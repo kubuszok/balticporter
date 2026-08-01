@@ -76,7 +76,7 @@ member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#mak
 member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#makeRemove(Entity)	sge.ecs.ComponentOperationHandler$ComponentOperation#makeRemove(Entity)	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	76	f548cb160e1441e2	
 member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#reset()	sge.ecs.ComponentOperationHandler$ComponentOperation#reset()	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	82	7eb064166348919c	
 member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#type	sge.ecs.ComponentOperationHandler$ComponentOperation#type	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	68	f70b119dd66cb686	
-member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperationPool#newObject()	sge.ecs.ComponentOperationHandler$ComponentOperationPool#newObject()	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	89	b352455e3afd3a00	
+member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperationPool#newObject()	sge.ecs.ComponentOperationHandler$ComponentOperationPool#newObject()	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	89	24d3da065393da0e	
 member	com.badlogic.ashley.core.ComponentType#<stmt1>	sge.ecs.ComponentType#<stmt1>	Renamed	-	com/badlogic/ashley/core/ComponentType.java	36	ef7992576402f428	
 member	com.badlogic.ashley.core.ComponentType#assignedComponentTypes	sge.ecs.ComponentType#assignedComponentTypes	Renamed	-	com/badlogic/ashley/core/ComponentType.java	30	9216a131f3e41b75	placement=companion vis=private
 member	com.badlogic.ashley.core.ComponentType#equals(Any)	sge.ecs.ComponentType#equals(Any)	Renamed	-	com/badlogic/ashley/core/ComponentType.java	90	098f36fb1cf12c37	
@@ -88,7 +88,7 @@ member	com.badlogic.ashley.core.ComponentType#hashCode()	sge.ecs.ComponentType#h
 member	com.badlogic.ashley.core.ComponentType#index	sge.ecs.ComponentType#index	Renamed	-	com/badlogic/ashley/core/ComponentType.java	33	d38ce783056e42b2	vis=private
 member	com.badlogic.ashley.core.ComponentType#typeIndex	sge.ecs.ComponentType#typeIndex	Renamed	-	com/badlogic/ashley/core/ComponentType.java	31	091acd0349b3754b	placement=companion vis=private
 member	com.badlogic.ashley.core.Engine#addEntity(Entity)	sge.ecs.Engine#addEntity(Entity)	Renamed	-	com/badlogic/ashley/core/Engine.java	80	6dea637a76796810	
-member	com.badlogic.ashley.core.Engine#addEntityInternal(Entity)	sge.ecs.Engine#addEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/Engine.java	254	e2bda9cd19d0825b	
+member	com.badlogic.ashley.core.Engine#addEntityInternal(Entity)	sge.ecs.Engine#addEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/Engine.java	254	dbbe70d4ae988445	
 member	com.badlogic.ashley.core.Engine#addEntityListener(EntityListener)	sge.ecs.Engine#addEntityListener(EntityListener)	Renamed	-	com/badlogic/ashley/core/Engine.java	186	2b4b1fc8c28ffe0c	
 member	com.badlogic.ashley.core.Engine#addEntityListener(Family,EntityListener)	sge.ecs.Engine#addEntityListener(Family,EntityListener)	Renamed	-	com/badlogic/ashley/core/Engine.java	204	4c177dc1afe2a543	
 member	com.badlogic.ashley.core.Engine#addEntityListener(Family,int,EntityListener)	sge.ecs.Engine#addEntityListener(Family,int,EntityListener)	Renamed	-	com/badlogic/ashley/core/Engine.java	213	7cb26125c344c5fc	
@@ -110,7 +110,7 @@ member	com.badlogic.ashley.core.Engine#removeAllEntities()	sge.ecs.Engine#remove
 member	com.badlogic.ashley.core.Engine#removeAllEntities(Family)	sge.ecs.Engine#removeAllEntities(Family)	Renamed	-	com/badlogic/ashley/core/Engine.java	96	7b7fa85e1f47d1d2	
 member	com.badlogic.ashley.core.Engine#removeAllSystems()	sge.ecs.Engine#removeAllSystems()	Renamed	-	com/badlogic/ashley/core/Engine.java	155	d8b476c41e7ab9b2	
 member	com.badlogic.ashley.core.Engine#removeEntity(Entity)	sge.ecs.Engine#removeEntity(Entity)	Renamed	-	com/badlogic/ashley/core/Engine.java	88	13889b5d77b9fdc5	
-member	com.badlogic.ashley.core.Engine#removeEntityInternal(Entity)	sge.ecs.Engine#removeEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/Engine.java	262	8e995eb1bb51333e	
+member	com.badlogic.ashley.core.Engine#removeEntityInternal(Entity)	sge.ecs.Engine#removeEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/Engine.java	262	c8183f594549a4f9	
 member	com.badlogic.ashley.core.Engine#removeEntityListener(EntityListener)	sge.ecs.Engine#removeEntityListener(EntityListener)	Renamed	-	com/badlogic/ashley/core/Engine.java	220	884d8f7ad44161ca	
 member	com.badlogic.ashley.core.Engine#removeSystem(EntitySystem)	sge.ecs.Engine#removeSystem(EntitySystem)	Renamed	-	com/badlogic/ashley/core/Engine.java	148	5a30093fe9541539	
 member	com.badlogic.ashley.core.Engine#systemManager	sge.ecs.Engine#systemManager	Renamed	-	com/badlogic/ashley/core/Engine.java	49	08d762b8904db4ef	vis=private
@@ -132,37 +132,37 @@ member	com.badlogic.ashley.core.Entity#<stmt7>	sge.ecs.Entity#<stmt7>	Renamed	-	
 member	com.badlogic.ashley.core.Entity#<stmt8>	sge.ecs.Entity#<stmt8>	Renamed	-	com/badlogic/ashley/core/Entity.java	57	d71b7ab109bf3ca7	
 member	com.badlogic.ashley.core.Entity#add(Component)	sge.ecs.Entity#add(Component)	Renamed	-	com/badlogic/ashley/core/Entity.java	64	29ba727a962bbe2b	
 member	com.badlogic.ashley.core.Entity#addAndReturn(T)	sge.ecs.Entity#addAndReturn(T)	Renamed	-	com/badlogic/ashley/core/Entity.java	81	36497dec82fabefc	
-member	com.badlogic.ashley.core.Entity#addInternal(Component)	sge.ecs.Entity#addInternal(Component)	Renamed	-	com/badlogic/ashley/core/Entity.java	175	d195d3b3aa60baf1	
+member	com.badlogic.ashley.core.Entity#addInternal(Component)	sge.ecs.Entity#addInternal(Component)	Renamed	-	com/badlogic/ashley/core/Entity.java	175	f54613f6fb31dae5	
 member	com.badlogic.ashley.core.Entity#componentAdded	sge.ecs.Entity#componentAdded	Renamed	-	com/badlogic/ashley/core/Entity.java	33	5b4b2ac4c8beefba	
 member	com.badlogic.ashley.core.Entity#componentBits	sge.ecs.Entity#componentBits	Renamed	-	com/badlogic/ashley/core/Entity.java	44	1cc8cc8ce8778c8c	vis=private
-member	com.badlogic.ashley.core.Entity#componentOperationHandler	sge.ecs.Entity#componentOperationHandler	Renamed	-	com/badlogic/ashley/core/Entity.java	39	0d55741af8ae8829	
+member	com.badlogic.ashley.core.Entity#componentOperationHandler	sge.ecs.Entity#componentOperationHandler	Renamed	-	com/badlogic/ashley/core/Entity.java	39	bfda67b6d9d1191d	
 member	com.badlogic.ashley.core.Entity#componentRemoved	sge.ecs.Entity#componentRemoved	Renamed	-	com/badlogic/ashley/core/Entity.java	35	4727d7dceff110b9	
 member	com.badlogic.ashley.core.Entity#components	sge.ecs.Entity#components	Renamed	-	com/badlogic/ashley/core/Entity.java	41	b2854601f751546e	vis=private
 member	com.badlogic.ashley.core.Entity#componentsArray	sge.ecs.Entity#componentsArray	Renamed	-	com/badlogic/ashley/core/Entity.java	42	3aa6becb13713dee	vis=private
 member	com.badlogic.ashley.core.Entity#familyBits	sge.ecs.Entity#familyBits	Renamed	-	com/badlogic/ashley/core/Entity.java	45	b5a766c414a79d7c	vis=private
 member	com.badlogic.ashley.core.Entity#flags	sge.ecs.Entity#flags	Renamed	-	com/badlogic/ashley/core/Entity.java	31	80545253df7c0eeb	
 member	com.badlogic.ashley.core.Entity#getComponent(Class)	sge.ecs.Entity#getComponent(Class<T>)	Renamed	-	com/badlogic/ashley/core/Entity.java	133	359e2f56c1a9e177	
-member	com.badlogic.ashley.core.Entity#getComponent(ComponentType)	sge.ecs.Entity#getComponent(ComponentType)	Renamed	-	com/badlogic/ashley/core/Entity.java	142	78c26f01d7895542	
-member	com.badlogic.ashley.core.Entity#getComponentBits()	sge.ecs.Entity#getComponentBits()	Renamed	-	com/badlogic/ashley/core/Entity.java	162	6059a25443207196	
+member	com.badlogic.ashley.core.Entity#getComponent(ComponentType)	sge.ecs.Entity#getComponent(ComponentType)	Renamed	-	com/badlogic/ashley/core/Entity.java	142	0bb3b860c528a69f	
+member	com.badlogic.ashley.core.Entity#getComponentBits()	sge.ecs.Entity#getComponentBits()	Renamed	-	com/badlogic/ashley/core/Entity.java	162	1b34592e5a6ec609	
 member	com.badlogic.ashley.core.Entity#getComponents()	sge.ecs.Entity#getComponents()	Renamed	-	com/badlogic/ashley/core/Entity.java	121	8ae43fac01422002	
-member	com.badlogic.ashley.core.Entity#getFamilyBits()	sge.ecs.Entity#getFamilyBits()	Renamed	-	com/badlogic/ashley/core/Entity.java	167	3cf9381ea80c67fb	
-member	com.badlogic.ashley.core.Entity#hasComponent(ComponentType)	sge.ecs.Entity#hasComponent(ComponentType)	Renamed	-	com/badlogic/ashley/core/Entity.java	155	e410d90e17c59dd8	
+member	com.badlogic.ashley.core.Entity#getFamilyBits()	sge.ecs.Entity#getFamilyBits()	Renamed	-	com/badlogic/ashley/core/Entity.java	167	907b9db7d891ab84	
+member	com.badlogic.ashley.core.Entity#hasComponent(ComponentType)	sge.ecs.Entity#hasComponent(ComponentType)	Renamed	-	com/badlogic/ashley/core/Entity.java	155	2e2f092ae9f7fc16	
 member	com.badlogic.ashley.core.Entity#immutableComponentsArray	sge.ecs.Entity#immutableComponentsArray	Renamed	-	com/badlogic/ashley/core/Entity.java	43	90218269ca5d56e8	vis=private
 member	com.badlogic.ashley.core.Entity#isRemoving()	sge.ecs.Entity#isRemoving()	Renamed	-	com/badlogic/ashley/core/Entity.java	229	7d6190a45ca00bb4	
 member	com.badlogic.ashley.core.Entity#isScheduledForRemoval()	sge.ecs.Entity#isScheduledForRemoval()	Renamed	-	com/badlogic/ashley/core/Entity.java	224	2f7f7c4769b3b697	
-member	com.badlogic.ashley.core.Entity#notifyComponentAdded()	sge.ecs.Entity#notifyComponentAdded()	Renamed	-	com/badlogic/ashley/core/Entity.java	215	daefc53996a670d1	
-member	com.badlogic.ashley.core.Entity#notifyComponentRemoved()	sge.ecs.Entity#notifyComponentRemoved()	Renamed	-	com/badlogic/ashley/core/Entity.java	219	a6b16b947948873f	
+member	com.badlogic.ashley.core.Entity#notifyComponentAdded()	sge.ecs.Entity#notifyComponentAdded()	Renamed	-	com/badlogic/ashley/core/Entity.java	215	53f1b866f799247e	
+member	com.badlogic.ashley.core.Entity#notifyComponentRemoved()	sge.ecs.Entity#notifyComponentRemoved()	Renamed	-	com/badlogic/ashley/core/Entity.java	219	0aa49ec6d07e9da7	
 member	com.badlogic.ashley.core.Entity#remove(Class)	sge.ecs.Entity#remove(Class<T>)	Renamed	-	com/badlogic/ashley/core/Entity.java	91	fd044248d2f13eef	
 member	com.badlogic.ashley.core.Entity#removeAll()	sge.ecs.Entity#removeAll()	Renamed	-	com/badlogic/ashley/core/Entity.java	114	1104d17d816e592a	
-member	com.badlogic.ashley.core.Entity#removeInternal(Class)	sge.ecs.Entity#removeInternal(Class<?>)	Renamed	-	com/badlogic/ashley/core/Entity.java	199	623a2a52f197ad14	
-member	com.badlogic.ashley.core.Entity#removing	sge.ecs.Entity#removing	Renamed	-	com/badlogic/ashley/core/Entity.java	38	6fd7210e6e803c4f	
-member	com.badlogic.ashley.core.Entity#scheduledForRemoval	sge.ecs.Entity#scheduledForRemoval	Renamed	-	com/badlogic/ashley/core/Entity.java	37	7ad23e456bc9ca32	
+member	com.badlogic.ashley.core.Entity#removeInternal(Class)	sge.ecs.Entity#removeInternal(Class<?>)	Renamed	-	com/badlogic/ashley/core/Entity.java	199	9beff4e888d27cd6	
+member	com.badlogic.ashley.core.Entity#removing	sge.ecs.Entity#removing	Renamed	-	com/badlogic/ashley/core/Entity.java	38	86bd02068bb0cb4a	
+member	com.badlogic.ashley.core.Entity#scheduledForRemoval	sge.ecs.Entity#scheduledForRemoval	Renamed	-	com/badlogic/ashley/core/Entity.java	37	88f00f9628d2c3a3	
 member	com.badlogic.ashley.core.EntityListener#entityAdded(Entity)	sge.ecs.EntityListener#entityAdded(Entity)	Renamed	-	com/badlogic/ashley/core/EntityListener.java	29	932a0890204c65c6	
 member	com.badlogic.ashley.core.EntityListener#entityRemoved(Entity)	sge.ecs.EntityListener#entityRemoved(Entity)	Renamed	-	com/badlogic/ashley/core/EntityListener.java	36	8861f9e8c298c8a4	
 member	com.badlogic.ashley.core.EntityManager#<stmt1>	sge.ecs.EntityManager#<stmt1>	Renamed	-	com/badlogic/ashley/core/EntityManager.java	18	802c342302b2cbcb	
 member	com.badlogic.ashley.core.EntityManager#addEntity(Entity)	sge.ecs.EntityManager#addEntity(Entity)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	21	da18d9d0905627b3	
 member	com.badlogic.ashley.core.EntityManager#addEntity(Entity,boolean)	sge.ecs.EntityManager#addEntity(Entity,boolean)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	25	e20c0376d88ea691	
-member	com.badlogic.ashley.core.EntityManager#addEntityInternal(Entity)	sge.ecs.EntityManager#addEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	129	7c1527f0b9aeb468	
+member	com.badlogic.ashley.core.EntityManager#addEntityInternal(Entity)	sge.ecs.EntityManager#addEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	129	df6b52cf3aea3b1a	
 member	com.badlogic.ashley.core.EntityManager#entities	sge.ecs.EntityManager#entities	Renamed	-	com/badlogic/ashley/core/EntityManager.java	11	c9596dbb3c4f4f81	vis=private
 member	com.badlogic.ashley.core.EntityManager#entityOperationPool	sge.ecs.EntityManager#entityOperationPool	Renamed	-	com/badlogic/ashley/core/EntityManager.java	15	d1527c0904614ec3	vis=private
 member	com.badlogic.ashley.core.EntityManager#entitySet	sge.ecs.EntityManager#entitySet	Renamed	-	com/badlogic/ashley/core/EntityManager.java	12	1e470f1520a91851	vis=private
@@ -178,24 +178,24 @@ member	com.badlogic.ashley.core.EntityManager#removeAllEntities(ImmutableArray,b
 member	com.badlogic.ashley.core.EntityManager#removeAllEntities(boolean)	sge.ecs.EntityManager#removeAllEntities(boolean)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	62	108bb95deefb4c04	
 member	com.badlogic.ashley.core.EntityManager#removeEntity(Entity)	sge.ecs.EntityManager#removeEntity(Entity)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	38	83310dc725aeb933	
 member	com.badlogic.ashley.core.EntityManager#removeEntity(Entity,boolean)	sge.ecs.EntityManager#removeEntity(Entity,boolean)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	42	1dedf83e5d9e78b6	
-member	com.badlogic.ashley.core.EntityManager#removeEntityInternal(Entity)	sge.ecs.EntityManager#removeEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	117	a7de8874949f8068	
+member	com.badlogic.ashley.core.EntityManager#removeEntityInternal(Entity)	sge.ecs.EntityManager#removeEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	117	7471a9fdc875db13	
 member	com.badlogic.ashley.core.EntityManager$EntityOperation#entities	sge.ecs.EntityManager$EntityOperation#entities	Renamed	-	com/badlogic/ashley/core/EntityManager.java	149	d865878b1c5c2b93	
 member	com.badlogic.ashley.core.EntityManager$EntityOperation#entity	sge.ecs.EntityManager$EntityOperation#entity	Renamed	-	com/badlogic/ashley/core/EntityManager.java	148	7cc65bdd643e080e	
 member	com.badlogic.ashley.core.EntityManager$EntityOperation#reset()	sge.ecs.EntityManager$EntityOperation#reset()	Renamed	-	com/badlogic/ashley/core/EntityManager.java	152	7eb064166348919c	
 member	com.badlogic.ashley.core.EntityManager$EntityOperation#type	sge.ecs.EntityManager$EntityOperation#type	Renamed	-	com/badlogic/ashley/core/EntityManager.java	147	9ad23fa3f3409ec0	
-member	com.badlogic.ashley.core.EntityManager$EntityOperationPool#newObject()	sge.ecs.EntityManager$EntityOperationPool#newObject()	Renamed	-	com/badlogic/ashley/core/EntityManager.java	159	ddd5c55a1642c64f	
+member	com.badlogic.ashley.core.EntityManager$EntityOperationPool#newObject()	sge.ecs.EntityManager$EntityOperationPool#newObject()	Renamed	-	com/badlogic/ashley/core/EntityManager.java	159	1dc721a139eb5484	
 member	com.badlogic.ashley.core.EntitySystem#<init>()	sge.ecs.EntitySystem#<init>()	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	31	bc7199df8df04217	
 member	com.badlogic.ashley.core.EntitySystem#<stmt1>	sge.ecs.EntitySystem#<stmt1>	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	40	3523c965b02b1007	
 member	com.badlogic.ashley.core.EntitySystem#<stmt2>	sge.ecs.EntitySystem#<stmt2>	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	41	84e7445495bc3837	
 member	com.badlogic.ashley.core.EntitySystem#addedToEngine(Engine)	sge.ecs.EntitySystem#addedToEngine(Engine)	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	48	de05bc100f46d068	
-member	com.badlogic.ashley.core.EntitySystem#addedToEngineInternal(Engine)	sge.ecs.EntitySystem#addedToEngineInternal(Engine)	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	81	35edc1c9549ab803	
+member	com.badlogic.ashley.core.EntitySystem#addedToEngineInternal(Engine)	sge.ecs.EntitySystem#addedToEngineInternal(Engine)	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	81	33c251f7f26bf0fd	
 member	com.badlogic.ashley.core.EntitySystem#checkProcessing()	sge.ecs.EntitySystem#checkProcessing()	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	66	e45b95880d28318f	
 member	com.badlogic.ashley.core.EntitySystem#engine	sge.ecs.EntitySystem#engine	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	28	a680e55a5d0f695a	vis=private
 member	com.badlogic.ashley.core.EntitySystem#getEngine()	sge.ecs.EntitySystem#getEngine()	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	77	27d7c1f5b266640a	
 member	com.badlogic.ashley.core.EntitySystem#priority	sge.ecs.EntitySystem#priority	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	25	eb634dbbae76cf73	
 member	com.badlogic.ashley.core.EntitySystem#processing	sge.ecs.EntitySystem#processing	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	27	229bf0f0d0f86304	vis=private
 member	com.badlogic.ashley.core.EntitySystem#removedFromEngine(Engine)	sge.ecs.EntitySystem#removedFromEngine(Engine)	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	55	648010f9c7dd171d	
-member	com.badlogic.ashley.core.EntitySystem#removedFromEngineInternal(Engine)	sge.ecs.EntitySystem#removedFromEngineInternal(Engine)	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	86	42985a2f13b5ebad	
+member	com.badlogic.ashley.core.EntitySystem#removedFromEngineInternal(Engine)	sge.ecs.EntitySystem#removedFromEngineInternal(Engine)	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	86	1d2bd610bd31d61e	
 member	com.badlogic.ashley.core.EntitySystem#setProcessing(boolean)	sge.ecs.EntitySystem#setProcessing(boolean)	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	71	11f452c901ed98a7	
 member	com.badlogic.ashley.core.EntitySystem#update(float)	sge.ecs.EntitySystem#update(float)	Renamed	-	com/badlogic/ashley/core/EntitySystem.java	62	b82e34be88477dfb	
 member	com.badlogic.ashley.core.Family#<stmt1>	sge.ecs.Family#<stmt1>	Renamed	-	com/badlogic/ashley/core/Family.java	42	edbf9ab49d81b684	
@@ -230,7 +230,7 @@ member	com.badlogic.ashley.core.Family$Builder#reset()	sge.ecs.Family$Builder#re
 member	com.badlogic.ashley.core.FamilyManager#<stmt1>	sge.ecs.FamilyManager#<stmt1>	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	20	a6692bd8605f9cd4	
 member	com.badlogic.ashley.core.FamilyManager#addEntityListener(Family,int,EntityListener)	sge.ecs.FamilyManager#addEntityListener(Family,int,EntityListener)	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	31	d7c131d6a956224d	
 member	com.badlogic.ashley.core.FamilyManager#bitsPool	sge.ecs.FamilyManager#bitsPool	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	16	4a47578af0930d2f	vis=private
-member	com.badlogic.ashley.core.FamilyManager#entities	sge.ecs.FamilyManager#entities	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	11	e3b938e214f788d2	
+member	com.badlogic.ashley.core.FamilyManager#entities	sge.ecs.FamilyManager#entities	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	11	2993fa8b4f92a5cb	
 member	com.badlogic.ashley.core.FamilyManager#entityListenerMasks	sge.ecs.FamilyManager#entityListenerMasks	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	15	5702e7f1fdc0f4ef	vis=private
 member	com.badlogic.ashley.core.FamilyManager#entityListeners	sge.ecs.FamilyManager#entityListeners	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	14	3e16e9f5406e37e9	vis=private
 member	com.badlogic.ashley.core.FamilyManager#families	sge.ecs.FamilyManager#families	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	12	5c993d73045b0b68	vis=private
@@ -241,7 +241,7 @@ member	com.badlogic.ashley.core.FamilyManager#notifying()	sge.ecs.FamilyManager#
 member	com.badlogic.ashley.core.FamilyManager#registerFamily(Family)	sge.ecs.FamilyManager#registerFamily(Family)	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	134	f68e28e188387519	vis=private
 member	com.badlogic.ashley.core.FamilyManager#removeEntityListener(EntityListener)	sge.ecs.FamilyManager#removeEntityListener(EntityListener)	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	63	8e6cfee89c7e0e69	
 member	com.badlogic.ashley.core.FamilyManager#updateFamilyMembership(Entity)	sge.ecs.FamilyManager#updateFamilyMembership(Entity)	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	83	801c5bef26c3a725	
-member	com.badlogic.ashley.core.FamilyManager$BitsPool#newObject()	sge.ecs.FamilyManager$BitsPool#newObject()	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	159	bfa7a2ca9b83f644	
+member	com.badlogic.ashley.core.FamilyManager$BitsPool#newObject()	sge.ecs.FamilyManager$BitsPool#newObject()	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	159	f3b6f595eff15480	
 member	com.badlogic.ashley.core.FamilyManager$EntityListenerData#listener	sge.ecs.FamilyManager$EntityListenerData#listener	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	153	bb185b9b86ed7316	
 member	com.badlogic.ashley.core.FamilyManager$EntityListenerData#priority	sge.ecs.FamilyManager$EntityListenerData#priority	Renamed	-	com/badlogic/ashley/core/FamilyManager.java	154	bc5953a688ed8c85	
 member	com.badlogic.ashley.core.PooledEngine#<init>()	sge.ecs.PooledEngine#<init>()	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	45	70e80739cb62ed09	
@@ -252,7 +252,7 @@ member	com.badlogic.ashley.core.PooledEngine#componentPools	sge.ecs.PooledEngine
 member	com.badlogic.ashley.core.PooledEngine#createComponent(Class)	sge.ecs.PooledEngine#createComponent(Class<T>)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	75	98fc18a90143d9bf	
 member	com.badlogic.ashley.core.PooledEngine#createEntity()	sge.ecs.PooledEngine#createEntity()	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	65	40194820c27dc8cf	
 member	com.badlogic.ashley.core.PooledEngine#entityPool	sge.ecs.PooledEngine#entityPool	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	38	da039147895ea191	vis=private
-member	com.badlogic.ashley.core.PooledEngine#removeEntityInternal(Entity)	sge.ecs.PooledEngine#removeEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	89	d351ca123c5b3995	
+member	com.badlogic.ashley.core.PooledEngine#removeEntityInternal(Entity)	sge.ecs.PooledEngine#removeEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	89	7041d9518e1eb7b1	
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt1>	sge.ecs.PooledEngine$ComponentPools#<stmt1>	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	146	16b4bc6c03c16349	
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt2>	sge.ecs.PooledEngine$ComponentPools#<stmt2>	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	147	3d9447d474ae91fe	
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt3>	sge.ecs.PooledEngine$ComponentPools#<stmt3>	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	148	c54125699dbbdf04	
@@ -263,9 +263,9 @@ member	com.badlogic.ashley.core.PooledEngine$ComponentPools#initialSize	sge.ecs.
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#maxSize	sge.ecs.PooledEngine$ComponentPools#maxSize	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	143	3230ffc65bf20137	vis=private[PooledEngine]
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#obtain(Class)	sge.ecs.PooledEngine$ComponentPools#obtain(Class<T>)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	151	8bb3b5297d6a4296	
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#pools	sge.ecs.PooledEngine$ComponentPools#pools	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	141	b965ce0823f32bb8	vis=private[PooledEngine]
-member	com.badlogic.ashley.core.PooledEngine$EntityPool#discard(PooledEntity)	sge.ecs.PooledEngine$EntityPool#discard(PooledEntity)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	135	7656b385bd24e744	
-member	com.badlogic.ashley.core.PooledEngine$EntityPool#newObject()	sge.ecs.PooledEngine$EntityPool#newObject()	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	126	899fae0629d502dd	
-member	com.badlogic.ashley.core.PooledEngine$PooledEntity#removeInternal(Class)	sge.ecs.PooledEngine$PooledEntity#removeInternal(Class<?>)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	99	4669e473dfbbbd40	
+member	com.badlogic.ashley.core.PooledEngine$EntityPool#discard(PooledEntity)	sge.ecs.PooledEngine$EntityPool#discard(PooledEntity)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	135	a2cfdbaccf2f05f5	
+member	com.badlogic.ashley.core.PooledEngine$EntityPool#newObject()	sge.ecs.PooledEngine$EntityPool#newObject()	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	126	3c54c63bd58b76dc	
+member	com.badlogic.ashley.core.PooledEngine$PooledEntity#removeInternal(Class)	sge.ecs.PooledEngine$PooledEntity#removeInternal(Class<?>)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	99	0d57f81e9a815cb5	
 member	com.badlogic.ashley.core.PooledEngine$PooledEntity#reset()	sge.ecs.PooledEngine$PooledEntity#reset()	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	109	5217107e78805473	
 member	com.badlogic.ashley.core.SystemManager#<stmt1>	sge.ecs.SystemManager#<stmt1>	Renamed	-	com/badlogic/ashley/core/SystemManager.java	19	802c342302b2cbcb	
 member	com.badlogic.ashley.core.SystemManager#addSystem(EntitySystem)	sge.ecs.SystemManager#addSystem(EntitySystem)	Renamed	-	com/badlogic/ashley/core/SystemManager.java	22	618aaeca91d828e8	
@@ -296,9 +296,9 @@ member	com.badlogic.ashley.systems.IntervalIteratingSystem#entities	sge.ecs.syst
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#family	sge.ecs.systems.IntervalIteratingSystem#family	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	31	12cf39debf9f352c	vis=private
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#getEntities()	sge.ecs.systems.IntervalIteratingSystem#getEntities()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	69	f674efea5fbab4db	
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#getFamily()	sge.ecs.systems.IntervalIteratingSystem#getFamily()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	76	803241f9570525c6	
-member	com.badlogic.ashley.systems.IntervalIteratingSystem#processEntity(Entity)	sge.ecs.systems.IntervalIteratingSystem#processEntity(Entity)	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	84	28dc80a20f18b12f	
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#processEntity(Entity)	sge.ecs.systems.IntervalIteratingSystem#processEntity(Entity)	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	84	343ec383f2d2894b	
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#startProcessing()	sge.ecs.systems.IntervalIteratingSystem#startProcessing()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	90	fe1ec348163df205	
-member	com.badlogic.ashley.systems.IntervalIteratingSystem#updateInterval()	sge.ecs.systems.IntervalIteratingSystem#updateInterval()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	58	fbce71364328dd88	
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#updateInterval()	sge.ecs.systems.IntervalIteratingSystem#updateInterval()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	58	00f69c75515eee91	
 member	com.badlogic.ashley.systems.IntervalSystem#<init>(float)	sge.ecs.systems.IntervalSystem#<init>(float)	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	33	92267b862c3f5fdc	
 member	com.badlogic.ashley.systems.IntervalSystem#<stmt1>	sge.ecs.systems.IntervalSystem#<stmt1>	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	43	82a7e52ab1e2b52d	
 member	com.badlogic.ashley.systems.IntervalSystem#<stmt2>	sge.ecs.systems.IntervalSystem#<stmt2>	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	44	efb840fbc448893a	
@@ -306,7 +306,7 @@ member	com.badlogic.ashley.systems.IntervalSystem#accumulator	sge.ecs.systems.In
 member	com.badlogic.ashley.systems.IntervalSystem#getInterval()	sge.ecs.systems.IntervalSystem#getInterval()	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	47	31c2a411d6c90dde	
 member	com.badlogic.ashley.systems.IntervalSystem#interval	sge.ecs.systems.IntervalSystem#interval	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	27	bc82215c1a6f5367	vis=private
 member	com.badlogic.ashley.systems.IntervalSystem#update(float)	sge.ecs.systems.IntervalSystem#update(float)	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	52	e93ffefba43dafb4	
-member	com.badlogic.ashley.systems.IntervalSystem#updateInterval()	sge.ecs.systems.IntervalSystem#updateInterval()	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	64	9b83463b3ad7dddb	
+member	com.badlogic.ashley.systems.IntervalSystem#updateInterval()	sge.ecs.systems.IntervalSystem#updateInterval()	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	64	4c59f9706002dc46	
 member	com.badlogic.ashley.systems.IteratingSystem#<init>(Family)	sge.ecs.systems.IteratingSystem#<init>(Family)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	38	bf85d2388b963637	
 member	com.badlogic.ashley.systems.IteratingSystem#<stmt1>	sge.ecs.systems.IteratingSystem#<stmt1>	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	50	7012404adc2dbcc5	
 member	com.badlogic.ashley.systems.IteratingSystem#addedToEngine(Engine)	sge.ecs.systems.IteratingSystem#addedToEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	54	2983e9638a4ddfbc	
@@ -315,7 +315,7 @@ member	com.badlogic.ashley.systems.IteratingSystem#entities	sge.ecs.systems.Iter
 member	com.badlogic.ashley.systems.IteratingSystem#family	sge.ecs.systems.IteratingSystem#family	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	31	12cf39debf9f352c	vis=private
 member	com.badlogic.ashley.systems.IteratingSystem#getEntities()	sge.ecs.systems.IteratingSystem#getEntities()	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	75	f674efea5fbab4db	
 member	com.badlogic.ashley.systems.IteratingSystem#getFamily()	sge.ecs.systems.IteratingSystem#getFamily()	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	82	803241f9570525c6	
-member	com.badlogic.ashley.systems.IteratingSystem#processEntity(Entity,float)	sge.ecs.systems.IteratingSystem#processEntity(Entity,float)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	92	c52e0cee99118598	
+member	com.badlogic.ashley.systems.IteratingSystem#processEntity(Entity,float)	sge.ecs.systems.IteratingSystem#processEntity(Entity,float)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	92	37bd0f707d1450e0	
 member	com.badlogic.ashley.systems.IteratingSystem#removedFromEngine(Engine)	sge.ecs.systems.IteratingSystem#removedFromEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	59	aefef9a3ed4e319a	
 member	com.badlogic.ashley.systems.IteratingSystem#startProcessing()	sge.ecs.systems.IteratingSystem#startProcessing()	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	98	fe1ec348163df205	
 member	com.badlogic.ashley.systems.IteratingSystem#update(float)	sge.ecs.systems.IteratingSystem#update(float)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	64	d0339cea2eb95088	
@@ -334,7 +334,7 @@ member	com.badlogic.ashley.systems.SortedIteratingSystem#family	sge.ecs.systems.
 member	com.badlogic.ashley.systems.SortedIteratingSystem#forceSort()	sge.ecs.systems.SortedIteratingSystem#forceSort()	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	69	08bb28cc86f09ad8	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#getEntities()	sge.ecs.systems.SortedIteratingSystem#getEntities()	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	126	cd7f5bfc48290aa5	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#getFamily()	sge.ecs.systems.SortedIteratingSystem#getFamily()	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	134	803241f9570525c6	
-member	com.badlogic.ashley.systems.SortedIteratingSystem#processEntity(Entity,float)	sge.ecs.systems.SortedIteratingSystem#processEntity(Entity,float)	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	144	c52e0cee99118598	
+member	com.badlogic.ashley.systems.SortedIteratingSystem#processEntity(Entity,float)	sge.ecs.systems.SortedIteratingSystem#processEntity(Entity,float)	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	144	37bd0f707d1450e0	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#removedFromEngine(Engine)	sge.ecs.systems.SortedIteratingSystem#removedFromEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	95	2eb32004b2e003ad	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#shouldSort	sge.ecs.systems.SortedIteratingSystem#shouldSort	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	39	41bb8a578e3b04db	vis=private
 member	com.badlogic.ashley.systems.SortedIteratingSystem#sort()	sge.ecs.systems.SortedIteratingSystem#sort()	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	73	1bc8ac7b3db92356	vis=private

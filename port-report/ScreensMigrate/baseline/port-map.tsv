@@ -43,13 +43,13 @@ member	de.eskalon.commons.core.ManagedGame#create()	sge.screen.ManagedGame#creat
 member	de.eskalon.commons.core.ManagedGame#dispose()	sge.screen.ManagedGame#dispose()	Renamed	-	de/eskalon/commons/core/ManagedGame.java	127	63263fff2acffb60	
 member	de.eskalon.commons.core.ManagedGame#getInputMultiplexer()	sge.screen.ManagedGame#getInputMultiplexer()	Renamed	-	de/eskalon/commons/core/ManagedGame.java	137	c0c195e986b5ce02	
 member	de.eskalon.commons.core.ManagedGame#getScreenManager()	sge.screen.ManagedGame#getScreenManager()	Renamed	-	de/eskalon/commons/core/ManagedGame.java	113	9b65adc3c8d3e7e1	
-member	de.eskalon.commons.core.ManagedGame#inputProcessor	sge.screen.ManagedGame#inputProcessor	Renamed	-	de/eskalon/commons/core/ManagedGame.java	50	fa6a87e3c09265c9	
+member	de.eskalon.commons.core.ManagedGame#inputProcessor	sge.screen.ManagedGame#inputProcessor	Renamed	-	de/eskalon/commons/core/ManagedGame.java	50	3e57eea222a0469a	
 member	de.eskalon.commons.core.ManagedGame#pause()	sge.screen.ManagedGame#pause()	Renamed	-	de/eskalon/commons/core/ManagedGame.java	104	0cf39777bf2f0b03	
 member	de.eskalon.commons.core.ManagedGame#render()	sge.screen.ManagedGame#render()	Renamed	-	de/eskalon/commons/core/ManagedGame.java	74	1e9b4fca2ac67659	
 member	de.eskalon.commons.core.ManagedGame#resize(int,int)	sge.screen.ManagedGame#resize(int,int)	Renamed	-	de/eskalon/commons/core/ManagedGame.java	92	a52aaea9e032727f	
 member	de.eskalon.commons.core.ManagedGame#resume()	sge.screen.ManagedGame#resume()	Renamed	-	de/eskalon/commons/core/ManagedGame.java	109	3caf6e9f03056d2f	
-member	de.eskalon.commons.core.ManagedGame#screenManager	sge.screen.ManagedGame#screenManager	Renamed	-	de/eskalon/commons/core/ManagedGame.java	54	dc0945ab31b20af4	
-member	de.eskalon.commons.screen.ManagedScreen#addInputProcessor(InputProcessor)	sge.screen.ManagedScreen#addInputProcessor(InputProcessor)	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	73	0478d2ed078c34da	
+member	de.eskalon.commons.core.ManagedGame#screenManager	sge.screen.ManagedGame#screenManager	Renamed	-	de/eskalon/commons/core/ManagedGame.java	54	edd652bd9853c359	
+member	de.eskalon.commons.screen.ManagedScreen#addInputProcessor(InputProcessor)	sge.screen.ManagedScreen#addInputProcessor(InputProcessor)	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	73	fdc46403c370f5b5	
 member	de.eskalon.commons.screen.ManagedScreen#dispose()	sge.screen.ManagedScreen#dispose()	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	211	02dda7641bdfd181	
 member	de.eskalon.commons.screen.ManagedScreen#getClearColor()	sge.screen.ManagedScreen#getClearColor()	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	221	774bf8a5757dbb3f	
 member	de.eskalon.commons.screen.ManagedScreen#getInputProcessors()	sge.screen.ManagedScreen#getInputProcessors()	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	213	9c705fe1863479b0	
@@ -64,30 +64,30 @@ member	de.eskalon.commons.screen.ManagedScreenAdapter#dispose()	sge.screen.Manag
 member	de.eskalon.commons.screen.ManagedScreenAdapter#render(float)	sge.screen.ManagedScreenAdapter#render(float)	Renamed	-	de/eskalon/commons/screen/ManagedScreenAdapter.java	32	4e3d6ad5231607f1	
 member	de.eskalon.commons.screen.ManagedScreenAdapter#resize(int,int)	sge.screen.ManagedScreenAdapter#resize(int,int)	Renamed	-	de/eskalon/commons/screen/ManagedScreenAdapter.java	37	4c2fa2b126e7e35a	
 member	de.eskalon.commons.screen.ScreenManager#LOG	sge.screen.ScreenManager#LOG	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	69	fdc3453a8420c145	vis=private
-member	de.eskalon.commons.screen.ScreenManager#autoDisposeScreens	sge.screen.ScreenManager#autoDisposeScreens	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	118	9d39a657ed4ef8b4	
-member	de.eskalon.commons.screen.ScreenManager#autoDisposeTransitions	sge.screen.ScreenManager#autoDisposeTransitions	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	119	a7c49bac738bca61	
+member	de.eskalon.commons.screen.ScreenManager#autoDisposeScreens	sge.screen.ScreenManager#autoDisposeScreens	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	118	efb7b49757df8768	
+member	de.eskalon.commons.screen.ScreenManager#autoDisposeTransitions	sge.screen.ScreenManager#autoDisposeTransitions	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	119	a3856449bf869636	
 member	de.eskalon.commons.screen.ScreenManager#blankScreen	sge.screen.ScreenManager#blankScreen	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	102	c1abd29e0b519d17	vis=private
-member	de.eskalon.commons.screen.ScreenManager#createFrameBuffer()	sge.screen.ScreenManager#createFrameBuffer()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	144	0d0078e159fd0bf0	
+member	de.eskalon.commons.screen.ScreenManager#createFrameBuffer()	sge.screen.ScreenManager#createFrameBuffer()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	144	69d9784dd726b893	
 member	de.eskalon.commons.screen.ScreenManager#currFBO	sge.screen.ScreenManager#currFBO	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	81	f07d77e25a3a6cd1	vis=private
-member	de.eskalon.commons.screen.ScreenManager#currScreen	sge.screen.ScreenManager#currScreen	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	92	dcf272930e119c4e	
-member	de.eskalon.commons.screen.ScreenManager#currentHeight	sge.screen.ScreenManager#currentHeight	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	113	674273d31c06c6bf	
+member	de.eskalon.commons.screen.ScreenManager#currScreen	sge.screen.ScreenManager#currScreen	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	92	52584555510eed31	
+member	de.eskalon.commons.screen.ScreenManager#currentHeight	sge.screen.ScreenManager#currentHeight	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	113	2283448627d2cc0b	
 member	de.eskalon.commons.screen.ScreenManager#currentProcessors	sge.screen.ScreenManager#currentProcessors	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	97	90e80b2a9f44c273	vis=private
-member	de.eskalon.commons.screen.ScreenManager#currentWidth	sge.screen.ScreenManager#currentWidth	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	113	ca6d9deb79f6f8f3	
+member	de.eskalon.commons.screen.ScreenManager#currentWidth	sge.screen.ScreenManager#currentWidth	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	113	d0b5af0ba022d3c5	
 member	de.eskalon.commons.screen.ScreenManager#dispose()	sge.screen.ScreenManager#dispose()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	417	b7a67945260de30f	
-member	de.eskalon.commons.screen.ScreenManager#finalizeScreen(ManagedScreen)	sge.screen.ScreenManager#finalizeScreen(ManagedScreen)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	344	9e9a23e8d9326378	
-member	de.eskalon.commons.screen.ScreenManager#finalizeTransition(T)	sge.screen.ScreenManager#finalizeTransition(T)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	350	0f341c20e1d18dd3	
+member	de.eskalon.commons.screen.ScreenManager#finalizeScreen(ManagedScreen)	sge.screen.ScreenManager#finalizeScreen(ManagedScreen)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	344	23276a7a24bcd212	
+member	de.eskalon.commons.screen.ScreenManager#finalizeTransition(T)	sge.screen.ScreenManager#finalizeTransition(T)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	350	9e417650b9ab33d9	
 member	de.eskalon.commons.screen.ScreenManager#gameInputMultiplexer	sge.screen.ScreenManager#gameInputMultiplexer	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	111	4bd425490c585666	vis=private
 member	de.eskalon.commons.screen.ScreenManager#getCurrentScreen()	sge.screen.ScreenManager#getCurrentScreen()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	474	4a87d13dc36d7597	
 member	de.eskalon.commons.screen.ScreenManager#getLastScreen()	sge.screen.ScreenManager#getLastScreen()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	461	b3760da89a226948	
-member	de.eskalon.commons.screen.ScreenManager#hasDepth	sge.screen.ScreenManager#hasDepth	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	117	b3a390c6be17c646	
-member	de.eskalon.commons.screen.ScreenManager#initBuffers()	sge.screen.ScreenManager#initBuffers()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	135	9f55ab4f3ce2d316	
+member	de.eskalon.commons.screen.ScreenManager#hasDepth	sge.screen.ScreenManager#hasDepth	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	117	3f9c3e9a78c358fc	
+member	de.eskalon.commons.screen.ScreenManager#initBuffers()	sge.screen.ScreenManager#initBuffers()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	135	c5cb98897d6f84f1	
 member	de.eskalon.commons.screen.ScreenManager#initialize(BasicInputMultiplexer,int,int,boolean)	sge.screen.ScreenManager#initialize(BasicInputMultiplexer,int,int,boolean)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	121	f988ad8eb93b93db	
-member	de.eskalon.commons.screen.ScreenManager#initializeScreen(ManagedScreen)	sge.screen.ScreenManager#initializeScreen(ManagedScreen)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	334	e82e42dcf0410b66	
-member	de.eskalon.commons.screen.ScreenManager#initializeTransition(T)	sge.screen.ScreenManager#initializeTransition(T)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	339	113db8e877e5b925	
+member	de.eskalon.commons.screen.ScreenManager#initializeScreen(ManagedScreen)	sge.screen.ScreenManager#initializeScreen(ManagedScreen)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	334	8f945cda6c664f8b	
+member	de.eskalon.commons.screen.ScreenManager#initializeTransition(T)	sge.screen.ScreenManager#initializeTransition(T)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	339	8f86a266fc0aa0e4	
 member	de.eskalon.commons.screen.ScreenManager#initialized	sge.screen.ScreenManager#initialized	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	115	fe39aead08e5eb6e	vis=private
 member	de.eskalon.commons.screen.ScreenManager#isTransitioning()	sge.screen.ScreenManager#isTransitioning()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	485	36f21f5609721dfa	
 member	de.eskalon.commons.screen.ScreenManager#lastFBO	sge.screen.ScreenManager#lastFBO	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	75	b82ee1d48e2c2525	vis=private
-member	de.eskalon.commons.screen.ScreenManager#lastScreen	sge.screen.ScreenManager#lastScreen	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	87	3ff38dcac470900c	
+member	de.eskalon.commons.screen.ScreenManager#lastScreen	sge.screen.ScreenManager#lastScreen	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	87	995e91112cd9f117	
 member	de.eskalon.commons.screen.ScreenManager#pause()	sge.screen.ScreenManager#pause()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	385	48a682fc331ccf12	
 member	de.eskalon.commons.screen.ScreenManager#pushScreen(S,T)	sge.screen.ScreenManager#pushScreen(S,T)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	208	01806f49d7aecdcf	
 member	de.eskalon.commons.screen.ScreenManager#pushScreen(Supplier,Supplier)	sge.screen.ScreenManager#pushScreen(Supplier<S>,Supplier<T>)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	243	5d042cc8b175762c	
@@ -96,19 +96,19 @@ member	de.eskalon.commons.screen.ScreenManager#resize(int,int)	sge.screen.Screen
 member	de.eskalon.commons.screen.ScreenManager#resume()	sge.screen.ScreenManager#resume()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	398	dd64ca080263bacc	
 member	de.eskalon.commons.screen.ScreenManager#setAutoDispose(boolean,boolean)	sge.screen.ScreenManager#setAutoDispose(boolean,boolean)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	180	621a92f2a2cb3e33	
 member	de.eskalon.commons.screen.ScreenManager#setHasDepth(boolean)	sge.screen.ScreenManager#setHasDepth(boolean)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	159	79caa240167560c7	
-member	de.eskalon.commons.screen.ScreenManager#transition	sge.screen.ScreenManager#transition	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	107	b6fb8556549e513a	
-member	de.eskalon.commons.screen.ScreenManager#transitionQueue	sge.screen.ScreenManager#transitionQueue	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	109	7b037e2cf2696d58	
+member	de.eskalon.commons.screen.ScreenManager#transition	sge.screen.ScreenManager#transition	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	107	847745480903829b	
+member	de.eskalon.commons.screen.ScreenManager#transitionQueue	sge.screen.ScreenManager#transitionQueue	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	109	caa67bc3328dc9ee	
 member	de.eskalon.commons.screen.transition.BatchTransition#<stmt1>	sge.screen.transition.BatchTransition#<stmt1>	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	54	e79c6b486078d08c	
 member	de.eskalon.commons.screen.transition.BatchTransition#<stmt2>	sge.screen.transition.BatchTransition#<stmt2>	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	56	8c122036d563d03e	
 member	de.eskalon.commons.screen.transition.BatchTransition#<stmt3>	sge.screen.transition.BatchTransition#<stmt3>	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	57	0335719265c94f2a	
-member	de.eskalon.commons.screen.transition.BatchTransition#batch	sge.screen.transition.BatchTransition#batch	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	36	dd204d346bf08192	
+member	de.eskalon.commons.screen.transition.BatchTransition#batch	sge.screen.transition.BatchTransition#batch	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	36	b8cf586ed61c90d9	
 member	de.eskalon.commons.screen.transition.BatchTransition#dispose()	sge.screen.transition.BatchTransition#dispose()	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	100	19b8e5b67dc6f922	
-member	de.eskalon.commons.screen.transition.BatchTransition#height	sge.screen.transition.BatchTransition#height	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	38	178494e199562eb3	
+member	de.eskalon.commons.screen.transition.BatchTransition#height	sge.screen.transition.BatchTransition#height	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	38	e80a1281456063c8	
 member	de.eskalon.commons.screen.transition.BatchTransition#render(float,TextureRegion,TextureRegion)	sge.screen.transition.BatchTransition#render(float,TextureRegion,TextureRegion)	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	63	2cff88f4869bd0c0	
 member	de.eskalon.commons.screen.transition.BatchTransition#render(float,TextureRegion,TextureRegion,float)	sge.screen.transition.BatchTransition#render(float,TextureRegion,TextureRegion,float)	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	88	2c1ee93640a2a702	
 member	de.eskalon.commons.screen.transition.BatchTransition#resize(int,int)	sge.screen.transition.BatchTransition#resize(int,int)	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	92	4b4effcf609b9a34	
-member	de.eskalon.commons.screen.transition.BatchTransition#viewport	sge.screen.transition.BatchTransition#viewport	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	37	e46aa982612eecd5	
-member	de.eskalon.commons.screen.transition.BatchTransition#width	sge.screen.transition.BatchTransition#width	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	38	3fba95f435f4d475	
+member	de.eskalon.commons.screen.transition.BatchTransition#viewport	sge.screen.transition.BatchTransition#viewport	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	37	70aaa0e5de7d791c	
+member	de.eskalon.commons.screen.transition.BatchTransition#width	sge.screen.transition.BatchTransition#width	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	38	bd652063951716d0	
 member	de.eskalon.commons.screen.transition.ScreenTransition#dispose()	sge.screen.transition.ScreenTransition#dispose()	Renamed	-	de/eskalon/commons/screen/transition/ScreenTransition.java	116	71c8016e73bcfa6f	
 member	de.eskalon.commons.screen.transition.ScreenTransition#getClearColor()	sge.screen.transition.ScreenTransition#getClearColor()	Renamed	-	de/eskalon/commons/screen/transition/ScreenTransition.java	122	774bf8a5757dbb3f	
 member	de.eskalon.commons.screen.transition.ScreenTransition#hide()	sge.screen.transition.ScreenTransition#hide()	Renamed	-	de/eskalon/commons/screen/transition/ScreenTransition.java	60	85c6308a8d3b8bf6	
@@ -126,13 +126,13 @@ member	de.eskalon.commons.screen.transition.TimedTransition#<init>(float)	sge.sc
 member	de.eskalon.commons.screen.transition.TimedTransition#<stmt1>	sge.screen.transition.TimedTransition#<stmt1>	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	50	3fe94415201bb442	
 member	de.eskalon.commons.screen.transition.TimedTransition#<stmt2>	sge.screen.transition.TimedTransition#<stmt2>	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	51	9ca935e87ee643f3	
 member	de.eskalon.commons.screen.transition.TimedTransition#<stmt3>	sge.screen.transition.TimedTransition#<stmt3>	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	52	2e7b0da537d94c15	
-member	de.eskalon.commons.screen.transition.TimedTransition#duration	sge.screen.transition.TimedTransition#duration	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	35	4fb4158aa75b332c	
-member	de.eskalon.commons.screen.transition.TimedTransition#interpolation	sge.screen.transition.TimedTransition#interpolation	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	34	73c4b4777a59c066	
+member	de.eskalon.commons.screen.transition.TimedTransition#duration	sge.screen.transition.TimedTransition#duration	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	35	51c966b781a464e0	
+member	de.eskalon.commons.screen.transition.TimedTransition#interpolation	sge.screen.transition.TimedTransition#interpolation	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	34	f65b7bb4fbf121d7	
 member	de.eskalon.commons.screen.transition.TimedTransition#isDone()	sge.screen.transition.TimedTransition#isDone()	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	98	5a6c7890b948af27	
 member	de.eskalon.commons.screen.transition.TimedTransition#render(float,TextureRegion,TextureRegion)	sge.screen.transition.TimedTransition#render(float,TextureRegion,TextureRegion)	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	69	c7b6c135dc7af8a7	
 member	de.eskalon.commons.screen.transition.TimedTransition#render(float,TextureRegion,TextureRegion,float)	sge.screen.transition.TimedTransition#render(float,TextureRegion,TextureRegion,float)	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	94	0ee4cde9e69e1762	
 member	de.eskalon.commons.screen.transition.TimedTransition#show()	sge.screen.transition.TimedTransition#show()	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	64	6e507b84ecdabaaa	
-member	de.eskalon.commons.screen.transition.TimedTransition#timePassed	sge.screen.transition.TimedTransition#timePassed	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	36	6c2f87b67bda6c78	
+member	de.eskalon.commons.screen.transition.TimedTransition#timePassed	sge.screen.transition.TimedTransition#timePassed	Renamed	-	de/eskalon/commons/screen/transition/TimedTransition.java	36	2fbe1cc9e7a80e50	
 member	de.eskalon.commons.screen.transition.impl.BlankTimedTransition#<init>(float)	sge.screen.transition.impl.BlankTimedTransition#<init>(float)	Renamed	-	de/eskalon/commons/screen/transition/impl/BlankTimedTransition.java	48	9eea17f7d7635f67	
 member	de.eskalon.commons.screen.transition.impl.BlankTimedTransition#dispose()	sge.screen.transition.impl.BlankTimedTransition#dispose()	Renamed	-	de/eskalon/commons/screen/transition/impl/BlankTimedTransition.java	64	19b8e5b67dc6f922	
 member	de.eskalon.commons.screen.transition.impl.BlankTimedTransition#render(float,TextureRegion,TextureRegion,float)	sge.screen.transition.impl.BlankTimedTransition#render(float,TextureRegion,TextureRegion,float)	Renamed	-	de/eskalon/commons/screen/transition/impl/BlankTimedTransition.java	53	f52440deaa6f65a5	
@@ -168,14 +168,14 @@ member	de.eskalon.commons.screen.transition.impl.ShaderTransition#currScreenLoc	
 member	de.eskalon.commons.screen.transition.impl.ShaderTransition#dispose()	sge.screen.transition.impl.ShaderTransition#dispose()	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	184	ad7e33742391a75b	
 member	de.eskalon.commons.screen.transition.impl.ShaderTransition#getProgram()	sge.screen.transition.impl.ShaderTransition#getProgram()	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	194	e9bd8e712f9ec1d3	
 member	de.eskalon.commons.screen.transition.impl.ShaderTransition#lastScreenLoc	sge.screen.transition.impl.ShaderTransition#lastScreenLoc	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	72	8fe8d64d2bbe6ee0	vis=private
-member	de.eskalon.commons.screen.transition.impl.ShaderTransition#program	sge.screen.transition.impl.ShaderTransition#program	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	63	492a85dc9e2f32de	
+member	de.eskalon.commons.screen.transition.impl.ShaderTransition#program	sge.screen.transition.impl.ShaderTransition#program	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	63	484aa30491df29b5	
 member	de.eskalon.commons.screen.transition.impl.ShaderTransition#progressLoc	sge.screen.transition.impl.ShaderTransition#progressLoc	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	73	b026876535713125	vis=private
 member	de.eskalon.commons.screen.transition.impl.ShaderTransition#projTransLoc	sge.screen.transition.impl.ShaderTransition#projTransLoc	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	71	aaaafa87aebd395d	vis=private
 member	de.eskalon.commons.screen.transition.impl.ShaderTransition#render(float,TextureRegion,TextureRegion,float)	sge.screen.transition.impl.ShaderTransition#render(float,TextureRegion,TextureRegion,float)	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	151	d58e1e6f113ce572	
 member	de.eskalon.commons.screen.transition.impl.ShaderTransition#renderContext	sge.screen.transition.impl.ShaderTransition#renderContext	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	66	f0195287dfdd30b9	vis=private
 member	de.eskalon.commons.screen.transition.impl.ShaderTransition#resize(int,int)	sge.screen.transition.impl.ShaderTransition#resize(int,int)	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	174	84a5aae819234acd	
 member	de.eskalon.commons.screen.transition.impl.ShaderTransition#screenQuad	sge.screen.transition.impl.ShaderTransition#screenQuad	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	70	52c932bd3e040f22	vis=private
-member	de.eskalon.commons.screen.transition.impl.ShaderTransition#viewport	sge.screen.transition.impl.ShaderTransition#viewport	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	64	e46aa982612eecd5	
+member	de.eskalon.commons.screen.transition.impl.ShaderTransition#viewport	sge.screen.transition.impl.ShaderTransition#viewport	Renamed	-	de/eskalon/commons/screen/transition/impl/ShaderTransition.java	64	d0d0db0661ef5b62	
 member	de.eskalon.commons.screen.transition.impl.SlidingInTransition#<init>(SpriteBatch,SlidingDirection,float)	sge.screen.transition.impl.SlidingInTransition#<init>(SpriteBatch,SlidingDirection,float)	Renamed	-	de/eskalon/commons/screen/transition/impl/SlidingInTransition.java	60	594d66e383bb0553	
 member	de.eskalon.commons.screen.transition.impl.SlidingOutTransition#<init>(SpriteBatch,SlidingDirection,float)	sge.screen.transition.impl.SlidingOutTransition#<init>(SpriteBatch,SlidingDirection,float)	Renamed	-	de/eskalon/commons/screen/transition/impl/SlidingOutTransition.java	60	f4804cc47b3a3d10	
 member	de.eskalon.commons.screen.transition.impl.VerticalSlicingTransition#<init>(SpriteBatch,int,float)	sge.screen.transition.impl.VerticalSlicingTransition#<init>(SpriteBatch,int,float)	Renamed	-	de/eskalon/commons/screen/transition/impl/VerticalSlicingTransition.java	71	6ca2419b6298c5c7	
