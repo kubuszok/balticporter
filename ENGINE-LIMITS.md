@@ -3687,6 +3687,121 @@ trigger, and `climb`'s view of a deferred field), plus the dead-binding report i
 `GlobalsToImplicitsTransform`. None of it is reachable from any manifest key; the mechanism stays
 DEFAULT-OFF, so all 13 ports are 0 members changed with every check count identical.*
 
+### CT7. A class a FRAMEWORK instantiates cannot host the clause, and nothing can put a `given` in generated code — **OPEN; 0 compile errors and a whole suite silently gone**
+
+CLOSED CT5 and CLOSED CT6 each took the enablement one step further and each was found BY COMPILING.
+CT7 is the first that a compile cannot see at all, and it is the reason CLAUDE.md §3 says what it
+says. The P5 delivery reached **0 scalac errors on libgdx-core, every number of CT6's census
+reproduced exactly** — and then the base's own suite lost five tests:
+
+```
+sge.graphics.g3d.utils.AnimationControllerTest.initializationError
+  java.lang.IllegalArgumentException: requirement failed:
+  Class 'sge.graphics.g3d.utils.AnimationControllerTest' is missing a public empty argument constructor
+```
+
+217 passing / 4 expected-failing → **212 / 5, with 5 baseline tests reported DID NOT RUN**. libgdx-test
+compiled at **0 errors** while this happened; `context-seam` on that module is 0, `policy` is 0, and
+the emitted file is valid Scala. Only §5.1's `tests.tsv` diff sees it, which is the whole argument
+for running the suite rather than counting errors.
+
+**The cause is every step of the design working.** The suite constructs `new Model()`; `Model` is one
+of the 188 threaded classes; the instantiate edge threads the suite; `attach = "class"` puts the
+clause on its constructor:
+
+```scala
+class AnimationControllerTest(using sge.Sge) extends munit.FunSuite {
+```
+
+The decision row says `via=instantiates-threaded`. What no part of the closure knows is that
+**nothing in the program ever instantiates this class** — MUnit does, reflectively, and a reflective
+instantiation cannot supply a `using`. The same is true of every JUnit suite, every `ServiceLoader`
+implementation and every framework-constructed type in reach of this engine.
+
+**No manifest key reaches it, and the three that look like they might were each walked to the wall:**
+
+| exit | what it actually does |
+|---|---|
+| `scope = Everywhere(except = <the suite>)` | leaves the suite un-threaded — and its `new Model()` still needs a given, so a lost suite becomes a COMPILE ERROR. Strictly worse |
+| `sites` (`lazy-init` / `residual-global` / `refuse`) | speaks about a READ. The suite has no read; it has an instantiate edge. CT6 Face B, one shape further out |
+| `attach = "method"` | MUnit's `test(…)` registrations are class-BODY statements, i.e. the constructor — so the clause lands in the same place. And it is the mode §11.12 measured at 3.3× with 32 frozen components |
+
+**The reference port ports this very suite, and its shape is the fix** (`../sge`,
+`sge/graphics/g3d/utils/AnimationControllerTest.scala`):
+
+```scala
+class AnimationControllerTest extends munit.FunSuite {
+  private given Sge = SgeTestFixture.testSge()      // noop application/graphics/audio/files/input/net
+  …
+  val modelInstance = new ModelInstance(new Model())
+```
+
+A NO-ARG constructor, and the context as a `private given` MEMBER supplied by a hand-written fixture.
+So the engine is missing two things, and they are separable:
+
+- **the ATTACHMENT decision has a third answer.** Today a declaration either takes the clause or is a
+  boundary; a framework-instantiated class is neither — it must take the context WITHOUT taking a
+  parameter. Whatever supplies that fact (a per-declaration policy, or `TestFrameworkTransform`
+  marking what it converts) it is not derivable from the closure, because the closure only sees the
+  program;
+- **a per-declaration CONTEXT SOURCE — the expression that becomes the `given` member.** This is the
+  half a port cannot buy for itself: the emitted suite is generated (§5.5), so no hand edit reaches
+  it, and the only place a hand-written `given` could be seen from is `sge.Sge`'s own companion —
+  which is precisely the **ambient default given DESIGN.md §8.4 deleted**, and which would silently
+  paper over every seam in the program rather than this one.
+
+**The hand-written half of a port is NOT affected, and the contrast is the diagnosis.** Three ports
+carry hand-written MUnit suites that construct threaded types (screens' `ScreenmanagerSuite`, vfx's
+`VfxFrameBufferSuite`), and every one of them can be fixed by the port with the fixture sge wrote —
+it is a `src/` file, so a human may add a `given` to it. The only unfixable case is the suite the
+ENGINE emitted. A port can supply the value; it cannot supply the line.
+
+*Fix kind: (a) engine for both halves — the attachment decision and a per-declaration context-source
+policy on `ContextHolder`. The fixture that fills the second is (c) per-library and belongs in the
+port's `inject`/`src`. The mechanism stays DEFAULT-OFF, so this costs no port anything today.*
+
+### CT8. A DEPENDENT cannot declare a `sites` policy for its OWN types — the holder is inherited and the phase is not `MergeablePolicy`
+
+Found in the same run, in `gdx-vfx`. The phase is `SurfacePolicy` and its holders live in the BASE
+manifest (§1.5, correctly — a base and a dependent that thread differently emit signatures that
+cannot meet). It is **not** `MergeablePolicy`, so a dependent that constructs its own
+`GlobalsToImplicitsTransform` is a fatal `SurfaceDivergence`, and the base manifest is therefore the
+only home for `sites`.
+
+But `sites` keys name DECLARATIONS, and a dependent's boundaries are in the DEPENDENT's own types,
+which the base neither governs nor parses. So the exit the seam's own diagnostic names —
+
+> give the site a `sites` policy (`lazy-init`), or move the use into a declaration the closure can reach
+
+— has no manifest a dependent may write it in. Measured, with the counts:
+
+```
+[vfx] CONTEXT SEAMS: 4
+  2 × com.crashinvaders.vfx.gl.VfxGLUtils#<clinit>          (a class initialiser reading the holder)
+  1 × com.crashinvaders.vfx.gl.VfxGLUtils#<clinit>          (unsuppliable use of DefaultVfxGlExtension)
+  1 × com.crashinvaders.vfx.framebuffer.VfxFrameBuffer#tmpCam (unsuppliable use of OrthographicCamera)
+```
+
+Two of the four materialise as scalac errors and the correlator classifies both as **`EngineGap`**,
+which is the right answer: the port has nowhere to put the fix. This is CT6 Face B one level up —
+there the exit did not exist, here it exists and is out of reach — and it is also the FIRST thing
+`MergeablePolicy` was designed for that this phase never declared (`DESIGN.md` §8.13, `ENGINE-LIMITS.md`
+D9). The merge itself is easy to state: holders union by `holder` FQN, and same-holder entries merge
+their `sites` maps while every other field must AGREE or the pair is a refusal. What has to be
+screened is §1.5's `SurfaceIntrusion` rule — a dependent's `sites` key must name a declaration inside
+its OWN units, never one of the base's, or a dependent silently re-shapes the shared surface.
+
+*Fix kind: (a) engine — `GlobalsToImplicitsTransform extends MergeablePolicy`, with `subjects` reported
+so the intrusion screen can run. Nothing in a port reaches it.*
+
+**A NON-FINDING, recorded because it was nearly written up as a third one.** `gdx-gltf` reads **7
+scalac errors with `signature` 1** under the enablement, all `EngineGap`, in `ModelInstanceHack`,
+`PBRCubemapAttribute`, `PBRTextureAttribute` and `MeshLoader#load`. Every one of them is **PRE-EXISTING
+and byte-identical in the reverted run** — gltf's committed state is 7 errors, and the enablement adds
+none. A dependent's error count is only evidence about a change once it has been diffed against that
+dependent's own baseline, and the two libgdx-dependent lanes whose counts DID move are vfx (0 → 43)
+and screens (0 → 16).
+
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 
 All three entries below come from the SAME delivery — Stage P6's attempt to enable an opaque family

@@ -2484,7 +2484,83 @@ Four things it settles, and one it does not:
 - **What is left is not the engine's.** `sge/utils/Pools.scala`'s eager registration block constructs
   types that now take a context, so it belongs behind a `def registerDefaults()(using sge.Sge)` the
   bootstrap calls. That is this port's hand-written Scala, and the correlator classifies it as
-  `Unmapped` rather than an engine gap. **P5 is ready**; the third replay is expected to deliver.
+  `Unmapped` rather than an engine gap.
+
+**THE THIRD REPLAY DELIVERED THE BASE AND WAS REVERTED ANYWAY — the shim fix works, libgdx-core reads
+0 errors, and RUNNING the suites found three things no compile can.** The base module is finished
+work: the config re-applied verbatim, the `Pools` block moved behind
+`def registerDefaults()(using sge.Sge)` (see below for why the whole block moves), and **every number
+of the census above reproduced to the row**.
+
+| | CT6's proof run | the delivery replay |
+|---|---:|---:|
+| libgdx-core scalac errors | 1 (the shim) | **0** |
+| threaded declarations | 275 = 188 + 87 | **275 = 188 + 87** |
+| distinct java files threaded | 177 | **177** |
+| `context-seam` | 19 | **19** — 14 captured, 3 residual-global, 2 deferred-init, 0 frozen, 0 lost-clause |
+| `policy` / `omissions` | 2 / 65 | **2 / 65** |
+| every other check | baseline | **identical** |
+| blast (`just members-unchanged`) | 1,807 | **1,807** |
+| emitted `(using sge.Sge)` clauses | 600 in 176 files | **600 in 176 files** |
+
+**`Pools.registerDefaults` — the shape, and why it is the whole block.** Registration CONSTRUCTS:
+`set(factory)` calls the factory once to learn the `Class` that keys the map, and `Net.HttpRequest` —
+one of the 38 types upstream's `static { }` pre-registers — is one of the 188 threaded classes. An
+object initialiser has no clause and no caller to take one from. Splitting the block (37 eager, one
+deferred) is a hand-maintained list derived from which classes the closure happens to reach today, so
+the whole block moves and the miss message names the method. The reference port never had this
+problem and its shape says why: sge carries no context-free global pool registry at all —
+`Actor.POOLS` and `Actions.ACTION_POOLS` register only context-free types, and its one
+context-needing pool lives on `SgeHttpClient`, an INSTANCE that already holds the context.
+
+**Then the suites ran, and this is what a green compile was hiding.** Two findings,
+`ENGINE-LIMITS.md` **CT7** and **CT8**. Every count below is against that lane's OWN committed
+baseline, which is what turned a would-be third finding into a non-finding:
+
+| lane | errors (baseline → enablement) | classification | suite |
+|---|---:|---|---|
+| libgdx-core | 0 → **0** | — | — |
+| **libgdx-test** | 0 → **0** | — | 217/4 → **212 / 5, and 5 baseline tests DID NOT RUN** — `AnimationControllerTest` lost whole (CT7) |
+| **ashley — the D2 gate** | 0 → 0 | — | 108 / 2 + 2 skips unchanged, **0 members changed on BOTH source sets, `context-seam` 0 on both** |
+| anim8 | 0 → 0 | — | **23 passing**, unchanged |
+| gltf | 7 → **7** | **unchanged — all seven pre-existing**, `signature` 1 both ways | not run in either state |
+| **vfx** | 0 → **43** | 2 `EngineGap` (CT8), 41 `Unmapped` (one hand-written suite) | 64 → not run, does not compile |
+| **screens** | 0 → **16** | all `Unmapped` — 4 hand-written shims + 1 hand-written suite | 16 → not run, does not compile |
+| sg / jbump / noise4j | unchanged | not affected: no libGDX dependency, so no manifest in reach of this policy | unchanged |
+
+**gltf's seven were nearly written up as a third engine gap.** They are `EngineGap`-classified, they
+are in gltf's own emitted code, and they look exactly like a base constructor gaining a clause and
+breaking a dependent's `super(…)`. They are byte-identical in the reverted run. A dependent's error
+COUNT is evidence about a change only after it has been diffed against that dependent's baseline —
+the same rule §5.1 states for members, one artifact over.
+
+- **CT7 is the one that decides it, and it is invisible to every count.** libgdx-test compiles at 0
+  errors, `context-seam` 0, `policy` 0, and the emitted Scala is valid — while
+  `class AnimationControllerTest(using sge.Sge) extends munit.FunSuite` cannot be instantiated by a
+  test runner. Only §5.1's `tests.tsv` diff sees it. **This is the first time the enablement's tests
+  were RUN rather than compiled** — the two earlier replays reverted before the suite — and it is
+  CLAUDE.md §3 paying for itself.
+- **CT8 is in a DEPENDENT, which is where the first two replays could not look.** vfx's four counted
+  seams name an exit — `give the site a sites policy` — that a dependent has no manifest to write it
+  in: the holder is inherited shared surface (§1.5) and `GlobalsToImplicitsTransform` is not
+  `MergeablePolicy`, so a second instance is a fatal `SurfaceDivergence` and the base cannot name a
+  dependent's types. Two of the four become scalac errors the correlator classifies `EngineGap`,
+  correctly, because the port has nowhere to put the fix.
+- **The port-side cost is now known and is not the blocker.** screens' 16 and 41 of vfx's 43 are
+  hand-written `src/` Scala reading `Gdx.gl*` or constructing threaded types — the same category as
+  `Pools.scala` and fixable the same way, plus a `SgeTestFixture`-shaped noop fixture for the two
+  hand-written suites. Roughly six files. **A GENERATED suite cannot be fixed that way, which is
+  exactly CT7.**
+
+**So the enablement is REVERTED a third time, byte-for-byte** — `just measure-all` exit 0, all 13
+ports 0 members changed, every check count identical, `context-seam` absent from every report.
+
+**Do NOT retry it until CT7 has an engine answer.** The three exits that look available for CT7 were
+each walked to the wall and are tabulated in `ENGINE-LIMITS.md`; `scope` turns a lost suite into a
+compile error, `sites` speaks about reads, and `attach = "method"` puts the clause in the same place
+for 3.3× the cost. And do not spend a cycle re-deriving the numbers above for the base: it is
+finished, the shim fix is the recorded shape, and the work left is CT7, then CT8, then the six or so
+hand-written `src/` files in screens and vfx.
 
 ### 11.13 D5j — the demand-derived JDK surface, as measured
 

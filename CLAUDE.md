@@ -62,6 +62,18 @@ neither optional:
   NO formal to compare against: the callee is then the JDK's own external symbol, which the frontend
   interned without a signature, so the four ordinary slot kinds do not see it.
 
+**And a class a FRAMEWORK instantiates has no caller to change.** Every such phase reasons from the
+program: it may add a parameter because it can see, and fix, each `new`. A test suite, a
+`ServiceLoader` implementation, a bean — these are constructed reflectively from OUTSIDE, so the
+closure sees no instantiation at all and concludes, correctly and uselessly, that nothing has to be
+fixed. Adding a parameter to one emits code that compiles perfectly and **cannot be constructed at
+run time**: no compile error, no check count, no finding, and the only evidence is the suite that
+stopped running. Measured on the first port to thread a constructor
+(`ENGINE-LIMITS.md` CT7 — 0 scalac errors, a whole suite silently gone). So a phase that changes a
+CONSTRUCTOR's signature owes a third answer beside "attach" and "refuse": *this declaration takes the
+value without taking a parameter*, and where that value comes from is a port's to say — a hand-written
+file may carry a `given`, and generated code cannot be edited to.
+
 ### (c) Genuinely library-specific — a SEPARATE, PLUGGED-IN RULE
 
 If a customisation needs knowledge so specific that it could only ever apply to **one** library, it
