@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=screens	engine=balticporter/0.1.0-SNAPSHOT	sources=a6a40dee2864c599	files=20	policy=597d4ba1dbded589
+# balticporter port map	schema=3	module=screens	engine=balticporter/0.1.0-SNAPSHOT	sources=a6a40dee2864c599	files=20	policy=7571408e899231d5
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	de.eskalon.commons.screen.BlankScreen	sge.screen.BlankScreen	Renamed	-		0		form=class parents=sge.screen.ManagedScreenAdapter primary=() primaryKind=unique-root primaryVis=public
 type	de.eskalon.commons.core.ManagedGame	sge.screen.ManagedGame	Renamed	-		0		form=class parents=sge.ApplicationAdapter primary=(ScreenManager) primaryKind=unique-root primaryVis=public secondaries=() tparams="[S <: sge.screen.ManagedScreen, T <: sge.screen.transition.ScreenTransition]"

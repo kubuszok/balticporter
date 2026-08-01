@@ -247,7 +247,7 @@ sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporte
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter#numComponents	val	d8dc1d1d014c7512
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter#numElements	val	f7d6ae5d1553e1c3
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter#outputType	val	3b0aa123b90bb59a
-sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter	class	7b6cf4dd8d8cc997
+sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter	class	f076b4b9fcafb110
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#<stmt1>	stmt	b6288eac58df8e3f
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#<stmt2>	stmt	3e6b58797b72a118
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#begin(int)	def	d7aae4df1ad4d32d
@@ -258,7 +258,7 @@ sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#conf
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#createBuffer()	def	2324b76f81e7ac71
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#currentBuffer	val	66eb6f5a858a6a06
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#end()	def	e60796012d6f9955
-sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#export(GLTFImage,Texture,String)	def	97fe50050749b092
+sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#export(GLTFImage,Texture,String)	def	4cde1e7dd0c8bba6
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#flushAllToFiles(String)	def	87330246366028cc
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#folder	val	5304f692d593d093
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#reset()	def	601382b545c63840

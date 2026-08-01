@@ -309,11 +309,222 @@ object LibgdxPolicy:
       memberRenames = Map("com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close")),
     )
 
+  /** libGDX's JavaBean accessor pairs that the reference hand port turned into Scala properties —
+    * `def x` / `def x_=(v)`, with every call site rewritten through them (DESIGN.md §8.5).
+    *
+    * ==Why an INCLUDE LIST and not a pattern (§1b, and the whole of what makes this policy)==
+    * Measured against the reference port, not assumed. libGDX core emits 3,234 `get*`/`set*`/`is*`
+    * methods; sge KEPT 1,375 of them (684 distinct names) and converted ~223 — a ~14 percent
+    * conversion rate, concentrated almost entirely in `maps.*`, `audio` and `scene2d.utils`, with
+    * `scene2d.ui`'s big widgets, `graphics.g3d`, `physics` and `utils` untouched. sge even converts
+    * the SAME pair differently in two types: `MapLayer#opacity` is a computed `def`, `MapObject#opacity`
+    * is a `var`. A blanket `getX` -> `x` rule would rewrite some three thousand members a careful human
+    * deliberately left alone, so the map below IS the policy and the engine holds only the mechanism.
+    *
+    * ==Where it comes from==
+    * Every entry is a conversion sge DOCUMENTED in a `Renames:` header — 132 of its 549 files carry
+    * one — joined to the upstream FQN through each header's `Original source:` line. Nothing here is
+    * derived or extrapolated: 144 properties over 38 upstream types, ~223 accessor methods. The
+    * per-implementor `getLeftWidth` rows of the `Drawable` family are collapsed into the one INTERFACE
+    * entry, because the phase renames the whole override COMPONENT and that is the design's point.
+    *
+    * ==Refusals are the expected outcome for some of it, and they are COUNTED==
+    * A pair is applied whole or not at all. Five entries refuse on this library and each is a
+    * `PolicyIssue.Unverifiable` finding with its cause, a `ScopedOut` decision and a porter note:
+    * three name an accessor that TAKES ARGUMENTS (`VertexAttributes#getOffset(int)`,
+    * `Polygon#getVertex(int,Vector2)`, `Polygon#getCentroid(Vector2)`), where the phase refuses rather
+    * than inventing a nilary twin, and two (`ScrollPane#scrollX`/`scrollY`) hit a name the emitter's
+    * §4.55 passes will not relocate. The first three are a POLICY defect this manifest owns — drop them
+    * or name the accessor sge actually converted — and completing the get-only `ScrollPane` entries
+    * whose upstream has setters is the same kind of edit. Neither is something the harvest may decide.
+    *
+    * A twelve-refusal sixth cause is GONE and worth naming so nobody re-adds a workaround for it:
+    * `Selection`/`VertexAttributes`/`TiledMapTileSet`/`OrientedBoundingBox` implement `java.lang.Iterable`,
+    * `Comparable` or `Serializable`, and their override components used to anchor on an unparsed
+    * external. `ExternalSurface.jdkPlatform` closes those member sets exactly (`ENGINE-LIMITS.md` K12),
+    * so all twelve now apply.
+    *
+    * ==Shared surface (§1.5)==
+    * This changes emitted SIGNATURES, so it is `SurfacePolicy` and lives in [[core]] alone: a base whose
+    * `getOpacity()` became `def opacity` and a dependent whose did not emit signatures that cannot meet.
+    * No dependent CONSTRUCTS a `bean-properties` phase, so there is exactly one instance in every
+    * effective pipeline and nothing has to merge (§1.5's instance-count question, asked before writing
+    * this). It runs FIRST in the pipeline so the descriptors it matches are java's own — `runsBefore`
+    * states that for the two engine phases whose names are static, and the list position states the rest.
+    */
+  def beanProperties: balticporter.transform.BeanPropertyTransform =
+    new balticporter.transform.BeanPropertyTransform(beanPropertyPairs)
+
+  /** the harvested pairs. KEY is the emitted property in the UPSTREAM namespace (§4.56 — the package
+    * rename runs last); VALUE names the accessors explicitly, because a hand port's names are not
+    * always bean-derivable (`getDragActor` -> `currentDragActor`) and a never-fired report needs them
+    * as DATA. */
+  def beanPropertyPairs: Map[String, String] = Map(
+    // -- com.badlogic.gdx.audio --
+    "com.badlogic.gdx.audio.AudioDevice#latency" -> "getLatency",
+    "com.badlogic.gdx.audio.Music#playing" -> "isPlaying",
+    "com.badlogic.gdx.audio.Music#looping" -> "isLooping/setLooping",
+    "com.badlogic.gdx.audio.Music#volume" -> "getVolume/setVolume",
+    "com.badlogic.gdx.audio.Music#position" -> "getPosition/setPosition",
+    // -- com.badlogic.gdx.graphics --
+    "com.badlogic.gdx.graphics.Cubemap#cubemapData" -> "getCubemapData",
+    "com.badlogic.gdx.graphics.Cubemap#managed" -> "isManaged",
+    "com.badlogic.gdx.graphics.Texture#textureData" -> "getTextureData",
+    "com.badlogic.gdx.graphics.Texture#managed" -> "isManaged",
+    "com.badlogic.gdx.graphics.TextureArray#managed" -> "isManaged",
+    "com.badlogic.gdx.graphics.VertexAttribute#key" -> "getKey",
+    "com.badlogic.gdx.graphics.VertexAttributes#offset" -> "getOffset",
+    "com.badlogic.gdx.graphics.VertexAttributes#mask" -> "getMask",
+    "com.badlogic.gdx.graphics.VertexAttributes#maskWithSizePacked" -> "getMaskWithSizePacked",
+    // -- com.badlogic.gdx.graphics.g2d --
+    "com.badlogic.gdx.graphics.g2d.SpriteCache#customShader" -> "getCustomShader",
+    // -- com.badlogic.gdx.graphics.profiling --
+    "com.badlogic.gdx.graphics.profiling.GLProfiler#listener" -> "getListener/setListener",
+    "com.badlogic.gdx.graphics.profiling.GLProfiler#enabled" -> "isEnabled",
+    // -- com.badlogic.gdx.maps --
+    "com.badlogic.gdx.maps.Map#layers" -> "getLayers",
+    "com.badlogic.gdx.maps.Map#properties" -> "getProperties",
+    "com.badlogic.gdx.maps.MapLayer#name" -> "getName/setName",
+    "com.badlogic.gdx.maps.MapLayer#visible" -> "isVisible/setVisible",
+    "com.badlogic.gdx.maps.MapLayer#objects" -> "getObjects",
+    "com.badlogic.gdx.maps.MapLayer#properties" -> "getProperties",
+    "com.badlogic.gdx.maps.MapLayer#parallaxX" -> "getParallaxX/setParallaxX",
+    "com.badlogic.gdx.maps.MapLayer#parallaxY" -> "getParallaxY/setParallaxY",
+    "com.badlogic.gdx.maps.MapLayer#opacity" -> "getOpacity/setOpacity",
+    "com.badlogic.gdx.maps.MapLayer#combinedTintColor" -> "getCombinedTintColor",
+    "com.badlogic.gdx.maps.MapLayer#tintColor" -> "getTintColor/setTintColor",
+    "com.badlogic.gdx.maps.MapLayer#offsetX" -> "getOffsetX/setOffsetX",
+    "com.badlogic.gdx.maps.MapLayer#offsetY" -> "getOffsetY/setOffsetY",
+    "com.badlogic.gdx.maps.MapLayer#renderOffsetX" -> "getRenderOffsetX",
+    "com.badlogic.gdx.maps.MapLayer#renderOffsetY" -> "getRenderOffsetY",
+    "com.badlogic.gdx.maps.MapLayer#parent" -> "getParent/setParent",
+    "com.badlogic.gdx.maps.MapObject#name" -> "getName/setName",
+    "com.badlogic.gdx.maps.MapObject#color" -> "getColor/setColor",
+    "com.badlogic.gdx.maps.MapObject#opacity" -> "getOpacity/setOpacity",
+    "com.badlogic.gdx.maps.MapObject#visible" -> "isVisible/setVisible",
+    "com.badlogic.gdx.maps.MapObject#properties" -> "getProperties",
+    // -- com.badlogic.gdx.maps.objects --
+    "com.badlogic.gdx.maps.objects.CircleMapObject#circle" -> "getCircle",
+    "com.badlogic.gdx.maps.objects.EllipseMapObject#ellipse" -> "getEllipse",
+    "com.badlogic.gdx.maps.objects.PointMapObject#point" -> "getPoint",
+    "com.badlogic.gdx.maps.objects.PolygonMapObject#polygon" -> "getPolygon/setPolygon",
+    "com.badlogic.gdx.maps.objects.PolylineMapObject#polyline" -> "getPolyline/setPolyline",
+    "com.badlogic.gdx.maps.objects.RectangleMapObject#rectangle" -> "getRectangle",
+    "com.badlogic.gdx.maps.objects.TextMapObject#rectangle" -> "getRectangle",
+    "com.badlogic.gdx.maps.objects.TextMapObject#rotation" -> "getRotation/setRotation",
+    "com.badlogic.gdx.maps.objects.TextMapObject#text" -> "getText/setText",
+    "com.badlogic.gdx.maps.objects.TextMapObject#pixelSize" -> "getPixelSize/setPixelSize",
+    "com.badlogic.gdx.maps.objects.TextMapObject#fontFamily" -> "getFontFamily/setFontFamily",
+    "com.badlogic.gdx.maps.objects.TextMapObject#bold" -> "isBold/setBold",
+    "com.badlogic.gdx.maps.objects.TextMapObject#italic" -> "isItalic/setItalic",
+    "com.badlogic.gdx.maps.objects.TextMapObject#underline" -> "isUnderline/setUnderline",
+    "com.badlogic.gdx.maps.objects.TextMapObject#strikeout" -> "isStrikeout/setStrikeout",
+    "com.badlogic.gdx.maps.objects.TextMapObject#kerning" -> "isKerning/setKerning",
+    "com.badlogic.gdx.maps.objects.TextMapObject#wrap" -> "isWrap/setWrap",
+    "com.badlogic.gdx.maps.objects.TextMapObject#horizontalAlign" -> "getHorizontalAlign/setHorizontalAlign",
+    "com.badlogic.gdx.maps.objects.TextMapObject#verticalAlign" -> "getVerticalAlign/setVerticalAlign",
+    "com.badlogic.gdx.maps.objects.TextureMapObject#x" -> "getX/setX",
+    "com.badlogic.gdx.maps.objects.TextureMapObject#y" -> "getY/setY",
+    "com.badlogic.gdx.maps.objects.TextureMapObject#originX" -> "getOriginX/setOriginX",
+    "com.badlogic.gdx.maps.objects.TextureMapObject#originY" -> "getOriginY/setOriginY",
+    "com.badlogic.gdx.maps.objects.TextureMapObject#scaleX" -> "getScaleX/setScaleX",
+    "com.badlogic.gdx.maps.objects.TextureMapObject#scaleY" -> "getScaleY/setScaleY",
+    "com.badlogic.gdx.maps.objects.TextureMapObject#rotation" -> "getRotation/setRotation",
+    "com.badlogic.gdx.maps.objects.TextureMapObject#textureRegion" -> "getTextureRegion/setTextureRegion",
+    // -- com.badlogic.gdx.maps.tiled --
+    "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#region" -> "getTextureRegion/setTextureRegion",
+    "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#x" -> "getX/setX",
+    "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#y" -> "getY/setY",
+    "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#repeatX" -> "isRepeatX/setRepeatX",
+    "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#repeatY" -> "isRepeatY/setRepeatY",
+    "com.badlogic.gdx.maps.tiled.TiledMapTileSet#name" -> "getName/setName",
+    "com.badlogic.gdx.maps.tiled.TiledMapTileSet#properties" -> "getProperties",
+    // -- com.badlogic.gdx.maps.tiled.objects --
+    "com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject#flipHorizontally" -> "isFlipHorizontally/setFlipHorizontally",
+    "com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject#flipVertically" -> "isFlipVertically/setFlipVertically",
+    "com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject#tile" -> "getTile/setTile",
+    // -- com.badlogic.gdx.maps.tiled.renderers --
+    "com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer#staggerAxisX" -> "isStaggerAxisX/setStaggerAxisX",
+    "com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer#staggerIndexEven" -> "isStaggerIndexEven/setStaggerIndexEven",
+    "com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer#hexSideLength" -> "getHexSideLength/setHexSideLength",
+    // -- com.badlogic.gdx.maps.tiled.tiles --
+    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#id" -> "getId/setId",
+    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#blendMode" -> "getBlendMode/setBlendMode",
+    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#textureRegion" -> "getTextureRegion/setTextureRegion",
+    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#offsetX" -> "getOffsetX/setOffsetX",
+    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#properties" -> "getProperties",
+    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#objects" -> "getObjects",
+    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#currentFrameIndex" -> "getCurrentFrameIndex",
+    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#currentFrame" -> "getCurrentFrame",
+    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#animationIntervals" -> "getAnimationIntervals/setAnimationIntervals",
+    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#frameTiles" -> "getFrameTiles",
+    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#id" -> "getId/setId",
+    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#blendMode" -> "getBlendMode/setBlendMode",
+    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#textureRegion" -> "getTextureRegion/setTextureRegion",
+    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetX" -> "getOffsetX/setOffsetX",
+    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetY" -> "getOffsetY/setOffsetY",
+    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#properties" -> "getProperties",
+    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#objects" -> "getObjects",
+    // -- com.badlogic.gdx.math --
+    "com.badlogic.gdx.math.Polygon#vertices" -> "getVertices",
+    "com.badlogic.gdx.math.Polygon#transformedVertices" -> "getTransformedVertices",
+    "com.badlogic.gdx.math.Polygon#vertexCount" -> "getVertexCount",
+    "com.badlogic.gdx.math.Polygon#vertex" -> "getVertex",
+    "com.badlogic.gdx.math.Polygon#centroid" -> "getCentroid",
+    "com.badlogic.gdx.math.Polygon#boundingRectangle" -> "getBoundingRectangle",
+    "com.badlogic.gdx.math.Polygon#rotation" -> "getRotation",
+    // -- com.badlogic.gdx.math.collision --
+    "com.badlogic.gdx.math.collision.OrientedBoundingBox#vertices" -> "getVertices",
+    "com.badlogic.gdx.math.collision.OrientedBoundingBox#bounds" -> "getBounds",
+    // -- com.badlogic.gdx.scenes.scene2d.ui --
+    "com.badlogic.gdx.scenes.scene2d.ui.List#cullingArea" -> "getCullingArea",
+    "com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#scrollX" -> "getScrollX",
+    "com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#scrollY" -> "getScrollY",
+    "com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#overscrollDistance" -> "getOverscrollDistance",
+    "com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#fadeScrollBars" -> "getFadeScrollBars",
+    "com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#variableSizeKnobs" -> "getVariableSizeKnobs",
+    "com.badlogic.gdx.scenes.scene2d.ui.SelectBox#clickListener" -> "getClickListener",
+    // -- com.badlogic.gdx.scenes.scene2d.utils --
+    "com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable#name" -> "getName",
+    "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#tapSquareSize" -> "getTapSquareSize/setTapSquareSize",
+    "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#tapCount" -> "getTapCount/setTapCount",
+    "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#button" -> "getButton/setButton",
+    "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#pressedButton" -> "getPressedButton",
+    "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#pressedPointer" -> "getPressedPointer",
+    "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#pressed" -> "isPressed",
+    "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#over" -> "isOver",
+    "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#touchDownX" -> "getTouchDownX",
+    "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#touchDownY" -> "getTouchDownY",
+    "com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#currentDragActor" -> "getDragActor",
+    "com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#currentPayload" -> "getDragPayload",
+    "com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#currentSource" -> "getDragSource",
+    "com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#dragTime" -> "getDragTime/setDragTime",
+    "com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#dragging" -> "isDragging",
+    "com.badlogic.gdx.scenes.scene2d.utils.DragListener#tapSquareSize" -> "getTapSquareSize/setTapSquareSize",
+    "com.badlogic.gdx.scenes.scene2d.utils.DragListener#button" -> "getButton/setButton",
+    "com.badlogic.gdx.scenes.scene2d.utils.DragListener#dragDistance" -> "getDragDistance",
+    "com.badlogic.gdx.scenes.scene2d.utils.DragListener#dragging" -> "isDragging",
+    "com.badlogic.gdx.scenes.scene2d.utils.Drawable#leftWidth" -> "getLeftWidth/setLeftWidth",
+    "com.badlogic.gdx.scenes.scene2d.utils.Drawable#rightWidth" -> "getRightWidth/setRightWidth",
+    "com.badlogic.gdx.scenes.scene2d.utils.Drawable#topHeight" -> "getTopHeight/setTopHeight",
+    "com.badlogic.gdx.scenes.scene2d.utils.Drawable#bottomHeight" -> "getBottomHeight/setBottomHeight",
+    "com.badlogic.gdx.scenes.scene2d.utils.Drawable#minWidth" -> "getMinWidth/setMinWidth",
+    "com.badlogic.gdx.scenes.scene2d.utils.Drawable#minHeight" -> "getMinHeight/setMinHeight",
+    "com.badlogic.gdx.scenes.scene2d.utils.Selection#lastSelected" -> "getLastSelected",
+    "com.badlogic.gdx.scenes.scene2d.utils.Selection#toggle" -> "getToggle/setToggle",
+    "com.badlogic.gdx.scenes.scene2d.utils.Selection#multiple" -> "getMultiple/setMultiple",
+    "com.badlogic.gdx.scenes.scene2d.utils.Selection#required" -> "getRequired/setRequired",
+    "com.badlogic.gdx.scenes.scene2d.utils.Selection#disabled" -> "isDisabled/setDisabled",
+    "com.badlogic.gdx.scenes.scene2d.utils.Selection#programmaticChangeEvents" -> "getProgrammaticChangeEvents/setProgrammaticChangeEvents",
+    "com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable#scale" -> "getScale",
+    "com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable#align" -> "getAlign",
+  )
+
   /** the `gdx/src` pipeline. Universal phases first, then the three §1(b) phases configured above,
     * then the one §1(c) rule libGDX plugs in from OUTSIDE the engine
     * ([[GdxSharedIteratorRule]]). */
   def mainPhases: List[balticporter.tir.Phase] =
-    List(new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
+    List(beanProperties, new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
          disposableRedirect, nullability)
 

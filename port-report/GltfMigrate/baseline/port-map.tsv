@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=c4a233f498930bfc
+# balticporter port map	schema=3	module=gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=19cc7f43e56381c0
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	net.mgsx.gltf.data.GLTF	sge.gltf.data.GLTF	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.data.GLTFAsset	sge.gltf.data.GLTFAsset	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
@@ -375,7 +375,7 @@ member	net.mgsx.gltf.exporters.GLTFBinaryExporter#config	sge.gltf.exporters.GLTF
 member	net.mgsx.gltf.exporters.GLTFBinaryExporter#createBuffer()	sge.gltf.exporters.GLTFBinaryExporter#createBuffer()	Renamed	-	net/mgsx/gltf/exporters/GLTFBinaryExporter.java	47	2324b76f81e7ac71	vis=private
 member	net.mgsx.gltf.exporters.GLTFBinaryExporter#currentBuffer	sge.gltf.exporters.GLTFBinaryExporter#currentBuffer	Renamed	-	net/mgsx/gltf/exporters/GLTFBinaryExporter.java	32	66eb6f5a858a6a06	vis=private
 member	net.mgsx.gltf.exporters.GLTFBinaryExporter#end()	sge.gltf.exporters.GLTFBinaryExporter#end()	Renamed	-	net/mgsx/gltf/exporters/GLTFBinaryExporter.java	83	e60796012d6f9955	
-member	net.mgsx.gltf.exporters.GLTFBinaryExporter#export(GLTFImage,Texture,String)	sge.gltf.exporters.GLTFBinaryExporter#export(GLTFImage,Texture,String)	Renamed	-	net/mgsx/gltf/exporters/GLTFBinaryExporter.java	123	97fe50050749b092	
+member	net.mgsx.gltf.exporters.GLTFBinaryExporter#export(GLTFImage,Texture,String)	sge.gltf.exporters.GLTFBinaryExporter#export(GLTFImage,Texture,String)	Renamed	-	net/mgsx/gltf/exporters/GLTFBinaryExporter.java	123	4cde1e7dd0c8bba6	
 member	net.mgsx.gltf.exporters.GLTFBinaryExporter#flushAllToFiles(String)	sge.gltf.exporters.GLTFBinaryExporter#flushAllToFiles(String)	Renamed	-	net/mgsx/gltf/exporters/GLTFBinaryExporter.java	106	87330246366028cc	
 member	net.mgsx.gltf.exporters.GLTFBinaryExporter#folder	sge.gltf.exporters.GLTFBinaryExporter#folder	Renamed	-	net/mgsx/gltf/exporters/GLTFBinaryExporter.java	33	5304f692d593d093	vis=private
 member	net.mgsx.gltf.exporters.GLTFBinaryExporter#reset()	sge.gltf.exporters.GLTFBinaryExporter#reset()	Renamed	-	net/mgsx/gltf/exporters/GLTFBinaryExporter.java	41	601382b545c63840	

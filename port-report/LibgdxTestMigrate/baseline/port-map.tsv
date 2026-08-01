@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=libgdx-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=82d01c5072166ff9
+# balticporter port map	schema=3	module=libgdx-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=5b3fc20d07150c06
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -88,9 +88,9 @@ member	com.badlogic.gdx.math.IntersectorTest#<stmt2>	sge.math.IntersectorTest#<s
 member	com.badlogic.gdx.math.IntersectorTest#<stmt3>	sge.math.IntersectorTest#<stmt3>	Renamed	-	com/badlogic/gdx/math/IntersectorTest.java	142	f002fa3aa1e2039d	
 member	com.badlogic.gdx.math.IntersectorTest#<stmt4>	sge.math.IntersectorTest#<stmt4>	Renamed	-	com/badlogic/gdx/math/IntersectorTest.java	185	51d159b387b81fb4	
 member	com.badlogic.gdx.math.IntersectorTest#<stmt5>	sge.math.IntersectorTest#<stmt5>	Renamed	-	com/badlogic/gdx/math/IntersectorTest.java	192	aeb6a35709ccc1bc	
-member	com.badlogic.gdx.math.IntersectorTest#<stmt6>	sge.math.IntersectorTest#<stmt6>	Renamed	-	com/badlogic/gdx/math/IntersectorTest.java	225	9fe868ae30970d28	
-member	com.badlogic.gdx.math.IntersectorTest#<stmt7>	sge.math.IntersectorTest#<stmt7>	Renamed	-	com/badlogic/gdx/math/IntersectorTest.java	235	57e3b7c3fe48f102	
-member	com.badlogic.gdx.math.IntersectorTest#<stmt8>	sge.math.IntersectorTest#<stmt8>	Renamed	-	com/badlogic/gdx/math/IntersectorTest.java	251	8fb3d95b39973733	
+member	com.badlogic.gdx.math.IntersectorTest#<stmt6>	sge.math.IntersectorTest#<stmt6>	Renamed	-	com/badlogic/gdx/math/IntersectorTest.java	225	512348f4db32928e	
+member	com.badlogic.gdx.math.IntersectorTest#<stmt7>	sge.math.IntersectorTest#<stmt7>	Renamed	-	com/badlogic/gdx/math/IntersectorTest.java	235	5d5911a55c857683	
+member	com.badlogic.gdx.math.IntersectorTest#<stmt8>	sge.math.IntersectorTest#<stmt8>	Renamed	-	com/badlogic/gdx/math/IntersectorTest.java	251	bfe528e8e2b5781f	
 member	com.badlogic.gdx.math.IntersectorTest#triangleEquals(Array,int,int,Array)	sge.math.IntersectorTest#triangleEquals(Array<float>,int,int,Array<float>)	Renamed	-	com/badlogic/gdx/math/IntersectorTest.java	13	6ac811217270813e	placement=companion vis=private
 member	com.badlogic.gdx.math.MathUtilsTest#<stmt10>	sge.math.MathUtilsTest#<stmt10>	Renamed	-	com/badlogic/gdx/math/MathUtilsTest.java	101	52f445d259c5525d	
 member	com.badlogic.gdx.math.MathUtilsTest#<stmt11>	sge.math.MathUtilsTest#<stmt11>	Renamed	-	com/badlogic/gdx/math/MathUtilsTest.java	110	0daa1c29dbc151e8	
@@ -104,8 +104,8 @@ member	com.badlogic.gdx.math.MathUtilsTest#<stmt7>	sge.math.MathUtilsTest#<stmt7
 member	com.badlogic.gdx.math.MathUtilsTest#<stmt8>	sge.math.MathUtilsTest#<stmt8>	Renamed	-	com/badlogic/gdx/math/MathUtilsTest.java	85	643699f7f201634f	
 member	com.badlogic.gdx.math.MathUtilsTest#<stmt9>	sge.math.MathUtilsTest#<stmt9>	Renamed	-	com/badlogic/gdx/math/MathUtilsTest.java	93	90f53173991a2395	
 member	com.badlogic.gdx.math.OctreeTest#<stmt1>	sge.math.OctreeTest#<stmt1>	Renamed	-	com/badlogic/gdx/math/OctreeTest.java	16	61d9948364444f2a	
-member	com.badlogic.gdx.math.PolygonTest#<stmt1>	sge.math.PolygonTest#<stmt1>	Renamed	-	com/badlogic/gdx/math/PolygonTest.java	26	f3685e77b4833eed	
-member	com.badlogic.gdx.math.PolygonTest#<stmt2>	sge.math.PolygonTest#<stmt2>	Renamed	-	com/badlogic/gdx/math/PolygonTest.java	34	4a825cff86040be9	
+member	com.badlogic.gdx.math.PolygonTest#<stmt1>	sge.math.PolygonTest#<stmt1>	Renamed	-	com/badlogic/gdx/math/PolygonTest.java	26	ef21367fcd99fe94	
+member	com.badlogic.gdx.math.PolygonTest#<stmt2>	sge.math.PolygonTest#<stmt2>	Renamed	-	com/badlogic/gdx/math/PolygonTest.java	34	3c25044955844ed9	
 member	com.badlogic.gdx.math.PolygonTest#<stmt3>	sge.math.PolygonTest#<stmt3>	Renamed	-	com/badlogic/gdx/math/PolygonTest.java	42	15b556a02812dec7	
 member	com.badlogic.gdx.math.PolygonTest#<stmt4>	sge.math.PolygonTest#<stmt4>	Renamed	-	com/badlogic/gdx/math/PolygonTest.java	50	c35e64193e780a95	
 member	com.badlogic.gdx.math.RectangleTest#<stmt1>	sge.math.RectangleTest#<stmt1>	Renamed	-	com/badlogic/gdx/math/RectangleTest.java	10	b673fbbe7c127814	

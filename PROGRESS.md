@@ -2884,6 +2884,143 @@ other eleven, every suite unchanged. Baselines promoted for those two, accounted
 measurement (§7.4): their notes land in emitted type BODIES and in injected files, so the blast is
 a different set.
 
+### 11.18 P4 — the bean-property subset: DELIVERED, and the first large CONFIGURED rename
+
+`BeanPropertyTransform(pairs = 144 entries)` first in `LibgdxPolicy.core`'s `mainPhases`, inherited
+by all five dependents (§1.5). **Every lane green, 0 compile errors on libGDX core, every suite
+unchanged, and exactly one check moved anywhere: `policy` 0 -> 5 on libgdx-core, which is the five
+counted refusals.**
+
+**Why it needs no merge, on P2/P3's argument.** `bean-properties` is a phase NO dependent constructs
+— the corpus grep is the whole proof — so there is one instance in every effective pipeline and
+`extendedBy` has nothing to fold. The instance-count question (§1.5) is asked BEFORE the policy is
+written, and here it answers "no fold", which is why this landed as one policy commit where P3's
+screens half could not.
+
+**The harvest binds completely: 144 entries, 0 typos, 0 invented members.**
+
+| | dry run (§11.11) | LIVE |
+|---|---:|---:|
+| entries declared (R5 §4's block) | 144 | **144** |
+| accessor keys that did not bind (`NeverMatched`/`Malformed`) | 0 | **0** |
+| properties APPLIED | 127 | **139** |
+| properties REFUSED, each counted | 17 | **5** |
+| declarations moved (`RenamedMember`, `Configured`) | 267 | **295** |
+
+**The 12-refusal delta is K12, and the live run is its confirmation.** `ENGINE-LIMITS.md` K12's
+`ExternalSurface.jdkPlatform` closes the member sets of the platform types the JDK itself closes, so
+`Selection` / `VertexAttributes` / `TiledMapTileSet` / `OrientedBoundingBox` no longer anchor their
+override components on `java.lang.Iterable`, `Comparable` or `Serializable`. 127 + 12 = 139 and
+17 - 12 = 5, exactly. The 28 extra declarations are those twelve properties' own components.
+
+**The 5 survivors, all correct, none silent** — a `PolicyIssue.Unverifiable` finding with its cause
+AND a `ScopedOut` decision, each:
+
+| cause | n | entries |
+|---|---:|---|
+| no NILARY getter | 3 | `VertexAttributes#offset` (`getOffset(int)`), `Polygon#vertex` (`getVertex(int,Vector2)`), `Polygon#centroid` (`getCentroid(Vector2)`) — **the phase refused rather than inventing a nilary twin**, which is "NEVER INVENT A MEMBER" firing on real policy |
+| collision the emitter will not move | 2 | `ScrollPane#scrollX`/`scrollY` — the target name is taken by a member the §4.55 passes do not relocate |
+
+All five are POLICY defects this manifest owns, not engine ones (CHUNK3 Q30): drop them, or name the
+accessor sge actually converted. They are left in DELIBERATELY — a refusal that is counted,
+explained and reproducible is the report the `PolicyIssue` channel exists to produce, and deleting
+the entries would delete the evidence that it works.
+
+**Every applied property landed on its EXACT requested name: zero suffixed rename targets.** The
+collisions that would have needed one were absorbed by the emitter moving the FIELD
+(`MemberRenamer.OnCollision.DeferToEmitter`) — the `$field` residue below — and the two it could not
+absorb are the two refusals above. That is the delegation contract measured end to end.
+
+**The `$field` residue — the number `TrivialAccessorCollapse` is gated behind (DESIGN.md §8.5).**
+Renaming a getter to `x` lands it on the private field's name, so the emitter's universal
+field-vs-method pass moves the field:
+
+| libgdx-core | before | after |
+|---|---:|---:|
+| emitter field-vs-method renames (`RenamedMember`, `Universal`, one per DECLARATION) | 168 | **281** |
+| `var …$field` declarations in emitted text | 163 | **274** |
+
+**+113 declarations**, against the dry run's +102 prediction. That is the gate's input and it is this
+commit's OUTPUT, not its change: 113 fields against 139 applied properties says most of the harvest
+is not trivial — a computed getter or a side-effecting setter keeps its field either way — and
+`BaseDrawable` is the worked example, seven `var x$field` under seven `override def x` /
+`override def x_=`. The collapse is worth doing and it is worth doing SECOND, on its own measurement
+(§5's *change one thing*).
+
+**`just decision-counts`, `LibgdxCoreMigrate`: 3,030 -> 3,436 rows**, and the +406 is fully
+accounted:
+
+| | |
+|---|---:|
+| `RenamedMember` **`Configured`** — the property renames | **+295** |
+| `RenamedMember` `Universal` — the field-vs-method fallout above | +113 |
+| `ScopedOut` — the five refusals | +5 |
+| `WidenedVisibility` | **-7** — see the provenance gaps below |
+
+**295 `Configured` rename rows is the largest configured population of any kind in the project**
+(P3's was 540 `RetypedSignature`; the largest rename population is libGDX's 882 `Universal` rows).
+They cover **255 DISTINCT declarations** — 2.1 per applied property — and the 40-row gap is a POLICY
+redundancy worth naming: nine harvested entries name the same property on two or three types of ONE
+override component (`Texture`/`Cubemap`/`TextureArray`#`managed` all resolve into
+`GLTexture#isManaged`; `AnimatedTiledMapTile`/`StaticTiledMapTile`'s six pairs both resolve into
+`TiledMapTile`). The rename is idempotent and applies once — only the decision log double-counts —
+but collapsing them into the interface entry, exactly as R5's harvest already did for `Drawable`, is
+a Q30 completion edit.
+
+**And the `Drawable` fan-out expectation is REFUTED by the code, which is worth recording because
+the brief predicted otherwise.** CHUNK3 priced `Drawable` at "4+ implementors"; upstream declares
+`getLeftWidth` in exactly TWO types — the `Drawable` interface and `BaseDrawable` — and every other
+implementor (`TiledDrawable`, `TextureRegionDrawable`, `NinePatchDrawable`, `SpriteDrawable`,
+`TransformDrawable`) inherits it. So each `Drawable` property moves 4 declarations (2 accessors × 2
+declaring types) and **the fan-out that is real is the CALL-SITE one**, in the `scene2d.ui` widgets
+that only ever call it. sge's per-implementor `getLeftWidth` rows record what its hand port WROTE
+per file, not what upstream declares — a reference port's rename header is evidence about the port,
+never about the java (§3.5).
+
+**Per-port promotion, accounted.** Nine baselines promoted, four untouched:
+
+| port | `just members-unchanged` | what moved |
+|---|---:|---|
+| libgdx-core | **1,538** = 255 re-keyed away + 255 re-keyed to + 514 digest-moved (two diff lines each) | the 255 accessor declarations RE-KEY (`#getVolume()` → `#volume()`, `#setVolume(float)` → `#volume_=(float)`); of the 514 moved in place, **255 `def`** (call sites in method bodies), **122 `val`** (the renamed fields — a field's member KEY is its upstream name, so a `$field` rename is a digest move and not a re-key), **93 `class`**, **27 `stmt`**, **17 `ctor`** |
+| libgdx-test | **14** | `PolygonTest` and `IntersectorTest` only — `polygon.vertices`, `polygon.transformedVertices`. §1.5 inheritance in the direction that matters: the test port declares no bean policy and its call sites move anyway |
+| gltf | **4** | one member: `GLTFBinaryExporter#export`, now `texture.textureData.getFormat()` |
+| anim8, ashley, ashley-test, gltf-test, screens, vfx | **0** | `port-map.tsv` header only — the `policy=` digest, because the phase joins `surfaceFingerprint` (P2/P3's "§1.5 working in the direction nobody watches") |
+| jbump, noise4j, sg, sg-test | **0**, port-map **0** | not libGDX dependents; nothing to inherit |
+
+**Suites, all unchanged**: gdx-test **221: 217 passing / 4 failing, all 4 `expected#derived`** from
+`Substitutions.dropTypes com.badlogic.gdx.utils.Json`, **0 unexpected and 0 declared** — the derived
+classification still doing the work §4.56 gave it; ashley 108/2 + 2 skipped (the same two); anim8 23,
+vfx 64, sg 16, screens 16, jbump no suite; gltf 7 and noise4j 2 pre-existing compile errors, the same
+`MeshLoader` / `PBRCubemapAttribute` / `PBRTextureAttribute` / `ModelInstanceHack`×4 set. **No test
+anchored in a renamed member changed state.**
+
+**Porter notes**: 295 `renamed-member` notes across 45 files, `NoteCoverageCheck` **0/0** on every
+port throughout.
+
+**Three provenance gaps this delivery MEASURED and deliberately did not fix** — all engine-side
+(§1a/b), and widening a mechanism inside a policy commit is what P1 established must not happen:
+
+- **A refusal has no porter note, and it is the one decision whose reader cannot find it.** A
+  `BeanPropertyTransform` refusal records `subject = SymId.None` — there is no declaration to sit
+  above, because the point is that nothing moved — so the five `ScopedOut` rows reach `decisions.tsv`
+  and the `policy` findings and NOTHING reaches the emitted line. An agent reading
+  `def getScrollX(): Float` in `ScrollPane.scala` has no local evidence that a policy entry asked for
+  it and was refused, which is exactly the §4.575 question. `PorterNote.InBody` on the owning type is
+  the shape that fits.
+- **`WidenedVisibility` 142 → 135: seven decisions stopped being recorded while the emitted text
+  still widens.** The seven are precisely `BaseDrawable`'s seven private fields (`leftWidth`,
+  `rightWidth`, `topHeight`, `bottomHeight`, `minWidth`, `minHeight`, `name`), each of which carried
+  a `cause=ctor-replay-widening; from=private; to=public` row before and is still emitted
+  `public var …$field` after. The rename moved the member out from under the widening decider; the
+  widening still happens, its RECORD does not. Nothing catches this: the emitted visibility is
+  unchanged, the compile is unchanged, and `porter-notes` is 0 because `NoteCoverageCheck` compares
+  decisions to notes, never decisions to reality.
+- **A base's refusals are republished in every dependent's `decisions.tsv`** — 5 rows each in anim8,
+  ashley, ashley-test, gltf, gltf-test, screens, vfx. `ENGINE-LIMITS.md` D2's module scope filters by
+  DECLARATION and a refusal has none, so the one decision kind that cannot be scoped is the one that
+  leaks. The `policy` findings ARE correctly scoped (0 on every dependent); only the provenance
+  artifact is not.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
@@ -2893,6 +3030,25 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 - **`TestFrameworkTransform`'s synthesised `beforeAll`/`afterAll` record no decision.** They are
   definitions with no Java behind them, which is precisely the case a reader cannot explain from the
   line itself.
+- **A REFUSAL renders no porter note, and a refusal is the decision a reader can least reconstruct.**
+  A decision whose `subject` is `SymId.None` — a policy entry the phase declined to apply — has no
+  declaration to sit above, so it reaches `decisions.tsv` and the check report and never the emitted
+  line. Measured by P4 (§11.18): five `bean-properties` refusals, five `policy` findings, zero notes,
+  and an agent reading `def getScrollX(): Float` has no local evidence that a policy entry asked for
+  it. `PorterNote.InBody` on the OWNING type is the shape that fits, and the same hole covers every
+  future phase that refuses per entry.
+- **A RENAMED member escapes the ctor-replay visibility decider.** Measured by P4 (§11.18):
+  `WidenedVisibility` fell 142 → 135 on libgdx-core while the emitted text still widens all seven —
+  `BaseDrawable`'s private fields, each `cause=ctor-replay-widening; from=private; to=public` before
+  the §4.55 field-vs-method pass moved it to `…$field`, and each still emitted `public` after with no
+  row behind it. Nothing catches this class: the emitted visibility is unchanged, the compile is
+  unchanged, and `NoteCoverageCheck` compares decisions to NOTES, never decisions to reality.
+- **A base's per-entry REFUSALS are republished in every dependent's `decisions.tsv`.** `D2`'s module
+  scope filters by DECLARATION, and the one decision kind with no declaration is therefore the one
+  kind that leaks: P4's five refusals appear in all seven libGDX dependents' artifacts (§11.18). The
+  `policy` findings are correctly scoped — only the provenance artifact is not — so the fix is to
+  scope a subject-less decision by the OWNER FQN the key names, which the run already translates
+  through `PackageRenameTransform.renamed` for `dropped-types.tsv`.
 - **Raw-generic `[?]` rendering and `uncheckedGeneric` retyping are unrecorded.** Both change a
   signature for a reason no reader can recover; recording them needs the decision log threaded through
   the frontend, which today records only from phases and the run.
