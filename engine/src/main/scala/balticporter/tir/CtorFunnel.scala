@@ -367,6 +367,16 @@ object CtorFunnel:
             // whose `super(args)` still reach the `extends` clause); then `nilaryPlan`, which knows
             // how to promote a nilary constructor and inline its `this(args)` delegation; then
             // `Plan.none`, where the class genuinely contributes nothing.
+            //
+            // THE FIRST ATTEMPT IS CURRENTLY INERT, and that is measured rather than suspected: the
+            // filter wants a plan that is NOMINATED and NOT paramful, which for several roots means
+            // `several.find(nilary)` found a nilary ROOT — and a class with a nilary constructor is
+            // one `reachableArgumentFree` never withholds in the first place, so the two conditions
+            // exclude each other. Probed over libGDX core: of 10 withheld classes the filter passes
+            // for NONE, and deleting the attempt outright leaves the lane byte-for-byte identical
+            // (0 members changed, omissions 65, errors 0). Kept because it is the correct order and
+            // it costs nothing; NOT kept as a thing anybody may cite as load-bearing.
+            // `ENGINE-LIMITS.md` C1 carries the number.
             val cd0 = classes.find(_.symbol == s)
             val demoted = cd0.map(plan0(program, _, synthesis = false))
               .filter(q => q.primary.isDefined && !paramfulPrimary(q))

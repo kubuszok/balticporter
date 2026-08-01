@@ -498,6 +498,23 @@ the synthesis had claimed threw away the promotion it would otherwise have had, 
 `plan0(…, synthesis = false)` — the plan this class would have had without the synthesis — and the
 count returns to 30.
 
+**…and that first attempt is INERT as the predicates now stand — re-measured, 0 hits.** Its filter
+wants a plan that is nominated and NOT paramful, which for several roots means `several.find(nilary)`
+found a NILARY ROOT — and a class with a nilary constructor is one `reachableArgumentFree` never
+withholds, so the two conditions exclude each other. Probed over libGDX core: of **10 withheld
+classes the filter passes for none** (`ScalingViewport`, `Pool`, `ObjectSet`, `ObjectMap`,
+`TextField`, `Table`, `BatchTiledMapRenderer`, `TextureMapObject`, `GLFrameBuffer$GLFrameBufferBuilder`,
+`BitmapFont`), and deleting the attempt outright leaves the lane **byte-for-byte identical** —
+0 members changed, omissions 65, errors 0. The 30 -> 79 above was real when it was taken; what
+holds the count at 30 today is `nilaryPlan` plus the guard above it, not this line. Keep the
+attempt — it is the correct order and costs nothing — and do NOT cite it as the thing that fixed
+anything. `inert` is a result (see "How to read an entry").
+
+**Pinned by `SyntheticPrimaryWithholdingSpec`**, which is the `BatchTiledMapRenderer` shape reduced
+to three classes: a synthesis with no nilary java constructor, a wall subclass whose bare `extends`
+is the fact `needNilary` reads, and — the other direction, without which the guard could be a
+blanket refusal — the same synthesis with a subclass that passes arguments up, which must survive.
+
 *Fix kind: (a).*
 
 ### C1.5. `primary.isEmpty` is NOT "nothing was nominated" — 109 escaping paths came back
@@ -514,6 +531,11 @@ primary" must go through it rather than through `synthetic.nonEmpty`: a class di
 MARKER ALONE has an empty slot list, and reading `synthetic.nonEmpty` there emitted a primary whose
 parameter list was empty while every secondary wrote `this((null: C.Funnel))` against scala's
 implicit nilary primary.
+
+**Both halves are pinned by `SyntheticPrimaryWithholdingSpec`**, each verified to fail against its
+own guard reverted: a class with no `super(args)` anywhere whose synthesis `nilaryPlan` must not
+claim, and a marker-only class (`Two()` beside `Two(int)`, parent `Object`, nothing hoistable) whose
+primary must come out `protected (ctor$: Two.Funnel)` and not `protected ()`.
 
 *Fix kind: (a).*
 
