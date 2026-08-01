@@ -3273,7 +3273,15 @@ had to be.
 #### Which phases declare a merge, and which keep the default
 
 `TypeRedirectTransform` declares one: `redirects` and `memberRenames` are key-independent maps, a
-key present in both sides with the same value is agreement and with a different value is refusal,
+key present in both sides with the same value is agreement and with a different value is refusal —
+**with the member half compared through `MemberKey.parseIn`, never as a map key.** `dispose` and
+`dispose()` are two strings and ONE member (a bare key is every overload, the nilary key is one of
+them), so a raw-key intersection merged `dispose -> close` with `dispose() -> shutdown` cleanly and
+the drift arrived one layer down as `MemberRenamer`'s NON-FATAL two-claimants refusal — a
+`PolicyIssue` where `mergedWith`'s stated obligation ("preserve both inputs' behaviour on their own
+keys, or refuse") owes a fatal `SurfaceDivergence`. A segment that will not parse falls back to its
+own text, so a refusal never depends on a parse succeeding; over-refusal is the safe direction for
+`OverrideGraph`'s reason, and two spellings agreeing on the target are still agreement,
 and `ExternalSurface` is unioned because it is ENGINE knowledge about the JDK rather than policy (it
 is not in the fingerprint, and cannot be — two ports that know different amounts about a platform
 type still emit the same signatures).

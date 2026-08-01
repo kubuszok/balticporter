@@ -181,17 +181,34 @@ final class TypeRedirectTransform(
       val typeClash = (redirects.keySet & o.redirects.keySet).filter(k => redirects(k) != o.redirects(k))
       // reported as OWNER and SEGMENT rather than as a rebuilt `owner#member` string: the member-key
       // grammar has exactly one renderer (§8.1) and a refusal message is no reason for a second.
+      //
+      // COMPARED BY PARSED NAME, NOT BY MAP KEY, and that is the whole of the fix. `dispose` and
+      // `dispose()` are two strings and ONE member — the bare form is every overload of it and the
+      // nilary form is one of them — so a raw-key intersection merged `dispose -> close` with
+      // `dispose() -> shutdown` cleanly, and the drift then arrived at `MemberRenamer` as its
+      // NON-FATAL two-claimants refusal: a `PolicyIssue` where `mergedWith`'s own contract
+      // (`SurfaceFold`'s three obligations) owes a fatal `SurfaceDivergence`. Over-refusal is the
+      // safe direction here for `OverrideGraph`'s reason — a pair refused is a pair a port spells
+      // once, while a pair merged is a rename whose outcome depends on which manifest was read.
+      def named(t: String, mem: String): String =
+        MemberKey.parseIn(t, mem).map(_.name).getOrElse(mem)
       val memberClash = for
         (t, rs)   <- o.memberRenames.toList
         (mem, to) <- rs
-        if memberRenames.getOrElse(t, Map.empty).get(mem).exists(_ != to)
-      yield (t, mem)
+        mine       = memberRenames.getOrElse(t, Map.empty)
+        (m2, to2) <- mine.toList
+        if named(t, m2) == named(t, mem) && to2 != to
+      yield (t, mem, to, m2, to2)
       if typeClash.nonEmpty || memberClash.nonEmpty then
         Left(
           (typeClash.toList.sorted.map(k =>
              s"""both modules redirect "$k", to "${redirects(k)}" and "${o.redirects(k)}"""") ++
-            memberClash.sorted.map((t, mem) =>
-              s"""both modules rename the member `$mem` of "$t", to two different names"""))
+            memberClash.sorted.distinct.map { (t, mem, to, m2, to2) =>
+              val how =
+                if mem == m2 then s"""the member `$mem` of "$t""""
+                else s"""`$m2` and `$mem` of "$t", which are ONE member (a bare key is every overload)"""
+              s"""both modules rename $how, to "$to2" and "$to""""
+            })
             .mkString("; ") +
             " — two answers for one key is a rewrite whose outcome depends on which manifest was read")
       else

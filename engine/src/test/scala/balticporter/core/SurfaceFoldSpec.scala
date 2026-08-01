@@ -116,6 +116,43 @@ class SurfaceFoldSpec extends munit.FunSuite:
     assert(clue(f.head.detail).contains("com.other.A"))
   }
 
+  test("REFUSED: a BARE key and an OVERLOAD key of one member are one member, not two") {
+    // `dispose` and `dispose()` are two map keys and ONE member — the bare form is every overload,
+    // the nilary form is one of them. Compared as raw strings the merge succeeded, and the drift
+    // then arrived at `MemberRenamer` as its non-fatal two-claimants refusal: a `PolicyIssue`
+    // where the merge contract owes a fatal `SurfaceDivergence`.
+    val b = base(List(new TypeRedirectTransform(
+      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "close")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(new TypeRedirectTransform(
+      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose()" -> "shutdown"))))))
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
+    assert(Kind.SurfaceDivergence.fatal)
+    assert(clue(f.head.detail).contains("ONE member"))
+    assert(clue(f.head.detail).contains("shutdown"))
+    assert(clue(f.head.detail).contains("close"))
+  }
+
+  test("…and two spellings of one member agreeing on the TARGET is not a conflict") {
+    val b = base(List(new TypeRedirectTransform(
+      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "close")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(new TypeRedirectTransform(
+      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose()" -> "close"))))))
+    assertEquals(dep.surfaceFold.refusals, Nil)
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
+  }
+
+  test("a MALFORMED member segment still compares — the refusal may not depend on a parse") {
+    // an unparseable segment falls back to its own text, so two modules disagreeing about it are
+    // still refused rather than merged behind a `None`.
+    val b = base(List(new TypeRedirectTransform(
+      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose<T>" -> "close")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(new TypeRedirectTransform(
+      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose<T>" -> "shutdown"))))))
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
+  }
+
   test("NO CONTRACT: a phase that declares no merge diverges exactly as it did before") {
     val dep = base(List(new ClassTableTransform(Map("com.demo.W#of" -> "com.demo.T#classFor"))))
       .extendedBy(PortManifest("dep",
