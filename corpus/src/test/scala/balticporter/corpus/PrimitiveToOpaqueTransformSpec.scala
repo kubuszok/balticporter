@@ -187,6 +187,233 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assert(!clue(emitted).contains("opaque type"), "no seed fired, so nothing was minted")
   }
 
+  // -------------------------------------------------------------------------
+  // O1 — a seed reaching a boundary through a COMPOUND EXPRESSION
+  // `ENGINE-LIMITS.md` §13 O1. The shape is the corpus's, not a constructed one: a null-guarding
+  // ternary feeding an arithmetic operand and a local that correctly keeps the primitive.
+  // -------------------------------------------------------------------------
+
+  private val ternary =
+    """package demo;
+      |class Tex {
+      |  private int handle = 0;
+      |  public int getHandle() { return handle; }
+      |}
+      |class Desc {
+      |  Tex tex;
+      |  public int hash() {
+      |    long result = 0;
+      |    result = 811 * result + (tex == null ? 0 : tex.getHandle());
+      |    return (int) result;
+      |  }
+      |  public int cmp(Desc o) {
+      |    int h1 = tex == null ? 0 : tex.getHandle();
+      |    int h2 = o.tex == null ? 0 : o.tex.getHandle();
+      |    if (h1 != h2) return h1 - h2;
+      |    return 0;
+      |  }
+      |}
+      |""".stripMargin
+
+  private val handleSpec = OpaqueSpec(fqn = "Handle", hints = _.fullName == "demo.Tex#handle")
+  private lazy val ternaryOut =
+    new TirEmitter(Pipeline.run(SpoonTir.fromSource(ternary), List(new PrimitiveToOpaqueTransform(handleSpec)))).emit
+
+  test("a seed reaching an ARITHMETIC operand through an `if` is coerced — not invisible") {
+    // the `Apply` under the ternary is correctly typed `Handle.T`; the enclosing `Tree.If` is not,
+    // because nothing retypes a composite node from its branches. Reading the If's own `tpe` — which
+    // is what the phase used to do — sees a plain `Int` and inserts nothing, and the `+` then has no
+    // overload for `Long + Handle.T`.
+    assert(clue(ternaryOut).contains("Handle.unwrap(this.tex.getHandle())"))
+  }
+
+  test("…and the coercion goes INSIDE each branch, never around the carrier") {
+    // The reference hand port writes `texture.map(_.textureObjectHandle.toInt).getOrElse(0)` — the
+    // coercion at the leaf, the declaration reading as java wrote it. Wrapping the whole would also
+    // be WRONG for a mixed carrier: an `if` with one branch of each type has no type a single
+    // coercion could take, since an opaque type's bound outside its own object is `Any`.
+    assert(!clue(ternaryOut).contains("Handle.unwrap(if"))
+    assert(!ternaryOut.contains("Handle.unwrap((if"))
+  }
+
+  test("a DECLARATION that correctly kept the primitive is a BOUNDARY, and gets its coercion") {
+    // `h1` is rightly NOT a seed: an `if` is not a pure move, so `FlowPropagation` builds no edge to
+    // it and the local keeps `int`. That is precisely a boundary — which is exactly where a coercion
+    // was owed and where none was inserted (2 of O1's 3 errors).
+    assert(clue(ternaryOut).contains("val h1: scala.Int ="))
+    assert(ternaryOut.contains("val h2: scala.Int ="))
+    assertEquals(clue(ternaryOut.sliding("Handle.unwrap(".length)
+      .count(_ == "Handle.unwrap(")), 3, "one per ternary: the operand, h1, h2")
+  }
+
+  test("a MIXED carrier flowing INTO a seed wraps the plain branch and leaves the seed one") {
+    val mixed =
+      """package demo;
+        |class Tex {
+        |  private int handle = 0;
+        |  private int spare = 0;
+        |  public void keep() { spare = handle; }
+        |  public void reset(boolean b) { handle = b ? 0 : spare; }
+        |}
+        |""".stripMargin
+    val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "Handle", hints = _.fullName == "demo.Tex#handle"))
+    val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(mixed), List(ph))).emit
+    // `spare = handle` IS a pure move, so `spare` is a seed and the `if` mixes the two types. Only
+    // the plain branch is wrapped; wrapping the whole would hand `Handle.apply` an argument that is
+    // already a `Handle.T` on one path.
+    assert(clue(emitted).contains("Handle(0)"))
+    assert(!emitted.contains("Handle(this.spare)"))
+    assert(!emitted.contains("Handle(if"), "the coercion is at the leaf, not around the carrier")
+  }
+
+  test("a UNIFORM plain carrier is still coerced WHOLE — the distribution is for a mix") {
+    val uniform =
+      """package demo;
+        |class Tex {
+        |  private int handle = 0;
+        |  public int other = 0;
+        |  public void reset(boolean b) { handle = b ? 0 : other; }
+        |}
+        |""".stripMargin
+    val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "Handle", hints = _.fullName == "demo.Tex#handle"))
+    val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(uniform), List(ph))).emit
+    // `other` never reaches `handle` by a pure move (an assignment through an `if` is not one), so
+    // both branches are plain and the pre-O1 answer — one coercion around the carrier — is right.
+    assert(clue(emitted).contains("Handle(if"))
+  }
+
+  // -------------------------------------------------------------------------
+  // O2 — a retyped PARAMETER moves its METHOD's signature
+  // `ENGINE-LIMITS.md` §13 O2. The TIR stores a parameter's type twice; the emitter reads the
+  // `ValDef` and the constructor funnel reads the signature, so the two must not disagree.
+  // -------------------------------------------------------------------------
+
+  private val inherited =
+    """package demo;
+      |class Base {
+      |  protected int target;
+      |  protected int handle;
+      |  Base(int target, int handle) { this.target = target; this.handle = handle; }
+      |}
+      |class Sub extends Base {
+      |  Sub(int h) { super(1, h); }
+      |  Sub(boolean b) { super(2, 3); }
+      |}
+      |""".stripMargin
+
+  private def inheritedRun =
+    val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "Handle", hints = _.fullName == "demo.Base#handle"))
+    val after = Pipeline.run(SpoonTir.fromSource(inherited), List(ph))
+    (after, new TirEmitter(after).emit)
+
+  test("a retyped ctor PARAMETER moves the ctor's `MethodType` slot — the two derivations agree") {
+    val (after, _) = inheritedRun
+    given balticporter.tir.Program = after
+    val ctor = after.symbols.all.find(s =>
+      s.fullName.startsWith("demo.Base#") && s.info.isInstanceOf[balticporter.tir.TypeRepr.MethodType] &&
+        after.definitionOf(s.id).exists { case d: balticporter.tir.Tree.DefDef => d.paramss.flatten.sizeIs == 2; case _ => false })
+      .getOrElse(fail("no 2-parameter member of demo.Base"))
+    val d = after.definitionOf(ctor.id).collect { case d: balticporter.tir.Tree.DefDef => d }.get
+    // the two readings of ONE slot: the `ValDef` the emitter renders, and the `MethodType` slot the
+    // constructor funnel (and every published contract row) derives from.
+    val fromValDef = d.paramss.flatten.map(_.tpt.tpe)
+    val fromInfo   = ctor.info match
+      case balticporter.tir.TypeRepr.MethodType(ps, _, _) => ps.map(_._2)
+      case other => fail(s"not a MethodType: $other")
+    assertEquals(clue(fromInfo), clue(fromValDef),
+      "a retyping phase owes every derived signature that mentions the declaration it moved")
+    assert(fromInfo.exists(t => balticporter.tir.TirPrinter.tpe(t, balticporter.tir.TirPrinter.Style.canonical).contains("Handle")))
+  }
+
+  test("…so a SYNTHESISED primary types its `sup$k` slot from the moved signature") {
+    val (_, emitted) = inheritedRun
+    // `Sub`'s two roots reach ONE parent constructor, so the funnel synthesises a primary taking the
+    // PARENT's own formals — read from the signature on purpose, since an argument's type may be
+    // narrower than the formal. Stale, slot 1 emitted `scala.Int` against a parent formal of
+    // `Handle.T`, and every `def this(...) = this(...)` delegation then failed to resolve.
+    assert(clue(emitted).contains("sup$1: Handle.T"), "the funnel read the parent's SIGNATURE")
+    assert(!emitted.contains("sup$1: scala.Int"))
+  }
+
+  // -------------------------------------------------------------------------
+  // O3 — a family that lands on a container's ELEMENT is UNREACHABLE, and says so
+  // -------------------------------------------------------------------------
+
+  test("a hint naming a declaration whose primitive is inside a CONTAINER is REPORTED, not silent") {
+    val arrays =
+      """package demo;
+        |class Mesh {
+        |  private int[] locations = new int[4];
+        |  public void bind(int[] extra) { }
+        |}
+        |""".stripMargin
+    val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "Loc", hints = _.fullName == "demo.Mesh#locations"))
+    Pipeline.run(SpoonTir.fromSource(arrays), List(ph))
+    val fs = ph.policyReport.findings
+    assertEquals(clue(fs).size, 1)
+    assertEquals(fs.head.key, "demo.Mesh#locations")
+    assertEquals(fs.head.issue, balticporter.core.PolicyIssue.Malformed)
+    assertEquals(fs.head.setting, "OpaqueSpec(Loc).hints")
+    // the reader's first question is which of §1's three kinds the fix is, and the honest answer
+    // here is (a) ENGINE — no respelling of the key can reach a container's element.
+    assert(clue(fs.head.detail).contains("§1(a) ENGINE"))
+    assert(fs.head.detail.contains("O3"))
+    assert(fs.head.detail.contains("NOT a typo"))
+  }
+
+  test("a hint the mechanism CAN reach reports nothing — empty policy in, empty report out") {
+    val ph = new PrimitiveToOpaqueTransform(layerSpec())
+    Pipeline.run(SpoonTir.fromSource(src), List(ph))
+    assertEquals(clue(ph.policyReport.findings), Nil)
+    // …and a hint naming a declaration with no `int` in it anywhere is an ordinary miss, not this.
+    val other = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "L", hints = _.name == "noSuchField"))
+    Pipeline.run(SpoonTir.fromSource(src), List(other))
+    assertEquals(clue(other.policyReport.findings), Nil)
+  }
+
+  test("a report is THIS run's — a reused instance never carries the previous translation's") {
+    val arrays =
+      """package demo;
+        |class Mesh { private int[] locations = new int[4]; }
+        |""".stripMargin
+    val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "Loc", hints = _.fullName == "demo.Mesh#locations"))
+    Pipeline.run(SpoonTir.fromSource(arrays), List(ph))
+    assertEquals(ph.policyReport.findings.size, 1)
+    Pipeline.run(SpoonTir.fromSource(arrays), List(ph))
+    assertEquals(clue(ph.policyReport.findings).size, 1, "cleared at the head of each run, not accumulated")
+  }
+
+  // -------------------------------------------------------------------------
+  // SurfacePolicy — two modules configuring this differently must NOT compare equal
+  // -------------------------------------------------------------------------
+
+  test("the fingerprint separates two differently-configured instances (§1.5)") {
+    import balticporter.core.PortManifest.fingerprint
+    def ph(s: OpaqueSpec) = new PrimitiveToOpaqueTransform(s)
+    val base  = OpaqueSpec(fqn = "Layer", hints = _.name == "layer")
+    val same  = OpaqueSpec(fqn = "Layer", hints = _.name == "layer")
+    assertEquals(clue(fingerprint(ph(base))), fingerprint(ph(same)), "two ports that AGREE compare equal")
+
+    // the fence is emitted SURFACE — a base whose `Meter` kept the primitive and a dependent whose
+    // did not emit signatures that each compile alone and cannot compile together.
+    assertNotEquals(fingerprint(ph(base)), fingerprint(ph(base.copy(scope = RuleScope.Only(Set("demo.Sprite"))))))
+    assertNotEquals(fingerprint(ph(base.copy(scope = RuleScope.Only(Set("a"))))),
+                    fingerprint(ph(base.copy(scope = RuleScope.Everywhere(Set("a"))))))
+    // …and so are the primitive and every agent-supplied extra hint.
+    assertNotEquals(fingerprint(ph(base)), fingerprint(ph(base.copy(underlying = OpaqueSpec.Primitive.Long))))
+    assertNotEquals(fingerprint(ph(base)), fingerprint(ph(base.copy(extraHints = Set("demo.Sprite#z")))))
+    // order-independent, or two ports that agree compare unequal on a HashSet's iteration order
+    assertEquals(fingerprint(ph(base.copy(extraHints = Set("b", "a")))),
+                 fingerprint(ph(base.copy(extraHints = Set("a", "b")))))
+    // a DIFFERENT opaque type is a different phase NAME, so the two never meet in a fold at all
+    assertNotEquals(fingerprint(ph(base)), fingerprint(ph(base.copy(fqn = "Other"))))
+  }
+
   // -- two specs in one pipeline --------------------------------------------
 
   test("two specs COMPOSE when their propagated seed sets are disjoint") {

@@ -3442,12 +3442,38 @@ names by the same components — `def id`, `def id_=` are emitted exactly as bef
 is one note and its `key=`. The three deleted refusals moved no member at all, which is what "inert
 on the code" means and what the audit's prediction was right about.
 
-### 11.25 P6 — the opaque families: the GL layer is ONE family, measured and REVERTED
+### 11.25 P6 — the opaque families: the GL layer is ONE family, measured, reverted, and now UNBLOCKED
 
-Stage P's last enablement. One family was configured and measured end to end; it works, and it costs
-6 errors in two engine gaps that no manifest key can reach, so the step is reverted on the P1/P5
+Stage P's last enablement. One family was configured and measured end to end; it worked, and it cost
+6 errors in two engine gaps that no manifest key could reach, so the step was reverted on the P1/P5
 precedent. Read the three parts in order — what the evidence actually supports, what the one family
 measured, and what was deliberately NOT measured and why.
+
+**THE TWO GAPS ARE CLOSED and the replay is proven, so this section is now a READY STEP rather than
+a dead end.** `ENGINE-LIMITS.md` §13 O1 and O2 are both fixed in the engine, and the `OpaqueSpec`
+below — re-applied verbatim, in-worktree, against the same baseline — reads:
+
+| | P6 (pre-fix) | replay (post-fix) |
+|---|---:|---:|
+| scalac errors | 6 (`EngineGap`) | **0** |
+| seeded | 1 | 1 |
+| `RetypedSignature` decisions | 2 | **2** |
+| coercions | 27 (14 wrap + 13 unwrap) | **30** (14 wrap + 16 unwrap) |
+| members changed | 34 | **37** |
+| check counts (21) | identical | **identical** |
+
+Both deltas are O1's and both are a diff rather than a reconstruction — the two runs are the same
+session against the same baseline. The 3 extra coercions are exactly the 3 O1 error sites
+(`TextureDescriptor#hashCode` once, `#compareTo` twice), and the 3 extra members are exactly the
+rows those sites live in — `TextureDescriptor` (the unit digest), `#hashCode`, `#compareTo` — which
+pre-fix did not move BECAUSE no coercion was inserted in them. O2 moves no member COUNT: it changes
+the TEXT of `sge.graphics.Texture`'s class line, which was already in the changed set, and the
+emitted member KEY for the affected constructor is byte-identical before and after (the descriptor
+stays frontend-derived — see O2's note).
+
+**What is left before this lands is the DECISION to land it, not an engine gap.** The step was
+reverted, so the policy below is still not in `LibgdxCoreMigrate`; enabling it is a paste, and the
+numbers to expect are the right-hand column.
 
 #### The GL evidence says ONE family, not twenty — and that is a measurement, not a scoping choice
 
@@ -3481,11 +3507,16 @@ element of an array is not something this phase can name. `taggablePrim` tests a
 against the spec's primitive, and `int[]` is not `scala.Int`, so neither a hint nor a pure-move edge
 can reach the element; `FlowPropagation`'s edges are between symbols, and an array's element has no
 symbol of its own. An `OpaqueSpec` whose family lands inside a container is therefore inexpressible
-today — not refused, simply unreachable, with the hint reported as never-fired. That is a mechanism
-gap and not a `RuleScope` question, and it is NOT counted in the 6 errors below because the family
-was never configured.
+today. That is a mechanism gap and not a `RuleScope` question, and it is NOT counted in the 6 errors
+below because the family was never configured.
 
-#### The one family WORKS, and costs 6 errors in two engine gaps
+**It is still inexpressible and it is no longer SILENT.** The half that made this expensive was that
+a hint naming such a declaration matched nothing and read exactly like a typo; the phase now reports
+it as a `policy` finding that says (a) ENGINE and points at `ENGINE-LIMITS.md` §13 O3. So a port that
+writes this hint learns in ONE RUN that the mechanism cannot reach it, instead of hunting a
+misspelling that is not there.
+
+#### The one family WORKS — it cost 6 errors in two engine gaps, and now costs 0
 
 The config, verbatim, in `LibgdxPolicy` — appended to `mainPhases` between `disposableRedirect` and
 `nullability`:
@@ -3522,15 +3553,17 @@ therefore grow the seed set into the GL interface and retype it, which sge does 
 rule and not as a number. What the fence buys IS measured: with the four GL interfaces scoped out,
 every one of those crossings is a counted coercion instead, and they are 27 of them.
 
-The 6 errors are `ENGINE-LIMITS.md` **O1** (3 — a coercion reads the boundary term's own type, so a
+The 6 errors were `ENGINE-LIMITS.md` **O1** (3 — a coercion reads the boundary term's own type, so a
 seed reaching it through an `if` is invisible) and **O2** (3 — a retyped PARAMETER leaves its
-method's `MethodType` stale, and the ctor funnel correctly reads the signature). **Neither has a
+method's `MethodType` stale, and the ctor funnel correctly reads the signature). **Neither had a
 policy exit**, and that is the load-bearing negative: O1's errors are at CALLERS of a retyped member,
 so no `RuleScope` can un-retype the callee; O2's are in a SUBCLASS of the seeded class, so scoping
-the subclass out cannot change the parent's formal. The family is all-or-nothing.
+the subclass out cannot change the parent's formal. The family is all-or-nothing — which is why the
+exit was the engine, and why both are now closed there.
 
-**So P6 is measured and REVERTED, on the P1/P5 precedent.** Reverting restores the port
-byte-for-byte: `members.tsv` **0 changed**, errors 0, all 21 check counts identical.
+**So P6 was measured and REVERTED, on the P1/P5 precedent.** Reverting restored the port
+byte-for-byte: `members.tsv` **0 changed**, errors 0, all 21 check counts identical. The revert
+stands; what changed is that re-applying it now costs 0 errors instead of 6.
 
 #### Two interactions settled, both negative, both worth the words
 
@@ -3545,7 +3578,9 @@ byte-for-byte: `members.tsv` **0 changed**, errors 0, all 21 check counts identi
   port). One instance, inherited through `extendedBy`; nothing to merge, and D9's shape is not in
   play. The inherited blast would be small: of the corpus dependents only gdx-gltf touches the
   retyped surface at all, at one TEST file (`gltf/test/…/SharedTextureTest.java`); vfx, ashley,
-  anim8 and screens reference `getTextureObjectHandle` nowhere.
+  anim8 and screens reference `getTextureObjectHandle` nowhere. That answer is what settles the
+  fingerprint question the phase's new `SurfacePolicy` raises: one instance, so no merge, and
+  `MergeablePolicy` is deliberately not implemented (`DESIGN.md` §8.13).
 
 #### `Pixels` and `Seconds` are NOT measured, and the reason is not that they lack evidence
 
@@ -3558,16 +3593,20 @@ and `Graphics#deltaTime`. (The 171 is a count of SITES, not of ported declaratio
 seed harvest is part of the task that configures them.) Neither is a consumer-side layer; both are
 exactly the shape this mechanism exists for.
 
-They were not configured because **measuring them before O1 and O2 are closed adds no information
-and one of them is strictly worse**. Both gaps are generic, not `TextureHandle`-specific: O1 fires
+They were not configured because **measuring them before O1 and O2 were closed added no information
+and one of them was strictly worse**. Both gaps are generic, not `TextureHandle`-specific: O1 fires
 wherever a seed reaches a boundary through a conditional, and O2 fires wherever a seed is a
 PARAMETER — which is what `Pixels` and `Seconds` are almost exclusively, against
-`TextureHandle`'s one field. A run would reproduce the same two diagnoses at a larger multiple and
-buy nothing the 6 errors have not already bought. §5's "change one thing, then measure" cuts the
-same way: two families in one commit could not be told apart.
+`TextureHandle`'s one field. A run would have reproduced the same two diagnoses at a larger multiple
+and bought nothing the 6 errors had not already bought. §5's "change one thing, then measure" cuts
+the same way: two families in one commit could not be told apart.
 
-So the honest state is **`Pixels`/`Seconds`: evidenced, unconfigured, unmeasured** — the next task
-after the two gaps close, and the one that will say what the mechanism costs at scale.
+So the honest state is **`Pixels`/`Seconds`: evidenced, unconfigured, unmeasured** — and now
+UNBLOCKED, since both gaps are closed. It is the next step, and the one that will say what the
+mechanism costs at scale. Note what the replay does NOT tell you about it: `TextureHandle` is one
+FIELD, and O2's fix is exercised there by a single constructor slot. `Pixels` and `Seconds` are
+parameters almost exclusively, so they are the first real measurement of the parameter path — expect
+that to be where the next shape appears, and configure them ONE AT A TIME.
 
 #### Do NOT retry
 
@@ -3576,11 +3615,12 @@ after the two gaps close, and the one that will say what the mechanism costs at 
   none of them to a ported declaration; the table above is the evidence, and re-deriving it costs a
   session. This does NOT extend to `Pixels`/`Seconds`, which are a different case entirely — see
   above.
-- **Do not re-attempt `TextureHandle` before O1 and O2 are closed.** The policy is correct as
-  written and reproduces 6 errors exactly; the `OpaqueSpec` is recorded verbatim above, so the
-  replay is a paste against `ENGINE-LIMITS.md` §13's two entries, not a redesign.
-- **Do not reach for a `RuleScope` to clear the 6.** Both gaps are outside every scope's reach, for
-  the two reasons given above.
+- **Do not re-derive the 6 errors.** They were O1 and O2, both are closed, and the replay above is
+  the proof. The `OpaqueSpec` is recorded verbatim, so enabling it is a paste and the numbers to
+  expect are 0 errors / 2 retypes / 30 coercions / 37 members.
+- **Do not reach for a `RuleScope` to clear a residue of this family.** Both gaps were outside every
+  scope's reach, for the two reasons given above, and any successor gap in this phase should be
+  classified the same way before a scope entry is written.
 
 ## 12. Remaining work, across the engine
 
@@ -3624,6 +3664,17 @@ Maintained by deletion. Items are ordered by what they block, not by size.
   is the reason for shows nothing. The same shape reaches any retyping phase with a scope. The fix
   is to attribute a scoped-out parameter to its owner, once per owner, exactly as
   `declarationOf` already does for the retype side.
+- **…and a RETYPED parameter is the same hole on the other side.**
+  `PrimitiveToOpaqueTransform.record` fires on `seeds(s) && Decision.isDeclaration(s)`, and a
+  parameter is neither: it is skipped as a parameter and its METHOD is not a seed, so a constructor
+  whose formal became an opaque type moves its emitted signature with no `RetypedSignature` row
+  behind it. `Decision`'s own doc is what says that row is owed — "a method's `info` is a
+  `MethodType` carrying its parameter types, so a parameter whose type moved moved the method's
+  signature and is one decision, not two" — and here the one row is the one nobody records. Seen
+  while closing `ENGINE-LIMITS.md` §13 O2, which is what MADE the method's signature move; left
+  deliberately out of that delivery so the replay's decision count stayed comparable to P6's
+  (§5's "change one thing"). Fixing it moves `RetypedSignature` and adds a porter note, so it is a
+  measured step of its own, and it covers every retyping phase whose seeds can be parameters.
 - **`RetypedSignature` and `RedirectedCall` carry no porter note.** The argument for each is in
   `DESIGN.md` §7.2 and stands — the retyped signature IS the declaration and the redirected call IS
   the body — so it is listed here so that adding one is a decision rather than an oversight.

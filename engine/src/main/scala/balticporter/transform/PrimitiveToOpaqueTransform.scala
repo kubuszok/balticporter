@@ -1,5 +1,6 @@
 package balticporter.transform
 
+import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
 /** Retype a semantically-tagged PRIMITIVE to an `opaque type` (+companion) everywhere it flows,
@@ -46,9 +47,54 @@ import balticporter.tir.*
   * would compile with half a domain type missing and nothing said. So the overlap is DETECTED (the
   * eligibility test admits a sibling's opaque type precisely so that reaching one is visible) and
   * the run is FAILED, naming the symbol and both specs. See [[refuseOverlap]].
+  *
+  * ==A COERCION reads the boundary through the DECLARATION, never the term node's `tpe`==
+  * CLAUDE.md §1's rule for a scoped retyping phase, and this one was measured getting it wrong
+  * (`ENGINE-LIMITS.md` §13 O1, 3 scalac errors). Every coercion here asks [[carriesOpaque]], which
+  * reads the SEED TABLE through the declaration a value flows from and descends the compound
+  * expressions that CARRY a value without being one — `if`, a block's tail, a `match` arm, a comment
+  * wrapper. Nothing retypes a composite node from its branches, so a node-`tpe` test is exact for a
+  * bare reference and blind to `x == null ? 0 : x.handle()`, which is the shape the corpus has.
+  * The coercion is then PUSHED INTO EACH BRANCH rather than wrapped around the whole
+  * ([[coerce]]), which is what the reference hand port writes and what leaves a declaration that
+  * kept the primitive reading as java wrote it.
+  *
+  * ==A retyped PARAMETER moves its METHOD's signature too==
+  * `ENGINE-LIMITS.md` §13 O2, 3 more errors. The TIR stores a parameter's type TWICE — on the
+  * parameter symbol and in the enclosing method's `MethodType` — and which one a consumer reads is
+  * its own business: the emitter renders the `ValDef`, the constructor funnel reads the signature
+  * (deliberately, since an argument's type may be narrower than the formal), a published contract
+  * row reads the signature. So the retype loop moves BOTH, by POSITION, in one motion.
   */
-final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
+final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
+    extends Phase, PolicySource, SurfacePolicy:
   def name = s"primitive->opaque:${spec.fqn}"
+
+  /** This phase RETYPES declarations under a [[RuleScope]], so two modules configuring it
+    * differently emit signatures that each compile alone and cannot compile together — CLAUDE.md
+    * §1's standing obligation, and it was unmet: with no `SurfacePolicy`,
+    * [[balticporter.core.PortManifest.fingerprint]] compared two instances by NAME, and the name is
+    * `primitive->opaque:<fqn>`, so a base and a dependent seeding the same opaque type from
+    * different declarations compared EQUAL.
+    *
+    * Everything DECLARATIVE in the spec is rendered, sorted. '''[[OpaqueSpec.hints]] is not, and
+    * cannot be''' — it is a `Symbol => Boolean`, and a lambda has no stable rendering; two specs
+    * differing only in their predicate therefore still compare equal. That residue is named in
+    * `ENGINE-LIMITS.md` §13 rather than hidden, and it is strictly smaller than the hole it
+    * replaces: the fence, the definition site, the primitive and every agent-supplied
+    * `extraHints` entry — which is where a predicate's misses are corrected — are all now compared.
+    */
+  def surfaceFingerprint: String =
+    val extras = if spec.extraHints.isEmpty then "" else s";extra=${spec.extraHints.toList.sorted.mkString(",")}"
+    val fence  = spec.scope.fingerprint
+    s"${spec.fqn}:${spec.underlyingFqn}$extras${if fence.isEmpty then "" else s";$fence"}"
+
+  /** Hints the mechanism CANNOT REACH — see [[reportUnreachable]]. Empty policy in, empty report
+    * out, and cleared at the head of every run so a reused instance never reports the previous
+    * translation's findings. */
+  private val unreachable = collection.mutable.ListBuffer.empty[PolicyFinding]
+
+  def policyReport: PolicyReport = PolicyReport(unreachable.toList)
 
   private var objSym, opaqueSym, applySym, unwrapSym, primSym: SymId = SymId.None
   private var seeds: Set[SymId]   = Set.empty
@@ -61,6 +107,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
   def typeMapping: Map[SymId, TypeRepr] = seeds.iterator.map(_ -> opaqueRef).toMap
 
   override def run(program: Program): Program =
+    unreachable.clear()
     primSym = program.symbols.all.find(_.fullName == spec.underlyingFqn).map(_.id).getOrElse(SymId.None)
     if primSym == SymId.None then return program
     primRef = TypeRepr.TypeRef(TypeRepr.NoType, primSym)
@@ -73,10 +120,13 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
     // A hint may also name something a SIBLING spec has already claimed — admitted here on purpose
     // so `refuseOverlap` can see it. Filtered out silently (which is what "it is no longer of my
     // primitive" would do) the second instance would simply find nothing and return.
-    val hints = program.symbols.all
-      .filter(s => (spec.hints(s) || spec.extraHints(s.fullName)) && fenced(s) &&
-        (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined))
+    val named = program.symbols.all.filter(s => spec.hints(s) || spec.extraHints(s.fullName))
+    val hints = named
+      .filter(s => fenced(s) && (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined))
       .map(_.id).toSet
+    // …and the ones this MECHANISM cannot reach, before any early return: a spec that names one is
+    // the shape that used to look exactly like a typo (see [[reportUnreachable]]).
+    reportUnreachable(program, named.filter(fenced))
     if hints.isEmpty then return program
     seeds = propagate(program, hints) // grow the seed set along pure-move flows
     refuseOverlap(program)
@@ -109,13 +159,46 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
       TypeTree(primRef, o), Some(Tree.Ident(vUnwrap, opaqueRef, o)), o)
     val synthUnit = Tree.ClassDef(objSym, Nil, None, List(typeDef, applyDef, unwrapDef), o)
 
-    // retype seed symbol infos primitive → opaque (value seeds) / return → opaque (method seeds).
+    // A retyped PARAMETER's own METHOD, by POSITION — `ENGINE-LIMITS.md` §13 O2.
+    //
+    // BY POSITION and never by name: a `MethodType`'s parameter list and its `DefDef`'s are
+    // parallel by construction, while the NAMES are not — an earlier phase may rewrite a parameter
+    // SLOT without touching the method's `info` (the reassigned-parameter transform mints
+    // `x$arg` for exactly that), and read by name the signature silently would not move. The same
+    // correction `NullabilityTransform` records, for the same reason and in the same shape.
+    //
+    // A method whose enclosing DEFINITION the program does not have contributes nothing: its
+    // parameters are not this program's declarations either, so there is no disagreement to close.
+    val seedParamSlots: Map[SymId, Set[Int]] =
+      program.symbols.all.iterator.filter(s => seeds(s.id) && s.flags.isParam).toList
+        .groupBy(_.owner).flatMap { (owner, ps) =>
+          program.definitionOf(owner).collect { case d: Tree.DefDef =>
+            val at = d.paramss.flatten.map(_.symbol).zipWithIndex.toMap
+            owner -> ps.flatMap(p => at.get(p.id)).toSet
+          }
+        }.toMap
+
+    /** ONE method's signature: every seeded parameter slot, plus the result when the method itself
+      * is a seed. Both halves in one place, because they are two faces of one declaration and a
+      * consumer reads whichever it reads. */
+    def methodType(id: SymId, mt: TypeRepr.MethodType): TypeRepr.MethodType =
+      val slots = seedParamSlots.getOrElse(id, Set.empty)
+      TypeRepr.MethodType(
+        mt.params.zipWithIndex.map((nt, i) => if slots(i) then nt._1 -> opaqueRef else nt),
+        if seeds(id) && isPrim(mt.result) then opaqueRef else mt.result,
+        mt.isImplicit)
+
+    // retype seed symbol infos primitive → opaque (value seeds) / return → opaque (method seeds)
+    // / the parameter slots of ANY method — seed or not — one of whose parameters is a seed.
     val retyped = program.symbols.all.map { s =>
-      if !seeds(s.id) then s
-      else s.info match
-        case r if isPrim(r) => s.copy(info = opaqueRef)
-        case TypeRepr.MethodType(ps, ret, im) if isPrim(ret) => s.copy(info = TypeRepr.MethodType(ps, opaqueRef, im))
-        case _ => s
+      s.info match
+        case r if seeds(s.id) && isPrim(r)                   => s.copy(info = opaqueRef)
+        case mt: TypeRepr.MethodType                         =>
+          val next = methodType(s.id, mt); if next == mt then s else s.copy(info = next)
+        case TypeRepr.PolyType(tps, mt: TypeRepr.MethodType) =>
+          val next = methodType(s.id, mt)
+          if next == mt then s else s.copy(info = TypeRepr.PolyType(tps, next))
+        case _                                               => s
     }
     val symbols = SymbolTable(retyped ++ minted)
     given Program = program.rebuilt(symbols = symbols)
@@ -166,6 +249,69 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
     FlowPropagation.grow(p, hints, id => p.symbolOf(id).exists(s =>
       (taggablePrim(s.info) || foreignOpaque(p, s.info).isDefined) && spec.scope.includes(p, s)))
 
+  /** A HINT THE MECHANISM CANNOT REACH — `ENGINE-LIMITS.md` §13 O3, made loud.
+    *
+    * [[taggablePrim]] tests a symbol's OWN info against the spec's primitive, so a declaration
+    * whose domain value sits INSIDE a container — `int[] locations`, which a reference hand port
+    * types `Array[AttributeLocation]` — is invisible to seeding, and to propagation as well, since
+    * `FlowPropagation`'s edges run between SYMBOLS and an array's element has none.
+    *
+    * The failure without this is quiet in exactly the way that matters: the hint does not throw and
+    * does not refuse, it simply matches nothing — which reads identically to a typo, and sends its
+    * author looking for a misspelling that is not there. So the phase reports the one case it can
+    * TELL APART: a hint that named a real declaration of this program, inside the fence, whose type
+    * MENTIONS the spec's primitive somewhere the mechanism cannot seed. That is not a guess about
+    * intent; it is the observation that the author wrote a name whose type contains the very
+    * primitive the spec is about.
+    *
+    * `Malformed` and not `NeverMatched`, deliberately: the key named something, so "your key matches
+    * nothing" is the wrong sentence, and `PolicyReport`'s three answers already contain the right
+    * one — *it could never have named anything the phase can act on*. The detail says which of §1's
+    * three kinds the fix is, because the honest answer here is (a) ENGINE and not the §1(b) the
+    * finding's own render assumes: a spec has no vocabulary for "the element of", so the exits are
+    * to drop the hint or to widen the mechanism.
+    */
+  private def reportUnreachable(program: Program, named: Iterable[Symbol]): Unit =
+    given Program = program
+    named.foreach { s =>
+      val value = valueTypeOf(s.info)
+      if !taggablePrim(s.info) && foreignOpaque(program, s.info).isEmpty && mentionsPrim(value) then
+        val setting =
+          if spec.extraHints(s.fullName) then s"OpaqueSpec(${spec.fqn}).extraHints"
+          else s"OpaqueSpec(${spec.fqn}).hints"
+        unreachable += PolicyFinding(name, setting, s.fullName, PolicyIssue.Malformed,
+          s"this declaration's value type is `${TirPrinter.tpe(value, TirPrinter.Style.canonical)}`, " +
+            s"which MENTIONS `${spec.underlyingFqn}` without BEING it — the domain value sits inside a " +
+            "container. This mechanism seeds a symbol whose OWN type is the primitive and grows the " +
+            "set along flows between SYMBOLS, and a container's element has no symbol of its own, so " +
+            "neither a hint nor a pure-move edge can reach it. The hint is therefore NOT a typo and " +
+            "NOT something a respelling fixes. [§1(a) ENGINE, `ENGINE-LIMITS.md` §13 O3: an " +
+            "`OpaqueSpec` has no vocabulary for \"the element of\". Until it does, the exits are to " +
+            "drop this hint or to widen the mechanism]")
+    }
+
+  /** the type a declaration's VALUE has — a method's RESULT, anything else's own info. The same
+    * shape [[taggablePrim]] tests, so the report's domain is exactly the seeding rule's domain: a
+    * hint naming a method whose PARAMETER is the primitive is a different mistake with a policy
+    * exit (name the parameter), and reporting it here would send its author to the engine. */
+  private def valueTypeOf(info: TypeRepr): TypeRepr = info match
+    case TypeRepr.MethodType(_, ret, _)                       => ret
+    case TypeRepr.PolyType(_, TypeRepr.MethodType(_, ret, _)) => ret
+    case other                                                => other
+
+  /** does this type mention the spec's primitive ANYWHERE — as an array element, a type argument, a
+    * parameter? Walked with `StandardTraversal.mapType` and not a private recursion, so a `TypeRepr`
+    * shape added later is reached without this remembering to enumerate it (CLAUDE.md §3). */
+  private def mentionsPrim(t: TypeRepr)(using Program): Boolean =
+    var found = false
+    val scan = new Phase:
+      def name = "primitive->opaque/mentions"
+      override def transformType(x: TypeRepr)(using Program): TypeRepr =
+        if isPrim(x) then found = true
+        x
+    StandardTraversal.mapType(scan, t)
+    found
+
   /** the OTHER opaque object a symbol's declared type belongs to, if any — read from the
     * `isOpaque` flag, which only this phase ever sets, and reported by its OWNER's name because
     * that is the sibling spec's `fqn`. `None` for this phase's own (nothing is minted yet when
@@ -209,13 +355,18 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
   // -------------------------------------------------------------------------
   // Retype seed positions in the tree + insert coercions.
   // -------------------------------------------------------------------------
+  // A DECLARATION is the boundary, on BOTH sides of the `if`: a seed declaration wraps whatever
+  // arrives, and a declaration that KEPT the primitive unwraps whatever seed arrives — which is the
+  // face `ENGINE-LIMITS.md` §13 O1 measured (`int h1 = texture == null ? 0 : texture.getHandle()`
+  // is a boundary precisely BECAUSE `h1` is correctly not a seed: an `if` is not a pure move, so
+  // `FlowPropagation` builds no edge to it and the local rightly keeps `int`).
   override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef =
-    if !seeds(v.symbol) then v
-    else v.copy(tpt = TypeTree(opaqueRef, v.origin), rhs = v.rhs.map(wrap))
+    if seeds(v.symbol) then v.copy(tpt = TypeTree(opaqueRef, v.origin), rhs = v.rhs.map(wrap))
+    else v.copy(rhs = v.rhs.map(unwrapIfOpaque))
 
   override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
-    if !seeds(d.symbol) then d
-    else d.copy(returnTpt = TypeTree(opaqueRef, d.origin), rhs = d.rhs.map(wrapReturns))
+    if seeds(d.symbol) then d.copy(returnTpt = TypeTree(opaqueRef, d.origin), rhs = d.rhs.map(wrapReturns))
+    else d.copy(rhs = d.rhs.map(unwrapReturns))
 
   // retype seed REFERENCES so boundary detection reads a consistent `tpe` (the populator left
   // a seed reference's node `tpe` as `Int`; only the declaration was retyped above).
@@ -236,11 +387,11 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
         coerceArgs(t)
 
   override def transformTerm(t: Term)(using Program): Term = t match
+    // The DECLARATION on the left decides, not the node type on the right: `layer = c ? 0 : x` has
+    // an `Assign` whose rhs node is still `Int` and whose value is half a seed's.
     case a: Tree.Assign =>
-      if isOpaque(a.lhs) && isPrim(a.rhs.tpe) then a.copy(rhs = wrap(a.rhs))
-      else if isPrim(a.lhs.tpe) && isOpaque(a.rhs) then a.copy(rhs = unwrapCall(a.rhs))
-      else a
-    case x: Tree.ArrayAccess if isOpaque(x.index) => x.copy(index = unwrapCall(x.index))
+      if carriesOpaque(a.lhs) then a.copy(rhs = wrap(a.rhs)) else a.copy(rhs = unwrapIfOpaque(a.rhs))
+    case x: Tree.ArrayAccess => x.copy(index = unwrapIfOpaque(x.index))
     case other => other
 
   private def isSeedMethod(m: SymId)(using p: Program): Boolean =
@@ -252,14 +403,61 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
         val params = d.paramss.flatten
         if params.length != t.args.length then t
         else t.copy(args = t.args.zip(params).map { (arg, p) =>
-          val pOpaque = seeds(p.symbol)
-          if pOpaque && isPrim(arg.tpe) then wrap(arg)
-          else if !pOpaque && isOpaque(arg) then unwrapCall(arg)
-          else arg
+          if seeds(p.symbol) then wrap(arg) else unwrapIfOpaque(arg)
         })
       case _ => t
 
-  private def wrap(e: Term): Term =
+  // -------------------------------------------------------------------------
+  // THE BOUNDARY, read through the DECLARATION — `ENGINE-LIMITS.md` §13 O1.
+  // -------------------------------------------------------------------------
+
+  /** Does the VALUE this term yields belong to the opaque family?
+    *
+    * '''Read through the DECLARATION, and through the compound expressions that CARRY a value.'''
+    * A node's own `tpe` is exact for a bare reference — `transformIdent`/`transformSelect`/
+    * `transformApply` retype those as they pass — and blind to every term that merely carries one,
+    * because nothing retypes a composite node from its branches. `x == null ? 0 : x.getHandle()` is
+    * an `If` whose `tpe` is still the primitive and whose value is a seed's on one branch, and that
+    * is the shape the corpus has (3 measured scalac errors, all of it).
+    *
+    * The CARRIERS are enumerated, and an unenumerated one is a MISSED coercion — the same failure
+    * direction [[FlowPropagation]] argues for and for the same reason: a missing coercion is a
+    * compile error at the site, loud and attributable, while a spurious one would silently unwrap a
+    * value nothing asked about. `Match` is here because a switch EXPRESSION carries its arms'
+    * values; a `Try` and a `Lambda` are not, and each is a missed edge rather than a wrong one.
+    */
+  private def carriesOpaque(e: Term)(using Program): Boolean = e match
+    case Tree.Commented(_, inner)     => carriesOpaque(inner)
+    case Tree.If(_, a, b, _, _)       => carriesOpaque(a) || carriesOpaque(b)
+    case Tree.Block(_, x, _, _, _)    => carriesOpaque(x)
+    case Tree.Match(_, cases, _, _)   => cases.exists(c => carriesOpaque(c.body))
+    case Tree.Ident(s, _, _)          => seeds(s) || isOpaque(e)
+    case Tree.Select(_, s, _, _)      => seeds(s) || isOpaque(e)
+    case Tree.Apply(_, _, m, _, _)    => isSeedMethod(m) || isOpaque(e)
+    case other                        => isOpaque(other)
+
+  /** Insert `f` WHERE THE VALUE IS — at each leaf of a carrying expression, never around the whole.
+    *
+    * `ENGINE-LIMITS.md` §13 O1 left two candidates and this is the one the reference hand port
+    * writes: `if (t == null) 0 else Handle.unwrap(t.getHandle())`, so the declaration that kept the
+    * primitive reads as java wrote it. Wrapping the whole is not merely uglier — it is WRONG for a
+    * mixed carrier, since an `if` with one branch of each type has no type a single coercion could
+    * take (an opaque type's upper bound outside its own object is `Any`).
+    */
+  private def coerce(e: Term, tpe: TypeRepr, f: Term => Term)(using Program): Term = e match
+    case Tree.Commented(l, inner)  => Tree.Commented(l, coerce(inner, tpe, f))
+    case i: Tree.If                => i.copy(thenp = coerce(i.thenp, tpe, f), elsep = coerce(i.elsep, tpe, f), tpe = tpe)
+    case b: Tree.Block             => b.copy(expr = coerce(b.expr, tpe, f), tpe = tpe)
+    case m: Tree.Match             => m.copy(cases = m.cases.map(c => c.copy(body = coerce(c.body, tpe, f))), tpe = tpe)
+    case leaf                      => f(leaf)
+
+  /** COERCE INTO the opaque type. A leaf that already carries it is left alone, so a MIXED carrier
+    * wraps only the branches that are still plain. */
+  private def wrap(e: Term)(using Program): Term =
+    if carriesOpaque(e) then coerce(e, opaqueRef, l => if carriesOpaque(l) then l else wrapCall(l))
+    else wrapCall(e)
+
+  private def wrapCall(e: Term): Term =
     if isPrim(e.tpe) then Tree.Apply(Tree.Ident(objSym, TypeRepr.NoType, e.origin), List(e), applySym, opaqueRef, e.origin)
     else e
 
@@ -267,14 +465,32 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
     Tree.Apply(Tree.Select(Tree.Ident(objSym, TypeRepr.NoType, e.origin), unwrapSym, TypeRepr.NoType, e.origin),
       List(e), unwrapSym, primRef, e.origin)
 
-  private def unwrapIfOpaque(e: Term): Term = if isOpaque(e) then unwrapCall(e) else e
+  /** COERCE OUT of it — a no-op unless the value really is a seed's, which is what makes this safe
+    * to ask at every boundary rather than only at the ones a node type made visible. */
+  private def unwrapIfOpaque(e: Term)(using Program): Term =
+    if !carriesOpaque(e) then e
+    else coerce(e, primRef, l => if carriesOpaque(l) then unwrapCall(l) else l)
 
-  private def wrapReturns(body: Term): Term = body match
+  private def wrapReturns(body: Term)(using Program): Term = body match
     case Tree.Return(Some(e), tp, o) if isPrim(e.tpe) => Tree.Return(Some(wrap(e)), tp, o)
     case b: Tree.Block  => b.copy(stats = b.stats.map { case s: Term => wrapReturns(s); case s => s }, expr = wrapReturns(b.expr))
     case i: Tree.If     => i.copy(thenp = wrapReturns(i.thenp), elsep = wrapReturns(i.elsep))
     case e if isPrim(e.tpe) => wrap(e)
     case other          => other
+
+  /** The dual, for a method that KEPT the primitive and returns a value carrying a seed — O1 one
+    * node up from a `val`. Only a `return` expression and the body's TAIL are coerced: an ordinary
+    * statement is not a value the method yields, and rewriting one would coerce an expression
+    * nothing consumes. */
+  private def unwrapReturns(body: Term)(using Program): Term =
+    def walk(t: Term, tail: Boolean): Term = t match
+      case Tree.Return(Some(e), tp, o) => Tree.Return(Some(unwrapIfOpaque(e)), tp, o)
+      case b: Tree.Block => b.copy(stats = b.stats.map { case s: Term => walk(s, false); case s => s },
+                                   expr = walk(b.expr, tail))
+      case i: Tree.If    => i.copy(thenp = walk(i.thenp, tail), elsep = walk(i.elsep, tail))
+      case other if tail => unwrapIfOpaque(other)
+      case other         => other
+    walk(body, true)
 
   private def isOpaque(t: Term): Boolean   = headSym(t.tpe).contains(opaqueSym)
   private def isPrim(t: TypeRepr): Boolean = headSym(t).contains(primSym)

@@ -3692,19 +3692,28 @@ DEFAULT-OFF, so all 13 ports are 0 members changed with every check count identi
 All three entries below come from the SAME delivery — Stage P6's attempt to enable an opaque family
 on libGDX core (`PROGRESS.md` §11.25) — and all three are in `PrimitiveToOpaqueTransform` itself,
 not in the policy that configured it. Read O1 and O2 together: they are two halves of "a retyping
-phase owes more than the declaration it was pointed at", and neither is reachable from any manifest
-key, so a port that hits either has no exit but the engine. O3 is a third shape — a family the spec
-cannot ask for at all.
+phase owes more than the declaration it was pointed at", and neither was reachable from any manifest
+key, so a port that hit either had no exit but the engine. O3 is a third shape — a family the spec
+cannot ask for at all, and it is the one still open.
 
 The delivery O1 and O2 blocked was otherwise complete and correct. The family emits exactly what the
 reference hand port emits (`GLTexture.glHandle: TextureHandle.T`, the mint wrapped at
 `TextureHandle(gl.glGenTexture())`, every GL-interface crossing unwrapped), every one of the 21
-check counts is unchanged, and the whole cost is **6 scalac errors, 3 from each of O1 and O2**.
+check counts is unchanged, and the whole cost was **6 scalac errors, 3 from each of O1 and O2**.
 
-### O1. A coercion reads the boundary TERM's own type, so a seed reaching it through an `if` is INVISIBLE — 3 errors
+**O1 and O2 are CLOSED**, and the number that says so is the same one that opened them: the P6
+`OpaqueSpec` re-applied verbatim reads **6 → 0 errors**, with the reached set intact — 1 seed, 2
+`RetypedSignature` decisions, and every one of the 21 check counts identical to the port's baseline.
+The two deltas are both O1's and both accounted: coercions **27 → 30** (one per O1 error site) and
+members **34 → 37** (`TextureDescriptor`, `#hashCode`, `#compareTo` — the three rows that pre-fix did
+not move BECAUSE no coercion was inserted in them). Both runs are in the same session against the
+same baseline, so the attribution is a diff and not a reconstruction.
 
-OPEN. (a) engine, in the phase's coercion. Measured on libGDX core: `TextureDescriptor#hashCode`
-(1) and `#compareTo` (2).
+### O1. A coercion reads the boundary TERM's own type, so a seed reaching it through an `if` is INVISIBLE — was 3 errors
+
+CLOSED, and it is the general rule §1.5 already states for `CollectionsTransform` — *read the
+boundary through the DECLARATION* — met by a second retyping phase. (a) engine, in the phase's
+coercion. Measured on libGDX core: `TextureDescriptor#hashCode` (1) and `#compareTo` (2).
 
 The phase retypes seed REFERENCES so boundary detection reads a consistent `tpe` —
 `transformIdent`, `transformSelect` and `transformApply` each rewrite the node's type to the opaque
@@ -3732,18 +3741,43 @@ same defect in the other direction: `h1` is correctly NOT a seed (an `If` is not
 precisely a boundary, which is exactly where a coercion was owed and none was inserted.
 
 The failure direction is the SAFE one `FlowPropagation`'s own doc argues for — a missed edge is a
-compile error at the site, never a silent retype — so this is a gap to close, not a design to
-revisit. What the fix has to decide is which of two it does: push the coercion into each branch of
-the carrying node, or type the carrying node from its branches and coerce the whole. The first is
-local and leaves `h1: Int` reading as java wrote it; the second is fewer sites and moves composite
-node types the populator set. Neither has been measured.
+compile error at the site, never a silent retype — so this was a gap to close, not a design to
+revisit.
 
-*Fix kind: (a) engine — `PrimitiveToOpaqueTransform`'s coercion. No `RuleScope` can reach it: the
-errors are at CALLERS of a retyped member, and scoping the caller out cannot un-retype the callee.*
+**The fix reads the boundary through the DECLARATION and pushes the coercion INTO EACH BRANCH.**
+`carriesOpaque` asks the SEED TABLE about the declaration a value flows from, and descends the
+compound expressions that carry a value without being one — `if`, a block's tail, a `match` arm, a
+`Commented` wrapper; `coerce` then rewrites the leaves. Both halves were choices and both are
+recorded:
 
-### O2. A retyped PARAMETER leaves its METHOD's signature stale — and the ctor funnel reads the signature — 3 errors
+- **which of the two candidates.** The entry left "push into each branch" and "type the carrier from
+  its branches and coerce the whole" as unmeasured alternatives. The first is right, and the
+  REFERENCE PORT settles it rather than taste (§3.5): sge writes
+  `texture.map(_.textureObjectHandle.toInt).getOrElse(0)` — the coercion at the leaf, the
+  declaration that kept the primitive reading as java wrote it. The second is also WRONG for a MIXED
+  carrier, which the first draft did not see: an `if` with one branch of each type has no type a
+  single coercion could take, since an opaque type's bound outside its own object is `Any`. A
+  UNIFORM plain carrier is still coerced whole, so the pre-fix answer survives where it was right
+  and no emitted byte moves for it.
+- **which node kinds are carriers is ENUMERATED, and an unenumerated one is a MISSED coercion** —
+  the same failure direction, deliberately: a missing coercion is a compile error at the site, while
+  a spurious one silently unwraps a value nothing asked about. A `Try`, a `Lambda` and an
+  anonymous-class body carry no coercion today and each is a missed edge rather than a wrong one.
 
-OPEN. (a) engine, in the phase's retype loop. Measured on libGDX core: `Texture`'s synthesised
+Emitted, at the site that opened this:
+
+```scala
+result = (811 * result) + (if (this.texture == null) 0 else sge.graphics.TextureHandle.unwrap(this.texture.getTextureObjectHandle()))
+val h1: scala.Int = if (this.texture == null) 0 else sge.graphics.TextureHandle.unwrap(this.texture.getTextureObjectHandle())
+```
+
+*Fix kind: (a) engine — `PrimitiveToOpaqueTransform`'s coercion. No `RuleScope` could have reached
+it: the errors are at CALLERS of a retyped member, and scoping the caller out cannot un-retype the
+callee.*
+
+### O2. A retyped PARAMETER leaves its METHOD's signature stale — and the ctor funnel reads the signature — was 3 errors
+
+CLOSED. (a) engine, in the phase's retype loop. Measured on libGDX core: `Texture`'s synthesised
 primary (1) plus the two overload resolutions that then fail (2).
 
 The retype loop rewrites two things and no third:
@@ -3787,14 +3821,39 @@ against a primary whose second slot has the wrong type.
 
 **The funnel is the consumer that MEASURED it, not the only one.** Anything else deriving from a
 method's signature rather than its `ValDef`s reads the same stale list — a descriptor, and the
-published surface a dependent compiles against (`DESIGN.md` §8.3). Nothing in this run reported a
-disagreement, but the run never got past the base's own compile, so treat the published-surface
-face as UNMEASURED rather than clean, and re-measure it with the fix.
+published surface a dependent compiles against (`DESIGN.md` §8.3).
 
-*Fix kind: (a) engine — rewrite the enclosing `MethodType`'s parameter list wherever a parameter
-symbol is retyped, in the same pass. The general rule it is an instance of: a phase that retypes a
-DECLARATION owes every derived signature that mentions it, because the TIR stores a parameter's
-type twice and only one of the two is what a given consumer reads.*
+**The fix rewrites the enclosing `MethodType`'s parameter slots in the same motion as the `ValDef`,
+BY POSITION** — the correction `NullabilityTransform` already records for its own retype loop, and
+for the same reason: a `MethodType`'s parameter list and its `DefDef`'s are parallel by
+construction while the NAMES are not, since an earlier phase may rewrite a parameter slot without
+touching the method's `info`. `PolyType` is unwrapped and re-wrapped, so a generic method with a
+seeded parameter moves too. Proof, in the run's own artifact rather than in prose —
+`decisions.tsv`, the `FunnelledCtor` row for the class that failed:
+
+```
+primary=(sup$0: scala.Int, sup$1: <notype>::sge.graphics.TextureHandle.T)
+```
+
+**And the three other consumers were checked, not assumed:**
+
+- **`MemberKey`/`Descriptor` are UNAFFECTED, and that is the invariant holding rather than luck.**
+  `Symbol.descriptor` is set by the FRONTEND from the Java signature and no phase rewrites it; the
+  binder, `OverrideGraph` and the emitter's contract rows read that field first, and
+  `Descriptor.ofInfo` — the only derivation that reads `MethodType` — is the documented FALLBACK for
+  a symbol the frontend never declared (an external member, or one the engine minted after it ran).
+  So a retyped parameter moves the signature and leaves the descriptor Java-derived, which is what
+  P4's audit pinned. Measured, not argued: `port-map` **0**, `signature` **0**, and the emitted member
+  KEY for the affected constructor is the same string before and after the fix.
+- **the CONSTRUCTOR FUNNEL** — the consumer that measured it — now reads `TextureHandle.T` and the
+  three errors go.
+- **the PUBLISHED SURFACE** (`DESIGN.md` §8.3) is no longer unmeasured: the fixed run reaches a
+  compile, `port-map` and `manifest` are both 0 on the base, and the seven libGDX dependents are
+  0 members changed with identical counts.
+
+*Fix kind: (a) engine. The general rule it is an instance of: a phase that retypes a DECLARATION
+owes every derived signature that mentions it, because the TIR stores a parameter's type twice and
+only one of the two is what a given consumer reads.*
 
 ### O3. An opaque family that lands on an ARRAY ELEMENT is INEXPRESSIBLE — not refused, unreachable
 
@@ -3822,5 +3881,47 @@ to a typo. Any fix has to decide how far the element type travels (an `Array[T]`
 collection's type argument, both) and what a coercion at an array boundary even is — a per-element
 map is not a wrap — so this is a design question, not an oversight to patch.
 
+**STILL OPEN — but no longer QUIET, which was the half that made it expensive.** The refusal stands
+and the report is new: the phase now reports every hint that named a real declaration of this
+program, inside the fence, whose VALUE TYPE mentions the spec's primitive without being it
+(`reportUnreachable`, a `PolicyIssue.Malformed` row in the `policy` check). Three things about the
+shape, each a decision:
+
+- **`Malformed`, not `NeverMatched`.** The key named something, so "your key matches nothing" is the
+  wrong sentence, and `PolicyReport`'s three answers already hold the right one — *it could never
+  have named anything the phase can act on*. The enum gains no case, which its own doc asks for.
+- **the detail says (a) ENGINE, explicitly**, because `PolicyFinding.render` appends §1(b)
+  unconditionally and here that is false: no respelling of the key reaches a container's element,
+  and the exits are to drop the hint or to widen the mechanism. §4.45's rule — a finding whose
+  reader cannot classify it costs a full investigation — is what makes the override worth the words.
+- **the report's DOMAIN is exactly the seeding rule's domain** — a method's RESULT, anything else's
+  own `info`. A hint naming a METHOD whose PARAMETER is the primitive is a different mistake with a
+  real policy exit (name the parameter), and reporting it here would send its author to the engine.
+
 *Fix kind: (a) engine — `taggablePrim` plus whatever `FlowPropagation` would need to carry an edge
 into a container's element. No policy exit: the spec has no vocabulary for "the element of".*
+
+### O4. An `OpaqueSpec`'s `hints` is a PREDICATE, so the surface fingerprint cannot see it
+
+OPEN, and it is the residue left by closing a bigger hole rather than a new one. The phase RETYPES
+declarations under a `RuleScope` and did not implement `SurfacePolicy`, so `PortManifest.fingerprint`
+compared two instances by NAME — and the name is `primitive->opaque:<fqn>`, which means a base and a
+dependent seeding the SAME opaque type from different declarations compared EQUAL, in
+`ManifestAgreement` and in every published port map. That is closed: the fingerprint now renders the
+spec's `fqn`, its primitive, its sorted `extraHints` and its `RuleScope.fingerprint`.
+
+**`hints` is a `Symbol => Boolean` and has no stable rendering, so two specs differing only in their
+predicate still compare equal.** This is the same blind spot `PortManifest.fingerprint`'s own doc
+names one level up, one level down: opt-in, and the alternative — reflecting over a lambda — would
+compare things that are not policy. What is left is strictly smaller than what it replaces, and the
+part a port actually EDITS after a failed compile (`extraHints`) is inside the fingerprint.
+
+**Nothing depends on it today, and that is a MEASUREMENT rather than a hope** (§1.5's instance-count
+question): no dependent in the corpus constructs a `primitive->opaque` phase, so there is one
+instance, inherited through `extendedBy`, and every dependent's effective surface agrees by
+construction. The exit when one does, and the reason it is not built yet, are in `DESIGN.md` §8.13.
+
+*Fix kind: (a) engine, if it is worth building — an `OpaqueSpec` field naming the predicate, which
+is policy the port would have to keep honest by hand, or a fingerprint over what the phase SEEDED,
+which is not available at fold time and would not be pure. Neither is obviously better than the
+named residue.*

@@ -228,6 +228,42 @@ not there. So the propagation is allowed to walk INTO a sibling's opaque type pr
 overlap is visible, and the run throws, naming the symbol and both specs. A throw rather than a
 finding, for the reason `Pipeline.order` throws on a phase cycle: there is no honest program to emit.
 
+**A retyping phase owes THREE things beyond the declaration it was pointed at**, and this one shipped
+owing all three. Each is now built, each was measured by the family that exposed it
+(`ENGINE-LIMITS.md` §13, `PROGRESS.md` §11.25), and each generalises past this phase:
+
+- **the coercion reads the boundary through the DECLARATION.** A node's own `tpe` is exact for a
+  bare reference and blind to every term that CARRIES one, because nothing retypes a composite node
+  from its branches — so `carriesOpaque` asks the seed table and descends `if` / a block's tail / a
+  `match` arm / a `Commented` wrapper, and `coerce` rewrites the LEAVES. That is §1.5's rule for
+  `CollectionsTransform` restated one phase along, and the leaf placement is the reference port's
+  own answer rather than a preference. Which node kinds carry is enumerated; an unenumerated one is
+  a MISSED coercion, which is a compile error at the site, never a silent unwrap.
+- **the enclosing `MethodType`'s parameter slots move with the parameter symbol, by POSITION.** The
+  TIR stores a parameter's type TWICE and consumers read different halves — the emitter reads the
+  `ValDef`, the constructor funnel reads the signature (deliberately: an argument's type may be
+  narrower than the formal), a published contract row reads the signature. One declaration with two
+  types is a disagreement no count can see. Descriptors are NOT part of this: `Symbol.descriptor` is
+  frontend-derived from the Java signature and no phase rewrites it, so a retyped parameter moves
+  the signature and leaves member identity alone — which is the invariant, verified rather than
+  assumed.
+- **a hint the MECHANISM cannot reach is REPORTED, and says (a) engine.** An `OpaqueSpec` seeds a
+  symbol whose own type is the primitive, so a family landing on a container's ELEMENT is
+  unreachable — and it used to be unreachable SILENTLY, which reads exactly like a typo. It is now a
+  `policy` finding whose detail names `ENGINE-LIMITS.md` §13 O3 and says no respelling helps.
+
+**And the spec is SHARED SURFACE, so the phase implements `SurfacePolicy`** — CLAUDE.md §1's standing
+obligation for anything that retypes declarations under a `RuleScope`, unmet here until now. The
+fingerprint renders the FQN, the primitive, the sorted `extraHints` and the scope. `hints` is a
+predicate and cannot be rendered; that residue is `ENGINE-LIMITS.md` §13 O4. **`MergeablePolicy` is
+deliberately NOT implemented**, and the argument is §1.5's instance-count question answered rather
+than assumed: no corpus dependent constructs this phase, so there is one instance inherited through
+`extendedBy` and nothing to fold. Two same-NAME instances would mean the same opaque type configured
+twice — the phase's name is `primitive->opaque:<fqn>` — which is two answers to "which values are
+this type", and OR-ing two predicates would silently widen the shared surface. `SurfaceDivergence`
+is the right answer for a composition nobody has designed; a merge is what to build when a dependent
+first needs one, not before.
+
 ### 2.1.3 Java primitives → Scala primitives is (a) UNIVERSAL, with nothing to scope
 
 Investigated when `RuleScope` landed, and recorded here so it is not re-derived.
