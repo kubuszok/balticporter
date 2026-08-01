@@ -270,8 +270,8 @@ gdx-test-measure:
     # and the residue is still JUnit (`@Test`), so counting only annotations under-reports by every
     # converted suite — the check must sum both or it lies in the safe-looking direction.
     JAVA_TESTS=$(java_test_count {{gdx_src}}/test)
-    JUNIT_LEFT=$(grep -rh "@org.junit.Test\|@Test" {{gdx_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
-    MUNIT_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{gdx_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    JUNIT_LEFT=$(junit_residue {{gdx_module}}/src_managed/test/scala)
+    MUNIT_TESTS=$(munit_emitted {{gdx_module}}/src_managed/test/scala)
     SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
     echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
     [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
@@ -359,8 +359,8 @@ ashley-measure:
     # still JUnit, so counting only one under-reports by every converted suite — in the safe-looking
     # direction, which is the dangerous one.
     JAVA_TESTS=$(java_test_count {{ashley_src}}/ashley/tests)
-    JUNIT_LEFT=$(grep -rh "@org.junit.Test\|@Test" {{ashley_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
-    MUNIT_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{ashley_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    JUNIT_LEFT=$(junit_residue {{ashley_module}}/src_managed/test/scala)
+    MUNIT_TESTS=$(munit_emitted {{ashley_module}}/src_managed/test/scala)
     SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
     echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
     [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
@@ -551,8 +551,8 @@ gltf-measure:
     # Both frameworks summed, as `gdx-test-measure` and `ashley-measure` do: a ported suite is MUnit
     # and any residue is still JUnit, so counting one under-reports in the safe-LOOKING direction.
     JAVA_TESTS=$(java_test_count {{gltf_tests}})
-    JUNIT_LEFT=$(grep -rh "@org.junit.Test\|@Test" {{gltf_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
-    MUNIT_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{gltf_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    JUNIT_LEFT=$(junit_residue {{gltf_module}}/src_managed/test/scala)
+    MUNIT_TESTS=$(munit_emitted {{gltf_module}}/src_managed/test/scala)
     SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
     echo "@Test in Java (whole {{gltf_tests}} tree): $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
     [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
@@ -860,8 +860,8 @@ sg-measure:
     # JUnit, so counting one under-reports by every converted suite — in the safe-looking direction. A
     # suite with no discoverable tests runs ZERO and reports SUCCESS.
     JAVA_TESTS=$(java_test_count {{sg_src}}/src/test)
-    JUNIT_LEFT=$(grep -rh "@org.junit.Test\|@Test" {{sg_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
-    MUNIT_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{sg_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    JUNIT_LEFT=$(junit_residue {{sg_module}}/src_managed/test/scala)
+    MUNIT_TESTS=$(munit_emitted {{sg_module}}/src_managed/test/scala)
     SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
     echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
     [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"

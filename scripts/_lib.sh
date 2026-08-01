@@ -91,6 +91,45 @@ java_test_count() {
   '
 }
 
+# scala_code <emitted-scala-dir>...
+# The emitted Scala with its COMMENTS REMOVED, on stdout — what the discovery counters below must
+# count over.
+#
+# Same reason `java_test_count` exists, one side further along, and it fired the moment the port
+# started preserving comments properly: simple-graphs' `GraphBuilderTest` holds an entire
+# commented-out `GridPoint` class with a `@Test public void testExample()` inside it, and once that
+# comment reached the emitted file the plain `grep -rh "@Test"` counted it — "TESTS LOST — -1 of 16
+# would never run", on a suite that had lost nothing and ran all 16. A NEGATIVE loss is the tell,
+# and a guard whose firing is a false positive teaches its reader to ignore it (ENGINE-LIMITS M5).
+#
+# PER FILE and LINE-ORIENTED for the reason spelled out on `java_test_count`: concatenating a tree
+# lets one unbalanced `/*` swallow across file boundaries, which is the direction that HIDES a lost
+# test. String literals are blanked first (a path glob `"a/*"` is not a comment opener) — which
+# cannot affect any count here, since neither `@Test` nor a `test(` call is inside a literal.
+scala_code() {
+  find "$@" -name '*.scala' -print0 2>/dev/null | xargs -0 perl -e '
+    for my $f (@ARGV) {
+      open(my $h, "<", $f) or next;
+      my $in = 0;                       # inside a /* … */ block, reset per FILE
+      while (my $l = <$h>) {
+        if ($in) { if ($l =~ s{^.*?\*/}{}) { $in = 0 } else { next } }
+        $l =~ s{"(?:\\.|[^"\\])*"}{""}g;
+        $l =~ s{/\*.*?\*/}{}g;          # whole blocks opened and closed on this line
+        if ($l =~ s{/\*.*$}{}) { $in = 1 }
+        $l =~ s{//.*$}{};               # …and the line form, which is how a NESTING block emits
+        print $l;
+      }
+      close($h);
+    }
+  '
+}
+
+# junit_residue <emitted-scala-dir>...   — `@Test` annotations the conversion did NOT translate
+junit_residue() { scala_code "$@" | grep -c "@org.junit.Test\|@Test" | tr -d ' '; }
+
+# munit_emitted <emitted-scala-dir>...   — `test("…")` registrations the emitted suite declares
+munit_emitted() { scala_code "$@" | grep -oE '(^|[^a-zA-Z0-9_.])test\("' | wc -l | tr -d ' '; }
+
 # reconcile_outcomes <run-output-file> <emitted-test-count>
 # Every emitted test must produce an OUTCOME LINE, and the two markers a measure script naturally
 # reaches for do not cover them all.
