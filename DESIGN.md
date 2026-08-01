@@ -2461,7 +2461,10 @@ a design, not a mechanism.
   alignment (`rawParentAlignment`) tests `hasWildcardArg`, which does not look inside a union — so an
   annotated parameter whose type carries a wildcard AND overrides a parent method silently stops
   being aligned. Nothing today produces that shape, because the phase is off; it is named here so the
-  P3 enablement measures it rather than discovering it as an unexplained diff.
+  P3 enablement measures it rather than discovering it as an unexplained diff. **Measured at P3 and it
+  does not fire**: the enabled port has five wildcard-inside-union sites and not one of them is an
+  override, so the shape does not occur in that library (`PROGRESS.md` §11.17). The gap in the
+  predicate is real and stays open for the next one.
 
 **Rejected.** `given Conversion` ergonomics. A **boxing** wrapper — it changes erasure, bringing bridges,
 overload-erasure collisions and an allocation per annotated call, where the opaque-over-union wrapper

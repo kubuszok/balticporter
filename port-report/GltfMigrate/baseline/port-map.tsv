@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=6f775e91c7db23cf
+# balticporter port map	schema=3	module=gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=c4a233f498930bfc
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	net.mgsx.gltf.data.GLTF	sge.gltf.data.GLTF	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.data.GLTFAsset	sge.gltf.data.GLTFAsset	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public

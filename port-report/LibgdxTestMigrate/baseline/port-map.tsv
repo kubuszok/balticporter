@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=libgdx-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=47cfd94c7184bb11
+# balticporter port map	schema=3	module=libgdx-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=82d01c5072166ff9
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -208,9 +208,9 @@ member	com.badlogic.gdx.utils.JsonMatcherTests#copy(JsonValue,Array)	sge.utils.J
 member	com.badlogic.gdx.utils.JsonMatcherTests#json	sge.utils.JsonMatcherTests#json	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1516	db8e49d79003bd09	placement=companion vis=private
 member	com.badlogic.gdx.utils.JsonMatcherTests#printResults(JsonMatcher,Array,String,Array,Array)	sge.utils.JsonMatcherTests#printResults(JsonMatcher,Array<JsonValue>,String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1477	5a2ddf83e34dbd67	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#rejectAll(String,String,String,Array)	sge.utils.JsonMatcherTests#rejectAll(String,String,String,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1146	b23e485f0da84df3	placement=companion
+member	com.badlogic.gdx.utils.JsonMatcherTests#test(?,String,Array,Array)	sge.utils.JsonMatcherTests#test(?,String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1443	87c4ef4d491076b8	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,Array,Array)	sge.utils.JsonMatcherTests#test(String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1439	bba2b17b56ad541a	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,String,Array)	sge.utils.JsonMatcherTests#test(String,String,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1435	3c3e8ad79e3459ea	placement=companion
-member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,String,Array,Array)	sge.utils.JsonMatcherTests#test(String,String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1443	6a429eb5de065c06	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(Array)	sge.utils.JsonMatcherTests#toString(Array<JsonValue>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1505	d7e5a497c8e2bf6c	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(JsonMatcher,Array)	sge.utils.JsonMatcherTests#toString(JsonMatcher,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1494	5df07723d5b7f6d3	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#watcher	sge.utils.JsonMatcherTests#watcher	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1570	992d2d5e056db94f	

@@ -5,6 +5,7 @@ collection-retarget	0
 gdx-shared-iterator	0
 jdk-surface	1
 manifest	0
+nullability-boundary	0
 omissions	1
 policy	0
 port-map	0

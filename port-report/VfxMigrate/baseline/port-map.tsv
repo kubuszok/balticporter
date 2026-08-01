@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=vfx	engine=balticporter/0.1.0-SNAPSHOT	sources=9c70572f550ff922	files=44	policy=a4fb23c9f34f9950
+# balticporter port map	schema=3	module=vfx	engine=balticporter/0.1.0-SNAPSHOT	sources=9c70572f550ff922	files=44	policy=e3a48e9e95113609
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	core.src.com.crashinvaders.vfx.VfxManager	sge.vfx.VfxManager	Renamed	-		0		companion=yes flags=final form=class parents=java.lang.AutoCloseable primary=(Format,int,int) primaryKind=unique-root primaryVis=public secondaries=(Format) statics=MAX_FRAME_BUFFER_SIDE,constrainFrameBufferSize,tmpVec
 type	core.src.com.crashinvaders.vfx.VfxRenderContext	sge.vfx.VfxRenderContext	Renamed	-		0		form=class parents=java.lang.AutoCloseable primary=(Format,int,int) primaryKind=unique-root primaryVis=public

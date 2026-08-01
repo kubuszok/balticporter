@@ -2179,7 +2179,9 @@ with it absent, which is the (b) proof; 24 specs, of which the negatives are the
 wrapper, uncoercible seam, unknown FQN never-fired, empty-config byte-identity).
 
 **P3 dry run — `@Null` → union floor on libGDX core, bound, counted and COMPILED, then reverted.**
-The phase was added to `mainPhases`, the port emitted and compiled, and the tree restored. Measured:
+The phase was added to `mainPhases`, the port emitted and compiled, and the tree restored. This is
+the UNSCOPED measurement, kept because it is what produced K13; §11.17 is what P3 actually shipped.
+Measured:
 
 | | |
 |---|---|
@@ -2686,6 +2688,143 @@ note** — the only note text that moved is `funnelled-ctor`'s `primary=` on `Ti
 `SortedIteratingSystem`, which now spells `scala.math.Ordering`. `NoteCoverageCheck` 0/0 on every
 port throughout.
 
+### 11.17 P3 — the `@Null` union floor: DELIVERED on libGDX, REFUSED on screens
+
+`NullabilityTransform(annotations = {"com.badlogic.gdx.utils.Null"}, target = Union, scope =
+Everywhere(except = 12 types))` in `LibgdxPolicy.core`'s `mainPhases`, inherited by all five
+dependents (§1.5). **Every lane green, every check count identical on all thirteen ports except the
+new `nullability-boundary`, every suite unchanged.**
+
+**Why it is not D9 and needs no merge**, on P2's argument: `nullability` is a phase NO dependent
+constructs — the corpus grep is the whole proof — so there is one instance in every effective
+pipeline and `extendedBy` has nothing to fold. That is also exactly why the screens half is refused
+(below): screens would have had to construct a second one.
+
+**The plan's central claim was refuted before this ran, and P3 is where the correction is paid
+for.** `ENGINE-LIMITS.md` K13: `Null` is a subtype of every CONCRETE reference type and not of an
+abstract `T <: Object`, so "0 error-count movement" holds for the floor's declarations and not for
+its uses. Measured here, unscoped, reproducing K13 to the site:
+
+| | unscoped | scoped (delivered) |
+|---|---:|---:|
+| declarations retyped (`decisions.tsv`, `nullability:com.badlogic.gdx.utils.Null`) | 632 | **540** |
+| positions moved | 707 | **608** — 150 return, 341 param, 117 field |
+| `ScopedOut` decisions (and porter notes) | 0 | **51** |
+| `nullability-boundary` | 174 (155 / 17 / 2) | **109** — 90 `AbstractTypeParameter`, 17 `NotAValuePosition`, 2 `VarargParameter` |
+| compile errors, libGDX core | **35** | **0** |
+
+**The three exits, and which one this port took.** K13 leaves the abstract-type class as a policy
+decision: accept the errors, scope the generic declarations out, or land §8.6's N2 (`-Yexplicit-nulls
+-language:unsafeNulls`, under which the class disappears). **The second**, because the first fails
+the measure lane's compile guard and the third is gated on A1/A2's placeholder removal, which is not
+done. What it exempts and why is `LibgdxPolicy.nullabilityExempt`: twelve types whose `@Null` members
+are typed by their OWN type parameter — eight containers (`Array`, `SnapshotArray`,
+`DelayedRemovalArray`, `AtomicQueue`, `IntMap`, `LongMap`, `ObjectMap`, `Queue`) and four generic
+widgets (`List`, `SelectBox`, `Tree`, `Selection`). **92 of 632 declarations held back to clear 35
+errors** — an over-approximation whose price is stated rather than hidden, because a `RuleScope` says
+TYPES and the failing set is a predicate over DECLARATIONS. Every other generic type in the library
+— `ArrayMap`, `ObjectSet`, `PooledLinkedList`, `ObjectFloatMap`, `Pool` — keeps the floor.
+
+**Two things the exit taught, both measured, both now in K13.**
+
+- **It closes over the subtypes that ANNOTATE.** The eleven types the errors landed in took 35 → 6;
+  the six survivors were all in `SnapshotArray` and `DelayedRemovalArray`, which extend the
+  scoped-out `Array` and re-state `@Null` on their own `T` in two overrides each. A scoped-out parent
+  beside a retyped override is half an override pair — the one shape a floor may not emit — and
+  nothing computes that closure: a `RuleScope` is a set of FQNs and the phase's override test is
+  wrapper-mode-only, so the compile is the only thing that finds a missing entry. Adding the two
+  took it to **0**.
+- **…and it stops there, because `OrderedMap` was DEAD POLICY.** It extends `ObjectMap` and
+  `OrderedMap$OrderedMapValues` overrides an annotated `ObjectMap$Values#toArray`, so the unscoped
+  run put an error in it and the first draft listed it. It re-states no annotation of its own (zero
+  `@Null` in the whole upstream file), so scoping `ObjectMap` out settles both ends and the entry
+  held back nothing. **Proved rather than argued: with and without it, `members.tsv` is
+  byte-identical.** Nothing would have reported it — `PolicyBinder.bindScope` asks "did anything in
+  the program fall inside this region", the type exists, and `policy` stays 0. An inert scope entry
+  is the one §1(b) no-op the never-fired machinery cannot see.
+
+**What the floor bought, in emitted text** (`skipPhases=nullability` against the delivered run, the
+§4.6 kill switch used as a measurement rather than as a debug aid):
+
+| in `libgdx-core/src_managed` | without | with |
+|---|---:|---:|
+| `\| scala.Null` | 0 | **543** (540 declarations; the 65-position gap is `Json`, which the port DROPS and never emits) |
+| `@sge.utils.Null` | 161 | **32** — every consumed marker stripped; the 32 that remain are on refused and scoped-out declarations, deliberately, so the contract stays readable at the line |
+| `null.asInstanceOf` | 278 | **262** — **16 placeholders retired**, both of §8.6's shapes: an annotated generic return, and an uninitialised annotated field that now states its own default (`private var stage: Stage \| scala.Null = null`) |
+
+**Per-port promotion.** Two ports move and eleven do not:
+
+| port | `just members-unchanged` | `nullability-boundary` | new `decisions.tsv` rows |
+|---|---:|---:|---:|
+| libgdx-core | **1,298** = 850 changed in place + **224 RE-KEYED** | 109 | 540 `RetypedSignature` + 51 `ScopedOut` |
+| libgdx-test | **4** = one re-keyed member + its owning class | 0 | **1** `RetypedSignature` |
+| every other port (11) | **0** | 0 | **0** |
+
+The 224 re-keys are not churn to explain away: a `MemberKey` descriptor is built from the parameter
+types, and a parameter that becomes `String | Null` renders `?`, so
+`JsonMatcherTests#test(String,String,Array<String>,Array<String>)` is now
+`#test(?,String,Array<String>,Array<String>)`. The lane's own correlate figure is **846**, which
+counts only what it can map through the source map; `just members-unchanged` counts every row.
+
+**And `libgdx-test`'s 4 is the disposal of CHUNK3's open question 34, measured.** The test port
+declares NO nullability policy of its own and gets one anyway, through §1.5 inheritance of the base
+manifest — its single `@Null` in test sources (`JsonMatcherTests#test`'s first parameter) is retyped
+by the base's instance, with the decision recorded in the TEST port's `decisions.tsv` because the
+declaration is the test port's own. Inherit-only was the right answer and it is no longer a claim.
+
+`just decision-counts`, `LibgdxCoreMigrate`: **2,439 → 3,030 rows**, the whole delta being
+`RetypedSignature` 429 → 969 and a `ScopedOut` kind this port had never recorded (0 → 51). Every
+other port's totals are unchanged but for libgdx-test's single row.
+
+**Ashley is the D2 gate and it holds**: `just members-unchanged AshleyMigrate` reports 0, and
+`AshleyMigrate/run-latest/decisions.tsv` contains not one `nullability` row — a dependent's phases
+decide about its base's units, and those decisions are the base's. `port-map.tsv` still moves on
+every port, because the phase joins `surfaceFingerprint`; that is §1.5 working in the direction
+nobody watches, exactly as P2 measured.
+
+**No new porter note kind, and that is the P2 rule applied rather than an omission.**
+`RetypedSignature` is outside `PorterNote.Rendered` — the type reads `T | scala.Null` and the
+annotation is gone, which is the whole of what a note would say, and 540 of them would bury the ones
+that carry information. Its COMPLEMENT `ScopedOut` **is** rendered, and those are the 51: a
+declaration that kept its upstream type shows nothing in the diff, so the reader has no local
+evidence at all. `NoteCoverageCheck` 0/0 on every port throughout.
+
+**The interaction §11.12 named to be MEASURED at P3, measured: it does not fire.**
+`TirEmitter.rawParentAlignment` tests `hasWildcardArg`, which does not look inside a union, so an
+annotated parameter whose type carries a wildcard AND overrides a parent method would silently stop
+being aligned — and a silent un-alignment is not a thing any count shows. The delivered output has
+**five** wildcard-inside-union sites (`Action#pool`/`getPool`/`setPool`, `Cell#merge`,
+`Button#getButtonGroup`) and **none of them is an `override`**, so the shape does not occur in libGDX
+and nothing was hidden. It remains live for the next library, and the fix is one predicate.
+
+**REFUSED: the screens half.** P3's plan also asked for `annotations =
+["org.jspecify.annotations.Nullable"]` on screens and the retirement of `--dependency
+org.jspecify:jspecify:0.3.0` from `screens_deps`. **It cannot land as policy.** `ScreensPolicy.core`
+is `LibgdxPolicy.core(...).extendedBy(...)`, so a `nullability` in its own `surface` is a SECOND
+instance of a phase the base now carries; `NullabilityTransform` does not extend `MergeablePolicy`,
+so `SurfaceFold.of` records `Cause.NoContract` and `ManifestAgreement` turns it into
+`SurfaceDivergence`, which is `fatal = true`. The finding's own text names the fix and its kind:
+*"the phase declares no `MergeablePolicy` (that is §1(a), engine: give it one)"*. That is a mechanism
+change, and widening the mechanism inside a policy commit is the thing P1 established must not
+happen. The five `@org.jspecify.annotations.Nullable` sites screens emits therefore stand, and the
+jar stays in the lane.
+
+Folding jspecify's FQN into the BASE's annotation set is not the alternative it looks like: it
+would put a fact about a dependent's own sources into the shared surface, and report a never-fired
+policy entry on every libGDX lane forever. **Do NOT retry either shape.** The order is: give
+`NullabilityTransform` a `MergeablePolicy` (union the annotation sets, compose the `RuleScope` per
+its direction, refuse on a conflicting `target`), measure that alone, then land screens' entry.
+
+**One residue this commit does NOT fix, found by reading the emitted output.** Every `ScopedOut`
+note renders its key TWICE — `/* porter: scoped-out reason=configured phase=nullability
+key=com.…ObjectMap key=com.…ObjectMap */`. `PorterNote.pairs` emits the `Reason.Configured` key and
+then the decision's own `detail`, and three phases put the same string in both:
+`NullabilityTransform`, `CollectionsTransform` and `GlobalsToImplicitsTransform` (`TypeRedirect` and
+`BeanProperty` do not). It is an M3-era engine defect, systemic rather than nullability's, and P3 is
+simply the first run in the corpus that emits a `ScopedOut` note at all. Fixing it here would be two
+changes in one measurement (§5); it is one line in each of three files plus 51 note texts of digest
+churn.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
@@ -2706,6 +2845,13 @@ Maintained by deletion. Items are ordered by what they block, not by size.
   `Configured` rows.** The same hole covers any phase that retypes a parent — the retarget is
   simply the first policy that does. The fix is one more pass over `Definition.parents` in the same
   `before`/`after` comparison, at the DECLARATION level the channel already uses.
+- **A `ScopedOut` note renders its policy key TWICE.** `PorterNote.pairs` emits the
+  `Reason.Configured` key and then the decision's own `detail` map, and three phases put the same
+  string in both — `NullabilityTransform`, `CollectionsTransform`, `GlobalsToImplicitsTransform`
+  (`TypeRedirectTransform` and `BeanPropertyTransform` do not). Visible for the first time at P3,
+  which is the first corpus run that emits a `ScopedOut` note at all: 51 of them on libGDX core,
+  each reading `key=…ObjectMap key=…ObjectMap`. One line in each of three files; the blast is 51
+  note texts.
 - **`RetypedSignature` and `RedirectedCall` carry no porter note.** The argument for each is in
   `DESIGN.md` §7.2 and stands — the retyped signature IS the declaration and the redirected call IS
   the body — so it is listed here so that adding one is a decision rather than an oversight.
@@ -2741,3 +2887,10 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 
 - **The Auditor has not run over this delivery.** It is expensive (Fable 5) and the **user** runs it,
   once a whole piece of work is delivered (`CLAUDE.md` §4).
+- **`NullabilityTransform` has no `MergeablePolicy`, and that blocks the SECOND port that wants
+  it.** With the phase now in the libGDX BASE manifest, any dependent declaring its own instance is
+  a fatal `SurfaceDivergence` — which is exactly what stops screens from stating its
+  `org.jspecify.annotations.Nullable` policy and retiring the jspecify jar from its lane (§11.17).
+  The merge is well-defined: union the annotation sets, compose the `RuleScope` per its direction
+  (`Only` intersects what a nearer manifest adds, `Everywhere(except)` unions the exclusions),
+  refuse on a conflicting `target`. §1(a), measured alone, before the screens entry.
