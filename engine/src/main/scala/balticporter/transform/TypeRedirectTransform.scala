@@ -120,15 +120,23 @@ final class TypeRedirectTransform(
               "because the REDIRECT TARGET spells the member differently, so with no `redirects` " +
               "entry for this type there is nothing it could be renamed towards")
           Nil
+        // KEYED `owner#member`, never the bare segment. The run holds a merged phase's findings to
+        // the subjects the fold recorded THIS manifest as contributing, and it reads the subject off
+        // the finding's key (`MergeablePolicy.subjectOf`, cut at `#`). A bare `dispose()` is its own
+        // subject, matches no contributed set, and the filter therefore DROPPED the dependent's own
+        // malformed-entry finding on every merged phase — a typo silently unreported at the one
+        // seam `PolicyReport` exists to close. `MemberKey.spell` is the same splice `parseIn`
+        // performs, in the file that owns the grammar.
         case Some(to) => renames.toList.sortBy(_._1).flatMap { (member, newName) =>
           MemberKey.parseIn(from, member) match
             case Left(m) =>
-              bad += PolicyFinding(name, s"TypeRedirectTransform(memberRenames) of `$from`", member,
-                PolicyIssue.Malformed, m.what)
+              bad += PolicyFinding(name, s"TypeRedirectTransform(memberRenames) of `$from`",
+                MemberKey.spell(from, member), PolicyIssue.Malformed, m.what)
               Nil
             case Right(_) if newName.isEmpty =>
-              bad += PolicyFinding(name, s"TypeRedirectTransform(memberRenames) of `$from`", member,
-                PolicyIssue.Malformed, "the new name is empty, which names nothing")
+              bad += PolicyFinding(name, s"TypeRedirectTransform(memberRenames) of `$from`",
+                MemberKey.spell(from, member), PolicyIssue.Malformed,
+                "the new name is empty, which names nothing")
               Nil
             case Right(mk) =>
               val entry = mk.render

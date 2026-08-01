@@ -3261,6 +3261,16 @@ own-declared phase to the effective instance that ABSORBED it, and the merged in
 are filtered to the subjects the fold recorded this manifest as having contributed. A port with no
 merge resolves every phase to itself and the filter is absent — byte-identical.
 
+**And a finding a filter reads by SUBJECT has to carry one.** The filter takes `subjectOf(f.key)` —
+the leading FQN, cut at `#` — so every finding a mergeable phase can produce must be keyed on a
+member key or a type FQN, never on a fragment. `TypeRedirectTransform` keyed its member-level
+`Malformed` findings by the bare SEGMENT (`dispose()`), whose subject is itself; it matched no
+contributed set and the filter DROPPED it, so a dependent's own typo'd `memberRenames` entry was
+silently unreported on every merged phase — the one seam this whole section exists to keep honest,
+failing in the direction nothing measures. They are keyed `owner#member` now (`MemberKey.spell`, the
+same splice `parseIn` performs, in the file that owns the grammar); the parse's own MESSAGE still
+names the segment the author wrote, because that is the string they have to edit.
+
 #### The `.conf` path composes through the SAME fold
 
 Nothing was added to it, and that is the result rather than an omission: `base = "…"` already ends

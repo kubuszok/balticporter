@@ -163,6 +163,39 @@ class PortRunSpec extends munit.FunSuite:
                  Set(Correlate.Dropped("com.demo.Widget", "sge.Gizmo")))
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // a MERGED phase's policy findings, held to the manifest that can fix them (DESIGN.md §8.13)
+  // ---------------------------------------------------------------------------------------------
+
+  /** a base and a dependent that each declare a `type-redirect` with one MALFORMED member key, so
+    * the fold merges them and one instance carries both findings. */
+  private def mergedRedirects(): PortManifest =
+    val base = PortManifest("base", surface = List(new balticporter.transform.TypeRedirectTransform(
+      Map("com.demo.Widget" -> "com.dep.W2"),
+      Map("com.demo.Widget" -> Map("theirs<T>" -> "y")))))
+    base.extendedBy(PortManifest("dep", surface = List(new balticporter.transform.TypeRedirectTransform(
+      Map("com.demo.Gadget" -> "com.dep.G2"),
+      Map("com.demo.Gadget" -> Map("mine<T>" -> "x"))))))
+
+  test("a typo'd DEPENDENT key on a merged phase surfaces its `policy` finding") {
+    // The filter reads a finding's key for its subject, cut at `#`. Keyed by the bare segment, the
+    // dependent's own malformed entry had NO type FQN in it, matched no contributed subject, and
+    // was dropped — a typo silently no-oping on exactly the seam `PolicyReport` exists to close.
+    val (root, src) = fixture()
+    val r = run(root, src)(_.copy(manifest = Some(mergedRedirects())))
+    val mine = r.report.policy.findings.filter(_.phase == "type-redirect")
+    assertEquals(mine.map(f => (f.key, f.issue)),
+                 List(("com.demo.Gadget#mine<T>", PolicyIssue.Malformed)))
+    assert(clue(r.report.policy.render).contains("type ARGUMENT"))
+  }
+
+  test("…and the BASE's key is withheld from the dependent's report — it is not fixable here") {
+    val (root, src) = fixture()
+    val r = run(root, src)(_.copy(manifest = Some(mergedRedirects())))
+    assert(!clue(r.report.policy.render).contains("theirs<T>"),
+           "an inherited key lives in the base's manifest; `ManifestAgreement` reports that half")
+  }
+
   test("externalConcrete is DERIVED from the phases: RuntimePlan, never a caller argument") {
     val (root, src) = fixture()
     val r = run(root, src)(_.copy(phases = List(new CollectionsTransform)))

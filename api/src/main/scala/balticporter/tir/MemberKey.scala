@@ -131,7 +131,17 @@ object MemberKey:
     else if member.contains('#') then
       Left(Malformed(member, "a `#` in a member segment whose owner is already named — write the " +
         "member alone (`dispose`), or one overload of it (`dispose()`)"))
-    else parse(owner + "#" + member).left.map(m => m.copy(key = member))
+    else parse(spell(owner, member)).left.map(m => m.copy(key = member))
+
+  /** The `owner#member` SPELLING of a segment key that [[parseIn]] could not parse — the same
+    * splice, in the same file, for the one caller a `MemberKey` cannot serve.
+    *
+    * A finding about a malformed segment has no parsed key to [[render]], and reporting it under
+    * the bare segment alone is not a cosmetic loss: `MergeablePolicy.subjectOf` reads a finding's
+    * key for its leading FQN, so a bare `dispose()` yields `dispose()` as its own subject, matches
+    * no manifest's contributed set, and the run's own-keys filter DROPS the finding — a malformed
+    * entry silently unreported on exactly the merged phase where a dependent's typo lives. */
+  def spell(owner: String, member: String): String = owner + "#" + member
 
   /** parse, or throw — for a literal written in engine code or a spec, never for policy. */
   def of(key: String): MemberKey =

@@ -300,12 +300,19 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     assertEquals(MemberKey.parseIn("a.B", "m(Class<T>)").left.map(_.key), Left("m(Class<T>)"))
   }
 
-  test("a malformed member segment names itself, and does not bind") {
+  test("a malformed member segment is keyed `owner#member`, and does not bind") {
+    // The MESSAGE names the segment the author wrote (above); the finding's KEY carries the owner
+    // with it, because the run reads a finding's key for its shared-surface SUBJECT — cut at `#`,
+    // `MergeablePolicy.subjectOf` — to decide whether the manifest being reported on can fix it. A
+    // bare segment is its own subject, matches no contributed set, and was DROPPED from a merged
+    // phase's report: the dependent's own typo, silently unreported (DESIGN.md §8.13).
     val ph = phase(Map("dispose(Class<T>)" -> "close"))
     run(clean, ph)
     val fs = ph.policyReport.of(PolicyIssue.Malformed)
     assertEquals(clue(fs).size, 1, ph.policyReport.render)
-    assertEquals(fs.head.key, "dispose(Class<T>)")
+    assertEquals(fs.head.key, "com.demo.Disposable#dispose(Class<T>)")
+    assertEquals(balticporter.core.MergeablePolicy.subjectOf(fs.head.key), "com.demo.Disposable")
+    assert(clue(fs.head.detail).contains("not `Class<T>`"), "the parse's own message, unchanged")
   }
 
   // ---- 6. the never-fired PATH: default-off --------------------------------------------------
