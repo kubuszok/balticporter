@@ -1860,6 +1860,24 @@ that predicate would be a second copy of the one the engine already computes and
 over-approximation is the honest price of the exit; the whole list is DELETED, not edited, when N2
 lands.
 
+**…and the price is only that high when the failing set is a container's WHOLE API. Spell the exit
+at the MEMBER when it is not.** A `RuleScope` entry may name `owner#member` as readily as a type,
+and a bare member name is every overload of it. Measured on the second port to take this exit
+(screens, P3): `ScreenManager<S extends ManagedScreen, T extends ScreenTransition>` annotates its
+own type parameters and the unscoped run put **3 errors** in it — an overload-resolution failure at
+`pushScreen` and two `T | Null` mismatches inside `render`. **Two member keys took it to 0**:
+`ScreenManager#transition` and `ScreenManager#pushScreen`. Two further declarations annotated at an
+abstract `S` (`#getCurrentScreen`, `#getLastScreen`) are NOT exempt and keep the floor, because
+nothing in reach uses them in a position `S | Null` does not satisfy; they remain counted, which is
+where a declaration that *could* have failed belongs. **The exit is what the compiler measured, not
+every declaration the check flagged** — and the two entries had to travel together for the reason
+the subclass closure exists one level up: the field is assigned from the parameter, so scoping out
+one and retyping the other is `T | Null` into `T`.
+
+One thing that shape does NOT record, and it is a provenance gap rather than a limit: a scope entry
+that holds back only a PARAMETER produces no `decisions.tsv` row and no porter note, because
+`NullabilityTransform.scopedOut` skips a param and does not attribute to its method (PROGRESS §7.1).
+
 *Fix kind: (b) per-library policy — the engine's part is the number.*
 
 ### K14. A RETARGET's subtyping licence is ONE-DIRECTIONAL — the producer side is COUNTED, never coerced

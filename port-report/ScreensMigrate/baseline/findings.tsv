@@ -1,4 +1,6 @@
 #id	check	kind	owner	path	line	detail
+55541edbae72	nullability-boundary	AbstractTypeParameter	de.eskalon.commons.screen.ScreenManager#getCurrentScreen	de/eskalon/commons/screen/ScreenManager.java	474	`org.jspecify.annotations.Nullable` on `de.eskalon.commons.screen.ScreenManager#getCurrentScreen`
+6879c2bf4176	nullability-boundary	AbstractTypeParameter	de.eskalon.commons.screen.ScreenManager#getLastScreen	de/eskalon/commons/screen/ScreenManager.java	461	`org.jspecify.annotations.Nullable` on `de.eskalon.commons.screen.ScreenManager#getLastScreen`
 2b259a40275f	portability(all)	java.lang.Class#forName	sge.utils.reflect.ClassReflection#forName	../../../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	28	Call — runtime class lookup by name is JVM-only
 aae5948a8e17	portability(all)	java.lang.Class#getConstructor	sge.utils.reflect.ClassReflection#getConstructor	../../../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	122	Call — reflective member access is JVM-only
 01cabea7b30c	portability(all)	java.lang.Class#getDeclaredConstructor	sge.utils.reflect.ClassReflection#getDeclaredConstructor	../../../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	135	Call — reflective member access is JVM-only

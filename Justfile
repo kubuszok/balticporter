@@ -138,11 +138,12 @@ jbump_deps    := ""
 gltf_deps     := "--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
 # libgdx-screenmanager's `build.gradle` declares gdx 1.13.5 and `com.github.crykn.guacamole:gdx`.
 # libGDX arrives as EMITTED SCALA on this compile, not as a jar, and guacamole is replaced by the
-# hand-written Scala in `screens-core/src/main/scala` — so the only COMPILE coordinate left is the
-# annotation jar those sources are written against. `@Nullable`/`@NullMarked` survive the port as
-# real annotations (an annotation IS a declaration's contract, `Annot` in the TIR), so the jar has
-# to be present or four emitted declarations do not resolve. munit is for the hand-written suite.
-screens_deps  := "--dependency org.jspecify:jspecify:0.3.0 --dependency org.scalameta::munit:1.0.2"
+# hand-written Scala in `screens-core/src/main/scala`. The annotation jar was the third coordinate
+# and IS NOW RETIRED: `ScreensPolicy.nullability` consumes `org.jspecify.annotations.Nullable` into
+# the TYPE, so no emitted declaration names it and nothing is left to resolve. That retirement is
+# the PROOF, not a tidy-up — a jar still on the compile line would let a surviving annotation
+# resolve and the port would look converted while it was not. munit is for the hand-written suite.
+screens_deps  := "--dependency org.scalameta::munit:1.0.2"
 # gdx-vfx's only compile dependency is libGDX itself, which this lane supplies as the SOURCE the
 # base port emitted rather than as a coordinate. So the only coordinate here is the one its
 # HAND-WRITTEN suite is written in — the same shape, and for the same reason, as anim8's.

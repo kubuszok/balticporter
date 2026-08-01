@@ -2797,32 +2797,69 @@ being aligned — and a silent un-alignment is not a thing any count shows. The 
 `Button#getButtonGroup`) and **none of them is an `override`**, so the shape does not occur in libGDX
 and nothing was hidden. It remains live for the next library, and the fix is one predicate.
 
-**REFUSED: the screens half.** P3's plan also asked for `annotations =
-["org.jspecify.annotations.Nullable"]` on screens and the retirement of `--dependency
-org.jspecify:jspecify:0.3.0` from `screens_deps`. **It cannot land as policy.** `ScreensPolicy.core`
-is `LibgdxPolicy.core(...).extendedBy(...)`, so a `nullability` in its own `surface` is a SECOND
-instance of a phase the base now carries; `NullabilityTransform` does not extend `MergeablePolicy`,
-so `SurfaceFold.of` records `Cause.NoContract` and `ManifestAgreement` turns it into
-`SurfaceDivergence`, which is `fatal = true`. The finding's own text names the fix and its kind:
-*"the phase declares no `MergeablePolicy` (that is §1(a), engine: give it one)"*. That is a mechanism
-change, and widening the mechanism inside a policy commit is the thing P1 established must not
-happen. The five `@org.jspecify.annotations.Nullable` sites screens emits therefore stand, and the
-jar stays in the lane.
+**The SCREENS half — refused once, then delivered, and the refusal is why it is worth reading.**
+P3's plan asked for `annotations = ["org.jspecify.annotations.Nullable"]` on screens and the
+retirement of `--dependency org.jspecify:jspecify:0.3.0` from `screens_deps`. It could not land as
+policy: `ScreensPolicy.core` is `LibgdxPolicy.core(...).extendedBy(...)`, so a `nullability` in its
+own `surface` is a SECOND instance of a phase the base now carries, `NullabilityTransform` declared
+no `MergeablePolicy`, `SurfaceFold.of` recorded `Cause.NoContract` and `ManifestAgreement` turned it
+into a fatal `SurfaceDivergence`. The finding named the fix and its kind — *"the phase declares no
+`MergeablePolicy` (that is §1(a), engine: give it one)"* — and widening the mechanism inside a policy
+commit is the thing P1 established must not happen.
 
 Folding jspecify's FQN into the BASE's annotation set is not the alternative it looks like: it
 would put a fact about a dependent's own sources into the shared surface, and report a never-fired
-policy entry on every libGDX lane forever. **Do NOT retry either shape.** The order is: give
-`NullabilityTransform` a `MergeablePolicy` (union the annotation sets, compose the `RuleScope` per
-its direction, refuse on a conflicting `target`), measure that alone, then land screens' entry.
+policy entry on every libGDX lane forever. **Do NOT retry that shape.** The order was: give
+`NullabilityTransform` a `MergeablePolicy`, measure that alone, then land screens' entry — and both
+steps are now done.
 
-**The first step of that order is now done** (`DESIGN.md` §8.13): the phase declares its merge —
-annotations union, `target` must agree, the scope unions its ENTRIES in both directions and refuses
-across them — and `subjects` covers both the annotation FQNs and the scope entries, so the intrusion
-screen sees the whole policy. Measured alone: **0 members changed and every check count identical on
-all thirteen ports**, which is what a contract nobody has instantiated yet must measure. Screens'
-entry is the second step.
+**Step one, measured alone** (`DESIGN.md` §8.13): annotations union, `target` must agree, the scope
+unions its ENTRIES in both directions and refuses across them, and `subjects` covers both the
+annotation FQNs and the scope entries so the intrusion screen sees the whole policy. **0 members
+changed and every check count identical on all thirteen ports** — what a contract nobody has
+instantiated yet must measure.
 
-**One residue this commit does NOT fix, found by reading the emitted output.** Every `ScopedOut`
+**Step two, the first production nullability merge.** `ScreensPolicy.nullability` states screens'
+own `org.jspecify.annotations.Nullable`, the fold composes it with the base's
+`com.badlogic.gdx.utils.Null` into ONE instance at the base's position, and `manifest` is **0** on
+screens — the number that was fatal before the contract existed.
+
+| screens | before | after |
+|---|---:|---:|
+| `@org.jspecify.annotations.Nullable` in `src_managed` | 4 | **0** |
+| `\| scala.Null` occurrences in emitted CODE | 0 | **20** (30 counting the ones a funnelled-ctor note quotes) |
+| `nullability-boundary` | 0 | **2**, both `AbstractTypeParameter` |
+| members whose emitted text moved | — | **25** (12 class lines whose funnelled primary took the union, 6 field/method retypes, 1 re-key: `ShaderTransition#<init>(String,String,boolean,float,Interpolation)` is now `…,?)`) |
+| `decisions.tsv` | 172 rows | **170** — `RetypedSignature` 59 → 56 and a `ScopedOut` this port had never recorded (0 → 1) |
+| lane dependencies | jspecify + munit | **munit** |
+
+**The jar's retirement is the proof, not a tidy-up.** The annotation is CONSUMED, so nothing emitted
+names it; with the jar still on the compile line a surviving annotation would resolve and the port
+would look converted while it was not. It stays on the FRONTEND classpath, where the Java sources
+still carry it and it has to resolve for the phase to see it at all.
+
+**And K13 arrived again, at member scale this time.** `ScreenManager<S extends ManagedScreen, T
+extends ScreenTransition>` annotates its own type parameters, and the unscoped run put **3 errors**
+in it — an overload-resolution failure at `pushScreen` and two `T | Null` mismatches inside
+`render`. The exit is the same one libGDX took and the scope is spelled one level finer:
+`ScreensPolicy.nullabilityExempt` is **two MEMBER keys**, `ScreenManager#transition` and
+`ScreenManager#pushScreen`, because the failing set here is four declarations in one class rather
+than a container's whole API. `3 -> 0`. The two travel together — the field is assigned from the
+parameter, so scoping out one and retyping the other is `T | Null` into `T`, K13's half-a-pair shape
+one level down. `#getCurrentScreen` and `#getLastScreen` are annotated at an abstract `S` too and
+are deliberately NOT exempt: they are the 2 counted `nullability-boundary` findings, and nothing in
+reach uses them in a position `S | Null` does not satisfy. **The exit is what the compiler measured,
+not every declaration that could in principle have failed.**
+
+Screens' scope entries are inside screens' OWN `governs` (`de.eskalon.commons`) and therefore pass
+the intrusion screen for the honest reason rather than by luck; a scope entry naming a libGDX type
+would be a fatal `SurfaceIntrusion`, which is the whole point of `subjects` carrying the scope half.
+
+Every other port is byte-identical: **0 members changed on the other twelve**, every check count
+unmoved, suites unchanged (gdx-test 217/4, ashley 108/2 + 2 skipped, anim8 23, vfx 64, sg 16, jbump
+no suite, screens 16/16; gltf 7 and noise4j 2 pre-existing errors).
+
+**One residue this delivery does NOT fix, found by reading the emitted output.** Every `ScopedOut`
 note renders its key TWICE — `/* porter: scoped-out reason=configured phase=nullability
 key=com.…ObjectMap key=com.…ObjectMap */`. `PorterNote.pairs` emits the `Reason.Configured` key and
 then the decision's own `detail`, and three phases put the same string in both:
@@ -2830,7 +2867,7 @@ then the decision's own `detail`, and three phases put the same string in both:
 `BeanProperty` do not). It is an M3-era engine defect, systemic rather than nullability's, and P3 is
 simply the first run in the corpus that emits a `ScopedOut` note at all. Fixing it here would be two
 changes in one measurement (§5); it is one line in each of three files plus 51 note texts of digest
-churn.
+churn on libGDX core and one on screens.
 
 ## 12. Remaining work, across the engine
 
@@ -2859,6 +2896,15 @@ Maintained by deletion. Items are ordered by what they block, not by size.
   which is the first corpus run that emits a `ScopedOut` note at all: 51 of them on libGDX core,
   each reading `key=…ObjectMap key=…ObjectMap`. One line in each of three files; the blast is 51
   note texts.
+- **A scoped-out PARAMETER records no decision at all.** `NullabilityTransform.scopedOut` skips a
+  symbol whose `flags.isParam` — the §5.1 rule that a decision is recorded at the DECLARATION —
+  but it does not then record against the parameter's METHOD, so a scope entry that holds back only
+  a parameter is a policy the artifact cannot see. Measured on screens (§11.17): two entries were
+  needed to clear the K13 errors, `ScreenManager#transition` and `ScreenManager#pushScreen`, and
+  only the first produced a `ScopedOut` row and a porter note; the method whose signature the scope
+  is the reason for shows nothing. The same shape reaches any retyping phase with a scope. The fix
+  is to attribute a scoped-out parameter to its owner, once per owner, exactly as
+  `declarationOf` already does for the retype side.
 - **`RetypedSignature` and `RedirectedCall` carry no porter note.** The argument for each is in
   `DESIGN.md` §7.2 and stands — the retyped signature IS the declaration and the redirected call IS
   the body — so it is listed here so that adding one is a decision rather than an oversight.
@@ -2894,7 +2940,3 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 
 - **The Auditor has not run over this delivery.** It is expensive (Fable 5) and the **user** runs it,
   once a whole piece of work is delivered (`CLAUDE.md` §4).
-- **Screens has not yet stated its `org.jspecify.annotations.Nullable` policy.** The engine half is
-  done — `NullabilityTransform` declares a `MergeablePolicy` (`DESIGN.md` §8.13) — so the entry is
-  now a manifest line plus the retirement of `--dependency org.jspecify:jspecify:0.3.0` from
-  `screens_deps`, and the jar going is what proves the annotation is really gone (§11.17).
