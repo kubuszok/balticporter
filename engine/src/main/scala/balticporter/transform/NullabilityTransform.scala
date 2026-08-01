@@ -630,6 +630,15 @@ final class NullabilityTransform(
     * for, so the answer sits at the line as well as in the artifact. */
   private def scopedOut(p: Program, s: Symbol, entry: String): Unit =
     if !s.flags.isParam && Decision.isDeclaration(p, s) then
+      // …and COUNTED, beside the decision, for the reason every other lane of this check exists: a
+      // residue nobody counts is a residue that grows. The only other evidence a scoped-out
+      // declaration leaves is its surviving upstream MARKER in the emitted text, and the emitter
+      // renders a class's and a method's annotations and neither a field's nor a parameter's — so
+      // grepping the output under-reports this by construction, which is exactly the shape §5 says
+      // must be a number instead. The finding is attributed to the declaration's own unit, so a
+      // dependent does not report its base's exclusions (D2).
+      issues += Finding(Issue.ScopedOut, s.fullName, s"`$entry` on ${describe(p, s)}",
+                        Decision.originOf(p, s.id), unitOf(p, s.id))
       record(Decision(
         kind       = Decision.Kind.ScopedOut,
         subject    = s.id,

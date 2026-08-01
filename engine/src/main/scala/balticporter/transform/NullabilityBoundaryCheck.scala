@@ -63,6 +63,9 @@ object NullabilityBoundaryCheck:
     /** the SCOPE's own closure: an ancestor this port scoped out declares a same-named annotated
       * member, so its half of the override pair keeps the upstream type while this one moves. */
     case ScopedOutParent
+    /** the declaration carries a configured annotation and this port's `nullability` scope
+      * deliberately holds it back, so it keeps its upstream type and its upstream marker. */
+    case ScopedOut
 
   object Issue:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
@@ -119,6 +122,16 @@ object NullabilityBoundaryCheck:
           "thing that could find a missing entry (`ENGINE-LIMITS.md` K13: 35 errors -> 6 -> 0, the " +
           "six being exactly this shape). A subtype that merely INHERITS an annotated member is not " +
           "reported and needs no entry — adding one is dead policy, which `policy` now reports."
+      case ScopedOut =>
+        "§1(b) HELD BACK ON PURPOSE, and counted for the reason every other lane here is: this " +
+          "declaration carries a configured nullability annotation and the port's `nullability` " +
+          "scope excludes it, so it keeps its upstream type AND its upstream marker while the " +
+          "declarations around it moved. That is a residue, not a defect — but a residue nobody " +
+          "counts is a residue that grows: the emitted markers are the only other evidence it " +
+          "exists, and the emitter renders a class's and a method's annotations and neither a " +
+          "field's nor a parameter's, so the text under-reports it by construction. Shrink it by " +
+          "deleting the scope entry (and paying `AbstractTypeParameter`'s errors), or by staging " +
+          "to `-Yexplicit-nulls -language:unsafeNulls`, under which the whole exit disappears."
 
   /** one boundary site. `unit` is the top-level symbol it belongs to, which is how a dependent
     * port holds a finding to the module that EMITS it (`ENGINE-LIMITS.md` D2). */

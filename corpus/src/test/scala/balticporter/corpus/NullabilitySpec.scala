@@ -264,6 +264,21 @@ class NullabilitySpec extends PortSuite:
     assertEquals(ph.policyReport.findings, Nil)
   }
 
+  test("every SCOPED-OUT declaration is COUNTED, not only decided — the residue is a number") {
+    val only = phase(scope = RuleScope.Only(Set("demo.Group#parent")))
+    val (after, _) = Pipeline.runTraced(PortFixture.parse(java), List(only))
+    val out = only.boundary(after.units).filter(_.issue == Issue.ScopedOut).map(_.subject)
+    // one per held-back DECLARATION, and the finding count agrees with the decision count exactly —
+    // two artifacts, one act, and a diff between them would be the thing neither can show alone
+    val (_, log) = Pipeline.runTraced(PortFixture.parse(java), List(phase(scope = RuleScope.Only(Set("demo.Group#parent")))))
+    assertEquals(out.size, log.of(Decision.Kind.ScopedOut).size)
+    assert(clue(out).contains("demo.Group#find"))
+    // …and it is EMPTY where nothing is scoped out, by arithmetic
+    val open = phase()
+    val (a2, _) = Pipeline.runTraced(PortFixture.parse(java), List(open))
+    assertEquals(open.boundary(a2.units).count(_.issue == Issue.ScopedOut), 0)
+  }
+
   test("a SCOPED-OUT ancestor beside a RETYPED override is reported — K13's closure, at plan time") {
     // `Box` is scoped out and annotates `find`; `SubBox` re-states the annotation on its own
     // override, so the parent keeps `Actor` while the child moves to `Actor | Null`. That is half an

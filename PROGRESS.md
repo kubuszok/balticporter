@@ -3097,6 +3097,31 @@ ancestor member that is not really an override names a pair a port dismisses in 
 signature test would need the override closure this phase does not have (its wrapper-mode test says
 the same thing one method up).
 
+### 11.21 Checkpoint-4 audit remediation — F4: the SCOPED-OUT declarations become a counted lane
+
+`NullabilityBoundaryCheck.Issue.ScopedOut`, raised beside the `ScopedOut` decision the phase already
+records. **The only check count that moves, and it moves on exactly the two ports that scope
+anything.**
+
+**Why the residue needed a number and not a grep.** P3 stated it as "the 32 `@sge.utils.Null` markers
+that remain are on refused and scoped-out declarations, deliberately". That number is not the
+residue: the emitter renders a CLASS's and a METHOD's annotations and neither a FIELD's nor a
+PARAMETER's, so the emitted text under-reports every held-back field and parameter by construction,
+and the only complete evidence was `decisions.tsv` — an artifact with no baseline diff and no line in
+any headline. A residue nobody counts is a residue that grows; every other lane of this check exists
+for the same reason.
+
+| port | `nullability-boundary` | of which `ScopedOut` |
+|---|---:|---:|
+| libgdx-core | 109 -> **160** | **51** — the same 51 declarations `LibgdxPolicy.nullabilityExempt`'s twelve entries hold back |
+| screens-core | 2 -> **3** | **1** — `ScreenManager#transition` |
+| every other port | unchanged | 0, by arithmetic |
+
+**It counts DECLARATIONS, exactly as the decision does**, so the two artifacts agree and a divergence
+between them would be visible; a scoped-out PARAMETER is still recorded by neither, which is §12.1's
+open item and is deliberately not widened here (a lane that counted parameters would disagree with
+the decisions it sits beside). Two baselines promoted, accounted.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
