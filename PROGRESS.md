@@ -313,15 +313,28 @@ one root, so the synthesis's two-root condition excludes it). `Material` — one
 observable divergences — is repaired outright; `Button` (5) and `Table` (1) are wall classes and
 remain.
 
-**And the COLLAPSE keeps an escape where the marker would not** — a residue named here because it is
-a decision, not a limit. `DESIGN.md` §8.2 orders collapse before the marker so the ~100 measured
-collisions come out byte-for-byte unchanged; a collapse PROMOTES a real constructor, so its body
-becomes the class body and C7 applies to it again. noise4j's `Object2dArray` is the whole of that
-port's residue: three roots reaching one `Array2D(int,int)`, one of them a pure pass-through whose
-parameters ARE the slots, so it collapses and its `this.array = getArray(width * height)` runs on all
-three paths. Disambiguating it instead would take the escape to 0 at the price of a companion member
-and a changed signature. The refinement that costs neither — collapse only where the promotion has NO
-escaping path — is one predicate (`reachesCtor` over the other roots) and is not built.
+**The COLLAPSE no longer keeps an escape the marker would not.** `DESIGN.md` §8.2 orders collapse
+before the marker so the ~100 measured collisions come out byte-for-byte unchanged — but a collapse
+PROMOTES a real constructor, so its body becomes the class body and C7 applies to it again. The
+refinement this section recorded as "one predicate, not built" is built: **collapse only where the
+promotion has NO escaping path.** It is asked through `CtorFunnel.escapesOf` — the same function
+`OmissionCheck.promotedBodyOnEveryPath` counts with, prefix strip included — rather than through a
+second predicate written at the nomination, so what the funnel believes a promotion costs and what
+the check reports cannot diverge (C7's `droppedSuperArgs` failure, in its other form). Where the
+collapse is declined the class falls through to the marker, which synthesises and promotes nothing.
+
+Measured, one predicate, thirteen ports:
+
+| lane | omissions | what moved |
+|---|---|---|
+| noise4j | **3 → 0** | `Object2dArray` — three roots reaching one `Array2D(int, int)`, one a pure pass-through, whose `this.array = getArray(width * height)` ran on all three paths. That was the port's ENTIRE residue; noise4j is now 0 findings. |
+| libgdx-core | **67 → 65** | `Dialog` — NOT predicted. Its promoted `initialize()` ran on two construction paths java never ran it on, so this is a behavioural repair of the `Button`/`Table` kind rather than a bookkeeping one. |
+| the other eleven | unchanged | the collapse still fires wherever it did — the escaping promotion is the rare case, not the common one |
+
+Cost: **5 member digests on libgdx-core, 8 on noise4j, 0 on the other eleven**; compile unchanged
+everywhere (libgdx 0, gltf 7, noise4j 2); every other check count identical; every suite unchanged.
+Two classes gained a companion `Funnel` — the price the ordering was refusing to pay for a
+divergence it had already counted.
 
 #### The 34 members that moved when this baseline was promoted, and the SILENT DEFECT one of them was
 

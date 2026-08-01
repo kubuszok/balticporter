@@ -13464,10 +13464,10 @@ sge.scenes.scene2d.ui.Container	sge.scenes.scene2d.ui.Container#size(float,float
 sge.scenes.scene2d.ui.Container	sge.scenes.scene2d.ui.Container#top()	def	8a0fc8cd3e046908
 sge.scenes.scene2d.ui.Container	sge.scenes.scene2d.ui.Container#width(Value)	def	cf991475b47ce073
 sge.scenes.scene2d.ui.Container	sge.scenes.scene2d.ui.Container#width(float)	def	d7d4403b3c7ab372
-sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog	class	abc00d2ee11d00d4
-sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#<init>(String,Skin)	ctor	741a9f66b86869ba
-sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#<init>(String,Skin,String)	ctor	e0d84e3322330a9d
-sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#<stmt1>	stmt	32fffd18ae01f8b6
+sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog	class	519f8e11bfc6dd1b
+sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#<init>(String,Skin)	ctor	485e647766cbe1cb
+sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#<init>(String,Skin,String)	ctor	ab73766fe3816c48
+sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#<init>(String,WindowStyle)	ctor	82d066231736420d
 sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#button(Button)	def	8c6661680dc19e5e
 sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#button(Button,Object)	def	ad1e1d35248608de
 sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#button(String)	def	4621637160e146b5

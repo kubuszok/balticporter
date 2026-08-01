@@ -1618,12 +1618,21 @@ slots, field assignment in the primary body, each root a secondary delegating wi
 and field values, and an unassigned field filled from its own initialiser or the Java default. It was
 written once for the flexmark/liqp corpus and not carried across to the TIR rewrite.
 
-**The double-evaluation trap, measured.** `this(h(n), h(n) * 2)` evaluates `h` **twice**; the naive
-hoist is not Java's evaluate-once. The encoding is a companion helper returning a **tuple** plus a
-`private def this(p: (A, B))` auxiliary that spreads it. And the auxiliary must be *entered into* the
-emitter's delegation-topological ordering, not appended — a secondary placed before the constructor it
-delegates to is a hard error. Do **not** copy the reference port's habit of recomputing a
-subexpression three times in one delegation: a hand port may accept that, the engine may not.
+**The double-evaluation trap is UNREACHABLE BY CONSTRUCTION, and the tuple/auxiliary encoding this
+section used to specify for it is retired.** The trap as stated was `this(h(n), h(n) * 2)` — a hoist
+evaluating `h` twice where Java evaluated it once — and the answer was a companion helper returning a
+tuple plus a `private def this(p: (A, B))` auxiliary spreading it, *entered into* the emitter's
+delegation-topological ordering rather than appended. None of it is buildable, because none of it has
+a domain. ORDER-SAFETY above admits a slot value only when it is **order-blind** — composed of the
+secondary's own parameters, literals and operator applications on those — so any expression
+containing a method call, a `new`, an array read or a static/field read is REFUSED a slot
+(`reason=order`; 146 of libGDX core's 166 refusals) and stays a post-delegation assignment. `h(n)` is
+a method call, so it never becomes a slot value at all, and what does survive into a delegation
+argument list is by definition RE-READABLE: evaluating it twice reads the same immutable parameter
+bindings and applies the same pure operators. Order-blindness and evaluate-once are two different
+properties and neither implies the other in general; this is the one place where a single condition
+happens to buy both, which is exactly why it is written down rather than left to be re-derived from
+the reference port's habit of recomputing a subexpression three times in one delegation.
 
 **Collision disambiguation has TWO predicates, and the design originally stated only one.** The first
 is about DECLARATIONS that cannot coexist and is by **ERASURE**, because that is the test scalac
@@ -1639,7 +1648,14 @@ per ROOT against the arguments the emitter will actually write.
 Two answers in order: **collapse** — if the colliding constructor is a pure pass-through whose
 parameters *are* the slots, promote it and emit no synthetic member at all, which covers most of the
 100 measured collisions (they are overwhelmingly value classes whose all-fields constructor IS the
-synthetic primary) and leaves output unchanged; otherwise **a final parameter of a marker type**,
+synthetic primary) and leaves output unchanged — **but only where that promotion has no ESCAPING
+PATH**, since a collapse promotes a real constructor and C7 therefore applies to it again: its body
+becomes the class body and runs where java ran nothing. "Byte-for-byte unchanged" is worth having
+only where nothing is wrong with the bytes, and the escaping case is rare enough to price at the
+marker (two classes corpus-wide: noise4j's `Object2dArray`, which was that port's entire omissions
+residue, and libGDX's `Dialog`). The question is asked through `CtorFunnel.escapesOf` — the same
+function `OmissionCheck.promotedBodyOnEveryPath` counts with — so the nomination and the count
+cannot disagree about what a promotion costs. Otherwise **a final parameter of a marker type**,
 minted **per disambiguated class** rather than once in `runtime/`: emitted code then carries no
 dependency on the engine's runtime artifact for a purely local encoding, at the price of ~100
 one-line companion members corpus-wide. The marker also answers the applicability problem outright,

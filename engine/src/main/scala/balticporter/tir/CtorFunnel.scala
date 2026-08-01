@@ -438,26 +438,6 @@ object CtorFunnel:
 
     // ---- what the promotion COSTS: the promoted body on paths java never ran it ----
 
-    /** Did Java ALSO run `target`'s body when `d` was the constructor invoked? True for `target`
-      * itself, and for every constructor whose leading `this(...)` delegation reaches it.
-      *
-      * ANY arity of `this(...)`, including the nilary one: `C(int n) { this(); … }` is a genuine
-      * delegation to `C()` even though [[delegatesToThis]] excludes it (that predicate answers a
-      * different question — whether the constructor is a funnel ROOT). Reading root-ness here
-      * instead would report `C(int)` as a path java did not run `C()` on, when java ran it first.
-      *
-      * An ABSENT delegation is java's implicit `super()`, which reaches no peer of this class, so
-      * "no leading `this(...)`" is a negative answer and not an unknown. */
-    private def reachesCtor(d: Tree.DefDef, target: SymId, depth: Int): Boolean =
-      // through `headStmt`, never the raw head: a java comment above the `this(...)` wraps it in
-      // `Tree.Commented`, and matching the raw statement counted that constructor as an ESCAPE —
-      // a finding manufactured by a comment (found at the E1 merge, pinned in the spec).
-      d.symbol == target || (depth <= 8 && (headStmt(d) match
-        case Some(Tree.Apply(Tree.Select(r, m, _, _), _, _, _, _))
-            if !r.isInstanceOf[Tree.Super] && isInitName(program, m) =>
-          defOf(m).exists(reachesCtor(_, target, depth + 1))
-        case _ => false))
-
     /** The constructors of `cd` on whose path java did NOT run the promoted constructor's body —
       * and on which the emitted class therefore runs it anyway.
       *
@@ -483,16 +463,14 @@ object CtorFunnel:
       * `ClickListener` to every button. The structural fact is the same in all of them, and it is
       * the one that can be computed. */
     def promotionEscapes(cd: Tree.ClassDef): List[Tree.DefDef] =
-      escapingRoots(cd).filter(d => residualBody(cd, d).isEmpty)
+      val p = plans.getOrElse(cd.symbol, Plan.none)
+      escapesOf(program, cd, p.primary, p.primaryBody)
 
     /** the constructors on whose path java did not run the promoted body — BEFORE the prefix strip
       * below has a chance to make the duplication disappear. */
     private def escapingRoots(cd: Tree.ClassDef): List[Tree.DefDef] =
       val p = plans.getOrElse(cd.symbol, Plan.none)
-      p.primary match
-        case Some(c) if p.primaryBody.nonEmpty =>
-          ctorsOf(program, cd.body).filterNot(reachesCtor(_, c.symbol, 0))
-        case _ => Nil
+      escapingRootsOf(program, cd, p.primary, p.primaryBody)
 
     /** PREFIX STRIP — the statements of an escaping root that the promoted body does not ALREADY
       * run, when its own body literally begins with the promoted body.
@@ -521,15 +499,7 @@ object CtorFunnel:
       * elsewhere and is not part of the body being duplicated. */
     def residualBody(cd: Tree.ClassDef, d: Tree.DefDef): Option[List[Statement]] =
       val p = plans.getOrElse(cd.symbol, Plan.none)
-      if p.primaryBody.isEmpty || !escapingRoots(cd).exists(_.symbol == d.symbol) then scala.None
-      else
-        given Program = program
-        val rest = bodyAfterDelegation(program, d)
-        val pb   = p.primaryBody
-        def canon(s: Statement): String = TirPrinter.render(s, TirPrinter.Style.canonical)
-        if pb.sizeIs <= rest.size && pb.zip(rest).forall((a, b) => canon(a) == canon(b))
-        then Some(rest.drop(pb.size))
-        else scala.None
+      residualBodyOf(program, cd, p.primary, p.primaryBody, d)
 
     // ---- effect replay: expressing a `super(args)` a secondary constructor cannot make ----
 
@@ -1004,6 +974,67 @@ object CtorFunnel:
   private def isInitName(program: Program, m: SymId): Boolean =
     program.symbolOf(m).exists(_.name == "<init>")
 
+  // ---- WHAT A PROMOTION COSTS, as a function of the promotion alone ----
+  //
+  // These three used to be `Plans` methods reading the FINAL plan, and that is one caller short.
+  // The other one is the NOMINATION itself: `syntheticPrimary`'s collapse promotes a real
+  // constructor, so it has to be able to ask what that promotion would cost BEFORE it commits to
+  // it — and asking through a second, locally-written predicate is exactly the shape
+  // `ENGINE-LIMITS.md` C7 warns about at `OmissionCheck.droppedSuperArgs`, where the count and the
+  // emission disagreed about the same question. Parameterised on `(primary, primaryBody)` instead
+  // of on a `Plan`, so a candidate and a decided plan are answered by the same code.
+
+  /** Did Java ALSO run `target`'s body when `d` was the constructor invoked? True for `target`
+    * itself, and for every constructor whose leading `this(...)` delegation reaches it.
+    *
+    * ANY arity of `this(...)`, including the nilary one: `C(int n) { this(); … }` is a genuine
+    * delegation to `C()` even though [[delegatesToThis]] excludes it (that predicate answers a
+    * different question — whether the constructor is a funnel ROOT). Reading root-ness here
+    * instead would report `C(int)` as a path java did not run `C()` on, when java ran it first.
+    *
+    * An ABSENT delegation is java's implicit `super()`, which reaches no peer of this class, so
+    * "no leading `this(...)`" is a negative answer and not an unknown. */
+  def reachesCtor(program: Program, d: Tree.DefDef, target: SymId, depth: Int = 0): Boolean =
+    // through `headStmt`, never the raw head: a java comment above the `this(...)` wraps it in
+    // `Tree.Commented`, and matching the raw statement counted that constructor as an ESCAPE —
+    // a finding manufactured by a comment (found at the E1 merge, pinned in the spec).
+    d.symbol == target || (depth <= 8 && (headStmt(d) match
+      case Some(Tree.Apply(Tree.Select(r, m, _, _), _, _, _, _))
+          if !r.isInstanceOf[Tree.Super] && isInitName(program, m) =>
+        program.definitionOf(m).collect { case x: Tree.DefDef => x }
+          .exists(reachesCtor(program, _, target, depth + 1))
+      case _ => false))
+
+  /** the constructors on whose path java did not run `primary`'s body — before the prefix strip. */
+  def escapingRootsOf(program: Program, cd: Tree.ClassDef,
+                      primary: Option[Tree.DefDef], primaryBody: List[Statement]): List[Tree.DefDef] =
+    primary match
+      case Some(c) if primaryBody.nonEmpty =>
+        ctorsOf(program, cd.body).filterNot(reachesCtor(program, _, c.symbol))
+      case _ => Nil
+
+  /** the statements of an escaping root that `primaryBody` does not ALREADY run, when its own body
+    * literally begins with it — see [[Plans.residualBody]] for why this is exact rather than an
+    * approximation, and why the comparison is over the canonical rendering. */
+  def residualBodyOf(program: Program, cd: Tree.ClassDef, primary: Option[Tree.DefDef],
+                     primaryBody: List[Statement], d: Tree.DefDef): Option[List[Statement]] =
+    if primaryBody.isEmpty || !escapingRootsOf(program, cd, primary, primaryBody).exists(_.symbol == d.symbol)
+    then scala.None
+    else
+      given Program = program
+      val rest = bodyAfterDelegation(program, d)
+      def canon(s: Statement): String = TirPrinter.render(s, TirPrinter.Style.canonical)
+      if primaryBody.sizeIs <= rest.size && primaryBody.zip(rest).forall((a, b) => canon(a) == canon(b))
+      then Some(rest.drop(primaryBody.size))
+      else scala.None
+
+  /** the paths this promotion would still duplicate — escaping roots minus the ones the prefix
+    * strip repairs. Empty means the promotion costs nothing C7 counts. */
+  def escapesOf(program: Program, cd: Tree.ClassDef,
+                primary: Option[Tree.DefDef], primaryBody: List[Statement]): List[Tree.DefDef] =
+    escapingRootsOf(program, cd, primary, primaryBody)
+      .filter(d => residualBodyOf(program, cd, primary, primaryBody, d).isEmpty)
+
   /** the leading `super(args)` of a constructor, when it passes arguments — exactly what a
     * secondary constructor cannot express. */
   /** the ERASED head name of a parameter type — what scalac compares when it decides two
@@ -1250,6 +1281,11 @@ object CtorFunnel:
       // overload APPLICABILITY. A widening needs both — `DESIGN.md` §8.2, `ENGINE-LIMITS.md` C8.
       val erasedSlots  = allSlots.map((_, t) => erasedName(program, cd, t))
       val erasureClash = ctors.exists(c => c.paramss.flatten.map(v => erasedName(program, cd, v.tpt.tpe)) == erasedSlots)
+      // the COLLAPSE, decided once — see the comment on the branch that consumes it below.
+      val collapsed =
+        if fs.isEmpty && collides && !roots.exists(_.paramss.flatten.isEmpty)
+        then collapseTo(program, cd, roots.filter(passesThrough))
+        else scala.None
       if formals.sizeIs != arities.head || formals.contains(TypeRepr.NoType) then scala.None
       // TWO DISJOINT SHAPES, and keeping them disjoint is the whole content of this decision. Three
       // orderings were measured against libGDX before this one, and every ordering that let either
@@ -1271,16 +1307,22 @@ object CtorFunnel:
       // longer than any real constructor's, so nothing collides and nothing shadows: collapsing
       // there would trade a class's whole `val` binding — every hoisted field — for a problem it
       // does not have.
-      else if fs.isEmpty && collides && !roots.exists(_.paramss.flatten.isEmpty) &&
-              roots.exists(passesThrough) then
-        roots.filter(passesThrough).sortBy(c => -c.paramss.flatten.size).headOption
-          // the promoted root's parameters ARE the parent's, so every other root's `super(args)`
-          // reaches it through `this(...)`. Whether each one ACTUALLY does is not asserted here —
-          // it is [[Plans.superCall]]'s answer, per root, and the one the emitter renders.
-          .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest) }
+      // …and only where the promotion it makes COSTS NOTHING. A collapse promotes a REAL
+      // constructor, so C7 applies to it again: its body becomes the class body and runs on every
+      // construction path, including the ones java did not run it on. That is the whole of noise4j's
+      // omissions residue — `Object2dArray`'s three roots reach one `Array2D(int, int)`, one of them
+      // a pure pass-through whose parameters ARE the slots, so it collapses and its
+      // `this.array = getArray(width * height)` runs on all three paths. "Byte-for-byte unchanged"
+      // is only worth having where nothing is wrong with the bytes; where the promotion escapes,
+      // the marker costs one companion member and takes the escape to ZERO, which is the trade the
+      // ordering was never meant to refuse. Asked through `escapesOf` — the same function
+      // `OmissionCheck.promotedBodyOnEveryPath` counts with, prefix strip included — so the
+      // nomination and the count cannot disagree about what a promotion costs.
+      else if collapsed.isDefined then collapsed
       // DISAMBIGUATE — the primary cannot be DECLARED beside a real constructor (erasure) or cannot
-      // be REACHED past one (applicability), and there is nothing to collapse onto. A final
-      // parameter of a per-class marker type answers both at once by changing the primary's ARITY.
+      // be REACHED past one (applicability), and there is nothing to collapse onto — or the
+      // collapse was declined above because its promotion would escape. A final parameter of a
+      // per-class marker type answers both at once by changing the primary's ARITY.
       //
       else if erasureClash || shadowed then synthesise(Some(markerName))
       // SHAPE 1 — SYNTHESISE. Every root reaches the SAME parent constructor, so one primary taking
@@ -1303,6 +1345,20 @@ object CtorFunnel:
       // such class a diff.
       else if allSlots.isEmpty then scala.None
       else synthesise(scala.None)
+
+  /** THE COLLAPSE, as a value: the widest pass-through root promoted, or `None` when there is none
+    * or when promoting it would leave an escaping path.
+    *
+    * The promoted root's parameters ARE the parent's, so every other root's `super(args)` reaches it
+    * through `this(...)`. Whether each one ACTUALLY does is not asserted here — that is
+    * [[Plans.superCall]]'s answer, per root, and the one the emitter renders. What IS asserted is
+    * the thing `syntheticPrimary` cannot ask any other way: does java run this body on every path
+    * that will now run it? Where it does not, the caller falls through to the marker, which
+    * synthesises and promotes nothing. */
+  private def collapseTo(program: Program, cd: Tree.ClassDef, candidates: List[Tree.DefDef]): Option[Plan] =
+    candidates.sortBy(c => -c.paramss.flatten.size).headOption
+      .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest) }
+      .filter(p => escapesOf(program, cd, p.primary, p.primaryBody).isEmpty)
 
   // ---- FIELD SLOTS: a `this.f = e` hoisted into the primary's parameter list ----
 

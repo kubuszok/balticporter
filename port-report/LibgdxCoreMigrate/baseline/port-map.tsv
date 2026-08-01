@@ -13452,9 +13452,9 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Container#size(float,float)	sge.scenes
 member	com.badlogic.gdx.scenes.scene2d.ui.Container#top()	sge.scenes.scene2d.ui.Container#top()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	590	8a0fc8cd3e046908
 member	com.badlogic.gdx.scenes.scene2d.ui.Container#width(Value)	sge.scenes.scene2d.ui.Container#width(Value)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	271	cf991475b47ce073
 member	com.badlogic.gdx.scenes.scene2d.ui.Container#width(float)	sge.scenes.scene2d.ui.Container#width(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	280	d7d4403b3c7ab372
-member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#<init>(String,Skin)	sge.scenes.scene2d.ui.Dialog#<init>(String,Skin)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	56	741a9f66b86869ba
-member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#<init>(String,Skin,String)	sge.scenes.scene2d.ui.Dialog#<init>(String,Skin,String)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	63	e0d84e3322330a9d
-member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#<stmt1>	sge.scenes.scene2d.ui.Dialog#<stmt1>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	72	32fffd18ae01f8b6
+member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#<init>(String,Skin)	sge.scenes.scene2d.ui.Dialog#<init>(String,Skin)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	56	485e647766cbe1cb
+member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#<init>(String,Skin,String)	sge.scenes.scene2d.ui.Dialog#<init>(String,Skin,String)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	63	ab73766fe3816c48
+member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#<init>(String,WindowStyle)	sge.scenes.scene2d.ui.Dialog#<init>(String,WindowStyle)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	70	82d066231736420d
 member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button(Button)	sge.scenes.scene2d.ui.Dialog#button(Button)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	174	8c6661680dc19e5e
 member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button(Button,Object)	sge.scenes.scene2d.ui.Dialog#button(Button,Object)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	180	ad1e1d35248608de
 member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button(String)	sge.scenes.scene2d.ui.Dialog#button(String)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	155	4621637160e146b5

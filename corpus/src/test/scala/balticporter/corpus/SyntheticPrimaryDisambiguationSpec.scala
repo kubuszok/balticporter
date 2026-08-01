@@ -117,6 +117,44 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
     assertEquals(clue(out).sliding("class Funnel".length).count(_ == "class Funnel"), 2)
   }
 
+  /** COLLAPSE IS DECLINED WHERE ITS PROMOTION WOULD ESCAPE, and that is a correction to the
+    * ordering rather than an exception to it.
+    *
+    * A collapse promotes a REAL constructor, so `ENGINE-LIMITS.md` C7 applies to it again: the
+    * promoted body becomes the class body, and every root that does not delegate to it runs those
+    * statements on a path java never ran them on. `Coll` above is safe because its promoted body is
+    * EMPTY; a pass-through root with a body is not. Two classes in the corpus were exactly this —
+    * noise4j's `Object2dArray` (that port's entire omissions residue, 3 paths) and libGDX's `Dialog`
+    * (2 paths, a duplicate `initialize()` of the kind `Button` is counted for) — and both are 0 now.
+    *
+    * The predicate is `CtorFunnel.escapesOf`, which is the SAME function
+    * `OmissionCheck.promotedBodyOnEveryPath` counts with, prefix strip included: a second predicate
+    * written at the nomination is the shape where the count and the emission come to disagree. */
+  test("COLLAPSE DECLINED — a pass-through root whose body would ESCAPE gets the marker instead") {
+    val escaping =
+      """package demo3;
+        |class EBase { EBase(int n, boolean b) {} }
+        |class Escaping extends EBase {
+        |  static int count;
+        |  static void bump() { count++; }
+        |  Escaping(int n, boolean b) { super(n, b); bump(); }
+        |  Escaping(int n)            { super(n, false); }
+        |}
+        |""".stripMargin
+    val p3 = Pipeline.run(SpoonTir.fromSource(escaping), Nil)
+    val o3 = new TirEmitter(p3).emit
+    // `Escaping(int, boolean)` HAS the slot signature and passes straight through, so the pre-
+    // correction ordering promoted it — and `Escaping(int)` does not delegate to it, so `bump()`
+    // ran on `new Escaping(5)` where java ran nothing.
+    assert(clue(o3).contains(
+      "class Escaping protected (sup$0: scala.Int, sup$1: scala.Boolean, ctor$: Escaping.Funnel) extends demo3.EBase(sup$0, sup$1)"))
+    assert(o3.contains("protected final class Funnel"))
+    // no java body became the class body, so there is nothing left to escape — and the check that
+    // counts it agrees, because it is the same function the nomination asked.
+    assertEquals(OmissionCheck.promotedBodyOnEveryPath(p3).filter(_.owner == "demo3.Escaping"), Nil)
+    assert(!o3.contains("class Escaping(n"))
+  }
+
   test("the marker NAME avoids what the class already declares") {
     val clash =
       """package demo2;

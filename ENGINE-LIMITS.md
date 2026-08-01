@@ -665,6 +665,26 @@ wall classes, JDK-throwable parents, and the UNIQUE-ROOT class whose promotion t
 withholds (`ObjectMap`, 3 paths — one root, so the synthesis's two-root condition excludes it; that
 is the largest single item left).
 
+**AND A FOURTH SOURCE, NOW CLOSED: the COLLAPSE re-created this entry's own defect. omissions
+noise4j 3 -> 0, libGDX core 67 -> 65.** C8's disambiguation tries COLLAPSE before the marker,
+because a collapse promotes a real pass-through root and leaves the class byte-for-byte as it was.
+But a promotion is a promotion: its body becomes the class body, and where another root does not
+delegate to it, the body runs on a path java never ran it on — exactly what the synthesis was built
+to stop. Two classes in the corpus: noise4j's `Object2dArray`
+(`this.array = getArray(width * height)` on all three paths — that port's ENTIRE omissions residue)
+and libGDX's `Dialog` (`initialize()` on two paths, which is `Button`'s observable defect in
+miniature and was NOT predicted). The fix is one condition on the collapse — take it only where the
+promotion has no escaping path, and otherwise fall through to the marker, which promotes nothing.
+
+Two things about HOW it is asked, both of which are the rule rather than the detail. It goes through
+`CtorFunnel.escapesOf`, the same function `OmissionCheck.promotedBodyOnEveryPath` counts with,
+prefix strip included — a second predicate written at the nomination is exactly the
+count-disagrees-with-emission shape this entry warns about at `droppedSuperArgs`. And it is asked of
+a CANDIDATE plan, before the nomination commits, which is why `escapesOf`/`escapingRootsOf`/
+`residualBodyOf` are parameterised on `(primary, primaryBody)` rather than on a decided `Plan`.
+Cost: 2 classes gain a companion marker, 5 member digests on libGDX core and 8 on noise4j, every
+other port and every other count unmoved.
+
 **Do not refuse the promotion** where one still happens. Dropping every escaping plan to `Plan.none`
 measured **0 -> 41 compile errors** on libGDX core, every one an `E120 Conflicting definitions`: the
 refused class emits a `def this()` beside Scala's implicit nilary primary, which is the exact clash
@@ -800,8 +820,9 @@ widening needs both. `DESIGN.md` §8.2 now states both.
 warning.** A final parameter of a per-class companion-`protected` marker type changes the primary's
 ARITY, which removes it from every delegation's candidate set at once and answers the erasure half
 in the same stroke. Attempt order is COLLAPSE first (a pass-through root whose parameters ARE the
-slots is promoted and nothing is synthesised, so those classes stay byte-for-byte as they were),
-then the marker. Measured on libGDX core: omissions **177 -> 176**, the one removed being
+slots is promoted and nothing is synthesised, so those classes stay byte-for-byte as they were)
+**— but only where that promotion has NO ESCAPING PATH, which is a correction, see C7 —** then the
+marker. Measured on libGDX core: omissions **177 -> 176**, the one removed being
 `DistanceFieldFontCache`'s two discarded arguments — this entry's own worked example — with compile
 still 0 and 6 classes gaining a marker (the five tiled map loaders plus `DistanceFieldFontCache`).
 `CtorFunnel.syntheticPrimary` asks `shadowedAt(1)` after choosing the marker, so a class that some
