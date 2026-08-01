@@ -44,8 +44,16 @@ final case class Decision(
     subject: SymId,
     /** the subject's fully-qualified name AT DECISION TIME — see the class doc. */
     subjectFqn: String,
-    /** kind-specific pairs: `from`/`to` for a rename, `key` for the policy entry that fired,
-      * `file` for an artefact copied in, `why` for free text. Sorted at write time. */
+    /** kind-specific pairs: `from`/`to` for a rename, `file` for an artefact copied in, `why` for
+      * free text. Sorted at write time.
+      *
+      * '''Never restate what [[Reason]] already carries.''' A `Reason.Configured(phase, key)` IS
+      * the policy entry, and both consumers print the two side by side — `PorterNote.pairs` emits
+      * the classification and then this map, so a `key` here renders `key=… key=…` in the comment
+      * beside the code, and `tsv` writes a `reason` column holding `phase:key` immediately before
+      * a `detail` column repeating it. Three phases did exactly that and it reached emitted output
+      * (PROGRESS §7.1). Put a NARROWER or DIFFERENT string here if a decider has one; never the
+      * same one. */
     detail: Map[String, String],
     reason: Reason,
     origin: Origin,

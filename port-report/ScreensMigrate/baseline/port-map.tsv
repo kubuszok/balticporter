@@ -97,7 +97,7 @@ member	de.eskalon.commons.screen.ScreenManager#resize(int,int)	sge.screen.Screen
 member	de.eskalon.commons.screen.ScreenManager#resume()	sge.screen.ScreenManager#resume()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	398	dd64ca080263bacc	
 member	de.eskalon.commons.screen.ScreenManager#setAutoDispose(boolean,boolean)	sge.screen.ScreenManager#setAutoDispose(boolean,boolean)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	180	621a92f2a2cb3e33	
 member	de.eskalon.commons.screen.ScreenManager#setHasDepth(boolean)	sge.screen.ScreenManager#setHasDepth(boolean)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	159	79caa240167560c7	
-member	de.eskalon.commons.screen.ScreenManager#transition	sge.screen.ScreenManager#transition	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	107	04097be31ec2c6ce	
+member	de.eskalon.commons.screen.ScreenManager#transition	sge.screen.ScreenManager#transition	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	107	355dc6602a6542c0	
 member	de.eskalon.commons.screen.ScreenManager#transitionQueue	sge.screen.ScreenManager#transitionQueue	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	109	caa67bc3328dc9ee	
 member	de.eskalon.commons.screen.transition.BatchTransition#<stmt1>	sge.screen.transition.BatchTransition#<stmt1>	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	54	e79c6b486078d08c	
 member	de.eskalon.commons.screen.transition.BatchTransition#<stmt2>	sge.screen.transition.BatchTransition#<stmt2>	Renamed	-	de/eskalon/commons/screen/transition/BatchTransition.java	56	8c122036d563d03e	

@@ -2859,15 +2859,30 @@ Every other port is byte-identical: **0 members changed on the other twelve**, e
 unmoved, suites unchanged (gdx-test 217/4, ashley 108/2 + 2 skipped, anim8 23, vfx 64, sg 16, jbump
 no suite, screens 16/16; gltf 7 and noise4j 2 pre-existing errors).
 
-**One residue this delivery does NOT fix, found by reading the emitted output.** Every `ScopedOut`
-note renders its key TWICE — `/* porter: scoped-out reason=configured phase=nullability
+**And one residue P3 FOUND by reading the emitted output, then fixed in its own measurement.** Every
+`ScopedOut` note rendered its key TWICE — `/* porter: scoped-out reason=configured phase=nullability
 key=com.…ObjectMap key=com.…ObjectMap */`. `PorterNote.pairs` emits the `Reason.Configured` key and
 then the decision's own `detail`, and three phases put the same string in both:
-`NullabilityTransform`, `CollectionsTransform` and `GlobalsToImplicitsTransform` (`TypeRedirect` and
-`BeanProperty` do not). It is an M3-era engine defect, systemic rather than nullability's, and P3 is
-simply the first run in the corpus that emits a `ScopedOut` note at all. Fixing it here would be two
-changes in one measurement (§5); it is one line in each of three files plus 51 note texts of digest
-churn on libGDX core and one on screens.
+`NullabilityTransform`, `CollectionsTransform`, `GlobalsToImplicitsTransform` (`TypeRedirect` and
+`BeanProperty` did not). An M3-era engine defect, systemic rather than nullability's; P3 is simply
+the first corpus run that emits a `ScopedOut` note at all.
+
+**Fixed at the DECIDER, not at the renderer**, and the layer is the whole of the argument: a dedup
+inside `PorterNote.pairs` would leave `decisions.tsv`'s `detail` column restating its own `reason`
+column — the same redundancy in the artifact the renderer never touches — and would silently swallow
+a `key` a future decider means as something OTHER than the classification's. `Decision.detail`'s
+scaladoc now states the rule where a decider reads it, and the three phases stopped.
+
+**Measured: 51 note texts on libGDX core and 1 on screens, and nothing else anywhere.** The
+member-digest blast is larger than the note count and exactly accountable — **libgdx-core 70
+members (140 by `just members-unchanged`, which counts a changed row twice) = the 51 declarations
+carrying a note PLUS the 19 enclosing types whose body text contains them; screens 2 (4) = its one
+note and its class.** Every check count identical on all thirteen ports, 0 members changed on the
+other eleven, every suite unchanged. Baselines promoted for those two, accounted.
+
+`PortRun`'s three drop-note sites are the same defect at a fourth decider and are left as their own
+measurement (§7.4): their notes land in emitted type BODIES and in injected files, so the blast is
+a different set.
 
 ## 12. Remaining work, across the engine
 
@@ -2889,13 +2904,6 @@ Maintained by deletion. Items are ordered by what they block, not by size.
   `Configured` rows.** The same hole covers any phase that retypes a parent — the retarget is
   simply the first policy that does. The fix is one more pass over `Definition.parents` in the same
   `before`/`after` comparison, at the DECLARATION level the channel already uses.
-- **A `ScopedOut` note renders its policy key TWICE.** `PorterNote.pairs` emits the
-  `Reason.Configured` key and then the decision's own `detail` map, and three phases put the same
-  string in both — `NullabilityTransform`, `CollectionsTransform`, `GlobalsToImplicitsTransform`
-  (`TypeRedirectTransform` and `BeanPropertyTransform` do not). Visible for the first time at P3,
-  which is the first corpus run that emits a `ScopedOut` note at all: 51 of them on libGDX core,
-  each reading `key=…ObjectMap key=…ObjectMap`. One line in each of three files; the blast is 51
-  note texts.
 - **A scoped-out PARAMETER records no decision at all.** `NullabilityTransform.scopedOut` skips a
   symbol whose `flags.isParam` — the §5.1 rule that a decision is recorded at the DECLARATION —
   but it does not then record against the parameter's METHOD, so a scope entry that holds back only
@@ -2934,7 +2942,12 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 
 ### 7.4 Cosmetic
 
-- Drop notes print `key=` twice.
+- **Drop notes print `key=` twice** — the last decider still restating what `Reason.Configured`
+  already carries (`Decision.detail`'s own scaladoc now forbids it, and the three phases that did it
+  were fixed at P3). The three sites are all in `PortRun`: the `dropTypes`, `dropMethods` and
+  `supportSources` loops. `DroppedMember` is `InBody` and `DroppedType` is `NotInTree`, so the blast
+  is emitted-type bodies plus the injected files' prepended headers — 16 + 12 notes on libGDX core
+  alone, which is why it did not travel with the phase fix.
 
 ### 7.5 Not run
 

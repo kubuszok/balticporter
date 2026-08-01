@@ -29,7 +29,7 @@ sge.screen.ManagedScreenAdapter	sge.screen.ManagedScreenAdapter	class	eec8574591
 sge.screen.ManagedScreenAdapter	sge.screen.ManagedScreenAdapter#close()	def	d921dd803edaf315
 sge.screen.ManagedScreenAdapter	sge.screen.ManagedScreenAdapter#render(float)	def	f8e1c11dc9a4f8ed
 sge.screen.ManagedScreenAdapter	sge.screen.ManagedScreenAdapter#resize(int,int)	def	8251b8592695c3e9
-sge.screen.ScreenManager	sge.screen.ScreenManager	class	6e2c0996048f821f
+sge.screen.ScreenManager	sge.screen.ScreenManager	class	c2daa48c4ebed285
 sge.screen.ScreenManager	sge.screen.ScreenManager#LOG	val	fdc3453a8420c145
 sge.screen.ScreenManager	sge.screen.ScreenManager#autoDisposeScreens	val	efb7b49757df8768
 sge.screen.ScreenManager	sge.screen.ScreenManager#autoDisposeTransitions	val	a3856449bf869636
@@ -63,7 +63,7 @@ sge.screen.ScreenManager	sge.screen.ScreenManager#resize(int,int)	def	01cc3d8103
 sge.screen.ScreenManager	sge.screen.ScreenManager#resume()	def	dd64ca080263bacc
 sge.screen.ScreenManager	sge.screen.ScreenManager#setAutoDispose(boolean,boolean)	def	621a92f2a2cb3e33
 sge.screen.ScreenManager	sge.screen.ScreenManager#setHasDepth(boolean)	def	79caa240167560c7
-sge.screen.ScreenManager	sge.screen.ScreenManager#transition	val	04097be31ec2c6ce
+sge.screen.ScreenManager	sge.screen.ScreenManager#transition	val	355dc6602a6542c0
 sge.screen.ScreenManager	sge.screen.ScreenManager#transitionQueue	val	caa67bc3328dc9ee
 sge.screen.transition.BatchTransition	sge.screen.transition.BatchTransition	class	44a15eeedc38532f
 sge.screen.transition.BatchTransition	sge.screen.transition.BatchTransition#<stmt1>	stmt	e79c6b486078d08c

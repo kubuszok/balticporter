@@ -72,7 +72,9 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
     val fqns = ds.map(_.subjectFqn).toSet
     assert(clue(fqns).contains("demo.Logger#log"))
     assert(fqns.contains("demo.App#run"))
-    assert(ds.forall(_.detail.contains("key")))
+    // the holder key is `Reason.Configured`'s and is NOT restated in `detail` — see the scoped-out
+    // test below for what restating it renders beside the code.
+    assert(ds.forall(!_.detail.contains("key")))
   }
 
   test("the residual holder is DERIVED: a static with no reader left is dropped") {
@@ -125,6 +127,10 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
     val (_, _, l, o) = ported(holder(_.copy(scope = RuleScope.Everywhere(Set("demo.Logger")))))
     val scoped = l.of(Decision.Kind.ScopedOut).map(_.subjectFqn)
     assertEquals(clue(scoped), List("demo.Logger#log"))
+    // …once: the holder key is `Reason.Configured`'s and is not restated in `detail`, or the porter
+    // note beside the code reads `key=demo.Config key=demo.Config`.
+    assert(l.of(Decision.Kind.ScopedOut).forall(!_.detail.contains("key")))
+    assertEquals(balticporter.tir.PorterNote.pairs(l.of(Decision.Kind.ScopedOut).head).count(_._1 == "key"), 1)
     assert(o.contains("demo.Config.verbosity"), o)
     assert(!o.contains("def log(msg: java.lang.String)(using"), o)
   }

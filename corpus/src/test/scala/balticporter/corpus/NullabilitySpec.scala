@@ -90,7 +90,10 @@ class NullabilitySpec extends PortSuite:
                  List("demo.Group#find", "demo.Group#parent", "demo.Group#pick"))
     rows.foreach { d =>
       assertEquals(d.reason, Reason.Configured("nullability", "demo.Null"))
-      assertEquals(d.detail("key"), "demo.Null")
+      // the key lives in the classification and NOWHERE else — `decisions.tsv` writes `reason` as
+      // `nullability:demo.Null` immediately before `detail`, and restating it there is the same
+      // string twice in adjacent columns (and `key=… key=…` in the note, for a rendered kind)
+      assert(!d.detail.contains("key"))
     }
     // a parameter's retype is attributed to its METHOD — one row per declaration, never one per
     // parameter (§5.1) — and the row says which positions moved.
@@ -217,6 +220,15 @@ class NullabilitySpec extends PortSuite:
     // the held-back declarations get the COMPLEMENT row — the one that explains why a declaration
     // kept its upstream type while the code around it moved.
     assert(log.of(Decision.Kind.ScopedOut).map(_.subjectFqn).contains("demo.Group#find"))
+    // …and it names the entry ONCE. `Reason.Configured` carries the policy key; a decider that also
+    // puts it in `detail` renders `key=… key=…` in the note beside the code and repeats itself in
+    // `decisions.tsv` next to a `reason` column that already says `phase:key`.
+    val out = log.of(Decision.Kind.ScopedOut)
+    // under `Only` a declaration is held back because NO entry names it, so the key an agent edits
+    // is the whole list — which is exactly why it must not also be a `detail` pair to keep in step
+    assert(out.forall(_.reason == Reason.Configured("nullability", "only:demo.Group#parent")))
+    assert(out.forall(!_.detail.contains("key")))
+    assertEquals(PorterNote.pairs(out.head).count(_._1 == "key"), 1)
 
     val except = phase(scope = RuleScope.Everywhere(Set("demo.Group#parent")))
     val (_, log2) = Pipeline.runTraced(PortFixture.parse(java), List(except))

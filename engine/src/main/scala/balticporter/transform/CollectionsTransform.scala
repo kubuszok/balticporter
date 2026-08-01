@@ -522,9 +522,10 @@ final class CollectionsTransform(
                 kind       = Decision.Kind.ScopedOut,
                 subject    = s.id,
                 subjectFqn = s.fullName,
+                // NO `key` in `detail` — `Reason.Configured` below already carries the entry, and a
+                // decider that spells it twice renders `key=… key=…` in the porter note.
                 detail = Map(
                   "kept" -> TirPrinter.tpe(s.info, TirPrinter.Style.canonical),
-                  "key"  -> entry,
                   "why"  -> ("this port's collections scope excludes this declaration, so it keeps " +
                     "the JDK type while the code around it moved to scala's"),
                 ),
@@ -588,10 +589,12 @@ final class CollectionsTransform(
             subject    = s.id,
             subjectFqn = s.fullName,
             detail = Map(
+              // …and no `key`: where `admittedBy` supplied one, `reason` above is
+              // `Reason.Configured(name, thatSameEntry)` and already carries it.
               "from" -> TirPrinter.tpe(s.info, TirPrinter.Style.canonical),
               "to"   -> TirPrinter.tpe(now.info, TirPrinter.Style.canonical),
               "why"  -> why,
-            ) ++ admittedBy.get(s.id).map("key" -> _),
+            ),
             reason = reason,
             origin = Decision.originOf(p, s.id),
           ))

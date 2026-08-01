@@ -14101,7 +14101,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.List#drawItem(Batch,BitmapFont,int,T,f
 member	com.badlogic.gdx.scenes.scene2d.ui.List#drawSelection(Batch,Drawable,float,float,float,float)	sge.scenes.scene2d.ui.List#drawSelection(Batch,Drawable,float,float,float,float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	251	f09369096930aaa9	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getAlignment()	sge.scenes.scene2d.ui.List#getAlignment()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	422	3032d359caa6e2d1	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getCullingArea()	sge.scenes.scene2d.ui.List#getCullingArea()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	412	af99829655665c46	
-member	com.badlogic.gdx.scenes.scene2d.ui.List#getItemAt(float)	sge.scenes.scene2d.ui.List#getItemAt(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	322	6399a93fc526730c	
+member	com.badlogic.gdx.scenes.scene2d.ui.List#getItemAt(float)	sge.scenes.scene2d.ui.List#getItemAt(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	322	8ece67bf9837b910	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getItemHeight()	sge.scenes.scene2d.ui.List#getItemHeight()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	388	bf78a05e47705e47	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getItemIndexAt(float)	sge.scenes.scene2d.ui.List#getItemIndexAt(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	329	cd2157def1fb87b0	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getItems()	sge.scenes.scene2d.ui.List#getItems()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	384	2ae1ceb712f95239	
@@ -14110,7 +14110,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.List#getOverItem()	sge.scenes.scene2d.
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getPrefHeight()	sge.scenes.scene2d.ui.List#getPrefHeight()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	397	1224b260e8036d28	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getPrefWidth()	sge.scenes.scene2d.ui.List#getPrefWidth()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	392	6e2c73276590e150	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getPressedItem()	sge.scenes.scene2d.ui.List#getPressedItem()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	317	620b07505baa1fbb	
-member	com.badlogic.gdx.scenes.scene2d.ui.List#getSelected()	sge.scenes.scene2d.ui.List#getSelected()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	278	cb90da2074475811	
+member	com.badlogic.gdx.scenes.scene2d.ui.List#getSelected()	sge.scenes.scene2d.ui.List#getSelected()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	278	9868165edcd12e0d	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getSelectedIndex()	sge.scenes.scene2d.ui.List#getSelectedIndex()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	294	cbb9fdac33046205	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getSelection()	sge.scenes.scene2d.ui.List#getSelection()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	269	3e3de41ff7e7fcdc	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getStyle()	sge.scenes.scene2d.ui.List#getStyle()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	169	ccbe28620346bdfb	
@@ -14138,12 +14138,12 @@ member	com.badlogic.gdx.scenes.scene2d.ui.List#typeToSelect	sge.scenes.scene2d.u
 member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#<init>()	sge.scenes.scene2d.ui.List$ListStyle#<init>()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	444	831035c3fa688bca	
 member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#<init>(BitmapFont,Color,Color,Drawable)	sge.scenes.scene2d.ui.List$ListStyle#<init>(BitmapFont,Color,Color,Drawable)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	447	ea1c2e5705285c42	
 member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#<init>(ListStyle)	sge.scenes.scene2d.ui.List$ListStyle#<init>(ListStyle)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	454	fe363c12e92c3ee2	
-member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#background	sge.scenes.scene2d.ui.List$ListStyle#background	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	442	8878563c9388398e	
-member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#down	sge.scenes.scene2d.ui.List$ListStyle#down	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	442	f5f378f7e55d5768	
+member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#background	sge.scenes.scene2d.ui.List$ListStyle#background	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	442	5c7b225cd9b5bab4	
+member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#down	sge.scenes.scene2d.ui.List$ListStyle#down	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	442	4f88d62cc4a1e663	
 member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#font	sge.scenes.scene2d.ui.List$ListStyle#font	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	438	31f9258075a11f9b	
 member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#fontColorSelected	sge.scenes.scene2d.ui.List$ListStyle#fontColorSelected	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	439	7cb6c3c6e2be8841	
 member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#fontColorUnselected	sge.scenes.scene2d.ui.List$ListStyle#fontColorUnselected	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	440	7af57014da26aa5b	
-member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#over	sge.scenes.scene2d.ui.List$ListStyle#over	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	442	318a792d33dbfc40	
+member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#over	sge.scenes.scene2d.ui.List$ListStyle#over	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	442	a0df4be7a7a73a06	
 member	com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#selection	sge.scenes.scene2d.ui.List$ListStyle#selection	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	441	3b6bbc1f8d18e842	
 member	com.badlogic.gdx.scenes.scene2d.ui.ParticleEffectActor#<init>(FileHandle,FileHandle)	sge.scenes.scene2d.ui.ParticleEffectActor#<init>(FileHandle,FileHandle)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/ParticleEffectActor.java	34	560795c069cb4962	
 member	com.badlogic.gdx.scenes.scene2d.ui.ParticleEffectActor#<init>(FileHandle,TextureAtlas)	sge.scenes.scene2d.ui.ParticleEffectActor#<init>(FileHandle,TextureAtlas)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/ParticleEffectActor.java	27	359e59ac1f706f64	
@@ -14416,7 +14416,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#clickListener	sge.scenes.sce
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#disabled	sge.scenes.scene2d.ui.SelectBox#disabled	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	63	3dc3ca05476da33f	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#draw(Batch,float)	sge.scenes.scene2d.ui.SelectBox#draw(Batch,float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	244	fb97e4d3adefbe3e	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#drawItem(Batch,BitmapFont,T,float,float,float)	sge.scenes.scene2d.ui.SelectBox#drawItem(Batch,BitmapFont,T,float,float,float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	273	95b900110ab8b6fe	
-member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getBackgroundDrawable()	sge.scenes.scene2d.ui.SelectBox#getBackgroundDrawable()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	230	2316341aeaef4187	
+member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getBackgroundDrawable()	sge.scenes.scene2d.ui.SelectBox#getBackgroundDrawable()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	230	d92f5251b86ed61d	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getClickListener()	sge.scenes.scene2d.ui.SelectBox#getClickListener()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	406	cb66650eb377e266	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getFontColor()	sge.scenes.scene2d.ui.SelectBox#getFontColor()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	238	c080e5795954056a	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getItems()	sge.scenes.scene2d.ui.SelectBox#getItems()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	181	2ae1ceb712f95239	
@@ -14426,7 +14426,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getMaxSelectedPrefWidth()	sg
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getPrefHeight()	sge.scenes.scene2d.ui.SelectBox#getPrefHeight()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	356	1224b260e8036d28	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getPrefWidth()	sge.scenes.scene2d.ui.SelectBox#getPrefWidth()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	351	6e2c73276590e150	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getScrollPane()	sge.scenes.scene2d.ui.SelectBox#getScrollPane()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	398	680a9f1cf81fb592	
-member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelected()	sge.scenes.scene2d.ui.SelectBox#getSelected()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	292	532314189ff08ee9	
+member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelected()	sge.scenes.scene2d.ui.SelectBox#getSelected()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	292	84b598a3c9b7a578	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedIndex()	sge.scenes.scene2d.ui.SelectBox#getSelectedIndex()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	307	cbb9fdac33046205	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedPrefWidth()	sge.scenes.scene2d.ui.SelectBox#getSelectedPrefWidth()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	322	38693070c2e700bf	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelection()	sge.scenes.scene2d.ui.SelectBox#getSelection()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	287	2ca82f5f1816ff1c	
@@ -14489,15 +14489,15 @@ member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxScrollPane#stagePos
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#<init>()	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#<init>()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	621	c345fadfa14fd04c	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#<init>(BitmapFont,Color,Drawable,ScrollPaneStyle,ListStyle)	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#<init>(BitmapFont,Color,Drawable,ScrollPaneStyle,ListStyle)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	624	57ff3d2b566d8515	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#<init>(SelectBoxStyle)	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#<init>(SelectBoxStyle)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	633	e8202dafa5b08cc8	
-member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#background	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#background	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	616	709e4ba1fbbdb363	
-member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundDisabled	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundDisabled	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	619	f45fb7ecf8e2856c	
-member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundOpen	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundOpen	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	619	6dca3e3850ce0a08	
-member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundOver	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundOver	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	619	559304f6daa88202	
-member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#disabledFontColor	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#disabledFontColor	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	615	2543d8902fba7e82	
+member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#background	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#background	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	616	0711986783471fa3	
+member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundDisabled	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundDisabled	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	619	b6b5f6575f4fbdb3	
+member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundOpen	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundOpen	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	619	5eb19a59c48b6c9d	
+member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundOver	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#backgroundOver	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	619	a989cb063e250689	
+member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#disabledFontColor	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#disabledFontColor	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	615	9cb6595269c6d3d5	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#font	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#font	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	613	31f9258075a11f9b	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#fontColor	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#fontColor	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	614	70192b75bdda2cb0	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#listStyle	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#listStyle	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	618	d5a629d4b4e456a3	
-member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#overFontColor	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#overFontColor	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	615	b142620d9df823e7	
+member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#overFontColor	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#overFontColor	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	615	f7eda71458add232	
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle#scrollStyle	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#scrollStyle	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	617	d1595863be9256f9	
 member	com.badlogic.gdx.scenes.scene2d.ui.Skin#<init>()	sge.scenes.scene2d.ui.Skin#<init>()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Skin.java	70	e5ea1d94b98fa347	
 member	com.badlogic.gdx.scenes.scene2d.ui.Skin#<init>(FileHandle)	sge.scenes.scene2d.ui.Skin#<init>(FileHandle)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Skin.java	76	b95643c722d63261	
@@ -15164,22 +15164,22 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Tree#expandAll()	sge.scenes.scene2d.ui
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#expandAll(Array)	sge.scenes.scene2d.ui.Tree#expandAll(Array<?>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	571	4515aed27750cdc3	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findExpandedValues(Array,Array)	sge.scenes.scene2d.ui.Tree#findExpandedValues(Array<?>,Array<?>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	527	43e0623d9c3151ff	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findExpandedValues(Array)	sge.scenes.scene2d.ui.Tree#findExpandedValues(Array<V>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	513	7b2b2e2e0b8fd6f4	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findNode(Array,Object)	sge.scenes.scene2d.ui.Tree#findNode(Array<?>,Object)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	542	92e6ebc6e86c1512	placement=companion
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findNode(V)	sge.scenes.scene2d.ui.Tree#findNode(V)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	537	c863520f0658d6f7	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findNode(Array,Object)	sge.scenes.scene2d.ui.Tree#findNode(Array<?>,Object)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	542	cfef6fe8de4b09a6	placement=companion
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findNode(V)	sge.scenes.scene2d.ui.Tree#findNode(V)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	537	2ffb676e6a2d59b2	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#foundNode	sge.scenes.scene2d.ui.Tree#foundNode	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	55	38b79ac6094b0425	vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getClickListener()	sge.scenes.scene2d.ui.Tree#getClickListener()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	577	af25ac638840bce8	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getExpandIcon(N,float)	sge.scenes.scene2d.ui.Tree#getExpandIcon(N,float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	353	ae6e5a529a05d223	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getIndentSpacing()	sge.scenes.scene2d.ui.Tree#getIndentSpacing()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	483	e8cf49d41d76a26d	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getNodeAt(Array,float,float)	sge.scenes.scene2d.ui.Tree#getNodeAt(Array<N>,float,float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	378	34d8a5557a5ac523	vis=private
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getNodeAt(float)	sge.scenes.scene2d.ui.Tree#getNodeAt(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	368	7617a03f0ccb7fb6	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getNodeAt(float)	sge.scenes.scene2d.ui.Tree#getNodeAt(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	368	a025533faa65e73d	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getNodes()	sge.scenes.scene2d.ui.Tree#getNodes()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	433	6682af78f690c076	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getOverNode()	sge.scenes.scene2d.ui.Tree#getOverNode()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	451	5dc2030aecf44b43	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getOverValue()	sge.scenes.scene2d.ui.Tree#getOverValue()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	456	d9f158e173191b53	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getOverNode()	sge.scenes.scene2d.ui.Tree#getOverNode()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	451	e82eefdd75618fae	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getOverValue()	sge.scenes.scene2d.ui.Tree#getOverValue()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	456	5d00c9828a63ef0f	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getPrefHeight()	sge.scenes.scene2d.ui.Tree#getPrefHeight()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	508	d16fdd56a65150dc	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getPrefWidth()	sge.scenes.scene2d.ui.Tree#getPrefWidth()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	503	8e666e2480f4f7c8	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getRootNodes()	sge.scenes.scene2d.ui.Tree#getRootNodes()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	427	6da765636fc3fbeb	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getSelectedNode()	sge.scenes.scene2d.ui.Tree#getSelectedNode()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	411	cc9dff7bff52f27f	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getSelectedValue()	sge.scenes.scene2d.ui.Tree#getSelectedValue()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	416	944a59b0463c0860	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getSelectedNode()	sge.scenes.scene2d.ui.Tree#getSelectedNode()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	411	5c634aaed71d9df3	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getSelectedValue()	sge.scenes.scene2d.ui.Tree#getSelectedValue()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	416	58b8a673fcf58da3	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getSelection()	sge.scenes.scene2d.ui.Tree#getSelection()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	406	651b50ce7b0aa03b	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getStyle()	sge.scenes.scene2d.ui.Tree#getStyle()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	421	00390c8ce74fa638	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#getYSpacing()	sge.scenes.scene2d.ui.Tree#getYSpacing()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	492	5801502a7a738f1d	
@@ -15229,15 +15229,15 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#expandAll()	sge.scenes.scene
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#expandTo()	sge.scenes.scene2d.ui.Tree$Node#expandTo()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	822	bdae26c6b0c4984c	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#expanded	sge.scenes.scene2d.ui.Tree$Node#expanded	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	593	a2c42186b5599ac3	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#findExpandedValues(Array)	sge.scenes.scene2d.ui.Tree$Node#findExpandedValues(Array<V>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	838	841fbf9f7be0223c	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#findNode(V)	sge.scenes.scene2d.ui.Tree$Node#findNode(V)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	803	20f8a2c866e6b890	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#findNode(V)	sge.scenes.scene2d.ui.Tree$Node#findNode(V)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	803	0497d43382f2ee7f	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getActor()	sge.scenes.scene2d.ui.Tree$Node#getActor()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	734	adfedfa8f275f08a	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getChildren()	sge.scenes.scene2d.ui.Tree$Node#getChildren()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	745	b4ec0aa7645f6250	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getHeight()	sge.scenes.scene2d.ui.Tree$Node#getHeight()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	854	8246cdc3ffb480ab	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getIcon()	sge.scenes.scene2d.ui.Tree$Node#getIcon()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	788	dd1d326848ac91a1	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getIcon()	sge.scenes.scene2d.ui.Tree$Node#getIcon()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	788	b0901cb19869ec45	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getLevel()	sge.scenes.scene2d.ui.Tree$Node#getLevel()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	792	c8f8f1f1550137c9	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getParent()	sge.scenes.scene2d.ui.Tree$Node#getParent()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	770	938162b5d205a72e	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getTree()	sge.scenes.scene2d.ui.Tree$Node#getTree()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	716	85eb2a6ba7ace584	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getValue()	sge.scenes.scene2d.ui.Tree$Node#getValue()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	779	080df0a7569366a3	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getParent()	sge.scenes.scene2d.ui.Tree$Node#getParent()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	770	115687bc9e85b1ff	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getTree()	sge.scenes.scene2d.ui.Tree$Node#getTree()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	716	1f523a98bede74fd	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getValue()	sge.scenes.scene2d.ui.Tree$Node#getValue()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	779	023a3a6fe0ee53d3	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#hasChildren()	sge.scenes.scene2d.ui.Tree$Node#hasChildren()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	749	3bd77e1b94bc469b	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#height	sge.scenes.scene2d.ui.Tree$Node#height	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	595	bae8d06566877f38	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#icon	sge.scenes.scene2d.ui.Tree$Node#icon	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	594	2112732162c693d8	
@@ -15262,13 +15262,13 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#value	sge.scenes.scene2d.ui.
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#<init>()	sge.scenes.scene2d.ui.Tree$TreeStyle#<init>()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	888	ebae8a9f2cc88ac0	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#<init>(Drawable,Drawable,Drawable)	sge.scenes.scene2d.ui.Tree$TreeStyle#<init>(Drawable,Drawable,Drawable)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	891	cb22021ebfa69149	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#<init>(TreeStyle)	sge.scenes.scene2d.ui.Tree$TreeStyle#<init>(TreeStyle)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	897	fb3cb28d18deaed2	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#background	sge.scenes.scene2d.ui.Tree$TreeStyle#background	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	886	e816d79d56627aa6	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#background	sge.scenes.scene2d.ui.Tree$TreeStyle#background	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	886	c7f29603445cf6a6	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#minus	sge.scenes.scene2d.ui.Tree$TreeStyle#minus	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	884	8a46ee5db1715c1e	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#minusOver	sge.scenes.scene2d.ui.Tree$TreeStyle#minusOver	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	885	bd3d66c33e63d09c	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#over	sge.scenes.scene2d.ui.Tree$TreeStyle#over	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	886	0879f02f3281b782	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#minusOver	sge.scenes.scene2d.ui.Tree$TreeStyle#minusOver	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	885	c5994502a1b1f6f1	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#over	sge.scenes.scene2d.ui.Tree$TreeStyle#over	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	886	4fe1339981ab6d75	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#plus	sge.scenes.scene2d.ui.Tree$TreeStyle#plus	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	884	cc897a3658d7011c	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#plusOver	sge.scenes.scene2d.ui.Tree$TreeStyle#plusOver	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	885	c3900e067845dee1	
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#selection	sge.scenes.scene2d.ui.Tree$TreeStyle#selection	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	886	50b686df7920be58	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#plusOver	sge.scenes.scene2d.ui.Tree$TreeStyle#plusOver	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	885	762d883c34eefb94	
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle#selection	sge.scenes.scene2d.ui.Tree$TreeStyle#selection	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	886	93166fb51d60d528	
 member	com.badlogic.gdx.scenes.scene2d.ui.Value#get()	sge.scenes.scene2d.ui.Value#get()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Value.java	28	630f880d6b6952a1	
 member	com.badlogic.gdx.scenes.scene2d.ui.Value#get(?)	sge.scenes.scene2d.ui.Value#get(?)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Value.java	33	2f2e958debda2c45	
 member	com.badlogic.gdx.scenes.scene2d.ui.Value#maxHeight	sge.scenes.scene2d.ui.Value#maxHeight	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Value.java	110	b77f607f0b677b41	placement=companion
@@ -15747,7 +15747,7 @@ member	com.badlogic.gdx.scenes.scene2d.utils.ScissorStack#pushScissors(Rectangle
 member	com.badlogic.gdx.scenes.scene2d.utils.ScissorStack#scissors	sge.scenes.scene2d.utils.ScissorStack#scissors	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/ScissorStack.java	34	8b59a5bf57d7c1e0	placement=companion vis=private
 member	com.badlogic.gdx.scenes.scene2d.utils.ScissorStack#tmp	sge.scenes.scene2d.utils.ScissorStack#tmp	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/ScissorStack.java	35	cec18df5f46204a9	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.utils.ScissorStack#viewport	sge.scenes.scene2d.utils.ScissorStack#viewport	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/ScissorStack.java	36	782b365032d25f98	placement=companion
-member	com.badlogic.gdx.scenes.scene2d.utils.Selection#actor	sge.scenes.scene2d.utils.Selection#actor	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	16	629775ec7be7ca86	vis=private
+member	com.badlogic.gdx.scenes.scene2d.utils.Selection#actor	sge.scenes.scene2d.utils.Selection#actor	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	16	ba87952bb31ea139	vis=private
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#add(T)	sge.scenes.scene2d.utils.Selection#add(T)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	140	20d05ba682951187	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#addAll(Array)	sge.scenes.scene2d.utils.Selection#addAll(Array<T>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	151	54560b796eaaa02a	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#changed()	sge.scenes.scene2d.utils.Selection#changed()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	217	c537c0a0aee7e717	
@@ -15756,8 +15756,8 @@ member	com.badlogic.gdx.scenes.scene2d.utils.Selection#cleanup()	sge.scenes.scen
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#clear()	sge.scenes.scene2d.utils.Selection#clear()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	200	1fae196800e3cd69	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#contains(T)	sge.scenes.scene2d.utils.Selection#contains(T)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	234	6a37677a60b49c83	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#fireChangeEvent()	sge.scenes.scene2d.utils.Selection#fireChangeEvent()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	223	2cedd353137ab890	
-member	com.badlogic.gdx.scenes.scene2d.utils.Selection#first()	sge.scenes.scene2d.utils.Selection#first()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	84	8fe921d24d0c3fe9	
-member	com.badlogic.gdx.scenes.scene2d.utils.Selection#getLastSelected()	sge.scenes.scene2d.utils.Selection#getLastSelected()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	240	edb4d7d88c951251	
+member	com.badlogic.gdx.scenes.scene2d.utils.Selection#first()	sge.scenes.scene2d.utils.Selection#first()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	84	a45b5a314ec213b3	
+member	com.badlogic.gdx.scenes.scene2d.utils.Selection#getLastSelected()	sge.scenes.scene2d.utils.Selection#getLastSelected()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	240	97846700329317e3	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#getMultiple()	sge.scenes.scene2d.utils.Selection#getMultiple()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	279	654dfe6b7f263282	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#getProgrammaticChangeEvents()	sge.scenes.scene2d.utils.Selection#getProgrammaticChangeEvents()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	302	d5c9014b2bd5ff1f	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#getRequired()	sge.scenes.scene2d.utils.Selection#getRequired()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	288	40910e1d7f1e1503	
@@ -15768,7 +15768,7 @@ member	com.badlogic.gdx.scenes.scene2d.utils.Selection#isDisabled()	sge.scenes.s
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#isEmpty()	sge.scenes.scene2d.utils.Selection#isEmpty()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	71	9effe40626e9a27f	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#items()	sge.scenes.scene2d.utils.Selection#items()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	79	6c21d6f2976419b2	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#iterator()	sge.scenes.scene2d.utils.Selection#iterator()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	249	41524f33cc58f579	
-member	com.badlogic.gdx.scenes.scene2d.utils.Selection#lastSelected	sge.scenes.scene2d.utils.Selection#lastSelected	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	24	7de414f6766579e7	
+member	com.badlogic.gdx.scenes.scene2d.utils.Selection#lastSelected	sge.scenes.scene2d.utils.Selection#lastSelected	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	24	425481dbddaef69d	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#multiple	sge.scenes.scene2d.utils.Selection#multiple	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	21	6a2437bba225a781	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#notEmpty()	sge.scenes.scene2d.utils.Selection#notEmpty()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	67	316ad6ffdba3c37c	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#old	sge.scenes.scene2d.utils.Selection#old	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	18	ea8c6ef10324d577	vis=private
@@ -15898,7 +15898,7 @@ member	com.badlogic.gdx.utils.Array#ordered	sge.utils.Array#ordered	Renamed	-	co
 member	com.badlogic.gdx.utils.Array#peek()	sge.utils.Array#peek()	Renamed	-	com/badlogic/gdx/utils/Array.java	432	77661f269b095b13	
 member	com.badlogic.gdx.utils.Array#pop()	sge.utils.Array#pop()	Renamed	-	com/badlogic/gdx/utils/Array.java	423	61bd4c1a9beaab08	
 member	com.badlogic.gdx.utils.Array#predicateIterable	sge.utils.Array#predicateIterable	Renamed	-	com/badlogic/gdx/utils/Array.java	39	0164698ccb3c8e4c	vis=private
-member	com.badlogic.gdx.utils.Array#random()	sge.utils.Array#random()	Renamed	-	com/badlogic/gdx/utils/Array.java	582	1fc794560b329b6e	
+member	com.badlogic.gdx.utils.Array#random()	sge.utils.Array#random()	Renamed	-	com/badlogic/gdx/utils/Array.java	582	1324b120f3032a18	
 member	com.badlogic.gdx.utils.Array#removeAll(Array,boolean)	sge.utils.Array#removeAll(Array<?>,boolean)	Renamed	-	com/badlogic/gdx/utils/Array.java	392	43c26eef3bff5aa7	
 member	com.badlogic.gdx.utils.Array#removeIndex(int)	sge.utils.Array#removeIndex(int)	Renamed	-	com/badlogic/gdx/utils/Array.java	358	14093ab02b6aad2e	
 member	com.badlogic.gdx.utils.Array#removeRange(int,int)	sge.utils.Array#removeRange(int,int)	Renamed	-	com/badlogic/gdx/utils/Array.java	372	ec7e83a5b2700266	
@@ -16038,7 +16038,7 @@ member	com.badlogic.gdx.utils.ArraySupplier#get(int)	sge.utils.ArraySupplier#get
 member	com.badlogic.gdx.utils.ArraySupplier#object()	sge.utils.ArraySupplier#object()	Renamed	-	com/badlogic/gdx/utils/ArraySupplier.java	13	295e0cace4ebc208	placement=companion
 member	com.badlogic.gdx.utils.AtomicQueue#<stmt1>	sge.utils.AtomicQueue#<stmt1>	Renamed	-	com/badlogic/gdx/utils/AtomicQueue.java	37	ebe6cfcbff108c7e	
 member	com.badlogic.gdx.utils.AtomicQueue#next(int)	sge.utils.AtomicQueue#next(int)	Renamed	-	com/badlogic/gdx/utils/AtomicQueue.java	40	bbb2eb40dc746f58	vis=private
-member	com.badlogic.gdx.utils.AtomicQueue#poll()	sge.utils.AtomicQueue#poll()	Renamed	-	com/badlogic/gdx/utils/AtomicQueue.java	54	42c90e3770900fa0	
+member	com.badlogic.gdx.utils.AtomicQueue#poll()	sge.utils.AtomicQueue#poll()	Renamed	-	com/badlogic/gdx/utils/AtomicQueue.java	54	2f6a994479b65a12	
 member	com.badlogic.gdx.utils.AtomicQueue#put(T)	sge.utils.AtomicQueue#put(T)	Renamed	-	com/badlogic/gdx/utils/AtomicQueue.java	44	dd579cf9cf1adb87	
 member	com.badlogic.gdx.utils.AtomicQueue#queue	sge.utils.AtomicQueue#queue	Renamed	-	com/badlogic/gdx/utils/AtomicQueue.java	34	e47edae97d8e09eb	vis=private
 member	com.badlogic.gdx.utils.AtomicQueue#readIndex	sge.utils.AtomicQueue#readIndex	Renamed	-	com/badlogic/gdx/utils/AtomicQueue.java	33	aa45c720aca41aeb	vis=private
@@ -17018,10 +17018,10 @@ member	com.badlogic.gdx.utils.IntMap#locateKey(int)	sge.utils.IntMap#locateKey(i
 member	com.badlogic.gdx.utils.IntMap#mask	sge.utils.IntMap#mask	Renamed	-	com/badlogic/gdx/utils/IntMap.java	66	a08e58f2e077742a	
 member	com.badlogic.gdx.utils.IntMap#notEmpty()	sge.utils.IntMap#notEmpty()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	231	39cd4126337542b3	
 member	com.badlogic.gdx.utils.IntMap#place(int)	sge.utils.IntMap#place(int)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	125	1f0443104384a523	
-member	com.badlogic.gdx.utils.IntMap#put(int,V)	sge.utils.IntMap#put(int,V)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	140	e88fc13fcfbb417d	
+member	com.badlogic.gdx.utils.IntMap#put(int,V)	sge.utils.IntMap#put(int,V)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	140	42b064a273dc6838	
 member	com.badlogic.gdx.utils.IntMap#putAll(IntMap)	sge.utils.IntMap#putAll(IntMap<?>)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	163	3c3ed6d11e0abc66	
 member	com.badlogic.gdx.utils.IntMap#putResize(int,V)	sge.utils.IntMap#putResize(int,V)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	175	b5e815ad664e83ca	vis=private
-member	com.badlogic.gdx.utils.IntMap#remove(int)	sge.utils.IntMap#remove(int)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	199	1415671ccc034665	
+member	com.badlogic.gdx.utils.IntMap#remove(int)	sge.utils.IntMap#remove(int)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	199	c6a5c9c4b77e2baf	
 member	com.badlogic.gdx.utils.IntMap#resize(int)	sge.utils.IntMap#resize(int)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	330	7bcbd0933347f169	vis=private
 member	com.badlogic.gdx.utils.IntMap#shift	sge.utils.IntMap#shift	Renamed	-	com/badlogic/gdx/utils/IntMap.java	61	781af59941fdad70	
 member	com.badlogic.gdx.utils.IntMap#shrink(int)	sge.utils.IntMap#shrink(int)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	243	9dacc05c2d0226b1	
@@ -17039,7 +17039,7 @@ member	com.badlogic.gdx.utils.IntMap$Entries#iterator()	sge.utils.IntMap$Entries
 member	com.badlogic.gdx.utils.IntMap$Entries#next()	sge.utils.IntMap$Entries#next()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	595	9bf2280af6937d60	
 member	com.badlogic.gdx.utils.IntMap$Entry#key	sge.utils.IntMap$Entry#key	Renamed	-	com/badlogic/gdx/utils/IntMap.java	515	0d09f8c7efbab0ba	
 member	com.badlogic.gdx.utils.IntMap$Entry#toString()	sge.utils.IntMap$Entry#toString()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	518	714eceff60f6af70	
-member	com.badlogic.gdx.utils.IntMap$Entry#value	sge.utils.IntMap$Entry#value	Renamed	-	com/badlogic/gdx/utils/IntMap.java	516	8365218ea15bae61	
+member	com.badlogic.gdx.utils.IntMap$Entry#value	sge.utils.IntMap$Entry#value	Renamed	-	com/badlogic/gdx/utils/IntMap.java	516	e8186e442d375232	
 member	com.badlogic.gdx.utils.IntMap$Keys#next()	sge.utils.IntMap$Keys#next()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	662	7af1a9372a6f704c	
 member	com.badlogic.gdx.utils.IntMap$Keys#toArray()	sge.utils.IntMap$Keys#toArray()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	672	6b01a5c4080314fc	
 member	com.badlogic.gdx.utils.IntMap$Keys#toArray(IntArray)	sge.utils.IntMap$Keys#toArray(IntArray)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	680	df647e6688cb8759	
@@ -17057,7 +17057,7 @@ member	com.badlogic.gdx.utils.IntMap$MapIterator#reset()	sge.utils.IntMap$MapIte
 member	com.badlogic.gdx.utils.IntMap$MapIterator#valid	sge.utils.IntMap$MapIterator#valid	Renamed	-	com/badlogic/gdx/utils/IntMap.java	531	01d045a83c9f074c	
 member	com.badlogic.gdx.utils.IntMap$Values#hasNext()	sge.utils.IntMap$Values#hasNext()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	626	0f26128f88d59033	
 member	com.badlogic.gdx.utils.IntMap$Values#iterator()	sge.utils.IntMap$Values#iterator()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	644	b08a414cf7d81a4e	
-member	com.badlogic.gdx.utils.IntMap$Values#next()	sge.utils.IntMap$Values#next()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	631	c12ee8f9c42139b6	
+member	com.badlogic.gdx.utils.IntMap$Values#next()	sge.utils.IntMap$Values#next()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	631	c970912e9740cbc1	
 member	com.badlogic.gdx.utils.IntMap$Values#toArray()	sge.utils.IntMap$Values#toArray()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	649	d8a9807608864d2a	
 member	com.badlogic.gdx.utils.tableSize	tableSize	Renamed	-	com/badlogic/gdx/utils/IntMap.java	92	80e9f64f18a709e6	name=tableSize$p
 member	com.badlogic.gdx.utils.IntSet#<init>()	sge.utils.IntSet#<init>()	Renamed	-	com/badlogic/gdx/utils/IntSet.java	66	a30a248909563a33	
@@ -17793,7 +17793,7 @@ member	com.badlogic.gdx.utils.LongMap#entries2	sge.utils.LongMap#entries2	Rename
 member	com.badlogic.gdx.utils.LongMap#equals(Any)	sge.utils.LongMap#equals(Any)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	365	563ef69e05ac811f	
 member	com.badlogic.gdx.utils.LongMap#equalsIdentity(Object)	sge.utils.LongMap#equalsIdentity(Object)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	395	e1809c67b68592e1	
 member	com.badlogic.gdx.utils.LongMap#findKey(Object,boolean,long)	sge.utils.LongMap#findKey(Object,boolean,long)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	303	1a94796a5f29b3c0	
-member	com.badlogic.gdx.utils.LongMap#get(long)	sge.utils.LongMap#get(long)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	185	d7a6f4c17acaacc6	
+member	com.badlogic.gdx.utils.LongMap#get(long)	sge.utils.LongMap#get(long)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	185	de504f2359d2e5da	
 member	com.badlogic.gdx.utils.LongMap#get(long,V)	sge.utils.LongMap#get(long,V)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	191	fc478f3b6c6e8d1e	
 member	com.badlogic.gdx.utils.LongMap#hasZeroValue	sge.utils.LongMap#hasZeroValue	Renamed	-	com/badlogic/gdx/utils/LongMap.java	48	f79caaa25eca991e	
 member	com.badlogic.gdx.utils.LongMap#hashCode()	sge.utils.LongMap#hashCode()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	349	c274d5f2bdcacb7e	
@@ -17808,10 +17808,10 @@ member	com.badlogic.gdx.utils.LongMap#locateKey(long)	sge.utils.LongMap#locateKe
 member	com.badlogic.gdx.utils.LongMap#mask	sge.utils.LongMap#mask	Renamed	-	com/badlogic/gdx/utils/LongMap.java	66	f2717b5d859a82c1	
 member	com.badlogic.gdx.utils.LongMap#notEmpty()	sge.utils.LongMap#notEmpty()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	230	39cd4126337542b3	
 member	com.badlogic.gdx.utils.LongMap#place(long)	sge.utils.LongMap#place(long)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	124	c70ec03bde9d2853	
-member	com.badlogic.gdx.utils.LongMap#put(long,V)	sge.utils.LongMap#put(long,V)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	139	5a4f3cce4d0fd8bb	
+member	com.badlogic.gdx.utils.LongMap#put(long,V)	sge.utils.LongMap#put(long,V)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	139	a58e0354cb4ea8ad	
 member	com.badlogic.gdx.utils.LongMap#putAll(LongMap)	sge.utils.LongMap#putAll(LongMap<?>)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	162	d408b843b2a36cd4	
 member	com.badlogic.gdx.utils.LongMap#putResize(long,V)	sge.utils.LongMap#putResize(long,V)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	174	14e57fdcef6b62e3	vis=private
-member	com.badlogic.gdx.utils.LongMap#remove(long)	sge.utils.LongMap#remove(long)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	198	173b6c3efa677604	
+member	com.badlogic.gdx.utils.LongMap#remove(long)	sge.utils.LongMap#remove(long)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	198	8a429a284ba2a2b3	
 member	com.badlogic.gdx.utils.LongMap#resize(int)	sge.utils.LongMap#resize(int)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	329	e3ae302e8a8df389	vis=private
 member	com.badlogic.gdx.utils.LongMap#shift	sge.utils.LongMap#shift	Renamed	-	com/badlogic/gdx/utils/LongMap.java	61	ba4d421c82e82d69	
 member	com.badlogic.gdx.utils.LongMap#shrink(int)	sge.utils.LongMap#shrink(int)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	242	9dacc05c2d0226b1	
@@ -17829,7 +17829,7 @@ member	com.badlogic.gdx.utils.LongMap$Entries#iterator()	sge.utils.LongMap$Entri
 member	com.badlogic.gdx.utils.LongMap$Entries#next()	sge.utils.LongMap$Entries#next()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	595	8d273bd1bc42815a	
 member	com.badlogic.gdx.utils.LongMap$Entry#key	sge.utils.LongMap$Entry#key	Renamed	-	com/badlogic/gdx/utils/LongMap.java	514	ffe6f92a903564f5	
 member	com.badlogic.gdx.utils.LongMap$Entry#toString()	sge.utils.LongMap$Entry#toString()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	517	714eceff60f6af70	
-member	com.badlogic.gdx.utils.LongMap$Entry#value	sge.utils.LongMap$Entry#value	Renamed	-	com/badlogic/gdx/utils/LongMap.java	515	0cb234a56640867a	
+member	com.badlogic.gdx.utils.LongMap$Entry#value	sge.utils.LongMap$Entry#value	Renamed	-	com/badlogic/gdx/utils/LongMap.java	515	6a781374b89571a1	
 member	com.badlogic.gdx.utils.LongMap$Keys#next()	sge.utils.LongMap$Keys#next()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	662	f818f8d91d7c83c1	
 member	com.badlogic.gdx.utils.LongMap$Keys#toArray()	sge.utils.LongMap$Keys#toArray()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	672	f29de9d291abd64c	
 member	com.badlogic.gdx.utils.LongMap$Keys#toArray(LongArray)	sge.utils.LongMap$Keys#toArray(LongArray)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	680	7cc0e2bb5b3666c5	
@@ -17847,7 +17847,7 @@ member	com.badlogic.gdx.utils.LongMap$MapIterator#reset()	sge.utils.LongMap$MapI
 member	com.badlogic.gdx.utils.LongMap$MapIterator#valid	sge.utils.LongMap$MapIterator#valid	Renamed	-	com/badlogic/gdx/utils/LongMap.java	530	01d045a83c9f074c	
 member	com.badlogic.gdx.utils.LongMap$Values#hasNext()	sge.utils.LongMap$Values#hasNext()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	626	0f26128f88d59033	
 member	com.badlogic.gdx.utils.LongMap$Values#iterator()	sge.utils.LongMap$Values#iterator()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	644	b08a414cf7d81a4e	
-member	com.badlogic.gdx.utils.LongMap$Values#next()	sge.utils.LongMap$Values#next()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	631	5173409335f69832	
+member	com.badlogic.gdx.utils.LongMap$Values#next()	sge.utils.LongMap$Values#next()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	631	13eeac622d00b34d	
 member	com.badlogic.gdx.utils.LongMap$Values#toArray()	sge.utils.LongMap$Values#toArray()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	649	d8a9807608864d2a	
 member	com.badlogic.gdx.utils.tableSize	tableSize	Renamed	-	com/badlogic/gdx/utils/LongMap.java	91	de4209bb3e9cd33d	name=tableSize$p
 member	com.badlogic.gdx.utils.LongQueue#<init>()	sge.utils.LongQueue#<init>()	Renamed	-	com/badlogic/gdx/utils/LongQueue.java	39	eebbf817a3e48a44	
@@ -18142,9 +18142,9 @@ member	com.badlogic.gdx.utils.ObjectMap#entries1	sge.utils.ObjectMap#entries1	Re
 member	com.badlogic.gdx.utils.ObjectMap#entries2	sge.utils.ObjectMap#entries2	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	67	86ddebf6142c5cec	
 member	com.badlogic.gdx.utils.ObjectMap#equals(Any)	sge.utils.ObjectMap#equals(Any)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	333	5c00aabef3fc777b	
 member	com.badlogic.gdx.utils.ObjectMap#equalsIdentity(Object)	sge.utils.ObjectMap#equalsIdentity(Object)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	355	aed7ef877d5fb08d	
-member	com.badlogic.gdx.utils.ObjectMap#findKey(Object,boolean)	sge.utils.ObjectMap#findKey(Object,boolean)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	275	4688a23ed42054a1	
+member	com.badlogic.gdx.utils.ObjectMap#findKey(Object,boolean)	sge.utils.ObjectMap#findKey(Object,boolean)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	275	7d5abcb7afc0116e	
 member	com.badlogic.gdx.utils.ObjectMap#get(K,V)	sge.utils.ObjectMap#get(K,V)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	182	acc79abd178a1f2d	
-member	com.badlogic.gdx.utils.ObjectMap#get(T)	sge.utils.ObjectMap#get(T)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	176	1cab651f86466829	
+member	com.badlogic.gdx.utils.ObjectMap#get(T)	sge.utils.ObjectMap#get(T)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	176	9fcd2dfd0e098b71	
 member	com.badlogic.gdx.utils.ObjectMap#hashCode()	sge.utils.ObjectMap#hashCode()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	318	87f030eb44a73b93	
 member	com.badlogic.gdx.utils.ObjectMap#isEmpty()	sge.utils.ObjectMap#isEmpty()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	216	3b4eb03d94d2c9a5	
 member	com.badlogic.gdx.utils.ObjectMap#iterator()	sge.utils.ObjectMap#iterator()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	406	8b1eddc86b10aae2	
@@ -18157,10 +18157,10 @@ member	com.badlogic.gdx.utils.ObjectMap#locateKey(K)	sge.utils.ObjectMap#locateK
 member	com.badlogic.gdx.utils.ObjectMap#mask	sge.utils.ObjectMap#mask	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	65	6bb91a684b96c491	
 member	com.badlogic.gdx.utils.ObjectMap#notEmpty()	sge.utils.ObjectMap#notEmpty()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	211	39cd4126337542b3	
 member	com.badlogic.gdx.utils.ObjectMap#place(K)	sge.utils.ObjectMap#place(K)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	121	35db1a860de7e8f3	
-member	com.badlogic.gdx.utils.ObjectMap#put(K,V)	sge.utils.ObjectMap#put(K,V)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	138	dfde730b34b3f2f7	
+member	com.badlogic.gdx.utils.ObjectMap#put(K,V)	sge.utils.ObjectMap#put(K,V)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	138	113cf06eb91730d3	
 member	com.badlogic.gdx.utils.ObjectMap#putAll(ObjectMap)	sge.utils.ObjectMap#putAll(ObjectMap<?,?>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	152	c4f0879dfcb1d821	
 member	com.badlogic.gdx.utils.ObjectMap#putResize(K,V)	sge.utils.ObjectMap#putResize(K,V)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	164	5f0687068cf0eb95	vis=private
-member	com.badlogic.gdx.utils.ObjectMap#remove(K)	sge.utils.ObjectMap#remove(K)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	188	2d2a14bab95aa6ff	
+member	com.badlogic.gdx.utils.ObjectMap#remove(K)	sge.utils.ObjectMap#remove(K)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	188	8c0fdc7cb10246ef	
 member	com.badlogic.gdx.utils.ObjectMap#resize(int)	sge.utils.ObjectMap#resize(int)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	298	ec9a28c2dc3a9616	
 member	com.badlogic.gdx.utils.ObjectMap#shift	sge.utils.ObjectMap#shift	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	60	33b91727b630dceb	
 member	com.badlogic.gdx.utils.ObjectMap#shrink(int)	sge.utils.ObjectMap#shrink(int)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	223	9dacc05c2d0226b1	
@@ -18179,7 +18179,7 @@ member	com.badlogic.gdx.utils.ObjectMap$Entries#iterator()	sge.utils.ObjectMap$E
 member	com.badlogic.gdx.utils.ObjectMap$Entries#next()	sge.utils.ObjectMap$Entries#next()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	546	0a3f3de8c3f7c875	
 member	com.badlogic.gdx.utils.ObjectMap$Entry#key	sge.utils.ObjectMap$Entry#key	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	477	9329367a4a3c8904	
 member	com.badlogic.gdx.utils.ObjectMap$Entry#toString()	sge.utils.ObjectMap$Entry#toString()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	480	714eceff60f6af70	
-member	com.badlogic.gdx.utils.ObjectMap$Entry#value	sge.utils.ObjectMap$Entry#value	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	478	6e8a98b034c00a79	
+member	com.badlogic.gdx.utils.ObjectMap$Entry#value	sge.utils.ObjectMap$Entry#value	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	478	d44c874f3cbb473b	
 member	com.badlogic.gdx.utils.ObjectMap$Keys#hasNext()	sge.utils.ObjectMap$Keys#hasNext()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	608	0f26128f88d59033	
 member	com.badlogic.gdx.utils.ObjectMap$Keys#iterator()	sge.utils.ObjectMap$Keys#iterator()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	622	7153723ff1ffd80f	
 member	com.badlogic.gdx.utils.ObjectMap$Keys#next()	sge.utils.ObjectMap$Keys#next()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	613	184b23a811845a7c	
@@ -18197,7 +18197,7 @@ member	com.badlogic.gdx.utils.ObjectMap$MapIterator#reset()	sge.utils.ObjectMap$
 member	com.badlogic.gdx.utils.ObjectMap$MapIterator#valid	sge.utils.ObjectMap$MapIterator#valid	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	490	01d045a83c9f074c	
 member	com.badlogic.gdx.utils.ObjectMap$Values#hasNext()	sge.utils.ObjectMap$Values#hasNext()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	572	0f26128f88d59033	
 member	com.badlogic.gdx.utils.ObjectMap$Values#iterator()	sge.utils.ObjectMap$Values#iterator()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	586	cbea439fdd6bbd92	
-member	com.badlogic.gdx.utils.ObjectMap$Values#next()	sge.utils.ObjectMap$Values#next()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	577	8b0a567873a40b41	
+member	com.badlogic.gdx.utils.ObjectMap$Values#next()	sge.utils.ObjectMap$Values#next()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	577	c4880a99c44b46a7	
 member	com.badlogic.gdx.utils.ObjectMap$Values#toArray()	sge.utils.ObjectMap$Values#toArray()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	591	557c029429110ad2	
 member	com.badlogic.gdx.utils.ObjectMap$Values#toArray(Array)	sge.utils.ObjectMap$Values#toArray(Array<V>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	596	51b416d77a480140	
 member	com.badlogic.gdx.utils.tableSize	tableSize	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	90	27b19aec8429707e	name=tableSize$p

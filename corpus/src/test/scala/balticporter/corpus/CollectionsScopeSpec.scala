@@ -4,7 +4,7 @@ import balticporter.core.PolicyIssue
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Decision, Pipeline, Program, Reason, RuleScope}
+import balticporter.tir.{Decision, Pipeline, PorterNote, Program, Reason, RuleScope}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
 
 /** WHERE `CollectionsTransform` applies — its [[RuleScope]], in both directions.
@@ -254,7 +254,10 @@ class CollectionsScopeSpec extends PortSuite:
     assert(clue(ds.map(_.subjectFqn)).contains("demo.Bridge#raw"))
     assert(ds.forall(_.reason == Reason.Configured("java-collections->scala", "demo.Bridge")))
     assertEquals(ds.head.reason.section, "§1(b) PER-LIBRARY POLICY")
-    assert(ds.forall(_.detail("key") == "demo.Bridge"))
+    // …ONCE. The entry lives in `Reason.Configured` and nowhere else: a decider that also puts it
+    // in `detail` renders `key=demo.Bridge key=demo.Bridge` in the porter note beside the code.
+    assert(ds.forall(!_.detail.contains("key")))
+    assertEquals(PorterNote.pairs(ds.head).count(_._1 == "key"), 1)
     // …and nothing outside the entry is claimed by it.
     assert(!ds.map(_.subjectFqn).exists(_.startsWith("demo.Model")))
   }

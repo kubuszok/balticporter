@@ -137,7 +137,16 @@ object PorterNote:
   export KeyValues.{safe, value}
 
   /** the `k=v` half, in a fixed order: the §1 classification first (it is the question an agent
-    * asks first), then the decision's own detail, sorted. */
+    * asks first), then the decision's own detail, sorted.
+    *
+    * '''The two are CONCATENATED, not reconciled, and that is the decider's obligation rather than
+    * this function's.''' A `Reason.Configured` contributes `key=`; a decider that puts the same
+    * string in `detail` gets `key=… key=…` in the comment beside the code, which is what three
+    * phases shipped (PROGRESS §7.1). Deduplicating here would be the wrong layer twice over: it
+    * would leave `decisions.tsv`'s `detail` column restating its own `reason` column — the same
+    * redundancy, in the artifact this function never touches — and it would silently swallow a
+    * `key` a future decider means as something OTHER than the classification's. So [[Decision]]'s
+    * `detail` says never to restate it, and this stays a concatenation. */
   def pairs(d: Decision): List[(String, String)] =
     val cls = ("reason" -> d.reason.className) :: (d.reason match
       case Reason.Universal(r)     => List("rule" -> r)

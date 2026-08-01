@@ -442,8 +442,10 @@ final class NullabilityTransform(
         kind       = Decision.Kind.ScopedOut,
         subject    = s.id,
         subjectFqn = s.fullName,
+        // NO `key` in `detail`: `Reason.Configured` already carries it, and a decider that spells
+        // it a second time renders `key=… key=…` in the porter note and repeats itself in
+        // `decisions.tsv`'s `detail` column beside a `reason` column that already says `phase:key`.
         detail = Map(
-          "key" -> entry,
           "why" -> ("this declaration carries a configured nullability annotation, and this port's " +
             "`nullability` scope deliberately holds it back — so it keeps its upstream type while " +
             "the annotated declarations around it moved"),
@@ -471,7 +473,6 @@ final class NullabilityTransform(
               detail = Map(
                 "from"      -> TirPrinter.tpe(w.info, TirPrinter.Style.canonical),
                 "to"        -> TirPrinter.tpe(n.info, TirPrinter.Style.canonical),
-                "key"       -> key,
                 "positions" -> ps.map(_.label).distinct.sorted.mkString(","),
                 "why"       -> ("the upstream states this contract with an annotation the scala " +
                   "compiler ignores; the port states it in the TYPE, and drops the annotation " +

@@ -405,8 +405,10 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
     def row(s: SymId, to: String): Unit =
       p.symbolOf(s).foreach(sym => record(Decision(
         kind = Decision.Kind.RetypedSignature, subject = s, subjectFqn = sym.fullName,
+        // no `key`: `Reason.Configured(name, h.holder)` below already carries it, and a decider
+        // that spells it twice renders `key=… key=…` in the porter note.
         detail = Map("from" -> "reads the holder's static state, or reaches something that does",
-                     "to" -> to, "key" -> h.holder) ++ need.via(s).map("via" -> _) ++
+                     "to" -> to) ++ need.via(s).map("via" -> _) ++
           Map("why" -> ("the ambient state this declaration read is threaded to it explicitly; a " +
             "call into it is unchanged, since the argument comes from the `using` in scope")),
         reason = Reason.Configured(name, h.holder),
@@ -419,7 +421,7 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
     need.scopedOut.toList.sortBy(_.raw).foreach { s =>
       p.symbolOf(s).foreach(sym => record(Decision(
         kind = Decision.Kind.ScopedOut, subject = s, subjectFqn = sym.fullName,
-        detail = Map("scope" -> h.scope.fingerprint, "key" -> h.holder,
+        detail = Map("scope" -> h.scope.fingerprint,
           "why" -> ("this declaration reads the holder and the holder's `scope` deliberately held " +
             "it back, so it keeps the upstream global while the code around it moved")),
         reason = Reason.Configured(name, h.holder),
