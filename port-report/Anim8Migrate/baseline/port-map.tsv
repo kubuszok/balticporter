@@ -1,7 +1,7 @@
-# balticporter port map	schema=3	module=anim8	engine=balticporter/0.1.0-SNAPSHOT	sources=6b96efbdb888cc69	files=16	policy=21e08d4e47fee393
+# balticporter port map	schema=3	module=anim8	engine=balticporter/0.1.0-SNAPSHOT	sources=6b96efbdb888cc69	files=16	policy=706c5cd8cb0965a0
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.github.tommyettinger.anim8.AnimatedGif	sge.anim8.AnimatedGif	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,sge.anim8.Dithered primary=() primaryKind=unique-root primaryVis=public
-type	com.github.tommyettinger.anim8.AnimatedPNG	sge.anim8.AnimatedPNG	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,sge.utils.Disposable primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=COLOR_ARGB,COMPRESSION_DEFLATE,FILTER_NONE,IDAT,IEND,IHDR,INTERLACE_NONE,SIGNATURE,acTL,fcTL,fdAT
+type	com.github.tommyettinger.anim8.AnimatedPNG	sge.anim8.AnimatedPNG	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,java.lang.AutoCloseable primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=COLOR_ARGB,COMPRESSION_DEFLATE,FILTER_NONE,IDAT,IEND,IHDR,INTERLACE_NONE,SIGNATURE,acTL,fcTL,fdAT
 type	com.github.tommyettinger.anim8.AnimationWriter	sge.anim8.AnimationWriter	Renamed	-		0		form=trait
 type	com.github.tommyettinger.anim8.ChunkBuffer	sge.anim8.ChunkBuffer	Renamed	-		0		form=class parents=java.io.DataOutputStream primary=(ByteArrayOutputStream,CRC32) primaryKind=unique-root primaryVis=private secondaries=(int)
 type	com.github.tommyettinger.anim8.ConstantData	sge.anim8.ConstantData	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
@@ -9,17 +9,18 @@ type	com.github.tommyettinger.anim8.Dithered	sge.anim8.Dithered	Renamed	-		0		co
 type	com.github.tommyettinger.anim8.Dithered$DitherAlgorithm	sge.anim8.Dithered$DitherAlgorithm	Renamed	-		0		companion=yes flags=abstract,sealed form=enum-class parents=java.lang.Enum primary=(String) primaryKind=not-funnelled primaryVis=public statics=ALL
 type	com.github.tommyettinger.anim8.FastAPNG	sge.anim8.FastAPNG	Renamed	-		0		companion=yes disambiguator=marker form=class parents=sge.anim8.AnimatedPNG primary=(int,?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int)
 type	com.github.tommyettinger.anim8.FastGif	sge.anim8.FastGif	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimatedGif primary=() primaryKind=unique-root primaryVis=public
-type	com.github.tommyettinger.anim8.FastPNG	sge.anim8.FastPNG	Renamed	-		0		companion=yes form=class parents=sge.utils.Disposable primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=COLOR_ARGB,COMPRESSION_DEFLATE,FILTER_NONE,IDAT,IEND,IHDR,INTERLACE_NONE,SIGNATURE
+type	com.github.tommyettinger.anim8.FastPNG	sge.anim8.FastPNG	Renamed	-		0		companion=yes form=class parents=java.lang.AutoCloseable primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=COLOR_ARGB,COMPRESSION_DEFLATE,FILTER_NONE,IDAT,IEND,IHDR,INTERLACE_NONE,SIGNATURE
 type	com.github.tommyettinger.anim8.FastPNG8	sge.anim8.FastPNG8	Renamed	-		0		companion=yes form=class parents=sge.anim8.PNG8 primary=(int) primaryKind=unique-root primaryVis=public secondaries=()
 type	com.github.tommyettinger.anim8.FastPalette	sge.anim8.FastPalette	Renamed	-		0		companion=yes disambiguator=marker form=class parents=sge.anim8.PaletteReducer primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int[]);(int[],int);(Color[]);(Color[],int);(Pixmap);(Array);(int[],byte[]);(Pixmap,double)
 type	com.github.tommyettinger.anim8.LZWEncoder	sge.anim8.LZWEncoder	Renamed	-		0		companion=yes form=class primary=(int,int,byte[],int) primaryKind=unique-root primaryVis=public statics=BITS,EOF,HSIZE
 type	com.github.tommyettinger.anim8.OtherMath	sge.anim8.OtherMath	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.github.tommyettinger.anim8.OtherMath$BiasGain	sge.anim8.OtherMath$BiasGain	Renamed	-		0		companion=yes form=class parents=sge.math.Interpolation primary=(float,float) primaryKind=unique-root primaryVis=public secondaries=()
-type	com.github.tommyettinger.anim8.PNG8	sge.anim8.PNG8	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,sge.anim8.Dithered,sge.utils.Disposable primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=COLOR_INDEXED,COMPRESSION_DEFLATE,FILTER_NONE,IDAT,IEND,IHDR,INTERLACE_NONE,PLTE,SIGNATURE,TRNS,acTL,centralizePalette,editPalette,editPaletteLightness,editPaletteOklab,editPaletteSaturation,fcTL,fdAT,hueShift,readChunks,swapPalette,writeChunks
+type	com.github.tommyettinger.anim8.PNG8	sge.anim8.PNG8	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,sge.anim8.Dithered,java.lang.AutoCloseable primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=COLOR_INDEXED,COMPRESSION_DEFLATE,FILTER_NONE,IDAT,IEND,IHDR,INTERLACE_NONE,PLTE,SIGNATURE,TRNS,acTL,centralizePalette,editPalette,editPaletteLightness,editPaletteOklab,editPaletteSaturation,fcTL,fdAT,hueShift,readChunks,swapPalette,writeChunks
 type	com.github.tommyettinger.anim8.PaletteReducer	sge.anim8.PaletteReducer	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int[]);(int[],int);(Color[]);(Color[],int);(Pixmap);(Array);(int[],byte[]);(Pixmap,double) statics=AURORA,BIG_PALETTE,HALTONIC,IntComparator,OKLAB,SNUGGLY,TBM_BITS,TBM_MASK,TRIANGULAR_BYTE_LOOKUP,TRI_BAYER_MATRIX_128,TRI_BLUE_NOISE,TRI_BLUE_NOISE_B,TRI_BLUE_NOISE_C,TRI_BLUE_NOISE_MULTIPLIERS,TRI_BLUE_NOISE_MULTIPLIERS_B,TRI_BLUE_NOISE_MULTIPLIERS_C,bayer,bigPaletteLoaded,bigPaletteMapping,colorsFrom,compareSwap,entryComparator,forwardLight,fromLinearLUT,hueComparator,inPlaceMerge,interleaveBytes,lightnessComparator,loadPreloadFile,lowerBound,oklabToRGB,reverseLight,reverseShortBits,shrink,sort,sort16,sort8,stretch,swap,tempThresholdMatrix,thresholdMatrix16,thresholdMatrix64,thresholdMatrix8,toLinearLUT,upperBound
 type	com.github.tommyettinger.anim8.PaletteReducer$IntComparator	sge.anim8.PaletteReducer$IntComparator	Renamed	-		0		form=trait
 type	com.github.tommyettinger.anim8.QualityPalette	sge.anim8.QualityPalette	Renamed	-		0		companion=yes disambiguator=marker form=class parents=sge.anim8.PaletteReducer primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int[]);(int[],int);(Color[]);(Color[],int);(Pixmap);(Array);(int[],byte[]);(Pixmap,double) statics=forwardLight,reverseLight
 type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
+type	com.badlogic.gdx.utils.Disposable		Dropped	-		0		
 type	com.badlogic.gdx.utils.Json		Dropped	-		0		
 type	com.badlogic.gdx.utils.Pools		Dropped	-		0		
 type	com.badlogic.gdx.utils.ReflectionPool		Dropped	-		0		
@@ -128,9 +129,9 @@ member	com.github.tommyettinger.anim8.AnimatedPNG#INTERLACE_NONE	sge.anim8.Anima
 member	com.github.tommyettinger.anim8.AnimatedPNG#SIGNATURE	sge.anim8.AnimatedPNG#SIGNATURE	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	80	ac2d7feb9bac0f30	placement=companion vis=private
 member	com.github.tommyettinger.anim8.AnimatedPNG#acTL	sge.anim8.AnimatedPNG#acTL	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	81	0b669a60cdbe9ffd	placement=companion vis=private
 member	com.github.tommyettinger.anim8.AnimatedPNG#buffer	sge.anim8.AnimatedPNG#buffer	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	91	b66cc2056bdaf596	vis=private
+member	com.github.tommyettinger.anim8.AnimatedPNG#close()	sge.anim8.AnimatedPNG#close()	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	304	667d8134a880a0d5	
 member	com.github.tommyettinger.anim8.AnimatedPNG#curLineBytes	sge.anim8.AnimatedPNG#curLineBytes	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	93	af3065e7af29e049	vis=private
 member	com.github.tommyettinger.anim8.AnimatedPNG#deflater	sge.anim8.AnimatedPNG#deflater	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	92	85ad53afba5533b6	vis=private
-member	com.github.tommyettinger.anim8.AnimatedPNG#dispose()	sge.anim8.AnimatedPNG#dispose()	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	304	75d5f5ab38c205a8	
 member	com.github.tommyettinger.anim8.AnimatedPNG#fcTL	sge.anim8.AnimatedPNG#fcTL	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	82	b18bb9c3c27a0b14	placement=companion vis=private
 member	com.github.tommyettinger.anim8.AnimatedPNG#fdAT	sge.anim8.AnimatedPNG#fdAT	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	83	b6c76c06dfcf54fc	placement=companion vis=private
 member	com.github.tommyettinger.anim8.AnimatedPNG#flipY	sge.anim8.AnimatedPNG#flipY	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	94	c35d6d0a77ec23d4	vis=private
@@ -180,9 +181,9 @@ member	com.github.tommyettinger.anim8.FastPNG#IHDR	sge.anim8.FastPNG#IHDR	Rename
 member	com.github.tommyettinger.anim8.FastPNG#INTERLACE_NONE	sge.anim8.FastPNG#INTERLACE_NONE	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	92	4a6352b7fd983aac	placement=companion vis=private
 member	com.github.tommyettinger.anim8.FastPNG#SIGNATURE	sge.anim8.FastPNG#SIGNATURE	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	85	ac2d7feb9bac0f30	placement=companion vis=private
 member	com.github.tommyettinger.anim8.FastPNG#buffer	sge.anim8.FastPNG#buffer	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	94	5f61ae987cac3337	vis=private
+member	com.github.tommyettinger.anim8.FastPNG#close()	sge.anim8.FastPNG#close()	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	229	4efe672f66858c81	
 member	com.github.tommyettinger.anim8.FastPNG#curLineBytes	sge.anim8.FastPNG#curLineBytes	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	96	af3065e7af29e049	vis=private
 member	com.github.tommyettinger.anim8.FastPNG#deflater	sge.anim8.FastPNG#deflater	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	95	85ad53afba5533b6	vis=private
-member	com.github.tommyettinger.anim8.FastPNG#dispose()	sge.anim8.FastPNG#dispose()	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	229	306b7dfa308f666d	
 member	com.github.tommyettinger.anim8.FastPNG#flipY	sge.anim8.FastPNG#flipY	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	97	c35d6d0a77ec23d4	vis=private
 member	com.github.tommyettinger.anim8.FastPNG#setCompression(int)	sge.anim8.FastPNG#setCompression(int)	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	130	af192376b3ea60ae	
 member	com.github.tommyettinger.anim8.FastPNG#setFlipY(boolean)	sge.anim8.FastPNG#setFlipY(boolean)	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	120	8f0d564fa8e04b14	
@@ -310,9 +311,9 @@ member	com.github.tommyettinger.anim8.PNG8#acTL	sge.anim8.PNG8#acTL	Renamed	-	co
 member	com.github.tommyettinger.anim8.PNG8#buffer	sge.anim8.PNG8#buffer	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	115	dcdbefe437c2ce3a	vis=private
 member	com.github.tommyettinger.anim8.PNG8#centralizePalette(FileHandle,FileHandle)	sge.anim8.PNG8#centralizePalette(FileHandle,FileHandle)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	8315	c8c0e5d3fe3db6e4	placement=companion
 member	com.github.tommyettinger.anim8.PNG8#centralizePalette(FileHandle,FileHandle,float)	sge.anim8.PNG8#centralizePalette(FileHandle,FileHandle,float)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	8331	f901e4fb4690a077	placement=companion
+member	com.github.tommyettinger.anim8.PNG8#close()	sge.anim8.PNG8#close()	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	7964	39f49101952b8542	
 member	com.github.tommyettinger.anim8.PNG8#curLineBytes	sge.anim8.PNG8#curLineBytes	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	117	af3065e7af29e049	vis=private
 member	com.github.tommyettinger.anim8.PNG8#deflater	sge.anim8.PNG8#deflater	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	116	85ad53afba5533b6	vis=private
-member	com.github.tommyettinger.anim8.PNG8#dispose()	sge.anim8.PNG8#dispose()	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	7964	04ad333aaec7b11a	
 member	com.github.tommyettinger.anim8.PNG8#ditherAlgorithm	sge.anim8.PNG8#ditherAlgorithm	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	122	d3d7c2579c78e717	
 member	com.github.tommyettinger.anim8.PNG8#ditherStrength	sge.anim8.PNG8#ditherStrength	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	155	f31fa51c596810c5	
 member	com.github.tommyettinger.anim8.PNG8#editPalette(FileHandle,FileHandle,Interpolation)	sge.anim8.PNG8#editPalette(FileHandle,FileHandle,Interpolation)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	8076	0fc8c6bd5e03e8cc	placement=companion

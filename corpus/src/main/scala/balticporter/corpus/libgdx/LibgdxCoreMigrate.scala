@@ -163,6 +163,12 @@ object LibgdxPolicy:
       // real `java.util.Map`. That JDK/Scala collection boundary is universal and still open;
       // this drop is justified by portability alone and must not be read as closing it.
       "com.badlogic.gdx.net.NetJavaImpl",
+      // dropped with NO replacement, and the pairing is the whole of what keeps
+      // `sge/utils/Disposable.scala` from shipping: [[disposableRedirect]] re-points every
+      // REFERENCE at `java.lang.AutoCloseable` and a redirect never deletes a declaration
+      // (`ENGINE-LIMITS.md` D8). There is nothing to inject — the target is the JDK's own type,
+      // which already exists everywhere the port compiles.
+      "com.badlogic.gdx.utils.Disposable",
     ),
     // libGDX itself deprecated `setEnabledReflection` (superseded by the typed
     // `setEnabled(Styleable, Boolean)`, already ported); its private `findMethod` helper was the
@@ -265,9 +271,48 @@ object LibgdxPolicy:
   def comparatorRetarget: Map[String, String] =
     Map("java.util.Comparator" -> "scala.math.Ordering")
 
-  /** the `gdx/src` pipeline. Universal phases first, then the two §1(b) phases configured above,
+  /** `com.badlogic.gdx.utils.Disposable` → `java.lang.AutoCloseable`, with `dispose` → `close`.
+    *
+    * libGDX's `Disposable` is `void dispose()` and nothing else — the JDK's own `AutoCloseable`
+    * under a different name, minus `try`-with-resources and minus `scala.util.Using`. A consumer
+    * that keeps the ported name gets neither, forever, for a type that carries no information the
+    * JDK's does not; sge's users write `Using(new Pixmap(…))` in ordinary Scala the moment the
+    * parent is the JDK's.
+    *
+    * The redirect alone would emit 47 classes claiming to be an `AutoCloseable` while declaring
+    * `dispose()`, so the entry carries `memberRenames` and the phase renames the member's whole
+    * PRE-REDIRECT override component first (see [[TypeRedirectTransform]] for why the two cannot be
+    * two phases). 66 declarations move together; the 8 `void dispose()` elsewhere in the library
+    * that implement no `Disposable` — `LifecycleListener`, `ApplicationListener`, `Game`,
+    * `ApplicationAdapter`, `ImmediateModeRenderer`(`20`), `ParticleController`, and a `Timer`
+    * anonymous body — keep the name, correctly, because they are a different member.
+    *
+    * ==Why the paired `dropTypes` entry below is not optional==
+    * A redirect re-points REFERENCES and never deletes a DECLARATION (`ENGINE-LIMITS.md` D8). This
+    * port OWNS `Disposable`, so without the drop it would emit `sge/utils/Disposable.scala` — a
+    * trait nothing refers to, beside 47 classes that all extend the JDK type instead. Nothing
+    * reports it: the port still compiles at 0 errors and every check reports the same number. There
+    * is no injection, because there is nothing to replace the type WITH; `java.lang.AutoCloseable`
+    * already exists.
+    *
+    * ==Shared surface, and the first base phase that has to MERGE==
+    * This is a fact about signatures every dependent compiles against, so it lives in [[core]]
+    * (§1.5). It is also a phase two dependents CONSTRUCT for themselves — ashley's `ReflectionPool`
+    * redirect and screens' ten guacamole entries — which made it the case `ENGINE-LIMITS.md` D9
+    * blocked and `MergeablePolicy` closes: the base's instance and each dependent's fold into one,
+    * at the base's pipeline position, and the base's published `policy=` digest does not move.
+    * Ashley's added subject is inside libGDX's `governs` claim and is legal because the base DROPS
+    * it (`DESIGN.md` §8.13). */
+  def disposableRedirect: balticporter.transform.TypeRedirectTransform =
+    new balticporter.transform.TypeRedirectTransform(
+      redirects     = Map("com.badlogic.gdx.utils.Disposable" -> "java.lang.AutoCloseable"),
+      memberRenames = Map("com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close")),
+    )
+
+  /** the `gdx/src` pipeline. Universal phases first, then the three §1(b) phases configured above,
     * then the one §1(c) rule libGDX plugs in from OUTSIDE the engine
     * ([[GdxSharedIteratorRule]]). */
   def mainPhases: List[balticporter.tir.Phase] =
     List(new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
-         new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule)
+         new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
+         disposableRedirect)

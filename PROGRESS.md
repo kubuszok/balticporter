@@ -2446,26 +2446,32 @@ Compile unchanged everywhere (libGDX 0, gltf 7, noise4j 2, the last two pre-exis
 check count identical on all thirteen ports; every suite unchanged (gdx-test 217/4, ashley 108/2
 plus its two pre-existing skips, anim8 23, vfx 64, simple-graphs 16, screens 16).
 
-### 11.15 P1 — `Disposable → AutoCloseable`: UNBLOCKED by M5m, with the blast already measured
+### 11.15 P1 — `Disposable → AutoCloseable`: DELIVERED, and the first production firing of M5m's fold
 
-The policy is three lines and it is CORRECT — measured end to end on libGDX core and its suite
-before the block was found, and reverted, not baselined. **What stopped it was not the policy: it
-was that the libGDX base manifest could not gain ANY new (b) phase while two dependents configured
-the same one** (D9). `ashley` and `screens` each reported `1 fatal SurfaceDivergence`; the escape
-route through the base manifest was closed by D1's published-map contract, measured as
-`BaseMapStale` → 309 fatal base-surface gaps. Both numbers, and why there was no third place to put
-the entry, are in D9.
-
-**D9 is now CLOSED by the M5m merge contract** (`DESIGN.md` §8.13): the base's and each dependent's
-`TypeRedirectTransform` fold into one instance holding both tables, at the base's pipeline position,
-with the base's own published `policy=` digest unchanged. Both dependents' added subjects are types
-the base DROPS, which is what the `governs` screen requires. **P1 re-issues unchanged**, and the
-numbers below are the replay — do not re-derive them.
-
-The numbers below are kept so the re-issue does not re-derive them. They are what the run produced
-with the three pieces in place — `TypeRedirectTransform("com.badlogic.gdx.utils.Disposable" ->
+The policy is three lines — `TypeRedirectTransform("com.badlogic.gdx.utils.Disposable" ->
 "java.lang.AutoCloseable", memberRenames = "dispose" -> "close")` last in `mainPhases`, plus
-`dropTypes += Disposable` with NO injection, plus 6 hand-written suite sites.
+`dropTypes += Disposable` with NO injection, plus 6 hand-written suite sites. It was measured end to
+end on libGDX core and its suite, then reverted rather than baselined, because **what stopped it was
+not the policy: it was that the libGDX base manifest could not gain ANY new (b) phase while two
+dependents configured the same one** (D9). `ashley` and `screens` each reported `1 fatal
+SurfaceDivergence`; the escape route through the base manifest was closed by D1's published-map
+contract, measured as `BaseMapStale` → 309 fatal base-surface gaps. Both numbers, and why there was
+no third place to put the entry, are in D9.
+
+**D9 was closed by the M5m merge contract** (`DESIGN.md` §8.13) and P1 then re-issued UNCHANGED. The
+re-issue is a replay and it replayed: **every one of the ten lane headlines is byte-identical
+before and after** — every check count, every error count, every test count, on all thirteen ports —
+and the only things that moved are member digests, `port-map.tsv`'s `policy=` digest, one
+`portability(all)` row, and `decisions.tsv`.
+
+**This is the first time the fold has run in production, and `screens` is where it is visible.** One
+`type-redirect` instance in that port's effective pipeline carries BOTH tables: the base's
+`Disposable` entry (2 `RetypedSignature` + 7 `RenamedMember` rows against screens' own declarations)
+and screens' own ten guacamole entries (33 rows). `ashley`'s merged instance carries the base's entry
+(0 rows — ashley emits no `Disposable` reference) beside its own `ReflectionPool → ComponentPool`
+(6 rows), and the `governs` intrusion screen admits `ReflectionPool` because the base DROPS it. Both
+ports: `manifest 0`, `port-map 0`. The same configuration was `1 fatal SurfaceDivergence` each
+before M5m.
 
 | gate | before | with P1 |
 |---|---|---|
@@ -2474,8 +2480,15 @@ with the three pieces in place — `TypeRedirectTransform("com.badlogic.gdx.util
 | libgdx-core files emitted | 598 (11 dropped) | **597 (12 dropped)** — `sge/utils/Disposable.scala` is not written |
 | libgdx-core member digests moved | 0 | **248** |
 | libgdx-test | 217 pass / 4 fail | **217 / 4, 0 members moved** — 0 upstream `Disposable` references, as predicted |
-| `decisions.tsv` | 2,278 | **2,412** = +66 `RenamedMember` +67 `RetypedSignature` (`phase=type-redirect`) +1 `DroppedType` |
+| ashley | 108 / 2 (+2 pre-existing skips) | **identical, 0 members moved** — the D2 gate: a dependent that references nothing renamed re-emits nothing |
+| `manifest` on ashley and screens | 1 fatal `SurfaceDivergence` each (pre-M5m) | **0 and 0** |
+| libgdx-core `decisions.tsv` | 2,305 | **2,439** = +66 `RenamedMember` +67 `RetypedSignature` (`phase=type-redirect`) +1 `DroppedType`, every one `Configured` with the key verbatim |
 | counted refusals (`ScopedOut refused=member-rename`) | — | **0** — no component in the closure reaches an unparsed parent |
+
+The `decisions.tsv` pair is the ONE number that is not the pre-block one, and it moved for a reason
+that is not P1: the first measurement quoted `2,278 → 2,412`, taken before §11.16's retarget added
+27 `Configured` rows to the same port. **The DELTA is identical to the digit** — +66 / +67 / +1 —
+which is what the replay was asserting.
 
 **The rename is exact, and the accounting closes.** 74 upstream `void dispose()` declarations = **66
 in `Disposable`'s override component**, all renamed whole, + **8 outside it** that correctly keep the
@@ -2491,7 +2504,7 @@ java.lang.AutoCloseable`, with 13 further occurrences as a field/parameter/local
 |---|---:|
 | `#close()` keys added | 64 |
 | `#dispose()` keys removed | 65 |
-| `AssetManager#manage`/`#manageDisposable` re-keyed `(Disposable)` → `(AutoCloseable)` | 2 + 2 |
+| `Model#manageDisposable` / `ModelBuilder#manage` re-keyed `(Disposable)` → `(AutoCloseable)` | 2 + 2 |
 | the `sge.utils.Disposable` class row, removed with the unit | 1 |
 | class rows changed in place | 89 — 47 that gained the parent, 42 whose body holds a renamed declaration or a moved call |
 | other member rows changed in place (call sites) | 25 (23 `def`, 2 `val`) |
@@ -2502,11 +2515,48 @@ java.lang.AutoCloseable`, with 13 further occurrences as a field/parameter/local
 separately and which is present in the emitted file.
 
 Three things that behaved exactly as designed and are worth not re-checking: `jdk-surface` stayed
-**24** (`java.lang.AutoCloseable`, 63 references, classifies `Kept`); `dropped-types.tsv` gained
-`com.badlogic.gdx.utils.Disposable` TAB `sge.utils.Disposable`, both namespaces (§4.56); and every
-renamed declaration carries its porter note, `NoteCoverageCheck` **0/0**, in the §4.575 grammar with
-the manifest entry verbatim —
+**24** and `external-surface.tsv` carries `java.lang.AutoCloseable` at **63** references, classified
+`Kept` — not a finding, which is why the check count does not move for a type the port now leans on
+sixty-three times; `dropped-types.tsv` gained `com.badlogic.gdx.utils.Disposable` TAB
+`sge.utils.Disposable`, both namespaces (§4.56); and every renamed declaration carries its porter
+note — **65** of them emitted, `NoteCoverageCheck` **0/0**, in the §4.575 grammar with the manifest
+entry verbatim —
 `reason=configured phase=type-redirect key="com.badlogic.gdx.utils.Disposable#dispose -> close" component=66`.
+65 notes against 66 renames is the drop: the 66th declaration is `sge.utils.Disposable#close()`, in
+the unit that is not written. The DROPPED TYPE itself gets no note at all, and that is the shape of
+D8 rather than a gap — a dropped type's note is `PorterNote.NotInTree`, carried by the injected file
+that supplies its FQN, and this drop has no injection because the target is the JDK's own type.
+
+**The dependent half, which the first attempt never reached** (it stopped at ashley's refusal). Every
+dependent lane green, every check count and every suite identical, and the blast is exactly the
+`Disposable` implementors each module declares:
+
+| port | own member-diff lines | what moved |
+|---|---:|---|
+| libgdx-core | 362 (248 members) | the table above |
+| gdx-gltf | 88 | 12 renamed decls, 16 class rows, 16 `def` rows in place |
+| gdx-vfx | 66 | 11 renamed decls, 14 class rows, 8 `def` rows in place |
+| screens | 40 | 7 renamed decls, 8 class rows, 5 `def` rows in place |
+| anim8 | 12 | 3 renamed decls (`AnimatedPNG`, `FastPNG`, `PNG8`), 3 class rows |
+| ashley, ashley-test, libgdx-test, gltf-test, sg, sg-test, noise4j, jbump | **0** | nothing — byte-identical emit |
+
+Compile unchanged everywhere (libGDX 0, gltf 7 pre-existing, noise4j 2 pre-existing); suites
+unchanged (gdx-test 217/4, ashley 108/2 + 2 pre-existing skips, anim8 23, vfx 64, sg 16, screens 16);
+jbump's differential probe still 44 transcript lines, IDENTICAL. `decisions.tsv` gained `+1
+DroppedType` on every port in the libGDX family — the inherited drop, §1.5 — plus, only where the
+module declares an implementor, its own renames and retypes (gltf +12/+1, vfx +11/+2, screens +7/+2,
+anim8 +3/0, **ashley +0/+0**).
+
+**`findings.tsv` moved on nine ports by exactly ONE row and no count moved with it**:
+`portability(all)`'s subject re-keyed `sge.utils.async.AsyncExecutor#dispose` →
+`#close`. That is the base's member seen through every dependent's inherited surface, and it is the
+cheapest possible demonstration that the rename reached the shared signature rather than only the
+base's own file.
+
+**Every `policy=` digest in the family moved, including screens' and gltf-test's**, which emit
+nothing new: the redirect joins `TypeRedirectTransform.surfaceFingerprint`, so a dependent that had
+NOT inherited the entry would now be a `SurfaceDivergence`. Same §1.5 mechanism §11.16 recorded for
+the retarget, now carrying a merged table instead of an inherited one.
 
 The 6 hand-written suite sites the enablement must fix are `ScreenmanagerSuite` (three overrides —
 `ScreenTransition implements Disposable` and `ManagedScreen implements Screen`, which

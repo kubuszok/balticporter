@@ -65,7 +65,7 @@ class VfxFrameBufferSuite extends munit.FunSuite:
   test("disposing an uninitialised queue is a no-op and empties it") {
     // `VfxFrameBuffer.reset()` returns early when `!initialized`, so no GL call is reached.
     val q = new VfxFrameBufferQueue(Format, 2)
-    q.dispose()
+    q.close()
     // …and the queue is now empty, so the modulo in `changeToNext` divides by zero.
     intercept[java.lang.ArithmeticException](q.changeToNext())
   }

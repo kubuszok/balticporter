@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=libgdx-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=abd605153d56303d
+# balticporter port map	schema=3	module=libgdx-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=47cfd94c7184bb11
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -33,6 +33,7 @@ type	com.badlogic.gdx.utils.SortTest	sge.utils.SortTest	Renamed	-		0		form=class
 type	com.badlogic.gdx.utils.SortTest$NullsFirstComparator	sge.utils.SortTest$NullsFirstComparator	Renamed	-		0		form=class parents=scala.math.Ordering primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.SortedIntListTest	sge.utils.SortedIntListTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
+type	com.badlogic.gdx.utils.Disposable		Dropped	-		0		
 type	com.badlogic.gdx.utils.Json		Dropped	-		0		
 type	com.badlogic.gdx.utils.Pools		Dropped	-		0		
 type	com.badlogic.gdx.utils.ReflectionPool		Dropped	-		0		

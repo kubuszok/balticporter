@@ -94,7 +94,7 @@ class ScreenmanagerSuite extends munit.FunSuite:
       lastProgress = progress
       renderCount += 1
     override def resize(width: Int, height: Int): Unit = ()
-    override def dispose(): Unit                       = ()
+    override def close(): Unit                         = ()
 
   test("TimedTransition: isDone after the duration elapses, and show() resets it (upstream)") {
     val t = new RecordingTimedTransition(5)
@@ -182,7 +182,7 @@ class ScreenmanagerSuite extends munit.FunSuite:
     override def resize(width: Int, height: Int): Unit = calls += "resize"
     override def pause(): Unit                         = calls += "pause"
     override def resume(): Unit                        = calls += "resume"
-    override def dispose(): Unit                       = calls += "dispose"
+    override def close(): Unit                         = calls += "dispose"
 
   test("ManagedScreen: the clear colour defaults to BLACK and input processors start empty") {
     val s = new RecordingScreen
@@ -196,9 +196,9 @@ class ScreenmanagerSuite extends munit.FunSuite:
     // `ManagedScreenAdapter` and `BlankScreen` are two of the three types the reference hand port
     // does not have at all, so this is their only coverage anywhere.
     val b = new BlankScreen()
-    b.show(); b.render(0.016f); b.resize(800, 600); b.pause(); b.resume(); b.hide(); b.dispose()
+    b.show(); b.render(0.016f); b.resize(800, 600); b.pause(); b.resume(); b.hide(); b.close()
     val a = new ManagedScreenAdapter()
-    a.show(); a.render(0.016f); a.resize(1, 1); a.hide(); a.dispose()
+    a.show(); a.render(0.016f); a.resize(1, 1); a.hide(); a.close()
     assertEquals(a.getClearColor(), sge.graphics.Color.BLACK)
   }
 
@@ -207,7 +207,7 @@ class ScreenmanagerSuite extends munit.FunSuite:
       override def render(d: Float, l: sge.graphics.g2d.TextureRegion, c: sge.graphics.g2d.TextureRegion): Unit = ()
       override def isDone(): Boolean                     = true
       override def resize(width: Int, height: Int): Unit = ()
-      override def dispose(): Unit                       = ()
+      override def close(): Unit                         = ()
     t.show()
     t.hide()
     assertEquals(t.getClearColor(), sge.graphics.Color.BLACK)

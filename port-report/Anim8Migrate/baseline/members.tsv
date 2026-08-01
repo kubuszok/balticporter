@@ -81,7 +81,7 @@ sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#writeShort(int)	def	5b82e4b097279141
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#writeString(String)	def	28e2826aa16274f6
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#x	val	f8caaa91ba85bcf1
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#y	val	28e8082d792f06ac
-sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG	class	df508c6891ea9b5b
+sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG	class	e24efb1978e818a6
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#<init>()	ctor	c3430307fd38a207
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#<stmt1>	stmt	75d72649c1a9f8e4
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#<stmt2>	stmt	892718451a90edbd
@@ -95,9 +95,9 @@ sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#INTERLACE_NONE	val	4a6352b7fd983aac
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#SIGNATURE	val	ac2d7feb9bac0f30
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#acTL	val	0b669a60cdbe9ffd
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#buffer	val	b66cc2056bdaf596
+sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#close()	def	667d8134a880a0d5
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#curLineBytes	val	af3065e7af29e049
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#deflater	val	85ad53afba5533b6
-sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#dispose()	def	75d5f5ab38c205a8
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#fcTL	val	b18bb9c3c27a0b14
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#fdAT	val	b6c76c06dfcf54fc
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#flipY	val	c35d6d0a77ec23d4
@@ -142,7 +142,7 @@ sge.anim8.FastAPNG	sge.anim8.FastAPNG#<init>()	ctor	db11a0532fb58800
 sge.anim8.FastAPNG	sge.anim8.FastAPNG#<init>(int)	ctor	afd95becfcbdd856
 sge.anim8.FastGif	sge.anim8.FastGif	class	099f2b013eebf1f0
 sge.anim8.FastGif	sge.anim8.FastGif#write(OutputStream,Array<Pixmap>,int)	def	e480eff286d0ab0d
-sge.anim8.FastPNG	sge.anim8.FastPNG	class	26c25509b3fa66f4
+sge.anim8.FastPNG	sge.anim8.FastPNG	class	7d249d5afbad3a30
 sge.anim8.FastPNG	sge.anim8.FastPNG#<init>()	ctor	f7aa12f8ad324eb7
 sge.anim8.FastPNG	sge.anim8.FastPNG#<stmt1>	stmt	75d72649c1a9f8e4
 sge.anim8.FastPNG	sge.anim8.FastPNG#<stmt2>	stmt	8bf7641d4f4f2250
@@ -155,9 +155,9 @@ sge.anim8.FastPNG	sge.anim8.FastPNG#IHDR	val	69c0c3bc0303a7cd
 sge.anim8.FastPNG	sge.anim8.FastPNG#INTERLACE_NONE	val	4a6352b7fd983aac
 sge.anim8.FastPNG	sge.anim8.FastPNG#SIGNATURE	val	ac2d7feb9bac0f30
 sge.anim8.FastPNG	sge.anim8.FastPNG#buffer	val	5f61ae987cac3337
+sge.anim8.FastPNG	sge.anim8.FastPNG#close()	def	4efe672f66858c81
 sge.anim8.FastPNG	sge.anim8.FastPNG#curLineBytes	val	af3065e7af29e049
 sge.anim8.FastPNG	sge.anim8.FastPNG#deflater	val	85ad53afba5533b6
-sge.anim8.FastPNG	sge.anim8.FastPNG#dispose()	def	306b7dfa308f666d
 sge.anim8.FastPNG	sge.anim8.FastPNG#flipY	val	c35d6d0a77ec23d4
 sge.anim8.FastPNG	sge.anim8.FastPNG#setCompression(int)	def	af192376b3ea60ae
 sge.anim8.FastPNG	sge.anim8.FastPNG#setFlipY(boolean)	def	8f0d564fa8e04b14
@@ -273,7 +273,7 @@ sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#<stmt2>	stmt	39efa5f70536897a
 sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#apply(float)	def	b8f9adeed3c9c443
 sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#shape	val	54cb9ca8d174b217
 sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#turning	val	daaf5503f030e249
-sge.anim8.PNG8	sge.anim8.PNG8	class	bbadaf6ab8a8cecf
+sge.anim8.PNG8	sge.anim8.PNG8	class	b55d8d99eb851ab0
 sge.anim8.PNG8	sge.anim8.PNG8#<init>()	ctor	aea8e357e1b890cb
 sge.anim8.PNG8	sge.anim8.PNG8#<stmt1>	stmt	75d72649c1a9f8e4
 sge.anim8.PNG8	sge.anim8.PNG8#<stmt2>	stmt	892718451a90edbd
@@ -291,9 +291,9 @@ sge.anim8.PNG8	sge.anim8.PNG8#acTL	val	0b669a60cdbe9ffd
 sge.anim8.PNG8	sge.anim8.PNG8#buffer	val	dcdbefe437c2ce3a
 sge.anim8.PNG8	sge.anim8.PNG8#centralizePalette(FileHandle,FileHandle)	def	c8c0e5d3fe3db6e4
 sge.anim8.PNG8	sge.anim8.PNG8#centralizePalette(FileHandle,FileHandle,float)	def	f901e4fb4690a077
+sge.anim8.PNG8	sge.anim8.PNG8#close()	def	39f49101952b8542
 sge.anim8.PNG8	sge.anim8.PNG8#curLineBytes	val	af3065e7af29e049
 sge.anim8.PNG8	sge.anim8.PNG8#deflater	val	85ad53afba5533b6
-sge.anim8.PNG8	sge.anim8.PNG8#dispose()	def	04ad333aaec7b11a
 sge.anim8.PNG8	sge.anim8.PNG8#ditherAlgorithm	val	d3d7c2579c78e717
 sge.anim8.PNG8	sge.anim8.PNG8#ditherStrength	val	f31fa51c596810c5
 sge.anim8.PNG8	sge.anim8.PNG8#editPalette(FileHandle,FileHandle,Interpolation)	def	0fc8c6bd5e03e8cc

@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ashley	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20	policy=37e23f0bc213a6a6
+# balticporter port map	schema=3	module=ashley	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20	policy=ef05103c2fe5a3c3
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.ashley.core.Component	sge.ecs.Component	Renamed	-		0		form=trait
 type	com.badlogic.ashley.core.ComponentMapper	sge.ecs.ComponentMapper	Renamed	-		0		companion=yes flags=final form=class primary=(Class) primaryKind=unique-root primaryVis=private statics=getFor tparams="[T <: sge.ecs.Component]"
@@ -41,6 +41,7 @@ type	com.badlogic.ashley.systems.SortedIteratingSystem	sge.ecs.systems.SortedIte
 type	com.badlogic.ashley.utils.Bag	sge.ecs.utils.Bag	Renamed	-		0		form=class primary=(int) primaryKind=unique-root primaryVis=public secondaries=() tparams="[E <: java.lang.Object]"
 type	com.badlogic.ashley.utils.ImmutableArray	sge.ecs.utils.ImmutableArray	Renamed	-		0		form=class parents=balticporter.runtime.JavaIterable primary=(Array) primaryKind=unique-root primaryVis=public secondaries=() tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
+type	com.badlogic.gdx.utils.Disposable		Dropped	-		0		
 type	com.badlogic.gdx.utils.Json		Dropped	-		0		
 type	com.badlogic.gdx.utils.Pools		Dropped	-		0		
 type	com.badlogic.gdx.utils.ReflectionPool		Dropped	-		0		

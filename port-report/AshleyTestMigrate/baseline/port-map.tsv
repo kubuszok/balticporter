@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ashley-test	engine=balticporter/0.1.0-SNAPSHOT	sources=4763fb93c6d8686a	files=18	policy=fe41cbfd44c74a87
+# balticporter port map	schema=3	module=ashley-test	engine=balticporter/0.1.0-SNAPSHOT	sources=4763fb93c6d8686a	files=18	policy=a7e7667834d3e12c
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.ashley.core.ComponentClassFactory	sge.ecs.ComponentClassFactory	Renamed	-		0		form=class parents=java.lang.ClassLoader primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.ashley.core.ComponentOperationHandlerTests	sge.ecs.ComponentOperationHandlerTests	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=BooleanInformerMock,ComponentSpy
@@ -92,6 +92,7 @@ type	sge.ecs.systems.SortedIteratingSystemTest$SpyComponent	sge.ecs.systems.Sort
 type	com.badlogic.ashley.utils.BagTest	sge.ecs.utils.BagTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.ashley.utils.ImmutableArrayTests	sge.ecs.utils.ImmutableArrayTests	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
+type	com.badlogic.gdx.utils.Disposable		Dropped	-		0		
 type	com.badlogic.gdx.utils.Json		Dropped	-		0		
 type	com.badlogic.gdx.utils.Pools		Dropped	-		0		
 type	com.badlogic.gdx.utils.ReflectionPool		Dropped	-		0		

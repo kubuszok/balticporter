@@ -2769,12 +2769,20 @@ Two rules that fall out:
   Nothing enforces the pairing and nothing can: it is a coherence property of the configuration.
   Measured, not assumed — `TypeRedirectMemberRenameSpec`'s owned-and-parsed case runs a redirect of
   a type the fixture declares and asserts exactly this shape, statics twinned and members renamed,
-  with the orphan declaration still there. And confirmed on a real port: Stage P's P1 redirects
-  libGDX's own `Disposable`, and there the paired `dropTypes` entry is the whole of what keeps
-  `sge/utils/Disposable.scala` from shipping beside the 47 types that gain the target as a parent
-  (`PROGRESS.md` §11.15 — measured, then reverted for D9's reason). Nothing would have said so:
-  with the drop omitted that port still compiles at 0 errors and every check reports the same
-  number. Confirming the pairing means reading a port's `dropTypes` against its `redirects` by hand.
+  with the orphan declaration still there. **And now EXERCISED IN PRODUCTION**: Stage P's P1
+  redirects libGDX's own `Disposable`, and there the paired `dropTypes` entry is the whole of what
+  keeps `sge/utils/Disposable.scala` from shipping beside the 47 types that gain the target as a
+  parent — 598 files (11 dropped) → 597 (12), the emitted file count being the only artifact that
+  says so (`PROGRESS.md` §11.15, delivered). Nothing else would have: with the drop omitted that
+  port still compiles at 0 errors and every check reports the same number. Confirming the pairing
+  means reading a port's `dropTypes` against its `redirects` by hand.
+
+  **And a drop whose target already exists has nowhere to put its porter note — correctly.** A
+  dropped TYPE's note is `PorterNote.NotInTree` (`CLAUDE.md` §4.575), carried by the INJECTED file
+  that supplies its FQN. A redirect-and-drop pair pointed at a type the platform already ships has
+  no injection, so it emits no note, and `NoteCoverageCheck` stays 0/0. The `DroppedType` row in
+  `decisions.tsv` is the whole record, which is the right place for it: the reader's question is
+  asked at the REFERENCES, and every one of those carries the redirect's own `renamed-member` note.
 
 *Fix kind: (a) engine — the mechanism was incomplete, not the policy. Done; pinned by
 `TypeRedirectTransformSpec`.*
@@ -2831,12 +2839,24 @@ propagated to nine published port maps with nothing else moving. The question to
 a base policy is therefore not "is this a (b) phase?" but *does any dependent CONSTRUCT this phase?*
 — one grep over the ports, and if the answer is no, D9 has nothing to say.
 
+**CLOSED, and now EXERCISED IN PRODUCTION.** M5m landed the contract; P1 then re-issued unchanged
+and is delivered (`PROGRESS.md` §11.15). The fold is visible in `screens`, where ONE `type-redirect`
+instance carries both tables — the base's `Disposable → AutoCloseable` (2 `RetypedSignature` + 7
+`RenamedMember` rows against screens' own declarations) beside screens' ten guacamole entries (33
+rows) — and in `ashley`, whose merged instance holds the base's entry (0 rows: ashley emits no
+`Disposable` reference) beside `ReflectionPool → ComponentPool` (6 rows), admitted by the `governs`
+screen because the base DROPS that type. **`manifest` 0 and `port-map` 0 on both**, against `1 fatal
+SurfaceDivergence` each for the identical configuration before M5m. Every `policy=` digest in the
+family moved and every dependent stayed fresh against the base's published map, so the D1 half held
+too. The two rows in the table above remain what NOT to retry; they are now history rather than
+the state.
+
 *Fix kind: (a) engine, and it is a CONTRACT change rather than a condition: `Phase` needs a way to
 say "my policy is a table, merge it with the base's", `PortManifest.effectiveSurface` needs to fold
 same-name phases through it, and `SurfaceDivergence` then fires only where a merge is refused — same
 key, different value. Every parameterised phase has to declare its own answer, because the merge is
-not always a union (an ordered list, a first-match table and a set compose differently). That is a
-mechanism commit with its own default-off gate, and it BLOCKS Stage P's P1 until it lands.*
+not always a union (an ordered list, a first-match table and a set compose differently). Done —
+M5m; pinned by `DESIGN.md` §8.13 and by P1 as its first consumer.*
 
 **CLOSED by M5m** — `MergeablePolicy` (`api`), `PortManifest.surfaceFold`, and
 `TypeRedirectTransform`'s own merge declaration; `DESIGN.md` §8.13 is the as-built. The two rows
