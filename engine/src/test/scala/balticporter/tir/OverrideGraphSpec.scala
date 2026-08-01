@@ -113,6 +113,38 @@ class OverrideGraphSpec extends munit.FunSuite:
     assert(g.closureOf(sym(p, "ByName#compare")).isAnchored, "…and says `compare` IS")
   }
 
+  test("a PLATFORM interface's closed surface lifts the anchor by DEFAULT — ENGINE-LIMITS K12") {
+    // `java.lang.Iterable` declares three methods and no library can add to it, so an absence from
+    // its member set really is proof. Before this, every accessor of every class with `implements
+    // Iterable` in its parent list was frozen — 12 of libGDX's 17 refused property renames.
+    val src =
+      """
+      class Bag implements java.lang.Iterable<String>, java.io.Serializable {
+        public java.util.Iterator<String> iterator() { return null; }
+        public int getToggle() { return 1; }
+      }
+      """
+    val (p, g) = graphOf(src)
+    assert(!g.closureOf(sym(p, "Bag#getToggle")).isAnchored,
+      "`java.lang.Iterable` does not declare `getToggle`, and the platform surface knows it")
+    assert(g.closureOf(sym(p, "Bag#iterator")).isAnchored, "…and it DOES declare `iterator`")
+  }
+
+  test("…and a parent whose surface is NOT closed still anchors — the default is knowledge, not optimism") {
+    // `java.util.Comparator`'s default methods grew across releases, so it is deliberately absent
+    // from `jdkPlatform`: an incomplete entry would turn a counted over-refusal into a silent
+    // under-refusal, which is the trade DESIGN.md §8.5 chose against.
+    assert(!ExternalSurface.default.isKnown("java.util.Comparator"))
+    val (p, g) = graphOf(
+      """
+      class ByName implements java.util.Comparator<String> {
+        public int compare(String a, String b) { return 0; }
+        public int getRank() { return 1; }
+      }
+      """)
+    assert(g.closureOf(sym(p, "ByName#getRank")).isAnchored)
+  }
+
   test("`java.lang.Object` anchors even though no parent list ever names it") {
     // `SpoonTir.superTypes` filters `java.lang.Object` out on purpose, so without the implicit root
     // a rename of `toString` reads as unanchored — and silently breaks every `println` of it.

@@ -346,12 +346,14 @@ object OverrideGraph:
   * closure refused because `java.util.Map$Entry` might declare the member is a refusal an agent can
   * act on; a refusal from an opaque `(String, String) => Boolean` is not.
   *
-  * ==The default knows one type, and that is the honest state of the engine==
+  * ==The default knows what the PLATFORM fixes, and nothing else==
   * `java.lang.Object` is universal knowledge about Java — §1(a), not any library's policy — and it
   * has to be here because [[OverrideGraph]] cannot see it in the tree: the frontend filters
   * `java.lang.Object` out of every parent list on purpose, so without this a rename of `toString`
-  * would read as unanchored. Everything else unparsed is [[mayDeclare]] = true: refuse, count, and
-  * lift the refusal the day a real JDK surface exists (DESIGN.md §8.9).
+  * would read as unanchored. Beside it are the platform interfaces whose member sets are CLOSED
+  * ([[ExternalSurface.jdkPlatform]]) — `Serializable` declares nothing, `Comparable` declares
+  * `compareTo`, and no library can add to either. Everything else unparsed is [[mayDeclare]] =
+  * true: refuse, count, and lift the refusal the day the type's surface is genuinely known.
   *
   * @param known
   *   FQN → the members that type declares. A type PRESENT here is answered exactly, so an absence
@@ -408,8 +410,46 @@ object ExternalSurface:
   def javaLangObjectDeclares(sig: OverrideGraph.Signature): Boolean =
     javaLangObjectMembers.exists(_.name == sig.name)
 
-  /** the default: `java.lang.Object`, and nothing else. */
-  val default: ExternalSurface = ExternalSurface(Map(JavaLangObject -> javaLangObjectMembers))
+  /** The PLATFORM interfaces whose member sets are fixed by the JDK, so an absence really is proof.
+    *
+    * ==Why these are §1(a) and a demand-derived surface is not==
+    * `java.lang.Object` is here because the frontend hides it; these are here because they are
+    * CLOSED. `java.io.Serializable` declares nothing at all, `java.lang.Comparable` declares
+    * `compareTo`, `java.lang.Iterable` declares three methods, and no library can add to any of
+    * them. That is a fact about Java in exactly the sense §1(a) means, and it is the only kind of
+    * entry this map may hold: `known`'s contract is that a type present here is answered EXACTLY,
+    * so an absence from its member set is proof and the anchor lifts.
+    *
+    * A surface derived from what a program CALLS cannot go here, however tempting the seam
+    * (`ENGINE-LIMITS.md` K12 said it could, and that is now corrected there with the measurement).
+    * The rows say which members a program references, not which members a type declares, so an
+    * absence from them proves nothing — and turning `OverrideGraph`'s counted over-refusal into an
+    * unnoticed under-refusal is the trade DESIGN.md §8.5 explicitly chose against.
+    *
+    * ==Arity-only on purpose==
+    * No `descriptor`, so [[Member.matches]] falls back to name-and-arity, which OVER-matches. The
+    * direction of that error is refusal, which is the safe one — the same reason
+    * [[javaLangObjectDeclares]] matches on the name alone.
+    *
+    * Nothing here is a library's policy and nothing here is a guess: each set is the whole of what
+    * the interface declares in the Java it is written for. A type whose surface is large or version-
+    * dependent (`java.util.Comparator`, whose default methods grew across releases) is deliberately
+    * ABSENT — unknown anchors, and an incomplete entry is worse than no entry.
+    */
+  val jdkPlatform: Map[String, Set[Member]] = Map(
+    "java.io.Serializable"     -> Set.empty,
+    "java.lang.Cloneable"      -> Set.empty,
+    "java.lang.Comparable"     -> Set(Member("compareTo", 1)),
+    "java.lang.Iterable"       -> Set(Member("iterator", 0), Member("forEach", 1), Member("spliterator", 0)),
+    "java.lang.Runnable"       -> Set(Member("run", 0)),
+    "java.lang.AutoCloseable"  -> Set(Member("close", 0)),
+    "java.io.Closeable"        -> Set(Member("close", 0)),
+    "java.util.Iterator"       -> Set(Member("hasNext", 0), Member("next", 0), Member("remove", 0),
+                                      Member("forEachRemaining", 1)),
+  )
+
+  /** the default: `java.lang.Object`, plus the platform interfaces whose surfaces are closed. */
+  val default: ExternalSurface = ExternalSurface(Map(JavaLangObject -> javaLangObjectMembers) ++ jdkPlatform)
 
   /** …from the arity-keyed channel the emitter already threads (`RuntimePlan.concreteMembers`,
     * `TirEmitter.externalConcrete`): FQN → `(name, params per clause)`. Arity-only, so it

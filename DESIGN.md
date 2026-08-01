@@ -2191,10 +2191,18 @@ mechanism commit rather than left for the enablement:
   every parent list on purpose, so a graph reading parents alone reports a rename of `toString`,
   `equals` or `clone` as unanchored. `ExternalSurface` carries `java.lang.Object`'s member set as
   §1(a) universal knowledge and every closure consults it whatever the tree shows.
-- **The external surface is a VALUE, and its default is one type.** `ExternalSurface(known)` answers
-  exactly for a type it has, and anything else anchors. Its default knows `java.lang.Object` and
-  nothing else — which is the honest state of the engine, and the seam §8.9's demand-derived JDK
-  surface plugs into with no change to `OverrideGraph`.
+- **The external surface is a VALUE, and it may hold only what is COMPLETE.** `ExternalSurface(known)`
+  answers exactly for a type it has, and anything else anchors. Its default is `java.lang.Object`
+  plus `jdkPlatform` — the eight platform types whose member sets the JDK itself CLOSES
+  (`Serializable` and `Cloneable` declare nothing, `Comparable` declares `compareTo`, `Iterable`
+  declares three) — which is §1(a) for the same reason `Object`'s set is, and which frees all 12 of
+  `ENGINE-LIMITS.md` K12's frozen properties. **§8.9's demand-derived surface is NOT a second source
+  for this map**, though K12 originally said it was: `ExternalUsage`'s rows say what a program CALLS,
+  and an absence from them is not an absence from the type. Believing them would turn this
+  mechanism's counted over-refusal into an unnoticed under-refusal, which is the one trade it exists
+  to refuse. `java.util.Comparator` is absent from the table for the same reason — its default
+  methods grew across releases, so its surface is not closed and an incomplete entry is worse than
+  no entry.
 - **A refused pair records `Decision.Kind.ScopedOut` with `detail("refused")`,** not a new enum case.
   A `ScopedOut` row already means "a policy entry named this declaration and it kept its upstream form
   while the code around it moved", which is exactly a refusal; the `detail` carries the cause and the

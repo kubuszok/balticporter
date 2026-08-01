@@ -1644,7 +1644,7 @@ constructor was a compile error before this, so no port that compiles could have
 *Fix kind: (a) engine; the SET of hashed targets is closed over the phase's own `typeMap`, so it is
 the phase's record and not a name test.*
 
-### K12. The engine has NO JDK MEMBER SURFACE, so a component under an UNPARSED PARENT is frozen — **12 of 144**
+### K12. A component under an UNPARSED PARENT is frozen — was **12 of 144**, now **0**; and the surface that fixed it may not be demand-derived
 
 `OverrideGraph.closureOf` may only change a member's signature when it can see every declaration of
 the override component. A parent type the frontend never parsed has no `ClassDef` and therefore no
@@ -1669,11 +1669,38 @@ The refusals are pure over-approximation, and they are the whole gap: **the engi
 what a JDK type declares.** `RuntimePlan.concreteMembers` is not it — that is the engine's own
 INJECTED shims (three types), threaded for the emitter's diamond check, not the JDK.
 
-**The seam is already there, so do not re-architect for it.** `ExternalSurface(known)` is a
-`Map[FQN, Set[Member]]` a caller supplies; a type PRESENT in it is answered exactly, so an absence
-from its member set is proof and the anchor lifts. A demand-derived JDK surface (DESIGN.md §8.9)
-fills exactly that map, with no change to `OverrideGraph` and no change to any phase. `Selection`'s
-six properties come back the day it lands.
+**CLOSED for all twelve, and NOT the way this entry predicted.** `ExternalSurface(known)` was the
+right seam — no change to `OverrideGraph`, no change to any phase — but the value that fills it is
+not the demand-derived surface. `ExternalSurface.jdkPlatform` is the eight PLATFORM types whose
+member sets are CLOSED by the JDK: `java.io.Serializable` and `java.lang.Cloneable` declare nothing,
+`java.lang.Comparable` declares `compareTo`, `java.lang.Iterable` declares three methods, and no
+library can add to any of them. It is folded into `default`, arity-only so it over-matches in the
+refusing direction, and it is §1(a) for exactly the reason `java.lang.Object`'s member set is.
+
+**Measured** by rebuilding the graph over libGDX core with each surface and reading
+`closureOf(...).externalAnchors` for the eighteen accessors of the twelve properties:
+
+| surface | accessors anchored | properties refused |
+|---|---:|---:|
+| `java.lang.Object` only (the old default) | 17 of 18 | **12** |
+| `Object` + `jdkPlatform` (the new default) | **0** of 18 | **0** |
+
+**12 of 12.** `Selection`'s six, `VertexAttributes`' two, `TiledMapTileSet`'s two and
+`OrientedBoundingBox`' two are all free. **0 members changed on all 13 ports** and every check count
+identical — `bean-properties` is default-off, so the widening is measured and not yet spent.
+
+**A DEMAND-DERIVED surface may NOT fill this map, and the correction matters more than the number.**
+`ExternalUsage`'s rows say which members a program CALLS; `known`'s contract is that a type present
+in it is answered EXACTLY, so an absence is proof. The two do not compose: a member the JDK type
+declares and this program never calls is absent from the rows, and the anchor lifts on evidence that
+was never there. On this corpus it would have lifted the same twelve — `java.lang.Iterable`'s rows
+are `iterator`, and none of the twelve is called `iterator` — which is precisely what makes it
+dangerous: an unsound rule that is right on the code you have. That converts §8.5's counted
+over-refusal into an unnoticed under-refusal, which is the trade §8.5 exists to refuse. The rule is
+general: **a surface may be believed only where it is COMPLETE, and completeness is a property of
+the source, not of the shape of the data.** A type whose surface is large or version-dependent
+(`java.util.Comparator`, whose default methods grew across releases) is therefore absent from
+`jdkPlatform` too, and still anchors.
 
 **One entry in the default surface is NOT optional and is easy to lose**: `java.lang.Object`.
 `SpoonTir.superTypes` filters it out of every parent list on purpose, so a graph that reads parents
@@ -1682,8 +1709,9 @@ those breaks every caller in the JVM with a green compile and no count moving. `
 carries `Object`'s member set as universal knowledge and every closure consults it whatever the tree
 shows.
 
-*Fix kind: (a) engine — the surface is a value the engine must derive; until it does, the refusal is
-correct and the cost is the number above.*
+*Fix kind: (a) engine. CLOSED for the twelve. The refusal remains correct — and remains the default —
+for every unparsed parent whose surface is not closed by the platform, which is all of them but
+eight.*
 
 ---
 

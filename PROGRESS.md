@@ -1985,11 +1985,11 @@ libGDX core's 827 `RenamedMember` rows, all `Universal`.
 *(R5's prose says "145 properties"; its own block yields 144 distinct keys. The block is what was
 bound — the discrepancy is in the brief's count, not in the policy.)*
 
-**The 17 refusals, all of them correct, none of them silent.**
+**The 17 refusals, all of them correct, none of them silent — now 5.**
 
 | cause | n | what it is |
 |---|---|---|
-| external anchor | 12 | `Selection`/`VertexAttributes`/`TiledMapTileSet`/`OrientedBoundingBox` implement `java.lang.Iterable`, `Comparable` or `Serializable`, which the frontend never parses. Pure over-approximation — see `ENGINE-LIMITS.md` K12, which is where the number and the fix live |
+| external anchor | 12 → **0** | `Selection`/`VertexAttributes`/`TiledMapTileSet`/`OrientedBoundingBox` implement `java.lang.Iterable`, `Comparable` or `Serializable`. `ExternalSurface.jdkPlatform` (D5j step 4) knows all three exactly, because the platform closes their member sets, so all twelve are free — 17 of 18 accessors anchored before, 0 after. `ENGINE-LIMITS.md` K12 holds the measurement and the rule that a DEMAND-DERIVED surface may not fill that map |
 | no nilary getter | 3 | `VertexAttributes#getOffset(int)`, `Polygon#getVertex(int,Vector2)`, `Polygon#getCentroid(Vector2)`. The harvest names a member that takes arguments; a property has none. **The phase refused rather than inventing a nilary twin**, which is the "NEVER INVENT A MEMBER" rule firing on real policy for the first time |
 | collision the emitter will not move | 2 | `ScrollPane#scrollX`/`scrollY` — the target name is already taken by something the §4.55 passes do not relocate |
 
@@ -2224,6 +2224,20 @@ report them; the day a library calls one, the row says why and cites where.
 `kept-iterable` findings, at the loops rather than at the enclosing members the compiler names.
 Every other port reports zero, which is arithmetic: they all retype, so no receiver survives in
 `java.*`. See ENGINE-LIMITS K9.
+
+**Step 4 — K12's twelve frozen properties, and the surface that did NOT fix them.** The seam K12
+named is `ExternalSurface(known)`, and it was right; the value that fills it is not the demand-
+derived surface this step was queued to wire. `ExternalUsage`'s rows say what a program CALLS and
+`known`'s contract is that a present type is answered EXACTLY — so an absence from the rows lifts an
+anchor on evidence that was never there, and on this corpus it would have lifted the same twelve for
+the wrong reason. What landed instead is `ExternalSurface.jdkPlatform`: the eight platform types
+whose member sets the JDK CLOSES (`Serializable` and `Cloneable` declare nothing, `Comparable`
+declares `compareTo`, `Iterable` declares three), arity-only so it over-matches in the refusing
+direction, §1(a) for the same reason `java.lang.Object`'s member set is. Rebuilding libGDX core's
+graph under each surface: **17 of 18 accessors anchored before, 0 after — 12 of 12 properties
+freed**, with 0 members changed and every check count identical on all 13 ports, because
+`bean-properties` is still default-off. `java.util.Comparator` is deliberately NOT in the table and
+still anchors: its default methods grew across releases, and an incomplete entry is worse than none.
 
 ## 12. Remaining work, across the engine
 
