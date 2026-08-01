@@ -2163,6 +2163,68 @@ The dry-run table above reproduces byte for byte after the fix (275 / 177 / 17 a
 both). Class attachment is still DEFAULT-OFF and no port declares a holder, so every lane is 0
 members changed.
 
+### 11.13 D5j — the demand-derived JDK surface, as measured
+
+DESIGN.md §8.9, landed as three commits. `ExternalUsage` (step 1) is the enumeration
+`PortabilityCheck` used to perform inline and discard; `JdkSurfaceCheck` (step 2) classifies it;
+step 3 wires both into `PortRun` — `jdk-surface` in `RequiredChecks`, `external-surface.tsv` in
+every run directory. **0 members changed on all 13 ports**, every other check count identical: the
+whole delivery is a report over a walk that already ran.
+
+**The initial classification, per port.** This is the number the design asked for — how much
+error-driven JDK coverage never got recorded anywhere a first run could read.
+
+| port | classified | shimmed | mapped | mappable | kept | **findings** |
+|---|---:|---:|---:|---:|---:|---:|
+| libgdx-core | 631 | 2 | 13 | — | 592 | **24** unhandled |
+| libgdx-test | 58 | 2 | 8 | — | 45 | **3** unhandled |
+| ashley | 10 | — | — | — | 10 | 0 |
+| ashley-test | 10 | 2 | 1 | — | 7 | 0 |
+| anim8 | 83 | — | — | — | 76 | **7** unhandled |
+| gltf | 93 | — | — | — | 93 | 0 |
+| gltf-test | 1 | — | — | — | 1 | 0 |
+| vfx | 36 | — | 3 | — | 32 | **1** unhandled |
+| simple-graphs | 54 | 5 | 11 | — | 32 | **6** unhandled |
+| simple-graphs-test | 14 | — | 4 | — | 9 | **1** unhandled |
+| noise4j | 53 | 1 | — | **25** | 27 | **2** kept-iterable |
+| jbump | 55 | — | 12 | — | 36 | **7** unhandled |
+| screens | 8 | 2 | 1 | — | 5 | 0 |
+
+**51 findings across 13 ports**, and the shape of them is the result. noise4j is the only port with
+`mappable` rows, because it is the only one that runs no collections phase — 25 members it could
+map if it wanted to, reported as an OFFER and not as a wall (`ran` is a parameter of the check,
+not a property of the phase). Everywhere else the findings are `unhandled`: a member on a type the
+phase RETYPED, with no entry in its tables. Those divide into two kinds and both are worth having:
+
+- **coverage by coincidence** — `List#contains`, `Map#clear`, `Set#contains`, `ArrayDeque#clear`.
+  The emitted call compiles because Scala happens to spell the member the same way. Nothing
+  recorded it, and nothing would notice it changing.
+- **a hole in a family the phase does rewrite** — `Arrays#fill`/`sort`/`copyOf` beside the
+  `Arrays#asList` it maps, `Collectors#joining` beside the `toList`/`toCollection` it collapses,
+  `Collections#addAll` beside `sort`/`swap`/`shuffle`. `Arrays#fill` alone is 114 call sites in
+  anim8 and had never appeared in any report.
+
+**Two false-positive classes were removed before the baseline, not after.** The first run reported
+**28** on libgdx-core; the number is 24, and the difference is CONSTRUCTORS. A `new HashMap<>()` on a
+retyped type emits `new scala.collection.mutable.HashMap()` and calls nothing java at all — retyping
+the type IS the rewrite for `new`, and the arity correspondence between the two constructors is the
+phase's business (ENGINE-LIMITS K11 is exactly that correspondence failing and being fixed). Left in,
+18 `#<init>` rows sat in front of the `clear`/`contains` rows that are the real work list. The second
+is `Kept`: 592 of libgdx-core's 631 rows are members nothing in the port claims, `java.lang.Math#max`
+among them, and reporting those would have made the check the thing whose false positives you learn
+to skip.
+
+**The refusal table fires nowhere on this corpus, and that is the honest state.** Its seven entries
+(`Collections#unmodifiable{List,Set,Map}`, `Map.Entry#setValue` in both spellings,
+`Collectors#toSet`/`toMap`) name members no port still references after its pipeline. They were
+written down because they existed only in doc comments and `case _ => None` arms, where no run could
+report them; the day a library calls one, the row says why and cites where.
+
+**K9 is closed as an invisible problem.** noise4j's two enhanced-for errors are exactly two derived
+`kept-iterable` findings, at the loops rather than at the enclosing members the compiler names.
+Every other port reports zero, which is arithmetic: they all retype, so no receiver survives in
+`java.*`. See ENGINE-LIMITS K9.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.

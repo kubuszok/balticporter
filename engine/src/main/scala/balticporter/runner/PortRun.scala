@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, SymbolTable, Tree, TriviaCheck, Xref}
+import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, SymbolTable, Tree, TriviaCheck, Xref}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -372,6 +372,36 @@ final case class PortRun(
     say(s"PORTABILITY (Scala.js/Native): ${portability.size} site(s) on JVM-only APIs in EMITTED code")
     if portability.nonEmpty then say(PortReport.Kind.Portability.classification)
     println(PortabilityCheck.summary(portability, fixes))
+
+    // ---- the port's JDK WALL, classified — DESIGN.md §8.9 ----
+    // Second consumer of the enumeration `PortabilityCheck` just used, with no new traversal. The
+    // EMITTED lane, held to this module's own units by the same `notShipped` predicate for the same
+    // measured reason (ENGINE-LIMITS D2): a dependent's program holds its base's units, and a
+    // dependency declared inside one of those belongs to the base.
+    //
+    // `ran` is the difference between a demand and an offer, and it is the RUN that knows it: with
+    // the retyping phase in the pipeline an unmapped member on a retyped owner is a hole the phase
+    // MADE; with the phase absent — which noise4j chooses deliberately — the same member is JDK code
+    // the port KEPT, and the row says only that a mapping exists if the port wants it.
+    val externalAll     = ExternalUsage.all(program).filterNot(r => program.owns(r.symbol))
+    val externalEmitted = ExternalUsage.external(program, notShipped)
+    val jdkMapping      = CollectionsTransform.jdkMapping(
+      ran = effectivePhases.exists(_.isInstanceOf[CollectionsTransform]))
+    val jdkClassified   = JdkSurfaceCheck.classify(externalEmitted, jdkMapping)
+    val jdkFindings     = JdkSurfaceCheck.check(program, externalEmitted, checkedUnits, jdkMapping)
+    CheckReport.record(PortRun.JdkSurface, jdkFindings.map(_.report))
+    say(s"JDK SURFACE (external java.* members this port still calls): " +
+      s"${jdkClassified.size} classified, ${jdkFindings.size} unresolved")
+    println(JdkSurfaceCheck.summary(jdkClassified, jdkFindings.count(_.disposition.label == "kept-iterable")))
+    JdkSurfaceCheck.classifications(jdkFindings).foreach(c => say("  " + c))
+    jdkFindings.take(20).foreach(f => println("  " + f.render))
+    if jdkFindings.sizeIs > 20 then println(s"  … ${jdkFindings.size - 20} more (see findings.tsv)")
+    // …and the ARTIFACT, both lanes. Gated on the artifact layer without exception (§5.1): with
+    // reporting off the report directory falls back to `<cwd>/port-report/…`, and a forked test's
+    // cwd is the subproject.
+    if CheckReport.enabled then
+      val p = ExternalUsage.write(CheckReport.runDir, externalAll, externalEmitted, CheckReport.relativise)
+      say(s"external surface: ${externalEmitted.size} emitted / ${externalAll.size} program-wide -> $p")
 
     val renameReport = PackageRenameTransform.check(program, renamePhase.fold(renames)(_.upstreamTable))
     if renames.nonEmpty then
@@ -1475,6 +1505,8 @@ object PortRun:
   val PortMapCheck         = "port-map"
   /** comments in the upstream Java that did not reach the emitted Scala (a LICENCE among them). */
   val TriviaDropped        = "trivia"
+  /** the port's JDK wall — every `java.*` member the emitted code still calls, classified. */
+  val JdkSurface           = JdkSurfaceCheck.Name
 
   /** Every check a run MUST have recorded by the time it finishes. Named rather than derived,
     * because the property being asserted is "the orchestrator invoked all of them" — deriving the
@@ -1489,6 +1521,10 @@ object PortRun:
   val RequiredChecks: Set[String] = Set(
     Signature, Omissions, PortabilityAll, PortabilityEmitted, PortabilityInjected, Remediation,
     SubstitutionEmitted, SubstitutionDangling, Policy, Manifest, PortMapCheck, TriviaDropped,
+    // required of EVERY port, including one that runs no retyping phase: with the phase absent the
+    // check still reports the port's kept JDK surface and K9's ForEach demand, and a port that
+    // reported nothing there would be indistinguishable from one whose check never ran.
+    JdkSurface,
     // recorded only when CollectionsTransform is in the pipeline; RequiredChecks asserts against
     // what RECORDED, and a port without the phase records neither, so requiring them here would
     // fail every phase-less port. They are made unskippable by the wiring living beside the

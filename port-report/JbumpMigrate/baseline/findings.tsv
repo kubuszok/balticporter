@@ -1,1 +1,8 @@
 #id	check	kind	owner	path	line	detail
+07263112ab2d	jdk-surface	unhandled	java.util.ArrayList#clear()	com/dongbat/jbump/Collisions.java	176	java.util.ArrayList#clear() — retyped to scala.collection.mutable.ArrayBuffer, no rewrite (20 site(s))
+bf2e4afd69f4	jdk-surface	unhandled	java.util.ArrayList#contains(Object)	com/dongbat/jbump/World.java	124	java.util.ArrayList#contains(Object) — retyped to scala.collection.mutable.ArrayBuffer, no rewrite (6 site(s))
+ecbe3c64a805	jdk-surface	unhandled	java.util.Arrays#sort(float[],int,int)	com/dongbat/jbump/util/FloatArray.java	277	java.util.Arrays#sort(float[],int,int) — retyped to java.util.Arrays, no rewrite (1 site(s))
+d76a36a7a6ed	jdk-surface	unhandled	java.util.Arrays#sort(int[],int,int)	com/dongbat/jbump/util/IntArray.java	277	java.util.Arrays#sort(int[],int,int) — retyped to java.util.Arrays, no rewrite (1 site(s))
+2d9f2ea41584	jdk-surface	unhandled	java.util.HashMap#clear()	com/dongbat/jbump/World.java	357	java.util.HashMap#clear() — retyped to scala.collection.mutable.HashMap, no rewrite (2 site(s))
+5121cc619b99	jdk-surface	unhandled	java.util.HashSet#clear()	com/dongbat/jbump/World.java	93	java.util.HashSet#clear() — retyped to scala.collection.mutable.HashSet, no rewrite (2 site(s))
+8ffa27314415	jdk-surface	unhandled	java.util.HashSet#contains(Object)	com/dongbat/jbump/World.java	69	java.util.HashSet#contains(Object) — retyped to scala.collection.mutable.HashSet, no rewrite (2 site(s))

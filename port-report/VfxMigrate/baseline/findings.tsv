@@ -1,4 +1,5 @@
 #id	check	kind	owner	path	line	detail
+c61c26f5299b	jdk-surface	unhandled	java.util.Map#clear()	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	81	java.util.Map#clear() — retyped to scala.collection.mutable.Map, no rewrite (1 site(s))
 766278f8392a	omissions	annotation dropped	sge.vfx.effects.ShaderVfxEffect	<synthetic>	0	java.lang.SuppressWarnings
 a8aaf897944b	portability(all)	java.lang.Class#forName	sge.utils.reflect.ClassReflection#forName	../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	28	Call — runtime class lookup by name is JVM-only
 78a4f03ed6a6	portability(all)	java.lang.Class#getConstructor	sge.utils.reflect.ClassReflection#getConstructor	../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	122	Call — reflective member access is JVM-only

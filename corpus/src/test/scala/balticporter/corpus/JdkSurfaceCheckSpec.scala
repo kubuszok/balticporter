@@ -122,6 +122,21 @@ class JdkSurfaceCheckSpec extends PortSuite:
       "a refusal names a member `CollectionsTransform` already rewrites — one of the two is out of date")
   }
 
+  test("a CONSTRUCTOR of a retyped type is not a hole — retyping the type IS the rewrite for `new`") {
+    val src =
+      """package demo;
+        |import java.util.*;
+        |class C { Map<String, String> m = new HashMap<String, String>(); }
+        |""".stripMargin
+    assertEquals(clue(dispositions(src, withPhase = true)).get("java.util.HashMap#<init>"), Some("mapped"))
+    // …and the flag is not an assumption: a phase that retypes without touching `new` reports it.
+    val after = ported(src, withPhase = true)
+    val noCtors = CollectionsTransform.jdkMapping(ran = true).copy(constructors = false)
+    assertEquals(JdkSurfaceCheck.classify(rows(after), noCtors)
+      .collectFirst { case (r, d) if r.member.contains("java.util.HashMap#<init>") => d.label },
+      Some("unhandled"))
+  }
+
   test("the EMPTY mapping makes the whole check a `kept` report — an empty parameter is a no-op") {
     val after = ported(statics, withPhase = false)
     val ds = JdkSurfaceCheck.classify(rows(after), JdkSurfaceCheck.noMapping).map(_._2.label).distinct

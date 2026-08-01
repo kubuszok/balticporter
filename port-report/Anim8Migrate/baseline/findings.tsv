@@ -1,4 +1,11 @@
 #id	check	kind	owner	path	line	detail
+fc36bc50fb23	jdk-surface	unhandled	java.util.Arrays#copyOf(byte[],int)	com/github/tommyettinger/anim8/PaletteReducer.java	2169	java.util.Arrays#copyOf(byte[],int) — retyped to java.util.Arrays, no rewrite (1 site(s))
+0d651d42d838	jdk-surface	unhandled	java.util.Arrays#fill(byte[],byte)	com/github/tommyettinger/anim8/PaletteReducer.java	1444	java.util.Arrays#fill(byte[],byte) — retyped to java.util.Arrays, no rewrite (10 site(s))
+4f439866348b	jdk-surface	unhandled	java.util.Arrays#fill(float[],float)	com/github/tommyettinger/anim8/AnimatedGif.java	750	java.util.Arrays#fill(float[],float) — retyped to java.util.Arrays, no rewrite (114 site(s))
+1bf7ba058769	jdk-surface	unhandled	java.util.Arrays#fill(float[],int,int,float)	com/github/tommyettinger/anim8/AnimatedGif.java	1727	java.util.Arrays#fill(float[],int,int,float) — retyped to java.util.Arrays, no rewrite (195 site(s))
+708b3f36701b	jdk-surface	unhandled	java.util.Arrays#fill(int[],int)	com/github/tommyettinger/anim8/PaletteReducer.java	1443	java.util.Arrays#fill(int[],int) — retyped to java.util.Arrays, no rewrite (14 site(s))
+acffc2186258	jdk-surface	unhandled	java.util.Arrays#fill(int[],int,int,int)	com/github/tommyettinger/anim8/PaletteReducer.java	2449	java.util.Arrays#fill(int[],int,int,int) — retyped to java.util.Arrays, no rewrite (2 site(s))
+4fe272b69bc2	jdk-surface	unhandled	java.util.Arrays#sort(int[],int,int)	com/github/tommyettinger/anim8/PaletteReducer.java	1765	java.util.Arrays#sort(int[],int,int) — retyped to java.util.Arrays, no rewrite (1 site(s))
 2b259a40275f	portability(all)	java.lang.Class#forName	sge.utils.reflect.ClassReflection#forName	../../../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	28	Call — runtime class lookup by name is JVM-only
 aae5948a8e17	portability(all)	java.lang.Class#getConstructor	sge.utils.reflect.ClassReflection#getConstructor	../../../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	122	Call — reflective member access is JVM-only
 01cabea7b30c	portability(all)	java.lang.Class#getDeclaredConstructor	sge.utils.reflect.ClassReflection#getDeclaredConstructor	../../../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	135	Call — reflective member access is JVM-only

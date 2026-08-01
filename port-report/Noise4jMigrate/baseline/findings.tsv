@@ -1,1 +1,3 @@
 #id	check	kind	owner	path	line	detail
+cef85fbdabd1	jdk-surface	kept-iterable	java.util.List	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	164	enhanced-for over java.util.List, which nothing retyped and no shim covers
+a59da238bbc4	jdk-surface	kept-iterable	java.util.Set	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	281	enhanced-for over java.util.Set, which nothing retyped and no shim covers

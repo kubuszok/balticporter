@@ -1563,6 +1563,11 @@ object CollectionsTransform:
       // really declares it and not because someone remembered to say so here.
       shimMembers  = RuntimeArtifact.concreteMembers.view.mapValues(_.map(_._1)).toMap,
       iterableShim = Some(JavaIterableFqn),
+      // `new` on a retyped type is rewritten by three paths — the `tpt` retyping itself,
+      // `copyConstructor` and `capacityConstructor` — none of which is a member table entry,
+      // because a constructor is not a member call. ENGINE-LIMITS K11 is the arity correspondence
+      // between the two constructors failing, and it is this phase's business, not the check's.
+      constructors = true,
     )
 
   /** Support types the retyping REQUIRES. They live in the PUBLISHED `balticporter-runtime`

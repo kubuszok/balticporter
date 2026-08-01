@@ -283,11 +283,12 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   `set -e` to a lane**: `grep -c` exits 1 when it counts zero, and counting zero errors is the
   success case, so a lane under `set -e` aborts exactly when the port is green.
 
-  Each prints, untruncated and diffed against the committed baseline, **fifteen engine checks —
+  Each prints, untruncated and diffed against the committed baseline, **sixteen engine checks —
   not four — plus any check the port's own §1(c) rules register** (libGDX adds
-  `gdx-shared-iterator`, so its lanes show sixteen). Twelve are required of every run
+  `gdx-shared-iterator`, so its lanes show seventeen). Thirteen are required of every run
   (`signature`, `omissions`, `portability(all|emitted|injected)`,
-  `substitution(emitted|dangling)`, `remediation`, `policy`, `manifest`, `port-map`, `trivia`);
+  `substitution(emitted|dangling)`, `remediation`, `policy`, `manifest`, `port-map`, `trivia`,
+  `jdk-surface`);
   `porter-notes` records on every run, and `collection-closure`/`collection-boundary` record when
   `CollectionsTransform` is in the pipeline. `PortRun.RequiredChecks` is asserted against what
   actually recorded, so a number that reaches stdout and not `findings.tsv` fails the run.

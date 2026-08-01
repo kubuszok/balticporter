@@ -1576,7 +1576,29 @@ a §1(b) phase with an empty default — a set of iterable types the port declar
 the iterator protocol before emission — because an empty parameter makes it a no-op and every current
 lane stays byte-identical.
 
-*Fix kind: (a) in effect, best delivered as (b). Unbuilt.*
+**The demand is now DERIVED and reported before any compile.** `JdkSurfaceCheck` (DESIGN.md §8.9)
+walks every `ForEach` in the units a run emits and reports a `kept-iterable` finding for each
+receiver the pipeline **left in the JDK namespace**, carrying the §1(b) classification above.
+Measured: noise4j's two errors are exactly two findings, at the loops themselves —
+
+```
+kept-iterable  java.util.List  DungeonGenerator.java:164     (error anchored at :163, the method)
+kept-iterable  java.util.Set   DungeonGenerator.java:281     (error anchored at :258, the method)
+```
+
+— and every other port reports **zero**, which is the honest number: they all run the collections
+phase, so no receiver survives in `java.*`. The finding names the loop; the compile error names the
+enclosing member, so the check is also the more precise of the two.
+
+**Read the NODE, not the phase's table.** The first spelling of this — "the receiver's java type is
+absent from `CollectionsTransform.typeMap`" — is the wrong side of the mapping and is wrong in both
+directions: a declaration the port SCOPES OUT keeps a real `java.util.List` that the table calls
+mapped, and a port with no phase at all keeps the same type that the table also calls mapped. The
+post-pipeline type standing in the receiver slot is what the emitted `for (x <- xs)` is applied to,
+whatever any phase intended.
+
+*Fix kind: (a) in effect, best delivered as (b). Unbuilt — but no longer invisible: it is 2
+findings on the one port that has it, on every run, before a compiler is started.*
 
 ### K10. A TYPE-VARIABLE map key arrives carrying java's `Object` WIDENING
 

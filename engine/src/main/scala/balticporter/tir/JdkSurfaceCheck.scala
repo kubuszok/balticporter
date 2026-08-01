@@ -172,6 +172,9 @@ object JdkSurfaceCheck:
   /** the instance-table key for an arm that matches every collection kind. */
   val AnyKind = "*"
 
+  /** the member NAME a constructor is interned under — see [[Mapping.constructors]]. */
+  val Constructor = "<init>"
+
   /** What a retyping phase DID, as data the check reads — never re-derived here.
     *
     * `ran` is the difference between a demand and an offer: with the phase in the pipeline an
@@ -195,9 +198,23 @@ object JdkSurfaceCheck:
       /** the FQN of the iterable shim, whose `foreach` extension is what makes an enhanced-for
         * work — K9's "covered by the shipped iterable shim" half */
       iterableShim: Option[String],
+      /** does the phase rewrite `new` on every type it retypes?
+        *
+        * A CONSTRUCTOR is not a member call and cannot be in a member table: retyping the type IS
+        * the rewrite for `new`, and the arity correspondence between the java constructor and the
+        * scala one is the phase's own business (ENGINE-LIMITS K11 is exactly that correspondence
+        * failing and being fixed). Without this the check reports `java.util.HashMap#<init>()` as a
+        * hole at every port that constructs one, while the emitted line reads
+        * `new scala.collection.mutable.HashMap()` and calls nothing java at all — 18 such rows on
+        * the first run, in front of the `clear`/`contains` rows that are the real work list.
+        *
+        * `false` — [[noMapping]]'s value — leaves a constructor classified like any other member, so
+        * a phase that retypes without touching `new` is reported rather than assumed. */
+      constructors: Boolean = false,
   ):
     def handles(owner: String, name: String, kind: String): Boolean =
-      statics.contains(s"$owner#$name") ||
+      (constructors && name == Constructor) ||
+        statics.contains(s"$owner#$name") ||
         instance.getOrElse(AnyKind, Set.empty).contains(name) ||
         instance.getOrElse(kind, Set.empty).contains(name)
 

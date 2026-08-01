@@ -1,4 +1,7 @@
 #id	check	kind	owner	path	line	detail
+fc17bc174bda	jdk-surface	unhandled	java.util.Arrays#toString(Object[])	com/badlogic/gdx/utils/JsonMatcherTests.java	1482	java.util.Arrays#toString(Object[]) — retyped to java.util.Arrays, no rewrite (2 site(s))
+b68961cee003	jdk-surface	unhandled	java.util.Arrays#toString(float[])	com/badlogic/gdx/math/ConvexHullTest.java	58	java.util.Arrays#toString(float[]) — retyped to java.util.Arrays, no rewrite (1 site(s))
+eecb2ac883ca	jdk-surface	unhandled	java.util.stream.Collectors#joining(CharSequence)	com/badlogic/gdx/utils/JsonMatcherTests.java	1581	java.util.stream.Collectors#joining(CharSequence) — retyped to java.util.stream.Collectors, no rewrite (1 site(s))
 5145b089923e	omissions	annotation dropped	sge.math.BezierTest	<synthetic>	0	org.junit.runner.RunWith
 ab1d363b2cf4	omissions	annotation dropped	sge.math.BezierTest#type	<synthetic>	0	org.junit.runners.Parameterized$Parameter
 9711dfd807f0	omissions	annotation dropped	sge.math.BezierTest#useSetter	<synthetic>	0	org.junit.runners.Parameterized$Parameter
