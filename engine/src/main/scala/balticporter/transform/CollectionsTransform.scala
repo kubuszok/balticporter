@@ -78,81 +78,13 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
 
   import CollectionsTransform.{JavaCollectionFqn, JavaCollectionsFqn, JavaIterableFqn, JavaIteratorFqn, Kind}
 
-  /** java fully-qualified name → (scala fully-qualified name, collection kind). */
-  private val typeMap: Map[String, (String, Kind)] = Map(
-    "java.util.List"          -> ("scala.collection.mutable.Buffer", Kind.Seq),
-    "java.util.ArrayList"     -> ("scala.collection.mutable.ArrayBuffer", Kind.Seq),
-    // a java `LinkedList` is a List AND a Deque, and the corpus uses it as a QUEUE.
-    // `mutable.Queue` extends `ArrayDeque` extends `Buffer`, so every Seq rewrite above still
-    // applies and `removeHeadOption` exists — which `ListBuffer` does not have.
-    "java.util.LinkedList"    -> ("scala.collection.mutable.Queue", Kind.Seq),
-    // `java.util.Queue` maps to `ArrayDeque` and NOT to `mutable.Queue`, because the two libraries
-    // order these types OPPOSITELY: java has `ArrayDeque <: Deque <: Queue`, scala has
-    // `Queue <: ArrayDeque`. Sending the interface to `mutable.Queue` and the class to
-    // `mutable.ArrayDeque` therefore INVERTS the relation, and ordinary java — assigning an
-    // `ArrayDeque` to a `Queue`-typed field — stops type-checking. Measured in simple-graphs'
-    // `MinimumWeightSpanningTree`, whose `Queue<Connection<V>>` field is filled from an
-    // `ArrayDeque::new` collector: `Found: ArrayDeque[…] / Required: Queue[…]`.
-    //
-    // This is the third instance of one rule, and the rule is the transferable part: A MAPPING MUST
-    // PRESERVE THE SOURCE LIBRARY'S OWN SUBTYPE RELATIONS. `Collection`/`AbstractCollection` (below)
-    // was the same failure from the other direction. Nothing is lost by mapping to the base:
-    // `mutable.ArrayDeque` has the `removeHeadOption`/`head` this phase's `poll`/`peek` rewrites
-    // need, and `LinkedList -> mutable.Queue` still conforms because scala's `Queue` IS an
-    // `ArrayDeque`.
-    "java.util.Queue"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
-    "java.util.Deque"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
-    "java.util.ArrayDeque"    -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
-    // The INTERFACE and its ABSTRACT BASE map to the same target, and must: java's
-    // `AbstractCollection implements Collection`, so a port that sent the two to unrelated types
-    // would break the subtype relation the source depends on. It was split once — `Collection` to
-    // `Buffer`, `AbstractCollection` to the shim — and that split is 13 of simple-graphs' 20
-    // errors: every method declared to return a `Collection` while returning the library's own
-    // `Array extends AbstractCollection`, and every `containsAll(Collection<?>)` override.
-    //
-    // The shared target is the SHIM rather than `Buffer` because only one of the two directions has
-    // a repair. A library that merely USES java collections is served by either; one that DEFINES a
-    // collection by extending `AbstractCollection` cannot extend `mutable.Buffer` at all — the
-    // scala trait demands `apply`/`update`/`insert` java never had and collides with the `size()`/
-    // `iterator()` the java class does declare (CLAUDE.md §4.5). Whereas a scala collection meeting
-    // a shim-typed slot IS repairable, by `coerce`, at the slot.
-    //
-    // MEASURED, and the reason `coerce` covers declarations and not only arguments: mapping the
-    // interface here while bridging arguments alone REGRESSED libGDX's test port by 3 — `BezierTest`
-    // declares `Collection<Object[]> parameters = new ArrayList<>()`, a slot no call-site seam sees.
-    //
-    // No implicit bridge is available instead of the seam, and that is measured too: ENGINE-LIMITS
-    // records `given Conversion` inert wherever the call is OVERLOADED, which
-    // `addVertices(Collection)` / `addVertices(V...)` is.
-    "java.util.Collection"         -> (JavaCollectionFqn, Kind.Seq),
-    "java.util.AbstractCollection" -> (JavaCollectionFqn, Kind.Seq),
-    // likewise NOT `scala.collection.Iterable`: java's `Iterable.iterator()` hands back a
-    // REMOVAL-CAPABLE iterator, scala's hands back a `scala.collection.Iterator`. Mapping the
-    // two independently would leave the pair inconsistent — `for (x <- xs)` would still work,
-    // but `xs.iterator()` would no longer be something you can remove through, which is the
-    // only reason libGDX takes an `Iterable` in `Predicate`/`CharArray`/`ModelLoader`.
-    "java.lang.Iterable"      -> (JavaIterableFqn, Kind.Seq),
-    // NOT `scala.collection.Iterator`: java's `Iterator` is `hasNext/next/REMOVE`, scala's is
-    // `hasNext/next`. Mapping it to scala's silently drops a method the source uses (and uses
-    // POLYMORPHICALLY, through the interface — so no call-site narrowing recovers it). The
-    // target is the shim in [[CollectionsTransform.runtimeSources]], which is scala's `Iterator`
-    // PLUS java's `remove`, defaulted to java's own default (throw UnsupportedOperationException).
-    "java.util.Iterator"      -> (JavaIteratorFqn, Kind.Seq),
-    "java.util.Map"           -> ("scala.collection.mutable.Map", Kind.Map),
-    "java.util.HashMap"       -> ("scala.collection.mutable.HashMap", Kind.Map),
-    "java.util.LinkedHashMap" -> ("scala.collection.mutable.LinkedHashMap", Kind.Map),
-    "java.util.TreeMap"       -> ("scala.collection.mutable.TreeMap", Kind.Map),
-    // a scala `Map` IS an `Iterable[(K, V)]`, so java's `Map.Entry` — a key/value pair with no
-    // identity of its own — is a `Tuple2`. `getKey`/`getValue` become `_1`/`_2` (below).
-    // Spoon's qualified name for a nested type separates with `$` — that is the key that fires;
-    // the dotted spelling is an alias for frontends that name nested types with `.`.
-    "java.util.Map$Entry"     -> ("scala.Tuple2", Kind.Entry),
-    "java.util.Map.Entry"     -> ("scala.Tuple2", Kind.Entry),
-    "java.util.Set"           -> ("scala.collection.mutable.Set", Kind.Set),
-    "java.util.HashSet"       -> ("scala.collection.mutable.HashSet", Kind.Set),
-    "java.util.LinkedHashSet" -> ("scala.collection.mutable.LinkedHashSet", Kind.Set),
-    "java.util.TreeSet"       -> ("scala.collection.mutable.TreeSet", Kind.Set),
-  )
+  /** java fully-qualified name → (scala fully-qualified name, collection kind).
+    *
+    * The table itself lives in the COMPANION ([[CollectionsTransform.typeMap]]) — it is a constant
+    * and nothing about it depends on an instance, and `JdkSurfaceCheck` has to be able to ask what
+    * this phase retypes without constructing one (§4.56: a check concludes from what a phase DID,
+    * which means the phase's record has to be reachable). */
+  private val typeMap: Map[String, (String, Kind)] = CollectionsTransform.typeMap
 
   /** the java types this phase retypes — its POLICY, read back so a CHECK can ask what the phase
     * did rather than guessing from a name (CLAUDE.md §4.56). Both checks below take it as a
@@ -1450,12 +1382,188 @@ object CollectionsTransform:
     * own home rather than a rewrite keyed on a receiver's collection kind. */
   val JavaCollectionsFqn = s"${RuntimeArtifact.Package}.JavaCollections"
 
+  /** java fully-qualified name -> (scala fully-qualified name, collection kind).
+    *
+    * The phase's POLICY, in the companion so a CHECK can read it without constructing a phase:
+    * `JdkSurfaceCheck` decides "did something retype this member's owner" from THIS table and never
+    * from the type's name (CLAUDE.md §4.56). It is a constant — no entry depends on an instance —
+    * so moving it here changes nothing about what the phase does.
+    *
+    * '''It must stay BELOW the `*Fqn` vals.''' Four entries name them, and an `object`'s vals
+    * initialise in DECLARATION order: declared above, this table is built with four `null` targets
+    * and the phase then throws a `NullPointerException` deep inside `run` — measured, 49 corpus
+    * tests, and DESIGN.md §8.10's class-initialisation watch note in its smallest possible form.
+    * `CollectionsHandledDerivationSpec` asserts no target is null for exactly that reason.
+    */
+  private[balticporter] val typeMap: Map[String, (String, Kind)] = Map(
+    "java.util.List"          -> ("scala.collection.mutable.Buffer", Kind.Seq),
+    "java.util.ArrayList"     -> ("scala.collection.mutable.ArrayBuffer", Kind.Seq),
+    // a java `LinkedList` is a List AND a Deque, and the corpus uses it as a QUEUE.
+    // `mutable.Queue` extends `ArrayDeque` extends `Buffer`, so every Seq rewrite above still
+    // applies and `removeHeadOption` exists — which `ListBuffer` does not have.
+    "java.util.LinkedList"    -> ("scala.collection.mutable.Queue", Kind.Seq),
+    // `java.util.Queue` maps to `ArrayDeque` and NOT to `mutable.Queue`, because the two libraries
+    // order these types OPPOSITELY: java has `ArrayDeque <: Deque <: Queue`, scala has
+    // `Queue <: ArrayDeque`. Sending the interface to `mutable.Queue` and the class to
+    // `mutable.ArrayDeque` therefore INVERTS the relation, and ordinary java — assigning an
+    // `ArrayDeque` to a `Queue`-typed field — stops type-checking. Measured in simple-graphs'
+    // `MinimumWeightSpanningTree`, whose `Queue<Connection<V>>` field is filled from an
+    // `ArrayDeque::new` collector: `Found: ArrayDeque[…] / Required: Queue[…]`.
+    //
+    // This is the third instance of one rule, and the rule is the transferable part: A MAPPING MUST
+    // PRESERVE THE SOURCE LIBRARY'S OWN SUBTYPE RELATIONS. `Collection`/`AbstractCollection` (below)
+    // was the same failure from the other direction. Nothing is lost by mapping to the base:
+    // `mutable.ArrayDeque` has the `removeHeadOption`/`head` this phase's `poll`/`peek` rewrites
+    // need, and `LinkedList -> mutable.Queue` still conforms because scala's `Queue` IS an
+    // `ArrayDeque`.
+    "java.util.Queue"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
+    "java.util.Deque"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
+    "java.util.ArrayDeque"    -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
+    // The INTERFACE and its ABSTRACT BASE map to the same target, and must: java's
+    // `AbstractCollection implements Collection`, so a port that sent the two to unrelated types
+    // would break the subtype relation the source depends on. It was split once — `Collection` to
+    // `Buffer`, `AbstractCollection` to the shim — and that split is 13 of simple-graphs' 20
+    // errors: every method declared to return a `Collection` while returning the library's own
+    // `Array extends AbstractCollection`, and every `containsAll(Collection<?>)` override.
+    //
+    // The shared target is the SHIM rather than `Buffer` because only one of the two directions has
+    // a repair. A library that merely USES java collections is served by either; one that DEFINES a
+    // collection by extending `AbstractCollection` cannot extend `mutable.Buffer` at all — the
+    // scala trait demands `apply`/`update`/`insert` java never had and collides with the `size()`/
+    // `iterator()` the java class does declare (CLAUDE.md §4.5). Whereas a scala collection meeting
+    // a shim-typed slot IS repairable, by `coerce`, at the slot.
+    //
+    // MEASURED, and the reason `coerce` covers declarations and not only arguments: mapping the
+    // interface here while bridging arguments alone REGRESSED libGDX's test port by 3 — `BezierTest`
+    // declares `Collection<Object[]> parameters = new ArrayList<>()`, a slot no call-site seam sees.
+    //
+    // No implicit bridge is available instead of the seam, and that is measured too: ENGINE-LIMITS
+    // records `given Conversion` inert wherever the call is OVERLOADED, which
+    // `addVertices(Collection)` / `addVertices(V...)` is.
+    "java.util.Collection"         -> (JavaCollectionFqn, Kind.Seq),
+    "java.util.AbstractCollection" -> (JavaCollectionFqn, Kind.Seq),
+    // likewise NOT `scala.collection.Iterable`: java's `Iterable.iterator()` hands back a
+    // REMOVAL-CAPABLE iterator, scala's hands back a `scala.collection.Iterator`. Mapping the
+    // two independently would leave the pair inconsistent — `for (x <- xs)` would still work,
+    // but `xs.iterator()` would no longer be something you can remove through, which is the
+    // only reason libGDX takes an `Iterable` in `Predicate`/`CharArray`/`ModelLoader`.
+    "java.lang.Iterable"      -> (JavaIterableFqn, Kind.Seq),
+    // NOT `scala.collection.Iterator`: java's `Iterator` is `hasNext/next/REMOVE`, scala's is
+    // `hasNext/next`. Mapping it to scala's silently drops a method the source uses (and uses
+    // POLYMORPHICALLY, through the interface — so no call-site narrowing recovers it). The
+    // target is the shim in [[CollectionsTransform.runtimeSources]], which is scala's `Iterator`
+    // PLUS java's `remove`, defaulted to java's own default (throw UnsupportedOperationException).
+    "java.util.Iterator"      -> (JavaIteratorFqn, Kind.Seq),
+    "java.util.Map"           -> ("scala.collection.mutable.Map", Kind.Map),
+    "java.util.HashMap"       -> ("scala.collection.mutable.HashMap", Kind.Map),
+    "java.util.LinkedHashMap" -> ("scala.collection.mutable.LinkedHashMap", Kind.Map),
+    "java.util.TreeMap"       -> ("scala.collection.mutable.TreeMap", Kind.Map),
+    // a scala `Map` IS an `Iterable[(K, V)]`, so java's `Map.Entry` — a key/value pair with no
+    // identity of its own — is a `Tuple2`. `getKey`/`getValue` become `_1`/`_2` (below).
+    // Spoon's qualified name for a nested type separates with `$` — that is the key that fires;
+    // the dotted spelling is an alias for frontends that name nested types with `.`.
+    "java.util.Map$Entry"     -> ("scala.Tuple2", Kind.Entry),
+    "java.util.Map.Entry"     -> ("scala.Tuple2", Kind.Entry),
+    "java.util.Set"           -> ("scala.collection.mutable.Set", Kind.Set),
+    "java.util.HashSet"       -> ("scala.collection.mutable.HashSet", Kind.Set),
+    "java.util.LinkedHashSet" -> ("scala.collection.mutable.LinkedHashSet", Kind.Set),
+    "java.util.TreeSet"       -> ("scala.collection.mutable.TreeSet", Kind.Set),
+  )
+
   /** every `JavaCollections` member the transform may emit. One list, so a new JDK utility is one
     * line here, one arm in `staticRewrite` and one method in the runtime object — and a typo is a
     * `SymId.None` that declines the rewrite rather than a dangling name in emitted code. */
   val StaticHelpers: List[String] =
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange")
+
+  // -------------------------------------------------------------------------------------------
+  // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give
+  // -------------------------------------------------------------------------------------------
+  //
+  // `staticRewrite` and `rewrite` are `match` arms, so nothing can ask "what does this phase
+  // cover?" — which is precisely why the engine's JDK coverage was invisible until a compile error
+  // named a hole. These two tables are that question answered, and they are DECLARED rather than
+  // derived at runtime because a regex over one's own source is not something production code
+  // should do. Their agreement with the arms is asserted by `CollectionsHandledDerivationSpec`,
+  // which scans this file's SOURCE TEXT in both directions — a table beside the code it describes
+  // is only worth having while the two agree, and neither a stale entry nor a missing one moves any
+  // other count: a missing entry makes a handled member read as the port's JDK wall, and a stale
+  // one makes a real hole read as covered.
+
+  /** every `owner#name` a [[staticRewrite]] arm matches, INCLUDING the two collector keys the
+    * `collect` arms read out of a guard — a `Collectors.toList()` call is subsumed by the collapse
+    * exactly as `Collections.sort` is subsumed by its factory, and a table that omitted them would
+    * report the port's own translation as its wall. */
+  val handledStatics: Set[String] = Set(
+    "java.util.Arrays#asList",
+    "java.util.Collection#stream",
+    "java.util.Collections#reverse",
+    "java.util.Collections#shuffle",
+    "java.util.Collections#sort",
+    "java.util.Collections#swap",
+    "java.util.Collections#unmodifiableCollection",
+    "java.util.List#stream",
+    "java.util.Map$Entry#comparingByKey",
+    "java.util.Map$Entry#comparingByValue",
+    "java.util.Map.Entry#comparingByKey",
+    "java.util.Map.Entry#comparingByValue",
+    "java.util.Set#stream",
+    "java.util.stream.Collectors#toCollection",
+    "java.util.stream.Collectors#toList",
+    "java.util.stream.DoubleStream#sum",
+    "java.util.stream.IntStream#mapToObj",
+    "java.util.stream.IntStream#range",
+    "java.util.stream.IntStream#sum",
+    "java.util.stream.LongStream#sum",
+    "java.util.stream.Stream#collect",
+    "java.util.stream.Stream#filter",
+    "java.util.stream.Stream#map",
+    "java.util.stream.Stream#mapToDouble",
+    "java.util.stream.Stream#sorted",
+  )
+
+  /** collection KIND → the instance member names [[rewrite]] handles for it, with
+    * `JdkSurfaceCheck.AnyKind` for an arm whose kind pattern is `_`.
+    *
+    * The split across kinds is READ BY EYE and deliberately not asserted: the arms are keyed on
+    * `(name, args, kind)` and one `add` arm serves every Seq-shaped java type, so only the UNION is
+    * mechanically derivable. Assigning a name to more kinds than its arm covers can make the check
+    * kinder (a `mapped` row that could have been a finding) and can never make it miss a hole in a
+    * kind that genuinely has none. */
+  val handledInstance: Map[String, Set[String]] = Map(
+    balticporter.tir.JdkSurfaceCheck.AnyKind -> Set(
+      // arms whose kind pattern is `_` …
+      "forEach", "iterator", "getOrDefault", "add", "addAll", "putAll",
+      // … and `parenless`, which is an arm of its own (`case (n, Nil, _) if parenless(n)`)
+      "size", "isEmpty", "keySet", "values", "nonEmpty", "hasNext", "next",
+    ),
+    Kind.Seq.toString   -> Set("get", "set", "remove", "addLast", "offer", "offerLast",
+                               "addFirst", "offerFirst", "poll", "pollFirst", "peek", "peekFirst", "element"),
+    Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values"),
+    Kind.Set.toString   -> Set("remove"),
+    Kind.Entry.toString -> Set("getKey", "getValue"),
+  )
+
+  /** This phase's record, in the shape [[balticporter.tir.JdkSurfaceCheck]] reads.
+    *
+    * `ran` is the caller's to supply and is not a property of the phase: the same tables answer two
+    * different questions depending on whether the phase is in the pipeline. With it absent an
+    * unhandled member on a mapped type is an OFFER (`mappable`, report-only — noise4j's deliberate
+    * position); with it present the same member is a hole the phase MADE, and is a finding. */
+  def jdkMapping(ran: Boolean): balticporter.tir.JdkSurfaceCheck.Mapping =
+    balticporter.tir.JdkSurfaceCheck.Mapping(
+      phase        = "java-collections->scala",
+      ran          = ran,
+      types        = typeMap.view.mapValues((target, kind) => (target, kind.toString)).toMap,
+      statics      = handledStatics,
+      instance     = handledInstance,
+      // the SHIMS' own members, from the artifact's map — pinned to the published runtime sources by
+      // `RuntimeMembersDerivationSpec`, so `java.util.Iterator#remove` is `shimmed` because the shim
+      // really declares it and not because someone remembered to say so here.
+      shimMembers  = RuntimeArtifact.concreteMembers.view.mapValues(_.map(_._1)).toMap,
+      iterableShim = Some(JavaIterableFqn),
+    )
 
   /** Support types the retyping REQUIRES. They live in the PUBLISHED `balticporter-runtime`
     * module (`runtime/src/main/scala`), not here — see [[RuntimeArtifact]] for why a per-port copy

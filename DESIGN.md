@@ -2649,6 +2649,41 @@ and K9's two errors in another port would have been a named finding **before any
 instance calls on kept receivers are invisible to text, while the TIR inventory sees them all, which is
 itself the argument for deriving the artifact from the walk rather than from a grep.
 
+**As built, four things the design did not say, each of which changes how the report reads.**
+
+- **A fifth and sixth class, and they are what make "anything unclassified is a finding" mean
+  something.** `Kept` is a member nothing in the port claims — emitted verbatim against the JDK,
+  portable, compiling. `java.lang.Math#max` is such a member at hundreds of sites, and reporting
+  those would put hundreds of rows in front of the one that says `Collections#rotate` has no
+  translation; a report whose false positives must be routinely ignored trains its readers to
+  ignore it (§4.45). A member is a FINDING when the port's own machinery has already **moved the
+  ground under it** — the owner was retyped and the member was not, or the loop that iterates it
+  will not compile. `Kept` is counted in the summary, never hidden. `Mappable` is the second: with
+  the retyping phase ABSENT the same unmapped member is untouched JDK code the port chose to keep,
+  so the row is an OFFER and not a hole. `ran` is therefore a parameter of the check's `Mapping`,
+  not a property of the phase — the same tables answer two different questions.
+- **The rows are the surface AFTER the pipeline.** A member whose call the phase actually rewrote is
+  no longer referenced and does not appear at all, which is the strongest outcome available and the
+  reason the `mapped` count is smaller than a reader expects. `Mapped` survives only for rewrites
+  that keep the java member SYMBOL and change its shape (`xs.size()` → `xs.size`, `get(i)` → `xs(i)`).
+  A check reading the PRE-pipeline program would show a comfortable `mapped` row for a dependency
+  the port does not have.
+- **K9 is derived from the NODE, not from a table.** "the receiver's java type is absent from the
+  phase's `typeMap`" is the wrong side of the mapping and fails in both directions: a scoped-out
+  declaration keeps a real `java.util.List` that the table calls mapped, and a port with no phase
+  keeps the same type that the table also calls mapped. The post-pipeline type standing in the
+  receiver slot is what the emitted `for (x <- xs)` will be applied to, whatever any phase intended
+  — §4.56 at its strongest, since the conclusion comes from what the phase did to *this expression*.
+- **The tables are DECLARED beside the arms and pinned by a source scan, not lifted into one
+  structure.** The design asked for the `match` arms to become a declarative table both the arms and
+  the check read; what landed is `CollectionsTransform.handledStatics`/`handledInstance` as data,
+  with `CollectionsHandledDerivationSpec` asserting the bijection against the arms' own SOURCE TEXT
+  in both directions. Restructuring 25 static arms and 25 instance arms whose guards read receivers,
+  collectors and result types is a rewrite of the phase, and it would have been measured in the same
+  commit as a new check — §5's "change one thing". The scan is SLICED to each function's region and
+  asserts the region does not contain the table, because a whole-file scan would find its own answer
+  and pass vacuously in both directions.
+
 ### 8.10 One `RealPath` — and a watch note on class-initialisation timing
 
 **Decision.** One utility, `balticporter.core.RealPath`, replacing the **four divergent private copies**
@@ -2705,6 +2740,14 @@ beside a `startsWith` is the signature, and the worktree is the environment wher
 > side-effecting static initialiser runs at a different moment than upstream. The failure profile is
 > T10's — no compile error, no count moves, only behaviour — so if a port ever exhibits init-order
 > symptoms, **this is the paragraph to reread before instrumenting.** Not a project; a named suspect.
+>
+> **And it bites the ENGINE'S OWN objects, which is not hypothetical.** Moving
+> `CollectionsTransform.typeMap` into the companion so a check could read it (§8.9) put it ABOVE the
+> four `*Fqn` vals four of its entries name — an `object`'s vals initialise in declaration order, so
+> the table was built with four `null` targets, compiled cleanly, and threw a `NullPointerException`
+> deep inside the phase's `run`: **49 corpus tests, one edit.** A table that names other vals of its
+> own object goes below them, and `CollectionsHandledDerivationSpec` now asserts no target is null,
+> because a `null` in a `Map[String, (String, Kind)]` is invisible to the type system.
 
 ### 8.11 Ordering, and the interactions the briefs left open
 
