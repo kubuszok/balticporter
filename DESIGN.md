@@ -1487,8 +1487,8 @@ strictly more expressive and impossible to report on, which `neverFired` is the 
 **Retires and unblocks.** D1's root defect narrows to its external residue; the two divergences become
 recorded limits with negative specs instead of latent traps; `Substitutions.matchedKeys` is deleted.
 It is a hard prerequisite for call-site substitution (a bare `Json#toJson` names three overloads with
-three different arities, and an expression template with positional holes can only be right for one),
-for the comparator call-site table, and for §8.3's member rows — a per-member contract row that is not
+three different arities, and an expression template with positional holes can only be right for one) —
+BUILT, see §8.12, which also records what the comparator call-site table turned out to need — and for §8.3's member rows — a per-member contract row that is not
 overload-keyed reproduces D1's own 118 ambiguities.
 
 ### 8.2 The constructor funnel — a synthetic PROTECTED primary
@@ -2906,5 +2906,116 @@ The ordering that follows, with the reason each edge is real rather than schedul
 | base surface | **§8.3 after §8.2, after §8.1's ownership work** | the contract's constructor rows *are* §8.2's signatures, and `Surface.owns` is the same climb §8.1 touches |
 | the armed phases | **§8.3 before §8.4's and the opaque-type enablements** | four of the nine drift sites are latent behind exactly those phases; arming them first is how the family grows a tenth face |
 | transform track | **§8.4, §8.5, §8.6 in parallel, default-off** | none reads a policy key beyond a type binding; each is its own phase, factory and spec, and the gate is every lane 0 members changed |
-| blocked on §8.1 | call-site substitution, the comparator table, §8.3's member rows | each needs an overload-exact key |
+| blocked on §8.1 | ~~call-site substitution, the comparator table~~ (**BUILT — §8.12**), §8.3's member rows | each needs an overload-exact key |
 | checks track | **§8.9, §8.10 any time** | no shared files with the above |
+
+### 8.12 Call-site substitution, and the first RETARGET entry — as built
+
+**Decision.** `CallSiteSubstitutionTransform(calls: Map[String, String])`: a member key naming the
+**resolved callee**, a value that is an **expression template** with `{recv}` and
+`{arg0}…{argN}`, and the call replaced by the template with the call's own receiver and arguments
+spliced in. `CollectionsTransform` gains a second, orthogonal table — `retarget: Map[String, String]`
+— for a type that **moves and is API-mapped nowhere**. Both default-empty; every lane byte-identical
+without them.
+
+**Why the seam had to exist.** The engine had three places to put code it must not translate
+mechanically and all three are whole-declaration: `dropTypes` + `inject`, `dropMethods`, and
+`MethodBodyTransform`. None can say *keep this method, rewrite this one call in it*, which is
+`ENGINE-LIMITS.md` D7 — a base drops a member, a dependent still calls it, and the call sits at one
+line of a method that is otherwise entirely mechanical.
+
+**The holes are TREES, and that is the load-bearing choice.** `Tree.Opaque` gains
+`holes: List[Term]` with a NUL marker no Scala source can contain; `holes = Nil` is the old node
+byte for byte. Three consequences, each of which a string splice would lose: `StandardTraversal`
+maps into the holes, so the **package rename — which runs last (§4.56)** — and every retyping phase
+still reach a spliced argument; `Xref` records the usages inside them, so a symbol used only in a
+hole is not dead; and nothing outside the emitter ever has to render a term, which a phase cannot do
+at all. Rendering parenthesises a hole slightly more eagerly than `operand` does, in a helper of its
+own — a hole's neighbours are whatever a policy author wrote, not the emitter's own output, and a
+redundant pair of parentheses cannot change a meaning.
+
+**Everything knowable at BIND time is known there.** The template parses once, into literal parts
+and numbered holes, so `{arg3}` on a one-argument callee is a `Malformed` finding *before the
+pipeline runs* rather than a compile error in generated Scala nobody attributes to a manifest entry
+— DESIGN §8.1's rule for keys, applied to their values. Exactness is required and is §8.1's stated
+asymmetry: a bare key naming two overloads is `Ambiguous` with the candidates listed, never one of
+them picked, and `remove(Object)` does not rewrite `remove(int)`.
+
+**`PolicyBinder.bindCallee` — the one binder addition, and why a declaration-side answer is not
+enough.** A member `dropMethods` removed has no declaration symbol, so `bindMembers` correctly
+answers "bound, nothing to point at" — which is the complete truth for a declaration and useless to
+a phase that rewrites CALLS, i.e. for exactly the case D7 is about. The frontend interns the callee
+from the REFERENCE anyway (`SpoonTir.methodSym`, with the declaration's own descriptor), so this
+falls through to the symbol table when the index answers with dropped members only, keeps
+`dropped = true` visible, and suppresses the `SyntheticTarget` refusal **on that path only** — its
+structural test ("the frontend walked this owner and did not record this executable") cannot tell a
+reference-side interning from an engine-minted member.
+
+**Refusals are per-SITE and counted, and ONE predicate decides them.** A vararg spread among the
+arguments (a positional hole names a term, not a group); an argument count this site does not have;
+`{recv}` on a call with no receiver term; the callee used as a method VALUE (`Foo::bar` has no
+argument list). `siteFault` is applied both by the traversal that rewrites and by the pass that
+records the decisions, so a `SubstitutedCall` row — and the porter note derived from it — can never
+claim a substitution that was refused.
+
+**A key that BOUND and rewrote ZERO sites is its own finding.** Not an unbound key, and its
+instruction is different: the callee is real, so either nothing calls it or an **earlier phase
+already re-pointed those calls**. That is not hypothetical — `CollectionsTransform`'s universal
+statics table maps `Collections.sort`, so an entry for it placed after that phase matches nothing,
+with every count unchanged and the emitted code exactly what the port asked to change.
+
+**`Decision.Kind.SubstitutedCall` is rendered as a porter note; its sibling `RedirectedCall` is
+not.** A redirect swaps the callee and leaves the call's shape alone, so the emitted line still
+reads as the Java's call with a different name on it and the diff carries the fact. A substitution
+replaces the whole expression, and the source map then points at a Java line that says something
+else — §4.575's case, the same one that makes `SubstitutedBody` rendered one level up.
+
+#### The RETARGET table, and why it is not four more `typeMap` rows
+
+`typeMap` says two things at once: *this type becomes that one*, and *its calls are rewritten
+kind-aware and its slots bridged by `coerce`*. The second half is what a collection needs and
+exactly what a retarget must not get, so a retarget entry joins `remap` and joins neither `kindOf`
+nor any factory — which makes every kind-driven arm a no-op on it **by arithmetic** rather than by a
+new guard in each one. A key that also appears in `typeMap` is refused rather than merged: two
+answers for one type is a rewrite whose outcome depends on which table was read.
+
+**The precondition the engine cannot check, and the policy author owes: the Scala target must be
+usable wherever the Java source was.** `java.util.Comparator` → `scala.math.Ordering` is the worked
+example and every property follows from Scala declaring `trait Ordering[T] extends Comparator[T]` —
+the parent moves, `compare` stays structurally identical (it is `Ordering`'s one abstract member, so
+a Java lambda stays SAM-convertible), and every slot that still says `Comparator` accepts the
+retyped value with no bridge. Where that relation does not hold the seam is a `coerce` boundary and
+the type belongs in `typeMap` with a kind and a factory. This is also why the retarget stays out of
+`mappedTypes` / `retypedTargets`: those feed the closure and boundary checks, and a retarget has no
+boundary by construction. It IS in `surfaceFingerprint` — a base whose `Comparator`s became
+`Ordering`s and a dependent whose did not emit signatures that cannot meet (§1.5).
+
+#### The comparator call-site table: RIDE, EXTEND — or neither
+
+The question CHUNK3 left open was whether `Collections.sort(xs, c)` / `Arrays.sort(a, c)` become M4
+config entries or new arms in `CollectionsTransform.staticRewrite`. **Measured, the answer is
+neither, and §8.9's statics table gained no arm:**
+
+- the template language **can** express the shape — `{arg0}.sortInPlace()(using {arg1})`; a `using`
+  clause is ordinary text around a hole — so no extension of either mechanism was needed;
+- the **shape is refuted**. `scala-cli compile --scala 3.8.4`: *value sortInPlace is not a member of
+  scala.collection.mutable.Buffer[String]*. `sortInPlace` is a `mutable.IndexedSeqOps` member and
+  `java.util.List` maps to `Buffer`. The substitution is performed exactly as asked, no count moves,
+  and the POLICY is simply wrong — which is the shape of finding this seam will keep producing;
+- after the retarget the existing `JavaCollections.sort(xs, cmp)` arm is **already correct**, because
+  its parameter is a real `java.util.Comparator` and an `Ordering` is one. Verified by compiling the
+  emitted probe.
+
+`Arrays.sort` ships no entry either, and the reason is §4.4's family rather than expressibility: the
+idiomatic `scala.util.Sorting.stableSort` takes a `ClassTag` as well as an `Ordering` and a
+positional template cannot name a **summoned** argument, while `quickSort` has the one using
+parameter and is **not stable** where Java's `Arrays.sort` is guaranteed to be. Trading a documented
+guarantee for legibility is not a trade a seam may make silently.
+
+**Rejected.** Rendering the template to text at the phase — a phase cannot print a term, and the
+result would be the one region of the program no later phase can see. A `Tree.Spliced` node of its
+own — every broad `Term` match would need an arm, and the ones written with a catch-all would miss
+it silently, where a fourth field on `Opaque` is compiler-forced at the two positional patterns that
+exist. A printable hole delimiter — it needs an escape grammar, which is a second parser over text
+the engine deliberately does not parse. Deciding the overload from the call's argument shape — §8.1
+measured that alternative at 118 `Ambiguous` out of 263.

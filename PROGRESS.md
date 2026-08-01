@@ -1375,8 +1375,20 @@ disagreement exists only when the two modules are compiled together.
 - **D5 (4 errors).** `Plans` needs the same "which classes does this run emit" input, and then M6's
   answer applies unchanged: refuse the replay whose widening cannot be performed, count the dropped
   `super(args)` as an omission, and compile.
-- **D7 (1 error).** A CALL-SITE substitution phase — the call-level twin of `MethodBodyTransform`,
-  keyed like `dropMethods`, replacement text naming the receiver and arguments.
+- **D7 — the MECHANISM exists; what is left is one policy decision.**
+  `CallSiteSubstitutionTransform` (DESIGN.md §8.12) is the call-level twin of `MethodBodyTransform`,
+  keyed like `dropMethods` and overload-exact. Dry-run against this port's three dead `Json` sites:
+  **3/3 bound, 3 sites rewritten, 0 policy findings**, at `SeparatedDataFileResolver.java:30`
+  (`fromJson(Class,FileHandle)`), `BinaryDataFileResolver.java:97` (`fromJson(Class,String)`) and
+  `GLTFExporter.java:241` (`prettyPrint(Object)`). It is NOT enabled: the replacement has to name a
+  codec, and this port has not made the codec decision (see the last bullet). Enabling it against a
+  codec that does not exist would trade three INERT calls for three that do not COMPILE.
+  `MeshLoader.java:252`'s `Array#toArray(Class)` — the original 1-error case — is reachable by the
+  same mechanism and wants the same decision.
+- **T12.** Render java's `protected` as `protected[<package>]`. Priced at 867 declarations of emitted
+  text on libGDX core alone; it wants its own cycle and its own baseline promotion, and until it
+  lands the port carries one `MethodBodyTransform` entry that exists only to restate the overload
+  javac chose.
 - **Behavioural coverage is 30 tests over 5 of 135 types**, and none has run. The exporter and the
   loaders are covered only by compilation, and their round-trip needs the reflective `Json` the base
   deliberately drops — the reference hand port replaced it with 2,268 lines of hand-written Jsoniter
@@ -1940,12 +1952,12 @@ behaviour). gltf is at parity, 135/135 both sides.
    never fires through overloaded calls) and flexmark, its heaviest user (1,356 sites), is
    overload-heavy. Beyond-annotation nullability (sge tracks ~2× the annotated set) needs
    null-flow analysis no phase has: open research, currently manual.
-5. **D7 call-site substitution** — the call-level twin of `MethodBodyTransform` (key = resolved
-   signature, replacement = expression template). Unlocks gltf's injected Jsoniter codecs (3 dead
-   `Json` call sites) and every future replace-the-callee case.
-6. **Collection-map extensions** — retarget entries like `gdx Array<Integer>` → `ArrayBuffer[Int]`
-   with wrapper unboxing (base-manifest); `java.util.Comparator`→`Ordering` + a
-   `Collections.sort`→`sortInPlace` call-site table.
+5. **Collection-map extensions** — retarget entries like `gdx Array<Integer>` → `ArrayBuffer[Int]`
+   with wrapper unboxing (base-manifest). The `java.util.Comparator`→`Ordering` half is BUILT as
+   `CollectionsTransform(retarget = …)` and is default-off pending P2; what it measured is that the
+   `Collections.sort`→`sortInPlace` call-site table it was supposed to need does not exist —
+   `sortInPlace` is not a `mutable.Buffer` member, and after the retarget the existing
+   `JavaCollections.sort` arm is already correct (DESIGN.md §8.12).
 **(c) Library rules, permanent injects, skip-then-patch (correctly not mechanized):**
 - **Opaque types** — ~30 in sge core (GL handles, GL enums, `Pixels`/`Seconds`/unit types), zero
   emitted. The (b) mechanism exists (`PrimitiveToOpaqueTransform`); the knowledge is per-library

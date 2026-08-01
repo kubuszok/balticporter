@@ -173,6 +173,24 @@ object GltfPolicy:
           // resolution, and the call resolves exactly as javac resolved it. The condition its own
           // comment named has been met, so the entry retires rather than being kept "just in case".
         )),
+        // ==THE THREE DEAD `Json` CALL SITES, and why the seam for them ships DISABLED==
+        //
+        // libGDX core drops `com.badlogic.gdx.utils.Json` (reflection is the one thing Scala.js and
+        // Native cannot do) and injects a facade whose reflective paths raise. gdx-gltf calls into
+        // it three times, so those three calls compile and are INERT at run time:
+        //
+        //   SeparatedDataFileResolver.java:30  Json#fromJson(Class,FileHandle)
+        //   BinaryDataFileResolver.java:97     Json#fromJson(Class,String)
+        //   GLTFExporter.java:241              Json#prettyPrint(Object)
+        //
+        // `CallSiteSubstitutionTransform` is the mechanism that repairs them, and it was DRY-RUN
+        // against exactly these three keys: 3/3 bound, 3 sites rewritten, 0 policy findings, each
+        // at the line above. What is missing is the other side — the reference hand port replaced
+        // the whole reflective path with 2,268 lines of Jsoniter codecs (`GLTFCodecs`,
+        // `GLTFExporterJson`), which is a decision THIS port has not made. Naming a codec that does
+        // not exist would trade three inert calls for three that do not compile, so the entry stays
+        // out until the codecs are injected. See `PROGRESS.md` §gdx-gltf.
+        //
         // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE
         // actually emitted and reports a reference the base does not ship, so it must run after
         // any seam that re-points such a reference, or it reports the very sites the next phase

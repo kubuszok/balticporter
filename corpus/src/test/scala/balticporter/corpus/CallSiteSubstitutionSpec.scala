@@ -220,7 +220,10 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
     // two DECLARATIONS use the callee (`byValue` once, `twice` twice) — never one row per site
     assertEquals(ds.map(_.subjectFqn).sorted, List("demo.Store#byValue", "demo.Store#twice"))
     assertEquals(ds.flatMap(_.detail.get("sites")).sorted, List("1", "2"))
-    assert(ds.forall(_.detail.get("key").contains("demo.Bag#remove(Object)")))
+    // the KEY is carried by the REASON and nowhere else — printed in the detail as well, a note
+    // would say the same string twice and read as two facts
+    assert(ds.forall(_.reason.detail.endsWith("demo.Bag#remove(Object)")))
+    assert(!ds.exists(_.detail.contains("key")))
     assert(ds.forall(_.reason.className == "configured"))
     // …and each one is BESIDE the code, because a substituted call may have no resemblance to the
     // Java the source map points at (§4.575)

@@ -256,16 +256,17 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
             kind       = Decision.Kind.SubstitutedCall,
             subject    = encl,
             subjectFqn = Decision.fqnOf(program, encl, calleeFqn),
+            // The KEY is NOT repeated here: `Reason.Configured` already carries it, and
+            // `PorterNote.pairs` renders the classification first — a `key=` in the detail as well
+            // prints the same string twice in one note, which reads as two facts.
             detail     = Map(
-              "callee"  -> b.key,
-              "sites"   -> rewritten(encl).toString,
-              "to"      -> calls(b.key),
-              "key"     -> b.key,
-              "dropped" -> (if b.dropped then "yes" else "no"),
-              "why"     -> ("the port does not call this member: the call is replaced by " +
+              "sites" -> rewritten(encl).toString,
+              "to"    -> calls(b.key),
+              "why"   -> ("the port does not call this member: the call is replaced by " +
                 "ready-made Scala naming the same receiver and arguments, so everything around it " +
                 "keeps its type and only what runs is this port's rather than upstream's"),
-            ),
+            ) ++ Option.when(b.dropped)("callee" ->
+              "DROPPED by this port's Substitutions.dropMethods — there is no declaration to return to"),
             reason = Reason.Configured(name, b.key),
             origin = origin,
           ))

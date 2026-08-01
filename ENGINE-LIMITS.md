@@ -2596,7 +2596,7 @@ the wrong answer.
 *Fix kind: (a) engine — fixed in `PortMap.of`; `PortMapSpec` pins the renaming case and the
 separator rule.*
 
-### D7. An inherited drop leaves a CALL SITE the engine has no seam for — 1 error
+### D7. An inherited drop leaves a CALL SITE the engine had no seam for — CLOSED; what remains is POLICY
 
 **Title, for renumbering: "an inherited drop leaves a call site the engine has no seam for".**
 
@@ -2619,14 +2619,37 @@ Note the finding IS reported, twice and correctly classified — `RewriteTrace`'
 `Dropped` record both name it with the Java file and line. What is missing is not the diagnosis, it
 is the repair.
 
-The shape of the missing (b): a CALL-SITE substitution keyed like `dropMethods`
-(`owner#name(P1,P2)`) whose replacement text can name the receiver and the arguments — the
-call-level twin of `MethodBodyTransform`'s declaration-level one, and subject to the same rules
-(spliced verbatim, written in the port's FINAL namespace, `SurfacePolicy`-fingerprinted because two
-modules rewriting a shared call differently is drift). Until it exists, a dependent that calls an
-inherited drop from inside a large method has exactly one honest outcome, which is to count it.
+**BUILT — `CallSiteSubstitutionTransform` (DESIGN.md §8.12).** Keyed like `dropMethods`
+(`owner#name(P1,P2)`, overload-exact through `PolicyBinder`), the value an expression template with
+`{recv}` / `{arg0}..{argN}`, spliced as TREES so the package rename and every retyping phase still
+reach the arguments, and `SurfacePolicy`-fingerprinted because two modules rewriting a shared call
+differently is drift. Default-off; an empty map is a no-op.
 
-*Fix kind: (b) — an engine phase that does not exist yet, not a library rule.*
+Two things it took to actually reach the case above, both of which look like details and are the
+entry's whole point:
+
+- **a DROPPED member has no declaration symbol**, so the declaration-side binding answers "bound,
+  nothing to point at" — correct, and useless to a phase that rewrites calls. `bindCallee` takes the
+  symbol the frontend interned from the REFERENCE, which exists for every caller of a dropped
+  member, and suppresses the `SyntheticTarget` refusal on that path only (its structural test cannot
+  tell a reference-side interning from an engine-minted member). Spec'd both ways in
+  `PolicyBinderSpec`, and end to end in `CallSiteSubstitutionSpec`.
+- **ordering is a silent no-op waiting to happen.** A call-site entry placed AFTER a phase that
+  re-points the same callee (`CollectionsTransform`'s statics table maps `Collections.sort`) matches
+  nothing, with every count unchanged. A key that bound and rewrote ZERO sites is therefore its own
+  finding.
+
+**What remains is POLICY, and it is one library's.** The mechanism reaches gdx-gltf's three dead
+`Json` sites — dry-run measured **3/3 bound, 3 sites, 0 policy findings**, at
+`SeparatedDataFileResolver.java:30`, `BinaryDataFileResolver.java:97` and `GLTFExporter.java:241`.
+The entry is NOT enabled, because the other side of it does not exist: the reference hand port
+replaced the reflective path with 2,268 lines of Jsoniter codecs, a decision that port has not made,
+and naming a codec that does not exist would trade three inert calls for three that do not compile.
+`MeshLoader.java:252` (`Array#toArray(Class)`, the original 1-error case) is now reachable by the
+same mechanism and wants the same thing: a replacement expression the port must decide on.
+
+*Fix kind: was (b) with no phase; the phase now exists, and each remaining site is (b) POLICY in
+that library's manifest.*
 ### D8. A TYPE REDIRECT that only rewrites `TypeRepr` is a PARTIAL redirect — and its own contract said that was impossible
 
 `TypeRedirectTransform` is the (b) mechanism a dependent uses for a type it cannot ship and cannot
