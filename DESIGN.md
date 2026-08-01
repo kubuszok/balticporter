@@ -1940,6 +1940,69 @@ implementation, not two; a replay consults `vis` and refuses + counts). D2's six
 D1 are kept unchanged, with the contract *adding* D6's cross-module face as a finding. §5.5's recorded
 hole — *member signatures are not compared* — closes for everything the `sig` row reaches.
 
+#### 8.3 AS BUILT — what landed, and the four places it differs from the design above
+
+Schema 3 ships: `port-map.tsv` carries a ninth column, `shape`, and a sixth header field, `policy=`.
+`Surface` and `Answer` live in `api`; `TrivialSurface` (every unit is mine) is the default every
+non-port caller gets and `PublishedSurface` (`engine/core`) is what a run builds. Two reads are
+migrated — the constructor plan and the class-vs-object question — and the fatal enforcement is live.
+A sample row, verbatim from libGDX core's map:
+
+```
+type	com.badlogic.gdx.assets.loaders.ShaderProgramLoader	sge.assets.loaders.ShaderProgramLoader	Renamed	-		0		companion=yes disambiguator=marker form=class parents=sge.assets.loaders.AsynchronousAssetLoader primary=(FileHandleResolver,String,String,?) primaryKind=synthesised-primary primaryVis=protected secondaries=(FileHandleResolver);(FileHandleResolver,String,String) statics=ShaderProgramParameter
+```
+
+**`Answer.Own` carries NO value**, where §8.3 above sketched `Own(a: A)`. An owned type's shape is
+what this run emits, and most of it — the class-vs-object collapse above all — does not exist until
+the emitter takes the branch that decides it. A view that carried the value would have to pre-compute
+every answer from the same indexes the emitter reads, before emission: a second derivation of exactly
+the thing the view exists to stop being derived twice, and one free to disagree with what was
+written. `Own` says *"you emit this declaration — your own derivation is the answer"*, which is both
+the truth and the only shape that cannot drift.
+
+**`promotedParam` is NOT carried, and the reason is structural.** A member row exists for every
+emitted DECLARATION, and a promoted constructor parameter has none: it *is* the class's parameter
+list, so the source map records no row for it and there is nothing for the key to hang on. `primary=`
+answers the constructor question; the §4.55 clash question stays open until the map carries rows for
+engine-minted members. `Surface.NotCarried` names it in code, because a key silently absent from a
+schema reads as an oversight.
+
+**A §4.55 member rename needed no `upstream`-column repair**, which was built and then deleted as
+inert (§3.10: a gate never observed open cannot be told from a deleted feature). The renaming passes
+rewrite `Symbol.name` and not `Symbol.fullName`, which is a stored field — so the member key the
+source map records already spells Java's name (`…FileHandle#file`, never `#file$field`) and the join
+key was right by construction. The EMITTED name was the half no artifact carried, and it is now
+`shape`'s `name=` on 237 of libGDX core's rows.
+
+**Type rows now cover NESTED types** (libGDX core: 605 units → 983 type rows). Not a tidy-up: a
+dependent extends a base's nested class as readily as its top-level one, and a contract covering only
+units answers `Unknown` for precisely the constructor questions this section exists for.
+
+**An ENUM is excluded from the constructor cross-check**, structurally. `TirEmitter.enumDef` lowers a
+Java enum directly — its primary IS the Java constructor, because every `case object` passes its
+arguments to it — and consults the funnel for nothing, so the funnel's plan for an enum is
+`Plan.none` while the contract row records the constructor's real slots. Comparing them compares two
+derivations. Measured before the exclusion: **5 FATAL cross-check failures on one dependent, every
+one an enum and every one a false alarm.**
+
+**What the wall costs, measured.** gdx-gltf's two remaining wall-class constructor errors
+(`PBRCubemapAttribute`, `PBRTextureAttribute`) **do not resolve with the row seeded, and cannot**:
+the base's row says `CubemapAttribute` has `primary=(long) primaryKind=unique-root` and lists
+`(long,TextureDescriptor)` / `(long,Cubemap)` among its `secondaries`, while both of the dependent
+subclass's roots call exactly those two. A Scala `extends` clause can reach only the PRIMARY, and
+§8.2's synthesis is inadmissible because the roots reach *different* parent constructors. The row
+therefore **confirms the wall rather than removing it** — which is the honest-scope statement above
+arriving at a real site: for this class the contract buys attribution, and the repair it would need
+is a counted refusal (M6/C3), not a seeded plan. Errors 7 → 7; the nine member digests that moved are
+those two classes and their constructors, now consistent with what the base published rather than
+with a demoted re-derivation.
+
+**The determinism twin is an emitter over the same program and must be handed the SAME `Surface`.**
+The view is an INPUT to emission — it scopes the funnel's fixpoint — so a twin built without it
+re-derives every base class's primary the pre-§8.3 way. That is not a hypothetical: it fired on the
+first dependent run, on exactly the two units this item fixes, and the determinism gate is what
+caught it.
+
 ### 8.4 Globals → context — replace the core, keep the shell
 
 **Decision.** The existing globals transform's **closure and boundary handling are replaced**; its

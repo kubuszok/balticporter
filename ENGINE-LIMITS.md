@@ -2419,7 +2419,25 @@ Two things that decision cost, and both are worth repeating for the next artifac
   and records its own policy rows afterwards; `detail("own")` already separates declared-here from
   inherited.
 
-*Fix kind: (a) engine.*
+**The substrate was wrong, and that is why the family kept recurring.** `Program.owned` roots its
+climb on `program.units` — ALL of them, the base's included — so it is a *program-vs-JDK* filter, not
+a *mine-vs-base* filter, and in a dependent it answers `true` for every base symbol. It is exactly
+right for what it is asked there (a rename must not rewrite the JDK; a `RuleScope` entry naming an
+external type did not fire), and it is not the predicate any of the instances above needed. The five
+real mine-vs-base filters were **six independent copies** of a fuel-bounded climb, all on the
+reporting side, none on the rewriting side, with different failure directions.
+
+`balticporter.tir.Surface.owns` (`api`) is now the one climb, and the failure direction is named
+once: **exhausting the fuel counts as NOT owned**, so the run asks the base's published contract and
+gets an honest `Unknown` rather than deciding on a guess. `PortRun` builds it from the same realpathed
+`partitionUnits` split every other owner question uses (§5.4), and the reporting-side filters keep
+their current semantics. The reason it had to be a VIEW and not a check is D4's own record: nothing
+in a dependent's run disagrees with itself, so a check comparing recomputed answers has nothing to
+compare against.
+
+*Fix kind: (a) engine. The reporting filters landed per instance; the predicate under them is now one
+value (`Surface`), and the rewriting side — where none of the six copies reached — is `CtorFunnel`'s
+fixpoint under D4.*
 
 ### D3. A `<synthetic>` origin is not a file — exclude it from any source fingerprint
 
@@ -2479,14 +2497,31 @@ answer. Do not go looking for a bug in `plan0`.
 **Do not "fix" it by refusing the withholding** — that is C1 exactly (+14 on libGDX), and it would
 break the dependent's own subclasses instead.
 
-The shape of a real fix: a class the run does not EMIT must have its plan READ, not recomputed —
-from the base's published port map, which is already the channel for "what did the base actually
-do" and already carries per-member records. That requires the map to carry each type's primary
-parameter list, and `Plans` to seed itself from it for every non-owned class. Neither exists.
-`Plans` does not currently know which classes the run owns at all, which is the same missing input
-D5 needs.
+**CLOSED for the fixpoint, and the residue is a different limit.** Port-map schema 3 carries
+`primary=` / `primaryKind=` / `primaryVis=` for every emitted type, `Surface` (`api`) answers
+mine-vs-base structurally, and `CtorFunnel.Plans` now runs its withholding fixpoint over the run's
+OWN classes only — both the demand set and the demotion target. A non-owned class is reconciled
+against the published row, in ONE implementation split by a provable property rather than a
+heuristic: the fixpoint's predicate is `paramfulPrimary && needNilary && !reachableArgumentFree` and
+adding units can only GROW `needNilary`, so a class failing the first or third conjunct is INVARIANT
+under extra subclasses (its local derivation *is* the base's answer, and the row is a cross-check
+whose disagreement is FATAL as an engine bug), while a class satisfying both is a WALL whose answer
+is a function of its subclasses (there is nothing to derive; the row is load-bearing and is read).
 
-*Fix kind: (a) engine — and it is the largest one a dependent port has surfaced.*
+`BaseSurfaceSpec` pins both directions, including the pre-D1 behaviour as a falsifier: with the whole
+program as the surface the fixpoint demotes the base's `Base(int n)` to nilary; with the view it does
+not, and an owned class is still demoted.
+
+**What is NOT closed, measured on the same port.** gdx-gltf's `PBRCubemapAttribute` and
+`PBRTextureAttribute` are still 2 errors, and the seeded row does not and cannot remove them: the
+base publishes `CubemapAttribute` as `primary=(long) primaryKind=unique-root` with
+`(long,TextureDescriptor)` and `(long,Cubemap)` among its `secondaries`, and both of the dependent's
+roots call exactly those two. A Scala `extends` clause reaches only the PRIMARY, and §8.2's synthesis
+is inadmissible because the roots reach *different* parent constructors. **The row confirms the wall
+rather than removing it.** That residue is C3's shape, not D4's — the honest outcome is a counted
+refusal, not a plan — and it must not be re-attempted as a seeding problem.
+
+*Fix kind: (a) engine. Landed for the fixpoint; the wall residue is C3.*
 
 ### D5. A REPLAY may not widen a `private` member the run does not EMIT — 4 errors
 
@@ -2510,9 +2545,15 @@ emitted Scala, because libGDX itself never replays it and so never widened it. *
 
 M6's answer applies unchanged: where the widening cannot be performed, REFUSE the replay and count
 the omission. `super(args)` is then dropped, which `OmissionCheck` already reports (C3), and the
-port compiles with a known, named divergence instead of failing. The missing input is the same one
-D4 needs — `Plans` has no notion of which classes this run EMITS, only of which are in the
-`Program`.
+port compiles with a known, named divergence instead of failing.
+
+**Both missing inputs now EXIST and nothing reads them yet — 4 errors, unchanged.** `Plans` knows
+which classes this run emits (`Surface.owns`, D4), and port-map schema 3 publishes `vis=` on every
+member row, so *"may a replay reach this base member?"* is a lookup rather than a re-derivation over
+the dependent's own symbol table. `replayFor` still consults `widenedMembers` and
+`TirEmitter.widen` still drops `private` from the flags of a class this run does not emit. The
+remaining work is one commit and it must not be measured together with D4's (`.balticporter/CHUNK3.md`
+sequences them).
 
 Note the asymmetry that makes this invisible from the base: the base cannot widen speculatively (it
 has no way to know a future dependent will replay), and the dependent cannot widen at all. Only the
@@ -2558,8 +2599,23 @@ declares nothing) — libGDX core moves **0 members** and gdx-gltf's 5 errors go
 candidate's own owner chain either way, or every class names itself and the collapse is disabled
 outright.
 
+**The CROSS-MODULE face is a fifth way, and it has no local repair.** The four positions above are
+what THIS run does with a name, and `typeNamedElsewhere` is right about them. The other direction is
+a base that collapsed a class and a DEPENDENT that names it as a type: the base's own run cannot see
+it (it has 31 and names none of them), and the dependent's recomputation cannot either, because the
+dependent does not emit the base and never takes the collapse branch. Port-map schema 3's `form=`
+answers it — `members.tsv` records `sge.utils.Align`'s kind as `class` while it emits as
+`object Align` — and `TirEmitter.surfaceGaps` reports it, ATTRIBUTED to the base and **not fatal**:
+the base is emitted and gone, nothing this module does makes the type a type again, and the fix is
+in the base's repository or in this module's use of the name. That smaller claim is the whole
+content of §8.3's honest-scope statement, and §4.45 measures a check by exactly that difference —
+a bare "type Align is not a member of sge.utils" becomes a finding naming the module that must
+change. **Measured 0 across the corpus today**, which is D6's own observation restated: libGDX has
+31 bare objects and no dependent names one as a type. `BaseSurfaceSpec` pins both directions.
+
 *Fix kind: (a) engine — fixed in `TirEmitter.typeNamedElsewhere`; `AllStaticClassAsTypeSpec` pins
-both directions INCLUDING the static-access negative.*
+both directions INCLUDING the static-access negative. The cross-module face is `TirEmitter.surfaceGaps`
+over `Surface.typeShape`, and is attribution, not repair.*
 
 ### D6.5. A drop and its INJECTION are in different namespaces, so nothing paired them — 10 false findings
 

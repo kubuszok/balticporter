@@ -1318,9 +1318,22 @@ suite of zero.
 
 | errors | site | classification |
 |---|---|---|
-| ~~3~~ **2** | ~~`ClippingPlaneAttribute`,~~ `PBRCubemapAttribute`, `PBRTextureAttribute` — `extends CubemapAttribute` / `extends TextureAttribute` with no arguments | **D4**, (a) engine |
+| ~~3~~ **2** | ~~`ClippingPlaneAttribute`,~~ `PBRCubemapAttribute`, `PBRTextureAttribute` — `extends CubemapAttribute` / `extends TextureAttribute` with no arguments | ~~**D4**~~ **C3**, (a) engine — see below |
 | 4 | `ModelInstanceHack` — `this.copyNodes(…)`, `private` in libGDX's emitted `ModelInstance` | **D5**, (a) engine |
 | 1 | `MeshLoader.java:252` — `vertexAttributes.toArray(VertexAttribute.class)`, a member the base drops | **D7**, (b) a phase that does not exist |
+
+**The remaining 2 are NOT D4, and the base-surface contract is what proves it — 7 -> 7.** With
+schema 3's `primary=` rows published and the funnel's fixpoint scoped to this run's own classes
+(`DESIGN.md` §8.3), gdx-gltf reports **0 unanswered contract questions**: every base class's plan
+this run derives now agrees with the row libGDX core published, cross-checked, and 9 member digests
+moved to match. The two errors survive that unchanged, and the row says precisely why:
+`CubemapAttribute` is published `primary=(long) primaryKind=unique-root primaryVis=public` with
+`(long,TextureDescriptor)` and `(long,Cubemap)` among its `secondaries`, and both of
+`PBRCubemapAttribute`'s roots call exactly those two. **A Scala `extends` clause reaches only the
+PRIMARY**, and §8.2's synthesis is inadmissible for this class because its roots reach *different*
+parent constructors. The contract therefore **confirms the wall rather than removing it** — the
+honest outcome is a counted refusal (C3/M6), not a seeded plan, and it must not be re-attempted as a
+seeding problem. This is §8.3's honest-scope statement arriving at a real site.
 
 **8 -> 7: one of the D4 trio is fixed, and WHICH one says exactly what is left.**
 `ClippingPlaneAttribute`'s two roots both call `super(Type)` — the SAME parent constructor — so
@@ -2037,6 +2050,44 @@ corpus package is named that, which is exactly why nothing would ever have repor
 the two ends of one join in the EMITTED namespace and did NOT move (see `ENGINE-LIMITS.md` D1 and
 DESIGN.md §8.1). Moving both together re-publishes every `port-map.tsv` and is its own measured
 commit; until then D1's 8-finding arity residue stands, scoped to that join.
+
+### 11.10b D1 — the published base surface, as measured
+
+`DESIGN.md` §8.3 (and its AS BUILT subsection). Landed as one piece because the schema must not
+change twice: the `shape` column and the header's `policy=` fingerprint ship together, the `Surface`
+view lands with them, and two of the nine drift sites are migrated onto it.
+
+**The measurements, and what each one settles:**
+
+| | measured |
+|---|---|
+| every lane's `members.tsv` except gdx-gltf's | **0 members changed** — the contract is WRITTEN in this work and read at only two sites, so emitted text must be byte-identical everywhere the two reads do not bite |
+| gdx-gltf | **9 members moved**, all of them `PBRCubemapAttribute` / `PBRTextureAttribute` and their constructors — the two classes whose parent's plan the fixpoint used to demote. Errors **7 -> 7** |
+| every check count, every lane | identical |
+| libGDX core's map | 605 units -> **983 type rows** (nested types now carried), 18620 member rows, **237** of them publishing an emitted `name=` that existed in no artifact before |
+| gdx-gltf, ashley | **0** unanswered contract questions, so every base plan this run derives agrees with the row the base published |
+| D6's cross-module face | **0** across the corpus, which is D6's own observation restated: libGDX emits 31 bare objects and no dependent names one as a type |
+
+**Three things fired that nothing else in the pipeline could have seen**, and each is the mechanism
+working rather than a surprise:
+
+- **5 FATAL cross-check failures on the first dependent run, every one an ENUM and every one false.**
+  `TirEmitter.enumDef` lowers a Java enum directly and consults the funnel for nothing, so the plan
+  is `Plan.none` while the row records the constructor's real slots — two derivations compared.
+  Excluded structurally; recorded in `DESIGN.md` §8.3 AS BUILT.
+- **A determinism violation on exactly the two gltf wall classes.** The `Determinism.Emission` twin
+  was built without the `Surface`, so it re-derived every base primary the pre-§8.3 way. The view is
+  an INPUT to emission, not a report about it, and the determinism gate is what said so.
+- **The `unrename` of a member name was built and measured INERT**, then deleted (§3.10). The §4.55
+  passes rewrite `Symbol.name` and not `Symbol.fullName`, so the map's join key was already right;
+  the EMITTED name was the missing half.
+
+**What this does NOT close, stated rather than implied.** gdx-gltf's two wall-class errors survive
+the seeding and cannot be removed by it — see §8.4, where the published row is quoted and the reason
+is that a Scala `extends` clause reaches only the primary. D5's `vis=` row now exists on every member
+and nothing reads it (4 errors). Seven of the nine drift sites are still bare `program.units` scans,
+each correct for the subjects the emitter renders and wrong only as an answer about a base type; the
+four latent behind default-off phases are the ordering constraint on Stage P5/P6.
 
 ### 11.11 M2 — `OverrideGraph`, `MemberRenamer`, `bean-properties`, as measured
 
