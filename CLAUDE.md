@@ -325,18 +325,21 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   `set -e` to a lane**: `grep -c` exits 1 when it counts zero, and counting zero errors is the
   success case, so a lane under `set -e` aborts exactly when the port is green.
 
-  Each prints, untruncated and diffed against the committed baseline, **nineteen engine checks —
-  not four — plus any check the port's own §1(c) rules register** (libGDX adds
-  `gdx-shared-iterator`, so its lanes show twenty). Fifteen are required of every run
-  (`signature`, `omissions`, `portability(all|emitted|injected)`,
-  `substitution(emitted|dangling)`, `remediation`, `policy`, `manifest`, `port-map`,
-  `trivia(|recovered|deliberate)`, `jdk-surface`). The trivia family is three lanes and all three
+  Each prints, untruncated and diffed against the committed baseline, **every engine check the
+  run's own pipeline registers — twenty rows on libgdx-core today, not four — plus any check the
+  port's own §1(c) rules register** (libGDX adds `gdx-shared-iterator`, so its lanes show
+  twenty-one). The total is not a constant to memorise — quoting one is what went stale twice; it
+  is the FIFTEEN required of every run (`signature`, `omissions`,
+  `portability(all|emitted|injected)`, `substitution(emitted|dangling)`, `remediation`, `policy`,
+  `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`) plus whatever the RUN'S
+  OWN PIPELINE registers. The trivia family is three lanes and all three
   are required, because `lost = 0` is the bar and a run could hold it by RECOVERING everything —
   `recovered` is a counted residue and `deliberate` is derived from the port's own drops, so
   reporting the bar without them says nothing about how it was met;
-  `porter-notes` records on every run, and
+  `porter-notes` records on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget` record when
-  `CollectionsTransform` is in the pipeline. **A retype has TWO directions and a subtyping argument
+  `CollectionsTransform` is in the pipeline, and `nullability-boundary` when
+  `NullabilityTransform` is. **A retype has TWO directions and a subtyping argument
   licenses only one of them**: `collection-retarget` counts the other — every value the JDK
   PRODUCES at a type the port retargets, which the boundary check cannot see, because the
   position-blind retyping moved the node type on both sides of that slot. `PortRun.RequiredChecks` is asserted against what
