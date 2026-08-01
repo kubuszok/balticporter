@@ -1892,7 +1892,7 @@ one and retyping the other is `T | Null` into `T`.
 
 One thing that shape does NOT record, and it is a provenance gap rather than a limit: a scope entry
 that holds back only a PARAMETER produces no `decisions.tsv` row and no porter note, because
-`NullabilityTransform.scopedOut` skips a param and does not attribute to its method (PROGRESS §7.1).
+`NullabilityTransform.scopedOut` skips a param and does not attribute to its method (PROGRESS §12.1).
 
 *Fix kind: (b) per-library policy — the engine's part is the number.*
 

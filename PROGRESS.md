@@ -2656,7 +2656,7 @@ classes changed their emitted declaration line with nothing in `decisions.tsv` �
 `SceneRenderableSorter` (gltf), `PrioritizedArray$WrapperComparator` (vfx). It is why `gltf`,
 `gltf-test`, `libgdx-test` and `ashley-test` each moved members with **zero** `Configured` rows.
 The emitted code is correct; the PROVENANCE is incomplete, and it is the same class of hole as the
-two already listed in §7.1, where it now sits.
+two already listed in §12.1, where it now sits.
 
 **The PRODUCER direction was uncounted, and is now a check that reads 0** (checkpoint-4 audit;
 `ENGINE-LIMITS.md` K14). The `collection-boundary 0` in the table above is honest and it is also
@@ -3174,11 +3174,49 @@ meaningful against Java the reader does not have (which is exactly the asymmetry
 `porter-notes` stays **0** on every port, which is the check confirming the other half: 202 new
 decisions, 202 new notes, none orphaned in either direction. Seven baselines promoted.
 
+### 11.23 Checkpoint-4 audit remediation — F5: the small ones, and the spec that came back clean
+
+Docs, cross-references and one spec; no engine behaviour, 0 members changed on every port, every
+check count identical.
+
+**The MemberKey collision is NOT real, and the spec that says so is the deliverable.** The hazard the
+audit named is plausible: `Descriptor.Param.Unresolved` renders `?`, `Descriptor.ofInfo` cannot spell
+a `TypeRepr.OrType`, and the union floor turns `m(String)` into `m(String | Null)` — so two overloads
+differing only in a nullable-retyped parameter could both key as `Holder#m(?)`, one key naming two
+members. `NullabilityMemberKeySpec` pins that it does not, and pins BOTH reasons rather than one,
+because either alone would be a coincidence a later change could withdraw: `Symbol.descriptor` is
+recorded by the FRONTEND from the java signature and no phase rewrites it, so a retyped member keeps
+the key its java always had; and the engine's fallback REFUSES rather than guessing —
+`Descriptor.total` is all of the parameters or none, so an unspellable slot yields NO descriptor
+rather than a `?` that collides. **Verdict: no defect.**
+
+**§12's subsections were numbered `7.1`–`7.5`, colliding with anim8's own `7.1`–`7.8`** — so a
+reference to "§7.1" named two different lists, and three of them pointed at the wrong one. Renumbered
+`12.1`–`12.5`; anim8's untouched. The three cross-references the audit named now resolve:
+`ENGINE-LIMITS.md` K13's tail -> §12.1 (the scoped-out-parameter row, which still exists);
+`Decision.detail`'s scaladoc and `PorterNote.pairs`' -> §12.4, because the row they cited (the
+duplicate `key=` rendering) was DELETED by `b2c27684` when the three phases were fixed, and §12.4's
+"drop notes print `key=` twice" is the surviving half of the same defect, in `PortRun`'s three loops.
+
+**`DESIGN.md` §8.13** now states that per-module scope DIRECTIONS are inexpressible in one merged
+instance — one instance carries one `RuleScope`, a `RuleScope` carries one direction, and a merge
+that kept both would have to be two instances, which is the `SurfaceDivergence` the fold removes — so
+P5/P6 do not re-litigate the `Everywhere` × `Only` refusal.
+
+**NOT DONE, deliberately: `CLAUDE.md` §5's check-count sentence.** It reads "nineteen engine checks …
+so its lanes show twenty" and the libgdx-core baseline now carries **21** rows, of which 20 are the
+engine's. The correction is stated in this delivery's report for a human to apply; an agent does not
+edit its own operating instructions on another agent's say-so. The sentence should also stop quoting
+a constant and state the MECHANISM — the fifteen `PortRun.RequiredChecks` rows plus every check the
+run's own pipeline registers (`porter-notes` always, the three `collection-*` with
+`CollectionsTransform`, `nullability-boundary` with `NullabilityTransform`) — because a number in
+prose is what went stale, twice.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
 
-### 7.1 Provenance coverage — decisions that are not yet recorded
+### 12.1 Provenance coverage — decisions that are not yet recorded
 
 - **`TestFrameworkTransform`'s synthesised `beforeAll`/`afterAll` record no decision.** They are
   definitions with no Java behind them, which is precisely the case a reader cannot explain from the
@@ -3223,13 +3261,13 @@ Maintained by deletion. Items are ordered by what they block, not by size.
   and is false for a SYNTHESIS, which is what the funnel now does for most multi-constructor
   classes. See §7's A2 section.)
 
-### 7.2 Control flow
+### 12.2 Control flow
 
 - **`labelSeq` is program-global**, so a control-flow diff is never file-local: emitting one new
   boundary shifts every subsequent label name. Nothing is wrong with the output; the *diff* is
   unreadable, which is a measurement cost (`CLAUDE.md` §5).
 
-### 7.3 Counted residues that are not defects
+### 12.3 Counted residues that are not defects
 
 - **Trivia `lost` is 0 on every port** (D4t, below). What remains counted is `trivia(recovered)` —
   comments the attachment channel could not place and the backstop relocated with their java
@@ -3243,7 +3281,7 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 - **`Collectors.toSet` / `toMap` deliberately unmapped** (`ENGINE-LIMITS.md` K6): each needs a different
   target type, and both a copy and the identity compile while being wrong.
 
-### 7.4 Cosmetic
+### 12.4 Cosmetic
 
 - **Drop notes print `key=` twice** — the last decider still restating what `Reason.Configured`
   already carries (`Decision.detail`'s own scaladoc now forbids it, and the three phases that did it
@@ -3252,7 +3290,7 @@ Maintained by deletion. Items are ordered by what they block, not by size.
   is emitted-type bodies plus the injected files' prepended headers — 16 + 12 notes on libGDX core
   alone, which is why it did not travel with the phase fix.
 
-### 7.5 Not run
+### 12.5 Not run
 
 - **The Auditor has not run over this delivery.** It is expensive (Fable 5) and the **user** runs it,
   once a whole piece of work is delivered (`CLAUDE.md` §4).

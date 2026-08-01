@@ -3357,6 +3357,12 @@ literally. A base `Everywhere` and a dependent `Only` **refuse**: `Only` says as
 OMITS as by what it lists, so no entry set preserves both — and that includes the DEFAULT
 `Everywhere(Set.empty)`, because "the whole program" is a direction and not the absence of one.
 
+**PER-MODULE scope DIRECTIONS are inexpressible in one merged instance, and the refusal is the honest
+rendering rather than a limitation to be worked around** — one instance carries one `RuleScope`, a
+`RuleScope` carries one direction, and a "merge" that kept both would have to be two instances, which
+is precisely the `SurfaceDivergence` the fold exists to remove. **P5/P6 must not re-litigate this**:
+a module that needs the other direction spells its base's scope the way its base spells it.
+
 **Its `subjects` are the annotation FQNs AND the scope entries**, on the trait's own instruction to
 over-approximate. The scope half is the one that carries the failure: a dependent that scopes out a
 type its BASE emits leaves its own overrides of that type's annotated members holding the upstream

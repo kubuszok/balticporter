@@ -142,7 +142,8 @@ object PorterNote:
     * '''The two are CONCATENATED, not reconciled, and that is the decider's obligation rather than
     * this function's.''' A `Reason.Configured` contributes `key=`; a decider that puts the same
     * string in `detail` gets `key=… key=…` in the comment beside the code, which is what three
-    * phases shipped (PROGRESS §7.1). Deduplicating here would be the wrong layer twice over: it
+    * phases shipped and what `PortRun`'s three drop loops still do (PROGRESS §12.4). Deduplicating
+    * here would be the wrong layer twice over: it
     * would leave `decisions.tsv`'s `detail` column restating its own `reason` column — the same
     * redundancy, in the artifact this function never touches — and it would silently swallow a
     * `key` a future decider means as something OTHER than the classification's. So [[Decision]]'s
