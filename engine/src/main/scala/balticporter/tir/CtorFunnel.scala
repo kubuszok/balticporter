@@ -1146,9 +1146,16 @@ object CtorFunnel:
 
   /** statements of a constructor body, block or not. */
   def stmtsOf(d: Tree.DefDef): List[Statement] = d.rhs match
-    case Some(Tree.Block(s, _, _, _)) => s
-    case Some(t)                      => List(t)
-    case None                         => Nil
+    case Some(b: Tree.Block) => b.stats
+    case Some(t)             => List(t)
+    case None                => Nil
+
+  /** …and the comments written at the END of that body, which [[stmtsOf]] by construction cannot
+    * carry. Every caller that rebuilds a constructor's braces from the statement list has to place
+    * these itself; a caller that renders the body TERM gets them from the emitter's `block`. */
+  def trailingOf(d: Tree.DefDef): List[Trivia] = d.rhs match
+    case Some(b: Tree.Block) => b.trailing
+    case _                   => Nil
 
   /** The FIRST statement of a constructor body, seen THROUGH any comment written above it.
     *

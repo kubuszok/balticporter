@@ -321,7 +321,22 @@ object Tree:
   final case class Apply(fun: Term, args: List[Term], method: SymId, tpe: TypeRepr, origin: Origin) extends Term
   final case class TypeApply(fun: Term, targs: List[TypeTree], tpe: TypeRepr, origin: Origin)       extends Term
   final case class Assign(lhs: Term, rhs: Term, tpe: TypeRepr, origin: Origin)          extends Term
-  final case class Block(stats: List[Statement], expr: Term, tpe: TypeRepr, origin: Origin) extends Term
+  /** @param trailing
+    *   comments written at the END of the block, after the last statement — the one comment
+    *   position java has and the TIR had no carrier for.
+    *
+    *   A frontend folds a comment onto the statement that FOLLOWS it; a comment with nothing
+    *   after it therefore had nowhere to go, and was dropped after being claimed — which put it
+    *   beyond every coarser harvest too. It is not a rare shape: an empty override body whose
+    *   whole content is `// Do nothing by default.`, commented-out code at the tail of a method,
+    *   and a switch arm whose comment became trailing the moment the case-terminator `break` was
+    *   filtered out (CLAUDE.md §4.4) are all this.
+    *
+    *   A slot here places them EXACTLY, because end-of-block is precisely where java had them —
+    *   no hoisting to a surviving node, which `ENGINE-LIMITS.md` V1 refuses for the right reason
+    *   (a comment printed above a member says something false about it). */
+  final case class Block(stats: List[Statement], expr: Term, tpe: TypeRepr, origin: Origin,
+                         trailing: List[Trivia] = Nil) extends Term
   /** anonymous function (`reflect.Closure`/`Block(DefDef,Closure)` simplified). */
   final case class Lambda(params: List[ValDef], body: Term, tpe: TypeRepr, origin: Origin) extends Term
   final case class If(cond: Term, thenp: Term, elsep: Term, tpe: TypeRepr, origin: Origin) extends Term

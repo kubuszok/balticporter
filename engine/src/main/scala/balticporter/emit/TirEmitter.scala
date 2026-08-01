@@ -1549,7 +1549,7 @@ final class TirEmitter(
     // the emitted class, not off `Plan.primaryParams`, which a synthesised primary leaves empty.
     def degenerate(d: Tree.DefDef): Boolean =
       !paramfulPrimary && d.paramss.flatten.isEmpty && (d.rhs match
-        case Some(Tree.Block(stats, _, _, _)) =>
+        case Some(Tree.Block(stats, _, _, _, _)) =>
           stats.forall {
             case t: Term => Tree.uncomment(t) match
               case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) => sym(m).name == "<init>"
@@ -2064,7 +2064,7 @@ final class TirEmitter(
     // synthetic `throw` after it is reached on every exit.
     case Tree.While(Tree.Literal(Constant.BoolC(true), _, _), b, _, _, _) => !breaksOut(b)
     case Tree.For(_, None, b, _, _, _, _)                                 => !breaksOut(b)
-    case Tree.Block(stats, e, _, _) =>
+    case Tree.Block(stats, e, _, _, _) =>
       endsInInfiniteLoop(e) || (e match {
         case Tree.Literal(Constant.UnitC, _, _) => stats.lastOption.collect { case x: Term => x }.exists(endsInInfiniteLoop)
         case _ => false
@@ -2120,7 +2120,11 @@ final class TirEmitter(
     val body  = currentClass.flatMap(plans.residualBody(_, cdef)).getOrElse(rest)
     val carried = (if rest eq stats then Nil else headTrivia) ++ eatenTrivia
     val head  = leading(carried, i + 1) + ind(i + 1) + deleg
-    val lines = head :: (replay ++ body).map(stat(_, i + 1)).filter(_.trim.nonEmpty)
+    // …and the block's END-OF-BODY comments, which this rendering has to carry itself: it
+    // reconstructs the braces from `stmtsOf`'s statement LIST rather than rendering the body
+    // `Tree.Block`, so the slot on the block reaches no other path from here.
+    val trail = CtorFunnel.trailingOf(cdef).map(triviaText(_, i + 1))
+    val lines = (head :: (replay ++ body).map(stat(_, i + 1)).filter(_.trim.nonEmpty)) ++ trail
     s"{\n${joinStats(lines)}\n${ind(i)}}"
 
   /** A secondary constructor's `super(args)` — which scala cannot write — expressed as a
@@ -2432,7 +2436,7 @@ final class TirEmitter(
     case Tree.Apply(fun, args, _, _, _) => applyStr(fun, args, i)
     case Tree.TypeApply(fun, targs, _, _) => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
     case Tree.Assign(l, r, _, _)        => s"${term(l, i)} = ${term(r, i)}"
-    case Tree.Block(stats, expr, _, _)  => block(stats, expr, i)
+    case Tree.Block(stats, expr, _, _, tr) => block(stats, expr, tr, i)
     case Tree.Lambda(ps, body, _, _)    =>
       val head = s"(${ps.map(param).mkString(", ")}) => "
       // A java LAMBDA BODY IS A METHOD BODY, so `return` is legal in it and means "leave the
@@ -2782,12 +2786,13 @@ final class TirEmitter(
     case _: Tree.Typed | _: Tree.Assign | _: Tree.InstanceOf => s"(${term(t, i)})"
     case _                                                   => operand(t, i)
 
-  private def block(stats: List[Statement], expr: Term, i: Int): String =
+  private def block(stats: List[Statement], expr: Term, trailing: List[Trivia], i: Int): String =
     // drop a redundant trailing `()` when the block already has statements (Java void bodies).
     val tail = expr match
       case Tree.Literal(Constant.UnitC, _, _) if stats.nonEmpty => Nil
       case _                                                    => List(ind(i + 1) + term(expr, i + 1))
-    val lines = (stats.map(stat(_, i + 1)) ++ tail).filter(_.trim.nonEmpty)
+    val lines = (stats.map(stat(_, i + 1)) ++ tail).filter(_.trim.nonEmpty) ++
+                trailing.map(triviaText(_, i + 1))
     s"{\n${joinStats(lines)}\n${ind(i)}}"
 
   /** join block statements, terminating one with `;` when the NEXT begins with `{` — otherwise

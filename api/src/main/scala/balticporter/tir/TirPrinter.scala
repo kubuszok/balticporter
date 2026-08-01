@@ -274,6 +274,10 @@ object TirPrinter:
       line(sb, indent, s"Block${ofType(x.tpe, style)}${origin(x.origin, style)}")
       group(sb, indent + 1, "stats", x.stats.map(y => y: Tree), style)
       sub(sb, indent + 1, "expr", x.expr, style)
+      // …and the block's END-OF-BODY comments, under the same rule as every other trivia field:
+      // elided by `canonical` (no phase reads a comment) and carried by `digest`, which keys the
+      // action cache on EMITTED TEXT and would otherwise re-serve a file without them (V2).
+      trivia(sb, indent + 1, "trailing", x.trailing, style)
     case x: Tree.Lambda =>
       line(sb, indent, s"Lambda${ofType(x.tpe, style)}${origin(x.origin, style)}")
       group(sb, indent + 1, "params", x.params.map(y => y: Tree), style)

@@ -1669,8 +1669,17 @@ object SpoonTir:
         }
 
       /** entry: a method/ctor block → a TIR `Block` (statements, Unit result). */
-      def methodBody(b: CtBlock[?]): Term =
-        Tree.Block(stmts(b.getStatements.asScala.toList), unit(b), unitT, originOf(b))
+      def methodBody(b: CtBlock[?]): Term = blockOf(b.getStatements.asScala.toList, b)
+
+      /** a statement list and the element it came from → a TIR `Block`, with whatever comments
+        * were written after the last statement kept in the block's `trailing` slot.
+        *
+        * The ONE place a `Tree.Block` is built out of `stmts`: the leftover was previously dropped
+        * at each of the three call sites independently, which is exactly the shape that makes a
+        * fix land in two of them. */
+      private def blockOf(ss: List[CtStatement], el: CtElement): Tree.Block =
+        val (sts, trail) = stmts(ss)
+        Tree.Block(sts, unit(el), unitT, originOf(el), trail)
 
       // ---- statement trivia ---------------------------------------------------
       //
@@ -1682,12 +1691,19 @@ object SpoonTir:
       // Run (3) before (2) and a comment inside an `if`'s then-branch lands above the `if`.
       //
       // A comment with nothing after it inside a block (a trailing `// TODO`) is attached by Spoon
-      // as a STATEMENT of its own; it is carried as `pending` onto the next statement, or dropped
-      // when there is none — the TIR has no empty statement and inventing one would emit a
-      // spurious `()`.
+      // as a STATEMENT of its own, so it is carried as `pending` onto the next statement — and
+      // where there is none it used to be DISCARDED. It had already been CLAIMED by then, so no
+      // coarser harvest could recover it either: claim-then-drop, and the single largest category
+      // of comment this port lost. `Tree.Block.trailing` is where it goes now, which places it
+      // exactly where java wrote it and needs no fallback (see that field's doc).
 
-      /** translate a statement list, folding comment-statements into the statement that follows. */
-      private def stmts(ss: List[CtStatement]): List[Statement] =
+      /** Translate a statement list, folding comment-statements into the statement that follows.
+        *
+        * The second half of the pair is what is LEFT when the list ends on comments — the block's
+        * `trailing`. Returned rather than attached here, because a statement list is not always a
+        * block (a `case` arm's is one, a single-statement body's is not) and the caller is the one
+        * that knows which node carries it. */
+      private def stmts(ss: List[CtStatement]): (List[Statement], List[Trivia]) =
         val out     = List.newBuilder[Statement]
         var pending = List.empty[Trivia]
         ss.foreach {
@@ -1696,7 +1712,7 @@ object SpoonTir:
             out += withTrivia(pending, s)
             pending = Nil
         }
-        out.result()
+        (out.result(), pending)
 
       /** one statement, with `pending` plus its own plus its subtree's leftovers attached. */
       private def withTrivia(pending: List[Trivia], s: CtStatement): Statement =
@@ -1707,10 +1723,15 @@ object SpoonTir:
         else
           k match
             // a local variable declaration has a `leading` field of its own — no wrapper needed,
-            // and none wanted: `Tree.Commented` is a TERM and a `ValDef` is not.
-            case v: Tree.ValDef => v.copy(leading = all ++ v.leading)
-            case t: Term        => TirTrace.mint(Tree.Commented(all, t))
-            case other          => other
+            // and none wanted: `Tree.Commented` is a TERM and a `ValDef` is not. Same for the two
+            // other DECLARATIONS a java block can hold: a local class and (through a lowering) a
+            // local `def`, both of which have the field and neither of which is a `Term`, so the
+            // wrapper cannot reach them and `case other => other` was dropping the comment.
+            case v: Tree.ValDef   => v.copy(leading = all ++ v.leading)
+            case c: Tree.ClassDef => c.copy(leading = all ++ c.leading)
+            case d: Tree.DefDef   => d.copy(leading = all ++ d.leading)
+            case t: Term          => TirTrace.mint(Tree.Commented(all, t))
+            case other            => other
 
       def exprOf(e: CtExpression[?]): Term = expr(e)
       /** translate an initializer, coercing it to `target` (null → type param, narrowing, etc.). */
@@ -1720,7 +1741,7 @@ object SpoonTir:
 
       private def blockTerm(s: CtStatement): Term = s match
         case null          => Tree.Block(Nil, Tree.Literal(Constant.UnitC, unitT, Origin.synthetic), unitT, Origin.synthetic)
-        case b: CtBlock[?] => Tree.Block(stmts(b.getStatements.asScala.toList), unit(b), unitT, originOf(b))
+        case b: CtBlock[?] => blockOf(b.getStatements.asScala.toList, b)
         case single        => Tree.Block(List(withTrivia(Nil, single)), unit(single), unitT, originOf(single))
 
       // ---- statements ----
@@ -2309,7 +2330,11 @@ object SpoonTir:
           val isLast    = idx == cases.length - 1
           if split(idx)._1.isEmpty && stmtsOf(c).isEmpty && !isDefault && !isLast then pending = pending ++ labels
           else
-            out += Tree.CaseDef(pending ++ labels, None, Tree.Block(stmts(closures(idx)), unit(c), unitT, originOf(c)), isDefault)
+            // …through `blockOf`, so an arm that ENDS on a comment keeps it. This is where the
+            // shape is MANUFACTURED as often as it is written: `:2313` deletes the case-terminator
+            // `break`, and a comment written above that break becomes the arm's last statement the
+            // moment it goes.
+            out += Tree.CaseDef(pending ++ labels, None, blockOf(closures(idx), c), isDefault)
             pending = Nil
         }
         // Java's switch with no `default` simply FALLS OUT when nothing matches; scala's `match`

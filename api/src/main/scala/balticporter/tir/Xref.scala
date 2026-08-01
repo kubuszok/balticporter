@@ -128,7 +128,7 @@ object Xref:
       case _: Tree.This | _: Tree.Super     => ()
       case Tree.Typed(expr, tpt, _, _)      => walkTerm(expr); walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)
       case Tree.Assign(lhs, rhs, _, _)      => walkTerm(lhs); walkTerm(rhs)
-      case Tree.Block(stats, expr, _, _)    => stats.foreach(walkStat); walkTerm(expr)
+      case Tree.Block(stats, expr, _, _, _) => stats.foreach(walkStat); walkTerm(expr)
       case Tree.Lambda(params, body, _, _)  => params.foreach(walkValDef); walkTerm(body)
       case Tree.If(c, th, el, _, _)         => walkTerm(c); walkTerm(th); walkTerm(el)
       case Tree.Repeated(elems, _, _)       => elems.foreach(walkTerm)

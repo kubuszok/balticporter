@@ -113,7 +113,7 @@ object FlowPropagation:
       case _                           => scala.None
 
     def walkTerm(t: Term, encl: SymId): Unit = t match
-      case Tree.Block(stats, e, _, _) => stats.foreach(walkStat(_, encl)); walkTerm(e, encl)
+      case Tree.Block(stats, e, _, _, _) => stats.foreach(walkStat(_, encl)); walkTerm(e, encl)
       case Tree.Assign(l, r, _, _) =>
         for a <- refSym(l); b <- refSym(r) do out += ((a, b))
         walkTerm(l, encl); walkTerm(r, encl)
@@ -141,7 +141,7 @@ object FlowPropagation:
     /** references returnable from a method body's TAIL (a bare-expression body, or the last
       * expression of a block), which flow to the method's own symbol exactly as a `return` does. */
     def tailRefs(t: Term): List[SymId] = t match
-      case Tree.Block(_, e, _, _) => tailRefs(e)
+      case Tree.Block(_, e, _, _, _) => tailRefs(e)
       case Tree.If(_, a, b, _, _) => tailRefs(a) ++ tailRefs(b)
       case other                  => refSym(other).toList
 

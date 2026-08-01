@@ -104,14 +104,16 @@ final class MutableParamsTransform extends Phase:
       Tree.ValDef(v.symbol, v.tpt, Some(Tree.Ident(argOf(v.symbol), v.tpt.tpe, o)), o))
     val isCtor = summon[Program].symbolOf(d.symbol).exists(_.name == "<init>")
     val body = d.rhs match
-      case Some(Tree.Block(stats, expr, tp, bo)) =>
+      // `copy`, never a fresh `Tree.Block`: the block carries end-of-body trivia, and a rebuild
+      // from its parts silently drops whatever field the rebuild does not name.
+      case Some(b @ Tree.Block(stats, _, _, _, _)) =>
         // a constructor body must LEAD with `this(...)`/`super(...)` delegation — insert the
         // `var` shadows right AFTER it, not before.
         stats match
           case (deleg @ Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _)) :: rest
               if isCtor && summon[Program].symbolOf(m).exists(_.name == "<init>") =>
-            Tree.Block(deleg :: (prelude ++ rest), expr, tp, bo)
-          case _ => Tree.Block(prelude ++ stats, expr, tp, bo)
+            b.copy(stats = deleg :: (prelude ++ rest))
+          case _ => b.copy(stats = prelude ++ stats)
       case Some(other) => Tree.Block(prelude, other, other.tpe, o)
       case None        => Tree.Block(prelude, Tree.Literal(Constant.UnitC, TypeRepr.NoType, o), TypeRepr.NoType, o)
     d.copy(paramss = paramss2, rhs = Some(body))
