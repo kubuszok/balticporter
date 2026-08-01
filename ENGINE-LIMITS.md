@@ -2769,10 +2769,63 @@ Two rules that fall out:
   Nothing enforces the pairing and nothing can: it is a coherence property of the configuration.
   Measured, not assumed — `TypeRedirectMemberRenameSpec`'s owned-and-parsed case runs a redirect of
   a type the fixture declares and asserts exactly this shape, statics twinned and members renamed,
-  with the orphan declaration still there.
+  with the orphan declaration still there. And confirmed on a real port: Stage P's P1 redirects
+  libGDX's own `Disposable`, and there the paired `dropTypes` entry is the whole of what keeps
+  `sge/utils/Disposable.scala` from shipping beside the 47 types that gain the target as a parent
+  (`PROGRESS.md` §11.15 — measured, then reverted for D9's reason). Nothing would have said so:
+  with the drop omitted that port still compiles at 0 errors and every check reports the same
+  number. Confirming the pairing means reading a port's `dropTypes` against its `redirects` by hand.
 
 *Fix kind: (a) engine — the mechanism was incomplete, not the policy. Done; pinned by
 `TypeRedirectTransformSpec`.*
+
+### D9. A (b) phase configured in a BASE manifest is one no DEPENDENT may ever configure — and adding one to a base that has dependents cannot land. **P1 blocked, 2 ports fatal**
+
+`PortManifest.extendedBy` composes every row §1.5 calls shared, and it composes them two different
+ways. `dropTypes`, `dropMethods` and the rename maps are unioned KEY BY KEY. `surface` is a
+`List[Phase]`, concatenated and deduplicated BY IDENTITY — and a phase's policy is a constructor
+argument, so two instances holding two halves of one table never merge. `ManifestAgreement` then
+fails the run: one phase NAME carrying two fingerprints in one effective pipeline is
+`SurfaceDivergence`, which is fatal.
+
+That check is right and must not be weakened where it stands: it cannot tell two DISJOINT tables
+from two DISAGREEING ones, and the second is exactly the drift §1 exists to stop.
+
+**Both halves are measured, and the second is what makes this an engine gap rather than a manifest
+mistake.** Stage P's P1 adds one `TypeRedirectTransform` (`Disposable -> AutoCloseable`, with
+`dispose -> close`) to the libGDX BASE manifest. Two dependents have declared a
+`TypeRedirectTransform` of their own since the phase was written, neither of which has ever
+overlapped with the base — because the base had none at all:
+
+| what was tried | what the run said |
+|---|---|
+| base gains the phase; ashley keeps `ReflectionPool -> ComponentPool`, screens keeps its ten guacamole entries | **`ashley` 1 fatal `SurfaceDivergence`; `screens` 1 fatal `SurfaceDivergence`.** Emitted code untouched, every other count identical — the manifest check is the only thing that sees it |
+| the escape: the base takes the dependent's entries as a parameter and builds ONE phase (`LibgdxPolicy.core(root, redirects = …)`) | **`ashley`: `BaseMapStale` (`policy fea528bdefdd4235 vs 2f1e063ead131c7d`) → the published map REFUSED → `BASE SURFACE … 926, 309 of them FATAL`.** The dependent is now declaring a base that never ran |
+
+The second row is not a detail of that attempt, it is a PROOF: D1's contract is that the base
+manifest a dependent declares is the base *as the base ran it*, and the base runs ONCE and publishes
+ONE map. N dependents each wanting their own entry cannot all agree with one map. So the base
+manifest is structurally not a home for a dependent's policy, and the dependent's own surface is
+closed by `SurfaceDivergence`. There is no third place.
+
+Note the `.conf` path has the identical hole — `base = "…"` is `base.extendedBy(own)`, and a base
+conf and a dependent conf that both declare `redirects { }` build two instances exactly as the
+Scala path does. This is not a corpus accident.
+
+**Do NOT retry** either row above. And do not reach for the near-misses: renaming the dependent's
+phase (the name is `def name` on a `final class`, and a per-instance name would defeat the drift
+check for real drift); putting the dependents' entries in the base's own table permanently (the base
+would name `de.damios.guacamole.*` and `com.badlogic.ashley.core.ComponentPool`, which is §1
+inverted, and the keys would never fire on the base's own run); `PortManifestConfig.fromPortMap`
+mirroring (a manifest with no `bases` is itself a fatal finding for a run with foreign resolution
+roots).
+
+*Fix kind: (a) engine, and it is a CONTRACT change rather than a condition: `Phase` needs a way to
+say "my policy is a table, merge it with the base's", `PortManifest.effectiveSurface` needs to fold
+same-name phases through it, and `SurfaceDivergence` then fires only where a merge is refused — same
+key, different value. Every parameterised phase has to declare its own answer, because the merge is
+not always a union (an ordered list, a first-match table and a set compose differently). That is a
+mechanism commit with its own default-off gate, and it BLOCKS Stage P's P1 until it lands.*
 
 ---
 

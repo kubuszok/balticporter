@@ -127,6 +127,19 @@ the INJECTION is a build artefact, and exactly one module must ship each replace
 dependent that copied it would emit a second definition of the same FQN. Every check that asks "is
 this replaced?" follows the same line and holds a module to its OWN drops only.
 
+**`surface` is the one inherited row that does NOT compose — and that closes a base manifest to new
+(b) policy once a dependent has any.** `extendedBy` unions the drops and the renames key by key; it
+CONCATENATES the phases and deduplicates them by IDENTITY, and a phase's policy is a constructor
+argument, so two instances holding two halves of one table never merge. One phase NAME carrying two
+configurations in one effective pipeline is a fatal `SurfaceDivergence` whether the two tables
+overlap or not. And the obvious escape — hand the dependent's entries to the base so there is one
+instance — is closed from the other side: the base manifest a dependent declares must be the base
+*as the base ran it*, or its published port map is `BaseMapStale` and every base-surface question
+turns fatal. **So a (b) phase configured in a base manifest is a phase no dependent may ever
+configure**, and adding one to a base that already has dependents using it is a change that cannot
+land. Measured, both halves, on the libGDX base's first `TypeRedirectTransform`
+(`ENGINE-LIMITS.md` D9).
+
 `PortRun` runs `ManifestAgreement` on every port, and a run whose resolution roots lie outside its
 own source root — the structural signature of a dependent — with no base declared is itself a fatal
 finding. If a resolution root is genuinely NOT a ported module, declare an empty manifest for it and

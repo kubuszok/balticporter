@@ -2444,6 +2444,66 @@ Compile unchanged everywhere (libGDX 0, gltf 7, noise4j 2, the last two pre-exis
 check count identical on all thirteen ports; every suite unchanged (gdx-test 217/4, ashley 108/2
 plus its two pre-existing skips, anim8 23, vfx 64, simple-graphs 16, screens 16).
 
+### 11.15 P1 — `Disposable → AutoCloseable`: BLOCKED on `ENGINE-LIMITS.md` D9, with the blast measured
+
+The policy is three lines and it is CORRECT — measured end to end on libGDX core and its suite
+before the block was found, and reverted, not baselined. **What stops it is not the policy: it is
+that the libGDX base manifest cannot gain ANY new (b) phase while two dependents configure the same
+one** (D9). `ashley` and `screens` each report `1 fatal SurfaceDivergence`; the escape route through
+the base manifest is closed by D1's published-map contract, measured as `BaseMapStale` → 309 fatal
+base-surface gaps. Both numbers, and why there is no third place to put the entry, are in D9.
+
+The numbers below are kept so the re-issue does not re-derive them. They are what the run produced
+with the three pieces in place — `TypeRedirectTransform("com.badlogic.gdx.utils.Disposable" ->
+"java.lang.AutoCloseable", memberRenames = "dispose" -> "close")` last in `mainPhases`, plus
+`dropTypes += Disposable` with NO injection, plus 6 hand-written suite sites.
+
+| gate | before | with P1 |
+|---|---|---|
+| libgdx-core compile errors | 0 | **0** |
+| all 19 libgdx-core check counts | — | **identical**, finding for finding, except the two `portability` rows whose SUBJECT is now `AsyncExecutor#close` |
+| libgdx-core files emitted | 598 (11 dropped) | **597 (12 dropped)** — `sge/utils/Disposable.scala` is not written |
+| libgdx-core member digests moved | 0 | **248** |
+| libgdx-test | 217 pass / 4 fail | **217 / 4, 0 members moved** — 0 upstream `Disposable` references, as predicted |
+| `decisions.tsv` | 2,278 | **2,412** = +66 `RenamedMember` +67 `RetypedSignature` (`phase=type-redirect`) +1 `DroppedType` |
+| counted refusals (`ScopedOut refused=member-rename`) | — | **0** — no component in the closure reaches an unparsed parent |
+
+**The rename is exact, and the accounting closes.** 74 upstream `void dispose()` declarations = **66
+in `Disposable`'s override component**, all renamed whole, + **8 outside it** that correctly keep the
+name (`LifecycleListener`/`ApplicationListener`/`Game`/`ApplicationAdapter` and a `Timer` anonymous
+body; `ImmediateModeRenderer` + `ImmediateModeRenderer20`; `ParticleController` — none of them
+implements `Disposable`, directly or through `Screen`). Emitted `def close()` = 66 renamed + 10
+pre-existing upstream `void close()` = **76**. **47** declaration lines gain `extends
+java.lang.AutoCloseable`, with 13 further occurrences as a field/parameter/local type.
+
+**The 248 moved digests, by category** (the promotion accounting the re-issue owes):
+
+| | rows |
+|---|---:|
+| `#close()` keys added | 64 |
+| `#dispose()` keys removed | 65 |
+| `AssetManager#manage`/`#manageDisposable` re-keyed `(Disposable)` → `(AutoCloseable)` | 2 + 2 |
+| the `sge.utils.Disposable` class row, removed with the unit | 1 |
+| class rows changed in place | 89 — 47 that gained the parent, 42 whose body holds a renamed declaration or a moved call |
+| other member rows changed in place (call sites) | 25 (23 `def`, 2 `val`) |
+
+66 renamed declarations against 64 added `#close()` rows is not a gap: one is
+`sge.utils.Disposable#close()` in the unit the drop removes, and one is
+`PixmapPacker$Page$6#close()` inside an ANONYMOUS class body, which `members.tsv` does not index
+separately and which is present in the emitted file.
+
+Three things that behaved exactly as designed and are worth not re-checking: `jdk-surface` stayed
+**24** (`java.lang.AutoCloseable`, 63 references, classifies `Kept`); `dropped-types.tsv` gained
+`com.badlogic.gdx.utils.Disposable` TAB `sge.utils.Disposable`, both namespaces (§4.56); and every
+renamed declaration carries its porter note, `NoteCoverageCheck` **0/0**, in the §4.575 grammar with
+the manifest entry verbatim —
+`reason=configured phase=type-redirect key="com.badlogic.gdx.utils.Disposable#dispose -> close" component=66`.
+
+The 6 hand-written suite sites the enablement must fix are `ScreenmanagerSuite` (three overrides —
+`ScreenTransition implements Disposable` and `ManagedScreen implements Screen`, which
+`extends Disposable` — and two calls) and `VfxFrameBufferSuite`'s one call on
+`VfxFrameBufferQueue implements Disposable`.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
