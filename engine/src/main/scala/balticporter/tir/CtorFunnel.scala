@@ -258,11 +258,36 @@ object CtorFunnel:
     * construction path, which every subclass whose own `extends` clause passes no arguments was
     * relying on. Such a promotion is withheld (and the class stays counted as an omission)
     * rather than emitted as code that cannot compile. */
-  final class Plans(program: Program):
+  /** @param surface
+    *   what this run may CONCLUDE about a class it does not emit (`DESIGN.md` §8.3). The fixpoint
+    *   below is the whole reason the view exists.
+    *
+    *   '''The demotion step is EXTRA-UNIT SENSITIVE and the plan it edits is not.''' `plan0`,
+    *   `nilaryPlan` and the synthesis are local functions of one class's own Java, so a dependent
+    *   re-derives every base class's nomination exactly. The FIXPOINT is not: `needNilary` is
+    *   computed from the SUBCLASSES, a dependent's program has subclasses the base's did not, and
+    *   the step only ever REMOVES promotions — so a dependent computes a same-or-NARROWER parameter
+    *   list than the base emitted, and then writes `extends Base()` against a base whose real
+    *   primary takes parameters. Three compile errors on one corpus port, with every check in the
+    *   run reporting clean (`ENGINE-LIMITS.md` D4).
+    *
+    *   So the fixpoint runs over OWNED classes only — both the demand set and the demotion target —
+    *   and a non-owned class is reconciled against the contract by [[reconciled]]. The default is a
+    *   surface over the whole program, which is what a single-module run, a spec and `DebugEmit` all
+    *   are; under it every class is owned and this file behaves exactly as it did.
+    */
+  final class Plans(program: Program, surfaceView: Option[Surface] = scala.None):
+    /** `Option`, and not a defaulted `TrivialSurface(program)`, because a Scala class's default
+      * argument cannot refer to another parameter of the same list. `None` reads as what it is. */
+    private val surface: Surface = surfaceView.getOrElse(TrivialSurface(program))
+
     private val classes: List[Tree.ClassDef] =
       def walk(cd: Tree.ClassDef): List[Tree.ClassDef] =
         cd :: cd.body.collect { case c: Tree.ClassDef => walk(c) }.flatten
       program.units.flatMap(walk)
+
+    /** …and the ones this run EMITS, which is the fixpoint's whole domain. */
+    private val ownedClasses: List[Tree.ClassDef] = classes.filter(cd => surface.owns(cd.symbol))
 
     // Withholding one promotion can force another: a class whose own promotion is withheld stops
     // passing super arguments, and so joins the set demanding a nilary parent. Iterate to a
@@ -351,12 +376,17 @@ object CtorFunnel:
       var changed = true
       while changed do
         changed = false
-        // parents that some subclass reaches with an argument-free `extends` clause
-        val needNilary = classes.filter(cd => acc.get(cd.symbol).forall(_.superArgs.isEmpty))
+        // parents that some subclass reaches with an argument-free `extends` clause.
+        //
+        // OVER THIS RUN'S OWN CLASSES ONLY. The base's own subclasses already demoted what they
+        // demoted, in the base's run, and that answer is published; a dependent's EXTRA subclasses
+        // must not demote a class the dependent does not emit (`ENGINE-LIMITS.md` D4). For a
+        // single-module run this is every class and nothing moves.
+        val needNilary = ownedClasses.filter(cd => acc.get(cd.symbol).forall(_.superArgs.isEmpty))
           .flatMap(parentSyms)
           .toSet
         acc.foreach { (s, p) =>
-          if paramfulPrimary(p) && needNilary(s) && !reachableArgumentFree(s, p) then
+          if surface.owns(s) && paramfulPrimary(p) && needNilary(s) && !reachableArgumentFree(s, p) then
             // A subclass reaches this class with an argument-free `extends`, so its paramful
             // primary cannot keep parameters. Falling straight to `Plan.none` DISCARDS whatever
             // java's own no-arg constructor did: `Pool()` delegates `this(16, MAX_VALUE)`, which
@@ -403,7 +433,129 @@ object CtorFunnel:
       // from outside the compilation this run holds, so neither can drift. libGDX core: 20 `val` on
       // the wide rule, 5 on this one; the 15 difference is exactly the class of field a dependent
       // may legitimately assign.
-      acc
+      //
+      // …and LAST, the contract. Every class the fixpoint above just declined to touch is one this
+      // run does not emit, and the module that DOES emit it published what it emitted.
+      reconciled(acc)
+
+    /** Reconcile every NON-OWNED class's locally-derived plan against the base's published row.
+      *
+      * '''ONE implementation, not two''' (`DESIGN.md` §8.11): a dependent DERIVES the signature
+      * locally for every non-wall class AND compares it against the `primary=` row wherever a row
+      * exists — never one or the other by circumstance. The two halves differ only in what a
+      * disagreement means, and the split is a provable property of the fixpoint rather than a
+      * heuristic:
+      *
+      *   - a '''NON-WALL''' class is one the fixpoint's demotion predicate can never fire on
+      *     (`!paramfulPrimary` or `reachableArgumentFree`). Adding units can only GROW `needNilary`,
+      *     so such a class's plan is INVARIANT under extra subclasses and the local derivation is
+      *     necessarily the base's answer — while both modules run the same engine. The row is
+      *     therefore a CROSS-CHECK, and a disagreement is an '''engine bug''': the local derivation
+      *     is only "the same answer the base got" because the versions match, and an engine upgrade
+      *     between the base's run and this one is precisely the drift a purely local derivation
+      *     cannot see. (The header's engine fingerprint says the versions differ; only this
+      *     comparison says whether the difference changed a signature.) It is FATAL.
+      *   - a '''WALL''' class is one the fixpoint CAN demote, so its answer is a function of the set
+      *     of subclasses and there is nothing to derive. The row is LOAD-BEARING and this run reads
+      *     it: where the row disagrees, the run takes the demotion the base took, and where no
+      *     demotion this run can express reproduces the row, the gap is FATAL rather than silently
+      *     re-derived — falling back is exactly how D4 shipped.
+      *
+      * What is NOT done here, deliberately: the base's plan is never DEMOTED to fit this module.
+      * Where the contract says the base emitted a primary this module's subclass cannot reach, there
+      * is no local repair — the base is emitted and gone — and the honest outcome is to refuse the
+      * replay and count it (§8.3's honest-scope statement), never to rewrite the base's plan in a
+      * run that does not emit the base. */
+    private def reconciled(acc: Map[SymId, Plan]): Map[SymId, Plan] =
+      // AN ENUM IS NOT THIS FILE'S TO ANSWER FOR, and the exclusion is structural rather than a
+      // narrowing. `TirEmitter.enumDef` lowers a java enum directly — its primary IS the java
+      // constructor, because every `case object` passes its arguments to it — and it consults the
+      // funnel for nothing. So the funnel's plan for an enum is `Plan.none` while the contract row
+      // records the constructor's real slots, and comparing the two compares two different
+      // derivations. Measured before it was excluded: 5 FATAL cross-check failures on one dependent,
+      // every one an enum (`Texture$TextureFilter` derived `()` against a published `(int)`), and
+      // every one of them a false alarm.
+      val nonOwned = classes.filterNot(cd =>
+        surface.owns(cd.symbol) || program.symbolOf(cd.symbol).exists(_.flags.isEnum))
+      if nonOwned.isEmpty then acc
+      else
+        var out = acc
+        nonOwned.foreach { cd =>
+          val local = out.getOrElse(cd.symbol, Plan.none)
+          val wall  = paramfulPrimary(local) && !reachableArgumentFree(cd.symbol, local)
+          val fqn   = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
+          surface.typeShape(cd.symbol) match
+            case Surface.Answer.Own => () // cannot happen: `nonOwned` is the complement of `owns`
+            case Surface.Answer.Published(shape, module) =>
+              val here = renderedPrimary(cd, local)
+              val there = shape.primary.map(_.render)
+              if there.isEmpty || there.contains(here) then ()
+              else if !wall then
+                // the cross-check firing. Not a finding: a signature this run derived and the base
+                // emitted differently means the two modules cannot compile together, and the
+                // derivation is supposed to be a pure function of the base's own Java.
+                surface.gap(Surface.Gap(fqn,
+                  s"this run derives the primary `(${here})` for a class $module emitted as " +
+                    s"`(${there.getOrElse("")})`. The derivation is a local function of the base's Java and " +
+                    "these two must agree; that they do not means the engine that published the map and " +
+                    "the one running now do not compute the same signature",
+                  Some(module), fatal = true,
+                  fix = "§1(a) ENGINE: re-run the base port with this engine. If they still disagree, " +
+                    "the constructor funnel changed behaviour between versions and the change is the bug"))
+              else
+                // the wall. The row is the answer; take the demotion the base took.
+                seededDemotion(cd, there.get) match
+                  case Some(p) => out = out.updated(cd.symbol, p)
+                  case scala.None =>
+                    surface.gap(Surface.Gap(fqn,
+                      s"$module emitted the primary `(${there.get})` for this class and no plan this run " +
+                        s"can express reproduces it (locally derived: `(${here})`). This class's primary is a " +
+                        "function of its SUBCLASSES, which differ between the two modules, so there is " +
+                        "nothing to derive and the published row cannot be honoured",
+                      Some(module), fatal = true,
+                      fix = "§1(a) ENGINE: the funnel cannot express a plan the contract records. " +
+                        "Re-run the base port with this engine; if the row is unchanged, the wall is real " +
+                        "and this class needs a §8.2 encoding the funnel does not have"))
+            case Surface.Answer.Unknown(why, module) =>
+              // An `Unknown` about a class whose plan is INVARIANT is not a failure: the local
+              // derivation is the base's answer and the contract would only have confirmed it. One
+              // about a WALL class is, because the answer shaped the emitted `extends` clause and
+              // the only alternative is the fallback that produced D4.
+              surface.gap(Surface.Gap(fqn, why, module, fatal = wall,
+                fix = if wall then
+                        "§1(b) PER-LIBRARY, OPERATIONAL: run the base port so it publishes a contract, " +
+                        "or declare an EMPTY manifest for that resolution root if it is genuinely not a " +
+                        "ported module (§1.5) — that is a statement, and it exempts this question"
+                      else
+                        "§1(b) PER-LIBRARY, OPERATIONAL: this class's primary does not depend on its " +
+                        "subclasses, so the local derivation is the base's answer and nothing is wrong " +
+                        "today; running the base port would let the engine CONFIRM that"))
+        }
+        out
+
+    /** the primary's slots as the CONTRACT spells them — §8.1's descriptor grammar, so the
+      * comparison is between two renderings of one grammar and never between a rendering and a
+      * parse. Kept beside the plan rather than in the emitter because the cross-check happens here,
+      * before anything renders. */
+    private def renderedPrimary(cd: Tree.ClassDef, p: Plan): String =
+      def param(t: TypeRepr): Param =
+        Descriptor.ofInfo(program, TypeRepr.MethodType(List("_" -> t), TypeRepr.NoType))
+          .flatMap(_.params.headOption).getOrElse(Param.Unresolved)
+      val slots =
+        if p.isSynthesised then p.synthetic.map((_, t) => param(t)) ++ p.marker.map(_ => Param.Unresolved).toList
+        else p.primaryParams.map(v => param(v.tpt.tpe))
+      Descriptor(slots).render
+
+    /** The plan this class would have had under the demotion the CONTRACT records — the same ordered
+      * fallback the fixpoint uses, filtered to the one whose signature matches the published row.
+      *
+      * `scala.None` when none of them does, which is reported rather than approximated: a plan that
+      * merely has the right ARITY is not the right plan, and picking one on arity is exactly the
+      * guess §4.56 forbids. */
+    private def seededDemotion(cd: Tree.ClassDef, published: String): Option[Plan] =
+      val candidates =
+        plan0(program, cd) :: plan0(program, cd, synthesis = false) :: nilaryPlan(cd).toList ::: List(Plan.none)
+      candidates.find(p => renderedPrimary(cd, p) == published)
 
     /** how many times the WHOLE program writes each field. Built once — the question is asked per
       * field slot and the answer is a property of the program, not of the class. */

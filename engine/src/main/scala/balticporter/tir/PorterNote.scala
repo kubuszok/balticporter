@@ -129,26 +129,12 @@ object PorterNote:
   private lazy val bySlug: Map[String, Decision.Kind] =
     Decision.Kind.values.map(k => slug(k) -> k).toMap
 
-  /** Neutralise anything that could open or close a comment, and flatten to one line.
-    *
-    * NOT a rejection: a value that cannot be rendered safely is still information, and dropping it
-    * would make the note say less than the TSV for no reason a reader could see. The delimiters are
-    * spaced apart (`/ *`), which survives grep and cannot nest. */
-  def safe(s: String): String =
-    s.replace("/*", "/ *").replace("*/", "* /")
-      .replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
-      .replaceAll(" +", " ").trim
-
-  /** A VALUE, as it appears after the `=`.
-    *
-    * Quoted when it contains whitespace, and that is not cosmetic: the pair list is
-    * whitespace-separated, so an unquoted `key=com.badlogic.gdx -> sge` is three tokens and every
-    * reader — [[scan]] included — silently truncates the value at the first space. That is exactly
-    * how the coverage check's first run reported 594 notes as unbacked: both sides were reading a
-    * value neither of them had written. */
-  def value(v: String): String =
-    val s = safe(v)
-    if s.exists(_.isWhitespace) || s.isEmpty then "\"" + s.replace("\"", "'") + "\"" else s
+  /** The grammar's primitives, which are the GRAMMAR's and not the note's — [[KeyValues]] carries
+    * them, with the two rules (neutralise anything that could open or close a Scala comment; quote
+    * a value that contains whitespace) and the measurements behind each. The port map's `shape`
+    * column is the second consumer (`DESIGN.md` §8.3), and one grammar with two renderings is
+    * exactly the drift §4.56 is about. */
+  export KeyValues.{safe, value}
 
   /** the `k=v` half, in a fixed order: the §1 classification first (it is the question an agent
     * asks first), then the decision's own detail, sorted. */

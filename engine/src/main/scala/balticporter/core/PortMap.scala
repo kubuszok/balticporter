@@ -46,12 +46,19 @@ import scala.jdk.CollectionConverters.*
   */
 object PortMap:
 
-  /** Schema version, in the file. A consumer refuses an unknown MAJOR rather than mis-reading a
-    * map written by a newer engine — silently mis-reading is the failure this number prevents.
+  /** Schema version, in the file. A consumer refuses a map written by a NEWER engine rather than
+    * mis-reading it — silently mis-reading is the failure this number prevents. An OLDER one is
+    * read, and every question its columns cannot answer degrades to
+    * [[balticporter.tir.Surface.Answer.Unknown]] (see [[read]]).
     *
     * 2 — the header gained `sources=` / `files=`, the SOURCE fingerprint that makes design risk R1
-    *     (a map gone stale against the base's emitted output) detectable rather than assumed. */
-  val Schema = 2
+    *     (a map gone stale against the base's emitted output) detectable rather than assumed.
+    * 3 — the BASE-SURFACE CONTRACT (`DESIGN.md` §8.3). One new column, `shape`, carrying what the
+    *     port EMITTED for each type and member in the porter-note `k=v` grammar; and one new header
+    *     field, `policy=`, the base's sorted `SurfacePolicy` fingerprint. The two land together on
+    *     purpose: a schema that changes twice regenerates every committed baseline twice, for one
+    *     design that was known at the first bump. */
+  val Schema = 3
 
   enum Disposition:
     /** translated mechanically, at the same fully-qualified name. */
@@ -73,6 +80,15 @@ object PortMap:
     * @param body     the member is emitted with a HAND-SUPPLIED body (`MethodBodyTransform`). The
     *                 signature is upstream's and the behaviour is not — a caller cannot see this
     *                 from the signature, which is precisely why it is recorded.
+    * @param shape    WHAT THIS PORT EMITTED, in the porter-note `k=v` grammar — schema 3's
+    *                 base-surface contract (`DESIGN.md` §8.3). Sparse: most member rows carry
+    *                 nothing, and a row that says nothing costs one empty column.
+    *
+    *                 '''Every name inside it is an EMITTED name''' (§4.56), while [[upstream]] stays
+    *                 the manifest-shaped upstream name because it is the join key. The split is not
+    *                 symmetric and it is deliberate: every consumer of `shape` compares it against
+    *                 emitted text — a reference, a `super[X]`, an `export` selector, a stack frame —
+    *                 and [[of]] is the one point where both namespaces are in scope.
     */
   final case class Entry(
       kind: String, // "type" | "member"
@@ -83,14 +99,33 @@ object PortMap:
       javaPath: String = "",
       javaLine: Int = 0,
       digest: String = "",
+      shape: String = "",
   ):
     def tsv: String =
-      s"$kind\t$upstream\t$emitted\t$disposition\t${if body then "body" else "-"}\t$javaPath\t$javaLine\t$digest"
+      s"$kind\t$upstream\t$emitted\t$disposition\t${if body then "body" else "-"}\t$javaPath\t$javaLine\t$digest\t$shape"
+
+    /** the contract row, parsed. `None` for a member row, for a schema-2 row, and for a type this
+      * port DROPPED — a dropped type has no emitted form to describe. */
+    def typeShape: Option[balticporter.tir.Surface.TypeShape] =
+      if kind == "type" then balticporter.tir.Surface.parseType(shape) else scala.None
+
+    def memberShape: balticporter.tir.Surface.MemberShape =
+      balticporter.tir.Surface.parseMember(shape)
 
   /** @param sources a fingerprint of the base's JAVA at the moment the map was published — see
     *                [[sourcesDigest]]. Empty for a map assembled without a source root.
     * @param files   how many distinct Java files that fingerprint covers, so a consumer can say
     *                how much of the base it was able to check rather than only whether it agreed.
+    * @param policy  the publisher's sorted `SurfacePolicy` fingerprint — see [[policyDigest]]. The
+    *                THIRD fingerprint, and the one schema 3 could not do without: [[sources]] and
+    *                [[engine]] both stay put when the base's MANIFEST changes, and schema 3's
+    *                `shape` payload is full of policy outcomes (an emitted member name is a property
+    *                pair, a `form` is a drop or a collapse, a `vis` is one rename entry away from a
+    *                different qualifier). Without it the map is `Fresh` and WRONG — D4's signature
+    *                failure re-entering through the artifact built to prevent it. Empty only for a
+    *                map published by a pre-schema-3 engine.
+    * @param schema  the schema the map was READ at, so a consumer can say "published by an older
+    *                engine" per question instead of refusing the file (`DESIGN.md` §8.3).
     */
   final case class Map0(
       module: String,
@@ -98,6 +133,8 @@ object PortMap:
       entries: List[Entry],
       sources: String = "",
       files: Int = 0,
+      policy: String = "",
+      schema: Int = Schema,
   ):
     def types: List[Entry]   = entries.filter(_.kind == "type")
     def members: List[Entry] = entries.filter(_.kind == "member")
@@ -123,7 +160,7 @@ object PortMap:
     val empty: Map0 = Map0("", "", Nil)
 
   private val Header =
-    "#kind\tupstream\temitted\tdisposition\tbody\tjavaPath\tjavaLine\tdigest"
+    "#kind\tupstream\temitted\tdisposition\tbody\tjavaPath\tjavaLine\tdigest\tshape"
 
   /** Reverse a package rename: emitted name → the upstream name it came from.
     *
@@ -218,6 +255,17 @@ object PortMap:
     *                      can carry a fingerprint of the sources it was derived FROM ([[Freshness]]);
     *                      absent, the map publishes no fingerprint and a dependent can only say it
     *                      could not check.
+    * @param typeShapes    schema 3's contract, keyed by EMITTED FQN — what the emitter actually
+    *                      wrote for each type it emitted. Empty makes every `shape` column empty and
+    *                      the map a schema-3 file with no contract, which is what a caller that does
+    *                      not emit (a snippet, a test) should publish.
+    * @param memberShapes  …and per emitted member key, in `SrcMap`'s spelling. This is where the
+    *                      §4.55 renames finally reach a consumer: the map's `upstream` column
+    *                      already spells Java's name (see the note at the member entries below) and
+    *                      the EMITTED name was published nowhere at all — 827 renames in one base,
+    *                      recorded only in `decisions.tsv`, which nothing discovers and nothing
+    *                      consumes.
+    * @param policy        the sorted `SurfacePolicy` fingerprint of the manifest this run used.
     */
   def of(
       module: String,
@@ -230,6 +278,9 @@ object PortMap:
       bodyKeys: Set[String],
       renames: scala.collection.Map[String, String],
       sourceRoot: Option[Path] = scala.None,
+      typeShapes: scala.collection.Map[String, String] = Map.empty,
+      memberShapes: scala.collection.Map[String, String] = Map.empty,
+      policy: String = "",
   ): Map0 =
     // emitted FQN -> the java file it came from, so `upstreamOf` can use the ORIGIN.
     val originOf: scala.collection.Map[String, String] =
@@ -237,7 +288,8 @@ object PortMap:
     val typeEntries = emittedTypes.sorted.map { emitted =>
       val upstream = upstreamOf(emitted, originOf.getOrElse(emitted, ""), renames)
       Entry("type", upstream, emitted,
-        if upstream != emitted then Disposition.Renamed else Disposition.Ported)
+        if upstream != emitted then Disposition.Renamed else Disposition.Ported,
+        shape = typeShapes.getOrElse(emitted, ""))
     }
 
     // A dropped type is SUBSTITUTED when something stands at its name and DROPPED when nothing
@@ -278,16 +330,24 @@ object PortMap:
       .map { e =>
         // `upstream` is the LOOKUP key and therefore the erased, manifest-shaped form; `emitted`
         // keeps the precise signature the emitter produced.
+        //
+        // A §4.55 MEMBER RENAME needs no undoing here, and that is worth stating rather than
+        // leaving as an accident: the §4.55 passes rewrite `Symbol.name` and NOT `Symbol.fullName`,
+        // which is a stored field, so the member key the source map records already spells Java's
+        // name (`…FileHandle#file`, never `#file$field`) and the join key is right by construction.
+        // The EMITTED name is the half that was missing, and it is in `shape`'s `name=`.
         val upstream = erase(upstreamOf(e.member, e.javaPath, renames))
         Entry("member", upstream, e.member,
           if upstream != erase(e.member) then Disposition.Renamed else Disposition.Ported,
           body = bodyKeys(upstream) || bodyKeys(e.member),
-          javaPath = e.javaPath, javaLine = e.javaLine, digest = e.digest)
+          javaPath = e.javaPath, javaLine = e.javaLine, digest = e.digest,
+          shape = memberShapes.getOrElse(e.member, ""))
       }
 
     val droppedMembers = dropMethods.toList.sorted.map(k => Entry("member", k, "", Disposition.Dropped))
 
-    val bare = Map0(module, engine, typeEntries ++ droppedEntries ++ added ++ memberEntries ++ droppedMembers)
+    val bare = Map0(module, engine, typeEntries ++ droppedEntries ++ added ++ memberEntries ++ droppedMembers,
+                    policy = policy)
     sourceRoot match
       case scala.None => bare
       case Some(root) =>
@@ -296,7 +356,7 @@ object PortMap:
 
   def render(m: Map0): String =
     val head = s"# balticporter port map\tschema=$Schema\tmodule=${m.module}\tengine=${m.engine}" +
-      s"\tsources=${m.sources}\tfiles=${m.files}\n"
+      s"\tsources=${m.sources}\tfiles=${m.files}\tpolicy=${m.policy}\n"
     (head + Header + "\n" + m.entries.map(_.tsv).mkString("\n") + "\n")
 
   // -------------------------------------------------------------------------
@@ -323,6 +383,29 @@ object PortMap:
     }
     TirPrinter.sha256(lines.mkString("\n")).take(16)
 
+  /** The publisher's POLICY, fingerprinted — the third thing a map has to pin, and the one that
+    * schema 2 could not see at all.
+    *
+    * [[freshness]] compared an engine fingerprint and a digest over the base's Java, and NEITHER of
+    * them moves when the base's MANIFEST changes. Schema 3's `shape` payload is full of policy
+    * outcomes: an emitted member `name` is a property pair read from the base manifest, a `form` is
+    * a drop or a collapse, a `vis` is one rename entry away from a different qualifier. Edit one
+    * entry in the base's manifest, re-run the DEPENDENT alone, and every source digest still matches
+    * while the payload is stale — a run that reports clean while the emitted text is wrong, which is
+    * `ENGINE-LIMITS.md` D4's signature failure arriving through the artifact built to prevent it.
+    *
+    * It is the value `ManifestAgreement` ALREADY compares (`PortManifest.fingerprint` over the
+    * effective surface), sorted and digested — not a new derivation. That matters: a second
+    * derivation of "what is this module's policy" is a second thing to keep in step, and §1.5's
+    * guarantee is that a dependent holds the base's manifest AS A VALUE, so it can compute exactly
+    * this without loading the base's build.
+    *
+    * The empty list still digests to something. `""` therefore means "published before schema 3"
+    * and never "this module has no surface policy", which is the one confusion that would make the
+    * comparison silently inert for every port with an empty surface. */
+  def policyDigest(fingerprints: List[String]): String =
+    TirPrinter.sha256(fingerprints.sorted.mkString("\n")).take(16)
+
   /** Can this map be believed about the base's output, right now? */
   enum Freshness:
     /** the engine and the base's sources are the ones the map was published from. */
@@ -334,13 +417,29 @@ object PortMap:
       * IS used (absence of proof is not proof) and the gap is reported. */
     case Unverified(reason: String)
 
-  /** Compare a published map against the engine now running and the sources now on disk.
+  /** Compare a published map against the engine now running, the sources now on disk, and the
+    * POLICY this run inherited from the module that published it.
     *
-    * @param roots where a member's relative `javaPath` may be resolved from — a dependent's
-    *              `resolutionRoots`, which by construction include the base's Java. */
-  def freshness(m: Map0, engine: String, roots: List[Path]): Freshness =
+    * @param roots  where a member's relative `javaPath` may be resolved from — a dependent's
+    *               `resolutionRoots`, which by construction include the base's Java.
+    * @param policy what [[policyDigest]] says about the base's manifest AS THIS RUN INHERITED IT
+    *               (§1.5 — a value, not a build). Empty skips the comparison, which is what a caller
+    *               with no manifest (a spec, a snippet) should pass. */
+  def freshness(m: Map0, engine: String, roots: List[Path], policy: String = ""): Freshness =
     if m.engine.nonEmpty && m.engine != engine then
       Freshness.Stale(s"published by engine ${m.engine}; this run is $engine — re-run the base port")
+    // …before the source digest, deliberately: a policy mismatch is PROVEN staleness and a source
+    // digest that matches would otherwise report `Fresh` first and hide it. That ordering IS the
+    // finding — every source digest matching is the whole point of this comparison existing.
+    else if policy.nonEmpty && m.policy.nonEmpty && m.policy != policy then
+      Freshness.Stale(
+        s"the base's MANIFEST has changed since the map was published (policy ${m.policy} vs $policy) — " +
+          "its emitted names, forms and visibilities are policy outcomes, so the contract describes a " +
+          "run that no longer exists even though every source file is unchanged. Re-run the base port")
+    else if policy.nonEmpty && m.policy.isEmpty then
+      Freshness.Unverified(
+        s"the map carries no policy fingerprint (published by an engine before schema $Schema), so a " +
+          "change to the base's manifest cannot be detected")
     else if m.sources.isEmpty then
       Freshness.Unverified("the map carries no source fingerprint (published by an older engine)")
     else
@@ -364,8 +463,16 @@ object PortMap:
     Files.writeString(p, render(m))
     p
 
-  /** Read a map published by another module. Refuses an unknown MAJOR schema rather than guessing
-    * at fields it does not understand. */
+  /** Read a map published by another module.
+    *
+    * '''A NEWER schema is refused; an OLDER one is read and degrades PER QUESTION.''' The two are
+    * not the same risk. A map from a newer engine has columns this engine cannot place, so reading
+    * it is guessing — refused. A map from an OLDER engine is a strict prefix of this schema, every
+    * column this engine knows how to read means what it says, and the only thing missing is the
+    * answer to a question that engine could not answer: `shape` comes back empty and every contract
+    * question about it is `Unknown("published by an older engine")`. Refusing it wholesale would
+    * tell a dependent "your base is unusable" where the truth is "your base is one engine version
+    * behind, and here are the three questions I cannot ask it" (`DESIGN.md` §8.3). */
   def read(p: Path): Either[String, Map0] =
     if !Files.exists(p) then Left(s"no port map at $p")
     else
@@ -373,25 +480,36 @@ object PortMap:
       val meta  = lines.headOption.getOrElse("")
       val schema = """schema=(\d+)""".r.findFirstMatchIn(meta).map(_.group(1).toInt)
       schema match
-        case Some(s) if s != Schema =>
-          Left(s"port map at $p declares schema $s; this engine reads $Schema — regenerate it with a matching engine")
+        case Some(s) if s > Schema =>
+          Left(s"port map at $p declares schema $s; this engine reads $Schema — it was published by a " +
+            "NEWER engine, whose columns this one cannot place. Re-run this port with that engine, or " +
+            "re-run the base with this one")
+        case Some(s) if s < 1 => Left(s"port map at $p declares schema $s, which is not a schema")
         case None => Left(s"port map at $p has no schema header")
-        case _ =>
+        case Some(s) =>
           val module  = field(meta, "module").getOrElse("?")
           val engine  = field(meta, "engine").getOrElse("?")
           val sources = field(meta, "sources").getOrElse("")
           val files   = field(meta, "files").flatMap(_.toIntOption).getOrElse(0)
+          val policy  = field(meta, "policy").getOrElse("")
           val es = lines.filterNot(l => l.startsWith("#") || l.isBlank).flatMap { l =>
             // `-1` keeps TRAILING empty fields. Without it Scala's `split` drops them, so every
             // `type` row — which has no javaPath, line or digest — arrived with 5 columns instead
             // of 8, matched no case, and was silently discarded. A map that loses exactly its type
             // entries while reporting success is the worst shape this artifact could fail in.
+            //
+            // The SAME trap one column later: schema 3's `shape` is empty on most member rows, so a
+            // 9-column row whose last field is empty splits to 9 here and would split to 8 without
+            // the `-1`. Both arities are accepted — the 8 is a schema-2 row and its contract answer
+            // is simply absent.
             l.split("\t", -1) match
+              case Array(k, up, em, d, b, jp, jl, dg, sh) =>
+                Some(Entry(k, up, em, Disposition.valueOf(d), b == "body", jp, jl.toIntOption.getOrElse(0), dg, sh))
               case Array(k, up, em, d, b, jp, jl, dg) =>
                 Some(Entry(k, up, em, Disposition.valueOf(d), b == "body", jp, jl.toIntOption.getOrElse(0), dg))
               case _ => None
           }
-          Right(Map0(module, engine, es, sources, files))
+          Right(Map0(module, engine, es, sources, files, policy, s))
 
   /** one `key=value` out of the metadata line. Tab-delimited, so a value may contain `=`. */
   private def field(meta: String, key: String): Option[String] =

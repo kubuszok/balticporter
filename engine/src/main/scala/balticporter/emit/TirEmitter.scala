@@ -46,7 +46,20 @@ final class TirEmitter(
       * the residue comment M6 counts. Orthogonal to `RuntimeMode` and OFF by default — the
       * shipping emission is byte-identical with it off, which `members.tsv` proves. */
     preview: Boolean = false,
+    /** What this run may CONCLUDE about a type it does not emit (`DESIGN.md` §8.3). Two reads go
+      * through it today — the constructor plan (via `CtorFunnel.Plans`) and the class-vs-object
+      * collapse — and the rest of this file's whole-program indexes are still bare `program.units`
+      * scans, which is stated rather than implied: they are correct for the SUBJECTS this emitter
+      * renders (all owned) and wrong only as answers ABOUT a base type, which is what the view is
+      * for. The default is a surface over the whole program, so a spec, a snippet and a
+      * single-module port behave exactly as they did.
+      *
+      * `Option`, and not a defaulted `TrivialSurface(source)`, because a Scala class's default
+      * argument cannot refer to another parameter of the SAME list. `None` reads as what it is —
+      * "no view was supplied, so this run is its own surface". */
+    surfaceView: Option[Surface] = scala.None,
 ):
+  private val surface: Surface = surfaceView.getOrElse(TrivialSurface(source))
   /** what the NORMALISATION below decided — a value, handed to the orchestrator rather than
     * recorded from here, so constructing an emitter has no side effect on the run's log. */
   private val own = collection.mutable.ListBuffer.empty[Decision]
@@ -62,7 +75,7 @@ final class TirEmitter(
         TirEmitter.resolveFieldShadowing(TirEmitter.resolveMemberClashes(source, own), own), own), own)
   /** which Java constructor becomes each class's Scala primary, and which `super(args)` can be
     * replayed as statements — whole-program decisions. */
-  private val plans = CtorFunnel.Plans(prepared)
+  private val plans = CtorFunnel.Plans(prepared, Some(surface))
   // a replayed parent constructor's statements execute one level down, so the private members
   // they reach must be visible there. Widening only rewrites symbol FLAGS — the trees `plans`
   // was computed over are untouched, so it still applies.
@@ -135,6 +148,116 @@ final class TirEmitter(
 
   private val recordedMap    = collection.mutable.LinkedHashMap.empty[String, List[SrcMap.Entry]]
   private val recordedMisses = collection.mutable.ListBuffer.empty[String]
+
+  // ---------------------------------------------------------------------------
+  // THE BASE-SURFACE CONTRACT (`DESIGN.md` §8.3) — what this emitter EMITTED, per declaration.
+  //
+  // Recorded AT EMISSION, from the same values the rendering reads, and never re-derived
+  // afterwards. That is the whole property the artifact has to have: a dependent reads this row
+  // instead of recomputing the answer over a program the base never had, so a row derived by a
+  // second pass — however careful — would be a THIRD derivation free to disagree with both. The
+  // class-vs-object collapse is the case that makes it concrete: it is decided inline from four
+  // whole-program index reads, and the only place that answer exists is the branch that took it.
+  //
+  // Recorded for NESTED types too, not only units. `Plans` plans every class in the program and a
+  // dependent extends a base's nested class as readily as its top-level one; a contract that
+  // covered only units would answer `Unknown` for exactly the constructor questions §8.3 exists for.
+  // ---------------------------------------------------------------------------
+
+  private val recordedTypeShapes   = collection.mutable.LinkedHashMap.empty[String, Surface.TypeShape]
+  private val recordedMemberShapes = collection.mutable.LinkedHashMap.empty[String, Surface.MemberShape]
+
+  /** What this emitter WROTE, keyed by EMITTED name — types by FQN, members by the same key
+    * [[srcMap]] uses, so the orchestrator can attach each to its row without a second join.
+    *
+    * A value this emitter owns, exactly like [[srcMap]] and for the same reason: two emitters in one
+    * JVM (`Determinism.Emission` builds a second) would contaminate a process-global table, and the
+    * determinism twin's identical copy is simply never read. */
+  def emittedShapes: TirEmitter.Shapes =
+    TirEmitter.Shapes(recordedTypeShapes.toMap, recordedMemberShapes.toMap)
+
+  /** Every contract question THIS emitter asked and could not answer, plus D6's cross-module face —
+    * a base type this module names where the contract says the base emitted an `object`.
+    *
+    * Read by the orchestrator after emission, together with the funnel's own gaps (which the shared
+    * `Surface` already holds), so a run has ONE list. */
+  def surfaceGaps: List[Surface.Gap] = collapsedBaseTypesNamed
+
+  /** every member this emitter's §4.55 passes RENAMED, by symbol → the name Java gave it.
+    *
+    * Read off the emitter's own decisions rather than recomputed: the passes rewrite the symbol
+    * table, so by the time anything renders, the original name exists nowhere else. Held to the
+    * decisions whose `to` is the symbol's CURRENT name, which is what makes the join exact when a
+    * name was appended to twice (§4.55's "keep appending until the name is free"). */
+  private lazy val renamedMembers: Map[SymId, String] =
+    own.iterator.collect {
+      case d if d.kind == Decision.Kind.RenamedMember && d.subject != SymId.None &&
+                d.detail.get("to").contains(program.symbolOf(d.subject).map(_.name).getOrElse("")) &&
+                d.detail.get("from").exists(_.nonEmpty) =>
+        d.subject -> d.detail("from")
+    }.toMap
+
+  /** `private`, `private[Outer]` or `public` — what [[mods]] actually renders for this symbol, read
+    * as the flags ARE. Java `protected` is emitted PUBLIC by this backend (loosening visibility can
+    * only remove access errors), so `protected` is deliberately not a value here: the contract
+    * records what was emitted, not what Java declared. */
+  private def visOf(s: Symbol, ownerSym: SymId): String =
+    if !s.flags.isPrivate then "public"
+    else privateQualifier(ownerSym).fold("private")(o => s"private[$o]")
+
+  private def recordTypeShape(cd: Tree.ClassDef, form: String, plan: CtorFunnel.Plan,
+                              companion: Boolean, statics: List[String]): Unit =
+    val s  = sym(cd.symbol)
+    val ps = plan.primary.map(_.symbol)
+    // the primary's slots, in §8.1's DESCRIPTOR grammar. A SYNTHESISED primary has no Java
+    // constructor behind it, so its slots come from the plan's own (name, type) pairs and the
+    // descriptor is derived engine-side — the case `Descriptor.ofInfo` exists for, and the reason
+    // a contract row and a policy key are never in two spellings.
+    val primary: Option[Descriptor] =
+      if s.flags.isTrait || s.flags.isModule then scala.None
+      else if plan.isSynthesised then
+        Some(Descriptor(plan.synthetic.map((_, t) => descriptorParam(t)) ++
+          // the MARKER is a slot of the emitted signature and is spelled by its simple name only —
+          // never an FQN. A companion-`protected` type is not a name a consumer may resolve, so
+          // `disambiguator=marker` is the fact and the type is not (`DESIGN.md` §8.1 F4).
+          plan.marker.map(_ => Param.Unresolved).toList))
+      else Some(Descriptor(plan.primaryParams.map(v => descriptorParam(v.tpt.tpe))))
+    recordedTypeShapes(s.fullName) = Surface.TypeShape(
+      form          = form,
+      companion     = companion,
+      statics       = statics,
+      primary       = primary,
+      primaryKind   = if s.flags.isTrait || s.flags.isModule then "" else plans.shape(cd),
+      primaryVis    = if primary.isEmpty then ""
+                      else if plan.isSynthesised then "protected"
+                      else ps.map(p => visOf(sym(p), cd.symbol)).getOrElse("public"),
+      disambiguator = if plan.marker.isDefined then "marker" else "none",
+      secondaries   = secondariesOf(cd, plan),
+      tparams       = if cd.tparams.isEmpty then "" else cd.tparams.map(typeParam).mkString("[", ", ", "]"),
+      parents       = parentSymsOf(cd).map(p => sym(p).fullName),
+      flags         = List(
+                        Option.when(form == "class" && s.flags.isAbstract)("abstract"),
+                        Option.when(s.flags.isSealed)("sealed"),
+                        Option.when(s.flags.isFinal)("final"),
+                      ).flatten,
+      vis           = "public", // the emitter drops a type's `private` outright — see `classDef1`
+    )
+
+  /** the emitted `def this` signatures — every constructor the funnel did NOT promote. */
+  private def secondariesOf(cd: Tree.ClassDef, plan: CtorFunnel.Plan): List[Descriptor] =
+    if sym(cd.symbol).flags.isModule then Nil
+    else
+      given Program = program
+      CtorFunnel.ctorsOf(program, cd.body)
+        .filterNot(d => plan.primary.exists(_.symbol == d.symbol))
+        .map(d => Descriptor(CtorFunnel.valueParams(program, d).map(v => descriptorParam(v.tpt.tpe))))
+
+  /** one emitted type, in the descriptor grammar's [[Param]] vocabulary — through
+    * `Descriptor.ofInfo`, the engine's own derivation, so a contract row and a manifest key can
+    * never be in two spellings (an array is `int[]` on both sides, never `Array`). */
+  private def descriptorParam(t: TypeRepr): Param =
+    Descriptor.ofInfo(program, TypeRepr.MethodType(List("_" -> t), TypeRepr.NoType))
+      .flatMap(_.params.headOption).getOrElse(Param.Unresolved)
 
   // ---------------------------------------------------------------------------
   // PORTER NOTES — one `Decision`, rendered beside the code it explains.
@@ -283,9 +406,34 @@ final class TirEmitter(
     else
       val slot = new Slot(memberKey(s), memberKind(s), s.origin)
       slots += slot
+      recordMemberShape(slot.member, s)
       val t = stat(s, i)
       slot.text = t
       t
+
+  /** …and the same member's CONTRACT row (`DESIGN.md` §8.3), keyed identically, so the orchestrator
+    * attaches it to the port-map row without a second join.
+    *
+    * Keyed on the source-map key rather than on the symbol because that is what the port map's rows
+    * are keyed by — and the key is built from the EMITTED name, which for a renamed member is not
+    * the one a consumer holds. That is exactly why `name=` exists: the map's `upstream` column
+    * already spells Java's name (the §4.55 passes rewrite `Symbol.name`, not `Symbol.fullName`),
+    * and the EMITTED name is the half no artifact carried. */
+  private def recordMemberShape(key: String, st: Statement): Unit =
+    val symId = st match
+      case d: Definition => Some(d.symbol)
+      case _             => scala.None
+    symId.foreach { id =>
+      val m = sym(id)
+      recordedMemberShapes(key) = Surface.MemberShape(
+        // the emitted SIMPLE name, and only where it differs from Java's — sparse by design.
+        name      = renamedMembers.get(id).filter(_ != m.name).map(_ => m.name).getOrElse(""),
+        vis       = visOf(m, currentOwnerSym),
+        // a java `static` lands in the COMPANION; a dependent emitting `Base.m()` needs the base's
+        // answer, not its own re-derivation from the base's Java.
+        placement = if m.flags.isStatic then "companion" else "class",
+      )
+    }
 
   /** A member's stable identity. `owner#name` for anything that has a symbol — the form the rest
     * of this engine already uses (`Substitutions.dropMethods`, `RewriteTrace`) — with the
@@ -560,6 +708,48 @@ final class TirEmitter(
       }
     }
     out.toSet
+
+  /** D6's CROSS-MODULE FACE, which no count and no compile of the base could ever see.
+    *
+    * [[typeNamedElsewhere]] answers the question for a type THIS emitter renders, and it is right
+    * about those. The other direction is the one that breaks a joint build: a BASE collapsed an
+    * all-static class to a bare `object`, this module names it in a TYPE position, and `object` is a
+    * value — no value is a type. The base's own run cannot see it (it has 31 such types and names
+    * none of them as a type, which is why five ports did not), and this run's recomputation cannot
+    * either, because this run does not emit the base and never takes the collapse branch.
+    *
+    * '''There is no local repair, and the outcome is ATTRIBUTION rather than a fix''' (§8.3's
+    * honest-scope statement). The base is emitted and gone; nothing this module does makes `Align` a
+    * type again. What the contract buys is that a bare "type Align is not a member of sge.utils"
+    * becomes a finding naming the module that must change and which of §1's three kinds the fix is —
+    * which is exactly the difference §4.45 measures a check by.
+    *
+    * Asked over the types this run NAMES, at the one moment both halves are in hand: the local
+    * `typeNamedElsewhere` scan has already collected every type-position occurrence in this
+    * program's units, and the view can say which of them a base emitted as an object. */
+  private lazy val collapsedBaseTypesNamed: List[Surface.Gap] =
+    typeNamedElsewhere.toList
+      .filterNot(surface.owns)
+      .flatMap { s =>
+        val fqn = program.symbolOf(s).map(_.fullName).getOrElse("?")
+        surface.typeShape(s) match
+          case Surface.Answer.Published(shape, module) if shape.form == "object" =>
+            List(Surface.Gap(fqn,
+              s"$module emitted this type as a bare `object` (its every member is static), and this " +
+                "module names it in a TYPE position. An `object` supplies a VALUE and no value is a " +
+                "type, so the two modules cannot compile together",
+              Some(module), fatal = false,
+              fix = s"§1(b) PER-LIBRARY, IN THE BASE: nothing in this module can repair it — $module is " +
+                "already emitted. Either that module keeps the type a `class` (its statics move to a " +
+                "companion, so every `X.member` call site is unchanged), or this module stops naming it " +
+                "as a type"))
+          // Every other non-owned type this module names is either published as something nameable
+          // or not published at all, and the SECOND is not a finding here: a type nobody publishes a
+          // contract for is the ordinary JDK case, and `Plans` already reports the base types whose
+          // absence actually shaped emitted text.
+          case _ => Nil
+      }
+      .sortBy(_.subject)
 
   private def declaredTypes(cd: Tree.ClassDef): Set[SymId] =
     val acc = collection.mutable.Set[SymId](cd.symbol)
@@ -1065,6 +1255,11 @@ final class TirEmitter(
       val ob0 = orderBody(members, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       val ob  = if bnote.isEmpty then ob0 else s"$bnote\n$ob0"
       // the VISIBILITY only — an `object` takes no `abstract`, and `final object` is redundant.
+      // THE COLLAPSE, recorded where it is TAKEN. A consumer that names this type in a type
+      // position is naming a value, and nothing else in any artifact says so: `members.tsv` records
+      // its kind as `class` (`ENGINE-LIMITS.md` D6's cross-module face). Recorded here rather than
+      // re-derived because the four whole-program reads above exist only in this branch.
+      recordTypeShape(cd, "object", plan, companion = false, statics = Nil)
       return s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
@@ -1157,7 +1352,17 @@ final class TirEmitter(
     // engine's runtime artifact for a purely local encoding (`DESIGN.md` §8.2). A class that needs
     // one may have no companion at all, so the companion is emitted for it.
     val markerDecl = plan.marker.toList.map(n => s"${ind(i + 1)}protected final class ${esc(n)}")
-    if statics.isEmpty && parentExports.isEmpty && markerDecl.isEmpty then cls
+    val hasCompanion = !(statics.isEmpty && parentExports.isEmpty && markerDecl.isEmpty)
+    // …and the OTHER three forms, recorded from the values that decided them. `companion` and
+    // `statics` are the two an `export Base.*` in a dependent has to read rather than recompute from
+    // the base's Java: a base with no companion makes the export an error outright, and a static
+    // the base renamed or moved is named wrongly by any recomputation.
+    recordTypeShape(cd,
+      form      = if s.flags.isAnnotation then "annotation" else kw,
+      plan      = plan,
+      companion = hasCompanion,
+      statics   = ownStaticNames)
+    if !hasCompanion then cls
     else
       val sb = (parentExports ++ markerDecl ++ orderBody(statics).map(memberStat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
@@ -1283,6 +1488,21 @@ final class TirEmitter(
     val vArms  = cd.enumCases.map(ec => esc(sym(ec.symbol).name)).map(n => s"""${ind(i + 2)}case "$n" => $n""").mkString("\n")
     val valueOf = s"${ind(i + 1)}def valueOf(name: java.lang.String): $name = name match {\n$vArms\n${ind(i + 2)}case _ => throw new java.lang.IllegalArgumentException(name)\n${ind(i + 1)}}"
     val objBody = (cases :+ values :+ valueOf) ++ statics.map(memberStat(_, i + 1)).filter(_.nonEmpty)
+    // A java enum is emitted as a SEALED ABSTRACT CLASS plus a companion holding one `case object`
+    // per constant, and neither `class` nor `object` describes that: a dependent naming it needs to
+    // know both that the type exists and that its constants are values in the companion. The plan is
+    // deliberately `Plan.none` — `CtorFunnel` is not consulted for an enum (see above), so the
+    // primary IS the java constructor and its slots are `ctorParams`.
+    recordedTypeShapes(s.fullName) = Surface.TypeShape(
+      form        = "enum-class",
+      companion   = true,
+      statics     = statics.collect { case d: Definition => esc(sym(d.symbol).name) }.distinct,
+      primary     = Some(Descriptor(ctorParams.map(v => descriptorParam(v.tpt.tpe)))),
+      primaryKind = "not-funnelled",
+      primaryVis  = "public",
+      parents     = parentSymsOf(cd).map(p => sym(p).fullName),
+      flags       = List("sealed", "abstract"),
+    )
     s"$cls\n${ind(i)}object $name {\n${objBody.mkString("\n")}\n${ind(i)}}"
 
   // a Java `static` nested class has no instance home in Scala → it moves to the companion
@@ -2774,6 +2994,23 @@ object TirEmitter:
   /** the last segment of the package a TOP-LEVEL FQN lives in; `""` in the default package. */
   def packageTailOf(fullName: String): String =
     if !fullName.contains('.') then "" else tailSegment(fullName.substring(0, fullName.lastIndexOf('.')))
+
+  /** THE BASE-SURFACE CONTRACT, as one emitter recorded it (`DESIGN.md` §8.3).
+    *
+    * @param types         emitted FQN → what was emitted at that name
+    * @param members       emitted member key (the source map's spelling) → the same, per member
+    */
+  final case class Shapes(
+      types: Map[String, Surface.TypeShape],
+      members: Map[String, Surface.MemberShape],
+  ):
+    /** …rendered, which is the form the port map's `shape` column takes. */
+    def renderedTypes: Map[String, String]   = types.view.mapValues(Surface.render).toMap
+    def renderedMembers: Map[String, String] =
+      members.view.mapValues(Surface.render).toMap.filter(_._2.nonEmpty)
+
+  object Shapes:
+    val empty: Shapes = Shapes(Map.empty, Map.empty)
 
   /** RECORD one of this file's decisions.
     *

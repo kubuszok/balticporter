@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, SymbolTable, Tree, TriviaCheck, Xref}
+import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, Xref}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -312,7 +312,6 @@ final case class PortRun(
     // ---- cross-port composition: does the shared surface agree with the module that emits it? ----
     // Runs on EVERY port. On a base port `shared` is empty and the check is a no-op by arithmetic
     // rather than by a branch — the same discipline as an empty policy making a phase a no-op.
-    val basePorts = discoverBasePorts()
     // `fired` comes from the RUN's binder — the drop keys that resolved to something. It used to be
     // a mutable tally on `Substitutions`, which answered "did this key ever fire on this INSTANCE"
     // and unioned two source sets translated through one manifest.
@@ -331,6 +330,41 @@ final case class PortRun(
     if agreement.nonEmpty then
       say(PortReport.Kind.Manifest.classification)
       agreement.take(40).foreach(f => println("  " + f.render))
+
+    // ---- THE BASE-SURFACE CONTRACT: what this run could not answer, and what that cost -----------
+    //
+    // The one behavioural change §8.3 asks for, and it is a deliberate departure from the
+    // loud-but-non-fatal `BaseMapStale` / `BaseMapMissing` above. Those FALL BACK to re-derivation,
+    // and falling back is exactly how `ENGINE-LIMITS.md` D4 produced three compile errors while
+    // every check in the run reported clean: nothing in a dependent's run disagrees with itself, so
+    // there is no count for the fallback to move.
+    //
+    // The rule is per QUESTION, not per map: an `Unknown` no emission consumed is a finding; an
+    // `Unknown` whose answer SHAPED EMITTED TEXT fails the run, naming the base module, the type,
+    // and which of §1's three kinds the fix is (§4.45). Only the consumer knows which it was, which
+    // is why `Surface.Gap.fatal` is set by the asker.
+    //
+    // THE EMPTY BASE MANIFEST stays the escape hatch, and what it exempts is precise. A resolution
+    // root that is genuinely not a ported module is a STATEMENT a port makes (§1.5) — the run says
+    // so loudly, above, through `ManifestAgreement`. It does NOT exempt a question: the questions
+    // below are asked about a non-owned CLASS, whichever root it came from, and a class that root
+    // supplies is as unanswerable as any other. What keeps that honest rather than fatal is the
+    // per-QUESTION rule itself: a class whose plan cannot drift is a finding, and only a class whose
+    // emitted `extends` clause depended on an answer nobody published fails. If a port ever needs
+    // more than that, the fix is to run the base — not to widen the exemption, which would restore
+    // exactly the fallback this replaces.
+    val surfaceGaps = (translated.surface.gaps ++ translated.emitter.surfaceGaps).distinct
+    val fatalGaps   = surfaceGaps.filter(_.fatal)
+    say(s"BASE SURFACE (contract questions this run could not answer): ${surfaceGaps.size}" +
+      (if fatalGaps.isEmpty then "" else s", ${fatalGaps.size} of them FATAL"))
+    surfaceGaps.take(40).foreach(g => println("  " + g.render))
+    if fatalGaps.nonEmpty then
+      sys.error(
+        s"[$label] ${fatalGaps.size} contract question(s) shaped emitted text and could not be " +
+          "answered from a base's published port map:\n" +
+          fatalGaps.map("  " + _.render).mkString("\n") +
+          "\n  [a run that falls back to re-deriving these emits text that compiles alone and cannot " +
+          "compile against the module it resolves against — DESIGN.md §8.3]")
 
     // ---- what a base's PUBLISHED map says about the references this module is about to emit ----
     // Recorded on EVERY run, `Nil` included: without a `PortMapTransform` in the pipeline the list
@@ -548,10 +582,21 @@ final case class PortRun(
     val injectedFqns = injectedSources.map(_._1).toSet ++ plan.sources.keySet ++ plan.required ++ supportSources.keySet
     val bodyKeys: Set[String] =
       effectivePhases.collect { case m: MethodBodyTransform => m.substituted }.flatten.toSet
+    val shapes = translated.emitter.emittedShapes
+    // NESTED types are in the map from schema 3 on, and that is not a tidy-up. The contract's
+    // constructor rows exist so a dependent can stop re-deriving a base class's primary over a
+    // program the base never had (`ENGINE-LIMITS.md` D4), and a dependent extends a base's NESTED
+    // class as readily as its top-level one — libGDX's `Attribute` hierarchy is exactly that. A map
+    // carrying only units would answer `Unknown` for precisely the questions §8.3 exists for.
+    // Dropped types are filtered out on the same rule as the units', which is why this shares one
+    // expression with them rather than a second one that can drift.
+    def emittedFqns(cd: Tree.ClassDef): List[String] =
+      program.symbolOf(cd.symbol).map(_.fullName).toList ++
+        cd.body.collect { case c: Tree.ClassDef => emittedFqns(c) }.flatten
     val portMap = PortMap.of(
       module       = label,
       engine       = balticporter.core.EngineInfo.fingerprint,
-      emittedTypes = translated.emitOrder.map(u => program.symbolOf(u.symbol).map(_.fullName).getOrElse(""))
+      emittedTypes = translated.emitOrder.flatMap(emittedFqns)
                        .filterNot(f => f.isEmpty || policySubs.dropsType(f)),
       srcMap       = translated.emitter.srcMap,
       dropTypes    = policySubs.dropTypes,
@@ -563,6 +608,17 @@ final case class PortRun(
       // sources moved under it (design risk R1) instead of reading an entry that describes a run
       // that no longer exists. `SrcMap` records each member's Java path relative to THIS root.
       sourceRoot   = Some(frontend.sourceRoot),
+      // ---- schema 3: THE BASE-SURFACE CONTRACT (`DESIGN.md` §8.3) ----------------------------
+      // What this module EMITTED, taken from the emitter's own recording — never re-derived here.
+      // A second derivation would be a third answer free to disagree with both the emission and the
+      // consumer, which is the drift the contract exists to end.
+      typeShapes    = shapes.renderedTypes,
+      memberShapes  = shapes.renderedMembers,
+      // …and the THIRD fingerprint. `engine=` and `sources=` both stay put when the base's MANIFEST
+      // changes, and the payload above is full of policy outcomes — so without this the map is
+      // `Fresh` and WRONG, which is D4's failure re-entering through the artifact built to prevent
+      // it. The same value `ManifestAgreement` compares, not a new derivation (§1.5).
+      policy        = surfacePolicyFingerprint,
     )
     // …and written only when the ARTIFACT LAYER IS ON, like every other file this run produces.
     //
@@ -807,7 +863,13 @@ final case class PortRun(
       case Determinism.Emission =>
         // a SECOND emitter over the same program: independent mutable state, independent lazy
         // tables, same bytes required.
-        val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions, preview)
+        // …and the SAME `Surface`. Not an optimisation: the view is an INPUT to emission (it scopes
+        // the constructor funnel's fixpoint), so a twin built without it re-derives every base
+        // class's primary the pre-§8.3 way and reports a determinism violation for exactly the
+        // classes the contract fixed. Measured: 2 units on gdx-gltf, both of them the wall classes
+        // this item exists for.
+        val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions,
+                                   preview, Some(once.surface))
         val diffs = once.emitOrder.filter(u => again.emitUnit(u) != once.sourceOf(u))
         if diffs.nonEmpty then determinismViolation("emission", once, diffs)
         say(s"determinism: ${once.emitOrder.size} units emitted twice, byte-identical " +
@@ -1305,6 +1367,32 @@ final case class PortRun(
     *     the reason travels as a finding. Using a stale entry and mentioning it in passing is the
     *     failure this mechanism exists to prevent.
     */
+  /** THIS module's own `SurfacePolicy` fingerprint, for the map it publishes — the same value
+    * `ManifestAgreement` compares (`PortManifest.fingerprint` over the effective surface), sorted
+    * and digested.
+    *
+    * A module with NO manifest still publishes one (the digest of the empty list), so an empty
+    * `policy=` in a map can only ever mean "published before schema 3". "This module declares no
+    * surface policy" and "this engine could not say" are different answers, and a fingerprint that
+    * conflated them would make the comparison silently inert for every port with an empty surface —
+    * which is most of the corpus. */
+  private def surfacePolicyFingerprint: String =
+    PortMap.policyDigest(manifest.map(_.effectiveSurface).getOrElse(effectivePhases).map(PortManifest.fingerprint))
+
+  /** …and the fingerprint of the BASE's manifest, as THIS run inherited it (§1.5 — a value the
+    * dependent holds, never the base's build). What `PortMap.freshness` compares the published one
+    * against. */
+  private def basePolicyFingerprint(b: PortManifest): String =
+    PortMap.policyDigest(b.effectiveSurface.map(PortManifest.fingerprint))
+
+  /** the bases' published contracts, discovered ONCE.
+    *
+    * A `lazy val` and not a call, because it is read in two places that must agree: the translation
+    * builds `Surface` from it and the manifest check reports on it. Two discoveries of one file
+    * within a run is D6.5's failure shape — the same artifact answering two questions differently —
+    * and here it would also mean two filesystem walks and, under `Determinism.Full`, four. */
+  private lazy val basePorts: List[ManifestAgreement.BasePort] = discoverBasePorts()
+
   private def discoverBasePorts(): List[ManifestAgreement.BasePort] =
     val chain = manifest.toList.flatMap(_.baseChain)
     if chain.isEmpty then Nil
@@ -1324,7 +1412,8 @@ final case class PortRun(
             pub.map match
               case Left(err) => ManifestAgreement.BasePort(b, scala.None, pub.source, stale = List(err))
               case Right(m0) =>
-                PortMap.freshness(m0, balticporter.core.EngineInfo.fingerprint, roots) match
+                PortMap.freshness(m0, balticporter.core.EngineInfo.fingerprint, roots,
+                                  basePolicyFingerprint(b)) match
                   case PortMap.Freshness.Fresh          => ManifestAgreement.BasePort(b, Some(m0), pub.source)
                   case PortMap.Freshness.Stale(r)       => ManifestAgreement.BasePort(b, scala.None, pub.source, stale = List(r))
                   case PortMap.Freshness.Unverified(r)  => ManifestAgreement.BasePort(b, Some(m0), pub.source, unverified = List(r))
@@ -1405,10 +1494,19 @@ final case class PortRun(
     // injected parent.
     // the emitter READS this log to render porter notes and never writes to it — its own decisions
     // come back as `TirEmitter.ownDecisions` and are recorded once, by `recordRunDecisions`.
-    val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview)
     val (mine, theirs) = partitionUnits(program)
+    // §8.3's view, built BEFORE the emitter because the emitter's constructor runs the constructor
+    // funnel, and the funnel's fixpoint is the first thing that must stop spanning the base.
+    // `mine` is the same partition every other owner question in this file uses, realpathed on both
+    // sides (§5.4) — so the six climbs that each answered "mine or my base's?" differently now have
+    // one root set.
+    val surface = new balticporter.core.PublishedSurface(
+      program, mine, basePorts.flatMap(b => b.map.map(b.name -> _)))
+    // the emitter READS this log to render porter notes and never writes to it — its own decisions
+    // come back as `TirEmitter.ownDecisions` and are recorded once, by `recordRunDecisions`.
+    val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, Some(surface))
     PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)),
-                       decisions, binder)
+                       decisions, binder, surface)
 
   /** Ask the binder about every key this run DECLARES — its drops, and every keyed phase's own.
     *
@@ -1552,6 +1650,12 @@ object PortRun:
         * this translation owns, for the same reason `decisions` is. */
       val binder: PolicyBinder = new PolicyBinder(
         new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty), MemberIndex.empty),
+      /** §8.3's view, shared by the funnel and the emitter so a run has ONE list of unanswered
+        * contract questions rather than one per consumer. A value this translation owns, for the
+        * same reason `decisions` is: `Determinism.Full` translates twice and the run keeps the
+        * first (§5.1). */
+      val surface: Surface = new TrivialSurface(
+        new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty)),
   ):
     private val memo = collection.mutable.Map.empty[SymId, String]
     // the DECISIONS are part of the key: they are not in the tree and they are in the emitted text

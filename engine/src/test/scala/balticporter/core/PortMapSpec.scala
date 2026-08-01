@@ -145,6 +145,83 @@ class PortMapSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------
+  // schema 3 — the base-surface contract (DESIGN.md §8.3)
+  // ---------------------------------------------------------------------------
+
+  test("schema 3: a type row carries what was EMITTED, and it round-trips") {
+    val shape = balticporter.tir.Surface.TypeShape(
+      form = "object", companion = true, statics = List("b", "a"),
+      primary = Some(balticporter.tir.Descriptor(List(
+        balticporter.tir.Param.Prim("int"), balticporter.tir.Param.Named("String")))),
+      primaryKind = "synthesised-primary", primaryVis = "protected", disambiguator = "marker",
+      parents = List("p.P"), flags = List("final", "abstract"), vis = "public")
+    val m = PortMap.of("m", "eng", List("p.C"), SrcMap.Recording(Nil), Set.empty, Set.empty,
+      Set.empty, Set.empty, Map.empty, typeShapes = Map("p.C" -> balticporter.tir.Surface.render(shape)))
+    val row = m.types.find(_.emitted == "p.C").get
+    assertEquals(row.typeShape, Some(shape.copy(statics = List("a", "b"), flags = List("abstract", "final"))))
+    // the payload is sorted and in the porter-note grammar — the SAME grammar, not a ninth one.
+    assert(clue(row.shape).startsWith("companion=yes disambiguator=marker flags="))
+
+    val tmp = Files.createTempDirectory("portmap3")
+    Files.writeString(tmp.resolve("port-map.tsv"), PortMap.render(m))
+    assertEquals(PortMap.read(tmp.resolve("port-map.tsv")).map(_.entries), Right(m.entries))
+  }
+
+  test("NEGATIVE: a shape value containing WHITESPACE round-trips, and does not truncate the row") {
+    // The pair list is whitespace-separated, so an unquoted value with a space is silently cut at
+    // the first one — the defect that reported 594 porter notes as unbacked. One grammar means one
+    // fix, and this is the assertion that it reached the second consumer.
+    val shape = balticporter.tir.Surface.TypeShape(form = "class", tparams = "[A <: p.X, B]")
+    val text  = balticporter.tir.Surface.render(shape)
+    assert(clue(text).contains("\""), "a value with whitespace is QUOTED")
+    assertEquals(balticporter.tir.Surface.parseType(text), Some(shape))
+  }
+
+  test("NEGATIVE: an OLDER schema degrades PER QUESTION — never wholesale, and never a crash") {
+    // §8.3's rule: refusing a schema-2 map outright tells a dependent "your base is unusable" where
+    // the truth is "your base is one engine version behind, and here are the questions I cannot ask
+    // it". The row must still be READ; only its contract answer is absent.
+    val m    = build(emitted = List("p.C"), members = List(member("p.C", "p.C#f()")))
+    val text = PortMap.render(m)
+    val tmp  = Files.createTempDirectory("portmap2")
+    val old  = tmp.resolve("port-map.tsv")
+    // a genuine schema-2 file: the header's version, no `policy=`, and eight columns per row.
+    Files.writeString(old, text.replace(s"schema=${PortMap.Schema}", "schema=2")
+      .replace("\tpolicy=", "\tlegacy=").split('\n')
+      .map(l => if l.startsWith("#") then l.stripSuffix("\tshape") else l.stripSuffix("\t")).mkString("\n"))
+    val back = PortMap.read(old)
+    assert(clue(back).isRight, "an older schema is READ")
+    val m0 = back.toOption.get
+    assertEquals(m0.schema, 2)
+    assertEquals(m0.types.size, 1)
+    assertEquals(m0.types.head.typeShape, scala.None, "…and its contract answer is simply absent")
+  }
+
+  test("schema 3: the POLICY fingerprint makes a base MANIFEST edit visible, with every source digest matching") {
+    // The whole reason the third fingerprint exists. `engine=` and `sources=` do not move when the
+    // base's manifest changes, and the `shape` payload is full of policy outcomes — so without this
+    // the map is `Fresh` and WRONG, which is D4's signature failure re-entering through the
+    // artifact built to prevent it.
+    val (root, _, m0) = basePort("package p; class C { int f() { return 1; } }")
+    val m = m0.copy(policy = PortMap.policyDigest(List("rename[a->b]")))
+    assertEquals(PortMap.freshness(m, "eng", List(root), PortMap.policyDigest(List("rename[a->b]"))),
+                 PortMap.Freshness.Fresh)
+    PortMap.freshness(m, "eng", List(root), PortMap.policyDigest(List("rename[a->c]"))) match
+      case PortMap.Freshness.Stale(r) =>
+        assert(clue(r).contains("MANIFEST has changed"))
+        assert(clue(r).contains("every source file is unchanged"))
+      case other => fail(s"expected Stale, got $other")
+    // NEGATIVE: with no policy to compare against, nothing is claimed — a caller that holds no
+    // manifest (a spec, a snippet) must not be told its base is stale.
+    assertEquals(PortMap.freshness(m, "eng", List(root)), PortMap.Freshness.Fresh)
+    // …and an EMPTY surface still digests to something, so `policy=""` can only mean "older engine".
+    assertNotEquals(PortMap.policyDigest(Nil), "")
+    PortMap.freshness(m0, "eng", List(root), PortMap.policyDigest(Nil)) match
+      case PortMap.Freshness.Unverified(r) => assert(clue(r).contains("no policy fingerprint"))
+      case other                           => fail(s"expected Unverified, got $other")
+  }
+
+  // ---------------------------------------------------------------------------
   // R1 — the map goes stale against the base's emitted output
   // ---------------------------------------------------------------------------
 
