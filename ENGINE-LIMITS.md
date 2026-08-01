@@ -1837,11 +1837,19 @@ survivors were all in `SnapshotArray` and `DelayedRemovalArray`, which extend th
 and OVERRIDE two of its annotated members with the annotation re-stated on their own `T`. So the
 parent's members were held back while the children's moved — half an override pair, which is the one
 shape a union floor may not emit — and it is the mirror of the constraint wrapper mode already
-refuses on (`DESIGN.md` §8.6). Adding the two subclasses took it to **0**. Nothing computes this
-closure: a `RuleScope` is a set of FQNs, and the phase's override test is wrapper-mode-only, so the
-port's scope entry is the whole of the answer and the compile is the only thing that finds a missing
-one. **A scope exit on a generic type therefore names the type AND every owned subtype that
-RE-STATES the annotation.**
+refuses on (`DESIGN.md` §8.6). Adding the two subclasses took it to **0**. **A scope exit on a
+generic type therefore names the type AND every owned subtype that RE-STATES the annotation.**
+
+**THE RULE STANDS AND THE RUN NOW ENFORCES IT, so the numbers above are history rather than the
+procedure.** This entry used to end "nothing computes this closure — a `RuleScope` is a set of FQNs
+and the compile is the only thing that finds a missing entry", which was true of the SCOPE and false
+of the PHASE: at plan time it already holds both halves, the annotation hits it has just computed
+and `Definition.parents`. `NullabilityBoundaryCheck.Issue.ScopedOutParent` now reports every
+(retyped declaration, scoped-out annotating ancestor) pair with the §1(b) classification, so the
+35 → 6 → 0 hunt costs the next port ONE RUN. The subject is the CHILD — the end a port can move —
+and the detail names the entry holding the parent back, which is the string an agent edits. It
+invents no notion of overriding beyond the NAME, deliberately: over-approximating names a pair a
+port can dismiss, while a signature test would need the override closure this phase does not have.
 
 **And it stops exactly there, which is the other half of the rule.** A subtype that merely INHERITS
 an annotated member needs no entry, and adding one is DEAD POLICY that nothing can report:
@@ -1850,8 +1858,16 @@ an annotated member needs no entry, and adding one is DEAD POLICY that nothing c
 but it declares zero `@Null` of its own, so scoping the parent out settles both ends and the entry
 holds back nothing. Measured: with and without it, `members.tsv` is byte-identical.
 `PolicyBinder.bindScope` asks only "did anything in this program fall inside this region", the type
-exists, and `policy` stays 0 — so an inert SCOPE entry is the one §1(b) no-op the never-fired
-machinery cannot see, and only a byte-identity check finds it.
+exists, and `policy` stays 0 — so an inert SCOPE entry was the one §1(b) no-op the never-fired
+machinery could not see, and only a byte-identity check found it.
+
+**ENFORCED TOO, and by the phase for the same reason.** `RuleScope.neverFired` is the complement of
+what a phase OBSERVED, and only the phase knows what it observed: `NullabilityTransform` records the
+entry that decided each ANNOTATED declaration — in both directions, since an entry excludes under
+`Everywhere` and includes under `Only` — and reports the complement as a `policy` `NeverMatched`
+finding whose text says what "fired" means for a scope. Only entries whose BINDING succeeded are
+reported, or one mistake with one fix would be reported twice. **A byte-identity experiment is not a
+report**, and a rule whose only evidence is an experiment nobody will re-run is a rule that decays.
 
 Its price, stated as a number rather than as "a few generic types": **12 entries hold back 92 of 632
 declarations** to clear 35 errors, of which about 34 are declarations that actually fail. A

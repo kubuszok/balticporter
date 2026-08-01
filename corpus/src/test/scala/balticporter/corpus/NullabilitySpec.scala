@@ -235,6 +235,65 @@ class NullabilitySpec extends PortSuite:
     assertEquals(log2.of(Decision.Kind.RetypedSignature).map(_.subjectFqn).contains("demo.Group#parent"), false)
   }
 
+  // -------------------------------------------------------------------------
+  // the SCOPE's own two obligations — `ENGINE-LIMITS.md` K13, as plan-time reports
+  // -------------------------------------------------------------------------
+
+  test("a scope entry that names no ANNOTATED declaration is REPORTED — the no-op only this phase sees") {
+    // `demo.Actor` is a real type with no annotated member, so `PolicyBinder.bindScope` BINDS it —
+    // the region exists — and it holds nothing back. That is K13's `OrderedMap`, whose only previous
+    // evidence was a byte-identical `members.tsv`.
+    val ph = phase(scope = RuleScope.Everywhere(Set("demo.Group#parent", "demo.Actor")))
+    run(ph)
+    val dead = ph.policyReport.of(PolicyIssue.NeverMatched).map(_.key)
+    assertEquals(dead, List("demo.Actor"))
+  }
+
+  test("…and an entry naming NOTHING is reported ONCE, by the binder, not twice") {
+    val ph = phase(scope = RuleScope.Everywhere(Set("demo.Nowhere")))
+    run(ph)
+    assertEquals(ph.policyReport.of(PolicyIssue.NeverMatched).map(_.key), List("demo.Nowhere"))
+  }
+
+  test("a phase whose ANNOTATIONS are empty reports no dead scope entry — the (b) no-op is total") {
+    // The plan loop never runs, so "no entry fired" is not yet a fact about anything; and an empty
+    // policy must produce an empty report by arithmetic rather than a page of findings about a
+    // phase the port turned off.
+    val ph = phase(annotations = Set.empty, scope = RuleScope.Everywhere(Set("demo.Actor")))
+    run(ph)
+    assertEquals(ph.policyReport.findings, Nil)
+  }
+
+  test("a SCOPED-OUT ancestor beside a RETYPED override is reported — K13's closure, at plan time") {
+    // `Box` is scoped out and annotates `find`; `SubBox` re-states the annotation on its own
+    // override, so the parent keeps `Actor` while the child moves to `Actor | Null`. That is half an
+    // override pair, and until this it cost a compile hunt (35 -> 6 -> 0 on the reference port).
+    val src =
+      """package demo;
+        |import java.lang.annotation.*;
+        |@Retention(RetentionPolicy.CLASS)
+        |@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+        |@interface Null {}
+        |class Actor {}
+        |class Box { @Null Actor find() { return null; } }
+        |class SubBox extends Box { @Null Actor find() { return null; } }
+        |class Inheritor extends Box { }
+        |""".stripMargin
+    def closureOf(sc: RuleScope): List[String] =
+      val ph        = new NullabilityTransform(Set("demo.Null"), scope = sc)
+      val (after, _) = Pipeline.runTraced(PortFixture.parse(src), List(ph))
+      ph.boundary(after.units).filter(_.issue == Issue.ScopedOutParent).map(_.subject)
+
+    // the CHILD is the subject — it is the end the port can move — and `Inheritor` is NOT reported:
+    // it merely inherits, declares no annotation of its own, so nothing is planned for it and a
+    // scope entry naming it would be the dead policy the test above reports.
+    assertEquals(closureOf(RuleScope.Everywhere(Set("demo.Box"))), List("demo.SubBox#find"))
+    // …closed, exactly as K13's exit closes: name the subtype beside its ancestor
+    assertEquals(closureOf(RuleScope.Everywhere(Set("demo.Box", "demo.SubBox"))), Nil)
+    // …and with no scope at all there is no half-pair to report
+    assertEquals(closureOf(RuleScope.Everywhere()), Nil)
+  }
+
   test("the SURFACE fingerprint carries the annotations, the target and the scope") {
     assertEquals(phase().surfaceFingerprint, "demo.Null|union|")
     assertEquals(phase(target = Target.Wrapper("lowlevel.Nullable")).surfaceFingerprint,

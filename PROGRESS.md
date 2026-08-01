@@ -3065,6 +3065,38 @@ ports**; the two engine fixtures that did not (`SurfaceFoldSpec`'s chain middle,
 base conf) now do, which is the finding firing correctly on the only two manifests in the repository
 that were silently unscreened.
 
+### 11.20 Checkpoint-4 audit remediation — F2: K13's two blindnesses become PLAN-TIME reports
+
+`RuleScope.neverFired` called by `NullabilityTransform` at the end of its plan, and
+`NullabilityBoundaryCheck.Issue.ScopedOutParent` for the closure a `RuleScope` does not compute.
+**Both rules are `ENGINE-LIMITS.md` K13's, unchanged; what moved is that the RUN now enforces them.**
+K13 keeps its numbers and says so.
+
+| K13 said | evidence it had | evidence it has now |
+|---|---|---|
+| a scope exit on a generic type names the type AND every owned subtype that RE-STATES the annotation | the COMPILER: 35 errors -> 6 -> 0, the six being `SnapshotArray`/`DelayedRemovalArray` | a `nullability-boundary` `ScopedOutParent` finding per (retyped declaration, scoped-out annotating ancestor), §1(b)-classified, at plan time |
+| …and it STOPS there — a subtype that merely inherits needs no entry, and adding one is dead policy | a BYTE-IDENTITY experiment (`OrderedMap` in, `OrderedMap` out, `members.tsv` identical) | a `policy` `NeverMatched` finding per declared scope entry that named no ANNOTATED declaration |
+
+**Both are 0 on the corpus, which is the delivery rather than a gap.** libGDX's twelve
+`nullabilityExempt` entries and screens' two member keys each hold something back — the closure was
+completed by hand at P3 and the inert `OrderedMap` entry was deleted then — so the reports confirm a
+scope that is already correct. That is why the mechanism is proven on fixtures instead: three tests
+in `NullabilitySpec` (a bound-but-inert entry; an entry naming nothing, reported ONCE by the binder
+and not twice; a scoped-out parent whose annotating child is reported, closed by naming the child,
+silent when nothing is scoped). Neutralised, the two positives fail and the rest pass.
+
+**Where each finding lands is structural, not taste.** The dead ENTRY is a manifest key with no site
+in emitted code, so it is a `policy` finding — the check already scoped to this module's own keys.
+The CLOSURE names an emitted declaration, so it is a `nullability-boundary` finding and survives that
+check's D2 emitted-unit filter, which is the same filter that would have dropped it had the subject
+been the scoped-out PARENT. The subject is therefore the CHILD, which is also the end a port can move.
+
+**The predicate over-approximates by NAME, deliberately.** It reads `Definition.parents` and the
+annotation hits the plan already computed; it does not resolve overriding. A same-named annotated
+ancestor member that is not really an override names a pair a port dismisses in one reading, while a
+signature test would need the override closure this phase does not have (its wrapper-mode test says
+the same thing one method up).
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.

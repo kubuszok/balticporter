@@ -112,7 +112,8 @@ final class NullabilityTransform(
     runScope    = binder.run
     ownSubjects = binder.run.contributed(name)
 
-  def policyReport: PolicyReport = PolicyReport.fromBindings(records) ++ PolicyReport(baseIntrusionFindings)
+  def policyReport: PolicyReport =
+    PolicyReport.fromBindings(records) ++ PolicyReport(baseIntrusionFindings ++ deadScopeFindings)
 
   /** Nullability is a fact about the SHARED SURFACE: a base that emits `Actor | Null` and a
     * dependent that emits `Actor` for the same member each compile alone and cannot compile
@@ -227,7 +228,8 @@ final class NullabilityTransform(
     // Every per-run value is reset HERE, because a phase instance is reused across two translations
     // (`Determinism.Full` does exactly that, and a port with two source sets shares one phase list)
     // and a cached answer from the first run is a wrong answer in the second (§5.1).
-    issues.clear(); intrusions.clear(); newTypes = Map.empty; wrapped = Map.empty; overridingRead = false
+    issues.clear(); intrusions.clear(); observedEntries.clear(); planned = false
+    newTypes = Map.empty; wrapped = Map.empty; overridingRead = false
     // §1(b): an empty policy needs no code path. Nothing bound — no annotation configured, or every
     // configured one named nothing — and the program is returned untouched.
     if boundAnnots.isEmpty then return program
@@ -284,25 +286,38 @@ final class NullabilityTransform(
         // under `Only(include)`. Ask the scope whether it includes the symbol, and quote the entry
         // that decided it when there is one — under `Only` a declaration is held back precisely
         // because NO entry names it, and the key an agent edits is then the whole list.
-        else if !scope.includes(program, s) then
-          scopedOut(program, s, scope.entryFor(program, s).getOrElse(scope.fingerprint))
+        //
+        // …and RECORD the entry either way. An entry that names no ANNOTATED declaration decided
+        // nothing whichever direction it points, and that is the §1(b) no-op only this phase can
+        // see: `PolicyBinder.bindScope` asks "does anything in the program fall inside this region",
+        // which a real type answers `yes` to whether or not it carries an annotation.
         else
-          slotOf(program, s) match
-            case scala.None => refuse(program, s, key, Issue.NotAValuePosition)
-            case Some((slot, was)) =>
-              if alreadyNullable(was) then ()                       // idempotent: nothing to do
-              else if hits.exists(_.args.nonEmpty) then refuse(program, s, key, Issue.AnnotationArguments)
-              else if s.flags.isParam && s.flags.isVararg then refuse(program, s, key, Issue.VarargParameter)
-              else if isPrimitive(program, was) then refuse(program, s, key, Issue.PrimitiveType)
-              else if wrapperCrossesOverride(program, s) then refuse(program, s, key, Issue.OverrideCrossing)
-              else
-                // RETYPED AND COUNTED, which is not a contradiction: the declaration is fine and
-                // every USE of it is not (see `Issue.AbstractTypeParameter`). Recorded before the
-                // plan entry so the order of the two reads as one act.
-                if target == Target.Union && mentionsTypeParam(program, was) then
-                  refuse(program, s, key, Issue.AbstractTypeParameter)
-                plan += Planned(s, key, slot, was, hits)
+          val entry = scope.entryFor(program, s)
+          entry.foreach(observedEntries += _)
+          if !scope.includes(program, s) then
+            scopedOut(program, s, entry.getOrElse(scope.fingerprint))
+          else
+            slotOf(program, s) match
+              case scala.None => refuse(program, s, key, Issue.NotAValuePosition)
+              case Some((slot, was)) =>
+                if alreadyNullable(was) then ()                       // idempotent: nothing to do
+                else if hits.exists(_.args.nonEmpty) then refuse(program, s, key, Issue.AnnotationArguments)
+                else if s.flags.isParam && s.flags.isVararg then refuse(program, s, key, Issue.VarargParameter)
+                else if isPrimitive(program, was) then refuse(program, s, key, Issue.PrimitiveType)
+                else if wrapperCrossesOverride(program, s) then refuse(program, s, key, Issue.OverrideCrossing)
+                else
+                  // RETYPED AND COUNTED, which is not a contradiction: the declaration is fine and
+                  // every USE of it is not (see `Issue.AbstractTypeParameter`). Recorded before the
+                  // plan entry so the order of the two reads as one act.
+                  if target == Target.Union && mentionsTypeParam(program, was) then
+                    refuse(program, s, key, Issue.AbstractTypeParameter)
+                  plan += Planned(s, key, slot, was, hits)
     }
+    // ---- the two things a SCOPE owes, both PLAN-TIME and both previously a compile hunt ----
+    // The plan walked every symbol, so `observedEntries` is complete and the never-fired complement
+    // is meaningful. Before this point it is not, which is what `planned` says.
+    planned = true
+    scopedOutParents(program, plan.toList)
     if plan.isEmpty then return program
 
     newTypes = plan.iterator.map(p => p.sym.id -> nullable(p.was)).toMap
@@ -472,6 +487,105 @@ final class NullabilityTransform(
     */
   private def intrudesOnBase(p: Program, s: Symbol, key: String): Boolean =
     ownSubjects.exists(_.contains(MergeablePolicy.subjectOf(key))) && !runScope.emits(unitOf(p, s.id))
+
+  // -------------------------------------------------------------------------
+  // the SCOPE's own two obligations — a dead entry, and the closure it does not compute
+  // -------------------------------------------------------------------------
+
+  /** every declared scope entry this run OBSERVED deciding something — the input to
+    * [[RuleScope.neverFired]], and the only honest one. */
+  private val observedEntries = collection.mutable.Set.empty[String]
+  /** did the plan loop run? `policyReport` is read whether or not the phase ever ran (the whole
+    * point of deriving the never-fired half from the BINDING), and "no entry fired" means nothing
+    * before the walk that would have fired them. */
+  private var planned = false
+
+  /** A DECLARED SCOPE ENTRY THAT NAMED NO ANNOTATED DECLARATION — the one §1(b) no-op the ordinary
+    * never-fired machinery cannot see, and `ENGINE-LIMITS.md` K13's own instruction.
+    *
+    * `PolicyBinder.bindScope` asks *did anything in this program fall inside this region*, and a
+    * real type answers `yes` whether or not it carries an annotation — so an entry that holds back
+    * nothing BINDS. K13 measured exactly that: libGDX's first `nullabilityExempt` draft listed
+    * `OrderedMap`, which declares no `@Null` of its own, and the entry held back nothing; with and
+    * without it `members.tsv` was byte-identical and `policy` stayed 0. A byte-identity experiment
+    * is not a report. This is.
+    *
+    * Only entries whose BINDING succeeded are reported, or an entry naming a type this program does
+    * not contain would be reported twice — once by the binder as `NeverMatched` and once here — for
+    * one mistake with one fix.
+    */
+  private def deadScopeFindings: List[PolicyFinding] =
+    if !planned then Nil
+    else
+      val bound = records.filter(r => r.binding.isBound).map(_.entry).toSet
+      scope.neverFired(observedEntries.toSet).intersect(bound).toList.sorted.map { e =>
+        PolicyFinding(name, s"NullabilityTransform(scope) ${scope.productPrefix} entry", e,
+          PolicyIssue.NeverMatched,
+          "the entry names a region of this program, and NO declaration inside it carries a " +
+            "configured nullability annotation — so it held nothing back (under `Everywhere`) or " +
+            "let nothing through (under `Only`), and removing it would change no emitted byte. " +
+            "`PolicyBinder.bindScope` cannot see this: it asks whether the REGION exists, which a " +
+            "real type answers whether or not it is annotated. Delete the entry, or fix the FQN if " +
+            "it was meant to name a different type.")
+      }
+
+  /** THE CLOSURE A `RuleScope` DOES NOT COMPUTE — a scoped-out PARENT beside a retyped CHILD.
+    *
+    * `ENGINE-LIMITS.md` K13's second measured rule, as a plan-time predicate. A scope entry naming a
+    * generic container holds its annotated members back; an owned SUBTYPE that RE-STATES the
+    * annotation on a same-named member is not covered by that entry and is retyped — half an
+    * override pair, which is the one shape a union floor may not emit. Measured on libGDX: scoping
+    * eleven types out took 35 errors to 6, and all six survivors were `SnapshotArray` and
+    * `DelayedRemovalArray` overriding two annotated members each of the scoped-out `Array`. Adding
+    * the two subclasses took it to 0 — and NOTHING computed the closure, so the compile was the only
+    * thing that could find a missing entry. This turns that hunt into one run.
+    *
+    * **And it stops exactly where K13 says it does.** A subtype that merely INHERITS an annotated
+    * member declares no annotation, so it is never PLANNED and never reaches this predicate — which
+    * is why `OrderedMap` produces nothing here and adding an entry for it would be the dead policy
+    * [[deadScopeFindings]] reports. The predicate reads `Definition.parents` and the annotation hits
+    * the plan already computed; it invents no notion of overriding beyond the name, deliberately —
+    * over-approximating names a pair a port can dismiss, while a signature test would need the
+    * override closure this phase does not have (see [[wrapperCrossesOverride]]'s same note).
+    *
+    * §1(b): the fix is a scope entry in the library's manifest, never an engine change.
+    */
+  private def scopedOutParents(p: Program, plan: List[Planned]): Unit =
+    if scope.isUnrestricted || plan.isEmpty then return
+    def classOf(id: SymId): Option[Tree.ClassDef] =
+      p.definitionOf(id).collect { case c: Tree.ClassDef => c }
+    def parentsOf(c: Tree.ClassDef): List[SymId] =
+      c.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case t: Term => headSym(t.tpe) }
+    def annotated(s: Symbol): Boolean =
+      s.annotations.exists(a => headSym(a.tpe).exists(boundAnnots.contains))
+    /** the same-named member of `a` that carries a bound annotation, if there is one. */
+    def annotatedMember(a: Tree.ClassDef, nm: String): Option[Symbol] =
+      a.body.collectFirst {
+        case d: Definition if p.symbolOf(d.symbol).exists(x => x.name == nm && annotated(x)) =>
+          p.symbolOf(d.symbol).get
+      }
+    // one row per (retyped declaration, scoped-out ancestor), and the DECLARATION is the subject:
+    // it is the end the port can move, and the end whose emitted signature is the wrong half.
+    plan.map(_.sym).map(declarationOf).distinct.foreach { decl =>
+      p.symbolOf(decl).foreach { d =>
+        val seen = collection.mutable.Set.empty[SymId]
+        def climb(t: SymId, fuel: Int): Unit =
+          if fuel > 0 && seen.add(t) then
+            classOf(t).foreach { cd =>
+              p.symbolOf(t).foreach { ts =>
+                if p.owns(t) && !scope.includes(p, ts) then
+                  annotatedMember(cd, d.name).foreach { parent =>
+                    issues += Finding(Issue.ScopedOutParent, d.fullName,
+                      s"`${parent.fullName}` is held back by the `${scope.entryFor(p, ts).getOrElse(scope.fingerprint)}` " +
+                        "scope entry while this override of it is retyped",
+                      Decision.originOf(p, decl), unitOf(p, decl))
+                  }
+              }
+              parentsOf(cd).foreach(climb(_, fuel - 1))
+            }
+        classOf(d.owner).foreach(cd => parentsOf(cd).foreach(climb(_, 64)))
+      }
+    }
 
   /** every base declaration a key of this module's selected, by key — one `PolicyFinding` per KEY,
     * because that is the string an agent edits (§4.575) and a row per declaration would report one

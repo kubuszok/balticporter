@@ -60,6 +60,9 @@ object NullabilityBoundaryCheck:
     /** UNION mode: the annotated type mentions an ABSTRACT TYPE PARAMETER, where the union is not
       * transparent — retyped, and counted, because the cost lands on the USES and not here. */
     case AbstractTypeParameter
+    /** the SCOPE's own closure: an ancestor this port scoped out declares a same-named annotated
+      * member, so its half of the override pair keeps the upstream type while this one moves. */
+    case ScopedOutParent
 
   object Issue:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
@@ -106,6 +109,16 @@ object NullabilityBoundaryCheck:
           "the USES and is invisible here, which is why it is a number. Three ways out, all policy: " +
           "scope this port's generic types out of `nullability`; accept the errors; or stage to " +
           "`-Yexplicit-nulls -language:unsafeNulls`, under which the whole class disappears."
+      case ScopedOutParent =>
+        "§1(b) A SCOPE EXIT THAT DID NOT CLOSE: an ANCESTOR of this declaration is held back by one " +
+          "of this port's own `nullability` scope entries, and it declares a member of the same " +
+          "name carrying the same annotation — so the parent keeps its upstream type while THIS " +
+          "override moves, which is half an override pair and the one shape a union floor may not " +
+          "emit. Add this type to the scope beside its ancestor. A `RuleScope` is a set of FQNs and " +
+          "nothing computes this closure, so before this was reported the COMPILER was the only " +
+          "thing that could find a missing entry (`ENGINE-LIMITS.md` K13: 35 errors -> 6 -> 0, the " +
+          "six being exactly this shape). A subtype that merely INHERITS an annotated member is not " +
+          "reported and needs no entry — adding one is dead policy, which `policy` now reports."
 
   /** one boundary site. `unit` is the top-level symbol it belongs to, which is how a dependent
     * port holds a finding to the module that EMITS it (`ENGINE-LIMITS.md` D2). */
