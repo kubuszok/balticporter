@@ -833,9 +833,17 @@ slots is promoted and nothing is synthesised, so those classes stay byte-for-byt
 marker. Measured on libGDX core: omissions **177 -> 176**, the one removed being
 `DistanceFieldFontCache`'s two discarded arguments — this entry's own worked example — with compile
 still 0 and 6 classes gaining a marker (the five tiled map loaders plus `DistanceFieldFontCache`).
-`CtorFunnel.syntheticPrimary` asks `shadowedAt(1)` after choosing the marker, so a class that some
-real constructor of the DISAMBIGUATED arity would still shadow is refused rather than emitted; that
-refusal is the residue this entry now covers.
+
+**There is no second applicability test after the marker, and that absence is a CONSEQUENCE rather
+than a residue.** The design asked for one — refuse where even the disambiguated primary is shadowed
+— and it has no cases, because the marker's argument is ASCRIBED: the disambiguated delegation
+writes `(null: C.Funnel)`, at a type the engine minted for this class alone (`TirEmitter.markerArg`).
+No real constructor declares a parameter of it, and one declaring `Object` in that position is
+applicable but strictly LESS specific, so it can never win the resolution. A bare `null` would have
+been applicable to everything — which is how the predicate was first written, and it refused the
+synthesis for every class that also declared a one-argument constructor. `CtorFunnel.syntheticPrimary`
+therefore asks the applicability question ONCE, about the BARE delegation, and the ascription answers
+the disambiguated one by construction (`DESIGN.md` §8.2, as-built item 3).
 
 *Fix kind: (a).*
 
