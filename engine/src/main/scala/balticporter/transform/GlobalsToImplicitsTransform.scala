@@ -283,7 +283,11 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
           // renders the classification's pairs first and the detail's after — so a duplicate key
           // appears TWICE in the emitted comment.
           detail = Map(
-            "from" -> "assigned by the class initialiser",
+            // WHICH initialiser it came out of — a `<clinit>` assignment or the field's own
+            // initialiser. A note that names the wrong one says something false about code the
+            // reader is holding, which is the whole reason a note sits beside the declaration.
+            "from" -> (if d.clinit == SymId.None then "the field's own initialiser"
+                       else "assigned by the class initialiser"),
             "to"   -> s"a `def` over a cache, taking `(using $ctxFqn)`",
             "why"  -> ("java runs a class initialiser at first ACTIVE USE of the class and this " +
               "runs at first READ of the field — an eager→lazy change the `sites` policy asked for"),

@@ -2436,10 +2436,55 @@ exist.** Both were measured, not reasoned:
 members changed, every check count identical, `context-seam` gone, every suite outcome unchanged.
 **Do NOT retry it as a policy exercise**: the two exits that look available are still the two §11.12
 rejected (a hand-maintained scope list, `attach = "method"`), and the third that was believed to
-exist — a `sites` entry — has now been measured not to. P5 replays unchanged the day CT6's two-line
-widening lands in `ContextNeed`, and the only work left beside it is this port's own `Pools.scala`,
-whose eager registration block constructs types that now take a context and therefore belongs behind
-a `def registerDefaults()(using sge.Sge)` the bootstrap calls.
+exist — a `sites` entry — has now been measured not to.
+
+**CT6 IS NOW CLOSED, and P5 REPLAYS AT 1 ERROR — which is the port's own shim and nothing else.**
+The mechanism shipped default-off (`ENGINE-LIMITS.md` CT6): both readers ask the `Tree.New` NODE
+what it CONSTRUCTS rather than the kind the shared index recorded, and the deferral's candidates come
+from the `sites` entries the binder resolved rather than from reads of a mapped static. The
+enablement, applied in a worktree with the P5 config above verbatim — the two `sites` `lazy-init`
+keys included — and then reverted:
+
+| | delivery replay, blocked on CT6 | replayed after CT6 |
+|---|---:|---:|
+| scalac errors | **3** | **1** — the injected `sge/utils/Pools.scala`, `Unmapped` |
+| — a generic `new` with no seam (`Table#cellPool`) | 1 | **0** |
+| — a static initialiser with no reachable `sites` exit (`TextField#DEFAULT_ONSCREEN_KEYBOARD`) | 1 | **0** |
+| — the port's own injected shim | 1 | **1** |
+| `context-seam` | 17 | **19** |
+|  — `captured-context` | 13 | **14** |
+|  — `residual-global-read` | 4 | **3** |
+|  — `deferred-init` | **0** | **2** |
+|  — `frozen-component` / `lost-clause` | 0 / 0 | **0 / 0** |
+| threaded declarations | 275 (188 classes + 87 methods) | **275** — 188 + 87 |
+| distinct java files threaded | 177 | **177** |
+| `policy` | 2 (the `bean-properties` floor) | **2**, the same two |
+| `omissions` | 65 | **65** |
+| every other check | baseline | **identical** |
+| blast (`just members-unchanged`) | 1,799 | **1,807** |
+| emitted `(using sge.Sge)` clauses | 598 | **600** in 176 emitted files |
+
+Four things it settles, and one it does not:
+
+- **The two former errors are now COUNTED, which was the sharper half of the complaint.** The `+1`
+  capture is `Table$114#newObject` — the anonymous subclass of `Pool<Cell>` that had no lexical home
+  at all — and the two `deferred-init` rows are the `sites` keys FIRING for the first time. A
+  boundary the engine cannot see is worse than one it refuses (CLAUDE.md §1); there are none left in
+  this run.
+- **`residual-global-read` 4 → 3 is a MOVE, not a fix.** `TextField#DEFAULT_ONSCREEN_KEYBOARD` left
+  that lane for `deferred-init`. The 3 that remain — `GLErrorListener#LOGGING_LISTENER` ×2 and
+  `ParticleShader$Setters#screenWidth` — are static initialisers that READ the holder, a different
+  shape with the exits it always had (`boundary = "residual-global"`, or `lazy-init`).
+- **`policy` did NOT rise**, and that is the report working rather than not firing: both entries
+  selected a site, so neither is a dead binding. A third key naming something undeferrable would now
+  be a `policy` row instead of silence.
+- **`+8` blast and `+2` clauses are exactly the two deferrals** — a cache pair and a `def` each.
+  Emitted-file count reads 176 against the java-file count of 177, which are different denominators;
+  every one of the 167 threaded TOP-LEVEL types carries a clause and `lost-clause` is 0.
+- **What is left is not the engine's.** `sge/utils/Pools.scala`'s eager registration block constructs
+  types that now take a context, so it belongs behind a `def registerDefaults()(using sge.Sge)` the
+  bootstrap calls. That is this port's hand-written Scala, and the correlator classifies it as
+  `Unmapped` rather than an engine gap. **P5 is ready**; the third replay is expected to deliver.
 
 ### 11.13 D5j — the demand-derived JDK surface, as measured
 

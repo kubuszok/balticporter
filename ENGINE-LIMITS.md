@@ -3531,12 +3531,12 @@ reproduced: 275 threaded declarations, 177 files, 17 seams, 0 refusals, 0 `froze
 
 *Fix kind: (a) engine — `CtorFunnel`, the `Plan.none` outcome. Not reachable from any manifest key.*
 
-### CT6. The INSTANTIATE edge does not exist for a GENERIC class, and the `sites` exit the seam NAMES does not exist either — **OPEN; P5's last 2 errors, and one of them is UNCOUNTED**
+### CT6. The INSTANTIATE edge does not exist for a GENERIC class, and the `sites` exit the seam NAMES does not exist either — **CLOSED; 3 errors → 1, and both faces are read off the NODE**
 
 **Title, for renumbering: "a generic `new` is not an instantiate, and `sites` cannot reach an
-unsuppliable use".** OPEN. (a) engine, both faces. Measured on the P5 replay after CT5 closed: the
-enablement lands at **3 scalac errors**, and neither of the two that are the port's own boundary has
-the policy exit the engine's own diagnostic tells its reader to use.
+unsuppliable use".** CLOSED. (a) engine, both faces — `ContextNeed`. Measured on the P5 replay after
+CT5 closed: the enablement landed at **3 scalac errors**, and neither of the two that are the port's
+own boundary had the policy exit the engine's own diagnostic tells its reader to use.
 
 Read this beside CT5. CT5 was the emitter losing a clause the phase attached; these two are the
 CLOSURE not seeing an edge, and the ESCAPE HATCH not reaching the site it is named for. Both are
@@ -3606,9 +3606,86 @@ the never-fired machinery has nothing to report. This is a policy entry that is 
 nothing, and is invisible to every check in the run — the third face of "never fired" and the one
 nothing currently counts.
 
-*Fix kind: (a) engine, both faces — `ContextNeed` (the usage match, `anonHome`, and the deferral's
-trigger). Neither is reachable from any manifest key, and P5 stays blocked on them: the enablement
-is otherwise complete and reproduces every number `PROGRESS.md` §11.12 records.*
+#### CLOSED — both readers ask the NODE, and the trigger is the POLICY
+
+**Face A is two readers and one predicate.** `ContextNeed.instantiates` answers *is this usage of
+`c` a construction of `c`* from the site: at a `Tree.New` it compares `c` against what the `New`
+CONSTRUCTS (`constructedBy` = the head of `tpt.tpe` with any application stripped), and off a `New`
+it falls back to the recorded kind. `expandClass`'s instantiate arm goes through it, and `anonHome`
+stops filtering on `UsageKind.Instantiate` entirely — the lexical home is *which body this `New`
+carries*, which the node says and the label does not.
+
+**Reading the node is what keeps it EXACT, and that is the part a kind-blind widening gets wrong.**
+"Any usage at a `New` site is an instantiation" would make `new Pool<Cell>()` an instantiation of
+`Cell` — `Cell` is named at that very node as a `TypeArg`, and constructing a `Pool` constructs no
+`Cell`. Negative-tested: relaxed to `case _: Tree.New => true`, the fixture's `Sized#mine` gains a
+seam it must not have.
+
+**Face B: the trigger is the POLICY, and a dead entry now reports.** `ContextNeed.deferrals` takes
+its candidates from the `sites` entries the binder RESOLVED (`boundSites`, the phase's own record),
+with the read-derived set kept beside them — that set is a subset by construction, but it is the
+only thing that reaches `<clinit>`, which `PolicyBinder` refuses as a `SyntheticTarget` and policy
+may still legitimately name. `planDeferral` then handles a static FIELD carrying its own initialiser
+as well as a class initialiser's assignments (`Deferral.clinit` is `SymId.None` for the first — there
+is nothing to strip, the `ValDef` is replaced whole), and `readsHolder(rhs)` widens to
+`needsContext(rhs)`: reads a mapped static, **or constructs a type this program declares**.
+
+That second disjunct is an over-approximation and cannot be anything else *here*: the deferral plan
+is read BEFORE the growth because it creates seeds, so `threadedClasses` does not exist yet, and a
+second growth to refine it would draw every boundary once and then un-draw it. What makes it safe is
+that the port had to NAME the site — `lazy-init` is per-site opt-in with a decision row, a porter
+note and a counted seam.
+
+**One more thing had to move or the exit reports against itself**: `climb` now resolves a DEFERRED
+field to `Site.Method`, because after the rewrite it IS a `def` over a cache carrying the clause. Its
+own scan therefore asks `preSiteOf`, a deferral-unaware and UNCACHED climb — cached, the pre-deferral
+answer would have been handed to the growth as well.
+
+**A BOUND `sites` ENTRY THAT SELECTS ZERO SITES NOW REPORTS** — the third face of "never fired", the
+same shape K13's dead-scope-entry report takes. `bindMembers` asks whether the MEMBER exists, which a
+real field answers whether or not the phase ever reaches it. A `lazy-init` entry counts as fired iff
+it produced a `Deferral`; the other two count when `policyFor` resolved a boundary through them, and
+their finding says the thing that is easy to get wrong — an UNSUPPLIABLE USE has no read to re-spell,
+so `residual-global` on one is dead and `lazy-init` is its exit. Only entries whose BINDING succeeded
+are reported, or one mistake with one fix is reported twice.
+
+**THE SHARED INDEX STILL UNDER-LABELS, and that is deliberate — do not diagnose it fresh.**
+`Xref.walkType`'s `AppliedType` arm still REPLACES the kind it was called with, so a symbol reached
+through an application is `Tycon`/`TypeArg` whatever position the caller was describing. CT6 is the
+worked example. It stays because `UsageKind` is read by the portability check, the rewrite trace and
+the external-surface walk, and re-labelling it is its own thirteen-port measure cycle; a consumer
+that needs the position asks the NODE (`Usage.site`), which is a structural fact. The arm carries
+this note in code.
+
+**What it measured. The P5 enablement, applied in a worktree and reverted: 3 → 1 error.** The one is
+the port's own injected `sge/utils/Pools.scala`, `Unmapped` and explicitly *not an engine gap*. The
+two CT6 errors are gone and both are now COUNTED:
+
+| | delivery replay (CT6 open) | with CT6 closed |
+|---|---:|---:|
+| scalac errors | **3** | **1** — the injected `Pools.scala` shim |
+| `context-seam` | 17 | **19** |
+|  — `captured-context` | 13 | **14** — `+1`, and it is `Table$114#newObject`, the anonymous subclass of `Pool<Cell>` that had no lexical home |
+|  — `residual-global-read` | 4 | **3** — `TextField#DEFAULT_ONSCREEN_KEYBOARD` left this lane for `deferred-init` |
+|  — `deferred-init` | **0** | **2** — both `sites` keys FIRE: `TextField#DEFAULT_ONSCREEN_KEYBOARD`, `Table#cellPool` |
+|  — `frozen-component` / `lost-clause` | 0 / 0 | **0 / 0** |
+| threaded declarations | 275 (188 classes + 87 methods) | **275** — 188 + 87 |
+| distinct java files threaded | 177 | **177** |
+| `policy` | 2 (the `bean-properties` floor) | **2**, the same two — no dead-binding row, because both entries fired |
+| `omissions` | 65 | **65** |
+| every other check | baseline | **identical** |
+| blast (`just members-unchanged`) | 1,799 | **1,807** — `+8`, the two cache pairs and their `def`s |
+
+`Table#cellPool` is the entry's own fixture reproduced at scale: `static final Pool<Cell> cellPool =
+new Pool<Cell>(){ … new Cell() … }` was **1 error and 0 seams**; it is now 1 counted `deferred-init`
+and a `def cellPool(using sge.Sge)` over a cache, with the porter note beside it. Read the note's
+`from=` — it says *the field's own initialiser*, because a note that named a `<clinit>` that never
+existed would say something false about the code its reader is holding.
+
+*Fix kind: (a) engine, both faces — `ContextNeed` (`instantiates`, `anonHome`, the deferral's
+trigger, and `climb`'s view of a deferred field), plus the dead-binding report in
+`GlobalsToImplicitsTransform`. None of it is reachable from any manifest key; the mechanism stays
+DEFAULT-OFF, so all 13 ports are 0 members changed with every check count identical.*
 
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 

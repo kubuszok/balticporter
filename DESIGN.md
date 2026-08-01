@@ -2211,6 +2211,32 @@ the mechanism commit rather than left for the enablement:
   puts the note at the head of the type's body, and the emitter looks that up by the type's symbol.
   A note keyed on the member's own symbol never appears, and `NoteCoverageCheck` cannot see it either
   (the member is not emitted, so it is out of scope by construction).
+- **The INSTANTIATE edge is read off the NODE, not off `UsageKind` — and the `lazy-init` trigger is
+  the POLICY, not a read.** Both are `ENGINE-LIMITS.md` CT6, and both were the closure believing a
+  label. `Xref.walkType`'s `AppliedType` arm REPLACES the kind it was called with, so
+  `walkType(tpt.tpe, Instantiate, n)` at a `Tree.New` labels a GENERIC class `Tycon` — parameterised
+  and raw alike — and this edge was therefore absent for every generic class: no threading, no
+  `impose`, and so no SEAM, which is a boundary the engine cannot see rather than one it refuses. It
+  also left an anonymous subclass of a generic parent with no lexical home, which is the capture
+  defect above reappearing for generics. `ContextNeed.instantiates` asks *what does this `New`
+  construct* (the head of `tpt.tpe`, application stripped) and `anonHome` asks *which body does it
+  carry*; both are structural facts about the node the phase is holding (§4.56). Asking the node is
+  also EXACT where a kind-blind widening is not — `new Pool<Cell>()` names `Cell` at that node as a
+  TYPE ARGUMENT, and constructing a `Pool` constructs no `Cell`. The fix is deliberately NOT in
+  `Xref`: `UsageKind` is a shared index read by three other consumers.
+  The second face is the same mistake in the escape hatch. Every seam this phase draws tells its
+  reader to *give the site a `sites` policy*, and the shape that most needs one — a static
+  initialiser that CONSTRUCTS a now-threaded type — reads no mapped static, so a trigger derived
+  from reads could not name it. The candidates are the bound entries themselves; a static field
+  carrying its own initialiser is deferrable (there is no `<clinit>` to strip); `climb` sees a
+  deferred field as the `def` the rewrite made it, or the seam is reported against the exit just
+  taken; and `readsHolder` widens to *reads a mapped static OR constructs a type this program
+  declares*, which is an over-approximation the per-site opt-in pays for and which cannot be
+  sharpened here, since the plan is read before the growth that would answer it.
+  **And a bound entry that selects zero sites REPORTS** — `bindMembers` asks whether the member
+  exists, which a real field answers whether or not the phase reaches it, so the binder's never-fired
+  machinery is blind to exactly this. Two such keys were measured on a real port: both bound, both
+  dead, output byte-identical, `policy` at its floor.
 
 **`attach = "class"` NOW EMITS, and the refusal it carried is a worked example of where such a
 refusal belongs.** For one release the TIR edit was complete and the emission was not — the
