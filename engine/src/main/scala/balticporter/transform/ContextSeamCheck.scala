@@ -21,7 +21,7 @@ import balticporter.tir.*
   * So: a number with an origin and a CLAUDE.md §1 classification, available before any compiler
   * runs. A port that enables the phase sees the size of its boundary immediately.
   *
-  * ==The five kinds, and why they are five==
+  * ==The seven kinds, and why they are seven==
   * Each one is a different instruction to its reader, which is the same argument
   * [[balticporter.tir.NotBound]] makes for refusing to collapse its cases:
   *
@@ -42,6 +42,17 @@ import balticporter.tir.*
   *     ([[balticporter.tir.OverrideGraph.Closure.isAnchored]]), or a trait whose own body needs the
   *     context and has no `promoteToClass` entry. Threading half a component is a broken `override`,
   *     so the whole of it is refused; each refusal names the member and what froze it.
+  *   - [[Kind.SelfSupplied]] — THE THIRD ANSWER. The port declared this type framework-instantiated,
+  *     so it takes the context WITHOUT taking a parameter: no clause on its constructors and a
+  *     `given` member the port's own expression fills. Counted because it is a place the threading
+  *     stopped exactly like the other five, and because the value now comes from a port's hand-
+  *     written fixture rather than from the caller — which is a fact about the port a reader should
+  *     be able to size without reading every generated file.
+  *   - [[Kind.UnconstructedThread]] — the WARNING, and the only kind that is not a place the
+  *     threading stopped: it is a place the threading may have gone somewhere it cannot be
+  *     exercised. A threaded class this program never constructs, whose ancestry leaves it, is the
+  *     shape a framework instantiates; a clause on its constructor compiles perfectly and cannot be
+  *     supplied at run time. This is the check `ENGINE-LIMITS.md` CT7 lacked.
   *   - [[Kind.LostClause]] — a clause the phase DID attach that the emitted type does not carry.
   *     The other four are refusals the phase records as it makes them; this one is a disagreement
   *     between the tree and the emitted text, and it is the only kind that is invisible to every
@@ -74,7 +85,12 @@ object ContextSeamCheck:
     case DeferredInit       extends Kind("deferred-init")
     case CapturedContext    extends Kind("captured-context")
     case FrozenComponent    extends Kind("frozen-component")
-    /** …and the fifth, which is the only one the PHASE cannot see: a clause it put on a class's
+    /** the port's own answer to a class no caller of this program constructs (`ENGINE-LIMITS.md`
+      * CT7): the constructors keep java's signature and a `given` member supplies the context. */
+    case SelfSupplied       extends Kind("self-supplied")
+    /** …and the WARNING, which is the CT7 shape observed rather than declared. */
+    case UnconstructedThread extends Kind("unconstructed-thread")
+    /** …and the seventh, which is the only one the PHASE cannot see: a clause it put on a class's
       * constructors that the emitted header does not carry (`ENGINE-LIMITS.md` CT5).
       *
       * It is a seam by the same definition as the other four — a place the threading stopped — and
@@ -118,6 +134,25 @@ object ContextSeamCheck:
           "a different feature, and a subtrait may not pass arguments), and an `enum`'s primary IS " +
           "its java constructor, which every case object reaches with its own argument list — move " +
           "what needs the context off the enum, or scope the enum out."
+      case SelfSupplied =>
+        "§1(b) PER-LIBRARY and DELIBERATE: the port declared this type framework-instantiated, so " +
+          "its constructors keep the signature java gave them and the context arrives from a " +
+          "`given` member filled by the port's own expression. Nothing here is broken; the count " +
+          "exists because the value this type threads is no longer its caller's, and because a " +
+          "reader of the emitted file should be able to size how many of them there are. Read the " +
+          "decision row for the expression, and confirm that a context built once per instance is " +
+          "the one this type should have."
+      case UnconstructedThread =>
+        "§1(b) PER-LIBRARY, and it may be nothing: this class was threaded and NOTHING IN THIS " +
+          "PROGRAM CONSTRUCTS IT, while its ancestry leaves the program — which is exactly the " +
+          "shape of a class a FRAMEWORK instantiates (a test suite, a `ServiceLoader` " +
+          "implementation, a bean). A reflective instantiation cannot supply a `using`, so the " +
+          "emitted file compiles perfectly and the type cannot be built at run time — no error, no " +
+          "other count, and the only evidence is the thing that stopped running. If a framework " +
+          "constructs it, give it a `selfSupplied` entry naming the expression that yields the " +
+          "context. If YOUR USERS construct it, this is correct as it stands and the clause is part " +
+          "of the ported API: the engine cannot tell the two apart, which is why this warns rather " +
+          "than refuses."
       case FrozenComponent =>
         "§1(b)/§1(a): this override component reaches a declaration this program does not own — an " +
           "unparsed parent, or a resolution root's — so its signature is not this module's to " +

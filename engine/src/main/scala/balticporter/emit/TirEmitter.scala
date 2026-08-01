@@ -2391,7 +2391,14 @@ final class TirEmitter(
   private def valDef0(v: Tree.ValDef, i: Int): String =
     val s = sym(v.symbol)
     if s.flags.isGiven then
-      return s"${ind(i)}given ${esc(s.name)}: ${tpe(v.tpt.tpe)}${v.rhs.map(r => s" = ${term(r, i)}").getOrElse("")}"
+      // An EMPTY NAME renders an ANONYMOUS given — the same rule, and the same reason, as the
+      // anonymous `using` parameter (`ENGINE-LIMITS.md` CT3): nothing reads a given's name, while a
+      // name this engine minted into a class body is a name that can shadow an emitted root package,
+      // and this backend emits nothing but fully-qualified references. An empty name is otherwise
+      // impossible — the frontend gives every declaration java's own.
+      val kw = if s.flags.isPrivate then "private given" else "given"
+      val nm = if s.name.isEmpty then "" else s"${esc(s.name)}: "
+      return s"${ind(i)}$kw $nm${tpe(v.tpt.tpe)}${v.rhs.map(r => s" = ${term(r, i)}").getOrElse("")}"
     // A FIELD SLOT — the constructor funnel hoisted this field's value into the synthesised
     // primary's parameter list, so the field binds that parameter and its java initialiser (which
     // every constructor overwrote) is gone. `val` where nothing else in the program writes it,

@@ -55,6 +55,19 @@ import balticporter.tir.*
   * would have threaded it — except across a refused boundary, and those sites are exactly what
   * [[ContextSeamCheck]] counts.
   *
+  * ==A class a FRAMEWORK instantiates has no caller to change==
+  * The closure reasons from the program: it may add a parameter because it can see, and fix, every
+  * `new`. A test suite, a `ServiceLoader` implementation and a bean are constructed reflectively from
+  * OUTSIDE, so the closure sees no instantiation at all and concludes, correctly and uselessly, that
+  * nothing has to be fixed — and a `using` clause on such a constructor emits code that compiles
+  * perfectly and cannot be constructed at run time. Measured: 0 scalac errors, 0 seams, 0 policy
+  * findings, and a whole suite silently gone (`ENGINE-LIMITS.md` CT7).
+  *
+  * So attachment has a THIRD answer beside "take the clause" and "be a boundary" —
+  * [[ContextHolder.selfSupplied]]: this declaration takes the context WITHOUT taking a parameter,
+  * from a `private given` member whose expression the PORT supplies. Which declarations those are is
+  * not derivable; the SHAPE is, and [[ContextSeamCheck.Kind.UnconstructedThread]] warns on it.
+  *
   * ==Kind==
   * CLAUDE.md §1(b). The mechanism — find the reads, close over five edges, add a clause, rewrite the
   * read through a path — is a fact about Java and Scala. WHICH class is an ambient context, what its
@@ -92,6 +105,10 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
     * are needed — the symbols are a `lazy-init` entry's candidate subjects, and the KEY SET is what
     * the dead-binding report is the complement of (`ENGINE-LIMITS.md` CT6). */
   private var boundSites: Map[String, Map[String, List[SymId]]]   = Map.empty
+  /** the `selfSupplied` entries the binder RESOLVED, per holder: the TYPE symbol → its policy key.
+    * The key is kept beside the symbol because it is the string an agent edits (§4.575) and it is
+    * what the decision's `Reason.Configured` carries. */
+  private var boundSelf: Map[String, Map[SymId, String]]          = Map.empty
 
   def bindPolicy(binder: PolicyBinder): Unit =
     val bad = collection.mutable.ListBuffer.empty[PolicyFinding]
@@ -145,6 +162,21 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
       boundSites = boundSites.updated(h.holder, h.sites.keys.toList.sorted.flatMap(k =>
         binder.bindMembers(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.sites", k)
           .toOption.map(hits => k -> hits.flatMap(_.sym))).toMap)
+
+      // THE THIRD ANSWER's keys are TYPE keys (`ENGINE-LIMITS.md` CT7): the shape is a class a
+      // framework CONSTRUCTS, so what a port names here is a type. A member key would be a different
+      // question (a method a framework CALLS reflectively) with a different answer, and `bindType`
+      // reports the `#` form as malformed rather than guessing which was meant.
+      h.selfSupplied.toList.sorted.foreach { (t, src) =>
+        if src.trim.isEmpty then
+          malformedEntry(h, "selfSupplied", t, "the entry names a type and supplies no expression, " +
+            "so the type would take neither a constructor clause nor a `given` member and every " +
+            "`summon` in its body would be a compile error at a line the port never wrote. Give " +
+            "the expression that yields the context — a call into a fixture this port hand-wrote")
+      }
+      boundSelf = boundSelf.updated(h.holder, h.selfSupplied.keys.toList.sorted.flatMap(t =>
+        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.selfSupplied", t)
+          .toOption.map(_ -> t)).toMap)
 
       boundPromote = boundPromote.updated(h.holder, h.promoteToClass.flatMap(t =>
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.promoteToClass", t)
@@ -236,10 +268,17 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
     given Program = program0
     val mint  = new Minter(program0)
     val graph = OverrideGraph.build(program0)
+    // an entry whose expression is empty is MALFORMED and reported as such; it must not also take
+    // the type out of the threading, or one mistake would silently produce a second, worse one.
+    val selfSupplied = boundSelf.getOrElse(h.holder, Map.empty)
+      .filter((_, k) => h.selfSupplied.get(k).exists(_.trim.nonEmpty))
+    /** the type → the Scala the port wrote for it, which the emitter splices verbatim. */
+    val selfSource: Map[SymId, String] = selfSupplied.map((s, k) => s -> h.selfSupplied(k))
     val need  = new ContextNeed(program0, graph, h, statics, boundPromote.getOrElse(h.holder, Set.empty),
                                 (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
                                 (s, why) => refuse(h, why),
-                                boundSites.getOrElse(h.holder, Map.empty))
+                                boundSites.getOrElse(h.holder, Map.empty),
+                                selfSupplied)
     need.grow()
 
     // ---- the context TYPE, and the terms that read through it ---------------------------------
@@ -322,7 +361,13 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
         else t
 
       override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef =
-        if !need.threadedClasses(t.symbol) then t
+        // THE THIRD ANSWER (`ENGINE-LIMITS.md` CT7): no clause anywhere, and a `given` member at the
+        // HEAD of the body instead. At the head because a class body is a constructor: a statement
+        // that uses the context before the given is initialised would read `null`, and the reference
+        // hand port writes it first for the same reason.
+        if need.selfSuppliedClasses(t.symbol) then
+          t.copy(body = mint.givenMember(t.symbol, ctxFqn, ctxRef, selfSource(t.symbol), t.origin) :: t.body)
+        else if !need.threadedClasses(t.symbol) then t
         else
           val ctors = t.body.collect { case d: Tree.DefDef if isCtor(summon[Program], d.symbol) => d.symbol }
           if ctors.isEmpty then
@@ -365,6 +410,8 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
 
     val out = residualHolder(withMint, h, statics)
     recordDecisions(out, h, need, ctxFqn)
+    recordSelfSupplied(out, h, need, ctxFqn, selfSupplied, selfSource)
+    recordDeadSelf(h, need)
     // LAST: `readPlan` above is what consults a residual-global/refuse `sites` entry, so anything
     // read before it would report an entry that had not been asked yet.
     recordDeadSites(h, need.firedSites)
@@ -477,6 +524,54 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
       )))
     }
 
+  /** One row per FRAMEWORK-INSTANTIATED type — CLAUDE.md §1(b)'s third answer, recorded.
+    *
+    * It is an `InjectedMember` and not a `RetypedSignature` because that is precisely what happened:
+    * the signature did NOT move (which is the whole point), and what the port gained is a member the
+    * engine put there. The subject is the TYPE, so the porter note sits above the emitted `class`
+    * line — where an agent reading the generated file asks the question. */
+  private def recordSelfSupplied(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String,
+                                 bound: Map[SymId, String], src: Map[SymId, String]): Unit =
+    need.selfSuppliedClasses.toList.sortBy(_.raw).foreach { c =>
+      p.symbolOf(c).foreach(sym => record(Decision(
+        kind = Decision.Kind.InjectedMember, subject = c, subjectFqn = sym.fullName,
+        detail = Map(
+          "given"  -> ctxFqn,
+          "source" -> src.getOrElse(c, ""),
+          "from"   -> "a constructor clause the closure would otherwise have attached",
+          "to"     -> s"a `private given $ctxFqn` member of this type",
+          "why"    -> ("this type is constructed by a FRAMEWORK, not by this program, and a " +
+            "reflective construction cannot supply a `using` — so it takes the context without " +
+            "taking a parameter, from an expression this port wrote"),
+        ),
+        reason = Reason.Configured(name, bound.getOrElse(c, h.holder)),
+        origin = Decision.originOf(p, c),
+      )))
+    }
+
+  /** A BOUND `selfSupplied` ENTRY THE CLOSURE NEVER REACHED — the third answer's own dead binding.
+    *
+    * `PolicyBinder.bindType` asks *does this program declare this type*, which a real class answers
+    * whether or not the threading would ever have touched it. An entry naming a class the closure
+    * does not reach takes nothing out of the threading and emits no `given` member, so removing it
+    * would change no emitted byte — the exact blindness CT6 measured for `sites`, one key over. */
+  private def recordDeadSelf(h: ContextHolder, need: ContextNeed): Unit =
+    val reached = need.selfSuppliedClasses
+    boundSelf.getOrElse(h.holder, Map.empty).toList.filterNot((s, _) => reached(s))
+      .map((_, k) => k)
+      // an entry with no expression is already reported as `Malformed`, and one mistake gets one
+      // finding: reported as both, the second reading ("your key names nothing the closure reached")
+      // contradicts the first and the reader has to work out which is true.
+      .filter(k => h.selfSupplied.get(k).exists(_.trim.nonEmpty))
+      .sorted.foreach { k =>
+        deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.selfSupplied",
+          k, PolicyIssue.NeverMatched, "the entry names a type of this program that the closure " +
+            "never reached: nothing in it reads the holder and nothing it uses is threaded, so it " +
+            "would have taken no constructor clause and there is no context for a `given` member " +
+            "to supply. No `given` was emitted and removing the entry would change no emitted byte. " +
+            "Delete it, or fix the key if it was meant to name a different type")
+      }
+
   private def refuse(h: ContextHolder, why: String): Unit =
     refusals += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`",
       h.holder, PolicyIssue.Unverifiable, why)
@@ -501,6 +596,7 @@ object GlobalsToImplicitsTransform:
     private var next = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
     private val buf  = collection.mutable.ListBuffer.empty[Symbol]
     private val usings = collection.mutable.Map.empty[SymId, SymId]
+    private val givens = collection.mutable.Map.empty[SymId, SymId]
 
     def minted: List[Symbol] = buf.toList
 
@@ -530,3 +626,22 @@ object GlobalsToImplicitsTransform:
       val id = usings.getOrElseUpdate(owner,
         member("", MemberKey(ctxFqn, "<using>").render, owner, ctxRef, Flags(isParam = true, isGiven = true)))
       Tree.ValDef(id, TypeTree(ctxRef, at), scala.None, at)
+
+    /** THE THIRD ANSWER's member: `private given <ctx> = <the port's expression>`, at the head of a
+      * framework-instantiated type's body (`ENGINE-LIMITS.md` CT7).
+      *
+      * ANONYMOUS, for the same reason [[usingParam]] is: a name here would be a name this engine
+      * minted into a class whose every other reference is fully qualified, and nothing reads a
+      * given's name. `private`, which is the reference hand port's shape and is what keeps the
+      * member off the type's published surface — it is machinery, not API.
+      *
+      * The RHS is [[Tree.Opaque]] — the node for a term the TIR does not model, kept typed so the
+      * tree stays whole — because the expression is Scala the frontend never saw. It is emitted
+      * verbatim and is NOT type-checked by the engine: the target compiler is the gate, and a
+      * mis-spelled fixture is one error at one line the source map attributes.
+      */
+    def givenMember(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, src: String, at: Origin): Tree.ValDef =
+      val id = givens.getOrElseUpdate(owner,
+        member("", MemberKey(ctxFqn, "<given>").render, owner, ctxRef,
+               Flags(isGiven = true, isPrivate = true)))
+      Tree.ValDef(id, TypeTree(ctxRef, at), Some(Tree.Opaque(src, ctxRef, at)), at)

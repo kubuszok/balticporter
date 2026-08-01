@@ -289,6 +289,7 @@ final class NullabilityFactory extends TransformFactory:
   *     members = { app = "application", gl = "graphics.gl20" }
   *     attach = "method", reader = "summon", boundary = "refuse"
   *     sites  = { "com.foo.Utils#<clinit>" = "lazy-init" }
+  *     selfSupplied = { "com.foo.FooTest" = "com.foo.TestFixture.ctx()" }
   *     promoteToClass = [ "com.foo.Viewport" ]
   *     scope { except = [ … ] } }] }
   * }}}
@@ -333,6 +334,7 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       sites = c.stringMap("sites").getOrElse(Map.empty).map((k, v) =>
         k -> ContextSite.fromToken(v).getOrElse(throw ConfigError(c.at("sites"),
           s"'$v' is not one of ${ContextSite.values.map(_.token).sorted.mkString(", ")}"))),
+      selfSupplied = c.stringMap("selfSupplied").getOrElse(Map.empty),
       promoteToClass = c.strings("promoteToClass").getOrElse(Nil).toSet,
       scope = TransformFactory.scopeOf(c),
     )

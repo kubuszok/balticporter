@@ -19,6 +19,7 @@ import balticporter.tir.RuleScope
   *     reader   = "summon" | "apply"
   *     boundary = "refuse" | "residual-global"
   *     sites    = { "com.foo.Utils#<clinit>" = "lazy-init" }
+  *     selfSupplied = { "com.foo.FooTest" = "com.foo.TestFixture.ctx()" }
   *     promoteToClass = [ "com.foo.Viewport" ]
   *     scope    = { except = [ … ] }
   *   }]
@@ -49,6 +50,27 @@ import balticporter.tir.RuleScope
   *   difference is whether the emitted code still names the thing the port is retiring.
   * @param sites
   *   per-site overrides, keyed by MEMBER key (`com.foo.Utils#<clinit>`).
+  * @param selfSupplied
+  *   THE THIRD ANSWER (CLAUDE.md §1(b), `ENGINE-LIMITS.md` CT7), keyed by TYPE FQN: *this
+  *   declaration takes the context WITHOUT taking a parameter*. Its constructors keep the signature
+  *   java gave them and the engine emits `private given <context> = <this expression>` at the head
+  *   of the type's body instead, so every `summon` inside it resolves to a value the PORT chose.
+  *
+  *   It exists because a class a FRAMEWORK instantiates has no caller to change: a test suite, a
+  *   `ServiceLoader` implementation, a bean are constructed reflectively from OUTSIDE, the closure
+  *   sees no instantiation at all, and a `using` clause on such a constructor emits code that
+  *   compiles perfectly and cannot be constructed at run time. Measured: a whole suite disappeared
+  *   at 0 scalac errors, 0 seams and 0 policy findings, and only `tests.tsv` saw it.
+  *
+  *   The VALUE is Scala, emitted verbatim exactly like `MethodBodyTransform`'s bodies, and it is
+  *   written in the EMITTED namespace — it names a fixture the port hand-wrote, which the frontend
+  *   never saw and the package rename therefore never rewrites (the same category as an INJECTED
+  *   context type). CLAUDE.md §6 applies to what you write: fully-qualified, no imports.
+  *
+  *   WHICH declarations are framework-instantiated is not derivable — the closure only ever sees
+  *   the program — so it is declared here. What IS derivable is the SHAPE, and the phase warns on
+  *   it: a threaded class this program never constructs whose ancestry leaves it
+  *   ([[ContextSeamCheck.Kind.UnconstructedThread]]).
   * @param promoteToClass
   *   traits this port allows to become `abstract class`es so they can carry a constructor clause.
   *   EXPLICIT rather than derived from "the trait's body needs the context": a predicate that
@@ -67,6 +89,7 @@ final case class ContextHolder(
     reader: ContextReader = ContextReader.Summon,
     boundary: ContextBoundary = ContextBoundary.Refuse,
     sites: Map[String, ContextSite] = Map.empty,
+    selfSupplied: Map[String, String] = Map.empty,
     promoteToClass: Set[String] = Set.empty,
     scope: RuleScope = RuleScope.everywhere,
 ):
@@ -74,7 +97,11 @@ final case class ContextHolder(
   def fingerprint: String =
     val ms = members.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
     val ss = sites.toList.map((k, v) => s"$k->${v.token}").sorted.mkString(",")
-    s"$holder|${context.token}|$ms|${attach.token}|${reader.token}|${boundary.token}|$ss|" +
+    // the SOURCE text is digested rather than spelled: it is Scala, it may hold every separator this
+    // rendering uses, and two modules that supply different context sources for one declaration have
+    // certainly made a mistake whether or not the strings are readable here.
+    val fs = selfSupplied.toList.map((k, v) => s"$k=>${v.hashCode.toHexString}").sorted.mkString(",")
+    s"$holder|${context.token}|$ms|${attach.token}|${reader.token}|${boundary.token}|$ss|$fs|" +
       s"${promoteToClass.toList.sorted.mkString(",")}|${scope.fingerprint}"
 
 /** WHERE the context type comes from.

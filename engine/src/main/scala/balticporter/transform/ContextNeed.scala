@@ -52,6 +52,10 @@ final class ContextNeed(
       * of what the binder resolved, so a `lazy-init` entry can name a site NO READ reaches — which
       * is `ENGINE-LIMITS.md` CT6's second face. Empty is the pre-CT6 code path. */
     boundSites: Map[String, List[SymId]] = Map.empty,
+    /** the `selfSupplied` entries that BOUND: the TYPE a framework instantiates → the policy key
+      * that said so. Such a type is threaded in every way except the one that changes its
+      * signature — `ENGINE-LIMITS.md` CT7's third answer. Empty is the pre-CT7 code path. */
+    selfSupplied: Map[SymId, String] = Map.empty,
 ):
   import ContextNeed.*
   import GlobalsToImplicitsTransform.ReadPlan
@@ -346,6 +350,7 @@ final class ContextNeed(
   private val edgeLog   = collection.mutable.ListBuffer.empty[Edge]
   private val methods   = collection.mutable.LinkedHashSet.empty[SymId]
   private val classes   = collection.mutable.LinkedHashSet.empty[SymId]
+  private val selfS     = collection.mutable.LinkedHashSet.empty[SymId]
   private val frozen    = collection.mutable.LinkedHashSet.empty[SymId]
   private val promotedS = collection.mutable.LinkedHashSet.empty[SymId]
   private val viaMap    = collection.mutable.Map.empty[SymId, String]
@@ -362,12 +367,22 @@ final class ContextNeed(
   def scopedOut: Set[SymId]         = scopedS.toSet
   def via(s: SymId): Option[String] = viaMap.get(s)
 
+  /** the classes the port declared framework-instantiated that this run REACHED — CT7's third
+    * answer, applied. They carry no clause and are not in [[threadedClasses]]; what they carry is a
+    * `given` member the emitter fills from the policy's expression. */
+  def selfSuppliedClasses: Set[SymId] = selfS.toSet
+
+  /** a class whose body may `summon` the context — it either took the clause or supplies its own.
+    * The read plan and the seam report both ask THIS and not [[threadedClasses]], because a read
+    * inside a self-supplied class resolves perfectly and is not a residual global. */
+  private def supplies(c: SymId): Boolean = classes(c) || selfS(c)
+
   private def enqueue(n: Node, edge: Edge): Unit =
     edgeLog += edge
     n match
-      case Node.M(m) if !methods(m) && !frozen(m) => work.enqueue(n)
-      case Node.C(c) if !classes(c) && !frozen(c) => work.enqueue(n)
-      case _                                      => ()
+      case Node.M(m) if !methods(m) && !frozen(m)                => work.enqueue(n)
+      case Node.C(c) if !classes(c) && !frozen(c) && !selfS(c)   => work.enqueue(n)
+      case _                                                     => ()
 
   /** the seeds and the fixpoint. Order-independent by construction (a set closed under the edges)
     * and cycle-safe (a node is expanded once). */
@@ -388,6 +403,70 @@ final class ContextNeed(
       work.dequeue() match
         case Node.M(m) => expandMethod(m)
         case Node.C(c) => expandClass(c)
+
+    // AFTER the fixpoint, because both questions are about the finished closure: whether a
+    // self-supplied class's PARENT ended up threaded, and which threaded classes nothing constructs.
+    selfS.toList.sortBy(_.raw).foreach(checkSelfSupplied)
+    classes.toList.sortBy(_.raw).foreach(warnUnconstructed)
+
+  /** A SELF-SUPPLIED CLASS WHOSE PARENT TOOK THE CLAUSE — the one shape the third answer cannot
+    * cover, and it is a hard compile error rather than a lost suite.
+    *
+    * A `given` member of a class body is in scope for the body. It is NOT in scope in the `extends`
+    * clause: the parent constructor runs before this class's own members exist, so `class Suite
+    * extends Threaded` has no argument to pass and nothing to pass it from. There is no rewrite that
+    * repairs it here — the parent's signature is the base's, not this type's — so it is refused,
+    * named, and counted, which is what a boundary the engine cannot fix is owed (CLAUDE.md §1). */
+  private def checkSelfSupplied(c: SymId): Unit =
+    graph.parentsOf(c).filter(classes).sortBy(_.raw).foreach { p =>
+      seam(ContextSeamCheck.Kind.SelfSupplied, fqn(c), selfSupplied.getOrElse(c, holder.holder),
+        s"UNSATISFIED: this type takes the context from a `given` member, and its parent " +
+          s"`${fqn(p)}` took a constructor clause — a given member is not in scope in an `extends` " +
+          "clause, so the super call has no argument. Give the PARENT a `selfSupplied` entry too, " +
+          "or scope it out", Decision.originOf(program, c), c)
+      refuse(c, s"`${fqn(c)}` is `selfSupplied` and its parent `${fqn(p)}` takes a constructor " +
+        "clause: a `given` member cannot supply an `extends` clause's argument")
+    }
+
+  /** THE CT7 WARNING — a threaded class NOTHING IN THIS PROGRAM CONSTRUCTS, whose ancestry leaves
+    * the program.
+    *
+    * This is the check the measured loss lacked. Every part of the closure worked: the suite
+    * constructed a threaded type, the instantiate edge threaded the suite, and the clause landed on
+    * its constructor — while nothing in the program ever instantiates a test suite, because a test
+    * RUNNER does, reflectively, and a reflective instantiation cannot supply a `using`. The emitted
+    * file compiled at 0 errors with 0 seams and the only evidence was five tests that stopped
+    * running.
+    *
+    * Both halves are structural and neither names a library (§1):
+    *
+    *   - '''nothing constructs it''' — no `Instantiate` edge into it from an owned declaration, and
+    *     no owned DESCENDANT that is constructed either. A subclass that IS constructed supplies the
+    *     parent's clause through its own `extends`, so the parent is exercised and is not this.
+    *   - '''its ancestry leaves the program''' — a strict ancestor this program does not declare,
+    *     other than `java.lang.Object`, which is every class's parent and would make this fire on
+    *     the whole port. That is what a framework-constructed type looks like from inside the
+    *     program: the framework's own base type is on the classpath and is not ported.
+    *
+    * It WARNS rather than refuses because the engine cannot distinguish "a framework constructs
+    * this" from "your users construct this" — both are external constructions, and the second is an
+    * ordinary ported API whose callers pass the given. A refusal would make the second unportable;
+    * a silence made the first invisible. */
+  private def warnUnconstructed(c: SymId): Unit =
+    if selfS(c) || constructedByProgram(c) then return
+    val external = graph.externalAncestorsOf(c).filterNot(_ == JavaLangObject).sorted
+    if external.isEmpty then return
+    program.symbolOf(c).foreach(s => seam(ContextSeamCheck.Kind.UnconstructedThread, s.fullName,
+      holder.holder, s"threaded, and NOTHING IN THIS PROGRAM CONSTRUCTS IT, while it extends " +
+        s"`${external.head}` which this program does not declare — the shape a framework " +
+        "instantiates. A reflective construction cannot supply the clause this class now takes; if " +
+        "that is what builds it, add a `selfSupplied` entry naming the expression that yields the " +
+        "context", Decision.originOf(program, c), c))
+
+  /** Does anything THIS PROGRAM declares construct `c`, or a descendant of it? */
+  private def constructedByProgram(c: SymId): Boolean =
+    (c :: graph.descendantsOf(c)).exists(t =>
+      program.usages(t).exists(u => instantiates(u, t) && u.enclosing != SymId.None))
 
   private def expandMethod(m: SymId): Unit =
     if methods(m) || frozen(m) then return
@@ -417,7 +496,22 @@ final class ContextNeed(
     }
 
   private def expandClass(c: SymId): Unit =
-    if classes(c) || frozen(c) then return
+    if classes(c) || frozen(c) || selfS(c) then return
+    // THE THIRD ANSWER, before anything else this method does (`ENGINE-LIMITS.md` CT7). A class a
+    // FRAMEWORK constructs takes the context WITHOUT taking a parameter, so it joins no signature
+    // edit and propagates neither down the hierarchy nor to its instantiation sites — its
+    // constructors are exactly what java declared, and there is nothing for a `new` to supply.
+    // Its BODY still reads the context, which is why this is a resolution and not a refusal: the
+    // reads inside it are `ReadPlan.Threaded` and the given member the emitter writes is what they
+    // resolve against.
+    if selfSupplied.contains(c) then
+      selfS += c
+      program.symbolOf(c).foreach(s => seam(ContextSeamCheck.Kind.SelfSupplied, s.fullName,
+        selfSupplied(c), "not threaded: the port declared this type framework-instantiated, so it " +
+          "takes the context from a `given` member of its own rather than from a constructor " +
+          "parameter no reflective instantiation could supply",
+        Decision.originOf(program, c), c))
+      return
     val sym = program.symbolOf(c)
     if !program.owns(c) || !isDeclaredClass(c) then
       frozen += c
@@ -507,7 +601,10 @@ final class ContextNeed(
           case Site.Method(m, cap) if methods(m) =>
             if cap then captured(enc, at)
             key -> ReadPlan.Threaded
-          case Site.Cls(c, cap) if classes(c) =>
+          // `supplies` and not `classes`: a self-supplied type's body has a given in scope, so its
+          // reads are threaded reads and reporting them as residual globals would count a seam that
+          // is not there — and would leave the read naming the holder the port is retiring.
+          case Site.Cls(c, cap) if supplies(c) =>
             if cap then captured(enc, at)
             key -> ReadPlan.Threaded
           case Site.Method(m, _)       => key -> global(at, m, "its override component is refused")
@@ -532,6 +629,10 @@ object ContextNeed:
   val ClinitName    = "<clinit>"
   val InitBlockName = "<initblock>"
   val CtorName      = "<init>"
+
+  /** every class's ancestor, which is why the CT7 warning excludes it: "has an external ancestor" is
+    * true of the whole program with this one counted. A JDK name, not a ported library's (§1). */
+  val JavaLangObject = "java.lang.Object"
 
   /** WHERE a declaration's need attaches. */
   enum Site:

@@ -3687,7 +3687,7 @@ trigger, and `climb`'s view of a deferred field), plus the dead-binding report i
 `GlobalsToImplicitsTransform`. None of it is reachable from any manifest key; the mechanism stays
 DEFAULT-OFF, so all 13 ports are 0 members changed with every check count identical.*
 
-### CT7. A class a FRAMEWORK instantiates cannot host the clause, and nothing can put a `given` in generated code — **OPEN; 0 compile errors and a whole suite silently gone**
+### CT7. A class a FRAMEWORK instantiates cannot host the clause, and nothing can put a `given` in generated code — **CLOSED; the numbers below are what it cost, and the fix is a THIRD ANSWER plus the warning that finds it**
 
 CLOSED CT5 and CLOSED CT6 each took the enablement one step further and each was found BY COMPILING.
 CT7 is the first that a compile cannot see at all, and it is the reason CLAUDE.md §3 says what it
@@ -3756,11 +3756,52 @@ carry hand-written MUnit suites that construct threaded types (screens' `Screenm
 it is a `src/` file, so a human may add a `given` to it. The only unfixable case is the suite the
 ENGINE emitted. A port can supply the value; it cannot supply the line.
 
-*Fix kind: (a) engine for both halves — the attachment decision and a per-declaration context-source
-policy on `ContextHolder`. The fixture that fills the second is (c) per-library and belongs in the
-port's `inject`/`src`. The mechanism stays DEFAULT-OFF, so this costs no port anything today.*
+**CLOSED, and both halves shipped together because either alone is worse than neither.**
+`ContextHolder.selfSupplied` is a `Map[type FQN, Scala expression]`: the named type takes the context
+WITHOUT taking a parameter — no clause on its constructors, and `private given <ctx> = <the
+expression>` at the head of its body instead, which is the reference hand port's shape reached from
+policy rather than by hand. `ContextNeed` treats it as a RESOLUTION and not a refusal: the reads
+inside it are still `ReadPlan.Threaded` (the read plan asks `supplies`, not `classes`), so a
+self-supplied type reintroduces no global, and it propagates neither down the hierarchy nor to its
+instantiation sites, because its constructors are exactly what java declared and there is nothing
+for a `new` to supply. The expression is `Tree.Opaque` — the node `MethodBodyTransform` already uses
+for Scala the frontend never saw — emitted verbatim, in the EMITTED namespace, uncheckable by the
+engine and checked by the target compiler at one attributable line. The emitted probe compiles at
+**0 errors under scalac 3.8.4**, which is the M2 gate this entry is entitled to.
 
-### CT8. A DEPENDENT cannot declare a `sites` policy for its OWN types — the holder is inherited and the phase is not `MergeablePolicy`
+**And the WARNING is the half the entry was actually about**, because a policy nobody knows to write
+is a policy nobody writes. `context-seam` gains `unconstructed-thread`: a threaded class NOTHING IN
+THIS PROGRAM CONSTRUCTS whose ancestry leaves the program. Both halves are structural and neither
+names a library — no `Instantiate` edge into it or into any owned descendant that is constructed (a
+constructed subclass supplies the parent's clause through its own `extends`, so the parent IS
+exercised), and a strict ancestor this program does not declare, `java.lang.Object` excluded because
+it is every class's parent and counting it would fire on the whole port. It WARNS and does not
+refuse, and that is the honest answer rather than timidity: from inside the program a class a
+FRAMEWORK constructs and a class this library's USERS construct are the same shape, and refusing
+would make the second unportable while silence made the first invisible.
+
+Four more things the fix owes, each counted rather than left to a compile:
+
+- **a self-supplied type whose PARENT took the clause is REFUSED.** A `given` member is in scope for
+  the body and NOT in the `extends` clause — the parent's constructor runs before this class's
+  members exist — so the super call would have no argument and nothing to build one from. Named,
+  counted (`self-supplied`, `UNSATISFIED`), and a `PolicyIssue.Unverifiable` refusal beside it.
+- **a `selfSupplied` entry the closure never reached is a DEAD BINDING.** `bindType` asks *does this
+  program declare this type*, which a real class answers whether or not the threading would ever
+  have touched it — CT6's blindness one key over, reported here rather than measured later.
+- **an entry with no expression is `Malformed`**, and is refused BEFORE it takes the type out of the
+  threading: neither a clause nor a member would be one mistake producing a second, worse one.
+- **the applied mode is itself a counted seam** (`self-supplied`). The warning does not vanish when a
+  port answers it — it MOVES, so the boundary stays sizeable.
+
+*Fix kind: (a) engine for both halves — the attachment decision (`ContextNeed`,
+`GlobalsToImplicitsTransform`, plus the anonymous/`private` given rendering in `TirEmitter`, which is
+CT3's empty-name rule one node over) and the `unconstructed-thread` warning. The EXPRESSION that
+fills it is (c) per-library and belongs in the port's manifest, pointing at a fixture in its
+`inject`/`src`. The mechanism stays DEFAULT-OFF: no port declares a holder, so all 13 ports are 0
+members changed with every check count identical.*
+
+### CT8. A DEPENDENT cannot declare a `sites` policy for its OWN types — the holder is inherited and the phase is not `MergeablePolicy` — **CLOSED; the per-declaration half is what a dependent adds, and the shared half is what it may not restate**
 
 Found in the same run, in `gdx-vfx`. The phase is `SurfacePolicy` and its holders live in the BASE
 manifest (§1.5, correctly — a base and a dependent that thread differently emit signatures that
@@ -3791,8 +3832,39 @@ their `sites` maps while every other field must AGREE or the pair is a refusal. 
 screened is §1.5's `SurfaceIntrusion` rule — a dependent's `sites` key must name a declaration inside
 its OWN units, never one of the base's, or a dependent silently re-shapes the shared surface.
 
-*Fix kind: (a) engine — `GlobalsToImplicitsTransform extends MergeablePolicy`, with `subjects` reported
-so the intrusion screen can run. Nothing in a port reaches it.*
+**CLOSED, and the shape is the SPLIT rather than the merge.** Stating the merge as "holders union by
+FQN and same-holder entries merge their `sites` maps" is right and is not sufficient: a `sites` entry
+belongs to a HOLDER, so a dependent that must name one would have to restate the holder — and with
+`context`, `members`, `attach`, `reader` and `boundary` all agree-or-refuse, restating the holder
+means restating the base's eleven-entry member map in the dependent's manifest. That is exactly what
+§1.5 forbids, arriving through the door the merge opened.
+
+So `ContextHolderExtension` is a value of its own — `holder` plus `sites` plus `selfSupplied`, and
+NO FIELD in which the shared half could be restated. The rule is structural rather than a
+convention, and the config front door says the same thing the same way: a `holders` entry with no
+`context` block IS an extension, and any shared-surface key written inside one is an unread key the
+loader already refuses. `GlobalsToImplicitsTransform.effectiveHolders` folds each extension into the
+holder of its FQN; an extension naming a holder no manifest in the chain declares is a counted
+`Malformed` finding, never a silent no-op.
+
+The merge itself then divides on one line, and every field is on the side its own failure mode puts
+it:
+
+| field | merge | why |
+|---|---|---|
+| `context`, `members`, `attach`, `reader`, `boundary` | AGREE, or refuse | one emitted signature per member. A dependent adding a member mapping re-points reads in code it does not own; a dependent changing `attach` emits a different signature for the base's own types |
+| `promoteToClass`, `scope` | union entries (`Everywhere`/`Only` mixed is a refusal, `NullabilityTransform`'s argument verbatim) | per-TYPE keys, and the `governs` screen is what stops one naming a base type |
+| `sites`, `selfSupplied` | UNION, refusing same-key-different-value | keyed on DECLARATIONS. This is the whole of CT8 |
+
+`subjects` reports the holder FQNs and every per-declaration key, so the `governs` screen runs on a
+dependent's extension exactly as on a merge — and the base's own holder FQN is not in `added` (the
+base already holds it), which is what lets vfx name `com.badlogic.gdx.Gdx` as the holder it extends
+while `com.crashinvaders.vfx.*` keys pass the screen. A dependent whose `sites` key names a BASE
+declaration is still a fatal `SurfaceIntrusion`, which is the rule this entry asked for.
+
+*Fix kind: (a) engine — `GlobalsToImplicitsTransform extends MergeablePolicy`, plus the
+`ContextHolderExtension` value the split needs. Nothing in a port reaches it, and no port declares a
+holder, so all 13 ports are 0 members changed with every check count identical.*
 
 **A NON-FINDING, recorded because it was nearly written up as a third one.** `gdx-gltf` reads **7
 scalac errors with `signature` 1** under the enablement, all `EngineGap`, in `ModelInstanceHack`,

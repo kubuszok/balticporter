@@ -2208,7 +2208,7 @@ set contains zero, so the behavioural gate survives unless a threaded signature 
 member, which `members.tsv` reports **before any compile**. One dependent has zero holder references at
 all and must show **0 members changed**, which is itself a gate that the phase respects D2.
 
-**What building it settled.** Seven things the design left open or got slightly wrong, each fixed in
+**What building it settled.** Nine things the design left open or got slightly wrong, each fixed in
 the mechanism commit rather than left for the enablement:
 
 - **The anonymous clause needed the EMITTER, not the phase.** Every parameter the emitter renders is
@@ -2273,6 +2273,37 @@ the mechanism commit rather than left for the enablement:
   exists, which a real field answers whether or not the phase reaches it, so the binder's never-fired
   machinery is blind to exactly this. Two such keys were measured on a real port: both bound, both
   dead, output byte-identical, `policy` at its floor.
+
+- **ATTACHMENT HAS A THIRD ANSWER, and it had to, because a class a FRAMEWORK instantiates has no
+  caller to change.** `ENGINE-LIMITS.md` CT7, and the first thing in this section that a compile
+  could not see at all. The closure reasons from the program: it may add a parameter because it can
+  see, and fix, every `new`. A test suite, a `ServiceLoader` implementation and a bean are
+  constructed reflectively from OUTSIDE, so the closure sees no instantiation, concludes correctly
+  and uselessly that nothing has to be fixed, and the clause lands — emitting a class that compiles
+  perfectly and cannot be built at run time. Measured on the first port to thread a constructor: 0
+  scalac errors, `context-seam` 0, `policy` 0, and a whole suite gone.
+  So `ContextHolder.selfSupplied` names such a type and the expression that yields its context, and
+  the type takes the value WITHOUT taking a parameter: `private given <ctx> = <expression>` at the
+  head of its body — the reference hand port's own shape (`private given Sge =
+  SgeTestFixture.testSge()` on a no-arg suite class), reached from policy. It is a RESOLUTION and
+  not a refusal, so the reads inside it stay threaded reads (the plan asks `supplies`, not
+  `classes`) and no global comes back; and it propagates nothing, because its constructors are
+  java's and there is nothing for a `new` to supply. The expression is `Tree.Opaque`, in the EMITTED
+  namespace, uncheckable here and checked by the target compiler at one attributable line — the same
+  contract `MethodBodyTransform`'s bodies have.
+  **WHICH declarations those are is not derivable and the SHAPE is**, which is why the warning ships
+  beside the policy rather than the policy alone: `context-seam`'s `unconstructed-thread` is a
+  threaded class nothing in this program constructs (nor any owned descendant of it) whose ancestry
+  leaves the program, `java.lang.Object` excluded because it is every class's parent. It WARNS
+  rather than refuses on evidence rather than caution: from inside the program, a class a framework
+  constructs and a class this library's USERS construct are indistinguishable, and refusing would
+  make the second unportable while silence made the first invisible.
+
+- **A `given` MEMBER is an emitter capability too, and it is CT3's empty-name rule one node over.**
+  A `ValDef` whose symbol is `isGiven` and whose NAME IS EMPTY renders as an anonymous
+  `given <T> = <rhs>`, `private` when the flag says so. A name minted into a class body can shadow
+  an emitted root package exactly as a named context parameter can, and nothing reads a given's
+  name; an empty name is otherwise impossible, since the frontend gives every declaration java's own.
 
 **`attach = "class"` NOW EMITS, and the refusal it carried is a worked example of where such a
 refusal belongs.** For one release the TIR edit was complete and the emission was not — the
