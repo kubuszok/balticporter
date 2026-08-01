@@ -3780,6 +3780,37 @@ refuse, and that is the honest answer rather than timidity: from inside the prog
 FRAMEWORK constructs and a class this library's USERS construct are the same shape, and refusing
 would make the second unportable while silence made the first invisible.
 
+**THE WARNING'S CRITERION WAS MEASURED THREE WAYS AND ONLY THE CONJUNCTION IS USABLE — and it does
+NOT see the case that opened this entry. Keep the numbers; they are the argument.** The dry run is
+the §11.12 one replayed with the P5 holder over libGDX core (275 threaded declarations in 177 files,
+reproduced to the row), and over core PLUS its own test source set:
+
+| criterion | warnings on libGDX core | sees `AnimationControllerTest`? |
+|---|---:|---|
+| never constructed **and** external ancestry (SHIPPED) | **1** (`RemoteInput`) | **no** |
+| never constructed **and** never NAMED anywhere in the program | 60 | yes (+1) |
+| never constructed | 74 | yes (+1) |
+
+The reason is one line of upstream Java: `public class AnimationControllerTest {` — a JUnit test class
+**extends nothing**. Its `extends munit.FunSuite` is minted by `TestFrameworkTransform`, which runs
+AFTER this phase, so at the moment the closure asks, the suite's ancestry has not left the program
+yet. And the two relaxed criteria that do see it are not usable: at 60 and 74 of 188 threaded classes
+they are `Stage`, `TextField`, `FitViewport`, `PerspectiveCamera` — every leaf of the library's public
+API, which nothing INSIDE a library constructs and everything outside one does. A lane at 74 is a
+lane nobody reads, and it would inflate `context-seam` from 19 to 92, which is a number `PROGRESS.md`
+quotes as the size of the boundary.
+
+**So the entry's own sentence is confirmed by measurement rather than assumed: which declarations are
+framework-instantiated is NOT derivable, because from inside the program a class a framework
+constructs and a class this library's USERS construct are the same shape.** What ships is the precise
+conjunction — correct wherever it fires, 1 on the real corpus — and the honest statement that the
+detector of record for this class of loss is the one that actually found it: `tests.tsv`'s
+DID-NOT-RUN gate (§5.1), which is a required lane on every test run. **Do not retry the relaxed
+criteria.** What would close the gap properly is a signal the phase does not have and could take
+without guessing — the SOURCE SET, since a test source set's classes are constructed by a runner by
+definition and that is an engine concept, not a library one. Unbuilt: it is plumbing from `PortRun`
+through `PolicyBinder`/`RunScope` into the phase, and nothing measured yet needs it.
+
 Four more things the fix owes, each counted rather than left to a compile:
 
 - **a self-supplied type whose PARENT took the clause is REFUSED.** A `given` member is in scope for

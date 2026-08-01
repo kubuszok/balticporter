@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
+import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource}
 import balticporter.tir.*
 
 /** GLOBALS → CONTEXT: a Java class whose `static` state is really an ambient CONTEXT becomes a value
@@ -75,13 +75,26 @@ import balticporter.tir.*
   * as a constructor parameter ([[ContextHolder]]). An empty `holders` list is a structural no-op:
   * `run` returns its input before building anything.
   *
-  * ==Shared surface==
-  * It changes emitted signatures, so it implements `SurfacePolicy` and its holders live in the BASE
-  * manifest: a dependent resolves against the base's Java and must see the same threading, or the
-  * two ports each compile alone and cannot compile together (§1.5).
+  * ==Shared surface, and the half of it a DEPENDENT may add to==
+  * It changes emitted signatures, so its holders live in the BASE manifest: a dependent resolves
+  * against the base's Java and must see the same threading, or the two ports each compile alone and
+  * cannot compile together (§1.5).
+  *
+  * But `sites` and `selfSupplied` are keyed on DECLARATIONS, and a dependent's boundaries are in the
+  * DEPENDENT's own types — which the base neither governs nor parses. Measured: four counted seams in
+  * a dependent whose own diagnostic told its reader to *give the site a `sites` policy*, with no
+  * manifest in which to write one (`ENGINE-LIMITS.md` CT8). So this declares `MergeablePolicy`, the
+  * shared half ([[ContextHolder.sharedSurface]]) must AGREE between two instances, the
+  * per-declaration half UNIONS refusing same-key-different-value, and what a dependent writes is a
+  * [[ContextHolderExtension]] — a value with no field in which the shared half could be restated.
   */
-final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
-    extends Phase, PolicySource, SurfacePolicy, PolicyBound:
+final class GlobalsToImplicitsTransform(
+    val holders: List[ContextHolder] = Nil,
+    /** what a DEPENDENT contributes — the per-declaration half of a holder the BASE declares
+      * (`ENGINE-LIMITS.md` CT8). Empty in a base, which is why every existing fingerprint is
+      * byte-identical. */
+    val extensions: List[ContextHolderExtension] = Nil,
+) extends Phase, PolicySource, MergeablePolicy, PolicyBound:
 
   import GlobalsToImplicitsTransform.*
 
@@ -91,8 +104,112 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
     * (§4.56). */
   override def runsBefore: Set[String] = Set("package-rename")
 
-  /** the holders, sorted and rendered — two modules that agree must compare equal (§1.5). */
-  def surfaceFingerprint: String = holders.map(_.fingerprint).sorted.mkString(";")
+  /** THE HOLDERS THIS INSTANCE ACTUALLY RUNS — each with the extensions that name it folded in.
+    *
+    * Everything downstream reads this and not [[holders]]: an extension is policy, and a phase that
+    * bound one table and ran another would be the §1(b) silent no-op twice over. A DANGLING
+    * extension — one naming a holder nothing in the chain declares — folds into nothing and is
+    * reported by [[danglingFindings]]. */
+  lazy val effectiveHolders: List[ContextHolder] =
+    holders.map(h => extensions.filter(_.holder == h.holder).foldLeft(h)(_ extendedBy _))
+
+  private lazy val dangling: List[ContextHolderExtension] =
+    extensions.filterNot(e => holders.exists(_.holder == e.holder))
+
+  /** the effective policy, sorted and rendered — two modules that agree must compare equal (§1.5).
+    *
+    * Read off [[effectiveHolders]] and not off the two lists, so a module that states a holder with
+    * its entries INLINE and one that states the same thing as holder-plus-extension fingerprint the
+    * same — which is what makes §8.13's containment test (`bases.mergedWith(mine)` leaves `mine`
+    * unchanged) work for a `mirroring` module. A dangling extension is rendered beside them, or a
+    * dependent that contributes only extensions would be indistinguishable from a phase with no
+    * policy at all. */
+  def surfaceFingerprint: String =
+    (effectiveHolders.map(_.fingerprint) ++ dangling.map(_.fingerprint)).sorted.mkString(";")
+
+  /** every shared-surface SUBJECT this instance's policy is keyed on — the holder FQNs (of holders
+    * AND of extensions, so a dependent naming a base's holder is a subject the screen can see), plus
+    * every per-declaration key, every promotion and every scope entry, each through
+    * [[MergeablePolicy.subjectOf]].
+    *
+    * '''The per-declaration keys are the half that matters''', and they are why this phase needed
+    * the screen as much as the merge: a `sites` or `selfSupplied` key names a DECLARATION, and a
+    * dependent that names one of the BASE's re-shapes a surface it does not own — the base emitted
+    * that declaration threaded and the dependent would emit it deferred, or unthreaded, or holding
+    * a `given` the base never wrote. A dependent naming its OWN types passes, which is the whole
+    * point; the base's own holder FQN is in the base's subjects too, so a merge never reports it as
+    * ADDED and an extension of an inherited holder is admitted for the honest reason. */
+  def subjects: Set[String] =
+    val fromHolders = holders.flatMap(h =>
+      (Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.promoteToClass ++ h.scope.entries))
+    val fromExts = extensions.flatMap(e => Set(e.holder) ++ e.keys)
+    (fromHolders ++ fromExts).map(MergeablePolicy.subjectOf).toSet
+
+  /** THE MERGE CONTRACT (DESIGN.md §8.13), and the division is `ContextHolder.sharedSurface` —
+    * which is a value on the policy rather than a list here, because "which half of this is the
+    * SHARED SURFACE" is a fact about the policy and a phase that spelled it twice would drift.
+    *
+    *   - '''holders UNION by holder FQN.''' A holder only one side declares is an addition — a
+    *     dependent with a global of its own is entitled to one — and the `governs` screen is what
+    *     refuses it when the FQN is inside a base's claim.
+    *   - '''a holder BOTH sides declare must AGREE on its shared surface, or the merge refuses.'''
+    *     Two answers for the context type, the member map, the attachment mode, the read shape or
+    *     the boundary default is a choice, and a choice is the thing a refusal exists to prevent:
+    *     the base emitted its own types with one of them and the dependent resolves against that
+    *     Java, so the two ports would each compile alone and could not compile together.
+    *   - '''`sites` and `selfSupplied` UNION, refusing same-key-different-value.''' They are keyed
+    *     on DECLARATIONS, and CT8 is exactly the case where the declaration is the dependent's.
+    *   - '''extensions carry across, and a dangling one becomes an ordinary extension of whatever
+    *     the merge just brought into scope.''' That is the mechanism: vfx's extension names
+    *     `com.badlogic.gdx.Gdx`, which is dangling in vfx's own instance and folds into the base's
+    *     holder in the merged one.
+    *
+    * `added` is the SUBJECT side of what the later instance contributes — every subject it holds
+    * that this one did not. Those are the names a dependent could use to re-shape a base's emitted
+    * surface, which is what `SurfaceFold` screens against `governs`, and they are the keys the run
+    * holds this module's own policy findings to.
+    */
+  def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
+    case o: GlobalsToImplicitsTransform =>
+      val mine   = holders.map(h => h.holder -> h).toMap
+      val theirs = o.holders.map(h => h.holder -> h).toMap
+      val surfaceClash = (mine.keySet & theirs.keySet).toList.sorted
+        .filter(k => mine(k).sharedSurface != theirs(k).sharedSurface)
+        .map(k => s"""both modules declare the holder "$k" and its SHARED SURFACE differs — """ +
+          s""""${mine(k).sharedSurface}" against "${theirs(k).sharedSurface}". The context type, """ +
+          "the member map, the attachment mode, the read shape, the boundary default, the " +
+          "promotions and the scope are all facts about the SIGNATURES this policy emits, so two " +
+          "answers is a choice and not a composition. A dependent adds `sites`/`selfSupplied` " +
+          "entries for its OWN declarations and inherits the rest")
+      val siteClash = for
+        k         <- (mine.keySet & theirs.keySet).toList.sorted
+        (key, v)  <- theirs(k).sites.toList.sortBy(_._1)
+        v2        <- mine(k).sites.get(key)
+        if v2 != v
+      yield s"""both modules give the site "$key" a policy, "${v2.token}" and "${v.token}""""
+      val selfClash = for
+        k        <- (mine.keySet & theirs.keySet).toList.sorted
+        (key, v) <- theirs(k).selfSupplied.toList.sorted
+        v2       <- mine(k).selfSupplied.get(key)
+        if v2 != v
+      yield s"""both modules make "$key" self-supplied, from "$v2" and from "$v""""
+      (surfaceClash ++ siteClash ++ selfClash) match
+        case Nil =>
+          val merged = (mine.keySet ++ theirs.keySet).toList.sorted.map { k =>
+            (mine.get(k), theirs.get(k)) match
+              case (Some(a), Some(b)) => a.copy(sites = a.sites ++ b.sites,
+                                                selfSupplied = a.selfSupplied ++ b.selfSupplied)
+              case (Some(a), None)    => a
+              case (None, Some(b))    => b
+              case (None, None)       => sys.error("unreachable: a key from the union of two maps")
+          }
+          Right(MergeablePolicy.Merged(
+            new GlobalsToImplicitsTransform(merged, (extensions ++ o.extensions).distinct),
+            o.subjects -- subjects))
+        case whys => Left(whys.mkString("; ") +
+          " — two answers for one key is a threading whose outcome depends on which manifest was read")
+    case other =>
+      Left(s"`${other.name}` is not a `GlobalsToImplicitsTransform`, so there is no policy to compose")
 
   // ---- policy, bound before the pipeline starts ---------------------------------------------
 
@@ -116,7 +233,7 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
       bad += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.$setting",
         key, PolicyIssue.Malformed, what)
 
-    holders.foreach { h =>
+    effectiveHolders.foreach { h =>
       // the HOLDER is a TYPE key; naming a member here is a different mistake with a different fix.
       binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.holder", h.holder)
         .toOption.foreach(s => boundHolder = boundHolder.updated(h.holder, s))
@@ -191,7 +308,23 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
   /** the never-fired half (from the BINDING, so it is complete whether or not this phase ran) plus
     * this phase's own malformed entries and counted refusals. */
   def policyReport: PolicyReport =
-    PolicyReport.fromBindings(records) ++ PolicyReport(malformed ++ refusals.toList ++ deadSites.toList)
+    PolicyReport.fromBindings(records) ++
+      PolicyReport(malformed ++ danglingFindings ++ refusals.toList ++ deadSites.toList)
+
+  /** AN EXTENSION NAMING A HOLDER NOTHING DECLARES — CT8's own never-fired shape.
+    *
+    * An extension is the per-declaration half of somebody else's holder, so it does nothing at all
+    * unless a manifest in the chain declares that holder. `PolicyBinder` cannot see this: the
+    * extension's own keys bind perfectly against a program that has them, and it is the HOLDER the
+    * chain is missing. Derived from the policy rather than from a run, so a phase that never ran
+    * reports it too — the reason `PolicyReport.fromBindings` exists one layer up. */
+  private def danglingFindings: List[PolicyFinding] = dangling.map { e =>
+    PolicyFinding(name, "GlobalsToImplicitsTransform(extensions)", e.holder, PolicyIssue.Malformed,
+      "this module extends a holder that neither it nor any of its bases declares, so every entry " +
+        "in the extension names a site of a threading that is not happening. An extension carries " +
+        "the PER-DECLARATION half of a holder the shared surface already states (§1.5); declare " +
+        "the holder in the base manifest, or fix the FQN if it was meant to name a different one")
+  }
 
   private val refusals = collection.mutable.ListBuffer.empty[PolicyFinding]
 
@@ -254,8 +387,8 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
 
   override def run(program: Program): Program =
     seamLog.clear(); refusals.clear(); deadSites.clear()
-    if holders.isEmpty then return program
-    holders.foldLeft(program)((p, h) => runHolder(p, h))
+    if effectiveHolders.isEmpty then return program
+    effectiveHolders.foldLeft(program)((p, h) => runHolder(p, h))
 
   private def runHolder(program0: Program, h: ContextHolder): Program =
     val statics: Map[SymId, String] =

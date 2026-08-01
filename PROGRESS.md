@@ -2555,12 +2555,52 @@ the same rule §5.1 states for members, one artifact over.
 **So the enablement is REVERTED a third time, byte-for-byte** — `just measure-all` exit 0, all 13
 ports 0 members changed, every check count identical, `context-seam` absent from every report.
 
-**Do NOT retry it until CT7 has an engine answer.** The three exits that look available for CT7 were
-each walked to the wall and are tabulated in `ENGINE-LIMITS.md`; `scope` turns a lost suite into a
-compile error, `sites` speaks about reads, and `attach = "method"` puts the clause in the same place
-for 3.3× the cost. And do not spend a cycle re-deriving the numbers above for the base: it is
-finished, the shim fix is the recorded shape, and the work left is CT7, then CT8, then the six or so
-hand-written `src/` files in screens and vfx.
+**Do NOT retry it as a policy exercise.** The three exits that looked available for CT7 were each
+walked to the wall and are tabulated in `ENGINE-LIMITS.md`; `scope` turns a lost suite into a compile
+error, `sites` speaks about reads, and `attach = "method"` puts the clause in the same place for 3.3×
+the cost. And do not spend a cycle re-deriving the numbers above for the base: it is finished and the
+shim fix is the recorded shape.
+
+**CT7 AND CT8 ARE NOW CLOSED, AND P5 IS READY FOR ITS FOURTH AND FINAL REPLAY.** Both mechanisms
+shipped DEFAULT-OFF and were measured alone: `just measure-all` exit 0, all ten lanes 0 members
+changed, every check count identical, no baseline moved, on each commit.
+
+- **CT7 — the THIRD ANSWER.** `selfSupplied` names a framework-instantiated TYPE and the expression
+  that yields its context; the type keeps java's constructor signature and gets
+  `private given <ctx> = <expression>` at the head of its body, which is sge's own shape
+  (`private given Sge = SgeTestFixture.testSge()` on a no-arg suite) reached from policy. It is a
+  RESOLUTION, not a refusal — the reads inside it stay threaded, so no global comes back — and it
+  propagates nothing. Validated by RUNNING: the emitted probe goes through scala-cli 3.8.4 at **0
+  errors**.
+- **CT8 — the merge, and the split it needed.** `GlobalsToImplicitsTransform` is `MergeablePolicy`;
+  the shared half must agree, `sites`/`selfSupplied` union refusing same-key-different-value, and a
+  dependent writes a `ContextHolderExtension` — a value with no field in which the shared half could
+  be restated, and a `holders` entry with no `context` block in the `.conf`. vfx's four seams now
+  have a manifest.
+
+**The `unconstructed-thread` warning is 1 on this port, and the dry run says why that is the ceiling.**
+Replayed with the P5 holder, the globals phase alone over libGDX core reproduces **275 threaded
+declarations in 177 files** exactly, and the new warning fires **once** —
+`com.badlogic.gdx.input.RemoteInput`, which is honest (nothing in the library constructs it) and is
+the "your users construct this" case the classification names. It does **not** fire on
+`AnimationControllerTest`, because a JUnit class extends nothing in Java and its `munit.FunSuite`
+parent is minted by a later phase; the two relaxed criteria that do see it read **60** and **74** of
+188 threaded classes and are every leaf of the public API. The numbers and the "do not retry" are in
+`ENGINE-LIMITS.md` CT7. **The detector of record for this class of loss remains `tests.tsv`'s
+DID-NOT-RUN gate**, which is what found it.
+
+**What the fourth replay has to do, and it is all PORT-SIDE.** The engine owes nothing more:
+
+| file | port | what |
+|---|---|---|
+| `libgdx-test`'s manifest | libgdx-test | a `selfSupplied` entry per generated suite that the closure threads, each naming the fixture expression |
+| a `SgeTestFixture`-shaped noop `src/` file | libgdx-test | the fixture the entries above call — application/graphics/audio/files/input/net all noop, sge's own shape |
+| `sge/utils/Pools.scala` | libgdx-core | the recorded `def registerDefaults()(using sge.Sge)` shape; the WHOLE block moves (see above) |
+| ~4 hand-written `src/` files | screens | the 16 errors: `Gdx.gl*` reads and constructions of threaded types, same category as `Pools` |
+| ~2 hand-written `src/` files + a fixture | vfx | 41 of the 43; plus a `globals-to-implicits` EXTENSION in vfx's manifest carrying `sites` for its own two subjects (`VfxGLUtils#<clinit>`, `VfxFrameBuffer#tmpCam`) — the thing CT8 just made writable |
+
+The two remaining `EngineGap` errors in vfx were CT8 and are now a manifest entry. gltf's 7 stay
+PRE-EXISTING and are not this enablement's (diff a dependent against its OWN baseline, §5.1).
 
 ### 11.13 D5j — the demand-derived JDK surface, as measured
 

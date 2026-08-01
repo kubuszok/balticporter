@@ -3347,8 +3347,9 @@ composes with a nearer manifest's instance of me*. `PortManifest.surfaceFold` fo
 through it — same `Phase.name`, base's pipeline POSITION preserved, the merged instance replacing
 the base's in place. A phase that declares nothing keeps exactly today's behaviour: both instances
 stay in the effective pipeline and `ManifestAgreement` reports the pair as a fatal
-`SurfaceDivergence`. `TypeRedirectTransform` declares its merge in this commit; every other
-parameterised phase keeps the no-merge default, deliberately (below).
+`SurfaceDivergence`. `TypeRedirectTransform` declared the first merge, `NullabilityTransform` the
+second and `GlobalsToImplicitsTransform` the third; every other parameterised phase keeps the
+no-merge default, deliberately (below).
 
 **What this closes.** `ENGINE-LIMITS.md` D9: a (b) phase configured in a BASE manifest was one no
 dependent could ever configure, so the libGDX base could not gain its first `TypeRedirectTransform`
@@ -3535,6 +3536,34 @@ type its BASE emits leaves its own overrides of that type's annotated members ho
 type beside a parent the base emitted as `T | Null` — half an override pair, which is the shape
 §11.17 measured when a scoped-out parent sat beside a retyped child, and precisely the "two modules
 that each compile alone and cannot compile together" the intrusion screen exists for.
+
+**`GlobalsToImplicitsTransform` declares the third, and it is the first whose merge needed a NEW
+VALUE rather than a rule** (`ENGINE-LIMITS.md` CT8). The rule alone is easy to state — holders union
+by holder FQN, `sites` and `selfSupplied` union refusing same-key-different-value, everything else
+must agree — and stating it is not sufficient, which is the finding. A `sites` entry belongs to a
+HOLDER, so a dependent that must name one would have to restate the holder; and with the context
+type, the member map, the attachment mode, the read shape and the boundary default all
+agree-or-refuse, restating the holder means restating the base's whole member map in the dependent's
+manifest. That is §1.5's prohibition arriving through the door the merge opened.
+
+So the split is a value: `ContextHolderExtension` carries `holder` plus the per-declaration half and
+has **no field in which the shared half could be restated**, and `ContextHolder.sharedSurface` is the
+other side of the same line, on the policy rather than spelled twice in the phase. The config front
+door says it the same way — a `holders` entry **with no `context` block IS an extension**, chosen
+because `context` is the one key with no default, and any shared-surface key written inside such a
+block is an unread key the loader already refuses. `effectiveHolders` folds each extension into the
+holder of its FQN and is what binds and runs; a DANGLING extension — one naming a holder nothing in
+the chain declares — is a counted `Malformed` derived from the policy, because its own keys would
+bind perfectly and what is missing is not a program fact at all.
+
+Two details that are not arbitrary. `promoteToClass` and `scope` are in the SHARED half rather than
+unioned: both name types, but both change what the threading does to declarations the base emits,
+and the phase has no per-module direction to offer (the `RuleScope` argument above, one phase over).
+And `subjects` includes the HOLDER FQN of an extension as well as of a holder, which looks like it
+would refuse every dependent and does the opposite: the base holds that subject too, so
+`o.subjects -- subjects` reports it as nothing ADDED — while a dependent declaring the phase with a
+holder in the base's namespace and NO base counterpart is screened whole and refused, which is the
+shape that has the most freedom.
 
 Every other parameterised phase keeps the no-merge default, and the reason is uniform:
 none of them has a second consumer yet, and a merge rule written without one is a guess that will be

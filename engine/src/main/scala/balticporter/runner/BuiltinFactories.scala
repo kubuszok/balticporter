@@ -292,6 +292,11 @@ final class NullabilityFactory extends TransformFactory:
   *     selfSupplied = { "com.foo.FooTest" = "com.foo.TestFixture.ctx()" }
   *     promoteToClass = [ "com.foo.Viewport" ]
   *     scope { except = [ … ] } }] }
+  *
+  * # …and in a DEPENDENT, an EXTENSION: no `context` block, per-declaration keys only
+  * { transform = "globals-to-implicits"
+  *   holders = [{ holder = "com.foo.Gdx"
+  *                sites  = { "com.dep.Utils#<clinit>" = "lazy-init" } }] }
   * }}}
   *
   * The whole policy is DATA, which is why this phase (unlike `primitive-to-opaque`'s seeds) needs no
@@ -308,7 +313,25 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       throw ConfigError(config.at("holders"),
         "required, and absent — with no holder named, the phase would find none and do nothing, " +
           "which is the §1(b) silent no-op this engine refuses"))
-    new GlobalsToImplicitsTransform(hs.map(holder))
+    // A HOLDER ENTRY WITH NO `context` BLOCK IS AN EXTENSION — the per-declaration half of a holder
+    // the BASE declares (`ENGINE-LIMITS.md` CT8). The absence of `context` is the signal because
+    // it is the one key with no default: a dependent has nothing to say about the context TYPE, and
+    // any shared-surface key written inside such a block is an unread key the loader already
+    // refuses. §1.5 is then structural rather than a convention on both sides of the front door.
+    val (exts, full) = hs.partition(_.child("context").isEmpty)
+    new GlobalsToImplicitsTransform(full.map(holder), exts.map(extension))
+
+  private def extension(c: ConfigView): ContextHolderExtension =
+    ContextHolderExtension(
+      holder       = c.requireString("holder"),
+      sites        = sites(c),
+      selfSupplied = c.stringMap("selfSupplied").getOrElse(Map.empty),
+    )
+
+  private def sites(c: ConfigView): Map[String, ContextSite] =
+    c.stringMap("sites").getOrElse(Map.empty).map((k, v) =>
+      k -> ContextSite.fromToken(v).getOrElse(throw ConfigError(c.at("sites"),
+        s"'$v' is not one of ${ContextSite.values.map(_.token).sorted.mkString(", ")}")))
 
   private def holder(c: ConfigView): ContextHolder =
     val ctx = c.requireChild("context")
@@ -331,9 +354,7 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
                   .getOrElse(ContextReader.Summon),
       boundary = c.enumerated("boundary", ContextBoundary.values.map(v => v.token -> v).toMap)
                   .getOrElse(ContextBoundary.Refuse),
-      sites = c.stringMap("sites").getOrElse(Map.empty).map((k, v) =>
-        k -> ContextSite.fromToken(v).getOrElse(throw ConfigError(c.at("sites"),
-          s"'$v' is not one of ${ContextSite.values.map(_.token).sorted.mkString(", ")}"))),
+      sites = sites(c),
       selfSupplied = c.stringMap("selfSupplied").getOrElse(Map.empty),
       promoteToClass = c.strings("promoteToClass").getOrElse(Nil).toSet,
       scope = TransformFactory.scopeOf(c),

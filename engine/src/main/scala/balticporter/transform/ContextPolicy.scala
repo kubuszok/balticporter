@@ -95,14 +95,82 @@ final case class ContextHolder(
 ):
   /** a stable, order-independent rendering — two modules that agree must compare equal (§1.5). */
   def fingerprint: String =
+    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied)}"
+
+  /** THE HALF A DEPENDENT MAY NOT RESTATE — `ENGINE-LIMITS.md` CT8.
+    *
+    * The holder, its context type, the member map, the attachment mode, the read shape, the boundary
+    * default, the promotions and the scope are all facts about the EMITTED SIGNATURES of the types
+    * this policy threads. A base and a dependent that answer any of them differently emit signatures
+    * that each compile alone and cannot compile together (§1.5), so this is what
+    * [[GlobalsToImplicitsTransform.mergedWith]] requires two modules to AGREE on rather than compose
+    * — with `promoteToClass` and `scope` the two that compose by ENTRY, because both are keyed on
+    * types a dependent may legitimately own and the `governs` screen is what stops one naming a
+    * base's.
+    */
+  def sharedSurface: String =
     val ms = members.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
-    val ss = sites.toList.map((k, v) => s"$k->${v.token}").sorted.mkString(",")
-    // the SOURCE text is digested rather than spelled: it is Scala, it may hold every separator this
-    // rendering uses, and two modules that supply different context sources for one declaration have
-    // certainly made a mistake whether or not the strings are readable here.
-    val fs = selfSupplied.toList.map((k, v) => s"$k=>${v.hashCode.toHexString}").sorted.mkString(",")
-    s"$holder|${context.token}|$ms|${attach.token}|${reader.token}|${boundary.token}|$ss|$fs|" +
+    s"$holder|${context.token}|$ms|${attach.token}|${reader.token}|${boundary.token}|" +
       s"${promoteToClass.toList.sorted.mkString(",")}|${scope.fingerprint}"
+
+  /** this holder with a dependent's per-declaration entries folded in. Every clashing key has
+    * already been refused by the caller — this composes, it does not decide. */
+  def extendedBy(e: ContextHolderExtension): ContextHolder =
+    copy(sites = sites ++ e.sites, selfSupplied = selfSupplied ++ e.selfSupplied)
+
+object ContextHolder:
+
+  /** the PER-DECLARATION half of a holder or of an extension, rendered by ONE body so a fingerprint
+    * cannot depend on which side of a merge stated an entry.
+    *
+    * A `selfSupplied` source is DIGESTED rather than spelled: it is Scala, it may hold every
+    * separator this rendering uses, and two modules that supply different context sources for one
+    * declaration have certainly made a mistake whether or not the strings are readable here. */
+  private[transform] def perDeclaration(sites: Map[String, ContextSite],
+                                        selfSupplied: Map[String, String]): String =
+    val ss = sites.toList.map((k, v) => s"$k->${v.token}").sorted.mkString(",")
+    val fs = selfSupplied.toList.map((k, v) => s"$k=>${v.hashCode.toHexString}").sorted.mkString(",")
+    s"$ss|$fs"
+
+/** WHAT A DEPENDENT MAY ADD to a base's holder — `ENGINE-LIMITS.md` CT8.
+  *
+  * [[ContextHolder]] is SHARED SURFACE, so it lives in the base manifest and a dependent inherits it
+  * (§1.5). But `sites` and `selfSupplied` are keyed on DECLARATIONS, and a dependent's boundaries
+  * are in the DEPENDENT's own types — which the base neither governs nor parses. Measured: four
+  * counted seams in a dependent whose own diagnostic told its reader to *give the site a `sites`
+  * policy*, with no manifest in which to write one.
+  *
+  * '''Stating the merge is not enough, and this value is why.''' A `sites` entry belongs to a
+  * HOLDER, so a dependent that must name one would have to restate the holder — and with `context`,
+  * `members`, `attach`, `reader` and `boundary` all agree-or-refuse, restating the holder means
+  * restating the base's whole member map in the dependent's manifest. That is exactly what §1.5
+  * forbids, arriving through the door the merge opened. So an extension states the per-declaration
+  * half and has NO FIELD in which the shared half could be restated: the rule is structural rather
+  * than a convention. The config front door says the same thing the same way — a `holders` entry
+  * with no `context` block IS an extension, and a shared-surface key written inside one is an unread
+  * key the loader already refuses.
+  *
+  * An extension naming a holder no manifest in the chain declares is a counted `Malformed` finding,
+  * never a silent no-op.
+  *
+  * {{{
+  * globals-to-implicits {
+  *   holders = [{ holder = "com.foo.Gdx"                       # no `context`: an EXTENSION
+  *                sites = { "com.dep.Utils#<clinit>" = "lazy-init" } }]
+  * }
+  * }}}
+  */
+final case class ContextHolderExtension(
+    holder: String,
+    sites: Map[String, ContextSite] = Map.empty,
+    selfSupplied: Map[String, String] = Map.empty,
+):
+  /** `+` marks it as an EXTENSION, so a dangling one can never fingerprint-collide with the holder
+    * it names. */
+  def fingerprint: String = s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied)}"
+
+  /** every per-declaration key, for the never-fired report and for the `governs` screen. */
+  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet
 
 /** WHERE the context type comes from.
   *
