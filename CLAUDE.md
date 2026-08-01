@@ -139,6 +139,20 @@ the INJECTION is a build artefact, and exactly one module must ship each replace
 dependent that copied it would emit a second definition of the same FQN. Every check that asks "is
 this replaced?" follows the same line and holds a module to its OWN drops only.
 
+**And a phase that SYNTHESISES a declaration owes the same answer, which is the half the table
+cannot state.** An inherited phase is one instance and it RUNS in every module — those are different
+questions, and asking only the first ("does any dependent CONSTRUCT this phase?", the instance count
+above) settles the merge while saying nothing about the emission. A dependent's model CONTAINS its
+base's units, so a phase keyed on a base declaration fires there too; if what it does is MINT a
+top-level unit, every module in the chain writes its own copy of the same FQN, and the run cannot
+tell them apart because a minted unit has no `Origin` for `PortRun.converted` to classify. So a
+synthesised unit belongs to the module that owns the declarations it was synthesised FOR — `RunScope`
+is that set — and nothing else may write it. Measured at 24 errors over six dependent lanes with six
+suites stopped, while the BASE read 0 errors and all of its check counts flat
+(`ENGINE-LIMITS.md` §13 O5). Note the shape of that evidence: **a base port's green numbers are not
+evidence about its dependents**, so a step that changes shared surface is measured with
+`just measure-all` or it is not measured.
+
 **`surface` composes only where the PHASE says how.** `extendedBy` unions the drops and the renames
 key by key; it cannot do that to a `surface`, because a phase's policy is a constructor argument and
 two instances holding two halves of one table are not a map. So a parameterised phase declares

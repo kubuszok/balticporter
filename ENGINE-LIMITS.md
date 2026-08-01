@@ -3804,12 +3804,15 @@ and screens (0 → 16).
 
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 
-All three entries below come from the SAME delivery — Stage P6's attempt to enable an opaque family
-on libGDX core (`PROGRESS.md` §11.25) — and all three are in `PrimitiveToOpaqueTransform` itself,
-not in the policy that configured it. Read O1 and O2 together: they are two halves of "a retyping
-phase owes more than the declaration it was pointed at", and neither was reachable from any manifest
-key, so a port that hit either had no exit but the engine. O3 is a third shape — a family the spec
-cannot ask for at all, and it is the one still open.
+All five entries below come from the SAME work — Stage P6's attempts to enable an opaque family on
+libGDX core (`PROGRESS.md` §11.25) — and none of them is in the policy that configured it. Read O1
+and O2 together: they are two halves of "a retyping phase owes more than the declaration it was
+pointed at", and neither was reachable from any manifest key, so a port that hit either had no exit
+but the engine. O3 is a third shape — a family the spec cannot ask for at all. **O5 is the one that
+blocks the family today**, and it is not about translation at all: the phase MINTS a unit, and the
+run emits that unit from every module in the pipeline. Note where each was found, because the
+pattern is the point — O1 and O2 by compiling the BASE, O5 only by compiling the DEPENDENTS, which
+the base's own 21 green check counts cannot see.
 
 The delivery O1 and O2 blocked was otherwise complete and correct. The family emits exactly what the
 reference hand port emits (`GLTexture.glHandle: TextureHandle.T`, the mint wrapped at
@@ -3823,6 +3826,10 @@ The two deltas are both O1's and both accounted: coercions **27 → 30** (one pe
 members **34 → 37** (`TextureDescriptor`, `#hashCode`, `#compareTo` — the three rows that pre-fix did
 not move BECAUSE no coercion was inserted in them). Both runs are in the same session against the
 same baseline, so the attribution is a diff and not a reconstruction.
+
+**And every one of those numbers reproduced exactly on the full delivery run, which is why O5 is
+worth reading before any of them.** The base is finished; it was finished when this paragraph was
+written, and the step still cannot land. What that proof did not contain was a single dependent.
 
 ### O1. A coercion reads the boundary TERM's own type, so a seed reaching it through an `if` is INVISIBLE — was 3 errors
 
@@ -4040,3 +4047,68 @@ construction. The exit when one does, and the reason it is not built yet, are in
 is policy the port would have to keep honest by hand, or a fingerprint over what the phase SEEDED,
 which is not available at fold time and would not be pure. Neither is obviously better than the
 named residue.*
+
+### O5. A MINTED unit has no origin, so EVERY module in the pipeline emits it — 24 errors, six suites stopped
+
+OPEN, and it is the entry that blocks the family a second time. (a) engine, in what a run decides to
+WRITE rather than in the phase's translation. Measured on the P6 delivery attempt: libgdx-core reads
+**0 errors** and every one of its 21 check counts is unchanged — the translation is exactly right —
+while **six dependent lanes go 0 → 3, 0 → 6, 0 → 3, 7 → 13, 0 → 3 and 0 → 3**, and none of their
+suites runs.
+
+The phase MINTS its object as a top-level unit (`Origin.synthetic`) and appends it to
+`program.units`. `PortRun.converted` classifies a unit by its recorded origin — under `sourceRoot`
+is owned, under a `resolutionRoot` is not — and its documented fallback is that **a unit with no
+usable origin is converted, because refusing to emit on a missing origin would be a silent
+omission.** That rule is right for a parsed unit and wrong for a minted one. A dependent's model
+CONTAINS the base's units (that is what `resolutionRoots` is), so the hint matches there too, the
+phase mints there too, and the fallback then writes the object into the dependent's own
+`src_managed`. Nine files were emitted where one was owed:
+
+```
+libgdx-core/src_managed/{main,test}/…/TextureHandle.scala   ← main is the only legitimate one
+ashley-core/src_managed/{main,test}/…/TextureHandle.scala
+gltf-core/src_managed/{main,test}/…/TextureHandle.scala
+anim8-core/src_managed/main/…/TextureHandle.scala
+vfx-core/src_managed/main/…/TextureHandle.scala
+screens-core/src_managed/main/…/TextureHandle.scala
+```
+
+Each duplicate costs exactly three errors — `24 = 8 × 3` — and the second and third are the part
+that makes this louder than a plain redefinition:
+
+```
+[E161] TextureHandle is already defined as object TextureHandle in libgdx-core/src_managed/main/…
+[E007] def apply(v: scala.Int): TextureHandle.T = v      Found: (v : Int)   Required: …TextureHandle.T
+[E007] def unwrap(v: TextureHandle.T): scala.Int = v     Found: (v : …TextureHandle.T)  Required: Int
+```
+
+Opacity is per-DEFINITION: inside the duplicate, `TextureHandle.T` binds to the FIRST definition's
+opaque type, which is abstract there, so the duplicate's own `apply`/`unwrap` no longer type-check
+against it. A minted opaque type therefore cannot be duplicated even harmlessly — the copy is not
+merely redundant, it does not compile.
+
+**There is NO POLICY EXIT, and that is the load-bearing negative.** `surface` is inherited through
+`extendedBy` and cannot be subtracted; a dependent that declared its own instance would be a fatal
+`SurfaceDivergence` (the phase implements no `MergeablePolicy`); and holding the phase back in a
+dependent is the very thing §1.5 forbids, since the base emits `glHandle: TextureHandle.T` and the
+dependent would emit `Int`. A `RuleScope` cannot reach it either: the fence bounds which SYMBOLS are
+seeded, and the mint is a consequence of the seed set being non-empty at all — which it must be in a
+dependent, because the seeded declaration is the base's.
+
+**The failure is invisible to every count the delivery was measured by.** libgdx-core's 21 check
+counts are identical, its 37 moved members are exactly the reached set, its `decisions.tsv` moves by
+the expected +2 `RetypedSignature`, and the emitted code is the reference port's line for line.
+Nothing in the base's report can see a file a DEPENDENT wrote. The one artifact that half-notices is
+the provenance log, and it notices inconsistently: of the nine emitting ports only three recorded a
+decision for the unit they wrote (libgdx-core, libgdx-test, screens, one `RenamedPackage` each) —
+so the module scope that governs `decisions.tsv` already disagrees with what the emitter writes, in
+the direction that hides it.
+
+*Fix kind: (a) engine. The shape that fits what the run already knows: a MINTED unit belongs to the
+module that owns the declarations it was minted FOR, so the phase should mint only when a seed lives
+in one of this module's own units (`RunScope` is exactly that set and the phase already receives it),
+and `PortRun` should refuse to write a synthetic unit whose FQN a base's published port map already
+claims. Both halves are wanted — the first stops the emission, the second is the check that fails
+loudly if some other phase mints one. A dependent that genuinely needs its OWN opaque family is a
+design question this does not answer; the corpus has none.*
