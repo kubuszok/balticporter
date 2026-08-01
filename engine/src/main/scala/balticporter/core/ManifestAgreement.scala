@@ -393,11 +393,21 @@ object ManifestAgreement:
               here.headOption.map(r => s"$fps — ${r.why}").getOrElse(fps))
     }
 
+    // …and an INTRUSION that produced no pair. The arm above can only see a phase NAME carrying two
+    // fingerprints, which is a merge that was refused; a dependent declaring a phase NO base has is
+    // one instance in the pipeline, so it never reaches that arm — and it is the shape with the most
+    // freedom, since nothing in any base's table constrains what it may re-point. The fold screens
+    // it (`SurfaceFold.of`'s no-counterpart arm) and this is where its refusal becomes the finding.
+    val divergentPhases = divergent.map(_.subject).toSet
+    val intrusions = m.surfaceFold.refusals
+      .filter(r => r.cause == SurfaceFold.Cause.Intrusion && !divergentPhases.contains(r.phase))
+      .map(r => Finding(Kind.SurfaceIntrusion, m.name, r.phase, r.why))
+
     val neverFired = m.inheritedKeysNeverFired(fired).toList.sortBy(_._1).flatMap { (base, keys) =>
       keys.toList.sorted.map(k => Finding(Kind.InheritedKeyNeverFired, base, k, "inherited key matched nothing in this run"))
     }
 
-    perBase ++ divergent ++ neverFired
+    perBase ++ divergent ++ intrusions ++ neverFired
 
   // -------------------------------------------------------------------------
   // dynamic — the base's policy against what this run modelled of the shared surface

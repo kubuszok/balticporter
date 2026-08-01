@@ -48,6 +48,22 @@ trait MergeablePolicy extends SurfacePolicy:
     */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged]
 
+  /** Every shared-surface SUBJECT this instance's policy is keyed on — each key's leading FQN,
+    * through [[MergeablePolicy.subjectOf]], so a phase does not spell the cut a second time.
+    *
+    * '''This is what makes the `governs` screen reachable without a merge.''' The screen used to
+    * read only the subjects a MERGE contributed, so a dependent declaring a phase its base does not
+    * have was appended to the pipeline unscreened: one instance, no divergence, no merge, and every
+    * type the base emits mechanically available to re-point. `ManifestAgreement`'s
+    * `SurfaceIntrusion` text states the rule unconditionally; this is the accessor that lets the run
+    * enforce it unconditionally.
+    *
+    * Over-approximate rather than under: a subject listed here that turns out to be harmless costs
+    * a refusal a port answers by naming the base's drop, while one omitted is a hole exactly where
+    * the screen exists.
+    */
+  def subjects: Set[String]
+
 object MergeablePolicy:
 
   /** @param phase the merged instance — a NEW value; neither input is mutated.
@@ -120,7 +136,16 @@ object SurfaceFold:
     do
       if !phases.exists(_ eq p) then
         phases.indexWhere(_.name == p.name) match
-          case -1 => phases = phases :+ p
+          // NO same-name instance to compose with — and this is the arm the screen used to miss.
+          // A dependent-declared phase with no counterpart in any base reaches the pipeline whole,
+          // so EVERY subject it holds is a subject it adds; screen all of them. The phase still
+          // joins the pipeline either way (a refusal has never removed one), and the fatal finding
+          // `ManifestAgreement` derives from the refusal is what stops the run.
+          case -1 =>
+            refusals = refusals ++ (p match
+              case a: MergeablePolicy => intrusion(seen, p.name, a.subjects)
+              case _                  => scala.None)
+            phases = phases :+ p
           case i  =>
             val earlier = phases(i)
             val outcome: Either[Option[Refusal], (Phase, Set[String])] = earlier match

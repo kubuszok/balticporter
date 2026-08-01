@@ -177,6 +177,48 @@ class SurfaceFoldSpec extends munit.FunSuite:
     assertEquals(bad.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
   }
 
+  test("INTRUSION without a merge: a phase NO base declares is screened exactly the same") {
+    // The hole the screen had: reached only from the `Right(Merged(...))` arm, a dependent that
+    // declared a phase its base does not have was appended to the pipeline UNSCREENED — one
+    // instance, so no divergence, and no merge, so no `added` to read. It could re-point any type
+    // the base emits mechanically, which is the very thing `SurfaceIntrusion` says is fatal.
+    val b   = PortManifest("base", governs = Set("com.demo"))   // NO type-redirect of its own
+    val dep = b.extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    assertEquals(dep.effectiveSurface.size, 1, "the phase still runs; the FINDING is what stops the run")
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
+    assert(Kind.SurfaceIntrusion.fatal)
+    assert(clue(f.head.detail).contains("com.demo.Widget"))
+    assert(clue(f.head.subject) == "type-redirect")
+  }
+
+  test("…and the same screen admits it when the base DROPS the type — ashley's real shape") {
+    val b   = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"))
+    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
+      surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    assertEquals(dep.surfaceFold.refusals, Nil)
+    assertEquals(
+      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, fired = Set("com.demo.Widget")).map(_.kind),
+      Nil)
+  }
+
+  test("an unmerged intrusion is reported ONCE, and a refused merge is not reported twice") {
+    // both channels can see one phase name: the divergence arm (two fingerprints) and the refusal
+    // list. The intrusion finding is derived from the second only where the first did not fire.
+    val dep = base(List(redirect("com.other.A" -> "com.dep.A")))
+      .extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    assertEquals(
+      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind),
+      List(Kind.SurfaceIntrusion))
+  }
+
+  test("`subjects` is every key's leading FQN — a rename OWNER counts as one") {
+    val p = new TypeRedirectTransform(
+      Map("com.other.A" -> "com.dep.A"), Map("com.other.B" -> Map("dispose" -> "close")))
+    assertEquals(p.subjects, Set("com.other.A", "com.other.B"))
+  }
+
   test("a base with NO governs claim screens nothing — no claim is not `everything`") {
     val dep = PortManifest("base", surface = List(redirect("com.other.A" -> "com.dep.A")))
       .extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))

@@ -169,6 +169,13 @@ final class TypeRedirectTransform(
     * plus the owner of any member rename it adds. Those are the names a dependent could use to
     * re-shape a base's emitted surface, which is what `SurfaceFold` screens against `governs`.
     */
+  /** every type this instance's policy is KEYED on — a redirect source, and the owner of a member
+    * rename. The same set `mergedWith` reports as `added` when the whole table is new, which is not
+    * a coincidence: the screen asks the identical question of a merged instance and of one that had
+    * nothing to merge with. */
+  def subjects: Set[String] =
+    (redirects.keySet ++ memberRenames.keySet).map(MergeablePolicy.subjectOf)
+
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: TypeRedirectTransform =>
       val typeClash = (redirects.keySet & o.redirects.keySet).filter(k => redirects(k) != o.redirects(k))

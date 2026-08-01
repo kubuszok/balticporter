@@ -3235,9 +3235,19 @@ A subject is read off a policy key as its leading FQN cut at `#` — the convent
 already uses for `dropMethods` keys, one body (`MergeablePolicy.subjectOf`), so a phase does not
 answer the question twice.
 
-The screen is scoped to keys the MERGE adds. A dependent's own, unmerged phase touching the base's
-namespace is the pre-existing situation on two ports today and is not this commit's to change; what
-this commit owes is that merging cannot become a way to do silently what was not allowed loudly.
+**The screen runs on EVERY dependent-declared instance, merged or not** — and it did not, for one
+checkpoint. Scoped to the keys a merge ADDS, it lived inside the `Right(Merged(…))` arm, so the one
+shape with the most freedom never reached it: a dependent declaring a phase **no base has** is
+appended to the pipeline whole, which is one instance (no divergence to report) and no merge (no
+`added` to read), leaving every type the base emits mechanically available to re-point. So
+`MergeablePolicy` declares `subjects` — each key's leading FQN, through the same `subjectOf` — the
+fold screens the no-counterpart arm with it, and `ManifestAgreement.statik` derives a
+`SurfaceIntrusion` from any refusal the divergence arm did not already report (a refused merge has
+two fingerprints and is reported there; an unmerged intrusion has one and would otherwise be
+silent). The classification text always stated the rule unconditionally; the run now enforces it
+unconditionally. Measured: the corpus is unmoved — ashley's redirect merges with the base's and is
+admitted by the drop, screens' ten entries are outside `com.badlogic.gdx` — which is exactly why
+nothing had noticed.
 
 #### The policy report follows the KEYS, not the instance
 
