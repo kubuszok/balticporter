@@ -345,6 +345,35 @@ final case class PortRun(
       say(PortReport.Kind.Manifest.classification)
       agreement.take(40).foreach(f => println("  " + f.render))
 
+    // ---- what this run SYNTHESISED, and whether a base already publishes it ----------------------
+    //
+    // `ENGINE-LIMITS.md` §13 O5 and CLAUDE.md §1.5: a phase that MINTS a top-level unit owes the same
+    // one-module answer an `inject` does, and the run cannot fall back on `converted` to hold it to
+    // one — a minted unit has no `Origin`, and the documented rule for a unit with no usable origin
+    // is to CONVERT it, because refusing to emit on a missing origin would be a silent omission.
+    // That is right for a parsed unit and blind here, so the phase fences its own mint on `RunScope`
+    // and this is the belt: a synthesised unit at an FQN a base's published map already claims is
+    // FATAL, whichever phase minted it. Written to catch the NEXT one, which will not have read O5.
+    //
+    // Counted on every run, `0 of 0` included, for the reason every check here is: a number nobody
+    // prints is a sentence living in prose, and "found nothing" must be distinguishable from "never
+    // looked" (this looked, and a base with no published map is reported as such above).
+    val synthesised = translated.emitOrder.filter(u => PortRun.isSynthesised(u.origin))
+    val claimed     = PortRun.claimedSynthetic(program, synthesised, basePorts.flatMap(b => b.map.map(b.name -> _)))
+    say(s"SYNTHESISED UNITS (minted by a phase, no Java file behind them): ${synthesised.size}" +
+      s", ${claimed.size} at an FQN a base already emits")
+    if claimed.nonEmpty then
+      claimed.foreach(c => System.err.println(s"[$label] FATAL — ${c.render}"))
+      sys.error(
+        s"[$label] ${claimed.size} synthesised unit(s) would be written at an FQN a base module " +
+          "already emits:\n" + claimed.map("  " + _.render).mkString("\n") +
+          "\n  [§1(a) ENGINE — the phase that minted these must fence its mint on `RunScope.emits`, " +
+          "so the unit is written by the module that owns the declarations it was minted FOR and by " +
+          "no other. A dependent still retypes and coerces; it resolves the name against the base's " +
+          "emitted output. There is no manifest key for this: `surface` is inherited through " +
+          "`extendedBy` and cannot be subtracted, and holding the phase back in a dependent is " +
+          "CLAUDE.md §1.5's compile-alone-but-not-together failure. See ENGINE-LIMITS.md §13 O5]")
+
     // ---- THE BASE-SURFACE CONTRACT: what this run could not answer, and what that cost -----------
     //
     // The one behavioural change §8.3 asks for, and it is a deliberate departure from the
@@ -1673,6 +1702,56 @@ object PortRun:
     * [[balticporter.core.RealPath]] is the one implementation of. Kept as a `String`-returning
     * alias because that is what this file's prefix tests compare. */
   def real(p: Path): String = balticporter.core.RealPath.str(p)
+
+  // =========================================================================================
+  // a SYNTHESISED unit, and the one module allowed to write it (ENGINE-LIMITS.md §13 O5)
+  // =========================================================================================
+
+  /** Did a phase MINT this unit, rather than the frontend parse it out of a Java file?
+    *
+    * Read from the ORIGIN, which is the only thing a rename cannot move (§4.57) — and read the way
+    * `PortMap.javaPaths` already reads it, because `Origin.synthetic`'s path is the placeholder
+    * `<synthetic>` and not the empty string, so an emptiness test alone would classify every minted
+    * unit as parsed. Anything in angle brackets is a placeholder and not a path. */
+  def isSynthesised(o: Origin): Boolean =
+    o.javaPath.isEmpty || o.javaPath.startsWith("<")
+
+  /** A unit this run would WRITE that no Java file produced, at an FQN a BASE module already emits.
+    *
+    * @param fqn         the EMITTED name — both sides of this comparison are emitted names, which is
+    *                    §4.56's rule for any artifact joining policy to observed code: the minted
+    *                    unit has been through this run's rename phase and the base's `emitted`
+    *                    column has been through the base's, and the two agree because a dependent
+    *                    inherits the rename policy (§1.5).
+    * @param base        which base module's published map claims it.
+    * @param disposition how the base's map describes it, so the reader can tell "the base emits this
+    *                    type" from "the base is where the injected replacement ships". */
+  final case class SyntheticClaim(fqn: String, base: String, disposition: String):
+    def render: String =
+      s"$fqn — synthesised by a phase in THIS run, and `$base` already emits a type at that name " +
+        s"($disposition). Two definitions of one FQN do not compile, and an opaque type cannot even " +
+        "be duplicated harmlessly: opacity is per-DEFINITION, so the copy's own accessors stop " +
+        "type-checking against the first definition's abstract type"
+
+  /** The refusal, as a pure function of what this run would write and what its bases published —
+    * testable without a run directory, the same division `discoverBasePorts` documents.
+    *
+    * A DROPPED type in a base's map is not a claim: the base does not emit it, so nothing collides.
+    * Only a name the base actually writes is one this run may not also write. */
+  def claimedSynthetic(program: Program, synthesised: List[Tree.ClassDef],
+                       bases: List[(String, PortMap.Map0)]): List[SyntheticClaim] =
+    if synthesised.isEmpty || bases.isEmpty then Nil
+    else
+      val claims: Map[String, (String, String)] =
+        bases.reverse.flatMap { (name, m) =>
+          m.types.iterator
+            .filter(e => e.emitted.nonEmpty && e.disposition != PortMap.Disposition.Dropped)
+            .map(e => e.emitted -> (name, e.disposition.toString))
+        }.toMap
+      synthesised.iterator
+        .flatMap(u => program.symbolOf(u.symbol).map(_.fullName))
+        .flatMap(fqn => claims.get(fqn).map((b, d) => SyntheticClaim(fqn, b, d)))
+        .toList.distinct.sortBy(c => (c.fqn, c.base))
 
   /** Every check's name as it appears in `counts.tsv`. Named here, in the orchestrator, because the
     * orchestrator is now the only thing that records: a check is a pure function of a `Program` and

@@ -65,9 +65,41 @@ import balticporter.tir.*
   * its own business: the emitter renders the `ValDef`, the constructor funnel reads the signature
   * (deliberately, since an argument's type may be narrower than the formal), a published contract
   * row reads the signature. So the retype loop moves BOTH, by POSITION, in one motion.
+  *
+  * ==The MINT belongs to ONE module — the one that owns the declarations it was minted FOR==
+  * `ENGINE-LIMITS.md` §13 O5, 24 errors over six dependent lanes with six suites stopped, and the
+  * one gap here that is not about translation at all. This phase adds a TOP-LEVEL UNIT to the
+  * program, and `PortRun.converted` classifies a unit by its recorded `Origin` — under `sourceRoot`
+  * is owned, under a `resolutionRoot` is not, and a unit with NO usable origin is converted, because
+  * refusing to emit on a missing origin would be a silent omission. That rule is right for a parsed
+  * unit and wrong for a minted one: a dependent's `Program` CONTAINS its base's units (that is what
+  * `resolutionRoots` is), so an inherited instance of this phase seeds there too, mints there too,
+  * and every module in the chain writes its own copy of the same FQN. A minted opaque type cannot be
+  * duplicated even harmlessly — opacity is per-DEFINITION, so inside the copy `T` binds to the FIRST
+  * definition's abstract type and the copy's own `apply`/`unwrap` stop type-checking against it.
+  *
+  * So the mint is fenced by [[RunScope.emits]], the run's own answer to *does this module emit that
+  * declaration at all* — CLAUDE.md §1.5's rule for a phase that SYNTHESISES a declaration, which is
+  * the same one-module answer `inject` already owes. A dependent still RETYPES every reference and
+  * COERCES at every boundary: it holds the minted symbols, `Program.owns` reports them external
+  * exactly as it does a JDK symbol (they hang off no unit of this run), and the emitted
+  * fully-qualified `Name.T` / `Name(…)` resolve against the object the OWNING module emitted and put
+  * on the classpath — which is what a dependent lane already compiles against.
+  *
+  * '''Read off the HINTS and never off the grown seed set.''' The seed set grows along pure-move
+  * flows, and a flow reaches a DEPENDENT's own declarations the moment that dependent so much as
+  * assigns the base's tagged getter to a local — gdx-gltf's `SharedTextureTest` is exactly that. A
+  * grown-set test would therefore hand the mint back to a module that merely USES the family, which
+  * is the defect wearing a fence. The hints are what the SPEC NAMED, so the module declaring them is
+  * the family's home, and a run owning none of them owns no part of the family.
+  *
+  * The fence is deliberately not a finding: withholding the mint is not a refusal, it is the phase
+  * doing in a dependent exactly what it should. `PortRun` carries the loud half, in the direction
+  * that can still go wrong — a synthesised unit at an FQN a base's published port map already claims
+  * FAILS THE RUN, which is what catches the next phase that mints without asking.
   */
 final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
-    extends Phase, PolicySource, SurfacePolicy:
+    extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name = s"primitive->opaque:${spec.fqn}"
 
   /** This phase RETYPES declarations under a [[RuleScope]], so two modules configuring it
@@ -101,6 +133,18 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   private var opaqueRef: TypeRepr = TypeRepr.NoType
   private var primRef: TypeRepr   = TypeRepr.NoType
   private val minted = collection.mutable.ListBuffer[Symbol]()
+
+  /** what the RUN knows about ITSELF — which top-level units it EMITS. Not derivable from the
+    * `Program` a phase is handed (a dependent's contains its base's units); see [[RunScope]]. The
+    * default is the base-port answer, which is also every spec's and `DebugEmit`'s, so a consumer
+    * cannot take a different code path under test than it does in a port. */
+  private var runScope: RunScope = RunScope.whole
+
+  /** Nothing to BIND: this phase's policy is a predicate and an FQN set, neither of which is a key
+    * the binder resolves. What it is here for is [[runScope]] — `PolicyBinder` is already the one
+    * object the run hands every phase before the pipeline starts, and a second channel would be a
+    * second thing a caller must remember. */
+  def bindPolicy(binder: PolicyBinder): Unit = runScope = binder.run
 
   /** the detected old→new type mapping: every primitive symbol retyped to the opaque type. A
     * reusable trace (also what a semantic-diff of this phase would report). */
@@ -233,8 +277,32 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
         }
     }
 
-    val units = program.units.map(u => StandardTraversal.mapClassDef(this, u)) :+ synthUnit
+    // THE MINT IS ONE MODULE'S — `ENGINE-LIMITS.md` §13 O5, and see the class doc for why the test
+    // is on the HINTS rather than on the grown seed set. Everything above this line happens in every
+    // module that inherits the instance: the symbols are minted, the declarations are retyped and
+    // every boundary is coerced. What a module that owns none of the tagged declarations must NOT do
+    // is WRITE the object, because `PortRun.converted` emits an origin-less unit and would then
+    // write one copy per module of an FQN that cannot be duplicated even harmlessly.
+    val walked = program.units.map(u => StandardTraversal.mapClassDef(this, u))
+    val units  = if mintsHere(program, hints) then walked :+ synthUnit else walked
     program.rebuilt(units, symbols)
+
+  /** Does THIS module own the declarations the spec named? Read through [[RunScope.emits]], which is
+    * the run's own emitted-unit set and the same predicate every other module-ownership question in
+    * the engine now goes through.
+    *
+    * `true` whenever there is no run scope (a base port, a single-module port, a spec, `DebugEmit`),
+    * by [[RunScope.whole]] — so this is the identity everywhere the pre-fix code was already right,
+    * and there is no second code path for a port to be silently on. */
+  private def mintsHere(p: Program, hints: Set[SymId]): Boolean =
+    hints.exists(id => runScope.emits(unitOf(p, id)))
+
+  /** the TOP-LEVEL unit a symbol belongs to — how a symbol is held to the module that emits it.
+    * Fuel-bounded, so a corrupt owner chain cannot hang the phase. */
+  private def unitOf(p: Program, id: SymId, fuel: Int = 64): SymId =
+    p.symbolOf(id) match
+      case Some(s) if s.owner != SymId.None && fuel > 0 => unitOf(p, s.owner, fuel - 1)
+      case _                                            => id
 
   /** Seed detection — [[FlowPropagation]] over the symbols of this spec's primitive, with the
     * hints as roots.

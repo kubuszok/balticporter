@@ -228,8 +228,8 @@ not there. So the propagation is allowed to walk INTO a sibling's opaque type pr
 overlap is visible, and the run throws, naming the symbol and both specs. A throw rather than a
 finding, for the reason `Pipeline.order` throws on a phase cycle: there is no honest program to emit.
 
-**A retyping phase owes THREE things beyond the declaration it was pointed at**, and this one shipped
-owing all three. Each is now built, each was measured by the family that exposed it
+**A retyping phase owes FOUR things beyond the declaration it was pointed at**, and this one shipped
+owing all four. Each is now built, each was measured by the family that exposed it
 (`ENGINE-LIMITS.md` §13, `PROGRESS.md` §11.25), and each generalises past this phase:
 
 - **the coercion reads the boundary through the DECLARATION.** A node's own `tpe` is exact for a
@@ -251,6 +251,25 @@ owing all three. Each is now built, each was measured by the family that exposed
   symbol whose own type is the primitive, so a family landing on a container's ELEMENT is
   unreachable — and it used to be unreachable SILENTLY, which reads exactly like a typo. It is now a
   `policy` finding whose detail names `ENGINE-LIMITS.md` §13 O3 and says no respelling helps.
+- **the SYNTHESISED unit belongs to ONE module, and it is the one that owns the declarations it was
+  minted FOR.** The fourth is not about translation at all, which is why it survived a delivery whose
+  base read 0 errors with all 21 check counts flat. This phase adds a top-level unit, `PortRun`
+  classifies a unit by its `Origin`, and a unit with no usable origin is CONVERTED — right for a
+  parsed unit, blind for a minted one, and a dependent's `Program` contains its base's units, so
+  every module in the chain wrote its own copy of one FQN (`ENGINE-LIMITS.md` §13 O5: nine files
+  where one was owed, 24 errors over six lanes, six suites stopped). The mint is now fenced on
+  `RunScope.emits`, read off the spec's own HINTS rather than off the grown seed set — a pure-move
+  flow reaches a dependent's own declarations the moment it assigns a tagged getter to a local, so a
+  grown-set fence hands the mint back to a module that merely uses the family. A module that does not
+  mint still retypes and coerces: the minted symbols are `external` to it exactly as a JDK symbol is,
+  and the emitted fully-qualified reference resolves against the owning module's output.
+
+  This is CLAUDE.md §1.5's rule for `inject` generalised — exactly one module ships each definition
+  of an FQN — and the general form is the one to reach for next: **a phase that SYNTHESISES a
+  declaration owes the same one-module answer.** `PortRun` carries the belt beside the phase's
+  suspenders: a synthesised unit at an FQN a base's published port map already claims fails the run,
+  whichever phase minted it, because the fence has to hold for the next phase too and that phase's
+  author will not have read O5.
 
 **And the spec is SHARED SURFACE, so the phase implements `SurfacePolicy`** — CLAUDE.md §1's standing
 obligation for anything that retypes declarations under a `RuleScope`, unmet here until now. The

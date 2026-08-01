@@ -3911,11 +3911,12 @@ All five entries below come from the SAME work — Stage P6's attempts to enable
 libGDX core (`PROGRESS.md` §11.25) — and none of them is in the policy that configured it. Read O1
 and O2 together: they are two halves of "a retyping phase owes more than the declaration it was
 pointed at", and neither was reachable from any manifest key, so a port that hit either had no exit
-but the engine. O3 is a third shape — a family the spec cannot ask for at all. **O5 is the one that
-blocks the family today**, and it is not about translation at all: the phase MINTS a unit, and the
-run emits that unit from every module in the pipeline. Note where each was found, because the
-pattern is the point — O1 and O2 by compiling the BASE, O5 only by compiling the DEPENDENTS, which
-the base's own 21 green check counts cannot see.
+but the engine. O3 is a third shape — a family the spec cannot ask for at all. **O5 was the one that
+blocked the family**, and it is not about translation at all: the phase MINTS a unit, and the run
+emitted that unit from every module in the pipeline. Note where each was found, because the pattern
+is the point — O1 and O2 by compiling the BASE, O5 only by compiling the DEPENDENTS, which the
+base's own 21 green check counts cannot see. **O1, O2 and O5 are CLOSED; O3 and O4 are named
+residues.**
 
 The delivery O1 and O2 blocked was otherwise complete and correct. The family emits exactly what the
 reference hand port emits (`GLTexture.glHandle: TextureHandle.T`, the mint wrapped at
@@ -3930,9 +3931,11 @@ members **34 → 37** (`TextureDescriptor`, `#hashCode`, `#compareTo` — the th
 not move BECAUSE no coercion was inserted in them). Both runs are in the same session against the
 same baseline, so the attribution is a diff and not a reconstruction.
 
-**And every one of those numbers reproduced exactly on the full delivery run, which is why O5 is
-worth reading before any of them.** The base is finished; it was finished when this paragraph was
-written, and the step still cannot land. What that proof did not contain was a single dependent.
+**And every one of those numbers reproduced exactly on the full delivery run, which is why O5 was
+worth reading before any of them.** The base was finished at that point and the step still could not
+land, because what that proof did not contain was a single dependent. It does now: the all-13
+replay in O5 is the first measurement of this family that is evidence about the STEP rather than
+about the base.
 
 ### O1. A coercion reads the boundary TERM's own type, so a seed reaching it through an `if` is INVISIBLE — was 3 errors
 
@@ -4151,13 +4154,27 @@ is policy the port would have to keep honest by hand, or a fingerprint over what
 which is not available at fold time and would not be pure. Neither is obviously better than the
 named residue.*
 
-### O5. A MINTED unit has no origin, so EVERY module in the pipeline emits it — 24 errors, six suites stopped
+### O5. A MINTED unit has no origin, so EVERY module in the pipeline emits it — was 24 errors, six suites stopped
 
-OPEN, and it is the entry that blocks the family a second time. (a) engine, in what a run decides to
-WRITE rather than in the phase's translation. Measured on the P6 delivery attempt: libgdx-core reads
-**0 errors** and every one of its 21 check counts is unchanged — the translation is exactly right —
-while **six dependent lanes go 0 → 3, 0 → 6, 0 → 3, 7 → 13, 0 → 3 and 0 → 3**, and none of their
-suites runs.
+**CLOSED.** (a) engine, in what a run decides to WRITE rather than in the phase's translation.
+Measured on the P6 delivery attempt: libgdx-core read **0 errors** with every one of its 21 check
+counts unchanged — the translation was exactly right — while **six dependent lanes went 0 → 3,
+0 → 6, 0 → 3, 7 → 13, 0 → 3 and 0 → 3**, and none of their suites ran.
+
+**The number that says it is closed is the same one that opened it.** The P6 `OpaqueSpec` re-applied
+verbatim and measured on **all thirteen ports** now reads `just measure-all` green end to end:
+**exactly one `TextureHandle.scala` in existence** (libgdx-core `main`), **zero new errors in every
+dependent lane**, and every one of the six stopped suites running again at its committed outcome
+(gdx-test 217/4 of 221 emitted, ashley 108/2 + 2 skips of 112, anim8 23/0, vfx 64/0, screens 16/0,
+sg 16/0; gltf's 7 and noise4j's 2 are pre-existing and byte-identical). libgdx-core replays its
+proof census unchanged — 0 errors, 1 seed, 2 `RetypedSignature` rows (`GLTexture#glHandle` and
+`#getTextureObjectHandle`), 30 coercions as 14 wraps + 16 unwraps, 37 distinct members, decisions
++3 (+2 `RetypedSignature`, +1 `RenamedPackage` for the minted unit), all 21 check counts identical —
+and **every dependent reads 0 members changed**, which is a second measurement rather than a
+restatement: no corpus dependent EMITS a reference to the retyped surface at all (gdx-gltf's
+`SharedTextureTest` is the only Java that names `getTextureObjectHandle`, and that file is not in
+the gltf test port's file set). The dependent-still-coerces half is therefore pinned by
+`OpaqueMintOwnershipSpec` and not by the corpus.
 
 The phase MINTS its object as a top-level unit (`Origin.synthetic`) and appends it to
 `program.units`. `PortRun.converted` classifies a unit by its recorded origin — under `sourceRoot`
@@ -4208,10 +4225,33 @@ decision for the unit they wrote (libgdx-core, libgdx-test, screens, one `Rename
 so the module scope that governs `decisions.tsv` already disagrees with what the emitter writes, in
 the direction that hides it.
 
-*Fix kind: (a) engine. The shape that fits what the run already knows: a MINTED unit belongs to the
-module that owns the declarations it was minted FOR, so the phase should mint only when a seed lives
-in one of this module's own units (`RunScope` is exactly that set and the phase already receives it),
-and `PortRun` should refuse to write a synthetic unit whose FQN a base's published port map already
-claims. Both halves are wanted — the first stops the emission, the second is the check that fails
-loudly if some other phase mints one. A dependent that genuinely needs its OWN opaque family is a
-design question this does not answer; the corpus has none.*
+**THE FIX, both halves, and the one place it deviates from the shape recorded here.** A MINTED unit
+belongs to the module that owns the declarations it was minted FOR:
+
+- `PrimitiveToOpaqueTransform` is now `PolicyBound` and fences its mint on `RunScope.emits`. A module
+  that does not mint still RETYPES and COERCES: it holds the minted symbols, `Program.owns` reports
+  them external exactly as it does a JDK symbol (they hang off no unit of that run), and the emitted
+  fully-qualified `Name.T` / `Name(…)` resolve against the object the owning module emitted — which
+  is what a dependent lane already compiles against, since each lane passes the base's `src_managed`
+  on the same `scala-cli` invocation. One consequence worth stating because it looks like a bug: the
+  minted symbol is UNOWNED in a dependent, and `PackageRenameTransform` still renames it, through the
+  `portOwnedPrefixes` relaxation it grew for injected replacements. The two cases are the same case —
+  a type in the port's own namespace that this run did not parse.
+- `PortRun` refuses to write a synthetic unit whose FQN a base's published port map claims
+  (`PortRun.isSynthesised` + `claimedSynthetic`, fatal, with the §1 classification in the message).
+  A DROPPED type in a base's map is not a claim — the base emits nothing to collide with. This is the
+  belt: it catches the NEXT phase that mints without asking, and `GlobalsToImplicitsTransform`
+  already mints a top-level unit the same way.
+
+**The deviation: the fence reads the HINTS, not the grown seed set.** The shape recorded above said
+"a seed", and a seed set GROWS along pure-move flows — it reaches a dependent's own declarations the
+moment that dependent assigns the base's tagged getter to a local, which is exactly gdx-gltf's
+`SharedTextureTest`. A grown-set fence hands the mint straight back to a module that merely USES the
+family and reproduces O5 in full. The hints are what the SPEC NAMED, so the module declaring them is
+the family's home. `OpaqueMintOwnershipSpec` pins both directions, and its fixture asserts that the
+grown set really does reach the dependent's own unit while no hint does — so the trap cannot quietly
+stop being exercised.
+
+*Fix kind: (a) engine. A dependent that genuinely needs its OWN opaque family is a design question
+this does not answer; the corpus has none. And the general rule is CLAUDE.md §1.5's: a phase that
+SYNTHESISES a declaration owes the same one-module answer `inject` does.*

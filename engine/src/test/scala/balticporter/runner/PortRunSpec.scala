@@ -493,3 +493,114 @@ class PortRunSpec extends munit.FunSuite:
     val units = SrcMap.parseAll(rep.resolve("run-latest/srcmap.tsv")).map(_.unit).distinct
     assertEquals(units, List("sge.Gadget"))
   }
+
+  // =========================================================================================
+  // a SYNTHESISED unit belongs to ONE module (ENGINE-LIMITS.md §13 O5, CLAUDE.md §1.5)
+  // =========================================================================================
+
+  /** the smallest phase that reproduces O5: it MINTS a top-level unit with no `Origin`.
+    *
+    * `PortRun.converted` classifies a unit by its recorded origin and CONVERTS one it cannot place,
+    * deliberately — refusing to emit on a missing origin would be a silent omission. So a phase that
+    * mints in every module of a chain gets its unit written once per module, and no count anywhere
+    * moves: the base's report cannot see a file a dependent wrote. */
+  private final class MintUnit(fqn: String) extends Phase:
+    def name = s"mint-unit:$fqn"
+    override def run(program: Program): Program =
+      val id  = SymId(program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1)
+      val sym = Symbol(id, fqn.substring(fqn.lastIndexOf('.') + 1), fqn,
+                       Flags(isModule = true), SymId.None, TypeRepr.NoType)
+      program.rebuilt(program.units :+ Tree.ClassDef(id, Nil, scala.None, Nil, Origin.synthetic),
+                      SymbolTable(program.symbols.all.toList :+ sym))
+
+  /** publish a base's map claiming one EMITTED type, where `PortMap.discover` will find it. */
+  private def publishBase(reportRoot: Path, module: String, emits: List[String],
+                          dropped: List[String] = Nil): Unit =
+    val entries =
+      emits.map(f => PortMap.Entry("type", f, f, PortMap.Disposition.Ported)) ++
+        dropped.map(f => PortMap.Entry("type", f, "", PortMap.Disposition.Dropped))
+    PortMap.write(reportRoot.resolve(module).resolve("run-latest"),
+                  PortMap.Map0(module, EngineInfo.fingerprint, entries))
+
+  private def dependentRun(root: Path, src: Path, other: Path, base: String, phases: List[Phase]) =
+    PortRun("demo", root.resolve("port"), SourceSet.Main,
+      FrontendConfig(other, List("com/demo2/Uses.java"), Nil, resolutionRoots = List(src)), Nil,
+      manifest = Some(PortManifest(base).extendedBy(PortManifest("dependent", surface = phases))))
+
+  private def dependentFixture(): (Path, Path, Path) =
+    val (root, src) = fixture()
+    val other = root.resolve("java2")
+    java(other, "com/demo2/Uses.java",
+      """package com.demo2;
+        |import com.demo.Widget;
+        |public class Uses { public Widget w = new Widget(); }""".stripMargin)
+    (root, src, other)
+
+  test("a SYNTHESISED unit at an FQN a base already emits FAILS THE RUN") {
+    // The belt to the phase's own suspenders. `PrimitiveToOpaqueTransform` now fences its mint on
+    // `RunScope.emits`; this is what catches the NEXT phase to mint without asking, which will not
+    // have read O5. Nothing else can see it — the duplicate compiles nowhere and counts nothing.
+    val (root, src, other) = dependentFixture()
+    val rep = root.resolve("report")
+    publishBase(root, "basemod", List("com.demo.Handle"))
+    val err = intercept[RuntimeException] {
+      withReport(rep)(dependentRun(root, src, other, "basemod", List(new MintUnit("com.demo.Handle"))).execute())
+    }
+    assert(clue(err.getMessage).contains("com.demo.Handle"))
+    assert(err.getMessage.contains("basemod"))
+    // the message says which of §1's three kinds the fix is, and where the rule is (§4.45)
+    assert(err.getMessage.contains("§1(a) ENGINE"))
+    assert(err.getMessage.contains("RunScope.emits"))
+    // …and nothing was written: the refusal runs before the emission loop
+    assert(!Files.exists(root.resolve("port").resolve("src_managed/main/scala/com/demo/Handle.scala")))
+  }
+
+  test("NEGATIVE: a synthesised unit the base does NOT emit is written, and the run is green") {
+    val (root, src, other) = dependentFixture()
+    val rep = root.resolve("report")
+    publishBase(root, "basemod", List("com.demo.Widget"))
+    val r = withReport(rep)(
+      dependentRun(root, src, other, "basemod", List(new MintUnit("com.demo.Handle"))).execute())
+    assert(clue(emitted(r.outDir)).contains("com/demo/Handle.scala"))
+  }
+
+  test("NEGATIVE: a base's DROPPED type is not a claim — it emits nothing to collide with") {
+    val (root, src, other) = dependentFixture()
+    val rep = root.resolve("report")
+    publishBase(root, "basemod", List("com.demo.Widget"), dropped = List("com.demo.Handle"))
+    val r = withReport(rep)(
+      dependentRun(root, src, other, "basemod", List(new MintUnit("com.demo.Handle"))).execute())
+    assert(clue(emitted(r.outDir)).contains("com/demo/Handle.scala"))
+  }
+
+  test("the refusal is a pure function of what this run would write and what its bases published") {
+    // Testable without a run directory — the same division `discoverBasePorts` documents. The four
+    // rows are the four ways a unit and a map can meet.
+    val (root, src) = fixture()
+    val r = run(root, src)()
+    val p = r.program
+    val parsed = p.units.head                                   // a real unit, with a Java origin
+    val mintedFqn = "com.demo.Handle"
+    val id  = SymId(p.symbols.all.map(_.id.raw).max + 1)
+    val sym = Symbol(id, "Handle", mintedFqn, Flags(isModule = true), SymId.None, TypeRepr.NoType)
+    val q   = p.rebuilt(symbols = SymbolTable(p.symbols.all.toList :+ sym))
+    val minted = Tree.ClassDef(id, Nil, scala.None, Nil, Origin.synthetic)
+
+    def claims(entries: List[PortMap.Entry]) =
+      PortRun.claimedSynthetic(q, List(minted), List("basemod" -> PortMap.Map0("basemod", "e", entries)))
+
+    // 1. minted, and the base emits that name → the refusal
+    assertEquals(claims(List(PortMap.Entry("type", mintedFqn, mintedFqn, PortMap.Disposition.Ported)))
+                   .map(c => c.fqn -> c.base), List(mintedFqn -> "basemod"))
+    // 2. minted, and the base emits something else → nothing
+    assertEquals(claims(List(PortMap.Entry("type", "com.demo.Other", "com.demo.Other", PortMap.Disposition.Ported))), Nil)
+    // 3. minted, and the base DROPS that name → nothing to collide with
+    assertEquals(claims(List(PortMap.Entry("type", mintedFqn, "", PortMap.Disposition.Dropped))), Nil)
+    // 4. no bases at all — a BASE port asks this question and always answers `Nil`, by arithmetic
+    assertEquals(PortRun.claimedSynthetic(q, List(minted), Nil), Nil)
+
+    // …and a PARSED unit is never synthesised, whatever a base's map says about its name. The whole
+    // point of reading the ORIGIN: this is the case `converted` already decides correctly.
+    assert(!PortRun.isSynthesised(parsed.origin), clue(parsed.origin))
+    assert(PortRun.isSynthesised(minted.origin))
+  }

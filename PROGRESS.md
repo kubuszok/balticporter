@@ -3558,29 +3558,52 @@ names by the same components — `def id`, `def id_=` are emitted exactly as bef
 is one note and its `key=`. The three deleted refusals moved no member at all, which is what "inert
 on the code" means and what the audit's prediction was right about.
 
-### 11.25 P6 — the opaque families: the GL layer is ONE family, and the BASE is right while the DEPENDENTS are the blocker
+### 11.25 P6 — the opaque families: the GL layer is ONE family, and O5 is CLOSED so the step is READY
 
-Stage P's last enablement. The same `OpaqueSpec` has now been applied and reverted three times, and
-the three runs are the three columns below. The translation has been correct since the second one;
-what stops it is not what the phase EMITS but what the run WRITES, in modules the first two runs
-never compiled. Read the four parts in order — what the three runs measured, what the evidence
-supports about the rest of the GL layer, what was deliberately not measured, and what must not be
-retried.
+Stage P's last enablement. The same `OpaqueSpec` has been applied and reverted four times, and the
+four runs are the four columns below. The translation has been correct since the second one; what
+stopped it was not what the phase EMITS but what the run WRITES, in modules the first two runs never
+compiled — and that is `ENGINE-LIMITS.md` §13 O5, now closed in the engine. Read the four parts in
+order — what the four runs measured, what the evidence supports about the rest of the GL layer, what
+was deliberately not measured, and what must not be retried.
 
-**Attempt 1 cost 6 errors in `ENGINE-LIMITS.md` §13 O1 and O2, both now CLOSED. Attempt 2 (the full
-delivery, all thirteen ports) reads 0 errors on libgdx-core and 24 NEW errors across six dependent
-lanes, all of them O5.** The three columns are the same `OpaqueSpec`, applied verbatim, against the
-same baseline:
+**Attempt 1 cost 6 errors in `ENGINE-LIMITS.md` §13 O1 and O2, both CLOSED. Attempt 2 (the full
+delivery) read 0 errors on libgdx-core and 24 NEW errors across six dependent lanes, all of them O5,
+also now CLOSED. Attempt 3 — the O5 proof, all thirteen ports — is green end to end.** The columns
+are the same `OpaqueSpec`, applied verbatim, against the same baseline:
 
-| | attempt 1 (pre-O1/O2) | O1+O2 proof | delivery (all 13 ports) |
-|---|---:|---:|---:|
-| libgdx-core scalac errors | 6 (`EngineGap`) | **0** | **0** |
-| seeded | 1 | 1 | **1** |
-| `RetypedSignature` decisions | 2 | 2 | **2** |
-| coercions | 27 (14 wrap + 13 unwrap) | 30 (14 + 16) | **30** (14 + 16) |
-| libgdx-core members changed | 34 | 37 | **37** |
-| libgdx-core check counts (21) | identical | identical | **identical** |
-| DEPENDENT scalac errors | not measured | not measured | **+24, six lanes** |
+| | attempt 1 (pre-O1/O2) | O1+O2 proof | delivery (all 13) | **O5 proof (all 13)** |
+|---|---:|---:|---:|---:|
+| libgdx-core scalac errors | 6 (`EngineGap`) | **0** | **0** | **0** |
+| seeded | 1 | 1 | **1** | **1** |
+| `RetypedSignature` decisions | 2 | 2 | **2** | **2** |
+| coercions | 27 (14 wrap + 13 unwrap) | 30 (14 + 16) | **30** (14 + 16) | **30** (14 + 16) |
+| libgdx-core members changed | 34 | 37 | **37** | **37** |
+| libgdx-core check counts (21) | identical | identical | **identical** | **identical** |
+| DEPENDENT scalac errors | not measured | not measured | **+24, six lanes** | **+0, every lane** |
+| `TextureHandle.scala` in existence | — | — | **9** | **1** |
+| suites that ran | — | — | **none of the six** | **all six** |
+
+**The O5 proof column, per lane.** `just measure-all` exits 0 with the family enabled; each lane's
+error count and suite outcome is its committed one:
+
+| lane | errors | suite |
+|---|---:|---|
+| libgdx-core | 0 → **0** | — (the one legitimate `main` emission) |
+| libgdx-test | 0 → **0** | 217 passing / 4 failing, 221 of 221 emitted |
+| ashley (+ test port) | 0 → **0** | 108 / 2, plus the 2 committed skips, 112 of 112 |
+| anim8 | 0 → **0** | 23 / 0 |
+| gdx-gltf (+ test ports) | 7 → **7** | does not run — the 7 are pre-existing `EngineGap`, byte-identical |
+| gdx-vfx | 0 → **0** | 64 / 0 |
+| screens | 0 → **0** | 16 / 0 |
+| simple-graphs (+ test), noise4j, jbump | unchanged | 16 / 0, 2 pre-existing, jbump's derived zero |
+
+**Members changed: 37 on libgdx-core and 0 on every other port** — and the second number is a
+MEASUREMENT rather than a restatement of the first. No corpus dependent emits a reference to the
+retyped surface at all: gdx-gltf's `SharedTextureTest` is the only Java in the corpus that names
+`getTextureObjectHandle`, and it is not in the gltf test port's file set. So the corpus cannot
+witness "a dependent that mints nothing still coerces"; `OpaqueMintOwnershipSpec` pins that, with a
+fixture whose propagated seed provably lands in a dependent-owned unit.
 
 The attempt-1 → proof deltas are both O1's and both are a diff rather than a reconstruction: the 3
 extra coercions are exactly the 3 O1 error sites (`TextureDescriptor#hashCode` once, `#compareTo`
@@ -3592,9 +3615,11 @@ whole lesson.** The proof run measured libgdx-core; the delivery ran `measure-al
 proof quoted reproduced exactly — 0 errors, 1 seed, 2 retypes, 30 coercions, 37 members, 21 check
 counts flat, `nullability-boundary` 160 → 160 — and the port's emitted code is the reference hand
 port's line for line. **A base port at 0 errors with 21 flat check counts says nothing whatever about
-its dependents**, and the row that was never measured is the row that blocks the step.
+its dependents**, and the row that was never measured was the row that blocked the step. Keep that
+sentence when quoting this section: it is the reason the O5 proof column is an all-13 run and not a
+fourth base census.
 
-#### The blocker: O5, and it is a WRITE rather than a translation
+#### The blocker WAS O5, and it is a WRITE rather than a translation — now CLOSED
 
 `PrimitiveToOpaqueTransform` mints its object as a top-level unit with `Origin.synthetic`.
 `PortRun.converted` emits a unit with no usable origin, deliberately (refusing on a missing origin
@@ -3625,12 +3650,23 @@ is inherited through `extendedBy` and cannot be subtracted; a dependent declarin
 a fatal `SurfaceDivergence`; and holding the phase back in a dependent is precisely §1.5's
 compile-alone-but-not-together failure. A `RuleScope` bounds which SYMBOLS seed, and the mint follows
 from the seed set being non-empty at all — which it must be in a dependent, because the seeded
-declaration is the base's. Full diagnosis and the fix shape: `ENGINE-LIMITS.md` §13 O5.
+declaration is the base's. Full diagnosis and the AS-BUILT fix: `ENGINE-LIMITS.md` §13 O5. In one
+line: the phase fences its mint on `RunScope.emits`, read off the spec's HINTS (a grown seed set
+reaches a dependent's own units and would hand the mint back to a module that merely uses the
+family), and `PortRun` fails any run that would write a synthetic unit at an FQN a base's published
+port map claims.
 
-**So P6 is REVERTED again, and the revert is verified the same way it was the first time**: with the
-policy removed, `members.tsv` reads **0 changed on all thirteen ports**, every check count is
-identical, and every lane returns to its committed numbers (gdx-test 217/4, ashley 108/2 + 2 skips,
-anim8 23, vfx 64, screens 16, sg 16, jbump's derived zero, gltf 7 and noise4j 2 pre-existing).
+**P6 is REVERTED once more — it is the ENGINE fix that landed, not the policy** — and the revert is
+verified the same way it was the first two times: with the policy removed, `members.tsv` reads **0
+changed on all thirteen ports**, every check count is identical, and every lane returns to its
+committed numbers (gdx-test 217/4, ashley 108/2 + 2 skips, anim8 23, vfx 64, screens 16, sg 16,
+jbump's derived zero, gltf 7 and noise4j 2 pre-existing).
+
+**P6 IS NOW READY, and the replay must still carry ALL-13 EVIDENCE.** The `OpaqueSpec` below is
+unchanged; re-applying it is a paste. What must not shrink is the measurement: a libgdx-core-only
+run reproduces every number in the base column and is worth nothing as evidence about the step —
+that is exactly how the first two proofs passed while the step could not land. Re-apply, run
+`just measure-all`, and report the per-lane table above, suite outcomes included.
 
 #### The GL evidence says ONE family, not twenty — and that is a measurement, not a scoping choice
 
@@ -3768,11 +3804,12 @@ PARAMETER — which is what `Pixels` and `Seconds` are almost exclusively, again
 and bought nothing the 6 errors had not already bought. §5's "change one thing, then measure" cuts
 the same way: two families in one commit could not be told apart.
 
-So the honest state is **`Pixels`/`Seconds`: evidenced, unconfigured, unmeasured**, and O5 blocks
-them for the same reason it blocks `TextureHandle` — every family mints a unit, so every family
-duplicates it into every dependent, and the cost scales with the number of dependents rather than
-with the family's size. When O5 is closed they are the next step, and the one that will say what the
-mechanism costs at scale. Note what `TextureHandle` does NOT tell you about them: it is one FIELD,
+So the honest state is **`Pixels`/`Seconds`: evidenced, unconfigured, unmeasured**. O5 blocked them
+for the same reason it blocked `TextureHandle` — every family mints a unit, so every family
+duplicated it into every dependent, and the cost scaled with the number of dependents rather than
+with the family's size — and with O5 closed the mint is one module's whatever the family's size, so
+they are now the next step and the one that will say what the mechanism costs at scale. Note what
+`TextureHandle` does NOT tell you about them: it is one FIELD,
 and O2's fix is exercised there by a single constructor slot. `Pixels` and `Seconds` are parameters
 almost exclusively, so they are the first real measurement of the parameter path — expect that to be
 where the next shape appears, and configure them ONE AT A TIME.
@@ -3784,15 +3821,14 @@ where the next shape appears, and configure them ONE AT A TIME.
   none of them to a ported declaration; the table above is the evidence, and re-deriving it costs a
   session. This does NOT extend to `Pixels`/`Seconds`, which are a different case entirely — see
   above.
-- **Do not re-derive the 6 errors of attempt 1.** They were O1 and O2, both are closed, and the
-  delivery column above is the proof. The `OpaqueSpec` is recorded verbatim, so re-enabling it is a
-  paste and the numbers to expect on libgdx-core are 0 errors / 1 seed / 2 retypes / 30 coercions /
-  37 members / 21 flat check counts.
-- **Do not re-enable the family to "see whether the dependents are still broken", and do not measure
-  it on libgdx-core alone.** They are, deterministically, until `ENGINE-LIMITS.md` §13 O5 is closed:
-  24 errors over six lanes, `8 duplicates × 3`, with six suites not running. A libgdx-core-only run
-  reproduces every number in the delivery column and is worth nothing as evidence about the step —
-  that is exactly how the first proof passed while the step could not land.
+- **Do not re-derive the 6 errors of attempt 1, or the 24 of attempt 2.** They were O1, O2 and O5,
+  all three closed, and the four columns above are the proof. The `OpaqueSpec` is recorded verbatim,
+  so re-enabling it is a paste and the numbers to expect on libgdx-core are 0 errors / 1 seed /
+  2 retypes / 30 coercions / 37 members / 21 flat check counts.
+- **Do not measure this family on libgdx-core alone, closed or not.** A libgdx-core-only run
+  reproduces every number in the base column and is worth nothing as evidence about the step — that
+  is exactly how the first two proofs passed while the step could not land. The gate for this step is
+  `just measure-all` and the per-lane table, suite outcomes included.
 - **Do not reach for a `RuleScope`, an `extendedBy` subtraction or a dependent-side drop to clear a
   residue of this family.** All three gaps were outside every scope's reach, for the reasons given
   above, and any successor gap in this phase should be classified the same way before a manifest
