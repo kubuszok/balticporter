@@ -50,7 +50,10 @@ final class DeferredInit(
   def name = "globals->implicits/deferred-init"
 
   private val byField  = deferrals.map(d => d.field -> d).toMap
-  private val byClinit = deferrals.groupBy(_.clinit)
+  /** only the deferrals that came OUT OF a class initialiser have one to strip: a static field
+    * carrying its own initialiser is replaced whole by [[deferField]], and its `clinit` is
+    * `SymId.None` (`ENGINE-LIMITS.md` CT6). */
+  private val byClinit = deferrals.filter(_.clinit != SymId.None).groupBy(_.clinit)
   private val o        = Origin.synthetic
 
   // The two types the cache is written in. MINTED rather than looked up: searching the symbol table

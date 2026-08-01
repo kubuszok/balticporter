@@ -48,11 +48,19 @@ final class ContextNeed(
     promoteAllowed: Set[SymId],
     seam: (ContextSeamCheck.Kind, String, String, String, Origin, SymId) => Unit,
     refuse: (SymId, String) => Unit,
+    /** the `sites` entries that BOUND: the policy key → the symbols it named. The phase's OWN record
+      * of what the binder resolved, so a `lazy-init` entry can name a site NO READ reaches — which
+      * is `ENGINE-LIMITS.md` CT6's second face. Empty is the pre-CT6 code path. */
+    boundSites: Map[String, List[SymId]] = Map.empty,
 ):
   import ContextNeed.*
   import GlobalsToImplicitsTransform.ReadPlan
 
   private given Program = program
+
+  /** the `sites` keys something in this run decided through — FIRST, because [[policyFor]] writes to
+    * it while [[deferrals]] is still being built and a `val` declared later is `null` there. */
+  private val firedS = collection.mutable.Set.empty[String]
 
   // -------------------------------------------------------------------------
   // 1. resolution — where does a read at this site attach?
@@ -80,9 +88,22 @@ final class ContextNeed(
     * at emission, the other by never seeding a field initialiser and never rewriting it either. */
   def siteOf(from: SymId): Site = siteCache.getOrElseUpdate(from, climb(from, captured = false, 64))
 
+  /** the climb AS IT WAS BEFORE ANY DEFERRAL — the one question the deferral scan may ask.
+    *
+    * [[deferrals]] is computed from the sites the closure cannot reach, and a deferred field then
+    * BECOMES a reachable one, so a deferral-aware climb consulted while the plan is being built is
+    * a cycle. It is also uncached on purpose: the answer it gives is the pre-deferral one, and
+    * leaving it in [[siteCache]] would hand it to the growth as well. */
+  private def preSiteOf(from: SymId): Site = climb(from, captured = false, 64, deferAware = false)
+
   @annotation.tailrec
-  private def climb(s: SymId, captured: Boolean, fuel: Int): Site =
+  private def climb(s: SymId, captured: Boolean, fuel: Int, deferAware: Boolean = true): Site =
     if s == SymId.None || fuel <= 0 then Site.Boundary(s, "it is outside any declaration")
+    // a DEFERRED static is no longer a field whose initialiser runs at class initialisation: the
+    // rewrite has made it a `def` over a cache that takes the clause, on the field's OWN symbol. A
+    // climb that still called it a boundary would report a seam against the exit the `sites` policy
+    // just took, and refuse to thread the very body the deferral moved.
+    else if deferAware && deferredFields.contains(s) then Site.Method(s, captured)
     else program.symbolOf(s) match
       case scala.None => Site.Boundary(s, "it is outside any declaration")
       case Some(sym) =>
@@ -92,13 +113,13 @@ final class ContextNeed(
             else Site.Boundary(s, "it is a class body statement and `attach = method`")
           // an anonymous-class or enum-constant body: its members' signatures are fixed by what they
           // implement, so the need lands OUTSIDE and the body captures it lexically.
-          else climb(anonHome.getOrElse(s, sym.owner), captured = true, fuel - 1)
+          else climb(anonHome.getOrElse(s, sym.owner), captured = true, fuel - 1, deferAware)
         // …and a MEMBER of such a body is reached from the member, not from the body: the climb has
         // to look UP one level before it decides, or an anonymous `Runnable#run` reads as an
         // ordinary method, gets a clause it may not have (its signature is `Runnable`'s), and the
         // enclosing declaration — the one that can actually supply the context — is never asked.
         else if isType(sym.owner) && !isDeclaredClass(sym.owner) then
-          climb(sym.owner, captured = true, fuel - 1)
+          climb(sym.owner, captured = true, fuel - 1, deferAware)
         else if PolicyBinder.isExecutable(sym.info) then
           if sym.name == ClinitName then Site.Boundary(s, "a class initialiser has no signature")
           else if sym.name == InitBlockName then
@@ -111,7 +132,7 @@ final class ContextNeed(
           // a FIELD, a parameter or a method-LOCAL. A local's owner is its METHOD, so the climb
           // continues; a field's owner is a TYPE, and a field initialiser has no signature.
           program.symbolOf(sym.owner) match
-            case Some(o) if PolicyBinder.isExecutable(o.info) => climb(sym.owner, captured, fuel - 1)
+            case Some(o) if PolicyBinder.isExecutable(o.info) => climb(sym.owner, captured, fuel - 1, deferAware)
             case Some(_) if isType(sym.owner) =>
               if !sym.flags.isStatic && holder.attach == ContextAttach.Class && isDeclaredClass(sym.owner) then
                 Site.Cls(sym.owner, captured)
@@ -127,14 +148,54 @@ final class ContextNeed(
     * where its emitted name comes from (`Outer$1`) — so the owner chain reaches the class and loses
     * the method, and a capture landing on the class would be a boundary under `attach = method` and
     * the wrong constructor under `attach = class`. The xref does hold the lexical home: every
-    * `new T(){ … }` is an `Instantiate` usage of `T` whose SITE is the `New` node carrying the body
-    * and whose `enclosing` is the declaration it was written in. Read from there, so nothing has to
-    * re-walk the tree with its own notion of "where am I" (CLAUDE.md §3). */
+    * `new T(){ … }` is a usage of `T` whose SITE is the `New` node carrying the body and whose
+    * `enclosing` is the declaration it was written in. Read from there, so nothing has to re-walk
+    * the tree with its own notion of "where am I" (CLAUDE.md §3).
+    *
+    * The KIND of that usage is not asked for, and that is `ENGINE-LIMITS.md` CT6: `Xref.walkType`'s
+    * `AppliedType` arm re-labels `Instantiate` as `Tycon`, so an anonymous subclass of a GENERIC
+    * parent — `new Pool<Cell>(){ … }` — had no lexical home at all and every capture inside it
+    * climbed to the enclosing CLASS instead. The home comes from the NODE (which body this `New`
+    * carries), so the recorded kind decides nothing here. */
   private val anonHome: Map[SymId, SymId] =
     program.referenced.toList.flatMap(program.usages).collect {
-      case Usage(UsageKind.Instantiate, n: Tree.New, enc) if n.anon.isDefined && enc != SymId.None =>
+      case Usage(_, n: Tree.New, enc) if n.anon.isDefined && enc != SymId.None =>
         n.anon.get.symbol -> enc
     }.toMap
+
+  /** Is this usage of `c` a CONSTRUCTION of `c`? — `ENGINE-LIMITS.md` CT6's first face.
+    *
+    * `Xref.walkType(tpt.tpe, UsageKind.Instantiate, n)` at a [[Tree.New]] reaches the constructed
+    * class as `Tycon` whenever that class takes type parameters, because the `AppliedType` arm
+    * re-labels the kind it was called with — and the frontend applies a RAW `new Cell()` too. The
+    * instantiate edge of DESIGN.md §8.4 was therefore absent for EVERY generic class: no threading,
+    * no [[impose]], and so no seam either, which is a boundary the engine cannot see rather than one
+    * it refuses (CLAUDE.md §1).
+    *
+    * The fix is HERE and not in `Xref`. `UsageKind` is a shared index read by the portability check,
+    * the rewrite trace and the external-surface walk; re-labelling that arm is its own change with
+    * its own thirteen-port measure cycle. A usage whose SITE is a `New` is an instantiation of
+    * whatever that `New` CONSTRUCTS — a structural fact about the node this phase is holding, never
+    * a conclusion drawn from a recorded name (§4.56).
+    *
+    * Reading the node is also what keeps it EXACT. A kind-blind "any usage at a `New` site" would
+    * make `new Pool<Cell>()` an instantiation of `Cell`, which it is not: `Cell` is named there as a
+    * TYPE ARGUMENT, and constructing a `Pool` constructs no `Cell`. Off a `New` the recorded kind is
+    * still the answer — `Tree.NewArray` records `Instantiate` for its element type and has no
+    * constructed head to read. */
+  private def instantiates(u: Usage, c: SymId): Boolean = u.site match
+    case n: Tree.New => constructedBy(n) == c
+    case _           => u.kind == UsageKind.Instantiate
+
+  /** the class a `new` constructs: the head of the type it was WRITTEN at, with any application
+    * stripped. `SymId.None` where there is no head to read. */
+  private def constructedBy(n: Tree.New): SymId = headOf(n.tpt.tpe)
+
+  @annotation.tailrec
+  private def headOf(t: TypeRepr): SymId = t match
+    case TypeRepr.AppliedType(tycon, _) => headOf(tycon)
+    case TypeRepr.TypeRef(_, s)         => s
+    case _                              => SymId.None
 
   private def isType(s: SymId): Boolean = graph.types.contains(s)
   private def isDeclaredClass(s: SymId): Boolean =
@@ -147,33 +208,104 @@ final class ContextNeed(
   // 2. the DEFERRED-INIT plan — read BEFORE the growth, because it creates seeds
   // -------------------------------------------------------------------------
 
-  /** the statics whose initialisation a `sites` policy asked to move out of a class initialiser. */
-  val deferrals: List[Deferral] =
-    reads.flatMap((_, _, enc) => siteOf(enc) match
+  /** the statics whose initialisation a `sites` policy asked to move out of an initialiser.
+    *
+    * ==The trigger is the POLICY, not a read — `ENGINE-LIMITS.md` CT6's second face==
+    * This used to be derived from [[reads]] alone: a read of a MAPPED STATIC whose site resolved to
+    * a `lazy-init` boundary. Every seam the phase draws tells its reader to *give the site a `sites`
+    * policy* — and for the shape that most needs it, an initialiser that CONSTRUCTS a now-threaded
+    * type, there was no read of a mapped static anywhere in it, so the entry could name nothing. It
+    * BOUND (it named a real member), it changed no emitted byte, and `policy` stayed at its floor:
+    * a policy entry that is accepted, does nothing, and is invisible to every check in the run.
+    *
+    * So the candidates are the entries themselves, resolved through [[boundSites]], with the
+    * read-derived set kept beside them — it is a subset by construction (a read boundary reaches
+    * `lazy-init` only through a `sites` entry naming it) but it also covers the keys the binder
+    * refuses, `<clinit>` above all, which is an engine-minted member policy may still name here. */
+  val deferrals: List[Deferral] = lazyInitSubjects.flatMap(planDeferral)
+
+  /** the deferred fields, as [[climb]] reads them. Derived from [[deferrals]] and therefore
+    * initialised after it — [[preSiteOf]] is what the plan itself is allowed to ask. */
+  private val deferredFields: Set[SymId] = deferrals.map(_.field).toSet
+
+  /** every subject a `lazy-init` entry could be about, in a deterministic order. */
+  private def lazyInitSubjects: List[SymId] =
+    val fromReads = reads.flatMap((_, _, enc) => preSiteOf(enc) match
       case Site.Boundary(sub, _) if policyFor(sub) == ContextSite.LazyInit => Some(sub)
-      case _                                                              => scala.None
-    ).distinct.flatMap(planDeferral)
+      case _                                                              => scala.None)
+    val fromPolicy = holder.sites.toList.collect { case (k, ContextSite.LazyInit) => k }
+      .sorted.flatMap(k => boundSites.getOrElse(k, Nil))
+    (fromReads ++ fromPolicy).distinct
 
   /** the per-site policy for a boundary subject, falling back to the holder's default. */
   private def policyFor(subject: SymId): ContextSite =
-    program.symbolOf(subject).map(_.fullName).flatMap(holder.sites.get).getOrElse(holder.boundary match
-      case ContextBoundary.Refuse         => ContextSite.Refuse
-      case ContextBoundary.ResidualGlobal => ContextSite.ResidualGlobal)
+    val key = program.symbolOf(subject).map(_.fullName)
+    key.flatMap(holder.sites.get) match
+      case Some(s) =>
+        // A `lazy-init` entry is judged by its OUTCOME, not by this lookup: the lookup is how the
+        // deferral scan ASKS the question, so counting it here would mark the entry fired before
+        // anything was planned — which is exactly the blindness CT6 measured. The other two decide
+        // at this call and nowhere else.
+        if s != ContextSite.LazyInit then key.foreach(firedS += _)
+        s
+      case scala.None => holder.boundary match
+        case ContextBoundary.Refuse         => ContextSite.Refuse
+        case ContextBoundary.ResidualGlobal => ContextSite.ResidualGlobal
 
-  private def planDeferral(clinit: SymId): List[Deferral] =
-    val key   = program.symbolOf(clinit).map(_.fullName).getOrElse("")
-    val owner = program.symbolOf(clinit).map(_.owner).getOrElse(SymId.None)
-    program.definitionOf(clinit).collect { case d: Tree.DefDef => d }.toList.flatMap { d =>
-      statementsOf(d.rhs).flatMap {
-        case t: Term => Tree.uncomment(t) match
-          case Tree.Assign(lhs, rhs, _, _) =>
-            lhsSym(lhs)
-              .filter(f => program.symbolOf(f).exists(x => x.flags.isStatic && x.owner == owner))
-              .filter(_ => readsHolder(rhs))
-              .map(f => Deferral(clinit, f, rhs, key))
-          case _ => scala.None
+  private def planDeferral(subject: SymId): List[Deferral] =
+    val key = program.symbolOf(subject).map(_.fullName).getOrElse("")
+    val out = program.definitionOf(subject) match
+      case Some(d: Tree.DefDef) => fromInitialiser(d, key)
+      case Some(v: Tree.ValDef) => fromField(v, key)
+      case _                    => Nil
+    if out.nonEmpty then firedS += key
+    out
+
+  /** a CLASS INITIALISER: every assignment in it to a static of its own owner. */
+  private def fromInitialiser(d: Tree.DefDef, key: String): List[Deferral] =
+    val owner = program.symbolOf(d.symbol).map(_.owner).getOrElse(SymId.None)
+    statementsOf(d.rhs).flatMap {
+      case t: Term => Tree.uncomment(t) match
+        case Tree.Assign(lhs, rhs, _, _) =>
+          lhsSym(lhs)
+            .filter(f => program.symbolOf(f).exists(x => x.flags.isStatic && x.owner == owner))
+            .filter(_ => needsContext(rhs))
+            .map(f => Deferral(d.symbol, f, rhs, key))
         case _ => scala.None
-      }
+      case _ => scala.None
+    }
+
+  /** a STATIC FIELD CARRYING ITS OWN INITIALISER — the shape no read reaches.
+    *
+    * `static final Pool<Cell> cellPool = new Pool<Cell>(){ … new Cell() … }` is a boundary because a
+    * static initialiser runs at class initialisation, before anything could pass it a context; it
+    * names no mapped static, so the read-derived trigger never saw it. There is no `<clinit>` to
+    * strip here — the ValDef itself is what [[DeferredInit]] replaces — which is why the deferral's
+    * `clinit` is [[SymId.None]].
+    *
+    * STATIC only: the cache pair [[DeferredInit]] mints is static, and an instance field under
+    * `attach = class` is not a boundary at all. A `sites` entry naming an instance field selects no
+    * site and is reported as such rather than silently doing something else. */
+  private def fromField(v: Tree.ValDef, key: String): List[Deferral] =
+    if !program.symbolOf(v.symbol).exists(_.flags.isStatic) then Nil
+    else v.rhs.filter(needsContext).map(rhs => Deferral(SymId.None, v.symbol, rhs, key)).toList
+
+  /** Does this initialiser reach the context AT ALL?
+    *
+    * Two ways, and the second is CT6's: it READS a mapped static, or it CONSTRUCTS a type this
+    * program declares — whose constructors the closure may thread. The second is an
+    * over-approximation and cannot be anything else here: the deferral plan is read BEFORE the
+    * growth (it creates seeds), so `threadedClasses` does not exist yet, and computing it twice to
+    * refine this would report every boundary the first pass drew and then unreport it. The gate that
+    * makes the approximation safe is that the port had to NAME this site: `lazy-init` is per-site
+    * opt-in, a `DeferredInit` decision, a porter note and a counted seam, never a default. */
+  private def needsContext(t: Term): Boolean = readsHolder(t) || constructsOwned(t)
+
+  private def constructsOwned(t: Term): Boolean =
+    StandardTraversal.scanTerm(t, false) { (acc, x) =>
+      acc || (x match
+        case n: Tree.New => constructedBy(n) != SymId.None && program.owns(constructedBy(n))
+        case _           => false)
     }
 
   private def statementsOf(rhs: Option[Term]): List[Statement] = rhs.map(Tree.uncomment).toList.flatMap {
@@ -198,6 +330,14 @@ final class ContextNeed(
 
   /** the read sites the deferral moved into a method that DOES take a clause. */
   private val deferredReads: Set[(SymId, Origin)] = deferrals.flatMap(d => staticIn(d.rhs)).toSet
+
+  /** WHICH `sites` entries this run's decisions actually turned on — the input to the phase's
+    * dead-binding report (`ENGINE-LIMITS.md` CT6).
+    *
+    * A `lazy-init` entry counts as fired iff it produced a [[Deferral]]; the other two count when
+    * [[policyFor]] resolved a boundary through them. Read it AFTER [[readPlan]] has been forced, or
+    * the residual-global and refuse entries have not been consulted yet. */
+  def firedSites: Set[String] = firedS.toSet
 
   // -------------------------------------------------------------------------
   // 3. the growth
@@ -302,11 +442,12 @@ final class ContextNeed(
       if !classes(d) then viaMap.getOrElseUpdate(d, "subclass-of-threaded")
       enqueue(Node.C(d), Edge(Edge.Kind.Instantiate, c, d, Decision.originOf(program, d)))
     }
-    // INSTANTIATE: `new C` needs a context in scope wherever it is written.
-    program.usages(c).foreach {
-      case Usage(UsageKind.Instantiate, site, enc) if enc != SymId.None && enc != c =>
-        impose(enc, c, site.origin, Edge.Kind.Instantiate)
-      case _ => ()
+    // INSTANTIATE: `new C` needs a context in scope wherever it is written. Read through
+    // `instantiates`, which asks the NODE and not the recorded kind — a generic `new` is labelled
+    // `Tycon` by the shared index (`ENGINE-LIMITS.md` CT6).
+    program.usages(c).foreach { u =>
+      if instantiates(u, c) && u.enclosing != SymId.None && u.enclosing != c then
+        impose(u.enclosing, c, u.site.origin, Edge.Kind.Instantiate)
     }
 
   /** impose the need on whatever declaration encloses `enc`, or record the seam if nothing can. */
@@ -406,9 +547,10 @@ object ContextNeed:
     case M(sym: SymId)
     case C(sym: SymId)
 
-  /** One static whose initialisation moves out of a class initialiser and onto first READ.
+  /** One static whose initialisation moves out of an initialiser and onto first READ.
     *
-    * @param clinit the class initialiser the assignment is removed from
+    * @param clinit the class initialiser the assignment is removed from, or [[SymId.None]] when the
+    *               FIELD carried its own initialiser and there is nothing to strip
     * @param field  the static being initialised — it becomes a `def` over a cache, taking the clause
     * @param rhs    the initialiser expression, moved verbatim; its own reads are then threaded
     * @param key    the `sites` entry that asked for this, verbatim — the string an agent edits

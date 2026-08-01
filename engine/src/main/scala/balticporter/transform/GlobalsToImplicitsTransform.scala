@@ -88,6 +88,10 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
   private var boundStatics: Map[String, Map[String, List[SymId]]] = Map.empty
   private var boundHolder: Map[String, SymId]                     = Map.empty
   private var boundPromote: Map[String, Set[SymId]]               = Map.empty
+  /** the `sites` entries the binder RESOLVED, per holder: key → the symbols it named. Both halves
+    * are needed — the symbols are a `lazy-init` entry's candidate subjects, and the KEY SET is what
+    * the dead-binding report is the complement of (`ENGINE-LIMITS.md` CT6). */
+  private var boundSites: Map[String, Map[String, List[SymId]]]   = Map.empty
 
   def bindPolicy(binder: PolicyBinder): Unit =
     val bad = collection.mutable.ListBuffer.empty[PolicyFinding]
@@ -138,8 +142,9 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
           .toOption.getOrElse(Nil).flatMap(_.sym)
       }.toMap)
 
-      h.sites.keys.toList.sorted.foreach(k =>
-        binder.bindMembers(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.sites", k))
+      boundSites = boundSites.updated(h.holder, h.sites.keys.toList.sorted.flatMap(k =>
+        binder.bindMembers(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.sites", k)
+          .toOption.map(hits => k -> hits.flatMap(_.sym))).toMap)
 
       boundPromote = boundPromote.updated(h.holder, h.promoteToClass.flatMap(t =>
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.promoteToClass", t)
@@ -154,9 +159,44 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
   /** the never-fired half (from the BINDING, so it is complete whether or not this phase ran) plus
     * this phase's own malformed entries and counted refusals. */
   def policyReport: PolicyReport =
-    PolicyReport.fromBindings(records) ++ PolicyReport(malformed ++ refusals.toList)
+    PolicyReport.fromBindings(records) ++ PolicyReport(malformed ++ refusals.toList ++ deadSites.toList)
 
   private val refusals = collection.mutable.ListBuffer.empty[PolicyFinding]
+
+  /** A BOUND `sites` ENTRY THAT SELECTED NO SITE — `ENGINE-LIMITS.md` CT6's second face, and the
+    * third face of "never fired".
+    *
+    * `PolicyBinder.bindMembers` asks *does this program declare this member*, and a real field
+    * answers `yes` whether or not anything in the run ever reaches it. CT6 measured exactly that:
+    * two `lazy-init` keys were added to a real port, both BOUND, `policy` stayed at its floor, and
+    * the emitted output was byte-identical with them and without them. A byte-identity experiment is
+    * not a report; this is.
+    *
+    * Only entries whose BINDING succeeded are reported, or an entry naming a member this program
+    * does not have would be reported twice — once by the binder as `NeverMatched` and once here —
+    * for one mistake with one fix. */
+  private val deadSites = collection.mutable.ListBuffer.empty[PolicyFinding]
+
+  private def recordDeadSites(h: ContextHolder, fired: Set[String]): Unit =
+    boundSites.getOrElse(h.holder, Map.empty).keySet.diff(fired).toList.sorted.foreach { k =>
+      val what = h.sites.get(k) match
+        case Some(ContextSite.LazyInit) =>
+          "the entry names a member of this program and NO initialisation could be moved off it: " +
+            "either it is not a static with an initialiser of its own (and not a class initialiser " +
+            "assigning one), or that initialiser neither reads a mapped static nor constructs a " +
+            "type this program declares, so there is nothing for a context to arrive for. " +
+            "`PolicyBinder` cannot see this — it asks whether the MEMBER exists, which a real field " +
+            "answers whether or not the phase ever reaches it"
+        case _ =>
+          "the entry names a member of this program and no READ of a mapped static resolved to it, " +
+            "so it overrode nothing and removing it would change no emitted byte. `residual-global` " +
+            "and `refuse` decide how a READ is spelled at a boundary; an UNSUPPLIABLE USE — a " +
+            "declaration that constructs or calls something threaded — has no read to spell, and " +
+            "its exit is `lazy-init` or moving the use into a declaration the closure can reach"
+      deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.sites",
+        k, PolicyIssue.NeverMatched, s"$what. Delete the entry, or fix the key if it was meant to " +
+          "name a different member")
+    }
 
   // ---- the seams, recorded as the run makes them --------------------------------------------
 
@@ -181,7 +221,7 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
   // ---- the run ------------------------------------------------------------------------------
 
   override def run(program: Program): Program =
-    seamLog.clear(); refusals.clear()
+    seamLog.clear(); refusals.clear(); deadSites.clear()
     if holders.isEmpty then return program
     holders.foldLeft(program)((p, h) => runHolder(p, h))
 
@@ -198,7 +238,8 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
     val graph = OverrideGraph.build(program0)
     val need  = new ContextNeed(program0, graph, h, statics, boundPromote.getOrElse(h.holder, Set.empty),
                                 (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
-                                (s, why) => refuse(h, why))
+                                (s, why) => refuse(h, why),
+                                boundSites.getOrElse(h.holder, Map.empty))
     need.grow()
 
     // ---- the context TYPE, and the terms that read through it ---------------------------------
@@ -320,6 +361,9 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
 
     val out = residualHolder(withMint, h, statics)
     recordDecisions(out, h, need, ctxFqn)
+    // LAST: `readPlan` above is what consults a residual-global/refuse `sites` entry, so anything
+    // read before it would report an entry that had not been asked yet.
+    recordDeadSites(h, need.firedSites)
     out.rebuilt(xref = Xref.build(out.units))
 
   // ---- the minted context type ----------------------------------------------------------------

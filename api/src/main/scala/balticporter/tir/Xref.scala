@@ -42,6 +42,14 @@ object Xref:
       case TypeRepr.TermRef(prefix, sym) => rec(sym, kind, site); walkType(prefix, UsageKind.TypeRefPos, site)
       case TypeRepr.ThisType(cls)        => rec(cls, kind, site)
       case TypeRepr.SuperType(a, b)      => walkType(a, kind, site); walkType(b, kind, site)
+      // KNOWN UNDER-LABELLING, deliberate: this arm REPLACES the kind it was called with, so a
+      // symbol reached through an application is `Tycon`/`TypeArg` whatever position the caller was
+      // describing — `walkType(tpt.tpe, Instantiate, n)` at a `Tree.New` labels a GENERIC class
+      // `Tycon`, for `new C<X>()` and for a raw `new C()` alike. `ENGINE-LIMITS.md` CT6 is the
+      // worked example and says why it stays: `UsageKind` is a shared index read by the portability
+      // check, the rewrite trace and the external-surface walk, so re-labelling here is its own
+      // thirteen-port measure cycle. A consumer that needs the position asks the NODE (`u.site`),
+      // which is a structural fact, rather than this label.
       case TypeRepr.AppliedType(tycon, args) =>
         walkType(tycon, UsageKind.Tycon, site); args.foreach(walkType(_, UsageKind.TypeArg, site))
       case TypeRepr.AndType(l, r)        => walkType(l, UsageKind.Mixin, site); walkType(r, UsageKind.Mixin, site)
