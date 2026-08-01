@@ -2523,9 +2523,35 @@ their current semantics. The reason it had to be a VIEW and not a check is D4's 
 in a dependent's run disagrees with itself, so a check comparing recomputed answers has nothing to
 compare against.
 
+**THE SIXTH INSTANCE IS ON THE REWRITING SIDE, and it is a REWRITE a POLICY KEY authorised.** Every
+instance above is a report; this one changes emitted code. `NullabilityTransform`'s plan loop walks
+`Program.owned` — the program-vs-JDK filter named above — so in a dependent it plans over the BASE's
+declarations too, and a dependent that declares its own annotation FQN retypes them. `SurfaceFold`'s
+`governs` screen cannot see it, and that is structural rather than an oversight: the screen reads
+policy KEYS, and an annotation FQN (`org.jspecify.annotations.Nullable`, a third-party jar's name) is
+the ONE key kind that names none of the declarations it moves — inside no base's claim, so admitted,
+correctly, because the key itself edits nothing.
+
+**Invisible by construction, in BOTH artifacts, which is why no number would ever have moved.** The
+`decisions.tsv` rows are about the base's declarations and this entry's own module scope withholds
+them; the findings are raised at base units and `NullabilityTransform.boundary`'s emitted-unit filter
+drops them. A dependent could have emitted `Actor | Null` where its base emitted `Actor`, on every
+run, with every count identical.
+
+Closed by `balticporter.tir.RunScope` (`api`) — *which units does this run EMIT*, and *which of a
+merged phase's keys did THIS manifest contribute* — carried on the `PolicyBinder`, which is already
+the one object the run hands every `PolicyBound` phase before the pipeline starts. `RunScope.whole`
+is the default and is the truth for a base port, so the screen is a no-op there by arithmetic. The
+refusal is COUNTED as a `policy` finding, one per KEY, and NON-FATAL: the refusal has already made
+the emission correct, so what is wrong is the manifest's claim and not the port's output
+(`DESIGN.md` §8.13's last subsection argues it). Only the annotation half needs the run-time screen —
+a SCOPE entry names an FQN, so one that reaches a base declaration is inside that base's `governs`
+claim by construction and is already fatal at manifest time. **Do not add a run-time screen for the
+other key kinds**; it would duplicate the fold and report the same thing twice.
+
 *Fix kind: (a) engine. The reporting filters landed per instance; the predicate under them is now one
-value (`Surface`), and the rewriting side — where none of the six copies reached — is `CtorFunnel`'s
-fixpoint under D4.*
+value (`Surface`); the rewriting side is `RunScope` for a policy-driven rewrite and `CtorFunnel`'s
+fixpoint under D4 for a whole-program index.*
 
 ### D3. A `<synthetic>` origin is not a file — exclude it from any source fingerprint
 

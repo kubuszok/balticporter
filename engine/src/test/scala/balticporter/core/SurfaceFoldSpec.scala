@@ -80,7 +80,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   test("D1 down a CHAIN: what the middle module publishes is exactly what the last one absorbs") {
     val a = base(List(redirect("com.other.A" -> "com.dep.A")))
-    val b = a.extendedBy(PortManifest("mid", surface = List(redirect("com.other.B" -> "com.dep.B"))))
+    val b = a.extendedBy(PortManifest("mid", governs = Set("com.mid"), surface = List(redirect("com.other.B" -> "com.dep.B"))))
     val c = b.extendedBy(PortManifest("last", surface = List(redirect("com.other.C" -> "com.dep.C"))))
     assertEquals(fps(b), List("type-redirect[com.other.A->com.dep.A,com.other.B->com.dep.B]"))
     assert(clue(c.surfaceFold.absorbed).contains(fps(b).head))
@@ -331,7 +331,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   test("`ownKeys` records only the FOLDED manifest's contribution — a §1(b) finding must be fixable here") {
     val a = base(List(redirect("com.other.A" -> "com.dep.A")))
-    val b = a.extendedBy(PortManifest("mid", surface = List(redirect("com.other.B" -> "com.dep.B"))))
+    val b = a.extendedBy(PortManifest("mid", governs = Set("com.mid"), surface = List(redirect("com.other.B" -> "com.dep.B"))))
     val c = b.extendedBy(PortManifest("last", surface = List(redirect("com.other.C" -> "com.dep.C"))))
     assertEquals(c.surfaceFold.ownKeys, Map("type-redirect" -> Set("com.other.C")))
     assertEquals(b.surfaceFold.ownKeys, Map("type-redirect" -> Set("com.other.B")))

@@ -61,12 +61,25 @@ import java.nio.file.Path
   *     single most important thing on this page to get right, and it is why `inject` is a field of
   *     the manifest rather than being folded into [[substitutions]] wholesale.
   *
-  * ==What [[governs]] is for==
-  * A namespace claim, used only where a check genuinely needs prefixes — the package-rename
-  * comparison. Substitution agreement does NOT use it: that check works from unit ORIGINS, so it is
-  * exact even when the two modules interleave their packages (a library's own test suite typically
-  * declares its suites in the very packages it tests, and no prefix can separate those). Leave it
-  * empty when the layout is interleaved; that costs only the rename-override diagnosis.
+  * ==What [[governs]] is for — and what an EMPTY one switches off==
+  * A namespace claim, used where a check genuinely needs prefixes. Substitution agreement does NOT
+  * use it: that check works from unit ORIGINS, so it is exact even when the two modules interleave
+  * their packages (a library's own test suite typically declares its suites in the very packages it
+  * tests, and no prefix can separate those).
+  *
+  * '''An empty `governs` is not merely a lost diagnosis — it DISABLES THE INTRUSION SCREEN for this
+  * module entirely.''' [[claims]] is `false` for every FQN when the set is empty ("no claim", never
+  * "everything"), and `SurfaceFold`'s `governs` screen — the thing that stops a DEPENDENT adding
+  * policy that re-shapes this module's emitted surface (§1.5, `DESIGN.md` §8.13) — asks exactly
+  * that question of each base. A base with no claim therefore admits every subject every dependent
+  * adds, silently and by arithmetic: there is no code path that reports it, because a screen with
+  * nothing to screen against is indistinguishable from a screen that passed. `ManifestAgreement`
+  * reports it ([[ManifestAgreement.Kind.BaseNamespaceUnclaimed]]) for that reason.
+  *
+  * Three checks read it: the package-rename comparison (`RenameOverride`, `TypeRenameDivergence`'s
+  * extra half), the `ExtraDrop` comparison, and the intrusion screen. Leave it empty only for a
+  * module nothing depends on, or for the empty manifest that declares "this resolution root is not
+  * a ported module" — where there is no policy to protect and [[declaresPolicy]] says so.
   */
 final case class PortManifest(
     /** for reports — the module this policy belongs to. */
@@ -259,6 +272,37 @@ final case class PortManifest(
 
   /** does this manifest claim `fqn`? False for an empty [[governs]] — no claim, not "everything". */
   def claims(fqn: String): Boolean = governs.exists(PortManifest.covers(fqn, _))
+
+  /** Phase name → the shared-surface SUBJECTS THIS manifest contributed to that phase's EFFECTIVE
+    * policy — what a phase reads through `balticporter.tir.RunScope.contributed`.
+    *
+    * Two cases, and the second is the one with no constraint on it at all:
+    *
+    *   - the fold MERGED this module's instance into a base's, and `SurfaceFold.ownKeys` is its own
+    *     record of what this module added;
+    *   - no base declares the phase, so the instance reaches the pipeline whole and EVERY subject it
+    *     holds is one this module contributed. `ownKeys` has no entry for it — the fold only records
+    *     a merge — so the phase's own `subjects` is the answer.
+    *
+    * A phase this manifest does NOT declare is absent from the map, which the reader takes as "no
+    * filter": every key it holds came from a base, and the base's own run applied it identically.
+    *
+    * One derivation, here rather than in the run, for the reason [[surfaceFold]] is on the manifest:
+    * the `.conf` path and the Scala path build the same value through the same constructors, and a
+    * second copy in the orchestrator would be free to drift from this one. */
+  lazy val contributedSubjects: Map[String, Set[String]] =
+    surface.collect { case p: MergeablePolicy =>
+      p.name -> surfaceFold.ownKeys.getOrElse(p.name, p.subjects)
+    }.toMap
+
+  /** Does this manifest state any SHARED-SURFACE policy at all?
+    *
+    * An empty manifest is the documented way to say "this resolution root is not a ported module"
+    * (CLAUDE.md §1.5), and every obligation a base carries — publish a map, claim a namespace — is
+    * an obligation only where there is policy to protect. One predicate, read by
+    * `ManifestAgreement` on both sides of that line. */
+  def declaresPolicy: Boolean =
+    dropTypes.nonEmpty || dropMethods.nonEmpty || packageRenames.nonEmpty || surface.nonEmpty
 
   /** the EMITTED FQNs this module's own [[inject]] roots supply — one derivation, in
     * [[Substitutions.injectedSources]], which the run's copy loop and `PortMap` read too.

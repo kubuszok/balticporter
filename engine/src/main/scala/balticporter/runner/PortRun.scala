@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, Xref}
+import balticporter.tir.{CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, Xref}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -1514,7 +1514,7 @@ final case class PortRun(
     //
     // The binder is per-TRANSLATION for the reason the decision log is (`Determinism.Full`
     // translates twice): a value one run owns, never a process-global table (§5.1).
-    val binder = new PolicyBinder(parsed, parsed.members)
+    val binder = new PolicyBinder(parsed, parsed.members, runScope(parsed))
     bindDeclaredPolicy(binder)
     // `runTraced`, so the phases' DECISIONS travel with the program they produced. The log belongs
     // to THIS translation: `Determinism.Full` translates twice and the run keeps the first, which
@@ -1572,6 +1572,26 @@ final case class PortRun(
     * is the normal case in a git worktree, and was the case that made this return every unit in
     * the model on its first run — is lexically unrelated to the path the parser recorded, and a
     * prefix test then matches nothing while looking correct. */
+  /** What a PHASE may conclude about ITSELF, built before the pipeline runs (`RunScope`).
+    *
+    * Two facts, and neither is derivable from the `Program` a phase is handed. The first is
+    * `partitionUnits` — the same realpathed origin split every other owner question in this file
+    * uses (§5.4) — computed over the PARSED program, because origins are what a phase cannot change
+    * and unit symbols are stable across the pipeline. The second is the merge contract's own answer
+    * to "which of this phase's keys did MY manifest contribute" (`DESIGN.md` §8.13): `ownKeys` where
+    * the fold merged this module's instance into a base's, and — for a phase this module declares
+    * that no base has a counterpart for, the shape with no constraint on it at all — every subject
+    * that instance holds. A phase this module does not declare is ABSENT from the map, which is the
+    * "no filter" answer: every key it holds is a base's, and the base's own run applied it
+    * identically.
+    *
+    * Both halves are the identity for a BASE port: no resolution roots means every unit is emitted,
+    * so nothing a phase asks can refuse anything.
+    */
+  private def runScope(parsed: Program): RunScope =
+    RunScope.of(partitionUnits(parsed)._1.map(_.symbol).toSet,
+                manifest.map(_.contributedSubjects).getOrElse(Map.empty))
+
   private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
     if frontend.resolutionRoots.isEmpty then (program.units, Nil)
     else

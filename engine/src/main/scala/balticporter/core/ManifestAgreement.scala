@@ -115,10 +115,9 @@ object ManifestAgreement:
     def name: String = manifest.name
     /** does this base declare ANY shared-surface policy? An empty manifest is the documented way to
       * say "this resolution root is not a ported module" (CLAUDE.md §1.5), and holding one to the
-      * obligation to publish a map would turn that statement into a finding. */
-    def declaresPolicy: Boolean =
-      manifest.dropTypes.nonEmpty || manifest.dropMethods.nonEmpty ||
-        manifest.packageRenames.nonEmpty || manifest.surface.nonEmpty
+      * obligation to publish a map would turn that statement into a finding. One derivation, on the
+      * manifest, because the same line governs the `governs` obligation below. */
+    def declaresPolicy: Boolean = manifest.declaresPolicy
 
   enum Kind(val fatal: Boolean, val classification: String):
     /** the base does not translate this type; this module does. */
@@ -170,6 +169,18 @@ object ManifestAgreement:
         "surface from the dependent's side and the two ports could not compile together. Move the " +
         "entry to the base's manifest, or (if the type is genuinely not part of the shared " +
         "surface) drop it there.")
+    /** a base this module depends on claims NO namespace, which switches off the intrusion screen
+      * that protects its surface from this module. Not fatal: nothing has gone wrong YET, and the
+      * base's own author is the one who must act. Loud, because the alternative is a screen that
+      * reports nothing whether it passed or was never asked. */
+    case BaseNamespaceUnclaimed extends Kind(false,
+      "§1(b) PER-LIBRARY, in the BASE's manifest: this base states shared-surface policy and " +
+        "claims NO namespace (`governs` is empty), so `PortManifest.claims` is false for every FQN " +
+        "and the `governs` INTRUSION SCREEN is disabled for it — every subject a dependent's phase " +
+        "adds inside the base's packages is admitted unscreened, silently, because a screen with " +
+        "nothing to screen against cannot be told from one that passed. Declare the base's " +
+        "`governs`. Leave it empty only for a resolution root that is not a ported module, which " +
+        "is stated by an EMPTY manifest and reports nothing here.")
     /** a resolution-root type the base drops that this run did not tag. */
     case TagMissing extends Kind(true,
       "§1(b) PER-LIBRARY: the base module substitutes this type, and this run translated it as an " +
@@ -371,8 +382,18 @@ object ManifestAgreement:
         .map(PortManifest.fingerprint).distinct.map(f =>
           Finding(Kind.SurfaceMissing, b.name, f, "signature-affecting phase present in the base's surface, absent from this module's"))
 
+      // …and the claim itself. Reported from the DEPENDENT's side because that is the run that has
+      // both manifests in hand, and because it is this module whose added policy goes unscreened —
+      // but the fix is in the base's manifest, which the classification says.
+      val unclaimed =
+        if b.governs.isEmpty && b.declaresPolicy then
+          List(Finding(Kind.BaseNamespaceUnclaimed, b.name, b.name,
+            "declares shared-surface policy and claims no namespace, so nothing this module adds " +
+              "inside it can be screened"))
+        else Nil
+
       missingTypes ++ missingMethods ++ extraTypes ++ extraMethods ++ renameDiff ++ renameExtra ++
-        typeDiff ++ typeExtra ++ splitDiff ++ surfaceGap
+        typeDiff ++ typeExtra ++ splitDiff ++ surfaceGap ++ unclaimed
     }
 
     // One phase NAME carrying two different policies in one pipeline is drift regardless of which

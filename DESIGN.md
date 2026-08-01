@@ -3360,3 +3360,55 @@ for. Merging at `PortRun` rather than on the manifest — a second truth on the 
 puts the merged pipeline where `ManifestAgreement` (a pure function of manifests) cannot see it.
 Letting the intrusion screen pass and reporting it as advisory — a dependent that edits the shared
 surface produces two ports that cannot compile together, which is the definition of fatal here.
+
+#### The screen the FOLD cannot run: a key that names NOTHING
+
+The `governs` screen above reads policy KEYS, and it is complete for every key that names what it
+edits — a redirect names a type, a drop names a type, a scope entry names an FQN. **An ANNOTATION
+FQN names none of the declarations it moves.** `org.jspecify.annotations.Nullable` is a third-party
+jar's name, inside no base's claim, so the fold admits it — correctly, because the key itself edits
+nothing. What it SELECTS is another matter: `NullabilityTransform`'s plan loop walks `Program.owned`,
+which in a dependent roots on every unit in the program including the base's (`ENGINE-LIMITS.md` D2's
+substrate note), so a dependent whose base's Java carries the same third-party marker retypes
+declarations the base's own run emitted untouched. Two ports that each compile alone and cannot
+compile together — §1.5's failure, through the one door a key-reading screen cannot watch.
+
+**So the screen runs a second time, at PLAN time, against the DECLARATIONS.** A phase refuses a
+rewrite when both halves hold: the declaration's unit is not one this run EMITS, and the key that
+selected it is one THIS manifest contributed. Both are facts about the run and neither is derivable
+from the `Program`, so they arrive as one value — `balticporter.tir.RunScope`, on the `PolicyBinder`,
+which is already the object the run hands every `PolicyBound` phase before the pipeline starts.
+`emits` is `PortRun.partitionUnits`, the same realpathed origin split every other owner question
+uses (§5.4); `contributed` is `PortManifest.contributedSubjects`, which is `SurfaceFold.ownKeys`
+where the fold merged this module's instance into a base's and the instance's whole `subjects` where
+no base declares the phase at all — the shape with no constraint on it, exactly as the fold's
+no-counterpart arm treats it. A phase this module does not declare is ABSENT from that map, which
+reads as "no filter": every key it holds is a base's, and the base's own run applied it identically.
+`RunScope.whole` — everything is emitted, nothing is scoped — is the default and is the truth for a
+base port, so the screen is a no-op there by arithmetic rather than by a branch.
+
+**Only the annotation half needs it, and that is a proof rather than a scoping decision.** A scope
+entry names an FQN, so an entry that reaches a base declaration is *by construction* inside that
+base's `governs` claim and is already a fatal `SurfaceIntrusion` at manifest time. The annotation is
+the only key whose reach is not its spelling.
+
+**The severity is NON-FATAL, argued.** The refusal has already made the emission correct — the base's
+declaration keeps exactly the type the base's own run gave it — so nothing this port WRITES is wrong.
+What is wrong is what its manifest SAYS: a nullability contract stated for a namespace it does not
+own. A fatal finding would stop a run whose output is right; a silent one would leave the author
+believing the annotation applies library-wide. One `policy` finding per KEY (never per declaration —
+that reports one manifest mistake once per member of the base), carrying the count and the first
+three subjects, is the honest middle. It reaches `policy` rather than `nullability-boundary` for a
+structural reason, not a taste one: `NullabilityTransform.boundary` filters to the units the run
+EMITS (D2), so a finding raised at a base declaration is dropped by the very filter that makes the
+check correct — the refusal has no emitted site to hang on, and the manifest key is the only thing it
+is really about.
+
+**And the corollary the screen depends on: an empty `governs` switches the FIRST screen off.**
+`PortManifest.claims` is `false` for every FQN when the set is empty ("no claim", never
+"everything"), so a base that states policy and claims no namespace admits every subject every
+dependent adds — silently, because a screen with nothing to screen against cannot be told from one
+that passed. `ManifestAgreement.Kind.BaseNamespaceUnclaimed` reports it, non-fatally, from the
+dependent's side (the run that holds both manifests) with the fix named in the base's. The empty
+manifest that declares "this resolution root is not a ported module" states no policy and reports
+nothing — `PortManifest.declaresPolicy` is the one line that separates the two.

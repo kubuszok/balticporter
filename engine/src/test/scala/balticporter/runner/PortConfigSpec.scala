@@ -342,7 +342,7 @@ class PortConfigSpec extends munit.FunSuite:
       """label = "base"
         |input  { sourceRoot = "java" }
         |output { portRoot = "out", sourceSet = "main" }
-        |manifest { name = "base"
+        |manifest { name = "base", governs = [ "a" ]
         |  surface = [ { transform = "type-redirect", redirects { "a.B" = "c.D" } } ] }
         |""".stripMargin
     val f = fixture(

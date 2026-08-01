@@ -3021,6 +3021,50 @@ port throughout.
   leaks. The `policy` findings ARE correctly scoped (0 on every dependent); only the provenance
   artifact is not.
 
+### 11.19 Checkpoint-4 audit remediation — F1: a dependent's ANNOTATION may not retype its BASE
+
+`balticporter.tir.RunScope` (`api`), carried on the `PolicyBinder`; `NullabilityTransform` refuses at
+PLAN time; `PortManifest.contributedSubjects` and `PortManifest.declaresPolicy`;
+`ManifestAgreement.Kind.BaseNamespaceUnclaimed`. **Every check count identical on all thirteen ports,
+0 members changed on every one, every suite unchanged, and the defect is proven on a synthetic
+base+dependent instead.** `DESIGN.md` §8.13's last subsection and `ENGINE-LIMITS.md` D2 carry the
+rule; this section carries the numbers.
+
+**The defect, and why the corpus could not show it.** `SurfaceFold`'s `governs` screen reads policy
+KEYS, and an ANNOTATION FQN is the one key that names none of the declarations it moves. libGDX's
+own `@Null` is inside libGDX's claim and is declared by the BASE, so every dependent inherits the one
+instance and there is nothing to screen; screens' jspecify entry was retired at
+`5902823a` in favour of the base's marker. The corpus therefore contains **no module whose own
+annotation FQN reaches a base declaration** — which is exactly why the hole shipped, and exactly why
+its proof has to be synthetic (`NullabilityBaseSurfaceSpec`, 7 tests). Neutralised, the screen's two
+positive tests fail and the five negatives pass, which is the failing-before evidence.
+
+| what the synthetic dependent does | before | after |
+|---|---|---|
+| `p.Base#find` / `p.Base#cached`, annotated in the BASE's Java with the DEPENDENT's marker | retyped `String \| Null` by the dependent's run | **kept**, exactly as the base's own run emitted them |
+| `q.Mine#own`, this module's own declaration | retyped | **retyped** — the phase still does its job |
+| `decisions.tsv` rows about `p.Base…` | present | **none** (D2 governs provenance too) |
+| `policy` findings | 0 | **1**, keyed on the annotation FQN, counting 2 refused declarations |
+
+**The severity is argued, not defaulted: NON-FATAL.** The refusal has already made the emission
+correct, so what is wrong is the manifest's claim rather than the port's output; a fatal finding
+would stop a run whose bytes are right. It lands in `policy` rather than `nullability-boundary`
+because `NullabilityTransform.boundary` filters to the units the run EMITS — the D2 filter that makes
+that check correct is the same filter that would silently drop this finding.
+
+**One key kind, and that is a proof.** A SCOPE entry names an FQN, so an entry that reaches a base
+declaration is inside that base's `governs` claim by construction and is already a fatal
+`SurfaceIntrusion` at manifest time. Do not add a run-time screen for the other key kinds.
+
+**The corollary, negative-tested and 0 on the corpus.** An empty `governs` makes `PortManifest.claims`
+false for every FQN, so a base that states policy and claims nothing admits every subject every
+dependent adds — a screen that cannot be told from one that passed. Every corpus base claims one
+(`com.badlogic.gdx`, `com.badlogic.ashley`, `net.mgsx.gltf`, `de.eskalon.commons`,
+`com.crashinvaders.vfx`, `com.github.tommyettinger.anim8`), so `manifest` stays **0 on all thirteen
+ports**; the two engine fixtures that did not (`SurfaceFoldSpec`'s chain middle, `PortConfigSpec`'s
+base conf) now do, which is the finding firing correctly on the only two manifests in the repository
+that were silently unscreened.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.

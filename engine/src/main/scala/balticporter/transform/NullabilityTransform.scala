@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{MergeablePolicy, PolicyReport, PolicySource}
+import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource}
 import balticporter.tir.*
 
 /** Move a library's NULLABILITY ANNOTATIONS out of an annotation the Scala compiler ignores and
@@ -91,6 +91,14 @@ final class NullabilityTransform(
   private var boundAnnots: Map[SymId, String] = Map.empty
   private var records: List[PolicyBinder.Record] = Nil
 
+  /** what the RUN knows about itself — which units it EMITS, and which of this (possibly MERGED)
+    * instance's keys THIS manifest contributed. Both are needed by [[intrudesOnBase]] and neither
+    * is derivable from the `Program`; see [[RunScope]]. The default is the base-port answer. */
+  private var runScope: RunScope = RunScope.whole
+  /** the subjects THIS module contributed to this phase's policy — `None` where this module
+    * declares no instance of the phase at all, which is the no-screen answer. */
+  private var ownSubjects: Option[Set[String]] = scala.None
+
   def bindPolicy(binder: PolicyBinder): Unit =
     // `Ownership.Either`: a library's nullability annotation is DECLARED IN-TREE about as often as
     // it is a third-party jar (libGDX ships its own `@Null`; another port uses jspecify's). Neither
@@ -100,9 +108,11 @@ final class NullabilityTransform(
     }.toMap
     val setting = s"NullabilityTransform(scope) ${scope.productPrefix} entry"
     scope.entries.toList.sorted.foreach(e => binder.bindScope(name, setting, e))
-    records = binder.recordsFor(name)
+    records     = binder.recordsFor(name)
+    runScope    = binder.run
+    ownSubjects = binder.run.contributed(name)
 
-  def policyReport: PolicyReport = PolicyReport.fromBindings(records)
+  def policyReport: PolicyReport = PolicyReport.fromBindings(records) ++ PolicyReport(baseIntrusionFindings)
 
   /** Nullability is a fact about the SHARED SURFACE: a base that emits `Actor | Null` and a
     * dependent that emits `Actor` for the same member each compile alone and cannot compile
@@ -217,7 +227,7 @@ final class NullabilityTransform(
     // Every per-run value is reset HERE, because a phase instance is reused across two translations
     // (`Determinism.Full` does exactly that, and a port with two source sets shares one phase list)
     // and a cached answer from the first run is a wrong answer in the second (§5.1).
-    issues.clear(); newTypes = Map.empty; wrapped = Map.empty; overridingRead = false
+    issues.clear(); intrusions.clear(); newTypes = Map.empty; wrapped = Map.empty; overridingRead = false
     // §1(b): an empty policy needs no code path. Nothing bound — no annotation configured, or every
     // configured one named nothing — and the program is returned untouched.
     if boundAnnots.isEmpty then return program
@@ -265,12 +275,16 @@ final class NullabilityTransform(
       val hits = s.annotations.filter(a => headSym(a.tpe).exists(boundAnnots.contains))
       if hits.nonEmpty && program.owns(s.id) then
         val key = hits.flatMap(a => headSym(a.tpe)).flatMap(boundAnnots.get).sorted.head
+        // THE ONE KEY KIND THAT CAN SELECT A BASE'S DECLARATIONS WITHOUT NAMING A BASE FQN.
+        // Refused before anything else is asked, because the alternative is a §1.5 divergence
+        // nothing else in the run can see — see `intrudesOnBase`.
+        if intrudesOnBase(program, s, key) then baseIntrusion(program, s, key)
         // The DIRECTION matters, and reading `entryFor` alone gets it wrong for `Only`: an entry is
         // present for an EXCLUDED declaration under `Everywhere(except)` and for an INCLUDED one
         // under `Only(include)`. Ask the scope whether it includes the symbol, and quote the entry
         // that decided it when there is one — under `Only` a declaration is held back precisely
         // because NO entry names it, and the key an agent edits is then the whole list.
-        if !scope.includes(program, s) then
+        else if !scope.includes(program, s) then
           scopedOut(program, s, scope.entryFor(program, s).getOrElse(scope.fingerprint))
         else
           slotOf(program, s) match
@@ -422,6 +436,70 @@ final class NullabilityTransform(
   // -------------------------------------------------------------------------
   // findings
   // -------------------------------------------------------------------------
+
+  // -------------------------------------------------------------------------
+  // the BASE-SURFACE screen — a key this module added, reaching a declaration this run does not emit
+  // -------------------------------------------------------------------------
+
+  /** Would honouring `key` here RETYPE A DECLARATION THIS RUN DOES NOT EMIT, on the strength of
+    * policy THIS module added?
+    *
+    * ==The hole this closes, and why nothing else could see it==
+    * `SurfaceFold`'s `governs` screen refuses a subject inside a base's claimed namespace that the
+    * base does not account for (`DESIGN.md` §8.13) — and an ANNOTATION FQN is the one policy key
+    * that selects declarations WITHOUT naming any of them. `org.jspecify.annotations.Nullable` is
+    * inside no base's claim, so it is admitted, correctly: the key itself edits nothing. What it
+    * SELECTS is another matter — the plan loop walks `Program.owned`, which in a dependent roots on
+    * every unit including the base's (`ENGINE-LIMITS.md` D2's substrate note) — so a dependent whose
+    * base's Java carries that same third-party annotation retypes the base's declarations, which the
+    * base's own run emitted untouched. Two ports that each compile alone and cannot compile
+    * together: §1.5's failure, through the one door the fold cannot watch.
+    *
+    * It is invisible BY CONSTRUCTION, which is why it is a screen and not a check. D2's module
+    * scope drops the `decisions.tsv` rows (they are about the base's declarations) and
+    * [[boundary]]'s emitted-unit filter drops any finding raised at one — so the retype would move
+    * no number anywhere.
+    *
+    * ==Why only the annotation half==
+    * A SCOPE entry names an FQN, so an entry that reaches a base declaration is by construction
+    * inside that base's `governs` claim and is already a FATAL `SurfaceIntrusion` at manifest time.
+    * The annotation half is the only one whose key does not name what it moves.
+    *
+    * ==And why an INHERITED key is not screened==
+    * `contributed` is the fold's record of what THIS manifest added. A key the base declared is one
+    * the base's own run applied to the same declarations, identically — screening it would refuse
+    * the composition the merge contract exists to allow.
+    */
+  private def intrudesOnBase(p: Program, s: Symbol, key: String): Boolean =
+    ownSubjects.exists(_.contains(MergeablePolicy.subjectOf(key))) && !runScope.emits(unitOf(p, s.id))
+
+  /** every base declaration a key of this module's selected, by key — one `PolicyFinding` per KEY,
+    * because that is the string an agent edits (§4.575) and a row per declaration would report one
+    * manifest mistake once per member of the base. */
+  private val intrusions = collection.mutable.LinkedHashMap.empty[String, collection.mutable.ListBuffer[String]]
+
+  private def baseIntrusion(p: Program, s: Symbol, key: String): Unit =
+    intrusions.getOrElseUpdate(key, collection.mutable.ListBuffer.empty) += describe(p, s)
+
+  /** §1(b), COUNTED and NON-FATAL, and the severity is the argument rather than a default: the
+    * refusal has already made the emission correct — the declaration keeps exactly the type the
+    * base's own run gave it — so there is nothing wrong with what this port WRITES. What is wrong
+    * is what its manifest SAYS: a nullability contract stated for a namespace this module does not
+    * own. A fatal finding would stop a run whose output is right; a silent one would leave the
+    * author believing the annotation applies library-wide. The number is the honest middle, and it
+    * reaches `policy`, which is scoped to this module's own keys already. */
+  private def baseIntrusionFindings: List[PolicyFinding] =
+    intrusions.toList.sortBy(_._1).map { (key, subjects) =>
+      val shown = subjects.toList.sorted.distinct
+      PolicyFinding(name, s"NullabilityTransform(annotations) `$key`", key, PolicyIssue.Unverifiable,
+        s"REFUSED on ${shown.size} declaration(s) this run does NOT emit — they belong to a module " +
+          "this one only resolves against, and this manifest is the one that added the annotation, " +
+          "so retyping them would re-shape the SHARED surface from the dependent's side and the two " +
+          "ports could not compile together (CLAUDE.md §1.5). They keep the type the base's own run " +
+          s"gave them. Declare the annotation in the BASE's manifest if the contract is really the " +
+          s"shared library's: ${shown.take(3).mkString(", ")}" +
+          (if shown.sizeIs > 3 then s", … (${shown.size} in all)" else ""))
+    }
 
   private def refuse(p: Program, s: Symbol, key: String, issue: Issue): Unit =
     issues += Finding(issue, s.fullName, s"`$key` on ${describe(p, s)}", Decision.originOf(p, s.id), unitOf(p, s.id))

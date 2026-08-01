@@ -33,7 +33,11 @@ package balticporter.tir
   * §4.56 defect, twice measured. This is a CONVENTION WITH A LINT (`PolicyKeyLintSpec`), not a
   * type-level guarantee, and saying so plainly is better than implying otherwise.
   */
-final class PolicyBinder(val program: Program, index: MemberIndex):
+/** @param run what the RUN knows about itself — which units it EMITS, and which of a merged
+  *            phase's keys THIS manifest contributed ([[RunScope]]). Defaulted to
+  *            [[RunScope.whole]], which is the truth for a base port and for every spec, so no
+  *            existing construction changes behaviour. */
+final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunScope = RunScope.whole):
 
   private val log = collection.mutable.ListBuffer.empty[PolicyBinder.Record]
 
