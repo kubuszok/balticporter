@@ -148,8 +148,10 @@ two instances holding two halves of one table are not a map. So a parameterised 
 - **no key a DEPENDENT declares may edit what a base EMITS — merged or not.** A subject inside a
   base's `governs` claim that the base neither drops nor already declares is a fatal
   `SurfaceIntrusion`: a dependent re-shaping the shared surface produces two ports that each compile
-  alone and cannot compile together. A subject the base DROPS is the allowed and ordinary case —
-  nothing stands at that name in the base's output. **Screen the whole of a mergeable phase's
+  alone and cannot compile together. The allowed case is a subject the base drops and leaves EMPTY —
+  **"nothing stands at that name", never "the base drops it"**: a drop WITH an injection ships a
+  file at that FQN, and the shim is shared surface exactly as an emitted class is. **Screen the
+  whole of a mergeable phase's
   policy, never only what a merge added**: scoped to the merge, the screen misses the one shape with
   no constraint on it at all — a phase the dependent declares and no base has, which is one instance
   (nothing diverges) and no merge (nothing is "added"). That is why `MergeablePolicy` has to expose

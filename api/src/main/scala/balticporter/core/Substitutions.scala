@@ -2,7 +2,7 @@ package balticporter.core
 
 import balticporter.tir.{SymTag, Symbol}
 
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 
 /** Principled, typed directives for replacing constructs the port must NOT
   * translate mechanically with ready-made Scala. A project declares one; the
@@ -62,6 +62,38 @@ final case class Substitutions(
 
 object Substitutions:
   val none: Substitutions = Substitutions()
+
+  /** every `.scala` file under `dir`, sorted; nothing when the directory does not exist.
+    *
+    * One body, HERE rather than in the check that reads it, because three layers now ask the same
+    * question of an injection root — the run (what to copy, and what to note), `SubstitutionCheck`
+    * (is a dropped type replaced), and `SurfaceFold` (does a BASE ship a replacement at the name a
+    * dependent wants to re-point) — and the last of those lives below the engine. */
+  def scalaSources(dir: Path): List[Path] =
+    import scala.jdk.CollectionConverters.*
+    if !Files.exists(dir) then Nil
+    else
+      val walk = Files.walk(dir)
+      try walk.iterator().asScala.filter(_.toString.endsWith(".scala")).toList.sorted
+      finally walk.close()
+
+  /** what a set of injection roots SUPPLIES: emitted FQN → the root-relative path it came from.
+    *
+    * The FQN is the relative path with its `.scala` dropped and its separators turned into dots —
+    * the one derivation, since the file's own location is what decides the name it stands at. Note
+    * these are EMITTED names (`PortMap` says the same thing at its own seam): an injection root
+    * holds the port's namespace, while a drop key is UPSTREAM, so any comparison between the two
+    * translates first (§4.56).
+    *
+    * A root that does not exist supplies NOTHING, which is not a lenient reading — it is the same
+    * answer the run gives, since the copy loop skips it and no file lands at any of those names. */
+  def injectedSources(roots: List[Path]): List[(String, String)] =
+    roots.filter(Files.exists(_)).flatMap { root =>
+      scalaSources(root).map { src =>
+        val rel = root.relativize(src).toString.replace('\\', '/')
+        rel.stripSuffix(".scala").replace('/', '.') -> rel
+      }
+    }
 
 /** Marks a symbol the port must NOT emit, so INTERMEDIATE layers can still see it.
   *

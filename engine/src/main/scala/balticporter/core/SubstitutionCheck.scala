@@ -96,7 +96,8 @@ object SubstitutionCheck:
     * separate decision with its own number. */
   def withoutPorterNotes(text: String): String = balticporter.tir.TriviaMark.stripAll(text)
 
-  /** every `.scala` file under `dir`, or nothing when the directory does not exist. */
-  def scalaSources(dir: Path): List[Path] =
-    if !Files.exists(dir) then Nil
-    else Files.walk(dir).iterator().asScala.filter(_.toString.endsWith(".scala")).toList.sorted
+  /** every `.scala` file under `dir`, or nothing when the directory does not exist — the body moved
+    * DOWN to [[Substitutions]] when a third reader appeared below the engine (`SurfaceFold` asks
+    * whether a base ships a replacement at a name a dependent wants to re-point), and is kept as a
+    * name here because every caller in the engine reaches it through this check. */
+  def scalaSources(dir: Path): List[Path] = Substitutions.scalaSources(dir)

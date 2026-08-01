@@ -457,12 +457,7 @@ final case class PortRun(
     // What this port SHIPS as ready-made Scala. Computed here rather than beside the copy loop
     // because the injection decisions are notes on the copied files, and a note cannot be written
     // after the file it belongs in.
-    val injectedSources: List[(String, String)] = ownSubs.inject.filter(Files.exists(_)).flatMap { root =>
-      SubstitutionCheck.scalaSources(root).map { src =>
-        val rel = root.relativize(src).toString.replace('\\', '/')
-        rel.stripSuffix(".scala").replace('/', '.') -> rel
-      }
-    }
+    val injectedSources: List[(String, String)] = Substitutions.injectedSources(ownSubs.inject)
     val foreignDecisions = recordRunDecisions(translated, injectedSources, plan)
     translatedDecisions = translated.decisions.all
 

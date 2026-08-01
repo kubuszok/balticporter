@@ -3223,13 +3223,27 @@ claims and refuses with a fatal `SurfaceIntrusion`, counted, naming the base and
 
 **A bare prefix test is the wrong criterion and would have refused the one port the mechanism
 exists for.** `ashley` redirects `com.badlogic.gdx.utils.ReflectionPool`, which is inside libGDX's
-`governs = com.badlogic.gdx` — and is CORRECT, because the base DROPS that type: nothing stands at
-the name in the base's output, so there is no shared surface at it to edit, and re-pointing
-references at a replacement the dependent ships is precisely what `TypeRedirectTransform` was built
-for. The honest criterion is therefore *inside a base's claimed namespace AND not accounted for by
-that base's own policy* — `dropTypes`, or the base's own instance of the same phase already saying
-the same thing (which contributes no added key at all). §4.56's rule applies to the claim as it
-applies to every prefix: `covers` cuts only at a separator.
+`governs = com.badlogic.gdx` — and is CORRECT, because the base drops that type and supplies
+NOTHING at its name, so there is no shared surface at it to edit, and re-pointing references at a
+replacement the dependent ships is precisely what `TypeRedirectTransform` was built for. The honest
+criterion is therefore *inside a base's claimed namespace AND not accounted for by that base's own
+policy* — the base's own instance of the same phase already saying the same thing (which contributes
+no added key at all), or **a drop with NOTHING STANDING AT THE NAME**. §4.56's rule applies to the
+claim as it applies to every prefix: `covers` cuts only at a separator.
+
+**"Dropped" is not that criterion; it approximates it, and the approximation is wrong in exactly one
+place.** A drop and its replacement are two decisions (§1.5), and a drop WITH an `inject` puts a
+FILE at that FQN — shared surface as much as an emitted class is, and the thing every dependent
+compiles against. A dependent re-pointing its references away from the base's shim to a type of its
+own produces two ports that each compile alone and cannot compile together, which is the failure
+this screen exists for, silently admitted. So the admission asks the base whether it SHIPS anything
+at the name (`PortManifest.shipsInjectionAt`), through `renamed` — the drop key is UPSTREAM and the
+shim's FQN is EMITTED, and a direct comparison would never fire on a renaming port (§4.56, the same
+trap `PortMap`'s `Substituted` fell into). A root that does not exist supplies nothing, which is not
+leniency: it is the answer the RUN gives, since its copy loop skips such a root and no file lands.
+Measured over the corpus: **the one production case is unaffected** — libGDX's overrides hold no
+`sge/utils/ReflectionPool.scala`, so ashley is admitted for the honest reason rather than by the
+approximation, and screens' ten guacamole entries were never inside the claim at all.
 
 A subject is read off a policy key as its leading FQN cut at `#` — the convention `ManifestAgreement`
 already uses for `dropMethods` keys, one body (`MergeablePolicy.subjectOf`), so a phase does not

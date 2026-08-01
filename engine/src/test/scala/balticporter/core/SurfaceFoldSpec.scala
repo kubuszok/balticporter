@@ -205,6 +205,68 @@ class SurfaceFoldSpec extends munit.FunSuite:
       Nil)
   }
 
+  // -------------------------------------------------------------------------------------------
+  // …and the admission is "NOTHING STANDS AT THAT NAME", which a drop alone does not say
+  // -------------------------------------------------------------------------------------------
+
+  /** an injection root holding one ready-made file at `rel`. */
+  private def injectRoot(rel: String): java.nio.file.Path =
+    val root = java.nio.file.Files.createTempDirectory("inject")
+    val p    = root.resolve(rel)
+    java.nio.file.Files.createDirectories(p.getParent)
+    java.nio.file.Files.writeString(p, "package x\nclass Y\n")
+    root
+
+  test("a drop the base REPLACES is an intrusion — the injected shim IS shared surface") {
+    // §1.5's asymmetry read correctly: a drop and its replacement are two decisions, and the second
+    // one puts a file at that FQN. Re-pointing references at a type of this module's own would
+    // compile alone and could not compile against the base — the very failure the screen is for.
+    val b = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"),
+      inject = List(injectRoot("com/demo/Widget.scala")),
+      surface = List(redirect("com.other.A" -> "com.dep.A")))
+    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
+      surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, fired = Set("com.demo.Widget"))
+    assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
+    assert(clue(f.head.detail).contains("DROPS and REPLACES"))
+  }
+
+  test("…and the SAME drop with no injection is admitted — nothing stands at the name") {
+    val b = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"),
+      inject = List(injectRoot("com/demo/Other.scala")), // a replacement for a DIFFERENT type
+      surface = List(redirect("com.other.A" -> "com.dep.A")))
+    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
+      surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    assertEquals(dep.surfaceFold.refusals, Nil)
+    assertEquals(dep.effectiveSurface.size, 1)
+  }
+
+  test("the injection is matched in the EMITTED namespace — a renaming base is the normal case") {
+    // the two sides are in different namespaces: the drop key is upstream, the shim's FQN is where
+    // the file sits in the port. Compared directly, this screen would never fire on a renaming
+    // port — §4.56, the failure `PortMap`'s `Substituted` was bitten by.
+    val b = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"),
+      packageRenames = Map("com.demo" -> "sge"),
+      inject = List(injectRoot("sge/Widget.scala")),
+      surface = List(redirect("com.other.A" -> "com.dep.A")))
+    assert(b.shipsInjectionAt("com.demo.Widget"), "upstream key, emitted file")
+    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
+      packageRenames = Map("com.demo" -> "sge"),
+      surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+  }
+
+  test("a base whose injection ROOT does not exist ships nothing — the run's own answer") {
+    val b = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"),
+      inject = List(java.nio.file.Path.of("/no/such/overrides")),
+      surface = List(redirect("com.other.A" -> "com.dep.A")))
+    assert(!b.shipsInjectionAt("com.demo.Widget"))
+    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
+      surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    assertEquals(dep.surfaceFold.refusals, Nil)
+  }
+
   test("a subject OUTSIDE every base's claim is allowed, and the claim cuts at a separator") {
     val b = PortManifest("base", governs = Set("com.demo"), surface = List(redirect("com.other.A" -> "com.dep.A")))
     // `com.demo` must not cover `com.demonstrate` (§4.56)

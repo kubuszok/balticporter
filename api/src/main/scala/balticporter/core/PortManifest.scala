@@ -260,6 +260,26 @@ final case class PortManifest(
   /** does this manifest claim `fqn`? False for an empty [[governs]] — no claim, not "everything". */
   def claims(fqn: String): Boolean = governs.exists(PortManifest.covers(fqn, _))
 
+  /** the EMITTED FQNs this module's own [[inject]] roots supply — one derivation, in
+    * [[Substitutions.injectedSources]], which the run's copy loop and `PortMap` read too.
+    *
+    * `lazy`, because it walks the filesystem and the fold asks it once per screened subject. Own
+    * injections only, exactly as [[inject]] is declared per module (§1.5). */
+  lazy val injectedFqns: Set[String] = Substitutions.injectedSources(inject).map(_._1).toSet
+
+  /** does this module — or anything in its policy chain — SHIP ready-made Scala at `fqn`?
+    *
+    * `fqn` is UPSTREAM (a manifest key) and an injection root holds the port's own namespace, so
+    * the question is asked at [[renamed]]: the two sides are in different namespaces and comparing
+    * them directly is the §4.56 failure `PortMap.Disposition.Substituted` was bitten by, where
+    * `Substituted` had never once been produced by a renaming port.
+    *
+    * The chain is included because "does something stand at that name in the shared output" is a
+    * question about the whole base layer, and exactly one module in it ships each replacement. */
+  def shipsInjectionAt(fqn: String): Boolean =
+    val at = renamed(fqn)
+    policyChain.exists(_.injectedFqns.contains(at))
+
 object PortManifest:
 
   /** `.` separates packages and the top-level type, `$` precedes a nested type, `#` a member — the

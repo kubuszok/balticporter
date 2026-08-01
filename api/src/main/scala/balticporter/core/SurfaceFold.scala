@@ -175,7 +175,7 @@ object SurfaceFold:
 
     SurfaceFold(phases.toList, absorbed, refusals.distinct.toList, ownKeys)
 
-  /** The `governs` screen: does a merged-in subject edit a BASE's shared surface?
+  /** The `governs` screen: does a subject this module adds edit a BASE's shared surface?
     *
     * The criterion is NOT a bare prefix — a base's claimed namespace holds types the base DROPS,
     * and re-pointing references at a replacement the dependent ships is the whole purpose of a
@@ -183,20 +183,36 @@ object SurfaceFold:
     * not account for: the base emits it mechanically, and a dependent quietly re-pointing every
     * reference to it produces two ports that each compile alone and cannot compile together.
     *
+    * '''A DROP is not the criterion; "nothing stands at that name" is.''' The two coincide only for
+    * a drop the base leaves EMPTY. A drop WITH an injection is the other half of §1.5's asymmetry:
+    * the base ships a replacement file at that FQN, and that replacement is shared surface exactly
+    * as an emitted class is — a dependent re-pointing its references at a type of its own would
+    * compile alone and could not compile against the base, which is the same failure the screen
+    * exists for and the one the drop test silently admitted. So the admission asks the base whether
+    * it SHIPS anything at the name (`PortManifest.shipsInjectionAt`, which translates the upstream
+    * key through the base's own renames — §4.56).
+    *
     * §4.56's cut applies to the claim, through `PortManifest.covers`.
     */
   private def intrusion(bases: List[PortManifest], phase: String, added: Set[String]): Option[Refusal] =
+    def admitted(b: PortManifest, subject: String): Boolean =
+      b.effectiveDropTypes.contains(subject) && !b.shipsInjectionAt(subject)
     val bad = for
       subject <- added.toList.sorted
       b       <- bases
-      if b.claims(subject) && !b.effectiveDropTypes.contains(subject)
-    yield (b.name, subject)
-    bad.headOption.map { (who, subject) =>
+      if b.claims(subject) && !admitted(b, subject)
+    yield (b.name, subject, b.effectiveDropTypes.contains(subject))
+    bad.headOption.map { (who, subject, dropped) =>
+      val why =
+        if dropped then
+          s"""which `$who` DROPS and REPLACES — its own `inject` supplies """ +
+            s""""${bases.find(_.name == who).map(_.renamed(subject)).getOrElse(subject)}", so the """ +
+            "replacement is shared surface exactly as an emitted class is"
+        else s"which `$who` emits mechanically"
       Refusal(phase, Cause.Intrusion,
         s"""this module's `$phase` adds "$subject", which is inside `$who`'s declared namespace and """ +
-          s"""which `$who` emits mechanically — merging it would let a dependent re-shape the SHARED """ +
-          "surface, so the two modules would each compile alone and could not compile together. A " +
-          "subject a base DROPS is a different case and is allowed: nothing stands at that name in " +
-          "the base's output" +
+          s"$why — it would let a dependent re-shape the SHARED surface, so the two modules would " +
+          "each compile alone and could not compile together. A subject a base drops and leaves " +
+          "EMPTY is the allowed case: nothing stands at that name in the base's output" +
           (if bad.size > 1 then s" (${bad.size} such subjects; the first is named)" else ""))
     }
