@@ -3397,6 +3397,146 @@ names by the same components — `def id`, `def id_=` are emitted exactly as bef
 is one note and its `key=`. The three deleted refusals moved no member at all, which is what "inert
 on the code" means and what the audit's prediction was right about.
 
+### 11.25 P6 — the opaque families: the GL layer is ONE family, measured and REVERTED
+
+Stage P's last enablement. One family was configured and measured end to end; it works, and it costs
+6 errors in two engine gaps that no manifest key can reach, so the step is reverted on the P1/P5
+precedent. Read the three parts in order — what the evidence actually supports, what the one family
+measured, and what was deliberately NOT measured and why.
+
+#### The GL evidence says ONE family, not twenty — and that is a measurement, not a scoping choice
+
+The plan carried "GLHandle 8, GLEnum 12, Pixels/Seconds" from the adoption-gap catalog (§11.9). Those
+are counts of what sge DECLARES. What matters for a transform is what sge APPLIES to a declaration
+libGDX declares, and re-read against the hand port the two are not the same set:
+
+| sge declares | applied to a ported declaration? | evidence |
+|---|---|---|
+| `TextureHandle` | **YES** | `GLTexture.scala:42` — `abstract class GLTexture(val glTarget: TextureTarget, private[graphics] var glHandle: TextureHandle)`, `def textureObjectHandle: TextureHandle` |
+| `ProgramHandle`, `ShaderHandle` | no | `ShaderProgram.scala:96,99,102` — `private var program: Int`, `vertexShaderHandle: Int`, `fragmentShaderHandle: Int` |
+| `FramebufferHandle`, `RenderbufferHandle` | no | `GLFrameBuffer.scala:73,79` — `depthStencilPackedBufferHandle: Int`, `colorBufferHandles: DynamicArray[Int]` |
+| `BufferHandle`, `UniformLocation` | no | `GLHandle.scala:125` — the family's real home is `GLHandleOps`, EXTENSION methods on `GL20` |
+| `AttributeLocation` | yes, but **INEXPRESSIBLE** — see below | `Mesh.scala:555` types libGDX's `void bind(ShaderProgram, int[], int[])` as `Array[AttributeLocation]` |
+
+So six of the eight handle types are a typed layer offered to CONSUMERS beside the raw one, and
+`GL20.scala:89` keeps `def glGenTexture(): Int` to prove it. The `GLEnum` family is a second shape
+again: sge types GL20's PARAMETERS (`glCreateShader(type: ShaderType)`) but its ~200 `GL_*` values
+are hand-authored named constants with no Java counterpart, and this mechanism retypes declarations
+— it does not mint a constant vocabulary. §11.9's sentence about that layer being ecosystem
+infrastructure is now a measurement rather than an impression.
+
+**Configuring those would have emitted a surface the reference port deliberately does not have.**
+That is the §1(c)-written-from-a-wish failure, and the reason the GL half of this step is one
+`OpaqueSpec` and not twenty.
+
+**And `AttributeLocation` is a MECHANISM limit rather than a policy choice, which is worth its own
+line because it is the one row an agent would otherwise re-attempt.** sge really does retype
+`Mesh#bind`'s `int[] locations` to `Array[AttributeLocation]` — a ported declaration — but the
+element of an array is not something this phase can name. `taggablePrim` tests a symbol's OWN info
+against the spec's primitive, and `int[]` is not `scala.Int`, so neither a hint nor a pure-move edge
+can reach the element; `FlowPropagation`'s edges are between symbols, and an array's element has no
+symbol of its own. An `OpaqueSpec` whose family lands inside a container is therefore inexpressible
+today — not refused, simply unreachable, with the hint reported as never-fired. That is a mechanism
+gap and not a `RuleScope` question, and it is NOT counted in the 6 errors below because the family
+was never configured.
+
+#### The one family WORKS, and costs 6 errors in two engine gaps
+
+The config, verbatim, in `LibgdxPolicy` — appended to `mainPhases` between `disposableRedirect` and
+`nullability`:
+
+```scala
+def textureHandle: PrimitiveToOpaqueTransform =
+  new PrimitiveToOpaqueTransform(OpaqueSpec(
+    fqn        = "com.badlogic.gdx.graphics.TextureHandle",
+    hints      = _.fullName == "com.badlogic.gdx.graphics.GLTexture#glHandle",
+    underlying = OpaqueSpec.Primitive.Int,
+    scope      = RuleScope.Everywhere(except = Set(
+      "com.badlogic.gdx.graphics.GL20", "com.badlogic.gdx.graphics.GL30",
+      "com.badlogic.gdx.graphics.GL31", "com.badlogic.gdx.graphics.GL32")),
+  ))
+```
+
+| | measured |
+|---|---|
+| seeded | **1** — the field, the only hint |
+| propagated | the ctor parameter, `getTextureObjectHandle`'s return, `FrameBufferCubemap`'s local; **2 `RetypedSignature` decisions**, which is the declaration-level count the phase records (parameters and locals are deliberately not rows) |
+| coerced at the boundary | **27** = 14 `TextureHandle(...)` wraps + 13 `TextureHandle.unwrap(...)` |
+| members changed | **34** |
+| every check count, all 21 | **identical** |
+| scalac errors | **0 -> 6**, all `EngineGap`, none `Approx`/`Unmapped` |
+
+The emitted code is what sge emits, line for line: `protected[graphics] var glHandle:
+sge.graphics.TextureHandle.T`, `this(glTarget, TextureHandle(sge.Gdx.gl.glGenTexture()))`,
+`glBindTexture(this.glTarget, TextureHandle.unwrap(this.glHandle))`, `glHandle =
+TextureHandle(0)`. The **fence is the load-bearing half**, and the reason is structural rather than
+measured: `FlowPropagation.refSym` admits a NULLARY CALL, so `glHandle = Gdx.gl.glGenTexture()` is a
+real flow edge to `GL20#glGenTexture`, whose `int` return makes it eligible — an unfenced run would
+therefore grow the seed set into the GL interface and retype it, which sge does not do
+(`GL20.scala:89`). The unfenced variant was NOT run, so treat that as a derivation from the edge
+rule and not as a number. What the fence buys IS measured: with the four GL interfaces scoped out,
+every one of those crossings is a counted coercion instead, and they are 27 of them.
+
+The 6 errors are `ENGINE-LIMITS.md` **O1** (3 — a coercion reads the boundary term's own type, so a
+seed reaching it through an `if` is invisible) and **O2** (3 — a retyped PARAMETER leaves its
+method's `MethodType` stale, and the ctor funnel correctly reads the signature). **Neither has a
+policy exit**, and that is the load-bearing negative: O1's errors are at CALLERS of a retyped member,
+so no `RuleScope` can un-retype the callee; O2's are in a SUBCLASS of the seeded class, so scoping
+the subclass out cannot change the parent's formal. The family is all-or-nothing.
+
+**So P6 is measured and REVERTED, on the P1/P5 precedent.** Reverting restores the port
+byte-for-byte: `members.tsv` **0 changed**, errors 0, all 21 check counts identical.
+
+#### Two interactions settled, both negative, both worth the words
+
+- **P3's `@Null` union floor does not meet this.** `NullabilityTransform` REFUSES a bare primitive
+  (`Issue.PrimitiveType`) and this phase seeds ONLY bare primitives (`taggablePrim`), so the two
+  domains are disjoint by construction and no `TextureHandle.T | Null` can arise. Confirmed
+  empirically: `nullability-boundary` **160 -> 160** with the family enabled. There is no ordering
+  hazard behind that either — the union floor would have to reach an `int` for one to exist, and
+  `NullabilityTransform`'s own note records that no bare-primitive annotation exists in the corpus.
+- **No dependent CONSTRUCTS a `primitive->opaque` phase** (the §1.5 instance-count question, asked
+  before writing the policy — the only corpus construction site is `demo/OpaqueDemo`, which is not a
+  port). One instance, inherited through `extendedBy`; nothing to merge, and D9's shape is not in
+  play. The inherited blast would be small: of the corpus dependents only gdx-gltf touches the
+  retyped surface at all, at one TEST file (`gltf/test/…/SharedTextureTest.java`); vfx, ashley,
+  anim8 and screens reference `getTextureObjectHandle` nowhere.
+
+#### `Pixels` and `Seconds` are NOT measured, and the reason is not that they lack evidence
+
+Stated plainly because the omission is the kind a later reader would otherwise mistake for a
+verdict. **Both families have broad, real evidence** — far broader than `TextureHandle`'s. `Pixels`
+appears at 171 annotation sites across sge, on ported declarations including `Input#getX`,
+`InputProcessor#touchDown` and `ApplicationListener#resize`; `Seconds` types every
+`act(float delta)` in the scene2d tree (`Actor`, `Stage`, `Group`, `Action`) plus `Screen#render`
+and `Graphics#deltaTime`. (The 171 is a count of SITES, not of ported declarations — the per-family
+seed harvest is part of the task that configures them.) Neither is a consumer-side layer; both are
+exactly the shape this mechanism exists for.
+
+They were not configured because **measuring them before O1 and O2 are closed adds no information
+and one of them is strictly worse**. Both gaps are generic, not `TextureHandle`-specific: O1 fires
+wherever a seed reaches a boundary through a conditional, and O2 fires wherever a seed is a
+PARAMETER — which is what `Pixels` and `Seconds` are almost exclusively, against
+`TextureHandle`'s one field. A run would reproduce the same two diagnoses at a larger multiple and
+buy nothing the 6 errors have not already bought. §5's "change one thing, then measure" cuts the
+same way: two families in one commit could not be told apart.
+
+So the honest state is **`Pixels`/`Seconds`: evidenced, unconfigured, unmeasured** — the next task
+after the two gaps close, and the one that will say what the mechanism costs at scale.
+
+#### Do NOT retry
+
+- **Do not configure `GLEnum`, `ProgramHandle`/`ShaderHandle`/`FramebufferHandle`/
+  `RenderbufferHandle`/`BufferHandle`, or `UniformLocation` on libGDX.** The reference port applies
+  none of them to a ported declaration; the table above is the evidence, and re-deriving it costs a
+  session. This does NOT extend to `Pixels`/`Seconds`, which are a different case entirely — see
+  above.
+- **Do not re-attempt `TextureHandle` before O1 and O2 are closed.** The policy is correct as
+  written and reproduces 6 errors exactly; the `OpaqueSpec` is recorded verbatim above, so the
+  replay is a paste against `ENGINE-LIMITS.md` §13's two entries, not a redesign.
+- **Do not reach for a `RuleScope` to clear the 6.** Both gaps are outside every scope's reach, for
+  the two reasons given above.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.

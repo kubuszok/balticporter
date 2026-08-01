@@ -3609,3 +3609,141 @@ nothing currently counts.
 *Fix kind: (a) engine, both faces — `ContextNeed` (the usage match, `anonHome`, and the deferral's
 trigger). Neither is reachable from any manifest key, and P5 stays blocked on them: the enablement
 is otherwise complete and reproduces every number `PROGRESS.md` §11.12 records.*
+
+## 13. Retyping a PRIMITIVE to an opaque domain type
+
+All three entries below come from the SAME delivery — Stage P6's attempt to enable an opaque family
+on libGDX core (`PROGRESS.md` §11.25) — and all three are in `PrimitiveToOpaqueTransform` itself,
+not in the policy that configured it. Read O1 and O2 together: they are two halves of "a retyping
+phase owes more than the declaration it was pointed at", and neither is reachable from any manifest
+key, so a port that hits either has no exit but the engine. O3 is a third shape — a family the spec
+cannot ask for at all.
+
+The delivery O1 and O2 blocked was otherwise complete and correct. The family emits exactly what the
+reference hand port emits (`GLTexture.glHandle: TextureHandle.T`, the mint wrapped at
+`TextureHandle(gl.glGenTexture())`, every GL-interface crossing unwrapped), every one of the 21
+check counts is unchanged, and the whole cost is **6 scalac errors, 3 from each of O1 and O2**.
+
+### O1. A coercion reads the boundary TERM's own type, so a seed reaching it through an `if` is INVISIBLE — 3 errors
+
+OPEN. (a) engine, in the phase's coercion. Measured on libGDX core: `TextureDescriptor#hashCode`
+(1) and `#compareTo` (2).
+
+The phase retypes seed REFERENCES so boundary detection reads a consistent `tpe` —
+`transformIdent`, `transformSelect` and `transformApply` each rewrite the node's type to the opaque
+one. Every coercion site then tests that type:
+
+```scala
+private def isOpaque(t: Term): Boolean = headSym(t.tpe).contains(opaqueSym)
+private def unwrapIfOpaque(e: Term): Term = if isOpaque(e) then unwrapCall(e) else e
+```
+
+which is exact for a BARE reference and blind to every term that CARRIES one. A conditional is the
+shape the corpus actually has:
+
+```java
+result = 811 * result + (texture == null ? 0 : texture.getTextureObjectHandle());   // E134
+int h1 =                (texture == null ? 0 : texture.getTextureObjectHandle());   // E007
+```
+
+`getTextureObjectHandle` is a seed method, so the `Apply` node is correctly typed
+`TextureHandle.T` — but the enclosing `Tree.If` is not, because nothing retypes a composite node
+from its branches. So `unwrapIfOpaque` sees an `If` whose `tpe` is still `Int`, inserts nothing, and
+the `+` has no overload for `Long + TextureHandle.T`. The `val h1: scala.Int = <If>` face is the
+same defect in the other direction: `h1` is correctly NOT a seed (an `If` is not a pure move, so
+`FlowPropagation` builds no edge to it and the declaration rightly keeps `Int`) — and that is
+precisely a boundary, which is exactly where a coercion was owed and none was inserted.
+
+The failure direction is the SAFE one `FlowPropagation`'s own doc argues for — a missed edge is a
+compile error at the site, never a silent retype — so this is a gap to close, not a design to
+revisit. What the fix has to decide is which of two it does: push the coercion into each branch of
+the carrying node, or type the carrying node from its branches and coerce the whole. The first is
+local and leaves `h1: Int` reading as java wrote it; the second is fewer sites and moves composite
+node types the populator set. Neither has been measured.
+
+*Fix kind: (a) engine — `PrimitiveToOpaqueTransform`'s coercion. No `RuleScope` can reach it: the
+errors are at CALLERS of a retyped member, and scoping the caller out cannot un-retype the callee.*
+
+### O2. A retyped PARAMETER leaves its METHOD's signature stale — and the ctor funnel reads the signature — 3 errors
+
+OPEN. (a) engine, in the phase's retype loop. Measured on libGDX core: `Texture`'s synthesised
+primary (1) plus the two overload resolutions that then fail (2).
+
+The retype loop rewrites two things and no third:
+
+```scala
+case r if isPrim(r) => s.copy(info = opaqueRef)                       // a VALUE symbol
+case TypeRepr.MethodType(ps, ret, im) if isPrim(ret) =>
+  s.copy(info = TypeRepr.MethodType(ps, opaqueRef, im))               // a method's RETURN
+```
+
+`ps` is never touched. So when a seed is a PARAMETER, the parameter's own symbol carries the opaque
+type while its enclosing method's `MethodType` still lists the primitive — one declaration with two
+types, and which one a consumer sees depends on whether it reads the `ValDef` or the signature.
+
+The emitter reads the `ValDef`, so the declaration renders correctly:
+
+```scala
+abstract class GLTexture(glTarget$p: scala.Int, glHandle$p: sge.graphics.TextureHandle.T)
+```
+
+The constructor funnel reads the SIGNATURE — and its comment says why that is the right thing to
+do, which is what makes this the phase's defect and not the funnel's:
+
+```scala
+// parameter TYPES from the parent constructor's own signature, never from one call's
+// arguments: an argument is an expression whose type may be narrower than the formal.
+val formals = program.symbolOf(targets.head).map(_.info).collect {
+  case TypeRepr.MethodType(ps, _, _) => ps.map(_._2) … }
+```
+
+so a subclass whose primary is SYNTHESISED (`DESIGN.md` §8.2) types its `sup$k` slots from the
+stale list and emits a parent call that cannot type-check:
+
+```scala
+class Texture protected (sup$0: scala.Int, sup$1: scala.Int) extends sge.graphics.GLTexture(sup$0, sup$1)
+//                                         ^^^^^^^^^^^^^^^^ the parent's formal is TextureHandle.T
+```
+
+The two E134s follow from the same slot: every `def this(...) = this(...)` delegation is resolved
+against a primary whose second slot has the wrong type.
+
+**The funnel is the consumer that MEASURED it, not the only one.** Anything else deriving from a
+method's signature rather than its `ValDef`s reads the same stale list — a descriptor, and the
+published surface a dependent compiles against (`DESIGN.md` §8.3). Nothing in this run reported a
+disagreement, but the run never got past the base's own compile, so treat the published-surface
+face as UNMEASURED rather than clean, and re-measure it with the fix.
+
+*Fix kind: (a) engine — rewrite the enclosing `MethodType`'s parameter list wherever a parameter
+symbol is retyped, in the same pass. The general rule it is an instance of: a phase that retypes a
+DECLARATION owes every derived signature that mentions it, because the TIR stores a parameter's
+type twice and only one of the two is what a given consumer reads.*
+
+### O3. An opaque family that lands on an ARRAY ELEMENT is INEXPRESSIBLE — not refused, unreachable
+
+OPEN. (a) engine, in the phase's eligibility test. Found while harvesting P6's policy; not counted
+in the 6 errors above, because the family it blocks was never configurable in the first place.
+
+An `OpaqueSpec` names a primitive and the phase seeds symbols whose OWN info is that primitive:
+
+```scala
+private def taggablePrim(info: TypeRepr): Boolean = info match
+  case r if isPrim(r)                 => true
+  case TypeRepr.MethodType(_, ret, _) => isPrim(ret)
+  case _                              => false
+```
+
+`int[]` is not `scala.Int`, so a declaration whose element is the domain value is invisible to
+seeding — and to propagation as well, because `FlowPropagation`'s edges run between SYMBOLS and an
+array's element has none. The measured case is libGDX's `void bind(ShaderProgram, int[] locations,
+int[] instanceLocations)`, which the reference hand port types `Array[AttributeLocation]`: a real
+retype of a real ported declaration that no `OpaqueSpec` can currently ask for.
+
+The failure is quiet in the way that matters — a hint naming such a declaration does not throw and
+does not refuse, it simply matches nothing and is reported as never-fired, which reads identically
+to a typo. Any fix has to decide how far the element type travels (an `Array[T]` element, a
+collection's type argument, both) and what a coercion at an array boundary even is — a per-element
+map is not a wrap — so this is a design question, not an oversight to patch.
+
+*Fix kind: (a) engine — `taggablePrim` plus whatever `FlowPropagation` would need to carry an edge
+into a container's element. No policy exit: the spec has no vocabulary for "the element of".*
