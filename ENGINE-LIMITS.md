@@ -541,7 +541,15 @@ java-`private` and assigned by one constructor — `val`-eligible by every test 
 two mocks replay `super(updates)` as `this.updates = updates`: **`E052 Reassignment to val` × 4**, in
 the TEST source set, on a run whose every check count was unchanged. The `val`/`var` decision
 therefore runs LAST, after `replays` is built, and adds the replayed writes to the program's.
-Pinned by `SyntheticPrimarySlotsSpec`.
+
+**Both halves are pinned by `SyntheticPrimarySlotsSpec`, and one of them was not.** The REPLAY half
+has been pinned since it was measured (`MockA`, whose two replays force `updates` to a `var`); the
+`final || private` NARROWING was pinned by no fixture at all — reverting the guard to `true` left the
+whole suite green, and the only thing that would have said so is the gltf lane, three lanes
+downstream of the change. `Loose` is the negative it needed: a field java declared package-private
+and non-final, written exactly once in the leading run, which is `val`-eligible by the write count
+and by nothing else, and which must still bind `var loose: scala.Int = f$loose`. A guard nothing
+fails against is a guard the next agent deletes.
 
 *Fix kind: (a).*
 

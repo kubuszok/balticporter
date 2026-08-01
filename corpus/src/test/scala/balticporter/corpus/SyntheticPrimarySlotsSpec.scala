@@ -112,6 +112,15 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
       |  Clean(int k) { super(null, k); this.n = k; this.tag = "x"; }
       |  void bump() { this.spare = 9; }
       |}
+      |/** C1.6's NEGATIVE HALF: `loose` is package-private and NOT final, and the whole program
+      |  * writes it exactly once — in the leading run the funnel hoists. It is `val`-eligible by the
+      |  * WRITE COUNT alone, and it must still bind as a `var`, because the count is over THIS run's
+      |  * program and a dependent module compiled against the emitted base is not in it. */
+      |class Loose extends Widened {
+      |  int loose;
+      |  Loose(String s) { super(s, 1); this.loose = 1; }
+      |  Loose(int k)    { super(null, k); this.loose = k; }
+      |}
       |/** ORDER-SAFETY: `hashed`'s value is a METHOD CALL, which a delegation argument list would
       |  * evaluate before `super(...)` and before the instance initialisers — java evaluated it after
       |  * both. Not a slot; the assignment stays where java put it. */
@@ -155,6 +164,23 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
 
   test("a root that does not assign a slot supplies the java DEFAULT at that slot") {
     assert(clue(fout).contains("this(null, k, k, \"x\", 0)"))
+  }
+
+  test("A1 NEGATIVE — a package-private, non-final slot stays a `var` whatever the count says") {
+    // The other half of `ENGINE-LIMITS.md` C1.6, and the half no other fixture had: `loose` is
+    // written ONCE in the whole program, from a parameter, in the leading run — `val`-eligible by
+    // the write count and by nothing else. The count is over THIS run's program, so a dependent
+    // module compiled against the emitted base can assign it and the `val` is `E052 Reassignment to
+    // val` in somebody else's compile (gdx-gltf 7 -> 23, every one on a libGDX core field). The
+    // narrowing is a JAVA fact — `final` cannot be written after construction at all, `private`
+    // cannot be written from outside this compilation — and neither can drift.
+    //
+    // Reverting the guard to `true` leaves every count in the suite unchanged and every other
+    // assertion in this file passing; only this one moves, and only three lanes downstream would
+    // otherwise have said so.
+    assert(clue(fout).contains("f$loose"), "the slot itself must be unaffected — this is not a slot question")
+    assert(!fout.contains("val loose:"))
+    assert(fout.contains("var loose: scala.Int = f$loose"))
   }
 
   test("ORDER-SAFETY — a value that is not order-blind is NOT a slot, and nothing behind it is") {
