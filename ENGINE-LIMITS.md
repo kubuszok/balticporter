@@ -3426,3 +3426,60 @@ class attachment against 2,497 in 324 and 162 under method**, `frozen-component`
 class mode changes no method signature at all.
 
 *Fix kind: (a) engine — the constructor region, not the threading phase.*
+
+### CT5. A class the funnel neither PROMOTES nor SYNTHESISES has nowhere to put the context clause — **OPEN; 57 errors, and it is CT4's fourth cause**
+
+**Title, for renumbering: "an implicit nilary primary carries no using clause".** OPEN. (a) engine.
+
+CT4 closed the clause for the two primaries the funnel BUILDS — a promoted java constructor
+(`plan0` reads `givenClauses` off it) and a synthesised one (`rootGivens.head`). It says nothing
+about the third outcome, which is the most common one in real code: **`Plan.none` — no promotion,
+no synthesis — where the emitted class relies on Scala's own implicit nilary primary and every java
+constructor becomes a `def this`.** There is no primary in the plan, so there is no parameter list
+to append a group to, and the emitter has no branch that writes `class X(using T)` for a class whose
+primary it did not construct.
+
+The threading phase does its half correctly: the clause lands on every `<init>`, so every secondary
+reads `def this(…)(using T)`. What is emitted is a class whose SECONDARIES take the context and
+whose own body cannot see it:
+
+```scala
+class IndexBufferObject extends sge.graphics.glutils.IndexData {          // <- no clause
+  def this(isStatic: Boolean, maxIndices: Int)(using sge.Sge) = { … }     // <- clause here
+  def bind(): Unit = summon[sge.Sge].graphics.gl20.glBindBuffer(…)        // <- no given in scope
+}
+```
+
+Measured on the enablement of `globals-to-implicits` over one corpus library, `attach = "class"`,
+**57 scalac errors from 188 threaded classes** — 19 top-level classes plus at least 3 nested ones
+lost the clause. Three shapes, one cause:
+
+- **55 × `E172` "No given … is in scope"** — every `summon` in such a class's body, every field
+  initialiser that constructs a threaded type, and every private helper the class calls. `Mesh` 14,
+  `IndexBufferObjectSubData` 11, `IndexBufferObject` 9, `TextField` 7, `VertexBufferObject` 5.
+- **2 × `E051` "Ambiguous overload"** — a java NILARY constructor became `def this()(using T)`
+  beside Scala's implicit `()` primary, so a subclass's argument-free `extends` sees two applicable
+  alternatives (`BitmapFont` / `DistanceFieldFont`). This is CT4's third cause reappearing from the
+  other side: CT4 removed it for a promoted primary by making the promotion possible again, and it
+  is still live wherever no promotion happens.
+- **the knock-on nobody counts**: a threaded class that has no body `summon` and no threaded
+  construction in its initialisers loses its threading SILENTLY — it compiles, and the decision row
+  and the porter note both claim a clause the emitted file does not carry.
+
+**Do not work around it in the threading phase** — CT4's standing rule, and this is the same
+module. And do not reach for the obvious one-line emitter fix either: giving such a class
+`class X(using T)` also requires each secondary to delegate `this()` FIRST, and the roots of a
+`Plan.none` class are exactly the constructors whose `super(args)` is already a counted
+`OmissionCheck` finding because Scala has nowhere to put it. Making the primary real for this shape
+IS the synthesis, widened to classes where the parent-constructor agreement the synthesis requires
+(`targets.sizeIs == 1`, `arities.sizeIs == 1`, `formals.sizeIs == arities.head`) does not hold — a
+`DESIGN.md` §8.2 change with its own measurement and its own re-baseline of every port, since a new
+primary shape moves emitted text with no phase enabled at all.
+
+**What this blocks, and what it does not.** It is the ONLY thing standing between the corpus and the
+globals→context enablement: everything else in that run reproduced its dry run exactly (275 threaded
+declarations, 177 files, 17 seams, 0 refusals, 0 `frozen-component`), the write story landed
+(`GLProfiler`'s ten global rebindings compile through the mapped service path), and the dependent
+that reads no holder moved 0 members. See `PROGRESS.md` §11.12.
+
+*Fix kind: (a) engine — `CtorFunnel`, the `Plan.none` outcome. Not reachable from any manifest key.*

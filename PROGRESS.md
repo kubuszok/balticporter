@@ -2301,6 +2301,61 @@ The dry-run table above reproduces byte for byte after the fix (275 / 177 / 17 a
 both). Class attachment is still DEFAULT-OFF and no port declares a holder, so every lane is 0
 members changed.
 
+**P5 — the ENABLEMENT was attempted, measured and REVERTED. It is blocked on one engine gap, and
+everything else about it landed.** The base manifest declared the holder (`com.badlogic.gdx.Gdx`,
+injected `sge.Sge`, the 11-field path map with `gl*` routed through `graphics`, `attach = "class"`,
+`reader = "summon"`, `boundary = "refuse"`, no `promoteToClass`), with four `Graphics#gl2x ->
+getGL2x/setGL2x` bean pairs beside it — a path segment is an identifier, so `graphics.gl20` can only
+land on a member of that name. The run is the dry run reproduced at LIVE scale, beside the other
+nine surface phases:
+
+| | dry run (§11.12) | LIVE, whole pipeline |
+|---|---|---|
+| threaded declarations (`RetypedSignature`) | 275 | **275** — 188 classes + 87 methods |
+| distinct java files threaded | 177 | **177** |
+| seams, total | 17 | **17** — 13 `captured-context`, 4 `residual-global-read`, **0** `frozen-component` |
+| refused components (`policy` findings) | 0 | **0** — `policy` stayed at its 2-row noise floor |
+| residual holder: fields dropped of 11 | 9 (`app`/`graphics` keep a reader) | **9**, the same two |
+| `DeferredInit` sites | 0 | **0** |
+| emitted `(using sge.Sge)` clauses | 578 | **575** across 176 files |
+
+Four things it settles, none of which the dry run could:
+
+- **The 1.6× pricing holds.** 177 threaded files against the 100 files that name `Gdx.` upstream is
+  **1.77×**, against the reference hand port's measured 1.6× and the plan's ≈1.6×. Method
+  attachment's 3.3× is still the number that is wrong.
+- **`GLProfiler` needs no drop and no §1(c) rule — CONFIRMED by compiling it.** The funnel promoted
+  its primary and carried the clause (`class GLProfiler(graphics$p: sge.Graphics)(using sge.Sge)`),
+  its ten global rebindings rewrote along the mapped path into the service's own setters, and its
+  five re-sync lines became self-assignments — which is the reference hand port's conclusion (it
+  deleted them by hand and recorded why) reached mechanically. 0 errors in that file.
+- **D2 holds, which was the gate.** The dependent that reads no holder is **0 members changed and
+  `context-seam` 0** on both its source sets; nothing the phase decided about the base's units
+  reached the dependent's artifacts.
+- **The test lane's first zero is confirmed**: `gdx/test` contains 0 `Gdx.*` references upstream.
+
+**What blocked it: 57 scalac errors, ONE cause, and it is an engine gap no manifest key reaches.**
+`ENGINE-LIMITS.md` **CT5** — a class the funnel neither promotes nor synthesises keeps Scala's
+implicit nilary primary, which carries no `using` clause, so the clause reaches only the `def this`
+secondaries and the class body has no given in scope. 19 top-level classes plus at least 3 nested
+ones of the 188 threaded: `Mesh` 14 errors, `IndexBufferObjectSubData` 11, `IndexBufferObject` 9,
+`TextField` 7, `VertexBufferObject` 5, the three `GLFrameBuffer` builders, the four
+`ScalingViewport` descendants, the five tiled renderers, `Table`, `TextArea`, `Pixmap`,
+`ParticleEffectActor`, and `BitmapFont`/`DistanceFieldFont` as the two `E051` ambiguities. **55 of
+the 57 are that cause.** The other two are the port's own boundary, not the engine's, and both have
+a policy answer waiting: `TextField#DEFAULT_ONSCREEN_KEYBOARD` is one of the four counted
+`residual-global-read` seams materialising as an error (a static field initialiser constructing a
+now-threaded type — its exit is a `sites` entry), and the injected `sge/utils/Pools.scala` registers
+factories for types whose constructors now take a context, which is a hand-written shim this port
+owns.
+
+**Do NOT retry the enablement before CT5 is closed**, and do not try to buy it with policy. The two
+exits that look available are both wrong: scoping the 22 classes out is a hand-maintained list
+derived from an emitter internal (it rots the first time upstream adds a constructor) and it leaves
+the globals in exactly the heaviest `Gdx.gl20` readers; `attach = "method"` is the mode §11.12
+measured at 3.3× with 32 frozen components. The revert is byte-for-byte — libgdx-core back to 0
+errors and **0 members changed**, every check count identical, `context-seam` gone.
+
 ### 11.13 D5j — the demand-derived JDK surface, as measured
 
 DESIGN.md §8.9, landed as three commits. `ExternalUsage` (step 1) is the enumeration
