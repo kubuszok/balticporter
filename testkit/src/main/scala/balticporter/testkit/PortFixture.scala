@@ -44,6 +44,13 @@ object PortFixture:
     val before = SpoonTir.fromSource(java)
     Ported(before, Pipeline.run(before, phases.toList), phases.toList)
 
+  /** the same over SEVERAL compilation units, each `fileName -> code`. A Java file declares exactly
+    * one package, so every rule about a PACKAGE BOUNDARY — default access, `protected`, an override
+    * that crosses one — is untestable from a single snippet. */
+  def portAll(sources: List[(String, String)], phases: Phase*): Ported =
+    val before = SpoonTir.fromSources(sources)
+    Ported(before, Pipeline.run(before, phases.toList), phases.toList)
+
   /** parse only — for tests about the FRONTEND rather than about a phase. */
   def parse(java: String): Program = SpoonTir.fromSource(java)
 
@@ -56,6 +63,8 @@ object PortFixture:
 abstract class PortSuite extends munit.FunSuite:
 
   def port(java: String, phases: Phase*): Ported = PortFixture.port(java, phases*)
+
+  def portAll(sources: List[(String, String)], phases: Phase*): Ported = PortFixture.portAll(sources, phases*)
 
   /** the emitted Scala contains `snippet` — with the WHOLE output in the failure message, because
     * "expected substring not found" without the text is the single most expensive failure mode

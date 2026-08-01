@@ -43,26 +43,26 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
 
   private val src =
     """package demo;
-      |class Base { Base(int n, boolean b) {} }
+      |public class Base { Base(int n, boolean b) {} }
       |/** COLLAPSE — `Coll(int,boolean)` already HAS the slot signature and passes its parameters
       |  * straight through, so it is promoted and nothing is synthesised. */
-      |class Coll extends Base {
+      |public class Coll extends Base {
       |  Coll(int n, boolean b) { super(n, b); }
       |  Coll(int n)            { super(n, false); }
       |}
       |/** MARKER, by ERASURE — the same signature, but the constructor COMPUTES its super arguments,
       |  * so there is no pass-through to promote and the two declarations cannot coexist. */
-      |class Marked extends Base {
+      |public class Marked extends Base {
       |  Marked(int n, boolean b) { super(n + 1, b); }
       |  Marked(int n)            { super(n, false); }
       |}
-      |class BFont { }
-      |class DFont extends BFont { }
-      |class BCache { BCache(BFont f, boolean b) {} }
+      |public class BFont { }
+      |public class DFont extends BFont { }
+      |public class BCache { BCache(BFont f, boolean b) {} }
       |/** MARKER, by APPLICABILITY — C8's shape. No signature EQUALS the slots `(BFont, boolean)`,
       |  * but `DCache(DFont, boolean)` is applicable to `this(f, b)` and strictly more specific, so
       |  * without the marker it delegates to ITSELF and the other root resolves to it. */
-      |class DCache extends BCache {
+      |public class DCache extends BCache {
       |  DCache(DFont f)            { super(f, true); }
       |  DCache(DFont f, boolean b) { super(f, b); }
       |}
@@ -72,7 +72,7 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
   private val out     = new TirEmitter(program).emit
 
   test("COLLAPSE — a pass-through root whose parameters ARE the slots is promoted, not disambiguated") {
-    assert(clue(out).contains("class Coll(n$p$: scala.Int, b$p$: scala.Boolean) extends demo.Base(n$p$, b$p$)"))
+    assert(clue(out).contains("class Coll private[demo] (n$p$: scala.Int, b$p$: scala.Boolean) extends demo.Base(n$p$, b$p$)"))
     // no synthetic member and no marker: this class is byte-for-byte what it was before the
     // disambiguator existed, which is the whole reason collapse is tried first
     assert(!out.contains("class Coll protected ("))
@@ -133,8 +133,8 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
   test("COLLAPSE DECLINED — a pass-through root whose body would ESCAPE gets the marker instead") {
     val escaping =
       """package demo3;
-        |class EBase { EBase(int n, boolean b) {} }
-        |class Escaping extends EBase {
+        |public class EBase { EBase(int n, boolean b) {} }
+        |public class Escaping extends EBase {
         |  static int count;
         |  static void bump() { count++; }
         |  Escaping(int n, boolean b) { super(n, b); bump(); }
@@ -158,8 +158,8 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
   test("the marker NAME avoids what the class already declares") {
     val clash =
       """package demo2;
-        |class B2 { B2(int n, boolean b) {} }
-        |class M2 extends B2 {
+        |public class B2 { B2(int n, boolean b) {} }
+        |public class M2 extends B2 {
         |  static class Funnel { }
         |  M2(int n, boolean b) { super(n + 1, b); }
         |  M2(int n)            { super(n, false); }

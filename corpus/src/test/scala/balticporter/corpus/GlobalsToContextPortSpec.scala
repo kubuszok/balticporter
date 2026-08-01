@@ -26,36 +26,36 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
       |  public static Files files;
       |}
       |
-      |class Graphics { public GL gl20; public int getWidth() { return 0; } }
-      |class GL { public void clear() {} }
-      |class Files { public String read(String n) { return n; } }
+      |public class Graphics { public GL gl20; public int getWidth() { return 0; } }
+      |public class GL { public void clear() {} }
+      |public class Files { public String read(String n) { return n; } }
       |
-      |interface Renderer { void render(); }
+      |public interface Renderer { void render(); }
       |
-      |class Basic implements Renderer {
+      |public class Basic implements Renderer {
       |  public void render() { Gdx.graphics.gl20.clear(); }
       |}
       |
-      |class Quiet implements Renderer {
+      |public class Quiet implements Renderer {
       |  public void render() { }
       |}
       |
-      |class Loud extends Basic {
+      |public class Loud extends Basic {
       |  public void render() { super.render(); }
       |}
       |
-      |class Scene {
+      |public class Scene {
       |  int w = Gdx.graphics.getWidth();
       |  void draw(Renderer r) { r.render(); }
       |}
       |
-      |class Boot {
+      |public class Boot {
       |  static String banner;
       |  static { banner = Gdx.files.read("banner"); }
       |  static String get() { return banner; }
       |}
       |
-      |class Listeners {
+      |public class Listeners {
       |  void install() {
       |    Runnable x = new Runnable() { public void run() { Gdx.graphics.gl20.clear(); } };
       |    x.run();
@@ -77,16 +77,16 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   private val synthSrc =
     """package demo;
       |public class Gdx { public static Graphics graphics; }
-      |class Graphics { public int getWidth() { return 0; } }
-      |class Widget {
+      |public class Graphics { public int getWidth() { return 0; } }
+      |public class Widget {
       |  int w; boolean vis;
       |  Widget(int w, boolean vis) { this.w = w; this.vis = vis; }
       |}
-      |class Panel extends Widget {
+      |public class Panel extends Widget {
       |  Panel()      { super(Gdx.graphics.getWidth(), true); }
       |  Panel(int w) { super(w, false); }
       |}
-      |class Deck extends Panel { }
+      |public class Deck extends Panel { }
       |""".stripMargin
 
   private def ported(h: ContextHolder): (GlobalsToImplicitsTransform, Program, DecisionLog, String) =
@@ -233,9 +233,9 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   test("a component anchored on an UNPARSED parent is refused whole and counted") {
     val anchored =
       """package demo;
-        |class Gdx { public static Graphics graphics; }
-        |class Graphics { public int getWidth() { return 0; } }
-        |class Widget extends javax.swing.JComponent {
+        |public class Gdx { public static Graphics graphics; }
+        |public class Graphics { public int getWidth() { return 0; } }
+        |public class Widget extends javax.swing.JComponent {
         |  public void paint(java.awt.Graphics g) { int w = Gdx.graphics.getWidth(); }
         |}
         |""".stripMargin
@@ -307,7 +307,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     assert(clue(c).contains("def this()(using demo.Ctx)"), c)
     assert(clue(c).contains("def this(w: scala.Int)(using demo.Ctx)"), c)
     // and the parent, which reads nothing, is untouched — the closure threads what needs it
-    assert(clue(c).contains("class Widget(") || clue(c).contains("class Widget protected ("), c)
+    assert(clue(c).contains("class Widget private[demo] (") || clue(c).contains("class Widget protected ("), c)
     assert(!c.contains("class Widget(using"), c)
     // a SUBCLASS reaches the synthesised primary's class argument-free, so it needs the clause too
     assert(clue(c).contains("class Deck(using demo.Ctx)"), c)
@@ -316,10 +316,10 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   test("a TRAIT whose body needs the context is refused unless `promoteToClass` names it") {
     val traitSrc =
       """package demo;
-        |class Gdx { public static Graphics graphics; }
-        |class Graphics { public int getWidth() { return 0; } }
-        |interface Sized { default int width() { return Gdx.graphics.getWidth(); } }
-        |class Box implements Sized { }
+        |public class Gdx { public static Graphics graphics; }
+        |public class Graphics { public int getWidth() { return 0; } }
+        |public interface Sized { default int width() { return Gdx.graphics.getWidth(); } }
+        |public class Box implements Sized { }
         |""".stripMargin
     def run(promote: Set[String]) =
       val ph = new GlobalsToImplicitsTransform(List(ContextHolder(

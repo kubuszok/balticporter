@@ -1162,36 +1162,49 @@ can today.
 
 ### T12. Java `protected` is DROPPED, and accessibility is an input to OVERLOAD RESOLUTION — 1 error
 
-**Title, for renumbering: "java protected is dropped, and accessibility is an input to overload
-resolution".** This entry is about MEMBER VISIBILITY, whose only current home is this section.
+CLOSED by `DESIGN.md` §8.7. The entry stays because the two facts it MEASURED are the constraints
+that design is built on, and because its history is the cheapest available lesson in what an error
+burn-down costs.
 
-The emitter renders no visibility modifier for a Java `protected` member: libGDX core's Java has
-**867** `protected` declarations and its emitted Scala has **3**, all of them inside injected or
-commented text. Every one of those members ships PUBLIC.
+**What it was.** Commit `c6645c0` ("libgdx-core burn-down: 95 → 45 errors") changed the emitter's
+`if f.isProtected then "protected "` to `""`, to escape the SAME-PACKAGE-CALLER delta: Java's
+`protected` is package access PLUS subclass access, Scala's bare `protected` is subclass access only
+and additionally forbids reaching the member through a reference that is not `this`, so emitting it
+turned a widening into a set of NEW access errors. libGDX core's Java has **867** `protected`
+declarations; every one of them then shipped PUBLIC.
 
 That is usually invisible — a widened member breaks no compile and no test. It stops being invisible
 where accessibility CHOSE AN OVERLOAD. Java resolves a call against the applicable methods that are
 also ACCESSIBLE from the call site, so a `protected` overload simply is not a candidate for an
 unrelated caller in another package; emitted public, it becomes one, and a call javac resolved
-uniquely becomes ambiguous.
+uniquely becomes ambiguous. Measured on gdx-gltf: `AnimationController` declares six public
+`setAnimation(String, …)` overloads and one `protected AnimationDesc setAnimation(AnimationDesc)`.
+`AnimationsPlayer.clearAnimations()` writes `scene.animationController.setAnimation(null)`, which
+javac resolved to `setAnimation(String)`. Emitted, both were public and arity-1, `null` conformed to
+both, and dotty reported `E051 Ambiguous overload` — the one error of that port's residue a reader
+would have blamed on the library rather than on the port. **The overload interaction was the COST of
+the drop, discovered a port and three weeks later, not its cause.** That is the lesson: a burn-down
+edit that removes information removes it everywhere, and the bill arrives in a module nobody was
+looking at.
 
-Measured on gdx-gltf: `AnimationController` declares six public `setAnimation(String, …)` overloads
-and one `protected AnimationDesc setAnimation(AnimationDesc)`. `AnimationsPlayer.clearAnimations()`
-writes `scene.animationController.setAnimation(null)`, which javac resolved to `setAnimation(String)`
-because the protected twin is out of reach. Emitted, both are public and arity-1, `null` conforms to
-both, and dotty reports `E051 Ambiguous overload` — 1 error, and the only one of gdx-gltf's residue
-that a reader would blame on the library rather than on the port.
+**What closed it.** `protected[<emitted package tail>]` restores the package half and lifts the
+`this` restriction, and dotty PRUNES an inaccessible alternative before overload resolution — so the
+mapping does not merely avoid the ambiguity, it restores javac's own resolution INPUT. The
+hand-written body substitution that compensated for it is deleted; the port lost the error.
 
-**Why it is not simply "emit `protected`".** Java's `protected` is package-access PLUS subclass
-access; Scala's is subclass access only, and Scala additionally forbids reaching a `protected`
-member through a reference that is not `this`. Emitting Scala's `protected` would turn a widening
-into a set of NEW access errors across every same-package caller the corpus has. The near-exact
-rendering is `protected[<package>]`, which restores package access and lifts the `this` restriction
-— untried, and its blast radius is every one of those 867 declarations plus whatever their callers
-then do, so it wants its own measured cycle and its own baseline promotion. Do not attempt it as
-part of another change.
+**The two measured facts that survive as constraints, and must not be re-derived:**
 
-*Fix kind: (a) engine — OPEN, and priced at 867 declarations of emitted-text movement.*
+- **Bare `protected` is unusable.** The same-package non-subclass caller set is **20 sites** in
+  libGDX core alone — `Button→ButtonGroup.canCheck`, `Stage→Actor.setStage`, and the decals package
+  reading `Decal`/`DecalMaterial` fields as a package-internal struct. Those are exactly what bare
+  `protected` breaks and what the qualified form preserves. Do not "simplify" the mapping to bare
+  `protected`.
+- **The residual PUBLIC widenings are `protected static` and the two guards**, all recorded. A
+  cross-package protected override does NOT widen to public: it takes the nearest common enclosing
+  package as its qualifier.
+
+*Fix kind: (a) engine. Built (`DESIGN.md` §8.7, `emit/Visibility.scala`, `VisibilitySpec`); the
+blast was one designed corpus-wide re-baseline.*
 ### T13. `Enum.ordinal()` is part of every java enum's SURFACE, mentioned or not
 
 CLOSED. The enum lowering synthesised `name()`, `values()` and `valueOf(String)` and not the fourth

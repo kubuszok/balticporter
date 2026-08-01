@@ -28,20 +28,20 @@ class CtorFunnelThrowablePaddingSpec extends munit.FunSuite:
   private val src =
     """package demo;
       |/** the JDK shape: three roots reaching `RuntimeException`'s fixed constructor set. */
-      |class Boom extends RuntimeException {
+      |public class Boom extends RuntimeException {
       |  Boom(String m)              { super(m); }
       |  Boom(String m, Throwable c) { super(m, c); }
       |  Boom(Throwable c)           { super(c); }
       |}
-      |class Holder { Throwable cause; Throwable next() { return null; } }
+      |public class Holder { Throwable cause; Throwable next() { return null; } }
       |/** a cause that is re-readable but is NOT a bare ident. */
-      |class Field extends RuntimeException {
+      |public class Field extends RuntimeException {
       |  Field(String m, Throwable c) { super(m, c); }
       |  Field(Holder h)              { super(h.cause); }
       |}
       |/** a cause with a SIDE EFFECT: naming it twice would call `next()` twice and hand the two
       |  * slots different objects, so the message is refused and reported instead. */
-      |class Call extends RuntimeException {
+      |public class Call extends RuntimeException {
       |  Call(String m, Throwable c) { super(m, c); }
       |  Call(Holder h)              { super(h.next()); }
       |}
@@ -49,11 +49,11 @@ class CtorFunnelThrowablePaddingSpec extends munit.FunSuite:
       |  * constructor set is whatever the library wrote, so nothing here is a JDK fact. (A separate
       |  * base from `Boom`: a subclass reaching its parent with an argument-free `extends` is what
       |  * makes `Plans` WITHHOLD that parent's promotion, which would change `Boom` as well.) */
-      |class Ported extends RuntimeException {
+      |public class Ported extends RuntimeException {
       |  Ported(String m, Throwable c) { super(m, c); }
       |  Ported(Throwable c)           { super(c); }
       |}
-      |class Derived extends Ported {
+      |public class Derived extends Ported {
       |  Derived(String m, Throwable c) { super(m, c); }
       |  Derived(Throwable c)           { super(c); }
       |}

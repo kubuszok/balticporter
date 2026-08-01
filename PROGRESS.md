@@ -226,7 +226,7 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 | files emitted | **598** (11 dropped, 6 injected) | **29** |
 | model | 605 units / 52,453 symbols | 634 units / 53,612 symbols |
 | signature consistency | 0 | 0 |
-| omissions | **67** | 3 |
+| omissions | **65** | 3 |
 | portability (all / emitted / injected) | 151 / 151 / 2 | 166 / 15 / 0 |
 | remediation suggestions | 29 | 2 |
 | substitutions (emitted / dangling) | 0 / 0 | 0 / 0 |
@@ -236,8 +236,8 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 | porter notes uncovered | **0** | **0** |
 | break residue (untranslated jumps) | **0** | **0** |
 | source map | 594 units / 19,288 members | 623 units / 19,547 members |
-| members changed vs baseline | **0** | **0** — the 28 + 6 that moved when this baseline was promoted are accounted below |
-| decisions recorded | **2,163** | **279** (961 withheld as the base's) |
+| members changed vs baseline | **0** | **0** — the 2,570 + 23 that moved in D3's designed re-baseline are accounted below |
+| decisions recorded | **2,278** | **279** (961 withheld as the base's) |
 | **tests** | — | **221 emitted, 217 passing, 4 failing** |
 
 All 4 failures are `expected#derived`, 0 declared: every one is a `sge.utils.JsonTest` case whose stack
@@ -252,9 +252,74 @@ naming the swap point — chosen over returning null/empty, which would corrupt 
 statically-derived codecs is viable; ONE site (`readValue("resource", null, …)`) is class-tag
 driven and needs explicit handling.
 
-`decisions.tsv` by kind, `libgdx-core`: 826 `RenamedMember`, 605 `RenamedPackage`, 335
-`RetypedSignature`, 292 `FunnelledCtor`, 30 `DroppedSuperCall`, 21 `RedirectedCall`, 16
-`DroppedMember`, 15 `WidenedVisibility`, 11 `DroppedType`, 10 `InjectedMember`.
+`decisions.tsv` by kind, `libgdx-core`: 816 `RenamedMember`, 605 `RenamedPackage`, 335
+`RetypedSignature`, 292 `FunnelledCtor`, **142 `WidenedVisibility`**, 30 `DroppedSuperCall`, 21
+`RedirectedCall`, 16 `DroppedMember`, 11 `DroppedType`, 10 `InjectedMember` — 2,278 rows.
+
+#### The visibility mapping (D3) — what shipped, and the residue by cause
+
+`DESIGN.md` §8.7 landed as one designed re-baseline: **2,570 of 19,288 member digests moved**,
+against a prediction of ≈1,970 from the modifier census — the excess is the porter notes the new
+residue carries plus every promoted constructor that gained a modifier. **Compile errors 0 → 0**,
+all seventeen check counts identical, `tests 217 passing / 4 failing` unmoved.
+
+| what the port emits now | count |
+|---|---|
+| `private[<pkg>]` — java package-private, and java `private` inside a nested type | **1,409** |
+| `protected[<pkg>]` — java `protected`, package half restored | **849** |
+| of which `protected[sge]` (a common-ancestor qualifier, or the root package's own) | 39 |
+| RESIDUE — `WidenedVisibility` rows | **142** |
+| — `protected-static` (P8: a companion object is nobody's supertype) | 99 |
+| — `x-pkg-protected-override` (the nearest common enclosing package) | 28 |
+| — `ctor-replay-widening` (pre-existing, now carrying the same `cause=` pair) | 15 |
+| — `qualifier-shadowed` · `unnameable-package` · `x-pkg-pkg-private-override` | 0 · 0 · 0 |
+
+Two numbers are worth more than their size. The **28** cross-package protected overrides are where
+the census predicted **10**: the other 18 are ANONYMOUS classes (`new Pool<T>() { protected T
+newObject() … }`), which are `Tree.New` nodes rather than `ClassDef`s and which a walk over class
+bodies cannot see — measured as 14 `E164 has weaker access privileges` errors before the override
+graph learned to reach them. And the **99** `protected-static` rows against a census of 71 are the
+nested `protected static` TYPES, which move to the companion for the same reason its members do.
+
+The three zeroes are the guards, and each was asserted rather than assumed: no enclosing type in
+this library is named like its package tail, nothing is in the default package, and the Java
+non-override shadow (a package-private method re-declared in a different-package subclass) is **0
+sites over 9,346 method declarations** — cheap insurance, not a live cost.
+
+**Across the corpus**, from the one serial `just measure-all` that promoted the baselines. Note what
+did NOT move: **`findings.tsv` and `counts.tsv` are byte-identical for all thirteen ports**, and so
+is every `tests.tsv` — the promotion is `members.tsv` (emitted text) and `port-map.tsv` (the
+published surface, which now carries visibility) and nothing else.
+
+| port | errors | members moved | `protected-static` | `x-pkg-protected-override` | `ctor-replay` |
+|---|---:|---:|---:|---:|---:|
+| libgdx-core | 0 | 2,570 | 99 | 28 | 15 |
+| libgdx-test | 0 (217 pass / 4 fail) | 23 | — | — | — |
+| ashley | 0 | 62 | — | 5 | — |
+| ashley-test | 0 (108 / 2 / 2 skipped) | 97 | — | — | 5 |
+| anim8 | 0 (23 / 23) | 128 | 11 | — | — |
+| gltf | **7** | 151 | 2 | 19 | — |
+| gltf-test | 0 | 0 | — | — | — |
+| vfx | 0 (64 / 64) | 62 | — | 4 | — |
+| screens | 0 (16 / 16) | 34 | — | — | — |
+| simple-graphs | 0 (16 / 16) | 129 | — | — | — |
+| sg-test | 0 | 8 | — | — | — |
+| noise4j | 2 (pre-existing, §5.4) | 57 | 2 | 2 | — |
+| jbump | 0, differential probe **IDENTICAL** | 31 | — | — | — |
+
+**192 residual rows corpus-wide, of which 20 are the pre-existing `ctor-replay-widening`** — so the
+mapping's own residue is 172 across 24,000+ declarations. Zero `qualifier-shadowed`, zero
+`unnameable-package` and zero `x-pkg-pkg-private-override` in any port: all three guards are
+insurance that has never had to fire.
+
+**The one prediction that did not hold, and what it actually means.** The plan priced gdx-gltf at
+**−1 error** for T12's retirement. Measured, gdx-gltf is **7 → 7**: the ambiguity was never IN the
+residue, because the hand-written body substitution was suppressing it, so deleting the workaround
+costs nothing rather than saving one. Verified both ways in this change — with the
+`MethodBodyTransform` entry restored the port still reports 7, and with it deleted no `E051 Ambiguous
+overload` appears anywhere (against `ENGINE-LIMITS.md` T12's own measurement that without the mapping
+it does). What the port really gains is the divergence from upstream: one `SubstitutedBody` row, 4 →
+**3**.
 
 #### The constructor funnel after A2 — what a SYNTHESISED primary bought, in numbers
 
@@ -1135,13 +1200,6 @@ a port that drops its PNG chunk framer has dropped PNG, and the JVM is a target 
 
 ### 7.8 Remaining
 
-- **`ConstantData` and `ChunkBuffer` are package-private in Java and public in the port.** Both are
-  declared `class X` with no modifier upstream. This is NOT one of the port's two recorded
-  `WidenedVisibility` decisions — those are `AnimatedPNG#buffer` and `#deflater`, widened because a
-  parent constructor's statements are replayed in the subclass. A Java package-private TYPE
-  becoming a public Scala one is not recorded at all, which is the general item: it is a real
-  surface difference that nothing counts. Harmless here (the hand-written suite is in the same
-  package either way) and worth a decision kind — see §9.
 - **A second source set for the demos** would need a libGDX backend, which is not ported and is not
   planned (§1.1's first surprise).
 - **Behavioural coverage is 23 tests over 4 of 16 types.** `PNG8`, `AnimatedGif`, `PaletteReducer`
@@ -1199,7 +1257,7 @@ prints the two numbers SEPARATELY — a ported test and a written one are differ
 
 | gate | `gltf` | `gltf-test` |
 |---|---|---|
-| compile errors (with libGDX core, Scala 3.8.4) | **8** | — (one invocation) |
+| compile errors (with libGDX core, Scala 3.8.4) | **7** | — (one invocation) |
 | files emitted | **135** (0 dropped, 1 injected) | **1** |
 | model | 740 units / 56,368 symbols | 741 / 56,420 |
 | signature consistency | 1 | 1 (the same site) |
@@ -1213,7 +1271,7 @@ prints the two numbers SEPARATELY — a ported test and a written one are differ
 | decisions recorded | 1,763 rows, **548** about gdx-gltf's own declarations; 1,215 withheld as the base's (D2) | 44, 2,937 withheld |
 | **tests** | 8 ported + 22 hand-written = **30, NONE RUN** — the port does not compile (§8.4) | |
 
-**Error trajectory: 19 → 16 → 14 → 9 → 8**, on 135 files at the first attempt. `break residue` is
+**Error trajectory: 19 → 16 → 14 → 9 → 8 → 7**, on 135 files at the first attempt. `break residue` is
 **0** and `portability(emitted)` is **0** on a library full of `switch`-driven enum mapping, which is
 §9.5's control-flow work and the portability rules paying off on a library they were not built for.
 
@@ -1230,7 +1288,7 @@ its body's comments.
 | — | `<clinit>` reached an `export` selector list; `export P.{<clinit> => _, *}` is an XML start tag to dotty | 3 errors |
 | `ENGINE-LIMITS.md` D6 | an all-static java class is still a TYPE, and the object collapse had no third guard | 5 errors |
 | `ENGINE-LIMITS.md` D6.5 | a DROP and its INJECTION are in different namespaces, so `Substituted` had never been produced by a renaming port | **10 false findings** |
-| `ENGINE-LIMITS.md` T12 | java `protected` is dropped, and accessibility is an input to OVERLOAD RESOLUTION | 1 error |
+| `ENGINE-LIMITS.md` T12 | java `protected` is dropped, and accessibility is an input to OVERLOAD RESOLUTION | 1 error — CLOSED by `DESIGN.md` §8.7; the `MethodBodyTransform` workaround is deleted and this port's `SubstitutedBody` rows are 4 → **3** |
 
 Each of the first three shipped in its own commit with a spec, and **each moved 0 members on
 libGDX** — the `<clinit>` guard cannot fire on a type with no initializer block, the type-position
@@ -1319,10 +1377,6 @@ disagreement exists only when the two modules are compiled together.
   `super(args)` as an omission, and compile.
 - **D7 (1 error).** A CALL-SITE substitution phase — the call-level twin of `MethodBodyTransform`,
   keyed like `dropMethods`, replacement text naming the receiver and arguments.
-- **T12.** Render java's `protected` as `protected[<package>]`. Priced at 867 declarations of emitted
-  text on libGDX core alone; it wants its own cycle and its own baseline promotion, and until it
-  lands the port carries one `MethodBodyTransform` entry that exists only to restate the overload
-  javac chose.
 - **Behavioural coverage is 30 tests over 5 of 135 types**, and none has run. The exporter and the
   loaders are covered only by compilation, and their round-trip needs the reflective `Json` the base
   deliberately drops — the reference hand port replaced it with 2,268 lines of hand-written Jsoniter
@@ -2270,10 +2324,6 @@ Maintained by deletion. Items are ordered by what they block, not by size.
   (`FunnelledCtor` was on this list and is now rendered: its argument was written for a PROMOTION
   and is false for a SYNTHESIS, which is what the funnel now does for most multi-constructor
   classes. See §7's A2 section.)
-- **A package-private java TYPE emits as a public Scala one, and nothing records it.**
-  `WidenedVisibility` covers members widened by the constructor replay; a `class X` with no modifier
-  becoming `class X` in Scala is a surface difference no decision, note or check sees. anim8 has two
-  (`ConstantData`, `ChunkBuffer`, §7.8) and libGDX will have many more.
 
 ### 7.2 Control flow
 

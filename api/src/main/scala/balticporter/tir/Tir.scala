@@ -57,6 +57,16 @@ final case class Flags(
     isParamAccessor: Boolean = false,
     isPrivate: Boolean = false,
     isProtected: Boolean = false,
+    /** Java's FOURTH access level — "default", or package-private: no `public`/`protected`/`private`
+      * modifier at all. Three of Java's four levels used to collapse onto "neither of the two
+      * booleans above", so a declaration written with no modifier produced flags byte-identical to a
+      * `public` one and the TIR could not even STATE that a type was package-private (DESIGN §8.7).
+      *
+      * It is the JLS-EFFECTIVE level, not the presence of a modifier: an interface member is
+      * implicitly `public` and an enum constructor implicitly `private`, so neither is this.
+      * Exactly one of `isPrivate`, `isProtected`, `isPackagePrivate` is set, or all three are clear
+      * and the declaration is public. */
+    isPackagePrivate: Boolean = false,
     isStatic: Boolean = false, // JavaStatic
     isNative: Boolean = false, // Java `native` (JNI) — a Panama-FFI rewrite target
     isCovariant: Boolean = false,
@@ -115,7 +125,12 @@ final case class Symbol(
     flags: Flags,
     owner: SymId,           // SymId.None at the root
     info: TypeRepr,
-    privateWithin: SymId = SymId.None,
+    // `privateWithin` — a `SymId` stub mirroring `reflect.Symbol`, populated nowhere and read
+    // nowhere — used to sit here. It is now `Flags.isPackagePrivate`, and deliberately NOT a
+    // symbol: a `SymId` cannot name a package in this TIR, because packages are `fullName`
+    // segments and not symbols (DESIGN §8.7). The qualifier a `private[p]` renders with is derived
+    // from the emitter's CURRENT emitted package, which is a fact the emitter has and no symbol
+    // carries.
     origin: Origin = Origin.synthetic,
     tags: Set[SymTag] = Set.empty,
     /** the declaration's Java annotations, in source order. See [[Annot]] — losing these is a

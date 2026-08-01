@@ -33,38 +33,38 @@ class CtorFunnelPromotedBodySpec extends munit.FunSuite:
 
   private val src =
     """package demo;
-      |class Audit {
+      |public class Audit {
       |  static int bumps = 0;
       |  static int bump() { bumps++; return -1; }
       |}
-      |class Parent { Parent(int a) {} Parent(int a, int b) {} }
+      |public class Parent { Parent(int a) {} Parent(int a, int b) {} }
       |/** C6's probe, ON THE WALL — two roots, neither delegating to the other, reaching two
       |  * DIFFERENT parent constructors. The wall is what keeps a PROMOTION here at all: where every
       |  * root reaches ONE parent constructor the funnel synthesises a primary instead, promotes
       |  * nothing, and there is no body to escape. That is the whole of A2, and it is why this
       |  * fixture had to grow a parent — measured, when it did not have one, as this spec failing
       |  * because the divergence it asserts had been REPAIRED. */
-      |class Base extends Parent {
+      |public class Base extends Parent {
       |  int n;
       |  Base() { super(0); this.n = Audit.bump(); }
       |  Base(int n) { super(n, 1); this.n = n; }
       |}
       |/** the paramful constructor DELEGATES with an explicit `this()`, so java ran the nilary body
       |  * on this path as well: nothing escapes and nothing may be reported. */
-      |class Delegating {
+      |public class Delegating {
       |  int n;
       |  Delegating() { this.n = Audit.bump(); }
       |  Delegating(int n) { this(); this.n = n; }
       |}
       |/** a UNIQUE root: every other constructor reaches it through `this(args)`, so its body ran on
       |  * every java path too. */
-      |class Unique {
+      |public class Unique {
       |  int n;
       |  Unique(int n) { this.n = Audit.bump() + n; }
       |  Unique(String s) { this(s.length()); }
       |}
       |/** an EMPTY promoted body adds nothing to any path, whatever the other roots do. */
-      |class Empty {
+      |public class Empty {
       |  int n;
       |  Empty() { }
       |  Empty(int n) { this.n = n; }
@@ -78,7 +78,7 @@ class CtorFunnelPromotedBodySpec extends munit.FunSuite:
   test("the promoted nilary body really is in the class body, where every path runs it") {
     // this is the emission the finding describes; asserting it here is what stops the check from
     // drifting into a claim about code the emitter no longer produces
-    assert(clue(out).contains("class Base extends demo.Parent(0) {"))
+    assert(clue(out).contains("class Base private[demo] () extends demo.Parent(0) {"))
     assert(out.contains("this.n = demo.Audit.bump()"))
     assert(out.contains("def this(n: scala.Int) = {"))
   }
@@ -112,7 +112,7 @@ class CtorFunnelPromotedBodySpec extends munit.FunSuite:
   test("a COMMENT above the `this()` delegation does not turn it into an escape") {
     val commented =
       """package demo2;
-        |class Audited {
+        |public class Audited {
         |  int n;
         |  Audited() { this.n = -1; }
         |  Audited(int k) {

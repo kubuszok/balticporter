@@ -1,0 +1,291 @@
+package balticporter.corpus
+
+import balticporter.testkit.PortSuite
+import balticporter.tir.Decision
+
+/** JAVA'S FOUR ACCESS LEVELS, pinned through the pipeline — `DESIGN.md` §8.7.
+  *
+  * Three of Java's four levels used to collapse onto "no modifier at all": `protected` was dropped
+  * wholesale during an error burn-down, package-private could not even be STATED in the TIR, and a
+  * type's `private` was erased at the class header. Every one of those is a WIDENING that no
+  * compile, no check count and no test can see — the port compiles perfectly with every member
+  * public — which is why the mapping needs specs rather than a measurement.
+  *
+  * Each negative below asserts the RECORDED fallback, not merely the absence of the qualifier: a
+  * widening the port cannot state is the failure this whole section exists to remove.
+  */
+class VisibilitySpec extends PortSuite:
+
+  private def widenings(p: balticporter.testkit.Ported): List[Decision] =
+    p.emitter.ownDecisions.filter(_.kind == Decision.Kind.WidenedVisibility)
+
+  private def causes(p: balticporter.testkit.Ported): List[String] =
+    widenings(p).flatMap(_.detail.get("cause"))
+
+  // -------------------------------------------------------------------------
+  // The mapping matrix
+  // -------------------------------------------------------------------------
+
+  test("the four levels render, and only the residue records") {
+    val p = port(
+      """package demo.util;
+        |public class Holder {
+        |  private int hidden;
+        |  int shared;
+        |  protected int guarded;
+        |  public int open;
+        |  private void hide() {}
+        |  void share() {}
+        |  protected void guard() {}
+        |  public void show() {}
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "private var hidden")
+    assertEmits(p, "private[util] var shared")
+    assertEmits(p, "protected[util] var guarded")
+    assertEmits(p, "var open")
+    assertEmits(p, "private def hide()")
+    assertEmits(p, "private[util] def share()")
+    assertEmits(p, "protected[util] def guard()")
+    assertEmits(p, "def show()")
+    // the mapping IS the diff (§4.575): a faithful rendering records nothing.
+    assertEquals(causes(p), Nil)
+  }
+
+  test("a top-level package-private TYPE is bare `private` — which already means its package") {
+    // Scala's top-level `private` is `private[enclosingPackage]`, so no qualifier is needed and the
+    // one form that IS barred from a public signature (an unqualified private NESTED type) cannot
+    // arise here. This is the anim8 §7.8 gap: the level used to be erased at the class header, so
+    // nothing could render it, record it or check it.
+    val p = port(
+      """package demo.util;
+        |class Internal { int v; }
+        |""".stripMargin
+    )
+    assertEmits(p, "private class Internal")
+    assertEquals(causes(p), Nil)
+  }
+
+  test("a NESTED type keeps its level, qualified — java's own scope for it") {
+    val p = port(
+      """package demo.util;
+        |public class Outer {
+        |  private static class Secret { int v; }
+        |  static class Shared { int v; }
+        |  public Secret make() { return new Secret(); }
+        |}
+        |""".stripMargin
+    )
+    // JLS 6.6.1: java's `private` reaches throughout the TOP-LEVEL enclosure, which is exactly
+    // `private[Outer]` — an exact rendering, not a widening, so nothing records.
+    assertEmits(p, "private[Outer] class Secret")
+    assertEmits(p, "private[util] class Shared")
+    // …and a public member may still expose it, which is what retires the blanket erasure.
+    assertEmits(p, "def make(): demo.util.Outer.Secret")
+    assertEquals(causes(p), Nil)
+  }
+
+  test("a `protected static` NESTED TYPE widens with the members — same companion, same reason") {
+    // The type moves to the companion `object` exactly as a static member does, so P8's argument
+    // is the same one: nothing subclasses an object, and a qualified form there would DENY the
+    // cross-package subclass access java grants. Its CONSTRUCTOR is not static and keeps its own
+    // qualified `protected`, which still admits a subclass in any package.
+    val p = port(
+      """package demo.util;
+        |public class Outer {
+        |  protected static class Guarded { int v; }
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "class Guarded protected[util] ()")
+    assertNotEmits(p, "protected[util] class Guarded")
+    assertEquals(causes(p), List("protected-static"))
+  }
+
+  test("a package-private CONSTRUCTOR renders on the promoted primary and on a secondary") {
+    val p = port(
+      """package demo.util;
+        |public class Made {
+        |  public int v;
+        |  Made(int v) { this.v = v; }
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "class Made private[util] (")
+  }
+
+  // -------------------------------------------------------------------------
+  // JLS-EFFECTIVE visibility: "no modifier" is not always package-private
+  // -------------------------------------------------------------------------
+
+  test("an INTERFACE member is implicitly public — never package-private") {
+    val p = port(
+      """package demo.util;
+        |public interface Sink {
+        |  int LIMIT = 4;
+        |  void accept(int v);
+        |  class Helper { int v; }
+        |}
+        |""".stripMargin
+    )
+    assertNotEmits(p, "private[util] def accept")
+    assertNotEmits(p, "private[util] inline val LIMIT")
+    assertNotEmits(p, "private[util] class Helper")
+  }
+
+  // -------------------------------------------------------------------------
+  // The residues — each recorded, none silent
+  // -------------------------------------------------------------------------
+
+  test("a `protected static` widens to public and RECORDS it") {
+    // P8: the member moves to the companion `object`, and a subclass of the class is not a subclass
+    // of its companion — so `protected[pkg]` there would DENY java's cross-package subclass access.
+    // Public is the only side to err on, and it is a residue rather than a mapping.
+    val p = port(
+      """package demo.util;
+        |public class Registry {
+        |  protected static int seed = 1;
+        |  public static int open = 2;
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "var seed")
+    assertNotEmits(p, "protected[util] var seed")
+    assertEquals(causes(p), List("protected-static"))
+  }
+
+  test("a CROSS-PACKAGE protected override takes the nearest common ancestor, and records") {
+    // P5/P14: the child can keep neither bare `protected` nor its own package's qualifier — both
+    // are "has weaker access privileges" — but it CAN name any ENCLOSING package, and the nearest
+    // common one covers the parent's boundary while still enclosing the child.
+    val p = portAll(List(
+      "Parent.java" ->
+        """package demo.a.q;
+          |public class Parent {
+          |  protected void hook() {}
+          |}
+          |""".stripMargin,
+      "Child.java" ->
+        """package demo.a.r;
+          |public class Child extends demo.a.q.Parent {
+          |  protected void hook() {}
+          |}
+          |""".stripMargin,
+    ))
+    assertEmits(p, "protected[q] def hook()")
+    assertEmits(p, "protected[a] override def hook()")
+    assertEquals(causes(p), List("x-pkg-protected-override"))
+  }
+
+  test("a child NESTED under the parent's package keeps the PARENT's qualifier") {
+    val p = portAll(List(
+      "Parent.java" ->
+        """package demo.a.q;
+          |public class Parent {
+          |  protected void hook() {}
+          |}
+          |""".stripMargin,
+      "Child.java" ->
+        """package demo.a.q.sub;
+          |public class Child extends demo.a.q.Parent {
+          |  protected void hook() {}
+          |}
+          |""".stripMargin,
+    ))
+    assertEmits(p, "protected[q] override def hook()")
+    assertEquals(causes(p), List("x-pkg-protected-override"))
+  }
+
+  test("a SAME-PACKAGE override keeps the ordinary qualifier and records nothing") {
+    val p = portAll(List(
+      "Parent.java" ->
+        """package demo.a.q;
+          |public class Parent {
+          |  protected void hook() {}
+          |}
+          |""".stripMargin,
+      "Child.java" ->
+        """package demo.a.q;
+          |public class Child extends Parent {
+          |  protected void hook() {}
+          |}
+          |""".stripMargin,
+    ))
+    assertEmits(p, "protected[q] override def hook()")
+    assertEquals(causes(p), Nil)
+  }
+
+  test("the QUALIFIER-SHADOWED guard fires loudly rather than narrowing silently") {
+    // P12: `private[util]` inside a type named `util` binds to the CLASS, not to the package — a
+    // silent narrowing with a green compile. The guard widens and says so.
+    val p = port(
+      """package demo.util;
+        |public class util {
+        |  int shared;
+        |}
+        |""".stripMargin
+    )
+    assertNotEmits(p, "private[util] var shared")
+    assertEquals(causes(p), List("qualifier-shadowed"))
+  }
+
+  test("the DEFAULT package has no name a qualifier can spell — widen and record") {
+    val p = port(
+      """public class Loose {
+        |  int shared;
+        |}
+        |""".stripMargin
+    )
+    assertNotEmits(p, "private[] var shared")
+    assertEquals(causes(p), List("unnameable-package"))
+  }
+
+  // -------------------------------------------------------------------------
+  // The rule-scoping corrections the mapping forces
+  // -------------------------------------------------------------------------
+
+  test("`override` is dropped for java `private` and KEPT for package-private") {
+    // A java `private` method is invisible to subclasses, so it overrides NOTHING and the pair
+    // `private override` is both illegal and contradictory. A package-private one DOES override
+    // within its package (P10) and needs the keyword — so the rule is scoped to the LEVEL, never
+    // to the presence of a qualifier.
+    val p = portAll(List(
+      "Parent.java" ->
+        """package demo.a;
+          |public class Parent {
+          |  void shared() {}
+          |}
+          |""".stripMargin,
+      "Child.java" ->
+        """package demo.a;
+          |public class Child extends Parent {
+          |  void shared() {}
+          |}
+          |""".stripMargin,
+    ))
+    assertEmits(p, "private[a] override def shared()")
+  }
+
+  test("a companion re-export does NOT forward a parent static that is not public") {
+    // P11: `export P.*` publishes a forwarder at the EXPORTING object's visibility, so a
+    // same-package companion re-exporting a `private[p]` static hands it to every package —
+    // silently undoing the mapping for exactly the members java scoped most tightly.
+    val p = portAll(List(
+      "Base.java" ->
+        """package demo.a;
+          |public class Base {
+          |  static final int SECRET = 1;
+          |  public static final int OPEN = 2;
+          |  public int f;
+          |}
+          |""".stripMargin,
+      "Sub.java" ->
+        """package demo.a;
+          |public class Sub extends Base {
+          |  public int g;
+          |}
+          |""".stripMargin,
+    ))
+    assertEmitsMatch(p, """export demo\.a\.Base\.\{SECRET => _, \*\}""")
+  }

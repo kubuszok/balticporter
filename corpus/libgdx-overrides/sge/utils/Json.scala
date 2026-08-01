@@ -183,7 +183,11 @@ class Json:
 
   /** `protected boolean ignoreUnknownField (Class type, String fieldName)` — libgdx's Json calls it
     * from `readFields`, and `Skin` overrides it. Absent here, that override compiled to nothing. */
-  def ignoreUnknownField(`type`: Class[?], fieldName: String): Boolean = false
+  // …and it is `protected[utils]` rather than public because that is what the upstream declaration
+  // it replaces is (DESIGN §8.7 renders java `protected` as `protected[<emitted package>]`). An
+  // INJECTED file supplies an FQN the port does not emit, so nothing derives its surface from the
+  // Java — it has to AGREE by hand, and a public member here is weaker-access at every override.
+  protected[utils] def ignoreUnknownField(`type`: Class[?], fieldName: String): Boolean = false
 
   def readValue[T](`type`: Class[T], jsonData: JsonValue): T = codec("Json.readValue")
   // java's `<T>` MEANS `<T extends Object>`, and the engine renders an override of this overload

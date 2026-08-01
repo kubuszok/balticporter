@@ -26,14 +26,14 @@ class CtorFunnelPrefixStripSpec extends munit.FunSuite:
 
   private val src =
     """package demo;
-      |class Parent { Parent(int a) {} Parent(int a, int b) {} }
+      |public class Parent { Parent(int a) {} Parent(int a, int b) {} }
       |/** the `Button` shape, ON THE WALL: the paramful root does NOT delegate, its body begins with
       |  * exactly what the promoted nilary root does, and the two roots reach DIFFERENT parent
       |  * constructors. The wall is what keeps a PROMOTION here — with every root reaching one parent
       |  * constructor A2's synthesis takes over, promotes nothing and leaves no prefix to strip.
       |  * These two fixtures are now the only coverage of the fallback, which is why they were
       |  * retargeted rather than deleted. */
-      |class Button extends Parent {
+      |public class Button extends Parent {
       |  int listeners;
       |  String skin;
       |  Button() { super(0); initialize(); }
@@ -43,7 +43,7 @@ class CtorFunnelPrefixStripSpec extends munit.FunSuite:
       |}
       |/** the promoted body is NOT a prefix here — the escaping root does something else first, so
       |  * there is nothing to strip and the divergence stays counted. */
-      |class NotAPrefix extends Parent {
+      |public class NotAPrefix extends Parent {
       |  int n;
       |  NotAPrefix() { super(0); bump(); }
       |  NotAPrefix(int k) { super(k, 1); n = k; bump(); }
@@ -67,7 +67,7 @@ class CtorFunnelPrefixStripSpec extends munit.FunSuite:
     out.substring(start, if end < 0 then out.length else end + 4)
 
   test("the promoted body IS the class body — that is what makes it run on every path") {
-    assert(clue(out).contains("class Button extends demo.Parent(0) {"))
+    assert(clue(out).contains("class Button private[demo] () extends demo.Parent(0) {"))
     // `initialize()` inlined at class-body level, from the promoted nilary constructor
     assert(out.linesIterator.exists(l => l.trim == "this.initialize()"), out)
   }
@@ -81,7 +81,7 @@ class CtorFunnelPrefixStripSpec extends munit.FunSuite:
   test("…and the emitted class therefore installs ONE listener, not two, on that path") {
     // the runtime shape, counted the way the C7 probe counts it: how many times `initialize()`
     // appears on the `Button(String)` construction path — class body once, secondary body zero.
-    val body   = out.substring(out.indexOf("class Button extends"), out.indexOf("class NotAPrefix"))
+    val body   = out.substring(out.indexOf("class Button private[demo] ()"), out.indexOf("class NotAPrefix"))
     val onPath = body.linesIterator.count(_.trim == "this.initialize()")
     assertEquals(onPath, 1, clue(body))
   }

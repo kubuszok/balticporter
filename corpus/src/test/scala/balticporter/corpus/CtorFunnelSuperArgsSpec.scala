@@ -31,18 +31,18 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
 
   private val src =
     """package demo;
-      |class Parent {
+      |public class Parent {
       |  Object a; int b;
       |  Parent(Object a, int b) { this.a = a; this.b = b; }
       |}
       |/** THE COLLAPSE: one root's parameters ARE the parent's, so it is promoted and nothing is
       |  * synthesised. The other root's arguments fit no slot BY TYPE (`String` is not `Object`),
       |  * and are delegated POSITIONALLY instead — which is what java wrote. */
-      |class Mixed extends Parent {
+      |public class Mixed extends Parent {
       |  Mixed(Object a, int b) { super(a, b); }
       |  Mixed(String s)        { super(s, 7); }
       |}
-      |class Anchor {
+      |public class Anchor {
       |  int cap; String tag;
       |  Anchor()        { this.tag = "t"; }
       |  Anchor(int cap) { this.cap = cap; }
@@ -53,17 +53,17 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
       |  * after `this()` would NOT leave the state java left. Both refusals are correct, and the
       |  * surviving `super(cap)` really is lost — which is what the check must say, for THAT root
       |  * and not for the class. */
-      |class Holder extends Anchor {
+      |public class Holder extends Anchor {
       |  Holder()         { }
       |  Holder(int cap)  { super(cap); }
       |}
-      |class Base {
+      |public class Base {
       |  int n; boolean flag;
       |  Base(int n, boolean flag) { this.n = n; this.flag = flag; }
       |}
       |/** a SYNTHESISED primary: every root reaches the same parent constructor, none can be the
       |  * primary, and each becomes a secondary computing its own arguments. Nothing is dropped. */
-      |class Synth extends Base {
+      |public class Synth extends Base {
       |  Synth()      { super(0, false); }
       |  Synth(int k) { super(k + 1, true); }
       |}
@@ -71,11 +71,11 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
       |  * are in the `extends` clause and nothing is lost, but the delegation the other roots use
       |  * cannot rebuild them (three parameters, two arguments) — so a check that asks the delegation
       |  * about the PRIMARY gets the wrong answer, and must not ask it. */
-      |class Sized extends Store {
+      |public class Sized extends Store {
       |  Sized(String label, int cap, int max) { super(cap, max); }
       |  Sized(String label)                   { this(label, 16, 99); }
       |}
-      |class Store {
+      |public class Store {
       |  int cap; int max;
       |  Store(int cap, int max) { this.cap = cap; this.max = max; }
       |}
@@ -88,7 +88,7 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
   // the promoted primary's parameters are renamed by `funnelParamRenames` (they become class
   // members), so match the SHAPE — both parameters passed straight through — not the mangled names.
   private val promoted =
-    raw"""class Mixed\(([\w$$]+): java\.lang\.Object, ([\w$$]+): scala\.Int\) extends demo\.Parent\(\1, \2\)""".r
+    raw"""class Mixed private\[demo\] \(([\w$$]+): java\.lang\.Object, ([\w$$]+): scala\.Int\) extends demo\.Parent\(\1, \2\)""".r
   private val delegated = raw"""def this\(s: java\.lang\.String\) = \{\s*this\(s, 7\)\s*\}""".r
   private val lost      = raw"""def this\(cap: scala\.Int\) = \{\s*this\(\)\s*\}""".r
   // `Synth()`'s own `super(0, false)` reaching the SYNTHESISED primary positionally

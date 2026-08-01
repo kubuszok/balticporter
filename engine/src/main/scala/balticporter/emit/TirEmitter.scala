@@ -68,6 +68,12 @@ final class TirEmitter(
   // was computed over are untouched, so it still applies.
   private val program = TirEmitter.widen(prepared, plans.widenedMembers, own)
 
+  /** Java's four access levels, decided once over the whole program — DESIGN §8.7, and the doc on
+    * [[Visibility]] for why the LEVEL is decided there and the QUALIFIER supplied here. Computed at
+    * construction like the renames above it, so its residual widenings travel with
+    * [[ownDecisions]] and are in the run's log before the first unit renders a note. */
+  private val visPlan: Map[SymId, Visibility.Vis] = Visibility.plan(program, own)
+
   /** The decisions THIS emitter made — the three §4.55 renaming passes and the replay widening.
     *
     * A value rather than a recording, for the reason the `notes` parameter gives: the orchestrator
@@ -88,12 +94,20 @@ final class TirEmitter(
     * `private` needs a qualifier only when the two DIFFER, i.e. the member lives in a NESTED class. */
   private var currentTopLevelSym: SymId = SymId.None
   private var currentOwnerSym: SymId    = SymId.None
+  /** last segment of the package this unit is being EMITTED into — the qualifier a Java
+    * package-private or `protected` declaration renders with (DESIGN §8.7). Read from the unit the
+    * emitter is writing and never from a symbol's upstream FQN plus a rename map: the rename runs
+    * LAST (§4.56), so this string is already the emitted fact and no two-namespace join exists.
+    * Empty in the default package, which [[Visibility]] has already turned into a recorded
+    * widening rather than an unspellable qualifier. */
+  private var currentPkgTail: String = ""
 
   def emitUnit(cd: Tree.ClassDef): String =
     currentDeclared = declaredTypes(cd)
     currentTopLevel = esc(sym(cd.symbol).name)
     currentTopLevelSym = cd.symbol
     currentOwnerSym = cd.symbol
+    currentPkgTail = TirEmitter.packageTailOf(sym(cd.symbol).fullName)
     slots.clear(); stmtSeq.clear()
     val full = sym(cd.symbol).fullName
     currentUnitName = full
@@ -590,6 +604,41 @@ final class TirEmitter(
         .foldLeft(Map.empty[String, SymId])((acc, p) => staticOwnersOf(p, seen + s) ++ acc)
       inherited ++ ownStaticsBySym.getOrElse(s, Set.empty).map(_ -> s).toMap
 
+  /** each type → its own `static` members, by the name they are EMITTED under. `ownStaticsBySym`
+    * carries the names alone, and a re-export has to reach the SYMBOL to ask how it renders. */
+  private lazy val ownStaticSymsBySym: Map[SymId, Map[String, SymId]] =
+    val m = collection.mutable.Map[SymId, Map[String, SymId]]()
+    def scan(cd: Tree.ClassDef): Unit =
+      // A STATIC INITIALIZER BLOCK is not a NAME. Java calls it `<clinit>`, no Scala identifier can
+      // spell it, and an exclusion naming it is `export P.{<clinit> => _, *}` — which the parser
+      // reads as an XML start tag. Measured as 29 `E040 Syntax` errors the first time this table
+      // forgot the filter `ownStaticsBySym`'s twin already carries.
+      m(cd.symbol) = cd.body.collect {
+        case d: Definition if sym(d.symbol).flags.isStatic &&
+          (!d.isInstanceOf[Tree.DefDef] || !isInitBlock(d.asInstanceOf[Tree.DefDef])) =>
+          esc(sym(d.symbol).name) -> d.symbol
+      }.toMap
+      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
+    program.units.foreach(scan); m.toMap
+
+  /** The names a companion re-export must NOT forward: a parent static that did not render PUBLIC.
+    *
+    * `export P.*` creates a forwarder at the EXPORTING object's own visibility, so a same-package
+    * companion re-exporting a `private[p]` static publishes it to every package — silently undoing
+    * §8.7's mapping for exactly the members Java scoped most tightly. Filtering is also the
+    * FAITHFUL rendering rather than a repair: Java's own access to a parent's package-private
+    * static is package-scoped, and it is unreachable through a subclass name from outside the
+    * package. Nothing this emitter writes depends on the forwarder either — a static reference is
+    * emitted through its DECLARING owner (`staticRef`), never through the subclass.
+    *
+    * A wildcard export of an INACCESSIBLE member is not an error — Scala simply skips it — so this
+    * only ever removes a leak the compiler would not have reported. */
+  private def nonPublicStatics(delivered: Map[String, SymId]): Set[String] =
+    delivered.collect {
+      case (n, owner) if ownStaticSymsBySym.getOrElse(owner, Map.empty).get(n)
+        .exists(id => visPlan.getOrElse(id, Visibility.Vis.Public) != Visibility.Vis.Public) => n
+    }.toSet
+
   /** each type → its parent symbols (whole program). */
   private lazy val parentsBySym: Map[SymId, List[SymId]] =
     val m = collection.mutable.Map[SymId, List[SymId]]()
@@ -898,10 +947,14 @@ final class TirEmitter(
     go(child)
 
   private def classDef0(cd: Tree.ClassDef, i: Int): String =
-    if sym(cd.symbol).flags.isEnum then return enumDef(cd, i)
+    // The owner is set for BOTH lowerings. An enum's own members need a `private` qualifier by the
+    // same rule an ordinary nested class's do, and dispatching before the assignment gave a nested
+    // enum the ENCLOSING type's context — a bare `private` where java's scope is the whole
+    // top-level enclosure.
     val savedOwner = currentOwnerSym
     currentOwnerSym = cd.symbol
-    try classDef1(cd, i) finally currentOwnerSym = savedOwner
+    try (if sym(cd.symbol).flags.isEnum then enumDef(cd, i) else classDef1(cd, i))
+    finally currentOwnerSym = savedOwner
 
   private def classDef1(cd: Tree.ClassDef, i: Int): String =
     val s  = sym(cd.symbol)
@@ -959,13 +1012,27 @@ final class TirEmitter(
     // paramful and declining to promote it. Empty for every port that threads nothing, which is why
     // no emitted byte moves.
     val givenClause = plan.givens.map(paramClause).mkString
+    // A PROMOTED java constructor is still a java DECLARATION, so §8.7's mapping governs it exactly
+    // as it governs the `def this` secondaries — one rule per kind of declaration (§8.11). The
+    // SYNTHESISED primary above is the deliberate exception: it is not a java declaration at all,
+    // and bare `protected` is the pair of answers it needs — wider in the subclass direction, so a
+    // dependent module in another package can still extend the class, and narrower in the package
+    // direction, where nothing legitimate calls it but this class's own secondaries.
+    val ctorVis = plan.primary.map(pc => vis(sym(pc.symbol), privateQualifier(s.owner))).getOrElse("")
     val prim    =
       if plan.isSynthesised then
         s" protected (${(plan.synthetic.map((n, t) => s"$n: ${tpe(t)}") ++ markerParam).mkString(", ")})$givenClause"
-      else if pparams.nonEmpty then s"(${pparams.map(param).mkString(", ")})$givenClause"
+      else if pparams.nonEmpty then s"${if ctorVis.isEmpty then "" else " " + ctorVis}(${pparams.map(param).mkString(", ")})$givenClause"
       // a class whose constructor java declared NILARY and the pipeline gave a clause: the clause is
       // the whole parameter list, and `class C(using T)` is what puts the given in scope for the
       // body, the field initialisers and the `extends` clause at once.
+      // …and a NILARY constructor that is not public needs somewhere for the modifier to sit. With
+      // a context clause that place already exists and the clause must NOT gain an empty group
+      // before it — `()(using Ctx)` is a different signature from `(using Ctx)` and every call site
+      // would have to change. Without one, `class C private[p] ()` is the only spelling there is.
+      else if ctorVis.isEmpty then givenClause
+      else if givenClause.nonEmpty then s" $ctorVis$givenClause"
+      else if kw == "class" then s" $ctorVis()"
       else givenClause
     // Does the emitted class have a PARAMFUL primary? A synthesised primary is one even though no
     // java constructor backs it, so `plan.primaryParams` is empty for it — reading only that told
@@ -997,7 +1064,8 @@ final class TirEmitter(
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
       val ob0 = orderBody(members, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       val ob  = if bnote.isEmpty then ob0 else s"$bnote\n$ob0"
-      return s"${leading(cd.leading, i)}$cnote${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
+      // the VISIBILITY only — an `object` takes no `abstract`, and `final object` is redundant.
+      return s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
@@ -1007,10 +1075,16 @@ final class TirEmitter(
     val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
     val abs     = if kw == "class" && s.flags.isAbstract then "abstract " else ""
-    // Scala (unlike Java) forbids a NON-private member from referring to a `private` type in its
-    // signature — a public `Values extends MapIterator` / field `pool: ModelInstancePool` where the
-    // referent is private is an error. Java nested classes leak this way constantly; drop the class's
-    // `private` (visibility-widening is always compile-safe) so those references type-check.
+    // Scala (unlike Java) forbids a NON-private member from referring to a bare-`private` type in
+    // its signature — a public `Values extends MapIterator` / field `pool: ModelInstancePool` where
+    // the referent is private is an error. Java nested classes leak this way constantly, which is
+    // why this whole modifier used to be ERASED at the class header. It is not erased any more:
+    // the rule is about UNQUALIFIED `private` only, and every rendering §8.7 gives a nested type is
+    // QUALIFIED (`private[TopLevel]` for a java `private` one, `private[pkg]` for a package-private
+    // one) — a public member may expose such a type in its signature, and a cross-package caller
+    // may call it and hold the value. The erasure was therefore hiding a real level, which is what
+    // the type-level half of §8.7's mapping restores. A top-level java type is never `private`, so
+    // the bare form the sentence above is about cannot arise from this path at all.
     // A Java `@interface` is an ANNOTATION TYPE. Emitted as an ordinary interface it becomes a
     // trait, and then nothing can be annotated with it — 161 errors' worth of `@Null` in this
     // corpus alone. Scala's equivalent is a class extending `StaticAnnotation`.
@@ -1024,7 +1098,7 @@ final class TirEmitter(
     val cls     =
       if s.flags.isAnnotation then
         s"${leading(cd.leading, i)}$cnote${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$prim extends scala.annotation.StaticAnnotation"
-      else s"${leading(cd.leading ++ ctorLead, i)}$cnote${annots(s, i)}${ind(i)}${mods(s.flags.copy(isPrivate = false))}$abs$kw ${esc(s.name)}$tps$prim$ext$open"
+      else s"${leading(cd.leading ++ ctorLead, i)}$cnote${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}$abs$kw ${esc(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
@@ -1074,7 +1148,7 @@ final class TirEmitter(
         at.filter(_ != winner).foreach(j => extraExcl(j) = extraExcl(j) + n)
     }
     val parentExports  = kept.zipWithIndex.map { (p, j) =>
-      val excluded = (ownStaticNames.toSet ++ extraExcl(j)).toList.sorted
+      val excluded = (ownStaticNames.toSet ++ extraExcl(j) ++ nonPublicStatics(delivered(j))).toList.sorted
       val sel      = if excluded.isEmpty then "*" else s"{${excluded.map(_ + " => _").mkString(", ")}, *}"
       s"${ind(i + 1)}export ${typeValue(p)}.$sel"
     }
@@ -1188,7 +1262,12 @@ final class TirEmitter(
       orderBody(instance).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
       ctorStats.map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM ++ ordinalM
     val cbody   = members.mkString("\n")
-    val cls     = s"${leading(cd.leading, i)}$cnote${ind(i)}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
+    // §8.7 governs an enum TYPE like any other. Its CONSTRUCTOR is a different matter and is
+    // deliberately left public: java makes it implicitly `private` (JLS 8.9.2), but this lowering
+    // has already dissolved it — the parameters ARE the sealed class's primary and every
+    // `case object` in the companion passes its arguments to that primary, so there is no
+    // constructor declaration left to carry a modifier.
+    val cls     = s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
     val cases = cd.enumCases.zipWithIndex.map { (ec, idx) =>
       val cn   = esc(sym(ec.symbol).name)
       val args = if ec.ctorArgs.isEmpty then "" else s"(${ec.ctorArgs.map(term(_, i + 1)).mkString(", ")})"
@@ -1551,7 +1630,7 @@ final class TirEmitter(
     // decision and the trivia is the upstream's documentation (a licence among them, §4.58) — a
     // note above the Javadoc reads as part of it and displaces the thing the port is obliged to
     // reproduce, so the order here is a rule and not a preference.
-    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}${ind(i)}${mods(s.flags, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
+    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
 
   /** does this loop body contain an unlabelled `break` that belongs to THIS loop?
     *
@@ -1910,7 +1989,7 @@ final class TirEmitter(
       case Some(fs) =>
         val kw = if fs.mutable then "var" else "val"
         val q  = privateQualifier(s.owner)
-        val m  = if kw == "var" then mods(s.flags, q).replace("final ", "") else mods(s.flags, q)
+        val m  = if kw == "var" then mods(s, q).replace("final ", "") else mods(s, q)
         return s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${fs.name}"
       case None => ()
     v.rhs match
@@ -1923,11 +2002,11 @@ final class TirEmitter(
         // creates a `Vector3` that is still half-built, and the JVM throws
         // `ExceptionInInitializerError`. Scala's equivalent of the java rule is `inline val` —
         // note WITHOUT the type ascription, which would defeat the constant type.
-        s"${ind(i)}${mods(s.flags).replace("final ", "")}inline val ${esc(s.name)} = ${constAt(r, v.tpt.tpe)}"
+        s"${ind(i)}${mods(s).replace("final ", "")}inline val ${esc(s.name)} = ${constAt(r, v.tpt.tpe)}"
       case Some(r) =>
         val kw = if s.flags.isMutable then "var" else "val"
         val q  = privateQualifier(s.owner)
-        val m  = if kw == "var" then mods(s.flags, q).replace("final ", "") else mods(s.flags, q)
+        val m  = if kw == "var" then mods(s, q).replace("final ", "") else mods(s, q)
         s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${term(r, i)}"
       case None =>
         // An uninitialized Java field: a `var` placeholder so constructors can assign it (a bare
@@ -1955,7 +2034,7 @@ final class TirEmitter(
         val fieldOfAClass = program.definitionOf(s.owner).exists(_.isInstanceOf[Tree.ClassDef])
         val stated = defaultFor(v.tpt.tpe)
         val blank  = if fieldOfAClass && stated.contains(".asInstanceOf[") then "scala.compiletime.uninitialized" else stated
-        s"${ind(i)}${mods(s.flags, privateQualifier(s.owner)).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = $blank"
+        s"${ind(i)}${mods(s, privateQualifier(s.owner)).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = $blank"
 
   /** the literal rendered AT the field's declared type.
     *
@@ -2041,19 +2120,33 @@ final class TirEmitter(
   private def privateQualifier(owner: SymId): Option[String] =
     Option.when(currentTopLevel.nonEmpty && currentOwnerSym != currentTopLevelSym)(currentTopLevel)
 
-  private def mods(f: Flags): String = mods(f, scala.None)
+  /** The ACCESS modifier alone — [[Visibility]] decided the level, this supplies the qualifier.
+    *
+    * The two package-scoped levels take [[currentPkgTail]], which is the package the emitter is
+    * writing into right now; only a cross-package override carries a package of its own, and even
+    * then it is an ENCLOSING one, so its last segment is a name in scope here. `esc` because a
+    * package segment is an ordinary Java identifier and Scala has more keywords than Java does. */
+  private def vis(s: Symbol, privateIn: Option[String]): String =
+    visPlan.getOrElse(s.id, Visibility.Vis.Public) match
+      case Visibility.Vis.Public         => ""
+      case Visibility.Vis.Private        => privateIn.fold("private ")(o => s"private[$o] ")
+      case Visibility.Vis.PackagePrivate => s"private[${esc(currentPkgTail)}] "
+      case Visibility.Vis.ProtectedPkg   => s"protected[${esc(currentPkgTail)}] "
+      case Visibility.Vis.PrivateAt(q)   => s"private[${esc(TirEmitter.tailSegment(q))}] "
+      case Visibility.Vis.ProtectedAt(q) => s"protected[${esc(TirEmitter.tailSegment(q))}] "
 
-  private def mods(f: Flags, privateIn: Option[String]): String =
+  private def mods(s: Symbol, privateIn: Option[String] = scala.None): String =
+    val f = s.flags
+    // `private override` is illegal in scala, and the pair is contradictory: a java `private`
+    // method is invisible to subclasses, so it overrides nothing — a name/arity agreement with an
+    // inherited member is coincidence. That is true of BOTH renderings of java `private` (bare, and
+    // `private[TopLevel]` for a nested class's member, which is java's own scope for it) and it is
+    // NOT true of package-private, which does override within its package and NEEDS the keyword.
+    // So the rule is scoped to the LEVEL and not to the presence of a qualifier.
+    val javaPrivate = visPlan.get(s.id).contains(Visibility.Vis.Private)
     val parts = List(
-      if f.isPrivate then privateIn.fold("private ")(o => s"private[$o] ") else "",
-      // Java `protected` (package + any-instance-in-subclass) is MORE permissive than Scala
-      // `protected` (this-instance only), so a faithful port emits it as public — loosening
-      // visibility can only remove access errors, never introduce them.
-      "",
-      // `private override` is illegal in scala, and the pair is contradictory: a PRIVATE java
-      // method is invisible to subclasses, so it overrides nothing — a name/arity agreement with an
-      // inherited member is coincidence. `private` is the faithful half; drop the modifier.
-      if f.isOverride && !f.isPrivate then "override " else "",
+      vis(s, privateIn),
+      if f.isOverride && !javaPrivate then "override " else "",
       if f.isFinal then "final " else "",
       if f.isSealed then "sealed " else "",
       if f.isImplicit then "implicit " else "",
@@ -2658,6 +2751,14 @@ final class TirEmitter(
 
 object TirEmitter:
 
+  /** the last segment of a dotted package name — the only form a Scala access qualifier has, since
+    * the language has no dotted qualifier at all (`private[a.b]` does not parse). */
+  def tailSegment(pkg: String): String = pkg.substring(pkg.lastIndexOf('.') + 1)
+
+  /** the last segment of the package a TOP-LEVEL FQN lives in; `""` in the default package. */
+  def packageTailOf(fullName: String): String =
+    if !fullName.contains('.') then "" else tailSegment(fullName.substring(0, fullName.lastIndexOf('.')))
+
   /** RECORD one of this file's decisions.
     *
     * Every decider here is [[Reason.Universal]] and every one of them is a §4.55/§4.56 fact about
@@ -2700,8 +2801,11 @@ object TirEmitter:
         if members(s.id) && s.flags.isPrivate then
           note(out, Decision.Kind.WidenedVisibility, src, s.id,
             Map(
+              // the same `cause=` pair every §8.7 residue carries, so "what widened, and why" is
+              // ONE grep over `decisions.tsv` rather than a join across two grammars.
+              "cause" -> "ctor-replay-widening",
               "from" -> "private",
-              "to"   -> "package-visible",
+              "to"   -> "public",
               "why"  -> ("a parent constructor's statements are REPLAYED in this subclass " +
                 "(CtorFunnel.replayFor), and java let them touch a private member that scala's " +
                 "replay cannot reach one level down; widening can only remove access errors"),

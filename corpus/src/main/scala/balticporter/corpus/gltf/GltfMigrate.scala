@@ -164,26 +164,14 @@ object GltfPolicy:
               |  }
               |  e
               |}""".stripMargin,
-          // 4. NOT a reflection site, and the only entry here that repairs an ENGINE gap rather
-          //    than a portability one — `ENGINE-LIMITS.md` T12. libGDX's `AnimationController`
-          //    declares six public `setAnimation(String, …)` and one PROTECTED
-          //    `setAnimation(AnimationDesc)`. Java resolved `setAnimation(null)` here against the
-          //    String overload alone, because the protected twin is not accessible from
-          //    `net.mgsx.gltf.scene3d.animation`; the emitter drops `protected` (867 declarations
-          //    in libGDX core, 3 survive), both overloads become public and arity-1, and dotty
-          //    reports `E051 Ambiguous overload`.
-          //
-          //    The body below is upstream's, verbatim, with the ascription that states the
-          //    overload java chose. It is a five-line method, so this costs no divergence from
-          //    upstream worth the name — and it is removed the day the engine renders java's
-          //    `protected` as `protected[<package>]`, which is priced at those 867 declarations.
-          "net.mgsx.gltf.scene3d.animation.AnimationsPlayer#clearAnimations" ->
-            """{
-              |  this.controllers.clear()
-              |  if (this.scene.animationController != null) {
-              |    this.scene.animationController.setAnimation(null.asInstanceOf[java.lang.String])
-              |  }
-              |}""".stripMargin,
+          // A FOURTH entry stood here and is GONE, which is worth a line because its absence is the
+          // measurement: `AnimationsPlayer#clearAnimations` carried upstream's own body plus an
+          // ascription, to work around the engine dropping java's `protected` (`ENGINE-LIMITS.md`
+          // T12 — both `setAnimation` overloads shipped public, `setAnimation(null)` became
+          // `E051 Ambiguous overload`). `DESIGN.md` §8.7 renders `protected` as
+          // `protected[<package>]`, dotty prunes the inaccessible alternative before overload
+          // resolution, and the call resolves exactly as javac resolved it. The condition its own
+          // comment named has been met, so the entry retires rather than being kept "just in case".
         )),
         // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE
         // actually emitted and reports a reference the base does not ship, so it must run after

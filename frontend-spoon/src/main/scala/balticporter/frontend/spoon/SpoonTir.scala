@@ -70,19 +70,31 @@ object SpoonTir:
     * JDK types resolve by qualified name) and populate the TIR from its top-level types. */
   def fromSource(code: String, fileName: String = "Snippet.java",
                  subs: Substitutions = Substitutions.none): Program =
+    fromSources(List(fileName -> code), subs)
+
+  /** The same, over SEVERAL compilation units — because a Java file holds exactly one package, and
+    * every rule about a PACKAGE BOUNDARY (default access, `protected`, a cross-package override)
+    * is therefore untestable from one snippet. Each pair is `fileName -> code`.
+    *
+    * The buffer handed to the builder is the CONCATENATION, which is only used to slice comments
+    * out by position; Spoon reports positions per compilation unit, so each unit's own text is
+    * looked up by file name rather than by offset into a joined string. */
+  def fromSources(sources: List[(String, String)],
+                  subs: Substitutions = Substitutions.none): Program =
     val launcher = new Launcher
     val env      = launcher.getEnvironment
     env.setComplianceLevel(21)
     env.setCommentEnabled(true)
     env.setNoClasspath(true)
-    launcher.addInputResource(new VirtualFile(code, fileName))
+    sources.foreach((name, code) => launcher.addInputResource(new VirtualFile(code, name)))
     val model = launcher.buildModel()
     val tops  = model.getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
-    // `code` is handed to the builder because a `VirtualFile` has no file behind it and Spoon's
-    // `CtCompilationUnit.getOriginalSourceCode` therefore returns null — comments would fall back
-    // to Spoon's RE-PRINTED form and this convenience API would quietly be the one path that does
-    // not preserve them verbatim. It is the same buffer either way; only its source differs.
-    new Builder(subs, code).build(tops)
+    // the source texts are handed to the builder because a `VirtualFile` has no file behind it and
+    // Spoon's `CtCompilationUnit.getOriginalSourceCode` therefore returns null — comments would
+    // fall back to Spoon's RE-PRINTED form and this convenience API would quietly be the one path
+    // that does not preserve them verbatim. It is the same buffer either way; only its source
+    // differs.
+    new Builder(subs, sources.toMap).build(tops)
 
   // -------------------------------------------------------------------------
   /** Interns symbols by a stable string key (qualified names for types, `owner#member`
@@ -131,10 +143,14 @@ object SpoonTir:
     def idOf(key: String): SymId  = byKey(key)
     def fullNameOf(id: SymId): String = syms.get(id).map(_.fullName).getOrElse("?")
 
-  /** @param inMemorySource
-    *   the compilation unit's text when Spoon has none of its own — see `fromSource`. Empty for a
-    *   model built over real files, where every unit carries its own buffer. */
-  private final class Builder(subs: Substitutions = Substitutions.none, inMemorySource: String = ""):
+  /** @param inMemorySources
+    *   each compilation unit's text BY FILE NAME, for the units where Spoon has none of its own —
+    *   see `fromSources`. Empty for a model built over real files, where every unit carries its own
+    *   buffer. Keyed rather than a single string because two in-memory units have two buffers and
+    *   one position is only meaningful in ONE of them: slicing unit B's comment out of unit A's
+    *   text is exactly the silent mis-preservation §4.58 is about. */
+  private final class Builder(subs: Substitutions = Substitutions.none,
+                              inMemorySources: Map[String, String] = Map.empty):
     private val minter   = new Minter
     private val tpScopes = collection.mutable.ArrayDeque[Map[String, SymId]]()
     private val selfRawStack = collection.mutable.ArrayDeque[(SymId, List[SymId])]()
@@ -262,8 +278,19 @@ object SpoonTir:
       * a broad `catch` one level up, made the whole harvest silently produce nothing. */
     private def sourceOf(el: CtElement): String =
       val pos = el.getPosition
-      if pos == null || !pos.isValidPosition then inMemorySource
-      else Option(pos.getCompilationUnit).flatMap(cu => Option(cu.getOriginalSourceCode)).getOrElse(inMemorySource)
+      if pos == null || !pos.isValidPosition then inMemoryFor(null)
+      else Option(pos.getCompilationUnit).flatMap(cu => Option(cu.getOriginalSourceCode)).getOrElse(inMemoryFor(pos))
+
+    /** the in-memory buffer THIS position belongs to, by the unit's file name. Falls back to the
+      * only source when there is exactly one (the single-snippet convenience path, where the name
+      * is an implementation detail nobody passed), and to `""` when several are in play and the
+      * position names none of them — which degrades a comment to Spoon's re-printed form rather
+      * than slicing it out of the wrong file. */
+    private def inMemoryFor(pos: spoon.reflect.cu.SourcePosition): String =
+      Option(pos).filter(_.isValidPosition).flatMap(p => Option(p.getFile)).map(_.getName)
+        .flatMap(inMemorySources.get)
+        .orElse(Option.when(inMemorySources.sizeIs == 1)(inMemorySources.values.head))
+        .getOrElse("")
 
     /** the comments Spoon attached DIRECTLY to `el` — its Javadoc and anything written above it.
       * Deliberately NOT wrapped in a `catch`: a harvest that throws is a defect to see, and a
@@ -1385,40 +1412,82 @@ object SpoonTir:
     private def has(m: CtModifiable, k: ModifierKind): Boolean = m.hasModifier(k)
     import ModifierKind.*
 
+    /** Java's FOURTH access level, and it is NOT "no modifier is present".
+      *
+      * "Package-private" is what the JLS calls *default access*, and the language grants public or
+      * private access implicitly in three places where nothing is written (DESIGN §8.7):
+      *
+      *   - a member of an INTERFACE or of an `@interface` is implicitly `public` (JLS 9.4, 9.6) —
+      *     so is a type nested in one (JLS 9.5), and so is an interface FIELD (JLS 9.3);
+      *   - an ENUM constructor is implicitly `private` (JLS 8.9.2), and declaring it `public` or
+      *     `protected` is a compile error, so the absent modifier is the strongest level rather
+      *     than the default one;
+      *   - an enum CONSTANT and an anonymous/local class carry no user-written access at all.
+      *
+      * Reading `hasModifier(PUBLIC)` instead would trust the parser's implicit-modifier model for
+      * exactly the declarations where the model is the thing in question (§4.58), so the rule is
+      * spelled here from the JLS and the DECLARING TYPE, which Spoon reports structurally. */
+    private def implicitlyPublic(el: CtElement): Boolean = el match
+      case m: CtTypeMember => m.getDeclaringType.isInstanceOf[CtInterface[?]]
+      case _               => false
+
+    /** JLS-effective access for one declaration: exactly one of the three is set, or all are clear
+      * and it is public. `implicitPrivate` is the enum-constructor case. */
+    private def access(m: CtModifiable, el: CtElement, implicitPrivate: Boolean = false): (Boolean, Boolean, Boolean) =
+      val priv = has(m, PRIVATE) || (implicitPrivate && !has(m, PUBLIC) && !has(m, PROTECTED) && !has(m, PRIVATE))
+      val prot = !priv && has(m, PROTECTED)
+      val pkg  = !priv && !prot && !has(m, PUBLIC) && !implicitlyPublic(el)
+      (priv, prot, pkg)
+
     private def typeFlags(t: CtType[?]): Flags =
       val isAnnot = t.isInstanceOf[spoon.reflect.declaration.CtAnnotationType[?]]
       // a Java `@interface` IS a `CtInterface`, but it must not become a Scala trait — see the
       // emitter: an annotation type is a CLASS extending `scala.annotation.StaticAnnotation`, or
       // nothing can be annotated with it.
       val isTrait = t.isInstanceOf[CtInterface[?]] && !isAnnot
+      // an ANONYMOUS or LOCAL class has no access modifier to read and no package half to lose:
+      // nothing outside the expression that declares it can name it at all.
+      val anonymous = t.getSimpleName == null || t.getSimpleName.isEmpty || t.getSimpleName.forall(_.isDigit)
+      val (priv, prot, pkg) = access(t, t)
       Flags(
         isAnnotation = isAnnot,
         isAbstract = (has(t, ABSTRACT) || isTrait) && !isAnnot,
         isFinal = has(t, FINAL),
         isTrait = isTrait,
         isEnum = t.isInstanceOf[CtEnum[?]],
-        isPrivate = has(t, PRIVATE),
-        isProtected = has(t, PROTECTED),
+        isPrivate = priv,
+        isProtected = prot,
+        isPackagePrivate = pkg && !anonymous,
         isStatic = has(t, STATIC),
       )
 
     private def fieldFlags(f: CtField[?]): Flags =
+      // an ENUM CONSTANT is `public static final` implicitly (JLS 8.9.3) and Spoon models it as a
+      // field of the enum, which is a CtClass and not a CtInterface — so it needs its own answer.
+      val enumConstant = f.isInstanceOf[CtEnumValue[?]]
+      val (priv, prot, pkg) = access(f, f)
       Flags(
         isFinal = has(f, FINAL),
         isMutable = !has(f, FINAL),
         isStatic = has(f, STATIC),
-        isPrivate = has(f, PRIVATE),
-        isProtected = has(f, PROTECTED),
+        isPrivate = priv,
+        isProtected = prot,
+        isPackagePrivate = pkg && !enumConstant,
       )
 
     private def execFlags(m: CtExecutable[?]): Flags = m match
       case mod: CtModifiable =>
+        val enumCtor = m match
+          case c: CtConstructor[?] => c.getDeclaringType.isInstanceOf[CtEnum[?]]
+          case _                   => false
+        val (priv, prot, pkg) = access(mod, m, implicitPrivate = enumCtor)
         Flags(
           isAbstract = has(mod, ABSTRACT),
           isFinal = has(mod, FINAL),
           isStatic = has(mod, STATIC),
-          isPrivate = has(mod, PRIVATE),
-          isProtected = has(mod, PROTECTED),
+          isPrivate = priv,
+          isProtected = prot,
+          isPackagePrivate = pkg,
           isNative = has(mod, NATIVE),
         )
       case _ => Flags()

@@ -2550,6 +2550,43 @@ That is right for **bare** private and **wrong** once qualified private exists �
 does override and needs the keyword. The existing negative stays pinned: qualifying a top-level class's
 own bare `private` regressed a port by 1 error, because a member that overrode nothing suddenly did.
 
+**BUILT (D3), and seven things the implementation settled that the paragraphs above could not.** The
+level is decided once, whole-program, in `emit/Visibility.scala`; the QUALIFIER is supplied by the
+emitter from the package it is currently writing into, which is why two of the five `Vis` cases carry
+no string at all. `Flags` gained `isPackagePrivate` (additive) and `Symbol.privateWithin` is deleted.
+What the code had to decide:
+
+- **The cross-package `protected` override lives in ANONYMOUS classes, and a walk over class bodies
+  finds none of them.** `new Pool<T>() { protected T newObject() { … } }` is how a Java library
+  writes a factory, and every one is an override across the package that declares `Pool`. An
+  anonymous class is a `Tree.New`, not a `ClassDef` (§3's rule, one more time), so the override
+  graph missed all of them: **14 `E164` errors** on the largest port, each *"has weaker access
+  privileges"* — and note the failure mode is an ERROR rather than the silent widening the rest of
+  this section is about. Counted, the residue is **28** cross-package protected overrides where the
+  census, which could only scan declared classes, predicted 10.
+- **`protected static` covers nested TYPES too**, for the same reason it covers members: a `protected
+  static class` moves to the companion `object`, and nothing subclasses an object. Its own
+  CONSTRUCTOR is not static and keeps `protected[pkg]`, which still admits a subclass in any package.
+  With the types counted the residue is **99**, not the census's 71.
+- **A NILARY constructor has nowhere for the modifier to sit**, so it gets the empty clause written
+  out — `class C private[p] ()`. NOT when the class already carries a context clause: `()(using Ctx)`
+  is a different signature from `(using Ctx)` and every call site would have to move.
+- **The companion re-export filter must skip `<clinit>`.** A static initialiser block is not a name;
+  excluding it emits `export P.{<clinit> => _, *}`, which the parser reads as an XML start tag —
+  **29 `E040` syntax errors**, and the second time that exact trap has been sprung in this file.
+- **`ctor-replay-widening` is NOT retargeted to `private[pkg]`.** The replayed statements execute in
+  a SUBCLASS, which the port may emit into another package, and a package boundary does not reach
+  there; public remains the only form that always does. Its row now carries the same `cause=` pair as
+  every other residue, so "what widened, and why" is one grep.
+- **An INJECTED file has to agree with the surface of the type it replaces, BY HAND.** Nothing
+  derives an injection's signatures from the Java it stands in for, so a hand-written shim that made
+  an upstream `protected` member public is weaker-access at every override the port emits — one
+  measured site, one error, fixed in the shim and not in the engine.
+- **`override` is dropped for java `private` and KEPT for package-private**, which is the scoping
+  correction below stated as the level rather than as the qualifier: `private[TopLevel]` IS java's
+  `private` (JLS 6.6.1) and overrides nothing, while `private[pkg]` does override within its package
+  and needs the keyword.
+
 **Blast: one designed corpus-wide re-baseline.** The census *is* the predicted movement — for the largest
 port ≈ 867 protected + 1,043 package-private + 36 types + 23 ctors ≈ **1,970 member digests**.
 `members-unchanged` is the wrong gate for this change **by design**; the gate is that error counts do
