@@ -2650,6 +2650,7 @@ same mechanism and wants the same thing: a replacement expression the port must 
 
 *Fix kind: was (b) with no phase; the phase now exists, and each remaining site is (b) POLICY in
 that library's manifest.*
+
 ### D8. A TYPE REDIRECT that only rewrites `TypeRepr` is a PARTIAL redirect — and its own contract said that was impossible
 
 `TypeRedirectTransform` is the (b) mechanism a dependent uses for a type it cannot ship and cannot
