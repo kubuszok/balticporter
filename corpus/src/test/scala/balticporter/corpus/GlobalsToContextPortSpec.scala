@@ -70,7 +70,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   )
 
   /** A class with TWO constructors reaching ONE parent constructor — §8.2's SYNTHESISED primary,
-    * which is the shape the constructor clause is hardest for and the one `ENGINE-LIMITS.md` X4's
+    * which is the shape the constructor clause is hardest for and the one `ENGINE-LIMITS.md` CT4's
     * first cause lived in. Its own source rather than a fifth class in `src`, because in METHOD mode
     * only the constructor that READS would take a clause and the two roots would then disagree
     * about their signatures — a legitimate refusal, and noise in every assertion above. */
@@ -259,7 +259,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
 
   test("`attach = class` EMITS — the refusal is gone, and nothing is reported in its place") {
     // This spec was the REFUSAL's spec: `attach = "class"` recorded a counted `Unverifiable`
-    // finding because the constructor funnel undid the clause three ways (ENGINE-LIMITS X4, 5
+    // finding because the constructor funnel undid the clause three ways (ENGINE-LIMITS CT4, 5
     // scalac errors on this fixture). All three were in the constructor region DESIGN.md §8.2 owns
     // and all three are closed there — the plan models parameter GROUPS, the funnel's "is this
     // nilary" questions read the VALUE parameters, and the emitter renders the clause through
@@ -291,7 +291,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     assert(clue(classRows).contains("demo.Basic"), classRows.toString)
   }
 
-  /** X4's FIRST cause, end to end: a constructor that has gained a clause is not java's nilary one,
+  /** CT4's FIRST cause, end to end: a constructor that has gained a clause is not java's nilary one,
     * and reading it as paramful is what made the funnel decline the promotion and emit a synthetic
     * nilary primary beside it — a class body with no given in scope anywhere. The class here needs a
     * SYNTHESISED primary (two roots, one parent constructor), so the clause has to survive both the

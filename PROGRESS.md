@@ -2143,7 +2143,7 @@ do to the same signatures. P5's numbers will move; the ratio between the two col
 
 **`attach = "class"` EMITS — the refusal landed, and then so did the fix. 5 scalac errors → 0.** For
 one release the TIR edit was complete and the emission was not: the constructor funnel undid the
-clause three ways (`ENGINE-LIMITS.md` X4), so the knob recorded a `PolicyIssue.Unverifiable` finding
+clause three ways (`ENGINE-LIMITS.md` CT4), so the knob recorded a `PolicyIssue.Unverifiable` finding
 naming all three rather than shipping code that does not compile. All three turned out to be one
 thing — `paramss.flatten`, which answers *what does this constructor take* where the question is
 *what did JAVA declare*. The funnel now models parameter GROUPS (`CtorFunnel.Plan.givens` beside
@@ -2156,7 +2156,7 @@ Validated by RUNNING, not by asserting: the fixture is emitted one file per unit
 `class Panel protected (sup$0: Int, sup$1: Boolean)(using demo.Ctx)` reached by two secondaries and
 by a subclass's argument-free `extends` — compiles and RUNS. At libGDX-core scale class attachment
 emits **578 `(using sge.Sge)` clauses, 0 flattened into a value parameter and 0 synthesised empty
-primaries** — X4's first two causes read off the emitted text rather than argued.
+primaries** — CT4's first two causes read off the emitted text rather than argued.
 
 The dry-run table above reproduces byte for byte after the fix (275 / 177 / 17 against 2,497 / 324 /
 162, `frozen-component` 32 → 0, refusals 15 → 0, residual holder 8 → 9 of 11, `DeferredInit` 0 in

@@ -140,7 +140,7 @@ object CtorFunnel:
         * cosmetic once a phase can add a clause. Flattened into [[primaryParams]] the group is lost
         * and the emitter writes `class Scene($p: demo.Ctx)` — an ordinary class parameter, with no
         * given in scope anywhere in the body and every `summon` in it failing. That was one of
-        * `ENGINE-LIMITS.md` X4's three causes; the other two are the same fact read at the
+        * `ENGINE-LIMITS.md` CT4's three causes; the other two are the same fact read at the
         * NOMINATION, where a constructor that gained a clause stopped counting as java's nilary one.
         *
         * So the plan models the split: [[primaryParams]] is what JAVA declared and this is what the
@@ -1003,7 +1003,7 @@ object CtorFunnel:
   // answers a different one the moment such a clause exists: a class whose only constructor gained
   // `(using Ctx)` stopped being the nilary root the funnel promotes, the promotion was withheld, and
   // the class emitted a synthetic nilary primary beside a `def this()(using Ctx)` with no given in
-  // scope at all (`ENGINE-LIMITS.md` X4). Both functions are the identity on an unedited program.
+  // scope at all (`ENGINE-LIMITS.md` CT4). Both functions are the identity on an unedited program.
 
   /** the TRAILING `using` clauses of a constructor — what a phase added, never what java wrote. */
   def givenClauses(program: Program, d: Tree.DefDef): List[List[Tree.ValDef]] =

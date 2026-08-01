@@ -107,7 +107,7 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
 
       // CLASS ATTACHMENT USED TO BE REFUSED HERE with a counted `Unverifiable` finding, because the
       // TIR edit was correct and the EMISSION was not: the constructor funnel undid it three ways
-      // (`ENGINE-LIMITS.md` X4, 5 scalac errors on this phase's own fixture) — a constructor that
+      // (`ENGINE-LIMITS.md` CT4, 5 scalac errors on this phase's own fixture) — a constructor that
       // had gained a parameter stopped counting as java's nilary root, a promoted primary's
       // parameter list was rebuilt flat and lost the `using` grouping, and a subclass of the first
       // shape saw two applicable constructors. All three were in the constructor region `DESIGN.md`

@@ -2062,7 +2062,7 @@ the mechanism commit rather than left for the enablement:
 
 **`attach = "class"` NOW EMITS, and the refusal it carried is a worked example of where such a
 refusal belongs.** For one release the TIR edit was complete and the emission was not — the
-constructor funnel undid it three ways, 5 scalac errors (`ENGINE-LIMITS.md` X4), all three inside
+constructor funnel undid it three ways, 5 scalac errors (`ENGINE-LIMITS.md` CT4), all three inside
 the region §8.2 owns — so the knob RECORDED a `PolicyIssue.Unverifiable` finding naming all three
 rather than emitting code that does not compile. That was the right place for the fix and the right
 place for the finding: a clause the funnel will not carry is not a clause, so every workaround in

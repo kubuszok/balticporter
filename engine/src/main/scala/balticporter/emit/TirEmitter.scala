@@ -954,7 +954,7 @@ final class TirEmitter(
     // rendered as its own GROUP through `paramClause`. Java's parameter list is one list and
     // scala's is a list of groups; flattened into the value parameters the `using` is lost and the
     // class reads `class Scene($p: demo.Ctx)` — an ordinary parameter, no given in scope, every
-    // `summon` in the body unresolved. That was one of `ENGINE-LIMITS.md` X4's three causes, and it
+    // `summon` in the body unresolved. That was one of `ENGINE-LIMITS.md` CT4's three causes, and it
     // is the one that lived HERE: the other two were the funnel reading such a constructor as
     // paramful and declining to promote it. Empty for every port that threads nothing, which is why
     // no emitted byte moves.

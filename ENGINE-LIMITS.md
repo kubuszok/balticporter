@@ -2894,7 +2894,15 @@ Turning a static holder into a `using` parameter is a whole-program reachability
 edges are not call-graph facts. What follows is what was measured wrong on the way to getting it
 right (`DESIGN.md` §8.4).
 
-### X1. An anonymous body's LEXICAL HOME is not in the owner chain — the capture lands on the CLASS
+Prefixed `CT`, and that is not decoration: these entries were minted `X1`–`X4` beside §6's `X1`–`X5`,
+so every citation in the repository read as either section for as long as both existed. An id in this
+file is unique across it, and an entry whose id may ever move carries its own **"Title, for
+renumbering"** line so a citation can be resolved by title when the number cannot.
+
+### CT1. An anonymous body's LEXICAL HOME is not in the owner chain — the capture lands on the CLASS
+
+**Title, for renumbering: "an anonymous body's lexical home is not in the owner chain".** CLOSED.
+(a) engine.
 
 CLOSED. The frontend interns an anonymous class with its **enclosing class** as owner, because that
 is where its emitted name comes from (`Outer$1`). A pass that finds "the declaration this body was
@@ -2918,7 +2926,10 @@ tests the symbol it was handed sees an ordinary method. Look UP one level before
 
 *Fix kind: (a) engine.*
 
-### X2. A `lazy val` cannot receive a context — the deferred static is a CACHE PAIR, not a `lazy val`
+### CT2. A `lazy val` cannot receive a context — the deferred static is a CACHE PAIR, not a `lazy val`
+
+**Title, for renumbering: "a lazy val cannot receive a context — the deferred static is a cache
+pair".** ASSERTED. (b) configure.
 
 ASSERTED, and it is a language fact rather than a measurement. A class initialiser that reads the
 holder cannot be threaded (it has no signature) and cannot be made a `lazy val` either: **a `lazy
@@ -2933,7 +2944,10 @@ with a `DeferredInit` decision and a porter note that says so.
 
 *Fix kind: (b) configure — `sites { "…#<clinit>" = "lazy-init" }`, per site, never a mode.*
 
-### X3. An anonymous `(using T)` clause is an EMITTER capability, not a phase one
+### CT3. An anonymous `(using T)` clause is an EMITTER capability, not a phase one
+
+**Title, for renumbering: "an anonymous using clause is an emitter capability, not a phase one".**
+CLOSED. (a) engine.
 
 CLOSED. Every parameter the emitter rendered was `name: Type`, so the shape the design specifies —
 `(using T)` with no name — was unemittable and a phase would have had to MINT a name. That is the
@@ -2947,7 +2961,10 @@ real one.
 
 *Fix kind: (a) engine.*
 
-### X4. A CONSTRUCTOR could not carry a `using` clause — **CLOSED; 5 errors → 0, and the fix is one distinction**
+### CT4. A CONSTRUCTOR could not carry a `using` clause — **CLOSED; 5 errors → 0, and the fix is one distinction**
+
+**Title, for renumbering: "a constructor could not carry a using clause — paramss.flatten".**
+CLOSED. (a) engine.
 
 **CLOSED.** Kept because the *reason* it was open is a rule, and because the shape of the wrong fix
 is worth naming twice.
