@@ -105,33 +105,18 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
           "would be un-mappable and the phase would thread nothing — the §1(b) silent no-op this " +
           "engine refuses. Map at least one static onto a path on the context type")
 
-      // CLASS ATTACHMENT IS NOT EMITTABLE YET, and it says so rather than shipping code that does
-      // not compile. The TIR edit is complete and correct — the clause lands on every constructor,
-      // the closure propagates down the hierarchy and across `new` — but the emitter's constructor
-      // funnel undoes it three ways, measured on this phase's own end-to-end fixture (5 errors):
-      //
-      //   - a constructor that has GAINED a parameter is no longer nilary, so the funnel declines to
-      //     promote it (`ENGINE-LIMITS.md` C1) and emits a synthetic nilary primary beside it — the
-      //     class body then has no context in scope at all;
-      //   - where it DOES promote, the synthetic primary's parameter list is built from the funnel's
-      //     own plan rather than through `paramClause`, so the `given` grouping is dropped and the
-      //     clause renders as an ordinary `class Scene($p: demo.Ctx)` — again no given in scope;
-      //   - and a subclass of the first shape sees TWO applicable constructors (`()` and
-      //     `()(using T)`) and reports an ambiguous overload.
-      //
-      // All three live in `CtorFunnel`/`CtorPlan`/the emitter's constructor region, which DESIGN.md
-      // §8.2's work owns. A finding, not a silent emission: CLAUDE.md §1(b)'s rule that a knob whose
-      // seam is silent is worse than no knob.
-      if h.attach == ContextAttach.Class then
-        bad += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.attach",
-          h.holder, PolicyIssue.Unverifiable,
-          "`attach = \"class\"` puts the context clause on the class's CONSTRUCTORS, and the " +
-            "emitter's constructor funnel does not carry it: a constructor that gained a parameter " +
-            "is not promoted to the primary (so the class body has no given in scope), a promoted " +
-            "one loses the `using` grouping and renders as an ordinary class parameter, and a " +
-            "subclass of the first shape sees an ambiguous overload. Measured: 5 errors on the " +
-            "phase's own fixture. Use `attach = \"method\"` until the synthetic-primary work " +
-            "(DESIGN.md §8.2) lands; the closure and the TIR edit are already correct")
+      // CLASS ATTACHMENT USED TO BE REFUSED HERE with a counted `Unverifiable` finding, because the
+      // TIR edit was correct and the EMISSION was not: the constructor funnel undid it three ways
+      // (`ENGINE-LIMITS.md` X4, 5 scalac errors on this phase's own fixture) — a constructor that
+      // had gained a parameter stopped counting as java's nilary root, a promoted primary's
+      // parameter list was rebuilt flat and lost the `using` grouping, and a subclass of the first
+      // shape saw two applicable constructors. All three were in the constructor region `DESIGN.md`
+      // §8.2 owns, and all three are closed there: the plan models parameter GROUPS
+      // (`CtorFunnel.Plan.givens`), every "is this constructor nilary" question in the funnel reads
+      // `CtorFunnel.valueParams`, and the emitter renders the clause through `paramClause`. This
+      // phase needs no code for it — which is the point, and the reason the refusal was a refusal
+      // rather than a workaround: a clause the funnel will not carry is not a clause, and every
+      // workaround would have been a second constructor plan.
 
       h.context match
         case ContextType.Minted(fqn) =>

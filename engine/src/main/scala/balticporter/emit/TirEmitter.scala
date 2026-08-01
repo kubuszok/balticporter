@@ -950,10 +950,23 @@ final class TirEmitter(
     // `protected` there, never `private`: scala requires every type in a member's signature to be
     // at least as visible as the member (C9).
     val markerParam = plan.marker.map(n => s"ctor$$: ${typeValue(cd.symbol)}.${esc(n)}").toList
+    // …and the CONTEXT CLAUSE a phase put on this class's constructors (`CtorFunnel.Plan.givens`),
+    // rendered as its own GROUP through `paramClause`. Java's parameter list is one list and
+    // scala's is a list of groups; flattened into the value parameters the `using` is lost and the
+    // class reads `class Scene($p: demo.Ctx)` — an ordinary parameter, no given in scope, every
+    // `summon` in the body unresolved. That was one of `ENGINE-LIMITS.md` X4's three causes, and it
+    // is the one that lived HERE: the other two were the funnel reading such a constructor as
+    // paramful and declining to promote it. Empty for every port that threads nothing, which is why
+    // no emitted byte moves.
+    val givenClause = plan.givens.map(paramClause).mkString
     val prim    =
       if plan.isSynthesised then
-        s" protected (${(plan.synthetic.map((n, t) => s"$n: ${tpe(t)}") ++ markerParam).mkString(", ")})"
-      else if pparams.isEmpty then "" else s"(${pparams.map(param).mkString(", ")})"
+        s" protected (${(plan.synthetic.map((n, t) => s"$n: ${tpe(t)}") ++ markerParam).mkString(", ")})$givenClause"
+      else if pparams.nonEmpty then s"(${pparams.map(param).mkString(", ")})$givenClause"
+      // a class whose constructor java declared NILARY and the pipeline gave a clause: the clause is
+      // the whole parameter list, and `class C(using T)` is what puts the given in scope for the
+      // body, the field initialisers and the `extends` clause at once.
+      else givenClause
     // Does the emitted class have a PARAMFUL primary? A synthesised primary is one even though no
     // java constructor backs it, so `plan.primaryParams` is empty for it — reading only that told
     // `orderBody` the primary was nilary, and it then discarded the class's own no-arg constructor

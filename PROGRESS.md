@@ -2141,18 +2141,27 @@ Four things follow, none of them re-derivable from R4's census alone:
 *(The dry run runs the globals phase ALONE, so it does not see what the base's other surface phases
 do to the same signatures. P5's numbers will move; the ratio between the two columns is the finding.)*
 
-**`attach = "class"` is REFUSED with a counted finding, and that is the one deliverable that did not
-land.** The TIR edit is complete — the clause lands on every constructor, the closure propagates down
-the hierarchy and across every `new` — and the EMISSION is not: the constructor funnel undoes it
-three ways, measured at **5 scalac errors** on the fixture. A constructor that gained a parameter is
-no longer nilary, so the funnel declines to promote it (`ENGINE-LIMITS.md` C1) and emits a synthetic
-nilary primary beside it, leaving the class body with no given in scope; where it does promote, the
-primary's parameter list is built from the funnel's own plan rather than through `paramClause`, so
-the `given` grouping is dropped and the clause renders `class Scene($p: demo.Ctx)`; and a subclass of
-the first shape sees two applicable constructors and reports an ambiguous overload. All three are in
-`CtorFunnel`/`CtorPlan`/the emitter's constructor region, which DESIGN.md §8.2's work owns — so the
-phase reports rather than emitting code that does not compile, and the refusal is one line to delete
-when the synthetic primary lands.
+**`attach = "class"` EMITS — the refusal landed, and then so did the fix. 5 scalac errors → 0.** For
+one release the TIR edit was complete and the emission was not: the constructor funnel undid the
+clause three ways (`ENGINE-LIMITS.md` X4), so the knob recorded a `PolicyIssue.Unverifiable` finding
+naming all three rather than shipping code that does not compile. All three turned out to be one
+thing — `paramss.flatten`, which answers *what does this constructor take* where the question is
+*what did JAVA declare*. The funnel now models parameter GROUPS (`CtorFunnel.Plan.givens` beside
+`primaryParams`), every nilary/pass-through/erasure question goes through `CtorFunnel.valueParams`,
+and the emitter renders the clause as its own group through `paramClause`. **This phase gained no
+code**, which is the evidence that the refusal was pointing at the right module.
+
+Validated by RUNNING, not by asserting: the fixture is emitted one file per unit and put through
+`scala-cli 3.8.4` in both modes at **0 errors**, and the synthesised-primary shape —
+`class Panel protected (sup$0: Int, sup$1: Boolean)(using demo.Ctx)` reached by two secondaries and
+by a subclass's argument-free `extends` — compiles and RUNS. At libGDX-core scale class attachment
+emits **578 `(using sge.Sge)` clauses, 0 flattened into a value parameter and 0 synthesised empty
+primaries** — X4's first two causes read off the emitted text rather than argued.
+
+The dry-run table above reproduces byte for byte after the fix (275 / 177 / 17 against 2,497 / 324 /
+162, `frozen-component` 32 → 0, refusals 15 → 0, residual holder 8 → 9 of 11, `DeferredInit` 0 in
+both). Class attachment is still DEFAULT-OFF and no port declares a holder, so every lane is 0
+members changed.
 
 ## 12. Remaining work, across the engine
 

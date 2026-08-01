@@ -2881,28 +2881,47 @@ real one.
 
 *Fix kind: (a) engine.*
 
-### X4. A CONSTRUCTOR cannot yet carry a `using` clause — the funnel undoes it three ways — **5 errors**
+### X4. A CONSTRUCTOR could not carry a `using` clause — **CLOSED; 5 errors → 0, and the fix is one distinction**
 
-OPEN, and owned by the synthetic-primary work (`DESIGN.md` §8.2). Adding a `(using T)` clause to a
-class's constructors is the reference hand port's shape — **82 % of its 493 attachment sites are
-constructors** — and the TIR edit for it is correct: the clause lands on every `<init>`, the closure
-propagates down the hierarchy and across every `new`. The EMISSION is what fails, measured at 5
-scalac errors on the mechanism's own fixture, three distinct causes:
+**CLOSED.** Kept because the *reason* it was open is a rule, and because the shape of the wrong fix
+is worth naming twice.
 
-- a constructor that has GAINED a parameter is no longer nilary, so `CtorFunnel` declines to promote
-  it (C1) and emits a **synthetic nilary primary beside it** — the class body then has no given in
-  scope at all, and every `summon` in it fails;
-- where it DOES promote, the synthetic primary's parameter list is built from the funnel's own plan
-  rather than through the emitter's `paramClause`, so the `given` grouping is **dropped** and the
-  clause renders as an ordinary `class Scene($p: demo.Ctx)`;
-- a subclass of the first shape sees TWO applicable constructors — `()` and `()(using T)` — and
-  reports an **ambiguous overload**.
+Adding a `(using T)` clause to a class's constructors is the reference hand port's shape — **82 % of
+its 493 attachment sites are constructors** — and the TIR edit for it was always correct: the clause
+lands on every `<init>`, the closure propagates down the hierarchy and across every `new`. The
+EMISSION failed, at 5 scalac errors on the mechanism's own fixture, in three places that looked
+unrelated and were one thing:
 
-Do NOT work around this in the threading phase: a clause the funnel will not carry is not a clause,
-and every workaround is a second constructor plan. `attach = "class"` therefore RECORDS a
-`PolicyIssue.Unverifiable` finding naming all three and the phase says so before emitting; `attach =
-"method"` emits and compiles. The dry run over one corpus library sizes what is being deferred:
-**275 threaded declarations in 177 files under class attachment against 2,497 in 324 under method**,
-and `frozen-component` refusals **32 → 0**, because class mode changes no method signature at all.
+- a constructor that had GAINED a parameter was no longer nilary, so `CtorFunnel` declined to
+  promote it (C1) and emitted a **synthetic nilary primary beside it** — the class body then had no
+  given in scope at all and every `summon` in it failed;
+- where it DID promote, the primary's parameter list was rebuilt from the funnel's own plan as a
+  FLAT list, so the `given` grouping was **dropped** and the clause rendered as an ordinary
+  `class Scene($p: demo.Ctx)`;
+- a subclass of the first shape saw TWO applicable constructors — `()` and `()(using T)` — and
+  reported an **ambiguous overload**.
+
+**All three are `paramss.flatten`.** A java constructor's parameter list is ONE list; a Scala
+constructor's is a list of GROUPS, and every question the funnel asks — *is this constructor nilary,
+does it pass its parameters straight through, does its signature equal the slots* — is a question
+about what JAVA declared. Flattening answers a different one the moment a phase can append a clause.
+So the plan models the split (`CtorFunnel.Plan.givens` beside `primaryParams`), every such question
+goes through `CtorFunnel.valueParams`, and the emitter renders the clause as its own group through
+`paramClause`. The third cause then has no cases: there is only one constructor again.
+
+Validated by RUNNING, not by asserting (the M2 lesson): the phase's fixture is emitted one file per
+unit and put through `scala-cli 3.8.4` in both attachment modes at **0 errors**, and the
+synthesised-primary shape — `class Panel protected (sup$0: Int, sup$1: Boolean)(using demo.Ctx)`
+reached by two secondaries and by a subclass's argument-free `extends` — compiles and runs. Over one
+corpus library (605 types) class attachment emits **578 `(using T)` clauses, 0 of them flattened
+into a value parameter and 0 synthesised empty primaries**.
+
+Two things NOT to re-derive. **Do not work around this in the threading phase**: a clause the funnel
+will not carry is not a clause, and every workaround is a second constructor plan — which is why the
+knob RECORDED a `PolicyIssue.Unverifiable` finding for as long as it could not emit, rather than
+shipping something. And the refusal cost nothing to keep honest: the dry run that sized it
+reproduces unchanged after the fix — **275 threaded declarations in 177 files and 17 seams under
+class attachment against 2,497 in 324 and 162 under method**, `frozen-component` **32 → 0** because
+class mode changes no method signature at all.
 
 *Fix kind: (a) engine — the constructor region, not the threading phase.*

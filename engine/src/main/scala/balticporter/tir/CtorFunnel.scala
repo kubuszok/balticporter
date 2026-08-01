@@ -133,8 +133,28 @@ object CtorFunnel:
         * "why is this field a `var`" is answered where the question is asked (§4.575). A1 has no
         * other channel for it. */
       notSlot: List[(String, String)] = Nil,
+      /** The trailing CONTEXT clauses the emitted primary carries — a `(using T)` group a PHASE put
+        * on this class's constructors (`DESIGN.md` §8.4), never anything java declared.
+        *
+        * Java's parameter list is ONE list; Scala's is a list of GROUPS, and the difference is not
+        * cosmetic once a phase can add a clause. Flattened into [[primaryParams]] the group is lost
+        * and the emitter writes `class Scene($p: demo.Ctx)` — an ordinary class parameter, with no
+        * given in scope anywhere in the body and every `summon` in it failing. That was one of
+        * `ENGINE-LIMITS.md` X4's three causes; the other two are the same fact read at the
+        * NOMINATION, where a constructor that gained a clause stopped counting as java's nilary one.
+        *
+        * So the plan models the split: [[primaryParams]] is what JAVA declared and this is what the
+        * pipeline added, and every "is this constructor nilary" question in this file asks the
+        * first. Empty for every unedited program, which is why no port's output moves.
+        *
+        * Always TRAILING — [[givenClauses]] reads them off the end of `paramss` — because that is
+        * where `Phase.transformDefDef` appends one and where Scala requires a `using` clause to be
+        * for the call sites to stay unchanged. */
+      givens: List[List[Tree.ValDef]] = Nil,
   ):
-    def primaryParams: List[Tree.ValDef] = primary.map(_.paramss.flatten).getOrElse(Nil)
+    /** the primary's VALUE parameters — java's own, never the context clause [[givens]] holds. */
+    def primaryParams: List[Tree.ValDef] =
+      primary.map(_.paramss.dropRight(givens.size).flatten).getOrElse(Nil)
 
     /** Is this a SYNTHESISED primary — a constructor no java declared?
       *
@@ -248,14 +268,14 @@ object CtorFunnel:
       if ctors.exists(c => superArgsOf(program, c).nonEmpty) then scala.None
       else
         for
-          nil  <- ctors.find(_.paramss.flatten.isEmpty)
+          nil  <- ctors.find(valueParams(program, _).isEmpty)
           head <- headStmt(nil)
           (m, as) <- head match
             case Tree.Apply(Tree.Select(r, mm, _, _), aas, _, _, _)
                 if isInitName(program, mm) && !r.isInstanceOf[Tree.Super] && aas.nonEmpty => Some((mm, aas))
             case _ => scala.None
           eff  <- effects(m, as, 0)
-        yield Plan(Some(nil), Nil, eff.stats ++ stmtsOf(nil).tail)
+        yield promoted(program, nil, Nil, eff.stats ++ stmtsOf(nil).tail)
 
     /** Does the emitted class take constructor arguments it cannot be built without? A SYNTHESISED
       * primary is paramful even though `primaryParams` is empty — no java constructor backs it, so
@@ -277,7 +297,7 @@ object CtorFunnel:
       * that constructor, so it is not there to be reached. */
     private def reachableArgumentFree(s: SymId, p: Plan): Boolean =
       p.isSynthesised &&
-        classes.find(_.symbol == s).exists(cd => ctorsOf(program, cd.body).exists(_.paramss.flatten.isEmpty))
+        classes.find(_.symbol == s).exists(cd => ctorsOf(program, cd.body).exists(valueParams(program, _).isEmpty))
 
     private val plans: Map[SymId, Plan] =
       var acc     = classes.map(cd => cd.symbol -> plan0(program, cd)).toMap
@@ -425,7 +445,7 @@ object CtorFunnel:
         p.primary match
           case scala.None            => if ctors.isEmpty then "no-constructor" else "not-funnelled"
           case Some(_) if roots.sizeIs == 1 => "unique-root"
-          case Some(c) if c.paramss.flatten.isEmpty =>
+          case Some(c) if valueParams(program, c).isEmpty =>
             // several roots and a NILARY one chosen. The two shapes differ by whether anything had
             // a `super(args)` to lose: with none, the funnel was needed only to stop scala's
             // implicit nilary primary clashing with an emitted `def this()`.
@@ -696,7 +716,7 @@ object CtorFunnel:
             // traded 45 escaping bodies for 49 dropped `super(args)` on libGDX core, which is the
             // trade `DESIGN.md` §8.2 names as the one that must not be made.
             if p.isSynthesised then
-              ctorsOf(program, cd.body).find(_.paramss.flatten.isEmpty)
+              ctorsOf(program, cd.body).find(valueParams(program, _).isEmpty)
                 .flatMap(n => effects(n.symbol, Nil, 0)).map(_.stats)
             // a PROMOTED paramful primary means `extends P` with no arguments reaches a nilary
             // SECONDARY that the promotion CONSUMED — there is none, and this is not "P's promoted
@@ -855,7 +875,7 @@ object CtorFunnel:
       if depth > 6 then scala.None
       else
         defOf(ctor).flatMap { d =>
-          val ps   = d.paramss.flatten
+          val ps   = valueParams(program, d)
           val stms = stmtsOf(d)
           // Substitution inlines an argument at each of its parameter's uses. That is Java's
           // evaluate-once only when re-evaluating is free (`simple`) or the parameter is used
@@ -973,6 +993,31 @@ object CtorFunnel:
 
   private def isInitName(program: Program, m: SymId): Boolean =
     program.symbolOf(m).exists(_.name == "<init>")
+
+  // ---- JAVA'S PARAMETERS vs THE PIPELINE'S (see `Plan.givens`) ----
+  //
+  // A java constructor's parameter list is one list. A scala constructor's is a list of GROUPS, and
+  // a phase may append a `(using T)` one (`DESIGN.md` §8.4). Every question this file asks about a
+  // constructor's parameters — is it nilary, does it pass its parameters straight through, does its
+  // signature equal the slots — is a question about what JAVA declared, and reading `paramss.flatten`
+  // answers a different one the moment such a clause exists: a class whose only constructor gained
+  // `(using Ctx)` stopped being the nilary root the funnel promotes, the promotion was withheld, and
+  // the class emitted a synthetic nilary primary beside a `def this()(using Ctx)` with no given in
+  // scope at all (`ENGINE-LIMITS.md` X4). Both functions are the identity on an unedited program.
+
+  /** the TRAILING `using` clauses of a constructor — what a phase added, never what java wrote. */
+  def givenClauses(program: Program, d: Tree.DefDef): List[List[Tree.ValDef]] =
+    d.paramss.reverse
+      .takeWhile(ps => ps.nonEmpty && ps.forall(v => program.symbolOf(v.symbol).exists(_.flags.isGiven)))
+      .reverse
+
+  /** the VALUE parameters — the only thing "is this constructor nilary" can mean. */
+  def valueParams(program: Program, d: Tree.DefDef): List[Tree.ValDef] =
+    d.paramss.dropRight(givenClauses(program, d).size).flatten
+
+  /** a promoted plan, with the constructor's own context clause carried onto the primary. */
+  private def promoted(program: Program, c: Tree.DefDef, sa: List[Term], rest: List[Statement]): Plan =
+    Plan(Some(c), sa, rest, givens = givenClauses(program, c))
 
   // ---- WHAT A PROMOTION COSTS, as a function of the promotion alone ----
   //
@@ -1119,7 +1164,7 @@ object CtorFunnel:
       //   `enum SgeError(message: String, cause: Option[Throwable]) extends Exception(message, cause.orNull)`
       def throwableParent: Boolean = jdkThrowableParent(program, cd)
       def passesThrough(c: Tree.DefDef): Boolean =
-        val ps = c.paramss.flatten.map(_.symbol)
+        val ps = valueParams(program, c).map(_.symbol)
         superArgsOf(program, c).map { case Tree.Ident(x, _, _) => x; case _ => SymId.None } == ps && ps.nonEmpty
       val chosen = roots match
         case one :: Nil if one.tparams.isEmpty => Some(one)
@@ -1133,8 +1178,8 @@ object CtorFunnel:
           val widest = several.filter(c => c.tparams.isEmpty && passesThrough(c))
             .sortBy(c => -superArgsOf(program, c).size).headOption
           widest.filter(w => several.exists(o => (o ne w) && superArgsOf(program, o).nonEmpty))
-            .orElse(several.find(c => c.paramss.flatten.isEmpty && c.tparams.isEmpty))
-        case several                           => several.find(c => c.paramss.flatten.isEmpty && c.tparams.isEmpty)
+            .orElse(several.find(c => valueParams(program, c).isEmpty && c.tparams.isEmpty))
+        case several                           => several.find(c => valueParams(program, c).isEmpty && c.tparams.isEmpty)
       chosen match
         // A UNIQUE ROOT is the primary and nothing else is possible or wanted: its parameters are
         // the class's, its body the class body, and it cannot escape because there is no other root
@@ -1142,7 +1187,7 @@ object CtorFunnel:
         // swallowed every MULTI-root class carrying no `super(args)` at all — the promotion domain
         // where C7's escaping bodies live. Those go to the synthesis now, which promotes nothing.
         case Some(c) if roots.sizeIs == 1 =>
-          val (sa, rest) = split(program, c); Plan(Some(c), sa, rest)
+          val (sa, rest) = split(program, c); promoted(program, c, sa, rest)
         // SEVERAL roots: whichever is nominated, another's arguments or another's body is lost.
         // Try the synthesised primary before falling back to that.
         // NOT for a throwable parent: that branch already nominates the WIDEST pass-through root and
@@ -1152,11 +1197,11 @@ object CtorFunnel:
         case other if !throwableParent && synthesis => syntheticPrimary(program, cd, roots).getOrElse {
           other match
             case None    => Plan.none
-            case Some(c) => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest)
+            case Some(c) => val (sa, rest) = split(program, c); promoted(program, c, sa, rest)
         }
         // a THROWABLE parent keeps the measured choice above, untouched by the synthesis
         case None    => Plan.none
-        case Some(c) => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest)
+        case Some(c) => val (sa, rest) = split(program, c); promoted(program, c, sa, rest)
 
   /** A primary whose parameters ARE the parent constructor's — see [[Plan.synthetic]].
     *
@@ -1181,12 +1226,19 @@ object CtorFunnel:
     // MIXED is still the wall, and the mix is exactly what makes it one: a root writing `super(a)`
     // beside a root that does not reaches TWO different parent constructors, and one `extends`
     // clause cannot make both calls.
+    // …and ONE context clause for every root. A phase that threads a `(using T)` puts it on EVERY
+    // constructor of the class (`DESIGN.md` §8.4), so this is uniform by construction and the check
+    // costs nothing; a program where it is NOT uniform is one where a single synthesised primary
+    // cannot carry a clause every secondary's delegation needs, and refusing is the answer that
+    // keeps the counted omission instead of emitting a signature no secondary can reach.
+    val rootGivens = roots.map(r => givenClauses(program, r))
     if roots.sizeIs < 2 || roots.exists(_.tparams.nonEmpty) then scala.None
     else if targets.sizeIs != 1 then scala.None
     else if arities.sizeIs != 1 then scala.None
+    else if rootGivens.map(_.map(_.map(_.tpt.tpe))).distinct.sizeIs != 1 then scala.None
     else
       def passesThrough(c: Tree.DefDef): Boolean =
-        val ps = c.paramss.flatten.map(_.symbol)
+        val ps = valueParams(program, c).map(_.symbol)
         superArgsOf(program, c).map { case Tree.Ident(x, _, _) => x; case _ => SymId.None } == ps && ps.nonEmpty
       // parameter TYPES from the parent constructor's own signature, never from one call's
       // arguments: an argument is an expression whose type may be narrower than the formal.
@@ -1197,7 +1249,7 @@ object CtorFunnel:
       // a java constructor that ALREADY has the synthetic signature would collide with it — the
       // COLLAPSE test, kept as exact type equality on ROOTS because that is the shape a promotion
       // can actually take over (its parameters ARE the slots, passed straight through).
-      val collides = roots.exists(_.paramss.flatten.map(_.tpt.tpe) == formals)
+      val collides = roots.exists(valueParams(program, _).map(_.tpt.tpe) == formals)
       // …but SIGNATURE EQUALITY IS NOT THE QUESTION SCALAC ASKS, and reading it as if it were cost
       // 2 compile errors the first time the synthesis was widened. What the emitter writes for each
       // root is `this(<that root's own super arguments>)`, and scalac resolves that by
@@ -1256,7 +1308,10 @@ object CtorFunnel:
         val o = cd.origin
         Some(Plan(scala.None, sup.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = allSlots,
                   marker = mark, superSlots = sup.size, fieldSlots = fs,
-                  delegations = delegations, consumed = consumedRuns, notSlot = refusedFields))
+                  delegations = delegations, consumed = consumedRuns, notSlot = refusedFields,
+                  // the roots agree (checked above), so any one of them names the clause the
+                  // synthesised primary must carry for every secondary's `this(...)` to resolve.
+                  givens = rootGivens.headOption.getOrElse(Nil)))
       /** is some real constructor of the class applicable to a root's DELEGATION — the arguments
         * the emitter will actually write, field slot values included, never the super arguments
         * alone? That is the question scalac answers when it resolves `this(...)`, and it decides
@@ -1271,7 +1326,7 @@ object CtorFunnel:
         * synthesis for every class that also declared a one-argument constructor. */
       val shadowed = delegations.values.exists { args =>
         ctors.exists { c =>
-          val ps = c.paramss.flatten
+          val ps = valueParams(program, c)
           ps.sizeIs == args.size && ps.zip(args).forall((p, a) => assignable(a.tpe, p.tpt.tpe))
         }
       }
@@ -1280,10 +1335,10 @@ object CtorFunnel:
       // type after erasure`, which `private` does not separate), while the delegation question is
       // overload APPLICABILITY. A widening needs both — `DESIGN.md` §8.2, `ENGINE-LIMITS.md` C8.
       val erasedSlots  = allSlots.map((_, t) => erasedName(program, cd, t))
-      val erasureClash = ctors.exists(c => c.paramss.flatten.map(v => erasedName(program, cd, v.tpt.tpe)) == erasedSlots)
+      val erasureClash = ctors.exists(c => valueParams(program, c).map(v => erasedName(program, cd, v.tpt.tpe)) == erasedSlots)
       // the COLLAPSE, decided once — see the comment on the branch that consumes it below.
       val collapsed =
-        if fs.isEmpty && collides && !roots.exists(_.paramss.flatten.isEmpty)
+        if fs.isEmpty && collides && !roots.exists(valueParams(program, _).isEmpty)
         then collapseTo(program, cd, roots.filter(passesThrough))
         else scala.None
       if formals.sizeIs != arities.head || formals.contains(TypeRepr.NoType) then scala.None
@@ -1356,8 +1411,8 @@ object CtorFunnel:
     * that will now run it? Where it does not, the caller falls through to the marker, which
     * synthesises and promotes nothing. */
   private def collapseTo(program: Program, cd: Tree.ClassDef, candidates: List[Tree.DefDef]): Option[Plan] =
-    candidates.sortBy(c => -c.paramss.flatten.size).headOption
-      .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest) }
+    candidates.sortBy(c => -valueParams(program, c).size).headOption
+      .map { c => val (sa, rest) = split(program, c); promoted(program, c, sa, rest) }
       .filter(p => escapesOf(program, cd, p.primary, p.primaryBody).isEmpty)
 
   // ---- FIELD SLOTS: a `this.f = e` hoisted into the primary's parameter list ----

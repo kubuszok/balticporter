@@ -2006,7 +2006,11 @@ off. `class` — the clause on the **primary constructor**, so instance methods 
 signature change and external-anchored overrides become a non-problem — is the reference port's shape:
 **82 % of its 493 attachment sites are constructors, and 49 % are SECONDARY constructors**, so the
 clause must land on every funnelled secondary too. That rides on the constructor plan, which is why
-class mode lands after §8.2 and the enablement is sequenced last.
+class mode landed after §8.2 — and the dependency turned out to be exactly one distinction inside the
+plan: java's parameter list is ONE list and Scala's is a list of GROUPS, so the plan carries the
+context clause apart from the value parameters (`CtorFunnel.Plan.givens`) and every "is this
+constructor nilary" question in the funnel reads the value parameters alone. Both modes emit and
+compile; the enablement (a port declaring a holder) is still sequenced last.
 
 **Measured facts that bound the risk.** 562 code reads in 97 of 605 base files; **62 of the reference
 port's 159 attachment files carry the clause purely to PROPAGATE**, so expect the closure to touch
@@ -2056,14 +2060,21 @@ the mechanism commit rather than left for the enablement:
   A note keyed on the member's own symbol never appears, and `NoteCoverageCheck` cannot see it either
   (the member is not emitted, so it is out of scope by construction).
 
-**And one deliverable that did NOT land: `attach = "class"` is refused with a counted finding.** The
-TIR edit is complete and the emission is not — the constructor funnel undoes it three ways, measured
-at 5 scalac errors (`ENGINE-LIMITS.md` X4), all three inside the region §8.2 owns. The dry run sizes
-what that defers: over one corpus library, class attachment threads **275 declarations in 177 files**
-against method attachment's **2,497 in 324**, and `frozen-component` refusals go **32 → 0** because
-class mode changes no method signature at all. 177 against 97 direct-reader files is **1.8×**, which
-is the reference hand port's measured 1.6× reproduced; method mode's 3.3× is not. The refusal is one
-line to delete when the synthetic primary lands.
+**`attach = "class"` NOW EMITS, and the refusal it carried is a worked example of where such a
+refusal belongs.** For one release the TIR edit was complete and the emission was not — the
+constructor funnel undid it three ways, 5 scalac errors (`ENGINE-LIMITS.md` X4), all three inside
+the region §8.2 owns — so the knob RECORDED a `PolicyIssue.Unverifiable` finding naming all three
+rather than emitting code that does not compile. That was the right place for the fix and the right
+place for the finding: a clause the funnel will not carry is not a clause, so every workaround in
+THIS phase would have been a second constructor plan. The funnel now models parameter GROUPS
+(`CtorFunnel.Plan.givens`), reads java's VALUE parameters for every "is this constructor nilary"
+question (`CtorFunnel.valueParams`), and renders the clause through the emitter's `paramClause`;
+this phase gained no code at all, which is the evidence that the refusal was pointing at the right
+module. The dry run that sized the deferral reproduces unchanged: class attachment threads **275
+declarations in 177 files with 17 seams** against method attachment's **2,497 in 324 with 162**, and
+`frozen-component` refusals go **32 → 0** because class mode changes no method signature at all. 177
+against 97 direct-reader files is **1.8×**, which is the reference hand port's measured 1.6×
+reproduced; method mode's 3.3× is not.
 
 **One deliberate simplification worth stating.** An UNSUPPLIABLE USE — a declaration that cannot take
 a clause calling one that now requires it — is counted as `residual-global-read` rather than as a

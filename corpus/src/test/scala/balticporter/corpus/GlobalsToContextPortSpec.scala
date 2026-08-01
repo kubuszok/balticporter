@@ -69,9 +69,32 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     members = Map("graphics" -> "graphics", "files" -> "files"),
   )
 
+  /** A class with TWO constructors reaching ONE parent constructor — §8.2's SYNTHESISED primary,
+    * which is the shape the constructor clause is hardest for and the one `ENGINE-LIMITS.md` X4's
+    * first cause lived in. Its own source rather than a fifth class in `src`, because in METHOD mode
+    * only the constructor that READS would take a clause and the two roots would then disagree
+    * about their signatures — a legitimate refusal, and noise in every assertion above. */
+  private val synthSrc =
+    """package demo;
+      |public class Gdx { public static Graphics graphics; }
+      |class Graphics { public int getWidth() { return 0; } }
+      |class Widget {
+      |  int w; boolean vis;
+      |  Widget(int w, boolean vis) { this.w = w; this.vis = vis; }
+      |}
+      |class Panel extends Widget {
+      |  Panel()      { super(Gdx.graphics.getWidth(), true); }
+      |  Panel(int w) { super(w, false); }
+      |}
+      |class Deck extends Panel { }
+      |""".stripMargin
+
   private def ported(h: ContextHolder): (GlobalsToImplicitsTransform, Program, DecisionLog, String) =
+    portedFrom(src, h)
+
+  private def portedFrom(source: String, h: ContextHolder): (GlobalsToImplicitsTransform, Program, DecisionLog, String) =
     val phase        = new GlobalsToImplicitsTransform(List(h))
-    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(src, "Demo.java"), List(phase))
+    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(source, "Demo.java"), List(phase))
     (phase, after, log, new TirEmitter(after, notes = log).emit)
 
   /** the emitted CODE with the porter notes stripped: a note names the UPSTREAM member on purpose,
@@ -234,27 +257,60 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   // class attachment
   // -------------------------------------------------------------------------
 
-  test("`attach = class` REFUSES LOUDLY: the emitter's constructor funnel does not carry the clause") {
-    // The TIR edit is correct and spec'd below; what is not yet true is the EMISSION. Measured on
-    // this fixture: 5 scalac errors, three causes, all in the constructor region DESIGN.md §8.2 owns.
-    // A knob whose seam is silent is worse than no knob, so the finding is the deliverable here.
+  test("`attach = class` EMITS — the refusal is gone, and nothing is reported in its place") {
+    // This spec was the REFUSAL's spec: `attach = "class"` recorded a counted `Unverifiable`
+    // finding because the constructor funnel undid the clause three ways (ENGINE-LIMITS X4, 5
+    // scalac errors on this fixture). All three were in the constructor region DESIGN.md §8.2 owns
+    // and all three are closed there — the plan models parameter GROUPS, the funnel's "is this
+    // nilary" questions read the VALUE parameters, and the emitter renders the clause through
+    // `paramClause`. The finding therefore has to be gone, not merely quieter.
     val (p, _, _, _) = ported(base.copy(attach = ContextAttach.Class))
-    val fs = p.policyReport.findings.filter(_.setting.endsWith(".attach"))
-    assertEquals(clue(fs).size, 1, p.policyReport.render)
-    assert(fs.head.detail.contains("constructor funnel does not carry it"), fs.head.render)
-    // …and METHOD attachment, which does emit, reports nothing of the kind.
+    assertEquals(clue(p.policyReport.findings.filter(_.setting.endsWith(".attach"))), Nil,
+      p.policyReport.render)
     assertEquals(phase.policyReport.findings.count(_.setting.endsWith(".attach")), 0)
   }
 
   test("`attach = class` puts the clause on the CONSTRUCTORS, not on the instance methods") {
     val (p, a, l, o) = ported(base.copy(attach = ContextAttach.Class))
     val c = code(o)
-    assert(clue(c).contains("class Scene"), c)
+    // the clause is the class's PARAMETER LIST, as a `using` GROUP — not an ordinary parameter,
+    // which is what a flattened plan emitted (`class Scene($p: demo.Ctx)`) and what left every
+    // `summon` in the body unresolved.
+    assert(clue(c).contains("class Scene(using demo.Ctx)"), c)
+    assert(clue(c).contains("class Basic(using demo.Ctx)"), c)
+    assert(!c.contains("$p: demo.Ctx"), c)
+    // …and NOT on the instance methods, which is the whole argument for class attachment: 275
+    // threaded declarations against 2,497, and `frozen-component` 32 -> 0 (PROGRESS §11.12).
+    assert(!c.contains("def render()(using"), c)
+    // a SUBCLASS of a threaded class takes the clause too, or its own `extends` has nothing to pass
+    assert(clue(c).contains("class Loud(using demo.Ctx)"), c)
     // the field initialiser is no longer a boundary: the class's constructor carries the context.
     assertEquals(p.seams(a).count(_.subject == "demo.Scene#w"), 0, p.seams(a).map(_.render).mkString("\n"))
     val classRows = l.of(Decision.Kind.RetypedSignature)
       .filter(_.detail.get("to").exists(_.contains("constructors"))).map(_.subjectFqn).toSet
     assert(clue(classRows).contains("demo.Basic"), classRows.toString)
+  }
+
+  /** X4's FIRST cause, end to end: a constructor that has gained a clause is not java's nilary one,
+    * and reading it as paramful is what made the funnel decline the promotion and emit a synthetic
+    * nilary primary beside it — a class body with no given in scope anywhere. The class here needs a
+    * SYNTHESISED primary (two roots, one parent constructor), so the clause has to survive both the
+    * nomination and the emission, and every secondary's `this(...)` has to still resolve. */
+  test("a SYNTHESISED primary carries the clause as its own GROUP, and the secondaries reach it") {
+    val holder = ContextHolder(holder = "demo.Gdx", context = ContextType.Injected("demo.Ctx"),
+                               members = Map("graphics" -> "graphics"), attach = ContextAttach.Class)
+    val (_, _, _, o) = portedFrom(synthSrc, holder)
+    val c = code(o)
+    assert(clue(c).contains(
+      "class Panel protected (sup$0: scala.Int, sup$1: scala.Boolean)(using demo.Ctx) extends demo.Widget(sup$0, sup$1)"), c)
+    // both java constructors survive as secondaries, each carrying the clause its delegation needs
+    assert(clue(c).contains("def this()(using demo.Ctx)"), c)
+    assert(clue(c).contains("def this(w: scala.Int)(using demo.Ctx)"), c)
+    // and the parent, which reads nothing, is untouched — the closure threads what needs it
+    assert(clue(c).contains("class Widget(") || clue(c).contains("class Widget protected ("), c)
+    assert(!c.contains("class Widget(using"), c)
+    // a SUBCLASS reaches the synthesised primary's class argument-free, so it needs the clause too
+    assert(clue(c).contains("class Deck(using demo.Ctx)"), c)
   }
 
   test("a TRAIT whose body needs the context is refused unless `promoteToClass` names it") {
@@ -289,16 +345,44 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("emitted probe is written for a real compiler, ONE FILE PER UNIT as a port writes it") {
-    // METHOD mode only: the class-mode probe is the measurement behind the refusal above and is
-    // reproduced by setting `attach = "class"` by hand — writing it here would leave an
-    // uncompilable directory in `target/` that reads as a regression.
     probe("method", base.copy(boundary = ContextBoundary.ResidualGlobal,
                               sites = Map("demo.Boot#<clinit>" -> ContextSite.LazyInit)))
   }
 
-  private def probe(label: String, h: ContextHolder): Unit =
+  test("…and the CLASS-mode probe too — it used to be the measurement behind a refusal") {
+    // While `attach = "class"` did not emit, writing this probe would have left an uncompilable
+    // directory in `target/` that reads as a regression, so only the method-mode one was written
+    // and the 5 errors were reproduced by hand. Now that the funnel carries the clause the probe is
+    // the evidence, not the symptom: an anonymous `(using T)` resolving through a SYNTHESISED
+    // primary, a subclass's `extends`, a field initialiser and an anonymous body across ten emitted
+    // files is a claim about scalac, and a string assertion is not evidence for it (M2's lesson).
+    probe("class", base.copy(attach = ContextAttach.Class))
+    // …and the SYNTHESISED-primary shape beside it, in its own directory: a `protected (…)(using T)`
+    // primary reached by two secondaries and by a subclass's `extends` is the part of the encoding
+    // that no string assertion settles.
+    probe("class-synth", ContextHolder(holder = "demo.Gdx", context = ContextType.Injected("demo.Ctx"),
+      members = Map("graphics" -> "graphics"), attach = ContextAttach.Class), synthSrc,
+      // …plus a MAIN that constructs through both secondaries and through the subclass, so the probe
+      // proves the primary is REACHED and not merely declared.
+      """package demo
+        |final case class Ctx(graphics: Graphics)
+        |object Ctx { var global: Ctx = null }
+        |object ProbeMain {
+        |  def main(args: Array[String]): Unit =
+        |    given Ctx = Ctx(new Graphics)
+        |    println(new Panel().w); println(new Panel(3).w); println(new Deck().vis)
+        |}
+        |""".stripMargin)
+  }
+
+  private def probe(label: String, h: ContextHolder, source: String = src,
+                    ctx: String =
+                      """package demo
+                        |final case class Ctx(graphics: Graphics, files: Files)
+                        |object Ctx { var global: Ctx = null }
+                        |""".stripMargin): Unit =
     val phase      = new GlobalsToImplicitsTransform(List(h))
-    val (after, l) = Pipeline.runTraced(SpoonTir.fromSource(src, "Demo.java"), List(phase))
+    val (after, l) = Pipeline.runTraced(SpoonTir.fromSource(source, "Demo.java"), List(phase))
     val emitter    = new TirEmitter(after, notes = l)
     val dir = _root_.java.nio.file.Path
       .of(sys.props.getOrElse("balticporter.dumpProbe", s"${sys.props("user.dir")}/target/probe"),
@@ -306,11 +390,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     _root_.java.nio.file.Files.createDirectories(dir)
     // the INJECTED context type is the port's own hand-written Scala — the engine never saw it, so
     // the probe supplies it exactly as a port would (§8.4: `inject` is where the ergonomics live).
-    _root_.java.nio.file.Files.writeString(dir.resolve("Ctx.scala"),
-      """package demo
-        |final case class Ctx(graphics: Graphics, files: Files)
-        |object Ctx { var global: Ctx = null }
-        |""".stripMargin)
+    _root_.java.nio.file.Files.writeString(dir.resolve("Ctx.scala"), ctx)
     // ONE FILE PER UNIT, because that is the layout a port writes (§5.5) and because the whole-
     // program `emit` concatenates ten `package demo` clauses into one file, which is not Scala.
     after.units.foreach { u =>
