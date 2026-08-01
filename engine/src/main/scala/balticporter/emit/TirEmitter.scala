@@ -3381,11 +3381,54 @@ object TirEmitter:
     if renames.isEmpty then p
     else
       // same visibility relaxation as `resolveMemberClashes`: a renamed field must stay reachable
-      // from wherever java read it.
+      // from wherever java read it — and RECORDED, see `recordClashWidening`.
+      recordClashWidening(p, out, renames.keys, "shadows-inherited")
       val syms = p.symbols.all.map(s =>
         renames.get(s.id).map(n => s.copy(name = n, flags = s.flags.copy(isPrivate = false, isProtected = false))).getOrElse(s)
       )
       p.rebuilt(symbols = SymbolTable(syms))
+
+  /** THE OTHER HALF OF A §4.55 FIELD RENAME: the member also ships WIDER than Java wrote it.
+    *
+    * Both clash passes strip `private` and `protected` from every field they rename, unconditionally
+    * — and they must: a renamed field has to stay reachable from wherever Java read it (an enclosing
+    * class reading a nested class's `private` field, a subclass reading what Java resolved by the
+    * receiver's static type). The rename was recorded and the widening was not, so a member emitted
+    * `public` where the upstream wrote `private` carried a `RenamedMember` row that says nothing
+    * about visibility and NO row that does.
+    *
+    * Nothing could catch that. The emitted visibility is what it always was, the compile is
+    * unchanged, and `NoteCoverageCheck` compares decisions to NOTES rather than decisions to
+    * reality — so a widening with no decision is invisible to it in the one direction that matters.
+    * It also explains a number that was filed against the wrong decider: `WidenedVisibility` fell
+    * 142 -> 135 on the largest port when a policy rename moved seven fields out from under
+    * [[widen]]'s `isPrivate` test, and the honest reading is not that the ctor-replay decider lost
+    * seven rows — it is that THIS decider never had them.
+    *
+    * One row per member that ACTUALLY LOST a modifier, the discipline [[widen]] already keeps: a
+    * member already public is renamed for a reason that has nothing to do with access, and a
+    * decision about a change that did not happen is a row an agent has to disprove. `clash` carries
+    * the same value as the `RenamedMember` row beside it, so "why is this called `x$field`" and "why
+    * is it public" are one grep and not two.
+    */
+  private def recordClashWidening(p: Program, out: collection.mutable.Buffer[Decision],
+                                  renamed: Iterable[SymId], clash: String): Unit =
+    renamed.toList.sortBy(_.raw).foreach { id =>
+      p.symbolOf(id).filter(s => s.flags.isPrivate || s.flags.isProtected).foreach { s =>
+        note(out, Decision.Kind.WidenedVisibility, p, id,
+          Map(
+            "cause" -> "member-rename",
+            "clash" -> clash,
+            "from"  -> (if s.flags.isPrivate then "private" else "protected"),
+            "to"    -> "public",
+            "why"   -> ("java lets this name be reused where scala cannot, so the field is renamed " +
+              "(§4.55) — and a renamed field must stay reachable from every place java read it, " +
+              "which scala's own access rules do not grant at the new name; widening can only " +
+              "remove access errors, never introduce one, and never changes behaviour"),
+          ),
+          MemberRenameRule)
+      }
+    }
 
   /** Rename an enclosing method's LOCAL or PARAMETER that a nested class's member shadows.
     *
@@ -3594,7 +3637,9 @@ object TirEmitter:
     if renames.isEmpty then p
     else
       // also relax visibility: Java lets the enclosing class read a nested class's private
-      // field (`point.x`); Scala does not, so a renamed clash-field must stay accessible.
+      // field (`point.x`); Scala does not, so a renamed clash-field must stay accessible — and
+      // RECORDED, see `recordClashWidening`.
+      recordClashWidening(p, out, renames.keys, "field-vs-method")
       val syms = p.symbols.all.map(s =>
         renames.get(s.id).map(n => s.copy(name = n, flags = s.flags.copy(isPrivate = false, isProtected = false))).getOrElse(s)
       )

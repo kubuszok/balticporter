@@ -19,7 +19,7 @@ sge.jbump.Collision	sge.jbump.Collision#type	val	4509e7987974d636
 sge.jbump.CollisionFilter	sge.jbump.CollisionFilter	class	01e8eec387802e06
 sge.jbump.CollisionFilter	sge.jbump.CollisionFilter#defaultFilter	val	2321979d280d0724
 sge.jbump.CollisionFilter	sge.jbump.CollisionFilter#filter(Item<?>,Item<?>)	def	c6f745cdef554b6c
-sge.jbump.Collisions	sge.jbump.Collisions	class	7bef9a2d53ca5ec7
+sge.jbump.Collisions	sge.jbump.Collisions	class	92cab1067bb0a1b6
 sge.jbump.Collisions	sge.jbump.Collisions#<init>()	ctor	191ad5aee912c614
 sge.jbump.Collisions	sge.jbump.Collisions#<init>(Collisions)	ctor	c93438a7afedb257
 sge.jbump.Collisions	sge.jbump.Collisions#add(Collision)	def	c5013d2d079d4311
@@ -44,7 +44,7 @@ sge.jbump.Collisions	sge.jbump.Collisions#order	val	55059e7d38734637
 sge.jbump.Collisions	sge.jbump.Collisions#others	val	805359e3c4b3fd77
 sge.jbump.Collisions	sge.jbump.Collisions#overlaps	val	e6cc71ee04787d92
 sge.jbump.Collisions	sge.jbump.Collisions#remove(int)	def	d953a7687f8bb008
-sge.jbump.Collisions	sge.jbump.Collisions#size	val	448ab2be410161fc
+sge.jbump.Collisions	sge.jbump.Collisions#size	val	03eb95b31c6936e1
 sge.jbump.Collisions	sge.jbump.Collisions#size()	def	2512040e1ef84730
 sge.jbump.Collisions	sge.jbump.Collisions#sort()	def	2ed17991043586a9
 sge.jbump.Collisions	sge.jbump.Collisions#swapMap	val	ff03ae65a3942653

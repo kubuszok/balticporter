@@ -310,7 +310,7 @@ sge.ecs.systems.IteratingSystemTest	sge.ecs.systems.IteratingSystemTest$Iteratin
 sge.ecs.systems.IteratingSystemTest	sge.ecs.systems.IteratingSystemTest$IteratingSystemMock#startProcessing()	def	0dd75fd483a3f1bd
 sge.ecs.systems.IteratingSystemTest	sge.ecs.systems.IteratingSystemTest$SpyComponent	class	f061388eefd40ccd
 sge.ecs.systems.IteratingSystemTest	sge.ecs.systems.IteratingSystemTest$SpyComponent#updates	val	0809796dfe4faaaf
-sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest	class	6ea8b5cfe36ad066
+sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest	class	335c1de0ff317fa5
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest#<stmt1>	stmt	fdfb966fdc031270
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest#<stmt2>	stmt	5e3d958edc68afee
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest#<stmt3>	stmt	16e4e658db085d14
@@ -330,11 +330,11 @@ sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemT
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingComponentRemovalSystem#im	val	c3594e5a65f5db5e
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingComponentRemovalSystem#processEntity(Entity,float)	def	3c1455a770dfa480
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingComponentRemovalSystem#sm	val	813789bcaa6a2fb9
-sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem	class	5290e533c30ed9fa
+sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem	class	1cdb28acb48a4e59
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#<stmt1>	stmt	f34796aa180e4c74
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#<stmt2>	stmt	2ff484f2df86ccff
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#addedToEngine(Engine)	def	df4fc220f440ab24
-sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#engine	val	767dd4fa124721f8
+sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#engine	val	79fdc81ad279c84f
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#im	val	c3594e5a65f5db5e
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#processEntity(Entity,float)	def	be0c23f3c250d217
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#sm	val	813789bcaa6a2fb9

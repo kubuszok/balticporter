@@ -113,8 +113,16 @@ object Decision:
     *                            funnel successfully and still drop one root's super arguments, and
     *                            merging them would make "how many paths lost their arguments"
     *                            unanswerable.
-    *   - [[WidenedVisibility]]— a member lost `private`/`protected` so a REPLAYED parent
-    *                            constructor's statements can still reach it one level down.
+    *   - [[WidenedVisibility]]— a declaration ships WIDER than java wrote it. One kind for members
+    *                            and types alike (DESIGN.md §8.7), with the `cause` pair saying
+    *                            which residual it is: a REPLAYED parent constructor's statements
+    *                            that must still reach a private member one level down; a `protected
+    *                            static`, which a scala companion cannot express; a §4.55 field
+    *                            RENAME, whose new name scala's own access rules do not make
+    *                            reachable from everywhere java read the old one; a package the
+    *                            port's own renames merged or split. The faithful part of the
+    *                            visibility mapping records NOTHING — the diff is the change — so
+    *                            every row here is a place the port could not be faithful.
     *   - [[DeferredInit]]     — a static's initialisation moved out of the class initialiser and
     *                            onto the first READ of it, because the initialiser needed a context
     *                            it had no signature to receive (DESIGN.md §8.4). It is the one

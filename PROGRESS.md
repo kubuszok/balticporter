@@ -3011,10 +3011,14 @@ port throughout.
   still widens.** The seven are precisely `BaseDrawable`'s seven private fields (`leftWidth`,
   `rightWidth`, `topHeight`, `bottomHeight`, `minWidth`, `minHeight`, `name`), each of which carried
   a `cause=ctor-replay-widening; from=private; to=public` row before and is still emitted
-  `public var …$field` after. The rename moved the member out from under the widening decider; the
-  widening still happens, its RECORD does not. Nothing catches this: the emitted visibility is
-  unchanged, the compile is unchanged, and `porter-notes` is 0 because `NoteCoverageCheck` compares
-  decisions to notes, never decisions to reality.
+  `public var …$field` after. Nothing catches this: the emitted visibility is unchanged, the compile
+  is unchanged, and `porter-notes` is 0 because `NoteCoverageCheck` compares decisions to notes,
+  never decisions to reality. **THE DIAGNOSIS WAS WRONG AND §11.22 CORRECTS IT.** The rename did move
+  those seven out from under the ctor-replay widener, but that widener was never the decider for
+  them: the §4.55 CLASH PASS strips `private` from every field it renames, before `widen` ever runs,
+  and it recorded nothing at all — so the seven are not rows one decider lost, they are seven of ~280
+  rows a second decider never had. Filed against the wrong decider, the item asks for a fix that
+  would have re-recorded seven and left the other ~273 exactly as invisible.
 - **A base's refusals are republished in every dependent's `decisions.tsv`** — 5 rows each in anim8,
   ashley, ashley-test, gltf, gltf-test, screens, vfx. `ENGINE-LIMITS.md` D2's module scope filters by
   DECLARATION and a refusal has none, so the one decision kind that cannot be scoped is the one that
@@ -3122,6 +3126,54 @@ between them would be visible; a scoped-out PARAMETER is still recorded by neith
 open item and is deliberately not widened here (a lane that counted parameters would disagree with
 the decisions it sits beside). Two baselines promoted, accounted.
 
+### 11.22 Checkpoint-4 audit remediation — F3: the CLASH PASS is the visibility decider, and it recorded nothing
+
+`TirEmitter.recordClashWidening`, called by both §4.55 field-clash passes. **`WidenedVisibility`
+135 -> 337 on libgdx-core (+202), 213 members and 78 enclosing types moved across seven ports, every
+check count identical everywhere, 0 compile errors, every suite unchanged.**
+
+**The defect.** `resolveFieldShadowing` and `resolveMemberClashes` both end with
+`flags.copy(isPrivate = false, isProtected = false)` on every field they rename, unconditionally —
+and they must: a renamed field has to stay reachable from wherever Java read it, and Scala's own
+access rules do not grant that at the new name. The RENAME was recorded; the WIDENING was not. So a
+member emitted `public` where the upstream wrote `private` carried a `RenamedMember` row that says
+nothing about visibility and NO row that does.
+
+**Nothing in the pipeline could see it.** The emitted visibility is what it always was, the compile
+is unchanged, and `NoteCoverageCheck` compares decisions to NOTES rather than decisions to reality —
+so a widening with no decision is invisible to it in the one direction that matters. This is the
+same shape as §11.18's third bullet and is why that bullet's DIAGNOSIS was wrong: `WidenedVisibility`
+142 -> 135 was filed as "a renamed member escapes the ctor-replay visibility decider", and the fix it
+asks for would have re-recorded seven rows and left the other 195 exactly as invisible. The clash
+pass runs BEFORE `TirEmitter.widen`, strips `private` first, and had no decider at all.
+
+| | |
+|---|---:|
+| fields the two clash passes rename, libgdx-core | 300 (281 `field-vs-method` + 19 `shadows-inherited`) |
+| …of which were `private` or `protected` — one row each, the `widen` discipline | **202** |
+| `WidenedVisibility`, libgdx-core | 135 -> **337** |
+| the 7 `BaseDrawable` fields §11.18 filed against the wrong decider | now `cause=member-rename`, among the 202 |
+
+**The blast, priced BEFORE it was taken and exactly reconciled after.** `WidenedVisibility` is
+already in `PorterNote.Rendered` for its other five causes and `Rendered` is per KIND, so
+"decision-row-only" is not expressible without splitting the kind — and splitting a kind to hide half
+of it is what §4.575 says a note must not do. The P2 `RetypedSignature` precedent does not transfer:
+a retyped signature IS the declaration and the diff shows it, while an ABSENT `private` is only
+meaningful against Java the reader does not have (which is exactly the asymmetry that already admits
+`ScopedOut`). So the notes ship, and the digests move:
+
+| port | own members changed | = decls + enclosing types |
+|---|---:|---|
+| libgdx-core | **278** | 201 emitted declarations + 3 nested types + 74 top-level units. The 202nd row is `Json#sortFields`, in a type this port DROPS — a decision about a declaration nobody emits, and therefore no digest |
+| ashley | 9 | 5 + 4 |
+| noise4j | 4 | 2 + 2 |
+| ashley-test, gltf | 3 each | 1 + 2, 2 + 1 |
+| jbump, simple-graphs | 2 each | 1 + 1 |
+| anim8, gltf-test, libgdx-test, screens, vfx, simple-graphs-test | 0 | no field-clash rename is private |
+
+`porter-notes` stays **0** on every port, which is the check confirming the other half: 202 new
+decisions, 202 new notes, none orphaned in either direction. Seven baselines promoted.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
@@ -3138,12 +3190,6 @@ Maintained by deletion. Items are ordered by what they block, not by size.
   and an agent reading `def getScrollX(): Float` has no local evidence that a policy entry asked for
   it. `PorterNote.InBody` on the OWNING type is the shape that fits, and the same hole covers every
   future phase that refuses per entry.
-- **A RENAMED member escapes the ctor-replay visibility decider.** Measured by P4 (§11.18):
-  `WidenedVisibility` fell 142 → 135 on libgdx-core while the emitted text still widens all seven —
-  `BaseDrawable`'s private fields, each `cause=ctor-replay-widening; from=private; to=public` before
-  the §4.55 field-vs-method pass moved it to `…$field`, and each still emitted `public` after with no
-  row behind it. Nothing catches this class: the emitted visibility is unchanged, the compile is
-  unchanged, and `NoteCoverageCheck` compares decisions to NOTES, never decisions to reality.
 - **A base's per-entry REFUSALS are republished in every dependent's `decisions.tsv`.** `D2`'s module
   scope filters by DECLARATION, and the one decision kind with no declaration is therefore the one
   kind that leaks: P4's five refusals appear in all seven libGDX dependents' artifacts (§11.18). The

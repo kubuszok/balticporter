@@ -2601,8 +2601,31 @@ additional information. The causes: `x-pkg-protected-override`, `protected-stati
 `qualifier-shadowed` (the guard for an enclosing type named like the package tail, which otherwise binds
 the qualifier to the *class* and silently narrows the boundary), `x-pkg-pkg-private-override` (Java's
 non-override across packages has no Scala form, and adding `override` **changes dispatch** — stated in
-`why`), the retargeted `ctor-replay-widening`, and `package-merge` plus `package-split`, which are the
-two **`Configured`** causes because they vary per port and per rename entry.
+`why`), the retargeted `ctor-replay-widening`, `member-rename` (below), and `package-merge` plus
+`package-split`, which are the two **`Configured`** causes because they vary per port and per rename
+entry.
+
+**`member-rename` is the largest of them and was the last to be recorded, which is the lesson.** Both
+of the emitter's §4.55 field-clash passes strip `private` and `protected` from every field they
+rename, unconditionally, and they must: a renamed field has to stay reachable from wherever Java read
+it, and Scala's own access rules do not grant that at the new name. The RENAME was recorded and the
+WIDENING was not, so ~280 members on the largest port shipped `public` carrying a `RenamedMember` row
+that says nothing about visibility and no row that does. **Nothing in the pipeline could catch it** —
+the emitted visibility is what it always was, the compile is unchanged, and `NoteCoverageCheck`
+compares decisions to NOTES rather than decisions to reality, so a widening with no decision is
+invisible to it in the one direction that matters. It also explains a number that had been filed
+against the wrong decider: `WidenedVisibility` 142 → 135 when a policy rename moved seven
+`BaseDrawable` fields out from under the ctor-replay widener's `isPrivate` test — the honest reading
+is not that that decider lost seven rows, but that THIS one never had them.
+
+**And the note is RENDERED, which is a decision rather than an omission.** `WidenedVisibility` is
+already in `PorterNote.Rendered` for its other five causes, and `Rendered` is per KIND: excluding
+half of one kind is not expressible without splitting the kind, and splitting a kind to hide half of
+it is exactly what §4.575 says a note must not do. The P2 precedent that excluded `RetypedSignature`
+does not transfer, and the reason is the same one that admitted `ScopedOut` beside it: a retyped
+signature IS the declaration and the diff shows it, while an ABSENT `private` is only meaningful
+against Java the reader does not have. The blast is paid once and stated: ~280 declarations gain a
+second note beside the rename note they already carry.
 
 **Two hazards the mapping itself introduces, with their answers.** A widened member re-enters overload
 resolution for outside callers — the T12 shape, now caused by the port's own widening; the residual set

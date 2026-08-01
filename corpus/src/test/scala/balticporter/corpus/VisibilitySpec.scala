@@ -155,6 +155,66 @@ class VisibilitySpec extends PortSuite:
     assertEquals(causes(p), List("protected-static"))
   }
 
+  test("a §4.55 field RENAME widens too, and the widening RECORDS — the clash pass is the decider") {
+    // Both clash passes strip `private`/`protected` from every field they rename, unconditionally,
+    // and they must: a renamed field has to stay reachable from wherever java read it, which
+    // scala's own access rules do not grant at the new name. The RENAME was recorded and the
+    // WIDENING was not — the emitted visibility is unchanged, the compile is unchanged, and
+    // `NoteCoverageCheck` compares decisions to NOTES rather than to reality, so nothing could see
+    // a widening with no decision.
+    val p = port(
+      """package demo.util;
+        |public class Holder {
+        |  private int align;                 // shadowed by the method below — field-vs-method
+        |  public int align() { return align; }
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "var align$field")
+    assertNotEmits(p, "private var align$field")
+    assertEquals(causes(p), List("member-rename"))
+    val w = widenings(p).head
+    assertEquals(w.detail.get("clash"), Some("field-vs-method"))
+    assertEquals(w.detail.get("from"), Some("private"))
+    assertEquals(w.detail.get("to"), Some("public"))
+    // …and the rename beside it carries the SAME `clash`, so the two rows read as one act
+    assert(p.emitter.ownDecisions.exists(d =>
+      d.kind == Decision.Kind.RenamedMember && d.detail.get("clash") == Some("field-vs-method")))
+  }
+
+  test("…and a renamed field that was ALREADY public records nothing — no row for a non-change") {
+    val p = port(
+      """package demo.util;
+        |public class Holder {
+        |  public int align;
+        |  public int align() { return align; }
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "var align$field")
+    assertEquals(causes(p), Nil)
+  }
+
+  test("a field SHADOWING an inherited member widens under its own `clash` value") {
+    val p = port(
+      """package demo.util;
+        |public class Parent { public Object data; }
+        |""".stripMargin,
+    )
+    val q = portAll(List(
+      "Parent.java" -> """package demo.util;
+        |public class Parent { public Object data; }
+        |""".stripMargin,
+      "Child.java" -> """package demo.util;
+        |public class Child extends Parent { protected float[] data; }
+        |""".stripMargin))
+    assertEmits(q, "data$shadow")
+    assertEquals(causes(q), List("member-rename"))
+    assertEquals(widenings(q).head.detail.get("clash"), Some("shadows-inherited"))
+    assertEquals(widenings(q).head.detail.get("from"), Some("protected"))
+    assertEquals(causes(p), Nil)
+  }
+
   test("a CROSS-PACKAGE protected override takes the nearest common ancestor, and records") {
     // P5/P14: the child can keep neither bare `protected` nor its own package's qualifier — both
     // are "has weaker access privileges" — but it CAN name any ENCLOSING package, and the nearest

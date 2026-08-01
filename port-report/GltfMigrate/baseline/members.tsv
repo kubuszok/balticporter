@@ -607,14 +607,14 @@ sge.gltf.loaders.shared.texture.TextureResolver	sge.gltf.loaders.shared.texture.
 sge.gltf.loaders.shared.texture.TextureResolver	sge.gltf.loaders.shared.texture.TextureResolver#loadTextures(Array<GLTFTexture>,Array<GLTFSampler>,ImageResolver)	def	74316b20a53b9bec
 sge.gltf.loaders.shared.texture.TextureResolver	sge.gltf.loaders.shared.texture.TextureResolver#texturesMipmap	val	b4bf7698a2052f8f
 sge.gltf.loaders.shared.texture.TextureResolver	sge.gltf.loaders.shared.texture.TextureResolver#texturesSimple	val	add417e744222c37
-sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack	class	88caf14fca7669a9
+sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack	class	a441f239c5c71085
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#apply(Animation,float,float)	def	34457350d6f6763c
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#applyAnimation(Animation,float)	def	6dae1d5487ae414c
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#applyAnimationPlus(ObjectMap<Node,Transform>,Pool<Transform>,float,Animation,float)	def	2c8084f401f15380
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#applyAnimations(Animation,float,Animation,float,float)	def	35ade5886d57511e
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#applyNodeAnimationBlending(NodeAnimation,ObjectMap<Node,Transform>,Pool<Transform>,float,float)	def	b24da91ff66d024e
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#applyNodeAnimationDirectly(NodeAnimation,float)	def	c5c9921c0b3b362b
-sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#applying	val	451d68bd51d7190a
+sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#applying	val	c3343a44889e1d70
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#begin()	def	b768b43ecd22cff7
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#calculateTransforms	val	8f38dd4313cb09df
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#cubic(Quaternion,float,float,Quaternion,Quaternion,Quaternion,Quaternion)	def	c8527ff4ca46980e
@@ -635,7 +635,7 @@ sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.An
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#setAnimation(Animation,int)	def	5c1755e7f15db655
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#setAnimationDesc(AnimationDesc)	def	573a902027ae57f4
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#tmpT	val	2d3e1482312f0af6
-sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#transformPool	val	56d8a1cb7e7f0019
+sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#transformPool	val	535c9ce6916374ab
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack#transforms	val	416fa6ac4441ca9b
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack$Transform	class	642158245bea122b
 sge.gltf.scene3d.animation.AnimationControllerHack	sge.gltf.scene3d.animation.AnimationControllerHack$Transform#idt()	def	169dfd6b57aa9cd6

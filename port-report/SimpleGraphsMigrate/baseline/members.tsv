@@ -408,9 +408,9 @@ sge.graphs.algorithms.BreadthFirstSearch	sge.graphs.algorithms.BreadthFirstSearc
 sge.graphs.algorithms.BreadthFirstSearch	sge.graphs.algorithms.BreadthFirstSearch#queue	val	4830319e41c4446a
 sge.graphs.algorithms.BreadthFirstSearch	sge.graphs.algorithms.BreadthFirstSearch#step	val	ee3fb262a444ddcb
 sge.graphs.algorithms.BreadthFirstSearch	sge.graphs.algorithms.BreadthFirstSearch#update()	def	ef09cc4d2024e6c4
-sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector	class	6a10b737ff5006b9
+sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector	class	60d2c09b908888ec
 sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector#<stmt1>	stmt	453e446431f80cf4
-sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector#containsCycle	val	f3fa9fcd27b9e88f
+sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector#containsCycle	val	319f163e5dba9977
 sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector#containsCycle()	def	bb97d3ca8a470454
 sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector#detectCycleDFS(Node<V>,Node<V>,Set<Node<V>>,int,Graph<V>)	def	c91c0432f805fe5e
 sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector#findCycle(Graph<V>)	def	41513a4cdf808a31

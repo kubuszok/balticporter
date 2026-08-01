@@ -72,7 +72,7 @@ member	com.dongbat.jbump.Collisions#order	sge.jbump.Collisions#order	Renamed	-	c
 member	com.dongbat.jbump.Collisions#others	sge.jbump.Collisions#others	Renamed	-	com/dongbat/jbump/Collisions.java	51	805359e3c4b3fd77	
 member	com.dongbat.jbump.Collisions#overlaps	sge.jbump.Collisions#overlaps	Renamed	-	com/dongbat/jbump/Collisions.java	34	e6cc71ee04787d92	vis=private
 member	com.dongbat.jbump.Collisions#remove(int)	sge.jbump.Collisions#remove(int)	Renamed	-	com/dongbat/jbump/Collisions.java	125	d953a7687f8bb008	
-member	com.dongbat.jbump.Collisions#size	sge.jbump.Collisions#size	Renamed	-	com/dongbat/jbump/Collisions.java	53	448ab2be410161fc	name=size$field
+member	com.dongbat.jbump.Collisions#size	sge.jbump.Collisions#size	Renamed	-	com/dongbat/jbump/Collisions.java	53	03eb95b31c6936e1	name=size$field
 member	com.dongbat.jbump.Collisions#size()	sge.jbump.Collisions#size()	Renamed	-	com/dongbat/jbump/Collisions.java	150	2512040e1ef84730	
 member	com.dongbat.jbump.Collisions#sort()	sge.jbump.Collisions#sort()	Renamed	-	com/dongbat/jbump/Collisions.java	252	2ed17991043586a9	
 member	com.dongbat.jbump.Collisions#swapMap	sge.jbump.Collisions#swapMap	Renamed	-	com/dongbat/jbump/Collisions.java	182	ff03ae65a3942653	vis=private

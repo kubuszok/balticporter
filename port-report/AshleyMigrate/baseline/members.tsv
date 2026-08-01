@@ -160,7 +160,7 @@ sge.ecs.EntitySystem	sge.ecs.EntitySystem#removedFromEngine(Engine)	def	648010f9
 sge.ecs.EntitySystem	sge.ecs.EntitySystem#removedFromEngineInternal(Engine)	def	1d2bd610bd31d61e
 sge.ecs.EntitySystem	sge.ecs.EntitySystem#setProcessing(boolean)	def	11f452c901ed98a7
 sge.ecs.EntitySystem	sge.ecs.EntitySystem#update(float)	def	b82e34be88477dfb
-sge.ecs.Family	sge.ecs.Family	class	42603f91e9eb4a1d
+sge.ecs.Family	sge.ecs.Family	class	98ff2dc762265b3b
 sge.ecs.Family	sge.ecs.Family#<stmt1>	stmt	edbf9ab49d81b684
 sge.ecs.Family	sge.ecs.Family#<stmt2>	stmt	415ba713967c3b24
 sge.ecs.Family	sge.ecs.Family#<stmt3>	stmt	4897c7b304842ccd
@@ -182,16 +182,16 @@ sge.ecs.Family	sge.ecs.Family#matches(Entity)	def	eceb3a39510a2c66
 sge.ecs.Family	sge.ecs.Family#one	val	fec5a675bcc6a6d1
 sge.ecs.Family	sge.ecs.Family#one(Array<Class<?>>)	def	77cb85094c159bf9
 sge.ecs.Family	sge.ecs.Family#zeroBits	val	4cfe71d9501f62d7
-sge.ecs.Family	sge.ecs.Family$Builder	class	6b213da5e13e527e
-sge.ecs.Family	sge.ecs.Family$Builder#all	val	fd60ac4232366ae5
+sge.ecs.Family	sge.ecs.Family$Builder	class	b310a0db90d95e22
+sge.ecs.Family	sge.ecs.Family$Builder#all	val	b9c88c1508c9fb10
 sge.ecs.Family	sge.ecs.Family$Builder#all(Array<Class<?>>)	def	828ed4e12bb9e0fb
-sge.ecs.Family	sge.ecs.Family$Builder#exclude	val	0f13c29947ccb619
+sge.ecs.Family	sge.ecs.Family$Builder#exclude	val	df0ab3091f2bd2bb
 sge.ecs.Family	sge.ecs.Family$Builder#exclude(Array<Class<?>>)	def	abb4cf4eba0f68a5
 sge.ecs.Family	sge.ecs.Family$Builder#get()	def	3f07656ad70df423
-sge.ecs.Family	sge.ecs.Family$Builder#one	val	db29c4fbfa9bbdec
+sge.ecs.Family	sge.ecs.Family$Builder#one	val	9716b8ca4ceb1646
 sge.ecs.Family	sge.ecs.Family$Builder#one(Array<Class<?>>)	def	a434aa06bfb2aee0
 sge.ecs.Family	sge.ecs.Family$Builder#reset()	def	63e57e0e272b9ccb
-sge.ecs.FamilyManager	sge.ecs.FamilyManager	class	4fb4b628f1d8ec5b
+sge.ecs.FamilyManager	sge.ecs.FamilyManager	class	feca349b3fc83b32
 sge.ecs.FamilyManager	sge.ecs.FamilyManager#<stmt1>	stmt	a6692bd8605f9cd4
 sge.ecs.FamilyManager	sge.ecs.FamilyManager#addEntityListener(Family,int,EntityListener)	def	d7c131d6a956224d
 sge.ecs.FamilyManager	sge.ecs.FamilyManager#bitsPool	val	4a47578af0930d2f
@@ -201,7 +201,7 @@ sge.ecs.FamilyManager	sge.ecs.FamilyManager#entityListeners	val	3e16e9f5406e37e9
 sge.ecs.FamilyManager	sge.ecs.FamilyManager#families	val	5c993d73045b0b68
 sge.ecs.FamilyManager	sge.ecs.FamilyManager#getEntitiesFor(Family)	def	87e6e43d92e227a5
 sge.ecs.FamilyManager	sge.ecs.FamilyManager#immutableFamilies	val	154eaa97b7c47b3c
-sge.ecs.FamilyManager	sge.ecs.FamilyManager#notifying	val	9ecc9e8452fbc1e4
+sge.ecs.FamilyManager	sge.ecs.FamilyManager#notifying	val	a872238da52f9cf8
 sge.ecs.FamilyManager	sge.ecs.FamilyManager#notifying()	def	4cbbbd1da9876ab8
 sge.ecs.FamilyManager	sge.ecs.FamilyManager#registerFamily(Family)	def	f68e28e188387519
 sge.ecs.FamilyManager	sge.ecs.FamilyManager#removeEntityListener(EntityListener)	def	8e6cfee89c7e0e69
@@ -321,7 +321,7 @@ sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#sort
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#sortedEntities	val	95d254fee834c230
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#startProcessing()	def	fe1ec348163df205
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#update(float)	def	e929bda0252b83e1
-sge.ecs.utils.Bag	sge.ecs.utils.Bag	class	cd46b97d7e1842c9
+sge.ecs.utils.Bag	sge.ecs.utils.Bag	class	97027a1a32571853
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#<init>()	ctor	47b6bd7ae280bd5b
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#<stmt1>	stmt	2756649d52ee1803
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#add(E)	def	382060dad3b965f3
@@ -338,7 +338,7 @@ sge.ecs.utils.Bag	sge.ecs.utils.Bag#remove(E)	def	b63762e764ef77db
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#remove(int)	def	c59b4366eb28f8d1
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#removeLast()	def	5d8b27d1b2ff2d46
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#set(int,E)	def	57c00a074b689c1e
-sge.ecs.utils.Bag	sge.ecs.utils.Bag#size	val	8cc4abc99a2dca30
+sge.ecs.utils.Bag	sge.ecs.utils.Bag#size	val	bcee8ae6274fbde8
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#size()	def	e7ea6eefce3d2418
 sge.ecs.utils.ImmutableArray	sge.ecs.utils.ImmutableArray	class	8b456e2795bc6ddc
 sge.ecs.utils.ImmutableArray	sge.ecs.utils.ImmutableArray#<init>()	ctor	6c7075a672b20f85
