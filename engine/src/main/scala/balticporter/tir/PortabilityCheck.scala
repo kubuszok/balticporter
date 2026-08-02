@@ -52,6 +52,16 @@ object PortabilityCheck:
     // structural, not a rename, because a `@Test` method becomes a `test("…") { … }` block.
     Rule("org.junit.", "JUnit is JVM-only; cross-platform Scala needs MUnit/utest"),
     Rule("junit.framework.", "JUnit 3 is JVM-only; cross-platform Scala needs MUnit/utest"),
+    // Hamcrest is JUnit's OTHER assertion vocabulary — `assertThat(x, is(equalTo(y)))` — and it
+    // arrives transitively with junit rather than as a declared dependency, which is exactly why
+    // it was missed. `TestFrameworkTransform` deliberately does not translate it (MUnit has no
+    // matcher algebra to map a matcher onto) and PRINTS what it left behind; nothing RECORDED it,
+    // because the two rules above name the framework and not the vocabulary reached through it.
+    // A suite could therefore be 100% hamcrest and every portability lane read zero — the same
+    // "a check reporting zero is only as good as its coverage" failure as the reflection-only
+    // list above, found the same way: by asking why a known-unportable package was not flagged.
+    Rule("org.hamcrest.", "Hamcrest is JVM-only, and arrives TRANSITIVELY with junit; MUnit has no " +
+      "matcher algebra, so each `assertThat(x, is(y))` has to become the assertion it means"),
     Rule("java.lang.System#getProperty", "system properties are JVM-only", exactMember = true),
     Rule("java.util.zip.", "java.util.zip is JVM-only"),
     Rule("javax.", "the javax.* stack is JVM-only"),

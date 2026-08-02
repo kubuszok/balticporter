@@ -642,6 +642,30 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(!clue(out).contains("munit.Assertions.assertThat"))
   }
 
+  test("…and the RESIDUE it leaves is COUNTED — PortabilityCheck has an org.hamcrest rule") {
+    // The decision not to translate hamcrest is only defensible if what it leaves behind is a
+    // NUMBER. `TestFrameworkTransform.findings` prints one; nothing recorded it, because the check
+    // had rules for `org.junit.` and `junit.framework.` and none for the vocabulary reached
+    // THROUGH them — so a suite could be 100% hamcrest and every portability lane read zero.
+    //
+    // The receiver is IMPORTED and named, not static-imported: `fromSource` builds with
+    // `noClasspath`, so a static import in a one-file snippet resolves to `this.assertThat(…)` and
+    // the reference never names hamcrest at all (see `transformApply`'s note). A model over a whole
+    // source tree resolves the static-import form — which is the one every liqp suite uses — to the
+    // same symbol this one names directly.
+    val prog = Pipeline.run(SpoonTir.fromSource(
+      """package demo;
+        |import org.hamcrest.CoreMatchers;
+        |import org.hamcrest.MatcherAssert;
+        |import org.junit.Test;
+        |public class HamcrestFqnTest {
+        |  @Test public void a() { MatcherAssert.assertThat(1, CoreMatchers.equalTo(1)); }
+        |}
+        |""".stripMargin), Nil)
+    val v = PortabilityCheck.check(prog).map(_.api).distinct
+    assert(clue(v).exists(_.startsWith("org.hamcrest.")))
+  }
+
   test("a plain JUnit-4 suite produces NO findings — the survey is not noise") {
     val (_, ph) = emit(lifecycleSrc)
     assertEquals(ph.findings.map(_.render), Nil)
