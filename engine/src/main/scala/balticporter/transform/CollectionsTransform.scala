@@ -710,7 +710,7 @@ final class CollectionsTransform(
     val t2 = wrapIterableArgs(t)
     copyConstructor(t2).orElse(capacityConstructor(t2)).orElse(staticRewrite(t2)).getOrElse {
       t2.fun match
-        case Tree.Select(recv, m, _, so) => kindAt(recv) match
+        case Tree.Select(recv, m, _, so) => kindAt(recv).orElse(inheritedKind(recv, m)) match
           case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
           case None    => t2
         case _ => t2
@@ -1252,7 +1252,23 @@ final class CollectionsTransform(
       * deliberately not one". Exceptions are listed ABOVE the guard, so a new rewrite is safe by
       * default and an unsafe one cannot be added by omission. */
     val onShim = headSym(recv.tpe).exists(shimSyms.contains)
+    /** is the receiver `super`? Scala admits `super` in exactly ONE position — as the qualifier of
+      * a member selection — and three of the shapes below put it somewhere else: `entrySet` returns
+      * the receiver ALONE (`for (e <- super)`), the `Seq` `get` makes it a function
+      * (`super(i)`), and every `+=`/`-=`/`++=` renders INFIX (`super ++= m`). All three are E040
+      * SYNTAX errors, and a syntax error is strictly worse than the type error they replace: it
+      * cannot be attributed to a member and it can take the rest of the file with it.
+      *
+      * So this is a BLANKET refusal with no exceptions, for the reason `onShim` above is one: the
+      * arms that WOULD survive (`super.getOrElse(k, d)`, `super.contains(k)`) are not worth the
+      * next arm that will not, and "which of these renders infix" is a fact about the EMITTER that
+      * this phase cannot read. `super.get(k)` therefore stays untranslated and fails to compile
+      * naming the member, which is a counted refusal (ENGINE-LIMITS M6) rather than a broken file.
+      * Note this costs nothing that worked before: a `super` receiver reaches `rewrite` at all only
+      * through `inheritedKind`, which is new. */
+    val onSuper = recv.isInstanceOf[Tree.Super]
     (name, t.args, k) match
+      case _ if onSuper => None
       // The one exception, and the reason it is one: java 8's `forEach(Consumer)` has no
       // counterpart on the shim itself — `JavaIterable` supplies `foreach` as an EXTENSION, which
       // is the whole point of the family (§4.5: an extension adds a view and cannot conflict).
@@ -1471,6 +1487,34 @@ final class CollectionsTransform(
   /** the receiver's (already-retyped, bottom-up) head type, if it is one of our scala
     * collections → its [[Kind]]. */
   private def kindAt(recv: Term)(using Program): Option[Kind] = headSym(actualOf(recv)._1).flatMap(kindOf.get)
+
+  /** the kind of a call the receiver INHERITED — read off the RESOLVED METHOD's declaring type.
+    *
+    * [[kindAt]] asks what the receiver IS, and answers `None` for the one shape a library that
+    * defines its own collection is made of: a class that EXTENDS a mapped JDK collection. Its type
+    * is its own (`SortableMap`, and after retyping `mutable.HashMap[…] & Comparable[…]`), which
+    * this phase never minted and `kindOf` therefore has no key for — so `this.get(k)`,
+    * `super.putAll(m)` and `super.entrySet()` inside such a class went through untouched, and
+    * `this.get(k)` then bound to scala's `Map.get` and returned an `Option` where java returned the
+    * value. ENGINE-LIMITS K5 closed this family for the SHIM targets, where the parent is a
+    * `balticporter.runtime` type and the shim carries java's own member names; it is still open
+    * wherever the parent becomes a real scala collection, which is every `extends HashMap`.
+    *
+    * The question CLAUDE.md §4.56 demands is still answered from what the PHASE ITSELF did: the
+    * resolved method is `java.util.Map#get`, and its OWNER is a key in this phase's own `typeMap`.
+    * That is the identification [[staticRewrite]] already uses for `stream()`, applied to an
+    * instance call — and it is strictly narrower than a name test, because a method the phase did
+    * not retype has an owner the table does not answer for.
+    *
+    * SUPPRESSED for a receiver this run's scope held back. That is CLAUDE.md §1(b)'s named failure:
+    * a declaration the port asked to keep in the JDK shape still RESOLVES `addAll` to
+    * `java.util.List#addAll`, so the fallback alone would rewrite `b.raw.addAll(mine)` to
+    * `b.raw ++= mine` against a real `java.util.List` — emitted, uncompilable code produced by the
+    * scope that was supposed to protect that declaration. [[actualOf]]'s second component is
+    * exactly the flag for it, and it reads `false` for every port that sets no scope. */
+  private def inheritedKind(recv: Term, m: SymId)(using p: Program): Option[Kind] =
+    if actualOf(recv)._2 then scala.None
+    else p.symbolOf(m).flatMap(s => p.symbolOf(s.owner)).flatMap(o => typeMap.get(o.fullName)).map(_._2)
 
   /** the type a term REALLY has — [[CollectionsTransform.scopedType]] against THIS run's
     * [[excluded]] set, with the flag that says the answer came from a declaration the scope held

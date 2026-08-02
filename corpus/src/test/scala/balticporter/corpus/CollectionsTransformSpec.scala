@@ -497,6 +497,56 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "asInstanceOf[scala.Array[java.lang.Object]]")
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // A class that EXTENDS a mapped JDK collection. K5 closed this family for the SHIM targets; it
+  // stayed open wherever the parent becomes a REAL scala collection, because the receiver's type is
+  // then the class's own and `kindOf` has no key for it. `this.get(k)` bound to scala's `Map.get`
+  // and returned an `Option` where java returned the value — a rewrite that silently did not run.
+  // ---------------------------------------------------------------------------------------------
+
+  test("a call INHERITED from a mapped collection is rewritten — the kind comes from the declaring type") {
+    val p = port(
+      """package demo;
+        |import java.util.HashMap;
+        |class Row extends HashMap<String, Integer> {
+        |  Integer at(String k)      { return this.get(k); }
+        |  void copyIn(HashMap<String, Integer> m) { this.putAll(m); }
+        |  boolean here(String k)    { return this.containsKey(k); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "this.getOrElse(k,")
+    assertEmits(p, "this ++= m")
+    assertEmits(p, "this.contains(k)")
+  }
+
+  test("…and EVERY rewrite declines on a `super` receiver — a blanket refusal, because E040 is worse") {
+    // Scala admits `super` in exactly one position, as the qualifier of a member selection. Three
+    // of the arms put it somewhere else — `entrySet` returns the receiver alone (`for (e <-
+    // super)`), the `Seq` `get` makes it a function (`super(i)`), and `+=`/`++=` render INFIX
+    // (`super ++= m`, measured as an E040 on liqp) — and a syntax error is strictly worse than the
+    // type error it replaces. Which arms render infix is a fact about the EMITTER, so the refusal
+    // is blanket rather than a carve-out this phase cannot keep in step.
+    val p = port(
+      """package demo;
+        |import java.util.HashMap;
+        |import java.util.Map;
+        |class Rows extends HashMap<String, Integer> {
+        |  Integer at(String k) { return super.get(k); }
+        |  void copyIn(HashMap<String, Integer> m) { super.putAll(m); }
+        |  void walk() { for (Map.Entry<String, Integer> e : super.entrySet()) { } }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "super.get(k)")
+    assertEmits(p, "super.putAll(m)")
+    assertEmits(p, "super.entrySet()")
+    assertNotEmits(p, "super ++=")
+    assertNotEmits(p, "super.getOrElse")
+  }
+
   test("a CAPACITY hint at a hashed collection gains java's own default load factor") {
     // scala's `mutable.HashMap` declares `()` and `(Int, Double)` and nothing in between, so java's
     // one-argument capacity constructor lands on no overload. Java's own definition of that

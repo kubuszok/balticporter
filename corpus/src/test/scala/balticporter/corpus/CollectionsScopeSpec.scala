@@ -192,6 +192,18 @@ class CollectionsScopeSpec extends PortSuite:
     assert(!out.contains("getOrElse"))
   }
 
+  test("…and the INHERITED-KIND fallback does not reopen it — the declaring type is java's either way") {
+    // The rewrite now falls back to the RESOLVED METHOD's declaring type when the receiver's own
+    // type is not one this phase minted, which is what lets `this.get(k)` inside a class extending
+    // `HashMap` translate. That fallback would rewrite a scoped-out receiver too, and for the worst
+    // possible reason: `b.raw.addAll(mine)` resolves to `java.util.List#addAll` whatever the scope
+    // said, so the fallback alone re-emits exactly the broken `++=` the test above pins as absent.
+    // Suppressed on `actualOf`'s scoped flag, which reads `false` for every port that sets no scope.
+    val (_, _, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
+    assert(clue(out).contains("b.raw.addAll(mine)"))
+    assert(!out.contains("b.raw ++="), "the declaring-type fallback must stop at a scoped-out receiver")
+  }
+
   test("…and the seam that call leaves is COUNTED — refusing to rewrite is not the same as being safe") {
     // Refusing the rewrite is only half of §1(b)'s obligation: `Client.push` still hands its own
     // `Buffer` to a `java.util.List` slot. NOTHING can wrap that, so it must be reported with the
