@@ -8,11 +8,11 @@ manifest	0
 omissions	6
 policy	0
 port-map	0
-portability(all)	56
-portability(emitted)	56
+portability(all)	58
+portability(emitted)	58
 portability(injected)	0
 porter-notes	0
-remediation	10
+remediation	11
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0
