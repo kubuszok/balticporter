@@ -414,19 +414,58 @@ class BaseSurfaceSpec extends munit.FunSuite:
   private def emittedWith(p: Program, s: Surface): String =
     new TirEmitter(p, surfaceView = Some(s)).emit
 
-  test("§4.55: a DEPENDENT's method does not rename the BASE's field — 0 corpus sites, and this is why") {
+  test("§4.55: a DEPENDENT's method does not rename the BASE's field — and the CLASH still moves") {
     val (p, root) = model(clashBase, clashHeir)
     // the pre-contract answer, reproduced: with the whole program as the surface the base's field is
     // renamed by a descendant the base never saw.
     assert(clue(emittedWith(p, TrivialSurface(p))).contains("x$field"))
 
     // …and with the base's row read, the base's own answer is FOLLOWED: it published no `name=`, so
-    // the field keeps java's name and this run renames nothing.
+    // the field keeps java's name and this run renames nothing about it.
     val published = new PublishedSurface(p, ownedUnits(p, root),
       List("base-mod" -> withMembers(contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class")),
                                      List(memberRow("p.Base#x", "public")))))
-    assert(!clue(emittedWith(p, published)).contains("x$field"))
+    val out = emittedWith(p, published)
+    assert(!clue(out).contains("x$field"), out)
+
+    // …BUT WITHHOLDING THE RENAME IS NOT RESOLVING THE CLASH, which is what this assertion used to
+    // stop at. `q.Heir extends p.Base` declares `int x()` over an inherited `var x`: the same erased
+    // signature, which cannot compile, and every count in the run was zero. The base settles ONE HALF
+    // of the pair; the other half is THIS module's own declaration, so this module moves it.
+    assert(clue(out).contains("def x$method(): scala.Int"), out)
+    assert(!out.linesIterator.exists(_.trim.startsWith("def x(")), out)
+    // it is a decision like any other rename, naming the field that could not move
+    val ds = new TirEmitter(p, surfaceView = Some(published)).ownDecisions
+      .filter(_.detail.get("clash").contains("field-vs-method-in-base"))
+    assertEquals(clue(ds).map(d => (d.detail("from"), d.detail("to"), d.detail("field"))),
+                 List(("x", "x$method", "p.Base#x")))
+    // and it is a REPAIR, not a refusal: nothing is left for a human to reconcile.
     assertEquals(published.gaps, Nil)
+  }
+
+  test("…and a method the run may NOT move is REFUSED and RECORDED, never renamed anyway") {
+    // The half this module owns is only movable when it answers to nothing outside this module. Here
+    // `q.Heir` implements `p.Iface.x()`, whose declaration lives in the BASE — renaming `Heir.x`
+    // would leave that interface unimplemented, so the closure is anchored and the pass refuses.
+    // Refuse-and-count is the honest outcome for a clash with no local repair (`DESIGN.md` §8.3).
+    val (p, root) = model(
+      clashBase ++ Map("p/Iface.java" -> "package p; public interface Iface { int x(); }"),
+      Map("q/Heir.java" -> """package q;
+        |public class Heir extends p.Base implements p.Iface {
+        |  public int x() { return 1; }
+        |}""".stripMargin))
+    val published = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> withMembers(contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class")),
+                                     List(memberRow("p.Base#x", "public")))))
+    val out = emittedWith(p, published)
+    assert(!clue(out).contains("x$field"), out)
+    assert(!clue(out).contains("x$method"), out)
+    // …the clash's own gap, among the ordinary ones this fixture's un-contracted `p.Iface` produces
+    val mine = published.gaps.filter(_.subject == "q.Heir#x")
+    assertEquals(clue(published.gaps).map(_.subject).count(_ == "q.Heir#x"), 1)
+    assertEquals(mine.head.fatal, false)
+    assert(clue(mine.head.why).contains("p.Base#x"), mine.head.why)
+    assert(clue(mine.head.fix).contains("§1(a) ENGINE, IN THE BASE"))
   }
 
   test("…and where the BASE DID rename it, the dependent spells the base's name, not its own") {

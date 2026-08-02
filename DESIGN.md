@@ -2146,8 +2146,25 @@ Both are whole-program indexes and both were wrong only across a module boundary
 has EXTRA descendants the base never saw, so a dependent subclass declaring `def x()` renamed the
 BASE's field and every reference the dependent emitted spelled a name the base never wrote. The
 base's `name=` is now FOLLOWED instead: a base that renamed the field hands the dependent that name,
-one that did not hands it nothing. **0 corpus sites**, which is exactly why it is a construction-time
-restriction and not a check — a check would have reported zero for as long as anybody looked, and
+one that did not hands it nothing.
+
+**…and "hands it nothing" is not "there is nothing to do" — that branch was SILENT.** A published row
+with no `name=` settles ONE HALF of the pair: the field keeps java's name and this run may not move
+it. The clash the dependent saw is still there, and it is one only this run has — the instance clash
+is decided against this class *and every descendant*, so a descendant the base ALSO had would have
+made the base's own run see it and publish a `name=`. Withheld, the dependent emitted `def x()` under
+an inherited `var x`: the same erased signature, which cannot compile, with zero findings and nothing
+in the run disagreeing with itself. So the other half moves — **the DEPENDENT'S OWN METHOD**, renamed
+`x$method`, which is this module's declaration to move and nobody else's. The rename runs through
+`OverrideGraph.closureOf`, so all of a component moves or none of it does, and a component that
+reaches an unparsed parent or a resolution root's declaration is REFUSED and recorded as a
+`Surface.Gap` naming the base — a method implementing a base interface genuinely has no local repair,
+and refuse-and-count is what the contract buys there. It rewrites `Symbol.name` and **not**
+`fullName`, like every other §4.55 pass, so the member key four artifacts join on does not move
+(`MemberClashPlacementSpec` is the gate); and the method renames are kept in a table of their own,
+because the field map also drives the `private`/`protected` strip and a method renamed for the
+field's sake must not be widened for it. **0 corpus sites**, which is exactly why it is a
+construction-time restriction and not a check — a check would have reported zero for as long as anybody looked, and
 `BaseSurfaceSpec` builds the shape that has none. The `export` lists read `statics=` and `companion=`
 for the same reason from the other end: what `export P.{… => _, *}` may exclude is the set of names
 the parent's companion ACTUALLY DELIVERS, and a static the base renamed or dropped exists only in the

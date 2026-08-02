@@ -3473,9 +3473,20 @@ object TirEmitter:
       cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case t: Term => headSym(t.tpe) }
         .flatMap(declOf.get).foreach(scan)
       val shadowed = inherited(cd)
+      // A field the BASE emits: its published name settles this, in both directions. `Renamed` hands
+      // this run the base's own name; `Kept` means the base saw the same ancestors and moved nothing,
+      // which here really is "nothing to do" — the shadowing is decided against ANCESTORS, and a
+      // base class cannot extend a dependent's, so a shadowing pair of base fields is one the base's
+      // own run already saw. (That is exactly what makes `resolveMemberClashes` different: its clash
+      // is decided against DESCENDANTS, which a dependent has and the base did not.)
+      def settledByBase(v: Tree.ValDef): Boolean =
+        TirEmitter.baseName(p, view, v.symbol, "shadows-inherited") match
+          case TirEmitter.BaseName.Derive      => false
+          case TirEmitter.BaseName.Renamed(to) => renames(v.symbol) = to; true
+          case TirEmitter.BaseName.Kept        => true
       cd.body.foreach {
         case v: Tree.ValDef if shadowed(nm(v.symbol)) && !p.symbolOf(v.symbol).exists(_.flags.isStatic) &&
-                               !TirEmitter.followsBase(p, view, renames, v.symbol, "shadows-inherited") =>
+                               !settledByBase(v) =>
           // The fresh name must not ITSELF be inherited. `CheckBox.style` shadows
           // `TextButton.style`, which shadows `Button.style` — renaming both to `style$shadow`
           // just relocated the collision one level up. Keep appending until the name is free
@@ -3510,8 +3521,20 @@ object TirEmitter:
       )
       p.rebuilt(symbols = SymbolTable(syms))
 
+  /** WHAT THE BASE SAYS ABOUT A FIELD THIS RUN WOULD RENAME — three answers, and the third is the
+    * one that used to be silent (see [[baseName]]). */
+  private[emit] enum BaseName:
+    /** this run EMITS the field, or no base publishes a row for it: the local derivation stands.
+      * For the second case the question is recorded as a gap first. */
+    case Derive
+    /** the base RENAMED it, and this is the name it emitted. Nothing is re-derived. */
+    case Renamed(to: String)
+    /** the base published a row and KEPT java's name. This run may not move the field — and the
+      * clash it saw is therefore ITS OWN, made by declarations only this run has. */
+    case Kept
+
   /** A field this run does NOT emit: does the BASE's published name settle it, so nothing is
-    * re-derived? `true` when the caller must not compute a rename of its own.
+    * re-derived? [[BaseName.Derive]] when the caller must compute its own.
     *
     * §4.55's two field passes are whole-program by construction — a field is renamed iff THIS CLASS
     * OR ANY DESCENDANT declares a method of that name, and shadowing is decided against every
@@ -3530,16 +3553,22 @@ object TirEmitter:
     * differs from Java's, so a base that DID rename the field hands the dependent that name, and one
     * that did not hands it nothing and the field keeps Java's. Where no base publishes a row the
     * local derivation stands — the pre-contract path — and the question is recorded as a gap, because
-    * a run that guessed here would emit exactly the text this exists to stop. */
-  private def followsBase(p: Program, view: Surface, renames: collection.mutable.Map[SymId, String],
-                          field: SymId, clash: String): Boolean =
-    if view.owns(field) then false
+    * a run that guessed here would emit exactly the text this exists to stop.
+    *
+    * '''AND "the base kept java's name" IS NOT "there is nothing to do".''' That branch answered
+    * `true` and returned, which withheld the rename and left the clash standing: base `p.Base{int x}`
+    * with a dependent `q.Heir extends p.Base { int x() }` emits a `def x()` under an inherited `var
+    * x` — the same erased signature, which cannot compile, with ZERO findings and nothing in the run
+    * disagreeing with itself. The base's answer settles ONE HALF of the clash and the other half is
+    * this module's own declaration; [[BaseName.Kept]] hands the caller that fact so it can move the
+    * half it owns. */
+  private[emit] def baseName(p: Program, view: Surface, field: SymId, clash: String): BaseName =
+    if view.owns(field) then BaseName.Derive
     else
       view.memberShape(field) match
-        case Surface.Answer.Own => false // cannot happen: `owns` above is the complement
+        case Surface.Answer.Own => BaseName.Derive // cannot happen: `owns` above is the complement
         case Surface.Answer.Published(shape, _) =>
-          if shape.name.nonEmpty then renames(field) = shape.name
-          true
+          if shape.name.nonEmpty then BaseName.Renamed(shape.name) else BaseName.Kept
         case Surface.Answer.Unknown(why, module) =>
           view.gap(Surface.Gap(p.symbolOf(field).map(_.fullName).getOrElse("?"),
             why + s" — this run would rename it for a $clash it can only see because its own " +
@@ -3548,7 +3577,7 @@ object TirEmitter:
             module, fatal = false,
             fix = "§1(b) PER-LIBRARY: declare the module that emits this field as a base " +
               "(`base = \"…\"`) and re-run it with this engine so its port map carries a `name=` row"))
-          false
+          BaseName.Derive
 
   /** THE OTHER HALF OF A §4.55 FIELD RENAME: the member also ships WIDER than Java wrote it.
     *
@@ -3749,7 +3778,15 @@ object TirEmitter:
                            surface: Surface = null): Program =
     val view    = if surface eq null then TrivialSurface(p) else surface
     val renames = collection.mutable.Map[SymId, String]()
+    /** METHOD renames, kept apart from [[renames]] for one reason that is not tidiness: the field
+      * map also drives `recordClashWidening` and the `isPrivate`/`isProtected` strip below, and a
+      * renamed field NEEDS that (java let an enclosing class read a nested private field at the old
+      * name). A method does not — it is renamed because the FIELD could not be, and widening it
+      * would move emitted surface for nothing and file a `WidenedVisibility` row about a change with
+      * no cause. */
+    val methodRenames = collection.mutable.Map[SymId, String]()
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
+    def eff(id: SymId): String = renames.getOrElse(id, methodRenames.getOrElse(id, nm(id)))
     def headSym(t: TypeRepr): Option[SymId] = t match
       case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(tc, _) => headSym(tc); case _ => None
     def isModule(c: SymId): Boolean  = p.symbolOf(c).exists(_.flags.isModule)
@@ -3759,10 +3796,14 @@ object TirEmitter:
     // per-class method names BY PLACEMENT, and the parent edges the instance scope is inherited along
     val instMethodsOf = collection.mutable.Map[SymId, Set[String]]()
     val statMethodsOf = collection.mutable.Map[SymId, Set[String]]()
+    // …and the DECLARATIONS behind the instance names, because a clash the base's field cannot
+    // resolve has to be resolved at the method, and a name is not a symbol.
+    val instMethodSyms = collection.mutable.Map[SymId, List[SymId]]()
     val childrenOf = collection.mutable.Map[SymId, List[SymId]]().withDefaultValue(Nil)
     def index(cd: Tree.ClassDef): Unit =
       val (stat, inst) = cd.body.collect { case d: Tree.DefDef => d }.partition(d => inCompanion(d.symbol, cd.symbol))
       instMethodsOf(cd.symbol) = inst.map(d => nm(d.symbol)).toSet
+      instMethodSyms(cd.symbol) = inst.map(_.symbol)
       statMethodsOf(cd.symbol) = stat.map(d => nm(d.symbol)).toSet
       cd.parents.foreach { case tt: TypeTree => headSym(tt.tpe).foreach(pp => childrenOf(pp) = cd.symbol :: childrenOf(pp)); case _ => () }
       cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
@@ -3770,41 +3811,129 @@ object TirEmitter:
     def selfOrDescMethods(c: SymId, seen: Set[SymId] = Set.empty): Set[String] =
       if seen(c) then Set.empty
       else instMethodsOf.getOrElse(c, Set.empty) ++ childrenOf(c).flatMap(ch => selfOrDescMethods(ch, seen + c))
+    def selfOrDescClasses(c: SymId, seen: Set[SymId] = Set.empty): List[SymId] =
+      if seen(c) then Nil else c :: childrenOf(c).flatMap(ch => selfOrDescClasses(ch, seen + c))
+
+    // THE OVERRIDE GRAPH IS LAZY. Building it walks the whole program, and the only branch that
+    // needs it is the one with 0 corpus sites — a base field this run may not move whose clashing
+    // method it owns. `baseUnits` is what makes the graph able to say "this component reaches a
+    // declaration a resolution root owns", which is the refusal that keeps the rename honest.
+    lazy val graph = OverrideGraph.build(
+      p, baseUnits = p.units.map(_.symbol).toSet -- view.ownedUnits.map(_.symbol).toSet)
+
     def scan(cd: Tree.ClassDef): Unit =
       val instClashNames = selfOrDescMethods(cd.symbol)
       val statClashNames = statMethodsOf.getOrElse(cd.symbol, Set.empty)
-      def clashes(v: Tree.ValDef): Boolean =
-        if inCompanion(v.symbol, cd.symbol) then statClashNames(nm(v.symbol)) else instClashNames(nm(v.symbol))
+      def clashNames(v: Tree.ValDef): Set[String] =
+        if inCompanion(v.symbol, cd.symbol) then statClashNames else instClashNames
+      def clashes(v: Tree.ValDef): Boolean = clashNames(v)(nm(v.symbol))
+
+      /** rename the FIELD — the ordinary answer, and the only one this pass had. */
+      def moveField(v: Tree.ValDef): Unit =
+        val fresh = nm(v.symbol) + "$field"
+        renames(v.symbol) = fresh
+        // the note's own text is unchanged by this refinement, deliberately: it already says
+        // "a method of this class or of a SUBCLASS", which is the INSTANCE scope and now the
+        // only thing the pass claims. A reworded `why` is emitted text (§4.575) and would move
+        // every member carrying this note in every port, hiding the three that really changed.
+        note(out, Decision.Kind.RenamedMember, p, v.symbol,
+          Map(
+            "from"  -> nm(v.symbol),
+            "to"    -> fresh,
+            "clash" -> "field-vs-method",
+            "owner" -> p.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
+            "why"   -> ("java keeps fields and methods in SEPARATE namespaces, so a field may " +
+              "share a name with a method of this class or of a SUBCLASS; scala has one " +
+              "namespace and forbids it"),
+          ),
+          MemberRenameRule)
+
+      /** …and the answer when the FIELD IS THE BASE'S AND THE BASE KEPT JAVA'S NAME: move the half
+        * of the clash this module owns.
+        *
+        * The clashing methods are necessarily this run's own declarations, and that is a derivation
+        * rather than an assumption: the instance clash is decided against this class AND EVERY
+        * DESCENDANT, and a descendant the BASE also had would have made the base's own run see the
+        * same clash and publish a `name=`. So a `Kept` answer means every clashing method is one only
+        * this program has.
+        *
+        * The rename still has to be SOUND, and only [[OverrideGraph]] can say so: a method that
+        * implements an interface or overrides a parent this module does not own cannot move, because
+        * the declaration it answers to stays where it is. That closure is refused and RECORDED — the
+        * honest outcome for a clash with no local repair (`DESIGN.md` §8.3: the contract buys
+        * attribution and refuse-and-count, not an answer). */
+      def moveOwnMethods(v: Tree.ValDef): Unit =
+        val n     = nm(v.symbol)
+        val mine  = selfOrDescClasses(cd.symbol)
+          .flatMap(c => instMethodSyms.getOrElse(c, Nil))
+          .filter(m => nm(m) == n && view.owns(m))
+        val fieldFqn = p.symbolOf(v.symbol).map(_.fullName).getOrElse("?")
+        mine.foreach { m =>
+          if !methodRenames.contains(m) then
+            val c = graph.closureOf(m)
+            c.anchorReason(p) match
+              case Some(why) =>
+                view.gap(Surface.Gap(p.symbolOf(m).map(_.fullName).getOrElse("?"),
+                  s"this method shares a name with `$fieldFqn`, a field the base emitted under java's " +
+                    s"own name — so scala's single namespace forbids the pair, this run may not move " +
+                    s"the field, and it cannot move the method either: $why",
+                  view.memberShape(v.symbol).module, fatal = false,
+                  fix = "§1(a) ENGINE, IN THE BASE: only the module that emits the field can rename " +
+                    "it, and only if it can see the clash — which it cannot, because the method is " +
+                    "declared here. Rename one of the two in the java, or drop this method"))
+              case scala.None =>
+                // FREE against everything the component can see — the collision rule `MemberRenamer`
+                // uses, read through the effective names so two renames in one hierarchy cannot land
+                // on each other (§4.55).
+                val visible = c.members.map(graph.ownerOf).filter(_ != SymId.None).toList.distinct
+                  .flatMap(graph.relativesOf).distinct.flatMap(graph.membersOf).distinct
+                  .filterNot(c.members.contains)
+                var fresh = n + "$method"
+                var fuel  = 64
+                while visible.exists(x => eff(x) == fresh) && fuel > 0 do { fresh += "$"; fuel -= 1 }
+                c.members.foreach(x => methodRenames(x) = fresh)
+                c.members.toList.sortBy(_.raw).foreach { x =>
+                  note(out, Decision.Kind.RenamedMember, p, x,
+                    Map(
+                      "from"      -> nm(x),
+                      "to"        -> fresh,
+                      "clash"     -> "field-vs-method-in-base",
+                      "field"     -> fieldFqn,
+                      "owner"     -> p.symbolOf(graph.ownerOf(x)).map(_.fullName).getOrElse("?"),
+                      "component" -> c.members.size.toString,
+                      "why"       -> ("java keeps fields and methods in SEPARATE namespaces and " +
+                        "scala does not; the field is emitted by a BASE module under java's own " +
+                        "name, so this run may not move it — the half of the clash this module " +
+                        "owns is the method, and every declaration of its override component moves " +
+                        "with it"),
+                    ),
+                    MemberRenameRule)
+                }
+        }
+
       cd.body.foreach {
-        case v: Tree.ValDef if clashes(v) && !TirEmitter.followsBase(p, view, renames, v.symbol, "field-vs-method") =>
-          renames(v.symbol) = nm(v.symbol) + "$field"
-          // the note's own text is unchanged by this refinement, deliberately: it already says
-          // "a method of this class or of a SUBCLASS", which is the INSTANCE scope and now the
-          // only thing the pass claims. A reworded `why` is emitted text (§4.575) and would move
-          // every member carrying this note in every port, hiding the three that really changed.
-          note(out, Decision.Kind.RenamedMember, p, v.symbol,
-            Map(
-              "from"  -> nm(v.symbol),
-              "to"    -> renames(v.symbol),
-              "clash" -> "field-vs-method",
-              "owner" -> p.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
-              "why"   -> ("java keeps fields and methods in SEPARATE namespaces, so a field may " +
-                "share a name with a method of this class or of a SUBCLASS; scala has one " +
-                "namespace and forbids it"),
-            ),
-            MemberRenameRule)
+        case v: Tree.ValDef if clashes(v) =>
+          TirEmitter.baseName(p, view, v.symbol, "field-vs-method") match
+            case TirEmitter.BaseName.Derive      => moveField(v)
+            case TirEmitter.BaseName.Renamed(to) => renames(v.symbol) = to
+            case TirEmitter.BaseName.Kept        => moveOwnMethods(v)
         case c: Tree.ClassDef                           => scan(c)
         case _                                           => ()
       }
       cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () })
     p.units.foreach(scan)
-    if renames.isEmpty then p
+    if renames.isEmpty && methodRenames.isEmpty then p
     else
       // also relax visibility: Java lets the enclosing class read a nested class's private
       // field (`point.x`); Scala does not, so a renamed clash-field must stay accessible — and
-      // RECORDED, see `recordClashWidening`.
+      // RECORDED, see `recordClashWidening`. FIELDS only — see `methodRenames`.
       recordClashWidening(p, out, renames.keys, "field-vs-method")
-      val syms = p.symbols.all.map(s =>
-        renames.get(s.id).map(n => s.copy(name = n, flags = s.flags.copy(isPrivate = false, isProtected = false))).getOrElse(s)
-      )
+      val syms = p.symbols.all.map { s =>
+        renames.get(s.id).map(n => s.copy(name = n, flags = s.flags.copy(isPrivate = false, isProtected = false)))
+          // `name` and NOT `fullName`: the member key the source map, the port map and `dropMethods`
+          // all join on is `owner#<java name>`, and a §4.55 pass moving it would move that join under
+          // four artifacts at once with nothing failing (`MemberClashPlacementSpec` is the gate).
+          .orElse(methodRenames.get(s.id).map(n => s.copy(name = n)))
+          .getOrElse(s)
+      }
       p.rebuilt(symbols = SymbolTable(syms))
