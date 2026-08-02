@@ -1234,7 +1234,9 @@ jbump-measure:
 # The compile is EXPECTED to report errors at this milestone. That is the deliverable — a census,
 # classified per CLAUDE.md §1 — so `compile_guard` reporting a non-zero count is data, and the
 # lane runs `correlate` whether or not it compiled, because the compiler output is then the only
-# diagnostic this port has.
+# diagnostic this port has. A compile that ABORTED is not data and stops the lane there
+# (`compile_guard`'s third state): the census would be a floor, and this port's whole deliverable is
+# the number.
 # ---------------------------------------------------------------------------------------------
 [doc("liqp + its own 105-file suite: emit, checks, discovery, break residue, compile, RUN when it compiles")]
 liqp-measure:

@@ -207,6 +207,14 @@ break_residue() {
 # guard above stays quiet; but every file it had not yet typed is UNMEASURED, so the number is a
 # FLOOR and nothing distinguishes it from a finished compile's total. Measured on liqp's first run:
 # 25 errors and an abort, quoted as "25 errors" until the capture was read by hand.
+#
+# All three states FAIL THE LANE, and the third one did not until it was audited: it printed the
+# warning and RETURNED, so the lane ran on to `headline`, the run looked like every other run, and
+# `just baseline-accept` would happily bake a floor in as this port's number. A warning nobody is
+# forced to act on is exactly the "stale number reads like a result" failure `measure-all` stops the
+# whole sequence for. Nothing in the corpus relies on continuing past an abort — no lane's compile
+# aborts today, liqp's included, since `LiqpClasspath.upstreamClasses` gave scalac the class files
+# whose absence caused the one measured abort.
 compile_guard() {
   local st="$1" errors="$2" file="$3"
   if [ "$st" != "0" ] && [ "$errors" = "0" ]; then
@@ -215,11 +223,20 @@ compile_guard() {
     exit 1
   fi
   if grep -qE 'An unhandled exception was thrown in the compiler|^Exception in thread "main"' "$file"; then
-    echo "!! THE COMPILER ABORTED — the count below is a FLOOR, not this port's error count."
-    echo "   scalac threw and stopped; every file it had not yet typed is UNMEASURED, and an"
-    echo "   aborted compile's number reads exactly like a finished one's. Fix the abort first."
+    echo "!! THE COMPILER ABORTED — $errors is a FLOOR, not this port's error count."
+    echo "   scalac threw and stopped where it stood; every file it had not yet typed is UNMEASURED,"
+    echo "   and an aborted compile's number reads exactly like a finished one's."
+    echo
+    echo "   WHAT TO DO — fix the abort, then re-run this lane; do not read, quote or accept a"
+    echo "   baseline from this run. An abort is almost always the CLASSPATH SEAM rather than the"
+    echo "   emitted code: a class file whose signature names a type the compile classpath does not"
+    echo "   hold makes ClassfileParser throw (that is the measured case). Check what this lane puts"
+    echo "   on --jar / --dependency against what the emitted code and its class files actually"
+    echo "   reference. If it is a compiler crash instead, the capture below is the report."
     grep -m1 -B2 -A6 -E 'An unhandled exception was thrown in the compiler|^Exception in thread "main"' \
       "$file" | sed 's/^/     /'
+    echo "   full capture: $file"
+    exit 1
   fi
 }
 
