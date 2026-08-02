@@ -310,6 +310,18 @@ Two things to record when you find one:
 
 Reasoning from first principles when a worked answer exists nearby wastes whole sessions. It has.
 
+**But what the reference port EMITTED is evidence; what it implies for a MECHANICAL port is a
+hypothesis, and it is measured before it is policy.** The two are not doing the same thing. A hand
+port adjusts every caller by hand, so it can keep a JDK type in one file and stay consistent
+everywhere; a mechanical port moves whole families of declarations at once, and a policy that
+exempts some of them SPLITS a call graph the hand port never had to keep whole. Read the second way,
+"ssg kept `java.util` in 32 of its 130 files" became "scope the collections phase out of the
+declarations at the seams", which is the same shape as their answer and cost **27 → 47 errors**,
+then **27 → 51** turned off entirely (`ENGINE-LIMITS.md` K16). Nothing was wrong with the
+observation. What was wrong was reading a hand port's freedom as a mechanical port's option — so
+quote the reference port for the SHAPE it emitted, and get a number before that shape becomes a
+manifest entry.
+
 ## 3.6 Where a discovery goes
 
 A lesson that would change how the NEXT library is ported does not belong only in that port's

@@ -2124,6 +2124,38 @@ widening it is not a change to make for four sites.
 D-liqp-1 × D-liqp-2 — an external generated parser that references back INTO the renamed library —
 costs exactly one error and cannot be fixed without porting or regenerating it.
 
+**And the whole of it is ONE PHASE's, which is what a port-policy wave went looking for and did not
+find a lever for.** Attributed by hand from the compile: **26 of the 27 are
+`CollectionsTransform` boundaries** (11 K6.5 `Arrays.asList`, 4 F11 `++=`, 4 K5.7 at `Sort`'s
+JDK-collection subclass and `Map.Entry` implementation, and 7 more at `java.util.stream`,
+`Map.Entry` and the Jackson/ANTLR/`ServiceLoader` seams). The 27th is the D-liqp-1 × D-liqp-2
+namespace seam above. **There is no drop or injection among them that is not a rewrite**: every one
+of these types is mechanically portable and the disagreement is a TYPE, so the only honest
+`dropTypes` + `inject` for the set would be a hand-written `NodeVisitor` (849 ll.), `LValue`,
+`Template`, `LiquidSupport`, five `spi` files and nine filters — which is the library, by hand, and
+the exact "false covenant" the reference port's own history warns about (two of ssg's files shipped
+marked `Covenant: full-port` while carrying a stub, and both had to be redone). A hand-written
+replacement for code the engine can translate is not port policy; it is a port that stopped
+measuring the engine.
+
+The phase's own §1(b) knob was the other candidate and is now a **measured dead end in both
+directions** — `ENGINE-LIMITS.md` K16: 27 → 47 with an 18-entry `except`, 27 → 51 with the phase a
+no-op, so `CollectionsTransform` being ON is worth 24 errors to this library. A scope splits a call
+graph, and liqp's collection types are its currency. The scoped-out `NodeVisitor` alone went 2 → 22,
+almost all of it K9's enhanced-for over a real `java.util.List` — a scope withdraws the phase's
+REWRITES too, not only its retyping. **Do NOT retry.**
+
+So the main set's 27 stay, and the classification splits 26/1 rather than running to one kind:
+**26 are (a) engine**, in the families K6.5 / G2-F11 / K5.7 / K6 / K15 / K9, and the port's `.conf`
+gains nothing for any of them — they move when those entries move. **The 27th is (b), and it is
+already this port's own decision**: D-liqp-1 keeps the generated parser external and D-liqp-2
+renames the library, so a parser compiled against upstream `liqp` asks for
+`liqp.TemplateParser.ErrorMode` at a call the port emits with `ssg.liquid.TemplateParser.ErrorMode`.
+No manifest key closes it, because none of them rewrites an ARGUMENT: a `type-redirect` at that enum
+would move the port's own type everywhere, and the only shim that reaches the one call site is a
+hand-written 504-line `Template`. It closes when a later milestone ports or regenerates the parser —
+which is what D-liqp-1 already says, and this error is its price, stated.
+
 ### 10.5.4 The test port — emitted and censused, NOT run
 
 `corpus/ports/liqp/test.conf` is a §1.5 dependent of `main.conf` (it inherits
@@ -2137,7 +2169,7 @@ source sets on one invocation and splits the wall by the path scalac printed.
 |---|---|
 | emitted | **101 Scala test files** from 105 java (4 excluded, below), 788 members in the source map |
 | tests | 639 `@Test` upstream -> **577 emitted** (munit 577, junit residue **0** — the whole JUnit surface converted) |
-| scalac errors | **main 27 (unchanged by this port), test 49 -> 29 -> 25 -> 23**, all `EngineGap`; the two are never summed, because a test-set error is frequently a cascade of a main-set one |
+| scalac errors | **main 27 (unchanged by this port), test 49 -> 29 -> 25 -> 23 -> 11**, all `EngineGap` bar the two D-liqp-1 × D-liqp-2 seams; the two source sets are never summed, because a test-set error is frequently a cascade of a main-set one |
 | `portability(emitted)` | **1467**, dominated by hamcrest (725 `assertThat` + 667 `is`/`equalTo`), which the conversion deliberately leaves in place and `ENGINE-LIMITS.md` X6's `org.hamcrest.` rule is what counts |
 | `omissions` | **8** — dropped `@SuppressWarnings` on anonymous-class fields |
 | `trivia` | **0 lost**, 1 recovered (`TestUtils.java:17`) |
@@ -2149,13 +2181,13 @@ five of them, in `ReadmeSamplesTest`, `TemplateTest`, `DateTest` and `LiquidSupp
 discovery gate prints `!! TESTS LOST — 62 of 639` on every run and is supposed to; the exclusion is
 stated in `test.conf` and is deleted, not narrowed, the day the frontend grows the node.
 
-**The 49, classified — and 26 of them closed.** Every one is (a) engine except the two named below;
-none is (b) or (c), and none is `TestFrameworkTransform`'s. **The test source set now reads 23.**
+**The 49, classified — and 38 of them closed.** Every one is (a) engine except the two named below;
+none is (b) or (c), and none is `TestFrameworkTransform`'s. **The test source set now reads 11.**
 
 | n | family | where it goes |
 |---|---|---|
 | ~~20~~ **0** | `ZoneOffset.systemDefault()` — a static reached through a SUBCLASS name. Java inherits statics, Scala companions do not | `ENGINE-LIMITS.md` **T14**, CLOSED in the frontend: the receiver is the interned symbol's OWNER, and the FIELD half's superclass-only walk became the inheritance closure (a java interface constant is inherited through `implements`) |
-| **12** | `value TemplateTest is not a member of ssg.liquid` — four suites `import liqp.TemplateTest` for its nested `ComparableBase` | the T9 exclusion's own cascade; no fix to those four suites removes it |
+| ~~12~~ **0** | `value TemplateTest is not a member of ssg.liquid` — four suites `import liqp.TemplateTest` for its nested `ComparableBase` | **NOT (a)** — CLOSED by D-liqp-5, an `inject` of that one nested type at the emitted FQN. It was T9's CASCADE and not T9's cost: four otherwise-portable suites failing over a data class they merely borrow. The 62-test T9 loss itself is untouched and stays loud, and the injection is DELETED — not grown — the day the frontend takes a method-local named class |
 | ~~4~~ **0** | an unqualified inherited `add(…)` inside a double-brace anonymous subclass of a retyped collection | `ENGINE-LIMITS.md` **K5** (extended), CLOSED: inside a NAMED class the frontend already supplies `this.`/`Outer.this.`; inside an ANONYMOUS one it does not, so the enclosing `new … { … }` claims the pending call — and the same claim repaired 22 SILENT `put` sites the four errors never named |
 | ~~2~~ **0** | `Found: Object / Required: String` at `InsertionTest`'s two anonymous `Block.render` bodies | `ENGINE-LIMITS.md` **T15** (new), CLOSED: `(c ? a : b).toString()` emitted the call INSIDE the else branch. A receiver is an operand, and four receiver positions were not asking `operand` |
 | **6** | one heterogeneous `Arrays.asList(98, "97", true, false, null)` — six per-element `Found: (98 : Int) / Required: String` | (a) OPEN. Java boxes those literals and infers `Serializable & Comparable<…>`; scala's `Int`/`Boolean` are value types and join to nothing java would name, so the element type the vararg infers is not java's. Visible only because K6.5's pack-opening made the elements separate arguments |

@@ -2852,6 +2852,68 @@ only at JDK ones.*
 
 ---
 
+### K16. A `CollectionsTransform` SCOPE is not a way to opt out of its residue — 27 → 47 narrow, 27 → 51 off. DO NOT RETRY
+
+**The move that looks obviously right, measured in both directions, and worse in both.** A port
+whose remaining wall is entirely this phase's boundaries reaches for the phase's own §1(b) knob:
+name the declarations whose java shape is load-bearing and let them keep it. The reference hand-port
+recommends exactly this from the sources — *"recommend `Everywhere(Set.empty)` off, or a very narrow
+`Only`; the cheapest first answer is not to open [the third-party seam]"* — and it is wrong. Three
+configurations, one library, one commit apart:
+
+| `scope` | main errors | test errors |
+|---|---|---|
+| none (`Everywhere(Set.empty)`) | **27** | 49 |
+| `except` = 18 named types, every one of them a declaration at a real seam | **47** | 49 |
+| `except = ["<the whole governed package>"]` — the phase a total no-op | **51** | 42 |
+
+**Anchored at `b95480b5`**, which is the honest way to quote three numbers from one afternoon: they
+were measured against that engine, one after another, with nothing else moving. The TEST column has
+since been overtaken (T14, K5's anonymous receiver and T15 took it to 23, and the cascade injection
+to 11) and the MAIN column has not moved at all. What the entry claims is the SHAPE — that the two
+scoped columns are both worse than the unscoped one, by a lot — and re-deriving the exact figures on
+a later engine is a day's work that would not change the conclusion. If a future change makes the
+scope look plausible again, it is cheaper to re-measure the three configurations than to trust these
+three integers.
+
+So the phase being ON is worth **24 main errors** to a library that is `java.util.Map<String,Object>`
+in and `Object` out throughout. Two facts explain it and both generalise:
+
+- **A SCOPE SPLITS A CALL GRAPH, and a library is not stratified.** Every error the narrow scope
+  removed at a scoped-out declaration it re-created at that declaration's CALLERS, which are
+  retyped: `Insertions.getBlockNames()` stopped being a `mutable.Set` and three callers in two other
+  files stopped compiling; `LiquidSupport.toLiquid()` stopped being a `mutable.Map` and five did.
+  The direction reverses but the count does not fall, because the boundary did not go away — it
+  MOVED, from one seam the phase can see to several it cannot. A scope pays only where the scoped
+  set is a genuine ISLAND (a bridge class nothing else consumes), and "this declaration sits at a
+  seam" is not evidence that it is one.
+- **A scoped-out body LOSES the phase's REWRITES, not only its retyping** — which is correct
+  (§4.56: a type the phase does not retype is still whatever it was) and is not what the knob's
+  name suggests. The enhanced-for is the expensive one: `for (x : javaList)` in a scoped-out body
+  emits `for (x <- javaList)` against a real `java.util.List`, which has no `foreach`, and that one
+  shape DOMINATES the narrow scope's new errors — it is what took the scoped-out `NodeVisitor` from
+  2 errors to 22, and it also appeared inside the scoped-out `LValue` and `SPIHelper` (K9's
+  territory, arriving through the scope). **A port that scopes out any declaration iterating a JDK
+  collection has to accept K9's wall inside it**, and nothing says so at configuration time.
+
+**And the seams a scope opens are NOT COUNTED, which is the half CLAUDE.md §1 requires and the
+engine does not yet have.** `collection-boundary` read **12 on all three runs** while the error count
+moved 27 → 47 → 51, and every other check count was flat too. §1 is explicit — "a scope that silently
+produces an uncompilable or wrongly-typed boundary is worse than no scope" — and the reason it reads
+zero is the reason K15 already records: the retyping is position-blind, so at a scope seam BOTH sides
+of the slot carry the moved type and a check comparing node types sees no disagreement. K15 closed
+that for an EXTERNAL callee by reading the class file; a scope seam's far side is a declaration this
+same run emitted, so the answer is available and simply not asked. **Until it is, the only instrument
+that sees a scope is the compiler**, which means a scope must be measured on the whole port and never
+reasoned about.
+
+*Fix kind: (b) for the port — DO NOT RETRY on a library whose collection types are its currency;
+scope only a genuine island. (a) for the engine — a scope's own seams need a count, from the
+DECLARATION on each side, and `collection-boundary` reading flat through a 24-error move is what
+says so.*
+
+---
+
 ### P1. A `--js` compile proves NOTHING as a portability gate
 
 Scala.js type-checks against JDK signatures and compiles `java.lang.reflect` happily. **Only the
