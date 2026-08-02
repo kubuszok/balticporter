@@ -172,7 +172,7 @@ object LiqpClasspath:
       && hasParserClasses(classes) && hasParserClasses(upstream)
     then out
     else
-      val jars = fetch()
+      val jars = fetch(Coordinates)
       compileParser(jars, classes, parserOnly = true)
       compileParser(jars, upstream, parserOnly = false)
       Files.createDirectories(out.getParent)
@@ -192,17 +192,21 @@ object LiqpClasspath:
     * `cs` writes PROGRESS to stderr and the classpath to stdout; merged here so a failure is
     * reportable, then filtered — taking the whole output once cached `Downloading https…` as a
     * classpath entry and the frontend refused the run with "Downloading https does not exist"
-    * (`SimpleGraphsClasspath`). */
-  private def fetch(): List[String] =
+    * (`SimpleGraphsClasspath`).
+    *
+    * Takes its coordinates rather than reading [[Coordinates]] so that [[LiqpTestClasspath]] can
+    * resolve the ONE test-scope coordinate through the same filter — the alternative was a second
+    * copy of the "Downloading https" lesson, one source set away. */
+  private[liqp] def fetch(coordinates: List[String]): List[String] =
     val pb = new ProcessBuilder(
-      (List("cs", "fetch", "--classpath") ++ Coordinates)*
+      (List("cs", "fetch", "--classpath") ++ coordinates)*
     ).redirectErrorStream(true)
     val proc = pb.start()
     val raw  = new String(proc.getInputStream.readAllBytes()).trim
     val line = raw.linesIterator.filter(_.contains(".jar")).toList.lastOption.getOrElse("")
     if proc.waitFor() != 0 || line.isEmpty then
       throw new IllegalStateException(
-        s"[liqp] could not fetch the compile classpath (is `cs` installed?):\n$raw")
+        s"[liqp] could not fetch a classpath (is `cs` installed?) for ${coordinates.mkString(" ")}:\n$raw")
     line.split(File.pathSeparator).filter(_.nonEmpty).toList
 
   /** javac the ANTLR output into `classes`, resolving liqp's own types from SOURCE.
