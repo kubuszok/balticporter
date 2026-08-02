@@ -1955,11 +1955,11 @@ written, 987 members in the source map. `just liqp-measure`.
 
 | | |
 |---|---|
-| scalac errors | **126 -> 67**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`) |
+| scalac errors | **126 -> 47**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`) |
 | `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
 | `jdk-surface` | **19 -> 10** |
-| `collection-boundary` | **6 -> 14 -> 12** — the residue nothing could count before (K15). It rose when the seam was first counted and fell when the frontend made the formals readable: two slots BRIDGED, two re-classified from "cannot verify" to what they actually are |
+| `collection-boundary` | **6 -> 14 -> 13** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), and rose by the one `InexpressibleParent` refusal K5.7 counts |
 | `omissions` | **6 -> 4** — `PlainBigDecimal`'s two `super(args)` are no longer dropped; with the external constructor's signature readable the funnel reaches K5.5's synthesised primary |
 | tests | 639 `@Test` upstream, **0 ported** — no `test.conf` in this milestone |
 
@@ -1997,6 +1997,18 @@ porting a library from outside the family the engine grew up in.
   than the type error it replaced.
 - **`ENGINE-LIMITS.md` K6.5** — the aliasing refusal is now a KNOWN construction blocked on one
   frontend fact, with the number (`76 -> 67` if taken accidentally).
+- **`ENGINE-LIMITS.md` K5.7** — a class that IMPLEMENTS `Map.Entry`. The mapping is right for every
+  USE and impossible as a PARENT (`Tuple2` is final, takes `(_1, _2)`, has no `setValue`), so the
+  parent stays java's and the refusal is counted. A second target for the implements-case is a
+  second truth about one java type and is refused with its reason.
+- **the wildcard `Map[?, ?]`** — java declares `get`/`containsKey`/`remove` over `Object`, scala
+  over `K`, and at a wildcard receiver `K` is unnameable and `V` renders as a bare `?` in a TERM
+  position. One rewrite, two error families, nine call sites, **18 errors**. K10's rule met at the
+  other kind of unnameable key.
+- **`? super java.lang.Object` is `Object`** — one filter dropped the `Object` bound from BOTH
+  wildcards, which is right for the upper one and destroys the lower one, java having no supertype
+  of `Object`. It moved no count and turned `Required: IterableOnce[Nothing & Any]` into
+  `Required: IterableOnce[Object]`, which is §4.45's bar.
 - **`toArray()`/`toArray(T[])`, `subList`, `putIfAbsent`** — four JDK members whose scala namesakes
   mean something else, each a §4.4 shape with no compile error of its own: an `Object[]` component
   type, a filled-not-allocated argument, a null terminator, a write-through view, and a return
@@ -2004,13 +2016,28 @@ porting a library from outside the family the engine grew up in.
 
 ### 10.5.3 Remaining, classified
 
-The 70 are dominated by three families the collections wave did not own: a wildcard reaching a TERM
-position and the `getOrElse` key it mints (`Map[?,?]`, `Buffer[?]`); `Map.Entry` where a class
-IMPLEMENTS it, whose `Tuple2` target is FINAL and has no `setValue` — an inexpressible parent, so
-likely M6's answer rather than a fix; and a Scala KEYWORD in an emitted package segment
-(`com.fasterxml.jackson.core.type`), which is one line in the emitter and the clearest §1(a) the
-census found. D-liqp-1 × D-liqp-2 — an external generated parser that references back INTO the
-renamed library — costs exactly one error and cannot be fixed without porting or regenerating it.
+The three families that dominated the 70 are settled, and what settled them was one FRONTEND fact
+plus two rules about position:
+
+| was | now |
+|---|---|
+| a wildcard `Map[?,?]`'s `getOrElse` key and the `null.asInstanceOf[?]` it minted — 18 errors over 9 call sites | **0.** Java declares `get`/`containsKey`/`remove` over `Object`, so the three runtime helpers take the key as `Any` and supply the `null` where `V` is a real parameter (K10's rule at the other kind of unnameable key) |
+| `Map.Entry` where a class IMPLEMENTS it — read as M6's answer, an inexpressible parent | **a counted refusal, and 2 fewer errors.** The parent stays JAVA's, because a phase may not emit a parent its target cannot BE; `setValue` remains the deliberate refusal K2 already recorded (K5.7) |
+| a retyped collection at a class file's FORMAL | **0.** K15's consumer half, unblocked by `SpoonTir` interning external members with their `MethodType` |
+
+**What is left, named.** A Scala KEYWORD in an emitted package segment
+(`com.fasterxml.jackson.core.type`) is still the clearest §1(a) in the residue and is the emitter's
+(3 errors, plus the `MAP_TYPE_REF` E134 that follows from it). Two java vararg families —
+`Arrays.asList(arr)`'s aliasing refusal (K6.5) and an external `String...` pack — are 18 between
+them. **F11 is 4 and now has an exact diagnosis rather than a nonsense one**: `list ++= valueList`
+where `list` is a `Buffer[Object]` and `valueList` a `Buffer[?]` reads `Required:
+IterableOnce[Object]` since `? super Object` renders as `Object`, and what blocks it is that a java
+`?` is `? extends Object` while a Scala `?` is bounded by `Any` — G2 measured that whole design
+space and settled on `[?]`, so widening it is not a change to make for four sites. The last E035 is
+a `JavaCollection[? <: ?E]` diamond, where `?E` is the frontend's interning of an unresolved type
+variable reaching a TERM position. D-liqp-1 × D-liqp-2 — an external generated parser that
+references back INTO the renamed library — costs exactly one error and cannot be fixed without
+porting or regenerating it.
 
 ---
 

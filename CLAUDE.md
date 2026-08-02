@@ -80,7 +80,11 @@ neither optional:
   runtime trait is handed to a class file asking for `java.lang.Iterable`. The seam then moves one
   type to the left and stops being findable, because the emitted call names the shim rather than the
   boundary. Where the class file cannot be read at all there is no formal, and that — not a
-  guess — is what the count stands for.
+  guess — is what the count stands for. **And a COERCION may not precede a REWRITE of the same
+  call**: the phase is about to change what that call IS, so an argument coerced to the old callee's
+  formal is an argument the new one does not want — `items.addAll(other.items)` became
+  `items ++= JavaCollection.from(other.items)`, and `++=` takes an `IterableOnce`. Measured at 4
+  errors on a port that had 0, with every check count flat and only the member digests moving.
 
 **And a class a FRAMEWORK instantiates has no caller to change.** Every such phase reasons from the
 program: it may add a parameter because it can see, and fix, each `new`. A test suite, a

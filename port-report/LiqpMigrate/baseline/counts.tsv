@@ -1,12 +1,12 @@
 #check	count
 base-surface	0
 break-catch	0
-collection-boundary	14
+collection-boundary	13
 collection-closure	9
 collection-retarget	0
 jdk-surface	10
 manifest	0
-omissions	6
+omissions	4
 policy	0
 port-map	0
 portability(all)	58

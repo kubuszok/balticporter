@@ -145,6 +145,8 @@ object Decision:
     case SubstitutedBody, SubstitutedCall, InjectedMember
     case RedirectedCall, RetypedSignature, ScopedOut, FunnelledCtor
     case DroppedSuperCall, WidenedVisibility, Unrenderable, DeferredInit
+    /** a PARENT this program's mapping could not move, because the target cannot BE a parent. */
+    case RetainedParent
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

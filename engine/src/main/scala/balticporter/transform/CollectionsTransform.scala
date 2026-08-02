@@ -585,9 +585,30 @@ final class CollectionsTransform(
           headSym(tpeOf(o)).filter(uninheritableSyms.contains) match
             case scala.None => m
             case Some(_)    =>
-              seam("parent (implements)", TirPrinter.tpe(tpeOf(m), TirPrinter.Style.canonical),
-                   TirPrinter.tpe(tpeOf(o), TirPrinter.Style.canonical), orig.origin, orig.symbol,
+              val kept   = TirPrinter.tpe(tpeOf(o), TirPrinter.Style.canonical)
+              val target = TirPrinter.tpe(tpeOf(m), TirPrinter.Style.canonical)
+              seam("parent (implements)", target, kept, orig.origin, orig.symbol,
                    CollectionBoundaryCheck.Issue.InexpressibleParent)
+              // …and a PORTER NOTE beside the class (§4.575). This is the shape that fact is worth
+              // one for: a reader of `Sort.scala` sees one parent spelled in java where every other
+              // mention of the same type is a `Tuple2`, and nothing in the emitted file or in the
+              // diff against the upstream says why — the java `implements` clause is unchanged, so
+              // the diff shows NOTHING at exactly the line the question is asked at.
+              record(Decision(
+                kind       = Decision.Kind.RetainedParent,
+                subject    = orig.symbol,
+                subjectFqn = summon[Program].symbolOf(orig.symbol).map(_.fullName).getOrElse(kept),
+                detail = Map(
+                  "kept"       -> kept,
+                  "instead-of" -> target,
+                  "why" -> ("this class IMPLEMENTS a java type the collections mapping covers, and " +
+                    "the target cannot BE a parent — it is final, has no write-through member and " +
+                    "takes its components in its constructor. The parent stays java's so the class " +
+                    "itself compiles; a value of it meeting the target is counted at the slot"),
+                ),
+                reason = Reason.Universal("inexpressible-parent(K5.7)"),
+                origin = orig.origin,
+              ))
               o
         }
       val body = CollectionsTransform.spine(orig.body, mapped.body, orig.symbol).map {
