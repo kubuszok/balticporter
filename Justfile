@@ -32,6 +32,7 @@
 #                                    join a compiler / test-runner log you produced BY HAND back
 #                                    to members and Java origins (CLAUDE.md §5.1)
 #   just debug-selfcheck             proves the four above do what they say — no sbt, no ports
+#   just lane-selfcheck              proves the TEST-OUTCOME GATES every lane shares — same, no sbt
 #
 # WHY ONE FILE AND NOT A SCRIPT PER LANE. The four lanes are one measurement over four sets of
 # paths, and as four scripts the differences between them were invisible: each held its own copy of
@@ -342,7 +343,7 @@ gdx-test-measure:
         {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
         {{gdx_module}}/src/test/scala 2>&1 |
         sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestrun.txt
-      reconcile_outcomes "$MEASURE_TMP"/gdxtestrun.txt "$MUNIT_TESTS"
+      reconcile_outcomes "$MEASURE_TMP"/gdxtestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
 
       # Anchor every failure on the first stack frame that lands in PORTED code and resolve it, through
       # both ports' source maps, to a member and a Java origin — then diff the pass/fail sets against
@@ -353,6 +354,9 @@ gdx-test-measure:
       correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/gdxtestrun.txt \
         --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
         --srcmap "test=$REPORT/run-latest/srcmap.tsv"
+      # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
+      # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
+      test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
     else
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
@@ -429,7 +433,7 @@ ashley-measure:
       scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/ashleyrun.txt
-      reconcile_outcomes "$MEASURE_TMP"/ashleyrun.txt "$MUNIT_TESTS"
+      reconcile_outcomes "$MEASURE_TMP"/ashleyrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
       # BOTH ports' maps: only the library's own map can anchor a failure on the member that threw,
@@ -439,6 +443,9 @@ ashley-measure:
         --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
         --srcmap "$REPORT/run-latest/srcmap.tsv" \
         --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+      # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
+      # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
+      test_outcome_guard "$TREPORT/run-latest" "$RECONCILED" || exit 1
     else
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
@@ -522,7 +529,7 @@ anim8-measure:
       scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala {{anim8_module}}/src/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/anim8run.txt
-      reconcile_outcomes "$MEASURE_TMP"/anim8run.txt "$HAND_TESTS"
+      reconcile_outcomes "$MEASURE_TMP"/anim8run.txt "$HAND_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
       # BOTH ports' maps. There is no `test=` map: the suite is hand-written, so no srcmap can
@@ -532,6 +539,9 @@ anim8-measure:
       correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/anim8run.txt \
         --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
         --srcmap "$REPORT/run-latest/srcmap.tsv"
+      # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
+      # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
+      test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
     else
       echo
       echo "-- correlation: every error located to its member and its Java origin --"
@@ -637,7 +647,7 @@ gltf-measure:
       # Reconciled against the SUM: both source sets are on the one invocation, so an outcome
       # count that matched only the ported half would report success for a hand-written suite that
       # never ran (CLAUDE.md §5.1).
-      reconcile_outcomes "$MEASURE_TMP"/gltfrun.txt "$ALL_TESTS"
+      reconcile_outcomes "$MEASURE_TMP"/gltfrun.txt "$ALL_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
       # All three maps: only the library's own can anchor a failure on the member that threw, only
@@ -647,6 +657,9 @@ gltf-measure:
         --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
         --srcmap "$REPORT/run-latest/srcmap.tsv" \
         --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+      # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
+      # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
+      test_outcome_guard "$TREPORT/run-latest" "$RECONCILED" || exit 1
     else
       echo
       echo "-- correlation: every error located to its member and its Java origin --"
@@ -752,7 +765,7 @@ screens-measure:
         {{screens_module}}/src/main/scala {{screens_module}}/src/test/scala \
         {{gdx_module}}/src/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/screensrun.txt
-      reconcile_outcomes "$MEASURE_TMP"/screensrun.txt "$HAND_TESTS"
+      reconcile_outcomes "$MEASURE_TMP"/screensrun.txt "$HAND_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
       # BOTH ports' maps, and no `test=` map: the suite is hand-written, so no srcmap can anchor a
@@ -761,6 +774,9 @@ screens-measure:
       correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/screensrun.txt \
         --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
         --srcmap "$REPORT/run-latest/srcmap.tsv"
+      # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
+      # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
+      test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
     else
       echo
       echo "-- correlation: every error located to its member and its Java origin --"
@@ -849,7 +865,7 @@ vfx-measure:
         {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala {{vfx_module}}/src/test/scala \
         {{gdx_module}}/src/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/vfxrun.txt
-      reconcile_outcomes "$MEASURE_TMP"/vfxrun.txt "$HAND_TESTS"
+      reconcile_outcomes "$MEASURE_TMP"/vfxrun.txt "$HAND_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
       # BOTH ports' maps. There is no `test=` map: the suite is hand-written, so no srcmap can
@@ -859,6 +875,9 @@ vfx-measure:
       correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/vfxrun.txt \
         --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
         --srcmap "$REPORT/run-latest/srcmap.tsv"
+      # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
+      # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
+      test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
     else
       echo
       echo "-- correlation: every error located to its member and its Java origin --"
@@ -952,12 +971,15 @@ sg-measure:
       scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
         {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/sgrun.txt
-      reconcile_outcomes "$MEASURE_TMP"/sgrun.txt "$MUNIT_TESTS"
+      reconcile_outcomes "$MEASURE_TMP"/sgrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
       correlate "$TREPORT/run-latest" --tests "$MEASURE_TMP"/sgrun.txt \
         --srcmap "$REPORT/run-latest/srcmap.tsv" \
         --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+      # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
+      # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
+      test_outcome_guard "$TREPORT/run-latest" "$RECONCILED" || exit 1
     else
       echo
       echo "-- correlation: every error located to its member and its Java origin --"
@@ -1373,12 +1395,15 @@ liqp-measure:
           "$ROOT/{{liqp_module}}/src_managed/main/scala" \
           "$ROOT/{{liqp_module}}/src_managed/test/scala" ) \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/liqprun.txt
-      reconcile_outcomes "$MEASURE_TMP"/liqprun.txt "$MUNIT_TESTS"
+      reconcile_outcomes "$MEASURE_TMP"/liqprun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
       correlate "$TREPORT/run-latest" --tests "$MEASURE_TMP"/liqprun.txt \
         --srcmap "$REPORT/run-latest/srcmap.tsv" \
         --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+      # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
+      # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
+      test_outcome_guard "$TREPORT/run-latest" "$RECONCILED" || exit 1
     else
       echo
       echo "-- correlation: every error located to its member and its Java origin --"
@@ -1756,6 +1781,70 @@ debug-selfcheck:
 
     echo
     [ "$fail" = "0" ] && echo "debug-selfcheck: PASS" || { echo "debug-selfcheck: FAILED"; exit 1; }
+
+# ---------------------------------------------------------------------------------------------
+# Proves the two TEST-OUTCOME GATES every measure lane shares — no sbt, no ports, no compile.
+#
+# These are the guards that decide whether a lane may report success, and a guard is exactly the
+# thing that must not be believed on the strength of its comment. Both were shipped as lines that
+# PRINTED and returned 0: ashley's lane said `!! DID NOT RUN — 2 emitted test(s) never executed`
+# on every run and exited 0 anyway, which is CLAUDE.md §3's "a test that stopped running is
+# reported as such, never as a pass" failing inside the measurement itself.
+#
+# The awkward half is that the gate must NOT fire on a skip the port has already accepted — so the
+# cases below prove both directions against the shapes `Correlate.TestDiff` really writes.
+# ---------------------------------------------------------------------------------------------
+[doc("proves the test-outcome gates every lane shares — no sbt, no ports")]
+lane-selfcheck:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+    T="$(mktemp -d)"
+    trap 'rm -rf "$T"' EXIT
+    fail=0
+    ok()   { echo "  ok   $1"; }
+    bad()  { echo "  FAIL $1"; fail=1; }
+    want() { [ "$2" = "$3" ] && ok "$1" || bad "$1 (want [$3], got [$2])"; }
+
+    echo "-- test_outcome_guard --"
+    # The shape ashley really has: two skips, both in the baseline, so `TestDiff.newlySkipped` is
+    # empty and the diff carries no block. This MUST pass, or the gate is a lane nobody can run.
+    printf 'TEST OUTCOMES: 110 passing, 0 failing  SKIPPED=2 — these never ran\n\n-- still failing (0)\n\n' > "$T/tests-diff.txt"
+    test_outcome_guard "$T" 0 > /dev/null 2>&1
+    want "an ACCEPTED skip (baselined) does not fail the lane" "$?" "0"
+
+    # …and the same suite the first time nobody has accepted it.
+    printf 'TEST OUTCOMES: 110 passing\n\n-- NEWLY SKIPPED (2) — the runner did NOT run these\n   p.S.t\n        anchor=none\n\n-- still failing (0)\n' > "$T/tests-diff.txt"
+    out=$(test_outcome_guard "$T" 0 2>&1); rc=$?
+    want "a NEWLY SKIPPED test FAILS the lane" "$rc" "1"
+    case "$out" in *"baseline-accept"*) ok "…and names the promotion command" ;; *) bad "…names the promotion command" ;; esac
+
+    # A correlation that did not write a diff is not a clean one (CLAUDE.md §5.1's missing-input rule).
+    printf 'x\n' > "$T/tests-diff.txt"; rm -f "$T/tests-diff.txt"
+    out=$(test_outcome_guard "$T" 0 2>&1); rc=$?
+    want "a MISSING tests-diff.txt is fatal, never clean" "$rc" "1"
+    case "$out" in *"NO TEST DIFF"*) ok "…and says which comparison never happened" ;; *) bad "…says so" ;; esac
+
+    # OUTCOMES LOST is carried in from `reconcile_outcomes` so the correlation still gets to run.
+    printf 'TEST OUTCOMES: ok\n\n' > "$T/tests-diff.txt"
+    want "a carried OUTCOMES-LOST status fails the lane" "$(test_outcome_guard "$T" 1 > /dev/null 2>&1; echo $?)" "1"
+
+    echo "-- reconcile_outcomes --"
+    printf '  + a 0.0s\n  + b 0.0s\n' > "$T/run.txt"
+    want "an emitted test with NO outcome line is a failure" "$(reconcile_outcomes "$T/run.txt" 3 > /dev/null; echo $?)" "1"
+    want "…and a fully reconciled run is not"                "$(reconcile_outcomes "$T/run.txt" 2 > /dev/null; echo $?)" "0"
+    # A skip IS an outcome line, so it reconciles; whether it is a NEW one is the guard's question
+    # and deliberately not this function's — it has no baseline to ask.
+    printf '  + a 0.0s\n==> s p.S.b skipped 0.0s\n' > "$T/run.txt"
+    want "a SKIP counts as an outcome and does not fail here" "$(reconcile_outcomes "$T/run.txt" 2 > /dev/null; echo $?)" "0"
+    case "$(reconcile_outcomes "$T/run.txt" 2)" in
+      *"DID NOT RUN"*) ok "…but is still REPORTED, loudly" ;;
+      *) bad "a skip must still print DID NOT RUN" ;;
+    esac
+
+    echo
+    [ "$fail" = "0" ] && echo "lane-selfcheck: PASS" || { echo "lane-selfcheck: FAILED"; exit 1; }
 
 # ---------------------------------------------------------------------------------------------
 # The baseline half of the check report: list, show, diff and ACCEPT.

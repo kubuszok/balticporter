@@ -147,6 +147,17 @@ munit_emitted() { scala_code "$@" | grep -oE '(^|[^a-zA-Z0-9_.])test\("' | wc -l
 # So the reconciliation is against the EMITTED count, not against a sum of markers: any test with no
 # line this script recognises is reported, whatever the reason. That keeps the check honest about the
 # next marker MUnit adds, which a fixed list of markers would not.
+#
+# WHAT THIS FUNCTION DELIBERATELY DOES NOT DECIDE. It prints the DID-NOT-RUN line and does not fail
+# the lane on it, because it cannot tell a NEW skip from one the port has already accepted — and
+# only one of those is a regression. That answer exists, in the engine (`Correlate.TestDiff
+# .newlySkipped`: a skipped test the baseline does not already record as skipped), and it is
+# produced one stage later, by `correlate`. Re-deriving it here would be a second implementation of
+# a rule this project has already got wrong once, in shell, against the same TSV — so the gate is
+# `test_outcome_guard` below, which READS the engine's answer instead. What this function does gate
+# on is the other half, which needs no baseline at all: an emitted test that produced NO outcome
+# line has no row in `tests.tsv` for a baseline to hold an opinion about, so it can only ever be a
+# regression.
 reconcile_outcomes() {
   local run="$1" emitted="$2"
   local pass fail other total
@@ -158,11 +169,63 @@ reconcile_outcomes() {
   if [ "$other" != "0" ]; then
     echo "!! DID NOT RUN — $other emitted test(s) never executed. A skipped test is not a passing test:"
     grep -E '^==> [^X] ' "$run" | sed 's/^/     /'
+    echo "   (whether any of them is NEW is \`test_outcome_guard\`'s answer, below, from the baseline)"
   fi
   if [ "$total" != "$emitted" ]; then
     echo "!! OUTCOMES LOST — $((emitted - total)) of $emitted emitted test(s) produced no outcome line;" \
          "the suite would report success while they vanish (CLAUDE.md §3)"
+    return 1
   fi
+  return 0
+}
+
+# test_outcome_guard <correlate-out-dir> [reconcile-status]
+# THE GATE for a test that stopped RUNNING — run AFTER `correlate`, which is what writes the file
+# it reads, and handed the same directory `correlate` was.
+#
+# The second argument is `reconcile_outcomes`' exit status, deliberately carried here rather than
+# acted on where it was produced: an OUTCOMES-LOST run is exactly the run whose correlation a
+# reader most needs, so the lane finishes the diagnosis and fails at the end, never before it.
+#
+# A lane that prints `!! DID NOT RUN` and exits 0 is the failure CLAUDE.md §5.1 describes happening
+# inside the measurement itself: a skip moves no pass count and no fail count, so with nothing
+# gating on it a suite abandoned mid-way scrolls past as a smaller green number. Ashley's lane did
+# exactly that for two tests, on every run, for as long as the marker has been parsed.
+#
+# The distinction the gate needs — new skip vs. accepted skip — is NOT re-derived here. `correlate`
+# already ran `Correlate.TestDiff`, which compares the run against `baseline/tests.tsv` and emits a
+# `-- NEWLY SKIPPED` block for a skipped test the baseline does not already record as skipped; this
+# reads that block and nothing else. So ashley's two baselined skips keep printing and keep passing
+# (they are a recorded state, promoted with `just baseline-accept`), and the first skip nobody has
+# accepted stops the lane.
+#
+# NEWLY FAILING is deliberately NOT gated here even though `TestDiff.regressed` covers both: the
+# headline already carries it, and turning it fatal in the same change would conflate two gates and
+# stop lanes for a reason this commit did not measure. `TestDiff.regressed` remains the engine's
+# whole answer; this is the half the lanes were throwing away.
+test_outcome_guard() {
+  local dir="$1" reconciled="${2:-0}" bad=0
+  local diff="$dir/tests-diff.txt"
+  # No diff file means correlate did not write one — never silently "clean" (CLAUDE.md §5.1's rule
+  # for a missing input), because a run with no baseline and a run whose correlation died look
+  # identical from a `grep -q` that treats absence as absence of findings.
+  if [ ! -f "$diff" ]; then
+    echo "!! NO TEST DIFF at $diff — the correlation did not write one, so nothing can say whether a"
+    echo "   test stopped running. Refusing to report a green lane on a comparison that never happened."
+    bad=1
+  elif grep -q '^-- NEWLY SKIPPED' "$diff"; then
+    echo "!! NEWLY SKIPPED — a test the baseline does not record as skipped DID NOT RUN. It moves no"
+    echo "   pass count and no fail count, which is exactly why this is a gate and not a line to read:"
+    sed -n '/^-- NEWLY SKIPPED/,/^$/p' "$diff" | sed 's/^/     /'
+    echo "   If the skip is a state this port accepts, promote it: just baseline-accept <port>"
+    bad=1
+  fi
+  if [ "$reconciled" != "0" ]; then
+    echo "!! OUTCOMES LOST (reported above) — an emitted test produced no outcome line at all, so it"
+    echo "   has no row in tests.tsv for any baseline to hold an opinion about. Failing the lane."
+    bad=1
+  fi
+  return $bad
 }
 
 # break_residue <emitted-scala-dir>...
