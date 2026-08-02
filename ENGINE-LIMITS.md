@@ -3856,6 +3856,30 @@ fills it is (c) per-library and belongs in the port's manifest, pointing at a fi
 `inject`/`src`. The mechanism stays DEFAULT-OFF: no port declares a holder, so all 13 ports are 0
 members changed with every check count identical.*
 
+**AN ARRAY ALLOCATION IS NOT A CONSTRUCTION, and it was suppressing the warning** — found by the
+checkpoint-4 audit, half fixed and half OPEN, which is why it is recorded rather than only committed.
+`Xref` records `UsageKind.Instantiate` for a `Tree.NewArray`'s ELEMENT type. That is the right edge
+for "is this type named in a way that needs it on the classpath" and the wrong one for "is this type
+CONSTRUCTED": `new Suite[8]` allocates eight null slots and runs no constructor. Two readers take it:
+
+- **`constructedByProgram`, the CT7 warning's suppressor — FIXED.** A class only ever array-allocated
+  is a class nothing in this program constructs, which is precisely the shape the warning exists for,
+  and the one edge that means the opposite of what it was read as switched the warning off. Excluded
+  by NODE KIND, which is the rule `instantiates` already states for `new Pool<Cell>()` applied to the
+  other node kind that names a type. Zero movement on all 13 ports — `context-seam` unmoved
+  everywhere, so no port in the corpus has an array-allocated-only threaded class, which is exactly
+  why nothing had noticed. Pinned by a spec whose fixture array-allocates the suite.
+- **the THREADING CLOSURE (`ContextNeed`, the `Instantiate` arm) — OPEN.** The same edge makes
+  `new Foo[10]` impose `Foo`'s context need on the enclosing declaration, which gets a `(using T)`
+  it does not need. Not fixed here because it moves EMITTED SIGNATURES and therefore owes its own
+  measurement — and the direction is over-threading, which compiles, so nothing in the corpus reports
+  it. `Xref` is the honest place for a fix (a distinct `UsageKind` for "named as an array element"),
+  and that is a wider change than this entry.
+
+*Fix kind for both: (a) engine. The general rule is §4.56's, one node kind over — a phase may only
+conclude something about a type from what it can READ AT THE NODE, and a recorded kind that answers a
+different question is not that.*
+
 ### CT8. A DEPENDENT cannot declare a `sites` policy for its OWN types — the holder is inherited and the phase is not `MergeablePolicy` — **CLOSED; the per-declaration half is what a dependent adds, and the shared half is what it may not restate**
 
 Found in the same run, in `gdx-vfx`. The phase is `SurfacePolicy` and its holders live in the BASE

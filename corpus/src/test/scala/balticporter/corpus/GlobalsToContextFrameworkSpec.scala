@@ -45,6 +45,25 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
       |public class Runner { void go() { Boot b = new Boot(); } }
       |""".stripMargin
 
+  /** the same CT7 shape, with an ARRAY ALLOCATION of the suite somewhere in the program. `Xref`
+    * records `Instantiate` for a `NewArray`'s ELEMENT type, and `new ModelTest[4]` runs no
+    * constructor at all — so reading that edge as a construction suppressed the warning for a class
+    * nothing constructs. */
+  private val arrayAllocSrc =
+    """package demo;
+      |
+      |public class Cfg { public static Svc svc; }
+      |public class Svc { public int width() { return 0; } }
+      |
+      |public class Model { int w; public Model() { w = Cfg.svc.width(); } }
+      |
+      |public class ModelTest extends munit.FunSuite {
+      |  void check() { Model m = new Model(); int w = Cfg.svc.width(); }
+      |}
+      |
+      |public class Registry { ModelTest[] slots() { return new ModelTest[4]; } }
+      |""".stripMargin
+
   /** a self-supplied type whose PARENT took the clause — the one shape the third answer cannot
     * cover, because a `given` member is not in scope in an `extends` clause. */
   private val inheritedSrc =
@@ -98,6 +117,21 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
     assert(ws.head.detail.contains("selfSupplied"), ws.head.render)
     assert(ContextSeamCheck.Kind.classification(ContextSeamCheck.Kind.UnconstructedThread)
       .contains("§1(b)"))
+  }
+
+  test("an ARRAY ALLOCATION is not a construction — `new Suite[4]` must not suppress the warning") {
+    // `new ModelTest[4]` allocates four null slots and runs no constructor, so nothing in this
+    // program builds a `ModelTest` and the CT7 shape is exactly what it was. The recorded
+    // `Instantiate` edge on a `NewArray`'s ELEMENT type means "this type is named here", which is
+    // the opposite of what the suppressor read it as.
+    // NEGATIVE: drop the `!u.site.isInstanceOf[Tree.NewArray]` guard in `constructedByProgram` and
+    // this is Nil — a class a framework instantiates, warned about nowhere, which is the whole of
+    // what CT7 cost.
+    val (p, a, _, out) = portedFrom(arrayAllocSrc, base)
+    assert(clue(code(out)).contains("class ModelTest(using demo.Ctx)"), code(out))
+    assert(clue(code(out)).contains("new scala.Array[demo.ModelTest](4)"), code(out))
+    assertEquals(seams(p, a, ContextSeamCheck.Kind.UnconstructedThread).map(_.subject),
+                 List("demo.ModelTest"), render(p, a))
   }
 
   test("…and it does NOT fire for a class the program constructs, nor for one rooted inside it") {

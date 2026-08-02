@@ -463,10 +463,26 @@ final class ContextNeed(
         "that is what builds it, add a `selfSupplied` entry naming the expression that yields the " +
         "context", Decision.originOf(program, c), c))
 
-  /** Does anything THIS PROGRAM declares construct `c`, or a descendant of it? */
+  /** Does anything THIS PROGRAM declares construct `c`, or a descendant of it?
+    *
+    * '''An ARRAY ALLOCATION is not a construction.''' `Xref` records `Instantiate` for a
+    * `Tree.NewArray`'s ELEMENT type, which is the right edge for the questions that ask "is this
+    * type mentioned in a way that needs it on the classpath" — and it is the wrong one here.
+    * `new Suite[8]` allocates eight null slots and runs no constructor, so a class only ever
+    * array-allocated is a class NOTHING IN THIS PROGRAM CONSTRUCTS: exactly the shape the warning
+    * exists for, silently suppressed by the one edge that means the opposite of what it is read as.
+    * Reading the NODE is the same rule [[instantiates]] states for `new Pool<Cell>()` — a type named
+    * at a site is not a type constructed there — applied to the other node kind that names one.
+    *
+    * The exclusion is HERE and not in [[instantiates]] deliberately. Its other caller is the
+    * threading closure, where the same edge over-threads (a method holding `new Foo[10]` is given a
+    * clause it does not need), and fixing THAT moves emitted signatures — a separate change with a
+    * separate measurement, recorded in `ENGINE-LIMITS.md` CT7. This one moves no emitted text at
+    * all: it decides whether a warning fires. */
   private def constructedByProgram(c: SymId): Boolean =
     (c :: graph.descendantsOf(c)).exists(t =>
-      program.usages(t).exists(u => instantiates(u, t) && u.enclosing != SymId.None))
+      program.usages(t).exists(u =>
+        instantiates(u, t) && !u.site.isInstanceOf[Tree.NewArray] && u.enclosing != SymId.None))
 
   private def expandMethod(m: SymId): Unit =
     if methods(m) || frozen(m) then return
