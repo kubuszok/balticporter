@@ -2100,7 +2100,12 @@ inert (§3.10: a gate never observed open cannot be told from a deleted feature)
 rewrite `Symbol.name` and not `Symbol.fullName`, which is a stored field — so the member key the
 source map records already spells Java's name (`…FileHandle#file`, never `#file$field`) and the join
 key was right by construction. The EMITTED name was the half no artifact carried, and it is now
-`shape`'s `name=` on 237 of libGDX core's rows.
+`shape`'s `name=` on 237 of libGDX core's rows. **That invariant is now a GATE**
+(`MemberClashPlacementSpec`), because it is not an accident nobody could disturb: `MemberRenamer` —
+the policy-driven rename one layer up — rewrites `fullName` as well, so the shape is already in the
+codebase, and a §4.55 pass doing the same would move the join key under the source map, the port
+map, the contract's member rows and `dropMethods` at once, with no count moving and nothing failing
+to compile.
 
 **…and the MEMBER lookup could not find a method row at all — corrected.** `PublishedSurface`
 looked a member up by `Symbol.fullName`, `owner#name`, while a published member row is keyed the way
@@ -3351,7 +3356,7 @@ boundary by construction. It IS in `surfaceFingerprint` — a base whose `Compar
 
 #### The comparator call-site table: RIDE, EXTEND — or neither
 
-The question CHUNK3 left open was whether `Collections.sort(xs, c)` / `Arrays.sort(a, c)` become M4
+The question left open at the design stage was whether `Collections.sort(xs, c)` / `Arrays.sort(a, c)` become M4
 config entries or new arms in `CollectionsTransform.staticRewrite`. **Measured, the answer is
 neither, and §8.9's statics table gained no arm:**
 

@@ -96,6 +96,46 @@ class MemberClashPlacementSpec extends munit.FunSuite:
     assert(clue(out).contains("count$field"))
   }
 
+  // -------------------------------------------------------------------------------------------
+  // THE JOIN KEY — a rename moves `Symbol.name` and must NOT move `Symbol.fullName`
+  // -------------------------------------------------------------------------------------------
+
+  /** Every artifact that joins POLICY to EMITTED CODE keys a member on `owner#name` (`MemberKey`),
+    * and the port map's `upstream` column is that key spelled in JAVA's names. That is right today
+    * for one reason and one only: the §4.55 passes rewrite `Symbol.name`, which the emitter renders,
+    * and leave `Symbol.fullName`, which is a separate stored field.
+    *
+    * NOTHING ASSERTED IT, and it is not an accident nobody could disturb: `MemberRenamer.renamed`
+    * — the policy-driven rename one layer up — rewrites `fullName` as well as `name`, so the shape
+    * is already in the codebase. A §4.55 pass doing the same would move the join key under every
+    * artifact at once: the source map's member id, the port map's `upstream` column, the
+    * base-surface contract's member rows, and `Substitutions.dropMethods`'s binding. No count moves,
+    * nothing fails to compile, and a dependent silently stops finding its base's rows. `DESIGN.md`
+    * §8.3 AS BUILT states the invariant in prose; this is the gate.
+    *
+    * The EMITTED name is not lost by keeping it — it is published, as `shape`'s `name=`, which is
+    * the half no artifact carried before schema 3. Both halves, one row.
+    */
+  test("a §4.55 rename moves the emitted NAME and leaves `Symbol.fullName` spelling JAVA's") {
+    val src =
+      """package demo;
+        |public class Builder {
+        |  private int all;
+        |  public Builder all (int n) { this.all = n; return this; }
+        |}
+        |""".stripMargin
+    val e   = new TirEmitter(balticporter.frontend.spoon.SpoonTir.fromSource(src))
+    val out = e.emit
+    assert(clue(out).contains("all$field"), out)
+
+    // the published member row is keyed on `owner#name` with JAVA's name — never `#all$field` —
+    // and the emitted name arrives beside it as `name=`.
+    val keys = e.emittedShapes.members.keySet
+    assert(clue(keys).contains("demo.Builder#all"), keys.mkString(", "))
+    assert(!keys.exists(_.contains("all$field")), keys.mkString(", "))
+    assertEquals(e.emittedShapes.members.get("demo.Builder#all").map(_.name), Some("all$field"))
+  }
+
   test("the other cross-placement pair is clean too: a STATIC field beside an INSTANCE method") {
     val out = emit(
       """package demo;

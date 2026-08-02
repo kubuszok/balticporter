@@ -445,7 +445,7 @@ targeted **0 → 35 `E120`**); the answer was not to refuse it but to stop needi
 that took omissions 193 → 177 still applies, on the wall.
 
 **The remaining `super(args) dropped` set is exactly the pre-A2 one minus `DistanceFieldFontCache`.**
-`.balticporter/briefs/R1`'s pre-pipeline census put libGDX core at 144 escapes and 31 dropped
+A pre-pipeline census put libGDX core at 144 escapes and 31 dropped
 `super(args)`; the lane said 140 and 31, and generalising the synthesis to "all roots reach one
 parent constructor" moved the DROPPED-SUPER count by zero — those 30 break down as
 `DistanceFieldFont` 7 (seven roots to seven `BitmapFont` overloads — irreducible), `OrderedSet` /
@@ -2467,9 +2467,9 @@ with no primary of its own carries the context clause its own constructors carry
 class emits `class X(using sge.Sge)` — hosting the clause, lifting no super argument, leaving every
 secondary's delegation and every counted omission exactly where they were (`omissions` 65 → 65 in
 the enablement run itself). It is CLAUSE-CONDITIONAL, so the mechanism commit is **0 members changed
-on all 13 ports with every check count identical** and no baseline moved — the re-baseline CHUNK3
-expected did not materialise, because nothing about the emitted text changes until a port declares a
-holder.
+on all 13 ports with every check count identical** and no baseline moved — the re-baseline the
+enablement was priced with did not materialise, because nothing about the emitted text changes until
+a port declares a holder.
 
 **The enablement, replayed in a worktree with the policy applied and then reverted** (the P5 config
 above, verbatim, plus the injected `sge.Sge` and the four `Graphics#gl2x` bean pairs):
@@ -3441,7 +3441,7 @@ types, and a parameter that becomes `String | Null` renders `?`, so
 `#test(?,String,Array<String>,Array<String>)`. The lane's own correlate figure is **846**, which
 counts only what it can map through the source map; `just members-unchanged` counts every row.
 
-**And `libgdx-test`'s 4 is the disposal of CHUNK3's open question 34, measured.** The test port
+**And `libgdx-test`'s 4 disposes of the open question about a dependent's re-keys, measured.** The test port
 declares NO nullability policy of its own and gets one anyway, through §1.5 inheritance of the base
 manifest — its single `@Null` in test sources (`JsonMatcherTests#test`'s first parameter) is retyped
 by the base's instance, with the decision recorded in the TEST port's `decisions.tsv` because the
@@ -3596,7 +3596,7 @@ AND a `ScopedOut` decision, each:
 | no NILARY getter | 3 | `VertexAttributes#offset` (`getOffset(int)`), `Polygon#vertex` (`getVertex(int,Vector2)`), `Polygon#centroid` (`getCentroid(Vector2)`) — **the phase refused rather than inventing a nilary twin**, which is "NEVER INVENT A MEMBER" firing on real policy |
 | collision the emitter will not move | 2 | `ScrollPane#scrollX`/`scrollY` — the target name is taken by a member the §4.55 passes do not relocate |
 
-All five are POLICY defects this manifest owns, not engine ones (CHUNK3 Q30): drop them, or name the
+All five are POLICY defects this manifest owns, not engine ones: drop them, or name the
 accessor sge actually converted. **THE "LEAVE THEM IN DELIBERATELY" ARGUMENT WAS WRONG FOR THE FIRST
 THREE AND §11.24 REVERSES IT.** "A refusal that is counted, explained and reproducible is the report
 the channel exists to produce" is true of a refusal a port can ACT on; the three no-nilary-getter
@@ -3643,11 +3643,11 @@ redundancy worth naming: nine harvested entries name the same property on two or
 override component (`Texture`/`Cubemap`/`TextureArray`#`managed` all resolve into
 `GLTexture#isManaged`; `AnimatedTiledMapTile`/`StaticTiledMapTile`'s six pairs both resolve into
 `TiledMapTile`). The rename is idempotent and applies once — only the decision log double-counts —
-but collapsing them into the interface entry, exactly as R5's harvest already did for `Drawable`, is
+but collapsing them into the interface entry, exactly as the harvest already did for `Drawable`, is
 a Q30 completion edit.
 
 **And the `Drawable` fan-out expectation is REFUTED by the code, which is worth recording because
-the brief predicted otherwise.** CHUNK3 priced `Drawable` at "4+ implementors"; upstream declares
+the brief predicted otherwise.** `Drawable` was priced at "4+ implementors"; upstream declares
 `getLeftWidth` in exactly TWO types — the `Drawable` interface and `BaseDrawable` — and every other
 implementor (`TiledDrawable`, `TextureRegionDrawable`, `NinePatchDrawable`, `SpriteDrawable`,
 `TransformDrawable`) inherits it. So each `Drawable` property moves 4 declarations (2 accessors × 2

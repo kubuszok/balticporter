@@ -319,6 +319,11 @@ transcript of what four experiments measured. **Write it. Do not commit it.**
 - Scratch and research files live under **`.balticporter/`**, which is gitignored and which the
   measure lanes already use for their own captures. Nothing else in the repository is a valid home
   for one.
+- **…and no committed file may CITE one.** A pointer is the same failure one level of indirection
+  out: `ENGINE-LIMITS.md` D5 named a scratch plan as the authority for the order two commits had to
+  be measured in, and `PROGRESS.md` cited five briefs and a question number for facts those briefs
+  no longer held. Every one of them reads as a document the next agent can open, and none of them
+  exists in a fresh checkout. State the FACT where the §3.6 table says it lives, and cite that.
 - Before the work is called done, what the file FOUND is incorporated: a decision into `DESIGN.md`, a
   measurement or a residue into `PROGRESS.md`, a measured dead end into `ENGINE-LIMITS.md`, a
   governing rule here. Then the scratch file is deleted, not committed.
