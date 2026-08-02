@@ -991,6 +991,7 @@ final case class PortRun(
     val withheld = retainOwnDecisions(t.program, t)
     recordCtorFunnel(t.program, t)
     recordDroppedSuperArgs(t.program, t)
+    recordDroppedNilaryCtors(t.program, t)
     recordPolicyDecisions(t.program, t, injectedSources, plan)
     withheld
 
@@ -1065,18 +1066,23 @@ final case class PortRun(
     * says which constructor, in the code, so the reader of that `def this` learns that the
     * arguments java passed to `super` are gone and why (`ENGINE-LIMITS.md` C3: padding is a guess
     * everywhere but the JDK throwables). */
+  /** every class this run EMITS, nested ones included — the domain every decision recorder below
+    * ranges over, spelled once so two of them cannot disagree about which classes are this module's
+    * (`ENGINE-LIMITS.md` D2). */
+  private def emittedClasses(program: Program, translated: PortRun.Translated): List[Tree.ClassDef] =
+    def nested(cd: Tree.ClassDef): List[Tree.ClassDef] =
+      cd :: cd.body.collect { case c: Tree.ClassDef => nested(c) }.flatten
+    translated.emitOrder.filterNot { u =>
+      program.symbolOf(u.symbol).exists(s => Substituted.tags(s) || policySubs.dropsType(s.fullName))
+    }.flatMap(nested)
+
   private def recordDroppedSuperArgs(program: Program, translated: PortRun.Translated): Unit =
     given Program = program
     // the run's own view — the same one the emitter and `OmissionCheck` hold. A decision recorder
     // that re-derived the funnel over a `TrivialSurface` would describe a plan this run did not
     // emit, which is the shadow-becomes-a-claim failure in its provenance form (D5).
     val plans = CtorFunnel.Plans(program, Some(translated.surface))
-    def nested(cd: Tree.ClassDef): List[Tree.ClassDef] =
-      cd :: cd.body.collect { case c: Tree.ClassDef => nested(c) }.flatten
-    val mine = translated.emitOrder.filterNot { u =>
-      program.symbolOf(u.symbol).exists(s => Substituted.tags(s) || policySubs.dropsType(s.fullName))
-    }
-    mine.flatMap(nested).foreach { cd =>
+    emittedClasses(program, translated).foreach { cd =>
       CtorFunnel.ctorsOf(program, cd.body).foreach { d =>
         val args = CtorFunnel.superArgsOf(program, d)
         if args.nonEmpty && !plans.superExpressed(cd, d) then
@@ -1095,6 +1101,53 @@ final case class PortRun(
             reason = Reason.Universal("ctor-funnel/super-args-dropped(C3)"),
             origin = d.origin,
           ))
+      }
+    }
+
+  /** The NILARY constructor `orderBody` drops in front of a nilary primary, as a DECISION beside the
+    * omission the same predicate already counts (`ENGINE-LIMITS.md` C11).
+    *
+    * The exact sibling of [[recordDroppedSuperArgs]], and for the same reason: a finding is a number
+    * to watch and a decision is the sentence the reader of that FILE needs. Here the gap between the
+    * two is at its widest, because the subject is a member that is not there — an agent reading the
+    * emitted `BitmapFont` sees no `def this()` and has nothing to grep for. `Decision.Kind
+    * .DroppedMember` is `PorterNote.InBody`, so the note heads the owning type's body, which is where
+    * somebody looking for the constructor looks.
+    *
+    * Derived from `CtorFunnel.Plans.droppedNilaryCtor` — the same function `OmissionCheck
+    * .droppedNilaryCtors` counts from and the same one `TirEmitter.orderBody` drops with — asked
+    * through the run's own `Surface`, so this cannot describe a plan the run did not emit (D5).
+    *
+    * The subject is the OWNING TYPE and not the constructor: an `InBody` note is rendered against the
+    * type whose body carries it, and the dropped constructor's own symbol is never emitted. That
+    * matches the `dropMethods` rows in `recordPolicyDecisions`, which are the other `DroppedMember`
+    * decider and key the same way. */
+  private def recordDroppedNilaryCtors(program: Program, translated: PortRun.Translated): Unit =
+    given Program = program
+    val plans = CtorFunnel.Plans(program, Some(translated.surface))
+    emittedClasses(program, translated).foreach { cd =>
+      plans.droppedNilaryCtor(cd).foreach { d =>
+        val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
+        val args  = CtorFunnel.delegationOnlyNilary(program, d).map(_.size).getOrElse(0)
+        translated.decisions.record(Decision(
+          kind       = Decision.Kind.DroppedMember,
+          subject    = cd.symbol,
+          subjectFqn = s"$owner#<init>()",
+          detail = Map(
+            "owner"     -> owner,
+            "member"    -> "<init>()",
+            "arguments" -> args.toString,
+            "why"       -> ("java ran this nilary constructor's delegation and scala's implicit " +
+              "nilary primary runs nothing; `def this()` beside that primary is `E120`, so there is " +
+              "nowhere to put it. `new " + owner.substring(owner.lastIndexOf('.') + 1) + "()` " +
+              "therefore builds an object java could not build. Emitting, promoting and " +
+              "marker-disambiguating it were each measured and each emits a WRONG answer in place " +
+              "of a missing one (ENGINE-LIMITS.md C11); a port that needs the behaviour writes the " +
+              "constructor by hand (§1.5's `inject`)"),
+          ),
+          reason = Reason.Universal("ctor-funnel/nilary-dropped(C11)"),
+          origin = d.origin,
+        ))
       }
     }
 

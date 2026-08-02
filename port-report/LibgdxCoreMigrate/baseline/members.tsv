@@ -3146,7 +3146,7 @@ sge.graphics.g2d.Batch	sge.graphics.g2d.Batch#setPackedColor(float)	def	c0a69bde
 sge.graphics.g2d.Batch	sge.graphics.g2d.Batch#setProjectionMatrix(Matrix4)	def	d2926786e2e7067b
 sge.graphics.g2d.Batch	sge.graphics.g2d.Batch#setShader(ShaderProgram)	def	7446fa8f781d5eab
 sge.graphics.g2d.Batch	sge.graphics.g2d.Batch#setTransformMatrix(Matrix4)	def	1e4557bd2b65e45c
-sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont	class	80daec549112971f
+sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont	class	245395132e2d1b92
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#<init>(BitmapFontData,Array<TextureRegion>,boolean,Sge)	ctor	f6fdbc2da7ad8550
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#<init>(BitmapFontData,TextureRegion,boolean,Sge)	ctor	0b652e2ff90df2f1
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#<init>(FileHandle,FileHandle,boolean,Sge)	ctor	254b20c6b8494d67

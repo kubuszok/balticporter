@@ -959,6 +959,17 @@ predicate the emission drops with and `OmissionCheck.droppedNilaryCtors` counts 
 constructor that was never written. A port that needs the behaviour writes the constructor by hand
 (§1.5's `inject`); the engine's job is to say so.
 
+**…and saying so means SAYING IT WHERE THE QUESTION IS ASKED** (§4.575). A count in `findings.tsv`
+answers an agent holding the run directory; the agent this engine has is reading `BitmapFont.scala`
+in another repository, and its question — *why is there no `def this()`* — has no grep. So
+`PortRun.recordDroppedNilaryCtors` records the drop as a `Decision.Kind.DroppedMember` with
+`Reason.Universal("ctor-funnel/nilary-dropped(C11)")`, from the same `Plans.droppedNilaryCtor`
+through the run's own `Surface`, and the note is `PorterNote.InBody` — a dropped member has no
+declaration to sit above, so it heads the owning type's body, which is where somebody looking for
+the constructor looks. Measured: libGDX core `decisions.tsv` 3893 -> 3894 rows (`DroppedMember`
+25 -> 26), ONE member digest moved (`sge.graphics.g2d.BitmapFont`'s class row, the note being emitted
+text), `porter-notes` 0 -> 0, and every other count on all 13 ports flat.
+
 **Do NOT retry any of the three rows above.** Each is a behaviour change, not a compile fix, and two
 of them are silent.
 

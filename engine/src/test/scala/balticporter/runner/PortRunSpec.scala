@@ -606,6 +606,42 @@ class PortRunSpec extends munit.FunSuite:
     assertEquals(supers.map(_.owner), List("com.demo.Kept"))
   }
 
+  test("a DROPPED NILARY CONSTRUCTOR carries a porter note in the body it is missing from (C11)") {
+    // `ENGINE-LIMITS.md` C11: `Font()` delegates WITH ARGUMENTS in front of a class whose primary is
+    // scala's own implicit nilary one, so it cannot be emitted and cannot be replaced by anything
+    // that is not a wrong answer. `OmissionCheck` gives that a NUMBER; the number answers an agent
+    // holding the run directory, and the agent this engine has is reading the emitted file, where
+    // the missing `def this()` has nothing to grep for. Hence the note — `InBody`, at the head of
+    // the owning type, which is where somebody looking for the constructor looks (§4.575).
+    val (root, src) = fixture()
+    java(src, "com/demo/Font.java",
+      """package com.demo;
+        |public class Font {
+        |  public int size; public String name;
+        |  public Font()                      { this(seed(), "d"); }
+        |  public Font(int size)              { this(size, "d"); }
+        |  public Font(int size, String name) { this.size = size; this.name = name; grow(size); }
+        |  static int seed() { return 12; }
+        |  void grow(int by) { size = size + by; }
+        |}""".stripMargin)
+    // the argument-free `extends` is what takes the paramful promotion back, leaving `Plan.none`
+    java(src, "com/demo/Sub.java", "package com.demo; public class Sub extends Font { }")
+    val r = run(root, src, files = List("com/demo/Font.java", "com/demo/Sub.java"))()
+    val out = Files.readString(r.outDir.resolve("com/demo/Font.scala"))
+
+    // the DECLARATION, not the string: the note's own `why` quotes `def this()` on purpose, and a
+    // `contains` here would pass or fail on the explanation rather than on the code.
+    assert(!out.linesIterator.exists(_.trim.startsWith("def this()")), out)
+    assert(clue(out).contains("/* porter: dropped-member reason=universal " +
+      "rule=ctor-funnel/nilary-dropped(C11) arguments=2 member=<init>() owner=com.demo.Font"), out)
+    // the note heads the CLASS BODY, not some member's declaration: the subject has none.
+    assert(clue(out.indexOf("porter: dropped-member")) > out.indexOf("class Font"), out)
+    // …and the omission it explains is still counted. Two records of ONE predicate's answer, for
+    // two audiences — never two derivations.
+    assertEquals(r.report.omissions.filter(_.what == "nilary constructor dropped").map(_.owner),
+                 List("com.demo.Font"))
+  }
+
   test("the source map describes what is ON DISK — a dropped unit leaves no phantom entries") {
     // The emitter records every unit it renders, including the ones the run then refuses to
     // write; left in the map, a stack frame inside the INJECTED replacement resolved to a
