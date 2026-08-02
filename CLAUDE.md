@@ -680,12 +680,20 @@ same number, because the members it broke were inside a type the library drops.
 starts answering for every target added since. `CollectionsTransform`'s argument bridge opened with
 `if javaIterableSym == SymId.None then t` — a fact about `java.lang.Iterable` — while the bridge
 it guards also serves `java.util.Collection`; so a library that uses `Collection` throughout and
-never names `Iterable` had the **whole pass inert**, and `E134 None of the overloaded alternatives`
-was the only evidence anywhere in the run. **A pass that never runs looks exactly like a pass with
-nothing to do**: no check fires, no policy entry goes unmatched, and `members.tsv` is stable because
-the output has been that way since the port began. So a guard is derived from ALL of the pass's own
-targets or it is not written — the work each target would do already declines cheaply on its own
-(`ENGINE-LIMITS.md` K2.5, measured at 3 errors and a `collection-boundary` residue of 5).
+never names `Iterable` had the **whole pass inert**. So a guard is derived from ALL of the pass's
+own targets or it is not written — the work each target would do already declines cheaply on its
+own.
+
+**And what makes it hard to see is a RESIDUE COUNT that cannot tell a refusal from a switched-off
+fix.** The boundary check reported all five seams, precisely, on every run since that port began —
+and a "no wrap was inserted" finding reads as *no wrap exists for this pair*, which is what the
+honest refusals in that same count are. Here the phase's own factory table answered the pair on its
+first line. **A residue count is only as good as the assumption that everything able to close it
+RAN**, and the phase is the one place that can check it: a reported boundary whose (source kind,
+target) pair HAS a factory is an engine bug, not a residue, and the phase holds both halves at the
+moment it files the finding. `members.tsv` cannot help either — the output has been that way since
+the port began. (`ENGINE-LIMITS.md` K2.5: 3 errors, and 5 findings that had been misreading
+themselves for the life of the port.)
 
 ## 4.57 Every emission backend carries PROVENANCE — it is a licence obligation
 

@@ -5,11 +5,6 @@
 4819c0f3e52a	collection-boundary	ExternalCallee	@34#putAll(java.util.Map)	liqp/filters/Sort.java	137	argument: Found scala.collection.mutable.Map / Required java.util.Map
 64d2ddd5b2e7	collection-boundary	ExternalCallee	@720#accept(T)	liqp/Template.java	341	argument (external callee, no signature): Found scala.collection.mutable.Map[java.lang.String, java.lang.Object] / Required unknown — the callee is a class file
 92924750addc	collection-boundary	InexpressibleParent	ssg.liquid.filters.Sort$ComparableMapEntry	liqp/filters/Sort.java	75	parent (implements): Found java.util.Map$Entry[liqp.filters.Sort$ComparableMapEntry$$K, liqp.filters.Sort$ComparableMapEntry$$V] / Required scala.Tuple2[liqp.filters.Sort$ComparableMapEntry$$K, liqp.filters.Sort$ComparableMapEntry$$V]
-3f7aa220e4c6	collection-boundary	ShimBoundary	ssg.liquid.Insertions#of	liqp/Insertions.java	91	argument: Found scala.collection.mutable.Buffer / Required balticporter.runtime.JavaCollection
-7db08b414156	collection-boundary	ShimBoundary	ssg.liquid.Insertions#of	liqp/TemplateParser.java	415	argument: Found scala.collection.mutable.Buffer / Required balticporter.runtime.JavaCollection
-70f48e118117	collection-boundary	ShimBoundary	ssg.liquid.filters.Filters#of	liqp/filters/Filters.java	118	argument: Found scala.collection.mutable.Buffer / Required balticporter.runtime.JavaCollection
-70f48e118117/2	collection-boundary	ShimBoundary	ssg.liquid.filters.Filters#of	liqp/filters/Filters.java	177	argument: Found scala.collection.mutable.Buffer / Required balticporter.runtime.JavaCollection
-70f48e118117/3	collection-boundary	ShimBoundary	ssg.liquid.filters.Filters#of	liqp/filters/Filters.java	181	argument: Found scala.collection.mutable.Buffer / Required balticporter.runtime.JavaCollection
 b46c7ffa1f9b	collection-boundary	UnmappedSubtype	ssg.liquid.spi.BasicTypesSupport$21#initialValue	liqp/spi/BasicTypesSupport.java	20	return: Found java.util.concurrent.ConcurrentHashMap / Required scala.collection.mutable.Map
 be046f8bdc73	collection-boundary	UntranslatedFamily	@258#concat(java.util.stream.Stream,java.util.stream.Stream)	liqp/parser/v4/NodeVisitor.java	481	argument: Found scala.collection.mutable.Buffer / Required java.util.stream.Stream
 59e200a75a87	collection-closure	java.util.Stack	registry	liqp/blocks/For.java	262	Tycon — unmapped, but java.util.List is mapped to scala.collection.mutable.Buffer, so the JDK relation java.util.Stack <: java.util.List is lost
@@ -32,9 +27,6 @@ ff9aa2708838	jdk-surface	unhandled	java.util.stream.Stream#concat(Stream,Stream)
 1ff046d9d987	jdk-surface	unhandled	java.util.stream.Stream#of(T)	liqp/parser/v4/NodeVisitor.java	480	java.util.stream.Stream#of(T) — retyped to java.util.stream.Stream, no rewrite (1 site(s))
 0ae0b7e260da	jdk-surface	unhandled	java.util.stream.Stream#toArray(IntFunction)	liqp/parser/v4/NodeVisitor.java	484	java.util.stream.Stream#toArray(IntFunction) — retyped to java.util.stream.Stream, no rewrite (1 site(s))
 f17040cdcaa0	omissions	annotation dropped	ssg.liquid.parser.LiquidSupport	<synthetic>	0	com.fasterxml.jackson.databind.annotation.JsonSerialize
-df6264018dee	omissions	super(args) dropped	ssg.liquid.exceptions.LiquidException	liqp/exceptions/LiquidException.java	15	2 argument(s) discarded
-d107651bb56d	omissions	super(args) dropped	ssg.liquid.exceptions.LiquidException	liqp/exceptions/LiquidException.java	23	1 argument(s) discarded
-df6264018dee/2	omissions	super(args) dropped	ssg.liquid.exceptions.LiquidException	liqp/exceptions/LiquidException.java	31	2 argument(s) discarded
 9314659ad22b	portability(all)	java.lang.Thread	key	liqp/spi/BasicTypesSupport.java	68	TermRef — threads do not exist on Scala.js
 15023864e250	portability(all)	java.lang.ThreadLocal	ssg.liquid.spi.BasicTypesSupport#local	liqp/spi/BasicTypesSupport.java	17	Tycon — threads do not exist on Scala.js
 15023864e250/2	portability(all)	java.lang.ThreadLocal	ssg.liquid.spi.BasicTypesSupport#local	liqp/spi/BasicTypesSupport.java	17	Tycon — threads do not exist on Scala.js

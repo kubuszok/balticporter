@@ -1558,10 +1558,25 @@ at each call where java's own `List`-is-a-`Collection` subtyping did not survive
 `mutable.Buffer` is not a `JavaCollection`, and the bridge that exists for precisely that was never
 consulted.
 
-Nothing else could see it, and that is the part worth keeping: no check fires (the boundary count
-is about the EXTERNAL seam, and this callee is owned), no policy entry goes unmatched (there is no
-policy — the phase is unscoped here), and `members.tsv` is stable because the pass has been inert
-since the port began. **A pass that never runs looks exactly like a pass with nothing to do.**
+**CORRECTION, and it is the better half of this entry: a check DID fire, on all five, and could not
+say what it had found.** `collection-boundary` reported every one as a `ShimBoundary` — `argument:
+Found scala.collection.mutable.Buffer / Required balticporter.runtime.JavaCollection`, with the java
+file and line — and had done so on every run since the port began. What it cannot say is that a wrap
+for that exact pair EXISTS. A `ShimBoundary` means "a retyped value met a shim-typed slot and no
+wrap was inserted", and a reader takes that as K2's honest residue — the `Kind.Map`-into-
+`JavaCollection` cell that is refused on purpose, the `keySet()` source the phase declines. Here
+`coerce`'s own table answers the pair on its first line (`Kind.Seq` + `JavaCollection` →
+`JavaCollection.from`), and the finding was a BUG REPORT that read as a residue report. Five of
+them, for the life of the port.
+
+So the durable rule is not "nothing could see it" — it is **a residue count is only as good as the
+assumption that everything able to close it RAN**, and that assumption is checkable from inside the
+phase: a reported boundary whose (source `Kind`, target shim) pair has a factory in `coerce` is not
+a residue, it is an engine bug, and the phase holds both halves at the moment it files the finding.
+Unbuilt, and priced here at the five findings it would have caught the first time this port was
+measured. `members.tsv` cannot help — the output has been that way since the port began, so the
+digest is stable — and no policy entry goes unmatched, because the phase is unscoped here.
+**A pass that never runs looks exactly like a pass with nothing to do.**
 
 The rule is `CLAUDE.md` §4.56's, one remove out: *a phase may conclude something only from what the
 phase itself did to the thing it is concluding about.* "Is there a `JavaIterable` in this program"
