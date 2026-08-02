@@ -72,6 +72,33 @@ class CollectionsStaticsSpec extends PortSuite:
     assertNotEmits(p2, "JavaCollections.unmodifiableList")
   }
 
+  test("the IMMUTABLE producers rewrite onto helpers that KEEP the immutability") {
+    // The PRODUCER direction of the retype: a value the JDK hands back at a slot this phase moved.
+    // Nothing coerces it and nothing can — the JDK object is not a scala collection — so the
+    // rewrite has to produce the scala value in the first place.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Empty {
+        |  List<String> el()                 { return Collections.emptyList(); }
+        |  Map<String, Integer> em()         { return Collections.emptyMap(); }
+        |  Set<String> es()                  { return Collections.emptySet(); }
+        |  List<String> sl(String x)         { return Collections.singletonList(x); }
+        |  Set<String> ss(String x)          { return Collections.singleton(x); }
+        |  Map<String, Integer> sm(String k, Integer v) { return Collections.singletonMap(k, v); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "balticporter.runtime.JavaCollections.emptyList()")
+    assertEmits(p, "balticporter.runtime.JavaCollections.emptyMap()")
+    assertEmits(p, "balticporter.runtime.JavaCollections.emptySet()")
+    assertEmits(p, "balticporter.runtime.JavaCollections.singletonList(x)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.singleton(x)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.singletonMap(k, v)")
+    assertNotEmits(p, "java.util.Collections.")
+  }
+
   test("`Map.Entry`'s statics come along, because `Map.Entry` became a `Tuple2`") {
     // Without these the call survives to the compiler naming `java.util.Map.Entry` — a type the
     // port no longer produces anywhere.

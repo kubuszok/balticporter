@@ -256,6 +256,52 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // the IMMUTABLE producers — the half of the divergence a compile cannot see
+  // -------------------------------------------------------------------------------------------
+
+  test("emptyList/emptyMap/emptySet REFUSE mutation, as java's do") {
+    // `mutable.ArrayBuffer.empty` would compile and be wrong in the one direction that matters:
+    // the result of these factories is routinely stored in a shared static, and a caller that puts
+    // into it gets `UnsupportedOperationException` in java and silently corrupts a global here.
+    intercept[UnsupportedOperationException](JavaCollections.emptyList[String]() += "x")
+    intercept[UnsupportedOperationException](JavaCollections.emptySet[String]() += "x")
+    intercept[UnsupportedOperationException](JavaCollections.emptyMap[String, Int]().put("k", 1))
+    intercept[UnsupportedOperationException](JavaCollections.emptyList[String]().clear())
+    intercept[UnsupportedOperationException](JavaCollections.emptyMap[String, Int]() -= "k")
+  }
+
+  test("…and READ as ordinary scala collections") {
+    assertEquals(JavaCollections.emptyList[String]().size, 0)
+    assertEquals(JavaCollections.emptyList[String]().toList, Nil)
+    assertEquals(JavaCollections.emptyMap[String, Int]().get("k"), None)
+    assert(!JavaCollections.emptySet[String]().contains("x"))
+    // a derived collection is an ordinary mutable one, as java's read operations produce
+    assertEquals(JavaCollections.singletonList("a").map(_.toUpperCase).toList, List("A"))
+  }
+
+  test("emptyList/emptyMap/emptySet are SHARED, as java's are — reference identity is observable") {
+    // java's `Collections.EMPTY_LIST` is one instance, and a java `xs == Collections.emptyList()`
+    // is a REFERENCE comparison, which this engine emits as `eq` (§4.4). A fresh instance per call
+    // would answer `false` where java answers `true`.
+    assert(JavaCollections.emptyList[String]() eq JavaCollections.emptyList[Int]())
+    assert(JavaCollections.emptyMap[String, Int]() eq JavaCollections.emptyMap[Int, Int]())
+    assert(JavaCollections.emptySet[String]() eq JavaCollections.emptySet[Int]())
+  }
+
+  test("singletonList/singleton/singletonMap carry the one element and refuse mutation") {
+    assertEquals(JavaCollections.singletonList("a").toList, List("a"))
+    assertEquals(JavaCollections.singleton("a").toList, List("a"))
+    assertEquals(JavaCollections.singletonMap("k", 1).get("k"), Some(1))
+    intercept[UnsupportedOperationException](JavaCollections.singletonList("a") += "b")
+    intercept[UnsupportedOperationException](JavaCollections.singletonList("a").update(0, "b"))
+    intercept[UnsupportedOperationException](JavaCollections.singletonList("a").remove(0))
+    intercept[UnsupportedOperationException](JavaCollections.singleton("a") -= "a")
+    intercept[UnsupportedOperationException](JavaCollections.singletonMap("k", 1).put("j", 2))
+    // …and are FRESH per call, as java's `new SingletonList<>(o)` is
+    assert(!(JavaCollections.singletonList("a") eq JavaCollections.singletonList("a")))
+  }
+
+  // -------------------------------------------------------------------------------------------
   // Map.Entry's statics over the Tuple2 a Map.Entry becomes
   // -------------------------------------------------------------------------------------------
 

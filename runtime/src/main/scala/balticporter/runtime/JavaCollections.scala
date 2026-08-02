@@ -163,6 +163,63 @@ object JavaCollections:
     if out.length > n then out(n) = null.asInstanceOf[A]
     out
 
+  // -------------------------------------------------------------------------------------------
+  // The IMMUTABLE producers — `emptyList`, `emptyMap`, `emptySet`, `singletonList`,
+  // `singletonMap`, `singleton`.
+  //
+  // Every one of these hands back a collection java REFUSES to modify, at a slot the port retyped
+  // to a MUTABLE scala collection. `mutable.ArrayBuffer.empty` would compile and be wrong in the
+  // one direction that matters: `Insertions.EMPTY = new Insertions(Collections.emptyMap())` is a
+  // shared static, and a caller that put into it gets `UnsupportedOperationException` in java and,
+  // with a growable buffer, silently corrupts a global here. That is CLAUDE.md §4.4 exactly — valid
+  // scala meaning something else, with no compile error and no count moved.
+  //
+  // So the immutability is REPRODUCED rather than dropped: the three `Frozen*` classes below are
+  // scala collections of the retyped shape whose every mutator throws
+  // `UnsupportedOperationException`, which is java's own behaviour and not an approximation of it.
+  // This is what ENGINE-LIMITS K6 said `Collections.unmodifiableList` had no target for — correctly
+  // for the STDLIB, which has no read-only `Buffer` view; the runtime can supply one, and these
+  // factories are the half of that family with no VIEW semantics to get wrong.
+  // -------------------------------------------------------------------------------------------
+
+  /** `java.util.Collections.emptyList()` — an immutable, empty `List`.
+    *
+    * SHARED, exactly as java's is (`Collections.EMPTY_LIST`, cast on the way out), because
+    * reference identity is observable: java code writing `xs == Collections.emptyList()` is a
+    * reference comparison, which this engine emits as `eq` (§4.4), and a fresh instance per call
+    * would answer `false` where java answers `true`. The cast java performs is sound for the same
+    * reason java's is — the value is empty and cannot be written to, so no element of type `A` is
+    * ever read out of it or stored into it. */
+  def emptyList[A](): scala.collection.mutable.Buffer[A] =
+    frozenEmptyBuffer.asInstanceOf[scala.collection.mutable.Buffer[A]]
+
+  /** `java.util.Collections.emptyMap()` — shared and immutable, for [[emptyList]]'s reasons. */
+  def emptyMap[K, V](): scala.collection.mutable.Map[K, V] =
+    frozenEmptyMap.asInstanceOf[scala.collection.mutable.Map[K, V]]
+
+  /** `java.util.Collections.emptySet()` — shared and immutable, for [[emptyList]]'s reasons. */
+  def emptySet[A](): scala.collection.mutable.Set[A] =
+    frozenEmptySet.asInstanceOf[scala.collection.mutable.Set[A]]
+
+  /** `java.util.Collections.singletonList(x)` — one element, immutable.
+    *
+    * FRESH per call, and that is java's behaviour too (`new SingletonList<>(o)`), so the identity
+    * argument [[emptyList]] makes does not apply here. */
+  def singletonList[A](x: A): scala.collection.mutable.Buffer[A] =
+    new FrozenBuffer(scala.collection.immutable.Vector(x))
+
+  /** `java.util.Collections.singleton(x)` — the `Set` of the same shape. */
+  def singleton[A](x: A): scala.collection.mutable.Set[A] =
+    new FrozenSet(scala.collection.immutable.Set(x))
+
+  /** `java.util.Collections.singletonMap(k, v)` — one mapping, immutable. */
+  def singletonMap[K, V](k: K, v: V): scala.collection.mutable.Map[K, V] =
+    new FrozenMap(scala.collection.immutable.Map(k -> v))
+
+  private val frozenEmptyBuffer = new FrozenBuffer[Any](scala.collection.immutable.Vector.empty)
+  private val frozenEmptySet    = new FrozenSet[Any](scala.collection.immutable.Set.empty)
+  private val frozenEmptyMap    = new FrozenMap[Any, Any](scala.collection.immutable.Map.empty)
+
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)
 
@@ -241,3 +298,60 @@ object JavaCollections:
     val c = factory()
     c ++= xs
     c
+
+  /** A `mutable.Buffer` that REFUSES every mutation, as java's immutable lists do.
+    *
+    * PRIVATE, and it is the target the retyping demands rather than a type any port names: the
+    * slot a `Collections.emptyList()` reaches is `scala.collection.mutable.Buffer`, because that is
+    * what `java.util.List` maps to — so the value has to BE one. Everything scala derives from
+    * `apply`/`length`/`iterator` (`map`, `filter`, `foreach`, `contains`, `mkString`) works and
+    * builds an ordinary `ArrayBuffer` when it builds anything, which is what java's own read
+    * operations do; everything that would MUTATE throws `UnsupportedOperationException`, which is
+    * java's own behaviour and not an approximation of it.
+    *
+    * CLAUDE.md §4.5 forbids modelling a JAVA INTERFACE on a scala collection trait, and this is not
+    * that: nothing in a port ever extends this, so there is no second java interface to satisfy and
+    * no member of a ported class for the trait's hundreds of inherited names to collide with. The
+    * rule's hazard is inheritance in the PORT, and this class is never in one. */
+  private final class FrozenBuffer[A](under: scala.collection.Seq[A])
+      extends scala.collection.mutable.AbstractBuffer[A]:
+    def apply(i: Int): A                                   = under(i)
+    def length: Int                                        = under.length
+    override def iterator: scala.collection.Iterator[A]    = under.iterator
+    override def knownSize: Int                            = under.length
+    def update(i: Int, elem: A): Unit                      = refuse
+    def insert(idx: Int, elem: A): Unit                    = refuse
+    def insertAll(idx: Int, elems: scala.collection.IterableOnce[A]): Unit = refuse
+    def prepend(elem: A): this.type                        = refuse
+    def remove(idx: Int): A                                = refuse
+    def remove(idx: Int, count: Int): Unit                 = refuse
+    def addOne(elem: A): this.type                         = refuse
+    def clear(): Unit                                      = refuse
+    override def patchInPlace(from: Int, patch: scala.collection.IterableOnce[A], replaced: Int): this.type = refuse
+
+  /** [[FrozenBuffer]]'s `Set`. */
+  private final class FrozenSet[A](under: scala.collection.Set[A])
+      extends scala.collection.mutable.AbstractSet[A]:
+    def contains(elem: A): Boolean                      = under.contains(elem)
+    def iterator: scala.collection.Iterator[A]          = under.iterator
+    override def knownSize: Int                         = under.size
+    def addOne(elem: A): this.type                      = refuse
+    def subtractOne(elem: A): this.type                 = refuse
+    override def clear(): Unit                          = refuse
+
+  /** [[FrozenBuffer]]'s `Map`. */
+  private final class FrozenMap[K, V](under: scala.collection.Map[K, V])
+      extends scala.collection.mutable.AbstractMap[K, V]:
+    def get(key: K): Option[V]                          = under.get(key)
+    def iterator: scala.collection.Iterator[(K, V)]     = under.iterator
+    override def knownSize: Int                         = under.size
+    def addOne(kv: (K, V)): this.type                   = refuse
+    def subtractOne(k: K): this.type                    = refuse
+    override def clear(): Unit                          = refuse
+
+  /** java's own answer at every one of those members — `UnsupportedOperationException`, with the
+    * message naming what the value IS, since the alternative a reader will guess is an engine bug. */
+  private def refuse: Nothing = throw new UnsupportedOperationException(
+    "this collection came from a java factory that returns an IMMUTABLE collection " +
+      "(Collections.emptyList/emptyMap/emptySet/singletonList/singletonMap/singleton); " +
+      "java throws here too")

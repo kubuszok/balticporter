@@ -814,6 +814,21 @@ final class CollectionsTransform(
       case (Some("java.util.Collections#reverse"), List(xs))      => Some(factory(sym("reverse"), List(xs)))
       case (Some("java.util.Collections#swap"), List(xs, i, j))   => Some(factory(sym("swap"), List(xs, i, j)))
       case (Some("java.util.Collections#shuffle"), List(xs, rnd))  => Some(factory(sym("shuffle"), List(xs, rnd)))
+      // The IMMUTABLE PRODUCERS. These are the other direction of the retype: not an argument the
+      // port hands the JDK, but a value the JDK hands BACK, at a slot this phase already moved —
+      // `Found: java.util.Map[K, V] / Required: mutable.Map[String, Insertion]`. Nothing coerces
+      // them, and nothing can: the JDK object is not a scala collection, so the rewrite has to
+      // produce the scala value in the first place.
+      //
+      // Their targets REPRODUCE java's immutability rather than dropping it — see the helpers.
+      // `mutable.ArrayBuffer.empty` would compile and turn a loud `UnsupportedOperationException`
+      // into a silent write to whatever shared constant the factory's result was stored in.
+      case (Some("java.util.Collections#emptyList"), Nil)           => Some(factory(sym("emptyList"), Nil))
+      case (Some("java.util.Collections#emptyMap"), Nil)            => Some(factory(sym("emptyMap"), Nil))
+      case (Some("java.util.Collections#emptySet"), Nil)            => Some(factory(sym("emptySet"), Nil))
+      case (Some("java.util.Collections#singletonList"), List(x))   => Some(factory(sym("singletonList"), List(x)))
+      case (Some("java.util.Collections#singleton"), List(x))       => Some(factory(sym("singleton"), List(x)))
+      case (Some("java.util.Collections#singletonMap"), List(k, v)) => Some(factory(sym("singletonMap"), List(k, v)))
       // `java.util.Arrays.asList` is not on `Collections`, but it is the same KIND of thing — a
       // receiver-less JDK factory whose result type the port has already retyped — so it shares the
       // table and the runtime object rather than earning a mechanism of its own.
@@ -1634,7 +1649,7 @@ object CollectionsTransform:
   val StaticHelpers: List[String] =
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
-         "toArray")
+         "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give
@@ -1657,8 +1672,14 @@ object CollectionsTransform:
   val handledStatics: Set[String] = Set(
     "java.util.Arrays#asList",
     "java.util.Collection#stream",
+    "java.util.Collections#emptyList",
+    "java.util.Collections#emptyMap",
+    "java.util.Collections#emptySet",
     "java.util.Collections#reverse",
     "java.util.Collections#shuffle",
+    "java.util.Collections#singleton",
+    "java.util.Collections#singletonList",
+    "java.util.Collections#singletonMap",
     "java.util.Collections#sort",
     "java.util.Collections#swap",
     "java.util.Collections#unmodifiableCollection",
