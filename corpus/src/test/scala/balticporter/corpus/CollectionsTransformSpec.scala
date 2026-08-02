@@ -547,6 +547,28 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "super.getOrElse")
   }
 
+  test("`subList` and `putIfAbsent` go to the helper — scala HAS both and both mean something else") {
+    // `slice` COPIES where java's `subList` is a write-through view, and `getOrElseUpdate` returns
+    // the value now in the map where java's `putIfAbsent` returns the PREVIOUS one. Both compile
+    // and both are §4.4; the contracts are pinned in `JavaCollectionsSpec`.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Ranges {
+        |  private final List<String> xs = new ArrayList<String>();
+        |  private final Map<String, String> m = new HashMap<String, String>();
+        |  List<String> head(int n)  { return xs.subList(0, n); }
+        |  String once(String k, String v) { return m.putIfAbsent(k, v); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "balticporter.runtime.JavaCollections.subList(this.xs, 0, n)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.putIfAbsent(this.m, k, v)")
+    assertNotEmits(p, "this.xs.slice")
+    assertNotEmits(p, "getOrElseUpdate")
+  }
+
   test("a CAPACITY hint at a hashed collection gains java's own default load factor") {
     // scala's `mutable.HashMap` declares `()` and `(Int, Double)` and nothing in between, so java's
     // one-argument capacity constructor lands on no overload. Java's own definition of that

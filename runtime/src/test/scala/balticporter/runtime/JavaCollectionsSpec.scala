@@ -328,6 +328,63 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // subList / putIfAbsent — scala HAS both operations and both mean something else
+  // -------------------------------------------------------------------------------------------
+
+  test("subList WRITES THROUGH — `xs.slice` would compile and detach every one of these") {
+    val xs: Buffer[Int] = ArrayBuffer(0, 1, 2, 3, 4)
+    val sub = JavaCollections.subList(xs, 1, 4)
+    assertEquals(sub.toList, List(1, 2, 3))
+    sub(0) = 99
+    assertEquals(xs.toList, List(0, 99, 2, 3, 4), "set through the view reaches the backing list")
+    // …and the other direction: a change to the backing list is visible through the view.
+    xs(2) = 77
+    assertEquals(sub.toList, List(99, 77, 3))
+  }
+
+  test("…and `subList(a, b).clear()` removes THAT RANGE from the list, which is java's own idiom") {
+    val xs: Buffer[Int] = ArrayBuffer(0, 1, 2, 3, 4)
+    JavaCollections.subList(xs, 1, 4).clear()
+    assertEquals(xs.toList, List(0, 4))
+  }
+
+  test("subList grows and shrinks the BACKING list, and its own end moves with it") {
+    val xs: Buffer[Int] = ArrayBuffer(0, 1, 2, 3)
+    val sub = JavaCollections.subList(xs, 1, 3)
+    sub += 9
+    assertEquals(xs.toList, List(0, 1, 2, 9, 3))
+    assertEquals(sub.toList, List(1, 2, 9))
+    assertEquals(sub.remove(0), 1)
+    assertEquals(xs.toList, List(0, 2, 9, 3))
+    assertEquals(sub.toList, List(2, 9))
+  }
+
+  test("subList keeps java's BOUNDS — a silently clamped range is a wrong answer, not a loud one") {
+    val xs: Buffer[Int] = ArrayBuffer(0, 1, 2)
+    intercept[IndexOutOfBoundsException](JavaCollections.subList(xs, -1, 2))
+    intercept[IndexOutOfBoundsException](JavaCollections.subList(xs, 0, 4))
+    intercept[IndexOutOfBoundsException](JavaCollections.subList(xs, 2, 1))
+    assertEquals(JavaCollections.subList(xs, 1, 1).toList, Nil) // empty is legal
+    intercept[IndexOutOfBoundsException](JavaCollections.subList(xs, 0, 2)(2))
+  }
+
+  test("putIfAbsent returns the PREVIOUS value — null on a successful insertion, unlike getOrElseUpdate") {
+    // `getOrElseUpdate` returns the value now in the map, i.e. the NEW one on an insertion, so
+    // every `if (m.putIfAbsent(k, v) == null)` would take the other branch with no compile error.
+    val m = scala.collection.mutable.Map.empty[String, String]
+    assertEquals(JavaCollections.putIfAbsent(m, "k", "v"), null)
+    assertEquals(m("k"), "v")
+    assertEquals(JavaCollections.putIfAbsent(m, "k", "w"), "v", "the previous value, and no overwrite")
+    assertEquals(m("k"), "v")
+  }
+
+  test("…and a key mapped to NULL counts as absent, which is java's own default body") {
+    val m = scala.collection.mutable.Map[String, String]("k" -> null)
+    assertEquals(JavaCollections.putIfAbsent(m, "k", "v"), null)
+    assertEquals(m("k"), "v")
+  }
+
+  // -------------------------------------------------------------------------------------------
   // Map.Entry's statics over the Tuple2 a Map.Entry becomes
   // -------------------------------------------------------------------------------------------
 

@@ -245,6 +245,42 @@ object JavaCollections:
   private val frozenEmptySet    = new FrozenSet[Any](scala.collection.immutable.Set.empty)
   private val frozenEmptyMap    = new FrozenMap[Any, Any](scala.collection.immutable.Map.empty)
 
+  /** `java.util.List.subList(from, to)` — a WRITE-THROUGH VIEW, as java's is.
+    *
+    * `xs.slice(from, to)` is the shape everyone reaches for and it COPIES, which breaks java's
+    * documented idiom in both directions with no compile error (§4.4): `list.subList(a, b).clear()`
+    * removes that range FROM THE LIST in java and does nothing at all to a copy, and
+    * `sub.set(i, v)` writes through in java and into a detached array here.
+    *
+    * So the view is real: reads index into the backing buffer, `update` writes into it, and
+    * `insert`/`remove` shift the backing buffer and move this view's own end. What is NOT
+    * reproduced is java's fail-fast `ConcurrentModificationException` when the BACKING list is
+    * structurally modified behind the view's back — and that is not a gap, because java does not
+    * promise it either: `List.subList` says the view's behaviour is *undefined* in that case and
+    * the exception is explicitly best-effort.
+    *
+    * Java's own bounds are kept — `IndexOutOfBoundsException` for `from < 0`, `to > size` or
+    * `from > to` — because a silently clamped range is a wrong answer rather than a loud one. */
+  def subList[A](xs: scala.collection.mutable.Buffer[A], from: Int, to: Int): scala.collection.mutable.Buffer[A] =
+    if from < 0 || to > xs.length || from > to then
+      throw new IndexOutOfBoundsException(s"subList($from, $to) on a list of size ${xs.length}")
+    new SubBuffer(xs, from, to)
+
+  /** `java.util.Map.putIfAbsent(k, v)` — java's exact definition, which is NOT `getOrElseUpdate`.
+    *
+    * The two differ in what they RETURN, and the difference is silent: java hands back the PREVIOUS
+    * value, so `null` is what a successful insertion returns and every `if (m.putIfAbsent(k, v) ==
+    * null)` branches on it. `getOrElseUpdate` returns the value that is now in the map — the new
+    * one on an insertion — so the same test would take the other branch, with no compile error.
+    *
+    * The body is `java.util.Map`'s own default implementation, verbatim, including its treatment of
+    * a key mapped to `null` as ABSENT (java puts, and still returns `null`). */
+  def putIfAbsent[K, V](m: scala.collection.mutable.Map[K, V], k: K, v: V): V =
+    val cur = m.get(k) match
+      case Some(x) => x
+      case None    => null.asInstanceOf[V]
+    if cur == null then { m.put(k, v); null.asInstanceOf[V] } else cur
+
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)
 
@@ -353,6 +389,41 @@ object JavaCollections:
     def addOne(elem: A): this.type                         = refuse
     def clear(): Unit                                      = refuse
     override def patchInPlace(from: Int, patch: scala.collection.IterableOnce[A], replaced: Int): this.type = refuse
+
+  /** `java.util.List.subList`'s view — see [[subList]] for the contract and for what is
+    * deliberately not reproduced. `until` is a `var` because java's view resizes when you insert or
+    * remove THROUGH it. */
+  private final class SubBuffer[A](
+      under: scala.collection.mutable.Buffer[A], from: Int, private var until: Int)
+      extends scala.collection.mutable.AbstractBuffer[A]:
+    def length: Int = until - from
+    private def at(i: Int): Int =
+      if i < 0 || i >= length then throw new IndexOutOfBoundsException(s"$i (sublist size $length)")
+      else from + i
+    private def gap(i: Int): Int =
+      if i < 0 || i > length then throw new IndexOutOfBoundsException(s"$i (sublist size $length)")
+      else from + i
+    def apply(i: Int): A                                = under(at(i))
+    override def iterator: scala.collection.Iterator[A] = Iterator.range(0, length).map(apply)
+    def update(i: Int, elem: A): Unit                   = under(at(i)) = elem
+    def insert(idx: Int, elem: A): Unit                 = { under.insert(gap(idx), elem); until += 1 }
+    def insertAll(idx: Int, elems: scala.collection.IterableOnce[A]): Unit =
+      val es = scala.collection.immutable.Vector.from(elems)
+      under.insertAll(gap(idx), es)
+      until += es.size
+    def prepend(elem: A): this.type = { insert(0, elem); this }
+    def addOne(elem: A): this.type  = { insert(length, elem); this }
+    def remove(idx: Int): A         = { val v = under.remove(at(idx)); until -= 1; v }
+    def remove(idx: Int, count: Int): Unit =
+      if count < 0 then throw new IllegalArgumentException(s"removing a negative number of elements: $count")
+      var n = count
+      while n > 0 do { under.remove(at(idx)); until -= 1; n -= 1 }
+    def clear(): Unit = remove(0, length)
+    def patchInPlace(idx: Int, patch: scala.collection.IterableOnce[A], replaced: Int): this.type =
+      val es = scala.collection.immutable.Vector.from(patch)
+      remove(idx, math.min(math.max(replaced, 0), length - idx))
+      insertAll(idx, es)
+      this
 
   /** [[FrozenBuffer]]'s `Set`. */
   private final class FrozenSet[A](under: scala.collection.Set[A])

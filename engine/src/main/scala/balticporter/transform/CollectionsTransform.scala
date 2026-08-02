@@ -1381,6 +1381,17 @@ final class CollectionsTransform(
       case ("toArray", List(a), Kind.Seq | Kind.Set) if sym("toArray") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("toArray"), TypeRepr.NoType, so), List(recv, arrayArg(a, t)),
                         sym("toArray"), t.tpe, t.origin))
+      // `subList` is a WRITE-THROUGH VIEW and `slice` is a copy — `list.subList(a, b).clear()`
+      // removes the range from the list in java and does nothing to a copy (§4.4). `putIfAbsent`
+      // returns the PREVIOUS value, so `null` is what a successful insertion returns, which is the
+      // opposite of what `getOrElseUpdate` hands back. Both are in the helper for the same reason
+      // `removeValue` is: scala has the operation and it means something else.
+      case ("subList", List(a, b), Kind.Seq) if sym("subList") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("subList"), TypeRepr.NoType, so), List(recv, a, b),
+                        sym("subList"), t.tpe, t.origin))
+      case ("putIfAbsent", List(key, v), Kind.Map) if sym("putIfAbsent") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("putIfAbsent"), TypeRepr.NoType, so),
+                        List(recv, keyArg(key, recv), v), sym("putIfAbsent"), t.tpe, t.origin))
       case ("add", List(i, x), Kind.Seq)        => Some(call(recv, insertSym, List(i, x), t, so)) // insert at index
       case ("add", List(x), _)                  => Some(infix(recv, opPlusEq, List(x), t, so))    // xs += x
       // ---- java Deque, as `LinkedList`/`ArrayDeque` are routinely used ----
@@ -1702,7 +1713,7 @@ object CollectionsTransform:
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
-         "unmodifiableList", "unmodifiableSet", "unmodifiableMap")
+         "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give
@@ -1776,8 +1787,8 @@ object CollectionsTransform:
     ),
     Kind.Seq.toString   -> Set("get", "set", "remove", "addLast", "offer", "offerLast",
                                "addFirst", "offerFirst", "poll", "pollFirst", "peek", "peekFirst", "element",
-                               "toArray"),
-    Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values"),
+                               "toArray", "subList"),
+    Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values", "putIfAbsent"),
     Kind.Set.toString   -> Set("remove", "toArray"),
     Kind.Entry.toString -> Set("getKey", "getValue"),
   )
