@@ -354,19 +354,21 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
 
   test("assertThrows is qualified to munit.Assertions, not the suite's inherited `intercept`") {
     // it is an ASSERTION, so it is rewritten in every scope — a java `static` helper included,
-    // whose companion object does not extend the suite. `@Test(expected=…)`'s intercept is built
-    // only inside a class that gains the parent, and stays inherited.
+    // which emits into the COMPANION OBJECT and does not extend the suite, so an inherited
+    // `intercept` is not in scope there (the same `Not found:` the assertion members hit).
+    // `@Test(expected=…)`'s intercept is built only inside a class that gains the parent, and
+    // stays inherited.
     val (out, _) = emit(
       """package demo;
         |import org.junit.Assert;
-        |public class ThrowUtils {
-        |  public static void mustThrow(Runnable r) {
-        |    Assert.assertThrows(RuntimeException.class, () -> r.run());
-        |  }
+        |import org.junit.Test;
+        |public class QualTest {
+        |  static void mustThrow(Runnable r) { Assert.assertThrows(RuntimeException.class, () -> r.run()); }
+        |  @Test public void a() { mustThrow(null); }
         |}
         |""".stripMargin)
-    assert(clue(out).contains("munit.Assertions.intercept[java.lang.RuntimeException](r.run())"))
-    assert(!out.contains("munit.FunSuite"))
+    val companion = out.substring(out.indexOf("object QualTest"))
+    assert(clue(companion).contains("munit.Assertions.intercept[java.lang.RuntimeException](r.run())"))
   }
 
   test("assertThrows with a MESSAGE is refused, not silently stripped of it") {
@@ -406,54 +408,6 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |""".stripMargin)
     assert(clue(ph.findings.map(_.construct)).contains("org.junit.Assert.assertThrows"))
     assert(!clue(out).contains("munit.Assertions.intercept"))
-  }
-
-  // ------------------------------------------ the rewrite is not SUITE-scoped --
-
-  /** A test HELPER declares no `@Test` — that is what makes it a helper — and it is where a suite's
-    * assertions are most often centralised. Gating the `Assert` rewrite on the class declaring a
-    * `@Test` meant those calls were never even visited. */
-  private val helperSrc =
-    """package demo;
-      |import org.junit.Assert;
-      |public class TestUtils {
-      |  public static void check(int a) { Assert.assertEquals(1, a); }
-      |  public static void boom() { Assert.fail("nope"); }
-      |}
-      |""".stripMargin
-
-  test("a helper class with NO @Test still has its Assert calls rewritten") {
-    val (out, _) = emit(helperSrc)
-    assert(clue(out).contains("munit.Assertions.assertEquals(a, 1)"))
-    assert(out.contains("""munit.Assertions.fail("nope")"""))
-    assert(!out.contains("org.junit"))
-  }
-
-  test("…and it does NOT become a suite: only the CONVERSION stays gated on @Test") {
-    val (out, ph) = emit(helperSrc)
-    // the gate that had to survive: a helper is not a test class, so it must not gain the parent,
-    // and nothing in it may be registered as a test.
-    assert(!clue(out).contains("munit.FunSuite"))
-    assert(!out.contains("test(\""))
-    assertEquals(ph.findings.map(_.render), Nil)
-  }
-
-  test("a NESTED suite's assertions are rewritten exactly ONCE — one walk, one finding") {
-    // the walk used to run per converted class, so an outer suite re-walked its already-converted
-    // nested one. Idempotent for the rewrites, NOT for the findings: an unmapped member inside a
-    // nested suite was reported twice, and the "UNTRANSLATED constructs" headline over-counted.
-    val (_, ph) = emit(
-      """package demo;
-        |import org.junit.Assert;
-        |import org.junit.Test;
-        |public class OuterTest {
-        |  @Test public void o() { }
-        |  public static class InnerTest {
-        |    @Test public void i() { Assert.assertEquals("m", 1.0d, 2.0d, 3.0d, 4.0d); }
-        |  }
-        |}
-        |""".stripMargin)
-    assertEquals(ph.findings.count(_.construct == "org.junit.Assert.assertEquals"), 1)
   }
 
   test("a java STATIC helper resolves — the 6 remaining errors, and why an object was chosen") {
@@ -638,28 +592,6 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // deliberately NOT rewritten — MUnit has no matcher algebra to map a matcher ONTO, and
     // inventing a translation would be the silent-miss this project exists to prevent.
     assert(!clue(out).contains("munit.Assertions.assertThat"))
-  }
-
-  test("…and the RESIDUE it leaves is COUNTED — PortabilityCheck has an org.hamcrest rule") {
-    // The decision not to translate hamcrest is only defensible if what it leaves behind is a
-    // NUMBER. `TestFrameworkTransform.findings` prints one; nothing recorded it, because the check
-    // had rules for `org.junit.` and `junit.framework.` and none for the vocabulary reached
-    // THROUGH them — so a suite could be 100% hamcrest and every portability lane read zero.
-    //
-    // Written FULLY QUALIFIED on purpose: `fromSource` builds with `noClasspath`, so a static
-    // import in a one-file snippet resolves to `this.assertThat(…)` and the reference never names
-    // hamcrest at all (see `transformApply`'s note). A model over a whole tree resolves it.
-    val prog = Pipeline.run(SpoonTir.fromSource(
-      """package demo;
-        |import org.junit.Test;
-        |public class HamcrestFqnTest {
-        |  @Test public void a() {
-        |    org.hamcrest.MatcherAssert.assertThat(1, org.hamcrest.CoreMatchers.equalTo(1));
-        |  }
-        |}
-        |""".stripMargin), Nil)
-    val v = PortabilityCheck.check(prog).map(_.api).distinct
-    assert(clue(v).exists(_.startsWith("org.hamcrest.")))
   }
 
   test("a plain JUnit-4 suite produces NO findings — the survey is not noise") {

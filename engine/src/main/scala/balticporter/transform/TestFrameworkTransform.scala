@@ -126,7 +126,7 @@ final class TestFrameworkTransform(
     * of the `org.junit.Assert` members mapped ONTO them; a junit name absent from it (`assertThat`)
     * is reported, never guessed at. */
   private val MunitMembers = Set("assertEquals", "assertNotEquals", "assert", "fail",
-    "assertEqualsFloat", "assertEqualsDouble")
+    "assertEqualsFloat", "assertEqualsDouble", "intercept")
   private val TestAnn        = "org.junit.Test"
   private val BeforeAnn      = "org.junit.Before"
   private val AfterAnn       = "org.junit.After"
@@ -354,15 +354,20 @@ final class TestFrameworkTransform(
         case scala.None      => t
         case Some(assertCls) =>
           val nm = p.symbolOf(m).map(_.name).getOrElse("")
-          munitCall(nm, t.args, o).getOrElse {
-            // the finding names the receiver the CALL had, not a canonical one: reported under a
-            // class the source never mentions, an agent cannot find the site.
-            found += Finding(assertCls + "." + nm, o, Fix.EngineRule,
-              s"no MUnit counterpart is known for this `$nm` overload (${t.args.size} argument(s)), so " +
-              s"the call is left on $assertCls — which compiles only with JUnit on the classpath and " +
-              "cannot run on Scala.js / Native. Add the mapping to TestFrameworkTransform.munitCall.")
-            t
-          }
+          munitCall(nm, t.args, o) match
+            case Right(rewritten) => rewritten
+            case Left(why)        =>
+              // the finding names the receiver the CALL had, not a canonical one: reported under a
+              // class the source never mentions, an agent cannot find the site. And where the
+              // refusal has a REASON beyond "no mapping exists" — a shape this phase understands
+              // and declines — that reason is the whole of what the reader needs, so `munitCall`
+              // returns it rather than leaving it to be re-derived from the argument list here.
+              found += Finding(assertCls + "." + nm, o, Fix.EngineRule,
+                s"no MUnit counterpart is known for this `$nm` overload (${t.args.size} argument(s)), so " +
+                s"the call is left on $assertCls — which compiles only with JUnit on the classpath and " +
+                "cannot run on Scala.js / Native. Add the mapping to TestFrameworkTransform.munitCall." +
+                (if why.isEmpty then "" else s" WHY THIS ONE: $why"))
+              t
     case _ => t
 
   /** java's `(message?, expected, actual, delta?)` → MUnit's `(obtained, expected, delta?, clue?)`.
@@ -371,38 +376,79 @@ final class TestFrameworkTransform(
     * carries more arguments than the member's minimal arity. That separates every junit overload
     * that exists — `assertEquals(String, Object, Object)` from `assertEquals(double, double,
     * double)`, and `assertEquals(a, b)` on two Strings from either — without naming one. */
-  private def munitCall(nm: String, args: List[Term], o: Origin)(using p: Program): Option[Term] =
-    MinArity.get(nm).flatMap { min =>
+  private def munitCall(nm: String, args: List[Term], o: Origin)(using p: Program): Either[String, Term] =
+    MinArity.get(nm).toRight("").flatMap { min =>
       val hasMsg = args.sizeIs > min && args.headOption.exists(a => nameOf(a.tpe) == "java.lang.String")
       val clue   = if hasMsg then List(args.head) else Nil
       val rest   = if hasMsg then args.tail else args
       (nm, rest) match
         // junit's `fail()` has no message; MUnit's `fail` requires one.
         case ("fail", Nil) =>
-          Some(call("fail", List(clue.headOption.getOrElse(constTerm(Constant.StringC("failed"), "java.lang.String", o))), o))
-        case ("assertTrue", List(c))  => Some(call("assert", c :: clue, o))
+          Right(call("fail", List(clue.headOption.getOrElse(constTerm(Constant.StringC("failed"), "java.lang.String", o))), o))
+        case ("assertTrue", List(c))  => Right(call("assert", c :: clue, o))
         // `assert(!c)` would need an operator node for one gain in readability; comparing against
         // the literal is the same assertion and reports the same way.
-        case ("assertFalse", List(c)) => Some(call("assertEquals", c :: bool(false, o) :: clue, o))
-        case ("assertNull", List(x))    => Some(call("assertEquals", x :: nul(o) :: clue, o))
-        case ("assertNotNull", List(x)) => Some(call("assertNotEquals", x :: nul(o) :: clue, o))
+        case ("assertFalse", List(c)) => Right(call("assertEquals", c :: bool(false, o) :: clue, o))
+        case ("assertNull", List(x))    => Right(call("assertEquals", x :: nul(o) :: clue, o))
+        case ("assertNotNull", List(x)) => Right(call("assertNotEquals", x :: nul(o) :: clue, o))
         // REFERENCE identity — scala's `==` is java's `equals` (CLAUDE.md §4.4), so `assertEquals`
         // here would silently weaken every `assertSame` into an `assertEquals`.
-        case ("assertSame", List(e, a))    => Some(call("assert", infix(a, eqSym, e, o) :: clue, o))
-        case ("assertNotSame", List(e, a)) => Some(call("assert", infix(a, neSym, e, o) :: clue, o))
+        case ("assertSame", List(e, a))    => Right(call("assert", infix(a, eqSym, e, o) :: clue, o))
+        case ("assertNotSame", List(e, a)) => Right(call("assert", infix(a, neSym, e, o) :: clue, o))
         case ("assertEquals" | "assertNotEquals", List(e, a)) =>
           val (a2, e2) = promote(a, e)
-          Some(call(if nm == "assertEquals" then "assertEquals" else "assertNotEquals", a2 :: e2 :: clue, o))
+          Right(call(if nm == "assertEquals" then "assertEquals" else "assertNotEquals", a2 :: e2 :: clue, o))
         case ("assertEquals", List(e, a, delta)) =>
-          Some(call(deltaMember(List(e, a, delta)), a :: e :: delta :: clue, o))
+          Right(call(deltaMember(List(e, a, delta)), a :: e :: delta :: clue, o))
         case ("assertArrayEquals", List(e, a)) =>
           // `guarded` for the same reason as in `widen`: an operand that renders infix or as a
           // control-flow expression would bind `.toSeq` to its last branch.
-          Some(call("assertEquals",
+          Right(call("assertEquals",
             select(guarded(a), toSeqSym, o) :: select(guarded(e), toSeqSym, o) :: clue, o))
-        case ("assertArrayEquals", List(e, a, delta)) => arrayWithDelta(e, a, delta, clue, o)
-        case _ => scala.None
+        case ("assertArrayEquals", List(e, a, delta)) => arrayWithDelta(e, a, delta, clue, o).toRight("")
+        // JUnit 4.13's `assertThrows(Class<T>, ThrowingRunnable)` asserts exactly what MUnit's
+        // `intercept[T] { … }` asserts and returns the throwable exactly as it does — the same
+        // construction [[testCase]] already builds for `@Test(expected = …)`, reached from the
+        // assertion side instead of the annotation side. TWO restrictions, both of them refusals
+        // rather than approximations:
+        //
+        //  - the runnable must be a LAMBDA. `intercept[E] { r }` EVALUATES `r` and never runs it,
+        //    so a `ThrowingRunnable` value or a method reference would turn the assertion into a
+        //    test of whether CONSTRUCTING the runnable threw — passing while checking nothing,
+        //    which is the shape this phase exists to prevent. Deriving the invocation would mean
+        //    naming `ThrowingRunnable#run`, a member no MUnit contract mentions;
+        //  - no leading `String message`. `intercept[T](body: => Any)` has no clue slot, so
+        //    junit's message has nowhere to go, and dropping a diagnostic the author wrote with
+        //    nothing counting the loss is worse than leaving the call where `PortabilityCheck`
+        //    already counts it.
+        case ("assertThrows", List(Tree.Literal(Constant.ClassOfC(ex), _, _), lam: Tree.Lambda))
+            if clue.isEmpty && lam.params.isEmpty =>
+          Right(intercept(munitSyms("intercept"), ex, lam.body, o))
+        // …and the two shapes this phase DOES understand and declines, each with the reason.
+        case ("assertThrows", List(Tree.Literal(Constant.ClassOfC(_), _, _), _: Tree.Lambda))
+            if clue.nonEmpty =>
+          Left("MUnit's `intercept[T](body)` has no clue slot, so junit's leading `String message` " +
+               "has nowhere to go. The 2-argument form IS translated; drop the message, or keep " +
+               "this suite on the JVM/JUnit path.")
+        case ("assertThrows", List(Tree.Literal(Constant.ClassOfC(_), _, _), _)) =>
+          Left("the runnable must be a NO-ARGUMENT LAMBDA. `intercept[E] { r }` EVALUATES a " +
+               "`ThrowingRunnable` value rather than running it, so the assertion would test " +
+               "whether CONSTRUCTING it threw — passing while checking nothing. Inline the " +
+               "runnable as `() -> …`.")
+        case _ => Left("")
     }
+
+  /** `intercept[E] { body }` — MUnit's assertion that the body throws.
+    *
+    * The SYMBOL is a parameter because there are two spellings and the difference is scope, not
+    * taste. [[testCase]] builds this only inside a class that gains [[suite]] as a PARENT, where
+    * `intercept` is inherited and in scope; [[munitCall]] builds it wherever an assertion is
+    * written — a java `static` helper's companion object included, which extends nothing — so that
+    * one goes through the `munit.Assertions` OBJECT for the reason [[MunitAssertions]] states. */
+  private def intercept(sym: SymId, ex: TypeRepr, body: Term, o: Origin): Term =
+    val fn = Tree.TypeApply(Tree.Ident(sym, TypeRepr.NoType, o), List(TypeTree(ex, o)),
+                            TypeRepr.NoType, o)
+    Tree.Apply(fn, List(body), sym, TypeRepr.NoType, o)
 
   /** MUnit splits java's one `assertEquals(…, delta)` by WIDTH, and its `delta` parameter is not
     * generic — so a `Double` operand anywhere forces the double form, exactly as java's own
@@ -645,11 +691,8 @@ final class TestFrameworkTransform(
       // checking nothing — the silent-omission shape this engine exists to prevent — so it becomes
       // MUnit's `intercept[E] { … }`, which asserts exactly what java asserted.
       val body0 = expectsThrow match
-        case Some(exTpe) =>
-          val fn = Tree.TypeApply(Tree.Ident(interceptSym, TypeRepr.NoType, d.origin),
-                                  List(TypeTree(exTpe, d.origin)), TypeRepr.NoType, d.origin)
-          Tree.Apply(fn, List(d.rhs.get), interceptSym, TypeRepr.NoType, d.origin)
-        case scala.None => d.rhs.get
+        case Some(exTpe) => intercept(interceptSym, exTpe, d.rhs.get, d.origin)
+        case scala.None  => d.rhs.get
       // JUnit's own nesting: afters(befores(expectException(invoke))). So the `@Before` calls go
       // INSIDE the try — a setup that throws still runs teardown, as in java — and the
       // expected-exception check goes inside them both.
@@ -736,4 +779,8 @@ object TestFrameworkTransform:
   val MinArity: Map[String, Int] = Map(
     "assertEquals" -> 2, "assertNotEquals" -> 2, "assertArrayEquals" -> 2,
     "assertSame" -> 2, "assertNotSame" -> 2, "assertTrue" -> 1, "assertFalse" -> 1,
-    "assertNull" -> 1, "assertNotNull" -> 1, "fail" -> 0)
+    "assertNull" -> 1, "assertNotNull" -> 1, "fail" -> 0,
+    // JUnit 4.13's `assertThrows(Class<T>, ThrowingRunnable)`, and its 3-arg message overload —
+    // which is HERE so that `hasMsg` separates the two, and refused in `munitCall` because MUnit's
+    // `intercept` has no clue slot to put the message in.
+    "assertThrows" -> 2)
