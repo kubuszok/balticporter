@@ -92,12 +92,15 @@ object LiqpPort:
   * ==Why `-implicit:none` and a `-sourcepath`, and not a plain `javac`==
   * The generated parser does not compile alone: `LiquidParser` has a member of type
   * `liqp.TemplateParser.ErrorMode`, so the ANTLR output and the library that consumes it are
-  * mutually recursive. Handing javac liqp's own `src/main/java` as a SOURCEPATH resolves that;
-  * `-implicit:none` then keeps javac from writing class files for the implicitly-read liqp
-  * sources, so the output directory holds the 84 class files of `liquid/parser/v4` and NOTHING of
-  * `liqp`. That distinction is the whole point: liqp's own types must reach the frontend as
-  * SOURCE, from the port's `sourceRoot`. A `liqp/…/X.class` on the frontend classpath is a second,
-  * older definition of every type being ported.
+  * mutually recursive. A SOURCEPATH resolves that and `-implicit:none` keeps javac from writing
+  * class files for what it read there, so the output directory holds the 84 class files of
+  * `liquid/parser/v4` and NOTHING else. That distinction is the whole point: liqp's own types must
+  * reach the frontend as SOURCE, from the port's `sourceRoot`, and a second class file of a ported
+  * type on any classpath here is an older definition of something this port emits.
+  *
+  * WHICH sourcepath is [[rewriteReferences]]'s decision D-liqp-1b, read there: not liqp's own
+  * sources any more, but a shape-honest stub of the ONE type the parser reaches back into, at the
+  * name the port EMITS it under.
   *
   * ==What the coordinates are read from==
   * `pom.xml`, verbatim, including the one that looks like a typo and is not: `jackson.databind
@@ -129,32 +132,74 @@ object LiqpClasspath:
   def cache(repoRoot: Path): Path         = repoRoot.resolve("out/liqp-classpath.txt")
   def parserClasses(repoRoot: Path): Path = repoRoot.resolve("out/liqp-parser-classes")
 
-  /** THE SCALA COMPILE'S copy — the generated parser and liqp's own sources together, and never on
-    * the frontend's classpath.
+  /** the rewritten copy of the generated sources javac actually reads (D-liqp-1b). A BUILD PRODUCT
+    * of a build product: never edited, deleted and rewritten on every rebuild. */
+  def parserSources(repoRoot: Path): Path = repoRoot.resolve("out/liqp-parser-src")
+
+  /** DECISION D-liqp-1b — THE GENERATED PARSER IS REWRITTEN INTO THE EMITTED NAMESPACE BEFORE JAVAC
+    * READS IT.
     *
-    * It exists because D-liqp-1 and D-liqp-2 CUT EACH OTHER. Treating the generated parser as
-    * external keeps it at `liquid.parser.v4`, compiled against upstream `liqp`; renaming the port
-    * to `ssg.liquid` means nothing named `liqp` is emitted. `LiquidParser` has a member typed
-    * `liqp.TemplateParser.ErrorMode`, so scalac reading that class file finds a signature naming a
-    * package that does not exist — and does not report it: it throws
-    * `AssertionError: failure to resolve inner class` out of `ClassfileParser` and ABORTS, which
-    * reads as a smaller error count rather than as a failure (`scripts/_lib.sh` `compile_guard`
-    * now says so).
+    * D-liqp-1 and D-liqp-2 CUT EACH OTHER, and this is where the cut is answered. Treating the
+    * generated parser as external keeps it at `liquid.parser.v4`, compiled against upstream `liqp`;
+    * renaming the port to `ssg.liquid` means nothing named `liqp` is emitted. `LiquidParser` has a
+    * member typed `liqp.TemplateParser.ErrorMode`, so the port's own call sites hand a
+    * `ssg.liquid.TemplateParser.ErrorMode` to a formal declared `liqp.TemplateParser.ErrorMode` —
+    * three compile errors that no manifest key can close, because none of them rewrites an ARGUMENT.
     *
-    * So the compile classpath carries upstream `liqp` too. That does not blur the port: the emitted
-    * code is `ssg.liquid`, these classes are `liqp`, and no emitted name can resolve to one of them
-    * — anything that did would be a reference the rename failed to move, which
-    * `PackageRenameTransform.check` is what answers. What it BUYS is that the cost of holding both
-    * decisions arrives as an ordinary, counted, attributable type error at the one call that
-    * crosses the seam, instead of as a compiler crash.
+    * But the generated parser is not a DEPENDENCY: it is a BUILD PRODUCT of this port's own build
+    * step, regenerated from the grammars under `src/main/antlr4` on demand and untracked. (Spelt in
+    * words: a slash-star-star inside a Scala doc comment OPENS a nested comment and swallows the
+    * rest of the file — CLAUDE.md §4.58's own rule, and it cost this file a compile.) A build
+    * product may be
+    * built against whatever this build is producing — so the sources are copied, their references
+    * INTO the ported library are rewritten to the emitted namespace, and javac compiles THAT.
     *
-    * The FRONTEND still gets `parserClasses` and only that: there, a `liqp` class file WOULD be a
-    * second, older definition of every type being ported. */
-  def upstreamClasses(repoRoot: Path): Path = repoRoot.resolve("out/liqp-upstream-classes")
+    * ==Two rewrites, and the second is the one that is easy to get silently wrong==
+    *   1. the PACKAGE, `liqp.` -> `ssg.liquid.`, cut only at a `.` (CLAUDE.md §4.56). The parser's
+    *      own package `liquid.parser.v4` is untouched, and so is any identifier that merely
+    *      CONTAINS `liqp` — a prefix is not a structural fact about anything;
+    *   2. the ENUM CONSTANT ACCESS. The port emits a java enum as a Scala `sealed abstract class`
+    *      plus a companion `object` of `case object`s, and Scala's static forwarders put
+    *      `values()`/`valueOf(String)` on the companion CLASS while each constant is a static field
+    *      of the MODULE class (`…$ErrorMode$`). So `ErrorMode.LAX` compiles against a java enum and
+    *      is a `NoSuchFieldError` at RUN time, which is precisely the failure a compile cannot see
+    *      (CLAUDE.md §3). `ErrorMode.valueOf("LAX")` reaches the forwarder, returns the singleton,
+    *      and `==` still holds — measured.
+    *
+    * ==What javac resolves `ssg.liquid.TemplateParser` against==
+    * `corpus/ports/liqp/javac-stub`, handed to javac as a `-sourcepath` with `-implicit:none`, so
+    * it is READ and never WRITTEN: the output directory holds `liquid/parser/v4` and nothing else,
+    * and no second definition of a ported type can reach the frontend or scalac. The stub is
+    * SHAPE-HONEST about the Scala that stands at that FQN at run time — it declares no constants,
+    * so an un-rewritten `ErrorMode.LAX` is a javac error rather than a run-time one.
+    *
+    * ==And the gate is javac itself==
+    * Upstream `liqp` is on NO classpath of this step any more — not as sources, not as classes — so
+    * a reference the rewrite missed cannot resolve and the build refuses. That replaces the whole
+    * of the previous arrangement: `out/liqp-upstream-classes` (upstream liqp compiled beside the
+    * parser, for scalac only) existed solely so that the seam arrived as a type error instead of as
+    * `AssertionError: failure to resolve inner class` out of `ClassfileParser`, and there is no seam
+    * left for it to soften. ONE directory of class files now serves the frontend, scalac and the
+    * test run. */
+  private val LibraryPackage = "liqp"
+
+  /** the emitted namespace, D-liqp-2's `packageRenames { liqp = "ssg.liquid" }`. Stated here and in
+    * `main.conf`; the two must agree, and nothing compares them. */
+  private val EmittedPackage = "ssg.liquid"
+
+  /** the ported library's java ENUMs the generated parser names CONSTANTS of, as the parser spells
+    * the type. Data rather than a derivation: which of a library's types are enums is knowledge
+    * about that library, and a "any SCREAMING_CASE selector" rule would rewrite every `static final`
+    * constant in reach. */
+  private val EnumTypes: List[String] = List("TemplateParser.ErrorMode")
 
   /** where the `antlr4-maven-plugin` writes, and the command that puts it there. */
   def generatedSources: Path =
     LiqpPort.upstream.resolve("target/generated-sources/antlr4")
+
+  /** the shape-honest stub javac resolves the rewritten references against — read, never written. */
+  def stubSources(repoRoot: Path): Path =
+    repoRoot.resolve("corpus/ports/liqp/javac-stub")
 
   private def regenerate: String =
     s"cd ${LiqpPort.upstream} && ./mvnw -q generate-sources"
@@ -164,25 +209,31 @@ object LiqpClasspath:
     *
     * THREE things are checked, not just the file:
     *
-    *   - the parser CLASSES, both copies: the classpath line names the parser directory, so a
-    *     cached line beside a `clean`ed `out/` is a classpath that resolves to nothing — exactly
-    *     the failure mode the fatality above exists to prevent, arriving by the back door;
+    *   - the parser CLASSES: the classpath line names the parser directory, so a cached line beside
+    *     a `clean`ed `out/` is a classpath that resolves to nothing — exactly the failure mode the
+    *     fatality above exists to prevent, arriving by the back door;
     *   - the COORDINATES the line was resolved from ([[ClasspathCache]]): this port's `pom.xml`
     *     pins six of them, including one that reads like a typo and is not, and a cache keyed on
     *     existence alone would answer a bump with the versions the port used to declare — an
-    *     unresolvable import that resolves WRONGLY rather than failing. */
+    *     unresolvable import that resolves WRONGLY rather than failing. The key carries D-liqp-1b's
+    *     REWRITE POLICY beside them, because the classes those coordinates produce depend on it: a
+    *     cache keyed on coordinates alone would reuse parser classes compiled against the OTHER
+    *     namespace, which is the same silent-wrong-resolution failure one hop out. */
   def ensure(repoRoot: Path): Path =
-    val out      = cache(repoRoot)
-    val classes  = parserClasses(repoRoot)
-    val upstream = upstreamClasses(repoRoot)
-    val key      = ClasspathCache.key(Coordinates)
-    if ClasspathCache.fresh(out, key) && hasParserClasses(classes) && hasParserClasses(upstream)
-    then out
+    val out     = cache(repoRoot)
+    val classes = parserClasses(repoRoot)
+    val key     = s"${ClasspathCache.key(Coordinates)} || $rewritePolicy"
+    if ClasspathCache.fresh(out, key) && hasParserClasses(classes) then out
     else
       val jars = fetch(Coordinates)
-      compileParser(jars, classes, parserOnly = true)
-      compileParser(jars, upstream, parserOnly = false)
+      compileParser(repoRoot, jars, classes)
       ClasspathCache.write(out, (jars :+ classes.toString).mkString(File.pathSeparator), key)
+
+  /** D-liqp-1b as a fingerprint — every value the rewrite is driven by, in order. Not passed as
+    * [[ClasspathCache.key]]'s `extraArgs`, which means "arguments `cs` was invoked with": this is
+    * not a resolver input, it is a property of what javac then produced FROM the resolved jars. */
+  private[liqp] def rewritePolicy: String =
+    (s"$LibraryPackage->$EmittedPackage" :: EnumTypes.map("enum:" + _)).mkString(" ")
 
   private def hasParserClasses(classes: Path): Boolean =
     val pkg = classes.resolve(ParserPackage)
@@ -201,18 +252,56 @@ object LiqpClasspath:
   private[liqp] def fetch(coordinates: List[String]): List[String] =
     ClasspathCache.fetch("liqp", coordinates)
 
-  /** javac the ANTLR output into `classes`, resolving liqp's own types from SOURCE.
+  /** rewrite one generated source's references INTO the ported library (D-liqp-1b), and say how
+    * many of each kind moved.
     *
-    * `parserOnly` decides whether liqp's own class files are WRITTEN as well as read — the whole
-    * difference between the frontend's copy and the scala compile's. See the class doc for why the
-    * frontend must have `true` and [[upstreamClasses]] for why the compile must have `false`. */
-  private def compileParser(jars: List[String], classes: Path, parserOnly: Boolean): Unit =
+    * Both rules cut only at a `.` (CLAUDE.md §4.56). The package rule matches `liqp.` only where a
+    * qualified name STARTS — the lookbehind rejects `myliqp.` and `other.liqp.`, and nothing
+    * matches a bare identifier that merely contains the string. The enum rule matches a
+    * SCREAMING_CASE selector off one of [[EnumTypes]] and nothing wider, so a `static final`
+    * constant on any other type is untouched.
+    *
+    * Returned counts are printed and the caller refuses a rewrite that moved nothing at all — a
+    * build step whose policy fires nowhere is a decision that silently did not happen. */
+  private[liqp] def rewriteReferences(text: String): (String, Int, Int) =
+    val pkg = java.util.regex.Pattern.compile(
+      raw"(?<![\p{L}\p{N}_$$.])" + java.util.regex.Pattern.quote(LibraryPackage) + raw"\.")
+    val (afterPkg, pkgHits) = replaceCounting(pkg, text, EmittedPackage + ".")
+
+    val (afterEnums, enumHits) = EnumTypes.foldLeft((afterPkg, 0)) { case ((t, n), typePath) =>
+      val re = java.util.regex.Pattern.compile(
+        raw"(?<![\p{L}\p{N}_$$.])((?:[\p{L}\p{N}_$$]+\.)*)" +
+          typePath.split('.').map(java.util.regex.Pattern.quote).mkString(raw"\.") +
+          raw"\.([A-Z][A-Z0-9_]*)(?![\p{L}\p{N}_$$(])")
+      val (out, hits) = replaceCounting(re, t, "$1" + typePath + ".valueOf(\"$2\")")
+      (out, n + hits)
+    }
+    (afterEnums, pkgHits, enumHits)
+
+  private def replaceCounting(
+      re: java.util.regex.Pattern, text: String, replacement: String): (String, Int) =
+    val m   = re.matcher(text)
+    val sb  = new java.lang.StringBuilder
+    var n   = 0
+    while m.find() do
+      n += 1
+      m.appendReplacement(sb, replacement)
+    m.appendTail(sb)
+    (sb.toString, n)
+
+  /** javac the ANTLR output into `classes`, D-liqp-1b's rewrite first.
+    *
+    * ONE output directory, read by the frontend, by scalac and by the test run. What used to be two
+    * — the frontend's parser-only copy and a scalac copy carrying upstream `liqp` beside it — was
+    * the price of compiling the parser against a namespace the port does not emit, and the rewrite
+    * is what removes that price rather than softening it. */
+  private def compileParser(repoRoot: Path, jars: List[String], classes: Path): Unit =
     val gen = generatedSources
     val sources =
       if !Files.isDirectory(gen) then Nil
       else
         val s = Files.walk(gen)
-        try s.iterator.asScala.filter(_.getFileName.toString.endsWith(".java")).map(_.toString).toList.sorted
+        try s.iterator.asScala.filter(_.getFileName.toString.endsWith(".java")).toList.sortBy(_.toString)
         finally s.close()
     if sources.isEmpty then
       throw new IllegalStateException(
@@ -228,9 +317,39 @@ object LiqpClasspath:
            |    $regenerate
            |""".stripMargin)
 
-    val javaSrc = LiqpPort.upstream.resolve("src/main/java")
-    if !Files.isDirectory(javaSrc) then
-      throw new IllegalStateException(s"[liqp] upstream sources are not at $javaSrc")
+    val stub = stubSources(repoRoot)
+    if !Files.isDirectory(stub) then
+      throw new IllegalStateException(
+        s"[liqp] D-liqp-1b's javac stub is not at $stub — javac cannot resolve $EmittedPackage")
+
+    // the rewritten copy, rebuilt from scratch: a stale file here is a parser compiled from a
+    // policy that is no longer this port's.
+    val work = parserSources(repoRoot)
+    deleteTree(work)
+    Files.createDirectories(work)
+    var pkgTotal  = 0
+    var enumTotal = 0
+    val rewritten = sources.map { src =>
+      val (text, pkgHits, enumHits) = rewriteReferences(Files.readString(src))
+      pkgTotal += pkgHits
+      enumTotal += enumHits
+      val dst = work.resolve(gen.relativize(src).toString)
+      Files.createDirectories(dst.getParent)
+      Files.writeString(dst, text)
+      dst.toString
+    }
+    if pkgTotal + enumTotal == 0 then
+      throw new IllegalStateException(
+        s"""[liqp] D-liqp-1b rewrote NOTHING in ${sources.size} generated sources.
+           |
+           |The decision is that the generated parser's references INTO the ported library are
+           |moved to the emitted namespace before javac reads them, and this run found none to
+           |move. Either the grammar stopped referencing `$LibraryPackage.` — in which case delete
+           |D-liqp-1b — or the rewrite's own rules stopped matching, which nothing else can report:
+           |javac would then simply succeed against a parser nobody renamed.
+           |""".stripMargin)
+    println(s"[liqp] D-liqp-1b: $pkgTotal package reference(s) and $enumTotal enum constant(s) " +
+      s"rewritten to $EmittedPackage across ${sources.size} generated sources")
 
     Files.createDirectories(classes)
     val cmd = List(
@@ -240,16 +359,28 @@ object LiqpClasspath:
       // reader is a resolution failure that reports as an unresolved import.
       "--release", "17",
       "-nowarn",
-      "-sourcepath", javaSrc.toString,
+      // the shape-honest stub, READ and never written — `-implicit:none` is what keeps
+      // `ssg/liquid/TemplateParser.class` out of the output, where it would be a second definition
+      // of a type this port emits.
+      "-sourcepath", stub.toString,
+      "-implicit:none",
       "-d", classes.toString,
       "-cp", jars.mkString(File.pathSeparator),
-    ) ++
-      // do not write class files for the liqp sources javac reads to type-check the parser. Those
-      // types must reach the frontend as SOURCE; a `liqp/…/X.class` beside them is a second, older
-      // definition of every type this port emits. The scala compile's copy wants the opposite.
-      (if parserOnly then List("-implicit:none") else Nil) ++ sources
+    ) ++ rewritten
     val proc = new ProcessBuilder(cmd*).redirectErrorStream(true).start()
     val raw  = new String(proc.getInputStream.readAllBytes()).trim
     if proc.waitFor() != 0 then
       throw new IllegalStateException(
-        s"[liqp] could not compile the generated parser into $classes:\n$raw")
+        s"""[liqp] could not compile the generated parser into $classes:
+           |$raw
+           |
+           |Upstream `$LibraryPackage` is on NO classpath of this step (D-liqp-1b), so a reference
+           |the rewrite did not move cannot resolve, and an enum CONSTANT the rewrite did not move
+           |is rejected by the stub on purpose — the emitted Scala has no such static field, and
+           |compiling that form would be a `NoSuchFieldError` at run time instead.""".stripMargin)
+
+  private def deleteTree(dir: Path): Unit =
+    if Files.exists(dir) then
+      val s = Files.walk(dir)
+      try s.sorted(java.util.Comparator.reverseOrder()).iterator.asScala.foreach(Files.delete)
+      finally s.close()

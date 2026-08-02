@@ -292,8 +292,8 @@ break_residue() {
 # `just baseline-accept` would happily bake a floor in as this port's number. A warning nobody is
 # forced to act on is exactly the "stale number reads like a result" failure `measure-all` stops the
 # whole sequence for. Nothing in the corpus relies on continuing past an abort — no lane's compile
-# aborts today, liqp's included, since `LiqpClasspath.upstreamClasses` gave scalac the class files
-# whose absence caused the one measured abort.
+# aborts today, liqp's included, since `LiqpClasspath` compiles the class files whose absence caused
+# the one measured abort against the namespace the port emits (D-liqp-1b).
 compile_guard() {
   local st="$1" errors="$2" file="$3"
   if [ "$st" != "0" ] && [ "$errors" = "0" ]; then

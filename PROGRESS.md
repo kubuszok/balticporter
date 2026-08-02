@@ -73,8 +73,8 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
-| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **8** (§10.5.3, all classified) |
-| `liqp-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **577** emitted, **none run** — the port does not compile | **5** |
+| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **7** (§10.5.3, all classified) |
+| `liqp-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **577** emitted, **none run** — the port does not compile | **3** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -1974,7 +1974,7 @@ written, 987 members in the source map. `just liqp-measure`.
 
 | | |
 |---|---|
-| scalac errors | main source set **126 -> 31 -> 27 -> 8**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); BOTH source sets **90 -> … -> 50 -> 38 -> 26 -> 22 -> 19 -> 14 -> 13** (the collections endgame: K6.5's aliasing view took 12, G23's wildcard `addAll` 4, `asList`'s explicit type argument 5, three unnamed JDK members 3, K5.8's `super` placement 1) |
+| scalac errors | main source set **126 -> 31 -> 27 -> 8**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); BOTH source sets **90 -> … -> 50 -> 38 -> 26 -> 22 -> 19 -> 14 -> 13 -> 10** (the collections endgame: K6.5's aliasing view took 12, G23's wildcard `addAll` 4, `asList`'s explicit type argument 5, three unnamed JDK members 3, K5.8's `super` placement 1, and D-liqp-1b's build-step rename the three namespace seams) |
 | `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
 | `jdk-surface` | **19 -> 10 -> 9** — `anyMatch`/`sortNatural`/`ConcurrentHashMap` stopped reading as this port's wall once the tables named them |
@@ -2157,10 +2157,43 @@ engine changes, none of them (b) or (c) and none of them a port-policy lever:
 | a heterogeneous `Arrays.asList(98, "97", true, false, null)` — 6 per-element mismatches | **1.** Java infers `T` across all the arguments and boxes; at an INFERRED `A` scalac declines the boxing conversion outright. Java's answer is on the call, so it is written down as the explicit type argument and `Predef.int2Integer` applies. What is left is one aggregate mismatch, below |
 | three JDK members the phase's tables never named — `Stream.anyMatch`, `Collections.sort`'s natural overload at java's own `<T extends Comparable<? super T>>` bound, and `ConcurrentHashMap` | **0**, one site each |
 
-**What is left, 13 — 8 main and 5 test.** Three of them are the D-liqp-1 × D-liqp-2 namespace seam
-(`Template#parse`, `TestUtils`, `LiquidParserTest`): an external generated parser that references
-back INTO the renamed library, unfixable without porting or regenerating it, and the price
-D-liqp-1 already states. The other ten, by family:
+**The D-liqp-1 × D-liqp-2 namespace seam is CLOSED by D-liqp-1b — 13 -> 10, three sites, zero member
+digests moved.** It was the one residue this port had classified as a decision rather than a bug
+(`Template#parse`, `TestUtils`, `LiquidParserTest`, all three `Found: ssg.liquid.TemplateParser
+.ErrorMode` against the generated parser's `liqp.` formal), and what unlocked it was noticing what
+the parser IS: not a dependency but a BUILD PRODUCT of this port's own build step, regenerated from
+the grammars and untracked. A build product may be built against what this build is producing. So
+`LiqpClasspath` copies the six generated files, rewrites their references INTO the ported library to
+the emitted namespace, and javacs THAT — D-liqp-1 unchanged, the parser still external, still a
+later milestone to port through the engine.
+
+Three things it cost, and the second is the one no compile could have found:
+
+- **the §4.56 cut.** `liqp.` is rewritten only where a qualified name STARTS; the parser's OWN
+  package `liquid.parser.v4` is one letter away and is untouched, as is anything merely containing
+  the string. Ten cases in `LiqpParserRewriteSpec`, which is where that discipline is held;
+- **the ENUM CONSTANT ACCESS, which is a §3 defect wearing a build step's clothes.** The port emits
+  a java enum as a Scala `sealed abstract class` plus a companion `object` of `case object`s, and
+  Scala's static forwarders put `values()`/`valueOf(String)` on the companion CLASS while each
+  constant is a static field of the MODULE class. So `ErrorMode.LAX` compiles against ANY java enum
+  and is a `NoSuchFieldError` at RUN time — the rename alone would have produced a green compile and
+  a suite that could not construct a parser. `ErrorMode.valueOf("LAX")` reaches the forwarder and
+  returns the same singleton, so the parser's own `errorMode == ErrorMode.STRICT` reference
+  comparison still holds. Verified standalone against real scalac output before it was written;
+- **the STUB is shape-honest or it is worse than nothing.** javac resolves the rewritten names
+  against `corpus/ports/liqp/javac-stub`, read as a `-sourcepath` under `-implicit:none` so it is
+  never written into the output (84 class files, all `liquid/parser/v4`). It declares no constants,
+  so a form the runtime could not link is a javac error here rather than a run-time one; and
+  upstream `liqp` is on NO classpath of that step, so a reference the rewrite missed cannot resolve
+  and the build refuses.
+
+**And `out/liqp-upstream-classes` is GONE.** That directory — upstream liqp compiled beside the
+parser, for scalac only — existed for exactly this seam: scalac reading `liqp.TemplateParser$ErrorMode`
+without it threw `AssertionError: failure to resolve inner class` out of `ClassfileParser` and
+ABORTED, which reads as a smaller error count rather than as a failure. With no seam left there is
+nothing for it to soften, and ONE directory now serves the frontend, scalac and the test run.
+
+**What is left, 10 — 7 main and 3 test**, all of them (a) engine, by family:
 
 | n | family | where |
 |---|---|---|
@@ -2173,7 +2206,7 @@ D-liqp-1 already states. The other ten, by family:
 | 1 | MUnit's `Compare` needs a common type and two `toJava` calls infer different element types | `RenderSettingsTest` |
 | 1 | G22 — a method type parameter constrained only by its bound | `blocks/ForTest` |
 
-**And the whole of it is still ONE PHASE's** — the ten above are `CollectionsTransform`
+**And the whole of it is still ONE PHASE's** — the ten families above are `CollectionsTransform`
 boundaries and generic-inference disagreements, and the port's `.conf` gains nothing for any of
 them. **There is no drop or injection among them that is not a rewrite**: every one
 of these types is mechanically portable and the disagreement is a TYPE, so the only honest
@@ -2191,16 +2224,16 @@ graph, and liqp's collection types are its currency. The scoped-out `NodeVisitor
 almost all of it K9's enhanced-for over a real `java.util.List` — a scope withdraws the phase's
 REWRITES too, not only its retyping. **Do NOT retry.**
 
-So the 13 stay for now, and the classification splits 10/3 rather than running to one kind:
-**10 are (a) engine**, in the families K5 / K5.7 / K9 / K15 / G22 and the two new ones above, and
-the port's `.conf` gains nothing for any of them — they move when those entries move. **The other
-three are (b), and they are already this port's own decision**: D-liqp-1 keeps the generated parser external and D-liqp-2
-renames the library, so a parser compiled against upstream `liqp` asks for
-`liqp.TemplateParser.ErrorMode` at a call the port emits with `ssg.liquid.TemplateParser.ErrorMode`.
-No manifest key closes it, because none of them rewrites an ARGUMENT: a `type-redirect` at that enum
-would move the port's own type everywhere, and the only shim that reaches the one call site is a
-hand-written 504-line `Template`. It closes when a later milestone ports or regenerates the parser —
-which is what D-liqp-1 already says, and this error is its price, stated.
+So the classification no longer splits: **all 10 are (a) engine**, in the families
+K5 / K5.7 / K9 / K15 / G22 and the two new ones above, and the port's `.conf` gains nothing for any
+of them — they move when those entries move. What used to be the (b) three was never a manifest
+question either: no key rewrites an ARGUMENT, a `type-redirect` at that enum would move the port's
+own type everywhere, and the only shim reaching the one call site is a hand-written 504-line
+`Template`. It closed at the BUILD instead (D-liqp-1b above), which is where it always lived —
+**the lesson being that a residue attributed to a DECISION is worth re-reading once, because what is
+being decided about may not be what you think it is.** "External" was never in question; what was
+mis-stated was that an external generated parser is a fixed artefact, when it is this port's own
+build step's output.
 
 ### 10.5.4 The test port — emitted and censused, NOT run
 
@@ -2215,7 +2248,7 @@ source sets on one invocation and splits the wall by the path scalac printed.
 |---|---|
 | emitted | **101 Scala test files** from 105 java (4 excluded, below), 788 members in the source map |
 | tests | 639 `@Test` upstream -> **577 emitted** (munit 577, junit residue **0** — the whole JUnit surface converted) |
-| scalac errors | **main 27 -> 8, test 49 -> 29 -> 25 -> 23 -> 11 -> 5**, all `EngineGap` bar the two D-liqp-1 × D-liqp-2 seams; the two source sets are never summed, because a test-set error is frequently a cascade of a main-set one |
+| scalac errors | **main 27 -> 8 -> 7, test 49 -> 29 -> 25 -> 23 -> 11 -> 5 -> 3**, all `EngineGap`; the two source sets are never summed, because a test-set error is frequently a cascade of a main-set one |
 | `portability(emitted)` | **1467**, dominated by hamcrest (725 `assertThat` + 667 `is`/`equalTo`), which the conversion deliberately leaves in place and `ENGINE-LIMITS.md` X6's `org.hamcrest.` rule is what counts |
 | `omissions` | **8** — dropped `@SuppressWarnings` on anonymous-class fields |
 | `trivia` | **0 lost**, 1 recovered (`TestUtils.java:17`) |
@@ -2237,7 +2270,7 @@ none is (b) or (c), and none is `TestFrameworkTransform`'s. **The test source se
 | ~~4~~ **0** | an unqualified inherited `add(…)` inside a double-brace anonymous subclass of a retyped collection | `ENGINE-LIMITS.md` **K5** (extended), CLOSED: inside a NAMED class the frontend already supplies `this.`/`Outer.this.`; inside an ANONYMOUS one it does not, so the enclosing `new … { … }` claims the pending call — and the same claim repaired 22 SILENT `put` sites the four errors never named |
 | ~~2~~ **0** | `Found: Object / Required: String` at `InsertionTest`'s two anonymous `Block.render` bodies | `ENGINE-LIMITS.md` **T15** (new), CLOSED: `(c ? a : b).toString()` emitted the call INSIDE the else branch. A receiver is an operand, and four receiver positions were not asking `operand` |
 | ~~6~~ **1** | one heterogeneous `Arrays.asList(98, "97", true, false, null)` — six per-element `Found: (98 : Int) / Required: String` | (a). Java infers `T` across all the arguments at once and BOXES; at an INFERRED `A` scalac declines the boxing conversion outright ("implicit conversions were not tried because the result of an implicit conversion must be more specific than T"). Java's answer is recorded on the CALL, so the rewrite writes it down as the explicit type argument and `Predef.int2Integer` applies. **What is left is ONE aggregate mismatch, and it is a different fact**: `cartesianProduct[T <: java.lang.Object]` will not take a `Buffer[Buffer[Serializable]]`, because scala 3 roots `java.io.Serializable` at `Any` (value classes are serialisable) while java's `<T>` bound — `T extends Object` — is VACUOUS and scala's `<: Object` is not. Reproduced standalone; the fix is to stop emitting the vacuous bound, whose blast radius is every generic signature in the corpus |
-| **2** | `Found: (templateParser.errorMode : ssg.liquid.TemplateParser.ErrorMode)` at `TestUtils` and `LiquidParserTest`, against the generated parser's `liqp.TemplateParser.ErrorMode` formal | **NOT (a)** — D-liqp-1 × D-liqp-2, the same one the main set carries: an external generated parser that references back INTO the renamed library. Unfixable without porting or regenerating it |
+| ~~2~~ **0** | `Found: (templateParser.errorMode : ssg.liquid.TemplateParser.ErrorMode)` at `TestUtils` and `LiquidParserTest`, against the generated parser's `liqp.TemplateParser.ErrorMode` formal | **NOT (a)** — D-liqp-1 × D-liqp-2, the same one the main set carried, and CLOSED with it by **D-liqp-1b**: the generated parser is this port's own build product, so the build step rewrites its references into the emitted namespace before javac reads them (§10.5.3) |
 | ~~1~~ **0** | `LiquidParserTest#array` — `JavaCollections.toArray(java.util.Arrays.asList(arr*), …)` | K6.5's aliasing refusal in the test set, CLOSED with the eleven the main port carried: what was refused was the copy, and `asListView` is java's own live view |
 | **1** | `RenderSettingsTest` — `E172 Can't compare these two types: java.util.List[Object] / java.util.List[String]` at `assertEquals(toJava(list), toJava(asList(…)))` | (a) OPEN. MUnit's `Compare` needs a common type and the two `toJava` calls infer different element types; it is the retyping's own element-type residue met at an assertion |
 | **1** | `ForTest` — `Found: Nothing / Required: ?{ isEmpty: ? }` at `getRegistry(REGISTRY_FOR).isEmpty()` | `ENGINE-LIMITS.md` **G22** (new, open): `<T extends Map<String,?>> T getRegistry(String)` — `T` appears in no formal and nothing at the call constrains it, so java instantiates it at its BOUND and scala at `Nothing` |
@@ -2268,16 +2301,13 @@ and the compiler can only say so once the elements are separate arguments.
 which the emitter now guards), and the `ServiceLoader` lookup below. Every §4.4 form in this port is
 UNMEASURED.
 
-**And the 13 that stand between here and that are not evenly reachable.** Ten are (a) engine and each
-is a bounded piece of work; **three are the port's own recorded decision** and are not a bug to fix
-— D-liqp-1 keeps the ANTLR-generated parser external, D-liqp-2 renames the library, and the parser's
-bytecode therefore asks for a `liqp.TemplateParser.ErrorMode` at three calls the port emits with
-`ssg.liquid.TemplateParser.ErrorMode`. No manifest key rewrites an ARGUMENT; a `type-redirect` at
-that enum would move the port's own type everywhere and make the emitted library depend on upstream
-liqp bytecode for it, which is a different port than the one D-liqp-1 describes. **So the suite
-running is gated on porting or regenerating the parser** — the later milestone D-liqp-1 already
-names — or on changing that decision deliberately, with its own measurement. It is not gated on
-another wave of collections fixes.
+**And the 10 that stand between here and that are all (a) engine**, each a bounded piece of work in
+a family `ENGINE-LIMITS.md` already names. The three that used to head this paragraph as "the port's
+own recorded decision" — the parser's bytecode asking for a `liqp.TemplateParser.ErrorMode` at calls
+the port emits with `ssg.liquid.TemplateParser.ErrorMode` — are closed by D-liqp-1b (§10.5.3), and
+the suite running is therefore **not** gated on porting or regenerating the parser after all. What
+was true is that no MANIFEST key could close it; what was wrong was reading that as "no fix exists",
+when the parser is a build product of this port's own build step.
 
 **`META-INF/services` is hand-written** (`liqp-core/src/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport`),
 because the engine emits `.scala` and nothing else and this file's NAME and CONTENTS are both
