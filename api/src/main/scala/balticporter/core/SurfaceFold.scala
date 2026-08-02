@@ -21,9 +21,11 @@ import balticporter.tir.Phase
   * rule would be right for one phase and silently wrong for the next — CLAUDE.md §1's failure mode
   * with the policy in the engine's hands.
   *
-  * A phase that declares nothing keeps the pre-merge behaviour exactly: both instances stay in the
-  * effective pipeline and the pair is reported. That is the correct answer for a composition nobody
-  * has designed.
+  * A phase that declares nothing keeps the pre-merge behaviour exactly: two instances that are
+  * PROVABLY the same policy collapse to one (nothing is reported — nothing differs), and two that
+  * differ both stay in the effective pipeline and the pair is reported. That is the correct answer
+  * for a composition nobody has designed. A phase that implements neither this nor [[SurfacePolicy]]
+  * can be asked neither question and is refused outright — see [[SurfaceFold.noContract]].
   *
   * ==Three obligations on an implementor, none of them checkable from outside==
   *   - the result PRESERVES BOTH INPUTS' behaviour on their own keys, or refuses. `SurfaceMissing`
@@ -116,12 +118,29 @@ object SurfaceFold:
     * not a statement about two policies failing to compose, it is a statement about a base's
     * OUTPUT, and it does not leave two instances in the pipeline. See [[Intrusion]]. */
   enum Cause:
-    /** the phase declares no [[MergeablePolicy]] — the pre-merge behaviour, unchanged. */
+    /** the phase declares no [[MergeablePolicy]] and the two policies are DEMONSTRABLY different —
+      * the pre-merge behaviour, unchanged. */
     case NoContract
+    /** the phase declares no [[MergeablePolicy]] and is not even a [[SurfacePolicy]], so the two
+      * policies cannot be COMPARED, let alone composed. See [[of]]. */
+    case Unverifiable
     /** the phase's own merge refused: same key, different value. */
     case Conflict
 
   final case class Refusal(phase: String, cause: Cause, why: String)
+
+  /** What the fold decided about ONE same-name pair. Three answers and not two, because "equal
+    * policies" is neither a merge nor a refusal: it is the pre-CT9 by-name dedup, which
+    * `Pipeline.order` used to perform by accident and no longer does. */
+  private enum Outcome:
+    /** the phase's own `mergedWith` composed them. */
+    case Merged(phase: Phase, added: Set[String])
+    /** the two instances are the SAME POLICY, provably. ONE of them runs — the base's, in the
+      * base's position — and the later one is dropped, which is exactly what the pre-CT9 pipeline
+      * did and what nothing has done since `Pipeline.order` started ordering INSTANCES. */
+    case Deduplicated
+    /** two instances stay in the pipeline, and the pair is a fatal `SurfaceDivergence`. */
+    case Kept(refusal: Refusal)
 
   /** A subject a nearer manifest ADDS inside `base`'s `governs` claim, which `base`'s own manifest
     * does not account for — a CANDIDATE for `SurfaceIntrusion`, screened against `base`'s published
@@ -163,7 +182,7 @@ object SurfaceFold:
             phases = phases :+ p
           case i  =>
             val earlier = phases(i)
-            val outcome: Either[Option[Refusal], (Phase, Set[String])] = earlier match
+            val outcome: Outcome = earlier match
               case a: MergeablePolicy => a.mergedWith(p) match
                 case Right(MergeablePolicy.Merged(merged, added)) =>
                   // The merge STANDS whatever the screen says. An intrusion is not a failure to
@@ -172,27 +191,61 @@ object SurfaceFold:
                   // the run before any phase runs rather than by leaving a pipeline half-composed
                   // (`ENGINE-LIMITS.md` CT9 Face A).
                   intrusions = intrusions ++ candidates(seen, p.name, added)
-                  Right(merged -> added)
-                case Left(why) => Left(Some(Refusal(p.name, Cause.Conflict, why)))
-              case _ =>
-                // Equal policy is not drift and reported nothing before this existed, so it records
-                // no refusal either — the refusal list only ever explains a finding.
-                Left(Option.when(PortManifest.fingerprint(earlier) != PortManifest.fingerprint(p))(
-                  Refusal(p.name, Cause.NoContract,
-                    s"`${p.name}` declares no `MergeablePolicy`, so two instances of it cannot be " +
-                      "composed: the engine does not know whether its policy is a union, an " +
-                      "ordered list or a first-match table")))
+                  Outcome.Merged(merged, added)
+                case Left(why) => Outcome.Kept(Refusal(p.name, Cause.Conflict, why))
+              case _ => noContract(earlier, p)
             outcome match
-              case Right((merged, added)) =>
+              case Outcome.Merged(merged, added) =>
                 absorbed = absorbed + PortManifest.fingerprint(earlier) + PortManifest.fingerprint(p)
                 phases   = phases.updated(i, merged)
                 if m eq owner then
                   ownKeys = ownKeys.updated(p.name, ownKeys.getOrElse(p.name, Set.empty) ++ added)
-              case Left(r) =>
-                refusals = refusals ++ r
+              case Outcome.Deduplicated =>
+                // `p` is NOT appended: one instance runs, which is the whole content of this answer.
+                ()
+              case Outcome.Kept(r) =>
+                refusals = refusals :+ r
                 phases   = phases :+ p
 
     SurfaceFold(phases.toList, absorbed, refusals.distinct.toList, ownKeys, intrusions.distinct.toList)
+
+  /** A same-name pair whose EARLIER instance declares no [[MergeablePolicy]] — and the one arm of
+    * the fold that had to change once `Pipeline.order` started ordering INSTANCES.
+    *
+    * '''Equal policy is a DEDUP, not an append.''' Two instances of one phase in one pipeline meant
+    * "the later one runs" for as long as `Pipeline.order` keyed phases by name; appending an equal
+    * instance was therefore free, and reporting nothing for it was right. Ordering instances closed
+    * `ENGINE-LIMITS.md` CT9 Face B and made the same append mean something new: the phase RUNS
+    * TWICE, over one program, with one policy. That is harmless only for a phase whose rewrite
+    * happens to be idempotent — which is a property of the phase, not of the contract, and one no
+    * implementor was ever asked for. So the pair collapses to ONE instance, at the base's position,
+    * which is the behaviour the pre-CT9 pipeline had and the behaviour this arm always promised.
+    *
+    * '''…and "equal" is only sayable of a [[SurfacePolicy]].''' [[PortManifest.fingerprint]] is
+    * NAME-ONLY for a phase that does not implement it, so two differently-configured instances of
+    * such a phase compare EQUAL — and the dedup above would then silently choose one policy of two
+    * and drop the other, which is the CT9 Face B failure restored under a different name. The engine
+    * cannot see inside a phase it was not told about, so it says so: a refusal, fatal at
+    * `ManifestAgreement.surfaceGate`, whose fix is one line in the phase (implement `SurfacePolicy`)
+    * and which is therefore §1(a) ENGINE for the repository that owns that phase.
+    *
+    * Note the asymmetry is deliberate and runs the safe way: an equal pair the engine can VERIFY is
+    * admitted silently, and a pair it cannot verify is refused loudly. Never the reverse.
+    */
+  private def noContract(earlier: Phase, later: Phase): Outcome = (earlier, later) match
+    case (_: SurfacePolicy, _: SurfacePolicy) =>
+      if PortManifest.fingerprint(earlier) == PortManifest.fingerprint(later) then Outcome.Deduplicated
+      else Outcome.Kept(Refusal(later.name, Cause.NoContract,
+        s"`${later.name}` declares no `MergeablePolicy`, so two instances of it cannot be " +
+          "composed: the engine does not know whether its policy is a union, an ordered list or a " +
+          "first-match table"))
+    case _ =>
+      Outcome.Kept(Refusal(later.name, Cause.Unverifiable,
+        s"`${later.name}` implements neither `MergeablePolicy` nor `SurfacePolicy`, so two " +
+          "instances of it can neither be composed NOR COMPARED: `PortManifest.fingerprint` falls " +
+          "back to the phase NAME, under which two different configurations render identically. " +
+          "Equality cannot be verified, so it is not assumed — both instances would otherwise run " +
+          "over one program with nothing able to say whether that is one policy or two"))
 
   /** The `governs` screen, MANIFEST HALF: which subjects this module adds could edit a BASE's
     * shared surface?

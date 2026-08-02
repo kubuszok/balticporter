@@ -87,8 +87,14 @@ class ManifestSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("extendedBy composes drops, renames and surface — and does NOT inherit `inject`") {
+    // REPINNED: `own` used to be a second `CollectionsTransform`, and this asserted that BOTH
+    // reached the effective pipeline. Two instances of one name is not composition — it is the
+    // same-name pair `SurfaceFold` decides, and two instances of a phase with EQUAL policy now
+    // collapse to one (the base's), which is what the pipeline did before it ordered instances.
+    // What `extendedBy` composes is phases with DIFFERENT names, so that is what is pinned here;
+    // the same-name pair has its own coverage in `SurfaceFoldSpec`.
     val phase = new CollectionsTransform
-    val own   = new CollectionsTransform
+    val own   = new MutableParamsTransform
     val core = PortManifest("core",
       dropTypes      = Set("com.demo.Widget"),
       dropMethods    = Set("com.demo.Widget#labels"),

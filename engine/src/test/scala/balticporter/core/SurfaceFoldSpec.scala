@@ -164,12 +164,71 @@ class SurfaceFoldSpec extends munit.FunSuite:
     assert(clue(f.head.detail).contains("declares no `MergeablePolicy`"))
   }
 
-  test("two EQUAL instances of a contract-less phase report nothing, as before") {
+  test("two EQUAL instances of a contract-less phase COLLAPSE TO ONE, and report nothing") {
+    // The pre-CT9 pipeline keyed phases by NAME and ran one of two; ordering INSTANCES turned the
+    // same append into "the phase runs TWICE over one program", which is a promise no implementor
+    // of a contract-less phase ever made. Proving them equal is what licenses the dedup, so the
+    // dedup is where the proof lands — and `effectiveSurface.size` is the assertion that sees it.
     val table = Map("com.demo.W#of" -> "com.demo.T#classFor")
-    val dep = base(List(new ClassTableTransform(table)))
-      .extendedBy(PortManifest("dep", surface = List(new ClassTableTransform(table))))
-    assertEquals(dep.effectiveSurface.size, 2)
+    val b   = base(List(new ClassTableTransform(table)))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(new ClassTableTransform(table))))
+    assertEquals(dep.effectiveSurface.size, 1, "ONE instance runs — the pre-CT9 semantics, restored")
+    assertEquals(dep.effectiveSurface.map(PortManifest.fingerprint), fps(b),
+                 "…and it is the BASE's, at the base's position: a merge changes a table, never an order")
     assertEquals(dep.surfaceFold.refusals, Nil, "equal policy is not drift, so it explains nothing")
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true), Nil)
+  }
+
+  test("…and the dedup does not make the base's phase `SurfaceMissing` — one instance IS the base's") {
+    val table = Map("com.demo.W#of" -> "com.demo.T#classFor")
+    val b   = base(List(new ClassTableTransform(table)))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(new ClassTableTransform(table))))
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // …and a phase that is not even a `SurfacePolicy` cannot be COMPARED, so equality is not assumed
+  // -------------------------------------------------------------------------------------------
+
+  /** a parameterised phase that implements NEITHER contract — the shape whose fingerprint is its
+    * NAME, so two configurations of it render identically. Declared here rather than borrowed from
+    * a production phase: which engine phase happens to lack `SurfacePolicy` is a fact that should
+    * change (and F2 changed one), and a spec pinned to it would silently stop testing this. */
+  private final class Unreadable(val table: Map[String, String]) extends Phase:
+    def name: String = "unreadable"
+
+  test("UNVERIFIABLE: two instances of a phase with no `SurfacePolicy` are FATAL, however configured") {
+    // The blind spot `PortManifest.fingerprint` documents, reached through the fold: these two
+    // tables differ and the rendering cannot say so. Deduping would drop one policy silently —
+    // CT9 Face B under a new name — so the engine refuses instead of guessing.
+    val dep = base(List(new Unreadable(Map("a" -> "1"))))
+      .extendedBy(PortManifest("dep", surface = List(new Unreadable(Map("a" -> "2")))))
+    assertEquals(dep.effectiveSurface.size, 2)
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Unverifiable))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
+    assert(clue(f.head.detail).contains("Equality cannot be verified"))
+    assert(f.head.kind.fatal, "…and it stops the run: `surfaceGate` keeps only the fatal ones")
+    assertEquals(ManifestAgreement.surfaceGate(Some(dep)).map(_.kind), List(Kind.SurfaceDivergence))
+  }
+
+  test("…and two IDENTICALLY-configured instances of one are refused just the same") {
+    // The point of the entry: the engine cannot TELL that these agree. Reporting nothing here is
+    // reporting nothing for every unreadable pair, since every unreadable pair looks like this one.
+    val table = Map("a" -> "1")
+    val dep = base(List(new Unreadable(table)))
+      .extendedBy(PortManifest("dep", surface = List(new Unreadable(table))))
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Unverifiable))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
+    assert(clue(f.head.detail).contains("EQUAL AS RENDERED"),
+           "the message says the two fingerprints matched and that this is not evidence")
+  }
+
+  test("ONE instance of an unreadable phase is untouched — this is a PAIR rule, not a phase ban") {
+    val dep = base(Nil).extendedBy(PortManifest("dep", surface = List(new Unreadable(Map("a" -> "1")))))
+    assertEquals(dep.effectiveSurface.size, 1)
+    assertEquals(dep.surfaceFold.refusals, Nil)
     assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true), Nil)
   }
 

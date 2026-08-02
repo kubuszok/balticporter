@@ -4057,6 +4057,34 @@ instances' policy fingerprints. Nothing is parsed and nothing is emitted.
   stable in declaration order and successors are still visited in name order, so all 13 ports read 0
   members changed with every check count identical.
 
+**FACE B'S THIRD CHANGE — the EQUAL pair, found by the checkpoint-4 audit and closed with it**
+(`DESIGN.md` §8.13's fifth as-built section). Two changes were not enough either. `SurfaceFold.of`
+appended a same-name instance whenever it declined to merge, *including when the two fingerprints
+were equal*, where it deliberately recorded no refusal — correct while `Pipeline.order` keyed by name
+and ran one of two, and silently wrong the moment it ordered instances: **an equal pair then ran the
+phase TWICE over one program.** Nothing could see it. The divergence report's own criterion was
+`fingerprint(ps).distinct.size > 1`, which an equal pair fails by definition, and the corpus has no
+duplicate phase name so no lane moved. The one production shape it had is idempotent
+(`ClassTableTransform`), and `PortRunSpec`'s green negative was pinned on that accident — a spec
+asserting the run was green while the pipeline underneath it was wrong.
+
+Worse in the same arm: **`PortManifest.fingerprint` is NAME-ONLY for a phase that is not a
+`SurfacePolicy`**, so `test-framework(suiteA)` and `test-framework(suiteB)` compared EQUAL — two
+different configurations of one phase, both running over one program, with nothing in the engine able
+to state that they differ. Deduping such a pair would have been Face B restored under a new name.
+
+The fold now gives a same-name pair three answers instead of two — merge, DEDUP (provably equal:
+one instance runs, the base's, at the base's position), or two instances and a fatal
+`SurfaceDivergence` — and refuses outright (`Cause.Unverifiable`) a pair it can neither compose nor
+COMPARE. The report's criterion moved with it, from "two distinct fingerprints" to "two instances in
+the effective pipeline", so the pair the engine understands least is no longer the one it reports
+nothing for. Both arms negative-tested against a spec-local phase implementing neither contract,
+rather than against whichever production phase happens to lack one. All 13 ports: 0 members changed,
+every check count identical.
+
+*Fix kind: (a) engine, and the one it leaves for a phase author is also (a), in whatever repository
+owns the phase: implement `SurfacePolicy` and the pair becomes verifiable.*
+
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 
 All five entries below come from the SAME work — Stage P6's attempts to enable an opaque family on

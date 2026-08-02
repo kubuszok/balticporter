@@ -228,11 +228,19 @@ class PortRunSpec extends munit.FunSuite:
     assert(!Files.exists(root.resolve("port").resolve("src_managed/main/scala/com/demo/Widget.scala")))
   }
 
-  test("NEGATIVE: two EQUAL instances are not a refusal, and the run is green") {
+  test("NEGATIVE: two EQUAL instances COLLAPSE TO ONE, and the run is green") {
+    // REPINNED. This used to assert only that the run was green, and it was green for the wrong
+    // reason: `Pipeline.order` keeps both instances since CT9 Face B, so the phase ran TWICE and
+    // the emitted file was correct only because `ClassTableTransform`'s rewrite happens to be
+    // IDEMPOTENT — a property of that one phase, which nothing asked of it and which the next
+    // contract-less phase need not have. The fold now proves the pair equal and drops one, so the
+    // pipeline itself is the assertion and the green is no longer an accident.
     val (root, src) = fixture()
     val table = Map("com.demo.Widget#of" -> "com.demo.Widget#classFor")
     val m = PortManifest("base", surface = List(new balticporter.transform.ClassTableTransform(table)))
       .extendedBy(PortManifest("dep", surface = List(new balticporter.transform.ClassTableTransform(table))))
+    assertEquals(m.effectiveSurface.size, 1, "ONE instance in the effective pipeline…")
+    assertEquals(Pipeline.order(m.effectiveSurface).size, 1, "…and ONE runs")
     val r = run(root, src)(_.copy(manifest = Some(m)))
     assert(clue(emitted(r.outDir)).contains("com/demo/Widget.scala"))
   }

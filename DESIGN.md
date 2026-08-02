@@ -3426,6 +3426,43 @@ gate and the report cannot drift. It is the only manifest finding that runs earl
 for that is stated rather than assumed: every other one describes EMITTED TEXT an operator reads
 beside it, and this one describes the pipeline that is about to run.
 
+#### …and the EQUAL pair is the third answer, because ordering instances changed what "equal" costs
+
+Face B's two changes made the refused pair loud and left the pair beside it silent. `SurfaceFold.of`
+appended a same-name instance whenever the fold declined to merge it — including when the two
+fingerprints were EQUAL, where it deliberately recorded no refusal, because equal policy is not
+drift and reported nothing before merging existed. That append was free for as long as
+`Pipeline.order` keyed phases by NAME: one of the two ran. Ordering INSTANCES turned it into *the
+phase runs twice, over one program, with one policy* — harmless only if that phase's rewrite happens
+to be idempotent, which is a property of the phase and not of any contract. It survived review
+because the one production shape it had, `ClassTableTransform`, IS idempotent, and `PortRunSpec`'s
+green negative was pinned on that accident rather than on the pipeline.
+
+So the fold answers a same-name pair three ways, not two, and the third is a DEDUP: two instances a
+phase's `MergeablePolicy` composes are one merged instance; two the engine can prove EQUAL are one
+instance, the base's, at the base's position — the pre-CT9 semantics, now stated rather than emergent;
+anything else is two instances and a fatal `SurfaceDivergence`.
+
+**And "equal" is only sayable of a `SurfacePolicy`.** `PortManifest.fingerprint` is NAME-ONLY for a
+phase that implements neither contract — the blind spot its own scaladoc documents — so two
+differently-configured instances of such a phase render identically, and the dedup above would then
+pick one policy of two and drop the other in silence, which is Face B restored under a new name. The
+engine cannot see inside a phase it was not told about, so it says so: `Cause.Unverifiable`, fatal at
+the gate, whose fix is one line in the phase. The asymmetry runs the safe way — an equal pair the
+engine can VERIFY is admitted silently, one it cannot compare is refused loudly, never the reverse.
+
+**The report had the same hole, from the other side.** `surfacePairs` derived "is this a pair" from
+`fingerprint(ps).distinct.size > 1`, so a pair whose fingerprints render identically produced NO
+finding — exactly the unreadable pair, which is the one the engine understands least. The criterion
+is now TWO INSTANCES IN THE EFFECTIVE PIPELINE, full stop: the fold has already collapsed every pair
+it can prove equal, so a name surviving it twice is a pair by construction, and the report reads the
+pipeline instead of re-deriving the fold's judgement from strings. Where the two fingerprints do
+match, the message says so out loud — `x vs x — EQUAL AS RENDERED, which is not evidence of
+agreement` — because a reader handed `x vs x` would otherwise conclude the check had misfired.
+
+Zero movement across all thirteen ports, for the reason Face B measured: no port in the corpus
+declares one phase name twice.
+
 #### The D1 contract: the base is the base AS THE BASE RAN IT
 
 This is the half that had to be got right or refused, and the shape that gets it right is not a

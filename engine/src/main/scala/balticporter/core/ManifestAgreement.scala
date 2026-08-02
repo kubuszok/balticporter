@@ -155,13 +155,16 @@ object ManifestAgreement:
       "§1(b) PER-LIBRARY: a phase that shapes emitted signatures ran in the base module and not " +
         "here, so this module re-derives the shared surface's signatures differently from the " +
         "module it compiles against. Add the phase to this manifest's `surface`, or inherit it.")
-    /** two instances of one phase, configured differently, in one effective pipeline — and the
-      * merge that would have composed them was declined or refused. */
+    /** two instances of one phase in one effective pipeline that the fold could neither MERGE nor
+      * prove equal — configured differently, or configured in a way the engine cannot read. */
     case SurfaceDivergence extends Kind(true,
-      "§1(b) PER-LIBRARY: one phase appears twice in the effective pipeline with different " +
-        "policy and the two could not be MERGED — either the phase declares no `MergeablePolicy` " +
-        "(that is §1(a), engine: give it one) or its own merge refused the pair, which is the " +
-        "drift CLAUDE.md §1 warns about (§1(b): reconcile the two values, or share one instance).")
+      "§1(b) PER-LIBRARY: one phase appears twice in the effective pipeline and the two instances " +
+        "could not be MERGED — either the phase declares no `MergeablePolicy` (that is §1(a), " +
+        "engine: give it one) or its own merge refused the pair, which is the drift CLAUDE.md §1 " +
+        "warns about (§1(b): reconcile the two values, or share one instance). A phase that " +
+        "implements no `SurfacePolicy` either is reported HOWEVER it is configured — its " +
+        "fingerprint is its NAME, so the engine cannot tell two policies from one, and both " +
+        "instances would run over one program (§1(a), engine: implement `SurfacePolicy`).")
     /** a dependent's merged-in key edits a namespace a base emits. */
     case SurfaceIntrusion extends Kind(true,
       "§1(b) PER-LIBRARY: this module adds policy for a type INSIDE a base's declared namespace " +
@@ -434,10 +437,20 @@ object ManifestAgreement:
     // survive the fold only where the merge was DECLINED or REFUSED, so the fold's own sentence for
     // why is attached. Read off the pipeline and not off the refusal list, so a phase that never
     // declared a merge is detected exactly as it was before merging existed.
+    // …and the criterion is TWO INSTANCES, never two distinct FINGERPRINTS. A fingerprint is
+    // name-only for a phase that implements no `SurfacePolicy`, so two differently-configured
+    // instances of one render identically — and a "> 1 distinct" test therefore reported NOTHING
+    // for exactly the pair the engine understands least. The fold now collapses a pair it can prove
+    // equal and refuses one it cannot compare, so a name surviving the fold twice is a pair, full
+    // stop, and this reads the pipeline rather than re-deriving the fold's judgement from strings.
     val whyRefused = m.surfaceFold.refusals.groupBy(_.phase)
     val divergent = m.effectiveSurface.groupBy(_.name).toList.sortBy(_._1).collect {
-      case (n, ps) if ps.map(PortManifest.fingerprint).distinct.size > 1 =>
-        val fps  = ps.map(PortManifest.fingerprint).distinct.sorted.mkString(" vs ")
+      case (n, ps) if ps.size > 1 =>
+        val distinct = ps.map(PortManifest.fingerprint).distinct.sorted
+        // Equal-as-rendered is said OUT LOUD: a reader handed `x vs x` would reasonably conclude
+        // the check had misfired, when what it means is that the rendering cannot tell them apart.
+        val fps = if distinct.size > 1 then distinct.mkString(" vs ")
+                  else s"${distinct.head} vs ${distinct.head} — EQUAL AS RENDERED, which is not evidence of agreement"
         val here = whyRefused.getOrElse(n, Nil)
         Finding(Kind.SurfaceDivergence, m.name, n,
           here.headOption.map(r => s"$fps — ${r.why}").getOrElse(fps))
