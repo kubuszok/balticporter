@@ -12,7 +12,7 @@
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
-#   just liqp-measure                liqp — MAIN source set only (milestone 1: the measured wall)
+#   just liqp-measure                liqp + its own 105-file suite (emitted and censused; RUN when it compiles)
 #   just measure-all                 every lane, SERIALLY, in dependency order
 #   just decision-counts             decisions.tsv row counts by kind, every port
 #   just members-unchanged [PORT]    members.tsv against its committed baseline — the blast radius
@@ -149,10 +149,20 @@ jbump_deps    := ""
 # liqp's `pom.xml`, at COMPILE scope, verbatim — including the one that reads like a typo and is
 # not: `jackson.databind.version` is 2.13.4.2 while `jackson.version` is 2.15.0, two properties in
 # the same pom. A port resolves what the library DECLARES (see `ashley_deps` for what guessing
-# cost). `junit:junit:4.13.1` is TEST scope and belongs to the test port, which milestone 1 does
-# not have. The ANTLR-generated parser is NOT a coordinate — it is a directory of class files the
+# cost). The ANTLR-generated parser is NOT a coordinate — it is a directory of class files the
 # lane adds with `--jar` (see `liqp_parser_classes`).
 liqp_deps     := "--dependency org.antlr:antlr4-runtime:4.13.0 --dependency com.fasterxml.jackson.core:jackson-core:2.15.0 --dependency com.fasterxml.jackson.core:jackson-databind:2.13.4.2 --dependency com.fasterxml.jackson.core:jackson-annotations:2.15.0 --dependency com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0 --dependency ua.co.k:strftime4j:1.0.6"
+# …and what the TEST source set adds on top of it. `junit:junit:4.13.1` is the ONE test-scope
+# dependency `pom.xml` declares; `org.hamcrest:hamcrest-core:1.3` arrives with it TRANSITIVELY and
+# is deliberately NOT named here — a port resolves what the library DECLARES, and hamcrest is not
+# a coordinate liqp has.
+#
+# BOTH jars are RUN dependencies, not only frontend ones, and that is a decision rather than an
+# oversight: `TestFrameworkTransform` maps `org.junit.Assert` onto `munit.Assertions` and has no
+# matcher algebra, so liqp's 767 `assertThat(x, is(y))` sites stay on hamcrest. Measured — a
+# hamcrest `AssertionError` produces MUnit's `==> X` marker per test and the suite CONTINUES, so
+# `reconcile_outcomes` loses nothing by it. munit is the runner the conversion targets.
+liqp_test_deps := "--dependency junit:junit:4.13.1 --dependency org.scalameta::munit:1.0.2"
 # JUnit 4.12 — gdx-gltf's OWN `junitVersion`, from its root `build.gradle`, not the 4.13.2 the
 # other lanes happen to use. The suite is converted to MUnit by `TestFrameworkTransform`, so the
 # junit coordinate is not what RUNS it; it is here because scala-cli must resolve the same surface
@@ -1180,10 +1190,11 @@ jbump-measure:
 
 
 # ---------------------------------------------------------------------------------------------
-# liqp — the MAIN source set only. Milestone 1 measures a WALL, not a green port.
+# liqp — the MAIN source set AND its own 105-file JUnit suite.
 #
-# `noise4j-measure`'s shape (emit → checks → discovery → break residue → compile → correlate) with
-# two differences, and both of them are the reason this lane is worth reading:
+# `sg-measure`'s shape (emit both ports → checks for both → discovery → break residue → compile
+# both → RUN when it compiles) with three differences, and each of them is the reason this lane is
+# worth reading:
 #
 #   * THE COMPILE HAS A CLASSPATH THAT IS NOT ONLY COORDINATES. Decision D-liqp-1 keeps the
 #     ANTLR-generated parser EXTERNAL: `LiqpClasspath` javacs `target/generated-sources/antlr4`
@@ -1195,19 +1206,37 @@ jbump-measure:
 #     compiled classes, which is what that flag's second name (`--extra-jars`) hides. The lane
 #     REFUSES to compile if the directory is not there rather than reporting the resulting import
 #     failures as the port's error count.
-#   * LIQP SHIPS A REAL SUITE AND THIS MILESTONE DOES NOT PORT IT. 105 test files, 640 `@Test`.
-#     The discovery block therefore re-derives that number and says, in the run, that the
-#     behavioural gate is ABSENT — everything CLAUDE.md §4.4 lists is unmeasured for this port.
-#     A lane that simply omitted the stage would read as a lane whose tests passed (the rule
-#     `noise4j-measure` states, arriving here from the other direction: not "no suite exists" but
-#     "a suite exists and none of it runs").
+#   * ONE COMPILE, TWO NUMBERS. Both source sets go through scalac together — they must, the suite
+#     links against what the main port emitted — and the count is then SPLIT by the path scalac
+#     itself printed, so `PROGRESS.md` §10.5's main-port figure stays a number this lane reproduces
+#     rather than one merged past recovery. A test-set error is frequently a CASCADE of a main-set
+#     one, which is exactly why the two are never added up into a single wall.
+#   * THE SUITE IS EMITTED AND, TODAY, NOT RUN. The main port stands at a measured wall, and the
+#     run stage is gated on 0 errors exactly as `sg-measure` gates it — with a line that SAYS the
+#     suite did not run. A lane that silently skipped the stage would read as a lane whose tests
+#     passed, which is the failure `noise4j-measure` states from the other direction. Everything
+#     `CLAUDE.md` §4.4 lists stays unmeasured for this port until that line stops printing.
+#
+# THE RUN'S WORKING DIRECTORY IS PART OF THE MEASUREMENT, and it is why the run stage looks
+# unlike every other lane's. 45 of the 639 tests read `./snippets/`, `./_includes/` and
+# `src/test/jekyll/` by RELATIVE path, and `TemplateTest.parseWithInputStream` reaches one through
+# `new FileInputStream(new File(…))` — the PROCESS working directory, which `-Duser.dir` does not
+# reach (verified). The paths are deliberately NOT parameterised in the Java: they are what
+# upstream asserts, and rewriting them would make the port a different program (`CLAUDE.md` §3.5).
+# So the lane builds a SYMLINK fixture tree under its own scratch and runs from it, which keeps
+# `.scala-build/` out of the ssg submodule's working tree. Two directories of the upstream
+# checkout are deliberately absent from that tree: the repo-root `alternative_includes/` is
+# referenced by nothing (all three `withSnippetsFolderName` sites name
+# `src/test/jekyll/alternative_includes`, which arrives inside the jekyll link), and `ruby/` is a
+# standalone shell harness a human invokes — no test shells out, and its `.rb` fragments appear in
+# the suite only as Javadoc quotations of the reference behaviour.
 #
 # The compile is EXPECTED to report errors at this milestone. That is the deliverable — a census,
 # classified per CLAUDE.md §1 — so `compile_guard` reporting a non-zero count is data, and the
-# lane runs `correlate` whether or not it compiled, because the compiler output is the only
+# lane runs `correlate` whether or not it compiled, because the compiler output is then the only
 # diagnostic this port has.
 # ---------------------------------------------------------------------------------------------
-[doc("liqp — MAIN source set: emit, checks, break residue, compile, correlate (no test port yet)")]
+[doc("liqp + its own 105-file suite: emit, checks, discovery, break residue, compile, RUN when it compiles")]
 liqp-measure:
     #!/usr/bin/env bash
     cd "{{root}}"
@@ -1219,35 +1248,62 @@ liqp-measure:
     # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{liqp_src}}"
     REPORT="$ROOT/port-report/LiqpMigrate"
+    TREPORT="$ROOT/port-report/LiqpTestMigrate"
 
-    # ABORT if the migration itself did not run, or the lane measures the PREVIOUS emit and reports a
-    # stale number as a result.
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.liqp.LiqpMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
-    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
-      echo "!! LiqpMigrate DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[liqp\]" <<<"$OUT" | head -30
-      exit 1
-    fi
-    echo "-- LiqpMigrate (ALL checks, untruncated, as the migration printed them) --"
-    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
-    echo
+    # ABORT if either migration did not run, or the lane measures the PREVIOUS emit and reports a
+    # stale number as a result. The test port is a DEPENDENT (`test.conf` has `base = "main.conf"`),
+    # so the order is not arbitrary: it resolves against the base's Java and inherits its manifest.
+    for M in LiqpMigrate LiqpTestMigrate; do
+      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.liqp.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
+        echo "!! $M DID NOT RUN — refusing to measure stale output"
+        grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[liqp\]" <<<"$OUT" | head -30
+        exit 1
+      fi
+      echo "-- $M (ALL checks, untruncated, as the migration printed them) --"
+      sed -n '/building model over/,/wrote [0-9]* Scala\( test\)\? files/p' <<<"$OUT"
+      echo
+    done
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    show_check_report "$TREPORT"
 
     echo
     echo "-- test discovery --"
-    # RE-DERIVED, never quoted. liqp HAS a suite and this milestone does not port it, which is a
-    # different statement from noise4j's "there is nothing to port" and has to read differently in
-    # the run — otherwise the absent stage reads as a stage that passed.
+    # Both frameworks summed, as in `sg-measure`: a ported suite is MUnit and any residue is still
+    # JUnit, so counting one under-reports by every converted suite — in the safe-looking direction.
+    # A suite with no discoverable tests runs ZERO and reports SUCCESS.
+    #
+    # 639, not the 640 a raw grep finds: `filters/date/FuzzyDateDateParserTest`'s is commented out
+    # upstream, which is exactly what `java_test_count`'s comment-aware count is for.
     JAVA_TESTS=$(java_test_count {{liqp_src}}/src/test)
-    echo "@Test in Java: $JAVA_TESTS   emitted test files: 0 (milestone 1 ports the MAIN source set only)"
-    if [ "$JAVA_TESTS" = "0" ]; then
-      echo "!! liqp's suite has VANISHED from ${ROOT}/{{liqp_src}}/src/test — that count has never been 0"
-    else
-      echo "   NONE OF THEM RUNS. There is no corpus/ports/liqp/test.conf yet, so this port's only"
-      echo "   evidence is the compiler, and every CLAUDE.md §4.4 form in it is UNMEASURED."
+    JUNIT_LEFT=$(junit_residue {{liqp_module}}/src_managed/test/scala)
+    MUNIT_TESTS=$(munit_emitted {{liqp_module}}/src_managed/test/scala)
+    SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
+    echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
+    [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
+
+    # -------------------------------------------------------------------------------------------
+    # THE RUN'S HAND-WRITTEN INPUTS, CHECKED HERE AND NOT AT THE RUN. Both are fatal, and both are
+    # checked BEFORE the compile gate on purpose: gated behind `ERRORS = 0` they would first fire
+    # on the day the port went green, which is the one day nobody is looking for a missing fixture.
+    # A missing input is fatal, never a smaller measurement (CLAUDE.md §5.1).
+    # -------------------------------------------------------------------------------------------
+    SERVICES="{{liqp_module}}/src/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport"
+    if [ ! -f "$SERVICES" ]; then
+      echo "!! $SERVICES is MISSING — the suite's ServiceLoader lookups would find zero providers,"
+      echo "   applyCustomDateTypes() would silently no-op, and no compile error, check count or"
+      echo "   finding would say so (ENGINE-LIMITS.md P5). It is HAND-WRITTEN and committed; restore it."
+      exit 1
     fi
+    for F in snippets _includes src/test/jekyll; do
+      if [ ! -d "{{liqp_src}}/$F" ]; then
+        echo "!! the fixture root {{liqp_src}}/$F is MISSING — 45 tests read it by relative path and"
+        echo "   would fail as if the port were wrong. Refusing to measure a suite whose inputs are absent."
+        exit 1
+      fi
+    done
 
     echo
     break_residue {{liqp_module}}/src_managed
@@ -1266,27 +1322,75 @@ liqp-measure:
     fi
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
-    DEPS="{{liqp_deps}}"
+    # BOTH source sets on one invocation: the main port is RuntimeMode.Vendored, so the shims live in
+    # `src_managed/main` and the suite links against them there. Compiling either alone measures nothing.
+    DEPS="{{liqp_deps}} {{liqp_test_deps}}"
     scala-cli compile --scala {{scala_version}} --server=false $DEPS \
       --jar "{{liqp_compile_classes}}" \
-      {{liqp_module}}/src_managed/main/scala \
+      {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/liqpmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/liqpmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/liqpmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/liqpmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/liqpmeasure.txt))"
+    # …and the SPLIT, from the path scalac printed in each error header. The two source sets are one
+    # compile and two walls: the main port's figure is what `PROGRESS.md` §10.5 quotes, and a
+    # test-set error is often a cascade of a main-set one. `correlate` below attributes every one of
+    # them to a member and a Java origin; this is only the shape of the total.
+    E_MAIN=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/liqpmeasure.txt | grep -c "/src_managed/main/")
+    E_TEST=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/liqpmeasure.txt | grep -c "/src_managed/test/")
+    echo "  main source set: $E_MAIN   test source set: $E_TEST   elsewhere: $((ERRORS - E_MAIN - E_TEST))"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/liqpmeasure.txt | sort | uniq -c | sort -rn | head -20
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/liqpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
-    echo
-    echo "-- correlation: every error located to its member and its Java origin --"
-    # Run WHETHER OR NOT it compiled. With no suite there is no second thing to correlate, so the
-    # compile output is the only diagnostic this port has and it is always worth attributing.
-    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/liqpmeasure.txt \
-      --srcmap "$REPORT/run-latest/srcmap.tsv"
+    # -------------------------------------------------------------------------------------------
+    # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists the java
+    # forms that translate to VALID scala meaning something else, and not one moves the count above.
+    # For this library the live questions are a `switch` with no `default`, 38 anonymous classes, and
+    # whether the ServiceLoader providers were found at all.
+    # -------------------------------------------------------------------------------------------
+    if [ "$ERRORS" = "0" ]; then
+      echo
+      echo "-- run --"
+      # THE CWD IS PART OF THE MEASUREMENT — see the lane header for why a system property cannot
+      # stand in for it, and which two upstream directories are deliberately not linked.
+      FIX="$MEASURE_TMP/liqp-run"
+      mkdir -p "$FIX/src/test"
+      ln -sfn "$ROOT/{{liqp_src}}/snippets"        "$FIX/snippets"
+      ln -sfn "$ROOT/{{liqp_src}}/_includes"       "$FIX/_includes"
+      ln -sfn "$ROOT/{{liqp_src}}/src/test/jekyll" "$FIX/src/test/jekyll"
+      # `--workspace` keeps scala-cli's own `.scala-build/` beside the fixture rather than under the
+      # cwd it inherits; `--resource-dir` is what puts the hand-written
+      # META-INF/services/ssg.liquid.spi.TypesSupport on the test JVM's classpath, and without it the
+      # suite's ServiceLoader lookups find nothing AND SAY NOTHING (ENGINE-LIMITS.md P5).
+      ( cd "$FIX" && scala-cli test --workspace "$FIX" --scala {{scala_version}} --server=false $DEPS \
+          -Duser.language=en -Duser.country=US \
+          --jar "$ROOT/{{liqp_compile_classes}}" \
+          --resource-dir "$ROOT/{{liqp_module}}/src/main/resources" \
+          "$ROOT/{{liqp_module}}/src_managed/main/scala" \
+          "$ROOT/{{liqp_module}}/src_managed/test/scala" ) \
+        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/liqprun.txt
+      reconcile_outcomes "$MEASURE_TMP"/liqprun.txt "$MUNIT_TESTS"
+      echo
+      echo "-- correlation: test failures located to members and Java origins --"
+      correlate "$TREPORT/run-latest" --tests "$MEASURE_TMP"/liqprun.txt \
+        --srcmap "$REPORT/run-latest/srcmap.tsv" \
+        --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+    else
+      echo
+      echo "-- correlation: every error located to its member and its Java origin --"
+      # BOTH maps, scoped: an error in the emitted suite resolves through the test port's map and one
+      # in the library through the main port's, so the two walls stay distinguishable after the join.
+      correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/liqpmeasure.txt \
+        --srcmap "$REPORT/run-latest/srcmap.tsv" \
+        --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+      echo "   $JAVA_TESTS java @Test are emitted as $MUNIT_TESTS munit registrations and NONE OF THEM RUNS."
+      echo "   Every CLAUDE.md §4.4 form in this port is UNMEASURED until that line stops printing."
+    fi
 
-    headline "$ERRORS" "$REPORT"
+    headline "$ERRORS" "$TREPORT"
 
 # ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
