@@ -1104,7 +1104,8 @@ object SpoonTir:
           val b = bound.filter(_.getQualifiedName != "java.lang.Object").map(tpe)
           if w.isUpper then TypeBounds(NoType, b.getOrElse(NoType)) else TypeBounds(b.getOrElse(NoType), NoType)
       case tv: CtTypeParameterReference =>
-        val id = resolveTypeParam(tv.getSimpleName).getOrElse(minter.external("?" + tv.getSimpleName, tv.getSimpleName))
+        val id = resolveTypeParam(tv.getSimpleName)
+          .getOrElse(minter.external(Symbol.UnresolvedTypeVarPrefix + tv.getSimpleName, tv.getSimpleName))
         TypeRef(NoPrefix, id)
       case p if p.isPrimitive =>
         TypeRef(NoPrefix, minter.external("scala." + primName(p.getSimpleName), p.getSimpleName))

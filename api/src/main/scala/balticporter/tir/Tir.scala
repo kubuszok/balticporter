@@ -159,6 +159,24 @@ final case class Symbol(
     descriptor: Option[Descriptor] = None,
 )
 
+object Symbol:
+
+  /** The `fullName` a frontend interns a type VARIABLE it could not resolve under.
+    *
+    * A java type argument may name a variable that has no binder in the reading scope — the
+    * INFERRED argument of a diamond (`new ArrayList<>(coll)`) is the standing case, and a callee's
+    * own `<T>` reached from outside is another. There is no symbol to point at, so the frontend
+    * mints one whose name is a marker rather than a name.
+    *
+    * `?` opens it because no java identifier and no java FQN can, so the marker is unambiguous and
+    * costs no field. Spelled HERE and read through [[isUnresolvedTypeVar]] by both sides: it is a
+    * convention BETWEEN a frontend and the emitter, and a convention spelled twice is one that
+    * drifts. What the emitter owes it is that such a symbol NEVER reaches the output — `?E` names
+    * nothing in Scala and does not even lex (`ENGINE-LIMITS.md` G2 settles what does: `?`). */
+  val UnresolvedTypeVarPrefix = "?"
+
+  def isUnresolvedTypeVar(fullName: String): Boolean = fullName.startsWith(UnresolvedTypeVarPrefix)
+
 // ---------------------------------------------------------------------------
 // Constants — mirrors `reflect.Constant`.
 // ---------------------------------------------------------------------------

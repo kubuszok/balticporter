@@ -147,3 +147,50 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(!text.contains("""".", )"""), clue(text))
     assert(text.contains(""""%s", "a", "b""""))
   }
+
+  // -- an INFERENCE VARIABLE must never reach the output (F5's emitter half) ----------------------
+  //
+  // `new ArrayList<>(((Collection<?>) value))` — liqp `LValue.java:154`. The diamond's argument has
+  // no binder in the reading scope, so the frontend interns a marker symbol
+  // (`Symbol.UnresolvedTypeVarPrefix`). Printed, it read `JavaCollection[? <: ?E]`: `?E` names
+  // nothing, does not lex, and took the statement around it plus two further errors with it.
+  // G2 settles the rendering — `?`, everywhere.
+
+  test("an unresolved type variable renders as `?`, never as its marker name") {
+    val CLS  = SymId(41)
+    val FLD  = SymId(42)
+    val LIST = SymId(43)
+    val STUB = SymId(44) // the marker the frontend mints for an inferred argument
+
+    // `JavaCollection[? <: ?E]` — a wildcard whose UPPER BOUND is the marker.
+    val bounded = AppliedType(TypeRef(NoPrefix, LIST),
+      List(TypeBounds(NoType, TypeRef(NoPrefix, STUB))))
+    val cd = Tree.ClassDef(CLS, parents = Nil, selfType = None,
+      body = List(Tree.ValDef(FLD, tt(bounded), rhs = None, origin = O)), origin = O)
+    val syms = SymbolTable(List(
+      Symbol(CLS, "Use", "demo.Use", Flags(), SymId.None, TypeRef(NoPrefix, CLS)),
+      Symbol(LIST, "Coll", "rt.Coll", Flags(), SymId.None, NoType),
+      Symbol(FLD, "xs", "demo.Use#xs", Flags(), CLS, bounded),
+      Symbol(STUB, "E", Symbol.UnresolvedTypeVarPrefix + "E", Flags(), SymId.None, NoType),
+    ))
+    val text = new TirEmitter(new Program(List(cd), syms, Xref.build(List(cd)), MemberIndex.empty)).emit
+    assert(!clue(text).contains("?E"), "an inference variable reached the output")
+    // the bound said nothing, so the wildcard alone is the whole of what java said
+    assert(text.contains("rt.Coll[?]"), clue(text))
+  }
+
+  test("a bare unresolved type variable renders `?` rather than its marker") {
+    val CLS  = SymId(51)
+    val FLD  = SymId(52)
+    val STUB = SymId(53)
+    val t = TypeRef(NoPrefix, STUB)
+    val cd = Tree.ClassDef(CLS, parents = Nil, selfType = None,
+      body = List(Tree.ValDef(FLD, tt(t), rhs = None, origin = O)), origin = O)
+    val syms = SymbolTable(List(
+      Symbol(CLS, "U2", "demo.U2", Flags(), SymId.None, TypeRef(NoPrefix, CLS)),
+      Symbol(FLD, "x", "demo.U2#x", Flags(), CLS, t),
+      Symbol(STUB, "T", Symbol.UnresolvedTypeVarPrefix + "T", Flags(), SymId.None, NoType),
+    ))
+    val text = new TirEmitter(new Program(List(cd), syms, Xref.build(List(cd)), MemberIndex.empty)).emit
+    assert(!clue(text).contains("?T"), "an inference variable reached the output")
+  }

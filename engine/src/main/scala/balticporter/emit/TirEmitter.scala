@@ -1068,6 +1068,15 @@ final class TirEmitter(
 
   /** backtick every keyword SEGMENT of a qualified name (§4.56 separators). */
   private def escPath(path: String): String = TirEmitter.escPath(path)
+
+  /** is this type a type VARIABLE the frontend could not resolve ([[Symbol.UnresolvedTypeVarPrefix]])?
+    *
+    * The emitter's standing obligation is that such a symbol never reaches the output: its name is
+    * a MARKER, not a name, so `?E` is neither a type nor a token sequence Scala can lex — one
+    * occurrence took out the statement around it and two more errors with it. */
+  private def isUnresolvedTypeVar(t: TypeRepr): Boolean = t match
+    case TypeRepr.TypeRef(_, s) => Symbol.isUnresolvedTypeVar(sym(s).fullName)
+    case _                      => false
   /** a TYPE symbol's rendered name. FULLY QUALIFIED by default — for the structural Java→Scala
     * phase we emit fully-qualified references and generate NO imports, which deletes the entire
     * import-decision bug class (import-vs-projection, shadowing, static-receiver qualification):
@@ -1077,7 +1086,12 @@ final class TirEmitter(
     * prerequisite. (A later refinement handles givens/extensions, which FQN genuinely can't name.) */
   private def typeSym(id: SymId): String =
     val s = sym(id)
-    if tparamSubst.contains(id) then tpe(tparamSubst(id)) // ctor type param → its bound
+    // an UNRESOLVED type variable is a marker and not a name — never print it (see
+    // [[isUnresolvedTypeVar]]). `?` is what G2 settles an un-nameable type argument renders as, and
+    // in the one position where `?` is not a type either, it is a CONTAINED error rather than a
+    // lexical one that takes the enclosing statement with it.
+    if Symbol.isUnresolvedTypeVar(s.fullName) then "?"
+    else if tparamSubst.contains(id) then tpe(tparamSubst(id)) // ctor type param → its bound
     else if s.flags.isParam then esc(s.name)
     // a Java `static` nested class is lowered into the enclosing type's companion `object`, so it
     // is named through the value path `Outer.Inner` — NOT by simple name (companion members aren't
@@ -3176,9 +3190,14 @@ final class TirEmitter(
     case TypeRepr.OrType(l, r)                 => s"${tpe(l)} | ${tpe(r)}"
     case TypeRepr.ByNameType(u)                => s"=> ${tpe(u)}"
     case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) => "?"
+    // A BOUND that is an unresolved type variable says nothing, and saying it is worse than
+    // silence: `? <: ?E` names a type that does not exist and does not even lex. Dropping the
+    // bound leaves `?`, which is exactly what G2 settles a raw generic renders as — and the
+    // wildcard was already all the java said, since the variable it was bounded by has no binder
+    // in this scope either. When BOTH bounds go, so does the whole `TypeBounds`.
     case TypeRepr.TypeBounds(lo, hi) =>
-      val l = if lo == TypeRepr.NoType then "" else s" >: ${tpe(lo)}"
-      val h = if hi == TypeRepr.NoType then "" else s" <: ${tpe(hi)}"
+      val l = if lo == TypeRepr.NoType || isUnresolvedTypeVar(lo) then "" else s" >: ${tpe(lo)}"
+      val h = if hi == TypeRepr.NoType || isUnresolvedTypeVar(hi) then "" else s" <: ${tpe(hi)}"
       s"?$l$h"
     case TypeRepr.Refinement(p, _, _)          => tpe(p)
     case TypeRepr.MethodType(ps, res, _)       => s"(${ps.map((_, pt) => tpe(pt)).mkString(", ")}) => ${tpe(res)}"

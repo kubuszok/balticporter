@@ -103,6 +103,25 @@ different, it is **semantically wrong** — a `BitmapFont`'s dependencies are a 
 Adopting the correct rendering cost **1 → 11** deliberately, then settled at a small residue of
 individual sites — not a wall.
 
+**…and the same answer covers an INFERENCE VARIABLE, which is not a raw type and reads like one.**
+A java DIAMOND (`new ArrayList<>(((Collection<?>) value))`, liqp `LValue.java:154`) has a type
+argument javac inferred and no scope names — so the frontend interns a MARKER symbol for it
+(`Symbol.UnresolvedTypeVarPrefix`, spelled once in `api` and read by both sides, because a
+convention spelled twice is one that drifts). Printed, the marker read
+`JavaCollection[? <: ?E]`. `?E` is not a wrong type: it names nothing and does not LEX, so the one
+occurrence cost three errors and only the third of them mentioned a type at all.
+
+The emitter therefore never prints one, in two places:
+
+- a `TypeBounds` whose bound IS the marker DROPS that bound. `? <: ?E` was never more informative
+  than `?` — the variable the wildcard was bounded by has no binder in this scope either;
+- a bare marker renders `?`. In the one position where `?` is not a type either, that is a
+  CONTAINED error rather than a lexical one that takes the enclosing statement with it.
+
+**liqp 58 → 57**, all check counts flat, and 0 members moved on any other port — no other corpus
+library reaches a diamond whose argument is un-nameable. `TirEmitterSpec`, both shapes,
+negative-tested.
+
 *Fix kind: (a).*
 
 ### G3. A class must see its INHERITED INSTANTIATION — 162 → 7, and the guard that cannot work
