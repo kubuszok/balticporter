@@ -1,0 +1,229 @@
+package balticporter.corpus.liqp
+
+import balticporter.runner.PortConfig
+
+import java.io.File
+import java.nio.file.{Files, Path}
+
+import scala.jdk.CollectionConverters.*
+
+/** Migrate **liqp** (`src/main/java`, 135 types — a Java implementation of the Liquid templating
+  * engine, backed by an ANTLR grammar).
+  *
+  *   corpus/runMain balticporter.corpus.liqp.LiqpMigrate [--determinism=full]
+  *
+  * ==This program is a `main` and a classpath, and that is all==
+  * The port is `corpus/ports/liqp/main.conf` — read that, not this file. What is here is the
+  * `main` that names the configuration and gives the run its report identity (`CheckReport.dir` is
+  * derived from the main class's simple name, so a per-port `main` is what keeps
+  * `port-report/LiqpMigrate` a stable measurement baseline), plus [[LiqpClasspath]], which is the
+  * one thing a conf cannot hold: a classpath is produced by a resolver and a compiler, and a
+  * config file naming a command to run would be the strings-that-are-secretly-code the transform
+  * SPI exists to keep out (CLAUDE.md §1.5).
+  *
+  * ==Why liqp is in the corpus==
+  * It is the FIRST library from outside the gdx/sge family, and it is here for what it moves from
+  * §1(c) toward §1(b) toward §1(a). Four things no corpus library has exercised before:
+  *
+  *   1. **A third-party API surface.** libGDX, Ashley, simple-graphs, noise4j and jbump between
+  *      them depend on the JDK and on each other. liqp depends on jackson, on antlr4's runtime and
+  *      on strftime4j, so every question `CollectionsTransform` answers at a JDK seam is asked
+  *      again at a seam that is neither the JDK nor a ported module — `ObjectMapper.convertValue`
+  *      taking a `java.util.Map` is not a shim boundary the phase has ever had to price.
+  *   2. **`ServiceLoader`.** `liqp/spi` discovers `TypesSupport` implementations reflectively.
+  *      That is `ENGINE-LIMITS.md` CT7 territory — a class a FRAMEWORK instantiates has no caller
+  *      to change — on a library that really does it, rather than in a test fixture.
+  *   3. **A generated parser it does not own.** See [[LiqpClasspath]]: 9 432 lines of ANTLR output
+  *      in a package (`liquid.parser.v4`) that is not the library's own, and that references back
+  *      INTO the library. Milestone 1 treats it as external.
+  *   4. **A reference port that is not sge.** `../ssg/ssg-liquid` is the hand-written Scala port of
+  *      this same library, so CLAUDE.md §3.5 has something to consult here that is not the engine's
+  *      usual witness.
+  *
+  * ==Milestone 1 is the SKELETON and the WALL==
+  * This port is not expected to compile. It exists so that the first error census is a MEASURED
+  * number classified per CLAUDE.md §1 rather than an estimate, and the wall is worked down after
+  * that census exists. `PROGRESS.md` §liqp holds the numbers.
+  */
+object LiqpMigrate:
+
+  def main(args: Array[String]): Unit =
+    LiqpClasspath.ensure(LiqpPort.repoRoot)
+    PortConfig.load(LiqpPort.conf("main.conf"), args.toSeq).execute()
+
+/** Where this port's configuration lives, and where its upstream is, for the `main`s that name
+  * them. */
+object LiqpPort:
+
+  def repoRoot: Path =
+    Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
+
+  def conf(name: String): Path = repoRoot.resolve("corpus/ports/liqp").resolve(name)
+
+  /** liqp's upstream checkout — a git SUBMODULE of ssg, not of sge like every other corpus
+    * library. Stated once here and once, conf-relatively, in `main.conf`; the two must agree, and
+    * the lane compares nothing, so a change is a change in both places. */
+  def upstream: Path = repoRoot.resolve("../ssg/original-src/liqp").normalize
+
+/** liqp's FRONTEND classpath: the six jars its `pom.xml` declares, plus the ANTLR-generated parser
+  * compiled to class files.
+  *
+  * ==Why the parser is a CLASSPATH input and not a source root (decision D-liqp-1)==
+  * liqp's own sources `import liquid.parser.v4.LiquidLexer` / `LiquidParser` / `NodeVisitor`. Those
+  * six files are ANTLR OUTPUT — 9 432 lines — generated from the `.g4` grammars in
+  * `src/main/antlr4` by the `antlr4-maven-plugin`, into `target/generated-sources/antlr4`, and they
+  * are UNTRACKED: present in a checkout that has been built, absent in a fresh one. (The grammar
+  * path is written in words rather than as a glob on purpose: a slash-star inside a Scala doc
+  * comment OPENS a nested comment and swallows the rest of the file — CLAUDE.md §4.58's own rule,
+  * met here by a hand-written file rather than by the emitter.) Milestone 1 therefore resolves them the
+  * way it resolves jackson: externally, by class file, with the emitted Scala naming them fully
+  * qualified and the compile lane putting the same directory on scalac's classpath. Porting the
+  * generated parser THROUGH the engine is a recorded later milestone (a second module of this
+  * port), not a thing to decide by accident here.
+  *
+  * ==A missing generated tree is FATAL==
+  * Never a silently smaller port. CLAUDE.md §5.1's rule for a missing `--tests` path applies with
+  * more force to a frontend classpath: `import liquid.parser.v4.LiquidParser` that the frontend
+  * cannot resolve does not fail — it resolves WRONGLY, and the port emits nonsense and reports
+  * success. The refusal below carries the regeneration command, because the agent that meets it is
+  * in a fresh checkout and has no way to know that `target/` is where the input lives.
+  *
+  * ==Why `-implicit:none` and a `-sourcepath`, and not a plain `javac`==
+  * The generated parser does not compile alone: `LiquidParser` has a member of type
+  * `liqp.TemplateParser.ErrorMode`, so the ANTLR output and the library that consumes it are
+  * mutually recursive. Handing javac liqp's own `src/main/java` as a SOURCEPATH resolves that;
+  * `-implicit:none` then keeps javac from writing class files for the implicitly-read liqp
+  * sources, so the output directory holds the 84 class files of `liquid/parser/v4` and NOTHING of
+  * `liqp`. That distinction is the whole point: liqp's own types must reach the frontend as
+  * SOURCE, from the port's `sourceRoot`. A `liqp/…/X.class` on the frontend classpath is a second,
+  * older definition of every type being ported.
+  *
+  * ==What the coordinates are read from==
+  * `pom.xml`, verbatim, including the one that looks like a typo and is not: `jackson.databind
+  * .version` is **2.13.4.2** while `jackson.version` is 2.15.0 — two properties, and the port
+  * resolves what the library DECLARES (the rule `AshleyClasspath` records, where guessing a modern
+  * Mockito cost a full cycle). Note that `cs` then applies HIGHEST-version conflict resolution
+  * where maven applies nearest-wins, so `jackson-datatype-jsr310:2.15.0`'s own dependency promotes
+  * databind to 2.15.0 in the resolved line. That is a resolver difference, not a policy one, and it
+  * is recorded here rather than papered over with a `--force-version`: the declared coordinate is
+  * what this file states, and the day the promotion matters this note is what says where it came
+  * from.
+  */
+object LiqpClasspath:
+
+  /** exactly what `pom.xml` declares at compile scope. `junit:junit:4.13.1` is TEST scope and
+    * belongs to the test port's classpath, not this one. */
+  val Coordinates: List[String] = List(
+    "org.antlr:antlr4-runtime:4.13.0",
+    "com.fasterxml.jackson.core:jackson-core:2.15.0",
+    "com.fasterxml.jackson.core:jackson-databind:2.13.4.2",
+    "com.fasterxml.jackson.core:jackson-annotations:2.15.0",
+    "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0",
+    "ua.co.k:strftime4j:1.0.6",
+  )
+
+  /** the ANTLR output's package, and the only package this object's javac step may write. */
+  val ParserPackage = "liquid/parser/v4"
+
+  def cache(repoRoot: Path): Path        = repoRoot.resolve("out/liqp-classpath.txt")
+  def parserClasses(repoRoot: Path): Path = repoRoot.resolve("out/liqp-parser-classes")
+
+  /** where the `antlr4-maven-plugin` writes, and the command that puts it there. */
+  def generatedSources: Path =
+    LiqpPort.upstream.resolve("target/generated-sources/antlr4")
+
+  private def regenerate: String =
+    s"cd ${LiqpPort.upstream} && ./mvnw -q generate-sources"
+
+  /** Guarantee the classpath file and the compiled parser exist, building both once if they do
+    * not. Returns the file's path.
+    *
+    * BOTH are checked, not just the file: the classpath line names the parser directory, so a
+    * cached line beside a `clean`ed `out/` is a classpath that resolves to nothing — which is
+    * exactly the failure mode the fatality above exists to prevent, arriving by the back door. */
+  def ensure(repoRoot: Path): Path =
+    val out     = cache(repoRoot)
+    val classes = parserClasses(repoRoot)
+    if Files.exists(out) && Files.readString(out).trim.nonEmpty && hasParserClasses(classes) then out
+    else
+      val jars = fetch()
+      compileParser(jars, classes)
+      Files.createDirectories(out.getParent)
+      Files.writeString(out, (jars :+ classes.toString).mkString(File.pathSeparator))
+      out
+
+  private def hasParserClasses(classes: Path): Boolean =
+    val pkg = classes.resolve(ParserPackage)
+    Files.isDirectory(pkg) && {
+      val s = Files.list(pkg)
+      try s.iterator.asScala.exists(_.getFileName.toString.endsWith(".class"))
+      finally s.close()
+    }
+
+  /** `cs fetch --classpath`, filtered to the one line that holds jars.
+    *
+    * `cs` writes PROGRESS to stderr and the classpath to stdout; merged here so a failure is
+    * reportable, then filtered — taking the whole output once cached `Downloading https…` as a
+    * classpath entry and the frontend refused the run with "Downloading https does not exist"
+    * (`SimpleGraphsClasspath`). */
+  private def fetch(): List[String] =
+    val pb = new ProcessBuilder(
+      (List("cs", "fetch", "--classpath") ++ Coordinates)*
+    ).redirectErrorStream(true)
+    val proc = pb.start()
+    val raw  = new String(proc.getInputStream.readAllBytes()).trim
+    val line = raw.linesIterator.filter(_.contains(".jar")).toList.lastOption.getOrElse("")
+    if proc.waitFor() != 0 || line.isEmpty then
+      throw new IllegalStateException(
+        s"[liqp] could not fetch the compile classpath (is `cs` installed?):\n$raw")
+    line.split(File.pathSeparator).filter(_.nonEmpty).toList
+
+  /** javac the ANTLR output into `classes`, resolving liqp's own types from SOURCE and writing
+    * none of them. See the class doc for why both halves of that sentence are load-bearing. */
+  private def compileParser(jars: List[String], classes: Path): Unit =
+    val gen = generatedSources
+    val sources =
+      if !Files.isDirectory(gen) then Nil
+      else
+        val s = Files.walk(gen)
+        try s.iterator.asScala.filter(_.getFileName.toString.endsWith(".java")).map(_.toString).toList.sorted
+        finally s.close()
+    if sources.isEmpty then
+      throw new IllegalStateException(
+        s"""[liqp] the ANTLR-generated parser is NOT PRESENT at $gen.
+           |
+           |liqp's sources `import liquid.parser.v4.{LiquidLexer, LiquidParser, …}`, which are
+           |generated by the antlr4-maven-plugin and are UNTRACKED — a fresh checkout has none.
+           |A port cannot resolve them, and an unresolved import does not fail the frontend: it
+           |resolves WRONGLY and the port emits nonsense and reports success (CLAUDE.md §5.1).
+           |
+           |Regenerate them and re-run:
+           |
+           |    $regenerate
+           |""".stripMargin)
+
+    val javaSrc = LiqpPort.upstream.resolve("src/main/java")
+    if !Files.isDirectory(javaSrc) then
+      throw new IllegalStateException(s"[liqp] upstream sources are not at $javaSrc")
+
+    Files.createDirectories(classes)
+    val cmd = List(
+      "javac",
+      // pinned rather than left to whatever JDK is current: the class files are read by the
+      // FRONTEND (Spoon) as well as by scalac, and a class-file version newer than the frontend's
+      // reader is a resolution failure that reports as an unresolved import.
+      "--release", "17",
+      "-nowarn",
+      // do not write class files for the liqp sources javac reads to type-check the parser. Those
+      // types must reach the frontend as SOURCE; a `liqp/…/X.class` beside them is a second, older
+      // definition of every type this port emits.
+      "-implicit:none",
+      "-sourcepath", javaSrc.toString,
+      "-d", classes.toString,
+      "-cp", jars.mkString(File.pathSeparator),
+    ) ++ sources
+    val proc = new ProcessBuilder(cmd*).redirectErrorStream(true).start()
+    val raw  = new String(proc.getInputStream.readAllBytes()).trim
+    if proc.waitFor() != 0 then
+      throw new IllegalStateException(
+        s"[liqp] could not compile the generated parser into $classes:\n$raw")

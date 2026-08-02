@@ -12,6 +12,7 @@
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
+#   just liqp-measure                liqp — MAIN source set only (milestone 1: the measured wall)
 #   just measure-all                 every lane, SERIALLY, in dependency order
 #   just decision-counts             decisions.tsv row counts by kind, every port
 #   just members-unchanged [PORT]    members.tsv against its committed baseline — the blast radius
@@ -79,6 +80,7 @@ jbump_module  := "jbump-core"
 gltf_module   := "gltf-core"
 screens_module := "screens-core"
 vfx_module    := "vfx-core"
+liqp_module   := "liqp-core"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
@@ -100,6 +102,12 @@ vfx_src       := "../sge/original-src/gdx-vfx"
 # with a `main` that opens an lwjgl window. `java_test_count` over the tree is what re-derives the
 # 8 — and what says so the day a second file gains a real `@Test`.
 gltf_tests    := "../sge/original-src/gdx-gltf/gltf/test"
+# liqp is the one corpus library whose upstream is a submodule of **ssg**, not of sge. Its own
+# `src/main/java` is what the port converts; `target/generated-sources/antlr4` is UNTRACKED ANTLR
+# output that `LiqpClasspath` javacs into `{{liqp_parser_classes}}` and hands the frontend as a
+# CLASSPATH (decision D-liqp-1, stated in corpus/ports/liqp/main.conf).
+liqp_src      := "../ssg/original-src/liqp"
+liqp_parser_classes := "out/liqp-parser-classes"
 
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
@@ -131,6 +139,13 @@ n4j_deps      := ""
 # on purpose, and left as a variable rather than dropped from the lane: the day the port grows a
 # test source set this is the line that gains a coordinate.
 jbump_deps    := ""
+# liqp's `pom.xml`, at COMPILE scope, verbatim — including the one that reads like a typo and is
+# not: `jackson.databind.version` is 2.13.4.2 while `jackson.version` is 2.15.0, two properties in
+# the same pom. A port resolves what the library DECLARES (see `ashley_deps` for what guessing
+# cost). `junit:junit:4.13.1` is TEST scope and belongs to the test port, which milestone 1 does
+# not have. The ANTLR-generated parser is NOT a coordinate — it is a directory of class files the
+# lane adds with `--jar` (see `liqp_parser_classes`).
+liqp_deps     := "--dependency org.antlr:antlr4-runtime:4.13.0 --dependency com.fasterxml.jackson.core:jackson-core:2.15.0 --dependency com.fasterxml.jackson.core:jackson-databind:2.13.4.2 --dependency com.fasterxml.jackson.core:jackson-annotations:2.15.0 --dependency com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0 --dependency ua.co.k:strftime4j:1.0.6"
 # JUnit 4.12 — gdx-gltf's OWN `junitVersion`, from its root `build.gradle`, not the 4.13.2 the
 # other lanes happen to use. The suite is converted to MUnit by `TestFrameworkTransform`, so the
 # junit coordinate is not what RUNS it; it is here because scala-cli must resolve the same surface
@@ -1158,6 +1173,109 @@ jbump-measure:
 
 
 # ---------------------------------------------------------------------------------------------
+# liqp — the MAIN source set only. Milestone 1 measures a WALL, not a green port.
+#
+# `noise4j-measure`'s shape (emit → checks → discovery → break residue → compile → correlate) with
+# two differences, and both of them are the reason this lane is worth reading:
+#
+#   * THE COMPILE HAS A CLASSPATH THAT IS NOT ONLY COORDINATES. Decision D-liqp-1 keeps the
+#     ANTLR-generated parser EXTERNAL: `LiqpClasspath` javacs `target/generated-sources/antlr4`
+#     into `{{liqp_parser_classes}}` and the frontend reads it as a classpath, so scalac must read
+#     the same directory or the two halves of the port disagree about what `liquid.parser.v4` is.
+#     `--jar` takes a directory of compiled classes, which is what that flag's second name
+#     (`--extra-jars`) hides. The lane REFUSES to compile if the directory is not there rather
+#     than reporting the resulting import failures as the port's error count.
+#   * LIQP SHIPS A REAL SUITE AND THIS MILESTONE DOES NOT PORT IT. 105 test files, 640 `@Test`.
+#     The discovery block therefore re-derives that number and says, in the run, that the
+#     behavioural gate is ABSENT — everything CLAUDE.md §4.4 lists is unmeasured for this port.
+#     A lane that simply omitted the stage would read as a lane whose tests passed (the rule
+#     `noise4j-measure` states, arriving here from the other direction: not "no suite exists" but
+#     "a suite exists and none of it runs").
+#
+# The compile is EXPECTED to report errors at this milestone. That is the deliverable — a census,
+# classified per CLAUDE.md §1 — so `compile_guard` reporting a non-zero count is data, and the
+# lane runs `correlate` whether or not it compiled, because the compiler output is the only
+# diagnostic this port has.
+# ---------------------------------------------------------------------------------------------
+[doc("liqp — MAIN source set: emit, checks, break residue, compile, correlate (no test port yet)")]
+liqp-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
+    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{liqp_src}}"
+    REPORT="$ROOT/port-report/LiqpMigrate"
+
+    # ABORT if the migration itself did not run, or the lane measures the PREVIOUS emit and reports a
+    # stale number as a result.
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.liqp.LiqpMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
+      echo "!! LiqpMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[liqp\]" <<<"$OUT" | head -30
+      exit 1
+    fi
+    echo "-- LiqpMigrate (ALL checks, untruncated, as the migration printed them) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
+    echo
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+
+    echo
+    echo "-- test discovery --"
+    # RE-DERIVED, never quoted. liqp HAS a suite and this milestone does not port it, which is a
+    # different statement from noise4j's "there is nothing to port" and has to read differently in
+    # the run — otherwise the absent stage reads as a stage that passed.
+    JAVA_TESTS=$(java_test_count {{liqp_src}}/src/test)
+    echo "@Test in Java: $JAVA_TESTS   emitted test files: 0 (milestone 1 ports the MAIN source set only)"
+    if [ "$JAVA_TESTS" = "0" ]; then
+      echo "!! liqp's suite has VANISHED from ${ROOT}/{{liqp_src}}/src/test — that count has never been 0"
+    else
+      echo "   NONE OF THEM RUNS. There is no corpus/ports/liqp/test.conf yet, so this port's only"
+      echo "   evidence is the compiler, and every CLAUDE.md §4.4 form in it is UNMEASURED."
+    fi
+
+    echo
+    break_residue {{liqp_module}}/src_managed
+
+    echo "-- compile --"
+    # The generated parser is a directory of CLASS FILES the frontend already read (D-liqp-1). If
+    # scalac does not read the same directory the two halves of the port disagree about what
+    # `liquid.parser.v4` is, and the import failures that follow would count as this port's errors.
+    if [ ! -d "{{liqp_parser_classes}}/liquid/parser/v4" ]; then
+      echo "!! {{liqp_parser_classes}} holds no compiled parser — LiqpClasspath did not build it."
+      echo "   Refusing to compile: the resulting unresolved-import errors are not this port's wall."
+      exit 1
+    fi
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
+    # that does not compile — a false NEGATIVE on the headline number.
+    DEPS="{{liqp_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      --jar "{{liqp_parser_classes}}" \
+      {{liqp_module}}/src_managed/main/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/liqpmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/liqpmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/liqpmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/liqpmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/liqpmeasure.txt))"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/liqpmeasure.txt | sort | uniq -c | sort -rn | head -20
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/liqpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
+
+    echo
+    echo "-- correlation: every error located to its member and its Java origin --"
+    # Run WHETHER OR NOT it compiled. With no suite there is no second thing to correlate, so the
+    # compile output is the only diagnostic this port has and it is always worth attributing.
+    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/liqpmeasure.txt \
+      --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
@@ -1170,7 +1288,7 @@ jbump-measure:
 measure-all:
     #!/usr/bin/env bash
     cd "{{root}}"
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure; do
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
