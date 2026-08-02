@@ -1220,18 +1220,33 @@ sibling of the anonymous class — reaches `SpoonTir.stmtKind` as a `CtClassImpl
 `unsupported construct: statement CtClassImpl`. Not dropped silently; the whole unit fails to
 translate, which is the right direction but is the whole story.
 
-**Zero sites in the corpus**, across libGDX core (604), libGDX test (29), Ashley (39), simple-graphs
-(36) and jbump (19) — which is why it has never cost anything and why it is recorded rather than
-built. It surfaced only when a spec for the captured-local rename (`CLAUDE.md` §4.55's fourth face)
-reached for a local class as the second shape that shadows a capture; the pass itself is indifferent
-between the two, because it reads `Tree.ClassDef` and `Tree.AnonClass` through one traversal, so it
-will cover local classes the day the frontend produces them.
+It was **zero sites** across libGDX core (604), libGDX test (29), Ashley (39), simple-graphs (36) and
+jbump (19), which is why it was recorded rather than built. It surfaced only when a spec for the
+captured-local rename (`CLAUDE.md` §4.55's fourth face) reached for a local class as the second shape
+that shadows a capture; the pass itself is indifferent between the two, because it reads
+`Tree.ClassDef` and `Tree.AnonClass` through one traversal, so it will cover local classes the day
+the frontend produces them.
 
-Java code that uses the form at all tends to use it a lot (parser and visitor code especially), so a
-library that hits this hits it as a wall rather than as a residue. Budget it as frontend work, not as
-a translation rule: the TIR already has the node.
+**MEASURED, on the sixth library: liqp's own test suite is the first corpus hit, and it costs 62 of
+639 tests plus 12 compile errors.** Five sites in four files — `liqp/ReadmeSamplesTest.java:65,76`,
+`liqp/TemplateTest.java:145`, `liqp/filters/DateTest.java:166`,
+`liqp/parser/LiquidSupportTest.java:198` — every one of them a `class X implements Inspectable {…}`
+declared inside a `@Test` body, which is idiomatic for a suite that documents an API by using it.
+The refusal aborts the WHOLE run, so `corpus/ports/liqp/test.conf` states the four files in
+`excludeGlobs`, 577 of the 639 `@Test` are emitted, and `just liqp-measure` prints
+`!! TESTS LOST — 62 of 639` on every run until the frontend grows the node. Read the second number
+too: the four excluded files are not isolated — four OTHER suites `import liqp.TemplateTest` for its
+nested `ComparableBase`, so the exclusion also produces **12 `value TemplateTest is not a member of
+ssg.liquid` errors**, a fifth of that source set's wall, which no fix to those four suites can
+remove. The exclusion is a stated, counted retreat and not a policy: when the construct lands, the
+four lines are DELETED rather than narrowed.
 
-*Fix kind: (a), unbuilt — frontend only.*
+That is the shape this entry predicted — Java code that uses the form at all tends to use it a lot,
+so a library that hits this hits it as a wall rather than as a residue. Budget it as frontend work,
+not as a translation rule: the TIR already has the node.
+
+*Fix kind: (a), unbuilt — frontend only. Cost, measured: 62 tests unportable + 12 cascade errors on
+one library.*
 
 ### T10. A java ENUM CONSTRUCTOR has a BODY, and it runs. **6 libGDX sides silently broken, 0 errors**
 
@@ -1383,6 +1398,33 @@ members diff. No error count and no check count moved anywhere. Spec: `EnumCtorB
 negative.
 
 *Fix kind: (a) engine. Built.*
+
+### T14. A java STATIC is INHERITED by every subclass; a Scala companion inherits nothing — emit the DECLARING type — **20 errors, OPEN**
+
+`ZoneOffset.systemDefault()` compiles in Java. `systemDefault()` is declared `static` on
+`java.time.ZoneId`, `ZoneOffset extends ZoneId`, and java lets a static be named through ANY
+subclass — so a library that writes the subclass name is writing valid, ordinary java. Scala's
+companion objects inherit nothing from each other, so the same text emitted verbatim is
+`value systemDefault is not a member of object java.time.ZoneOffset`, every time.
+
+The receiver in the source is a NAME, and the name is the wrong thing to carry across. What the
+frontend has and the emission drops is the resolved executable's **declaring type**, which is the
+only receiver that means the same thing in both languages — the same fact `CLAUDE.md` §1(a) already
+states for the other half of this (*"Java interface constants are `static` and inherited; Scala
+companions do not inherit"*), arriving at a METHOD instead of a constant.
+
+**Measured on liqp's test suite: 20 errors, one call spelled four ways across
+`nodes/{Gt,GtEq,Lt,LtEq}NodeTest`** — a third of that source set's whole wall (59), from a single
+upstream idiom, and every site is `java.time.ZoneOffset.systemDefault()` where the JDK declares
+`java.time.ZoneId.systemDefault()`. It is a JDK-boundary case here, but nothing about it is JDK-only:
+any ported hierarchy whose subclass name is used to reach a base's static has the same shape, and
+the same fix covers both.
+
+Note what it is NOT: not a collections retype, not a shim, not policy. No manifest key can express
+"call this static on its declaring class", and no library should have to.
+
+*Fix kind: (a) engine, unbuilt — emit a static call's receiver as its DECLARING type. Cost, measured:
+20 errors on one library, zero configuration available to a port.*
 
 ---
 

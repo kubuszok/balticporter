@@ -1961,11 +1961,12 @@ written, 987 members in the source map. `just liqp-measure`.
 | `jdk-surface` | **19 -> 10** |
 | `collection-boundary` | **6 -> 14 -> 13** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), and rose by the one `InexpressibleParent` refusal K5.7 counts |
 | `omissions` | **6 -> 4** — `PlainBigDecimal`'s two `super(args)` are no longer dropped; with the external constructor's signature readable the funnel reaches K5.5's synthesised primary |
-| tests | 639 `@Test` upstream, **0 ported** — no `test.conf` in this milestone |
+| tests | 639 `@Test` upstream, **577 emitted, 0 run** — see 10.5.4 |
 
 **There is no behavioural gate on this port.** Every number above is a compile-time one, and §3 is
 explicit about what that is worth: four silent correctness defects in libGDX core all compiled
-cleanly. The `test.conf` is what turns any of this into evidence.
+cleanly. The suite is now emitted and censused; RUNNING it is what turns any of this into evidence,
+and the main port's 31 is what stands between here and there.
 
 ### 10.5.2 What this library taught the engine
 
@@ -2073,6 +2074,61 @@ a null message and no cause — C3 now names the one missing shape (a synthesise
 throwable's widest overload) and the padding it would delegate to, which is already built.
 D-liqp-1 × D-liqp-2 — an external generated parser that references back INTO the renamed library —
 costs exactly one error and cannot be fixed without porting or regenerating it.
+
+### 10.5.4 The test port — emitted and censused, NOT run
+
+`corpus/ports/liqp/test.conf` is a §1.5 dependent of `main.conf` (it inherits
+`packageRenames { liqp = "ssg.liquid" }` and the base's surface phases, and adds `test-framework`).
+`LiqpTestClasspath` derives its frontend classpath from the main one and adds `junit:junit:4.13.1`,
+the ONE test-scope coordinate the pom declares — `org.hamcrest:hamcrest-core:1.3` arrives with it
+transitively and is deliberately not named. `just liqp-measure` runs both ports, compiles both
+source sets on one invocation and splits the wall by the path scalac printed.
+
+| | |
+|---|---|
+| emitted | **101 Scala test files** from 105 java (4 excluded, below), 788 members in the source map |
+| tests | 639 `@Test` upstream -> **577 emitted** (munit 577, junit residue **0** — the whole JUnit surface converted) |
+| scalac errors | **main 31 (unchanged), test 59**, all `EngineGap`; the two are never summed, because a test-set error is frequently a cascade of a main-set one |
+| `portability(emitted)` | **1467**, dominated by hamcrest (725 `assertThat` + 667 `is`/`equalTo`), which the conversion deliberately leaves in place and `ENGINE-LIMITS.md` X6's `org.hamcrest.` rule is what counts |
+| `omissions` | **8** — dropped `@SuppressWarnings` on anonymous-class fields |
+| `trivia` | **0 lost**, 1 recovered (`TestUtils.java:17`) |
+| `break_residue` | **0** over both source sets |
+
+**Four files are excluded and 62 tests go with them.** `ENGINE-LIMITS.md` T9 — a method-LOCAL named
+class is refused by the frontend outright, aborting the whole run — has its first corpus sites here:
+five of them, in `ReadmeSamplesTest`, `TemplateTest`, `DateTest` and `LiquidSupportTest`. The lane's
+discovery gate prints `!! TESTS LOST — 62 of 639` on every run and is supposed to; the exclusion is
+stated in `test.conf` and is deleted, not narrowed, the day the frontend grows the node.
+
+**The 59, classified.** Every one is (a) engine; none is (b) or (c), and none is
+`TestFrameworkTransform`'s:
+
+| n | family | where it goes |
+|---|---|---|
+| **20** | `ZoneOffset.systemDefault()` — a static reached through a SUBCLASS name. Java inherits statics, Scala companions do not | `ENGINE-LIMITS.md` **T14**, new and open: emit a static call's receiver as its DECLARING type |
+| **12** | `value TemplateTest is not a member of ssg.liquid` — four suites `import liqp.TemplateTest` for its nested `ComparableBase` | the T9 exclusion's own cascade; no fix to those four suites removes it |
+| **12** | `JavaCollections.fromJava` over a value the phase ALREADY retyped — java's double-brace `new HashMap<>(){{ … }}` | K15's coercion rule; the same family as two sites in the MAIN set |
+| **4** | an unqualified inherited `add(…)` inside a double-brace anonymous subclass of a retyped collection | K5's inherited-call rewrite, at an ANONYMOUS class with an implicit receiver |
+| 11 | assorted `Found/Required` mismatches at retyped collections and at `TemplateParser.ErrorMode` | the main port's own residue reaching the suite |
+
+**What the suite would exercise the moment it runs**, and does not yet: 46 `@Test(expected=…)`, 2
+`@Before`, 38 anonymous classes, a `switch` on `String` with NO `default`
+(`nodes/ComparingExpressionNodeTest.java:142`, §4.4's fall-out row), and the `ServiceLoader` lookup
+below. Every §4.4 form in this port is UNMEASURED.
+
+**`META-INF/services` is hand-written** (`liqp-core/src/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport`),
+because the engine emits `.scala` and nothing else and this file's NAME and CONTENTS are both
+upstream FQNs a rename has to move — `ENGINE-LIMITS.md` P5, whose counting half is shipped and whose
+artefact lane is not. `Template`'s `static { }` block reaches `ServiceLoader.load(TypesSupport.class)`,
+so absent it the whole suite runs with zero providers and says nothing. The lane carries it with
+`--resource-dir` and refuses to run if the file is gone.
+
+**The run's CWD is part of the measurement.** 45 tests read `./snippets/`, `./_includes/` and
+`src/test/jekyll/` relatively, and `TemplateTest.parseWithInputStream` goes through a
+`FileInputStream`, which `-Duser.dir` does not reach. The lane builds a symlink fixture tree under
+its own scratch and runs `scala-cli test --workspace` from inside it, so nothing is written into the
+ssg submodule. `alternative_includes/` at the upstream root is referenced by nothing and `ruby/` is a
+human's shell harness — neither is linked, and no test shells out.
 
 ---
 
