@@ -2675,7 +2675,10 @@ final class TirEmitter(
     case Tree.Literal(c, _, _)          => constant(c)
     case Tree.This(s, _, _)             => thisRef(s)
     case Tree.Super(_, _, _)            => "super"
-    case Tree.Select(q, s, _, _)        => s"${term(q, i)}.${local(s)}"
+    // A RECEIVER IS AN OPERAND: `.m` binds tighter than every control-flow expression and than
+    // every operator, so `(c ? a : b).toString()` rendered from `term` reads
+    // `if (c) a else b.toString()` — which parses, and calls the method on ONE BRANCH.
+    case Tree.Select(q, s, _, _)        => s"${operand(q, i)}.${local(s)}"
     case Tree.New(tpt, _, _, anon)      => s"new ${ctorTpe(tpt.tpe)}${anonBody(anon, i)}"
     case Tree.Apply(fun, args, _, _, _) => applyStr(fun, args, i)
     case Tree.TypeApply(fun, targs, _, _) => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
@@ -2715,9 +2718,10 @@ final class TirEmitter(
     case Tree.While(c, b, _, _, lbl)    =>
       loopWithJumps(b, lbl, bd => s"while (${term(c, i)}) $bd", term(b, i))
     case Tree.Throw(e, _, _)            => s"throw ${term(e, i)}"
-    case Tree.InstanceOf(e, tpt, _, _)  => s"${term(e, i)}.isInstanceOf[${tpe(tpt.tpe)}]"
-    case Tree.ArrayAccess(a, idx, _, _) => s"${term(a, i)}(${term(idx, i)})"
-    case Tree.ArrayLength(a, _, _)      => s"${term(a, i)}.length"
+    // …and the other three receiver positions, by the same rule and for the same misparse.
+    case Tree.InstanceOf(e, tpt, _, _)  => s"${operand(e, i)}.isInstanceOf[${tpe(tpt.tpe)}]"
+    case Tree.ArrayAccess(a, idx, _, _) => s"${operand(a, i)}(${term(idx, i)})"
+    case Tree.ArrayLength(a, _, _)      => s"${operand(a, i)}.length"
     case Tree.NewArray(el, dims, init, _, _) =>
       init match
         // `scala.Array`, fully qualified: a bare `Array` collides with libGDX's own
@@ -3041,7 +3045,14 @@ final class TirEmitter(
 
   /** parenthesize a term when it is an operand, where bare juxtaposition would misparse:
     * an operator application (precedence) and any control-flow expression — `if`/`match`
-    * as an operand (`a + if (c) x else y`) needs parens or Scala reads "end of statement". */
+    * as an operand (`a + if (c) x else y`) needs parens or Scala reads "end of statement".
+    *
+    * A RECEIVER IS AN OPERAND TOO, and for a while it was not asked. `(c ? a : b).toString()` is
+    * ordinary java; `if (c) a else b.toString()` is valid scala that calls the method on ONE
+    * BRANCH, and where the branches share a type it COMPILES (§4.4 at the emitter rather than at a
+    * statement form). Four positions render a receiver — `Select`'s qualifier, `InstanceOf`'s,
+    * `ArrayLength`'s and `ArrayAccess`'s — and all four now come through here, as `Typed` and
+    * `Spread` already did. */
   private def operand(t: Term, i: Int): String = t match
     case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) if sym(m).fullName.startsWith("scala.<op>#") =>
       s"(${term(t, i)})"

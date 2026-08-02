@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=anim8	engine=balticporter/0.1.0-SNAPSHOT	sources=6b96efbdb888cc69	files=16	policy=b8bd45a9c5de7f6e
+# balticporter port map	schema=3	module=anim8	engine=balticporter/0.1.0-SNAPSHOT	sources=6b96efbdb888cc69	files=16	policy=1f13499252a80d06
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.github.tommyettinger.anim8.AnimatedGif	sge.anim8.AnimatedGif	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,sge.anim8.Dithered primary=() primaryKind=unique-root primaryVis=public
 type	com.github.tommyettinger.anim8.AnimatedPNG	sge.anim8.AnimatedPNG	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,java.lang.AutoCloseable primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=COLOR_ARGB,COMPRESSION_DEFLATE,FILTER_NONE,IDAT,IEND,IHDR,INTERLACE_NONE,SIGNATURE,acTL,fcTL,fdAT
@@ -559,7 +559,7 @@ member	com.github.tommyettinger.anim8.PaletteReducer#thresholdMatrix64	sge.anim8
 member	com.github.tommyettinger.anim8.PaletteReducer#thresholdMatrix8	sge.anim8.PaletteReducer#thresholdMatrix8	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	982	be42eda44fa6143a	placement=companion
 member	com.github.tommyettinger.anim8.PaletteReducer#toLinearLUT	sge.anim8.PaletteReducer#toLinearLUT	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	3982	e9846328a182e72e	placement=companion
 member	com.github.tommyettinger.anim8.PaletteReducer#upperBound(Array,int,int,int,IntComparator)	sge.anim8.PaletteReducer#upperBound(Array<int>,int,int,int,IntComparator)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1713	23dfa2ef2adcd992	placement=companion vis=private
-member	com.github.tommyettinger.anim8.PaletteReducer#writeBigPalette(FileHandle)	sge.anim8.PaletteReducer#writeBigPalette(FileHandle)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	2487	bb7f1859092cec95	
+member	com.github.tommyettinger.anim8.PaletteReducer#writeBigPalette(FileHandle)	sge.anim8.PaletteReducer#writeBigPalette(FileHandle)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	2487	82e0c98ef7a7c9d8	
 member	com.github.tommyettinger.anim8.PaletteReducer#writePreloadFile(FileHandle)	sge.anim8.PaletteReducer#writePreloadFile(FileHandle)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1026	5fef0d28793b422f	
 member	com.github.tommyettinger.anim8.PaletteReducer$IntComparator#compare(int,int)	sge.anim8.PaletteReducer$IntComparator#compare(int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1595	1490956fa748b246	
 member	com.github.tommyettinger.anim8.QualityPalette#<init>(Array,Sge)	sge.anim8.QualityPalette#<init>(Array<Color>,Sge)	Renamed	-	com/github/tommyettinger/anim8/QualityPalette.java	90	2c10d98cf3176856	

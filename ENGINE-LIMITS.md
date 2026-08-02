@@ -489,6 +489,32 @@ gating the retype off.
 
 *Fix kind: (a) engine. Built.*
 
+### G22. A method TYPE PARAMETER constrained only by its BOUND infers `Nothing` in Scala and its BOUND in java — 1 error, OPEN
+
+```java
+<T extends Map<String, ?>> T getRegistry(String name);
+…
+assertTrue(context.getRegistry(REGISTRY_FOR).isEmpty());
+```
+
+`T` appears in no formal, and the result is consumed by a member selection rather than by a typed
+slot — so nothing at the call site constrains it. Java then instantiates it at its BOUND and
+`isEmpty()` resolves; Scala instantiates an unconstrained variable at its LOWER bound and the
+selection fails with `Found: Nothing / Required: ?{ isEmpty: ? }`. Nothing about the receiver is
+wrong and nothing about the retyping is: the two languages disagree about what an unconstrained
+variable is.
+
+`SpoonTir.pinTypeArgs` covers the NEIGHBOURING case — a generic call whose ARGUMENTS determine what
+java resolved — and declines here, correctly, because no argument mentions `T`. The answer java gave
+is therefore a fact about the DECLARATION rather than about the call, which is what makes this a
+different rule and not a widening of that one: pin the java-resolved argument explicitly, and where
+nothing at the call constrains it, that argument is the bound.
+
+Measured at **1 error** on liqp (`TemplateContext.getRegistry`, called for its emptiness in a
+`finally`). `CLAUDE.md` §6's "never cast to `scala.Nothing`" is the same disagreement met at a cast.
+
+*Fix kind: (a) engine, unbuilt.*
+
 ---
 
 ## 2. Constructors
@@ -1478,6 +1504,52 @@ symbols. Same seams, renumbered.
 
 *Fix kind: (a) engine. Both halves — method and interface constant — are the one rule, read off the
 symbol's owner.*
+
+### T15. A RECEIVER IS AN OPERAND — `.m` binds tighter than every control-flow expression — **CLOSED, 2 errors and an unknown number of silent ones**
+
+```java
+String data = (nodes.length >= 2 ? nodes[1].render(c) : nodes[0].render(c)).toString();
+```
+
+emitted
+
+```scala
+val data: String = if (nodes.length >= 2) nodes(1).render(c) else nodes(0).render(c).toString()
+```
+
+The `.toString()` is now **inside the else branch**. Scala parses it, so this is not a syntax
+error — it is `CLAUDE.md` §4.4's shape reached at the EMITTER rather than at a statement form: where
+the two branches have different types it is a type error attributed to the wrong expression, and
+where they have the same type it COMPILES and calls the method on one branch only.
+
+`TirEmitter.operand` has known which terms need parenthesising as an operand since it was written —
+an operator application (precedence) and any control-flow expression — and `Tree.Typed` and
+`Tree.Spread` already went through it. **Four receiver positions did not**: `Select`'s qualifier,
+`InstanceOf`'s, `ArrayLength`'s and `ArrayAccess`'s. The rule was half-applied rather than absent,
+which is exactly why nothing found it: the emitter *looks* like it parenthesises operands.
+
+Note the second face, which has no conditional in it at all: `(a + b).length()` emitted
+`a + b.length()`, a different program wherever both sides are `String`.
+
+Found by porting a TEST SUITE and reading one error, not by compiling a library — the same route as
+every §4.4 entry. **2 errors on liqp** (`InsertionTest`, the same anonymous `Block.render` written
+twice), and the measurement that matters is the MEMBER diff rather than the error diff, because the
+loud face is the rare one.
+
+**The silent face was in the corpus already, in a port measured green.** `anim8`:
+
+```java
+(filename == null ? Gdx.files.local("BigPaletteMapping.dat") : filename)
+    .writeString(new String(bigPaletteMapping), false, "UTF8");
+```
+
+emitted `if (c) Gdx.files.local(…) else filename.writeString(…)`. Both branches are a `FileHandle`,
+so the ported `writeBigPalette` COMPILED — and wrote the file only when the caller passed a handle;
+called with `null` it built the local handle, discarded it, and wrote nothing. **0 errors, every
+check count flat, 23 tests passing, for as long as that port has existed.** libGDX core moved 0
+members, which says only that libGDX has no such receiver — not that the defect is rare.
+
+*Fix kind: (a) engine. Built — one call to `operand` in each of the four positions, and no new rule.*
 
 ---
 

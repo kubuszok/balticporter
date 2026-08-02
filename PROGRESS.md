@@ -1127,6 +1127,14 @@ universal engine defects, each in its own commit, pinned by a spec through the p
 | L2 | a prefix operator rendered against its operand lexes as one token (`--`) | **48 errors in one method** |
 | T10 | a java enum CONSTRUCTOR's body was dropped; every field it assigned stayed at its default | **0 errors — 6 libGDX cubemap sides silently broken** |
 | T11 | a PROMOTED enum constructor parameter is a member and collided with `Enum.name()` | 1 error |
+| T15 | a RECEIVER is an operand — a CONDITIONAL receiver's call landed INSIDE one branch | **0 errors — `writeBigPalette(null)` wrote nothing at all** |
+
+**T15 is T10's shape again, and it was found from ANOTHER LIBRARY.** `writeBigPalette` is
+`(filename == null ? Gdx.files.local(…) : filename).writeString(…)`; emitted without parentheses the
+`writeString` bound to the `else` branch, both branches are a `FileHandle` so it COMPILED, and the
+method wrote the file only when the caller passed a handle. 0 errors, every check count flat, 23
+tests passing, for the life of this port — the two liqp errors that exposed the rule are in a
+different library, and this port moved 2 members on the fix.
 
 **T10 is the one that matters.** It is a pre-existing silent correctness defect in **libGDX core**,
 not in anim8: `Cubemap.CubemapSide`'s constructor builds `up` and `direction` from six float
@@ -1959,7 +1967,7 @@ written, 987 members in the source map. `just liqp-measure`.
 
 | | |
 |---|---|
-| scalac errors | main source set **126 -> 31 -> 27**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); with the test source set, **90 -> 87 -> 74 -> 76 -> 56** (the test half gained 2 when the `asList` rewrite learned the external pack shape and repaired three sites — K6.5 — and lost 20 when T14 closed) |
+| scalac errors | main source set **126 -> 31 -> 27**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); with the test source set, **90 -> 87 -> 74 -> 76 -> 56 -> 52 -> 50** (the test half gained 2 when the `asList` rewrite learned the external pack shape and repaired three sites — K6.5 — then lost 20 to T14, 4 to K5's implicit receiver and 2 to T15's receiver parenthesisation) |
 | `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
 | `jdk-surface` | **19 -> 10** |
@@ -2031,6 +2039,12 @@ porting a library from outside the family the engine grew up in.
   omission: `SpoonTir.descriptorOf` spells `T…` and `T[]` identically BY CONSTRUCTION, so the
   vararg-ness lives only in the class file the frontend read and a tree-level check could do nothing
   but read the frontend's answer back — which `BreakCatchCheck`'s contract forbids.
+- **`ENGINE-LIMITS.md` T15 (new, closed)** — a RECEIVER IS AN OPERAND. `(c ? a : b).toString()`
+  emitted `if (c) a else b.toString()`, which parses and calls the method on ONE BRANCH. `operand`
+  has known the rule since it was written and four receiver positions were not asking it — the
+  half-applied form is why nothing found it. 2 errors here, **and one SILENT site in a port measured
+  green**: `anim8`'s `writeBigPalette` wrote nothing at all when called with `null`, at 0 errors and
+  23 passing tests, for the life of that port. That is the whole of §3 in one member.
 - **`ENGINE-LIMITS.md` K5 (extended, closed)** — an inherited collection call with NO RECEIVER
   WRITTEN, which is what java's double-brace initialiser is made of. Inside a NAMED class the
   frontend already supplies `this.`/`Outer.this.`; inside an ANONYMOUS class it does not, so the
@@ -2123,7 +2137,7 @@ source sets on one invocation and splits the wall by the path scalac printed.
 |---|---|
 | emitted | **101 Scala test files** from 105 java (4 excluded, below), 788 members in the source map |
 | tests | 639 `@Test` upstream -> **577 emitted** (munit 577, junit residue **0** — the whole JUnit surface converted) |
-| scalac errors | **main 27 (unchanged by this port), test 49 -> 29**, all `EngineGap`; the two are never summed, because a test-set error is frequently a cascade of a main-set one |
+| scalac errors | **main 27 (unchanged by this port), test 49 -> 29 -> 25 -> 23**, all `EngineGap`; the two are never summed, because a test-set error is frequently a cascade of a main-set one |
 | `portability(emitted)` | **1467**, dominated by hamcrest (725 `assertThat` + 667 `is`/`equalTo`), which the conversion deliberately leaves in place and `ENGINE-LIMITS.md` X6's `org.hamcrest.` rule is what counts |
 | `omissions` | **8** — dropped `@SuppressWarnings` on anonymous-class fields |
 | `trivia` | **0 lost**, 1 recovered (`TestUtils.java:17`) |
@@ -2135,15 +2149,20 @@ five of them, in `ReadmeSamplesTest`, `TemplateTest`, `DateTest` and `LiquidSupp
 discovery gate prints `!! TESTS LOST — 62 of 639` on every run and is supposed to; the exclusion is
 stated in `test.conf` and is deleted, not narrowed, the day the frontend grows the node.
 
-**The 49, classified.** Every one is (a) engine; none is (b) or (c), and none is
-`TestFrameworkTransform`'s:
+**The 49, classified — and 26 of them closed.** Every one is (a) engine except the two named below;
+none is (b) or (c), and none is `TestFrameworkTransform`'s. **The test source set now reads 23.**
 
 | n | family | where it goes |
 |---|---|---|
 | ~~20~~ **0** | `ZoneOffset.systemDefault()` — a static reached through a SUBCLASS name. Java inherits statics, Scala companions do not | `ENGINE-LIMITS.md` **T14**, CLOSED in the frontend: the receiver is the interned symbol's OWNER, and the FIELD half's superclass-only walk became the inheritance closure (a java interface constant is inherited through `implements`) |
 | **12** | `value TemplateTest is not a member of ssg.liquid` — four suites `import liqp.TemplateTest` for its nested `ComparableBase` | the T9 exclusion's own cascade; no fix to those four suites removes it |
-| **4** | an unqualified inherited `add(…)` inside a double-brace anonymous subclass of a retyped collection | K5's inherited-call rewrite, at an ANONYMOUS class with an implicit receiver |
-| 13 | assorted `Found/Required` mismatches at retyped collections, at `TemplateParser.ErrorMode` and at one `toJava` comparison | the main port's own residue reaching the suite |
+| ~~4~~ **0** | an unqualified inherited `add(…)` inside a double-brace anonymous subclass of a retyped collection | `ENGINE-LIMITS.md` **K5** (extended), CLOSED: inside a NAMED class the frontend already supplies `this.`/`Outer.this.`; inside an ANONYMOUS one it does not, so the enclosing `new … { … }` claims the pending call — and the same claim repaired 22 SILENT `put` sites the four errors never named |
+| ~~2~~ **0** | `Found: Object / Required: String` at `InsertionTest`'s two anonymous `Block.render` bodies | `ENGINE-LIMITS.md` **T15** (new), CLOSED: `(c ? a : b).toString()` emitted the call INSIDE the else branch. A receiver is an operand, and four receiver positions were not asking `operand` |
+| **6** | one heterogeneous `Arrays.asList(98, "97", true, false, null)` — six per-element `Found: (98 : Int) / Required: String` | (a) OPEN. Java boxes those literals and infers `Serializable & Comparable<…>`; scala's `Int`/`Boolean` are value types and join to nothing java would name, so the element type the vararg infers is not java's. Visible only because K6.5's pack-opening made the elements separate arguments |
+| **2** | `Found: (templateParser.errorMode : ssg.liquid.TemplateParser.ErrorMode)` at `TestUtils` and `LiquidParserTest`, against the generated parser's `liqp.TemplateParser.ErrorMode` formal | **NOT (a)** — D-liqp-1 × D-liqp-2, the same one the main set carries: an external generated parser that references back INTO the renamed library. Unfixable without porting or regenerating it |
+| **1** | `LiquidParserTest#array` — `JavaCollections.toArray(java.util.Arrays.asList(arr*), …)` | K6.5's aliasing refusal in the test set; the same nine the main port carries |
+| **1** | `RenderSettingsTest` — `E172 Can't compare these two types: java.util.List[Object] / java.util.List[String]` at `assertEquals(toJava(list), toJava(asList(…)))` | (a) OPEN. MUnit's `Compare` needs a common type and the two `toJava` calls infer different element types; it is the retyping's own element-type residue met at an assertion |
+| **1** | `ForTest` — `Found: Nothing / Required: ?{ isEmpty: ? }` at `getRegistry(REGISTRY_FOR).isEmpty()` | `ENGINE-LIMITS.md` **G22** (new, open): `<T extends Map<String,?>> T getRegistry(String)` — `T` appears in no formal and nothing at the call constrains it, so java instantiates it at its BOUND and scala at `Nothing` |
 
 The 12 `JavaCollections.fromJava` errors that used to head this table — java's double-brace
 `new HashMap<>(){{ … }}` handed to a retyped value — are GONE, taken by A2/A3/A4 (the external wrap

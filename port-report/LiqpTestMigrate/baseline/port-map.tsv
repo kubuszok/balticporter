@@ -125,8 +125,8 @@ member	liqp.ConditionTest#<stmt6>	ssg.liquid.ConditionTest#<stmt6>	Renamed	-	liq
 member	liqp.ConditionTest#<stmt7>	ssg.liquid.ConditionTest#<stmt7>	Renamed	-	liqp/ConditionTest.java	171	8ab0e132863d45f4	
 member	liqp.InsertionTest#<stmt10>	ssg.liquid.InsertionTest#<stmt10>	Renamed	-	liqp/InsertionTest.java	189	1ae884182baa36e4	
 member	liqp.InsertionTest#<stmt11>	ssg.liquid.InsertionTest#<stmt11>	Renamed	-	liqp/InsertionTest.java	205	a677a68d55771abd	
-member	liqp.InsertionTest#<stmt1>	ssg.liquid.InsertionTest#<stmt1>	Renamed	-	liqp/InsertionTest.java	16	59d6e5bdecbc776d	
-member	liqp.InsertionTest#<stmt2>	ssg.liquid.InsertionTest#<stmt2>	Renamed	-	liqp/InsertionTest.java	41	020bde769753d22f	
+member	liqp.InsertionTest#<stmt1>	ssg.liquid.InsertionTest#<stmt1>	Renamed	-	liqp/InsertionTest.java	16	43c24a179d4c028e	
+member	liqp.InsertionTest#<stmt2>	ssg.liquid.InsertionTest#<stmt2>	Renamed	-	liqp/InsertionTest.java	41	1ac14ee0e99efa76	
 member	liqp.InsertionTest#<stmt3>	ssg.liquid.InsertionTest#<stmt3>	Renamed	-	liqp/InsertionTest.java	65	1de8bc878e77e42e	
 member	liqp.InsertionTest#<stmt4>	ssg.liquid.InsertionTest#<stmt4>	Renamed	-	liqp/InsertionTest.java	82	68e5e73aa0757603	
 member	liqp.InsertionTest#<stmt5>	ssg.liquid.InsertionTest#<stmt5>	Renamed	-	liqp/InsertionTest.java	100	237f5205b153238d	

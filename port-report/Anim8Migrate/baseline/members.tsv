@@ -386,7 +386,7 @@ sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Array<Pixmap>,int)	
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Pixmap)	def	1d04584303d5da27
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Array<Pixmap>,int)	def	d745d50271f61fbe
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Pixmap)	def	77dea53a81167dae
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	bb7a1980192709f1
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	896ce5824f80d486
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	da27f25e725d2439
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	99d19fbed16243ab
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<init>(Array<Color>,Sge)	ctor	2e1bfbfa5ed145c3
@@ -540,7 +540,7 @@ sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#thresholdMatrix64	val	74b01c30
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#thresholdMatrix8	val	be42eda44fa6143a
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#toLinearLUT	val	e9846328a182e72e
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#upperBound(Array<int>,int,int,int,IntComparator)	def	23dfa2ef2adcd992
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#writeBigPalette(FileHandle)	def	bb7f1859092cec95
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#writeBigPalette(FileHandle)	def	82e0c98ef7a7c9d8
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#writePreloadFile(FileHandle)	def	5fef0d28793b422f
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer$IntComparator	class	4096e85a657a8203
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer$IntComparator#compare(int,int)	def	1490956fa748b246
