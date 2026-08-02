@@ -354,7 +354,12 @@ class SurfaceFoldSpec extends munit.FunSuite:
     assert(clue(f.head.subject) == "type-redirect")
   }
 
-  test("…and the same screen admits it when the base DROPS the type — ashley's real shape") {
+  // …and this is a real dependent port's shape: it redirects a type its base DROPS and supplies
+  // nothing at (ashley re-points `com.badlogic.gdx.utils.ReflectionPool` at its own replacement).
+  // The attribution lives HERE and not in the title on purpose: the §1 enforcement grep reads code
+  // lines and skips comments, so a library name inside a `test("…")` string is a library name in
+  // CODE that the grep cannot see — and a fixture that names one is exactly what §1 forbids.
+  test("…and the same screen admits it when the base DROPS the type") {
     val b   = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"))
     val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
       surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))

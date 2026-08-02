@@ -19,7 +19,8 @@ import balticporter.tir.RuleScope
   *     reader   = "summon" | "apply"
   *     boundary = "refuse" | "residual-global"
   *     sites    = { "com.foo.Utils#<clinit>" = "lazy-init" }
-  *     selfSupplied = { "com.foo.FooTest" = "com.foo.TestFixture.ctx()" }
+  *     # KEY upstream (a type this run parses); VALUE in the EMITTED namespace — see `selfSupplied`
+  *     selfSupplied = { "com.foo.FooTest" = "sge.FooTestFixture.ctx()" }
   *     promoteToClass = [ "com.foo.Viewport" ]
   *     scope    = { except = [ … ] }
   *   }]
@@ -65,7 +66,11 @@ import balticporter.tir.RuleScope
   *   The VALUE is Scala, emitted verbatim exactly like `MethodBodyTransform`'s bodies, and it is
   *   written in the EMITTED namespace — it names a fixture the port hand-wrote, which the frontend
   *   never saw and the package rename therefore never rewrites (the same category as an INJECTED
-  *   context type). CLAUDE.md §6 applies to what you write: fully-qualified, no imports.
+  *   context type). CLAUDE.md §6 applies to what you write: fully-qualified, no imports. The two
+  *   halves of one entry are therefore in DIFFERENT namespaces — the key upstream, because it names
+  *   a type this run parses and the rename runs last (§4.56); the value emitted, because nothing
+  *   will ever rewrite it — which is why the example above spells the value `sge.FooTestFixture` and
+  *   not `com.foo.…`. A value written upstream compiles against nothing.
   *
   *   WHICH declarations are framework-instantiated is not derivable — the closure only ever sees
   *   the program — so it is declared here. What IS derivable is the SHAPE, and the phase warns on
