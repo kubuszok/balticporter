@@ -1946,6 +1946,68 @@ method is a shader draw. That is 27 of 44 types resting on compilation alone.
 
 ---
 
+## 10.5 liqp — the first port measured from OUTSIDE the sge/ssg family
+
+**Milestone 1 measures a WALL, not a green port.** 135 java files converted, 139 Scala files
+written, 987 members in the source map. `just liqp-measure`.
+
+### 10.5.1 Measured state
+
+| | |
+|---|---|
+| scalac errors | **126 -> 70**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`) |
+| `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
+| `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
+| `jdk-surface` | **19 -> 10** |
+| `collection-boundary` | **6 -> 14** — the 8 new ones are `ExternalCallee`, a residue nothing could count before (K15) |
+| tests | 639 `@Test` upstream, **0 ported** — no `test.conf` in this milestone |
+
+**There is no behavioural gate on this port.** Every number above is a compile-time one, and §3 is
+explicit about what that is worth: four silent correctness defects in libGDX core all compiled
+cleanly. The `test.conf` is what turns any of this into evidence.
+
+### 10.5.2 What this library taught the engine
+
+Every entry below is an ENGINE fix, none of them (b) or (c) — which is the useful surprise of
+porting a library from outside the family the engine grew up in.
+
+- **`ENGINE-LIMITS.md` K15** — *a retyping phase owes a boundary count at EXTERNAL callees, not
+  only at JDK ones*, now also `CLAUDE.md` §1(b). 15 compile errors at one third-party package
+  against 0 findings, because the position-blind retyping moved the node's type on BOTH sides. The
+  producer half is closed by a live `scala.jdk` wrap; the consumer half is frontend-blocked and
+  counted. **The measurement underneath it is the transferable one: every external member the
+  frontend interns carries `NoType`** — 1157 of them here, not one with a `MethodType`.
+- **`ENGINE-LIMITS.md` K6** — `Collectors.toSet`/`toMap` built (java's two-argument `toMap` THROWS
+  on a duplicate key; `.toMap` over pairs keeps the last), and the stream collapse's
+  wrong-table-lookup bug found: it emitted the SHIM's `asScalaBuffer` on `Buffer` and `Map`
+  receivers. **No check could see that one** — the collapse fired, so nothing reported an
+  untranslated chain.
+- **`ENGINE-LIMITS.md` K6 (`Collections`)** — the `unmodifiable*` family CLOSED, with the rule that
+  reopened it: *"scala has no such type" is a claim about the STDLIB, and this engine ships a
+  runtime.*
+- **`ENGINE-LIMITS.md` K5** — a class that EXTENDS a mapped collection now has its INHERITED calls
+  rewritten (the kind comes from the resolved method's declaring type). `super` is refused blanket,
+  measured: `super.putAll(m)` rendered `super ++= m`, an E040 SYNTAX error, which is strictly worse
+  than the type error it replaced.
+- **`ENGINE-LIMITS.md` K6.5** — the aliasing refusal is now a KNOWN construction blocked on one
+  frontend fact, with the number (`76 -> 67` if taken accidentally).
+- **`toArray()`/`toArray(T[])`, `subList`, `putIfAbsent`** — four JDK members whose scala namesakes
+  mean something else, each a §4.4 shape with no compile error of its own: an `Object[]` component
+  type, a filled-not-allocated argument, a null terminator, a write-through view, and a return
+  value that is the PREVIOUS one.
+
+### 10.5.3 Remaining, classified
+
+The 70 are dominated by three families the collections wave did not own: a wildcard reaching a TERM
+position and the `getOrElse` key it mints (`Map[?,?]`, `Buffer[?]`); `Map.Entry` where a class
+IMPLEMENTS it, whose `Tuple2` target is FINAL and has no `setValue` — an inexpressible parent, so
+likely M6's answer rather than a fix; and a Scala KEYWORD in an emitted package segment
+(`com.fasterxml.jackson.core.type`), which is one line in the emitter and the clearest §1(a) the
+census found. D-liqp-1 × D-liqp-2 — an external generated parser that references back INTO the
+renamed library — costs exactly one error and cannot be fixed without porting or regenerating it.
+
+---
+
 ## 11. Publishability — what sge and ssg need before they can depend on this
 
 **The goal being evaluated.** sge and ssg stop hand-maintaining their ports and instead depend on
