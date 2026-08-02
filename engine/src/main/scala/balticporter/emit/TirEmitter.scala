@@ -257,13 +257,22 @@ final class TirEmitter(
       vis           = "public", // the emitter drops a type's `private` outright — see `classDef1`
     )
 
-  /** the emitted `def this` signatures — every constructor the funnel did NOT promote. */
+  /** the emitted `def this` signatures — every constructor the funnel did NOT promote, MINUS the
+    * ones `orderBody` drops in front of a nilary primary.
+    *
+    * The second subtraction is not a refinement, it is the difference between a contract and a
+    * guess. A `Plan.none` class's nilary java constructor is never emitted (`E120` beside scala's
+    * implicit primary), and publishing `()` among the secondaries told every dependent that
+    * `new BitmapFont()` reaches a `def this()` this module does not have. Read through
+    * `CtorFunnel.delegationOnlyNilary`, which is the predicate the emission itself drops with. */
   private def secondariesOf(cd: Tree.ClassDef, plan: CtorFunnel.Plan): List[Descriptor] =
     if sym(cd.symbol).flags.isModule then Nil
     else
       given Program = program
+      val paramful = plans.paramfulPrimaryOf(cd)
       CtorFunnel.ctorsOf(program, cd.body)
         .filterNot(d => plan.primary.exists(_.symbol == d.symbol))
+        .filterNot(d => !paramful && CtorFunnel.delegationOnlyNilary(program, d).isDefined)
         .map(d => Descriptor(CtorFunnel.valueParams(program, d).map(v => descriptorParam(v.tpt.tpe))))
 
   /** one emitted type, in the descriptor grammar's [[Param]] vocabulary — through
@@ -1735,17 +1744,14 @@ final class TirEmitter(
     // `extends` and every `new C()`. That is CT4's third cause reappearing on the `Plan.none` side,
     // and reading value parameters restores exactly the answer this class gets with no clause at
     // all — the degenerate secondary dropped (`ENGINE-LIMITS.md` CT5).
-    def degenerate(d: Tree.DefDef): Boolean =
-      !paramfulPrimary && CtorFunnel.valueParams(program, d).isEmpty && (d.rhs match
-        case Some(Tree.Block(stats, _, _, _, _)) =>
-          stats.forall {
-            case t: Term => Tree.uncomment(t) match
-              case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) => sym(m).name == "<init>"
-              case _                                               => false
-            case _ => false
-          }
-        case _ => true)
-    val ctorList = body.collect { case d: Tree.DefDef if isCtor(d) && !degenerate(d) => d }
+    // …and DEGENERATE is only half of what this predicate drops. A nilary constructor whose
+    // delegation CARRIES ARGUMENTS is not degenerate — java ran that delegation and scala's implicit
+    // nilary primary does not — and it is dropped all the same, because there is nowhere to put it:
+    // `def this()` beside a nilary primary is `E120`. That half is `CtorFunnel.Plans.droppedNilaryCtor`
+    // and `OmissionCheck.droppedNilaryCtors` counts it. ONE predicate for both, so the emission and
+    // the count cannot disagree about which constructors vanish.
+    def dropped(d: Tree.DefDef): Boolean = !paramfulPrimary && CtorFunnel.delegationOnlyNilary(program, d).isDefined
+    val ctorList = body.collect { case d: Tree.DefDef if isCtor(d) && !dropped(d) => d }
     val bySym    = ctorList.map(d => d.symbol -> d).toMap
     // DFS post-order = topological order (a target is appended before its caller); `inProgress`
     // breaks any (illegal) cycle so a malformed chain can't loop forever.

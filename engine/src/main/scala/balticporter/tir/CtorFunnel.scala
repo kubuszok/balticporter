@@ -702,6 +702,46 @@ object CtorFunnel:
       val p = plans.getOrElse(cd.symbol, Plan.none)
       escapesOf(program, cd, p.primary, p.primaryBody)
 
+    /** Does the emitted class have a primary this funnel gave PARAMETERS? The emitter asks it to
+      * decide whether a `def this()` has room to be declared beside the primary, and a check asks it
+      * to decide whether one was therefore dropped — one function, so the two cannot drift. */
+    def paramfulPrimaryOf(cd: Tree.ClassDef): Boolean = paramfulPrimary(apply(cd))
+
+    /** The class's own NILARY java constructor, where the port DROPS IT AND LOSES WHAT IT DID.
+      *
+      * A `Plan.none` (or promoted-nilary) class keeps scala's implicit nilary primary, so a
+      * `def this()` beside it is `E120 Conflicting definitions` and the emitter drops every nilary
+      * constructor in front of one ([[delegationOnlyNilary]]). For `C() { super(); }` that is exact:
+      * the implicit primary IS that constructor. For `C() { this(seed(), "d"); }` it is not —
+      * java ran the delegation, the emitted class runs nothing, and `new C()` builds an object java
+      * could never build.
+      *
+      * There is no third option here, and each alternative was measured rather than assumed:
+      *
+      *   - EMIT it — `E120` at the declaration, `E051` at every argument-free `extends` (CT4/CT5);
+      *   - PROMOTE it to the primary — its body becomes the class body, which runs on EVERY
+      *     construction path, so `new BitmapFont(fontFile)` would also load the default face
+      *     ([[promotionEscapes]], `ENGINE-LIMITS.md` C6/C7: 9 of libGDX `BitmapFont`'s 10 paths);
+      *   - give the class a MARKER-disambiguated synthesised primary so the `def this()` is
+      *     declarable — then a subclass's bare `extends C` resolves to that very `def this()` (the
+      *     fact [[reachableArgumentFree]] is built on), so `new DistanceFieldFont(…)` would load the
+      *     default face where today it loads nothing. A new wrong answer in place of a missing one.
+      *
+      * So the honest outcome is the counted one, exactly as for [[promotionEscapes]].
+      * `OmissionCheck.droppedNilaryCtors` reports it, from this function.
+      *
+      * `None` when the class has no such constructor, when the primary is paramful (the `def this()`
+      * is then declarable and IS emitted), or when the nilary constructor is itself the promoted
+      * primary — its body is the class body and nothing is lost. */
+    def droppedNilaryCtor(cd: Tree.ClassDef): Option[Tree.DefDef] =
+      val p = plans.getOrElse(cd.symbol, Plan.none)
+      if paramfulPrimary(p) then scala.None
+      else
+        ctorsOf(program, cd.body).find { d =>
+          !p.primary.map(_.symbol).contains(d.symbol) &&
+            delegationOnlyNilary(program, d).exists(_.nonEmpty)
+        }
+
     /** the constructors on whose path java did not run the promoted body — BEFORE the prefix strip
       * below has a chance to make the duplication disappear. */
     private def escapingRoots(cd: Tree.ClassDef): List[Tree.DefDef] =
@@ -1231,6 +1271,46 @@ object CtorFunnel:
 
   private def isInitName(program: Program, m: SymId): Boolean =
     program.symbolOf(m).exists(_.name == "<init>")
+
+  /** A NILARY constructor whose body is NOTHING BUT delegation, with the arguments that delegation
+    * passes — `Some(Nil)` for `C() { super(); }`, `Some(args)` for `C() { this(seed(), "d"); }`,
+    * `None` for a constructor that is paramful or that does anything else.
+    *
+    * This is the whole of what `TirEmitter.orderBody` drops in front of a NILARY primary, and it is
+    * one function because the two halves of it must never drift apart:
+    *
+    *   - `Some(Nil)` is DEGENERATE. Scala's implicit primary constructor already is exactly that
+    *     constructor, and `def this() = this()` self-recurses. Dropping it costs nothing, and
+    *     emitting it costs `E120` at the declaration plus an `E051` at every argument-free `extends`
+    *     (`ENGINE-LIMITS.md` CT4/CT5).
+    *   - `Some(args)` with `args.nonEmpty` is NOT degenerate — java ran that delegation and scala's
+    *     implicit primary does not — and it is dropped ANYWAY, for the same `E120`. That is a real
+    *     omission, and it was silent until [[Plans.droppedNilaryCtor]] and
+    *     `OmissionCheck.droppedNilaryCtors` gave it a number: `new BitmapFont()` built a font with no
+    *     data, no page and no glyph where java loaded the default 15pt face, and nothing in the
+    *     pipeline moved (CLAUDE.md §4.4 — it compiles and means something else).
+    *
+    * An ABSENT body is `Some(Nil)` too: a constructor with no statements at all is the implicit
+    * primary exactly as an explicit `super()` is.
+    *
+    * NILARY is asked of the VALUE parameters ([[valueParams]]), never `paramss.flatten`: a `C()`
+    * that gained a `(using T)` clause is still java's nilary constructor, and reading the flattened
+    * list made it paramful, un-dropped it, and put `def this()(using T)` beside a primary carrying
+    * the same clause (CT5). */
+  def delegationOnlyNilary(program: Program, d: Tree.DefDef): Option[List[Term]] =
+    if valueParams(program, d).nonEmpty then scala.None
+    else
+      d.rhs match
+        case Some(Tree.Block(stats, _, _, _, _)) =>
+          val delegations = stats.map {
+            case t: Term => Tree.uncomment(t) match
+              case Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _) if isInitName(program, m) => Some(as)
+              case _                                                                          => scala.None
+            case _ => scala.None
+          }
+          if delegations.forall(_.isDefined) then Some(delegations.flatten.flatten) else scala.None
+        // no block body at all — nothing to run, so it IS scala's implicit primary
+        case _ => Some(Nil)
 
   // ---- JAVA'S PARAMETERS vs THE PIPELINE'S (see `Plan.givens`) ----
   //

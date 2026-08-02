@@ -226,7 +226,7 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 | files emitted | **598** (12 dropped, 7 injected) | **29** |
 | model | 605 units / 52,453 symbols | 634 units / 53,612 symbols |
 | signature consistency | 0 | 0 |
-| omissions | **65** | 3 |
+| omissions | **66** | 3 |
 | portability (all / emitted / injected) | 151 / 151 / 2 | 166 / 15 / 0 |
 | remediation suggestions | 29 | 2 |
 | substitutions (emitted / dangling) | 0 / 0 | 0 / 0 |
@@ -454,6 +454,16 @@ every one reaching DIFFERENT parent constructors. What the widening was worth is
 escaping paths above, and the soundness test in `ENGINE-LIMITS.md` C8 — without which it emitted an
 infinitely self-delegating constructor. The 31st, `DistanceFieldFontCache`, is C8's own worked
 example and the marker disambiguator repaired it.
+
+**The 66th omission is `BitmapFont()`, and it was SILENT until it was counted** (`omissions`
+**65 → 66**, 0 members moved, compile 0 → 0, suite 217/4 unchanged). `TirEmitter.orderBody` drops
+every nilary java constructor in front of scala's implicit nilary primary; for
+`BitmapFont() { this(classpath("lsans-15.fnt"), classpath("lsans-15.png"), false, true); }` that
+drop loses the default 15pt face, so `new BitmapFont()` built a font with no data, no page and no
+glyph. Instrumenting the predicate over all thirteen ports found **exactly one site**, this one. The
+three ways to keep the delegation each emit a WRONG answer rather than a missing one and are priced
+in `ENGINE-LIMITS.md` C11; the outcome is refuse-and-count, and the published contract stopped
+listing `()` among `BitmapFont`'s `secondaries=` in the same commit.
 
 **Trivia, 100 of 4,565 comments.** Classified in `ENGINE-LIMITS.md` §10: a comment on a construct the
 *emission consumes* has nowhere to go. Carrying comments at all costs +33.8 % emitted bytes on libGDX

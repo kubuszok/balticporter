@@ -43,6 +43,7 @@ object OmissionCheck:
     droppedSuperArgs(program, units)
       ++ droppedCauseMessages(program, units)
       ++ promotedBodyOnEveryPath(program, units)
+      ++ droppedNilaryCtors(program, units)
       ++ droppedAnonMembers(program, units)
       ++ droppedAnnotations(program, ownedBy(program, units))
 
@@ -207,6 +208,41 @@ object OmissionCheck:
         val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
         Finding("promoted constructor body runs on every path", owner,
                 s"$n statement(s) of the promoted constructor also run here; java ran them only on its own path",
+                d.origin)
+      }
+    }
+
+  /** A NILARY java constructor the port does not emit, whose delegation DID something.
+    *
+    * `BitmapFont()` delegates `this(classpath("lsans-15.fnt"), classpath("lsans-15.png"), false,
+    * true)` — the default 15pt face. The emitted class keeps scala's implicit nilary primary, so
+    * that constructor has nowhere to be declared and is dropped; `new BitmapFont()` then builds a
+    * font with no data, no page and no glyph, and NOTHING SAW IT. It compiles, every other count is
+    * unchanged, and the suite does not construct one — CLAUDE.md §4.4's shape exactly, and the
+    * reason this lane exists.
+    *
+    * The sibling case — `C() { super(); }`, a delegation passing nothing — is not reported, because
+    * scala's implicit primary IS that constructor and dropping it loses nothing. The two are told
+    * apart by [[CtorFunnel.delegationOnlyNilary]], which is also the predicate the emitter drops
+    * with, so this cannot report a constructor the emitter kept or miss one it dropped.
+    *
+    * Fix kind (a) — and it is a REFUSAL, not a gap: [[CtorFunnel.Plans.droppedNilaryCtor]] records
+    * the three alternatives and what each was measured to cost. A port that needs the behaviour
+    * writes the constructor by hand (§1.5's `inject`); the engine's job is to say so. */
+  def droppedNilaryCtors(program: Program): List[Finding] =
+    droppedNilaryCtors(program, program.units)
+
+  def droppedNilaryCtors(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+    def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
+      cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
+    val plans = CtorFunnel.Plans(program)
+    units.flatMap(classes).flatMap { cd =>
+      plans.droppedNilaryCtor(cd).map { d =>
+        val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
+        val n     = CtorFunnel.delegationOnlyNilary(program, d).map(_.size).getOrElse(0)
+        Finding("nilary constructor dropped", owner,
+                s"its delegation passed $n argument(s); scala's implicit nilary primary runs nothing, " +
+                  "so `new C()` no longer performs it",
                 d.origin)
       }
     }

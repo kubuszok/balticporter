@@ -2,8 +2,9 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Constant, CtorFunnel, Flags, MemberKey, OmissionCheck, Origin, Phase, Pipeline,
-                         Program, StandardTraversal, Statement, SymbolTable, Tree, TypeRepr, TypeTree}
+import balticporter.tir.{Constant, CtorFunnel, Descriptor, Flags, MemberKey, OmissionCheck, Origin, Phase,
+                         Pipeline, Program, StandardTraversal, Statement, Surface, SymbolTable, Tree,
+                         TypeRepr, TypeTree}
 import balticporter.transform.*
 
 /** THE CLAUSE-BEARING EMPTY PRIMARY — a class the funnel neither PROMOTES nor SYNTHESISES, carrying a
@@ -145,11 +146,11 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
   // E051 — the nilary constructor beside the clause-bearing primary
   // -------------------------------------------------------------------------
 
-  test("the DEGENERATE nilary constructor stays dropped — E120 + E051 is what emitting it costs") {
+  test("the nilary constructor stays dropped — E120 + E051 is what emitting it costs") {
     val (_, _, out) = threaded(fontSrc)
     assert(clue(out).contains("class Font(using demo.Ctx)"), out)
-    // java's `Font()` is a delegation and nothing else, so scala's own nilary primary already IS it;
-    // emitted beside a primary carrying the same clause the two have the same erased signature.
+    // `Font()` is a delegation and nothing else, so it has no place beside a primary carrying the
+    // same clause: the two have the same erased signature.
     assert(!out.contains("def this()(using demo.Ctx)"), out)
     // …and that is exactly what the same class emits with NO clause: the drop is not new, and
     // reading `paramss.flatten` instead of the value parameters is what un-dropped it.
@@ -157,6 +158,50 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
     // the subclass reaches it with an argument-free `extends` — the site the `E051` was reported at
     assert(clue(out).contains("class Sub(using demo.Ctx) extends demo.Font"), out)
   }
+
+  /** …AND THE DROP IS NOT FREE, which the assertion above used to state as though it were.
+    *
+    * `Font()` is not DEGENERATE: it delegates `this(seed(), "d")`, and scala's implicit nilary
+    * primary runs none of that. `new Sub()` therefore builds an object java could not build, and
+    * until this lane existed nothing said so — the port compiled, every other count was unchanged,
+    * and the only witness would have been a test that constructed one. Measured on libGDX core as
+    * exactly one site: `new BitmapFont()` built a font with no data, no page and no glyph where
+    * java loaded the default 15pt face.
+    *
+    * The three alternatives are priced in `CtorFunnel.Plans.droppedNilaryCtor`; each emits a WRONG
+    * answer rather than a missing one, which is why the outcome here is refuse-and-count.
+    */
+  test("…and a delegation that CARRIES ARGUMENTS is a counted omission, never a silent drop") {
+    val (after, _, out) = threaded(fontSrc)
+    assert(!out.contains("def this()"), out)
+    val found = OmissionCheck.droppedNilaryCtors(after, after.units)
+    assertEquals(clue(found).map(f => f.owner -> f.what), List("demo.Font" -> "nilary constructor dropped"))
+    assert(clue(found.head.detail).contains("2 argument(s)"), found.head.detail)
+    // …and the PUBLISHED contract stops claiming it. `secondaries` is the emitted `def this` list,
+    // so a dependent must not read `()` there for a constructor this module does not emit.
+    assert(!clue(shapeOf(fontSrc, "demo.Font").secondaries).contains(Descriptor.empty),
+           shapeOf(fontSrc, "demo.Font").secondaries.map(_.render).mkString(";"))
+  }
+
+  /** the OTHER half of the same predicate: a delegation that passes NOTHING is genuinely degenerate
+    * — scala's implicit primary already is that constructor — so it is dropped and NOT counted. */
+  test("a delegation that passes nothing is degenerate: dropped, and reported by nobody") {
+    val nilSrc = preamble +
+      """public class Empty {
+        |  int n;
+        |  public Empty()      { super(); }
+        |  public Empty(int a) { n = a; }
+        |}
+        |""".stripMargin
+    val (after, _, out) = plain(nilSrc)
+    assert(!clue(out).contains("def this()\n"), out)
+    assertEquals(OmissionCheck.droppedNilaryCtors(after, after.units), Nil)
+  }
+
+  private def shapeOf(source: String, fqn: String): Surface.TypeShape =
+    val (_, e, _) = threaded(source)
+    val ts        = e.emittedShapes.types
+    ts.getOrElse(fqn, fail(s"no published shape for $fqn — ${ts.keys.mkString(", ")}"))
 
   // -------------------------------------------------------------------------
   // clause-conditional: with no clause, nothing moves

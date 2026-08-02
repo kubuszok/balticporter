@@ -927,6 +927,41 @@ of the type.
 
 *Fix kind: (a).*
 
+### C11. A NILARY constructor in front of a NILARY primary cannot be emitted, and all three ways of keeping its delegation are WORSE — 1 site, `omissions 65 -> 66`
+
+**Title, for renumbering: "a nilary constructor whose delegation carries arguments cannot be
+emitted".** Counted, not closed. (a) engine.
+
+`TirEmitter.orderBody` drops every nilary java constructor in front of a class whose primary is
+scala's own implicit nilary one. For `C() { super(); }` that is exact — the implicit primary IS that
+constructor. For `C() { this(seed(), "d"); }` it is not, and the drop was SILENT: the port compiles,
+no other count moves, and the only witness is a `new C()` somebody runs.
+
+Measured over the whole corpus by instrumenting the predicate: **exactly one site**, libGDX
+`BitmapFont()`, which delegates
+`this(classpath("lsans-15.fnt"), classpath("lsans-15.png"), false, true)`. `new BitmapFont()` in the
+port therefore built a font with no data, no page and no glyph where java loaded the default 15pt
+face. Nothing saw it — and the published contract made it worse, listing `()` among `BitmapFont`'s
+`secondaries=` for a `def this()` the module does not emit.
+
+**The three ways to keep the delegation were each priced, and each emits a WRONG answer in place of
+a missing one:**
+
+| attempt | what it costs |
+|---|---|
+| emit it as `def this()` | `E120 Conflicting definitions` against the implicit nilary primary, plus `E051` at every argument-free `extends` — CT4/CT5's measured shape, and C7's `0 -> 41` is the same wall from the other side |
+| PROMOTE it (`Plans.nilaryPlan`) so its body becomes the class body | the body then runs on EVERY construction path (C6/C7). 9 of `BitmapFont`'s 10 paths never ran it, so `new BitmapFont(fontFile)` would also load the default face. `effects` refuses it first anyway — `BitmapFont(BitmapFontData,TextureRegion,boolean)` reads its `region` parameter twice and the argument is not re-evaluable |
+| give the class a MARKER-disambiguated synthesised primary (C8) so the `def this()` is declarable | a subclass's bare `extends C` then resolves to that very `def this()` — the fact `reachableArgumentFree` is built on — so `new DistanceFieldFont(…)` would load the default face where today it loads nothing |
+
+So the outcome is the counted one, exactly as for C7: `CtorFunnel.delegationOnlyNilary` is the ONE
+predicate the emission drops with and `OmissionCheck.droppedNilaryCtors` counts from, and
+`TirEmitter.secondariesOf` subtracts the same set so the published contract stops claiming a
+constructor that was never written. A port that needs the behaviour writes the constructor by hand
+(§1.5's `inject`); the engine's job is to say so.
+
+**Do NOT retry any of the three rows above.** Each is a behaviour change, not a compile fix, and two
+of them are silent.
+
 ---
 
 ## 3. `this`, inner classes and anonymous classes
