@@ -2955,6 +2955,13 @@ final class TirEmitter(
     case Tree.New(tpt, _, _, anon) =>
       s"new ${ctorTpe(tpt.tpe)}(${args.map(term(_, i)).mkString(", ")})${anonBody(anon, i)}"
     // operators (populator tags them `scala.<op>#…`) render infix / prefix, not `.op(x)`.
+    // …EXCEPT on a `super` receiver, where scala's grammar admits `super` only as the QUALIFIER of a
+    // member selection. `super ++= m` is an E040 SYNTAX error — worse than any type error, since it
+    // cannot be attributed to a member and can take the rest of the file with it — while
+    // `super.++=(m)` is legal and is the only legal spelling of the same call. Reached when a class
+    // that EXTENDS a retyped collection calls an inherited `addAll`/`putAll` through `super`.
+    case Tree.Select(recv: Tree.Super, m, _, _) if sym(m).fullName.startsWith("scala.<op>#") =>
+      s"${operand(recv, i)}.${esc(sym(m).name)}(${args.map(term(_, i)).mkString(", ")})"
     case Tree.Select(recv, m, _, _) if sym(m).fullName.startsWith("scala.<op>#") =>
       val op = sym(m).name
       if op.startsWith("unary_") then prefixOp(op.stripPrefix("unary_"), operand(recv, i))

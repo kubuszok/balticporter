@@ -373,10 +373,10 @@ class CollectionsTransformSpec extends PortSuite:
     val p = port(asList, new CollectionsTransform)
     // two ARRAY elements: correct, translatable java that emitted the pack unspread and failed
     // E007. Behaviour verified by running it — size 2, both elements `eq` to the argument.
-    assertEmits(p, "balticporter.runtime.JavaCollections.asList(xs, xs)")
+    assertEmits(p, "JavaCollections.asList[scala.Array[java.lang.String]](xs, xs)")
     assertNotEmits(p, "asList(scala.Array[scala.Array[")
     // one element: the frontend packs a single non-primitive argument too.
-    assertEmits(p, "balticporter.runtime.JavaCollections.asList(s)")
+    assertEmits(p, "JavaCollections.asList[java.lang.String](s)")
     assertNotEmits(p, "asList(scala.Array[java.lang.String](s))")
     // …and the pack arrives here in the EXTERNAL-callee shape (`Tree.Repeated`, not
     // `Tree.NewArray`), because `java.util.Arrays.asList` is a class file: read as one ordinary
@@ -387,8 +387,45 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "return java.util.Arrays.asList(s)")
     // the two shapes the frontend already emitted as bare elements are unchanged — it declines to
     // pack primitives, which is the only reason `asList(1, 2, 3)` was ever right.
-    assertEmits(p, "balticporter.runtime.JavaCollections.asList(1, 2, 3)")
-    assertEmits(p, "balticporter.runtime.JavaCollections.asList()")
+    assertEmits(p, "JavaCollections.asList[java.lang.Integer](1, 2, 3)")
+    assertEmits(p, "JavaCollections.asList[java.lang.String]()")
+  }
+
+  test("the ELEMENT form carries JAVA'S OWN INFERENCE as an explicit type argument") {
+    // Java infers `T` from all the arguments at once and BOXES what it must, so
+    // `Arrays.asList(98, "97", true)` is a `List<Serializable & Comparable<…>>`. Scala infers `A`
+    // too, but its `Int`/`Boolean` are VALUE types that join to nothing java would name — and at an
+    // INFERRED `A` scalac declines the boxing conversion outright ("implicit conversions were not
+    // tried because the result of an implicit conversion must be more specific than T"), reporting
+    // one mismatch per element. Written down, the conversion is tried and `Predef.int2Integer`
+    // applies.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |import java.io.Serializable;
+        |class H {
+        |  List<Serializable> mixed() { return Arrays.asList(98, "97", true); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "JavaCollections.asList[java.io.Serializable](98, \"97\", true)")
+  }
+
+  test("…and no type argument is written where java's answer cannot BE written") {
+    // a wildcard is not syntax in a term position (K10) and an inference marker names nothing
+    // (G2), so those calls are left to scala's own inference — which is what they had before, and
+    // is why this is not a regression at the shapes it cannot help.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class H {
+        |  List<?> anon(String a) { return Arrays.asList(a); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertNotEmits(p, "asList[?]")
   }
 
   test("the whole-ARRAY aliasing form becomes a LIVE VIEW — never the copying helper") {
@@ -458,7 +495,7 @@ class CollectionsTransformSpec extends PortSuite:
     // the element form IS rewritten, so what reaches the slot is the runtime helper's `Buffer` and
     // the wrap is exactly right. A blanket "never wrap an `asList`" would have taken this too.
     val p = port(refusedIntoShimSlot, new CollectionsTransform)
-    assertEmits(p, "B.of(balticporter.runtime.JavaCollection.from(balticporter.runtime.JavaCollections.asList(a, b)))")
+    assertEmits(p, "B.of(balticporter.runtime.JavaCollection.from(balticporter.runtime.JavaCollections.asList[java.lang.String](a, b)))")
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -553,6 +590,44 @@ class CollectionsTransformSpec extends PortSuite:
     // type, and downgrading it would compile and lose thread-safety silently.
     assertEmits(p, "new scala.collection.concurrent.TrieMap[java.lang.String, java.lang.Object]()")
     assertNotEmits(p, "java.util.concurrent.ConcurrentHashMap")
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // A `super` RECEIVER on a class that EXTENDS a retyped collection. Scala's grammar admits `super`
+  // in exactly one position — as the qualifier of a member selection — and java has no such rule,
+  // so a rewrite can put it somewhere illegal. The refusal used to be BLANKET; it is now a
+  // structural test of the RESULT, so a new arm is covered by construction.
+  // ---------------------------------------------------------------------------------------------
+
+  private val superReceiver =
+    """package demo;
+      |import java.util.*;
+      |class Sorted extends HashMap<String, String> {
+      |  void seed(Map<String, String> m) { super.putAll(m); }
+      |  boolean has(String k)            { return super.containsKey(k); }
+      |  String dump() {
+      |    StringBuilder b = new StringBuilder();
+      |    for (Map.Entry<String, String> e : super.entrySet()) { b.append(e.getKey()); }
+      |    return b.toString();
+      |  }
+      |}
+      |""".stripMargin
+
+  test("an inherited call through `super` translates — as a SELECTION, never infix") {
+    val p = port(superReceiver, new CollectionsTransform)
+    // `super ++= m` is an E040 SYNTAX error and `super.++=(m)` is the same call spelled legally.
+    assertEmits(p, "super.++=(m)")
+    assertNotEmits(p, "super ++= m")
+    assertEmits(p, "super.contains(k)")
+  }
+
+  test("…and a rewrite that would put `super` somewhere ILLEGAL is still refused, structurally") {
+    // `entrySet()` maps to the RECEIVER ALONE, because a scala `Map` already IS its entry view —
+    // which for a `super` receiver is `for (e <- super)`, a syntax error. The test is on the
+    // RESULT and not on the arm, so no future arm can reintroduce it by omission.
+    val p = port(superReceiver, new CollectionsTransform)
+    assertEmits(p, "super.entrySet()")
+    assertNotEmits(p, "<- super)")
   }
 
   test("an IN-PROGRAM vararg method still receives the materialised array — the convention holds") {
@@ -699,13 +774,17 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "this.contains(k)")
   }
 
-  test("…and EVERY rewrite declines on a `super` receiver — a blanket refusal, because E040 is worse") {
-    // Scala admits `super` in exactly one position, as the qualifier of a member selection. Three
-    // of the arms put it somewhere else — `entrySet` returns the receiver alone (`for (e <-
-    // super)`), the `Seq` `get` makes it a function (`super(i)`), and `+=`/`++=` render INFIX
-    // (`super ++= m`, measured as an E040 on liqp) — and a syntax error is strictly worse than the
-    // type error it replaces. Which arms render infix is a fact about the EMITTER, so the refusal
-    // is blanket rather than a carve-out this phase cannot keep in step.
+  test("…and on a `super` receiver a rewrite fires only where scala lets `super` STAND") {
+    // Scala admits `super` in exactly one position, as the qualifier of a member selection, and
+    // java has no such rule. Two arms put it somewhere else — `entrySet` returns the receiver ALONE
+    // (`for (e <- super)`) and the `Seq` `get` makes it a function (`super(i)`) — both E040 SYNTAX
+    // errors, which are strictly worse than the type errors they replace.
+    //
+    // This used to be a BLANKET refusal, on the grounds that "which arm renders infix" is a fact
+    // about the emitter. It is no longer: the emitter renders an operator on a `super` receiver as
+    // an ordinary selection (the only legal spelling), and what remains is a STRUCTURAL property of
+    // the RESULT this phase can check — see `superPlaced`. Asked of the result and not of the arm,
+    // so a rewrite added later is covered by construction.
     val p = port(
       """package demo;
         |import java.util.HashMap;
@@ -718,11 +797,17 @@ class CollectionsTransformSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform,
     )
-    assertEmits(p, "super.get(k)")
-    assertEmits(p, "super.putAll(m)")
+    // TRANSLATED, because `super` stays a selection qualifier
+    assertEmits(p, "super.++=(m)")
+    assertNotEmits(p, "super ++= m")
+    // …and a Map `get` translates too, because `super.getOrElse(k, null)` is a selection as well.
+    // Java's `Map.get` returns null for an absent key, which is what the default states.
+    assertEmits(p, "super.getOrElse(k, null)")
+    // REFUSED, because THIS one would move `super` out of a selection: a scala `Map` already IS its
+    // entry view, so the rewrite is the receiver alone and `for (e <- super)` is E040. It keeps
+    // java's name and fails to compile there (M6).
     assertEmits(p, "super.entrySet()")
-    assertNotEmits(p, "super ++=")
-    assertNotEmits(p, "super.getOrElse")
+    assertNotEmits(p, "<- super)")
   }
 
   test("`subList` and `putIfAbsent` go to the helper — scala HAS both and both mean something else") {

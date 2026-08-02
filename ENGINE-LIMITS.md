@@ -540,6 +540,35 @@ flat and no other port's output moved.
 
 *Fix kind: (a). Universal — a bound java writes implicitly and scala writes differently.*
 
+### G24. Java's `<T>` bound is VACUOUS and the emitted `T <: java.lang.Object` is not — 1 error, OPEN
+
+An unbounded java type parameter means `T extends Object`, which admits every reference type there
+is. The port emits that bound literally (`def cartesianProduct[T <: java.lang.Object]`), and in
+Scala 3 it is **not** vacuous: `java.io.Serializable` is rooted at `Any`, not at `AnyRef`, because
+value classes are serialisable. So `java.io.Serializable </: java.lang.Object`, and
+
+```scala
+def cp[A <: java.lang.Object](l: Buffer[Buffer[A]]): Buffer[Buffer[A]] = l
+val b: Buffer[Buffer[java.io.Serializable]] = …
+val c: Buffer[Buffer[java.io.Serializable]] = cp(b)   // Found: …[Serializable] / Required: …[A]
+```
+
+fails to compile with `A is a type variable with constraint <: Object`. **Reproduced standalone on
+3.8.4**, so it is a fact about the two type lattices and not about anything the port did.
+
+The fix is to stop emitting a bound java wrote implicitly — an unbounded java type parameter is an
+unbounded Scala one — and the reason it is OPEN is the blast radius: that is every generic signature
+in the corpus, and the divergence it introduces runs the other way (a Scala unbounded `T` admits
+value types, which java's does not, so code java would have rejected compiles). The permissive
+direction is the one this project has accepted elsewhere (`asList`'s fixed-size divergence), but the
+change wants its own measurement wave rather than a corner of a collections one.
+
+Measured at **1 error** on liqp (`ComparingExpressionNodeTest`, whose fixture is a
+`List<List<Serializable>>`), and it is the first corpus library to write `Serializable` as a type
+argument at all — which is why five libraries and fourteen ports went past it.
+
+*Fix kind: (a) engine, unbuilt — with a measured blast radius, not a small edit.*
+
 ---
 
 ## 2. Constructors
@@ -1991,6 +2020,35 @@ Restoring the parent does not change that, and should not.
 
 *Fix kind: (a) engine — the parent restore. The residue is (a) and REFUSED, with the reason above.*
 
+### K5.8 A `super` receiver is a SYNTAX question, and it is answered of the RESULT — not of the arm
+
+CLOSED. Scala's grammar admits `super` in exactly one position, as the QUALIFIER of a member
+selection; java has no such rule, so an inherited call on a class that EXTENDS a retyped collection
+can be rewritten into a shape that puts it somewhere illegal. Three did: `entrySet()` maps to the
+RECEIVER ALONE (`for (e <- super)`), the `Seq` `get` maps to an application of it (`super(i)`), and
+every `+=`/`-=`/`++=` rendered INFIX (`super ++= m`). All three are E040 SYNTAX errors, which are
+strictly worse than the type errors they replace — a syntax error cannot be attributed to a member
+and can take the rest of the file with it.
+
+K5 answered with a BLANKET refusal, on the stated grounds that *which of these renders infix is a
+fact about the EMITTER that this phase cannot read*. Both halves of that turned out to be movable:
+
+- **the infix face is gone at its source.** `TirEmitter.applyStr0` now renders an operator on a
+  `super` receiver as an ordinary selection — `super.++=(m)`, which is legal and is the only legal
+  spelling of that call. The emitter is where the position rule lives, so the fix belongs there and
+  not in a phase guessing at it;
+- **what remains is a STRUCTURAL property of the RESULT**, which the phase can simply check:
+  does every `Tree.Super` in the term I just built stand as a `Tree.Select`'s qualifier?
+  `superPlaced` asks exactly that, of the rewrite AFTER it is built and never of the arm — so a
+  rewrite added later is covered by construction and no arm can reintroduce the failure by
+  omission. That was the one property the blanket refusal was bought for, and it is kept.
+
+`super.putAll(m)`, `super.contains(k)` and `super.getOrElse(k, null)` now translate; `entrySet()` and
+the `Seq` `get` stay untranslated under java's own names and fail to compile there (M6). Measured on
+liqp: **14 -> 13**, one site, and the two refusals still reported.
+
+*Fix kind: (a). Universal — a scala grammar rule, no library involved.*
+
 ### K6. `java.util.stream` — the CHAIN collapses; and the two rules that make that safe
 
 **PARTLY CLOSED.** `xs.stream().filter(p).collect(Collectors.toList())` now translates, and the shape
@@ -2171,6 +2229,26 @@ check count flat. The earlier accidental measurement (liqp 76 → 67 when K15's 
 calls) was right about the count and wrong about the value — that path shipped `Buffer[Object]`
 where java inferred `List<Insertion>`, and read green only because that library's filters are
 `Object`-typed throughout.
+
+**THE FIFTH CASE — the ELEMENT form needs java's INFERENCE written down, not just its arity.**
+CLOSED. Opening the pack made the elements separate arguments, which is what let scalac describe a
+disagreement it could not reach before: `Arrays.asList(98, "97", true, false, null)` is a
+`List<Serializable & Comparable<…>>` in java, because java infers `T` across all the arguments at
+once and BOXES what it must. Scala infers `A` across them too — and its `Int`/`Boolean` are VALUE
+types that join to nothing java would name, so at an INFERRED `A` scalac declines the boxing
+conversion outright ("implicit conversions were not tried because the result of an implicit
+conversion must be more specific than T") and reports **one mismatch per element**.
+
+Java's answer is recorded on the CALL, exactly as it is for the aliasing form above, so the rewrite
+writes it down: `JavaCollections.asList[java.io.Serializable](98, "97", true)`. With `A` explicit
+the conversion IS tried, `Predef.int2Integer` applies, and the emitted list is java's. Written only
+where java's answer CAN be written — a `TypeBounds` is a wildcard and `?` in a term position is not
+syntax (K10), an inference marker names nothing (G2) — and left to scala's own inference otherwise,
+which is what those calls had before.
+
+Measured on liqp: **19 → 14**, six per-element mismatches becoming one aggregate one, and the
+aggregate is a different fact entirely (G24: java's `<T>` bound is vacuous and the emitted
+`<: java.lang.Object` is not).
 
 `refusedRewriteSource` and the `handledStatic` record it reads are UNCHANGED and still load-bearing:
 they answer "did this phase decline this call", and a call the phase now rewrites carries the minted

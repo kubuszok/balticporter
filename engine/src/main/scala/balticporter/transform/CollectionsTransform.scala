@@ -1365,7 +1365,20 @@ final class CollectionsTransform(
       // which is where the engine's own vararg convention has to be undone. See [[asListArgs]].
       case (Some("java.util.Arrays#asList"), args)                 =>
         asListArgs(args) match
-          case AsList.Elements(as) => Some(factory(sym("asList"), as))
+          // …with JAVA'S OWN INFERENCE re-stated as the explicit type argument. Java infers `T`
+          // from all the arguments at once and BOXES what it must:
+          // `Arrays.asList(98, "97", true, false, null)` is a `List<Serializable & Comparable<…>>`.
+          // Scala infers `A` from the arguments too, and its `Int`/`Boolean` are VALUE types that
+          // join to nothing java would name — so at an inferred `A` scalac declines the boxing
+          // conversion outright ("implicit conversions were not tried because the result of an
+          // implicit conversion must be more specific than T") and reports one mismatch per
+          // element. With `A` written down the conversion IS tried, `Predef.int2Integer` applies,
+          // and the emitted call is the list java built. See [[elementArg]] for the guard.
+          case AsList.Elements(as) =>
+            Some(elementArg(t).fold(factory(sym("asList"), as))(a =>
+              Tree.Apply(Tree.TypeApply(Tree.Ident(sym("asList"), TypeRepr.NoType, t.origin), List(a),
+                                        TypeRepr.NoType, t.origin),
+                         as, sym("asList"), t.tpe, t.origin)))
           case AsList.Aliased(arr) => Some(factory(sym("asListView"), List(asListViewArg(arr, t))))
       // `Map.Entry` became a `Tuple2`, so `Entry`'s own statics must come along or the call survives
       // to the compiler naming a type the port no longer produces.
@@ -1561,6 +1574,34 @@ final class CollectionsTransform(
       case List(Tree.Spread(e, _, _)) if isArray(e.tpe)     => AsList.Aliased(e)
       case List(a) if isArray(a.tpe)                        => AsList.Aliased(a)
       case _                                                => AsList.Elements(args)
+
+  /** the element type a `TypeTree` may be written for — java's own inference, made explicit.
+    *
+    * Yielded only when the call's result really names one type: a `TypeBounds` is a wildcard and
+    * writing `?` in a TERM position is not syntax (K10's rule), an unresolved inference marker
+    * names nothing (G2), and `NoType` is the frontend saying it does not know. In every one of
+    * those cases the call is left to scala's own inference, which is what it did before — so the
+    * guard is what keeps this from being a regression at the shapes it cannot help. */
+  private def elementArg(t: Tree.Apply)(using p: Program): Option[TypeTree] =
+    soleTypeArg(t.tpe).collect {
+      case a if a != TypeRepr.NoType && !a.isInstanceOf[TypeRepr.TypeBounds] && !namesUnresolved(a) =>
+        TypeTree(a, t.origin)
+    }
+
+  /** does this type mention an inference MARKER the frontend interned for a diamond's inferred
+    * argument, or a WILDCARD, anywhere inside it?
+    *
+    * Printed, `?E` names nothing and does not lex (G2), and a `?` in a TERM position is not syntax
+    * at all (K10) — so a type carrying either may not be written down as an explicit type argument.
+    * Read through `Symbol.isUnresolvedTypeVar`, which is where `api` owns the prefix, never a local
+    * spelling of it. */
+  private def namesUnresolved(t: TypeRepr)(using p: Program): Boolean = t match
+    case TypeRepr.TypeRef(_, s)      => p.symbolOf(s).exists(x => Symbol.isUnresolvedTypeVar(x.fullName))
+    case TypeRepr.AppliedType(c, as) => namesUnresolved(c) || as.exists(namesUnresolved)
+    case _: TypeRepr.TypeBounds      => true
+    case TypeRepr.AndType(l, r)      => namesUnresolved(l) || namesUnresolved(r)
+    case TypeRepr.OrType(l, r)       => namesUnresolved(l) || namesUnresolved(r)
+    case _                           => false
 
   /** the argument `asListView` should receive — [[arrayArg]]'s rule at `Arrays.asList(T[])`.
     *
@@ -2030,21 +2071,22 @@ final class CollectionsTransform(
     val onShim = headSym(recv.tpe).exists(shimSyms.contains)
     /** is the receiver `super`? Scala admits `super` in exactly ONE position — as the qualifier of
       * a member selection — and three of the shapes below put it somewhere else: `entrySet` returns
-      * the receiver ALONE (`for (e <- super)`), the `Seq` `get` makes it a function
-      * (`super(i)`), and every `+=`/`-=`/`++=` renders INFIX (`super ++= m`). All three are E040
-      * SYNTAX errors, and a syntax error is strictly worse than the type error they replace: it
-      * cannot be attributed to a member and it can take the rest of the file with it.
+      * the receiver ALONE (`for (e <- super)`), the `Seq` `get` makes it a function (`super(i)`),
+      * and every `+=`/`-=`/`++=` used to render INFIX (`super ++= m`). All three are E040 SYNTAX
+      * errors, and a syntax error is strictly worse than the type error it replaces: it cannot be
+      * attributed to a member and it can take the rest of the file with it.
       *
-      * So this is a BLANKET refusal with no exceptions, for the reason `onShim` above is one: the
-      * arms that WOULD survive (`super.getOrElse(k, d)`, `super.contains(k)`) are not worth the
-      * next arm that will not, and "which of these renders infix" is a fact about the EMITTER that
-      * this phase cannot read. `super.get(k)` therefore stays untranslated and fails to compile
-      * naming the member, which is a counted refusal (ENGINE-LIMITS M6) rather than a broken file.
-      * Note this costs nothing that worked before: a `super` receiver reaches `rewrite` at all only
-      * through `inheritedKind`, which is new. */
+      * This was a BLANKET refusal, on the grounds that "which of these renders infix" is a fact
+      * about the EMITTER this phase cannot read. Two things changed that. The emitter now renders
+      * an operator on a `super` receiver as an ordinary selection (`super.++=(m)`), which is legal
+      * and is the only legal spelling — so the infix face is gone at its source rather than avoided
+      * here. And the remaining question is not "which arm" but a STRUCTURAL property of the RESULT
+      * that this phase can simply check: does every `Tree.Super` in what I built stand as the
+      * qualifier of a `Tree.Select`? See [[superPlaced]] — asked of the rewrite AFTER it is built,
+      * so a new arm is covered by construction and cannot reintroduce the syntax error by omission,
+      * which is exactly the property the blanket refusal was bought for. */
     val onSuper = recv.isInstanceOf[Tree.Super]
-    (name, t.args, k) match
-      case _ if onSuper => None
+    val out = (name, t.args, k) match
       // The one exception, and the reason it is one: java 8's `forEach(Consumer)` has no
       // counterpart on the shim itself — `JavaIterable` supplies `foreach` as an EXTENSION, which
       // is the whole point of the family (§4.5: an extension adds a view and cannot conflict).
@@ -2200,6 +2242,54 @@ final class CollectionsTransform(
       case ("remove", List(x), Kind.Set)        => Some(infix(recv, opMinusEq, List(x), t, so)) // xs -= x
       case ("containsKey", List(key), Kind.Map) => Some(call(recv, containsSym, List(keyArg(key, recv)), t, so))
       case _                                    => None
+    if onSuper then out.filter(superPlaced) else out
+
+  /** does every `super` in this rewritten term stand where scala allows one — as the QUALIFIER of a
+    * member selection, and nowhere else?
+    *
+    * Scala's grammar admits `super` in exactly one position. Java has no such restriction, so an
+    * inherited call on a class that EXTENDS a retyped collection can be rewritten into a shape that
+    * puts it somewhere illegal: `entrySet()` maps to the RECEIVER ALONE (`for (e <- super)`) and the
+    * `Seq` `get` maps to an application of it (`super(i)`). Both are E040 SYNTAX errors, which are
+    * strictly worse than the type errors they replace — a syntax error cannot be attributed to a
+    * member and can take the rest of the file with it.
+    *
+    * Asked of the RESULT rather than of the arm, which is the whole point: a rewrite added later is
+    * covered by construction, and no arm can reintroduce the failure by omission. That is the
+    * property the previous BLANKET refusal was bought for, kept without the cost — `super.putAll(m)`
+    * and `super.contains(k)` are legal and now translate, while the two shapes above stay
+    * untranslated and fail to compile naming the member (M6).
+    *
+    * The walk is `StandardTraversal`'s (CLAUDE.md §3): a hand-rolled recursion that stopped one node
+    * short would answer "safe" for the shape this test exists to catch. */
+  private def superPlaced(t: Term)(using Program): Boolean =
+    var bad = false
+    val scan = new Phase:
+      def name = "super-placement"
+      override def transformTerm(x: Term)(using Program): Term =
+        x match
+          // a `super` reached as a Select's qualifier is the one legal position; every OTHER
+          // occurrence is found by the default arm below, because the traversal visits the
+          // qualifier as a term of its own.
+          case Tree.Select(_: Tree.Super, _, _, _) => x
+          case _: Tree.Super                       => bad = true; x
+          case _                                   => x
+    // the qualifier of a legal Select is still visited on the way down, so the exemption above has
+    // to REPLACE the descent rather than sit beside it: strip the legal ones first, then scan.
+    StandardTraversal.mapTerm(scan, stripLegalSuper(t))
+    !bad
+
+  /** replace every LEGAL `super.member` with a marker the placement scan does not object to, so the
+    * scan sees only the occurrences that stand somewhere else. `Tree.This` is chosen because it is
+    * the one node with exactly `super`'s legal positions and one more, and nothing downstream ever
+    * sees this term — it is built for the scan and discarded. */
+  private def stripLegalSuper(t: Term)(using Program): Term =
+    val strip = new Phase:
+      def name = "super-strip"
+      override def transformTerm(x: Term)(using Program): Term = x match
+        case s @ Tree.Select(sup: Tree.Super, m, tp, o) => Tree.Select(Tree.This(SymId.None, sup.tpe, sup.origin), m, tp, o)
+        case _                                          => x
+    StandardTraversal.mapTerm(strip, t)
 
   /** is this source's SOLE element type an unnameable wildcard — the whole of F11?
     *

@@ -41,7 +41,12 @@ just debug-selfcheck      # proves the four above — no sbt, no ports, seconds
 Run them **serially** — `measure-all` does: each re-emits into `src_managed/` and the dependent lanes
 compile against what the base lane just wrote. Every lane refuses to measure stale output if its
 migration did not run, and every one prints the full check report diffed against the committed
-baseline, not a filtered selection of it. The mechanism they share is `scripts/_lib.sh`; the policy
+baseline, not a filtered selection of it.
+
+**The compile-error count is baselined too** (`baseline/expected-errors`, one line per lane, written
+by the run and promoted by `just baseline-accept`), and a mismatch fails the lane in EITHER
+direction. Until that gate shipped it was the only number nothing compared — which is how a 0 -> 3
+regression walked through `measure-all` reporting success (`ENGINE-LIMITS.md` M9). The mechanism they share is `scripts/_lib.sh`; the policy
 (sbt projects, upstream trees, dependency coordinates) is variables at the top of the `Justfile`.
 
 Measurements below are from one serial run of all lanes, 2026-07-31.
@@ -1967,7 +1972,7 @@ written, 987 members in the source map. `just liqp-measure`.
 
 | | |
 |---|---|
-| scalac errors | main source set **126 -> 31 -> 27**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); with the test source set, **90 -> 87 -> 74 -> 76 -> 56 -> 52 -> 50** (the test half gained 2 when the `asList` rewrite learned the external pack shape and repaired three sites — K6.5 — then lost 20 to T14, 4 to K5's implicit receiver and 2 to T15's receiver parenthesisation) |
+| scalac errors | main source set **126 -> 31 -> 27 -> 8**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); BOTH source sets **90 -> … -> 50 -> 38 -> 26 -> 22 -> 19 -> 14 -> 13** (the collections endgame: K6.5's aliasing view took 12, G23's wildcard `addAll` 4, `asList`'s explicit type argument 5, three unnamed JDK members 3, K5.8's `super` placement 1) |
 | `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
 | `jdk-surface` | **19 -> 10** |
@@ -2107,29 +2112,35 @@ changes none of which is (b) or (c):
 | `Insertions.of`/`Filters.of` — `E134 None of the overloaded alternatives`, 5 errors, read as an overload problem | **0 of the five, 3 fewer errors.** It was never overload resolution: liqp names `java.util.Collection` and never names `java.lang.Iterable`, and the pass that bridges a retyped argument into a shim-typed formal opened with `if javaIterableSym == SymId.None then t` — so the whole bridge was inert for this port, with no check, no policy entry and no member digest able to say so (K2.5, new). The remaining two sites were the `Arrays.asList(arr)` aliasing refusal wearing an E134 mask, and now report it |
 | `LiquidException` — 0 errors and a SILENT §4.4 defect: three roots, three different `super(...)`, none promotable, so every exception it threw had a null message and no cause | **fixed, and it moves no error count at all**, which is §3 in one line. C3's synthesised primary at the JDK throwable's widest overload; `omissions` 4 -> 1 |
 
-**What is left, 27 in the main source set.** `Arrays.asList(arr)`'s aliasing refusal (K6.5) is 11 —
-9 deliberate, and 2 that K2.5's bridge reached, where the wrap named the WRAPPER rather than the
-boundary because the phase refused to move the value it wraps. Those two no longer carry a wrapper:
-`coerce` asks the phase's own static table whether the value's producer is a call it declined, and
-the seam is counted as `RefusedSource` — 2 errors either way (an overloaded callee prints `E134`
-rather than a `Found`/`Required` pair, so the message does NOT come back naming the boundary; what
-comes back is the untranslated `java.util.Arrays.asList` in the emitted text, and two counted seams
-where there were none).
-**F11 is 4 and now has an
-exact diagnosis rather than a nonsense one**: `list ++= valueList` where `list` is a
-`Buffer[Object]` and `valueList` a `Buffer[?]` reads `Required: IterableOnce[Object]` since
-`? super Object` renders as `Object`, and what blocks it is that a java `?` is `? extends Object`
-while a Scala `?` is bounded by `Any` — G2 measured that whole design space and settled on `[?]`, so
-widening it is not a change to make for four sites.
-D-liqp-1 × D-liqp-2 — an external generated parser that references back INTO the renamed library —
-costs exactly one error and cannot be fixed without porting or regenerating it.
+**…and the collections endgame took 38 (27 main + 11 test) to 14 (9 main + 5 test)**, in five
+engine changes, none of them (b) or (c) and none of them a port-policy lever:
 
-**And the whole of it is ONE PHASE's, which is what a port-policy wave went looking for and did not
-find a lever for.** Attributed by hand from the compile: **26 of the 27 are
-`CollectionsTransform` boundaries** (11 K6.5 `Arrays.asList`, 4 F11 `++=`, 4 K5.7 at `Sort`'s
-JDK-collection subclass and `Map.Entry` implementation, and 7 more at `java.util.stream`,
-`Map.Entry` and the Jackson/ANTLR/`ServiceLoader` seams). The 27th is the D-liqp-1 × D-liqp-2
-namespace seam above. **There is no drop or injection among them that is not a rewrite**: every one
+| was | now |
+|---|---|
+| `Arrays.asList(arr)`'s aliasing REFUSAL — 11 in the main set, 1 in the test set, kept under the JDK name so the error reads as an untranslated call | **0.** What was refused was the COPY, never the form: `JavaCollections.asListView(arr)` is java's own live, fixed-size view — reads and WRITES go through to the array, `add`/`remove` throw where java throws. The element type that "was gone" is recorded on the CALL, so the erasure coercion comes off (K6.5, closed) |
+| `list ++= valueList` where the source is a `Buffer[?]` — 4 | **0.** Java's `?` is bounded by `Object` and scala's by `Any`, so the difference is stated at the ONE operation it blocks rather than by widening what `?` means (G23, new) |
+| a heterogeneous `Arrays.asList(98, "97", true, false, null)` — 6 per-element mismatches | **1.** Java infers `T` across all the arguments and boxes; at an INFERRED `A` scalac declines the boxing conversion outright. Java's answer is on the call, so it is written down as the explicit type argument and `Predef.int2Integer` applies. What is left is one aggregate mismatch, below |
+| three JDK members the phase's tables never named — `Stream.anyMatch`, `Collections.sort`'s natural overload at java's own `<T extends Comparable<? super T>>` bound, and `ConcurrentHashMap` | **0**, one site each |
+
+**What is left, 13 — 8 main and 5 test.** Three of them are the D-liqp-1 × D-liqp-2 namespace seam
+(`Template#parse`, `TestUtils`, `LiquidParserTest`): an external generated parser that references
+back INTO the renamed library, unfixable without porting or regenerating it, and the price
+D-liqp-1 already states. The other eleven, by family:
+
+| n | family | where |
+|---|---|---|
+| 1 | K5.8's remaining half — `super.entrySet()` maps to the RECEIVER ALONE, and `for (e <- super)` is an E040 SYNTAX error. Refused STRUCTURALLY now (the phase checks that every `super` in the rewrite it built stands as a selection qualifier), so `super.putAll` translates and this one does not | `filters/Sort$SortableMap` |
+| 2 | K2/K5.7's `Map.Entry.setValue` — a `Tuple2` has none, and a write-through to the map needs the map, which the entry does not carry | `filters/Sort$ComparableMapEntry`, `parser/LiquidSupport#visitMap` |
+| 2 | K9/K15 at ANTLR — an enhanced-for over a real external `java.util.List`, and a collapsed stream whose result feeds an external `Stream.concat` | `parser/v4/NodeVisitor` |
+| 1 | a `Map.Entry::getKey` METHOD REFERENCE inside a collapsed stream. The phase rewrites `getKey` on an Apply and never sees a `Tree.MethodRef`, which the emitter expands to `self$ => self$.getKey()` after every phase has run | `Insertions#getNames` |
+| 1 | K15's producer wrap at a Jackson call whose declared result is a TYPE VARIABLE. Jackson really does build a `java.util.Map`, so the wrap is right and its ARGUMENT node type has already been retyped — `fromJava(aScalaMap)` | `parser/LiquidSupport#objectToMap` |
+| 1 | java's `<T>` means `T extends Object`, which is VACUOUS; the port emits `T <: java.lang.Object`, which is NOT — scala 3 roots `java.io.Serializable` at `Any` (value classes are serialisable), so `Buffer[Buffer[Serializable]]` does not conform to `Buffer[Buffer[T]]`. Reproduced standalone; the fix is to stop emitting the vacuous bound, and its blast radius is every generic signature in the corpus | `ComparingExpressionNodeTest` |
+| 1 | MUnit's `Compare` needs a common type and two `toJava` calls infer different element types | `RenderSettingsTest` |
+| 1 | G22 — a method type parameter constrained only by its bound | `blocks/ForTest` |
+
+**And the whole of it is still ONE PHASE's** — the eleven above are `CollectionsTransform`
+boundaries and generic-inference disagreements, and the port's `.conf` gains nothing for any of
+them. **There is no drop or injection among them that is not a rewrite**: every one
 of these types is mechanically portable and the disagreement is a TYPE, so the only honest
 `dropTypes` + `inject` for the set would be a hand-written `NodeVisitor` (849 ll.), `LValue`,
 `Template`, `LiquidSupport`, five `spi` files and nine filters — which is the library, by hand, and
@@ -2145,10 +2156,10 @@ graph, and liqp's collection types are its currency. The scoped-out `NodeVisitor
 almost all of it K9's enhanced-for over a real `java.util.List` — a scope withdraws the phase's
 REWRITES too, not only its retyping. **Do NOT retry.**
 
-So the main set's 27 stay, and the classification splits 26/1 rather than running to one kind:
-**26 are (a) engine**, in the families K6.5 / G2-F11 / K5.7 / K6 / K15 / K9, and the port's `.conf`
-gains nothing for any of them — they move when those entries move. **The 27th is (b), and it is
-already this port's own decision**: D-liqp-1 keeps the generated parser external and D-liqp-2
+So the 13 stay for now, and the classification splits 10/3 rather than running to one kind:
+**10 are (a) engine**, in the families K5 / K5.7 / K9 / K15 / G22 and the two new ones above, and
+the port's `.conf` gains nothing for any of them — they move when those entries move. **The other
+three are (b), and they are already this port's own decision**: D-liqp-1 keeps the generated parser external and D-liqp-2
 renames the library, so a parser compiled against upstream `liqp` asks for
 `liqp.TemplateParser.ErrorMode` at a call the port emits with `ssg.liquid.TemplateParser.ErrorMode`.
 No manifest key closes it, because none of them rewrites an ARGUMENT: a `type-redirect` at that enum
@@ -2169,7 +2180,7 @@ source sets on one invocation and splits the wall by the path scalac printed.
 |---|---|
 | emitted | **101 Scala test files** from 105 java (4 excluded, below), 788 members in the source map |
 | tests | 639 `@Test` upstream -> **577 emitted** (munit 577, junit residue **0** — the whole JUnit surface converted) |
-| scalac errors | **main 27 (unchanged by this port), test 49 -> 29 -> 25 -> 23 -> 11**, all `EngineGap` bar the two D-liqp-1 × D-liqp-2 seams; the two source sets are never summed, because a test-set error is frequently a cascade of a main-set one |
+| scalac errors | **main 27 -> 8, test 49 -> 29 -> 25 -> 23 -> 11 -> 5**, all `EngineGap` bar the two D-liqp-1 × D-liqp-2 seams; the two source sets are never summed, because a test-set error is frequently a cascade of a main-set one |
 | `portability(emitted)` | **1467**, dominated by hamcrest (725 `assertThat` + 667 `is`/`equalTo`), which the conversion deliberately leaves in place and `ENGINE-LIMITS.md` X6's `org.hamcrest.` rule is what counts |
 | `omissions` | **8** — dropped `@SuppressWarnings` on anonymous-class fields |
 | `trivia` | **0 lost**, 1 recovered (`TestUtils.java:17`) |
@@ -2182,7 +2193,7 @@ discovery gate prints `!! TESTS LOST — 62 of 639` on every run and is supposed
 stated in `test.conf` and is deleted, not narrowed, the day the frontend grows the node.
 
 **The 49, classified — and 38 of them closed.** Every one is (a) engine except the two named below;
-none is (b) or (c), and none is `TestFrameworkTransform`'s. **The test source set now reads 11.**
+none is (b) or (c), and none is `TestFrameworkTransform`'s. **The test source set now reads 5.**
 
 | n | family | where it goes |
 |---|---|---|
@@ -2190,9 +2201,9 @@ none is (b) or (c), and none is `TestFrameworkTransform`'s. **The test source se
 | ~~12~~ **0** | `value TemplateTest is not a member of ssg.liquid` — four suites `import liqp.TemplateTest` for its nested `ComparableBase` | **NOT (a)** — CLOSED by D-liqp-5, an `inject` of that one nested type at the emitted FQN. It was T9's CASCADE and not T9's cost: four otherwise-portable suites failing over a data class they merely borrow. The 62-test T9 loss itself is untouched and stays loud, and the injection is DELETED — not grown — the day the frontend takes a method-local named class |
 | ~~4~~ **0** | an unqualified inherited `add(…)` inside a double-brace anonymous subclass of a retyped collection | `ENGINE-LIMITS.md` **K5** (extended), CLOSED: inside a NAMED class the frontend already supplies `this.`/`Outer.this.`; inside an ANONYMOUS one it does not, so the enclosing `new … { … }` claims the pending call — and the same claim repaired 22 SILENT `put` sites the four errors never named |
 | ~~2~~ **0** | `Found: Object / Required: String` at `InsertionTest`'s two anonymous `Block.render` bodies | `ENGINE-LIMITS.md` **T15** (new), CLOSED: `(c ? a : b).toString()` emitted the call INSIDE the else branch. A receiver is an operand, and four receiver positions were not asking `operand` |
-| **6** | one heterogeneous `Arrays.asList(98, "97", true, false, null)` — six per-element `Found: (98 : Int) / Required: String` | (a) OPEN. Java boxes those literals and infers `Serializable & Comparable<…>`; scala's `Int`/`Boolean` are value types and join to nothing java would name, so the element type the vararg infers is not java's. Visible only because K6.5's pack-opening made the elements separate arguments |
+| ~~6~~ **1** | one heterogeneous `Arrays.asList(98, "97", true, false, null)` — six per-element `Found: (98 : Int) / Required: String` | (a). Java infers `T` across all the arguments at once and BOXES; at an INFERRED `A` scalac declines the boxing conversion outright ("implicit conversions were not tried because the result of an implicit conversion must be more specific than T"). Java's answer is recorded on the CALL, so the rewrite writes it down as the explicit type argument and `Predef.int2Integer` applies. **What is left is ONE aggregate mismatch, and it is a different fact**: `cartesianProduct[T <: java.lang.Object]` will not take a `Buffer[Buffer[Serializable]]`, because scala 3 roots `java.io.Serializable` at `Any` (value classes are serialisable) while java's `<T>` bound — `T extends Object` — is VACUOUS and scala's `<: Object` is not. Reproduced standalone; the fix is to stop emitting the vacuous bound, whose blast radius is every generic signature in the corpus |
 | **2** | `Found: (templateParser.errorMode : ssg.liquid.TemplateParser.ErrorMode)` at `TestUtils` and `LiquidParserTest`, against the generated parser's `liqp.TemplateParser.ErrorMode` formal | **NOT (a)** — D-liqp-1 × D-liqp-2, the same one the main set carries: an external generated parser that references back INTO the renamed library. Unfixable without porting or regenerating it |
-| **1** | `LiquidParserTest#array` — `JavaCollections.toArray(java.util.Arrays.asList(arr*), …)` | K6.5's aliasing refusal in the test set; the same nine the main port carries |
+| ~~1~~ **0** | `LiquidParserTest#array` — `JavaCollections.toArray(java.util.Arrays.asList(arr*), …)` | K6.5's aliasing refusal in the test set, CLOSED with the eleven the main port carried: what was refused was the copy, and `asListView` is java's own live view |
 | **1** | `RenderSettingsTest` — `E172 Can't compare these two types: java.util.List[Object] / java.util.List[String]` at `assertEquals(toJava(list), toJava(asList(…)))` | (a) OPEN. MUnit's `Compare` needs a common type and the two `toJava` calls infer different element types; it is the retyping's own element-type residue met at an assertion |
 | **1** | `ForTest` — `Found: Nothing / Required: ?{ isEmpty: ? }` at `getRegistry(REGISTRY_FOR).isEmpty()` | `ENGINE-LIMITS.md` **G22** (new, open): `<T extends Map<String,?>> T getRegistry(String)` — `T` appears in no formal and nothing at the call constrains it, so java instantiates it at its BOUND and scala at `Nothing` |
 
