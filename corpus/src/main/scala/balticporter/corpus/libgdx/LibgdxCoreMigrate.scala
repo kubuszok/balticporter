@@ -535,7 +535,46 @@ object LibgdxPolicy:
   def mainPhases: List[balticporter.tir.Phase] =
     List(beanProperties, new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
-         disposableRedirect, nullability)
+         disposableRedirect, textureHandle, nullability)
+
+  /** libGDX's GL texture handle — the `int` that is really a texture name — as an opaque type, which
+    * is what the reference hand port declares (`sge/graphics/GLHandle.scala`) and APPLIES to a ported
+    * declaration (`GLTexture.scala:42`).
+    *
+    * ==Why ONE family and not the eight sge declares (§1c, and it is a MEASUREMENT)==
+    * `TextureHandle` is the only one of sge's handle types that types a declaration libGDX itself
+    * declares. `ProgramHandle`/`ShaderHandle` (`ShaderProgram` keeps `private var program: Int`),
+    * `FramebufferHandle`/`RenderbufferHandle` (`GLFrameBuffer` keeps `Int`), `BufferHandle` and
+    * `UniformLocation` are a typed layer offered to CONSUMERS beside the raw one — their home is
+    * `GLHandleOps`, extension methods on `GL20`, and `GL20.scala:89` keeps `def glGenTexture(): Int`
+    * to prove it. Configuring them would emit a surface the reference port deliberately does not
+    * have. `GLEnum` is a third shape again: sge's ~200 `GL_*` values are hand-authored constants with
+    * no Java counterpart, and this mechanism retypes declarations rather than minting a vocabulary.
+    * PROGRESS §11.25 holds the evidence table; do not re-derive it.
+    *
+    * ==The FENCE is load-bearing, and its reason is structural rather than measured==
+    * `FlowPropagation.refSym` admits a NULLARY CALL, so `glHandle = Gdx.gl.glGenTexture()` is a real
+    * flow edge to `GL20#glGenTexture`, whose `int` return makes it eligible. Unfenced, the seed set
+    * would grow into the GL interface and retype it — which sge does not do. With the four GL
+    * interfaces scoped out, every one of those crossings becomes a COUNTED coercion instead, and
+    * they are 30 of them (14 wraps + 16 unwraps).
+    *
+    * ==Shared surface, one instance, one mint (§1.5)==
+    * The retyped signatures are what every dependent compiles against, so this lives in [[core]] and
+    * is inherited through `extendedBy`. No dependent CONSTRUCTS a `primitive->opaque` phase, so
+    * nothing merges — but the phase RUNS in every dependent, which is a different question and the
+    * one `ENGINE-LIMITS.md` §13 O5 answers: the minted `TextureHandle` object belongs to the module
+    * that declares the HINTS, and a dependent retypes and coerces against the object this module
+    * emitted. */
+  def textureHandle: balticporter.transform.PrimitiveToOpaqueTransform =
+    new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      fqn        = "com.badlogic.gdx.graphics.TextureHandle",
+      hints      = _.fullName == "com.badlogic.gdx.graphics.GLTexture#glHandle",
+      underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
+      scope      = balticporter.tir.RuleScope.Everywhere(except = Set(
+        "com.badlogic.gdx.graphics.GL20", "com.badlogic.gdx.graphics.GL30",
+        "com.badlogic.gdx.graphics.GL31", "com.badlogic.gdx.graphics.GL32")),
+    ))
 
   /** libGDX's own `@Null` moved OUT of an annotation the Scala compiler ignores and INTO the type
     * — the union floor, `T | scala.Null` (DESIGN.md §8.6's N1).

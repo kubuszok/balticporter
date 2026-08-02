@@ -3558,115 +3558,128 @@ names by the same components — `def id`, `def id_=` are emitted exactly as bef
 is one note and its `key=`. The three deleted refusals moved no member at all, which is what "inert
 on the code" means and what the audit's prediction was right about.
 
-### 11.25 P6 — the opaque families: the GL layer is ONE family, and O5 is CLOSED so the step is READY
+### 11.25 P6 — the opaque families: DELIVERED, and the first step whose gate was a DEPENDENT's suite
 
-Stage P's last enablement. The same `OpaqueSpec` has been applied and reverted four times, and the
-four runs are the four columns below. The translation has been correct since the second one; what
-stopped it was not what the phase EMITS but what the run WRITES, in modules the first two runs never
-compiled — and that is `ENGINE-LIMITS.md` §13 O5, now closed in the engine. Read the four parts in
-order — what the four runs measured, what the evidence supports about the rest of the GL layer, what
-was deliberately not measured, and what must not be retried.
+`PrimitiveToOpaqueTransform(OpaqueSpec(TextureHandle))` is in `LibgdxPolicy.mainPhases`, between
+`disposableRedirect` and `nullability`. The same `OpaqueSpec` had been applied and reverted four
+times before this; the translation had been correct since the second one, and what stopped it was
+never what the phase EMITS but what the run WRITES, in modules the first two attempts never
+compiled. That was `ENGINE-LIMITS.md` §13 O5, closed in the engine, and the delivery below is the
+fifth application of a value that has not changed since attempt 1.
 
-**Attempt 1 cost 6 errors in `ENGINE-LIMITS.md` §13 O1 and O2, both CLOSED. Attempt 2 (the full
-delivery) read 0 errors on libgdx-core and 24 NEW errors across six dependent lanes, all of them O5,
-also now CLOSED. Attempt 3 — the O5 proof, all thirteen ports — is green end to end.** The columns
-are the same `OpaqueSpec`, applied verbatim, against the same baseline:
+**The five columns are the same `OpaqueSpec` against the same baseline**, so every difference
+between them is an ENGINE difference:
 
-| | attempt 1 (pre-O1/O2) | O1+O2 proof | delivery (all 13) | **O5 proof (all 13)** |
-|---|---:|---:|---:|---:|
-| libgdx-core scalac errors | 6 (`EngineGap`) | **0** | **0** | **0** |
-| seeded | 1 | 1 | **1** | **1** |
-| `RetypedSignature` decisions | 2 | 2 | **2** | **2** |
-| coercions | 27 (14 wrap + 13 unwrap) | 30 (14 + 16) | **30** (14 + 16) | **30** (14 + 16) |
-| libgdx-core members changed | 34 | 37 | **37** | **37** |
-| libgdx-core check counts (21) | identical | identical | **identical** | **identical** |
-| DEPENDENT scalac errors | not measured | not measured | **+24, six lanes** | **+0, every lane** |
-| `TextureHandle.scala` in existence | — | — | **9** | **1** |
-| suites that ran | — | — | **none of the six** | **all six** |
+| | attempt 1 (pre-O1/O2) | O1+O2 proof | attempt 2 (all 13) | O5 proof (all 13) | **DELIVERED** |
+|---|---:|---:|---:|---:|---:|
+| libgdx-core scalac errors | 6 (`EngineGap`) | 0 | 0 | 0 | **0** |
+| seeded | 1 | 1 | 1 | 1 | **1** |
+| `RetypedSignature` decisions | 2 | 2 | 2 | 2 | **2** |
+| coercions | 27 (14 wrap + 13 unwrap) | 30 (14 + 16) | 30 | 30 | **30** (14 + 16) |
+| libgdx-core members changed | 34 | 37 | 37 | 37 | **37 keys / 68 diff lines** |
+| libgdx-core check counts (21) | identical | identical | identical | identical | **identical** |
+| DEPENDENT scalac errors | not measured | not measured | +24, six lanes | +0, every lane | **+0, every lane** |
+| `TextureHandle.scala` in existence | — | — | 9 | 1 | **1** |
+| suites that ran | — | — | none of the six | all six | **all six** |
 
-**The O5 proof column, per lane.** `just measure-all` exits 0 with the family enabled; each lane's
-error count and suite outcome is its committed one:
+**Per lane, `just measure-all` exit 0, and every one of the ten lane HEADLINES is byte-identical to
+the pre-policy run of the same checkout.** The before column is not the committed baseline quoted
+from memory: the policy was stashed out, `measure-all` run, and all thirteen ports read **0 members
+changed** — so the after column below is a diff against a reproduction, not against a claim.
 
 | lane | errors | suite |
 |---|---:|---|
 | libgdx-core | 0 → **0** | — (the one legitimate `main` emission) |
-| libgdx-test | 0 → **0** | 217 passing / 4 failing, 221 of 221 emitted |
-| ashley (+ test port) | 0 → **0** | 108 / 2, plus the 2 committed skips, 112 of 112 |
-| anim8 | 0 → **0** | 23 / 0 |
+| libgdx-test | 0 → **0** | **217 passing / 4 failing, 221 of 221 emitted**; all 4 DERIVED from `Substitutions.dropTypes com.badlogic.gdx.utils.Json`, 0 declared |
+| ashley (+ test port) | 0 → **0** | **108 / 2, plus the 2 committed skips, 112 of 112** |
+| anim8 | 0 → **0** | **23 / 0** |
 | gdx-gltf (+ test ports) | 7 → **7** | does not run — the 7 are pre-existing `EngineGap`, byte-identical |
-| gdx-vfx | 0 → **0** | 64 / 0 |
-| screens | 0 → **0** | 16 / 0 |
-| simple-graphs (+ test), noise4j, jbump | unchanged | 16 / 0, 2 pre-existing, jbump's derived zero |
+| gdx-vfx | 0 → **0** | **64 / 0** |
+| screens | 0 → **0** | **16 / 0** |
+| simple-graphs (+ test) | 0 → **0** | **16 / 0** |
+| noise4j | 2 → **2** | pre-existing, byte-identical |
+| jbump | 0 → **0** | ships no suite; the lane re-derives that zero |
 
-**Members changed: 37 on libgdx-core and 0 on every other port** — and the second number is a
-MEASUREMENT rather than a restatement of the first. No corpus dependent emits a reference to the
-retyped surface at all: gdx-gltf's `SharedTextureTest` is the only Java in the corpus that names
-`getTextureObjectHandle`, and it is not in the gltf test port's file set. So the corpus cannot
-witness "a dependent that mints nothing still coerces"; `OpaqueMintOwnershipSpec` pins that, with a
-fixture whose propagated seed provably lands in a dependent-owned unit.
+`SYNTHESISED UNITS` reads **`1, 0 at an FQN a base already emits` on libgdx-core and `0, 0` on all
+twelve other ports**, and `find -name TextureHandle.scala` returns exactly one path
+(`libgdx-core/src_managed/main/scala/sge/graphics/TextureHandle.scala`). That pair is the whole of
+O5's closure, measured rather than argued.
 
-The attempt-1 → proof deltas are both O1's and both are a diff rather than a reconstruction: the 3
-extra coercions are exactly the 3 O1 error sites (`TextureDescriptor#hashCode` once, `#compareTo`
-twice) and the 3 extra members are exactly the rows those sites live in. O2 moves no member COUNT —
-it changes the TEXT of `sge.graphics.Texture`'s class line, already in the changed set.
+#### The libgdx-core census, and the one number whose PROSE was wrong
 
-**The proof column and the delivery column are IDENTICAL wherever they overlap, and that is the
-whole lesson.** The proof run measured libgdx-core; the delivery ran `measure-all`. Every number the
-proof quoted reproduced exactly — 0 errors, 1 seed, 2 retypes, 30 coercions, 37 members, 21 check
-counts flat, `nullability-boundary` 160 → 160 — and the port's emitted code is the reference hand
-port's line for line. **A base port at 0 errors with 21 flat check counts says nothing whatever about
-its dependents**, and the row that was never measured was the row that blocked the step. Keep that
-sentence when quoting this section: it is the reason the O5 proof column is an all-13 run and not a
-fourth base census.
+| | measured (delivery) |
+|---|---|
+| seeded | **1** — `GLTexture#glHandle`, the only hint |
+| propagated | the ctor parameter, `getTextureObjectHandle`'s return, `FrameBufferCubemap`'s local; **2 `RetypedSignature` decisions**, the declaration-level count the phase records (parameters and locals are deliberately not rows — §12.1 holds the parameter hole) |
+| coerced at the boundary | **30** = 14 `TextureHandle(...)` wraps + 16 `TextureHandle.unwrap(...)` unwraps, counted in the emitted text |
+| members changed | **37 distinct keys / 68 `members-unchanged` diff lines** — see the split below |
+| every check count, all 21 | **identical**, `nullability-boundary` 160 → 160 included; `findings.tsv` and `counts.tsv` diff to **zero lines** |
+| `decisions.tsv` | 3595 → **3598**: +2 `RetypedSignature`, +1 `RenamedPackage` (the minted unit). Every other port: unchanged, to the row |
+| libgdx-core scalac errors | **0 -> 0** |
 
-#### The blocker WAS O5, and it is a WRITE rather than a translation — now CLOSED
+**`members-unchanged` counts DIFF LINES, not members, and the two numbers are not the same one.**
+68 = 32 `<` + 36 `>`, over **37 distinct member keys**, and the split is:
 
-`PrimitiveToOpaqueTransform` mints its object as a top-level unit with `Origin.synthetic`.
-`PortRun.converted` emits a unit with no usable origin, deliberately (refusing on a missing origin
-would be a silent omission) — and a dependent's model CONTAINS the base's units, so the hint matches
-there, the phase mints there, and every module in the pipeline writes its own copy. Nine
-`TextureHandle.scala` were emitted where one was owed:
+- **31 moved** — same key, new digest;
+- **1 key RENAMED** — `Texture#<init>(int,int,TextureData)` → `#<init>(int,T,TextureData)`, which is
+  one member appearing as one `<` and one `>`;
+- **4 genuinely new rows** — the minted unit `sge.graphics.TextureHandle` and its three members
+  (`T`, `apply(int)`, `unwrap(T)`).
 
-| port | scalac errors | |
-|---|---:|---|
-| libgdx-core | 0 → **0** | the one legitimate emission (`main`) |
-| libgdx-test | 0 → **3** | duplicate in `libgdx-core/src_managed/test` |
-| ashley (+ its test port) | 0 → **6** | duplicates in both source sets |
-| anim8 | 0 → **3** | |
-| gdx-gltf (+ its test ports) | 7 → **13** | the 7 are pre-existing and byte-identical |
-| gdx-vfx | 0 → **3** | |
-| screens | 0 → **3** | |
-| simple-graphs, noise4j, jbump | unchanged | they do not inherit libGDX's manifest |
+31 + 1 + 1 + 4 = 37 keys; 32 + 36 = 68 lines. The earlier prose in this section said "31 moved + 6
+new rows: the minted unit and its three members, plus `Texture`/`Cubemap` unit digests" — the count
+37 was right and the DECOMPOSITION was not: the `Texture` and `Cubemap` unit digests are in the
+MOVED set, not the new one. Quote the split above.
 
-`24 = 8 duplicates × 3`, and the three are always the same: one `[E161]` redefinition plus two
-`[E007]`, because opacity is per-DEFINITION — inside the duplicate, `TextureHandle.T` binds to the
-FIRST definition's opaque type and the duplicate's own `apply`/`unwrap` stop type-checking against
-it. **A minted opaque type cannot be duplicated even harmlessly.** And the cost is not the error
-count: six suites (gdx-test 221, ashley 112, anim8 23, gltf, vfx 64, screens 16) did not run at all,
-because a module that does not compile has no tests.
+**The decisions carry `reason=library-rule rule=primitive->opaque:com.badlogic.gdx.graphics.TextureHandle`**
+— not `configured`, because the phase records the §1(c) classification the mechanism's own doc argues
+for: which primitives are really a domain value is knowledge about one library, so the reader is sent
+to that library's rule and not to a manifest key. Neither row renders a porter note, which is the
+P2/P6 precedent standing (`RetypedSignature` and `RedirectedCall` are the two kinds `DESIGN.md` §7.2
+deliberately leaves noteless), and `porter-notes` reports 0/0 accordingly. The minted unit's own
+`RenamedPackage` DOES render a note, at the head of the file it names.
 
-**There is no policy exit**, which is what makes this the engine's and not this manifest's: `surface`
-is inherited through `extendedBy` and cannot be subtracted; a dependent declaring its own instance is
-a fatal `SurfaceDivergence`; and holding the phase back in a dependent is precisely §1.5's
-compile-alone-but-not-together failure. A `RuleScope` bounds which SYMBOLS seed, and the mint follows
-from the seed set being non-empty at all — which it must be in a dependent, because the seeded
-declaration is the base's. Full diagnosis and the AS-BUILT fix: `ENGINE-LIMITS.md` §13 O5. In one
-line: the phase fences its mint on `RunScope.emits`, read off the spec's HINTS (a grown seed set
-reaches a dependent's own units and would hand the mint back to a module that merely uses the
-family), and `PortRun` fails any run that would write a synthetic unit at an FQN a base's published
-port map claims.
+**The emitted code is what sge emits, in shape and site for site:**
+`protected[graphics] var glHandle: sge.graphics.TextureHandle.T`,
+`this(glTarget, sge.graphics.TextureHandle(sge.Gdx.gl.glGenTexture()))`,
+`glBindTexture(this.glTarget, sge.graphics.TextureHandle.unwrap(this.glHandle))`,
+`this.glHandle = sge.graphics.TextureHandle(0)`, and `def getTextureObjectHandle():
+sge.graphics.TextureHandle.T`. Both engine fixes are visible in the output: O1's coercion is PUSHED
+INTO EACH BRANCH at `TextureDescriptor#hashCode`/`#compareTo` (`if (this.texture == null) 0 else
+TextureHandle.unwrap(...)`), and O2's retyped formal reaches the funnel, so `Texture`'s synthesised
+primary reads `class Texture protected (sup$0: scala.Int, sup$1: sge.graphics.TextureHandle.T)`.
+The two differences from sge's file are both un-landed OTHER work, not this step's: sge threads
+`(using Sge)` (P5, reverted on CT7/CT8) and offers `.toInt`/`TextureHandle.none` as its own
+extension sugar over the same opaque type.
 
-**P6 is REVERTED once more — it is the ENGINE fix that landed, not the policy** — and the revert is
-verified the same way it was the first two times: with the policy removed, `members.tsv` reads **0
-changed on all thirteen ports**, every check count is identical, and every lane returns to its
-committed numbers (gdx-test 217/4, ashley 108/2 + 2 skips, anim8 23, vfx 64, screens 16, sg 16,
-jbump's derived zero, gltf 7 and noise4j 2 pre-existing).
+**The FENCE is the load-bearing half, and its reason is structural rather than measured.**
+`FlowPropagation.refSym` admits a NULLARY CALL, so `glHandle = Gdx.gl.glGenTexture()` is a real flow
+edge to `GL20#glGenTexture`, whose `int` return makes it eligible — an unfenced run would grow the
+seed set into the GL interface and retype it, which sge does not do (`GL20.scala:89` keeps
+`def glGenTexture(): Int`). The unfenced variant was NOT run, so treat that as a derivation from the
+edge rule and not as a number. What the fence buys IS measured: with the four GL interfaces scoped
+out, every one of those crossings is a counted coercion instead, and they are 30 of them.
 
-**P6 IS NOW READY, and the replay must still carry ALL-13 EVIDENCE.** The `OpaqueSpec` below is
-unchanged; re-applying it is a paste. What must not shrink is the measurement: a libgdx-core-only
-run reproduces every number in the base column and is worth nothing as evidence about the step —
-that is exactly how the first two proofs passed while the step could not land. Re-apply, run
-`just measure-all`, and report the per-lane table above, suite outcomes included.
+#### The BLAST is not confined to libgdx-core, and the shape is P1's
+
+**Nine of the thirteen ports needed a baseline promotion, and eight of them for one line.** Adding a
+phase to the base `surface` moves the `policy=` fingerprint in every module that INHERITS it through
+`extendedBy`, so each of `libgdx-test`, `ashley` (+ test), `anim8`, `gdx-gltf` (+ test), `gdx-vfx`
+and `screens` republishes a `port-map.tsv` whose header digest changed and whose every other row is
+byte-identical. `simple-graphs` (+ test), `noise4j` and `jbump` do not inherit libGDX's manifest and
+did not move at all.
+
+| promoted | what moved |
+|---|---|
+| `LibgdxCoreMigrate` | `members.tsv` 68 lines (the 37 keys above) + `port-map.tsv` 56 lines: the `policy=` digest, `GLTexture`/`Texture`'s `primary=(int,T)` rows, one NEW `type … TextureHandle … form=object` row, and the member digests |
+| the 8 libGDX dependents | `port-map.tsv`, **one header line each** — `policy=` only |
+| `findings.tsv` / `counts.tsv`, every port | **nothing** — zero diff lines anywhere |
+| `tests.tsv`, every port | **nothing** |
+
+This is exactly the shape §11.15 recorded for P1 and §1.5 records for `CollectionsTransform`'s
+retarget — "the fingerprint change reaching nine published port maps and nothing else moving". It is
+not a surprise and it is not confined to one port; a delivery of a base-surface phase that promotes
+only the base leaves eight stale published maps behind.
 
 #### The GL evidence says ONE family, not twenty — and that is a measurement, not a scoping choice
 
@@ -3701,7 +3714,7 @@ against the spec's primitive, and `int[]` is not `scala.Int`, so neither a hint 
 can reach the element; `FlowPropagation`'s edges are between symbols, and an array's element has no
 symbol of its own. An `OpaqueSpec` whose family lands inside a container is therefore inexpressible
 today. That is a mechanism gap and not a `RuleScope` question, and it is NOT counted in the 6 errors
-below because the family was never configured.
+of attempt 1 because the family was never configured.
 
 **It is still inexpressible and it is no longer SILENT.** The half that made this expensive was that
 a hint naming such a declaration matched nothing and read exactly like a typo; the phase now reports
@@ -3709,13 +3722,7 @@ it as a `policy` finding that says (a) ENGINE and points at `ENGINE-LIMITS.md` �
 writes this hint learns in ONE RUN that the mechanism cannot reach it, instead of hunting a
 misspelling that is not there.
 
-#### The one family's TRANSLATION works — the config, verbatim
-
-The `OpaqueSpec` below is the whole of the policy. It is recorded here rather than in
-`LibgdxCoreMigrate` because the step is reverted; re-applying it is a paste, appended to
-`mainPhases` between `disposableRedirect` and `nullability`, and the numbers to expect on
-libgdx-core are the delivery column above. **Do not re-apply it until O5 is closed** — the base's
-numbers will look perfect and six dependent lanes will stop compiling.
+#### The policy, as shipped
 
 ```scala
 def textureHandle: PrimitiveToOpaqueTransform =
@@ -3729,61 +3736,35 @@ def textureHandle: PrimitiveToOpaqueTransform =
   ))
 ```
 
-| | measured (delivery) |
-|---|---|
-| seeded | **1** — the field, the only hint |
-| propagated | the ctor parameter, `getTextureObjectHandle`'s return, `FrameBufferCubemap`'s local; **2 `RetypedSignature` decisions**, which is the declaration-level count the phase records (parameters and locals are deliberately not rows) |
-| coerced at the boundary | **30** = 14 `TextureHandle(...)` wraps + 16 `TextureHandle.unwrap(...)` |
-| members changed | **37** (31 moved + 6 new rows: the minted unit and its three members, plus `Texture`/`Cubemap` unit digests) |
-| every check count, all 21 | **identical**, `nullability-boundary` 160 → 160 included |
-| `decisions.tsv` | 3595 → **3598**: +2 `RetypedSignature`, +1 `RenamedPackage` (the minted unit) |
-| libgdx-core scalac errors | **0 -> 0** |
-
-The decisions carry `reason=library-rule rule=primitive->opaque:com.badlogic.gdx.graphics.TextureHandle`
-— NOT `configured`, because the phase records the §1(c) classification the mechanism's own doc argues
-for: which primitives are really a domain value is knowledge about one library, so the reader is sent
-to that library's rule and not to a manifest key. Neither row renders a porter note, which is the
-P2/P6 precedent standing (`RetypedSignature` and `RedirectedCall` are the two kinds `DESIGN.md` §7.2
-deliberately leaves noteless), and `porter-notes` reports 0/0 accordingly.
-
-The emitted code is what sge emits, line for line: `protected[graphics] var glHandle:
-sge.graphics.TextureHandle.T`, `this(glTarget, TextureHandle(sge.Gdx.gl.glGenTexture()))`,
-`glBindTexture(this.glTarget, TextureHandle.unwrap(this.glHandle))`, `glHandle =
-TextureHandle(0)`. The **fence is the load-bearing half**, and the reason is structural rather than
-measured: `FlowPropagation.refSym` admits a NULLARY CALL, so `glHandle = Gdx.gl.glGenTexture()` is a
-real flow edge to `GL20#glGenTexture`, whose `int` return makes it eligible — an unfenced run would
-therefore grow the seed set into the GL interface and retype it, which sge does not do
-(`GL20.scala:89`). The unfenced variant was NOT run, so treat that as a derivation from the edge
-rule and not as a number. What the fence buys IS measured: with the four GL interfaces scoped out,
-every one of those crossings is a counted coercion instead, and they are 30 of them.
-
 The 6 errors attempt 1 cost were `ENGINE-LIMITS.md` **O1** (3 — a coercion reads the boundary term's
 own type, so a seed reaching it through an `if` is invisible) and **O2** (3 — a retyped PARAMETER
 leaves its method's `MethodType` stale, and the ctor funnel correctly reads the signature). **Neither
 had a policy exit**, and that is the load-bearing negative: O1's errors are at CALLERS of a retyped
 member, so no `RuleScope` can un-retype the callee; O2's are in a SUBCLASS of the seeded class, so
-scoping the subclass out cannot change the parent's formal. Both are closed in the engine — and O5
-has the same shape one level up, which is why it is also the engine's.
+scoping the subclass out cannot change the parent's formal. The 24 of attempt 2 were **O5**, which
+has the same shape one level up and is why it was also the engine's. All three are closed.
 
 #### Two interactions settled, both negative, both worth the words
 
 - **P3's `@Null` union floor does not meet this.** `NullabilityTransform` REFUSES a bare primitive
   (`Issue.PrimitiveType`) and this phase seeds ONLY bare primitives (`taggablePrim`), so the two
   domains are disjoint by construction and no `TextureHandle.T | Null` can arise. Confirmed
-  empirically: `nullability-boundary` **160 -> 160** with the family enabled. There is no ordering
-  hazard behind that either — the union floor would have to reach an `int` for one to exist, and
+  empirically on the delivery run: `nullability-boundary` **160 -> 160**. There is no ordering hazard
+  behind that either — the union floor would have to reach an `int` for one to exist, and
   `NullabilityTransform`'s own note records that no bare-primitive annotation exists in the corpus.
-- **No dependent CONSTRUCTS a `primitive->opaque` phase** (the §1.5 instance-count question, asked
-  before writing the policy — the only corpus construction site is `demo/OpaqueDemo`, which is not a
-  port). One instance, inherited through `extendedBy`; nothing to merge, and D9's shape is not in
-  play. The inherited blast would be small: of the corpus dependents only gdx-gltf touches the
-  retyped surface at all, at one TEST file (`gltf/test/…/SharedTextureTest.java`); vfx, ashley,
-  anim8 and screens reference `getTextureObjectHandle` nowhere. That answer is what settles the
-  fingerprint question the phase's new `SurfacePolicy` raises: one instance, so no merge, and
-  `MergeablePolicy` is deliberately not implemented (`DESIGN.md` §8.13). **What that question did NOT
-  ask, and O5 is the answer to, is whether the ONE inherited instance RUNS in each dependent — it
-  does, and running is what mints.** "No dependent constructs this phase" settles the merge and says
-  nothing about the emission; the two are different questions and only the first was asked.
+- **No dependent CONSTRUCTS a `primitive->opaque` phase** (the §1.5 instance-count question — the
+  only corpus construction site is `demo/OpaqueDemo`, which is not a port). One instance, inherited
+  through `extendedBy`; nothing to merge, and D9's shape is not in play, so `MergeablePolicy` is
+  deliberately not implemented (`DESIGN.md` §8.13). **What that question did NOT ask, and O5 is the
+  answer to, is whether the ONE inherited instance RUNS in each dependent — it does, and running is
+  what mints.** The two are different questions and only the first was asked.
+
+**Members changed: 37 on libgdx-core and 0 on every other port** — and the second number is a
+MEASUREMENT rather than a restatement of the first. No corpus dependent emits a reference to the
+retyped surface at all: gdx-gltf's `SharedTextureTest` is the only Java in the corpus that names
+`getTextureObjectHandle`, and it is not in the gltf test port's file set. So the corpus cannot
+witness "a dependent that mints nothing still coerces"; `OpaqueMintOwnershipSpec` pins that, with a
+fixture whose propagated seed provably lands in a dependent-owned unit.
 
 #### `Pixels` and `Seconds` are NOT measured, and the reason is not that they lack evidence
 
@@ -3796,23 +3777,21 @@ and `Graphics#deltaTime`. (The 171 is a count of SITES, not of ported declaratio
 seed harvest is part of the task that configures them.) Neither is a consumer-side layer; both are
 exactly the shape this mechanism exists for.
 
-They were not configured because **measuring them before O1 and O2 were closed added no information
-and one of them was strictly worse**. Both gaps are generic, not `TextureHandle`-specific: O1 fires
-wherever a seed reaches a boundary through a conditional, and O2 fires wherever a seed is a
-PARAMETER — which is what `Pixels` and `Seconds` are almost exclusively, against
-`TextureHandle`'s one field. A run would have reproduced the same two diagnoses at a larger multiple
-and bought nothing the 6 errors had not already bought. §5's "change one thing, then measure" cuts
-the same way: two families in one commit could not be told apart.
+They were not configured with `TextureHandle` because §5's "change one thing, then measure" cuts
+here exactly as it does anywhere: two families in one commit could not be told apart, and before O1
+and O2 were closed a run would have reproduced the same two diagnoses at a larger multiple and
+bought nothing the 6 errors had not already bought. O5 then blocked them for the same reason it
+blocked `TextureHandle` — every family mints a unit, so every family duplicated it into every
+dependent, and the cost scaled with the number of DEPENDENTS rather than with the family's size.
 
-So the honest state is **`Pixels`/`Seconds`: evidenced, unconfigured, unmeasured**. O5 blocked them
-for the same reason it blocked `TextureHandle` — every family mints a unit, so every family
-duplicated it into every dependent, and the cost scaled with the number of dependents rather than
-with the family's size — and with O5 closed the mint is one module's whatever the family's size, so
-they are now the next step and the one that will say what the mechanism costs at scale. Note what
-`TextureHandle` does NOT tell you about them: it is one FIELD,
-and O2's fix is exercised there by a single constructor slot. `Pixels` and `Seconds` are parameters
-almost exclusively, so they are the first real measurement of the parameter path — expect that to be
-where the next shape appears, and configure them ONE AT A TIME.
+So the honest state is **`Pixels`/`Seconds`: evidenced, unconfigured, unmeasured** — and now
+unblocked. With O5 closed the mint is one module's whatever the family's size, so they are the next
+step and the one that will say what the mechanism costs at scale. Note what `TextureHandle` does NOT
+tell you about them: it is one FIELD, and O2's fix is exercised there by a single constructor slot.
+`Pixels` and `Seconds` are parameters almost exclusively, so they are the first real measurement of
+the parameter path — expect that to be where the next shape appears, and configure them ONE AT A
+TIME. §12.1's "a RETYPED parameter records no decision at all" is the hole they will walk into
+first.
 
 #### Do NOT retry
 
@@ -3822,13 +3801,14 @@ where the next shape appears, and configure them ONE AT A TIME.
   session. This does NOT extend to `Pixels`/`Seconds`, which are a different case entirely — see
   above.
 - **Do not re-derive the 6 errors of attempt 1, or the 24 of attempt 2.** They were O1, O2 and O5,
-  all three closed, and the four columns above are the proof. The `OpaqueSpec` is recorded verbatim,
-  so re-enabling it is a paste and the numbers to expect on libgdx-core are 0 errors / 1 seed /
-  2 retypes / 30 coercions / 37 members / 21 flat check counts.
-- **Do not measure this family on libgdx-core alone, closed or not.** A libgdx-core-only run
-  reproduces every number in the base column and is worth nothing as evidence about the step — that
-  is exactly how the first two proofs passed while the step could not land. The gate for this step is
-  `just measure-all` and the per-lane table, suite outcomes included.
+  all three closed, and the five columns above are the proof.
+- **Do not measure a family of this phase on libgdx-core alone.** A libgdx-core-only run reproduces
+  every number in the base census and is worth nothing as evidence about the step — that is exactly
+  how the first two proofs passed while the step could not land. The gate is `just measure-all` and
+  the per-lane table, suite outcomes included.
+- **Do not promote only the base's baseline when a base-SURFACE phase lands.** Eight dependents'
+  `port-map.tsv` headers move with it, by one line each, and leaving them is eight stale published
+  maps that the next run silently re-diffs.
 - **Do not reach for a `RuleScope`, an `extendedBy` subtraction or a dependent-side drop to clear a
   residue of this family.** All three gaps were outside every scope's reach, for the reasons given
   above, and any successor gap in this phase should be classified the same way before a manifest

@@ -3918,6 +3918,12 @@ is the point — O1 and O2 by compiling the BASE, O5 only by compiling the DEPEN
 base's own 21 green check counts cannot see. **O1, O2 and O5 are CLOSED; O3 and O4 are named
 residues.**
 
+**The family they blocked is now SHIPPED** — `LibgdxPolicy.mainPhases` carries the `TextureHandle`
+`OpaqueSpec`, `just measure-all` is green on all thirteen ports with every lane headline
+byte-identical, and exactly one `TextureHandle.scala` exists. So each entry below is a closed dead
+end rather than an open one; what is left of this section for a NEW port is O3 and O4, plus the
+rule each closed entry states about what a retyping phase owes.
+
 The delivery O1 and O2 blocked was otherwise complete and correct. The family emits exactly what the
 reference hand port emits (`GLTexture.glHandle: TextureHandle.T`, the mint wrapped at
 `TextureHandle(gl.glGenTexture())`, every GL-interface crossing unwrapped), every one of the 21
