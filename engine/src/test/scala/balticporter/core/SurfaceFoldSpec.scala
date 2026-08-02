@@ -180,8 +180,11 @@ class SurfaceFoldSpec extends munit.FunSuite:
   test("INTRUSION: a merged-in subject the base EMITS is fatal, and is not a plain divergence") {
     val dep = base(List(redirect("com.other.A" -> "com.dep.A")))
       .extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
-    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
-    assertEquals(dep.effectiveSurface.size, 2, "a refused merge leaves the pre-merge pipeline")
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
+    // the merge STANDS — an intrusion is a statement about the base's OUTPUT, not a failure to
+    // compose two policies, and a confirmed one stops the run at the gate (DESIGN.md §8.13)
+    assertEquals(dep.effectiveSurface.size, 1)
+    assertEquals(dep.surfaceFold.refusals, Nil)
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
     assert(Kind.SurfaceIntrusion.fatal)
@@ -226,7 +229,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
       surface = List(redirect("com.other.A" -> "com.dep.A")))
     val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
       surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
-    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, fired = Set("com.demo.Widget"))
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
     assert(clue(f.head.detail).contains("DROPS and REPLACES"))
@@ -254,7 +257,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
     val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
       packageRenames = Map("com.demo" -> "sge"),
       surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
-    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
   }
 
   test("a base whose injection ROOT does not exist ships nothing — the run's own answer") {
@@ -273,7 +276,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
     val ok = b.extendedBy(PortManifest("dep", surface = List(redirect("com.demonstrate.W" -> "com.dep.W"))))
     assertEquals(ok.surfaceFold.refusals, Nil)
     val bad = b.extendedBy(PortManifest("dep", surface = List(redirect("com.demo.W" -> "com.dep.W"))))
-    assertEquals(bad.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    assertEquals(bad.surfaceFold.intrusions.map(_.subject), List("com.demo.W"))
   }
 
   test("INTRUSION without a merge: a phase NO base declares is screened exactly the same") {
@@ -284,7 +287,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
     val b   = PortManifest("base", governs = Set("com.demo"))   // NO type-redirect of its own
     val dep = b.extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
     assertEquals(dep.effectiveSurface.size, 1, "the phase still runs; the FINDING is what stops the run")
-    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
     assert(Kind.SurfaceIntrusion.fatal)
@@ -310,6 +313,92 @@ class SurfaceFoldSpec extends munit.FunSuite:
     assertEquals(
       ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind),
       List(Kind.SurfaceIntrusion))
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // …and the criterion is what the base EMITS, which only its PUBLISHED MAP can say
+  // (ENGINE-LIMITS.md CT9 Face A, DESIGN.md §8.13)
+  // -------------------------------------------------------------------------------------------
+
+  /** the base, as a run FOUND it: a manifest and a usable published map. */
+  private def published(b: PortManifest, entries: PortMap.Entry*): ManifestAgreement.BasePort =
+    ManifestAgreement.BasePort(b, Some(PortMap.Map0(b.name, "engine", entries.toList)), "run-latest")
+
+  private def emits(fqn: String)   = PortMap.Entry("type", fqn, fqn, PortMap.Disposition.Ported)
+  private def drops(fqn: String)   = PortMap.Entry("type", fqn, "", PortMap.Disposition.Dropped)
+  private def replaces(fqn: String, at: String) =
+    PortMap.Entry("type", fqn, at, PortMap.Disposition.Substituted)
+
+  /** a dependent whose OWN declaration lives inside the base's claimed namespace — the whole of
+    * CT9 Face A. `com.demo.WidgetTest` is a test module's suite beside `com.demo.Widget`. */
+  private def intruding(subject: String) =
+    val b = PortManifest("base", governs = Set("com.demo"), surface = List(redirect("com.other.A" -> "com.dep.A")))
+    b -> b.extendedBy(PortManifest("dep", surface = List(redirect(subject -> "com.dep.X"))))
+
+  test("a key at an FQN the base's map has NO ENTRY for is ADMITTED — the base declares nothing there") {
+    // libGDX's own suites are declared INSIDE `com.badlogic.gdx`, so no prefix separates the two
+    // modules and the base never parses the test tree at all. A drop is a statement about a type the
+    // base HAS; this is a name it has never heard of, and the manifest cannot tell them apart.
+    val (b, dep) = intruding("com.demo.WidgetTest")
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.WidgetTest"),
+                 "the fold still names it — it is a CANDIDATE, screened by the layer holding the map")
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
+                                    ports = List(published(b, emits("com.demo.Widget"))))
+    assertEquals(f.map(_.kind), Nil)
+    assertEquals(dep.effectiveSurface.size, 1, "…and the merge stands, which is the point")
+  }
+
+  test("…and a key at an FQN the base's map EMITS is still REFUSED, with the map as the evidence") {
+    val (b, dep) = intruding("com.demo.Widget")
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
+                                    ports = List(published(b, emits("com.demo.Widget"))))
+    assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
+    assert(Kind.SurfaceIntrusion.fatal)
+    assert(clue(f.head.detail).contains("published map emits it"))
+  }
+
+  test("a map entry that is DROPPED admits — `nothing stands at that name`, read off the OUTPUT") {
+    val (b, dep) = intruding("com.demo.Widget")
+    assertEquals(
+      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
+                              ports = List(published(b, drops("com.demo.Widget")))).map(_.kind),
+      Nil)
+  }
+
+  test("…and a SUBSTITUTED one refuses: an injected replacement IS shared surface") {
+    val (b, dep) = intruding("com.demo.Widget")
+    assertEquals(
+      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
+                              ports = List(published(b, replaces("com.demo.Widget", "sge.Widget")))).map(_.kind),
+      List(Kind.SurfaceIntrusion))
+  }
+
+  test("NO USABLE MAP falls back to re-derivation — the answer that shipped, and it says so") {
+    // D1's rule: `BasePort.map` is empty for a map never published AND for one proven stale, and the
+    // two take the same path. The fallback REFUSES, which is the safe direction for a screen, and it
+    // is reported as weaker beside this finding rather than silently taken.
+    val (b, dep) = intruding("com.demo.WidgetTest")
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
+                                    ports = List(ManifestAgreement.BasePort(b)))
+    assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion, Kind.BaseMapMissing))
+    assert(clue(f.head.detail).contains("no usable port map"))
+    assert(!Kind.BaseMapMissing.fatal, "the operational half is loud, not fatal")
+  }
+
+  test("…and a run that looked up no maps at all behaves identically — a base port asks nothing") {
+    val (_, dep) = intruding("com.demo.WidgetTest")
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind),
+                 List(Kind.SurfaceIntrusion))
+  }
+
+  test("ONE finding per phase, whatever the number of subjects — one manifest mistake, one row") {
+    val b = PortManifest("base", governs = Set("com.demo"), surface = List(redirect("com.other.A" -> "com.dep.A")))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(
+      redirect("com.demo.Widget" -> "com.dep.W", "com.demo.Gadget" -> "com.dep.G"))))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
+                                    ports = List(published(b, emits("com.demo.Widget"), emits("com.demo.Gadget"))))
+    assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
+    assert(clue(f.head.detail).contains("2 such subjects"))
   }
 
   test("`subjects` is every key's leading FQN — a rename OWNER counts as one") {
@@ -502,7 +591,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
     val b = base(List(nullability(Set("com.demo.Null"))))
     val dep = b.extendedBy(PortManifest("dep", surface = List(
       nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Widget"))))))
-    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
     assert(Kind.SurfaceIntrusion.fatal)
@@ -513,7 +602,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
     val b   = base(List(nullability(Set("com.demo.Null"))))
     val dep = b.extendedBy(PortManifest("dep",
       surface = List(nullability(Set("com.demo.Null", "com.demo.MaybeNull")))))
-    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.MaybeNull"))
     assert(clue(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).head.detail)
       .contains("com.demo.MaybeNull"))
   }

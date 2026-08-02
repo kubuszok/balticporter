@@ -2664,17 +2664,66 @@ expression all work. The three exits for CT9 Face A — put the entry in the bas
 buys a green run with six permanently unclearable `policy` rows, which is the noise floor this file
 already warns about one section up.
 
-**What the FIFTH replay needs, and it is two engine commits and then the port-side list below.**
+**What the FIFTH replay needs — the two engine commits are DONE (below), so this is the port-side
+list and nothing else.**
 
 | | what |
 |---|---|
-| CT9 Face A | the `governs` screen must admit a subject the base does not EMIT, not merely one it DROPS — the base's published port map is where that already lives (`DESIGN.md` decision + its own 13-port cycle) |
-| CT9 Face B | `Pipeline.order` orders INSTANCES, not names; changes what every refused merge does, so it is measured alone |
 | `libgdx-test`'s manifest | ONE `selfSupplied` entry — `AnimationControllerTest`, the only threaded suite of the 221 emitted tests; the closure reaches it through `new Model()` |
 | a fixture `src/` file | libgdx-core's `src/test/scala`, plus that directory on the `gdx-test-measure` compile line (vfx and screens lanes already compile theirs). The suite touches NO service — three tests are a keyframe binary search, two drive the animation state machine, and `Model` carries the clause for propagation and dereferences it nowhere — so an ABSENT service is louder than a noop that answers |
 | `sge/utils/Pools.scala` | the recorded `def registerDefaults()(using sge.Sge)` shape; the WHOLE block moves (see above) |
 | ~4 hand-written `src/` files | screens — the 16 `Unmapped` errors: `Gdx.gl*` reads and constructions of threaded types |
 | 1 hand-written suite + the `<clinit>` body | vfx — the 41 `Unmapped`, plus its `MethodBodyTransform` body, which constructs a now-threaded `DefaultVfxGlExtension` from an object initialiser (the last `EngineGap`, and it is the PORT's own Scala) |
+
+**BOTH CT9 COMMITS HAVE LANDED, AND THE TRIGGER WAS RE-MEASURED AS A PROOF GATE.** Face B —
+`Pipeline.order` orders instances, and a refused pair stops the run before the pipeline — and Face A
+— the `governs` screen asks what the base EMITS, per its published map (`ENGINE-LIMITS.md` CT9,
+`DESIGN.md` §8.13's two new as-built sections). Each shipped DEFAULT-OFF and was measured alone at
+`just measure-all` exit 0, all 13 ports
+0 members changed, every check count identical, no baseline moved. **P5 is ready for the FIFTH
+replay, and what is left is entirely the port-side list below.**
+
+The gate was the §11.12 config re-applied verbatim as UNCOMMITTED SCRATCH — the holder, the 11-field
+path map, the four `Graphics#gl2x` bean pairs, the two `sites` `lazy-init` keys, the injected
+`sge.Sge` and the `Pools.registerDefaults()(using sge.Sge)` shape — plus the ONE `selfSupplied` entry
+that is CT9-A's trigger, then reverted:
+
+| | fourth replay (CT9 open) | the CT9 proof gate |
+|---|---:|---:|
+| libgdx-core scalac errors | **0** | **0** |
+| `context-seam` (base) | 44 | **44** — 25 unconstructed-thread, 14 captured-context, 3 residual-global, 2 deferred-init, 0 frozen, 0 lost-clause |
+| decisions (base) | 3,893 (`DeferredInit` 2, `RetypedSignature` 1,246) | **3,893** — `DeferredInit` 2, `RetypedSignature` 1,246 |
+| `policy` / `omissions` (base) | 2 / 65 | **2 / 65** |
+| **libgdx-test `manifest`** | **1 FATAL `SurfaceIntrusion`** | **0** |
+| **libgdx-test `policy`** | **1** (the extension's holder "neither it nor any of its bases declares") | **0** |
+| libgdx-test `context-seam` | 0 — the base's holder never ran | **1 × `self-supplied`**, `AnimationControllerTest` |
+| libgdx-test scalac errors | **2** | **1** |
+
+Four things it settles, and one it deliberately does not:
+
+- **Face A CLEARS ON THE REAL PORT.** `manifest` 0 against the base's published map — the screen
+  found no entry at `com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest` and admitted it,
+  which is the whole of CT9 Face A. The base still `governs = com.badlogic.gdx` and nothing about the
+  claim moved.
+- **Face B is visible in `policy` 0.** The dangling-extension finding was a CONSEQUENCE of the
+  refused merge, not a second defect: with the merge standing, `effectiveHolders` folds the extension
+  into the base's holder and the base's whole holder RUNS for libgdx-test. It cleared with no code
+  aimed at it.
+- **The entry APPLIES, and the emitted text is the evidence.**
+  `class AnimationControllerTest extends munit.FunSuite` — no `using` clause — with
+  `private given sge.Sge = sge.SgeTestFixture.testSge()` at the head of its body and the
+  `injected-member` porter note above it. CT7's third answer, reached from a DEPENDENT's manifest.
+- **The remaining 1 error is the PORT's, and it names itself**:
+  `value SgeTestFixture is not a member of sge` at that `given`. The fixture file is the next row of
+  the port-side list and was deliberately NOT written here — a proof gate that writes the port's
+  fixture stops being a measurement of the engine.
+- **The suite therefore did not RUN** (`not running the suite: it does not compile`), so the
+  217/4 outcome line in that lane is the committed baseline echoed, not a result. The fifth replay
+  is what runs it.
+
+Everything else on the list is unchanged and already measured: the `Pools.registerDefaults` shape
+(re-applied verbatim here and correct), vfx's extension, screens' four files, vfx's suite and
+`<clinit>` body.
 
 ### 11.13 D5j — the demand-derived JDK surface, as measured
 

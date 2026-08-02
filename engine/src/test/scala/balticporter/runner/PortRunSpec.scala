@@ -237,6 +237,54 @@ class PortRunSpec extends munit.FunSuite:
     assert(clue(emitted(r.outDir)).contains("com/demo/Widget.scala"))
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // the `governs` screen asks what the base EMITS (ENGINE-LIMITS.md CT9 Face A), end to end
+  // ---------------------------------------------------------------------------------------------
+
+  /** a dependent whose OWN declaration lives INSIDE the base's claimed namespace — a library's own
+    * test module, which is the shape no prefix can separate from the module it tests. */
+  private def sharedNamespaceFixture(): (Path, Path, Path) =
+    val (root, src) = fixture()
+    val other = root.resolve("java3")
+    java(other, "com/demo/WidgetTest.java",
+      """package com.demo;
+        |public class WidgetTest { public Widget w = new Widget(); }""".stripMargin)
+    (root, src, other)
+
+  private def claimingRun(root: Path, src: Path, other: Path, phases: List[Phase]) =
+    PortRun("demo", root.resolve("port"), SourceSet.Main,
+      FrontendConfig(other, List("com/demo/WidgetTest.java"), Nil, resolutionRoots = List(src)), Nil,
+      manifest = Some(PortManifest("basemod", governs = Set("com.demo"))
+        .extendedBy(PortManifest("dependent", surface = phases))))
+
+  test("a dependent's key at an FQN the base's published map does NOT emit is ADMITTED") {
+    // CT9 Face A. `com.demo.WidgetTest` is inside the base's `governs` claim and the base has never
+    // parsed it — a drop cannot say that, and the base's map does: no entry, nothing stands there.
+    val (root, src, other) = sharedNamespaceFixture()
+    val rep = root.resolve("report")
+    publishBase(root, "basemod", List("com.demo.Widget", "com.demo.Gadget"))
+    val r = withReport(rep)(claimingRun(root, src, other, List(
+      new balticporter.transform.TypeRedirectTransform(
+        Map("com.demo.WidgetTest" -> "com.dep.WidgetTest")))).execute())
+    assert(clue(emitted(r.outDir)).contains("com/demo/WidgetTest.scala"))
+    assert(!clue(r.report.manifest.map(_.kind.toString)).contains("SurfaceIntrusion"))
+  }
+
+  test("…and one at an FQN it DOES emit is refused, before any phase runs") {
+    val (root, src, other) = sharedNamespaceFixture()
+    val rep = root.resolve("report")
+    publishBase(root, "basemod", List("com.demo.Widget", "com.demo.Gadget"))
+    val err = intercept[RuntimeException] {
+      withReport(rep)(claimingRun(root, src, other, List(
+        new balticporter.transform.TypeRedirectTransform(
+          Map("com.demo.Widget" -> "com.dep.Widget")))).execute())
+    }
+    assert(clue(err.getMessage).contains("SurfaceIntrusion"))
+    assert(err.getMessage.contains("com.demo.Widget"))
+    assert(err.getMessage.contains("published map emits it"), "the map is the evidence, not the manifest")
+    assert(!Files.exists(root.resolve("port").resolve("src_managed/main/scala/com/demo/WidgetTest.scala")))
+  }
+
   test("externalConcrete is DERIVED from the phases: RuntimePlan, never a caller argument") {
     val (root, src) = fixture()
     val r = run(root, src)(_.copy(phases = List(new CollectionsTransform)))

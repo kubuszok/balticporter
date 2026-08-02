@@ -3919,10 +3919,12 @@ none. A dependent's error count is only evidence about a change once it has been
 dependent's own baseline, and the two libgdx-dependent lanes whose counts DID move are vfx (0 → 43)
 and screens (0 → 16).
 
-### CT9. A dependent whose OWN declarations sit inside a base's CLAIMED namespace cannot name one — and a REFUSED merge silently runs only ONE of the two instances — **OPEN; it is what blocked the fourth replay, and the base itself is finished**
+### CT9. A dependent whose OWN declarations sit inside a base's CLAIMED namespace cannot name one — and a REFUSED merge silently runs only ONE of the two instances — **CLOSED, both faces; the screen now asks what the base EMITS, and a refused pair stops the run**
 
 **Title, for renumbering: "a dependent cannot name a per-declaration key inside a base's claimed
-namespace, and a refused merge runs one instance of two".** OPEN. (a) engine, both faces.
+namespace, and a refused merge runs one instance of two".** CLOSED. (a) engine, both faces. The
+diagnosis below is what the fourth P5 replay measured and is kept verbatim; the two closures are at
+the end of the entry.
 
 Found by the fourth P5 replay, which is the first one that could get this far: CT5, CT6, CT7 and CT8
 are all closed, **libgdx-core reads 0 scalac errors with the whole census reproduced to the row**,
@@ -3992,6 +3994,40 @@ DROPS — the base's published port map is where that answer already lives (`Man
 holds `BasePort`s), which makes it a decision for `DESIGN.md` and its own measure cycle rather than a
 line in `SurfaceFold`. Face B is `Pipeline.order` keying phases by NAME; the fix is to order
 INSTANCES, and it changes what every refused pair does, so it is measured on its own.*
+
+**FACE A IS CLOSED, and the criterion is now the base's OUTPUT** (`DESIGN.md` §8.13's amended
+`governs` section). The screen used to be a pure function of manifests and could therefore only ask
+manifest questions — *is it dropped, does an `inject` ship at the name* — and **a drop is a statement
+about a type the base HAS.** It says nothing about a name the base has never heard of, which is the
+whole of this entry. The base's PUBLISHED PORT MAP is the artifact that can say it, and it answers
+three ways:
+
+| the base's map, at that FQN | screen |
+|---|---|
+| an entry that is not `Dropped` (`Ported`/`Renamed`/`Substituted`) | REFUSE — a class, a rename of one, or an injected replacement stands there, all three shared surface |
+| an entry that IS `Dropped` | ADMIT — the map's own words for "nothing stands at that name" |
+| **no entry at all** | ADMIT — the base declares nothing there. This row is CT9 Face A |
+
+Three consequences, each measured or argued rather than assumed:
+
+- **The screen MOVED, and the fold stopped refusing.** A port map is a run artifact and `SurfaceFold`
+  must stay a pure function of manifests, so the fold names CANDIDATES (`SurfaceFold.Intrusion`) and
+  `ManifestAgreement` — which already holds the `BasePort`s — applies the emits-fact. An intrusion
+  therefore no longer un-merges: a cleared candidate merges normally, and a confirmed one stops the
+  run at the gate Face B installed, before any phase runs. `SurfaceFold.Cause` is back to the two
+  causes that really do leave two instances.
+- **STALENESS is D1's answer, not a new one.** `BasePort.map` is empty for a map never published AND
+  for one proven stale — the same path, deliberately — and the screen then falls back to
+  re-derivation, which is the criterion that shipped before it could read a map. That fallback
+  REFUSES where the map would admit, which is the safe direction for a screen, and
+  `BaseMapMissing`/`BaseMapStale` already report it as the weaker check with "run the base port" as
+  the fix. **A dependent that runs before its base ever has behaves exactly as it did**, loudly.
+- **Both directions are negative-tested, and the two production shapes stay put.** A dependent key at
+  an FQN the base's map emits is still fatal (with the map quoted as the evidence); one at the
+  dependent's own FQN inside the base's namespace is admitted. `gdx-vfx`'s own-namespace extension is
+  outside every claim and never reached the screen; `ashley`'s redirect is admitted by the drop
+  exactly as before, now proven from the base's output rather than from its manifest. All 13 ports: 0
+  members changed, every check count identical, `manifest` 0 everywhere.
 
 **FACE B IS CLOSED, and it took TWO changes rather than one** (`DESIGN.md` §8.13's fourth as-built
 section). Ordering instances is the obvious half and it is not sufficient: with both instances

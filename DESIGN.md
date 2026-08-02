@@ -3456,7 +3456,7 @@ holding a run's mutable binding state; recomputed per call, the instance the pip
 be the instance whose `policyReport` the run reads — the same failure `PortManifest.substitutions`
 is a `lazy val` to avoid, one layer up.
 
-#### The `governs` intrusion — refused, but the criterion is DROPPED, not PREFIXED
+#### The `governs` intrusion — refused, and the criterion is not PREFIXED (first correction of two)
 
 The dangerous shape the merge newly permits is a dependent adding a key that edits the SHARED
 surface: the base emitted a type mechanically, and a dependent quietly re-points every reference to
@@ -3505,6 +3505,67 @@ silent). The classification text always stated the rule unconditionally; the run
 unconditionally. Measured: the corpus is unmoved — ashley's redirect merges with the base's and is
 admitted by the drop, screens' ten entries are outside `com.badlogic.gdx` — which is exactly why
 nothing had noticed.
+
+#### …and "not accounted for by the base's own POLICY" is still not the criterion — the base's OUTPUT is
+
+The section above corrected the criterion once, from `dropped` to *nothing stands at that name*, and
+the correction was made **inside the manifest**: a drop is a manifest fact, an `inject` root is a
+manifest fact, and both were reachable from a pure function of manifests. That is the whole of what
+this screen could see, and it is not the whole question. **A drop is a statement about a type the
+base HAS. It says nothing about a name the base has never heard of.**
+
+Which is the shape a library's own test module is in. libGDX's suites are declared *inside*
+`com.badlogic.gdx` — `AnimationControllerTest` shares a package with `BaseAnimationController` — so
+no prefix separates the two modules, the base's `governs` claim covers the dependent's own
+declarations, and the base does not parse `gdx/test` at all. The one `selfSupplied` entry CT7 exists
+to make writable was refused as a fatal `SurfaceIntrusion` naming a type the base has never seen,
+with a sentence — *"which `libgdx-core` emits mechanically"* — that is simply false about the program
+(`ENGINE-LIMITS.md` CT9 Face A). A dependent with a namespace of its own is unaffected, which is why
+`gdx-vfx` merged on its first production run and libgdx-test did not: the refused case is exactly *a
+module whose own declarations live in the base's namespace* — a test module, a split package, a
+`com.foo.internal.impl` sibling shipped as a second artifact.
+
+**So the criterion becomes: inside a base's claim, AND the base EMITS a declaration at that FQN, AND
+not accounted for by the base's own policy.** The engine had already solved this once, one artifact
+over: `ManifestAgreement`'s substitution half works from UNIT ORIGINS precisely because a prefix
+cannot separate these two modules, and the base's PUBLISHED PORT MAP is where emits-facts live (the
+D1 contract, §8.3). The map answers in three ways and each is the honest one:
+
+| the base's map, at that FQN | means | screen |
+|---|---|---|
+| an entry that is not `Dropped` | a class, a rename of one, or an injected replacement stands there | REFUSE — all three are shared surface |
+| an entry that IS `Dropped` | the map's own words for "nothing stands at that name" | ADMIT — §8.13's admission, now read off OUTPUT rather than approximated from a drop |
+| **no entry at all** | the base declares nothing there | ADMIT — this is CT9 Face A |
+
+`Kind.BaseSurfaceAbsent` is the same statement read in the other direction, and it is why the third
+row is not leniency: a fresh map is a claim about the WHOLE of a module's output, and a shared type
+missing from one is already fatal.
+
+**Staleness is answered by D1's existing machinery and nothing new.** `BasePort.map` is `None`
+exactly when no map was published and when one was proven STALE — the two share a path deliberately
+(§8.3) — and the screen then falls back to RE-DERIVATION, which is the criterion that shipped before
+it could read a map: *the base emits it unless its manifest drops it and ships nothing at the name*.
+That fallback is strictly more REFUSING than the map's answer, which is the safe direction for a
+screen, and it is already reported as weaker by `BaseMapMissing` / `BaseMapStale` with "run the base
+port once" as the fix. **A dependent that runs before its base ever has therefore behaves exactly as
+it does today** — it refuses, loudly, and is told what to run. No new freshness notion, no new
+finding kind, and no silent admission bought with an absent artifact.
+
+**And the screen therefore MOVES: the fold stops refusing, and reports CANDIDATES.** A port map is a
+run artifact; `SurfaceFold` is a pure function of manifests and must stay one (that is the whole
+argument for folding on the manifest rather than in the run, two sections up). So the fold does what
+a manifest can do — name every subject a nearer manifest ADDS inside a base's claim that the base's
+own manifest does not account for — and `ManifestAgreement`, which already holds the `BasePort`s,
+applies the emits-fact and derives the finding. Three consequences worth stating:
+
+- **an intrusion no longer un-merges.** A candidate the map clears merges normally, which is the
+  point; a candidate the map confirms is fatal at the gate, before any phase runs, so what the
+  pipeline holds for a doomed run does not matter. `SurfaceFold.Cause` is back to the two causes that
+  really do leave two instances — `NoContract` and `Conflict`.
+- **the fold's `refusals` and its `intrusions` are different lists because the reader's next action
+  differs**: reconcile two values, or stop editing a base's surface.
+- **one finding per phase**, naming the first subject and counting the rest, exactly as before — a
+  dependent's manifest mistake is one mistake however many keys it touches.
 
 #### The policy report follows the KEYS, not the instance
 

@@ -273,7 +273,7 @@ object ManifestAgreement:
             List(Finding(Kind.NoBaseDeclared, "-", m.name,
               "resolution roots outside the source root, and the manifest declares no `bases`"))
           else Nil
-        noBase ++ statik(m, fired) ++ mapHealth(ports) ++ dynamic(m, shared, ports)
+        noBase ++ statik(m, fired, ports) ++ mapHealth(ports) ++ dynamic(m, shared, ports)
 
   /** THE FINDINGS THAT MUST STOP A RUN BEFORE ANY PHASE RUNS — the same-name pairs the fold could
     * not compose, and nothing else.
@@ -292,8 +292,8 @@ object ManifestAgreement:
     * can never disagree about what a refusal is. The gate takes no `fired` set and no `shared`
     * list: neither exists before the translation, and neither is an input to this question.
     */
-  def surfaceGate(manifest: Option[PortManifest]): List[Finding] =
-    manifest.toList.flatMap(surfacePairs).filter(_.kind.fatal)
+  def surfaceGate(manifest: Option[PortManifest], ports: List[BasePort] = Nil): List[Finding] =
+    manifest.toList.flatMap(m => surfacePairs(m, ports)).filter(_.kind.fatal)
 
   // -------------------------------------------------------------------------
   // the maps themselves — R1, reported before anything is read OFF one
@@ -318,7 +318,7 @@ object ManifestAgreement:
   // static — declaration against declaration
   // -------------------------------------------------------------------------
 
-  private def statik(m: PortManifest, fired: Set[String]): List[Finding] =
+  private def statik(m: PortManifest, fired: Set[String], ports: List[BasePort]): List[Finding] =
     val mine        = m.effectiveDropTypes
     val myMethods   = m.effectiveDropMethods
     val myRenames   = m.effectivePackageRenames
@@ -420,7 +420,7 @@ object ManifestAgreement:
       keys.toList.sorted.map(k => Finding(Kind.InheritedKeyNeverFired, base, k, "inherited key matched nothing in this run"))
     }
 
-    perBase ++ surfacePairs(m) ++ neverFired
+    perBase ++ surfacePairs(m, ports) ++ neverFired
 
   /** THE SURFACE HALF of the static layer: what the fold could not compose, and what it screened.
     *
@@ -428,36 +428,84 @@ object ManifestAgreement:
     * ([[surfaceGate]]) as well as reported with everything else afterwards, and two derivations of
     * "is this pair a refusal" would be free to drift.
     */
-  private def surfacePairs(m: PortManifest): List[Finding] =
+  private def surfacePairs(m: PortManifest, ports: List[BasePort]): List[Finding] =
     // One phase NAME carrying two different policies in one pipeline is drift regardless of which
     // manifest each came from, so it is checked once over the effective surface. Two instances
     // survive the fold only where the merge was DECLINED or REFUSED, so the fold's own sentence for
-    // why is attached — and an INTRUSION is reported as itself, because the reader's next action is
-    // a different one (DESIGN.md §8.13). Read off the pipeline and not off the refusal list, so a
-    // phase that never declared a merge is detected exactly as it was before merging existed.
+    // why is attached. Read off the pipeline and not off the refusal list, so a phase that never
+    // declared a merge is detected exactly as it was before merging existed.
     val whyRefused = m.surfaceFold.refusals.groupBy(_.phase)
     val divergent = m.effectiveSurface.groupBy(_.name).toList.sortBy(_._1).collect {
       case (n, ps) if ps.map(PortManifest.fingerprint).distinct.size > 1 =>
         val fps  = ps.map(PortManifest.fingerprint).distinct.sorted.mkString(" vs ")
         val here = whyRefused.getOrElse(n, Nil)
-        here.find(_.cause == SurfaceFold.Cause.Intrusion) match
-          case Some(r) => Finding(Kind.SurfaceIntrusion, m.name, n, s"$fps — ${r.why}")
-          case scala.None =>
-            Finding(Kind.SurfaceDivergence, m.name, n,
-              here.headOption.map(r => s"$fps — ${r.why}").getOrElse(fps))
+        Finding(Kind.SurfaceDivergence, m.name, n,
+          here.headOption.map(r => s"$fps — ${r.why}").getOrElse(fps))
     }
 
-    // …and an INTRUSION that produced no pair. The arm above can only see a phase NAME carrying two
-    // fingerprints, which is a merge that was refused; a dependent declaring a phase NO base has is
-    // one instance in the pipeline, so it never reaches that arm — and it is the shape with the most
-    // freedom, since nothing in any base's table constrains what it may re-point. The fold screens
-    // it (`SurfaceFold.of`'s no-counterpart arm) and this is where its refusal becomes the finding.
+    // …and the INTRUSION SCREEN, which is a different question, answered from a different artifact.
+    // The fold names every subject a nearer manifest ADDS inside a base's claim that the base's own
+    // MANIFEST does not account for; whether anything actually STANDS at that name is a fact about
+    // the base's OUTPUT, and its published port map is where that lives (DESIGN.md §8.13, closing
+    // `ENGINE-LIMITS.md` CT9 Face A). A candidate the map clears is admitted; one it confirms, or
+    // one no usable map can speak for, is fatal.
+    //
+    // ONE FINDING PER PHASE, naming the first subject and counting the rest: a dependent's manifest
+    // mistake is one mistake however many keys it touches. A phase already reported as DIVERGENT is
+    // skipped — the reader's next action there is to reconcile the two policies first.
     val divergentPhases = divergent.map(_.subject).toSet
-    val intrusions = m.surfaceFold.refusals
-      .filter(r => r.cause == SurfaceFold.Cause.Intrusion && !divergentPhases.contains(r.phase))
-      .map(r => Finding(Kind.SurfaceIntrusion, m.name, r.phase, r.why))
+    val intrusions = m.surfaceFold.intrusions
+      .filterNot(i => divergentPhases.contains(i.phase))
+      .filter(i => standsAt(ports, i.base, i.subject))
+      .groupBy(_.phase).toList.sortBy(_._1)
+      .map { (phase, is) =>
+        val first = is.head
+        Finding(Kind.SurfaceIntrusion, m.name, phase,
+          first.why + evidence(ports, first.base, first.subject) +
+            (if is.size > 1 then s" (${is.size} such subjects; the first is named)" else ""))
+      }
 
     divergent ++ intrusions
+
+  /** Does anything STAND at `subject` in `base`'s output — asked of its PUBLISHED MAP where there
+    * is a usable one, and of its manifest where there is not.
+    *
+    * The three answers a usable map gives, and why each is the honest one:
+    *
+    *   - '''an entry that is not `Dropped`''' — the base emits a class, a rename of one, or an
+    *     injected replacement at that FQN. All three are shared surface: a dependent re-pointing its
+    *     references away from any of them compiles alone and cannot compile against the base.
+    *   - '''an entry that IS `Dropped`''' — the map's own words for "nothing stands at that name",
+    *     which is the admission §8.13 states and the drop test only approximates.
+    *   - '''NO ENTRY AT ALL''' — the base declares nothing there. That is the CT9 case: a library's
+    *     own test module declares its suites inside the base's packages, so no prefix separates the
+    *     two modules and the `governs` claim covers a type the base has never parsed. A usable map
+    *     is a claim about the WHOLE of a module's output, and [[Kind.BaseSurfaceAbsent]] is the same
+    *     claim read in the other direction — a shared type missing from one is already fatal.
+    *
+    * '''A base with no usable map falls back to RE-DERIVATION, exactly as every other question about
+    * a base does.''' [[BasePort.map]] is `scala.None` when no map was published and when one was
+    * proven STALE — D1's rule, and the two share this path deliberately. The re-derived answer is
+    * the one the fold already applied (the base emits it unless its manifest drops it and ships
+    * nothing at the name), so a candidate that reaches here with no map is confirmed: strictly more
+    * REFUSING than the map's answer, which is the safe direction for a screen, and already reported
+    * as weaker by [[Kind.BaseMapMissing]] / [[Kind.BaseMapStale]] with "run the base port" as the
+    * fix. A dependent that runs before its base ever has therefore behaves exactly as it did.
+    */
+  private def standsAt(ports: List[BasePort], base: String, subject: String): Boolean =
+    ports.find(_.name == base).flatMap(_.map) match
+      case Some(m0)   => m0.byUpstream("type").get(subject).exists(_.disposition != PortMap.Disposition.Dropped)
+      case scala.None => true
+
+  /** where the answer came from, said out loud — the reader's next action differs. */
+  private def evidence(ports: List[BasePort], base: String, subject: String): String =
+    ports.find(_.name == base).flatMap(_.map) match
+      case Some(m0) =>
+        m0.byUpstream("type").get(subject).map(e => s""" — its published map emits it as "${e.emitted}"""")
+          .getOrElse("")
+      case scala.None =>
+        s" — re-derived from `$base`'s MANIFEST, because it publishes no usable port map; run the " +
+          "base port and this screen reads what it actually emits"
 
   // -------------------------------------------------------------------------
   // dynamic — the base's policy against what this run modelled of the shared surface

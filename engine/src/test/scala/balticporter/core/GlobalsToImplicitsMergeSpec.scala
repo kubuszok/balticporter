@@ -192,7 +192,7 @@ class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
       .extendedBy(PortManifest("dep", surface = List(globals(es = List(
         ContextHolderExtension("com.demo.Gdx",
           sites = Map("com.demo.Utils#<clinit>" -> ContextSite.LazyInit)))))))
-    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Utils"))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
     assert(Kind.SurfaceIntrusion.fatal)
@@ -203,7 +203,7 @@ class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
     // the no-counterpart arm — one instance, no divergence, no merge, and every type the base emits
     // mechanically available to re-point. `subjects` is what lets the screen run here at all.
     val dep = base(Nil).extendedBy(PortManifest("dep", surface = List(globals(List(holder())))))
-    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Gdx"))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
     assert(clue(f.head.detail).contains("com.demo.Gdx"))

@@ -251,15 +251,22 @@ final case class PortRun(
     // So the refusal is LOAD-BEARING. Nothing is parsed, nothing is emitted, and the message carries
     // BOTH instances' policy fingerprints — which is the pair a reader has to reconcile, and the one
     // thing the silent drop made unreadable.
-    val surfaceStop = ManifestAgreement.surfaceGate(manifest)
+    //
+    // The bases' PUBLISHED MAPS come with it, because the other question the gate asks — does a
+    // subject this module adds edit something a base actually EMITS — is a fact about the base's
+    // OUTPUT and not about its manifest (CT9 Face A). `basePorts` is discovered once and read here
+    // and by the check below; a base with no usable map takes the re-derived answer, loudly.
+    val surfaceStop = ManifestAgreement.surfaceGate(manifest, basePorts)
     if surfaceStop.nonEmpty then
       surfaceStop.foreach(f => System.err.println(s"[$label] FATAL — ${f.render}"))
       sys.error(
-        s"[$label] ${surfaceStop.size} phase(s) appear twice in the effective pipeline and could not " +
-          "be composed:\n" + surfaceStop.map("  " + _.render).mkString("\n") +
-          "\n  [the run stops HERE, before any phase runs: both instances would otherwise transform " +
-          "the same program with two policies. Give the phase a `MergeablePolicy`, reconcile the two " +
-          "values, or share one instance — DESIGN.md §8.13]")
+        s"[$label] ${surfaceStop.size} shared-surface finding(s) the effective pipeline cannot be " +
+          "run with:\n" + surfaceStop.map("  " + _.render).mkString("\n") +
+          "\n  [the run stops HERE, before any phase runs. A DIVERGENCE leaves two instances of one " +
+          "phase that would both transform this program with two policies — give the phase a " +
+          "`MergeablePolicy`, reconcile the two values, or share one instance. An INTRUSION would " +
+          "re-shape a namespace a base module emits, so the two ports could not compile together — " +
+          "move the entry to the base's manifest. DESIGN.md §8.13]")
 
     val roots = if frontend.resolutionRoots.isEmpty then "" else s" (resolving against ${frontend.resolutionRoots.size} extra root(s))"
     say(s"building model over ${frontend.files.size} file(s)$roots…")

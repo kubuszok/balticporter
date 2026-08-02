@@ -93,28 +93,42 @@ object MergeablePolicy:
   * @param refusals every same-name pair the fold could NOT merge, with the reason.
   * @param ownKeys  phase name → the subjects the FOLDED manifest itself contributed to a merge.
   *                 Absent for a phase that was not merged, which is the "no filter" answer.
+  * @param intrusions every subject a nearer manifest ADDS inside a base's claim that the base's own
+  *                 MANIFEST does not account for — CANDIDATES, not findings. Whether the base
+  *                 actually EMITS anything at the name is a fact about its OUTPUT, which a pure
+  *                 function of manifests cannot know; `ManifestAgreement` screens these against the
+  *                 base's published port map and derives the fatal finding (DESIGN.md §8.13).
   */
 final case class SurfaceFold(
     phases: List[Phase],
     absorbed: Set[String] = Set.empty,
     refusals: List[SurfaceFold.Refusal] = Nil,
     ownKeys: Map[String, Set[String]] = Map.empty,
+    intrusions: List[SurfaceFold.Intrusion] = Nil,
 )
 
 object SurfaceFold:
 
-  /** Why a same-name pair was not merged. The three are kept apart because the READER's next action
-    * differs: write a merge contract, reconcile two values, or stop editing the base's surface. */
+  /** Why a same-name pair was not merged. The two are kept apart because the READER's next action
+    * differs: write a merge contract, or reconcile two values.
+    *
+    * An INTRUSION is not here, and that is the correction `ENGINE-LIMITS.md` CT9 Face A made: it is
+    * not a statement about two policies failing to compose, it is a statement about a base's
+    * OUTPUT, and it does not leave two instances in the pipeline. See [[Intrusion]]. */
   enum Cause:
     /** the phase declares no [[MergeablePolicy]] — the pre-merge behaviour, unchanged. */
     case NoContract
     /** the phase's own merge refused: same key, different value. */
     case Conflict
-    /** the later instance adds a subject inside a base's `governs` namespace that the base's own
-      * policy does not account for — a dependent editing the SHARED surface. */
-    case Intrusion
 
   final case class Refusal(phase: String, cause: Cause, why: String)
+
+  /** A subject a nearer manifest ADDS inside `base`'s `governs` claim, which `base`'s own manifest
+    * does not account for — a CANDIDATE for `SurfaceIntrusion`, screened against `base`'s published
+    * map by the layer that holds one.
+    *
+    * @param why the sentence the finding carries, minus the evidence the map supplies. */
+  final case class Intrusion(phase: String, base: String, subject: String, why: String)
 
   /** THE fold. `chain` is furthest base first, `owner` is the manifest being folded (the last
     * element, and the one whose contributions [[SurfaceFold.ownKeys]] records).
@@ -123,10 +137,11 @@ object SurfaceFold:
     * runs its phases once.
     */
   def of(chain: List[PortManifest], owner: PortManifest): SurfaceFold =
-    var phases   = Vector.empty[Phase]
-    var absorbed = Set.empty[String]
-    var refusals = Vector.empty[Refusal]
-    var ownKeys  = Map.empty[String, Set[String]]
+    var phases     = Vector.empty[Phase]
+    var absorbed   = Set.empty[String]
+    var refusals   = Vector.empty[Refusal]
+    var ownKeys    = Map.empty[String, Set[String]]
+    var intrusions = Vector.empty[Intrusion]
 
     for
       // each manifest of the chain, paired with the manifests that come BEFORE it — the bases whose
@@ -138,22 +153,26 @@ object SurfaceFold:
         phases.indexWhere(_.name == p.name) match
           // NO same-name instance to compose with — and this is the arm the screen used to miss.
           // A dependent-declared phase with no counterpart in any base reaches the pipeline whole,
-          // so EVERY subject it holds is a subject it adds; screen all of them. The phase still
-          // joins the pipeline either way (a refusal has never removed one), and the fatal finding
-          // `ManifestAgreement` derives from the refusal is what stops the run.
+          // so EVERY subject it holds is a subject it adds; screen all of them. The phase joins the
+          // pipeline either way, and the fatal finding `ManifestAgreement` derives from a CONFIRMED
+          // candidate is what stops the run.
           case -1 =>
-            refusals = refusals ++ (p match
-              case a: MergeablePolicy => intrusion(seen, p.name, a.subjects)
-              case _                  => scala.None)
+            intrusions = intrusions ++ (p match
+              case a: MergeablePolicy => candidates(seen, p.name, a.subjects)
+              case _                  => Nil)
             phases = phases :+ p
           case i  =>
             val earlier = phases(i)
             val outcome: Either[Option[Refusal], (Phase, Set[String])] = earlier match
               case a: MergeablePolicy => a.mergedWith(p) match
                 case Right(MergeablePolicy.Merged(merged, added)) =>
-                  intrusion(seen, p.name, added) match
-                    case Some(r) => Left(Some(r))
-                    case None    => Right(merged -> added)
+                  // The merge STANDS whatever the screen says. An intrusion is not a failure to
+                  // compose two policies — it is a statement about what the BASE emits, which only
+                  // the layer holding the base's published map can make, and a confirmed one stops
+                  // the run before any phase runs rather than by leaving a pipeline half-composed
+                  // (`ENGINE-LIMITS.md` CT9 Face A).
+                  intrusions = intrusions ++ candidates(seen, p.name, added)
+                  Right(merged -> added)
                 case Left(why) => Left(Some(Refusal(p.name, Cause.Conflict, why)))
               case _ =>
                 // Equal policy is not drift and reported nothing before this existed, so it records
@@ -173,15 +192,16 @@ object SurfaceFold:
                 refusals = refusals ++ r
                 phases   = phases :+ p
 
-    SurfaceFold(phases.toList, absorbed, refusals.distinct.toList, ownKeys)
+    SurfaceFold(phases.toList, absorbed, refusals.distinct.toList, ownKeys, intrusions.distinct.toList)
 
-  /** The `governs` screen: does a subject this module adds edit a BASE's shared surface?
+  /** The `governs` screen, MANIFEST HALF: which subjects this module adds could edit a BASE's
+    * shared surface?
     *
     * The criterion is NOT a bare prefix — a base's claimed namespace holds types the base DROPS,
     * and re-pointing references at a replacement the dependent ships is the whole purpose of a
-    * redirect. What is refused is a subject inside a base's claim that the base's own policy does
-    * not account for: the base emits it mechanically, and a dependent quietly re-pointing every
-    * reference to it produces two ports that each compile alone and cannot compile together.
+    * redirect. What is a candidate is a subject inside a base's claim that the base's own policy
+    * does not account for: a dependent quietly re-pointing every reference to something the base
+    * ships produces two ports that each compile alone and cannot compile together.
     *
     * '''A DROP is not the criterion; "nothing stands at that name" is.''' The two coincide only for
     * a drop the base leaves EMPTY. A drop WITH an injection is the other half of §1.5's asymmetry:
@@ -192,27 +212,32 @@ object SurfaceFold:
     * it SHIPS anything at the name (`PortManifest.shipsInjectionAt`, which translates the upstream
     * key through the base's own renames — §4.56).
     *
+    * '''…and a drop is a statement about a type the base HAS.''' It says nothing about a name the
+    * base has never heard of, which is the shape a library's own TEST MODULE is in: its suites are
+    * declared inside the base's packages, so no prefix separates the two modules and this screen
+    * calls a type the base never parsed one it "emits mechanically" (`ENGINE-LIMITS.md` CT9 Face A).
+    * That half of the question is about the base's OUTPUT and a manifest cannot answer it, so these
+    * are CANDIDATES: `ManifestAgreement` screens each against the base's published port map, and a
+    * base with no usable map falls back to exactly the answer this function gives.
+    *
     * §4.56's cut applies to the claim, through `PortManifest.covers`.
     */
-  private def intrusion(bases: List[PortManifest], phase: String, added: Set[String]): Option[Refusal] =
+  private def candidates(bases: List[PortManifest], phase: String, added: Set[String]): List[Intrusion] =
     def admitted(b: PortManifest, subject: String): Boolean =
       b.effectiveDropTypes.contains(subject) && !b.shipsInjectionAt(subject)
-    val bad = for
+    for
       subject <- added.toList.sorted
       b       <- bases
       if b.claims(subject) && !admitted(b, subject)
-    yield (b.name, subject, b.effectiveDropTypes.contains(subject))
-    bad.headOption.map { (who, subject, dropped) =>
+    yield
       val why =
-        if dropped then
-          s"""which `$who` DROPS and REPLACES — its own `inject` supplies """ +
-            s""""${bases.find(_.name == who).map(_.renamed(subject)).getOrElse(subject)}", so the """ +
-            "replacement is shared surface exactly as an emitted class is"
-        else s"which `$who` emits mechanically"
-      Refusal(phase, Cause.Intrusion,
-        s"""this module's `$phase` adds "$subject", which is inside `$who`'s declared namespace and """ +
-          s"$why — it would let a dependent re-shape the SHARED surface, so the two modules would " +
-          "each compile alone and could not compile together. A subject a base drops and leaves " +
-          "EMPTY is the allowed case: nothing stands at that name in the base's output" +
-          (if bad.size > 1 then s" (${bad.size} such subjects; the first is named)" else ""))
-    }
+        if b.effectiveDropTypes.contains(subject) then
+          s"""which `${b.name}` DROPS and REPLACES — its own `inject` supplies """ +
+            s""""${b.renamed(subject)}", so the replacement is shared surface exactly as an """ +
+            "emitted class is"
+        else s"which `${b.name}` emits"
+      Intrusion(phase, b.name, subject,
+        s"""this module's `$phase` adds "$subject", which is inside `${b.name}`'s declared """ +
+          s"namespace and $why — it would let a dependent re-shape the SHARED surface, so the two " +
+          "modules would each compile alone and could not compile together. A subject the base " +
+          "leaves EMPTY is the allowed case: nothing stands at that name in the base's output")
