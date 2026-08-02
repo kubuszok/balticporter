@@ -2772,7 +2772,7 @@ final class TirEmitter(
       val u  = upd.map(flatStat).mkString("; ")
       loopWithJumps(body, lbl, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
     case t: Tree.Try                    => tryStr(t, i)
-    case Tree.Match(scr, cases, _, _)   => matchStr(scr, cases, i)
+    case m: Tree.Match                  => matchStr(m, i)
     case Tree.MethodRef(q, s, mrT, _)   =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
       q match
@@ -3305,8 +3305,27 @@ final class TirEmitter(
     *
     * The boundary is ALWAYS named. It is the innermost `Label` only until something inside it (a
     * labelled statement, a nested switch) opens another, and unlike a loop this node has no cheap
-    * "nothing can nest here" case worth the risk. */
-  private def matchStr(scr: Term, cases: List[Tree.CaseDef], i: Int): String =
+    * "nothing can nest here" case worth the risk.
+    *
+    * ==…and a NULL selector, which is the fall-out arm's own defect from the other side==
+    * Java throws a `NullPointerException` the instant a `switch` on a REFERENCE type sees a null
+    * selector — `String`, a boxed primitive, an enum (JLS 14.11.2 for the enum case, 14.11's
+    * general text otherwise). It is IMPLICIT: a classic switch has no `case null` syntax to opt out
+    * with, so there is no way to write one that tolerates null.
+    *
+    * Scala's `match` special-cases nothing. `null` simply fails every literal and constructor
+    * pattern, so it reaches whatever the LAST arm is — which, since the fall-out arm was added, is
+    * an arm that quietly does nothing. So the two §4.4 defects here are one mechanism read at two
+    * selector values: without the fall-out arm an ordinary value throws `MatchError` where java
+    * falls out; without this one a null value falls out where java throws.
+    *
+    * A `case null => throw` arm AHEAD of the java arms is the whole repair. It is emitted only for
+    * a selector whose type is a REFERENCE type — a `switch` on a primitive `int`/`char` can never
+    * see null, and libGDX's scanners are full of those — and only when the java did not write a
+    * `null` label itself, which is SE21's pattern-switch escape hatch (JLS 14.11.1) and the one
+    * shape that must NOT gain a synthetic exception. */
+  private def matchStr(m: Tree.Match, i: Int): String =
+    val (scr, cases) = (m.scrutinee, m.cases)
     val cs = cases.map { c =>
       val pat = if c.isDefault then "_" else c.labels.map(term(_, i)).mkString(" | ")
       if !caseNeedsBoundary(c.body) then s"${ind(i + 1)}case $pat => ${inSwitch(scala.None)(term(c.body, i + 1))}"
@@ -3319,7 +3338,42 @@ final class TirEmitter(
     // the SCRUTINEE is outside the switch — a `break` cannot occur in a java expression — but it
     // is rendered AFTER the arms so that the boundary numbering does not move for a switch that
     // needed no change.
-    s"${inSwitch(scala.None)(term(scr, i))} match {\n$cs\n${ind(i)}}"
+    val sel  = inSwitch(scala.None)(term(scr, i))
+    val npe =
+      if !selectorCanBeNull(scr, cases) then ""
+      else
+        nullGuardedSwitches += m.id
+        s"${ind(i + 1)}case null => throw new java.lang.NullPointerException(" +
+          "\"switch selector was null\") // §4.4: java's switch NPEs on a null reference selector\n"
+    s"$sel match {\n$npe$cs\n${ind(i)}}"
+
+  /** does java's implicit null check apply to this switch, and has nothing already written one?
+    *
+    * Two conditions, and both are needed:
+    *
+    *   - the selector's type is a REFERENCE type. A primitive `int`/`char`/`long` selector cannot
+    *     be null and gaining an unreachable `case null` would be noise on every scanner in the
+    *     corpus. Decided from the emitted type's head symbol against scala's value classes —
+    *     which is what a java primitive renders as, by construction;
+    *   - no case label is already `null`. SE21's pattern switch may write `case null ->` (JLS
+    *     14.11.1), which is java code that deliberately handles null, and adding a throw ahead of
+    *     it would invert exactly the behaviour that label exists to state. */
+  private def selectorCanBeNull(scr: Term, cases: List[Tree.CaseDef]): Boolean =
+    val isValueClass = headSymOf(scr.tpe).map(s => sym(s).fullName).exists(TirEmitter.ScalaValueClasses.contains)
+    val writesNull = cases.exists(_.labels.exists {
+      case Tree.Literal(Constant.NullC, _, _) => true
+      case _                                  => false
+    })
+    !isValueClass && !writesNull
+
+  /** every switch this emitter gave a `case null` arm — the input to `switch-null`, which finds the
+    * reference-typed switches independently and reports the ones nothing guarded.
+    *
+    * Keyed by [[Tree.Match.id]] for the reasons `breakGuarded` is keyed by `Tree.Try.id`: an
+    * `Origin` is not unique across nodes, and `StandardTraversal` rebuilds every node it walks. */
+  private val nullGuardedSwitches = collection.mutable.Set.empty[MatchId]
+  def switchNullGuards: Tree.Match => Boolean = m => nullGuardedSwitches.contains(m.id)
+  def switchNullGuardCount: Int = nullGuardedSwitches.size
 
   // ---- types ----
   /** a type in `new` position: `new Foo[?]` is illegal (you can't instantiate a wildcard), so
@@ -3458,6 +3512,16 @@ object TirEmitter:
     * of this name and a shadowing warning is the worst it could cost — the arm's body is one
     * `throw` of its own binder. */
   val BreakGuard = "brkThru$"
+
+  /** the emitted types a JAVA PRIMITIVE renders as — the whole of "this value cannot be null".
+    *
+    * Spelled ONCE and read by both the emitter and `SwitchNullCheck`, so the repair and the check
+    * cannot disagree about which switches java's implicit null check applies to. Deliberately the
+    * EMITTED names rather than java's: what the emitter holds at a scrutinee is the type after
+    * every retyping phase, and a java `int` arrives here as `scala.Int` by construction. */
+  val ScalaValueClasses: Set[String] = Set(
+    "scala.Boolean", "scala.Byte", "scala.Short", "scala.Char",
+    "scala.Int", "scala.Long", "scala.Float", "scala.Double", "scala.Unit")
 
   /** Scala's reserved words, plus the soft keywords a bare occurrence can still steer the parser
     * into. Backticking one that did not need it costs two characters and can never change meaning,

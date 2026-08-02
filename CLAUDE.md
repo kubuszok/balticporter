@@ -425,7 +425,7 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   are required, because `lost = 0` is the bar and a run could hold it by RECOVERING everything —
   `recovered` is a counted residue and `deliberate` is derived from the port's own drops, so
   reporting the bar without them says nothing about how it was met;
-  `porter-notes` and `break-catch` record on every run,
+  `porter-notes`, `break-catch`, `try-resource` and `switch-null` record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget` record when
   `CollectionsTransform` is in the pipeline, and `nullability-boundary` when
   `NullabilityTransform` is. **A retype has TWO directions and a subtyping argument
@@ -611,6 +611,7 @@ compile-error count; every one was found by RUNNING the ported tests, never by a
 | `L:` on a statement that is NOT a loop | *nothing* — a label on an `if`, a block or a `switch` had nowhere to live | `break L` leaves THAT statement; dropped, `JsonReader` fell through after `bool(name,true)` and emitted a second, string event for every unquoted bool/null/number | `Tree.Labeled` + a named `boundary` around the STATEMENT. A LOOP's label stays in the loop node — it is also `continue L`'s target, whose boundary goes elsewhere |
 | any boundary the emitter INTERPOSES | an un-annotated `break(())` under it | `boundary.break` with no `using` resolves the INNERMOST `Label`, so a new boundary silently steals the enclosing loop's jumps | name the enclosing boundary whenever anything inside the body renders with a boundary of its own; over-approximate, an unused name costs one identifier |
 | `switch` with no `default` | `match` with no `case _` | java FALLS OUT when nothing matches; scala throws `MatchError` — and falling out is often the normal path | always emit the fall-out arm |
+| `switch` on a `String`/boxed/enum selector that is `null` | the same `match` | java throws `NullPointerException` the instant the selector is null (JLS 14.11), IMPLICITLY — a classic switch has no `case null` to opt out with. `null` matches no literal pattern, so it reaches the fall-out arm above and the EXCEPTIONAL path became a silent no-op. The same mechanism as the row above, read at the other selector value | `case null => throw new NullPointerException(…)` ahead of the java arms, for a selector whose type is not a scala value class — and never where the java itself writes `case null` (SE21's opt-out) |
 | a case's trailing `break L` | stripped as a case terminator | only an UNLABELLED break ends a case; a labelled one leaves the LOOP | strip unlabelled only |
 | a `break` in the MIDDLE of a case | *nothing* | it ends the CASE — and fallthrough is lowered by duplicating the next case's tail INTO this arm, so what ran on is code java put in a different case | a named `boundary` around the ARM; `match` cannot leave an arm early |
 | `static final int X = 0` | `final val X: Int = 0` | java INLINES a constant variable, so reading it never triggers the class initialiser; the typed `val` does, and libgdx's `Vector3`/`Matrix4` initialisers are a cycle | `inline val X = 0`, literal rendered AT the declared type |

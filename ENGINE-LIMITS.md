@@ -4398,6 +4398,47 @@ day a library writes one. None does.
 
 *Fix kind: (a). Universal — a java statement form with no Scala counterpart, no library involved.*
 
+### F6. A NULL selector must NPE — the fall-out arm's own defect, read at the other value
+
+CLOSED. Java throws a `NullPointerException` the instant a `switch` on a REFERENCE type sees a null
+selector (JLS 14.11.2 for enums, 14.11's general text for `String` and boxed primitives), and it is
+IMPLICIT: a classic switch has no `case null` syntax, so there is no way to write one that tolerates
+null. Scala's `match` special-cases nothing — `null` fails every literal and constructor pattern and
+reaches whatever the LAST arm is.
+
+**Which makes it the same mechanism as F-family's fall-out arm, read at a different selector value,
+and the two point opposite ways.** Without the fall-out arm an ordinary value throws `MatchError`
+where java falls out — a non-exceptional path became an exception. With it and without this repair a
+null value falls out where java throws — an EXCEPTIONAL path became a silent no-op. Adding the first
+repair is what created the second one's silence; before it, a null selector at least threw
+`MatchError`.
+
+Both are invisible to a compile: the emitted `match` is valid Scala either way and no count moves.
+
+What shipped: `case null => throw new java.lang.NullPointerException(…)` ahead of the java arms,
+under two conditions and only those.
+
+- **the selector's type is not a scala value class.** A java primitive renders as `scala.Int` /
+  `scala.Char` / … by construction, so the emitted type is the whole test — and it has to be, since
+  most of the corpus's switches are `char` scanners where an unreachable `case null` would be noise
+  on every one. `TirEmitter.ScalaValueClasses` is spelled once and read by the emitter and the check
+  both, so the repair and the count cannot disagree about which switches java's rule applies to;
+- **the java does not write a `null` label itself.** SE21's pattern switch may (`case null ->`, JLS
+  14.11.1), and that is java deliberately handling null — a synthetic throw ahead of it would invert
+  exactly the behaviour the label exists to state. Spoon parses the form and the frontend already
+  carries it as a `Constant.NullC` label, so the test is a tree fact rather than a guess.
+
+Counted as `switch-null`, found from the TREES (which switches are reference-typed) against the
+EMITTER's guarded set — so `_ => false` is the un-repaired engine on the same trees. `Tree.Match`
+gained an id for that, on `Tree.Try`'s contract exactly: an `Origin` is not unique across nodes and
+`StandardTraversal` rebuilds every node it walks, so neither can key the question.
+
+**libGDX: 55 member digests moved, errors 0 -> 0, every check count flat.** That is the measurement
+worth keeping — fifty-five switches in one library whose null path was a no-op, none of which any
+gate could see, and a repair whose whole cost is one arm each. `JsonValue` alone carries 19.
+
+*Fix kind: (a). Universal.*
+
 ---
 
 ## 10. Comments (trivia) — what still does not survive, with its number

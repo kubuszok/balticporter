@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -808,6 +808,15 @@ final case class PortRun(
     say(s"TRY-WITH-RESOURCES (resources the emission never closed): ${tryResources.size}")
     if tryResources.nonEmpty then say(TryResourceCheck.Issue.classification(TryResourceCheck.Issue.UnloweredResource))
     println(TryResourceCheck.summary(tryResources))
+
+    // ---- §4.4: a reference-typed `switch` that falls out on null where java throws ----
+    // The fall-out arm's own defect read at the other selector value, and the same two-source
+    // question: the reference-typed switches come from the trees, the guarded set from the emitter.
+    val switchNulls = SwitchNullCheck.check(program, checkedUnits, translated.emitter.switchNullGuards)
+    CheckReport.record(SwitchNullCheck.Name, switchNulls.map(_.report))
+    say(s"SWITCH-NULL (reference-typed switches that fall out where java NPEs): ${switchNulls.size}")
+    if switchNulls.nonEmpty then say(SwitchNullCheck.Issue.classification(SwitchNullCheck.Issue.NullFallsOut))
+    println(SwitchNullCheck.summary(switchNulls))
 
     // ---- the CONTEXT boundary, RECORDED: the four the phase drew (collected above) plus the one
     // only the emitted text can show — a `using` clause the threading attached to a class's

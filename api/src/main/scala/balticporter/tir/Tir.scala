@@ -33,6 +33,13 @@ object TryId:
   def fresh(): TryId             = seq.incrementAndGet()
   extension (t: TryId) def raw: Long = t
 
+/** WHICH `switch` — see [[Tree.Match.id]]. Same contract, same reasons, as [[TryId]]. */
+opaque type MatchId = Long
+object MatchId:
+  private val seq                      = java.util.concurrent.atomic.AtomicLong(0L)
+  def fresh(): MatchId                 = seq.incrementAndGet()
+  extension (m: MatchId) def raw: Long = m
+
 /** Stable symbol identity — interned, NEVER a string (the analog of `reflect.Symbol`
   * as a handle). Ergonomic queries hang off it as `(using Program)` extensions,
   * mirroring Quotes' `(using Quotes)` symbol methods. */
@@ -432,8 +439,20 @@ object Tree:
     override def hashCode: Int = (resources, body, catches, finalizer, tpe, origin).hashCode
   /** one `catch (param) body`; `param.tpt` may be an `OrType` for multi-catch. */
   final case class CatchCase(param: ValDef, body: Term)
-  /** `scrutinee match { cases }` (from a Java switch). */
-  final case class Match(scrutinee: Term, cases: List[CaseDef], tpe: TypeRepr, origin: Origin) extends Term
+  /** `scrutinee match { cases }` (from a Java switch).
+    *
+    * Carries a token for the same reason [[Try]] does: the `switch-null` check has to ask the
+    * emitter "did you guard THIS one", and neither an `Origin` (two switches can share a path,
+    * line and column, and every synthesised node carries `Origin.synthetic`) nor object identity
+    * (`StandardTraversal` rebuilds every node it walks) can answer that. */
+  final case class Match(scrutinee: Term, cases: List[CaseDef], tpe: TypeRepr, origin: Origin,
+                         id: MatchId = MatchId.fresh()) extends Term:
+    // structural equality EXCLUDING `id`, exactly as `Try` does — every existing comparison keeps
+    // meaning and the token is used only where it is meant to be, as an explicit key.
+    override def equals(o: Any): Boolean = o match
+      case m: Match => m.scrutinee == scrutinee && m.cases == cases && m.tpe == tpe && m.origin == origin
+      case _        => false
+    override def hashCode: Int = (scrutinee, cases, tpe, origin).hashCode
   /** one case: `labels` are the constant patterns (empty ⇒ `default`/`case _`). */
   final case class CaseDef(labels: List[Term], guard: Option[Term], body: Term, isDefault: Boolean)
   /** a method value `qualifier :: method` (`Foo::bar`, `x::baz`, `Foo::new`). */
