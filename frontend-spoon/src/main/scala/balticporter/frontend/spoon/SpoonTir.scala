@@ -3323,7 +3323,81 @@ object SpoonTir:
         if formals > 0 && actuals.nonEmpty && actuals.sizeIs == formals && actuals.forall(isBoxedWrapper)
           && !inv.getArguments.asScala.exists(isPrimitiveClassLiteral)
         then Tree.TypeApply(fun, actuals.map(a => tt(tpe(a), inv)), NoType, o)
-        else fun
+        else pinUnconstrainedTypeArgs(fun, inv, o)
+
+      /** A method TYPE PARAMETER that appears in NO FORMAL, at a call that gives it no target type
+        * either — `ENGINE-LIMITS.md` G22.
+        *
+        * {{{
+        * <T extends Map<String, ?>> T getRegistry(String name);
+        * …
+        * assertTrue(context.getRegistry(REGISTRY_FOR).isEmpty());
+        * }}}
+        *
+        * Nothing at the call constrains `T`. Java then instantiates it at its BOUND (JLS 18: with no
+        * constraints and no target type, resolution takes the upper bound) and `isEmpty()` resolves;
+        * Scala instantiates an unconstrained variable at its LOWER bound and the selection fails with
+        * `Found: Nothing / Required: ?{ isEmpty: ? }`. Nothing about the receiver or the retyping is
+        * wrong — the two languages disagree about what an unconstrained variable is — so the answer
+        * java gave is written down.
+        *
+        * [[pinTypeArgs]] above is the NEIGHBOURING case and declines here, correctly: it pins what
+        * the ARGUMENTS determined, and no argument mentions `T`. The answer here is a fact about the
+        * DECLARATION instead, which is what makes it a different rule rather than a widening of that
+        * one.
+        *
+        * Four conditions, and each is a way the pin would be wrong without it:
+        *
+        *   - **no formal mentions the variable.** One that does is constrained by its argument, and
+        *     both languages infer it the same way;
+        *   - **the call has no TARGET TYPE.** `Map<String,Integer> m = ctx.getRegistry(k)` gives java
+        *     AND scala the target to infer from, and pinning the bound there would emit
+        *     `Map[String, ?]` where `Map[String, Integer]` was written. The shape with no target is
+        *     the one where scala says `Nothing`: the call standing as the RECEIVER of another
+        *     selection, which is exactly where that `Nothing` is then selected from;
+        *   - **every variable has a REAL bound.** An unbounded `T` means `T extends Object`, and
+        *     pinning that is G24's territory — a bound scala does not read as vacuous — for no gain:
+        *     an `Object` receiver has no member worth selecting;
+        *   - **the bound mentions no type variable of its own.** An F-bound or a bound naming the
+        *     enclosing class's parameter is not a type this call site can write down. */
+      private def pinUnconstrainedTypeArgs(fun: Term, inv: CtInvocation[?], o: Origin): Term =
+        try
+          Option(inv.getExecutable.getExecutableDeclaration).collect { case m: CtMethod[?] => m } match
+            case scala.None => fun
+            case Some(m) =>
+              val fs    = m.getFormalCtTypeParameters.asScala.toList
+              val names = fs.map(_.getSimpleName).toSet
+              val bounds = fs.map(f => Option(f.getSuperclass)
+                .filter(_.getQualifiedName != "java.lang.Object").filterNot(mentionsNamedTypeVar))
+              if fs.isEmpty || bounds.exists(_.isEmpty) then fun
+              else if m.getParameters.asScala.exists(p => mentionsTypeVar(p.getType, names)) then fun
+              else if !isReceiverOfSelection(inv) then fun
+              else Tree.TypeApply(fun, bounds.flatten.map(b => tt(tpe(b), inv)), NoType, o)
+        catch { case _: Throwable => fun }
+
+      /** does this type mention a NAMED type variable — one an F-bound or an enclosing class
+        * declares — as opposed to a WILDCARD, which is writable anywhere?
+        *
+        * `mentionsAnyTypeVar` cannot answer it: Spoon's `CtWildcardReference` EXTENDS
+        * `CtTypeParameterReference`, so its `case _: CtTypeParameterReference => true` claims every
+        * `?` as a variable and the wildcard arm below it is dead. `Map<String, ?>` is the bound this
+        * pin exists for, so answering "yes" there declines the whole rule. */
+      private def mentionsNamedTypeVar(tr: CtTypeReference[?]): Boolean = tr match
+        case null                         => false
+        case w: CtWildcardReference       => Option(w.getBoundingType).exists(mentionsNamedTypeVar)
+        case _: CtTypeParameterReference  => true
+        case arr: CtArrayTypeReference[?] => mentionsNamedTypeVar(arr.getComponentType)
+        case r => try r.getActualTypeArguments.asScala.exists(mentionsNamedTypeVar) catch { case _: Throwable => false }
+
+      /** does this invocation stand as the RECEIVER of another member access — the one position that
+        * gives its result no expected type at all, and the one where scala's `Nothing` is then
+        * selected from? See [[pinUnconstrainedTypeArgs]]. */
+      private def isReceiverOfSelection(inv: CtInvocation[?]): Boolean =
+        try inv.getParent match
+          case p: CtInvocation[?]   => p.getTarget eq inv
+          case p: CtFieldAccess[?]  => p.getTarget eq inv
+          case _                    => false
+        catch { case _: Throwable => false }
 
       /** `int.class` etc. — Java types a primitive class literal as `Class<Integer>` (boxed), but we
         * emit it as `classOf[scala.Int]` (`Class[Int]`). Baseline inference binds a `Class<T>` param's

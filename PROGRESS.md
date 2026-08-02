@@ -2193,14 +2193,13 @@ without it threw `AssertionError: failure to resolve inner class` out of `Classf
 ABORTED, which reads as a smaller error count rather than as a failure. With no seam left there is
 nothing for it to soften, and ONE directory now serves the frontend, scalac and the test run.
 
-**What is left, 4 — 1 main and 3 test**, all of them (a) engine, by family:
+**What is left, 3 — 1 main and 2 test**, all of them (a) engine, by family:
 
 | n | family | where |
 |---|---|---|
 | 1 | K2/K5.7's `Map.Entry.setValue` at the case with NO LOOP AND NO MAP — the receiver is a FIELD whose value, after the retyping, is a detached pair. REFUSED, and the reason now says which of the two cases it is (`ENGINE-LIMITS.md` K5.7) | `filters/Sort$ComparableMapEntry` |
 | 1 | java's `<T>` means `T extends Object`, which is VACUOUS; the port emits `T <: java.lang.Object`, which is NOT — scala 3 roots `java.io.Serializable` at `Any` (value classes are serialisable), so `Buffer[Buffer[Serializable]]` does not conform to `Buffer[Buffer[T]]`. **The obvious fix was BUILT and measured at libGDX core 0 -> 50, and the method-only variant at 0 -> 6 — `ENGINE-LIMITS.md` G24 now carries all three numbers and the two rules that turn out to be reading that bound (reference identity, wildcard capture). Reverted; do not retry blind** | `ComparingExpressionNodeTest` |
 | 1 | MUnit's `Compare` needs a common type and two `toJava` calls infer different element types | `RenderSettingsTest` |
-| 1 | G22 — a method type parameter constrained only by its bound | `blocks/ForTest` |
 
 **And the whole of it is still ONE PHASE's** — the families above are `CollectionsTransform`
 boundaries and generic-inference disagreements, and the port's `.conf` gains nothing for any of

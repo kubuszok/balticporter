@@ -489,7 +489,7 @@ gating the retype off.
 
 *Fix kind: (a) engine. Built.*
 
-### G22. A method TYPE PARAMETER constrained only by its BOUND infers `Nothing` in Scala and its BOUND in java — 1 error, OPEN
+### G22. A method TYPE PARAMETER constrained only by its BOUND infers `Nothing` in Scala and its BOUND in java — CLOSED
 
 ```java
 <T extends Map<String, ?>> T getRegistry(String name);
@@ -513,7 +513,33 @@ nothing at the call constrains it, that argument is the bound.
 Measured at **1 error** on liqp (`TemplateContext.getRegistry`, called for its emptiness in a
 `finally`). `CLAUDE.md` §6's "never cast to `scala.Nothing`" is the same disagreement met at a cast.
 
-*Fix kind: (a) engine, unbuilt.*
+**CLOSED** by `SpoonTir.pinUnconstrainedTypeArgs`, on four conditions each of which is a way the pin
+would be wrong without it:
+
+- **no FORMAL mentions the variable.** One that does is constrained by its argument, and both
+  languages infer it the same way;
+- **the call has no TARGET TYPE.** `Map<String,Integer> m = ctx.getRegistry(k)` gives java AND scala
+  a target, and pinning the bound there would emit `Map[String, ?]` where `Map[String, Integer]` was
+  written. The shape with no target is the call standing as the RECEIVER of another selection —
+  which is exactly where scala's `Nothing` is then selected from, so the condition and the symptom
+  are the same fact;
+- **every variable has a REAL bound.** An unbounded `T` means `T extends Object`, and pinning that
+  is G24's territory for no gain: an `Object` receiver has no member worth selecting;
+- **the bound mentions no NAMED type variable.** An F-bound, or one naming the enclosing class's
+  parameter, is not a type this call site can write down.
+
+**The fourth condition is where this was first written wrong, and the reason is a Spoon inheritance
+nobody would guess: `CtWildcardReference` EXTENDS `CtTypeParameterReference`.** So the frontend's own
+`mentionsAnyTypeVar` answers TRUE for every `?` — its `case _: CtTypeParameterReference` matches
+first and the wildcard arm below it is dead code — and `Map<String, ?>`, which is the bound this pin
+exists for, was rejected as F-bounded. The rule declined silently, on the one shape it was built for,
+with no error and no count. `mentionsNamedTypeVar` orders the wildcard arm FIRST.
+
+Measured on liqp: **4 -> 3**, one site, and on libGDX core **0 errors, 0 member digests, every check
+count flat** — the number a frontend change owes.
+
+*Fix kind: (a). Universal — the two languages disagree about what an unconstrained type variable is,
+and java's answer is written down at the call.*
 
 ### G23. Java's `?` is bounded by `Object`; scala's is bounded by `Any` — and the gap is one operation wide
 
