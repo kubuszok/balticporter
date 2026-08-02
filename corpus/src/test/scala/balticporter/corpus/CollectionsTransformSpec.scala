@@ -659,6 +659,36 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "fromJava")
   }
 
+  test("a call this phase REWRITES gets its arguments BARE — no wrap may precede the rewrite") {
+    // `list.addAll(other.list)` becomes `list ++= other.list`, and `++=` wants an `IterableOnce`.
+    // `java.util.List#addAll`'s formal is `java.util.Collection`, which `remap` reads as the SHIM —
+    // so the moment external formals became readable, the argument pass wrapped it first and the
+    // rewrite then emitted `list ++= JavaCollection.from(other.list)`, which is not an
+    // `IterableOnce` at all. Measured at 4 errors on a port that had 0, with every check count flat
+    // and 8 member digests moved: nothing but the compiler could see it, and no spec looked.
+    //
+    // Two rules keep it shut and both are asserted here: the shim wrap is for callees the PROGRAM
+    // OWNS (a class file cannot name a `balticporter.runtime` type), and the java-formal bridge
+    // runs after the rewrites.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Bag2 {
+        |  final List<String> items = new ArrayList<String>();
+        |  final Set<String> seen = new HashSet<String>();
+        |  void merge(Bag2 other) { items.addAll(other.items); seen.addAll(other.seen); }
+        |  // …and this is LOAD-BEARING, not decoration: `wrapIterableArgs` short-circuits when the
+        |  // program names no `java.lang.Iterable`, because the shim is minted on demand. Without a
+        |  // mention the pass never runs and this fixture passes for the wrong reason — it did.
+        |  void feed(Iterable<String> xs) { for (String s : xs) { items.add(s); } }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertEmits(p, "this.items ++= other.items")
+    assertEmits(p, "this.seen ++= other.seen")
+    assertNotEmits(p, "JavaCollection.from")
+    assertNotEmits(p, "JavaCollections.toJava")
+  }
+
   test("an external CONSUMER slot whose formal is READABLE is bridged, not counted") {
     // The consumer half, which used to be unanswerable: an argument whose formal lives in a class
     // file. The frontend interned every external member with NO signature — 1157 on liqp, not one

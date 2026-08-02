@@ -1394,13 +1394,22 @@ final class CollectionsTransform(
     * REMOVE through it. Wrapping the ARGUMENT has neither problem — the type is exact before
     * overload resolution runs, and the parameter keeps the capability it declares. */
   private def wrapIterableArgs(t: Tree.Apply)(using p: Program): Tree.Apply =
-    // A call whose formals STAY java is not this pass's — see [[keepsJavaFormals]] and
-    // [[bridgeJavaFormals]]. Reading such a formal through `remap` is the failure CLAUDE.md §1(b)
-    // names for the rewrite: it says the slot wants `JavaIterable`, so the shim wrap fires, and
-    // `String.join(",", JavaIterable.from(xs))` hands a standalone runtime trait to a class file
-    // that asks for `java.lang.Iterable`. The seam moves one type to the left and stops being
-    // findable — the emitted call names the shim rather than the boundary.
-    if javaIterableSym == SymId.None || keepsJavaFormals(t) then t
+    // ONLY A CALLEE THE PROGRAM OWNS, and that is not a narrowing — it is what this pass IS.
+    //
+    // The wrap it inserts targets a SHIM, and a shim formal can only ever belong to a declaration
+    // the port EMITS: no class file names `balticporter.runtime.JavaIterable`. Reading an EXTERNAL
+    // formal through `remap` claims otherwise — it says a `java.util.Collection` slot wants
+    // `JavaCollection` — and produces two failures at once. `String.join(",", JavaIterable.from(xs))`
+    // hands a standalone runtime trait to a class file asking for `java.lang.Iterable`, so the seam
+    // moves one type to the left and stops being findable; and, worse, the wrap lands on a call the
+    // phase is ABOUT TO REWRITE — `this.items.addAll(other.items)` became
+    // `this.items ++= JavaCollection.from(other.items)`, where `++=` wants an `IterableOnce` and
+    // the shim is not one. Measured at 4 errors on a port that had 0, with 8 member digests moved
+    // and every check count flat: nothing but the compiler could see it.
+    //
+    // The java-formal direction is [[bridgeJavaFormals]]'s, and it runs AFTER the rewrites for
+    // exactly the reason the second failure above gives.
+    if javaIterableSym == SymId.None || !ownedSym(t.method) || keepsJavaFormals(t) then t
     else
       val formals = formalsOf(t)
       if formals.sizeIs != t.args.size then t

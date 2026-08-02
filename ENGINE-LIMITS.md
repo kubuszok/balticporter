@@ -2166,6 +2166,28 @@ than none:
   behaviour change with no compile error and no count moving. That phase excludes external callees
   BEFORE reading formals, and its count says which of the two facts is missing.
 
+**A SHIM formal belongs to a callee the PROGRAM OWNS, and reading an external one through `remap`
+broke a green port.** `wrapIterableArgs` wraps toward `JavaIterable`/`JavaCollection`, and no class
+file can name a `balticporter.runtime` type — so the moment external formals became readable, that
+pass started reading `java.util.Collection` through `remap`, concluding the slot wanted the shim, and
+wrapping. Two failures at once: `String.join(",", JavaIterable.from(xs))` hands a standalone runtime
+trait to a class file asking for `java.lang.Iterable`, and — the one that cost a port — the wrap
+lands on a call the phase is ABOUT TO REWRITE, so `this.items.addAll(other.items)` came out as
+`this.items ++= JavaCollection.from(other.items)` where `++=` wants an `IterableOnce`. **jbump 0 → 4
+errors, 8 member digests moved, every check count flat**: nothing but the compiler could see it.
+
+Two things about how that was found and shut, both of which generalise:
+
+- **the first regression spec written for it PASSED.** `wrapIterableArgs` short-circuits when the
+  program names no `java.lang.Iterable` at all — the shim is minted on demand — so a fixture with
+  only `List` and `Set` in it never reached the pass. A spec that does not name an `Iterable` is a
+  spec for a code path that did not run, and it looked exactly like a spec that holds. The fixture
+  now says so at the line that carries the mention.
+- **that same short-circuit is a capability switch, and it stays only because it is now harmless.**
+  Removing it — which reads like tidying an accidental gate — put the pass in front of every
+  rewritten call in the corpus: **8 specs**, first try. The gate is not what makes the pass correct;
+  `ownedSym` is.
+
 **And the BRIDGE runs after the rewrites, not with `wrapIterableArgs`.** That pass runs first by
 design — a shim-typed formal belongs to a declaration the port emits, and the wrap must be in place
 before overload resolution. A `java.util.*` formal is the signature of a method this phase may be
