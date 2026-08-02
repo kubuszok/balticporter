@@ -172,6 +172,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // the shape that used to look exactly like a typo (see [[reportUnreachable]]).
     reportUnreachable(program, named.filter(fenced))
     if hints.isEmpty then return program
+    refuseSpanningHints(program, hints) // …and the ones that name TWO modules' declarations
     seeds = propagate(program, hints) // grow the seed set along pure-move flows
     refuseOverlap(program)
     if seeds.isEmpty then return program
@@ -293,9 +294,61 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     *
     * `true` whenever there is no run scope (a base port, a single-module port, a spec, `DebugEmit`),
     * by [[RunScope.whole]] — so this is the identity everywhere the pre-fix code was already right,
-    * and there is no second code path for a port to be silently on. */
+    * and there is no second code path for a port to be silently on.
+    *
+    * `exists` is safe BECAUSE of [[refuseSpanningHints]], which has already run: the bound hints are
+    * all this module's or none of them are, so `exists` and `forall` agree and the question has one
+    * answer. Read on its own it is the more DANGEROUS of the two — see that method. */
   private def mintsHere(p: Program, hints: Set[SymId]): Boolean =
     hints.exists(id => runScope.emits(unitOf(p, id)))
+
+  /** FAIL THE RUN when the spec's BOUND HINTS land in more than one module — O5's fence, which
+    * admitted exactly the shape it exists to prevent.
+    *
+    * [[mintsHere]] asks `hints.exists(owned)`, and `exists` is the WRONG quantifier for a fence whose
+    * answer decides who WRITES a file. A spec's `hints` is a predicate over `Symbol` — libGDX's is an
+    * exact FQN, but the type invites `_.name == "handle"`, which is the form that reads naturally and
+    * matches whatever a dependent happens to have called a field. One such match inside a dependent's
+    * own units makes `exists` true THERE, and the base's own hints make it true in the BASE, so both
+    * modules mint the same FQN: precisely the 24-error, six-suites-stopped failure O5 measured, with
+    * the fence in place and answering.
+    *
+    * The `claimedSynthetic` belt behind it does not close this, and its own doc says why it cannot be
+    * relied on to: `PortRun.claimedSynthetic(_, _, Nil)` is `Nil`, so a base with NO published map —
+    * or one proven stale, which shares the path — ADMITS the second copy. Note the direction that
+    * asymmetry runs in against `DESIGN.md` §8.13's `governs` screen, which REFUSES when it has no map
+    * to read. Both are deliberate and neither is a defect (see the belt's own note at
+    * `PortRun.claimedSynthetic`), but a fence that leans on a belt which admits by default is a fence
+    * with no floor. So the fence answers for itself.
+    *
+    * The phase can answer it: it holds the `RunScope` and it already resolves a symbol to its
+    * top-level unit ([[unitOf]]) for [[mintsHere]]. A hint set that straddles the two is a spec whose
+    * intent the engine cannot recover — mint here, mint there, or mint in neither is a choice about
+    * a library's shared surface — so it refuses and names both sides.
+    *
+    * §1(c) LIBRARY RULE, and the fix is in the port: `hints` names declarations of ONE module. A
+    * dependent that genuinely wants its own domain type declares its own spec, with its own FQN.
+    *
+    * A throw and not a finding, for [[refuseOverlap]]'s reason: there is no honest program to emit. */
+  private def refuseSpanningHints(p: Program, hints: Set[SymId]): Unit =
+    def named(id: SymId): String = p.symbolOf(id).map(_.fullName).getOrElse(id.toString)
+    val (here, elsewhere) = hints.toList.partition(id => runScope.emits(unitOf(p, id)))
+    if here.nonEmpty && elsewhere.nonEmpty then
+      def show(ids: List[SymId]) =
+        ids.map(id => s"      ${named(id)}   (in ${named(unitOf(p, id))})").sorted.take(10).mkString("\n")
+      throw new IllegalStateException(
+        s"[balticporter] §1(c) LIBRARY RULE: `${spec.fqn}`'s hints bind declarations in MORE THAN " +
+          "ONE module, so no module can be said to own the minted type.\n" +
+          s"    this module emits ${here.size} of them:\n${show(here)}\n" +
+          s"    and does NOT emit ${elsewhere.size}:\n${show(elsewhere)}\n" +
+          s"  The minted `${spec.fqn}` is a TOP-LEVEL unit and belongs to the module that owns the " +
+          "declarations it was minted FOR (`ENGINE-LIMITS.md` §13 O5). With hints on both sides of " +
+          "that line, every module in the chain mints its own copy of one FQN — and an opaque type " +
+          "cannot be duplicated even harmlessly, since opacity is per-DEFINITION.\n" +
+          "  Fix in the PORT: narrow `hints`/`extraHints` to declarations of ONE module — an exact " +
+          "FQN rather than a name pattern is the reliable form — or fence the spec with a " +
+          "`RuleScope`. A dependent that wants a domain type of its own declares its OWN spec, at " +
+          "its own FQN.")
 
   /** the TOP-LEVEL unit a symbol belongs to — how a symbol is held to the module that emits it.
     * Fuel-bounded, so a corrupt owner chain cannot hang the phase. */

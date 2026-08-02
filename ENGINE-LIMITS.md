@@ -4441,3 +4441,31 @@ stop being exercised.
 *Fix kind: (a) engine. A dependent that genuinely needs its OWN opaque family is a design question
 this does not answer; the corpus has none. And the general rule is CLAUDE.md §1.5's: a phase that
 SYNTHESISES a declaration owes the same one-module answer `inject` does.*
+
+**…AND THE FENCE ADMITTED A HINT SET THAT SPANS TWO MODULES — closed by the checkpoint-4 audit.**
+The fence reads the hints, which is right; it read them with `exists`, which is not. `hints` is a
+`Symbol => Boolean` predicate, and while libGDX's is an exact FQN (`_.fullName == "…GLTexture#glHandle"`,
+which cannot straddle), the type invites `_.name == "handle"` — the form that reads naturally and
+matches whatever a dependent happens to have called a field. **One such match inside a dependent's
+own units makes `exists` true THERE, and the base's own hints make it true in the BASE.** Both
+modules then mint one FQN: O5 in full, with the fence in place and answering.
+
+The belt behind it does not close this, and the reason is worth stating because it is an ASYMMETRY:
+`PortRun.claimedSynthetic(_, _, Nil)` is `Nil`, so a base with no published map — or one proven
+stale, which shares that path — ADMITS the second copy, whereas `DESIGN.md` §8.13's `governs` screen
+asked the same "I have no map" question REFUSES. The belt's admission stays, argued rather than
+flipped: an empty base list is also what a base port, a single-module port, a spec and `DebugEmit`
+have, and every one of them is the module that MUST mint, so refusing on it would fail the only run
+allowed to write the type — while a policy key checked against a NAMED base has no such reading. The
+loud half already fires (`BaseMapMissing`/`BaseMapStale`, "run the base port once"). What was wrong
+was a fence LEANING on a belt that admits by default.
+
+So the fence answers for itself: `PrimitiveToOpaqueTransform.refuseSpanningHints` throws when the
+bound hints straddle `RunScope.emits`, naming both sides, before propagation runs. The phase already
+holds the scope and already resolves a symbol to its top-level unit, so this costs no new machinery.
+§1(c) LIBRARY RULE and the fix is in the PORT — name one module's declarations, or declare a
+separate spec at the dependent's own FQN. Negative-tested four ways in `OpaqueMintOwnershipSpec`: a
+spanning name pattern refuses from BOTH modules' side, the same pattern over ONE module mints
+normally (the rule is about the line, not about patterns), and an exact-FQN hint over the same
+two-module tree is untouched — which is the measurement behind "zero corpus movement" rather than an
+assertion about it. All 13 ports: 0 members changed, every check count identical.

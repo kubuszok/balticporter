@@ -1771,7 +1771,27 @@ object PortRun:
     * testable without a run directory, the same division `discoverBasePorts` documents.
     *
     * A DROPPED type in a base's map is not a claim: the base does not emit it, so nothing collides.
-    * Only a name the base actually writes is one this run may not also write. */
+    * Only a name the base actually writes is one this run may not also write.
+    *
+    * ==NO MAPS ADMITS, and that is argued rather than inherited==
+    * `bases = Nil` returns `Nil`, so a run with no usable base map writes its synthesised units. Note
+    * that `DESIGN.md` §8.13's `governs` screen, asked the same "I have no map" question, REFUSES —
+    * and the asymmetry is deliberate in both directions:
+    *
+    *   - **`Nil` here conflates two things and must.** A base port, a single-module port, a spec and
+    *     `DebugEmit` all have no bases at all, and every one of them is the module that MUST mint.
+    *     Refusing on an empty list would fail the only run allowed to write the type. The screen's
+    *     input is a POLICY KEY an operator wrote against a named base, which has no such reading.
+    *   - **the loud half already fires.** A base that published no map, or one proven stale, is
+    *     `BaseMapMissing`/`BaseMapStale` beside this line, with "run the base port once" as the fix.
+    *     The screen has no equivalent because a policy key is checked once, before anything runs.
+    *   - **this is a BELT, and the fence in front of it now refuses for itself.** A phase that mints
+    *     fences its mint on `RunScope`, and `PrimitiveToOpaqueTransform.refuseSpanningHints` makes
+    *     that fence answer rather than guess when its hints straddle two modules. A belt that admits
+    *     by default is only a hazard while it is the sole floor.
+    *
+    * So it stays as it is. What must not happen is this being read as the same answer the screen
+    * gives, or a fence being written that leans on it. */
   def claimedSynthetic(program: Program, synthesised: List[Tree.ClassDef],
                        bases: List[(String, PortMap.Map0)]): List[SyntheticClaim] =
     if synthesised.isEmpty || bases.isEmpty then Nil

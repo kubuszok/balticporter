@@ -58,7 +58,9 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
       |}""".stripMargin,
   )
 
-  private def model(): (Program, Path) =
+  private def model(): (Program, Path) = modelWith(dep)
+
+  private def modelWith(depFiles: Map[String, String]): (Program, Path) =
     val root = Files.createTempDirectory("opaque-mint-ownership")
     def put(under: Path, files: Map[String, String]) = files.foreach { (rel, body) =>
       val p = under.resolve(rel)
@@ -66,9 +68,9 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
       Files.writeString(p, body)
     }
     put(root.resolve("base"), base)
-    put(root.resolve("dep"), dep)
+    put(root.resolve("dep"), depFiles)
     val types = SpoonTir.buildModel(
-      FrontendConfig(root.resolve("dep"), dep.keys.toList.sorted, Nil,
+      FrontendConfig(root.resolve("dep"), depFiles.keys.toList.sorted, Nil,
                      resolutionRoots = List(root.resolve("base"))), lenient = true)
     (SpoonTir.fromTypes(types), root)
 
@@ -190,6 +192,65 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     val hinted = after.symbols.all.filter(s => ph.spec.hints(s)).map(_.id)
     assert(clue(hinted).nonEmpty)
     assert(hinted.forall(id => !mine.contains(unitOf(id))))
+  }
+
+  // -------------------------------------------------------------------------
+  // …and a hint set that STRADDLES the two modules is refused, not resolved by `exists`
+  // -------------------------------------------------------------------------
+
+  /** the same two-module tree, plus a dependent declaration a NAME PATTERN also matches. `hints` is
+    * a `Symbol => Boolean`, and `_.name == "handle"` is the form that reads naturally and is exactly
+    * the form that stops being about one module the moment a dependent names a field the same. */
+  private val depWithOwnField = dep + ("q/Own.java" -> """package q;
+    |public class Own {
+    |  private int handle;
+    |  public int get() { return handle; }
+    |}""".stripMargin)
+
+  private def patternPhase = new PrimitiveToOpaqueTransform(OpaqueSpec(
+    fqn   = "p.Handle",
+    hints = s => s.name == "handle" && !s.flags.isParam,
+  ))
+
+  test("SPANNING hints FAIL THE RUN — `exists` would have minted in BOTH modules") {
+    // Pre-fix this was silent: `mintsHere` is `hints.exists(owned)`, true in the dependent because
+    // of `q.Own#handle` and true in the base because of `p.Gpu#handle`, so both modules write
+    // `p.Handle.scala` — O5 in full, with the fence in place and answering. The belt behind it
+    // (`PortRun.claimedSynthetic`) does not catch it either: with no published base map it ADMITS.
+    val (p, root) = modelWith(depWithOwnField)
+    val err = intercept[IllegalStateException](run(p, root, patternPhase, "dep"))
+    assert(clue(err.getMessage).contains("MORE THAN ONE module"))
+    assert(err.getMessage.contains("p.Gpu#handle"), "the side this module does NOT emit is named")
+    assert(err.getMessage.contains("q.Own#handle"), "…and so is the side it does")
+    assert(err.getMessage.contains("§1(c)"), "a refusal says which of §1's three kinds the fix is")
+    assert(err.getMessage.contains("ENGINE-LIMITS.md` §13 O5"))
+  }
+
+  test("…and the BASE side of the same tree refuses too — neither module may decide alone") {
+    val (p, root) = modelWith(depWithOwnField)
+    val err = intercept[IllegalStateException](run(p, root, patternPhase, "base"))
+    assert(clue(err.getMessage).contains("MORE THAN ONE module"))
+  }
+
+  test("NEGATIVE: the SAME pattern over ONE module is not a span — the rule is about the LINE") {
+    // `q.Own` alone, with no base to straddle: `RunScope.whole`, every hint owned, mint proceeds.
+    // Without this the refusal could be "a name pattern is banned", which it is not.
+    val root  = Files.createTempDirectory("opaque-mint-one-module")
+    depWithOwnField.foreach { (rel, body) =>
+      val f = root.resolve(rel); Files.createDirectories(f.getParent); Files.writeString(f, body)
+    }
+    val types = SpoonTir.buildModel(
+      FrontendConfig(root, depWithOwnField.keys.toList.sorted, Nil), lenient = true)
+    val after = Pipeline.run(SpoonTir.fromTypes(types), List(patternPhase))
+    assert(clue(unitNames(after)).contains("p.Handle"))
+  }
+
+  test("NEGATIVE: an EXACT-FQN hint over the two-module tree is unaffected — the corpus's shape") {
+    // libGDX's own spec is `_.fullName == "…#glHandle"`, which cannot straddle. This is the
+    // measurement behind "zero corpus movement" rather than an assertion about it.
+    val (p, root) = modelWith(depWithOwnField)
+    assert(!clue(unitNames(run(p, root, phase, "dep"))).contains("p.Handle"))
+    assert(clue(unitNames(run(p, root, phase, "base"))).contains("p.Handle"))
   }
 
   // -------------------------------------------------------------------------
