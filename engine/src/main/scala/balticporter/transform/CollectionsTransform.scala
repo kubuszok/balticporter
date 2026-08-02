@@ -1397,6 +1397,20 @@ final class CollectionsTransform(
     * array is freshly allocated at the call, so nobody holds the alias the live view would matter
     * for.
     *
+    * ==…and the pack has TWO node shapes, because the callee here is EXTERNAL==
+    * The frontend materialises the pack as a `Tree.NewArray` only for a callee this program
+    * DECLARES. At an EXTERNAL one — which `java.util.Arrays.asList` is, and which is the only kind
+    * this rewrite ever sees — it mints a `Tree.Repeated`, since scalac reads a java `T...` in a
+    * class file as a REPEATED parameter and a materialised pack there is one argument too many
+    * (`ENGINE-LIMITS.md` K6.5). A `Repeated` is the argument list's TAIL, already opened.
+    *
+    * Both shapes therefore mean "these are the ELEMENTS", and both must open, or the two halves of
+    * one decision disagree: read as an ordinary argument the `Repeated` carries an ARRAY node type,
+    * so it fell into the aliasing arm below and REFUSED a pack it had itself just opened —
+    * `asList(xs, xs)` and `asList(s)` emitted `java.util.Arrays.asList(…)` under the retyped return
+    * type, which cannot compile, while `asList(1, 2, 3)` (never packed at all) was rewritten. Each
+    * half was green alone; the composition was not.
+    *
     * A single argument that IS an array is the aliasing form and is REFUSED — the rewrite does not
     * happen at all, so the emitted text names `java.util.Arrays.asList` and fails to compile there.
     * That is deliberately louder than the previous behaviour, which emitted
@@ -1410,6 +1424,8 @@ final class CollectionsTransform(
     def isArray(t: TypeRepr) = headSym(t).flatMap(p.symbolOf).exists(_.fullName == "scala.Array")
     args match
       case init :+ Tree.NewArray(_, Nil, Some(elems), _, _) => Some(init ++ elems)
+      // the EXTERNAL-callee shape of the same pack — opened, never read as one array argument.
+      case init :+ Tree.Repeated(elems, _, _)               => Some(init ++ elems)
       case List(a) if isArray(a.tpe)                        => scala.None
       case _                                                => Some(args)
 

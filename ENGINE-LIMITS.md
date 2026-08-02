@@ -1987,6 +1987,20 @@ which is precisely what `BreakCatchCheck`'s contract forbids. The gate is theref
 SPEC — both directions, negative-tested (`SpoonTirBodySpec`) — plus the emitter's own
 (`TirEmitterSpec`). **liqp 67 → 58**, with every check count flat.
 
+**…and the third case COLLIDED with the first, which is what a composition costs.** The two halves
+above landed in different steps and each was green alone. The rewrite reads its ARGUMENTS and knew
+one pack shape (`Tree.NewArray`); the frontend now mints the other (`Tree.Repeated`) at exactly the
+callee this rewrite is about, since `java.util.Arrays.asList` is a class file and nothing else. Read
+as an ordinary argument a `Repeated` carries an ARRAY node type — so it fell into the ALIASING arm,
+and the rewrite REFUSED a pack it had itself just opened: `asList(xs, xs)` and `asList(s)` emitted
+`java.util.Arrays.asList(…)` under a retyped return type, while `asList(1, 2, 3)` — never packed —
+was rewritten. **A phase that pattern-matches an argument list owes BOTH shapes of the frontend's
+vararg convention**, and the only thing that can see the omission is a spec over the composition:
+neither wave's own suite moved. Measured on liqp's test set, **59 → 61 with three sites repaired**:
+three `LookupNodeTest` calls stopped emitting the JDK name, and one heterogeneous
+`asList(98, "97", true, false, null)` turned one aggregate mismatch into six per-element ones, which
+is the compiler describing what it could not reach before.
+
 *Fix kind: (a). Universal — java's call syntax against a class file, no library involved.*
 
 ### K7. A java enhanced-for BINDING may be declared at a supertype, and the port dropped it

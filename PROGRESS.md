@@ -2099,7 +2099,7 @@ source sets on one invocation and splits the wall by the path scalac printed.
 |---|---|
 | emitted | **101 Scala test files** from 105 java (4 excluded, below), 788 members in the source map |
 | tests | 639 `@Test` upstream -> **577 emitted** (munit 577, junit residue **0** — the whole JUnit surface converted) |
-| scalac errors | **main 31 (unchanged), test 59**, all `EngineGap`; the two are never summed, because a test-set error is frequently a cascade of a main-set one |
+| scalac errors | **main 31 (unchanged), test 61**, all `EngineGap`; the two are never summed, because a test-set error is frequently a cascade of a main-set one |
 | `portability(emitted)` | **1467**, dominated by hamcrest (725 `assertThat` + 667 `is`/`equalTo`), which the conversion deliberately leaves in place and `ENGINE-LIMITS.md` X6's `org.hamcrest.` rule is what counts |
 | `omissions` | **8** — dropped `@SuppressWarnings` on anonymous-class fields |
 | `trivia` | **0 lost**, 1 recovered (`TestUtils.java:17`) |
@@ -2111,7 +2111,7 @@ five of them, in `ReadmeSamplesTest`, `TemplateTest`, `DateTest` and `LiquidSupp
 discovery gate prints `!! TESTS LOST — 62 of 639` on every run and is supposed to; the exclusion is
 stated in `test.conf` and is deleted, not narrowed, the day the frontend grows the node.
 
-**The 59, classified.** Every one is (a) engine; none is (b) or (c), and none is
+**The 61, classified.** Every one is (a) engine; none is (b) or (c), and none is
 `TestFrameworkTransform`'s:
 
 | n | family | where it goes |
@@ -2120,7 +2120,13 @@ stated in `test.conf` and is deleted, not narrowed, the day the frontend grows t
 | **12** | `value TemplateTest is not a member of ssg.liquid` — four suites `import liqp.TemplateTest` for its nested `ComparableBase` | the T9 exclusion's own cascade; no fix to those four suites removes it |
 | **12** | `JavaCollections.fromJava` over a value the phase ALREADY retyped — java's double-brace `new HashMap<>(){{ … }}` | K15's coercion rule; the same family as two sites in the MAIN set |
 | **4** | an unqualified inherited `add(…)` inside a double-brace anonymous subclass of a retyped collection | K5's inherited-call rewrite, at an ANONYMOUS class with an implicit receiver |
-| 11 | assorted `Found/Required` mismatches at retyped collections and at `TemplateParser.ErrorMode` | the main port's own residue reaching the suite |
+| 13 | assorted `Found/Required` mismatches at retyped collections and at `TemplateParser.ErrorMode` | the main port's own residue reaching the suite |
+
+The last row moved 11 -> 13 when `Arrays.asList`'s rewrite learned the EXTERNAL-callee pack shape
+(`ENGINE-LIMITS.md` K6.5, the composition): three `LookupNodeTest` sites were repaired and one
+heterogeneous `asList(98, "97", true, false, null)` replaced a single aggregate mismatch with six
+per-element ones — java boxes those literals into `Serializable`, Scala's `Int`/`Boolean` are not,
+and the compiler can only say so once the elements are separate arguments.
 
 **What the suite would exercise the moment it runs**, and does not yet: 46 `@Test(expected=…)`, 2
 `@Before`, 38 anonymous classes, a `switch` on `String` with NO `default`

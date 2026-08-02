@@ -378,6 +378,13 @@ class CollectionsTransformSpec extends PortSuite:
     // one element: the frontend packs a single non-primitive argument too.
     assertEmits(p, "balticporter.runtime.JavaCollections.asList(s)")
     assertNotEmits(p, "asList(scala.Array[java.lang.String](s))")
+    // …and the pack arrives here in the EXTERNAL-callee shape (`Tree.Repeated`, not
+    // `Tree.NewArray`), because `java.util.Arrays.asList` is a class file: read as one ordinary
+    // argument that node carries an ARRAY type and fell into the aliasing refusal, so the rewrite
+    // did not happen and the two element forms above emitted the JDK call under a retyped return
+    // type. Both halves were green alone. Nothing but this composition can see it.
+    assertNotEmits(p, "return java.util.Arrays.asList(xs, xs)")
+    assertNotEmits(p, "return java.util.Arrays.asList(s)")
     // the two shapes the frontend already emitted as bare elements are unchanged — it declines to
     // pack primitives, which is the only reason `asList(1, 2, 3)` was ever right.
     assertEmits(p, "balticporter.runtime.JavaCollections.asList(1, 2, 3)")
