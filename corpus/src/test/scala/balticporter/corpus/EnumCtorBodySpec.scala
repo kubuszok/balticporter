@@ -139,3 +139,56 @@ class EnumCtorBodySpec extends PortSuite:
     assertNotEmits(p, "def ordinal(): scala.Int")
     assertNotEmits(p, "override def ordinal()")
   }
+
+  // -- T11's OTHER half: the collidee is DECLARED, not synthesised ------------------------------
+  //
+  // T11 closed the case where a promoted parameter collides with the emitter-SYNTHESISED
+  // `Enum.name()`, by skipping the synthesis, and recorded that the other case "would need a §4.55
+  // pass that can see an EMITTER-synthesised member, which no phase can today". The other case does
+  // not need one: the collidee is DECLARED (liqp `Flavor`'s `isLiquidStyleInclude` parameter
+  // against its own `isLiquidStyleInclude()` method), which is exactly what `funnelParamRenames`
+  // reads. Java needs no answer here — a constructor parameter is not a member, and its two
+  // namespaces would let it share a name with a method even if it were.
+
+  test("a promoted enum parameter clashing with a DECLARED method is renamed, and the method stays") {
+    val p = port(
+      """package p;
+        |enum Flavour {
+        |  LIQUID("a", true), JEKYLL("b", false);
+        |  private final boolean styled;
+        |  public String folder;
+        |  Flavour(String folder, boolean isStyled) {
+        |    this.folder = folder;
+        |    this.styled = isStyled;
+        |  }
+        |  public boolean isStyled() { return styled; }
+        |}
+        |""".stripMargin
+    )
+    // the parameter moves, not the method: the method is the java API and the `var` is the port's
+    // own artefact (java's parameter was not a member at all).
+    assertEmits(p, "isStyled$p: scala.Boolean")
+    assertEmits(p, "def isStyled(): scala.Boolean")
+    // the constants pass positionally, so the rename is invisible where it matters
+    assertEmits(p, "case object LIQUID extends Flavour(")
+    // and the body's reference followed the symbol
+    assertEmits(p, "this.styled = isStyled$p")
+  }
+
+  test("a promoted enum parameter that SUPERSEDES a field is NOT renamed") {
+    // `var glEnum` IS the field, so the field is never emitted and cannot be a collidee. Renaming
+    // the parameter would un-supersede it — emitting both, and breaking the self-assignment drop
+    // that goes with it. This is the shape most java enums have, so a rename here would move the
+    // emitted surface of every enum in the corpus.
+    val p = port(
+      """package p;
+        |enum Filter {
+        |  NEAREST(9728), LINEAR(9729);
+        |  public final int glEnum;
+        |  Filter(int glEnum) { this.glEnum = glEnum; }
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "sealed abstract class Filter(var glEnum: scala.Int)")
+    assertNotEmits(p, "glEnum$p")
+  }

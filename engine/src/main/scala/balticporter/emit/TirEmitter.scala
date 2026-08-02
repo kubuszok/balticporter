@@ -3546,6 +3546,63 @@ object TirEmitter:
       if scanned(cd.symbol) then return
       scanned += cd.symbol
       parentSyms(cd).flatMap(declOf.get).foreach(scan) // parents first, so `eff` is settled
+      // AN ENUM PROMOTES ITS CONSTRUCTOR PARAMETERS TOO, and by a different route: `enumDef`
+      // renders each as a `var` field of the sealed class's primary, deliberately without consulting
+      // `CtorFunnel` (an enum's shape is already fixed — every `case object` passes its arguments to
+      // that one primary). So `plans(cd).primaryParams` is empty here and the pass above sees
+      // nothing, which is `ENGINE-LIMITS.md` T11's remaining half: T11 closed the case where the
+      // COLLIDEE is the emitter-SYNTHESISED `Enum.name()`, by skipping it, and said the other case
+      // "would need a §4.55 pass that can see" the promotion. It does not — the collidee here is
+      // DECLARED (`Flavor`'s `isLiquidStyleInclude` parameter against its own
+      // `isLiquidStyleInclude()`), and a declared member is exactly what this pass reads.
+      //
+      // NARROW, unlike the plan-based arm above. A promoted funnel parameter is positional and
+      // invisible, so that arm renames every one of them; an enum parameter is EMITTED SURFACE —
+      // a public `var` — so renaming one that does not collide would move the API of every enum in
+      // the corpus for nothing. Two names are therefore NOT collidees:
+      //
+      //   - the parameter's own name (it is what is being placed, not something already there);
+      //   - a body FIELD the parameter SUPERSEDES. `enumDef` drops a same-named `ValDef` precisely
+      //     because the `var` parameter IS that field, so it is never emitted and cannot clash —
+      //     and renaming the parameter would UN-supersede it, emitting both and breaking the
+      //     self-assignment drop that goes with it (libGDX's `TextureFilter(glEnum)`).
+      val enumParams =
+        if !p.symbolOf(cd.symbol).exists(_.flags.isEnum) then Nil
+        else cd.body.collectFirst { case d: Tree.DefDef if nm(d.symbol) == "<init>" => d }
+               .map(CtorFunnel.valueParams(p, _)).getOrElse(Nil)
+      if enumParams.nonEmpty then
+        val own = enumParams.map(v => nm(v.symbol)).toSet
+        // built from the PARTS rather than by subtracting from `visibleNames`, because the two
+        // exclusions are not the same set: a name may be BOTH a superseded field and a declared
+        // method (`isStyled` the parameter, `styled` the field, `isStyled()` the method), and
+        // subtracting the parameter's own name would take the collidee with it.
+        val takenE = collection.mutable.Set.from(
+          cd.body.collect {
+            case d: Tree.DefDef if nm(d.symbol) != "<init>" => eff(d.symbol)
+            case c: Tree.ClassDef                           => eff(c.symbol)
+            case v: Tree.ValDef if !own(nm(v.symbol))       => eff(v.symbol)
+          } ++ parentSyms(cd).flatMap(declOf.get).flatMap(visibleNames(_)))
+        enumParams.foreach { v =>
+          val n = nm(v.symbol)
+          if takenE(n) then
+            var fresh = n + "$p"
+            while takenE(fresh) do fresh += "$"
+            takenE += fresh
+            renames(v.symbol) = fresh
+            note(out, Decision.Kind.RenamedMember, p, v.symbol,
+              Map(
+                "from"  -> n,
+                "to"    -> fresh,
+                "clash" -> "promoted-enum-ctor-scope",
+                "owner" -> p.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
+                "why"   -> ("a java enum's constructor parameter becomes a `var` member of the " +
+                  "emitted sealed class, where this name was already taken by a declared member; " +
+                  "java's parameter was not a member at all and its two namespaces let the " +
+                  "constant carry both"),
+              ),
+              MemberRenameRule)
+        }
+
       val plan = plans(cd)
       if plan.primary.isDefined then
         val taken = collection.mutable.Set.from(visibleNames(cd))

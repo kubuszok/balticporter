@@ -1248,7 +1248,31 @@ can today.
 
 **One error on anim8, the last one that port had.**
 
-*Fix kind: (a) engine. Built; `EnumCtorBodySpec`.*
+**THE OTHER HALF — a DECLARED collidee — needs no such pass, and is now closed.** The sentence above
+is about a SYNTHESISED collidee and does not carry over: liqp's `Flavor` takes a constructor
+parameter `isLiquidStyleInclude` and DECLARES `isLiquidStyleInclude()`, which is an ordinary member
+`funnelParamRenames` already reads. What blocked it was not visibility but the ROUTE — `enumDef`
+promotes the parameters itself, deliberately without consulting `CtorFunnel`, so `plans(cd)
+.primaryParams` is empty for an enum and the §4.55 pass saw nothing to place. So the pass grows an
+enum arm reading the same parameters `enumDef` does.
+
+**NARROW, unlike the plan-based arm beside it, and the difference is what the parameter IS.** A
+promoted funnel parameter is positional and invisible, so that arm renames every one; an enum
+parameter is EMITTED SURFACE — a public `var` — so a rename that is not forced would move the API of
+every enum in the corpus. Two names are therefore not collidees: the parameter's own, and a body
+FIELD it SUPERSEDES (`enumDef` drops a same-named `ValDef` because the `var` parameter IS that field,
+so renaming would un-supersede it, emit both, and break the self-assignment drop — libGDX's
+`TextureFilter(glEnum)`). The taken set is built from the PARTS rather than by subtracting from the
+visible names, because one name can be both (`isStyled` the parameter, `styled` the field,
+`isStyled()` the method) and subtracting the parameter's own name would take the collidee with it.
+
+**liqp 56 → 54**, 0 members moved on any other port. Note the residue it inherits rather than
+introduces: a promoted PARAMETER's rename decision is recorded in `decisions.tsv` and has no porter
+note in the emitted file, because a note is `AtDeclaration` and a constructor parameter has no
+declaration line — true of the plan-based arm's parameters (`templateParser$p`) since they shipped,
+and invisible to `porter-notes`, which does not resolve these subjects.
+
+*Fix kind: (a) engine. Built; `EnumCtorBodySpec`, both directions.*
 
 ### T12. Java `protected` is DROPPED, and accessibility is an input to OVERLOAD RESOLUTION — 1 error
 
