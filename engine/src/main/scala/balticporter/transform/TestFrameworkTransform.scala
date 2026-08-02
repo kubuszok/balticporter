@@ -214,7 +214,31 @@ final class TestFrameworkTransform(
     val symbols0 = SymbolTable(program.symbols.all ++ added)
     given Program = program.rebuilt(symbols = symbols0)
     survey(program)
-    val units = program.units.map(convert)
+    // TWO WALKS, and the split is the whole of what is gated on `@Test`.
+    //
+    // The ASSERTION rewrite runs over every unit: an assertion is an assertion wherever it is
+    // written, and a test HELPER declares no `@Test` — that is what makes it a helper — while
+    // being where a suite's assertions are most often centralised. Scoped to converted classes it
+    // never VISITED those calls, so they emitted as `org.junit.Assert.*` into a port whose whole
+    // point is to leave the JVM, and the phase's own counters said nothing because nothing was
+    // counted.
+    //
+    // It was scoped for a stated reason that no longer holds: rewriting program-wide once produced
+    // `Not found: assertTrue` in helper classes, because the members came from the suite's base
+    // class and a helper has none. Assertions have been emitted fully qualified to the
+    // `munit.Assertions` OBJECT since — see [[MunitAssertions]], which is the fix for exactly that
+    // failure — so there is no scope in which they do not resolve, and the gate was a leftover.
+    //
+    // Running it ONCE per unit rather than once per converted class also removes a double walk:
+    // `mapClassDef` descends into nested classes, so an outer suite re-walked its already-converted
+    // nested one. Idempotent for the rewrites, NOT for the findings — an unmapped member inside a
+    // nested suite was reported twice and the untranslated-construct headline over-counted.
+    val rewritten = program.units.map(u => StandardTraversal.mapClassDef(this, u))
+    // …and the CONVERSION — the `munit.FunSuite` parent, the `test(name){body}` registrations, the
+    // lifecycle inlining and the `beforeAll`/`afterAll` overrides — stays gated on the class
+    // declaring a `@Test`, because that is what a suite IS. A helper that gained the parent would
+    // register zero tests and claim to be one.
+    val units = rewritten.map(convert)
     // `convert` mints more (the lifecycle overrides), so the table is rebuilt AFTER the walk.
     val symbols = consumed.foldLeft(SymbolTable(program.symbols.all ++ added)) { (t, id) =>
       t.get(id) match
@@ -558,7 +582,12 @@ final class TestFrameworkTransform(
     sym.flatMap(p.symbolOf).map(_.fullName).filter(AssertClasses)
 
   /** A class is a SUITE when it declares at least one `@Test` member. Nested classes are converted
-    * too — libGDX nests helper suites — so the walk is explicit rather than top-level only. */
+    * too — libGDX nests helper suites — so the walk is explicit rather than top-level only.
+    *
+    * This gate covers the CONVERSION alone: the parent, the registrations, the lifecycle inlining.
+    * The assertion rewrite ran over the whole unit before this (see [[run]]), because a class with
+    * no `@Test` is a test HELPER, not a non-test — and a helper is where a suite's assertions are
+    * most often centralised. */
   private def convert(cd: Tree.ClassDef)(using p: Program): Tree.ClassDef =
     val nested = cd.body.map {
       case c: Tree.ClassDef => convert(c)
@@ -567,11 +596,9 @@ final class TestFrameworkTransform(
     val cd2 = cd.copy(body = nested)
     if !nested.exists(isAnnotated(_, TestAnn)) then cd2
     else
-      // Rewrite `Assert.assertX` to the façade member ONLY inside a class that becomes a suite —
-      // it is the base class that supplies those members. Rewriting program-wide (via a traversal
-      // in `run`) un-qualified the calls in helper classes that never gained the base class, and
-      // they failed with `Not found: assertTrue`.
-      val mapped = StandardTraversal.mapClassDef(this, cd2)
+      // NOTE there is no assertion walk here: it has already run over this whole unit (see `run`).
+      // What is left is the SUITE conversion, which is what `@Test` gates.
+      //
       // JUnit runs `@Before` before EVERY test, on a FRESH instance of the class. MUnit has
       // neither: one suite instance, and no such annotation — so the emitted `@Before def setUp`
       // was never called and `SortTest`'s `sortInstance` was null in all 19 of its tests. Nothing
@@ -581,7 +608,7 @@ final class TestFrameworkTransform(
       // wherever setup ASSIGNS the fields it needs, which is the shape `@Before` exists for. It
       // does NOT reproduce JUnit's fresh instance, so a field carrying state through its own
       // INITIALISER rather than through setup still leaks between tests — recorded, not hidden.
-      val setups = mapped.body.collect {
+      val setups = cd2.body.collect {
         case d: Tree.DefDef if isAnnotated(d, BeforeAnn) => d.symbol
       }
       // `@After` is the SAME defect on the release side, and it is the one that hides best: the
@@ -593,23 +620,23 @@ final class TestFrameworkTransform(
       // test would skip it and poison every later test in the suite. `try … finally` is the only
       // shape with java's semantics, and it nests in java's own order —
       // `try { setUp(); intercept[E]{ body } } finally { tearDown() }`.
-      val teardowns = mapped.body.collect {
+      val teardowns = cd2.body.collect {
         case d: Tree.DefDef if isAnnotated(d, AfterAnn) => d.symbol
       }
       // `@BeforeClass` / `@AfterClass` are JUnit's ONE-TIME hooks; MUnit spells them `beforeAll` /
       // `afterAll` on the suite. They are java `static`, so they emit into the companion object and
       // the override calls them through it (`Suite.setUpClass()`).
-      val classSetups = mapped.body.collect {
+      val classSetups = cd2.body.collect {
         case d: Tree.DefDef if isAnnotated(d, BeforeClassAnn) => d.symbol
       }
-      val classTeardowns = mapped.body.collect {
+      val classTeardowns = cd2.body.collect {
         case d: Tree.DefDef if isAnnotated(d, AfterClassAnn) => d.symbol
       }
       consumed ++= setups ++ teardowns ++ classSetups ++ classTeardowns
       // `@Ignore` on the CLASS disables every test it declares.
       val allIgnored = hasAnn(cd.symbol, IgnoreAnn)
       if allIgnored then consumed += cd.symbol
-      val body = mapped.body.flatMap {
+      val body = cd2.body.flatMap {
         case d: Tree.DefDef if isAnnotated(d, TestAnn) => List(testCase(d, setups, teardowns, allIgnored))
         case other                                     => List(other)
       }

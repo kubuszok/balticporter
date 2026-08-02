@@ -410,6 +410,54 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(!clue(out).contains("munit.Assertions.intercept"))
   }
 
+  // ------------------------------------------ the rewrite is not SUITE-scoped --
+
+  /** A test HELPER declares no `@Test` — that is what makes it a helper — and it is where a suite's
+    * assertions are most often centralised. Gating the `Assert` rewrite on the class declaring a
+    * `@Test` meant those calls were never even visited. */
+  private val helperSrc =
+    """package demo;
+      |import org.junit.Assert;
+      |public class TestUtils {
+      |  public static void check(int a) { Assert.assertEquals(1, a); }
+      |  public static void boom() { Assert.fail("nope"); }
+      |}
+      |""".stripMargin
+
+  test("a helper class with NO @Test still has its Assert calls rewritten") {
+    val (out, _) = emit(helperSrc)
+    assert(clue(out).contains("munit.Assertions.assertEquals(a, 1)"))
+    assert(out.contains("""munit.Assertions.fail("nope")"""))
+    assert(!out.contains("org.junit"))
+  }
+
+  test("…and it does NOT become a suite: only the CONVERSION stays gated on @Test") {
+    val (out, ph) = emit(helperSrc)
+    // the gate that had to survive: a helper is not a test class, so it must not gain the parent,
+    // and nothing in it may be registered as a test.
+    assert(!clue(out).contains("munit.FunSuite"))
+    assert(!out.contains("test(\""))
+    assertEquals(ph.findings.map(_.render), Nil)
+  }
+
+  test("a NESTED suite's assertions are rewritten exactly ONCE — one walk, one finding") {
+    // the walk used to run per converted class, so an outer suite re-walked its already-converted
+    // nested one. Idempotent for the rewrites, NOT for the findings: an unmapped member inside a
+    // nested suite was reported twice, and the "UNTRANSLATED constructs" headline over-counted.
+    val (_, ph) = emit(
+      """package demo;
+        |import org.junit.Assert;
+        |import org.junit.Test;
+        |public class OuterTest {
+        |  @Test public void o() { }
+        |  public static class InnerTest {
+        |    @Test public void i() { Assert.assertEquals("m", 1.0d, 2.0d, 3.0d, 4.0d); }
+        |  }
+        |}
+        |""".stripMargin)
+    assertEquals(ph.findings.count(_.construct == "org.junit.Assert.assertEquals"), 1)
+  }
+
   test("a java STATIC helper resolves — the 6 remaining errors, and why an object was chosen") {
     val (out, _) = emit(assertSrc)
     // `static` emits into the COMPANION object, which does not extend the suite: an assertion
