@@ -233,6 +233,22 @@ object PortConfig:
   ): PortManifest =
     val dir = file.getParent
     val m   = view.requireChild("manifest")
+    // WHERE THE BASES PUBLISHED — read BEFORE the surface entries, and ANCHORED, because a
+    // `{ transform = "port-map-migration" }` entry loads its maps at CONSTRUCTION time and a
+    // `TransformFactory` takes nothing but its own `ConfigView`. Anchoring publishes the port's own
+    // value through the one accessor both readers already take, exactly as `PortRun
+    // .anchorReportPaths` does for `reportPathRoot` (§4.6: a value that shapes what a run produces
+    // comes from the PORT, and the engine makes it reach every reader rather than asking each one to
+    // be handed it). Giving the factory a `reports = […]` key of its own would be a second home for
+    // one value, which is what §5.6 refuses.
+    //
+    // …and only for the conf being loaded as THIS RUN's own (`seen.isEmpty`). A base conf's
+    // `baseReports` says where the BASE's bases published, which is a fact about that module's build
+    // and none of this run's business — the same line §1.5 draws for `frontend` and `inject`.
+    val reports = view.strings("baseReports").getOrElse(Nil).map(resolvePath(dir, _))
+    if reports.nonEmpty && seen.isEmpty then
+      System.setProperty(balticporter.tir.DebugFlags.Prefix + "baseReports",
+                         reports.mkString(java.io.File.pathSeparator))
     val own = PortManifest(
       name           = m.requireString("name"),
       governs        = m.strings("governs").getOrElse(Nil).toSet,
@@ -248,6 +264,7 @@ object PortConfig:
       allowPackageSplit  = m.strings("allowPackageSplit").getOrElse(Nil).toSet,
       surface        = m.children("surface").getOrElse(Nil).map(surfaceEntry(registry)),
       inject         = m.strings("inject").getOrElse(Nil).map(resolvePath(dir, _)),
+      baseReports    = if seen.isEmpty then reports else Nil,
     )
     view.string("base") match
       case scala.None    => own

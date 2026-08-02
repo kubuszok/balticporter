@@ -577,8 +577,26 @@ object PortMap:
     * affected, because a map is looked up by the base MANIFEST's name and no test's run label
     * matches one. Give a module a name nothing else uses.
     */
-  def discover(reportRoot: Path, exclude: Set[String] = Set.empty): List[Published] =
-    discoverIn(reportRoot :: balticporter.tir.DebugFlags.baseReports, exclude)
+  def discover(reportRoot: Path, exclude: Set[String] = Set.empty,
+               configured: List[Path] = Nil): List[Published] =
+    discoverIn(reportRoot :: searchPath(configured), exclude)
+
+  /** THE EXTRA ROOTS, and WHOSE ANSWER THEY ARE.
+    *
+    * A base's map decides emitted text — the funnel's fixpoint, the class-vs-object question, §4.55's
+    * field names, the `export` lists — so WHICH maps a run discovers is part of that run's identity,
+    * not part of an operator's session. `balticporter.baseReports` alone made it the operator's: a
+    * leftover `debug.properties` entry adds a base, and two checkouts at the same commit then emit
+    * differently with every count identical. That is `reportPathRoot`'s lesson (§4.6) at an input
+    * that shapes the OUTPUT rather than a finding's id.
+    *
+    * So a port states it — `PortManifest.baseReports`, beside the `bases` it is about — and the flag
+    * is a FALLBACK, consulted only where nothing states one: `DebugEmit` and the other tools that
+    * have no port configuration at all, and §4.45's consumer before it has written a manifest. It is
+    * not merged with a declared value, deliberately: an extra root can only ADD a base, so merging
+    * would leave exactly the leftover-flag failure in place for every port that had stated its own. */
+  def searchPath(configured: List[Path]): List[Path] =
+    if configured.nonEmpty then configured else balticporter.tir.DebugFlags.baseReports
 
   /** …over SEVERAL roots, nearest first. THE ONE SEARCH PATH, and both readers take it: `PortRun`
     * builds the `Surface` from it and `PortMapTransform` resolves its own base through
@@ -606,12 +624,17 @@ object PortMap:
   /** the directory every port's report lives under — the parent of THIS run's own report dir, so a
     * consumer needs no configuration and no knowledge of any other port's layout.
     *
-    * `balticporter.baseReports` extends it (see [[discoverIn]]) for §4.45's consumer, which has no
+    * A port's own `baseReports` extends it (see [[searchPath]]) for §4.45's consumer, which has no
     * run tree of this shape at all. */
   def reportRoot: Path = CheckReport.dir.toAbsolutePath.normalize.getParent
 
   /** The map published by `module`, for a porting program constructing a
     * `balticporter.transform.PortMapTransform`. `scala.None` when the base has never been run or
-    * its map cannot be read — which the phase reports rather than silently treating as a no-op. */
-  def published(module: String): Option[Map0] =
-    discover(reportRoot).find(_.module == module).flatMap(_.map.toOption)
+    * its map cannot be read — which the phase reports rather than silently treating as a no-op.
+    *
+    * `configured` is this PORT's declared search path (`PortManifest.baseReports`), and it must be
+    * the same value `PortRun` hands [[discover]]: both readers take one function for D6.5's reason —
+    * two loads of one artifact answering differently is the failure the base-surface view exists to
+    * remove. */
+  def published(module: String, configured: List[Path] = Nil): Option[Map0] =
+    discover(reportRoot, configured = configured).find(_.module == module).flatMap(_.map.toOption)

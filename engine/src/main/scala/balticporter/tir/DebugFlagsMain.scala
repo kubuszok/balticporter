@@ -82,7 +82,15 @@ object DebugFlagsMain:
         // A key nothing reads is a flag that does nothing, and the run it was meant for looks
         // entirely normal — the failure `just debug-flags` is called about, one spelling earlier.
         val unknown = if DebugFlags.known.contains(r.key) then "" else "   !! UNKNOWN KEY — nothing reads it"
-        sb.append(s"  ${r.key.padTo(w, ' ')} = ${r.value}   [${r.source}]$shadow$unknown\n")
+        // …and the other thing an operator cannot see: a flag whose effect is on EMITTED TEXT and
+        // which a PORT is supposed to state. Left set here it changes what every later run in this
+        // checkout writes, with no count moving (§4.6).
+        val fallback =
+          if DebugFlags.PortSupplied.contains(r.key)
+          then "   (FALLBACK — a port states this in its own configuration and IGNORES this flag; " +
+            "set here only for a tool that has no port)"
+          else ""
+        sb.append(s"  ${r.key.padTo(w, ' ')} = ${r.value}   [${r.source}]$shadow$unknown$fallback\n")
       }
 
     // The failure this exists to make visible: a hand-written entry that no accessor will ever

@@ -1630,7 +1630,13 @@ final case class PortRun(
     if chain.isEmpty then Nil
     else
       val mine  = Set(label) ++ manifest.map(_.name)
-      val found = PortMap.discover(PortMap.reportRoot, exclude = mine).map(p => p.module -> p).toMap
+      // THE PORT'S OWN SEARCH PATH, not the operator's. `PortMapTransform` reads its maps at
+      // CONSTRUCTION time from this same value (`PortMap.searchPath`), and two loads of one artifact
+      // answering differently is D6.5's failure shape — which is why the manifest holds it and a
+      // flag does not.
+      val found = PortMap.discover(PortMap.reportRoot, exclude = mine,
+                                   configured = manifest.map(_.baseReports).getOrElse(Nil))
+        .map(p => p.module -> p).toMap
       // the same roots `partitionUnits` and `sharedSurface` spell through §5.4's helper, spelled the
       // same way. These reach `PortMap.freshness`, which only probes them for existence today — so
       // this is a spelling inconsistency and not yet a bug, and it is fixed for that reason: the

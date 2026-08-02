@@ -302,8 +302,14 @@ object PortMapTransform:
     * [[PortMapTransform.surfaceFingerprint]] depend on what is on disk. That is intended: two
     * modules built against two different revisions of a base really do disagree about the surface,
     * and `ManifestAgreement` should say so. */
-  def forBases(modules: String*): PortMapTransform =
-    new PortMapTransform(modules.toList.flatMap(PortMap.published))
+  def forBases(modules: String*): PortMapTransform = forBasesIn(Nil, modules*)
+
+  /** …with the port's own search path for the bases' report trees — `PortManifest.baseReports`, the
+    * value `PortRun` also hands `PortMap.discover`, because both readers must take the same one
+    * (D6.5). Pass `Nil` inside a checkout whose ports all publish under one `port-report/`; §4.45's
+    * consumer, whose base was run somewhere else entirely, passes where. */
+  def forBasesIn(reports: List[java.nio.file.Path], modules: String*): PortMapTransform =
+    new PortMapTransform(modules.toList.flatMap(PortMap.published(_, reports)))
 
   enum Issue:
     /** a call to a member the base's map records as `Dropped`. */

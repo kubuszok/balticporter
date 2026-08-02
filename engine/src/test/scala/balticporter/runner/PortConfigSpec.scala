@@ -283,6 +283,46 @@ class PortConfigSpec extends munit.FunSuite:
     assertEquals(PortConfig.load(f).manifest.get.baseChain.map(_.name), List("base"))
   }
 
+  test("`baseReports` is the PORT's, resolved against the conf and reaching BOTH readers") {
+    // Which base maps a run discovers decides EMITTED TEXT (the constructor plan, the class-vs-object
+    // question, §4.55's field names, the `export` lists), so it belongs to the port and not to an
+    // operator's `debug.properties` — §4.6's `reportPathRoot` lesson at an input that shapes output.
+    val prev = Option(System.getProperty("balticporter.baseReports"))
+    try
+      System.clearProperty("balticporter.baseReports")
+      val base =
+        """label = "base"
+          |input  { sourceRoot = "java" }
+          |output { portRoot = "out", sourceSet = "main" }
+          |baseReports = ["not-this-one"]
+          |manifest { name = "base" }
+          |""".stripMargin
+      val f = fixture(
+        """label = "dep"
+          |base  = "base.conf"
+          |baseReports = ["published", "elsewhere"]
+          |input  { sourceRoot = "java" }
+          |output { portRoot = "out", sourceSet = "test" }
+          |manifest { name = "dep" }
+          |""".stripMargin, Map("base.conf" -> base))
+      val m = PortConfig.load(f).manifest.get
+      // resolved against THE CONF FILE, like every other path a conf holds
+      assertEquals(m.baseReports.map(_.getFileName.toString), List("published", "elsewhere"))
+      assert(m.baseReports.forall(_.isAbsolute), m.baseReports.toString)
+      // …and NOT inherited: a base's own `baseReports` says where ITS bases published, which is a
+      // fact about that module's build and none of this run's business (§1.5's must-differ column).
+      assertEquals(m.baseChain.map(_.baseReports), List(Nil))
+      // …and ANCHORED, so a `{ transform = "port-map-migration" }` entry — which loads its maps at
+      // CONSTRUCTION time, through a factory that takes nothing but its own view — reads the same
+      // value `PortRun` will. One value, both readers (D6.5).
+      assertEquals(balticporter.tir.DebugFlags.baseReports.map(_.getFileName.toString),
+                   List("published", "elsewhere"))
+    finally
+      prev match
+        case Some(v) => System.setProperty("balticporter.baseReports", v)
+        case None    => System.clearProperty("balticporter.baseReports")
+  }
+
   // -------------------------------------------------------------------------------------------
   test("`type-redirect` reads BOTH entry shapes out of one map, and the flat one is unchanged") {
     // The flat form is published — every port that writes it must keep working — so the entry that

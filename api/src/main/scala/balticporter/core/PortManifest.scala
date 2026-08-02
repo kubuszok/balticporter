@@ -111,6 +111,22 @@ final case class PortManifest(
     inject: List[Path] = Nil,
     /** the modules this one is a dependent OF, nearest last. */
     bases: List[PortManifest] = Nil,
+    /** WHERE THOSE BASES PUBLISHED. Extra directories to look for a base module's `port-map.tsv`
+      * under, nearest first; the run's own report tree is always searched first and cannot be
+      * shadowed.
+      *
+      * NOT inherited, and it sits here rather than in a flag for the reason CLAUDE.md §4.6 gives for
+      * `reportPathRoot`: a base's map decides EMITTED TEXT (the constructor plan, the class-vs-object
+      * question, §4.55's field names, the `export` lists), so which maps a run discovers is part of
+      * that run's identity. Left to `balticporter.baseReports`, it was the operator's — a leftover
+      * `debug.properties` entry adds a base, and two checkouts at the same commit emit differently
+      * with every count identical. The flag survives as the fallback for a tool with no port
+      * configuration at all (`DebugEmit`), and `PortMap.searchPath` is the one place the two meet.
+      *
+      * Empty is the ordinary case and the whole of this repository: every port here publishes under
+      * one `port-report/`, which `PortMap.reportRoot` already finds. §4.45's consumer, whose base was
+      * run in another repository, is the caller this exists for. */
+    baseReports: List[Path] = Nil,
     /** Does this manifest INHERIT its [[bases]]' policy, or merely declare that it must AGREE
       * with them?
       *

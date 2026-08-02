@@ -2195,7 +2195,20 @@ that name. A row published to remove a blind spot would have created one, at the
 **The base's map is discovered over a SEARCH PATH, not one root.** `PortMap.reportRoot` is the
 parent of THIS run's report directory, which is exactly right inside this repository and useless to
 §4.45's consumer: an agent in another repository has no tree of that shape, and its base's map comes
-from wherever that base was run. `balticporter.baseReports` prepends extra roots, and BOTH readers
+from wherever that base was run. **`PortManifest.baseReports` is where a port states it**, beside the
+`bases` it is about — not `balticporter.baseReports`, which survives as the fallback for a tool with
+no port configuration (`DebugEmit`) and is IGNORED wherever a port has stated one. The reason is
+§4.6's `reportPathRoot` lesson at an input that shapes the OUTPUT: a base's map decides the
+constructor plan, the class-vs-object question, §4.55's field names and the `export` lists, so which
+maps a run discovers is part of that run's identity, and left to a flag a leftover `debug.properties`
+entry makes two checkouts at the same commit emit differently with every count identical.
+`PortMap.searchPath` CHOOSES between the two rather than merging them — an extra root can only ADD a
+base, so merging would leave that failure in place for every port that had stated its own. The
+`.conf` spelling is a top-level `baseReports = […]` beside `base`, and `PortConfig` anchors it before
+building the `surface` entries, because a `{ transform = "port-map-migration" }` entry loads its maps
+at CONSTRUCTION time and a `TransformFactory` takes nothing but its own `ConfigView` — the same
+publish-through-the-one-accessor move `PortRun.anchorReportPaths` makes, and the alternative (a
+`reports = […]` key on the factory) would be a second home for one value. BOTH readers
 take the same function (`PortMap.discoverIn`) — `PortRun` builds the `Surface` from it and
 `PortMapTransform` resolves its own base through `published` — because two loads of one artifact
 answering differently is D6.5's failure shape and this view exists to remove it. An extra root can

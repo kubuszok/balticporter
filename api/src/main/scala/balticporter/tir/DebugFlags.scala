@@ -149,6 +149,16 @@ object DebugFlags:
     "report", "reportDir", "reportPathRoot", "baseReports",
   ).map(Prefix + _)
 
+  /** Keys a PORT normally supplies from its own configuration, for which this flag is only the
+    * fallback — for a tool that has no port configuration at all (`DebugEmit`, `CorrelateMain`) and
+    * for §4.45's consumer before it has written a manifest.
+    *
+    * `just debug-flags` marks them, and the marking is the point: these are the flags whose effect is
+    * on EMITTED TEXT rather than on a diagnostic, so a leftover entry is a checkout that emits
+    * differently at the same commit with every count identical (§4.6's `reportPathRoot` lesson). An
+    * operator seeing one set here should be asking whether the port ought to be stating it instead. */
+  val PortSupplied: Set[String] = Set(Prefix + "baseReports")
+
   /** raw lookup: system property wins, then marker files (debug over run). */
   def get(key: String): Option[String] =
     val full = if key.startsWith(Prefix) then key else Prefix + key
@@ -164,13 +174,22 @@ object DebugFlags:
   def path(key: String): Option[Path] =
     get(key).map(v => root.resolve(v).normalize)
 
-  /** EXTRA directories to look for a base module's published port map in, in order.
+  /** EXTRA directories to look for a base module's published port map in, in order — THE FALLBACK
+    * ONLY (see [[PortSupplied]]).
     *
     * §4.45's consumer is an agent in ANOTHER REPOSITORY, pointing a published Baltic Porter at its
     * own Java. It has no `port-report/` tree of this checkout's shape — its base's map arrives from
     * wherever that base's port was run, or unpacked from an artifact — so the default search root
     * (the parent of THIS run's report directory) finds nothing and every base-surface question
     * degrades to `Unknown` with no way to say otherwise.
+    *
+    * '''A PORT states this itself''' (`PortManifest.baseReports`), and where it does, this flag is
+    * not consulted at all: a base's map decides EMITTED TEXT, so which maps a run discovers belongs
+    * to the run's identity and not to an operator's session — left here, a leftover entry makes two
+    * checkouts at the same commit emit differently with every count identical, which is exactly
+    * `reportPathRoot`'s lesson one input further in. `PortMap.searchPath` is the one place the two
+    * meet, and it CHOOSES rather than merges: merging would leave that failure in place for every
+    * port that had stated its own.
     *
     * Separated by the platform path separator, so a value is pasteable from a classpath. Relative
     * entries resolve against [[root]], as every other path flag does. Empty is the ordinary case and

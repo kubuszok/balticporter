@@ -56,6 +56,20 @@ class DebugFlagsMainSpec extends munit.FunSuite:
     assert(!ok.contains("UNKNOWN KEY"), ok)
   }
 
+  test("a flag a PORT is supposed to supply is marked as the FALLBACK it is") {
+    // The one thing an operator cannot see otherwise: `baseReports` changes what a run EMITS (it
+    // decides which base contracts are found), so a leftover entry makes this checkout emit
+    // differently at the same commit with every count identical — §4.6's `reportPathRoot` lesson.
+    val out = DebugFlagsMain.render(root("debug.properties" -> "balticporter.baseReports=/tmp/x"),
+                                    Map.empty, scala.None)
+    assert(out.contains("(FALLBACK"), out)
+    assert(out.contains("a port states this in its own configuration"), out)
+    // …and an ordinary diagnostic flag is not marked, or the marking says nothing
+    val plain = DebugFlagsMain.render(root("debug.properties" -> "balticporter.skipPhases=*"),
+                                      Map.empty, scala.None)
+    assert(!plain.contains("(FALLBACK"), plain)
+  }
+
   test("the forked-JVM caveat is always printed — it is the answer as often as the table is") {
     val out = DebugFlagsMain.render(root(), Map.empty, scala.None)
     assert(out.contains("FORKED from the sbt server"), out)

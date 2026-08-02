@@ -3,7 +3,7 @@ package balticporter.core
 import balticporter.core.PortMap.Disposition
 import balticporter.tir.SrcMap
 
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 
 class PortMapSpec extends munit.FunSuite:
 
@@ -51,11 +51,34 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(PortMap.discoverIn(List(here.resolve("nope")), Set.empty), Nil)
   }
 
-  test("`balticporter.baseReports` is the flag that extends it, and it is one an accessor READS") {
+  test("the search path comes from the PORT; the flag is the fallback, and it is CHOSEN not merged") {
+    // A base's map decides emitted text, so which maps a run discovers is part of the run's identity
+    // (§4.6's `reportPathRoot` lesson at an input that shapes the OUTPUT). Left to the flag alone, a
+    // leftover `debug.properties` entry adds a base and two checkouts at the same commit emit
+    // differently with every count identical — so a port that states its own IGNORES the flag.
+    // Merging would leave exactly that failure in place for every port that had stated one.
+    val prev = Option(System.getProperty("balticporter.baseReports"))
+    try
+      System.setProperty("balticporter.baseReports", "from-the-operator")
+      assertEquals(PortMap.searchPath(Nil).map(_.getFileName.toString), List("from-the-operator"))
+      assertEquals(PortMap.searchPath(List(Path.of("from-the-port"))).map(_.getFileName.toString),
+                   List("from-the-port"))
+    finally
+      prev match
+        case Some(v) => System.setProperty("balticporter.baseReports", v)
+        case None    => System.clearProperty("balticporter.baseReports")
+    // …and with neither, the run's own report root is the whole search path
+    assertEquals(PortMap.searchPath(Nil), Nil)
+  }
+
+  test("`balticporter.baseReports` is the fallback flag, and it is one an accessor READS") {
     val prev = Option(System.getProperty("balticporter.baseReports"))
     try
       System.setProperty("balticporter.baseReports", List("a", "b").mkString(java.io.File.pathSeparator))
       assertEquals(balticporter.tir.DebugFlags.baseReports.map(_.getFileName.toString), List("a", "b"))
+      // …and it is marked as the FALLBACK, because its effect is on EMITTED TEXT and a port is
+      // supposed to state it — an operator has no other way to see that.
+      assert(balticporter.tir.DebugFlags.PortSupplied.contains("balticporter.baseReports"))
       // …and it is in `known`, so `just debug-flags` cannot mark it as a key nothing will look up —
       // which is the one thing an operator cannot see any other way (§4.6).
       assert(balticporter.tir.DebugFlags.known.contains("balticporter.baseReports"))

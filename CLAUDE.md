@@ -807,13 +807,20 @@ the question "is this phase even responsible" costs one run and no diff:
 | `balticporter.dumpOnly=<fqn>` | narrow either dump to one type |
 | `balticporter.tracePhases` | announce each phase as it runs |
 | `balticporter.traceNode=<Kind>` | `TirTrace.mint` prints constructing frames for a node kind — no node gains a field |
-| `balticporter.baseReports=<p1:p2>` | EXTRA directories to look for a base module's published `port-map.tsv` in |
+| `balticporter.baseReports=<p1:p2>` | FALLBACK ONLY — extra directories to look for a base module's published `port-map.tsv` in |
 
-`baseReports` is the one flag on that list an ordinary CONSUMER needs rather than a debugger: §4.45's
-agent has no `port-report/` tree of this repository's shape, so its base's map arrives from wherever
-that base was run. It EXTENDS the default root and never shadows it — first wins per module — and
-both readers take the one search path (`PortMap.discoverIn`), because two discoveries of one artifact
-answering differently is the failure the base-surface view exists to remove.
+`baseReports` is the one entry on that list that is not a debugger's: §4.45's agent has no
+`port-report/` tree of this repository's shape, so its base's map arrives from wherever that base was
+run. **It belongs to the PORT** (`PortManifest.baseReports`, beside the `bases` it is about; `baseReports = […]`
+in a `.conf`), and where a port states one this flag is not consulted at all — a base's map decides
+EMITTED TEXT, so which maps a run discovers is part of that run's identity and a leftover
+`debug.properties` entry would make two checkouts at the same commit emit differently with every
+count identical. `PortMap.searchPath` is the one place the two meet and it CHOOSES rather than
+merges, because merging leaves that failure in place for every port that stated its own; `just
+debug-flags` marks the flag as the fallback it is. Whatever the source, it EXTENDS the run's own
+report root and never shadows it — first wins per module — and both readers take the one search path
+(`PortMap.discoverIn`), because two discoveries of one artifact answering differently is the failure
+the base-surface view exists to remove.
 
 Resolution order, in INCREASING precedence, is **`<root>/.balticporter/run.properties`
 (script-written) → `<root>/.balticporter/debug.properties` (hand-written, beats run.properties) → a
