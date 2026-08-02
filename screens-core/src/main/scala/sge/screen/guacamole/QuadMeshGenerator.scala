@@ -17,17 +17,24 @@ package sge.screen.guacamole
   *
   * `flipY` selects which of the two v coordinates is 1: a framebuffer texture is stored
   * bottom-up, so a transition sampling one without the flip renders every screen upside down.
+  *
+  * ==Why all three take `(using sge.Sge)`==
+  * `sge.graphics.Mesh` is one of the classes the base port threads (DESIGN.md §8.4), so
+  * constructing one takes the context. This is hand-written `src/` Scala the frontend never sees,
+  * so the clause is added here by hand and carried down the three-deep delegation. The one caller,
+  * `ShaderTransition.resize`, is an instance method of a threaded class, so the context is already
+  * in scope there.
   */
 object QuadMeshGenerator:
 
-  def createFullScreenQuad(screenWidth: Int, screenHeight: Int, flipY: Boolean): sge.graphics.Mesh =
+  def createFullScreenQuad(screenWidth: Int, screenHeight: Int, flipY: Boolean)(using sge.Sge): sge.graphics.Mesh =
     createQuad(0, 0, screenWidth.toFloat, screenHeight.toFloat, flipY)
 
-  def createQuad(x: Float, y: Float, width: Float, height: Float, flipY: Boolean): sge.graphics.Mesh =
+  def createQuad(x: Float, y: Float, width: Float, height: Float, flipY: Boolean)(using sge.Sge): sge.graphics.Mesh =
     createQuadFromCoordinates(x, y, x + width, y + height, flipY)
 
   /** Coordinate system: y-up. `(x1, y1)` is bottom-left, `(x2, y2)` top-right. */
-  def createQuadFromCoordinates(x1: Float, y1: Float, x2: Float, y2: Float, flipY: Boolean): sge.graphics.Mesh =
+  def createQuadFromCoordinates(x1: Float, y1: Float, x2: Float, y2: Float, flipY: Boolean)(using sge.Sge): sge.graphics.Mesh =
     val verts = Array[Float](
       // bottom left
       x1, y1, 0, 0, if flipY then 0 else 1,

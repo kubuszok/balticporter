@@ -281,8 +281,15 @@ gdx-test-measure:
     break_residue {{gdx_module}}/src_managed/test/scala
 
     echo "-- compile --"
+    # `{{gdx_module}}/src/test/scala` is the HAND-WRITTEN half of this port's test source set, and it
+    # is on the line for the same reason `screens-core/src` and `vfx-core/src` are on theirs: an
+    # emitted suite the globals policy marks `selfSupplied` gets `private given sge.Sge =
+    # sge.SgeTestFixture.testSge()`, and the fixture is a `src/` file a human may write where the
+    # generated one is not (CLAUDE.md §5.5, `ENGINE-LIMITS.md` CT7). Leaving it off compiles the
+    # emitted suite against a fixture that is not there — one error, and it is the port's own.
     scala-cli compile --scala {{scala_version}} --server=false {{gdx_deps}} \
-      {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestmeasure.txt
+      {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
+      {{gdx_module}}/src/test/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gdxtestmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxtestmeasure.txt
@@ -300,7 +307,8 @@ gdx-test-measure:
       echo "-- run --"
       scala-cli test --scala {{scala_version}} --server=false {{gdx_run_deps}} \
         -Duser.language=en -Duser.country=US \
-        {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala 2>&1 |
+        {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
+        {{gdx_module}}/src/test/scala 2>&1 |
         sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestrun.txt
       reconcile_outcomes "$MEASURE_TMP"/gdxtestrun.txt "$MUNIT_TESTS"
 
@@ -686,9 +694,15 @@ screens-measure:
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
     DEPS="{{screens_deps}}"
+    # `{{gdx_module}}/src/test/scala` is the BASE port's hand-written test fixture (`sge.SgeTestFixture`).
+    # It is on this line because the base retires `Gdx` into a threaded context and this port's
+    # hand-written suite has to construct one — the same fixture the base's own `selfSupplied` suite
+    # is given, rather than a third copy of it in every dependent (CLAUDE.md §1.5's spirit, one
+    # artifact down: a value the dependent imports, never policy it repeats).
     scala-cli compile --scala {{scala_version}} --server=false $DEPS \
       {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala \
       {{screens_module}}/src/main/scala {{screens_module}}/src/test/scala \
+      {{gdx_module}}/src/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/screensmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/screensmeasure.txt)
@@ -704,6 +718,7 @@ screens-measure:
       scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala \
         {{screens_module}}/src/main/scala {{screens_module}}/src/test/scala \
+        {{gdx_module}}/src/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/screensrun.txt
       reconcile_outcomes "$MEASURE_TMP"/screensrun.txt "$HAND_TESTS"
       echo
@@ -780,8 +795,12 @@ vfx-measure:
 
     echo "-- compile --"
     DEPS="{{vfx_deps}}"
+    # `{{gdx_module}}/src/test/scala` is the BASE port's hand-written test fixture
+    # (`sge.SgeTestFixture`), on this line for the reason `screens-measure` states: the base retires
+    # `Gdx` into a threaded context and this port's hand-written suite has to construct one.
     scala-cli compile --scala {{scala_version}} --server=false $DEPS \
       {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala {{vfx_module}}/src/test/scala \
+      {{gdx_module}}/src/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/vfxmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/vfxmeasure.txt)
@@ -796,6 +815,7 @@ vfx-measure:
       echo "-- run --"
       scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala {{vfx_module}}/src/test/scala \
+        {{gdx_module}}/src/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/vfxrun.txt
       reconcile_outcomes "$MEASURE_TMP"/vfxrun.txt "$HAND_TESTS"
       echo

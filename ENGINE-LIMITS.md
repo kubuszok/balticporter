@@ -3750,11 +3750,21 @@ So the engine is missing two things, and they are separable:
   which is precisely the **ambient default given DESIGN.md §8.4 deleted**, and which would silently
   paper over every seam in the program rather than this one.
 
-**The hand-written half of a port is NOT affected, and the contrast is the diagnosis.** Three ports
-carry hand-written MUnit suites that construct threaded types (screens' `ScreenmanagerSuite`, vfx's
-`VfxFrameBufferSuite`), and every one of them can be fixed by the port with the fixture sge wrote —
+**The hand-written half of a port is FIXABLE, and the contrast is the diagnosis.** Three ports carry
+hand-written MUnit suites that construct threaded types (screens' `ScreenmanagerSuite`, vfx's
+`VfxFrameBufferSuite`), and every one of them can be repaired by the port with the fixture sge wrote —
 it is a `src/` file, so a human may add a `given` to it. The only unfixable case is the suite the
 ENGINE emitted. A port can supply the value; it cannot supply the line.
+
+**"Fixable" is not "unaffected", and the delivery measured the difference: eight hand-written files
+across three modules** (PROGRESS §11.12) — an injected context type, an absent-service test fixture,
+four shims and two suites. A hand-written shim is outside the closure, so nothing threads it and
+every one of them breaks the moment the shared surface moves — and WHICH repair each takes is READ OFF
+ITS GENERATED CALLER rather than chosen. Two shims in one directory took opposite answers:
+`NestableFrameBuffer`'s caller is an instance method of a threaded class, so it takes the clause;
+`GLUtils`' caller is a generated declaration the closure did NOT thread, so it may not, and its honest
+answer is the residual global. A clause on the second would have emitted a port that does not compile,
+from the file that looks most like the one that should have it. The rule is now `CLAUDE.md` §1(b).
 
 **CLOSED, and both halves shipped together because either alone is worse than neither.**
 `ContextHolder.selfSupplied` is a `Map[type FQN, Scala expression]`: the named type takes the context

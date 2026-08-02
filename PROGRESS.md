@@ -223,7 +223,7 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 | gate | `libgdx-core` | `libgdx-test` |
 |---|---|---|
 | compile errors (scala-cli, Scala 3.8.4) | **0** | **0** |
-| files emitted | **598** (11 dropped, 6 injected) | **29** |
+| files emitted | **598** (12 dropped, 7 injected) | **29** |
 | model | 605 units / 52,453 symbols | 634 units / 53,612 symbols |
 | signature consistency | 0 | 0 |
 | omissions | **65** | 3 |
@@ -232,12 +232,13 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 | substitutions (emitted / dangling) | 0 / 0 | 0 / 0 |
 | manifest agreement · port map · policy | 0 · 0 · 0 | 0 · 0 · 0 |
 | collection closure / boundary | **2** / 0 | 0 / 0 |
+| context seams (boundary + warning) | **44** = 19 + 25 (§11.12) | **1** × `self-supplied` |
 | trivia lost / recovered / deliberate | **0** / 4 / 12 | **0** / 0 / 0 |
 | porter notes uncovered | **0** | **0** |
 | break residue (untranslated jumps) | **0** | **0** |
 | source map | 594 units / 19,288 members | 623 units / 19,547 members |
 | members changed vs baseline | **0** | **0** — the 2,570 + 23 that moved in D3's designed re-baseline are accounted below |
-| decisions recorded | **2,278** | **279** (961 withheld as the base's) |
+| decisions recorded | **3,893** | **284** (the base's withheld — D2) |
 | **tests** | — | **221 emitted, 217 passing, 4 failing** |
 
 All 4 failures are `expected#derived`, 0 declared: every one is a `sge.utils.JsonTest` case whose stack
@@ -252,9 +253,12 @@ naming the swap point — chosen over returning null/empty, which would corrupt 
 statically-derived codecs is viable; ONE site (`readValue("resource", null, …)`) is class-tag
 driven and needs explicit handling.
 
-`decisions.tsv` by kind, `libgdx-core`: 816 `RenamedMember`, 605 `RenamedPackage`, 335
-`RetypedSignature`, 292 `FunnelledCtor`, **142 `WidenedVisibility`**, 30 `DroppedSuperCall`, 21
-`RedirectedCall`, 16 `DroppedMember`, 11 `DroppedType`, 10 `InjectedMember` — 2,278 rows.
+`decisions.tsv` by kind, `libgdx-core`: 1,258 `RenamedMember`, 1,246 `RetypedSignature`, 606
+`RenamedPackage`, 337 `WidenedVisibility`, 292 `FunnelledCtor`, 53 `ScopedOut`, 30
+`DroppedSuperCall`, 25 `DroppedMember`, 21 `RedirectedCall`, 12 `DroppedType`, 11 `InjectedMember`,
+**2 `DeferredInit`** — 3,893 rows. 286 of them are the globals policy's (§11.12): 275
+`RetypedSignature` — 188 classes and 87 methods, across 177 java files — 9 `DroppedMember` for the
+holder statics that lost their last reader, and the 2 `DeferredInit`.
 
 #### The visibility mapping (D3) — what shipped, and the residue by cause
 
@@ -1085,10 +1089,11 @@ reading as agreement is precisely the silent success `java_test_count` exists to
 | portability (all / emitted / injected) | 263 / **112** / 0 |
 | substitutions · manifest · port map · policy | 0 · 0 · 0 · 0 |
 | collection closure · boundary · shared-iterator | 0 · 0 · 0 |
+| context seams | **5**, every one an `unconstructed-thread` WARNING — anim8's five PNG writers, whose users construct them (§11.12) |
 | trivia lost / recovered / deliberate | **0** / 0 / 0 |
 | porter notes uncovered · break residue | 0 · **0** |
 | source map | 16 units / 568 members |
-| decisions recorded | 632 rows, **251** about anim8's own declarations (235 `RetypedSignature`, 16 `RenamedPackage`); the other 381 are the base's, which `ENGINE-LIMITS.md` D2 says should not be republished here |
+| decisions recorded | 705 rows about anim8's own declarations (623 `RetypedSignature`, 16 `RenamedPackage`); the base's are withheld, which `ENGINE-LIMITS.md` D2 says is where they belong |
 | **tests** | **23 of 23 PASSING** (4 files, hand-written) |
 
 **Error trajectory: 1383 → 49 → 1 → 0**, every step an engine §1(a) fix (§7.3). **`break residue` is
@@ -1265,10 +1270,11 @@ prints the two numbers SEPARATELY — a ported test and a written one are differ
 | portability (all / emitted / injected) | 151 / **0** / **0** | 151 / 0 / 0 |
 | substitutions · manifest · port map · policy | 0 · 0 · **0** · 0 | 0 · 0 · 0 · 0 |
 | collection closure · boundary · shared-iterator | 0 · 0 · 0 | 0 · 0 · 0 |
+| context seams | **7**, every one an `unconstructed-thread` WARNING (§11.12) | 0 |
 | trivia lost / recovered / deliberate | **0** / 4 / 0 | **0** / 0 / 0 |
 | porter notes uncovered · break residue | 0 · **0** | 0 · 0 |
 | source map | 135 units / 1,523 members | 1 / 9 |
-| decisions recorded | 1,763 rows, **548** about gdx-gltf's own declarations; 1,215 withheld as the base's (D2) | 44, 2,937 withheld |
+| decisions recorded | 2,065 rows about gdx-gltf's own declarations (1,767 `RetypedSignature`); the base's withheld (D2) | 47 |
 | **tests** | 8 ported + 22 hand-written = **30, NONE RUN** — the port does not compile (§8.4) | |
 
 **Error trajectory: 19 → 16 → 14 → 9 → 8 → 7**, on 135 files at the first attempt. `break residue` is
@@ -1465,16 +1471,17 @@ application, and no libGDX backend is ported (§1.1's first surprise). `src/test
 |---|---|
 | compile errors (with libGDX core, Scala 3.8.4) | **0** |
 | files emitted | **22** (0 dropped, 0 injected) |
-| hand-written support sources (`src/main/scala`) | **9 files, 458 lines** — the guacamole replacements |
+| hand-written support sources (`src/main/scala`) | **9 files, 503 lines** — the guacamole replacements; four of them carry the context the base threads (§11.12) |
 | model | 627 units / 52,867 symbols |
 | signature consistency · omissions | 0 · **0** |
 | portability (all / emitted / injected) | 151 / **0** / 0 |
 | substitutions (emitted / dangling) · manifest · port map · policy · remediation | 0 · 0 · 0 · 0 · 0 · 0 |
 | collection closure · boundary · shared-iterator | 0 · 0 · 0 |
+| context seams | **10**, every one an `unconstructed-thread` WARNING — the ten transitions, whose users construct them (§11.12) |
 | trivia lost / recovered / deliberate | **0** / 1 / 0 |
 | porter notes uncovered · break residue | 0 · **0** |
 | source map | 22 units / 175 members; port map 37 types / 169 members |
-| decisions recorded | 139 rows (`RenamedMember` 45, `RetypedSignature` 34, `RenamedPackage` 22, `DroppedMember` 16, `DroppedType` 11, `FunnelledCtor` 11); 1,810 withheld as the base's (`ENGINE-LIMITS` D2) |
+| decisions recorded | 186 rows (`RetypedSignature` 70, `RenamedMember` 52, `RenamedPackage` 22, `DroppedMember` 16, `DroppedType` 12, `FunnelledCtor` 11, `ScopedOut` 3); the base's withheld (`ENGINE-LIMITS` D2) |
 | **tests** | **16 of 16 PASSING** (hand-written; upstream's 12 are §9.4) |
 
 **`omissions` and `portability(emitted)` are both 0**, which no other dependent port has managed —
@@ -1694,10 +1701,11 @@ silent success `java_test_count` exists to prevent.
 | portability (all / emitted / injected) | 151 / **0** / 0 |
 | substitutions · manifest · port map · policy | 0 · 0 · 0 · 0 |
 | collection closure · boundary · shared-iterator | 0 · 0 · 0 |
+| context seams | **20** — 16 `unconstructed-thread` WARNINGS, 3 `residual-global-read` and 1 `deferred-init` (§11.12) |
 | trivia lost / recovered / deliberate | **0** / 2 / 0 |
 | porter notes uncovered · break residue | 0 · **0** |
 | source map | 44 units / 910 members |
-| decisions recorded | 350 rows about gdx-vfx's own declarations (216 `RetypedSignature`, 46 `RenamedMember`, 44 `RenamedPackage`, 16 `DroppedMember`, 15 `FunnelledCtor`, 11 `DroppedType`, 1 `RedirectedCall`, 1 `SubstitutedBody`); 1,216 withheld as the base's, per `ENGINE-LIMITS.md` D2 |
+| decisions recorded | 415 rows about gdx-vfx's own declarations (261 `RetypedSignature`, 57 `RenamedMember`, 44 `RenamedPackage`, 16 `DroppedMember`, 15 `FunnelledCtor`, 12 `DroppedType`, 4 `WidenedVisibility`, 2 `SubstitutedBody`, 2 `ScopedOut`, 1 `RedirectedCall`, **1 `DeferredInit`**); the base's withheld, per `ENGINE-LIMITS.md` D2 |
 | **tests** | **64 of 64 PASSING** (6 files, hand-written) |
 
 **Error trajectory: 11 → 10 → 7 → 6 → 5 → 4 → 1 → 0.** One §1(b) policy step and SEVEN §1(a)
@@ -1705,7 +1713,7 @@ engine fixes, one commit and one measurement each — six of the seven moved the
 seventh moved `porter-notes` instead, which is the only gate that could see it. `portability(emitted)` is **0**: the 151 are every one
 in libGDX's own files, which D2's ownership filter keeps out of this port's emitted column.
 
-### 10.3 The one policy decision — a §1(b) body substitution, and why it is not a fork
+### 10.3 The policy decisions — two §1(b) body substitutions and one context extension
 
 `VfxGLUtils`' STATIC INITIALISER is gdx-vfx's only reflective site:
 
@@ -1728,10 +1736,33 @@ call to preserve a branch that cannot be taken would fail to compile for no beha
 assigns `DefaultVfxGlExtension()` unconditionally, so it SOLVED this rather than skipping it
 (`CLAUDE.md` §3.5). Expressing it as policy rather than as a fork keeps the other ~100 lines of that
 class — shader compilation, the viewport query, the GL state query — mechanically translated and
-tracking upstream. `port-map 2 → 0`, and it is the port's one `SubstitutedBody` decision.
+tracking upstream. `port-map 2 → 0`, and it is the first of the port's two `SubstitutedBody`
+decisions.
+
+**A SECOND substitution joined it when the base's globals policy landed, and the pair is one
+decision.** `DefaultVfxGlExtension` reads `Gdx.gl`, so it is one of the classes the base threads and
+constructing one now takes a context — which a `static { }` block has no way to hold. The class
+initialiser therefore becomes `{ }` and the construction moves, behind a null guard, into
+`VfxFrameBuffer#getBoundFboHandle`, the nearest caller whose enclosing class carries the clause.
+That is the reference port's own shape (`initExtension()(using Sge)` called from
+`getBoundFboHandle()(using Sge)`), landing one member further out because a body substitution may
+change what a member DOES and never what it TAKES — the emitted `VfxGLUtils.getBoundFboHandle()`
+reads no holder, so nothing threaded it, and no manifest key can. The boundary is COUNTED either
+way: `VfxGLUtils#<clinit>` reports `unsuppliable use: this declaration uses DefaultVfxGlExtension,
+which now takes a context`.
+
+**And the one `ContextHolderExtension` — `ENGINE-LIMITS.md` CT8's mechanism in production.**
+`VfxFrameBuffer#tmpCam` is a `private static final OrthographicCamera` initialised at class
+initialisation, and `OrthographicCamera` is threaded; a `sites` `lazy-init` entry moves it to first
+READ and turns a scalac error into a counted `deferred-init` seam plus a `DeferredInit` decision with
+a porter note. It is a per-declaration key about gdx-vfx's OWN type, contributed as an extension with
+no field in which the base's shared surface could be restated (§1.5). `VfxGLUtils#<clinit>`
+deliberately gets no such key — it READS the holder rather than initialising a static from a threaded
+construction, and `lazy-init` there was measured as a `never matched` policy finding.
 
 **No §1(c) rule, no new phase parameter, no injected source.** The rest of the manifest is a
-namespace claim, one package-rename pair and the base's inherited surface.
+namespace claim, one package-rename pair, the base's inherited surface, and the per-declaration half
+above.
 
 ### 10.4 What this library taught the engine — seven (a) fixes, one (b), no (c)
 
@@ -1782,8 +1813,14 @@ turns both suites red and nothing else.
 only allocates matrices; `initialize(w, h)` is the first line that touches GL. So the rotation
 arithmetic, the guard clauses and the ping-pong swap are reachable and the rendering is not. The
 reference port covers the same ground with a headless GL stub over its own `Sge` context; this port
-emits libGDX's `Gdx` statics instead and has no context to stub, so it stops at the GL line rather
-than building a ~150-method `GL20` no-op.
+stops at the GL line rather than building a ~150-method `GL20` no-op.
+
+**Since §11.12 landed, that boundary is ENFORCED rather than described.** `VfxFrameBuffer` now takes
+`(using sge.Sge)`, so the suite declares one — `sge.SgeTestFixture.testSge()`, whose every service is
+ABSENT rather than a noop. A test that started to cross the GL line therefore fails with a
+`NullPointerException` at the exact field, where a stub would have answered and let it pass while
+asserting nothing. That is the whole argument for the fixture's shape, and this suite is where it
+does visible work.
 
 **Not covered at all**: the 21 effect classes and `VfxManager`/`VfxRenderContext`, whose every
 method is a shader draw. That is 27 of 44 types resting on compilation alone.
@@ -2227,7 +2264,14 @@ tabs normalised to spaces and the id is recomputed from the parsed row on read, 
 is reported as removed-and-re-added on every run. Three rows in gdx-gltf, counts identical, and
 `just baseline-accept` does not settle it because the next read re-derives the same mismatch.
 
-### 11.12 M1 — globals → context, as measured
+### 11.12 M1 + P5 — globals → context: DELIVERED, on the fifth replay and after five engine gaps
+
+**Read the top of this section for the mechanism and the bottom for the delivered census.** What is
+in between is the record of four replays that were each measured and REVERTED, and it is kept
+deliberately: every one of them found an engine gap that a compile could not (CT5, CT6), that a
+compile could not even see (CT7), that only a DEPENDENT could produce (CT8), or that only a
+dependent inside the base's own namespace could produce (CT9). The four "do NOT retry" paragraphs
+are still exactly what they say; the exits they refuse have not become available.
 
 DESIGN.md §8.4. The mechanism is DEFAULT-OFF: no port declares a holder, so **every one of the ten
 lanes is 0 members changed and all 13 ports' check counts are identical**, and `context-seam` records
@@ -2664,17 +2708,6 @@ expression all work. The three exits for CT9 Face A — put the entry in the bas
 buys a green run with six permanently unclearable `policy` rows, which is the noise floor this file
 already warns about one section up.
 
-**What the FIFTH replay needs — the two engine commits are DONE (below), so this is the port-side
-list and nothing else.**
-
-| | what |
-|---|---|
-| `libgdx-test`'s manifest | ONE `selfSupplied` entry — `AnimationControllerTest`, the only threaded suite of the 221 emitted tests; the closure reaches it through `new Model()` |
-| a fixture `src/` file | libgdx-core's `src/test/scala`, plus that directory on the `gdx-test-measure` compile line (vfx and screens lanes already compile theirs). The suite touches NO service — three tests are a keyframe binary search, two drive the animation state machine, and `Model` carries the clause for propagation and dereferences it nowhere — so an ABSENT service is louder than a noop that answers |
-| `sge/utils/Pools.scala` | the recorded `def registerDefaults()(using sge.Sge)` shape; the WHOLE block moves (see above) |
-| ~4 hand-written `src/` files | screens — the 16 `Unmapped` errors: `Gdx.gl*` reads and constructions of threaded types |
-| 1 hand-written suite + the `<clinit>` body | vfx — the 41 `Unmapped`, plus its `MethodBodyTransform` body, which constructs a now-threaded `DefaultVfxGlExtension` from an object initialiser (the last `EngineGap`, and it is the PORT's own Scala) |
-
 **BOTH CT9 COMMITS HAVE LANDED, AND THE TRIGGER WAS RE-MEASURED AS A PROOF GATE.** Face B —
 `Pipeline.order` orders instances, and a refused pair stops the run before the pipeline — and Face A
 — the `governs` screen asks what the base EMITS, per its published map (`ENGINE-LIMITS.md` CT9,
@@ -2721,9 +2754,168 @@ Four things it settles, and one it deliberately does not:
   217/4 outcome line in that lane is the committed baseline echoed, not a result. The fifth replay
   is what runs it.
 
-Everything else on the list is unchanged and already measured: the `Pools.registerDefaults` shape
-(re-applied verbatim here and correct), vfx's extension, screens' four files, vfx's suite and
-`<clinit>` body.
+---
+
+#### THE FIFTH REPLAY DELIVERED — the enablement is IN, and every suite in the corpus RAN
+
+Five replays, five engine gaps, and then the port-side list landed exactly as the fourth replay had
+priced it. **The base census reproduced to the row on the FIRST run of the fifth replay**, which is
+what four reverted replays' worth of measurement was for.
+
+| | fourth replay (CT9 open) | the CT9 proof gate | **DELIVERED** |
+|---|---:|---:|---:|
+| libgdx-core scalac errors | **0** | **0** | **0** |
+| `context-seam` (base) | 44 | 44 | **44** — 25 unconstructed-thread, 14 captured-context, 3 residual-global-read, 2 deferred-init, **0** frozen-component, **0** lost-clause |
+| threaded declarations | 275 (188 classes + 87 methods) | — | **275** — 188 + 87, in **177** java files |
+| blast (`just members-unchanged`) | 1,807 | — | **1,807** |
+| decisions (base) | 3,893 | 3,893 | **3,893** — `DeferredInit` 2, `RetypedSignature` 1,246 |
+| `policy` / `omissions` (base) | 2 / 65 | 2 / 65 | **2 / 65** |
+| every other base check | baseline | baseline | **identical** |
+| libgdx-test `manifest` / `policy` | **1 FATAL** / 1 | 0 / 0 | **0 / 0** |
+| libgdx-test `context-seam` | 0 — the holder never ran | 1 × `self-supplied` | **1 × `self-supplied`** |
+| libgdx-test scalac errors | 2 | 1 (the fixture was deliberately not written) | **0** |
+| **libgdx-test SUITE** | **212 / 5, and 5 DID NOT RUN** | not run — it did not compile | **217 passing / 4 failing, 221 of 221 emitted tests with an outcome, DID-NOT-RUN 0** |
+
+**The `(using sge.Sge)` clause count is 604 occurrences across 178 files**, of which **600 in the 176
+EMITTED files** — CT6's census to the occurrence — plus 4 in the two injected ones, and two of THOSE
+four are prose inside `sge.Sge`'s `@implicitNotFound` message. Quote the emitted number; a grep for
+the clause counts the sentence that explains it too.
+
+#### The five recovered tests, one at a time
+
+CT7 cost `AnimationControllerTest` whole — five tests, at 0 scalac errors and 0 findings, visible
+only to `tests.tsv`. All five run again and all five **pass**, byte-identical to the committed
+baseline. They are scrutinised individually rather than counted, because a pass under an
+ABSENT-service fixture is a claim about what the test touches:
+
+| test | what it exercises | why a pass is honest here |
+|---|---|---|
+| `testGetFirstKeyframeIndexAtTimeNominal` | `BaseAnimationController.getFirstKeyframeIndexAtTime` over four keyframes, seven probes | pure binary search over an `Array[NodeKeyframe]`; no service is on the path |
+| `testGetFirstKeyframeIndexAtTimeSingleKey` | the same, one keyframe | as above |
+| `testGetFirstKeyframeIndexAtTimeEmpty` | the same, zero keyframes | as above |
+| `testEndUpActionAtDurationTime` | `AnimationController`'s loop→action→loop state machine over `new ModelInstance(new Model())` | `Model` is threaded and carries the clause for PROPAGATION only — the emitted body dereferences the context nowhere, and an empty `Model` loads no asset. An absent `graphics`/`files` would NPE at the field if it did |
+| `testEndUpActionAtDurationTimeReverse` | the same at a negative speed | as above |
+
+The emitted head of the suite is CT7's third answer, reached from a DEPENDENT's manifest:
+
+```scala
+/* porter: injected-member reason=configured phase=globals->implicits key=…AnimationControllerTest
+   from="a constructor clause the closure would otherwise have attached" given=sge.Sge
+   source=sge.SgeTestFixture.testSge() to="a `private given sge.Sge` member of this type" — … */
+class AnimationControllerTest extends munit.FunSuite {
+  private given sge.Sge = sge.SgeTestFixture.testSge()
+```
+
+No `using` clause on the class, java's constructor signature intact, and the note says which manifest
+key to edit.
+
+#### The whole corpus, and the D2 gate
+
+| lane | errors | `context-seam` | suite |
+|---|---:|---|---|
+| **libgdx-core** | **0** | **44** (19 boundary + 25 warning) | — |
+| **libgdx-test** | **0** | **1** × `self-supplied` | **217 / 4**, 221 of 221 RUN |
+| **ashley — the D2 gate** | 0 | **0 on BOTH source sets** | 108 / 2 + 2 skips, 112 of 112 accounted; **0 members changed on BOTH source sets** |
+| anim8 | 0 | 5, all `unconstructed-thread` | **23 / 23** |
+| gltf | **7 — PRE-EXISTING**, `signature` 1 | 7, all `unconstructed-thread` (0 on its test set) | not run in either state (§8.4) |
+| **vfx** | **0** (was 42) | 20 — 16 warning, 3 residual-global-read, 1 deferred-init | **64 / 64** |
+| **screens** | **0** (was 16) | 10, all `unconstructed-thread` | **16 / 16** |
+| sg / jbump / noise4j | unchanged | — | unchanged — no libGDX dependency, so no manifest in reach of this policy; **0 members changed**, byte-identical |
+
+**The corpus-wide seam census is 87, and it reconciles: 24 BOUNDARIES and 63 WARNINGS.** The
+boundaries are libgdx-core's 19 (14 captured-context, 3 residual-global-read, 2 deferred-init),
+libgdx-test's 1 `self-supplied` and vfx's 4 (3 residual-global-read, 1 deferred-init). The warnings
+are `unconstructed-thread` — 25 base, 16 vfx, 10 screens, 7 gltf, 5 anim8 — and every one of them is
+a public-API leaf whose USERS construct it, which is the case the classification names and not a
+defect. **`frozen-component` is 0 and `lost-clause` is 0 on every port**, which are the two counts
+that would say the mechanism had refused something or dropped a clause it attached.
+
+**gltf's seven are the same seven, and that is checked rather than asserted**: 2 × `E134` on
+`PBRCubemapAttribute`/`PBRTextureAttribute`, 4 × `E008` on `ModelInstanceHack#copyNodes`, 1 × `E007`
+at `MeshLoader`'s `toArray(VertexAttribute.class)` — §8.4's table, entry for entry, with `signature`
+still 1. A dependent's error COUNT is evidence about a change only after it has been diffed against
+that dependent's own baseline (`CLAUDE.md` §5.1, one artifact over).
+
+#### Decisions, before → after
+
+`just decision-counts`, every port, reverted state → delivered:
+
+| port | before | after | what moved |
+|---|---:|---:|---|
+| libgdx-core | 3,598 | **3,893** | `RetypedSignature` 971 → 1,246 (the 275 threaded declarations), `DroppedMember` 16 → 25 (the nine holder statics that lost their last reader), `RenamedMember` 1,250 → 1,258 (the four `Graphics#gl2x` bean pairs), `InjectedMember` 10 → 11, `DeferredInit` 0 → **2** |
+| libgdx-test | 283 | **284** | `InjectedMember` 0 → 1 — the one `selfSupplied` `given` |
+| ashley (both sets) | 186 / 219 | **186 / 219** | nothing. This is the D2 gate stated in the provenance artifact rather than in members |
+| anim8 | 748 | **705** | `RetypedSignature` 666 → 623: fewer of anim8's declarations are retyped, because the base now expresses through a context what anim8 used to see as a `Gdx` read |
+| gltf (both sets) | 2,048 / 47 | **2,065 / 47** | `RetypedSignature` 1,750 → 1,767 |
+| screens | 172 | **186** | `RetypedSignature` 56 → 70 |
+| vfx | 414 | **415** | `DeferredInit` 0 → **1** (`VfxFrameBuffer#tmpCam`), `SubstitutedBody` 1 → **2**, `RetypedSignature` 262 → 261 |
+
+#### What the PORT had to write, and the rule it produced
+
+Everything below is `src/` or manifest — no engine code changed in the delivery commit.
+
+| where | what | category |
+|---|---|---|
+| `LibgdxPolicy.globalsToContext` | the holder: `com.badlogic.gdx.Gdx`, injected `sge.Sge`, the 11-field path map with the five `gl*` two-hop through `graphics`, `attach = class`, `reader = summon`, `boundary = refuse`, two `sites` `lazy-init` keys, no `promoteToClass`, no `scope` | attach-clause |
+| `LibgdxPolicy.beanPropertyPairs` | four `Graphics#gl2x -> getGL2x/setGL2x` pairs — a path segment is an identifier, so `graphics.gl20` needs a member of that name | reader-rewrite |
+| `corpus/libgdx-overrides/sge/Sge.scala` | the INJECTED context type: the six services, `@implicitNotFound`, a public constructor and the `apply()` sugar. NOT minted — it is published API and the reference port's shape | hand-written |
+| `corpus/libgdx-overrides/sge/utils/Pools.scala` | the whole `static { }` block behind `def registerDefaults()(using sge.Sge)`; `Pools.get`'s miss message names it | deferred |
+| `LibgdxPolicy.selfSuppliedSuites` (libgdx-test) | ONE `ContextHolderExtension` `selfSupplied` entry → `sge.SgeTestFixture.testSge()` | self-supplied |
+| `libgdx-core/src/test/scala/sge/SgeTestFixture.scala` | the ABSENT-service fixture, plus that directory on the `gdx-test-measure`, `vfx-measure` and `screens-measure` compile lines | hand-written |
+| `VfxPolicy` — a `ContextHolderExtension` | `VfxFrameBuffer#tmpCam` → `lazy-init`. `VfxGLUtils#<clinit>` deliberately gets NO key: it READS the holder, so `lazy-init` is the wrong site kind and was a `never matched` finding when it was tried | deferred |
+| `VfxPolicy` — a second `MethodBodyTransform` entry | `VfxGLUtils#<clinit>` → `{ }`, and the construction moves to `VfxFrameBuffer#getBoundFboHandle` behind a null guard | boundary-exit |
+| `vfx-core/src/test/.../VfxFrameBufferSuite.scala` | one `private given sge.Sge` line — it is what turns "this suite stops at the first GL call" from a comment into an NPE | hand-written |
+| `screens-core/src/main/.../NestableFrameBuffer.scala` | `(using sge.Sge)` on both constructors; three `Gdx.gl20` reads become `summon` | attach-clause |
+| `screens-core/src/main/.../QuadMeshGenerator.scala` | `(using sge.Sge)` on all three overloads (it constructs a `Mesh`) | attach-clause |
+| `screens-core/src/main/.../ShaderProgramFactory.scala` | `(using sge.Sge)` on the three `fromString`s, on `ShaderCompatibilityHelper.fromString`, `mustUse32CShader` and `getDefaultShaderVersionStatement`; `Gdx.gl30` becomes `summon` | attach-clause |
+| `screens-core/src/main/.../GLUtils.scala` | `Gdx.gl` → `Gdx.graphics.gl20` — the RESIDUAL global, and NOT a clause | seam |
+| `screens-core/src/test/.../ScreenmanagerSuite.scala` | one `private given sge.Sge` line | hand-written |
+
+**The last two screens rows are the finding, and it is now a rule (`CLAUDE.md` §1b).** `GLUtils` and
+`NestableFrameBuffer` are two shims in one directory, and they take opposite answers — because the
+answer is READ OFF THE GENERATED CALLER and not chosen. `NestableFrameBuffer`'s only caller is
+`ScreenManager.createFrameBuffer()`, an instance method of a threaded class, so a clause is available
+there. `GLUtils`' only caller is `ScreenFboUtils.retrieveFboStatus()`, which the closure did NOT
+thread — it sees a call to an EXTERNAL guacamole symbol and cannot know the shim behind it reaches
+the global — and that caller is GENERATED, so no manifest key and no hand edit can give it one. A
+clause on `GLUtils` would therefore have emitted a port that does not compile, in the file that looks
+most like the one that should have it.
+
+**And vfx's `<clinit>` is the same rule for a BODY SUBSTITUTION**: it may change what a member DOES
+and never what it TAKES. `MethodBodyTransform` could not give `VfxGLUtils.getBoundFboHandle()` a
+context (the closure threaded nothing there — its body reads no holder), so the construction moved
+one member further out, to `VfxFrameBuffer#getBoundFboHandle`, whose enclosing class carries the
+clause. That is the reference hand port's own shape — `initExtension()(using Sge)` called from
+`getBoundFboHandle()(using Sge)` — landing one member out because the emitted signature is not the
+port's to choose. The seam is COUNTED either way: `VfxGLUtils#<clinit>` reports
+`unsuppliable use: this declaration uses DefaultVfxGlExtension, which now takes a context`, which is
+the boundary naming its own exit.
+
+#### The residues, all named
+
+- **25 `unconstructed-thread` warnings on the base, 16 on vfx, 10 on screens, 5 on anim8** — the
+  `TypeRedirectTransform` interaction §11.12 already explains, and every one is a public-API leaf
+  whose USERS construct it. They are warnings, not boundaries.
+- **3 `residual-global-read` on the base** — `GLErrorListener#LOGGING_LISTENER` ×2 and
+  `ParticleShader$Setters#screenWidth`, static initialisers that READ the holder. Their exits are
+  `boundary = "residual-global"` or a `sites` key; neither is taken, because both would change what
+  the emitted code names for no behaviour.
+- **`sge.Gdx` still exists, with `app` and `graphics`** — 9 of 11 statics lost their last reader and
+  are dropped with a porter note each. The two that remain are what the boundaries above still read,
+  and `screens`' `GLUtils` is the one hand-written file that deliberately joins them.
+- **2 `policy` rows** — the `ScrollPane#scrollX`/`scrollY` bean pairs, unchanged and unrelated.
+
+#### Do NOT retry
+
+- **Do not put the `selfSupplied` entry in the BASE manifest.** It buys a green run and six
+  permanently unclearable `policy` rows, one per module that inherits a key it can never match.
+- **Do not give `GLUtils` a `(using sge.Sge)`**, and do not "fix" the residual `Gdx.graphics.gl20`
+  read in it. Its generated caller is not threaded and cannot be made so.
+- **Do not give `VfxGLUtils#<clinit>` a `sites` `lazy-init` key.** Measured: `never matched`. It
+  reads the holder; it does not initialise a static from a threaded construction.
+- **Do not soften `SgeTestFixture` into noop services.** The one suite it reaches touches none, and
+  a fixture that answers everything can never fail — which would make the threading unmeasurable at
+  exactly the place CT7 proved a compile is blind.
 
 ### 11.13 D5j — the demand-derived JDK surface, as measured
 
@@ -3916,7 +4108,7 @@ the parameter path — expect that to be where the next shape appears, and confi
 TIME. §12.1's "a RETYPED parameter records no decision at all" is the hole they will walk into
 first.
 
-#### Do NOT retry
+##### Do NOT retry
 
 - **Do not configure `GLEnum`, `ProgramHandle`/`ShaderHandle`/`FramebufferHandle`/
   `RenderbufferHandle`/`BufferHandle`, or `UniformLocation` on libGDX.** The reference port applies

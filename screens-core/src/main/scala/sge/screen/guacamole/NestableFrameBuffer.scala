@@ -37,6 +37,14 @@ package sge.screen.guacamole
   * failure rather than a wrong frame. `NestableFrameBufferBuilder` is NOT reproduced: it is
   * upstream's seam for attaching extra buffers, this port calls none of it, and a shim member with
   * no caller is untested code that reads as verified.
+  *
+  * ==Why the constructor takes `(using sge.Sge)`==
+  * The base port retires libGDX's `Gdx` global into a threaded context (DESIGN.md §8.4), and
+  * `GLFrameBuffer` is one of the classes it threads — so `sge.graphics.glutils.FrameBuffer`'s
+  * constructors now take the clause and a subclass has to be able to pass it on. This shim is
+  * hand-written `src/` Scala the frontend never sees, so nothing threads it automatically; the
+  * clause is added here by hand. Its one caller, `ScreenManager.createFrameBuffer()`, is an
+  * instance method of a threaded class, so the context is already in scope there.
   */
 class NestableFrameBuffer(
     format: sge.graphics.Pixmap.Format,
@@ -44,9 +52,9 @@ class NestableFrameBuffer(
     height: Int,
     private val depth: Boolean,
     hasStencil: Boolean,
-) extends sge.graphics.glutils.FrameBuffer(format, width, height, depth, hasStencil):
+)(using sge.Sge) extends sge.graphics.glutils.FrameBuffer(format, width, height, depth, hasStencil):
 
-  def this(format: sge.graphics.Pixmap.Format, width: Int, height: Int, hasDepth: Boolean) =
+  def this(format: sge.graphics.Pixmap.Format, width: Int, height: Int, hasDepth: Boolean)(using sge.Sge) =
     this(format, width, height, hasDepth, false)
 
   private var previousFBOHandle: Int      = -1
@@ -67,7 +75,7 @@ class NestableFrameBuffer(
   /** Upstream deprecates this — it does not support nesting; `begin()` is the entry point. */
   @deprecated("does not support nesting — use begin()", "")
   override def bind(): Unit =
-    sge.Gdx.gl20.glBindFramebuffer(sge.graphics.GL20.GL_FRAMEBUFFER, this.framebufferHandle)
+    scala.Predef.summon[sge.Sge].graphics.gl20.glBindFramebuffer(sge.graphics.GL20.GL_FRAMEBUFFER, this.framebufferHandle)
 
   /** Rebinds the PREVIOUS framebuffer — not the default one — and restores its viewport. */
   override def `end`(): Unit =
@@ -83,14 +91,14 @@ class NestableFrameBuffer(
           ") doesn't match this one. Make sure the nested framebuffers are closed in the same " +
           "order they were opened in!")
 
-    sge.Gdx.gl20.glBindFramebuffer(sge.graphics.GL20.GL_FRAMEBUFFER, previousFBOHandle)
-    sge.Gdx.gl20.glViewport(x, y, w, h)
+    scala.Predef.summon[sge.Sge].graphics.gl20.glBindFramebuffer(sge.graphics.GL20.GL_FRAMEBUFFER, previousFBOHandle)
+    scala.Predef.summon[sge.Sge].graphics.gl20.glViewport(x, y, w, h)
 
   /** Building an FBO binds it; upstream restores what was bound before, and so does this. */
   override def build(): Unit =
     val previous = GLUtils.getBoundFboHandle()
     super.build()
-    sge.Gdx.gl20.glBindFramebuffer(sge.graphics.GL20.GL_FRAMEBUFFER, previous)
+    scala.Predef.summon[sge.Sge].graphics.gl20.glBindFramebuffer(sge.graphics.GL20.GL_FRAMEBUFFER, previous)
 
   /** whether this framebuffer was created with a depth buffer. */
   def hasDepth(): Boolean = depth

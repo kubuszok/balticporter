@@ -155,9 +155,67 @@ object VfxPolicy:
         // and the BODY is the port's FINAL namespace (it is spliced verbatim and the rename never
         // sees it). `<clinit>` is what the frontend names a `static { }` block; an instance
         // initialiser is `<initblock>`.
+        //
+        // ==THE PAIR, and why the initialisation had to LEAVE the class initialiser==
+        // The base port retires `Gdx` into a threaded `sge.Sge` context (DESIGN.md §8.4) and
+        // `DefaultVfxGlExtension` — whose one method reads `Gdx.gl` — is one of the classes it
+        // threads, so constructing one now takes the clause. A `static { }` block has no clause and
+        // no caller to take one from, which is precisely the boundary the globals phase counts. So
+        // the class initialiser becomes EMPTY and the construction moves to the first call that has
+        // a context: `VfxFrameBuffer#getBoundFboHandle`, an instance method of a threaded class.
+        //
+        // That is once more the reference hand port's own answer rather than an invention —
+        // `../sge/sge-extension/vfx/.../VfxGLUtils.scala` has `def initExtension()(using Sge)` with
+        // exactly this null guard, called from `getBoundFboHandle()(using Sge)`. It sits one member
+        // further out here for a mechanical reason: the emitted `VfxGLUtils.getBoundFboHandle()`
+        // reads no holder of its own, so nothing threaded it, and a body substitution may change
+        // what a member DOES but never what it takes.
+        //
+        // Ordering: the null guard is not a race the port introduced. Java ran the same assignment
+        // at class initialisation, i.e. before any caller could touch a framebuffer; the guard runs
+        // it at the first framebuffer bind instead, which is the first moment a GL context exists at
+        // all. `VfxFrameBuffer#getBoundFboHandle` is the ONLY reader of `VfxGLUtils.glExtension` in
+        // this port, so there is no second path into it to leave uncovered.
         new balticporter.transform.MethodBodyTransform(Map(
-          "com.crashinvaders.vfx.gl.VfxGLUtils#<clinit>" ->
-            "{ sge.vfx.gl.VfxGLUtils.glExtension = new sge.vfx.gl.DefaultVfxGlExtension() }",
+          "com.crashinvaders.vfx.gl.VfxGLUtils#<clinit>" -> "{ }",
+          "com.crashinvaders.vfx.framebuffer.VfxFrameBuffer#getBoundFboHandle" ->
+            """{
+              |  if (sge.vfx.gl.VfxGLUtils.glExtension == null)
+              |    sge.vfx.gl.VfxGLUtils.glExtension = new sge.vfx.gl.DefaultVfxGlExtension()
+              |  sge.vfx.gl.VfxGLUtils.getBoundFboHandle()
+              |}""".stripMargin,
+        )),
+        // WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER — `ENGINE-LIMITS.md` CT8.
+        //
+        // The holder itself is SHARED SURFACE and is inherited from `LibgdxPolicy.core` (§1.5): the
+        // context type, the member map, the attachment mode, the read shape and the boundary default
+        // are all facts about signatures this port compiles against, and a `ContextHolderExtension`
+        // has no field in which any of them could be restated. What it carries is the
+        // PER-DECLARATION half, which is keyed on DECLARATIONS — and gdx-vfx's boundaries are in
+        // gdx-vfx's own types, which the base neither governs nor parses.
+        //
+        // There is exactly one: `VfxFrameBuffer#tmpCam` is a `private static final
+        // OrthographicCamera` initialised at class initialisation, and `OrthographicCamera` is one
+        // of the classes the base threads. A static has no clause and no caller, so without this
+        // entry it is a scalac error the correlator classifies `EngineGap` — correctly, because the
+        // port would have nowhere to put the fix. With it, the initialisation moves to first READ,
+        // which is a counted `deferred-init` seam and a `DeferredInit` decision with a porter note.
+        //
+        // Two things it does NOT carry, both deliberate:
+        //   - `VfxGLUtils#<clinit>`, which READS the holder rather than initialising a static from a
+        //     threaded construction. `lazy-init` is the wrong site kind there — measured as a
+        //     `never matched` policy finding — and its answer is the body substitution above;
+        //   - a `selfSupplied` entry. gdx-vfx's suite is HAND-WRITTEN `src/` Scala, so it declares
+        //     its own `given` (CLAUDE.md §5.5); `selfSupplied` exists for the suites a port cannot
+        //     edit because the engine emitted them.
+        new balticporter.transform.GlobalsToImplicitsTransform(extensions = List(
+          balticporter.transform.ContextHolderExtension(
+            holder = "com.badlogic.gdx.Gdx",
+            sites  = Map(
+              "com.crashinvaders.vfx.framebuffer.VfxFrameBuffer#tmpCam" ->
+                balticporter.transform.ContextSite.LazyInit,
+            ),
+          )
         )),
         // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE actually
         // emitted and reports a reference the base does not ship, so it must run after any seam

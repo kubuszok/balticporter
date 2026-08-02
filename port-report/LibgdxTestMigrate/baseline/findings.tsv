@@ -1,4 +1,5 @@
 #id	check	kind	owner	path	line	detail
+5595b61bb11b	context-seam	self-supplied	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	14	not threaded: the port declared this type framework-instantiated, so it takes the context from a `given` member of its own rather than from a constructor parameter no reflective instantiation could supply [key=com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest]
 fc17bc174bda	jdk-surface	unhandled	java.util.Arrays#toString(Object[])	com/badlogic/gdx/utils/JsonMatcherTests.java	1482	java.util.Arrays#toString(Object[]) — retyped to java.util.Arrays, no rewrite (2 site(s))
 b68961cee003	jdk-surface	unhandled	java.util.Arrays#toString(float[])	com/badlogic/gdx/math/ConvexHullTest.java	58	java.util.Arrays#toString(float[]) — retyped to java.util.Arrays, no rewrite (1 site(s))
 eecb2ac883ca	jdk-surface	unhandled	java.util.stream.Collectors#joining(CharSequence)	com/badlogic/gdx/utils/JsonMatcherTests.java	1581	java.util.stream.Collectors#joining(CharSequence) — retyped to java.util.stream.Collectors, no rewrite (1 site(s))

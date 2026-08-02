@@ -43,6 +43,16 @@ import sge.screen.utils.BasicInputMultiplexer
 
 class ScreenmanagerSuite extends munit.FunSuite:
 
+  /** The base port threads libGDX's `Gdx` global as a `using` context (DESIGN.md §8.4), and
+    * `ScreenManager` is one of the classes it threads — so constructing one needs a context. This
+    * suite is HAND-WRITTEN, so it may simply declare one; the emitted suites of the base module
+    * cannot, which is the whole of `ENGINE-LIMITS.md` CT7 and why `selfSupplied` exists.
+    *
+    * Every service is ABSENT rather than a noop, and the reason is in `sge.SgeTestFixture`: none of
+    * the assertions below reaches one, so anything that started to would fail at the field with a
+    * `NullPointerException` naming the line instead of quietly being answered. */
+  private given sge.Sge = sge.SgeTestFixture.testSge()
+
   // ---------------------------------------------------------------------------------------
   // BasicInputMultiplexer — upstream `BasicInputMultiplexerTest.test()`, assertion for assertion.
   //

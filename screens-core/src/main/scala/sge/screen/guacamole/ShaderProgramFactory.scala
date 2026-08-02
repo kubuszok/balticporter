@@ -16,13 +16,20 @@ package sge.screen.guacamole
   * nulls the pair, builds, and puts them back; that save/restore is reproduced exactly, including
   * putting them back BEFORE the compilation check throws, or a failed shader would leave the
   * application's prepends permanently cleared.
+  *
+  * ==Why the three `fromString` overloads take `(using sge.Sge)`==
+  * `sge.graphics.glutils.ShaderProgram` is one of the classes the base port threads (DESIGN.md
+  * §8.4), so constructing one takes the context. This is hand-written `src/` Scala the frontend
+  * never sees, so the clause is added by hand. The one caller of the four-argument form is
+  * `ShaderTransition`'s own constructor body — a threaded class — so the context is in scope there;
+  * `checkCompilation` needs none and does not take one.
   */
 object ShaderProgramFactory:
 
-  def fromString(vertexShader: String, fragmentShader: String): sge.graphics.glutils.ShaderProgram =
+  def fromString(vertexShader: String, fragmentShader: String)(using sge.Sge): sge.graphics.glutils.ShaderProgram =
     fromString(vertexShader, fragmentShader, true)
 
-  def fromString(vertexShader: String, fragmentShader: String, throwException: Boolean): sge.graphics.glutils.ShaderProgram =
+  def fromString(vertexShader: String, fragmentShader: String, throwException: Boolean)(using sge.Sge): sge.graphics.glutils.ShaderProgram =
     fromString(vertexShader, fragmentShader, throwException, false)
 
   def fromString(
@@ -30,7 +37,7 @@ object ShaderProgramFactory:
       fragmentShader: String,
       throwException: Boolean,
       ignorePrepend: Boolean,
-  ): sge.graphics.glutils.ShaderProgram =
+  )(using sge.Sge): sge.graphics.glutils.ShaderProgram =
     var prependVertexCode: String   = null
     var prependFragmentCode: String = null
     if ignorePrepend then
@@ -58,10 +65,20 @@ object ShaderProgramFactory:
   * library that has to serve GL ES 2 and GL 3 from one set of shaders has to rewrite them at run
   * time. Everything here is upstream's, including the fact that the three `#version` answers
   * differ per platform and that desktop deliberately gets NO version statement.
+  *
+  * ==What takes the context and what does not, and the line is the CALLER's==
+  * `mustUse32CShader` reads `Gdx.gl30` — one of the nine statics the base port retires — so it and
+  * everything that calls it take `(using sge.Sge)` and read the GL handle through the context
+  * instead. `toVert150`/`toFrag150` are pure string rewrites, take nothing, and stay reachable from
+  * the hand-written suite, which is the only place in this port that exercises them.
+  *
+  * The two `Gdx.app` reads are LEFT AS THEY ARE, deliberately: `app` is one of the two statics that
+  * keep a reader in the base's own emitted code, so this is the residual global the base still has
+  * rather than one this shim reintroduced.
   */
 object ShaderCompatibilityHelper:
 
-  def fromString(vert: String, frag: String): sge.graphics.glutils.ShaderProgram =
+  def fromString(vert: String, frag: String)(using sge.Sge): sge.graphics.glutils.ShaderProgram =
     var v = vert
     var f = frag
     if mustUse32CShader() then
@@ -86,12 +103,12 @@ object ShaderCompatibilityHelper:
 
   /** `gl30 != null` also rules out ANGLE, which is why it is part of the test and not a tidier
     * platform check. */
-  def mustUse32CShader(): Boolean =
+  def mustUse32CShader()(using sge.Sge): Boolean =
     (sge.Gdx.app.getType() == sge.Application.ApplicationType.Desktop ||
       sge.Gdx.app.getType() == sge.Application.ApplicationType.HeadlessDesktop) &&
-      sge.Gdx.gl30 != null && sge.scenes.scene2d.utils.UIUtils.isMac
+      scala.Predef.summon[sge.Sge].graphics.gl30 != null && sge.scenes.scene2d.utils.UIUtils.isMac
 
-  def getDefaultShaderVersionStatement(): String =
+  def getDefaultShaderVersionStatement()(using sge.Sge): String =
     if mustUse32CShader() then "#version 150\n" // macOS 3.2 core profile
     else if sge.Gdx.app.getType() != sge.Application.ApplicationType.Desktop &&
       sge.Gdx.app.getType() != sge.Application.ApplicationType.HeadlessDesktop

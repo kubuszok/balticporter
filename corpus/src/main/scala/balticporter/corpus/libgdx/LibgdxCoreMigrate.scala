@@ -117,8 +117,48 @@ object LibgdxPolicy:
     */
   def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
     name    = "libgdx-test",
-    surface = List(new TestFrameworkTransform()),
+    surface = List(new TestFrameworkTransform(), selfSuppliedSuites),
   ))
+
+  /** THE ONE `selfSupplied` ENTRY — `ENGINE-LIMITS.md` CT7, contributed the way CT8 says a dependent
+    * contributes: a [[ContextHolderExtension]], which has NO field in which the shared half could be
+    * restated.
+    *
+    * `AnimationControllerTest` constructs `new Model()`, `Model` is one of the 188 classes
+    * [[globalsToContext]] threads, so the instantiate edge threads the suite and `attach = "class"`
+    * puts the clause on its constructor. Every step of that is the design working — and MUnit
+    * constructs a suite REFLECTIVELY, which cannot supply a `using`. The result compiled at 0 errors
+    * with `context-seam` 0 and `policy` 0, and five tests silently stopped running; only §5.1's
+    * `tests.tsv` DID-NOT-RUN gate saw it.
+    *
+    * So the suite takes the context WITHOUT taking a parameter: java's constructor signature stands
+    * and the engine emits `private given sge.Sge = sge.SgeTestFixture.testSge()` at the head of its
+    * body. That is the reference hand port's own shape for this very file
+    * (`../sge/.../AnimationControllerTest.scala`), reached from policy rather than by editing
+    * generated code — which §5.5 forbids and which no consumer could do anyway.
+    *
+    * ==Why the value is an ABSENT-SERVICE fixture and not a noop one==
+    * See `libgdx-core/src/test/scala/sge/SgeTestFixture.scala`. The one affected suite reaches no
+    * service at all, so a stub that ANSWERS would let a test pass while asserting nothing about the
+    * thing it was answering for.
+    *
+    * ==Why this is the DEPENDENT's manifest and not the base's==
+    * The key is a declaration in the TEST source set, which the base neither parses nor emits.
+    * Putting it in [[core]] would bind every module that inherits the base — six of them — to a
+    * `selfSupplied` key none of them can ever match, which is six permanently unclearable `policy`
+    * rows: exactly the noise floor [[beanProperties]] already documents. The entry sits inside
+    * `governs = com.badlogic.gdx` and is admitted because the screen asks what the base EMITS, per
+    * its published port map, and the base emits nothing at that name (`ENGINE-LIMITS.md` CT9). */
+  def selfSuppliedSuites: balticporter.transform.GlobalsToImplicitsTransform =
+    new balticporter.transform.GlobalsToImplicitsTransform(extensions = List(
+      balticporter.transform.ContextHolderExtension(
+        holder       = "com.badlogic.gdx.Gdx",
+        selfSupplied = Map(
+          "com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest" ->
+            "sge.SgeTestFixture.testSge()",
+        ),
+      )
+    ))
 
   /** Typed substitution manifest: constructs sge dropped upstream (and their ready-made Scala
     * replacements). `dropTypes`/`dropMethods` are the seams for opting an in-source type or method
@@ -380,6 +420,16 @@ object LibgdxPolicy:
     "com.badlogic.gdx.audio.Music#looping" -> "isLooping/setLooping",
     "com.badlogic.gdx.audio.Music#volume" -> "getVolume/setVolume",
     "com.badlogic.gdx.audio.Music#position" -> "getPosition/setPosition",
+    // -- com.badlogic.gdx.Graphics --
+    // The four GL accessors, and they are here for a MECHANICAL reason rather than a stylistic one:
+    // [[globalsToContext]]'s member map re-points `Gdx.gl20` at the path `graphics.gl20`, and a path
+    // segment is an IDENTIFIER — so `graphics.gl20` can only land on a member of that name. Without
+    // these four the five `gl*` statics would have nowhere to go. (`Gdx.gl` is an alias of `gl20`
+    // upstream and maps to the same path, so four pairs serve five statics.)
+    "com.badlogic.gdx.Graphics#gl20" -> "getGL20/setGL20",
+    "com.badlogic.gdx.Graphics#gl30" -> "getGL30/setGL30",
+    "com.badlogic.gdx.Graphics#gl31" -> "getGL31/setGL31",
+    "com.badlogic.gdx.Graphics#gl32" -> "getGL32/setGL32",
     // -- com.badlogic.gdx.graphics --
     "com.badlogic.gdx.graphics.Cubemap#cubemapData" -> "getCubemapData",
     // `isManaged` is declared ABSTRACT on `GLTexture` and the phase renames the whole override
@@ -535,7 +585,98 @@ object LibgdxPolicy:
   def mainPhases: List[balticporter.tir.Phase] =
     List(beanProperties, new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
-         disposableRedirect, textureHandle, nullability)
+         disposableRedirect, textureHandle, nullability, globalsToContext)
+
+  /** `com.badlogic.gdx.Gdx` — eleven `public static` fields read from 100 files — retired into a
+    * `sge.Sge` threaded as a `using` parameter (DESIGN.md §8.4).
+    *
+    * ==Every value here is a fact about libGDX, and none of it is derivable (§1b)==
+    * WHICH class is an ambient context, what its counterpart is called, where each static went and
+    * what happens at the edges. The mechanism — find the reads, close over five edges, add a clause,
+    * rewrite the read through a path, count every seam — is the engine's and names no library.
+    *
+    * ==`attach = "class"`, and it is a MEASUREMENT and not a preference==
+    * The two modes were priced against the same library before either was enabled (PROGRESS §11.12).
+    * Class attachment threads **275 declarations in 177 files** and refuses nothing; method
+    * attachment threads **2,497 in 324** and FREEZES 32 declarations across 15 override components,
+    * every one of them anchored on `Runnable`, `Comparable` or another parent this program does not
+    * declare. 177 files against the 100 that name `Gdx.` upstream is 1.77×, beside the reference hand
+    * port's own 1.6×; method attachment's 3.3× is the number that is wrong. Class attachment is also
+    * the reference port's shape — 82 % of its attachment sites are constructors.
+    *
+    * ==The member map is PATH-valued, and the two-hop half is why the bean pairs exist==
+    * `app` was re-homed onto the bundle as `application`; the five `gl*` were never really the
+    * global's at all — they duplicated what `Graphics` owns — so they are two-hop reads through
+    * `graphics`, matching the reference port, where two-hop reads are 305 of 557. `gl` is upstream's
+    * alias for `gl20` and maps to the same path. See [[beanPropertyPairs]] for the four
+    * `Graphics#gl2x` entries that give those paths a member to land on.
+    *
+    * ==`boundary = "refuse"`==
+    * A site the closure cannot reach keeps naming `Gdx` and is a COUNTED `context-seam` row, rather
+    * than being quietly re-pointed at a companion `global` — which would retire the static and keep
+    * the singleton. The two exceptions are named below.
+    *
+    * ==The two `sites` entries, and why `lazy-init` is opt-in per site==
+    * Both are STATIC FIELD INITIALISERS that CONSTRUCT a now-threaded type, which is the one shape
+    * with no signature to thread and no caller to take a clause from. `lazy-init` moves the
+    * initialisation from first ACTIVE USE of the class (java's rule) to first READ of the field, and
+    * the two coincide only when nothing else in the class is touched first — a fact the mechanism
+    * cannot know, so it is never a default. Each is a `DeferredInit` decision, a porter note and a
+    * counted seam. `Table#cellPool` was invisible until `ENGINE-LIMITS.md` CT5 cleared the 55 errors
+    * around it and CT6 gave a `new` at a GENERIC class an instantiate edge at all.
+    *
+    * ==No `promoteToClass`, and no `scope`==
+    * Class attachment changes no method signature, so no trait ever needed to become an
+    * `abstract class`; and the run refuses nothing, so there is nothing to scope out. Both being
+    * EMPTY is the measurement, not an omission — `attach = "method"` is where the refusals live.
+    *
+    * ==Shared surface, ONE instance, and the half a dependent adds (§1.5)==
+    * The clause is on emitted constructors, so this is `SurfacePolicy` and lives in [[core]] alone:
+    * a base whose `Mesh` takes `(using sge.Sge)` and a dependent whose does not emit signatures that
+    * cannot meet. `sites` and `selfSupplied` are keyed on DECLARATIONS, though, and a dependent's
+    * boundaries are in the DEPENDENT's own types — so gdx-vfx and this library's own test module
+    * each contribute a `ContextHolderExtension`, which the merge folds in at this position
+    * (`ENGINE-LIMITS.md` CT8, CT9).
+    *
+    * ==Position: LAST==
+    * Two things in this list move what it reads. [[disposableRedirect]] re-points libGDX's own
+    * `Disposable` at `java.lang.AutoCloseable`, which gives 24 threaded classes an ancestor this
+    * program does not declare and is therefore 24 of the 25 `unconstructed-thread` WARNINGS this
+    * port reports; [[beanProperties]] is what makes `graphics.gl20` resolvable at all. A dry run of
+    * this phase alone reports 1 warning, not 25 — CLAUDE.md §5, and it is why the number is quoted
+    * from the pipeline. */
+  def globalsToContext: balticporter.transform.GlobalsToImplicitsTransform =
+    new balticporter.transform.GlobalsToImplicitsTransform(List(
+      balticporter.transform.ContextHolder(
+        holder   = "com.badlogic.gdx.Gdx",
+        context  = balticporter.transform.ContextType.Injected("sge.Sge"),
+        members  = Map(
+          "app"      -> "application",
+          "graphics" -> "graphics",
+          "audio"    -> "audio",
+          "input"    -> "input",
+          "files"    -> "files",
+          "net"      -> "net",
+          // the five GL statics, two-hop through the service that really owns them
+          "gl"       -> "graphics.gl20",
+          "gl20"     -> "graphics.gl20",
+          "gl30"     -> "graphics.gl30",
+          "gl31"     -> "graphics.gl31",
+          "gl32"     -> "graphics.gl32",
+        ),
+        attach   = balticporter.transform.ContextAttach.Class,
+        reader   = balticporter.transform.ContextReader.Summon,
+        boundary = balticporter.transform.ContextBoundary.Refuse,
+        sites    = Map(
+          // `static final OnscreenKeyboard DEFAULT_ONSCREEN_KEYBOARD = new DefaultOnscreenKeyboard()`
+          "com.badlogic.gdx.scenes.scene2d.ui.TextField#DEFAULT_ONSCREEN_KEYBOARD" ->
+            balticporter.transform.ContextSite.LazyInit,
+          // `static Pool<Cell> cellPool = new Pool<Cell>(){ protected Cell newObject(){ … } }`
+          "com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool" ->
+            balticporter.transform.ContextSite.LazyInit,
+        ),
+      )
+    ))
 
   /** libGDX's GL texture handle — the `int` that is really a texture name — as an opaque type, which
     * is what the reference hand port declares (`sge/graphics/GLHandle.scala`) and APPLIES to a ported

@@ -19,6 +19,19 @@ import sge.graphics.Pixmap
   */
 class VfxFrameBufferSuite extends munit.FunSuite:
 
+  /** The base port threads libGDX's `Gdx` global as a `using` context (DESIGN.md §8.4), and
+    * `VfxFrameBuffer` is one of the classes gdx-vfx inherits that threading into — so constructing
+    * one needs a context. This suite is HAND-WRITTEN, so it may simply declare one; the emitted
+    * suites of the base module cannot, which is the whole of `ENGINE-LIMITS.md` CT7.
+    *
+    * Every service is ABSENT rather than a noop (see `sge.SgeTestFixture`), and here that is doing
+    * real work rather than being tidy: this suite exists precisely to run everything UP TO the
+    * first GL call, and an absent `graphics` is what makes crossing that line a
+    * `NullPointerException` at the exact field instead of a stub quietly answering and a test
+    * passing while asserting nothing. The doc comment above says the boundary is where the testable
+    * half ends; this is what enforces it. */
+  private given sge.Sge = sge.SgeTestFixture.testSge()
+
   private val Format = Pixmap.Format.RGBA8888
 
   test("the queue rejects a non-positive buffer count") {

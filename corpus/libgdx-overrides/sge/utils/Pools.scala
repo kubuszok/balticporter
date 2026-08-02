@@ -27,48 +27,66 @@ object Pools:
   private final val typePools: ObjectMap[java.lang.Class[?], Pool[?]] =
     new ObjectMap[java.lang.Class[?], Pool[?]]()
 
-  // The upstream `static { … }` block, ported by hand: every type libGDX itself pools is
-  // pre-registered with its constructor as the factory. This is what makes the `Class`-keyed
-  // lookups above resolve WITHOUT ever needing to construct from a `Class` — the reflective
-  // fallback existed only because these registrations were not exhaustive for user types.
-  Pools.set(() => new Array[java.lang.Object]())
-  Pools.set(() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent())
-  Pools.set(() => new sge.scenes.scene2d.ui.Table.DebugRect())
-  Pools.set(() => new sge.scenes.scene2d.utils.FocusListener.FocusEvent())
-  Pools.set(() => new sge.graphics.g2d.GlyphLayout.GlyphRun())
-  Pools.set(() => new sge.graphics.g2d.GlyphLayout())
-  Pools.set(() => new sge.Net.HttpRequest())
-  Pools.set(() => new sge.scenes.scene2d.InputEvent())
-  Pools.set(() => new sge.math.Rectangle())
-  Pools.set(() => new sge.scenes.scene2d.Stage.TouchFocus())
-  // Actions
-  Pools.set(() => new sge.scenes.scene2d.actions.AddAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.AddListenerAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.AfterAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.AlphaAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.ColorAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.DelayAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.FloatAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.IntAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.LayoutAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.MoveByAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.MoveToAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.ParallelAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.RemoveAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.RemoveActorAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.RemoveListenerAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.RepeatAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.RotateByAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.RotateToAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.RunnableAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.ScaleByAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.ScaleToAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.SequenceAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.SizeByAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.SizeToAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.TimeScaleAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.TouchableAction())
-  Pools.set(() => new sge.scenes.scene2d.actions.VisibleAction())
+  /** The upstream `static { … }` block, ported by hand: every type libGDX itself pools is
+    * pre-registered with its constructor as the factory. This is what makes the `Class`-keyed
+    * lookups above resolve WITHOUT ever needing to construct from a `Class` — the reflective
+    * fallback existed only because these registrations were not exhaustive for user types.
+    *
+    * ==Why it is a METHOD taking the context, and why the WHOLE block moves==
+    * Registration CONSTRUCTS: `set(factory)` calls the factory once to learn the `Class` that keys
+    * the map. `sge.Net.HttpRequest` — one of the 38 types below — is one of the 188 classes the
+    * globals policy threads, so its constructor now takes `(using sge.Sge)`, and an OBJECT
+    * INITIALISER has neither a clause of its own nor a caller to take one from.
+    *
+    * Splitting the block (37 eager, one deferred) would be a hand-maintained list derived from
+    * which classes today's closure happens to reach — it rots the first time upstream pools one
+    * more threaded type, silently, because nothing reports a registration that was not made. So
+    * the whole block moves behind one call the bootstrap makes once, and the miss message
+    * (`Pools.get`) names this method.
+    *
+    * The reference hand port never had this problem and its shape says why: sge carries no
+    * context-free global pool registry at all — `Actor.POOLS` and `Actions.ACTION_POOLS` register
+    * only context-free types, and its one context-needing pool lives on `SgeHttpClient`, an
+    * INSTANCE that already holds the context. */
+  def registerDefaults()(using sge.Sge): Unit =
+    Pools.set(() => new Array[java.lang.Object]())
+    Pools.set(() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent())
+    Pools.set(() => new sge.scenes.scene2d.ui.Table.DebugRect())
+    Pools.set(() => new sge.scenes.scene2d.utils.FocusListener.FocusEvent())
+    Pools.set(() => new sge.graphics.g2d.GlyphLayout.GlyphRun())
+    Pools.set(() => new sge.graphics.g2d.GlyphLayout())
+    Pools.set(() => new sge.Net.HttpRequest())
+    Pools.set(() => new sge.scenes.scene2d.InputEvent())
+    Pools.set(() => new sge.math.Rectangle())
+    Pools.set(() => new sge.scenes.scene2d.Stage.TouchFocus())
+    // Actions
+    Pools.set(() => new sge.scenes.scene2d.actions.AddAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.AddListenerAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.AfterAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.AlphaAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.ColorAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.DelayAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.FloatAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.IntAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.LayoutAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.MoveByAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.MoveToAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.ParallelAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.RemoveAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.RemoveActorAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.RemoveListenerAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.RepeatAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.RotateByAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.RotateToAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.RunnableAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.ScaleByAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.ScaleToAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.SequenceAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.SizeByAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.SizeToAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.TimeScaleAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.TouchableAction())
+    Pools.set(() => new sge.scenes.scene2d.actions.VisibleAction())
 
   /** Registers an existing pool for the specified type. */
   def set[T <: java.lang.Object](`type`: java.lang.Class[T], pool: Pool[T]): Unit =
@@ -98,7 +116,8 @@ object Pools:
     if pool == null then
       throw new GdxRuntimeException(
         "No Pool registered for " + `type` + " — register one with Pools.set(" +
-          `type`.getSimpleName() + "::new) or use Pools.get(type, factory)"
+          `type`.getSimpleName() + "::new), use Pools.get(type, factory), or call " +
+          "Pools.registerDefaults() at start-up for the types libGDX itself pools"
       )
     pool
 

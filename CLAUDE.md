@@ -74,6 +74,18 @@ CONSTRUCTOR's signature owes a third answer beside "attach" and "refuse": *this 
 value without taking a parameter*, and where that value comes from is a port's to say — a hand-written
 file may carry a `given`, and generated code cannot be edited to.
 
+**And the port's HAND-WRITTEN half is outside the closure, so the phase leaves it to a human — who
+does not get to choose.** A shim, an injected replacement, a hand-written suite: the frontend never
+saw them, so nothing threads them and every one is a compile error the moment the shared surface
+moves. Which answer each takes is READ OFF THE GENERATED CALLER, not picked: a shim whose callers are
+all inside threaded declarations may take the clause; a shim reached from a generated declaration the
+closure did NOT thread may not, because no manifest key can add a clause to that caller, and its
+honest answer is the residual global the phase already counts. Both shapes shipped in one port, two
+files apart, and the difference between them is entirely the difference between their callers.
+Corollary for a body substitution: it may change what a member DOES and never what it TAKES, so a
+replacement body needing the new value has to be placed at a member the closure already reached —
+one member further out than the one you were looking at.
+
 ### (c) Genuinely library-specific — a SEPARATE, PLUGGED-IN RULE
 
 If a customisation needs knowledge so specific that it could only ever apply to **one** library, it
