@@ -391,19 +391,26 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "balticporter.runtime.JavaCollections.asList()")
   }
 
-  test("the whole-ARRAY aliasing form is REFUSED, and the refusal keeps the JDK name") {
+  test("the whole-ARRAY aliasing form becomes a LIVE VIEW — never the copying helper") {
     val p = port(asList, new CollectionsTransform)
-    // java returns a LIVE VIEW of the caller's array; the runtime helper's `A*` would COPY it and
-    // silently detach every aliased write (§4.4). The REWRITE therefore does not happen at all, so
-    // the emitted text keeps the JDK name and says which call was not translated.
-    //
-    // The argument is SPREAD, which is the frontend's answer at any external vararg callee
-    // (K6.5's fourth case) and is exactly what makes the untranslated call a faithful one:
-    // `Arrays.asList(arr*)` compiles to the same live view java has — measured on 3.8.4, writes
-    // through `arr` are visible in the list. What is left over is only the RETYPED return
-    // (`Found: java.util.List[String] / Required: Buffer[String]`), which is the refusal talking.
-    assertEmits(p, "return java.util.Arrays.asList(xs.asInstanceOf[scala.Array[java.lang.Object]]*)")
-    assertNotEmits(p, "JavaCollections.asList(xs.asInstanceOf")
+    // java returns a LIVE VIEW of the caller's array, so the copying `asList[A](xs: A*)` may never
+    // receive this shape: a copy compiles and silently detaches every aliased write (§4.4).
+    // `asListView` is java's own answer — reads and WRITES go through to the array, and
+    // `add`/`remove` throw `UnsupportedOperationException` at the call java throws it at.
+    assertEmits(p, "balticporter.runtime.JavaCollections.asListView(xs)")
+    assertNotEmits(p, "JavaCollections.asList(xs)")
+    // …the JDK name is gone: this is a translated call now, not a refused one.
+    assertNotEmits(p, "java.util.Arrays.asList(xs")
+    // …the SPREAD comes off. At an external vararg callee the frontend renders java's array
+    // pass-through as `arr*` (K6.5's fourth case), and `asListView` takes the ARRAY: left on, the
+    // emitted `asListView(xs*)` is `Sequence argument type annotation '*' cannot be used here` —
+    // the rewrite firing at the right site with the wrong shape.
+    assertNotEmits(p, "asListView(xs*)")
+    // …and so does the ERASURE coercion the frontend synthesised for the JDK's `Object[]` formal.
+    // `asListView[A]` infers `A` from its argument, so with the cast left on it would infer
+    // `Object` and hand back a `Buffer[Object]` where java's call — which inferred `T = String`
+    // from the unerased argument — produced a `List<String>`.
+    assertNotEmits(p, "asListView(xs.asInstanceOf")
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -432,9 +439,18 @@ class CollectionsTransformSpec extends PortSuite:
       |}
       |""".stripMargin
 
-  test("a value under a DELIBERATE REFUSAL is not wrapped — the error keeps naming the boundary") {
+  test("…and with the aliasing form now TRANSLATED, the bridge fires for it exactly as for the rest") {
+    // This used to assert the opposite, and both readings were right at their own time. While
+    // `Arrays.asList(arr)` was a REFUSAL the value under it really was a `java.util.List` and a
+    // `JavaCollection.from(…)` over it named the wrapper instead of the boundary. `asListView`
+    // produces a `Buffer`, so there is nothing left to paint over: the bridge is wrapping a value
+    // this phase made, which is the case it exists for.
+    //
+    // The mechanism that decided the old case is UNCHANGED and still load-bearing — a call left
+    // standing at one of this phase's handled statics is a call the phase declined — which is why
+    // the assertion below is about the NAME the emitted call carries, not about a special case.
     val p = port(refusedIntoShimSlot, new CollectionsTransform)
-    assertEmits(p, "B.of(java.util.Arrays.asList(xs.asInstanceOf[scala.Array[java.lang.Object]]*))")
+    assertEmits(p, "B.of(balticporter.runtime.JavaCollection.from(balticporter.runtime.JavaCollections.asListView(xs)))")
     assertNotEmits(p, "JavaCollection.from(java.util.Arrays.asList")
   }
 

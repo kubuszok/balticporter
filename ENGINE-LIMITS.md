@@ -2082,7 +2082,7 @@ with a SCALA vararg, `JavaCollections.asList[A](xs: A*)`:
 | `Arrays.asList(1, 2, 3)` | `asList(1, 2, 3)` — right BY ACCIDENT | unchanged |
 | `Arrays.asList(s)` | `asList(Array[String](s))` — E007 | `asList(s)` |
 | `Arrays.asList(xs, xs)` | `asList(Array[Array[String]](xs, xs))` — E007 | `asList(xs, xs)` |
-| `Arrays.asList(xs)` | `JavaCollections.asList(xs.asInstanceOf[Array[Object]])` — E007 | `java.util.Arrays.asList(…)` — REFUSED, E007 under the JDK name |
+| `Arrays.asList(xs)` | `JavaCollections.asList(xs.asInstanceOf[Array[Object]])` — E007 | `JavaCollections.asListView(xs)` — java's LIVE, fixed-size view (see the closure below) |
 
 The accident matters more than the failure: the frontend declines to pack PRIMITIVES, so the one
 shape everybody writes arrived as bare elements and the convention clash never showed. **A rewrite
@@ -2113,21 +2113,44 @@ Two rules the fix rests on:
   `Found` side is the node's type and not the value's, so it cannot be mistaken for the engine bug a
   bare `ShimBoundary` at a pair with a factory would be.
 
-**The aliasing form IS expressible after all, and what blocks it is now precisely known.** This entry
-said a faithful live view was "not reachable from the rewrite". It is reachable by COMPOSITION and
-by nothing else: `JavaCollections.fromJava(java.util.Arrays.asList(arr))` is a live `Buffer` view of
-a live `java.util.List` view of the caller's array — writes reach `arr`, and `add`/`remove` throw
-because java's fixed-size list rejects them, which is java's behaviour and not an approximation.
-What still blocks it is the half this entry already identified: **the frontend has erased the
-element type**, so the composition yields `Buffer[Object]` where java's call inferred `List<String>`.
+**CLOSED — and what was refused was the COPY, never the form.** The rows above say a single
+array-typed argument is REFUSED, and every word of the reason stands: java returns a live view, a
+`Buffer` built from `A*` copies, and a copy compiles while silently detaching every aliased write.
+What was wrong was the conclusion that there was no third answer. `JavaCollections.asListView(arr)`
+is java's own: a fixed-size `Buffer` reading AND WRITING THROUGH the array, with `add`/`remove`/
+`clear` throwing `UnsupportedOperationException` at the call `java.util.Arrays$ArrayList` throws it
+at. Nothing in it is an approximation, and it needs no composition — the earlier idea of
+`fromJava(Arrays.asList(arr))` (a Buffer view of a List view) was two live views where one does.
 
-Measured, by accident, when the EXTERNAL-CALLEE wrap (K15) reached these calls before anything
-excluded them: **liqp 76 → 67**, i.e. all nine of its aliasing sites compiled — because that
-library's filters are `Object`-typed throughout and `Buffer[Object]` is what their slots want. It is
-excluded again deliberately, and the exclusion is the point: `staticRewrite` returning `None` means
-either "no arm matched" or "an arm REFUSED", only the first is an external seam, and **a refusal the
-next mechanism paints over is a refusal nobody can find**. Closing this properly is one deliberate
-arm plus a corpus measurement of the erased element type — not an accident of ordering.
+**What "blocked" it was a fact about the ARGUMENT read as a fact about the TREE.** This entry said
+the frontend has already coerced the argument to the erased formal (`Array[Object]`), so the element
+type is gone. True of the argument node; false of the call. The coercion is a `Tree.Typed` the
+frontend synthesised for the OLD callee's formal, and java's own inference is recorded on the CALL —
+`Arrays.asList(arr)` over an `Insertion[]` has result type `List<Insertion>`, which this phase has
+retyped to `Buffer[Insertion]`. So the element type is recoverable by looking THROUGH a cast the
+rewrite is about to make irrelevant, which is CLAUDE.md §1(b)'s *a coercion may not precede a
+rewrite of the same call* and `arrayArg`'s rule at a second site. The strip is structural and names
+no type: take the cast off exactly when the array it wraps has the element type the call RESULTS in.
+
+**The aliasing form has THREE node shapes, not two, and the third is this entry's own fourth case
+biting the arm that reads it.** After K6.5's fourth case an external callee's array pass-through is
+a `Tree.Spread` (`arr*`), so the single-argument arm sees a spread whose type is an array — right
+about the shape, wrong about the node. Passed through, the rewrite emitted `asListView(arr*)` and
+scalac said `Sequence argument type annotation '*' cannot be used here`: the rewrite firing at the
+right site with the wrong shape, at every one of the twelve sites. **A phase that pattern-matches an
+argument list owes every shape of the frontend's vararg convention** — the same sentence this entry
+already carries for the composition above, met a second time by the arm one line down.
+
+Measured on liqp: **38 → 26** (main 27 → 16, test 11 → 10), twelve sites, 22 member digests, every
+check count flat. The earlier accidental measurement (liqp 76 → 67 when K15's wrap reached these
+calls) was right about the count and wrong about the value — that path shipped `Buffer[Object]`
+where java inferred `List<Insertion>`, and read green only because that library's filters are
+`Object`-typed throughout.
+
+`refusedRewriteSource` and the `handledStatic` record it reads are UNCHANGED and still load-bearing:
+they answer "did this phase decline this call", and a call the phase now rewrites carries the minted
+helper's symbol, so the wrap fires for it exactly as for every other value the phase produced. The
+mechanism was never about `asList`.
 
 **THE THIRD CASE — the convention stops at the PROGRAM'S EDGE, and it is not about `asList` at
 all.** CLOSED. The two cases above are one rewrite retargeting one helper. The general fact is that

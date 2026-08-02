@@ -1360,7 +1360,9 @@ final class CollectionsTransform(
       // …and it is the ONE rewritten static whose runtime counterpart is a SCALA vararg (`A*`),
       // which is where the engine's own vararg convention has to be undone. See [[asListArgs]].
       case (Some("java.util.Arrays#asList"), args)                 =>
-        asListArgs(args).map(as => factory(sym("asList"), as))
+        asListArgs(args) match
+          case AsList.Elements(as) => Some(factory(sym("asList"), as))
+          case AsList.Aliased(arr) => Some(factory(sym("asListView"), List(asListViewArg(arr, t))))
       // `Map.Entry` became a `Tuple2`, so `Entry`'s own statics must come along or the call survives
       // to the compiler naming a type the port no longer produces.
       case (Some("java.util.Map$Entry#comparingByKey" | "java.util.Map.Entry#comparingByKey"), List(cmp)) =>
@@ -1509,23 +1511,73 @@ final class CollectionsTransform(
     * type, which cannot compile, while `asList(1, 2, 3)` (never packed at all) was rewritten. Each
     * half was green alone; the composition was not.
     *
-    * A single argument that IS an array is the aliasing form and is REFUSED — the rewrite does not
-    * happen at all, so the emitted text names `java.util.Arrays.asList` and fails to compile there.
-    * That is deliberately louder than the previous behaviour, which emitted
-    * `JavaCollections.asList(xs.asInstanceOf[Array[Object]])` and read as a broken runtime helper
-    * rather than an untranslated call. ENGINE-LIMITS M6: the compiler is the tracker. A faithful
-    * live view is possible in principle — a fixed-size `Buffer` over the array, with `add`/`remove`
-    * throwing as java's does — but not reachable from here: the frontend has already coerced the
-    * argument to the ERASED formal (`Array[Object]`), so the element type needed to type the view
-    * is gone by this point, and recovering it is a frontend change with far wider blast radius. */
-  private def asListArgs(args: List[Term])(using p: Program): Option[List[Term]] =
+    * ==A single ARRAY argument is the ALIASING form, and it is now a VIEW rather than a refusal==
+    * This used to return `None`, refusing the rewrite entirely so the emitted text kept the JDK
+    * name and failed to compile as an untranslated call. The refusal was right about the thing it
+    * refused — a COPY here silently detaches every aliased write, which is CLAUDE.md §4.4 exactly —
+    * and wrong about there being no third answer. `JavaCollections.asListView` is java's own:
+    * a fixed-size `Buffer` reading and WRITING THROUGH the array, with `add`/`remove` throwing
+    * `UnsupportedOperationException` at the call java throws it at. Nothing about it is an
+    * approximation.
+    *
+    * What blocked it was stated here as "the frontend has already coerced the argument to the
+    * ERASED formal (`Array[Object]`), so the element type is gone" — and that is true of the
+    * ARGUMENT and not of the tree. The coercion is a `Tree.Typed` the frontend synthesised for the
+    * OLD callee's formal, with java's own inference recorded on the CALL: `Arrays.asList(arr)` over
+    * an `Insertion[]` has result type `List<Insertion>`. So the element type is recoverable by
+    * looking THROUGH a cast this rewrite is about to make irrelevant — which is CLAUDE.md §1(b)'s
+    * "a COERCION may not precede a REWRITE of the same call", and `arrayArg`'s rule at a second
+    * site. See [[asListViewArg]]. */
+  private def asListArgs(args: List[Term])(using p: Program): AsList =
     def isArray(t: TypeRepr) = headSym(t).flatMap(p.symbolOf).exists(_.fullName == "scala.Array")
     args match
-      case init :+ Tree.NewArray(_, Nil, Some(elems), _, _) => Some(init ++ elems)
+      case init :+ Tree.NewArray(_, Nil, Some(elems), _, _) => AsList.Elements(init ++ elems)
       // the EXTERNAL-callee shape of the same pack — opened, never read as one array argument.
-      case init :+ Tree.Repeated(elems, _, _)               => Some(init ++ elems)
-      case List(a) if isArray(a.tpe)                        => scala.None
-      case _                                                => Some(args)
+      case init :+ Tree.Repeated(elems, _, _)               => AsList.Elements(init ++ elems)
+      // …and the THIRD shape of the same java call, which is the aliasing form after K6.5's fourth
+      // case: java FORWARDS an array through the `T...` slot, and at an external callee that is a
+      // `Tree.Spread` (`arr*`), not a pack. It is one argument that IS the caller's array, so it is
+      // this arm and not the two above — and the spread comes OFF, because `asListView` takes the
+      // array itself. Left on, the emitted `asListView(arr*)` is `Sequence argument type annotation
+      // '*' cannot be used here`, i.e. the rewrite firing at the right site with the wrong shape.
+      case List(Tree.Spread(e, _, _)) if isArray(e.tpe)     => AsList.Aliased(e)
+      case List(a) if isArray(a.tpe)                        => AsList.Aliased(a)
+      case _                                                => AsList.Elements(args)
+
+  /** the argument `asListView` should receive — [[arrayArg]]'s rule at `Arrays.asList(T[])`.
+    *
+    * Java's `asList` is declared `<T> List<T> asList(T... a)`, whose ERASED formal is `Object[]`, so
+    * the frontend synthesises `arr.asInstanceOf[Array[Object]]` off the declared formal (G14, the
+    * same rule that widens a map key to `Object`). `asListView[A]` infers `A` FROM the argument, so
+    * with the cast left on it infers `Object` and hands back a `Buffer[Object]` where java's call —
+    * which inferred `T = Insertion` from the unerased argument — produced a `List<Insertion>`.
+    *
+    * The test is STRUCTURAL and names no type (CLAUDE.md §4.56): strip when the cast wraps an array
+    * whose ELEMENT type is the one this call RESULTS in — that is precisely "java inferred `T` from
+    * the unerased argument", since the call's recorded result type is `List<T>` and this phase has
+    * already retyped it to `Buffer[T]`. A java source that really wrote `(Object[]) value` inferred
+    * `T = Object`, so both elements are `Object`, the strip is a no-op on the type, and the cast the
+    * JAVA wrote survives underneath it. */
+  private def asListViewArg(arg: Term, call: Tree.Apply): Term = arg match
+    case Tree.Typed(inner, _, _, _) =>
+      val wanted = soleTypeArg(call.tpe)
+      val have   = soleTypeArg(inner.tpe)
+      if wanted.isDefined && wanted == have then inner else arg
+    case _ => arg
+
+  /** the single type argument of an applied type, or `None` — the one shape [[asListViewArg]]
+    * compares. Deliberately not a general "element type of": a `Buffer[A]` and an `Array[A]` both
+    * have exactly one, and anything else is not a pair this strip may reason about. */
+  private def soleTypeArg(t: TypeRepr): Option[TypeRepr] = t match
+    case TypeRepr.AppliedType(_, List(a)) if a != TypeRepr.NoType => Some(a)
+    case _                                                        => scala.None
+
+  /** which of `Arrays.asList`'s two java shapes a call site is — see [[asListArgs]]. An `Option`
+    * could not say it: the aliasing form is not "no arguments to pass", it is a DIFFERENT helper,
+    * and reading the absence as a refusal is what kept the view out of reach for two waves. */
+  private enum AsList:
+    case Elements(args: List[Term])
+    case Aliased(array: Term)
 
   /** a `JavaCollections` static by name. Minted EAGERLY in `run` — symbols cannot be added once the
     * table is built, and the table is built before the traversal that consults these. An unlisted
@@ -2499,7 +2551,7 @@ object CollectionsTransform:
   private[balticporter] val UninheritableTargets: Set[String] = Set("scala.Tuple2")
 
   val StaticHelpers: List[String] =
-    List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "removeValue",
+    List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",

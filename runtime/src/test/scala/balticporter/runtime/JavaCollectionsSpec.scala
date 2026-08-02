@@ -190,11 +190,71 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(xs.toList, List("a", "b"))
   }
 
-  test("asList does NOT alias an array — the aliasing form never reaches here (asListArgs refuses it)") {
+  test("asList does NOT alias an array — the aliasing form goes to asListView, never here") {
     val arr = Array("a", "b")
     val xs  = JavaCollections.asList(arr*)
     arr(0) = "changed"
     assertEquals(xs.toList, List("a", "b"))
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // Arrays.asList(T[]) — the ALIASING form, which is a live fixed-size VIEW and not a copy
+  // -------------------------------------------------------------------------------------------
+
+  test("asListView READS THROUGH — a write to the array is visible in the list") {
+    val arr = Array("a", "b")
+    val xs  = JavaCollections.asListView(arr)
+    assertEquals(xs.toList, List("a", "b"))
+    arr(0) = "changed"
+    assertEquals(xs(0), "changed")
+    assertEquals(xs.toList, List("changed", "b"))
+  }
+
+  test("…and WRITES THROUGH — `set` reaches the caller's array. This is the half a copy loses") {
+    val arr = Array("a", "b")
+    val xs  = JavaCollections.asListView(arr)
+    xs(1) = "written"
+    assertEquals(arr(1), "written")
+  }
+
+  test("asListView is FIXED-SIZE — every resizing operation throws, as java's does") {
+    val arr = Array("a", "b")
+    val xs  = JavaCollections.asListView(arr)
+    assertEquals(xs.length, 2)
+    intercept[UnsupportedOperationException](xs += "c")
+    intercept[UnsupportedOperationException](xs.remove(0))
+    intercept[UnsupportedOperationException](xs.insert(0, "z"))
+    intercept[UnsupportedOperationException](xs.prepend("z"))
+    intercept[UnsupportedOperationException](xs.clear())
+    // …and none of them touched the array
+    assertEquals(arr.toList, List("a", "b"))
+  }
+
+  test("asListView ITERATES the array, and a derived collection is an ordinary one") {
+    val arr = Array(1, 2, 3)
+    val xs  = JavaCollections.asListView(arr)
+    assertEquals(xs.iterator.toList, List(1, 2, 3))
+    assertEquals(xs.map(_ * 2).toList, List(2, 4, 6))
+    // a MAPPED buffer is a fresh ArrayBuffer, so it is growable — java's `asList().stream()` is
+    // the same shape: reading off a fixed-size view does not make the result fixed-size.
+    val ys = xs.map(_ * 2)
+    ys += 8
+    assertEquals(ys.toList, List(2, 4, 6, 8))
+    assertEquals(arr.toList, List(1, 2, 3))
+  }
+
+  test("asListView keeps the ARRAY's element type — java's own inference, not the erased one") {
+    // the whole reason `CollectionsTransform.asListViewArg` strips the erasure coercion: an
+    // `Array[String]` must yield a `Buffer[String]`, not a `Buffer[Object]`.
+    val xs: scala.collection.mutable.Buffer[String] = JavaCollections.asListView(Array("a"))
+    assertEquals(xs.head.length, 1)
+  }
+
+  test("an EMPTY array is a legal view, and still fixed-size") {
+    val xs = JavaCollections.asListView(Array.empty[String])
+    assertEquals(xs.length, 0)
+    assert(xs.isEmpty)
+    intercept[UnsupportedOperationException](xs += "a")
   }
 
   // -------------------------------------------------------------------------------------------

@@ -80,6 +80,33 @@ object JavaCollections:
   def asList[A](xs: A*): scala.collection.mutable.Buffer[A] =
     scala.collection.mutable.ArrayBuffer.from(xs)
 
+  /** `java.util.Arrays.asList(T[] a)` — the OTHER shape behind that syntax, and the one [[asList]]
+    * above must never receive: a LIVE, FIXED-SIZE view of the caller's array.
+    *
+    * Java's contract, reproduced exactly rather than approximated:
+    *
+    *   - **reads go through to the array**, so a write to `arr` after the call is visible in the
+    *     list;
+    *   - **`set(i, v)` writes THROUGH**, so a write through the list is visible in `arr`. That is
+    *     the half a copy silently loses, which is why `ENGINE-LIMITS.md` K6.5 refused a copying
+    *     rewrite rather than shipping one: a detached alias is CLAUDE.md §4.4 exactly — valid
+    *     Scala, no error, no moved count, and every aliased write gone;
+    *   - **the size is FIXED.** `add`, `remove`, `clear`, `insert` and `prepend` throw
+    *     `UnsupportedOperationException`, which is what `Arrays$ArrayList` does — it extends
+    *     `AbstractList` and overrides `set` but nothing that resizes. So this is not a restriction
+    *     the port invented; it is the exception java throws, at the call java throws it at.
+    *
+    * The element type is the ARRAY's, which is what java's own inference saw: `Arrays.asList(arr)`
+    * on an `Insertion[]` is a `List<Insertion>`. The rewrite therefore has to hand this method the
+    * argument BENEATH the erasure coercion the frontend synthesised for the JDK's `Object[]`
+    * formal — see `CollectionsTransform.asListViewArg`, which is `arrayArg`'s rule at a second
+    * site.
+    *
+    * CLAUDE.md §4.5 is not violated here for the same reason [[FrozenBuffer]] does not violate it:
+    * nothing in a port ever EXTENDS this class, so there is no second java interface to satisfy and
+    * no ported member for a collection trait's inherited names to collide with. */
+  def asListView[A](arr: Array[A]): scala.collection.mutable.Buffer[A] = new ArrayViewBuffer[A](arr)
+
   /** `java.util.Collection.remove(Object)` — removal BY VALUE, which scala's `Buffer` does not have.
     *
     * Not `Collections`', and deliberately here anyway: like every other member of this object it
@@ -551,6 +578,27 @@ object JavaCollections:
     def clear(): Unit                                      = refuse
     override def patchInPlace(from: Int, patch: scala.collection.IterableOnce[A], replaced: Int): this.type = refuse
 
+  /** `java.util.Arrays.asList(T[])`'s live, fixed-size view — see [[asListView]] for the contract.
+    *
+    * Every size-preserving operation reads or writes the ARRAY; every size-CHANGING one throws, as
+    * `java.util.Arrays$ArrayList` does. `refuseFixedSize` rather than [[refuse]] because the reason
+    * is a different one and the message a reader gets at run time is the whole value of throwing. */
+  private final class ArrayViewBuffer[A](arr: Array[A]) extends scala.collection.mutable.AbstractBuffer[A]:
+    def apply(i: Int): A                                = arr(i)
+    def length: Int                                     = arr.length
+    override def knownSize: Int                         = arr.length
+    override def iterator: scala.collection.Iterator[A] = arr.iterator
+    def update(i: Int, elem: A): Unit                   = arr(i) = elem
+    def insert(idx: Int, elem: A): Unit                 = refuseFixedSize
+    def insertAll(idx: Int, elems: scala.collection.IterableOnce[A]): Unit = refuseFixedSize
+    def prepend(elem: A): this.type                     = refuseFixedSize
+    def remove(idx: Int): A                             = refuseFixedSize
+    def remove(idx: Int, count: Int): Unit              = refuseFixedSize
+    def addOne(elem: A): this.type                      = refuseFixedSize
+    def clear(): Unit                                   = refuseFixedSize
+    override def patchInPlace(from: Int, patch: scala.collection.IterableOnce[A], replaced: Int): this.type =
+      refuseFixedSize
+
   /** `java.util.List.subList`'s view — see [[subList]] for the contract and for what is
     * deliberately not reproduced. `until` is a `var` because java's view resizes when you insert or
     * remove THROUGH it. */
@@ -608,6 +656,10 @@ object JavaCollections:
 
   /** java's own answer at every one of those members — `UnsupportedOperationException`, with the
     * message naming what the value IS, since the alternative a reader will guess is an engine bug. */
+  private def refuseFixedSize: Nothing = throw new UnsupportedOperationException(
+    "this list is java's `Arrays.asList(array)` — a FIXED-SIZE view of the caller's array. " +
+      "`set` writes through; `add`/`remove`/`clear` throw, and java throws here too")
+
   private def refuse: Nothing = throw new UnsupportedOperationException(
     "this collection came from a java factory that returns an IMMUTABLE collection or an " +
       "unmodifiable VIEW (Collections.emptyList/emptyMap/emptySet/singletonList/singletonMap/" +
