@@ -1,5 +1,6 @@
 package balticporter.corpus.gltf
 
+import balticporter.corpus.ClasspathCache
 import balticporter.core.{FrontendConfig, Provenance, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
@@ -93,25 +94,12 @@ object GltfTestMigrate:
   */
 object GltfClasspath:
 
+  /** the version `gdx-gltf/build.gradle` declares. */
+  val Coordinates: List[String] = List("junit:junit:4.12")
+
   def resolve(repoRoot: Path): List[Path] =
-    val cache = repoRoot.resolve("out/gltf-test-classpath.txt")
-    val text =
-      if Files.exists(cache) then Files.readString(cache).trim
-      else
-        val pb = new ProcessBuilder("cs", "fetch", "--classpath", "junit:junit:4.12")
-          .redirectErrorStream(true)
-        val proc = pb.start()
-        // `cs` writes PROGRESS to stderr and the classpath to stdout; the streams are merged here
-        // so a failure is reportable, and the classpath is the last line holding a `.jar`.
-        val raw = new String(proc.getInputStream.readAllBytes()).trim
-        val out = raw.linesIterator.filter(_.contains(".jar")).toList.lastOption.getOrElse("")
-        if proc.waitFor() != 0 || out.isEmpty then
-          // A missing classpath is reported, never silently swallowed: the failure it causes is a
-          // WRONG resolution rather than an error, so a quiet fallback would look like a port bug.
-          System.err.println(s"[gltf-test] could not fetch test classpath (is `cs` installed?):\n$raw")
-          ""
-        else
-          Files.createDirectories(cache.getParent)
-          Files.writeString(cache, out)
-          out
-    text.split(java.io.File.pathSeparator).filter(_.nonEmpty).map(Path.of(_)).toList
+    // through the shared mechanism, which also RECORDS these coordinates beside the cache: reused
+    // for a different set, a cached line resolves this suite's imports against a version the port
+    // no longer declares — and an import that resolves WRONGLY does not fail, it emits nonsense
+    // (`ClasspathCache`, which is also where the fetch failure is fatal rather than empty).
+    ClasspathCache.entries(repoRoot.resolve("out/gltf-test-classpath.txt"), "gltf-test", Coordinates)

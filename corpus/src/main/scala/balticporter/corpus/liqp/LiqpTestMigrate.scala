@@ -1,5 +1,6 @@
 package balticporter.corpus.liqp
 
+import balticporter.corpus.ClasspathCache
 import balticporter.runner.PortConfig
 
 import java.io.File
@@ -120,16 +121,19 @@ object LiqpTestClasspath:
         .filter(_.nonEmpty)
         .toList
     val out      = cache(repoRoot)
+    val key      = ClasspathCache.key(TestCoordinates)
     val existing = if Files.exists(out) then Files.readString(out).trim else ""
     val carried  = existing.split(File.pathSeparator).filter(_.nonEmpty).toList
     // the cached line is reusable only if it still STARTS with the main classpath, entry for
-    // entry: anything else is a line built against a different resolution of the base port.
-    if carried.startsWith(mainEntries) && carried.sizeIs > mainEntries.size then out
+    // entry — anything else is a line built against a different resolution of the base port — AND
+    // was resolved from the test coordinates this port declares now ([[ClasspathCache]]): the
+    // prefix check follows the BASE, so on its own it would answer a test-scope version bump with
+    // the jar the port used to declare.
+    if ClasspathCache.fresh(out, key) && carried.startsWith(mainEntries) &&
+       carried.sizeIs > mainEntries.size
+    then out
     else
       val junit = LiqpClasspath.fetch(TestCoordinates)
       // `distinct` rather than a union: the ORDER is the resolution order `cs` produced, and the
       // main entries come first because they are what the resolution roots are read against.
-      val line = (mainEntries ++ junit).distinct.mkString(File.pathSeparator)
-      Files.createDirectories(out.getParent)
-      Files.writeString(out, line)
-      out
+      ClasspathCache.write(out, (mainEntries ++ junit).distinct.mkString(File.pathSeparator), key)

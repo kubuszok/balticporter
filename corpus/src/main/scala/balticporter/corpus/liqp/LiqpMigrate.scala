@@ -1,5 +1,6 @@
 package balticporter.corpus.liqp
 
+import balticporter.corpus.ClasspathCache
 import balticporter.runner.PortConfig
 
 import java.io.File
@@ -161,23 +162,27 @@ object LiqpClasspath:
   /** Guarantee the classpath file and the compiled parser exist, building both once if they do
     * not. Returns the file's path.
     *
-    * BOTH are checked, not just the file: the classpath line names the parser directory, so a
-    * cached line beside a `clean`ed `out/` is a classpath that resolves to nothing — which is
-    * exactly the failure mode the fatality above exists to prevent, arriving by the back door. */
+    * THREE things are checked, not just the file:
+    *
+    *   - the parser CLASSES, both copies: the classpath line names the parser directory, so a
+    *     cached line beside a `clean`ed `out/` is a classpath that resolves to nothing — exactly
+    *     the failure mode the fatality above exists to prevent, arriving by the back door;
+    *   - the COORDINATES the line was resolved from ([[ClasspathCache]]): this port's `pom.xml`
+    *     pins six of them, including one that reads like a typo and is not, and a cache keyed on
+    *     existence alone would answer a bump with the versions the port used to declare — an
+    *     unresolvable import that resolves WRONGLY rather than failing. */
   def ensure(repoRoot: Path): Path =
     val out      = cache(repoRoot)
     val classes  = parserClasses(repoRoot)
     val upstream = upstreamClasses(repoRoot)
-    if Files.exists(out) && Files.readString(out).trim.nonEmpty
-      && hasParserClasses(classes) && hasParserClasses(upstream)
+    val key      = ClasspathCache.key(Coordinates)
+    if ClasspathCache.fresh(out, key) && hasParserClasses(classes) && hasParserClasses(upstream)
     then out
     else
       val jars = fetch(Coordinates)
       compileParser(jars, classes, parserOnly = true)
       compileParser(jars, upstream, parserOnly = false)
-      Files.createDirectories(out.getParent)
-      Files.writeString(out, (jars :+ classes.toString).mkString(File.pathSeparator))
-      out
+      ClasspathCache.write(out, (jars :+ classes.toString).mkString(File.pathSeparator), key)
 
   private def hasParserClasses(classes: Path): Boolean =
     val pkg = classes.resolve(ParserPackage)
@@ -187,27 +192,14 @@ object LiqpClasspath:
       finally s.close()
     }
 
-  /** `cs fetch --classpath`, filtered to the one line that holds jars.
-    *
-    * `cs` writes PROGRESS to stderr and the classpath to stdout; merged here so a failure is
-    * reportable, then filtered — taking the whole output once cached `Downloading https…` as a
-    * classpath entry and the frontend refused the run with "Downloading https does not exist"
-    * (`SimpleGraphsClasspath`).
+  /** the jars for these coordinates, through the mechanism every port shares
+    * ([[balticporter.corpus.ClasspathCache]] — the `cs` invocation, the stream merge and the
+    * jar-line filter, once).
     *
     * Takes its coordinates rather than reading [[Coordinates]] so that [[LiqpTestClasspath]] can
-    * resolve the ONE test-scope coordinate through the same filter — the alternative was a second
-    * copy of the "Downloading https" lesson, one source set away. */
+    * resolve the ONE test-scope coordinate the same way. */
   private[liqp] def fetch(coordinates: List[String]): List[String] =
-    val pb = new ProcessBuilder(
-      (List("cs", "fetch", "--classpath") ++ coordinates)*
-    ).redirectErrorStream(true)
-    val proc = pb.start()
-    val raw  = new String(proc.getInputStream.readAllBytes()).trim
-    val line = raw.linesIterator.filter(_.contains(".jar")).toList.lastOption.getOrElse("")
-    if proc.waitFor() != 0 || line.isEmpty then
-      throw new IllegalStateException(
-        s"[liqp] could not fetch a classpath (is `cs` installed?) for ${coordinates.mkString(" ")}:\n$raw")
-    line.split(File.pathSeparator).filter(_.nonEmpty).toList
+    ClasspathCache.fetch("liqp", coordinates)
 
   /** javac the ANTLR output into `classes`, resolving liqp's own types from SOURCE.
     *

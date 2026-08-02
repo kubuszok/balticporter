@@ -1,5 +1,6 @@
 package balticporter.corpus.simplegraphs
 
+import balticporter.corpus.ClasspathCache
 import balticporter.runner.PortConfig
 
 import java.nio.file.{Files, Path}
@@ -64,29 +65,17 @@ object SimpleGraphsClasspath:
 
   def cache(repoRoot: Path): Path = repoRoot.resolve("out/simplegraphs-test-classpath.txt")
 
-  /** Guarantee the cache file exists, fetching once if it does not. Returns its path.
+  /** the version simple-graphs' own `build.gradle` declares. */
+  val Coordinates: List[String] = List("junit:junit:4.12")
+
+  /** Guarantee the cache file exists AND was resolved from the coordinates above, fetching once if
+    * not. Returns its path.
     *
-    * A failure here is FATAL rather than an empty classpath, and that is not strictness for its own
-    * sake: an `import static org.junit.Assert.assertEquals` the frontend cannot resolve does not
-    * fail — it resolves WRONGLY, to an unqualified call on the enclosing test class — so a port
-    * built with no JUnit on the frontend classpath emits nonsense and reports success.
+    * A failure is FATAL rather than an empty classpath, and a STALE cache is refetched rather than
+    * reused, for one reason ([[ClasspathCache]] holds both): an
+    * `import static org.junit.Assert.assertEquals` the frontend cannot resolve does not fail — it
+    * resolves WRONGLY, to an unqualified call on the enclosing test class — so a port built with no
+    * JUnit, or with a different JUnit than it declares, emits nonsense and reports success.
     */
   def ensure(repoRoot: Path): Path =
-    val out = cache(repoRoot)
-    if Files.exists(out) && Files.readString(out).trim.nonEmpty then out
-    else
-      val pb = new ProcessBuilder("cs", "fetch", "--classpath", "junit:junit:4.12")
-        .redirectErrorStream(true)
-      val proc = pb.start()
-      // `cs` writes PROGRESS to stderr and the classpath to stdout; merged here so a failure is
-      // reportable, then filtered to the one line holding a jar. Taking the whole output cached
-      // "Downloading https…" as a classpath entry and the frontend refused the run with
-      // "Downloading https does not exist".
-      val raw  = new String(proc.getInputStream.readAllBytes()).trim
-      val line = raw.linesIterator.filter(_.contains(".jar")).toList.lastOption.getOrElse("")
-      if proc.waitFor() != 0 || line.isEmpty then
-        throw new IllegalStateException(
-          s"[simple-graphs-test] could not fetch the test classpath (is `cs` installed?):\n$raw")
-      Files.createDirectories(out.getParent)
-      Files.writeString(out, line)
-      out
+    ClasspathCache.ensure(cache(repoRoot), "simple-graphs-test", Coordinates)

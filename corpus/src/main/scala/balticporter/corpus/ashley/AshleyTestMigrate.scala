@@ -1,5 +1,6 @@
 package balticporter.corpus.ashley
 
+import balticporter.corpus.ClasspathCache
 import balticporter.core.{FrontendConfig, Provenance, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
@@ -81,27 +82,14 @@ object AshleyTestMigrate:
   */
 object AshleyClasspath:
 
+  /** the versions Ashley's own `build.gradle` declares — see above for what guessing a modern
+    * Mockito cost. */
+  val Coordinates: List[String] = List("junit:junit:4.13.2", "org.mockito:mockito-core:1.10.19")
+
   def resolve(repoRoot: Path): List[Path] =
-    val cache = repoRoot.resolve("out/ashley-test-classpath.txt")
-    val text =
-      if Files.exists(cache) then Files.readString(cache).trim
-      else
-        val pb = new ProcessBuilder("cs", "fetch", "--classpath",
-          "junit:junit:4.13.2", "org.mockito:mockito-core:1.10.19").redirectErrorStream(true)
-        val proc = pb.start()
-        // `cs` writes PROGRESS to stderr and the classpath to stdout, and the streams are merged
-        // here so a failure is reportable. The classpath is the last line and the only one holding
-        // a path separator — taking the whole output cached "Downloading https…" as a classpath
-        // entry, and Spoon then refused the run with "Downloading https does not exist".
-        val raw  = new String(proc.getInputStream.readAllBytes()).trim
-        val out  = raw.linesIterator.filter(_.contains(".jar")).toList.lastOption.getOrElse("")
-        if proc.waitFor() != 0 || out.isEmpty then
-          // A missing classpath is reported, never silently swallowed: the failure it causes is a
-          // WRONG resolution rather than an error, so a quiet fallback would look like a port bug.
-          System.err.println(s"[ashley-test] could not fetch test classpath (is `cs` installed?):\n$raw")
-          ""
-        else
-          Files.createDirectories(cache.getParent)
-          Files.writeString(cache, out)
-          out
-    text.split(java.io.File.pathSeparator).filter(_.nonEmpty).map(Path.of(_)).toList
+    // through the shared mechanism, which also RECORDS these coordinates beside the cache: reused
+    // for a different set, a cached line resolves this suite's imports against versions the port no
+    // longer declares — and an import that resolves WRONGLY does not fail, it emits nonsense
+    // (`ClasspathCache`). A fetch failure is fatal there rather than an empty classpath here, for
+    // the same reason: a quiet fallback looks like a port bug two stages later.
+    ClasspathCache.entries(repoRoot.resolve("out/ashley-test-classpath.txt"), "ashley-test", Coordinates)

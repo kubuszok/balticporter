@@ -1,5 +1,6 @@
 package balticporter.corpus.screens
 
+import balticporter.corpus.ClasspathCache
 import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
@@ -252,28 +253,19 @@ object ScreensClasspath:
     "org.jspecify:jspecify:0.3.0",
   )
 
-  def entries(repoRoot: Path): List[Path] =
-    ensure(repoRoot).toString.split(java.io.File.pathSeparator).toList
-      .filter(_.nonEmpty).map(Path.of(_))
+  /** everything before the coordinates in the resolver invocation — part of the cache's fingerprint,
+    * because an exclusion decides the classpath as much as a version does. */
+  private val resolverArgs = List(
+    "-r", "https://jitpack.io",
+    // libGDX is a SOURCE resolution root; a second copy of it on the frontend classpath is a
+    // second answer to every `com.badlogic.gdx.*` name, decided by scan order.
+    "--exclude", "com.badlogicgames.gdx:gdx",
+  )
 
-  /** Guarantee the cache file exists, fetching once if it does not. Returns the joined line. */
+  def entries(repoRoot: Path): List[Path] =
+    ClasspathCache.entries(cache(repoRoot), "screens", coordinates, resolverArgs)
+
+  /** Guarantee the cache file exists AND was resolved from these coordinates and exclusions,
+    * fetching once if not. Returns the joined line. */
   def ensure(repoRoot: Path): String =
-    val out = cache(repoRoot)
-    if Files.exists(out) && Files.readString(out).trim.nonEmpty then Files.readString(out).trim
-    else
-      val cmd = List("cs", "fetch", "--classpath", "-r", "https://jitpack.io",
-        // libGDX is a SOURCE resolution root; a second copy of it on the frontend classpath is a
-        // second answer to every `com.badlogic.gdx.*` name, decided by scan order.
-        "--exclude", "com.badlogicgames.gdx:gdx") ++ coordinates
-      val proc = new ProcessBuilder(cmd*).redirectErrorStream(true).start()
-      val raw  = new String(proc.getInputStream.readAllBytes()).trim
-      // `cs` writes PROGRESS to stderr and the classpath to stdout; merged here so a failure is
-      // reportable, then filtered to the one line holding a jar (`SimpleGraphsClasspath` records
-      // what taking the whole output cost).
-      val line = raw.linesIterator.filter(_.contains(".jar")).toList.lastOption.getOrElse("")
-      if proc.waitFor() != 0 || line.isEmpty then
-        throw new IllegalStateException(
-          s"[screens] could not fetch the frontend classpath (is `cs` installed?):\n$raw")
-      Files.createDirectories(out.getParent)
-      Files.writeString(out, line)
-      line
+    Files.readString(ClasspathCache.ensure(cache(repoRoot), "screens", coordinates, resolverArgs)).trim

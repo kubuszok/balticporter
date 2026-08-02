@@ -1,5 +1,6 @@
 package balticporter.corpus.demo
 
+import balticporter.corpus.ClasspathCache
 import balticporter.core.*
 import balticporter.frontend.spoon.SpoonFrontend
 import balticporter.runner.M0Pipeline
@@ -77,31 +78,23 @@ object LiqpM0:
         System.err.println("[m0] GATE RED")
         sys.exit(1)
 
+/** The M0 SCOUT's classpath — the published liqp jar + transitives, so `LValue`/`TemplateContext`
+  * resolve as Spoon shadow classes. Not to be confused with `balticporter.corpus.liqp.LiqpClasspath`,
+  * which is the real port's and resolves liqp from SOURCE. */
 object LiqpClasspath:
-  /** Dependency classpath for resolution: the published liqp jar + transitives
-    * (LValue/TemplateContext resolve as Spoon shadow classes from the jar).
-    */
+
+  /** 0.9.2.3 is the closest published release to the vendored 0.9.2 commit; the jar is only used
+    * for shadow-class resolution of out-of-set types (LValue, TemplateContext). antlr4-runtime
+    * comes explicitly (upstream pom pins 4.13.0) because the published liqp jar shades it away. */
+  val Coordinates: List[String] = List("nl.big-o:liqp:0.9.2.3", "org.antlr:antlr4-runtime:4.13.0")
+
   def resolve(repoRoot: Path): List[Path] =
-    val cache = repoRoot.resolve("out/liqp-classpath.txt")
-    val text =
-      if Files.exists(cache) then Files.readString(cache).trim
-      else
-        // 0.9.2.3 is the closest published release to the vendored 0.9.2 commit; the jar is
-        // only used for shadow-class resolution of out-of-set types (LValue, TemplateContext).
-        // antlr4-runtime comes explicitly (upstream pom pins 4.13.0) because the published
-        // liqp jar shades it away.
-        val pb = new ProcessBuilder(
-          "cs", "fetch", "--classpath",
-          "nl.big-o:liqp:0.9.2.3", "org.antlr:antlr4-runtime:4.13.0",
-        ).redirectErrorStream(true)
-        val proc = pb.start()
-        val out = new String(proc.getInputStream.readAllBytes()).trim
-        if proc.waitFor() != 0 then throw new RuntimeException(s"coursier fetch failed:\n$out")
-        val cp = out.linesIterator.toList.last
-        Files.createDirectories(cache.getParent)
-        Files.writeString(cache, cp)
-        cp
-    val fetched = text.split(java.io.File.pathSeparatorChar).toList.map(Path.of(_))
+    // `out/liqp-m0-…`, NOT `out/liqp-classpath.txt`: that name belongs to the TIR port
+    // (`balticporter.corpus.liqp.LiqpClasspath`), whose line is a different resolution entirely —
+    // the six pom coordinates plus a javac'd parser directory, against this scout's published jar.
+    // Two writers of one cache file is a port resolved against whichever program ran last.
+    val fetched =
+      ClasspathCache.entries(repoRoot.resolve("out/liqp-m0-classpath.txt"), "liqp-m0", Coordinates)
     // liqp types resolve from the vendored SOURCE tree (resolutionRoots), never from the
     // published jar — the jar is version-skewed (0.9.2.3 vs vendored 0.9.2) and shades
     // ANTLR. Only true externals stay on the classpath, plus the parser classes we
@@ -142,20 +135,10 @@ object LiqpClasspath:
     genClasses
 
   /** JUnit4 + Hamcrest for test-source resolution. */
+  val JunitCoordinates: List[String] = List("junit:junit:4.13.2", "org.hamcrest:hamcrest-all:1.3")
+
   def junitClasspath(repoRoot: Path): List[Path] =
-    val cache = repoRoot.resolve("out/junit-classpath.txt")
-    val text =
-      if Files.exists(cache) then Files.readString(cache).trim
-      else
-        val pb = new ProcessBuilder("cs", "fetch", "--classpath", "junit:junit:4.13.2", "org.hamcrest:hamcrest-all:1.3")
-          .redirectErrorStream(true)
-        val proc = pb.start()
-        val out = new String(proc.getInputStream.readAllBytes()).trim
-        if proc.waitFor() != 0 then throw new RuntimeException(s"coursier fetch failed:\n$out")
-        val cp = out.linesIterator.toList.last
-        Files.writeString(cache, cp)
-        cp
-    text.split(java.io.File.pathSeparatorChar).toList.map(Path.of(_))
+    ClasspathCache.entries(repoRoot.resolve("out/junit-classpath.txt"), "junit", JunitCoordinates)
 
   /** Pin of the vendored upstream: the submodule HEAD recorded by ../ssg. */
   def upstreamCommit(repoRoot: Path): String =
