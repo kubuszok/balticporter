@@ -4285,9 +4285,12 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
   comments the attachment channel could not place and the backstop relocated with their java
   coordinates — and `trivia(deliberate)`, derived from the port's own drops. Neither is a defect;
   `recovered` is the work list for the categories that still want an honest home.
-- **libGDX omissions 177**, dominated by the promoted-constructor-body shape. The targeted refusal for
-  the `Material`/`Table` remainder was measured at **0 → 35 `E120`** and refused (`ENGINE-LIMITS.md` C7)
-  — do not re-derive it.
+- **libGDX omissions 66** (the committed baseline), dominated by the promoted-constructor-body shape.
+  The targeted refusal for the `Material`/`Table` remainder was measured at **0 → 35 `E120`** and
+  refused (`ENGINE-LIMITS.md` C7) — do not re-derive it. *The figure quoted here was `177` for as
+  long as anybody looked, against a baseline that has said `66` since the check was scoped to EMITTED
+  units; a residue number restated in prose beside the artifact that computes it is a number that
+  goes stale silently.*
 - **2 collection-closure findings on libGDX**, both `java.util.concurrent`: portability decides those
   first.
 - **`Collectors.toSet` / `toMap` deliberately unmapped** (`ENGINE-LIMITS.md` K6): each needs a different

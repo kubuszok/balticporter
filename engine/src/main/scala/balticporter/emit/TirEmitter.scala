@@ -3830,7 +3830,16 @@ object TirEmitter:
 
       /** rename the FIELD — the ordinary answer, and the only one this pass had. */
       def moveField(v: Tree.ValDef): Unit =
-        val fresh = nm(v.symbol) + "$field"
+        // …TO A NAME THAT IS FREE, the idiom both sibling passes use (`resolveFieldShadowing`'s
+        // `style$shadow`, `funnelParamRenames`). `$` is an ordinary java identifier character, so a
+        // class may declare `x`, `x()` AND `x$field`, and appending once just relocates the
+        // collision — silently, because the emitted duplicate is a name neither the rename decision
+        // nor any count mentions. Held against BOTH members of the emitted scope: the method names
+        // that decided the clash, and the sibling fields' EFFECTIVE names (§4.55 — a field this pass
+        // has already moved contributes its NEW name, or two renames land on each other).
+        val taken = clashNames(v) ++ cd.body.collect { case w: Tree.ValDef if w.symbol != v.symbol => eff(w.symbol) }
+        var fresh = nm(v.symbol) + "$field"
+        while taken(fresh) do fresh += "$"
         renames(v.symbol) = fresh
         // the note's own text is unchanged by this refinement, deliberately: it already says
         // "a method of this class or of a SUBCLASS", which is the INSTANCE scope and now the

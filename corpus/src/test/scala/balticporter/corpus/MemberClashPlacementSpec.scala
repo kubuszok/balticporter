@@ -96,6 +96,50 @@ class MemberClashPlacementSpec extends munit.FunSuite:
     assert(clue(out).contains("count$field"))
   }
 
+  test("the fresh name KEEPS APPENDING until it is free — `$` is an ordinary java identifier char") {
+    // `x$field` is a name java can declare, so appending once may land the rename straight on top of
+    // a member that is already there — and the failure is silent, because the emitted duplicate is a
+    // name neither the rename decision nor any count mentions. Both sibling passes keep appending
+    // (`style$shadow`, `funnelParamRenames`); this one did not.
+    //
+    // (i) the collider is a sibling FIELD, which is not a clash of its own — so nothing else in
+    // this pass would ever have looked at it.
+    val field = emit(
+      """package demo;
+        |public class C {
+        |  private int x;
+        |  private int x$field;
+        |  public int x () { return x; }
+        |}
+        |""".stripMargin)
+    assert(clue(field).contains("var x$field$:"), field)
+    assertEquals(clue(field.linesIterator.count(_.contains("var x$field:"))), 1, field)
+
+    // (ii) …and a METHOD of the fresh name, which the clash test itself already holds.
+    val method = emit(
+      """package demo;
+        |public class E {
+        |  private int y;
+        |  public int y () { return y; }
+        |  public int y$field () { return 0; }
+        |}
+        |""".stripMargin)
+    assert(clue(method).contains("var y$field$:"), method)
+    assertEquals(clue(method.linesIterator.count(_.contains("def y$field("))), 1, method)
+  }
+
+  test("NEGATIVE: with nothing in the way it appends exactly once — the loop is a guard, not a policy") {
+    val out = emit(
+      """package demo;
+        |public class D {
+        |  private int x;
+        |  public int x () { return x; }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("x$field"), out)
+    assert(!clue(out).contains("x$field$"), out)
+  }
+
   // -------------------------------------------------------------------------------------------
   // THE JOIN KEY — a rename moves `Symbol.name` and must NOT move `Symbol.fullName`
   // -------------------------------------------------------------------------------------------
