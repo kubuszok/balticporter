@@ -40,8 +40,10 @@ class CollectionBoundaryCheckSpec extends PortSuite:
 
   test("PROBE: the retyping strands a slot and nothing counts it — the value moved, the slot did not") {
     val (p, _) = findings(streamSlot)
-    // the SOURCE collapses to a scala `Buffer` …
-    assertEmits(p, "= this.f.asScalaBuffer")
+    // the SOURCE collapses to a scala `Buffer` — with NO accessor, because `f` is a
+    // `java.util.List` and retypes to a `Buffer`, which already IS the sequence. `asScalaBuffer` is
+    // the SHIM's accessor and this receiver is not one (`CollectionsTransform.streamSource`) …
+    assertEmits(p, "= this.f\n")
     // … while the DECLARATION still says `java.util.stream.Stream`, because the stream family is
     // deliberately not retyped (ENGINE-LIMITS K6). Two types that java made agree, and no number
     // in the pipeline moves: this is not an omission, not a portability site, not a signature

@@ -143,16 +143,12 @@ object JdkSurfaceCheck:
     * Per-library refusals belong beside them and are not built yet: they are a fact about the
     * SHARED SURFACE, so their home is the manifest (§1.5's inherited column), not a conf key. */
   val Refusals: List[Refusal] = List(
-    Refusal("java.util.Collections#unmodifiableList",
-      "there is no read-only `Buffer` view to map onto, and mapping it to the identity would drop " +
-        "the immutability with a green compile — CLAUDE.md §4.4's shape exactly",
-      "runtime/JavaCollections.scala (the admission note); CollectionsTransform.staticRewrite"),
-    Refusal("java.util.Collections#unmodifiableSet",
-      "as `unmodifiableList`: no read-only view exists to map onto",
-      "runtime/JavaCollections.scala (the admission note); CollectionsTransform.staticRewrite"),
-    Refusal("java.util.Collections#unmodifiableMap",
-      "as `unmodifiableList`: no read-only view exists to map onto",
-      "runtime/JavaCollections.scala (the admission note); CollectionsTransform.staticRewrite"),
+    // `Collections#unmodifiableList`/`Set`/`Map` and `Collectors#toSet`/`toMap` stood here and are
+    // GONE, removed by the STALE-REFUSAL guard rather than by anyone remembering: all five are now
+    // rewritten (ENGINE-LIMITS K6). Their citations said "no read-only view exists to map onto" and
+    // "the target type cannot be guessed", and the first was a claim about the STDLIB that stopped
+    // being true the moment the runtime supplied the view. A refusal that outlives its reason is a
+    // finding that sends its reader to a wall which is not there (§4.45).
     Refusal("java.util.Map$Entry#setValue",
       "a `java.util.Map.Entry` becomes a `Tuple2`, which has no write-through to the map. A " +
         "`setValue` must fail to COMPILE rather than be turned into a write to a detached copy",
@@ -160,13 +156,6 @@ object JdkSurfaceCheck:
     Refusal("java.util.Map.Entry#setValue",
       "the dotted spelling of the same member, for a frontend that names nested types with `.`",
       "CollectionsTransform.rewrite, the `entrySet` arm"),
-    Refusal("java.util.stream.Collectors#toSet",
-      "each collector needs a different target type and guessing one is a silent wrong answer; " +
-        "unmapped, the chain fails to compile, which is the honest outcome",
-      "ENGINE-LIMITS.md K6; CollectionsTransform.staticRewrite, the `collect` arms"),
-    Refusal("java.util.stream.Collectors#toMap",
-      "as `toSet`: the target type cannot be guessed from the collector",
-      "ENGINE-LIMITS.md K6; CollectionsTransform.staticRewrite, the `collect` arms"),
   )
 
   /** the instance-table key for an arm that matches every collection kind. */

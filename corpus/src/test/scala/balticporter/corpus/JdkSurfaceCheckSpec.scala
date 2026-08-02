@@ -84,13 +84,18 @@ class JdkSurfaceCheckSpec extends PortSuite:
   }
 
   test("a REFUSAL is reported with its citation, never as the wall") {
+    // `Map.Entry#setValue` and not `Collections#unmodifiableList`: that one WAS the example here
+    // and is now rewritten, which the stale-refusal guard below is what caught. This refusal is
+    // one no runtime type can lift — a `Tuple2` has no write-through to the map it came from, so
+    // the call must fail to COMPILE rather than become a write to a detached copy.
     val src =
       """package demo;
         |import java.util.*;
-        |class U { List<String> ro(List<String> xs) { return Collections.unmodifiableList(xs); } }
+        |class U { void bump(Map.Entry<String, Integer> e) { e.setValue(1); } }
         |""".stripMargin
-    assertEquals(clue(dispositions(src, withPhase = true)).get("java.util.Collections#unmodifiableList"), Some("refused"))
-    val r = JdkSurfaceCheck.Refusals.find(_.api == "java.util.Collections#unmodifiableList").get
+    val d = dispositions(src, withPhase = true)
+    assert(clue(d).exists((k, v) => k.endsWith("#setValue") && v == "refused"))
+    val r = JdkSurfaceCheck.Refusals.find(_.api.endsWith("#setValue")).get
     assert(clue(r.cite).nonEmpty)
   }
 
@@ -104,10 +109,15 @@ class JdkSurfaceCheckSpec extends PortSuite:
   test("STALE-REFUSAL guard: a refusal the tables now handle is itself a finding") {
     // `toCollection` was refused in a comment for a release after the `into` arm started handling
     // it — "a comment that still names a case the code handles is the reason not to look".
+    // The synthetic stale entry used to be `Collections#unmodifiableList`, and this guard is what
+    // RETIRED it: that member is now rewritten, so the pair stopped being a contradiction and the
+    // test went red — which is the guard reporting on its own table rather than on a fixture.
+    // `Map.Entry#setValue` is a live refusal (a `Tuple2` has no write-through), so pairing it with
+    // a mapping that claims to handle it reproduces the contradiction.
     val m = CollectionsTransform.jdkMapping(ran = true)
-      .copy(statics = CollectionsTransform.handledStatics + "java.util.Collections#unmodifiableList")
-    val row = ExternalUsage.Row(SymId(1), "unmodifiableList",
-      Some("java.util.Collections"), "unmodifiableList", scala.None, Nil)
+      .copy(statics = CollectionsTransform.handledStatics + "java.util.Map$Entry#setValue")
+    val row = ExternalUsage.Row(SymId(1), "setValue",
+      Some("java.util.Map$Entry"), "setValue", scala.None, Nil)
     assertEquals(JdkSurfaceCheck.classify(List(row), m).head._2.label, "stale-refusal")
   }
 
