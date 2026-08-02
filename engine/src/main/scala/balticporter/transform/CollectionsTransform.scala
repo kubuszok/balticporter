@@ -234,6 +234,11 @@ final class CollectionsTransform(
   private var mapSym: SymId = SymId.None
   /** `JavaIterator.from` — the `iterator` counterpart of `wrapIterableArgs`. */
   private var iteratorFromSym, javaIteratorSym: SymId = SymId.None
+  /** the mapping targets `JavaCollections.fromJava` can actually PRODUCE — see
+    * [[CollectionsTransform.liveWrappable]], read as symbols so [[externalProducer]] asks a
+    * membership question about what this run minted rather than a question about a name. EMPTY when
+    * the program names none of them, which makes the wrap arm decline by arithmetic. */
+  private var liveWrappableSyms: Set[SymId] = Set.empty
 
   // ---- the RuleScope's own record, for THIS run (see `applyScope`) ----
 
@@ -376,6 +381,11 @@ final class CollectionsTransform(
     ).flatMap(fqn => byScala.get(fqn).map(_ -> mint("defaultLoadFactor", s"$fqn.defaultLoadFactor"))).toMap
     iteratorFromSym = mint("from", JavaIteratorFqn + ".from")
     javaIteratorSym = byScala.getOrElse(JavaIteratorFqn, SymId.None)
+    // …the five targets a LIVE view exists for, as this run's own symbols. Keyed on `byScala`, so a
+    // target the program never names is simply absent and the wrap declines by arithmetic.
+    liveWrappableSyms = byScala.collect {
+      case (fqn, id) if CollectionsTransform.liveWrappable(fqn) => id
+    }.toSet
     foreachSym          = mint("foreach", "foreach")
     removeHeadOptionSym = mint("removeHeadOption", "removeHeadOption")
     headOptionSym       = mint("headOption", "headOption")
@@ -902,10 +912,16 @@ final class CollectionsTransform(
     *     `transformType` then MOVED — is the only evidence that the value crossing this call is a
     *     collection. Reading it is still §4.56's question answered from the phase's own record: the
     *     node says `Buffer` precisely because THIS PHASE put it there;
-    *   - that type is not `JavaCollection`. The inverse of `typeMap` is unique for the five targets
-    *     the runtime can wrap LIVE, and `JavaCollection` is the one with no `scala.jdk` converter
-    *     behind it — a shim built over a copied `Buffer` would detach both directions. Refused and
-    *     counted rather than copied (M6);
+    *   - that type is one `fromJava` can actually PRODUCE. `kindOf` holds every mapping TARGET —
+    *     `ArrayBuffer`, `ArrayDeque`, `mutable.TreeMap`, `Tuple2` — while the helper is five
+    *     overloads returning `Buffer`, `Set`, `Map`, `JavaIterator` and `JavaIterable`. Wrapping
+    *     toward anything else emits a call whose result does not meet the node's own claim, and the
+    *     error then names the HELPER rather than the boundary (`E134 None of the overloaded
+    *     alternatives of method fromJava`), which is the worst shape this seam can produce. The test
+    *     is [[CollectionsTransform.liveWrappable]] — the phase's own table read in the direction the
+    *     phase moved it (§4.56) — and it subsumes the `JavaCollection` refusal, which is the same
+    *     fact for the one target with no `scala.jdk` converter behind it: a shim built over a copied
+    *     `Buffer` would detach both directions. Refused and counted rather than copied (M6);
     *   - the TYPE ARGUMENTS mention nothing this phase produced. `asScala` converts ONE level, so a
     *     `List<List<String>>` becomes `Buffer[java.util.List[String]]` while the retyping claims
     *     `Buffer[Buffer[String]]` — a wrap that silently lies one type argument in.
@@ -919,7 +935,7 @@ final class CollectionsTransform(
     if fromJavaSym == SymId.None || !externalCallee(t.method) || passesThrough(t) then t
     else headSym(t.tpe).filter(s => kindOf.contains(s) || shimSyms.contains(s)) match
       case scala.None => t
-      case Some(s) if s == javaCollectionSym =>
+      case Some(s) if !liveWrappableSyms.contains(s) =>
         seam("external result", "a live scala view", TirPrinter.tpe(t.tpe, TirPrinter.Style.canonical),
              t.origin, t.method)
         t

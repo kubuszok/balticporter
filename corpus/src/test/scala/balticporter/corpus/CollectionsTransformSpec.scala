@@ -1,10 +1,13 @@
 package balticporter.corpus
 
+import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.testkit.PortSuite
-import balticporter.tir.{Pipeline, UsageKind}
+import balticporter.testkit.{PortSuite, Ported}
+import balticporter.tir.{Phase, Pipeline, UsageKind}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
+
+import java.nio.file.Files
 
 /** The java→scala collections transform: retypes every collection occurrence and rewrites
   * the common call shapes, whole-program and symbol-driven. Asserts both the xref (the old
@@ -593,6 +596,36 @@ class CollectionsTransformSpec extends PortSuite:
   // which class file it is: what it keys on is "the program does not declare this method".
   // ---------------------------------------------------------------------------------------------
 
+  /** a port whose frontend also sees COMPILED CLASS FILES.
+    *
+    * The JDK alone cannot pose two of the questions this seam has to answer — a third party's method
+    * declared to return a CONCRETE `java.util.ArrayList`, and one declared to return a
+    * `java.util.Map.Entry` — because every JDK member of that shape is owned by a type the mapping
+    * already covers and is excluded before the arm is reached. So the fixture compiles its own
+    * class file and hands the directory to the frontend as a classpath, exactly the way
+    * `ExternalSignatureSpec` builds its partially-resolvable one. `ext.*` is a fixture package, not
+    * a library (§1's enforcement rule): what the mechanism keys on is "the program does not declare
+    * this method". */
+  private def portAgainst(ext: List[(String, String)], java: String, phases: Phase*): Ported =
+    val root = Files.createTempDirectory("collections-external")
+    val cls  = root.resolve("classes")
+    Files.createDirectories(cls)
+    val files = ext.map { (name, code) =>
+      val f = root.resolve("jsrc").resolve(name)
+      Files.createDirectories(f.getParent)
+      Files.writeString(f, code)
+      f.toString
+    }
+    val javac = javax.tools.ToolProvider.getSystemJavaCompiler
+    assertEquals(javac.run(null, null, null, List("-d", cls.toString) ++ files*), 0,
+                 "the fixture's own java did not compile")
+    val srcRoot = root.resolve("src")
+    Files.createDirectories(srcRoot.resolve("demo"))
+    Files.writeString(srcRoot.resolve("demo/Snippet.java"), java)
+    val before = SpoonTir.fromTypes(
+      SpoonTir.buildModel(FrontendConfig(srcRoot, List("demo/Snippet.java"), List(cls)), lenient = true))
+    Ported(before, Pipeline.run(before, phases.toList), phases.toList, Map("Snippet.java" -> java))
+
   test("an EXTERNAL producer is wrapped, so the value really becomes what its node already claims") {
     val ph = new CollectionsTransform
     val p  = port(
@@ -657,6 +690,36 @@ class CollectionsTransformSpec extends PortSuite:
       new CollectionsTransform,
     )
     assertNotEmits(p, "fromJava")
+  }
+
+  test("…nor a target NO CONVERTER PRODUCES — the wrap is gated on what `fromJava` can actually make") {
+    // `kindOf` holds EVERY mapping target — `ArrayBuffer`, `ArrayDeque`, `mutable.TreeMap`,
+    // `Tuple2` — while `fromJava` produces exactly five shapes (`Buffer`, `Set`, `Map`,
+    // `JavaIterator`, `JavaIterable`). Wrapping toward the rest emits a call whose RESULT does not
+    // meet the node's own claim, and the error then names the HELPER instead of the boundary:
+    // `E134 None of the overloaded alternatives of method fromJava`. `liveWrappable` is the phase's
+    // own record of which targets a live view exists for, read in the direction the phase moved
+    // them (§4.56); everything else is a counted refusal, exactly as `JavaCollection` already was.
+    val ph = new CollectionsTransform
+    val p  = portAgainst(
+      List("ext/Prod.java" ->
+        """package ext;
+          |public class Prod {
+          |  public java.util.ArrayList<String> made() { return new java.util.ArrayList<String>(); }
+          |  public java.util.Map.Entry<String, String> pair() { return null; }
+          |}""".stripMargin),
+      """package demo;
+        |class Uses {
+        |  java.util.ArrayList<String> made(ext.Prod p) { return p.made(); }
+        |  java.util.Map.Entry<String, String> pair(ext.Prod p) { return p.pair(); }
+        |}
+        |""".stripMargin, ph)
+    // a CONCRETE list: the node claims `ArrayBuffer`, and `fromJava` makes a `Buffer`.
+    // a `Map.Entry`: the node claims `Tuple2`, and `fromJava` has no overload at all.
+    assertNotEmits(p, "fromJava")
+    val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee)
+    assertEquals(clue(fs).count(_.slot.startsWith("external result")), 2,
+                 "both refusals must be counted — an uncounted refusal is indistinguishable from no seam")
   }
 
   test("a call this phase REWRITES gets its arguments BARE — no wrap may precede the rewrite") {

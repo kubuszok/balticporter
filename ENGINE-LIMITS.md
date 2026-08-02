@@ -2400,6 +2400,33 @@ Four exclusions, each measured as a false positive before it was written:
 | a callee with NO owner at all | `scala.<op>#+` is an interned operator, not a member of any class file — `"…" + aMap` was reported twice |
 | a member `handledStatics` covers | `staticRewrite` returning `None` is either "no arm matched" or "an arm REFUSED", and only the first is a seam (K6.5) |
 | a GENERIC PASS-THROUGH | the node's type is evidence of two different things — see below |
+| a target NO CONVERTER PRODUCES | `kindOf` holds every mapping target; `fromJava` produces five shapes — see below |
+
+**A WRAP MAY ONLY BE EMITTED TOWARD A TARGET THE HELPER CAN ACTUALLY PRODUCE, and "is this a type
+the phase produced" is not that question.** The arm gated on `kindOf.contains(s)`, which holds EVERY
+mapping target — `ArrayBuffer`, `ArrayDeque`, `mutable.TreeMap`, `mutable.LinkedHashMap`, `Tuple2` —
+while `JavaCollections.fromJava` is five overloads returning `Buffer`, `Set`, `Map`, `JavaIterator`
+and `JavaIterable`. So an external callee declared to return a CONCRETE `java.util.HashMap` got a
+wrap whose result (`Map`) does not meet the node's own claim (`mutable.HashMap`), and a
+`java.util.Map.Entry` return got one with no overload behind it at all. The failure shape is the
+worst this seam has: `E134 None of the overloaded alternatives of method fromJava` — an error naming
+the HELPER instead of the boundary, which is the same complaint this entry already records against
+the pass-through case, arriving by a different route.
+
+The predicate for it — `liveWrappable`, a TARGET test read in the direction the phase moved the type
+(§4.56) — **had been written for exactly this and was NEVER CALLED**, while a hand-written
+`s == javaCollectionSym` stood in its place covering one of the five refusals. That is the shape to
+look for: a refusal expressed as a comparison against ONE known-bad value is a refusal that will be
+right until the second bad value exists, and nothing reports the difference. Note also that it is
+invisible to every JDK-only fixture: every JDK member returning a concrete collection type is owned
+by a type the mapping already covers, so it is excluded one row above and the arm is never reached.
+The negative test needs a COMPILED CLASS FILE of its own (`CollectionsTransformSpec.portAgainst`,
+built the way `ExternalSignatureSpec` builds its partial classpath).
+
+**Measured on liqp: 87 → 74 errors** (main 28 → 27, test 59 → 47), `collection-boundary` 8 → 10 on
+the base and 0 → 12 on the suite — the two `new HashMap<>(){{ put(…) }}` double-brace initialisers
+and the `mapper.readValue(s, HashMap.class)` site, each now a counted refusal instead of an E134 with
+a cascade behind it. 12 member digests over 4 units.
 
 **The node's type means two different things, and telling them apart is the whole subtlety.** Where
 the callee's result is a real `java.util.List`, the node says `Buffer` because this phase MOVED it
