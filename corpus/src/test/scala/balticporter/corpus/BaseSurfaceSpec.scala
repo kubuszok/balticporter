@@ -241,6 +241,118 @@ class BaseSurfaceSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
+  // 3.5 D5 — a REPLAY may not widen a `private` member this run does not EMIT
+  // -------------------------------------------------------------------------
+
+  /** The D5 shape exactly. `p.Base(int)` runs `touch()`, which is `private` in the base; a dependent
+    * subclass writes `super(3)`, which scala cannot express, so `replayFor` would lift `Base`'s
+    * constructor body into `Mine` — and there `touch()` is not reachable. Within one module that is
+    * repaired by widening; across the boundary the DECLARATION is in a file this run does not write.
+    */
+  private val privateBase = Map(
+    "p/Base.java" -> """package p;
+      |public class Base {
+      |  protected int n;
+      |  public Base() { }
+      |  public Base(int n) { this.n = n; touch(); }
+      |  private void touch() { this.n = this.n + 1; }
+      |}""".stripMargin,
+  )
+
+  /** Two roots reaching DIFFERENT parent constructors, so the synthesis refuses and the class keeps
+    * a nilary primary — which is what makes `Mine(int)`'s `super(a)` a SECONDARY's super call, the
+    * only shape `replayFor` exists for (`ModelInstanceHack` in gdx-gltf, exactly). */
+  private val privateHeir = Map(
+    "q/Mine.java" -> """package q;
+      |public class Mine extends p.Base {
+      |  public Mine() { }
+      |  public Mine(int a) { super(a); }
+      |}""".stripMargin,
+  )
+
+  /** a published MEMBER row, keyed the way the source map keys one — `owner#name(params)` for an
+    * executable, `owner#name` for a field. */
+  private def withMembers(m: PortMap.Map0, rows: List[PortMap.Entry]): PortMap.Map0 =
+    m.copy(entries = m.entries ++ rows)
+
+  private def memberRow(key: String, vis: String): PortMap.Entry =
+    PortMap.Entry("member", key, key, PortMap.Disposition.Ported,
+                  shape = Surface.render(Surface.MemberShape(vis = vis)))
+
+  private def memberId(p: Program, fq: String): SymId =
+    p.symbols.all.find(_.fullName == fq).map(_.id).getOrElse(fail(s"no symbol $fq"))
+
+  private def replayed(p: Program, s: Surface, cls: String): Boolean =
+    val plans = CtorFunnel.Plans(p, Some(s))
+    val cd    = p.units.find(u => fqn(p, u.symbol) == cls).get
+    CtorFunnel.ctorsOf(p, cd.body).exists(d => plans.replayFor(cd, d).isDefined)
+
+  test("D5: a replay reaching a BASE's `private` member is REFUSED, and the refusal is attributed") {
+    val (p, root) = model(privateBase, privateHeir)
+    // the pre-D5 behaviour, reproduced: with the whole program as the surface the owner has a TREE,
+    // which is what `classOfSym(...).isDefined` asked, so the replay is accepted and the emitted
+    // call to a `private` base member does not compile (4 errors on gdx-gltf).
+    assert(replayed(p, TrivialSurface(p), "q.Mine"), "the whole-program answer ACCEPTS the replay")
+
+    val published = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> withMembers(contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class")),
+                                     List(memberRow("p.Base#touch()", "private")))))
+    assert(!replayed(p, published, "q.Mine"), "a `private` published member REFUSES the replay")
+    val gap = published.gaps
+    assertEquals(clue(gap).size, 1)
+    assert(gap.head.subject.startsWith("p.Base#touch"), gap.head.subject)
+    assertEquals(gap.head.module, Some("base-mod"))
+    assertEquals(gap.head.fatal, false, "a withheld rewrite did not shape emitted text — only the BASE can fix it")
+    assert(clue(gap.head.fix).contains("§1(a) ENGINE, in the BASE"), gap.head.fix)
+  }
+
+  test("D5 NEGATIVE: a member the base published PUBLIC is reachable, and no gap is recorded") {
+    val (p, root) = model(privateBase, privateHeir)
+    val published = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> withMembers(contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class")),
+                                     List(memberRow("p.Base#touch()", "public")))))
+    assert(replayed(p, published, "q.Mine"))
+    assertEquals(published.gaps, Nil)
+  }
+
+  test("D5: the WITHIN-module widening is untouched — the guard is a scope, not a removal") {
+    // libGDX core makes 22 sound `WidenedVisibility` decisions of its own; a blanket refusal
+    // regresses the base to fix the dependent (`PROGRESS.md` §8.5).
+    val (p, root) = model(Map("z/Unused.java" -> "package z; public class Unused { }"),
+                          privateBase ++ privateHeir)
+    assert(replayed(p, new PublishedSurface(p, ownedUnits(p, root)), "q.Mine"),
+      "both classes are THIS run's, so the widening is real and the replay stands")
+  }
+
+  test("a member lookup finds a METHOD row — the published key carries a descriptor and a symbol does not") {
+    val (p, root) = model(privateBase, privateHeir)
+    val rows = List(
+      memberRow("p.Base#touch()", "private"),
+      memberRow("p.Base#n", "public"),
+    )
+    val s = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> withMembers(contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class")), rows)))
+    // `Symbol.fullName` is `owner#name`; the row's key is `owner#name(params)`. Looking the one up
+    // by the other found every FIELD and no METHOD, silently, from the day it was written.
+    assertEquals(s.memberShape(memberId(p, "p.Base#touch")).published.map(_.vis), Some("private"))
+    assertEquals(s.memberShape(memberId(p, "p.Base#n")).published.map(_.vis), Some("public"))
+  }
+
+  test("…and DISAGREEING overloads of one name are Unknown, never one of them picked") {
+    val (p, root) = model(privateBase, privateHeir)
+    val rows = List("private", "public").zipWithIndex.map { (v, i) =>
+      memberRow(s"p.Base#touch(int$i)", v)
+    }
+    val s = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> withMembers(contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class")), rows)))
+    s.memberShape(memberId(p, "p.Base#touch")) match
+      case Surface.Answer.Unknown(why, m) =>
+        assert(clue(why).contains("do not agree"), why)
+        assertEquals(m, Some("base-mod"))
+      case other => fail(s"expected Unknown, got $other")
+  }
+
+  // -------------------------------------------------------------------------
   // 4. what the contract PUBLISHES — the emitter's own recording
   // -------------------------------------------------------------------------
 

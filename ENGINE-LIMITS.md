@@ -2688,7 +2688,7 @@ refusal, not a plan — and it must not be re-attempted as a seeding problem.
 
 *Fix kind: (a) engine. Landed for the fixpoint; the wall residue is C3.*
 
-### D5. A REPLAY may not widen a `private` member the run does not EMIT — 4 errors
+### D5. A REPLAY may not widen a `private` member the run does not EMIT — **CLOSED; gltf 7 -> 3 errors, `omissions` 3 -> 12**
 
 **Title, for renumbering: "A replay may not widen a private member the run does not emit".**
 
@@ -2712,18 +2712,54 @@ M6's answer applies unchanged: where the widening cannot be performed, REFUSE th
 the omission. `super(args)` is then dropped, which `OmissionCheck` already reports (C3), and the
 port compiles with a known, named divergence instead of failing.
 
-**Both missing inputs now EXIST and nothing reads them yet — 4 errors, unchanged.** `Plans` knows
-which classes this run emits (`Surface.owns`, D4), and port-map schema 3 publishes `vis=` on every
-member row, so *"may a replay reach this base member?"* is a lookup rather than a re-derivation over
-the dependent's own symbol table. `replayFor` still consults `widenedMembers` and
-`TirEmitter.widen` still drops `private` from the flags of a class this run does not emit. The
-remaining work is one commit and it must not be measured together with D4's (`.balticporter/CHUNK3.md`
-sequences them).
+**CLOSED by reading the published `vis=`.** `CtorFunnel.Plans.reachablePrivate` asks the SURFACE
+instead of the symbol table, and the three answers are the three cases:
+
+| the owner is | the answer |
+|---|---|
+| a class this run EMITS | the widening is real — the old `classOfSym(...).isDefined` test, unchanged |
+| a base that published the member NOT `private` | reachable; no widening needed |
+| a base that published it `private`, or published nothing | REFUSE the replay, record a non-fatal `Surface.Gap` naming the base |
+
+The refused `super(args)` is then dropped, `OmissionCheck.droppedSuperArgs` counts it, and the port
+compiles with a named divergence instead of failing (M6/C3). Measured on gdx-gltf: **errors 7 -> 3**
+— the 4 `copyNodes` errors are gone and what is left is the 2 C3 wall classes plus D7's `MeshLoader`
+— with **1** base-surface gap, `[base: libgdx-core]`, classified `§1(a) ENGINE, in the BASE`.
+
+**TWO THINGS THE FIX HAD TO REPAIR BEFORE THE LOOKUP WORKED AT ALL, both silent:**
+
+- **`Surface.memberShape` could not find a METHOD row.** It looked a member up by
+  `Symbol.fullName` — `owner#name` — while a published member row is keyed the way the SOURCE MAP
+  keys one, `owner#name(params)`, because `Symbol.descriptor` is deliberately never folded into the
+  name (§8.1). So it matched every FIELD row and no method row, and had answered `Unknown` for
+  exactly the questions D5 needs it for since the day it was written. Fixed by grouping the rows by
+  `owner#name` — the OVERLOAD SET — rather than re-spelling the emitter's parameter grammar in a
+  second place; where the overloads publish DIFFERENT shapes the answer is `Unknown`, never one of
+  them picked.
+- **Every check and decision recorder built its own `CtorFunnel.Plans` with NO surface.**
+  `OmissionCheck` (four lanes), `PortRun.recordDroppedSuperArgs` and `PortRun.recordCtorFunnel` each
+  did `CtorFunnel.Plans(program)`, which is a `TrivialSurface` — everything is mine. So the check
+  answered over a DIFFERENT fixpoint from the one the emitter used: gdx-gltf's `omissions` sat at
+  **3** while the emitter had lowered nine constructors to a bare `this()`, and the port map's own
+  decisions claimed those `super(args)` were expressed. Threading the run's view took gltf's
+  `omissions` **3 -> 12** with the emitted CODE unchanged for seven of them — only the porter notes
+  appeared, which is the shadow-becomes-a-claim failure `OmissionCheck` warns about, arriving in the
+  one place nothing was watching.
+
+The GAP is scoped to classes this run EMITS (D2). A dependent's `Plans` decides about its base's
+classes too, so two of gltf's three initial refusals were about `Button`/`ScaleInfluencer` — text the
+base wrote and this run does not touch. The refusal still stands there and costs nothing.
 
 Note the asymmetry that makes this invisible from the base: the base cannot widen speculatively (it
 has no way to know a future dependent will replay), and the dependent cannot widen at all. Only the
 dependent can SEE the problem, and only the base could fix it — which is why the honest engine
-answer is to refuse rather than to shift the decision.
+answer is to refuse rather than to shift the decision, and why the gap's `fix` names the BASE's
+repository.
+
+**Do NOT retry a blanket refusal of cross-class private widening.** libGDX core makes 22 sound
+`WidenedVisibility` decisions of its own, all within one module; refusing them regresses the base to
+fix the dependent (`PROGRESS.md` §8.5). The guard is a SCOPE, and `BaseSurfaceSpec` pins both
+directions.
 
 *Fix kind: (a) engine.*
 

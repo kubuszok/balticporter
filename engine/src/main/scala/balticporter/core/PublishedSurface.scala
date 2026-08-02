@@ -55,10 +55,30 @@ final class PublishedSurface(
       m.types.filter(_.emitted.nonEmpty).map(e => e.emitted -> (mod, e))
     }.reverse.toMap
 
-  private lazy val memberRows: Map[String, (String, PortMap.Entry)] =
+  /** every base's member rows, grouped by the member's `owner#name` — the OVERLOAD SET.
+    *
+    * A member row's `emitted` column is the source map's key, which carries the parameter spelling
+    * for an executable (`…#copyNodes(Array<Node>)`) and nothing for a field (`…#file`). A `SymId`
+    * carries neither: `Symbol.fullName` is `owner#name` and the descriptor is a separate field
+    * (`Symbol.descriptor`), deliberately never folded into the name. So a lookup by `fullName` alone
+    * found every FIELD row and no METHOD row at all — which is why [[memberShape]] answered
+    * `Unknown` for exactly the questions `ENGINE-LIMITS.md` D5 needs it for, silently, from the day
+    * it was written.
+    *
+    * Grouped rather than re-spelt. Rebuilding the emitter's parameter spelling here would be a
+    * SECOND derivation of the key, free to drift from `TirEmitter.memberKey` — the failure this
+    * whole view exists to stop. The overload set is what the name honestly identifies, and
+    * [[memberShape]] says so when its members disagree. */
+  private lazy val memberRows: Map[String, List[(String, PortMap.Entry)]] =
     bases.flatMap { (mod, m) =>
-      m.members.filter(_.emitted.nonEmpty).map(e => e.emitted -> (mod, e))
-    }.reverse.toMap
+      m.members.filter(_.emitted.nonEmpty).map(e => bareName(e.emitted) -> (mod, e))
+    }.groupMap(_._1)(_._2)
+
+  /** `owner#name` from a source-map member key — the parameter spelling cut off at its `(`, which is
+    * a separator the grammar guarantees is not in an owner or a member name (§4.56). */
+  private def bareName(key: String): String =
+    val i = key.indexOf('(')
+    if i < 0 then key else key.substring(0, i)
 
   def typeShape(s: SymId): Surface.Answer[Surface.TypeShape] =
     if owns(s) then Surface.Answer.Own
@@ -83,13 +103,28 @@ final class PublishedSurface(
               s"(searched ${bases.map(_._1).sorted.mkString(", ")})",
             bases.map(_._1).headOption.filter(_ => bases.sizeIs == 1))
 
+  /** …and where the name names SEVERAL overloads, they must AGREE.
+    *
+    * The published key carries a parameter spelling and the asked-about symbol does not (see
+    * [[memberRows]]), so what this can honestly answer is a question about `owner#name`. Where every
+    * overload published the same shape that is also the answer for each of them; where they differ
+    * the honest answer is `Unknown`, and a consumer that refuses on `Unknown` refuses for the whole
+    * name — conservative in the only direction that cannot emit wrong text. */
   def memberShape(s: SymId): Surface.Answer[Surface.MemberShape] =
     if owns(s) then Surface.Answer.Own
     else
       val fqn = program.symbolOf(s).map(_.fullName).getOrElse("")
       memberRows.get(fqn) match
-        case Some((mod, e)) => Surface.Answer.Published(e.memberShape, mod)
-        case scala.None =>
+        case Some((mod, e) :: rest) =>
+          val shapes = (e :: rest.map(_._2)).map(_.memberShape).distinct
+          if shapes.sizeIs == 1 then Surface.Answer.Published(shapes.head, mod)
+          else
+            Surface.Answer.Unknown(
+              s"$mod publishes ${rest.size + 1} overloads of $fqn and they do not agree " +
+                s"(${shapes.map(Surface.render).mkString("; ")}) — a symbol carries no parameter " +
+                "spelling here, so the name cannot be resolved to one of them",
+              Some(mod))
+        case _ =>
           Surface.Answer.Unknown(s"no declared base publishes a contract row for the member $fqn",
                                  bases.map(_._1).headOption.filter(_ => bases.sizeIs == 1))
 

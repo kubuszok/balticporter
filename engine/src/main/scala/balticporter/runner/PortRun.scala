@@ -295,7 +295,13 @@ final case class PortRun(
     // The filter lives HERE because the drop set is policy and the check stays library-blind (§1).
     val checkedUnits = translated.emitOrder.filterNot(u =>
       program.symbolOf(u.symbol).map(_.fullName).exists(policySubs.dropsType))
-    val omissions = OmissionCheck.check(program, checkedUnits)
+    // …and the SAME `Surface` the emitter used. Every constructor lane here shadows a
+    // `CtorFunnel.Plans` decision, and `Plans` takes the view: built without it the check gets a
+    // `TrivialSurface` (everything is mine), so a replay the emitter REFUSED because it reaches a
+    // base's `private` member is still reported EXPRESSED here, and the `super(args)` the port drops
+    // moves no count at all. Measured on gdx-gltf: `omissions` sat at 3 while the emitter had just
+    // lowered two constructors to a bare `this()` (`ENGINE-LIMITS.md` D5).
+    val omissions = OmissionCheck.check(program, checkedUnits, Some(translated.surface))
     CheckReport.record(PortRun.Omissions, omissions.map(_.report))
     say(s"OMISSIONS (emitted code silently loses these): ${omissions.size}")
     if omissions.nonEmpty then say(PortReport.Kind.Omission.classification)
@@ -1056,7 +1062,10 @@ final case class PortRun(
     * everywhere but the JDK throwables). */
   private def recordDroppedSuperArgs(program: Program, translated: PortRun.Translated): Unit =
     given Program = program
-    val plans = CtorFunnel.Plans(program)
+    // the run's own view — the same one the emitter and `OmissionCheck` hold. A decision recorder
+    // that re-derived the funnel over a `TrivialSurface` would describe a plan this run did not
+    // emit, which is the shadow-becomes-a-claim failure in its provenance form (D5).
+    val plans = CtorFunnel.Plans(program, Some(translated.surface))
     def nested(cd: Tree.ClassDef): List[Tree.ClassDef] =
       cd :: cd.body.collect { case c: Tree.ClassDef => nested(c) }.flatten
     val mine = translated.emitOrder.filterNot { u =>
@@ -1270,7 +1279,7 @@ final case class PortRun(
     */
   private def recordCtorFunnel(program: Program, translated: PortRun.Translated): Unit =
     given Program = program
-    val plans = CtorFunnel.Plans(program)
+    val plans = CtorFunnel.Plans(program, Some(translated.surface))
     def nested(cd: Tree.ClassDef): List[Tree.ClassDef] =
       cd :: cd.body.collect { case c: Tree.ClassDef => nested(c) }.flatten
     // this run's OWN units, minus the ones it does not write: a dropped type's constructors are

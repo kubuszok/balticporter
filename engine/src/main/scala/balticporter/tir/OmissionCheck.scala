@@ -39,11 +39,12 @@ object OmissionCheck:
     *
     * `units` is the run's own set, so a BASE port passes `program.units` and this is the identity —
     * the no-op is the general path taken to its limit, not a branch around it (CLAUDE.md §1). */
-  def check(program: Program, units: List[Tree.ClassDef]): List[Finding] =
-    droppedSuperArgs(program, units)
-      ++ droppedCauseMessages(program, units)
-      ++ promotedBodyOnEveryPath(program, units)
-      ++ droppedNilaryCtors(program, units)
+  def check(program: Program, units: List[Tree.ClassDef],
+            surface: Option[Surface] = scala.None): List[Finding] =
+    droppedSuperArgs(program, units, surface)
+      ++ droppedCauseMessages(program, units, surface)
+      ++ promotedBodyOnEveryPath(program, units, surface)
+      ++ droppedNilaryCtors(program, units, surface)
       ++ droppedAnonMembers(program, units)
       ++ droppedAnnotations(program, ownedBy(program, units))
 
@@ -125,11 +126,12 @@ object OmissionCheck:
     */
   def droppedSuperArgs(program: Program): List[Finding] = droppedSuperArgs(program, program.units)
 
-  def droppedSuperArgs(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+  def droppedSuperArgs(program: Program, units: List[Tree.ClassDef],
+                  surface: Option[Surface] = scala.None): List[Finding] =
     def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
       cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
 
-    val plans = CtorFunnel.Plans(program)
+    val plans = CtorFunnel.Plans(program, surface)
     units.flatMap(classes).flatMap { cd =>
       // Per CONSTRUCTOR, from `CtorFunnel.Plans.superExpressed` — the same function the emitter
       // renders its delegation from. It was briefly a class-wide flag the planner asserted
@@ -160,10 +162,11 @@ object OmissionCheck:
   def droppedCauseMessages(program: Program): List[Finding] =
     droppedCauseMessages(program, program.units)
 
-  def droppedCauseMessages(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+  def droppedCauseMessages(program: Program, units: List[Tree.ClassDef],
+                  surface: Option[Surface] = scala.None): List[Finding] =
     def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
       cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
-    val plans = CtorFunnel.Plans(program)
+    val plans = CtorFunnel.Plans(program, surface)
     units.flatMap(classes).flatMap { cd =>
       CtorFunnel.ctorsOf(program, cd.body).filter(plans.causeMessageLost(cd, _)).map { d =>
         val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
@@ -198,10 +201,11 @@ object OmissionCheck:
   def promotedBodyOnEveryPath(program: Program): List[Finding] =
     promotedBodyOnEveryPath(program, program.units)
 
-  def promotedBodyOnEveryPath(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+  def promotedBodyOnEveryPath(program: Program, units: List[Tree.ClassDef],
+                  surface: Option[Surface] = scala.None): List[Finding] =
     def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
       cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
-    val plans = CtorFunnel.Plans(program)
+    val plans = CtorFunnel.Plans(program, surface)
     units.flatMap(classes).flatMap { cd =>
       val n = plans(cd).primaryBody.size
       plans.promotionEscapes(cd).map { d =>
@@ -232,10 +236,11 @@ object OmissionCheck:
   def droppedNilaryCtors(program: Program): List[Finding] =
     droppedNilaryCtors(program, program.units)
 
-  def droppedNilaryCtors(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+  def droppedNilaryCtors(program: Program, units: List[Tree.ClassDef],
+                  surface: Option[Surface] = scala.None): List[Finding] =
     def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
       cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
-    val plans = CtorFunnel.Plans(program)
+    val plans = CtorFunnel.Plans(program, surface)
     units.flatMap(classes).flatMap { cd =>
       plans.droppedNilaryCtor(cd).map { d =>
         val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")

@@ -2102,6 +2102,16 @@ source map records already spells Java's name (`…FileHandle#file`, never `#fil
 key was right by construction. The EMITTED name was the half no artifact carried, and it is now
 `shape`'s `name=` on 237 of libGDX core's rows.
 
+**…and the MEMBER lookup could not find a method row at all — corrected.** `PublishedSurface`
+looked a member up by `Symbol.fullName`, `owner#name`, while a published member row is keyed the way
+the SOURCE MAP keys one, `owner#name(params)` — `Symbol.descriptor` is a separate field and
+deliberately never folded into the name (§8.1). So it matched every FIELD row and no method row, and
+answered `Unknown` for exactly the questions `ENGINE-LIMITS.md` D5 needs it for, from the day it was
+written; nothing read `memberShape` yet, so nothing failed. The repair does NOT re-spell the
+emitter's parameter grammar in a second place — that is the drift this view exists to stop. It groups
+the rows by `owner#name`, the OVERLOAD SET, which is what a symbol honestly identifies here, and
+answers `Unknown` where the overloads publish different shapes rather than picking one.
+
 **Type rows now cover NESTED types** (libGDX core: 605 units → 983 type rows). Not a tidy-up: a
 dependent extends a base's nested class as readily as its top-level one, and a contract covering only
 units answers `Unknown` for precisely the constructor questions this section exists for.

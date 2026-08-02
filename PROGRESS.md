@@ -60,7 +60,7 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `ashley` | Ashley `ashley/src` | 21 → **21** (2 injected) | — | **0** |
 | `ashley-test` | Ashley `ashley/tests` | 18 → **18** | **112**, 108 pass / 2 fail / 2 skipped | **0** |
 | `anim8` | anim8-gdx `src/main/java` | 16 → **16** (0 dropped, 0 injected) | **23** hand-written, all passing — upstream has NO suite (§7.1) | **0** |
-| `gltf` | gdx-gltf `gltf/src` | 135 → **135** (0 dropped, 1 injected) | — | **8** (§8.4, all classified) |
+| `gltf` | gdx-gltf `gltf/src` | 135 → **135** (0 dropped, 1 injected) | — | **3** (§8.4, all classified) |
 | `gltf-test` | gdx-gltf `gltf/test` | 1 of 7 → **1** (§8.1) | **8** ported + **22** hand-written, **none run** — the port does not compile | — |
 | `screens` | libgdx-screenmanager `src/main/java` | 22 → **22** (0 dropped, 0 injected) | **16** hand-written, all passing — upstream's 12 need an unported BACKEND (§9 libgdx-screenmanager) | **0** |
 | `vfx` | gdx-vfx `core/src` + `effects/src` | 44 → **44** (0 dropped, 0 injected) | **64** hand-written, all passing — upstream has NO test SOURCE SET (§10.1) | **0** |
@@ -1272,11 +1272,11 @@ prints the two numbers SEPARATELY — a ported test and a written one are differ
 
 | gate | `gltf` | `gltf-test` |
 |---|---|---|
-| compile errors (with libGDX core, Scala 3.8.4) | **7** | — (one invocation) |
+| compile errors (with libGDX core, Scala 3.8.4) | **3** | — (one invocation) |
 | files emitted | **135** (0 dropped, 1 injected) | **1** |
 | model | 740 units / 56,368 symbols | 741 / 56,420 |
 | signature consistency | 1 | 1 (the same site) |
-| omissions | 3 | 0 |
+| omissions | **12** | 0 |
 | portability (all / emitted / injected) | 151 / **0** / **0** | 151 / 0 / 0 |
 | substitutions · manifest · port map · policy | 0 · 0 · **0** · 0 | 0 · 0 · 0 · 0 |
 | collection closure · boundary · shared-iterator | 0 · 0 · 0 | 0 · 0 · 0 |
@@ -1287,7 +1287,7 @@ prints the two numbers SEPARATELY — a ported test and a written one are differ
 | decisions recorded | 2,065 rows about gdx-gltf's own declarations (1,767 `RetypedSignature`); the base's withheld (D2) | 47 |
 | **tests** | 8 ported + 22 hand-written = **30, NONE RUN** — the port does not compile (§8.4) | |
 
-**Error trajectory: 19 → 16 → 14 → 9 → 8 → 7**, on 135 files at the first attempt. `break residue` is
+**Error trajectory: 19 → 16 → 14 → 9 → 8 → 7 → 3**, on 135 files at the first attempt. `break residue` is
 **0** and `portability(emitted)` is **0** on a library full of `switch`-driven enum mapping, which is
 §9.5's control-flow work and the portability rules paying off on a library they were not built for.
 
@@ -1329,7 +1329,16 @@ REFERENCE an injected replacement (six of its files use libGDX's substituted `Js
 times that the base "emits nothing at that name and nothing replaces it" about a type it compiles
 against. This is `CLAUDE.md` §4.56 at a third artifact.
 
-### 8.4 The residue — 8 errors, all classified, and why the tests cannot run
+**And the D5 refusal NARROWED three members on `ashley-test`, which is the same fix seen from the
+other side.** A replay that reached an ashley-core `private` member had been accepted, and everything
+it touched was widened with it — including three of the TEST port's own `private static` fields
+(`IntervalSystemTest.deltaTime`, `IntervalIteratingTest.deltaTime`,
+`SortedIteratingSystemTest.comparator`), which were emitted with java's `private` dropped for no
+reason anybody could state. With the replay refused they are `private` again, matching java. 6 member
+digests, `vis=private` on three port-map rows, every check count identical and the suite unchanged at
+108 / 2 / 2.
+
+### 8.4 The residue — 3 errors, all classified, and why the tests cannot run
 
 The port does not compile, so **none of its 30 tests has ever executed.** `CLAUDE.md` §3 is explicit
 that a test which cannot run is not a test that passed, and the lane says so rather than reporting a
@@ -1337,9 +1346,25 @@ suite of zero.
 
 | errors | site | classification |
 |---|---|---|
-| ~~3~~ **2** | ~~`ClippingPlaneAttribute`,~~ `PBRCubemapAttribute`, `PBRTextureAttribute` — `extends CubemapAttribute` / `extends TextureAttribute` with no arguments | ~~**D4**~~ **C3**, (a) engine — see below |
-| 4 | `ModelInstanceHack` — `this.copyNodes(…)`, `private` in libGDX's emitted `ModelInstance` | **D5**, (a) engine |
+| **2** | `PBRCubemapAttribute`, `PBRTextureAttribute` — `extends CubemapAttribute` / `extends TextureAttribute` with no arguments | **C3**, (a) engine — see below |
+| ~~4~~ **0** | ~~`ModelInstanceHack` — `this.copyNodes(…)`, `private` in libGDX's emitted `ModelInstance`~~ | ~~**D5**~~ CLOSED — the replay is refused and counted |
 | 1 | `MeshLoader.java:252` — `vertexAttributes.toArray(VertexAttribute.class)`, a member the base drops | **D7**, (b) a phase that does not exist |
+
+**D5 CLOSED, 7 -> 3, and `omissions` 3 -> 12 is the price it names.** `CtorFunnel.Plans` asks the
+SURFACE — not its own symbol table — whether a replay may reach a base's `private` member, and
+refuses where the base published it `private`. `ModelInstanceHack`'s two `super(args)` are then
+DROPPED rather than replayed into a call that cannot compile, which is M6/C3's answer applied
+unchanged, and `run-latest/report.md` carries the one gap that says so:
+`[base: libgdx-core]  [§1(a) ENGINE, in the BASE]`.
+
+**Seven of the nine new omissions were ALWAYS TRUE and nothing was reporting them.** `OmissionCheck`
+and both decision recorders built their own `CtorFunnel.Plans` with no surface — a `TrivialSurface`,
+under which the funnel's fixpoint spans the base — so they answered over a DIFFERENT plan from the
+one the emitter used. `PBRCubemapAttribute` and `PBRTextureAttribute` had been emitting a bare
+`this()` for seven `super(args)` while the check called them expressed and the port map's decisions
+agreed with the check. The emitted CODE for those seven is byte-identical; what appeared is nine
+`dropped-super-call` porter notes that should always have been there. 12 member digests moved, all
+in those three classes (`ENGINE-LIMITS.md` D5).
 
 **The remaining 2 are NOT D4, and the base-surface contract is what proves it — 7 -> 7.** With
 schema 3's `primary=` rows published and the funnel's fixpoint scoped to this run's own classes
@@ -1389,8 +1414,8 @@ disagreement exists only when the two modules are compiled together.
   holders de-collapsed, 36 members moved, compile still 0 and no check count moved. See D6.
 - **Refusing every cross-class private widening in `CtorFunnel`** to fix D5. libGDX core makes **22**
   `WidenedVisibility` decisions of its own, all of them within one module and all of them sound, so a
-  blanket refusal regresses the base to fix the dependent. The missing input is which classes the run
-  EMITS, which `Plans` does not have — the same input D4 needs.
+  blanket refusal regresses the base to fix the dependent. The guard that landed is a SCOPE, not a
+  removal: the within-module widening is untouched and `BaseSurfaceSpec` pins both directions.
 - **Refusing the withheld promotion** to fix D4. That is `ENGINE-LIMITS.md` C1 exactly (+14 on
   libGDX) and it breaks the dependent's own subclasses instead.
 - **`dropTypes` + `inject` for the four affected files** to reach a green compile. That forks
@@ -1404,9 +1429,6 @@ disagreement exists only when the two modules are compiled together.
   from the base's published port map, which is already the channel for "what did the base actually
   do". The map must carry each type's primary parameter list, and `Plans` must seed itself from it
   for every non-owned class.
-- **D5 (4 errors).** `Plans` needs the same "which classes does this run emit" input, and then M6's
-  answer applies unchanged: refuse the replay whose widening cannot be performed, count the dropped
-  `super(args)` as an omission, and compile.
 - **D7 — the MECHANISM exists; what is left is one policy decision.**
   `CallSiteSubstitutionTransform` (DESIGN.md §8.12) is the call-level twin of `MethodBodyTransform`,
   keyed like `dropMethods` and overload-exact. Dry-run against this port's three dead `Json` sites:

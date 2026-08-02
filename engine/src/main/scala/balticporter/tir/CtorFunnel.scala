@@ -1198,9 +1198,70 @@ object CtorFunnel:
           // at all
           touched.forall { s =>
             program.symbolOf(s).forall { sy =>
-              !sy.flags.isPrivate || sy.owner == cd.symbol || classOfSym(sy.owner).isDefined
+              !sy.flags.isPrivate || sy.owner == cd.symbol || reachablePrivate(cd, s, sy)
             }
           }
+
+    /** May this replay reach `sy`, a `private` member of a class that is NOT the one the statements
+      * land in? `ENGINE-LIMITS.md` D5, and the whole of it.
+      *
+      * WITHIN one module the answer is yes-by-widening: the planner collects the symbol in
+      * [[widenedMembers]] and `TirEmitter.widen` drops `private` from it before anything renders.
+      * That is exact and cannot change behaviour — the declaration this run is about to write is the
+      * one being widened.
+      *
+      * ACROSS a module boundary it is not a widening at all. `widen` edits the SYMBOL TABLE of this
+      * run's `Program`; the DECLARATION lives in the base's already-emitted file, which still says
+      * `private`, and the dependent emits a call to it and the compile fails — measured on gdx-gltf
+      * as 4 × `value copyNodes is not a member of …ModelInstanceHack`. The test was
+      * `classOfSym(sy.owner).isDefined`, "do we have a tree for the owner", which is TRUE for every
+      * base class a dependent resolves against: a dependent's `Program` CONTAINS its base.
+      *
+      * So the question is asked of the SURFACE, not of the symbol table:
+      *
+      *   - the owner is one this run EMITS — the widening is real, and the old answer stands;
+      *   - the base PUBLISHED the member and it is not `private` there — reachable, no widening
+      *     needed;
+      *   - the base published it `private` (or `private[p]`), or published nothing about it — the
+      *     replay is REFUSED. `super(args)` is then dropped, `OmissionCheck.droppedSuperArgs`
+      *     counts it, and the port compiles with a named divergence instead of failing (M6/C3).
+      *
+      * The refusal is RECORDED as a non-fatal [[Surface.Gap]] either way, because a refusal an agent
+      * cannot attribute is §4.45's "cannot classify" failure: only the BASE can fix this, and the gap
+      * names it. Non-fatal on purpose — the answer did not shape emitted text, it withheld a rewrite,
+      * which is exactly what a `Gap.fatal` must not be widened to cover. */
+    private def reachablePrivate(cd: Tree.ClassDef, s: SymId, sy: Symbol): Boolean =
+      if surface.owns(sy.owner) then classOfSym(sy.owner).isDefined
+      else
+        // …and the GAP is scoped to the classes THIS RUN EMITS (`ENGINE-LIMITS.md` D2). A
+        // dependent's `Plans` decides about its base's classes too — the fixpoint spans the whole
+        // program — so a refusal about `Table`/`Button` is a question about text the BASE wrote and
+        // this run does not touch. Recording it puts the module's own questions in a minority in its
+        // own report; the REFUSAL still stands there, and costs nothing, because nothing is emitted.
+        def report(g: Surface.Gap): Unit = if surface.owns(cd.symbol) then surface.gap(g)
+        val who = s"${sy.fullName} (replayed into ${program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")})"
+        surface.memberShape(s) match
+          // cannot happen: `surface.owns(sy.owner)` above is the complement of this
+          case Surface.Answer.Own => classOfSym(sy.owner).isDefined
+          case Surface.Answer.Published(shape, module) =>
+            if shape.vis == "public" || shape.vis == "protected" then true
+            else
+              report(Surface.Gap(who,
+                s"$module emitted this member `${shape.vis}` and this run does not write its " +
+                  "declaration, so the constructor replay that reaches it cannot be widened; the " +
+                  "replay is refused and the `super(args)` it expressed is counted as an omission",
+                Some(module), fatal = false,
+                fix = s"§1(a) ENGINE, in the BASE: only $module can widen a member it emits, and it " +
+                  "cannot know a future dependent will replay one. The divergence is counted by " +
+                  "`omissions`; hand-write the constructor in this module if the behaviour is needed"))
+              false
+          case Surface.Answer.Unknown(why, module) =>
+            report(Surface.Gap(who, why + " — the constructor replay that reaches it is refused, " +
+              "because a replay across a module boundary cannot widen anything",
+              module, fatal = false,
+              fix = "§1(b) PER-LIBRARY: declare the module that emits this member as a base " +
+                "(`base = \"…\"`) and re-run it with this engine so its port map carries a `vis=` row"))
+            false
 
   /** does this class extend a JDK THROWABLE? Its constructor set is fixed and public — `()`,
     * `(String)`, `(String, Throwable)`, `(Throwable)` — which is what makes null-padding a shorter
