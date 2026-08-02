@@ -23,6 +23,16 @@ final case class Origin(javaPath: String, line: Int, col: Int)
 object Origin:
   val synthetic: Origin = Origin("<synthetic>", 0, 0)
 
+/** WHICH `try` — see [[Tree.Try.id]] for why neither an `Origin` nor object identity can be that.
+  *
+  * A counter and nothing else: it is never printed, never emitted, never written to an artifact and
+  * never compared across runs, so no output depends on the order tokens are handed out in. */
+opaque type TryId = Long
+object TryId:
+  private val seq                = java.util.concurrent.atomic.AtomicLong(0L)
+  def fresh(): TryId             = seq.incrementAndGet()
+  extension (t: TryId) def raw: Long = t
+
 /** Stable symbol identity — interned, NEVER a string (the analog of `reflect.Symbol`
   * as a handle). Ergonomic queries hang off it as `(using Program)` extensions,
   * mirroring Quotes' `(using Quotes)` symbol methods. */
@@ -393,8 +403,33 @@ object Tree:
   final case class For(init: List[Statement], cond: Option[Term], update: List[Statement], body: Term, tpe: TypeRepr, origin: Origin, label: Option[String] = None) extends Term
   /** `try (resources) body catch cases finally fin`. `resources` are the try-with-resources
     * bindings (empty for a plain `try`); each is auto-closed — a lowering concern for the
-    * backend, kept structural here. */
-  final case class Try(resources: List[ValDef], body: Term, catches: List[CatchCase], finalizer: Option[Term], tpe: TypeRepr, origin: Origin) extends Term
+    * backend, kept structural here.
+    *
+    * @param id WHICH `try` this is, for the one question two `try`s must never share an answer to:
+    *           did the emitter put a `Break` re-throw arm on it (`ENGINE-LIMITS.md` K16 / CLAUDE.md
+    *           §4.4)? Neither of the two obvious keys can carry it —
+    *
+    *             - an `Origin` is a path, a line and a column, and a nested one-liner shares all
+    *               three, while every SYNTHESISED `try` carries `Origin.synthetic`;
+    *             - object identity does not survive `StandardTraversal`, which rebuilds every node
+    *               it walks (a `scan` is a `map` with a side effect), so the emitter's node and the
+    *               check's are different objects for the same `try`.
+    *
+    *           A token minted at construction survives both: `copy` carries it, so every rebuild is
+    *           the SAME try, and two separately constructed `try`s are never confused. It is
+    *           excluded from `equals`/`hashCode` — an identity is not part of the value — and it
+    *           reaches no emitted text, no artifact and no printer, so nothing about a run's output
+    *           depends on it. */
+  final case class Try(resources: List[ValDef], body: Term, catches: List[CatchCase],
+                       finalizer: Option[Term], tpe: TypeRepr, origin: Origin,
+                       id: TryId = TryId.fresh()) extends Term:
+    // structural equality EXCLUDING `id`: every existing comparison keeps meaning, and the token is
+    // used where it is meant to be used — as an explicit key.
+    override def equals(o: Any): Boolean = o match
+      case t: Try => t.resources == resources && t.body == body && t.catches == catches &&
+                     t.finalizer == finalizer && t.tpe == tpe && t.origin == origin
+      case _      => false
+    override def hashCode: Int = (resources, body, catches, finalizer, tpe, origin).hashCode
   /** one `catch (param) body`; `param.tpt` may be an `OrType` for multi-catch. */
   final case class CatchCase(param: ValDef, body: Term)
   /** `scrutinee match { cases }` (from a Java switch). */

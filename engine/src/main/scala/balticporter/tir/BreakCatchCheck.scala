@@ -52,20 +52,33 @@ object BreakCatchCheck:
 
   /** The complete result. Pure — persisting it is the orchestrator's job.
     *
-    * @param guarded the origins the emitter put a re-throw arm on ([[balticporter.emit.TirEmitter.breakGuards]]).
-    *                `_ => false` is the un-repaired engine, which is how the negative test asks
-    *                this check whether it can report at all.
+    * @param guarded which `try`s the emitter put a re-throw arm on
+    *                ([[balticporter.emit.TirEmitter.breakGuards]], keyed by [[Tree.Try.id]]).
+    *                `_ => false` is the un-repaired engine, which is how the negative test asks this
+    *                check whether it can report at all.
+    *
+    *                Asked of the NODE and answered from its TOKEN, never from its `Origin`: a
+    *                path/line/column triple is not unique across `try`s — a nested one-liner shares
+    *                one, and every synthesised `try` carries `Origin.synthetic` — so an
+    *                origin-keyed answer lets a GUARDED try vouch for an unguarded sibling and this
+    *                check reports nothing for it. Object identity would not do either: this walk
+    *                rebuilds every node, so nothing here is the object the emitter held.
     */
-  def check(program: Program, units: List[Tree.ClassDef], guarded: Origin => Boolean): List[Finding] =
+  def check(program: Program, units: List[Tree.ClassDef], guarded: Tree.Try => Boolean): List[Finding] =
     given Program = program
     units.flatMap(inUnit(_, guarded))
 
-  private def inUnit(u: Tree.ClassDef, guarded: Origin => Boolean)(using program: Program): List[Finding] =
+  private def inUnit(u: Tree.ClassDef, guarded: Tree.Try => Boolean)(using program: Program): List[Finding] =
     // ---- which member each `try` sits in, innermost first (the walk is bottom-up, so a nested
     // `def`'s tries are claimed before the enclosing one sees them).
+    //
+    // The ONE table still keyed by `Origin`, and harmlessly: what it decides is the OWNER NAME
+    // printed in a finding, so two `try`s sharing an origin share a label and nothing else — while
+    // every table that decides WHETHER to report is keyed below by the try's own token, where an
+    // alias would silently drop a finding.
     val ownerOf = collection.mutable.Map.empty[Origin, String]
     val claim = (s: SymId, t: Option[Term]) =>
-      t.foreach(x => triesIn(x).foreach(o => ownerOf.getOrElseUpdate(o, fqn(s))))
+      t.foreach(x => tryOriginsIn(x).foreach(o => ownerOf.getOrElseUpdate(o, fqn(s))))
     val owners = new Phase:
       def name: String = "break-catch/owner"
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = { claim(d.symbol, d.rhs); d }
@@ -76,10 +89,10 @@ object BreakCatchCheck:
     // the construct that owns the jump encloses the try, so this is the whole of the outer context
     // the crossing test needs: which tries are under a loop (a `continue`'s boundary), under a loop
     // or a switch (an unlabelled `break`'s), and under which labels (a labelled jump's).
-    val underLoop     = collection.mutable.Set.empty[Origin]
-    val underJumpable = collection.mutable.Set.empty[Origin]
-    val brkLabels     = collection.mutable.Map.empty[Origin, Set[String]].withDefaultValue(Set.empty)
-    val contLabels    = collection.mutable.Map.empty[Origin, Set[String]].withDefaultValue(Set.empty)
+    val underLoop     = collection.mutable.Set.empty[TryId]
+    val underJumpable = collection.mutable.Set.empty[TryId]
+    val brkLabels     = collection.mutable.Map.empty[TryId, Set[String]].withDefaultValue(Set.empty)
+    val contLabels    = collection.mutable.Map.empty[TryId, Set[String]].withDefaultValue(Set.empty)
     val tries         = collection.mutable.ListBuffer.empty[Tree.Try]
 
     StandardTraversal.scanClassDef(u, ()) { (_, t) =>
@@ -108,21 +121,35 @@ object BreakCatchCheck:
     val out = collection.mutable.ListBuffer.empty[Finding]
     for tr <- tries do
       val armed = tr.catches.filter(c => Jumps.catchesBreak(c.param.tpt.tpe))
-      if armed.nonEmpty && !guarded(tr.origin) then
+      if armed.nonEmpty && !guarded(tr) then
         val caught = armed.map(c => typeName(c.param.tpt.tpe)).mkString(" | ")
         val owner  = ownerOf.getOrElse(tr.origin, fqn(u.symbol))
+        val id     = tr.id
         val jumps  =
-          Option.when(underJumpable(tr.origin) && Jumps.breaksOut(tr.body))("break").toList
-            ++ Option.when(underLoop(tr.origin) && Jumps.continuesIn(tr.body))("continue")
-            ++ brkLabels(tr.origin).filter(l => Jumps.jumpsTo(tr.body, l, brk = true)).toList.sorted.map("break " + _)
-            ++ contLabels(tr.origin).filter(l => Jumps.jumpsTo(tr.body, l, brk = false)).toList.sorted.map("continue " + _)
+          Option.when(underJumpable(id) && Jumps.breaksOut(tr.body))("break").toList
+            ++ Option.when(underLoop(id) && Jumps.continuesIn(tr.body))("continue")
+            ++ brkLabels(id).filter(l => Jumps.jumpsTo(tr.body, l, brk = true)).toList.sorted.map("break " + _)
+            ++ contLabels(id).filter(l => Jumps.jumpsTo(tr.body, l, brk = false)).toList.sorted.map("continue " + _)
         jumps.foreach(j => out += Finding(Issue.UnguardedJump, owner, j, caught, tr.origin))
     out.toList
 
-  /** every `try` in this subtree, by origin. `StandardTraversal` rather than a walk of this file's
+  /** every `try` in this subtree, BY TOKEN. `StandardTraversal` rather than a walk of this file's
     * own: the set has to be complete as node kinds are added, and it is the one walk in the engine
-    * that is kept so (CLAUDE.md §3). */
-  private def triesIn(t: Term)(using Program): Set[Origin] =
+    * that is kept so (CLAUDE.md §3).
+    *
+    * The token rather than the node, because this traversal REBUILDS what it walks — a `scan` is a
+    * `map` with a side effect — so no object here is the one the caller holds, while `copy` carries
+    * `Tree.Try.id` across every rebuild. */
+  private def triesIn(t: Term)(using Program): Set[TryId] =
+    StandardTraversal.scanTerm(t, Set.empty[TryId]) { (acc, x) =>
+      x match
+        case tr: Tree.Try => acc + tr.id
+        case _            => acc
+    }
+
+  /** …and the same subtree's `try` ORIGINS, for the one table that cannot use identity — see
+    * `ownerOf`. */
+  private def tryOriginsIn(t: Term)(using Program): Set[Origin] =
     StandardTraversal.scanTerm(t, Set.empty[Origin]) { (acc, x) =>
       x match
         case tr: Tree.Try => acc + tr.origin

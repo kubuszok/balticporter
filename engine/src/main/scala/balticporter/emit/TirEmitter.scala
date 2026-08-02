@@ -2767,7 +2767,7 @@ final class TirEmitter(
       val c  = cond.map(term(_, i)).getOrElse("true")
       val u  = upd.map(flatStat).mkString("; ")
       loopWithJumps(body, lbl, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
-    case Tree.Try(res, body, catches, fin, _, o) => tryStr(res, body, catches, fin, o, i)
+    case t: Tree.Try                    => tryStr(t, i)
     case Tree.Match(scr, cases, _, _)   => matchStr(scr, cases, i)
     case Tree.MethodRef(q, s, mrT, _)   =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
@@ -3131,12 +3131,12 @@ final class TirEmitter(
     * catch in the corpus, and a repair nobody can point at a jump for is a repair nobody can
     * review. `finally` is untouched: a finalizer is not a handler, and both languages run it and
     * let the jump through. */
-  private def tryStr(res: List[Tree.ValDef], body: Term, catches: List[Tree.CatchCase],
-                     fin: Option[Term], origin: Origin, i: Int): String =
+  private def tryStr(t: Tree.Try, i: Int): String =
+    val (res, body, catches, fin) = (t.resources, t.body, t.catches, t.finalizer)
     val r  = res.map(v => s"${ind(i + 1)}${valDef(v, 0)}\n").mkString
     val guard =
       if catches.exists(c => Jumps.catchesBreak(c.param.tpt.tpe)(using program)) && crossesCatch(body) then
-        breakGuarded += origin
+        breakGuarded += t.id
         s"${ind(i + 1)}case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard}" +
           s" // §4.4: a java jump is not catchable\n"
       else ""
@@ -3161,14 +3161,29 @@ final class TirEmitter(
       labelBreak.keysIterator.exists(l => Jumps.jumpsTo(body, l, brk = true)) ||
       labelCont.keysIterator.exists(l => Jumps.jumpsTo(body, l, brk = false))
 
-  /** every `try` this emitter put a [[TirEmitter.BreakGuard]] arm on, by origin — the input to
-    * `break-catch`, which finds the crossings independently and reports the ones nothing guarded.
+  /** every `try` this emitter put a [[TirEmitter.BreakGuard]] arm on — the input to `break-catch`,
+    * which finds the crossings independently and reports the ones nothing guarded.
     *
-    * A SET, so the idempotence `recordedNotes` and `clauseLost` get from keying by unit is here by
-    * construction: re-emitting a unit (the determinism twin, the action cache) re-adds origins it
-    * already holds. */
-  private val breakGuarded = collection.mutable.Set.empty[Origin]
-  def breakGuards: Set[Origin] = breakGuarded.toSet
+    * ==Keyed by the try's own TOKEN, never by `Origin`==
+    * An `Origin` is a java path, line and column, and two `try`s can share all three: a nested
+    * one-liner (java's own "close quietly" idiom), and every `try` a phase SYNTHESISED, which
+    * carries `Origin.synthetic`. Keyed by origin, a GUARDED try vouches for its unguarded twin —
+    * the check asks "was this origin guarded?", gets `true` from the sibling and reports nothing,
+    * which hides a §4.4 defect that compiles, moves no count and fails no test behind the very
+    * mechanism written to find it.
+    *
+    * Object identity cannot be the key either, and that is not obvious: `StandardTraversal` REBUILDS
+    * every node it walks (a `scan` is a `map` with a side effect), so the check's `try` is never the
+    * object this emitter held. `Tree.Try.id` survives a rebuild because `copy` carries it.
+    *
+    * Still a SET, so the idempotence `recordedNotes` and `clauseLost` get from keying by unit is
+    * here by construction: re-emitting a unit (the determinism twin, the action cache) re-adds the
+    * tokens it already holds. */
+  private val breakGuarded = collection.mutable.Set.empty[TryId]
+  def breakGuards: Tree.Try => Boolean = t => breakGuarded.contains(t.id)
+  /** how many `try`s that is — the only thing a caller can ask a membership test that it cannot
+    * answer itself, and what a spec asserting "the emitter really did guard" needs. */
+  def breakGuardCount: Int = breakGuarded.size
 
   /** A java `switch`, with a boundary around any case body that still contains an unlabelled
     * `break`.

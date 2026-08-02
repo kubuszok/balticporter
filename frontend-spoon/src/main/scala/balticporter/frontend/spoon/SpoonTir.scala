@@ -465,11 +465,34 @@ object SpoonTir:
     /** Is this executable's declaration a SHADOW — reconstructed from a class file rather than
       * parsed from a source this run owns?
       *
-      * The same test `coerceArgsFixed` uses, deliberately: `getExecutableDeclaration` is non-null
-      * for a JDK member under `noClasspath` too, so null-ness is not the external signal and a
-      * second spelling of "is this external" would be a second answer. */
+      * The same test `coerceArgsFixed` and `varargPack` use — through [[isExternalCallee]], so there
+      * is ONE spelling of "is this external": `getExecutableDeclaration` is non-null for a JDK
+      * member under `noClasspath` too, so null-ness is not the external signal, and a second
+      * spelling would be a second answer.
+      *
+      * The two absences are DIFFERENT answers and are written out rather than left to `forall`,
+      * which is vacuously true on `None` and therefore hides which one was meant:
+      *
+      *   - NO DECLARING TYPE — an executable Spoon parented to nothing. Nothing in this program
+      *     declares it, so it is external, and that is the same answer the null reference gets;
+      *   - a THROW out of `getParent` — a model in a state this cannot read. Not the same claim:
+      *     the conservative answer is "not external", which suppresses the erasure cast and the
+      *     spread rather than inserting either on no evidence. */
     private def isShadowDecl(m: CtExecutable[?]): Boolean =
-      try Option(m.getParent(classOf[CtType[?]])).forall(_.isShadow) catch { case _: Throwable => false }
+      try
+        Option(m.getParent(classOf[CtType[?]])) match
+          case scala.None    => true
+          case Some(t)       => t.isShadow
+      catch { case _: Throwable => false }
+
+    /** …and the same question asked of a call's REFERENCE, which is where every caller starts.
+      *
+      * A reference with no declaration at all is external by the same rule: this program's own
+      * members are parsed, so they have one. */
+    private def isExternalCallee(ex: CtExecutableReference[?]): Boolean =
+      Option(ex.getExecutableDeclaration) match
+        case scala.None => true
+        case Some(d)    => isShadowDecl(d)
 
     /** The `MethodType` of an EXTERNAL member — the fix `ENGINE-LIMITS.md` K15 names, and the fact
       * every consumer of that seam was blocked on.
@@ -2298,10 +2321,7 @@ object SpoonTir:
             // the same signal `coerceArgsFixed` reads for the erasure cast, and the only one that
             // survives `noClasspath` (where `getExecutableDeclaration` is non-null for the JDK too).
             // ONE answer for both directions: which side of the program's edge the CALLEE is on.
-            val external = Option(ex.getExecutableDeclaration)
-              .flatMap(d => Option(d.getParent(classOf[CtType[?]]))) match
-              case scala.None    => true
-              case Some(decl) => decl.isShadow
+            val external = isExternalCallee(ex)
             if comp == null || argEs.sizeIs < fixed then None
             else if passesArray then passedThrough(ex, argEs, external)
             else if elemRef.isEmpty then None
@@ -2393,9 +2413,7 @@ object SpoonTir:
         // A JDK/library method's declaration is a SHADOW type (reconstructed from bytecode/reflection);
         // our own source types are non-shadow. (`getExecutableDeclaration` is non-null even for JDK
         // methods under noClasspath, so isShadow — not null-ness — is the reliable external signal.)
-        val external = Option(ex.getExecutableDeclaration) match
-          case None    => true
-          case Some(d) => Option(d.getParent(classOf[CtType[?]])).forall(_.isShadow)
+        val external = isExternalCallee(ex)
         val formals = ex.getParameters.asScala.toList
         // Under noClasspath, an executable REFERENCE erases a generic formal `T` to `Object`, so
         // `coerce` sees `null → Object` (legal) and skips the cast — yet the emitted method keeps
