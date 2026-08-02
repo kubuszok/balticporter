@@ -626,12 +626,17 @@ Three further things the retry should know:
 - **`members.tsv` is the honest size**: 174 members moved on libGDX for the both-halves version and
   143 for the method-only one, at 0 changed check counts either way. The blast is real and no count
   reports it;
-- **there may be a cheaper place to stand.** The single liqp error is not really about the bound: it
-  is that the port WROTE DOWN java's inferred type argument (`Serializable`, the lub of
-  `98, "97", true, false, null`) at a call, and Scala roots `java.io.Serializable` at `Any` so that
-  argument does not conform to a `<: Object` parameter. Pinning such a lub as `java.lang.Object`
-  where the inferred head is a type Scala does not place under `Object` is one site's fix rather
-  than every generic signature's — unmeasured, and the shape a retry should price first.
+- **the cheaper place to stand was EVALUATED, and it is not there.** This entry used to note one:
+  the liqp error is not really about the bound, it is that the port WROTE DOWN java's inferred type
+  argument (`Serializable`, the lub of `98, "97", true, false, null`) at an `Arrays.asList` call, so
+  pinning such a lub as `java.lang.Object` would be one site's fix rather than every generic
+  signature's. **Reading the java settles it: `Serializable` is written there TWICE.** Beside the
+  three `asList` calls whose argument the port inferred, the enclosing declaration is
+  `List<List<Serializable>> cases = cartesianProduct(…)` — java's own written type. Pin the lub to
+  `Object` and the call yields `Buffer[Buffer[Object]]`, which then does not conform to the
+  `Buffer[Buffer[Serializable]]` the DECLARATION asks for, because `Buffer` is invariant. The
+  mismatch moves one line down and the error count does not move at all. So there is no site-local
+  fix for this error: it is the bound, and the bound is priced above. **Do not re-derive this.**
 
 Measured at **1 error** on liqp (`ComparingExpressionNodeTest`, whose fixture is a
 `List<List<Serializable>>`), and it is the first corpus library to write `Serializable` as a type
