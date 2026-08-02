@@ -96,6 +96,10 @@ object CollectionBoundaryCheck:
       * THE PHASE, at the moment the external signature is still readable, and reported here so a
       * reader finds the whole residue in one place. */
     case ExternalCallee
+    /** a class the program declares IMPLEMENTS a java type this phase maps, and the target CANNOT
+      * BE A PARENT. The parent is left as java's rather than emitted at a type that cannot carry
+      * it — see the classification for why that is the honest answer and not a gap. */
+    case InexpressibleParent
 
   object Issue:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
@@ -124,6 +128,17 @@ object CollectionBoundaryCheck:
           "the port expects a scala collection. Widen the scope to cover this declaration, or " +
           "narrow it to exclude the other side of the slot too. The engine needs no change; a " +
           "scope that produced this seam SILENTLY would be worse than no scope."
+      case InexpressibleParent =>
+        "§1(a) engine, and REFUSED on purpose: this class IMPLEMENTS a java type the mapping " +
+          "covers, and the target cannot BE a parent — `scala.Tuple2` is final, has no `setValue` " +
+          "and takes its two components in its constructor, so `extends Tuple2[K, V]` is three " +
+          "errors with no fix available from inside the class. The parent is therefore left as " +
+          "JAVA's: the class really does implement `java.util.Map.Entry`, which is on the " +
+          "classpath and whose members it already declares, so the class compiles and the error " +
+          "moves to the SLOTS where the port hands it to a `Tuple2` — which is where it belongs. " +
+          "A second target for the implements-case is NOT the fix: `entrySet()` yields a `Tuple2` " +
+          "everywhere in every port, so a shim-typed class would need a coercion at every crossing " +
+          "in both directions, which is a second truth about one java type (ENGINE-LIMITS K5.7)."
       case ExternalCallee =>
         "§1(a) engine, and REFUSED here on purpose: the other side of this slot is a method the " +
           "program does not declare, so its signature is a fact about a compiled class file and no " +

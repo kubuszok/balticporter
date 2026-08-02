@@ -244,6 +244,11 @@ final class CollectionsTransform(
     * see [[wildcardMapCall]]. */
   private var mapGetSym, mapContainsKeySym, mapRemoveSym: SymId = SymId.None
 
+  /** the java symbols this run's mapping sends to a target that CANNOT BE A PARENT — see
+    * [[restoreUninheritableParents]]. EMPTY unless the program actually names one, which makes the
+    * pass a no-op by arithmetic on every port that does not. */
+  private var uninheritableSyms: Set[SymId] = Set.empty
+
   /** is this symbol one the PROGRAM declares? Structural (`Program.owned`), never a name test
     * (§4.56), and computed once per run because the external-seam arms ask it per call. */
   private var ownedSym: SymId => Boolean = _ => true
@@ -393,7 +398,11 @@ final class CollectionsTransform(
     val ownedNow = summon[Program].owned
     ownedSym = ownedNow
     applyScope(summon[Program]) // fills `excluded`, `admittedBy` and `report` — a no-op by default
-    val units    = program.units.map(u => restoreExcluded(u, StandardTraversal.mapClassDef(this, u)))
+    uninheritableSyms = program.symbols.all.collect {
+      case s if typeMap.get(s.fullName).exists((tgt, _) => CollectionsTransform.UninheritableTargets(tgt)) => s.id
+    }.toSet
+    val units    = program.units.map(u =>
+      restoreUninheritableParents(u, restoreExcluded(u, StandardTraversal.mapClassDef(this, u))))
     val symbols2 = mapSignatures(symbols) // retype signatures too
     recordRetypings(symbols, symbols2)
     recordScopedOut(symbols)
@@ -537,6 +546,55 @@ final class CollectionsTransform(
         else mapped.copy(parents = orig.parents, selfType = orig.selfType,
                          tparams = orig.tparams, enumCases = orig.enumCases)
       own.copy(body = body)
+
+  /** A PARENT this phase's target cannot BE is left as java's, and the refusal is COUNTED.
+    *
+    * `java.util.Map.Entry` is the case, and it is the whole of it today. As a USE it is a pair and
+    * `scala.Tuple2` is exact — an entry read out of a map really is a `(K, V)`, which is why
+    * `entrySet()` can hand back the map itself. As a PARENT it is impossible three times over:
+    * `Tuple2` is FINAL, it has no `setValue`, and its constructor takes the two components — so a
+    * class that IMPLEMENTS `Map.Entry` emits `extends scala.Tuple2[K, V]` and there is nothing
+    * inside the class that could fix any of the three.
+    *
+    * **A phase may not emit a parent its target cannot be.** So the parent stays JAVA's: the class
+    * really does implement `java.util.Map.Entry`, which is on the classpath and whose three members
+    * it already declares, so the class itself compiles — and the seam moves to the SLOTS where the
+    * port hands such a class to a `Tuple2`, which is where a reader can act on it. That is M6's
+    * bar met by construction rather than by leaving a broken emission in place.
+    *
+    * The alternative — a SECOND target for the implements-case, a `JavaMapEntry` shim beside the
+    * `Tuple2` the use-case keeps — is rejected, and the reason is not effort. Every `entrySet()` in
+    * every port yields a `Tuple2`, so the two would meet at every crossing, in both directions,
+    * needing a coercion each way for one class in one library: a second truth about one java type,
+    * which §1's balance is explicit about (ENGINE-LIMITS K5.7).
+    *
+    * A no-op by arithmetic wherever the program names no such type ([[uninheritableSyms]] empty),
+    * which is 13 of the 14 corpus ports. */
+  private def restoreUninheritableParents(orig: Tree.ClassDef, mapped: Tree.ClassDef)(using Program): Tree.ClassDef =
+    if uninheritableSyms.isEmpty then mapped
+    else
+      def tpeOf(p: Term | TypeTree): TypeRepr = p match
+        case tt: TypeTree => tt.tpe
+        case t: Term      => t.tpe
+      val parents =
+        // lengths agree by construction — `mapClassDef` maps the list one for one — and a mismatch
+        // means the traversal changed shape, in which case the MAPPED list is the honest answer
+        // rather than a zip that silently truncates (see `spine` for the same reasoning).
+        if orig.parents.sizeIs != mapped.parents.size then mapped.parents
+        else orig.parents.zip(mapped.parents).map { (o, m) =>
+          headSym(tpeOf(o)).filter(uninheritableSyms.contains) match
+            case scala.None => m
+            case Some(_)    =>
+              seam("parent (implements)", TirPrinter.tpe(tpeOf(m), TirPrinter.Style.canonical),
+                   TirPrinter.tpe(tpeOf(o), TirPrinter.Style.canonical), orig.origin, orig.symbol,
+                   CollectionBoundaryCheck.Issue.InexpressibleParent)
+              o
+        }
+      val body = CollectionsTransform.spine(orig.body, mapped.body, orig.symbol).map {
+        case (o: Tree.ClassDef, m: Tree.ClassDef) => restoreUninheritableParents(o, m)
+        case (_, m)                               => m
+      }
+      mapped.copy(parents = parents, body = body)
 
   /** `StandardTraversal.mapSymbols`, minus the symbols the scope held back — so an excluded
     * declaration's SIGNATURE stays exactly as the frontend read it, which is what the restored tree
@@ -981,9 +1039,9 @@ final class CollectionsTransform(
 
   /** record one external seam this phase could not close, for [[boundary]] to report. A refusal
     * that is not counted is indistinguishable from a seam that does not exist (M6). */
-  private def seam(slot: String, expected: String, actual: String, origin: Origin, enclosing: SymId): Unit =
-    externalSeams += CollectionBoundaryCheck.Finding(
-      CollectionBoundaryCheck.Issue.ExternalCallee, slot, expected, actual, origin, enclosing)
+  private def seam(slot: String, expected: String, actual: String, origin: Origin, enclosing: SymId,
+                   issue: CollectionBoundaryCheck.Issue = CollectionBoundaryCheck.Issue.ExternalCallee): Unit =
+    externalSeams += CollectionBoundaryCheck.Finding(issue, slot, expected, actual, origin, enclosing)
 
   /** Java's collection COPY CONSTRUCTOR — `new ArrayList<>(c)`, `new HashSet<>(c)`,
     * `new HashMap<>(m)`, `new ArrayDeque<>(c)`.
@@ -2172,6 +2230,13 @@ object CollectionsTransform:
   /** the three members java declares over `Object`, so a `Map<?, ?>` receiver supports them and
     * scala's `Map[K, V]` does not — see `wildcardMapCall`. */
   private[balticporter] val WildcardMapMembers: Set[String] = Set("get", "containsKey", "remove")
+
+  /** Mapping TARGETS that cannot be a PARENT, however right they are as a use.
+    *
+    * `scala.Tuple2` is the one: final, no `setValue`, and a constructor taking the two components.
+    * A class that IMPLEMENTS `java.util.Map.Entry` therefore cannot be emitted at that target at
+    * all — see `restoreUninheritableParents`, which keeps java's parent and counts the refusal. */
+  private[balticporter] val UninheritableTargets: Set[String] = Set("scala.Tuple2")
 
   val StaticHelpers: List[String] =
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "removeValue",

@@ -815,6 +815,62 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(m, \"k\")")
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // A PARENT the target cannot BE.
+  // ---------------------------------------------------------------------------------------------
+
+  test("a class that IMPLEMENTS Map.Entry keeps JAVA's parent, and the refusal is COUNTED") {
+    // `Map.Entry` is a pair, and `Tuple2` is exact for every USE of one — which is why `entrySet()`
+    // can hand back the map itself. As a PARENT it is impossible three times over: `Tuple2` is
+    // final, has no `setValue`, and takes its two components in its constructor. So the parent
+    // stays java's — the class really does implement `java.util.Map.Entry`, whose three members it
+    // declares — and the seam moves to the slots where the port hands such a class to a `Tuple2`,
+    // which is where a reader can act on it (M6).
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.Map;
+        |class Holder {
+        |  static final class Pair<K, V> implements Map.Entry<K, V> {
+        |    private final Map.Entry<K, V> e;
+        |    Pair(Map.Entry<K, V> e) { this.e = e; }
+        |    public K getKey() { return e.getKey(); }
+        |    public V getValue() { return e.getValue(); }
+        |    public V setValue(V v) { return null; }
+        |  }
+        |}
+        |""".stripMargin, ph)
+    assertEmits(p, "extends java.util.Map.Entry[K, V]")
+    assertNotEmits(p, "extends scala.Tuple2")
+    val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent)
+    assertEquals(clue(fs).size, 1)
+    assert(clue(fs.head.slot).contains("parent"))
+    assert(clue(CollectionBoundaryCheck.Issue.classification(
+             CollectionBoundaryCheck.Issue.InexpressibleParent)).contains("§1(a)"))
+  }
+
+  test("…and a USE of Map.Entry is still a Tuple2 — the negative test") {
+    // The refusal is about the PARENT position and nothing else. An `entrySet()` walk and a
+    // declared entry both keep the pair, which is what makes `getKey`/`getValue` translate to
+    // `_1`/`_2`. A rule that fired on the TYPE rather than on the position would undo the mapping.
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.*;
+        |class Uses2 {
+        |  private final Map<String, Integer> m = new HashMap<String, Integer>();
+        |  int first() { for (Map.Entry<String, Integer> e : m.entrySet()) { return e.getValue(); } return 0; }
+        |  Integer of(Map.Entry<String, Integer> e) { return e.getValue(); }
+        |}
+        |""".stripMargin, ph)
+    // the DECLARED entry moved…
+    assertEmits(p, "def of(e: scala.Tuple2[java.lang.String, java.lang.Integer])")
+    // …and both `getValue` calls became the pair's accessor, which only holds if it did.
+    assertEmits(p, "return e._2")
+    assertNotEmits(p, "java.util.Map.Entry")
+    assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent), 0)
+  }
+
   test("a CAPACITY hint at a hashed collection gains java's own default load factor") {
     // scala's `mutable.HashMap` declares `()` and `(Int, Double)` and nothing in between, so java's
     // one-argument capacity constructor lands on no overload. Java's own definition of that

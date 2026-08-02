@@ -1554,6 +1554,43 @@ also let `coerce` see the argument and bridge it properly — the cast had been 
 
 *Fix kind: (a).*
 
+### K5.7 A class that IMPLEMENTS `Map.Entry` — the target is FINAL, so the PARENT stays java's
+
+K5 is a class that EXTENDS a JDK collection and it is closed for the shim families. This is the cell
+it does not cover, and the difference is that the target here is not a shim at all.
+
+`java.util.Map.Entry` maps to `scala.Tuple2`, and for every USE that is exact — an entry read out of
+a map really is a `(K, V)`, which is why the `entrySet()` rewrite can hand back the map itself. As a
+PARENT it is impossible three times over, and all three at once:
+
+| `Tuple2` | so `extends scala.Tuple2[K, V]` is |
+|---|---|
+| `final` | `class ComparableMapEntry cannot extend final class Tuple2` |
+| takes `(_1, _2)` | `missing argument for parameter _1 of constructor Tuple2` |
+| has no `setValue` | the write-through member has nothing to override |
+
+**A phase may not emit a parent its target cannot BE.** So the parent is left as JAVA's. The class
+really does implement `java.util.Map.Entry` — it is on the classpath and the class already declares
+`getKey`, `getValue` and `setValue` — so the class itself compiles, and the seam moves to the SLOTS
+where the port hands such a class to a `Tuple2`, which is where a reader can act on it. **liqp 49 →
+47**, with `collection-boundary` 12 → 13: two errors become one counted, classified refusal
+(`Issue.InexpressibleParent`), which is M6's bar met by construction rather than by leaving a broken
+emission behind.
+
+**The obvious alternative is a SECOND TRUTH and is refused.** A `JavaMapEntry` shim for the
+implements-case, beside the `Tuple2` the use-case keeps, is the K5 answer and it does not transfer:
+`entrySet()` yields a `Tuple2` in every port, so the two targets would meet at every crossing, in
+both directions, needing a coercion each way — for one class in one library. §1's balance is
+explicit that a mechanism is preferred to a special case, and this special case would be paid for by
+every port that never implements the interface.
+
+**What is left is `setValue`, and it was already a deliberate refusal.** `Tuple2` has no
+write-through to the map; K2 records that as a translation the port declines to guess, and a
+`setValue` call therefore fails to compile naming the member rather than writing to a detached copy.
+Restoring the parent does not change that, and should not.
+
+*Fix kind: (a) engine — the parent restore. The residue is (a) and REFUSED, with the reason above.*
+
 ### K6. `java.util.stream` — the CHAIN collapses; and the two rules that make that safe
 
 **PARTLY CLOSED.** `xs.stream().filter(p).collect(Collectors.toList())` now translates, and the shape
