@@ -113,9 +113,11 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "under exactly that key; it is engine identity, never a policy key"),
     ),
     "TestFrameworkTransform.scala" -> Map(
-      "fullName ==" ->
-        ("the JUnit/Hamcrest FQNs this phase knows are §1(a) UNIVERSAL knowledge about a test " +
-          "framework, written into the engine, not per-library policy any manifest supplies"),
+      // NO `fullName ==` entry any more. The JUnit FQNs this phase knows are still §1(a) universal
+      // knowledge about a test framework — but there are THREE assertion classes, so the question
+      // became set membership (`AssertClasses`) and the equality spelling left the file. An
+      // exemption for a shape nobody uses is a rule nobody is following, which is what this spec's
+      // second half exists to say.
       "fullName.startsWith" ->
         ("`scala.<op>#` again — the engine's synthetic operator namespace, not a policy key"),
     ),
