@@ -169,6 +169,45 @@ class ExternalSignatureSpec extends munit.FunSuite:
     assert(program.definitionOf(s.id).isEmpty)
   }
 
+  // -- the two Object bounds, which are NOT the same fact ---------------------------------------
+
+  test("`? extends Object` is `?`; `? super Object` is `Object` — java has no supertype of it") {
+    // One filter used to drop the `java.lang.Object` bound from BOTH, which is right for the upper
+    // one (it says nothing) and destroys the lower one (it says everything). `List<? super Object>`
+    // has exactly one java instantiation, so naming it loses nothing — and rendered `[?]` alongside
+    // its unbounded sibling, a `list.addAll(other)` java accepts by capture conversion has an
+    // element that unifies to `Nothing`: `Required: IterableOnce[Nothing & Any]`.
+    val p = SpoonTir.fromSource(
+      """package demo;
+        |import java.util.*;
+        |class W {
+        |  List<?> any;
+        |  List<? super Object> sink;
+        |  List<? extends Object> src;
+        |  List<? super Number> sup;
+        |  List<? extends Number> sub;
+        |}
+        |""".stripMargin)
+    // NOTE the renderer is bound to THIS program: `fqn` resolves symbol ids, and an id means
+    // nothing outside the run that minted it.
+    def show(t: TypeRepr): String = t match
+      case TypeRef(_, s)              => p.symbols.get(s).map(_.fullName).getOrElse("?")
+      case AppliedType(tc, as)        => s"${show(tc)}[${as.map(show).mkString(",")}]"
+      case TypeBounds(NoType, NoType) => "?"
+      case TypeBounds(NoType, hi)     => s"? <: ${show(hi)}"
+      case TypeBounds(lo, NoType)     => s"? >: ${show(lo)}"
+      case other                      => other.toString
+    def field(n: String): String =
+      p.symbols.all.toList.find(s => s.name == n && p.symbols.get(s.owner).exists(_.fullName == "demo.W"))
+        .map(s => show(s.info)).getOrElse(fail(s"no demo.W#$n"))
+    assertEquals(field("any"),  "java.util.List[?]")
+    assertEquals(field("src"),  "java.util.List[?]")
+    assertEquals(field("sink"), "java.util.List[java.lang.Object]")
+    // …and a lower bound that is NOT `Object` really is a family, so it keeps its bound.
+    assertEquals(field("sup"),  "java.util.List[? >: java.lang.Number]")
+    assertEquals(field("sub"),  "java.util.List[? <: java.lang.Number]")
+  }
+
   // -- the case this was built for: a REAL classpath, one class file of which is incomplete ------
 
   test("a PARTIALLY-RESOLVABLE class file leaves its members signature-less; a whole one does not") {

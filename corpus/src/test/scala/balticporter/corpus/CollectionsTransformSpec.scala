@@ -719,6 +719,72 @@ class CollectionsTransformSpec extends PortSuite:
              .contains("\u00a71(a)"))
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // A map whose type arguments are WILDCARDS — K10's rule at the other kind of unnameable key.
+  // ---------------------------------------------------------------------------------------------
+
+  test("a `Map<?, ?>` receiver takes java's three Object-keyed members, never scala's K-keyed ones") {
+    // Java declares `get`, `containsKey` and `remove` over `Object`, so all three are legal on a
+    // `Map<?, ?>` and no capture is involved. Scala declares the same three over `K`, so the
+    // ordinary rewrite emits a key at an unnameable capture (`Found: String / Required: map.K`)
+    // and — for `get` — a `null` ascribed to the equally unnameable `V`, which renders as a bare
+    // `?` in a TERM position and is not syntax. Measured on liqp at 10 and 8 errors, from the same
+    // nine call sites.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Wild {
+        |  Object read(Map<?, ?> m, String k) { return m.get(k); }
+        |  boolean has(Map<?, ?> m, String k) { return m.containsKey(k); }
+        |  Object drop(Map<?, ?> m, String k) { return m.remove(k); }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(m, k)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.mapContainsKey(m, k)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.mapRemove(m, k)")
+    // the thing that made this a SYNTAX error rather than a type error, gone:
+    assertNotEmits(p, "asInstanceOf[?]")
+  }
+
+  test("…and a FULLY-TYPED map keeps the scala members — the negative test") {
+    // The helper is not a wider `get`; it is the answer to an unnameable capture. Where `K` and `V`
+    // are ordinary types the scala member is exact, reads better, and is what every other port in
+    // the corpus emits — routing it through a helper would move emitted text everywhere for no
+    // gain and would hide the `getOrElse` shape the rest of this file asserts.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Typed {
+        |  private final Map<String, Integer> m = new HashMap<String, Integer>();
+        |  Integer read(String k) { return m.get(k); }
+        |  boolean has(String k) { return m.containsKey(k); }
+        |  Integer drop(String k) { return m.remove(k); }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertNotEmits(p, "mapGet")
+    assertNotEmits(p, "mapContainsKey")
+    assertNotEmits(p, "mapRemove")
+    assertEmits(p, "this.m.getOrElse(k, null.asInstanceOf[java.lang.Integer])")
+    assertEmits(p, "this.m.contains(k)")
+  }
+
+  test("…and ONE wildcard is enough, on either side of the map") {
+    // `Map<String, ?>` has a nameable key and an unnameable value, so `containsKey` would have been
+    // fine and `get`'s null default would not. `Map<?, String>` is the mirror. Both go to the
+    // helpers: the condition is a wildcard ANYWHERE in what this phase rendered, because the two
+    // faces of the failure sit in different argument positions of the same call.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Half {
+        |  Object v(Map<String, ?> m) { return m.get("k"); }
+        |  Object k(Map<?, String> m) { return m.get("k"); }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertNotEmits(p, "getOrElse")
+    assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(m, \"k\")")
+  }
+
   test("a CAPACITY hint at a hashed collection gains java's own default load factor") {
     // scala's `mutable.HashMap` declares `()` and `(Int, Double)` and nothing in between, so java's
     // one-argument capacity constructor lands on no overload. Java's own definition of that

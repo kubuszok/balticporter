@@ -331,6 +331,37 @@ object JavaCollections:
   /** …a `java.lang.Iterable`. */
   def fromJava[A](i: java.lang.Iterable[A]): JavaIterable[A] = JavaIterable.from(i.asScala)
 
+  // -------------------------------------------------------------------------------------------
+  // A map whose type arguments are WILDCARDS — java's three `Object`-keyed members
+  //
+  // Java declares `get`, `containsKey` and `remove` over `Object`, so `Map<?, ?>` supports all
+  // three: no capture is involved on either side. Scala's `Map[K, V]` declares the same three over
+  // `K`, and at a wildcard receiver `K` is an unnameable capture — `Found: String / Required:
+  // map.K` — while the `null` default `get` needs is at the equally unnameable `V`, which renders
+  // as a bare `?` in a TERM position and is not even syntax (`null.asInstanceOf[?]`).
+  //
+  // These three take the key as `Any` and never name `K`, which is java's own contract; and each
+  // supplies its own `null` INSIDE, where `V` is an ordinary type parameter. The cast is a widening
+  // of the KEY position only and is erased, so no value is reinterpreted: the lookup is the same
+  // `hashCode`/`equals` one java performs, and a key of the wrong type simply misses, which is
+  // exactly what java's `Object`-keyed lookup does.
+  //
+  // Not `put` or `getOrDefault`: java REJECTS both on a `Map<?, ?>` too, because each needs a value
+  // at the capture. There is nothing to translate and nothing to bridge.
+  // -------------------------------------------------------------------------------------------
+
+  /** java's `Map.get(Object)` — `null` when absent, and the key is `Object`. */
+  def mapGet[K, V](m: scala.collection.Map[K, V], key: Any): V =
+    m.asInstanceOf[scala.collection.Map[Any, V]].getOrElse(key, null.asInstanceOf[V])
+
+  /** java's `Map.containsKey(Object)`. */
+  def mapContainsKey[K, V](m: scala.collection.Map[K, V], key: Any): Boolean =
+    m.asInstanceOf[scala.collection.Map[Any, V]].contains(key)
+
+  /** java's `Map.remove(Object)` — which RETURNS the value that was there, or `null`. */
+  def mapRemove[K, V](m: scala.collection.mutable.Map[K, V], key: Any): V =
+    m.asInstanceOf[scala.collection.mutable.Map[Any, V]].remove(key).getOrElse(null.asInstanceOf[V])
+
   /** the CONSUMER direction: a `Buffer` the port holds, at a class file's `java.util.List` FORMAL.
     *
     * A live view, for the reason the whole family is: java's callee may KEEP the collection — an

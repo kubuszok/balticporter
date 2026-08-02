@@ -463,6 +463,45 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(JavaCollections.toMap(ArrayBuffer("ax", "ay"), head, id, drop).toMap, Map.empty[Char, String])
   }
 
+  // -------------------------------------------------------------------------------------------
+  // java's three `Object`-keyed map members — what a `Map<?, ?>` receiver needs
+  // -------------------------------------------------------------------------------------------
+
+  test("mapGet is java's `get(Object)`: the value, or NULL when absent") {
+    val m = scala.collection.mutable.Map("a" -> "x")
+    assertEquals(JavaCollections.mapGet(m, "a"), "x")
+    assertEquals(JavaCollections.mapGet(m, "b"), null)
+  }
+
+  test("…and a key of a DIFFERENT type simply misses, exactly as java's Object-keyed lookup does") {
+    // The whole reason the key is `Any`: java's `Map<String, ?>.get(anInteger)` compiles and
+    // returns null. Scala's `Map[String, ?].getOrElse(anInt, …)` does not compile at all, so the
+    // port has to keep java's shape or lose calls java accepted.
+    val m = scala.collection.mutable.Map("1" -> "x")
+    assertEquals(JavaCollections.mapGet(m, java.lang.Integer.valueOf(1)), null)
+    assertEquals(JavaCollections.mapContainsKey(m, java.lang.Integer.valueOf(1)), false)
+  }
+
+  test("mapContainsKey is java's `containsKey(Object)`") {
+    val m = scala.collection.mutable.Map("a" -> "x")
+    assert(JavaCollections.mapContainsKey(m, "a"))
+    assert(!JavaCollections.mapContainsKey(m, "b"))
+  }
+
+  test("mapRemove RETURNS the value that was there — java's contract, not scala's `-=`") {
+    val m = scala.collection.mutable.Map("a" -> "x", "b" -> "y")
+    assertEquals(JavaCollections.mapRemove(m, "a"), "x")
+    assertEquals(JavaCollections.mapRemove(m, "a"), null) // …and null the second time
+    assertEquals(m.toMap, Map("b" -> "y"))
+  }
+
+  test("mapGet reads the LIVE map, never a snapshot") {
+    val m = scala.collection.mutable.Map.empty[String, String]
+    assertEquals(JavaCollections.mapGet(m, "a"), null)
+    m.put("a", "x")
+    assertEquals(JavaCollections.mapGet(m, "a"), "x")
+  }
+
   test("into builds the FACTORY's collection and fills it — the target comes from the collector") {
     val out = JavaCollections.into(ArrayBuffer(1, 2, 3), () => ListBuffer.empty[Int])
     assertEquals(out.toList, List(1, 2, 3))

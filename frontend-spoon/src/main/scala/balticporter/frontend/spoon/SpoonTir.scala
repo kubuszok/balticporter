@@ -1086,9 +1086,23 @@ object SpoonTir:
         AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(tpe(arr.getComponentType)))
       case inter: CtIntersectionTypeReference[?] =>
         inter.getBounds.asScala.toList.map(tpe).reduce(AndType(_, _))
+      // `? super java.lang.Object` HAS EXACTLY ONE INHABITANT, and it is not a wildcard.
+      //
+      // Java has no supertype of `Object`, so `List<? super Object>` can only ever be a
+      // `List<Object>` — the lower bound says EVERYTHING, where an upper `? extends Object` says
+      // nothing and is correctly dropped. Rendered `[?]` (both dropped by the same filter) the two
+      // become the same type and a `list.addAll(other)` java accepts by capture conversion has an
+      // element that unifies to `Nothing`: `Required: IterableOnce[Nothing & Any]`, measured at 4
+      // sites on one library. This is not an approximation — it is the only java instantiation, so
+      // naming it loses nothing. A `? super X` for any OTHER `X` really is a family and keeps its
+      // bound.
       case w: CtWildcardReference =>
-        val b = Option(w.getBoundingType).filter(_.getQualifiedName != "java.lang.Object").map(tpe)
-        if w.isUpper then TypeBounds(NoType, b.getOrElse(NoType)) else TypeBounds(b.getOrElse(NoType), NoType)
+        val bound = Option(w.getBoundingType)
+        val isObj = bound.exists(_.getQualifiedName == "java.lang.Object")
+        if !w.isUpper && isObj then objectT
+        else
+          val b = bound.filter(_.getQualifiedName != "java.lang.Object").map(tpe)
+          if w.isUpper then TypeBounds(NoType, b.getOrElse(NoType)) else TypeBounds(b.getOrElse(NoType), NoType)
       case tv: CtTypeParameterReference =>
         val id = resolveTypeParam(tv.getSimpleName).getOrElse(minter.external("?" + tv.getSimpleName, tv.getSimpleName))
         TypeRef(NoPrefix, id)

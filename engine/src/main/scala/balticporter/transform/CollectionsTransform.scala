@@ -240,6 +240,10 @@ final class CollectionsTransform(
   /** `JavaCollections.fromJava` / `toJava` — the EXTERNAL seam's two directions. */
   private var fromJavaSym, toJavaSym: SymId = SymId.None
 
+  /** java's three `Object`-keyed map members, for a receiver whose type arguments are WILDCARDS —
+    * see [[wildcardMapCall]]. */
+  private var mapGetSym, mapContainsKeySym, mapRemoveSym: SymId = SymId.None
+
   /** is this symbol one the PROGRAM declares? Structural (`Program.owned`), never a name test
     * (§4.56), and computed once per run because the external-seam arms ask it per call. */
   private var ownedSym: SymId => Boolean = _ => true
@@ -376,6 +380,9 @@ final class CollectionsTransform(
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
     fromJavaSym  = staticSyms.getOrElse("fromJava", SymId.None)
     toJavaSym    = staticSyms.getOrElse("toJava", SymId.None)
+    mapGetSym         = staticSyms.getOrElse("mapGet", SymId.None)
+    mapContainsKeySym = staticSyms.getOrElse("mapContainsKey", SymId.None)
+    mapRemoveSym      = staticSyms.getOrElse("mapRemove", SymId.None)
     externalSeams.clear()
 
     mintedSyms = added.map(_.id).toSet
@@ -1705,6 +1712,10 @@ final class CollectionsTransform(
       // emits `it.hasNext` against `def hasNext()` — 24 measured errors.
       case (n, Nil, _) if parenless(n)          => Some(Tree.Select(recv, m, t.tpe, t.origin)) // drop `()`
       case ("get", List(i), Kind.Seq)           => Some(Tree.Apply(recv, List(i), m, t.tpe, t.origin)) // xs(i)
+      // A WILDCARD-typed map is java's three `Object`-keyed members and nothing else — see
+      // [[wildcardMapCall]] for why the ordinary rewrite cannot be used there.
+      case (n, List(key), Kind.Map) if wildcardMapCall(n, recv) =>
+        Some(staticCall(wildcardMapSym(n), List(recv, keyArg(key, recv)), t, so))
       case ("get", List(key), Kind.Map)         => Some(call(recv, getOrElseSym, List(keyArg(key, recv), dflt(nullOf(so), recv, so)), t, so))
       case ("getOrDefault", List(key, d), _)    => Some(call(recv, getOrElseSym, List(keyArg(key, recv), dflt(d, recv, so)), t, so))
       case ("set", List(i, x), Kind.Seq)        => Some(call(recv, updateSym, List(i, x), t, so)) // xs(i) = x
@@ -1815,6 +1826,41 @@ final class CollectionsTransform(
   /** `recv.member(args)`. */
   private def call(recv: Term, member: SymId, args: List[Term], t: Tree.Apply, so: Origin): Term =
     Tree.Apply(Tree.Select(recv, member, TypeRepr.NoType, so), args, member, t.tpe, t.origin)
+
+  /** `JavaCollections.member(args)` — a runtime helper, typed as what the java call it replaces
+    * was recorded at (ENGINE-LIMITS K6's first rule: a node describes what it emits). */
+  private def staticCall(member: SymId, args: List[Term], t: Tree.Apply, so: Origin): Term =
+    Tree.Apply(Tree.Ident(member, TypeRepr.NoType, so), args, member, t.tpe, t.origin)
+
+  /** Is this a call on a map whose type arguments are WILDCARDS, at one of the three members java
+    * declares over `Object`?
+    *
+    * Java's `Map.get`, `containsKey` and `remove` take an `Object`, so `Map<?, ?>` supports all
+    * three and no capture is involved anywhere. Scala's `Map[K, V]` declares the same three over
+    * `K`, and the ordinary rewrite therefore emits two things a wildcard receiver cannot have:
+    * a key at the unnameable `K` (`Found: String / Required: map.K`, and `?1.K` where the receiver
+    * is not even a stable path) and, for `get`, a `null` ascribed to the equally unnameable `V` —
+    * which renders `null.asInstanceOf[?]`, a `?` in a TERM position, which is not syntax. Measured
+    * on liqp at 10 and 8 errors respectively, from the same nine call sites.
+    *
+    * This is K10's rule met at the OTHER kind of unnameable key. There the strip was structural and
+    * named no type; here so is the test — the wildcard is in the type THIS PHASE rendered, so
+    * asking whether it is there is asking the phase's own record (§4.56). The three helpers take
+    * the key as `Any`, which is java's own contract, so nothing is approximated.
+    *
+    * `put` and `getOrDefault` are deliberately absent: each needs a VALUE at the capture, and javac
+    * rejects both on a `Map<?, ?>` for exactly that reason. There is no java to translate. */
+  private def wildcardMapCall(name: String, recv: Term)(using Program): Boolean =
+    CollectionsTransform.WildcardMapMembers.contains(name) && wildcardMapSym(name) != SymId.None &&
+      (actualOf(recv)._1 match
+        case TypeRepr.AppliedType(_, args) => args.exists(_.isInstanceOf[TypeRepr.TypeBounds])
+        case _                             => false)
+
+  private def wildcardMapSym(name: String): SymId = name match
+    case "get"         => mapGetSym
+    case "containsKey" => mapContainsKeySym
+    case "remove"      => mapRemoveSym
+    case _             => SymId.None
 
   /** `null` — the faithful default for a Java `Map.get` miss (Java map values are always
     * reference types, so `null` always type-checks). Ascribed to `V` by [[dflt]]. */
@@ -2114,12 +2160,16 @@ object CollectionsTransform:
   /** every `JavaCollections` member the transform may emit. One list, so a new JDK utility is one
     * line here, one arm in `staticRewrite` and one method in the runtime object — and a typo is a
     * `SymId.None` that declines the rewrite rather than a dangling name in emitted code. */
+  /** the three members java declares over `Object`, so a `Map<?, ?>` receiver supports them and
+    * scala's `Map[K, V]` does not — see `wildcardMapCall`. */
+  private[balticporter] val WildcardMapMembers: Set[String] = Set("get", "containsKey", "remove")
+
   val StaticHelpers: List[String] =
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
-         "toSet", "toMap", "fromJava", "toJava")
+         "toSet", "toMap", "fromJava", "toJava", "mapGet", "mapContainsKey", "mapRemove")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give
