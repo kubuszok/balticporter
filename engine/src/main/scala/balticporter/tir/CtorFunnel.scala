@@ -1280,16 +1280,40 @@ object CtorFunnel:
       case _                           => scala.None
     cd.parents.flatMap { case tt: TypeTree => head(tt.tpe); case t: Term => head(t.tpe) }
 
-  /** statements of a constructor body, block or not. */
-  def stmtsOf(d: Tree.DefDef): List[Statement] = d.rhs match
-    case Some(b: Tree.Block) => b.stats
-    case Some(t)             => List(t)
-    case None                => Nil
+  /** Statements of a constructor body, block or not — and seen THROUGH a comment wrapper on the
+    * BODY ITSELF, which is [[headStmt]]'s transparency one level further out.
+    *
+    * '''Every shape match in this file reads the body through this function, so this is the one
+    * place the transparency can be given once.''' `Tree.Commented` is a TERM, so a comment written
+    * above a constructor's first statement can arrive wrapped around the whole `rhs`; matched on
+    * `Tree.Block` alone the body then reads as ONE opaque statement, and every question this file
+    * asks of it answers wrongly at once — `delegatesToThis` says no, the funnel counts the
+    * constructor as a root instead of a delegation, and [[delegationOnlyNilary]] reads it as an
+    * empty body and DROPS IT. One comment was the whole difference, and no count moved.
+    *
+    * The wrapper's comment is not discarded with the wrapper: it was written above the body's FIRST
+    * statement, so that is where it is re-attached (§4.58 — looking through a comment must never
+    * delete it), using the carrier the statement list already has for exactly this. The one residue
+    * is a body that is BOTH commented and empty, where there is no statement to carry it; the
+    * emitter renders that body's term directly and never through this list. */
+  def stmtsOf(d: Tree.DefDef): List[Statement] =
+    def stats(t: Term): List[Statement] = t match
+      case b: Tree.Block => b.stats
+      case other         => List(other)
+    d.rhs match
+      case None                    => Nil
+      case Some(c: Tree.Commented) => stats(Tree.uncomment(c)) match
+        case (t: Term) :: rest => Tree.Commented(Tree.triviaOn(c), t) :: rest
+        case other             => other
+      case Some(t)                 => stats(t)
 
   /** …and the comments written at the END of that body, which [[stmtsOf]] by construction cannot
     * carry. Every caller that rebuilds a constructor's braces from the statement list has to place
-    * these itself; a caller that renders the body TERM gets them from the emitter's `block`. */
-  def trailingOf(d: Tree.DefDef): List[Trivia] = d.rhs match
+    * these itself; a caller that renders the body TERM gets them from the emitter's `block`.
+    *
+    * Read through a comment wrapper for [[stmtsOf]]'s reason: a body's trailing comments do not stop
+    * existing because something wrote a leading one. */
+  def trailingOf(d: Tree.DefDef): List[Trivia] = d.rhs.map(Tree.uncomment) match
     case Some(b: Tree.Block) => b.trailing
     case _                   => Nil
 
@@ -1354,6 +1378,24 @@ object CtorFunnel:
     * An ABSENT body is `Some(Nil)` too: a constructor with no statements at all is the implicit
     * primary exactly as an explicit `super()` is.
     *
+    * '''`Some(Nil)` IS RESERVED FOR AN EMPTY STATEMENT LIST — it is not a fallback.''' The arm that
+    * produced it used to be `case _ => Some(Nil)` under a match on `d.rhs` shaped as `Tree.Block`, so
+    * it also caught two bodies that are not "no body" at all and answered DROP IT, SILENTLY, for
+    * both:
+    *
+    *   - `Some(Tree.Commented(_, block))` — a comment written above the constructor's first
+    *     statement wraps the body in a TERM, and the shape match on `Tree.Block` then fails. That is
+    *     the failure [[headStmt]] calls the worst one in this file, arriving at the one predicate
+    *     whose answer is "delete this constructor": `C() { /* seed it */ this(seed(), "d"); }` read
+    *     as degenerate, dropped, and NOT counted by `OmissionCheck.droppedNilaryCtors` either, since
+    *     the count reads this same function. One comment was the whole difference.
+    *   - `Some(<any non-block term>)` — a single-statement body with no braces around it, likewise
+    *     read as empty. Where that statement IS the delegation the drop is now COUNTED; where it is
+    *     anything else the answer is `None` and the constructor is EMITTED, which is `E120` beside a
+    *     nilary primary — loud, attributable and at the declaration, rather than a constructor that
+    *     vanishes with its delegation. A refusal that fails a compile is strictly better than one
+    *     that changes behaviour (CLAUDE.md §3).
+    *
     * NILARY is asked of the VALUE parameters ([[valueParams]]), never `paramss.flatten`: a `C()`
     * that gained a `(using T)` clause is still java's nilary constructor, and reading the flattened
     * list made it paramful, un-dropped it, and put `def this()(using T)` beside a primary carrying
@@ -1361,17 +1403,16 @@ object CtorFunnel:
   def delegationOnlyNilary(program: Program, d: Tree.DefDef): Option[List[Term]] =
     if valueParams(program, d).nonEmpty then scala.None
     else
-      d.rhs match
-        case Some(Tree.Block(stats, _, _, _, _)) =>
-          val delegations = stats.map {
-            case t: Term => Tree.uncomment(t) match
-              case Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _) if isInitName(program, m) => Some(as)
-              case _                                                                          => scala.None
-            case _ => scala.None
-          }
-          if delegations.forall(_.isDefined) then Some(delegations.flatten.flatten) else scala.None
-        // no block body at all — nothing to run, so it IS scala's implicit primary
-        case _ => Some(Nil)
+      val delegations = stmtsOf(d).map {
+        case t: Term => Tree.uncomment(t) match
+          case Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _) if isInitName(program, m) => Some(as)
+          case _                                                                          => scala.None
+        case _ => scala.None
+      }
+      // an EMPTY list is vacuously all-delegation, which is exactly right and is the ONLY way
+      // `Some(Nil)` is now reached: no statements to run means scala's implicit primary already is
+      // this constructor.
+      if delegations.forall(_.isDefined) then Some(delegations.flatten.flatten) else scala.None
 
   // ---- JAVA'S PARAMETERS vs THE PIPELINE'S (see `Plan.givens`) ----
   //

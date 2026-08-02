@@ -962,6 +962,19 @@ constructor that was never written. A port that needs the behaviour writes the c
 **Do NOT retry any of the three rows above.** Each is a behaviour change, not a compile fix, and two
 of them are silent.
 
+**…and a predicate whose answer is DELETE THIS DECLARATION may not have a fallback arm.** The one
+above ended in `case _ => Some(Nil)` under a match on `Tree.Block`, so two bodies that are not "no
+body" answered DROP IT: a body wrapped in `Tree.Commented` — which is what ONE COMMENT above the
+constructor's first statement produces — and a single-statement body with no braces. Either removed
+the constructor AND the record of its removal in one step, since the emission and the count read this
+same function. The body is now read through the wrapper (`CtorFunnel.stmtsOf`, which every shape
+match in that file goes through, so the transparency is given once) and an unrecognised shape answers
+`None`, which EMITS the constructor and takes the `E120` — a compile error an agent can act on rather
+than a behaviour change (CLAUDE.md §3). **0 corpus sites**: 13 ports, 0 -> 0 members changed, every
+check count flat. It is pinned by `CtorFunnelBodyShapeSpec`, which builds both shapes by rewriting a
+parsed constructor's `rhs`, because no Java text can produce them at today's frontend — and that is
+the point, since the next lowering or frontend can.
+
 ---
 
 ## 3. `this`, inner classes and anonymous classes
