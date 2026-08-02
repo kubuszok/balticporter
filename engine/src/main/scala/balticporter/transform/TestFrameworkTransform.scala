@@ -98,7 +98,25 @@ final class TestFrameworkTransform(
     * not policy and cannot differ between two instances. */
   def surfaceFingerprint: String = s"suite=$suite,test=$testMember"
 
-  private val AssertClass = "org.junit.Assert"
+  /** JUnit's assertion statics live at THREE FQNs, and one table maps all of them.
+    *
+    * `junit.framework.Assert` is JUnit 3's assertion class; `junit.framework.TestCase` extends it,
+    * so `import static junit.framework.TestCase.assertEquals` resolves to the same member and a
+    * frontend may report either as the receiver (Spoon reports the executable's DECLARING type,
+    * which is `Assert`; a frontend reporting the qualifier would say `TestCase`). Both are covered
+    * because which one arrives is not this phase's fact to know.
+    *
+    * Note what this is NOT evidence of: a class reaching these members through a static import is
+    * an ordinary JUnit-4 suite that happens to have imported JUnit 3's copy of `assertEquals` —
+    * five of liqp's do — not a `TestCase` subclass. [[survey]]'s JUnit-3 scan keys off the PARENT
+    * and correctly says nothing about them.
+    *
+    * Their contract is `org.junit.Assert`'s exactly: `(expected, actual)`, an optional leading
+    * `String message`, the same minimal arities — JUnit 4's `Assert` was written as a superset of
+    * this one. So the set is a §1(a) fact about JUnit, written into the engine. It must not become
+    * a constructor parameter: an empty default would silently stop converting `org.junit.Assert`
+    * too, and a per-library list of JUnit's own class names is policy nobody can get right twice. */
+  private val AssertClasses = Set("org.junit.Assert", "junit.framework.Assert", "junit.framework.TestCase")
   /** MUnit declares every assertion twice — on the `Assertions` TRAIT that `FunSuite` mixes in, and
     * on the `Assertions` OBJECT. Emitting through the object is what makes a java `static` test
     * helper translate at all: it lands in the companion object, which does not extend the suite, so
@@ -331,15 +349,20 @@ final class TestFrameworkTransform(
     * explicitly, or the test asserts against unrewritten output and passes for the wrong reason. A
     * model built over a whole source tree resolves the static import correctly. */
   override def transformApply(t: Tree.Apply)(using p: Program): Term = t.fun match
-    case Tree.Select(recv, m, _, o) if recvIs(recv, AssertClass) =>
-      val nm = p.symbolOf(m).map(_.name).getOrElse("")
-      munitCall(nm, t.args, o).getOrElse {
-        found += Finding(AssertClass + "." + nm, o, Fix.EngineRule,
-          s"no MUnit counterpart is known for this `$nm` overload (${t.args.size} argument(s)), so " +
-          "the call is left on org.junit — which compiles only with JUnit on the classpath and " +
-          "cannot run on Scala.js / Native. Add the mapping to TestFrameworkTransform.munitCall.")
-        t
-      }
+    case Tree.Select(recv, m, _, o) =>
+      assertClassOf(recv) match
+        case scala.None      => t
+        case Some(assertCls) =>
+          val nm = p.symbolOf(m).map(_.name).getOrElse("")
+          munitCall(nm, t.args, o).getOrElse {
+            // the finding names the receiver the CALL had, not a canonical one: reported under a
+            // class the source never mentions, an agent cannot find the site.
+            found += Finding(assertCls + "." + nm, o, Fix.EngineRule,
+              s"no MUnit counterpart is known for this `$nm` overload (${t.args.size} argument(s)), so " +
+              s"the call is left on $assertCls — which compiles only with JUnit on the classpath and " +
+              "cannot run on Scala.js / Native. Add the mapping to TestFrameworkTransform.munitCall.")
+            t
+          }
     case _ => t
 
   /** java's `(message?, expected, actual, delta?)` → MUnit's `(obtained, expected, delta?, clue?)`.
@@ -479,10 +502,14 @@ final class TestFrameworkTransform(
     case TypeRepr.TypeRef(_, s) => s
     case _                      => SymId.None
 
-  private def recvIs(recv: Term, fqn: String)(using p: Program): Boolean = recv match
-    case Tree.Ident(s, _, _)     => p.symbolOf(s).exists(_.fullName == fqn)
-    case Tree.Select(_, s, _, _) => p.symbolOf(s).exists(_.fullName == fqn)
-    case _                       => false
+  /** WHICH of [[AssertClasses]] a call's receiver names, or `None` for every other receiver. The
+    * name is returned rather than a `Boolean` because the refusal path reports it. */
+  private def assertClassOf(recv: Term)(using p: Program): Option[String] =
+    val sym = recv match
+      case Tree.Ident(s, _, _)     => Some(s)
+      case Tree.Select(_, s, _, _) => Some(s)
+      case _                       => scala.None
+    sym.flatMap(p.symbolOf).map(_.fullName).filter(AssertClasses)
 
   /** A class is a SUITE when it declares at least one `@Test` member. Nested classes are converted
     * too — libGDX nests helper suites — so the walk is explicit rather than top-level only. */
