@@ -125,8 +125,31 @@ object LiqpClasspath:
   /** the ANTLR output's package, and the only package this object's javac step may write. */
   val ParserPackage = "liquid/parser/v4"
 
-  def cache(repoRoot: Path): Path        = repoRoot.resolve("out/liqp-classpath.txt")
+  def cache(repoRoot: Path): Path         = repoRoot.resolve("out/liqp-classpath.txt")
   def parserClasses(repoRoot: Path): Path = repoRoot.resolve("out/liqp-parser-classes")
+
+  /** THE SCALA COMPILE'S copy — the generated parser and liqp's own sources together, and never on
+    * the frontend's classpath.
+    *
+    * It exists because D-liqp-1 and D-liqp-2 CUT EACH OTHER. Treating the generated parser as
+    * external keeps it at `liquid.parser.v4`, compiled against upstream `liqp`; renaming the port
+    * to `ssg.liquid` means nothing named `liqp` is emitted. `LiquidParser` has a member typed
+    * `liqp.TemplateParser.ErrorMode`, so scalac reading that class file finds a signature naming a
+    * package that does not exist — and does not report it: it throws
+    * `AssertionError: failure to resolve inner class` out of `ClassfileParser` and ABORTS, which
+    * reads as a smaller error count rather than as a failure (`scripts/_lib.sh` `compile_guard`
+    * now says so).
+    *
+    * So the compile classpath carries upstream `liqp` too. That does not blur the port: the emitted
+    * code is `ssg.liquid`, these classes are `liqp`, and no emitted name can resolve to one of them
+    * — anything that did would be a reference the rename failed to move, which
+    * `PackageRenameTransform.check` is what answers. What it BUYS is that the cost of holding both
+    * decisions arrives as an ordinary, counted, attributable type error at the one call that
+    * crosses the seam, instead of as a compiler crash.
+    *
+    * The FRONTEND still gets `parserClasses` and only that: there, a `liqp` class file WOULD be a
+    * second, older definition of every type being ported. */
+  def upstreamClasses(repoRoot: Path): Path = repoRoot.resolve("out/liqp-upstream-classes")
 
   /** where the `antlr4-maven-plugin` writes, and the command that puts it there. */
   def generatedSources: Path =
@@ -142,12 +165,16 @@ object LiqpClasspath:
     * cached line beside a `clean`ed `out/` is a classpath that resolves to nothing — which is
     * exactly the failure mode the fatality above exists to prevent, arriving by the back door. */
   def ensure(repoRoot: Path): Path =
-    val out     = cache(repoRoot)
-    val classes = parserClasses(repoRoot)
-    if Files.exists(out) && Files.readString(out).trim.nonEmpty && hasParserClasses(classes) then out
+    val out      = cache(repoRoot)
+    val classes  = parserClasses(repoRoot)
+    val upstream = upstreamClasses(repoRoot)
+    if Files.exists(out) && Files.readString(out).trim.nonEmpty
+      && hasParserClasses(classes) && hasParserClasses(upstream)
+    then out
     else
       val jars = fetch()
-      compileParser(jars, classes)
+      compileParser(jars, classes, parserOnly = true)
+      compileParser(jars, upstream, parserOnly = false)
       Files.createDirectories(out.getParent)
       Files.writeString(out, (jars :+ classes.toString).mkString(File.pathSeparator))
       out
@@ -178,9 +205,12 @@ object LiqpClasspath:
         s"[liqp] could not fetch the compile classpath (is `cs` installed?):\n$raw")
     line.split(File.pathSeparator).filter(_.nonEmpty).toList
 
-  /** javac the ANTLR output into `classes`, resolving liqp's own types from SOURCE and writing
-    * none of them. See the class doc for why both halves of that sentence are load-bearing. */
-  private def compileParser(jars: List[String], classes: Path): Unit =
+  /** javac the ANTLR output into `classes`, resolving liqp's own types from SOURCE.
+    *
+    * `parserOnly` decides whether liqp's own class files are WRITTEN as well as read — the whole
+    * difference between the frontend's copy and the scala compile's. See the class doc for why the
+    * frontend must have `true` and [[upstreamClasses]] for why the compile must have `false`. */
+  private def compileParser(jars: List[String], classes: Path, parserOnly: Boolean): Unit =
     val gen = generatedSources
     val sources =
       if !Files.isDirectory(gen) then Nil
@@ -214,14 +244,14 @@ object LiqpClasspath:
       // reader is a resolution failure that reports as an unresolved import.
       "--release", "17",
       "-nowarn",
-      // do not write class files for the liqp sources javac reads to type-check the parser. Those
-      // types must reach the frontend as SOURCE; a `liqp/…/X.class` beside them is a second, older
-      // definition of every type this port emits.
-      "-implicit:none",
       "-sourcepath", javaSrc.toString,
       "-d", classes.toString,
       "-cp", jars.mkString(File.pathSeparator),
-    ) ++ sources
+    ) ++
+      // do not write class files for the liqp sources javac reads to type-check the parser. Those
+      // types must reach the frontend as SOURCE; a `liqp/…/X.class` beside them is a second, older
+      // definition of every type this port emits. The scala compile's copy wants the opposite.
+      (if parserOnly then List("-implicit:none") else Nil) ++ sources
     val proc = new ProcessBuilder(cmd*).redirectErrorStream(true).start()
     val raw  = new String(proc.getInputStream.readAllBytes()).trim
     if proc.waitFor() != 0 then

@@ -108,6 +108,13 @@ gltf_tests    := "../sge/original-src/gdx-gltf/gltf/test"
 # CLASSPATH (decision D-liqp-1, stated in corpus/ports/liqp/main.conf).
 liqp_src      := "../ssg/original-src/liqp"
 liqp_parser_classes := "out/liqp-parser-classes"
+# …and the SCALA COMPILE's own copy, which is the parser AND upstream liqp. Not the same directory
+# and not interchangeable with it: `LiquidParser.class` has a member typed
+# `liqp.TemplateParser.ErrorMode`, so scalac reading it without upstream `liqp` on the classpath
+# ABORTS (`AssertionError` out of `ClassfileParser`) rather than reporting anything. The FRONTEND
+# must never see this one — there, a `liqp` class file is a second definition of every ported type.
+# `LiqpClasspath.upstreamClasses` is where the reasoning lives.
+liqp_compile_classes := "out/liqp-upstream-classes"
 
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
@@ -1180,11 +1187,14 @@ jbump-measure:
 #
 #   * THE COMPILE HAS A CLASSPATH THAT IS NOT ONLY COORDINATES. Decision D-liqp-1 keeps the
 #     ANTLR-generated parser EXTERNAL: `LiqpClasspath` javacs `target/generated-sources/antlr4`
-#     into `{{liqp_parser_classes}}` and the frontend reads it as a classpath, so scalac must read
-#     the same directory or the two halves of the port disagree about what `liquid.parser.v4` is.
-#     `--jar` takes a directory of compiled classes, which is what that flag's second name
-#     (`--extra-jars`) hides. The lane REFUSES to compile if the directory is not there rather
-#     than reporting the resulting import failures as the port's error count.
+#     into `{{liqp_parser_classes}}` for the frontend and `{{liqp_compile_classes}}` for scalac,
+#     so both halves of the port agree about what `liquid.parser.v4` is. Two directories, not one:
+#     the compile's also carries upstream `liqp`, because the ANTLR output's own signature names
+#     `liqp.TemplateParser.ErrorMode` and the port emits `ssg.liquid` — read `liqp_compile_classes`
+#     for what happens without it, which is not an error message. `--jar` takes a directory of
+#     compiled classes, which is what that flag's second name (`--extra-jars`) hides. The lane
+#     REFUSES to compile if the directory is not there rather than reporting the resulting import
+#     failures as the port's error count.
 #   * LIQP SHIPS A REAL SUITE AND THIS MILESTONE DOES NOT PORT IT. 105 test files, 640 `@Test`.
 #     The discovery block therefore re-derives that number and says, in the run, that the
 #     behavioural gate is ABSENT — everything CLAUDE.md §4.4 lists is unmeasured for this port.
@@ -1244,10 +1254,13 @@ liqp-measure:
 
     echo "-- compile --"
     # The generated parser is a directory of CLASS FILES the frontend already read (D-liqp-1). If
-    # scalac does not read the same directory the two halves of the port disagree about what
-    # `liquid.parser.v4` is, and the import failures that follow would count as this port's errors.
-    if [ ! -d "{{liqp_parser_classes}}/liquid/parser/v4" ]; then
-      echo "!! {{liqp_parser_classes}} holds no compiled parser — LiqpClasspath did not build it."
+    # scalac does not read the same `liquid.parser.v4` the two halves of the port disagree about
+    # what it is, and the import failures that follow would count as this port's errors — so this
+    # is a refusal, not a smaller number. It is the COMPILE's copy, which carries upstream `liqp`
+    # beside the parser: see `liqp_compile_classes` for why scalac needs that and the frontend
+    # must not have it.
+    if [ ! -d "{{liqp_compile_classes}}/liquid/parser/v4" ]; then
+      echo "!! {{liqp_compile_classes}} holds no compiled parser — LiqpClasspath did not build it."
       echo "   Refusing to compile: the resulting unresolved-import errors are not this port's wall."
       exit 1
     fi
@@ -1255,7 +1268,7 @@ liqp-measure:
     # that does not compile — a false NEGATIVE on the headline number.
     DEPS="{{liqp_deps}}"
     scala-cli compile --scala {{scala_version}} --server=false $DEPS \
-      --jar "{{liqp_parser_classes}}" \
+      --jar "{{liqp_compile_classes}}" \
       {{liqp_module}}/src_managed/main/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/liqpmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}

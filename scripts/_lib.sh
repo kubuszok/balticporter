@@ -199,12 +199,27 @@ break_residue() {
 # guard above the sbt call, one stage later. Exit status comes from `${PIPESTATUS[0]}`, captured
 # by the caller immediately after the pipeline (the pipeline's own status is sed's).
 # Non-zero WITH counted errors is the ordinary failing compile and stays silent.
+#
+# AND a THIRD state, which the two above cannot see and which reads exactly like a result: the
+# compiler ABORTED. scalac can throw — an `AssertionError` out of `ClassfileParser` on a class file
+# whose signature names a type the classpath does not hold is one measured way — and it then stops
+# where it stood. Every error it had already reported is real, so the count is non-zero and the
+# guard above stays quiet; but every file it had not yet typed is UNMEASURED, so the number is a
+# FLOOR and nothing distinguishes it from a finished compile's total. Measured on liqp's first run:
+# 25 errors and an abort, quoted as "25 errors" until the capture was read by hand.
 compile_guard() {
   local st="$1" errors="$2" file="$3"
   if [ "$st" != "0" ] && [ "$errors" = "0" ]; then
     echo "!! COMPILE DID NOT RUN — scala-cli exited $st with no countable error; refusing to report 0"
     tail -5 "$file" | sed 's/^/     /'
     exit 1
+  fi
+  if grep -qE 'An unhandled exception was thrown in the compiler|^Exception in thread "main"' "$file"; then
+    echo "!! THE COMPILER ABORTED — the count below is a FLOOR, not this port's error count."
+    echo "   scalac threw and stopped; every file it had not yet typed is UNMEASURED, and an"
+    echo "   aborted compile's number reads exactly like a finished one's. Fix the abort first."
+    grep -m1 -B2 -A6 -E 'An unhandled exception was thrown in the compiler|^Exception in thread "main"' \
+      "$file" | sed 's/^/     /'
   fi
 }
 
