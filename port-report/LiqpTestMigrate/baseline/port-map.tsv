@@ -116,6 +116,7 @@ type		balticporter.runtime.JavaCollection	Added	-		0
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		ssg.liquid.TemplateTest	Added	-		0		
 member	liqp.ConditionTest#<stmt1>	ssg.liquid.ConditionTest#<stmt1>	Renamed	-	liqp/ConditionTest.java	19	0e6505dfab4baa88	
 member	liqp.ConditionTest#<stmt2>	ssg.liquid.ConditionTest#<stmt2>	Renamed	-	liqp/ConditionTest.java	44	7e5fa85113859201	
 member	liqp.ConditionTest#<stmt3>	ssg.liquid.ConditionTest#<stmt3>	Renamed	-	liqp/ConditionTest.java	76	7d2043425f510e52	
