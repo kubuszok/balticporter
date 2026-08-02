@@ -1692,7 +1692,24 @@ Two rules the fix rests on:
   the ERASED formal (`Array[Object]`), so the element type the view needs is gone by then.
   Recovering it is a frontend change with far wider blast radius.
 
-*Fix kind: (a). The residue (the aliasing form) is (a) and unbuilt, and is a refusal by choice.*
+**The aliasing form IS expressible after all, and what blocks it is now precisely known.** This entry
+said a faithful live view was "not reachable from the rewrite". It is reachable by COMPOSITION and
+by nothing else: `JavaCollections.fromJava(java.util.Arrays.asList(arr))` is a live `Buffer` view of
+a live `java.util.List` view of the caller's array — writes reach `arr`, and `add`/`remove` throw
+because java's fixed-size list rejects them, which is java's behaviour and not an approximation.
+What still blocks it is the half this entry already identified: **the frontend has erased the
+element type**, so the composition yields `Buffer[Object]` where java's call inferred `List<String>`.
+
+Measured, by accident, when the EXTERNAL-CALLEE wrap (K15) reached these calls before anything
+excluded them: **liqp 76 → 67**, i.e. all nine of its aliasing sites compiled — because that
+library's filters are `Object`-typed throughout and `Buffer[Object]` is what their slots want. It is
+excluded again deliberately, and the exclusion is the point: `staticRewrite` returning `None` means
+either "no arm matched" or "an arm REFUSED", only the first is an external seam, and **a refusal the
+next mechanism paints over is a refusal nobody can find**. Closing this properly is one deliberate
+arm plus a corpus measurement of the erased element type — not an accident of ordering.
+
+*Fix kind: (a). The residue (the aliasing form) is (a), and it is now a KNOWN construction blocked
+on one frontend fact rather than an open question.*
 
 ### K7. A java enhanced-for BINDING may be declared at a supertype, and the port dropped it
 
@@ -2047,6 +2064,66 @@ with a kind and a factory, where the seam becomes a counted `coerce` boundary (`
 
 *Fix kind: (a) engine for the counter — DONE; (b) per-library for the choice of table when a real
 producer appears.*
+
+### K15. A retyping phase owes a boundary count at EXTERNAL callees — and half of it is FRONTEND-BLOCKED
+
+**The seam nothing could see, and the one that a new library meets first.** CLAUDE.md §1(b) states
+it for a SCOPE seam — "the callee is then the JDK's own external symbol, which the frontend interned
+without a signature". An external callee is the same fact one step out and it is worse, because the
+signature is a fact about a COMPILED CLASS FILE that no phase can move:
+
+- an ANTLR parser's `ctx.atom()` really returns a `java.util.List<AtomContext>` — but
+  `transformType` is position-blind, so the CALL NODE's type was retyped to `Buffer`, and the
+  for-each, `coerce` and `CollectionBoundaryCheck` all believe it;
+- a generated lexer's constructor really takes a `java.util.Set<String>` — and `coerce` reads the
+  formal THROUGH `remap`, so it sees `mutable.Set` on both sides and declines to bridge.
+
+**BOTH SIDES READ THE SAME MOVED TYPE**, so a check comparing node types reports ZERO on exactly the
+seam the retyping made. Measured on liqp before any of this: **15 compile errors at one third-party
+package against 0 findings**.
+
+**The PRODUCER half is CLOSED**, and the observable it had to be built on is the finding worth
+keeping. The arm was first written to read the callee's declared RESULT TYPE — and there is none:
+**every external member the frontend interns carries `NoType`**, measured at 1157 external callees on
+liqp with not one `MethodType`, `java.lang.Object#toString` included. The only evidence that a value
+crossing an external call is a collection is the NODE's type, which Spoon resolved and this phase
+then moved — still §4.56's question answered from the phase's own record, since the node says
+`Buffer` precisely because the phase put it there. `JavaCollections.fromJava` wraps it into a LIVE
+`scala.jdk` view, and needs no evidence of WHICH java type it was: the helper is overloaded and
+scalac resolves it against the real static type from the class file, which is the one thing in the
+whole seam that is not in doubt. **liqp 86 → 76**, the 13 for-each errors included.
+
+Four exclusions, each measured as a false positive before it was written:
+
+| excluded | because |
+|---|---|
+| a symbol this phase MINTED | every rewrite target (`+=`, `filtered`, `fromJava` itself) is owned by nothing and named by no class file |
+| a callee whose OWNER is a mapped type or one of its targets | `java.util.Map#keySet` is an external method returning `java.util.Set` whose value IS already scala's, because the RECEIVER moved |
+| a callee with NO owner at all | `scala.<op>#+` is an interned operator, not a member of any class file — `"…" + aMap` was reported twice |
+| a member `handledStatics` covers | `staticRewrite` returning `None` is either "no arm matched" or "an arm REFUSED", and only the first is a seam (K6.5) |
+
+…and a call the phase itself rewrote is not looked at at all: ordering the seam arms first reported
+`Collections.unmodifiableSet(mySet)` as an unverifiable external argument while the same run was
+retargeting it — eight findings closed before they were written down, which is §4.45's
+report-credibility failure exactly.
+
+**The CONSUMER half CANNOT be closed here, and that is a FRONTEND limit, not a design choice.**
+`asJava` is as obvious as `asScala`; what is missing is any way to know a formal is a `java.util.*`,
+because of the `NoType` fact above — `wrapIterableArgs` sees no formals (its
+`formals.sizeIs != t.args.size` guard declines at zero), `coerce` is never reached, and
+`CollectionBoundaryCheck`'s argument arm skips the call for the same reason. So it is a
+CANNOT-VERIFY count (`Issue.ExternalCallee`, `collection-boundary`), and the finding says so rather
+than claiming a break: where the formal really is `Object` the retyped value conforms and nothing is
+wrong, where it is a `java.util.*` the port does not compile, and **nothing in the pipeline can tell
+those apart**. liqp reports 8, the two ANTLR lexer arguments included. An `asJava` helper was written
+and then DELETED rather than shipped: a capability nothing can reach reads as one that works.
+
+The fix is `SpoonTir` interning external members with their `MethodType`, at which point the
+consumer half is one arm in `coerce` and the count drops to whatever genuinely has no wrapper.
+
+*Fix kind: (a) engine for the producer — DONE. (a) FRONTEND for the consumer — unbuilt, and the
+count is what stands in for it. The generalisation is CLAUDE.md's: every retyping phase owes a
+boundary count at EXTERNAL callees, not only at JDK ones.*
 
 ---
 

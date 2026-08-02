@@ -62,7 +62,15 @@ neither optional:
   (a `mutable.Buffer` is not a `java.util.List`), refuse and report with the §1 classification, and
   read the boundary through the DECLARATION — a position-blind `transformType` has already remapped
   the reference node's type, so a check reading node types reports ZERO on exactly the seam the
-  scope made. **The REWRITE reads it the same way, through the same function.** A call rewrite keyed
+  scope made. **And the same seam exists at every EXTERNAL CALLEE, scope or no scope** — a method
+  the program does not declare has its signature in a COMPILED CLASS FILE, which no phase can move,
+  while the position-blind retyping moved the call NODE's type on both sides of it. So a check
+  comparing node types reports ZERO there too, and it is not a JDK-only fact: a third party's
+  parser returning a `java.util.List` is the same shape as the JDK's, and the JDK-shaped check does
+  not even look. **Every retyping phase owes a boundary count at EXTERNAL callees, not only at JDK
+  ones** — measured at 15 errors against 0 findings on one third-party package
+  (`ENGINE-LIMITS.md` K15). Where the phase can wrap at the seam it must; where the FORMAL is
+  unknowable it counts, and says which of the two it is. **The REWRITE reads it the same way, through the same function.** A call rewrite keyed
   on the receiver's node type fires against the JDK type the declaration kept — `b.raw ++= mine` on
   a `java.util.List` — so the scope emits, for the very declarations it was asked to protect, code
   that cannot compile and that no check counts. And a scope seam is also the one argument slot with

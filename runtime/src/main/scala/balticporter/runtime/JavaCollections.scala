@@ -281,6 +281,56 @@ object JavaCollections:
       case None    => null.asInstanceOf[V]
     if cur == null then { m.put(k, v); null.asInstanceOf[V] } else cur
 
+  // -------------------------------------------------------------------------------------------
+  // The EXTERNAL SEAM — a collection that crosses into or out of code the port does not emit.
+  //
+  // Every other member of this object exists because a JDK UTILITY has no scala counterpart. These
+  // two exist because a THIRD PARTY's compiled signature cannot be retyped at all: an ANTLR parser
+  // returns `java.util.List<AtomContext>` and a generated lexer takes `java.util.Set<String>`, and
+  // no amount of retyping inside the port changes either. The port's own code around them moved, so
+  // the seam is real and one-sided, and the only honest answer is a conversion AT the seam.
+  //
+  // A live WRAPPER, never a copy, which is what `scala.jdk.CollectionConverters` gives: writes
+  // through the view reach the underlying collection and the caller's later changes are visible.
+  // A copy would compile and detach both directions — §4.4 in the shape the whole `subList`/
+  // `unmodifiable*` family above is written to avoid.
+  //
+  // ==Only the PRODUCER direction ships, and the reason is a frontend limit==
+  // The consumer direction — the port's `Buffer` at a third party's `java.util.List` FORMAL — has
+  // an equally obvious wrapper (`asJava`) and NOTHING TO TRIGGER IT: deciding that a formal is a
+  // `java.util.*` needs the callee's signature, and the frontend interns every external member with
+  // no signature at all (measured on liqp: 1157 external callees, not one with a `MethodType`). So
+  // that half is COUNTED at the seam and not bridged, and an `asJava` shipped here would be a
+  // capability nothing can reach. See ENGINE-LIMITS K15.
+  //
+  // ==What these do NOT convert, and why the ELEMENT type decides it==
+  // `asScala` converts one level. A `java.util.List<java.util.List<String>>` becomes a
+  // `Buffer[java.util.List[String]]` while the port's retyping claims `Buffer[Buffer[String]]`, so
+  // the two disagree one type argument in. `CollectionsTransform` therefore refuses to emit either
+  // of these where the type arguments mention anything it retyped, and COUNTS the refusal —
+  // a wrap that silently lies about its element type is worse than no wrap.
+  // -------------------------------------------------------------------------------------------
+
+  import scala.jdk.CollectionConverters.*
+
+  /** a `java.util.List` a third party HANDED BACK, as the `Buffer` the port's code expects. */
+  def fromJava[A](xs: java.util.List[A]): scala.collection.mutable.Buffer[A] = xs.asScala
+
+  /** …a `java.util.Set`. */
+  def fromJava[A](s: java.util.Set[A]): scala.collection.mutable.Set[A] = s.asScala
+
+  /** …a `java.util.Map`. */
+  def fromJava[K, V](m: java.util.Map[K, V]): scala.collection.mutable.Map[K, V] = m.asScala
+
+  /** …a `java.util.Iterator`, which the port retypes to the REMOVAL-CAPABLE shim rather than to
+    * scala's `Iterator`. The wrapper's `remove()` throws, which is java's own default for an
+    * iterator that offers no removal — and `asScala` does not carry java's `remove` across, so
+    * this is the one member of the family that loses something. It loses it LOUDLY. */
+  def fromJava[A](it: java.util.Iterator[A]): JavaIterator[A] = JavaIterator.from(it.asScala)
+
+  /** …a `java.lang.Iterable`. */
+  def fromJava[A](i: java.lang.Iterable[A]): JavaIterable[A] = JavaIterable.from(i.asScala)
+
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)
 

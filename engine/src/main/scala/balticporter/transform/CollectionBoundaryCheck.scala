@@ -90,6 +90,12 @@ object CollectionBoundaryCheck:
     /** one side is a declaration the phase's [[balticporter.tir.RuleScope]] deliberately held back,
       * so it kept its JDK type while the code meeting it moved. */
     case ScopedOut
+    /** one side is a method the PROGRAM DOES NOT DECLARE, whose signature is a fact about a
+      * compiled class file and cannot be retyped — and whose seam nothing in this check can see,
+      * because the position-blind retyping moved the node's type on both sides of it. Recorded BY
+      * THE PHASE, at the moment the external signature is still readable, and reported here so a
+      * reader finds the whole residue in one place. */
+    case ExternalCallee
 
   object Issue:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
@@ -116,6 +122,15 @@ object CollectionBoundaryCheck:
           "and the runtime shims bridge the other direction only — so widen the scope to cover " +
           "this declaration, or narrow it to exclude the other side of the slot too. The engine " +
           "needs no change; a scope that produced this seam SILENTLY would be worse than no scope."
+      case ExternalCallee =>
+        "§1(a) engine, and REFUSED here on purpose: the other side of this slot is a method the " +
+          "program does not declare, so its signature is a fact about a compiled class file and no " +
+          "phase can move it. Where a LIVE wrapper exists the phase inserts one " +
+          "(`JavaCollections.fromJava`/`toJava`); this site is one where it does not — a target " +
+          "with no converter, a nested element type a one-level wrap would silently lie about, or " +
+          "a class file the frontend could only partly resolve. A COPY would compile and detach " +
+          "both directions (§4.4), so the seam is counted instead. If the dependency is itself " +
+          "portable, the answer is to PORT it rather than to bridge it."
 
   /** one stranded slot. */
   final case class Finding(issue: Issue, slot: String, expected: String, actual: String, origin: Origin, enclosing: SymId):

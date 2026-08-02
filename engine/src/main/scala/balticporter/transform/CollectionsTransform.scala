@@ -158,7 +158,19 @@ final class CollectionsTransform(
   /** …held to the units the run EMITS, for the reason [[closure]] gives. [[scopedOut]] goes with
     * the mapping, so a seam the SCOPE created is classified as such rather than as an engine bug. */
   def boundary(program: Program, units: List[Tree.ClassDef]): List[CollectionBoundaryCheck.Finding] =
-    CollectionBoundaryCheck.check(program, units, mappedTypes, retypedTargets, scopedOut)
+    CollectionBoundaryCheck.check(program, units, mappedTypes, retypedTargets, scopedOut) ++
+      // …plus the EXTERNAL seams, which the check cannot re-derive: by the time it runs, the
+      // position-blind retyping has moved the node's type on BOTH sides of every one of them, so a
+      // walk over the post-phase tree reports zero. They are recorded during the traversal, while
+      // the external signature is still readable, and filtered to the units this run EMITS for
+      // ENGINE-LIMITS D2's reason — a dependent's program contains its base's units, and a seam
+      // inside one of those is the base's finding.
+      externalSeams.toList.filter(f => emittedPaths(units).contains(f.origin.javaPath))
+
+  /** the java files the units this run emits came from — the D2 filter, by SOURCE PATH, because a
+    * recorded seam carries its `Origin` and not the unit it sat in. */
+  private def emittedPaths(units: List[Tree.ClassDef]): Set[String] =
+    units.map(_.origin.javaPath).toSet
 
   /** [[RetargetBoundaryCheck]] over this phase's own retarget table — the PRODUCER direction, which
     * [[boundary]] is blind to by construction (a retarget contributes nothing to `mappedTypes` or
@@ -224,6 +236,23 @@ final class CollectionsTransform(
   private var iteratorFromSym, javaIteratorSym: SymId = SymId.None
 
   // ---- the RuleScope's own record, for THIS run (see `applyScope`) ----
+
+  /** `JavaCollections.fromJava` / `toJava` — the EXTERNAL seam's two directions. */
+  private var fromJavaSym: SymId = SymId.None
+
+  /** is this symbol one the PROGRAM declares? Structural (`Program.owned`), never a name test
+    * (§4.56), and computed once per run because the external-seam arms ask it per call. */
+  private var ownedSym: SymId => Boolean = _ => true
+
+  /** every symbol THIS PHASE minted in [[run]] — the rewrites' own targets. They are owned by
+    * nothing and named by no class file, so the external-seam arms would otherwise read each of
+    * them as a third party's method. */
+  private var mintedSyms: Set[SymId] = Set.empty
+
+  /** every external seam this run could NOT close, in the order it met them. Reported through
+    * [[boundary]], because it is the same residue `CollectionBoundaryCheck` counts and a reader
+    * looking for "what did the retyping leave open" must find all of it in one place. */
+  private val externalSeams = collection.mutable.ListBuffer[CollectionBoundaryCheck.Finding]()
 
   /** every symbol this run's [[scope]] held OUT of the rewrite. EMPTY for the default scope — and
     * for any scope whose entries matched nothing — which is what makes the no-op a no-op. */
@@ -345,9 +374,16 @@ final class CollectionsTransform(
     prependSym          = mint("prepend", "prepend")
     putSym       = mint("put", "put")     // scala `mutable.Map.put`: returns the PREVIOUS value
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
+    fromJavaSym  = staticSyms.getOrElse("fromJava", SymId.None)
+    externalSeams.clear()
 
+    mintedSyms = added.map(_.id).toSet
     val symbols = SymbolTable(program.symbols.all ++ added)
     given Program = program.rebuilt(symbols = symbols)
+    // …resolved once. The external-seam arms ask it per CALL, and `Program.owned` walks an owner
+    // chain, so asking it inside the traversal would be quadratic on a library of any size.
+    val ownedNow = summon[Program].owned
+    ownedSym = ownedNow
     applyScope(summon[Program]) // fills `excluded`, `admittedBy` and `report` — a no-op by default
     val units    = program.units.map(u => restoreExcluded(u, StandardTraversal.mapClassDef(this, u)))
     val symbols2 = mapSignatures(symbols) // retype signatures too
@@ -712,13 +748,176 @@ final class CollectionsTransform(
 
   override def transformApply(t: Tree.Apply)(using Program): Term =
     val t2 = wrapIterableArgs(t)
-    copyConstructor(t2).orElse(capacityConstructor(t2)).orElse(staticRewrite(t2)).getOrElse {
+    val out = copyConstructor(t2).orElse(capacityConstructor(t2)).orElse(staticRewrite(t2)).getOrElse {
       t2.fun match
         case Tree.Select(recv, m, _, so) => kindAt(recv).orElse(inheritedKind(recv, m)) match
           case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
           case None    => t2
         case _ => t2
     }
+    // …and the seam arms see only what NOTHING ELSE REWROTE. Ordering them before the rewrites
+    // reported `Collections.unmodifiableSet(mySet)` and `Collections.sort(myBuffer)` as unverifiable
+    // external arguments while the very same run was retargeting both onto the runtime — eight
+    // findings that were closed before they were written down, which is the report-credibility
+    // failure §4.45 names: one such row teaches a reader that these findings need checking.
+    if out ne t2 then out
+    else
+      externalArgs(t2)
+      externalProducer(t2)
+
+  // -------------------------------------------------------------------------------------------
+  // The EXTERNAL CALLEE seam — the boundary nothing could see, in both directions
+  // -------------------------------------------------------------------------------------------
+  //
+  // CLAUDE.md §1(b) states the rule for a SCOPE seam: "a scope seam is also the one argument slot
+  // with NO formal to compare against — the callee is then the JDK's own external symbol, which the
+  // frontend interned without a signature". An external callee that DOES carry a signature is the
+  // same fact one step out, and it is worse, because the signature is a fact about a COMPILED CLASS
+  // FILE that no phase can move:
+  //
+  //   * an ANTLR parser's `ctx.atom()` really returns a `java.util.List<AtomContext>` — but
+  //     `transformType` is position-blind, so the CALL NODE's type was retyped to `Buffer` and every
+  //     reader downstream (the for-each, `coerce`, `CollectionBoundaryCheck`) believes it;
+  //   * a generated lexer's constructor really takes a `java.util.Set<String>` — and `coerce` reads
+  //     the formal THROUGH `remap`, so it sees `mutable.Set` on both sides and declines to bridge.
+  //
+  // BOTH SIDES READ THE SAME MOVED TYPE, so a check comparing node types reports ZERO on exactly
+  // the seam the retyping made — which is what liqp measured: 15 errors at one third-party package
+  // against 0 findings. The generalisation, and it is not about the JDK: EVERY RETYPING PHASE OWES
+  // A BOUNDARY COUNT AT EXTERNAL CALLEES, NOT ONLY AT JDK ONES.
+  //
+  // What closes it is a conversion at the seam, and where none can be emitted the seam is COUNTED
+  // and classified (§1) rather than approximated (M6). Both halves are below.
+
+  /** A call to a method the PROGRAM DOES NOT DECLARE, whose declared result is a collection this
+    * phase retypes — wrapped so the value really becomes what its node already claims.
+    *
+    * Fires only where every one of these holds, and each is the phase's own record rather than a
+    * name test (CLAUDE.md §4.56):
+    *
+    *   - the callee is not owned by this program (`Program.owned`, structural);
+    *   - the callee's OWNER is not itself a type in `typeMap`. That is what keeps this off the
+    *     collection API's own members: `java.util.Map#keySet` is an external method returning
+    *     `java.util.Set`, and its receiver has already been retyped, so its result already IS a
+    *     scala set — wrapping it would be a second conversion of a value that never was java's;
+    *   - the node's own TYPE is one this phase produced. This is the observable the seam has to be
+    *     read from, and it is not the one this arm was first written against: **every external
+    *     member the frontend interns carries `NoType`** — measured on liqp, 1157 external callees
+    *     and not one with a `MethodType`, `java.lang.Object#toString` included. So there is no
+    *     declared result type to read, and the node's `tpe` — which Spoon resolved and
+    *     `transformType` then MOVED — is the only evidence that the value crossing this call is a
+    *     collection. Reading it is still §4.56's question answered from the phase's own record: the
+    *     node says `Buffer` precisely because THIS PHASE put it there;
+    *   - that type is not `JavaCollection`. The inverse of `typeMap` is unique for the five targets
+    *     the runtime can wrap LIVE, and `JavaCollection` is the one with no `scala.jdk` converter
+    *     behind it — a shim built over a copied `Buffer` would detach both directions. Refused and
+    *     counted rather than copied (M6);
+    *   - the TYPE ARGUMENTS mention nothing this phase produced. `asScala` converts ONE level, so a
+    *     `List<List<String>>` becomes `Buffer[java.util.List[String]]` while the retyping claims
+    *     `Buffer[Buffer[String]]` — a wrap that silently lies one type argument in.
+    *
+    * The emitted call needs no evidence of WHICH java type it was: `fromJava` is overloaded and
+    * scalac resolves it against the real static type from the class file, which is the one thing in
+    * this whole seam that is not in doubt. The node keeps the type it already has, and for once
+    * that is not a claim being made about a value — after the wrap the value really is that type
+    * (ENGINE-LIMITS K6's first rule). */
+  private def externalProducer(t: Tree.Apply)(using p: Program): Term =
+    if fromJavaSym == SymId.None || !externalCallee(t.method) then t
+    else headSym(t.tpe).filter(s => kindOf.contains(s) || shimSyms.contains(s)) match
+      case scala.None => t
+      case Some(s) if s == javaCollectionSym =>
+        seam("external result", "a live scala view", TirPrinter.tpe(t.tpe, TirPrinter.Style.canonical),
+             t.origin, t.method)
+        t
+      case Some(_) if mentionsRetyped(t.tpe) =>
+        seam("external result (nested element)", "a one-level wrap",
+             TirPrinter.tpe(t.tpe, TirPrinter.Style.canonical), t.origin, t.method)
+        t
+      case Some(_) =>
+        Tree.Apply(Tree.Ident(fromJavaSym, TypeRepr.NoType, t.origin), List(t), fromJavaSym, t.tpe, t.origin)
+
+  /** is this a method the PROGRAM DOES NOT DECLARE, and not one of the collection API's own?
+    *
+    * Three exclusions, each of which would otherwise make the seam arms fire on a value that never
+    * was java's: a symbol THIS PHASE MINTED (every rewrite's target — `+=`, `filtered`, `fromJava`
+    * itself), and a callee whose OWNER is either a type the mapping covers or one of its targets.
+    * `java.util.Map#keySet` is the shape that matters: an external method returning
+    * `java.util.Set`, on a receiver this phase already retyped, so its value IS a scala set and
+    * wrapping it would convert something that was never java's. */
+  private def externalCallee(m: SymId)(using p: Program): Boolean =
+    m != SymId.None && !ownedSym(m) && !mintedSyms.contains(m) &&
+      // …and it must have an OWNER. A symbol with none is not a member of any class file: it is an
+      // operator or an intrinsic the frontend interned bare (`scala.<op>#+`), and `"…" + aMap` was
+      // reported twice as an unverifiable external argument because nothing asked. There is no
+      // class file behind it to be unable to read, which is what this whole family is about.
+      p.symbolOf(m).exists(_.owner != SymId.None) &&
+      !p.symbolOf(m).flatMap(c => p.symbolOf(c.owner))
+        .exists(o => typeMap.contains(o.fullName) || retypedTargets.contains(o.fullName)) &&
+      // …and never a member THIS PHASE'S OWN TABLES cover. `staticRewrite` returning `None` means
+      // one of two things — no arm matched, or an arm REFUSED — and only the first is an external
+      // seam. Measured: `Arrays.asList(arr)` is K6.5's deliberate refusal, kept under the JDK's own
+      // name so the error reads as an untranslated call; wrapped here it read as a translated one
+      // and failed a type further in. A refusal that the next mechanism paints over is a refusal
+      // nobody can find (M6).
+      !p.symbolOf(m).flatMap(c => p.symbolOf(c.owner).map(o => MemberKey(o.fullName, c.name).render))
+        .exists(CollectionsTransform.handledStatics.contains)
+
+  /** does this type mention, anywhere inside its ARGUMENTS, a type this phase PRODUCED?
+    *
+    * The retyped direction, because by the time this runs the node has already been mapped: a
+    * `java.util.List<java.util.List<String>>` reads `Buffer[Buffer[String]]` here, and the inner
+    * `Buffer` is the evidence that a one-level `asScala` would leave a `java.util.List` where the
+    * type says otherwise.
+    *
+    * Walked with [[StandardTraversal.mapType]] and never a private recursion over `TypeRepr`'s
+    * cases, for CLAUDE.md §3's reason: a hand-rolled walk that stopped one constructor short would
+    * answer "no nesting" for the shape this test exists to catch, and the wrap would then be
+    * emitted for exactly the type it must refuse. The HEAD is excluded by construction — the caller
+    * has already established it, which is the trigger, not the problem. */
+  private def mentionsRetyped(t: TypeRepr)(using p: Program): Boolean = t match
+    case TypeRepr.AppliedType(_, args) => args.exists { a =>
+      var hit = false
+      val scan = new Phase:
+        def name = "external-nesting-scan"
+        override def transformType(x: TypeRepr)(using pp: Program): TypeRepr =
+          x match
+            case TypeRepr.TypeRef(_, s) => if kindOf.contains(s) || shimSyms.contains(s) then hit = true
+            case _                      => ()
+          x
+      StandardTraversal.mapType(scan, a)
+      hit
+    }
+    case _ => false
+
+  /** The CONSUMER half of the same seam, and it can only ever be COUNTED.
+    *
+    * An argument the phase retyped, handed to a method the program does not declare. Whether it
+    * fits is decided by a FORMAL in a class file, and the frontend interns every external member
+    * with `NoType` — so `wrapIterableArgs` sees no formals (its `formals.sizeIs != t.args.size`
+    * guard declines at 0), `coerce` is never reached, and `CollectionBoundaryCheck`'s argument arm
+    * skips the call for exactly the same reason. Measured on liqp: 15 compile errors at one
+    * third-party package against 0 findings.
+    *
+    * So this is a CANNOT-VERIFY count, and the finding says so rather than claiming a break: where
+    * the formal really is `Object` the retyped value conforms and nothing is wrong, and where it is
+    * a `java.util.*` the port does not compile. Both are the same fact — nothing in the pipeline
+    * can tell them apart — and a count that is honest about which one it is worth more than a
+    * silence that is right about neither. Closing it is a FRONTEND change (intern external members
+    * with their signatures), not another arm here. */
+  private def externalArgs(t: Tree.Apply)(using p: Program): Unit =
+    if externalCallee(t.method) && p.symbolOf(t.method).forall(_.info == TypeRepr.NoType) then
+      t.args.foreach { a =>
+        headSym(a.tpe).filter(s => kindOf.contains(s) || shimSyms.contains(s)).foreach { _ =>
+          seam("argument (external callee, no signature)", "unknown — the callee is a class file",
+               TirPrinter.tpe(a.tpe, TirPrinter.Style.canonical), a.origin, t.method)
+        }
+      }
+
+  /** record one external seam this phase could not close, for [[boundary]] to report. A refusal
+    * that is not counted is indistinguishable from a seam that does not exist (M6). */
+  private def seam(slot: String, expected: String, actual: String, origin: Origin, enclosing: SymId): Unit =
+    externalSeams += CollectionBoundaryCheck.Finding(
+      CollectionBoundaryCheck.Issue.ExternalCallee, slot, expected, actual, origin, enclosing)
 
   /** Java's collection COPY CONSTRUCTOR — `new ArrayList<>(c)`, `new HashSet<>(c)`,
     * `new HashMap<>(m)`, `new ArrayDeque<>(c)`.
@@ -1769,6 +1968,23 @@ object CollectionsTransform:
     "java.util.TreeSet"       -> ("scala.collection.mutable.TreeSet", Kind.Set),
   )
 
+  /** Can `JavaCollections.fromJava`/`toJava` express a LIVE view for this retype target?
+    *
+    * Five of the mapping's targets have a `scala.jdk.CollectionConverters` wrapper on the other
+    * side and are therefore convertible with no copy; `JavaCollection` — what `java.util.Collection`
+    * and `AbstractCollection` map to — has none, because the shim's factories build over a
+    * `Buffer`, and building one from a raw `java.util.Collection` is a COPY that detaches both
+    * directions. That refusal is COUNTED at the seam rather than silently taken (M6).
+    *
+    * A TARGET test and not a source-name test: it is the phase's own table read in the direction
+    * the phase moved it (§4.56), so `java.util.ArrayList` — whose target is `ArrayBuffer`, a type
+    * no converter produces — is refused for the same reason and by the same arithmetic, rather than
+    * being wrapped into something narrower than the value it names. */
+  private[transform] def liveWrappable(target: String): Boolean = Set(
+    "scala.collection.mutable.Buffer", "scala.collection.mutable.Set", "scala.collection.mutable.Map",
+    JavaIteratorFqn, JavaIterableFqn,
+  ).contains(target)
+
   /** every `JavaCollections` member the transform may emit. One list, so a new JDK utility is one
     * line here, one arm in `staticRewrite` and one method in the runtime object — and a typo is a
     * `SymId.None` that declines the rewrite rather than a dangling name in emitted code. */
@@ -1777,7 +1993,7 @@ object CollectionsTransform:
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
-         "toSet", "toMap")
+         "toSet", "toMap", "fromJava")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give

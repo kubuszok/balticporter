@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
 import balticporter.tir.{Pipeline, UsageKind}
-import balticporter.transform.CollectionsTransform
+import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
 
 /** The java→scala collections transform: retypes every collection occurrence and rewrites
   * the common call shapes, whole-program and symbol-driven. Asserts both the xref (the old
@@ -580,6 +580,82 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "balticporter.runtime.JavaCollections.putIfAbsent(this.m, k, v)")
     assertNotEmits(p, "this.xs.slice")
     assertNotEmits(p, "getOrElseUpdate")
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // The EXTERNAL CALLEE seam. A method the program does not declare has a signature in a CLASS
+  // FILE, which no phase can move — while `transformType` moved the call NODE's type, so both sides
+  // read the same scala collection and every check comparing node types reports zero. Measured on
+  // liqp: 15 compile errors at one third-party package against 0 findings.
+  //
+  // These use `java.util.Collections` and `java.lang.System` as stand-ins for a third party, because
+  // §1's enforcement rule forbids naming a ported library here and the mechanism does not care
+  // which class file it is: what it keys on is "the program does not declare this method".
+  // ---------------------------------------------------------------------------------------------
+
+  test("an EXTERNAL producer is wrapped, so the value really becomes what its node already claims") {
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.*;
+        |class Ext {
+        |  Map<String, String> env() { return System.getenv(); }
+        |}
+        |""".stripMargin, ph)
+    // the wrap needs no evidence of WHICH java type it was: `fromJava` is overloaded and scalac
+    // resolves it against the real static type from the class file.
+    assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(java.lang.System.getenv())")
+  }
+
+  test("…and a call the phase does NOT retype is left completely alone — the negative test") {
+    // Nothing about "external" licenses a wrap. Only a node whose type THIS PHASE produced is a
+    // seam; a `String`, an `int` or a third-party type of its own is not, and a rule that fired on
+    // "the callee is external" would wrap every call in the program.
+    val p = port(
+      """package demo;
+        |class Plain {
+        |  String greet() { return java.lang.System.getProperty("user.name").trim(); }
+        |  int size(String s) { return s.length(); }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertNotEmits(p, "fromJava")
+  }
+
+  test("…nor is a JDK COLLECTION member, whose receiver this phase already retyped") {
+    // `java.util.Map#keySet` is an external method returning `java.util.Set`, and its value IS
+    // already a scala set because the RECEIVER moved. Wrapping it would convert something that was
+    // never java's. The guard is the callee's OWNER being one of the phase's own types.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Own {
+        |  private final Map<String, String> m = new HashMap<String, String>();
+        |  Set<String> keys() { return m.keySet(); }
+        |  int n() { return m.size(); }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertNotEmits(p, "fromJava")
+  }
+
+  test("an external seam the phase CANNOT close is COUNTED, with its §1 classification") {
+    // The consumer half: an argument whose formal lives in a class file the frontend interned with
+    // NO signature — measured on liqp as 1157 external callees and not one with a `MethodType`. So
+    // nothing can decide whether it fits, and the honest answer is a cannot-verify count rather
+    // than a silence (M6). `String.join` takes an `Iterable`, so this one really does not compile.
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.*;
+        |class Hand {
+        |  private final List<String> xs = new ArrayList<String>();
+        |  String joined() { return String.join(",", xs); }
+        |}
+        |""".stripMargin, ph)
+    val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee)
+    assert(clue(fs).nonEmpty, "an argument at a signature-less external callee must be counted")
+    assert(clue(fs.head.slot).contains("external callee"))
+    assert(clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ExternalCallee))
+             .contains("\u00a71(a)"))
   }
 
   test("a CAPACITY hint at a hashed collection gains java's own default load factor") {
