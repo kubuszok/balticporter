@@ -275,6 +275,26 @@ object ManifestAgreement:
           else Nil
         noBase ++ statik(m, fired) ++ mapHealth(ports) ++ dynamic(m, shared, ports)
 
+  /** THE FINDINGS THAT MUST STOP A RUN BEFORE ANY PHASE RUNS — the same-name pairs the fold could
+    * not compose, and nothing else.
+    *
+    * Every finding this object produces is reported after the translation, which is right for all
+    * but one of them: a disagreement about a DROP or a RENAME describes emitted text an operator can
+    * read beside the finding. A pair the fold refused is different in kind, because the refusal is
+    * about the PIPELINE THAT IS ABOUT TO RUN. `Pipeline.order` used to key phases by name and drop
+    * one of the two silently, so the run then emitted a whole module with one shared-surface policy
+    * missing and reported a fatal finding about something else entirely (`ENGINE-LIMITS.md` CT9
+    * Face B). Ordering INSTANCES fixes the drop; it does not make running two conflicting
+    * configurations of one phase a sane thing to do. So the refusal is made LOAD-BEARING here: the
+    * run stops before the pipeline, with both instances' policies named.
+    *
+    * One derivation with [[statik]] — the same [[surfacePairs]] body — so the gate and the report
+    * can never disagree about what a refusal is. The gate takes no `fired` set and no `shared`
+    * list: neither exists before the translation, and neither is an input to this question.
+    */
+  def surfaceGate(manifest: Option[PortManifest]): List[Finding] =
+    manifest.toList.flatMap(surfacePairs).filter(_.kind.fatal)
+
   // -------------------------------------------------------------------------
   // the maps themselves — R1, reported before anything is read OFF one
   // -------------------------------------------------------------------------
@@ -396,6 +416,19 @@ object ManifestAgreement:
         typeDiff ++ typeExtra ++ splitDiff ++ surfaceGap ++ unclaimed
     }
 
+    val neverFired = m.inheritedKeysNeverFired(fired).toList.sortBy(_._1).flatMap { (base, keys) =>
+      keys.toList.sorted.map(k => Finding(Kind.InheritedKeyNeverFired, base, k, "inherited key matched nothing in this run"))
+    }
+
+    perBase ++ surfacePairs(m) ++ neverFired
+
+  /** THE SURFACE HALF of the static layer: what the fold could not compose, and what it screened.
+    *
+    * Split out of [[statik]] because it is the half that must be asked BEFORE the pipeline runs
+    * ([[surfaceGate]]) as well as reported with everything else afterwards, and two derivations of
+    * "is this pair a refusal" would be free to drift.
+    */
+  private def surfacePairs(m: PortManifest): List[Finding] =
     // One phase NAME carrying two different policies in one pipeline is drift regardless of which
     // manifest each came from, so it is checked once over the effective surface. Two instances
     // survive the fold only where the merge was DECLINED or REFUSED, so the fold's own sentence for
@@ -424,11 +457,7 @@ object ManifestAgreement:
       .filter(r => r.cause == SurfaceFold.Cause.Intrusion && !divergentPhases.contains(r.phase))
       .map(r => Finding(Kind.SurfaceIntrusion, m.name, r.phase, r.why))
 
-    val neverFired = m.inheritedKeysNeverFired(fired).toList.sortBy(_._1).flatMap { (base, keys) =>
-      keys.toList.sorted.map(k => Finding(Kind.InheritedKeyNeverFired, base, k, "inherited key matched nothing in this run"))
-    }
-
-    perBase ++ divergent ++ intrusions ++ neverFired
+    divergent ++ intrusions
 
   // -------------------------------------------------------------------------
   // dynamic — the base's policy against what this run modelled of the shared surface

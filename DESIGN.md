@@ -3395,6 +3395,37 @@ implementor, all stated on the trait because none is checkable from outside:
 - `surfaceFingerprint` must move whenever the merged table differs from either input, or a merge that
   changed the surface publishes a digest saying it did not.
 
+#### …and a refused pair STOPS THE RUN before any phase runs — the refusal has to be load-bearing
+
+"The refused pair stays in the effective pipeline, so the divergence detection that already exists
+fires on it unchanged" was true of the FINDING and false of the RUN, and the gap between those two
+was invisible for as long as merging has existed. `Pipeline.order` sorted a `name -> phase` map and
+ended in `out.toList.map(byName)`, so of two same-name instances the LATER one ran and the earlier
+one was silently dropped. Measured on the first refused merge to reach production: a base's entire
+`globals->implicits` holder never ran for one module — 0 decisions, no error, no check count, no
+finding — while the fatal finding reported beside it was about a DIFFERENT thing and would have read
+identically had the pipeline been correct (`ENGINE-LIMITS.md` CT9 Face B).
+
+Two changes, and they are two because either alone is wrong:
+
+- **`Pipeline.order` orders INSTANCES.** An ordering edge NAMES a phase and a name may stand for two
+  instances, so an edge to a name is an edge to EACH of them — "after X" means after every X, the
+  only reading that cannot silently under-constrain. Ties stay stable in declaration order and
+  successors are still visited in name order, so a pipeline with distinct names orders exactly as it
+  always did (every port in the corpus: 0 members changed).
+- **A refused pair is FATAL BEFORE THE PIPELINE.** Ordering instances alone would replace a silent
+  DROP with a silent DOUBLE APPLICATION: two configurations of one phase, both rewriting one program,
+  in whatever order the fold left them. The refusal is the engine saying it does not know how to
+  compose them, and running them anyway is the approximation this contract exists to refuse. So
+  `ManifestAgreement.surfaceGate` is `PortRun.execute`'s first act after anchoring the report paths —
+  nothing parsed, nothing emitted, and the message carries BOTH instances' policy fingerprints, which
+  is the pair a reader has to reconcile and precisely what the silent drop made unreadable.
+
+The gate shares `statik`'s body (`surfacePairs`), so "what is a refusal" has one derivation and the
+gate and the report cannot drift. It is the only manifest finding that runs early, and the criterion
+for that is stated rather than assumed: every other one describes EMITTED TEXT an operator reads
+beside it, and this one describes the pipeline that is about to run.
+
 #### The D1 contract: the base is the base AS THE BASE RAN IT
 
 This is the half that had to be got right or refused, and the shape that gets it right is not a

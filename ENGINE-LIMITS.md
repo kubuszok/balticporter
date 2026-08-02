@@ -3993,6 +3993,24 @@ holds `BasePort`s), which makes it a decision for `DESIGN.md` and its own measur
 line in `SurfaceFold`. Face B is `Pipeline.order` keying phases by NAME; the fix is to order
 INSTANCES, and it changes what every refused pair does, so it is measured on its own.*
 
+**FACE B IS CLOSED, and it took TWO changes rather than one** (`DESIGN.md` §8.13's fourth as-built
+section). Ordering instances is the obvious half and it is not sufficient: with both instances
+running, a refused pair applies TWO configurations of one phase to one program, which is the
+approximation the refusal exists to refuse. So the refusal is now LOAD-BEARING —
+`ManifestAgreement.surfaceGate` is `PortRun.execute`'s first act after anchoring the report paths, it
+shares `statik`'s body so the gate and the report cannot drift, and the message carries BOTH
+instances' policy fingerprints. Nothing is parsed and nothing is emitted.
+
+- **The silent-drop shape is reproduced and then caught, in specs**, because a defect nothing could
+  see is one a count cannot re-detect: `PipelineOrderSpec` runs two same-name instances over a
+  program and reads the answer off the TREE (11/12, not 10/11 — the number that was missing), and
+  `PortRunSpec` drives a run whose fold refused and asserts it dies naming both tables.
+- **An ordering edge NAMES a phase, so it constrains EVERY instance of that name.** "after X" meaning
+  "after one of the two Xs" is a schedule nobody declared.
+- **Zero movement, as predicted**: no port in the corpus has a duplicate phase name, ties are still
+  stable in declaration order and successors are still visited in name order, so all 13 ports read 0
+  members changed with every check count identical.
+
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 
 All five entries below come from the SAME work — Stage P6's attempts to enable an opaque family on

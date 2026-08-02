@@ -196,6 +196,47 @@ class PortRunSpec extends munit.FunSuite:
            "an inherited key lives in the base's manifest; `ManifestAgreement` reports that half")
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // a REFUSED merge stops the run BEFORE the pipeline (ENGINE-LIMITS.md CT9 Face B)
+  // ---------------------------------------------------------------------------------------------
+
+  /** a base and a dependent that each declare a `class-table` — a `SurfacePolicy` with NO
+    * `MergeablePolicy` — with different tables for one key. The fold cannot compose them, so both
+    * instances stay in the effective pipeline: the shape that used to run only the later one. */
+  private def refusedPair(): PortManifest =
+    PortManifest("base", surface = List(new balticporter.transform.ClassTableTransform(
+      Map("com.demo.Widget#of" -> "com.demo.Widget#classFor"))))
+      .extendedBy(PortManifest("dep", surface = List(new balticporter.transform.ClassTableTransform(
+        Map("com.demo.Widget#of" -> "com.demo.Gadget#classFor")))))
+
+  test("a REFUSED merge FAILS THE RUN, and BOTH instances' policies are named") {
+    // the silent-drop shape reproduced, then caught. `Pipeline.order` now keeps both instances, so
+    // running would apply two policies for one key; the refusal is what stops it, and it stops it
+    // before anything is parsed.
+    val (root, src) = fixture()
+    val m = refusedPair()
+    assertEquals(m.effectiveSurface.size, 2, "the pre-merge pipeline: two instances, one name")
+    assertEquals(Pipeline.order(m.effectiveSurface).size, 2, "…and BOTH would run (CT9 Face B)")
+    val err = intercept[RuntimeException](run(root, src)(_.copy(manifest = Some(m))))
+    assert(clue(err.getMessage).contains("SurfaceDivergence"))
+    // BOTH policies, so the reader has the pair to reconcile — the thing the silent drop hid
+    assert(err.getMessage.contains("com.demo.Widget#classFor"))
+    assert(err.getMessage.contains("com.demo.Gadget#classFor"))
+    assert(err.getMessage.contains("§1"), "every finding says which of §1's three kinds the fix is")
+    assert(err.getMessage.contains("before any phase runs"))
+    // …and nothing was emitted: the gate runs ahead of the translation, not after it
+    assert(!Files.exists(root.resolve("port").resolve("src_managed/main/scala/com/demo/Widget.scala")))
+  }
+
+  test("NEGATIVE: two EQUAL instances are not a refusal, and the run is green") {
+    val (root, src) = fixture()
+    val table = Map("com.demo.Widget#of" -> "com.demo.Widget#classFor")
+    val m = PortManifest("base", surface = List(new balticporter.transform.ClassTableTransform(table)))
+      .extendedBy(PortManifest("dep", surface = List(new balticporter.transform.ClassTableTransform(table))))
+    val r = run(root, src)(_.copy(manifest = Some(m)))
+    assert(clue(emitted(r.outDir)).contains("com/demo/Widget.scala"))
+  }
+
   test("externalConcrete is DERIVED from the phases: RuntimePlan, never a caller argument") {
     val (root, src) = fixture()
     val r = run(root, src)(_.copy(phases = List(new CollectionsTransform)))

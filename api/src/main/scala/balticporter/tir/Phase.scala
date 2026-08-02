@@ -98,28 +98,57 @@ trait Plugin:
 /** Orders phases by `runsAfter`/`runsBefore` and runs them over the `Program`,
   * rebuilding the xref index between phases (immutable-rebuild; optimize later). */
 object Pipeline:
+
+  /** Order the phases by `runsAfter` / `runsBefore`.
+    *
+    * '''It orders INSTANCES, and it used to order NAMES.''' The topological sort ran over
+    * `phases.map(p => p.name -> p).toMap` and ended in `out.map(byName)`, so two instances of one
+    * phase NAME collapsed to whichever the map kept — the LATER one — and the other silently never
+    * ran. Nothing anywhere could see it: the run emitted, every check counted the same, and the
+    * absent phase's `decisions` were absent because the phase was.
+    *
+    * Two same-name instances is not a hypothetical: it is exactly what a `MergeablePolicy` merge
+    * that was DECLINED or REFUSED leaves behind (`SurfaceFold`, DESIGN.md §8.13), which is the
+    * pre-merge behaviour the contract deliberately keeps. Measured on the first refused merge to
+    * reach production: a base's whole `globals->implicits` holder did not run for one module — 0
+    * decisions, no error, no count, no finding (`ENGINE-LIMITS.md` CT9 Face B). A refused pair is
+    * now FATAL BEFORE THE PIPELINE STARTS (`ManifestAgreement.surfaceGate`), and this is the other
+    * half of the same fix: whatever list arrives here is run in full, so a future caller that
+    * assembles two instances for a reason nobody has thought of yet gets both of them, not one.
+    *
+    * An ordering edge NAMES a phase, and a name may stand for two instances, so an edge to a name
+    * is an edge to EACH of them — "after X" means after every X, which is the only reading that
+    * cannot silently under-constrain. Ties stay stable in declaration order and successors are
+    * still visited in NAME order, so a pipeline with no duplicate names orders byte-identically to
+    * the way it always did.
+    */
   def order(phases: List[Phase]): List[Phase] =
-    val byName = phases.map(p => p.name -> p).toMap
-    // edges: a -> b means a runs before b
-    val edges: Map[String, Set[String]] =
-      phases.foldLeft(Map.empty[String, Set[String]].withDefaultValue(Set.empty)) { (m, p) =>
-        val afters  = p.runsAfter.filter(byName.contains).map(a => (a, p.name))  // a before p
-        val befores = p.runsBefore.filter(byName.contains).map(b => (p.name, b)) // p before b
+    val instances = phases.toVector
+    val byName: Map[String, List[Int]] =
+      instances.indices.groupBy(i => instances(i).name).view.mapValues(_.toList).toMap
+    // edges: i -> j means the INSTANCE at i runs before the instance at j
+    val edges: Map[Int, Set[Int]] =
+      instances.indices.foldLeft(Map.empty[Int, Set[Int]].withDefaultValue(Set.empty)) { (m, i) =>
+        val p       = instances(i)
+        val afters  = p.runsAfter.toList.flatMap(a => byName.getOrElse(a, Nil)).map(a => (a, i))  // a before p
+        val befores = p.runsBefore.toList.flatMap(b => byName.getOrElse(b, Nil)).map(b => (i, b)) // p before b
         (afters ++ befores).foldLeft(m)((mm, e) => mm.updated(e._1, mm(e._1) + e._2))
       }
     // Kahn's algorithm (deterministic: stable by declaration order on ties)
-    val indeg = collection.mutable.Map[String, Int]().withDefaultValue(0)
-    phases.foreach(p => indeg.getOrElseUpdate(p.name, 0))
+    val indeg = collection.mutable.Map[Int, Int]().withDefaultValue(0)
+    instances.indices.foreach(i => indeg.getOrElseUpdate(i, 0))
     edges.values.flatten.foreach(t => indeg(t) += 1)
-    val ready = collection.mutable.Queue(phases.filter(p => indeg(p.name) == 0).map(_.name)*)
-    val out   = collection.mutable.ListBuffer[String]()
+    val ready = collection.mutable.Queue(instances.indices.filter(i => indeg(i) == 0)*)
+    val out   = collection.mutable.ListBuffer[Int]()
     while ready.nonEmpty do
       val n = ready.dequeue()
       out += n
-      edges(n).toList.sorted.foreach { m => indeg(m) -= 1; if indeg(m) == 0 then ready.enqueue(m) }
-    if out.size != phases.size then
-      throw new IllegalStateException(s"phase ordering has a cycle among: ${phases.map(_.name).toSet -- out.toSet}")
-    out.toList.map(byName)
+      edges(n).toList.sortBy(m => (instances(m).name, m))
+        .foreach { m => indeg(m) -= 1; if indeg(m) == 0 then ready.enqueue(m) }
+    if out.size != instances.size then
+      throw new IllegalStateException(
+        s"phase ordering has a cycle among: ${(instances.indices.toSet -- out.toSet).map(instances(_).name)}")
+    out.toList.map(instances)
 
   /** Run phases in dependency order, rebuilding the xref from the rewritten tree after
     * each — so every phase sees an index consistent with the prior phase's rewrites.

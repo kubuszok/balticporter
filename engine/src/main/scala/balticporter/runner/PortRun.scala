@@ -234,6 +234,33 @@ final case class PortRun(
 
     anchorReportPaths()
 
+    // ---- THE SURFACE GATE: a pair the fold could not compose stops the run BEFORE the pipeline --
+    //
+    // Every other manifest finding is reported after the translation, beside the emitted text it
+    // describes. This one cannot wait, because it is a statement about the PIPELINE THAT IS ABOUT TO
+    // RUN: two instances of one phase name, carrying two policies, with no merge to compose them.
+    //
+    // It used to fall through — `Pipeline.order` keyed phases by NAME, so of the two instances the
+    // LATER one ran and the other silently did not. Measured: a base's whole `globals->implicits`
+    // holder vanished from one module's pipeline with no error, no check count and no finding, while
+    // the fatal finding reported beside it was about something else entirely (`ENGINE-LIMITS.md` CT9
+    // Face B). Ordering INSTANCES is the other half of that fix and is what makes this gate
+    // necessary rather than merely tidy: with both instances running, a refused pair would apply two
+    // conflicting configurations of one phase to one program.
+    //
+    // So the refusal is LOAD-BEARING. Nothing is parsed, nothing is emitted, and the message carries
+    // BOTH instances' policy fingerprints — which is the pair a reader has to reconcile, and the one
+    // thing the silent drop made unreadable.
+    val surfaceStop = ManifestAgreement.surfaceGate(manifest)
+    if surfaceStop.nonEmpty then
+      surfaceStop.foreach(f => System.err.println(s"[$label] FATAL — ${f.render}"))
+      sys.error(
+        s"[$label] ${surfaceStop.size} phase(s) appear twice in the effective pipeline and could not " +
+          "be composed:\n" + surfaceStop.map("  " + _.render).mkString("\n") +
+          "\n  [the run stops HERE, before any phase runs: both instances would otherwise transform " +
+          "the same program with two policies. Give the phase a `MergeablePolicy`, reconcile the two " +
+          "values, or share one instance — DESIGN.md §8.13]")
+
     val roots = if frontend.resolutionRoots.isEmpty then "" else s" (resolving against ${frontend.resolutionRoots.size} extra root(s))"
     say(s"building model over ${frontend.files.size} file(s)$roots…")
 
