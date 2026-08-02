@@ -468,6 +468,18 @@ you should do:
   emitted text moved. Identical files mean the output is byte-for-byte unchanged — which is a
   stronger revert check than any count, because *no check count moves for most transform
   regressions* (with the whole pipeline skipped, every check count is unchanged).
+- **…and a baseline is only ever a claim about the run that PRODUCED it, so accept it from a run
+  that is CURRENT.** A committed baseline row that neither of two checkouts can reproduce at the
+  commit that ships it reads exactly like an environment defect (§5.4 is full of real ones), and
+  the first suspects — a symlinked path, a resolver difference, an iteration order — are expensive
+  to chase. Measured: one `members.tsv` row diverged between a worktree and the primary checkout at
+  identical commits, and what settled it was running the lane in the SECOND checkout at the FIRST
+  one's commit: the two agreed exactly, and the committed value turned out to be the digest that
+  statement had *before the same wave's own earlier commit* moved it. A baseline accepted from a
+  `run-latest` that predates a later edit in the same wave is stale, and nothing reports it: the
+  numbers all agree, only one digest is from another run. So re-run the lane before
+  `just baseline-accept`, and when a digest cannot be reproduced, compare **checkout against
+  checkout at one commit** before reaching for an environment explanation.
 - **The test lane is the only one that sees §4.4.** The §4.4 table's Java forms translate to valid Scala meaning
   something else and move no error count. `tests.tsv` is the pass/fail baseline and the diff names
   newly-failing tests, anchors each on the first stack frame in ported code, and says how good that
