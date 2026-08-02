@@ -540,7 +540,7 @@ flat and no other port's output moved.
 
 *Fix kind: (a). Universal — a bound java writes implicitly and scala writes differently.*
 
-### G24. Java's `<T>` bound is VACUOUS and the emitted `T <: java.lang.Object` is not — 1 error, OPEN
+### G24. Java's `<T>` bound is VACUOUS and the emitted `T <: java.lang.Object` is not — 1 error, OPEN. THE FIX WAS BUILT AND MEASURED AT 0 -> 50; DO NOT RETRY BLIND
 
 An unbounded java type parameter means `T extends Object`, which admits every reference type there
 is. The port emits that bound literally (`def cartesianProduct[T <: java.lang.Object]`), and in
@@ -556,18 +556,65 @@ val c: Buffer[Buffer[java.io.Serializable]] = cp(b)   // Found: …[Serializable
 fails to compile with `A is a type variable with constraint <: Object`. **Reproduced standalone on
 3.8.4**, so it is a fact about the two type lattices and not about anything the port did.
 
-The fix is to stop emitting a bound java wrote implicitly — an unbounded java type parameter is an
-unbounded Scala one — and the reason it is OPEN is the blast radius: that is every generic signature
-in the corpus, and the divergence it introduces runs the other way (a Scala unbounded `T` admits
-value types, which java's does not, so code java would have rejected compiles). The permissive
-direction is the one this project has accepted elsewhere (`asList`'s fixed-size divergence), but the
-change wants its own measurement wave rather than a corner of a collections one.
+The obvious fix is to stop emitting a bound java wrote implicitly — an unbounded java type
+parameter is an unbounded Scala one. **It has now been BUILT AND MEASURED THREE WAYS, and all three
+are worse than the one error it closes. DO NOT RETRY without reading what each one cost.**
+
+The measurement is the entry, because "one edit in `TirEmitter.typeParam`" is exactly what it looks
+like and exactly what it is not:
+
+| what was dropped | libGDX core | what broke |
+|---|---|---|
+| nothing (today) | **0** | — |
+| every vacuous bound, class and method | **0 -> 50** | 49 × §4.4's reference-equality translation, 1 × a wildcard capture |
+| a METHOD's only, class bounds kept | **0 -> 6** | a method's `T` passed as a CLASS's type argument |
+
+**The 50, and the two families in them.** Forty-nine are `value eq is not a member of T`: §4.4's
+`a == b` -> `a eq b` rule needs an `AnyRef`, and an unbounded `T` is not statically one. That half
+IS repairable and the repair is small — `SpoonTir.referenceIdentity`'s `asRef` already ascribes a
+`java.lang.Object`-typed operand, and a TYPE-VARIABLE operand is the third case it owes. **Whoever
+retries G24 owes this repair with it; the two rules are coupled and the coupling is invisible until
+the bound comes off.** The fiftieth is not repairable at the operation:
+`map.get(this.keys.get(nextIndex))` in `OrderedMap$OrderedMapValues` type-checked for the life of
+the port because `Array[?]`'s element capture conformed to `Object` — *because `Array[T]` declared
+that bound*. Java keeps the two sides linked as ONE capture (`OrderedMap<?, V>`'s `?` is the same
+capture as its `keys`') and the emitted form does not, so there is no argument slot at which to
+state the difference. That is the G2/G23 wildcard family met from the other side.
+
+**And the method-only split is not a smaller version of the change — it is an INCOHERENT one.** It
+reads as principled: a method type parameter is instantiated afresh at every call and never
+CAPTURED, so dropping its bound weakens nothing, while a class's bound is re-read at every `C[?]`.
+Both halves of that are true and the conclusion still fails, because **a method's type parameter is
+routinely a CLASS's type ARGUMENT**: `Array.with[T](array)` calls `new Array[T](…)`, and an
+unbounded `T` does not satisfy the `T <: java.lang.Object` the class kept. Six errors on libGDX,
+every one of that shape (`Array#of`, `Array#with`, `DelayedRemovalArray#with`,
+`SnapshotArray#with`, `AssetManager#load`, `ResourceData$SaveData#saveAsset`). **So G24 is
+all-or-nothing across the two kinds of type parameter, and "all" costs the wildcard capture.**
+
+Three further things the retry should know:
+
+- **the port's HAND-WRITTEN half moves with it** (CLAUDE.md §1). `corpus/libgdx-overrides/sge/utils/Json.scala`
+  carries `readValue[T <: Object]` precisely because the engine renders `Skin`'s override that way;
+  the moment the engine stops, that line is a compile error and the answer is read off the generated
+  override, not chosen. One site found, and only the sites the change reaches are findable;
+- **`members.tsv` is the honest size**: 174 members moved on libGDX for the both-halves version and
+  143 for the method-only one, at 0 changed check counts either way. The blast is real and no count
+  reports it;
+- **there may be a cheaper place to stand.** The single liqp error is not really about the bound: it
+  is that the port WROTE DOWN java's inferred type argument (`Serializable`, the lub of
+  `98, "97", true, false, null`) at a call, and Scala roots `java.io.Serializable` at `Any` so that
+  argument does not conform to a `<: Object` parameter. Pinning such a lub as `java.lang.Object`
+  where the inferred head is a type Scala does not place under `Object` is one site's fix rather
+  than every generic signature's — unmeasured, and the shape a retry should price first.
 
 Measured at **1 error** on liqp (`ComparingExpressionNodeTest`, whose fixture is a
 `List<List<Serializable>>`), and it is the first corpus library to write `Serializable` as a type
-argument at all — which is why five libraries and fourteen ports went past it.
+argument at all — which is why five libraries and fourteen ports went past it. **One error closed,
+six to fifty opened.**
 
-*Fix kind: (a) engine, unbuilt — with a measured blast radius, not a small edit.*
+*Fix kind: (a) engine, MEASURED AND REVERTED. The permissive direction is the one this project
+accepts elsewhere (`asList`'s fixed-size divergence); what defeats it here is not permissiveness but
+that two other universal rules — reference identity and wildcard capture — are reading the bound.*
 
 ---
 
