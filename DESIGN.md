@@ -2135,6 +2135,17 @@ is a counted refusal (M6/C3), not a seeded plan. Errors 7 → 7; the nine member
 those two classes and their constructors, now consistent with what the base published rather than
 with a demoted re-derivation.
 
+**A NON-FATAL contract gap is now a CHECK, `base-surface`.** The fatal half fails the run — §8.3's
+enforcement, and deliberately not a check ("a drift check is rejected on evidence"). The other half is
+specified as a FINDING and was a line of stdout: an `Unknown` no emission consumed. A number nobody
+persists is a number nobody diffs, and a base-surface question is exactly the kind that starts
+appearing with no other count moving. It is `RequiredChecks` on EVERY port, a base with no declared
+base included, because a run that asked nothing and a run whose recording was skipped are
+indistinguishable without the row; and it is recorded BEFORE the fatal refusal, so the run that dies
+still leaves the artifact naming what killed it. `kind` splits the two halves (`unanswered` /
+`shaped emitted text`) and the §1 classification rides in `detail`, for an agent holding only
+`findings.tsv` (§4.45).
+
 **The determinism twin is an emitter over the same program and must be handed the SAME `Surface`.**
 The view is an INPUT to emission — it scopes the funnel's fixpoint — so a twin built without it
 re-derives every base class's primary the pre-§8.3 way. That is not a hypothetical: it fired on the

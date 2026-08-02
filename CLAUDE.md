@@ -371,13 +371,15 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   success case, so a lane under `set -e` aborts exactly when the port is green.
 
   Each prints, untruncated and diffed against the committed baseline, **every engine check the
-  run's own pipeline registers — twenty rows on libgdx-core today, not four — plus any check the
+  run's own pipeline registers — twenty-one rows on libgdx-core today, not four — plus any check the
   port's own §1(c) rules register** (libGDX adds `gdx-shared-iterator`, so its lanes show
-  twenty-one). The total is not a constant to memorise — quoting one is what went stale twice; it
-  is the FIFTEEN required of every run (`signature`, `omissions`,
+  twenty-two). The total is not a constant to memorise — quoting one is what went stale twice; it
+  is the SIXTEEN required of every run (`signature`, `omissions`,
   `portability(all|emitted|injected)`, `substitution(emitted|dangling)`, `remediation`, `policy`,
-  `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`) plus whatever the RUN'S
-  OWN PIPELINE registers. The trivia family is three lanes and all three
+  `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`, `base-surface`) plus
+  whatever the RUN'S OWN PIPELINE registers. `base-surface` is required of a BASE port too, which has
+  no contract to ask: a run that asked nothing and a run whose recording was skipped are
+  indistinguishable without the row. The trivia family is three lanes and all three
   are required, because `lost = 0` is the bar and a run could hold it by RECOVERING everything —
   `recovered` is a counted residue and `deliberate` is derived from the port's own drops, so
   reporting the bar without them says nothing about how it was met;

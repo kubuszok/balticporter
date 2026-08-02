@@ -438,6 +438,11 @@ final case class PortRun(
     // exactly the fallback this replaces.
     val surfaceGaps = (translated.surface.gaps ++ translated.emitter.surfaceGaps).distinct
     val fatalGaps   = surfaceGaps.filter(_.fatal)
+    // RECORDED BEFORE THE REFUSAL BELOW, and including the fatal ones. A fatal gap stops the run, so
+    // a successful run's row only ever counts the non-fatal half — but a run that dies must still
+    // leave the artifact that says why, and a recording placed after `sys.error` writes nothing on
+    // exactly the run a reader most needs it for.
+    CheckReport.record(PortRun.BaseSurface, PortRun.baseSurfaceFindings(surfaceGaps))
     say(s"BASE SURFACE (contract questions this run could not answer): ${surfaceGaps.size}" +
       (if fatalGaps.isEmpty then "" else s", ${fatalGaps.size} of them FATAL"))
     surfaceGaps.take(40).foreach(g => println("  " + g.render))
@@ -1816,6 +1821,22 @@ object PortRun:
         .flatMap(fqn => claims.get(fqn).map((b, d) => SyntheticClaim(fqn, b, d)))
         .toList.distinct.sortBy(c => (c.fqn, c.base))
 
+  /** The [[BaseSurface]] findings for a run's gaps — a PURE function, so the negative case ("an
+    * unconsumed `Unknown` must count") is testable without a two-module port on disk.
+    *
+    * `kind` splits the two halves the §8.3 rule splits: an `Unknown` that shaped emitted text FAILS
+    * the run, and one that did not is a finding. Both are recorded, because a run that dies must
+    * leave the artifact naming what killed it. There is no origin — a contract question is about a
+    * SYMBOL, not a line of Java — so the path is empty rather than a plausible-looking guess (§4.57's
+    * rule, from the other side), and the SUBJECT is the FQN a reader greps for. The `fix` rides in
+    * `detail` so an agent holding only `findings.tsv` still gets §1's classification (§4.45). */
+  def baseSurfaceFindings(gaps: List[balticporter.tir.Surface.Gap]): List[CheckReport.Finding] =
+    gaps.map { g =>
+      CheckReport.Finding(BaseSurface, if g.fatal then "shaped emitted text" else "unanswered",
+                          g.subject, "", 0,
+                          g.why + g.module.fold("")(m => s"  [base: $m]") + s"  [${g.fix}]")
+    }
+
   /** Every check's name as it appears in `counts.tsv`. Named here, in the orchestrator, because the
     * orchestrator is now the only thing that records: a check is a pure function of a `Program` and
     * does not know it is being persisted. */
@@ -1832,6 +1853,14 @@ object PortRun:
   val Manifest             = "manifest"
   /** references a base module's PUBLISHED port map says are not in its output. */
   val PortMapCheck         = "port-map"
+  /** contract questions about a BASE type this run could not answer (`DESIGN.md` §8.3).
+    *
+    * The FATAL half fails the run, which is §8.3's enforcement and deliberately not a check — "a
+    * drift check is rejected on evidence". The other half is specified as a FINDING and was a line of
+    * stdout: an `Unknown` no emission consumed. A number nobody persists is a number nobody diffs,
+    * which is exactly what `counts.tsv` exists to prevent, and it is the only place a base-surface
+    * question can start appearing without anything saying so. */
+  val BaseSurface          = "base-surface"
   /** comments in the upstream Java that did not reach the emitted Scala (a LICENCE among them). */
   val TriviaDropped        = "trivia"
   /** …the ones the emitter's backstop had to PUT BACK: a counted residue, never a success. */
@@ -1857,6 +1886,9 @@ object PortRun:
     // all three trivia lanes: a run that reported `lost` alone could hold the bar at zero by
     // recovering everything, and nothing would say so.
     TriviaDropped, TriviaRecovered, TriviaDeliberate,
+    // required of EVERY port, a base with no `base = "…"` included: a run that asked no contract
+    // question and one whose recording was skipped are indistinguishable without the row.
+    BaseSurface,
     // required of EVERY port, including one that runs no retyping phase: with the phase absent the
     // check still reports the port's kept JDK surface and K9's ForEach demand, and a port that
     // reported nothing there would be indistinguishable from one whose check never ran.

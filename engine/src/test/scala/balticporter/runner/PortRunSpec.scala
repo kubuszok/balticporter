@@ -495,6 +495,38 @@ class PortRunSpec extends munit.FunSuite:
     assert(counts.contains(PortRun.PortabilityInjected), "nothing was injected, and it must still be named")
   }
 
+  test("base-surface: an UNCONSUMED Unknown is a finding, and the FATAL half is kept apart") {
+    // the negative case the registration exists for. A gap nothing emitted is specified as a
+    // FINDING, and until it had a check name it was a line of stdout: no `counts.tsv` row, so
+    // nothing could diff it and a port could start asking unanswerable questions with no number
+    // moving anywhere.
+    val unconsumed = Surface.Gap("p.Base#m", "no declared base publishes a contract row", Some("base-mod"),
+                                 fatal = false, fix = "\u00a71(b) PER-LIBRARY: declare the base")
+    val consumed   = unconsumed.copy(subject = "p.Other", fatal = true)
+    val fs = PortRun.baseSurfaceFindings(List(unconsumed, consumed))
+    assertEquals(fs.map(_.check).distinct, List(PortRun.BaseSurface))
+    assertEquals(fs.map(f => f.kind -> f.owner),
+                 List("unanswered" -> "p.Base#m", "shaped emitted text" -> "p.Other"))
+    // \u00a74.45 \u2014 the classification rides in `detail`, so an agent holding only findings.tsv has it
+    assert(clue(fs.head.detail).contains("\u00a71(b) PER-LIBRARY"), fs.head.detail)
+    assert(fs.head.detail.contains("[base: base-mod]"), fs.head.detail)
+    // no origin: a contract question is about a SYMBOL, and a plausible-looking path would be worse
+    assertEquals(fs.map(f => f.path -> f.line).distinct, List("" -> 0))
+    assertEquals(PortRun.baseSurfaceFindings(Nil), Nil)
+  }
+
+  test("\u2026and a run that asks NOTHING still names the check \u2014 a zero is not an absence") {
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src)()
+      CheckReport.write(rep.resolve("run-latest"))
+    }
+    val counts = Files.readAllLines(rep.resolve("run-latest/counts.tsv")).toArray(Array.empty[String]).toList
+      .filterNot(_.startsWith("#")).map(_.split('\t').toList)
+    assertEquals(clue(counts).collectFirst { case k :: v :: _ if k == PortRun.BaseSurface => v }, Some("0"))
+  }
+
   test("correlation runs IN-PROCESS against this run's own report directory") {
     val (root, src) = fixture()
     val rep = root.resolve("report")
