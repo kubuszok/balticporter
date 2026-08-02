@@ -73,7 +73,7 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
-| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **7** (§10.5.3, all classified) |
+| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **6** (§10.5.3, all classified) |
 | `liqp-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **577** emitted, **none run** — the port does not compile | **3** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
@@ -2193,11 +2193,10 @@ without it threw `AssertionError: failure to resolve inner class` out of `Classf
 ABORTED, which reads as a smaller error count rather than as a failure. With no seam left there is
 nothing for it to soften, and ONE directory now serves the frontend, scalac and the test run.
 
-**What is left, 10 — 7 main and 3 test**, all of them (a) engine, by family:
+**What is left, 9 — 6 main and 3 test**, all of them (a) engine, by family:
 
 | n | family | where |
 |---|---|---|
-| 1 | K5.8's remaining half — `super.entrySet()` maps to the RECEIVER ALONE, and `for (e <- super)` is an E040 SYNTAX error. Refused STRUCTURALLY now (the phase checks that every `super` in the rewrite it built stands as a selection qualifier), so `super.putAll` translates and this one does not | `filters/Sort$SortableMap` |
 | 2 | K2/K5.7's `Map.Entry.setValue` — a `Tuple2` has none, and a write-through to the map needs the map, which the entry does not carry | `filters/Sort$ComparableMapEntry`, `parser/LiquidSupport#visitMap` |
 | 2 | K9/K15 at ANTLR — an enhanced-for over a real external `java.util.List`, and a collapsed stream whose result feeds an external `Stream.concat` | `parser/v4/NodeVisitor` |
 | 1 | a `Map.Entry::getKey` METHOD REFERENCE inside a collapsed stream. The phase rewrites `getKey` on an Apply and never sees a `Tree.MethodRef`, which the emitter expands to `self$ => self$.getKey()` after every phase has run | `Insertions#getNames` |
@@ -2206,7 +2205,7 @@ nothing for it to soften, and ONE directory now serves the frontend, scalac and 
 | 1 | MUnit's `Compare` needs a common type and two `toJava` calls infer different element types | `RenderSettingsTest` |
 | 1 | G22 — a method type parameter constrained only by its bound | `blocks/ForTest` |
 
-**Three of the ten are now DIAGNOSED to the edit, and one of the three splits in two.** None is
+**Two of the nine are DIAGNOSED to the edit, and one of the two splits in two.** Neither is
 built — what follows is what the next wave does not have to re-derive:
 
 - **the `Map.Entry::getKey` method reference is a NODE SHAPE, not a missing rewrite.**
@@ -2219,13 +2218,6 @@ built — what follows is what the next wave does not have to re-derive:
   Apply into a SELECT, so the phase has to LOWER the `MethodRef` into a `Tree.Lambda` whose body is
   the rewritten selection. That is also why teaching the emitter's expansion instead does not work —
   it renders `self$.<member>(<args>)` and `_1` is parenless.
-- **`super.entrySet()` has a legal exact form, gated on a whole-program question.** K5.8's
-  structural refusal is right: `entrySet()` maps to the RECEIVER ALONE and `super` is not a value in
-  Scala. But where the class does not itself declare the member, `super.m` and `this.m` resolve to
-  the same member, so the receiver-alone rewrite may use `this` — with the caveat that a SUBCLASS
-  overriding it would then dispatch differently, so the condition is "neither this class nor any
-  class in the program that extends it declares `m`", which the phase can compute from `Program`.
-  `Sort$SortableMap` satisfies it.
 - **`setValue` is ONE message over TWO cases, and only one of them is refused.** K2 records the
   refusal as "a `Tuple2` has no write-through", which is true and is stated at the wrong
   granularity. The real line is *`setValue` is unmappable where the MAP IS NOT REACHABLE FROM THE

@@ -621,13 +621,58 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "super.contains(k)")
   }
 
-  test("…and a rewrite that would put `super` somewhere ILLEGAL is still refused, structurally") {
+  test("…and a rewrite that cannot stand on `super` stands on `this`, where the two are one member") {
     // `entrySet()` maps to the RECEIVER ALONE, because a scala `Map` already IS its entry view —
-    // which for a `super` receiver is `for (e <- super)`, a syntax error. The test is on the
-    // RESULT and not on the arm, so no future arm can reintroduce it by omission.
+    // which for a `super` receiver is `for (e <- super)`, a syntax error. `Sorted` declares no
+    // `entrySet` and nothing in this program extends it, so `super.entrySet()` and
+    // `this.entrySet()` name the same member and the rewrite may simply stand on `this`.
     val p = port(superReceiver, new CollectionsTransform)
-    assertEmits(p, "super.entrySet()")
+    assertEmits(p, "<- this)")
     assertNotEmits(p, "<- super)")
+    assertNotEmits(p, "super.entrySet()")
+    // …and the arms that ARE legal on `super` are untouched — the retry is a fallback reached only
+    // where the super-placed rewrite failed, so nothing that already translated moves.
+    assertEmits(p, "super.++=(m)")
+    assertEmits(p, "super.contains(k)")
+  }
+
+  test("…and it is REFUSED where a SUBCLASS in the program overrides the member") {
+    // `this.entrySet()` is the VIRTUAL call, so an override anywhere below the class dispatches
+    // somewhere `super.entrySet()` never would. The refusal is what it was: java's own name, and a
+    // compile error at the member (M6).
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Base extends HashMap<String, String> {
+        |  String dump() {
+        |    StringBuilder b = new StringBuilder();
+        |    for (Map.Entry<String, String> e : super.entrySet()) { b.append(e.getKey()); }
+        |    return b.toString();
+        |  }
+        |}
+        |class Sub extends Base {
+        |  @Override public Set<Map.Entry<String, String>> entrySet() { return super.entrySet(); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "super.entrySet()")
+    assertNotEmits(p, "<- this)")
+    assertNotEmits(p, "<- super)")
+  }
+
+  test("…and it is REFUSED where the class DECLARES the member itself — `this.m` would recurse") {
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Own extends HashMap<String, String> {
+        |  @Override public Set<Map.Entry<String, String>> entrySet() { return super.entrySet(); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "super.entrySet()")
+    assertNotEmits(p, "this.entrySet()")
   }
 
   test("an IN-PROGRAM vararg method still receives the materialised array — the convention holds") {
@@ -803,11 +848,12 @@ class CollectionsTransformSpec extends PortSuite:
     // …and a Map `get` translates too, because `super.getOrElse(k, null)` is a selection as well.
     // Java's `Map.get` returns null for an absent key, which is what the default states.
     assertEmits(p, "super.getOrElse(k, null)")
-    // REFUSED, because THIS one would move `super` out of a selection: a scala `Map` already IS its
-    // entry view, so the rewrite is the receiver alone and `for (e <- super)` is E040. It keeps
-    // java's name and fails to compile there (M6).
-    assertEmits(p, "super.entrySet()")
+    // THIS one would move `super` out of a selection: a scala `Map` already IS its entry view, so
+    // the rewrite is the receiver alone and `for (e <- super)` is E040. `Rows` declares no
+    // `entrySet` and nothing extends it, so the rewrite stands on `this` instead — the fallback
+    // above. What must never appear is the syntax error.
     assertNotEmits(p, "<- super)")
+    assertEmits(p, "<- this)")
   }
 
   test("`subList` and `putIfAbsent` go to the helper — scala HAS both and both mean something else") {

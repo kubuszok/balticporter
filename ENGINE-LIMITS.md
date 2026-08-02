@@ -2094,6 +2094,32 @@ fact about the EMITTER that this phase cannot read*. Both halves of that turned 
 the `Seq` `get` stay untranslated under java's own names and fail to compile there (M6). Measured on
 liqp: **14 -> 13**, one site, and the two refusals still reported.
 
+**And the refusal had ONE more answer under it, which is a whole-program question rather than a
+syntax one: stand on `this`.** `super.m` is java's non-virtual call of the nearest inherited `m` and
+`this.m` is the virtual one, so the two name THE SAME MEMBER exactly when nothing between them can
+override — neither the class itself, nor any class IN THE PROGRAM that extends it, declares `m`.
+Both halves are needed and each was checked: an override on the class makes `this.m` recurse into
+itself, and one on a SUBCLASS makes an instance of that subclass dispatch somewhere `super.m` never
+would. `superIsThis` asks exactly that of `Program`, transitively (`A extends B extends C`).
+
+Three things about the shape, none of them incidental:
+
+- **it is a FALLBACK, reached only where the super-placed rewrite failed.** Applied up front it
+  would move `super.putAll(m)` to `this.++=(m)` as well — the same call, and a diff for nothing. So
+  the retry runs `.orElse` behind `superPlaced`, and every arm that already translated is untouched;
+- **the retry goes back through the SAME function** with a `this` receiver, so no arm is spelled
+  twice. Its own receiver is not a `Super`, so it returns directly and the placement filter is then
+  trivially satisfied — applied anyway, because a filter omitted on the grounds that it holds is the
+  omission `superPlaced` exists to prevent;
+- **"in this program" is the honest scope and it is stated, not assumed.** An emitted class can be
+  extended by code the port never sees, and no whole-program question answers for that. What makes
+  it admissible is that the alternative is not a correct emission but NO emission — the refused
+  rewrite leaves a call that does not compile — so the choice is between an exact answer for every
+  subclass the program declares and no answer at all.
+
+Measured on liqp: **10 -> 9**, one site (`Sort$SortableMap#toString`), 3 member digests, every check
+count flat.
+
 *Fix kind: (a). Universal — a scala grammar rule, no library involved.*
 
 ### K6. `java.util.stream` — the CHAIN collapses; and the two rules that make that safe

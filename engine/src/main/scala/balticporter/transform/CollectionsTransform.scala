@@ -2242,7 +2242,66 @@ final class CollectionsTransform(
       case ("remove", List(x), Kind.Set)        => Some(infix(recv, opMinusEq, List(x), t, so)) // xs -= x
       case ("containsKey", List(key), Kind.Map) => Some(call(recv, containsSym, List(keyArg(key, recv)), t, so))
       case _                                    => None
-    if onSuper then out.filter(superPlaced) else out
+    if !onSuper then out
+    else
+      // …and where the shape it built puts `super` somewhere scala has no position for, there is
+      // ONE more answer before the refusal: stand on `this` instead. It is exact only under the
+      // whole-program condition [[superIsThis]] states, and the retry goes back through this same
+      // function so the rewritten term is built by the SAME arm — a second spelling of any arm here
+      // is a second thing to keep in step. The recursive call's own receiver is not a `Super`, so it
+      // returns directly and the `superPlaced` filter below is then trivially satisfied; it is
+      // applied anyway, because a filter that holds by construction is free and a filter omitted on
+      // the grounds that it holds is the omission `superPlaced` exists to prevent.
+      out.filter(superPlaced).orElse(
+        if superIsThis(recv, name) then rewrite(k, thisOf(recv), m, so, t).filter(superPlaced)
+        else scala.None)
+
+  /** may a rewrite that cannot stand on `super` stand on `this` instead — i.e. do `super.m` and
+    * `this.m` name THE SAME MEMBER for every value this expression can have?
+    *
+    * `super.m` is java's non-virtual call of the nearest inherited `m`. `this.m` is the virtual
+    * one, so the two agree exactly when nothing between them can override: neither the class
+    * itself, nor any class IN THIS PROGRAM that extends it, declares `m`. Both halves are needed —
+    * an override on the class itself makes `this.m` recurse into it, and one on a SUBCLASS makes an
+    * instance of that subclass dispatch somewhere `super.m` never would.
+    *
+    * "In this program" is the honest scope and it is stated rather than assumed: a class the port
+    * emits can be extended by code the port never sees, and no whole-program question can answer
+    * for that. What makes it admissible here is that the alternative is not a correct emission but
+    * NO emission — the refused rewrite leaves a call that does not compile — so the choice is
+    * between an exact answer for every subclass the program declares and no answer at all.
+    *
+    * Both walks read the class DEFINITIONS rather than the symbol table, because the question is
+    * "does a declaration exist", which is what a `ClassDef`'s body is; and the subclass walk is
+    * transitive (`A extends B extends C`), since an override two levels down dispatches exactly as
+    * one level down does. */
+  private def superIsThis(recv: Term, member: String)(using p: Program): Boolean = recv match
+    case Tree.Super(cls, _, _) if cls != SymId.None =>
+      val all      = PackageRenameTransform.allClasses(p)
+      val byId     = all.map(c => c.symbol -> c).toMap
+      def declares(c: Tree.ClassDef): Boolean = c.body.exists {
+        case d: Tree.DefDef => methodName(d.symbol) == member
+        case _              => false
+      }
+      def parentsOf(c: Tree.ClassDef): List[SymId] = c.parents.flatMap {
+        case tt: TypeTree => headSym(tt.tpe)
+        case term: Term   => headSym(term.tpe)
+      }
+      /** does `c` reach `cls` through its parents? Fuel-bounded, and a walk that exhausts its fuel
+        * counts as REACHING — the conservative answer, since the caller refuses on `true`. */
+      def below(c: Tree.ClassDef, fuel: Int): Boolean =
+        fuel <= 0 || parentsOf(c).exists(s => s == cls || byId.get(s).exists(below(_, fuel - 1)))
+      byId.get(cls).exists(!declares(_)) &&
+        !all.exists(c => c.symbol != cls && declares(c) && below(c, 64))
+    case _ => false
+
+  /** the `this` standing where `recv`'s `super` stood — same class, same origin. Its TYPE is the
+    * class's own, which is what every rewrite here reads the receiver's kind from
+    * ([[inheritedKind]] already answers for a class that EXTENDS a mapped collection, which is the
+    * only shape a `super` receiver can have). */
+  private def thisOf(recv: Term): Term = recv match
+    case Tree.Super(cls, tpe, so) => Tree.This(cls, tpe, so)
+    case other                    => other
 
   /** does every `super` in this rewritten term stand where scala allows one — as the QUALIFIER of a
     * member selection, and nowhere else?
