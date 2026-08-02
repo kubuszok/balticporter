@@ -29,7 +29,7 @@ sge.screen.ManagedScreenAdapter	sge.screen.ManagedScreenAdapter	class	eec8574591
 sge.screen.ManagedScreenAdapter	sge.screen.ManagedScreenAdapter#close()	def	d921dd803edaf315
 sge.screen.ManagedScreenAdapter	sge.screen.ManagedScreenAdapter#render(float)	def	f8e1c11dc9a4f8ed
 sge.screen.ManagedScreenAdapter	sge.screen.ManagedScreenAdapter#resize(int,int)	def	8251b8592695c3e9
-sge.screen.ScreenManager	sge.screen.ScreenManager	class	529a0c08a95f91d5
+sge.screen.ScreenManager	sge.screen.ScreenManager	class	efbeffc1b0883e5b
 sge.screen.ScreenManager	sge.screen.ScreenManager#LOG	val	fdc3453a8420c145
 sge.screen.ScreenManager	sge.screen.ScreenManager#autoDisposeScreens	val	efb7b49757df8768
 sge.screen.ScreenManager	sge.screen.ScreenManager#autoDisposeTransitions	val	a3856449bf869636
@@ -56,9 +56,9 @@ sge.screen.ScreenManager	sge.screen.ScreenManager#isTransitioning()	def	36f21f56
 sge.screen.ScreenManager	sge.screen.ScreenManager#lastFBO	val	b82ee1d48e2c2525
 sge.screen.ScreenManager	sge.screen.ScreenManager#lastScreen	val	10f4c6b9d0fe4208
 sge.screen.ScreenManager	sge.screen.ScreenManager#pause()	def	48a682fc331ccf12
-sge.screen.ScreenManager	sge.screen.ScreenManager#pushScreen(S,T)	def	01806f49d7aecdcf
+sge.screen.ScreenManager	sge.screen.ScreenManager#pushScreen(S,T)	def	c9befa11fdc4eb23
 sge.screen.ScreenManager	sge.screen.ScreenManager#pushScreen(Supplier<S>,Supplier<T>)	def	5d042cc8b175762c
-sge.screen.ScreenManager	sge.screen.ScreenManager#render(float)	def	710c8e38c0c5084f
+sge.screen.ScreenManager	sge.screen.ScreenManager#render(float)	def	2a08d12f1e6b32e2
 sge.screen.ScreenManager	sge.screen.ScreenManager#resize(int,int)	def	01cc3d8103461bc2
 sge.screen.ScreenManager	sge.screen.ScreenManager#resume()	def	dd64ca080263bacc
 sge.screen.ScreenManager	sge.screen.ScreenManager#setAutoDispose(boolean,boolean)	def	621a92f2a2cb3e33

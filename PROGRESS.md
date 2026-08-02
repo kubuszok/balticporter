@@ -1955,7 +1955,7 @@ written, 987 members in the source map. `just liqp-measure`.
 
 | | |
 |---|---|
-| scalac errors | **126 -> 47**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`) |
+| scalac errors | **126 -> 31**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`) |
 | `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
 | `jdk-surface` | **19 -> 10** |
@@ -2013,6 +2013,30 @@ porting a library from outside the family the engine grew up in.
   mean something else, each a §4.4 shape with no compile error of its own: an `Object[]` component
   type, a filled-not-allocated argument, a null terminator, a write-through view, and a return
   value that is the PREVIOUS one.
+- **`ENGINE-LIMITS.md` L4 (new)** — a Scala KEYWORD as a PACKAGE SEGMENT was never escaped. `esc`
+  has had the keyword set from the beginning and every name the emitter renders BY HAND goes
+  through it; a `Symbol.fullName` is a PATH and reached the output verbatim at four call sites.
+  Five corpus libraries had no keyword segment; jackson ships one (`…core.type.TypeReference`).
+  Nothing but scalac can count it and that is the right counting — the failure is a SYNTAX error, so
+  the emitted text is not a file and there is no emitted-text check to add.
+- **`ENGINE-LIMITS.md` K6.5, third case** — the vararg PACK stops at the program's edge. The loud
+  half was 9 errors; the SILENT half was 9 more in the same library, because `Array[Object]`
+  conforms to an `Object...` slot and `String.format(fmt, Array[Object](a, b))` passes the whole
+  array as one `%s`. **No check can be built for that one**, and the reason is a fact rather than an
+  omission: `SpoonTir.descriptorOf` spells `T…` and `T[]` identically BY CONSTRUCTION, so the
+  vararg-ness lives only in the class file the frontend read and a tree-level check could do nothing
+  but read the frontend's answer back — which `BreakCatchCheck`'s contract forbids.
+- **`ENGINE-LIMITS.md` G2 (extended)** — an INFERENCE VARIABLE is not a raw type and reads like one.
+  A diamond's inferred argument has no binder in the reading scope, so the frontend interns a
+  MARKER; printed, `?E` names nothing and does not lex. The marker prefix now lives in `api`
+  (`Symbol.UnresolvedTypeVarPrefix`) and both sides read it there.
+- **`ENGINE-LIMITS.md` K7 (extended)** — an enhanced-for BINDING may be REASSIGNED, which K7's type
+  half does not cover. Same java fact `MutableParamsTransform` handles for a parameter, one node
+  kind out; the two reasons to re-bind compose into one alias.
+- **`ENGINE-LIMITS.md` T11 (closed)** — the DECLARED-collidee half of the promoted enum parameter.
+  What blocked it was not visibility but the ROUTE: `enumDef` promotes the parameters without
+  consulting `CtorFunnel`, so the §4.55 pass had nothing to place. NARROW where the plan-based arm
+  is blanket, because an enum parameter is emitted SURFACE.
 
 ### 10.5.3 Remaining, classified
 
@@ -2025,19 +2049,30 @@ plus two rules about position:
 | `Map.Entry` where a class IMPLEMENTS it — read as M6's answer, an inexpressible parent | **a counted refusal, and 2 fewer errors.** The parent stays JAVA's, because a phase may not emit a parent its target cannot BE; `setValue` remains the deliberate refusal K2 already recorded (K5.7) |
 | a retyped collection at a class file's FORMAL | **0.** K15's consumer half, unblocked by `SpoonTir` interning external members with their `MethodType` |
 
-**What is left, named.** A Scala KEYWORD in an emitted package segment
-(`com.fasterxml.jackson.core.type`) is still the clearest §1(a) in the residue and is the emitter's
-(3 errors, plus the `MAP_TYPE_REF` E134 that follows from it). Two java vararg families —
-`Arrays.asList(arr)`'s aliasing refusal (K6.5) and an external `String...` pack — are 18 between
-them. **F11 is 4 and now has an exact diagnosis rather than a nonsense one**: `list ++= valueList`
-where `list` is a `Buffer[Object]` and `valueList` a `Buffer[?]` reads `Required:
-IterableOnce[Object]` since `? super Object` renders as `Object`, and what blocks it is that a java
-`?` is `? extends Object` while a Scala `?` is bounded by `Any` — G2 measured that whole design
-space and settled on `[?]`, so widening it is not a change to make for four sites. The last E035 is
-a `JavaCollection[? <: ?E]` diamond, where `?E` is the frontend's interning of an unresolved type
-variable reaching a TERM position. D-liqp-1 × D-liqp-2 — an external generated parser that
-references back INTO the renamed library — costs exactly one error and cannot be fixed without
-porting or regenerating it.
+**…and the emitter-and-constructor families that dominated the rest are settled too**, by six
+changes none of which is (b) or (c):
+
+| was | now |
+|---|---|
+| a Scala KEYWORD in an emitted package segment (`com.fasterxml.jackson.core.type`) — 3 errors plus the `MAP_TYPE_REF` E134 that followed from it | **0.** `esc` answered for an IDENTIFIER and a `Symbol.fullName` is a PATH; `escPath` escapes per segment at §4.56's separators (L4, new) |
+| an EXTERNAL java vararg pack — 9 errors, **and 9 more that COMPILED** (`String.format(fmt, Array[Object](a, b))` conforms and passes the whole array as one `%s`) | **0.** The pack stops at the program's edge: `Tree.Repeated` for an external callee, flattened in argument position (K6.5, third case) |
+| a diamond's INFERRED type argument printed as `?E` — 1 error, and the only E035 4a's wildcard work left | **0.** A marker is not a name; the bound is dropped and `?` is what G2 already settled (G2) |
+| an enhanced-for BINDING reassigned in the body | **0.** K7's alias with `var` and no cast — the same fact `MutableParamsTransform` handles for a parameter (K7) |
+| a promoted ENUM parameter against a DECLARED method — 2 errors | **0.** T11's remaining half; what blocked it was the ROUTE, not visibility — `enumDef` promotes without `CtorFunnel`, so the §4.55 pass had nothing to place (T11) |
+| `PlainBigDecimal`'s dropped `super(args)` | **0**, by K5.5 once the external signature became readable |
+
+**What is left, 31.** `Arrays.asList(arr)`'s aliasing refusal (K6.5) is 9 and deliberate.
+`Insertions.of`/`Filters.of` overloads broken by a retyped argument are 5. **F11 is 4 and now has an
+exact diagnosis rather than a nonsense one**: `list ++= valueList` where `list` is a
+`Buffer[Object]` and `valueList` a `Buffer[?]` reads `Required: IterableOnce[Object]` since
+`? super Object` renders as `Object`, and what blocks it is that a java `?` is `? extends Object`
+while a Scala `?` is bounded by `Any` — G2 measured that whole design space and settled on `[?]`, so
+widening it is not a change to make for four sites. `LiquidException` is 0 errors and a SILENT §4.4
+defect: three roots, three different `super(...)`, none promotable, so every exception it throws has
+a null message and no cause — C3 now names the one missing shape (a synthesised primary at the JDK
+throwable's widest overload) and the padding it would delegate to, which is already built.
+D-liqp-1 × D-liqp-2 — an external generated parser that references back INTO the renamed library —
+costs exactly one error and cannot be fixed without porting or regenerating it.
 
 ---
 

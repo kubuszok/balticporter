@@ -1,4 +1,6 @@
 #id	check	kind	owner	path	line	detail
+19fcfd25a2de	collection-boundary	ExternalCallee	@3#removeAll(java.util.Collection)	space/earlygrey/simplegraphs/Path.java	103	argument: Found balticporter.runtime.JavaCollection / Required java.util.Collection
+449f2ab1b62a	collection-boundary	ExternalCallee	@3#retainAll(java.util.Collection)	space/earlygrey/simplegraphs/Path.java	109	argument: Found balticporter.runtime.JavaCollection / Required java.util.Collection
 0b4620f437a2	jdk-surface	unhandled	java.util.ArrayDeque#clear()	space/earlygrey/simplegraphs/algorithms/BreadthFirstSearch.java	35	java.util.ArrayDeque#clear() — retyped to scala.collection.mutable.ArrayDeque, no rewrite (2 site(s))
 7a060875b2ba	jdk-surface	unhandled	java.util.Arrays#copyOf(T[],int)	space/earlygrey/simplegraphs/Array.java	131	java.util.Arrays#copyOf(T[],int) — retyped to java.util.Arrays, no rewrite (5 site(s))
 1dd81a9b15ef	jdk-surface	unhandled	java.util.Arrays#fill(Object[],Object)	space/earlygrey/simplegraphs/Array.java	136	java.util.Arrays#fill(Object[],Object) — retyped to java.util.Arrays, no rewrite (1 site(s))

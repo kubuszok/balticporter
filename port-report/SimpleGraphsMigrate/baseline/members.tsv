@@ -226,7 +226,7 @@ sge.graphs.Node	sge.graphs.Node#setPrev(Node<V>)	def	3dd2cc512817724e
 sge.graphs.Node	sge.graphs.Node#setProcessed(boolean)	def	bf111d225ace7751
 sge.graphs.Node	sge.graphs.Node#setSeen(boolean)	def	d6150f469a3e6de7
 sge.graphs.Node	sge.graphs.Node#toString()	def	0b96b2844b534170
-sge.graphs.NodeCollection	sge.graphs.NodeCollection	class	2e3a884acb33a487
+sge.graphs.NodeCollection	sge.graphs.NodeCollection	class	90608e81e3b6ad0f
 sge.graphs.NodeCollection	sge.graphs.NodeCollection#<stmt1>	stmt	5fcb8a0c322f9567
 sge.graphs.NodeCollection	sge.graphs.NodeCollection#add(Node<V>)	def	8a32c6cc84d345d2
 sge.graphs.NodeCollection	sge.graphs.NodeCollection#addAll(JavaCollection<?>)	def	1357536d4fc63a10
@@ -234,7 +234,7 @@ sge.graphs.NodeCollection	sge.graphs.NodeCollection#clear()	def	b7f33019981e017e
 sge.graphs.NodeCollection	sge.graphs.NodeCollection#contains(Object)	def	b38aa8e201cae9c6
 sge.graphs.NodeCollection	sge.graphs.NodeCollection#containsAll(JavaCollection<?>)	def	4ef99d6eb2f2f731
 sge.graphs.NodeCollection	sge.graphs.NodeCollection#equals(Any)	def	6a5ef040c7ec0c1f
-sge.graphs.NodeCollection	sge.graphs.NodeCollection#hashCode()	def	1dcd0a6a4629f3f9
+sge.graphs.NodeCollection	sge.graphs.NodeCollection#hashCode()	def	6ef167ac0fa01a45
 sge.graphs.NodeCollection	sge.graphs.NodeCollection#iterator()	def	0be77a6e2b597f26
 sge.graphs.NodeCollection	sge.graphs.NodeCollection#nodeMap	val	86acb5063a2767f4
 sge.graphs.NodeCollection	sge.graphs.NodeCollection#remove(Object)	def	1a4b5fd66d284005
@@ -323,7 +323,7 @@ sge.graphs.UndirectedGraph	sge.graphs.UndirectedGraph#getEdge(Node<V>,Node<V>)	d
 sge.graphs.UndirectedGraph	sge.graphs.UndirectedGraph#isDirected()	def	5fa6d2f482369757
 sge.graphs.UndirectedGraph	sge.graphs.UndirectedGraph#obtainEdge()	def	7769b7ddf29d0b38
 sge.graphs.UndirectedGraph	sge.graphs.UndirectedGraph#removeConnection(Node<V>,Node<V>)	def	8c78b722488fd26c
-sge.graphs.VertexCollection	sge.graphs.VertexCollection	class	2bfea48fc41c78ab
+sge.graphs.VertexCollection	sge.graphs.VertexCollection	class	c36d3a288988b676
 sge.graphs.VertexCollection	sge.graphs.VertexCollection#<stmt1>	stmt	5fcb8a0c322f9567
 sge.graphs.VertexCollection	sge.graphs.VertexCollection#add(V)	def	b397e0e55f650e7f
 sge.graphs.VertexCollection	sge.graphs.VertexCollection#addAll(JavaCollection<?>)	def	56b6c92a84d79ebe
@@ -331,7 +331,7 @@ sge.graphs.VertexCollection	sge.graphs.VertexCollection#clear()	def	b7f33019981e
 sge.graphs.VertexCollection	sge.graphs.VertexCollection#contains(Object)	def	4bcedea5aa385a66
 sge.graphs.VertexCollection	sge.graphs.VertexCollection#containsAll(JavaCollection<?>)	def	a28d58ee5ac87443
 sge.graphs.VertexCollection	sge.graphs.VertexCollection#equals(Any)	def	9483dcd4b1235c0f
-sge.graphs.VertexCollection	sge.graphs.VertexCollection#hashCode()	def	1dcd0a6a4629f3f9
+sge.graphs.VertexCollection	sge.graphs.VertexCollection#hashCode()	def	6ef167ac0fa01a45
 sge.graphs.VertexCollection	sge.graphs.VertexCollection#isEmpty()	def	16357cd7a07eb946
 sge.graphs.VertexCollection	sge.graphs.VertexCollection#iterator()	def	20bcda7df781f25e
 sge.graphs.VertexCollection	sge.graphs.VertexCollection#nodeMap	val	86acb5063a2767f4

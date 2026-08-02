@@ -90,9 +90,9 @@ member	de.eskalon.commons.screen.ScreenManager#isTransitioning()	sge.screen.Scre
 member	de.eskalon.commons.screen.ScreenManager#lastFBO	sge.screen.ScreenManager#lastFBO	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	75	b82ee1d48e2c2525	vis=private
 member	de.eskalon.commons.screen.ScreenManager#lastScreen	sge.screen.ScreenManager#lastScreen	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	87	10f4c6b9d0fe4208	
 member	de.eskalon.commons.screen.ScreenManager#pause()	sge.screen.ScreenManager#pause()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	385	48a682fc331ccf12	
-member	de.eskalon.commons.screen.ScreenManager#pushScreen(S,T)	sge.screen.ScreenManager#pushScreen(S,T)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	208	01806f49d7aecdcf	
+member	de.eskalon.commons.screen.ScreenManager#pushScreen(S,T)	sge.screen.ScreenManager#pushScreen(S,T)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	208	c9befa11fdc4eb23	
 member	de.eskalon.commons.screen.ScreenManager#pushScreen(Supplier,Supplier)	sge.screen.ScreenManager#pushScreen(Supplier<S>,Supplier<T>)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	243	5d042cc8b175762c	
-member	de.eskalon.commons.screen.ScreenManager#render(float)	sge.screen.ScreenManager#render(float)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	259	710c8e38c0c5084f	
+member	de.eskalon.commons.screen.ScreenManager#render(float)	sge.screen.ScreenManager#render(float)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	259	2a08d12f1e6b32e2	
 member	de.eskalon.commons.screen.ScreenManager#resize(int,int)	sge.screen.ScreenManager#resize(int,int)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	360	01cc3d8103461bc2	
 member	de.eskalon.commons.screen.ScreenManager#resume()	sge.screen.ScreenManager#resume()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	398	dd64ca080263bacc	
 member	de.eskalon.commons.screen.ScreenManager#setAutoDispose(boolean,boolean)	sge.screen.ScreenManager#setAutoDispose(boolean,boolean)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	180	621a92f2a2cb3e33	

@@ -259,7 +259,7 @@ member	space.earlygrey.simplegraphs.NodeCollection#clear()	sge.graphs.NodeCollec
 member	space.earlygrey.simplegraphs.NodeCollection#contains(Object)	sge.graphs.NodeCollection#contains(Object)	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	49	b38aa8e201cae9c6	
 member	space.earlygrey.simplegraphs.NodeCollection#containsAll(JavaCollection)	sge.graphs.NodeCollection#containsAll(JavaCollection<?>)	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	104	4ef99d6eb2f2f731	
 member	space.earlygrey.simplegraphs.NodeCollection#equals(Any)	sge.graphs.NodeCollection#equals(Any)	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	135	6a5ef040c7ec0c1f	
-member	space.earlygrey.simplegraphs.NodeCollection#hashCode()	sge.graphs.NodeCollection#hashCode()	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	143	1dcd0a6a4629f3f9	
+member	space.earlygrey.simplegraphs.NodeCollection#hashCode()	sge.graphs.NodeCollection#hashCode()	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	143	6ef167ac0fa01a45	
 member	space.earlygrey.simplegraphs.NodeCollection#iterator()	sge.graphs.NodeCollection#iterator()	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	54	0be77a6e2b597f26	
 member	space.earlygrey.simplegraphs.NodeCollection#nodeMap	sge.graphs.NodeCollection#nodeMap	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	37	86acb5063a2767f4	
 member	space.earlygrey.simplegraphs.NodeCollection#remove(Object)	sge.graphs.NodeCollection#remove(Object)	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	98	1a4b5fd66d284005	
@@ -351,7 +351,7 @@ member	space.earlygrey.simplegraphs.VertexCollection#clear()	sge.graphs.VertexCo
 member	space.earlygrey.simplegraphs.VertexCollection#contains(Object)	sge.graphs.VertexCollection#contains(Object)	Renamed	-	space/earlygrey/simplegraphs/VertexCollection.java	54	4bcedea5aa385a66	
 member	space.earlygrey.simplegraphs.VertexCollection#containsAll(JavaCollection)	sge.graphs.VertexCollection#containsAll(JavaCollection<?>)	Renamed	-	space/earlygrey/simplegraphs/VertexCollection.java	103	a28d58ee5ac87443	
 member	space.earlygrey.simplegraphs.VertexCollection#equals(Any)	sge.graphs.VertexCollection#equals(Any)	Renamed	-	space/earlygrey/simplegraphs/VertexCollection.java	132	9483dcd4b1235c0f	
-member	space.earlygrey.simplegraphs.VertexCollection#hashCode()	sge.graphs.VertexCollection#hashCode()	Renamed	-	space/earlygrey/simplegraphs/VertexCollection.java	140	1dcd0a6a4629f3f9	
+member	space.earlygrey.simplegraphs.VertexCollection#hashCode()	sge.graphs.VertexCollection#hashCode()	Renamed	-	space/earlygrey/simplegraphs/VertexCollection.java	140	6ef167ac0fa01a45	
 member	space.earlygrey.simplegraphs.VertexCollection#isEmpty()	sge.graphs.VertexCollection#isEmpty()	Renamed	-	space/earlygrey/simplegraphs/VertexCollection.java	49	16357cd7a07eb946	
 member	space.earlygrey.simplegraphs.VertexCollection#iterator()	sge.graphs.VertexCollection#iterator()	Renamed	-	space/earlygrey/simplegraphs/VertexCollection.java	59	20bcda7df781f25e	
 member	space.earlygrey.simplegraphs.VertexCollection#nodeMap	sge.graphs.VertexCollection#nodeMap	Renamed	-	space/earlygrey/simplegraphs/VertexCollection.java	37	86acb5063a2767f4	
