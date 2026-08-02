@@ -1974,7 +1974,7 @@ written, 987 members in the source map. `just liqp-measure`.
 
 | | |
 |---|---|
-| scalac errors | main source set **126 -> 31 -> 27 -> 8**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); BOTH source sets **90 -> … -> 50 -> 38 -> 26 -> 22 -> 19 -> 14 -> 13 -> 10** (the collections endgame: K6.5's aliasing view took 12, G23's wildcard `addAll` 4, `asList`'s explicit type argument 5, three unnamed JDK members 3, K5.8's `super` placement 1, and D-liqp-1b's build-step rename the three namespace seams) |
+| scalac errors | main source set **126 -> 31 -> 27 -> 8 -> 1**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); BOTH source sets **90 -> … -> 50 -> 38 -> 26 -> 22 -> 19 -> 14 -> 13 -> 10 -> 3** (the collections endgame: K6.5's aliasing view took 12, G23's wildcard `addAll` 4, `asList`'s explicit type argument 5, three unnamed JDK members 3, K5.8's `super` placement 1, and D-liqp-1b's build-step rename the three namespace seams; then the residue wave took **10 -> 9 -> 8 -> 7 -> 6 -> 5 -> 4 -> 3**, one engine change each — K5.8's `this` fallback, K5.7's loop-reachable `setValue`, K5.9's method-reference lowering, K15's external FIELD, K6's unterminated stream, K15's occurrence-not-equality pass-through, and G22's bound pin) |
 | `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
 | `jdk-surface` | **19 -> 10 -> 9** — `anyMatch`/`sortNatural`/`ConcurrentHashMap` stopped reading as this port's wall once the tables named them |
@@ -2243,7 +2243,7 @@ source sets on one invocation and splits the wall by the path scalac printed.
 |---|---|
 | emitted | **101 Scala test files** from 105 java (4 excluded, below), 788 members in the source map |
 | tests | 639 `@Test` upstream -> **577 emitted** (munit 577, junit residue **0** — the whole JUnit surface converted) |
-| scalac errors | **main 27 -> 8 -> 7, test 49 -> 29 -> 25 -> 23 -> 11 -> 5 -> 3**, all `EngineGap`; the two source sets are never summed, because a test-set error is frequently a cascade of a main-set one |
+| scalac errors | **main 27 -> 8 -> 7 -> 1, test 49 -> 29 -> 25 -> 23 -> 11 -> 5 -> 3 -> 2**, all `EngineGap`; the two source sets are never summed, because a test-set error is frequently a cascade of a main-set one |
 | `portability(emitted)` | **1467**, dominated by hamcrest (725 `assertThat` + 667 `is`/`equalTo`), which the conversion deliberately leaves in place and `ENGINE-LIMITS.md` X6's `org.hamcrest.` rule is what counts |
 | `omissions` | **8** — dropped `@SuppressWarnings` on anonymous-class fields |
 | `trivia` | **0 lost**, 1 recovered (`TestUtils.java:17`) |
