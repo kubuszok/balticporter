@@ -515,6 +515,31 @@ Measured at **1 error** on liqp (`TemplateContext.getRegistry`, called for its e
 
 *Fix kind: (a) engine, unbuilt.*
 
+### G23. Java's `?` is bounded by `Object`; scala's is bounded by `Any` — and the gap is one operation wide
+
+CLOSED. `java.util.List<?>` means `List<? extends Object>` — java's unbounded wildcard carries an
+implicit `Object` upper bound — so every element read off one IS an `Object` and
+`list.addAll(valueList)` type-checks with no cast anywhere in the source. Scala's `?` is bounded by
+`Any`, which is strictly wider, so `Buffer[?]` is an `IterableOnce[Any]` and `dst ++= src` on a
+`Buffer[Object]` reads `Found: Buffer[?] / Required: IterableOnce[Object]`.
+
+**Do not fix this by changing what `?` renders as.** G2 measured that whole design space and settled
+on `[?]` everywhere — parent, override and field alike — which is also what the reference port
+emits, and the wildcard round-trips across an override precisely because it says nothing. Widening
+it to `? <: Object` to satisfy four call sites would move every raw generic in every port.
+
+So the difference is stated at the ONE operation it blocks: `JavaCollections.addAll(dst, src)`,
+which performs java's own read (`asInstanceOf[E]` on an erased parameter is a no-op at run time, so
+it throws nothing java's own unchecked `addAll` would not) and returns java's `boolean` besides,
+which `++=` does not. The rewrite is keyed structurally on the SOURCE's sole type argument being a
+`TypeBounds`, and deliberately nothing wider: a source with a real element type conforms through
+`IterableOnce`'s covariance, so every other `addAll` in the corpus stays the idiomatic `++=`.
+
+Measured on liqp: **26 → 22**, four sites (`Push`, `Unshift`), 4 member digests, every check count
+flat and no other port's output moved.
+
+*Fix kind: (a). Universal — a bound java writes implicitly and scala writes differently.*
+
 ---
 
 ## 2. Constructors

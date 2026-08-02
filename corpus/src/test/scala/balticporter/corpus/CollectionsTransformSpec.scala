@@ -461,6 +461,57 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "B.of(balticporter.runtime.JavaCollection.from(balticporter.runtime.JavaCollections.asList(a, b)))")
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // F11 — `addAll` from an UNBOUNDED WILDCARD source. Java's `List<?>` is `List<? extends Object>`,
+  // so reading it as `Object` is sound and `list.addAll(valueList)` needs no cast anywhere; scala's
+  // `?` is bounded by `Any`, so `Buffer[?]` is an `IterableOnce[Any]` and `++=` on a
+  // `Buffer[Object]` reads `Required: IterableOnce[Object]`. Widening scala's `?` is G2's measured
+  // dead end, so the difference is stated at the one operation it blocks.
+  // ---------------------------------------------------------------------------------------------
+
+  private val wildcardAddAll =
+    """package demo;
+      |import java.util.*;
+      |class W {
+      |  List<Object> merge(List<?> a, List<?> b) {
+      |    List<Object> out = new ArrayList<>();
+      |    out.addAll(a);
+      |    out.addAll(b);
+      |    return out;
+      |  }
+      |  void plain(List<String> src, List<String> dst) { dst.addAll(src); }
+      |}
+      |""".stripMargin
+
+  test("addAll from a WILDCARD source becomes the helper that states java's read") {
+    val p = port(wildcardAddAll, new CollectionsTransform)
+    assertEmits(p, "balticporter.runtime.JavaCollections.addAll(out, a)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.addAll(out, b)")
+    assertNotEmits(p, "out ++= a")
+  }
+
+  test("…and a source with a REAL element type stays `++=` — the narrowness is the point") {
+    // `Buffer[String]` conforms to `IterableOnce[Object]` through covariance, so nothing is wrong
+    // with `++=` there and every port in the corpus keeps emitting it. A blanket helper would have
+    // moved every `addAll` in every library for four sites in one.
+    val p = port(wildcardAddAll, new CollectionsTransform)
+    assertEmits(p, "dst ++= src")
+    assertNotEmits(p, "JavaCollections.addAll(dst, src)")
+  }
+
+  test("`putAll` is untouched by it — a map is not the shape this is about") {
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class M {
+        |  void copy(Map<String, ?> src, Map<String, Object> dst) { dst.putAll(src); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "dst ++= src")
+  }
+
   test("an IN-PROGRAM vararg method still receives the materialised array — the convention holds") {
     val p = port(asList, new CollectionsTransform)
     // the pack is only opened for the one helper declared `A*`; a java `T...` parameter is still

@@ -198,6 +198,46 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // addAll — java's read off an UNBOUNDED WILDCARD source
+  // -------------------------------------------------------------------------------------------
+
+  test("addAll appends in iteration order and returns java's `changed` boolean") {
+    val dst = scala.collection.mutable.ArrayBuffer[Object]("a")
+    assert(JavaCollections.addAll(dst, List[Object]("b", "c")))
+    assertEquals(dst.toList, List[Object]("a", "b", "c"))
+    // java's `addAll` returns FALSE for an empty source, and code branches on it
+    assert(!JavaCollections.addAll(dst, Nil))
+    assertEquals(dst.size, 3)
+  }
+
+  test("a WILDCARD-elemented source reaches an Object destination — the whole of F11") {
+    // this is the call that does not type as `dst ++= src`: java's `List<?>` is
+    // `List<? extends Object>`, scala's `?` is bounded by `Any`.
+    val src: scala.collection.mutable.Buffer[?] = scala.collection.mutable.ArrayBuffer("x", 1)
+    val dst = scala.collection.mutable.ArrayBuffer.empty[Object]
+    assert(JavaCollections.addAll(dst, src))
+    assertEquals(dst.toList, List[Object]("x", java.lang.Integer.valueOf(1)))
+  }
+
+  test("…and the cast is java's ERASURE, so nothing throws that java would not") {
+    // `E` is erased, so `asInstanceOf[E]` is a no-op — exactly what java's own unchecked `addAll`
+    // does. A value that does not belong shows up where java shows it: at the READ, not here.
+    val src: scala.collection.mutable.Buffer[?] = scala.collection.mutable.ArrayBuffer(1, 2)
+    val dst = scala.collection.mutable.ArrayBuffer.empty[String]
+    assert(JavaCollections.addAll(dst, src))
+    assertEquals(dst.size, 2)
+  }
+
+  test("addAll takes any IterableOnce source — a Set and a map's entries, as java's Collection does") {
+    val dst = scala.collection.mutable.ArrayBuffer.empty[Object]
+    JavaCollections.addAll(dst, scala.collection.mutable.Set[Object]("s"))
+    assertEquals(dst.toList, List[Object]("s"))
+    val dst2 = scala.collection.mutable.ArrayBuffer.empty[Object]
+    JavaCollections.addAll(dst2, scala.collection.mutable.Map("k" -> 1))
+    assertEquals(dst2.toList, List[Object](("k", 1)))
+  }
+
+  // -------------------------------------------------------------------------------------------
   // Arrays.asList(T[]) — the ALIASING form, which is a live fixed-size VIEW and not a copy
   // -------------------------------------------------------------------------------------------
 

@@ -107,6 +107,29 @@ object JavaCollections:
     * no ported member for a collection trait's inherited names to collide with. */
   def asListView[A](arr: Array[A]): scala.collection.mutable.Buffer[A] = new ArrayViewBuffer[A](arr)
 
+  /** `java.util.Collection.addAll(Collection<?>)` — java's read off an UNBOUNDED WILDCARD.
+    *
+    * `List<?>` in java means `List<? extends Object>`: the unbounded wildcard's implicit upper
+    * bound is `Object`, so every element read off one IS an `Object` and `list.addAll(valueList)`
+    * needs no cast. Scala's `?` is bounded by `Any`, which is strictly wider — `Buffer[?]` is an
+    * `IterableOnce[Any]`, and `dst ++= src` on a `Buffer[Object]` reads
+    * `Required: IterableOnce[Object]`.
+    *
+    * The cast here is java's ERASURE, stated: at run time `E` is erased, the source's elements are
+    * whatever java put in them, and `asInstanceOf[E]` on an erased parameter is a no-op — so this
+    * throws nothing java would not, and adds nothing java's own unchecked `addAll` does not.
+    *
+    * The RESULT is java's too: `addAll` returns whether the collection changed, and code branches
+    * on it. `++=` returns the buffer.
+    *
+    * `IterableOnce[?]` rather than `Buffer[?]` on the source so the one signature serves every
+    * java collection the retyping produces — a `Set`, a `Buffer` and a map's entry view are all
+    * `IterableOnce`, and java's `addAll` takes a `Collection` without caring which. */
+  def addAll[E](dst: scala.collection.mutable.Buffer[E], src: scala.collection.IterableOnce[?]): Boolean =
+    val before = dst.size
+    dst ++= src.iterator.map(_.asInstanceOf[E])
+    dst.size != before
+
   /** `java.util.Collection.remove(Object)` — removal BY VALUE, which scala's `Buffer` does not have.
     *
     * Not `Collections`', and deliberately here anyway: like every other member of this object it

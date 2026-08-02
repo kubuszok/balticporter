@@ -2169,10 +2169,39 @@ final class CollectionsTransform(
         Some(Tree.Select(call(recv, removeHeadOptionSym, Nil, t, so), orNullSym, t.tpe, so))
       case ("peek" | "peekFirst" | "element", Nil, Kind.Seq) =>
         Some(Tree.Select(Tree.Select(recv, headOptionSym, TypeRepr.NoType, so), orNullSym, t.tpe, so))
+      // `addAll` from a WILDCARD-elemented source is not `++=` — see [[wildcardElement]]. Java's
+      // `List<?>` is `List<? extends Object>`, so reading it as `Object` is sound and java accepts
+      // `list.addAll(valueList)`; scala's `?` is bounded by `Any`, so `Buffer[?]` is an
+      // `IterableOnce[Any]` and `++=` on a `Buffer[Object]` reads
+      // `Required: IterableOnce[Object]`. The helper states java's read explicitly and returns
+      // java's own `boolean` besides.
+      case ("addAll", List(c), _) if wildcardElement(c.tpe) && sym("addAll") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("addAll"), TypeRepr.NoType, so), List(recv, c),
+                        sym("addAll"), t.tpe, t.origin))
       case ("addAll" | "putAll", List(c), _)    => Some(infix(recv, opPlusPlusEq, List(c), t, so))// xs ++= c
       case ("remove", List(x), Kind.Set)        => Some(infix(recv, opMinusEq, List(x), t, so)) // xs -= x
       case ("containsKey", List(key), Kind.Map) => Some(call(recv, containsSym, List(keyArg(key, recv)), t, so))
       case _                                    => None
+
+  /** is this source's SOLE element type an unnameable wildcard — the whole of F11?
+    *
+    * `java.util.List<?>` means `List<? extends Object>`: java's unbounded wildcard has `Object` as
+    * its implicit upper bound, so every read off one yields an `Object` and
+    * `list.addAll(valueList)` type-checks with no cast anywhere in sight. Scala's `?` is bounded by
+    * `Any`, which is strictly wider — `Buffer[?]` is an `IterableOnce[Any]`, and `++=` on a
+    * `Buffer[Object]` reads `Found: Buffer[?] / Required: IterableOnce[Object]`.
+    *
+    * Widening scala's `?` is not the fix and is a measured dead end: G2 explored that whole design
+    * space and settled on rendering a raw generic as `[?]` everywhere, which is also what the
+    * reference port emits. So the difference is stated at the ONE operation it blocks, by a helper
+    * that performs java's own read, rather than by moving what a wildcard means.
+    *
+    * Narrow deliberately: only a sole type argument that IS a `TypeBounds`. A source with a real
+    * element type conforms through `IterableOnce`'s covariance and stays the idiomatic `++=`,
+    * which is what every other port in the corpus emits today. */
+  private def wildcardElement(t: TypeRepr): Boolean = t match
+    case TypeRepr.AppliedType(_, List(_: TypeRepr.TypeBounds)) => true
+    case _                                                     => false
 
   /** did java resolve `Collection.remove(Object)` (by VALUE, returning `boolean`) rather than
     * `List.remove(int)` (by INDEX, returning the element)? See the `remove` arm in [[rewrite]] for
@@ -2551,7 +2580,7 @@ object CollectionsTransform:
   private[balticporter] val UninheritableTargets: Set[String] = Set("scala.Tuple2")
 
   val StaticHelpers: List[String] =
-    List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView", "removeValue",
+    List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView", "addAll", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
