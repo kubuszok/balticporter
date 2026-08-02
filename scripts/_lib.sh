@@ -319,6 +319,78 @@ compile_guard() {
   fi
 }
 
+# error_baseline_guard <counted-errors> <report-dir>
+#
+# THE COMPILE-ERROR COUNT IS A MEASUREMENT, AND UNTIL NOW IT WAS THE ONLY ONE NOTHING COMPARED.
+#
+# Every other number a lane prints is diffed against a committed baseline: `findings.tsv` and
+# `counts.tsv` per check, `members.tsv` per emitted member, `tests.tsv` per test. The headline
+# number — the one every commit subject quotes and the one CLAUDE.md §3 calls the gate — was
+# printed and thrown away. So a lane could go from 0 errors to 3, print `TOTAL ERRORS: 3`, exit 0,
+# and `just measure-all` would run on through it to the next lane. Measured exactly that way: the
+# screens lane read 0 -> 3 across an engine wave and `measure-all` reported success, because a
+# non-zero error count is a legitimate state for a port that has not reached zero and no lane could
+# tell "3, as always" from "3, as of this commit".
+#
+# So the expected count is a ONE-LINE BASELINE FILE, `<report-dir>/baseline/expected-errors`, and a
+# mismatch fails the lane IN EITHER DIRECTION:
+#
+#   - MORE errors than the baseline is a regression, and stopping is the whole point;
+#   - FEWER is a change too, and it is ACKNOWLEDGED by re-accepting rather than absorbed. A lane
+#     that silently tolerated improvement would let a fix and a regression cancel in one run and
+#     report nothing — and a baseline that only ever moves up is not a baseline.
+#
+# The observed count is written to `<report-dir>/run-latest/errors-count` on every run, so
+# `just baseline-accept <port>` promotes it with the rest and nobody types a number.
+#
+# A MISSING baseline file is FATAL, for the reason `members-unchanged` is fatal on an input it
+# cannot compare: "nothing is comparing this" and "this compares clean" are indistinguishable from
+# the outside, and the second is the §3 false green.
+#
+# The verdict is PRINTED HERE and EXITED IN `headline`. Exiting on the spot would take the
+# correlation with it — and the correlation is the thing that says WHICH member and WHICH java line
+# the new errors came from, i.e. the only part of the run a regression needs.
+#
+# It travels between the two as a MARKER FILE, `run-latest/errors-baseline-failed`, and NOT as a
+# shell variable. A variable set inside `$(…)` is set in a subshell and reaches nobody — which is
+# how this gate first shipped, and the selfcheck caught it in the one shape a lane never uses. The
+# same rule §4.6 gives the debug flags: a marker crosses every boundary a variable does not. It is
+# rewritten (or removed) on every call, so a stale one from a previous run can never fail a run
+# that is now green.
+error_baseline_guard() {
+  local errors="$1" dir="$2"
+  local expected_file="$dir/baseline/expected-errors"
+  local marker="$dir/run-latest/errors-baseline-failed"
+  mkdir -p "$dir/run-latest" 2>/dev/null
+  echo "$errors" > "$dir/run-latest/errors-count"
+  rm -f "$marker"
+  if [ ! -f "$expected_file" ]; then
+    echo "!! NO ERROR BASELINE — nothing is comparing this lane's compile-error count."
+    echo "   $expected_file does not exist, so a 0 -> $errors regression would print and pass."
+    echo "   Seed it from this run's honest state: just baseline-accept <port>"
+    : > "$marker"; return 1
+  fi
+  local expected
+  expected=$(tr -dc '0-9' < "$expected_file")
+  if [ -z "$expected" ]; then
+    echo "!! ERROR BASELINE UNREADABLE — $expected_file holds no number."
+    : > "$marker"; return 1
+  fi
+  if [ "$errors" = "$expected" ]; then
+    echo "  errors vs baseline: $errors = $expected  (unchanged)"
+    return 0
+  fi
+  if [ "$errors" -gt "$expected" ]; then
+    echo "!! ERRORS ROSE — $expected -> $errors. This lane's compile REGRESSED."
+    echo "   The correlation below names the member and the java origin of every one of them."
+  else
+    echo "!! ERRORS FELL — $expected -> $errors. That is a change, and it is ACKNOWLEDGED, not absorbed."
+    echo "   Re-accept the baseline so the new floor is the one the next run is held to:"
+    echo "     just baseline-accept <port>"
+  fi
+  : > "$marker"; return 1
+}
+
 # show_check_report <report-dir>
 # The persisted, UNTRUNCATED check results and their diff against the committed baseline.
 show_check_report() {
@@ -409,4 +481,11 @@ headline() {
   echo "=================================================================="
   echo "HEADLINE  errors=$errors | $checks$tests"
   echo "=================================================================="
+  # …and the ERROR-COUNT gate, exited HERE rather than where it was decided, so a regression still
+  # gets its correlation printed (see `error_baseline_guard`). Last line of the lane, non-zero, so
+  # `measure-all` stops the sequence exactly as it does for a lost test.
+  if [ -f "$dir/run-latest/errors-baseline-failed" ]; then
+    echo "!! this lane FAILED its error baseline — see the 'errors vs baseline' line above"
+    exit 1
+  fi
 }

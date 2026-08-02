@@ -446,6 +446,17 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   - **`decisions.tsv` + the porter notes** — how many non-mechanical decisions the port made, by
     kind, and whether every one of them reached the code (§4.575). `porter-notes` is the check;
     `just decision-counts` is the size, which nothing else prints.
+- **THE ERROR COUNT IS BASELINED TOO, and in BOTH directions.** It is the number every commit
+  subject quotes and it was the one measurement nothing compared — every check, every member digest
+  and every test outcome was diffed against a committed file, while the headline was printed and
+  thrown away. So a lane could go 0 -> 3 and `measure-all` would run straight through it, because a
+  non-zero count is a legitimate state for a port that has not reached zero and no lane could tell
+  "3, as always" from "3, as of this commit". Measured exactly that way on the screens lane.
+  `baseline/expected-errors` is a one-line file per lane, written by the run itself
+  (`run-latest/errors-count`) and promoted by `just baseline-accept`, so nobody ever types the
+  number — a hand-edited floor is the one baseline that can disagree with the run that produced it.
+  **Fewer errors fails the lane as loudly as more**: a change is acknowledged by re-accepting, and a
+  lane that absorbed improvement would let a fix and a regression cancel inside one run.
 - **Change one thing, then measure.** Two changes measured together cost a full cycle to untangle
   and tell you nothing about either.
 - **A DRY RUN of one phase is not a measurement of the pipeline.** Running a single phase over a

@@ -3520,6 +3520,38 @@ are exactly the members with no `def`/`val` keyword of their own.
 
 *Fix kind: (a) engine.*
 
+### M9. A lane's ERROR COUNT was the one measurement nothing compared — 0 -> 3 exited 0
+
+CLOSED. Every number a lane prints is diffed against a committed baseline: `findings.tsv` and
+`counts.tsv` per check, `members.tsv` per emitted member, `tests.tsv` per test outcome. The
+COMPILE-ERROR TOTAL — the number CLAUDE.md §3 calls the gate and every commit subject quotes — was
+printed to stdout and thrown away.
+
+That is not a cosmetic gap, because a non-zero count is a LEGITIMATE state here: gltf sits at 3 and
+noise4j at 2 for reasons both ports have written down. So no lane could distinguish "3, as always"
+from "3, as of this commit", and `measure-all` walked through a real regression reporting success —
+measured on the screens lane, whose 0 became 3 when K6.5's third case changed the shape of an
+external vararg call and a hand-written shim's five formals stopped matching. Nothing in the run
+said so; the regression was found by reading the capture.
+
+The fix is `baseline/expected-errors`, one line per lane, and three properties that are not
+optional:
+
+- **the number is WRITTEN BY THE RUN**, into `run-latest/errors-count`, and promoted by
+  `just baseline-accept`. A baseline a human types is the one baseline that can disagree with the
+  run that produced it;
+- **fewer errors fails the lane too.** A lane that silently absorbed improvement would let a fix and
+  a regression cancel inside one run and report nothing, and a floor that only ever moves up is not
+  a baseline. The message names `baseline-accept`, so acknowledging is one command;
+- **the verdict crosses to `headline` as a MARKER FILE, never a shell variable.** Exiting at the
+  guard would take the correlation with it — the part of the run that says which member and which
+  java line the new errors came from — so the decision and the exit are in different functions. The
+  first cut used a global, which is set in a subshell and reaches nobody; `just lane-selfcheck`
+  catches it in the one shape a lane never uses, and both directions plus the stale-marker case are
+  cases there now.
+
+*Fix kind: (a) engine — measurement machinery, no library involved.*
+
 ---
 
 ## 8. A DEPENDENT reading its base's published port map

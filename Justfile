@@ -249,6 +249,7 @@ gdx-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gdxmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gdxmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -327,6 +328,7 @@ gdx-test-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gdxtestmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxtestmeasure.txt
     echo "TOTAL ERRORS: $ERRORS"
+    error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head
 
     # -------------------------------------------------------------------------------------------
@@ -425,6 +427,7 @@ ashley-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/ashleymeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/ashleymeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/ashleymeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/ashleymeasure.txt))"
+    error_baseline_guard "$ERRORS" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/ashleymeasure.txt | sort | uniq -c | sort -rn | head
 
     if [ "$ERRORS" = "0" ]; then
@@ -519,6 +522,7 @@ anim8-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/anim8measure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/anim8measure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/anim8measure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/anim8measure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/anim8measure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/anim8measure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -633,6 +637,7 @@ gltf-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gltfmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/gltfmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gltfmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gltfmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gltfmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gltfmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -753,6 +758,7 @@ screens-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/screensmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/screensmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/screensmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/screensmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/screensmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/screensmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -854,6 +860,7 @@ vfx-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/vfxmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/vfxmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/vfxmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/vfxmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/vfxmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/vfxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -955,6 +962,7 @@ sg-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/sgmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/sgmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/sgmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/sgmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -1056,6 +1064,7 @@ noise4j-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/n4jmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/n4jmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/n4jmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/n4jmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/n4jmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/n4jmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -1141,6 +1150,7 @@ jbump-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/jbumpmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/jbumpmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/jbumpmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/jbumpmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -1357,6 +1367,7 @@ liqp-measure:
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/liqpmeasure.txt)
     compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/liqpmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/liqpmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/liqpmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$TREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. The two source sets are one
     # compile and two walls: the main port's figure is what `PROGRESS.md` §10.5 quotes, and a
     # test-set error is often a cascade of a main-set one. `correlate` below attributes every one of
@@ -1850,6 +1861,40 @@ lane-selfcheck:
       *) bad "a skip must still print DID NOT RUN" ;;
     esac
 
+    echo "-- error_baseline_guard --"
+    # The gate the screens lane's 0 -> 3 walked straight through. Both directions are failures and
+    # a missing baseline is a third: "nothing is comparing this" reads exactly like "this is clean".
+    mkdir -p "$T/eb/baseline" "$T/eb/run-latest"
+    printf '3\n' > "$T/eb/baseline/expected-errors"
+    out=$(error_baseline_guard 3 "$T/eb" 2>&1); rc=$?
+    want "an UNCHANGED error count does not fail the lane" "$rc" "0"
+    want "…and the run's observed count is written for baseline-accept" "$(cat "$T/eb/run-latest/errors-count")" "3"
+    ( headline 3 "$T/eb" ) > /dev/null 2>&1
+    want "…and headline exits 0 after it"                 "$?" "0"
+
+    out=$(error_baseline_guard 5 "$T/eb" 2>&1); rc=$?
+    want "a RISEN error count FAILS the lane" "$rc" "1"
+    case "$out" in *"ERRORS ROSE"*"3 -> 5"*) ok "…and states the before->after" ;; *) bad "…states the before->after" ;; esac
+    # The verdict has to CROSS A SUBSHELL — the capture above is one, and a shell variable set in it
+    # reaches nobody. That is exactly how this gate first shipped, and the marker file is the fix.
+    ( headline 5 "$T/eb" ) > /dev/null 2>&1
+    want "…and headline EXITS NON-ZERO for it, across the capture" "$?" "1"
+
+    out=$(error_baseline_guard 1 "$T/eb" 2>&1); rc=$?
+    want "a FALLEN error count fails the lane too" "$rc" "1"
+    case "$out" in *"baseline-accept"*) ok "…and names the promotion command" ;; *) bad "…names the promotion command" ;; esac
+
+    rm -f "$T/eb/baseline/expected-errors"
+    out=$(error_baseline_guard 0 "$T/eb" 2>&1); rc=$?
+    want "a MISSING error baseline is fatal, never clean" "$rc" "1"
+    case "$out" in *"NO ERROR BASELINE"*) ok "…and says nothing is comparing the count" ;; *) bad "…says so" ;; esac
+
+    # …and a marker left by a PREVIOUS run must not fail a run that is now green.
+    printf '7\n' > "$T/eb/baseline/expected-errors"
+    error_baseline_guard 7 "$T/eb" > /dev/null 2>&1
+    ( headline 7 "$T/eb" ) > /dev/null 2>&1
+    want "a STALE failure marker is cleared by the next guard" "$?" "0"
+
     echo
     [ "$fail" = "0" ] && echo "lane-selfcheck: PASS" || { echo "lane-selfcheck: FAILED"; exit 1; }
 
@@ -1907,11 +1952,19 @@ baseline-accept PORT:
     #                                and it is line-free so a member that only MOVED does not churn
     #   tests.tsv                  — the pass/fail set; the behavioural baseline, and the only one
     #                                that can catch a CLAUDE.md §4.4 regression
+    #   errors-count               — the LANE's compile-error total, promoted as `expected-errors`.
+    #                                Written by `error_baseline_guard` on every run precisely so
+    #                                that nobody ever types this number: a hand-edited floor is the
+    #                                one baseline that can disagree with the run that produced it.
     # srcmap.tsv is deliberately NOT promoted: it is positional by construction and would rewrite
     # itself on every emit. report.md carries the absolute source root and diff.txt is derived.
     for f in findings.tsv counts.tsv members.tsv tests.tsv port-map.tsv; do
       if [ -f "$DIR/run-latest/$f" ]; then cp "$DIR/run-latest/$f" "$DIR/baseline/"; fi
     done
+    if [ -f "$DIR/run-latest/errors-count" ]; then
+      cp "$DIR/run-latest/errors-count" "$DIR/baseline/expected-errors"
+      echo "expected-errors: $(cat "$DIR/baseline/expected-errors")"
+    fi
     echo "baseline accepted for {{PORT}}:"
     cat "$DIR/baseline/counts.tsv"
     if [ -f "$DIR/baseline/members.tsv" ]; then
