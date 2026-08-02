@@ -263,3 +263,80 @@ class SpoonTirBodySpec extends munit.FunSuite:
       case Some(_)              => ()
       case None                 => fail("no argument at all")
   }
+
+  // -- T14: a java STATIC is INHERITED by every subclass; a scala companion inherits NOTHING ------
+  //
+  // `ZoneOffset.systemDefault()` is ordinary java: `systemDefault` is declared `static` on
+  // `java.time.ZoneId`, `ZoneOffset extends ZoneId`, and java lets a static be named through ANY
+  // subclass. Emitted verbatim that is `value systemDefault is not a member of object
+  // java.time.ZoneOffset`, every time.
+  //
+  // Java resolved the member STATICALLY, so the receiver that means the same thing in both
+  // languages is the member's DECLARING type — which is the interned symbol's OWNER, never a test
+  // on the written name (`CLAUDE.md` §4.56).
+
+  private val staticProgram = SpoonTir.fromSources(List(
+    "Base.java"   -> """package demo;
+                       |public class Base { public static int make() { return 1; } public static final int SEED = 3; }
+                       |""".stripMargin,
+    "Sub.java"    -> """package demo;
+                       |public class Sub extends Base { }
+                       |""".stripMargin,
+    "Consts.java" -> """package demo;
+                       |public interface Consts { int MAX = 7; }
+                       |""".stripMargin,
+    "Impl.java"   -> """package demo;
+                       |public class Impl implements Consts { }
+                       |""".stripMargin,
+    "Use.java"    -> """package demo;
+                       |public class Use {
+                       |  int viaSubclass()       { return Sub.make(); }
+                       |  int viaOwnClass()       { return Base.make(); }
+                       |  int fieldViaSubclass()  { return Sub.SEED; }
+                       |  int fieldViaOwnClass()  { return Base.SEED; }
+                       |  int fieldViaInterface() { return Impl.MAX; }
+                       |  Object jdkViaSubclass() { return java.time.ZoneOffset.systemDefault(); }
+                       |  Object jdkViaOwnClass() { return java.time.ZoneId.systemDefault(); }
+                       |}
+                       |""".stripMargin))
+
+  /** the type the emitted receiver NAMES, for the one static access in `demo.Use#<name>`. */
+  private def staticReceiverIn(name: String): String =
+    given Program = staticProgram
+    val id = staticProgram.symbols.all.find(_.fullName == s"demo.Use#$name").map(_.id)
+      .getOrElse(fail(s"no member demo.Use#$name"))
+    staticProgram.definitionOf(id) match
+      case Some(d: Tree.DefDef) =>
+        StandardTraversal.scanTerm(d.rhs.getOrElse(fail("no body")), List.empty[String]) {
+          case (acc, Tree.Select(Tree.Ident(q, _, _), _, _, _)) =>
+            staticProgram.symbolOf(q).map(_.fullName).getOrElse("?") :: acc
+          case (acc, _) => acc
+        }.headOption.getOrElse(fail(s"no static access in demo.Use#$name"))
+      case _ => fail(s"demo.Use#$name is not a method")
+
+  test("a static METHOD reached through a SUBCLASS name is emitted at its DECLARING type") {
+    assertEquals(staticReceiverIn("viaSubclass"), "demo.Base")
+  }
+
+  test("…and the same in a JDK hierarchy, where no companion re-export can reach it") {
+    // `ZoneOffset extends ZoneId`. An in-program parent's statics are ALSO delivered by the
+    // companion re-export `TirEmitter.classDef` writes; an EXTERNAL parent has no such reach, so
+    // this is the case with no second mechanism standing behind it.
+    assertEquals(staticReceiverIn("jdkViaSubclass"), "java.time.ZoneId")
+  }
+
+  test("a static FIELD reached through a SUBCLASS name is emitted at its DECLARING type") {
+    assertEquals(staticReceiverIn("fieldViaSubclass"), "demo.Base")
+  }
+
+  test("a static field reached through an IMPLEMENTING class resolves to the INTERFACE") {
+    // java interface constants are `static` and inherited through `implements` — `CLAUDE.md` §1(a)'s
+    // own example. A walk up the SUPERCLASS chain alone never reaches one.
+    assertEquals(staticReceiverIn("fieldViaInterface"), "demo.Consts")
+  }
+
+  test("a static reached through its OWN declaring type is left alone — the negative") {
+    assertEquals(staticReceiverIn("viaOwnClass"), "demo.Base")
+    assertEquals(staticReceiverIn("fieldViaOwnClass"), "demo.Base")
+    assertEquals(staticReceiverIn("jdkViaOwnClass"), "java.time.ZoneId")
+  }

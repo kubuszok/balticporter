@@ -1959,7 +1959,7 @@ written, 987 members in the source map. `just liqp-measure`.
 
 | | |
 |---|---|
-| scalac errors | main source set **126 -> 31 -> 27**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); with the test source set, **90 -> 87 -> 74 -> 76** (the test half gained 2 when the `asList` rewrite learned the external pack shape and repaired three sites — K6.5) |
+| scalac errors | main source set **126 -> 31 -> 27**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); with the test source set, **90 -> 87 -> 74 -> 76 -> 56** (the test half gained 2 when the `asList` rewrite learned the external pack shape and repaired three sites — K6.5 — and lost 20 when T14 closed) |
 | `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
 | `jdk-surface` | **19 -> 10** |
@@ -2031,6 +2031,14 @@ porting a library from outside the family the engine grew up in.
   omission: `SpoonTir.descriptorOf` spells `T…` and `T[]` identically BY CONSTRUCTION, so the
   vararg-ness lives only in the class file the frontend read and a tree-level check could do nothing
   but read the frontend's answer back — which `BreakCatchCheck`'s contract forbids.
+- **`ENGINE-LIMITS.md` T14 (closed)** — a java STATIC reached through a SUBCLASS name. 20 errors in
+  this suite from one upstream idiom (`ZoneOffset.systemDefault()`), and the fix is the frontend
+  reading the interned symbol's OWNER instead of re-deriving the receiver from the written name. The
+  transferable half is what it exposed on a library nobody was looking at: the FIELD half had been
+  shipping since libGDX with a SUPERCLASS-only walk, so a java INTERFACE CONSTANT — `CLAUDE.md`
+  §1(a)'s own example of this exact rule — had never once been re-qualified. It compiled anyway
+  because the emitter re-exports a parent's companion, which is why nothing found it: 10 libGDX
+  members moved on this commit and its error count did not.
 - **`ENGINE-LIMITS.md` G2 (extended)** — an INFERENCE VARIABLE is not a raw type and reads like one.
   A diamond's inferred argument has no binder in the reading scope, so the frontend interns a
   MARKER; printed, `?E` names nothing and does not lex. The marker prefix now lives in `api`
@@ -2103,7 +2111,7 @@ source sets on one invocation and splits the wall by the path scalac printed.
 |---|---|
 | emitted | **101 Scala test files** from 105 java (4 excluded, below), 788 members in the source map |
 | tests | 639 `@Test` upstream -> **577 emitted** (munit 577, junit residue **0** — the whole JUnit surface converted) |
-| scalac errors | **main 27 (unchanged by this port), test 49**, all `EngineGap`; the two are never summed, because a test-set error is frequently a cascade of a main-set one |
+| scalac errors | **main 27 (unchanged by this port), test 49 -> 29**, all `EngineGap`; the two are never summed, because a test-set error is frequently a cascade of a main-set one |
 | `portability(emitted)` | **1467**, dominated by hamcrest (725 `assertThat` + 667 `is`/`equalTo`), which the conversion deliberately leaves in place and `ENGINE-LIMITS.md` X6's `org.hamcrest.` rule is what counts |
 | `omissions` | **8** — dropped `@SuppressWarnings` on anonymous-class fields |
 | `trivia` | **0 lost**, 1 recovered (`TestUtils.java:17`) |
@@ -2120,7 +2128,7 @@ stated in `test.conf` and is deleted, not narrowed, the day the frontend grows t
 
 | n | family | where it goes |
 |---|---|---|
-| **20** | `ZoneOffset.systemDefault()` — a static reached through a SUBCLASS name. Java inherits statics, Scala companions do not | `ENGINE-LIMITS.md` **T14**, new and open: emit a static call's receiver as its DECLARING type |
+| ~~20~~ **0** | `ZoneOffset.systemDefault()` — a static reached through a SUBCLASS name. Java inherits statics, Scala companions do not | `ENGINE-LIMITS.md` **T14**, CLOSED in the frontend: the receiver is the interned symbol's OWNER, and the FIELD half's superclass-only walk became the inheritance closure (a java interface constant is inherited through `implements`) |
 | **12** | `value TemplateTest is not a member of ssg.liquid` — four suites `import liqp.TemplateTest` for its nested `ComparableBase` | the T9 exclusion's own cascade; no fix to those four suites removes it |
 | **4** | an unqualified inherited `add(…)` inside a double-brace anonymous subclass of a retyped collection | K5's inherited-call rewrite, at an ANONYMOUS class with an implicit receiver |
 | 13 | assorted `Found/Required` mismatches at retyped collections, at `TemplateParser.ErrorMode` and at one `toJava` comparison | the main port's own residue reaching the suite |

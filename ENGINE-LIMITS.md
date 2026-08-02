@@ -1421,7 +1421,7 @@ negative.
 
 *Fix kind: (a) engine. Built.*
 
-### T14. A java STATIC is INHERITED by every subclass; a Scala companion inherits nothing — emit the DECLARING type — **20 errors, OPEN**
+### T14. A java STATIC is INHERITED by every subclass; a Scala companion inherits nothing — emit the DECLARING type — **CLOSED, 20 errors**
 
 `ZoneOffset.systemDefault()` compiles in Java. `systemDefault()` is declared `static` on
 `java.time.ZoneId`, `ZoneOffset extends ZoneId`, and java lets a static be named through ANY
@@ -1445,8 +1445,39 @@ the same fix covers both.
 Note what it is NOT: not a collections retype, not a shim, not policy. No manifest key can express
 "call this static on its declaring class", and no library should have to.
 
-*Fix kind: (a) engine, unbuilt — emit a static call's receiver as its DECLARING type. Cost, measured:
-20 errors on one library, zero configuration available to a port.*
+**CLOSED, in the FRONTEND, and the placement is the whole of it.** The declaring type is a fact about
+how JAVA resolved the call, so the layer that owns it is the one that read java. The frontend already
+had the answer and was throwing it away: `methodSym` derives an external member's owner from
+`getExecutableDeclaration`'s own declaration, so the interned SYMBOL's owner IS `java.time.ZoneId`
+while `typeTerm` re-derived the receiver from `CtTypeAccess.getAccessedType` — the NAME the source
+wrote. `SpoonTir.staticCallQualifier` reads the owner instead (§4.56: never a test on the name), and
+where the parse resolved no declaration the owner is the written type and the rewrite is a no-op by
+arithmetic, which is the right degrade. A transform could not have done it as well: it would have to
+re-derive "this is a static call" from the tree, which is reading the frontend's answer back, and it
+would have to run before the package rename with nothing able to say so.
+
+**And the FIELD half was half-built and looked finished.** `staticFieldAccess` had done exactly this
+for a field since libGDX, by walking the accessed type's SUPERCLASS chain — which reaches no
+interface, and a java INTERFACE CONSTANT is `static` and inherited through `implements`. That is
+`CLAUDE.md` §1(a)'s own worked example of this rule, and the walk could not see it. It is now the
+inheritance CLOSURE, breadth-first with the class edge first (java's own shadowing precedence; two
+interfaces offering one name does not compile in java either, so there is no tie to break).
+
+Measured, `just measure-all`, one commit:
+
+| | |
+|---|---|
+| liqp | **76 -> 56**, all 20 in the test source set (`main 27` unchanged, `test 49 -> 29`); 8 members over the four `nodes/{Gt,GtEq,Lt,LtEq}NodeTest` |
+| libgdx core | **0 -> 0 errors, 10 members** — the interface half, entirely `GL30.GL_COLOR_ATTACHMENT0` / `GL_TEXTURE_2D` / `GL_DEPTH_COMPONENT` / `GL_STENCIL_ATTACHMENT` / `GL_LUMINANCE` and friends, every one declared in `GL20` and written through `GL30`. It compiled before only because `TirEmitter.classDef` re-exports a parent's companion; the emitted text now names what java meant |
+| every other port | byte-for-byte unchanged, every check count flat on all fifteen |
+
+One thing the diff shows that is worth knowing before it is chased: three `collection-boundary` findings
+changed their stable ID without changing their count, because an external member's `fullName` IS its
+interning key (`@33538#getHeaderFields()`) and the interface walk mints a different set of external
+symbols. Same seams, renumbered.
+
+*Fix kind: (a) engine. Both halves — method and interface constant — are the one rule, read off the
+symbol's owner.*
 
 ---
 

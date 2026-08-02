@@ -149,6 +149,11 @@ object SpoonTir:
     def table: SymbolTable        = SymbolTable(syms.values)
     def idOf(key: String): SymId  = byKey(key)
     def fullNameOf(id: SymId): String = syms.get(id).map(_.fullName).getOrElse("?")
+    /** the interned OWNER of a member — the type that DECLARES it, which for a member reached
+      * through a subclass name is NOT the type the source wrote (T14). `SymId.None` for a type,
+      * and for a member whose declaration the parse could not resolve, which is what makes reading
+      * it a safe no-op rather than a guess. */
+    def ownerOf(id: SymId): SymId = syms.get(id).map(_.owner).getOrElse(SymId.None)
 
   /** @param inMemorySources
     *   each compilation unit's text BY FILE NAME, for the units where Spoon has none of its own —
@@ -2805,14 +2810,33 @@ object SpoonTir:
             Tree.Select(Tree.Ident(ownerId, TypeRef(NoPrefix, ownerId), originOf(at)), fid2, ty(at), originOf(at))
           case _ => Tree.Select(typeTerm(ta, at), fid, ty(at), originOf(at))
 
-      /** the type that DECLARES a static field `name`, walking the accessed type's superclass chain
-        * (source types only; degrades to None on shadow/unresolved types). */
+      /** the type that DECLARES a static field `name` (source types only; degrades to None on
+        * shadow/unresolved types).
+        *
+        * The walk is over the whole INHERITANCE CLOSURE — superclass AND superinterfaces — not the
+        * superclass chain alone, because a java INTERFACE CONSTANT is `static` and is inherited
+        * through `implements` (`CLAUDE.md` §1(a)'s own example of the rule). Read up the superclass
+        * only, `Impl.MAX` for `interface Consts { int MAX = 7; }` resolves to nothing, the walk
+        * declines, and the written receiver — whose companion inherits nothing — is emitted.
+        *
+        * Breadth-first with the class edge taken before the interface ones, which is java's own
+        * precedence: a field declared or inherited through the superclass chain SHADOWS one of the
+        * same name reachable through an interface. Two interfaces offering one name is ambiguous in
+        * java too, so nothing here has to break that tie — such a program does not compile. */
       private def declaringStaticType(accessed: CtTypeReference[?], name: String): Option[CtType[?]] =
-        var t: CtType[?] = try accessed.getTypeDeclaration catch { case _: Throwable => null }
-        val seen = collection.mutable.Set[String]()
-        while t != null && seen.add(t.getQualifiedName) do
-          if (try t.getFields.asScala.exists(_.getSimpleName == name) catch { case _: Throwable => false }) then return Some(t)
-          t = try Option(t.getSuperclass).flatMap(s => Option(s.getTypeDeclaration)).orNull catch { case _: Throwable => null }
+        val seen  = collection.mutable.Set[String]()
+        val queue = collection.mutable.Queue[CtType[?]]()
+        def decl(r: CtTypeReference[?]): CtType[?] =
+          try r.getTypeDeclaration catch { case _: Throwable => null }
+        Option(decl(accessed)).foreach(queue.enqueue)
+        while queue.nonEmpty do
+          val t = queue.dequeue()
+          if t != null && seen.add(t.getQualifiedName) then
+            if (try t.getFields.asScala.exists(_.getSimpleName == name) catch { case _: Throwable => false }) then return Some(t)
+            val parents =
+              try Option(t.getSuperclass).toList ++ t.getSuperInterfaces.asScala.toList
+              catch { case _: Throwable => Nil }
+            parents.map(decl).filter(_ != null).foreach(queue.enqueue)
         None
 
       private def fieldSym(ref: CtFieldReference[?]): SymId =
@@ -3089,7 +3113,7 @@ object SpoonTir:
             Tree.Select(if superCtor then superTerm(inv) else thisTerm(inv), mid, NoType, o)
           else inv.getTarget match
             case _: CtSuperAccess[?]  => Tree.Select(superTerm(inv), mid, NoType, o)
-            case ta: CtTypeAccess[?]  => Tree.Select(typeTerm(ta, inv), mid, NoType, o) // static call
+            case ta: CtTypeAccess[?]  => Tree.Select(staticCallQualifier(ta, mid, inv), mid, NoType, o)
             // implicit (no target): a BARE reference resolves an own OR an ENCLOSING member
             // (Scala inner classes see the outer's members by simple name). Explicit `this.m`
             // stays qualified — it's used precisely to defeat param/local shadowing.
@@ -3471,6 +3495,34 @@ object SpoonTir:
         val q  = ta.getAccessedType.getQualifiedName
         val id = minter.external(q, simpleName(q))
         Tree.Ident(id, TypeRef(NoPrefix, id), originOf(at))
+
+      /** T14 — the receiver of a STATIC CALL, which is the member's DECLARING type and not the type
+        * the source wrote.
+        *
+        * `java.time.ZoneOffset.systemDefault()` is ordinary java: `systemDefault` is declared
+        * `static` on `ZoneId`, `ZoneOffset extends ZoneId`, and java lets a static be named through
+        * ANY subclass. Scala companion objects inherit nothing from each other, so the same text
+        * emitted verbatim is `value systemDefault is not a member of object java.time.ZoneOffset`,
+        * every time — 20 errors on one library's suite from a single upstream idiom. The
+        * `staticFieldAccess` above is the same fact arriving at a FIELD; this is its other half.
+        *
+        * Read off the SYMBOL'S OWNER, never off the written name (`CLAUDE.md` §4.56): `methodSym`
+        * derives that owner from the resolved executable's own declaration, so it IS the declaring
+        * type wherever the parse resolved one, and is the written type — hence a no-op here — where
+        * it did not. Java resolved the member statically, so this is exact for the same reason
+        * §4.55's renames are: the reference already points at the symbol java chose.
+        *
+        * It re-qualifies for an IN-PROGRAM parent too, where `TirEmitter.classDef`'s companion
+        * re-export would also have delivered the name. That is deliberate, not redundant: naming
+        * the declaring type is what the java means, one mechanism covers both, and the two cannot
+        * disagree — an inaccessible declaring type is equally unnameable by the re-export, which is
+        * emitted as `export <declaring>.*` in the very same file. */
+      private def staticCallQualifier(ta: CtTypeAccess[?], mid: SymId, at: CtElement): Term =
+        val written  = ta.getAccessedType.getQualifiedName
+        val declaring = minter.ownerOf(mid)
+        if declaring != SymId.None && minter.fullNameOf(declaring) != written then
+          Tree.Ident(declaring, TypeRef(NoPrefix, declaring), originOf(at))
+        else typeTerm(ta, at)
 
       // operators as `recv.op(args)` — the quotes.reflect shape (no dedicated node).
       private def opId(op: String): SymId = minter.external("scala.<op>#" + op, op)
