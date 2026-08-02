@@ -3112,6 +3112,35 @@ only at JDK ones.*
 
 ---
 
+**And a FIELD is the one member kind with no call node at all.** Everything above is keyed on
+`Tree.Apply`; a field read is a `Tree.Select`, so an ANTLR context's `public List<ParseTree>
+children` was the same seam one node kind along and invisible to every check — the class file says
+`java.util.List`, the position-blind retyping moved the SELECT's node type to `Buffer`, and both
+`CollectionBoundaryCheck` and `JdkSurfaceCheck` therefore read a scala collection on both sides.
+`jdk-surface` reported ZERO on it while scalac read `value foreach is not a member of
+java.util.List`.
+
+Two halves, and the second is what makes the arm SOUND rather than merely present:
+
+- **the frontend interns an external FIELD with its declared type** (`externalFieldType`), by
+  exactly `externalSignature`'s rules — scope-free through `externalSlot`, so a field typed at the
+  declaring class's own type variable (`Node<N>.parent`) cannot bind to whatever `N` the CALLER
+  declares, and only for a SHADOW declaration, since a field the program declares gets its real type
+  from `fieldDef`;
+- **the arm reads the CLASS FILE and not the node, and here that is not a preference — reading the
+  node is UNSOUND.** `StandardTraversal.mapTerm` visits an `Apply`'s `fun` as a term of its own, so
+  this arm sees every method SELECTION too, and wrapping one would put a `fromJava(…)` where the
+  callee belongs — turning every rewritten call in the program into a call on a wrap, silently. The
+  class file separates the two exactly: a method's `info` is a `MethodType` (or `NoType` where the
+  file could not be read), and only a FIELD carries a plain type, which is a fact no method can
+  have. Where the file cannot be read there is no `info` and the arm does nothing, which is this
+  entry's own answer everywhere else.
+
+Measured on liqp: **7 -> 6**, one site (`NodeVisitor#visitSimple_tag`), 2 member digests, every
+check count flat — and on libGDX core **0 errors, 0 member digests, every count flat**, which is the
+number a frontend change owes: that port has no external field at a mapped collection type, so the
+interning is inert there.
+
 ### K16. A `CollectionsTransform` SCOPE is not a way to opt out of its residue — 27 → 47 narrow, 27 → 51 off. DO NOT RETRY
 
 **The move that looks obviously right, measured in both directions, and worse in both.** A port

@@ -827,7 +827,58 @@ final class CollectionsTransform(
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
     case fe: Tree.ForEach => writeThroughEntries(fe)
     case mr: Tree.MethodRef => lowerMethodRef(mr)
+    case sel: Tree.Select => externalFieldProducer(sel)
     case other          => other
+
+  /** A FIELD the program does not declare, whose CLASS FILE types it as a collection this phase
+    * retypes — [[externalProducer]]'s fact for the one member kind that has no call node.
+    *
+    * K15 is about external CALLEES and it is stated for `Tree.Apply`. A field read is the same seam
+    * one node kind along and it is invisible to everything keyed on a call: an ANTLR context's
+    * `public List<ParseTree> children` really is a `java.util.List`, the position-blind retyping
+    * moved the SELECT's node type to `Buffer`, and both the boundary check and the JDK-surface
+    * check therefore read a scala collection on both sides — `jdk-surface` reported ZERO on it
+    * while scalac read `value foreach is not a member of java.util.List`.
+    *
+    * ==Why this arm asks the CLASS FILE and not the node==
+    * [[externalProducer]] reads the node's `tpe`, because at a CALL there was no readable result to
+    * read. Here reading the node is not merely weaker, it is UNSOUND: `mapTerm` visits an
+    * `Apply`'s `fun` as a term of its own, so this arm sees every method SELECTION too, and
+    * wrapping one would put a `fromJava(...)` where the callee belongs — silently turning every
+    * rewritten call in the program into a call on a wrap. The class file separates them exactly:
+    * a method's `info` is a `MethodType` (or `NoType` where the file could not be read), and only
+    * a FIELD carries a plain type. So the arm fires on "the symbol's declared info is a
+    * non-method type whose head is a type `typeMap` covers", which is a fact no method can have.
+    *
+    * The head is read LITERALLY and never through `remap` — an unowned symbol's signature is a fact
+    * about a compiled class file and `StandardTraversal.mapSymbols` deliberately does not move it
+    * (§4.56) — and every exclusion [[externalProducer]] states applies unchanged, through
+    * [[externalCallee]]. Where the class file cannot be read there is no `info` and this arm does
+    * nothing: that is K15's own answer, and the residue is what the count stands for. */
+  private def externalFieldProducer(sel: Tree.Select)(using p: Program): Term =
+    if fromJavaSym == SymId.None || !externalCallee(sel.sym) then sel
+    else declaredFieldHead(sel.sym) match
+      case scala.None => sel
+      case Some(_)    => headSym(sel.tpe).filter(liveWrappableSyms.contains) match
+        case scala.None => sel
+        case Some(_) if mentionsRetyped(sel.tpe) =>
+          seam("external field (nested element)", "a one-level wrap",
+               TirPrinter.tpe(sel.tpe, TirPrinter.Style.canonical), sel.origin, sel.sym)
+          sel
+        case Some(_) =>
+          Tree.Apply(Tree.Ident(fromJavaSym, TypeRepr.NoType, sel.origin), List(sel),
+                     fromJavaSym, sel.tpe, sel.origin)
+
+  /** the head of a symbol's declared type where that type is a FIELD's — `None` for a method (whose
+    * `info` is a `MethodType`), for an unreadable class file (`NoType`), and for anything the
+    * mapping does not cover. See [[externalFieldProducer]] for why the method/field distinction has
+    * to come from here and cannot come from the node. */
+  private def declaredFieldHead(s: SymId)(using p: Program): Option[SymId] =
+    p.symbolOf(s).map(_.info).flatMap {
+      case _: TypeRepr.MethodType => scala.None
+      case TypeRepr.NoType        => scala.None
+      case t                      => headSym(t).filter(h => p.symbolOf(h).exists(x => typeMap.contains(x.fullName)))
+    }
 
   /** A METHOD REFERENCE at a member this phase rewrites — `Map.Entry::getKey` inside a stream.
     *

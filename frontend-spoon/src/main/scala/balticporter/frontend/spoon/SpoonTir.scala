@@ -2856,7 +2856,33 @@ object SpoonTir:
           .orElse(Option(ref.getDeclaringType).map(_.getQualifiedName))
           .getOrElse("java.lang.Object")
         val ownerId = minter.external(ownerQ, simpleName(ownerQ))
-        externalMember(ownerId, ref.getSimpleName, ref.getSimpleName)
+        externalMember(ownerId, ref.getSimpleName, ref.getSimpleName, info = externalFieldType(ref))
+
+      /** the DECLARED type of an EXTERNAL field, as a class file states it — [[externalSignature]]'s
+        * fact for the other kind of member, and read by exactly the same rules.
+        *
+        * A field is the one member a phase can meet in value position without a call node, so the
+        * seam it makes is invisible to everything keyed on `Tree.Apply`: an ANTLR context's
+        * `public List<ParseTree> children` really is a `java.util.List`, while the position-blind
+        * retyping moved the SELECT node's type to `Buffer` and no check compares the two.
+        * `ENGINE-LIMITS.md` K15 states the rule for callees; a field is the same fact one node kind
+        * along, and the answer is the same one: ask the class file.
+        *
+        * Rendered SCOPE-FREE through [[externalSlot]], for the reason stated there — a field typed
+        * at the declaring class's own type variable (`Node<N>.parent`) must not bind to whatever
+        * `N` the CALLER declares, because an external symbol is interned once and the first
+        * reference in the run would otherwise decide it for every other. `NoType` is then "no
+        * answer", which is the state every external field was in before this existed.
+        *
+        * Only for a SHADOW declaration: a field the program declares gets its real type from
+        * `fieldDef`, and a second, weaker rendering of the same member is a second truth about it. */
+      private def externalFieldType(ref: CtFieldReference[?]): TypeRepr =
+        try Option(ref.getFieldDeclaration) match
+          case scala.None => NoType // no declaration to read — not evidence of anything
+          case Some(fd)   =>
+            val shadow = Option(fd.getParent(classOf[CtType[?]])).forall(_.isShadow)
+            if !shadow then NoType else externalSlot(try fd.getType catch { case _: Throwable => null })
+        catch { case _: Throwable => NoType }
 
       /** Java's WILDCARD/RAW-receiver calls. When the receiver's static type leaves its arguments
         * unknown (raw use, or wildcards), Scala gives every member access a fresh CAPTURE — so a

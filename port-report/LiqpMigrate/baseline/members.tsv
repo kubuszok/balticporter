@@ -880,7 +880,7 @@ ssg.liquid.parser.LiquidSupport	ssg.liquid.parser.LiquidSupport$LiquidSupportFro
 ssg.liquid.parser.LiquidSupport	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visit(Object)	def	d4fc8104d11b272a
 ssg.liquid.parser.LiquidSupport	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visitList(Buffer<Object>)	def	fce7be0fa4764b39
 ssg.liquid.parser.LiquidSupport	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visitMap(Map<String,Object>)	def	6daa9a96c19401b6
-ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor	class	de0807f77e4b823c
+ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor	class	8bb247b82e985854
 ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#<stmt1>	stmt	a808eeaa9d09a83a
 ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#<stmt2>	stmt	ca6a308ae9ac1014
 ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#<stmt3>	stmt	ef9843fd46b2547e
@@ -929,7 +929,7 @@ ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#visitParam_exp
 ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#visitParam_expr_key_value(Param_expr_key_valueContext)	def	feae95c27f61aba6
 ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#visitParse(ParseContext)	def	859268e2e1b750c8
 ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#visitRaw_tag(Raw_tagContext)	def	20c52d169f93546d
-ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#visitSimple_tag(Simple_tagContext)	def	41541b648ee55931
+ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#visitSimple_tag(Simple_tagContext)	def	184b9ce78129bbee
 ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#visitTable_tag(Table_tagContext)	def	a005f63761e67c80
 ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#visitTerm_Blank(Term_BlankContext)	def	98d832ec1c5662fc
 ssg.liquid.parser.v4.NodeVisitor	ssg.liquid.parser.v4.NodeVisitor#visitTerm_DoubleNum(Term_DoubleNumContext)	def	773eff62875aef3e

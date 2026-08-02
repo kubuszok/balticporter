@@ -933,6 +933,70 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(java.lang.System.getenv())")
   }
 
+  test("an EXTERNAL FIELD is wrapped too — the one member kind with no call node") {
+    // K15 is stated for external CALLEES and keyed on `Tree.Apply`. A field read is the same seam
+    // one node kind along and is invisible to everything keyed on a call: the class file says
+    // `java.util.List`, the position-blind retyping moved the SELECT's node type to `Buffer`, and
+    // both the boundary check and the JDK-surface check then read a scala collection on both sides.
+    val p = portAgainst(
+      List("ext/Ctx.java" ->
+        """package ext;
+          |public class Ctx {
+          |  public java.util.List<String> children = new java.util.ArrayList<String>();
+          |  public java.util.List<String> childList() { return children; }
+          |}""".stripMargin),
+      """package demo;
+        |class Walk {
+        |  int count(ext.Ctx c) {
+        |    int n = 0;
+        |    for (String s : c.children) { n += s.length(); }
+        |    return n;
+        |  }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(c.children)")
+  }
+
+  test("…and a METHOD SELECTION is never wrapped, which is why the CLASS FILE decides, not the node") {
+    // `mapTerm` visits an `Apply`'s `fun` as a term of its own, so the field arm sees every method
+    // selection too. Reading the node's type there would put a `fromJava(…)` where the callee
+    // belongs and turn every rewritten call in the program into a call on a wrap. The class file
+    // separates them exactly: a method's `info` is a `MethodType`, and only a field carries a plain
+    // type — a fact no method can have.
+    val p = portAgainst(
+      List("ext/Ctx2.java" ->
+        """package ext;
+          |public class Ctx2 {
+          |  public java.util.List<String> childList() { return new java.util.ArrayList<String>(); }
+          |}""".stripMargin),
+      """package demo;
+        |class Walk2 {
+        |  int count(ext.Ctx2 c) {
+        |    int n = 0;
+        |    for (String s : c.childList()) { n += s.length(); }
+        |    return n;
+        |  }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    // the CALL is wrapped by `externalProducer`, once, around the whole application — never around
+    // the selection inside it.
+    assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(c.childList())")
+    assertNotEmits(p, "fromJava(c.childList)")
+  }
+
+  test("…and a field of a type the phase does NOT retype is left alone — the negative test") {
+    val p = portAgainst(
+      List("ext/Box.java" ->
+        """package ext;
+          |public class Box { public String label = ""; }""".stripMargin),
+      """package demo;
+        |class Reads {
+        |  String of(ext.Box b) { return b.label; }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertNotEmits(p, "fromJava")
+  }
+
   test("…and a call the phase does NOT retype is left completely alone — the negative test") {
     // Nothing about "external" licenses a wrap. Only a node whose type THIS PHASE produced is a
     // seam; a `String`, an `int` or a third-party type of its own is not, and a rule that fired on
