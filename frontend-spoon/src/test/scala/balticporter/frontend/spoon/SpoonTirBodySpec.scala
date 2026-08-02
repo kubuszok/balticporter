@@ -99,3 +99,61 @@ class SpoonTirBodySpec extends munit.FunSuite:
     )
     assert(p.symbols.all.exists(_.fullName == "demo.R#go"))
   }
+
+  /** CLAUDE.md §4.4 row 7, for the shape a String switch takes.
+    *
+    * Java FALLS OUT of a `switch` when no label matches; Scala's `match` throws `MatchError`. The
+    * fall-out is routinely the NORMAL path — a three-label switch over a comparison operator
+    * leaves the variable at whatever the code before it set — so the difference is not an edge
+    * case, and it costs no compile error and no check count: the emitted `match` is valid Scala
+    * that throws where java returned.
+    *
+    * Asserted on the TREE rather than the emitted text because this is the frontend's contract:
+    * every `Tree.Match` built from a java `switch` carries a default arm, whatever the scrutinee's
+    * type, and `TirEmitter` renders `isDefault` as `case _`. */
+  private def matchesOf(p: Program, member: String): List[Tree.Match] =
+    val sym = p.symbols.all.find(_.fullName == member).map(_.id)
+      .getOrElse(fail(s"no member $member"))
+    p.definitionOf(sym) match
+      case Some(d: Tree.DefDef) =>
+        given Program = p
+        StandardTraversal.scanTerm(d.rhs.getOrElse(fail("no body")), List.empty[Tree.Match]) {
+          case (acc, m: Tree.Match) => m :: acc
+          case (acc, _)             => acc
+        }
+      case _ => fail(s"$member is not a method")
+
+  test("a String switch with NO default gains the fall-out arm java already had") {
+    val p = SpoonTir.fromSource(
+      """package demo;
+        |class Cmp {
+        |  boolean apply(String op, int l, int r) {
+        |    boolean out = false;
+        |    switch (op) {
+        |      case "<":  out = l <  r; break;
+        |      case "<=": out = l <= r; break;
+        |      case ">":  out = l >  r; break;
+        |    }
+        |    return out;
+        |  }
+        |}
+        |""".stripMargin)
+    val ms = matchesOf(p, "demo.Cmp#apply")
+    assertEquals(ms.size, 1)
+    // without this arm every operator OUTSIDE the three labels — which java answers `false` —
+    // becomes a MatchError at run time, and no compile and no check says so.
+    assert(clue(ms.head.cases.map(_.isDefault)).contains(true))
+    assertEquals(ms.head.cases.count(_.isDefault), 1)
+  }
+
+  test("a switch that HAS a default gains no second one") {
+    val p = SpoonTir.fromSource(
+      """package demo;
+        |class Cmp2 {
+        |  int apply(String op) {
+        |    switch (op) { case "a": return 1; default: return 2; }
+        |  }
+        |}
+        |""".stripMargin)
+    assertEquals(matchesOf(p, "demo.Cmp2#apply").head.cases.count(_.isDefault), 1)
+  }
