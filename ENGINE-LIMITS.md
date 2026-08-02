@@ -4335,6 +4335,69 @@ stops swallowing the jump, so the day scala changes `Break`'s parent, that test 
 *Fix kind: (a). If a port shows a `break-catch` finding, the fix is `TirEmitter.crossesCatch`, never
 the port's manifest.*
 
+### F5. TRY-WITH-RESOURCES was dropped WHOLE — the frontend modelled it and the emitter never printed it
+
+CLOSED. The worst of this family, because nothing about it was half-done: `Tree.Try.resources` was
+populated correctly by the frontend, carried through every phase, and rendered by `TirPrinter` in the
+TIR's own debug view — so every diagnostic said the resources were there. `TirEmitter.tryStr`
+computed their text into a local `r` and then **never interpolated it**, behind a trailing comment
+(`// resources: r prepended when the backend lowers auto-close`) describing an intended step as if it
+were a plan rather than a gap. The resource `val`, every `close()`, the reverse ordering and the
+suppression were absent from the output entirely.
+
+**Two failure modes, and only one of them is loud.** A resource REFERENCED by name inside its own
+body is an unbound identifier and fails to compile — self-correcting. A resource opened for its side
+effect alone — `try (var lock = acquire()) { … }`, an idiomatic shape — compiles perfectly with the
+lock never acquired and never released. No error, no moved count, no failing check, nothing in the
+emitted file to say a java statement had ever been there. That is §3's defect class with a whole
+STATEMENT FORM inside it rather than a corner of one.
+
+**What shipped is JLS 14.20.3.1's own lowering, emitted INLINE as statements** — one nesting per
+resource, wrapping the BODY only, since 14.20.3.2 defines the extended form as the basic one nested
+inside `try … Catches Finally` and java therefore closes before this try's own `catch` runs:
+
+```
+{ val r = init
+  var primary$n: Throwable = null
+  try <rest>
+  catch { case t$n: Throwable => { primary$n = t$n; throw t$n } }
+  finally if r != null then {
+    if primary$n != null then { try r.close() catch { case s$n: Throwable => primary$n.addSuppressed(s$n) } }
+    else r.close() } }
+```
+
+**Statements, and NOT `Using(r) { r => … }` or a runtime `withResource` helper — that is the part to
+not re-litigate.** Both combinator forms put the body inside a LAMBDA, and this emitter emits
+explicit `return`, while `break`/`continue` render as `boundary.break` bound to a label opened
+OUTSIDE the try. A java jump out of a try-with-resources is legal and must still close
+(14.20.3.1), and neither construct survives being moved into a function body unchanged. The
+statement form needs no rewriting of the body at all.
+
+Four contract properties, reproduced rather than approximated, and all four executed in
+`TryResourceBehaviourSpec`: reverse declaration order (it falls out of the nesting); every `close()`
+attempted even when an earlier one threw (an inner failure propagates and becomes the outer level's
+`primary`); suppression rather than replacement; and closed on ANY completion including a jump —
+a `boundary.Break` is a `RuntimeException`, so the catch-all sees it and RE-THROWS it, which is F4's
+rule met by construction and why this arm needs no `BreakGuard` beside it.
+
+**The corpus count is ZERO and that is the whole reason this survived.** Ten ported upstream trees,
+not one try-with-resources between them, so no port's number would have moved if a library HAD used
+one — the same lesson F4 states, at a defect one order larger. The gate is therefore a SPEC
+(`TryResourceSpec`, shape + the `try-resource` check lane; `TryResourceBehaviourSpec`, the semantics
+executed) plus a counted check that reports 0 on every lane today and cannot report 0 by
+construction: it finds the resource-carrying `try`s from the TREES and takes only the LOWERED set
+from the emitter, so `_ => false` reproduces the un-repaired engine exactly.
+
+**And the frontend had a second, smaller hole in the same statement.** `getResources` was read with a
+`collect { case lv: CtLocalVariable[?] => … }`, which is a silent drop for every shape it does not
+name — and JLS 14.20.3's SE9 form (`try (existingEffectivelyFinalLocal) { … }`) is one, modelled by
+Spoon as a variable REFERENCE. It fell out of the list, so that resource closed one fewer time than
+java does, with nothing in the tree to say it had been there. Refused LOUDLY now (M6): the faithful
+translation is a fresh alias binding and minting a local symbol for it is a change worth making the
+day a library writes one. None does.
+
+*Fix kind: (a). Universal — a java statement form with no Scala counterpart, no library involved.*
+
 ---
 
 ## 10. Comments (trivia) — what still does not survive, with its number

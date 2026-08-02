@@ -1,0 +1,115 @@
+package balticporter.tir
+
+/** Every java try-with-resources whose RESOURCES the emitter did not lower.
+  *
+  * The §4.4 defect this counts: `try (R r = …) { … }` closes `r` when the block finishes for ANY
+  * reason — normal completion, an exception, or a jump — in reverse declaration order, and BEFORE
+  * this `try`'s own `catch`/`finally` runs (JLS 14.20.3.1/14.20.3.2). Scala has no such statement.
+  * A structural per-node translator that emits the `try` and forgets the resources produces valid
+  * Scala in which the resource is never bound and never closed.
+  *
+  * That is exactly what this engine shipped: `Tree.Try.resources` was populated by the frontend and
+  * printed by `TirPrinter`, and `TirEmitter.tryStr` computed the rendered resource text into a
+  * local it never interpolated. A resource REFERENCED inside its own body then failed to compile,
+  * which is loud and self-correcting; a resource opened for its side effect alone —
+  * `try (var lock = acquire()) { … }`, an entirely idiomatic shape — compiled cleanly with the lock
+  * never acquired and never released. No error, no moved count, no failing test, and nothing in the
+  * emitted file to say a statement had been there at all.
+  *
+  * '''Why this is not the emitter's own answer read back.''' The resource-carrying `try`s are found
+  * HERE, from the trees, by walking with `StandardTraversal`; the emitter contributes only the set
+  * of sites it actually lowered. So the two disagree exactly when a `try` reached the output through
+  * a path that does not lower — which is the failure worth counting, and the one a tally the emitter
+  * owned on its own could never report.
+  *
+  * ==Why a count of zero is still worth having==
+  * No library in the corpus writes a try-with-resources today (ten upstream trees, zero sites), so
+  * this check reports 0 everywhere it currently runs. That is the point: the defect was latent for
+  * the life of the TIR backend precisely because no measurement would have moved if a library HAD
+  * used one, and the first library that does must not rediscover it by reading emitted Scala.
+  */
+object TryResourceCheck:
+
+  val Name = "try-resource"
+
+  enum Issue:
+    /** a `try` carries resources and the emitter closed none of them: the whole statement form is
+      * gone from the output. */
+    case UnloweredResource
+
+  object Issue:
+    def classification(i: Issue): String = i match
+      case UnloweredResource =>
+        "§1(a) ENGINE: java's try-with-resources is a universal java-vs-scala fact, never " +
+          "per-library policy. `TirEmitter.resourceStr` emits JLS 14.20.3.1's own lowering — the " +
+          "resource binding, a `finally` that closes in reverse declaration order, and " +
+          "`addSuppressed` for a `close()` that throws while the body is already completing " +
+          "abruptly. A finding here means a `try` with resources reached the output through a " +
+          "path that does not lower: fix the emitter, not the port."
+
+  /** @param resources the resource names the java statement declared, in declaration order */
+  final case class Finding(issue: Issue, owner: String, resources: List[String], origin: Origin):
+    def detail: String =
+      s"try-with-resources declaring ${resources.mkString(", ")} — the emitted `try` binds none of " +
+        "them and calls no `close()`, so a resource opened for its side effect vanishes silently " +
+        "(JLS 14.20.3.1)"
+    def render: String = s"$issue $owner: try(${resources.mkString("; ")})  (${origin.javaPath}:${origin.line})"
+    def report: CheckReport.Finding =
+      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
+        origin.line, detail)
+
+  /** @param lowered which `try`s the emitter lowered ([[balticporter.emit.TirEmitter.resourceLowerings]],
+    *                keyed by [[Tree.Try.id]]). `_ => false` is the un-repaired engine, which is how
+    *                the negative test asks this check whether it can report at all.
+    *
+    *                Keyed by the TOKEN for the reasons `BreakCatchCheck` spells out: an
+    *                `Origin` is not unique across `try`s (a nested one-liner shares one, and every
+    *                synthesised `try` carries `Origin.synthetic`), so an origin-keyed answer lets a
+    *                lowered `try` vouch for an unlowered sibling; and object identity is not
+    *                available either, since `StandardTraversal` rebuilds every node it walks.
+    */
+  def check(program: Program, units: List[Tree.ClassDef], lowered: Tree.Try => Boolean): List[Finding] =
+    given Program = program
+    units.flatMap(inUnit(_, lowered))
+
+  private def inUnit(u: Tree.ClassDef, lowered: Tree.Try => Boolean)(using program: Program): List[Finding] =
+    // which member each `try` sits in — the same shape, and the same caveat, as `BreakCatchCheck`:
+    // keyed by `Origin` and deciding only the OWNER NAME a finding prints, never whether to report.
+    val ownerOf = collection.mutable.Map.empty[Origin, String]
+    val claim = (s: SymId, t: Option[Term]) =>
+      t.foreach(x => tryOriginsIn(x).foreach(o => ownerOf.getOrElseUpdate(o, fqn(s))))
+    val owners = new Phase:
+      def name: String = "try-resource/owner"
+      override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = { claim(d.symbol, d.rhs); d }
+      override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef = { claim(v.symbol, v.rhs); v }
+    StandardTraversal.mapClassDef(owners, u)
+
+    val out = collection.mutable.ListBuffer.empty[Finding]
+    StandardTraversal.scanClassDef(u, ()) { (_, t) =>
+      t match
+        case tr: Tree.Try if tr.resources.nonEmpty && !lowered(tr) =>
+          val names = tr.resources.map(v => program.symbolOf(v.symbol).map(_.name).getOrElse("?"))
+          out += Finding(Issue.UnloweredResource, ownerOf.getOrElse(tr.origin, fqn(u.symbol)), names, tr.origin)
+        case _ => ()
+      ()
+    }
+    out.toList
+
+  private def tryOriginsIn(t: Term)(using Program): Set[Origin] =
+    StandardTraversal.scanTerm(t, Set.empty[Origin]) { (acc, x) =>
+      x match
+        case tr: Tree.Try => acc + tr.origin
+        case _            => acc
+    }
+
+  private def fqn(s: SymId)(using program: Program): String =
+    program.symbolOf(s).map(_.fullName).getOrElse("?")
+
+  def summary(fs: List[Finding]): String =
+    if fs.isEmpty then "  none"
+    else
+      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
+        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+        val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
+        (head :: sites).mkString("\n")
+      }.mkString("\n")

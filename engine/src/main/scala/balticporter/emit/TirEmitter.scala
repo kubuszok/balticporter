@@ -3144,7 +3144,6 @@ final class TirEmitter(
     * let the jump through. */
   private def tryStr(t: Tree.Try, i: Int): String =
     val (res, body, catches, fin) = (t.resources, t.body, t.catches, t.finalizer)
-    val r  = res.map(v => s"${ind(i + 1)}${valDef(v, 0)}\n").mkString
     val guard =
       if catches.exists(c => Jumps.catchesBreak(c.param.tpt.tpe)(using program)) && crossesCatch(body) then
         breakGuarded += t.id
@@ -3154,7 +3153,101 @@ final class TirEmitter(
     val cs = catches.map(c => s"${ind(i + 1)}case ${esc(sym(c.param.symbol).name)}: ${tpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}").mkString("\n")
     val cl = if catches.isEmpty then "" else s" catch {\n$guard$cs\n${ind(i)}}"
     val fl = fin.map(f => s" finally ${term(f, i)}").getOrElse("")
-    s"try ${term(body, i)}$cl$fl" // resources: r prepended when the backend lowers auto-close
+    // The RESOURCES wrap the BODY and nothing else — JLS 14.20.3.2 defines an extended
+    // try-with-resources as the basic one nested inside `try … Catches Finally`, i.e. every
+    // resource is closed BEFORE this try's own `catch`/`finally` runs.
+    if res.isEmpty then s"try ${term(body, i)}$cl$fl"
+    else
+      resourceLowered += t.id
+      s"try ${resourceStr(res, body, i)}$cl$fl"
+
+  /** JLS 14.20.3.1's lowering of a try-with-resources, emitted INLINE — one nesting per resource.
+    *
+    * ==What was here before==
+    * `Tree.Try.resources` was populated by the frontend, printed by `TirPrinter`, and **never
+    * interpolated into the emitted string**: the resource `val`s, every `close()`, the ordering and
+    * the suppression were all silently dropped, behind a trailing comment describing a step that
+    * had not been taken. A resource REFERENCED in its own body then failed to compile, which is
+    * loud; a resource opened for its side effect alone — `try (var lock = acquire()) { … }`, an
+    * idiomatic shape — compiled perfectly with the lock never acquired and never released. That is
+    * CLAUDE.md §3's defect class at its worst: a whole java statement FORM gone, no error, no
+    * count moving, and nothing in the output to say anything had been there.
+    *
+    * ==The shape, and why it is statements rather than a combinator==
+    * The obvious lowering is `Using(r) { r => body }` or a runtime `withResource` helper, and both
+    * put the body inside a LAMBDA. This emitter emits explicit `return`, and `break`/`continue`
+    * render as `boundary.break` bound to a label opened OUTSIDE the try — a java jump out of a
+    * try-with-resources is legal and must still close (JLS 14.20.3.1), and neither survives being
+    * moved into a function body unchanged. So the lowering is java's own, spelled as statements:
+    *
+    * {{{
+    * {
+    *   val r = <init>
+    *   var primary$n: Throwable = null
+    *   try <rest>
+    *   catch { case t$n: Throwable => { primary$n = t$n; throw t$n } }
+    *   finally
+    *     if r != null then
+    *       if primary$n != null then try r.close() catch { case s$n: Throwable => primary$n.addSuppressed(s$n) }
+    *       else r.close()
+    * }
+    * }}}
+    *
+    * Four properties of java's contract that this reproduces rather than approximates:
+    *
+    *   - **reverse declaration order** — falls out of the nesting: the LAST resource is innermost,
+    *     so its `finally` runs first;
+    *   - **every `close()` is attempted** even when an earlier one threw. An inner `close()` that
+    *     throws propagates into the enclosing level, becomes ITS `primary`, and the outer resource
+    *     still closes in its own `finally`;
+    *   - **suppression, not replacement** — a `close()` failure while the body is already
+    *     completing abruptly is attached to the body's exception with `addSuppressed`, and the
+    *     BODY's exception is the one that propagates. With the body completing normally the
+    *     `close()` exception is the statement's own abrupt completion, which is what the bare
+    *     `r.close()` arm gives;
+    *   - **closed on ANY completion**, jumps included: a `boundary.break` leaving the body is a
+    *     `RuntimeException`, so the `finally` runs and the catch-all RE-THROWS it rather than
+    *     swallowing it — which is the §4.4 rule about a broad handler met by construction, and why
+    *     this arm needs no `BreakGuard` beside it.
+    *
+    * The catch-all's binder and the `primary` are numbered per nesting level, because two resources
+    * in one statement are two of these blocks one inside the other and Scala would otherwise shadow. */
+  private def resourceStr(res: List[Tree.ValDef], body: Term, i: Int): String =
+    res match
+      case Nil => term(body, i)
+      case v :: rest =>
+        resourceSeq += 1
+        val n    = resourceSeq
+        val name = esc(sym(v.symbol).name)
+        val p    = s"primary$$$n"
+        val thr  = s"thrown$$$n"
+        val sup  = s"suppressed$$$n"
+        val inner = resourceStr(rest, body, i + 1)
+        val b  = new StringBuilder
+        b ++= "{\n"
+        b ++= s"${ind(i + 1)}${valDef(v, 0)}\n"
+        b ++= s"${ind(i + 1)}var $p: java.lang.Throwable = null\n"
+        b ++= s"${ind(i + 1)}try $inner\n"
+        b ++= s"${ind(i + 1)}catch { case $thr: java.lang.Throwable => { $p = $thr; throw $thr } }\n"
+        b ++= s"${ind(i + 1)}finally if $name != null then {\n"
+        b ++= s"${ind(i + 2)}if $p != null then { try $name.close() catch { case $sup: java.lang.Throwable => $p.addSuppressed($sup) } }\n"
+        b ++= s"${ind(i + 2)}else $name.close()\n"
+        b ++= s"${ind(i + 1)}}\n"
+        b ++= s"${ind(i)}}"
+        b.toString
+
+  /** one counter for every resource block this emitter opens — see [[resourceStr]] for why the
+    * `primary`/`thrown`/`suppressed` binders may not repeat across a nesting. */
+  private var resourceSeq = 0
+
+  /** every `try` whose RESOURCES this emitter lowered — the input to `try-resource`, which finds
+    * the resource-carrying `try`s independently and reports the ones nothing closed.
+    *
+    * Keyed by [[Tree.Try.id]] for exactly the reasons `breakGuarded` is: an `Origin` is not unique
+    * across `try`s, and `StandardTraversal` rebuilds every node so object identity is not either. */
+  private val resourceLowered = collection.mutable.Set.empty[TryId]
+  def resourceLowerings: Tree.Try => Boolean = t => resourceLowered.contains(t.id)
+  def resourceLoweringCount: Int = resourceLowered.size
 
   /** does a jump in this try BODY leave the try — i.e. is its `boundary` outside it?
     *

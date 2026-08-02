@@ -1977,9 +1977,21 @@ object SpoonTir:
           val upd  = f.getForUpdate.asScala.toList.map(stmt)
           Tree.For(init, cond, upd, blockTerm(f.getBody), unitT, originOf(f), labelOf(f))
         case t: CtTryWithResource =>
-          val res = t.getResources.asScala.toList.collect { case lv: CtLocalVariable[?] =>
-            val rt = tpe(lv.getType)
-            Tree.ValDef(defineLocal(lv, rt), tt(rt, lv), Option(lv.getDefaultExpression).map(expr), originOf(lv))
+          // A `collect` here is a SILENT DROP for every shape it does not name, and the SE9 form
+          // (`try (existingEffectivelyFinalLocal) { … }`, JLS 14.20.3) is one: Spoon models that
+          // resource as a variable REFERENCE, not a `CtLocalVariable`, so it fell out of the list
+          // and the emitter closed one resource fewer than java does — with no error, no count and
+          // nothing in the tree to say a resource had been there. Refused LOUDLY instead (M6): the
+          // faithful translation is a fresh alias binding, and minting a local symbol for it is a
+          // change worth making the day a corpus library writes one. None does today.
+          val res = t.getResources.asScala.toList.map {
+            case lv: CtLocalVariable[?] =>
+              val rt = tpe(lv.getType)
+              Tree.ValDef(defineLocal(lv, rt), tt(rt, lv), Option(lv.getDefaultExpression).map(expr), originOf(lv))
+            case other =>
+              unsupported(other, "a try-with-resources resource that is not a local DECLARATION " +
+                "(JLS 14.20.3's SE9 form, an existing effectively-final variable): it needs a fresh " +
+                "alias binding to close, and dropping it closes one resource fewer than java does")
           }
           tryStmt(t, res)
         case t: CtTry             => tryStmt(t, Nil)

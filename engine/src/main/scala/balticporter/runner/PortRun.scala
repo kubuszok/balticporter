@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -797,6 +797,17 @@ final case class PortRun(
     say(s"BREAK-IN-CATCH (jumps a translated handler would swallow, unguarded): ${breakCatches.size}")
     if breakCatches.nonEmpty then say(BreakCatchCheck.Issue.classification(BreakCatchCheck.Issue.UnguardedJump))
     println(BreakCatchCheck.summary(breakCatches))
+
+    // ---- §4.4: a try-with-resources whose resources nothing closed ----
+    // Beside the jump check for the same reason: the question needs BOTH the trees (which `try`s
+    // carry resources) and what the emitter did with them (which it lowered). Over `checkedUnits`
+    // (ENGINE-LIMITS D2). Reports 0 on every corpus port today — no upstream tree writes one —
+    // which is exactly why the drop survived the life of the TIR backend unnoticed.
+    val tryResources = TryResourceCheck.check(program, checkedUnits, translated.emitter.resourceLowerings)
+    CheckReport.record(TryResourceCheck.Name, tryResources.map(_.report))
+    say(s"TRY-WITH-RESOURCES (resources the emission never closed): ${tryResources.size}")
+    if tryResources.nonEmpty then say(TryResourceCheck.Issue.classification(TryResourceCheck.Issue.UnloweredResource))
+    println(TryResourceCheck.summary(tryResources))
 
     // ---- the CONTEXT boundary, RECORDED: the four the phase drew (collected above) plus the one
     // only the emitted text can show — a `using` clause the threading attached to a class's
