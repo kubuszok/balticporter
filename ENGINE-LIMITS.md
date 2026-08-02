@@ -616,7 +616,41 @@ overloads.
 Note also that `super(msg)` and `super(msg, null)` differ in `Throwable`'s cause semantics (unset vs
 null), which no delegation reproduces.
 
-*Fix kind: (a) — and the (a) is "count the omission", not "approximate it".*
+**THE JDK-THROWABLE HALF §4.4 PRESCRIBES IS NOT BUILT, and the first library to need it has now
+arrived.** This entry says padding is exact for that family; nothing implements it. liqp's
+`LiquidException extends RuntimeException` has three constructors, three different `super(...)`
+calls (`super(createMessage(e), e)`, `super(message)`, `super(message, cause)`) and **no nilary
+root**, so the funnel synthesises a nilary primary and every one of the three delegates `this()`:
+the port compiles, moves no count, and **every exception it throws has a null message and no
+cause**. That is §4.4's own row, shipping. The reference hand-port does exactly what §4.4 says
+(`ssg .../exceptions/LiquidException.scala`: a primary extending `RuntimeException(message, cause)`
+with three padded delegations), so the shape is validated against real code — it is the ENGINE that
+has no arm.
+
+Two things measured while scoping it, both of which change what should be built:
+
+- **The corpus blast radius is liqp ONLY.** Of the 11 classes across all ports whose dropped
+  `super(args)` `OmissionCheck` counts, not one is a `Throwable` — libGDX's are `DistanceFieldFont`,
+  `Button`, `OrderedMap`, four `RegionInfluencer`s and so on. So a throwable arm is measurable in
+  one lane.
+- **…and "JDK throwables only" is the WRONG generalisation to build first.** What the throwable
+  family buys is knowledge of a parent's constructor SET, which is only needed when the roots'
+  super calls DISAGREE. Where they agree in shape no such knowledge is needed at all, and the same
+  library has that case: `PlainBigDecimal`'s two roots both call `super(<String>)`, so a primary
+  whose parameters ARE the shared super arguments — `class PlainBigDecimal protected (x$: String)
+  extends BigDecimal(x$)`, each root becoming `this(<its own args>)` — is exact, needs no table of
+  JDK shapes, and would remove the one compile error this entry's refusal currently carries there
+  (E134, `BigDecimal` has no nilary constructor). The throwable padding is then the narrower second
+  step, for the disagreeing case, and it is the only one that pays the cause-semantics caveat above.
+
+Deliberately NOT built in the wave that measured it: `CtorFunnel` decides every port's emitted
+constructors, and a new synthesis arm is a surface change across fourteen lanes that must be
+measured on its own (§5). Recorded here rather than attempted at the end of a burn-down.
+
+*Fix kind: (a) — the (a) was "count the omission", and for the two shapes above it is now "build the
+promotion". The refusal stays correct for the rest, and IS correctly counted: `omissions` reports
+each site, `decisions.tsv` classifies it `Universal("ctor-funnel/super-args-dropped(C3)")`, and a
+porter note sits on every affected constructor in the emitted file — verified on both liqp classes.*
 
 ### C4. Several roots, none nilary, plus an explicit nilary constructor = a clash with no plan
 
