@@ -2288,6 +2288,35 @@ from what it did to that type, and this phase did nothing to `java.util.stream.S
 collapse and both rules above are (a). The `Stream`-typed slot is (a) and unbuilt — it needs the
 stream family retyped, not a wider guard.*
 
+**And the collapse assumes a TERMINAL, which the third rule is about.** `xs.stream().filter(p)` with
+no `collect` is a chain whose VALUE is still a `Stream`, and it reaches java again at a `Stream`
+formal — `Stream.concat`, `Stream.of`, a third party's own. The collapse has already made it a
+`Buffer` by then, and no `toJava` overload serves that slot: `Found: Buffer[LNode] / Required:
+Stream[? <: LNode]`, which `CollectionBoundaryCheck` counted honestly as `UntranslatedFamily` and
+which nothing could close.
+
+`JavaCollections.toStream` closes it, at the CONSUMER slot and not by declining to collapse. Three
+things that decided the shape:
+
+- **not-collapsing is worse.** Left alone, `xs.stream()` emits a `stream()` call on a `Buffer`,
+  which has no such member — so the chain would have to be bridged at its RECEIVER instead, and a
+  receiver is the one position nothing in this phase bridges;
+- **it is faithful for the same reason `toJava` is at the universal slot**: java's value at that
+  slot really WAS a `Stream`. What is not restored is LAZINESS — the operations before the wrap have
+  already run — which is the collapse's own documented divergence met at its boundary rather than a
+  new one, and it is unobservable wherever the terminal consumes the whole stream, which a `Stream`
+  formal's callee does;
+- **`asJava.stream()` and never a hand-built iterator**: java's `Stream` carries spliterator-derived
+  size and ordering characteristics that `toArray` reads. `Kind.Map` is excluded — java's `Map` has
+  no `stream()`, so no valid java sends one to such a slot, the same asymmetry `coerce`'s
+  `JavaCollection` row already records. EXTERNAL formals only: a `Stream` formal on a declaration
+  this port emits is one the port itself decided, and the collapse would have moved it too.
+
+Measured on liqp: **6 -> 5**, one site (`NodeVisitor#getJekyllIncludeInsertionNode`),
+`collection-boundary` **14 -> 13** — the closed row is exactly the `UntranslatedFamily` this seam
+was being counted as — and 3 member digests.
+
+
 ### K6.5 A java `T...` becomes an `Array[T]`, so a REWRITE onto a scala vararg must undo the pack
 
 The engine renders a java varargs parameter as `Array[T]` and MATERIALISES the pack at the call

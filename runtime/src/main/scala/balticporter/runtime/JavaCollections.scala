@@ -449,6 +449,22 @@ object JavaCollections:
     * `coerce`'s refusal table records for the shim direction. */
   def toJava[K, V](m: scala.collection.mutable.Map[K, V]): java.util.Map[K, V] = m.asJava
 
+  /** …and a `java.util.stream.Stream` FORMAL, which the collapse is what creates.
+    *
+    * `xs.stream().map(f)` collapses to `xs.map(f)` — a strict scala collection where java had a
+    * lazy `Stream` — and that is right wherever the chain ends inside the program, because its
+    * TERMINAL (`collect`) materialises anyway. Where the chain is NOT terminated the value crosses
+    * back out to java at a `Stream` slot (`Stream.concat`, `Stream.of`, a third party's own), and
+    * the collapse's result has to become a `Stream` again.
+    *
+    * `asJava.stream()` and never `.iterator`: java's `Stream` carries `spliterator`-derived size and
+    * ordering characteristics that a hand-built one does not, and `toArray` reads them. What is NOT
+    * restored is laziness — the operations before this call have already run — which is the
+    * collapse's own documented divergence met at its boundary rather than a new one. The result is
+    * SEQUENTIAL, as `Collection.stream()` is. */
+  def toStream[A](xs: scala.collection.Iterable[A]): java.util.stream.Stream[A] =
+    xs.toBuffer.asJava.stream()
+
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)
 

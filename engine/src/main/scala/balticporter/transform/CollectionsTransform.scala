@@ -245,7 +245,7 @@ final class CollectionsTransform(
   // ---- the RuleScope's own record, for THIS run (see `applyScope`) ----
 
   /** `JavaCollections.fromJava` / `toJava` — the EXTERNAL seam's two directions. */
-  private var fromJavaSym, toJavaSym: SymId = SymId.None
+  private var fromJavaSym, toJavaSym, toStreamSym: SymId = SymId.None
 
   /** java's three `Object`-keyed map members, for a receiver whose type arguments are WILDCARDS —
     * see [[wildcardMapCall]]. */
@@ -405,6 +405,7 @@ final class CollectionsTransform(
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
     fromJavaSym  = staticSyms.getOrElse("fromJava", SymId.None)
     toJavaSym    = staticSyms.getOrElse("toJava", SymId.None)
+    toStreamSym  = staticSyms.getOrElse("toStream", SymId.None)
     mapGetSym         = staticSyms.getOrElse("mapGet", SymId.None)
     mapContainsKeySym = staticSyms.getOrElse("mapContainsKey", SymId.None)
     mapRemoveSym      = staticSyms.getOrElse("mapRemove", SymId.None)
@@ -2187,6 +2188,15 @@ final class CollectionsTransform(
     // a held-back declaration's `Object` formal belongs to scala this port emits.
     val wantsUniversal = expectedExternal &&
       wants.flatMap(p.symbolOf).exists(_.fullName == CollectionsTransform.ObjectFqn)
+    // …and the slot THIS PHASE'S OWN COLLAPSE creates. `xs.stream().map(f)` becomes `xs.map(f)`,
+    // which is right wherever the chain's terminal is inside the program; where it is not, the
+    // value crosses back out to java at a `Stream` formal and no `toJava` overload serves it
+    // (`Found: Buffer[LNode] / Required: Stream[? <: LNode]`). `toStream` is the faithful answer
+    // and not a compromise, for the same reason `toJava` is at the universal slot: java's value at
+    // that slot really WAS a `Stream`. EXTERNAL only — a `Stream` formal on a declaration this port
+    // emits is a formal the port itself decided, and the collapse would have moved it too.
+    val wantsStream = expectedExternal &&
+      wants.flatMap(p.symbolOf).exists(_.fullName == CollectionsTransform.StreamFqn)
     // …asked so that an ABSENT shim can never match. A shim symbol is `SymId.None` when nothing in
     // the program maps to it (`javaIterableSym` exists only where something names
     // `java.lang.Iterable`), and a `wants` of `Some(SymId.None)` — an expected type whose head did
@@ -2203,9 +2213,13 @@ final class CollectionsTransform(
       // `java.util.List<java.util.List<String>>` formal would emit a wrap that lies one type
       // argument in. Refused and counted, the same way [[externalProducer]] refuses the mirror.
       case Some(Kind.Seq | Kind.Set | Kind.Map)
-        if (wantsJava || wantsUniversal) && mentionsRetyped(actualT)                    => SymId.None
+        if (wantsJava || wantsUniversal || wantsStream) && mentionsRetyped(actualT)     => SymId.None
       case Some(Kind.Seq | Kind.Set | Kind.Map)
         if (wantsJava || wantsUniversal) && toJavaSym != SymId.None                     => toJavaSym
+      // …and a `Stream` FORMAL takes the collapse's result back to java. `Kind.Map` is excluded:
+      // java's `Map` has no `stream()`, so no valid java sends one to such a slot — the same
+      // asymmetry the `JavaCollection` row above records.
+      case Some(Kind.Seq | Kind.Set) if wantsStream && toStreamSym != SymId.None        => toStreamSym
       case _                                                                          => SymId.None
     if factory == SymId.None then actual
     else
@@ -2805,6 +2819,18 @@ object CollectionsTransform:
     * handed it. */
   private[balticporter] val ObjectFqn = "java.lang.Object"
 
+  /** the class file formal a COLLAPSED stream chain has to become a `Stream` again for.
+    *
+    * The collapse (K6) rewrites `xs.stream().map(f)` to `xs.map(f)`, which is right wherever the
+    * chain's TERMINAL is inside the program — `collect` materialises, so the observable result is
+    * the same. Where the chain is not terminated, its value crosses back out to java at a `Stream`
+    * slot, and the collapsed `Buffer` is then handed to a formal no `toJava` overload serves:
+    * `Found: Buffer[LNode] / Required: Stream[? <: LNode]` at `Stream.concat`. Naming the JDK type
+    * here is a fact ABOUT THE JDK, exactly as `typeMap`'s own keys are, and not §4.56's
+    * decide-from-a-prefix (nothing is concluded about a type from its NAME; an exact FQN is
+    * compared against an exact FQN). */
+  private[balticporter] val StreamFqn = "java.util.stream.Stream"
+
   /** java fully-qualified name -> (scala fully-qualified name, collection kind).
     *
     * The phase's POLICY, in the companion so a CHECK can read it without constructing a phase:
@@ -2943,7 +2969,7 @@ object CollectionsTransform:
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
-         "toSet", "toMap", "fromJava", "toJava", "mapGet", "mapContainsKey", "mapRemove")
+         "toSet", "toMap", "fromJava", "toJava", "toStream", "mapGet", "mapContainsKey", "mapRemove")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give

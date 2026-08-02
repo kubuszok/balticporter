@@ -933,6 +933,30 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(java.lang.System.getenv())")
   }
 
+  test("an UNTERMINATED stream chain crossing to a java `Stream` FORMAL goes back through toStream") {
+    // The collapse (K6) rewrites `xs.stream().map(f)` to `xs.map(f)`, which is right wherever the
+    // chain's TERMINAL is inside the program — `collect` materialises anyway. Where it is not, the
+    // value crosses back out to java at a `Stream` slot and no `toJava` overload serves it:
+    // `Found: Buffer[LNode] / Required: Stream[? <: LNode]`. `toStream` is the faithful answer for
+    // the same reason `toJava` is at the universal slot — java's value there really WAS a `Stream`.
+    val p = portAgainst(
+      List("ext/Sink.java" ->
+        """package ext;
+          |public class Sink {
+          |  public static <T> java.util.stream.Stream<T> take(java.util.stream.Stream<? extends T> s) { return null; }
+          |}""".stripMargin),
+      """package demo;
+        |import java.util.*;
+        |class Feeds {
+        |  private final List<String> xs = new ArrayList<String>();
+        |  java.util.stream.Stream<String> out() {
+        |    return ext.Sink.take(xs.stream().map(s -> s.trim()));
+        |  }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertEmits(p, "balticporter.runtime.JavaCollections.toStream(")
+  }
+
   test("an EXTERNAL FIELD is wrapped too — the one member kind with no call node") {
     // K15 is stated for external CALLEES and keyed on `Tree.Apply`. A field read is the same seam
     // one node kind along and is invisible to everything keyed on a call: the class file says
