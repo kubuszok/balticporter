@@ -4248,6 +4248,31 @@ Maintained by deletion. Items are ordered by what they block, not by size.
   and is false for a SYNTHESIS, which is what the funnel now does for most multi-constructor
   classes. See §7's A2 section.)
 
+### 12.1.5 Base-surface sites the published map CANNOT answer
+
+Every whole-program index in the emitter is a question a dependent asks about a program that
+CONTAINS its base (`DESIGN.md` §8.3). Five are migrated — the funnel's fixpoint, the class-vs-object
+collapse, the constructor replay's `vis=` lookup, §4.55's two field-rename passes, and the `export`
+exclusion lists' `statics=`. The rest are named here rather than left to be re-discovered, each with
+THE CONTRACT KEY IT AWAITS, because a site whose answer is wrong only across a module boundary is one
+nothing in a single-module run can see:
+
+| site | what it answers about a BASE type | the key it needs | why the map does not carry it |
+|---|---|---|---|
+| `TirEmitter.funnelParamRenames` | the `$p` rename of a base class's PROMOTED constructor parameter | a member row for an ENGINE-MINTED member | a promoted parameter has no emitted DECLARATION — it IS the class's parameter list, so the source map records no row for it. `Surface.NotCarried` names it in code |
+| `TirEmitter.rawParentAlignment` / `overrideAlign` | the TYPE at which a base parent's parameter was RENDERED | a `sig=` row | schema 3 publishes a `primary=` DESCRIPTOR, which is the erased source spelling; an override alignment needs the rendered Scala type, which no column holds |
+| `TirEmitter.diamondOverrides` | is a base parent's method CONCRETE | a `concrete` flag on the member row | not published; `MemberShape` carries `name`/`vis`/`placement` only |
+| `GlobalsToImplicitsTransform` seeds + closure | does a base declaration carry a `(using C)` clause | a `usingClause=` on the member row | not published, and the phase is default-off in every port |
+| `PrimitiveToOpaqueTransform` seeds | is a base declaration RETYPED to an opaque type | a `retyped=` on the member row | as above |
+| `CollectionsTransform` scope (`RuleScope.Only` growth) | is a base declaration inside the retyping scope | as above | as above |
+| `FlowPropagation.edges` | — | — | whole-program by construction; it is the SUBSTRATE the three phases above grow over, so it is answered by whatever they are |
+
+**The last four are ARMED, not latent.** P2/P5/P6 landed, so the phases exist and run; what keeps
+them from producing a cross-module divergence today is that no port declares a holder, an
+`OpaqueSpec` or a `RuleScope.Only` that reaches a base declaration. The first one that does will hit
+this table, and the entry to write then is a contract column — not a re-derivation, which is the
+whole of what `ENGINE-LIMITS.md` D4/D5 measured.
+
 ### 12.2 Control flow
 
 - **`labelSeq` is program-global**, so a control-flow diff is never file-local: emitting one new

@@ -81,7 +81,8 @@ final class TirEmitter(
   private val prepared =
     TirEmitter.resolveCapturedLocalClashes(
       TirEmitter.funnelParamRenames(
-        TirEmitter.resolveFieldShadowing(TirEmitter.resolveMemberClashes(source, own), own), own), own)
+        TirEmitter.resolveFieldShadowing(
+          TirEmitter.resolveMemberClashes(source, own, surface), own, surface), own), own)
   /** which Java constructor becomes each class's Scala primary, and which `super(args)` can be
     * replayed as statements — whole-program decisions. */
   private val plans = CtorFunnel.Plans(prepared, Some(surface))
@@ -936,11 +937,42 @@ final class TirEmitter(
       case _ => None
     cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case term: Term => headSym(term.tpe) }
 
+  /** Types that have at least one `static` member, so a companion `object` holds it — and for a type
+    * this run does NOT emit, the answer is the base's PUBLISHED `statics=` rather than a
+    * re-derivation over the base's Java.
+    *
+    * The distinction is the whole of `DESIGN.md` §8.3 at this site. What an `export Parent.{… => _,
+    * *}` must exclude is the set of names the parent's companion ACTUALLY DELIVERS, and for a base
+    * parent that is a fact about the base's EMITTED output: §4.55 may have renamed a static, the
+    * manifest may have dropped one, and the base's own run is the only place either happened.
+    * Re-deriving it from the Java the dependent happens to have parsed gets Java's names back, which
+    * is right exactly when nothing moved. libGDX core publishes 350 `name=` rows.
+    *
+    * `Unknown` keeps the local derivation — the pre-contract path — and records the question. */
+  private def basePublishedStatics(s: SymId): Option[Set[String]] =
+    if surface.owns(s) then scala.None
+    else
+      surface.typeShape(s) match
+        case Surface.Answer.Own                 => scala.None
+        case Surface.Answer.Published(shape, _) => Some(shape.statics.map(esc).toSet)
+        case Surface.Answer.Unknown(why, module) =>
+          surface.gap(Surface.Gap(sym(s).fullName,
+            why + " — this run re-exports its companion, so it needs the static NAMES that companion " +
+              "delivers; the local derivation over the base's java stands, and it does not see a " +
+              "static the base renamed or dropped",
+            module, fatal = false,
+            fix = "§1(b) PER-LIBRARY: declare the module that emits this type as a base " +
+              "(`base = \"…\"`) and re-run it with this engine so its port map carries `statics=`"))
+          scala.None
+
   /** our-own types that have at least one `static` member (so a companion `object` holds it). */
   private lazy val typesWithStatics: Set[SymId] =
     val acc = collection.mutable.Set[SymId]()
     def scan(cd: Tree.ClassDef): Unit =
-      if cd.body.exists { case d: Definition => sym(d.symbol).flags.isStatic; case _ => false } then acc += cd.symbol
+      val statics = basePublishedStatics(cd.symbol) match
+        case Some(published) => published.nonEmpty
+        case scala.None      => cd.body.exists { case d: Definition => sym(d.symbol).flags.isStatic; case _ => false }
+      if statics then acc += cd.symbol
       cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
     program.units.foreach(scan)
     acc.toSet
@@ -949,7 +981,8 @@ final class TirEmitter(
   private lazy val ownStaticsBySym: Map[SymId, Set[String]] =
     val m = collection.mutable.Map[SymId, Set[String]]()
     def scan(cd: Tree.ClassDef): Unit =
-      m(cd.symbol) = cd.body.collect { case d: Definition if sym(d.symbol).flags.isStatic => esc(sym(d.symbol).name) }.toSet
+      m(cd.symbol) = basePublishedStatics(cd.symbol).getOrElse(
+        cd.body.collect { case d: Definition if sym(d.symbol).flags.isStatic => esc(sym(d.symbol).name) }.toSet)
       cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
     program.units.foreach(scan); m.toMap
 
@@ -3400,7 +3433,9 @@ object TirEmitter:
     * Fields shadowing an inherited METHOD (`TextField`'s `layout` field under `Widget.layout()`)
     * are the same defect through Java's separate namespaces for the two, and are renamed here too.
     * Statics are exempt: they land in the companion, which inherits nothing. */
-  def resolveFieldShadowing(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
+  def resolveFieldShadowing(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
+                            surface: Surface = null): Program =
+    val view    = if surface eq null then TrivialSurface(p) else surface
     val renames = collection.mutable.Map[SymId, String]()
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
     def headSym(t: TypeRepr): Option[SymId] = t match
@@ -3434,7 +3469,8 @@ object TirEmitter:
         .flatMap(declOf.get).foreach(scan)
       val shadowed = inherited(cd)
       cd.body.foreach {
-        case v: Tree.ValDef if shadowed(nm(v.symbol)) && !p.symbolOf(v.symbol).exists(_.flags.isStatic) =>
+        case v: Tree.ValDef if shadowed(nm(v.symbol)) && !p.symbolOf(v.symbol).exists(_.flags.isStatic) &&
+                               !TirEmitter.followsBase(p, view, renames, v.symbol, "shadows-inherited") =>
           // The fresh name must not ITSELF be inherited. `CheckBox.style` shadows
           // `TextButton.style`, which shadows `Button.style` — renaming both to `style$shadow`
           // just relocated the collision one level up. Keep appending until the name is free
@@ -3468,6 +3504,46 @@ object TirEmitter:
         renames.get(s.id).map(n => s.copy(name = n, flags = s.flags.copy(isPrivate = false, isProtected = false))).getOrElse(s)
       )
       p.rebuilt(symbols = SymbolTable(syms))
+
+  /** A field this run does NOT emit: does the BASE's published name settle it, so nothing is
+    * re-derived? `true` when the caller must not compute a rename of its own.
+    *
+    * §4.55's two field passes are whole-program by construction — a field is renamed iff THIS CLASS
+    * OR ANY DESCENDANT declares a method of that name, and shadowing is decided against every
+    * ancestor — and a dependent's `Program` CONTAINS its base, with EXTRA descendants the base's own
+    * run never saw. So a dependent subclass declaring `def x()` renames the BASE's field `x` to
+    * `x$field` in the dependent's symbol table, and every reference the dependent emits then spells a
+    * name the base never wrote. It compiles alone and cannot compile against the module it resolves
+    * against (§1.5) — `ENGINE-LIMITS.md` D4's shape, at the renaming passes instead of the funnel.
+    *
+    * **0 corpus sites**, which is why this is a construction-time restriction and not a repair: no
+    * port in the corpus has a dependent subclass whose method name collides with a base field, and a
+    * check would therefore have reported zero for as long as anybody looked. `BaseSurfaceSpec` builds
+    * the shape that has none.
+    *
+    * The base's answer is FOLLOWED, not merely respected: `name=` is the emitted simple name where it
+    * differs from Java's, so a base that DID rename the field hands the dependent that name, and one
+    * that did not hands it nothing and the field keeps Java's. Where no base publishes a row the
+    * local derivation stands — the pre-contract path — and the question is recorded as a gap, because
+    * a run that guessed here would emit exactly the text this exists to stop. */
+  private def followsBase(p: Program, view: Surface, renames: collection.mutable.Map[SymId, String],
+                          field: SymId, clash: String): Boolean =
+    if view.owns(field) then false
+    else
+      view.memberShape(field) match
+        case Surface.Answer.Own => false // cannot happen: `owns` above is the complement
+        case Surface.Answer.Published(shape, _) =>
+          if shape.name.nonEmpty then renames(field) = shape.name
+          true
+        case Surface.Answer.Unknown(why, module) =>
+          view.gap(Surface.Gap(p.symbolOf(field).map(_.fullName).getOrElse("?"),
+            why + s" — this run would rename it for a $clash it can only see because its own " +
+              "declarations are in the same program as the base's; the local derivation stands, and " +
+              "it may not be the name the base emitted",
+            module, fatal = false,
+            fix = "§1(b) PER-LIBRARY: declare the module that emits this field as a base " +
+              "(`base = \"…\"`) and re-run it with this engine so its port map carries a `name=` row"))
+          false
 
   /** THE OTHER HALF OF A §4.55 FIELD RENAME: the member also ships WIDER than Java wrote it.
     *
@@ -3664,7 +3740,9 @@ object TirEmitter:
     * A `module` symbol has one body rather than a class and a companion, so both its placements land
     * in the same scope and the partition collapses — stated here rather than assumed, because a
     * synthesized object is exactly where an assumption about `isStatic` stops holding. */
-  def resolveMemberClashes(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
+  def resolveMemberClashes(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
+                           surface: Surface = null): Program =
+    val view    = if surface eq null then TrivialSurface(p) else surface
     val renames = collection.mutable.Map[SymId, String]()
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
     def headSym(t: TypeRepr): Option[SymId] = t match
@@ -3693,7 +3771,7 @@ object TirEmitter:
       def clashes(v: Tree.ValDef): Boolean =
         if inCompanion(v.symbol, cd.symbol) then statClashNames(nm(v.symbol)) else instClashNames(nm(v.symbol))
       cd.body.foreach {
-        case v: Tree.ValDef if clashes(v) =>
+        case v: Tree.ValDef if clashes(v) && !TirEmitter.followsBase(p, view, renames, v.symbol, "field-vs-method") =>
           renames(v.symbol) = nm(v.symbol) + "$field"
           // the note's own text is unchanged by this refinement, deliberately: it already says
           // "a method of this class or of a SUBCLASS", which is the INSTANCE scope and now the

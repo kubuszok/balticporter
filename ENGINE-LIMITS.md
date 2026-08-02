@@ -2736,6 +2736,15 @@ compiles with a named divergence instead of failing (M6/C3). Measured on gdx-glt
   `owner#name` — the OVERLOAD SET — rather than re-spelling the emitter's parameter grammar in a
   second place; where the overloads publish DIFFERENT shapes the answer is `Unknown`, never one of
   them picked.
+
+  **…and the overload set ALONE is still wrong — 272 false reports on ONE dependent.** §4.55 exists
+  because java lets `FileHandle.file` be a FIELD and `file()` a METHOD, and the field is then renamed
+  `file$field` — so those two rows DISAGREE by construction, and every renamed field in every base
+  answered `Unknown` about a row sitting right there. A field's key is exactly `owner#name` and a
+  nilary method's still carries `()`, so the two are told apart by WHAT THE SYMBOL IS: read from the
+  DEFINITION (`Tree.DefDef` vs `Tree.ValDef`), never from `Symbol.descriptor`, which is also `None`
+  for an unresolved external and would conflate "a field" with "we do not know". Found by a lane, not
+  by a compile: the count is a check row and nothing else moved.
 - **Every check and decision recorder built its own `CtorFunnel.Plans` with NO surface.**
   `OmissionCheck` (four lanes), `PortRun.recordDroppedSuperArgs` and `PortRun.recordCtorFunnel` each
   did `CtorFunnel.Plans(program)`, which is a `TrivialSurface` — everything is mine. So the check

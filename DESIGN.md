@@ -2140,6 +2140,20 @@ is a counted refusal (M6/C3), not a seeded plan. Errors 7 → 7; the nine member
 those two classes and their constructors, now consistent with what the base published rather than
 with a demoted re-derivation.
 
+**Two more reads are migrated: §4.55's field-rename passes and the `export` exclusion lists.**
+Both are whole-program indexes and both were wrong only across a module boundary. A field is renamed
+`x$field` iff this class OR ANY DESCENDANT declares a method of that name — and a dependent's program
+has EXTRA descendants the base never saw, so a dependent subclass declaring `def x()` renamed the
+BASE's field and every reference the dependent emitted spelled a name the base never wrote. The
+base's `name=` is now FOLLOWED instead: a base that renamed the field hands the dependent that name,
+one that did not hands it nothing. **0 corpus sites**, which is exactly why it is a construction-time
+restriction and not a check — a check would have reported zero for as long as anybody looked, and
+`BaseSurfaceSpec` builds the shape that has none. The `export` lists read `statics=` and `companion=`
+for the same reason from the other end: what `export P.{… => _, *}` may exclude is the set of names
+the parent's companion ACTUALLY DELIVERS, and a static the base renamed or dropped exists only in the
+base's emitted output. `export P.*` against a type whose companion the base did not emit is an error
+outright.
+
 **A NON-FATAL contract gap is now a CHECK, `base-surface`.** The fatal half fails the run — §8.3's
 enforcement, and deliberately not a check ("a drift check is rejected on evidence"). The other half is
 specified as a FINDING and was a line of stdout: an `Unknown` no emission consumed. A number nobody

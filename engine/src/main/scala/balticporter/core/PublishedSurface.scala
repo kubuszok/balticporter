@@ -103,19 +103,41 @@ final class PublishedSurface(
               s"(searched ${bases.map(_._1).sorted.mkString(", ")})",
             bases.map(_._1).headOption.filter(_ => bases.sizeIs == 1))
 
-  /** …and where the name names SEVERAL overloads, they must AGREE.
+  /** Is this symbol an EXECUTABLE? The published key carries a parameter spelling for one and not
+    * for a field, and `owner#name` names BOTH when java put a field and a method there — which §4.55
+    * exists precisely because java allows.
     *
-    * The published key carries a parameter spelling and the asked-about symbol does not (see
-    * [[memberRows]]), so what this can honestly answer is a question about `owner#name`. Where every
-    * overload published the same shape that is also the answer for each of them; where they differ
-    * the honest answer is `Unknown`, and a consumer that refuses on `Unknown` refuses for the whole
-    * name — conservative in the only direction that cannot emit wrong text. */
+    * Read from the DEFINITION and not from `Symbol.descriptor`: `descriptor` is also `None` for an
+    * external member the frontend could not resolve, so a `None` there conflates "a field" with "we
+    * do not know", and the two want opposite answers below. */
+  private def isExecutable(s: SymId): Boolean =
+    program.definitionOf(s) match
+      case Some(_: Tree.DefDef) => true
+      case Some(_)              => false
+      case scala.None           => program.symbolOf(s).exists(_.descriptor.isDefined)
+
+  /** …and the row is chosen by WHAT THE SYMBOL IS, then by agreement across overloads.
+    *
+    * A FIELD's key is exactly `owner#name` — no parentheses, which a nilary method's key
+    * (`owner#name()`) still has — so a field is an EXACT lookup and can never be confused with the
+    * method beside it. An EXECUTABLE has no parameter spelling on this side (`Symbol.descriptor` is
+    * a symbol PROPERTY and deliberately not part of the name, §8.1), so what it can honestly ask
+    * about is the OVERLOAD SET; where those agree that is the answer for each of them, and where
+    * they differ the answer is `Unknown` rather than one of them picked.
+    *
+    * Splitting the two is not a refinement. Read as one set, `FileHandle#file` — a field §4.55
+    * renamed to `file$field` beside the method `file()` that forced the rename — is two rows that
+    * DISAGREE by construction, so every renamed field in every base answered `Unknown`: **272 of
+    * them on one dependent**, each one a false report about a row that was sitting right there. */
   def memberShape(s: SymId): Surface.Answer[Surface.MemberShape] =
     if owns(s) then Surface.Answer.Own
     else
-      val fqn = program.symbolOf(s).map(_.fullName).getOrElse("")
-      memberRows.get(fqn) match
-        case Some((mod, e) :: rest) =>
+      val fqn  = program.symbolOf(s).map(_.fullName).getOrElse("")
+      val rows = memberRows.getOrElse(fqn, Nil)
+      val mine = if isExecutable(s) then rows.filter((_, e) => e.emitted != fqn)
+                 else rows.filter((_, e) => e.emitted == fqn)
+      mine match
+        case (mod, e) :: rest =>
           val shapes = (e :: rest.map(_._2)).map(_.memberShape).distinct
           if shapes.sizeIs == 1 then Surface.Answer.Published(shapes.head, mod)
           else
@@ -124,7 +146,7 @@ final class PublishedSurface(
                 s"(${shapes.map(Surface.render).mkString("; ")}) — a symbol carries no parameter " +
                 "spelling here, so the name cannot be resolved to one of them",
               Some(mod))
-        case _ =>
+        case Nil =>
           Surface.Answer.Unknown(s"no declared base publishes a contract row for the member $fqn",
                                  bases.map(_._1).headOption.filter(_ => bases.sizeIs == 1))
 

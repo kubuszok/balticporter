@@ -338,6 +338,23 @@ class BaseSurfaceSpec extends munit.FunSuite:
     assertEquals(s.memberShape(memberId(p, "p.Base#n")).published.map(_.vis), Some("public"))
   }
 
+  test("a FIELD and a METHOD of one name are TWO rows, and each symbol gets its own") {
+    // §4.55's whole reason for existing, arriving at the lookup: java lets `FileHandle.file` be a
+    // field AND `file()` a method, the field is renamed `file$field`, and the two rows therefore
+    // DISAGREE by construction. Read as one overload set every renamed field in every base answered
+    // `Unknown` — 272 of them on one dependent, each a false report about a row sitting right there.
+    val (p, root) = model(privateBase, privateHeir)
+    val rows = List(
+      memberRow("p.Base#n", "public").copy(shape = Surface.render(Surface.MemberShape(name = "n$field"))),
+      memberRow("p.Base#n()", "private"),
+    )
+    val s = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> withMembers(contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class")), rows)))
+    // the FIELD's key has no parentheses; a nilary METHOD's still does, so the two never collide
+    assertEquals(s.memberShape(memberId(p, "p.Base#n")).published.map(_.name), Some("n$field"))
+    assertEquals(s.gaps, Nil)
+  }
+
   test("…and DISAGREEING overloads of one name are Unknown, never one of them picked") {
     val (p, root) = model(privateBase, privateHeir)
     val rows = List("private", "public").zipWithIndex.map { (v, i) =>
@@ -350,6 +367,133 @@ class BaseSurfaceSpec extends munit.FunSuite:
         assert(clue(why).contains("do not agree"), why)
         assertEquals(m, Some("base-mod"))
       case other => fail(s"expected Unknown, got $other")
+  }
+
+  // -------------------------------------------------------------------------
+  // 3.6 §4.55 — a DESCENDANT clash may not rename a field this run does not EMIT
+  // -------------------------------------------------------------------------
+
+  /** The face with **0 corpus sites**, which is exactly why it is pinned here rather than measured.
+    *
+    * `p.Base` declares a field `x`; the DEPENDENT declares `q.Heir extends p.Base` with a method
+    * `x()`. §4.55's field-vs-method pass is whole-program — a field is renamed iff this class or any
+    * DESCENDANT declares a method of that name — and a dependent's `Program` contains its base with
+    * EXTRA descendants the base's own run never saw. So the dependent renames the BASE's field, and
+    * every reference it emits spells `x$field` against a base that wrote `x`: it compiles alone and
+    * cannot compile against the module it resolves against.
+    */
+  private val clashBase = Map(
+    "p/Base.java" -> """package p;
+      |public class Base { public int x; }""".stripMargin,
+  )
+
+  private val clashHeir = Map(
+    "q/Heir.java" -> """package q;
+      |public class Heir extends p.Base {
+      |  public int x() { return 1; }
+      |}""".stripMargin,
+  )
+
+  private def emittedWith(p: Program, s: Surface): String =
+    new TirEmitter(p, surfaceView = Some(s)).emit
+
+  test("§4.55: a DEPENDENT's method does not rename the BASE's field — 0 corpus sites, and this is why") {
+    val (p, root) = model(clashBase, clashHeir)
+    // the pre-contract answer, reproduced: with the whole program as the surface the base's field is
+    // renamed by a descendant the base never saw.
+    assert(clue(emittedWith(p, TrivialSurface(p))).contains("x$field"))
+
+    // …and with the base's row read, the base's own answer is FOLLOWED: it published no `name=`, so
+    // the field keeps java's name and this run renames nothing.
+    val published = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> withMembers(contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class")),
+                                     List(memberRow("p.Base#x", "public")))))
+    assert(!clue(emittedWith(p, published)).contains("x$field"))
+    assertEquals(published.gaps, Nil)
+  }
+
+  test("…and where the BASE DID rename it, the dependent spells the base's name, not its own") {
+    val (p, root) = model(clashBase, clashHeir)
+    val rows = List(PortMap.Entry("member", "p.Base#x", "p.Base#x", PortMap.Disposition.Ported,
+                                  shape = Surface.render(Surface.MemberShape(name = "x$renamedByTheBase"))))
+    val published = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> withMembers(contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class")), rows)))
+    val out = emittedWith(p, published)
+    assert(clue(out).contains("x$renamedByTheBase"), out)
+    assert(!out.contains("x$field"), out)
+  }
+
+  test("NEGATIVE: an OWNED field still moves — the guard is a scope, not a removal") {
+    val (p, root) = model(clashBase, Map(
+      "q/Own.java"  -> "package q; public class Own { public int y; }",
+      "q/Sub.java"  -> "package q; public class Sub extends q.Own { public int y() { return 1; } }",
+    ))
+    val published = new PublishedSurface(p, ownedUnits(p, root))
+    assert(clue(emittedWith(p, published)).contains("y$field"))
+  }
+
+  test("an UNKNOWN base keeps the local derivation and RECORDS the question") {
+    val (p, root) = model(clashBase, clashHeir)
+    val published = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class"))))
+    assert(clue(emittedWith(p, published)).contains("x$field"))
+    assertEquals(clue(published.gaps).map(_.subject), List("p.Base#x"))
+    assertEquals(published.gaps.head.fatal, false)
+  }
+
+  // -------------------------------------------------------------------------
+  // 3.7 the `export` exclusion list reads the base's PUBLISHED `statics=`
+  // -------------------------------------------------------------------------
+
+  /** What `export Parent.{… => _, *}` must exclude is the set of names the PARENT'S COMPANION
+    * actually delivers, and for a base parent that is a fact about the base's EMITTED output — a
+    * static it renamed, a static the manifest dropped. Re-derived from the base's java the dependent
+    * gets java's names back, which is right exactly when nothing moved. */
+  private val staticBase = Map(
+    "p/Holder.java" -> """package p;
+      |public class Holder {
+      |  public static final int LIMIT = 3;
+      |  public static int twice(int v) { return v * 2; }
+      |}""".stripMargin,
+  )
+
+  private val staticHeir = Map(
+    "q/Uses.java" -> """package q;
+      |public class Uses extends p.Holder {
+      |  public static final int LIMIT = 9;
+      |}""".stripMargin,
+  )
+
+  test("a base whose statics the manifest DROPPED delivers none, so no `export` is written at all") {
+    val (p, root) = model(staticBase, staticHeir)
+    // the base's java has two statics; its EMITTED output has none, because its manifest dropped
+    // them. `export P.*` against a type with no companion is an error outright, and only the base's
+    // row can say so — the java the dependent parsed says the opposite.
+    val published = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> contract("base-mod",
+        "p.Holder" -> Surface.TypeShape(form = "class", companion = false, statics = Nil))))
+    val out = emittedWith(p, published)
+    assert(!clue(out).contains("export p.Holder."), out)
+    assertEquals(published.gaps, Nil)
+  }
+
+  test("…and a base that DID emit them is re-exported, with the names it actually emitted") {
+    val (p, root) = model(staticBase, staticHeir)
+    val published = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> contract("base-mod",
+        "p.Holder" -> Surface.TypeShape(form = "class", companion = true,
+                                        statics = List("LIMIT", "twice")))))
+    assert(clue(emittedWith(p, published)).contains("export p.Holder."))
+    assertEquals(published.gaps, Nil)
+  }
+
+  test("NEGATIVE: with no published row the local derivation stands, and the question is RECORDED") {
+    val (p, root) = model(staticBase, staticHeir)
+    val published = new PublishedSurface(p, ownedUnits(p, root))
+    val out = emittedWith(p, published)
+    assert(clue(out).contains("export p.Holder."), out)
+    assert(clue(published.gaps).exists(_.subject == "p.Holder"), published.gaps.map(_.subject).mkString(", "))
+    assert(published.gaps.forall(!_.fatal))
   }
 
   // -------------------------------------------------------------------------
