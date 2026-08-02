@@ -73,9 +73,14 @@ neither optional:
   unknowable it counts, and says which of the two it is. **The REWRITE reads it the same way, through the same function.** A call rewrite keyed
   on the receiver's node type fires against the JDK type the declaration kept — `b.raw ++= mine` on
   a `java.util.List` — so the scope emits, for the very declarations it was asked to protect, code
-  that cannot compile and that no check counts. And a scope seam is also the one argument slot with
-  NO formal to compare against: the callee is then the JDK's own external symbol, which the frontend
-  interned without a signature, so the four ordinary slot kinds do not see it.
+  that cannot compile and that no check counts. **And a formal that stays JAVA is read LITERALLY —
+  never through the phase's own remap.** The frontend interns an external member with its
+  `MethodType` where a class file can be read for one scope-free, so the formal is usually there;
+  read through `remap` it says the slot wants the port's own shim, the wrap fires, and a standalone
+  runtime trait is handed to a class file asking for `java.lang.Iterable`. The seam then moves one
+  type to the left and stops being findable, because the emitted call names the shim rather than the
+  boundary. Where the class file cannot be read at all there is no formal, and that — not a
+  guess — is what the count stands for.
 
 **And a class a FRAMEWORK instantiates has no caller to change.** Every such phase reasons from the
 program: it may add a parameter because it can see, and fix, each `new`. A test suite, a
@@ -614,6 +619,12 @@ The TIR answers it: the frontend interns an external symbol lazily with `owner =
 `Definition`, while everything the program declares hangs off a top-level unit through the `owner`
 chain. So **a symbol is owned iff climbing its owners reaches a `program.units` symbol** — stronger
 than "has a definition", which anonymous-class symbols do not.
+
+**And an unowned symbol's SIGNATURE is a fact about a class file, so no phase may move it.**
+`StandardTraversal.mapSymbols` skips what the program does not own, for the same reason a rename
+must: whatever the port does to itself, that method still takes and returns what it was compiled to.
+Mapped, the table would say the port's own type on BOTH sides of every external seam, and the check
+written to find that seam would report zero (`ENGINE-LIMITS.md` K15).
 
 Two corollaries for any prefix rule:
 

@@ -783,21 +783,34 @@ final class NullabilityTransform(
     else e
 
   private def coerceArgs(t: Tree.Apply)(using p: Program): Term =
-    p.symbolOf(t.method).map(_.info).collect {
+    // An EXTERNAL callee is excluded BEFORE the formals are read, and that exclusion is the whole
+    // difference between this phase's seam and the collection boundary's.
+    //
+    // `SpoonTir` now interns an external member with its `MethodType` where a class file can be
+    // read for one, so the formals ARE available here. They are the wrong evidence.
+    // `CollectionsTransform` asks "what TYPE does this slot want", which a class file answers;
+    // this phase has to ask "does this slot accept null", which a class file does not answer at
+    // all — no annotation is read from one, and every reference type in a java signature accepts
+    // null unless something says otherwise. Coercing on the type alone would emit `.get` at
+    // `println(anAbsentValue)`, which java prints as "null" and the port would THROW on: a §4.4
+    // behaviour change with no compile error and no count moving. So the seam stays COUNTED, and
+    // the count now says which of the two facts is missing.
+    val formals = Option.when(p.owns(t.method))(p.symbolOf(t.method).map(_.info)).flatten.collect {
       case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
       case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
-    } match
+    }
+    formals match
       case Some(fs) if fs.sizeIs == t.args.size => t.copy(args = t.args.zip(fs).map((a, f) => coerceTo(f, a)))
       case _ =>
-        // THE ONE SLOT WITH NO FORMAL TO COMPARE AGAINST — the callee is an external the frontend
-        // interned without a signature, so there is nothing to coerce to and nothing that could
-        // honestly be inserted. Counted rather than guessed: a wrapped value reaching a slot the
-        // engine cannot see is exactly the seam a wrapper mode creates, and a seam that moved no
-        // number would be worse than no wrapper (`CollectionBoundaryCheck` counts its own for the
-        // same reason).
+        // THE ONE SLOT WITH NO NULLABILITY TO COMPARE AGAINST — there is nothing to coerce to and
+        // nothing that could honestly be inserted. Counted rather than guessed: a wrapped value
+        // reaching a slot the engine cannot see is exactly the seam a wrapper mode creates, and a
+        // seam that moved no number would be worse than no wrapper (`CollectionBoundaryCheck`
+        // counts its own for the same reason).
         t.args.filter(isWrapped).foreach { a =>
           issues += Finding(Issue.UncoercibleSeam, p.symbolOf(t.method).map(_.fullName).getOrElse("?"),
-            "a wrapped argument reaches a callee whose formals this program does not have",
+            "a wrapped argument reaches a callee whose NULLABILITY this program does not have — a " +
+              "class file carries no annotation the engine reads, so its type is not evidence here",
             a.origin, currentUnit)
         }
         t

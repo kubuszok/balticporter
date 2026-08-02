@@ -31,8 +31,17 @@ class XrefSpec extends munit.FunSuite:
 
   private val O  = Origin.synthetic
   private def tt(t: TypeRepr) = TypeTree(t, O)
+  /** an EXTERNAL symbol — `owner = SymId.None`, which is what makes it external (§4.56: ownership
+    * is decided by climbing the owner chain to a unit, never from the name). */
   private def sym(id: SymId, name: String, info: TypeRepr) =
     Symbol(id, name, name, Flags(), SymId.None, info)
+
+  /** …and a MEMBER of `Foo`, which must carry `Foo` as its owner or the whole engine reads it as an
+    * external: `StandardTraversal.mapSymbols` does not retype what the program does not own,
+    * because an external signature is a fact about a class file that no phase can move. A fixture
+    * that leaves the owner off is not a smaller program, it is a different one. */
+  private def member(id: SymId, name: String, info: TypeRepr) =
+    Symbol(id, name, s"Foo#$name", Flags(), FOO, info)
 
   // ---- the program: class Foo extends Base with Widget { fields...; def render }
   private val wDef   = Tree.ValDef(W, tt(tWidget), scala.None, O)
@@ -62,10 +71,10 @@ class XrefSpec extends munit.FunSuite:
       sym(LIST, "List", NoType),
       sym(UNIT, "Unit", NoType),
       sym(PRINTLN, "println", MethodType(Nil, tUnit)),
-      sym(W, "w", tWidget),
-      sym(WS, "ws", tListWidget),
-      sym(BND, "bounded", tBoundedWidget),
-      sym(RENDER, "render", MethodType(Nil, tUnit)),
+      member(W, "w", tWidget),
+      member(WS, "ws", tListWidget),
+      member(BND, "bounded", tBoundedWidget),
+      member(RENDER, "render", MethodType(Nil, tUnit)),
     )
   )
 
@@ -120,4 +129,24 @@ class XrefSpec extends munit.FunSuite:
     assertEquals(after.symbolOf(W).map(_.info), Some(TypeRef(NoPrefix, GADGET)))
     // an untouched position (the call) is unaffected.
     assert(kinds(after, PRINTLN).contains(UsageKind.Call))
+  }
+
+  test("…and an EXTERNAL symbol's signature does NOT move — a class file is not the phase's to edit") {
+    // The other half of the line above, and it is not symmetry for its own sake. `println`'s
+    // signature is a fact about a compiled class file: whatever the port renames inside itself,
+    // that method still takes and returns what it was compiled to take and return. A phase that
+    // rewrote it would produce a table claiming otherwise, and every seam against an external
+    // callee would then read the port's OWN answer on both sides of it — which is the shape
+    // `ENGINE-LIMITS.md` K15 measured at 15 compile errors against 0 findings.
+    val widening = new Phase:
+      def name = "unit->widget"
+      override def transformType(t: TypeRepr)(using Program): TypeRepr = t match
+        case TypeRef(p, s) if s == UNIT => TypeRef(p, WIDGET)
+        case other                      => other
+
+    val after = Pipeline.run(program(), List(widening))
+    // `render` is ours, so its signature moved…
+    assertEquals(after.symbolOf(RENDER).map(_.info), Some(MethodType(Nil, TypeRef(NoPrefix, WIDGET))))
+    // …and `println` is a class file's, so it did not.
+    assertEquals(after.symbolOf(PRINTLN).map(_.info), Some(MethodType(Nil, tUnit)))
   }

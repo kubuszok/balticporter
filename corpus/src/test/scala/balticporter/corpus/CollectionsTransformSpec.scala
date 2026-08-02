@@ -659,11 +659,13 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "fromJava")
   }
 
-  test("an external seam the phase CANNOT close is COUNTED, with its §1 classification") {
-    // The consumer half: an argument whose formal lives in a class file the frontend interned with
-    // NO signature — measured on liqp as 1157 external callees and not one with a `MethodType`. So
-    // nothing can decide whether it fits, and the honest answer is a cannot-verify count rather
-    // than a silence (M6). `String.join` takes an `Iterable`, so this one really does not compile.
+  test("an external CONSUMER slot whose formal is READABLE is bridged, not counted") {
+    // The consumer half, which used to be unanswerable: an argument whose formal lives in a class
+    // file. The frontend interned every external member with NO signature — 1157 on liqp, not one
+    // `MethodType` — so nothing could decide whether the argument fitted and the only honest
+    // answer was a cannot-verify count. `SpoonTir` now records what a class file can be read for
+    // scope-free, so `String.join`'s `java.lang.Iterable` formal is visible and the port's `Buffer`
+    // reaches it through a LIVE view instead of through a compile error.
     val ph = new CollectionsTransform
     val p  = port(
       """package demo;
@@ -673,9 +675,46 @@ class CollectionsTransformSpec extends PortSuite:
         |  String joined() { return String.join(",", xs); }
         |}
         |""".stripMargin, ph)
+    assertEmits(p, "balticporter.runtime.JavaCollections.toJava(this.xs)")
+    assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee), 0)
+  }
+
+  test("\u2026and a slot the phase does NOT map is neither bridged nor counted \u2014 the negative test") {
+    // The bridge is keyed on the phase's OWN table (\u00a74.56), not on "the callee is external". A
+    // retyped value at an `Object` formal conforms exactly as it did, so nothing is inserted and
+    // nothing is reported \u2014 a count that rose here would be a count nobody could act on.
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.*;
+        |class Plain2 {
+        |  private final List<String> xs = new ArrayList<String>();
+        |  String shown() { return String.valueOf(xs); }
+        |}
+        |""".stripMargin, ph)
+    assertNotEmits(p, "toJava")
+    assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee), 0)
+  }
+
+  test("\u2026and a class file with NO readable signature is still COUNTED, with its \u00a71 kind") {
+    // The half that must never quietly become zero. Where the callee's declaration cannot be
+    // reconstructed there is no formal at any slot, so nothing can decide whether the argument
+    // fits and a cannot-verify count is the honest answer (M6) \u2014 a check that reads 0 because it
+    // stopped looking is exactly the failure CLAUDE.md \u00a71(b) names. The real classpath fixture
+    // that puts a member in that state lives in `ExternalSignatureSpec`; asserted here is that the
+    // arm keys on the ABSENT `MethodType` and that its classification still reaches a reader.
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.*;
+        |class Hand3 {
+        |  private final List<String> xs = new ArrayList<String>();
+        |  void go(demo.Unknown u) { u.take(xs); }
+        |}
+        |""".stripMargin, ph)
     val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee)
     assert(clue(fs).nonEmpty, "an argument at a signature-less external callee must be counted")
-    assert(clue(fs.head.slot).contains("external callee"))
+    assert(clue(fs.head.slot).contains("no signature"))
     assert(clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ExternalCallee))
              .contains("\u00a71(a)"))
   }

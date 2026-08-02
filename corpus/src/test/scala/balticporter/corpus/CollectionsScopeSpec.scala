@@ -18,9 +18,12 @@ import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
   *      direction too — `demo.Bridge` must not carry `demo.BridgeHelper` out with it (§4.56).
   *   3. `Only` PROPAGATES: naming a field brings its getter, because a signature that moves without
   *      its call sites is a compile error one call away.
-  *   4. every seam the scope creates is REPORTED. This is the one that makes the knob safe to ship:
-  *      no wrap can bridge a `Buffer` into a `java.util.List` slot, so a scope whose boundaries were
-  *      silent would be a feature for emitting code that does not compile, with nothing to say why.
+  *   4. every seam the scope creates is either BRIDGED or REPORTED. This is the one that makes the
+  *      knob safe to ship. The CONSUMER direction is bridged — a retyped `Buffer` reaching a
+  *      held-back `java.util.List` slot goes through `JavaCollections.toJava`, a live view — and
+  *      the PRODUCER direction is not, because a value the held-back declaration hands back arrives
+  *      already typed as java's. A scope whose remaining boundaries were silent would be a feature
+  *      for emitting code that does not compile, with nothing to say why.
   */
 class CollectionsScopeSpec extends PortSuite:
 
@@ -157,13 +160,14 @@ class CollectionsScopeSpec extends PortSuite:
   // 4. every seam the scope creates is REPORTED
   // -------------------------------------------------------------------------
 
-  test("a seam the scope creates is a ScopedOut finding, classified §1(b) and told which entry to move") {
-    // `Model.take(List)` is excluded, so its formal stays `java.util.List`, while `Client.feed`
-    // hands it `m.getItems()` — which moved. NOTHING can wrap that, so it must be counted.
-    val (ph, after, _) = ported(RuleScope.Everywhere(Set("demo.Model#take")))
-    val scoped = ph.boundary(after).filter(_.issue == CollectionBoundaryCheck.Issue.ScopedOut)
-    assert(clue(scoped).nonEmpty, "the scope opened a slot; the check must see it AND blame the scope")
-    assert(scoped.exists(f => f.expected == "java.util.List" && f.actual.startsWith("scala.collection.")))
+  test("a held-back FORMAL is bridged where the scope let a retyped value reach it") {
+    // `Model.take(List)` is excluded, so its parameter stays `java.util.List`, while `Client.feed`
+    // hands it `m.getItems()` — which moved. That is the CONSUMER direction and it has a live
+    // wrapper, so §1(b)'s first obligation applies before its second: insert the coercion.
+    val (ph, after, out) = ported(RuleScope.Everywhere(Set("demo.Model#take")))
+    assert(clue(out).contains(s"def take(more: $JList)"), "the excluded formal kept its JDK type")
+    assert(out.contains("m.take(balticporter.runtime.JavaCollections.toJava(m.getItems()))"))
+    assertEquals(ph.boundary(after).count(_.issue == CollectionBoundaryCheck.Issue.ScopedOut), 0)
     assert(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ScopedOut).contains("§1(b)"))
   }
 
@@ -186,7 +190,7 @@ class CollectionsScopeSpec extends PortSuite:
     // `getOrElse` against JDK receivers that have neither. Two compile errors produced BY the
     // scope that exists to protect those declarations.
     val (_, _, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
-    assert(clue(out).contains("b.raw.addAll(mine)"), "java's method, against the JDK type it kept")
+    assert(clue(out).contains("b.raw.addAll("), "java's method, against the JDK type it kept")
     assert(out.contains("""b.m.get("k")"""), "…and java's `Map.get`, not scala's `getOrElse`")
     assert(!out.contains("++="), "the scala-shaped rewrite must not reach a scoped-out receiver")
     assert(!out.contains("getOrElse"))
@@ -200,17 +204,33 @@ class CollectionsScopeSpec extends PortSuite:
     // said, so the fallback alone re-emits exactly the broken `++=` the test above pins as absent.
     // Suppressed on `actualOf`'s scoped flag, which reads `false` for every port that sets no scope.
     val (_, _, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
-    assert(clue(out).contains("b.raw.addAll(mine)"))
+    assert(clue(out).contains("b.raw.addAll("))
     assert(!out.contains("b.raw ++="), "the declaring-type fallback must stop at a scoped-out receiver")
   }
 
-  test("…and the seam that call leaves is COUNTED — refusing to rewrite is not the same as being safe") {
+  test("…and the seam that call leaves is BRIDGED — §1(b) asks for a wrap first, a count second") {
     // Refusing the rewrite is only half of §1(b)'s obligation: `Client.push` still hands its own
-    // `Buffer` to a `java.util.List` slot. NOTHING can wrap that, so it must be reported with the
-    // entry to move — a scope whose seams were silent would be worse than no scope.
-    val (ph, after, _) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
+    // `Buffer` to the `java.util.List` slot `b.raw.addAll` kept. That USED to be uncloseable and
+    // counted, on the reasoning that a `mutable.Buffer` is not a `java.util.List` — which is true
+    // of the TYPE and false of the value, because `asJava` is a live view in both directions. The
+    // formal became readable when the frontend started interning external members with their
+    // `MethodType` (`ENGINE-LIMITS.md` K15), and §1(b) is explicit about the order: where a
+    // coercion exists, insert it; only where none can, refuse and report.
+    val (ph, after, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
+    assert(clue(out).contains("b.raw.addAll(balticporter.runtime.JavaCollections.toJava(mine))"))
+    assertEquals(ph.boundary(after).count(_.issue == CollectionBoundaryCheck.Issue.ScopedOut), 0,
+                 "a bridged slot is not a residue — counting it would be a number nobody can act on")
+  }
+
+  test("…while the PRODUCER direction of the same scope is still COUNTED, and blames the scope") {
+    // The half no wrap closes, and the reason the count above going to zero is not the check going
+    // blind: `Model.getLegacy` is held back, so it HANDS BACK a `java.util.List` where the port's
+    // own code expects a `Buffer`. Nothing at the call site can change what a declaration returns.
+    val (ph, after, _) = ported(RuleScope.Everywhere(Set("demo.Model#getLegacy")))
     val scoped = ph.boundary(after).filter(_.issue == CollectionBoundaryCheck.Issue.ScopedOut)
     assert(clue(scoped).nonEmpty, "the scope opened a slot; the check must see it AND blame the scope")
+    assert(clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ScopedOut))
+             .contains("PRODUCES"))
   }
 
   test("the same source under the DEFAULT scope is byte-for-byte the unscoped port, and counts zero") {

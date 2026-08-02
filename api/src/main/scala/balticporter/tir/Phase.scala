@@ -312,13 +312,28 @@ object StandardTraversal:
     * (`ENGINE-LIMITS.md` M5.8 "A symbol's ANNOTATIONS are types too").
     *
     * The annotation's ARGUMENTS are terms, and terms are reached by the tree walk that visits the
-    * declaration — not from here, which sees the symbol table alone. */
-  def mapSymbols(ph: Phase, tbl: SymbolTable)(using Program): SymbolTable =
+    * declaration — not from here, which sees the symbol table alone.
+    *
+    * ==A symbol the program does not OWN is not walked at all==
+    * Its signature is a fact about a COMPILED CLASS FILE, and no phase can move one: whatever a
+    * retyping does inside the port, `java.util.Set<String>` is still what that lexer's constructor
+    * takes. Mapping it would produce a table that says otherwise, and every consumer of the seam
+    * would then read the port's own answer on BOTH sides of it — which is `ENGINE-LIMITS.md` K15's
+    * failure shape exactly, one level down from where K15 found it. Ownership is decided
+    * structurally by [[Program.owned]] and never from a name (§4.56).
+    *
+    * This was a no-op until the frontend began interning external members WITH their `MethodType`:
+    * before that every external `info` was `NoType` and every external `annotations` empty, so
+    * nothing was being mapped here anyway. It is written down because the day that changed is the
+    * day the omission would have started costing something, silently. */
+  def mapSymbols(ph: Phase, tbl: SymbolTable)(using p: Program): SymbolTable =
     tbl.all.foldLeft(tbl)((t, s) =>
-      t.updated(s.copy(
-        info        = mapType(ph, s.info),
-        annotations = s.annotations.map(a => a.copy(tpe = mapType(ph, a.tpe))),
-      ))
+      if !p.owns(s.id) then t
+      else
+        t.updated(s.copy(
+          info        = mapType(ph, s.info),
+          annotations = s.annotations.map(a => a.copy(tpe = mapType(ph, a.tpe))),
+        ))
     )
 
   // -- trees --

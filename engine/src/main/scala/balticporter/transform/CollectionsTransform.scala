@@ -238,7 +238,7 @@ final class CollectionsTransform(
   // ---- the RuleScope's own record, for THIS run (see `applyScope`) ----
 
   /** `JavaCollections.fromJava` / `toJava` — the EXTERNAL seam's two directions. */
-  private var fromJavaSym: SymId = SymId.None
+  private var fromJavaSym, toJavaSym: SymId = SymId.None
 
   /** is this symbol one the PROGRAM declares? Structural (`Program.owned`), never a name test
     * (§4.56), and computed once per run because the external-seam arms ask it per call. */
@@ -375,6 +375,7 @@ final class CollectionsTransform(
     putSym       = mint("put", "put")     // scala `mutable.Map.put`: returns the PREVIOUS value
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
     fromJavaSym  = staticSyms.getOrElse("fromJava", SymId.None)
+    toJavaSym    = staticSyms.getOrElse("toJava", SymId.None)
     externalSeams.clear()
 
     mintedSyms = added.map(_.id).toSet
@@ -534,10 +535,14 @@ final class CollectionsTransform(
     * declaration's SIGNATURE stays exactly as the frontend read it, which is what the restored tree
     * above says it is. The two must agree: a tree that says `java.util.List` over a symbol that
     * says `Buffer` is a lie every later reader believes. */
-  private def mapSignatures(tbl: SymbolTable)(using Program): SymbolTable =
+  private def mapSignatures(tbl: SymbolTable)(using p: Program): SymbolTable =
     if excluded.isEmpty then StandardTraversal.mapSymbols(this, tbl)
+    // …and the same OWNERSHIP guard `mapSymbols` carries: an external member's signature is a fact
+    // about a class file and this phase cannot move it. Without it the scoped path would retype
+    // exactly the formals `coerce` and the boundary count now read (K15).
     else tbl.all.foldLeft(tbl) { (t, s) =>
-      if excluded(s.id) then t else t.updated(s.copy(info = StandardTraversal.mapType(this, s.info)))
+      if excluded(s.id) || !p.owns(s.id) then t
+      else t.updated(s.copy(info = StandardTraversal.mapType(this, s.info)))
     }
 
   /** DECISION PROVENANCE for the exclusion direction: one row per declaration the scope HELD BACK
@@ -762,8 +767,11 @@ final class CollectionsTransform(
     // failure §4.45 names: one such row teaches a reader that these findings need checking.
     if out ne t2 then out
     else
-      externalArgs(t2)
-      externalProducer(t2)
+      // …and on such a call the CONSUMER half of the seam is bridged where a live view exists,
+      // BEFORE the count runs — a bridged slot is not a residue.
+      val bridged = bridgeJavaFormals(t2)
+      externalArgs(bridged)
+      externalProducer(bridged)
 
   // -------------------------------------------------------------------------------------------
   // The EXTERNAL CALLEE seam — the boundary nothing could see, in both directions
@@ -928,21 +936,33 @@ final class CollectionsTransform(
     }
     case _ => false
 
-  /** The CONSUMER half of the same seam, and it can only ever be COUNTED.
+  /** The CONSUMER half of the same seam, for the calls where it can only ever be COUNTED — and the
+    * split between this and [[CollectionBoundaryCheck]] is drawn on the one line that matters.
     *
     * An argument the phase retyped, handed to a method the program does not declare. Whether it
-    * fits is decided by a FORMAL in a class file, and the frontend interns every external member
-    * with `NoType` — so `wrapIterableArgs` sees no formals (its `formals.sizeIs != t.args.size`
-    * guard declines at 0), `coerce` is never reached, and `CollectionBoundaryCheck`'s argument arm
-    * skips the call for exactly the same reason. Measured on liqp: 15 compile errors at one
-    * third-party package against 0 findings.
+    * fits is decided by a FORMAL in a class file. That used to be unanswerable for every such
+    * call: the frontend interned every external member with `NoType` — 1157 on one library, not
+    * one `MethodType` — so `wrapIterableArgs` saw no formals (its `formals.sizeIs != t.args.size`
+    * guard declines at 0), `coerce` was never reached, and `CollectionBoundaryCheck`'s argument arm
+    * skipped the call for the same reason. Measured then: 15 compile errors at one third-party
+    * package against 0 findings.
     *
-    * So this is a CANNOT-VERIFY count, and the finding says so rather than claiming a break: where
-    * the formal really is `Object` the retyped value conforms and nothing is wrong, and where it is
-    * a `java.util.*` the port does not compile. Both are the same fact — nothing in the pipeline
-    * can tell them apart — and a count that is honest about which one it is worth more than a
-    * silence that is right about neither. Closing it is a FRONTEND change (intern external members
-    * with their signatures), not another arm here. */
+    * `SpoonTir` now records what a class file can be read for scope-free, so the two halves have
+    * different owners:
+    *
+    *   - **the formal is READABLE** — then `CollectionBoundaryCheck` can see the slot for itself,
+    *     with both types in hand, and classifies it properly (a `java.util.stream.Stream` formal is
+    *     `UntranslatedFamily`, a mapped one at a class file is `ExternalCallee`). Counting it HERE
+    *     as well would put two rows on one seam;
+    *   - **there is NO signature** — a class file the parse could only partially resolve. The check
+    *     has nothing to compare and skips the call entirely, so this is the arm that keeps it
+    *     visible: a CANNOT-VERIFY count, saying so, because where the formal really is `Object` the
+    *     retyped value conforms and where it is a `java.util.*` the port does not compile, and
+    *     nothing in the pipeline can tell those apart.
+    *
+    * The reason this may not simply stop counting where a signature appeared is CLAUDE.md §1(b)'s:
+    * a check that reads zero because it stopped looking is worse than one that reads high. It does
+    * not read zero — the row moved to the check that can now say more about it. */
   private def externalArgs(t: Tree.Apply)(using p: Program): Unit =
     if externalCallee(t.method) && p.symbolOf(t.method).forall(_.info == TypeRepr.NoType) then
       t.args.foreach { a =>
@@ -1367,17 +1387,70 @@ final class CollectionsTransform(
     * REMOVE through it. Wrapping the ARGUMENT has neither problem — the type is exact before
     * overload resolution runs, and the parameter keeps the capability it declares. */
   private def wrapIterableArgs(t: Tree.Apply)(using p: Program): Tree.Apply =
-    if javaIterableSym == SymId.None then t
+    // A call whose formals STAY java is not this pass's — see [[keepsJavaFormals]] and
+    // [[bridgeJavaFormals]]. Reading such a formal through `remap` is the failure CLAUDE.md §1(b)
+    // names for the rewrite: it says the slot wants `JavaIterable`, so the shim wrap fires, and
+    // `String.join(",", JavaIterable.from(xs))` hands a standalone runtime trait to a class file
+    // that asks for `java.lang.Iterable`. The seam moves one type to the left and stops being
+    // findable — the emitted call names the shim rather than the boundary.
+    if javaIterableSym == SymId.None || keepsJavaFormals(t) then t
     else
-      val formals = p.symbolOf(t.method).map(_.info).collect {
-        case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
-        case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
-      }.getOrElse(Nil)
+      val formals = formalsOf(t)
       if formals.sizeIs != t.args.size then t
       else
-        // an EXCLUDED method's formals stay exactly as the frontend read them (`mapSignatures`), so
-        // the slot on the other end of this call is a real `java.util.List` — see `coerce`.
-        val as = t.args.zip(formals).map((a, f) => coerce(f, a, excluded(t.method)))
+        val as = t.args.zip(formals).map((a, f) => coerce(f, a))
+        if as == t.args then t else t.copy(args = as)
+
+  /** Does this call's callee keep JAVA formals — i.e. is its signature one this phase did not and
+    * cannot move? Three cases, and the third is the one that decides the shape.
+    *
+    *   - the CALLEE is a declaration this run's scope held back, so its parameters stayed;
+    *   - the RECEIVER resolves through a held-back declaration to a java collection, so the call
+    *     binds to the JDK's own API whatever the node types say (`b.raw.addAll(mine)`);
+    *   - the callee is a genuine EXTERNAL seam, by [[externalCallee]]'s own four exclusions.
+    *
+    * "not owned" alone is NOT the test, and the difference is a refusal being painted over. A
+    * `super.putAll(m)` inside a class extending a mapped collection is an unowned callee with a
+    * `java.util.Map` formal — and this phase REFUSED to rewrite it (the blanket `super` guard),
+    * because every scala-shaped form of it is an E040. Bridging its argument leaves the same
+    * uncompilable call with a wrapper inside it, so the error stops naming the member and starts
+    * naming the helper: M6's refusal made unfindable, which is the failure K6.5 records under its
+    * own name. `externalCallee` already excludes a callee whose OWNER this phase maps, for exactly
+    * that reason. */
+  private def keepsJavaFormals(t: Tree.Apply)(using Program): Boolean =
+    excluded(t.method) || externalCallee(t.method) || (t.fun match
+      case Tree.Select(recv, _, _, _) => actualOf(recv)._2
+      case _                          => false)
+
+  /** the callee's declared formals, or `Nil` where it has none. */
+  private def formalsOf(t: Tree.Apply)(using p: Program): List[TypeRepr] =
+    p.symbolOf(t.method).map(_.info).collect {
+      case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
+      case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
+    }.getOrElse(Nil)
+
+  /** The CONSUMER half of the external seam — a value this phase retyped, at a formal it did not
+    * and cannot: a class file's (`ENGINE-LIMITS.md` K15) or a declaration this run's scope held
+    * back. Bridged with a LIVE `JavaCollections.toJava` view.
+    *
+    * ==Why this does NOT live in `wrapIterableArgs`, which is the obvious home==
+    * That pass runs BEFORE the call rewrites, which is right for its own job: a shim-typed formal
+    * belongs to a declaration the port emits, and the wrap has to be in place before overload
+    * resolution ever sees the argument. It is wrong for this one. A `java.util.*` formal is the
+    * signature of a method the phase may be about to RETARGET — `Collections.sort(myBuffer)` goes
+    * to `JavaCollections.sort`, whose parameter is a `Buffer`, and `items.addAll(more)` becomes
+    * `items ++= more` — so bridging first hands the rewritten call a wrapped argument its new
+    * target does not want. Measured at 8 specs the first time the two were merged.
+    *
+    * So it runs where the seam COUNT runs, on a call nothing else rewrote, which is the same
+    * ordering rule K15 already records for the count and for the same reason. */
+  private def bridgeJavaFormals(t: Tree.Apply)(using p: Program): Tree.Apply =
+    if !keepsJavaFormals(t) then t
+    else
+      val formals = formalsOf(t)
+      if formals.sizeIs != t.args.size then t
+      else
+        val as = t.args.zip(formals).map((a, f) => coerce(f, a, expectedScoped = true))
         if as == t.args then t else t.copy(args = as)
 
   /** a RETURN is a shim-typed slot exactly as a formal, a `val` and an assignment target are — the
@@ -1491,7 +1564,7 @@ final class CollectionsTransform(
     * NAMING the wrapper instead of the boundary, so the unwrapped value is left to fail at the slot
     * exactly as it did before this seam existed. `Map.values()` has no such problem: its rewrite
     * already restores the invariant by wrapping at the call. */
-  private def coerce(expected: TypeRepr, actual: Term, expectedScoped: Boolean = false)(using Program): Term =
+  private def coerce(expected: TypeRepr, actual: Term, expectedScoped: Boolean = false)(using p: Program): Term =
     // the symbol table is retyped AFTER the trees (see `run`), so a formal read here is still the
     // ORIGINAL java symbol — `java.lang.Iterable`, not the shim. Compare through `remap`, which
     // makes this correct on either side of that pass.
@@ -1507,11 +1580,25 @@ final class CollectionsTransform(
     val wants = headSym(expected).map(scalaSym(_, expectedScoped))
     val got   = headSym(actualT).map(scalaSym(_, actualScoped))
     val from  = got.filterNot(shimSyms.contains).flatMap(kindOf.get)
+    // …and the slot that is LITERALLY a java collection — the seam `ENGINE-LIMITS.md` K15's
+    // consumer half is about. `expectedScoped` means the expected side is taken as it is written
+    // rather than through `remap`, which is true of exactly two things: a declaration this run's
+    // scope held back, and an EXTERNAL callee's formal, whose signature lives in a class file no
+    // phase can move. In both, a value this phase retyped is meeting a `java.util.*` that stayed —
+    // so the wrap goes the other way, and it goes through the phase's OWN record of what it maps
+    // (§4.56) rather than any test on the name.
+    val wantsJava = expectedScoped &&
+      wants.flatMap(p.symbolOf).exists(o => typeMap.contains(o.fullName))
     val factory = from match
       case _ if wants.isEmpty || isKeySetView(actual)                                 => SymId.None
       case Some(Kind.Seq | Kind.Set | Kind.Map) if wants.contains(javaIterableSym)   => iterableFromSym
       case Some(Kind.Seq)                       if wants.contains(javaCollectionSym) => collectionFromSym
       case Some(Kind.Set)                       if wants.contains(javaCollectionSym) => collectionFromSetSym
+      // `asJava` converts ONE level, exactly as `asScala` does, so a `Buffer[Buffer[String]]` at a
+      // `java.util.List<java.util.List<String>>` formal would emit a wrap that lies one type
+      // argument in. Refused and counted, the same way [[externalProducer]] refuses the mirror.
+      case Some(Kind.Seq | Kind.Set | Kind.Map) if wantsJava && mentionsRetyped(actualT) => SymId.None
+      case Some(Kind.Seq | Kind.Set | Kind.Map) if wantsJava && toJavaSym != SymId.None  => toJavaSym
       case _                                                                          => SymId.None
     if factory == SymId.None then actual
     else
@@ -2032,7 +2119,7 @@ object CollectionsTransform:
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
-         "toSet", "toMap", "fromJava")
+         "toSet", "toMap", "fromJava", "toJava")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give

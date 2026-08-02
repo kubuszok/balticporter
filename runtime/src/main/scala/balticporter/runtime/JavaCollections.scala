@@ -295,13 +295,13 @@ object JavaCollections:
   // A copy would compile and detach both directions — §4.4 in the shape the whole `subList`/
   // `unmodifiable*` family above is written to avoid.
   //
-  // ==Only the PRODUCER direction ships, and the reason is a frontend limit==
-  // The consumer direction — the port's `Buffer` at a third party's `java.util.List` FORMAL — has
-  // an equally obvious wrapper (`asJava`) and NOTHING TO TRIGGER IT: deciding that a formal is a
-  // `java.util.*` needs the callee's signature, and the frontend interns every external member with
-  // no signature at all (measured on liqp: 1157 external callees, not one with a `MethodType`). So
-  // that half is COUNTED at the seam and not bridged, and an `asJava` shipped here would be a
-  // capability nothing can reach. See ENGINE-LIMITS K15.
+  // ==BOTH directions ship, and the consumer one is younger than the producer one==
+  // `toJava` was written and DELETED once, because deciding that a formal is a `java.util.*` needs
+  // the callee's signature and the frontend interned every external member with none — a capability
+  // nothing can reach reads as one that works. `SpoonTir` now interns an external member WITH its
+  // `MethodType` wherever a class file can be read for one scope-free, so the trigger exists and
+  // the helper is reachable. Where the formal is still unknown — a class file the parse could only
+  // partially resolve — the seam is COUNTED exactly as it was. See ENGINE-LIMITS K15.
   //
   // ==What these do NOT convert, and why the ELEMENT type decides it==
   // `asScala` converts one level. A `java.util.List<java.util.List<String>>` becomes a
@@ -330,6 +330,26 @@ object JavaCollections:
 
   /** …a `java.lang.Iterable`. */
   def fromJava[A](i: java.lang.Iterable[A]): JavaIterable[A] = JavaIterable.from(i.asScala)
+
+  /** the CONSUMER direction: a `Buffer` the port holds, at a class file's `java.util.List` FORMAL.
+    *
+    * A live view, for the reason the whole family is: java's callee may KEEP the collection — an
+    * ANTLR lexer stores the `Set<String>` it is constructed with — so a copy would detach every
+    * later change the port makes to it. `asJava` on a MUTABLE scala collection is writable in both
+    * directions, which is what java's own parameter passing means.
+    *
+    * The RESULT type is java's most specific: `java.util.List` also satisfies a
+    * `java.util.Collection` and a `java.lang.Iterable` formal, so one overload per KIND covers
+    * every slot in the family rather than one per formal type. */
+  def toJava[A](xs: scala.collection.mutable.Buffer[A]): java.util.List[A] = xs.asJava
+
+  /** …a `Set`. */
+  def toJava[A](s: scala.collection.mutable.Set[A]): java.util.Set[A] = s.asJava
+
+  /** …a `Map`. Note java's `Map` is neither a `Collection` nor an `Iterable`, so this overload
+    * serves exactly the `java.util.Map` formals and no others — which is the same asymmetry
+    * `coerce`'s refusal table records for the shim direction. */
+  def toJava[K, V](m: scala.collection.mutable.Map[K, V]): java.util.Map[K, V] = m.asJava
 
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)

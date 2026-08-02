@@ -2065,7 +2065,7 @@ with a kind and a factory, where the seam becomes a counted `coerce` boundary (`
 *Fix kind: (a) engine for the counter — DONE; (b) per-library for the choice of table when a real
 producer appears.*
 
-### K15. A retyping phase owes a boundary count at EXTERNAL callees — and half of it is FRONTEND-BLOCKED
+### K15. A retyping phase owes a boundary count at EXTERNAL callees — CLOSED where a class file can be READ, counted where it cannot
 
 **The seam nothing could see, and the one that a new library meets first.** CLAUDE.md §1(b) states
 it for a SCOPE seam — "the callee is then the JDK's own external symbol, which the frontend interned
@@ -2083,9 +2083,12 @@ seam the retyping made. Measured on liqp before any of this: **15 compile errors
 package against 0 findings**.
 
 **The PRODUCER half is CLOSED**, and the observable it had to be built on is the finding worth
-keeping. The arm was first written to read the callee's declared RESULT TYPE — and there is none:
-**every external member the frontend interns carries `NoType`**, measured at 1157 external callees on
-liqp with not one `MethodType`, `java.lang.Object#toString` included. The only evidence that a value
+keeping. The arm was first written to read the callee's declared RESULT TYPE — and at the time there
+was none: **every external member the frontend interned carried `NoType`**, measured at 1157 external
+callees on liqp with not one `MethodType`, `java.lang.Object#toString` included. (That is the state
+the consumer half below then FIXED; the producer arm was not rewritten to use it, because the
+observable it settled on is sound and re-deriving it would move emitted text for no gain.) The only
+evidence that a value
 crossing an external call is a collection is the NODE's type, which Spoon resolved and this phase
 then moved — still §4.56's question answered from the phase's own record, since the node says
 `Buffer` precisely because the phase put it there. `JavaCollections.fromJava` wraps it into a LIVE
@@ -2124,23 +2127,81 @@ the `JavaIterator` its result became.
 retargeting it — eight findings closed before they were written down, which is §4.45's
 report-credibility failure exactly.
 
-**The CONSUMER half CANNOT be closed here, and that is a FRONTEND limit, not a design choice.**
-`asJava` is as obvious as `asScala`; what is missing is any way to know a formal is a `java.util.*`,
-because of the `NoType` fact above — `wrapIterableArgs` sees no formals (its
-`formals.sizeIs != t.args.size` guard declines at zero), `coerce` is never reached, and
-`CollectionBoundaryCheck`'s argument arm skips the call for the same reason. So it is a
-CANNOT-VERIFY count (`Issue.ExternalCallee`, `collection-boundary`), and the finding says so rather
-than claiming a break: where the formal really is `Object` the retyped value conforms and nothing is
-wrong, where it is a `java.util.*` the port does not compile, and **nothing in the pipeline can tell
-those apart**. liqp reports 8, the two ANTLR lexer arguments included. An `asJava` helper was written
-and then DELETED rather than shipped: a capability nothing can reach reads as one that works.
+**The CONSUMER half was FRONTEND-BLOCKED and is now CLOSED — `SpoonTir` interns an external member
+with its `MethodType`.** `asJava` was always as obvious as `asScala`; what was missing was any way to
+know a formal is a `java.util.*`, because of the `NoType` fact above. An `asJava` helper was written
+and then DELETED rather than shipped for exactly that reason: a capability nothing can reach reads as
+one that works. **liqp 70 → 67**, `collection-boundary` 14 → 12, and the two ANTLR lexer arguments
+this entry named are now `JavaCollections.toJava(…)`, a live view.
 
-The fix is `SpoonTir` interning external members with their `MethodType`, at which point the
-consumer half is one arm in `coerce` and the count drops to whatever genuinely has no wrapper.
+Five things the frontend half had to get right, each of which is a way to make the signature WORSE
+than none:
 
-*Fix kind: (a) engine for the producer — DONE. (a) FRONTEND for the consumer — unbuilt, and the
-count is what stands in for it. The generalisation is CLAUDE.md's: every retyping phase owes a
-boundary count at EXTERNAL callees, not only at JDK ones.*
+- **it is rendered SCOPE-FREE.** `SpoonTir.tpe` resolves a type variable by NAME against the scopes
+  the walk is inside, and fills a raw generic from the names accessible there. Both are right for a
+  type written in the program and catastrophic for one read out of a class file: `List<E>.add(E)`
+  would bind the callee's `E` to whatever `E` the CALLER declares — and because an external symbol
+  is interned once and never clobbered, the FIRST call site in the run would decide the signature
+  for the whole run. `externalSlot` therefore renders type variables, intersections and raw fills
+  without consulting any scope.
+- **a SLOT and a type ARGUMENT are different questions.** Spoon reconstructs a shadow type by
+  REFLECTION, so `String.join`'s `Iterable<? extends CharSequence>` arrives as `Iterable<T>` —
+  the interface's own formal, echoed. Refusing that would refuse most generic signatures in the JDK;
+  recording `Iterable[?]` records what was read, and the HEAD is the whole of the question a
+  boundary asks. A variable at the slot ITSELF still refuses: there is no head to record.
+- **ALL of it or NONE of it**, `Descriptor.total`'s rule. A partially-resolvable class file is one
+  the parse was lenient about, and the slots that DID resolve are not evidence either. Measured
+  shape: a classpath holding `Partial.class` whose referenced `Gone.class` was removed — Spoon
+  reconstructs NO declaration for `Partial`, so every member of it stays signature-less, including
+  the one whose own parameter is a plain `String` (`ExternalSignatureSpec`, both directions in one
+  fixture, because a run where everything is signature-less looks exactly like a regression).
+- **`StandardTraversal.mapSymbols` must not walk a symbol the program does not OWN.** A class file's
+  signature is not the phase's to edit; mapped, the table would say `mutable.Set` on both sides of
+  the seam and the check would report zero — this entry's own failure shape, one level down. It was
+  a no-op until the day external infos stopped being `NoType`, which is exactly when it would have
+  started costing something silently.
+- **knowing a formal's TYPE is not knowing its NULLABILITY.** `NullabilityTransform.coerceArgs`
+  reads formals the same way, and with them visible it began emitting `.get` at
+  `println(anAbsentValue)` — which java prints as `null` and the port would THROW on: a §4.4
+  behaviour change with no compile error and no count moving. That phase excludes external callees
+  BEFORE reading formals, and its count says which of the two facts is missing.
+
+**And the BRIDGE runs after the rewrites, not with `wrapIterableArgs`.** That pass runs first by
+design — a shim-typed formal belongs to a declaration the port emits, and the wrap must be in place
+before overload resolution. A `java.util.*` formal is the signature of a method this phase may be
+about to RETARGET (`Collections.sort(buf)` → `JavaCollections.sort`, `items.addAll(more)` → `++=`),
+so bridging first hands the rewritten call an argument its new target does not want: **8 specs**,
+first try. `bridgeJavaFormals` therefore runs where the seam COUNT runs, on a call nothing else
+rewrote — the same ordering rule this entry already records for the count.
+
+**Three calls keep java formals, and "not owned" is not the test.** A `super.putAll(m)` inside a
+class extending a mapped collection is an unowned callee with a `java.util.Map` formal — and the
+phase REFUSED to rewrite it (the blanket `super` guard, every scala form being an E040). Bridging its
+argument leaves the same uncompilable call with a wrapper inside it, so the error stops naming the
+member and starts naming the helper: M6's refusal made unfindable, K6.5's failure under a new name.
+The test is `excluded(callee) || externalCallee(callee) || the RECEIVER resolves through a held-back
+declaration` — and `externalCallee` already excludes a callee whose OWNER the phase maps.
+
+**The SCOPE seam's consumer direction closed with it, and its classification text was wrong.**
+`Issue.ScopedOut` said "NO WRAP CAN CLOSE IT — a `mutable.Buffer` is not a `java.util.List`", which
+is true of the TYPE and false of the VALUE. A retyped value at a held-back java formal now goes
+through `toJava`; what remains ScopedOut is the PRODUCER direction, where the held-back declaration
+hands BACK a `java.util.List` and nothing at a call site can change what a declaration returns.
+
+**What is left is a count, and it is smaller and better classified.** Where no signature can be read
+the seam is still `Issue.ExternalCallee` and still says "cannot verify" — that arm may never go to
+zero by being deleted, which is CLAUDE.md §1(b)'s rule. Where the signature IS readable the row moved
+to `CollectionBoundaryCheck`, which holds both types and can say more: liqp's
+`Stream.concat(Stream, Stream)` is now `UntranslatedFamily` (K6's deliberate refusal) instead of
+"cannot verify". One caution that arrived with it — **a MAPPED type at an EXTERNAL formal is not
+`MappedTypeSurvived`.** That issue reads "§1(a) engine bug: no occurrence of this type should have
+survived `transformType`", and a class file's `java.util.Map` never had the chance to move. It
+became reachable the moment external formals became visible, and it is classified `ExternalCallee`.
+
+*Fix kind: (a) engine for the producer — DONE. (a) FRONTEND for the consumer — DONE. What remains
+is a count for class files the parse cannot resolve, which no engine change can reach. The
+generalisation is CLAUDE.md's: every retyping phase owes a boundary count at EXTERNAL callees, not
+only at JDK ones.*
 
 ---
 

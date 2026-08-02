@@ -128,15 +128,22 @@ object SpoonTir:
       * history of the project, so they never fired once. Ownership still terminates at `SymId.None`
       * one level up, so nothing that climbs the chain changes answer. */
     def external(key: String, name: String, owner: SymId = SymId.None,
-                 descriptor: Option[Descriptor] = None): SymId =
+                 descriptor: Option[Descriptor] = None, info: TypeRepr = NoType): SymId =
       val id = resolve(key)
-      if !syms.contains(id) then syms(id) = Symbol(id, name, key, Flags(), owner, NoType, descriptor = descriptor)
-      // `external` NEVER clobbers, so a stub interned by an earlier, UNRESOLVED reference would
-      // otherwise keep its empty descriptor for the whole run while a later, resolved one knew the
-      // answer. The descriptor is the one field where filling a hole is strictly better information:
-      // it is derived from the parser's own declaration and cannot contradict a previous fill.
-      else if descriptor.isDefined && syms(id).descriptor.isEmpty then
-        syms(id) = syms(id).copy(descriptor = descriptor)
+      if !syms.contains(id) then syms(id) = Symbol(id, name, key, Flags(), owner, info, descriptor = descriptor)
+      else
+        // `external` NEVER clobbers, so a stub interned by an earlier, UNRESOLVED reference would
+        // otherwise keep its empty descriptor for the whole run while a later, resolved one knew the
+        // answer. The descriptor is the one field where filling a hole is strictly better information:
+        // it is derived from the parser's own declaration and cannot contradict a previous fill.
+        //
+        // `info` fills the same way and for the same reason — and only ever a HOLE. A member the
+        // program DECLARES gets its real signature from `execDef`, through `define`, which does
+        // clobber; the fill here can therefore never overwrite a declaration, only precede one.
+        var s = syms(id)
+        if descriptor.isDefined && s.descriptor.isEmpty then s = s.copy(descriptor = descriptor)
+        if info != NoType && s.info == NoType then s = s.copy(info = info)
+        syms(id) = s
       id
 
     def table: SymbolTable        = SymbolTable(syms.values)
@@ -417,8 +424,9 @@ object SpoonTir:
     /** An external MEMBER always knows its owner — the key is derived from it. Passing it on is
       * what lets `owner#name` be reconstructed downstream (see `Minter.external`). */
     private def externalMember(owner: SymId, sig: String, name: String,
-                               descriptor: Option[Descriptor] = None): SymId =
-      minter.external(memberKey(owner, sig), name, owner, descriptor)
+                               descriptor: Option[Descriptor] = None,
+                               info: TypeRepr = NoType): SymId =
+      minter.external(memberKey(owner, sig), name, owner, descriptor, info)
     private def minterKeyOf(id: SymId): String = "@" + id.raw // members hang off their owner's id
     private def erasedSig(m: CtExecutable[?]): String =
       val ps = m.getParameters.asScala.toList
@@ -453,6 +461,108 @@ object SpoonTir:
           scala.util.Try(other.getSimpleName).toOption.fold(Param.Unresolved)(Descriptor.paramOf)
       val ps = scala.util.Try(m.getParameters.asScala.toList).getOrElse(Nil)
       Descriptor.total(ps.map(p => scala.util.Try(p.getType).toOption.fold(Param.Unresolved)(paramOf)))
+
+    /** Is this executable's declaration a SHADOW — reconstructed from a class file rather than
+      * parsed from a source this run owns?
+      *
+      * The same test `coerceArgsFixed` uses, deliberately: `getExecutableDeclaration` is non-null
+      * for a JDK member under `noClasspath` too, so null-ness is not the external signal and a
+      * second spelling of "is this external" would be a second answer. */
+    private def isShadowDecl(m: CtExecutable[?]): Boolean =
+      try Option(m.getParent(classOf[CtType[?]])).forall(_.isShadow) catch { case _: Throwable => false }
+
+    /** The `MethodType` of an EXTERNAL member — the fix `ENGINE-LIMITS.md` K15 names, and the fact
+      * every consumer of that seam was blocked on.
+      *
+      * Until this existed, every external member the frontend interned carried `NoType` (measured
+      * at 1157 on one library, `java.lang.Object#toString` included), so no phase could ask what a
+      * method the program does not declare TAKES or RETURNS. That is the whole of K15's consumer
+      * half: a retyped `mutable.Set` handed to a class file's `java.util.Set` formal is a break
+      * nothing could see, because the position-blind retyping moved the call node's type on both
+      * sides while the class file's own signature cannot move at all.
+      *
+      * Two properties, and neither is negotiable:
+      *
+      *  - **it is rendered SCOPE-FREE.** [[tpe]] resolves a type variable by NAME against the
+      *    scopes the walk is currently inside, and fills a raw generic from the names accessible
+      *    HERE. Both are right for a type written in the program and catastrophic for one read out
+      *    of a class file: `java.util.List<E>.add(E)` would bind the callee's `E` to whatever `E`
+      *    the CALLER happens to declare, and — because an external symbol is interned once and
+      *    never clobbered — the first call site to reach it would decide the signature for the
+      *    whole run. So a type variable, an intersection and a raw generic each render as *no
+      *    answer*, never as a name this scope supplies.
+      *  - **ALL of it or NONE of it**, exactly [[Descriptor.total]]'s rule and for a sharper
+      *    reason. A partially-resolvable class file is one the parse was LENIENT about, and a
+      *    signature read from it is not evidence about the slots that DID resolve: the measured
+      *    case is a generated parser's constructor whose one parameter type is itself unresolvable,
+      *    where an arity-correct-looking signature with one hole in it would be read as a fact.
+      *    So one unrenderable slot — parameter or result — leaves the member signature-less, which
+      *    is the state every external member was in before this method existed and which every
+      *    consumer already handles.
+      *
+      * Only for a SHADOW declaration ([[isShadowDecl]]): a member the program declares gets its
+      * real signature from `execDef`, and a second, weaker rendering of the same member is a second
+      * truth about it. */
+    private def externalSignature(m: CtExecutable[?]): TypeRepr =
+      if !isShadowDecl(m) then NoType
+      else
+        val ps  = try m.getParameters.asScala.toList catch { case _: Throwable => Nil }
+        val slots = ps.map(p => p.getSimpleName -> externalSlot(try p.getType catch { case _: Throwable => null }))
+        // a constructor's result is `Unit`, which is what `execDef` renders for the members this
+        // program DECLARES. One grammar: a reader that has a `MethodType` must not have to ask
+        // where it came from before it can read the result slot.
+        val ret = m match
+          case _: CtConstructor[?] => unitT
+          case _                   => externalSlot(try m.getType catch { case _: Throwable => null })
+        if ret == NoType || slots.exists(_._2 == NoType) then NoType
+        else MethodType(slots, ret)
+
+    /** one SLOT of [[externalSignature]] — a parameter's or the result's declared type as a class
+      * file states it, or `NoType` where this program has no scope-free name for it.
+      *
+      * A slot and a type ARGUMENT are not the same question, which is the distinction the two
+      * methods here draw. A slot that cannot be rendered is unknown and says so; an ARGUMENT that
+      * cannot be rendered is `?`, because Spoon reconstructs a shadow type by REFLECTION and a
+      * class file's erasure genuinely does not say — `String.join`'s
+      * `Iterable<? extends CharSequence>` arrives as `Iterable<T>`, echoing the interface's own
+      * formal. `Iterable[?]` records exactly what was read: the head is exact, and the head is the
+      * whole of the question a boundary asks. */
+    private def externalSlot(tr: CtTypeReference[?]): TypeRepr = tr match
+      case null                                 => NoType
+      case p if (try p.isPrimitive catch { case _: Throwable => false }) => tpe(p)
+      case arr: CtArrayTypeReference[?] =>
+        externalSlot(arr.getComponentType) match
+          case NoType => NoType
+          case c      => AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(c))
+      // a type VARIABLE at the slot itself names something only the CALLEE's scope has, and an
+      // intersection would be filled from names this scope supplies. Neither is a fact about the
+      // class file, so neither is recorded.
+      case _: CtTypeParameterReference          => NoType
+      case _: CtIntersectionTypeReference[?]    => NoType
+      // a wildcard is scope-free — `?` is a fresh existential — and its BOUND goes through the
+      // ARGUMENT rendering, since an unrenderable bound is `?` and not a refusal.
+      case w: CtWildcardReference =>
+        Option(w.getBoundingType).filter(_.getQualifiedName != "java.lang.Object") match
+          case None    => TypeBounds(NoType, NoType)
+          case Some(b) => externalArg(b) match
+            case TypeBounds(NoType, NoType) => TypeBounds(NoType, NoType)
+            case u => if w.isUpper then TypeBounds(NoType, u) else TypeBounds(u, NoType)
+      case r =>
+        val head  = TypeRef(NoPrefix, typeSym(r))
+        val args  = try r.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
+        val arity = formalArity(r)
+        // `tpe` would fill a bare generic from the names accessible at the READING point — the one
+        // scope this rendering may not consult — so the fill here is the WILDCARD one, which is
+        // what `tpe` itself produces where no name is in scope.
+        if args.isEmpty then
+          if arity <= 0 then head else AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
+        else AppliedType(head, args.map(externalArg))
+
+    /** a type ARGUMENT of [[externalSlot]] — the same rendering, with "cannot be named here"
+      * spelled `?` instead of refused. */
+    private def externalArg(tr: CtTypeReference[?]): TypeRepr = externalSlot(tr) match
+      case NoType => TypeBounds(NoType, NoType)
+      case t      => t
 
     // ---- type parameter resolution ----
     /** parallel to `tpScopes`: is this frame an EXECUTABLE's own type parameters? */
@@ -3232,7 +3342,7 @@ object SpoonTir:
             val (q, s) = declType(decl)
             val ownerId = minter.external(q, s)
             val nm      = if decl.isInstanceOf[CtConstructor[?]] then "<init>" else decl.getSimpleName
-            externalMember(ownerId, nm + erasedSig(decl), nm, descriptorOf(decl))
+            externalMember(ownerId, nm + erasedSig(decl), nm, descriptorOf(decl), externalSignature(decl))
           case None =>
             val ownerQ  = Option(ex.getDeclaringType).map(_.getQualifiedName).getOrElse("java.lang.Object")
             val ownerId = minter.external(ownerQ, simpleName(ownerQ))

@@ -118,10 +118,12 @@ object CollectionBoundaryCheck:
       case ScopedOut =>
         "§1(b) PER-LIBRARY: one side of this slot is a declaration this port's " +
           "`CollectionsTransform(scope)` deliberately held back, so it kept its JDK type while the " +
-          "other side moved. NO WRAP CAN CLOSE IT — a `mutable.Buffer` is not a `java.util.List` " +
-          "and the runtime shims bridge the other direction only — so widen the scope to cover " +
-          "this declaration, or narrow it to exclude the other side of the slot too. The engine " +
-          "needs no change; a scope that produced this seam SILENTLY would be worse than no scope."
+          "other side moved. The direction that CAN be closed already is — a retyped value at a " +
+          "held-back java formal goes through `JavaCollections.toJava`, a live view — so what is " +
+          "left here is the other one: a value the held-back declaration PRODUCES, arriving where " +
+          "the port expects a scala collection. Widen the scope to cover this declaration, or " +
+          "narrow it to exclude the other side of the slot too. The engine needs no change; a " +
+          "scope that produced this seam SILENTLY would be worse than no scope."
       case ExternalCallee =>
         "§1(a) engine, and REFUSED here on purpose: the other side of this slot is a method the " +
           "program does not declare, so its signature is a fact about a compiled class file and no " +
@@ -186,8 +188,15 @@ object CollectionBoundaryCheck:
 
     def fqn(t: TypeRepr): Option[String] = headSym(t).flatMap(program.symbolOf).map(_.fullName)
 
-    def issueFor(jdk: String, scoped: Boolean): Issue =
-      if scoped && mapped.contains(jdk) then Issue.ScopedOut
+    def issueFor(jdk: String, scoped: Boolean, external: Boolean = false): Issue =
+      // A MAPPED type reached this slot from a CLASS FILE's own signature, which is not the same
+      // fact as one surviving `transformType` and must not be reported as one. `MappedTypeSurvived`
+      // reads "§1(a) engine bug — no occurrence of this type should have survived", and sending a
+      // reader after a phase that never had the chance to move it costs the full investigation
+      // §4.45 is about. It became reachable the day the frontend started interning external members
+      // with their `MethodType`: before that this arm never saw an external formal at all.
+      if external && mapped.contains(jdk) then Issue.ExternalCallee
+      else if scoped && mapped.contains(jdk) then Issue.ScopedOut
       else if mapped.contains(jdk) then Issue.MappedTypeSurvived
       else if untranslatedFamilies.exists(jdk.startsWith) then Issue.UntranslatedFamily
       else if CollectionClosureCheck.supertypesOf(jdk).exists(mapped.contains) then Issue.UnmappedSubtype
@@ -203,13 +212,15 @@ object CollectionBoundaryCheck:
       CollectionsTransform.scopedType(t, scopedOut).map(_ -> true).getOrElse(t.tpe -> false)
 
     def slot(kind: String, expected: TypeRepr, actual: Term, origin: Origin, enclosing: SymId,
-             expectedScoped: Boolean): Unit =
+             expectedScoped: Boolean, expectedExternal: Boolean = false): Unit =
       val (actualT, actualScoped) = actualOf(actual)
       val scoped = expectedScoped || actualScoped
       (fqn(expected), fqn(actualT)) match
         case (Some(e), Some(a)) if e != a =>
           (sideOf(e, shims), sideOf(a, shims)) match
-            case (Side.Jdk, Side.Scala | Side.Shim) => out += Finding(issueFor(e, scoped), kind, e, a, origin, enclosing)
+            // `expectedExternal` describes the EXPECTED side only, so it is passed on the arm where
+            // the JDK type came from there and nowhere else.
+            case (Side.Jdk, Side.Scala | Side.Shim) => out += Finding(issueFor(e, scoped, expectedExternal), kind, e, a, origin, enclosing)
             case (Side.Scala | Side.Shim, Side.Jdk) => out += Finding(issueFor(a, scoped), kind, e, a, origin, enclosing)
             case (Side.Shim, Side.Scala) | (Side.Scala, Side.Shim) =>
               out += Finding(Issue.ShimBoundary, kind, e, a, origin, enclosing)
@@ -228,7 +239,9 @@ object CollectionBoundaryCheck:
           case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
         }.getOrElse(Nil)
         if formals.sizeIs == t.args.size then
-          t.args.zip(formals).foreach((a, f) => slot("argument", f, a, a.origin, t.method, scopedOut(t.method)))
+          val external = !program.owns(t.method)
+          t.args.zip(formals).foreach((a, f) =>
+            slot("argument", f, a, a.origin, t.method, scopedOut(t.method), external))
         else onScopedReceiver(t)
         t
 

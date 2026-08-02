@@ -1955,11 +1955,12 @@ written, 987 members in the source map. `just liqp-measure`.
 
 | | |
 |---|---|
-| scalac errors | **126 -> 70**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`) |
+| scalac errors | **126 -> 67**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`) |
 | `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
 | `jdk-surface` | **19 -> 10** |
-| `collection-boundary` | **6 -> 14** — the 8 new ones are `ExternalCallee`, a residue nothing could count before (K15) |
+| `collection-boundary` | **6 -> 14 -> 12** — the residue nothing could count before (K15). It rose when the seam was first counted and fell when the frontend made the formals readable: two slots BRIDGED, two re-classified from "cannot verify" to what they actually are |
+| `omissions` | **6 -> 4** — `PlainBigDecimal`'s two `super(args)` are no longer dropped; with the external constructor's signature readable the funnel reaches K5.5's synthesised primary |
 | tests | 639 `@Test` upstream, **0 ported** — no `test.conf` in this milestone |
 
 **There is no behavioural gate on this port.** Every number above is a compile-time one, and §3 is
@@ -1974,9 +1975,14 @@ porting a library from outside the family the engine grew up in.
 - **`ENGINE-LIMITS.md` K15** — *a retyping phase owes a boundary count at EXTERNAL callees, not
   only at JDK ones*, now also `CLAUDE.md` §1(b). 15 compile errors at one third-party package
   against 0 findings, because the position-blind retyping moved the node's type on BOTH sides. The
-  producer half is closed by a live `scala.jdk` wrap; the consumer half is frontend-blocked and
-  counted. **The measurement underneath it is the transferable one: every external member the
-  frontend interns carries `NoType`** — 1157 of them here, not one with a `MethodType`.
+  producer half is closed by a live `scala.jdk` wrap. **The measurement underneath it is the
+  transferable one: every external member the frontend interned carried `NoType`** — 1157 of them
+  here, not one with a `MethodType` — and that is what blocked the consumer half. `SpoonTir` now
+  interns an external member WITH its `MethodType` wherever a class file can be read for one
+  SCOPE-FREE and in full, so the consumer half is closed too (`toJava`, a live view) and what is
+  left is a count for class files the parse cannot resolve. The fix landed a second, unlooked-for
+  improvement: with an external constructor's signature readable, `PlainBigDecimal`'s two dropped
+  `super(args)` become K5.5's synthesised primary.
 - **`ENGINE-LIMITS.md` K6** — `Collectors.toSet`/`toMap` built (java's two-argument `toMap` THROWS
   on a duplicate key; `.toMap` over pairs keeps the last), and the stream collapse's
   wrong-table-lookup bug found: it emitted the SHIM's `asScalaBuffer` on `Buffer` and `Map`
