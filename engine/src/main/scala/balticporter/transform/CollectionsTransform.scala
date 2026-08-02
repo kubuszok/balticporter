@@ -399,6 +399,7 @@ final class CollectionsTransform(
     mapContainsKeySym = staticSyms.getOrElse("mapContainsKey", SymId.None)
     mapRemoveSym      = staticSyms.getOrElse("mapRemove", SymId.None)
     externalSeams.clear()
+    implicitPending.clear()
 
     mintedSyms = added.map(_.id).toSet
     val symbols = SymbolTable(program.symbols.all ++ added)
@@ -861,13 +862,82 @@ final class CollectionsTransform(
     // external arguments while the very same run was retargeting both onto the runtime — eight
     // findings that were closed before they were written down, which is the report-credibility
     // failure §4.45 names: one such row teaches a reader that these findings need checking.
-    if out ne t2 then out
-    else
-      // …and on such a call the CONSUMER half of the seam is bridged where a live view exists,
-      // BEFORE the count runs — a bridged slot is not a residue.
-      val bridged = bridgeJavaFormals(t2)
-      externalArgs(bridged)
-      externalProducer(bridged)
+    val res =
+      if out ne t2 then out
+      else
+        // …and on such a call the CONSUMER half of the seam is bridged where a live view exists,
+        // BEFORE the count runs — a bridged slot is not a residue.
+        val bridged = bridgeJavaFormals(t2)
+        externalArgs(bridged)
+        externalProducer(bridged)
+    res match
+      case a: Tree.Apply => noteImplicitReceiver(a); a
+      case other         => other
+
+  // -------------------------------------------------------------------------------------------
+  // AN INHERITED COLLECTION CALL WITH NO RECEIVER WRITTEN — K5's family at an ANONYMOUS class
+  // -------------------------------------------------------------------------------------------
+  //
+  // [[inheritedKind]] closed the class that EXTENDS a mapped JDK collection, and it is dispatched on
+  // `Tree.Select(recv, m)` — it needs a receiver term both to ask the question and to build the
+  // answer. Java's commonest way of writing such a call writes no receiver at all:
+  //
+  //   List<?> xs = new ArrayList<Object>() {{ add(a); add(b); }};      // the double-brace idiom
+  //
+  // Inside a NAMED class the frontend already supplies one — Spoon reports an implicit
+  // `CtThisAccess` and `SpoonTir` emits `this.add(…)` / `Outer.this.add(…)`, choosing the innermost
+  // enclosing type that PROVIDES the member — so those shapes have always reached the rewrite.
+  // Inside an ANONYMOUS class the target is absent, the call is a bare `Tree.Ident`, and the whole
+  // family went through untouched: `add(…)` against a `mutable.ArrayBuffer`, which has no such
+  // member.
+  //
+  // WHERE THE RECEIVER COMES FROM. Java's rule is "the innermost enclosing class that provides the
+  // member", and since the member is a mapped collection's, that is the innermost enclosing class
+  // which IS one. The traversal is bottom-up, so every enclosing `new … { … }` is offered the calls
+  // under it before anything further out is: it CLAIMS them when its own type answers [[kindAt]],
+  // and DROPS them unclaimed when it does not — because `this` inside a nested anonymous class is
+  // that class, and an anonymous class has no name to qualify with from inside one (T3), so there
+  // is no receiver to synthesise. A dropped call is emitted exactly as java wrote it, which is the
+  // honest refusal (M6) rather than a `this` naming the wrong instance.
+
+  /** call sites recorded by [[transformApply]], awaiting an enclosing class that can supply `this`.
+    *
+    * Keyed by ORIGIN and not by node identity: `StandardTraversal.mapTerm` REBUILDS every node it
+    * visits, so the `Tree.Apply` an enclosing hook sees is a copy of the one recorded here and no
+    * identity survives. An origin is a java file, line and column, which is exactly one call site.
+    * Cleared per translation in [[run]] — a phase instance is reused across source sets. */
+  private val implicitPending = collection.mutable.Set[Origin]()
+
+  /** [[inheritedKind]] with no receiver to read. The scope suppression `inheritedKind` applies is
+    * about the RECEIVER's declaration, and there is no receiver here; the enclosing class's own
+    * [[kindAt]] — which does go through `actualOf` — is what stands in for it at the claim. */
+  private def implicitInheritedKind(m: SymId)(using p: Program): Option[Kind] =
+    if mintedSyms.contains(m) then scala.None
+    else p.symbolOf(m).flatMap(s => p.symbolOf(s.owner)).flatMap(o => typeMap.get(o.fullName)).map(_._2)
+
+  private def noteImplicitReceiver(t: Tree.Apply)(using Program): Unit = t.fun match
+    case Tree.Ident(m, _, _) if t.origin != Origin.synthetic && implicitInheritedKind(m).isDefined =>
+      implicitPending += t.origin
+    case _ => ()
+
+  override def transformNew(t: Tree.New)(using Program): Term = t.anon match
+    case Some(a) if implicitPending.nonEmpty =>
+      // the anonymous class's own kind decides whether it can SUPPLY the receiver; the claimer
+      // drains what it finds either way, so the drop happens at the innermost anonymous class.
+      val supplies = kindAt(t)
+      val claimer = new Phase:
+        def name: String = "collections/implicit-receiver"
+        override def transformApply(x: Tree.Apply)(using Program): Term =
+          if !implicitPending.remove(x.origin) then x
+          else if supplies.isEmpty then x
+          else x.fun match
+            case Tree.Ident(m, _, so) =>
+              implicitInheritedKind(m)
+                .flatMap(k => rewrite(k, Tree.This(a.symbol, t.tpe, x.origin), m, so, x))
+                .getOrElse(x)
+            case _ => x
+      t.copy(anon = Some(a.copy(body = a.body.map(StandardTraversal.mapStat(claimer, _)))))
+    case _ => t
 
   // -------------------------------------------------------------------------------------------
   // The EXTERNAL CALLEE seam — the boundary nothing could see, in both directions

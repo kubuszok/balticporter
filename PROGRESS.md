@@ -2031,6 +2031,13 @@ porting a library from outside the family the engine grew up in.
   omission: `SpoonTir.descriptorOf` spells `T…` and `T[]` identically BY CONSTRUCTION, so the
   vararg-ness lives only in the class file the frontend read and a tree-level check could do nothing
   but read the frontend's answer back — which `BreakCatchCheck`'s contract forbids.
+- **`ENGINE-LIMITS.md` K5 (extended, closed)** — an inherited collection call with NO RECEIVER
+  WRITTEN, which is what java's double-brace initialiser is made of. Inside a NAMED class the
+  frontend already supplies `this.`/`Outer.this.`; inside an ANONYMOUS class it does not, so the
+  bare `Tree.Ident` never reached the rewrite. 4 errors — and 22 SILENT sites beside them: `add` has
+  no scala namesake so it fails to compile, `put` does, so an unclaimed `put(k, v)` compiled with
+  scala's `Option` result where java returns the previous value (§4.4). The four errors named one
+  member of a family the claim repaired whole.
 - **`ENGINE-LIMITS.md` T14 (closed)** — a java STATIC reached through a SUBCLASS name. 20 errors in
   this suite from one upstream idiom (`ZoneOffset.systemDefault()`), and the fix is the frontend
   reading the interned symbol's OWNER instead of re-deriving the receiver from the written name. The

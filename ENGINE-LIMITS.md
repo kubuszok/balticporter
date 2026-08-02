@@ -1757,6 +1757,46 @@ that base's OWN abstract/concrete split, member for member, with java's paramete
 type-parameter bounds — and no compile error names any of the four mistakes above until every other
 error is gone.
 
+**…AND THE COMMONEST WAY TO WRITE SUCH A CALL WRITES NO RECEIVER AT ALL.** The inherited-call
+rewrite above reads the RESOLVED METHOD's declaring type, which is right — and it is dispatched on
+`Tree.Select(recv, m)`, because it needs a receiver term both to ask the question and to build the
+answer. Java's double-brace initialiser has none:
+
+```java
+List<?> xs = new ArrayList<Object>() {{ add(a); add(b); }};
+```
+
+Inside a NAMED class this never showed, and that is worth knowing before designing anything here:
+Spoon reports an implicit `CtThisAccess` there, so `SpoonTir` already emits `this.add(…)` — or
+`Outer.this.add(…)`, choosing the innermost enclosing type that PROVIDES the member, which is a
+walk only the frontend can do. Inside an ANONYMOUS class the target is absent, the call is a bare
+`Tree.Ident`, and the entire family went through untouched: `add(…)` against a `mutable.ArrayBuffer`.
+**4 errors on liqp's suite, all in one field initialiser**, and the shape is the one every library
+that seeds a collection inline uses.
+
+The receiver is java's own rule — the innermost enclosing class that provides the member, which for
+a mapped collection's member is the innermost enclosing class that IS one. The traversal is
+bottom-up, so every enclosing `new … { … }` is offered the calls under it before anything further
+out is; it CLAIMS them when its own type answers `kindAt` and DROPS them when it does not. The drop
+is the load-bearing half: `this` inside a nested anonymous class is that class, and an anonymous
+class has no name to qualify with from inside one (T2/T3), so where the provider is an enclosing
+ANONYMOUS class there is no receiver to synthesise and the call stays as java wrote it (M6). Note
+the pending set is keyed by `Origin` and not by node identity — `StandardTraversal.mapTerm` REBUILDS
+every node it visits, so no identity survives to the enclosing hook.
+
+**And the four errors were the SMALLER half.** `add` has no scala namesake, so an unclaimed one is a
+compile error and gets counted. `put` does: java's `Map.put` returns the PREVIOUS value and scala's
+returns an `Option`, so a bare `put(k, v)` inside a double-brace initialiser COMPILED — the phase's
+`put` rewrite (`this.put(k, v).getOrElse(null)`) simply never fired there, at **22 sites in one
+library** whose emitted text no error, no check and no test could distinguish from the right one.
+That is `CLAUDE.md` §4.4's shape reached through a receiver rather than through a statement form, and
+it is why the blast radius of this fix is 9 members and not 4: the errors named one member of the
+family and the claim repaired all of it.
+
+Measured, `just measure-all`: **liqp 56 -> 52** (main 27 flat, test 29 -> 25), 9 members — 1 in the
+main source set (`Parser#toBeReplaced`, ten `put`s) and 8 in the test — every other port
+byte-for-byte unchanged and every check count flat on all fifteen.
+
 *Fix kind: (a). The types are JDK, the inheritance is ordinary java, and every library that defines
 its own collection type hits it — flexmark and liqp both do.*
 
