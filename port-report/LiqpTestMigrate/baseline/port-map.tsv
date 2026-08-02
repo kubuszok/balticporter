@@ -1,0 +1,794 @@
+# balticporter port map	schema=3	module=liqp-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a41fd23e039e6add	files=101	policy=c3233d79f1885078
+#kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
+type	liqp.ConditionTest	ssg.liquid.ConditionTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.InsertionTest	ssg.liquid.InsertionTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.LValueTest	ssg.liquid.LValueTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.ProtectionSettingsTest	ssg.liquid.ProtectionSettingsTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.RenderSettingsTest	ssg.liquid.RenderSettingsTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=CustomRenderTransformer,MyAppender
+type	liqp.RenderSettingsTest$CustomRenderTransformer	ssg.liquid.RenderSettingsTest$CustomRenderTransformer	Renamed	-		0		companion=yes flags=final form=class parents=ssg.liquid.RenderTransformer primary=() primaryKind=unique-root primaryVis=private[RenderSettingsTest]
+type	liqp.RenderSettingsTest$MyAppender	ssg.liquid.RenderSettingsTest$MyAppender	Renamed	-		0		companion=yes flags=final form=class parents=ssg.liquid.RenderTransformer$ObjectAppender$Controller primary=() primaryKind=unique-root primaryVis=private[RenderSettingsTest]
+type	liqp.StatementsTest	ssg.liquid.StatementsTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.TestUtils	ssg.liquid.TestUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
+type	liqp.blocks.CaptureTest	ssg.liquid.blocks.CaptureTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.blocks.CaseTest	ssg.liquid.blocks.CaseTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.blocks.CommentTest	ssg.liquid.blocks.CommentTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.blocks.CycleTest	ssg.liquid.blocks.CycleTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.blocks.ForTest	ssg.liquid.blocks.ForTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.blocks.IfTest	ssg.liquid.blocks.IfTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.blocks.IfchangedTest	ssg.liquid.blocks.IfchangedTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.blocks.RawTest	ssg.liquid.blocks.RawTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.blocks.TablerowTest	ssg.liquid.blocks.TablerowTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.blocks.UnlessTest	ssg.liquid.blocks.UnlessTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.AbsTest	ssg.liquid.filters.AbsTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Absolute_UrlTest	ssg.liquid.filters.Absolute_UrlTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.AppendTest	ssg.liquid.filters.AppendTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.At_LeastTest	ssg.liquid.filters.At_LeastTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.At_MostTest	ssg.liquid.filters.At_MostTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.CapitalizeTest	ssg.liquid.filters.CapitalizeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.CeilTest	ssg.liquid.filters.CeilTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.CompactTest	ssg.liquid.filters.CompactTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.ConcatTest	ssg.liquid.filters.ConcatTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.DefaultTest	ssg.liquid.filters.DefaultTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Divided_ByTest	ssg.liquid.filters.Divided_ByTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.DowncaseTest	ssg.liquid.filters.DowncaseTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.EscapeTest	ssg.liquid.filters.EscapeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Escape_OnceTest	ssg.liquid.filters.Escape_OnceTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.FilterTest	ssg.liquid.filters.FilterTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.FirstTest	ssg.liquid.filters.FirstTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.FloorTest	ssg.liquid.filters.FloorTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.HTest	ssg.liquid.filters.HTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.JoinTest	ssg.liquid.filters.JoinTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.JsonTest	ssg.liquid.filters.JsonTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.LastTest	ssg.liquid.filters.LastTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.LstripTest	ssg.liquid.filters.LstripTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.MapTest	ssg.liquid.filters.MapTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.MinusTest	ssg.liquid.filters.MinusTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.ModuloTest	ssg.liquid.filters.ModuloTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Newline_To_BrTest	ssg.liquid.filters.Newline_To_BrTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Normalize_WhitespaceTest	ssg.liquid.filters.Normalize_WhitespaceTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.PlusTest	ssg.liquid.filters.PlusTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.PopTest	ssg.liquid.filters.PopTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.PrependTest	ssg.liquid.filters.PrependTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.PushTest	ssg.liquid.filters.PushTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Relative_UrlTest	ssg.liquid.filters.Relative_UrlTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.RemoveTest	ssg.liquid.filters.RemoveTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Remove_FirstTest	ssg.liquid.filters.Remove_FirstTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.ReplaceTest	ssg.liquid.filters.ReplaceTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Replace_FirstTest	ssg.liquid.filters.Replace_FirstTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.ReverseTest	ssg.liquid.filters.ReverseTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.RoundTest	ssg.liquid.filters.RoundTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.RstripTest	ssg.liquid.filters.RstripTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.ShiftTest	ssg.liquid.filters.ShiftTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.SizeTest	ssg.liquid.filters.SizeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.SliceTest	ssg.liquid.filters.SliceTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.SortTest	ssg.liquid.filters.SortTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=Pojo,PojoWithSupport,context
+type	liqp.filters.SortTest$Pojo	ssg.liquid.filters.SortTest$Pojo	Renamed	-		0		form=class parents=ssg.liquid.parser.Inspectable primary=(int) primaryKind=unique-root primaryVis=public
+type	liqp.filters.SortTest$PojoWithSupport	ssg.liquid.filters.SortTest$PojoWithSupport	Renamed	-		0		companion=yes form=class parents=ssg.liquid.parser.LiquidSupport primary=(int) primaryKind=unique-root primaryVis=public
+type	liqp.filters.Sort_NaturalTest	ssg.liquid.filters.Sort_NaturalTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.SplitTest	ssg.liquid.filters.SplitTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.StripTest	ssg.liquid.filters.StripTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Strip_HTMLTest	ssg.liquid.filters.Strip_HTMLTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Strip_NewlinesTest	ssg.liquid.filters.Strip_NewlinesTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.TimesTest	ssg.liquid.filters.TimesTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.TruncateTest	ssg.liquid.filters.TruncateTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.TruncatewordsTest	ssg.liquid.filters.TruncatewordsTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.UniqTest	ssg.liquid.filters.UniqTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.UnshiftTest	ssg.liquid.filters.UnshiftTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.UpcaseTest	ssg.liquid.filters.UpcaseTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Url_DecodeTest	ssg.liquid.filters.Url_DecodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Url_EncodeTest	ssg.liquid.filters.Url_EncodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.Where_ExpTest	ssg.liquid.filters.Where_ExpTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.date.FuzzyDateDateParserTest	ssg.liquid.filters.date.FuzzyDateDateParserTest	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
+type	liqp.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=Child,Meta2,ObjectEntry,SampleLiquidSupport,TagsHolder
+type	liqp.filters.where.JekyllWhereImplTest$Child	ssg.liquid.filters.where.JekyllWhereImplTest$Child	Renamed	-		0		form=class primary=(String,String) primaryKind=unique-root primaryVis=public
+type	liqp.filters.where.JekyllWhereImplTest$Meta2	ssg.liquid.filters.where.JekyllWhereImplTest$Meta2	Renamed	-		0		form=class primary=(Object,Object,Object) primaryKind=unique-root primaryVis=public
+type	liqp.filters.where.JekyllWhereImplTest$ObjectEntry	ssg.liquid.filters.where.JekyllWhereImplTest$ObjectEntry	Renamed	-		0		form=class primary=(String,String) primaryKind=unique-root primaryVis=public
+type	liqp.filters.where.JekyllWhereImplTest$SampleLiquidSupport	ssg.liquid.filters.where.JekyllWhereImplTest$SampleLiquidSupport	Renamed	-		0		companion=yes form=class parents=ssg.liquid.parser.LiquidSupport primary=(Boolean,String) primaryKind=unique-root primaryVis=public
+type	liqp.filters.where.JekyllWhereImplTest$TagsHolder	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder	Renamed	-		0		form=class primary=(Object,String) primaryKind=unique-root primaryVis=public
+type	liqp.filters.where.LiquidWhereImplTest	ssg.liquid.filters.where.LiquidWhereImplTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=SampleLiquidSupport
+type	liqp.filters.where.LiquidWhereImplTest$SampleLiquidSupport	ssg.liquid.filters.where.LiquidWhereImplTest$SampleLiquidSupport	Renamed	-		0		companion=yes form=class parents=ssg.liquid.parser.LiquidSupport primary=(Boolean,String) primaryKind=unique-root primaryVis=public
+type	liqp.nodes.AndNodeTest	ssg.liquid.nodes.AndNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.AtomNodeTest	ssg.liquid.nodes.AtomNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.BlockNodeTest	ssg.liquid.nodes.BlockNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.ComparingExpressionNodeTest	ssg.liquid.nodes.ComparingExpressionNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.ContainsNodeTest	ssg.liquid.nodes.ContainsNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.EqNodeTest	ssg.liquid.nodes.EqNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.GtEqNodeTest	ssg.liquid.nodes.GtEqNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.GtNodeTest	ssg.liquid.nodes.GtNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.LookupNodeTest	ssg.liquid.nodes.LookupNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.LtEqNodeTest	ssg.liquid.nodes.LtEqNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.LtNodeTest	ssg.liquid.nodes.LtNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.NEqNodeTest	ssg.liquid.nodes.NEqNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.OrNodeTest	ssg.liquid.nodes.OrNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.nodes.OutputNodeTest	ssg.liquid.nodes.OutputNodeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.parser.ParseTest	ssg.liquid.parser.ParseTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.parser.v4.LiquidLexerTest	ssg.liquid.parser.v4.LiquidLexerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=commonTokenStream,singleToken,tokenise
+type	liqp.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=array,parse,parseWithListener,texts,textsWithError
+type	liqp.parser.v4.LiquidParserTest$CapturingErrorListener	ssg.liquid.parser.v4.LiquidParserTest$CapturingErrorListener	Renamed	-		0		form=class parents=org.antlr.v4.runtime.BaseErrorListener primary=() primaryKind=unique-root primaryVis=public
+type	liqp.tags.AssignTest	ssg.liquid.tags.AssignTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.tags.DecrementTest	ssg.liquid.tags.DecrementTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.tags.IncludeRelativeTest	ssg.liquid.tags.IncludeRelativeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.tags.IncludeTest	ssg.liquid.tags.IncludeTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.tags.IncrementTest	ssg.liquid.tags.IncrementTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.tags.WhitespaceControlTest	ssg.liquid.tags.WhitespaceControlTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	liqp.tags.WhitespaceWindowsControlTest	ssg.liquid.tags.WhitespaceWindowsControlTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type		balticporter.runtime.JavaCollection	Added	-		0		
+type		balticporter.runtime.JavaCollections	Added	-		0		
+type		balticporter.runtime.JavaIterable	Added	-		0		
+type		balticporter.runtime.JavaIterator	Added	-		0		
+member	liqp.ConditionTest#<stmt1>	ssg.liquid.ConditionTest#<stmt1>	Renamed	-	liqp/ConditionTest.java	19	0e6505dfab4baa88	
+member	liqp.ConditionTest#<stmt2>	ssg.liquid.ConditionTest#<stmt2>	Renamed	-	liqp/ConditionTest.java	44	7e5fa85113859201	
+member	liqp.ConditionTest#<stmt3>	ssg.liquid.ConditionTest#<stmt3>	Renamed	-	liqp/ConditionTest.java	76	7d2043425f510e52	
+member	liqp.ConditionTest#<stmt4>	ssg.liquid.ConditionTest#<stmt4>	Renamed	-	liqp/ConditionTest.java	102	52939c90b3a1237e	
+member	liqp.ConditionTest#<stmt5>	ssg.liquid.ConditionTest#<stmt5>	Renamed	-	liqp/ConditionTest.java	131	a1127c3c2a5e57c9	
+member	liqp.ConditionTest#<stmt6>	ssg.liquid.ConditionTest#<stmt6>	Renamed	-	liqp/ConditionTest.java	154	377b9fc9c591e511	
+member	liqp.ConditionTest#<stmt7>	ssg.liquid.ConditionTest#<stmt7>	Renamed	-	liqp/ConditionTest.java	171	8ab0e132863d45f4	
+member	liqp.InsertionTest#<stmt10>	ssg.liquid.InsertionTest#<stmt10>	Renamed	-	liqp/InsertionTest.java	189	1ae884182baa36e4	
+member	liqp.InsertionTest#<stmt11>	ssg.liquid.InsertionTest#<stmt11>	Renamed	-	liqp/InsertionTest.java	205	a677a68d55771abd	
+member	liqp.InsertionTest#<stmt1>	ssg.liquid.InsertionTest#<stmt1>	Renamed	-	liqp/InsertionTest.java	16	59d6e5bdecbc776d	
+member	liqp.InsertionTest#<stmt2>	ssg.liquid.InsertionTest#<stmt2>	Renamed	-	liqp/InsertionTest.java	41	020bde769753d22f	
+member	liqp.InsertionTest#<stmt3>	ssg.liquid.InsertionTest#<stmt3>	Renamed	-	liqp/InsertionTest.java	65	1de8bc878e77e42e	
+member	liqp.InsertionTest#<stmt4>	ssg.liquid.InsertionTest#<stmt4>	Renamed	-	liqp/InsertionTest.java	82	68e5e73aa0757603	
+member	liqp.InsertionTest#<stmt5>	ssg.liquid.InsertionTest#<stmt5>	Renamed	-	liqp/InsertionTest.java	100	237f5205b153238d	
+member	liqp.InsertionTest#<stmt6>	ssg.liquid.InsertionTest#<stmt6>	Renamed	-	liqp/InsertionTest.java	118	c11abc346b4e2032	
+member	liqp.InsertionTest#<stmt7>	ssg.liquid.InsertionTest#<stmt7>	Renamed	-	liqp/InsertionTest.java	140	74ad614bebec5a8b	
+member	liqp.InsertionTest#<stmt8>	ssg.liquid.InsertionTest#<stmt8>	Renamed	-	liqp/InsertionTest.java	146	158732954118a332	
+member	liqp.InsertionTest#<stmt9>	ssg.liquid.InsertionTest#<stmt9>	Renamed	-	liqp/InsertionTest.java	168	8e673c3bc29162a3	
+member	liqp.LValueTest#<stmt1>	ssg.liquid.LValueTest#<stmt1>	Renamed	-	liqp/LValueTest.java	10	c48227d7039ee882	
+member	liqp.ProtectionSettingsTest#<stmt10>	ssg.liquid.ProtectionSettingsTest#<stmt10>	Renamed	-	liqp/ProtectionSettingsTest.java	85	15c6aef898ddaed7	
+member	liqp.ProtectionSettingsTest#<stmt11>	ssg.liquid.ProtectionSettingsTest#<stmt11>	Renamed	-	liqp/ProtectionSettingsTest.java	95	75723fd03c0b8f4d	
+member	liqp.ProtectionSettingsTest#<stmt12>	ssg.liquid.ProtectionSettingsTest#<stmt12>	Renamed	-	liqp/ProtectionSettingsTest.java	103	4371dbca83445d71	
+member	liqp.ProtectionSettingsTest#<stmt13>	ssg.liquid.ProtectionSettingsTest#<stmt13>	Renamed	-	liqp/ProtectionSettingsTest.java	114	9666e51a011f018b	
+member	liqp.ProtectionSettingsTest#<stmt1>	ssg.liquid.ProtectionSettingsTest#<stmt1>	Renamed	-	liqp/ProtectionSettingsTest.java	8	ead4952244332091	
+member	liqp.ProtectionSettingsTest#<stmt2>	ssg.liquid.ProtectionSettingsTest#<stmt2>	Renamed	-	liqp/ProtectionSettingsTest.java	18	8f71c15bc91f4eba	
+member	liqp.ProtectionSettingsTest#<stmt3>	ssg.liquid.ProtectionSettingsTest#<stmt3>	Renamed	-	liqp/ProtectionSettingsTest.java	25	b21c89a8577dd098	
+member	liqp.ProtectionSettingsTest#<stmt4>	ssg.liquid.ProtectionSettingsTest#<stmt4>	Renamed	-	liqp/ProtectionSettingsTest.java	36	6d68df3c376844e3	
+member	liqp.ProtectionSettingsTest#<stmt5>	ssg.liquid.ProtectionSettingsTest#<stmt5>	Renamed	-	liqp/ProtectionSettingsTest.java	44	069637fb085ab465	
+member	liqp.ProtectionSettingsTest#<stmt6>	ssg.liquid.ProtectionSettingsTest#<stmt6>	Renamed	-	liqp/ProtectionSettingsTest.java	55	6fe871fdf2ba0af9	
+member	liqp.ProtectionSettingsTest#<stmt7>	ssg.liquid.ProtectionSettingsTest#<stmt7>	Renamed	-	liqp/ProtectionSettingsTest.java	63	cd01bf5edc3f133d	
+member	liqp.ProtectionSettingsTest#<stmt8>	ssg.liquid.ProtectionSettingsTest#<stmt8>	Renamed	-	liqp/ProtectionSettingsTest.java	71	90ab798812232142	
+member	liqp.ProtectionSettingsTest#<stmt9>	ssg.liquid.ProtectionSettingsTest#<stmt9>	Renamed	-	liqp/ProtectionSettingsTest.java	77	c667ca2b448fbb45	
+member	liqp.RenderSettingsTest#<stmt10>	ssg.liquid.RenderSettingsTest#<stmt10>	Renamed	-	liqp/RenderSettingsTest.java	128	57724f1aac3d5939	
+member	liqp.RenderSettingsTest#<stmt11>	ssg.liquid.RenderSettingsTest#<stmt11>	Renamed	-	liqp/RenderSettingsTest.java	149	8dfc189f000de77d	
+member	liqp.RenderSettingsTest#<stmt12>	ssg.liquid.RenderSettingsTest#<stmt12>	Renamed	-	liqp/RenderSettingsTest.java	178	2da84f99d3fcdd58	
+member	liqp.RenderSettingsTest#<stmt1>	ssg.liquid.RenderSettingsTest#<stmt1>	Renamed	-	liqp/RenderSettingsTest.java	35	be312335b29729a6	
+member	liqp.RenderSettingsTest#<stmt2>	ssg.liquid.RenderSettingsTest#<stmt2>	Renamed	-	liqp/RenderSettingsTest.java	45	a307c019a59aab39	
+member	liqp.RenderSettingsTest#<stmt3>	ssg.liquid.RenderSettingsTest#<stmt3>	Renamed	-	liqp/RenderSettingsTest.java	55	f8afc8c3e3fd2cd0	
+member	liqp.RenderSettingsTest#<stmt4>	ssg.liquid.RenderSettingsTest#<stmt4>	Renamed	-	liqp/RenderSettingsTest.java	61	420cf162e7c1b23e	
+member	liqp.RenderSettingsTest#<stmt5>	ssg.liquid.RenderSettingsTest#<stmt5>	Renamed	-	liqp/RenderSettingsTest.java	72	235f5939076ba869	
+member	liqp.RenderSettingsTest#<stmt6>	ssg.liquid.RenderSettingsTest#<stmt6>	Renamed	-	liqp/RenderSettingsTest.java	83	daa3fb92b0b2e74d	
+member	liqp.RenderSettingsTest#<stmt7>	ssg.liquid.RenderSettingsTest#<stmt7>	Renamed	-	liqp/RenderSettingsTest.java	89	8a36b4297df78eb2	
+member	liqp.RenderSettingsTest#<stmt8>	ssg.liquid.RenderSettingsTest#<stmt8>	Renamed	-	liqp/RenderSettingsTest.java	100	ad1818ef71c78a66	
+member	liqp.RenderSettingsTest#<stmt9>	ssg.liquid.RenderSettingsTest#<stmt9>	Renamed	-	liqp/RenderSettingsTest.java	111	05486abced7e1a79	
+member	liqp.RenderSettingsTest#parserWithStrictVariables()	ssg.liquid.RenderSettingsTest#parserWithStrictVariables()	Renamed	-	liqp/RenderSettingsTest.java	23	8a5f84332f332a79	
+member	liqp.RenderSettingsTest#parserWithStrictVariablesAndRaiseExceptionsInStrictModeFalse()	ssg.liquid.RenderSettingsTest#parserWithStrictVariablesAndRaiseExceptionsInStrictModeFalse()	Renamed	-	liqp/RenderSettingsTest.java	27	b05bc7f9f6e1d2df	
+member	liqp.RenderSettingsTest$CustomRenderTransformer#newObjectAppender(TemplateContext,int)	ssg.liquid.RenderSettingsTest$CustomRenderTransformer#newObjectAppender(TemplateContext,int)	Renamed	-	liqp/RenderSettingsTest.java	229	31439e2e9652f605	
+member	liqp.RenderSettingsTest$CustomRenderTransformer#transformObject(TemplateContext,Object)	ssg.liquid.RenderSettingsTest$CustomRenderTransformer#transformObject(TemplateContext,Object)	Renamed	-	liqp/RenderSettingsTest.java	224	0f23ba0dd6c9fd81	
+member	liqp.RenderSettingsTest$MyAppender#append(Object)	ssg.liquid.RenderSettingsTest$MyAppender#append(Object)	Renamed	-	liqp/RenderSettingsTest.java	204	8aba97c68502d86c	
+member	liqp.RenderSettingsTest$MyAppender#getList()	ssg.liquid.RenderSettingsTest$MyAppender#getList()	Renamed	-	liqp/RenderSettingsTest.java	208	d77dcdc20cc598e6	
+member	liqp.RenderSettingsTest$MyAppender#getResult()	ssg.liquid.RenderSettingsTest$MyAppender#getResult()	Renamed	-	liqp/RenderSettingsTest.java	199	fd6a5f40f5b500d8	
+member	liqp.RenderSettingsTest$MyAppender#list	ssg.liquid.RenderSettingsTest$MyAppender#list	Renamed	-	liqp/RenderSettingsTest.java	196	f465e66472bbc2f6	
+member	liqp.RenderSettingsTest$MyAppender#toString()	ssg.liquid.RenderSettingsTest$MyAppender#toString()	Renamed	-	liqp/RenderSettingsTest.java	213	d99b645010fe3c2b	
+member	liqp.StatementsTest#<stmt10>	ssg.liquid.StatementsTest#<stmt10>	Renamed	-	liqp/StatementsTest.java	142	ba89c4c4a22a5edd	
+member	liqp.StatementsTest#<stmt11>	ssg.liquid.StatementsTest#<stmt11>	Renamed	-	liqp/StatementsTest.java	155	9b3e12bef0116a27	
+member	liqp.StatementsTest#<stmt12>	ssg.liquid.StatementsTest#<stmt12>	Renamed	-	liqp/StatementsTest.java	171	302f438f525a9038	
+member	liqp.StatementsTest#<stmt13>	ssg.liquid.StatementsTest#<stmt13>	Renamed	-	liqp/StatementsTest.java	187	8de931708f7b1021	
+member	liqp.StatementsTest#<stmt14>	ssg.liquid.StatementsTest#<stmt14>	Renamed	-	liqp/StatementsTest.java	203	3c2d43bf264b46d8	
+member	liqp.StatementsTest#<stmt15>	ssg.liquid.StatementsTest#<stmt15>	Renamed	-	liqp/StatementsTest.java	219	7ef8655e8afdaf65	
+member	liqp.StatementsTest#<stmt16>	ssg.liquid.StatementsTest#<stmt16>	Renamed	-	liqp/StatementsTest.java	235	458c8f3e83b7dd77	
+member	liqp.StatementsTest#<stmt17>	ssg.liquid.StatementsTest#<stmt17>	Renamed	-	liqp/StatementsTest.java	255	63afaf96b38d3913	
+member	liqp.StatementsTest#<stmt18>	ssg.liquid.StatementsTest#<stmt18>	Renamed	-	liqp/StatementsTest.java	274	b58a03da5ca2a89a	
+member	liqp.StatementsTest#<stmt1>	ssg.liquid.StatementsTest#<stmt1>	Renamed	-	liqp/StatementsTest.java	18	3dc7cf1da3be4dd7	
+member	liqp.StatementsTest#<stmt2>	ssg.liquid.StatementsTest#<stmt2>	Renamed	-	liqp/StatementsTest.java	31	c2d0c86ad3714384	
+member	liqp.StatementsTest#<stmt3>	ssg.liquid.StatementsTest#<stmt3>	Renamed	-	liqp/StatementsTest.java	44	9c3cfd05d18c443a	
+member	liqp.StatementsTest#<stmt4>	ssg.liquid.StatementsTest#<stmt4>	Renamed	-	liqp/StatementsTest.java	57	6a5543bd2954bcfc	
+member	liqp.StatementsTest#<stmt5>	ssg.liquid.StatementsTest#<stmt5>	Renamed	-	liqp/StatementsTest.java	70	96b6db4ebd56bda3	
+member	liqp.StatementsTest#<stmt6>	ssg.liquid.StatementsTest#<stmt6>	Renamed	-	liqp/StatementsTest.java	83	ffee4a44fdb1c23b	
+member	liqp.StatementsTest#<stmt7>	ssg.liquid.StatementsTest#<stmt7>	Renamed	-	liqp/StatementsTest.java	101	4f20b499a4bd76d0	
+member	liqp.StatementsTest#<stmt8>	ssg.liquid.StatementsTest#<stmt8>	Renamed	-	liqp/StatementsTest.java	116	b93dbcf04c5e9eed	
+member	liqp.StatementsTest#<stmt9>	ssg.liquid.StatementsTest#<stmt9>	Renamed	-	liqp/StatementsTest.java	129	6e7b30aa3a97085b	
+member	liqp.TestUtils#assertPatternInvalid(String,TemplateParser,String)	ssg.liquid.TestUtils#assertPatternInvalid(String,TemplateParser,String)	Renamed	-	liqp/TestUtils.java	116	190076de4fe51d36	placement=companion
+member	liqp.TestUtils#assertPatternInvalid(TemplateParser,String)	ssg.liquid.TestUtils#assertPatternInvalid(TemplateParser,String)	Renamed	-	liqp/TestUtils.java	101	13a40dd22a1195d5	placement=companion
+member	liqp.TestUtils#assertPatternResultEquals(String,TemplateParser,String,String)	ssg.liquid.TestUtils#assertPatternResultEquals(String,TemplateParser,String,String)	Renamed	-	liqp/TestUtils.java	85	965fe23c0ce8f5bc	placement=companion
+member	liqp.TestUtils#assertPatternResultEquals(TemplateParser,String,String)	ssg.liquid.TestUtils#assertPatternResultEquals(TemplateParser,String,String)	Renamed	-	liqp/TestUtils.java	67	fa7cb1fa6fc9e44a	placement=companion
+member	liqp.TestUtils#getExceptionRootCause(Throwable)	ssg.liquid.TestUtils#getExceptionRootCause(Throwable)	Renamed	-	liqp/TestUtils.java	46	5664c24d94a04b5d	placement=companion
+member	liqp.TestUtils#getNode(String,String)	ssg.liquid.TestUtils#getNode(String,String)	Renamed	-	liqp/TestUtils.java	30	491a067008ac2058	placement=companion
+member	liqp.TestUtils#getNode(String,String,TemplateParser)	ssg.liquid.TestUtils#getNode(String,String,TemplateParser)	Renamed	-	liqp/TestUtils.java	34	2b7b40a1cd3e364d	placement=companion
+member	liqp.blocks.CaptureTest#<stmt1>	ssg.liquid.blocks.CaptureTest#<stmt1>	Renamed	-	liqp/blocks/CaptureTest.java	17	40d7790b9dfbad1a	
+member	liqp.blocks.CaptureTest#<stmt2>	ssg.liquid.blocks.CaptureTest#<stmt2>	Renamed	-	liqp/blocks/CaptureTest.java	39	22fd75d031b6c301	
+member	liqp.blocks.CaptureTest#<stmt3>	ssg.liquid.blocks.CaptureTest#<stmt3>	Renamed	-	liqp/blocks/CaptureTest.java	61	35f7600da1f74c21	
+member	liqp.blocks.CaptureTest#<stmt4>	ssg.liquid.blocks.CaptureTest#<stmt4>	Renamed	-	liqp/blocks/CaptureTest.java	92	933c2c6e83cd8d5a	
+member	liqp.blocks.CaptureTest#<stmt5>	ssg.liquid.blocks.CaptureTest#<stmt5>	Renamed	-	liqp/blocks/CaptureTest.java	114	9268786d8ca71dc2	
+member	liqp.blocks.CaptureTest#<stmt6>	ssg.liquid.blocks.CaptureTest#<stmt6>	Renamed	-	liqp/blocks/CaptureTest.java	134	6037730ad3ac43fb	
+member	liqp.blocks.CaptureTest#<stmt7>	ssg.liquid.blocks.CaptureTest#<stmt7>	Renamed	-	liqp/blocks/CaptureTest.java	140	a7de3353ea1a0302	
+member	liqp.blocks.CaseTest#<stmt10>	ssg.liquid.blocks.CaseTest#<stmt10>	Renamed	-	liqp/blocks/CaseTest.java	318	ae7d32f4c163bf65	
+member	liqp.blocks.CaseTest#<stmt11>	ssg.liquid.blocks.CaseTest#<stmt11>	Renamed	-	liqp/blocks/CaseTest.java	323	9aaa86706822a2f4	
+member	liqp.blocks.CaseTest#<stmt1>	ssg.liquid.blocks.CaseTest#<stmt1>	Renamed	-	liqp/blocks/CaseTest.java	16	e6309d4f32b25230	
+member	liqp.blocks.CaseTest#<stmt2>	ssg.liquid.blocks.CaseTest#<stmt2>	Renamed	-	liqp/blocks/CaseTest.java	65	eb24729066bfdcf7	
+member	liqp.blocks.CaseTest#<stmt3>	ssg.liquid.blocks.CaseTest#<stmt3>	Renamed	-	liqp/blocks/CaseTest.java	112	b3797f06c04b47e3	
+member	liqp.blocks.CaseTest#<stmt4>	ssg.liquid.blocks.CaseTest#<stmt4>	Renamed	-	liqp/blocks/CaseTest.java	141	dbad4691661b9116	
+member	liqp.blocks.CaseTest#<stmt5>	ssg.liquid.blocks.CaseTest#<stmt5>	Renamed	-	liqp/blocks/CaseTest.java	179	a9524c914fc69325	
+member	liqp.blocks.CaseTest#<stmt6>	ssg.liquid.blocks.CaseTest#<stmt6>	Renamed	-	liqp/blocks/CaseTest.java	209	3c78b3a95d7e2e13	
+member	liqp.blocks.CaseTest#<stmt7>	ssg.liquid.blocks.CaseTest#<stmt7>	Renamed	-	liqp/blocks/CaseTest.java	230	3f126e07812a9970	
+member	liqp.blocks.CaseTest#<stmt8>	ssg.liquid.blocks.CaseTest#<stmt8>	Renamed	-	liqp/blocks/CaseTest.java	259	421b3f4d94c39b2b	
+member	liqp.blocks.CaseTest#<stmt9>	ssg.liquid.blocks.CaseTest#<stmt9>	Renamed	-	liqp/blocks/CaseTest.java	287	282bcd281417edc2	
+member	liqp.blocks.CommentTest#<stmt1>	ssg.liquid.blocks.CommentTest#<stmt1>	Renamed	-	liqp/blocks/CommentTest.java	15	b37b63c9e5b2c437	
+member	liqp.blocks.CommentTest#<stmt2>	ssg.liquid.blocks.CommentTest#<stmt2>	Renamed	-	liqp/blocks/CommentTest.java	57	8128e1ec6792e4c1	
+member	liqp.blocks.CommentTest#<stmt3>	ssg.liquid.blocks.CommentTest#<stmt3>	Renamed	-	liqp/blocks/CommentTest.java	82	3f02ad53698c0e21	
+member	liqp.blocks.CycleTest#<stmt1>	ssg.liquid.blocks.CycleTest#<stmt1>	Renamed	-	liqp/blocks/CycleTest.java	15	757bf4b4276f7c81	
+member	liqp.blocks.CycleTest#<stmt2>	ssg.liquid.blocks.CycleTest#<stmt2>	Renamed	-	liqp/blocks/CycleTest.java	88	8345cdd796c889b9	
+member	liqp.blocks.CycleTest#<stmt3>	ssg.liquid.blocks.CycleTest#<stmt3>	Renamed	-	liqp/blocks/CycleTest.java	108	99c1986136016be1	
+member	liqp.blocks.CycleTest#<stmt4>	ssg.liquid.blocks.CycleTest#<stmt4>	Renamed	-	liqp/blocks/CycleTest.java	129	8db8555be82891a5	
+member	liqp.blocks.CycleTest#<stmt5>	ssg.liquid.blocks.CycleTest#<stmt5>	Renamed	-	liqp/blocks/CycleTest.java	147	d03911edf45fae74	
+member	liqp.blocks.CycleTest#<stmt6>	ssg.liquid.blocks.CycleTest#<stmt6>	Renamed	-	liqp/blocks/CycleTest.java	160	f8c1132b9445acb1	
+member	liqp.blocks.ForTest#<stmt10>	ssg.liquid.blocks.ForTest#<stmt10>	Renamed	-	liqp/blocks/ForTest.java	238	de4dc1c150aa641a	
+member	liqp.blocks.ForTest#<stmt11>	ssg.liquid.blocks.ForTest#<stmt11>	Renamed	-	liqp/blocks/ForTest.java	253	d62f5ae08339b15b	
+member	liqp.blocks.ForTest#<stmt12>	ssg.liquid.blocks.ForTest#<stmt12>	Renamed	-	liqp/blocks/ForTest.java	270	320e86d34c6395da	
+member	liqp.blocks.ForTest#<stmt13>	ssg.liquid.blocks.ForTest#<stmt13>	Renamed	-	liqp/blocks/ForTest.java	290	3fc984d8e379a7a5	
+member	liqp.blocks.ForTest#<stmt14>	ssg.liquid.blocks.ForTest#<stmt14>	Renamed	-	liqp/blocks/ForTest.java	304	d1f543eefbec5a60	
+member	liqp.blocks.ForTest#<stmt15>	ssg.liquid.blocks.ForTest#<stmt15>	Renamed	-	liqp/blocks/ForTest.java	318	42a9dc85371ca203	
+member	liqp.blocks.ForTest#<stmt16>	ssg.liquid.blocks.ForTest#<stmt16>	Renamed	-	liqp/blocks/ForTest.java	346	30827fca331ee06b	
+member	liqp.blocks.ForTest#<stmt17>	ssg.liquid.blocks.ForTest#<stmt17>	Renamed	-	liqp/blocks/ForTest.java	386	d657269f122a871e	
+member	liqp.blocks.ForTest#<stmt18>	ssg.liquid.blocks.ForTest#<stmt18>	Renamed	-	liqp/blocks/ForTest.java	426	313d912f41b196a2	
+member	liqp.blocks.ForTest#<stmt19>	ssg.liquid.blocks.ForTest#<stmt19>	Renamed	-	liqp/blocks/ForTest.java	462	7f90fc808e4041ed	
+member	liqp.blocks.ForTest#<stmt1>	ssg.liquid.blocks.ForTest#<stmt1>	Renamed	-	liqp/blocks/ForTest.java	25	e70dacfa95189293	
+member	liqp.blocks.ForTest#<stmt20>	ssg.liquid.blocks.ForTest#<stmt20>	Renamed	-	liqp/blocks/ForTest.java	522	4cacc74f0175a4ac	
+member	liqp.blocks.ForTest#<stmt21>	ssg.liquid.blocks.ForTest#<stmt21>	Renamed	-	liqp/blocks/ForTest.java	607	926054f3a32c8c85	
+member	liqp.blocks.ForTest#<stmt22>	ssg.liquid.blocks.ForTest#<stmt22>	Renamed	-	liqp/blocks/ForTest.java	680	d81dcac03b4fb243	
+member	liqp.blocks.ForTest#<stmt23>	ssg.liquid.blocks.ForTest#<stmt23>	Renamed	-	liqp/blocks/ForTest.java	710	9dea0b7d15dc07fe	
+member	liqp.blocks.ForTest#<stmt24>	ssg.liquid.blocks.ForTest#<stmt24>	Renamed	-	liqp/blocks/ForTest.java	726	f0607a644bf23e25	
+member	liqp.blocks.ForTest#<stmt25>	ssg.liquid.blocks.ForTest#<stmt25>	Renamed	-	liqp/blocks/ForTest.java	738	f921c888636da070	
+member	liqp.blocks.ForTest#<stmt26>	ssg.liquid.blocks.ForTest#<stmt26>	Renamed	-	liqp/blocks/ForTest.java	743	e5c3c7038d997987	
+member	liqp.blocks.ForTest#<stmt27>	ssg.liquid.blocks.ForTest#<stmt27>	Renamed	-	liqp/blocks/ForTest.java	761	030d4276eac7ea2c	
+member	liqp.blocks.ForTest#<stmt28>	ssg.liquid.blocks.ForTest#<stmt28>	Renamed	-	liqp/blocks/ForTest.java	787	13d3a84535ec891b	
+member	liqp.blocks.ForTest#<stmt29>	ssg.liquid.blocks.ForTest#<stmt29>	Renamed	-	liqp/blocks/ForTest.java	838	dccb8fe8eccda270	
+member	liqp.blocks.ForTest#<stmt2>	ssg.liquid.blocks.ForTest#<stmt2>	Renamed	-	liqp/blocks/ForTest.java	92	b7638c78f91b1934	
+member	liqp.blocks.ForTest#<stmt30>	ssg.liquid.blocks.ForTest#<stmt30>	Renamed	-	liqp/blocks/ForTest.java	853	ef0d6f74b6d9dc23	
+member	liqp.blocks.ForTest#<stmt31>	ssg.liquid.blocks.ForTest#<stmt31>	Renamed	-	liqp/blocks/ForTest.java	867	b8b3e87298d24af9	
+member	liqp.blocks.ForTest#<stmt32>	ssg.liquid.blocks.ForTest#<stmt32>	Renamed	-	liqp/blocks/ForTest.java	878	5b80374bdd1de4e1	
+member	liqp.blocks.ForTest#<stmt33>	ssg.liquid.blocks.ForTest#<stmt33>	Renamed	-	liqp/blocks/ForTest.java	896	728a32b1fc06254b	
+member	liqp.blocks.ForTest#<stmt34>	ssg.liquid.blocks.ForTest#<stmt34>	Renamed	-	liqp/blocks/ForTest.java	928	1c49e0e35a7ee954	
+member	liqp.blocks.ForTest#<stmt3>	ssg.liquid.blocks.ForTest#<stmt3>	Renamed	-	liqp/blocks/ForTest.java	115	421fe788562af0ca	
+member	liqp.blocks.ForTest#<stmt4>	ssg.liquid.blocks.ForTest#<stmt4>	Renamed	-	liqp/blocks/ForTest.java	132	b3094aaa2f002ad0	
+member	liqp.blocks.ForTest#<stmt5>	ssg.liquid.blocks.ForTest#<stmt5>	Renamed	-	liqp/blocks/ForTest.java	149	e1fbe7bd15a4bdba	
+member	liqp.blocks.ForTest#<stmt6>	ssg.liquid.blocks.ForTest#<stmt6>	Renamed	-	liqp/blocks/ForTest.java	160	dfd245e2780028cd	
+member	liqp.blocks.ForTest#<stmt7>	ssg.liquid.blocks.ForTest#<stmt7>	Renamed	-	liqp/blocks/ForTest.java	171	00ae9ee742bbc62d	
+member	liqp.blocks.ForTest#<stmt8>	ssg.liquid.blocks.ForTest#<stmt8>	Renamed	-	liqp/blocks/ForTest.java	191	f79799e18b746a84	
+member	liqp.blocks.ForTest#<stmt9>	ssg.liquid.blocks.ForTest#<stmt9>	Renamed	-	liqp/blocks/ForTest.java	216	3b04944e1fa30ae0	
+member	liqp.blocks.ForTest#assertTemplateResult(String,String)	ssg.liquid.blocks.ForTest#assertTemplateResult(String,String)	Renamed	-	liqp/blocks/ForTest.java	916	96d5296b9974f355	
+member	liqp.blocks.ForTest#assertTemplateResult(String,String,Map)	ssg.liquid.blocks.ForTest#assertTemplateResult(String,String,Map<String,Object>)	Renamed	-	liqp/blocks/ForTest.java	920	efada13cff5cdc5d	
+member	liqp.blocks.ForTest#assertTemplateResult(String,String,String)	ssg.liquid.blocks.ForTest#assertTemplateResult(String,String,String)	Renamed	-	liqp/blocks/ForTest.java	923	ccaca184b272fc7e	
+member	liqp.blocks.IfTest#<stmt10>	ssg.liquid.blocks.IfTest#<stmt10>	Renamed	-	liqp/blocks/IfTest.java	195	6a763a03235d5318	
+member	liqp.blocks.IfTest#<stmt11>	ssg.liquid.blocks.IfTest#<stmt11>	Renamed	-	liqp/blocks/IfTest.java	235	87225feb46ac2e95	
+member	liqp.blocks.IfTest#<stmt12>	ssg.liquid.blocks.IfTest#<stmt12>	Renamed	-	liqp/blocks/IfTest.java	283	05be6ea7e2e5ec27	
+member	liqp.blocks.IfTest#<stmt13>	ssg.liquid.blocks.IfTest#<stmt13>	Renamed	-	liqp/blocks/IfTest.java	309	a56bd1b675e4043d	
+member	liqp.blocks.IfTest#<stmt14>	ssg.liquid.blocks.IfTest#<stmt14>	Renamed	-	liqp/blocks/IfTest.java	332	d9c726fbd9050555	
+member	liqp.blocks.IfTest#<stmt15>	ssg.liquid.blocks.IfTest#<stmt15>	Renamed	-	liqp/blocks/IfTest.java	347	6b583c4113d0ea31	
+member	liqp.blocks.IfTest#<stmt16>	ssg.liquid.blocks.IfTest#<stmt16>	Renamed	-	liqp/blocks/IfTest.java	357	c2f214280f5316fa	
+member	liqp.blocks.IfTest#<stmt17>	ssg.liquid.blocks.IfTest#<stmt17>	Renamed	-	liqp/blocks/IfTest.java	373	865bbf750a916f3f	
+member	liqp.blocks.IfTest#<stmt18>	ssg.liquid.blocks.IfTest#<stmt18>	Renamed	-	liqp/blocks/IfTest.java	387	5768b90169f6a4b1	
+member	liqp.blocks.IfTest#<stmt19>	ssg.liquid.blocks.IfTest#<stmt19>	Renamed	-	liqp/blocks/IfTest.java	409	25e762639af19363	
+member	liqp.blocks.IfTest#<stmt1>	ssg.liquid.blocks.IfTest#<stmt1>	Renamed	-	liqp/blocks/IfTest.java	16	815c36562543b31c	
+member	liqp.blocks.IfTest#<stmt2>	ssg.liquid.blocks.IfTest#<stmt2>	Renamed	-	liqp/blocks/IfTest.java	56	2f41cd013b2dd9fe	
+member	liqp.blocks.IfTest#<stmt3>	ssg.liquid.blocks.IfTest#<stmt3>	Renamed	-	liqp/blocks/IfTest.java	71	0eb2b4a9a94448c4	
+member	liqp.blocks.IfTest#<stmt4>	ssg.liquid.blocks.IfTest#<stmt4>	Renamed	-	liqp/blocks/IfTest.java	84	88f966cc410e905c	
+member	liqp.blocks.IfTest#<stmt5>	ssg.liquid.blocks.IfTest#<stmt5>	Renamed	-	liqp/blocks/IfTest.java	101	185e283aeecc3158	
+member	liqp.blocks.IfTest#<stmt6>	ssg.liquid.blocks.IfTest#<stmt6>	Renamed	-	liqp/blocks/IfTest.java	120	a6eda1ee0a372812	
+member	liqp.blocks.IfTest#<stmt7>	ssg.liquid.blocks.IfTest#<stmt7>	Renamed	-	liqp/blocks/IfTest.java	137	10b65f3c5405dd2e	
+member	liqp.blocks.IfTest#<stmt8>	ssg.liquid.blocks.IfTest#<stmt8>	Renamed	-	liqp/blocks/IfTest.java	164	a3ec67a50ff61c8b	
+member	liqp.blocks.IfTest#<stmt9>	ssg.liquid.blocks.IfTest#<stmt9>	Renamed	-	liqp/blocks/IfTest.java	182	0df81b5076443843	
+member	liqp.blocks.IfchangedTest#<stmt1>	ssg.liquid.blocks.IfchangedTest#<stmt1>	Renamed	-	liqp/blocks/IfchangedTest.java	22	4e27d403d48ec816	
+member	liqp.blocks.IfchangedTest#<stmt2>	ssg.liquid.blocks.IfchangedTest#<stmt2>	Renamed	-	liqp/blocks/IfchangedTest.java	42	76819447a57bdbdf	
+member	liqp.blocks.RawTest#<stmt1>	ssg.liquid.blocks.RawTest#<stmt1>	Renamed	-	liqp/blocks/RawTest.java	15	8b8880fe4d92e890	
+member	liqp.blocks.RawTest#<stmt2>	ssg.liquid.blocks.RawTest#<stmt2>	Renamed	-	liqp/blocks/RawTest.java	38	90c89702f213dced	
+member	liqp.blocks.RawTest#<stmt3>	ssg.liquid.blocks.RawTest#<stmt3>	Renamed	-	liqp/blocks/RawTest.java	51	3133dfc220e9aa68	
+member	liqp.blocks.TablerowTest#<stmt10>	ssg.liquid.blocks.TablerowTest#<stmt10>	Renamed	-	liqp/blocks/TablerowTest.java	455	c86dd9a8858bbe62	
+member	liqp.blocks.TablerowTest#<stmt11>	ssg.liquid.blocks.TablerowTest#<stmt11>	Renamed	-	liqp/blocks/TablerowTest.java	463	41f3800941e4f638	
+member	liqp.blocks.TablerowTest#<stmt1>	ssg.liquid.blocks.TablerowTest#<stmt1>	Renamed	-	liqp/blocks/TablerowTest.java	16	c6f01417f2c1d43d	
+member	liqp.blocks.TablerowTest#<stmt2>	ssg.liquid.blocks.TablerowTest#<stmt2>	Renamed	-	liqp/blocks/TablerowTest.java	329	90857a7089fb07d8	
+member	liqp.blocks.TablerowTest#<stmt3>	ssg.liquid.blocks.TablerowTest#<stmt3>	Renamed	-	liqp/blocks/TablerowTest.java	351	e75b31edf8c33462	
+member	liqp.blocks.TablerowTest#<stmt4>	ssg.liquid.blocks.TablerowTest#<stmt4>	Renamed	-	liqp/blocks/TablerowTest.java	367	2469374c3a543648	
+member	liqp.blocks.TablerowTest#<stmt5>	ssg.liquid.blocks.TablerowTest#<stmt5>	Renamed	-	liqp/blocks/TablerowTest.java	387	9dc1bc165d61e097	
+member	liqp.blocks.TablerowTest#<stmt6>	ssg.liquid.blocks.TablerowTest#<stmt6>	Renamed	-	liqp/blocks/TablerowTest.java	408	7543744487bb6e4d	
+member	liqp.blocks.TablerowTest#<stmt7>	ssg.liquid.blocks.TablerowTest#<stmt7>	Renamed	-	liqp/blocks/TablerowTest.java	424	a566f19f99b9c8e2	
+member	liqp.blocks.TablerowTest#<stmt8>	ssg.liquid.blocks.TablerowTest#<stmt8>	Renamed	-	liqp/blocks/TablerowTest.java	438	dc38ea6c7d37b6c6	
+member	liqp.blocks.TablerowTest#<stmt9>	ssg.liquid.blocks.TablerowTest#<stmt9>	Renamed	-	liqp/blocks/TablerowTest.java	443	5d091cab176c1fb4	
+member	liqp.blocks.UnlessTest#<stmt1>	ssg.liquid.blocks.UnlessTest#<stmt1>	Renamed	-	liqp/blocks/UnlessTest.java	15	fe5088848662e4c5	
+member	liqp.blocks.UnlessTest#<stmt2>	ssg.liquid.blocks.UnlessTest#<stmt2>	Renamed	-	liqp/blocks/UnlessTest.java	43	ea59ef8e5a37424b	
+member	liqp.blocks.UnlessTest#<stmt3>	ssg.liquid.blocks.UnlessTest#<stmt3>	Renamed	-	liqp/blocks/UnlessTest.java	58	377ed230f88d84a7	
+member	liqp.blocks.UnlessTest#<stmt4>	ssg.liquid.blocks.UnlessTest#<stmt4>	Renamed	-	liqp/blocks/UnlessTest.java	71	5e69a483abcc2d80	
+member	liqp.blocks.UnlessTest#<stmt5>	ssg.liquid.blocks.UnlessTest#<stmt5>	Renamed	-	liqp/blocks/UnlessTest.java	85	4f23fe81a644e480	
+member	liqp.filters.AbsTest#<stmt1>	ssg.liquid.filters.AbsTest#<stmt1>	Renamed	-	liqp/filters/AbsTest.java	32	29e05adda1efad8a	
+member	liqp.filters.AbsTest#<stmt2>	ssg.liquid.filters.AbsTest#<stmt2>	Renamed	-	liqp/filters/AbsTest.java	58	d8005372c2a41cab	
+member	liqp.filters.AbsTest#<stmt3>	ssg.liquid.filters.AbsTest#<stmt3>	Renamed	-	liqp/filters/AbsTest.java	71	9b05e3c45605cc52	
+member	liqp.filters.Absolute_UrlTest#<stmt10>	ssg.liquid.filters.Absolute_UrlTest#<stmt10>	Renamed	-	liqp/filters/Absolute_UrlTest.java	238	8185625f87238df9	
+member	liqp.filters.Absolute_UrlTest#<stmt11>	ssg.liquid.filters.Absolute_UrlTest#<stmt11>	Renamed	-	liqp/filters/Absolute_UrlTest.java	261	ef723efff3c28a97	
+member	liqp.filters.Absolute_UrlTest#<stmt12>	ssg.liquid.filters.Absolute_UrlTest#<stmt12>	Renamed	-	liqp/filters/Absolute_UrlTest.java	274	027d98acbbe2259c	
+member	liqp.filters.Absolute_UrlTest#<stmt13>	ssg.liquid.filters.Absolute_UrlTest#<stmt13>	Renamed	-	liqp/filters/Absolute_UrlTest.java	293	a79a64c01ec83176	
+member	liqp.filters.Absolute_UrlTest#<stmt14>	ssg.liquid.filters.Absolute_UrlTest#<stmt14>	Renamed	-	liqp/filters/Absolute_UrlTest.java	313	f99abcaabed2fd35	
+member	liqp.filters.Absolute_UrlTest#<stmt1>	ssg.liquid.filters.Absolute_UrlTest#<stmt1>	Renamed	-	liqp/filters/Absolute_UrlTest.java	33	437e7158ec9ce98e	
+member	liqp.filters.Absolute_UrlTest#<stmt2>	ssg.liquid.filters.Absolute_UrlTest#<stmt2>	Renamed	-	liqp/filters/Absolute_UrlTest.java	53	bfab3e2967d368ac	
+member	liqp.filters.Absolute_UrlTest#<stmt3>	ssg.liquid.filters.Absolute_UrlTest#<stmt3>	Renamed	-	liqp/filters/Absolute_UrlTest.java	76	3d2417ff0cbed6ab	
+member	liqp.filters.Absolute_UrlTest#<stmt4>	ssg.liquid.filters.Absolute_UrlTest#<stmt4>	Renamed	-	liqp/filters/Absolute_UrlTest.java	100	0665db2a775de139	
+member	liqp.filters.Absolute_UrlTest#<stmt5>	ssg.liquid.filters.Absolute_UrlTest#<stmt5>	Renamed	-	liqp/filters/Absolute_UrlTest.java	123	1b9fafa95b207c18	
+member	liqp.filters.Absolute_UrlTest#<stmt6>	ssg.liquid.filters.Absolute_UrlTest#<stmt6>	Renamed	-	liqp/filters/Absolute_UrlTest.java	146	f786f57ad5e34abd	
+member	liqp.filters.Absolute_UrlTest#<stmt7>	ssg.liquid.filters.Absolute_UrlTest#<stmt7>	Renamed	-	liqp/filters/Absolute_UrlTest.java	169	55ce1c537e5704b5	
+member	liqp.filters.Absolute_UrlTest#<stmt8>	ssg.liquid.filters.Absolute_UrlTest#<stmt8>	Renamed	-	liqp/filters/Absolute_UrlTest.java	192	692fcbb81298eb1b	
+member	liqp.filters.Absolute_UrlTest#<stmt9>	ssg.liquid.filters.Absolute_UrlTest#<stmt9>	Renamed	-	liqp/filters/Absolute_UrlTest.java	215	9a186735f7b07ef2	
+member	liqp.filters.Absolute_UrlTest#getData(Object,String)	ssg.liquid.filters.Absolute_UrlTest#getData(Object,String)	Renamed	-	liqp/filters/Absolute_UrlTest.java	18	f1dd09a7a7545291	vis=private
+member	liqp.filters.AppendTest#<stmt1>	ssg.liquid.filters.AppendTest#<stmt1>	Renamed	-	liqp/filters/AppendTest.java	22	f6c39844c76da807	
+member	liqp.filters.AppendTest#<stmt2>	ssg.liquid.filters.AppendTest#<stmt2>	Renamed	-	liqp/filters/AppendTest.java	49	ffac138dc6aeb702	
+member	liqp.filters.AppendTest#<stmt3>	ssg.liquid.filters.AppendTest#<stmt3>	Renamed	-	liqp/filters/AppendTest.java	64	d6c9fb44ca98892b	
+member	liqp.filters.AppendTest#<stmt4>	ssg.liquid.filters.AppendTest#<stmt4>	Renamed	-	liqp/filters/AppendTest.java	78	6187e403cb1eeb40	
+member	liqp.filters.AppendTest#<stmt5>	ssg.liquid.filters.AppendTest#<stmt5>	Renamed	-	liqp/filters/AppendTest.java	92	a3882d657c14dbf7	
+member	liqp.filters.AppendTest#t	ssg.liquid.filters.AppendTest#t	Renamed	-	liqp/filters/AppendTest.java	59	af9e731d560405d0	vis=private
+member	liqp.filters.At_LeastTest#<stmt1>	ssg.liquid.filters.At_LeastTest#<stmt1>	Renamed	-	liqp/filters/At_LeastTest.java	27	03343ef60fa5a9f3	
+member	liqp.filters.At_MostTest#<stmt1>	ssg.liquid.filters.At_MostTest#<stmt1>	Renamed	-	liqp/filters/At_MostTest.java	27	235f507c3127ca9c	
+member	liqp.filters.CapitalizeTest#<stmt1>	ssg.liquid.filters.CapitalizeTest#<stmt1>	Renamed	-	liqp/filters/CapitalizeTest.java	16	9791b6ae7d376337	
+member	liqp.filters.CapitalizeTest#<stmt2>	ssg.liquid.filters.CapitalizeTest#<stmt2>	Renamed	-	liqp/filters/CapitalizeTest.java	37	334907e67899c860	
+member	liqp.filters.CeilTest#<stmt1>	ssg.liquid.filters.CeilTest#<stmt1>	Renamed	-	liqp/filters/CeilTest.java	22	183f5ff455559004	
+member	liqp.filters.CompactTest#<stmt1>	ssg.liquid.filters.CompactTest#<stmt1>	Renamed	-	liqp/filters/CompactTest.java	15	8a4ce552c54552a5	
+member	liqp.filters.ConcatTest#<stmt1>	ssg.liquid.filters.ConcatTest#<stmt1>	Renamed	-	liqp/filters/ConcatTest.java	21	8eb0bf9bdb5fea91	
+member	liqp.filters.ConcatTest#<stmt2>	ssg.liquid.filters.ConcatTest#<stmt2>	Renamed	-	liqp/filters/ConcatTest.java	40	27c685b6b2926cce	
+member	liqp.filters.ConcatTest#<stmt3>	ssg.liquid.filters.ConcatTest#<stmt3>	Renamed	-	liqp/filters/ConcatTest.java	46	cfa1998d85c8e569	
+member	liqp.filters.DefaultTest#<stmt1>	ssg.liquid.filters.DefaultTest#<stmt1>	Renamed	-	liqp/filters/DefaultTest.java	25	8f017edb16fc974a	
+member	liqp.filters.Divided_ByTest#<stmt1>	ssg.liquid.filters.Divided_ByTest#<stmt1>	Renamed	-	liqp/filters/Divided_ByTest.java	16	099fc10789609cb2	
+member	liqp.filters.Divided_ByTest#<stmt2>	ssg.liquid.filters.Divided_ByTest#<stmt2>	Renamed	-	liqp/filters/Divided_ByTest.java	38	b88fa3c0288c9a54	
+member	liqp.filters.Divided_ByTest#<stmt3>	ssg.liquid.filters.Divided_ByTest#<stmt3>	Renamed	-	liqp/filters/Divided_ByTest.java	44	f4affd1982d5a21e	
+member	liqp.filters.Divided_ByTest#<stmt4>	ssg.liquid.filters.Divided_ByTest#<stmt4>	Renamed	-	liqp/filters/Divided_ByTest.java	50	25864af4789af29a	
+member	liqp.filters.Divided_ByTest#<stmt5>	ssg.liquid.filters.Divided_ByTest#<stmt5>	Renamed	-	liqp/filters/Divided_ByTest.java	68	d098bb6726848f9e	
+member	liqp.filters.DowncaseTest#<stmt1>	ssg.liquid.filters.DowncaseTest#<stmt1>	Renamed	-	liqp/filters/DowncaseTest.java	16	0a9ab46f7d3e6b03	
+member	liqp.filters.DowncaseTest#<stmt2>	ssg.liquid.filters.DowncaseTest#<stmt2>	Renamed	-	liqp/filters/DowncaseTest.java	41	e1bf21075ac19d26	
+member	liqp.filters.EscapeTest#<stmt1>	ssg.liquid.filters.EscapeTest#<stmt1>	Renamed	-	liqp/filters/EscapeTest.java	16	8dd49844bd48aaeb	
+member	liqp.filters.EscapeTest#<stmt2>	ssg.liquid.filters.EscapeTest#<stmt2>	Renamed	-	liqp/filters/EscapeTest.java	44	4855be96e14b27ed	
+member	liqp.filters.Escape_OnceTest#<stmt1>	ssg.liquid.filters.Escape_OnceTest#<stmt1>	Renamed	-	liqp/filters/Escape_OnceTest.java	16	39219bed76e3754d	
+member	liqp.filters.Escape_OnceTest#<stmt2>	ssg.liquid.filters.Escape_OnceTest#<stmt2>	Renamed	-	liqp/filters/Escape_OnceTest.java	45	98d65749f8892848	
+member	liqp.filters.FilterTest#<stmt1>	ssg.liquid.filters.FilterTest#<stmt1>	Renamed	-	liqp/filters/FilterTest.java	17	d5660a23b95e2cca	
+member	liqp.filters.FilterTest#<stmt2>	ssg.liquid.filters.FilterTest#<stmt2>	Renamed	-	liqp/filters/FilterTest.java	35	71e472dc2866df55	
+member	liqp.filters.FirstTest#<stmt1>	ssg.liquid.filters.FirstTest#<stmt1>	Renamed	-	liqp/filters/FirstTest.java	16	c842f7800c5f3bea	
+member	liqp.filters.FirstTest#<stmt2>	ssg.liquid.filters.FirstTest#<stmt2>	Renamed	-	liqp/filters/FirstTest.java	26	c08eed2a65709b02	
+member	liqp.filters.FirstTest#<stmt3>	ssg.liquid.filters.FirstTest#<stmt3>	Renamed	-	liqp/filters/FirstTest.java	43	0057dca9f38cb02b	
+member	liqp.filters.FloorTest#<stmt1>	ssg.liquid.filters.FloorTest#<stmt1>	Renamed	-	liqp/filters/FloorTest.java	22	ddeb25e4f1547285	
+member	liqp.filters.HTest#<stmt1>	ssg.liquid.filters.HTest#<stmt1>	Renamed	-	liqp/filters/HTest.java	16	bee9104138a2afa8	
+member	liqp.filters.HTest#<stmt2>	ssg.liquid.filters.HTest#<stmt2>	Renamed	-	liqp/filters/HTest.java	43	f00ce2d50939b10b	
+member	liqp.filters.JoinTest#<stmt1>	ssg.liquid.filters.JoinTest#<stmt1>	Renamed	-	liqp/filters/JoinTest.java	16	cc718e33f61a5a57	
+member	liqp.filters.JoinTest#<stmt2>	ssg.liquid.filters.JoinTest#<stmt2>	Renamed	-	liqp/filters/JoinTest.java	43	1886589d5aa028ed	
+member	liqp.filters.JsonTest#<stmt1>	ssg.liquid.filters.JsonTest#<stmt1>	Renamed	-	liqp/filters/JsonTest.java	14	ae948279c005af0e	
+member	liqp.filters.JsonTest#<stmt2>	ssg.liquid.filters.JsonTest#<stmt2>	Renamed	-	liqp/filters/JsonTest.java	21	676ced5778847e6a	
+member	liqp.filters.LastTest#<stmt1>	ssg.liquid.filters.LastTest#<stmt1>	Renamed	-	liqp/filters/LastTest.java	16	bbf4f36d212325b4	
+member	liqp.filters.LastTest#<stmt2>	ssg.liquid.filters.LastTest#<stmt2>	Renamed	-	liqp/filters/LastTest.java	26	ae8fb70697ed174c	
+member	liqp.filters.LastTest#<stmt3>	ssg.liquid.filters.LastTest#<stmt3>	Renamed	-	liqp/filters/LastTest.java	43	b64f55143f158e4c	
+member	liqp.filters.LstripTest#<stmt1>	ssg.liquid.filters.LstripTest#<stmt1>	Renamed	-	liqp/filters/LstripTest.java	21	32dbc8831353df9e	
+member	liqp.filters.MapTest#<stmt1>	ssg.liquid.filters.MapTest#<stmt1>	Renamed	-	liqp/filters/MapTest.java	18	5c333a6a494d7ea3	
+member	liqp.filters.MapTest#<stmt2>	ssg.liquid.filters.MapTest#<stmt2>	Renamed	-	liqp/filters/MapTest.java	51	cdc6ff24ed2d17a6	
+member	liqp.filters.MinusTest#<stmt1>	ssg.liquid.filters.MinusTest#<stmt1>	Renamed	-	liqp/filters/MinusTest.java	18	16d04dc73df8dab5	
+member	liqp.filters.MinusTest#<stmt2>	ssg.liquid.filters.MinusTest#<stmt2>	Renamed	-	liqp/filters/MinusTest.java	40	0807bfe48ca96911	
+member	liqp.filters.MinusTest#<stmt3>	ssg.liquid.filters.MinusTest#<stmt3>	Renamed	-	liqp/filters/MinusTest.java	46	82c4573afdc6cd1b	
+member	liqp.filters.MinusTest#<stmt4>	ssg.liquid.filters.MinusTest#<stmt4>	Renamed	-	liqp/filters/MinusTest.java	57	16fe8380eb955361	
+member	liqp.filters.MinusTest#<stmt5>	ssg.liquid.filters.MinusTest#<stmt5>	Renamed	-	liqp/filters/MinusTest.java	97	4d526f19da2f99ac	
+member	liqp.filters.MinusTest#<stmt6>	ssg.liquid.filters.MinusTest#<stmt6>	Renamed	-	liqp/filters/MinusTest.java	135	a59ae1d2bdb05a9d	
+member	liqp.filters.MinusTest#<stmt7>	ssg.liquid.filters.MinusTest#<stmt7>	Renamed	-	liqp/filters/MinusTest.java	142	3b31eaf199dd1300	
+member	liqp.filters.ModuloTest#<stmt1>	ssg.liquid.filters.ModuloTest#<stmt1>	Renamed	-	liqp/filters/ModuloTest.java	16	909af4c675847c5f	
+member	liqp.filters.ModuloTest#<stmt2>	ssg.liquid.filters.ModuloTest#<stmt2>	Renamed	-	liqp/filters/ModuloTest.java	36	a547ab24cd9f01c5	
+member	liqp.filters.ModuloTest#<stmt3>	ssg.liquid.filters.ModuloTest#<stmt3>	Renamed	-	liqp/filters/ModuloTest.java	42	172869de66998384	
+member	liqp.filters.ModuloTest#<stmt4>	ssg.liquid.filters.ModuloTest#<stmt4>	Renamed	-	liqp/filters/ModuloTest.java	54	bfbb84fb9503a529	
+member	liqp.filters.ModuloTest#<stmt5>	ssg.liquid.filters.ModuloTest#<stmt5>	Renamed	-	liqp/filters/ModuloTest.java	60	302b0fd7fa791b0c	
+member	liqp.filters.Newline_To_BrTest#<stmt1>	ssg.liquid.filters.Newline_To_BrTest#<stmt1>	Renamed	-	liqp/filters/Newline_To_BrTest.java	15	b405ad7f6dd3a317	
+member	liqp.filters.Normalize_WhitespaceTest#<stmt1>	ssg.liquid.filters.Normalize_WhitespaceTest#<stmt1>	Renamed	-	liqp/filters/Normalize_WhitespaceTest.java	38	d69fcfe45104b795	
+member	liqp.filters.PlusTest#<stmt1>	ssg.liquid.filters.PlusTest#<stmt1>	Renamed	-	liqp/filters/PlusTest.java	15	0d70cb2acecba96a	
+member	liqp.filters.PlusTest#<stmt2>	ssg.liquid.filters.PlusTest#<stmt2>	Renamed	-	liqp/filters/PlusTest.java	36	df89291c5f3ddaf7	
+member	liqp.filters.PlusTest#<stmt3>	ssg.liquid.filters.PlusTest#<stmt3>	Renamed	-	liqp/filters/PlusTest.java	42	afa167c58187d4cf	
+member	liqp.filters.PlusTest#<stmt4>	ssg.liquid.filters.PlusTest#<stmt4>	Renamed	-	liqp/filters/PlusTest.java	53	c3dfaa6d1d68732f	
+member	liqp.filters.PopTest#<stmt1>	ssg.liquid.filters.PopTest#<stmt1>	Renamed	-	liqp/filters/PopTest.java	13	02b370449f5e3832	
+member	liqp.filters.PopTest#<stmt2>	ssg.liquid.filters.PopTest#<stmt2>	Renamed	-	liqp/filters/PopTest.java	20	05023c559812a71a	
+member	liqp.filters.PopTest#<stmt3>	ssg.liquid.filters.PopTest#<stmt3>	Renamed	-	liqp/filters/PopTest.java	26	b4a90bdcc85216d5	
+member	liqp.filters.PopTest#<stmt4>	ssg.liquid.filters.PopTest#<stmt4>	Renamed	-	liqp/filters/PopTest.java	43	eb0e0e6afe8b7141	
+member	liqp.filters.PopTest#<stmt5>	ssg.liquid.filters.PopTest#<stmt5>	Renamed	-	liqp/filters/PopTest.java	49	a555b6ac7a6972cc	
+member	liqp.filters.PopTest#<stmt6>	ssg.liquid.filters.PopTest#<stmt6>	Renamed	-	liqp/filters/PopTest.java	68	acccf1139003f8f0	
+member	liqp.filters.PrependTest#<stmt1>	ssg.liquid.filters.PrependTest#<stmt1>	Renamed	-	liqp/filters/PrependTest.java	15	694bf0d9065d0702	
+member	liqp.filters.PrependTest#<stmt2>	ssg.liquid.filters.PrependTest#<stmt2>	Renamed	-	liqp/filters/PrependTest.java	42	f4d69113ead90c37	
+member	liqp.filters.PushTest#<stmt1>	ssg.liquid.filters.PushTest#<stmt1>	Renamed	-	liqp/filters/PushTest.java	11	0f334498dda9d4e6	
+member	liqp.filters.PushTest#<stmt2>	ssg.liquid.filters.PushTest#<stmt2>	Renamed	-	liqp/filters/PushTest.java	18	d182c5cce9948cb9	
+member	liqp.filters.Relative_UrlTest#<stmt10>	ssg.liquid.filters.Relative_UrlTest#<stmt10>	Renamed	-	liqp/filters/Relative_UrlTest.java	157	ef51e536fd854e04	
+member	liqp.filters.Relative_UrlTest#<stmt11>	ssg.liquid.filters.Relative_UrlTest#<stmt11>	Renamed	-	liqp/filters/Relative_UrlTest.java	176	2dacf5a08d3e065d	
+member	liqp.filters.Relative_UrlTest#<stmt12>	ssg.liquid.filters.Relative_UrlTest#<stmt12>	Renamed	-	liqp/filters/Relative_UrlTest.java	189	41aba9c2ba500aa1	
+member	liqp.filters.Relative_UrlTest#<stmt13>	ssg.liquid.filters.Relative_UrlTest#<stmt13>	Renamed	-	liqp/filters/Relative_UrlTest.java	202	e0488b49f35fd707	
+member	liqp.filters.Relative_UrlTest#<stmt14>	ssg.liquid.filters.Relative_UrlTest#<stmt14>	Renamed	-	liqp/filters/Relative_UrlTest.java	209	492d065bbd9c9c42	
+member	liqp.filters.Relative_UrlTest#<stmt1>	ssg.liquid.filters.Relative_UrlTest#<stmt1>	Renamed	-	liqp/filters/Relative_UrlTest.java	24	ac7c263fa2d3eec0	
+member	liqp.filters.Relative_UrlTest#<stmt2>	ssg.liquid.filters.Relative_UrlTest#<stmt2>	Renamed	-	liqp/filters/Relative_UrlTest.java	37	3d877a2b4f352b87	
+member	liqp.filters.Relative_UrlTest#<stmt3>	ssg.liquid.filters.Relative_UrlTest#<stmt3>	Renamed	-	liqp/filters/Relative_UrlTest.java	51	65d1cd74bb9fb11f	
+member	liqp.filters.Relative_UrlTest#<stmt4>	ssg.liquid.filters.Relative_UrlTest#<stmt4>	Renamed	-	liqp/filters/Relative_UrlTest.java	58	2610558bdd441969	
+member	liqp.filters.Relative_UrlTest#<stmt5>	ssg.liquid.filters.Relative_UrlTest#<stmt5>	Renamed	-	liqp/filters/Relative_UrlTest.java	76	90441b8bcb2ce4c9	
+member	liqp.filters.Relative_UrlTest#<stmt6>	ssg.liquid.filters.Relative_UrlTest#<stmt6>	Renamed	-	liqp/filters/Relative_UrlTest.java	93	7f27249d25c87df9	
+member	liqp.filters.Relative_UrlTest#<stmt7>	ssg.liquid.filters.Relative_UrlTest#<stmt7>	Renamed	-	liqp/filters/Relative_UrlTest.java	110	fdf9f1652f5ab1b2	
+member	liqp.filters.Relative_UrlTest#<stmt8>	ssg.liquid.filters.Relative_UrlTest#<stmt8>	Renamed	-	liqp/filters/Relative_UrlTest.java	127	2034805f45b6eb44	
+member	liqp.filters.Relative_UrlTest#<stmt9>	ssg.liquid.filters.Relative_UrlTest#<stmt9>	Renamed	-	liqp/filters/Relative_UrlTest.java	143	e11eb662f34c7c5f	
+member	liqp.filters.Relative_UrlTest#getData(String)	ssg.liquid.filters.Relative_UrlTest#getData(String)	Renamed	-	liqp/filters/Relative_UrlTest.java	216	18ca809c33628d8d	vis=private
+member	liqp.filters.Relative_UrlTest#jekyllParser()	ssg.liquid.filters.Relative_UrlTest#jekyllParser()	Renamed	-	liqp/filters/Relative_UrlTest.java	221	960f1569f16e468b	vis=private
+member	liqp.filters.RemoveTest#<stmt1>	ssg.liquid.filters.RemoveTest#<stmt1>	Renamed	-	liqp/filters/RemoveTest.java	16	3d45c771e3730b1d	
+member	liqp.filters.RemoveTest#<stmt2>	ssg.liquid.filters.RemoveTest#<stmt2>	Renamed	-	liqp/filters/RemoveTest.java	35	9274811edb4a574f	
+member	liqp.filters.RemoveTest#<stmt3>	ssg.liquid.filters.RemoveTest#<stmt3>	Renamed	-	liqp/filters/RemoveTest.java	47	bcd7b4967623d3b3	
+member	liqp.filters.Remove_FirstTest#<stmt1>	ssg.liquid.filters.Remove_FirstTest#<stmt1>	Renamed	-	liqp/filters/Remove_FirstTest.java	16	9940aa9759bd9bdb	
+member	liqp.filters.Remove_FirstTest#<stmt2>	ssg.liquid.filters.Remove_FirstTest#<stmt2>	Renamed	-	liqp/filters/Remove_FirstTest.java	35	adb71a56d25c259e	
+member	liqp.filters.Remove_FirstTest#<stmt3>	ssg.liquid.filters.Remove_FirstTest#<stmt3>	Renamed	-	liqp/filters/Remove_FirstTest.java	47	78e4a5d432fb8efb	
+member	liqp.filters.ReplaceTest#<stmt1>	ssg.liquid.filters.ReplaceTest#<stmt1>	Renamed	-	liqp/filters/ReplaceTest.java	16	3c591c2067fee5e7	
+member	liqp.filters.ReplaceTest#<stmt2>	ssg.liquid.filters.ReplaceTest#<stmt2>	Renamed	-	liqp/filters/ReplaceTest.java	35	e993c3bd52f1e317	
+member	liqp.filters.ReplaceTest#<stmt3>	ssg.liquid.filters.ReplaceTest#<stmt3>	Renamed	-	liqp/filters/ReplaceTest.java	40	93fff7ee39600ce5	
+member	liqp.filters.ReplaceTest#<stmt4>	ssg.liquid.filters.ReplaceTest#<stmt4>	Renamed	-	liqp/filters/ReplaceTest.java	52	c30c916b86c5b1ef	
+member	liqp.filters.Replace_FirstTest#<stmt1>	ssg.liquid.filters.Replace_FirstTest#<stmt1>	Renamed	-	liqp/filters/Replace_FirstTest.java	16	2cca6ae77ca9bec9	
+member	liqp.filters.Replace_FirstTest#<stmt2>	ssg.liquid.filters.Replace_FirstTest#<stmt2>	Renamed	-	liqp/filters/Replace_FirstTest.java	35	e7ffbbaf2515027f	
+member	liqp.filters.Replace_FirstTest#<stmt3>	ssg.liquid.filters.Replace_FirstTest#<stmt3>	Renamed	-	liqp/filters/Replace_FirstTest.java	40	686c2f00d2a1fbb6	
+member	liqp.filters.Replace_FirstTest#<stmt4>	ssg.liquid.filters.Replace_FirstTest#<stmt4>	Renamed	-	liqp/filters/Replace_FirstTest.java	52	9a9ee49e895a0bf7	
+member	liqp.filters.ReverseTest#<stmt1>	ssg.liquid.filters.ReverseTest#<stmt1>	Renamed	-	liqp/filters/ReverseTest.java	15	efa8620728b2c3bc	
+member	liqp.filters.RoundTest#<stmt1>	ssg.liquid.filters.RoundTest#<stmt1>	Renamed	-	liqp/filters/RoundTest.java	23	a94ab264a65fe13b	
+member	liqp.filters.RstripTest#<stmt1>	ssg.liquid.filters.RstripTest#<stmt1>	Renamed	-	liqp/filters/RstripTest.java	21	301704a58c20d950	
+member	liqp.filters.ShiftTest#<stmt1>	ssg.liquid.filters.ShiftTest#<stmt1>	Renamed	-	liqp/filters/ShiftTest.java	13	81d5592aabd49fb4	
+member	liqp.filters.ShiftTest#<stmt2>	ssg.liquid.filters.ShiftTest#<stmt2>	Renamed	-	liqp/filters/ShiftTest.java	20	f4055998b7470a58	
+member	liqp.filters.ShiftTest#<stmt3>	ssg.liquid.filters.ShiftTest#<stmt3>	Renamed	-	liqp/filters/ShiftTest.java	26	72e4a8675eb61355	
+member	liqp.filters.ShiftTest#<stmt4>	ssg.liquid.filters.ShiftTest#<stmt4>	Renamed	-	liqp/filters/ShiftTest.java	43	7429c3ccabfe8309	
+member	liqp.filters.ShiftTest#<stmt5>	ssg.liquid.filters.ShiftTest#<stmt5>	Renamed	-	liqp/filters/ShiftTest.java	49	de298f186d4e8797	
+member	liqp.filters.ShiftTest#<stmt6>	ssg.liquid.filters.ShiftTest#<stmt6>	Renamed	-	liqp/filters/ShiftTest.java	68	dfc2296c26f74f8d	
+member	liqp.filters.SizeTest#<stmt1>	ssg.liquid.filters.SizeTest#<stmt1>	Renamed	-	liqp/filters/SizeTest.java	20	fdca423089f102e9	
+member	liqp.filters.SizeTest#<stmt2>	ssg.liquid.filters.SizeTest#<stmt2>	Renamed	-	liqp/filters/SizeTest.java	50	d0195916c0bc263c	
+member	liqp.filters.SliceTest#<stmt1>	ssg.liquid.filters.SliceTest#<stmt1>	Renamed	-	liqp/filters/SliceTest.java	30	9769c8cf20439e1d	
+member	liqp.filters.SliceTest#<stmt2>	ssg.liquid.filters.SliceTest#<stmt2>	Renamed	-	liqp/filters/SliceTest.java	63	190158d6e38bee0a	
+member	liqp.filters.SliceTest#<stmt3>	ssg.liquid.filters.SliceTest#<stmt3>	Renamed	-	liqp/filters/SliceTest.java	68	d9d1108af0bd4861	
+member	liqp.filters.SliceTest#<stmt4>	ssg.liquid.filters.SliceTest#<stmt4>	Renamed	-	liqp/filters/SliceTest.java	73	5fbbe723a3a656a0	
+member	liqp.filters.SliceTest#<stmt5>	ssg.liquid.filters.SliceTest#<stmt5>	Renamed	-	liqp/filters/SliceTest.java	78	01afd812b918bad2	
+member	liqp.filters.SortTest#<stmt1>	ssg.liquid.filters.SortTest#<stmt1>	Renamed	-	liqp/filters/SortTest.java	26	92364b0a4ac92d3d	
+member	liqp.filters.SortTest#<stmt2>	ssg.liquid.filters.SortTest#<stmt2>	Renamed	-	liqp/filters/SortTest.java	58	1e9522f132c280a6	
+member	liqp.filters.SortTest#<stmt3>	ssg.liquid.filters.SortTest#<stmt3>	Renamed	-	liqp/filters/SortTest.java	100	ed727f0a25f71aab	
+member	liqp.filters.SortTest#<stmt4>	ssg.liquid.filters.SortTest#<stmt4>	Renamed	-	liqp/filters/SortTest.java	132	9c2d9a6278a21263	
+member	liqp.filters.SortTest#<stmt5>	ssg.liquid.filters.SortTest#<stmt5>	Renamed	-	liqp/filters/SortTest.java	151	79fa7448fd245879	
+member	liqp.filters.SortTest#context	ssg.liquid.filters.SortTest#context	Renamed	-	liqp/filters/SortTest.java	23	c7f854f199dc3e17	placement=companion
+member	liqp.filters.SortTest$Pojo#<stmt1>	ssg.liquid.filters.SortTest$Pojo#<stmt1>	Renamed	-	liqp/filters/SortTest.java	85	24c0a043b85d437e	
+member	liqp.filters.SortTest$Pojo#a	ssg.liquid.filters.SortTest$Pojo#a	Renamed	-	liqp/filters/SortTest.java	88	e084db005e9a6f8d	vis=private[SortTest]
+member	liqp.filters.SortTest$Pojo#getA()	ssg.liquid.filters.SortTest$Pojo#getA()	Renamed	-	liqp/filters/SortTest.java	90	52a8868d47ec5a7a	
+member	liqp.filters.SortTest$Pojo#setA(int)	ssg.liquid.filters.SortTest$Pojo#setA(int)	Renamed	-	liqp/filters/SortTest.java	94	c8bad2c90d481cef	
+member	liqp.filters.SortTest$PojoWithSupport#<stmt1>	ssg.liquid.filters.SortTest$PojoWithSupport#<stmt1>	Renamed	-	liqp/filters/SortTest.java	120	34c744f9fee031d1	
+member	liqp.filters.SortTest$PojoWithSupport#<stmt2>	ssg.liquid.filters.SortTest$PojoWithSupport#<stmt2>	Renamed	-	liqp/filters/SortTest.java	121	46c224d64accb5b8	
+member	liqp.filters.SortTest$PojoWithSupport#map	ssg.liquid.filters.SortTest$PojoWithSupport#map	Renamed	-	liqp/filters/SortTest.java	123	7f8ee184c7dd51b3	vis=private[SortTest]
+member	liqp.filters.SortTest$PojoWithSupport#toLiquid()	ssg.liquid.filters.SortTest$PojoWithSupport#toLiquid()	Renamed	-	liqp/filters/SortTest.java	126	00d2b157dc75e467	
+member	liqp.filters.Sort_NaturalTest#<stmt1>	ssg.liquid.filters.Sort_NaturalTest#<stmt1>	Renamed	-	liqp/filters/Sort_NaturalTest.java	20	d9f41fb324d5166d	
+member	liqp.filters.SplitTest#<stmt1>	ssg.liquid.filters.SplitTest#<stmt1>	Renamed	-	liqp/filters/SplitTest.java	18	ca2b67b41931d85f	
+member	liqp.filters.SplitTest#<stmt2>	ssg.liquid.filters.SplitTest#<stmt2>	Renamed	-	liqp/filters/SplitTest.java	49	178f9872bbdf7419	
+member	liqp.filters.StripTest#<stmt1>	ssg.liquid.filters.StripTest#<stmt1>	Renamed	-	liqp/filters/StripTest.java	21	30fddce7d41e79c9	
+member	liqp.filters.Strip_HTMLTest#<stmt1>	ssg.liquid.filters.Strip_HTMLTest#<stmt1>	Renamed	-	liqp/filters/Strip_HTMLTest.java	16	2a1117b95a4b8ed9	
+member	liqp.filters.Strip_HTMLTest#<stmt2>	ssg.liquid.filters.Strip_HTMLTest#<stmt2>	Renamed	-	liqp/filters/Strip_HTMLTest.java	46	6eb96b383571556c	
+member	liqp.filters.Strip_HTMLTest#<stmt3>	ssg.liquid.filters.Strip_HTMLTest#<stmt3>	Renamed	-	liqp/filters/Strip_HTMLTest.java	58	1ba37b319c79fb41	
+member	liqp.filters.Strip_NewlinesTest#<stmt1>	ssg.liquid.filters.Strip_NewlinesTest#<stmt1>	Renamed	-	liqp/filters/Strip_NewlinesTest.java	15	decd6380ce856881	
+member	liqp.filters.Strip_NewlinesTest#<stmt2>	ssg.liquid.filters.Strip_NewlinesTest#<stmt2>	Renamed	-	liqp/filters/Strip_NewlinesTest.java	39	d27d4f942d775dc1	
+member	liqp.filters.TimesTest#<stmt1>	ssg.liquid.filters.TimesTest#<stmt1>	Renamed	-	liqp/filters/TimesTest.java	19	bace3cc840de3610	
+member	liqp.filters.TimesTest#<stmt2>	ssg.liquid.filters.TimesTest#<stmt2>	Renamed	-	liqp/filters/TimesTest.java	42	7e7e96b920806dc1	
+member	liqp.filters.TimesTest#<stmt3>	ssg.liquid.filters.TimesTest#<stmt3>	Renamed	-	liqp/filters/TimesTest.java	48	040a65082d3cb182	
+member	liqp.filters.TimesTest#<stmt4>	ssg.liquid.filters.TimesTest#<stmt4>	Renamed	-	liqp/filters/TimesTest.java	66	9bb7b6da7457aac9	
+member	liqp.filters.TruncateTest#<stmt1>	ssg.liquid.filters.TruncateTest#<stmt1>	Renamed	-	liqp/filters/TruncateTest.java	16	1f00164b42c88b5c	
+member	liqp.filters.TruncateTest#<stmt2>	ssg.liquid.filters.TruncateTest#<stmt2>	Renamed	-	liqp/filters/TruncateTest.java	50	4478847b3cf4dbee	
+member	liqp.filters.TruncatewordsTest#<stmt1>	ssg.liquid.filters.TruncatewordsTest#<stmt1>	Renamed	-	liqp/filters/TruncatewordsTest.java	16	13165dec052c3d99	
+member	liqp.filters.TruncatewordsTest#<stmt2>	ssg.liquid.filters.TruncatewordsTest#<stmt2>	Renamed	-	liqp/filters/TruncatewordsTest.java	51	b8b0423845aed85a	
+member	liqp.filters.UniqTest#<stmt1>	ssg.liquid.filters.UniqTest#<stmt1>	Renamed	-	liqp/filters/UniqTest.java	15	72e8dd0f93c0d49c	
+member	liqp.filters.UnshiftTest#<stmt1>	ssg.liquid.filters.UnshiftTest#<stmt1>	Renamed	-	liqp/filters/UnshiftTest.java	11	8325e14d238095db	
+member	liqp.filters.UnshiftTest#<stmt2>	ssg.liquid.filters.UnshiftTest#<stmt2>	Renamed	-	liqp/filters/UnshiftTest.java	18	2c44d2a7ebe77d07	
+member	liqp.filters.UpcaseTest#<stmt1>	ssg.liquid.filters.UpcaseTest#<stmt1>	Renamed	-	liqp/filters/UpcaseTest.java	16	8fe411a768306581	
+member	liqp.filters.UpcaseTest#<stmt2>	ssg.liquid.filters.UpcaseTest#<stmt2>	Renamed	-	liqp/filters/UpcaseTest.java	41	be68d3cbd00873cf	
+member	liqp.filters.Url_DecodeTest#<stmt1>	ssg.liquid.filters.Url_DecodeTest#<stmt1>	Renamed	-	liqp/filters/Url_DecodeTest.java	25	5c021a0f23e40403	
+member	liqp.filters.Url_EncodeTest#<stmt1>	ssg.liquid.filters.Url_EncodeTest#<stmt1>	Renamed	-	liqp/filters/Url_EncodeTest.java	23	4442348ed3ef9fed	
+member	liqp.filters.Where_ExpTest#<stmt10>	ssg.liquid.filters.Where_ExpTest#<stmt10>	Renamed	-	liqp/filters/Where_ExpTest.java	271	2a3dbedd5e2f69bd	
+member	liqp.filters.Where_ExpTest#<stmt11>	ssg.liquid.filters.Where_ExpTest#<stmt11>	Renamed	-	liqp/filters/Where_ExpTest.java	289	1a621eaa43c0c38e	
+member	liqp.filters.Where_ExpTest#<stmt12>	ssg.liquid.filters.Where_ExpTest#<stmt12>	Renamed	-	liqp/filters/Where_ExpTest.java	308	dca7be3ee7d8c5b2	
+member	liqp.filters.Where_ExpTest#<stmt1>	ssg.liquid.filters.Where_ExpTest#<stmt1>	Renamed	-	liqp/filters/Where_ExpTest.java	27	4894bcd32d19ef44	
+member	liqp.filters.Where_ExpTest#<stmt2>	ssg.liquid.filters.Where_ExpTest#<stmt2>	Renamed	-	liqp/filters/Where_ExpTest.java	50	598c6d300c7647fe	
+member	liqp.filters.Where_ExpTest#<stmt3>	ssg.liquid.filters.Where_ExpTest#<stmt3>	Renamed	-	liqp/filters/Where_ExpTest.java	71	87201b6fd07e92b0	
+member	liqp.filters.Where_ExpTest#<stmt4>	ssg.liquid.filters.Where_ExpTest#<stmt4>	Renamed	-	liqp/filters/Where_ExpTest.java	107	c2805d890bf78c4e	
+member	liqp.filters.Where_ExpTest#<stmt5>	ssg.liquid.filters.Where_ExpTest#<stmt5>	Renamed	-	liqp/filters/Where_ExpTest.java	141	55c16ac3dc3fdcee	
+member	liqp.filters.Where_ExpTest#<stmt6>	ssg.liquid.filters.Where_ExpTest#<stmt6>	Renamed	-	liqp/filters/Where_ExpTest.java	177	58c15303aef8adb5	
+member	liqp.filters.Where_ExpTest#<stmt7>	ssg.liquid.filters.Where_ExpTest#<stmt7>	Renamed	-	liqp/filters/Where_ExpTest.java	201	fb8103cf88f5afb4	
+member	liqp.filters.Where_ExpTest#<stmt8>	ssg.liquid.filters.Where_ExpTest#<stmt8>	Renamed	-	liqp/filters/Where_ExpTest.java	238	c6f96924fb2c1eb0	
+member	liqp.filters.Where_ExpTest#<stmt9>	ssg.liquid.filters.Where_ExpTest#<stmt9>	Renamed	-	liqp/filters/Where_ExpTest.java	259	bac4edf2d7115eac	
+member	liqp.filters.Where_ExpTest#array_of_objects	ssg.liquid.filters.Where_ExpTest#array_of_objects	Renamed	-	liqp/filters/Where_ExpTest.java	15	0ddaabdaaec9671e	vis=private
+member	liqp.filters.Where_ExpTest#objectWithGroups	ssg.liquid.filters.Where_ExpTest#objectWithGroups	Renamed	-	liqp/filters/Where_ExpTest.java	221	c64c76a03356aeae	vis=private
+member	liqp.filters.Where_ExpTest#parse(String)	ssg.liquid.filters.Where_ExpTest#parse(String)	Renamed	-	liqp/filters/Where_ExpTest.java	325	48f7b99a3cb9a055	
+member	liqp.filters.date.FuzzyDateDateParserTest#parser	ssg.liquid.filters.date.FuzzyDateDateParserTest#parser	Renamed	-	liqp/filters/date/FuzzyDateDateParserTest.java	13	52aad5a118f1da30	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#<stmt10>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt10>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	451	60dff3928749dd65	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt11>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt11>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	470	b3b3ff79629a6443	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt12>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt12>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	510	b6adf3cf67cd8755	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt13>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt13>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	525	5a8f2f650893915d	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	96	0d8265c4e40c388e	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	116	a1c3fadb8bc86c91	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt3>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt3>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	142	bea8a47cc8d45e56	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt4>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt4>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	159	c4654e26d851e6de	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt5>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt5>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	220	04763a83a7e31c45	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt6>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt6>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	254	f8eb1da94e252459	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt7>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt7>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	280	313d1c25b86fc339	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt8>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt8>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	375	616d9650a13ac04c	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt9>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt9>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	407	67f4384e46e8cfba	
+member	liqp.filters.where.JekyllWhereImplTest#array_of_objects1	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects1	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	49	03b66522961dbfae	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#array_of_objects2	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects2	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	71	a292a67ae460c049	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#array_of_objects3	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects3	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	79	0a85f38af3ca6267	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#parse(String)	ssg.liquid.filters.where.JekyllWhereImplTest#parse(String)	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	25	9fda53205910682e	vis=private
+member	liqp.filters.where.JekyllWhereImplTest$Child#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest$Child#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	41	1589f61a20dca30b	
+member	liqp.filters.where.JekyllWhereImplTest$Child#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest$Child#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	42	b1094de479f8809f	
+member	liqp.filters.where.JekyllWhereImplTest$Child#color	ssg.liquid.filters.where.JekyllWhereImplTest$Child#color	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	44	67761601b68a7478	
+member	liqp.filters.where.JekyllWhereImplTest$Child#marker	ssg.liquid.filters.where.JekyllWhereImplTest$Child#marker	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	45	a380e76fa8b7e8a2	
+member	liqp.filters.where.JekyllWhereImplTest$Meta2#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest$Meta2#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	214	d30930aee45c285a	
+member	liqp.filters.where.JekyllWhereImplTest$Meta2#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest$Meta2#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	215	40079413d846178d	
+member	liqp.filters.where.JekyllWhereImplTest$Meta2#<stmt3>	ssg.liquid.filters.where.JekyllWhereImplTest$Meta2#<stmt3>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	216	41c0a82206156910	
+member	liqp.filters.where.JekyllWhereImplTest$Meta2#a	ssg.liquid.filters.where.JekyllWhereImplTest$Meta2#a	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	210	ff639754d752bbf8	
+member	liqp.filters.where.JekyllWhereImplTest$Meta2#b	ssg.liquid.filters.where.JekyllWhereImplTest$Meta2#b	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	211	e9b2a00f821b2091	
+member	liqp.filters.where.JekyllWhereImplTest$Meta2#c	ssg.liquid.filters.where.JekyllWhereImplTest$Meta2#c	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	212	2580cd2db78bf57e	
+member	liqp.filters.where.JekyllWhereImplTest$ObjectEntry#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest$ObjectEntry#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	34	e466b965cc6d236c	
+member	liqp.filters.where.JekyllWhereImplTest$ObjectEntry#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest$ObjectEntry#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	35	9b99ba2b2e3a3ccf	
+member	liqp.filters.where.JekyllWhereImplTest$ObjectEntry#color	ssg.liquid.filters.where.JekyllWhereImplTest$ObjectEntry#color	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	30	67761601b68a7478	
+member	liqp.filters.where.JekyllWhereImplTest$ObjectEntry#size	ssg.liquid.filters.where.JekyllWhereImplTest$ObjectEntry#size	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	31	3de3cbf8969f1988	
+member	liqp.filters.where.JekyllWhereImplTest$SampleLiquidSupport#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest$SampleLiquidSupport#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	437	4aaf5095f72b7b65	
+member	liqp.filters.where.JekyllWhereImplTest$SampleLiquidSupport#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest$SampleLiquidSupport#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	438	7815c25f07260d1a	
+member	liqp.filters.where.JekyllWhereImplTest$SampleLiquidSupport#<stmt3>	ssg.liquid.filters.where.JekyllWhereImplTest$SampleLiquidSupport#<stmt3>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	439	4555a9e903ad5cc4	
+member	liqp.filters.where.JekyllWhereImplTest$SampleLiquidSupport#marker	ssg.liquid.filters.where.JekyllWhereImplTest$SampleLiquidSupport#marker	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	434	a380e76fa8b7e8a2	
+member	liqp.filters.where.JekyllWhereImplTest$SampleLiquidSupport#notMappableCircularRef	ssg.liquid.filters.where.JekyllWhereImplTest$SampleLiquidSupport#notMappableCircularRef	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	432	b2d0213b23fb905e	
+member	liqp.filters.where.JekyllWhereImplTest$SampleLiquidSupport#toLiquid()	ssg.liquid.filters.where.JekyllWhereImplTest$SampleLiquidSupport#toLiquid()	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	443	63336955ad9f21f2	
+member	liqp.filters.where.JekyllWhereImplTest$SampleLiquidSupport#val	ssg.liquid.filters.where.JekyllWhereImplTest$SampleLiquidSupport#val	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	433	282851975dcdf359	
+member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	200	d074459bbad54161	
+member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	201	7815c25f07260d1a	
+member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#getMarker()	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#getMarker()	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	204	89e868bec0ad99f3	
+member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#marker	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#marker	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	197	9efabea33b72a00a	vis=private[JekyllWhereImplTest]
+member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#tags	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#tags	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	196	664437de6a3e60e1	
+member	liqp.filters.where.LiquidWhereImplTest#<stmt10>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt10>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	301	0161666127579774	
+member	liqp.filters.where.LiquidWhereImplTest#<stmt1>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt1>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	54	4530cb24286511f0	
+member	liqp.filters.where.LiquidWhereImplTest#<stmt2>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt2>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	101	4459549a48607fb3	
+member	liqp.filters.where.LiquidWhereImplTest#<stmt3>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt3>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	135	2ba167de7c9d698e	
+member	liqp.filters.where.LiquidWhereImplTest#<stmt4>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt4>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	154	bdbe2c15c535f318	
+member	liqp.filters.where.LiquidWhereImplTest#<stmt5>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt5>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	183	843633403d9a89ae	
+member	liqp.filters.where.LiquidWhereImplTest#<stmt6>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt6>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	203	358b63368a431995	
+member	liqp.filters.where.LiquidWhereImplTest#<stmt7>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt7>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	227	0709b4be6beaebc2	
+member	liqp.filters.where.LiquidWhereImplTest#<stmt8>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt8>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	268	fb21076b02ae3eb9	
+member	liqp.filters.where.LiquidWhereImplTest#<stmt9>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt9>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	288	b8891c21e0f96088	
+member	liqp.filters.where.LiquidWhereImplTest#parse(String)	ssg.liquid.filters.where.LiquidWhereImplTest#parse(String)	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	24	896b21cfc4302159	vis=private
+member	liqp.filters.where.LiquidWhereImplTest#setUp()	ssg.liquid.filters.where.LiquidWhereImplTest#setUp()	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	29	15d639d100863d31	
+member	liqp.filters.where.LiquidWhereImplTest$SampleLiquidSupport#<stmt1>	ssg.liquid.filters.where.LiquidWhereImplTest$SampleLiquidSupport#<stmt1>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	254	4aaf5095f72b7b65	
+member	liqp.filters.where.LiquidWhereImplTest$SampleLiquidSupport#<stmt2>	ssg.liquid.filters.where.LiquidWhereImplTest$SampleLiquidSupport#<stmt2>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	255	7815c25f07260d1a	
+member	liqp.filters.where.LiquidWhereImplTest$SampleLiquidSupport#<stmt3>	ssg.liquid.filters.where.LiquidWhereImplTest$SampleLiquidSupport#<stmt3>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	256	4555a9e903ad5cc4	
+member	liqp.filters.where.LiquidWhereImplTest$SampleLiquidSupport#marker	ssg.liquid.filters.where.LiquidWhereImplTest$SampleLiquidSupport#marker	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	251	a380e76fa8b7e8a2	
+member	liqp.filters.where.LiquidWhereImplTest$SampleLiquidSupport#notMappableCircularRef	ssg.liquid.filters.where.LiquidWhereImplTest$SampleLiquidSupport#notMappableCircularRef	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	249	7460c07aa83aa6d8	
+member	liqp.filters.where.LiquidWhereImplTest$SampleLiquidSupport#toLiquid()	ssg.liquid.filters.where.LiquidWhereImplTest$SampleLiquidSupport#toLiquid()	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	260	63336955ad9f21f2	
+member	liqp.filters.where.LiquidWhereImplTest$SampleLiquidSupport#val	ssg.liquid.filters.where.LiquidWhereImplTest$SampleLiquidSupport#val	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	250	282851975dcdf359	
+member	liqp.nodes.AndNodeTest#<stmt1>	ssg.liquid.nodes.AndNodeTest#<stmt1>	Renamed	-	liqp/nodes/AndNodeTest.java	15	bfd74c235dba2f88	
+member	liqp.nodes.AtomNodeTest#<stmt1>	ssg.liquid.nodes.AtomNodeTest#<stmt1>	Renamed	-	liqp/nodes/AtomNodeTest.java	15	c571fb61d175b851	
+member	liqp.nodes.BlockNodeTest#<stmt1>	ssg.liquid.nodes.BlockNodeTest#<stmt1>	Renamed	-	liqp/nodes/BlockNodeTest.java	21	fb28a996962ec3d1	
+member	liqp.nodes.ComparingExpressionNodeTest#<stmt1>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt1>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	54	00e4a425df9e4da0	
+member	liqp.nodes.ComparingExpressionNodeTest#<stmt2>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt2>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	112	f5ea18d36a0a4c0f	
+member	liqp.nodes.ComparingExpressionNodeTest#<stmt3>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt3>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	165	bf93ae12bd96cb1b	
+member	liqp.nodes.ComparingExpressionNodeTest#<stmt4>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt4>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	178	682c3e30424bd167	
+member	liqp.nodes.ComparingExpressionNodeTest#<stmt5>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt5>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	189	9b6cba04f9bbf4b4	
+member	liqp.nodes.ComparingExpressionNodeTest#cartesianProduct(Buffer)	ssg.liquid.nodes.ComparingExpressionNodeTest#cartesianProduct(Buffer<Buffer<T>>)	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	200	3d12f1950dd5e11a	
+member	liqp.nodes.ComparingExpressionNodeTest#testCombunationsStrctWithExpectation(String,TemplateParser)	ssg.liquid.nodes.ComparingExpressionNodeTest#testCombunationsStrctWithExpectation(String,TemplateParser)	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	124	b05054e7391d75cb	vis=private
+member	liqp.nodes.ContainsNodeTest#<stmt1>	ssg.liquid.nodes.ContainsNodeTest#<stmt1>	Renamed	-	liqp/nodes/ContainsNodeTest.java	11	cc0f6070a26fe225	
+member	liqp.nodes.EqNodeTest#<stmt1>	ssg.liquid.nodes.EqNodeTest#<stmt1>	Renamed	-	liqp/nodes/EqNodeTest.java	15	23b38a2477566600	
+member	liqp.nodes.EqNodeTest#<stmt2>	ssg.liquid.nodes.EqNodeTest#<stmt2>	Renamed	-	liqp/nodes/EqNodeTest.java	53	e8fac9b56c85e78e	
+member	liqp.nodes.GtEqNodeTest#<stmt1>	ssg.liquid.nodes.GtEqNodeTest#<stmt1>	Renamed	-	liqp/nodes/GtEqNodeTest.java	26	1b3b1b29caf543c4	
+member	liqp.nodes.GtEqNodeTest#<stmt2>	ssg.liquid.nodes.GtEqNodeTest#<stmt2>	Renamed	-	liqp/nodes/GtEqNodeTest.java	47	cd68ec979aa72065	
+member	liqp.nodes.GtEqNodeTest#<stmt3>	ssg.liquid.nodes.GtEqNodeTest#<stmt3>	Renamed	-	liqp/nodes/GtEqNodeTest.java	69	9ada36dbe6b35327	
+member	liqp.nodes.GtEqNodeTest#<stmt4>	ssg.liquid.nodes.GtEqNodeTest#<stmt4>	Renamed	-	liqp/nodes/GtEqNodeTest.java	85	d6f44614d572ec90	
+member	liqp.nodes.GtNodeTest#<stmt1>	ssg.liquid.nodes.GtNodeTest#<stmt1>	Renamed	-	liqp/nodes/GtNodeTest.java	31	247e32c080b4e89b	
+member	liqp.nodes.GtNodeTest#<stmt2>	ssg.liquid.nodes.GtNodeTest#<stmt2>	Renamed	-	liqp/nodes/GtNodeTest.java	52	61d43a9d3722c7c2	
+member	liqp.nodes.GtNodeTest#<stmt3>	ssg.liquid.nodes.GtNodeTest#<stmt3>	Renamed	-	liqp/nodes/GtNodeTest.java	74	7a8bc7ee0f1002e0	
+member	liqp.nodes.GtNodeTest#<stmt4>	ssg.liquid.nodes.GtNodeTest#<stmt4>	Renamed	-	liqp/nodes/GtNodeTest.java	90	874aa8e68b663134	
+member	liqp.nodes.GtNodeTest#<stmt5>	ssg.liquid.nodes.GtNodeTest#<stmt5>	Renamed	-	liqp/nodes/GtNodeTest.java	102	d1098eb1511c18c2	
+member	liqp.nodes.GtNodeTest#<stmt6>	ssg.liquid.nodes.GtNodeTest#<stmt6>	Renamed	-	liqp/nodes/GtNodeTest.java	117	e2b4824bcfe1225a	
+member	liqp.nodes.GtNodeTest#<stmt7>	ssg.liquid.nodes.GtNodeTest#<stmt7>	Renamed	-	liqp/nodes/GtNodeTest.java	131	1ba3e1fc096c0462	
+member	liqp.nodes.GtNodeTest#<stmt8>	ssg.liquid.nodes.GtNodeTest#<stmt8>	Renamed	-	liqp/nodes/GtNodeTest.java	139	8f8a63cff53c1e31	
+member	liqp.nodes.LookupNodeTest#<stmt10>	ssg.liquid.nodes.LookupNodeTest#<stmt10>	Renamed	-	liqp/nodes/LookupNodeTest.java	285	554e968e033a1629	
+member	liqp.nodes.LookupNodeTest#<stmt11>	ssg.liquid.nodes.LookupNodeTest#<stmt11>	Renamed	-	liqp/nodes/LookupNodeTest.java	301	68daa368b5429ca4	
+member	liqp.nodes.LookupNodeTest#<stmt12>	ssg.liquid.nodes.LookupNodeTest#<stmt12>	Renamed	-	liqp/nodes/LookupNodeTest.java	309	a205db9ae0f017b5	
+member	liqp.nodes.LookupNodeTest#<stmt13>	ssg.liquid.nodes.LookupNodeTest#<stmt13>	Renamed	-	liqp/nodes/LookupNodeTest.java	315	0cea9c98ae95062c	
+member	liqp.nodes.LookupNodeTest#<stmt14>	ssg.liquid.nodes.LookupNodeTest#<stmt14>	Renamed	-	liqp/nodes/LookupNodeTest.java	325	11d6ddf217b15a91	
+member	liqp.nodes.LookupNodeTest#<stmt1>	ssg.liquid.nodes.LookupNodeTest#<stmt1>	Renamed	-	liqp/nodes/LookupNodeTest.java	24	ba67bd7c3652c695	
+member	liqp.nodes.LookupNodeTest#<stmt2>	ssg.liquid.nodes.LookupNodeTest#<stmt2>	Renamed	-	liqp/nodes/LookupNodeTest.java	61	891ca211ab9c726d	
+member	liqp.nodes.LookupNodeTest#<stmt3>	ssg.liquid.nodes.LookupNodeTest#<stmt3>	Renamed	-	liqp/nodes/LookupNodeTest.java	105	ed4187ae3db4fbe3	
+member	liqp.nodes.LookupNodeTest#<stmt4>	ssg.liquid.nodes.LookupNodeTest#<stmt4>	Renamed	-	liqp/nodes/LookupNodeTest.java	134	7073e6fc7ae82dc3	
+member	liqp.nodes.LookupNodeTest#<stmt5>	ssg.liquid.nodes.LookupNodeTest#<stmt5>	Renamed	-	liqp/nodes/LookupNodeTest.java	169	f473cc52e4a10796	
+member	liqp.nodes.LookupNodeTest#<stmt6>	ssg.liquid.nodes.LookupNodeTest#<stmt6>	Renamed	-	liqp/nodes/LookupNodeTest.java	193	66d40d37d52a9ea7	
+member	liqp.nodes.LookupNodeTest#<stmt7>	ssg.liquid.nodes.LookupNodeTest#<stmt7>	Renamed	-	liqp/nodes/LookupNodeTest.java	219	b9c366cd1f10f974	
+member	liqp.nodes.LookupNodeTest#<stmt8>	ssg.liquid.nodes.LookupNodeTest#<stmt8>	Renamed	-	liqp/nodes/LookupNodeTest.java	245	92758e0469194977	
+member	liqp.nodes.LookupNodeTest#<stmt9>	ssg.liquid.nodes.LookupNodeTest#<stmt9>	Renamed	-	liqp/nodes/LookupNodeTest.java	271	a51ea9872e411e6b	
+member	liqp.nodes.LtEqNodeTest#<stmt1>	ssg.liquid.nodes.LtEqNodeTest#<stmt1>	Renamed	-	liqp/nodes/LtEqNodeTest.java	26	405244f06a7eab63	
+member	liqp.nodes.LtEqNodeTest#<stmt2>	ssg.liquid.nodes.LtEqNodeTest#<stmt2>	Renamed	-	liqp/nodes/LtEqNodeTest.java	47	0529237f1ed7e3dc	
+member	liqp.nodes.LtEqNodeTest#<stmt3>	ssg.liquid.nodes.LtEqNodeTest#<stmt3>	Renamed	-	liqp/nodes/LtEqNodeTest.java	69	5e70617230fd745d	
+member	liqp.nodes.LtEqNodeTest#<stmt4>	ssg.liquid.nodes.LtEqNodeTest#<stmt4>	Renamed	-	liqp/nodes/LtEqNodeTest.java	85	92dde8f4d00dd025	
+member	liqp.nodes.LtNodeTest#<stmt1>	ssg.liquid.nodes.LtNodeTest#<stmt1>	Renamed	-	liqp/nodes/LtNodeTest.java	26	e12e5b81bb324ccd	
+member	liqp.nodes.LtNodeTest#<stmt2>	ssg.liquid.nodes.LtNodeTest#<stmt2>	Renamed	-	liqp/nodes/LtNodeTest.java	47	e6079324655814ae	
+member	liqp.nodes.LtNodeTest#<stmt3>	ssg.liquid.nodes.LtNodeTest#<stmt3>	Renamed	-	liqp/nodes/LtNodeTest.java	68	0254be4b4375b016	
+member	liqp.nodes.LtNodeTest#<stmt4>	ssg.liquid.nodes.LtNodeTest#<stmt4>	Renamed	-	liqp/nodes/LtNodeTest.java	84	efa8edfa28015beb	
+member	liqp.nodes.NEqNodeTest#<stmt1>	ssg.liquid.nodes.NEqNodeTest#<stmt1>	Renamed	-	liqp/nodes/NEqNodeTest.java	15	a0c030ea8fd43838	
+member	liqp.nodes.OrNodeTest#<stmt1>	ssg.liquid.nodes.OrNodeTest#<stmt1>	Renamed	-	liqp/nodes/OrNodeTest.java	15	e187987cf67ac8de	
+member	liqp.nodes.OutputNodeTest#<stmt1>	ssg.liquid.nodes.OutputNodeTest#<stmt1>	Renamed	-	liqp/nodes/OutputNodeTest.java	19	74b628cf8206905f	
+member	liqp.nodes.OutputNodeTest#<stmt2>	ssg.liquid.nodes.OutputNodeTest#<stmt2>	Renamed	-	liqp/nodes/OutputNodeTest.java	36	b39939c561002059	
+member	liqp.nodes.OutputNodeTest#<stmt3>	ssg.liquid.nodes.OutputNodeTest#<stmt3>	Renamed	-	liqp/nodes/OutputNodeTest.java	85	101febf65b48018c	
+member	liqp.nodes.OutputNodeTest#<stmt4>	ssg.liquid.nodes.OutputNodeTest#<stmt4>	Renamed	-	liqp/nodes/OutputNodeTest.java	109	2e925b3df4ffaa65	
+member	liqp.parser.ParseTest#<stmt1>	ssg.liquid.parser.ParseTest#<stmt1>	Renamed	-	liqp/parser/ParseTest.java	26	b661a255888f817b	
+member	liqp.parser.ParseTest#<stmt2>	ssg.liquid.parser.ParseTest#<stmt2>	Renamed	-	liqp/parser/ParseTest.java	41	8c7815da3896c1b0	
+member	liqp.parser.ParseTest#<stmt3>	ssg.liquid.parser.ParseTest#<stmt3>	Renamed	-	liqp/parser/ParseTest.java	53	ab777e028611c45e	
+member	liqp.parser.ParseTest#<stmt4>	ssg.liquid.parser.ParseTest#<stmt4>	Renamed	-	liqp/parser/ParseTest.java	65	8115d61b2acb7111	
+member	liqp.parser.ParseTest#<stmt5>	ssg.liquid.parser.ParseTest#<stmt5>	Renamed	-	liqp/parser/ParseTest.java	79	d65e8dab21c3c726	
+member	liqp.parser.ParseTest#<stmt6>	ssg.liquid.parser.ParseTest#<stmt6>	Renamed	-	liqp/parser/ParseTest.java	93	4dbf5f3d222c0251	
+member	liqp.parser.ParseTest#<stmt7>	ssg.liquid.parser.ParseTest#<stmt7>	Renamed	-	liqp/parser/ParseTest.java	109	55cffa97edb59917	
+member	liqp.parser.ParseTest#<stmt8>	ssg.liquid.parser.ParseTest#<stmt8>	Renamed	-	liqp/parser/ParseTest.java	117	e29e2b9d332e4297	
+member	liqp.parser.ParseTest#<stmt9>	ssg.liquid.parser.ParseTest#<stmt9>	Renamed	-	liqp/parser/ParseTest.java	131	eb5a795dc72b1b58	
+member	liqp.parser.v4.LiquidLexerTest#<stmt10>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt10>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	139	1233b900b1ae0895	
+member	liqp.parser.v4.LiquidLexerTest#<stmt11>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt11>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	167	50ef345089731cc5	
+member	liqp.parser.v4.LiquidLexerTest#<stmt12>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt12>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	190	10ee18b991a7d1ba	
+member	liqp.parser.v4.LiquidLexerTest#<stmt13>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt13>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	197	0927ee072939b3e8	
+member	liqp.parser.v4.LiquidLexerTest#<stmt14>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt14>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	204	53fbf5109300d5a1	
+member	liqp.parser.v4.LiquidLexerTest#<stmt15>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt15>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	210	5adcb83c81e5985a	
+member	liqp.parser.v4.LiquidLexerTest#<stmt16>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt16>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	216	b1c3104c63dd72ea	
+member	liqp.parser.v4.LiquidLexerTest#<stmt17>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt17>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	222	29bb44aa9589af9b	
+member	liqp.parser.v4.LiquidLexerTest#<stmt18>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt18>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	228	35133aee714c889e	
+member	liqp.parser.v4.LiquidLexerTest#<stmt19>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt19>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	234	543b58ca816fa333	
+member	liqp.parser.v4.LiquidLexerTest#<stmt1>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt1>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	30	0442d082383073a3	
+member	liqp.parser.v4.LiquidLexerTest#<stmt20>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt20>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	240	18d80080329751eb	
+member	liqp.parser.v4.LiquidLexerTest#<stmt21>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt21>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	246	3aa30e6c5dbe6987	
+member	liqp.parser.v4.LiquidLexerTest#<stmt22>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt22>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	252	d6c01f37f49258ed	
+member	liqp.parser.v4.LiquidLexerTest#<stmt23>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt23>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	258	0a04d9e3112ea5dc	
+member	liqp.parser.v4.LiquidLexerTest#<stmt24>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt24>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	264	440071be8fcecc70	
+member	liqp.parser.v4.LiquidLexerTest#<stmt25>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt25>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	270	e642847136b30b84	
+member	liqp.parser.v4.LiquidLexerTest#<stmt26>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt26>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	276	71bae7eb6b554910	
+member	liqp.parser.v4.LiquidLexerTest#<stmt27>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt27>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	282	8378701039423123	
+member	liqp.parser.v4.LiquidLexerTest#<stmt28>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt28>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	288	c276b2a8827f12bc	
+member	liqp.parser.v4.LiquidLexerTest#<stmt29>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt29>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	294	50d41fd87465484d	
+member	liqp.parser.v4.LiquidLexerTest#<stmt2>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt2>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	50	b74e41c0d7aa7ee9	
+member	liqp.parser.v4.LiquidLexerTest#<stmt30>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt30>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	300	0f8f3a200618b3f9	
+member	liqp.parser.v4.LiquidLexerTest#<stmt31>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt31>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	309	9b2d318ee9c0d8ea	
+member	liqp.parser.v4.LiquidLexerTest#<stmt32>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt32>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	322	fd8bd19bd1de7832	
+member	liqp.parser.v4.LiquidLexerTest#<stmt33>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt33>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	329	196ada28c0ddf70e	
+member	liqp.parser.v4.LiquidLexerTest#<stmt34>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt34>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	335	5501dc17ddc892d4	
+member	liqp.parser.v4.LiquidLexerTest#<stmt35>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt35>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	341	35e7645fb7f2b124	
+member	liqp.parser.v4.LiquidLexerTest#<stmt36>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt36>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	347	c976cc701e8274fc	
+member	liqp.parser.v4.LiquidLexerTest#<stmt37>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt37>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	353	c1dd3ec5bcafd446	
+member	liqp.parser.v4.LiquidLexerTest#<stmt38>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt38>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	360	3a3ad261ebe431ef	
+member	liqp.parser.v4.LiquidLexerTest#<stmt39>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt39>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	366	c184f7341b629f30	
+member	liqp.parser.v4.LiquidLexerTest#<stmt3>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt3>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	67	3a36eb99bf48195e	
+member	liqp.parser.v4.LiquidLexerTest#<stmt40>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt40>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	372	a87cf8bbfac5b72c	
+member	liqp.parser.v4.LiquidLexerTest#<stmt41>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt41>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	378	2f64d3a091126760	
+member	liqp.parser.v4.LiquidLexerTest#<stmt42>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt42>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	384	ee5beceede044953	
+member	liqp.parser.v4.LiquidLexerTest#<stmt43>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt43>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	390	2636a8bbd9bda5d7	
+member	liqp.parser.v4.LiquidLexerTest#<stmt44>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt44>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	396	a7f2dbd03228ddb9	
+member	liqp.parser.v4.LiquidLexerTest#<stmt45>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt45>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	402	58e6e12b51423896	
+member	liqp.parser.v4.LiquidLexerTest#<stmt46>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt46>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	408	48bd1079815ada3c	
+member	liqp.parser.v4.LiquidLexerTest#<stmt47>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt47>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	414	040ba6054a85f953	
+member	liqp.parser.v4.LiquidLexerTest#<stmt48>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt48>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	420	baed623a08fd61bd	
+member	liqp.parser.v4.LiquidLexerTest#<stmt49>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt49>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	426	5d28c96c98eeb41a	
+member	liqp.parser.v4.LiquidLexerTest#<stmt4>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt4>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	81	079df4eeb2690777	
+member	liqp.parser.v4.LiquidLexerTest#<stmt50>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt50>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	432	d33264c87dd1785c	
+member	liqp.parser.v4.LiquidLexerTest#<stmt51>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt51>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	438	e5d3e65aabb2b800	
+member	liqp.parser.v4.LiquidLexerTest#<stmt52>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt52>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	444	4a77dfdf85ef1b59	
+member	liqp.parser.v4.LiquidLexerTest#<stmt53>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt53>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	450	d2bcef2e7cd52074	
+member	liqp.parser.v4.LiquidLexerTest#<stmt54>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt54>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	456	fddb2442f6600493	
+member	liqp.parser.v4.LiquidLexerTest#<stmt55>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt55>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	462	a155abaabf5666c0	
+member	liqp.parser.v4.LiquidLexerTest#<stmt56>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt56>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	468	a0a23bd3f3ef0b52	
+member	liqp.parser.v4.LiquidLexerTest#<stmt57>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt57>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	474	38803d904cec39d5	
+member	liqp.parser.v4.LiquidLexerTest#<stmt58>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt58>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	480	8a9eb67cc69381df	
+member	liqp.parser.v4.LiquidLexerTest#<stmt59>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt59>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	486	fa0c7504224ac1e7	
+member	liqp.parser.v4.LiquidLexerTest#<stmt5>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt5>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	87	880a892be49a12e8	
+member	liqp.parser.v4.LiquidLexerTest#<stmt60>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt60>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	492	6cac65794e6ae229	
+member	liqp.parser.v4.LiquidLexerTest#<stmt61>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt61>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	498	7e136d01f85d4bae	
+member	liqp.parser.v4.LiquidLexerTest#<stmt62>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt62>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	504	4e2ba1938b963fe8	
+member	liqp.parser.v4.LiquidLexerTest#<stmt63>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt63>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	515	a41d74a730d9298b	
+member	liqp.parser.v4.LiquidLexerTest#<stmt64>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt64>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	521	60a88511f7f3b4e4	
+member	liqp.parser.v4.LiquidLexerTest#<stmt65>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt65>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	527	c7ae3173d4f5440b	
+member	liqp.parser.v4.LiquidLexerTest#<stmt66>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt66>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	532	f70af769df15e342	
+member	liqp.parser.v4.LiquidLexerTest#<stmt67>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt67>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	538	3a63c4f835adc302	
+member	liqp.parser.v4.LiquidLexerTest#<stmt68>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt68>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	559	7f837a6c326c4cfb	
+member	liqp.parser.v4.LiquidLexerTest#<stmt69>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt69>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	569	b8ce2c8a4a4538e2	
+member	liqp.parser.v4.LiquidLexerTest#<stmt6>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt6>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	94	022a29d2de2bf45a	
+member	liqp.parser.v4.LiquidLexerTest#<stmt70>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt70>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	576	49561287f3b737a8	
+member	liqp.parser.v4.LiquidLexerTest#<stmt71>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt71>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	582	87e09150a3a01f6e	
+member	liqp.parser.v4.LiquidLexerTest#<stmt72>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt72>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	605	08eef3527d4472dd	
+member	liqp.parser.v4.LiquidLexerTest#<stmt7>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt7>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	104	9617fb28fc266c5a	
+member	liqp.parser.v4.LiquidLexerTest#<stmt8>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt8>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	114	b2b52ef65f0e258e	
+member	liqp.parser.v4.LiquidLexerTest#<stmt9>	ssg.liquid.parser.v4.LiquidLexerTest#<stmt9>	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	122	a803de2ffd4d0262	
+member	liqp.parser.v4.LiquidLexerTest#commonTokenStream(String,boolean,Set,Set)	ssg.liquid.parser.v4.LiquidLexerTest#commonTokenStream(String,boolean,Set<String>,Set<String>)	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	683	30d06e33c548df26	placement=companion
+member	liqp.parser.v4.LiquidLexerTest#singleToken(String)	ssg.liquid.parser.v4.LiquidLexerTest#singleToken(String)	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	645	a9eadac83a26d7d9	placement=companion vis=private
+member	liqp.parser.v4.LiquidLexerTest#singleToken(String,boolean,boolean)	ssg.liquid.parser.v4.LiquidLexerTest#singleToken(String,boolean,boolean)	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	649	271b9c4a8e569e25	placement=companion vis=private
+member	liqp.parser.v4.LiquidLexerTest#tokenise(String)	ssg.liquid.parser.v4.LiquidLexerTest#tokenise(String)	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	659	92f38d5c232ec12b	placement=companion vis=private
+member	liqp.parser.v4.LiquidLexerTest#tokenise(String,Set,Set)	ssg.liquid.parser.v4.LiquidLexerTest#tokenise(String,Set<String>,Set<String>)	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	663	7cc4773ff9f07f2f	placement=companion vis=private
+member	liqp.parser.v4.LiquidLexerTest#tokenise(String,boolean,boolean)	ssg.liquid.parser.v4.LiquidLexerTest#tokenise(String,boolean,boolean)	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	667	09f5700afb0e9f7c	placement=companion vis=private
+member	liqp.parser.v4.LiquidLexerTest#tokenise(String,boolean,boolean,Set,Set)	ssg.liquid.parser.v4.LiquidLexerTest#tokenise(String,boolean,boolean,Set<String>,Set<String>)	Renamed	-	liqp/parser/v4/LiquidLexerTest.java	671	711c04cc59fda58b	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#<stmt10>	ssg.liquid.parser.v4.LiquidParserTest#<stmt10>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	337	b3f41a138005ac16	
+member	liqp.parser.v4.LiquidParserTest#<stmt11>	ssg.liquid.parser.v4.LiquidParserTest#<stmt11>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	355	794caceba8f7bee4	
+member	liqp.parser.v4.LiquidParserTest#<stmt12>	ssg.liquid.parser.v4.LiquidParserTest#<stmt12>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	372	56d0dcb5e21337e3	
+member	liqp.parser.v4.LiquidParserTest#<stmt13>	ssg.liquid.parser.v4.LiquidParserTest#<stmt13>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	409	e6228bfddf1cdff5	
+member	liqp.parser.v4.LiquidParserTest#<stmt14>	ssg.liquid.parser.v4.LiquidParserTest#<stmt14>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	426	ebca4b5961a121ab	
+member	liqp.parser.v4.LiquidParserTest#<stmt1>	ssg.liquid.parser.v4.LiquidParserTest#<stmt1>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	53	e4839d36f3779fd7	
+member	liqp.parser.v4.LiquidParserTest#<stmt2>	ssg.liquid.parser.v4.LiquidParserTest#<stmt2>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	157	07accc0d78801262	
+member	liqp.parser.v4.LiquidParserTest#<stmt3>	ssg.liquid.parser.v4.LiquidParserTest#<stmt3>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	169	2458ea69bfcba2d9	
+member	liqp.parser.v4.LiquidParserTest#<stmt4>	ssg.liquid.parser.v4.LiquidParserTest#<stmt4>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	189	1b4e32a9d02ca096	
+member	liqp.parser.v4.LiquidParserTest#<stmt5>	ssg.liquid.parser.v4.LiquidParserTest#<stmt5>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	211	fb29a0bad1866ddc	
+member	liqp.parser.v4.LiquidParserTest#<stmt6>	ssg.liquid.parser.v4.LiquidParserTest#<stmt6>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	236	297a4c048e077e0f	
+member	liqp.parser.v4.LiquidParserTest#<stmt7>	ssg.liquid.parser.v4.LiquidParserTest#<stmt7>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	267	66d95bb8267f5fef	
+member	liqp.parser.v4.LiquidParserTest#<stmt8>	ssg.liquid.parser.v4.LiquidParserTest#<stmt8>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	296	94443a750481f054	
+member	liqp.parser.v4.LiquidParserTest#<stmt9>	ssg.liquid.parser.v4.LiquidParserTest#<stmt9>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	320	2acb4c7c7bac6c4a	
+member	liqp.parser.v4.LiquidParserTest#array(Array)	ssg.liquid.parser.v4.LiquidParserTest#array(Array<String>)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	510	0c4eb215d9001d3e	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#parse(String,String,Set,Set)	ssg.liquid.parser.v4.LiquidParserTest#parse(String,String,Set<String>,Set<String>)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	496	5e888781d72f35ee	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#parse(String,String,Set,Set,Boolean,Boolean)	ssg.liquid.parser.v4.LiquidParserTest#parse(String,String,Set<String>,Set<String>,Boolean,Boolean)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	500	b68e468466100115	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#parse(String,String,boolean,boolean)	ssg.liquid.parser.v4.LiquidParserTest#parse(String,String,boolean,boolean)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	477	fef2cfd3b89f03fe	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#parseWithListener(String,String,Set,Set,BaseErrorListener,Boolean,boolean)	ssg.liquid.parser.v4.LiquidParserTest#parseWithListener(String,String,Set<String>,Set<String>,BaseErrorListener,Boolean,boolean)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	481	beabaa09fb8567a9	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#texts(ParseTree)	ssg.liquid.parser.v4.LiquidParserTest#texts(ParseTree)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	466	3fd86bdf45793e46	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#texts(String,String)	ssg.liquid.parser.v4.LiquidParserTest#texts(String,String)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	462	980352988012edd5	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#texts(String,String,Set,Set)	ssg.liquid.parser.v4.LiquidParserTest#texts(String,String,Set<String>,Set<String>)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	450	7969d1b5d4379605	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#texts(String,String,boolean)	ssg.liquid.parser.v4.LiquidParserTest#texts(String,String,boolean)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	456	2434ec1dc05de60e	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#textsWithError(String,String,Set,Set,BaseErrorListener)	ssg.liquid.parser.v4.LiquidParserTest#textsWithError(String,String,Set<String>,Set<String>,BaseErrorListener)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	444	6ea16a637835a87d	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest$CapturingErrorListener#getLastErrorMessage()	ssg.liquid.parser.v4.LiquidParserTest$CapturingErrorListener#getLastErrorMessage()	Renamed	-	liqp/parser/v4/LiquidParserTest.java	32	999a42e97125f420	
+member	liqp.parser.v4.LiquidParserTest$CapturingErrorListener#lastErrorMessage	ssg.liquid.parser.v4.LiquidParserTest$CapturingErrorListener#lastErrorMessage	Renamed	-	liqp/parser/v4/LiquidParserTest.java	24	863e0a2e72cf2142	vis=private[LiquidParserTest]
+member	liqp.parser.v4.LiquidParserTest$CapturingErrorListener#syntaxError(Recognizer,Object,int,int,String,RecognitionException)	ssg.liquid.parser.v4.LiquidParserTest$CapturingErrorListener#syntaxError(Recognizer<?,?>,Object,int,int,String,RecognitionException)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	27	d2fa8f228eeee7db	
+member	liqp.tags.AssignTest#<stmt10>	ssg.liquid.tags.AssignTest#<stmt10>	Renamed	-	liqp/tags/AssignTest.java	169	e6a7cea0824676e1	
+member	liqp.tags.AssignTest#<stmt11>	ssg.liquid.tags.AssignTest#<stmt11>	Renamed	-	liqp/tags/AssignTest.java	178	4f6d3245bd351c42	
+member	liqp.tags.AssignTest#<stmt1>	ssg.liquid.tags.AssignTest#<stmt1>	Renamed	-	liqp/tags/AssignTest.java	16	7223e89454bae2b1	
+member	liqp.tags.AssignTest#<stmt2>	ssg.liquid.tags.AssignTest#<stmt2>	Renamed	-	liqp/tags/AssignTest.java	58	ccc1800462fbb8c3	
+member	liqp.tags.AssignTest#<stmt3>	ssg.liquid.tags.AssignTest#<stmt3>	Renamed	-	liqp/tags/AssignTest.java	69	0e81a80237b94f22	
+member	liqp.tags.AssignTest#<stmt4>	ssg.liquid.tags.AssignTest#<stmt4>	Renamed	-	liqp/tags/AssignTest.java	83	3bc5e3fffa94e344	
+member	liqp.tags.AssignTest#<stmt5>	ssg.liquid.tags.AssignTest#<stmt5>	Renamed	-	liqp/tags/AssignTest.java	96	b57f0ab30d023282	
+member	liqp.tags.AssignTest#<stmt6>	ssg.liquid.tags.AssignTest#<stmt6>	Renamed	-	liqp/tags/AssignTest.java	111	956493eb9a6cff33	
+member	liqp.tags.AssignTest#<stmt7>	ssg.liquid.tags.AssignTest#<stmt7>	Renamed	-	liqp/tags/AssignTest.java	126	9ea110a2da54a668	
+member	liqp.tags.AssignTest#<stmt8>	ssg.liquid.tags.AssignTest#<stmt8>	Renamed	-	liqp/tags/AssignTest.java	140	afdb8b8937d35331	
+member	liqp.tags.AssignTest#<stmt9>	ssg.liquid.tags.AssignTest#<stmt9>	Renamed	-	liqp/tags/AssignTest.java	154	285de1e32fe35f58	
+member	liqp.tags.DecrementTest#<stmt1>	ssg.liquid.tags.DecrementTest#<stmt1>	Renamed	-	liqp/tags/DecrementTest.java	14	5f644407209fd560	
+member	liqp.tags.IncludeRelativeTest#<stmt1>	ssg.liquid.tags.IncludeRelativeTest#<stmt1>	Renamed	-	liqp/tags/IncludeRelativeTest.java	21	754d0e7b5637350b	
+member	liqp.tags.IncludeRelativeTest#<stmt2>	ssg.liquid.tags.IncludeRelativeTest#<stmt2>	Renamed	-	liqp/tags/IncludeRelativeTest.java	36	c93268b56905a014	
+member	liqp.tags.IncludeRelativeTest#<stmt3>	ssg.liquid.tags.IncludeRelativeTest#<stmt3>	Renamed	-	liqp/tags/IncludeRelativeTest.java	53	40114a5140df78e0	
+member	liqp.tags.IncludeRelativeTest#<stmt4>	ssg.liquid.tags.IncludeRelativeTest#<stmt4>	Renamed	-	liqp/tags/IncludeRelativeTest.java	88	18da05d03dfd13dd	
+member	liqp.tags.IncludeRelativeTest#<stmt5>	ssg.liquid.tags.IncludeRelativeTest#<stmt5>	Renamed	-	liqp/tags/IncludeRelativeTest.java	103	e1e5b53efeb7a8f8	
+member	liqp.tags.IncludeTest#<stmt10>	ssg.liquid.tags.IncludeTest#<stmt10>	Renamed	-	liqp/tags/IncludeTest.java	141	e29221801cef95b7	
+member	liqp.tags.IncludeTest#<stmt11>	ssg.liquid.tags.IncludeTest#<stmt11>	Renamed	-	liqp/tags/IncludeTest.java	151	9bbe6d3f1c0edd22	
+member	liqp.tags.IncludeTest#<stmt12>	ssg.liquid.tags.IncludeTest#<stmt12>	Renamed	-	liqp/tags/IncludeTest.java	160	2c26ad5fdc939762	
+member	liqp.tags.IncludeTest#<stmt13>	ssg.liquid.tags.IncludeTest#<stmt13>	Renamed	-	liqp/tags/IncludeTest.java	168	4689a2f17b542962	
+member	liqp.tags.IncludeTest#<stmt14>	ssg.liquid.tags.IncludeTest#<stmt14>	Renamed	-	liqp/tags/IncludeTest.java	177	ab0254e9a0f20240	
+member	liqp.tags.IncludeTest#<stmt15>	ssg.liquid.tags.IncludeTest#<stmt15>	Renamed	-	liqp/tags/IncludeTest.java	185	f14a1321d089b6c6	
+member	liqp.tags.IncludeTest#<stmt16>	ssg.liquid.tags.IncludeTest#<stmt16>	Renamed	-	liqp/tags/IncludeTest.java	203	702924464f330d99	
+member	liqp.tags.IncludeTest#<stmt17>	ssg.liquid.tags.IncludeTest#<stmt17>	Renamed	-	liqp/tags/IncludeTest.java	228	f08ac4521d665f6a	
+member	liqp.tags.IncludeTest#<stmt18>	ssg.liquid.tags.IncludeTest#<stmt18>	Renamed	-	liqp/tags/IncludeTest.java	237	29fc2721f43b597a	
+member	liqp.tags.IncludeTest#<stmt19>	ssg.liquid.tags.IncludeTest#<stmt19>	Renamed	-	liqp/tags/IncludeTest.java	248	333b12ac3c1f2b27	
+member	liqp.tags.IncludeTest#<stmt1>	ssg.liquid.tags.IncludeTest#<stmt1>	Renamed	-	liqp/tags/IncludeTest.java	23	7fb4a77b36ab41f3	
+member	liqp.tags.IncludeTest#<stmt20>	ssg.liquid.tags.IncludeTest#<stmt20>	Renamed	-	liqp/tags/IncludeTest.java	256	57862b9b6af61df7	
+member	liqp.tags.IncludeTest#<stmt21>	ssg.liquid.tags.IncludeTest#<stmt21>	Renamed	-	liqp/tags/IncludeTest.java	264	9034c6801c0cd137	
+member	liqp.tags.IncludeTest#<stmt22>	ssg.liquid.tags.IncludeTest#<stmt22>	Renamed	-	liqp/tags/IncludeTest.java	282	a4f8ea0ccdb30231	
+member	liqp.tags.IncludeTest#<stmt23>	ssg.liquid.tags.IncludeTest#<stmt23>	Renamed	-	liqp/tags/IncludeTest.java	302	43735c56bd2ccb54	
+member	liqp.tags.IncludeTest#<stmt24>	ssg.liquid.tags.IncludeTest#<stmt24>	Renamed	-	liqp/tags/IncludeTest.java	320	6fdb350aa16cbf7b	
+member	liqp.tags.IncludeTest#<stmt25>	ssg.liquid.tags.IncludeTest#<stmt25>	Renamed	-	liqp/tags/IncludeTest.java	340	7c305ff213f1fbda	
+member	liqp.tags.IncludeTest#<stmt26>	ssg.liquid.tags.IncludeTest#<stmt26>	Renamed	-	liqp/tags/IncludeTest.java	358	ae63414142d06cc3	
+member	liqp.tags.IncludeTest#<stmt27>	ssg.liquid.tags.IncludeTest#<stmt27>	Renamed	-	liqp/tags/IncludeTest.java	378	63e4429b136c6144	
+member	liqp.tags.IncludeTest#<stmt28>	ssg.liquid.tags.IncludeTest#<stmt28>	Renamed	-	liqp/tags/IncludeTest.java	399	a2470fb1faccb00e	
+member	liqp.tags.IncludeTest#<stmt29>	ssg.liquid.tags.IncludeTest#<stmt29>	Renamed	-	liqp/tags/IncludeTest.java	417	856f78ec7f3a0ffe	
+member	liqp.tags.IncludeTest#<stmt2>	ssg.liquid.tags.IncludeTest#<stmt2>	Renamed	-	liqp/tags/IncludeTest.java	54	35a281e2a00c8635	
+member	liqp.tags.IncludeTest#<stmt30>	ssg.liquid.tags.IncludeTest#<stmt30>	Renamed	-	liqp/tags/IncludeTest.java	432	e3437015edeb80d2	
+member	liqp.tags.IncludeTest#<stmt31>	ssg.liquid.tags.IncludeTest#<stmt31>	Renamed	-	liqp/tags/IncludeTest.java	449	3d725c4c29d9fd79	
+member	liqp.tags.IncludeTest#<stmt32>	ssg.liquid.tags.IncludeTest#<stmt32>	Renamed	-	liqp/tags/IncludeTest.java	468	d8182b4e65500651	
+member	liqp.tags.IncludeTest#<stmt33>	ssg.liquid.tags.IncludeTest#<stmt33>	Renamed	-	liqp/tags/IncludeTest.java	496	5a52553bec159538	
+member	liqp.tags.IncludeTest#<stmt34>	ssg.liquid.tags.IncludeTest#<stmt34>	Renamed	-	liqp/tags/IncludeTest.java	506	44dd3f852f555fcd	
+member	liqp.tags.IncludeTest#<stmt35>	ssg.liquid.tags.IncludeTest#<stmt35>	Renamed	-	liqp/tags/IncludeTest.java	523	6b10242b434cf562	
+member	liqp.tags.IncludeTest#<stmt36>	ssg.liquid.tags.IncludeTest#<stmt36>	Renamed	-	liqp/tags/IncludeTest.java	539	f0a6ed48f4c27204	
+member	liqp.tags.IncludeTest#<stmt37>	ssg.liquid.tags.IncludeTest#<stmt37>	Renamed	-	liqp/tags/IncludeTest.java	550	c64f261e11ea1c7d	
+member	liqp.tags.IncludeTest#<stmt3>	ssg.liquid.tags.IncludeTest#<stmt3>	Renamed	-	liqp/tags/IncludeTest.java	62	72a45d1a3df66a71	
+member	liqp.tags.IncludeTest#<stmt4>	ssg.liquid.tags.IncludeTest#<stmt4>	Renamed	-	liqp/tags/IncludeTest.java	69	591d9f673819d3e1	
+member	liqp.tags.IncludeTest#<stmt5>	ssg.liquid.tags.IncludeTest#<stmt5>	Renamed	-	liqp/tags/IncludeTest.java	76	a636c3dc37f48ca5	
+member	liqp.tags.IncludeTest#<stmt6>	ssg.liquid.tags.IncludeTest#<stmt6>	Renamed	-	liqp/tags/IncludeTest.java	84	4469fb30c04e68f7	
+member	liqp.tags.IncludeTest#<stmt7>	ssg.liquid.tags.IncludeTest#<stmt7>	Renamed	-	liqp/tags/IncludeTest.java	100	f34aca4a63d2d3ae	
+member	liqp.tags.IncludeTest#<stmt8>	ssg.liquid.tags.IncludeTest#<stmt8>	Renamed	-	liqp/tags/IncludeTest.java	115	880dfbd4f8006f98	
+member	liqp.tags.IncludeTest#<stmt9>	ssg.liquid.tags.IncludeTest#<stmt9>	Renamed	-	liqp/tags/IncludeTest.java	132	faff71e0c47bf22e	
+member	liqp.tags.IncludeTest#jekyllParser()	ssg.liquid.tags.IncludeTest#jekyllParser()	Renamed	-	liqp/tags/IncludeTest.java	559	4d32428ca9070762	
+member	liqp.tags.IncludeTest#liquidParser()	ssg.liquid.tags.IncludeTest#liquidParser()	Renamed	-	liqp/tags/IncludeTest.java	563	c2f45f1ed4684fb2	
+member	liqp.tags.IncrementTest#<stmt1>	ssg.liquid.tags.IncrementTest#<stmt1>	Renamed	-	liqp/tags/IncrementTest.java	22	6a1f5f189d31d359	
+member	liqp.tags.WhitespaceControlTest#<stmt1>	ssg.liquid.tags.WhitespaceControlTest#<stmt1>	Renamed	-	liqp/tags/WhitespaceControlTest.java	16	c551e933cff1f53f	
+member	liqp.tags.WhitespaceControlTest#<stmt2>	ssg.liquid.tags.WhitespaceControlTest#<stmt2>	Renamed	-	liqp/tags/WhitespaceControlTest.java	26	fc927f4be791068c	
+member	liqp.tags.WhitespaceControlTest#<stmt3>	ssg.liquid.tags.WhitespaceControlTest#<stmt3>	Renamed	-	liqp/tags/WhitespaceControlTest.java	36	6dd13abc273356f0	
+member	liqp.tags.WhitespaceControlTest#<stmt4>	ssg.liquid.tags.WhitespaceControlTest#<stmt4>	Renamed	-	liqp/tags/WhitespaceControlTest.java	46	261f02490192f015	
+member	liqp.tags.WhitespaceControlTest#<stmt5>	ssg.liquid.tags.WhitespaceControlTest#<stmt5>	Renamed	-	liqp/tags/WhitespaceControlTest.java	56	1ba8e41a4a1dd5b2	
+member	liqp.tags.WhitespaceControlTest#<stmt6>	ssg.liquid.tags.WhitespaceControlTest#<stmt6>	Renamed	-	liqp/tags/WhitespaceControlTest.java	66	5d9e6bf02eaff4a5	
+member	liqp.tags.WhitespaceControlTest#<stmt7>	ssg.liquid.tags.WhitespaceControlTest#<stmt7>	Renamed	-	liqp/tags/WhitespaceControlTest.java	76	71979da415eda89b	
+member	liqp.tags.WhitespaceControlTest#<stmt8>	ssg.liquid.tags.WhitespaceControlTest#<stmt8>	Renamed	-	liqp/tags/WhitespaceControlTest.java	86	e652b35ac06d0397	
+member	liqp.tags.WhitespaceWindowsControlTest#<stmt1>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt1>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	15	ace0994fbd9b671c	
+member	liqp.tags.WhitespaceWindowsControlTest#<stmt2>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt2>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	25	9672c137ef52fd85	
+member	liqp.tags.WhitespaceWindowsControlTest#<stmt3>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt3>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	35	4dd8786c740759cd	
+member	liqp.tags.WhitespaceWindowsControlTest#<stmt4>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt4>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	45	b847b37c857727b6	
+member	liqp.tags.WhitespaceWindowsControlTest#<stmt5>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt5>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	55	d52df2a8a264d986	
+member	liqp.tags.WhitespaceWindowsControlTest#<stmt6>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt6>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	65	bf0148067a963c80	
+member	liqp.tags.WhitespaceWindowsControlTest#<stmt7>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt7>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	75	88d7432bc2ddb579	
+member	liqp.tags.WhitespaceWindowsControlTest#<stmt8>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt8>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	85	785bb0f8596930ff	
