@@ -722,6 +722,68 @@ class CollectionsTransformSpec extends PortSuite:
                  "both refusals must be counted — an uncounted refusal is indistinguishable from no seam")
   }
 
+  test("a CONCRETE collection head at the callee's declared result disproves the pass-through guess") {
+    // The structural guess — "the result type already occurs on the INPUT side" — is also the shape
+    // of every non-identity `List`→`List` third-party utility (`reverse`, `sorted`, `filtered`), and
+    // there the value crossing the call really is java's. Suppressing the wrap there ALSO recorded
+    // nothing, which is the pre-K15 state at the very calls K15 was built for.
+    //
+    // Where the class file can be read the guess is not needed: a MethodType is all-or-none, so a
+    // member whose result is a type VARIABLE is signature-less by construction (`ExternalSignatureSpec`)
+    // — and a readable result whose HEAD is a type this phase maps is therefore a real java
+    // collection, whatever the argument types happen to be. The phase's own table answers it (§4.56).
+    // The RECEIVER half of the guess is what this fixture aims at, because it is the half nothing
+    // else moves: a bridged ARGUMENT stops being a scala collection before the guess reads it, while
+    // a receiver's type is never bridged. A generic third-party holder instantiated at a collection
+    // makes every concrete-returning member of it read as a pass-through.
+    val ph = new CollectionsTransform
+    val p  = portAgainst(
+      List("ext/Holder.java" ->
+        """package ext;
+          |public class Holder<T> {
+          |  public T get() { return null; }
+          |  public java.util.List<String> names() { return new java.util.ArrayList<String>(); }
+          |}""".stripMargin),
+      """package demo;
+        |import java.util.*;
+        |class Names {
+        |  private final ext.Holder<List<String>> holder = new ext.Holder<List<String>>();
+        |  List<String> names() { return holder.names(); }
+        |  List<String> value()  { return holder.get(); }
+        |}
+        |""".stripMargin, ph)
+    // `names()` — the class file SAYS `java.util.List`, so the value crossing the call is java's.
+    assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(this.holder.names())")
+    // `get()` — a type-variable result, so the member is signature-less and the guess is right.
+    assertNotEmits(p, "fromJava(this.holder.get())")
+    assertEquals(ph.boundary(p.after)
+                   .count(_.slot.startsWith("external result (unverified pass-through")), 1)
+  }
+
+  test("…and where the STRUCTURAL GUESS is all there is, the suppression is COUNTED in its own lane") {
+    // `Objects.requireNonNull(m)` and `ThreadLocal<Map<K,V>>.get()` are signature-less — a
+    // type-variable result leaves the member at `NoType` — so nothing can decide whether the value
+    // crossing the call was ever java's, and the wrap stays suppressed. What may NOT happen is the
+    // early exit taking the count with it: a suppression nobody counted is indistinguishable from a
+    // seam that does not exist (M6), and it is a DIFFERENT fact from "the argument's fit could not
+    // be verified" — the two must never be confusable, so it gets its own slot.
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.*;
+        |class Through2 {
+        |  private final ThreadLocal<Map<String, Object>> local = new ThreadLocal<Map<String, Object>>();
+        |  Map<String, Object> checked(Map<String, Object> m) { return Objects.requireNonNull(m); }
+        |  Map<String, Object> here() { return local.get(); }
+        |}
+        |""".stripMargin, ph)
+    assertNotEmits(p, "fromJava")
+    val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee)
+    assertEquals(clue(fs).count(_.slot.startsWith("external result (unverified pass-through")), 2)
+    // …and it is NOT the cannot-verify-argument lane, which is about a different slot of the call.
+    assert(fs.forall(f => f.slot.startsWith("external result") || f.slot.startsWith("argument")))
+  }
+
   test("a call this phase REWRITES gets its arguments BARE — no wrap may precede the rewrite") {
     // `list.addAll(other.list)` becomes `list ++= other.list`, and `++=` wants an `IterableOnce`.
     // `java.util.List#addAll`'s formal is `java.util.Collection`, which `remap` reads as the SHIM —

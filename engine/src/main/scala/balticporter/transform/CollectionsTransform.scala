@@ -932,9 +932,23 @@ final class CollectionsTransform(
     * that is not a claim being made about a value — after the wrap the value really is that type
     * (ENGINE-LIMITS K6's first rule). */
   private def externalProducer(t: Tree.Apply)(using p: Program): Term =
-    if fromJavaSym == SymId.None || !externalCallee(t.method) || passesThrough(t) then t
+    if fromJavaSym == SymId.None || !externalCallee(t.method) then t
     else headSym(t.tpe).filter(s => kindOf.contains(s) || shimSyms.contains(s)) match
       case scala.None => t
+      // …the pass-through arm is asked HERE and not at the top, so a call whose result is not a
+      // collection at all never reaches it — and so a SUPPRESSION is a decision this phase made
+      // about a value it would otherwise have wrapped, which is the only kind worth counting.
+      case Some(_) if passesThrough(t) =>
+        // a readable signature settles it and the guess is not consulted (see [[passesThrough]]);
+        // an unreadable one leaves a REFUSAL RESTING ON A GUESS, which is its own residue and is
+        // not the same fact as `externalArgs`' cannot-verify — that one is about a different slot
+        // of the same call. Ordering the two on one lane would let a reader take either for the
+        // other, which is the classification failure §4.45 is about.
+        if !signatureReadable(t) then
+          seam("external result (unverified pass-through, no signature)",
+               "a live scala view, IF the value was ever java's",
+               TirPrinter.tpe(t.tpe, TirPrinter.Style.canonical), t.origin, t.method)
+        t
       case Some(s) if !liveWrappableSyms.contains(s) =>
         seam("external result", "a live scala view", TirPrinter.tpe(t.tpe, TirPrinter.Style.canonical),
              t.origin, t.method)
@@ -963,13 +977,53 @@ final class CollectionsTransform(
     * type or anywhere inside the receiver's. That is what a generic pass-through IS, and it costs
     * the honest cases nothing: `ctx.atom()`'s receiver is a parse-tree context that mentions no
     * collection, and `ServiceLoader<T>.iterator()`'s receiver mentions `T` but not the `JavaIterator`
-    * its result became. */
-  private def passesThrough(t: Tree.Apply)(using Program): Boolean =
-    val want = t.tpe
-    want != TypeRepr.NoType && (
-      t.args.exists(_.tpe == want) || (t.fun match
-        case Tree.Select(recv, _, _, _) => occursIn(want, recv.tpe)
-        case _                          => false))
+    * its result became.
+    *
+    * ==…but the guess is CONSULTED LAST, because it is also the shape of an honest utility==
+    * "The result type occurs on the input side" is equally the shape of every non-identity
+    * `List`→`List` third party — `reverse`, `sorted`, a cache's `getOrDefault` — where the value
+    * crossing the call really IS java's; and of every concrete-returning member of a generic holder
+    * instantiated at a collection (`Holder<List<String>>.names()`), where the RECEIVER carries the
+    * occurrence and nothing bridges a receiver. Suppressing there is a wrap not emitted at a real
+    * seam, and — because the suppression was an EARLY EXIT — a seam not counted either, which is the
+    * pre-K15 state at the very calls K15 exists for.
+    *
+    * So the CLASS FILE is asked first, wherever it can be read. A `MethodType` is all-or-none
+    * (`ExternalSignatureSpec`), so a member whose result is a type VARIABLE is signature-less by
+    * construction — which means a READABLE result whose HEAD is a type this phase maps is a real
+    * java collection, whatever the argument and receiver types happen to be. That is the phase's own
+    * table answering the question (§4.56), and it leaves the guess exactly the calls K15 measured it
+    * on: the ones with no signature to read. Those are still suppressed — and now COUNTED, in a lane
+    * of their own (see [[externalProducer]]). */
+  private def passesThrough(t: Tree.Apply)(using p: Program): Boolean =
+    !declaredResultIsMapped(t) && {
+      val want = t.tpe
+      want != TypeRepr.NoType && (
+        t.args.exists(_.tpe == want) || (t.fun match
+          case Tree.Select(recv, _, _, _) => occursIn(want, recv.tpe)
+          case _                          => false))
+    }
+
+  /** does the CLASS FILE declare this callee's result to be a collection the mapping covers?
+    *
+    * Read LITERALLY and never through `remap`: an unowned symbol's signature is a fact about a
+    * compiled class file, which `StandardTraversal.mapSymbols` deliberately does not move (§4.56),
+    * so the head read here is still java's own name. `None` — no signature at all — is not evidence
+    * of anything and answers `false`, which is what leaves the structural guess in charge. */
+  private def declaredResultIsMapped(t: Tree.Apply)(using p: Program): Boolean =
+    declaredResult(t).flatMap(headSym).flatMap(p.symbolOf).exists(s => typeMap.contains(s.fullName))
+
+  /** the callee's DECLARED result type, where the class file could be read for one. */
+  private def declaredResult(t: Tree.Apply)(using p: Program): Option[TypeRepr] =
+    p.symbolOf(t.method).map(_.info).collect {
+      case TypeRepr.MethodType(_, ret, _)                       => ret
+      case TypeRepr.PolyType(_, TypeRepr.MethodType(_, ret, _)) => ret
+    }
+
+  /** could the callee's class file be read for a signature at all? The two answers a suppression has
+    * to be told apart by: a refusal the CLASS FILE licensed, and one resting on a GUESS. */
+  private def signatureReadable(t: Tree.Apply)(using p: Program): Boolean =
+    p.symbolOf(t.method).exists(_.info != TypeRepr.NoType)
 
   /** does `needle` occur anywhere inside `hay`, as a whole type? Structural equality, and the
     * traversal is [[StandardTraversal.mapType]]'s for CLAUDE.md §3's reason. */

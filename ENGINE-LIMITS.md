@@ -2444,6 +2444,33 @@ pass-through is, and it costs the honest cases nothing: `ctx.atom()`'s receiver 
 context mentioning no collection, and `ServiceLoader<T>.iterator()`'s receiver mentions `T` but not
 the `JavaIterator` its result became.
 
+**…and that guess is CONSULTED LAST, because a guess that suppresses ALSO suppressed the count.**
+"The result type occurs on the input side" is equally the shape of every non-identity `List`→`List`
+third party — `reverse`, `sorted`, a cache's `getOrDefault` — where the value crossing the call
+really is java's; and of every concrete-returning member of a generic holder instantiated at a
+collection (`Holder<List<String>>.names()`), where the RECEIVER carries the occurrence and nothing
+bridges a receiver. The suppression was an EARLY EXIT returning the tree, so those calls got no wrap
+AND no finding: **the pre-K15 state, at the very calls K15 exists for**, reachable by a guess the
+entry above validated against seven sites of one shape.
+
+Two halves, and only the first is a fix:
+
+- **ask the CLASS FILE first, wherever it can be read.** A `MethodType` is all-or-none, so a member
+  whose result is a type VARIABLE is signature-less by construction — which means a READABLE result
+  whose HEAD is a type the mapping covers is a real java collection, whatever the argument and
+  receiver types happen to be. The phase's own table answers it (§4.56) and the guess never runs.
+- **where the guess IS all there is, the suppression is a residue and gets its own lane** —
+  `external result (unverified pass-through, no signature)`, deliberately not the
+  `argument (external callee, no signature)` lane, which is about a DIFFERENT SLOT of the same call.
+  Ordering the two together would let a reader take either for the other.
+
+**Measured on liqp: 74 → 74 errors, `collection-boundary` 10 → 16, and ZERO member digests moved** —
+which is the whole result: every one of liqp's six pass-through sites is a `requireNonNull`/
+`ThreadLocal.get` whose class file cannot be read, so nothing was newly wrapped and six silent
+suppressions became six counted ones. The readable-signature half is exercised by
+`CollectionsTransformSpec`'s own class-file fixture and by nothing in the corpus yet; a library that
+uses a third-party `List`→`List` utility is the one that will move an error count with it.
+
 …and a call the phase itself rewrote is not looked at at all: ordering the seam arms first reported
 `Collections.unmodifiableSet(mySet)` as an unverifiable external argument while the same run was
 retargeting it — eight findings closed before they were written down, which is §4.45's
