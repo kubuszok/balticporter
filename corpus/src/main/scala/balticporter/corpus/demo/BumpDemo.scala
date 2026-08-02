@@ -108,7 +108,7 @@ object BumpDemo:
       .toList.sorted
     val cfg = FrontendConfig(root, files, cp, resolutionRoots = List(root))
     val prov = Provenance("Liqp", "bump-demo", "MIT", "liqp/src/main/java")
-    val parsed = new SpoonFrontend().parseTolerant(cfg)
+    val parsed = new SpoonFrontend(ScoutPolicy.PreservedAnnotationPrefixes).parseTolerant(cfg)
     val units = parsed.collect { case (_, Right(u)) => u }
     val sentinels = SentinelRegistry.compute(units)
     val ctorReg = new balticporter.emit.CtorRegistry(units)

@@ -24,8 +24,22 @@ import scala.jdk.CollectionConverters.*
 
 /** Frontend on Spoon 11.x (ECJ underneath, full-classpath mode, comments enabled).
   * The only module that sees Spoon types (DESIGN.md §3.2 insulation rule).
+  *
+  * @param preservedAnnotationPrefixes
+  *   annotation packages carried through to the output verbatim, by FQN prefix — CLAUDE.md §1(b),
+  *   mechanism here and policy at the porting program. WHICH annotations are behaviour-bearing is a
+  *   fact about a library and its dependencies, never about java: a serialization framework's
+  *   annotations drive a custom serializer at run time and must survive, a nullness hint is
+  *   advisory and must not, and a cross-platform port would substitute the first set rather than
+  *   keep it. Inlined here the list named one library's dependencies inside a shared module, which
+  *   is the same mistake `ReflectionToPortableTransform` made one layer up.
+  *
+  *   `Nil` — the default — preserves nothing beyond `java.lang.Deprecated` (mapped to
+  *   `scala.deprecated`, which is a java-to-scala fact and stays universal), so "turned off" needs
+  *   no code path. Everything else an element carries is then reported through `unsupported`, which
+  *   is the honest answer for an annotation nobody claimed.
   */
-final class SpoonFrontend extends Frontend:
+final class SpoonFrontend(preservedAnnotationPrefixes: List[String] = Nil) extends Frontend:
 
   def parse(cfg: FrontendConfig): List[BUnit] =
     val typesByFile = buildModel(cfg)
@@ -33,7 +47,7 @@ final class SpoonFrontend extends Frontend:
       val abs = RealPath.ofExisting(cfg.sourceRoot.resolve(rel), s"declared source file $rel")
       val types = typesByFile.getOrElse(abs, throw Unsupported(rel, "-", "file produced no types"))
       val src = Files.readString(abs)
-      new UnitBuilder(rel, src).build(types)
+      new UnitBuilder(rel, src, preservedAnnotationPrefixes).build(types)
     }
 
   /** Like parse, but isolates conversion failures per file (corpus/coverage runs).
@@ -46,7 +60,7 @@ final class SpoonFrontend extends Frontend:
         val abs = RealPath.ofExisting(cfg.sourceRoot.resolve(rel), s"declared source file $rel")
         val types = typesByFile.getOrElse(abs, throw Unsupported(rel, "-", "file produced no types"))
         val src = Files.readString(abs)
-        new UnitBuilder(rel, src).build(types)
+        new UnitBuilder(rel, src, preservedAnnotationPrefixes).build(types)
       }.toEither
     }
 
@@ -78,7 +92,8 @@ final class SpoonFrontend extends Frontend:
       .mapValues(_.sortBy(t => t.getPosition.getSourceStart))
       .toMap
 
-private final class UnitBuilder(sourcePath: String, source: String):
+private final class UnitBuilder(sourcePath: String, source: String,
+                                preservedAnnotationPrefixes: List[String] = Nil):
 
   private def unsupported(el: CtElement, what: String): Nothing =
     val pos = el.getPosition
@@ -212,12 +227,6 @@ private final class UnitBuilder(sourcePath: String, source: String):
     "java.lang.FunctionalInterface", // Scala SAM conversion needs no marker
     "java.lang.Deprecated",          // mapped to scala.deprecated in preservedAnnotations
   )
-
-  /** annotations carried through to the output verbatim. Jackson annotations are
-    * behavior-bearing on the JVM (custom serializers drive the eager-render path) —
-    * a cross-platform port would substitute them (ssg's disposition), but the
-    * JVM-faithful port preserves them. */
-  private val preservedAnnotationPrefixes = List("org.junit.", "junit.", "com.fasterxml.jackson.")
 
   private def checkAnnotations(el: CtElement & CtModifiable): Boolean =
     var hasOverride = false

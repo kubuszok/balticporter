@@ -43,7 +43,7 @@ object XwikiProject:
 
     val cfg = FrontendConfig(fmRoot, files, cp, resolutionRoots = moduleRoots)
     val prov = Provenance("flexmark-java", "cold-port", "BSD-2-Clause", "flexmark-java")
-    val frontend = new SpoonFrontend
+    val frontend = new SpoonFrontend(ScoutPolicy.PreservedAnnotationPrefixes)
     val units = frontend.parse(cfg)
     val sentinels = SentinelRegistry.compute(units)
     val ctorReg = Some(new balticporter.emit.CtorRegistry(units))

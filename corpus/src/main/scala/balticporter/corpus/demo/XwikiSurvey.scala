@@ -59,7 +59,7 @@ object XwikiSurvey:
     val cp = annotationsJar ++ LiqpClasspath.junitClasspath(repoRoot)
     val cfg = FrontendConfig(fmRoot, files, cp, resolutionRoots = moduleRoots.map(_._2))
     val prov = Provenance("flexmark-java", "survey", "BSD-2-Clause", "flexmark-java")
-    val parsed = new SpoonFrontend().parseTolerant(cfg)
+    val parsed = new SpoonFrontend(ScoutPolicy.PreservedAnnotationPrefixes).parseTolerant(cfg)
     val units = parsed.collect { case (_, Right(u)) => u }
     val sentinels = SentinelRegistry.compute(units)
     val ctorReg = Some(new balticporter.emit.CtorRegistry(units))

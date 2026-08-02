@@ -52,7 +52,7 @@ object LiqpCorpus:
       "liqp/parser/LiquidSupport.java" -> "Jackson replaced by LiquidSupport trait (ssg-data-commons DataView)",
     )
 
-    val parsedAll = new SpoonFrontend().parseTolerant(cfg)
+    val parsedAll = new SpoonFrontend(ScoutPolicy.PreservedAnnotationPrefixes).parseTolerant(cfg)
     val sentinels = balticporter.emit.SentinelRegistry.compute(parsedAll.collect { case (_, Right(u)) => u })
     val ctorReg = Some(new balticporter.emit.CtorRegistry(parsedAll.collect { case (_, Right(u)) => u }))
     val results = parsedAll.map { case (rel, parsed) =>

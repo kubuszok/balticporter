@@ -61,7 +61,7 @@ object LiqpM0:
     )
 
     println(s"[m0] translating ${plan.files.length} files from $sourceRoot")
-    val translated = M0Pipeline.translateDeterministic(plan, () => new SpoonFrontend)
+    val translated = M0Pipeline.translateDeterministic(plan, () => new SpoonFrontend(ScoutPolicy.PreservedAnnotationPrefixes))
     println("[m0] determinism: OK (double translation byte-identical)")
     println("[m0] comments: OK (preservation invariant held for all units)")
 

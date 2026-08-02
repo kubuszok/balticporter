@@ -30,7 +30,7 @@ object VocabDemo:
 
     def translate(): String =
       val cfg = FrontendConfig(sourceRoot, List("demo/Registry.java"), Nil, Nil)
-      val unit = new SpoonFrontend().parse(cfg).head
+      val unit = new SpoonFrontend(ScoutPolicy.PreservedAnnotationPrefixes).parse(cfg).head
       val prov = Provenance("balticporter-demo", "n/a", "Apache-2.0", "corpus/vocab-demo/src")
       ScalaPrinter.print(PassPipeline.run(passes, unit), prov)
 

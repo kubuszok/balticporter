@@ -49,7 +49,7 @@ object FlexmarkCorpus:
     val cp = annotationsJar ++ LiqpClasspath.junitClasspath(repoRoot)
     val cfg = FrontendConfig(fmRoot, files, cp, resolutionRoots = moduleRoots)
     val prov = Provenance("flexmark-java", "baseline", "BSD-2-Clause", "flexmark-java")
-    val parsed = new SpoonFrontend().parseTolerant(cfg)
+    val parsed = new SpoonFrontend(ScoutPolicy.PreservedAnnotationPrefixes).parseTolerant(cfg)
     val sentinels = SentinelRegistry.compute(parsed.collect { case (_, Right(u)) => u })
     val ctorReg = Some(new balticporter.emit.CtorRegistry(parsed.collect { case (_, Right(u)) => u }))
 

@@ -17,13 +17,17 @@ package balticporter.core
 // (`TirCacheKey`, in this file's neighbour `Cache.scala`), determinism by
 // double-translation, `SbtGen` wiring and provenance.
 //
-// It is NOT deleted, and must not be. EIGHT corpus programs still translate through
-// it — LiqpCorpus, LiqpM0, LiqpProject, XwikiProject, XwikiSurvey, FlexmarkCorpus,
+// It is NOT deleted, and must not be. SEVEN corpus programs still translate through
+// it — LiqpCorpus, LiqpM0, XwikiProject, XwikiSurvey, FlexmarkCorpus,
 // BumpDemo, VocabDemo — covering liqp and
 // xwiki/flexmark, which are ssg's Java libraries.
 // (It was nine: jbump's scout, `JbumpCorpus`, was retired when jbump became a real
-// TIR port. That is the shape of this list's retirement — a library leaves it by
-// being ported properly, not by having its scout deleted.)
+// TIR port, and `LiqpProject` — the BIR whole-corpus ASSEMBLY for liqp, with its own
+// sbt emission, its own JUnit4 test translation and one hand-written override —
+// went the same way once `corpus/ports/liqp/{main,test}.conf` and `just liqp-measure`
+// did all of it through the TIR and MEASURED it. That is the shape of this list's
+// retirement — a library leaves it by being ported properly, not by having its scout
+// deleted. liqp's two remaining scouts survey; they do not assemble.)
 // (SpoonTirEmitProject is NOT a dependent: it translates through the TIR and touches
 // this path only for `M0Pipeline.compileGate` — do not put it on a migration work list.)
 // Moving them to

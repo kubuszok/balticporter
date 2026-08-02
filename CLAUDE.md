@@ -136,8 +136,16 @@ code** — test sources included, because a fixture that hard-codes one library'
 mistake one layer down:
 
 ```
-grep -rn --include='*.scala' -E "badlogic|libgdx" api engine frontend-spoon runtime | grep -vE ":\s*(\*|//)"
+grep -rn --include='*.scala' -E "badlogic|libgdx|liqp|liquid\.parser|earlygrey|simplegraphs|dongbat|jbump|czyzby|noise4j|tommyettinger|anim8|crashinvaders|eskalon|mgsx|fasterxml|antlr|strftime" api engine frontend-spoon runtime | grep -vE ":\s*(\*|//|/\*)"
 ```
+
+**Every corpus library's identifying string is in that pattern, and so are its DEPENDENCIES'.** One
+library's name in the engine is the mistake the rule is about; one library's *dependency* named
+there is the same mistake with an extra hop, and both have now been found — `PlatformLint` carried
+`liquid.parser.`, `ua.co.k.` and jackson, and `SpoonFrontend` decided which annotations survive from
+a hard-coded `com.fasterxml.jackson.`. Add the new library's strings when you add the library (§2),
+and note the third `grep -v` alternative: a doc comment opening with `/*` is documentation and is
+wanted (the rule is about code), which the two-alternative filter used to let through as a hit.
 
 Library names in **doc comments** are fine and wanted — the worked example that justifies a general
 rule (`GL30Interceptor` witnessing the export diamond, `Array<? extends T>` witnessing array
