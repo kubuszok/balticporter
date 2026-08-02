@@ -107,6 +107,62 @@ object JavaCollections:
     val i = xs.indexWhere(e => if o == null then e == null else o.equals(e))
     if i < 0 then false else { xs.remove(i); true }
 
+  /** `java.util.Collection.toArray()` — a FRESH `Object[]` of exactly `size`, in iteration order.
+    *
+    * Not `xs.toArray`, and the difference is not stylistic: scala's `toArray` takes a `ClassTag[B]`
+    * and therefore allocates an array of the ELEMENT's runtime class, so a `Buffer[String]` would
+    * hand back a `String[]` where java hands back an `Object[]`. That is invisible to a compile —
+    * an `Array[String]` conforms nowhere an `Array[Object]` is wanted in scala (arrays are
+    * invariant), so it fails at the SLOT and reads as a missing mapping; and where the result flows
+    * into an `Object` it type-checks and diverges only at `arr[0] = someNonString`, which java
+    * permits and an `Object[]`-declared-`String[]` rejects with `ArrayStoreException`. Allocating
+    * `Object[]` is java's own contract, stated on `Collection.toArray()`. */
+  def toArray(xs: scala.collection.Iterable[?]): Array[Object] =
+    val out = new Array[Object](xs.size)
+    var i   = 0
+    val it  = xs.iterator
+    while it.hasNext do
+      out(i) = it.next().asInstanceOf[Object]
+      i += 1
+    out
+
+  /** `java.util.Collection.toArray(T[] a)` — java's THREE-part contract, reproduced exactly.
+    *
+    * Java does not simply allocate: it fills the caller's array when the elements fit, and the
+    * caller may be relying on that (`list.toArray(shared)` and then reading `shared`). The contract,
+    * from `Collection.toArray(T[])` and implemented by `AbstractCollection`:
+    *
+    *   1. **`a.length >= size`** — the elements are written INTO `a`, which is also what is
+    *      returned. The array the caller passed is the array the caller gets back.
+    *   2. **`a.length < size`** — a NEW array is allocated, with `a`'s RUNTIME component type
+    *      (`java.util.Arrays.copyOf`, which is what preserves it — a fresh `Array[A]` here would
+    *      have the erased component type and the result would throw `ArrayStoreException` on the
+    *      first element the caller stored into it through a `T[]`-typed reference).
+    *   3. **the NULL TERMINATOR** — if the returned array is LONGER than the collection, index
+    *      `size` is set to `null`, so a caller that walks until it sees a `null` stops in the right
+    *      place. Java sets exactly that one element and leaves the rest of the tail alone; so does
+    *      this.
+    *
+    * Every one of the three is a CLAUDE.md §4.4 shape — a naive `xs.toArray` compiles, returns the
+    * right elements, and silently breaks all three: it never fills `a`, so an aliasing caller reads
+    * a stale array; it allocates on the element's class rather than `a`'s; and it is exactly `size`
+    * long, so the terminator a caller looks for is never written. None of that moves a compile-error
+    * count, which is why the contract is spelled out here and pinned in `JavaCollectionsSpec`.
+    *
+    * `java.util.Arrays.copyOf` rather than `java.lang.reflect.Array.newInstance`: the two do the
+    * same thing here, and only the first survives `PortabilityCheck` (reflection does not exist on
+    * Scala.js or Native). */
+  def toArray[A <: AnyRef](xs: scala.collection.Iterable[?], a: Array[A]): Array[A] =
+    val n   = xs.size
+    val out = if a.length >= n then a else java.util.Arrays.copyOf(a, n)
+    var i   = 0
+    val it  = xs.iterator
+    while it.hasNext do
+      out(i) = it.next().asInstanceOf[A]
+      i += 1
+    if out.length > n then out(n) = null.asInstanceOf[A]
+    out
+
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)
 

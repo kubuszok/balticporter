@@ -198,6 +198,64 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // toArray — java's THREE-part contract, none of which a naive `xs.toArray` honours
+  // -------------------------------------------------------------------------------------------
+
+  test("toArray() allocates Object[] — NOT an array of the element's runtime class") {
+    // scala's own `toArray` takes a `ClassTag[B]` and allocates on the ELEMENT's class, so a
+    // `Buffer[String]` would hand back a `String[]` where java hands back an `Object[]`. Where the
+    // result flows into an `Object` that type-checks and then throws `ArrayStoreException` on the
+    // first non-String store — which java permits through an `Object[]`.
+    val out = JavaCollections.toArray(ArrayBuffer("a", "b"))
+    assertEquals(out.getClass.getComponentType, classOf[Object])
+    assertEquals(out.toList, List[Object]("a", "b"))
+    out(0) = Integer.valueOf(1) // an Object[] accepts this; a String[] would throw
+    assertEquals(out(0), Integer.valueOf(1): Object)
+  }
+
+  test("toArray() is exactly `size` long and in ITERATION order") {
+    assertEquals(JavaCollections.toArray(ArrayBuffer.empty[String]).length, 0)
+    assertEquals(JavaCollections.toArray(ListBuffer(3, 1, 2)).toList.map(_.toString), List("3", "1", "2"))
+  }
+
+  test("toArray(a) FILLS the caller's array when the elements fit, and returns THAT array") {
+    // java's contract, and the reason this is not an allocate-and-copy: a caller may pass an array
+    // it still holds and read it afterwards. An implementation that always allocated would compile,
+    // return the right elements and leave the caller's array untouched (§4.4).
+    val a   = new Array[String](3)
+    val out = JavaCollections.toArray(ArrayBuffer("x", "y"), a)
+    assert(out eq a, "the caller's array must be the array returned when it fits")
+    assertEquals(a(0), "x")
+    assertEquals(a(1), "y")
+  }
+
+  test("…and writes the NULL TERMINATOR at index `size` when the array is longer") {
+    val a = Array("p", "q", "r", "s")
+    JavaCollections.toArray(ArrayBuffer("x", "y"), a)
+    assertEquals(a(2), null, "java sets exactly index `size` to null")
+    assertEquals(a(3), "s", "…and leaves the rest of the tail alone")
+  }
+
+  test("toArray(a) allocates on the argument's RUNTIME component type when it does not fit") {
+    // `java.util.Arrays.copyOf` and not a fresh `Array[A]`: the element type is erased here, so a
+    // fresh array would have component type `Object` and the caller's `T[]`-typed reference would
+    // throw `ArrayStoreException` on its first store.
+    val a: Array[Object] = new Array[String](0).asInstanceOf[Array[Object]]
+    val out = JavaCollections.toArray(ArrayBuffer("x", "y"), a)
+    assert(!(out eq a))
+    assertEquals(out.length, 2)
+    assertEquals(out.getClass.getComponentType, classOf[String])
+    assertEquals(out.toList, List[Object]("x", "y"))
+  }
+
+  test("toArray(a) on an exact fit writes no terminator and does not grow") {
+    val a   = new Array[String](2)
+    val out = JavaCollections.toArray(ArrayBuffer("x", "y"), a)
+    assert(out eq a)
+    assertEquals(out.toList, List("x", "y"))
+  }
+
+  // -------------------------------------------------------------------------------------------
   // Map.Entry's statics over the Tuple2 a Map.Entry becomes
   // -------------------------------------------------------------------------------------------
 

@@ -1321,6 +1321,27 @@ final class CollectionsTransform(
       case ("remove", List(x), Kind.Seq) if removesByValue(t) && sym("removeValue") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("removeValue"), TypeRepr.NoType, so), List(recv, x),
                         sym("removeValue"), t.tpe, t.origin))
+      // ---- `Collection.toArray()` and `toArray(T[])` ----
+      //
+      // Neither has a scala counterpart with java's meaning, and left alone BOTH bind to something
+      // that is not even a `toArray`: scala's is PARENLESS, so `xs.toArray()` parses as
+      // `xs.toArray.apply()` — an Array INDEX — and the compiler says `missing argument for
+      // parameter i of method apply in class Array`, an error naming neither collections nor
+      // `toArray`. The one-argument form is the same misparse with the array in the index slot
+      // (`Found: Array[Object] / Required: Int`).
+      //
+      // The rewrite is a `JavaCollections` helper for each, and the reason is java's CONTRACT rather
+      // than the arity: `toArray()` allocates `Object[]` where scala's `toArray` allocates on the
+      // element's class, and `toArray(T[])` fills the caller's array when it fits, allocates on its
+      // RUNTIME component type when it does not, and writes a null terminator. All three are
+      // CLAUDE.md §4.4 shapes — `xs.toArray` compiles and silently does none of them. See the
+      // helpers' own docs, which are where the contract is stated.
+      case ("toArray", Nil, Kind.Seq | Kind.Set) if sym("toArray") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("toArray"), TypeRepr.NoType, so), List(recv),
+                        sym("toArray"), t.tpe, t.origin))
+      case ("toArray", List(a), Kind.Seq | Kind.Set) if sym("toArray") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("toArray"), TypeRepr.NoType, so), List(recv, arrayArg(a, t)),
+                        sym("toArray"), t.tpe, t.origin))
       case ("add", List(i, x), Kind.Seq)        => Some(call(recv, insertSym, List(i, x), t, so)) // insert at index
       case ("add", List(x), _)                  => Some(infix(recv, opPlusEq, List(x), t, so))    // xs += x
       // ---- java Deque, as `LinkedList`/`ArrayDeque` are routinely used ----
@@ -1401,6 +1422,26 @@ final class CollectionsTransform(
   private def keyArg(arg: Term, recv: Term): Term = (arg, keyType(recv.tpe)) match
     case (Tree.Typed(inner, _, _, _), Some(k)) if k != TypeRepr.NoType && inner.tpe == k => inner
     case _                                                                               => arg
+
+  /** [[keyArg]]'s rule at `toArray(T[])` — the ERASURE coercion the frontend synthesised off java's
+    * formal, stripped exactly where the scala helper wants what lies beneath it.
+    *
+    * Java declares `<T> T[] toArray(T[] a)`, whose erased formal is `Object[]`, so the frontend
+    * emits `new LNode[n].asInstanceOf[Array[Object]]` (G14, the same rule that widens a map key to
+    * `Object`). `JavaCollections.toArray[A]` infers `A` FROM the argument, so with the cast left on
+    * it infers `Object` and hands back an `Array[Object]` where java's call — which inferred
+    * `T = LNode` from the unerased argument — produced an `LNode[]`. Scala's arrays are invariant,
+    * so that is a compile error at the slot rather than anything silent; but it is a compile error
+    * the rewrite MADE, and the fix is to give the helper the type java's own inference saw.
+    *
+    * The test is STRUCTURAL and names no type (CLAUDE.md §4.56): strip when what the cast wraps
+    * ALREADY has the type this call RESULTS in — that is precisely "java inferred `T` from the
+    * unerased argument", because the call's recorded result type IS `T[]`. A java source that
+    * really wrote `(Object[]) xs` inferred `T = Object`, so the call's result type is the CAST's
+    * type and not the inner's, the guard fails, and the cast stays. */
+  private def arrayArg(arg: Term, t: Tree.Apply): Term = arg match
+    case Tree.Typed(inner, _, _, _) if inner.tpe != TypeRepr.NoType && inner.tpe == t.tpe => inner
+    case _                                                                                => arg
 
   private def methodName(m: SymId)(using p: Program): String = p.symbolOf(m).map(_.name).getOrElse("")
 
@@ -1592,7 +1633,8 @@ object CollectionsTransform:
     * `SymId.None` that declines the rewrite rather than a dangling name in emitted code. */
   val StaticHelpers: List[String] =
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "removeValue",
-         "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange")
+         "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
+         "toArray")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give
@@ -1656,9 +1698,10 @@ object CollectionsTransform:
       "size", "isEmpty", "keySet", "values", "nonEmpty", "hasNext", "next",
     ),
     Kind.Seq.toString   -> Set("get", "set", "remove", "addLast", "offer", "offerLast",
-                               "addFirst", "offerFirst", "poll", "pollFirst", "peek", "peekFirst", "element"),
+                               "addFirst", "offerFirst", "poll", "pollFirst", "peek", "peekFirst", "element",
+                               "toArray"),
     Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values"),
-    Kind.Set.toString   -> Set("remove"),
+    Kind.Set.toString   -> Set("remove", "toArray"),
     Kind.Entry.toString -> Set("getKey", "getValue"),
   )
 

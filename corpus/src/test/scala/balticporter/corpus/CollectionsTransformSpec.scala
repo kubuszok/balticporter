@@ -448,6 +448,55 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "this.m.put(key, value)")
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // `Collection.toArray()` and `toArray(T[])`. Left alone, NEITHER binds to a `toArray` at all:
+  // scala's is PARENLESS, so `xs.toArray()` parses as `xs.toArray.apply()` — an array INDEX — and
+  // the error names `method apply in class Array`. Both go to a `JavaCollections` helper because
+  // java's CONTRACT (Object[] component type; fill-the-argument-if-it-fits; the null terminator)
+  // is what a naive `xs.toArray` silently breaks — §4.4, and pinned in `JavaCollectionsSpec`.
+  // ---------------------------------------------------------------------------------------------
+
+  test("toArray() and toArray(T[]) go to the runtime helper, on Seq and on Set alike") {
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Arrays2 {
+        |  private final List<String> xs = new ArrayList<String>();
+        |  private final Set<String> ys = new HashSet<String>();
+        |  Object[] all() { return xs.toArray(); }
+        |  Object[] allSet() { return ys.toArray(); }
+        |  Object[] into(Object[] a) { return xs.toArray(a); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "balticporter.runtime.JavaCollections.toArray(this.xs)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.toArray(this.ys)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.toArray(this.xs, a)")
+    // and nothing binds to scala's parenless `toArray`, which is what produced the `apply` error.
+    assertNotEmits(p, "this.xs.toArray")
+  }
+
+  test("the ERASURE cast on a toArray(T[]) argument is stripped — the helper infers java's own T") {
+    // Java declares `<T> T[] toArray(T[] a)`, erased formal `Object[]`, so the frontend wraps the
+    // argument in `asInstanceOf[Array[Object]]` (G14). `JavaCollections.toArray[A]` infers `A` FROM
+    // the argument, so with the cast left on it hands back an `Array[Object]` where java's call —
+    // which inferred `T = String` from the UNERASED argument — produced a `String[]`; scala's
+    // arrays are invariant, so that is a compile error the rewrite itself made.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Erased {
+        |  private final List<String> xs = new ArrayList<String>();
+        |  String[] typed() { return xs.toArray(new String[xs.size()]); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "balticporter.runtime.JavaCollections.toArray(this.xs, new scala.Array[java.lang.String](")
+    assertNotEmits(p, "asInstanceOf[scala.Array[java.lang.Object]]")
+  }
+
   test("a CAPACITY hint at a hashed collection gains java's own default load factor") {
     // scala's `mutable.HashMap` declares `()` and `(Int, Double)` and nothing in between, so java's
     // one-argument capacity constructor lands on no overload. Java's own definition of that
