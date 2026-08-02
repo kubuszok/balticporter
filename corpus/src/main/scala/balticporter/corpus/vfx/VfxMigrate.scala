@@ -174,8 +174,29 @@ object VfxPolicy:
         // Ordering: the null guard is not a race the port introduced. Java ran the same assignment
         // at class initialisation, i.e. before any caller could touch a framebuffer; the guard runs
         // it at the first framebuffer bind instead, which is the first moment a GL context exists at
-        // all. `VfxFrameBuffer#getBoundFboHandle` is the ONLY reader of `VfxGLUtils.glExtension` in
-        // this port, so there is no second path into it to leave uncovered.
+        // all. `VfxFrameBuffer#getBoundFboHandle` is the ONLY reader of `VfxGLUtils.glExtension`
+        // INSIDE this port — but it is not the only way in, which is the third entry.
+        //
+        // ==AND `VfxGLUtils.getBoundFboHandle()` IS PUBLIC API, so the guard is not enough==
+        // `public static int getBoundFboHandle()` is upstream's own entry point and both it and the
+        // `public static VfxGlExtension glExtension` field are part of gdx-vfx's surface. A consumer
+        // — sge, an effect written against this library, anything outside the port — may call it
+        // without ever having touched a `VfxFrameBuffer`, and in JAVA that always worked, because
+        // the class initialiser had already run by definition. With `<clinit>` emptied above it
+        // NULLs, at a line whose text says nothing about why.
+        //
+        // The member cannot initialise: constructing a `DefaultVfxGlExtension` takes the threaded
+        // `sge.Sge` and this is a `static` with no clause and no caller to take one from — the same
+        // boundary that moved the initialisation out of `<clinit>` in the first place, and CLAUDE.md
+        // §1(b)'s rule for a body substitution (it may change what a member DOES, never what it
+        // TAKES) says the fix has to sit at a member the closure already reached, which is why the
+        // entry above is on `VfxFrameBuffer` and not here.
+        //
+        // What it CAN do is fail informatively. An `IllegalStateException` naming the initialisation
+        // path turns a bare NPE into the one sentence its reader needs, and it is honest about the
+        // port's own decision rather than about a bug in the caller. This is the residue the
+        // reference hand port does not have to carry: sge's `VfxGLUtils.initExtension()(using Sge)`
+        // is a hand-written member that takes the clause, and a generated one cannot be edited to.
         new balticporter.transform.MethodBodyTransform(Map(
           "com.crashinvaders.vfx.gl.VfxGLUtils#<clinit>" -> "{ }",
           "com.crashinvaders.vfx.framebuffer.VfxFrameBuffer#getBoundFboHandle" ->
@@ -183,6 +204,17 @@ object VfxPolicy:
               |  if (sge.vfx.gl.VfxGLUtils.glExtension == null)
               |    sge.vfx.gl.VfxGLUtils.glExtension = new sge.vfx.gl.DefaultVfxGlExtension()
               |  sge.vfx.gl.VfxGLUtils.getBoundFboHandle()
+              |}""".stripMargin,
+          "com.crashinvaders.vfx.gl.VfxGLUtils#getBoundFboHandle" ->
+            """{
+              |  if (sge.vfx.gl.VfxGLUtils.glExtension == null)
+              |    throw new java.lang.IllegalStateException(
+              |      "sge.vfx.gl.VfxGLUtils.glExtension is not initialised. Upstream assigned it in a " +
+              |        "static initialiser; this port cannot, because constructing a DefaultVfxGlExtension " +
+              |        "needs the sge.Sge context and a class initialiser has no clause to take it from. " +
+              |        "It is initialised on the first VfxFrameBuffer bind (VfxFrameBuffer.getBoundFboHandle); " +
+              |        "bind one first, or assign VfxGLUtils.glExtension yourself.")
+              |  sge.vfx.gl.VfxGLUtils.glExtension.getBoundFboHandle()
               |}""".stripMargin,
         )),
         // WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER — `ENGINE-LIMITS.md` CT8.

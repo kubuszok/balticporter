@@ -728,13 +728,13 @@ sge.vfx.framebuffer.VfxPingPongWrapper	sge.vfx.framebuffer.VfxPingPongWrapper#sw
 sge.vfx.gl.DefaultVfxGlExtension	sge.vfx.gl.DefaultVfxGlExtension	class	4077756f7ee6caed
 sge.vfx.gl.DefaultVfxGlExtension	sge.vfx.gl.DefaultVfxGlExtension#getBoundFboHandle()	def	1d39f5d10be663f5
 sge.vfx.gl.DefaultVfxGlExtension	sge.vfx.gl.DefaultVfxGlExtension#tmpIntBuf	val	642fffd92820afb5
-sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils	class	c799a8225c9bc374
+sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils	class	ad3b7ff04f744c6c
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#<clinit>	init	5571c93101ed3a5d
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#TAG	val	bd99982a5a79e6cb
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#compileShader(FileHandle,FileHandle,Sge)	def	518ca941d4756c0d
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#compileShader(FileHandle,FileHandle,String,Sge)	def	7036d320620b45b6
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#enableGLQueryStates	val	10a9bfd73d9368d0
-sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#getBoundFboHandle()	def	ed3b8f5801eb27ad
+sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#getBoundFboHandle()	def	75c7b5ac04152aae
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#getViewport(Sge)	def	f0a97697bc7f23a2
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#glExtension	val	8735fc9bf21f479b
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#isGLEnabled(int,Sge)	def	2f0e4bf411a72038

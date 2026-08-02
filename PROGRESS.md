@@ -1705,7 +1705,7 @@ silent success `java_test_count` exists to prevent.
 | trivia lost / recovered / deliberate | **0** / 2 / 0 |
 | porter notes uncovered · break residue | 0 · **0** |
 | source map | 44 units / 910 members |
-| decisions recorded | 415 rows about gdx-vfx's own declarations (261 `RetypedSignature`, 57 `RenamedMember`, 44 `RenamedPackage`, 16 `DroppedMember`, 15 `FunnelledCtor`, 12 `DroppedType`, 4 `WidenedVisibility`, 2 `SubstitutedBody`, 2 `ScopedOut`, 1 `RedirectedCall`, **1 `DeferredInit`**); the base's withheld, per `ENGINE-LIMITS.md` D2 |
+| decisions recorded | 416 rows about gdx-vfx's own declarations (261 `RetypedSignature`, 57 `RenamedMember`, 44 `RenamedPackage`, 16 `DroppedMember`, 15 `FunnelledCtor`, 12 `DroppedType`, 4 `WidenedVisibility`, 3 `SubstitutedBody`, 2 `ScopedOut`, 1 `RedirectedCall`, **1 `DeferredInit`**); the base's withheld, per `ENGINE-LIMITS.md` D2 |
 | **tests** | **64 of 64 PASSING** (6 files, hand-written) |
 
 **Error trajectory: 11 → 10 → 7 → 6 → 5 → 4 → 1 → 0.** One §1(b) policy step and SEVEN §1(a)
@@ -1713,7 +1713,7 @@ engine fixes, one commit and one measurement each — six of the seven moved the
 seventh moved `porter-notes` instead, which is the only gate that could see it. `portability(emitted)` is **0**: the 151 are every one
 in libGDX's own files, which D2's ownership filter keeps out of this port's emitted column.
 
-### 10.3 The policy decisions — two §1(b) body substitutions and one context extension
+### 10.3 The policy decisions — three §1(b) body substitutions and one context extension
 
 `VfxGLUtils`' STATIC INITIALISER is gdx-vfx's only reflective site:
 
@@ -1750,6 +1750,33 @@ change what a member DOES and never what it TAKES — the emitted `VfxGLUtils.ge
 reads no holder, so nothing threaded it, and no manifest key can. The boundary is COUNTED either
 way: `VfxGLUtils#<clinit>` reports `unsuppliable use: this declaration uses DefaultVfxGlExtension,
 which now takes a context`.
+
+**A THIRD substitution followed, because `VfxGLUtils.getBoundFboHandle()` is PUBLIC API.** The null
+guard above covers the port's own only reader; it does not cover upstream's own entry point.
+`public static int getBoundFboHandle()` and the `public static VfxGlExtension glExtension` field
+beside it are gdx-vfx's surface, and a consumer — sge, an effect written against this library,
+anything outside the port — may call the first without ever having touched a `VfxFrameBuffer`. In
+JAVA that always worked, because the class initialiser had run by definition; with `<clinit>` emptied
+it is a bare NPE at a line whose text says nothing about why.
+
+The member cannot initialise itself: constructing a `DefaultVfxGlExtension` takes the threaded
+`sge.Sge`, and this is a `static` with no clause and no caller to take one from — the same boundary
+that moved the initialisation out of `<clinit>`, and exactly why the guard sits one member further
+out on `VfxFrameBuffer`. What it CAN do is fail informatively, so it throws an
+`IllegalStateException` naming the initialisation path (bind a `VfxFrameBuffer`, or assign
+`VfxGLUtils.glExtension` yourself). This is residue the reference hand port does not carry:
+`initExtension()(using Sge)` is a hand-written member that takes the clause, and a generated one
+cannot be edited to.
+
+Blast, accounted: **2 members** — the substituted `def` and its enclosing object's digest — plus this
+module's own `policy=` fingerprint (`93e61bca → 3d3364cc`, and gdx-vfx is a leaf, so no dependent
+reads it). Every check count and all 64 tests unchanged; nine other ports 0 members.
+
+**RESIDUE: the throw is not exercised by a test.** The hand-written suite is value-level and holds no
+GL context, `glExtension` is a global `var`, and a suite that asserted the null branch would depend
+on nothing else having initialised it — order-coupled state in a suite that has none today.
+The `if` is not evidence of behaviour; CLAUDE.md §3 applies and this is the one place in the port
+where it is unmet.
 
 **And the one `ContextHolderExtension` — `ENGINE-LIMITS.md` CT8's mechanism in production.**
 `VfxFrameBuffer#tmpCam` is a `private static final OrthographicCamera` initialised at class
