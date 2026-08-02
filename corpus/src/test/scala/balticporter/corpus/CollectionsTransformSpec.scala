@@ -637,6 +637,28 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "fromJava")
   }
 
+  test("…nor a GENERIC PASS-THROUGH, where the port's own value went in and came back out") {
+    // The node's type is evidence of two different things. Where the callee's result is a real
+    // `java.util.List`, the node says `Buffer` because this phase MOVED it. Where the result is a
+    // TYPE VARIABLE, the node says `Buffer` because the CALLER handed it one — and wrapping that
+    // converts a value that was never java's. Measured as 7 sites on liqp
+    // (`fromJava(java.util.Objects.requireNonNull(aScalaMap))`, an E134 naming the helper rather
+    // than the boundary). With no external signature there is no way to ask "is the result a type
+    // variable", so it is answered structurally: the result type already occurs on the INPUT side.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Through {
+        |  private final ThreadLocal<Map<String, Object>> local = new ThreadLocal<Map<String, Object>>();
+        |  Map<String, Object> checked(Map<String, Object> m) { return Objects.requireNonNull(m); }
+        |  Map<String, Object> here() { return local.get(); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertNotEmits(p, "fromJava")
+  }
+
   test("an external seam the phase CANNOT close is COUNTED, with its §1 classification") {
     // The consumer half: an argument whose formal lives in a class file the frontend interned with
     // NO signature — measured on liqp as 1157 external callees and not one with a `MethodType`. So

@@ -822,7 +822,7 @@ final class CollectionsTransform(
     * that is not a claim being made about a value — after the wrap the value really is that type
     * (ENGINE-LIMITS K6's first rule). */
   private def externalProducer(t: Tree.Apply)(using p: Program): Term =
-    if fromJavaSym == SymId.None || !externalCallee(t.method) then t
+    if fromJavaSym == SymId.None || !externalCallee(t.method) || passesThrough(t) then t
     else headSym(t.tpe).filter(s => kindOf.contains(s) || shimSyms.contains(s)) match
       case scala.None => t
       case Some(s) if s == javaCollectionSym =>
@@ -835,6 +835,45 @@ final class CollectionsTransform(
         t
       case Some(_) =>
         Tree.Apply(Tree.Ident(fromJavaSym, TypeRepr.NoType, t.origin), List(t), fromJavaSym, t.tpe, t.origin)
+
+  /** Does the PORT'S OWN VALUE simply pass through this external call?
+    *
+    * The node's type is the only evidence [[externalProducer]] has, and it is evidence of two
+    * different things. Where the callee's result is a real `java.util.List`, the node says `Buffer`
+    * because this phase MOVED it and the value is java's. Where the callee's result is a TYPE
+    * VARIABLE, the node says `Buffer` because the caller HANDED IT ONE — `Objects.requireNonNull(m)`
+    * and `ThreadLocal<Map<K,V>>.get()` both give back exactly what the port put in, already a scala
+    * collection — and wrapping it converts a value that was never java's. Measured: 7 sites on liqp,
+    * emitted as `fromJava(java.util.Objects.requireNonNull(aScalaMap))`, which is an E134 naming the
+    * helper rather than the boundary.
+    *
+    * With no external signature there is no way to ask "is the result a type variable" — see K15 for
+    * the `NoType` measurement — so the question is answered STRUCTURALLY, from the call itself: the
+    * value passes through iff the result type ALREADY OCCURS on the input side, as an argument's
+    * type or anywhere inside the receiver's. That is what a generic pass-through IS, and it costs
+    * the honest cases nothing: `ctx.atom()`'s receiver is a parse-tree context that mentions no
+    * collection, and `ServiceLoader<T>.iterator()`'s receiver mentions `T` but not the `JavaIterator`
+    * its result became. */
+  private def passesThrough(t: Tree.Apply)(using Program): Boolean =
+    val want = t.tpe
+    want != TypeRepr.NoType && (
+      t.args.exists(_.tpe == want) || (t.fun match
+        case Tree.Select(recv, _, _, _) => occursIn(want, recv.tpe)
+        case _                          => false))
+
+  /** does `needle` occur anywhere inside `hay`, as a whole type? Structural equality, and the
+    * traversal is [[StandardTraversal.mapType]]'s for CLAUDE.md §3's reason. */
+  private def occursIn(needle: TypeRepr, hay: TypeRepr)(using Program): Boolean =
+    if hay == needle then true
+    else
+      var hit = false
+      val scan = new Phase:
+        def name = "passthrough-scan"
+        override def transformType(x: TypeRepr)(using Program): TypeRepr =
+          if x == needle then hit = true
+          x
+      StandardTraversal.mapType(scan, hay)
+      hit
 
   /** is this a method the PROGRAM DOES NOT DECLARE, and not one of the collection API's own?
     *

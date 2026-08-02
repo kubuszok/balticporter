@@ -2101,6 +2101,23 @@ Four exclusions, each measured as a false positive before it was written:
 | a callee whose OWNER is a mapped type or one of its targets | `java.util.Map#keySet` is an external method returning `java.util.Set` whose value IS already scala's, because the RECEIVER moved |
 | a callee with NO owner at all | `scala.<op>#+` is an interned operator, not a member of any class file — `"…" + aMap` was reported twice |
 | a member `handledStatics` covers | `staticRewrite` returning `None` is either "no arm matched" or "an arm REFUSED", and only the first is a seam (K6.5) |
+| a GENERIC PASS-THROUGH | the node's type is evidence of two different things — see below |
+
+**The node's type means two different things, and telling them apart is the whole subtlety.** Where
+the callee's result is a real `java.util.List`, the node says `Buffer` because this phase MOVED it
+and the value is java's. Where the callee's result is a TYPE VARIABLE, the node says `Buffer`
+because the CALLER HANDED IT ONE: `Objects.requireNonNull(m)` and `ThreadLocal<Map<K,V>>.get()` give
+back exactly what the port put in, already a scala collection, and wrapping converts a value that
+was never java's. Measured at **7 sites on liqp** (`76 → 70`), each emitted as
+`fromJava(java.util.Objects.requireNonNull(aScalaMap))` — an E134 naming the HELPER rather than the
+boundary, which is the worst kind of error this seam can produce.
+
+With no external signature there is no way to ask "is the result a type variable", so it is answered
+STRUCTURALLY from the call itself: **the value passes through iff the result type already occurs on
+the INPUT side** — as an argument's type, or anywhere inside the receiver's. That is what a generic
+pass-through is, and it costs the honest cases nothing: `ctx.atom()`'s receiver is a parse-tree
+context mentioning no collection, and `ServiceLoader<T>.iterator()`'s receiver mentions `T` but not
+the `JavaIterator` its result became.
 
 …and a call the phase itself rewrote is not looked at at all: ordering the seam arms first reported
 `Collections.unmodifiableSet(mySet)` as an unverifiable external argument while the same run was
