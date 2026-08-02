@@ -293,6 +293,9 @@ object TirPrinter:
     case x: Tree.Repeated =>
       line(sb, indent, s"Repeated${ofType(x.tpe, style)}${origin(x.origin, style)}")
       group(sb, indent + 1, "elems", x.elems.map(y => y: Tree), style)
+    case x: Tree.Spread =>
+      line(sb, indent, s"Spread${ofType(x.tpe, style)}${origin(x.origin, style)}")
+      sub(sb, indent + 1, "expr", x.expr, style)
     case x: Tree.Return =>
       line(sb, indent, s"Return${ofType(x.tpe, style)}${origin(x.origin, style)}")
       x.expr.foreach(e => sub(sb, indent + 1, "expr", e, style))

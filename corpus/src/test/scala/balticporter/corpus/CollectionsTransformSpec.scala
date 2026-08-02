@@ -393,10 +393,16 @@ class CollectionsTransformSpec extends PortSuite:
 
   test("the whole-ARRAY aliasing form is REFUSED, and the refusal keeps the JDK name") {
     val p = port(asList, new CollectionsTransform)
-    // java returns a LIVE VIEW of the caller's array; spreading it would silently copy what java
-    // aliases (§4.4). The rewrite does not happen at all, so the emitted text says which call was
-    // not translated — measured `Found: java.util.List[Array[Object]] / Required: Buffer[String]`.
-    assertEmits(p, "return java.util.Arrays.asList(xs.asInstanceOf[scala.Array[java.lang.Object]])")
+    // java returns a LIVE VIEW of the caller's array; the runtime helper's `A*` would COPY it and
+    // silently detach every aliased write (§4.4). The REWRITE therefore does not happen at all, so
+    // the emitted text keeps the JDK name and says which call was not translated.
+    //
+    // The argument is SPREAD, which is the frontend's answer at any external vararg callee
+    // (K6.5's fourth case) and is exactly what makes the untranslated call a faithful one:
+    // `Arrays.asList(arr*)` compiles to the same live view java has — measured on 3.8.4, writes
+    // through `arr` are visible in the list. What is left over is only the RETYPED return
+    // (`Found: java.util.List[String] / Required: Buffer[String]`), which is the refusal talking.
+    assertEmits(p, "return java.util.Arrays.asList(xs.asInstanceOf[scala.Array[java.lang.Object]]*)")
     assertNotEmits(p, "JavaCollections.asList(xs.asInstanceOf")
   }
 

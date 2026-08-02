@@ -140,6 +140,7 @@ object Xref:
       case Tree.Lambda(params, body, _, _)  => params.foreach(walkValDef); walkTerm(body)
       case Tree.If(c, th, el, _, _)         => walkTerm(c); walkTerm(th); walkTerm(el)
       case Tree.Repeated(elems, _, _)       => elems.foreach(walkTerm)
+      case Tree.Spread(e, _, _)             => walkTerm(e)
       case Tree.Return(e, _, _)             => e.foreach(walkTerm)
       case Tree.While(c, b, _, _, _)           => walkTerm(c); walkTerm(b)
       case Tree.Throw(e, _, _)              => walkTerm(e)

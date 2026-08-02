@@ -2234,8 +2234,10 @@ object SpoonTir:
               case arr: CtArrayTypeReference[?] => arr.getComponentType
               case _                            => null
             // already an array in the vararg slot (`f(arr)`, `f((String[]) null)`) — Java passes it
-            // through, so do we. The CASTS matter: Spoon types `(String[]) null` by the literal, not
-            // the cast, and packing it would build `Array[String](null: Array[String])`.
+            // through, and so do we WHERE THE CALLEE IS OURS. At an EXTERNAL one it becomes a
+            // SPREAD, which is the mirror of the pack below and the same fact: see `passThrough`.
+            // The CASTS matter: Spoon types `(String[]) null` by the literal, not the cast, and
+            // packing it would build `Array[String](null: Array[String])`.
             val passesArray = argEs.sizeIs == l.size && {
               val e     = argEs.last
               val casts = try e.getTypeCasts.asScala.toList catch { case _: Throwable => Nil }
@@ -2292,7 +2294,17 @@ object SpoonTir:
                 val ts = argEs.drop(fixed).map(e => try e.getType catch { case _: Throwable => null })
                 Option.when(ts.nonEmpty && ts.forall(t => t != null && !t.isPrimitive && tpConcrete(t)) &&
                             ts.map(_.getQualifiedName).distinct.sizeIs == 1)(ts.head)
-            if comp == null || passesArray || argEs.sizeIs < fixed || elemRef.isEmpty then None
+            // the declaring type is a SHADOW exactly when it was reconstructed from bytecode —
+            // the same signal `coerceArgsFixed` reads for the erasure cast, and the only one that
+            // survives `noClasspath` (where `getExecutableDeclaration` is non-null for the JDK too).
+            // ONE answer for both directions: which side of the program's edge the CALLEE is on.
+            val external = Option(ex.getExecutableDeclaration)
+              .flatMap(d => Option(d.getParent(classOf[CtType[?]]))) match
+              case scala.None    => true
+              case Some(decl) => decl.isShadow
+            if comp == null || argEs.sizeIs < fixed then None
+            else if passesArray then passedThrough(ex, argEs, external)
+            else if elemRef.isEmpty then None
             else
               val (head, rest) = argEs.splitAt(fixed)
               val fixedTerms = head.zipWithIndex.map { (e, i) => coerce(l(i).getType, e, expr(e)) }
@@ -2300,15 +2312,48 @@ object SpoonTir:
               val elems = rest.map(e => coerce(elemRef.get, e, expr(e)))
               val at = AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(ct))
               val o = argEs.headOption.map(originOf).getOrElse(Origin.synthetic)
-              // the declaring type is a SHADOW exactly when it was reconstructed from bytecode —
-              // the same signal `coerceArgsFixed` reads for the erasure cast, and the only one that
-              // survives `noClasspath` (where `getExecutableDeclaration` is non-null for the JDK too).
-              val external = Option(ex.getExecutableDeclaration)
-                .flatMap(d => Option(d.getParent(classOf[CtType[?]]))).forall(_.isShadow)
               Some(fixedTerms :+ (
                 if external then Tree.Repeated(elems, at, o)
                 else Tree.NewArray(TypeTree(ct, o), Nil, Some(elems), at, o)))
           case _ => None
+
+      /** java already holds the array and passes it WHOLE through the `T...` slot — the MIRROR of
+        * the pack above, and the same fact about the program's edge (`ENGINE-LIMITS.md` K6.5).
+        *
+        * Where the callee is OURS the parameter is emitted `def f(xs: Array[T])`, so passing the
+        * array as it stands is exactly right and nothing has to happen: `None`, which leaves
+        * `coerceArgsFixed` to render the ordinary argument list. That is the case every in-program
+        * vararg method is in, and it is what a dependent port's calls into its BASE are in too — a
+        * resolution root's java is parsed as source and stays ours.
+        *
+        * Where the callee is a CLASS FILE nothing in this port can move, scalac reads that `T...`
+        * as a REPEATED parameter, and a bare array conforms as ONE element. Java's own
+        * vararg-FORWARDING idiom is exactly this shape — `String.format(fmt, args)`,
+        * `Arrays.asList(xs)`, `logger.debug(msg, args)` — so it is not an edge case:
+        *
+        *   - where the repeated element is `Object` the bare array COMPILES and means something
+        *     else. `String.format("%s-%s", args)` prints the array as a single `%s` and then throws
+        *     `MissingFormatArgumentException` for the second — CLAUDE.md §4.4's shape exactly: no
+        *     error, no moved count, and a wrong answer at run time. Measured;
+        *   - otherwise it is an uncounted compile error at every such call.
+        *
+        * So the array is SPREAD, and the spread is faithful rather than a compromise: measured on
+        * 3.8.4, `java.util.Arrays.asList(arr*)` yields a list of `arr.length` elements that still
+        * ALIASES `arr` — writes through it are visible — which is precisely what java's own
+        * pass-through does. (It is the reason a `Buffer` COPY at the same call is refused one layer
+        * up, in the `asList` rewrite; the spread has no such cost.) A bare `null` in the slot is
+        * java's null ARRAY, and `f(null*)` renders it as one: it compiles, and it throws where java
+        * throws. */
+      private def passedThrough(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
+                                external: Boolean): Option[List[Term]] =
+        if !external then None
+        else
+          // through `coerceArgsFixed`, never around it: the erasure cast a java `Object...` formal
+          // needs (`args.asInstanceOf[Array[Object]]`) is that function's answer, and a second
+          // spelling of it here would be a second answer.
+          val terms = coerceArgsFixed(ex, argEs)
+          if terms.sizeIs != argEs.size then None
+          else Some(terms.init :+ Tree.Spread(terms.last, terms.last.tpe, originOf(argEs.last)))
 
       /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing
         * that Scala won't do implicitly). Skipped when arities differ (varargs spread etc.). */

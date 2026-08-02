@@ -2708,6 +2708,9 @@ final class TirEmitter(
     case Tree.If(c, th, el, _, _)       => s"if (${term(c, i)}) ${term(th, i)} else ${term(el, i)}"
     case Tree.Typed(e, tpt, _, _)       => s"${operand(e, i)}.asInstanceOf[${tpe(castTarget(e, tpt.tpe))}]" // Java cast
     case Tree.Repeated(es, _, _)        => es.map(term(_, i)).mkString(", ")
+    // `xs*` — CLAUDE.md §6's spread, never `: _*`. `operand` because the array is an expression the
+    // `*` binds tighter than: `(if (c) a else b)*` parses, `if (c) a else b*` does not.
+    case Tree.Spread(e, _, _)           => s"${operand(e, i)}*"
     case Tree.Return(e, _, _)           => "return" + e.map(x => " " + term(x, i)).getOrElse("")
     case Tree.While(c, b, _, _, lbl)    =>
       loopWithJumps(b, lbl, bd => s"while (${term(c, i)}) $bd", term(b, i))

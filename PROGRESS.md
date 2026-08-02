@@ -2122,6 +2122,14 @@ stated in `test.conf` and is deleted, not narrowed, the day the frontend grows t
 | **4** | an unqualified inherited `add(…)` inside a double-brace anonymous subclass of a retyped collection | K5's inherited-call rewrite, at an ANONYMOUS class with an implicit receiver |
 | 13 | assorted `Found/Required` mismatches at retyped collections and at `TemplateParser.ErrorMode` | the main port's own residue reaching the suite |
 
+**Eleven of those messages then changed without the count moving.** `ENGINE-LIMITS.md` K6.5's fourth
+case — an array FORWARDED through an external `T...` slot is now spread — turned
+`Found: java.util.List[Array[Object]]` into `Found: java.util.List[Object]` at eleven slots across
+both source sets (`LValue.asList`, `For.renderArray`, `Concat`, `Reverse`, `Uniq`, `Sort_Natural`,
+`ContainsNode`, `LiquidParserTest.array`). The remaining disagreement at each is the collections
+retyping, not the arity: the value is now the N-element list java built. 40 members moved and no
+check count did.
+
 The last row moved 11 -> 13 when `Arrays.asList`'s rewrite learned the EXTERNAL-callee pack shape
 (`ENGINE-LIMITS.md` K6.5, the composition): three `LookupNodeTest` sites were repaired and one
 heterogeneous `asList(98, "97", true, false, null)` replaced a single aggregate mismatch with six

@@ -213,3 +213,53 @@ class SpoonTirBodySpec extends munit.FunSuite:
       case Some(Tree.Repeated(es, _, _)) => assertEquals(es, Nil)
       case other                         => fail(s"expected an empty Repeated, got $other")
   }
+
+  // -- …and the MIRROR: java PASSES AN ARRAY THROUGH the same slot (K6.5, fourth case) -----------
+  //
+  // `String.format(fmt, args)` is java's own vararg-FORWARDING idiom, not an edge case. Where the
+  // callee is ours the array is passed as it stands, because the parameter is emitted `Array[T]`.
+  // Where it is a class file the bare array conforms as ONE element: silent where the repeated
+  // element is `Object` (measured on 3.8.4 — `String.format("%s-%s", arr)` prints the array for the
+  // first `%s` and throws `MissingFormatArgumentException` for the second), loud otherwise.
+
+  private val passThroughProgram = SpoonTir.fromSource(
+    """package demo;
+      |class Fwd {
+      |  static int pick(String... xs) { return xs.length; }
+      |  String forward(Object[] args, String[] parts) {
+      |    pick(parts);
+      |    java.nio.file.Paths.get(".", parts);
+      |    return String.format("%s %s", args);
+      |  }
+      |}
+      |""".stripMargin)
+
+  private def lastFwdArgOf(name: String): Option[Tree] =
+    callsIn(passThroughProgram, "demo.Fwd#forward")
+      .find(a => passThroughProgram.symbolOf(a.method).exists(_.name == name))
+      .flatMap(_.args.lastOption)
+
+  test("an array passed through an EXTERNAL vararg slot is SPREAD — the silent, Object-element face") {
+    // `String.format(String, Object...)`: `Array[Object] <: Object`, so the unspread array COMPILES
+    // and formats as a single `%s`. Nothing but this can see it — no error, no moved count.
+    lastFwdArgOf("format") match
+      case Some(Tree.Spread(_, _, _)) => ()
+      case other                      => fail(s"expected Spread, got $other")
+  }
+
+  test("…and the loud face is spread by the SAME rule, not by a second one") {
+    // `Paths.get(String, String...)` forwarded a `String[]`: unspread it reads
+    // `Found: Array[String] / Required: String`. One rule, both faces.
+    lastFwdArgOf("get") match
+      case Some(Tree.Spread(_, _, _)) => ()
+      case other                      => fail(s"expected Spread, got $other")
+  }
+
+  test("an IN-PROGRAM callee keeps the PASS-THROUGH — the negative test for the mirror") {
+    // `pick(String...)` is emitted `def pick(xs: Array[String])`, so both halves agree on the bare
+    // array and a spread here would be an argument of the wrong shape.
+    lastFwdArgOf("pick") match
+      case Some(_: Tree.Spread) => fail("an owned vararg callee must keep the array as it stands")
+      case Some(_)              => ()
+      case None                 => fail("no argument at all")
+  }

@@ -361,6 +361,18 @@ object Tree:
   final case class Typed(expr: Term, tpt: TypeTree, tpe: TypeRepr, origin: Origin)      extends Term
   /** varargs sequence (`reflect.Repeated`). */
   final case class Repeated(elems: List[Term], tpe: TypeRepr, origin: Origin)           extends Term
+  /** `expr*` — an ARRAY passed THROUGH a repeated parameter, which is one argument and not a list.
+    *
+    * The mirror of [[Repeated]], and needed for the same reason: java lets a call fill a `T...`
+    * slot with an array it already holds (`String.format(fmt, args)`), and the callee's half decides
+    * what that means. Where the callee is OURS the parameter is emitted `Array[T]` and the array is
+    * passed as it stands — no node. Where the callee is a CLASS FILE scalac reads `T...` as a
+    * REPEATED parameter, so the bare array conforms as ONE element; the faithful form is the spread
+    * (`ENGINE-LIMITS.md` K6.5, fourth case).
+    *
+    * `tpe` is the ARRAY's type, because that is what the term still is — the `*` is a fact about the
+    * position, exactly as `Repeated`'s flattening is. */
+  final case class Spread(expr: Term, tpe: TypeRepr, origin: Origin)                    extends Term
   /** `return e` — imperative early exit (Java bodies). `tpe` is Nothing. */
   final case class Return(expr: Option[Term], tpe: TypeRepr, origin: Origin)            extends Term
   /** `while (cond) body` — imperative loop (Java bodies). `tpe` is Unit. */

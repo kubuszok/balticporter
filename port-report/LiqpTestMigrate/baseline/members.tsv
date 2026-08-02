@@ -678,7 +678,7 @@ ssg.liquid.parser.v4.LiquidLexerTest	ssg.liquid.parser.v4.LiquidLexerTest#tokeni
 ssg.liquid.parser.v4.LiquidLexerTest	ssg.liquid.parser.v4.LiquidLexerTest#tokenise(String,Set<String>,Set<String>)	def	7cc4773ff9f07f2f
 ssg.liquid.parser.v4.LiquidLexerTest	ssg.liquid.parser.v4.LiquidLexerTest#tokenise(String,boolean,boolean)	def	09f5700afb0e9f7c
 ssg.liquid.parser.v4.LiquidLexerTest	ssg.liquid.parser.v4.LiquidLexerTest#tokenise(String,boolean,boolean,Set<String>,Set<String>)	def	711c04cc59fda58b
-ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest	class	b30b234d6e49bf08
+ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest	class	02ff31eaff1af544
 ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#<stmt10>	stmt	b3f41a138005ac16
 ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#<stmt11>	stmt	794caceba8f7bee4
 ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#<stmt12>	stmt	56d0dcb5e21337e3
@@ -693,7 +693,7 @@ ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#<stm
 ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#<stmt7>	stmt	66d95bb8267f5fef
 ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#<stmt8>	stmt	94443a750481f054
 ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#<stmt9>	stmt	2acb4c7c7bac6c4a
-ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#array(Array<String>)	def	0c4eb215d9001d3e
+ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#array(Array<String>)	def	981c0c3a21e8a1b9
 ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#parse(String,String,Set<String>,Set<String>)	def	5e888781d72f35ee
 ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#parse(String,String,Set<String>,Set<String>,Boolean,Boolean)	def	b68e468466100115
 ssg.liquid.parser.v4.LiquidParserTest	ssg.liquid.parser.v4.LiquidParserTest#parse(String,String,boolean,boolean)	def	fef2cfd3b89f03fe

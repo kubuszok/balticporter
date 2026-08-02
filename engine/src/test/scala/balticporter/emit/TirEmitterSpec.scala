@@ -148,6 +148,39 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(text.contains(""""%s", "a", "b""""))
   }
 
+  // -- …and a `Spread` is ONE argument, rendered `xs*` --------------------------------------------
+  //
+  // The mirror node (K6.5, fourth case): java forwards an array it already holds through a `T...`
+  // slot. Unspread at an EXTERNAL callee the array conforms as one element, silently where the
+  // repeated element is `Object`. §6: `xs*`, never `xs: _*`.
+
+  test("a Spread argument renders as the scala spread, and stays ONE argument") {
+    val CLS = SymId(41)
+    val M   = SymId(42)
+    val EXT = SymId(43)
+    val ARG = SymId(44)
+    val TS  = TypeRef(NoPrefix, SymId(45))
+
+    val body = Tree.Block(
+      List(Tree.Apply(Tree.Ident(EXT, NoType, O),
+        List(Tree.Literal(Constant.StringC("%s"), TS, O),
+             Tree.Spread(Tree.Ident(ARG, TS, O), TS, O)), EXT, TS, O)),
+      Tree.Literal(Constant.UnitC, NoType, O), NoType, O)
+    val d = Tree.DefDef(M, paramss = List(List(Tree.ValDef(ARG, tt(TS), rhs = None, origin = O))),
+      returnTpt = tt(NoType), rhs = Some(body), origin = O)
+    val cd = Tree.ClassDef(CLS, parents = Nil, selfType = None, body = List(d), origin = O)
+    val syms = SymbolTable(List(
+      Symbol(CLS, "Fwd", "demo.Fwd", Flags(), SymId.None, TypeRef(NoPrefix, CLS)),
+      Symbol(M, "run", "demo.Fwd#run", Flags(), CLS, MethodType(List("args" -> TS), NoType)),
+      Symbol(ARG, "args", "demo.Fwd#run(args)", Flags(), M, TS),
+      Symbol(EXT, "format", "java.lang.String#format", Flags(isStatic = true), SymId.None, NoType),
+      Symbol(SymId(45), "String", "java.lang.String", Flags(), SymId.None, NoType),
+    ))
+    val text = new TirEmitter(new Program(List(cd), syms, Xref.build(List(cd)), MemberIndex.empty)).emit
+    assert(clue(text).contains("""("%s", args*)"""), "a Spread is `xs*`, and one argument")
+    assert(!text.contains(": _*"), clue(text))
+  }
+
   // -- an INFERENCE VARIABLE must never reach the output (F5's emitter half) ----------------------
   //
   // `new ArrayList<>(((Collection<?>) value))` — liqp `LValue.java:154`. The diamond's argument has

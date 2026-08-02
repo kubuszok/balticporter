@@ -1987,6 +1987,38 @@ which is precisely what `BreakCatchCheck`'s contract forbids. The gate is theref
 SPEC — both directions, negative-tested (`SpoonTirBodySpec`) — plus the emitter's own
 (`TirEmitterSpec`). **liqp 67 → 58**, with every check count flat.
 
+**THE FOURTH CASE — the MIRROR: java PASSES AN ARRAY THROUGH the same slot.** CLOSED. The third
+case is about a call that spells its arguments out; this one is about java's own vararg-FORWARDING
+idiom, which is at least as common — `String.format(fmt, args)`, `Arrays.asList(xs)`,
+`logger.debug(msg, args)`, `Insertions.of(insertions)`. The frontend recognised it (`passesArray`)
+and answered "java passes it through, so do we", which is right for exactly the half the third case
+was right for and wrong at the same edge, in the same two faces:
+
+| where the callee is | java | emitted before | what it meant |
+|---|---|---|---|
+| OURS | `pick(parts)` | `pick(parts)` | correct — the parameter is emitted `Array[String]` |
+| a CLASS FILE, element `Object` | `String.format("%s %s", args)` | `String.format("%s %s", args)` | COMPILES; the array is ONE `%s` and the second throws `MissingFormatArgumentException`. Measured on 3.8.4 |
+| a CLASS FILE, element not `Object` | `Paths.get(".", parts)` | same | uncounted `Found: Array[String] / Required: String` |
+
+So an external callee's pass-through becomes a SPREAD (`Tree.Spread`, rendered `xs*` — §6, never
+`: _*`), built through `coerceArgsFixed` so the erasure cast an `Object...` formal needs is still
+that function's one answer. Three things measured while doing it:
+
+- **the spread is FAITHFUL, not a compromise.** `java.util.Arrays.asList(arr*)` on 3.8.4 yields a
+  list of `arr.length` elements that still ALIASES `arr` — a write through `arr` is visible in the
+  list — which is exactly what java's pass-through does. That is a different answer from the `A*`
+  runtime helper one layer up, which COPIES, and it is why the `asList` refusal above stays a
+  refusal while the JDK call under it becomes correct;
+- **a bare `null` in the slot is java's null ARRAY**, and `f(null*)` renders it as one: it compiles,
+  and it throws where java throws;
+- **the count does not move, and that is the point.** liqp main 31, test 61, every check flat, 40
+  members changed — and ELEVEN error messages changed from `Found: java.util.List[Array[Object]]`
+  to `Found: java.util.List[Object]`: same error, because the collections retyping is what those
+  slots still disagree about, but the value in them is now the N-element list java built instead of
+  a one-element list holding the array. The sites that were SILENT move no message at all.
+
+*Fix kind: (a). Universal.*
+
 **…and the third case COLLIDED with the first, which is what a composition costs.** The two halves
 above landed in different steps and each was green alone. The rewrite reads its ARGUMENTS and knew
 one pack shape (`Tree.NewArray`); the frontend now mints the other (`Tree.Repeated`) at exactly the
