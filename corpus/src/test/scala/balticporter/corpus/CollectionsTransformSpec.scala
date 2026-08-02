@@ -174,6 +174,17 @@ class CollectionsTransformSpec extends PortSuite:
     // and nothing survives as a java stream call.
     assertNotEmits(p, "java.util.stream.Collectors.toList()")
     assertNotEmits(p, ".stream()")
+    // …and the ACCESSOR each receiver reaches the chain through is decided by what that receiver
+    // IS, not by one entry in a table applied to every kind (see `streamSource`). Emitting
+    // `asScalaBuffer` unconditionally was three uncompilable sites on liqp that no check saw,
+    // because the collapse fired and nothing reported an untranslated chain.
+    assertEmits(p, "c.asScalaBuffer")      // a `Collection`/`AbstractCollection` slot IS the shim
+    assertEmits(p, "c.toBuffer")           // a `Set` copies — every collapsed operation takes a Buffer
+    assertEmitsMatch(p, """filtered\(c, p\.""")  // a `List`/`Deque`/`Queue` slot already IS the sequence
+    // `Own extends AbstractCollection<T>` keeps ITS OWN type, which this phase never minted — the
+    // accessor comes from the DECLARING type's target, and it is right because `Own` really does
+    // extend `JavaCollection` after the retyping.
+    assertEmitsMatch(p, """(?s)def r12\(c: demo\.Own.*?filtered\(c\.asScalaBuffer""")
   }
 
   test("a chain whose receiver the phase did NOT retype is left alone — and must be") {
@@ -217,8 +228,10 @@ class CollectionsTransformSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform,
     )
-    // the SOURCE still collapses — it is the slot that does not follow …
-    assertEmits(p, "val st: java.util.stream.Stream[java.lang.String] = this.f.asScalaBuffer")
+    // the SOURCE still collapses — it is the slot that does not follow. `f` is a `java.util.List`,
+    // so it retypes to a `Buffer` and IS the sequence: no accessor is added, because
+    // `asScalaBuffer` is the SHIM's and this receiver is not one (see `streamSource`).
+    assertEmits(p, "val st: java.util.stream.Stream[java.lang.String] = this.f\n")
     // … and the operation is therefore NOT rewritten, which is what makes the mismatch visible.
     assertNotEmits(p, "JavaCollection.filtered(")
   }

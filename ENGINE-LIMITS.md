@@ -1575,9 +1575,33 @@ Two rules were each measured the hard way, and a new backend or a new operation 
   Measured 0 → 1 on libGDX's test port. A chain from a non-collection source is untranslated and
   must fail as such.
 
-Still open, and each needs a different target type rather than more of the same: `Collectors.toSet`
-and `Collectors.toMap`. Guessing one would be a silent wrong answer, so they are deliberately
-unmapped and fail to compile. Two that WERE on this list now ship in `JavaCollections`:
+**`Collectors.toSet` and `Collectors.toMap` are now BUILT**, and what kept them off `toList`'s arm
+is the transferable part: `collect(toList())` collapses to NOTHING because the receiver already IS
+the sequence, while these two change the TARGET TYPE and therefore need a helper each. Neither was
+guessable, and `toMap` is why the entry said so — java's TWO-argument form **throws
+`IllegalStateException` on a duplicate key**, where the obvious `.map(x => k(x) -> v(x)).toMap`
+silently keeps the last one. A stream whose keys collide is a bug java reports loudly and the naive
+translation hides, with no compile error and no count moved (§4.4). The three-argument form takes a
+merge run as `merge(EXISTING, INCOMING)` — an order that inverts every non-commutative resolver —
+and REMOVES the mapping when the merge returns null, which is `Map.merge`'s documented behaviour.
+The mappers are declared with JAVA's `Function`, for `removeIf`/`Predicate`'s reason above:
+`Function.identity()` reaches that slot in real code and is a `java.util.function.Function`, while a
+lambda written at the call site SAM-converts to one.
+
+**And a third thing was wrong here the whole time, invisibly**: the collapse emitted the SHIM's
+accessor unconditionally — `Tree.Select(recv, asScalaBuffer)` — which is a table lookup keyed on one
+kind applied to every kind. `asScalaBuffer` is an extension in `JavaCollection`'s companion, so it
+is right only where the declaration was a `java.util.Collection`; a `java.util.List` retypes to a
+`Buffer` and a `java.util.Set` to a `mutable.Set`, and both got the Buffer-side accessor.
+**No check could see it**: the collapse FIRED, so nothing reported an untranslated chain, and the
+error surfaced only as `value asScalaBuffer is not a member of scala.collection.mutable.Buffer[…]`
+three files apart on liqp. The source is now chosen by what the receiver IS (`kindOf`/`shimSyms`),
+falling back to the TARGET OF THE TYPE THAT DECLARES `stream()` — which is what makes
+`class Own extends AbstractCollection<T>` still take `asScalaBuffer`, correctly, because `Own` really
+does extend the shim after the retyping. A `Set` or `Map` source is `.toBuffer`, a copy on the same
+footing the collapse already accepts.
+
+Two that WERE on this list now ship in `JavaCollections`:
 `Stream.sorted(Comparator)` as `sortedWith` (a copy, with the doc explaining why the name matters)
 and `Collectors.toCollection(f)` as `into` (bounded by `Growable`).
 `java.util.Collections`' statics were the same story and are now **CLOSED**, which is worth keeping

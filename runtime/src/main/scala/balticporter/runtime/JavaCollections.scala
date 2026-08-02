@@ -350,6 +350,66 @@ object JavaCollections:
   def intRange(startInclusive: Int, endExclusive: Int): scala.collection.mutable.Buffer[Int] =
     scala.collection.mutable.ArrayBuffer.from(startInclusive until endExclusive)
 
+  /** `Collectors.toSet()` on a chain this engine has already collapsed to a `Buffer`.
+    *
+    * `collect(Collectors.toList())` collapses to NOTHING, because the receiver already IS the
+    * sequence; `toSet` cannot, because the TARGET TYPE differs — which is exactly why K6 recorded
+    * it as open rather than guessing. A `HashSet`, because that is what java's collector actually
+    * builds; java documents the type, mutability, serializability and thread-safety of the result
+    * as unspecified, so nothing here is a promise java makes and this does not. */
+  def toSet[A](xs: scala.collection.mutable.Buffer[A]): scala.collection.mutable.Set[A] =
+    scala.collection.mutable.HashSet.from(xs)
+
+  /** `Collectors.toMap(keyFn, valueFn)` — java's TWO-argument form, which THROWS on a duplicate key.
+    *
+    * The throw is the whole reason this is not a `.map(x => k(x) -> v(x)).toMap`: java's two-argument
+    * collector calls `Map.merge` with a remapping function that throws `IllegalStateException`, so a
+    * duplicate key is a loud failure, and building a scala `Map` from pairs silently keeps the LAST
+    * one. A stream whose keys collide is a bug java reports and the naive translation hides — §4.4,
+    * with no compile error and no count moved. The three-argument overload below is the one that
+    * takes a merge function, and it is a different method for that reason.
+    *
+    * The mappers are declared with JAVA's own `Function` type, not `A => K`: `Function.identity()`
+    * reaches this slot in real code (liqp's `Insertions.of`) and is a `java.util.function.Function`,
+    * while a lambda written at the call site SAM-converts to one. Declaring the scala type would
+    * accept the second and reject the first. Same rule the shim's `removeIf` records for
+    * `Predicate`. */
+  def toMap[A, K, V](
+      xs: scala.collection.mutable.Buffer[A],
+      key: java.util.function.Function[? >: A, ? <: K],
+      value: java.util.function.Function[? >: A, ? <: V]): scala.collection.mutable.Map[K, V] =
+    val m = scala.collection.mutable.HashMap.empty[K, V]
+    xs.foreach { x =>
+      val k = key.apply(x)
+      if m.contains(k) then throw new IllegalStateException(s"Duplicate key $k")
+      m(k) = value.apply(x)
+    }
+    m
+
+  /** `Collectors.toMap(keyFn, valueFn, mergeFn)` — the overload that RESOLVES a duplicate key.
+    *
+    * Java's merge runs as `merge(existing, incoming)` and that ORDER is observable for any
+    * non-commutative resolver — `(a, b) -> b` means last-wins and `(a, b) -> a` means first-wins,
+    * and swapping the two inverts every one of them with no compile error. Java also REMOVES the
+    * mapping when the merge returns null, which is `Map.merge`'s documented behaviour and not an
+    * accident of the collector. */
+  def toMap[A, K, V](
+      xs: scala.collection.mutable.Buffer[A],
+      key: java.util.function.Function[? >: A, ? <: K],
+      value: java.util.function.Function[? >: A, ? <: V],
+      merge: java.util.function.BinaryOperator[V]): scala.collection.mutable.Map[K, V] =
+    val m = scala.collection.mutable.HashMap.empty[K, V]
+    xs.foreach { x =>
+      val k = key.apply(x)
+      val v = value.apply(x)
+      m.get(k) match
+        case Some(old) =>
+          val merged = merge.apply(old, v)
+          if merged == null then m.remove(k) else m(k) = merged
+        case None => m(k) = v
+    }
+    m
+
   /** `Collectors.toCollection(Factory::new)` — build the factory's collection and fill it.
     *
     * `Growable` is the exact bound: it is what "a collection you can add to" is in scala, and it is

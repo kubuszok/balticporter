@@ -211,6 +211,9 @@ final class CollectionsTransform(
   private var staticSyms: Map[String, SymId] = Map.empty
   /** the `java.util.stream` collapse — see `staticRewrite`. */
   private var asScalaBufferSym, filteredSym: SymId = SymId.None
+  /** scala's own `toBuffer` — how a `Kind.Set` or `Kind.Map` stream SOURCE reaches the `Buffer`
+    * every collapsed operation is declared over. See `streamSource`. */
+  private var toBufferSym: SymId = SymId.None
   /** `mutable.Buffer`, so a collapsed stream can be TYPED as what it now emits. */
   private var bufferSym: SymId = SymId.None
   /** scala's own `sum` — a plain MEMBER name on the collapsed buffer, not a `JavaCollections` helper. */
@@ -316,6 +319,7 @@ final class CollectionsTransform(
     bufferSym           = byScala.getOrElse("scala.collection.mutable.Buffer", SymId.None)
     sumSym              = mint("sum", "sum")
     mapSym              = mint("map", "map")
+    toBufferSym         = mint("toBuffer", "toBuffer")
     staticSyms = CollectionsTransform.StaticHelpers
       .map(n => n -> mint(n, s"$JavaCollectionsFqn.$n")).toMap
     // one `from` per DISTINCT scala target, so `new ArrayList<>(c)` copies through the companion the
@@ -880,7 +884,7 @@ final class CollectionsTransform(
       // interface declares the method, so on this frontend they never fire. See `collapsed` for
       // the audit that established this and for the one shape where the collapse does not reach.
       case (Some("java.util.Collection#stream" | "java.util.List#stream" | "java.util.Set#stream"), Nil) =>
-        recv.map(r => Tree.Select(r, asScalaBufferSym, asBuffer(r.tpe), t.origin))
+        recv.map(streamSource(_, t.method))
       // `IntStream.range(a, b)` is a stream SOURCE with no collection behind it — the one shape the
       // "only collapse a collapsed receiver" rule would otherwise leave untranslated forever, since
       // nothing can ever collapse it. It becomes the range itself, and the chain proceeds normally.
@@ -936,6 +940,22 @@ final class CollectionsTransform(
       case (Some("java.util.stream.Stream#collect"), List(collector))
           if collapsed(recv) && qualified(collectorOf(collector)).contains("java.util.stream.Collectors#toList") =>
         recv
+      // `toSet` and `toMap` were K6's two openly-unmapped collectors, and the reason they could not
+      // ride on `toList`'s arm is that `toList` collapses to NOTHING — the receiver already IS the
+      // sequence — while these two change the TARGET TYPE. Each therefore needs a helper of its
+      // own, and neither may be guessed: java's two-argument `toMap` THROWS on a duplicate key
+      // where a scala `.toMap` over pairs silently keeps the last (§4.4). See the helpers.
+      case (Some("java.util.stream.Stream#collect"), List(collector))
+          if collapsed(recv) && qualified(collectorOf(collector)).contains("java.util.stream.Collectors#toSet") =>
+        recv.map(r => factory(sym("toSet"), List(r)))
+      case (Some("java.util.stream.Stream#collect"), List(collector))
+          if collapsed(recv) && qualified(collectorOf(collector)).contains("java.util.stream.Collectors#toMap") =>
+        // the collector carries its mappers INSIDE it, exactly as `toCollection` carries its
+        // factory, so the collapse cannot end at the receiver: they move to the helper's argument
+        // list. Java has a two- and a three-argument form and nothing else; an arity this does not
+        // recognise declines the rewrite rather than dropping an argument.
+        val fs = collector match { case a: Tree.Apply => a.args; case _ => Nil }
+        if fs.sizeIs != 2 && fs.sizeIs != 3 then None else recv.map(r => factory(sym("toMap"), r :: fs))
       case _ => None
 
   /** the arguments `JavaCollections.asList` should receive — or `None`, which REFUSES the whole
@@ -989,6 +1009,49 @@ final class CollectionsTransform(
   private def collectorOf(t: Term): SymId = t match
     case a: Tree.Apply => a.method
     case _             => SymId.None
+
+  /** A `stream()` receiver AS the scala sequence the collapse consumes — the head of the chain.
+    *
+    * This used to be an unconditional `Tree.Select(r, asScalaBuffer)`, and that is a table lookup
+    * keyed on ONE kind applied to every kind. `asScalaBuffer` is an extension in `JavaCollection`'s
+    * companion — the SHIM's accessor — and only a receiver that IS (or extends) the shim has it.
+    * Measured on liqp: `value asScalaBuffer is not a member of scala.collection.mutable.Buffer[…]`
+    * where the declaration was a `java.util.List`, and `… is not a member of
+    * scala.collection.mutable.Map[…]` where it was a `Map` reached through this phase's own
+    * `entrySet()` rewrite (which returns the map). Three sites, none of which any check could see:
+    * the collapse fired, so nothing reported an untranslated chain.
+    *
+    * What the receiver really is decides, in this order and no other:
+    *
+    *   - a type this phase MINTED (`kindOf`/`shimSyms` — §4.56's "what did the phase do to it");
+    *   - failing that, the TARGET of the type that DECLARES `stream()`. That is the case a library
+    *     which defines its own collection is made of: `class Own extends AbstractCollection<T>`
+    *     keeps its own type, which this phase never minted, and `java.util.Collection#stream`'s
+    *     owner maps to the shim — so `own.asScalaBuffer` is right, and it is right BECAUSE `Own`
+    *     really does extend `JavaCollection` after the retyping.
+    *
+    * A `Kind.Set` or `Kind.Map` source is `.toBuffer` — a COPY, on the same footing the collapse
+    * already accepts for `asScalaBuffer` (its own note: java's stream is lazy, the chain's terminal
+    * materialises, and the observable result is identical). It is not optional: everything the
+    * chain collapses onto (`JavaCollection.filtered`, `sortedWith`, `into`) is declared over a
+    * `Buffer`, and a scala `Map[K, V]` copied to a `Buffer` is `Buffer[(K, V)]` — precisely the
+    * `entrySet()` view java streamed. */
+  private def streamSource(r: Term, m: SymId)(using p: Program): Term =
+    val effective = headSym(r.tpe)
+      .filter(s => kindOf.contains(s) || shimSyms.contains(s))
+      .orElse(p.symbolOf(m).flatMap(x => p.symbolOf(x.owner)).flatMap(o => remap.get(o.id)))
+    effective match
+      case Some(s) if shimSyms.contains(s) && asScalaBufferSym != SymId.None =>
+        Tree.Select(r, asScalaBufferSym, asBuffer(r.tpe), r.origin)
+      case Some(s) if kindOf.get(s).contains(Kind.Seq)                       => r
+      case Some(s) if kindOf.get(s).contains(Kind.Set) && toBufferSym != SymId.None =>
+        Tree.Select(r, toBufferSym, asBuffer(r.tpe), r.origin)
+      // a `Map[K, V]` copies to a `Buffer[(K, V)]`, so the ARITY changes and `asBuffer` — which
+      // only swaps the head — would claim a `Buffer[K, V]`. The bare constructor is the honest
+      // record of a type this phase cannot spell precisely, and only its head is ever read.
+      case Some(s) if kindOf.get(s).contains(Kind.Map) && toBufferSym != SymId.None =>
+        Tree.Select(r, toBufferSym, TypeRepr.TypeRef(TypeRepr.NoPrefix, bufferSym), r.origin)
+      case _ => r
 
   /** the OTHER direction from [[coerce]]: a shim reaching a slot that wants a scala collection.
     *
@@ -1713,7 +1776,8 @@ object CollectionsTransform:
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
-         "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent")
+         "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
+         "toSet", "toMap")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give
@@ -1758,6 +1822,8 @@ object CollectionsTransform:
     "java.util.Set#stream",
     "java.util.stream.Collectors#toCollection",
     "java.util.stream.Collectors#toList",
+    "java.util.stream.Collectors#toMap",
+    "java.util.stream.Collectors#toSet",
     "java.util.stream.DoubleStream#sum",
     "java.util.stream.IntStream#mapToObj",
     "java.util.stream.IntStream#range",

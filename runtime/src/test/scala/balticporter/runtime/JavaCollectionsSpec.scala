@@ -429,6 +429,40 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(JavaCollections.intRange(5, 3).toList, Nil)
   }
 
+  test("toSet collects to a Set — the target type is why it could not ride on toList's arm") {
+    assertEquals(JavaCollections.toSet(ArrayBuffer(1, 2, 2, 3)).toList.sorted, List(1, 2, 3))
+    assertEquals(JavaCollections.toSet(ArrayBuffer.empty[Int]).size, 0)
+  }
+
+  test("toMap(k, v) THROWS on a duplicate key, where a scala `.toMap` over pairs keeps the last") {
+    // Java's two-argument collector merges with a remapping function that throws
+    // `IllegalStateException`. A stream whose keys collide is a bug java reports loudly and the
+    // naive `.map(x => k(x) -> v(x)).toMap` hides — no compile error, no count moved.
+    val id: java.util.function.Function[String, String]  = (s: String) => s
+    val len: java.util.function.Function[String, Int]    = (s: String) => s.length
+    assertEquals(JavaCollections.toMap(ArrayBuffer("a", "bb"), id, len).toMap, Map("a" -> 1, "bb" -> 2))
+    val head: java.util.function.Function[String, Char] = (s: String) => s.charAt(0)
+    intercept[IllegalStateException](JavaCollections.toMap(ArrayBuffer("ax", "ay"), head, len))
+  }
+
+  test("toMap(k, v, merge) runs merge(EXISTING, INCOMING) — the order inverts every resolver") {
+    // `(a, b) -> b` is last-wins and `(a, b) -> a` is first-wins; swapping the two arguments turns
+    // each into the other with nothing in the compile to show for it.
+    val head: java.util.function.Function[String, Char] = (s: String) => s.charAt(0)
+    val id: java.util.function.Function[String, String] = (s: String) => s
+    val last: java.util.function.BinaryOperator[String] = (_: String, b: String) => b
+    val first: java.util.function.BinaryOperator[String] = (a: String, _: String) => a
+    assertEquals(JavaCollections.toMap(ArrayBuffer("ax", "ay"), head, id, last).toMap, Map('a' -> "ay"))
+    assertEquals(JavaCollections.toMap(ArrayBuffer("ax", "ay"), head, id, first).toMap, Map('a' -> "ax"))
+  }
+
+  test("…and a merge returning NULL REMOVES the mapping, which is Map.merge's documented behaviour") {
+    val head: java.util.function.Function[String, Char] = (s: String) => s.charAt(0)
+    val id: java.util.function.Function[String, String] = (s: String) => s
+    val drop: java.util.function.BinaryOperator[String] = (_: String, _: String) => null
+    assertEquals(JavaCollections.toMap(ArrayBuffer("ax", "ay"), head, id, drop).toMap, Map.empty[Char, String])
+  }
+
   test("into builds the FACTORY's collection and fills it — the target comes from the collector") {
     val out = JavaCollections.into(ArrayBuffer(1, 2, 3), () => ListBuffer.empty[Int])
     assertEquals(out.toList, List(1, 2, 3))

@@ -157,6 +157,28 @@ class CollectionsStaticsSpec extends PortSuite:
     assertNotEmits(p, "java.util.stream.IntStream")
   }
 
+  test("`Collectors.toSet` and `toMap` collapse onto helpers — K6's two openly-unmapped collectors") {
+    // `toList` collapses to NOTHING, because the receiver already IS the sequence. These two change
+    // the TARGET TYPE, which is why they needed a helper each rather than another guard on that arm.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |import java.util.stream.*;
+        |import java.util.function.Function;
+        |class C {
+        |  Set<String> s(List<String> xs)                { return xs.stream().collect(Collectors.toSet()); }
+        |  Map<Integer, String> m(List<String> xs)       { return xs.stream().collect(Collectors.toMap(String::length, Function.identity())); }
+        |  Map<Integer, String> merged(List<String> xs)  { return xs.stream().collect(Collectors.toMap(String::length, Function.identity(), (a, b) -> b)); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "balticporter.runtime.JavaCollections.toSet(xs)")
+    assertEmitsMatch(p, """JavaCollections\.toMap\(xs, [^\n]*identity\(\)\)""")
+    assertEmitsMatch(p, """JavaCollections\.toMap\(xs, [^\n]*identity\(\), \(""")
+    assertNotEmits(p, "java.util.stream.Collectors.")
+  }
+
   test("`Collectors.toCollection(f)` is `into` — the target is read out of the collector's factory") {
     val p = port(streams, new CollectionsTransform)
     // The one terminal that cannot end at the receiver the way `toList` does: its target lives
