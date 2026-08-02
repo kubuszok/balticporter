@@ -1955,11 +1955,11 @@ written, 987 members in the source map. `just liqp-measure`.
 
 | | |
 |---|---|
-| scalac errors | **126 -> 31**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`) |
+| scalac errors | main source set **126 -> 31 -> 28**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); with the test source set, **90 -> 87** |
 | `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
 | `jdk-surface` | **19 -> 10** |
-| `collection-boundary` | **6 -> 14 -> 13** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), and rose by the one `InexpressibleParent` refusal K5.7 counts |
+| `collection-boundary` | **6 -> 14 -> 13 -> 8** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), rose by the one `InexpressibleParent` refusal K5.7 counts, and fell by five when the OWNED-callee bridge stopped being switched off by a shim this library never names (K2.5) |
 | `omissions` | **6 -> 4 -> 1** — `PlainBigDecimal`'s two `super(args)` are no longer dropped (with the external constructor's signature readable the funnel reaches K5.5's synthesised primary), and `LiquidException`'s three reach a primary synthesised at the JDK throwable's widest overload (C3) |
 | tests | 639 `@Test` upstream, **577 emitted, 0 run** — see 10.5.4 |
 
@@ -2071,9 +2071,13 @@ changes none of which is (b) or (c):
 | an enhanced-for BINDING reassigned in the body | **0.** K7's alias with `var` and no cast — the same fact `MutableParamsTransform` handles for a parameter (K7) |
 | a promoted ENUM parameter against a DECLARED method — 2 errors | **0.** T11's remaining half; what blocked it was the ROUTE, not visibility — `enumDef` promotes without `CtorFunnel`, so the §4.55 pass had nothing to place (T11) |
 | `PlainBigDecimal`'s dropped `super(args)` | **0**, by K5.5 once the external signature became readable |
+| `Insertions.of`/`Filters.of` — `E134 None of the overloaded alternatives`, 5 errors, read as an overload problem | **0 of the five, 3 fewer errors.** It was never overload resolution: liqp names `java.util.Collection` and never names `java.lang.Iterable`, and the pass that bridges a retyped argument into a shim-typed formal opened with `if javaIterableSym == SymId.None then t` — so the whole bridge was inert for this port, with no check, no policy entry and no member digest able to say so (K2.5, new). The remaining two sites were the `Arrays.asList(arr)` aliasing refusal wearing an E134 mask, and now report it |
+| `LiquidException` — 0 errors and a SILENT §4.4 defect: three roots, three different `super(...)`, none promotable, so every exception it threw had a null message and no cause | **fixed, and it moves no error count at all**, which is §3 in one line. C3's synthesised primary at the JDK throwable's widest overload; `omissions` 4 -> 1 |
 
-**What is left, 31.** `Arrays.asList(arr)`'s aliasing refusal (K6.5) is 9 and deliberate.
-`Insertions.of`/`Filters.of` overloads broken by a retyped argument are 5. **F11 is 4 and now has an
+**What is left, 28 in the main source set.** `Arrays.asList(arr)`'s aliasing refusal (K6.5) is 11 —
+9 deliberate, and 2 that K2.5's bridge now reaches, where the wrap names the WRAPPER rather than the
+boundary because the phase refused to move the value it wraps (open, in K6.5's territory).
+**F11 is 4 and now has an
 exact diagnosis rather than a nonsense one**: `list ++= valueList` where `list` is a
 `Buffer[Object]` and `valueList` a `Buffer[?]` reads `Required: IterableOnce[Object]` since
 `? super Object` renders as `Object`, and what blocks it is that a java `?` is `? extends Object`

@@ -675,6 +675,18 @@ NOT retype is by definition still whatever it was, and the phase has no standing
 Note this failure is invisible to every count: the port still compiled and every check reported the
 same number, because the members it broke were inside a type the library drops.
 
+**And the same rule governs a phase's own FAST-PATH GUARD, where it is even harder to see.** A
+"nothing to do here" test written when a pass had ONE target keeps passing for that target and
+starts answering for every target added since. `CollectionsTransform`'s argument bridge opened with
+`if javaIterableSym == SymId.None then t` — a fact about `java.lang.Iterable` — while the bridge
+it guards also serves `java.util.Collection`; so a library that uses `Collection` throughout and
+never names `Iterable` had the **whole pass inert**, and `E134 None of the overloaded alternatives`
+was the only evidence anywhere in the run. **A pass that never runs looks exactly like a pass with
+nothing to do**: no check fires, no policy entry goes unmatched, and `members.tsv` is stable because
+the output has been that way since the port began. So a guard is derived from ALL of the pass's own
+targets or it is not written — the work each target would do already declines cheaply on its own
+(`ENGINE-LIMITS.md` K2.5, measured at 3 errors and a `collection-boundary` residue of 5).
+
 ## 4.57 Every emission backend carries PROVENANCE — it is a licence obligation
 
 Each library in reach of this engine is licensed (Apache-2.0 so far) and every port is a derived

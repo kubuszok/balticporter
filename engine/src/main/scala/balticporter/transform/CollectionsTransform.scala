@@ -1488,7 +1488,19 @@ final class CollectionsTransform(
     //
     // The java-formal direction is [[bridgeJavaFormals]]'s, and it runs AFTER the rewrites for
     // exactly the reason the second failure above gives.
-    if javaIterableSym == SymId.None || !ownedSym(t.method) || keepsJavaFormals(t) then t
+    //
+    // AND IT IS NOT GATED ON `javaIterableSym`. It was, and that gate was a fact about a DIFFERENT
+    // shim: `javaIterableSym` exists only where the program NAMES `java.lang.Iterable`, while the
+    // table in [[coerce]] has two independent targets and the `JavaCollection` half has nothing to
+    // do with `Iterable`. A library that uses `Collection` throughout and never mentions `Iterable`
+    // — liqp, 135 files — therefore had this whole pass switched off, silently: no check fires, no
+    // policy entry goes unmatched, and the only evidence is `E134 None of the overloaded
+    // alternatives` at each call where java's own `List`-is-a-`Collection` subtyping did not
+    // survive the retyping. §4.56's rule at one remove: "is there a `JavaIterable` in this program"
+    // is not a fact about a `Collection`-typed formal. `coerce` already returns the argument
+    // untouched when no factory matches, so the gate bought nothing but the bug — what it looked
+    // like it was protecting is now protected where it belongs, at the target comparisons.
+    if !ownedSym(t.method) || keepsJavaFormals(t) then t
     else
       val formals = formalsOf(t)
       if formals.sizeIs != t.args.size then t
@@ -1684,11 +1696,18 @@ final class CollectionsTransform(
     // (§4.56) rather than any test on the name.
     val wantsJava = expectedScoped &&
       wants.flatMap(p.symbolOf).exists(o => typeMap.contains(o.fullName))
+    // …asked so that an ABSENT shim can never match. A shim symbol is `SymId.None` when nothing in
+    // the program maps to it (`javaIterableSym` exists only where something names
+    // `java.lang.Iterable`), and a `wants` of `Some(SymId.None)` — an expected type whose head did
+    // not resolve — would then satisfy `contains` and wrap a value in a factory for a type this run
+    // does not have. That is the real hazard the pass-level `javaIterableSym` gate was standing in
+    // front of, and it belongs here, per target, where it costs no OTHER target its bridge.
+    def wantsIs(s: SymId) = s != SymId.None && wants.contains(s)
     val factory = from match
-      case _ if wants.isEmpty || isKeySetView(actual)                                 => SymId.None
-      case Some(Kind.Seq | Kind.Set | Kind.Map) if wants.contains(javaIterableSym)   => iterableFromSym
-      case Some(Kind.Seq)                       if wants.contains(javaCollectionSym) => collectionFromSym
-      case Some(Kind.Set)                       if wants.contains(javaCollectionSym) => collectionFromSetSym
+      case _ if wants.isEmpty || isKeySetView(actual)                          => SymId.None
+      case Some(Kind.Seq | Kind.Set | Kind.Map) if wantsIs(javaIterableSym)    => iterableFromSym
+      case Some(Kind.Seq)                       if wantsIs(javaCollectionSym)  => collectionFromSym
+      case Some(Kind.Set)                       if wantsIs(javaCollectionSym)  => collectionFromSetSym
       // `asJava` converts ONE level, exactly as `asScala` does, so a `Buffer[Buffer[String]]` at a
       // `java.util.List<java.util.List<String>>` formal would emit a wrap that lies one type
       // argument in. Refused and counted, the same way [[externalProducer]] refuses the mirror.

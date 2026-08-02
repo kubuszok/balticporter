@@ -1542,6 +1542,52 @@ Three cells are REFUSALS rather than gaps, and each refusal is a compile error a
 *Fix kind: (a). Whether to retype collections **at all** is (b) — a JVM-only port may keep
 `java.util` and skip the phase entirely, which makes this boundary vanish.*
 
+### K2.5 A pass gated on ONE of its targets is SWITCHED OFF for every program that lacks that target — 3 errors, and a whole pass silently inert
+
+K2's bridge has TWO independent targets: `JavaIterable`, which exists when the program names
+`java.lang.Iterable`, and `JavaCollection`, which exists when it names `java.util.Collection`. The
+pass that applies the bridge at an OWNED callee's formals opened with
+`if javaIterableSym == SymId.None then t` — a cheap "nothing to do" guard, written when the pass had
+one target, and left in place when it grew the second.
+
+**So a library that uses `Collection` throughout and never once mentions `Iterable` is a library
+where the whole argument bridge is a no-op.** liqp is exactly that: 135 java files, `Collection` in
+three public APIs, `Iterable` nowhere, and **not one `JavaCollection.from(` in the emitted port**.
+What reaches the reader is `E134 None of the overloaded alternatives of method of in object Filters`
+at each call where java's own `List`-is-a-`Collection` subtyping did not survive the retyping —
+`mutable.Buffer` is not a `JavaCollection`, and the bridge that exists for precisely that was never
+consulted.
+
+Nothing else could see it, and that is the part worth keeping: no check fires (the boundary count
+is about the EXTERNAL seam, and this callee is owned), no policy entry goes unmatched (there is no
+policy — the phase is unscoped here), and `members.tsv` is stable because the pass has been inert
+since the port began. **A pass that never runs looks exactly like a pass with nothing to do.**
+
+The rule is `CLAUDE.md` §4.56's, one remove out: *a phase may conclude something only from what the
+phase itself did to the thing it is concluding about.* "Is there a `JavaIterable` in this program"
+is not a fact about a `Collection`-typed formal. The guard also bought nothing — `coerce` already
+returns the argument untouched when no factory matches — and what it LOOKED like it protected (an
+expected type whose head did not resolve, so `wants` is `Some(SymId.None)` and `contains` matches an
+ABSENT shim) belongs per-target at the comparison, where it costs no other target its bridge.
+
+**Measured on liqp: 90 → 87 errors, `collection-boundary` 13 → 8, 8 member digests over 4
+members.** Five bridges are emitted where none was; three compile. The other two are the same
+`Arrays.asList(arr)` sites K6.5 deliberately refuses to rewrite, and they are the caution:
+
+**A bridge inserted over a value the phase REFUSED to move names the wrapper, not the boundary.**
+`Insertions.of(Arrays.asList(arr))` gets `JavaCollection.from(java.util.Arrays.asList(…))` — the
+node's type says `Buffer` because `transformType` moved it, while K6.5's aliasing refusal left the
+VALUE a real `java.util.List`, so `from` receives a java collection. Same error count at those two
+sites either way (the call could not compile before), and the message actually improved from "none
+of the overloaded alternatives" to `Found: java.util.List[Array[Object]]`, which names the real
+cause. But the shape is the one `CLAUDE.md` §1(b) warns about, and it cannot be fixed here:
+`wrapIterableArgs` runs BEFORE the rewrites (it must — a shim-typed formal has to be in place before
+overload resolution sees the argument), so at wrap time the phase has not yet decided to refuse the
+`asList`. It is left OPEN and counted, next to K6.5's own nine.
+
+*Fix kind: (a) engine — the gate, DONE. The `asList`-refused source reaching the bridge is (a) and
+OPEN, in K6.5's territory rather than this one.*
+
 ### K3. Injected sources are for SEMANTICS the target lacks — never for adapting SHAPES
 
 Two rules, and a port violates them in different ways:
