@@ -197,6 +197,28 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(xs.toList, List("a", "b"))
   }
 
+  test("sortNatural takes JAVA's bound, so a Comparable<Object> element still sorts") {
+    // java's signature is `<T extends Comparable<? super T>>`, not `Comparable<T>`. A
+    // `List<Comparable<Object>>` — what a library sorting heterogeneous values declares — satisfies
+    // java's bound and not the narrower one, and read `Found: Buffer[Comparable[Object]]`.
+    val xs = scala.collection.mutable.ArrayBuffer[Comparable[Object]](
+      new Comparable[Object] { def compareTo(o: Object): Int = 1 },
+      new Comparable[Object] { def compareTo(o: Object): Int = -1 },
+    )
+    JavaCollections.sortNatural(xs)
+    assertEquals(xs.size, 2)
+    // …and the ordinary case is unchanged
+    val ys = scala.collection.mutable.ArrayBuffer[java.lang.Integer](3, 1, 2)
+    JavaCollections.sortNatural(ys)
+    assertEquals(ys.toList.map(_.intValue), List(1, 2, 3))
+  }
+
+  test("noneMatch is java's, including `true` on an empty source") {
+    assert(JavaCollections.noneMatch(List(1, 2, 3), (_: Int) > 5))
+    assert(!JavaCollections.noneMatch(List(1, 2, 3), (_: Int) > 2))
+    assert(JavaCollections.noneMatch(List.empty[Int], (_: Int) > 0))
+  }
+
   // -------------------------------------------------------------------------------------------
   // addAll — java's read off an UNBOUNDED WILDCARD source
   // -------------------------------------------------------------------------------------------

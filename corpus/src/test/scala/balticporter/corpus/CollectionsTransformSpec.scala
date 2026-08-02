@@ -512,6 +512,49 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "dst ++= src")
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // The SHORT-CIRCUITING stream terminals, and the concurrent map. Three unrelated holes with one
+  // shape: a JDK member the phase's tables did not name, which is invisible until a compile error
+  // names it — `JdkSurfaceCheck` reads those same tables, so an unlisted member reads as the port's
+  // JDK wall rather than as an engine gap.
+  // ---------------------------------------------------------------------------------------------
+
+  test("anyMatch/allMatch are scala's exists/forall, and noneMatch is the one that needs a helper") {
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class S {
+        |  boolean any(List<String> xs)  { return xs.stream().anyMatch(s -> s.isEmpty()); }
+        |  boolean all(List<String> xs)  { return xs.stream().allMatch(s -> s.isEmpty()); }
+        |  boolean none(List<String> xs) { return xs.stream().noneMatch(s -> s.isEmpty()); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "xs.exists(")
+    assertEmits(p, "xs.forall(")
+    assertEmits(p, "balticporter.runtime.JavaCollections.noneMatch(xs,")
+    // the whole chain collapsed — no `stream()` survives
+    assertNotEmits(p, ".stream()")
+  }
+
+  test("a ConcurrentHashMap is a java.util.Map, so it must map or the subtype relation splits") {
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |import java.util.concurrent.ConcurrentHashMap;
+        |class C {
+        |  Map<String, Object> make() { return new ConcurrentHashMap<String, Object>(); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    // `TrieMap` and not `mutable.HashMap`: the concurrency is the whole reason the java names this
+    // type, and downgrading it would compile and lose thread-safety silently.
+    assertEmits(p, "new scala.collection.concurrent.TrieMap[java.lang.String, java.lang.Object]()")
+    assertNotEmits(p, "java.util.concurrent.ConcurrentHashMap")
+  }
+
   test("an IN-PROGRAM vararg method still receives the materialised array — the convention holds") {
     val p = port(asList, new CollectionsTransform)
     // the pack is only opened for the one helper declared `A*`; a java `T...` parameter is still

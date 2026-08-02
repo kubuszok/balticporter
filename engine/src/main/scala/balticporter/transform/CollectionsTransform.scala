@@ -232,6 +232,8 @@ final class CollectionsTransform(
   private var sumSym: SymId = SymId.None
   /** scala's own `map` — a plain member on a collapsed buffer, for the stream chain. */
   private var mapSym: SymId = SymId.None
+  /** scala's own `exists`/`forall` — java's `anyMatch`/`allMatch`, which mean exactly these. */
+  private var existsSym, forallSym: SymId = SymId.None
   /** `JavaIterator.from` — the `iterator` counterpart of `wrapIterableArgs`. */
   private var iteratorFromSym, javaIteratorSym: SymId = SymId.None
   /** the mapping targets `JavaCollections.fromJava` can actually PRODUCE — see
@@ -362,6 +364,8 @@ final class CollectionsTransform(
     bufferSym           = byScala.getOrElse("scala.collection.mutable.Buffer", SymId.None)
     sumSym              = mint("sum", "sum")
     mapSym              = mint("map", "map")
+    existsSym           = mint("exists", "exists")
+    forallSym           = mint("forall", "forall")
     toBufferSym         = mint("toBuffer", "toBuffer")
     staticSyms = CollectionsTransform.StaticHelpers
       .map(n => n -> mint(n, s"$JavaCollectionsFqn.$n")).toMap
@@ -1445,6 +1449,20 @@ final class CollectionsTransform(
       case (Some("java.util.stream.Stream#filter"), List(pred)) if filteredSym != SymId.None && collapsed(recv) =>
         recv.map(r => Tree.Apply(Tree.Ident(filteredSym, TypeRepr.NoType, t.origin), List(r, pred),
                                  filteredSym, r.tpe, t.origin))
+      // the SHORT-CIRCUITING terminals. `anyMatch`/`allMatch` are scala's `exists`/`forall`
+      // exactly — same result, same laziness, same answer on an empty source (`false` / `true`) —
+      // so they are plain members and not helpers; a helper here would be indirection with nothing
+      // to say. `noneMatch` has no scala namesake and IS a helper, because the alternative is
+      // synthesising a negation node for one call: `!xs.exists(p)` is a term this phase has no
+      // `unary_!` symbol for, and minting one to save three lines of runtime is the wrong trade.
+      case (Some("java.util.stream.Stream#anyMatch"), List(pred)) if existsSym != SymId.None && collapsed(recv) =>
+        recv.map(r => Tree.Apply(Tree.Select(r, existsSym, TypeRepr.NoType, t.origin), List(pred),
+                                 existsSym, t.tpe, t.origin))
+      case (Some("java.util.stream.Stream#allMatch"), List(pred)) if forallSym != SymId.None && collapsed(recv) =>
+        recv.map(r => Tree.Apply(Tree.Select(r, forallSym, TypeRepr.NoType, t.origin), List(pred),
+                                 forallSym, t.tpe, t.origin))
+      case (Some("java.util.stream.Stream#noneMatch"), List(pred)) if sym("noneMatch") != SymId.None && collapsed(recv) =>
+        recv.map(r => factory(sym("noneMatch"), List(r, pred)))
       // the terminal, and only for the collector the receiver ALREADY is. `Collectors.toSet` and
       // `toMap` each need a different target type, and guessing one would be a silent wrong answer;
       // unmapped, they fail to compile, which is the honest outcome. `toCollection(f)` was on that
@@ -2536,6 +2554,20 @@ object CollectionsTransform:
     "java.util.HashMap"       -> ("scala.collection.mutable.HashMap", Kind.Map),
     "java.util.LinkedHashMap" -> ("scala.collection.mutable.LinkedHashMap", Kind.Map),
     "java.util.TreeMap"       -> ("scala.collection.mutable.TreeMap", Kind.Map),
+    // `ConcurrentHashMap` is a `java.util.Map`, so a port that mapped the interface and not this
+    // one splits the relation the source depends on — `Map<String, Object> m = new
+    // ConcurrentHashMap<>()` reads `Found: ConcurrentHashMap / Required: mutable.Map` and there is
+    // no seam at a `new`. It is the same rule the `Queue`/`Deque` block states, met at the
+    // concurrent package: A MAPPING MUST PRESERVE THE SOURCE LIBRARY'S OWN SUBTYPE RELATIONS.
+    //
+    // `scala.collection.concurrent.TrieMap` and not `mutable.HashMap`, because the concurrency is
+    // the whole reason the java names this type: `TrieMap` is scala's lock-free concurrent map and
+    // is a `mutable.Map`, so every rewrite above still applies. Downgrading to `HashMap` would
+    // compile and lose thread-safety silently, which is §4.4's shape at a type rather than at a
+    // statement. What is NOT reproduced is `ConcurrentMap`'s atomic `putIfAbsent`/`replace`
+    // contract; `TrieMap` has both and they are atomic there too.
+    "java.util.concurrent.ConcurrentHashMap" -> ("scala.collection.concurrent.TrieMap", Kind.Map),
+    "java.util.concurrent.ConcurrentMap"     -> ("scala.collection.concurrent.Map", Kind.Map),
     // a scala `Map` IS an `Iterable[(K, V)]`, so java's `Map.Entry` — a key/value pair with no
     // identity of its own — is a `Tuple2`. `getKey`/`getValue` become `_1`/`_2` (below).
     // Spoon's qualified name for a nested type separates with `$` — that is the key that fires;
@@ -2580,7 +2612,7 @@ object CollectionsTransform:
   private[balticporter] val UninheritableTargets: Set[String] = Set("scala.Tuple2")
 
   val StaticHelpers: List[String] =
-    List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView", "addAll", "removeValue",
+    List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView", "addAll", "noneMatch", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
@@ -2636,10 +2668,13 @@ object CollectionsTransform:
     "java.util.stream.IntStream#range",
     "java.util.stream.IntStream#sum",
     "java.util.stream.LongStream#sum",
+    "java.util.stream.Stream#allMatch",
+    "java.util.stream.Stream#anyMatch",
     "java.util.stream.Stream#collect",
     "java.util.stream.Stream#filter",
     "java.util.stream.Stream#map",
     "java.util.stream.Stream#mapToDouble",
+    "java.util.stream.Stream#noneMatch",
     "java.util.stream.Stream#sorted",
   )
 

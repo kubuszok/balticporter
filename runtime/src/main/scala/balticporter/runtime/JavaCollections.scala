@@ -35,8 +35,15 @@ object JavaCollections:
 
   /** `java.util.Collections.sort(list)` — the natural-ordering overload, which java resolves through
     * `Comparable`. Scala needs an `Ordering`, and there is none for an arbitrary `A`; taking the
-    * `Comparable` bound explicitly is what java's own signature says. */
-  def sortNatural[A <: Comparable[A]](xs: scala.collection.mutable.Buffer[A]): Unit =
+    * `Comparable` bound explicitly is what java's own signature says.
+    *
+    * The bound is java's OWN — `<T extends Comparable<? super T>>`, not `Comparable<T>` — and the
+    * difference is not cosmetic. `Comparable<Object>` satisfies java's bound (`? super
+    * Comparable<Object>` admits `Object`) and does NOT satisfy `Comparable[A]`, so a `List<Comparable<Object>>`
+    * — which is exactly what a library that sorts heterogeneous values declares — read
+    * `Found: Buffer[Comparable[Object]] / Required: Buffer[A]`. Transcribing a JDK signature means
+    * transcribing its wildcards. */
+  def sortNatural[A <: Comparable[? >: A]](xs: scala.collection.mutable.Buffer[A]): Unit =
     inPlace(xs, xs.toList.sortWith((a, b) => a.compareTo(b) < 0))
 
   /** `java.util.Collections.shuffle(list, rnd)` — JAVA'S ALGORITHM, not an equivalent one.
@@ -106,6 +113,16 @@ object JavaCollections:
     * nothing in a port ever EXTENDS this class, so there is no second java interface to satisfy and
     * no ported member for a collection trait's inherited names to collide with. */
   def asListView[A](arr: Array[A]): scala.collection.mutable.Buffer[A] = new ArrayViewBuffer[A](arr)
+
+  /** `java.util.stream.Stream.noneMatch(Predicate)` — the one short-circuiting terminal with no
+    * scala namesake.
+    *
+    * `anyMatch` and `allMatch` are `exists` and `forall` exactly (same result, same laziness, same
+    * answer on an empty source), so the collapse emits those as plain members and nothing lives
+    * here for them. `noneMatch` is `!exists`, and a NEGATION is a term the collapse would have to
+    * synthesise a `unary_!` symbol for — three lines of runtime against a minted operator for one
+    * call shape. Java's own answer on an empty stream is `true`, which `!exists` gives. */
+  def noneMatch[A](xs: scala.collection.Iterable[A], p: A => Boolean): Boolean = !xs.exists(p)
 
   /** `java.util.Collection.addAll(Collection<?>)` — java's read off an UNBOUNDED WILDCARD.
     *
