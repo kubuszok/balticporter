@@ -9,7 +9,7 @@ manifest	0
 omissions	8
 policy	0
 port-map	0
-portability(all)	1525
+portability(all)	1524
 portability(emitted)	1467
 portability(injected)	0
 porter-notes	0
@@ -17,6 +17,8 @@ remediation	7
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0
+switch-null	0
 trivia	0
 trivia(deliberate)	0
 trivia(recovered)	1
+try-resource	0

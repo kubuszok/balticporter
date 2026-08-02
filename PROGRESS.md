@@ -55,7 +55,7 @@ Measurements below are from one serial run of all lanes, 2026-07-31.
 
 ## 1. Corpus inventory
 
-Nine libraries are ported on the current (TIR) pipeline, across thirteen runs — a library and its own
+Ten libraries are ported on the current (TIR) pipeline, across fifteen runs — a library and its own
 test suite are two ports, and the suite is a *dependent* of the library:
 
 | port | upstream | files in / out | tests | compile |
@@ -73,6 +73,8 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
+| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **8** (§10.5.3, all classified) |
+| `liqp-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **577** emitted, **none run** — the port does not compile | **5** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -1975,8 +1977,8 @@ written, 987 members in the source map. `just liqp-measure`.
 | scalac errors | main source set **126 -> 31 -> 27 -> 8**, all `EngineGap` (`Approx=0 Unmapped=0 Declared=0`); BOTH source sets **90 -> … -> 50 -> 38 -> 26 -> 22 -> 19 -> 14 -> 13** (the collections endgame: K6.5's aliasing view took 12, G23's wildcard `addAll` 4, `asList`'s explicit type argument 5, three unnamed JDK members 3, K5.8's `super` placement 1) |
 | `break_residue` | **0** — liqp has loops and switches, and §4.4's control-flow table cost this port nothing |
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
-| `jdk-surface` | **19 -> 10** |
-| `collection-boundary` | **6 -> 14 -> 13 -> 8** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), rose by the one `InexpressibleParent` refusal K5.7 counts, and fell by five when the OWNED-callee bridge stopped being switched off by a shim this library never names (K2.5) |
+| `jdk-surface` | **19 -> 10 -> 9** — `anyMatch`/`sortNatural`/`ConcurrentHashMap` stopped reading as this port's wall once the tables named them |
+| `collection-boundary` (main) | **6 -> 14 -> 13 -> 8 -> 18 -> 14** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), rose by the one `InexpressibleParent` refusal K5.7 counts, and fell by five when the OWNED-callee bridge stopped being switched off by a shim this library never names (K2.5). It then ROSE to 18 and fell to 14 in one step, because the aliasing refusal became a TRANSLATION: twelve `Arrays.asList(arr)` sites stopped being untranslated calls the check cannot see and became boundaries it can, four of which the same change closed |
 | `omissions` | **6 -> 4 -> 1** — `PlainBigDecimal`'s two `super(args)` are no longer dropped (with the external constructor's signature readable the funnel reaches K5.5's synthesised primary), and `LiquidException`'s three reach a primary synthesised at the JDK throwable's widest overload (C3) |
 | tests | 639 `@Test` upstream, **577 emitted, 0 run** — see 10.5.4 |
 
@@ -2082,6 +2084,39 @@ porting a library from outside the family the engine grew up in.
   declines it and drops both arguments), and K5.5's throwable fence is NARROWED to "wherever it
   nominates" rather than removed. `omissions` **4 -> 1**, errors 31 -> 31, 8 member digests — all of
   them that one class — and every other corpus port byte-for-byte unchanged.
+- **`ENGINE-LIMITS.md` K6.5 (CLOSED, the aliasing half)** — *what was refused was the COPY, never the
+  form.* `Arrays.asList(arr)` returns a live view and the runtime helper's `A*` copies, so the
+  rewrite refused it and the emitted text kept the JDK name. `JavaCollections.asListView(arr)` is
+  java's own answer — reads and WRITES go through to the array, `add`/`remove` throw where java
+  throws — and what "blocked" it for two waves was a fact about the ARGUMENT read as a fact about
+  the TREE: the frontend's erasure coercion is a `Tree.Typed` and java's own inference is recorded
+  on the CALL. **12 sites.** And the aliasing form has THREE node shapes, not two: after K6.5's
+  fourth case an external callee's array pass-through is a `Tree.Spread`, which the single-argument
+  arm read as an array and passed through, emitting `asListView(arr*)` at every site — this entry's
+  own rule about owing every shape of the vararg convention, met one arm down.
+- **`ENGINE-LIMITS.md` K6.5 (fifth case)** — java infers a vararg's `T` across ALL the arguments and
+  BOXES; at an INFERRED `A` scalac declines the boxing conversion outright, so a heterogeneous
+  `asList(98, "97", true, false, null)` reported one mismatch per element. Java's answer is on the
+  call and is now written down as the explicit type argument. **5 errors**, and what is left is a
+  different fact entirely (G24, below).
+- **`ENGINE-LIMITS.md` G23 (new)** — *java's `?` is bounded by `Object`; scala's is bounded by
+  `Any`.* `list.addAll(valueList)` off a `List<?>` needs no cast in java and does not type as `++=`
+  in scala. Stated at the ONE operation it blocks rather than by widening what `?` renders as, which
+  G2 already measured. **4 errors.**
+- **`ENGINE-LIMITS.md` K5.8 (new)** — *a `super` receiver is a SYNTAX question, and it is answered of
+  the RESULT.* K5's blanket refusal was bought to stop a rewrite putting `super` outside a member
+  selection; the emitter now renders `super.++=(m)` (the only legal spelling) and the phase checks
+  the property structurally on the term it just built, so a new arm is covered by construction.
+- **`ENGINE-LIMITS.md` G24 (new, OPEN)** — *java's `<T>` bound is VACUOUS and the emitted
+  `T <: java.lang.Object` is not.* Scala 3 roots `java.io.Serializable` at `Any`, so a
+  `Buffer[Buffer[Serializable]]` does not conform to `Buffer[Buffer[T]]`. liqp is the first corpus
+  library to write `Serializable` as a type argument, which is why five libraries went past it.
+- **three JDK members the collections tables never named** — `Stream.anyMatch`/`allMatch`/`noneMatch`,
+  `Collections.sort`'s natural overload at java's own `<T extends Comparable<? super T>>` bound (not
+  `Comparable<T>` — transcribing a JDK signature means transcribing its wildcards), and
+  `ConcurrentHashMap`, which IS a `java.util.Map` and splits the subtype relation if only the
+  interface is mapped. One error each, and each invisible until a compile named it — `JdkSurfaceCheck`
+  reads the same tables, so an unlisted member reads as the PORT's wall rather than an engine gap.
 - **`ENGINE-LIMITS.md` T11 (closed)** — the DECLARED-collidee half of the promoted enum parameter.
   What blocked it was not visibility but the ROUTE: `enumDef` promotes the parameters without
   consulting `CtorFunnel`, so the §4.55 pass had nothing to place. NARROW where the plan-based arm
@@ -2112,7 +2147,7 @@ changes none of which is (b) or (c):
 | `Insertions.of`/`Filters.of` — `E134 None of the overloaded alternatives`, 5 errors, read as an overload problem | **0 of the five, 3 fewer errors.** It was never overload resolution: liqp names `java.util.Collection` and never names `java.lang.Iterable`, and the pass that bridges a retyped argument into a shim-typed formal opened with `if javaIterableSym == SymId.None then t` — so the whole bridge was inert for this port, with no check, no policy entry and no member digest able to say so (K2.5, new). The remaining two sites were the `Arrays.asList(arr)` aliasing refusal wearing an E134 mask, and now report it |
 | `LiquidException` — 0 errors and a SILENT §4.4 defect: three roots, three different `super(...)`, none promotable, so every exception it threw had a null message and no cause | **fixed, and it moves no error count at all**, which is §3 in one line. C3's synthesised primary at the JDK throwable's widest overload; `omissions` 4 -> 1 |
 
-**…and the collections endgame took 38 (27 main + 11 test) to 14 (9 main + 5 test)**, in five
+**…and the collections endgame took 38 (27 main + 11 test) to 13 (8 main + 5 test)**, in six
 engine changes, none of them (b) or (c) and none of them a port-policy lever:
 
 | was | now |
@@ -2125,7 +2160,7 @@ engine changes, none of them (b) or (c) and none of them a port-policy lever:
 **What is left, 13 — 8 main and 5 test.** Three of them are the D-liqp-1 × D-liqp-2 namespace seam
 (`Template#parse`, `TestUtils`, `LiquidParserTest`): an external generated parser that references
 back INTO the renamed library, unfixable without porting or regenerating it, and the price
-D-liqp-1 already states. The other eleven, by family:
+D-liqp-1 already states. The other ten, by family:
 
 | n | family | where |
 |---|---|---|
@@ -2138,7 +2173,7 @@ D-liqp-1 already states. The other eleven, by family:
 | 1 | MUnit's `Compare` needs a common type and two `toJava` calls infer different element types | `RenderSettingsTest` |
 | 1 | G22 — a method type parameter constrained only by its bound | `blocks/ForTest` |
 
-**And the whole of it is still ONE PHASE's** — the eleven above are `CollectionsTransform`
+**And the whole of it is still ONE PHASE's** — the ten above are `CollectionsTransform`
 boundaries and generic-inference disagreements, and the port's `.conf` gains nothing for any of
 them. **There is no drop or injection among them that is not a rewrite**: every one
 of these types is mechanically portable and the disagreement is a TYPE, so the only honest
@@ -2192,7 +2227,7 @@ five of them, in `ReadmeSamplesTest`, `TemplateTest`, `DateTest` and `LiquidSupp
 discovery gate prints `!! TESTS LOST — 62 of 639` on every run and is supposed to; the exclusion is
 stated in `test.conf` and is deleted, not narrowed, the day the frontend grows the node.
 
-**The 49, classified — and 38 of them closed.** Every one is (a) engine except the two named below;
+**The 49, classified — and 44 of them closed.** Every one is (a) engine except the two named below;
 none is (b) or (c), and none is `TestFrameworkTransform`'s. **The test source set now reads 5.**
 
 | n | family | where it goes |
@@ -2229,8 +2264,20 @@ and the compiler can only say so once the elements are separate arguments.
 
 **What the suite would exercise the moment it runs**, and does not yet: 46 `@Test(expected=…)`, 2
 `@Before`, 38 anonymous classes, a `switch` on `String` with NO `default`
-(`nodes/ComparingExpressionNodeTest.java:142`, §4.4's fall-out row), and the `ServiceLoader` lookup
-below. Every §4.4 form in this port is UNMEASURED.
+(`nodes/ComparingExpressionNodeTest.java:142`, §4.4's fall-out row — and its NULL-selector sibling,
+which the emitter now guards), and the `ServiceLoader` lookup below. Every §4.4 form in this port is
+UNMEASURED.
+
+**And the 13 that stand between here and that are not evenly reachable.** Ten are (a) engine and each
+is a bounded piece of work; **three are the port's own recorded decision** and are not a bug to fix
+— D-liqp-1 keeps the ANTLR-generated parser external, D-liqp-2 renames the library, and the parser's
+bytecode therefore asks for a `liqp.TemplateParser.ErrorMode` at three calls the port emits with
+`ssg.liquid.TemplateParser.ErrorMode`. No manifest key rewrites an ARGUMENT; a `type-redirect` at
+that enum would move the port's own type everywhere and make the emitted library depend on upstream
+liqp bytecode for it, which is a different port than the one D-liqp-1 describes. **So the suite
+running is gated on porting or regenerating the parser** — the later milestone D-liqp-1 already
+names — or on changing that decision deliberately, with its own measurement. It is not gated on
+another wave of collections fixes.
 
 **`META-INF/services` is hand-written** (`liqp-core/src/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport`),
 because the engine emits `.scala` and nothing else and this file's NAME and CONTENTS are both

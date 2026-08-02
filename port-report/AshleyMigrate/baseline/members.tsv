@@ -6,14 +6,14 @@ sge.ecs.ComponentMapper	sge.ecs.ComponentMapper#componentType	val	ce377d122dd71b
 sge.ecs.ComponentMapper	sge.ecs.ComponentMapper#get(Entity)	def	14bc32a288e3cfcf
 sge.ecs.ComponentMapper	sge.ecs.ComponentMapper#getFor(Class<T>)	def	69cf8da34d90142a
 sge.ecs.ComponentMapper	sge.ecs.ComponentMapper#has(Entity)	def	b3726dcc30b685cb
-sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler	class	ae69fbc97d5c1707
+sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler	class	4d4edb25360280cf
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler#<stmt1>	stmt	f34390dcec3c2572
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler#add(Entity)	def	877830839133c977
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler#delayed	val	60fbe44694d57454
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler#hasOperationsToProcess()	def	dbd5e5a3e7af030c
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler#operationPool	val	34e3becba0b7bb2f
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler#operations	val	8c03feaf079e3a51
-sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler#processOperations()	def	6fb2b32005989eea
+sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler#processOperations()	def	1e65c7e8c05f3c93
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler#remove(Entity)	def	f0e2b60a62e65265
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler$BooleanInformer	class	ae659dc18a82592b
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler$BooleanInformer#value()	def	1fc566a602720496
@@ -116,7 +116,7 @@ sge.ecs.Entity	sge.ecs.Entity#scheduledForRemoval	val	88f00f9628d2c3a3
 sge.ecs.EntityListener	sge.ecs.EntityListener	class	9395279b95e0733e
 sge.ecs.EntityListener	sge.ecs.EntityListener#entityAdded(Entity)	def	932a0890204c65c6
 sge.ecs.EntityListener	sge.ecs.EntityListener#entityRemoved(Entity)	def	8861f9e8c298c8a4
-sge.ecs.EntityManager	sge.ecs.EntityManager	class	fccd31a7e6030c5a
+sge.ecs.EntityManager	sge.ecs.EntityManager	class	46726da44f865455
 sge.ecs.EntityManager	sge.ecs.EntityManager#<stmt1>	stmt	802c342302b2cbcb
 sge.ecs.EntityManager	sge.ecs.EntityManager#addEntity(Entity)	def	da18d9d0905627b3
 sge.ecs.EntityManager	sge.ecs.EntityManager#addEntity(Entity,boolean)	def	e20c0376d88ea691
@@ -129,7 +129,7 @@ sge.ecs.EntityManager	sge.ecs.EntityManager#hasPendingOperations()	def	2ce93a70f
 sge.ecs.EntityManager	sge.ecs.EntityManager#immutableEntities	val	12871b7a5cee08ce
 sge.ecs.EntityManager	sge.ecs.EntityManager#listener	val	c84285963dc42d8f
 sge.ecs.EntityManager	sge.ecs.EntityManager#pendingOperations	val	41af91339319b8e2
-sge.ecs.EntityManager	sge.ecs.EntityManager#processPendingOperations()	def	56cf56befefac340
+sge.ecs.EntityManager	sge.ecs.EntityManager#processPendingOperations()	def	aee94d1b5ca356c3
 sge.ecs.EntityManager	sge.ecs.EntityManager#removeAllEntities()	def	cf4d7be62bcf6a16
 sge.ecs.EntityManager	sge.ecs.EntityManager#removeAllEntities(ImmutableArray<Entity>)	def	5d15ad0c775292ad
 sge.ecs.EntityManager	sge.ecs.EntityManager#removeAllEntities(ImmutableArray<Entity>,boolean)	def	e87bd89de6e8d4bd

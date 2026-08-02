@@ -2178,14 +2178,12 @@ Two rules the fix rests on:
   needed and makes both frontend outcomes emit one shape. A LITERAL array in the slot
   (`asList(new String[]{a, b})`) opens too, soundly: the array is allocated at the call, so no
   caller holds the alias.
-- **A single ARRAY-typed argument is the ALIASING form and is refused.** Java returns a live view of
-  the caller's array; a spread would silently copy what java aliases (§4.4). The rewrite is skipped
-  entirely so the emitted text keeps the JDK name and the error reads as an untranslated call
-  (`Found: java.util.List[Array[Object]] / Required: Buffer[String]`) rather than a broken helper.
-  A faithful live view — a fixed-size `Buffer` over the array with `add`/`remove` throwing — is
-  expressible but not reachable from the rewrite: the frontend has already coerced the argument to
-  the ERASED formal (`Array[Object]`), so the element type the view needs is gone by then.
-  Recovering it is a frontend change with far wider blast radius.
+- **A single ARRAY-typed argument is the ALIASING form and goes to a DIFFERENT helper.** Java
+  returns a live view of the caller's array; the vararg helper's `A*` would copy it and silently
+  detach every aliased write (§4.4). It was REFUSED for two waves on the grounds that a faithful
+  live view, though expressible, was not reachable from here — see the closure below for why that
+  was a fact about the argument rather than about the tree. `JavaCollections.asListView(arr)` is
+  what it takes now.
 - …**and NOTHING DOWNSTREAM MAY PAINT OVER THAT REFUSAL.** The refused call keeps the JDK name, so
   the value really is a `java.util.List` — while its NODE says `Buffer`, because the position-blind
   retyping moved the type on both sides of it. Read from the node alone, `coerce` found a factory

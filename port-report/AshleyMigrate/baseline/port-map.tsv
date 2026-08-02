@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ashley	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20	policy=1bb1af3414b3f9a5
+# balticporter port map	schema=3	module=ashley	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20	policy=0a2e7c2878d939fd
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.ashley.core.Component	sge.ecs.Component	Renamed	-		0		form=trait
 type	com.badlogic.ashley.core.ComponentMapper	sge.ecs.ComponentMapper	Renamed	-		0		companion=yes flags=final form=class primary=(Class) primaryKind=unique-root primaryVis=private statics=getFor tparams="[T <: sge.ecs.Component]"
@@ -69,7 +69,7 @@ member	com.badlogic.ashley.core.ComponentOperationHandler#delayed	sge.ecs.Compon
 member	com.badlogic.ashley.core.ComponentOperationHandler#hasOperationsToProcess()	sge.ecs.ComponentOperationHandler#hasOperationsToProcess()	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	38	dbd5e5a3e7af030c	
 member	com.badlogic.ashley.core.ComponentOperationHandler#operationPool	sge.ecs.ComponentOperationHandler#operationPool	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	9	34e3becba0b7bb2f	vis=private
 member	com.badlogic.ashley.core.ComponentOperationHandler#operations	sge.ecs.ComponentOperationHandler#operations	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	10	8c03feaf079e3a51	vis=private
-member	com.badlogic.ashley.core.ComponentOperationHandler#processOperations()	sge.ecs.ComponentOperationHandler#processOperations()	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	42	6fb2b32005989eea	
+member	com.badlogic.ashley.core.ComponentOperationHandler#processOperations()	sge.ecs.ComponentOperationHandler#processOperations()	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	42	1e65c7e8c05f3c93	
 member	com.badlogic.ashley.core.ComponentOperationHandler#remove(Entity)	sge.ecs.ComponentOperationHandler#remove(Entity)	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	27	f0e2b60a62e65265	
 member	com.badlogic.ashley.core.ComponentOperationHandler$BooleanInformer#value()	sge.ecs.ComponentOperationHandler$BooleanInformer#value()	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	95	1fc566a602720496	
 member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#entity	sge.ecs.ComponentOperationHandler$ComponentOperation#entity	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandler.java	69	7cc65bdd643e080e	
@@ -172,7 +172,7 @@ member	com.badlogic.ashley.core.EntityManager#hasPendingOperations()	sge.ecs.Ent
 member	com.badlogic.ashley.core.EntityManager#immutableEntities	sge.ecs.EntityManager#immutableEntities	Renamed	-	com/badlogic/ashley/core/EntityManager.java	13	12871b7a5cee08ce	vis=private
 member	com.badlogic.ashley.core.EntityManager#listener	sge.ecs.EntityManager#listener	Renamed	-	com/badlogic/ashley/core/EntityManager.java	10	c84285963dc42d8f	vis=private
 member	com.badlogic.ashley.core.EntityManager#pendingOperations	sge.ecs.EntityManager#pendingOperations	Renamed	-	com/badlogic/ashley/core/EntityManager.java	14	41af91339319b8e2	vis=private
-member	com.badlogic.ashley.core.EntityManager#processPendingOperations()	sge.ecs.EntityManager#processPendingOperations()	Renamed	-	com/badlogic/ashley/core/EntityManager.java	95	56cf56befefac340	
+member	com.badlogic.ashley.core.EntityManager#processPendingOperations()	sge.ecs.EntityManager#processPendingOperations()	Renamed	-	com/badlogic/ashley/core/EntityManager.java	95	aee94d1b5ca356c3	
 member	com.badlogic.ashley.core.EntityManager#removeAllEntities()	sge.ecs.EntityManager#removeAllEntities()	Renamed	-	com/badlogic/ashley/core/EntityManager.java	58	cf4d7be62bcf6a16	
 member	com.badlogic.ashley.core.EntityManager#removeAllEntities(ImmutableArray)	sge.ecs.EntityManager#removeAllEntities(ImmutableArray<Entity>)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	66	5d15ad0c775292ad	
 member	com.badlogic.ashley.core.EntityManager#removeAllEntities(ImmutableArray,boolean)	sge.ecs.EntityManager#removeAllEntities(ImmutableArray<Entity>,boolean)	Renamed	-	com/badlogic/ashley/core/EntityManager.java	70	e87bd89de6e8d4bd	

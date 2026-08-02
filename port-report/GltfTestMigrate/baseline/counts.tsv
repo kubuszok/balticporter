@@ -20,6 +20,8 @@ remediation	0
 signature	1
 substitution(dangling)	0
 substitution(emitted)	0
+switch-null	0
 trivia	0
 trivia(deliberate)	0
 trivia(recovered)	0
+try-resource	0

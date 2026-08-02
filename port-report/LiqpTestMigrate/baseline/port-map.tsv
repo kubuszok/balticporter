@@ -151,7 +151,7 @@ member	liqp.ProtectionSettingsTest#<stmt8>	ssg.liquid.ProtectionSettingsTest#<st
 member	liqp.ProtectionSettingsTest#<stmt9>	ssg.liquid.ProtectionSettingsTest#<stmt9>	Renamed	-	liqp/ProtectionSettingsTest.java	77	c667ca2b448fbb45	
 member	liqp.RenderSettingsTest#<stmt10>	ssg.liquid.RenderSettingsTest#<stmt10>	Renamed	-	liqp/RenderSettingsTest.java	128	57724f1aac3d5939	
 member	liqp.RenderSettingsTest#<stmt11>	ssg.liquid.RenderSettingsTest#<stmt11>	Renamed	-	liqp/RenderSettingsTest.java	149	8dfc189f000de77d	
-member	liqp.RenderSettingsTest#<stmt12>	ssg.liquid.RenderSettingsTest#<stmt12>	Renamed	-	liqp/RenderSettingsTest.java	178	6aaa8111d210a0fe	
+member	liqp.RenderSettingsTest#<stmt12>	ssg.liquid.RenderSettingsTest#<stmt12>	Renamed	-	liqp/RenderSettingsTest.java	178	0c296e5030724f32	
 member	liqp.RenderSettingsTest#<stmt1>	ssg.liquid.RenderSettingsTest#<stmt1>	Renamed	-	liqp/RenderSettingsTest.java	35	be312335b29729a6	
 member	liqp.RenderSettingsTest#<stmt2>	ssg.liquid.RenderSettingsTest#<stmt2>	Renamed	-	liqp/RenderSettingsTest.java	45	a307c019a59aab39	
 member	liqp.RenderSettingsTest#<stmt3>	ssg.liquid.RenderSettingsTest#<stmt3>	Renamed	-	liqp/RenderSettingsTest.java	55	f8afc8c3e3fd2cd0	
@@ -561,7 +561,7 @@ member	liqp.nodes.ComparingExpressionNodeTest#<stmt3>	ssg.liquid.nodes.Comparing
 member	liqp.nodes.ComparingExpressionNodeTest#<stmt4>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt4>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	178	682c3e30424bd167	
 member	liqp.nodes.ComparingExpressionNodeTest#<stmt5>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt5>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	189	9b6cba04f9bbf4b4	
 member	liqp.nodes.ComparingExpressionNodeTest#cartesianProduct(Buffer)	ssg.liquid.nodes.ComparingExpressionNodeTest#cartesianProduct(Buffer<Buffer<T>>)	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	200	3d12f1950dd5e11a	
-member	liqp.nodes.ComparingExpressionNodeTest#testCombunationsStrctWithExpectation(String,TemplateParser)	ssg.liquid.nodes.ComparingExpressionNodeTest#testCombunationsStrctWithExpectation(String,TemplateParser)	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	124	8885ba3d257a4b5f	vis=private
+member	liqp.nodes.ComparingExpressionNodeTest#testCombunationsStrctWithExpectation(String,TemplateParser)	ssg.liquid.nodes.ComparingExpressionNodeTest#testCombunationsStrctWithExpectation(String,TemplateParser)	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	124	66340bae3cbf36f1	vis=private
 member	liqp.nodes.ContainsNodeTest#<stmt1>	ssg.liquid.nodes.ContainsNodeTest#<stmt1>	Renamed	-	liqp/nodes/ContainsNodeTest.java	11	cc0f6070a26fe225	
 member	liqp.nodes.EqNodeTest#<stmt1>	ssg.liquid.nodes.EqNodeTest#<stmt1>	Renamed	-	liqp/nodes/EqNodeTest.java	15	23b38a2477566600	
 member	liqp.nodes.EqNodeTest#<stmt2>	ssg.liquid.nodes.EqNodeTest#<stmt2>	Renamed	-	liqp/nodes/EqNodeTest.java	53	e8fac9b56c85e78e	
@@ -579,9 +579,9 @@ member	liqp.nodes.GtNodeTest#<stmt7>	ssg.liquid.nodes.GtNodeTest#<stmt7>	Renamed
 member	liqp.nodes.GtNodeTest#<stmt8>	ssg.liquid.nodes.GtNodeTest#<stmt8>	Renamed	-	liqp/nodes/GtNodeTest.java	139	8f8a63cff53c1e31	
 member	liqp.nodes.LookupNodeTest#<stmt10>	ssg.liquid.nodes.LookupNodeTest#<stmt10>	Renamed	-	liqp/nodes/LookupNodeTest.java	285	554e968e033a1629	
 member	liqp.nodes.LookupNodeTest#<stmt11>	ssg.liquid.nodes.LookupNodeTest#<stmt11>	Renamed	-	liqp/nodes/LookupNodeTest.java	301	68daa368b5429ca4	
-member	liqp.nodes.LookupNodeTest#<stmt12>	ssg.liquid.nodes.LookupNodeTest#<stmt12>	Renamed	-	liqp/nodes/LookupNodeTest.java	309	2a42b45df1b12abe	
-member	liqp.nodes.LookupNodeTest#<stmt13>	ssg.liquid.nodes.LookupNodeTest#<stmt13>	Renamed	-	liqp/nodes/LookupNodeTest.java	315	1dfb66ae27f16236	
-member	liqp.nodes.LookupNodeTest#<stmt14>	ssg.liquid.nodes.LookupNodeTest#<stmt14>	Renamed	-	liqp/nodes/LookupNodeTest.java	325	e32bbed376447fb2	
+member	liqp.nodes.LookupNodeTest#<stmt12>	ssg.liquid.nodes.LookupNodeTest#<stmt12>	Renamed	-	liqp/nodes/LookupNodeTest.java	309	559f5def08664ccd	
+member	liqp.nodes.LookupNodeTest#<stmt13>	ssg.liquid.nodes.LookupNodeTest#<stmt13>	Renamed	-	liqp/nodes/LookupNodeTest.java	315	b123e923435e72b1	
+member	liqp.nodes.LookupNodeTest#<stmt14>	ssg.liquid.nodes.LookupNodeTest#<stmt14>	Renamed	-	liqp/nodes/LookupNodeTest.java	325	81ea273b91ee3d5b	
 member	liqp.nodes.LookupNodeTest#<stmt1>	ssg.liquid.nodes.LookupNodeTest#<stmt1>	Renamed	-	liqp/nodes/LookupNodeTest.java	24	ba67bd7c3652c695	
 member	liqp.nodes.LookupNodeTest#<stmt2>	ssg.liquid.nodes.LookupNodeTest#<stmt2>	Renamed	-	liqp/nodes/LookupNodeTest.java	61	18a073439a013ea7	
 member	liqp.nodes.LookupNodeTest#<stmt3>	ssg.liquid.nodes.LookupNodeTest#<stmt3>	Renamed	-	liqp/nodes/LookupNodeTest.java	105	ed4187ae3db4fbe3	
@@ -707,7 +707,7 @@ member	liqp.parser.v4.LiquidParserTest#<stmt6>	ssg.liquid.parser.v4.LiquidParser
 member	liqp.parser.v4.LiquidParserTest#<stmt7>	ssg.liquid.parser.v4.LiquidParserTest#<stmt7>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	267	66d95bb8267f5fef	
 member	liqp.parser.v4.LiquidParserTest#<stmt8>	ssg.liquid.parser.v4.LiquidParserTest#<stmt8>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	296	94443a750481f054	
 member	liqp.parser.v4.LiquidParserTest#<stmt9>	ssg.liquid.parser.v4.LiquidParserTest#<stmt9>	Renamed	-	liqp/parser/v4/LiquidParserTest.java	320	2acb4c7c7bac6c4a	
-member	liqp.parser.v4.LiquidParserTest#array(Array)	ssg.liquid.parser.v4.LiquidParserTest#array(Array<String>)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	510	981c0c3a21e8a1b9	placement=companion vis=private
+member	liqp.parser.v4.LiquidParserTest#array(Array)	ssg.liquid.parser.v4.LiquidParserTest#array(Array<String>)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	510	4a21e201393fb45c	placement=companion vis=private
 member	liqp.parser.v4.LiquidParserTest#parse(String,String,Set,Set)	ssg.liquid.parser.v4.LiquidParserTest#parse(String,String,Set<String>,Set<String>)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	496	5e888781d72f35ee	placement=companion vis=private
 member	liqp.parser.v4.LiquidParserTest#parse(String,String,Set,Set,Boolean,Boolean)	ssg.liquid.parser.v4.LiquidParserTest#parse(String,String,Set<String>,Set<String>,Boolean,Boolean)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	500	b68e468466100115	placement=companion vis=private
 member	liqp.parser.v4.LiquidParserTest#parse(String,String,boolean,boolean)	ssg.liquid.parser.v4.LiquidParserTest#parse(String,String,boolean,boolean)	Renamed	-	liqp/parser/v4/LiquidParserTest.java	477	fef2cfd3b89f03fe	placement=companion vis=private

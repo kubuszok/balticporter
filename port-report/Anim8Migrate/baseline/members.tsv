@@ -1,5 +1,5 @@
 #unit	member	kind	digest
-sge.anim8.AnimatedGif	sge.anim8.AnimatedGif	class	14b83fe6cda76117
+sge.anim8.AnimatedGif	sge.anim8.AnimatedGif	class	7a08a5a3f2249b92
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#addFrame(Pixmap)	def	7eb406a53c4eba9c
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzeAdditive()	def	124ea3da4194b226
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzeBanter()	def	07cb67a9c41ef6c9
@@ -18,7 +18,7 @@ sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzeNone()	def	08b5925a7f003eee
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzeOceanic()	def	80a486f65d1458ee
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzeOverboard()	def	44b117226f7c2bde
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzePattern()	def	6283ff994aee8336
-sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzePixels()	def	0913a8c0eb7c1e84
+sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzePixels()	def	67ebf780580851a2
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzeRoberts()	def	6f4891a22041257a
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzeScatter()	def	394e88364176e21f
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#analyzeSeaside()	def	3219af3b559e8f9c
@@ -273,7 +273,7 @@ sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#<stmt2>	stmt	39efa5f70536897a
 sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#apply(float)	def	b8f9adeed3c9c443
 sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#shape	val	54cb9ca8d174b217
 sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#turning	val	daaf5503f030e249
-sge.anim8.PNG8	sge.anim8.PNG8	class	ba4e15218f3caf69
+sge.anim8.PNG8	sge.anim8.PNG8	class	61b5a20c8f1a229e
 sge.anim8.PNG8	sge.anim8.PNG8#<init>(Sge)	ctor	f11c075fd722b596
 sge.anim8.PNG8	sge.anim8.PNG8#<stmt1>	stmt	75d72649c1a9f8e4
 sge.anim8.PNG8	sge.anim8.PNG8#<stmt2>	stmt	892718451a90edbd
@@ -324,7 +324,7 @@ sge.anim8.PNG8	sge.anim8.PNG8#write(FileHandle,Pixmap)	def	bf90120d6db15e67
 sge.anim8.PNG8	sge.anim8.PNG8#write(FileHandle,Pixmap,boolean)	def	bcf75e886ec8f17e
 sge.anim8.PNG8	sge.anim8.PNG8#write(FileHandle,Pixmap,boolean,boolean)	def	3d326c5166c4b224
 sge.anim8.PNG8	sge.anim8.PNG8#write(FileHandle,Pixmap,boolean,boolean,int)	def	adac1c21ff619dcd
-sge.anim8.PNG8	sge.anim8.PNG8#write(OutputStream,Array<Pixmap>,int)	def	efc293f6236ede8f
+sge.anim8.PNG8	sge.anim8.PNG8#write(OutputStream,Array<Pixmap>,int)	def	ff0850525e4fd272
 sge.anim8.PNG8	sge.anim8.PNG8#write(OutputStream,Array<Pixmap>,int,boolean)	def	00fccdcfc4829c00
 sge.anim8.PNG8	sge.anim8.PNG8#write(OutputStream,Pixmap)	def	94889031b5c4efac
 sge.anim8.PNG8	sge.anim8.PNG8#write(OutputStream,Pixmap,boolean)	def	3dff21e8fd5e599d
@@ -345,7 +345,7 @@ sge.anim8.PNG8	sge.anim8.PNG8#writeChaoticNoiseDithered(OutputStream,Pixmap)	def
 sge.anim8.PNG8	sge.anim8.PNG8#writeChunks(OutputStream,OrderedMap<String,Array<byte>>)	def	556c743a44d8a3b9
 sge.anim8.PNG8	sge.anim8.PNG8#writeDiffusionDithered(OutputStream,Array<Pixmap>,int)	def	53dc6be246426837
 sge.anim8.PNG8	sge.anim8.PNG8#writeDiffusionDithered(OutputStream,Pixmap)	def	df49fc4230f509ea
-sge.anim8.PNG8	sge.anim8.PNG8#writeDithered(OutputStream,Pixmap)	def	7b47f16643238c5f
+sge.anim8.PNG8	sge.anim8.PNG8#writeDithered(OutputStream,Pixmap)	def	ad64cd2e22e311b5
 sge.anim8.PNG8	sge.anim8.PNG8#writeDodgyDithered(OutputStream,Array<Pixmap>,int)	def	574778b96b71327e
 sge.anim8.PNG8	sge.anim8.PNG8#writeDodgyDithered(OutputStream,Pixmap)	def	58469c04bb896c9a
 sge.anim8.PNG8	sge.anim8.PNG8#writeGourdDithered(OutputStream,Array<Pixmap>,int)	def	54dfb99f66de4c54
@@ -386,7 +386,7 @@ sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Array<Pixmap>,int)	
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Pixmap)	def	1d04584303d5da27
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Array<Pixmap>,int)	def	d745d50271f61fbe
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Pixmap)	def	77dea53a81167dae
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	896ce5824f80d486
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	d61095d01a7886da
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	da27f25e725d2439
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	99d19fbed16243ab
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<init>(Array<Color>,Sge)	ctor	2e1bfbfa5ed145c3
@@ -491,7 +491,7 @@ sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#populationBias	val	590d2aaef4c
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#randomColor(Random)	def	24b111d7fd737de3
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#randomColorIndex(Random)	def	829ba828b42bd8c0
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduce(Pixmap)	def	02039214e002111c
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduce(Pixmap,DitherAlgorithm)	def	874dfdab4d7e7f7a
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduce(Pixmap,DitherAlgorithm)	def	d7d0ae66676e0d85
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceAdditive(Pixmap)	def	7978297257a9bab0
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceBanter(Pixmap)	def	45844044353d7ab8
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceBlueNoise(Pixmap)	def	d2263cd2a682b086

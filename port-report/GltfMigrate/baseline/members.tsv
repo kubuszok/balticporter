@@ -320,7 +320,7 @@ sge.gltf.exporters.GLTFLightExporter	sge.gltf.exporters.GLTFLightExporter#<stmt1
 sge.gltf.exporters.GLTFLightExporter	sge.gltf.exporters.GLTFLightExporter#base	val	5ad42a70bbe4c33c
 sge.gltf.exporters.GLTFLightExporter	sge.gltf.exporters.GLTFLightExporter#export(ObjectMap<Node,BaseLight<?>>)	def	caa885f0a63753c2
 sge.gltf.exporters.GLTFLightExporter	sge.gltf.exporters.GLTFLightExporter#map(GLTFLight,BaseLight<?>)	def	75266bb692b15744
-sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter	class	232949be355dab75
+sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter	class	589b040cf38191ff
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#<stmt1>	stmt	23fd91ae01f58830
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#base	val	5ad42a70bbe4c33c
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#defaultNull(Color,Color)	def	cce95d47d7d6c6a6
@@ -336,9 +336,9 @@ sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#extTransmission(GLTFMaterial)	def	c705300527bafdea
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#extVolume(GLTFMaterial)	def	1ebf94e02d191ec1
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#getTexture(TextureAttribute)	def	2440463eeb623b40
-sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#map(TextureWrap)	def	00e220a613090e5c
-sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#mapMag(TextureFilter)	def	02fe35427770d7dd
-sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#mapMin(TextureFilter)	def	39ae1bc5575fa901
+sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#map(TextureWrap)	def	78b98e0e3256af1e
+sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#mapMag(TextureFilter)	def	da7fc42e310a2a68
+sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#mapMin(TextureFilter)	def	8e5ff5195913ba9e
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#normalTexture(PBRTextureAttribute,Material)	def	3c2b68f8606fadf6
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#occlusionTexture(PBRTextureAttribute,Material)	def	8a7598f2c422cbc2
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#pbr(GLTFMaterial)	def	d1a57f31156fb0b0
@@ -462,7 +462,7 @@ sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#sc
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#skinLoader	val	811b5466284ca405
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#supportedExtensions	val	3ad670810b953918
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#textureResolver	val	34ea0df435dc3a96
-sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes	class	8d3fec3a6607403a
+sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes	class	d5b81626922d9e71
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#C_BYTE	val	df6628d4f7cbf6eb
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#C_FLOAT	val	de3251c810dbf298
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#C_SHORT	val	9ce87392be1564d3
@@ -480,7 +480,7 @@ sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#accessorComp
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#accessorSize(GLTFAccessor)	def	09b74873db91cf5f
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#accessorStrideSize(GLTFAccessor)	def	1aa950fd15daffad
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#accessorTypeSize(GLTFAccessor)	def	33684dcf41ce79ba
-sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#isMipMapFilter(GLTFSampler)	def	d87ad4744ba75a41
+sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#isMipMapFilter(GLTFSampler)	def	7a4e7f91c86e25fc
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(CubicQuaternion,Array<float>,int)	def	27b20269f3851710
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(CubicVector3,Array<float>,int)	def	08fc8a251d3a612f
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(CubicWeightVector,Array<float>,int)	def	430dd1e584d1098b
@@ -492,13 +492,13 @@ sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(Vector3,
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(WeightVector,Array<float>,int)	def	ef1475bbf4273798
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapColor(Array<float>,Color)	def	cfb4f5bc6b581a36
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapInterpolation(String)	def	285264fef4a2e269
-sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapPrimitiveMode(Integer)	def	f1b01d89683d9f60
-sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapTextureMagFilter(Integer)	def	bec9532d91f58f49
-sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapTextureMinFilter(Integer)	def	b311673f3d9d67a6
+sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapPrimitiveMode(Integer)	def	4f1367827c2d9c1f
+sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapTextureMagFilter(Integer)	def	dd6b780e5d6eac7a
+sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapTextureMinFilter(Integer)	def	fa74bfdfe5339507
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapTextureSampler(TextureDescriptor<Texture>,GLTFSampler)	def	a2849ad26e154d21
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapTextureSampler(TextureParameter)	def	c0b91fc0976c2144
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapTextureSampler(TextureParameter,GLTFSampler)	def	5b412e330ac6e10a
-sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapTextureWrap(Integer)	def	ffa554a0f1b4cf0a
+sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#mapTextureWrap(Integer)	def	e43b3e8fea9c4b1f
 sge.gltf.loaders.shared.SceneAssetLoaderParameters	sge.gltf.loaders.shared.SceneAssetLoaderParameters	class	a72454fedee0be48
 sge.gltf.loaders.shared.SceneAssetLoaderParameters	sge.gltf.loaders.shared.SceneAssetLoaderParameters#withData	val	97672a77128f7cbf
 sge.gltf.loaders.shared.animation.AnimationLoader	sge.gltf.loaders.shared.animation.AnimationLoader	class	4b55b95df56d78ac
