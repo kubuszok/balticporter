@@ -933,6 +933,33 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(java.lang.System.getenv())")
   }
 
+  test("…and a result pinned by an ARGUMENT'S TYPE ARGUMENT is a pass-through too — occurrence, not equality") {
+    // `Objects.requireNonNull(m)` is the equality case the guess was written for;
+    // `mapper.convertValue(v, typeRef)` is the same fact one type argument in — the result `T` is
+    // pinned by the TYPE ARGUMENT of an argument, so the value's type comes from what the CALLER
+    // handed in and not from a collection the callee built. Wrapping it emits `fromJava(aScalaMap)`,
+    // an E134 naming the HELPER rather than the boundary.
+    val ph = new CollectionsTransform
+    val p  = portAgainst(
+      List("ext/Conv.java" ->
+        """package ext;
+          |public class Conv {
+          |  public static class Token<T> {}
+          |  public <T> T convert(Object from, Token<T> to) { return null; }
+          |}""".stripMargin),
+      """package demo;
+        |import java.util.*;
+        |class Uses3 {
+        |  static final ext.Conv.Token<Map<String, Object>> TOK = new ext.Conv.Token<Map<String, Object>>();
+        |  Map<String, Object> read(ext.Conv c, Object o) { return c.convert(o, TOK); }
+        |}
+        |""".stripMargin, ph)
+    assertNotEmits(p, "fromJava")
+    // …and the suppression is COUNTED, in the lane that says the refusal rests on a guess.
+    val fs = ph.boundary(p.after).filter(_.slot.startsWith("external result (unverified pass-through"))
+    assertEquals(clue(fs).size, 1)
+  }
+
   test("an UNTERMINATED stream chain crossing to a java `Stream` FORMAL goes back through toStream") {
     // The collapse (K6) rewrites `xs.stream().map(f)` to `xs.map(f)`, which is right wherever the
     // chain's TERMINAL is inside the program — `collect` materialises anyway. Where it is not, the

@@ -3170,6 +3170,20 @@ check count flat — and on libGDX core **0 errors, 0 member digests, every coun
 number a frontend change owes: that port has no external field at a mapped collection type, so the
 interning is inert there.
 
+**…and the guess's ARGUMENT half was asking the wrong question, which cost one E134 for the life of
+the port.** "The result type occurs on the input side" was implemented as `occursIn` for the
+RECEIVER and as `_.tpe == want` for the ARGUMENTS — equality, so it saw `Objects.requireNonNull(m)`
+and nothing one type argument in. `mapper.convertValue(value, MAP_TYPE_REF)` pins its result `T`
+through the TYPE ARGUMENT of an argument, so the value's type comes from what the CALLER handed in;
+wrapped, it emitted `fromJava(aScalaMap)`, an E134 naming the HELPER rather than the boundary, which
+is the shape this entry already records as the worst one this seam produces. Occurrence subsumes
+equality, so the case the guess was written for is unchanged.
+
+Measured on liqp: **5 -> 4**, `collection-boundary` **13 -> 14** — the wrap became a COUNTED
+suppression in the unverified-pass-through lane, which is what the two numbers moving in opposite
+directions means here — and 4 member digests.
+
+
 ### K16. A `CollectionsTransform` SCOPE is not a way to opt out of its residue — 27 → 47 narrow, 27 → 51 off. DO NOT RETRY
 
 **The move that looks obviously right, measured in both directions, and worse in both.** A port

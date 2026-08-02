@@ -73,7 +73,7 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
-| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **2** (§10.5.3, all classified) |
+| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **1** (§10.5.3, all classified) |
 | `liqp-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **577** emitted, **none run** — the port does not compile | **3** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
@@ -2193,12 +2193,11 @@ without it threw `AssertionError: failure to resolve inner class` out of `Classf
 ABORTED, which reads as a smaller error count rather than as a failure. With no seam left there is
 nothing for it to soften, and ONE directory now serves the frontend, scalac and the test run.
 
-**What is left, 5 — 2 main and 3 test**, all of them (a) engine, by family:
+**What is left, 4 — 1 main and 3 test**, all of them (a) engine, by family:
 
 | n | family | where |
 |---|---|---|
 | 1 | K2/K5.7's `Map.Entry.setValue` at the case with NO LOOP AND NO MAP — the receiver is a FIELD whose value, after the retyping, is a detached pair. REFUSED, and the reason now says which of the two cases it is (`ENGINE-LIMITS.md` K5.7) | `filters/Sort$ComparableMapEntry` |
-| 1 | K15's producer wrap at a Jackson call whose declared result is a TYPE VARIABLE. Jackson really does build a `java.util.Map`, so the wrap is right and its ARGUMENT node type has already been retyped — `fromJava(aScalaMap)` | `parser/LiquidSupport#objectToMap` |
 | 1 | java's `<T>` means `T extends Object`, which is VACUOUS; the port emits `T <: java.lang.Object`, which is NOT — scala 3 roots `java.io.Serializable` at `Any` (value classes are serialisable), so `Buffer[Buffer[Serializable]]` does not conform to `Buffer[Buffer[T]]`. **The obvious fix was BUILT and measured at libGDX core 0 -> 50, and the method-only variant at 0 -> 6 — `ENGINE-LIMITS.md` G24 now carries all three numbers and the two rules that turn out to be reading that bound (reference identity, wildcard capture). Reverted; do not retry blind** | `ComparingExpressionNodeTest` |
 | 1 | MUnit's `Compare` needs a common type and two `toJava` calls infer different element types | `RenderSettingsTest` |
 | 1 | G22 — a method type parameter constrained only by its bound | `blocks/ForTest` |

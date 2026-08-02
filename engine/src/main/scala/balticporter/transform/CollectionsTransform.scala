@@ -1251,8 +1251,16 @@ final class CollectionsTransform(
   private def passesThrough(t: Tree.Apply)(using p: Program): Boolean =
     !declaredResultIsMapped(t) && {
       val want = t.tpe
+      // OCCURRENCE on BOTH sides, never equality on one of them. The argument half was written as
+      // `_.tpe == want` and the receiver half as `occursIn`, and that asymmetry is itself a hole:
+      // `Objects.requireNonNull(m)` is the equality case and `mapper.convertValue(v, typeRef)` is
+      // the same fact one type argument in — the result `T` is pinned by the TYPE ARGUMENT of an
+      // argument (`TypeReference<Map<String,Object>>`), so the value's type comes from what the
+      // CALLER handed in and not from a collection the callee built. Wrapping it emitted
+      // `fromJava(aScalaMap)`, an E134 naming the HELPER rather than the boundary, which is the
+      // worst shape this seam produces. Occurrence subsumes equality, so the first case is unchanged.
       want != TypeRepr.NoType && (
-        t.args.exists(_.tpe == want) || (t.fun match
+        t.args.exists(a => occursIn(want, a.tpe)) || (t.fun match
           case Tree.Select(recv, _, _, _) => occursIn(want, recv.tpe)
           case _                          => false))
     }
