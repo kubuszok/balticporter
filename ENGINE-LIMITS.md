@@ -3856,6 +3856,38 @@ negatives (the collapse still fires without them; the guard is per-symbol).
 
 *Fix kind: (a) engine.*
 
+### L4. A Scala KEYWORD as a PACKAGE SEGMENT — the emitter escaped IDENTIFIERS and never PATHS
+
+CLOSED. Java's reserved words are not Scala's, so `type`, `object`, `val`, `given`, `end`, `as` and
+two dozen more are legal java package segments and unparseable scala ones.
+`com.fasterxml.jackson.core.type.TypeReference` is the witness: **3 errors on liqp, none of which
+names the cause** — an E119 (`package com.fasterxml.jackson.core is not a value`), an E067 about the
+member that reference is inside, and a bare `end of statement expected but '.' found`.
+
+The emitter's `esc` had the keyword set from the beginning and every name rendered BY HAND went
+through it — a member, a local, a type's simple name, a `private[pkg]` qualifier. A
+`Symbol.fullName` did not, because it is a PATH and reached the output verbatim through
+`nestedPath`'s base case, `nestedPath`'s fallback, `typeValue`'s two qualified branches and the
+`package` clause itself. So the gap was never "which keywords" — it was that four call sites emitted
+a string nothing escaped.
+
+Two things worth keeping:
+
+- **Escape per SEGMENT, cutting only at §4.56's three separators** (`.`, `$`, `#`), carrying each
+  separator across verbatim — `nestedPath` re-chooses `.` versus `#` per level afterwards, and a
+  whole-string test would both miss `com.x.type.Ref` and corrupt `com.typescript.T`.
+- **Nothing but scalac can count this, and that is the right counting.** The failure is a SYNTAX
+  error at the first occurrence, never silent: there is no emitted-text check to add, because the
+  emitted text is not a file. Contrast §4.4's table, where the whole point is that the text parses.
+  What the fix owes instead is a spec on the EMISSION (`TirEmitterSpec`, negative-tested by
+  neutering `escPath`), and the member half pinned beside it — `esc` already covered members, and
+  the pin is what keeps the two halves from drifting apart again.
+
+Five corpus libraries had no keyword segment anywhere, which is why this survived to the sixth. A
+library with a `type`, `object`, `val` or `package` segment is not exotic — jackson ships one.
+
+*Fix kind: (a) engine, universal.*
+
 ---
 
 ## 12. Threading a CONTEXT through a program

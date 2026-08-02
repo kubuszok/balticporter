@@ -136,7 +136,7 @@ final class TirEmitter(
     currentUnitName = full
     printedNotes.clear()
     val body = classDef(cd, 0)
-    val pkg  = if full.contains('.') then s"package ${full.substring(0, full.lastIndexOf('.'))}\n\n" else ""
+    val pkg  = if full.contains('.') then s"package ${escPath(full.substring(0, full.lastIndexOf('.')))}\n\n" else ""
     // The generated banner says what the FILE is; the upstream's own header — its licence — follows
     // verbatim, before the `package` clause it sat above in Java. Both, in that order: the banner
     // carries the `Original license:` SPDX line and the upstream commit, which is the machine-
@@ -1063,15 +1063,11 @@ final class TirEmitter(
     case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
     case _                                                   => Nil
 
-  private val keywords = Set(
-    "type", "object", "val", "var", "def", "class", "trait", "enum", "given", "match", "case",
-    "if", "else", "while", "do", "for", "yield", "then", "with", "extends", "new", "this", "super",
-    "null", "true", "false", "import", "package", "override", "final", "abstract", "sealed", "private",
-    "protected", "implicit", "lazy", "return", "throw", "try", "catch", "finally", "forSome", "using",
-    "export", "inline", "opaque", "transparent", "derives", "extension", "macro", "end", "as", "wait",
-  )
   /** backtick an identifier that collides with a Scala keyword. */
-  private def esc(name: String): String = if keywords(name) then s"`$name`" else name
+  private def esc(name: String): String = TirEmitter.esc(name)
+
+  /** backtick every keyword SEGMENT of a qualified name (§4.56 separators). */
+  private def escPath(path: String): String = TirEmitter.escPath(path)
   /** a TYPE symbol's rendered name. FULLY QUALIFIED by default — for the structural Java→Scala
     * phase we emit fully-qualified references and generate NO imports, which deletes the entire
     * import-decision bug class (import-vs-projection, shadowing, static-receiver qualification):
@@ -1118,7 +1114,7 @@ final class TirEmitter(
   private def nestedPath(id: SymId): String =
     def go(x: SymId): Option[String] =
       val sx = sym(x)
-      if !sx.fullName.contains('$') then Some(sx.fullName)
+      if !sx.fullName.contains('$') then Some(escPath(sx.fullName))
       else if sx.owner == SymId.None || program.symbolOf(sx.owner).isEmpty then None
       else go(sx.owner).map(p => p + (if sx.flags.isStatic then "." else "#") + esc(sx.name))
     // The fallback fires exactly when an owner is UNKNOWN, which for a type we do not define means
@@ -1127,7 +1123,7 @@ final class TirEmitter(
     // path, which a bare external class name is not (`java.nio.channels.FileChannel#MapMode`).
     go(id).getOrElse:
       val sep = if program.definitionOf(id).isEmpty then '.' else '#'
-      sym(id).fullName.replace('$', sep)
+      escPath(sym(id).fullName).replace('$', sep)
 
   /** a NON-static nested class of one of our own NON-GENERIC classes (not of a companion `object`).
     * A generic enclosing class is excluded: `Octree#OctreeNode` is not a legal projection — the
@@ -2603,9 +2599,9 @@ final class TirEmitter(
     val s = sym(id)
     // a static nested type lives in the companion `object`, so name it through the value path
     // `Outer.Inner` even from inside `Outer` (companion members aren't in the class's scope).
-    if s.flags.isStatic && s.fullName.contains('$') then s.fullName.replace('$', '.')
+    if s.flags.isStatic && s.fullName.contains('$') then escPath(s.fullName).replace('$', '.')
     else if currentDeclared(id) || inheritedNested(s.owner) then esc(s.name)
-    else s.fullName.replace('$', '.')
+    else escPath(s.fullName).replace('$', '.')
 
   /** a static member lives in the companion `object`; even inside its own class it must be
     * named `Owner.member`, since a Scala class doesn't see its companion's members unqualified. */
@@ -3269,6 +3265,50 @@ object TirEmitter:
     * of this name and a shadowing warning is the worst it could cost — the arm's body is one
     * `throw` of its own binder. */
   val BreakGuard = "brkThru$"
+
+  /** Scala's reserved words, plus the soft keywords a bare occurrence can still steer the parser
+    * into. Backticking one that did not need it costs two characters and can never change meaning,
+    * so the set over-approximates deliberately. */
+  private val keywords = Set(
+    "type", "object", "val", "var", "def", "class", "trait", "enum", "given", "match", "case",
+    "if", "else", "while", "do", "for", "yield", "then", "with", "extends", "new", "this", "super",
+    "null", "true", "false", "import", "package", "override", "final", "abstract", "sealed", "private",
+    "protected", "implicit", "lazy", "return", "throw", "try", "catch", "finally", "forSome", "using",
+    "export", "inline", "opaque", "transparent", "derives", "extension", "macro", "end", "as", "wait",
+  )
+
+  /** backtick an identifier that collides with a Scala keyword. */
+  def esc(name: String): String = if keywords(name) then s"`$name`" else name
+
+  /** THE SAME RULE, APPLIED TO EVERY SEGMENT OF A QUALIFIED NAME.
+    *
+    * `esc` answers for an IDENTIFIER, and every name this emitter renders by hand — a member, a
+    * local, a type's simple name — goes through it. A `Symbol.fullName` does not: it is a PATH, and
+    * a path that reaches the output verbatim carries whatever java's package structure happened to
+    * spell. Java and Scala do not share a keyword set, so a package segment java was free to name
+    * `type`, `object`, `val` or `package` emits an unparseable reference —
+    * `com.fasterxml.jackson.core.type.TypeReference` reads as `…core.type` followed by a stray `.`,
+    * which is an E119 plus a syntax error and not a type error anywhere near the construct.
+    *
+    * Cut only at §4.56's three separators (`.` between packages and the top-level type, `$` before
+    * a nested type, `#` before a member) and carry each separator across verbatim, so a mixed chain
+    * a caller is about to re-separate (`nestedPath`'s per-level `.`/`#` choice) still holds. Nothing
+    * here decides ownership from the string — every segment is escaped or not on its own, and a
+    * segment that is not a keyword is returned identically, which is why this is safe to apply to
+    * an external FQN the port does not own. */
+  def escPath(path: String): String =
+    if path.isEmpty then path
+    else
+      val b   = new StringBuilder(path.length)
+      var seg = 0
+      var i   = 0
+      while i <= path.length do
+        if i == path.length || path(i) == '.' || path(i) == '$' || path(i) == '#' then
+          b ++= esc(path.substring(seg, i))
+          if i < path.length then b += path(i)
+          seg = i + 1
+        i += 1
+      b.result()
 
   /** A class whose constructors carry a CONTEXT CLAUSE the emitted header does not
     * (`ENGINE-LIMITS.md` CT5).
