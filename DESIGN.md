@@ -2154,6 +2154,15 @@ the parent's companion ACTUALLY DELIVERS, and a static the base renamed or dropp
 base's emitted output. `export P.*` against a type whose companion the base did not emit is an error
 outright.
 
+**The base's map is discovered over a SEARCH PATH, not one root.** `PortMap.reportRoot` is the
+parent of THIS run's report directory, which is exactly right inside this repository and useless to
+§4.45's consumer: an agent in another repository has no tree of that shape, and its base's map comes
+from wherever that base was run. `balticporter.baseReports` prepends extra roots, and BOTH readers
+take the same function (`PortMap.discoverIn`) — `PortRun` builds the `Surface` from it and
+`PortMapTransform` resolves its own base through `published` — because two loads of one artifact
+answering differently is D6.5's failure shape and this view exists to remove it. An extra root can
+only ADD a base: first wins per module, so the run's own tree cannot be shadowed by a stale copy.
+
 **A NON-FATAL contract gap is now a CHECK, `base-surface`.** The fatal half fails the run — §8.3's
 enforcement, and deliberately not a check ("a drift check is rejected on evidence"). The other half is
 specified as a FINDING and was a line of stdout: an `Unknown` no emission consumed. A number nobody

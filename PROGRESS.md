@@ -4259,7 +4259,7 @@ nothing in a single-module run can see:
 
 | site | what it answers about a BASE type | the key it needs | why the map does not carry it |
 |---|---|---|---|
-| `TirEmitter.funnelParamRenames` | the `$p` rename of a base class's PROMOTED constructor parameter | a member row for an ENGINE-MINTED member | a promoted parameter has no emitted DECLARATION — it IS the class's parameter list, so the source map records no row for it. `Surface.NotCarried` names it in code |
+| `TirEmitter.funnelParamRenames` | the `$p` rename of a base class's PROMOTED constructor parameter | a member row for an ENGINE-MINTED member | a promoted parameter has no emitted DECLARATION — it IS the class's parameter list, so the source map records no row for it. `Surface.NotCarried` names it in code. **Its FUNNEL is scoped now** — it was the fourth site to build `CtorFunnel.Plans` with no view, so the plan it read a base class's promoted parameters from was not the plan the base emitted (D4). What is still open is the member row, not the fixpoint |
 | `TirEmitter.rawParentAlignment` / `overrideAlign` | the TYPE at which a base parent's parameter was RENDERED | a `sig=` row | schema 3 publishes a `primary=` DESCRIPTOR, which is the erased source spelling; an override alignment needs the rendered Scala type, which no column holds |
 | `TirEmitter.diamondOverrides` | is a base parent's method CONCRETE | a `concrete` flag on the member row | not published; `MemberShape` carries `name`/`vis`/`placement` only |
 | `GlobalsToImplicitsTransform` seeds + closure | does a base declaration carry a `(using C)` clause | a `usingClause=` on the member row | not published, and the phase is default-off in every port |

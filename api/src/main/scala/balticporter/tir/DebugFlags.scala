@@ -41,6 +41,7 @@ import java.nio.file.{Files, Path}
   * | `balticporter.report=off`              | disable check persistence ([[CheckReport]]) |
   * | `balticporter.reportDir=<path>`        | where check results go (default derived, see there) |
   * | `balticporter.reportPathRoot=<path>`   | source root to make finding paths RELATIVE to |
+  * | `balticporter.baseReports=<p1:p2>`     | EXTRA directories to look for a base's published port map in |
   *
   * The marker FILES are read once and cached — a flag must not change under a run, or two halves
   * of one measurement disagree (CLAUDE.md §5). The cache is keyed on [[root]], which is the one
@@ -145,7 +146,7 @@ object DebugFlags:
     * completely normal. Nothing else can see that, so `just debug-flags` marks it. */
   val known: List[String] = List(
     "root", "skipPhases", "dumpTirBefore", "dumpTirAfter", "dumpOnly", "tracePhases", "traceNode",
-    "report", "reportDir", "reportPathRoot",
+    "report", "reportDir", "reportPathRoot", "baseReports",
   ).map(Prefix + _)
 
   /** raw lookup: system property wins, then marker files (debug over run). */
@@ -162,6 +163,23 @@ object DebugFlags:
 
   def path(key: String): Option[Path] =
     get(key).map(v => root.resolve(v).normalize)
+
+  /** EXTRA directories to look for a base module's published port map in, in order.
+    *
+    * §4.45's consumer is an agent in ANOTHER REPOSITORY, pointing a published Baltic Porter at its
+    * own Java. It has no `port-report/` tree of this checkout's shape — its base's map arrives from
+    * wherever that base's port was run, or unpacked from an artifact — so the default search root
+    * (the parent of THIS run's report directory) finds nothing and every base-surface question
+    * degrades to `Unknown` with no way to say otherwise.
+    *
+    * Separated by the platform path separator, so a value is pasteable from a classpath. Relative
+    * entries resolve against [[root]], as every other path flag does. Empty is the ordinary case and
+    * makes this a no-op by arithmetic rather than by a branch. */
+  def baseReports: List[Path] =
+    get("baseReports").toList
+      .flatMap(_.split(java.io.File.pathSeparatorChar).toList)
+      .map(_.trim).filter(_.nonEmpty)
+      .map(v => root.resolve(v).normalize)
 
   // ---- pipeline diagnosis ----
   def skipPhases: Set[String]    = list("skipPhases")
@@ -184,6 +202,7 @@ object DebugFlags:
     dumpOnly.map(f => s"dumpOnly=$f"),
     Option.when(tracePhases)("tracePhases=true"),
     Option.when(traceNode.nonEmpty)(s"traceNode=${traceNode.toList.sorted.mkString(",")}"),
+    Option.when(baseReports.nonEmpty)(s"baseReports=${baseReports.mkString(java.io.File.pathSeparator)}"),
   ).flatten
 
   /** a one-line statement of what is switched on, for the run's own output. Silence when nothing

@@ -550,9 +550,19 @@ object PortMap:
     * matches one. Give a module a name nothing else uses.
     */
   def discover(reportRoot: Path, exclude: Set[String] = Set.empty): List[Published] =
-    if !Files.isDirectory(reportRoot) then Nil
+    discoverIn(reportRoot :: balticporter.tir.DebugFlags.baseReports, exclude)
+
+  /** …over SEVERAL roots, nearest first. THE ONE SEARCH PATH, and both readers take it: `PortRun`
+    * builds the `Surface` from it and `PortMapTransform` resolves its own base through
+    * [[published]], and two discoveries of one artifact answering differently is D6.5's failure
+    * shape. Duplicates are collapsed the same way one root's are — first wins per module — so an
+    * extra root can only ADD a base, never shadow the run's own tree with a stale copy. */
+  def discoverIn(roots: List[Path], exclude: Set[String]): List[Published] =
+    val dirs = roots.map(RealPath.of).distinct.filter(Files.isDirectory(_)).flatMap { r =>
+      Files.list(r).iterator().asScala.filter(Files.isDirectory(_)).toList.sortBy(_.toString)
+    }
+    if dirs.isEmpty then Nil
     else
-      val dirs = Files.list(reportRoot).iterator().asScala.filter(Files.isDirectory(_)).toList.sortBy(_.toString)
       val found = for
         d      <- dirs
         source <- List("run-latest", "baseline")
@@ -566,7 +576,10 @@ object PortMap:
       found.filterNot(x => exclude(x.module)).groupBy(_.module).toList.sortBy(_._1).map(_._2.head)
 
   /** the directory every port's report lives under — the parent of THIS run's own report dir, so a
-    * consumer needs no configuration and no knowledge of any other port's layout. */
+    * consumer needs no configuration and no knowledge of any other port's layout.
+    *
+    * `balticporter.baseReports` extends it (see [[discoverIn]]) for §4.45's consumer, which has no
+    * run tree of this shape at all. */
   def reportRoot: Path = CheckReport.dir.toAbsolutePath.normalize.getParent
 
   /** The map published by `module`, for a porting program constructing a

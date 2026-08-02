@@ -684,7 +684,7 @@ sge.gltf.scene3d.attributes.ClippingPlaneAttribute	sge.gltf.scene3d.attributes.C
 sge.gltf.scene3d.attributes.ClippingPlaneAttribute	sge.gltf.scene3d.attributes.ClippingPlaneAttribute#compareTo(Attribute)	def	7397a8439e6ecbf5
 sge.gltf.scene3d.attributes.ClippingPlaneAttribute	sge.gltf.scene3d.attributes.ClippingPlaneAttribute#copy()	def	cef741f9eb96b587
 sge.gltf.scene3d.attributes.ClippingPlaneAttribute	sge.gltf.scene3d.attributes.ClippingPlaneAttribute#plane	val	ec6f404dea5763c8
-sge.gltf.scene3d.attributes.FogAttribute	sge.gltf.scene3d.attributes.FogAttribute	class	5a433df75105bf11
+sge.gltf.scene3d.attributes.FogAttribute	sge.gltf.scene3d.attributes.FogAttribute	class	aef6c3ff4465bfbb
 sge.gltf.scene3d.attributes.FogAttribute	sge.gltf.scene3d.attributes.FogAttribute#FogEquation	val	bb3b50b9afd40064
 sge.gltf.scene3d.attributes.FogAttribute	sge.gltf.scene3d.attributes.FogAttribute#FogEquationAlias	val	925eb27258fd5435
 sge.gltf.scene3d.attributes.FogAttribute	sge.gltf.scene3d.attributes.FogAttribute#compareTo(Attribute)	def	2469b1148ba94e98
@@ -693,7 +693,7 @@ sge.gltf.scene3d.attributes.FogAttribute	sge.gltf.scene3d.attributes.FogAttribut
 sge.gltf.scene3d.attributes.FogAttribute	sge.gltf.scene3d.attributes.FogAttribute#set(Vector3)	def	356cec9805a689c9
 sge.gltf.scene3d.attributes.FogAttribute	sge.gltf.scene3d.attributes.FogAttribute#set(float,float,float)	def	e1e278ed88d5485b
 sge.gltf.scene3d.attributes.FogAttribute	sge.gltf.scene3d.attributes.FogAttribute#value	val	221bf5e22732879f
-sge.gltf.scene3d.attributes.MirrorAttribute	sge.gltf.scene3d.attributes.MirrorAttribute	class	4db79d651a46877c
+sge.gltf.scene3d.attributes.MirrorAttribute	sge.gltf.scene3d.attributes.MirrorAttribute	class	a1e544ec10a147a9
 sge.gltf.scene3d.attributes.MirrorAttribute	sge.gltf.scene3d.attributes.MirrorAttribute#Specular	val	1f28250371464cc4
 sge.gltf.scene3d.attributes.MirrorAttribute	sge.gltf.scene3d.attributes.MirrorAttribute#SpecularAlias	val	5bebd6a1677621e6
 sge.gltf.scene3d.attributes.MirrorAttribute	sge.gltf.scene3d.attributes.MirrorAttribute#compareTo(Attribute)	def	c92c0aa78040a892
@@ -707,7 +707,7 @@ sge.gltf.scene3d.attributes.MirrorSourceAttribute	sge.gltf.scene3d.attributes.Mi
 sge.gltf.scene3d.attributes.MirrorSourceAttribute	sge.gltf.scene3d.attributes.MirrorSourceAttribute#normal	val	2382b9a25b6ef0cd
 sge.gltf.scene3d.attributes.MirrorSourceAttribute	sge.gltf.scene3d.attributes.MirrorSourceAttribute#set(TextureDescriptor<Texture>,Vector3)	def	89e72eca765a65e5
 sge.gltf.scene3d.attributes.MirrorSourceAttribute	sge.gltf.scene3d.attributes.MirrorSourceAttribute#textureDescription	val	04523793eb4bb918
-sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute	class	b87eada9626b6c15
+sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute	class	0b74bfd9f98a4617
 sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute#<clinit>	init	0d7a97057cbf5b2e
 sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute#BaseColorFactor	val	0de09e0a6b6dcd8c
 sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute#BaseColorFactorAlias	val	af3c40befb79847c
@@ -724,12 +724,12 @@ sge.gltf.scene3d.attributes.PBRCubemapAttribute	sge.gltf.scene3d.attributes.PBRC
 sge.gltf.scene3d.attributes.PBRCubemapAttribute	sge.gltf.scene3d.attributes.PBRCubemapAttribute#copy()	def	8495f30dbcf8452a
 sge.gltf.scene3d.attributes.PBRCubemapAttribute	sge.gltf.scene3d.attributes.PBRCubemapAttribute#createDiffuseEnv(Cubemap)	def	f3f7dd2b0e27d104
 sge.gltf.scene3d.attributes.PBRCubemapAttribute	sge.gltf.scene3d.attributes.PBRCubemapAttribute#createSpecularEnv(Cubemap)	def	3569208ef3caa271
-sge.gltf.scene3d.attributes.PBRFlagAttribute	sge.gltf.scene3d.attributes.PBRFlagAttribute	class	f7255eb594c94e84
+sge.gltf.scene3d.attributes.PBRFlagAttribute	sge.gltf.scene3d.attributes.PBRFlagAttribute	class	3c05036c82f6b3a8
 sge.gltf.scene3d.attributes.PBRFlagAttribute	sge.gltf.scene3d.attributes.PBRFlagAttribute#Unlit	val	8868ae0154677eb8
 sge.gltf.scene3d.attributes.PBRFlagAttribute	sge.gltf.scene3d.attributes.PBRFlagAttribute#UnlitAlias	val	c7f0ef9d47bfd123
 sge.gltf.scene3d.attributes.PBRFlagAttribute	sge.gltf.scene3d.attributes.PBRFlagAttribute#compareTo(Attribute)	def	cf7a368a13660fa1
 sge.gltf.scene3d.attributes.PBRFlagAttribute	sge.gltf.scene3d.attributes.PBRFlagAttribute#copy()	def	d8feffaa7d382588
-sge.gltf.scene3d.attributes.PBRFloatAttribute	sge.gltf.scene3d.attributes.PBRFloatAttribute	class	2f21b4cc1abf861c
+sge.gltf.scene3d.attributes.PBRFloatAttribute	sge.gltf.scene3d.attributes.PBRFloatAttribute	class	dcfa038e8a57ac1a
 sge.gltf.scene3d.attributes.PBRFloatAttribute	sge.gltf.scene3d.attributes.PBRFloatAttribute#EmissiveIntensity	val	af7f01614943cfee
 sge.gltf.scene3d.attributes.PBRFloatAttribute	sge.gltf.scene3d.attributes.PBRFloatAttribute#EmissiveIntensityAlias	val	4e4b302b3a0626de
 sge.gltf.scene3d.attributes.PBRFloatAttribute	sge.gltf.scene3d.attributes.PBRFloatAttribute#IOR	val	ce3da7a5e7cb5a28
@@ -757,7 +757,7 @@ sge.gltf.scene3d.attributes.PBRFloatAttribute	sge.gltf.scene3d.attributes.PBRFlo
 sge.gltf.scene3d.attributes.PBRFloatAttribute	sge.gltf.scene3d.attributes.PBRFloatAttribute#createRoughness(float)	def	d5667cd968292c2e
 sge.gltf.scene3d.attributes.PBRFloatAttribute	sge.gltf.scene3d.attributes.PBRFloatAttribute#createSpecularFactor(float)	def	5687ae34d66211c5
 sge.gltf.scene3d.attributes.PBRFloatAttribute	sge.gltf.scene3d.attributes.PBRFloatAttribute#createTransmissionFactor(float)	def	5546ea8accedca50
-sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute	class	be6928f991a4b945
+sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute	class	a7a8d7bab042b080
 sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute#<stmt1>	stmt	5d534a2d5e1000f1
 sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute#<stmt2>	stmt	e9246af1bb877761
 sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute#<stmt3>	stmt	bd4030b3f65def62
@@ -780,7 +780,7 @@ sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.
 sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute#ior	val	e689e8dec83f7f79
 sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute#thicknessMax	val	4dd67c14d1ecf768
 sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute#thicknessMin	val	74238ac47b1e6767
-sge.gltf.scene3d.attributes.PBRMatrixAttribute	sge.gltf.scene3d.attributes.PBRMatrixAttribute	class	73c15c477e01c7cb
+sge.gltf.scene3d.attributes.PBRMatrixAttribute	sge.gltf.scene3d.attributes.PBRMatrixAttribute	class	127cac94016b860a
 sge.gltf.scene3d.attributes.PBRMatrixAttribute	sge.gltf.scene3d.attributes.PBRMatrixAttribute#EnvRotation	val	91670e0acb6d212b
 sge.gltf.scene3d.attributes.PBRMatrixAttribute	sge.gltf.scene3d.attributes.PBRMatrixAttribute#EnvRotationAlias	val	30628e0ce3c6531e
 sge.gltf.scene3d.attributes.PBRMatrixAttribute	sge.gltf.scene3d.attributes.PBRMatrixAttribute#compareTo(Attribute)	def	cf7a368a13660fa1

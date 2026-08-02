@@ -82,7 +82,7 @@ final class TirEmitter(
     TirEmitter.resolveCapturedLocalClashes(
       TirEmitter.funnelParamRenames(
         TirEmitter.resolveFieldShadowing(
-          TirEmitter.resolveMemberClashes(source, own, surface), own, surface), own), own)
+          TirEmitter.resolveMemberClashes(source, own, surface), own, surface), own, surface), own)
   /** which Java constructor becomes each class's Scala primary, and which `super(args)` can be
     * replayed as statements — whole-program decisions. */
   private val plans = CtorFunnel.Plans(prepared, Some(surface))
@@ -3345,9 +3345,14 @@ object TirEmitter:
     * means the field). Suffixing `$p` removes both: parameters are positional and the locals are
     * unreachable from outside, so the rename is invisible everywhere it matters.
     */
-  def funnelParamRenames(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
+  def funnelParamRenames(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
+                         surface: Surface = null): Program =
     val renames = collection.mutable.Map[SymId, String]()
-    val plans = CtorFunnel.Plans(p)
+    // THE RUN'S OWN VIEW, not a `TrivialSurface`. This is the fourth site to have built the funnel
+    // without one, and the failure is `ENGINE-LIMITS.md` D4 exactly: a dependent's fixpoint spans its
+    // base, so the plan this pass reads a base class's PROMOTED PARAMETERS from is not the plan the
+    // base emitted, and a `$p` rename derived from it renames a parameter that is not there.
+    val plans = CtorFunnel.Plans(p, Option(surface))
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
     def parentSyms(cd: Tree.ClassDef): List[SymId] =
       def hs(t: TypeRepr): Option[SymId] = t match

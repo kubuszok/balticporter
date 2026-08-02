@@ -20,6 +20,53 @@ class PortMapSpec extends munit.FunSuite:
       renames: Map[String, String] = Map.empty,
   ) = PortMap.of("m", "eng", emitted, SrcMap.Recording(members), dropTypes, dropMethods, injected, bodies, renames)
 
+  test("the SEARCH PATH is several roots, nearest first — §4.45's consumer has no run tree") {
+    // An agent in another repository points a published Baltic Porter at its own java. Its base's map
+    // arrives from wherever that base was run, or unpacked from an artifact — never from a
+    // `port-report/` tree of this checkout's shape. With one root the discovery finds nothing and
+    // every base-surface question degrades to `Unknown` with no way to say otherwise.
+    val here  = Files.createTempDirectory("pm-here")
+    val there = Files.createTempDirectory("pm-there")
+    def publish(under: java.nio.file.Path, module: String): Unit =
+      val d = under.resolve(module).resolve("run-latest")
+      Files.createDirectories(d)
+      PortMap.write(d, PortMap.Map0(module, "eng", Nil))
+
+    publish(here, "mine")
+    publish(there, "the-base")
+
+    assertEquals(PortMap.discoverIn(List(here), Set.empty).map(_.module), List("mine"))
+    assertEquals(PortMap.discoverIn(List(here, there), Set.empty).map(_.module).sorted,
+                 List("mine", "the-base"))
+    // an extra root can only ADD a base, never shadow the run's own tree: first wins per module,
+    // exactly as two directories under ONE root already do.
+    publish(there, "mine")
+    val both = PortMap.discoverIn(List(here, there), Set.empty)
+    assertEquals(both.map(_.module).sorted, List("mine", "the-base"))
+    assert(clue(both.find(_.module == "mine").map(_.path.toString))
+             .exists(_.startsWith(RealPath.str(here))), RealPath.str(here))
+    // …and `exclude` still holds, so a run cannot discover ITSELF as its own base
+    assertEquals(PortMap.discoverIn(List(here, there), Set("mine")).map(_.module), List("the-base"))
+    // a root that does not exist is not an error — an unset flag must be a no-op by arithmetic
+    assertEquals(PortMap.discoverIn(List(here.resolve("nope")), Set.empty), Nil)
+  }
+
+  test("`balticporter.baseReports` is the flag that extends it, and it is one an accessor READS") {
+    val prev = Option(System.getProperty("balticporter.baseReports"))
+    try
+      System.setProperty("balticporter.baseReports", List("a", "b").mkString(java.io.File.pathSeparator))
+      assertEquals(balticporter.tir.DebugFlags.baseReports.map(_.getFileName.toString), List("a", "b"))
+      // …and it is in `known`, so `just debug-flags` cannot mark it as a key nothing will look up —
+      // which is the one thing an operator cannot see any other way (§4.6).
+      assert(balticporter.tir.DebugFlags.known.contains("balticporter.baseReports"))
+      assert(clue(balticporter.tir.DebugFlags.active).exists(_.startsWith("baseReports=")))
+    finally
+      prev match
+        case Some(v) => System.setProperty("balticporter.baseReports", v)
+        case None    => System.clearProperty("balticporter.baseReports")
+    assertEquals(balticporter.tir.DebugFlags.baseReports, Nil)
+  }
+
   test("erase strips generic ARGUMENTS so a manifest key matches a srcmap key") {
     // The defect this exists for: SrcMap records `f(Class<T>)`, every manifest writes `f(Class)`,
     // and a map keyed one way but consulted the other misses SILENTLY — the body flag simply never
