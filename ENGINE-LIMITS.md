@@ -2515,6 +2515,57 @@ than none:
   behaviour change with no compile error and no count moving. That phase excludes external callees
   BEFORE reading formals, and its count says which of the two facts is missing.
 
+**THE SEAM WITH NO COMPILE ERROR BEHIND IT IS `java.lang.Object`, and it was reported by nothing.**
+Every arm above is reachable from a type error: a `java.util.Set` formal, a shim formal, a scoped-out
+declaration. A retyped collection at a class file's UNIVERSAL formal is none of them — `mutable.Map`
+IS an `AnyRef`, so it conforms, the port compiles, and `objectMapper.convertValue(myMap)` /
+`writeValueAsString` / `jsgen.writeObject` / `String.valueOf` / `println` hand reflective third-party
+code a value java handed a `HashMap`. `toString`, `instanceof` and every serializer see something
+else. That is §4.4's shape — valid output meaning something different — arriving through a retype
+rather than through a statement form.
+
+Three places had to change for it, and each was silent in its own way: `coerce` wrapped only where
+the expected head was in `typeMap`, and `java.lang.Object` is not; `externalArgs` counted only
+SIGNATURE-LESS callees, and this one has a signature; `CollectionBoundaryCheck.sideOf` put
+`java.lang.Object` on no side at all, so the pair fell through the match. **A check that reads zero
+because the pair it needs is not in its own vocabulary is the hardest kind to notice**, since every
+other pair in that match is right — `Side.Universal` is now its own side for exactly that reason.
+
+The bridge is `toJava` and it is FAITHFUL rather than a compromise, which is what licenses inserting
+a wrap where nothing is broken: java's value at that slot really WAS a java collection, so the live
+view restores what the callee is entitled to see with both directions still shared. What cannot be
+bridged is counted — a nested element a one-level view would lie about, a shim source — and OWNED
+callees are excluded, because their `Object` formal belongs to scala this port emits and the scala
+collection is what it wants.
+
+Two limits found while measuring it, both worth knowing before the next port:
+
+- **naming `java.lang.Object` is not §4.56's forbidden name test**, and the distinction is the one to
+  carry: that rule forbids concluding a type's PROVENANCE from its spelling, because a prefix is a
+  fact about a string. This is an EQUALITY, against java's universal supertype, asked at a slot the
+  phase already knows is a class file's — a fact about the java LANGUAGE, exactly as `typeMap`'s own
+  keys are. Note the callee's owner must still be screened (`java.util.List#indexOf(Object)` is an
+  external member with a universal formal whose receiver has already been retyped, so the call binds
+  to scala's own `indexOf` and the class file's formal describes nothing that will be emitted).
+- **the bridge inherits K2.5's open caution and made one message worse.** Where the SOURCE is a call
+  the phase deliberately refused to move — `Arrays.asList(arr)`, K6.5's aliasing refusal — the node
+  says `Buffer` while the value is a real `java.util.List`, so `toJava` receives a java collection
+  and the error names the HELPER. Measured at exactly one liqp site, count flat: `Can't compare these
+  two types` became `None of the overloaded alternatives of method toJava`. It is the same shape
+  K2.5 recorded and left OPEN in K6.5's territory, and the fix belongs there — a refused-source test
+  beside `coerce`'s existing `isKeySetView`, which is the same idea for the other refused source.
+
+One case is deliberately left where it was: a `Kind.Entry` — a `Tuple2` where java had a `Map.Entry`
+— at a universal formal is neither bridged (`toJava` has no overload for a pair, and a pair is not a
+collection) nor counted, because `scala.Tuple2` is deliberately not on the scala side of this
+check's line and putting it there would be noise. Its `toString` really does differ from java's
+(`(k,v)` against `k=v`); that belongs to K5.7's story about `Map.Entry`, not to this one.
+
+**Measured on liqp: 74 → 74 errors, every check count flat, 5 member digests over 3 units** — the
+whole visible effect being two `toJava` wraps at jackson's own `writeObject` and one at a converted
+assertion, plus the message above. That is the point of the entry: the seam this closes is one no
+count could have shown, and the number that would have moved is a serialization test's.
+
 **A SHIM formal belongs to a callee the PROGRAM OWNS, and reading an external one through `remap`
 broke a green port.** `wrapIterableArgs` wraps toward `JavaIterable`/`JavaCollection`, and no class
 file can name a `balticporter.runtime` type — so the moment external formals became readable, that

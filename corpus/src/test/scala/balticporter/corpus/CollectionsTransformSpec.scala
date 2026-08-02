@@ -834,19 +834,76 @@ class CollectionsTransformSpec extends PortSuite:
     assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee), 0)
   }
 
-  test("\u2026and a slot the phase does NOT map is neither bridged nor counted \u2014 the negative test") {
-    // The bridge is keyed on the phase's OWN table (\u00a74.56), not on "the callee is external". A
-    // retyped value at an `Object` formal conforms exactly as it did, so nothing is inserted and
-    // nothing is reported \u2014 a count that rose here would be a count nobody could act on.
+  test("\u2026and so is one at java's UNIVERSAL formal, which the type checker cannot object to") {
+    // The seam with no compile error behind it, and therefore the one nothing was looking for. A
+    // retyped collection at a `java.lang.Object` formal CONFORMS \u2014 `mutable.Map` is an `AnyRef` \u2014
+    // so the port compiles and hands reflective third-party code a value java handed a `HashMap`.
+    // `toString`, `instanceof` and every serializer see something else: an ObjectMapper's
+    // `convertValue`/`writeValueAsString`, a `String.valueOf`, a `println`. \u00a74.4's exact shape.
+    //
+    // `toJava` is the FAITHFUL answer rather than a compromise, and that is what licenses inserting
+    // one where nothing is broken: java's value at that slot really WAS a java collection, so the
+    // live view restores what the callee is entitled to see, both directions still shared.
+    //
+    // Naming `java.lang.Object` is not \u00a74.56's forbidden name test: it is not a claim about a
+    // library's type, it is java's universal supertype \u2014 the one slot at which EVERY value conforms
+    // and therefore the one at which conformance proves nothing.
     val ph = new CollectionsTransform
     val p  = port(
       """package demo;
         |import java.util.*;
         |class Plain2 {
         |  private final List<String> xs = new ArrayList<String>();
+        |  private final Map<String, Object> m = new HashMap<String, Object>();
         |  String shown() { return String.valueOf(xs); }
+        |  void log() { System.out.println(m); }
+        |  // \u2026and a value the phase did NOT retype is untouched at the same kind of slot.
+        |  String plain(String s) { return String.valueOf(s); }
         |}
         |""".stripMargin, ph)
+    assertEmits(p, "java.lang.String.valueOf(balticporter.runtime.JavaCollections.toJava(this.xs))")
+    assertEmits(p, "println(balticporter.runtime.JavaCollections.toJava(this.m))")
+    assertEmits(p, "java.lang.String.valueOf(s)")
+    // a bridged slot is not a residue.
+    assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee), 0)
+  }
+
+  test("\u2026and where it CANNOT be bridged, the universal formal produces a ROW where it produced nothing") {
+    // `asJava` converts ONE level, so a `Map[String, Buffer[String]]` at a universal formal would
+    // emit a view that lies one type argument in \u2014 the same refusal the mapped-formal direction
+    // already makes. What must not follow is silence: `sideOf` put `java.lang.Object` on no side of
+    // the boundary at all, so the pair fell through the match and the seam this whole finding is
+    // about was reported by nothing.
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.*;
+        |class Deep {
+        |  private final Map<String, List<String>> deep = new HashMap<String, List<String>>();
+        |  String shown() { return String.valueOf(deep); }
+        |}
+        |""".stripMargin, ph)
+    assertNotEmits(p, "toJava")
+    val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee)
+    assertEquals(clue(fs).count(_.expected == "java.lang.Object"), 1)
+  }
+
+  test("\u2026and an OWNED callee's universal formal is left alone \u2014 the negative test") {
+    // The callee is scala the port EMITS, so the value it should receive is the scala collection.
+    // Bridging there would hand a ported method a `java.util.List` its own body no longer expects,
+    // and the row would be one nobody could act on. `bridgeJavaFormals` runs only where the formals
+    // stay java's, which is exactly the three cases `keepsJavaFormals` names.
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.*;
+        |class Own3 {
+        |  private final List<String> xs = new ArrayList<String>();
+        |  void take(Object o) { }
+        |  void go() { take(xs); }
+        |}
+        |""".stripMargin, ph)
+    assertEmits(p, "this.take(this.xs)")
     assertNotEmits(p, "toJava")
     assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee), 0)
   }

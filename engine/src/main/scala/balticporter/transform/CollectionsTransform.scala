@@ -1627,7 +1627,14 @@ final class CollectionsTransform(
       val formals = formalsOf(t)
       if formals.sizeIs != t.args.size then t
       else
-        val as = t.args.zip(formals).map((a, f) => coerce(f, a, expectedScoped = true))
+        // …and the UNIVERSAL formal is a bridge only at a CLASS FILE's slot, which is the one of
+        // `keepsJavaFormals`' three cases where the code on the other side really is java. A
+        // scoped-out declaration's `Object` formal belongs to scala this port EMITS, and a held-back
+        // declaration is held back so that its own body keeps working — bridging into it would hand
+        // a ported method a `java.util.List` its body no longer expects.
+        val external = externalCallee(t.method)
+        val as = t.args.zip(formals).map((a, f) =>
+          coerce(f, a, expectedScoped = true, expectedExternal = external))
         if as == t.args then t else t.copy(args = as)
 
   /** a RETURN is a shim-typed slot exactly as a formal, a `val` and an assignment target are — the
@@ -1741,7 +1748,8 @@ final class CollectionsTransform(
     * NAMING the wrapper instead of the boundary, so the unwrapped value is left to fail at the slot
     * exactly as it did before this seam existed. `Map.values()` has no such problem: its rewrite
     * already restores the invariant by wrapping at the call. */
-  private def coerce(expected: TypeRepr, actual: Term, expectedScoped: Boolean = false)(using p: Program): Term =
+  private def coerce(expected: TypeRepr, actual: Term, expectedScoped: Boolean = false,
+                     expectedExternal: Boolean = false)(using p: Program): Term =
     // the symbol table is retyped AFTER the trees (see `run`), so a formal read here is still the
     // ORIGINAL java symbol — `java.lang.Iterable`, not the shim. Compare through `remap`, which
     // makes this correct on either side of that pass.
@@ -1766,6 +1774,16 @@ final class CollectionsTransform(
     // (§4.56) rather than any test on the name.
     val wantsJava = expectedScoped &&
       wants.flatMap(p.symbolOf).exists(o => typeMap.contains(o.fullName))
+    // …and the slot with NO type error behind it, which is why nothing was looking for it. A class
+    // file's `java.lang.Object` formal takes anything, so a retyped collection conforms and the port
+    // compiles — while the callee is reflective third-party code that java handed a `HashMap` and
+    // this port hands a `mutable.Map`: `toString`, `instanceof` and every serializer see something
+    // else (`CollectionsTransform.ObjectFqn` for why naming it is not §4.56's name test). `toJava`
+    // is the FAITHFUL answer and not a compromise — java's value at that slot really WAS a java
+    // collection — which is what licenses inserting a wrap where nothing is broken. EXTERNAL only:
+    // a held-back declaration's `Object` formal belongs to scala this port emits.
+    val wantsUniversal = expectedExternal &&
+      wants.flatMap(p.symbolOf).exists(_.fullName == CollectionsTransform.ObjectFqn)
     // …asked so that an ABSENT shim can never match. A shim symbol is `SymId.None` when nothing in
     // the program maps to it (`javaIterableSym` exists only where something names
     // `java.lang.Iterable`), and a `wants` of `Some(SymId.None)` — an expected type whose head did
@@ -1781,8 +1799,10 @@ final class CollectionsTransform(
       // `asJava` converts ONE level, exactly as `asScala` does, so a `Buffer[Buffer[String]]` at a
       // `java.util.List<java.util.List<String>>` formal would emit a wrap that lies one type
       // argument in. Refused and counted, the same way [[externalProducer]] refuses the mirror.
-      case Some(Kind.Seq | Kind.Set | Kind.Map) if wantsJava && mentionsRetyped(actualT) => SymId.None
-      case Some(Kind.Seq | Kind.Set | Kind.Map) if wantsJava && toJavaSym != SymId.None  => toJavaSym
+      case Some(Kind.Seq | Kind.Set | Kind.Map)
+        if (wantsJava || wantsUniversal) && mentionsRetyped(actualT)                    => SymId.None
+      case Some(Kind.Seq | Kind.Set | Kind.Map)
+        if (wantsJava || wantsUniversal) && toJavaSym != SymId.None                     => toJavaSym
       case _                                                                          => SymId.None
     if factory == SymId.None then actual
     else
@@ -2228,6 +2248,22 @@ object CollectionsTransform:
   /** `java.util.Collections`' statics — a receiver-less utility class, which is why they need their
     * own home rather than a rewrite keyed on a receiver's collection kind. */
   val JavaCollectionsFqn = s"${RuntimeArtifact.Package}.JavaCollections"
+
+  /** java's UNIVERSAL supertype — the one formal at which every value conforms, and therefore the
+    * one at which conformance proves nothing.
+    *
+    * This is not §4.56's forbidden name test and the difference is worth stating, because the two
+    * look identical. That rule forbids concluding a type's PROVENANCE from its spelling — "starts
+    * with `java.`, so the phase may delete this cast" — because a prefix is a fact about a string.
+    * `java.lang.Object` is not a prefix and not a library's type: it is a fact about the JAVA
+    * LANGUAGE, exactly as [[typeMap]]'s own keys and `CollectionClosureCheck.jdkFamily` are, and it
+    * is asked as an EQUALITY at a slot the phase already knows is a class file's.
+    *
+    * Its consequence is the seam with NO COMPILE ERROR behind it: a retyped collection reaching an
+    * `Object` formal conforms (`mutable.Map` is an `AnyRef`), so the port compiles and reflective
+    * third-party code — a serializer, a `toString`, an `instanceof` — sees something java never
+    * handed it. */
+  private[balticporter] val ObjectFqn = "java.lang.Object"
 
   /** java fully-qualified name -> (scala fully-qualified name, collection kind).
     *

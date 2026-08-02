@@ -147,7 +147,10 @@ object CollectionBoundaryCheck:
           "with no converter, a nested element type a one-level wrap would silently lie about, or " +
           "a class file the frontend could only partly resolve. A COPY would compile and detach " +
           "both directions (§4.4), so the seam is counted instead. If the dependency is itself " +
-          "portable, the answer is to PORT it rather than to bridge it."
+          "portable, the answer is to PORT it rather than to bridge it. Where the formal is " +
+          "`java.lang.Object` there is no compile error to look for and never was: the retyped " +
+          "value CONFORMS, and what changed is what the callee's `toString`, `instanceof` and " +
+          "serializer see."
 
   /** one stranded slot. */
   final case class Finding(issue: Issue, slot: String, expected: String, actual: String, origin: Origin, enclosing: SymId):
@@ -164,7 +167,7 @@ object CollectionBoundaryCheck:
   val untranslatedFamilies: List[String] = List("java.util.stream.")
 
   private enum Side:
-    case Jdk, Shim, Scala, Other
+    case Jdk, Shim, Scala, Universal, Other
 
   /** which side of the boundary a type is on, decided from the MAPPING's own targets wherever a
     * choice exists.
@@ -173,11 +176,18 @@ object CollectionBoundaryCheck:
     * of three names — so a mapping that adds a fourth shim widens this with nothing to edit. The
     * scala side is decided by PACKAGE rather than by membership, because the phase also mints
     * `scala.collection.Set` (the `keySet` view type) and `scala.collection.mutable.Buffer` (the
-    * stream collapse's type) without either being a `typeMap` target. */
+    * stream collapse's type) without either being a `typeMap` target.
+    *
+    * `Universal` is `java.lang.Object` and is its own side rather than `Other`, because it is the
+    * one type at which a retyped value CONFORMS — so a slot against it produces no compile error
+    * and had therefore been reported by nothing at all, while the callee behind it (a serializer, a
+    * `toString`, an `instanceof`) sees a value java never handed it. `Other` keeps its meaning of
+    * "not a party to this boundary", which every third-party type genuinely is. */
   private def sideOf(fqn: String, shims: Set[String]): Side =
     if shims.contains(fqn) then Side.Shim
     else if fqn.startsWith("scala.collection.") then Side.Scala
     else if CollectionClosureCheck.jdkFamily.contains(fqn) || untranslatedFamilies.exists(fqn.startsWith) then Side.Jdk
+    else if fqn == CollectionsTransform.ObjectFqn then Side.Universal
     else Side.Other
 
   /** Every stranded slot in `program`, which must be the program AFTER the phase ran: this counts
@@ -226,8 +236,21 @@ object CollectionBoundaryCheck:
     def actualOf(t: Term): (TypeRepr, Boolean) =
       CollectionsTransform.scopedType(t, scopedOut).map(_ -> true).getOrElse(t.tpe -> false)
 
+    /** is this callee a THIRD PARTY's, rather than one of the collection API's own members?
+      *
+      * `CollectionsTransform.externalCallee`'s second exclusion, restated where this check can ask
+      * it: `java.util.List#indexOf(Object)` is an external member with a universal formal, and its
+      * RECEIVER has already been retyped, so the call binds to scala's own `indexOf` and the class
+      * file's formal describes nothing that will be emitted. Reading it would put a row on every
+      * such call. The narrower question is asked ONLY by the universal arm, so the existing
+      * `expectedExternal` classification is untouched. */
+    def foreign(m: SymId): Boolean =
+      !program.owns(m) && !program.symbolOf(m).flatMap(c => program.symbolOf(c.owner))
+        .exists(o => mapped.contains(o.fullName) || targets.contains(o.fullName))
+
     def slot(kind: String, expected: TypeRepr, actual: Term, origin: Origin, enclosing: SymId,
-             expectedScoped: Boolean, expectedExternal: Boolean = false): Unit =
+             expectedScoped: Boolean, expectedExternal: Boolean = false,
+             expectedForeign: Boolean = false): Unit =
       val (actualT, actualScoped) = actualOf(actual)
       val scoped = expectedScoped || actualScoped
       (fqn(expected), fqn(actualT)) match
@@ -239,6 +262,17 @@ object CollectionBoundaryCheck:
             case (Side.Scala | Side.Shim, Side.Jdk) => out += Finding(issueFor(a, scoped), kind, e, a, origin, enclosing)
             case (Side.Shim, Side.Scala) | (Side.Scala, Side.Shim) =>
               out += Finding(Issue.ShimBoundary, kind, e, a, origin, enclosing)
+            // java's UNIVERSAL formal, at a CLASS FILE. The pair fell through this match entirely —
+            // `java.lang.Object` was `Other` — which is exactly why it was the seam nothing could
+            // report: it produces no compile error either, because a retyped collection conforms.
+            // `CollectionsTransform.coerce` now bridges it with `toJava` wherever a live view exists
+            // (and a bridged slot never reaches here, its two sides agreeing), so what is left is
+            // the refusals: an element type a one-level view would lie about, and a shim source.
+            // OWNED callees are excluded by `expectedForeign` — their `Object` formal belongs to
+            // scala this port emits, and the scala collection is what it wants — and so are the
+            // collection API's own members, whose receiver has already moved (see `foreign`).
+            case (Side.Universal, Side.Scala | Side.Shim) if expectedForeign =>
+              out += Finding(Issue.ExternalCallee, kind, e, a, origin, enclosing)
             case _ => ()
         case _ => ()
 
@@ -255,8 +289,9 @@ object CollectionBoundaryCheck:
         }.getOrElse(Nil)
         if formals.sizeIs == t.args.size then
           val external = !program.owns(t.method)
+          val third    = foreign(t.method)
           t.args.zip(formals).foreach((a, f) =>
-            slot("argument", f, a, a.origin, t.method, scopedOut(t.method), external))
+            slot("argument", f, a, a.origin, t.method, scopedOut(t.method), external, third))
         else onScopedReceiver(t)
         t
 
