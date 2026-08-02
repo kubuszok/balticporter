@@ -17,7 +17,7 @@ ssg.liquid.Insertion	ssg.liquid.Insertion#<init>(String)	ctor	ce2696b89d1d718a
 ssg.liquid.Insertion	ssg.liquid.Insertion#getName()	def	d0eb939f9fd80f1f
 ssg.liquid.Insertion	ssg.liquid.Insertion#name	val	1f7943b90a3ad2ea
 ssg.liquid.Insertion	ssg.liquid.Insertion#render(TemplateContext,Array<LNode>)	def	d04d8deec6ae5453
-ssg.liquid.Insertions	ssg.liquid.Insertions	class	59359c5fd6c25c0b
+ssg.liquid.Insertions	ssg.liquid.Insertions	class	7c3fbc9b478473a3
 ssg.liquid.Insertions	ssg.liquid.Insertions#<stmt1>	stmt	6959f48d37163fe5
 ssg.liquid.Insertions	ssg.liquid.Insertions#<stmt2>	stmt	6b636a090e14136e
 ssg.liquid.Insertions	ssg.liquid.Insertions#<stmt3>	stmt	1c46cd9577234324
@@ -29,7 +29,7 @@ ssg.liquid.Insertions	ssg.liquid.Insertions#blockNames	val	63e8d595e940c4dd
 ssg.liquid.Insertions	ssg.liquid.Insertions#equals(Any)	def	33736471165f7c78
 ssg.liquid.Insertions	ssg.liquid.Insertions#get(String)	def	89b2876430dc0167
 ssg.liquid.Insertions	ssg.liquid.Insertions#getBlockNames()	def	396aa44834d9dadf
-ssg.liquid.Insertions	ssg.liquid.Insertions#getNames(Predicate<?>)	def	486cb3ebfc2c2397
+ssg.liquid.Insertions	ssg.liquid.Insertions#getNames(Predicate<?>)	def	26201efc93cbbdde
 ssg.liquid.Insertions	ssg.liquid.Insertions#getTagNames()	def	9c1d5b2f3ee978cf
 ssg.liquid.Insertions	ssg.liquid.Insertions#hashCode()	def	c3668aa4b0409c15
 ssg.liquid.Insertions	ssg.liquid.Insertions#map	val	73621cec9a46abfe

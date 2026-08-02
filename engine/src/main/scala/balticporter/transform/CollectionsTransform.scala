@@ -202,7 +202,7 @@ final class CollectionsTransform(
   /** java 8 `Collection.forEach(Consumer)` — scala's is `foreach`, differing only in case, which
     * makes the failure read like a typo rather than a missing mapping. */
   private var foreachSym: SymId = SymId.None
-  private var key1Sym, value2Sym, roSetSym: SymId = SymId.None
+  private var key1Sym, value2Sym, roSetSym, selfParamSym: SymId = SymId.None
   /** `JavaIterable` + its `from` factory — see `coerce`. */
   private var javaIterableSym, iterableFromSym: SymId = SymId.None
   /** `JavaCollection` + its `from` factory — the same seam, one type up. `unmodifiableFromSym` is
@@ -348,6 +348,12 @@ final class CollectionsTransform(
     containsSym  = mint("contains", "contains")
     key1Sym      = mint("_1", "_1") // Map.Entry#getKey   on a Tuple2
     value2Sym    = mint("_2", "_2") // Map.Entry#getValue on a Tuple2
+    // the receiver parameter of a LOWERED unbound method reference — see [[lowerMethodRef]]. ONE
+    // symbol serves every site, and that is a fact about the shape rather than a shortcut: the
+    // lowered body is a single member access on the parameter, so it can contain no second lowered
+    // reference and two of these lambdas can never nest. The name matches what `TirEmitter` already
+    // spells for a method reference it expands itself, so the two paths read alike.
+    selfParamSym = mint("self$", "self$")
     roSetSym     = mint("Set", "scala.collection.Set") // see `transformValDef`
     javaIterableSym = byScala.getOrElse(JavaIterableFqn, SymId.None)
     iterableFromSym = mint("from", JavaIterableFqn + ".from")
@@ -820,7 +826,55 @@ final class CollectionsTransform(
       a.copy(rhs = coerce(want, a.rhs, wantScoped))
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
     case fe: Tree.ForEach => writeThroughEntries(fe)
+    case mr: Tree.MethodRef => lowerMethodRef(mr)
     case other          => other
+
+  /** A METHOD REFERENCE at a member this phase rewrites — `Map.Entry::getKey` inside a stream.
+    *
+    * The member table already answers `getKey`, and it is keyed on `Tree.Apply`. A method reference
+    * is a `Tree.MethodRef`, which the EMITTER expands to `self$ => self$.getKey()` after every
+    * phase has run — so the rewrite never saw the call and the emitted lambda selects a member the
+    * retyped receiver does not have. Two phases already look at both node shapes
+    * (`CallSiteSubstitutionTransform`, `BeanPropertyTransform`); this is one more shape of an
+    * existing rewrite, not a new mechanism.
+    *
+    * **It cannot be a symbol swap.** `getKey` becomes `_1`, which turns an `Apply` into a `Select`,
+    * so there is no method left to point the reference at — which is also why teaching the
+    * emitter's own expansion the table does not work: it renders `self$.<member>(<args>)` and `_1`
+    * is parenless. The phase therefore LOWERS the reference itself, into the lambda the emitter
+    * would have built, with the rewritten term as its body.
+    *
+    * Only an UNBOUND instance reference (`Type::instanceMethod`) is lowered. A static one is
+    * `Type.member` and has no receiver to rewrite; a bound one (`expr::m`) already carries its
+    * receiver as a term and is the `Apply` case one node out.
+    *
+    * **The parameter is emitted UNANNOTATED, deliberately.** Java writes this qualifier RAW
+    * (`Map.Entry::getKey`), so the retyped type renders `Tuple2[?, ?]` and annotating with it makes
+    * the body's `_1` an unusable capture — `Set[Any]` where a `Set[String]` was wanted. Scalac
+    * infers the parameter from the expected function type, which is exactly what java's own
+    * poly-expression rule does, and it is what the emitter's expansion already emits. */
+  private def lowerMethodRef(mr: Tree.MethodRef)(using p: Program): Term =
+    if selfParamSym == SymId.None then return mr
+    val isStatic = p.symbolOf(mr.method).exists(_.flags.isStatic)
+    mr.qualifier match
+      case Left(tt) if !isStatic =>
+        kindOf.get(headSym(tt.tpe).getOrElse(SymId.None)) match
+          case None    => mr
+          case Some(k) =>
+            val o    = mr.origin
+            val self = Tree.Ident(selfParamSym, tt.tpe, o)
+            // the `Apply` the reference stands for, so the rewrite runs against the same shape it
+            // was written for. Its result type is the reference's own, which for a method VALUE is
+            // the functional interface — unused by every arm that answers here (they read the
+            // RECEIVER's kind), and honest about what is known.
+            val callT = Tree.Apply(Tree.Select(self, mr.method, TypeRepr.NoType, o), Nil,
+                                   mr.method, TypeRepr.NoType, o)
+            rewrite(k, self, mr.method, o, callT) match
+              case None       => mr
+              case Some(body) =>
+                val param = Tree.ValDef(selfParamSym, TypeTree(TypeRepr.NoType, o), scala.None, o)
+                Tree.Lambda(List(param), body, mr.tpe, o)
+      case _ => mr
 
   /** `Map.Entry.setValue` — WHERE THE MAP IS REACHABLE FROM THE CALL.
     *

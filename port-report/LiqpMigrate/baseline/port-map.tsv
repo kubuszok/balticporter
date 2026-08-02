@@ -188,7 +188,7 @@ member	liqp.Insertions#blockNames	ssg.liquid.Insertions#blockNames	Renamed	-	liq
 member	liqp.Insertions#equals(Any)	ssg.liquid.Insertions#equals(Any)	Renamed	-	liqp/Insertions.java	167	33736471165f7c78	
 member	liqp.Insertions#get(String)	ssg.liquid.Insertions#get(String)	Renamed	-	liqp/Insertions.java	191	89b2876430dc0167	
 member	liqp.Insertions#getBlockNames()	ssg.liquid.Insertions#getBlockNames()	Renamed	-	liqp/Insertions.java	153	396aa44834d9dadf	
-member	liqp.Insertions#getNames(Predicate)	ssg.liquid.Insertions#getNames(Predicate<?>)	Renamed	-	liqp/Insertions.java	148	486cb3ebfc2c2397	vis=private
+member	liqp.Insertions#getNames(Predicate)	ssg.liquid.Insertions#getNames(Predicate<?>)	Renamed	-	liqp/Insertions.java	148	26201efc93cbbdde	vis=private
 member	liqp.Insertions#getTagNames()	ssg.liquid.Insertions#getTagNames()	Renamed	-	liqp/Insertions.java	157	9c1d5b2f3ee978cf	
 member	liqp.Insertions#hashCode()	ssg.liquid.Insertions#hashCode()	Renamed	-	liqp/Insertions.java	162	c3668aa4b0409c15	
 member	liqp.Insertions#map	ssg.liquid.Insertions#map	Renamed	-	liqp/Insertions.java	34	73621cec9a46abfe	vis=private

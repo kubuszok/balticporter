@@ -2147,6 +2147,44 @@ count flat.
 
 *Fix kind: (a). Universal — a scala grammar rule, no library involved.*
 
+### K5.9 A METHOD REFERENCE is a second NODE SHAPE of a rewrite keyed on a CALL — and it has to be LOWERED
+
+CLOSED. `CollectionsTransform`'s member table answers `getKey`, and it is keyed on `Tree.Apply`.
+`Map.Entry::getKey` is a `Tree.MethodRef`, which the EMITTER expands to `self$ => self$.getKey()`
+AFTER every phase has run — so the rewrite never saw the call, and the emitted lambda selects a
+member the retyped receiver does not have (`value getKey is not a member of (String, Insertion)`).
+
+Two phases already look at both node shapes (`CallSiteSubstitutionTransform`,
+`BeanPropertyTransform`), so this is one more shape of an existing rewrite rather than a new
+mechanism. What makes it worth its own entry is that **it cannot be a symbol swap, and it cannot be
+fixed at the emitter either**:
+
+- `getKey` becomes `_1`, which turns an `Apply` into a `Select`. There is no method left to point
+  the reference at, so re-targeting `mr.method` has nothing to target;
+- teaching the emitter's own expansion the phase's table fails for the same reason from the other
+  side — it renders `self$.<member>(<args>)`, and `_1` is parenless. It would also put a phase's
+  policy in the backend, which §4.575 forbids for exactly the reason it forbids an authored note.
+
+So the phase LOWERS the reference into the lambda the emitter would have built, with the rewritten
+term as the body: it synthesises the `Apply` the reference stands for, runs the SAME `rewrite` that
+answers a written-out call, and wraps the result. Only an UNBOUND instance reference is lowered — a
+static one is `Type.member` with no receiver to rewrite, and a bound one already carries its
+receiver as a term and is the `Apply` case one node out.
+
+**The parameter is emitted UNANNOTATED, and that is the part a retry will get wrong.** Java writes
+this qualifier RAW (`Map.Entry::getKey`), so the retyped type renders `Tuple2[?, ?]`; annotating
+with it makes the body's `_1` an unusable capture and the enclosing `collect` yields `Set[Any]`
+where a `Set[String]` was wanted. Scalac takes the parameter from the expected function type, which
+is java's own poly-expression rule and is what the emitter's own expansion already emits. That
+needed one emitter capability — a `ValDef` whose type is `NoType` renders as a bare name — and
+nothing else can produce one: every declaration the frontend builds carries java's own type, so a
+lambda parameter a phase mints is the only `ValDef` without one.
+
+Measured on liqp: **8 -> 7**, one site (`Insertions#getNames`), 3 member digests, every check count
+flat.
+
+*Fix kind: (a). Universal — a rewrite owes every node shape its member can appear in.*
+
 ### K6. `java.util.stream` — the CHAIN collapses; and the two rules that make that safe
 
 **PARTLY CLOSED.** `xs.stream().filter(p).collect(Collectors.toList())` now translates, and the shape

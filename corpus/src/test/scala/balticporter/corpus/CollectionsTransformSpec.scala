@@ -1393,6 +1393,50 @@ class CollectionsTransformSpec extends PortSuite:
   }
 
   // ---------------------------------------------------------------------------------------------
+  // A METHOD REFERENCE at a member this phase rewrites. The table is keyed on `Tree.Apply`; a
+  // reference is a `Tree.MethodRef`, which the EMITTER expands after every phase has run.
+  // ---------------------------------------------------------------------------------------------
+
+  test("`Map.Entry::getKey` is LOWERED to the lambda the rewrite belongs in") {
+    // It cannot be a symbol swap: `getKey` becomes `_1`, which turns an Apply into a SELECT, so
+    // there is no method left to point the reference at. The parameter is UNANNOTATED because java
+    // writes the qualifier RAW — annotating with `Tuple2[?, ?]` makes `_1` an unusable capture.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |import java.util.stream.Collectors;
+        |class Names {
+        |  private final Map<String, Integer> m = new HashMap<String, Integer>();
+        |  Set<String> keys() {
+        |    return m.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toSet());
+        |  }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "((self$) => self$._1)")
+    assertNotEmits(p, "self$.getKey()")
+  }
+
+  test("…and a reference at a member the phase does NOT rewrite is untouched — the negative test") {
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |import java.util.stream.Collectors;
+        |class Lens {
+        |  static final class Row { String label() { return ""; } }
+        |  private final List<Row> rows = new ArrayList<Row>();
+        |  List<String> labels() {
+        |    return rows.stream().map(Row::label).collect(Collectors.toList());
+        |  }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "self$.label()")
+  }
+
+  // ---------------------------------------------------------------------------------------------
   // `Map.Entry.setValue` — ONE message over TWO cases, and only one of them is refused. The line is
   // *unmappable where the MAP IS NOT REACHABLE FROM THE CALL*, not *a `Tuple2` cannot write
   // through*: java's one legal mutation during entry-set iteration has the map ON THE LOOP.

@@ -2429,7 +2429,19 @@ final class TirEmitter(
   // sites and overload-aware resolution, else `f(array)` calls break. Emitting the param type
   // as `Array[T]` keeps varargs callable positionally via the array.
   private def param(v: Tree.ValDef): String =
-    s"${esc(sym(v.symbol).name)}: ${tpe(overrideAlign.getOrElse(v.symbol, v.tpt.tpe))}"
+    // NO TYPE = a parameter a PHASE deliberately left for scalac to infer, and the one construct
+    // that needs it is a LOWERED unbound method reference. Java writes such a qualifier RAW
+    // (`Map.Entry::getKey`), so the retyped type renders `[?]` and annotating with it makes the
+    // body an unusable capture — which is why this backend's own method-reference expansion emits
+    // the receiver parameter bare too. Scalac takes the parameter from the expected function type,
+    // which is java's own poly-expression rule.
+    //
+    // Nothing else may reach here with a `NoType`: every declaration the frontend builds carries
+    // java's own type, so an unannotated `def` parameter would be a frontend defect and is a case
+    // this arm cannot produce — a lambda parameter is the only `ValDef` a phase mints without one.
+    val t = overrideAlign.getOrElse(v.symbol, v.tpt.tpe)
+    if t == TypeRepr.NoType then esc(sym(v.symbol).name)
+    else s"${esc(sym(v.symbol).name)}: ${tpe(t)}"
 
   private def valDef(v: Tree.ValDef, i: Int): String =
     // trivia, then the porter note, then the `val` — see `defDef` for why that order is a rule.

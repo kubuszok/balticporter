@@ -73,7 +73,7 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
-| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **5** (§10.5.3, all classified) |
+| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **4** (§10.5.3, all classified) |
 | `liqp-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **577** emitted, **none run** — the port does not compile | **3** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
@@ -2193,31 +2193,16 @@ without it threw `AssertionError: failure to resolve inner class` out of `Classf
 ABORTED, which reads as a smaller error count rather than as a failure. With no seam left there is
 nothing for it to soften, and ONE directory now serves the frontend, scalac and the test run.
 
-**What is left, 8 — 5 main and 3 test**, all of them (a) engine, by family:
+**What is left, 7 — 4 main and 3 test**, all of them (a) engine, by family:
 
 | n | family | where |
 |---|---|---|
 | 1 | K2/K5.7's `Map.Entry.setValue` at the case with NO LOOP AND NO MAP — the receiver is a FIELD whose value, after the retyping, is a detached pair. REFUSED, and the reason now says which of the two cases it is (`ENGINE-LIMITS.md` K5.7) | `filters/Sort$ComparableMapEntry` |
 | 2 | K9/K15 at ANTLR — an enhanced-for over a real external `java.util.List`, and a collapsed stream whose result feeds an external `Stream.concat` | `parser/v4/NodeVisitor` |
-| 1 | a `Map.Entry::getKey` METHOD REFERENCE inside a collapsed stream. The phase rewrites `getKey` on an Apply and never sees a `Tree.MethodRef`, which the emitter expands to `self$ => self$.getKey()` after every phase has run | `Insertions#getNames` |
 | 1 | K15's producer wrap at a Jackson call whose declared result is a TYPE VARIABLE. Jackson really does build a `java.util.Map`, so the wrap is right and its ARGUMENT node type has already been retyped — `fromJava(aScalaMap)` | `parser/LiquidSupport#objectToMap` |
 | 1 | java's `<T>` means `T extends Object`, which is VACUOUS; the port emits `T <: java.lang.Object`, which is NOT — scala 3 roots `java.io.Serializable` at `Any` (value classes are serialisable), so `Buffer[Buffer[Serializable]]` does not conform to `Buffer[Buffer[T]]`. **The obvious fix was BUILT and measured at libGDX core 0 -> 50, and the method-only variant at 0 -> 6 — `ENGINE-LIMITS.md` G24 now carries all three numbers and the two rules that turn out to be reading that bound (reference identity, wildcard capture). Reverted; do not retry blind** | `ComparingExpressionNodeTest` |
 | 1 | MUnit's `Compare` needs a common type and two `toJava` calls infer different element types | `RenderSettingsTest` |
 | 1 | G22 — a method type parameter constrained only by its bound | `blocks/ForTest` |
-
-**One of the eight is DIAGNOSED to the edit.** It is not built — what follows is what the next
-wave does not have to re-derive:
-
-- **the `Map.Entry::getKey` method reference is a NODE SHAPE, not a missing rewrite.**
-  `CollectionsTransform`'s member table already answers `getKey`; it is keyed on `Tree.Apply` and a
-  method reference is a `Tree.MethodRef`, which the EMITTER expands to `self$ => self$.getKey()`
-  after every phase has run. Two phases already look at both shapes
-  (`CallSiteSubstitutionTransform`, `BeanPropertyTransform`), so the §1 framing is "one more node
-  shape of an existing rewrite" — the same shape as K5's inherited call with no receiver written —
-  and not a new mechanism. **And it cannot be a symbol swap**: `getKey` becomes `_1`, which turns an
-  Apply into a SELECT, so the phase has to LOWER the `MethodRef` into a `Tree.Lambda` whose body is
-  the rewritten selection. That is also why teaching the emitter's expansion instead does not work —
-  it renders `self$.<member>(<args>)` and `_1` is parenless.
 
 **And the whole of it is still ONE PHASE's** — the families above are `CollectionsTransform`
 boundaries and generic-inference disagreements, and the port's `.conf` gains nothing for any of
