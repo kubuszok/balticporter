@@ -829,6 +829,14 @@ final class CollectionsTransform(
       case (Some("java.util.Collections#singletonList"), List(x))   => Some(factory(sym("singletonList"), List(x)))
       case (Some("java.util.Collections#singleton"), List(x))       => Some(factory(sym("singleton"), List(x)))
       case (Some("java.util.Collections#singletonMap"), List(k, v)) => Some(factory(sym("singletonMap"), List(k, v)))
+      // …and the unmodifiable VIEWS, which are the same family with a live underlying collection.
+      // ENGINE-LIMITS K6 recorded these as unmappable and they were, while the only candidate
+      // targets were the STDLIB's — scala has no read-only `Buffer`/`Set`/`Map` view, so the shapes
+      // available were a copy (detaches the view) and the identity (drops the immutability). The
+      // runtime's `Frozen*` delegate every READ to the collection they wrap, which is java's answer.
+      case (Some("java.util.Collections#unmodifiableList"), List(c)) => Some(factory(sym("unmodifiableList"), List(c)))
+      case (Some("java.util.Collections#unmodifiableSet"), List(c))  => Some(factory(sym("unmodifiableSet"), List(c)))
+      case (Some("java.util.Collections#unmodifiableMap"), List(c))  => Some(factory(sym("unmodifiableMap"), List(c)))
       // `java.util.Arrays.asList` is not on `Collections`, but it is the same KIND of thing — a
       // receiver-less JDK factory whose result type the port has already retyped — so it shares the
       // table and the runtime object rather than earning a mechanism of its own.
@@ -1649,7 +1657,8 @@ object CollectionsTransform:
   val StaticHelpers: List[String] =
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
-         "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap")
+         "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
+         "unmodifiableList", "unmodifiableSet", "unmodifiableMap")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give
@@ -1683,6 +1692,9 @@ object CollectionsTransform:
     "java.util.Collections#sort",
     "java.util.Collections#swap",
     "java.util.Collections#unmodifiableCollection",
+    "java.util.Collections#unmodifiableList",
+    "java.util.Collections#unmodifiableMap",
+    "java.util.Collections#unmodifiableSet",
     "java.util.List#stream",
     "java.util.Map$Entry#comparingByKey",
     "java.util.Map$Entry#comparingByValue",

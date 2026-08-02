@@ -15,12 +15,12 @@ package balticporter.runtime
   * has the wrong shape. Naming them for what they mirror is what makes the next one obvious to add.
   *
   * ==What is deliberately NOT here==
-  * `unmodifiableList`, `unmodifiableSet`, `unmodifiableMap`. Java returns a read-only VIEW of a
-  * mutable collection, and scala has no such view of a `Buffer`/`Set`/`Map` — so the honest options
-  * are a copy (which silently detaches the view) or the identity (which silently drops the
-  * immutability). Both compile and both are wrong, so neither is offered and the call fails to
-  * translate. `unmodifiableCollection` IS mapped, on [[JavaCollection.unmodifiable]], because the
-  * shim can express exactly what java returns.
+  * Nothing whose java semantics this object would have to GUESS. The bar is stated on each member
+  * that came close: `asList` refuses the array-aliasing form outright rather than copying it, and
+  * the `unmodifiable*` family below is offered only because the runtime can express java's answer
+  * exactly — a read-only VIEW — which the STDLIB cannot. Where a copy or the identity is the only
+  * available shape, neither is offered: both compile and both are wrong, and an unmapped static
+  * fails to compile under the JDK's own name, which is the honest outcome (ENGINE-LIMITS M6).
   */
 object JavaCollections:
 
@@ -216,6 +216,31 @@ object JavaCollections:
   def singletonMap[K, V](k: K, v: V): scala.collection.mutable.Map[K, V] =
     new FrozenMap(scala.collection.immutable.Map(k -> v))
 
+  /** `java.util.Collections.unmodifiableList(xs)` — a read-only VIEW of `xs`, as java's is.
+    *
+    * A VIEW and not a copy, and that distinction is the whole of it: java's result reflects later
+    * changes to `xs`, so a copy would silently detach every one of them (§4.4), and the identity
+    * would silently drop the immutability. Both compile. What makes the honest answer reachable is
+    * [[FrozenBuffer]], which delegates every READ to the collection it wraps and throws on every
+    * write — exactly `Collections.UnmodifiableList`. ENGINE-LIMITS K6 recorded this as unmappable,
+    * and it was, while the only candidate targets were the STDLIB's: scala has no read-only
+    * `Buffer` view. The runtime can supply one, and this is it.
+    *
+    * The `? <: A` WIDENING is java's own signature (`unmodifiableList(List<? extends T>): List<T>`)
+    * and is load-bearing for the same reason [[JavaCollection.unmodifiable]]'s is — a caller passes
+    * a `List<Sub>` and stores the result as a `List<Super>`. The cast is sound for java's reason:
+    * the view is read-only, so no `A` is ever stored into it. */
+  def unmodifiableList[A](xs: scala.collection.Seq[? <: A]): scala.collection.mutable.Buffer[A] =
+    new FrozenBuffer[A](xs.asInstanceOf[scala.collection.Seq[A]])
+
+  /** `java.util.Collections.unmodifiableSet(s)` — [[unmodifiableList]]'s rule, one kind along. */
+  def unmodifiableSet[A](s: scala.collection.Set[? <: A]): scala.collection.mutable.Set[A] =
+    new FrozenSet[A](s.asInstanceOf[scala.collection.Set[A]])
+
+  /** `java.util.Collections.unmodifiableMap(m)` — [[unmodifiableList]]'s rule, one kind along. */
+  def unmodifiableMap[K, V](m: scala.collection.Map[? <: K, ? <: V]): scala.collection.mutable.Map[K, V] =
+    new FrozenMap[K, V](m.asInstanceOf[scala.collection.Map[K, V]])
+
   private val frozenEmptyBuffer = new FrozenBuffer[Any](scala.collection.immutable.Vector.empty)
   private val frozenEmptySet    = new FrozenSet[Any](scala.collection.immutable.Set.empty)
   private val frozenEmptyMap    = new FrozenMap[Any, Any](scala.collection.immutable.Map.empty)
@@ -352,6 +377,6 @@ object JavaCollections:
   /** java's own answer at every one of those members — `UnsupportedOperationException`, with the
     * message naming what the value IS, since the alternative a reader will guess is an engine bug. */
   private def refuse: Nothing = throw new UnsupportedOperationException(
-    "this collection came from a java factory that returns an IMMUTABLE collection " +
-      "(Collections.emptyList/emptyMap/emptySet/singletonList/singletonMap/singleton); " +
-      "java throws here too")
+    "this collection came from a java factory that returns an IMMUTABLE collection or an " +
+      "unmodifiable VIEW (Collections.emptyList/emptyMap/emptySet/singletonList/singletonMap/" +
+      "singleton/unmodifiableList/unmodifiableSet/unmodifiableMap); java throws here too")

@@ -301,6 +301,32 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assert(!(JavaCollections.singletonList("a") eq JavaCollections.singletonList("a")))
   }
 
+  test("unmodifiableList/Set/Map are LIVE VIEWS — a later change to the source is visible") {
+    // The distinction that made these unmappable while the only candidates were the stdlib's: a
+    // COPY compiles, returns the right elements now, and silently detaches every later change
+    // (§4.4). Java's result reflects them; so does this.
+    val xs: Buffer[String] = ArrayBuffer("a")
+    val ro = JavaCollections.unmodifiableList(xs)
+    xs += "b"
+    assertEquals(ro.toList, List("a", "b"))
+    val s = scala.collection.mutable.Set("a")
+    val ros = JavaCollections.unmodifiableSet(s)
+    s += "b"
+    assert(ros.contains("b"))
+    val m = scala.collection.mutable.Map("k" -> 1)
+    val rom = JavaCollections.unmodifiableMap(m)
+    m("j") = 2
+    assertEquals(rom.get("j"), Some(2))
+  }
+
+  test("…and REFUSE every write, which is the other half — the identity would drop it silently") {
+    val xs: Buffer[String] = ArrayBuffer("a")
+    intercept[UnsupportedOperationException](JavaCollections.unmodifiableList(xs) += "b")
+    intercept[UnsupportedOperationException](JavaCollections.unmodifiableList(xs).update(0, "b"))
+    intercept[UnsupportedOperationException](JavaCollections.unmodifiableSet(scala.collection.mutable.Set("a")) += "b")
+    intercept[UnsupportedOperationException](JavaCollections.unmodifiableMap(scala.collection.mutable.Map("k" -> 1)).put("j", 2))
+  }
+
   // -------------------------------------------------------------------------------------------
   // Map.Entry's statics over the Tuple2 a Map.Entry becomes
   // -------------------------------------------------------------------------------------------

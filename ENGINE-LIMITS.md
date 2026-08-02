@@ -1580,10 +1580,26 @@ and `Collectors.toMap`. Guessing one would be a silent wrong answer, so they are
 unmapped and fail to compile. Two that WERE on this list now ship in `JavaCollections`:
 `Stream.sorted(Comparator)` as `sortedWith` (a copy, with the doc explaining why the name matters)
 and `Collectors.toCollection(f)` as `into` (bounded by `Growable`).
-`java.util.Collections`' statics are the same story — `unmodifiableCollection` is mapped (its
-`Collection<? extends T> -> Collection<T>` widening is load-bearing, not erasable to the identity),
-while `unmodifiableList` has no read-only `Buffer` view to map onto and mapping it to the identity
-would drop the immutability with a green compile.
+`java.util.Collections`' statics were the same story and are now **CLOSED**, which is worth keeping
+because the reason they were open is the reason they closed. `unmodifiableList`/`Set`/`Map` were
+recorded here as unmappable — no read-only `Buffer`/`Set`/`Map` view to map onto, so the available
+shapes were a COPY (detaches the view) and the IDENTITY (drops the immutability), both of which
+compile. That was true of the STDLIB and only of the stdlib: the RUNTIME can supply the view, and
+now does (`JavaCollections`' private `FrozenBuffer`/`FrozenSet`/`FrozenMap` delegate every read to
+the collection they wrap and throw `UnsupportedOperationException` on every write, which is java's
+own answer rather than an approximation of it). The same three classes are what let the IMMUTABLE
+producers — `emptyList`, `emptyMap`, `emptySet`, `singletonList`, `singleton`, `singletonMap` —
+map at all; `mutable.ArrayBuffer.empty` would have turned a loud `UnsupportedOperationException`
+into a silent write to whatever shared static the factory's result was stored in (§4.4). liqp
+92 errors at that step, with `jdk-surface` 19 → 12.
+
+**The transferable rule: "scala has no such type" is a claim about the STDLIB, and this engine
+ships a runtime.** Before recording a JDK utility as unmappable, ask whether the missing semantics
+is expressible as a runtime type — the same question `JavaIterator`/`JavaIterable`/`JavaCollection`
+already answered YES to for the collection interfaces. `unmodifiableCollection` had been mapped all
+along, on the shim, for exactly this reason; the three that stayed open differed only in that
+nobody had written their target. `CLAUDE.md` §4.5's ban is on a PORTED class inheriting a scala
+collection trait — these are private, nothing extends them, and the ban does not reach them.
 
 `java.util.function` is now exercised: `Predicate` reaches the runtime shim's `removeIf`, and the
 shim declares JAVA's signature (`Predicate<? super A>`) rather than `A => Boolean` — because a

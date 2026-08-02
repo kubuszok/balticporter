@@ -55,21 +55,26 @@ class CollectionsStaticsSpec extends PortSuite:
     assertNotEmits(p, "java.util.Collections.")
   }
 
-  test("`unmodifiableCollection` maps and its `? <: T` widening is kept — the other `unmodifiable*` do NOT") {
+  test("the whole `unmodifiable*` family maps — each onto a read-only VIEW, never a copy") {
     val p = port(statics, new CollectionsTransform)
+    // `Collection` goes to the SHIM's own `unmodifiable`, because a `Collection`-typed slot is a
+    // shim slot; the other three go to the runtime's `Frozen*` views of the retyped scala shape.
     assertEmits(p, "balticporter.runtime.JavaCollection.unmodifiable(c)")
-    // The deliberate absence: `unmodifiableList`/`Set`/`Map` have no read-only scala view to map
-    // onto, so they are unmapped and fail to compile under the JDK name rather than being turned
-    // into a copy (detaches the view) or the identity (drops the immutability). Both compile.
     val p2 = port(
       """package demo;
         |import java.util.*;
-        |class N { List<String> ro(List<String> xs) { return Collections.unmodifiableList(xs); } }
+        |class N {
+        |  List<String> rl(List<String> xs)          { return Collections.unmodifiableList(xs); }
+        |  Set<String> rs(Set<String> s)             { return Collections.unmodifiableSet(s); }
+        |  Map<String, Integer> rm(Map<String, Integer> m) { return Collections.unmodifiableMap(m); }
+        |}
         |""".stripMargin,
       new CollectionsTransform,
     )
-    assertEmits(p2, "java.util.Collections.unmodifiableList(xs)")
-    assertNotEmits(p2, "JavaCollections.unmodifiableList")
+    assertEmits(p2, "balticporter.runtime.JavaCollections.unmodifiableList(xs)")
+    assertEmits(p2, "balticporter.runtime.JavaCollections.unmodifiableSet(s)")
+    assertEmits(p2, "balticporter.runtime.JavaCollections.unmodifiableMap(m)")
+    assertNotEmits(p2, "java.util.Collections.")
   }
 
   test("the IMMUTABLE producers rewrite onto helpers that KEEP the immutability") {
