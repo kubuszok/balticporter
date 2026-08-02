@@ -396,7 +396,7 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   are required, because `lost = 0` is the bar and a run could hold it by RECOVERING everything —
   `recovered` is a counted residue and `deliberate` is derived from the port's own drops, so
   reporting the bar without them says nothing about how it was met;
-  `porter-notes` records on every run,
+  `porter-notes` and `break-catch` record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget` record when
   `CollectionsTransform` is in the pipeline, and `nullability-boundary` when
   `NullabilityTransform` is. **A retype has TWO directions and a subtyping argument
@@ -566,6 +566,7 @@ compile-error count; every one was found by RUNNING the ported tests, never by a
 | `@Before` | *nothing* | JUnit runs it before EVERY test, on a fresh instance; MUnit has neither | call it at the head of each test body |
 | `@Test(expected = E.class)` | body run bare | it would PASS while checking nothing | `intercept[E] { … }` |
 | `list.remove(anInteger)` | `buffer.remove(x)` | java resolved `remove(Object)` — by VALUE, returning `boolean`; scala's only `Buffer.remove` is BY INDEX, and `Integer2int` applies silently, so `[10,11,12].remove(Integer.valueOf(1))` removes nothing in java and `11` in the port | a by-value helper. Read WHICH overload java resolved off the call's RESULT type: `remove(Object)` returns a primitive `boolean` and `remove(int)` returns the element, which java generics can never make primitive |
+| a jump inside a `try` whose `catch` is broad (`Exception`/`RuntimeException`/`Throwable`) | the `boundary.break` emitted under that translated `catch` | java's `break`/`continue` is a JUMP — no handler can intercept one; scala's is `boundary.Break`, which **extends `RuntimeException`**, so the handler eats it, the loop runs on, and the catch body runs for a condition java never had. Not incidental: dotty's `DropBreaks.prepareForTry` shadows enclosing labels, so a break under a `try` is ALWAYS the exception form | a re-throw arm AHEAD of the java arms — `case b: scala.util.boundary.Break[?] => throw b` — wherever a jump really crosses the catch. Exact rather than a compromise: java's semantics say that handler never sees that jump. `finally` is untouched (both languages run it and let the jump through), and a NARROW catch is left alone |
 
 Before adding a translation for a Java *statement* form, ask what it means when its value or its
 control flow is used, not only what it looks like. And read §3 again: a green compile said nothing

@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, Xref}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -759,6 +759,18 @@ final case class PortRun(
     say(s"PORTER NOTES (decisions with no note in the code, and notes with no decision): ${noteFindings.size}")
     if noteFindings.nonEmpty then say(NoteCoverageCheck.Classification)
     println(NoteCoverageCheck.summary(noteFindings, translated.emitter.notesPrinted.size))
+
+    // ---- §4.4: a translated JUMP that a translated `catch` would swallow ----
+    // Here rather than beside the omission check for the same reason the note coverage is: the
+    // question needs BOTH the trees and what the emitter did with them. The crossings are found
+    // from the trees (`BreakCatchCheck` walks with `StandardTraversal`); the emitter contributes
+    // only the set of sites it guarded, so the two disagree exactly when the emitter's boundary
+    // state missed a shape this walk can see. Over `checkedUnits` (ENGINE-LIMITS D2).
+    val breakCatches = BreakCatchCheck.check(program, checkedUnits, translated.emitter.breakGuards)
+    CheckReport.record(BreakCatchCheck.Name, breakCatches.map(_.report))
+    say(s"BREAK-IN-CATCH (jumps a translated handler would swallow, unguarded): ${breakCatches.size}")
+    if breakCatches.nonEmpty then say(BreakCatchCheck.Issue.classification(BreakCatchCheck.Issue.UnguardedJump))
+    println(BreakCatchCheck.summary(breakCatches))
 
     // ---- the CONTEXT boundary, RECORDED: the four the phase drew (collected above) plus the one
     // only the emitted text can show — a `using` clause the threading attached to a class's

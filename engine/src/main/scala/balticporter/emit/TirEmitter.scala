@@ -2218,25 +2218,12 @@ final class TirEmitter(
     * a case body means "stop HERE and leave the switch", over statements that follow it. */
   private def caseNeedsBoundary(body: Term): Boolean = breaksOut(body)
 
-  /** a `break L` / `continue L` naming this loop, at ANY depth — a labelled jump crosses nested
-    * loops and switches by definition, which is what it is for. */
-  private def jumpsTo(t: Any, label: String, brk: Boolean): Boolean = t match
-    case Tree.Break(Some(l), _, _) if brk     => l == label
-    case Tree.Continue(Some(l), _, _) if !brk => l == label
-    case xs: Iterable[?]                      => xs.exists(jumpsTo(_, label, brk))
-    case Some(x)                              => jumpsTo(x, label, brk)
-    case p: Product                           => p.productIterator.exists(jumpsTo(_, label, brk))
-    case _                                    => false
-
-  /** an unlabelled `continue` belonging to THIS loop. Unlike `breaksOut` it does NOT stop at a
-    * `match`: java's `continue` inside a switch continues the enclosing LOOP. */
-  private def continuesIn(t: Any): Boolean = t match
-    case Tree.Continue(scala.None, _, _)                                  => true
-    case _: Tree.While | _: Tree.DoWhile | _: Tree.For | _: Tree.ForEach  => false
-    case xs: Iterable[?]                                                  => xs.exists(continuesIn)
-    case Some(x)                                                          => continuesIn(x)
-    case p: Product                                                       => p.productIterator.exists(continuesIn)
-    case _                                                                => false
+  // The three predicates below say which construct a java jump BELONGS to. They live in
+  // `balticporter.tir.Jumps` because the `break-catch` check has to ask the same questions of the
+  // same trees (§4.4's jump-in-a-broad-catch row): two copies would be two answers, and the one
+  // that is wrong is the one nothing measures.
+  private def jumpsTo(t: Any, label: String, brk: Boolean): Boolean = Jumps.jumpsTo(t, label, brk)
+  private def continuesIn(t: Any): Boolean = Jumps.continuesIn(t)
 
   /** does this subtree `return` from the construct that OWNS it?
     *
@@ -2269,17 +2256,7 @@ final class TirEmitter(
     case p: Product                                       => p.productIterator.toList.flatMap(collectReturns)
     case _                                                => Nil
 
-  private def breaksOut(t: Any): Boolean = t match
-    case Tree.Break(scala.None, _, _)                     => true
-    case _: Tree.While | _: Tree.DoWhile | _: Tree.Match |
-         _: Tree.For | _: Tree.ForEach                    => false // binds to the inner one
-    case xs: Iterable[?]                                  => xs.exists(breaksOut)
-    case Some(x)                                          => breaksOut(x)
-    // Product reflection rather than a hand-written case per node: a hand-rolled walk that stops
-    // one node short is exactly how two of this project's silent defects survived (CLAUDE.md §3),
-    // and there is no generic child accessor on the TIR to use instead.
-    case p: Product                                       => p.productIterator.exists(breaksOut)
-    case _                                                => false
+  private def breaksOut(t: Any): Boolean = Jumps.breaksOut(t)
 
   private def isUnitType(t: TypeRepr): Boolean = t match
     case TypeRepr.TypeRef(_, s) => sym(s).fullName == "scala.Unit"
@@ -2741,7 +2718,7 @@ final class TirEmitter(
       val c  = cond.map(term(_, i)).getOrElse("true")
       val u  = upd.map(flatStat).mkString("; ")
       loopWithJumps(body, lbl, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
-    case Tree.Try(res, body, catches, fin, _, _) => tryStr(res, body, catches, fin, i)
+    case Tree.Try(res, body, catches, fin, _, o) => tryStr(res, body, catches, fin, o, i)
     case Tree.Match(scr, cases, _, _)   => matchStr(scr, cases, i)
     case Tree.MethodRef(q, s, mrT, _)   =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
@@ -3062,12 +3039,71 @@ final class TirEmitter(
       else return Some(s.charAt(i))
     scala.None
 
-  private def tryStr(res: List[Tree.ValDef], body: Term, catches: List[Tree.CatchCase], fin: Option[Term], i: Int): String =
+  /** A java `try`, plus the arm that keeps a translated JUMP out of its handlers.
+    *
+    * Java's `break`/`continue` is not an exception: no `catch` can intercept one, at any breadth.
+    * Scala's translation of it IS one — `scala.util.boundary.Break[T] extends RuntimeException`
+    * (read off `scala/util/boundary.scala` in the 3.8.x library, and deliberately not a
+    * `ControlThrowable`, so `NonFatal` matches it too). So the moment a `boundary.break` stands
+    * inside a `try` whose boundary is OUTSIDE that try, every arm broad enough to match a
+    * `RuntimeException` swallows the jump: the loop runs on, and the handler's body runs for a
+    * condition java never had.
+    *
+    * Nor is it incidental. dotty's `DropBreaks` rewrites a same-method break into a labelled jump,
+    * which would be immune — but `DropBreaks.prepareForTry` shadows every enclosing label ("Need to
+    * suppress labeled returns if there is an intervening try"), so a break under a `try` is ALWAYS
+    * the exception form. Measured in the reference ecosystem before it was measured here: ssg
+    * `ed8ce078`, where a date parser's early exit was eaten by the `catch (Exception)` that exists
+    * to ignore a failed parse, and the whole filter silently stopped working with a green compile.
+    *
+    * The repair is a re-throw arm ahead of the java arms, and it is EXACT rather than a
+    * compromise: java's own semantics say this handler never sees this jump, so re-throwing is
+    * what faithfulness means here. It is also the only shape that composes — a `Break` belonging
+    * to some other boundary is re-thrown by `boundary.apply` itself for the same reason.
+    *
+    * Interposed only where a jump really CROSSES the catch, which the emitter's own boundary state
+    * answers exactly (see `crossesCatch`) — over-approximating would put the arm on every broad
+    * catch in the corpus, and a repair nobody can point at a jump for is a repair nobody can
+    * review. `finally` is untouched: a finalizer is not a handler, and both languages run it and
+    * let the jump through. */
+  private def tryStr(res: List[Tree.ValDef], body: Term, catches: List[Tree.CatchCase],
+                     fin: Option[Term], origin: Origin, i: Int): String =
     val r  = res.map(v => s"${ind(i + 1)}${valDef(v, 0)}\n").mkString
+    val guard =
+      if catches.exists(c => Jumps.catchesBreak(c.param.tpt.tpe)(using program)) && crossesCatch(body) then
+        breakGuarded += origin
+        s"${ind(i + 1)}case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard}" +
+          s" // §4.4: a java jump is not catchable\n"
+      else ""
     val cs = catches.map(c => s"${ind(i + 1)}case ${esc(sym(c.param.symbol).name)}: ${tpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}").mkString("\n")
-    val cl = if catches.isEmpty then "" else s" catch {\n$cs\n${ind(i)}}"
+    val cl = if catches.isEmpty then "" else s" catch {\n$guard$cs\n${ind(i)}}"
     val fl = fin.map(f => s" finally ${term(f, i)}").getOrElse("")
     s"try ${term(body, i)}$cl$fl" // resources: r prepended when the backend lowers auto-close
+
+  /** does a jump in this try BODY leave the try — i.e. is its `boundary` outside it?
+    *
+    * Read off the emitter's own boundary state, which is exact at this point and free: a jump that
+    * will render as `boundary.break` is precisely one whose target is in scope HERE, and every
+    * target in scope here was opened by a construct enclosing this `try`. A label bound INSIDE the
+    * body is not in these maps yet (the enclosing `Labeled`/loop registers it as it renders), so
+    * the labelled lanes need no extra test to exclude it.
+    *
+    * The unlabelled lanes ask `breakTarget`/`contTarget` first, so a jump the emitter will leave as
+    * a counted residue (no enclosing loop at all) is not mistaken for one that crosses anything. */
+  private def crossesCatch(body: Term): Boolean =
+    (breakTarget.isDefined && Jumps.breaksOut(body)) ||
+      (contTarget.isDefined && Jumps.continuesIn(body)) ||
+      labelBreak.keysIterator.exists(l => Jumps.jumpsTo(body, l, brk = true)) ||
+      labelCont.keysIterator.exists(l => Jumps.jumpsTo(body, l, brk = false))
+
+  /** every `try` this emitter put a [[TirEmitter.BreakGuard]] arm on, by origin — the input to
+    * `break-catch`, which finds the crossings independently and reports the ones nothing guarded.
+    *
+    * A SET, so the idempotence `recordedNotes` and `clauseLost` get from keying by unit is here by
+    * construction: re-emitting a unit (the determinism twin, the action cache) re-adds origins it
+    * already holds. */
+  private val breakGuarded = collection.mutable.Set.empty[Origin]
+  def breakGuards: Set[Origin] = breakGuarded.toSet
 
   /** A java `switch`, with a boundary around any case body that still contains an unlabelled
     * `break`.
@@ -3225,6 +3261,14 @@ final class TirEmitter(
     b.result()
 
 object TirEmitter:
+
+  /** the binder of the re-throw arm that keeps a translated jump out of a java handler (§4.4).
+    *
+    * `$`-suffixed like every other name this emitter mints (`brk$`, `cnt$`, `lbl$`, `case$`), and
+    * spelled ONCE so the check's spec and the emitter cannot drift. Java can declare an identifier
+    * of this name and a shadowing warning is the worst it could cost — the arm's body is one
+    * `throw` of its own binder. */
+  val BreakGuard = "brkThru$"
 
   /** A class whose constructors carry a CONTEXT CLAUSE the emitted header does not
     * (`ENGINE-LIMITS.md` CT5).

@@ -2576,6 +2576,29 @@ listed ten servers of which exactly one was this worktree's — the other nine w
 checkouts', mid-measure, and three of them had started during this lane's own run, which is
 precisely the coincidence that makes a name-based kill look justified.
 
+### M5.6b A dead server turns `sbt -batch` into a GREEN-LOOKING NON-RESULT — exit 0, no tests run
+
+The other end of M5.6, and the reason a wedge is worth diagnosing rather than waiting out.
+`sbt -batch` is a CLIENT (M5.6 says so in passing; this is what it costs): when the server it
+attaches to dies or is killed, the batch invocation prints
+
+```
+[error] sbt server disconnected
+```
+
+**and exits 0**, having executed nothing. Measured here: a `sbt -batch "testOnly *"` sat at 0% CPU
+for 26 minutes queued behind this worktree's own idle server, and the moment that server was killed
+the batch run "completed" — 36 bytes of output, exit 0, zero suites. A caller that reads the exit
+code, or a lane that greps for a failure marker, records a full green test run that never happened.
+
+So gate on OUTPUT, never on the status, exactly as the measure lanes already do for the migration
+itself (`gdx-measure` refuses to measure unless the run printed `wrote N Scala files`, because
+piping into `grep` discarded the status). For a test invocation the marker is `[info] Passed: Total
+…` — one per project, and an invocation with none of them ran nothing whatever the shell says.
+
+Same failure shape as §5.1's skipped-test lane one level up: a run that did not happen and a run
+that passed are indistinguishable unless something insists on seeing the evidence.
+
 ### M5.7 An unchanged-tree `testFull` is a cache REPLAY — it proves nothing about flakiness
 
 sbt 2 caches test results, and a replay is a perfect forgery of a run: per-project totals, suite
@@ -3438,6 +3461,77 @@ reason). Note this is the same defect as the dropped `break`, one construct alon
 has a switch-heavy scanner, this is where it hides.
 
 *Fix kind: (a).*
+
+### F4. A translated CATCH swallows a translated JUMP — `boundary.Break` is a `RuntimeException`
+
+The third face of the same lowering, and the only one that is invisible to `break_residue` too: the
+jump WAS translated, correctly, and then eaten. `scala.util.boundary.Break[T] extends
+RuntimeException(null, null, false, false)` — read off `scala/util/boundary.scala` in the 3.8.x
+library, and deliberately NOT a `ControlThrowable`, so `NonFatal` matches it as well. So a
+`boundary.break` standing inside a `try` whose boundary is outside it is caught by any arm broad
+enough to match a `RuntimeException`: the loop runs on, and the handler's body runs for a condition
+java never had. Java's own `break` is a jump and no handler can see one, at any breadth.
+
+**Do not expect dotty's optimiser to save it.** `DropBreaks` rewrites a same-method break into a
+labelled jump, which would be immune — but `DropBreaks.prepareForTry` shadows every enclosing label
+("Need to suppress labeled returns if there is an intervening try"), so a break under a `try` is
+always the exception form. The swallow is deterministic, not a race with an optimisation.
+
+Measured in the reference ecosystem before it was measured here: ssg `ed8ce078`, a hand-written
+port whose date parser exits early inside the `catch (Exception)` that exists to ignore a FAILED
+parse — the whole `date` filter silently stopped parsing, with a green compile, no moved count and
+no failing check.
+
+**And the engine's exposure is NARROWER than that hand port's, which is the part worth knowing.**
+ssg's witness is a java `return`, and a `return` is not this defect for this emitter: scala's
+method-level `return` is a jump, so the same source emits
+`liqp-core/…/filters/date/BasicDateParser.scala:30` as a plain `return` inside the `try` and is
+immune — as is a `return` in a LAMBDA, which the emitter lowers to a nested `def` (F-family, the
+`Tree.Lambda` case) rather than to a boundary. What the engine can produce is the `break`/`continue`
+face, and only that. So do not read a hand port's occurrence as a port's: which java constructs a
+`boundary` gets interposed around is an EMITTER fact, and the same defect class has a different
+footprint in each.
+
+What shipped: a re-throw arm ahead of the java arms (`case brkThru$: scala.util.boundary.Break[?]
+=> throw brkThru$`), interposed only where a jump really crosses the catch — which the emitter's own
+boundary state answers exactly, since a jump renders as `boundary.break` precisely when its target
+is in scope at that `try`. `finally` is untouched (a finalizer is not a handler; both languages run
+it and let the jump through) and a narrow catch is left alone. The counted lane is `break-catch`,
+and it finds the crossings from the TREES rather than reading the emitter's answer back, so the two
+disagree exactly when the emitter's state missed a shape the walk can see.
+
+**Where the corpus's ONE real site is, and why every count says zero.** `break-catch` reads 0 on all
+eleven lanes and `members.tsv` moved by 0 on all fourteen ports — and the corpus is NOT free of the
+shape. `com.badlogic.gdx.utils.Json#writeFields` is a textbook instance: a `for` over the field
+names, a `try` whose body carries four `continue`s (the default-value skips), and
+`catch (Exception runtimeEx)` at `Json.java:343`. Unrepaired, that port would write every field
+equal to its default instead of skipping it, and wrap the jump in a `SerializationException` for a
+condition java never had.
+
+It moves nothing because **libGDX DROPS `Json`** (`Substitutions.dropTypes`, replaced by an injected
+shim), so the unit is modelled and never written: no file on disk changes, `members.tsv` cannot see
+it, and `break-catch` cannot either — the check runs over `checkedUnits`, which excludes dropped
+types, and that scoping is correct (a finding about code the run does not emit describes nothing).
+The single trace it leaves anywhere is one member digest in `port-map.tsv`, which digests the
+emit ORDER rather than the written files. That is the §4.56 blind spot again, one phase along: *a
+defect inside a dropped type is invisible to every count this project has*, and the only reason this
+one was seen at all is that a port map row moved by one digest.
+
+liqp — 19 broad catches over 15 files, the library this was expected to bite — really does read
+zero, for the reason above: its early exits inside a guarded block are `return`s, and its
+`break`/`continue`s are not inside one (`blocks/For.scala:216` is the worst-case method, and its
+`boundary.break`s at :95/:125/:129/:134 all sit outside the `try`).
+
+Two things to take from that. **A defect class is worth closing at a corpus count of zero** — the
+count is a fact about the libraries measured so far and about what they happen to DROP, the shape is
+a fact about the language, and this one is invisible to every gate the project has while the
+reference ecosystem shipped it to production. And **the evidence for a repair like this is a SPEC,
+not a port**: `BreakInCatchSpec` asserts the emitted shape for five crossing shapes and five
+must-not-touch ones and EXECUTES three in the test JVM — one of which fails if the naive shape ever
+stops swallowing the jump, so the day scala changes `Break`'s parent, that test says so.
+
+*Fix kind: (a). If a port shows a `break-catch` finding, the fix is `TirEmitter.crossesCatch`, never
+the port's manifest.*
 
 ---
 
