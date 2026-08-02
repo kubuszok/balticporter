@@ -2,12 +2,21 @@ package balticporter.core
 
 import java.nio.file.Path
 
-/** Provenance stamped into every generated file's header.
+/** Provenance stamped into every generated file's header — and the upstream NOTICE files the port
+  * ships beside its output.
   *
   * Attribution is a LICENCE obligation, not decoration: every port in this project's reach is a
-  * derived work of a licensed original (Apache-2.0 for the libraries ported so far), and a derived
-  * work ships its notice. A generated file with no header is a compliance gap that a green build
-  * cannot report.
+  * derived work of a licensed original, and a derived work ships its notice. A generated file with
+  * no header is a compliance gap that a green build cannot report.
+  *
+  * ==A HEADER IS NOT ALWAYS THE NOTICE (CLAUDE.md §4.57)==
+  * Apache-2.0 sources carry the notice in every file, so a port that reproduces each file's comment
+  * (§4.58) and stamps its own banner has met the obligation by construction. That is an accident of
+  * how Apache-2.0 projects write their sources, and the corpus's first non-Apache library exposed it:
+  * an MIT library commonly carries ZERO per-file headers, so the ONLY home of the copyright and
+  * permission notice is the upstream `LICENSE` file — and MIT's one condition is that this notice be
+  * INCLUDED in copies. The emitted banner names the licence; naming a licence is not reproducing its
+  * notice, and no check in the pipeline could tell the difference.
   */
 final case class Provenance(
     upstreamName: String,
@@ -27,6 +36,21 @@ final case class Provenance(
       * inventing one.
       */
     sourceRoot: String = "",
+    /** upstream files the port COPIES beside its emitted code — `LICENSE`, `NOTICE`, whatever the
+      * original ships its notice in. Absolute, or resolved against the conf that named them.
+      *
+      * Empty is the no-op and stays the default (CLAUDE.md §1(b)): an Apache-2.0 port whose every file
+      * already carries its notice states nothing here and nothing is written. A port whose licence
+      * lives in ONE file states it, and the mechanism is the port's for free — the next headerless
+      * library needs no engine change.
+      *
+      * WHICH files is per-library policy and cannot be derived: it is not always `LICENSE`, a
+      * project may ship `NOTICE` beside it, and the upstream ROOT is not the source root the port
+      * parses (liqp's licence is four directories above `src/main/java`). A missing declared file is
+      * FATAL rather than skipped, for the same reason a missing `classpathFile` is: a licence
+      * obligation quietly not met looks exactly like one met.
+      */
+    notices: List[Path] = Nil,
 )
 
 /** M0 subset of a port configuration (DESIGN.md §3.3): one module, explicit file list. */

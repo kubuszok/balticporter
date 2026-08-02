@@ -53,7 +53,14 @@ object SbtGen:
     * `target/scala-3.x/`. [[emit]] wires it into `Compile/Test sourceGenerators` and into
     * `cleanFiles`, and writes the `.gitignore` — so `clean` removes it and git never sees it. */
   def managedDir(root: Path, config: String): Path =
-    root.resolve("src_managed").resolve(config).resolve("scala")
+    managedRoot(root).resolve(config).resolve("scala")
+
+  /** the build-product tree ITSELF — every source set hangs off it, `.gitignore` names it and
+    * `cleanFiles` removes it. The home for anything a run produces that is not a source file of one
+    * configuration: the upstream LICENSE/NOTICE a port ships beside its derived work (CLAUDE.md
+    * §4.57) belongs to the MODULE, not to `main` or to `test`, and both source sets of one port
+    * write the same bytes here. */
+  def managedRoot(root: Path): Path = root.resolve("src_managed")
   def managedMain(root: Path): Path = managedDir(root, "main")
   def managedTest(root: Path): Path = managedDir(root, "test")
 

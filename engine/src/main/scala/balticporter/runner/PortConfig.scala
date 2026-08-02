@@ -74,6 +74,7 @@ import scala.jdk.CollectionConverters.*
   *   sourcePathPrefix = "src/main/java"   # required within the block
   *   upstreamCommit = "…"                 # default: derived from the source tree's git state
   *   sourceRoot     = "…"                 # default: input.sourceRoot, absolute
+  *   notices        = ["../LICENSE"]      # upstream notice files copied beside the emitted code
   * }
   *
   * runtimeMode = "vendored"               # dependency (default) | vendored
@@ -197,6 +198,9 @@ object PortConfig:
         sourcePathPrefix = p.requireString("sourcePathPrefix"),
         sourceRoot       = p.string("sourceRoot").map(resolvePath(dir, _).toString)
                              .getOrElse(srcRoot.toString),
+        // conf-relative like every other path here, because the upstream ROOT is not the source
+        // root: a licence file usually sits several directories above `src/main/java`.
+        notices          = p.strings("notices").getOrElse(Nil).map(resolvePath(dir, _)),
       )),
       runtimeMode = view.enumerated("runtimeMode",
                       Map("dependency" -> RuntimeMode.Dependency, "vendored" -> RuntimeMode.Vendored))

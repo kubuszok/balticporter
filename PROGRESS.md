@@ -192,8 +192,12 @@ or per construct.
 - **ssg**: `NOTICE` names flexmark only — not liqp (MIT), terser, KaTeX, Mermaid, dart-sass, rough.js
   or the Ruby gems. Per-file headers exist, so this is arguably compliant, but the NOTICE is incomplete.
 
-Baltic Porter emits provenance headers, so a re-port fixes the per-file half automatically. The
-NOTICE / THIRD-PARTY files are hand-maintained and are not.
+Baltic Porter emits provenance headers, so a re-port fixes the per-file half automatically — and
+since liqp it also SHIPS the upstream notice files a port declares (`provenance { notices = […] }`,
+copied into `src_managed/`), which is the half a banner cannot meet for a library with no per-file
+headers at all: MIT's one condition is inclusion, and liqp carries zero headers, so the emitted
+`Original license: MIT (see liqp upstream)` was a pointer and nothing else (CLAUDE.md §4.57). The
+repository-level NOTICE / THIRD-PARTY files are still hand-maintained and are not.
 
 ### 1.2 Suggested assignment order
 

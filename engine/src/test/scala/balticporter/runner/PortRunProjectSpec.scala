@@ -163,3 +163,50 @@ class PortRunProjectSpec extends munit.FunSuite:
     // the gate is OPEN in the same run: the skeleton IS emitted, so this is not passing by absence
     assert(Files.exists(port.resolve("build.sbt")))
   }
+
+  // -- the upstream NOTICE, for a library whose licence lives in ONE file (CLAUDE.md §4.57) -------
+  //
+  // The per-file banner NAMES a licence; MIT's single condition is that the copyright and
+  // permission notice be INCLUDED. An MIT library commonly carries no per-file headers at all, so
+  // reproducing every comment (§4.58) reproduces nothing, and no check in the pipeline can see the
+  // difference — the port compiles, every count is flat, and the obligation is simply unmet.
+
+  test("a declared notice is COPIED beside the emitted code, into the build product") {
+    val (root, src) = fixture()
+    val port    = root.resolve("port")
+    val license = root.resolve("upstream/LICENSE")
+    Files.createDirectories(license.getParent)
+    Files.writeString(license, "MIT License\n\nCopyright (c) 2010 Someone\n")
+    run(port, src)(_.copy(provenance = Some(Provenance(
+      upstreamName = "demo", upstreamCommit = "abc", originalLicense = "MIT",
+      sourcePathPrefix = "java", sourceRoot = src.toString, notices = List(license)))))
+    // beside the sources, in `src_managed/` — the tree `clean` removes and `.gitignore` names, never
+    // the port ROOT, where an untracked file blurs decision and artefact (§5.5). Byte-for-byte: the
+    // port ships the upstream's own notice, not a rendering of it.
+    assertEquals(Files.readString(port.resolve("src_managed/LICENSE")), Files.readString(license))
+    assert(files(port).contains("src_managed/LICENSE"), clue(files(port)))
+  }
+
+  test("…and a port that declares NONE writes none — the empty default is the no-op") {
+    val (root, src) = fixture()
+    val port = root.resolve("port")
+    run(port, src)(_.copy(provenance = Some(Provenance(
+      upstreamName = "demo", upstreamCommit = "abc", originalLicense = "Apache-2.0",
+      sourcePathPrefix = "java", sourceRoot = src.toString))))
+    // the whole file set, so this fails on the NEXT stray artifact too — an Apache-2.0 port meets
+    // the obligation through its per-file headers and must gain nothing here.
+    assertEquals(files(port), List(
+      "src_managed/main/scala/com/demo/Gadget.scala",
+      "src_managed/main/scala/com/demo/Widget.scala",
+    ))
+  }
+
+  test("a declared notice that is NOT THERE is fatal — never a port that silently ships no notice") {
+    val (root, src) = fixture()
+    val port = root.resolve("port")
+    val e = intercept[RuntimeException](run(port, src)(_.copy(provenance = Some(Provenance(
+      upstreamName = "demo", upstreamCommit = "abc", originalLicense = "MIT",
+      sourcePathPrefix = "java", sourceRoot = src.toString,
+      notices = List(root.resolve("upstream/NOTICE")))))))
+    assert(clue(e.getMessage).contains("notice"))
+  }

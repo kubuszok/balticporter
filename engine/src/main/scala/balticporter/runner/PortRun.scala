@@ -589,6 +589,32 @@ final case class PortRun(
         PortRun.declaredSymbols(u, emittedSubjects)
         written += 1
     }
+    // ---- the upstream NOTICE, beside the derived work (CLAUDE.md §4.57) --------------------
+    // A per-file banner names the licence; for a library whose licence lives in ONE file — an MIT
+    // project with no per-file headers is the ordinary case — naming it is not reproducing it, and
+    // MIT's single condition is inclusion. Copied rather than embedded so the port ships the
+    // upstream's own bytes.
+    //
+    // NOT gated on the artifact layer, deliberately: this is a licence obligation, and one that
+    // held only when a diagnostic switch was on would be met by accident. What keeps it from
+    // writing anywhere unexpected is the same thing that makes it a §1(b) no-op — a port that
+    // declares no notice writes nothing — plus the destination, which is `src_managed/`: the
+    // BUILD PRODUCT this run already owns and `clean` already removes (§5.5), never the port root,
+    // where an untracked file would blur the one distinction `git status` has to keep.
+    val notices = provenance.map(_.notices).getOrElse(Nil)
+    notices.foreach { src =>
+      // FATAL rather than skipped, like a declared `classpathFile` that is not there: a notice the
+      // port meant to ship and silently did not looks exactly like one it shipped.
+      if !Files.isRegularFile(src) then
+        sys.error(s"[$label] provenance declares a notice file that is not there: $src. A licence " +
+          "notice the port does not ship is a compliance gap no check and no build can report.")
+      val dst = SbtGen.managedRoot(portRoot).resolve(src.getFileName.toString)
+      Files.createDirectories(dst.getParent)
+      Files.copy(src, dst, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+    }
+    if notices.nonEmpty then
+      say(s"notice(s) shipped beside the emitted code: ${notices.map(_.getFileName).mkString(", ")}")
+
     // Support types a phase RETYPED code onto. Two feeds, one rule: what the phases DECLARE
     // (RequiresRuntime → RuntimePlan) and what a phase that cannot declare it hands over.
     written += plan.writeSources(outDir)
