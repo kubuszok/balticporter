@@ -13,7 +13,7 @@ package balticporter.tir
   * counts what the emitter must still drop), so the check can never drift from what is actually
   * emitted: improve the funnel here and both move together.
   *
-  * SIX shapes are funnelled today, each nominated at its own site and documented there. This list
+  * SEVEN shapes are funnelled today, each nominated at its own site and documented there. This list
   * is the map, not the specification — it started as "two shapes" and stayed that way through four
   * additions, which is exactly how a header stops being readable as evidence:
   *
@@ -43,6 +43,11 @@ package balticporter.tir
   *     needed only to stop Scala's implicit nilary primary clashing with an emitted `def this()`.
   *     The nilary constructor is promoted with its `this(args)` delegation inlined.
   *     ([[Plans.nilaryPlan]])
+  *  7. PADDED THROWABLE SYNTHESIS, JDK THROWABLES ONLY — several roots reaching DIFFERENT overloads
+  *     of the JDK throwable, and not one of them a pass-through, so (3) has nothing to promote. A
+  *     primary is synthesised at the family's WIDEST overload and each root pads into it the way
+  *     the JDK's own narrower constructor pads. The one place §4.4's "promote the widest super
+  *     call" cannot mean "promote a root". ([[plan0]], [[throwablePadding]], `ENGINE-LIMITS.md` C3)
   *
   * Two mechanisms sit ON TOP of the nomination rather than beside it: [[Plans]] WITHHOLDS a
   * paramful promotion wherever a subclass reaches the class with an argument-free `extends`, and
@@ -656,7 +661,14 @@ object CtorFunnel:
       val p     = apply(cd)
       val ctors = ctorsOf(program, cd.body)
       val roots = ctors.filterNot(delegatesToThis(program, _))
-      if p.isSynthesised then "synthesised-primary"
+      // A JDK-THROWABLE PARENT IS THE PADDED SHAPE, and the equivalence is structural rather than a
+      // recorded flag: `plan0` withholds the ordinary synthesis for such a parent outright, so a
+      // synthesised plan under one can only have come through `throwablePadding`. Named apart
+      // because the two differ in what a reader may conclude — a uniform synthesis reproduces every
+      // root's call exactly, while this one reproduces the JDK's own narrower-overload delegation
+      // and carries C3's `()`-versus-`(null, null)` residue with it.
+      if p.isSynthesised then
+        if jdkThrowableParent(program, cd) then "padded-throwable-synthesis" else "synthesised-primary"
       else
         p.primary match
           case scala.None            => if ctors.isEmpty then "no-constructor" else "not-funnelled"
@@ -896,11 +908,21 @@ object CtorFunnel:
       * delegation above expresses it. */
     def superExpressed(cd: Tree.ClassDef, d: Tree.DefDef): Boolean =
       val args = superArgsOf(program, d)
+      val plan = apply(cd)
       // `.map(_.symbol).contains` — NOT `primary.contains(d.symbol)`, which compiles (both widen to
       // `Any`) and is always FALSE. It reported the promoted primary of 24 libGDX classes as having
       // lost the arguments that were sitting in their `extends` clause.
-      args.isEmpty || apply(cd).primary.map(_.symbol).contains(d.symbol) || replayFor(cd, d).isDefined ||
-        superCall(cd, args) != SuperCall.Dropped
+      //
+      // …and `Plan.delegations` beside `superCall`, for the same one-answer reason. A root with a
+      // delegation entry is one `TirEmitter.ctorBody` renders as `this(<that entry>)` WITHOUT
+      // consulting `superCall` at all, and the entry begins with this root's own super arguments,
+      // placed in the primary's slots by the nomination. Left out, a PADDED root — whose java call
+      // is narrower than the slots it fills — reads as dropped in the check while its arguments sit
+      // in the emitted delegation, which is exactly the emitter-vs-check disagreement this file
+      // spent a whole rewrite removing. It adds nothing for a uniform synthesis, where `superCall`
+      // already answers `Positional` for every root.
+      args.isEmpty || plan.primary.map(_.symbol).contains(d.symbol) || replayFor(cd, d).isDefined ||
+        plan.delegations.contains(d.symbol) || superCall(cd, args) != SuperCall.Dropped
 
     /** members a replay reaches that are `private` where they are declared. The replay executes
       * one level down, in the subclass, so they must be widened — which is compile-safe and
@@ -1040,15 +1062,6 @@ object CtorFunnel:
         val pre = prologue.map(assignedField)
         val set = stats.flatMap(assignedField).toSet
         pre.forall(f => f.exists(set.contains))
-
-    /** a term that may be substituted for a parameter: evaluating it twice is evaluating it once,
-      * so inlining it at each of the parameter's uses preserves Java's evaluate-arguments-once. */
-    private def simple(t: Term): Boolean = t match
-      case _: Tree.Ident | _: Tree.Literal | _: Tree.This => true
-      case Tree.Select(q, _, _, _)                        => simple(q)
-      case Tree.Typed(e, _, _, _)                         => simple(e)
-      case Tree.ArrayLength(a, _, _)                      => simple(a)
-      case _                                              => false
 
     /** how many times each symbol is referenced by these statements. */
     private def useCounts(stats: List[Statement]): Map[SymId, Int] =
@@ -1263,6 +1276,20 @@ object CtorFunnel:
                 "(`base = \"…\"`) and re-run it with this engine so its port map carries a `vis=` row"))
             false
 
+  /** a term that may be substituted for a parameter: evaluating it twice is evaluating it once,
+    * so inlining it at each of the parameter's uses preserves Java's evaluate-arguments-once.
+    *
+    * At OBJECT level rather than inside [[Plans]] because the nomination asks it too: the JDK's
+    * `Throwable(Throwable)` message is rendered by naming the cause in BOTH slots, so a cause that
+    * cannot be read twice is what makes [[throwablePadding]] refuse. One predicate, so the
+    * nomination and the delegation cannot disagree about which causes are re-readable. */
+  private def simple(t: Term): Boolean = t match
+    case _: Tree.Ident | _: Tree.Literal | _: Tree.This => true
+    case Tree.Select(q, _, _, _)                        => simple(q)
+    case Tree.Typed(e, _, _, _)                         => simple(e)
+    case Tree.ArrayLength(a, _, _)                      => simple(a)
+    case _                                              => false
+
   /** does this class extend a JDK THROWABLE? Its constructor set is fixed and public — `()`,
     * `(String)`, `(String, Throwable)`, `(Throwable)` — which is what makes null-padding a shorter
     * super call exact rather than a guess. A java fact, not a library one. */
@@ -1272,6 +1299,98 @@ object CtorFunnel:
       case t: Term      => headName(program, t.tpe)
     }.exists(n => n == "java.lang.Throwable" ||
                   (n.startsWith("java.") && (n.endsWith("Exception") || n.endsWith("Error"))))
+
+  /** a constructor symbol's own FORMALS — the parameter types the class file declares, never the
+    * types of one call's arguments. An argument may be a SUBTYPE of the formal, which is exactly
+    * the difference that decides [[throwablePadding]]. */
+  private def formalsOf(program: Program, target: SymId): List[TypeRepr] =
+    program.symbolOf(target).map(_.info).collect {
+      case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
+      case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
+    }.getOrElse(Nil)
+
+  /** WHICH of the JDK throwable's four constructors a root's `super(...)` reached.
+    *
+    * The set is `()`, `(String)`, `(String, Throwable)`, `(Throwable)` and it is FIXED — that is
+    * the whole of what makes padding exact here and a guess everywhere else (`ENGINE-LIMITS.md`
+    * C3: 0 -> 55 when it was guessed outside the family).
+    *
+    * Read off the TARGET CONSTRUCTOR's formals, and that is the load-bearing part. Read off the
+    * ARGUMENTS instead, `super(createMessage(e), e)` with `e` a `RecognitionException` looks like
+    * no JDK overload at all — its second argument's head name is not `java.lang.Throwable` — and
+    * the fill that decides by head name declines it, dropping BOTH arguments. Java already
+    * resolved the overload; the target symbol is where that answer is written down.
+    *
+    * `None` for anything the four do not cover, including a parent whose class file this run could
+    * not read (no formals at all). Refusing is the answer that keeps the counted omission. */
+  private enum ThrowableCtor:
+    case Nilary, Message, Cause, Both
+
+  private def throwableCtor(program: Program, target: SymId, args: List[Term]): Option[ThrowableCtor] =
+    def is(t: TypeRepr, n: String) = headName(program, t).contains(n)
+    // an EMPTY argument list is java's implicit `super()` or an explicit one — the nilary overload
+    // either way, and `superTarget` reports `SymId.None` for both, so there is no formal to read.
+    if args.isEmpty then Some(ThrowableCtor.Nilary)
+    else formalsOf(program, target) match
+      case f :: Nil if is(f, "java.lang.String")    => Some(ThrowableCtor.Message)
+      case f :: Nil if is(f, "java.lang.Throwable") => Some(ThrowableCtor.Cause)
+      case a :: b :: Nil if is(a, "java.lang.String") && is(b, "java.lang.Throwable") =>
+        Some(ThrowableCtor.Both)
+      case _ => scala.None
+
+  /** Every root's `super(args)` expressed at the JDK throwable's WIDEST overload — `ENGINE-LIMITS.md`
+    * C3's missing shape, and the one thing §4.4's "promote the widest super call" cannot mean
+    * "promote a root", because here no root IS the widest.
+    *
+    * Returns the widest overload's own constructor symbol (so the synthesised primary's parameter
+    * types come from the JDK's signature rather than from any call) together with the padded
+    * argument list for each root. Each shorter overload is padded the way the JDK's own delegation
+    * pads it, which is what makes this a translation rather than an approximation:
+    *
+    *   - `(String)`      — the cause position really is left unset, so `null`;
+    *   - `()`            — both, which is the one residue this shape carries: java leaves the cause
+    *                       UNSET and `(null, null)` sets it to null, so a later `initCause` behaves
+    *                       differently. Recorded in C3; the promoted throwable path has padded the
+    *                       same way since it was built;
+    *   - `(Throwable)`   — specified as `this(cause == null ? null : cause.toString(), cause)`, so
+    *                       it fills its OWN message. `java.util.Objects.toString(c, null)` IS that
+    *                       expression and evaluates `c` once — but the delegation then names the
+    *                       cause in BOTH slots, and a scala secondary constructor cannot bind a
+    *                       value before its `this(...)`. A cause that cannot be read twice refuses
+    *                       the WHOLE synthesis rather than that one root: a synthesised primary is
+    *                       paramful, so a root with no delegation of its own would emit `this()`
+    *                       against it and not compile.
+    *
+    * `None` — refused, and the class keeps its counted omission — where any root reached something
+    * outside the four, or where NO root reached the widest overload. That second one is the
+    * boundary worth stating: the JDK really does declare `(String, Throwable)`, but if nothing in
+    * the program calls it this run holds no symbol for it, and minting a call to a constructor
+    * nobody named is precisely the guess §4.56 forbids. */
+  private def throwablePadding(program: Program, roots: List[Tree.DefDef])
+      : Option[(SymId, Map[SymId, List[Term]])] =
+    val classified = roots.map { r =>
+      val args = superArgsOf(program, r)
+      (r, args, throwableCtor(program, superTarget(program, r), args))
+    }
+    val widest = classified.collectFirst { case (r, _, Some(ThrowableCtor.Both)) => superTarget(program, r) }
+    widest.flatMap { target =>
+      val formals = formalsOf(program, target)
+      def nullAt(t: TypeRepr, o: Origin): Term =
+        Tree.Typed(Tree.Literal(Constant.NullC, t, o), TypeTree(t, o), t, o)
+      def pad(r: Tree.DefDef, args: List[Term], k: ThrowableCtor): Option[List[Term]] =
+        val o = r.origin
+        k match
+          case ThrowableCtor.Both    => Some(args)
+          case ThrowableCtor.Message => Some(List(args.head, nullAt(formals(1), o)))
+          case ThrowableCtor.Nilary  => Some(List(nullAt(formals.head, o), nullAt(formals(1), o)))
+          case ThrowableCtor.Cause   =>
+            Option.when(simple(args.head))(List(
+              Tree.Opaque.spliced(List("java.util.Objects.toString(", ", null)"),
+                                  List(args.head), formals.head, o),
+              args.head))
+      val padded = classified.map { (r, args, k) => k.flatMap(pad(r, args, _)).map(r.symbol -> _) }
+      Option.when(formals.sizeIs == 2 && padded.forall(_.isDefined))(target -> padded.flatten.toMap)
+    }
 
   private def parentSyms(cd: Tree.ClassDef): List[SymId] =
     def head(t: TypeRepr): Option[SymId] = t match
@@ -1660,7 +1779,23 @@ object CtorFunnel:
             case None    => Plan.none
             case Some(c) => val (sa, rest) = split(program, c); promoted(program, c, sa, rest)
         }
-        // a THROWABLE parent keeps the measured choice above, untouched by the synthesis
+        // A THROWABLE PARENT KEEPS THE MEASURED CHOICE ABOVE — except where it made none at all.
+        //
+        // K5.5's table says of this branch "leave it alone", and that stands wherever it NOMINATED
+        // something: consulting the synthesis first let it pick a narrower pass-through root and
+        // cost libGDX omissions 46 -> 50. The fence is NARROWED here, not removed — reached only
+        // on `chosen == None`, which is the case K5.5 never had to answer for and which C3 names:
+        // no root passes its own parameters straight through and none is nilary, so there is
+        // nothing to promote, `Plan.none` was the answer, and every root's `super(args)` was
+        // lowered to a bare `this()`. The class compiled and every exception it threw carried a
+        // null message and no cause (§4.4's own row, shipping).
+        //
+        // What the synthesis supplies is the PRIMARY to delegate to. Everything after that already
+        // existed: `throwablePadding` expresses each root at the JDK's widest overload exactly as
+        // the promotion's fill does, and refuses — keeping the counted omission — for anything
+        // outside the fixed four.
+        case None if throwableParent && synthesis =>
+          syntheticPrimary(program, cd, roots, throwablePad = true).getOrElse(Plan.none)
         case None    => Plan.none
         case Some(c) => val (sa, rest) = split(program, c); promoted(program, c, sa, rest)
 
@@ -1671,8 +1806,14 @@ object CtorFunnel:
     * behaviour AND the omission finding, which is the honest outcome: `OmissionCheck` reported all
     * five of simple-graphs' dropped `super(args)` correctly, and the defect survived because nobody
     * opened the report — not because the report was missing. */
+  /** @param throwablePad admit the ONE shape whose roots reach DIFFERENT parent constructors: the
+    *                     JDK throwable family, whose set is fixed, where each root is padded to the
+    *                     widest overload ([[throwablePadding]]). `plan0` passes it only where its
+    *                     own measured throwable branch nominated nothing at all — the fence K5.5
+    *                     put round this parent is narrowed, never removed. */
   private def syntheticPrimary(program: Program, cd: Tree.ClassDef,
-                               roots: List[Tree.DefDef]): Option[Plan] =
+                               roots: List[Tree.DefDef],
+                               throwablePad: Boolean = false): Option[Plan] =
     val calls = roots.map(r => superTarget(program, r) -> superArgsOf(program, r))
     val targets = calls.map(_._1).distinct
     val arities = calls.map(_._2.size).distinct
@@ -1693,20 +1834,35 @@ object CtorFunnel:
     // cannot carry a clause every secondary's delegation needs, and refusing is the answer that
     // keeps the counted omission instead of emitting a signature no secondary can reach.
     val rootGivens = roots.map(r => givenClauses(program, r))
+    // THE SUPER SLOTS, AND WHAT EACH ROOT PUTS IN THEM — one value, reached two ways, and the
+    // ordering is the whole of how the throwable case stays fenced off from this one.
+    //
+    // UNIFORM is the shape this synthesis was built for: every root reaches the SAME parent
+    // constructor with the same arity, so each root's own arguments ARE its slot values and
+    // nothing is padded. That is the only admissible answer for a parent whose constructor set the
+    // engine does not know — `DistanceFieldFont extends BitmapFont` has seven roots reaching seven
+    // overloads, and padding there measured 0 -> 55.
+    //
+    // PADDED is `ENGINE-LIMITS.md` C3's, and it is offered ONLY when `plan0` asks for it, which it
+    // does only for a JDK throwable whose own measured branch nominated nothing.
+    val slotArgs: Option[(SymId, Map[SymId, List[Term]])] =
+      Option.when(targets.sizeIs == 1 && arities.sizeIs == 1)(
+        targets.head -> roots.map(r => r.symbol -> superArgsOf(program, r)).toMap)
+        .orElse(Option.when(throwablePad)(throwablePadding(program, roots)).flatten)
     if roots.sizeIs < 2 || roots.exists(_.tparams.nonEmpty) then scala.None
-    else if targets.sizeIs != 1 then scala.None
-    else if arities.sizeIs != 1 then scala.None
+    else if slotArgs.isEmpty then scala.None
     else if rootGivens.map(_.map(_.map(_.tpt.tpe))).distinct.sizeIs != 1 then scala.None
     else
+      val (target, superValues) = slotArgs.get
+      // a PADDED plan is one whose roots do NOT all reach the same parent constructor, which is
+      // what every question below that reads a root's own `super(args)` has to know.
+      val padding = targets.sizeIs != 1 || arities.sizeIs != 1
       def passesThrough(c: Tree.DefDef): Boolean =
         val ps = valueParams(program, c).map(_.symbol)
         superArgsOf(program, c).map { case Tree.Ident(x, _, _) => x; case _ => SymId.None } == ps && ps.nonEmpty
       // parameter TYPES from the parent constructor's own signature, never from one call's
       // arguments: an argument is an expression whose type may be narrower than the formal.
-      val formals = program.symbolOf(targets.head).map(_.info).collect {
-        case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
-        case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
-      }.getOrElse(Nil)
+      val formals = formalsOf(program, target)
       // a java constructor that ALREADY has the synthetic signature would collide with it — the
       // COLLAPSE test, kept as exact type equality on ROOTS because that is the shape a promotion
       // can actually take over (its parameters ARE the slots, passed straight through).
@@ -1763,7 +1919,7 @@ object CtorFunnel:
       // of them positionally, which is what makes `superCall` a question about that prefix alone.
       val allSlots    = sup ++ fs.map(s => (s.name, s.tpe))
       val delegations = roots.map { r =>
-        r.symbol -> (superArgsOf(program, r) ++ values.getOrElse(r.symbol, Nil))
+        r.symbol -> (superValues(r.symbol) ++ values.getOrElse(r.symbol, Nil))
       }.toMap
       def synthesise(mark: Option[String]): Option[Plan] =
         val o = cd.origin
@@ -1798,11 +1954,21 @@ object CtorFunnel:
       val erasedSlots  = allSlots.map((_, t) => erasedName(program, cd, t))
       val erasureClash = ctors.exists(c => valueParams(program, c).map(v => erasedName(program, cd, v.tpt.tpe)) == erasedSlots)
       // the COLLAPSE, decided once — see the comment on the branch that consumes it below.
+      //
+      // NEVER UNDER PADDING. A collapse promotes a REAL constructor whose parameters ARE the slots,
+      // passed straight through — a property of one call, and under padding the roots do not even
+      // reach one parent constructor, so no root's own `super(args)` is the primary's argument
+      // list. It is also the promotion K5.5's fence already refused for this parent: `plan0` looked
+      // for exactly such a root, found none, and only then asked for the synthesis.
       val collapsed =
-        if fs.isEmpty && collides && !roots.exists(valueParams(program, _).isEmpty)
+        if !padding && fs.isEmpty && collides && !roots.exists(valueParams(program, _).isEmpty)
         then collapseTo(program, cd, roots.filter(passesThrough))
         else scala.None
-      if formals.sizeIs != arities.head || formals.contains(TypeRepr.NoType) then scala.None
+      // the slot list and the parent's formals must be the same shape for EVERY root — asked of
+      // the padded values rather than of `arities`, which under padding is the pre-pad answer.
+      val slotArity = superValues.values.map(_.size).toList.distinct
+      if slotArity.sizeIs != 1 || !slotArity.contains(formals.size) ||
+         formals.contains(TypeRepr.NoType) then scala.None
       // TWO DISJOINT SHAPES, and keeping them disjoint is the whole content of this decision. Three
       // orderings were measured against libGDX before this one, and every ordering that let either
       // shape reach the other's classes moved a number: promotion-first cost 4 omissions

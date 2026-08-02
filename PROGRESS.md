@@ -1960,7 +1960,7 @@ written, 987 members in the source map. `just liqp-measure`.
 | `signature` / `trivia`(all three lanes) | **0** on the first run of a 135-file library nothing in the engine was tuned against |
 | `jdk-surface` | **19 -> 10** |
 | `collection-boundary` | **6 -> 14 -> 13** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), and rose by the one `InexpressibleParent` refusal K5.7 counts |
-| `omissions` | **6 -> 4** — `PlainBigDecimal`'s two `super(args)` are no longer dropped; with the external constructor's signature readable the funnel reaches K5.5's synthesised primary |
+| `omissions` | **6 -> 4 -> 1** — `PlainBigDecimal`'s two `super(args)` are no longer dropped (with the external constructor's signature readable the funnel reaches K5.5's synthesised primary), and `LiquidException`'s three reach a primary synthesised at the JDK throwable's widest overload (C3) |
 | tests | 639 `@Test` upstream, **577 emitted, 0 run** — see 10.5.4 |
 
 **There is no behavioural gate on this port.** Every number above is a compile-time one, and §3 is
@@ -2034,6 +2034,16 @@ porting a library from outside the family the engine grew up in.
 - **`ENGINE-LIMITS.md` K7 (extended)** — an enhanced-for BINDING may be REASSIGNED, which K7's type
   half does not cover. Same java fact `MutableParamsTransform` handles for a parameter, one node
   kind out; the two reasons to re-bind compose into one alias.
+- **`ENGINE-LIMITS.md` C3 (closed)** — the JDK-throwable half §4.4 has prescribed since it was
+  written. `LiquidException`'s three roots reach three different `super(...)` and not one passes its
+  parameters through, so nothing was promoted and **every exception the port threw carried a null
+  message and no cause** — 0 compile errors, no count moving, exactly §3's defect class. A primary
+  is now SYNTHESISED at the family's widest overload and each root pads into it. Two things the
+  build turned on: the overload has to be read off the TARGET CONSTRUCTOR's formals (an argument may
+  be a SUBTYPE — `super(createMessage(e), e)` passes a `RecognitionException`, and the head-name fill
+  declines it and drops both arguments), and K5.5's throwable fence is NARROWED to "wherever it
+  nominates" rather than removed. `omissions` **4 -> 1**, errors 31 -> 31, 8 member digests — all of
+  them that one class — and every other corpus port byte-for-byte unchanged.
 - **`ENGINE-LIMITS.md` T11 (closed)** — the DECLARED-collidee half of the promoted enum parameter.
   What blocked it was not visibility but the ROUTE: `enumDef` promotes the parameters without
   consulting `CtorFunnel`, so the §4.55 pass had nothing to place. NARROW where the plan-based arm
@@ -2068,10 +2078,7 @@ exact diagnosis rather than a nonsense one**: `list ++= valueList` where `list` 
 `Buffer[Object]` and `valueList` a `Buffer[?]` reads `Required: IterableOnce[Object]` since
 `? super Object` renders as `Object`, and what blocks it is that a java `?` is `? extends Object`
 while a Scala `?` is bounded by `Any` — G2 measured that whole design space and settled on `[?]`, so
-widening it is not a change to make for four sites. `LiquidException` is 0 errors and a SILENT §4.4
-defect: three roots, three different `super(...)`, none promotable, so every exception it throws has
-a null message and no cause — C3 now names the one missing shape (a synthesised primary at the JDK
-throwable's widest overload) and the padding it would delegate to, which is already built.
+widening it is not a change to make for four sites.
 D-liqp-1 × D-liqp-2 — an external generated parser that references back INTO the renamed library —
 costs exactly one error and cannot be fixed without porting or regenerating it.
 

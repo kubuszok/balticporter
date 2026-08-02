@@ -616,44 +616,66 @@ overloads.
 Note also that `super(msg)` and `super(msg, null)` differ in `Throwable`'s cause semantics (unset vs
 null), which no delegation reproduces.
 
-**THE JDK-THROWABLE HALF §4.4 PRESCRIBES IS STILL NOT BUILT, and what is missing is now exactly one
-shape.** This entry says padding is exact for that family, and the padding itself IS built —
-`Slot.NullAt` fills what a narrower overload left `null`, `Slot.CauseMessage` handles the one JDK
-overload that fills its own message, and `superCall`'s type-matched fill puts each argument in the
-slot java put it in. What it needs is a PRIMARY to delegate to, and it reads that from
-`plan.primaryParams`.
+**THE JDK-THROWABLE HALF §4.4 PRESCRIBES IS NOW BUILT**, and the shape of what was missing is the
+part worth keeping. The padding was already there — `Slot.NullAt` fills what a narrower overload
+left `null`, `Slot.CauseMessage` handles the one JDK overload that fills its own message. What it
+had no way to reach was a PRIMARY to delegate to, because it read one from `plan.primaryParams` and
+that is the promoted root's parameter list.
 
-liqp supplies both sides of the line in one package:
+liqp supplied both sides of the line in one package:
 
 - `VariableNotExistException extends RuntimeException` has ONE root, so it is PROMOTED and the fill
   runs — `extends RuntimeException(String.format(…))`, exact;
 - `LiquidException extends RuntimeException` has THREE, with three different `super(...)` calls
-  (`super(createMessage(e), e)`, `super(message)`, `super(message, cause)`) and no nilary root. No
-  root supersedes another, so nothing is promoted; K5.5's synthesis is deliberately withheld for a
-  throwable parent (its own table: *"leave it alone"*); `primaryParams` is therefore EMPTY, the fill
-  never runs, and all three roots delegate `this()`. The port compiles, moves no count, and **every
-  exception it throws has a null message and no cause** — §4.4's own row, shipping.
+  (`super(createMessage(e), e)`, `super(message)`, `super(message, cause)`) and no nilary root. Not
+  one of them passes its own parameters straight through, so `plan0`'s widest-pass-through branch
+  nominated NOTHING, `primaryParams` was EMPTY, the fill never ran, and all three roots delegated
+  `this()`. The port compiled, moved no count, and **every exception it threw had a null message and
+  no cause** — §4.4's own row, shipping.
 
-The missing shape is a synthesised primary at the parent's WIDEST overload — `(String, Throwable)`
-for the JDK throwable family, whose constructor set is fixed, which is the one place §4.4's "promote
-the widest super call" cannot mean "promote a root" because no root is widest. Everything after that
-already exists: each root's `super(args)` goes through the same fill it does for a promoted primary.
+The shape that closes it is a SYNTHESISED primary at the family's widest overload —
+`class LiquidException protected (sup$0: String, sup$1: Throwable) extends RuntimeException(sup$0,
+sup$1)` — which is the one place §4.4's "promote the widest super call" cannot mean "promote a root",
+because no root IS the widest. `CtorFunnel.throwablePadding` expresses each root at those slots and
+`syntheticPrimary` takes it from there unchanged; it is shape (7) in that file's header.
 
-Two measurements that bound it: the corpus blast radius is **liqp only** — of the classes across all
-ports whose dropped `super(args)` `OmissionCheck` counts, not one else is a `Throwable` — and
-`PlainBigDecimal`, which this entry previously carried as the other half, is CLOSED by K5.5 once the
-external constructor's signature became readable (its two roots reach the same
-`BigDecimal(String)`). So what remains is one class, one shape, and a warning label from K5.5 about
-the branch it has to be written next to.
+**Three things about how it had to be written, and each of them is the transferable part:**
 
-Deliberately NOT built in the wave that measured it: `CtorFunnel` decides every port's emitted
-constructors, and a new synthesis arm beside one K5.5 explicitly fenced off is a change to measure
-on its own (§5).
+- **The overload is read off the TARGET CONSTRUCTOR's formals, never off the arguments.** The
+  existing fill matches an argument to a slot by HEAD NAME, and `super(createMessage(e), e)` passes
+  a `RecognitionException` — a subtype of `Throwable`, whose head name is not `java.lang.Throwable`.
+  Matched by name that argument finds no slot, the fill declines, and BOTH arguments are dropped.
+  Java already resolved the overload; the target symbol is where that answer is written down, and it
+  is readable exactly because K15's frontend work made an external member carry its `MethodType`.
+- **K5.5's fence is NARROWED, not removed.** Its table says of the throwable branch *"leave it
+  alone"*, and that stands wherever it NOMINATED something — consulting the synthesis first there
+  cost libGDX omissions 46 → 50. The new arm is reached only on `chosen == None`, which is the case
+  K5.5 never had to answer for.
+- **A root reaching an overload NOBODY names is refused, not minted.** The JDK really declares
+  `(String, Throwable)`, but if no root calls it this run holds no symbol for it, and a class whose
+  roots reach only `(String)` and `(Throwable)` therefore keeps its counted omission. Same for a
+  `super(cause)` whose cause cannot be read twice: the delegation would name it in both slots, so
+  the WHOLE synthesis is refused rather than that one root — a synthesised primary is paramful, and
+  a root without a delegation of its own would emit `this()` against it and not compile.
 
-*Fix kind: (a) — the (a) was "count the omission", and for this shape it is now "build the
-synthesis". The refusal stays correct for the rest, and IS correctly counted: `omissions` reports
-each site, `decisions.tsv` classifies it `Universal("ctor-funnel/super-args-dropped(C3)")`, and a
-porter note sits on every affected constructor in the emitted file — verified on liqp.*
+**Measured: liqp `omissions` 4 → 1, scalac errors 31 → 31** (this is a behavioural fix; §3 is the
+whole point of it moving no error count), **8 member digests, all of them `LiquidException` and its
+three constructors**, and every other port in `just measure-all` byte-for-byte unchanged — which
+confirms the blast-radius prediction this entry carried: of the classes across all ports whose
+dropped `super(args)` `OmissionCheck` counts, not one else is a `Throwable`. `PlainBigDecimal`,
+which this entry once carried as the other half, was already CLOSED by K5.5 when the external
+constructor's signature became readable.
+
+**The residue this shape carries, stated so nobody re-derives it:** a root whose super call is
+`()` pads to `(null, null)`, and java leaves the cause UNSET where that sets it to null — so a later
+`initCause` throws in the port and works in java. It is the same padding the promoted throwable path
+has done since it was built, and the note above about `super(msg)` vs `super(msg, null)` is the same
+fact.
+
+*Fix kind: (a). The refusal stays correct for every non-throwable parent and IS correctly counted:
+`omissions` reports each site, `decisions.tsv` classifies it
+`Universal("ctor-funnel/super-args-dropped(C3)")`, and a porter note sits on every affected
+constructor in the emitted file — verified on liqp.*
 
 ### C4. Several roots, none nilary, plus an explicit nilary constructor = a clash with no plan
 
@@ -1647,7 +1669,7 @@ Four things measured while getting there, each of which moved a libGDX number th
 |---|---|
 | promoting a pass-through root when some root takes NO parameters | libGDX **0 → 5** — the no-arg root has nothing to delegate with and emits `this()` against a primary that no longer accepts it |
 | picking the FIRST pass-through root rather than the widest | omissions **46 → 50** |
-| letting the synthesis run for a JDK-THROWABLE parent | that branch already nominates the widest and is measured (0 → 55 when it guessed) — leave it alone |
+| letting the synthesis run for a JDK-THROWABLE parent | that branch already nominates the widest and is measured (0 → 55 when it guessed) — leave it alone **wherever it NOMINATES.** Where it nominates NOTHING the fence is narrowed by C3, which is a different question and a different arm: no root passes through, so there is nothing for this table's warning to protect |
 | letting either shape reach the other's classes | every ordering tried moved a number; they are disjoint by construction now — a no-arg root means SYNTHESIS, all-paramful-with-a-collision means PROMOTION, anything else keeps the old behaviour |
 
 And one that moved a number the RIGHT way while looking wrong: `OmissionCheck` counts a dropped
