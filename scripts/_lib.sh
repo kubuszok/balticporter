@@ -171,10 +171,26 @@ reconcile_outcomes() {
     grep -E '^==> [^X] ' "$run" | sed 's/^/     /'
     echo "   (whether any of them is NEW is \`test_outcome_guard\`'s answer, below, from the baseline)"
   fi
-  if [ "$total" != "$emitted" ]; then
+  # THE TWO DIRECTIONS ARE NOT THE SAME FINDING, and only one of them is fatal.
+  #
+  # FEWER outcomes than emitted is a test that VANISHED: it produced no line this script recognises,
+  # so it has no row in `tests.tsv` either, and the suite reports success while it disappears. That
+  # is the failure this function exists for.
+  #
+  # MORE outcomes than emitted means the EMITTED COUNT is the thing that is wrong — `munit_emitted`
+  # greps `test("` out of the source, and a lane whose suite is HAND-WRITTEN passes a count derived
+  # the same way over code no migration produced. Printed as a subtraction that reads
+  # `-3 of 5 produced no outcome line`, which is nonsense, and failed as a lost test, which is a
+  # green lane stopped for a counting artefact. It is still reported — a reconciliation that cannot
+  # reconcile is worth saying — and it is not the gate.
+  if [ "$total" -lt "$emitted" ]; then
     echo "!! OUTCOMES LOST — $((emitted - total)) of $emitted emitted test(s) produced no outcome line;" \
          "the suite would report success while they vanish (CLAUDE.md §3)"
     return 1
+  fi
+  if [ "$total" -gt "$emitted" ]; then
+    echo "!! OUTCOME COUNT ABOVE THE EMITTED COUNT — $total outcomes against $emitted emitted." \
+         "No test is lost; the EMITTED figure this lane passed is what does not describe the suite."
   fi
   return 0
 }

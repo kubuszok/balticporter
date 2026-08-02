@@ -1834,6 +1834,13 @@ lane-selfcheck:
     printf '  + a 0.0s\n  + b 0.0s\n' > "$T/run.txt"
     want "an emitted test with NO outcome line is a failure" "$(reconcile_outcomes "$T/run.txt" 3 > /dev/null; echo $?)" "1"
     want "…and a fully reconciled run is not"                "$(reconcile_outcomes "$T/run.txt" 2 > /dev/null; echo $?)" "0"
+    # The OTHER direction, which is a wrong EMITTED count and not a lost test: reported, never fatal.
+    # Gated, it would stop a green hand-written-suite lane over a `test("` grep (anim8/screens/vfx).
+    want "MORE outcomes than emitted does NOT fail the lane"  "$(reconcile_outcomes "$T/run.txt" 1 > /dev/null; echo $?)" "0"
+    case "$(reconcile_outcomes "$T/run.txt" 1)" in
+      *"ABOVE THE EMITTED COUNT"*) ok "…and says which figure is the wrong one" ;;
+      *) bad "an over-count must say the EMITTED figure is what is wrong" ;;
+    esac
     # A skip IS an outcome line, so it reconciles; whether it is a NEW one is the guard's question
     # and deliberately not this function's — it has no baseline to ask.
     printf '  + a 0.0s\n==> s p.S.b skipped 0.0s\n' > "$T/run.txt"
