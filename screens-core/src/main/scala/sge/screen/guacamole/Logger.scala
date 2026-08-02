@@ -9,32 +9,34 @@ package sge.screen.guacamole
 
 /** A level-gated logger over `Gdx.app.log` with `String.format` message interpolation.
   *
-  * The `args` parameter is an `Array[Object]` rather than a Scala `Object*` deliberately: the
-  * engine emits a Java `T...` parameter as `Array[T]` and a call site as a positional
-  * `scala.Array[java.lang.Object](…)` (see `TirEmitter.param`). Declared as varargs here, every
-  * emitted `LOG.debug(msg, Array(…))` would be a type error — and the fix would be in the shim,
-  * which is the wrong place: the shim's job is to match what the emitter produces.
+  * The `args` parameter is a Scala `Object*` because that is what the generated callers now pass.
+  * `CLAUDE.md` §1 is explicit that a port's hand-written half takes its shape from the emitted
+  * caller rather than choosing one: `ENGINE-LIMITS.md` K6.5's third case made the engine stop
+  * materialising a vararg pack at an EXTERNAL callee, and a `TypeRedirectTransform` target is
+  * external by construction — so `LOG.debug(fmt, a, b)` now arrives as three arguments where it
+  * used to arrive as `(fmt, Array(a, b))`. An `Array[Object]` formal was right for exactly as long
+  * as the emitter packed, and is a compile error the moment it spreads.
   */
 final class Logger private[guacamole] (className: String):
 
   private val classPrefix: String = String.format("[%s]: ", className)
 
-  def trace(message: String, args: Array[Object]): Unit =
+  def trace(message: String, args: java.lang.Object*): Unit =
     if LoggerService.isTraceEnabled() then sge.Gdx.app.debug("TRACE", formatted(message, args))
 
-  def debug(message: String, args: Array[Object]): Unit =
+  def debug(message: String, args: java.lang.Object*): Unit =
     if LoggerService.isDebugEnabled() then sge.Gdx.app.debug("DEBUG", formatted(message, args))
 
-  def info(message: String, args: Array[Object]): Unit =
+  def info(message: String, args: java.lang.Object*): Unit =
     if LoggerService.isInfoEnabled() then sge.Gdx.app.log("INFO", formatted(message, args))
 
-  def warn(message: String, args: Array[Object]): Unit =
+  def warn(message: String, args: java.lang.Object*): Unit =
     if LoggerService.isWarnEnabled() then sge.Gdx.app.log("WARN", formatted(message, args))
 
-  def error(message: String, args: Array[Object]): Unit =
+  def error(message: String, args: java.lang.Object*): Unit =
     if LoggerService.isErrorEnabled() then sge.Gdx.app.error("ERROR", formatted(message, args))
 
-  private def formatted(message: String, args: Array[Object]): String =
+  private def formatted(message: String, args: Seq[java.lang.Object]): String =
     classPrefix + (if args == null || args.isEmpty then message else String.format(message, args*))
 
 /** The level gate and the `Logger` factory.
