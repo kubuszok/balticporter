@@ -2200,7 +2200,28 @@ object SpoonTir:
         * passes the elements POSITIONALLY — `new VertexAttributes(a, b, c)` — has to materialize the
         * array Java would have built: `new VertexAttributes(scala.Array[VertexAttribute](a, b, c))`.
         * A call that already passes an array (Java permits that too) is left alone; so is a generic
-        * `T...` component, whose element type would not render at the call site. */
+        * `T...` component, whose element type would not render at the call site.
+        *
+        * ==…and that convention stops at the program's edge (`ENGINE-LIMITS.md` K6.5, third case)==
+        * The materialised pack is right because BOTH halves are ours: the emitted `def f(xs:
+        * Array[T])` and the emitted `f(Array[T](a, b))` agree by construction. An EXTERNAL callee's
+        * half is a CLASS FILE nothing in this port can move, and scalac reads a java `T...` there as
+        * a REPEATED parameter — so the pack is one argument too many, at every external java vararg
+        * method, which every library meets. `Paths.get(".")` emitted `Paths.get(".",
+        * Array[String]())` and read `Found: Array[String] / Required: String`.
+        *
+        * **The loud half is the smaller half.** Where the repeated element is `Object` the pack
+        * CONFORMS — `Array[Object] <: Object` — so `String.format(fmt, Array[Object](a, b))`
+        * compiles and passes the array as a SINGLE `%s`, which is CLAUDE.md §4.4's shape exactly: no
+        * error, no moved count, and a wrong string at run time. 9 such sites in one library against
+        * 9 that failed to compile.
+        *
+        * So an external callee gets `Tree.Repeated`, which the emitter renders as the ELEMENTS —
+        * `CLAUDE.md` §6's spread with no spread syntax needed, and the same normalisation K6.5's
+        * `Arrays.asList` rewrite already performs one layer up. Ownership is decided STRUCTURALLY
+        * (§4.56) from the DECLARING type being a shadow — a reconstruction from bytecode — never
+        * from the name: a resolution root's java is parsed as source and stays ours, which is what
+        * keeps a dependent port's calls into its base on the materialised form both modules emit. */
       private def varargPack(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
                              recvSubst: Map[String, CtTypeReference[?]]): Option[List[Term]] =
         val ps = try Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList)
@@ -2278,7 +2299,14 @@ object SpoonTir:
               val elems = rest.map(e => coerce(elemRef.get, e, expr(e)))
               val at = AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(ct))
               val o = argEs.headOption.map(originOf).getOrElse(Origin.synthetic)
-              Some(fixedTerms :+ Tree.NewArray(TypeTree(ct, o), Nil, Some(elems), at, o))
+              // the declaring type is a SHADOW exactly when it was reconstructed from bytecode —
+              // the same signal `coerceArgsFixed` reads for the erasure cast, and the only one that
+              // survives `noClasspath` (where `getExecutableDeclaration` is non-null for the JDK too).
+              val external = Option(ex.getExecutableDeclaration)
+                .flatMap(d => Option(d.getParent(classOf[CtType[?]]))).forall(_.isShadow)
+              Some(fixedTerms :+ (
+                if external then Tree.Repeated(elems, at, o)
+                else Tree.NewArray(TypeTree(ct, o), Nil, Some(elems), at, o)))
           case _ => None
 
       /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing

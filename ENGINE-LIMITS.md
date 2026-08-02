@@ -1745,8 +1745,44 @@ either "no arm matched" or "an arm REFUSED", only the first is an external seam,
 next mechanism paints over is a refusal nobody can find**. Closing this properly is one deliberate
 arm plus a corpus measurement of the erased element type — not an accident of ordering.
 
-*Fix kind: (a). The residue (the aliasing form) is (a), and it is now a KNOWN construction blocked
-on one frontend fact rather than an open question.*
+**THE THIRD CASE — the convention stops at the PROGRAM'S EDGE, and it is not about `asList` at
+all.** CLOSED. The two cases above are one rewrite retargeting one helper. The general fact is that
+the materialised pack is right only while BOTH halves are ours: the emitted `def f(xs: Array[T])`
+and the emitted `f(Array[T](a, b))` agree by construction. An **EXTERNAL** callee's half is a CLASS
+FILE nothing in this port can move, and scalac reads a java `T...` there as a REPEATED parameter —
+so the pack is one argument too many at *every* external java vararg method, which every library
+meets. `Paths.get(".")` emitted `Paths.get(".", scala.Array[java.lang.String]())` and read
+`Found: Array[String] / Required: String`.
+
+**The loud half is the smaller half.** Where the repeated element type is `Object` the pack
+CONFORMS — `Array[Object] <: Object` — so `String.format(fmt, Array[Object](a, b))` compiles and
+passes the whole array as ONE `%s`. That is CLAUDE.md §4.4's shape exactly: no error, no moved
+count, no failing check, and a wrong string at run time. In liqp: **9 sites that failed to compile
+and 9 more that compiled**, in the same library, from the same defect.
+
+What shipped, in two halves that are each meaningless alone:
+
+- the FRONTEND packs into `Tree.Repeated` rather than `Tree.NewArray` when the callee is external,
+  decided STRUCTURALLY (§4.56) from the declaring type being a SHADOW — a reconstruction from
+  bytecode, the same signal `coerceArgsFixed` already reads, and the only one that survives
+  `noClasspath` (where `getExecutableDeclaration` is non-null for the JDK too). A resolution root's
+  java is parsed as SOURCE and stays ours, which is what keeps a dependent port's calls into its
+  base on the materialised form both modules emit;
+- the EMITTER flattens a `Repeated` in an ARGUMENT position into the argument list. Invisible for
+  one element or more — the node renders comma-joined and so does the arg list — and decisive for
+  ZERO, where a node rendering `""` leaves `f(a, )`. Java's `get(".")` against `get(String,
+  String...)` is exactly that call, so the empty spread is the normal case and not an edge.
+
+**And no CHECK is available for the silent half, which is a fact about the descriptor rather than a
+gap in effort.** A check over the trees would have to ask "is this external array formal really a
+`T...`?", and `SpoonTir.descriptorOf` spells `T…` and `T[]` identically BY CONSTRUCTION (its own
+doc says so, deliberately — it is what makes a vararg member's key match). The fact lives only in
+the class file the frontend read, so a check could do nothing but read the frontend's answer back,
+which is precisely what `BreakCatchCheck`'s contract forbids. The gate is therefore the frontend
+SPEC — both directions, negative-tested (`SpoonTirBodySpec`) — plus the emitter's own
+(`TirEmitterSpec`). **liqp 67 → 58**, with every check count flat.
+
+*Fix kind: (a). Universal — java's call syntax against a class file, no library involved.*
 
 ### K7. A java enhanced-for BINDING may be declared at a supertype, and the port dropped it
 

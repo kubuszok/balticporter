@@ -2878,7 +2878,23 @@ final class TirEmitter(
     case Tree.Select(q, _, _, _)                        => effectFree(q)
     case _                                              => false
 
-  private def applyStr(fun: Term, args: List[Term], i: Int): String = fun match
+  /** A `Tree.Repeated` in an ARGUMENT position is the argument list's TAIL, not one argument.
+    *
+    * The distinction is invisible for one element or more — the node renders comma-joined and the
+    * enclosing `mkString(", ")` produces the same text either way — and decisive for ZERO, where a
+    * node that renders `""` leaves a call reading `f(a, )`. Java's `f(a)` against `f(A, B...)` is
+    * exactly that case (`Paths.get(".")`), so the empty spread is the normal one, not an edge.
+    *
+    * Flattened HERE rather than at the node, because it is a fact about the position: the same node
+    * in any other position still stands for a sequence of its own. */
+  private def argTerms(args: List[Term]): List[Term] =
+    if !args.exists(_.isInstanceOf[Tree.Repeated]) then args
+    else args.flatMap { case Tree.Repeated(es, _, _) => es; case a => List(a) }
+
+  private def applyStr(fun: Term, argsIn: List[Term], i: Int): String =
+    applyStr0(fun, argTerms(argsIn), i)
+
+  private def applyStr0(fun: Term, args: List[Term], i: Int): String = fun match
     case Tree.New(tpt, _, _, anon) =>
       s"new ${ctorTpe(tpt.tpe)}(${args.map(term(_, i)).mkString(", ")})${anonBody(anon, i)}"
     // operators (populator tags them `scala.<op>#…`) render infix / prefix, not `.op(x)`.

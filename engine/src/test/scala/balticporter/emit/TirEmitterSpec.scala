@@ -111,3 +111,39 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(text.contains("def `match`(): scala.Int"))
     assert(text.contains("return this.`type`"))
   }
+
+  // -- an argument-position `Repeated` is the argument list's TAIL --------------------------------
+  //
+  // Invisible for one element or more (the node renders comma-joined, and so does the arg list);
+  // decisive for ZERO, where a node rendering "" leaves `f(a, )`. Java's `Paths.get(".")` against
+  // `get(String, String...)` is exactly that call.
+
+  test("a Repeated argument flattens into the argument list, and an EMPTY one disappears") {
+    val CLS = SymId(31)
+    val M   = SymId(32)  // the emitted member
+    val EXT = SymId(33)  // an external vararg callee
+    val TS  = TypeRef(NoPrefix, SymId(34))
+
+    def call(args: List[Term]) =
+      Tree.Apply(Tree.Ident(EXT, NoType, O), args, EXT, TS, O)
+    val body = Tree.Block(
+      List(
+        call(List(Tree.Literal(Constant.StringC("."), TS, O), Tree.Repeated(Nil, NoType, O))),
+        call(List(Tree.Literal(Constant.StringC("%s"), TS, O),
+                  Tree.Repeated(List(Tree.Literal(Constant.StringC("a"), TS, O),
+                                     Tree.Literal(Constant.StringC("b"), TS, O)), NoType, O))),
+      ),
+      Tree.Literal(Constant.UnitC, NoType, O), NoType, O)
+    val d = Tree.DefDef(M, paramss = List(Nil), returnTpt = tt(NoType), rhs = Some(body), origin = O)
+    val cd = Tree.ClassDef(CLS, parents = Nil, selfType = None, body = List(d), origin = O)
+    val syms = SymbolTable(List(
+      Symbol(CLS, "Use", "demo.Use", Flags(), SymId.None, TypeRef(NoPrefix, CLS)),
+      Symbol(M, "run", "demo.Use#run", Flags(), CLS, MethodType(Nil, NoType)),
+      Symbol(EXT, "get", "ext.P#get", Flags(isStatic = true), SymId.None, NoType),
+      Symbol(SymId(34), "String", "java.lang.String", Flags(), SymId.None, NoType),
+    ))
+    val text = new TirEmitter(new Program(List(cd), syms, Xref.build(List(cd)), MemberIndex.empty)).emit
+    assert(clue(text).contains("""(".")"""), "an empty Repeated must leave no trailing separator")
+    assert(!text.contains("""".", )"""), clue(text))
+    assert(text.contains(""""%s", "a", "b""""))
+  }

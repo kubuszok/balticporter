@@ -157,3 +157,59 @@ class SpoonTirBodySpec extends munit.FunSuite:
         |""".stripMargin)
     assertEquals(matchesOf(p, "demo.Cmp2#apply").head.cases.count(_.isDefault), 1)
   }
+
+  // -- a java VARARG PACK stops at the program's edge (`ENGINE-LIMITS.md` K6.5, third case) ------
+  //
+  // `T...` is emitted as `Array[T]`, so a positional call has to materialise the array java would
+  // have built — and that is right only while BOTH halves are ours. An EXTERNAL callee's half is a
+  // class file, where scalac reads `T...` as a REPEATED parameter, so the pack is one argument too
+  // many. The loud face is `Paths.get(".", Array[String]())`; the silent one is
+  // `String.format(fmt, Array[Object](a, b))`, which CONFORMS (`Array[Object] <: Object`) and
+  // passes the whole array as one `%s`.
+
+  private def callsIn(p: Program, member: String): List[Tree.Apply] =
+    given Program = p
+    p.definitionOf(p.symbols.all.find(_.fullName == member).map(_.id).getOrElse(fail(s"no $member"))) match
+      case Some(d: Tree.DefDef) =>
+        StandardTraversal.scanTerm(d.rhs.getOrElse(fail("no body")), List.empty[Tree.Apply]) {
+          case (acc, a: Tree.Apply) => a :: acc
+          case (acc, _)             => acc
+        }
+      case _ => fail(s"$member is not a method")
+
+  private val varargProgram = SpoonTir.fromSource(
+    """package demo;
+      |class Va {
+      |  static int pick(String... xs) { return xs.length; }
+      |  String use() {
+      |    pick("a", "b");
+      |    java.nio.file.Paths.get(".");
+      |    return String.format("%s %s", "a", "b");
+      |  }
+      |}
+      |""".stripMargin)
+
+  private def lastArgOf(name: String): Option[Tree] =
+    callsIn(varargProgram, "demo.Va#use")
+      .find(a => varargProgram.symbolOf(a.method).exists(_.name == name))
+      .flatMap(_.args.lastOption)
+
+  test("an IN-PROGRAM vararg call still materialises the array both halves agree on") {
+    assert(clue(lastArgOf("pick")).exists(_.isInstanceOf[Tree.NewArray]))
+  }
+
+  test("an EXTERNAL vararg call packs into Tree.Repeated — the elements, never an Array") {
+    // `String.format(String, Object...)` — the SILENT face: an Array here compiles and is wrong.
+    lastArgOf("format") match
+      case Some(Tree.Repeated(es, _, _)) => assertEquals(es.size, 2)
+      case other                         => fail(s"expected Repeated, got $other")
+  }
+
+  test("ZERO variadic arguments at an external callee is an EMPTY Repeated, not an empty Array") {
+    // `Paths.get(String, String...)` called as `get(".")`. An `Array[String]()` here is the loud
+    // face (`Found: Array[String] / Required: String`); an empty Repeated renders as nothing at
+    // all, which is what java's own call site says.
+    lastArgOf("get") match
+      case Some(Tree.Repeated(es, _, _)) => assertEquals(es, Nil)
+      case other                         => fail(s"expected an empty Repeated, got $other")
+  }
