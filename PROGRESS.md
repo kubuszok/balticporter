@@ -2206,6 +2206,43 @@ nothing for it to soften, and ONE directory now serves the frontend, scalac and 
 | 1 | MUnit's `Compare` needs a common type and two `toJava` calls infer different element types | `RenderSettingsTest` |
 | 1 | G22 — a method type parameter constrained only by its bound | `blocks/ForTest` |
 
+**Three of the ten are now DIAGNOSED to the edit, and one of the three splits in two.** None is
+built — what follows is what the next wave does not have to re-derive:
+
+- **the `Map.Entry::getKey` method reference is a NODE SHAPE, not a missing rewrite.**
+  `CollectionsTransform`'s member table already answers `getKey`; it is keyed on `Tree.Apply` and a
+  method reference is a `Tree.MethodRef`, which the EMITTER expands to `self$ => self$.getKey()`
+  after every phase has run. Two phases already look at both shapes
+  (`CallSiteSubstitutionTransform`, `BeanPropertyTransform`), so the §1 framing is "one more node
+  shape of an existing rewrite" — the same shape as K5's inherited call with no receiver written —
+  and not a new mechanism. **And it cannot be a symbol swap**: `getKey` becomes `_1`, which turns an
+  Apply into a SELECT, so the phase has to LOWER the `MethodRef` into a `Tree.Lambda` whose body is
+  the rewritten selection. That is also why teaching the emitter's expansion instead does not work —
+  it renders `self$.<member>(<args>)` and `_1` is parenless.
+- **`super.entrySet()` has a legal exact form, gated on a whole-program question.** K5.8's
+  structural refusal is right: `entrySet()` maps to the RECEIVER ALONE and `super` is not a value in
+  Scala. But where the class does not itself declare the member, `super.m` and `this.m` resolve to
+  the same member, so the receiver-alone rewrite may use `this` — with the caveat that a SUBCLASS
+  overriding it would then dispatch differently, so the condition is "neither this class nor any
+  class in the program that extends it declares `m`", which the phase can compute from `Program`.
+  `Sort$SortableMap` satisfies it.
+- **`setValue` is ONE message over TWO cases, and only one of them is refused.** K2 records the
+  refusal as "a `Tuple2` has no write-through", which is true and is stated at the wrong
+  granularity. The real line is *`setValue` is unmappable where the MAP IS NOT REACHABLE FROM THE
+  CALL*:
+  - `LiquidSupport#visitMap` is java's ONE legal mutation during entry-set iteration, and the map is
+    not on the entry but it IS ON THE LOOP. A `ForEach` whose source is a `Kind.Map` receiver and
+    whose body calls `binding.setValue(v)` translates to `src.update(binding._1, v)`, guarded on
+    `src` being a pure path. Bounded, universal, and it is K5's own shape;
+  - `Sort$ComparableMapEntry#setValue` has no loop and no map: the receiver is a FIELD whose java
+    type was `Map.Entry` and whose value, after the retyping, really is a detached pair. Restoring
+    the field's java type — the consistent reading of K5.7, which already leaves the PARENT as
+    java's — makes the body compile and moves the seam to the construction site, where a `Tuple2`
+    meets a `java.util.Map.Entry` formal: one error traded for at least one, unless the runtime
+    supplies a detached `SimpleEntry`, which is exactly the write-to-a-detached-copy K2 refuses. It
+    stays REFUSED, now for a reason that says which of the two cases it is.
+
+
 **And the whole of it is still ONE PHASE's** — the ten families above are `CollectionsTransform`
 boundaries and generic-inference disagreements, and the port's `.conf` gains nothing for any of
 them. **There is no drop or injection among them that is not a rewrite**: every one
