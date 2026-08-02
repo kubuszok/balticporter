@@ -1391,3 +1391,67 @@ class CollectionsTransformSpec extends PortSuite:
     )
     assertEmits(p, "this.m.getOrElse(o,")
   }
+
+  // ---------------------------------------------------------------------------------------------
+  // `Map.Entry.setValue` — ONE message over TWO cases, and only one of them is refused. The line is
+  // *unmappable where the MAP IS NOT REACHABLE FROM THE CALL*, not *a `Tuple2` cannot write
+  // through*: java's one legal mutation during entry-set iteration has the map ON THE LOOP.
+  // ---------------------------------------------------------------------------------------------
+
+  test("`setValue` inside an entry-set loop writes through the MAP — which is on the loop") {
+    // java's `setValue` returns the PREVIOUS value, which is what the phase's own `Map.put` rewrite
+    // preserves; `update` would discard it (§4.4).
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Visit {
+        |  static void bump(Map<String, Object> m) {
+        |    for (Map.Entry<String, Object> e : m.entrySet()) {
+        |      Object v = String.valueOf(e.getValue());
+        |      e.setValue(v);
+        |    }
+        |  }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "m.put(e._1, v)")
+    assertNotEmits(p, "e.setValue(v)")
+  }
+
+  test("…and it is REFUSED where the entry is a FIELD — no loop, no map, nothing to write to") {
+    // K2's refusal, kept, with the reason that says which of the two cases it is: the receiver is a
+    // detached pair and the only emission that compiles writes to a copy. It fails to compile
+    // naming the member (M6).
+    val p = port(
+      """package demo;
+        |import java.util.Map;
+        |class Held<K, V> {
+        |  private final Map.Entry<K, V> e;
+        |  Held(Map.Entry<K, V> e) { this.e = e; }
+        |  V put(V v) { return e.setValue(v); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "this.e.setValue(v)")
+  }
+
+  test("…and it is REFUSED where the loop SOURCE is not a pure path — java evaluates it ONCE") {
+    // The rewrite repeats the source inside the body, so a source with any effect would run per
+    // iteration. Over-approximating this duplicates an effect that no compile error and no check
+    // count reports.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Fresh {
+        |  Map<String, Object> load() { return new HashMap<String, Object>(); }
+        |  void bump() {
+        |    for (Map.Entry<String, Object> e : load().entrySet()) { e.setValue("x"); }
+        |  }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "e.setValue(\"x\")")
+  }

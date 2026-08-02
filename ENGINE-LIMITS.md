@@ -2060,12 +2060,37 @@ both directions, needing a coercion each way — for one class in one library. �
 explicit that a mechanism is preferred to a special case, and this special case would be paid for by
 every port that never implements the interface.
 
-**What is left is `setValue`, and it was already a deliberate refusal.** `Tuple2` has no
-write-through to the map; K2 records that as a translation the port declines to guess, and a
-`setValue` call therefore fails to compile naming the member rather than writing to a detached copy.
-Restoring the parent does not change that, and should not.
+**What is left is `setValue`, and it is ONE MESSAGE OVER TWO CASES — only one of which is refused.**
+K2 records the refusal as *a `Tuple2` has no write-through*, which is true and is stated at the
+wrong granularity. The line is ***`setValue` is unmappable where the MAP IS NOT REACHABLE FROM THE
+CALL***, and there is exactly one shape where it is reachable — java's own single legal mutation
+during entry-set iteration:
 
-*Fix kind: (a) engine — the parent restore. The residue is (a) and REFUSED, with the reason above.*
+```java
+for (Map.Entry<K, V> e : m.entrySet()) { … e.setValue(v); }
+```
+
+The map is not on the entry and it IS ON THE LOOP, so `m.put(e._1, v)` is the same write. It is the
+phase's own `Map.put` rewrite, `getOrElse(null)` included, because java's `setValue` returns the
+PREVIOUS value exactly as `put` does — `update` would discard it, which is the §4.4 shape the `put`
+arm exists to avoid. Four conditions, each a way the rewrite would be wrong without it: the loop's
+SOURCE is a `Kind.Map` (the phase's own record, never a name test); the receiver is the loop's
+BINDING and not some other entry, which would write to a different map; the source is a PURE PATH,
+because java evaluates the iterable ONCE and the rewrite repeats it inside the body; and the binding
+is not REASSIGNED, or `e._1` is no longer the key the loop is at.
+
+**What stays refused is the case with no loop and no map** — a class holding a detached entry in a
+FIELD (`Sort$ComparableMapEntry`), where the receiver's java type was `Map.Entry` and its value,
+after the retyping, really is a detached pair. Restoring the field's java type would make the body
+compile and move the seam to the CONSTRUCTION site, where a `Tuple2` meets a `java.util.Map.Entry`
+formal: one error traded for at least one, unless the runtime supplies a `SimpleEntry`, which is
+exactly the write-to-a-detached-copy K2 refuses. It fails to compile naming the member (M6).
+
+Measured on liqp: **9 -> 8**, one site (`LiquidSupport#visitMap`), 1 member digest, every check
+count flat.
+
+*Fix kind: (a) engine — the parent restore, and the loop-reachable half of `setValue`. The
+field-held half is (a) and REFUSED, with the reason above.*
 
 ### K5.8 A `super` receiver is a SYNTAX question, and it is answered of the RESULT — not of the arm
 

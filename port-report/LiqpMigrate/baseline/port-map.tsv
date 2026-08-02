@@ -898,7 +898,7 @@ member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#toLiquid()	ssg.liq
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#variable	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#variable	Renamed	-	liqp/parser/LiquidSupport.java	74	ae41a0135e84606c	vis=private[LiquidSupport]
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#visit(Object)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visit(Object)	Renamed	-	liqp/parser/LiquidSupport.java	114	d4fc8104d11b272a	placement=companion
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#visitList(Buffer)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visitList(Buffer<Object>)	Renamed	-	liqp/parser/LiquidSupport.java	104	fce7be0fa4764b39	placement=companion
-member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#visitMap(Map)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visitMap(Map<String,Object>)	Renamed	-	liqp/parser/LiquidSupport.java	97	88d6fa4b013853bd	placement=companion
+member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#visitMap(Map)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visitMap(Map<String,Object>)	Renamed	-	liqp/parser/LiquidSupport.java	97	6daa9a96c19401b6	placement=companion
 member	liqp.parser.v4.NodeVisitor#<stmt1>	ssg.liquid.parser.v4.NodeVisitor#<stmt1>	Renamed	-	liqp/parser/v4/NodeVisitor.java	110	a808eeaa9d09a83a	
 member	liqp.parser.v4.NodeVisitor#<stmt2>	ssg.liquid.parser.v4.NodeVisitor#<stmt2>	Renamed	-	liqp/parser/v4/NodeVisitor.java	113	ca6a308ae9ac1014	
 member	liqp.parser.v4.NodeVisitor#<stmt3>	ssg.liquid.parser.v4.NodeVisitor#<stmt3>	Renamed	-	liqp/parser/v4/NodeVisitor.java	116	ef9843fd46b2547e	

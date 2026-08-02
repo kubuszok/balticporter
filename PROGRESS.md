@@ -73,7 +73,7 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
-| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **6** (§10.5.3, all classified) |
+| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **5** (§10.5.3, all classified) |
 | `liqp-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **577** emitted, **none run** — the port does not compile | **3** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
@@ -2193,11 +2193,11 @@ without it threw `AssertionError: failure to resolve inner class` out of `Classf
 ABORTED, which reads as a smaller error count rather than as a failure. With no seam left there is
 nothing for it to soften, and ONE directory now serves the frontend, scalac and the test run.
 
-**What is left, 9 — 6 main and 3 test**, all of them (a) engine, by family:
+**What is left, 8 — 5 main and 3 test**, all of them (a) engine, by family:
 
 | n | family | where |
 |---|---|---|
-| 2 | K2/K5.7's `Map.Entry.setValue` — a `Tuple2` has none, and a write-through to the map needs the map, which the entry does not carry | `filters/Sort$ComparableMapEntry`, `parser/LiquidSupport#visitMap` |
+| 1 | K2/K5.7's `Map.Entry.setValue` at the case with NO LOOP AND NO MAP — the receiver is a FIELD whose value, after the retyping, is a detached pair. REFUSED, and the reason now says which of the two cases it is (`ENGINE-LIMITS.md` K5.7) | `filters/Sort$ComparableMapEntry` |
 | 2 | K9/K15 at ANTLR — an enhanced-for over a real external `java.util.List`, and a collapsed stream whose result feeds an external `Stream.concat` | `parser/v4/NodeVisitor` |
 | 1 | a `Map.Entry::getKey` METHOD REFERENCE inside a collapsed stream. The phase rewrites `getKey` on an Apply and never sees a `Tree.MethodRef`, which the emitter expands to `self$ => self$.getKey()` after every phase has run | `Insertions#getNames` |
 | 1 | K15's producer wrap at a Jackson call whose declared result is a TYPE VARIABLE. Jackson really does build a `java.util.Map`, so the wrap is right and its ARGUMENT node type has already been retyped — `fromJava(aScalaMap)` | `parser/LiquidSupport#objectToMap` |
@@ -2205,8 +2205,8 @@ nothing for it to soften, and ONE directory now serves the frontend, scalac and 
 | 1 | MUnit's `Compare` needs a common type and two `toJava` calls infer different element types | `RenderSettingsTest` |
 | 1 | G22 — a method type parameter constrained only by its bound | `blocks/ForTest` |
 
-**Two of the nine are DIAGNOSED to the edit, and one of the two splits in two.** Neither is
-built — what follows is what the next wave does not have to re-derive:
+**One of the eight is DIAGNOSED to the edit.** It is not built — what follows is what the next
+wave does not have to re-derive:
 
 - **the `Map.Entry::getKey` method reference is a NODE SHAPE, not a missing rewrite.**
   `CollectionsTransform`'s member table already answers `getKey`; it is keyed on `Tree.Apply` and a
@@ -2218,24 +2218,8 @@ built — what follows is what the next wave does not have to re-derive:
   Apply into a SELECT, so the phase has to LOWER the `MethodRef` into a `Tree.Lambda` whose body is
   the rewritten selection. That is also why teaching the emitter's expansion instead does not work —
   it renders `self$.<member>(<args>)` and `_1` is parenless.
-- **`setValue` is ONE message over TWO cases, and only one of them is refused.** K2 records the
-  refusal as "a `Tuple2` has no write-through", which is true and is stated at the wrong
-  granularity. The real line is *`setValue` is unmappable where the MAP IS NOT REACHABLE FROM THE
-  CALL*:
-  - `LiquidSupport#visitMap` is java's ONE legal mutation during entry-set iteration, and the map is
-    not on the entry but it IS ON THE LOOP. A `ForEach` whose source is a `Kind.Map` receiver and
-    whose body calls `binding.setValue(v)` translates to `src.update(binding._1, v)`, guarded on
-    `src` being a pure path. Bounded, universal, and it is K5's own shape;
-  - `Sort$ComparableMapEntry#setValue` has no loop and no map: the receiver is a FIELD whose java
-    type was `Map.Entry` and whose value, after the retyping, really is a detached pair. Restoring
-    the field's java type — the consistent reading of K5.7, which already leaves the PARENT as
-    java's — makes the body compile and moves the seam to the construction site, where a `Tuple2`
-    meets a `java.util.Map.Entry` formal: one error traded for at least one, unless the runtime
-    supplies a detached `SimpleEntry`, which is exactly the write-to-a-detached-copy K2 refuses. It
-    stays REFUSED, now for a reason that says which of the two cases it is.
 
-
-**And the whole of it is still ONE PHASE's** — the ten families above are `CollectionsTransform`
+**And the whole of it is still ONE PHASE's** — the families above are `CollectionsTransform`
 boundaries and generic-inference disagreements, and the port's `.conf` gains nothing for any of
 them. **There is no drop or injection among them that is not a rewrite**: every one
 of these types is mechanically portable and the disagreement is a TYPE, so the only honest

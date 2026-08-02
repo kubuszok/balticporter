@@ -819,7 +819,80 @@ final class CollectionsTransform(
       val (want, wantScoped) = actualOf(a.lhs)
       a.copy(rhs = coerce(want, a.rhs, wantScoped))
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
+    case fe: Tree.ForEach => writeThroughEntries(fe)
     case other          => other
+
+  /** `Map.Entry.setValue` — WHERE THE MAP IS REACHABLE FROM THE CALL.
+    *
+    * `entrySet()` maps to the map itself and an entry to a `Tuple2`, which has no write-through;
+    * K2 records that as a refusal and the refusal is right, but it was stated at the wrong
+    * granularity. The line is not *a `Tuple2` cannot write through* — it is ***`setValue` is
+    * unmappable where the MAP IS NOT REACHABLE FROM THE CALL***, and there is exactly one shape
+    * where it is:
+    *
+    * {{{
+    * for (Map.Entry<K, V> e : m.entrySet()) { … e.setValue(v); }   // java's ONE legal mutation
+    * }}}                                                           // during entry-set iteration
+    *
+    * The map is not on the entry and it IS ON THE LOOP, so `m.put(e._1, v)` is the same write —
+    * and it is the phase's own `Map.put` rewrite, `getOrElse(null)` included, because java's
+    * `setValue` returns the PREVIOUS value exactly as `put` does. Emitting `update` instead would
+    * discard it, which is the §4.4 shape the `put` arm exists to avoid.
+    *
+    * Four conditions, and each is a way the rewrite would be wrong without it:
+    *
+    *   - the loop's SOURCE is a `Kind.Map` — the phase's own record that this receiver is a map it
+    *     retyped, never a name test (§4.56). A `Kind.Seq` source's elements are not entries;
+    *   - the receiver of `setValue` is the loop's BINDING, not some other entry. `e2.setValue(v)`
+    *     inside the loop writes to whatever map `e2` came from, which is not this one;
+    *   - the source is a PURE PATH — an `Ident`, or a `Select` chain over `this`/an `Ident`. Java
+    *     evaluates the iterable ONCE; re-writing it into the body would evaluate it per iteration,
+    *     so a source with any effect (a call, an index) is refused rather than duplicated;
+    *   - the binding is not REASSIGNED in the body, or `e._1` is no longer the key the loop is at.
+    *
+    * What stays refused is the case with no loop and no map — a class holding a detached entry in a
+    * FIELD, where the only way to make the body compile is to write to a copy. That is K2's refusal
+    * and it keeps it, now with a reason that says which of the two cases it is. */
+  private def writeThroughEntries(fe: Tree.ForEach)(using p: Program): Tree.ForEach =
+    val src = fe.iterable
+    if !kindAt(src).contains(Kind.Map) || !purePath(src) then fe
+    else
+      val bound = fe.binding.symbol
+      if bound == SymId.None || reassigned(bound, fe.body) then fe
+      else
+        val rw = new Phase:
+          def name = "entry-set-write-through"
+          override def transformApply(t: Tree.Apply)(using Program): Term = t.fun match
+            case Tree.Select(Tree.Ident(`bound`, bt, bo), m, _, so)
+              if methodName(m) == "setValue" && t.args.sizeIs == 1 =>
+              val key = Tree.Select(Tree.Ident(bound, bt, bo), key1Sym, keyType(src.tpe).getOrElse(TypeRepr.NoType), bo)
+              call(call(src, putSym, List(key, t.args.head), t, so), getOrElseSym,
+                   List(dflt(nullOf(so), src, so)), t, so)
+            case _ => t
+        fe.copy(body = StandardTraversal.mapTerm(rw, fe.body))
+
+  /** an expression java may evaluate a SECOND time without changing what the program does — an
+    * identifier, `this`, or a selection chain over one. Deliberately narrow: the question is asked
+    * of a loop source about to be repeated inside the body, and over-approximating it duplicates an
+    * effect that no compile error and no check count would report. */
+  private def purePath(t: Term): Boolean = t match
+    case _: Tree.Ident | _: Tree.This       => true
+    case Tree.Select(q, _, _, _)            => purePath(q)
+    case _                                  => false
+
+  /** is `s` the target of an assignment anywhere under `body`? `StandardTraversal`'s walk, per
+    * CLAUDE.md §3 — a hand-rolled recursion that stopped one node short would answer "no" for the
+    * shape this test exists to catch. */
+  private def reassigned(s: SymId, body: Term)(using Program): Boolean =
+    var hit = false
+    val scan = new Phase:
+      def name = "binding-reassignment"
+      override def transformTerm(x: Term)(using Program): Term =
+        x match
+          case Tree.Assign(Tree.Ident(`s`, _, _), _, _, _) => hit = true; x
+          case _                                           => x
+    StandardTraversal.mapTerm(scan, body)
+    hit
 
   /** a cast TO a runtime shim whose SOURCE this phase has retyped OUT of the shim family — a cast
     * no value can satisfy, because the phase itself guaranteed the runtime value is a scala
