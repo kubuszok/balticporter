@@ -2157,6 +2157,29 @@ final class TirEmitter(
   private def widenedBinding(b: Tree.ValDef, it: Term): Option[String] =
     elementTpe(it.tpe).filter(_ != b.tpt.tpe).map(_ => tpe(b.tpt.tpe))
 
+  /** is the enhanced-for BINDING written to inside the loop body?
+    *
+    * Java's `for (Object obj : array)` binding is an ordinary local and may be assigned; Scala's
+    * generator binds a `val`, so the same body reads `Reassignment to val obj`. The same java fact
+    * `MutableParamsTransform` handles for a parameter, and read the same way — with
+    * `StandardTraversal` rather than a private recursion (§3), and counting `IncDec` beside
+    * `Assign` because `obj++` writes just as much as `obj = …` does.
+    *
+    * Scanning the whole body cannot produce a false positive: a symbol identifies its binder
+    * uniquely, so an assignment to THIS symbol anywhere under the loop is an assignment to this
+    * binding. Over-approximating would cost only a `var` where a `val` would do; under-approximating
+    * costs a compile error, which is why the scan is total rather than a list of node kinds. */
+  private def reassignsBinding(body: Tree, binding: SymId): Boolean =
+    given Program = program
+    body match
+      case t: Term => StandardTraversal.scanTerm(t, false) { (found, x) =>
+        x match
+          case Tree.Assign(Tree.Ident(s, _, _), _, _, _) if s == binding    => true
+          case Tree.IncDec(Tree.Ident(s, _, _), _, _, _, _) if s == binding => true
+          case _                                                            => found
+      }
+      case _ => false
+
   /** the element type of something java could put in an enhanced-for: an applied generic's single
     * argument, or an array's element. `None` = not readable, which callers must treat as no evidence
     * rather than as a difference. */
@@ -2705,18 +2728,31 @@ final class TirEmitter(
     case Tree.ForEach(b, it, body, _, _, lbl) =>
       val raw  = sym(b.symbol).name
       val name = esc(raw)
-      widenedBinding(b, it) match
-        case None       => loopWithJumps(body, lbl, bd => s"for ($name <- ${term(it, i)}) $bd", term(body, i))
-        case Some(decl) =>
+      // TWO independent reasons to re-bind, and they compose into one alias (K7 + F16). The
+      // DECLARED TYPE may differ from the iterable's element type, which java resolved every use
+      // against; and the binding may be REASSIGNED in the body, which java permits on an ordinary
+      // local and scala's generator — a `val` — does not (`Reassignment to val obj`). The second is
+      // the same fact `MutableParamsTransform` handles for a parameter, one node kind out.
+      val mutable = reassignsBinding(body, b.symbol)
+      val kw      = if mutable then "var" else "val"
+      (widenedBinding(b, it), mutable) match
+        case (None, false) => loopWithJumps(body, lbl, bd => s"for ($name <- ${term(it, i)}) $bd", term(body, i))
+        case (widened, _) =>
           // the alias is INSIDE the loop body, so it is re-bound each iteration exactly as java's is,
           // and outside any `continue` boundary `loopWithJumps` adds — which is where java runs it.
+          // A reassignment therefore cannot leak into the next iteration, which is java's semantics
+          // exactly: java's binding is assigned afresh from the iterator each time round.
           // Derive the fresh name from the RAW one and escape THAT: appending to the escaped form
           // gives `` `object`$e ``, which is not an identifier at all (measured, 0 -> 3 on libGDX,
           // as an E040 syntax error). A suffixed keyword needs no escape, so `esc` is a no-op here —
           // but only because it is applied to the whole name.
           val fresh = esc(s"$raw$$e")
+          // the CAST belongs to the widening and only to it: where the binding is re-bound purely
+          // because java wrote to it, the generator already yields the declared type.
+          val decl = widened.getOrElse(tpe(b.tpt.tpe))
+          val rhs  = if widened.isDefined then s"$fresh.asInstanceOf[$decl]" else fresh
           loopWithJumps(body, lbl,
-            bd => s"for ($fresh <- ${term(it, i)}) { val $name: $decl = $fresh.asInstanceOf[$decl]; $bd }",
+            bd => s"for ($fresh <- ${term(it, i)}) { $kw $name: $decl = $rhs; $bd }",
             term(body, i))
     case Tree.For(init, cond, upd, body, _, _, lbl) =>
       // the UPDATE must run on a `continue` too, so it sits OUTSIDE the per-iteration boundary —

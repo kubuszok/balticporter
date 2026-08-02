@@ -1825,6 +1825,23 @@ Two things measured while doing it:
 27 members of libGDX main changed emitted text; 217/221 tests still pass, so the alias is behaviour-
 preserving where it fired.
 
+**A SECOND, independent reason to re-bind: the body WRITES to the binding.** This entry is about the
+binding's declared TYPE and says nothing about its mutability. Java's `for (Object obj : array)`
+binding is an ordinary local, so `obj = evaluated.toLiquid()` is legal java (liqp `Sort.java:111`);
+Scala's generator binds a `val` and the same body reads `Reassignment to val obj`. That is the same
+java fact `MutableParamsTransform` handles for a PARAMETER, one node kind out — and a `for`
+generator cannot itself be a `var`, so the answer is the alias this entry already built, with `var`
+in place of `val` and no cast (the widening is what earns the cast, and this is not it).
+
+The two reasons COMPOSE into one alias rather than two: a binding that is both widened and written
+to gets `var name: T = name$e.asInstanceOf[T]`. And the alias is inside the loop BODY, so a write
+cannot leak into the next iteration — which is java's semantics exactly, since java assigns the
+binding afresh from the iterator each time round.
+
+Read with `StandardTraversal` and counting `IncDec` beside `Assign` (§3); over-approximating costs a
+`var` where a `val` would do, under-approximating costs a compile error. **liqp 57 → 56**, 0 members
+moved on any other port.
+
 *Fix kind: (a) — java's for-each, scala's for-comprehension, no library involved.*
 
 ### K8. `Type::method` is TWO java forms sharing one syntax

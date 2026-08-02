@@ -194,3 +194,54 @@ class TirEmitterSpec extends munit.FunSuite:
     val text = new TirEmitter(new Program(List(cd), syms, Xref.build(List(cd)), MemberIndex.empty)).emit
     assert(!clue(text).contains("?T"), "an inference variable reached the output")
   }
+
+  // -- an enhanced-for BINDING REASSIGNED in the body (F16) ---------------------------------------
+  //
+  // Java's `for (Object obj : array)` binding is an ordinary local and `obj = …` is legal; Scala's
+  // generator binds a `val`, so the same body reads `Reassignment to val obj` (liqp
+  // `Sort.java:111`). K7 covers the binding's declared TYPE and says nothing about its mutability.
+  // The alias is re-bound each iteration, which is java's own semantics: java assigns the binding
+  // afresh from the iterator every time round, so no write can leak into the next iteration.
+
+  private def foreachBody(assignBinding: Boolean): String =
+    val CLS  = SymId(61)
+    val M    = SymId(62)
+    val ARR  = SymId(63)
+    val BND  = SymId(64)
+    val OBJ  = TypeRef(NoPrefix, SymId(65))
+    val arrT = AppliedType(TypeRef(NoPrefix, SymId(66)), List(OBJ))
+
+    val bind = Tree.ValDef(BND, tt(OBJ), rhs = None, origin = O)
+    val write: List[Statement] =
+      if assignBinding then
+        List(Tree.Assign(Tree.Ident(BND, OBJ, O), Tree.Literal(Constant.NullC, OBJ, O), NoType, O))
+      else Nil
+    val loop = Tree.ForEach(bind, Tree.Ident(ARR, arrT, O),
+      Tree.Block(write, Tree.Ident(BND, OBJ, O), OBJ, O), NoType, O)
+    val d = Tree.DefDef(M, paramss = List(Nil), returnTpt = tt(NoType),
+      rhs = Some(Tree.Block(List(loop), Tree.Literal(Constant.UnitC, NoType, O), NoType, O)), origin = O)
+    val cd = Tree.ClassDef(CLS, parents = Nil, selfType = None, body = List(d), origin = O)
+    val syms = SymbolTable(List(
+      Symbol(CLS, "S", "demo.S", Flags(), SymId.None, TypeRef(NoPrefix, CLS)),
+      Symbol(M, "run", "demo.S#run", Flags(), CLS, MethodType(Nil, NoType)),
+      Symbol(ARR, "array", "demo.S#array", Flags(), CLS, arrT),
+      Symbol(BND, "obj", "demo.S#run$obj", Flags(), M, OBJ),
+      Symbol(SymId(65), "Object", "java.lang.Object", Flags(), SymId.None, NoType),
+      Symbol(SymId(66), "Array", "scala.Array", Flags(), SymId.None, NoType),
+    ))
+    new TirEmitter(new Program(List(cd), syms, Xref.build(List(cd)), MemberIndex.empty)).emit
+
+  test("a for-each binding WRITTEN TO in the body becomes a shadowing var") {
+    val text = foreachBody(assignBinding = true)
+    assert(clue(text).contains("for (obj$e <- "), clue(text))
+    assert(text.contains("var obj: java.lang.Object = obj$e"), clue(text))
+    // no CAST: the widening is K7's reason to re-bind and this is not it — the generator already
+    // yields the declared type.
+    assert(!text.contains("asInstanceOf"), clue(text))
+  }
+
+  test("a for-each binding that is NOT written to keeps the plain generator") {
+    val text = foreachBody(assignBinding = false)
+    assert(clue(text).contains("for (obj <- "), clue(text))
+    assert(!text.contains("obj$e"), clue(text))
+  }
