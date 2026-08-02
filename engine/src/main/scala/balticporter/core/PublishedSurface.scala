@@ -68,10 +68,20 @@ final class PublishedSurface(
     * Grouped rather than re-spelt. Rebuilding the emitter's parameter spelling here would be a
     * SECOND derivation of the key, free to drift from `TirEmitter.memberKey` — the failure this
     * whole view exists to stop. The overload set is what the name honestly identifies, and
-    * [[memberShape]] says so when its members disagree. */
+    * [[memberShape]] says so when its members disagree.
+    *
+    * A `Dropped` row is EXCLUDED, and the reason is the question this map answers: "what shape did
+    * you EMIT this member in". A member the base did not emit has no shape, so a row for one is not
+    * a quieter answer, it is a different fact — and read into the overload set it makes the set
+    * disagree with itself and turns a `Published` answer into `Unknown` for every sibling overload.
+    * The `emitted.nonEmpty` filter used to do this by accident, because every `Dropped` row a policy
+    * drop produced had an empty `emitted` column; an engine REFUSAL keeps that column, since the
+    * owning type is emitted and only the member is gone. So the predicate now says what it means. */
   private lazy val memberRows: Map[String, List[(String, PortMap.Entry)]] =
     bases.flatMap { (mod, m) =>
-      m.members.filter(_.emitted.nonEmpty).map(e => bareName(e.emitted) -> (mod, e))
+      m.members
+        .filter(e => e.emitted.nonEmpty && e.disposition != PortMap.Disposition.Dropped)
+        .map(e => bareName(e.emitted) -> (mod, e))
     }.groupMap(_._1)(_._2)
 
   /** `owner#name` from a source-map member key — the parameter spelling cut off at its `(`, which is

@@ -266,6 +266,19 @@ object PortMap:
     *                      recorded only in `decisions.tsv`, which nothing discovers and nothing
     *                      consumes.
     * @param policy        the sorted `SurfacePolicy` fingerprint of the manifest this run used.
+    * @param refusedMembers
+    *   members this run DID NOT EMIT because an engine rule could not render them — EMITTED member
+    *   key → the `shape` payload naming that rule ([[balticporter.tir.Surface.MemberShape.refusal]]).
+    *   Distinct from `dropMethods`, which is POLICY, and the distinction is the whole content of the
+    *   row for a dependent: a policy drop can be asked back, an engine refusal cannot.
+    *
+    *   Until this existed, `ENGINE-LIMITS.md` C11's drop reached the contract through
+    *   `TypeShape.secondaries`, which SUBTRACTS the constructor and says nothing — `primary=()
+    *   primaryKind=not-funnelled` with no `()` among the secondaries is indistinguishable from a
+    *   benign class with no second constructor. So a dependent's `new C()` compiled straight into the
+    *   wrong answer with nothing counting it. As a `Dropped` MEMBER row it lands in the lane
+    *   `PortMapTransform` already has for a dropped member's call sites, and the base's own record
+    *   travels with the finding.
     */
   def of(
       module: String,
@@ -281,6 +294,7 @@ object PortMap:
       typeShapes: scala.collection.Map[String, String] = Map.empty,
       memberShapes: scala.collection.Map[String, String] = Map.empty,
       policy: String = "",
+      refusedMembers: scala.collection.Map[String, String] = Map.empty,
   ): Map0 =
     // emitted FQN -> the java file it came from, so `upstreamOf` can use the ORIGIN.
     val originOf: scala.collection.Map[String, String] =
@@ -346,7 +360,21 @@ object PortMap:
 
     val droppedMembers = dropMethods.toList.sorted.map(k => Entry("member", k, "", Disposition.Dropped))
 
-    val bare = Map0(module, engine, typeEntries ++ droppedEntries ++ added ++ memberEntries ++ droppedMembers,
+    // …and the members an ENGINE RULE refused, in BOTH namespaces (§4.56). The upstream half comes
+    // from the same `upstreamOf` every other member row uses — one derivation, so a refused row and
+    // an emitted row of the same owner can never disagree about what the java was called — with the
+    // owner's java file taken from the unit's own source-map entry, since the refused member has none
+    // of its own. The EMITTED half is kept, unlike a policy drop's, because the type IS emitted:
+    // only the member is missing, so a reader who greps the emitted file has a name to grep for.
+    val refusedEntries = refusedMembers.toList.sortBy(_._1).map { (emitted, shape) =>
+      val cut  = emitted.indexWhere(c => c == '$' || c == '#')
+      val unit = if cut < 0 then emitted else emitted.substring(0, cut)
+      Entry("member", erase(upstreamOf(emitted, originOf.getOrElse(unit, ""), renames)), emitted,
+            Disposition.Dropped, shape = shape)
+    }
+
+    val bare = Map0(module, engine,
+                    typeEntries ++ droppedEntries ++ added ++ memberEntries ++ droppedMembers ++ refusedEntries,
                     policy = policy)
     sourceRoot match
       case scala.None => bare

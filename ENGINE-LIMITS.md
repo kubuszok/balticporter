@@ -959,6 +959,18 @@ predicate the emission drops with and `OmissionCheck.droppedNilaryCtors` counts 
 constructor that was never written. A port that needs the behaviour writes the constructor by hand
 (§1.5's `inject`); the engine's job is to say so.
 
+**…and the DEPENDENT could not see it at all.** The drop reached the published contract only as an
+absence from `TypeShape.secondaries`, and an absence is not a disposition: `primary=()
+primaryKind=not-funnelled` with no `()` among the secondaries is character-for-character what a
+benign class with one constructor publishes. So a dependent's `new BitmapFont()` compiled straight
+into the empty-font wrong answer with nothing counting it — C11's own failure, one module out. It is
+now a `Dropped` MEMBER row carrying `refusal=ctor-funnel/nilary-dropped(C11)` in both namespaces
+(`DESIGN.md` §8.3), which lands in the lane `PortMapTransform` already has for a dropped member's
+call sites, so a dependent's `new C()` is a counted finding whose message says the fix is §1(a) IN
+THE BASE and not a manifest key anywhere. Measured: libgdx-core's map 19606 -> 19607 rows, one row,
+and 0 -> 0 on every check of all 13 ports — no dependent in the corpus calls it, which is exactly why
+nothing had ever noticed.
+
 **…and saying so means SAYING IT WHERE THE QUESTION IS ASKED** (§4.575). A count in `findings.tsv`
 answers an agent holding the run directory; the agent this engine has is reading `BitmapFont.scala`
 in another repository, and its question — *why is there no `def this()`* — has no grep. So

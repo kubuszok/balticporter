@@ -712,6 +712,9 @@ final case class PortRun(
       // `Fresh` and WRONG, which is D4's failure re-entering through the artifact built to prevent
       // it. The same value `ManifestAgreement` compares, not a new derivation (§1.5).
       policy        = surfacePolicyFingerprint,
+      // …and the members this run REFUSED. A policy drop is already a `Dropped` row; an engine
+      // refusal was published nowhere at all — see `refusedMembers` for what that cost.
+      refusedMembers = refusedMembers(program, translated),
     )
     // …and written only when the ARTIFACT LAYER IS ON, like every other file this run produces.
     //
@@ -1066,6 +1069,37 @@ final case class PortRun(
     * says which constructor, in the code, so the reader of that `def this` learns that the
     * arguments java passed to `super` are gone and why (`ENGINE-LIMITS.md` C3: padding is a guess
     * everywhere but the JDK throwables). */
+  /** The members an ENGINE RULE refused to emit, for the published contract — EMITTED member key →
+    * the `shape` payload naming the rule.
+    *
+    * One entry today, `ENGINE-LIMITS.md` C11's nilary constructor, and the shape of the hole it
+    * closes is why this is a member row rather than another type-shape key. The drop DID reach the
+    * contract before, through `TypeShape.secondaries`, which SUBTRACTS the constructor — so a
+    * dependent read `primary=() primaryKind=not-funnelled` with no `()` among the secondaries, which
+    * is precisely what a benign class with one constructor publishes. `secondaries` is write-only for
+    * this question: an absence is not a disposition, and `new C()` in a dependent therefore compiled
+    * into the empty-font wrong answer with nothing counting it (§4.4 — it compiles and means
+    * something else).
+    *
+    * As a `Dropped` MEMBER row it lands in the lane `PortMapTransform` already has for a dropped
+    * member's call sites, with no new consumer and no second artifact; the `refusal` key is what
+    * keeps it apart from a POLICY drop, which is a different §1 kind and a different fix.
+    *
+    * Derived from `CtorFunnel.Plans.droppedNilaryCtor` through the run's own `Surface` — the same
+    * function the emitter drops with, `OmissionCheck` counts from and `recordDroppedNilaryCtors`
+    * records; four readings, one answer. */
+  private def refusedMembers(program: Program, translated: PortRun.Translated): Map[String, String] =
+    val plans = CtorFunnel.Plans(program, Some(translated.surface))
+    emittedClasses(program, translated).flatMap { cd =>
+      plans.droppedNilaryCtor(cd).flatMap { _ =>
+        program.symbolOf(cd.symbol).map(_.fullName).filter(_.nonEmpty).map { owner =>
+          s"$owner#<init>()" ->
+            balticporter.tir.Surface.render(
+              balticporter.tir.Surface.MemberShape(refusal = "ctor-funnel/nilary-dropped(C11)"))
+        }
+      }
+    }.toMap
+
   /** every class this run EMITS, nested ones included — the domain every decision recorder below
     * ranges over, spelled once so two of them cannot disagree about which classes are this module's
     * (`ENGINE-LIMITS.md` D2). */
@@ -1123,7 +1157,6 @@ final case class PortRun(
     * matches the `dropMethods` rows in `recordPolicyDecisions`, which are the other `DroppedMember`
     * decider and key the same way. */
   private def recordDroppedNilaryCtors(program: Program, translated: PortRun.Translated): Unit =
-    given Program = program
     val plans = CtorFunnel.Plans(program, Some(translated.surface))
     emittedClasses(program, translated).foreach { cd =>
       plans.droppedNilaryCtor(cd).foreach { d =>

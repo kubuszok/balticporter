@@ -132,6 +132,98 @@ class PortMapTransformSpec extends munit.FunSuite:
     assertEquals(clue(phase.findings).filter(_.issue == PortMapTransform.Issue.Ambiguous), Nil)
   }
 
+  // -------------------------------------------------------------------------
+  // an ENGINE REFUSAL is a `Dropped` MEMBER row, not an absence from `secondaries`
+  // -------------------------------------------------------------------------
+
+  /** A base whose nilary constructor `ENGINE-LIMITS.md` C11 refuses, and a dependent that calls it.
+    *
+    * `Font()` delegates WITH ARGUMENTS in front of a class whose primary is scala's own implicit
+    * nilary one, so it cannot be emitted; `new Font()` in the port therefore builds an object java
+    * could not build (§4.4 — it compiles and means something else). The base published that fact only
+    * as an ABSENCE from `secondaries`, which is indistinguishable from a class that never had a
+    * second constructor: `primary=() primaryKind=not-funnelled` either way. */
+  private val refusedBase = Map(
+    "p/Font.java" ->
+      """package p;
+        |public class Font {
+        |  public int size; public String name;
+        |  public Font()                      { this(seed(), "d"); }
+        |  public Font(int size, String name) { this.size = size; this.name = name; }
+        |  static int seed() { return 12; }
+        |}
+        |""".stripMargin,
+  )
+
+  private val refusedCaller = Map(
+    "q/Uses.java" ->
+      """package q;
+        |import p.Font;
+        |public class Uses {
+        |  public Font make()     { return new Font(); }
+        |  public Font sized()    { return new Font(3, "x"); }
+        |}
+        |""".stripMargin,
+  )
+
+  /** the base's map as `PortMap.of` assembles one for a run that refused `Font()`. */
+  private def refusedMap = PortMap.of("base-mod", "eng", List("p.Font"),
+    balticporter.tir.SrcMap.Recording(List(balticporter.tir.SrcMap.Entry(
+      "p.Font", "p.Font#<init>(int,String)", "def", 1, 2, "p/Font.java", 5, "d0"))),
+    dropTypes = Set.empty, dropMethods = Set.empty, injectedFqns = Set.empty, bodyKeys = Set.empty,
+    renames = Map.empty,
+    refusedMembers = Map("p.Font#<init>()" ->
+      balticporter.tir.Surface.render(
+        balticporter.tir.Surface.MemberShape(refusal = "ctor-funnel/nilary-dropped(C11)"))))
+
+  test("a dependent's `new C()` on a REFUSED constructor is a counted call-site finding") {
+    // the row itself, in BOTH namespaces: the upstream half is the join key a dependent looks up by,
+    // the emitted half is what a reader greps the base's output for — the TYPE is emitted here and
+    // only the member is missing, which is what makes an emitted name meaningful at all (§4.56).
+    val row = refusedMap.members.find(_.upstream == "p.Font#<init>()")
+      .getOrElse(fail(s"no refused row in ${refusedMap.members.map(_.upstream)}"))
+    assertEquals(row.disposition, PortMap.Disposition.Dropped)
+    assertEquals(row.emitted, "p.Font#<init>()")
+    assertEquals(row.memberShape.refusal, "ctor-funnel/nilary-dropped(C11)")
+
+    val (phase, _) = run(model(refusedBase, refusedCaller), List(refusedMap))
+    val dropped = phase.findings.filter(_.issue == PortMapTransform.Issue.DroppedMember)
+    assertEquals(clue(dropped).map(f => (f.symbol, f.base)), List(("p.Font#<init>()", "base-mod")))
+    assert(clue(dropped.head.origin.javaPath).endsWith("Uses.java"))
+    // …and the message says which of §1's three kinds the fix is, which is the reader's FIRST
+    // question and the one a bare `Dropped` cannot answer: a policy drop can be asked back, an
+    // engine refusal cannot (§4.45).
+    assert(clue(dropped.head.detail).contains("ctor-funnel/nilary-dropped(C11)"), dropped.head.detail)
+    assert(dropped.head.detail.contains("§1(a) IN THE BASE"), dropped.head.detail)
+
+    // the PARAMFUL constructor beside it is untouched. Both are `p.Font#<init>` to a TIR symbol, so
+    // without arity separating them the base's refusal would be reported against the call the port
+    // is supposed to keep.
+    assertEquals(clue(phase.findings).filter(_.issue == PortMapTransform.Issue.Ambiguous), Nil)
+    assertEquals(phase.findings.size, 1)
+  }
+
+  test("NEGATIVE: with the constructor NOT refused, the same call site reports nothing") {
+    // the guard is a disposition, not the shape of the key: drop the refusal and the finding goes.
+    val clean = PortMap.of("base-mod", "eng", List("p.Font"),
+      balticporter.tir.SrcMap.Recording(List(balticporter.tir.SrcMap.Entry(
+        "p.Font", "p.Font#<init>(int,String)", "def", 1, 2, "p/Font.java", 5, "d0"))),
+      Set.empty, Set.empty, Set.empty, Set.empty, Map.empty)
+    val (phase, _) = run(model(refusedBase, refusedCaller), List(clean))
+    assertEquals(clue(phase.findings), Nil)
+  }
+
+  test("a POLICY drop's message stays exactly what it was — the refusal key is what separates them") {
+    val policy = PortMap.of("base-mod", "eng", List("p.Font"),
+      balticporter.tir.SrcMap.Recording(Nil), Set.empty,
+      dropMethods = Set("p.Font#<init>()"), injectedFqns = Set.empty, bodyKeys = Set.empty,
+      renames = Map.empty)
+    val (phase, _) = run(model(refusedBase, refusedCaller), List(policy))
+    val dropped = phase.findings.filter(_.issue == PortMapTransform.Issue.DroppedMember)
+    assertEquals(clue(dropped).map(_.symbol), List("p.Font#<init>()"))
+    assert(!dropped.head.detail.contains("§1(a) IN THE BASE"), dropped.head.detail)
+  }
+
   test("the same program with NO map produces nothing — the phase is a total no-op unconfigured") {
     val (phase, out) = run(model(baseArray, dependent), Nil)
     assertEquals(phase.findings, Nil)

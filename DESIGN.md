@@ -2154,6 +2154,27 @@ the parent's companion ACTUALLY DELIVERS, and a static the base renamed or dropp
 base's emitted output. `export P.*` against a type whose companion the base did not emit is an error
 outright.
 
+**A member the ENGINE REFUSED is a `Dropped` MEMBER ROW — `secondaries` was write-only for it.**
+The §8.3 table above gives the type row a `secondaries` key and nothing that says why one is
+*missing*. `ENGINE-LIMITS.md` C11's nilary constructor is exactly that: `TirEmitter.secondariesOf`
+SUBTRACTS it, so a dependent reads `primary=() primaryKind=not-funnelled` with no `()` among the
+secondaries — which is character-for-character what a benign class with one constructor publishes. An
+absence is not a disposition, and `new C()` in a dependent therefore compiled into the wrong answer
+(§4.4's shape: valid Scala meaning something else) with nothing counting it. The refusal is now a
+`member` row with `Disposition.Dropped` and a `shape` carrying one key, `refusal=` — the ENGINE RULE
+in the `Reason` grammar the decision log uses — so it lands in the lane `PortMapTransform` already
+has for a dropped member's call sites, with no new consumer and no second artifact. `refusal` is what
+keeps it apart from a POLICY drop, which is the reader's first question and a different §1 kind: a
+policy drop can be asked back, an engine refusal cannot (the base ships it by hand, §1.5's `inject`).
+
+Two consequences that are not optional. The row carries BOTH namespaces where every other `Dropped`
+row carries only the upstream one, because here the TYPE IS EMITTED and only the member is missing —
+there is a name to grep the base's output for (§4.56). And `PublishedSurface.memberRows` must now
+EXCLUDE `Dropped` rows explicitly: it filtered on `emitted.nonEmpty`, which happened to exclude every
+policy drop and does not exclude this one, and a shapeless row read into an overload set makes the
+set disagree with itself — turning a `Published` answer into `Unknown` for every sibling overload of
+that name. A row published to remove a blind spot would have created one, at the members beside it.
+
 **The base's map is discovered over a SEARCH PATH, not one root.** `PortMap.reportRoot` is the
 parent of THIS run's report directory, which is exactly right inside this repository and useless to
 §4.45's consumer: an agent in another repository has no tree of that shape, and its base's map comes

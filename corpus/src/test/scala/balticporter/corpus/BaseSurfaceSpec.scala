@@ -355,6 +355,23 @@ class BaseSurfaceSpec extends munit.FunSuite:
     assertEquals(s.gaps, Nil)
   }
 
+  test("a `Dropped` member row is not a SHAPE — it may not make the overload set disagree") {
+    // A shape answers "what did you EMIT this member as", and a member the base did not emit has
+    // none. Read into the overload set anyway, one refused constructor makes every sibling overload
+    // of that name answer `Unknown` — a row published to REMOVE a blind spot creating one, at the
+    // members beside it. The `emitted.nonEmpty` filter used to hide this by accident: a policy drop
+    // leaves that column empty, and an ENGINE refusal keeps it, because the owning type IS emitted.
+    val (p, root) = model(privateBase, privateHeir)
+    val rows = List(
+      memberRow("p.Base#touch()", "private"),
+      PortMap.Entry("member", "p.Base#touch(int)", "p.Base#touch(int)", PortMap.Disposition.Dropped,
+                    shape = Surface.render(Surface.MemberShape(refusal = "some-rule(X1)"))),
+    )
+    val s = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> withMembers(contract("base-mod", "p.Base" -> Surface.TypeShape(form = "class")), rows)))
+    assertEquals(s.memberShape(memberId(p, "p.Base#touch")).published.map(_.vis), Some("private"))
+  }
+
   test("…and DISAGREEING overloads of one name are Unknown, never one of them picked") {
     val (p, root) = model(privateBase, privateHeir)
     val rows = List("private", "public").zipWithIndex.map { (v, i) =>

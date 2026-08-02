@@ -19604,3 +19604,4 @@ member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int,Class)		Dro
 member	com.badlogic.gdx.utils.Queue#<init>(int,Class)		Dropped	-		0		
 member	com.badlogic.gdx.utils.SnapshotArray#<init>(Class)		Dropped	-		0		
 member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int,Class)		Dropped	-		0		
+member	com.badlogic.gdx.graphics.g2d.BitmapFont#<init>()	sge.graphics.g2d.BitmapFont#<init>()	Dropped	-		0		refusal=ctor-funnel/nilary-dropped(C11)

@@ -192,6 +192,21 @@ object Surface:
       /** `class` | `companion`. A Java static lands in the companion; a dependent emitting
         * `Base.m()` needs the BASE's answer, not its own. */
       placement: String = "class",
+      /** THE ONE KEY A `Dropped` MEMBER ROW CARRIES: the ENGINE RULE that refused to emit it, in the
+        * `Reason` grammar the decision log uses (`ctor-funnel/nilary-dropped(C11)`).
+        *
+        * Every other key here describes an emitted declaration, and a refused member has none. What a
+        * consumer needs instead is WHOSE DECISION IT WAS, because that decides which of §1's three
+        * kinds the fix is and therefore which repository it lives in: a member absent from
+        * `dropMethods` is the base's POLICY and the dependent can ask for it back, while a member the
+        * engine could not render is a §1(a) refusal the base must work around by hand (§1.5's
+        * `inject`). Empty for every row a policy drop produced, which is the ordinary case.
+        *
+        * Rule-shaped and therefore whitespace-free on purpose: the `k=v` grammar quotes a value
+        * containing whitespace, and a sentence here would put a quoted paragraph in a TSV column. The
+        * sentence belongs in `decisions.tsv` and in the porter note, both of which the base already
+        * writes. */
+      refusal: String = "",
   )
 
   /** '''NOT carried, and named rather than left to be discovered.''' §8.3's schema listed a
@@ -233,6 +248,7 @@ object Surface:
     KeyValues.render(List(
       Option.when(m.name.nonEmpty)("name" -> m.name),
       Option.when(m.placement != d.placement)("placement" -> m.placement),
+      Option.when(m.refusal.nonEmpty)("refusal" -> m.refusal),
       Option.when(m.vis != d.vis)("vis" -> m.vis),
     ).flatten.sortBy(_._1))
 
@@ -267,6 +283,7 @@ object Surface:
       name      = kv.getOrElse("name", ""),
       vis       = kv.getOrElse("vis", "public"),
       placement = kv.getOrElse("placement", "class"),
+      refusal   = kv.getOrElse("refusal", ""),
     )
 
   /** A descriptor from its own rendering. Not `Descriptor.total`: a slot the publisher could not

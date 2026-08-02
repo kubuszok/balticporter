@@ -274,7 +274,8 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
                 if e.disposition == PortMap.Disposition.Dropped then
                   out += PortMapTransform.Finding(PortMapTransform.Issue.DroppedMember, who, e.upstream,
                     "the base's map records it Dropped: the base emits no such member, so this call " +
-                      "resolves to nothing in the module it compiles against",
+                      "resolves to nothing in the module it compiles against" +
+                      PortMapTransform.refusalOf(e),
                     origin)
                 else if e.body then
                   out += PortMapTransform.Finding(PortMapTransform.Issue.SubstitutedBody, who, e.upstream,
@@ -324,6 +325,24 @@ object PortMapTransform:
     def report: CheckReport.Finding =
       CheckReport.Finding("port-map", issue.toString, symbol,
         CheckReport.relativise(origin.javaPath), origin.line, s"$detail (base: $base)")
+
+  /** THE BASE'S OWN RECORD, where the drop was an ENGINE REFUSAL rather than a policy decision.
+    *
+    * The two are the same `Disposition` and a different §1 kind, which is exactly the distinction a
+    * reader has to make first (§4.45). A member missing because the base's manifest drops it is
+    * (b) — the dependent can ask for it back, or supply a replacement. A member missing because an
+    * engine rule could not render it is (a) IN THE BASE, and no manifest key anywhere changes that;
+    * what the base can do is ship it by hand (§1.5's `inject`), and what this module can do is stop
+    * calling it. The rule id travels so the reader can find the entry in `ENGINE-LIMITS.md` and the
+    * matching row in the base's own `decisions.tsv`, which carries the sentence.
+    *
+    * Empty for every ordinary policy drop, so the message is unchanged where nothing new is known. */
+  private[transform] def refusalOf(e: PortMap.Entry): String =
+    val r = e.memberShape.refusal
+    if r.isEmpty then ""
+    else s" — and NOT by policy: the base's ENGINE could not render it (`$r`), so no manifest key " +
+      "here or there brings it back. §1(a) IN THE BASE: the fix is a hand-written replacement in " +
+      "that module (§1.5's `inject`); in this one, stop calling it"
 
   /** Which of §1's three kinds each issue's fix is. A finding whose reader cannot tell (a) from (b)
     * from (c) costs a full investigation, and this check's whole value is arriving EARLY — an early
