@@ -385,6 +385,14 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
     `just decision-counts` is the size, which nothing else prints.
 - **Change one thing, then measure.** Two changes measured together cost a full cycle to untangle
   and tell you nothing about either.
+- **A DRY RUN of one phase is not a measurement of the pipeline.** Running a single phase over a
+  library — the cheap way to price a policy before enabling it — measures that phase against
+  UNTRANSFORMED input, and every other surface phase in the port is a phase that has already moved
+  what it reads. Quote such a number as what it is. Measured: a warning lane priced at **1** by a
+  dry run reads **25** in the live pipeline, because a `TypeRedirectTransform` earlier in the list
+  gives 24 more classes an ancestor outside the program and the warning's criterion is exactly
+  "ancestry leaves the program" (`ENGINE-LIMITS.md` CT7's correction). Nothing was wrong with the
+  criterion or the dry run; what was wrong was reading one as the other.
 - **Record what regressed and why**, in that library's `PROGRESS.md` section under "Do NOT retry". A
   measured failure is a result; re-deriving it later is waste.
 - State counts as `before->after` in the commit subject.

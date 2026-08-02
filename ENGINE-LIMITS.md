@@ -3791,6 +3791,20 @@ reproduced to the row), and over core PLUS its own test source set:
 | never constructed **and** never NAMED anywhere in the program | 60 | yes (+1) |
 | never constructed | 74 | yes (+1) |
 
+**CORRECTION, measured by the fourth replay: the shipped criterion's ceiling on this port is 25, not
+1, and the table above is a measurement of ONE PHASE rather than of the pipeline.** The dry run ran
+the globals phase alone. In the LIVE pipeline `TypeRedirectTransform` re-points
+`com.badlogic.gdx.utils.Disposable` at `java.lang.AutoCloseable` (`PROGRESS.md` §11.12's P1), so 24
+more threaded classes acquire an ancestor the program does not declare and meet the second criterion:
+every one of the 25 reads `extends java.lang.AutoCloseable which this program does not declare`, and
+every one is a public-API leaf — `Stage`, `AssetManager`, `ModelBatch`, the six tiled renderers —
+i.e. the "your USERS construct this" case, correctly warned and correctly not refused. anim8 adds 5
+(its PNG writers) and vfx 16. Nothing about the criterion is wrong; what is wrong is deriving a
+lane's size from a run that omits the phases that decide ancestry. **A criterion measured against one
+phase is not a measurement of the pipeline** — and the conclusion the entry draws is unchanged, since
+`tests.tsv`'s DID-NOT-RUN gate is still the detector of record and the relaxed criteria are still not
+usable.
+
 The reason is one line of upstream Java: `public class AnimationControllerTest {` — a JUnit test class
 **extends nothing**. Its `extends munit.FunSuite` is minted by `TestFrameworkTransform`, which runs
 AFTER this phase, so at the moment the closure asks, the suite's ancestry has not left the program
@@ -3904,6 +3918,80 @@ and byte-identical in the reverted run** — gltf's committed state is 7 errors,
 none. A dependent's error count is only evidence about a change once it has been diffed against that
 dependent's own baseline, and the two libgdx-dependent lanes whose counts DID move are vfx (0 → 43)
 and screens (0 → 16).
+
+### CT9. A dependent whose OWN declarations sit inside a base's CLAIMED namespace cannot name one — and a REFUSED merge silently runs only ONE of the two instances — **OPEN; it is what blocked the fourth replay, and the base itself is finished**
+
+**Title, for renumbering: "a dependent cannot name a per-declaration key inside a base's claimed
+namespace, and a refused merge runs one instance of two".** OPEN. (a) engine, both faces.
+
+Found by the fourth P5 replay, which is the first one that could get this far: CT5, CT6, CT7 and CT8
+are all closed, **libgdx-core reads 0 scalac errors with the whole census reproduced to the row**,
+and `gdx-vfx` — the dependent CT8 was written for — **merged its `ContextHolderExtension` cleanly on
+the first production run**. libgdx-test did not, and the two faces below are why. Both are (a)
+engine; neither is reachable from any manifest key.
+
+**Face A — the `governs` screen refuses a dependent's key for a type the dependent DECLARES and the
+base never emits.** CT7's answer is `selfSupplied`, keyed by TYPE FQN, and CT8's answer is that a
+dependent writes it as a `ContextHolderExtension`. libGDX's own suite needs exactly one entry:
+
+```
+selfSupplied = Map("com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest" -> "sge.SgeTestFixture.testSge()")
+```
+
+`SurfaceFold.intrusion` refuses it, fatally:
+
+```
+manifest 0 -> 1   SurfaceIntrusion: globals->implicits
+  this module's `globals->implicits` adds "com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest",
+  which is inside `libgdx-core`'s declared namespace and which `libgdx-core` emits mechanically
+policy   0 -> 1   the extension names a holder neither it nor any of its bases declares
+```
+
+Both sentences are false about this program and the screen cannot know it. libGDX's test module
+declares its suites **inside `com.badlogic.gdx`** — `AnimationControllerTest` shares a package with
+`BaseAnimationController`, which the base does emit — so no prefix separates the two modules, and the
+base never parses `gdx/test` at all: *nothing stands at that name in the base's output*, which is the
+admission the screen already states in words. The screen tests a different thing — `does the base
+DROP it` — and a drop is a manifest fact while emission is a run fact. **The engine already solved
+this once, one artifact over**: `ManifestAgreement`'s substitution half works from UNIT ORIGINS
+precisely because a prefix cannot separate these two modules, and `LibgdxPolicy.core`'s own scaladoc
+has said so since it was written. The screen never got the same treatment.
+
+Note WHICH dependent this hits, because it is the whole shape: **a dependent with a namespace of its
+own passes.** vfx's two `sites` keys are `com.crashinvaders.vfx.*`, outside the base's claim, and its
+extension merged with `manifest` at 0. The refused case is exactly *a module whose own declarations
+live in the base's namespace* — a library's own test module, a split package, a
+`com.foo.internal.impl` sibling shipped as a second artifact.
+
+The three port-side exits were each walked to the wall and every one is worse than the wall:
+
+| exit | what it actually does |
+|---|---|
+| declare the entry in the BASE manifest | `PolicyBinder.bindType` cannot resolve a `gdx/test` type in a run that parses only `gdx/src`, so it is a `NeverMatched` `policy` finding on libgdx-core AND on all five libgdx-dependent lanes — six permanently unclearable rows, which is the noise floor CLAUDE.md warns about in `beanPropertyPairs`' own refusal note |
+| narrow the base's `governs` | there is no prefix: `com.badlogic.gdx.graphics.g3d.utils` holds a main type and a test type |
+| add the suite to the base's `dropTypes` | it is a lie that also lands the suite in `dropped-types.tsv`, which would classify every failure in it as a DERIVED expected failure |
+
+**Face B — a REFUSED merge runs one instance, not two, and nothing says so.** `Pipeline.order` opens
+with `val byName = phases.map(p => p.name -> p).toMap` and returns `out.toList.map(byName)`, so two
+same-name instances collapse to the LATER one. `SurfaceFold` appends a refused pair rather than
+merging it (`phases = phases :+ p`) — which is correct and is what the pre-merge behaviour promised —
+and the pipeline then silently drops the base's instance and runs the dependent's.
+
+Measured on exactly that: with the merge refused, libgdx-test ran only its own extension-only
+instance, whose `effectiveHolders` is empty and whose `run` returns its input. So **the base's entire
+holder never ran for that module**: the suite emitted with NO context clause and NO `given` member,
+`new Model()` failed at 2 scalac errors, and `decisions.tsv` held **0** `globals->implicits` rows. A
+whole shared-surface policy vanished from one module's pipeline with no error, no check count and no
+finding — the fatal `SurfaceIntrusion` beside it is about a DIFFERENT thing and would be reported
+identically if the pipeline had been correct. This is worse than the refusal it accompanies, and it
+is not specific to this phase: any refused merge, for any `MergeablePolicy`, has run one instance
+instead of two since merging existed.
+
+*Fix kind: (a) engine, both. Face A is a screen that must ask what the base EMITS rather than what it
+DROPS — the base's published port map is where that answer already lives (`ManifestAgreement.dynamic`
+holds `BasePort`s), which makes it a decision for `DESIGN.md` and its own measure cycle rather than a
+line in `SurfaceFold`. Face B is `Pipeline.order` keying phases by NAME; the fix is to order
+INSTANCES, and it changes what every refused pair does, so it is measured on its own.*
 
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 

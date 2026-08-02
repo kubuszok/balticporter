@@ -2561,7 +2561,7 @@ error, `sites` speaks about reads, and `attach = "method"` puts the clause in th
 the cost. And do not spend a cycle re-deriving the numbers above for the base: it is finished and the
 shim fix is the recorded shape.
 
-**CT7 AND CT8 ARE NOW CLOSED, AND P5 IS READY FOR ITS FOURTH AND FINAL REPLAY.** Both mechanisms
+**CT7 AND CT8 ARE NOW CLOSED, AND P5 REPLAYED A FOURTH TIME.** Both mechanisms
 shipped DEFAULT-OFF and were measured alone: `just measure-all` exit 0, all ten lanes 0 members
 changed, every check count identical, no baseline moved, on each commit.
 
@@ -2589,18 +2589,92 @@ parent is minted by a later phase; the two relaxed criteria that do see it read 
 `ENGINE-LIMITS.md` CT7. **The detector of record for this class of loss remains `tests.tsv`'s
 DID-NOT-RUN gate**, which is what found it.
 
-**What the fourth replay has to do, and it is all PORT-SIDE.** The engine owes nothing more:
+**THE FOURTH REPLAY RAN THE WHOLE PORT-SIDE LIST AND IS REVERTED ON ONE MORE ENGINE GAP —
+`ENGINE-LIMITS.md` CT9.** It is the first replay that reached the DEPENDENTS with a policy in hand,
+and what it found there divides cleanly: the base is finished, CT8's mechanism works in production,
+and the one dependent it does not work for is libGDX's own test module.
 
-| file | port | what |
+**The base DELIVERED again, and the census reproduced to the row.** The §11.12 config verbatim
+(holder `com.badlogic.gdx.Gdx`, injected `sge.Sge`, the 11-field path map with the five `gl*`
+two-hop through `graphics`, `attach = class`, `reader = summon`, `boundary = refuse`, the four
+`Graphics#gl2x` bean pairs, the two `sites` `lazy-init` keys), plus the recorded
+`Pools.registerDefaults()(using sge.Sge)` shape:
+
+| | third replay (delivered) | fourth replay |
+|---|---:|---:|
+| libgdx-core scalac errors | **0** | **0** |
+| `context-seam` — the BOUNDARY | 19 | **19** — 14 captured, 3 residual-global, 2 deferred-init, 0 frozen, 0 lost-clause |
+| `context-seam` — the WARNING lane | (did not exist) | **+25 `unconstructed-thread`**, so the check reads **44** |
+| blast (`just members-unchanged`) | 1,807 | **1,807** |
+| emitted `(using sge.Sge)` clauses | 600 in 176 files | **603 in 178 files** |
+| `policy` / `omissions` | 2 / 65 | **2 / 65** |
+| every other check | baseline | **identical** |
+| decisions | 3,890 | **3,893** (`DeferredInit` 2, `RetypedSignature` 1,246) |
+
+**The 25 warnings are P1's redirect, not a new boundary, and the arithmetic is worth keeping.** CT7
+measured this lane at **1** (`RemoteInput`) and called that its ceiling — but that dry run was the
+globals phase ALONE. In the LIVE pipeline `disposableRedirect` re-points libGDX's own `Disposable`
+at `java.lang.AutoCloseable`, so 24 more threaded classes acquire an ancestor this
+program does not declare and meet the warning's second criterion. Every one of the 25 says
+`extends java.lang.AutoCloseable which this program does not declare`, and every one is a leaf of
+the public API — `Stage`, `AssetManager`, `ModelBatch`, the six tiled renderers — which is the
+"your USERS construct this" case the classification names and not a defect. **A criterion measured
+against one phase is not a measurement of the pipeline**; the honest ceiling on this port is 25, and
+`context-seam` reads 19 + 25 = 44. anim8 adds 5 of the same shape (its five PNG writers) and vfx 16.
+
+**CT8's `ContextHolderExtension` MERGED ON ITS FIRST PRODUCTION RUN.** vfx declared the extension
+CT8 was designed for — `holder = "com.badlogic.gdx.Gdx"`, two `sites` keys in its own namespace —
+and `manifest` stayed at **0**: no `SurfaceDivergence`, no `SurfaceIntrusion`, the per-declaration
+half folded into the base's holder at the base's pipeline position.
+`VfxFrameBuffer#tmpCam` FIRED as a `deferred-init` seam and its scalac error went with it —
+**vfx `EngineGap` 2 → 1**. The other key is a `never matched` finding and the report is right:
+`VfxGLUtils#<clinit>` READS the holder, it does not initialise a static from a threaded
+construction, so `lazy-init` is the wrong site kind there and its exit is `residual-global`.
+
+| lane | fourth replay | classification |
 |---|---|---|
-| `libgdx-test`'s manifest | libgdx-test | a `selfSupplied` entry per generated suite that the closure threads, each naming the fixture expression |
-| a `SgeTestFixture`-shaped noop `src/` file | libgdx-test | the fixture the entries above call — application/graphics/audio/files/input/net all noop, sge's own shape |
-| `sge/utils/Pools.scala` | libgdx-core | the recorded `def registerDefaults()(using sge.Sge)` shape; the WHOLE block moves (see above) |
-| ~4 hand-written `src/` files | screens | the 16 errors: `Gdx.gl*` reads and constructions of threaded types, same category as `Pools` |
-| ~2 hand-written `src/` files + a fixture | vfx | 41 of the 43; plus a `globals-to-implicits` EXTENSION in vfx's manifest carrying `sites` for its own two subjects (`VfxGLUtils#<clinit>`, `VfxFrameBuffer#tmpCam`) — the thing CT8 just made writable |
+| libgdx-core | **0 errors**, census above | DELIVERED |
+| **libgdx-test** | **BLOCKED — CT9.** `manifest` 0 → **1 FATAL**, `policy` 0 → 1, 2 scalac errors, suite still 212 / 5 with **5 DID NOT RUN** | (a) engine |
+| **ashley — the D2 gate** | **0 members changed on BOTH source sets**, `context-seam` 0 on both, 0 errors, 108 / 2 + 2 skips, every check identical | HELD |
+| anim8 | **0 errors, 23 passing** unchanged; blast 192; 5 seams, all `unconstructed-thread` | fine |
+| gltf | **7 errors / `signature` 1 — PRE-EXISTING**, byte-identical to its own baseline; blast 208 main / 0 test | non-finding, as CT8 recorded |
+| vfx | 42 errors = **1 `EngineGap` + 41 `Unmapped`**; `context-seam` 20 (1 deferred-init, 3 residual-global, 16 warnings); `manifest` 0 | port-side + the extension WORKS |
+| screens | 16 errors, **all `Unmapped`, 0 `EngineGap`**; `context-seam` 10 | port-side |
 
-The two remaining `EngineGap` errors in vfx were CT8 and are now a manifest entry. gltf's 7 stay
-PRE-EXISTING and are not this enablement's (diff a dependent against its OWN baseline, §5.1).
+**What CT9 is, in one line: a dependent whose OWN declarations live inside the base's `governs`
+claim may not name one.** libGDX's suite is that dependent —
+`com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest` shares a package with
+`BaseAnimationController` — so the one `selfSupplied` entry CT7 exists to make writable is refused as
+a `SurfaceIntrusion` before it can be applied. A dependent with a namespace of its own is unaffected,
+which is why vfx merged and libgdx-test did not. Face B of the same entry is worse and was found by
+the same run: a REFUSED merge leaves two same-name instances in the pipeline and `Pipeline.order`
+keys phases by NAME, so only the later one runs — the base's whole holder silently did not run for
+libgdx-test (0 `globals->implicits` decisions, the suite emitted with neither a clause nor a
+`given`). Numbers, the three port-side exits and why each is worse than the wall: `ENGINE-LIMITS.md`
+CT9.
+
+**So the enablement is REVERTED a fourth time, byte-for-byte** — `just measure-all` exit 0, all 13
+ports 0 members changed, every check count identical, `context-seam` absent from every report, every
+suite outcome unchanged.
+
+**Do NOT retry it as a policy exercise.** Everything port-side is now MEASURED and none of it is the
+blocker: the base's config, the `Pools.registerDefaults` shape, vfx's extension and the fixture
+expression all work. The three exits for CT9 Face A — put the entry in the base manifest, narrow
+`governs`, drop the suite — are each measured worse in `ENGINE-LIMITS.md` CT9, and the first of them
+buys a green run with six permanently unclearable `policy` rows, which is the noise floor this file
+already warns about one section up.
+
+**What the FIFTH replay needs, and it is two engine commits and then the port-side list below.**
+
+| | what |
+|---|---|
+| CT9 Face A | the `governs` screen must admit a subject the base does not EMIT, not merely one it DROPS — the base's published port map is where that already lives (`DESIGN.md` decision + its own 13-port cycle) |
+| CT9 Face B | `Pipeline.order` orders INSTANCES, not names; changes what every refused merge does, so it is measured alone |
+| `libgdx-test`'s manifest | ONE `selfSupplied` entry — `AnimationControllerTest`, the only threaded suite of the 221 emitted tests; the closure reaches it through `new Model()` |
+| a fixture `src/` file | libgdx-core's `src/test/scala`, plus that directory on the `gdx-test-measure` compile line (vfx and screens lanes already compile theirs). The suite touches NO service — three tests are a keyframe binary search, two drive the animation state machine, and `Model` carries the clause for propagation and dereferences it nowhere — so an ABSENT service is louder than a noop that answers |
+| `sge/utils/Pools.scala` | the recorded `def registerDefaults()(using sge.Sge)` shape; the WHOLE block moves (see above) |
+| ~4 hand-written `src/` files | screens — the 16 `Unmapped` errors: `Gdx.gl*` reads and constructions of threaded types |
+| 1 hand-written suite + the `<clinit>` body | vfx — the 41 `Unmapped`, plus its `MethodBodyTransform` body, which constructs a now-threaded `DefaultVfxGlExtension` from an object initialiser (the last `EngineGap`, and it is the PORT's own Scala) |
 
 ### 11.13 D5j — the demand-derived JDK surface, as measured
 
