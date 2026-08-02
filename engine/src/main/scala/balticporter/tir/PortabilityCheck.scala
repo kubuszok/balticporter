@@ -64,6 +64,18 @@ object PortabilityCheck:
       "matcher algebra, so each `assertThat(x, is(y))` has to become the assertion it means"),
     Rule("java.lang.System#getProperty", "system properties are JVM-only", exactMember = true),
     Rule("java.util.zip.", "java.util.zip is JVM-only"),
+    // `ServiceLoader` is JVM-only twice over, and the SECOND reason is the one nothing else can
+    // see. It is reflective instantiation, so Scala.js / Native cannot provide it — and it reads a
+    // `META-INF/services` FILE, which this engine does not emit: the pipeline produces `.scala` and
+    // nothing else, so the providers are constructed from OUTSIDE the closure (CLAUDE.md §1's
+    // "a class a FRAMEWORK instantiates has no caller to change") off a resource no phase carries.
+    // With that file absent the loader finds zero providers, the registration silently no-ops, and
+    // there is no compile error, no other check count and no finding. This rule is not the fix —
+    // the port has to ship the file by hand, and a rename moves both its NAME and its CONTENTS —
+    // but it is what makes the dependence a NUMBER rather than a thing someone has to remember.
+    Rule("java.util.ServiceLoader", "reflective provider lookup is JVM-only, AND it reads a " +
+      "META-INF/services file no phase emits or renames — absent, it finds zero providers and " +
+      "the registration silently does nothing"),
     Rule("javax.", "the javax.* stack is JVM-only"),
     Rule("java.lang.Class#forName", "runtime class lookup by name is JVM-only", exactMember = true),
     Rule("java.lang.Class#newInstance", "reflective instantiation is JVM-only", exactMember = true),

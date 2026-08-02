@@ -68,6 +68,23 @@ class ExternalSurfaceSpec extends PortSuite:
     assert(ms.forall(_.api == "java.lang.Math#max"))
   }
 
+  test("a ServiceLoader use is a COUNTED violation — the resource it reads is not emitted") {
+    // The engine produces `.scala` and nothing else, so `META-INF/services/<iface>` is a file the
+    // port must ship by hand — and one a package rename has to translate in its NAME and in its
+    // CONTENTS. With it absent the loader finds zero providers and the registration silently does
+    // nothing: no compile error, no other check count, no finding. This rule is the only thing in
+    // the pipeline that says the program depends on it at all.
+    val spi = SpoonTir.fromSource(
+      """package demo;
+        |import java.util.ServiceLoader;
+        |class Providers {
+        |  void load() { ServiceLoader.load(CharSequence.class); }
+        |}
+        |""".stripMargin)
+    val vs = PortabilityCheck.check(spi).map(_.api).distinct
+    assert(clue(vs).contains("java.util.ServiceLoader"))
+  }
+
   test("the EMITTED lane excludes a unit this run does not ship (ENGINE-LIMITS D2)") {
     val everything = ExternalUsage.external(program)
     val bag        = program.units.head.symbol

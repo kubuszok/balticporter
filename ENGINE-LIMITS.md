@@ -2079,6 +2079,41 @@ Cost: a whole audit pass to notice, twice independently. What made it findable w
 
 *Fix kind: (a) engine — one field in the frontend's interning.*
 
+### P5. The engine emits `.scala` AND NOTHING ELSE — a `META-INF/services` file is a deliverable no phase carries, and a rename moves both its NAME and its CONTENTS — **OPEN; the counting is closed, the pipeline is not**
+
+A `ServiceLoader.load(X.class)` reads `META-INF/services/<X's FQN>`, whose lines are provider class
+names. Nothing in this pipeline emits, copies or renames that file, and the failure is CT7's family
+one step short of CT7 itself: the providers are constructed reflectively from OUTSIDE the program,
+so the closure sees no instantiation, concludes correctly and uselessly that nothing has to be
+fixed, and **there is no compile error, no check count and no finding**. With the file absent the
+loader finds zero providers and every registration the library performs at class-initialisation
+silently no-ops. Found by the liqp census: `SPIHelper.findProviders()` is reached from a
+`static { }` block in `Template`, i.e. effectively from the whole suite, and from
+`LiquidSupport`'s type-referencing setup, i.e. from every render of a POJO.
+
+Two halves, and only the first is closed:
+
+- **the DEPENDENCE is now counted.** `PortabilityCheck` has a `java.util.ServiceLoader` rule, whose
+  `why` names both reasons — reflective provider lookup is JVM-only, and the resource it reads is
+  not emitted. That converts "silent" into a number an agent can act on, which is `CLAUDE.md` §3's
+  bar and is all a rule can do;
+- **the ARTEFACT is still hand-written.** The engine has no notion of a resource input at all: no
+  config key names one, no lane copies one. The milestone-1 answer is a file in the port's
+  hand-written `src/main/resources` (§5.5 — `src/` is the hand-written half) plus a `--resource-dir`
+  on the lane's runner, which is what liqp ships.
+
+**Do not underestimate the second half by looking at the first.** A carried services file is not a
+copy: under a package rename the file's NAME is the renamed interface FQN and its CONTENTS are
+renamed provider FQNs, so it is §4.56's "an artifact that joins POLICY to OBSERVED code carries BOTH
+names" in a format `PackageRenameTransform` has never seen — and it must translate through
+`PackageRenameTransform.renamed`, never a hand-written `startsWith`. That, plus a `resourceRoot`
+the config would have to grow, is why this is not the one-line (a) a census can mistake it for: the
+COUNTING is (a) and shipped, the resource lane is (a)-mechanism with a (b) input and is unbuilt.
+
+*Fix kind: (a) engine for the rule — SHIPPED, and no corpus port referenced `ServiceLoader`, so
+every lane is unchanged. (a) engine for the artefact lane — OPEN. Port-side workaround: a
+hand-written `src/main/resources` tree, which is what exists today.*
+
 ---
 
 ## 6. Porting a test suite
@@ -2211,7 +2246,8 @@ a library rule.
 `@RunWith` is the one worth understanding before you try: a custom runner changes how tests are
 **enumerated**, so a converted suite runs a different *set* of tests from Java's while looking
 complete. Hamcrest is a second assertion vocabulary; inventing a mapping is precisely the silent
-miss this project exists to prevent.
+miss this project exists to prevent — and since X6 its residue is a COUNTED one, `PortabilityCheck`
+having gained the `org.hamcrest.` rule it never had.
 
 **Two claims here were false and are corrected.** JUnit 5 reaches the `org.junit.` prefix rule only
 through the *term* reference from an assertion call — annotation types are not in the xref at all,
@@ -2220,6 +2256,58 @@ elsewhere is invisible. And **TestNG matches no rule whatsoever**; `PortabilityC
 `Nil` for it. A test now pins that `Nil` so it fails the day a rule is added.
 
 *Fix kind: (a) for the residue, and it is reported rather than silent. Lifecycle: BUILT.*
+
+### X6. The JUnit surface a phase HANDLES is a VOCABULARY and a SCOPE, and both were narrower than JUnit — **CLOSED, four faces, all (a)**
+
+Every one was found by censusing a suite the engine had not yet been pointed at (liqp, 639 `@Test`),
+and none of them is visible to a compile: each leaves valid Scala that references JUnit, so the port
+still builds and runs *on the JVM with junit on the classpath* — which is the one platform the
+conversion exists to leave.
+
+- **The assertion statics are THREE FQNs, not one.** `AssertClass` was the single string
+  `org.junit.Assert`, so `junit.framework.Assert` and `junit.framework.TestCase` — JUnit 3's copy of
+  the same members, inherited, with the same argument order and the same minimal arities — were
+  neither rewritten nor reported. 31 call sites in five ordinary JUnit-4 classes, reached through
+  `import static junit.framework.TestCase.assertEquals`. Note what that is NOT: none of the five
+  subclasses `TestCase`, so `survey`'s JUnit-3 PARENT scan correctly says nothing and the CALLS are
+  the only trace. Which of the two a frontend reports as the receiver is not the phase's fact to
+  know (Spoon reports the executable's declaring type; a frontend reporting the qualifier would say
+  the other), so both are in the set. **Not a parameter**: an empty default would silently stop
+  converting `org.junit.Assert` too, and a per-library list of JUnit's own class names is policy
+  nobody can get right twice.
+- **`assertThrows` had no mapping**, though MUnit's counterpart is the `intercept[E] { … }` the same
+  phase already builds for `@Test(expected = …)` — same assertion, same returned throwable. Two
+  overloads are REFUSED rather than approximated, and the refusal now carries its own reason:
+  `intercept[T](body)` has no clue slot, so junit's leading `String message` has nowhere to go; and
+  the runnable must be a no-argument LAMBDA, because `intercept[E] { r }` EVALUATES a
+  `ThrowingRunnable` value rather than running it — the assertion would then test whether
+  CONSTRUCTING it threw, passing while checking nothing.
+- **The rewrite was SUITE-SCOPED, so a test HELPER was never visited.** `convert` returned a class
+  unchanged when it declared no `@Test`, and the only walk reaching `transformApply` ran inside that
+  `else`. A class with no `@Test` is not a non-test; it is a helper — and a helper is where a
+  library centralises its assertions. The scoping had a stated reason (rewriting program-wide once
+  produced `Not found: assertTrue` in helper classes, whose members came from the suite's base
+  class) and that reason was REMOVED by X3: assertions have been fully-qualified `munit.Assertions`
+  object calls ever since, which resolve from every scope. **A gate whose justification is closed
+  elsewhere is a leftover, and nothing reports one.** The walk now splits — assertions over every
+  unit, the CONVERSION (parent, registrations, lifecycle inlining) still keyed on `@Test`, because
+  that is what a suite is.
+- **…and running that walk per CONVERTED CLASS double-counted.** `StandardTraversal.mapClassDef`
+  descends into nested classes, so an outer suite re-walked its already-converted nested one.
+  Idempotent for the rewrites — a rewritten call is no longer a `Select` on `Assert` — and NOT for
+  the findings: an unmapped member inside a nested suite was reported twice, and the
+  "UNTRANSLATED test-framework constructs" headline over-counted by exactly that. One walk per unit.
+
+**And the RESIDUE the phase deliberately leaves is now counted.** `PortabilityCheck` had rules for
+`org.junit.` and `junit.framework.` and none for `org.hamcrest.` — the vocabulary reached *through*
+them, and the one that arrives TRANSITIVELY with junit rather than as a declared dependency. So a
+suite could be entirely hamcrest (liqp: 1535 references, 767 `assertThat`) and every portability lane
+read zero, while the phase printed the number to stdout and nothing recorded it. A decision not to
+translate is only defensible if what it leaves behind is a NUMBER (`CLAUDE.md` §3).
+
+*Fix kind: (a) engine, every face. No corpus port uses `junit.framework`, `assertThrows`, hamcrest or
+an assertion-carrying helper, so all lanes are 0 members changed with every check count identical —
+which is the point: none of these was measurable until a library that used them was pointed at.*
 
 ---
 
