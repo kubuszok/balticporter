@@ -1062,8 +1062,36 @@ final class CollectionsTransform(
       // name so the error reads as an untranslated call; wrapped here it read as a translated one
       // and failed a type further in. A refusal that the next mechanism paints over is a refusal
       // nobody can find (M6).
-      !p.symbolOf(m).flatMap(c => p.symbolOf(c.owner).map(o => MemberKey(o.fullName, c.name).render))
-        .exists(CollectionsTransform.handledStatics.contains)
+      !handledStatic(m)
+
+  /** does this callee name a member one of THIS PHASE'S OWN static arms covers?
+    *
+    * The phase's record of itself, in `MemberKey` form (§4.56). Two callers read it and they are
+    * the same question asked at two seams: a call still standing at such a name is a call this
+    * phase DECLINED to rewrite — every arm that fired left its minted helper's symbol behind
+    * instead — so its value is whatever java's was, whatever the node's retyped `tpe` now says. */
+  private def handledStatic(m: SymId)(using p: Program): Boolean =
+    p.symbolOf(m).flatMap(c => p.symbolOf(c.owner).map(o => MemberKey(o.fullName, c.name).render))
+      .exists(CollectionsTransform.handledStatics.contains)
+
+  /** the source half of the same fact — a value PRODUCED by a call this phase refused to rewrite.
+    *
+    * `Insertions.of(Arrays.asList(arr))` is the measured shape. The `asList` is K6.5's aliasing
+    * refusal, so the emitted text keeps the JDK name and the value really is a `java.util.List`;
+    * the NODE says `Buffer`, because `transformType` is position-blind and moved the type on both
+    * sides of that call. Read from the node alone, [[coerce]] therefore sees a `Kind.Seq` meeting a
+    * shim-typed formal, finds a factory on its table's first line, and emits
+    * `JavaCollection.from(java.util.Arrays.asList(…))` — a factory handed a java collection. Same
+    * error count either way (the call could not compile before) and a strictly worse message: it
+    * names the WRAPPER instead of the boundary a reader has to act on, which is the shape
+    * `CLAUDE.md` §1(b) warns about and `ENGINE-LIMITS.md` K2.5 left open.
+    *
+    * This is exactly [[isKeySetView]]'s rule at a second site — "the recorded type is not a witness
+    * of what the emitter will print" — and it is answered from the phase's own tables rather than
+    * from an arm-by-arm list, so a refusal added later is covered by construction. */
+  private def refusedRewriteSource(t: Term)(using Program): Boolean = t match
+    case a: Tree.Apply => handledStatic(a.method)
+    case _             => false
 
   /** does this type mention, anywhere inside its ARGUMENTS, a type this phase PRODUCED?
     *
@@ -1808,7 +1836,7 @@ final class CollectionsTransform(
     // front of, and it belongs here, per target, where it costs no OTHER target its bridge.
     def wantsIs(s: SymId) = s != SymId.None && wants.contains(s)
     val factory = from match
-      case _ if wants.isEmpty || isKeySetView(actual)                          => SymId.None
+      case _ if wants.isEmpty || isKeySetView(actual) || refusedRewriteSource(actual) => SymId.None
       case Some(Kind.Seq | Kind.Set | Kind.Map) if wantsIs(javaIterableSym)    => iterableFromSym
       case Some(Kind.Seq)                       if wantsIs(javaCollectionSym)  => collectionFromSym
       case Some(Kind.Set)                       if wantsIs(javaCollectionSym)  => collectionFromSetSym

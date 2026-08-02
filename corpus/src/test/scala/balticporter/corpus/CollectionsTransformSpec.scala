@@ -406,6 +406,45 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "JavaCollections.asList(xs.asInstanceOf")
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // …AND NO LATER MECHANISM MAY PAINT OVER THAT REFUSAL — the other half of `ENGINE-LIMITS.md`
+  // K6.5, measured as K2.5's caution.
+  //
+  // The refused call keeps the JDK name, so at run time it really is a `java.util.List`. Its NODE
+  // says `Buffer`, because `transformType` is position-blind and moved the type on both sides — so
+  // the argument bridge, reading the node, sees a `Kind.Seq` meeting a shim-typed formal and wraps:
+  // `JavaCollection.from(java.util.Arrays.asList(…))`, a factory handed a java collection. Same
+  // error count either way (the call could not compile before), and a strictly worse message: it
+  // names the WRAPPER instead of the boundary the reader has to act on.
+  //
+  // The test is the phase's own record, exactly as §4.56 requires: a call whose callee is still one
+  // of THIS PHASE'S handled statics is a call this phase declined to rewrite — every arm that fired
+  // left the minted helper's symbol behind instead — so its value is whatever java's was.
+  // ---------------------------------------------------------------------------------------------
+
+  private val refusedIntoShimSlot =
+    """package demo;
+      |import java.util.*;
+      |class B {
+      |  static B of(Collection<String> xs)    { return new B(); }
+      |  B whole(String[] xs)                  { return of(Arrays.asList(xs)); }
+      |  B elems(String a, String b)           { return of(Arrays.asList(a, b)); }
+      |}
+      |""".stripMargin
+
+  test("a value under a DELIBERATE REFUSAL is not wrapped — the error keeps naming the boundary") {
+    val p = port(refusedIntoShimSlot, new CollectionsTransform)
+    assertEmits(p, "B.of(java.util.Arrays.asList(xs.asInstanceOf[scala.Array[java.lang.Object]]*))")
+    assertNotEmits(p, "JavaCollection.from(java.util.Arrays.asList")
+  }
+
+  test("…and the bridge still fires for a value the phase DID produce — the positive control") {
+    // the element form IS rewritten, so what reaches the slot is the runtime helper's `Buffer` and
+    // the wrap is exactly right. A blanket "never wrap an `asList`" would have taken this too.
+    val p = port(refusedIntoShimSlot, new CollectionsTransform)
+    assertEmits(p, "B.of(balticporter.runtime.JavaCollection.from(balticporter.runtime.JavaCollections.asList(a, b)))")
+  }
+
   test("an IN-PROGRAM vararg method still receives the materialised array — the convention holds") {
     val p = port(asList, new CollectionsTransform)
     // the pack is only opened for the one helper declared `A*`; a java `T...` parameter is still

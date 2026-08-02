@@ -87,6 +87,12 @@ object CollectionBoundaryCheck:
     case MappedTypeSurvived
     /** both sides are the phase's own output, on opposite sides of the shim/scala split. */
     case ShimBoundary
+    /** …and the same slot where the VALUE is not the phase's output at all: it is produced by a
+      * call one of the phase's own static arms covers and DECLINED to rewrite, so the emitted text
+      * keeps the JDK name and the value is java's. The node's type says otherwise, because the
+      * position-blind retyping moved it — which is exactly why this is a separate row and not a
+      * [[ShimBoundary]] (whose classification tells a reader to go extend `coerce`). */
+    case RefusedSource
     /** one side is a declaration the phase's [[balticporter.tir.RuleScope]] deliberately held back,
       * so it kept its JDK type while the code meeting it moved. */
     case ScopedOut
@@ -119,6 +125,16 @@ object CollectionBoundaryCheck:
         "§1(a) engine gap: a scala collection meets a `balticporter.runtime` shim slot (or the " +
           "reverse) with no wrap — extend `CollectionsTransform.coerce` to this slot, or, if the " +
           "cell is a deliberate refusal, it stays counted here (ENGINE-LIMITS K2's coverage table)."
+      case RefusedSource =>
+        "§1(a) engine, and REFUSED on purpose UPSTREAM OF THIS SLOT: the value here comes from a " +
+          "call `CollectionsTransform` covers and declined to rewrite — the aliasing " +
+          "`Arrays.asList(arr)` is the measured one — so the emitted text keeps the JDK name and " +
+          "the value really is a `java.util.*`. The `Found` side above is the NODE's type, which " +
+          "the position-blind retyping moved on both sides of that call; do not read it as the " +
+          "value's. Do NOT close this by wrapping: a factory over a refused value names the " +
+          "WRAPPER instead of the boundary and the refusal stops being findable (ENGINE-LIMITS " +
+          "K2.5, K6.5). It closes when the REFUSAL closes — for `asList` that is one frontend fact, " +
+          "the erased element type."
       case ScopedOut =>
         "§1(b) PER-LIBRARY: one side of this slot is a declaration this port's " +
           "`CollectionsTransform(scope)` deliberately held back, so it kept its JDK type while the " +
@@ -248,6 +264,18 @@ object CollectionBoundaryCheck:
       !program.owns(m) && !program.symbolOf(m).flatMap(c => program.symbolOf(c.owner))
         .exists(o => mapped.contains(o.fullName) || targets.contains(o.fullName))
 
+    /** is this value produced by a call the phase's own static arms cover and DECLINED to rewrite?
+      *
+      * `CollectionsTransform.refusedRewriteSource`'s question, asked from the reporting side and
+      * keyed the same way (§4.56 — the phase's own table, never a test on a name). Every arm that
+      * FIRED left its minted helper's symbol behind, so a callee still standing at one of these
+      * `owner#name` keys is one the phase left under the JDK's name. */
+    def refusedSource(t: Term): Boolean = t match
+      case a: Tree.Apply =>
+        program.symbolOf(a.method).flatMap(c => program.symbolOf(c.owner).map(o => MemberKey(o.fullName, c.name).render))
+          .exists(CollectionsTransform.handledStatics.contains)
+      case _ => false
+
     def slot(kind: String, expected: TypeRepr, actual: Term, origin: Origin, enclosing: SymId,
              expectedScoped: Boolean, expectedExternal: Boolean = false,
              expectedForeign: Boolean = false): Unit =
@@ -261,7 +289,12 @@ object CollectionBoundaryCheck:
             case (Side.Jdk, Side.Scala | Side.Shim) => out += Finding(issueFor(e, scoped, expectedExternal), kind, e, a, origin, enclosing)
             case (Side.Scala | Side.Shim, Side.Jdk) => out += Finding(issueFor(a, scoped), kind, e, a, origin, enclosing)
             case (Side.Shim, Side.Scala) | (Side.Scala, Side.Shim) =>
-              out += Finding(Issue.ShimBoundary, kind, e, a, origin, enclosing)
+              // …and the one shape whose `Found` side is not what the emitter printed. The phase's
+              // own static table answers it — a call still standing at one of those names is a call
+              // it declined to rewrite (`CollectionsTransform.handledStatic`, restated where this
+              // check can ask it), so the value is java's however the node reads.
+              out += Finding(if refusedSource(actual) then Issue.RefusedSource else Issue.ShimBoundary,
+                             kind, e, a, origin, enclosing)
             // java's UNIVERSAL formal, at a CLASS FILE. The pair fell through this match entirely —
             // `java.lang.Object` was `Other` — which is exactly why it was the seam nothing could
             // report: it produces no compile error either, because a retyped collection conforms.

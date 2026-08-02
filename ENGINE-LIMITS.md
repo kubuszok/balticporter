@@ -1624,15 +1624,42 @@ members.** Five bridges are emitted where none was; three compile. The other two
 `Insertions.of(Arrays.asList(arr))` gets `JavaCollection.from(java.util.Arrays.asList(…))` — the
 node's type says `Buffer` because `transformType` moved it, while K6.5's aliasing refusal left the
 VALUE a real `java.util.List`, so `from` receives a java collection. Same error count at those two
-sites either way (the call could not compile before), and the message actually improved from "none
-of the overloaded alternatives" to `Found: java.util.List[Array[Object]]`, which names the real
-cause. But the shape is the one `CLAUDE.md` §1(b) warns about, and it cannot be fixed here:
-`wrapIterableArgs` runs BEFORE the rewrites (it must — a shim-typed formal has to be in place before
-overload resolution sees the argument), so at wrap time the phase has not yet decided to refuse the
-`asList`. It is left OPEN and counted, next to K6.5's own nine.
+sites either way (the call could not compile before), and the shape is the one `CLAUDE.md` §1(b)
+warns about. What made it look unfixable here was an ORDERING claim: `wrapIterableArgs` runs BEFORE
+the rewrites (it must — a shim-typed formal has to be in place before overload resolution sees the
+argument), so at wrap time "the phase has not yet decided to refuse the `asList`".
 
-*Fix kind: (a) engine — the gate, DONE. The `asList`-refused source reaching the bridge is (a) and
-OPEN, in K6.5's territory rather than this one.*
+**CLOSED, and the ordering claim was about the wrong node.** The `asList` is an ARGUMENT, and the
+traversal is bottom-up: by the time the enclosing call's arguments are bridged, that inner call has
+already been through `transformApply` and is in its final form. So the question is answerable at the
+wrap — and it is answered from the phase's own table, not from an arm-by-arm list:
+`CollectionsTransform.handledStatic` asks whether the callee still stands at one of the `owner#name`
+keys `staticRewrite` covers, and every arm that FIRED left its minted helper's symbol behind
+instead. A call still at `java.util.Arrays#asList` is one this phase declined, whatever the node's
+retyped `tpe` says. `coerce` refuses beside `isKeySetView`, which is §4.56's rule at a second site —
+*the recorded type is not a witness of what the emitter will print.*
+
+**And the message does NOT come back naming the boundary — that expectation was wrong, for a reason
+worth knowing.** Both these callees are OVERLOADED, so what scalac prints for an argument that fits
+no alternative is `E134 None of the overloaded alternatives of method of`, with the three formals
+listed — not a `Found`/`Required` pair. The wrapped form printed a pair (`Found: java.util.List`)
+because the wrapper is a single-alternative method: a sharper-looking message about
+`JavaCollection.from`'s parameter rather than about the port's own `of`. What actually improves is
+the emitted TEXT — `Insertions.of(java.util.Arrays.asList(…))` is the untranslated JDK call, at the
+line, greppable — and the COUNT: those two seams are now reported instead of being hidden inside a
+wrapper that made them look translated.
+
+**The residue row therefore needs its own name.** A `ShimBoundary` whose (source kind, target shim)
+pair HAS a factory is, by this entry's own rule, an engine bug — which is exactly what these two
+would have read as. `CollectionBoundaryCheck.Issue.RefusedSource` is that row: same slot, and a
+classification that says the `Found` side is the NODE's type and not the value's, that wrapping is
+the thing not to do, and that it closes when the REFUSAL closes.
+
+**Measured: liqp 56 -> 56** (main 27, test 29 — the count was never going to move, the call could
+not compile either way), `collection-boundary` 16 -> 18, 8 member digests over 4 members, every
+other check count flat and every other port byte-for-byte unchanged.
+
+*Fix kind: (a) engine — the gate, DONE; the `asList`-refused source reaching the bridge, DONE.*
 
 ### K3. Injected sources are for SEMANTICS the target lacks — never for adapting SHAPES
 
@@ -1964,6 +1991,15 @@ Two rules the fix rests on:
   expressible but not reachable from the rewrite: the frontend has already coerced the argument to
   the ERASED formal (`Array[Object]`), so the element type the view needs is gone by then.
   Recovering it is a frontend change with far wider blast radius.
+- …**and NOTHING DOWNSTREAM MAY PAINT OVER THAT REFUSAL.** The refused call keeps the JDK name, so
+  the value really is a `java.util.List` — while its NODE says `Buffer`, because the position-blind
+  retyping moved the type on both sides of it. Read from the node alone, `coerce` found a factory
+  and emitted `JavaCollection.from(java.util.Arrays.asList(…))`: a wrapper over a value this phase
+  had just declined to move, which is the shape §1(b) warns about and which K2.5 measured and left
+  open. Closed there, by the phase's own table (`handledStatic`) rather than by an arm-by-arm list,
+  and the seam is counted as `CollectionBoundaryCheck.Issue.RefusedSource` — a row that says the
+  `Found` side is the node's type and not the value's, so it cannot be mistaken for the engine bug a
+  bare `ShimBoundary` at a pair with a factory would be.
 
 **The aliasing form IS expressible after all, and what blocks it is now precisely known.** This entry
 said a faithful live view was "not reachable from the rewrite". It is reachable by COMPOSITION and

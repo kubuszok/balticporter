@@ -2086,9 +2086,14 @@ changes none of which is (b) or (c):
 | `Insertions.of`/`Filters.of` — `E134 None of the overloaded alternatives`, 5 errors, read as an overload problem | **0 of the five, 3 fewer errors.** It was never overload resolution: liqp names `java.util.Collection` and never names `java.lang.Iterable`, and the pass that bridges a retyped argument into a shim-typed formal opened with `if javaIterableSym == SymId.None then t` — so the whole bridge was inert for this port, with no check, no policy entry and no member digest able to say so (K2.5, new). The remaining two sites were the `Arrays.asList(arr)` aliasing refusal wearing an E134 mask, and now report it |
 | `LiquidException` — 0 errors and a SILENT §4.4 defect: three roots, three different `super(...)`, none promotable, so every exception it threw had a null message and no cause | **fixed, and it moves no error count at all**, which is §3 in one line. C3's synthesised primary at the JDK throwable's widest overload; `omissions` 4 -> 1 |
 
-**What is left, 28 in the main source set.** `Arrays.asList(arr)`'s aliasing refusal (K6.5) is 11 —
-9 deliberate, and 2 that K2.5's bridge now reaches, where the wrap names the WRAPPER rather than the
-boundary because the phase refused to move the value it wraps (open, in K6.5's territory).
+**What is left, 27 in the main source set.** `Arrays.asList(arr)`'s aliasing refusal (K6.5) is 11 —
+9 deliberate, and 2 that K2.5's bridge reached, where the wrap named the WRAPPER rather than the
+boundary because the phase refused to move the value it wraps. Those two no longer carry a wrapper:
+`coerce` asks the phase's own static table whether the value's producer is a call it declined, and
+the seam is counted as `RefusedSource` — 2 errors either way (an overloaded callee prints `E134`
+rather than a `Found`/`Required` pair, so the message does NOT come back naming the boundary; what
+comes back is the untranslated `java.util.Arrays.asList` in the emitted text, and two counted seams
+where there were none).
 **F11 is 4 and now has an
 exact diagnosis rather than a nonsense one**: `list ++= valueList` where `list` is a
 `Buffer[Object]` and `valueList` a `Buffer[?]` reads `Required: IterableOnce[Object]` since

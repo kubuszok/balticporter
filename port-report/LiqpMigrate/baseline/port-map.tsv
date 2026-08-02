@@ -193,7 +193,7 @@ member	liqp.Insertions#getTagNames()	ssg.liquid.Insertions#getTagNames()	Renamed
 member	liqp.Insertions#hashCode()	ssg.liquid.Insertions#hashCode()	Renamed	-	liqp/Insertions.java	162	c3668aa4b0409c15	
 member	liqp.Insertions#map	ssg.liquid.Insertions#map	Renamed	-	liqp/Insertions.java	34	73621cec9a46abfe	vis=private
 member	liqp.Insertions#mergeWith(Insertions)	ssg.liquid.Insertions#mergeWith(Insertions)	Renamed	-	liqp/Insertions.java	127	a81a78d53d0f45bb	
-member	liqp.Insertions#of(Array)	ssg.liquid.Insertions#of(Array<Insertion>)	Renamed	-	liqp/Insertions.java	90	09a9b50aba98b855	placement=companion
+member	liqp.Insertions#of(Array)	ssg.liquid.Insertions#of(Array<Insertion>)	Renamed	-	liqp/Insertions.java	90	c8ac1b5aa6ad62a9	placement=companion
 member	liqp.Insertions#of(JavaCollection)	ssg.liquid.Insertions#of(JavaCollection<Insertion>)	Renamed	-	liqp/Insertions.java	76	70fe6db713d4e084	placement=companion
 member	liqp.Insertions#of(Map)	ssg.liquid.Insertions#of(Map<String,Insertion>)	Renamed	-	liqp/Insertions.java	100	4b42e96127dbfb7a	placement=companion
 member	liqp.Insertions#tagNames	ssg.liquid.Insertions#tagNames	Renamed	-	liqp/Insertions.java	37	5df4a009b03872ad	vis=private
@@ -623,7 +623,7 @@ member	liqp.filters.Filters#hashCode()	ssg.liquid.filters.Filters#hashCode()	Ren
 member	liqp.filters.Filters#map	ssg.liquid.filters.Filters#map	Renamed	-	liqp/filters/Filters.java	12	6a6792d4378bb2aa	vis=private
 member	liqp.filters.Filters#mergeWith(Buffer)	ssg.liquid.filters.Filters#mergeWith(Buffer<Filter>)	Renamed	-	liqp/filters/Filters.java	171	99b9080ceb180261	
 member	liqp.filters.Filters#mergeWith(Filters)	ssg.liquid.filters.Filters#mergeWith(Filters)	Renamed	-	liqp/filters/Filters.java	147	e7dcfdb831efaa08	
-member	liqp.filters.Filters#of(Array)	ssg.liquid.filters.Filters#of(Array<Filter>)	Renamed	-	liqp/filters/Filters.java	117	ad3fef5fd3141a68	placement=companion
+member	liqp.filters.Filters#of(Array)	ssg.liquid.filters.Filters#of(Array<Filter>)	Renamed	-	liqp/filters/Filters.java	117	ed3b2c6b3ef55d34	placement=companion
 member	liqp.filters.Filters#of(JavaCollection)	ssg.liquid.filters.Filters#of(JavaCollection<Filter>)	Renamed	-	liqp/filters/Filters.java	90	75867c41538aa3e1	placement=companion
 member	liqp.filters.Filters#of(Map)	ssg.liquid.filters.Filters#of(Map<String,Filter>)	Renamed	-	liqp/filters/Filters.java	104	df2c9faed291d9af	placement=companion
 member	liqp.filters.Filters#toString()	ssg.liquid.filters.Filters#toString()	Renamed	-	liqp/filters/Filters.java	199	d471e7da9166d894	
