@@ -78,11 +78,25 @@ import balticporter.tir.*
 final class TestFrameworkTransform(
     suite: String = TestFrameworkTransform.DefaultSuite,
     testMember: String = "test",
-) extends Phase:
+) extends Phase, balticporter.core.SurfacePolicy:
 
   import TestFrameworkTransform.{Finding, Fix, MinArity, NumericRank}
 
   def name: String = "junit->portable-suite"
+
+  /** This phase SHAPES SIGNATURES — CLAUDE.md §1's obligation on a (b), which it owed and did not
+    * pay. A converted suite gains [[suite]] as a PARENT and every `@Test` method becomes a
+    * [[testMember]] call, so two modules configured differently emit two different type hierarchies
+    * for the same Java. Without this, [[balticporter.core.PortManifest.fingerprint]] falls back to
+    * the phase NAME and `junit->portable-suite(munit.FunSuite)` compares EQUAL to
+    * `junit->portable-suite(utest.TestSuite)`: `SurfaceMissing` cannot see the difference, and a
+    * same-name pair could neither be compared nor composed (`ENGINE-LIMITS.md` CT9 Face B's third
+    * change, which makes such a pair a refusal rather than a silent double application).
+    *
+    * Both parameters, and only them: they are the whole of what a caller can vary. The rest of this
+    * phase's contract is MUnit named literally in tree-building code (see the class doc), which is
+    * not policy and cannot differ between two instances. */
+  def surfaceFingerprint: String = s"suite=$suite,test=$testMember"
 
   private val AssertClass = "org.junit.Assert"
   /** MUnit declares every assertion twice — on the `Assertions` TRAIT that `FunSuite` mixes in, and

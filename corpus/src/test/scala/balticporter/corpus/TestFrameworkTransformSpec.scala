@@ -288,6 +288,25 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(companion.contains("""munit.Assertions.fail("helper")"""))
   }
 
+  // -------------------------------------------------------------------------------------------
+  // …and the phase SHAPES SIGNATURES, so it is comparable across two modules' pipelines
+  // -------------------------------------------------------------------------------------------
+
+  test("two differently-configured instances do NOT compare equal — this phase is a SurfacePolicy") {
+    // Without this the fingerprint is the phase NAME, and two modules emitting suites with two
+    // DIFFERENT parents compare identical: `SurfaceMissing` sees nothing, and a same-name pair can
+    // be neither compared nor composed. Both parameters are in it because both are surface — the
+    // parent a converted suite gains, and the member every `@Test` becomes a call to.
+    val fp = (p: TestFrameworkTransform) => balticporter.core.PortManifest.fingerprint(p)
+    assertNotEquals(fp(new TestFrameworkTransform(suite = "a.A")), fp(new TestFrameworkTransform(suite = "b.B")))
+    assertNotEquals(fp(new TestFrameworkTransform(testMember = "test")),
+                    fp(new TestFrameworkTransform(testMember = "testCase")))
+    // …and two instances of one configuration DO, or two modules that agree would report drift.
+    assertEquals(fp(new TestFrameworkTransform), fp(new TestFrameworkTransform))
+    assert(clue(fp(new TestFrameworkTransform)).contains(TestFrameworkTransform.DefaultSuite),
+           "the fingerprint names the parent, which is the thing a dependent compiles against")
+  }
+
   test("NOTHING is injected alongside the port — the Asserts façade is gone") {
     val (out, _) = emit(assertSrc)
     assert(!clue(out).contains("balticporter.runtime"))

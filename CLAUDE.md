@@ -49,7 +49,14 @@ neither optional:
 
 - **the scope is a fact about the emitted SURFACE**, so the phase implements `SurfacePolicy` — two
   modules scoping it differently emit signatures that each compile alone and cannot compile together
-  (§1.5);
+  (§1.5). **And a scope is not the only way a policy reaches the surface**: a parameter that decides
+  a PARENT, a member name, a type's kind or its package is the same fact, so `SurfacePolicy` is owed
+  by every (b) whose parameters a reader could point at in the emitted signatures — not only by the
+  retyping ones. `TestFrameworkTransform` owed it for two: its `suite` becomes a converted suite's
+  parent and its `testMember` the call every `@Test` becomes. Nothing reports the omission and
+  nothing can: `PortManifest.fingerprint` falls back to the phase NAME, under which two different
+  configurations compare EQUAL — so `SurfaceMissing` cannot see the difference and a same-name pair
+  can be neither compared nor composed (`ENGINE-LIMITS.md` CT9);
 - **every seam the scope creates is COUNTED.** A scope that silently produces an uncompilable or
   wrongly-typed boundary is worse than no scope. Where a coercion exists, insert it; where none can
   (a `mutable.Buffer` is not a `java.util.List`), refuse and report with the §1 classification, and
