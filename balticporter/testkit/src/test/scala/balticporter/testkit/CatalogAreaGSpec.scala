@@ -130,6 +130,34 @@ class CatalogAreaGSpec extends PortSuite:
     assertEmits(p, "asInstanceOf[java.lang.String]")
   }
 
+  test("JS-G31 — a VARARG PACK changes the call's arity, and the row is answered per INDEX") {
+    // The guard that used to stand here was `args.sizeIs != argEs.size => None`, which reads to the
+    // catalog as "the difference does not APPLY at this call" — a vacuous guard, and the one shape
+    // that reaches it is not rare: java's own vararg materialisation collapses N trailing arguments
+    // into ONE array term, so EVERY vararg call with two or more variadic arguments declined,
+    // including for the poly expression sitting in the FIXED prefix, which lines up perfectly.
+    //
+    // Per index now: the fixed prefix pairs with `argEs` position by position and the packed tail
+    // is answered INSIDE the array, element by element, against the arguments it was built from.
+    val p = port(
+      """public class A {
+        |  static void run(Runnable r, Object... rest) {}
+        |  void f() { run(() -> {}, "a", "b"); }
+        |}""".stripMargin)
+    assertConsults(p, JS.G(31), fired = true)
+    assertNotEmits(p, "asInstanceOf[java.lang.Runnable")
+  }
+
+  test("JS-G31 — …and a poly expression INSIDE the pack is reached too") {
+    val p = port(
+      """public class A {
+        |  static void all(String name, Runnable... rest) {}
+        |  void f() { all("n", () -> {}, () -> {}); }
+        |}""".stripMargin)
+    assertConsults(p, JS.G(31), fired = true)
+    assertNotEmits(p, "asInstanceOf[java.lang.Runnable")
+  }
+
   test("JS-G31 — a lambda whose target is one of OUR OWN interfaces is not cast either") {
     // The rule is about the EXPRESSION, not about who owns the interface: an in-program functional
     // interface is SAM-converted by scala on exactly the same rule as a JDK one.

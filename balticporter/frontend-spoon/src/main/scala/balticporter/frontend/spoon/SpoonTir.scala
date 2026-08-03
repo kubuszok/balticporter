@@ -2253,18 +2253,59 @@ object SpoonTir:
         * makes "keep what java wrote, drop what we added" decidable rather than a guess.
         *
         * `Some` only where the call really has a poly argument, so `fired` counts the sites where
-        * the difference APPLIES and `consulted` counts the calls that asked. */
+        * the difference APPLIES and `consulted` counts the calls that asked.
+        *
+        * ==the ARITY is answered per INDEX, never by declining the call==
+        * `args.sizeIs != argEs.size => None` reads to the catalog as *the difference does not apply
+        * at this call*, and that is a vacuous guard: java's own vararg materialisation collapses N
+        * trailing arguments into ONE array term (`varargPack`), so every vararg call with two or
+        * more variadic arguments declined — including for a poly expression in the FIXED prefix,
+        * which lines up position by position. The prefix is paired by index and the packed tail is
+        * answered INSIDE the array against the arguments it was built from. Where no
+        * correspondence can be established at all the answer is still `None`, and it now means what
+        * it says: not "the arity differs" but "nothing here pairs with a source expression". */
       private def polyArgsUncast(argEs: List[CtExpression[?]], args: List[Term], at: Origin)
                                 (using Obligations): List[Term] =
         Obligations.consult(JS.G(31), at) {
           val poly = argEs.zipWithIndex.collect { case (e, i) if polyExpression(e) => i }.toSet
-          if poly.isEmpty || args.sizeIs != argEs.size then scala.None
-          else Some(args.zipWithIndex.map { (t, i) => if poly(i) then uncastAdded(t, argEs(i)) else t })
+          if poly.isEmpty then scala.None
+          else if args.sizeIs == argEs.size then
+            Some(args.zipWithIndex.map { (t, i) => if poly(i) then uncastAdded(t, argEs(i)) else t })
+          else packedUncast(argEs, args, poly)
         }.getOrElse(args)
 
-      /** the casts an ARGUMENT ARM added, removed; the ones the JAVA SOURCE wrote, kept. */
+      /** [[polyArgsUncast]] where a VARARG PACK has changed the arity: `args` is the fixed prefix
+        * plus ONE term holding the variadic elements, built from the `argEs` tail in order. */
+      private def packedUncast(argEs: List[CtExpression[?]], args: List[Term],
+                               poly: Set[Int]): Option[List[Term]] =
+        val fixed = args.size - 1
+        if fixed < 0 || argEs.sizeIs <= fixed then scala.None
+        else
+          val (headEs, restEs) = argEs.splitAt(fixed)
+          val headTs = args.take(fixed).zipWithIndex.map { (t, i) => if poly(i) then uncastAdded(t, headEs(i)) else t }
+          def elems(es: List[Term]): Option[List[Term]] =
+            if es.sizeIs != restEs.size then scala.None
+            else Some(es.zipWithIndex.map { (t, k) => if poly(fixed + k) then uncastAdded(t, restEs(k)) else t })
+          // the two shapes `varargPack` materialises — a SPREAD at an external callee, an array
+          // literal at one the port declares. A third shape is a pack nobody has built, and
+          // declining on it is the honest answer rather than a guess about which term is which.
+          val packed = args.last match
+            case r: Tree.Repeated => elems(r.elems).map(es => r.copy(elems = es))
+            case n: Tree.NewArray => n.init.flatMap(elems).map(es => n.copy(init = Some(es)))
+            case _                => scala.None
+          packed.map(headTs :+ _)
+
+      /** the casts an ARGUMENT ARM added, removed; the ones the JAVA SOURCE wrote, kept.
+        *
+        * The failure DIRECTION is the whole of the `catch`: an unreadable cast list used to read as
+        * "java wrote NONE", which strips java's own conversions along with the arms', silently and
+        * at the one node kind where that is a semantic change. Unreadable now DECLINES — a term
+        * left exactly as the arms built it is at worst a cast too many, which is the error this
+        * function exists to remove and not a conversion it invented. `RuntimeException`, so a
+        * `StackOverflowError` from a deep tree is not swallowed by a helper (`CLAUDE.md` §4.58's
+        * rule about a `catch` around a harvest, met at an argument list). */
       private def uncastAdded(t: Term, e: CtExpression[?]): Term =
-        val own = try e.getTypeCasts.size catch { case _: Throwable => 0 }
+        val own = try Some(e.getTypeCasts.size) catch { case _: RuntimeException => scala.None }
         def depth(x: Term): Int = x match
           case Tree.Typed(inner, _, _, _) => 1 + depth(inner)
           case _                          => 0
@@ -2273,7 +2314,7 @@ object SpoonTir:
           else x match
             case Tree.Typed(inner, _, _, _) => strip(inner, n - 1)
             case other                      => other
-        strip(t, depth(t) - own)
+        own.fold(t)(n => strip(t, depth(t) - n))
 
       private def uncheckedGeneric(target: CtTypeReference[?], e: CtExpression[?], t: Term,
                                    rawTarget: Boolean = true, ownScope: Boolean = true): Term =
