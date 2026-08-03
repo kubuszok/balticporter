@@ -2216,6 +2216,24 @@ Three things it cost, and the second is the one no compile could have found:
   upstream `liqp` is on NO classpath of that step, so a reference the rewrite missed cannot resolve
   and the build refuses.
 
+**…and a fourth, found by audit-2 (F5): the CACHE KEY did not name the generated sources.**
+`LiqpClasspath.ensure` asked three questions — do the parser classes exist, are these the
+coordinates, is this the rewrite policy — and not the one about the input javac actually reads. The
+generated tree is UNTRACKED and is rebuilt by `./mvnw generate-sources`, so a grammar change writes
+new `.java` under an unchanged key beside a `parserClasses` directory that still holds `.class`
+files, and `hasParserClasses` is an EXISTENCE test. The port then resolves against a parser it no
+longer has — this cache's own stated failure (an import that resolves WRONGLY rather than failing),
+one input further in, with the port compiling and every count flat.
+
+`generatedDigest` folds the tree into the key: every `.java` under it by RELATIVE PATH and by
+CONTENT, sorted. Both halves are load-bearing — content alone misses a RENAME (ANTLR renames a
+generated class when the grammar's name changes, and javac then produces a class file at a name
+nothing imports), the path set alone misses every edit to a rule body. An absent tree digests to a
+distinct stated value rather than throwing, because this is consulted on a freshness question and
+`compileParser`'s refusal — which can print the command that fixes it — is the right place for the
+fatality. Five cases in `LiqpParserRewriteSpec`; liqp re-measured at **0 errors, 357/218, 0 member
+digests** with the parser rebuilt under the new key.
+
 **And `out/liqp-upstream-classes` is GONE.** That directory — upstream liqp compiled beside the
 parser, for scalac only — existed for exactly this seam: scalac reading `liqp.TemplateParser$ErrorMode`
 without it threw `AssertionError: failure to resolve inner class` out of `ClassfileParser` and
