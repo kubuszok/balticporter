@@ -151,7 +151,7 @@ member	liqp.ProtectionSettingsTest#<stmt8>	ssg.liquid.ProtectionSettingsTest#<st
 member	liqp.ProtectionSettingsTest#<stmt9>	ssg.liquid.ProtectionSettingsTest#<stmt9>	Renamed	-	liqp/ProtectionSettingsTest.java	77	c667ca2b448fbb45	
 member	liqp.RenderSettingsTest#<stmt10>	ssg.liquid.RenderSettingsTest#<stmt10>	Renamed	-	liqp/RenderSettingsTest.java	128	57724f1aac3d5939	
 member	liqp.RenderSettingsTest#<stmt11>	ssg.liquid.RenderSettingsTest#<stmt11>	Renamed	-	liqp/RenderSettingsTest.java	149	8dfc189f000de77d	
-member	liqp.RenderSettingsTest#<stmt12>	ssg.liquid.RenderSettingsTest#<stmt12>	Renamed	-	liqp/RenderSettingsTest.java	178	0c296e5030724f32	
+member	liqp.RenderSettingsTest#<stmt12>	ssg.liquid.RenderSettingsTest#<stmt12>	Renamed	-	liqp/RenderSettingsTest.java	178	7d8a8cd33c716b4a	
 member	liqp.RenderSettingsTest#<stmt1>	ssg.liquid.RenderSettingsTest#<stmt1>	Renamed	-	liqp/RenderSettingsTest.java	35	be312335b29729a6	
 member	liqp.RenderSettingsTest#<stmt2>	ssg.liquid.RenderSettingsTest#<stmt2>	Renamed	-	liqp/RenderSettingsTest.java	45	a307c019a59aab39	
 member	liqp.RenderSettingsTest#<stmt3>	ssg.liquid.RenderSettingsTest#<stmt3>	Renamed	-	liqp/RenderSettingsTest.java	55	f8afc8c3e3fd2cd0	
@@ -375,7 +375,7 @@ member	liqp.filters.ModuloTest#<stmt3>	ssg.liquid.filters.ModuloTest#<stmt3>	Ren
 member	liqp.filters.ModuloTest#<stmt4>	ssg.liquid.filters.ModuloTest#<stmt4>	Renamed	-	liqp/filters/ModuloTest.java	54	bfbb84fb9503a529	
 member	liqp.filters.ModuloTest#<stmt5>	ssg.liquid.filters.ModuloTest#<stmt5>	Renamed	-	liqp/filters/ModuloTest.java	60	302b0fd7fa791b0c	
 member	liqp.filters.Newline_To_BrTest#<stmt1>	ssg.liquid.filters.Newline_To_BrTest#<stmt1>	Renamed	-	liqp/filters/Newline_To_BrTest.java	15	b405ad7f6dd3a317	
-member	liqp.filters.Normalize_WhitespaceTest#<stmt1>	ssg.liquid.filters.Normalize_WhitespaceTest#<stmt1>	Renamed	-	liqp/filters/Normalize_WhitespaceTest.java	38	d69fcfe45104b795	
+member	liqp.filters.Normalize_WhitespaceTest#<stmt1>	ssg.liquid.filters.Normalize_WhitespaceTest#<stmt1>	Renamed	-	liqp/filters/Normalize_WhitespaceTest.java	38	e47c992537f6fd78	
 member	liqp.filters.PlusTest#<stmt1>	ssg.liquid.filters.PlusTest#<stmt1>	Renamed	-	liqp/filters/PlusTest.java	15	0d70cb2acecba96a	
 member	liqp.filters.PlusTest#<stmt2>	ssg.liquid.filters.PlusTest#<stmt2>	Renamed	-	liqp/filters/PlusTest.java	36	df89291c5f3ddaf7	
 member	liqp.filters.PlusTest#<stmt3>	ssg.liquid.filters.PlusTest#<stmt3>	Renamed	-	liqp/filters/PlusTest.java	42	afa167c58187d4cf	
@@ -462,7 +462,7 @@ member	liqp.filters.Strip_NewlinesTest#<stmt2>	ssg.liquid.filters.Strip_Newlines
 member	liqp.filters.TimesTest#<stmt1>	ssg.liquid.filters.TimesTest#<stmt1>	Renamed	-	liqp/filters/TimesTest.java	19	bace3cc840de3610	
 member	liqp.filters.TimesTest#<stmt2>	ssg.liquid.filters.TimesTest#<stmt2>	Renamed	-	liqp/filters/TimesTest.java	42	7e7e96b920806dc1	
 member	liqp.filters.TimesTest#<stmt3>	ssg.liquid.filters.TimesTest#<stmt3>	Renamed	-	liqp/filters/TimesTest.java	48	040a65082d3cb182	
-member	liqp.filters.TimesTest#<stmt4>	ssg.liquid.filters.TimesTest#<stmt4>	Renamed	-	liqp/filters/TimesTest.java	66	9bb7b6da7457aac9	
+member	liqp.filters.TimesTest#<stmt4>	ssg.liquid.filters.TimesTest#<stmt4>	Renamed	-	liqp/filters/TimesTest.java	66	0a22027f10ad6834	
 member	liqp.filters.TruncateTest#<stmt1>	ssg.liquid.filters.TruncateTest#<stmt1>	Renamed	-	liqp/filters/TruncateTest.java	16	1f00164b42c88b5c	
 member	liqp.filters.TruncateTest#<stmt2>	ssg.liquid.filters.TruncateTest#<stmt2>	Renamed	-	liqp/filters/TruncateTest.java	50	4478847b3cf4dbee	
 member	liqp.filters.TruncatewordsTest#<stmt1>	ssg.liquid.filters.TruncatewordsTest#<stmt1>	Renamed	-	liqp/filters/TruncatewordsTest.java	16	13165dec052c3d99	
@@ -555,13 +555,10 @@ member	liqp.filters.where.LiquidWhereImplTest$SampleLiquidSupport#val	ssg.liquid
 member	liqp.nodes.AndNodeTest#<stmt1>	ssg.liquid.nodes.AndNodeTest#<stmt1>	Renamed	-	liqp/nodes/AndNodeTest.java	15	bfd74c235dba2f88	
 member	liqp.nodes.AtomNodeTest#<stmt1>	ssg.liquid.nodes.AtomNodeTest#<stmt1>	Renamed	-	liqp/nodes/AtomNodeTest.java	15	c571fb61d175b851	
 member	liqp.nodes.BlockNodeTest#<stmt1>	ssg.liquid.nodes.BlockNodeTest#<stmt1>	Renamed	-	liqp/nodes/BlockNodeTest.java	21	fb28a996962ec3d1	
-member	liqp.nodes.ComparingExpressionNodeTest#<stmt1>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt1>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	54	00e4a425df9e4da0	
-member	liqp.nodes.ComparingExpressionNodeTest#<stmt2>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt2>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	112	f5ea18d36a0a4c0f	
-member	liqp.nodes.ComparingExpressionNodeTest#<stmt3>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt3>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	165	bf93ae12bd96cb1b	
-member	liqp.nodes.ComparingExpressionNodeTest#<stmt4>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt4>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	178	682c3e30424bd167	
-member	liqp.nodes.ComparingExpressionNodeTest#<stmt5>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt5>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	189	9b6cba04f9bbf4b4	
+member	liqp.nodes.ComparingExpressionNodeTest#<stmt1>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt1>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	165	bf93ae12bd96cb1b	
+member	liqp.nodes.ComparingExpressionNodeTest#<stmt2>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt2>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	178	682c3e30424bd167	
+member	liqp.nodes.ComparingExpressionNodeTest#<stmt3>	ssg.liquid.nodes.ComparingExpressionNodeTest#<stmt3>	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	189	9b6cba04f9bbf4b4	
 member	liqp.nodes.ComparingExpressionNodeTest#cartesianProduct(Buffer)	ssg.liquid.nodes.ComparingExpressionNodeTest#cartesianProduct(Buffer<Buffer<T>>)	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	200	3d12f1950dd5e11a	
-member	liqp.nodes.ComparingExpressionNodeTest#testCombunationsStrctWithExpectation(String,TemplateParser)	ssg.liquid.nodes.ComparingExpressionNodeTest#testCombunationsStrctWithExpectation(String,TemplateParser)	Renamed	-	liqp/nodes/ComparingExpressionNodeTest.java	124	66340bae3cbf36f1	vis=private
 member	liqp.nodes.ContainsNodeTest#<stmt1>	ssg.liquid.nodes.ContainsNodeTest#<stmt1>	Renamed	-	liqp/nodes/ContainsNodeTest.java	11	cc0f6070a26fe225	
 member	liqp.nodes.EqNodeTest#<stmt1>	ssg.liquid.nodes.EqNodeTest#<stmt1>	Renamed	-	liqp/nodes/EqNodeTest.java	15	23b38a2477566600	
 member	liqp.nodes.EqNodeTest#<stmt2>	ssg.liquid.nodes.EqNodeTest#<stmt2>	Renamed	-	liqp/nodes/EqNodeTest.java	53	e8fac9b56c85e78e	
@@ -793,3 +790,6 @@ member	liqp.tags.WhitespaceWindowsControlTest#<stmt5>	ssg.liquid.tags.Whitespace
 member	liqp.tags.WhitespaceWindowsControlTest#<stmt6>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt6>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	65	bf0148067a963c80	
 member	liqp.tags.WhitespaceWindowsControlTest#<stmt7>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt7>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	75	88d7432bc2ddb579	
 member	liqp.tags.WhitespaceWindowsControlTest#<stmt8>	ssg.liquid.tags.WhitespaceWindowsControlTest#<stmt8>	Renamed	-	liqp/tags/WhitespaceWindowsControlTest.java	85	785bb0f8596930ff	
+member	liqp.nodes.ComparingExpressionNodeTest#testCombinationsNonStrict()		Dropped	-		0		
+member	liqp.nodes.ComparingExpressionNodeTest#testCombinationsStrict()		Dropped	-		0		
+member	liqp.nodes.ComparingExpressionNodeTest#testCombunationsStrctWithExpectation(String,TemplateParser)		Dropped	-		0		

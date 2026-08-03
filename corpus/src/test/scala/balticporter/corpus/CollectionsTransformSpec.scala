@@ -1432,11 +1432,40 @@ class CollectionsTransformSpec extends PortSuite:
         |""".stripMargin, ph)
     assertEmits(p, "extends java.util.Map.Entry[K, V]")
     assertNotEmits(p, "extends scala.Tuple2")
+    // …AND THE OTHER HALF OF THE SAME REFUSAL. Keeping java's parent makes the `extends` clause
+    // legal and leaves the class INCOMPLETE: `Map.Entry` declares `setValue`, the target has no
+    // write-through, and a member the parent declares cannot simply be absent — the class would
+    // need to be abstract, which `RefChecks` only says once the port reaches 0 typer errors (§3).
+    // Java's own contract is the answer: `setValue` is an OPTIONAL operation documented to throw
+    // `UnsupportedOperationException` where the backing map does not support the write, and a
+    // ported entry with no reachable map IS that entry. Louder than java, never quieter — the
+    // opposite of the `SimpleEntry` K2 refuses, which would succeed and change nothing.
+    assertEmits(p, "override def setValue(v: V): V = throw new java.lang.UnsupportedOperationException(")
     val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent)
-    assertEquals(clue(fs).size, 1)
-    assert(clue(fs.head.slot).contains("parent"))
+    assertEquals(clue(fs).map(_.slot).sorted, List("member (implements) setValue", "parent (implements)"))
     assert(clue(CollectionBoundaryCheck.Issue.classification(
              CollectionBoundaryCheck.Issue.InexpressibleParent)).contains("§1(a)"))
+  }
+
+  test("…and the refusal is owed to the PARENT, not to the receiver — a plain class keeps the error") {
+    // The interface's optional-operation contract is what licenses the throw, so it applies exactly
+    // where the class must IMPLEMENT `setValue`. A class that merely HOLDS an entry has no such
+    // obligation, and inventing a throw for its own method would be the engine deciding what that
+    // method means. It fails to compile naming the member instead (M6) — the negative test for the
+    // rule above, and the same shape the field-held case below pins.
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.Map;
+        |class Plain<K, V> {
+        |  private final Map.Entry<K, V> e;
+        |  Plain(Map.Entry<K, V> e) { this.e = e; }
+        |  V setValue(V v) { return e.setValue(v); }
+        |}
+        |""".stripMargin, ph)
+    assertEmits(p, "this.e.setValue(v)")
+    assertNotEmits(p, "UnsupportedOperationException")
+    assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent), 0)
   }
 
   test("…and a USE of Map.Entry is still a Tuple2 — the negative test") {

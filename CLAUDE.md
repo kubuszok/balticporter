@@ -110,6 +110,20 @@ Corollary for a body substitution: it may change what a member DOES and never wh
 replacement body needing the new value has to be placed at a member the closure already reached —
 one member further out than the one you were looking at.
 
+**And an obligation THE ENGINE'S OWN TRANSLATION created is not a port's to discharge.** A drop key
+is a statement about the LIBRARY's surface — "this port ships without that member". Where the member
+is one an emitted PARENT declares, dropping it does not remove an obligation, it breaks one: the
+class needs to be abstract, and **nothing reports that until the port is already at 0 typer errors**,
+because `RefChecks` does not run before then (§3). So the failure arrives on the day the port goes
+green, in a member nobody was looking at, having passed every count on the way. Read the shape rather
+than the case: when the residue exists BECAUSE a phase emitted a parent, chose a member name, or
+retyped a field, the answer is owed by the phase — and where no translation exists, the honest
+emission is often the JAVA CONTRACT'S OWN refusal (an `UnsupportedOperationException` at an operation
+the interface itself declares optional), which is louder than java and never quieter, rather than a
+stand-in that compiles and silently does nothing. Measured on the first port to try the drop:
+one `Not Found` traded for one `needs to be abstract`, at 0 net errors moved
+(`ENGINE-LIMITS.md` K5.7).
+
 ### (c) Genuinely library-specific — a SEPARATE, PLUGGED-IN RULE
 
 If a customisation needs knowledge so specific that it could only ever apply to **one** library, it
@@ -226,6 +240,15 @@ two instances holding two halves of one table are not a map. So a parameterised 
   no constraint on it at all — a phase the dependent declares and no base has, which is one instance
   (nothing diverges) and no merge (nothing is "added"). That is why `MergeablePolicy` has to expose
   its `subjects` and not just its merge.
+  **And ask that question of what the base EMITS, never of its `governs` CLAIM.** A claim names a
+  NAMESPACE; it does not say that every FQN under it is the base's, and a dependent's own
+  declarations routinely live inside it — a TEST SOURCE SET always does, `src/test/java/<pkg>` being
+  the same package as `src/main/java/<pkg>`. Screened by the claim, every key such a module writes
+  about its OWN members is an intrusion, which is a rule with no way to comply with it: 3 fatal
+  findings for one three-key `dropMethods` entry naming the dependent's own test class
+  (`ENGINE-LIMITS.md` D10). The base's PUBLISHED PORT MAP is the list of what it emitted and is what
+  the screen must read; the namespace is the fallback for a base that published none, which is
+  already a finding of its own.
 
 Measured on the libGDX base's first `TypeRedirectTransform`, which is what closed `ENGINE-LIMITS.md`
 D9.

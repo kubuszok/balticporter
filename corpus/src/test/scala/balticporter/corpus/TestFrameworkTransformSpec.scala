@@ -192,6 +192,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
       |  @Test public void shapes() {
       |    Object o = "x";
       |    String s = "x";
+      |    java.util.List<Object> lo = new java.util.ArrayList<Object>();
+      |    java.util.List<String> ls = new java.util.ArrayList<String>();
       |    long l = 1L;
       |    int i = 1;
       |    char c = 'a';
@@ -202,6 +204,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
       |    Assert.assertEquals(i, l);
       |    Assert.assertEquals(c, i);
       |    Assert.assertEquals(o, s);
+      |    Assert.assertEquals(ls, lo);
       |    Assert.assertEquals(1.0f, 2.0f, 0.5f);
       |    Assert.assertEquals("why", 1.0d, 2.0d, 0.5d);
       |    Assert.assertNotEquals(1, i);
@@ -238,6 +241,25 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(out.contains("munit.Assertions.assertEquals(i, c.toInt)"))
     // and an EQUAL-typed pair is left alone: a `.toLong` on both sides would be noise.
     assert(out.contains("munit.Assertions.assertEquals(i, 1)"))
+  }
+
+  test("an UNRELATED REFERENCE pair re-applies java's OTHER widening — assertEquals[Object, Object]") {
+    val (out, _) = emit(assertSrc)
+    // Java resolved `assertEquals(Object, Object)` here and WIDENED both operands; MUnit's
+    // `Compare[A, B]` needs the two to relate, and two invariant `java.util.List`s at different
+    // element types do not. Same rule as the numeric promotion above, at the other overload —
+    // written as the call's type arguments, which is what java's signature said.
+    assert(clue(out).contains(
+      "munit.Assertions.assertEquals[java.lang.Object, java.lang.Object](lo, ls)"))
+    // A ROOT on either side takes it too: `Compare[A, Object]` resolves for every `A`, so MUnit's
+    // constraint is ALREADY VACUOUS there and writing java's widening down costs no check — while
+    // reading a root as "the two types agree" is what would decline the one pair that needs it.
+    assert(out.contains("munit.Assertions.assertEquals[java.lang.Object, java.lang.Object](s, o)"))
+    // …and where MUnit's constraint IS a check, it is kept: an equal, non-root pair, and every
+    // numeric pair, which `promote` above owns.
+    assert(out.contains("munit.Assertions.assertEquals(i, 1)"))
+    assert(!out.contains("assertEquals[java.lang.Object, java.lang.Object](i,"))
+    assert(!out.contains("assertEquals[java.lang.Object, java.lang.Object](b,"))
   }
 
   test("the delta overloads become assertEqualsFloat / assertEqualsDouble, by WIDTH") {
@@ -518,6 +540,20 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     val c: Char = 1.toChar
     munit.Assertions.assertEquals(i, c.toInt)
     intercept[munit.ComparisonFailException](munit.Assertions.assertEquals(2.toLong, l))
+  }
+
+  test("BEHAVIOUR: the REFERENCE widening still compares CONTENTS, exactly as java's did") {
+    // `assertEquals[Object, Object]` is what java's `assertEquals(Object, Object)` was: the
+    // comparison is still `equals`, so two lists that hold the same elements are still equal and
+    // two that do not are still not. Widening the STATIC types must not weaken the assertion into
+    // a reference check, which is the one way this rewrite could pass while checking nothing.
+    val lo: java.util.List[Object] = java.util.Arrays.asList[Object]("a", "b")
+    val ls: java.util.List[String] = java.util.Arrays.asList("a", "b")
+    munit.Assertions.assertEquals[java.lang.Object, java.lang.Object](lo, ls)
+    assert(!(lo eq ls))
+    val other: java.util.List[String] = java.util.Arrays.asList("a", "c")
+    intercept[munit.ComparisonFailException](
+      munit.Assertions.assertEquals[java.lang.Object, java.lang.Object](lo, other))
   }
 
   test("BEHAVIOUR: assertSame maps to `eq`, which is NOT `==`") {

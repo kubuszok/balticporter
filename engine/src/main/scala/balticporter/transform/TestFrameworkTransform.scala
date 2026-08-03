@@ -80,7 +80,7 @@ final class TestFrameworkTransform(
     testMember: String = "test",
 ) extends Phase, balticporter.core.SurfacePolicy:
 
-  import TestFrameworkTransform.{Finding, Fix, MinArity, NumericRank}
+  import TestFrameworkTransform.{Finding, Fix, MinArity, NumericRank, Roots}
 
   def name: String = "junit->portable-suite"
 
@@ -157,6 +157,8 @@ final class TestFrameworkTransform(
   private var widenSyms: Map[String, SymId] = Map.empty
   /** primitive/`Unit` type references, resolved from the program where it already has them. */
   private var primTypes: Map[String, TypeRepr] = Map.empty
+  /** `java.lang.Object` — the type java's `assertEquals(Object, Object)` widened to; see [[widened]]. */
+  private var objType: TypeRepr = TypeRepr.NoType
   private var toSeqSym: SymId   = SymId.None
   private var indicesSym: SymId = SymId.None
   private var eqSym: SymId      = SymId.None
@@ -209,6 +211,7 @@ final class TestFrameworkTransform(
         byName.get(fqn).flatMap(_.headOption).map(_.id)
           .getOrElse(mint(fqn.substring(fqn.lastIndexOf('.') + 1), fqn)))
     primTypes = (NumericRank.keySet + "scala.Unit" + "scala.Boolean").map(t => t -> prim(t)).toMap
+    objType = prim("java.lang.Object")
     unitSym = headSymOf(primTypes("scala.Unit"))
 
     val symbols0 = SymbolTable(program.symbols.all ++ added)
@@ -421,7 +424,9 @@ final class TestFrameworkTransform(
         case ("assertNotSame", List(e, a)) => Right(call("assert", infix(a, neSym, e, o) :: clue, o))
         case ("assertEquals" | "assertNotEquals", List(e, a)) =>
           val (a2, e2) = promote(a, e)
-          Right(call(if nm == "assertEquals" then "assertEquals" else "assertNotEquals", a2 :: e2 :: clue, o))
+          val m = if nm == "assertEquals" then "assertEquals" else "assertNotEquals"
+          Right(if widened(a2, e2) then callAt(m, objType, a2 :: e2 :: clue, o)
+                else call(m, a2 :: e2 :: clue, o))
         case ("assertEquals", List(e, a, delta)) =>
           Right(call(deltaMember(List(e, a, delta)), a :: e :: delta :: clue, o))
         case ("assertArrayEquals", List(e, a)) =>
@@ -501,6 +506,77 @@ final class TestFrameworkTransform(
 
   private def widen(t: Term, from: String, to: String, p: Program): Term =
     if from == to then t else select(guarded(t)(using p), widenSyms(to), t.origin, primTypes(to))
+
+  /** JAVA'S OTHER WIDENING, re-applied — the REFERENCE half of what [[promote]] does for numbers.
+    *
+    * Java has one `assertEquals(Object, Object)` and every reference pair went through it, WIDENED
+    * at the call; MUnit's `assertEquals[A, B]` infers each operand independently and then demands a
+    * `Compare[A, B]`, which needs the two types to relate. Two invariant `java.util.List`s at
+    * different element types do not — `Can't compare these two types: java.util.List[Object] /
+    * java.util.List[String]` (liqp `RenderSettingsTest`), the same fact as the 26 `Long / Int`
+    * errors at the other overload.
+    *
+    * MUnit's constraint is a STRICTLY STRONGER check than java's, so the rule is to KEEP IT WHERE
+    * IT IS A CHECK and write java's widening down everywhere else. It is a check exactly when the
+    * two static types are the SAME and that type is not a ROOT — `Compare` is reflexive, and
+    * `[Object, Object]` on a pair MUnit can already compare would throw the better diagnostic
+    * away.
+    *
+    * **A ROOT on either side is the case that reads as "already relates" and is not.** MUnit's
+    * `Compare[A, Object]` resolves whatever `A` is, so at a root operand the constraint is ALREADY
+    * VACUOUS and the widening costs nothing — and it is the one place the TIR's own answer cannot
+    * be trusted. An earlier phase's boundary bridge types its wrap as the FORMAL it was inserted
+    * for, and java's `assertEquals(Object, Object)` formal is `java.lang.Object`: at liqp's
+    * `RenderSettingsTest` BOTH operands are `JavaCollections.toJava(…)` nodes carrying
+    * `java.lang.Object`, while the text they emit is `java.util.List[Object]` and
+    * `java.util.List[String]`. Read as "same type, so MUnit can compare them" that pair declines
+    * the widening and fails to compile; read as "a root, so there was never a check here" it takes
+    * it. Note the phase concludes nothing about ANOTHER phase's rewrite — it reads its own operand
+    * types and treats a root as the absence of information it is.
+    *
+    * Two guards, both refusals rather than approximations:
+    *
+    *   - `NoType` on either side is "the frontend could not say", and a rewrite is not made on a
+    *     guess;
+    *   - a PRIMITIVE on either side belongs to [[promote]], and widening a boxed pair to `Object`
+    *     would silently change the comparison: scala's `==` on two boxed numbers is NUMERIC
+    *     (`BoxesRunTime.equals`), where java's `Integer.equals(Long)` is `false`. That is a §4.4
+    *     divergence and this rewrite must not open it.
+    *
+    * The widening is written as the call's TYPE ARGUMENTS rather than as a cast per operand: it is
+    * one construct instead of two, it is exactly what java's signature said, and it leaves the
+    * operands' own emitted text alone. A type-PARAMETER operand takes it too and is safe for the
+    * reason `ENGINE-LIMITS.md` G24 measures — the port emits java's vacuous `T <: java.lang.Object`
+    * bound literally, so such an operand conforms; the day G24's bound comes off, it stops. */
+  private def widened(x: Term, y: Term)(using p: Program): Boolean =
+    val (sx, sy) = (shape(x.tpe), shape(y.tpe))
+    sx.nonEmpty && sy.nonEmpty &&
+      !isValueType(x.tpe) && !isValueType(y.tpe) &&
+      (sx != sy || Roots(sx))
+
+  private def isValueType(t: TypeRepr)(using p: Program): Boolean =
+    val n = nameOf(t)
+    NumericRank.contains(n) || n == "scala.Boolean" || n == "scala.Unit"
+
+  /** A type's full structural name, type ARGUMENTS included.
+    *
+    * [[nameOf]] deliberately answers the type CONSTRUCTOR, which is right everywhere else in this
+    * phase and is exactly wrong here: the pair [[widened]] exists for differs ONLY in its
+    * arguments, and read through `nameOf` the two sides compare equal. */
+  private def shape(t: TypeRepr)(using p: Program): String = t match
+    case TypeRepr.TypeRef(_, s)       => p.symbolOf(s).map(_.fullName).getOrElse("")
+    case TypeRepr.AppliedType(tc, as) =>
+      val head = shape(tc)
+      if head.isEmpty then "" else head + as.map(shape).mkString("[", ",", "]")
+    case TypeRepr.TypeBounds(_, _)    => "?"
+    case _                            => ""
+
+  /** `assertEquals[T, T](…)` — the call at an EXPLICIT type argument on both operands. */
+  private def callAt(member: String, targ: TypeRepr, args: List[Term], o: Origin): Term =
+    val s  = munitSyms(member)
+    val fn = Tree.TypeApply(Tree.Ident(s, TypeRepr.NoType, o),
+                            List(TypeTree(targ, o), TypeTree(targ, o)), TypeRepr.NoType, o)
+    Tree.Apply(fn, args, s, TypeRepr.NoType, o)
 
   /** Parenthesize a receiver that would otherwise re-associate. `a * b` is a bare `Apply` in the
     * TIR but renders INFIX, so `.toLong` on it would attach to `b` — and `x >> 2.toLong` is not
@@ -798,6 +874,15 @@ object TestFrameworkTransform:
   val NumericRank: Map[String, Int] = Map(
     "scala.Byte" -> 1, "scala.Short" -> 2, "scala.Char" -> 2, "scala.Int" -> 3,
     "scala.Long" -> 4, "scala.Float" -> 5, "scala.Double" -> 6)
+
+  /** The types every other type conforms to — where MUnit's `Compare` resolves whatever the other
+    * operand is, so its constraint is ALREADY VACUOUS and there is no check to preserve.
+    *
+    * Read [[TestFrameworkTransform.widened]] for why that makes a root a reason TO widen rather
+    * than a reason not to. `java.lang.Object` is the one java's `assertEquals` formal produces; the
+    * Scala roots are here because a port's own retyping can put one on an operand. */
+  val Roots: Set[String] =
+    Set("java.lang.Object", "scala.Any", "scala.AnyRef", "scala.Matchable")
 
   /** How many arguments each `org.junit.Assert` member takes WITHOUT java's optional leading
     * `String message`. Everything above this count with a leading `String` is that message — which

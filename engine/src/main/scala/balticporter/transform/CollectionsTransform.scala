@@ -256,6 +256,12 @@ final class CollectionsTransform(
     * pass a no-op by arithmetic on every port that does not. */
   private var uninheritableSyms: Set[SymId] = Set.empty
 
+  /** `java.lang.UnsupportedOperationException`, as this run's own type — see
+    * [[CollectionsTransform.UnsupportedOnTarget]]. */
+  private var unsupportedOpTpe: TypeRepr = TypeRepr.NoType
+  private var unsupportedOpSym: SymId    = SymId.None
+  private var stringTpe: TypeRepr        = TypeRepr.NoType
+
   /** is this symbol one the PROGRAM declares? Structural (`Program.owned`), never a name test
     * (§4.56), and computed once per run because the external-seam arms ask it per call. */
   private var ownedSym: SymId => Boolean = _ => true
@@ -409,6 +415,15 @@ final class CollectionsTransform(
     mapGetSym         = staticSyms.getOrElse("mapGet", SymId.None)
     mapContainsKeySym = staticSyms.getOrElse("mapContainsKey", SymId.None)
     mapRemoveSym      = staticSyms.getOrElse("mapRemove", SymId.None)
+    // …the refusal a RETAINED PARENT's own contract prescribes (`UnsupportedOnTarget`). Resolved
+    // from the program where it already holds the symbol and minted only where it does not: two
+    // symbols for one FQN print the same text and compare unequal, which is how a later reader ends
+    // up asking about a type this run has twice.
+    def named(fqn: String, nm: String): SymId =
+      program.symbols.all.find(_.fullName == fqn).map(_.id).getOrElse(mint(nm, fqn))
+    unsupportedOpSym = named(CollectionsTransform.UnsupportedOperationFqn, "UnsupportedOperationException")
+    unsupportedOpTpe = TypeRepr.TypeRef(TypeRepr.NoPrefix, unsupportedOpSym)
+    stringTpe        = TypeRepr.TypeRef(TypeRepr.NoPrefix, named("java.lang.String", "String"))
     externalSeams.clear()
     implicitPending.clear()
 
@@ -598,6 +613,9 @@ final class CollectionsTransform(
       def tpeOf(p: Term | TypeTree): TypeRepr = p match
         case tt: TypeTree => tt.tpe
         case t: Term      => t.tpe
+      // the members THIS class's retained parents declare that their targets cannot carry — filled
+      // while the parents are decided, because that is the one place both halves are in hand.
+      val unimplementable = collection.mutable.Set.empty[String]
       val parents =
         // lengths agree by construction — `mapClassDef` maps the list one for one — and a mismatch
         // means the traversal changed shape, in which case the MAPPED list is the honest answer
@@ -609,6 +627,9 @@ final class CollectionsTransform(
             case Some(_)    =>
               val kept   = TirPrinter.tpe(tpeOf(o), TirPrinter.Style.canonical)
               val target = TirPrinter.tpe(tpeOf(m), TirPrinter.Style.canonical)
+              headSym(tpeOf(m)).flatMap(summon[Program].symbolOf).map(_.fullName)
+                .flatMap(CollectionsTransform.UnsupportedOnTarget.get)
+                .foreach(unimplementable ++= _)
               seam("parent (implements)", target, kept, orig.origin, orig.symbol,
                    CollectionBoundaryCheck.Issue.InexpressibleParent)
               // …and a PORTER NOTE beside the class (§4.575). This is the shape that fact is worth
@@ -635,9 +656,68 @@ final class CollectionsTransform(
         }
       val body = CollectionsTransform.spine(orig.body, mapped.body, orig.symbol).map {
         case (o: Tree.ClassDef, m: Tree.ClassDef) => restoreUninheritableParents(o, m)
+        case (_, m: Tree.DefDef)
+          if unimplementable.nonEmpty &&
+             summon[Program].symbolOf(m.symbol).exists(s => unimplementable(s.name)) =>
+          refuseOnTarget(m, orig)
         case (_, m)                               => m
       }
       mapped.copy(parents = parents, body = body)
+
+  /** THE OTHER HALF OF A RETAINED PARENT — the member that parent declares and the target cannot.
+    *
+    * Keeping java's parent makes the class's `extends` clause legal; it does not make the class
+    * COMPLETE. `java.util.Map.Entry` declares `setValue`, so the emitted class must still implement
+    * it, and the body upstream wrote is a write-through call on a receiver this phase retyped to a
+    * `Tuple2` — which has no such member. **Dropping the member is not open to the port either**:
+    * a `dropMethods` key removes a member the retained parent declares and leaves the class
+    * abstract, and that failure is invisible until the port reaches 0 typer errors, because
+    * `RefChecks` does not run before then (CLAUDE.md §3). Measured exactly that way — the drop
+    * traded one `Not Found` for one `needs to be abstract`.
+    *
+    * So the answer is JAVA'S OWN, and it is a contract rather than a stand-in: `Map.Entry.setValue`
+    * is an **optional operation**, documented to throw `UnsupportedOperationException` where the
+    * backing map does not support the write. A ported entry whose map is not reachable from the
+    * call is precisely that entry, so the port emits the refusal the interface prescribes. It is
+    * the same refusal K2 has always made, expressed in code instead of as a compile error — and it
+    * is the opposite of the alternative K2 rejects: a `SimpleEntry` would compile and write to a
+    * DETACHED COPY, succeeding while changing nothing, which is CLAUDE.md §4.4's defect class.
+    * Throwing is louder than java, never quieter, and it is counted at the slot.
+    *
+    * The LOOP-REACHABLE case never arrives here: `writeThroughEntries` has already turned
+    * `e.setValue(v)` inside `for (e : m.entrySet())` into the map's own `put`, so what is left is
+    * exactly the case with no loop and no map. */
+  private def refuseOnTarget(d: Tree.DefDef, owner: Tree.ClassDef)(using p: Program): Tree.DefDef =
+    val nm  = p.symbolOf(d.symbol).map(_.name).getOrElse("")
+    val fqn = p.symbolOf(d.symbol).map(_.fullName).getOrElse(nm)
+    val o   = d.origin
+    val why =
+      s"$nm: this java.util.Map.Entry was ported to a detached pair, so the backing map is not " +
+        "reachable from the entry. java declares this an OPTIONAL operation whose contract is this " +
+        "exception; writing to the detached copy would succeed and change nothing"
+    val exn = Tree.Apply(Tree.New(TypeTree(unsupportedOpTpe, o), unsupportedOpTpe, o),
+                         List(Tree.Literal(Constant.StringC(why), stringTpe, o)),
+                         unsupportedOpSym, unsupportedOpTpe, o)
+    seam(s"member (implements) $nm", TirPrinter.tpe(d.returnTpt.tpe, TirPrinter.Style.canonical),
+         CollectionsTransform.UnsupportedOperationFqn, o, d.symbol,
+         CollectionBoundaryCheck.Issue.InexpressibleParent)
+    record(Decision(
+      kind       = Decision.Kind.SubstitutedBody,
+      subject    = d.symbol,
+      subjectFqn = fqn,
+      detail = Map(
+        "member"  -> nm,
+        "throws"  -> CollectionsTransform.UnsupportedOperationFqn,
+        "owner"   -> p.symbolOf(owner.symbol).map(_.fullName).getOrElse(""),
+        "why" -> ("the RETAINED PARENT declares this member and the mapping target cannot carry " +
+          "it, so the body is java's own documented refusal for an optional operation. Writing to " +
+          "the detached pair would compile and change nothing (K2); dropping the member would " +
+          "leave the class abstract against the parent it kept"),
+      ),
+      reason = Reason.Universal("inexpressible-parent(K5.7)"),
+      origin = o,
+    ))
+    d.copy(rhs = Some(Tree.Throw(exn, d.returnTpt.tpe, o)))
 
   /** `StandardTraversal.mapSymbols`, minus the symbols the scope held back — so an excluded
     * declaration's SIGNATURE stays exactly as the frontend read it, which is what the restored tree
@@ -2971,6 +3051,25 @@ object CollectionsTransform:
     * A class that IMPLEMENTS `java.util.Map.Entry` therefore cannot be emitted at that target at
     * all — see `restoreUninheritableParents`, which keeps java's parent and counts the refusal. */
   private[balticporter] val UninheritableTargets: Set[String] = Set("scala.Tuple2")
+
+  /** …and the members that RETAINED PARENT declares which its mapping target cannot carry.
+    *
+    * Keeping java's parent (`restoreUninheritableParents`) makes the class compile as far as its
+    * PARENT goes and leaves the other half open: the class must still IMPLEMENT everything that
+    * parent declares, and the member whose body was written against the java type is exactly the
+    * one the target has no counterpart for. `java.util.Map.Entry#setValue` is that member and is
+    * the whole of this table — `getKey`/`getValue` are `_1`/`_2` and translate.
+    *
+    * Read the values as *what the target cannot express*, not as *what the phase gave up on*: java
+    * declares `setValue` an OPTIONAL operation whose contract is `UnsupportedOperationException`
+    * where the backing map does not support the write, so a ported entry that has no reachable map
+    * throwing it is a CONFORMING `Map.Entry` rather than a hole. Derived from the phase's own
+    * mapping (a key here is a target in [[UninheritableTargets]]), never from a receiver's name. */
+  private[balticporter] val UnsupportedOnTarget: Map[String, Set[String]] =
+    Map("scala.Tuple2" -> Set("setValue"))
+
+  /** the exception java's own contract names for an optional operation a receiver cannot perform. */
+  private[balticporter] val UnsupportedOperationFqn = "java.lang.UnsupportedOperationException"
 
   val StaticHelpers: List[String] =
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView", "addAll", "noneMatch", "removeValue",

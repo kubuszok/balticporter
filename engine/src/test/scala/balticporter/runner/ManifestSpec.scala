@@ -324,6 +324,35 @@ class ManifestSpec extends munit.FunSuite:
     assert(!Kind.InheritedKeyNeverFired.fatal)
   }
 
+  test("an EXTRA drop is screened against what the base EMITS, not against its NAMESPACE") {
+    // `governs` claims a package; it does not claim every FQN under it. A dependent's own
+    // declarations routinely live inside that package — a TEST SOURCE SET always does, `src/test/
+    // java/<pkg>` being the same package as `src/main/java/<pkg>` — so a screen that reads the
+    // claim alone makes every key such a module declares about its OWN members an intrusion, and
+    // leaves it no way to comply. §1.5 says "may not edit what a base EMITS", and the base's
+    // published PORT MAP is what answers that.
+    val base = PortManifest("core", governs = Set("com.demo"))
+    val m    = base.extendedBy(PortManifest("ext", dropMethods = Set("com.demo.OwnTest#helper()")))
+    def run(entries: List[PortMap.Entry]) =
+      ManifestAgreement.check(Some(m), Nil, foreignRoots = true, fired = Set("com.demo.OwnTest#helper()"),
+        ports = List(ManifestAgreement.BasePort(base, Some(PortMap.Map0("core", "e", entries)))))
+    def entry(kind: String, upstream: String) =
+      PortMap.Entry(kind, upstream, upstream, PortMap.Disposition.Ported)
+
+    // the base's map holds ONLY its own type, so the dependent's drop touches nothing of it.
+    assertEquals(run(List(entry("type", "com.demo.Widget"))).map(_.kind), Nil)
+    // …and the moment the base really does emit that type, the intrusion is fatal again.
+    assertEquals(
+      run(List(entry("type", "com.demo.Widget"), entry("type", "com.demo.OwnTest"))).map(_.kind),
+      List(Kind.ExtraDrop))
+    // NO MAP is not "no claim": an unpublished base is already reported on its own, and the
+    // namespace is then the only answer that exists — so the screen keeps the pre-map behaviour.
+    assertEquals(
+      ManifestAgreement.check(Some(m), Nil, foreignRoots = true, fired = Set("com.demo.OwnTest#helper()"),
+        ports = List(ManifestAgreement.BasePort(base))).map(_.kind),
+      List(Kind.ExtraDrop))
+  }
+
   test("every finding renders its §1 classification — an agent must not have to investigate to act") {
     Kind.values.foreach(k => assert(clue(k.classification).contains("§1"), k.toString))
   }

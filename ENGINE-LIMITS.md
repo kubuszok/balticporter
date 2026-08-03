@@ -1234,6 +1234,73 @@ check count flat. It is pinned by `CtorFunnelBodyShapeSpec`, which builds both s
 parsed constructor's `rhs`, because no Java text can produce them at today's frontend — and that is
 the point, since the next lowering or frontend can.
 
+### C12. A PROMOTED CONSTRUCTOR LOCAL keeps its NAME and loses its POSITION — **409 of 414 test failures, 0 compile errors. OPEN**
+
+C2 says a promoted constructor's parameters and top-level locals become MEMBERS, and `CLAUDE.md`
+§4.55 says how to rename them so nothing collides. Both are about the NAME. Neither is about WHERE
+the member's initialiser runs, and that is the half that is wrong.
+
+A java constructor body is a sequence. Promoting it to Scala's primary emits the locals as `val`
+members and the rest as statements — but the `val`s are emitted at the HEAD of the class body,
+ahead of every statement, whatever order java wrote them in:
+
+```java
+Template(TemplateParser templateParser, CharStream stream, Path location) {
+    this.templateParser = templateParser;                                    // 1st in java
+    Set<String> blockNames = this.templateParser.insertions.getBlockNames();  // 2nd
+    …
+}
+```
+```scala
+private var templateParser: ssg.liquid.TemplateParser = scala.compiletime.uninitialized
+val blockNames$p = this.templateParser.insertions.getBlockNames()   // ← runs FIRST; the field is null
+…
+this.templateParser = templateParser$p                              // ← runs after
+```
+
+A Scala class body IS its constructor, so a `val` initialiser and a statement are the same kind of
+thing and their relative order is the whole of the semantics. Emitting every promoted local before
+every statement re-orders java's constructor, and the failure it produces is a `NullPointerException`
+on a field that java had already assigned.
+
+**Measured on liqp's first suite run: 409 of 414 failures, all of them this one constructor.**
+`Template` is what every test parses through, so one member's ordering took 71% of the suite. And
+the number nothing else could have found: **0 scalac errors, every check count flat, and the port
+had been reported green on the compile for the whole wave that produced it** — CLAUDE.md §3 in one
+member, at the scale it warns about.
+
+**The line is `TirEmitter.orderBody`**, and it is three lines long:
+
+```scala
+val fields = body.collect { case v: Tree.ValDef => v }
+val rest   = body.filterNot(s => isCtor(s) || s.isInstanceOf[Tree.ValDef])
+fields ++ ordered.toList ++ rest          // every ValDef hoisted ahead of every statement
+```
+
+For a class's own FIELDS that partition is right — java runs field initialisers before the
+constructor body, so hoisting them reproduces java. For a PROMOTED CONSTRUCTOR LOCAL it is exactly
+wrong: that `ValDef` is a STATEMENT of the constructor (spliced in as `plan.primaryBody`), and
+hoisting it past the constructor's other statements re-orders java. The two kinds are indistinguishable
+by NODE KIND and distinguishable by PROVENANCE, which is what the fix has to read.
+
+Three things a fix has to keep, which is why it is not a sort:
+
+- **java's order, exactly** — the promoted locals interleave with the promoted statements and the
+  interleaving is what carries the dependencies. "Declarations first" is the bug, and "sort by
+  origin line" is not the fix either, since a real field and a promoted local can share a line only
+  by accident;
+- **real fields keep the hoist.** A java field initialiser really does run before the constructor
+  body, and a class whose field initialiser reads a constructor parameter does not exist in java;
+- **the RENAMES C2/§4.55 already do are correct and independent** — only the placement moves. And a
+  local promoted by a route OTHER than the funnel (the enum-parameter route T11 names) reaches the
+  same three lines, so the fix is here and not at one caller.
+
+The blast is every port with a paramful promoted constructor, i.e. most of the corpus, and it moves
+emitted TEXT rather than any count — so it is measured with `just measure-all` and read as member
+digests plus the two test lanes' outcomes, never as an error count.
+
+*Fix kind: (a) engine, OPEN. Found by RUNNING a suite and by nothing else.*
+
 ---
 
 ## 3. `this`, inner classes and anonymous classes
@@ -2110,18 +2177,56 @@ BINDING and not some other entry, which would write to a different map; the sour
 because java evaluates the iterable ONCE and the rewrite repeats it inside the body; and the binding
 is not REASSIGNED, or `e._1` is no longer the key the loop is at.
 
-**What stays refused is the case with no loop and no map** — a class holding a detached entry in a
-FIELD (`Sort$ComparableMapEntry`), where the receiver's java type was `Map.Entry` and its value,
-after the retyping, really is a detached pair. Restoring the field's java type would make the body
-compile and move the seam to the CONSTRUCTION site, where a `Tuple2` meets a `java.util.Map.Entry`
-formal: one error traded for at least one, unless the runtime supplies a `SimpleEntry`, which is
-exactly the write-to-a-detached-copy K2 refuses. It fails to compile naming the member (M6).
+**The case with no loop and no map** is a class holding a detached entry in a FIELD
+(`Sort$ComparableMapEntry`), where the receiver's java type was `Map.Entry` and its value, after the
+retyping, really is a detached pair. Restoring the field's java type would make the body compile and
+move the seam to the CONSTRUCTION site, where a `Tuple2` meets a `java.util.Map.Entry` formal: one
+error traded for at least one, unless the runtime supplies a `SimpleEntry`, which is exactly the
+write-to-a-detached-copy K2 refuses.
 
 Measured on liqp: **9 -> 8**, one site (`LiquidSupport#visitMap`), 1 member digest, every check
 count flat.
 
-*Fix kind: (a) engine — the parent restore, and the loop-reachable half of `setValue`. The
-field-held half is (a) and REFUSED, with the reason above.*
+**…AND THE REFUSAL STILL OWED AN EMISSION, because the RETAINED PARENT is an obligation.** Leaving
+the body to fail to compile naming the member (M6) is the right answer for a method the class merely
+declares. It is not available for THIS one: keeping java's parent makes the `extends` clause legal
+and leaves the class INCOMPLETE — `java.util.Map.Entry` declares `setValue`, so the emitted class
+must implement it or be abstract. The engine's own parent choice created an obligation the body
+cannot meet, which is why the port cannot answer it either:
+
+| answer | measured |
+|---|---|
+| leave the untranslated body | `value setValue is not a member of (K, V)` — 1 error, and the port cannot reach 0 |
+| **`Substitutions.dropMethods` on the member** | the `Not Found` goes and `class ComparableMapEntry needs to be abstract, since def setValue(x0: V): V in trait Entry in object Map is not defined` arrives. **One error traded for one**, and the new one is INVISIBLE until the port is at 0 typer errors, because `RefChecks` does not run before then (`CLAUDE.md` §3) |
+| `dropTypes` + `inject` | the type is `private static final` and NESTED in a class the port emits, so an injected file at that FQN would define `Sort` twice. Only dropping the whole enclosing filter expresses it, which is 130 lines of mechanically portable code by hand |
+
+**So the answer is JAVA'S OWN, and it is a contract rather than a stand-in.** `Map.Entry.setValue`
+is an **optional operation**, documented to throw `UnsupportedOperationException` where the backing
+map does not support the write. A ported entry whose map is not reachable from the call IS that
+entry, so the phase emits the refusal the interface prescribes — the same refusal K2 has always
+made, expressed in code instead of as a compile error. It is the exact opposite of the `SimpleEntry`
+K2 rejects: that would compile and write to a DETACHED COPY, succeeding while changing nothing
+(§4.4's defect class), where this is louder than java and never quieter, and counted at the slot
+(`Issue.InexpressibleParent`, `slot = member (implements) setValue`).
+
+Scoped to the obligation and not to the receiver: a class that merely HOLDS an entry and calls
+`e.setValue(v)` in a method of its own keeps the compile error, because no interface asked it for
+that member and inventing a throw there would be the engine deciding what the method means. Both
+directions are spec'd. Derived from the phase's own mapping — `UnsupportedOnTarget` is keyed on a
+target in `UninheritableTargets` — never from a receiver's name (§4.56).
+
+Measured on liqp: **main source set 1 -> 0**, `collection-boundary` 14 -> 15, 3 member digests, and
+the emitted member carries its porter note.
+
+**The transferable half is the middle row of that table.** A `dropMethods` key that removes a member
+an emitted parent DECLARES leaves the class abstract, and nothing in the engine reports it: it is
+not a check, not a finding, not a member digest, and not a typer error until the port is already
+green. Any port at a non-zero error count that reaches for `dropMethods` on an `@Override` is buying
+a failure it cannot yet see.
+
+*Fix kind: (a) engine — the parent restore, the loop-reachable half of `setValue`, and the
+field-held half as the interface's own documented refusal. Nothing here is (b) or (c): the
+obligation is one the engine's own mapping created, so a manifest key cannot discharge it.*
 
 ### K5.8 A `super` receiver is a SYNTAX question, and it is answered of the RESULT — not of the arm
 
@@ -3454,7 +3559,45 @@ Two traps in the numeric widening, both real:
 - **A widening conversion needs its receiver PARENTHESIZED.** `a * b` is a bare `Apply` in the TIR
   but renders infix, so `.toLong` on it attaches to `b`: `x >> 2.toLong` is not `(x >> 2).toLong`.
 
-*Fix kind: (a). Closed in `TestFrameworkTransform`.*
+**…AND JAVA HAS A SECOND WIDENING AT THE SAME MEMBER, which the numeric one hid for four ports.**
+`assertEquals(Object, Object)` widened its REFERENCE operands exactly as `assertEquals(long, long)`
+widened its numeric ones — one overload, two conversions — and MUnit's `Compare[A, B]` needs the two
+types to relate whichever kind they are. Two invariant `java.util.List`s at different element types
+do not: `Can't compare these two types: java.util.List[Object] / java.util.List[String]`, liqp's
+`RenderSettingsTest`, the last error in that port's test source set. Five libraries went past it
+because the numeric half is far commoner and because a suite comparing two DIFFERENTLY-PARAMETERISED
+collections is unusual.
+
+The fix is the same rule at the other overload, and it is written as the call's TYPE ARGUMENTS
+(`assertEquals[java.lang.Object, java.lang.Object](a, e)`) rather than as a cast per operand: one
+construct instead of two, exactly what java's signature said, and the operands' own emitted text is
+left alone. **MUnit's constraint is a STRICTLY STRONGER check than java's**, so it is KEPT wherever
+it is a check and java's widening is written down only where it is not — the two static types are
+the same, and that type is not a root.
+
+**The trap is the ROOT, and it reads as the opposite of what it is.** "One side is
+`java.lang.Object`, so the pair already relates, so leave it alone" is wrong twice: `Compare[A,
+Object]` resolves for every `A`, so MUnit's constraint at a root operand is ALREADY VACUOUS and the
+widening costs no check at all — and a root is the one answer the TIR's own types cannot be trusted
+on. An earlier phase's boundary bridge types its wrap as the FORMAL it was inserted for, and java's
+`assertEquals(Object, Object)` formal IS `java.lang.Object`: at the liqp site BOTH operands are
+`JavaCollections.toJava(…)` nodes carrying `java.lang.Object`, while the text they emit is
+`java.util.List[Object]` and `java.util.List[String]`. Read as "same type, so MUnit can compare
+them", that pair declines the widening and does not compile. Read as "a root, so there was never a
+check here", it takes it. Note the phase concludes nothing about another phase's rewrite — it reads
+its own operand types and treats a root as the absence of information it is (§4.56).
+
+Two guards, both refusals rather than approximations: `NoType` on either side is "the frontend could
+not say", and a PRIMITIVE on either side belongs to the numeric promotion above — widening a boxed
+pair to `Object` would silently change the comparison, scala's `==` on two boxed numbers being
+NUMERIC (`BoxesRunTime.equals`) where java's `Integer.equals(Long)` is `false`. That is a §4.4
+divergence and this rewrite must not open it.
+
+Measured: **liqp 3 -> 2** (its test source set 2 -> 1), and across the four green test lanes it
+moves emitted TEXT and no outcome — the widening is behaviour-preserving by construction, because
+MUnit compares with `==` at every instantiation.
+
+*Fix kind: (a). Closed in `TestFrameworkTransform`, both halves.*
 
 ### X3. CLOSED — a Java `static` test helper emits into the COMPANION OBJECT; use the framework's assertion OBJECT
 
@@ -4531,6 +4674,38 @@ is the ordinary case; that is the criterion, not the prefix, and a bare prefix t
 refused `ashley`'s `ReflectionPool` redirect, which is the one port the mechanism exists for.
 
 Stage P's P1 is unblocked and re-issues unchanged; `PROGRESS.md` §11.15 keeps its numbers.
+
+### D10. `governs` IS A NAMESPACE, NOT A SET OF DECLARATIONS — and a TEST SOURCE SET is always inside its base's. **3 fatal findings on a key about the module's OWN member**
+
+`CLAUDE.md` §1.5 says *no key a DEPENDENT declares may edit what a base EMITS*, and the screen
+implemented it as *is the subject inside the base's `governs` claim*. Those are not the same
+question, and every dependent whose sources share the base's package is where they come apart:
+
+```
+src/main/java/liqp/nodes/…   →  base,      governs = ["liqp"]
+src/test/java/liqp/nodes/…   →  dependent, same package by construction
+```
+
+So a `dropMethods` key naming `liqp.nodes.ComparingExpressionNodeTest#…` — the dependent's OWN test
+class, which the base neither declares nor emits nor has ever seen — read as an `ExtraDrop` against
+the base, fatal, three findings for one three-key entry. **A rule with no way to comply with it**:
+that module's every declaration is inside the claimed namespace, so no drop it could ever write is
+admissible. No corpus port had declared a test-set drop before, which is why it survived six
+libraries.
+
+The base's published PORT MAP answers §1.5's actual question exactly — it is the list of what the
+base EMITTED — so the screen asks it, and falls back to the namespace claim only where there is no
+map. That fallback is not a loophole: an unpublished base is already reported (`BaseMapMissing`), and
+the namespace is then the only answer that exists.
+
+Note which direction stayed strict. `MissingDrop` is unchanged: a base drop absent in a dependent is
+a disagreement about the base's own policy and needs no map to see. And an `ExtraDrop` against a type
+the base really does emit is still fatal, which is the case the mechanism was built for
+(`ManifestSpec` pins all three: the base's map without the subject, with it, and no map at all).
+
+*Fix kind: (a) engine — the screen read a claim where the rule said EMITS. Measured on liqp's test
+port: `manifest` 3 -> 0, with `manifest` 0 unchanged on every other port and no member digest moved
+by the change.*
 
 ---
 

@@ -339,10 +339,24 @@ object ManifestAgreement:
 
       // an EXTRA drop is only a disagreement about a name the base CLAIMS; the dynamic layer
       // catches the rest exactly, from unit origins, without needing a namespace claim at all.
-      val extraTypes = (mine -- bDropTypes).filter(b.claims).toList.sorted.map(k =>
+      //
+      // …and a CLAIM IS A NAMESPACE, NOT A SET OF DECLARATIONS. `governs` says which package the
+      // shared surface lives in; it does not say that every FQN under it is the base's. A
+      // dependent's own sources routinely sit inside that namespace — a TEST SOURCE SET always
+      // does, `src/test/java/<pkg>/…` being the same package as `src/main/java/<pkg>/…` — so read
+      // through the claim alone, EVERY key such a module declares about its OWN declarations is an
+      // intrusion, which is a rule with no way to comply with it. §1.5's own words are "may not
+      // edit what a base EMITS", and the base's published PORT MAP is what answers that exactly.
+      // Fall back to the claim only where there is no map to ask: an unpublished base is already
+      // reported (`BaseMapMissing`), and the namespace is then the only answer that exists.
+      val bMap = ports.find(_.name == b.name).flatMap(_.map).map(_.types.map(_.upstream).toSet)
+      def baseHas(fqn: String): Boolean = bMap.forall(_.contains(fqn))
+      val extraTypes = (mine -- bDropTypes).filter(k => b.claims(k) && baseHas(k)).toList.sorted.map(k =>
         Finding(Kind.ExtraDrop, b.name, k, "dropped here, inside the base's declared namespace, and not by the base"))
-      val extraMethods = (myMethods -- bDropMethods).filter(k => b.claims(k.takeWhile(_ != '#'))).toList.sorted.map(k =>
-        Finding(Kind.ExtraDrop, b.name, k, "method dropped here, inside the base's declared namespace, and not by the base"))
+      val extraMethods = (myMethods -- bDropMethods)
+        .filter { k => val owner = k.takeWhile(_ != '#'); b.claims(owner) && baseHas(owner) }
+        .toList.sorted.map(k =>
+          Finding(Kind.ExtraDrop, b.name, k, "method dropped here, inside the base's declared namespace, and not by the base"))
 
       val renameDiff = bRenames.toList.sorted.flatMap { (from, to) =>
         myRenames.get(from) match
