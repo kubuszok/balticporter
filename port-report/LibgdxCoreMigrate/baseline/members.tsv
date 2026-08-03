@@ -5950,7 +5950,7 @@ sge.graphics.g3d.particles.ParticleSystem	sge.graphics.g3d.particles.ParticleSys
 sge.graphics.g3d.particles.ParticleSystem	sge.graphics.g3d.particles.ParticleSystem#update(float)	def	69c033b7a0ebea17
 sge.graphics.g3d.particles.ParticleSystem	sge.graphics.g3d.particles.ParticleSystem#updateAndDraw()	def	55e39f9b2df7acfa
 sge.graphics.g3d.particles.ParticleSystem	sge.graphics.g3d.particles.ParticleSystem#updateAndDraw(float)	def	3f93b95a86c0d875
-sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData	class	668fbbb821f173ca
+sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData	class	e1b52034d41137ba
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData#<init>()	ctor	b2d7585f1d3e8823
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData#<init>(T)	ctor	8d13bb7b79833b9e
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData#createSaveData()	def	1aa90254a2eb4dc3
@@ -5967,11 +5967,11 @@ sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData#
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData#sharedAssets	val	88a74dc8dbbe3959
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData#uniqueData	val	b3b2dc7f3d9929d8
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData#write(Json)	def	ce6d049799e39b26
-sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$AssetData	class	4c5116a0afd7d855
+sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$AssetData	class	1803e8e4238f873e
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$AssetData#<init>()	ctor	c4fbd16ab1814f78
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$AssetData#<init>(String,Class<T>)	ctor	5df62249165cef27
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$AssetData#filename	val	60ea84f2551b2b1f
-sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$AssetData#read(Json,JsonValue)	def	95a5961a92cf1ae8
+sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$AssetData#read(Json,JsonValue)	def	4503f6fbc05d9bf9
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$AssetData#type	val	18dd3d92c1800bea
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$AssetData#write(Json)	def	6982a43c38936359
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$Configurable	class	6ef42a3e00606e5d

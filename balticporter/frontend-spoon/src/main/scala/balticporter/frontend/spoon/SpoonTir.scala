@@ -2318,7 +2318,13 @@ object SpoonTir:
 
       private def uncheckedGeneric(target: CtTypeReference[?], e: CtExpression[?], t: Term,
                                    rawTarget: Boolean = true, ownScope: Boolean = true): Term =
-        val et = try e.getType catch { case _: Throwable => null }
+        // THE TYPE THE ARGUMENT HAS WHERE IT STANDS — [[castType]], not `e.getType`. Java decides
+        // its unchecked conversion (JLS 5.1.9) on the type the value has AT THE SLOT, and a cast is
+        // the one thing that moves it: `gallopRight((Comparable) a[i], …)` at a `Comparable<Object>`
+        // formal is raw-to-parameterised, which is the whole of what this function is for. Read
+        // BEFORE the cast the same argument is an `Object`, which mentions no raw generic at all —
+        // so the one shape java writes this conversion for is the one shape that declined.
+        val et = castType(e)
         // a CLASS LITERAL is the one expression whose Spoon type lies about raw-ness: `AddAction.class`
         // types as raw `Class`, yet we emit `classOf[AddAction]` — precisely `Class[AddAction]`. Casting
         // it (to `Class[Action]`, the formal's bound) would destroy the very inference it feeds.
