@@ -491,7 +491,12 @@ final case class PortRun(
       CheckReport.record(PortRun.PortabilityEmitted, portability.map(_.report(PortRun.PortabilityEmitted)))
     }
     CheckReport.record(PortRun.Remediation, Remediator.reports(fixes))
-    say(s"PORTABILITY (Scala.js/Native): ${portability.size} site(s) on JVM-only APIs in EMITTED code")
+    // the rule count is DERIVED here and stated nowhere else. `PortabilityCheck`'s own scaladoc
+    // carried a hand-written one for long enough that it detached from the list and then escaped
+    // into two commit subjects nobody can regenerate; the fix is a number the code computes, at the
+    // one line a reader is looking at when they ask "against what?".
+    say(s"PORTABILITY (Scala.js/Native): ${portability.size} site(s) on JVM-only APIs in EMITTED code" +
+      s", against ${PortabilityCheck.jsAndNative.size} rules")
     if portability.nonEmpty then say(PortReport.Kind.Portability.classification)
     println(PortabilityCheck.summary(portability, fixes))
 

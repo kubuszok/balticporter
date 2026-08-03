@@ -109,9 +109,20 @@ object PortabilityCheck:
     *
     * The walk it used to perform inline — every referenced symbol, its `owner#name` (a MEMBER is
     * identified that way, since an external member's own `fullName` is an interning key), and every
-    * recorded usage — is [[ExternalUsage.all]], because it answers more questions than these 34
-    * rules ask and throwing it away was the reason no artifact of a port's external dependencies
+    * recorded usage — is [[ExternalUsage.all]], because it answers more questions than [[jsAndNative]]
+    * asks and throwing it away was the reason no artifact of a port's external dependencies
     * existed anywhere.
+    *
+    * This sentence used to say *"these 34 rules"*. It was never 34: the list was 21 when the number
+    * was last edited beside it and is [[jsAndNative]]`.size` now, and nothing computed either. The
+    * count is DELETED here rather than corrected — a corrected constant is a constant that goes
+    * stale again — and the run states the derived one instead (`PortRun`'s PORTABILITY line). This
+    * is `PROGRESS.md` §12.3's rule ("a residue number restated in prose beside the artifact that
+    * computes it is a number that goes stale silently") reproduced inside the engine's own source,
+    * and it escaped: the commit subjects `9eba29b3` (*"rules 34 -> 35"*) and `0aa10cd6`
+    * (*"rules 35 -> 36"*) both quote this phantom while the list they edited went 25 -> 26 -> 27.
+    * Those two subjects are WRONG and cannot be regenerated; do not trust a rule count from the
+    * git log.
     *
     * The lift is order-preserving on purpose: [[ExternalUsage.all]] iterates
     * `program.referenced.toList` and each symbol's usages in exactly the order this loop did, so
