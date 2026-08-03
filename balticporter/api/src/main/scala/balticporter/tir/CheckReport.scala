@@ -117,14 +117,23 @@ object CheckReport:
     * any `PortRun`), or when a report dir is named explicitly, or when forced with
     * `balticporter.report=on`. Off inside a plain unit-test JVM, which has none of those — a test
     * suite must not litter a repository with run artifacts. `balticporter.report=off` disables it
-    * everywhere. */
+    * everywhere.
+    *
+    * …and off, WHATEVER the flags say, when there is no port identity to name a directory after
+    * (see [[mainClassKey]]). §5.1's rule is that an artifact write is gated on the artifact layer
+    * without exception, and this is the same gate the unconditional `PortMap.write` needed: with a
+    * report directory derived from `sun.java.command`, a forked test JVM answers with the BUILD
+    * TOOL's main — `sbt.internal.worker1.WorkerMain` under sbt 2 — and any suite that turned
+    * reporting on without naming a directory published `<subproject>/port-report/WorkerMain/` into
+    * the checkout. A `git status` that cannot tell a decision from an artefact is what §5.5's
+    * discipline rests on. An explicit `reportDir` still enables it, because a caller that NAMED a
+    * directory has supplied the identity the fallback could not derive. */
   def enabled: Boolean =
     DebugFlags.get("report").map(_ == "off") match
       case Some(true) => false
       case _ =>
-        DebugFlags.bool("report") ||
         DebugFlags.get("reportDir").isDefined ||
-        sys.props.contains(DebugFlags.Prefix + "root")
+        ((DebugFlags.bool("report") || sys.props.contains(DebugFlags.Prefix + "root")) && mainClassKey.isDefined)
 
   /** `balticporter.reportDir`, else `port-report/<main class simple name>` under the root.
     *
@@ -132,16 +141,38 @@ object CheckReport:
     * port's name (CLAUDE.md §1 — nothing in `core` may name a ported library), it separates two
     * migration programs in the same repository automatically, and it needs no configuration at
     * the call site, which is the only way it could work at all while the migration programs are
-    * copy-paste. */
+    * copy-paste.
+    *
+    * [[NoMainClass]] is what it resolves to when nothing can be derived. Nothing WRITES there —
+    * [[enabled]] is false in exactly that case — but the path stays total, because `PortMap`
+    * discovers a base's map through this directory's PARENT and reading is not writing. */
   def dir: Path =
-    DebugFlags.path("reportDir").getOrElse(DebugFlags.root.resolve(s"port-report/$mainClassKey"))
+    DebugFlags.path("reportDir").getOrElse(DebugFlags.root.resolve(s"port-report/${mainClassKey.getOrElse(NoMainClass)}"))
 
-  private def mainClassKey: String =
+  /** the placeholder segment for "this JVM has no port identity"; see [[dir]]. */
+  private[tir] val NoMainClass = "default"
+
+  /** Mains that belong to the BUILD, not to a port. A report directory named after one of these is
+    * a directory in the checkout with a run's artifacts in it and no run that asked for them.
+    *
+    * A prefix test on a string is normally the thing CLAUDE.md §4.56 forbids — but there is no
+    * structure to read here. `sun.java.command` is a JVM property whose value is a bare command
+    * line, so the only fact available is the name, and the honest move is to make the negative
+    * explicit and short rather than to invent a structural claim it cannot support. */
+  private val BuildToolMains = List("sbt.", "xsbt.", "org.scalatest.", "munit.", "org.junit.")
+
+  /** the launching main class's simple name, when it is a PORT's own migration program.
+    *
+    * `scala.None` when this JVM was launched by the build tool, or when the command is absent or
+    * not a plain class name. The measure lanes are unaffected: each runs a migration `main` whose
+    * class is the port's own, which is exactly the identity CLAUDE.md §2.1 keeps stable across a
+    * module rename. */
+  private[tir] def mainClassKey: Option[String] =
     Option(System.getProperty("sun.java.command"))
       .map(_.split(' ').head)
+      .filterNot(c => BuildToolMains.exists(c.startsWith))
       .map(c => c.substring(c.lastIndexOf('.') + 1))
       .filter(s => s.nonEmpty && s.forall(c => c.isLetterOrDigit || c == '_' || c == '-'))
-      .getOrElse("default")
 
   def runDir: Path      = dir.resolve("run-latest")
   def baselineDir: Path = dir.resolve("baseline")

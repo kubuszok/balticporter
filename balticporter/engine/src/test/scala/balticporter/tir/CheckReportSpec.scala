@@ -138,6 +138,52 @@ class CheckReportSpec extends munit.FunSuite:
     }
   }
 
+  test("a BUILD TOOL's main is not a port identity — reporting stays OFF and no directory is named") {
+    // `CheckReport.dir` falls back to `port-report/<sun.java.command's simple name>`, and under a
+    // forked test JVM that command is the build's own worker — `sbt.internal.worker1.WorkerMain`
+    // under sbt 2. Any suite that turned reporting on without naming a directory therefore
+    // published `<subproject>/port-report/WorkerMain/` into the checkout: an artifact write that
+    // was gated on a FLAG and not on the artifact layer (§5.1, the `PortMap.write` precedent).
+    withProps("sun.java.command" -> "sbt.internal.worker1.WorkerMain --tcp 49786",
+              "balticporter.report" -> "on") {
+      assertEquals(CheckReport.mainClassKey, scala.None)
+      assert(!CheckReport.enabled, "reporting must not turn on for a JVM with no port identity")
+      assertEquals(CheckReport.dir.getFileName.toString, CheckReport.NoMainClass)
+    }
+    // …while a port's OWN migration main still names its directory, which is the measurement
+    // identity CLAUDE.md §2.1 keeps stable across a module rename.
+    withProps("sun.java.command" -> "com.example.port.WidgetMigrate",
+              "balticporter.report" -> "on") {
+      assertEquals(CheckReport.mainClassKey, Some("WidgetMigrate"))
+      assert(CheckReport.enabled)
+      assertEquals(CheckReport.dir.getFileName.toString, "WidgetMigrate")
+    }
+    // …and an EXPLICIT directory is an identity the caller supplied, so it enables reporting even
+    // under the build tool's main.
+    withProps("sun.java.command" -> "sbt.internal.worker1.WorkerMain",
+              "balticporter.report" -> "on", "balticporter.reportDir" -> "/tmp/bp-explicit") {
+      assert(CheckReport.enabled)
+      assertEquals(CheckReport.dir.getFileName.toString, "bp-explicit")
+    }
+  }
+
+  test("with reporting ON but no reportDir, a forked test JVM leaves NOTHING in the checkout") {
+    // Asserted on the FILESYSTEM, not on `enabled`: what is being pinned is that nothing was
+    // created, and a `false` proves only that a branch was taken. This is the shape PortRunSpec
+    // pins for the port map and for correlation, at the layer both of them go through.
+    val here   = DebugFlags.root.resolve("port-report")
+    def listed = if !Files.exists(here) then Set.empty[String]
+                 else Files.walk(here).sorted().toArray.map(_.toString).toSet
+    val before = listed
+    withProps("balticporter.report" -> "on") {
+      CheckReport.reset()
+      CheckReport.record("omissions", List(f("omissions", "k", "p.A", "p/A.java", 1, "x")))
+      CheckReport.writeNow()
+    }
+    CheckReport.reset()
+    assertEquals(listed, before, "a run nobody asked to publish must not create its own home")
+  }
+
   test("relativise never emits an absolute path when a source root is known") {
     withProps("balticporter.reportPathRoot" -> "/abs/src") {
       assertEquals(CheckReport.relativise("/abs/src/p/Foo.java"), "p/Foo.java")
