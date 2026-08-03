@@ -1,6 +1,10 @@
 #check	count
 base-surface	0
 break-catch	0
+catalog(consulted)	5
+catalog(undischarged)	0
+catalog(unmechanised)	112
+catalog(unreached)	3
 collection-boundary	2
 collection-closure	0
 collection-retarget	0
