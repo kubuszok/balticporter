@@ -96,12 +96,15 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     assertEquals(verdicts.get("G22"), Some("CLOSED"))
     assertEquals(verdicts.get("C12"), Some("CLOSED"))
     assertEquals(verdicts.get("G24"), Some("OPEN"))
-    // K17 was the second entry to reach AMBIGUOUS, and by the route the state exists for: one of its
-    // two faces closed and the other did not, so the heading says both and the verdict is derived
-    // rather than decided. It is pinned here because it is CITED by two rows with different statuses
-    // — `JS-E05` (`Handled`, the face that closed) and `JS-E06` (`Partial`, the face that did not) —
-    // which is the shape rule (i) must not fail on and must not silently excuse either.
-    assertEquals(verdicts.get("K17"), Some("AMBIGUOUS"))
+    // K17 was the second entry to reach AMBIGUOUS, held that state for exactly as long as one of its
+    // two faces was open, and reads CLOSED now that both are. It stays pinned because it is the
+    // entry that exercised the TRANSITION — a verdict that is derived from the heading and the first
+    // paragraph moves on its own when a wave edits them, and an entry whose two faces closed in two
+    // different commits is the only shape that can prove the derivation is live in both directions.
+    // Three rows cite it at three statuses: `JS-E05` and `JS-G31` `Handled`, the two faces; `JS-E06`
+    // `Partial`, which is a THIRD situation under the same rule and is exempt by design (a partial
+    // row STATES which half is missing, and rule (i) only forbids a stale `Open`).
+    assertEquals(verdicts.get("K17"), Some("CLOSED"))
     // UNMARKED is a real third state, not a parse failure: this entry describes a shipped fix and a
     // residue counted to zero without ever using the word, and calling that CLOSED would be the
     // spec inventing the claim it exists to check.

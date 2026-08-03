@@ -25,8 +25,12 @@ import Attaches.*
   *   - `JS-C44` was `UNVERIFIED` and is `Open`: `SpoonTir.typeFlags` never populates
   *     `Flags.isSealed`, so a Java `sealed`/`permits` hierarchy ships as an ordinary open class —
   *     a silent widening with no refusal and no finding;
-  *   - `JS-G31` was `HANDLED` and is `Partial`: the poly-expression exclusion list is TWO lists,
-  *     and the constructor-argument one omits a member the invocation one has;
+  *   - `JS-G31` was `HANDLED`, was re-derived to `Partial` — the poly-expression exclusion list is
+  *     TWO lists and the constructor-argument one omits a member the invocation one has — and is
+  *     `Handled` again only now that it is ONE predicate consulted at both call dispatches. Read
+  *     the sequence rather than the endpoint: the re-derivation was right and UNDERSTATED the
+  *     defect, because there was a THIRD argument arm with no list at all, and that arm is where
+  *     `ENGINE-LIMITS.md` K17 face 1's 27 test failures came from;
   *   - `JS-C22`'s twin was `T12`, which reads CLOSED. T12 closed a different FACE (accessibility as
   *     an input to the candidate set), so the CITATION was wrong rather than the status. That is
   *     the finding step (1) produced on its first run.
@@ -482,9 +486,17 @@ object Differences:
       Loud, Handled, el("G22"), Universal,
       "SpoonTir.pinUnconstrainedTypeArgs, whose reach is bounded by ENGINE-LIMITS G24's still-open vacuous-bound case", notYetG),
     Difference(gId(31), "a POLY EXPRESSION must never be cast as a whole",
-      "JLS 15.2", "UNCITED — a lambda or a method reference has no type until its target is known",
-      Loud, Partial("the exclusion list exists TWICE — the constructor-argument copy omits the method-reference case the invocation copy has"),
-      el("G12"), Universal, "SpoonTir.uncheckedGeneric's `bad` list, and the second one in SpoonTir.appliedCtorArgs", notYetG),
+      // UNCITED for the same reason JS-G33 is, and deliberately not papered over: the behaviour is
+      // PROBED (scala 3.8.4 SAM-converts a function literal at a wildcard-applied, a contravariant
+      // and a bare-wildcard slot) and no Scala 3 reference page for the eligibility rule was
+      // located. A citation invented to move `catalog(uncited)` would be worse than the gap.
+      "JLS 15.2", "UNCITED — no Scala 3 reference page located; the SAM-conversion behaviour is probed, not cited",
+      // MIXED, and both directions are measured: casting a method reference to a callee's own
+      // variable is a compile error (`ENGINE-LIMITS.md` G12), while casting a LAMBDA into a
+      // functional interface compiles perfectly and throws at run time (K17 face 1, 27 tests).
+      Mixed, Handled, el("K17"), Universal,
+      "SpoonTir.polyExpression, the ONE predicate, and SpoonTir.polyArgsUncast, which answers for it at both call dispatches",
+      Lowered("CtInvocation", Dispatch.Expression)),
     Difference(gId(32), "a callee's OWN type variables never resolve at the caller",
       "JLS 18.5.1", "UNCITED — the callee's variables are not in scope at the call site",
       Loud, Handled, el("G12"), Universal, "SpoonTir.uncheckedGeneric's tpResolvable/calleeBounded decline", notYetG),

@@ -395,9 +395,9 @@ member	liqp.TemplateParser#liquidStyleWhere	ssg.liquid.TemplateParser#liquidStyl
 member	liqp.TemplateParser#locale	ssg.liquid.TemplateParser#locale	Renamed	-	liqp/TemplateParser.java	81	df6982db9b165e84	
 member	liqp.TemplateParser#mapper	ssg.liquid.TemplateParser#mapper	Renamed	-	liqp/TemplateParser.java	62	428cb1ffea16f6cd	
 member	liqp.TemplateParser#nameResolver	ssg.liquid.TemplateParser#nameResolver	Renamed	-	liqp/TemplateParser.java	88	8ee061624ffc385d	
-member	liqp.TemplateParser#parse(CharStream)	ssg.liquid.TemplateParser#parse(CharStream)	Renamed	-	liqp/TemplateParser.java	497	d2b9b789a93d01da	
+member	liqp.TemplateParser#parse(CharStream)	ssg.liquid.TemplateParser#parse(CharStream)	Renamed	-	liqp/TemplateParser.java	497	21dfcb8b0b8dd07c	
 member	liqp.TemplateParser#parse(File)	ssg.liquid.TemplateParser#parse(File)	Renamed	-	liqp/TemplateParser.java	479	1c5f08d9bda51610	
-member	liqp.TemplateParser#parse(InputStream)	ssg.liquid.TemplateParser#parse(InputStream)	Renamed	-	liqp/TemplateParser.java	488	d38c255e08986712	
+member	liqp.TemplateParser#parse(InputStream)	ssg.liquid.TemplateParser#parse(InputStream)	Renamed	-	liqp/TemplateParser.java	488	7412d0ea1dca29cf	
 member	liqp.TemplateParser#parse(Path)	ssg.liquid.TemplateParser#parse(Path)	Renamed	-	liqp/TemplateParser.java	475	d8b6c181a035498c	
 member	liqp.TemplateParser#parse(Reader)	ssg.liquid.TemplateParser#parse(Reader)	Renamed	-	liqp/TemplateParser.java	493	bdf831e42fdbd53a	
 member	liqp.TemplateParser#parse(String)	ssg.liquid.TemplateParser#parse(String)	Renamed	-	liqp/TemplateParser.java	484	f8522030b5aff611	

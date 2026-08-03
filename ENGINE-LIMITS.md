@@ -3619,23 +3619,23 @@ says so.*
 
 ---
 
-### K17. A java CONVERSION emitted as a scala CAST asserts where java CONVERTED — **34 test failures, 0 compile errors. FACE 2 CLOSED, FACE 1 OPEN**
+### K17. A java CONVERSION emitted as a scala CAST asserts where java CONVERTED — **34 test failures, 0 compile errors. BOTH FACES CLOSED**
 
 Two faces, found in the same run and the same defect twice: java's expression grammar performs a
 CONVERSION at a position where the emitter renders an `asInstanceOf`. The cast has the right static
 type — that is why nothing complains — and at run time it asserts a fact that is false, because the
 conversion never happened.
 
-**Read the two faces apart.** FACE 2 (the conditional, 7 failures) is CLOSED — the conversion is
+**Read the two faces apart.** FACE 2 (the conditional, 7 failures) closed first — the conversion is
 performed on each OPERAND now, so the `if` really has java's type and there is nothing to assert.
-FACE 1 (a lambda at a functional-interface slot, 27 failures) is OPEN and is the larger half. The
-general rule below is what they share and is what makes the closure of one evidence about the other.
+FACE 1 (a lambda at a functional-interface slot, 27 failures) was the larger half and closed second,
+by a different mechanism. The general rule below is what they share.
 
 Both were invisible until C12 closed. They sit behind `Template`'s constructor, so every test that
 would have reached them died one frame earlier with C12's `NullPointerException`; they are not
 regressions and no count moved when they appeared (`errors 0 -> 0`, every check flat).
 
-**FACE 1 — a LAMBDA at an external functional-interface slot. 27 failures.**
+**FACE 1 — a LAMBDA at an external functional-interface slot. 27 failures. CLOSED.**
 
 ```java
 Optional.ofNullable(location).orElseGet(() -> Paths.get(".").toAbsolutePath())
@@ -3655,11 +3655,41 @@ java.lang.ClassCastException: class ssg.liquid.TemplateParser$$Lambda cannot be 
 class java.util.function.Supplier
 ```
 
-The fix is to make the expected type do the work — emit the literal into the slot and let the
-conversion happen, or `new Supplier[…] { def get() = … }` where no expected type is available — and
-never to cast a literal into an interface. Note the seam is at an EXTERNAL callee, so the formal
-comes from a class file and is exactly readable (K15's rule); this is not a case where the engine
-cannot know.
+**HOW IT CLOSED, and the three things the closure corrected about this entry's own diagnosis.**
+
+- **the fix reads NO signature, and that is the whole shape of it.** This entry said the formal
+  "comes from a class file and is exactly readable (K15's rule)", which invites emitting the lambda
+  INTO a type the engine looks up — and every such emission is an ascription, which is a cast one
+  syntax away from the defect. A poly expression (JLS 15.2) has no type until its target is known
+  **in both languages**, so the faithful emission is the literal AT THE SLOT and nothing at all
+  around it: scalac then applies the expected type exactly where javac applied it. The engine's job
+  was to STOP interposing, not to compute the type better;
+- **the anonymous-class fallback this entry proposed is not needed, and that is a PROBE result, not
+  an assumption.** Against scala 3.8.4, a function literal SAM-converts at a wildcard-applied slot
+  (`Supplier[? <: Path]`, the measured site), at a contravariant one (`Comparator[? super T]`), at
+  both directions in one formal (`Function[? super K, ? <: V]`) and at a bare `Supplier[?]`. It
+  refuses in exactly two places, and neither can arise from a java lambda at an argument: a GENERIC
+  function type, which JLS 15.27.3 forbids a lambda at in the first place, and an INTERSECTION
+  target (`(Supplier<X> & Serializable) () -> …`), which the frontend has no model for. Emitting
+  `new Supplier[…] { … }` would have been a hand-written answer to a question the language already
+  answers;
+- **the site is not the one this entry named.** "The seam is at an EXTERNAL callee" reads as a K15
+  boundary problem. It is not: the cast came from `SpoonTir.knownReceiverArgs`, whose gate is that
+  the RECEIVER's instantiation is fully known (`Optional<Path>`), and it would fire identically on a
+  callee the port declares itself.
+
+**And what the closure actually is, is a THIRD copy of a rule that already existed twice.** The
+catalog predicted this — `JS-G31`, *"a POLY EXPRESSION must never be cast as a whole"*, whose
+`Partial` said the exclusion list exists TWICE and that the constructor-argument copy omits the
+method-reference case the invocation copy has. The re-derivation was right and UNDERSTATED it: there
+was a third argument arm with no list at all, and that arm carried all 27 failures. So the fix is
+`SpoonTir.polyExpression`, ONE predicate both `bad` lists now call, plus `SpoonTir.polyArgsUncast`,
+which answers for the row at the call itself — after every arm has run, restoring each poly argument
+to what `expr` produced and keeping the casts the JAVA SOURCE wrote (they are the innermost
+`getTypeCasts.size` layers, which is what makes "ours" and "java's" decidable rather than a guess).
+Stated once, at the call, so the seventh arm cannot reintroduce it. This is `F8`'s finding at one
+level up — F8 was two copies of a predicate twelve lines apart, this was two copies plus an arm that
+never got one — and it is the second time the same shape has cost a measured defect.
 
 **FACE 2 — a conditional `? :` over MIXED BOXED NUMERICS. 7 failures. CLOSED.**
 
@@ -3720,9 +3750,19 @@ it is handed, which is its own change and its own measurement.
 Scala with the right static type. The gate that saw them is the one §3 names, and it is the gate
 that confirmed this one.
 
-*Fix kind: (a) engine. FACE 2 CLOSED (catalog `JS-E05`); FACE 1 still OPEN (catalog `JS-E06`, whose
-fix is a lambda at a functional-interface slot and a different mechanism — do not read this closure
-as evidence about it). Found by RUNNING liqp's suite after C12 closed.*
+**A CITATION CORRECTION, kept because it cost a wave's opening hour.** Face 1 was carried forward as
+`JS-E06`, in a handoff and in two commit subjects. `JS-E06` is *"a primitive cast is a CONVERSION in
+Java and an assertion in Scala once a phase has retyped the value"* — a THIRD situation under this
+entry's general rule, still `Partial`, and not the lambda at all. The lambda's row has always been
+`JS-G31`, in the area that owns poly expressions. The mistake is the one this entry's own shape
+invites: an `ENGINE-LIMITS.md` id and a catalog id are different namespaces, and "the other row
+citing K17" is not a way to name a row. **Cite the DiffId, and check that the row's sentence is the
+defect you are holding.**
+
+*Fix kind: (a) engine. FACE 2 CLOSED (catalog `JS-E05`, `SpoonTir.promotedBranch`); FACE 1 CLOSED
+(catalog `JS-G31`, `SpoonTir.polyExpression` + `SpoonTir.polyArgsUncast`). Both found by RUNNING
+liqp's suite after C12 closed; the second was PREDICTED by the catalog before it was measured, which
+is the first time that has happened in this file.*
 
 ---
 

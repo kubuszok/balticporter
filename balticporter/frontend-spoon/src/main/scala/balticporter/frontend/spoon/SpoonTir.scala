@@ -2213,6 +2213,68 @@ object SpoonTir:
         * `[String, AssetLoader[T, P]]` inside `setLoader<T, P>`). Emit exactly the cast Java
         * performs implicitly. Gated to a GENERIC target whose type variables all resolve here, so
         * we never synthesize a `?T` stub; declarations keep their own types untouched. */
+      /** JS-G31 — a POLY EXPRESSION (JLS 15.2): a LAMBDA or a METHOD REFERENCE.
+        *
+        * Neither has a type of its own. Java gives it the type of the slot it fills, and so does
+        * Scala — a function literal SAM-converts when the EXPECTED type is the interface. So a cast
+        * at such an argument is not a conversion java performed and we are writing down; there was
+        * no conversion. Written as a cast the literal is elaborated FIRST, to a `scala.FunctionN`,
+        * and the cast then asserts that a `Function0` is a `Supplier`, which it is not:
+        *
+        * {{{
+        * Optional.ofNullable(location).orElseGet(() -> Paths.get(".").toAbsolutePath())   // java
+        * // ClassCastException: TemplateParser$$Lambda cannot be cast to java.util.function.Supplier
+        * }}}
+        *
+        * PROBED against scala 3.8.4 before this was written, because "does Scala SAM-convert here"
+        * is not a question to answer from first principles: it converts at a WILDCARD-applied slot
+        * (`Supplier[? <: Path]`), at a contravariant one (`Comparator[? super T]`), at both
+        * directions in one formal (`Function[? super K, ? <: V]`) and at a bare `Supplier[?]` — and
+        * it refuses only where java refuses too (a GENERIC function type, which JLS 15.27.3 forbids
+        * a lambda at) or at an INTERSECTION target, which the frontend has no model for. So the
+        * faithful emission is the literal AT THE SLOT and nothing else — never a cast, and never an
+        * anonymous class synthesised where the language already does the work.
+        *
+        * ONE function, because this rule was written twice and the two copies disagreed
+        * (`ENGINE-LIMITS.md` F8's shape): `uncheckedGeneric` had the method-reference case,
+        * `appliedCtorArgs` did not, and the third arm — `knownReceiverArgs` — had no list at all,
+        * which is where all 27 of liqp's failures came from. */
+      private def polyExpression(e: CtExpression[?]): Boolean =
+        e.isInstanceOf[CtLambda[?]] || e.isInstanceOf[CtExecutableReferenceExpression[?, ?]]
+
+      /** JS-G31's answer AT THE CALL — every POLY-EXPRESSION argument restored to what `expr`
+        * produced for it, with any cast an argument arm wrapped it in removed.
+        *
+        * Answered here rather than in each arm, and that is the point: the arms are six and
+        * growing, each with its own reason for casting, and a rule stated once per arm is a rule
+        * that will be missing from the seventh. `expr` folds the java-written casts on an
+        * expression innermost-first, one `Tree.Typed` per `getTypeCasts` entry, so those are
+        * exactly the innermost `own` layers and everything outside them was added by an arm — which
+        * makes "keep what java wrote, drop what we added" decidable rather than a guess.
+        *
+        * `Some` only where the call really has a poly argument, so `fired` counts the sites where
+        * the difference APPLIES and `consulted` counts the calls that asked. */
+      private def polyArgsUncast(argEs: List[CtExpression[?]], args: List[Term], at: Origin)
+                                (using Obligations): List[Term] =
+        Obligations.consult(JS.G(31), at) {
+          val poly = argEs.zipWithIndex.collect { case (e, i) if polyExpression(e) => i }.toSet
+          if poly.isEmpty || args.sizeIs != argEs.size then scala.None
+          else Some(args.zipWithIndex.map { (t, i) => if poly(i) then uncastAdded(t, argEs(i)) else t })
+        }.getOrElse(args)
+
+      /** the casts an ARGUMENT ARM added, removed; the ones the JAVA SOURCE wrote, kept. */
+      private def uncastAdded(t: Term, e: CtExpression[?]): Term =
+        val own = try e.getTypeCasts.size catch { case _: Throwable => 0 }
+        def depth(x: Term): Int = x match
+          case Tree.Typed(inner, _, _, _) => 1 + depth(inner)
+          case _                          => 0
+        def strip(x: Term, n: Int): Term =
+          if n <= 0 then x
+          else x match
+            case Tree.Typed(inner, _, _, _) => strip(inner, n - 1)
+            case other                      => other
+        strip(t, depth(t) - own)
+
       private def uncheckedGeneric(target: CtTypeReference[?], e: CtExpression[?], t: Term,
                                    rawTarget: Boolean = true, ownScope: Boolean = true): Term =
         val et = try e.getType catch { case _: Throwable => null }
@@ -2227,9 +2289,8 @@ object SpoonTir:
         // Measured: without this, `addPool(Array.class, Array::new)` casts the supplier to
         // `PoolSupplier[Object]` while `Array.class` pins `T = Array[?]`, and the overload
         // resolves against nothing.
-        val bad = classLit || e.isInstanceOf[CtLambda[?]] || e.isInstanceOf[CtLiteral[?]] ||
-          e.isInstanceOf[CtNewArray[?]] || e.isInstanceOf[CtConditional[?]] ||
-          e.isInstanceOf[CtExecutableReferenceExpression[?, ?]]
+        val bad = classLit || polyExpression(e) || e.isInstanceOf[CtLiteral[?]] ||
+          e.isInstanceOf[CtNewArray[?]] || e.isInstanceOf[CtConditional[?]]
         if target == null || et == null || bad then t
         else if !isGenericUse(target) then t
         else if !(if ownScope then tpResolvable(target) else tpConcrete(target) || calleeBounded(target)) then t
@@ -3395,7 +3456,7 @@ object SpoonTir:
               }
             case _ => args
 
-      private def invocation(inv: CtInvocation[?]): Term =
+      private def invocation(inv: CtInvocation[?])(using Obligations): Term =
         val ex   = inv.getExecutable
         val mid  = methodSym(ex)
         val argEs = inv.getArguments.asScala.toList
@@ -3410,8 +3471,11 @@ object SpoonTir:
             eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs, recvSubst), subst)
           case Some((_, _, nm)) => selfTypeArgs(ex, argEs, coerceArgs(ex, argEs, recvSubst), nm)
           case None             => coerceArgs(ex, argEs, recvSubst)
-        val args = typeVarReceiverArgs(inv, argEs, knownReceiverArgs(inv, argEs, args0))
         val o    = originOf(inv)
+        // JS-G31. Every arm above may cast an argument to the formal it read; a POLY EXPRESSION is
+        // the one argument that has no type to cast FROM, so the call answers for it here, once,
+        // after all of them have run. See `polyExpression` for the probe this rests on.
+        val args = polyArgsUncast(argEs, typeVarReceiverArgs(inv, argEs, knownReceiverArgs(inv, argEs, args0)), o)
         val fun: Term =
           if ex.isConstructor then
             // super()/this() delegation — target class ≠ enclosing ⇒ super (Spoon often nulls the target).
@@ -3684,7 +3748,7 @@ object SpoonTir:
       private def isBoxedWrapper(t: CtTypeReference[?]): Boolean =
         try boxedWrappers(t.getQualifiedName) catch { case _: Throwable => false }
 
-      private def ctorCall(cc: CtConstructorCall[?]): Term =
+      private def ctorCall(cc: CtConstructorCall[?])(using Obligations): Term =
         // A RAW `new` is the one place the inherited instantiation must NOT fill: the constructor
         // ARGUMENTS decide the parameter there. `new AssetDescriptor(name, TextureAtlas.class)`
         // inside `BitmapFontLoader extends …<BitmapFont, …>` is a `TextureAtlas` descriptor, not a
@@ -3697,7 +3761,13 @@ object SpoonTir:
         noInheritFill = savedNoInherit
         val cid  = methodSym(cc.getExecutable)
         val argEs = cc.getArguments.asScala.toList
-        val args = appliedCtorArgs(cc, argEs, rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs)))
+        // JS-G31, as at an invocation — the constructor's argument arms are three more of the same
+        // family, and a `new` takes a lambda exactly as a call does. The row ATTACHES at the
+        // invocation dispatch and this consult is recorded without being owed, which is the honest
+        // shape: `Attaches` holds one surface, and a row nothing attaches here would still be a row
+        // this arm had considered.
+        val args = polyArgsUncast(
+          argEs, appliedCtorArgs(cc, argEs, rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs))), originOf(cc))
         // `CtNewClass` IS a `CtConstructorCall` — the anonymous body hangs off the subtype, and
         // reading only the supertype is what silently dropped every one of them.
         val anon = cc match
@@ -3834,7 +3904,7 @@ object SpoonTir:
               // only destroys the inference it feeds.
               val bad = argEs(i) match
                 case fr: CtFieldRead[?] => fr.getVariable.getSimpleName == "class"
-                case e                  => e.isInstanceOf[CtLambda[?]] || e.isInstanceOf[CtLiteral[?]] ||
+                case e                  => polyExpression(e) || e.isInstanceOf[CtLiteral[?]] ||
                                            e.isInstanceOf[CtNewArray[?]] || e.isInstanceOf[CtConditional[?]]
               if f == null || bad || !mentionsAnyTypeVar(f) then t
               else substFormal(f, subst) match
