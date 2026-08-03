@@ -140,3 +140,70 @@ class StructuralAssertionsSpec extends PortSuite:
     assertEquals(dep.plan.mode, RuntimeMode.Dependency)
     assertEquals(vend.plan.mode, RuntimeMode.Vendored)
   }
+
+
+  // -- assertConsults / assertNotConsults / assertCites -------------------------------------------
+  //
+  // The FOURTH fact a port is judged on, and the one nothing could reach until the obligation log
+  // existed: whether the engine CONSIDERED a Java-vs-Scala difference at this construct. Text
+  // cannot say it — a lowering that happens to produce the right output without ever asking the
+  // question emits exactly the same characters, and that is the state an arm regresses into.
+
+  private val identity = "public class I { boolean f(Object a, Object b) { return a == b; } }"
+
+  test("assertConsults sees a difference the frontend CONSIDERED, which the text cannot state") {
+    val p = port(identity)
+    assertEmits(p, " eq ")                                        // what the text can say
+    assertConsults(p, balticporter.catalog.JS.E(1), fired = true) // what only the log can
+  }
+
+  test("...and it FAILS for a difference this construct never reaches") {
+    val p = port(identity)
+    // JS-E03 attaches at the STATEMENT dispatch and there is no compound assignment here.
+    intercept[munit.FailException](assertConsults(p, balticporter.catalog.JS.E(3)))
+    assertNotConsults(p, balticporter.catalog.JS.E(3))
+  }
+
+  test("`fired` is a SEPARATE claim - a live branch that never applies is the normal state") {
+    val p = port("public class C { void f(int i) { i += 1; } }")
+    // consulted, because the arm asked; not fired, because `int += int` needs no narrowing. A
+    // single number could not tell those apart, which is why the assertion takes two.
+    assertConsults(p, balticporter.catalog.JS.E(3))
+    intercept[munit.FailException](assertConsults(p, balticporter.catalog.JS.E(3), fired = true))
+  }
+
+  test("assertNotConsults FAILS when the engine did consider it") {
+    val p = port(identity)
+    intercept[munit.FailException](assertNotConsults(p, balticporter.catalog.JS.E(1)))
+  }
+
+  test("assertCites reads the PHASE surface, which is a different and weaker claim") {
+    // A phase does not walk one node kind, so nothing can assert it *should have* considered a
+    // difference at a declaration it never visited. What a citation says is that it DID - here,
+    // that `TestFrameworkTransform` re-applied java's binary numeric promotion (JS-E07) inside a
+    // named member.
+    val junit =
+      """package p;
+        |import org.junit.Assert;
+        |import org.junit.Test;
+        |public class T {
+        |  @Test public void widens() { long v = 2L; Assert.assertEquals(1, v); }
+        |}
+        |""".stripMargin
+    val p = port(junit, new balticporter.transform.TestFrameworkTransform())
+    assertCites(p, balticporter.catalog.JS.E(7), about = "widens")
+    intercept[munit.FailException](assertCites(p, balticporter.catalog.JS.E(7), about = "nosuchmember"))
+  }
+
+  test("...and a suite with no promotion cites NOTHING - the citation is not a per-phase constant") {
+    val plain =
+      """package p;
+        |import org.junit.Assert;
+        |import org.junit.Test;
+        |public class U {
+        |  @Test public void same() { Assert.assertEquals(1, 1); }
+        |}
+        |""".stripMargin
+    val p = port(plain, new balticporter.transform.TestFrameworkTransform())
+    intercept[munit.FailException](assertCites(p, balticporter.catalog.JS.E(7)))
+  }

@@ -3,6 +3,7 @@ package balticporter.testkit
 import balticporter.core.{RuntimeMode, RuntimePlan}
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
+import balticporter.catalog.{CatalogLog, DiffId}
 import balticporter.tir.{CheckReport, Decision, Phase, Pipeline, Program, SymId}
 
 /** One Java snippet taken through the pipeline, with everything a test wants to assert on.
@@ -27,7 +28,8 @@ import balticporter.tir.{CheckReport, Decision, Phase, Pipeline, Program, SymId}
 final case class Ported(before: Program, after: Program, phases: List[Phase],
                         sources: Map[String, String] = Map.empty,
                         decisions: List[Decision] = Nil,
-                        runtimeMode: RuntimeMode = RuntimeMode.Dependency):
+                        runtimeMode: RuntimeMode = RuntimeMode.Dependency,
+                        catalog: CatalogLog = CatalogLog.discarding):
 
   /** what the phases that ran require of `balticporter-runtime`. Derived, not passed: the fixture
     * is a miniature of the orchestrator, so a test exercises the same derivation a real port does
@@ -97,9 +99,17 @@ object PortFixture:
 
   /** …for a port whose runtime delivery is not the default. See [[Ported.runtimeMode]]. */
   def portIn(mode: RuntimeMode, java: String, phases: Phase*): Ported =
-    val before        = SpoonTir.fromSource(java)
-    val (after, log)  = Pipeline.runTraced(before, phases.toList)
-    Ported(before, after, phases.toList, Map("Snippet.java" -> java), log.all, mode)
+    // `fatal = true` — the TESTKIT is the mode where an undischarged obligation is an ERROR.
+    // `DESIGN.md` §2.8 stages enforcement deliberately: a port run counts, because a run that died
+    // on an incomplete rule produces no diagnostics at all, and a spec fails, because every
+    // difference gets an edge-case suite and that suite is what the guarantee rests on. A row the
+    // registry itself calls `Open` or `Absent` is never fatal — it is the work list, and a mode
+    // that died on it would make the work list unrunnable.
+    val catalog       = new CatalogLog(fatal = true)
+    val before        = SpoonTir.fromSource(java, catalog = catalog)
+    val (after, log)  = Pipeline.runTraced(before, phases.toList,
+                          new balticporter.tir.PolicyBinder(before, before.members), catalog)
+    Ported(before, after, phases.toList, Map("Snippet.java" -> java), log.all, mode, catalog)
 
   /** the same over SEVERAL compilation units, each `fileName -> code`. A Java file declares exactly
     * one package, so every rule about a PACKAGE BOUNDARY — default access, `protected`, an override
@@ -108,9 +118,11 @@ object PortFixture:
     portAllIn(RuntimeMode.Dependency, sources, phases*)
 
   def portAllIn(mode: RuntimeMode, sources: List[(String, String)], phases: Phase*): Ported =
-    val before       = SpoonTir.fromSources(sources)
-    val (after, log) = Pipeline.runTraced(before, phases.toList)
-    Ported(before, after, phases.toList, sources.toMap, log.all, mode)
+    val catalog      = new CatalogLog(fatal = true)
+    val before       = SpoonTir.fromSources(sources, catalog = catalog)
+    val (after, log) = Pipeline.runTraced(before, phases.toList,
+                         new balticporter.tir.PolicyBinder(before, before.members), catalog)
+    Ported(before, after, phases.toList, sources.toMap, log.all, mode, catalog)
 
   /** parse only — for tests about the FRONTEND rather than about a phase. */
   def parse(java: String): Program = SpoonTir.fromSource(java)
@@ -220,6 +232,54 @@ abstract class PortSuite extends munit.FunSuite:
 
   private def renderFindings(fs: Seq[CheckReport.Finding]): String =
     if fs.isEmpty then "  (none)" else fs.map("  " + _.render).mkString("\n")
+
+  /** a catalog row was CONSULTED while this fixture was lowered — the structural assertion for
+    * `DESIGN.md` §2.8's obligation surfaces.
+    *
+    * The one an edge-case suite opens with, and it asserts something no text assertion can reach:
+    * that the engine CONSIDERED the difference at this construct. `assertEmits` can only say that
+    * some string is present, and a string is present for many reasons — including a lowering that
+    * happened to produce the right text without ever asking the question, which is precisely the
+    * shape that regresses the day an arm is rewritten.
+    *
+    * `fired` is the second half and is separate on purpose: a consult that is reached and never
+    * applies is the normal state of most rows at most sites, and a suite for the difference's own
+    * edge case wants to say the difference APPLIED here. `assertConsults(p, id, fired = true)` is
+    * that; the default asserts only that the branch was live. */
+  def assertConsults(p: Ported, id: DiffId, fired: Boolean = false)(using munit.Location): Unit =
+    val n = p.catalog.consulted(id)
+    if n == 0 then
+      fail(s"$id was never consulted while lowering this fixture" +
+        s"\n--- rows reached ---\n${renderReached(p)}\n---------------")
+    if fired && p.catalog.fired(id) == 0 then
+      fail(s"$id was consulted $n time(s) and never APPLIED — the branch is live and the " +
+        s"difference did not fire, which is the one thing a consult count cannot tell you")
+
+  /** …and the direction a regression needs: the engine did NOT consider this difference here.
+    *
+    * Every assertion in this file is tested in both directions, and this is the one that makes the
+    * positive form mean something — a fixture where every row reads as consulted is a fixture that
+    * would pass with the wrapper wired to a constant. */
+  def assertNotConsults(p: Ported, id: DiffId)(using munit.Location): Unit =
+    val n = p.catalog.consulted(id)
+    if n != 0 then
+      fail(s"$id was consulted $n time(s) and should not have been at this construct")
+
+  /** a catalog row was CITED by a PHASE, at a declaration whose name contains `about`.
+    *
+    * The phase surface's assertion, and deliberately a different one: a citation is weaker than an
+    * obligation — nothing can assert that a phase *should have* considered a difference at a
+    * declaration it never visited — so a suite must not be able to spell the two the same way. */
+  def assertCites(p: Ported, id: DiffId, about: String = "")(using munit.Location): Unit =
+    val at = p.catalog.citedAt(id)
+    if !at.exists(_.contains(about)) then
+      fail(s"$id was not cited by any phase${if about.isEmpty then "" else s" at a declaration containing '$about'"}" +
+        s"\n--- ${at.size} citation(s) ---\n${if at.isEmpty then "  (none)" else at.map("  " + _).mkString("\n")}\n---------------")
+
+  private def renderReached(p: Ported): String =
+    val rows = p.catalog.rows.filter(r => r.consulted > 0 || r.declarations > 0)
+    if rows.isEmpty then "  (none)"
+    else rows.map(r => s"  ${r.id} consulted=${r.consulted} fired=${r.fired} declarations=${r.declarations}").mkString("\n")
 
   /** the PREVIEW emission (`DESIGN.md` §7.4) contains `snippet`.
     *

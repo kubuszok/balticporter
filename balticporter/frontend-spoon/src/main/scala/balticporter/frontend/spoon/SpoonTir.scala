@@ -1,6 +1,7 @@
 package balticporter.frontend.spoon
 
 import balticporter.core.{FrontendConfig, RealPath, Substituted, Substitutions}
+import balticporter.catalog.{CatalogLog, Dispatch, JS, Lowering, Obligations}
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
 
@@ -26,9 +27,17 @@ import scala.jdk.CollectionConverters.*
   * F-bounds. The whole liqp corpus (135 types) translates with no `Unsupported`.
   */
 object SpoonTir:
-  /** Build a [[Program]] from already-resolved top-level Spoon types. */
-  def fromTypes(types: List[CtType[?]], subs: Substitutions = Substitutions.none): Program =
-    new Builder(subs).build(types)
+  /** Build a [[Program]] from already-resolved top-level Spoon types.
+    *
+    * `catalog` is the run's OBLIGATION LOG (`balticporter.catalog`). It is a parameter and not a
+    * field of the returned `Program` for the reason `DecisionLog` is a parameter of the pipeline: a
+    * log is a value ONE RUN owns (`CLAUDE.md` §5.1), and `Determinism.Full` translates twice — two
+    * translations sharing one log would double every consult in it. The default is a fresh
+    * discarding log, so a caller that does not want coverage does not have to hold one, and nothing
+    * accumulates across two calls. */
+  def fromTypes(types: List[CtType[?]], subs: Substitutions = Substitutions.none,
+                catalog: CatalogLog = CatalogLog.discarding): Program =
+    new Builder(subs, catalog = catalog).build(types)
 
   /** Build the Spoon model over a whole closure and return its top-level types. Full
     * classpath by default (like the BIR frontend); `lenient` uses noClasspath mode so a
@@ -69,8 +78,9 @@ object SpoonTir:
   /** Convenience for tests / snippets: parse one in-memory source (no external classpath;
     * JDK types resolve by qualified name) and populate the TIR from its top-level types. */
   def fromSource(code: String, fileName: String = "Snippet.java",
-                 subs: Substitutions = Substitutions.none): Program =
-    fromSources(List(fileName -> code), subs)
+                 subs: Substitutions = Substitutions.none,
+                 catalog: CatalogLog = CatalogLog.discarding): Program =
+    fromSources(List(fileName -> code), subs, catalog)
 
   /** The same, over SEVERAL compilation units — because a Java file holds exactly one package, and
     * every rule about a PACKAGE BOUNDARY (default access, `protected`, a cross-package override)
@@ -80,7 +90,8 @@ object SpoonTir:
     * out by position; Spoon reports positions per compilation unit, so each unit's own text is
     * looked up by file name rather than by offset into a joined string. */
   def fromSources(sources: List[(String, String)],
-                  subs: Substitutions = Substitutions.none): Program =
+                  subs: Substitutions = Substitutions.none,
+                  catalog: CatalogLog = CatalogLog.discarding): Program =
     val launcher = new Launcher
     val env      = launcher.getEnvironment
     env.setComplianceLevel(21)
@@ -94,7 +105,7 @@ object SpoonTir:
     // fall back to Spoon's RE-PRINTED form and this convenience API would quietly be the one path
     // that does not preserve them verbatim. It is the same buffer either way; only its source
     // differs.
-    new Builder(subs, sources.toMap).build(tops)
+    new Builder(subs, sources.toMap, catalog).build(tops)
 
   // -------------------------------------------------------------------------
   /** Interns symbols by a stable string key (qualified names for types, `owner#member`
@@ -162,7 +173,13 @@ object SpoonTir:
     *   one position is only meaningful in ONE of them: slicing unit B's comment out of unit A's
     *   text is exactly the silent mis-preservation §4.58 is about. */
   private final class Builder(subs: Substitutions = Substitutions.none,
-                              inMemorySources: Map[String, String] = Map.empty):
+                              inMemorySources: Map[String, String] = Map.empty,
+                              catalog: CatalogLog = CatalogLog.discarding):
+    /** the run's obligation log, in scope for every `Lowering.of` in this builder. `given` rather
+      * than a parameter on every lowering method: the wrapper is at the DISPATCH and the dispatch
+      * is one method, so threading it explicitly would be forty signatures carrying a value one of
+      * them uses. */
+    private given CatalogLog = catalog
     private val minter   = new Minter
     private val tpScopes = collection.mutable.ArrayDeque[Map[String, SymId]]()
     private val selfRawStack = collection.mutable.ArrayDeque[(SymId, List[SymId])]()
@@ -2011,7 +2028,35 @@ object SpoonTir:
         case _: Tree.While | _: Tree.For | _: Tree.ForEach | _: Tree.DoWhile => true
         case _                                                               => false
 
-      private def stmtKind(s: CtStatement): Statement = s match
+      /** JS-E03/E04's PREDICATE, as one function: the target type when java's implicit narrowing
+        * applies to a compound assignment here, `scala.None` when it does not.
+        *
+        * One function and not two copies, because the two positions this is consulted from are
+        * exactly the pair the catalog splits into two rows — and a predicate copied into both is a
+        * predicate that will be fixed in one. Java's binary numeric promotion lifts
+        * `byte`/`short`/`char` operands to at least `int`, so the op result may be wider than the
+        * target (`byte += byte` computes an `int`); narrow back whenever
+        * `max(rhsRank, intRank) > targetRank`. */
+      private def compoundNarrow(a: CtOperatorAssignment[?, ?]): Option[CtTypeReference[?]] =
+        val lt = a.getAssigned.getType
+        val rt = try a.getAssignment.getType catch { case _: Throwable => null }
+        val narrow = lt != null && lt.isPrimitive && rt != null && rt.isPrimitive &&
+          primRank.get(lt.getSimpleName).exists(l =>
+            primRank.get(rt.getSimpleName).exists(r => math.max(r, primRank("int")) > l))
+        if narrow then Some(lt) else scala.None
+
+      /** THE STATEMENT DISPATCH — and the obligation wrapper sits HERE, not in an arm.
+        *
+        * `Lowering.of` maps the node's runtime class to its registry name ONCE and enters the
+        * obligation scope before any `case` is tried, so an arm is incapable of escaping its
+        * obligations because it never had the choice. Written inside each `case`, the failure mode
+        * would be an arm that declines to wrap — which is the same shape as the defect the
+        * mechanism exists to catch (`DESIGN.md` §2.8). Cost is one `Map` lookup per statement, and
+        * `Nil` for every kind nothing attaches to. */
+      private def stmtKind(s: CtStatement): Statement =
+        Lowering.of(SpoonKinds.nameOf(s.getClass), Dispatch.Statement, originOf(s))(stmtArm(s))
+
+      private def stmtArm(s: CtStatement)(using Obligations): Statement = s match
         case v: CtLocalVariable[?] =>
           val vt = tpe(v.getType)
           val id = defineLocal(v, vt) // sets isMutable when the local is reassigned
@@ -2021,14 +2066,12 @@ object SpoonTir:
           // Java compound assignment narrows implicitly: `int += float` means `= (int)(i + f)`.
           val lhs = expr(a.getAssigned)
           val res = binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a))
-          val lt  = a.getAssigned.getType
-          val rt  = try a.getAssignment.getType catch { case _: Throwable => null }
-          // Java binary numeric promotion lifts byte/short/char operands to at least `int`, so the
-          // op result (rank ≥ int) may be wider than the target — e.g. `byte += byte` computes an
-          // `int`. Narrow back to the target whenever `max(rhsRank, intRank) > targetRank`.
-          val narrow = lt != null && lt.isPrimitive && rt != null && rt.isPrimitive &&
-            primRank.get(lt.getSimpleName).exists(l => primRank.get(rt.getSimpleName).exists(r => math.max(r, primRank("int")) > l))
-          val out = if narrow then Tree.Typed(res, tt(tpe(lt), a), tpe(lt), originOf(a)) else res
+          // JS-E03, CONSULTED rather than merely done: the catalog attaches it to this dispatch, so
+          // the wrapper reports an arm that returns without asking. `compoundNarrow` is the whole
+          // predicate — `Some(target)` when java's implicit narrowing applies here — which is what
+          // makes the consult a decision the coverage lane can count rather than a formality.
+          val out = Obligations.consult(JS.E(3), originOf(a))(compoundNarrow(a))
+            .fold(res)(t => Tree.Typed(res, tt(tpe(t), a), tpe(t), originOf(a)))
           Tree.Assign(lhs, out, unitT, originOf(a))
         case a: CtAssignment[?, ?] =>
           val tgt = Option(a.getAssigned.getType)
@@ -2694,7 +2737,12 @@ object SpoonTir:
           val ct = tpe(t); Tree.Typed(acc, tt(ct, e), ct, originOf(e))
         }
 
-      private def exprNoCast(e: CtExpression[?]): Term = e match
+      /** THE EXPRESSION DISPATCH — the wrapper's second entry, symmetrical with [[stmtKind]] and
+        * for the same reason. See that method for why it is here and not in the arms. */
+      private def exprNoCast(e: CtExpression[?]): Term =
+        Lowering.of(SpoonKinds.nameOf(e.getClass), Dispatch.Expression, originOf(e))(exprArm(e))
+
+      private def exprArm(e: CtExpression[?])(using Obligations): Term = e match
         case l: CtLiteral[?]      => literal(l)
         case f: CtFieldRead[?]    => fieldAccess(f.getVariable, f.getTarget, e)
         case f: CtFieldWrite[?]   => fieldAccess(f.getVariable, f.getTarget, e)
@@ -2713,40 +2761,44 @@ object SpoonTir:
         case l: CtLambda[?]     => lambda(l)
         case mr: CtExecutableReferenceExpression[?, ?] => methodRef(mr)
         case b: CtBinaryOperator[?] =>
+          // BOTH consults happen at EVERY binary operator, `instanceof` included. The catalog
+          // attaches them to the NODE KIND, and an arm that asked only at the nodes where it
+          // already knew the answer would be discharging its obligation on a condition of its own
+          // choosing — which is the shape the wrapper exists to make impossible. Neither predicate
+          // touches an operand until it has ruled the kind in, so asking everywhere costs a
+          // `getKind` comparison and translates nothing twice.
+          val stringified = Obligations.consult(JS.E(14), originOf(b))(stringConcatLeft(b))
+          val identity    = Obligations.consult(JS.E(1), originOf(b))(referenceIdentity(b))
           if b.getKind == BinaryOperatorKind.INSTANCEOF then
             val tp = b.getRightHandOperand match
               case ta: CtTypeAccess[?] => tpe(ta.getAccessedType)
               case other               => unsupported(other, "instanceof right operand")
             Tree.InstanceOf(expr(b.getLeftHandOperand), tt(tp, b), ty(b), originOf(b))
-          else if b.getKind == BinaryOperatorKind.PLUS && isStringConcat(b) && !isStringTyped(b.getLeftHandOperand) then
-            // Java string concatenation with a non-String LEFT operand (`obj + "s"`): Scala has no
-            // `+` on `obj`, so stringify the left (`String.valueOf(obj) + "s"`).
-            binApply("+", stringify(expr(b.getLeftHandOperand), b), expr(b.getRightHandOperand), ty(b))
-          else referenceIdentity(b).getOrElse(
-            binApply(opText(b.getKind), expr(b.getLeftHandOperand), expr(b.getRightHandOperand), ty(b)))
+          else
+            stringified.orElse(identity).getOrElse(
+              binApply(opText(b.getKind), expr(b.getLeftHandOperand), expr(b.getRightHandOperand), ty(b)))
         case u: CtUnaryOperator[?] =>
           import UnaryOperatorKind.*
-          u.getKind match
+          // JS-E02, consulted at every unary operator for the reason above; `incDecOf` answers
+          // `scala.None` for the four that are not increments.
+          Obligations.consult(JS.E(2), originOf(u))(incDecOf(u)).getOrElse(u.getKind match
             case NOT     => unApply("unary_!", expr(u.getOperand), ty(u))
             case NEG     => unApply("unary_-", expr(u.getOperand), ty(u))
             case POS     => unApply("unary_+", expr(u.getOperand), ty(u))
             case COMPL   => unApply("unary_~", expr(u.getOperand), ty(u))
-            case POSTINC => Tree.IncDec(expr(u.getOperand), "+", post = true, ty(u), originOf(u))
-            case POSTDEC => Tree.IncDec(expr(u.getOperand), "-", post = true, ty(u), originOf(u))
-            case PREINC  => Tree.IncDec(expr(u.getOperand), "+", post = false, ty(u), originOf(u))
-            case PREDEC  => Tree.IncDec(expr(u.getOperand), "-", post = false, ty(u), originOf(u))
-            // Java has eight unary operators and this arm enumerates all eight, so the default is
-            // unreachable TODAY and is not there for Java — it is there for SPOON. `getKind` is a
-            // Java enum from a dependency, not a sealed Scala one, so scalac cannot check this
-            // match: a Spoon upgrade that adds a kind produces a `MatchError` at some depth of the
-            // expression translator, with no origin, no construct name and nothing to classify it
-            // by. That is the one failure shape this frontend must not have — an error an agent
-            // cannot classify costs it a full investigation (§4.45) — so the default is a MARKER,
-            // located and named, and `FrontendBlindSpot` rather than `UnmodelledNodeKind` because
-            // the node kind IS dispatched on here. What is missing is one shape of it.
+            // Java has eight unary operators; `incDecOf` above answers four of them and this match
+            // the other four, so the default is unreachable TODAY and is not there for Java — it is
+            // there for SPOON. `getKind` is a Java enum from a dependency, not a sealed Scala one,
+            // so scalac cannot check this match: a Spoon upgrade that adds a kind produces a
+            // `MatchError` at some depth of the expression translator, with no origin, no construct
+            // name and nothing to classify it by. That is the one failure shape this frontend must
+            // not have — an error an agent cannot classify costs it a full investigation (§4.45) —
+            // so the default is a MARKER, located and named, and `FrontendBlindSpot` rather than
+            // `UnmodelledNodeKind` because the node kind IS dispatched on here. What is missing is
+            // one shape of it.
             case other =>
               unlowered(u, s"unary operator kind '$other' — this arm enumerates java's eight and " +
-                "the parser produced a ninth", ty(u), Some(UnportableKind.FrontendBlindSpot))
+                "the parser produced a ninth", ty(u), Some(UnportableKind.FrontendBlindSpot)))
         // assignment used as a VALUE (`return a = v`, `while ((line = read()) != null)`):
         // Java yields the assigned value, Scala's `=` is Unit — lower to `{ lhs = rhs; lhs }`.
         case a: CtOperatorAssignment[?, ?] =>
@@ -2762,16 +2814,30 @@ object SpoonTir:
           val rhs = a.getAssignment
           val v   = Option(a.getAssigned.getType).map(coerce(_, rhs, expr(rhs))).getOrElse(expr(rhs))
           val st  = Tree.Assign(lhs, toDeclaredTypeParam(a.getAssigned, rhs, v), unitT, originOf(a))
-          Tree.Block(List(st), lhs, ty(a), originOf(a))
+          // JS-E15. This consult ALWAYS fires and that is the honest answer, not a formality: an
+          // assignment reaching the EXPRESSION dispatch is by definition one whose value java
+          // yields, so the difference applies at every site. Where it did not apply the answer is
+          // `st` itself — a plain `Unit` assignment, which is exactly what the statement dispatch
+          // emits — so the two branches are the two languages' two forms and neither is dead text.
+          Obligations.consult(JS.E(15), originOf(a))(Some(lhs))
+            .fold[Term](st)(v2 => Tree.Block(List(st), v2, ty(a), originOf(a)))
         case c: CtConditional[?] =>
           // Java `b ? x : null` typed as the type parameter `V`; Scala infers `x.type | Null`, which
           // won't satisfy a `V` slot. Cast a null branch to the conditional's own type so the ternary
           // stays `V`. Guarded: only when that type resolves (never emit the `?T` unresolved stub).
           val ct = ty(c)
+          // JS-E05, and note what this consult does and does not discharge. The row is `Partial`:
+          // java COMPUTES the conditional's type (JLS 15.25.2) where Scala takes the lub of the
+          // branches, and only the null-branch shape is reproduced here — the rest of the row is
+          // the emitter dropping `Tree.If`'s `tpe`, which is a different surface. Consulting here
+          // says the frontend considered it; it does not say the row is closed, and the row's own
+          // `Partial(missing)` is what says the other half is open.
+          val ascribe = Obligations.consult(JS.E(5), originOf(c))(
+            if ct != NoType && condTypeResolves(c) then Some(ct) else scala.None)
           def branch(be: CtExpression[?]): Term =
             val t      = expr(be)
             val isNull = be match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
-            if isNull && ct != NoType && condTypeResolves(c) then Tree.Typed(t, tt(ct, be), ct, originOf(be)) else t
+            if isNull then ascribe.fold(t)(a2 => Tree.Typed(t, tt(a2, be), a2, originOf(be))) else t
           Tree.If(expr(c.getCondition), branch(c.getThenExpression), branch(c.getElseExpression), ct, originOf(c))
         case ta: CtTypeAccess[?] => Tree.Literal(Constant.ClassOfC(tpe(ta.getAccessedType)), ty(e), originOf(e))
         // …and the same for an EXPRESSION. The marker carries the expression's own type, so the
@@ -3791,6 +3857,27 @@ object SpoonTir:
         * reads better — and when either static type is PRIMITIVE, where `==` is value equality in
         * both languages. `Any`-typed operands (java's `equals(Object)` parameter, which scala must
         * render `equals(Any)`) go through `AnyRef`, since `eq` lives there. */
+      /** JS-E14's PREDICATE: java string concatenation with a NON-`String` left operand
+        * (`obj + "s"`). Scala has no `+` on `obj`, so the left is stringified
+        * (`String.valueOf(obj) + "s"`). `scala.None` — nothing to do — for every other operator,
+        * and the kind is ruled in before either operand is translated. */
+      private def stringConcatLeft(b: CtBinaryOperator[?]): Option[Term] =
+        if b.getKind == BinaryOperatorKind.PLUS && isStringConcat(b) && !isStringTyped(b.getLeftHandOperand)
+        then Some(binApply("+", stringify(expr(b.getLeftHandOperand), b), expr(b.getRightHandOperand), ty(b)))
+        else scala.None
+
+      /** JS-E02's PREDICATE: `++`/`--` in either position, which java evaluates to the value BEFORE
+        * the update for the postfix forms. `Tree.IncDec` carries the distinction; the emitter is
+        * what renders `{ val p = x; x += 1; p }` rather than `{ x += 1; x }`. */
+      private def incDecOf(u: CtUnaryOperator[?]): Option[Term] =
+        import UnaryOperatorKind.*
+        u.getKind match
+          case POSTINC => Some(Tree.IncDec(expr(u.getOperand), "+", post = true, ty(u), originOf(u)))
+          case POSTDEC => Some(Tree.IncDec(expr(u.getOperand), "-", post = true, ty(u), originOf(u)))
+          case PREINC  => Some(Tree.IncDec(expr(u.getOperand), "+", post = false, ty(u), originOf(u)))
+          case PREDEC  => Some(Tree.IncDec(expr(u.getOperand), "-", post = false, ty(u), originOf(u)))
+          case _       => scala.None
+
       private def referenceIdentity(b: CtBinaryOperator[?]): Option[Term] =
         import BinaryOperatorKind.*
         val (l, r) = (b.getLeftHandOperand, b.getRightHandOperand)

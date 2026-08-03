@@ -176,6 +176,15 @@ final class TestFrameworkTransform(
   private var suitesConverted = 0
   private var testsConverted  = 0
 
+  /** JS-E07's citation state — set when [[promote]] actually widened an operand, read by
+    * [[transformDefDef]], which the bottom-up traversal reaches AFTER the body it belongs to.
+    *
+    * A flag and not a set of `Apply` nodes, because the citation is per DECLARATION (`CLAUDE.md`
+    * §5.1) and the declaration is the frame this phase's rewrite has no other way to name: the
+    * assertion rewrite is a `transformApply` hook, which sees a call and never the member it is in.
+    * Cleared at each declaration, so a widening in one method cannot be attributed to the next. */
+  private var promotedHere = false
+
   /** Constructs this phase could not translate, with their CLAUDE.md §1 classification. Empty
     * until [[run]] has executed. A migrator that wants the number on every run can read it; `run`
     * already prints a one-line summary plus the details, so no wiring is required for it to be
@@ -501,8 +510,25 @@ final class TestFrameworkTransform(
     (NumericRank.get(tx), NumericRank.get(ty)) match
       case (Some(rx), Some(ry)) if tx != ty =>
         val to = if rx > ry then tx else if ry > rx then ty else "scala.Int"
+        promotedHere = true
         (widen(x, tx, to, p), widen(y, ty, to, p))
       case _ => (x, y)
+
+  /** JS-E07's CITATION — the catalog's third discharge surface (`DESIGN.md` §2.8).
+    *
+    * A phase does not walk one node kind, so an obligation wrapper is the wrong shape for it; what
+    * a phase owes is a row per DECLARATION it decided about. This hook is where that declaration is
+    * finally in hand: the traversal is bottom-up, so a `DefDef` is reached after every `Apply` in
+    * its body, and [[promotedHere]] is exactly "java's binary numeric promotion had to be
+    * re-applied somewhere in this member".
+    *
+    * The tree is returned UNCHANGED. This hook exists to observe, and an observation that moved a
+    * byte of output would be a coverage mechanism that changes what it measures. */
+  override def transformDefDef(t: Tree.DefDef)(using p: Program): Tree.DefDef =
+    if promotedHere then
+      cite(balticporter.catalog.JS.E(7), p.symbolOf(t.symbol).map(_.fullName).getOrElse(t.symbol.toString))
+      promotedHere = false
+    t
 
   private def widen(t: Term, from: String, to: String, p: Program): Term =
     if from == to then t else select(guarded(t)(using p), widenSyms(to), t.origin, primTypes(to))

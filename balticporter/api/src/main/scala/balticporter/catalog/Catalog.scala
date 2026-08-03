@@ -24,12 +24,13 @@ package balticporter.catalog
   * already governs it. `DifferenceTakesNoParameterSpec` is that rule, mechanised — every field of
   * every row, recursively, must be a literal or an enum case.
   *
-  * WHAT IS DELIBERATELY NOT HERE YET. A row carries no `attaches` and no `tests`. Both are real
-  * fields of the design and both depend on a mechanism that does not exist — the obligation
-  * surfaces at the frontend dispatch, at the emitter dispatch and at a phase's per-declaration
-  * citation. A field whose mechanism is not built is the `Unmechanised` trap: it reads as a claim
-  * the engine cannot honour, and the lane that would check it would report every row as fine. They
-  * arrive with the surfaces that discharge them, not before.
+  * `attaches` ARRIVED WITH ITS FIRST SURFACE, and only for the rows that surface reaches. The
+  * frontend's lowering dispatch is built ([[Lowering]]); the emitter's rendering dispatch and the
+  * per-declaration phase citation are not both there yet, and a row whose discharge site has no
+  * mechanism says so — [[Attaches.Unmechanised]], counted in its own lane. A field that claimed
+  * coverage on the strength of a surface that does not exist would make the lane checking it report
+  * every row as fine, which is worse than no lane. `tests` is still absent for the same reason: the
+  * edge-case suites are per-area waves and a row pointing at a suite nobody wrote is a claim.
   *
   * NO ROW MAY CARRY A NUMBER. Numbers live where §3.6 says: a measurement in `ENGINE-LIMITS.md` or
   * `PROGRESS.md`, and the row points at it with its [[Twin]]. This includes the catalog's own SIZE
@@ -144,6 +145,11 @@ enum FixKind:
   *                  the gap is, with the file when the symbol alone is ambiguous. **Never a line
   *                  number**: this pass alone re-read a dozen line numbers that had moved, and a
   *                  registry of 126 stale line numbers would be worse than none
+  * @param attaches  WHERE the engine owes a decision about this row, and therefore what a coverage
+  *                  lane may claim about it. See [[Attaches]] — including its two honest negatives,
+  *                  `Unmechanised` (the surface is not built) and `NoObligation` (no surface is
+  *                  owed), which are counted apart because collapsing them hides the first inside
+  *                  the second
   */
 final case class Difference(
     id: DiffId,
@@ -155,6 +161,7 @@ final case class Difference(
     twin: Twin,
     fix: FixKind,
     evidence: String,
+    attaches: Attaches,
 )
 
 /** an id that was ABSORBED into another row and is therefore out of circulation forever.

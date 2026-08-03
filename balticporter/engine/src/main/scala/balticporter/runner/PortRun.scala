@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -908,6 +908,34 @@ final case class PortRun(
     println(MarkerCheck.summary(markers, resolved))
     writeMarkers(program, markerInventory)
 
+    // ---- the DIFFERENCE CATALOG's four coverage lanes (`DESIGN.md` §2.8) ----
+    //
+    // Four and not one, following the `trivia(|recovered|deliberate)` precedent exactly: `lost = 0`
+    // is a bar a run could hold by recovering everything, and here `unreached = 0` is a bar a run
+    // could hold by declaring every row `Unmechanised`. So the positive (`consulted`), the two
+    // residues (`unreached`, `unmechanised`) and the work list (`undischarged`) are reported apart,
+    // and every one of them is in `RequiredChecks` — a number that reaches stdout and not
+    // `findings.tsv` fails the run.
+    //
+    // `catalog(refused)` is deliberately NOT a fifth lane: it is the `markers` lane above, which
+    // already records a `Tree.Unportable` mint with its catalog id. Two lanes counting one thing is
+    // how two numbers start disagreeing.
+    val catalogLog     = translated.catalog
+    val catConsulted   = CatalogCheck.consulted(catalogLog)
+    val catUnreached   = CatalogCheck.unreached(catalogLog)
+    val catUnmech      = CatalogCheck.unmechanised
+    val catUndischarged = CatalogCheck.undischargedAll(catalogLog)
+    CheckReport.record(CatalogCheck.Consulted, catConsulted)
+    CheckReport.record(CatalogCheck.Unreached, catUnreached)
+    CheckReport.record(CatalogCheck.Unmechanised, catUnmech)
+    CheckReport.record(CatalogCheck.Undischarged, catUndischarged)
+    say(s"CATALOG: ${catConsulted.size} row(s) consulted, ${catUnreached.size} mechanised and " +
+      s"unreached, ${catUnmech.size} not instrumented, ${catUndischarged.size} undischarged")
+    if catUndischarged.nonEmpty then
+      say(CatalogCheck.Classification)
+      catUndischarged.take(10).foreach(f => say("  " + f.render))
+    writeCatalog(catalogLog)
+
     // ---- the CONTEXT boundary, RECORDED: the four the phase drew (collected above) plus the one
     // only the emitted text can show — a `using` clause the threading attached to a class's
     // constructors that the emitted type does not carry (`ENGINE-LIMITS.md` CT5).
@@ -1130,6 +1158,25 @@ final case class PortRun(
       }
       Files.writeString(dir.resolve("markers.tsv"),
         ("#unit\tmember\tstate\tkind\tcatalog\tjavaPath\tline\twhat" :: rows).mkString("", "\n", "\n"))
+
+  /** `catalog.tsv` — one row per catalog entry, reached or not.
+    *
+    * Every row and not only the reached ones, because the question the artifact exists to answer is
+    * "which branches does this port never touch", and a file listing only what fired answers the
+    * other one. `just catalog-coverage` aggregates these across the corpus, which is the answer an
+    * agent needs before claiming a rule is live: a row unreached on one small library is normal, a
+    * row unreached on all fifteen is dead code or an untested rule.
+    *
+    * GATED ON THE ARTIFACT LAYER, without exception (§5.1). This is written from the FRONTEND's own
+    * log, so it is reachable from more test paths than `PortMap` is — and one unconditional
+    * `PortMap.write` was enough to publish run directories into the checkout from a JVM with no
+    * port identity at all. */
+  private def writeCatalog(log: balticporter.catalog.CatalogLog): Unit =
+    if CheckReport.enabled then
+      val dir = CheckReport.runDir
+      Files.createDirectories(dir)
+      Files.writeString(dir.resolve("catalog.tsv"),
+        (CatalogCheck.TsvHeader :: CatalogCheck.tsv(log)).mkString("", "\n", "\n"))
 
   private def writeSrcMap(rec: balticporter.tir.SrcMap.Recording): Unit =
     if CheckReport.enabled then
@@ -1895,7 +1942,13 @@ final case class PortRun(
 
   private def translateOnce(): PortRun.Translated =
     val types   = SpoonTir.buildModel(frontend, lenient = lenient)
-    val parsed  = SpoonTir.fromTypes(types, policySubs)
+    // The run's OBLIGATION LOG (`DESIGN.md` §2.8). Created HERE, inside `translateOnce`, for the
+    // reason the decision log and the policy binder are: `Determinism.Full` translates twice, and a
+    // log shared between the two translations would report every consult twice. `fatal = false` —
+    // a port run COUNTS an undischarged obligation, because a run that died on an incomplete rule
+    // is a run that produces no diagnostics at all; the testkit is where a hole is an error.
+    val catalog = new balticporter.catalog.CatalogLog(fatal = false)
+    val parsed  = SpoonTir.fromTypes(types, policySubs, catalog)
     // ---- POLICY BINDING (§8.1) — every declared key resolved ONCE, before any phase runs ----
     //
     // Before the pipeline and not inside it, for two reasons that are not scheduling. Every policy
@@ -1914,7 +1967,7 @@ final case class PortRun(
     // is only coherent because neither log is shared (CLAUDE.md §5.1).
     // The binder is handed to the pipeline, which binds every `PolicyBound` phase before the first
     // one runs — a phase run unbound matches nothing, silently.
-    val (program, decisions) = Pipeline.runTraced(parsed, effectivePhases, binder)
+    val (program, decisions) = Pipeline.runTraced(parsed, effectivePhases, binder, catalog)
     val plan    = RuntimePlan.of(effectivePhases, runtimeMode)
     // `externalConcrete` is DERIVED, never passed in: a caller who has to remember it is a caller
     // who forgets it, and forgetting it silently disables diamond-conflict detection against an
@@ -1934,7 +1987,7 @@ final case class PortRun(
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, bestEffort,
                                  Some(surface))
     PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)),
-                       decisions, binder, surface, parsed)
+                       decisions, binder, surface, parsed, catalog)
 
   /** Ask the binder about every key this run DECLARES — its drops, and every keyed phase's own.
     *
@@ -2175,6 +2228,13 @@ object PortRun:
     // check still reports the port's kept JDK surface and K9's ForEach demand, and a port that
     // reported nothing there would be indistinguishable from one whose check never ran.
     JdkSurface,
+    // all four catalog lanes, and all four for the trivia family's reason: `unreached = 0` is a bar
+    // a run could hold by declaring every row `Unmechanised`, and reporting the bar without the
+    // residues says nothing about how it was met. `unmechanised` is derived from the REGISTRY
+    // rather than from the run, so it reads the same on every port — deliberately, because it is a
+    // fact about the engine and a reader comparing two ports must be able to see it did not move.
+    CatalogCheck.Consulted, CatalogCheck.Unreached, CatalogCheck.Unmechanised,
+    CatalogCheck.Undischarged,
     // recorded only when CollectionsTransform is in the pipeline; RequiredChecks asserts against
     // what RECORDED, and a port without the phase records neither, so requiring them here would
     // fail every phase-less port. They are made unskippable by the wiring living beside the
@@ -2219,6 +2279,13 @@ object PortRun:
         * spec is still constructible; the check then compares an empty minting set, which reports
         * nothing and claims nothing. */
       val parsed: Program = new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty),
+      /** what this translation CONSULTED of the difference catalog — the three discharge surfaces'
+        * one log (`DESIGN.md` §2.8). A value this translation owns, for the same reason `decisions`
+        * is: `Determinism.Full` translates twice and the run keeps the first, which is only
+        * coherent because neither log is shared (§5.1). Defaults to a fresh discarding log so a
+        * hand-built `Translated` in a spec is still constructible; every catalog lane then reports
+        * the registry's own answer and claims nothing about a run. */
+      val catalog: balticporter.catalog.CatalogLog = balticporter.catalog.CatalogLog.discarding,
   ):
     private val memo = collection.mutable.Map.empty[SymId, String]
     // the DECISIONS are part of the key: they are not in the tree and they are in the emitted text

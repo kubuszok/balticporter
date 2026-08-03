@@ -46,6 +46,26 @@ trait Phase:
     * phase can be tested on its decisions with no filesystem in sight. */
   final def record(d: Decision): Unit = decisions.record(d)
 
+  // ---- catalog citation (`DESIGN.md` §2.8: the THIRD discharge surface) ----
+
+  /** What CATALOG ROWS this phase decided, and at which declarations, for the run in progress.
+    *
+    * Owned and drained exactly as [[decisions]] is, and for the same reason: a phase instance
+    * reused across two translations must not report the first run's citations as the second's. */
+  private[tir] val cites = collection.mutable.ListBuffer.empty[(balticporter.catalog.DiffId, String)]
+
+  /** CITE a catalog row at a DECLARATION this phase decided about.
+    *
+    * Deliberately weaker than the frontend's obligation, and reported apart from it: a phase does
+    * not walk one node kind, so nothing can assert that it *should have* considered a difference at
+    * a declaration it never visited. What a citation buys is the other half of the coverage
+    * question — `catalog(unreached)` can be true of phases as well as of lowering arms.
+    *
+    * One row per DECLARATION, never one per expression, which is the granularity `Decision` already
+    * uses (`CLAUDE.md` §5.1): a site-level rewrite is visible in the diff a reader is holding, and
+    * what the diff cannot say is which difference produced it. */
+  final def cite(id: balticporter.catalog.DiffId, decl: String): Unit = cites += (id -> decl)
+
   /** Full-control entry point. Default applies the hooks below via the standard
     * bottom-up traversal (MiniPhase-style), then rewrites symbol infos with
     * `transformType` so signatures stay consistent with the rewritten trees. Override
@@ -194,6 +214,13 @@ object Pipeline:
     * is a caller that will not, and a §1(c) rule author reaching for `Pipeline.run` has no reason
     * to know the step exists. */
   def runTraced(program: Program, phases: List[Phase], binder: PolicyBinder): (Program, DecisionLog) =
+    runTraced(program, phases, binder, balticporter.catalog.CatalogLog.discarding)
+
+  /** …and with the run's CATALOG LOG, so a phase's `cite` reaches the same log the frontend's
+    * consults do. One log per run, three surfaces feeding it (`DESIGN.md` §2.8) — three per-surface
+    * artifacts would answer three narrower questions and never "was this row reached at all". */
+  def runTraced(program: Program, phases: List[Phase], binder: PolicyBinder,
+                catalog: balticporter.catalog.CatalogLog): (Program, DecisionLog) =
     val log     = new DecisionLog
     val ordered = order(phases)
     ordered.foreach { case p: PolicyBound => p.bindPolicy(binder); case _ => () }
@@ -209,9 +236,12 @@ object Pipeline:
         prog
       else
         phase.decisions.clear() // this run's decisions only — see `runTraced`
+        phase.cites.clear()     // …and this run's citations only, for the same reason
         val out  = phase.run(prog)
         val next = out.rebuilt(xref = Xref.build(out.units))
         log.recordAll(phase.decisions.drain())
+        phase.cites.foreach((id, decl) => catalog.cite(id, decl))
+        phase.cites.clear()
         if DebugFlags.tracePhases then
           println(s"[balticporter] phase '${phase.name}': ${next.units.size} units, ${next.symbols.all.size} symbols" +
             (if log.isEmpty then "" else s", decisions so far: ${log.size}"))

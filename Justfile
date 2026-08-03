@@ -15,6 +15,7 @@
 #   just liqp-measure                liqp + its own 105-file suite (emitted and censused; RUN when it compiles)
 #   just measure-all                 every lane, SERIALLY, in dependency order
 #   just decision-counts             decisions.tsv row counts by kind, every port
+#   just catalog-coverage            catalog.tsv across every port — rows the corpus never reaches
 #   just members-unchanged [PORT]    members.tsv against its committed baseline — the blast radius
 #   just baseline-list                        every port: baseline size and last run
 #   just baseline-show   PORT                 the run's full report
@@ -1507,6 +1508,52 @@ decision-counts:
       echo "$(basename "$d"): $n row(s)"
       grep -v '^#' "$f" | cut -f1 | sort | uniq -c | sed 's/^/    /'
     done
+
+# ---------------------------------------------------------------------------------------------
+# THE DIFFERENCE CATALOG'S CORPUS-WIDE COVERAGE — `catalog.tsv`, aggregated across every port.
+#
+# The per-port lane cannot answer the question that matters. A row unreached on jbump (2,000 lines,
+# no suite) is normal; a row unreached on ALL of them is a branch nothing in the corpus exercises,
+# which is either dead code or an untested rule — and CLAUDE.md §3's whole argument is that those
+# are the same thing until a test says otherwise. So `catalog(unreached)` is per-port informational
+# with a baseline, and THIS is the recipe an agent runs before claiming a rule is live.
+#
+# The same shape as `decision-counts` and for the same reason: the artifact is written by every run
+# and nothing else in the workflow states its corpus-wide total.
+# ---------------------------------------------------------------------------------------------
+[doc("catalog.tsv aggregated over every port — which difference rows the whole corpus never reaches")]
+catalog-coverage:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    files=$(ls port-report/*/run-latest/catalog.tsv 2>/dev/null)
+    if [ -z "$files" ]; then
+      echo "!! no port has written a catalog.tsv — run a measure lane first"
+      exit 1
+    fi
+    echo "== per port =="
+    for f in $files; do
+      port=$(basename "$(dirname "$(dirname "$f")")")
+      reached=$(awk -F'\t' '!/^#/ && ($4>0 || $6>0)' "$f" | wc -l | tr -d ' ')
+      mech=$(awk -F'\t' '!/^#/ && ($3 ~ /^(lowering|phase):/)' "$f" | wc -l | tr -d ' ')
+      unmech=$(awk -F'\t' '!/^#/ && $3=="unmechanised"' "$f" | wc -l | tr -d ' ')
+      none=$(awk -F'\t' '!/^#/ && $3=="none"' "$f" | wc -l | tr -d ' ')
+      echo "$port: $reached reached / $mech mechanised, $unmech unmechanised, $none owe nothing"
+    done
+    echo
+    echo "== NEVER REACHED BY ANY PORT (mechanised rows only — the ones a lane may claim about) =="
+    # union of reached ids over every port, subtracted from the mechanised set of any one of them.
+    # `unmechanised` rows are excluded by construction: a row whose discharge surface does not exist
+    # cannot be "unreached by the corpus", only unmeasured, and the two must never share a number.
+    reached=$(mktemp); mech=$(mktemp)
+    for f in $files; do
+      awk -F'\t' '!/^#/ && ($4>0 || $6>0) {print $1}' "$f" >> "$reached"
+      awk -F'\t' '!/^#/ && ($3 ~ /^(lowering|phase):/) {print $1"\t"$2"\t"$3}' "$f" >> "$mech"
+    done
+    sort -u "$reached" -o "$reached"; sort -u "$mech" -o "$mech"
+    join -v1 -t$'\t' "$mech" "$reached" | sed 's/^/  /'
+    n=$(join -v1 -t$'\t' "$mech" "$reached" | wc -l | tr -d ' ')
+    echo "  -> $n mechanised row(s) that NO port in the corpus reaches"
+    rm -f "$reached" "$mech"
 
 # ---------------------------------------------------------------------------------------------
 # `members.tsv` against its committed baseline, for every port with a run (or just PORT).

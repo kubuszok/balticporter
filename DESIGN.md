@@ -494,10 +494,67 @@ translation; a JLS-mandated deterministic lowering *is* the mechanical translati
 would be narration that `NoteCoverageCheck` polices in both directions. A row earns a decision only
 where the port could have gone another way, or where something is missing from the output.
 
-**What is deliberately not in a row yet.** No `attaches` and no `tests`. Both depend on a mechanism
-that does not exist — an obligation wrapper at the frontend dispatch, a symmetrical one at the
-emitter's, and a per-declaration citation from a phase. A field whose mechanism is unbuilt reads as a
-claim the engine cannot honour, and the lane that would check it would report every row as fine.
+**`attaches`, and the exact strength of what it buys.** A row declares WHERE the engine owes it a
+decision, and the engine records whether that decision was taken (`balticporter.catalog.Attaches`).
+Three discharge surfaces were designed and **two are built**:
+
+- **frontend lowering** — `Lowering.of(kind, dispatch, at)` at `SpoonTir`'s statement and expression
+  dispatches, `Obligations.consult(id, at)(predicate)` inside. **The wrapper goes at the DISPATCH,
+  never in an arm**: written inside each `case`, an arm could decline to wrap, and an arm that opts
+  out is the same shape as the defect the mechanism exists to catch. Entered at the dispatch, an arm
+  never had the choice;
+- **a phase** — `Phase.cite(id, decl)`, one row per DECLARATION it decided about, which is the
+  granularity `Decision` already uses (`CLAUDE.md` §5.1). Deliberately weaker and reported apart:
+  nothing can assert that a phase *should have* considered a difference at a declaration it never
+  visited;
+- **emitter rendering** — a symmetrical wrapper keyed on the `Tree` kind. NOT BUILT. The rows that
+  would discharge there carry `Attaches.Unmechanised(why)` and are COUNTED, because a lane reporting
+  them as fine on the strength of a surface that does not exist is worse than no lane.
+
+`Attaches.NoObligation(why)` is the fourth answer and is kept apart from `Unmechanised` on purpose:
+one says the surface is missing, the other says no surface is owed (a checked non-difference, or a
+difference the translation satisfies by construction with no site-level decision to take), and
+collapsing them would hide the first inside the second.
+
+**The DISPATCH is part of the key, and that is not an implementation detail leaking upward.** Java
+gives one node kind two meanings by position: `i += f` as a statement discards the compound
+assignment's value (JLS 14.8) and the same node as an expression yields it (JLS 15.26.2). The
+catalog has two rows for exactly that reason, and a kind-only attachment could not tell `JS-E03`
+from `JS-E04` — which is the pair the whole mechanism was designed around.
+
+**What the wrapper GUARANTEES, at the strength it holds.** It detects an ABSENT consult. It cannot
+detect a WRONG one: an arm that consults a row and hands it a predicate which never returns `Some`
+discharges the obligation and emits the same wrong code. So the claim is *a difference cannot be
+silently UNCONSIDERED at a site the catalog attaches it to*, and the other half — that the
+consideration is CORRECT — is carried by the per-area edge-case suites, which is why those suites
+are a definition-of-done and not an afterthought. An over-claimed guarantee is how a mechanism stops
+being audited.
+
+**Enforcement is staged.** In the testkit and `just debug-emit` an undischarged obligation is FATAL,
+because every difference gets an edge-case suite and that suite is what the guarantee rests on. In a
+PORT RUN it is a counted finding: a run that died because a rule is incomplete produces no
+diagnostics at all, which is the wrong trade (`ENGINE-LIMITS.md` M6 is about refusing to
+*approximate*, not about refusing to *report*). A row the registry itself calls `Open` or `Absent` is
+never fatal in either mode — it is the work list, and a mode that died on the work list would make
+the work list unrunnable.
+
+**Coverage: four lanes and one artifact.** `catalog.tsv` holds one row per catalog entry, reached or
+not — every row, because the question it exists to answer is "which branches does this port never
+touch" and a file listing only what fired answers the other one. It is written **through the
+artifact-layer gate**, without exception (`CLAUDE.md` §5.1): it comes from the frontend's own log, so
+it is reachable from more test paths than `PortMap` is, and one unconditional `PortMap.write` was
+enough to publish run directories into the checkout from a JVM with no port identity at all. The
+lanes are `catalog(consulted|unreached|unmechanised|undischarged)`, all four in
+`PortRun.RequiredChecks`, following the `trivia` family's precedent: `unreached = 0` is a bar a run
+could hold by declaring every row unmeasured. `catalog(refused)` is deliberately NOT a fifth lane —
+it is the `markers` lane, which already records a `Tree.Unportable` mint with its catalog id, and two
+lanes counting one thing is how two numbers start disagreeing. `just catalog-coverage` aggregates the
+artifact across the corpus, which is the only place the useful question can be asked: a row unreached
+on one small library is normal, a row unreached on all of them is dead code or an untested rule.
+
+**`tests` is still not a field**, and for the reason `attaches` was not one until its surface
+existed: the edge-case suites are per-area waves, and a row pointing at a suite nobody wrote is a
+claim the engine cannot honour.
 
 **Rendering.** `just catalog` writes `.balticporter/catalog.md` — gitignored, a build product,
 §5.5's rule for emitted code applied one medium over. Committed, that markdown would be a seventh

@@ -477,18 +477,25 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   success case, so a lane under `set -e` aborts exactly when the port is green.
 
   Each prints, untruncated and diffed against the committed baseline, **every engine check the
-  run's own pipeline registers — twenty-one rows on `sge` today, not four — plus any check the
-  port's own §1(c) rules register** (libGDX adds `gdx-shared-iterator`, so its lanes show
-  twenty-two). The total is not a constant to memorise — quoting one is what went stale twice; it
-  is the SIXTEEN required of every run (`signature`, `omissions`,
+  run's own pipeline registers, plus any check the port's own §1(c) rules register**. The total is
+  not a constant to memorise — quoting one is what went stale twice; it
+  is the TWENTY required of every run (`signature`, `omissions`,
   `portability(all|emitted|injected)`, `substitution(emitted|dangling)`, `remediation`, `policy`,
-  `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`, `base-surface`) plus
+  `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`, `base-surface`,
+  `catalog(consulted|unreached|unmechanised|undischarged)`) plus
   whatever the RUN'S OWN PIPELINE registers. `base-surface` is required of a BASE port too, which has
   no contract to ask: a run that asked nothing and a run whose recording was skipped are
   indistinguishable without the row. The trivia family is three lanes and all three
   are required, because `lost = 0` is the bar and a run could hold it by RECOVERING everything —
   `recovered` is a counted residue and `deliberate` is derived from the port's own drops, so
-  reporting the bar without them says nothing about how it was met;
+  reporting the bar without them says nothing about how it was met. **The catalog family is four,
+  for exactly that reason one artifact over**: `unreached = 0` is a bar a run could hold by
+  declaring every difference row unmeasured, so the positive (`consulted`), the two residues
+  (`unreached` — narrowed to rows whose discharge surface EXISTS — and `unmechanised`, the rows
+  nothing is instrumented to answer for) and the work list (`undischarged`) are reported apart.
+  `just catalog-coverage` is the corpus-wide half, and it is the recipe an agent runs before
+  claiming a rule is live: a row unreached on one small library is normal, a row unreached on all
+  fifteen is dead code or an untested rule;
   `porter-notes`, `break-catch`, `try-resource`, `switch-null` and `markers` record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget` record when
   `CollectionsTransform` is in the pipeline, and `nullability-boundary` when
