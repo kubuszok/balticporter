@@ -2483,7 +2483,27 @@ producer direction was real and is worth **44 of the 160** on its own (measured:
 `readValue` result in `fromJava` alone reads 436) — it stops there because `asScala` is one level and
 the values inside a deserialised map are still java's.
 
-**THE RESIDUE is 23 and has not been read per test yet.**
+**THE RESIDUE — 23, read individually and classified.** Nothing here is a fixture, a `ServiceLoader`
+or a working-directory miss; the lane's infrastructure has held on every run.
+
+| n | root cause | §1 |
+|---|---|---|
+| **10** | **a REIFIED TYPE ARGUMENT at an external carrier** — `LiquidSupport`'s `MAP_TYPE_REF: TypeReference<Map<String,Object>>` is jackson's super-type token, and the retyping moved the argument to `mutable.Map`, which jackson then reads out of the class file's generic signature and tries to CONSTRUCT (`Cannot construct instance of scala.collection.mutable.Map`). K18's fact one position over: not a test or a cast, but a type argument a THIRD PARTY reifies. 9 through `objectToMap`, 1 through a filter | **(b)** — the mechanism (do not retype a reified type argument; bridge at the use) is universal; WHICH external generic types are reified carriers is per-library policy, and `java.lang.Class` is the only one java itself guarantees |
+| **4** | `java.util.ArrayList cannot be cast to mutable.Map` in `filters/where` — an item reaching `((Map<?,?>) e).get(p)` as a LIST. Downstream of the row above: every one of these tests renders through `Template.render(true, …)`, whose `putStringKey` builds its data with `mapper.convertValue(value, Map.class)` | **(a)**, pending — re-read after the row above closes |
+| **5** | `munit.ComparisonFailException` in `JekyllWhereImplTest` / `LiquidWhereImplTest`, same two files and the same `render(true, …)` path | as above |
+| **2** | `java.lang.Long cannot be cast to java.lang.Double` at `Ceil`/`Floor` — a PRIMITIVE cast that is a CONVERSION in java, K17's third face | **(a) engine**, `ENGINE-LIMITS.md` K17 / catalog `JS-E06`, still `Partial` |
+| **1** | `Sort$ComparableMapEntry cannot be cast to scala.Tuple2` | **(a), REFUSED and COUNTED** — `Map.Entry -> Tuple2` is `UninheritableTargets` (K5.7) and `Tuple2` is a concrete target no live view can be, so K18 refuses it at the reified cast too. One of the port's two `ReifiedOccurrence` findings |
+| **1** | `JsonTest` comparison | unclassified — the only one of the original 29 that is not accounted for by a named family |
+
+**Of the "29 unread" the second census listed, 23 flipped with K18 and 6 remain** (the 5 `where`
+comparisons and the `JsonTest` one); the two `ForTest` `AssertionError`s were among the 23. That is
+the whole of what "read them individually" found: they were not 29 separate translation defects, they
+were the same seam observed at the ASSERTION instead of at the exception. **The lesson generalises
+past this port and is why the reading was worth doing at all**: the second census grouped failures by
+their EXCEPTION CLASS, which grouped them by DISTANCE FROM THE CAUSE and not by cause — a
+`ClassCastException` is the defect one hop away, a wrong rendering is the same defect three hops
+away, and an assertion failure with no exception behind it is the same defect at the end of the
+chain. A census is only a work list if its rows are causes; ours had four rows for one.
 
 `tests.tsv` and `expected-errors` are accepted from the run that produced these numbers, so the next
 change is diffed against 552/23.
