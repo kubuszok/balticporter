@@ -92,6 +92,31 @@ class EmissionGateSpec extends munit.FunSuite:
     assertEquals(scalaFiles(port.outDir), Nil)
   }
 
+  test("a REFUSED run removes the PREVIOUS tree — a stale one is what sourceGenerators compiles") {
+    // "Nothing was written" is true of THIS run and says nothing about the last one. `outDir` is
+    // `src_managed/<config>/scala`, which the build compiles whatever produced it, so a refusal that
+    // leaves yesterday's tree in place ships yesterday's port with today's gate reporting a refusal
+    // — the two facts never meet, because the compile succeeds.
+    val (root, src) = fixture()
+    val ok = run(root, src, Nil).execute()
+    assertEquals(scalaFiles(ok.outDir), List("com/demo/Plain.scala"))
+
+    val port = run(root, src, List(new Mint))
+    intercept[RuntimeException](port.execute())
+    assertEquals(scalaFiles(port.outDir), Nil, "the previous run's tree is still there")
+  }
+
+  test("…and BEST EFFORT removes it too — the degraded tree is not a replacement for it") {
+    val (root, src) = fixture()
+    val ok = run(root, src, Nil).execute()
+    assertEquals(scalaFiles(ok.outDir), List("com/demo/Plain.scala"))
+
+    val port = run(root, src, List(new Mint), bestEffort = true)
+    intercept[RuntimeException](port.execute())
+    assertEquals(scalaFiles(port.outDir), Nil, "the deliverable tree must not survive the refusal")
+    assertEquals(scalaFiles(port.bestEffortDir), List("com/demo/Plain.scala"))
+  }
+
   test("a marker inside a DROPPED type does NOT refuse — the gate reads what the run EMITS") {
     // The gate's own remediation says "drop the declarations that use them and inject replacements".
     // Read over `emitOrder` rather than over the emitted set, the gate refuses a port that took its

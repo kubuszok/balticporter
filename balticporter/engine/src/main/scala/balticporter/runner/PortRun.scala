@@ -601,6 +601,15 @@ final case class PortRun(
     // the `markers` lane, scoped to the emitted units, called the same run clean (see [[isDropped]]).
     val openMarkers = MarkerCheck.openMarkers(program, checkedUnits)
     val emitDir = if bestEffort && openMarkers.nonEmpty then bestEffortDir else outDir
+    // …and the DELIVERABLE TREE GOES, on both refusing paths, BEFORE the message is printed.
+    // "Nothing was written" is a true statement about THIS run and says nothing about the last one:
+    // `outDir` is `src_managed/<config>/scala`, a build product the consumer's `sourceGenerators`
+    // compiles whatever produced it. Left in place, a refusal ships the PREVIOUS run's port with the
+    // gate's own diagnosis in the log beside it, and the two never meet because the compile
+    // succeeds. Best-effort wipes it for the same reason and one more: its degraded tree is a
+    // diagnostic, and a stale deliverable beside it is the only thing that could be mistaken for the
+    // real one.
+    if openMarkers.nonEmpty then wipe(outDir)
     if openMarkers.nonEmpty && !bestEffort then
       val head = openMarkers.take(10).map { s =>
         s"    ${s.ownerFqn} — ${s.marker.kind.label}${s.marker.diff.fold("")(d => s" [$d]")}: " +
@@ -609,7 +618,7 @@ final case class PortRun(
       }.mkString
       sys.error(
         s"[$label] EMISSION REFUSED: ${openMarkers.size} open unportability marker(s). Nothing was " +
-          s"written.\n$head" +
+          s"written, and any tree a previous run left at $outDir was REMOVED.\n$head" +
           (if openMarkers.size > 10 then s"    … and ${openMarkers.size - 10} more\n" else "") +
           "  Close them in the engine, drop the declarations that use them and inject replacements, " +
           "or re-run with best-effort emission to inspect the degraded output (DESIGN.md §6.4). " +
@@ -625,7 +634,8 @@ final case class PortRun(
         s"This tree is BEST-EFFORT output (DESIGN.md §6.4) and MUST NOT SHIP.\n" +
           s"${openMarkers.size} region(s) are not a faithful translation; each is fenced in the " +
           s"file that contains it and named in that file's banner.\n" +
-          s"The deliverable tree for this port is $outDir, and this run did not write it.\n")
+          s"The deliverable tree for this port is $outDir; this run did not write it, and it " +
+          s"removed whatever a previous run had left there.\n")
 
     var written = 0
     var dropped = 0
