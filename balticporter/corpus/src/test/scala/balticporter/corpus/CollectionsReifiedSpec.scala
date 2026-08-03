@@ -176,6 +176,83 @@ class CollectionsReifiedSpec extends PortSuite:
   }
 
   // -------------------------------------------------------------------------
+  // 7. …and the target the phase did NOT retype, which reads as nothing at all
+  // -------------------------------------------------------------------------
+  //
+  // The refusal above is at a target the mapping OWNS. This one is at a target OUTSIDE it, and it
+  // is the shape with no instrument on it whatsoever: `x instanceof RandomAccess` is emitted
+  // verbatim, because nothing in it names a type this phase moved — and it answers NO for every
+  // value the phase retyped, where java answered YES for the `ArrayList` that value used to be.
+  // No compile error, no coercion, no count, and (unlike a mapped target) not even a helper the
+  // engine could have written: `mutable.Buffer` is not a `RandomAccess` and no live view can make
+  // it one.
+  //
+  // Decided from the phase's OWN typeMap (§4.56): the supertype closure of the java types it maps,
+  // minus the ones it maps. Never a name test — `com.badlogic.gdx.utils.Json$Serializable` is a
+  // `Serializable` by NAME and shares nothing with `java.io.Serializable`.
+
+  test("a reified test at an UNMAPPED JDK SUPERTYPE of a mapped type is refused and COUNTED") {
+    val (ph, program, out) = ported(
+      """package demo;
+        |import java.util.*;
+        |class T {
+        |  boolean fast(List<String> xs) { return xs instanceof RandomAccess; }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("isInstanceOf[java.util.RandomAccess]"), "left exactly as java wrote it")
+    val reified = ph.boundary(program)
+      .filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+    assertEquals(clue(reified).size, 1)
+    assert(reified.head.detail.contains("reified type test"))
+  }
+
+  test("…and a CAST to one, which is the same question at the other node kind") {
+    val (ph, program, _) = ported(
+      """package demo;
+        |import java.util.*;
+        |class T {
+        |  Object sorted(Object v) { return (SortedMap<String, Object>) v; }
+        |}
+        |""".stripMargin)
+    val reified = ph.boundary(program)
+      .filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+    assertEquals(clue(reified).size, 1)
+    assert(reified.head.detail.contains("reified cast"))
+  }
+
+  test("NEGATIVE — an ordinary JDK type that no mapped type inherits counts NOTHING") {
+    // The direction that makes the count mean something. `java.lang.String` and
+    // `java.lang.Runnable` are not supertypes of anything this phase retypes, so a test or a cast
+    // at one is an ordinary reified question the retyping did not move — and a check that reported
+    // it would be a check nobody could act on.
+    val (ph, program, _) = ported(
+      """package demo;
+        |import java.util.*;
+        |class T {
+        |  boolean isStr(Object v) { return v instanceof String; }
+        |  Runnable run(Object v)  { return (Runnable) v; }
+        |  List<String> keep(List<String> xs) { return xs; }
+        |}
+        |""".stripMargin)
+    assertEquals(clue(ph.boundary(program))
+      .count(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence), 0)
+  }
+
+  test("NEGATIVE — `java.lang.Object` is in every closure and is never a divergence") {
+    // Everything is an `Object` in scala too, so the answer did not move. Excluded by construction
+    // rather than by luck, because it is in the supertype closure of every mapped type.
+    val (ph, program, _) = ported(
+      """package demo;
+        |import java.util.*;
+        |class T {
+        |  boolean isObj(Object v) { return v instanceof Object; }
+        |}
+        |""".stripMargin)
+    assertEquals(clue(ph.boundary(program))
+      .count(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence), 0)
+  }
+
+  // -------------------------------------------------------------------------
   // the catalog row is CITED, per declaration
   // -------------------------------------------------------------------------
 

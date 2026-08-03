@@ -248,6 +248,11 @@ final class CollectionsTransform(
     * [[liveWrappableSyms]] takes, and for the same reason (§4.56: the phase's own record). */
   private var reifiedIsSyms, reifiedAsSyms: Map[SymId, SymId] = Map.empty
 
+  /** every symbol THIS PROGRAM names that is an unmapped SUPERTYPE of a type this phase retypes —
+    * see [[unmappedReified]]. EMPTY where the program names none of them, which makes the refusal
+    * decline by arithmetic exactly as the two maps above do. */
+  private var unmappedSupertypeSyms: Set[SymId] = Set.empty
+
   /** did a REIFIED occurrence get translated inside the declaration currently being closed?
     *
     * The traversal is BOTTOM-UP, so a term hook cannot name its enclosing declaration and the
@@ -428,6 +433,12 @@ final class CollectionsTransform(
         val n = "as" + CollectionsTransform.reifiedHelper(fqn)
         id -> mint(n, s"${CollectionsTransform.ReifiedFqn}.$n")
     }.toMap
+    // …and the targets a reified occurrence can name that this phase did NOT retype, as symbols of
+    // THIS program — see [[unmappedReified]]. Read off `program.symbols` and not off the mapping,
+    // because these are types the phase leaves alone: their symbols keep the ids they arrived with.
+    unmappedSupertypeSyms = program.symbols.all.collect {
+      case s if CollectionsTransform.unmappedSupertypes(s.fullName) => s.id
+    }.toSet
     foreachSym          = mint("foreach", "foreach")
     removeHeadOptionSym = mint("removeHeadOption", "removeHeadOption")
     headOptionSym       = mint("headOption", "headOption")
@@ -1027,7 +1038,7 @@ final class CollectionsTransform(
   /** java's `x instanceof T` where this phase retyped `T`. */
   private def reifiedTest(t: Tree.InstanceOf)(using p: Program): Term =
     reifiedTarget(t.tpt.tpe) match
-      case scala.None => t
+      case scala.None => unmappedReified("reified type test", t.tpt.tpe, t.origin); t
       case Some(tgt)  => reifiedIsSyms.get(tgt) match
         case Some(f) =>
           reifiedHere = true
@@ -1044,6 +1055,12 @@ final class CollectionsTransform(
     * — the erased class. Replacing the cast instead would silently narrow a wildcard-applied
     * target the helper cannot name. */
   private def reifiedCast(t: Tree.Typed)(using p: Program): Term =
+    // …asked BEFORE `vouched`, and that is not an oversight. `vouched` says the phase KNOWS the
+    // value is one of its own representations, which at a target outside the mapping makes the
+    // divergence certain rather than possible: java asked about the `ArrayList` this value used to
+    // be. A `null` still has no runtime object to be about, in either direction.
+    if !isNullLiteral(t.expr) && reifiedTarget(t.tpt.tpe).isEmpty then
+      unmappedReified("reified cast", t.tpt.tpe, t.origin)
     if vouched(t.expr) || isNullLiteral(t.expr) then t
     else reifiedTarget(t.tpt.tpe) match
       case scala.None => t
@@ -1112,6 +1129,32 @@ final class CollectionsTransform(
     seam(slot, "a representation-agnostic test or coercion",
          TirPrinter.tpe(target, TirPrinter.Style.canonical), origin, SymId.None,
          CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+
+  /** …and the reified occurrence at a target this phase did NOT retype, which is the one shape with
+    * no instrument on it at all.
+    *
+    * `x instanceof java.util.RandomAccess` names nothing this phase moved, so every arm above
+    * declines and the node is emitted verbatim — valid Scala, asking a question that answers NO for
+    * every value the phase retyped, where java answered YES for the `ArrayList` that value used to
+    * be. `SortedMap`, `Cloneable`, `Serializable`, `SequencedCollection` are the same site at other
+    * names. Unlike a CONCRETE mapping target there is not even a helper the engine could write:
+    * `mutable.Buffer` is not a `RandomAccess` and no live view can make it one, because the target
+    * is outside the family the mapping is a mapping OF.
+    *
+    * So it is REFUSED and COUNTED (M6), never approximated — and the count is the whole of what
+    * exists here: no compile error, no coercion, and no member digest moves.
+    *
+    * ==Decided from the phase's own table, never from a name (§4.56)==
+    * [[CollectionsTransform.unmappedSupertypes]] is the SUPERTYPE CLOSURE of `typeMap`'s own java
+    * keys minus those keys — a fact the phase can derive because it is the phase that chose the
+    * keys. A name test would be exactly the failure §4.56 records: libGDX's
+    * `com.badlogic.gdx.utils.Json$Serializable` is a `Serializable` by simple name and shares
+    * nothing at all with `java.io.Serializable`. */
+  private def unmappedReified(slot: String, target: TypeRepr, origin: Origin)(using Program): Unit =
+    if headSym(target).exists(unmappedSupertypeSyms) then
+      seam(slot, "no coercion exists: the target is OUTSIDE the mapping, and a retyped value is not one",
+           TirPrinter.tpe(target, TirPrinter.Style.canonical), origin, SymId.None,
+           CollectionBoundaryCheck.Issue.ReifiedOccurrence)
 
   /** A FIELD the program does not declare, whose CLASS FILE types it as a collection this phase
     * retypes — [[externalProducer]]'s fact for the one member kind that has no call node.
@@ -3274,6 +3317,36 @@ object CollectionsTransform:
 
   /** `JavaCollections.Reified`, whose members [[reifiedHelper]] names. */
   val ReifiedFqn = s"$JavaCollectionsFqn.Reified"
+
+  /** THE JDK TYPES A RETYPED VALUE STOPS BEING, and that this phase never sees a name for.
+    *
+    * A `java.util.ArrayList` is a `RandomAccess`, a `Cloneable`, a `java.io.Serializable`, an
+    * `AbstractList` and (since 21) a `SequencedCollection`. An `ArrayBuffer` is none of them. So
+    * `x instanceof RandomAccess` over a value this phase retyped answers NO where java answered
+    * YES — and the occurrence names NOTHING this phase moved, so every reified arm declines and the
+    * node is emitted verbatim. That is the same defect as `ENGINE-LIMITS.md` K18 at a target the
+    * mapping does not own, and it has one less instrument on it: a mapped-but-concrete target at
+    * least reaches the refusal count, and this one reached nothing.
+    *
+    * DERIVED, never listed: the supertype/interface closure of [[typeMap]]'s own java keys, minus
+    * those keys. A list would go stale the day the JDK adds an interface (`SequencedCollection` is
+    * exactly that day) or the day a key is added here, and it would be a name test besides — which
+    * §4.56 forbids for the reason libGDX demonstrates: `com.badlogic.gdx.utils.Json$Serializable`
+    * is a `Serializable` by simple name and shares nothing with `java.io.Serializable`. The
+    * separator is the JVM's own (`java.util.Map$Entry`), which is `Symbol.fullName`'s too.
+    *
+    * `java.lang.Object` is excluded because it is in EVERY closure and is never a divergence:
+    * everything is an `Object` in scala too. A key the running JDK cannot load — the dotted
+    * `java.util.Map.Entry` alias — contributes nothing, which is right: it is an alias for a key
+    * that loads. */
+  private[transform] lazy val unmappedSupertypes: Set[String] =
+    def closure(c: Class[?]): Set[String] =
+      if c == null then Set.empty
+      else Set(c.getName) ++ closure(c.getSuperclass) ++ c.getInterfaces.flatMap(closure).toSet
+    val all = typeMap.keys.flatMap { k =>
+      try closure(Class.forName(k)) catch { case _: Throwable => Set.empty[String] }
+    }.toSet
+    all -- typeMap.keySet - "java.lang.Object"
 
   /** every `JavaCollections` member the transform may emit. One list, so a new JDK utility is one
     * line here, one arm in `staticRewrite` and one method in the runtime object — and a typo is a
