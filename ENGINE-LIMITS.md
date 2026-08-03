@@ -5028,7 +5028,8 @@ inside `try … Catches Finally` and java therefore closes before this try's own
 { val r = init
   var primary$n: Throwable = null
   try <rest>
-  catch { case t$n: Throwable => { primary$n = t$n; throw t$n } }
+  catch { case brkThru$: scala.util.boundary.Break[?] => throw brkThru$
+          case t$n: Throwable => { primary$n = t$n; throw t$n } }
   finally if r != null then {
     if primary$n != null then { try r.close() catch { case s$n: Throwable => primary$n.addSuppressed(s$n) } }
     else r.close() } }
@@ -5047,6 +5048,28 @@ attempted even when an earlier one threw (an inner failure propagates and become
 `primary`); suppression rather than replacement; and closed on ANY completion including a jump —
 a `boundary.Break` is a `RuntimeException`, so the catch-all sees it and RE-THROWS it, which is F4's
 rule met by construction and why this arm needs no `BreakGuard` beside it.
+
+**CORRECTION (audit-2 F2): the jump arm had to come AHEAD of the recorder, and re-throwing alone was
+not enough.** The catch-all did re-throw, so the jump itself survived — and on the way it wrote the
+`Break` into `primary$n`, which routed the `finally` to the SUPPRESSING arm. `scala.util.boundary.
+Break` is constructed with suppression DISABLED, so `addSuppressed` there is a documented no-op:
+a `close()` that threw during a jump was **swallowed entirely** and the jump completed normally.
+Java is the opposite and for a structural reason — a java `break` carries no exception object, so
+14.20.3.1 has nothing to suppress INTO; the close exception replaces the jump and propagates out of
+the loop. The fix is one arm, mirroring `tryStr`'s existing §4.4 guard:
+
+```
+catch { case brkThru$: scala.util.boundary.Break[?] => throw brkThru$
+        case t$n: Throwable => { primary$n = t$n; throw t$n } }
+```
+
+`primary$n` then stays null on a jump, the `finally` calls `close()` bare, and the statement
+completes abruptly for the close's reason exactly as java's does. **Note what could see it: only
+`TryResourceBehaviourSpec`.** The emitted code compiled before and after, the corpus writes zero
+try-with-resources, and the shape spec asserted every line of the lowering while asserting nothing
+about their ORDER — which is the whole of the defect. Measured: liqp 0 -> 0 errors, 357/218 ->
+357/218, **0 member digests moved on any lane**, because no library in the corpus has the construct.
+*Fix kind: (a) engine.*
 
 **The corpus count is ZERO and that is the whole reason this survived.** Ten ported upstream trees,
 not one try-with-resources between them, so no port's number would have moved if a library HAD used

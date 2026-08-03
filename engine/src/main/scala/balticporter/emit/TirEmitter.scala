@@ -3236,7 +3236,8 @@ final class TirEmitter(
     *   val r = <init>
     *   var primary$n: Throwable = null
     *   try <rest>
-    *   catch { case t$n: Throwable => { primary$n = t$n; throw t$n } }
+    *   catch { case b: scala.util.boundary.Break[?] => throw b
+    *           case t$n: Throwable => { primary$n = t$n; throw t$n } }
     *   finally
     *     if r != null then
     *       if primary$n != null then try r.close() catch { case s$n: Throwable => primary$n.addSuppressed(s$n) }
@@ -3256,9 +3257,18 @@ final class TirEmitter(
     *     BODY's exception is the one that propagates. With the body completing normally the
     *     `close()` exception is the statement's own abrupt completion, which is what the bare
     *     `r.close()` arm gives;
-    *   - **closed on ANY completion**, jumps included: a `boundary.break` leaving the body is a
-    *     `RuntimeException`, so the `finally` runs and the catch-all RE-THROWS it rather than
-    *     swallowing it — which is the §4.4 rule about a broad handler met by construction, and why
+    *   - **closed on ANY completion**, jumps included — and a JUMP TAKES THE `Break` ARM, not the
+    *     recorder. Java's `break` carries no exception object, so JLS 14.20.3.1 has nothing for a
+    *     failing `close()` to be suppressed INTO: the close exception simply replaces the jump and
+    *     propagates. Scala's `break` IS an exception (`boundary.Break extends RuntimeException`,
+    *     §4.4), so the catch-all recorded it as `primary` and the `finally` took the SUPPRESSING
+    *     arm — and `boundary.Break` is constructed with suppression disabled, which makes
+    *     `addSuppressed` a documented no-op. The close exception went nowhere at all, the jump
+    *     completed, and a resource that failed to close said nothing: no error, no count, and only
+    *     `TryResourceBehaviourSpec` able to see it. The arm AHEAD of the recorder is what fixes it —
+    *     `primary` stays null, the `finally` calls `close()` bare, and a throwing close completes
+    *     the statement abruptly exactly as java's does. It is also still the re-throw that keeps a
+    *     jump crossing this catch-all intact (§4.4's broad-handler rule met by construction), so
     *     this arm needs no `BreakGuard` beside it.
     *
     * The catch-all's binder and the `primary` are numbered per nesting level, because two resources
@@ -3279,7 +3289,11 @@ final class TirEmitter(
         b ++= s"${ind(i + 1)}${valDef(v, 0)}\n"
         b ++= s"${ind(i + 1)}var $p: java.lang.Throwable = null\n"
         b ++= s"${ind(i + 1)}try $inner\n"
-        b ++= s"${ind(i + 1)}catch { case $thr: java.lang.Throwable => { $p = $thr; throw $thr } }\n"
+        // the JUMP arm, AHEAD of the recorder — see the note above. Java's jump carries no
+        // exception object, so a failing `close()` has nothing to be suppressed into and must
+        // propagate; leaving `primary` null is what routes the `finally` to the bare `close()`.
+        b ++= s"${ind(i + 1)}catch { case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard} // §4.4: a java jump carries no exception to suppress into\n"
+        b ++= s"${ind(i + 2)}case $thr: java.lang.Throwable => { $p = $thr; throw $thr } }\n"
         b ++= s"${ind(i + 1)}finally if $name != null then {\n"
         b ++= s"${ind(i + 2)}if $p != null then { try $name.close() catch { case $sup: java.lang.Throwable => $p.addSuppressed($sup) } }\n"
         b ++= s"${ind(i + 2)}else $name.close()\n"

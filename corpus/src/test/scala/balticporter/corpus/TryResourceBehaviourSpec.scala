@@ -27,7 +27,8 @@ class TryResourceBehaviourSpec extends munit.FunSuite:
   private def one[A](r: R)(body: => A): A =
     var primary$1: java.lang.Throwable = null
     try body
-    catch { case thrown$1: java.lang.Throwable => { primary$1 = thrown$1; throw thrown$1 } }
+    catch { case brkThru$ : scala.util.boundary.Break[?] => throw brkThru$
+            case thrown$1: java.lang.Throwable => { primary$1 = thrown$1; throw thrown$1 } }
     finally if r != null then {
       if primary$1 != null then { try r.close() catch { case suppressed$1: java.lang.Throwable => primary$1.addSuppressed(suppressed$1) } }
       else r.close()
@@ -95,6 +96,45 @@ class TryResourceBehaviourSpec extends munit.FunSuite:
     }
     assertEquals(v, 7)
     assertEquals(log.toList, List("a"))
+  }
+
+  test("…and a close() that THROWS during that jump PROPAGATES — java abandons the jump") {
+    // The half the re-throw above does not settle, and the one that only running it can see.
+    //
+    // JLS 14.20.3.1 makes no special case for a jump: the resource is closed, and a `close()` that
+    // completes abruptly makes the whole `try` statement complete abruptly for THAT reason. Java's
+    // `break` is a jump with no exception object, so there is nothing for the close exception to be
+    // suppressed INTO — it simply replaces the jump and propagates out of the loop.
+    //
+    // Scala's `break` is `boundary.Break`, a `RuntimeException`, so the lowering's catch-all
+    // recorded it as `primary` and the `finally` took the SUPPRESSING arm. `boundary.Break` is
+    // constructed with suppression DISABLED, so `addSuppressed` is a documented no-op: the close
+    // exception went nowhere, the jump completed, and the resource's failure to close vanished.
+    // No compile error, no count, no other test — CLAUDE.md §4.4's shape exactly.
+    //
+    // The fix is the arm the recorder now sits behind: a `Break` is re-thrown BEFORE `primary` is
+    // written, so `primary` stays null, the `finally` calls `close()` bare, and a throwing close
+    // completes the statement abruptly exactly as java's does.
+    val log = collection.mutable.ListBuffer.empty[String]
+    val e = intercept[IllegalStateException](scala.util.boundary {
+      one(new R("a", log, failOnClose = true)) { scala.util.boundary.break(7) }
+    })
+    assertEquals(e.getMessage, "close:a")
+    assertEquals(log.toList, List("a"))
+  }
+
+  test("…and the OUTER resource still closes when an inner close() throws over a jump") {
+    // Every close() is attempted on a jump too — the inner one's exception becomes the outer
+    // level's primary, which is the ordinary suppression path again once a real exception exists.
+    val log = collection.mutable.ListBuffer.empty[String]
+    val e = intercept[IllegalStateException](scala.util.boundary {
+      two(new R("first", log, failOnClose = true), new R("second", log, failOnClose = true)) {
+        scala.util.boundary.break(7)
+      }
+    })
+    assertEquals(e.getMessage, "close:second")
+    assertEquals(e.getSuppressed.toList.map(_.getMessage), List("close:first"))
+    assertEquals(log.toList, List("second", "first"))
   }
 
   test("a null resource is not closed and does not NPE — JLS 14.20.3.1's `!= null` guard") {

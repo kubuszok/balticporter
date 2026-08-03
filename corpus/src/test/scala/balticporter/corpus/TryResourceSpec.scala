@@ -63,6 +63,21 @@ class TryResourceSpec extends PortSuite:
     assert(clue(p.out).contains("throw thrown$1"), p.out)
   }
 
+  test("a JUMP takes its own arm AHEAD of the recorder — so `primary` stays null") {
+    // Java's `break` carries no exception object, so JLS 14.20.3.1 has nothing for a failing
+    // `close()` to be suppressed into: it replaces the jump and propagates. Scala's break IS an
+    // exception, so recorded as `primary` it routed the `finally` to the SUPPRESSING arm — and
+    // `boundary.Break` disables suppression, making `addSuppressed` a no-op that dropped the close
+    // exception entirely. The arm below is what keeps `primary` null on a jump.
+    // `TryResourceBehaviourSpec` runs the difference; this asserts the shape that produces it.
+    val p   = port(oneResource)
+    val out = p.out
+    val jump = out.indexOf("scala.util.boundary.Break[?] => throw brkThru$")
+    val rec  = out.indexOf("primary$1 = thrown$1")
+    assert(clue(jump) >= 0, out)
+    assert(clue(jump) < clue(rec), "the Break arm must precede the recorder, or it never matches")
+  }
+
   test("two resources close in REVERSE declaration order, with distinct binders") {
     val p = port(twoResources)
     val out = p.out
