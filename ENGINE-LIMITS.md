@@ -2249,6 +2249,39 @@ target in `UninheritableTargets` — never from a receiver's name (§4.56).
 Measured on liqp: **main source set 1 -> 0**, `collection-boundary` 14 -> 15, 3 member digests, and
 the emitted member carries its porter note.
 
+**CORRECTION (audit-2 F1): the refusal above was matched by BARE NAME, so it refused two members
+java runs.** "Derived from the phase's own mapping, never from a receiver's name" was true of WHICH
+TARGET the table is keyed on and false of WHICH MEMBER it then substituted: the arm read
+`unimplementable(s.name)` over the class body, which is a string test on the declaration and says
+nothing about what the phase did to it. Two shapes fall through it, and both are §4.4's class — the
+port throws where java succeeded, with a green compile, no check count moving and no test to see it,
+because neither shape occurs in liqp:
+
+| shape | java | the port, before the fix |
+|---|---|---|
+| a SELF-CONTAINED entry — `class Pair implements Map.Entry { V v; V setValue(V nv){ V o=v; v=nv; return o; } }` | runs, returns the previous value | `throw new UnsupportedOperationException` — the whole body discarded |
+| an unrelated OVERLOAD — `void setValue(int a, int b)` beside the interface's member | a method the interface says nothing about | the same throw, for a five-letter name collision |
+
+The fix is TWO conditions where there was one, and neither alone is sufficient:
+
+- **the member is the INTERFACE'S**, by signature — `UnsupportedOnTarget` now holds a
+  `MemberSig(name, arity)`, so `setValue(int, int)` is not `Map.Entry#setValue(V)`. Arity is the
+  whole of the signature available: the declaring interface is EXTERNAL, interned with no member
+  list, and its parameter is a type variable that erases to `Object` anyway;
+- **the phase can point at what it BROKE** — the TRANSLATED body still selects a member on a
+  receiver this phase retyped to a target in `UnsupportedOnTarget`. That is the licence for the
+  substitution and the only reading of §4.56 that holds here: the optional-operation contract makes
+  a throw CONFORMING for an entry that cannot perform the write, and says nothing about one that
+  can. The reference found is recorded on the decision (`broke=scala.Tuple2#setValue`) and reaches
+  the porter note, because a reader of the emitted throw cannot otherwise recover which call it
+  replaced.
+
+Measured on liqp: **0 -> 0 errors, suite 357/218 -> 357/218**, every check count flat, 3 member
+digests — `Sort$ComparableMapEntry#setValue(V)` and its two enclosing types, and the only text that
+moved is the new `broke=` pair. liqp's own entry DELEGATES (`return entry.setValue(value)`), so it
+keeps the refusal, which is what makes the regression invisible to this corpus and is exactly why
+the two shapes are spec'd rather than measured. *Fix kind: (a) engine.*
+
 **The transferable half is the middle row of that table.** A `dropMethods` key that removes a member
 an emitted parent DECLARES leaves the class abstract, and nothing in the engine reports it: it is
 not a check, not a finding, not a member digest, and not a typer error until the port is already

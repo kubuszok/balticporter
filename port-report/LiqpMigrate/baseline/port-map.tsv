@@ -668,7 +668,7 @@ member	liqp.filters.Sort$ComparableMapEntry#compareTo(Tuple2)	ssg.liquid.filters
 member	liqp.filters.Sort$ComparableMapEntry#entry	ssg.liquid.filters.Sort$ComparableMapEntry#entry	Renamed	-	liqp/filters/Sort.java	77	091ab4962f3f853a	vis=private[Sort]
 member	liqp.filters.Sort$ComparableMapEntry#getKey()	ssg.liquid.filters.Sort$ComparableMapEntry#getKey()	Renamed	-	liqp/filters/Sort.java	84	3edeadb239810b9d	
 member	liqp.filters.Sort$ComparableMapEntry#getValue()	ssg.liquid.filters.Sort$ComparableMapEntry#getValue()	Renamed	-	liqp/filters/Sort.java	89	3952591e8ee6365e	
-member	liqp.filters.Sort$ComparableMapEntry#setValue(V)	ssg.liquid.filters.Sort$ComparableMapEntry#setValue(V)	Renamed	-	liqp/filters/Sort.java	94	da5d8e14201a4b9c	
+member	liqp.filters.Sort$ComparableMapEntry#setValue(V)	ssg.liquid.filters.Sort$ComparableMapEntry#setValue(V)	Renamed	-	liqp/filters/Sort.java	94	9e8b5f6264c11461	
 member	liqp.filters.Sort$ComparableMapEntry#toString()	ssg.liquid.filters.Sort$ComparableMapEntry#toString()	Renamed	-	liqp/filters/Sort.java	105	df39e239a2930ca6	
 member	liqp.filters.Sort$SortableMap#<stmt1>	ssg.liquid.filters.Sort$SortableMap#<stmt1>	Renamed	-	liqp/filters/Sort.java	137	27c4f29be4de279b	
 member	liqp.filters.Sort$SortableMap#<stmt2>	ssg.liquid.filters.Sort$SortableMap#<stmt2>	Renamed	-	liqp/filters/Sort.java	138	9e07ee827b2f50bb	

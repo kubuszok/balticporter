@@ -124,6 +124,18 @@ stand-in that compiles and silently does nothing. Measured on the first port to 
 one `Not Found` traded for one `needs to be abstract`, at 0 net errors moved
 (`ENGINE-LIMITS.md` K5.7).
 
+**…and a refusal SUBSTITUTED FOR A BODY is licensed by the DEFECT THE PHASE CAUSED, never by the
+member it sits on.** The contract makes the throw conforming for a receiver that cannot perform the
+operation; it says nothing about one that can, and both are spelled the same. So a body substitution
+answers two questions before it fires — *is this really the interface's member*, by SIGNATURE (a
+class implementing `Map.Entry` may declare `setValue(int, int)` beside it, and java resolves the two
+separately), and *does the TRANSLATED body still reference something the mapping removed*. Matched
+on the bare name alone, a self-contained `setValue` that java runs was replaced by a throw, and so
+was the unrelated overload: green compile, every count flat, and no test in the corpus to see it
+because the one library that has the shape happens to delegate (`ENGINE-LIMITS.md` K5.7's
+correction). Record what the substitution BROKE on the decision, too — a reader of the emitted throw
+cannot otherwise recover which call it replaced.
+
 ### (c) Genuinely library-specific — a SEPARATE, PLUGGED-IN RULE
 
 If a customisation needs knowledge so specific that it could only ever apply to **one** library, it

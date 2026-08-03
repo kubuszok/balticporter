@@ -615,7 +615,7 @@ final class CollectionsTransform(
         case t: Term      => t.tpe
       // the members THIS class's retained parents declare that their targets cannot carry — filled
       // while the parents are decided, because that is the one place both halves are in hand.
-      val unimplementable = collection.mutable.Set.empty[String]
+      val unimplementable = collection.mutable.Set.empty[CollectionsTransform.MemberSig]
       val parents =
         // lengths agree by construction — `mapClassDef` maps the list one for one — and a mismatch
         // means the traversal changed shape, in which case the MAPPED list is the honest answer
@@ -656,13 +656,68 @@ final class CollectionsTransform(
         }
       val body = CollectionsTransform.spine(orig.body, mapped.body, orig.symbol).map {
         case (o: Tree.ClassDef, m: Tree.ClassDef) => restoreUninheritableParents(o, m)
-        case (_, m: Tree.DefDef)
-          if unimplementable.nonEmpty &&
-             summon[Program].symbolOf(m.symbol).exists(s => unimplementable(s.name)) =>
-          refuseOnTarget(m, orig)
+        // …and the member half of the same refusal, under BOTH of its conditions — see
+        // `declaresUnimplementable` (this really is the interface's member) and `brokenByMapping`
+        // (the phase can point at what it broke). Either alone refuses a member java runs.
+        case (_, m: Tree.DefDef) if unimplementable.nonEmpty =>
+          val broken =
+            if declaresUnimplementable(m, unimplementable.toSet) then brokenByMapping(m) else scala.None
+          broken.fold(m)(refuseOnTarget(m, orig, _))
         case (_, m)                               => m
       }
       mapped.copy(parents = parents, body = body)
+
+  /** IS THIS THE INTERFACE'S MEMBER, or a method that merely shares its name?
+    *
+    * The refusal below is owed to a member the RETAINED PARENT declares, so the test is the
+    * parent's own signature — `java.util.Map.Entry` declares exactly `setValue(V)` — and never the
+    * bare name. A class implementing that interface is free to declare `setValue(int, int)` beside
+    * it; java resolves the two separately and the interface says nothing about the second. Matched
+    * by name alone, that method's body was replaced by a throw as well: a method java runs, the
+    * port refuses, with a green compile and no count moving anywhere (CLAUDE.md §3).
+    *
+    * See [[CollectionsTransform.MemberSig]] for why `arity` is both the whole of the signature
+    * available here and enough of it. */
+  private def declaresUnimplementable(d: Tree.DefDef, sigs: Set[CollectionsTransform.MemberSig])(
+      using p: Program): Boolean =
+    p.symbolOf(d.symbol).exists(s =>
+      sigs.contains(CollectionsTransform.MemberSig(s.name, d.paramss.map(_.size).sum)))
+
+  /** …AND CAN THIS PHASE POINT AT WHAT IT BROKE? The second condition, and the one that keeps the
+    * refusal a translation rather than a policy.
+    *
+    * `Map.Entry.setValue` is an optional operation, so throwing is a CONFORMING implementation —
+    * but only for an entry that genuinely cannot perform the write. An entry that stores its own
+    * value performs it perfectly, java runs it, and nothing this phase did touches the body:
+    * substituting a throw there makes the port fail where java succeeded. Both bodies are the same
+    * five letters and the difference is entirely what the body DOES, so the licence has to be read
+    * off the body and not off the declaration.
+    *
+    * §4.56 says how: a phase may only conclude something about a member from what the PHASE ITSELF
+    * did to it. The mapping's own record answers exactly that — a receiver this phase retyped to a
+    * target in [[CollectionsTransform.UnsupportedOnTarget]], carrying a call to one of the members
+    * that target cannot express, is a reference the mapping REMOVED, and it is the whole reason
+    * there is no body left to emit. Read off the MAPPED tree, because the untranslated one still
+    * names the java type at every position.
+    *
+    * Returns the reference it found, so the refusal can say which one it was — a decision that does
+    * not name the call it replaced sends its reader back to the java to guess. */
+  private def brokenByMapping(d: Tree.DefDef)(using p: Program): Option[String] =
+    d.rhs.flatMap { body =>
+      StandardTraversal.scanTerm(body, Option.empty[String]) { (acc, t) =>
+        if acc.nonEmpty then acc
+        else
+          t match
+            case Tree.Select(recv, m, _, _) =>
+              for
+                tgt  <- headSym(recv.tpe).flatMap(p.symbolOf).map(_.fullName)
+                sigs <- CollectionsTransform.UnsupportedOnTarget.get(tgt)
+                nm   <- p.symbolOf(m).map(_.name)
+                if sigs.exists(_.name == nm)
+              yield s"$tgt#$nm"
+            case _ => scala.None
+      }
+    }
 
   /** THE OTHER HALF OF A RETAINED PARENT — the member that parent declares and the target cannot.
     *
@@ -686,8 +741,12 @@ final class CollectionsTransform(
     *
     * The LOOP-REACHABLE case never arrives here: `writeThroughEntries` has already turned
     * `e.setValue(v)` inside `for (e : m.entrySet())` into the map's own `put`, so what is left is
-    * exactly the case with no loop and no map. */
-  private def refuseOnTarget(d: Tree.DefDef, owner: Tree.ClassDef)(using p: Program): Tree.DefDef =
+    * exactly the case with no loop and no map.
+    *
+    * **Both conditions are the caller's and neither is optional** — [[declaresUnimplementable]] (a
+    * member the parent really declares, by signature) and [[brokenByMapping]] (a body this phase
+    * really broke, `broke` being what the latter found). Either alone refuses a member java runs. */
+  private def refuseOnTarget(d: Tree.DefDef, owner: Tree.ClassDef, broke: String)(using p: Program): Tree.DefDef =
     val nm  = p.symbolOf(d.symbol).map(_.name).getOrElse("")
     val fqn = p.symbolOf(d.symbol).map(_.fullName).getOrElse(nm)
     val o   = d.origin
@@ -709,6 +768,10 @@ final class CollectionsTransform(
         "member"  -> nm,
         "throws"  -> CollectionsTransform.UnsupportedOperationFqn,
         "owner"   -> p.symbolOf(owner.symbol).map(_.fullName).getOrElse(""),
+        // the reference the mapping REMOVED, verbatim — the licence for the substitution and the
+        // one fact a reader cannot recover from the emitted throw. A body with no such reference
+        // is not substituted at all.
+        "broke"   -> broke,
         "why" -> ("the RETAINED PARENT declares this member and the mapping target cannot carry " +
           "it, so the body is java's own documented refusal for an optional operation. Writing to " +
           "the detached pair would compile and change nothing (K2); dropping the member would " +
@@ -3065,8 +3128,24 @@ object CollectionsTransform:
     * where the backing map does not support the write, so a ported entry that has no reachable map
     * throwing it is a CONFORMING `Map.Entry` rather than a hole. Derived from the phase's own
     * mapping (a key here is a target in [[UninheritableTargets]]), never from a receiver's name. */
-  private[balticporter] val UnsupportedOnTarget: Map[String, Set[String]] =
-    Map("scala.Tuple2" -> Set("setValue"))
+  private[balticporter] val UnsupportedOnTarget: Map[String, Set[MemberSig]] =
+    Map("scala.Tuple2" -> Set(MemberSig("setValue", 1)))
+
+  /** ONE MEMBER OF AN INTERFACE, by the shape java resolved it at — never by its bare name.
+    *
+    * `java.util.Map.Entry` declares exactly `setValue(V)`, and a class implementing it may declare
+    * any number of unrelated methods that happen to share those five letters. Java resolves them
+    * separately and the interface says nothing about them, so a bare-name match refused a
+    * `setValue(int, int)` with a perfectly good body — a member replaced by a throw for a name
+    * collision, with a green compile and no count moving (CLAUDE.md §3).
+    *
+    * `arity` is the whole of the discrimination available here and it is enough: the declaring
+    * interface is EXTERNAL, so the frontend interned it with no `Definition` and no member list
+    * (§4.56), and the parameter type it declares is a type VARIABLE, which erases to `Object` and
+    * so distinguishes nothing anyway. An overload agreeing on name AND arity still has to pass the
+    * second, stronger gate — that the phase can point at what it broke — before anything is
+    * substituted. */
+  private[balticporter] final case class MemberSig(name: String, arity: Int)
 
   /** the exception java's own contract names for an optional operation a receiver cannot perform. */
   private[balticporter] val UnsupportedOperationFqn = "java.lang.UnsupportedOperationException"

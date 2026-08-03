@@ -1426,7 +1426,7 @@ class CollectionsTransformSpec extends PortSuite:
         |    Pair(Map.Entry<K, V> e) { this.e = e; }
         |    public K getKey() { return e.getKey(); }
         |    public V getValue() { return e.getValue(); }
-        |    public V setValue(V v) { return null; }
+        |    public V setValue(V v) { return e.setValue(v); }
         |  }
         |}
         |""".stripMargin, ph)
@@ -1440,11 +1440,96 @@ class CollectionsTransformSpec extends PortSuite:
     // `UnsupportedOperationException` where the backing map does not support the write, and a
     // ported entry with no reachable map IS that entry. Louder than java, never quieter — the
     // opposite of the `SimpleEntry` K2 refuses, which would succeed and change nothing.
+    // …and the body is the DELEGATING one on purpose: this member's `return e.setValue(v)` is a
+    // write-through on a receiver THIS PHASE retyped to a `Tuple2`, so the phase can point at what
+    // it broke. That is the whole licence for the substitution — see the two tests below.
     assertEmits(p, "override def setValue(v: V): V = throw new java.lang.UnsupportedOperationException(")
     val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent)
     assertEquals(clue(fs).map(_.slot).sorted, List("member (implements) setValue", "parent (implements)"))
     assert(clue(CollectionBoundaryCheck.Issue.classification(
              CollectionBoundaryCheck.Issue.InexpressibleParent)).contains("§1(a)"))
+  }
+
+  test("…but a SELF-CONTAINED setValue keeps its own body — the phase broke nothing to point at") {
+    // The refusal above is licensed by a DEFECT THIS PHASE CAUSED: the body was a write-through on
+    // a receiver the mapping retyped to a type with no such member, so there is no body left to
+    // emit. An entry that stores its own value has no such body — java runs it, it returns the
+    // previous value, and nothing the mapping did touches it. Substituting a throw there is the
+    // port failing where java succeeded, with a green compile and no count moving anywhere
+    // (CLAUDE.md §3), and it is exactly what a BARE-NAME match does.
+    //
+    // §4.56 states the rule this restores: a phase may only conclude something about a member from
+    // what the PHASE ITSELF did to it. `refuseOnTarget` therefore asks its own mapping whether the
+    // TRANSLATED body still references a member the mapping removed, and emits java's optional-
+    // operation contract only when the answer is yes.
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.Map;
+        |class Own {
+        |  static final class Pair<K, V> implements Map.Entry<K, V> {
+        |    private final K k;
+        |    private V v;
+        |    Pair(K k, V v) { this.k = k; this.v = v; }
+        |    public K getKey() { return k; }
+        |    public V getValue() { return v; }
+        |    public V setValue(V nv) { V old = v; v = nv; return old; }
+        |  }
+        |}
+        |""".stripMargin, ph)
+    assertEmits(p, "extends java.util.Map.Entry[K, V]")   // the PARENT half is unchanged
+    assertNotEmits(p, "UnsupportedOperationException")
+    assertEmits(p, "this.v = nv")
+    // …and only the parent seam is counted: nothing was refused at a member.
+    val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent)
+    assertEquals(clue(fs).map(_.slot).sorted, List("parent (implements)"))
+  }
+
+  test("…and an unrelated OVERLOAD named setValue is not the interface's member") {
+    // The second half of the same bare-name defect. `Map.Entry` declares exactly `setValue(V)`, so
+    // a two-argument `setValue(int, int)` in the same class is a method java resolves separately
+    // and the interface says nothing about. Matched by name alone it was refused too — a method
+    // with a perfectly good body replaced by a throw because it shares five letters with an
+    // interface member.
+    val ph = new CollectionsTransform
+    val p  = port(
+      """package demo;
+        |import java.util.Map;
+        |class Both {
+        |  static final class Pair<K, V> implements Map.Entry<K, V> {
+        |    private final Map.Entry<K, V> e;
+        |    private int x, y;
+        |    Pair(Map.Entry<K, V> e) { this.e = e; }
+        |    public K getKey() { return e.getKey(); }
+        |    public V getValue() { return e.getValue(); }
+        |    public V setValue(V v) { return e.setValue(v); }
+        |    void setValue(int a, int b) { this.x = a; this.y = b; }
+        |  }
+        |}
+        |""".stripMargin, ph)
+    // the interface's member is refused (its body IS a write-through the mapping removed)…
+    assertEmits(p, "override def setValue(v: V): V = throw new java.lang.UnsupportedOperationException(")
+    // …and the overload keeps its own body.
+    assertEmits(p, "this.x = a")
+    assertEmits(p, "this.y = b")
+    val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent)
+    assertEquals(clue(fs).map(_.slot).sorted, List("member (implements) setValue", "parent (implements)"))
+  }
+
+  test("BEHAVIOUR: a self-contained entry's setValue returns the PREVIOUS value, as java does") {
+    // The shape the test above pins, transcribed and RUN — `CollectionsTransformSpec` asserts what
+    // the phase emits and only running it can say the emission means what java's did. `setValue`
+    // is specified to return the value the entry held BEFORE the write, which is the one thing a
+    // throw-instead cannot do and a `SimpleEntry` stand-in would get right while writing to a
+    // detached copy (K2).
+    final class Pair[K, V](k: K, private var v: V) extends java.util.Map.Entry[K, V]:
+      def getKey(): K            = k
+      def getValue(): V          = v
+      def setValue(nv: V): V     = { val old = v; v = nv; old }
+    val p = new Pair[String, Int]("k", 1)
+    assertEquals(p.setValue(2), 1)   // the PREVIOUS value, not the new one
+    assertEquals(p.getValue(), 2)    // …and the write took effect
+    assertEquals(p.setValue(3), 2)
   }
 
   test("…and the refusal is owed to the PARENT, not to the receiver — a plain class keeps the error") {
