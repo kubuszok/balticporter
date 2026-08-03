@@ -124,8 +124,23 @@ object PortFixture:
                          new balticporter.tir.PolicyBinder(before, before.members), catalog)
     Ported(before, after, phases.toList, sources.toMap, log.all, mode, catalog)
 
-  /** parse only — for tests about the FRONTEND rather than about a phase. */
-  def parse(java: String): Program = SpoonTir.fromSource(java)
+  /** parse only — for tests about the FRONTEND rather than about a phase.
+    *
+    * `fatal = true`, exactly as [[portIn]] and [[portAllIn]] are, and here the argument is one step
+    * stronger than it is for them: an undischarged obligation is a LOWERING ARM that returned
+    * without consulting a difference the catalog attaches to it, so a frontend-only spec is the
+    * closest possible witness to it. This path took `CatalogLog.discarding` — the log for a caller
+    * that does not want one — so the mode where a hole is an error was off in the one place it is
+    * cheapest to see, and every spec here would have gone on passing over a lowering that had
+    * stopped asking. */
+  def parse(java: String): Program = parseWith(java)._1
+
+  /** …and the LOG beside it, so "is this path fatal" is a question a spec can ask. The three
+    * entry points differ by one constructor argument and nothing reports a disagreement between
+    * them; this is what makes the next one visible. */
+  def parseWith(java: String): (Program, CatalogLog) =
+    val catalog = new CatalogLog(fatal = true)
+    (SpoonTir.fromSource(java, catalog = catalog), catalog)
 
 /** MUnit base class for suites that port a snippet and assert on the result.
   *
