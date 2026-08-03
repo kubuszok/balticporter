@@ -2541,6 +2541,35 @@ EXCEPTION CLASS is grouped by distance from the cause; this one adds that a cens
 are not causes. The number that means something here is `10 -> 0` on the family K20 names, not
 `552 -> 554` on the suite.
 
+**THE FIFTH CENSUS — K21 closed on both faces, and the residue is 8 rows over THREE causes.**
+`554 -> 559 -> 567 passing, 21 -> 16 -> 8 failing`, at `errors 0` throughout — face 1 (the egress
+bridge, D-liqp-9) and face 2 (bean accessors, D-liqp-10) measured one at a time. It is small enough
+to enumerate to the test, so it is enumerated to the test, with each row's §1 classification:
+
+| n | test | root cause | §1 |
+|---|---|---|---|
+| **2** | `CeilTest.applyTest`, `FloorTest.applyTest` | `java.lang.Long cannot be cast to java.lang.Double` — a primitive cast is a CONVERSION in java and an assertion in Scala once a phase has retyped the value | **(a) engine**, `ENGINE-LIMITS.md` K17 / catalog `JS-E06`, still `Partial`. Unchanged since the third census |
+| **1** | `SortTest.testSortMap` | `Sort$ComparableMapEntry cannot be cast to scala.Tuple2` — `Map.Entry -> Tuple2` is an `UninheritableTarget` and `Tuple2` is a concrete target no live view can be, so K18 refuses the reified cast | **(a), REFUSED AND COUNTED** — one of this port's two `ReifiedOccurrence` findings. Unchanged since the third census |
+| **5** | `GtNodeTest`, `GtEqNodeTest`, `LtNodeTest`, `LtEqNodeTest` `.testDateTypes`; `LiquidWhereImplTest.testWhereWhenDateCompatibleTypes` | **K22 — a java `static { }` block emitted into the companion `object` and initialised by nothing.** `Template`'s block registers liqp's date-type SPI providers; `new Template(…)` does not touch the object, so `isCustomDateType(aDate)` is `false`, `asRubyDate` falls through to `ZonedDateTime.now()`, and every temporal comparison answers about NOW. Probed: forcing `SPIHelper.applyCustomDateTypes()` by hand flips all five, and it reproduces with a PLAIN `Map` and no reflection anywhere | **(a) engine**, `ENGINE-LIMITS.md` K22. OPEN — corpus-wide blast, needs its own measured wave |
+
+**Three things this census records that the numbers do not.**
+
+- **The fourth census's attribution was wrong in two rows, in both directions.**
+  `AppendTest.testAppendToDateTypeEager` was filed "K21 face 2 by inspection (not probed)" and
+  flipped with face 1; the four `testDateTypes` were filed as face 2 and are only face 2 as far as
+  the data — with the fields exposed they still fail, for K22. **An unprobed row in a census is a
+  guess wearing a table's clothes**, and this one cost nothing only because the wave probed before
+  it fixed.
+- **K21 face 2 was hiding K22 exactly as K20 hid K21.** With no properties visible those tests
+  compared `null` against `null`; the comparison could not be wrong until the data arrived. Third
+  time in this port that closing one defect revealed the next — which is why the honest form of
+  "N are gated behind this" is a re-census, never a prediction (`CLAUDE.md` §1).
+- **The two new review lanes are populated and were right on their first run.**
+  `collection-boundary` carries 11 `OpaqueEgress` rows on the main port and 4 on the test port, and
+  one of them names `JsonGenerator#writeObject` — a jackson sink `main.conf` does NOT declare.
+  `bean-exposure` is 0 on the test port (everything in scope, no name clash). Neither number is a
+  defect count; both are lists a port picks entries from.
+
 ---
 
 ## 11. Publishability — what sge and ssg need before they can depend on this

@@ -65,9 +65,15 @@ object TransformFactory:
     * ask for. An empty `only = []` is honoured as written — "only these, and there are none" is a
     * statement a port can make on purpose (see [[RuleScope.Only]]).
     */
-  def scopeOf(config: ConfigView, key: String = "scope"): RuleScope =
+  def scopeOf(config: ConfigView, key: String = "scope",
+              default: RuleScope = RuleScope.Everywhere()): RuleScope =
     config.child(key) match
-      case scala.None => RuleScope.Everywhere()
+      // …`default` is the phase's OWN no-op and not always the unrestricted one. A phase that
+      // RETYPES declarations is unrestricted by default and its scope is an opt-OUT; a phase that
+      // ADDS members is the other way round — "everything" would rewrite a port's surface for a
+      // key nobody wrote — so its no-op is `Only(Set.empty)`. §1(b) asks that the DEFAULT be the
+      // no-op, never that every phase spell it the same way.
+      case scala.None => default
       case Some(s) =>
         (s.strings("except"), s.strings("only")) match
           case (Some(_), Some(_)) =>

@@ -14,3 +14,4 @@ balticporter.runner.PrimitiveToOpaqueFactory
 balticporter.runner.GlobalsToImplicitsFactory
 balticporter.runner.BeanPropertyFactory
 balticporter.runner.NullabilityFactory
+balticporter.runner.PublicFieldAccessorFactory

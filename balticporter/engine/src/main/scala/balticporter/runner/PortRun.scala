@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, RetargetBoundaryCheck}
+import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -359,6 +359,17 @@ final case class PortRun(
       println(CollectionBoundaryCheck.summary(bnd))
       say(s"RETARGET BOUNDARY (values the JDK produces at a retargeted type): ${ret.size}")
       println(RetargetBoundaryCheck.summary(ret))
+    }
+
+    // ---- what a reflective framework cannot see: java-public fields with no bean property ----
+    // Recorded only when the phase RAN, for the reason the collection checks are: a port that never
+    // declared a reflective consumer has no policy for this to be a residue of, and the population
+    // would then be every public field in the library. Over `checkedUnits` (ENGINE-LIMITS D2).
+    effectivePhases.collect { case b: PublicFieldAccessorTransform => b }.foreach { b =>
+      val exp = b.exposure(checkedUnits)
+      CheckReport.record(BeanExposureCheck.Name, exp.map(_.report))
+      say(s"BEAN EXPOSURE (java-public fields a framework cannot see): ${exp.size}")
+      println(BeanExposureCheck.summary(exp))
     }
 
     // ---- the nullability boundary: every annotated site the phase refused, and every wrapper

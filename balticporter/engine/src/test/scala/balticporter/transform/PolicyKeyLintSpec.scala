@@ -89,6 +89,12 @@ class PolicyKeyLintSpec extends munit.FunSuite:
         ("the JDK side of this phase is a TYPE MAPPING keyed by FQN, which is what the map IS — the " +
           "declarations it selects go through `RuleScope` and `Program.owned`"),
     ),
+    "PublicFieldAccessorTransform.scala" -> Map(
+      "fullName ==" ->
+        ("`java.lang.Object` is the one type whose name says NOTHING about a value, which is the " +
+          "whole reason the getter bridges at that field and nowhere else — an external the " +
+          "program never declares, so this is mint-or-reuse and there is no symbol to bind"),
+    ),
     "StaticForwarderTransform.scala" -> Map(
       "fullName ==" ->
         ("the forwarder RECEIVER is a type this program need not declare (it is the JDK's, normally), " +

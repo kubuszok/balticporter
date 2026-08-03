@@ -4080,7 +4080,7 @@ The per-site diagnosis stays in `PROGRESS.md`'s liqp residue table.*
 
 ---
 
-### K21. A retyped VALUE and an emitted CLASS are read out of the class file at the OTHER end of the same call — **8 test failures on liqp, 0 compile errors, every check count flat, and three of the four assertions pass by accident. FACE 1 CLOSED (+5), face 2 below**
+### K21. A retyped VALUE and an emitted CLASS are read out of the class file at the OTHER end of the same call — **13 test failures on liqp, 0 compile errors, every check count flat, and three of the four assertions pass by accident. BOTH FACES CLOSED (554/21 → 567/8)**
 
 K20 is the type ARGUMENT a third party reads out of the class file. **This is the OBJECT and its
 MEMBERS, read out of the class file by the same third party on the same call** — so it is not a
@@ -4174,12 +4174,118 @@ and nothing else in the pipeline can see a slot where the value CONFORMS.
 `collection-boundary` 14 → 25 (main) and 14 → 18 (test), which is the new review list appearing and
 not a regression.
 
-**Face 2 is a question about the emitted member's JVM shape, not about its type.** Read it below;
-**do not fix them together** — they share a cause and nothing else.
+**WHAT CLOSED FACE 2, and the first thing to know is what CANNOT be closed.** Probed on scalac
+3.8.4: a class-body `var`, a `val`, and a `val` class parameter ALL emit a private JVM field plus
+accessors. **Scala 3 has no declaration form that emits a public instance field**, so
+`getClass.getFields` answers `[]` in the port whatever the engine does, and a framework that reads
+FIELDS specifically is a LIMIT rather than a gap. What is expressible is the BEAN pair, which is
+what jackson, gson-by-getter, every injector and every template engine actually read:
 
-*Fix kind: face 1 (b) — mechanism universal (`JavaCollections.Reified.toJavaValue`,
-`CollectionsTransform.bridgeSinkArgs`), sink list per library. CLOSED, with the numbers above.
-Face 2 (a) engine, and OPEN at this line — see the entry it grew into.*
+```
+class Plain  { var a: Object }                     getFields=[]  jackson: "no properties discovered"
+class Beaned { @BeanProperty var a: Object }       getFields=[]  jackson: {"a":"1"}
+```
+
+**And `@BeanProperty` is NOT what shipped, which is the load-bearing measurement.** It reads +3
+tests WORSE than an explicit accessor pair, and the reason generalises past this library: a
+reflective framework does not only RECEIVE values, it **calls back IN** through the accessor it
+just discovered — and `@BeanProperty`'s generated getter hands back the field verbatim. A field
+typed `java.lang.Object` holding a collection this port retyped therefore delivers a
+`scala.collection.*` to the framework one hop PAST face 1's argument bridge. An explicit
+`def getX(): Object = Reified.toJavaValue(this.x)` is the same run-time bridge at the same seam
+read from the other side, and it is the only place it can go. **Face 1 and face 2 share one
+mechanism after all; what they do not share is where it is inserted.**
+
+**It is a (b), and the reason is the emitted SURFACE.** The FACT is universal. Applying the remedy
+universally is not free: it adds two member names per public field to every port in the corpus,
+`getX` COLLIDES with a java class that declares its own (`public ObjectMapper mapper` beside
+`getMapper()` — real, in this same library), and no reference hand port emits such an accessor
+anywhere. So `PublicFieldAccessorTransform(scope)`, with `Only(Set.empty)` — nothing — as the
+default and the no-op, and a name clash REFUSED and counted rather than emitted as a duplicate
+definition. Note the default is NOT `Everywhere`: §1(b) asks that the default be the no-op, and for
+a phase that ADDS members the no-op is the empty `Only`.
+
+**Two shapes a first cut misses.** An ANONYMOUS class is the usual one here —
+`new Inspectable() { public Date a = …; }` is how a framework's caller writes a bean — and it lives
+inside a TERM, so a phase that overrode only the class hook would do nothing on the measured case
+with no error anywhere (§3, §4.55). And the bean suffix is `java.beans.Introspector`'s, not
+`capitalize`: `URL` stays `getURL`, or the accessor is one no framework looks for.
+
+**THE COUNT.** `BeanExposureCheck` — `NameTaken` for a field the policy could not expose (the seam
+the scope created) and `Unexposed`, one row per TYPE, for a type with java-public fields the port
+did not ask about (the review list, the same shape as face 1's `OpaqueEgress`). Recorded only where
+the phase is in the pipeline, exactly as the collection and nullability boundaries are: without a
+declared reflective consumer the population is every public field in the library, and a review list
+nobody can act on is noise.
+
+**Measured on liqp: 559 → 567 passing, 16 → 8 failing, `errors 0` before and after**, with
+`bean-exposure 0` on the test port (everything in scope, no clash). Read the whole of K21 as
+**554 → 567, 21 → 8**.
+
+*Fix kind: BOTH faces (b) — mechanism universal, policy per library. Face 1:
+`JavaCollections.Reified.toJavaValue`, `CollectionsTransform.reflectiveSinks`,
+`Issue.OpaqueEgress`. Face 2: `PublicFieldAccessorTransform(scope)`, `BeanExposureCheck`. CLOSED.
+The one thing that stays OPEN is not a defect and cannot be fixed from inside Scala: `getFields`
+answers `[]`, so a framework that reads fields rather than properties sees nothing, and a port
+whose consumer does that has to say so in its own shim.*
+
+---
+
+### K22. A java `static { }` block runs at CLASS INITIALISATION; the `object` it is emitted into is initialised by nothing — **5 test failures on liqp, 0 compile errors, every check count flat, and the whole family was invisible until K21 closed. OPEN**
+
+The block is translated, faithfully, into the companion:
+
+```java
+public class Template { static { SPIHelper.applyCustomDateTypes(); } … }
+```
+```scala
+object Template { locally { ssg.liquid.spi.SPIHelper.applyCustomDateTypes() } … }
+```
+
+**And it never runs.** Java initialises the CLASS `Template` on the first instance creation, the
+first static-member access or a subclass's own initialisation (JLS 12.4.1). Scala initialises the
+OBJECT `Template` when something first touches the OBJECT — which `new Template(…)` does not, and
+neither does any member of the class. The port constructs `Template`s all day and the block's
+effect never happens.
+
+**What that costs, when the effect is a REGISTRATION.** liqp's block registers its date-type SPI
+providers, so `CustomDateFormatRegistry.isCustomDateType(aDate)` answers `false`, `LValue.isTemporal`
+answers `false`, and `asRubyDate` falls through to `ZonedDateTime.now()` — a comparison between two
+temporal values silently answers about NOW. Probed directly, with everything else in place:
+
+```
+isCustomDateType(a) = false        plain-map render {% if a > b %} = no      (java: yes)
+… then SPIHelper.applyCustomDateTypes() by hand:
+isCustomDateType(a) = true         plain-map render {% if a > b %} = yes
+```
+
+**Every instrument reads clean.** The `locally` block is emitted, so nothing is dropped and no
+`OmissionCheck` row exists; the port compiles; every check count is flat; and the failure is a
+comparison answering the other way. This is `CLAUDE.md` §4.4's defect class one level up — not a
+statement that means something else, a statement that runs at a different TIME.
+
+**It was invisible until K21 closed**, which is K20's lesson arriving for the third time: face 2
+meant those tests had NO data at all, so the comparison never got as far as being wrong. The five
+failures are `GtNodeTest`/`GtEqNodeTest`/`LtNodeTest`/`LtEqNodeTest`'s `testDateTypes` plus
+`LiquidWhereImplTest.testWhereWhenDateCompatibleTypes`, and every one of them reproduces with a
+PLAIN `Map` and no reflection anywhere — so it is not a K21 residue, it is the defect underneath.
+
+**Why it is not fixed in the same wave that found it.** The shape of a fix is not in doubt — java's
+own trigger list is short, so a class with a static initialiser forces its companion from its
+primary constructor and from each static member, which is mechanical — but the blast is
+corpus-wide (every `static { }` in every port) and it lands exactly where §4.4's `static final`
+row already records an initialisation CYCLE (`Vector3`/`Matrix4`). Forcing an object from a
+constructor is precisely how such a cycle is re-entered, so this needs its own measured wave with
+`just measure-all`, not a rider on one that is measuring something else. liqp has 4 such blocks;
+the corpus-wide count is what the wave that takes it should open with.
+
+**Do NOT reach for "call it from every method".** Java's trigger is initialisation, not use, and a
+port that forced the object at each call site would run the block on a path java never did — the
+`static final` constant row in §4.4 is the same distinction from the other side, where java's
+INLINING means a read triggers nothing at all.
+
+*Fix kind: (a) engine — universal, a fact about JLS 12.4.1 against Scala's object initialisation.
+OPEN, with the number above. The per-site diagnosis is in `PROGRESS.md`'s liqp residue table.*
 
 ---
 

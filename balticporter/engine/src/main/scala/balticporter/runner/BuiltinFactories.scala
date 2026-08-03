@@ -1,6 +1,6 @@
 package balticporter.runner
 
-import balticporter.tir.{ConfigError, ConfigView, OpaqueSpec, Phase, TransformFactory}
+import balticporter.tir.{ConfigError, ConfigView, OpaqueSpec, Phase, RuleScope, TransformFactory}
 import balticporter.transform.*
 
 /** The engine's own [[TransformFactory]] registrations — one per transform it ships that a config
@@ -53,7 +53,7 @@ object BuiltinFactories:
     new TypeRedirectFactory, new MethodBodyFactory, new CallSiteSubstitutionFactory,
     new PortMapMigrationFactory,
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
-    new NullabilityFactory,
+    new NullabilityFactory, new PublicFieldAccessorFactory,
   )
 
 // ---------------------------------------------------------------------------------------------
@@ -104,6 +104,21 @@ final class CollectionsFactory extends TransformFactory:
       config.stringMap("retarget").getOrElse(Map.empty),
       config.strings("reifiedCarriers").getOrElse(Nil).toSet,
       config.strings("reflectiveSinks").getOrElse(Nil).toSet)
+
+/** ```
+  * { transform = "public-field-accessors", scope { only = ["com.foo.Model"] } }
+  * ```
+  *
+  * Java's `public` field is part of the class file's surface and scala emits no public JVM field
+  * for it, so a framework that auto-detects one sees nothing (`ENGINE-LIMITS.md` K21 face 2). This
+  * adds `getX`/`setX` beside such a field for the declarations named — the entries reach nested and
+  * ANONYMOUS classes, which is the usual shape. No scope admits nothing, which is the default.
+  */
+final class PublicFieldAccessorFactory extends TransformFactory:
+  def name = "public-field-accessors"
+  def fromConfig(config: ConfigView): Phase =
+    new PublicFieldAccessorTransform(
+      TransformFactory.scopeOf(config, default = RuleScope.Only(Set.empty)))
 
 /** `{ transform = "test-framework", suite = "munit.FunSuite", testMember = "test" }` */
 final class TestFrameworkFactory extends TransformFactory:

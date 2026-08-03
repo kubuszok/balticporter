@@ -128,8 +128,22 @@ java `public` FIELD emitted as a scala `var` is PRIVATE on the JVM, so a framewo
 public fields sees ZERO properties. Neither has a slot: the formal is `Object` and the port's value
 conforms perfectly. **The second one does not even throw** — every absent property reads `null`, and
 a library that coerces `null` to a default then answers three assertions out of four CORRECTLY from
-data that is not there (`ENGINE-LIMITS.md` K21, 8 failures at 0 errors and every count flat). So a
+data that is not there (`ENGINE-LIMITS.md` K21, 13 failures at 0 errors and every count flat). So a
 retyping phase owes an answer where its value leaves the program, not only where one arrives.
+
+**And the answer is a RUN-TIME one, at TWO seams, because a framework calls back IN.** There is no
+static evidence to bridge on: the formal is `Object` and so is the argument's own type — a library
+whose data model is `Map<String,Object>` gives the phase nothing at the call, at the declaration or
+anywhere else — so the question is asked of the OBJECT, deep and by view (a serialiser walks the
+whole tree; a one-level `asJava` is the refusal such a phase already records, and a copy detaches
+both directions). And bridging the ARGUMENT is only half: the framework then calls the ACCESSOR it
+discovered, so the accessor is the same seam read from the other side — which is why a generated
+bean property (`@BeanProperty`) is measurably worse than an emitted one that can interpose. Both
+halves are per-library policy for the same reason and one step past K20's: java guarantees no
+reflective sink and no reflectively-read class, so the engine ships both lists empty and publishes
+the CANDIDATES instead — one row per external callee with an opaque formal, one row per emitted
+type with java-public fields. A missing entry is otherwise invisible; the first run of that list
+named a second sink the port had not declared.
 
 **And "N failures are gated behind this one" is a HYPOTHESIS, never a count.** A defect that THROWS
 hides every defect after it on the same path, so the tests attributed to it are the tests it is
@@ -787,6 +801,7 @@ compile-error count; every one was found by RUNNING the ported tests, never by a
 | a case's trailing `break L` | stripped as a case terminator | only an UNLABELLED break ends a case; a labelled one leaves the LOOP | strip unlabelled only |
 | a `break` in the MIDDLE of a case | *nothing* | it ends the CASE — and fallthrough is lowered by duplicating the next case's tail INTO this arm, so what ran on is code java put in a different case | a named `boundary` around the ARM; `match` cannot leave an arm early |
 | `static final int X = 0` | `final val X: Int = 0` | java INLINES a constant variable, so reading it never triggers the class initialiser; the typed `val` does, and libgdx's `Vector3`/`Matrix4` initialisers are a cycle | `inline val X = 0`, literal rendered AT the declared type |
+| `static { … }` on a class | `locally { … }` in the companion `object` | the block is EMITTED and never RUNS. Java initialises the CLASS on the first `new`, the first static access or a subclass's init (JLS 12.4.1); Scala initialises the OBJECT when something touches the OBJECT, and `new Template(…)` does not. Where the block REGISTERS something — an SPI provider, a factory, a codec — every later lookup silently answers "not registered", which a library then turns into a plausible wrong answer rather than an error. 5 test failures on liqp, 0 compile errors, every count flat | **OPEN** — force the companion from the class's primary constructor and from each static member, which is java's own trigger list; NOT from every use, which would run it on paths java never did. Corpus-wide blast, and it lands where the row above records an initialisation CYCLE, so it needs its own measured wave (`ENGINE-LIMITS.md` K22) |
 | `super(args)` in a 2nd ctor | *nothing* | scala secondary constructors cannot call super; every exception lost its message | promote the widest super call to the PRIMARY and delegate (JDK throwables only — elsewhere padding is a guess) |
 | `@Before` | *nothing* | JUnit runs it before EVERY test, on a fresh instance; MUnit has neither | call it at the head of each test body |
 | `@Test(expected = E.class)` | body run bare | it would PASS while checking nothing | `intercept[E] { … }` |

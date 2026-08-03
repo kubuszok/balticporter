@@ -163,6 +163,12 @@ object Decision:
       * NOT retyping a position, this one by a bridge at the USE — and a reader who is told only
       * "the third party reifies things" cannot tell which of the two a line is. */
     case BridgedEgress
+    /** java-bean accessors added beside a field java declared `public`, because scala emits no
+      * public JVM field and a framework auto-detecting one sees nothing (`ENGINE-LIMITS.md` K21
+      * face 2). An INVENTED member — no java declared it — which is `FunnelledCtor`'s case for
+      * carrying a note: the reader is looking at a `def getA()` with no upstream line behind it,
+      * and the source map cannot answer that. */
+    case BeanAccessor
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
