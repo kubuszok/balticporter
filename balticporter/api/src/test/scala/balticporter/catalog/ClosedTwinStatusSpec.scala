@@ -96,6 +96,23 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     assertEquals(verdicts.get("F1"), Some("UNMARKED"))
   }
 
+  test("AMBIGUOUS is a state the FILE reaches — both documents name K15 as the example") {
+    // The branch that decides a half-closed entry is a human's call had NEVER been taken: K15's
+    // heading said "CLOSED where a class file can be READ, counted where it cannot", which holds
+    // only the one token, so it parsed CLOSED and zero entries were AMBIGUOUS — while this spec's
+    // header and `scripts/catalog-status.sh` both cited K15 as the worked example of the state.
+    // The entry's own content is the arbiter and it is genuinely two-faced: the producer half is
+    // closed wherever a signature can be read, and where it cannot the suppression is a COUNTED
+    // RESIDUE and nothing is bridged. The heading now says both, so the verdict is derived rather
+    // than asserted here — and a documented state with no instance is a branch nobody has run.
+    assertEquals(verdicts.get("K15"), Some("AMBIGUOUS"))
+    val ambiguous = verdicts.collect { case (id, "AMBIGUOUS") => id }.toList.sorted
+    assert(ambiguous.nonEmpty, "no entry is AMBIGUOUS — the state both documents describe is unreachable")
+    // REPORTED, never asserted on: a half-closed entry is a human's call by construction, and a row
+    // whose twin is one of these is what step (2) of the re-derivation exists for.
+    println(s"[catalog] AMBIGUOUS twins (a human's call): ${ambiguous.mkString(", ")}")
+  }
+
   test("every cited ENGINE-LIMITS twin RESOLVES — a citation to nothing makes a status unfalsifiable") {
     val dangling = engineLimitTwins.collect { case (id, t, _) if !verdicts.contains(t) => s"$id cites `$t`" }
     assertEquals(dangling, Nil, dangling.mkString("\n"))

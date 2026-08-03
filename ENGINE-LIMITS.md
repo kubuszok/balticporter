@@ -3239,7 +3239,7 @@ with a kind and a factory, where the seam becomes a counted `coerce` boundary (`
 *Fix kind: (a) engine for the counter — DONE; (b) per-library for the choice of table when a real
 producer appears.*
 
-### K15. A retyping phase owes a boundary count at EXTERNAL callees — CLOSED where a class file can be READ, counted where it cannot
+### K15. A retyping phase owes a boundary count at EXTERNAL callees — CLOSED where a class file can be READ, OPEN where it cannot (counted, never bridged)
 
 **The seam nothing could see, and the one that a new library meets first.** CLAUDE.md §1(b) states
 it for a SCOPE seam — "the callee is then the JDK's own external symbol, which the frontend interned

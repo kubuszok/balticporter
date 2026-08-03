@@ -53,8 +53,12 @@ fi
 # would call the one entry that says it is open, closed.
 #
 # Where both tokens appear the verdict is AMBIGUOUS rather than a guess: `K15` ("CLOSED where a
-# class file can be READ, counted where it cannot") is a real half-and-half, and a script that
-# picked a side would be the hand transcription this one replaces.
+# class file can be READ, OPEN where it cannot") is a real half-and-half, and a script that picked a
+# side would be the hand transcription this one replaces. Note that heading had to be MADE honest
+# before the state existed at all: it used to read "counted where it cannot", which holds one token,
+# so K15 parsed CLOSED and this branch had never once been taken while two documents cited it as the
+# example. A documented state with no instance is a branch nobody has run — `ClosedTwinStatusSpec`
+# pins K15's verdict for that reason.
 # ---------------------------------------------------------------------------------------------
 verdicts() {
   awk '
