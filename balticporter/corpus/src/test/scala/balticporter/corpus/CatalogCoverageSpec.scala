@@ -33,7 +33,10 @@ class CatalogCoverageSpec extends munit.FunSuite:
     Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node) {
       Obligations.consult(JS.E(3), origin)(scala.None)
     }
-    assertEquals(log.undischarged.map(_.id), Nil)
+    // JS-E17 also attaches to this kind (at BOTH dispatches) and is `Open`, so it is a DECLARED
+    // hole here and not a defect — the work list, which is what that lane is. What this test is
+    // about is JS-E03, and consulting it leaves nothing owed.
+    assert(!log.undischarged.map(_.id).contains(JS.E(3)))
     assertEquals(log.consulted(JS.E(3)), 1)
     assertEquals(log.fired(JS.E(3)), 0)
   }
@@ -46,18 +49,22 @@ class CatalogCoverageSpec extends munit.FunSuite:
     given CatalogLog = log
     Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node)(())
     val holes = log.undischarged
-    assertEquals(holes.map(_.id), List(JS.E(3)))
+    // two rows attach at this (kind, dispatch): JS-E03, which the registry says is handled — so its
+    // hole is an ENGINE GAP — and JS-E17, which the registry itself calls `Open`, so its hole is
+    // DECLARED. The lane keeps them apart by the `kind` column and this is the pair that shows it.
+    assertEquals(holes.map(_.id), List(JS.E(3), JS.E(17)))
     assertEquals(holes.head.kind, "CtOperatorAssignment")
     assertEquals(holes.head.dispatch, Dispatch.Statement)
-    assertEquals(CatalogCheck.undischarged(log).map(_.kind), List("ENGINE GAP"))
+    assertEquals(CatalogCheck.undischarged(log).map(_.kind), List("ENGINE GAP", "declared open"))
   }
 
   test("…and the hole is one finding per ROW, however many sites produced it") {
     val log = new CatalogLog
     given CatalogLog = log
     (1 to 40).foreach(_ => Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node)(()))
-    assertEquals(log.undischarged.size, 1)
-    assertEquals(log.undischarged.head.sites, 40)
+    // one finding per ROW — two rows attach here, and each is reported once with 40 sites behind it.
+    assertEquals(log.undischarged.size, 2)
+    assertEquals(log.undischarged.map(_.sites), List(40, 40))
   }
 
   test("THE DELEGATION SEAM: one node lowered by BOTH dispatches is one obligation, not two") {
@@ -100,8 +107,10 @@ class CatalogCoverageSpec extends munit.FunSuite:
   test("the DISPATCH is part of the key — JS-E03 is owed at a statement and JS-E04 at an expression") {
     // The pair the whole mechanism was designed around. A kind-only attachment could not tell them
     // apart, and the two rows exist precisely because java gives one node kind two meanings.
-    assertEquals(Differences.owedAt("CtOperatorAssignment", Dispatch.Statement), List(JS.E(3)))
-    assertEquals(Differences.owedAt("CtOperatorAssignment", Dispatch.Expression), List(JS.E(4)))
+    // JS-E17 rides on both, being a `Dispatch.Either` row: the lvalue is evaluated twice whichever
+    // position the node is in, so it is one difference and not the E03/E04 pair.
+    assertEquals(Differences.owedAt("CtOperatorAssignment", Dispatch.Statement), List(JS.E(3), JS.E(17)))
+    assertEquals(Differences.owedAt("CtOperatorAssignment", Dispatch.Expression), List(JS.E(4), JS.E(17)))
     assertEquals(Differences.owedAt("CtLiteral", Dispatch.Expression), Nil)
   }
 
@@ -117,7 +126,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
     val alsoFatal = new CatalogLog(fatal = true)
     given CatalogLog = alsoFatal
     Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin, node)(())
-    assertEquals(alsoFatal.undischarged.map(_.id), List(JS.E(4)))
+    assertEquals(alsoFatal.undischarged.map(_.id), List(JS.E(4), JS.E(17)))
   }
 
   // -------------------------------------------------------------------------------------------

@@ -77,13 +77,13 @@ object Differences:
     Difference(eId(1), "`==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`",
       "JLS 15.21.3", "SLS 12.1 — `eq`/`ne` are the reference test on `AnyRef`; `==` forwards to `equals`",
       Silent, Handled, Rule44, Universal, "SpoonTir.referenceIdentity", Lowered("CtBinaryOperator", Dispatch.Expression)),
-    Difference(eId(2), "postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update",
+    Difference(eId(2), "postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17",
       "JLS 15.14.2, 15.15.1", "UNCITED — Scala has no increment operator; `x += 1` has type `Unit`",
       Silent, Handled, Rule44, Universal, "SpoonTir.exprNoCast POSTINC/PREINC -> Tree.IncDec; TirEmitter's Tree.IncDec arm", Lowered("CtUnaryOperator", Dispatch.Expression)),
-    Difference(eId(3), "compound assignment narrows implicitly to the left-hand type — STATEMENT position",
+    Difference(eId(3), "compound assignment NARROWS implicitly to the left-hand type — STATEMENT position; the lvalue's single evaluation is JS-E17",
       "JLS 15.26.2", "SLS 6.12.4 — `x op= e` is `x = x op e`, with no implicit narrowing",
       Silent, Handled, Predicted, Universal, "SpoonTir.stmtKind's CtOperatorAssignment arm, via SpoonTir.primRank", Lowered("CtOperatorAssignment", Dispatch.Statement)),
-    Difference(eId(4), "compound assignment narrows implicitly to the left-hand type — EXPRESSION position",
+    Difference(eId(4), "compound assignment NARROWS implicitly to the left-hand type — EXPRESSION position; the lvalue's single evaluation is JS-E17",
       "JLS 15.26.2", "SLS 6.12.4 — as JS-E03, and the expression path never asks",
       Loud, Open, Predicted, Universal,
       "SpoonTir.exprNoCast's CtOperatorAssignment arm — no primRank, no narrowing, and no coerce either", Lowered("CtOperatorAssignment", Dispatch.Expression)),
@@ -124,6 +124,17 @@ object Differences:
       "JLS 15.26", "SLS 6.12.4 — an assignment has type `Unit`",
       NoImpact, Handled, InCode("SpoonTir.exprNoCast's CtAssignment arm carries the argument in a comment"),
       Universal, "SpoonTir.exprNoCast's CtAssignment arm -> Tree.Block(List(Assign), lhs)", Lowered("CtAssignment", Dispatch.Expression)),
+    // The row JS-E02/E03/E04 each cover HALF of. Those three are about the VALUE and the NARROWING;
+    // this one is about how many times the LVALUE is evaluated, and no arm asks it — every one of
+    // them translates the lvalue once and uses the translation on both sides of the store. Attached
+    // at `Either` because both dispatches lower the same node and both do it, and left OPEN because
+    // the honest fix binds temporaries and moves emitted text at 161 sites (`ENGINE-LIMITS.md` F7).
+    Difference(eId(17), "a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target",
+      "JLS 15.26.2, 15.14.2, 15.15.1",
+      "SLS 6.12.4 — `l op= r` expands to `l = l op r`, and every occurrence of `l` is evaluated",
+      Silent, Open, el("F7"), Universal,
+      "SpoonTir.stmtArm's CtOperatorAssignment and CtUnaryOperator arms, and exprArm's twins — each translates the lvalue once and USES the translation twice",
+      Lowered("CtOperatorAssignment", Dispatch.Either)),
   )
 
   // -------------------------------------------------------------------------------------------

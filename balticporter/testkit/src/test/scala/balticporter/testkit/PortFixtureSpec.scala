@@ -62,7 +62,9 @@ class PortFixtureSpec extends PortSuite:
     // none).
     val (_, log) = PortFixture.parseWith("package demo; public class P { void f(byte b) { b += 3; } }")
     assert(log.fatal, "the frontend-only fixture must enforce what the porting ones enforce")
-    assertEquals(log.undischarged.map(_.id), Nil)
+    // JS-E03 is discharged; what is left is the DECLARED-open work list (JS-E17 attaches to the
+    // same kind), which a fatal log counts rather than raising on.
+    assertEquals(log.undischarged.map(_.id), List(balticporter.catalog.JS.E(17)))
     assert(log.consulted(balticporter.catalog.JS.E(3)) > 0, "the log is not even live")
 
     // …and the exemption, through the same path: a row the registry itself calls `Open` is the WORK
@@ -70,5 +72,6 @@ class PortFixtureSpec extends PortSuite:
     // the work list unrunnable — and this is the assertion that says the log is fatal AND correct
     // rather than merely quiet.
     val (_, open) = PortFixture.parseWith("package demo; public class Q { int f(byte b) { return (b += 3); } }")
-    assertEquals(open.undischarged.map(_.id), List(balticporter.catalog.JS.E(4)))
+    assertEquals(open.undischarged.map(_.id),
+      List(balticporter.catalog.JS.E(4), balticporter.catalog.JS.E(17)))
   }

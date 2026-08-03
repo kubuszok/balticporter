@@ -5297,6 +5297,57 @@ gate could see, and a repair whose whole cost is one arm each. `JsonValue` alone
 
 ---
 
+### F7. A compound assignment evaluates its LVALUE ONCE; the emitted form evaluates it TWICE — OPEN, measured at 161 duplicated sites and 0 that misbehave today
+
+**The defect is in the ENGINE and it has not fired in the CORPUS. Both halves are the finding.**
+
+JLS 15.26.2 is explicit: for `E1 op= E2`, the array reference and the index (or the field's target
+reference) are evaluated ONCE, before the value is read, and the result is stored back through THAT
+SAME reference. JLS 15.14.2/15.15.1 say the same of `++`/`--`. Every arm that lowers one of these
+translates the lvalue and then USES THE TRANSLATION TWICE:
+
+```java
+void stmtCompound() { a[next()] += 5; }     // java: next() runs ONCE
+int  exprInc()      { return a[next()]++; }
+```
+```scala
+private[demo] def stmtCompound(): scala.Unit = { this.a(this.next()) = this.a(this.next()) + 5 }
+private[demo] def exprInc(): scala.Int =
+  { val $prev = this.a(this.next()); this.a(this.next()) += 1; $prev }
+```
+
+Measured on the fixture, `next()` calls per java-source occurrence: statement compound **2**,
+statement `++` **2**, expression `++` **3**, expression compound **3** (whose value is also a
+RE-READ of the element rather than the value that was stored), `o.a[next()] |= 2` **2**. A §4.4-class
+defect exactly: valid Scala meaning something else, no compile error, no count.
+
+**And what the corpus says, which is why it is recorded rather than fixed or refused.** Scanned over
+every emitted tree: **161** statement-position sites duplicate a non-trivial lvalue, of which **4**
+repeat a nested call — and all four are pure (`glyphItems(ii).asInstanceOf[Glyph].page`,
+`vertices.items((o + colOffset) + 1)`): an extra READ, no extra effect. The expression form is
+cleaner still: **632** increment-as-value sites, **0** with a non-trivial operand. So there is no
+behavioural failure to point at, which is precisely why every suite passes and why nothing here can
+be trusted to stay true — the first library whose `a[next()] += x` calls a method is the one that
+finds it.
+
+**Neither available answer was taken, and each for a measured reason.** MINTING AN OPEN MARKER would
+refuse emission (the §6.4 gate) at 161 sites whose translation is correct today — a port that
+compiles and passes would stop shipping for a defect it does not have. FIXING it moves emitted text
+at those same 161 sites for no behavioural gain now, and the fix is a design step of its own: the
+faithful lowering binds each lvalue subexpression to a temporary ONCE
+(`{ val $r = arr; val $i = next(); $r($i) = $r($i) + 5 }`), which means minting local symbols in the
+frontend or a dedicated TIR node — `Tree.IncDec` is the precedent for the second, and it lowers in
+the EMITTER, which is where the `$prev` temporary already comes from. Do that in a wave that can
+measure the blast, not at the end of another one.
+
+What ships instead: `JS-E17`, `Open`, twinned here — so the difference is DATA rather than prose, and
+`catalog(undischarged)` counts it on every port that lowers a compound assignment. The count is the
+work list; this entry is what it points at.
+
+*Fix kind: (a). Universal — java's evaluation order is not a per-library question.*
+
+---
+
 ## 10. Comments (trivia) — what still does not survive, with its number
 
 The governing rule is `CLAUDE.md` §4.58. This section is only the residue: what is measured to be

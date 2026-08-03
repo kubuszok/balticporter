@@ -94,7 +94,10 @@ class CatalogAreaESpec extends PortSuite:
     assertEquals(Differences.byId(JS.E(4)).status, Status.Open)
     val p = port("public class D { int f(byte b) { return (b += 3); } }")
     assertNotConsults(p, JS.E(4))
-    assertEquals(p.catalog.undischarged.map(_.id), List(JS.E(4)))
+    // JS-E17 is beside it and is `Open` for the same kind of reason — the lvalue's single
+    // evaluation, which no arm reproduces (`ENGINE-LIMITS.md` F7) — so the work list here is two
+    // rows and both are declared rather than defects.
+    assertEquals(p.catalog.undischarged.map(_.id), List(JS.E(4), JS.E(17)))
   }
 
   // -- JS-E05: the conditional operator's type is COMPUTED, not the lub of its branches -----------
