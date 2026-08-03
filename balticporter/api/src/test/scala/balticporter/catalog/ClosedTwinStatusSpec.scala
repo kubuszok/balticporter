@@ -16,6 +16,13 @@ import java.nio.file.{Files, Path}
   * same rule for an agent holding a checkout rather than a test runner, and the two must agree —
   * they read the same file by the same shape.
   *
+  * BOTH DIRECTIONS, because they are different failures: a row still claiming `Open` after the entry
+  * closed is a status that went stale downwards, and a row claiming `Handled` against a twin that
+  * reads OPEN is the registry asserting coverage its own measurement contradicts — which reads as a
+  * guarantee to an agent in another repository. `Partial(why)` is exempt from the second and that is
+  * the whole exemption: a partial row STATES which half is missing, which is what an open twin is
+  * evidence of.
+  *
   * ITS HONEST LIMIT, stated because an over-claimed guarantee is how a mechanism stops being
   * audited: it sees a row only THROUGH its twin. A row with `Twin.Predicted` is invisible to it,
   * which is why `Twin.NoTwin` is refused for an `Open` row below — a row claiming to be open owes a
