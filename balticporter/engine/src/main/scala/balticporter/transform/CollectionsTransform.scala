@@ -714,7 +714,7 @@ final class CollectionsTransform(
                 sigs <- CollectionsTransform.UnsupportedOnTarget.get(tgt)
                 nm   <- p.symbolOf(m).map(_.name)
                 if sigs.exists(_.name == nm)
-              yield s"$tgt#$nm"
+              yield MemberKey(tgt, nm).render
             case _ => scala.None
       }
     }
