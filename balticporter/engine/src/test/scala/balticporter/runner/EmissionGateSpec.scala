@@ -35,23 +35,35 @@ class EmissionGateSpec extends munit.FunSuite:
         |public class Plain { public int twice(int a) { return a + a; } }""".stripMargin)
     (root, src)
 
-  /** mints an OPEN marker at `twice`'s body — standing in for a frontend refusal point, which is
+  /** the same, plus a SECOND type the port can drop — the fixture the gate's own remediation
+    * describes ("drop the declarations that use them and inject replacements"). */
+  private def fixtureWithDroppable(): (Path, Path) =
+    val (root, src) = fixture()
+    java(src, "com/demo/Doomed.java",
+      """package com.demo;
+        |public class Doomed { public int thrice(int a) { return a + a + a; } }""".stripMargin)
+    (root, src)
+
+  /** mints an OPEN marker at `member`'s body — standing in for a frontend refusal point, which is
     * what §6.5 adopts first and which no fixture Java can reach on demand. */
-  private class Mint extends Phase:
+  private class Mint(member: String = "twice") extends Phase:
     def name: String = "test/mint"
     override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
-      if !p.symbolOf(d.symbol).exists(_.name == "twice") then d
+      if !p.symbolOf(d.symbol).exists(_.name == member) then d
       else d.copy(rhs = d.rhs.map(r =>
         Tree.Unportable.open(r, UnportableKind.ConstructorTopology, scala.None,
           "the fixture's stand-in for a construct with no faithful Scala", r.tpe, r.origin)))
 
-  private def run(root: Path, src: Path, phases: List[Phase], bestEffort: Boolean = false): PortRun =
+  private def run(root: Path, src: Path, phases: List[Phase], bestEffort: Boolean = false,
+                  files: List[String] = List("com/demo/Plain.java"),
+                  subs: Substitutions = Substitutions.none): PortRun =
     PortRun(
       label      = "demo",
       portRoot   = root.resolve("port"),
       sourceSet  = SourceSet.Main,
-      frontend   = FrontendConfig(src, List("com/demo/Plain.java"), Nil),
+      frontend   = FrontendConfig(src, files, Nil),
       phases     = phases,
+      subs       = subs,
       bestEffort = bestEffort,
     )
 
@@ -78,6 +90,20 @@ class EmissionGateSpec extends munit.FunSuite:
     assert(e.getMessage.contains("constructor-topology"), e.getMessage)
     // NOTHING on disk. Not a partial tree, not an older one — the gate runs before the wipe.
     assertEquals(scalaFiles(port.outDir), Nil)
+  }
+
+  test("a marker inside a DROPPED type does NOT refuse — the gate reads what the run EMITS") {
+    // The gate's own remediation says "drop the declarations that use them and inject replacements".
+    // Read over `emitOrder` rather than over the emitted set, the gate refuses a port that took its
+    // advice — forever — while the `markers` lane, which IS scoped to the emitted units, reports
+    // zero. One run, two answers, and the port has no way out. One drop filter, both readers.
+    val (root, src) = fixtureWithDroppable()
+    val port = run(root, src, List(new Mint("thrice")),
+      files = List("com/demo/Plain.java", "com/demo/Doomed.java"),
+      subs  = Substitutions(dropTypes = Set("com.demo.Doomed")))
+    val r = port.execute()
+    assertEquals(scalaFiles(r.outDir), List("com/demo/Plain.scala"))
+    assertEquals(r.dropped, 1)
   }
 
   test("BEST EFFORT writes instead — to its OWN directory, with a sentinel, and still ends nonzero") {

@@ -317,8 +317,7 @@ final case class PortRun(
     // code this run never emits — the classpath holds the injected replacement, not the reported
     // construct. The check's own contract is "the units the run actually EMITS"; hold it to that.
     // The filter lives HERE because the drop set is policy and the check stays library-blind (§1).
-    val checkedUnits = translated.emitOrder.filterNot(u =>
-      program.symbolOf(u.symbol).map(_.fullName).exists(policySubs.dropsType))
+    val checkedUnits = emittedUnits(program, translated.emitOrder)
     // …and the SAME `Surface` the emitter used. Every constructor lane here shadows a
     // `CtorFunnel.Plans` decision, and `Plans` takes the view: built without it the check gets a
     // `TrivialSurface` (everything is mine), so a replay the emitter REFUSED because it reaches a
@@ -597,7 +596,10 @@ final case class PortRun(
     //
     // Best-effort mode is the escape hatch and it is escape-shaped: the output moves to its own
     // directory, carries a sentinel, and the run ends nonzero.
-    val openMarkers = MarkerCheck.openMarkers(program, translated.emitOrder)
+    // …over `checkedUnits`, which is what the run WRITES. Over `emitOrder` the gate refused a port
+    // for a marker inside a type the manifest DROPS — the remediation the gate itself prints — and
+    // the `markers` lane, scoped to the emitted units, called the same run clean (see [[isDropped]]).
+    val openMarkers = MarkerCheck.openMarkers(program, checkedUnits)
     val emitDir = if bestEffort && openMarkers.nonEmpty then bestEffortDir else outDir
     if openMarkers.nonEmpty && !bestEffort then
       val head = openMarkers.take(10).map { s =>
@@ -639,15 +641,9 @@ final case class PortRun(
     translated.emitOrder.foreach { u =>
       val full = program.symbolOf(u.symbol).map(_.fullName).getOrElse("Unit")
       // Substitutions.dropTypes: PARSED (so every reference to it still resolves) but NOT emitted —
-      // the injected replacement supplies this FQN instead.
-      //
-      // Decided by the frontend's `Substituted` TAG, not by matching `full` against the drop set.
-      // `full` is the name AFTER the package rename, and every drop key is written in the UPSTREAM
-      // namespace — so a renamed port matched none of them and emitted all 11 dropped types while
-      // reporting `0 dropped`. The tag is applied at parse time and is therefore rename-proof.
-      // (Kept as a fallback for a symbol the frontend never tagged.)
-      val substituted = program.symbolOf(u.symbol).exists(Substituted.tags)
-      if substituted || policySubs.dropsType(full) then dropped += 1
+      // the injected replacement supplies this FQN instead. Asked through [[isDropped]], which is
+      // where the tag-then-key reasoning lives and which the checks and the gate read too.
+      if isDropped(program, u) then dropped += 1
       else
         val text = translated.sourceOf(u)
         write(emitDir.resolve(full.replace('.', '/') + ".scala"), text)
@@ -1336,15 +1332,33 @@ final case class PortRun(
       }
     }.toMap
 
+  /** IS THIS UNIT ONE THE RUN WILL NOT WRITE? — the one drop question, asked in one place.
+    *
+    * Two facts decide it and BOTH are needed: the frontend's `Substituted` TAG, applied at parse
+    * time and therefore rename-proof, and the manifest key as a fallback for a symbol the frontend
+    * never tagged. The write loop has asked both since a renamed port emitted all 11 of its dropped
+    * types while reporting `0 dropped`; the CHECKS asked only the second, and the EMISSION GATE
+    * asked neither.
+    *
+    * That third reader is what makes this a function rather than a habit. The gate ran over the raw
+    * `emitOrder`, so a port that took the gate's own remediation — *drop the declarations that use
+    * the marker and inject a replacement* — was refused forever, while the `markers` lane beside it
+    * reported the same run as clean because it IS scoped to the emitted units. One run, two answers,
+    * and no way out of it. Every reader of "what does this run emit" goes through here. */
+  private def isDropped(program: Program, u: Tree.ClassDef): Boolean =
+    program.symbolOf(u.symbol).exists(s => Substituted.tags(s) || policySubs.dropsType(s.fullName))
+
+  /** the units of `emitOrder` this run actually WRITES — [[isDropped]] over a list. */
+  private def emittedUnits(program: Program, units: List[Tree.ClassDef]): List[Tree.ClassDef] =
+    units.filterNot(isDropped(program, _))
+
   /** every class this run EMITS, nested ones included — the domain every decision recorder below
     * ranges over, spelled once so two of them cannot disagree about which classes are this module's
     * (`ENGINE-LIMITS.md` D2). */
   private def emittedClasses(program: Program, translated: PortRun.Translated): List[Tree.ClassDef] =
     def nested(cd: Tree.ClassDef): List[Tree.ClassDef] =
       cd :: cd.body.collect { case c: Tree.ClassDef => nested(c) }.flatten
-    translated.emitOrder.filterNot { u =>
-      program.symbolOf(u.symbol).exists(s => Substituted.tags(s) || policySubs.dropsType(s.fullName))
-    }.flatMap(nested)
+    emittedUnits(program, translated.emitOrder).flatMap(nested)
 
   private def recordDroppedSuperArgs(program: Program, translated: PortRun.Translated): Unit =
     given Program = program
