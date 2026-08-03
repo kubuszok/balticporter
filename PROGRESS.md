@@ -74,7 +74,7 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
-| `liqp-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 161 passing, 414 failing**, 409 of them one constructor (§10.5.5) | **0** |
+| `liqp-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 357 passing, 218 failing**, 155 of them one collections seam (§10.5.5) | **0** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -1980,13 +1980,15 @@ written, 987 members in the source map. `just liqp-measure`.
 | `jdk-surface` | **19 -> 10 -> 9** — `anyMatch`/`sortNatural`/`ConcurrentHashMap` stopped reading as this port's wall once the tables named them |
 | `collection-boundary` (main) | **6 -> 14 -> 13 -> 8 -> 18 -> 14 -> 15** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), rose by the one `InexpressibleParent` refusal K5.7 counts, and fell by five when the OWNED-callee bridge stopped being switched off by a shim this library never names (K2.5). It then ROSE to 18 and fell to 14 in one step, because the aliasing refusal became a TRANSLATION: twelve `Arrays.asList(arr)` sites stopped being untranslated calls the check cannot see and became boundaries it can, four of which the same change closed. The fifteenth is K5.7's other half: the member a RETAINED PARENT declares and the target cannot carry, now emitted as the interface's own documented refusal and counted at the slot |
 | `omissions` | **6 -> 4 -> 1** — `PlainBigDecimal`'s two `super(args)` are no longer dropped (with the external constructor's signature readable the funnel reaches K5.5's synthesised primary), and `LiquidException`'s three reach a primary synthesised at the JDK throwable's widest overload (C3) |
-| tests | 639 `@Test` upstream, **575 emitted, 575 RUN — 161 passing, 414 failing** (§10.5.5) |
+| tests | 639 `@Test` upstream, **575 emitted, 575 RUN — 161 -> 357 passing, 414 -> 218 failing** (§10.5.5) |
 
 **The behavioural gate is now the measurement.** Every number above except the last row is a
-compile-time one, and §3 is explicit about what that is worth — which this port then demonstrated at
-scale: **409 of the 414 failures are ONE constructor's statement ORDER, at 0 scalac errors and every
-check count flat** (`ENGINE-LIMITS.md` C12). The compile said nothing about it and nothing else
-could have.
+compile-time one, and §3 is explicit about what that is worth — which this port then demonstrated
+twice at scale. First: **409 of the first run's 414 failures were ONE constructor's statement ORDER,
+at 0 scalac errors and every check count flat** (`ENGINE-LIMITS.md` C12, now closed). Then, with that
+closed, **196 tests flipped to passing, 0 newly failed, and the 218 that remain are four families the
+first census could not see at all** — every one of them behind the same constructor, and every one of
+them still at 0 scalac errors with every check count flat. The compile said nothing about any of it.
 
 ### 10.5.2 What this library taught the engine
 
@@ -2136,10 +2138,18 @@ porting a library from outside the family the engine grew up in.
   members an intrusion — a rule with no way to comply with it. The base's published PORT MAP is what
   §1.5 actually asks for. Six libraries went past it because no corpus port had declared a test-set
   drop before.
-- **`ENGINE-LIMITS.md` C12 (new, OPEN)** — and the one only the RUN could find: a promoted
+- **`ENGINE-LIMITS.md` C12 (new, CLOSED)** — and the one only the RUN could find: a promoted
   constructor local keeps its name (C2/§4.55) and loses its POSITION, so `Template`'s locals
-  initialise ahead of the assignments java wrote first. **409 of 414 test failures at 0 scalac
-  errors and every check count flat** (§10.5.5).
+  initialised ahead of the assignments java wrote first. **409 of 414 test failures at 0 scalac
+  errors and every check count flat**; closed by giving `TirEmitter.orderBody` the class symbol and
+  hoisting only that class's own FIELDS, which is JLS 12.5's own cut and a §4.56 ownership test
+  rather than a name. **161/414 -> 357/218 passing on liqp; 29 libGDX classes' emitted text moved and
+  every suite in the corpus kept identical outcomes** (§10.5.5).
+- **`ENGINE-LIMITS.md` K17 (new, OPEN)** — what C12 was hiding, and the same defect twice: **a java
+  CONVERSION emitted as a scala CAST**. A lambda at an external functional-interface slot is cast
+  rather than SAM-converted (27 failures), and a `? :` over `Long`/`Double` is cast to java's
+  JLS 15.25 promoted type without performing the promotion (7). Both emit valid Scala with the right
+  static type, so no compile, no check and no member digest can see either.
 
 ### 10.5.3 Remaining, classified
 
@@ -2354,45 +2364,63 @@ sets, then the fixture symlink tree, the `--resource-dir` services file and `sca
 | upstream `@Test` | **639** |
 | emitted munit registrations | **575** (64 lost: 62 to T9's four excluded files, 2 to D-liqp-7 — §10.5.4) |
 | **outcomes recorded** | **575 of 575 emitted** — the full accounting, nothing inferred from a sum of markers |
-| passing | **161** |
-| failing | **414** |
+| passing | **161 -> 357** (C12 closed) |
+| failing | **414 -> 218** |
+| newly passing / newly failing / newly skipped | **196 / 0 / 0** |
 | did not run (skipped) | **0** |
 | ignored | **0** |
-| derived expected failures | **0** — this port has no `dropTypes`, so `dropped-types.tsv` is empty and no failure is deliberate. All 414 are `unexpected`, which is the honest reading and not a gap |
+| derived expected failures | **0** — this port has no `dropTypes`, so `dropped-types.tsv` is empty and no failure is deliberate. All 218 are `unexpected`, which is the honest reading and not a gap |
 | declared expected failures | **0** — no `baseline/expected-failures.tsv` at all, which is the normal state of that escape hatch (§5.1) |
 
 The `expected 0` line is worth reading rather than skipping: liqp drops no TYPE, so there is nothing
 for the derived rule to classify from, and a run that reported some other number would be reporting a
 list somebody had maintained by hand.
 
-**The 414, by family** — three, and the first is 99% of the number:
+**THE FIRST CENSUS: the 414, by family** — three, and the first was 99% of the number:
 
 | n | family | §1 | representative site |
 |---|---|---|---|
-| **409** | **`Template`'s promoted constructor locals initialise BEFORE the statements java wrote first**, so `this.templateParser` is still `uninitialized` when `blockNames$p` reads it. `TirEmitter.orderBody` hoists every `ValDef` in a class body ahead of every statement — right for a real FIELD, wrong for a constructor local the funnel promoted. 394 arrive as the bare `NullPointerException`, 9 through an `intercept[LiquidException]` that catches the wrong exception, and 6 through a cast of it — one defect, three shapes | **(a) engine, `ENGINE-LIMITS.md` C12 (new, OPEN)** | `ssg.liquid.InsertionTest.breakTest` → `blockNames` [`liqp/Template.java:57`] |
-| **2** | jackson cannot REFLECTIVELY CONSTRUCT a type the collections retyping moved: `Cannot construct instance of scala.collection.mutable.Map (no Creators, like default constructor, exist)`. K15's own case — a third party's reflective code was handed the port's type where java handed it a `HashMap` — met at run time instead of at a formal | **(a) engine, K15 family** | `LiquidSupport$LiquidSupportFromInspectable#objectToMap` [`liqp/parser/LiquidSupport.java:81`] |
-| **3** | genuinely per-test: two `GtNodeTest` assertions (`testBug267StringVsNumber`, `testBug267ExpressionInOutputAsLiquid`) and `ForTest.test_for_cleans_up_registers`, whose `Template$ContextHolder.getContext()` is null | unclassified — each needs its own read, and none is worth a family | `ssg.liquid.nodes.GtNodeTest.testBug267StringVsNumber` |
+| **409** | **`Template`'s promoted constructor locals initialise BEFORE the statements java wrote first**, so `this.templateParser` is still `uninitialized` when `blockNames$p` reads it. `TirEmitter.orderBody` hoisted every `ValDef` in a class body ahead of every statement — right for a real FIELD, wrong for a constructor local the funnel promoted. 394 arrived as the bare `NullPointerException`, 9 through an `intercept[LiquidException]` that catches the wrong exception, and 6 through a cast of it — one defect, three shapes | **(a) engine, `ENGINE-LIMITS.md` C12 — CLOSED** | `ssg.liquid.InsertionTest.breakTest` → `blockNames` [`liqp/Template.java:57`] |
+| **2** | jackson cannot REFLECTIVELY CONSTRUCT a type the collections retyping moved | (a) engine, K15 family | `LiquidSupport$LiquidSupportFromInspectable#objectToMap` |
+| **3** | genuinely per-test | unclassified | `ssg.liquid.nodes.GtNodeTest.testBug267StringVsNumber` |
 
-**409 of 414 is one member, and that is the whole argument of §3 in one number.** The port was at 0
+**409 of 414 was one member, and that is the whole argument of §3 in one number.** The port was at 0
 scalac errors, every check count flat, `break_residue` 0, `trivia` 0 lost, and 22 checks green.
 Nothing in the pipeline could see it, because a Scala class body IS its constructor and the emitted
 order is valid Scala meaning something else — §4.4's defect class, arriving at the scale the rule
 warns about. `Template` is what every test parses through, so one ordering took 71% of the suite.
 
-**The lane's own infrastructure held.** No failure is a missing fixture, an unresolved
+**THE SECOND CENSUS: the 218 that remain, by ROOT cause.** C12's fix flipped 196 and failed nothing
+new; what it did do is let every test that used to die in `Template`'s constructor run far enough to
+reach the defect that was always underneath. The families below are therefore FINDINGS UNMASKED, not
+regressions — the first census could not have named one of them, and the run that produced them reads
+`errors 0`, every check count identical to the run before it, and exactly **one** member digest moved
+in the whole port (`Template`):
+
+| n | root cause | §1 |
+|---|---|---|
+| **155** | **the collections retyping met at a PRODUCER**, in four shapes: `java.util.HashMap cannot be cast to scala.collection.mutable.Map` (138, `Template#renderToObject`'s `mapper.readValue(json, HashMap.class)`), jackson's `Cannot construct instance of scala.collection.mutable.Map` (10, reflective), `java.util.ArrayList` → `mutable.Map` (4) and `JavaCollections$FrozenBuffer` → `mutable.Map` (2), plus one `cannot sort: ArrayBuffer`. Every one is a value a THIRD PARTY produced at a declaration the port retyped — K14's counted direction and K15's family, met at run time rather than at a formal. `collection-retarget` reads **0**, which is what that check exists to say it cannot see here | **(a) engine, K14/K15 family** |
+| **27** | **a java LAMBDA at an external functional-interface slot, emitted as a cast instead of a SAM conversion** — `TemplateParser$$Lambda cannot be cast to java.util.function.Supplier` at `Optional.orElseGet(() -> …)` | **(a) engine, `ENGINE-LIMITS.md` K17 (new, OPEN)** |
+| **7** | **a `? :` over mixed boxed numerics** — JLS 15.25 gives `Long`/`Double` binary numeric promotion and the port emits `if`/`else` plus `asInstanceOf[Double]`, which asserts instead of converting: `java.lang.Long cannot be cast to java.lang.Double` at `LValue#asNumber` | **(a) engine, `ENGINE-LIMITS.md` K17 (new, OPEN)** |
+| **29** | assertion / comparison failures with no exception behind them — 27 `munit.ComparisonFailException` (the `Pop`/`Push`/`Shift`/`Unshift` filter families, the two `where` impls, `LookupNode`, `IncludeRelative`, `Json`) and 2 `AssertionError` in `ForTest`. Several are downstream of the 155 (a filter handed a shim renders differently); none has been read individually yet | unclassified — the next wave's work, and the first place a per-test read is worth doing |
+
+**Two of the three unmasked families are the SAME defect** — a java CONVERSION emitted as a scala
+CAST — which is why they are one `ENGINE-LIMITS.md` entry and not two. Neither is visible to a
+compile, to any check, or to a member digest: both emit valid Scala carrying java's own static type.
+
+**The lane's own infrastructure held, on both runs.** No failure is a missing fixture, an unresolved
 `META-INF/services` provider or a working-directory miss: the 45 relative-path tests reach the
 symlink tree, the `ServiceLoader` finds its two providers, and the parser's class files resolve. What
 the run measured is the translation, which is what it is for.
 
-**What is NOT yet evidence.** With 71% of the suite failing on one constructor, the 161 passes are a
-floor and not a coverage statement: the §4.4 forms §10.5.4 lists — 46 `@Test(expected=…)`, the two
-`@Before`s, the 38 anonymous classes, the `default`-less `switch` — are exercised only by the tests
-that got past `Template`. C12 is what stands between this number and a real behavioural gate, and it
-is a bounded piece of (a) work whose blast is emitted TEXT across most of the corpus, so it wants its
-own measured wave.
+**What is NOT yet evidence.** 357 passes is a real coverage statement in a way 161 was not — the §4.4
+forms §10.5.4 lists (46 `@Test(expected=…)`, the two `@Before`s, the 38 anonymous classes, the
+`default`-less `switch`) are now exercised broadly rather than only by whatever got past `Template`.
+But 155 of the 218 are one seam, so the next behavioural gate is the collections PRODUCER direction,
+and it is (a) work in the engine, not policy in this port.
 
-`tests.tsv` and `expected-errors` are accepted from this run, so the next change is diffed against
-161/414 rather than against nothing.
+`tests.tsv` and `expected-errors` are accepted from the run that produced these numbers, so the next
+change is diffed against 357/218.
 
 ---
 

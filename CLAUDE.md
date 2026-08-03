@@ -680,6 +680,22 @@ And count what the constructor funnel PROMOTES — the chosen constructor's para
 top-level locals. Neither is in the class body, both become members, and a Java constructor local
 becoming a Scala member is exactly what a subclass then collides with.
 
+**…and a promotion moves a NAME, never a POSITION.** The rule above is the whole of the renaming
+question and none of the ordering one, and the two look alike because the promoted local ends up
+spelled as a class member. A Scala class body IS its constructor, so a `val` initialiser and a
+statement are the same kind of thing there and their relative order is the entire semantics. JLS
+12.5 is the cut: a FIELD initialiser runs in step 4, in textual order, before any constructor body
+statement — so hoisting a field above the promoted body reproduces java whatever order the java file
+declared them in — while a constructor's own LOCAL DECLARATION is a step-5 body statement whose
+position among the other statements carries every dependency between them. Emit it where java wrote
+it. Both are `ValDef`s and the difference is OWNERSHIP (§4.56): the frontend interns a field under
+the CLASS and a local under the enclosing EXECUTABLE, so "is this a member of the class whose body I
+am ordering?" is a symbol lookup, and a name, an origin line or a per-caller "was this in the plan's
+body?" test are all the string-shaped answers §4.56 is about. Measured at **409 of 414 test failures
+on one constructor, 0 scalac errors, every check count flat** (`ENGINE-LIMITS.md` C12) — and note
+what that number is evidence for: the compile, the twenty-two checks and the member digests were all
+green throughout, so only §3's gate could see it.
+
 ## 4.56 A rename decides OWNERSHIP structurally, never by name
 
 Any pass that rewrites a name by prefix — package rename above all — must first answer *does this

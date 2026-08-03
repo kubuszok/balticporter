@@ -1473,7 +1473,7 @@ final class TirEmitter(
     if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && pparams.isEmpty &&
        !extendedTypes(cd.symbol) && !instantiatedTypes(cd.symbol) && !typeNamedElsewhere(cd.symbol) then
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
-      val ob0 = orderBody(members, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+      val ob0 = orderBody(members, cd.symbol, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       val ob  = if bnote.isEmpty then ob0 else s"$bnote\n$ob0"
       // the VISIBILITY only — an `object` takes no `abstract`, and `final object` is redundant.
       // THE COLLAPSE, recorded where it is TAKEN. A consumer that names this type in a type
@@ -1488,7 +1488,7 @@ final class TirEmitter(
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
-    val body1   = joinStats(orderBody(instance, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty))
+    val body1   = joinStats(orderBody(instance, cd.symbol, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty))
     val body0   = if bnote.isEmpty then body1 else joinStats(bnote :: List(body1).filter(_.nonEmpty))
     val diamonds = diamondOverrides(cd, i + 1)
     val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
@@ -1588,7 +1588,7 @@ final class TirEmitter(
       statics   = ownStaticNames)
     if !hasCompanion then cls
     else
-      val sb = (parentExports ++ markerDecl ++ orderBody(statics).map(memberStat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
+      val sb = (parentExports ++ markerDecl ++ orderBody(statics, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
 
   /** `this.x = x` — the NAME assigned, when the assignment is a field taking its own same-named
@@ -1696,7 +1696,7 @@ final class TirEmitter(
     // a Scala class body runs its statements in textual order, so an assignment placed above the
     // `var` it targets would not compile, and one placed below runs exactly where java ran it.
     val members = List(bnote).filter(_.nonEmpty) ++
-      orderBody(instance).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
+      orderBody(instance, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
       ctorStats.map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM ++ ordinalM
     val cbody   = members.mkString("\n")
     // §8.7 governs an enum TYPE like any other. Its CONSTRUCTOR is a different matter and is
@@ -1762,8 +1762,37 @@ final class TirEmitter(
     * then constructors in DELEGATION-TOPOLOGICAL order (each ctor's `this(args)` target emitted
     * before it), then everything else. Arity is not a reliable proxy — a 3-arg convenience ctor can
     * delegate to a 1-arg one (`Texture(pixmap,fmt,mip)` → `Texture(data)`), so we follow the actual
-    * `this(...)` edges, keyed by the target ctor's own symbol. */
-  private def orderBody(body: List[Statement], paramfulPrimary: Boolean = false): List[Statement] =
+    * `this(...)` edges, keyed by the target ctor's own symbol.
+    *
+    * `owner` is the class whose body this is, and it decides WHICH `ValDef`s the hoist applies to —
+    * `ENGINE-LIMITS.md` C12. Two kinds of `ValDef` reach this list and they are the same node kind:
+    *
+    *  - the class's own FIELDS, which java runs in step 4 of JLS 12.5 — in textual order, before
+    *    any constructor body statement. Hoisting them reproduces java whatever order the java file
+    *    declared them in, and a field declared BELOW the constructor needs the hoist to compile at
+    *    all;
+    *  - a PROMOTED CONSTRUCTOR LOCAL, spliced in by [[lowerCtors]] as part of `plan.primaryBody`.
+    *    That declaration is a step-5 constructor BODY statement: java ran it exactly where it stood,
+    *    among the constructor's other statements, and the interleaving is what carries every
+    *    dependency between them. Hoisted, it initialises itself before the statements java ran
+    *    first — measured on liqp's `Template` as 409 of 414 test failures, all `NullPointerException`
+    *    on a field the statement above the local assigns, at **0 scalac errors with every check
+    *    count flat**.
+    *
+    * The two are told apart by OWNERSHIP and by nothing else (`CLAUDE.md` §4.56 — never by name,
+    * never by origin line, which a real field and a promoted local can share only by accident).
+    * The frontend interns a field under the CLASS and a local under the enclosing EXECUTABLE
+    * (`SpoonTir.defineLocal` sets `owner = methodId`), so "is this `ValDef` a member of `owner`?"
+    * is a symbol lookup. It also generalises past the funnel: any route that splices a
+    * constructor's own declarations into a class body produces symbols owned by that constructor,
+    * so no caller has to opt in.
+    *
+    * A promoted local therefore stays in `rest`, in place — the SIMPLEST faithful shape, and the
+    * one that needs no `uninitialized`/assign split, because java's definite-assignment rules make
+    * a forward reference from an earlier statement to a later local impossible in the first place.
+    * A `val` is legal anywhere in a scala class body, so nothing about its position needs
+    * repairing; only the hoist did. */
+  private def orderBody(body: List[Statement], owner: SymId, paramfulPrimary: Boolean = false): List[Statement] =
     def isCtor(s: Statement) = s match { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
     // the peer ctor this one delegates to via a leading `this(args)` (NOT super, NOT the no-arg
     // primary) — its symbol identifies the exact target constructor.
@@ -1809,8 +1838,11 @@ final class TirEmitter(
         visited += d.symbol
         ordered += d
     ctorList.foreach(visit)
-    val fields = body.collect { case v: Tree.ValDef => v }
-    val rest   = body.filterNot(s => isCtor(s) || s.isInstanceOf[Tree.ValDef])
+    // C12: a FIELD of `owner` — not merely a `ValDef`. See the doc above for why the difference is
+    // ownership and for what hoisting the other kind costs.
+    def isField(s: Statement) = s match { case v: Tree.ValDef => sym(v.symbol).owner == owner; case _ => false }
+    val fields = body.collect { case v: Tree.ValDef if isField(v) => v }
+    val rest   = body.filterNot(s => isCtor(s) || isField(s))
     fields ++ ordered.toList ++ rest
 
   private def typeParam(td: Tree.TypeDef): String =

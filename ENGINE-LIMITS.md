@@ -1234,7 +1234,7 @@ check count flat. It is pinned by `CtorFunnelBodyShapeSpec`, which builds both s
 parsed constructor's `rhs`, because no Java text can produce them at today's frontend — and that is
 the point, since the next lowering or frontend can.
 
-### C12. A PROMOTED CONSTRUCTOR LOCAL keeps its NAME and loses its POSITION — **409 of 414 test failures, 0 compile errors. OPEN**
+### C12. A PROMOTED CONSTRUCTOR LOCAL keeps its NAME and loses its POSITION — **liqp 161/414 -> 357/218 passing, 0 compile errors either side. CLOSED**
 
 C2 says a promoted constructor's parameters and top-level locals become MEMBERS, and `CLAUDE.md`
 §4.55 says how to rename them so nothing collides. Both are about the NAME. Neither is about WHERE
@@ -1269,7 +1269,7 @@ the number nothing else could have found: **0 scalac errors, every check count f
 had been reported green on the compile for the whole wave that produced it** — CLAUDE.md §3 in one
 member, at the scale it warns about.
 
-**The line is `TirEmitter.orderBody`**, and it is three lines long:
+**The line was `TirEmitter.orderBody`**, and it was three lines long:
 
 ```scala
 val fields = body.collect { case v: Tree.ValDef => v }
@@ -1277,29 +1277,60 @@ val rest   = body.filterNot(s => isCtor(s) || s.isInstanceOf[Tree.ValDef])
 fields ++ ordered.toList ++ rest          // every ValDef hoisted ahead of every statement
 ```
 
-For a class's own FIELDS that partition is right — java runs field initialisers before the
-constructor body, so hoisting them reproduces java. For a PROMOTED CONSTRUCTOR LOCAL it is exactly
-wrong: that `ValDef` is a STATEMENT of the constructor (spliced in as `plan.primaryBody`), and
-hoisting it past the constructor's other statements re-orders java. The two kinds are indistinguishable
-by NODE KIND and distinguishable by PROVENANCE, which is what the fix has to read.
+For a class's own FIELDS that partition is right — JLS 12.5 step 4 runs field initialisers, in
+textual order, before any constructor body statement, so hoisting them reproduces java WHATEVER
+order the java file declared them in, and a field declared BELOW the constructor needs the hoist to
+compile at all. For a PROMOTED CONSTRUCTOR LOCAL it is exactly wrong: that `ValDef` is a step-5
+constructor BODY statement (spliced in as `plan.primaryBody`), and hoisting it past the
+constructor's other statements re-orders java.
 
-Three things a fix has to keep, which is why it is not a sort:
+**THE FIX: the hoist applies to `owner`'s FIELDS, and ownership is what tells the two apart.** The
+two kinds are indistinguishable by NODE KIND, and every other discriminator is a `CLAUDE.md` §4.56
+violation waiting to happen — a name, an origin line (a real field and a promoted local can share
+one only by accident), a `plan.primaryBody` membership test at one caller. The frontend already
+records the fact structurally: `SpoonTir.defineLocal` interns a local with `owner = methodId` while a
+field is interned under the CLASS, so `orderBody` takes the class symbol and asks *is this `ValDef` a
+member of it?* That also generalises past the funnel with no caller opting in — any route that
+splices a constructor's own declarations into a class body produces symbols owned by that
+constructor, the enum-parameter route T11 names included.
+
+**The SHAPE chosen, and the one deliberately not needed.** A promoted local simply stays in `rest`,
+in place; there is no `var x = scala.compiletime.uninitialized` at the top with an assignment where
+the declaration stood. Scala permits a `val` anywhere in a class body, so nothing about the position
+needs repairing — and the split's only motivation, a forward reference from an earlier statement to a
+later local, cannot arise: java's definite-assignment rules already rejected that program. (Had it
+been needed, `uninitialized` reading as null/0 before the assignment IS java's semantics for the
+pre-assignment window, so the split would have been faithful too — it is simply a second construct
+for nothing.)
+
+Three things the fix keeps, which is why it is not a sort:
 
 - **java's order, exactly** — the promoted locals interleave with the promoted statements and the
-  interleaving is what carries the dependencies. "Declarations first" is the bug, and "sort by
-  origin line" is not the fix either, since a real field and a promoted local can share a line only
-  by accident;
-- **real fields keep the hoist.** A java field initialiser really does run before the constructor
-  body, and a class whose field initialiser reads a constructor parameter does not exist in java;
-- **the RENAMES C2/§4.55 already do are correct and independent** — only the placement moves. And a
-  local promoted by a route OTHER than the funnel (the enum-parameter route T11 names) reaches the
-  same three lines, so the fix is here and not at one caller.
+  interleaving is what carries the dependencies;
+- **real fields keep the hoist**, and `CtorFunnelPromotedLocalOrderSpec` pins that negative with a
+  field declared BELOW the constructor that reads it;
+- **the RENAMES C2/§4.55 already do are correct and independent** — only the placement moved, which
+  is why the spec asserts the `$p` suffixes beside the order.
 
-The blast is every port with a paramful promoted constructor, i.e. most of the corpus, and it moves
-emitted TEXT rather than any count — so it is measured with `just measure-all` and read as member
-digests plus the two test lanes' outcomes, never as an error count.
+**MEASURED, and the shape of the evidence is the point.** No error count moved anywhere: liqp
+0 -> 0, and every one of the eleven lanes flat with every check count identical. What moved was
+emitted TEXT and test OUTCOMES:
 
-*Fix kind: (a) engine, OPEN. Found by RUNNING a suite and by nothing else.*
+| | |
+|---|---|
+| liqp suite | **161 passing / 414 failing -> 357 / 218** — 196 newly passing, **0 newly failing**, 0 skipped |
+| liqp member digests | **1** — `Template`, the one member the whole census pointed at |
+| libgdx-core member digests | **29** classes, every one a paramful promoted constructor with a top-level local (`IntMap`, `ObjectMap`, `SpriteBatch`, `ShaderProgram`, `DefaultShader`, `Timer`…) |
+| every suite's outcomes | **unchanged** — gdx-test 217/4, ashley 108/2+2, anim8 23, vfx 64, sg 16, screens 16 |
+
+That last row is the one that had to be checked and could have gone either way: the hoist was
+load-bearing nowhere, but nothing short of running every suite could say so. And note libGDX was
+carrying the same defect silently — `IntMap(initialCapacity, loadFactor)` computed
+`tableSize(initialCapacity, loadFactor)` BEFORE the `loadFactor <= 0f` validation that java runs
+first — with 0 errors and a green suite, because no test passed an invalid load factor.
+
+*Fix kind: (a) engine. CLOSED in `TirEmitter.orderBody`, pinned by
+`CtorFunnelPromotedLocalOrderSpec`. Found by RUNNING a suite and by nothing else.*
 
 ---
 
@@ -3379,6 +3410,72 @@ reasoned about.
 scope only a genuine island. (a) for the engine — a scope's own seams need a count, from the
 DECLARATION on each side, and `collection-boundary` reading flat through a 24-error move is what
 says so.*
+
+---
+
+### K17. A java CONVERSION emitted as a scala CAST asserts where java CONVERTED — **34 test failures, 0 compile errors. OPEN**
+
+Two faces, found in the same run and the same defect twice: java's expression grammar performs a
+CONVERSION at a position where the emitter renders an `asInstanceOf`. The cast has the right static
+type — that is why nothing complains — and at run time it asserts a fact that is false, because the
+conversion never happened.
+
+Both were invisible until C12 closed. They sit behind `Template`'s constructor, so every test that
+would have reached them died one frame earlier with C12's `NullPointerException`; they are not
+regressions and no count moved when they appeared (`errors 0 -> 0`, every check flat).
+
+**FACE 1 — a LAMBDA at an external functional-interface slot. 27 failures.**
+
+```java
+Optional.ofNullable(location).orElseGet(() -> Paths.get(".").toAbsolutePath())
+```
+```scala
+java.util.Optional.ofNullable(location)
+  .orElseGet((() => java.nio.file.Paths.get(".").toAbsolutePath())
+               .asInstanceOf[java.util.function.Supplier[? <: java.nio.file.Path]])
+```
+
+Scala 3 SAM-converts a function literal to a java functional interface **when the EXPECTED type is
+that interface**. Written as a cast, the literal is elaborated first — to a `scala.Function0` — and
+the cast then asserts that a `Function0` is a `Supplier`, which it is not:
+
+```
+java.lang.ClassCastException: class ssg.liquid.TemplateParser$$Lambda cannot be cast to
+class java.util.function.Supplier
+```
+
+The fix is to make the expected type do the work — emit the literal into the slot and let the
+conversion happen, or `new Supplier[…] { def get() = … }` where no expected type is available — and
+never to cast a literal into an interface. Note the seam is at an EXTERNAL callee, so the formal
+comes from a class file and is exactly readable (K15's rule); this is not a case where the engine
+cannot know.
+
+**FACE 2 — a conditional `? :` over MIXED BOXED NUMERICS. 7 failures.**
+
+```java
+return str.matches("\\d+") ? Long.valueOf(str) : Double.valueOf(str);   // JLS 15.25
+```
+```scala
+return (if (str.matches("\\d+")) java.lang.Long.valueOf(str)
+        else java.lang.Double.valueOf(str)).asInstanceOf[java.lang.Double]
+```
+
+JLS 15.25 gives a conditional whose two operands are `Long` and `Double` **binary numeric
+promotion**: both branches are UNBOXED, promoted to `double`, and the result re-boxed — the
+expression's type really is `Double` and the `Long` branch really does become one. Scala's `if` has
+no such rule; its type is the LUB (`java.lang.Number`), and the branch value stays a `Long`.
+
+The emitter read java's static type correctly and wrote it as a cast, which is the whole error:
+`java.lang.Long cannot be cast to class java.lang.Double`. A cast is not a conversion. The faithful
+emission is the promotion java performed — `java.lang.Double.valueOf(x.doubleValue())` on the
+branch, at the promoted type — and the general rule is that **wherever the frontend records a java
+expression type that differs from the scala expression's own type BY A CONVERSION, the emitter owes
+the conversion and not an assertion.**
+
+**Neither is visible to a compile, to any check, or to a member digest** — both emit valid Scala with
+the right static type. The gate that saw them is the one §3 names.
+
+*Fix kind: (a) engine, OPEN, both faces. Found by RUNNING liqp's suite after C12 closed.*
 
 ---
 

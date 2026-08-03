@@ -1050,7 +1050,7 @@ sge.gltf.scene3d.scene.SceneAsset	sge.gltf.scene3d.scene.SceneAsset#scene	val	bb
 sge.gltf.scene3d.scene.SceneAsset	sge.gltf.scene3d.scene.SceneAsset#scenes	val	fee2d2f41b6bdd6c
 sge.gltf.scene3d.scene.SceneAsset	sge.gltf.scene3d.scene.SceneAsset#textures	val	4be2df59424645a4
 sge.gltf.scene3d.scene.SceneManager	lum	val	5574aa99defcd399
-sge.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager	class	65e9616d9c094248
+sge.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager	class	5ceda6052d47cbde
 sge.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager#<init>(Sge)	ctor	3af5b5153a6cc878
 sge.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager#<init>(ShaderProvider,DepthShaderProvider,Sge)	ctor	717a2ae8312f57f5
 sge.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager#<init>(int,Sge)	ctor	23b18baf05abd0f5
