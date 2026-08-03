@@ -2494,8 +2494,9 @@ object SpoonTir:
               val own   = try e.getType catch { case _: Throwable => null }
               // the CAST wins where there is one, for the reason stated above — Spoon types
               // `(String[]) null` by the literal — and it is also the type java resolved the slot
-              // against, so it is the one whose component decides.
-              (casts.reverse :+ own).collectFirst { case a: CtArrayTypeReference[?] => a }
+              // against, so it is the one whose component decides. OUTERMOST first, which is the
+              // head (see [[castType]]); this list was reversed, which asked the innermost.
+              (casts :+ own).collectFirst { case a: CtArrayTypeReference[?] => a }
                 .exists(componentAgrees) ||
                 // a BARE `null` is the array itself; `(String) null` is not. The cast names the
                 // COMPONENT type, which is exactly how java disambiguates the two — `test("null",
@@ -2622,7 +2623,7 @@ object SpoonTir:
         val rt = inv.getTarget match
           case null => null
           case _: CtSuperAccess[?] | _: CtTypeAccess[?] => null
-          case t    => try t.getTypeCasts.asScala.lastOption.getOrElse(t.getType) catch { case _: Throwable => null }
+          case t    => castType(t)
         if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
            rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then Map.empty
         else
@@ -2801,6 +2802,29 @@ object SpoonTir:
           val ct = tpe(t); Tree.Typed(acc, tt(ct, e), ct, originOf(e))
         }
 
+      /** THE TYPE AN EXPRESSION HAS WHERE IT STANDS — after the casts the SOURCE wrote, which is
+        * the OUTERMOST one, which is the HEAD of `getTypeCasts`.
+        *
+        * `e.getType` is Spoon's answer for the expression BEFORE its own casts, and every reader
+        * that dispatches on a receiver's or an operand's static type wants the type javac
+        * dispatched on — `((AsynchronousAssetLoader) loader).unloadAsync(…)` is the whole reason a
+        * source writes one. So the cast list decides, and WHICH END of it is not a matter of taste:
+        * [[expr]] folds it with `foldRight`, so the head becomes the OUTER `Tree.Typed` and
+        * `(Integer)(Object) o` emits `o.asInstanceOf[Object].asInstanceOf[Integer]` — java's own
+        * order, and the head is java's outermost cast.
+        *
+        * ONE function, six callers (`CLAUDE.md` §4.6's shape, and `ENGINE-LIMITS.md` F8's): the
+        * idiom was written six times taking `lastOption`, which is the INNERMOST cast, so every one
+        * of them read the type the source had already converted away from — under a comment that
+        * said "outermost". A seventh reader would have copied the seventh. Null where Spoon has no
+        * answer at all: the callers each decline on that, which is honest rather than fabricating a
+        * default (`CLAUDE.md` §4.6).
+        *
+        * The FROZEN BIR frontend (`SpoonFrontend.typedArg`) holds the same idiom and is left as it
+        * is: no measure lane runs that path, so a change there is unmeasurable by construction. */
+      private def castType(e: CtExpression[?]): CtTypeReference[?] =
+        try e.getTypeCasts.asScala.headOption.getOrElse(e.getType) catch { case _: Throwable => null }
+
       /** THE EXPRESSION DISPATCH — the wrapper's second entry, symmetrical with [[stmtKind]] and
         * for the same reason. See that method for why it is here and not in the arms. */
       private def exprNoCast(e: CtExpression[?]): Term =
@@ -2964,7 +2988,8 @@ object SpoonTir:
         * ==The operand's type is the one AFTER its own casts==
         *
         * `be.getType` is the type Spoon records for the expression BEFORE the source's own casts,
-        * which `expr` applies on top (`getTypeCasts`, outermost last). Read without them,
+        * which `expr` applies on top — so the branch is read through [[castType]], whose own doc
+        * says which end of `getTypeCasts` is the outermost and why. Read without them,
         * `pole == 0 ? (float) Math.asin(…) : pole * PI * 0.5f` looks like a `double` operand of a
         * `float` conditional and earns a narrowing this pass would emit on top of the one the source
         * already wrote — a third `asInstanceOf[scala.Float]` on a term that is already a `Float`.
@@ -2975,7 +3000,7 @@ object SpoonTir:
         * fabricated default (`CLAUDE.md` §4.6): it declines to convert, and never asserts a type. */
       private def promotedBranch(c: CtConditional[?], be: CtExpression[?], t: Term): Term =
         val cj = try c.getType catch { case _: Throwable => null }
-        val bj = try be.getTypeCasts.asScala.lastOption.getOrElse(be.getType) catch { case _: Throwable => null }
+        val bj = castType(be)
         if cj == null || bj == null || !cj.isPrimitive || cj.getQualifiedName == bj.getQualifiedName then t
         else if !bj.isPrimitive then
           // a boxed operand at a primitive conditional: java UNBOXES it, then widens. Only a wrapper
@@ -3097,8 +3122,7 @@ object SpoonTir:
         * the two must be produced together: a `Tree.Select` carrying Spoon's un-erased field type
         * over an erased receiver is a TIR node whose `tpe` the emitted Scala does not have. */
       private def erasedFieldReceiver(ref: CtFieldReference[?], target: CtExpression[?]): Option[(TypeRepr, TypeRepr)] =
-        val rt = try target.getTypeCasts.asScala.lastOption.getOrElse(target.getType)
-                 catch { case _: Throwable => null }
+        val rt = castType(target)
         if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
            rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then None
         else
@@ -3237,7 +3261,7 @@ object SpoonTir:
             // an explicit CAST is what fixes the static type javac dispatched on
             // (`((AsynchronousAssetLoader) loader).unloadAsync(…)`) — Spoon keeps it beside the
             // expression, whose own type is still the field's, so the outermost cast wins.
-            val rt = try t.getTypeCasts.asScala.lastOption.getOrElse(t.getType) catch { case _: Throwable => null }
+            val rt = castType(t)
             // A FIELD read reports the reference's erased view, not the declaration's: `node.parent`
             // of `public N parent` types as the RAW `Node` under noClasspath, which reads as "the
             // arguments are unknown" and triggers an erasure the code never needed — Java's own type
@@ -3367,7 +3391,7 @@ object SpoonTir:
         val rt = inv.getTarget match
           case null => null
           case _: CtSuperAccess[?] | _: CtTypeAccess[?] | _: CtThisAccess[?] => null
-          case t    => try t.getTypeCasts.asScala.lastOption.getOrElse(t.getType) catch { case _: Throwable => null }
+          case t    => castType(t)
         if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
            rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then args
         else
@@ -3538,7 +3562,7 @@ object SpoonTir:
           val declSubst: Map[String, TypeRepr] =
             try
               val t  = inv.getTarget
-              val rt = t.getTypeCasts.asScala.lastOption.getOrElse(t.getType)
+              val rt = castType(t)
               val fs = Option(rt.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
               val as = rt.getActualTypeArguments.asScala.toList
               if fs.sizeIs != as.size then Map.empty

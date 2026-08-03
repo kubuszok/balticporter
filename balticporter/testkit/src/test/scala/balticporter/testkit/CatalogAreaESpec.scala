@@ -200,6 +200,24 @@ class CatalogAreaESpec extends PortSuite:
     assertNotEmits(p, "asInstanceOf[scala.Float].asInstanceOf[scala.Float].asInstanceOf[scala.Float]")
   }
 
+  test("JS-E05 — TWO source casts: the effective type is the OUTERMOST one, which is the HEAD") {
+    // The test above holds for ONE cast whichever end of `getTypeCasts` a reader takes, so it
+    // could not see the order. Spoon lists the casts OUTERMOST FIRST — `expr` folds them with
+    // `foldRight`, which makes the head the outer `Tree.Typed`, and the emitted text for
+    // `(Integer)(Object) o` is `o.asInstanceOf[Object].asInstanceOf[Integer]`, java's own order.
+    // A reader taking `lastOption` therefore gets the INNERMOST cast: here `(double)`, which reads
+    // as a `double` operand of a `float` conditional and earns a narrowing the source already
+    // wrote. `SpoonTir.castType` is the one place the question is asked (`CLAUDE.md` §4.6's
+    // "one idiom, six sites").
+    val p = port(
+      """public class E {
+        |  float f(boolean b, double d, float g) { return b ? (float)(double) d : g; }
+        |}""".stripMargin)
+    assertConsults(p, JS.E(5))
+    assertEmits(p, "d.asInstanceOf[scala.Double].asInstanceOf[scala.Float]")
+    assertNotEmits(p, "asInstanceOf[scala.Float].asInstanceOf[scala.Float].asInstanceOf[scala.Float]")
+  }
+
   test("JS-E05 — a REFERENCE conditional is consulted and no branch is converted") {
     // The other half of the row, and the one that must NOT move: java's type for a reference
     // conditional is a lub and scala's is also a lub. Only the numeric case is a conversion.
