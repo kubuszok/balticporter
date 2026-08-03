@@ -2566,12 +2566,14 @@ outcomes identical. What is left:
 | **2** | `CeilTest.applyTest`, `FloorTest.applyTest` | `java.lang.Long cannot be cast to java.lang.Double` — a primitive cast is a CONVERSION in java and an assertion in Scala once a phase has retyped the value | **(a) engine**, `ENGINE-LIMITS.md` K17 / catalog `JS-E06`, still `Partial`. Unchanged since the third census |
 | **1** | `SortTest.testSortMap` | `Sort$ComparableMapEntry cannot be cast to scala.Tuple2` — `Map.Entry -> Tuple2` is an `UninheritableTarget` and `Tuple2` is a concrete target no live view can be, so K18 refuses the reified cast | **(a), REFUSED AND COUNTED**. Unchanged since the third census |
 
-**And the new lane was not vacuous on its first run**, which is what a coverage check most often is.
-`class-init-trigger` reports `Unforced` **0 on all fifteen ports** — every `static { }` block reached
-a trigger — and `SubclassInitUnforced` **18 on libGDX core** (every `Actor` subclass with statics of
-its own) **and 1 on anim8** (`QualityPalette <- PaletteReducer`). Those 19 are JLS 12.4.1 item 7,
-which the instantiation trigger does not reach when nothing is instantiated; they are a residue that
-EXISTS rather than a bar held at zero by looking away.
+**And the new lane was not vacuous on either run**, which is what a coverage check most often is.
+`class-init-trigger` reported `Unforced` **0 on all fifteen ports** from the first measurement —
+every `static { }` block reached the instantiation trigger — and `SubclassInitUnforced` **18 on
+libGDX core** (every `Actor` descendant with a companion) **and 1 on anim8**
+(`QualityPalette <- PaletteReducer`). Those 19 are JLS 12.4.1 item 7, which the instantiation
+trigger does not reach when nothing is instantiated; the second commit of the wave took them to 0.
+A residue that existed, was counted, and then went to zero is the only evidence a lane can move at
+all — and it is why the two triggers were landed and measured one at a time rather than together.
 
 **Three things this census records that the numbers do not.**
 

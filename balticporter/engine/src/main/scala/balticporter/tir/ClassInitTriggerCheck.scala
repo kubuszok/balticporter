@@ -28,6 +28,14 @@ package balticporter.tir
   * Declared nesting is the whole census: a java inner or anonymous class may not declare a static
   * initialiser at all (JLS 8.1.3), so a walk over class bodies misses none of them — the one place
   * `CLAUDE.md` §3's "a walk over class bodies finds no anonymous class" does not bite.
+  *
+  * '''Its honest limit''', stated because an over-claimed guarantee is how a mechanism stops being
+  * audited: this counts triggers that do not FIRE, and says nothing about WHEN one fires relative to
+  * java. Java initialises the class before `<init>` runs at all, the superclass constructor
+  * included, and a Scala class-body statement runs after it — observable only where a super
+  * constructor calls a method this class overrides which reads this class's statics. No criterion
+  * for that is cheaper than the whole-program analysis it would take, and an over-approximate review
+  * list is noise (`CLAUDE.md` §1), so `ENGINE-LIMITS.md` K22 states it and nothing counts it.
   */
 object ClassInitTriggerCheck:
 
@@ -68,9 +76,10 @@ object ClassInitTriggerCheck:
           s"runs the constructor and never touches the object, so the block's effects — a " +
           s"registration, a factory, a table — silently do not happen"
       case Issue.SubclassInitUnforced =>
-        s"`$owner` inherits a java `static { }` block from `$declarer` and declares statics of its " +
-          s"own, so java initialises `$declarer` on a bare `$owner.member` read (JLS 12.4.1) and " +
-          s"this port initialises only `$owner`'s companion"
+        s"`$owner` inherits a java `static { }` block from `$declarer` and has a companion of its " +
+          s"own, so java initialises `$declarer` first on any route that initialises `$owner` — a " +
+          s"bare `$owner.member` read above all (JLS 12.4.1 item 7) — and initialising this port's " +
+          s"`$owner` object reaches no other object"
     def render: String = s"$issue $owner ($form) <- $declarer  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
       CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
@@ -81,17 +90,31 @@ object ClassInitTriggerCheck:
   val Instantiation = "instantiation"
   val SubclassInit  = "subclass-init"
 
-  /** @param forced   which (type, trigger) pairs the emitter attached
-    *                 ([[balticporter.emit.TirEmitter.forcedClassInits]])
-    * @param formOf   the FORM the emitter gave an emitted FQN — `class` / `object` / `trait` /
-    *                 `annotation` / `enum-class`. Absent means the run did not emit the type.
+  /** @param forced  which (type, trigger) pairs the emitter attached
+    *                ([[balticporter.emit.TirEmitter.forcedClassInits]])
+    * @param shapeOf what the emitter WROTE for an emitted FQN. Two fields are read and both are
+    *                facts only the emitter has: `form` (an all-static class collapses to an
+    *                `object`, decided inline from four whole-program reads) and `companion`
+    *                (whether an object exists at that name at all). Absent means the run did not
+    *                emit the type.
     */
   def check(program: Program, units: List[Tree.ClassDef],
-            forced: Set[(SymId, String)], formOf: String => Option[String]): List[Finding] =
+            forced: Set[(SymId, String)], shapeOf: String => Option[Surface.TypeShape]): List[Finding] =
     given Program = program
-    val all = units.flatMap(nested)
+    val formOf: String => Option[String] = f => shapeOf(f).map(_.form)
+    // THE SUBJECTS ARE THIS RUN'S OWN UNITS AND THE CENSUS IS THE WHOLE PROGRAM — different
+    // questions, and `ENGINE-LIMITS.md` D2 governs only the first. A dependent's model CONTAINS its
+    // base's units (§1.5), so the ancestor that declares the `static { }` may live in the base; a
+    // census scoped to the emitted units would not see it, while the EMITTER — which walks
+    // `program.units` — does. The two would then disagree about which types owe the line, and the
+    // one that would be silent is the one that reports. This is the shape §4.56 is about read at a
+    // check: derive the fact from the same place the repair derives it, never from the narrower
+    // list that happens to be in hand.
+    val declared = program.units.flatMap(nested)
+    val all      = units.flatMap(nested)
+    val mine     = all.map(_.symbol).toSet
     val clinitBearers: Map[SymId, Tree.ClassDef] =
-      all.filter(cd => declaresClinit(cd)).map(cd => cd.symbol -> cd).toMap
+      declared.filter(cd => declaresClinit(cd)).map(cd => cd.symbol -> cd).toMap
 
     // ---- the instantiation trigger ----
     //
@@ -102,22 +125,28 @@ object ClassInitTriggerCheck:
     // statement would run at every implementor's initialisation, which is MORE than java does.
     val selfInitialising = Set("object", "enum-class")
     val unforced = clinitBearers.toList.collect {
-      case (s, cd) if !forced(s -> Instantiation) && !formOf(fqn(s)).exists(selfInitialising) =>
+      case (s, cd) if mine(s) && !forced(s -> Instantiation) && !formOf(fqn(s)).exists(selfInitialising) =>
         Finding(Issue.Unforced, fqn(s), fqn(s), formOf(fqn(s)).getOrElse("?"), cd.origin)
     }
 
     // ---- the subclass trigger ----
     //
-    // Asked only of a type that HAS statics of its own: without them there is no `S.member` to
-    // read, so the only way into `S` is `new S`, which reaches the ancestor's own class-body force
-    // through the super constructor and needs nothing here.
-    val parents = all.map(cd => cd.symbol -> parentSyms(cd)).toMap
-    def ancestors(s: SymId, seen: Set[SymId]): List[SymId] =
-      parents.getOrElse(s, Nil).filterNot(seen).flatMap(p => p :: ancestors(p, seen + s + p))
+    // Asked of a type the emitter gave a COMPANION, and of no other: an object that is never
+    // initialised runs nothing, so what is at stake is exactly "when `object S` initialises, has
+    // the ancestor's `static { }` run". A type with no companion has no `S.member` to read and is
+    // reached only by `new S`, which runs the ancestor's own class-body force through the super
+    // constructor. Only the NEAREST bearing ancestor is asked for, because that ancestor's own
+    // companion owes the same line for ITS nearest — one row per type, not one per chain.
+    val parents = declared.map(cd => cd.symbol -> parentSyms(cd)).toMap
+    def nearest(front: List[SymId], seen: Set[SymId]): Option[SymId] =
+      val next = front.flatMap(parents.getOrElse(_, Nil)).filterNot(seen).distinct
+      next.find(clinitBearers.contains) match
+        case Some(a)           => Some(a)
+        case _ if next.isEmpty => None
+        case _                 => nearest(next, seen ++ next)
     val subclass = all.collect {
-      case cd if !clinitBearers.contains(cd.symbol) && hasStatics(cd) &&
-                 !forced(cd.symbol -> SubclassInit) =>
-        ancestors(cd.symbol, Set.empty).filter(clinitBearers.contains).distinct
+      case cd if shapeOf(fqn(cd.symbol)).exists(_.companion) && !forced(cd.symbol -> SubclassInit) =>
+        nearest(List(cd.symbol), Set(cd.symbol))
           .map(a => Finding(Issue.SubclassInitUnforced, fqn(cd.symbol), fqn(a),
             formOf(fqn(cd.symbol)).getOrElse("?"), cd.origin))
     }.flatten
@@ -134,12 +163,6 @@ object ClassInitTriggerCheck:
     cd.body.exists {
       case d: Tree.DefDef => program.symbolOf(d.symbol).exists(s => s.name == "<clinit>" && s.flags.isStatic)
       case _              => false
-    }
-
-  private def hasStatics(cd: Tree.ClassDef)(using program: Program): Boolean =
-    cd.body.exists {
-      case d: Definition => program.symbolOf(d.symbol).exists(_.flags.isStatic)
-      case _             => false
     }
 
   private def parentSyms(cd: Tree.ClassDef): List[SymId] =

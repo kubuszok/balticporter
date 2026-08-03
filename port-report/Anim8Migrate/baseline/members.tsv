@@ -168,7 +168,7 @@ sge.anim8.FastPNG8	sge.anim8.FastPNG8#<init>(Sge)	ctor	f11c075fd722b596
 sge.anim8.FastPNG8	sge.anim8.FastPNG8#<stmt1>	stmt	6bfbde55f443638b
 sge.anim8.FastPNG8	sge.anim8.FastPNG8#write(OutputStream,Array<Pixmap>,int,boolean)	def	33174be02dc7f86c
 sge.anim8.FastPNG8	sge.anim8.FastPNG8#write(OutputStream,Pixmap,boolean,boolean,int)	def	f0f865183ed6bcb6
-sge.anim8.FastPalette	sge.anim8.FastPalette	class	6edfa2983448021b
+sge.anim8.FastPalette	sge.anim8.FastPalette	class	345a1d1ff50f8263
 sge.anim8.FastPalette	sge.anim8.FastPalette#<init>(Array<Color>,Sge)	ctor	e117450773f8da77
 sge.anim8.FastPalette	sge.anim8.FastPalette#<init>(Array<Color>,int,Sge)	ctor	8def1caf884bcb9b
 sge.anim8.FastPalette	sge.anim8.FastPalette#<init>(Array<Pixmap>,Sge)	ctor	7b79378d1d761d27
@@ -386,7 +386,7 @@ sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Array<Pixmap>,int)	
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Pixmap)	def	1d04584303d5da27
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Array<Pixmap>,int)	def	d745d50271f61fbe
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Pixmap)	def	77dea53a81167dae
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	cb10e50147504413
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	c43acae279a6e3cf
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	da27f25e725d2439
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	99d19fbed16243ab
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<init>(Array<Color>,Sge)	ctor	2e1bfbfa5ed145c3
@@ -544,7 +544,7 @@ sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#writeBigPalette(FileHandle)	de
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#writePreloadFile(FileHandle)	def	5fef0d28793b422f
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer$IntComparator	class	4096e85a657a8203
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer$IntComparator#compare(int,int)	def	1490956fa748b246
-sge.anim8.QualityPalette	sge.anim8.QualityPalette	class	4cec14d8c7b64b12
+sge.anim8.QualityPalette	sge.anim8.QualityPalette	class	69d6eaaf72cb6097
 sge.anim8.QualityPalette	sge.anim8.QualityPalette#<init>(Array<Color>,Sge)	ctor	2c10d98cf3176856
 sge.anim8.QualityPalette	sge.anim8.QualityPalette#<init>(Array<Color>,int,Sge)	ctor	aa571f55420466ff
 sge.anim8.QualityPalette	sge.anim8.QualityPalette#<init>(Array<Pixmap>,Sge)	ctor	0417c82a0b796b62

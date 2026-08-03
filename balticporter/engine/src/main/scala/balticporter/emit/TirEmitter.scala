@@ -1540,7 +1540,8 @@ final class TirEmitter(
     // body at all. Neither shape can arise from java — an interface may not declare a static
     // initialiser (JLS 9.1.1) — so both are left to `class-init-trigger` rather than guessed at.
     val force   = if hasClinit(statics) && kw == "class" && !s.flags.isAnnotation
-                  then forceCompanion(cd, balticporter.tir.ClassInitTriggerCheck.Instantiation, i + 1) else ""
+                  then forceCompanion(cd, cd.symbol, balticporter.tir.ClassInitTriggerCheck.Instantiation, i + 1)
+                  else ""
     val body0   = joinStats(List(bnote, force, body1).filter(_.nonEmpty))
     val diamonds = diamondOverrides(cd, i + 1)
     val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
@@ -1640,7 +1641,21 @@ final class TirEmitter(
       statics   = ownStaticNames)
     if !hasCompanion then cls
     else
-      val sb = (parentExports ++ markerDecl ++ orderBody(statics, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
+      // K22's SECOND trigger — JLS 12.4.1 item 7. Initialising a class initialises its SUPERCLASS
+      // first, and what initialises a class with nothing instantiating it is a bare `S.member`
+      // read; in Scala that touches `object S` and reaches no other object, so an ancestor's
+      // `static { }` never runs on that path. The force goes FIRST in the companion body, because
+      // java ran the ancestor's initialiser before this type's own static field initialisers.
+      //
+      // The companion is the whole condition — an object that is never initialised runs nothing, so
+      // a line inside one can never over-trigger relative to java, whatever put the object there.
+      // That is why this asks `hasCompanion` rather than re-deriving "does anything read a static
+      // of this type", which is the string-shaped guess §4.56 is about.
+      val superForce = nearestClinitAncestor(cd.symbol)
+        .map(a => forceCompanion(cd, a, balticporter.tir.ClassInitTriggerCheck.SubclassInit, i + 1))
+        .toList.filter(_.nonEmpty)
+      val sb = (superForce ++ parentExports ++ markerDecl ++
+                orderBody(statics, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
 
   /** `this.x = x` — the NAME assigned, when the assignment is a field taking its own same-named
@@ -1862,30 +1877,61 @@ final class TirEmitter(
   // initialise nothing, silently.
   // ---------------------------------------------------------------------------
 
-  /** The note and the statement that force `cd`'s companion, recorded as one [[Decision]] so the
-    * note is DERIVED rather than authored (§4.575) and `NoteCoverageCheck` sees the pair.
+  /** The note and the statement that force `target`'s companion, recorded as one [[Decision]] about
+    * `cd` so the note is DERIVED rather than authored (§4.575) and `NoteCoverageCheck` sees the
+    * pair.
+    *
+    * `target` is `cd` itself for the instantiation trigger and an ANCESTOR for the subclass one —
+    * java's item 7 initialises the superclass, not this class, and a note that named this class
+    * there would answer the reader's question with the wrong type.
     *
     * @param trigger which of JLS 12.4.1's actions this statement stands for — the reader's real
     *                question is whether THEIR path is covered, and the list is short enough to say.
     */
-  private def forceCompanion(cd: Tree.ClassDef, trigger: String, i: Int): String =
-    val s = sym(cd.symbol)
+  private def forceCompanion(cd: Tree.ClassDef, target: SymId, trigger: String, i: Int): String =
+    val s  = sym(cd.symbol)
+    val tg = sym(target)
+    val why =
+      if target == cd.symbol then
+        "java runs this class's `static { }` at class initialisation (JLS 12.4.1) and a scala " +
+          "companion initialises on first access to the OBJECT, which `new` is not"
+      else
+        s"initialising this type initialises `${tg.fullName}` first (JLS 12.4.1 item 7), which runs " +
+          "that type's `static { }`; a scala object's initialisation reaches no other object"
     val d = Decision(
       kind       = Decision.Kind.ForcedClassInit,
       subject    = cd.symbol,
       subjectFqn = s.fullName,
-      detail     = Map(
-        "trigger" -> trigger,
-        "why"     -> ("java runs this class's `static { }` at class initialisation (JLS 12.4.1) and a " +
-                      "scala companion initialises on first access to the OBJECT, which `new` is not"),
-      ),
+      detail     = Map("trigger" -> trigger, "forces" -> tg.fullName, "why" -> why),
       reason     = Reason.Universal("class-init-trigger(§4.4)"),
       origin     = cd.origin,
     )
     recordedEmission.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty) += d
     printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
     forcedClinits += (cd.symbol -> trigger)
-    s"${PorterNote.render(d, ind(i))}${ind(i)}val _ = ${escPath(s.fullName).replace('$', '.')}"
+    s"${PorterNote.render(d, ind(i))}${ind(i)}val _ = ${escPath(tg.fullName).replace('$', '.')}"
+
+  /** every type this program declares that carries a java `static { }` block. */
+  private lazy val clinitBearers: Set[SymId] =
+    val acc = collection.mutable.Set[SymId]()
+    def scan(cd: Tree.ClassDef): Unit =
+      if hasClinit(cd.body) then acc += cd.symbol
+      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
+    program.units.foreach(scan)
+    acc.toSet
+
+  /** the nearest ancestor of `s` carrying a `static { }` block — the ONE this type's companion has
+    * to force. Java initialises the whole superclass chain, and forcing only the nearest reproduces
+    * that because THAT type's companion carries the same line for ITS own nearest, recursively.
+    * Breadth-first, so "nearest" means nearest and not "first found down one branch". */
+  private def nearestClinitAncestor(s: SymId): Option[SymId] =
+    def go(front: List[SymId], seen: Set[SymId]): Option[SymId] =
+      val next = front.flatMap(parentsBySym.getOrElse(_, Nil)).filterNot(seen).distinct
+      next.find(clinitBearers) match
+        case Some(a)         => Some(a)
+        case _ if next.isEmpty => scala.None
+        case _               => go(next, seen ++ next)
+    go(List(s), Set(s))
 
   /** every (type, trigger) pair this emitter forced — the input to `class-init-trigger`, which
     * takes the CENSUS of `static { }` blocks from the trees itself. An empty set therefore

@@ -908,7 +908,7 @@ final case class PortRun(
     // because the all-static class-to-`object` collapse is decided inline and exists nowhere else
     // (`ENGINE-LIMITS.md` K22).
     val classInits = ClassInitTriggerCheck.check(program, checkedUnits,
-      translated.emitter.forcedClassInits, translated.emitter.emittedShapes.types.get(_).map(_.form))
+      translated.emitter.forcedClassInits, translated.emitter.emittedShapes.types.get)
     CheckReport.record(ClassInitTriggerCheck.Name, classInits.map(_.report))
     say(s"CLASS-INIT TRIGGER (`static { }` blocks nothing initialises): ${classInits.size}")
     classInits.map(_.issue).distinct.foreach(i => say(ClassInitTriggerCheck.Issue.classification(i)))

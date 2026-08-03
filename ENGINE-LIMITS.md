@@ -4231,7 +4231,7 @@ whose consumer does that has to say so in its own shim.*
 
 ---
 
-### K22. A java `static { }` block runs at CLASS INITIALISATION; the `object` it is emitted into is initialised by nothing — **5 test failures on liqp, 0 compile errors, every check count flat, and the whole family was invisible until K21 closed. CLOSED for the INSTANTIATION trigger; the SUBCLASS one is now COUNTED at 19 and OPEN, and the REFLECTIVE one is refused**
+### K22. A java `static { }` block runs at CLASS INITIALISATION; the `object` it is emitted into is initialised by nothing — **5 test failures on liqp, 0 compile errors, every check count flat, and the whole family was invisible until K21 closed. CLOSED for both port-visible triggers; the REFLECTIVE one is refused**
 
 The block is translated, faithfully, into the companion:
 
@@ -4288,18 +4288,37 @@ initialisation, certain reflective actions and `main`. Reading each against Scal
 | a static `T` declares is used or assigned | `T.member` IS an object access | already exact |
 | a CONSTANT is read | `inline val`, so no member read at all | already exact, and this is `JS-C08` |
 | a subclass `S` is initialised, by `new S` | `S`'s constructor calls `T`'s, which runs `T`'s class-body force | covered by the row above |
-| …by a bare `S.member` read | `object S` initialises and `object T` does not | **BROKEN, and COUNTED rather than repaired here** — `ClassInitTriggerCheck.Issue.SubclassInitUnforced`, 19 corpus-wide |
+| …by a bare `S.member` read | `object S` initialises and `object T` does not | **BROKEN** — the same statement at the head of `S`'s COMPANION, forcing the NEAREST `<clinit>`-bearing ancestor. Only the nearest, because that ancestor's own companion owes the same line for ITS nearest; the chain is recursion, not a walk |
 | `Class.forName("T", true, cl)` | a reflective load of the emitted `T` does not touch `T$` | **REFUSED** — nothing in the program can see a reflective load that lives in its CONSUMER, so this is stated and not counted |
 
-`TirEmitter.forceCompanion` writes it, as a decision kind (`ForcedClassInit`) whose `trigger=` names
-which item it stands for — a reader's real question is whether THEIR path is covered, and the list
-is short enough to answer. `ClassInitTriggerCheck` is the count, and it takes the CENSUS of
+`TirEmitter.forceCompanion` writes both, as ONE decision kind (`ForcedClassInit`) whose `trigger=`
+and `forces=` say which item it stands for and which type it initialises — a reader's real question
+is whether THEIR path is covered, and the list is short enough to answer.
+`ClassInitTriggerCheck` is the count, and it takes the CENSUS of
 `static { }` blocks from the trees rather than from the emitter, so an empty forced-set reproduces
-the un-repaired engine on the same trees (`switch-null`'s two-source shape exactly). **The check is
-not vacuous on its first run**, which is the thing a coverage check most often is: `Unforced` is 0
-on all fifteen ports — every `static { }` block reached a trigger — while `SubclassInitUnforced`
-reads 18 on libGDX core and 1 on anim8, and those 19 are a residue that exists, not a bar held at
-zero by looking away.
+the un-repaired engine on the same trees (`switch-null`'s two-source shape exactly). **Its SUBJECTS
+are this run's units and its CENSUS is the whole program**, which are different questions and only
+the first is D2's: a dependent's model contains its base's units, so the ancestor bearing the block
+may live in the BASE, and a census scoped to the emitted units would not see it while the emitter
+does. A watchdog that derives a fact from a narrower list than the repair does is a watchdog that is
+silent exactly where the repair could be wrong.
+
+**The subclass trigger's condition is the COMPANION, and deriving it any other way is §4.56's
+mistake.** The tempting condition is "does this type have statics somebody could read" — and that is
+a guess about use, re-derived from the tree, that a static nested type or a `private` static
+immediately makes wrong in one direction or the other. The exact condition is available and is one
+field: an object that is never initialised runs nothing, so a line inside `object S` can never
+over-trigger relative to java whatever put the object there, and `object S` initialising IS java's
+"S is initialised". So the emitter asks `hasCompanion` and the check asks `Surface.TypeShape`'s own
+`companion`, which is the same fact from the same recording — the two cannot disagree about which
+types owe the line.
+
+**The check was not vacuous on either run**, which is the thing a coverage check most often is.
+`Unforced` read 0 on all fifteen ports from the first measurement — every `static { }` block reached
+the instantiation trigger — while `SubclassInitUnforced` read **18 on libGDX core** (every `Actor`
+descendant with a companion — `Group`, `Button`, `Label`, `ScrollPane`, …) **and 1 on anim8**
+(`QualityPalette <- PaletteReducer`), and the second commit took those to 0. A residue that existed,
+was counted, and then went to zero is the only evidence that the lane can move at all.
 
 **`val _ = <path>`, not a bare reference and not a `private val`.** All three compile to the same
 `getstatic MODULE$` and all three force — measured on a seven-shape probe including re-entrance —

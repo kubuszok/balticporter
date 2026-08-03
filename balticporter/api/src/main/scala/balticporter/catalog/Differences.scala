@@ -255,9 +255,20 @@ object Differences:
       "JLS 15.12.4.1", "UNCITED — a companion call has no receiver slot to put the expression in",
       Mixed, Handled, NoTwin, Universal,
       "TirEmitter.staticThroughInstance with effectFree — emits `{ recv; Owner.m(args) }` where the receiver can have effects", notYetC),
+    // This row read `NonDiff("no observable difference except through JS-C08")` until K22 measured
+    // it wrong. The argument behind that verdict was that scala's object-access trigger fires at
+    // least as often as any JLS 12.4.1 case, "since every `T.x` read is an object access" — true of
+    // items 2-4, and FALSE of items 1 and 7, which read no member at all. `new T` runs a
+    // constructor and touches no object; a subclass's initialisation touches only the subclass's.
+    // A `static { }` block therefore lands in the companion and never runs.
     Difference(cId(7), "JLS's class-initialisation TRIGGER list vs Scala's uniform accessor trigger",
       "JLS 12.4.1", "UNCITED — a Scala object initialises on first access to any member",
-      NoImpact, NonDiff("no observable difference except through JS-C08"), NoTwin, NoFix, "no symbol — see JS-C08", notYetC),
+      Silent,
+      Partial("the SUBCLASS trigger (item 7, reached by a bare `S.member` read) is counted and not " +
+        "yet forced, and the REFLECTIVE one (item 6) is refused: a reflective load of the emitted " +
+        "class does not touch its module, and the load lives in the port's CONSUMER"),
+      el("K22"), Universal,
+      "TirEmitter.forceCompanion and its `hasClinit` call site; ClassInitTriggerCheck", notYetC),
     Difference(cId(8), "a CONSTANT VARIABLE is inlined, so reading it never triggers class initialisation",
       "JLS 4.12.4, 13.1", "UNCITED — `inline val` is the image; a typed `val` triggers the initialiser",
       Silent, Handled, Rule44, Universal, "TirEmitter.isJavaConstant and its `inline val` rendering", notYetC),

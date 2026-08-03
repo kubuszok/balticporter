@@ -728,7 +728,7 @@ sge.vfx.framebuffer.VfxPingPongWrapper	sge.vfx.framebuffer.VfxPingPongWrapper#sw
 sge.vfx.gl.DefaultVfxGlExtension	sge.vfx.gl.DefaultVfxGlExtension	class	4077756f7ee6caed
 sge.vfx.gl.DefaultVfxGlExtension	sge.vfx.gl.DefaultVfxGlExtension#getBoundFboHandle()	def	1d39f5d10be663f5
 sge.vfx.gl.DefaultVfxGlExtension	sge.vfx.gl.DefaultVfxGlExtension#tmpIntBuf	val	642fffd92820afb5
-sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils	class	e71f9acf2e1f3db2
+sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils	class	6407e6bc377dc23c
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#<clinit>	init	5571c93101ed3a5d
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#TAG	val	bd99982a5a79e6cb
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#compileShader(FileHandle,FileHandle,Sge)	def	518ca941d4756c0d
@@ -753,7 +753,7 @@ sge.vfx.gl.VfxGlViewport	sge.vfx.gl.VfxGlViewport#toString()	def	112e99d9b107842
 sge.vfx.gl.VfxGlViewport	sge.vfx.gl.VfxGlViewport#width	val	3fba95f435f4d475
 sge.vfx.gl.VfxGlViewport	sge.vfx.gl.VfxGlViewport#x	val	f4fdec7508850541
 sge.vfx.gl.VfxGlViewport	sge.vfx.gl.VfxGlViewport#y	val	211669e893d611c7
-sge.vfx.scene2d.VfxWidgetGroup	sge.vfx.scene2d.VfxWidgetGroup	class	3fdb58ebd3f8e458
+sge.vfx.scene2d.VfxWidgetGroup	sge.vfx.scene2d.VfxWidgetGroup	class	a3b5428a75c6d5d2
 sge.vfx.scene2d.VfxWidgetGroup	sge.vfx.scene2d.VfxWidgetGroup#<stmt1>	stmt	993a5580c3b7aca5
 sge.vfx.scene2d.VfxWidgetGroup	sge.vfx.scene2d.VfxWidgetGroup#<stmt2>	stmt	66d779493df4f3d4
 sge.vfx.scene2d.VfxWidgetGroup	sge.vfx.scene2d.VfxWidgetGroup#<stmt3>	stmt	23fa614c2d675692
@@ -887,7 +887,7 @@ sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#tmpKeyArray	val	6aa5cb49
 sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#toString()	def	ec5d9c14593c4aba
 sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#toString(String)	def	c709ad88bfa2fe21
 sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#values	val	709b06eb75dc09b1
-sge.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh	class	d8a48298208a23f6
+sge.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh	class	c1af2d429acd0c24
 sge.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh#<clinit>	init	56eb77b7a494a77c
 sge.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh#<init>(Sge)	ctor	4cc02c4b7ea796ea
 sge.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh#<stmt1>	stmt	319f610c2df2017b
