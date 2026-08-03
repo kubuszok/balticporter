@@ -728,7 +728,7 @@ sge.vfx.framebuffer.VfxPingPongWrapper	sge.vfx.framebuffer.VfxPingPongWrapper#sw
 sge.vfx.gl.DefaultVfxGlExtension	sge.vfx.gl.DefaultVfxGlExtension	class	4077756f7ee6caed
 sge.vfx.gl.DefaultVfxGlExtension	sge.vfx.gl.DefaultVfxGlExtension#getBoundFboHandle()	def	1d39f5d10be663f5
 sge.vfx.gl.DefaultVfxGlExtension	sge.vfx.gl.DefaultVfxGlExtension#tmpIntBuf	val	642fffd92820afb5
-sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils	class	ad3b7ff04f744c6c
+sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils	class	5d36fc8ed393b37d
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#<clinit>	init	5571c93101ed3a5d
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#TAG	val	bd99982a5a79e6cb
 sge.vfx.gl.VfxGLUtils	sge.vfx.gl.VfxGLUtils#compileShader(FileHandle,FileHandle,Sge)	def	518ca941d4756c0d

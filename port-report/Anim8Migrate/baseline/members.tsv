@@ -117,7 +117,7 @@ sge.anim8.ChunkBuffer	sge.anim8.ChunkBuffer#<stmt2>	stmt	3fa2026817a30db7
 sge.anim8.ChunkBuffer	sge.anim8.ChunkBuffer#buffer	val	d4aa0760a813d6e2
 sge.anim8.ChunkBuffer	sge.anim8.ChunkBuffer#crc	val	3f7c03e43ac66bfd
 sge.anim8.ChunkBuffer	sge.anim8.ChunkBuffer#endChunk(DataOutputStream)	def	e94d15e7a99b332b
-sge.anim8.ConstantData	sge.anim8.ConstantData	class	709fa5e9ff9428a3
+sge.anim8.ConstantData	sge.anim8.ConstantData	class	c3f54117c8d1d773
 sge.anim8.ConstantData	sge.anim8.ConstantData#<clinit>	init	88e8225cfe97c6ea
 sge.anim8.ConstantData	sge.anim8.ConstantData#<clinit>	init	86f6b935041455ed
 sge.anim8.ConstantData	sge.anim8.ConstantData#ENCODED_SNUGGLY	val	62d6455fc751e2c8
@@ -386,7 +386,7 @@ sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Array<Pixmap>,int)	
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Pixmap)	def	1d04584303d5da27
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Array<Pixmap>,int)	def	d745d50271f61fbe
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Pixmap)	def	77dea53a81167dae
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	d61095d01a7886da
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	6315f77c97e22c84
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	da27f25e725d2439
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	99d19fbed16243ab
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<init>(Array<Color>,Sge)	ctor	2e1bfbfa5ed145c3

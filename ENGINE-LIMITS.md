@@ -1329,7 +1329,43 @@ carrying the same defect silently — `IntMap(initialCapacity, loadFactor)` comp
 `tableSize(initialCapacity, loadFactor)` BEFORE the `loadFactor <= 0f` validation that java runs
 first — with 0 errors and a green suite, because no test passed an invalid load factor.
 
-*Fix kind: (a) engine. CLOSED in `TirEmitter.orderBody`, pinned by
+**CORRECTION (audit-2 F6): "hoisting them reproduces java WHATEVER order the java file declared
+them in" was true of FIELDS ALONE, and step 4 has two kinds of member in it.** JLS 12.5 step 4 runs
+field initialisers and INSTANCE INITIALISER BLOCKS as one sequence, in TEXTUAL ORDER — 12.4.2 step 9
+says the same of the static pair. A block is carried as a synthetic `<initblock>`/`<clinit>` member,
+which is a `Tree.DefDef` and not a `ValDef`, so it was outside the hoist entirely and landed behind
+every field. The counterexample is two lines:
+
+```java
+class Interleaved { { this.b = 2; } int b = 5; }   // java: b == 5
+```
+```scala
+class Interleaved { var b: Int = 5; locally { this.b = 2 } }   // port: b == 2
+```
+
+Same shape as C12 above and the same evidence: valid Scala, no compile error, no check count, and
+only a run can see it. **And it was TWO groupings, not one** — the frontend also built its body as
+`fields ++ ctors ++ methods ++ initBlocks ++ nested`, so the textual order between a field and a
+block was lost before the emitter ever saw it. Both had to move:
+
+- the FRONTEND carries each field and each block with its source position and sorts the pair into
+  one step-4 group. Sorted AFTER every symbol is minted, never before — the minting order stays
+  `fields → ctors → methods → initBlocks`, because a run's `SymId` assignment is what every
+  deterministic artifact is keyed on;
+- the EMITTER hoists "step-4 members" rather than "the `ValDef`s", so a block travels with the
+  fields and keeps its place among them — which also puts it ahead of the promoted constructor
+  body, where java runs it (step 4 before step 5).
+
+Measured with `just measure-all`: **every headline, every check count and every suite outcome
+identical** — gdx-test 217/4, ashley 108/2+2, anim8 23, vfx 64, sg 16, screens 16, liqp 357/218 —
+and **16 member digests over five ports**, every one a whole-CLASS digest with no member's own text
+moved, which is the signature of a pure reordering: `LibgdxCoreMigrate` 8 (`Version`, `Colors`,
+`Frustum`, `Matrix3`, `Actions`, `Skin`, and the two LZMA `Encoder`s), `GltfMigrate` 4,
+`Anim8Migrate` 2, `VfxMigrate` 1, `LiqpMigrate` 1. Two of those are load-bearing at run time: LZMA's
+`Encoder` fills `g_FastPos` in a block that now sits directly after the array it fills, and liqp's
+`Template` registers its `SPIHelper` date types before the companion's other statements.
+
+*Fix kind: (a) engine. CLOSED in `TirEmitter.orderBody` and `SpoonTir.classDef`, pinned by
 `CtorFunnelPromotedLocalOrderSpec`. Found by RUNNING a suite and by nothing else.*
 
 ---

@@ -619,7 +619,7 @@ sge.ScreenAdapter	sge.ScreenAdapter#render(float)	def	4e3d6ad5231607f1
 sge.ScreenAdapter	sge.ScreenAdapter#resize(int,int)	def	4c2fa2b126e7e35a
 sge.ScreenAdapter	sge.ScreenAdapter#resume()	def	c12e459aa0615c7b
 sge.ScreenAdapter	sge.ScreenAdapter#show()	def	fa4f538ddb048120
-sge.Version	sge.Version	class	c3b40cc06433e9be
+sge.Version	sge.Version	class	9ff72b5374879550
 sge.Version	sge.Version#<clinit>	init	ea0aa1666d92d2fa
 sge.Version	sge.Version#MAJOR	val	431d624e90a60cd4
 sge.Version	sge.Version#MINOR	val	aac13d837131796b
@@ -1185,7 +1185,7 @@ sge.graphics.Color	sge.graphics.Color#toIntBits(int,int,int,int)	def	24f7228976b
 sge.graphics.Color	sge.graphics.Color#toString()	def	1bb262b5af02a8b4
 sge.graphics.Color	sge.graphics.Color#valueOf(String)	def	6515944edc435ade
 sge.graphics.Color	sge.graphics.Color#valueOf(String,Color)	def	9756efa3943c7ac1
-sge.graphics.Colors	sge.graphics.Colors	class	254254f4eb77f698
+sge.graphics.Colors	sge.graphics.Colors	class	05c604765723d186
 sge.graphics.Colors	sge.graphics.Colors#<clinit>	init	b9a5290b18f2f6fe
 sge.graphics.Colors	sge.graphics.Colors#get(String)	def	9b3c5fc88580f837
 sge.graphics.Colors	sge.graphics.Colors#getColors()	def	3d002aa7cea328af
@@ -10722,7 +10722,7 @@ sge.math.FloatCounter	sge.math.FloatCounter#reset()	def	87d181e823fdc0ec
 sge.math.FloatCounter	sge.math.FloatCounter#toString()	def	5da6396c1b52113d
 sge.math.FloatCounter	sge.math.FloatCounter#total	val	d959fbae3e5a76e6
 sge.math.FloatCounter	sge.math.FloatCounter#value	val	de325184aebaf449
-sge.math.Frustum	sge.math.Frustum	class	a53f649c1244517c
+sge.math.Frustum	sge.math.Frustum	class	0e3e0599914f80fc
 sge.math.Frustum	sge.math.Frustum#<clinit>	init	064e6ec87a10572f
 sge.math.Frustum	sge.math.Frustum#<stmt1>	stmt	d9946da078af8562
 sge.math.Frustum	sge.math.Frustum#boundsInFrustum(BoundingBox)	def	1668e480fdc56c02
@@ -11108,7 +11108,7 @@ sge.math.MathUtils	sge.math.MathUtils#tanDeg(float)	def	4dc556406210a47d
 sge.math.MathUtils	sge.math.MathUtils$Sin	class	c6d9405979924018
 sge.math.MathUtils	sge.math.MathUtils$Sin#<clinit>	init	8cc51503ddf4b524
 sge.math.MathUtils	sge.math.MathUtils$Sin#table	val	dba18cc18fb59eb7
-sge.math.Matrix3	sge.math.Matrix3	class	aa362ac4aface68a
+sge.math.Matrix3	sge.math.Matrix3	class	48c99f117a203b87
 sge.math.Matrix3	sge.math.Matrix3#<init>()	ctor	a8007258f03a7c3d
 sge.math.Matrix3	sge.math.Matrix3#<init>(Array<float>)	ctor	4f988e23ba60f656
 sge.math.Matrix3	sge.math.Matrix3#<init>(Matrix3)	ctor	3a87dcc2728b4539
@@ -12616,7 +12616,7 @@ sge.scenes.scene2d.Stage	sge.scenes.scene2d.Stage$TouchFocus#pointer	val	f3db118
 sge.scenes.scene2d.Stage	sge.scenes.scene2d.Stage$TouchFocus#reset()	def	8f35e5e95e196481
 sge.scenes.scene2d.Stage	sge.scenes.scene2d.Stage$TouchFocus#target	val	d3daa5a541d4f6ff
 sge.scenes.scene2d.Touchable	sge.scenes.scene2d.Touchable	class	083cd042fad33fc5
-sge.scenes.scene2d.actions.Actions	sge.scenes.scene2d.actions.Actions	class	2d4bf2cfa31d4852
+sge.scenes.scene2d.actions.Actions	sge.scenes.scene2d.actions.Actions	class	b4bcb35c9c33dc84
 sge.scenes.scene2d.actions.Actions	sge.scenes.scene2d.actions.Actions#<clinit>	init	e1763c6f14dc1682
 sge.scenes.scene2d.actions.Actions	sge.scenes.scene2d.actions.Actions#ACTION_POOLS	val	51f0910ebffae635
 sge.scenes.scene2d.actions.Actions	sge.scenes.scene2d.actions.Actions#action(Class<T>)	def	d7e06fc33e98514b
@@ -14164,7 +14164,7 @@ sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#f
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#listStyle	val	d5a629d4b4e456a3
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#overFontColor	val	f7eda71458add232
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#scrollStyle	val	d1595863be9256f9
-sge.scenes.scene2d.ui.Skin	sge.scenes.scene2d.ui.Skin	class	f33fa09743814253
+sge.scenes.scene2d.ui.Skin	sge.scenes.scene2d.ui.Skin	class	d39cc71ac5d97f0d
 sge.scenes.scene2d.ui.Skin	sge.scenes.scene2d.ui.Skin#<init>(FileHandle,Sge)	ctor	7827076219ff656c
 sge.scenes.scene2d.ui.Skin	sge.scenes.scene2d.ui.Skin#<init>(FileHandle,TextureAtlas,Sge)	ctor	1a450bbea65fce27
 sge.scenes.scene2d.ui.Skin	sge.scenes.scene2d.ui.Skin#<init>(Sge)	ctor	ad7438d43c6fb09d
@@ -18983,7 +18983,7 @@ sge.utils.compression.lzma.Decoder	sge.utils.compression.lzma.Decoder$LiteralDec
 sge.utils.compression.lzma.Decoder	sge.utils.compression.lzma.Decoder$LiteralDecoder$Decoder2#DecodeWithMatchByte(Decoder,byte)	def	d440acd4c76d02a9
 sge.utils.compression.lzma.Decoder	sge.utils.compression.lzma.Decoder$LiteralDecoder$Decoder2#Init()	def	b99071a6b10c4829
 sge.utils.compression.lzma.Decoder	sge.utils.compression.lzma.Decoder$LiteralDecoder$Decoder2#m_Decoders	val	490b8b85055bc28f
-sge.utils.compression.lzma.Encoder	sge.utils.compression.lzma.Encoder	class	1b6912eaf036c9ca
+sge.utils.compression.lzma.Encoder	sge.utils.compression.lzma.Encoder	class	e32b8f10a03047eb
 sge.utils.compression.lzma.Encoder	sge.utils.compression.lzma.Encoder#<clinit>	init	a5123ab598f12324
 sge.utils.compression.lzma.Encoder	sge.utils.compression.lzma.Encoder#<stmt1>	stmt	44f115f2da44f421
 sge.utils.compression.lzma.Encoder	sge.utils.compression.lzma.Encoder#<stmt2>	stmt	88cf2c2fd917dd18
@@ -19165,7 +19165,7 @@ sge.utils.compression.rangecoder.Decoder	sge.utils.compression.rangecoder.Decode
 sge.utils.compression.rangecoder.Decoder	sge.utils.compression.rangecoder.Decoder#kNumBitModelTotalBits	val	27d905baf1b6a5d7
 sge.utils.compression.rangecoder.Decoder	sge.utils.compression.rangecoder.Decoder#kNumMoveBits	val	bb19ba7c21e6328c
 sge.utils.compression.rangecoder.Decoder	sge.utils.compression.rangecoder.Decoder#kTopMask	val	bb4e56b8c16c61c7
-sge.utils.compression.rangecoder.Encoder	sge.utils.compression.rangecoder.Encoder	class	1415c83d3d2dda85
+sge.utils.compression.rangecoder.Encoder	sge.utils.compression.rangecoder.Encoder	class	bb2524939b24a439
 sge.utils.compression.rangecoder.Encoder	sge.utils.compression.rangecoder.Encoder#<clinit>	init	b993fddccd881fc4
 sge.utils.compression.rangecoder.Encoder	sge.utils.compression.rangecoder.Encoder#Encode(Array<short>,int,int)	def	de8c9b495b5e2f22
 sge.utils.compression.rangecoder.Encoder	sge.utils.compression.rangecoder.Encoder#EncodeDirectBits(int,int)	def	139475b80dbf2a2c

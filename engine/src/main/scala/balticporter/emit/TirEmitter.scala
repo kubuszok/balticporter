@@ -1768,9 +1768,18 @@ final class TirEmitter(
     * `ENGINE-LIMITS.md` C12. Two kinds of `ValDef` reach this list and they are the same node kind:
     *
     *  - the class's own FIELDS, which java runs in step 4 of JLS 12.5 — in textual order, before
-    *    any constructor body statement. Hoisting them reproduces java whatever order the java file
-    *    declared them in, and a field declared BELOW the constructor needs the hoist to compile at
-    *    all;
+    *    any constructor body statement. Hoisting them puts every one ahead of the promoted body,
+    *    which is where java runs them, and a field declared BELOW the constructor needs the hoist
+    *    to compile at all;
+    *
+    *    **…but step 4 is not only fields, and "whatever order the java file declared them in" was
+    *    an overclaim.** JLS 12.5 step 4 runs field initialisers and INSTANCE INITIALISER BLOCKS as
+    *    ONE sequence, in textual order (12.4.2 step 9 says the same of the static pair). A block is
+    *    carried as a synthetic `<initblock>`/`<clinit>` member — a `Tree.DefDef`, not a `ValDef` —
+    *    so it fell into `rest`, behind every field: `{ b = 2; } int b = 5;` left `b == 2` where
+    *    java leaves 5, because the assignment java ran FIRST ran LAST. Same evidence as C12 — valid
+    *    Scala, no compile error, no check count, only a run can see it — which is why the hoisted
+    *    group is "step-4 members" and their RELATIVE ORDER is java's, rather than "the `ValDef`s";
     *  - a PROMOTED CONSTRUCTOR LOCAL, spliced in by [[lowerCtors]] as part of `plan.primaryBody`.
     *    That declaration is a step-5 constructor BODY statement: java ran it exactly where it stood,
     *    among the constructor's other statements, and the interleaving is what carries every
@@ -1841,9 +1850,16 @@ final class TirEmitter(
     // C12: a FIELD of `owner` — not merely a `ValDef`. See the doc above for why the difference is
     // ownership and for what hoisting the other kind costs.
     def isField(s: Statement) = s match { case v: Tree.ValDef => sym(v.symbol).owner == owner; case _ => false }
-    val fields = body.collect { case v: Tree.ValDef if isField(v) => v }
-    val rest   = body.filterNot(s => isCtor(s) || isField(s))
-    fields ++ ordered.toList ++ rest
+    // …and the OTHER kind of step-4 member: an instance (or static) INITIALISER BLOCK. JLS 12.5
+    // step 4 runs field initialisers and instance initialisers as ONE sequence in TEXTUAL ORDER
+    // (12.4.2 step 9 says the same of the static pair), so a block belongs in the hoisted group and
+    // KEEPS ITS PLACE inside it — see the doc above.
+    def isStep4(s: Statement) = s match
+      case d: Tree.DefDef => isInitBlock(d)
+      case _              => isField(s)
+    val step4 = body.filter(isStep4)
+    val rest  = body.filterNot(s => isCtor(s) || isStep4(s))
+    step4 ++ ordered.toList ++ rest
 
   private def typeParam(td: Tree.TypeDef): String =
     val name = esc(sym(td.symbol).name)

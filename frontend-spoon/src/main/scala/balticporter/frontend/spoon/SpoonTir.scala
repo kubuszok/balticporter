@@ -1205,10 +1205,12 @@ object SpoonTir:
       tpExecNames.prepend(if capturesEnclosing(t) then tpExecNames.headOption.getOrElse(Set.empty) else Set.empty)
       val savedStatic = inStatic; inStatic = false // a class body isn't a static context for its instance members
       val parents = superTypes(t)
+      // …carried WITH their source positions, because a field and an initialiser BLOCK are one
+      // sequence in JLS 12.5 step 4 and the body list has to interleave them. See `step4` below.
       val fields = t.getFields.asScala.toList
         .filterNot(_.isInstanceOf[CtEnumValue[?]])
         .sortBy(posKey)
-        .map(fieldDef(id, _))
+        .map(f => posKey(f) -> fieldDef(id, f))
       // include enum constructors too — the emitter folds their PARAMS into the sealed class's primary
       // constructor so each constant (`Nearest(GL_NEAREST)`) has a matching parameter to pass to.
       // Substitutions.dropMethods: a member opted out of mechanical translation (a ready Scala
@@ -1274,7 +1276,7 @@ object SpoonTir:
             // sending it through the drop test would silently make init blocks droppable — a
             // widening this commit has no business making.
             note(ae, nm, Some(d.symbol), dropped = false)
-            d
+            posKey(ae) -> d
           }
         case _ => Nil
       val nested  = t.getNestedTypes.asScala.toList.sortBy(posKey).map(classDef)
@@ -1283,7 +1285,19 @@ object SpoonTir:
         case _            => Nil
       tpScopes.remove(0); tpIsExec.remove(0); inheritedInst.remove(0); enclosingFqns.remove(0); ancestorFqns.remove(0)
       selfRawStack.remove(0); tpAccessible.remove(0); tpExecNames.remove(0); inStatic = savedStatic
-      Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ initBlocks ++ nested,
+      // JLS 12.5 STEP 4 IS ONE SEQUENCE, IN TEXTUAL ORDER — field initialisers and instance
+      // initialiser blocks together (12.4.2 step 9 says the same of the static pair). Grouped
+      // `fields ++ … ++ initBlocks`, every block landed behind every field, so
+      // `{ b = 2; } int b = 5;` emitted the assignment java ran FIRST last and left `b == 2` where
+      // java leaves 5. Valid Scala, no compile error, no check count, and only a run can see it —
+      // C12's shape at the other member of the same step.
+      //
+      // Sorted AFTER every symbol is minted, never before: the minting order stays
+      // fields → ctors → methods → initBlocks, because a run's `SymId` assignment is what every
+      // deterministic artifact is keyed on (see `walked` above for the same reasoning). `sortBy` is
+      // stable, so members with no valid position keep the grouping they had.
+      val step4 = (fields ++ initBlocks).sortBy(_._1).map(_._2)
+      Tree.ClassDef(id, parents, selfType = None, body = step4 ++ ctors ++ methods ++ nested,
         origin = originOf(t), tparams = tpDefs, enumCases = enumCases, leading = lead)
 
     /** a Java enum constant → `EnumCase`: its ctor args, and any per-constant method overrides

@@ -719,17 +719,29 @@ becoming a Scala member is exactly what a subclass then collides with.
 question and none of the ordering one, and the two look alike because the promoted local ends up
 spelled as a class member. A Scala class body IS its constructor, so a `val` initialiser and a
 statement are the same kind of thing there and their relative order is the entire semantics. JLS
-12.5 is the cut: a FIELD initialiser runs in step 4, in textual order, before any constructor body
-statement — so hoisting a field above the promoted body reproduces java whatever order the java file
-declared them in — while a constructor's own LOCAL DECLARATION is a step-5 body statement whose
-position among the other statements carries every dependency between them. Emit it where java wrote
-it. Both are `ValDef`s and the difference is OWNERSHIP (§4.56): the frontend interns a field under
+12.5 is the cut: a FIELD initialiser runs in step 4, before any constructor body statement — so
+hoisting a field above the promoted body puts it where java runs it — while a constructor's own
+LOCAL DECLARATION is a step-5 body statement whose position among the other statements carries every
+dependency between them. Emit it where java wrote it. Both are `ValDef`s and the difference is
+OWNERSHIP (§4.56): the frontend interns a field under
 the CLASS and a local under the enclosing EXECUTABLE, so "is this a member of the class whose body I
 am ordering?" is a symbol lookup, and a name, an origin line or a per-caller "was this in the plan's
 body?" test are all the string-shaped answers §4.56 is about. Measured at **409 of 414 test failures
 on one constructor, 0 scalac errors, every check count flat** (`ENGINE-LIMITS.md` C12) — and note
 what that number is evidence for: the compile, the twenty-two checks and the member digests were all
 green throughout, so only §3's gate could see it.
+
+**…and STEP 4 IS NOT ONLY FIELDS, which is the half "in textual order" quietly did the work of.**
+JLS 12.5 step 4 runs field initialisers and INSTANCE INITIALISER BLOCKS as ONE sequence, in textual
+order (12.4.2 step 9 says the same of the static pair). A block is not a `ValDef` — it is a
+synthetic member under the JVM's own name — so any pass that groups "the fields" and "the blocks"
+into two lists has already lost the only thing that decides what the class computes:
+`{ b = 2; } int b = 5;` leaves `b == 5` in java and left `b == 2` in the port, because the
+assignment java ran FIRST ran LAST. **Ask which STEP a member belongs to, never which node kind it
+is** — and check the FRONTEND as well as the emitter, because a body assembled as
+`fields ++ … ++ initBlocks` has thrown the order away before any emitter can honour it
+(`ENGINE-LIMITS.md` C12's correction: 16 member digests over five ports, every headline, check count
+and suite outcome identical — the same §3-only evidence as C12 itself).
 
 ## 4.56 A rename decides OWNERSHIP structurally, never by name
 
