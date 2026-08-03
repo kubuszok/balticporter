@@ -2067,7 +2067,8 @@ object SpoonTir:
         case a: CtOperatorAssignment[?, ?] =>
           // Java compound assignment narrows implicitly: `int += float` means `= (int)(i + f)`.
           val lhs = expr(a.getAssigned)
-          val res = binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a))
+          val res = opText(a.getKind).fold(unknownOp(a.getKind, a, ty(a)))(
+            op => binApply(op, lhs, expr(a.getAssignment), ty(a)))
           // JS-E03, CONSULTED rather than merely done: the catalog attaches it to this dispatch, so
           // the wrapper reports an arm that returns without asking. `compoundNarrow` is the whole
           // predicate — `Some(target)` when java's implicit narrowing applies here — which is what
@@ -2778,7 +2779,8 @@ object SpoonTir:
             Tree.InstanceOf(expr(b.getLeftHandOperand), tt(tp, b), ty(b), originOf(b))
           else
             stringified.orElse(identity).getOrElse(
-              binApply(opText(b.getKind), expr(b.getLeftHandOperand), expr(b.getRightHandOperand), ty(b)))
+              opText(b.getKind).fold(unknownOp(b.getKind, b, ty(b)))(
+                op => binApply(op, expr(b.getLeftHandOperand), expr(b.getRightHandOperand), ty(b))))
         case u: CtUnaryOperator[?] =>
           import UnaryOperatorKind.*
           // JS-E02, consulted at every unary operator for the reason above; `incDecOf` answers
@@ -2805,7 +2807,9 @@ object SpoonTir:
         // Java yields the assigned value, Scala's `=` is Unit — lower to `{ lhs = rhs; lhs }`.
         case a: CtOperatorAssignment[?, ?] =>
           val lhs = expr(a.getAssigned)
-          val st  = Tree.Assign(lhs, binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a)), unitT, originOf(a))
+          val rhs2 = opText(a.getKind).fold(unknownOp(a.getKind, a, ty(a)))(
+            op => binApply(op, lhs, expr(a.getAssignment), ty(a)))
+          val st  = Tree.Assign(lhs, rhs2, unitT, originOf(a))
           Tree.Block(List(st), lhs, ty(a), originOf(a))
         case a: CtAssignment[?, ?] =>
           // Java's assignment-as-EXPRESSION needs the same coercion as the statement form. It did
@@ -3912,11 +3916,35 @@ object SpoonTir:
       private def unApply(op: String, o: Term, resT: TypeRepr): Term =
         Tree.Apply(Tree.Select(o, opId(op), NoType, o.origin), Nil, opId(op), resT, o.origin)
 
-      private def opText(k: BinaryOperatorKind): String =
+      /** the Scala spelling of a java binary operator, or `scala.None` for a kind this arm does not
+        * enumerate.
+        *
+        * An `Option` and not a defaulted string, for the reason [[UnaryOperatorKind]]'s twin arm
+        * gives at length: `BinaryOperatorKind` is a java enum from a DEPENDENCY, not a sealed Scala
+        * one, so scalac cannot check this match and a Spoon upgrade that adds a kind falls through.
+        * The default used to be `"?" + other` — which is not a diagnostic, it is a METHOD NAME:
+        * `binApply` would build `l.?NEWKIND(r)`, the emitter would render it, and the port would
+        * carry a call to a member nobody declares. Best case a compile error naming a symbol that
+        * appears nowhere in the java; worst case, in a position where scalac infers rather than
+        * resolves, nothing at all. `INSTANCEOF` is java's twentieth kind and never reaches here —
+        * the arm above it branches first — so what this enumerates is the nineteen operators. */
+      private def opText(k: BinaryOperatorKind): Option[String] =
         import BinaryOperatorKind.*
         k match
-          case PLUS => "+"; case MINUS => "-"; case MUL => "*"; case DIV => "/"; case MOD => "%"
-          case AND => "&&"; case OR => "||"; case BITAND => "&"; case BITOR => "|"; case BITXOR => "^"
-          case EQ => "=="; case NE => "!="; case LT => "<"; case LE => "<="; case GT => ">"; case GE => ">="
-          case SL => "<<"; case SR => ">>"; case USR => ">>>"
-          case other => "?" + other
+          case PLUS => Some("+"); case MINUS => Some("-"); case MUL => Some("*")
+          case DIV => Some("/"); case MOD => Some("%")
+          case AND => Some("&&"); case OR => Some("||"); case BITAND => Some("&")
+          case BITOR => Some("|"); case BITXOR => Some("^")
+          case EQ => Some("=="); case NE => Some("!="); case LT => Some("<")
+          case LE => Some("<="); case GT => Some(">"); case GE => Some(">=")
+          case SL => Some("<<"); case SR => Some(">>"); case USR => Some(">>>")
+          case _ => scala.None
+
+      /** the MARKER for an operator kind [[opText]] does not enumerate — located, named, and
+        * `FrontendBlindSpot` rather than `UnmodelledNodeKind` because the node KIND is dispatched
+        * on here and what is missing is one shape of it. The emission gate then refuses to ship the
+        * port until it is closed (`DESIGN.md` §6.4), which is the whole difference between this and
+        * a method name nobody can resolve. */
+      private def unknownOp(k: BinaryOperatorKind, at: CtElement, tpe: TypeRepr): Term =
+        unlowered(at, s"binary operator kind '$k' — this arm enumerates java's nineteen and the " +
+          "parser produced a twentieth", tpe, Some(UnportableKind.FrontendBlindSpot))

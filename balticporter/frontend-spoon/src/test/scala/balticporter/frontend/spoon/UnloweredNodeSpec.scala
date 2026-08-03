@@ -19,7 +19,10 @@ import balticporter.tir.*
   */
 class UnloweredNodeSpec extends munit.FunSuite:
 
-  private def markers(p: Program): List[Tree.Unportable] =
+  /** every term this program holds, `StandardTraversal` doing the walking (`CLAUDE.md` §3: never a
+    * private recursion — two of the four silent defects were hand-rolled walks that stopped one
+    * node short). */
+  private def scan[A](p: Program)(f: PartialFunction[Term, A]): List[A] =
     given Program = p
     p.units.flatMap { cd =>
       def terms(c: Tree.ClassDef): List[Term] = c.body.flatMap {
@@ -29,11 +32,13 @@ class UnloweredNodeSpec extends munit.FunSuite:
         case t: Term          => List(t)
         case _                => Nil
       }
-      terms(cd).flatMap(t => StandardTraversal.scanTerm(t, List.empty[Tree.Unportable]) {
-        case (acc, m: Tree.Unportable) => m :: acc
-        case (acc, _)                  => acc
+      terms(cd).flatMap(t => StandardTraversal.scanTerm(t, List.empty[A]) {
+        case (acc, x) if f.isDefinedAt(x) => f(x) :: acc
+        case (acc, _)                     => acc
       })
     }
+
+  private def markers(p: Program): List[Tree.Unportable] = scan(p) { case m: Tree.Unportable => m }
 
   test("a SWITCH EXPRESSION mints a marker — and the rest of the class still translates") {
     // `CtSwitchExpression` extends `CtExpression` and `CtAbstractSwitch` and NOT `CtSwitch`, so the
@@ -85,4 +90,75 @@ class UnloweredNodeSpec extends munit.FunSuite:
     val p = SpoonTir.fromSource(
       "package p; public class Ok { public int f(int a) { switch (a) { case 1: return 2; } return 0; } }")
     assertEquals(markers(p), Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // THE OPERATOR ARMS — a blind spot INSIDE a kind the frontend dispatches on.
+  //
+  // `BinaryOperatorKind` and `UnaryOperatorKind` are java enums from a DEPENDENCY, not sealed Scala
+  // ones, so scalac cannot check either match and a Spoon upgrade that adds a kind falls straight
+  // through to the default arm. The binary default used to be `"?" + other` — which is not a
+  // diagnostic, it is a METHOD NAME: `binApply` builds `l.?NEWKIND(r)` and the emitter renders it,
+  // so the port carries a call to a member nobody declares. Best case that is a compile error naming
+  // a symbol which appears nowhere in the java; worst case it is nothing at all.
+  //
+  // The fallback itself cannot be PROBED — a java enum cannot be extended, so no fixture can make
+  // the parser hand over a kind that does not exist yet, which is the same reason the unary twin has
+  // no direct probe. What IS checkable is the pair of facts it sits between: the jar's enum, and
+  // what the emitted text may contain.
+  // -------------------------------------------------------------------------------------------
+
+  /** every constant of a Spoon operator enum, READ FROM THE JAR — never a hand-written list, for
+    * `NodeKindTotalitySpec`'s reason: a set written down here is one that stops being a measurement
+    * the first time the dependency moves. */
+  private def constants(fqn: String): Set[String] =
+    Class.forName(fqn).getEnumConstants.map(_.toString).toSet
+
+  test("the operator enums are the ones the arms enumerate — a Spoon upgrade fails HERE") {
+    // `SpoonTir.opText` answers nineteen and `INSTANCEOF` never reaches it (the arm above branches
+    // first); the unary arm answers four increments plus four operators. A twentieth binary kind or
+    // a ninth unary one now mints a marker instead of a method name — the right outcome, and one
+    // nobody would go looking for, so this is where a dependency bump is meant to stop.
+    assertEquals(
+      constants("spoon.reflect.code.BinaryOperatorKind"),
+      Set("OR", "AND", "BITOR", "BITXOR", "BITAND", "EQ", "NE", "LT", "GT", "LE", "GE",
+          "SL", "SR", "USR", "PLUS", "MINUS", "MUL", "DIV", "MOD", "INSTANCEOF"),
+      "spoon's binary operator kinds moved — `SpoonTir.opText` enumerates them, and the new one " +
+        "mints a FrontendBlindSpot marker until an arm is written for it")
+    assertEquals(
+      constants("spoon.reflect.code.UnaryOperatorKind"),
+      Set("POS", "NEG", "NOT", "COMPL", "PREINC", "PREDEC", "POSTINC", "POSTDEC"),
+      "spoon's unary operator kinds moved — `SpoonTir`'s unary arm enumerates them")
+  }
+
+  test("no operator java HAS is APPLIED under a `?`-named symbol — the shape the default emitted") {
+    // Asserted at the APPLY's own symbol, which is what the emitter renders: `?NEWKIND` is a legal
+    // Scala identifier, so nothing downstream can tell it from a real member — the emitted file is
+    // the last place this is visible and the first place it is too late. (Read here rather than out
+    // of emitted text because `frontend-spoon` does not see the emitter; the name is the same one.)
+    // One snippet using every binary operator, both compound-assignment positions included, because
+    // all three call sites took their spelling from the same function.
+    val p = SpoonTir.fromSource(
+      """package p;
+        |public class Ops {
+        |  public int f(int a, int b, Object o) {
+        |    int r = a + b - a * b / (b + 1) % 3;
+        |    r = r << 1; r = r >> 1; r = r >>> 1;
+        |    r = r & b; r = r | b; r = r ^ b;
+        |    r += b; r -= b; r *= b; r /= b; r %= b; r &= b; r |= b; r ^= b;
+        |    r <<= 1; r >>= 1; r >>>= 1;
+        |    boolean t = (a == b) || (a != b) && (a < b) | (a > b) & (a <= b) ^ (a >= b);
+        |    boolean u = o instanceof String;
+        |    return t || u ? r : 0;
+        |  }
+        |}
+        |""".stripMargin)
+    assertEquals(markers(p), Nil)
+    val applied = scan(p) { case a: Tree.Apply => a }
+      .flatMap(a => p.symbolOf(a.method)).map(_.name).distinct
+    assertEquals(applied.filter(_.startsWith("?")), Nil,
+      s"an operator was applied under a `?`-named symbol: $applied")
+    // …and the positive, so the assertion above is not passing on an empty walk.
+    assert(applied.contains("+") && applied.contains(">>>") && applied.contains("^"),
+      s"the walk did not reach the operators at all: $applied")
   }
