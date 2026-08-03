@@ -489,7 +489,7 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   are required, because `lost = 0` is the bar and a run could hold it by RECOVERING everything —
   `recovered` is a counted residue and `deliberate` is derived from the port's own drops, so
   reporting the bar without them says nothing about how it was met;
-  `porter-notes`, `break-catch`, `try-resource` and `switch-null` record on every run,
+  `porter-notes`, `break-catch`, `try-resource`, `switch-null` and `markers` record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget` record when
   `CollectionsTransform` is in the pipeline, and `nullability-boundary` when
   `NullabilityTransform` is. **A retype has TWO directions and a subtyping argument

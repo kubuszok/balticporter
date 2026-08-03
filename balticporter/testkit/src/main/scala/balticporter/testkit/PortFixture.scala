@@ -34,12 +34,12 @@ final case class Ported(before: Program, after: Program, phases: List[Phase],
     * rather than a hand-assembled approximation of it. */
   lazy val plan: RuntimePlan = RuntimePlan.of(phases, runtimeMode)
 
-  private def emitterWith(preview: Boolean): TirEmitter =
+  private def emitterWith(preview: Boolean = false, bestEffort: Boolean = false): TirEmitter =
     new TirEmitter(after, plan.concreteMembers,
                    javaSource = path => sources.collectFirst { case (n, c) if path.endsWith(n) => c },
-                   preview = preview)
+                   preview = preview, bestEffort = bestEffort)
 
-  lazy val emitter: TirEmitter = emitterWith(preview = false)
+  lazy val emitter: TirEmitter = emitterWith()
 
   /** the emitted Scala for the whole program. */
   lazy val out: String = emitter.emit
@@ -63,6 +63,17 @@ final case class Ported(before: Program, after: Program, phases: List[Phase],
   lazy val previewEmitter: TirEmitter = emitterWith(preview = true)
 
   lazy val previewOut: String = previewEmitter.emit
+
+  /** the same program emitted in BEST-EFFORT mode (`DESIGN.md` §6.4).
+    *
+    * A third emitter, for the reason the second one is a second: each records its own source map,
+    * member digests and marker inventory. This is the fixture §6.4's standing claim needs — *at
+    * zero open markers, best-effort output minus fences and banner is byte-identical to deliverable
+    * output, by construction* — and a claim by construction still wants the one comparison that
+    * would notice if the construction ever stopped holding. */
+  lazy val bestEffortEmitter: TirEmitter = emitterWith(bestEffort = true)
+
+  lazy val bestEffortOut: String = bestEffortEmitter.emit
 
   /** the symbol id for a fully-qualified name, in whichever program. */
   def idIn(p: Program, fullName: String): Option[SymId] = p.symbols.all.find(_.fullName == fullName).map(_.id)

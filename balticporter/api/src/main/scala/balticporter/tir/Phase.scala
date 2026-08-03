@@ -446,4 +446,13 @@ object StandardTraversal:
       // unwrapped — including `transformTerm`, which is what keeps a scan's coverage complete —
       // and the wrapper itself is then offered to `transformTerm` too, one node later.
       case x: Tree.Commented => x.copy(stmt = mapTerm(ph, x.stmt))
+      // THE MARKER (`DESIGN.md` §6.2). Recursed into and REBUILT, exactly like the comment wrapper
+      // above and for a sharper reason: every phase's hooks must reach INSIDE an approximation,
+      // because the whole point of keeping the marked tree is that a later whole-program transform
+      // might be what fixes it. A phase that matches for a specific shape simply fails to match a
+      // wrapped one and leaves it alone — so the safe default is marker-preserved, code-untouched,
+      // and ERASING a marker takes a deliberate match on `Tree.Unportable` plus a replacement.
+      // That asymmetry is the design: a discharge is `state = Resolved`, a deletion is a defect,
+      // and `MarkerCheck` can only tell them apart because the two look different HERE.
+      case x: Tree.Unportable => x.copy(inner = mapTerm(ph, x.inner), tpe = mapType(ph, x.tpe))
     ph.transformTerm(rebuilt)

@@ -103,9 +103,19 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // one shrink while another grew.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.AbsorbedSilently),
       List("CtAnnotationFieldAccess", "CtAnnotationMethod", "CtRecord", "CtTextBlock"))
+    // …and a FOURTH, added when `DESIGN.md` §6.2's marker took over the first two of
+    // `SpoonTir.unsupported`'s six sites. A marked kind still blocks the port — the emission gate
+    // refuses on any open marker — but the failure is now the size of the CONSTRUCT rather than the
+    // size of the FILE, which is the difference between "this library cannot be ported" and "these
+    // three declarations cannot".
+    assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.MarkedUnportable),
+      List("CtCasePattern", "CtSwitchExpression", "CtYieldStatement"))
+    // What is LEFT here is the four sites whose SHAPE a term-level marker cannot take: a `Constant`,
+    // a `ValDef`, the type operand of an `instanceof`, a lambda with no body. Each is a real mint
+    // site wanting a marker of its own kind, and putting a term where the tree needs a declaration
+    // would be worse than the throw.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.RefusedLoudly),
-      List("CtCasePattern", "CtRecordPattern", "CtSwitchExpression", "CtTypePattern", "CtUnnamedPattern",
-        "CtYieldStatement"))
+      List("CtRecordPattern", "CtTypePattern", "CtUnnamedPattern"))
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.NeverVisited),
       List("CtModule", "CtModuleRequirement", "CtPackage", "CtPackageDeclaration", "CtPackageExport",
         "CtProvidedService", "CtReceiverParameter", "CtRecordComponent", "CtUsedService"))

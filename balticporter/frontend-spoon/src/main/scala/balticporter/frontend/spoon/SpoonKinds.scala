@@ -40,8 +40,24 @@ object SpoonKinds:
   /** the three ways a kind can be unhandled, in descending order of how loudly it fails. */
   enum Absence:
     /** reaches `SpoonTir.unsupported`, which throws — so the whole COMPILATION UNIT fails to
-      * translate, not one node. That is the honest cost of one `record` in a 135-file library */
+      * translate, not one node. That is the honest cost of one `record` in a 135-file library.
+      *
+      * What is left here after `DESIGN.md` §6.2's marker landed are the refusal points whose SHAPE
+      * a term-level marker cannot take: a `Constant`, a `ValDef`, the type operand of an
+      * `instanceof`. Each is a real mint site and each wants a marker of its own kind; none of them
+      * is one an expression wrapper can stand in for, and pretending otherwise would put a term
+      * where the tree needs a declaration */
     case RefusedLoudly
+
+    /** reaches a mint site that produces a `Tree.Unportable` marker: the node is refused PER SITE,
+      * the rest of the unit translates, and the emission gate refuses to ship the port until the
+      * marker is closed or the declaration that uses it is dropped (`DESIGN.md` §6.4).
+      *
+      * Strictly better than [[RefusedLoudly]] and strictly worse than a lowering. The port still
+      * does not ship, which is the point — but the failure is now the size of the construct rather
+      * than the size of the file, and adopting a new syntax family becomes an incremental measured
+      * step instead of an all-or-nothing one */
+    case MarkedUnportable
     /** a SUPERTYPE's arm takes it and the construct degrades with no error, no moved count and
       * nothing in the emitted file to say a Java construct had ever been there. The dangerous one */
     case AbsorbedSilently
@@ -170,12 +186,12 @@ object SpoonKinds:
     Kind("CtRecord", Absent(AbsorbedSilently, "extends CtClass, so classDef treats it as a plain class and typeFlags has no isRecord"), Some(c(43))),
     Kind("CtAnnotationMethod", Absent(AbsorbedSilently, "extends CtMethod, so execDef emits an ordinary abstract method; getDefaultExpression is never called and the `default` clause is dropped"), scala.None),
 
-    Kind("CtSwitchExpression", Absent(RefusedLoudly, "extends CtExpression and CtAbstractSwitch, NOT CtSwitch, so the switch arm cannot catch it"), Some(s(9))),
-    Kind("CtYieldStatement", Absent(RefusedLoudly, "extends CtCFlowBreak, not CtBreak or CtReturn; in practice the enclosing switch expression refuses first"), Some(s(9))),
-    Kind("CtTypePattern", Absent(RefusedLoudly, "reached as the instanceof right operand, which refuses"), Some(g(21))),
-    Kind("CtRecordPattern", Absent(RefusedLoudly, "the same instanceof refusal, and as a case label it reaches the expression refusal"), Some(s(10))),
-    Kind("CtCasePattern", Absent(RefusedLoudly, "a CtExpression, not a CtPattern, so switchStmt's case-expression map refuses it"), Some(s(10))),
-    Kind("CtUnnamedPattern", Absent(RefusedLoudly, "both pattern paths above"), Some(s(10))),
+    Kind("CtSwitchExpression", Absent(MarkedUnportable, "extends CtExpression and CtAbstractSwitch, NOT CtSwitch, so the switch arm cannot catch it"), Some(s(9))),
+    Kind("CtYieldStatement", Absent(MarkedUnportable, "extends CtCFlowBreak, not CtBreak or CtReturn; in practice the enclosing switch expression refuses first"), Some(s(9))),
+    Kind("CtTypePattern", Absent(RefusedLoudly, "reached as the instanceof right operand, which refuses — and that site is one of the four whose SHAPE a term-level marker cannot take"), Some(g(21))),
+    Kind("CtRecordPattern", Absent(RefusedLoudly, "the instanceof right operand still THROWS — a term marker cannot stand where the tree wants a type operand; as a CASE LABEL it now mints a marker instead, and the loudest reachable outcome is what this claim states"), Some(s(10))),
+    Kind("CtCasePattern", Absent(MarkedUnportable, "a CtExpression, not a CtPattern, so switchStmt's case-expression map refuses it"), Some(s(10))),
+    Kind("CtUnnamedPattern", Absent(RefusedLoudly, "both pattern paths above — the case-label one marks, the instanceof one still throws"), Some(s(10))),
 
     Kind("CtPackage", Absent(NeverVisited, "the builder enters at the top-level types; package names are recovered from qualified names"), scala.None),
     Kind("CtPackageDeclaration", Absent(NeverVisited, "not read; its comments survive only through the positional file-header harvest"), scala.None),
@@ -192,6 +208,37 @@ object SpoonKinds:
   val registry: List[Kind] = lowered ++ positional ++ absent
 
   val byName: Map[String, Kind] = registry.map(k => k.name -> k).toMap
+
+  /** the REGISTRY name for a node the parser actually built.
+    *
+    * The registry is keyed on Spoon's INTERFACE names (`CtSwitchExpression`) and the parser hands
+    * back its own implementations (`CtSwitchExpressionImpl`), so a marker minted from a live node
+    * would name a class this list has never heard of — and the join between "the run refused n
+    * constructs" and "here is what the frontend does with that kind" is the whole reason both
+    * artifacts exist.
+    *
+    * Resolved structurally rather than by stripping `Impl`: an implementation may sit two classes
+    * below its interface, and the string test would then answer a name nobody registered. The
+    * `Impl` shortcut is tried FIRST only because it is exact when it matches — a hit is checked
+    * against [[byName]], never assumed. Among the interfaces a class carries, the MOST SPECIFIC
+    * registered one wins: `CtSwitchExpressionImpl` implements both `CtSwitchExpression` and
+    * `CtExpression`, and answering the supertype would say the node is one the frontend handles.
+    *
+    * Falls back to the class's own simple name, which is honest: a kind outside the registry is
+    * exactly what `NodeKindTotalitySpec` exists to fail on, and inventing a registered name for it
+    * here would hide that. */
+  def nameOf(cls: Class[?]): String =
+    val stripped = cls.getSimpleName.stripSuffix("Impl")
+    if byName.contains(stripped) then stripped
+    else
+      def all(c: Class[?]): List[Class[?]] =
+        if c == null then Nil
+        else c.getInterfaces.toList.flatMap(i => i :: all(i)) ++ all(c.getSuperclass)
+      val candidates = all(cls).distinct.filter(c => byName.contains(c.getSimpleName))
+      candidates
+        .find(c => candidates.forall(d => (d eq c) || !c.isAssignableFrom(d)))
+        .map(_.getSimpleName)
+        .getOrElse(stripped)
 
   /** the kinds nothing reaches, by how loudly they fail. Printed by the spec; the ONLY honest way
     * to state the size of the gap, because a total that mixes a loud refusal with a silent

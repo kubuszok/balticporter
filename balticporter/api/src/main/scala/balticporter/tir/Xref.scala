@@ -180,6 +180,11 @@ object Xref:
       // everything they always did. A usage that occurs only inside a hole would read as dead code
       // to every consumer of this index if the walk stopped at the node.
       case o: Tree.Opaque                   => o.holes.foreach(walkTerm)
+      // the approximation is ordinary program text and names ordinary symbols. Stopping at the
+      // wrapper would make every symbol used only inside a marked region read as DEAD to
+      // `usagesOf` — and "is anything still using this?" is the question the drop suggestions, the
+      // vacation assertion and the boundary checks all ask.
+      case m: Tree.Unportable               => walkTerm(m.inner)
 
     units.foreach(walkClassDef)
     new XrefIndex(defs.toMap, usages.view.mapValues(_.toList).toMap)

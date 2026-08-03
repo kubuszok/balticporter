@@ -394,4 +394,15 @@ object TirPrinter:
       val shown = x.holes.indices.foldLeft(x.raw)((s, i) => s.replace(Tree.Opaque.hole(i), s"{$i}"))
       line(sb, indent, s"Opaque ${"\""}${escape(shown)}${"\""}${ofType(x.tpe, style)}${origin(x.origin, style)}")
       group(sb, indent + 1, "holes", x.holes, style)
+    case x: Tree.Unportable =>
+      // the STATE leads, because "is this still open?" is the only question a reader of a dump has
+      // about a marker, and it is the one the emitted file cannot answer at all: an open marker
+      // never ships and a resolved one renders as its inner, so the two are indistinguishable
+      // downstream of here.
+      val st = x.state match
+        case MarkerState.Open                => "OPEN"
+        case MarkerState.Resolved(by, how)   => s"resolved by $by: $how"
+      line(sb, indent, s"Unportable [$st] ${x.kind.label}${x.diff.fold("")(d => s" $d")} " +
+        s"${"\""}${escape(x.what)}${"\""}${ofType(x.tpe, style)}${origin(x.origin, style)}")
+      sub(sb, indent + 1, "inner", x.inner, style)
 

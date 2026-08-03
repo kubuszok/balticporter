@@ -46,6 +46,17 @@ final class TirEmitter(
       * the residue comment M6 counts. Orthogonal to `RuntimeMode` and OFF by default — the
       * shipping emission is byte-identical with it off, which `members.tsv` proves. */
     preview: Boolean = false,
+    /** BEST-EFFORT emission (`DESIGN.md` §6.4). Not a second code path — one emitter, one flag:
+      * an OPEN marker renders as its inner term inside deterministic comment fences instead of the
+      * `compiletime.error` the shipping default emits, and each affected file gains a banner naming
+      * the regions. The orchestrator supplies the rest of the mode (a separate output directory, a
+      * sentinel, a nonzero exit), because those are facts about a RUN and not about a rendering.
+      *
+      * At ZERO open markers this changes nothing at all — no marker, no fence, no banner — which is
+      * §6.4's standing claim reduced to what makes it true: the two modes are the same emitter over
+      * the same tree, so byte-identity is by construction rather than by a comparison somebody
+      * remembers to run. `BestEffortIdentitySpec` is that claim under test. */
+    bestEffort: Boolean = false,
     /** What this run may CONCLUDE about a type it does not emit (`DESIGN.md` §8.3). Two reads go
       * through it today — the constructor plan (via `CtorFunnel.Plans`) and the class-vs-object
       * collapse — and the rest of this file's whole-program indexes are still bare `program.units`
@@ -135,6 +146,11 @@ final class TirEmitter(
     val full = sym(cd.symbol).fullName
     currentUnitName = full
     printedNotes.clear()
+    // …taken BEFORE the body renders, so the best-effort banner below names THIS file's regions.
+    // The marker list is per-emitter and cumulative (it is the run's inventory); the slice from
+    // here on is this unit's, and re-emitting a unit — which `Determinism.Emission` does for every
+    // unit on every run — appends to it exactly as it re-renders the text.
+    val markersBefore = recordedMarkers.size
     val body = classDef(cd, 0)
     val pkg  = if full.contains('.') then s"package ${escPath(full.substring(0, full.lastIndexOf('.')))}\n\n" else ""
     // The generated banner says what the FILE is; the upstream's own header — its licence — follows
@@ -148,11 +164,27 @@ final class TirEmitter(
     // first line that is the port speaking for itself — and it is exactly where a reader who has
     // just noticed the package is not the upstream one is looking.
     val text0 = header(cd) + leading(cd.unitLeading, 0) + unitNotes(cd) + pkg + body
+    // …and, in BEST-EFFORT mode only, the banner naming the regions this file was degraded at.
+    // Assembled after the body because the marker set is only known once the body has rendered,
+    // and prepended above everything for the reason a sentinel exists at all: a file that looks
+    // like deliverable output and is not is the single thing this mode must never produce.
+    val banner =
+      if !bestEffort then ""
+      else
+        val mine = recordedMarkers.drop(markersBefore).toList
+        if mine.isEmpty then ""
+        else
+          "// ############################################################################\n" +
+          s"// BEST-EFFORT OUTPUT — ${mine.size} region(s) in this file are NOT a faithful\n" +
+          "// translation. This file MUST NOT ship. Each region is fenced in the body below.\n" +
+          mine.map(m => s"//   ${m.kind.label}${m.diff.fold("")(d => s" [$d]")} at " +
+            s"${m.origin.javaPath}:${m.origin.line} — ${Tree.Unportable.safe(m.what)}\n").mkString +
+          "// ############################################################################\n"
     // …and the comments the attachment channel could not place, put back beside the member they
     // were written in. BEFORE the source map is computed, not after: a post-pass over finished text
     // would desync `srcmap.tsv` and `members.tsv` from the file, and the rule that a join happens
     // on a recorded id rather than on a rendering applies to line ranges too.
-    val text = recoverTrivia(cd, text0)
+    val text = banner + recoverTrivia(cd, text0)
     if SrcMap.enabled then recordedMap(full) = srcMapOf(full, cd, text)
     text
 
@@ -2952,6 +2984,59 @@ final class TirEmitter(
     // Ready-made Scala, with any HOLES rendered as terms. The closed form (`holes = Nil`) is
     // `raw` verbatim and no scan runs over it — see `Tree.Opaque`.
     case o: Tree.Opaque                 => o.spliced(h => spliceOperand(h, i))
+    // THE MARKER (`DESIGN.md` §6.2/§6.4). A RESOLVED one renders as its inner and nothing else: a
+    // phase answered it, and a record of work done is not a residue. An OPEN one never ships.
+    case m: Tree.Unportable             => unportable(m, i)
+
+  /** Render a marker. `Open` is the case that matters and there are exactly two answers:
+    *
+    *   - '''best effort''' — the approximation inside deterministic comment fences, so an operator
+    *     can read the whole file and see precisely which regions are wrong. A comment cannot change
+    *     program shape, which is what makes the fence admissible at all;
+    *   - '''anything else, including the shipping default''' — `scala.compiletime.error`. The
+    *     orchestrator's gate (§6.4) means a deliverable run never reaches this branch, because the
+    *     tree is not written at all; what reaches it is an emitter with no orchestrator around it,
+    *     which is every testkit fixture. So the DEFAULT is the loudest available answer rather than
+    *     the quietest, which is the opposite of `unrenderable`'s default and deliberately so: that
+    *     one degrades an expression the engine can still spell, this one stands where the engine
+    *     has nothing to say.
+    *
+    * Either way the refusal is RECORDED, as `Decision.Kind.Unrenderable` — the same kind
+    * `unrenderable` uses and for the same reader's question. §2.6's reconciliation, taken: the
+    * marker's own `UnportableKind` and catalog id carry what a second decision kind would have
+    * carried, and two kinds whose one-line descriptions are indistinguishable is how a decision log
+    * stops being classifiable. */
+  private def unportable(m: Tree.Unportable, i: Int): String =
+    m.state match
+      case MarkerState.Resolved(_, _) => term(m.inner, i)
+      case MarkerState.Open =>
+        val d = Decision(
+          kind       = Decision.Kind.Unrenderable,
+          subject    = currentOwnerSym,
+          subjectFqn = if currentOwnerSym == SymId.None then currentUnitName else sym(currentOwnerSym).fullName,
+          detail     = Map("construct" -> m.kind.label, "why" -> m.what,
+            "action" -> m.kind.remedies.headOption.map(_.what).getOrElse("no remedy is recorded for this kind"))
+            ++ m.diff.map(dd => "catalog" -> dd.toString),
+          reason = Reason.Universal(s"unportable/${m.kind.slug}"),
+          origin = m.origin,
+        )
+        recordedEmission.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty) += d
+        printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
+        recordedMarkers += m
+        if bestEffort then
+          val (openF, closeF) = Tree.Unportable.fence(m)
+          s"$openF ${term(m.inner, i)} $closeF"
+        else
+          val msg = PorterNote.safe(s"balticporter: ${m.kind.label}: ${m.what}; " +
+            m.kind.remedies.headOption.map(_.render).getOrElse("") + s"; origin ${m.origin.javaPath}:${m.origin.line}")
+          PorterNote.render(d, "").stripSuffix("\n") + " " +
+            "scala.compiletime.error(\"" + escape(msg) + "\")"
+
+  /** every OPEN marker this emitter RENDERED — the input to the best-effort banner, and the
+    * emitter's own half of the marker inventory. A value this emitter owns, exactly like the source
+    * map and for the same reason (§5.1). */
+  def renderedMarkers: List[Tree.Unportable] = recordedMarkers.toList
+  private val recordedMarkers = collection.mutable.ListBuffer.empty[Tree.Unportable]
 
   /** A Java constructor reference (`Foo::new`) is typed by the TARGET functional interface Java
     * resolved, not by `Foo`. Emitted bare, `() => new Foo()` is a `Function0`, which Scala

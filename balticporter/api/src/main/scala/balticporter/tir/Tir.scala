@@ -487,6 +487,101 @@ object Tree:
   final case class DoWhile(body: Term, cond: Term, tpe: TypeRepr, origin: Origin, label: Option[String] = None) extends Term
   /** `synchronized (lock) body`. `tpe` is Unit. */
   final case class Synchronized(lock: Term, body: Term, tpe: TypeRepr, origin: Origin)   extends Term
+
+  /** THE MARKER — a construct with no faithful Scala image, recorded IN THE TREE.
+    *
+    * `DESIGN.md` §6.2, built. What §3.4 forbids is not best effort; it is SILENT best effort, and
+    * until this node existed the engine had two answers and no third. `TirEmitter.unrenderable` is
+    * one — four call sites, whose shipping-default output is a comment and `()`, in a mode no
+    * measure lane runs. `SpoonTir.unsupported` is the other, and it is a THROW that is not
+    * per-site: it fails the whole COMPILATION UNIT, so one unmodelled declaration in a 135-file
+    * library does not cost one node, it costs that file. This is the per-site record that makes
+    * adopting a new syntax family an incremental, measured step instead of an all-or-nothing one.
+    *
+    * ==Why it lives in the tree==
+    *
+    * §6.2 rejects three alternatives, each for a reason this codebase has already paid for once,
+    * and they are not re-argued here. The short form: trees have no identity — [[StandardTraversal]]
+    * rebuilds every node on every phase — so a side table has nothing stable to key on and a phase
+    * that deletes a subtree leaves an entry that either vanishes silently or falsely blocks; a
+    * `diag` field on every node touches every construction site for something empty almost
+    * everywhere; and symbol tags cannot pin the exact expression that the fence, the error
+    * correlation and the diff all need.
+    *
+    * ==What a phase sees==
+    *
+    * The traversal recurses INTO [[inner]] and rebuilds the wrapper, so every phase's hooks reach
+    * the approximation exactly as they reach any other term — and a phase that pattern-matches for
+    * a specific shape simply fails to match a wrapped one and leaves it alone. '''The safe default
+    * is marker-preserved, code-untouched.''' Erasing a marker requires deliberately matching it and
+    * constructing a replacement, which is the point: discharge is an explicit act
+    * ([[MarkerState.Resolved]]), and `MarkerCheck` is what tells a discharge from an erasure. Those
+    * two are the same size in the output and nothing like each other in a port.
+    *
+    * ==What emission does==
+    *
+    * An `Open` marker is never shipped. In deliverable mode the gate runs before anything is
+    * written (§6.4) and the tree is not written at all; the emitter, asked to render one anyway —
+    * which is what a fixture with no orchestrator around it does — emits `compiletime.error`, so
+    * the loudest available answer is also the DEFAULT one. In best-effort mode it renders as
+    * [[inner]] inside deterministic comment fences and the file gains a banner. A `Resolved` marker
+    * renders as its inner and nothing else: it is a record of work done, not a residue.
+    *
+    * @param inner the approximation. For a construct with no approximation at all this is the unit
+    *   literal, and it is deliberately NOT an `Option`: every consumer would then carry a branch
+    *   for "no term here", and a node the emitter cannot render is one the gate catches anyway
+    * @param kind  the taxonomy — a CLOSED engine enum ([[UnportableKind]])
+    * @param state `Open` until a phase discharges it
+    * @param diff  the `balticporter.catalog` row this marker is an INSTANCE of, where one names it.
+    *   `None` is an honest state: inventing a row to point at would make the registry describe the
+    *   engine's failures instead of Java and Scala
+    * @param what  one line, in the mint site's own words. The taxonomy says which FAMILY the
+    *   failure belongs to; this says which member of it
+    */
+  final case class Unportable(inner: Term, kind: UnportableKind, state: MarkerState,
+                              diff: Option[balticporter.catalog.DiffId], what: String,
+                              tpe: TypeRepr, origin: Origin) extends Term:
+
+    /** discharged BY A NAMED PHASE, with what it did. The replacement term is the caller's to
+      * build; this records that the marker was ANSWERED rather than deleted. */
+    def resolved(byPhase: String, how: String): Unportable =
+      copy(state = MarkerState.Resolved(byPhase, how))
+
+    /** the identity a CONSERVATION check compares two programs on.
+      *
+      * Not object identity and not a `SymId`: the traversal rebuilds every node on every phase —
+      * §6.2's own reason for rejecting a side table — and a marker is minted at an EXPRESSION,
+      * which has no symbol. The origin plus the mint site's own words is what survives a rebuild,
+      * and it is distinguishing only because [[Unportable.open]] refuses a synthetic origin:
+      * `<synthetic>:0:0` would collapse every marker in the program onto one key, and the check
+      * keyed on it would then report nothing, confidently. */
+    def markerKey: String = s"${kind.label}@${origin.javaPath}:${origin.line}:${origin.col}|$what"
+
+  object Unportable:
+
+    /** MINT one. Refuses a synthetic origin — §6.2's rule that *a marker must point at real Java*,
+      * and the precondition [[Unportable.markerKey]] depends on. A mint site with no position has
+      * to keep whatever loud answer it had; that is a worse outcome for one node and a truthful
+      * one, where a marker nothing can locate is neither. */
+    def open(inner: Term, kind: UnportableKind, diff: Option[balticporter.catalog.DiffId],
+             what: String, tpe: TypeRepr, origin: Origin): Unportable =
+      require(origin != Origin.synthetic && origin.javaPath.nonEmpty,
+        s"Unportable.open: a marker must point at real Java, and this one has no position ($what)")
+      Unportable(inner, kind, MarkerState.Open, diff, what, tpe, origin)
+
+    /** the fence a BEST-EFFORT emission wraps an open marker in. Comment-shaped and deterministic:
+      * a comment cannot change program shape, which is the whole reason the fence is admissible
+      * (§6.4), and determinism is what lets `diff -r` of two run directories mean anything. */
+    def fence(m: Unportable): (String, String) =
+      (s"/* balticporter:unportable ${m.kind.label}${m.diff.fold("")(d => s" $d")} — ${safe(m.what)} */",
+       "/* balticporter:end-unportable */")
+
+    /** a fence may never OPEN or CLOSE a comment: Scala block comments NEST (§4.58), so a block
+      * opener in the mint site's own words would swallow the rest of the file. This very scaladoc
+      * failed to compile the first time it was written, which is the shortest available argument
+      * that the rule is not theoretical. */
+    def safe(s: String): String = s.replace("/*", "/ *").replace("*/", "* /")
+
   /** an as-yet-unmodeled TERM, kept typed (a full structured `tpe`) so the tree stays
     * whole while the node set grows. TYPES are never opaque; only unmodeled terms are.
     *

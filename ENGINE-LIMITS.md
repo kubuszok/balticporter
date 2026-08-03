@@ -1564,6 +1564,24 @@ That is the shape this entry predicted — Java code that uses the form at all t
 so a library that hits this hits it as a wall rather than as a residue. Budget it as frontend work,
 not as a translation rule: the TIR already has the node.
 
+**CORRECTION (2026-08-03): the refusal is now PER SITE, not per compilation unit — and that changes
+the cost, not the verdict.** `DESIGN.md` §6.2's marker landed and took over `SpoonTir.unsupported`'s
+statement and expression default arms, so a local class now mints a
+`Tree.Unportable(UnmodelledNodeKind("CtClass"))` and the rest of the file translates. Read what this
+does and does not buy. It does NOT make the construct portable: the emission gate refuses on any
+open marker, so a port that hits one still does not ship, and liqp's four `excludeGlobs` lines stay
+until the frontend grows the node. What it buys is that the failure is now the size of the CONSTRUCT
+rather than the size of the FILE — the four excluded suites would today report five located,
+taxonomised markers with a catalog id and a first remedy instead of five aborted translations — and
+that adopting the construct becomes an incremental measured step. The 12 cascade errors are
+unaffected; they follow from the exclusion, not from the refusal.
+
+Also corrected here because it was stated loosely for the life of this entry: `unsupported` is
+**loud but UNIT-FATAL, never per-site**, and it had **six** call sites (five default arms and one
+guard), not five. Two of the six are now mint sites; the other four are the ones whose SHAPE a
+term-level marker cannot take — a `Constant`, a `ValDef`, an `instanceof`'s type operand, a lambda
+with no body — and each wants a marker of its own kind (`DESIGN.md` §6.5).
+
 *Fix kind: (a), unbuilt — frontend only. Cost, measured: 62 tests unportable + 12 cascade errors on
 one library.*
 

@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -164,6 +164,21 @@ final case class PortRun(
       * real ones — `Correlate.Lane.Declared` classifies them by the message the engine itself
       * wrote, ahead of the source-map lookup. */
     preview: Boolean = false,
+    /** BEST-EFFORT emission (`DESIGN.md` §6.4), orthogonal to [[preview]] and OFF by default.
+      *
+      * The mode a library lives in for its first weeks. With it OFF, the emission GATE runs before
+      * a byte is written and an `Open` marker means the deliverable tree is not written at all —
+      * which is the anti-omission stance (§3.4) applied to the one construct class the engine
+      * admits it cannot translate. With it ON, the run still writes: each open marker renders as
+      * its approximation inside deterministic comment fences, each affected file carries a banner,
+      * the output goes to a SEPARATE directory beside the deliverable one with a sentinel file in
+      * it, and the run exits NONZERO. Three of those four exist so degraded output can never be
+      * mistaken for the real thing — dotty's own best-effort compilation is where that discipline
+      * is borrowed from (§6.1).
+      *
+      * At zero open markers the mode changes nothing: no marker, no fence, no banner, and the
+      * emitted text is byte-identical by construction rather than by comparison (§6.4). */
+    bestEffort: Boolean = false,
     /** printed as the last line — what the operator does next. */
     nextStep: String = "",
 ):
@@ -213,6 +228,15 @@ final case class PortRun(
 
   /** where this source set's emitted Scala goes. From [[SbtGen]], never composed by hand (§5.5). */
   def outDir: Path = SbtGen.managedDir(portRoot, sourceSet.configName)
+
+  /** where BEST-EFFORT output goes (`DESIGN.md` §6.4) — a SEPARATE directory, never [[outDir]].
+    *
+    * Borrowed from dotty's own best-effort compilation, which writes degraded artifacts to their
+    * own directory with a distinct header so they can never masquerade as real ones (§6.1). Beside
+    * the deliverable tree rather than inside it, so `clean` reaches it and no build that globs
+    * `src_managed/main/scala` picks it up by accident. */
+  def bestEffortDir: Path =
+    outDir.getParent.resolve(outDir.getFileName.toString + "-besteffort")
 
   /** The whole run. Throws on a FATAL finding — a leaked dropped type, a dangling substitution, a
     * determinism violation — after printing the full report, so an operator sees every finding and
@@ -559,9 +583,47 @@ final case class PortRun(
     // only one could see the run's decisions would report every noted member as a violation.
     verifyDeterminism(translated, injectedSources, plan)
 
+    // ---- THE EMISSION GATE (`DESIGN.md` §6.4) -------------------------------------------------
+    //
+    // An OPEN marker says the engine has no faithful Scala for a construct this port uses. §3.4's
+    // stance is that such a thing is fatal and never silently best-effort, so the gate runs BEFORE
+    // a byte is written and the deliverable tree is simply not written. It is deliberately not a
+    // finding-with-a-baseline: a baselined open marker is a construct somebody accepted once and
+    // nobody looks at again, which is the shape §5.1 says rots.
+    //
+    // The gate reads the PROGRAM rather than the emitted text, because the emitted text of a marked
+    // unit is a `compiletime.error` — a compile failure downstream, in another repository, with the
+    // engine's diagnosis in a string. That is the right last resort and the wrong first one.
+    //
+    // Best-effort mode is the escape hatch and it is escape-shaped: the output moves to its own
+    // directory, carries a sentinel, and the run ends nonzero.
+    val openMarkers = MarkerCheck.openMarkers(program, translated.emitOrder)
+    val emitDir = if bestEffort && openMarkers.nonEmpty then bestEffortDir else outDir
+    if openMarkers.nonEmpty && !bestEffort then
+      val head = openMarkers.take(10).map { s =>
+        s"    ${s.ownerFqn} — ${s.marker.kind.label}${s.marker.diff.fold("")(d => s" [$d]")}: " +
+          s"${s.marker.what}  (${s.marker.origin.javaPath}:${s.marker.origin.line})\n" +
+          s.marker.kind.remedies.map(r => s"        ${r.render}\n").mkString
+      }.mkString
+      sys.error(
+        s"[$label] EMISSION REFUSED: ${openMarkers.size} open unportability marker(s). Nothing was " +
+          s"written.\n$head" +
+          (if openMarkers.size > 10 then s"    … and ${openMarkers.size - 10} more\n" else "") +
+          "  Close them in the engine, drop the declarations that use them and inject replacements, " +
+          "or re-run with best-effort emission to inspect the degraded output (DESIGN.md §6.4). " +
+          "A port that ships an approximation it cannot name is the failure this gate exists for.")
+
     // ---- emission ----
-    wipe(outDir)
-    Files.createDirectories(outDir)
+    wipe(emitDir)
+    Files.createDirectories(emitDir)
+    if emitDir != outDir then
+      // the SENTINEL. A degraded tree that looks like a deliverable one is the single thing this
+      // mode must never produce, and a directory name is not enough — a directory gets copied.
+      Files.writeString(emitDir.resolve("BALTICPORTER-BEST-EFFORT"),
+        s"This tree is BEST-EFFORT output (DESIGN.md §6.4) and MUST NOT SHIP.\n" +
+          s"${openMarkers.size} region(s) are not a faithful translation; each is fenced in the " +
+          s"file that contains it and named in that file's banner.\n" +
+          s"The deliverable tree for this port is $outDir, and this run did not write it.\n")
 
     var written = 0
     var dropped = 0
@@ -588,7 +650,7 @@ final case class PortRun(
       if substituted || policySubs.dropsType(full) then dropped += 1
       else
         val text = translated.sourceOf(u)
-        write(outDir.resolve(full.replace('.', '/') + ".scala"), text)
+        write(emitDir.resolve(full.replace('.', '/') + ".scala"), text)
         shipped += TriviaCheck.Unit(PortRun.real(Path.of(u.origin.javaPath)), text)
         writtenTexts += (full -> text)
         PortRun.declaredSymbols(u, emittedSubjects)
@@ -622,8 +684,8 @@ final case class PortRun(
 
     // Support types a phase RETYPED code onto. Two feeds, one rule: what the phases DECLARE
     // (RequiresRuntime → RuntimePlan) and what a phase that cannot declare it hands over.
-    written += plan.writeSources(outDir)
-    supportSources.foreach { (fqn, src) => write(outDir.resolve(fqn.replace('.', '/') + ".scala"), src); written += 1 }
+    written += plan.writeSources(emitDir)
+    supportSources.foreach { (fqn, src) => write(emitDir.resolve(fqn.replace('.', '/') + ".scala"), src); written += 1 }
 
     // The MEMBER-LEVEL source map for what was just emitted — written HERE, from the emitter's own
     // recording, rather than accumulated in a process-global table and flushed by a shutdown hook.
@@ -671,7 +733,7 @@ final case class PortRun(
         .toList.sorted
         .foreach { src =>
           val rel = root.relativize(src).toString.replace('\\', '/')
-          val dst = outDir.resolve(root.relativize(src).toString)
+          val dst = emitDir.resolve(root.relativize(src).toString)
           Files.createDirectories(dst.getParent)
           Files.writeString(dst, injectionNotes(rel) + Files.readString(src))
           injected += 1
@@ -823,6 +885,26 @@ final case class PortRun(
     if switchNulls.nonEmpty then say(SwitchNullCheck.Issue.classification(SwitchNullCheck.Issue.NullFallsOut))
     println(SwitchNullCheck.summary(switchNulls))
 
+    // ---- §6.2's CONSERVATION LAW: a refusal may be DISCHARGED, never erased ----
+    // Beside the three above and recorded the same way, because it asks the same two-source
+    // question — what the FRONTEND minted against what the pipeline left — and because a mechanism
+    // whose failure nothing counts is one that fails silently (§3). The failure it exists for is
+    // invisible to every other number here: a phase that DELETES a marked subtree removes the
+    // finding rather than the problem, the emitted code compiles, the error count does not move,
+    // and no member digest changes because that member was going to be rewritten anyway.
+    //
+    // Over `checkedUnits` (ENGINE-LIMITS D2) on both sides. Deliberately NOT in `RequiredChecks`,
+    // for the reason stated there: it records on EVERY run and the wiring living here is what makes
+    // it unskippable, exactly as for `porter-notes`, `break-catch`, `try-resource` and
+    // `switch-null`.
+    val markers  = MarkerCheck.check(translated.parsed, program, checkedUnits)
+    val resolved = MarkerCheck.inventory(program, checkedUnits).count(!_.marker.state.isOpen)
+    CheckReport.record(MarkerCheck.Name, markers.map(_.report))
+    say(s"MARKERS (constructs with no faithful Scala): ${markers.size}")
+    if markers.nonEmpty then say(MarkerCheck.Classification)
+    println(MarkerCheck.summary(markers, resolved))
+    writeMarkers(program, MarkerCheck.inventory(program, checkedUnits))
+
     // ---- the CONTEXT boundary, RECORDED: the four the phase drew (collected above) plus the one
     // only the emitted text can show — a `using` clause the threading attached to a class's
     // constructors that the emitted type does not carry (`ENGINE-LIMITS.md` CT5).
@@ -951,7 +1033,22 @@ final case class PortRun(
     // in its manifest, or in a rule of its own (CLAUDE.md §4.45).
     say("report:")
     println(report.render)
-    say(s"wrote $written ${sourceSet.noun} ($dropped dropped, $injected injected) -> $outDir")
+    say(s"wrote $written ${sourceSet.noun} ($dropped dropped, $injected injected) -> $emitDir")
+
+    // BEST EFFORT ENDS NONZERO (`DESIGN.md` §6.4). Here and not at the gate, because the whole
+    // value of the mode is the diagnostics ABOVE this line — the report, the marker inventory, the
+    // per-file banners. A run that died at the gate would produce none of them, which is the wrong
+    // trade (`ENGINE-LIMITS.md` M6 is about refusing to APPROXIMATE, not about refusing to REPORT).
+    // What it must never do is succeed: an exit code is the one signal a build reads without being
+    // asked to, and a degraded tree that a script treats as a delivery is exactly what the separate
+    // directory and the sentinel exist to prevent.
+    if emitDir != outDir then
+      System.err.println(s"[$label] BEST-EFFORT emission: ${openMarkers.size} open marker(s); " +
+        s"the degraded tree is at $emitDir and MUST NOT SHIP")
+      sys.error(s"[$label] BEST-EFFORT run: ${openMarkers.size} open unportability marker(s). " +
+        s"Nothing was written to the deliverable tree ($outDir); the degraded output is at " +
+        s"$emitDir, beside a ${"BALTICPORTER-BEST-EFFORT"} sentinel, with every region fenced and " +
+        "named in its file's banner.")
 
     if report.fatal.nonEmpty then
       report.fatal.foreach(f => System.err.println(s"[$label] FATAL — $f"))
@@ -1005,6 +1102,32 @@ final case class PortRun(
     * regressions on every run. The rename is applied by the phase's OWN rule
     * ([[PackageRenameTransform.renamed]]): longest prefix, cut only at a separator, so `com.foo`
     * can never rewrite `com.foobar`. */
+  /** `markers.tsv` — one line per marker, keyed the way [[SrcMap]] keys members.
+    *
+    * `DESIGN.md` §6.5 asks for exactly this and says why: the correlation lane already ACCEPTS a
+    * marker set and an empty one is a tested, legal input, so the marker side has only to write the
+    * file for §6.3's third lane — a diagnostic at a MARKED region, classified and expected rather
+    * than triaged — and for the false-positive lane, which is one set-difference over the same two
+    * inputs. A marked region with NO error is the most interesting row the engine can produce: an
+    * approximation that happens to compile is precisely the silent-defect class §6 exists for.
+    *
+    * GATED ON THE ARTIFACT LAYER, without exception (§5.1). This is written from a check's own
+    * inventory, so it is reachable from more test paths than `PortMap` is — and one unconditional
+    * `PortMap.write` was enough to publish run directories into the checkout from a JVM with no
+    * port identity at all. */
+  private def writeMarkers(prog: Program, sited: List[MarkerCheck.Sited]): Unit =
+    if CheckReport.enabled then
+      val dir = CheckReport.runDir
+      Files.createDirectories(dir)
+      val rows = sited.map { s =>
+        val unit  = prog.symbolOf(s.unit).map(_.fullName).getOrElse("?")
+        val state = if s.marker.state.isOpen then "open" else "resolved"
+        s"$unit\t${s.ownerFqn}\t$state\t${s.marker.kind.label}\t${s.marker.diff.fold("-")(_.toString)}\t" +
+          s"${CheckReport.relativise(s.marker.origin.javaPath)}\t${s.marker.origin.line}\t${s.marker.what}"
+      }
+      Files.writeString(dir.resolve("markers.tsv"),
+        ("#unit\tmember\tstate\tkind\tcatalog\tjavaPath\tline\twhat" :: rows).mkString("", "\n", "\n"))
+
   private def writeSrcMap(rec: balticporter.tir.SrcMap.Recording): Unit =
     if CheckReport.enabled then
       val dir = CheckReport.runDir
@@ -1079,7 +1202,7 @@ final case class PortRun(
         // classes the contract fixed. Measured: 2 units on gdx-gltf, both of them the wall classes
         // this item exists for.
         val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions,
-                                   preview, Some(once.surface))
+                                   preview, bestEffort, Some(once.surface))
         val diffs = once.emitOrder.filter(u => again.emitUnit(u) != once.sourceOf(u))
         if diffs.nonEmpty then determinismViolation("emission", once, diffs)
         say(s"determinism: ${once.emitOrder.size} units emitted twice, byte-identical " +
@@ -1805,9 +1928,10 @@ final case class PortRun(
       program, mine, basePorts.flatMap(b => b.map.map(b.name -> _)))
     // the emitter READS this log to render porter notes and never writes to it — its own decisions
     // come back as `TirEmitter.ownDecisions` and are recorded once, by `recordRunDecisions`.
-    val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, Some(surface))
+    val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, bestEffort,
+                                 Some(surface))
     PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)),
-                       decisions, binder, surface)
+                       decisions, binder, surface, parsed)
 
   /** Ask the binder about every key this run DECLARES — its drops, and every keyed phase's own.
     *
@@ -2081,6 +2205,17 @@ object PortRun:
         * first (§5.1). */
       val surface: Surface = new TrivialSurface(
         new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty)),
+      /** the FRONTEND's own output, before any phase ran.
+        *
+        * Carried and not re-derived, because the one question it answers cannot be asked of the
+        * final program alone: `MarkerCheck` compares the markers the frontend MINTED against the
+        * markers that SURVIVED, and a marker that a phase deleted is by definition absent from the
+        * only program anything else in this run holds. Re-parsing to get it back would be a second
+        * translation free to disagree with the first — the same rule the decision log and the
+        * source map follow (§5.1). Defaults to an empty program so a hand-built `Translated` in a
+        * spec is still constructible; the check then compares an empty minting set, which reports
+        * nothing and claims nothing. */
+      val parsed: Program = new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty),
   ):
     private val memo = collection.mutable.Map.empty[SymId, String]
     // the DECISIONS are part of the key: they are not in the tree and they are in the emitted text

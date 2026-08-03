@@ -1105,11 +1105,17 @@ holding the original Java. That buys three things dotty cannot have: a taxonomy 
 of what a hand-porter would write plus ranked remediations against the engine's own seams; and
 **expected-error correlation** (§6.3).
 
-### 6.2 The marker, and why it lives in the tree
+### 6.2 The marker, and why it lives in the tree — BUILT (term level)
 
-- **Term level**: a wrapper node — a term translated only APPROXIMATELY, syntactically complete and
-  semantically wrong, whose `inner` is the approximation and whose state `Open` means it MUST NOT
-  ship. A smart constructor rejects a synthetic origin: a marker must point at real Java.
+- **Term level**: a wrapper node — `Tree.Unportable`, a term translated only APPROXIMATELY,
+  syntactically complete and semantically wrong, whose `inner` is the approximation and whose state
+  `Open` means it MUST NOT ship. A smart constructor (`Tree.Unportable.open`) rejects a synthetic
+  origin: a marker must point at real Java, and that is also the precondition `markerKey` — the
+  identity the conservation check compares two programs on — depends on, since `<synthetic>:0:0`
+  would collapse every marker in a program onto one key and the check would then report nothing,
+  confidently. It carries `Option[DiffId]` beside its `UnportableKind`, so a refusal report says
+  *which known difference* this is rather than only *which kind of problem*; `None` is an honest
+  state and is better than inventing a catalog row to point at.
 - **Definition level**: a `SymTag`, for findings whose subject is a declaration's *shape* rather than
   an expression — a constructor topology with no single-primary encoding, a signature that cannot be
   expressed.
@@ -1136,10 +1142,18 @@ Taxonomy: `UnportableKind` is a **closed engine enum** — a new kind is an engi
 with its mint sites and its report text, which is the correct friction. Its members are derived from
 what this codebase has actually produced (raw-generic conversion, context-dependent raw fill, JDK
 boundary flow, constructor topology, platform-hostile API, reflective lookup, overload divergence,
-frontend blind spot, unmodelled construct, annotation residue), and each carries default ranked
-remediations classified (a)/(b)/(c) — with (c) ranking last unless the kind is inherently semantic.
-Every string in a remediation is built from `Program` data at run time, so the mechanism stays
-library-free and `CLAUDE.md` §1's grep gate continues to hold.
+frontend blind spot, unmodelled node kind, annotation residue), and each carries default ranked
+remediations classified (a)/(b)/(c) — with (c) ranking last unless the kind is inherently semantic
+(`PlatformHostileApi` is the deliberate exception: which APIs a port may not use is a fact about that
+port). Every string in a remediation is a TEMPLATE naming only the engine's own mechanisms, so the
+mechanism stays library-free and `CLAUDE.md` §1's grep gate continues to hold.
+
+`UnmodelledNodeKind(spoonKind)` is the one member that carries data, and the parser's own interface
+name is what it carries — `CtSwitchExpression`, not `CtSwitchExpressionImpl`, resolved structurally
+by `SpoonKinds.nameOf`. That is what joins a run's findings to §2.8's kind registry, which is the
+list that says what the frontend does with every kind a Java source can produce. Without the name a
+run could report *n constructs were refused* and nothing could say which — the report that costs its
+reader the whole investigation §4.45 is about.
 
 ### 6.3 The report and the correlation — BUILT
 
@@ -1202,17 +1216,37 @@ also changed digest is called out: that is the highest-value signal the engine p
 located to a member and a Java line, 0 unmapped**; breaking the `static final` → `inline val` rule
 produced **zero scalac errors** and was located to `Matrix4#<stmt1>` by the test lane alone.
 
-### 6.4 Best-effort emission
+### 6.4 Best-effort emission — BUILT
 
-Not a second code path. One emitter, one flag, three effects: `Open` markers render as the inner term
-inside deterministic comment fences (comments cannot change program shape); each affected file gets a
-banner naming the regions and their state against the baseline; output goes to a separate directory
-with a sentinel file and the migration exits nonzero. In deliverable mode the gate runs first — any
-`Open` marker and the deliverable tree is not written.
+Not a second code path. One emitter, one flag (`TirEmitter.bestEffort`, supplied by
+`PortRun.bestEffort`), three effects: `Open` markers render as the inner term inside deterministic
+comment fences (comments cannot change program shape); each affected file gets a banner naming the
+regions; output goes to a separate directory (`PortRun.bestEffortDir`) with a
+`BALTICPORTER-BEST-EFFORT` sentinel file, and the migration exits nonzero. In deliverable mode the
+gate runs first — any `Open` marker and the deliverable tree is not written.
+
+Two details that are decisions rather than mechanics. **The nonzero exit is at the END of the run,
+not at the gate**, because the value of the mode is the diagnostics — the report, the marker
+inventory, the per-file banners — and a run that died at the gate would produce none of them
+(`ENGINE-LIMITS.md` M6 is about refusing to *approximate*, not about refusing to *report*). And
+**the emitter's rendering of an open marker in the shipping default is `compiletime.error`**, not the
+fence and not a comment: the orchestrator's gate means a real deliverable run never reaches that
+branch, so what reaches it is an emitter with no orchestrator around it — every testkit fixture — and
+the default there has to be the loudest available answer rather than the quietest.
 
 At zero open markers, best-effort output minus fences and banner is byte-identical to deliverable
-output *by construction* (same emitter, same tree) — and a standing check asserts exactly that, so the
-mode cannot rot into a divergent path.
+output *by construction* (same emitter, same tree) — no marker means no fence and no banner, so there
+is nothing for the mode to add. `UnportableMarkerSpec` asserts exactly that, in both the zero-marker
+and the all-discharged case, so the mode cannot rot into a divergent path.
+
+**And this is what replaced the engine's only previous emission-side refusal.**
+`TirEmitter.unrenderable` has four call sites, all of them a `Tree.Break`/`Tree.Continue` whose
+target label is not in scope, and under `preview = false` — the default, and what every measure lane
+runs — it emits its `residue` string, which for all four is a comment and `()`. So before the marker,
+"emission refuses loudly" was true of four sites in a diagnostic mode and of nothing at all in a
+normal run. The two mechanisms are kept apart on purpose and the difference is which way each
+degrades: `unrenderable` stands at an expression the engine *can* still spell and chooses a weaker
+spelling, the marker stands where the engine has nothing to say.
 
 The measure lanes have been running in unlabelled best-effort mode all along; after this the
 "deliverable" claim becomes a *positive statement the gate makes* (zero open markers, every check
@@ -1220,22 +1254,50 @@ clean) rather than the absence of complaints. That is the mode a new library liv
 
 ### 6.5 Status and staging
 
-Everything in §6.3 is **built**. The marker itself (§6.2) and best-effort emission (§6.4) are
-deliberately **not**: the correlation lane already accepts a marker set and an empty one is a tested,
-legal input, so the marker side only has to WRITE a `markers.tsv` of `unit<TAB>member` lines keyed the
-way the source map keys members. The false-positive lane is one set-difference over the same two
-inputs.
+Everything in §6.3 is built. **The marker (§6.2) and best-effort emission (§6.4) are now built too**,
+and they landed together as the adoption order below required: `Tree.Unportable` + `UnportableKind` +
+`MarkerState`, the traversal case, `MarkerCheck` (conservation), the emission gate, the fences and
+`markers.tsv` in one change. The measured claim that made it emission-neutral is stated as a
+condition and not as a hope: **zero markers mint on all fifteen lanes**, so no emitted byte moved.
 
-When the marker IS built, the adoption order is already decided (from the original design, kept so
-its builder does not re-derive it): the marker, traversal case, conservation check, emission gate
-and fences land **together as one change** (CLAUDE.md §3 — check and translation arrive together);
-then mint sites one at a time, each measured against §6.3's precision check, starting with the
-frontend's refusal points (`SpoonTir.unsupported`), then transform refusal points, then gate-derived
-tags. Two standing constraints: the minting rule wraps the **smallest wrong term**, never a
-`this(...)`/`super(...)` delegation head (shape-matching consumers read constructor prologues); and
-constructor-topology markers stay **derived from `CtorFunnel.Plans`** — never frontend-minted —
-because the plan, the check and the emitter must keep answering from one function (§7's rule,
-already enforced for the funnel's other decisions).
+What is still owed, and by whom:
+
+- **the DEFINITION-level half — a `SymTag` for a finding whose subject is a declaration's *shape***
+  (a constructor topology with no single-primary encoding, a signature that cannot be expressed).
+  Deferred to the stage that MINTS one, which is this section's own third stage: a tag with no mint
+  site is indistinguishable from one that is not there, which is the `TirTrace` failure the marker
+  exists to avoid repeating. `UnportableKind.ConstructorTopology` is already in the taxonomy so the
+  stage has a kind to mint, and the constraint below still stands — it stays derived from
+  `CtorFunnel.Plans`;
+- **four of `SpoonTir.unsupported`'s six sites**, which are the ones whose SHAPE a term-level marker
+  cannot take: a `Constant` (the literal arm), a `ValDef` (a try-with-resources resource that is not
+  a local declaration), the type operand of an `instanceof`, and the lambda-without-body guard. Each
+  is a real mint site wanting a marker of its own kind; putting a term where the tree needs a
+  declaration would be worse than the throw. `SpoonKinds.Absence.RefusedLoudly` is now exactly the
+  kinds that still reach one of these, and `MarkedUnportable` the kinds that mint;
+- **the correlation join.** `markers.tsv` is written (`unit`, `member`, `state`, `kind`, `catalog`,
+  `javaPath`, `line`, `what` — keyed the way the source map keys members, and gated on the artifact
+  layer per `CLAUDE.md` §5.1). §6.3's marked-region lane and the false-positive lane — one
+  set-difference over the same two inputs — read it next.
+
+The adoption order, kept so its builder does not re-derive it: the marker, traversal case,
+conservation check, emission gate and fences land **together as one change** (CLAUDE.md §3 — check
+and translation arrive together); then mint sites one at a time, each measured against §6.3's
+precision check, starting with the frontend's refusal points (`SpoonTir.unsupported`), then transform
+refusal points, then gate-derived tags. Two standing constraints: the minting rule wraps the
+**smallest wrong term**, never a `this(...)`/`super(...)` delegation head (shape-matching consumers
+read constructor prologues); and constructor-topology markers stay **derived from
+`CtorFunnel.Plans`** — never frontend-minted — because the plan, the check and the emitter must keep
+answering from one function (§7's rule, already enforced for the funnel's other decisions).
+
+**One thing the conservation check answers with no exemption list**, because the risk table below
+asks for it and a hand-maintained list is what `CLAUDE.md` §5.1 says rots: a marker that is gone
+because its whole DECLARATION is gone is not an erasure. The owner settles it — if the declaration
+went, everything in it went with it — and the survivor set is read from the TREES, never from the
+symbol table, because a phase that drops a member removes the `DefDef` and leaves the `Symbol`
+behind (nothing prunes the table, and it would be wrong to: every reference to the dropped member
+still has to resolve). Asked of the table, the check reports every legitimate deletion as an engine
+defect, which is the false positive that would have made the lane un-baselineable.
 
 Risks and their cheapest falsifying experiments, kept because they are what the staging is for:
 

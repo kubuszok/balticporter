@@ -1750,6 +1750,43 @@ object SpoonTir:
       val path = if p != null && p.isValidPosition && p.getFile != null then p.getFile.getPath else "<snippet>"
       throw balticporter.core.Unsupported(path, line, what)
 
+    /** MINT A MARKER instead of failing the whole unit — `DESIGN.md` §6.2/§6.5's first mint site.
+      *
+      * [[unsupported]] is a refusal and it is the RIGHT kind of refusal; what it is not is
+      * per-site. It throws, so one node the frontend cannot model costs the whole COMPILATION
+      * UNIT: a single `record` declaration in a 135-file library takes that file's every other
+      * type with it, and there is no measured step between "the library ports" and "the library
+      * ports except for this file". That is what makes adopting a new syntax family
+      * all-or-nothing, and it is exactly what §6.2's marker exists to replace.
+      *
+      * What changes and what does not: the port still does not ship — the emission gate refuses on
+      * any open marker (§6.4) — but the failure is now the size of the construct, every other
+      * declaration in the unit translates, and the run REPORTS which construct it was, where, and
+      * what a fix would be. Silence is what was never on offer either way (§3.4).
+      *
+      * '''Falls back to the throw where there is no position.''' §6.2 requires a marker to point at
+      * real Java, and [[Tree.Unportable.markerKey]] — the identity the conservation check compares
+      * two programs on — is derived from that origin. A marker at `<synthetic>:0:0` would collide
+      * with every other one, and the check keyed on it would then report nothing, confidently. A
+      * unit-fatal throw for one positionless node is a worse outcome and a truthful one.
+      *
+      * The catalog id comes from [[SpoonKinds]] rather than from a table here: that registry
+      * already says what this frontend does with every kind a Java source can produce, and a second
+      * mapping beside it would be a second answer to one question. */
+    private def unlowered(el: CtElement, what: String, tpe: TypeRepr): Term =
+      val o = originOf(el)
+      if o == Origin.synthetic || o.javaPath.isEmpty then unsupported(el, what)
+      else
+        val kindName = SpoonKinds.nameOf(el.getClass)
+        Tree.Unportable.open(
+          inner  = Tree.Literal(Constant.UnitC, unitT, o),
+          kind   = UnportableKind.UnmodelledNodeKind(kindName),
+          diff   = SpoonKinds.byName.get(kindName).flatMap(_.catalog),
+          what   = what,
+          tpe    = tpe,
+          origin = o,
+        )
+
     // -----------------------------------------------------------------------
     /** Translates one method/ctor/field-initializer body into TIR terms, resolving every
       * reference to a `SymId`. Covered: locals, assignments, `if`/`while`/`return`/`throw`,
@@ -2027,7 +2064,10 @@ object SpoonTir:
         // — Java's empty statement. NOT claimed: leaving it unclaimed lets the enclosing
         // statement's `deepComments` pick the text up, which is the only place left to put it.
         case c: CtComment => Tree.Literal(Constant.UnitC, unitT, originOf(c))
-        case other => unsupported(other, s"statement ${other.getClass.getSimpleName}")
+        // NO ARM EXISTS for this Java statement kind. A MARKER, not a throw: the failure is the
+        // size of the construct rather than the size of the file, and the gate still refuses to
+        // ship the port (§6.4). `unitT` because a statement produces no value.
+        case other => unlowered(other, s"statement ${SpoonKinds.nameOf(other.getClass)}", unitT)
 
       private def defineLocal(v: CtVariable[?], vt: TypeRepr): SymId =
         val key = "@" + methodId.raw + "$L$" + v.getSimpleName + "#" + posKey(v)
@@ -2688,7 +2728,10 @@ object SpoonTir:
             if isNull && ct != NoType && condTypeResolves(c) then Tree.Typed(t, tt(ct, be), ct, originOf(be)) else t
           Tree.If(expr(c.getCondition), branch(c.getThenExpression), branch(c.getElseExpression), ct, originOf(c))
         case ta: CtTypeAccess[?] => Tree.Literal(Constant.ClassOfC(tpe(ta.getAccessedType)), ty(e), originOf(e))
-        case other => unsupported(other, s"expression ${other.getClass.getSimpleName}")
+        // …and the same for an EXPRESSION. The marker carries the expression's own type, so the
+        // tree stays typed and every phase after this one reads the slot exactly as it would
+        // have — which is the whole reason the marker is a wrapper rather than a hole.
+        case other => unlowered(other, s"expression ${SpoonKinds.nameOf(other.getClass)}", ty(e))
 
       /** the conditional's static type is safe to ascribe onto a null branch — a concrete type, or a
         * type parameter that actually resolves in scope (not the `?T` unresolved stub). */
