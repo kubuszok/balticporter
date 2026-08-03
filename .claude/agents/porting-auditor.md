@@ -24,7 +24,7 @@ the budget on depth, not breadth-first skimming: read whole phases and their tes
 
 ### 1. Over-specificity — library knowledge in the engine
 
-Nothing under `api/`, `engine/`, `frontend-spoon/`, `runtime/` may name a ported library in code —
+Nothing under `balticporter/{api,engine,frontend-spoon,runtime}/` may name a ported library in code —
 test sources included:
 
 ```

@@ -32,7 +32,7 @@ ThisBuild / scalacOptions ++= Seq(
 // PUBLISHING (Maven-Central-shaped)
 //
 // Applied at `ThisBuild`, so every module inherits it; the modules that must NOT ship say
-// `publish / skip := true` individually (`corpus`, `libgdx-core`, `root`).
+// `publish / skip := true` individually (`corpus`, `sge`, `root`).
 //
 // NOT set up here, deliberately: CI credentials and the Sonatype Central portal bundle upload.
 // `publishTo` below is the classic OSSRH staging/snapshot shape, which is what `publishSigned` and
@@ -123,7 +123,7 @@ val munit = "org.scalameta" %% "munit" % "1.2.0" % Test
 //   * Version-locked to the engine (`ThisBuild / version`); see the version-scheme note above.
 // ---------------------------------------------------------------------------------------------
 lazy val runtime = project
-  .in(file("runtime"))
+  .in(file("balticporter/runtime"))
   .settings(
     name        := "balticporter-runtime",
     description := "Support types that Baltic-Porter-emitted Scala links against.",
@@ -149,7 +149,7 @@ lazy val runtime = project
 // §3.2 for the cut and the two judgement calls in it.
 // ---------------------------------------------------------------------------------------------
 lazy val api = project
-  .in(file("api"))
+  .in(file("balticporter/api"))
   .settings(
     name := "balticporter-api",
     description := "The Baltic Porter model and contracts a transform, check or frontend is written against.",
@@ -167,7 +167,7 @@ lazy val api = project
 // (DESIGN.md §3.2) true: no Spoon type is visible here.
 // ---------------------------------------------------------------------------------------------
 lazy val engine = project
-  .in(file("engine"))
+  .in(file("balticporter/engine"))
   .dependsOn(api, `frontend-spoon`)
   .settings(
     name := "balticporter-engine",
@@ -250,7 +250,7 @@ lazy val engine = project
 // The ONLY module that sees Spoon types. It depends on `api` alone for the TIR path; the BIR path
 // (`SpoonFrontend`) is served by the frozen BIR model, which is why that model lives in `api` too.
 lazy val `frontend-spoon` = project
-  .in(file("frontend-spoon"))
+  .in(file("balticporter/frontend-spoon"))
   .dependsOn(api)
   .settings(
     name := "balticporter-frontend-spoon",
@@ -265,7 +265,7 @@ lazy val `frontend-spoon` = project
 // spec (see `PortFixture`). `munit` is a COMPILE dependency here — a testkit whose users write
 // MUnit suites has to hand them the framework.
 lazy val testkit = project
-  .in(file("testkit"))
+  .in(file("balticporter/testkit"))
   .dependsOn(api, engine, `frontend-spoon`)
   .settings(
     name := "balticporter-testkit",
@@ -273,7 +273,7 @@ lazy val testkit = project
   )
 
 lazy val corpus = project
-  .in(file("corpus"))
+  .in(file("balticporter/corpus"))
   .dependsOn(api, engine, testkit, `frontend-spoon`)
   .settings(
     name := "balticporter-corpus",
@@ -288,13 +288,20 @@ lazy val corpus = project
 // (JDK-only, like libGDX core itself) and NOT aggregated by root, so a work-in-progress port
 // can't break the main build. Lenient scalacOptions: this is generated code under burn-down.
 //
+// The project — its directory, its sbt id and the port's own `label` — is named for the module
+// of the REFERENCE PORT it targets (`../sge/build.sbt`'s `sge`), not for the upstream library:
+// what this repository produces is sge's core module, and the upstream name says nothing about
+// where the output belongs. Every ported library under `ported/` follows that rule. The migrator
+// CLASS name and the `port-report/` directory keyed on it deliberately do NOT — that is the
+// measurement identity, and it is stable across a rename.
+//
 // Its sources live in `src_managed/`, gitignored and removed by `clean` — the same layout
 // `SbtGen` writes for a real port (see `SbtGen.managedDir` for why, and `SbtGen.managedSources`
 // for the settings this mirrors). Only `src/` would ever be committed, and this port has none.
-lazy val `libgdx-core` = project
-  .in(file("libgdx-core"))
+lazy val sge = project
+  .in(file("ported/sge"))
   .settings(
-    name := "balticporter-libgdx-core",
+    name := "balticporter-sge",
     scalacOptions := Seq("-nowarn"),
     publish / skip := true,
     libraryDependencies += "org.scalameta" %% "munit" % "1.2.0" % Test,

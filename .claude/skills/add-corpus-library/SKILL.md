@@ -6,7 +6,7 @@ description: Add a new Java library to the Baltic Porter corpus — port it, mak
 # Adding a library to the corpus
 
 Until Baltic Porter is published and each library gets its own porter repository, new libraries are
-added to the **corpus** (`corpus/`, one package per library). Read `CLAUDE.md` §1 before starting — the classification
+added to the **corpus** (`balticporter/corpus/`, one package per library). Read `CLAUDE.md` §1 before starting — the classification
 it defines is the point of the exercise, not a formality.
 
 Each library added should move engine rules **from (c) library-specific → (b) parameterised → (a)
@@ -41,13 +41,13 @@ behavioural evidence the port will ever have, and it decides whether the library
 
 Most of what a migration program contains is declarative, so **write a `.conf` and a three-line
 `main`** and only reach for a hand-written `PortRun(...)` when something genuinely resists it.
-simple-graphs is the worked example — read `corpus/ports/simplegraphs/{main,test}.conf` beside
+simple-graphs is the worked example — read `balticporter/corpus/ports/simplegraphs/{main,test}.conf` beside
 `SimpleGraphsMigrate.scala` before writing either.
 
 ```
-corpus/ports/<lib>/main.conf     # the port
-corpus/ports/<lib>/test.conf     # its suite: `base = "main.conf"` — that IS `extendedBy` (§1.5)
-corpus/src/main/scala/balticporter/corpus/<lib>/<Lib>Migrate.scala
+balticporter/corpus/ports/<lib>/main.conf     # the port
+balticporter/corpus/ports/<lib>/test.conf     # its suite: `base = "main.conf"` — that IS `extendedBy` (§1.5)
+balticporter/corpus/src/main/scala/balticporter/corpus/<lib>/<Lib>Migrate.scala
 ```
 
 ```scala
@@ -80,7 +80,7 @@ keep the conf. Do NOT invent a way to say it in strings — see DESIGN.md §5.7.
 
 ### 2.01 …or the Scala program, when the port needs one
 
-One `object <Lib>Migrate` in `corpus/src/main/scala/balticporter/corpus/<lib>/`, in package
+One `object <Lib>Migrate` in `balticporter/corpus/src/main/scala/balticporter/corpus/<lib>/`, in package
 `balticporter.corpus.<lib>`. It is a **single
 `PortRun(...)` value plus this library's policy, and nothing else**. Do NOT copy the body of
 another migration program: everything mechanical — emission, the dropped-type skip, the injection
@@ -212,7 +212,7 @@ The migration program owns **all** per-library policy and nothing else:
 
 - `Substitutions(dropTypes, dropMethods, inject)` — what not to emit and the Scala to inject instead
 - the parameterised transforms, constructed with this library's values
-- the injected replacement sources, under `corpus/<lib>-overrides/`
+- the injected replacement sources, under `balticporter/corpus/<lib>-overrides/`
 - any §1(c) rule this library plugs in
 
 Nothing library-specific goes into `api` / `engine` / `frontend-spoon`. When you need a new
@@ -224,8 +224,8 @@ rule, decide its kind FIRST (`CLAUDE.md` §1):
 
 ### 2.1 Writing a §1(c) rule — the worked example
 
-`corpus/src/main/scala/balticporter/corpus/libgdx/GdxSharedIteratorRule.scala` is the model, with
-`corpus/src/test/scala/balticporter/corpus/libgdx/GdxSharedIteratorRuleSpec.scala` as the model for
+`balticporter/corpus/src/main/scala/balticporter/corpus/libgdx/GdxSharedIteratorRule.scala` is the model, with
+`balticporter/corpus/src/test/scala/balticporter/corpus/libgdx/GdxSharedIteratorRuleSpec.scala` as the model for
 testing it. It is deliberately *not* in the engine, and it shows the three things the engine's own
 phases cannot:
 
@@ -235,7 +235,7 @@ phases cannot:
 2. **How it enters the pipeline** — as an ordinary element of `PortRun(phases = …)`. Implement
    `balticporter.tir.Phase`; nothing has to be registered. If the port is driven from a `.conf`
    (§2.0) it needs a name instead, and that is one more five-line class beside the rule:
-   `corpus/src/main/scala/balticporter/corpus/libgdx/GdxSharedIteratorFactory.scala` plus a
+   `balticporter/corpus/src/main/scala/balticporter/corpus/libgdx/GdxSharedIteratorFactory.scala` plus a
    `META-INF/services/balticporter.tir.TransformFactory` line in your own resources. Still your
    repository, still compiled by your build — the conf holds a NAME, never behaviour.
 3. **How it is tested** — `balticporter.testkit.PortSuite`, on a Java snippet, in your own test

@@ -157,12 +157,12 @@ policy inlined — that is exactly the mistake `ReflectionToPortableTransform` m
 
 ### Enforcing it
 
-No file under `api/`, `engine/`, `frontend-spoon/` or `runtime/` may name a ported library **in
+No file under `balticporter/{api,engine,frontend-spoon,runtime}/` may name a ported library **in
 code** — test sources included, because a fixture that hard-codes one library's names is the same
 mistake one layer down:
 
 ```
-grep -rn --include='*.scala' -E "badlogic|libgdx|liqp|liquid\.parser|earlygrey|simplegraphs|dongbat|jbump|czyzby|noise4j|tommyettinger|anim8|crashinvaders|eskalon|mgsx|fasterxml|antlr|strftime" api engine frontend-spoon runtime | grep -vE ":\s*(\*|//|/\*)"
+grep -rn --include='*.scala' -E "badlogic|libgdx|liqp|liquid\.parser|earlygrey|simplegraphs|dongbat|jbump|czyzby|noise4j|tommyettinger|anim8|crashinvaders|eskalon|mgsx|fasterxml|antlr|strftime" balticporter/api balticporter/engine balticporter/frontend-spoon balticporter/runtime | grep -vE ":\s*(\*|//|/\*)"
 ```
 
 **Every corpus library's identifying string is in that pattern, and so are its DEPENDENCIES'.** One
@@ -284,7 +284,8 @@ say so; that is a statement, not a loophole.
 ## 2. Adding a library to the corpus
 
 Until the framework is published and each library gets its own porter repository, new libraries are
-added to the **corpus** (`corpus/`, one package per library: `balticporter.corpus.<lib>`). The
+added to the **corpus** (`balticporter/corpus/`, one package per library:
+`balticporter.corpus.<lib>`). The
 procedure for each:
 
 1. **Make it compile.** Every effort — this is where the engine's gaps surface.
@@ -294,6 +295,34 @@ procedure for each:
 Each library added is expected to move engine rules from (c) toward (b) toward (a). A rule that
 survives three libraries unchanged is probably universal; one that needs a new parameter per library
 is correctly a (b); one that cannot be shared at all is a (c) and should be named as such.
+
+### 2.1 A port is named for its DESTINATION, never for its upstream
+
+The repository has two halves and the split is structural: **`balticporter/`** holds the framework
+(`api`, `engine`, `frontend-spoon`, `runtime`, `testkit`, `corpus`) and **`ported/`** holds one
+directory per ported library. What goes in a `ported/` name is the **reference port's own module
+id** — `../sge/build.sbt`'s `sge`, `sge-ecs`, `sge-gltf`, …, `../ssg/build.sbt`'s `ssg-liquid` — and
+not the upstream library's name. libGDX core is `ported/sge`; Ashley is `ported/sge-ecs`; liqp is
+`ported/ssg-liquid`.
+
+The reason is that the upstream name says nothing about where the output belongs, and a port has
+exactly one consumer that must be able to drop the emitted tree in place. A directory called
+`ashley-core` emitting `package sge.ecs` states two different answers to one question, and the
+second module is where that starts costing something. The **port's `label` and its
+`PortManifest.name` take the same value** — they are not decoration: `label` is what
+`PortRun` writes as `module=` into the published `port-map.tsv`, `PortManifest.name` is what a
+dependent's `baseChain` matches against it, and `PortMapTransform.forBases(…)` names it a third
+time. All three must agree or a dependent finds no base map and says so quietly.
+
+**Three things this rule deliberately does NOT reach**, because each is a different axis:
+
+- the **`port-report/<X>/` directory**, keyed on the migrator's `main` CLASS simple name. That is
+  the MEASUREMENT identity, and a baseline whose directory moves with a rename is a baseline that
+  cannot be diffed across one. Rename the module; leave `LibgdxCoreMigrate` alone.
+- **`packageRenames`**, which is the namespace axis and was already correct on every port — the
+  reference module's directory and the package it declares are not the same string
+  (`sge-screens` declares `sge.screen`, singular).
+- the **upstream source tree**, which keeps whatever name the library gave it.
 
 ---
 

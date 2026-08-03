@@ -72,16 +72,16 @@ corpus        := "corpus"                # holds the migration programs (balticp
 core_project  := "engine"                # holds balticporter.tir.CorrelateMain
 
 # ported modules (their emitted Scala lives in <module>/src_managed/{main,test}/scala)
-gdx_module    := "libgdx-core"
-ashley_module := "ashley-core"
-sg_module     := "simplegraphs-core"
-anim8_module  := "anim8-core"
-n4j_module    := "noise4j-core"
-jbump_module  := "jbump-core"
-gltf_module   := "gltf-core"
-screens_module := "screens-core"
-vfx_module    := "vfx-core"
-liqp_module   := "liqp-core"
+gdx_module    := "ported/sge"
+ashley_module := "ported/sge-ecs"
+sg_module     := "ported/sge-graphs"
+anim8_module  := "ported/sge-anim8"
+n4j_module    := "ported/sge-noise"
+jbump_module  := "ported/sge-jbump"
+gltf_module   := "ported/sge-gltf"
+screens_module := "ported/sge-screens"
+vfx_module    := "ported/sge-vfx"
+liqp_module   := "ported/ssg-liquid"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
@@ -106,7 +106,7 @@ gltf_tests    := "../sge/original-src/gdx-gltf/gltf/test"
 # liqp is the one corpus library whose upstream is a submodule of **ssg**, not of sge. Its own
 # `src/main/java` is what the port converts; `target/generated-sources/antlr4` is UNTRACKED ANTLR
 # output that `LiqpClasspath` javacs into `{{liqp_parser_classes}}` and hands the frontend as a
-# CLASSPATH (decision D-liqp-1, stated in corpus/ports/liqp/main.conf).
+# CLASSPATH (decision D-liqp-1, stated in balticporter/corpus/ports/liqp/main.conf).
 #
 # ONE directory, read by the frontend, by scalac and by the test run. It was two until D-liqp-1b:
 # the parser's own signature named `liqp.TemplateParser.ErrorMode` while the port emits
@@ -1141,7 +1141,7 @@ jbump-measure:
       echo "   never be counted as a ported test (CLAUDE.md §3); PROGRESS.md §jbump says what it covers."
     else
       echo "!! A SUITE HAS APPEARED UPSTREAM — $JAVA_TESTS @Test method(s). This port has no test"
-      echo "   source set; add corpus/ports/jbump/test.conf (\`base = \"main.conf\"\`) and a lane stage."
+      echo "   source set; add balticporter/corpus/ports/jbump/test.conf (\`base = \"main.conf\"\`) and a lane stage."
     fi
 
     echo
@@ -1172,7 +1172,7 @@ jbump-measure:
     # forms (reference `==`, `x++` as a value, `break`/`continue`, a `switch`, a `static {}` block,
     # a `super`-less secondary-constructor funnel) — none of which moves the count above.
     #
-    # `corpus/ports/jbump/probe/{ProbeJava.java,Probe.scala}` walk the SAME scenario, one against
+    # `balticporter/corpus/ports/jbump/probe/{ProbeJava.java,Probe.scala}` walk the SAME scenario, one against
     # `{{jbump_src}}` and one against the emitted port, and the gate is that their transcripts are
     # IDENTICAL. No expected value is written anywhere, so none can be written down wrong: the
     # upstream Java is the authority and the diff is the whole assertion.
@@ -1190,18 +1190,18 @@ jbump-measure:
     echo "-- differential probe: emitted Scala vs upstream Java, same scenario --"
     PROBE="$MEASURE_TMP/jbump-probe"
     rm -rf "$PROBE"; mkdir -p "$PROBE/classes"
-    javac -nowarn -d "$PROBE/classes" -sourcepath {{jbump_src}} corpus/ports/jbump/probe/ProbeJava.java \
+    javac -nowarn -d "$PROBE/classes" -sourcepath {{jbump_src}} balticporter/corpus/ports/jbump/probe/ProbeJava.java \
       > "$PROBE/javac.txt" 2>&1
     if [ "$?" != "0" ]; then
       echo "!! PROBE DID NOT COMPILE against the upstream Java — the AUTHORITY half is broken, so the"
-      echo "   port half proves nothing. Fix corpus/ports/jbump/probe/ProbeJava.java:"
+      echo "   port half proves nothing. Fix balticporter/corpus/ports/jbump/probe/ProbeJava.java:"
       grep -v '^Note:' "$PROBE/javac.txt" | head -20 | sed 's/^/     /'
       exit 1
     fi
     java -cp "$PROBE/classes" ProbeJava > "$PROBE/java.txt" 2>&1
     JAVA_ST=$?
     scala-cli run --scala {{scala_version}} --server=false $DEPS \
-      {{jbump_module}}/src_managed/main/scala corpus/ports/jbump/probe/Probe.scala \
+      {{jbump_module}}/src_managed/main/scala balticporter/corpus/ports/jbump/probe/Probe.scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' \
       | grep -vE '^Warning: setting |deprecation warning|^[0-9]+ warning' > "$PROBE/scala.txt"
     SCALA_ST=${PIPESTATUS[0]}

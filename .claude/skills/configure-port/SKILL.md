@@ -13,7 +13,7 @@ restates), §5.5 (emitted code is a build product). The schema is documented in 
 `balticporter.runner.PortConfig` — it is `PortRun`'s parameters in the same words, and it is the
 authority when this file and it disagree.
 
-**Worked example:** `corpus/ports/simplegraphs/main.conf` (a base port) and `test.conf` (its
+**Worked example:** `balticporter/corpus/ports/simplegraphs/main.conf` (a base port) and `test.conf` (its
 dependent). Read both before writing either; everything below is visible in them.
 
 **Not covered here:** running the port and reading the numbers (`port-first-attempt`), reading the
@@ -42,8 +42,8 @@ object MyLibMigrate:
 
 ## 1. Where the file lives, and how its paths resolve
 
-In this repository: `corpus/ports/<library>/{main,test}.conf`, beside the port's other inputs
-(`corpus/<lib>-overrides/`) and **not** under `src/`. In your own repository, anywhere you like.
+In this repository: `balticporter/corpus/ports/<library>/{main,test}.conf`, beside the port's other inputs
+(`balticporter/corpus/<lib>-overrides/`) and **not** under `src/`. In your own repository, anywhere you like.
 
 **Every path in a conf resolves against THE CONF FILE, lexically** — not the working directory, not
 `balticporter.root`. That is what makes a port directory relocatable. `${balticporter.root}`
@@ -103,7 +103,7 @@ COMMAND to run is deliberately not supported: that would be a string that is sec
 ## 3. `output` — and where the Scala lands
 
 ```hocon
-output { portRoot = "../../../simplegraphs-core", sourceSet = "main" }   # main | test
+output { portRoot = "../../../../ported/sge-graphs", sourceSet = "main" }   # main | test
 ```
 
 Emitted Scala goes to `<portRoot>/src_managed/{main,test}/scala` — gitignored, deleted by

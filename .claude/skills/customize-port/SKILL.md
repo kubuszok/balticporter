@@ -95,13 +95,13 @@ asymmetry: a **drop** is inherited by a dependent, an **injection** is not.
 
 ## 2. When config is not enough — a §1(c) rule, in YOUR repository
 
-The worked example is a matched pair in `corpus/` — the stand-in for "the porting program's own
+The worked example is a matched pair in `balticporter/corpus/` — the stand-in for "the porting program's own
 repository":
 
-- `corpus/src/main/scala/balticporter/corpus/libgdx/GdxSharedIteratorRule.scala` — the rule
-- `corpus/src/main/scala/balticporter/corpus/libgdx/GdxSharedIteratorFactory.scala` — its factory
-- `corpus/src/main/resources/META-INF/services/balticporter.tir.TransformFactory` — one line
-- `corpus/src/test/scala/balticporter/corpus/libgdx/GdxSharedIteratorRuleSpec.scala` — its spec
+- `balticporter/corpus/src/main/scala/balticporter/corpus/libgdx/GdxSharedIteratorRule.scala` — the rule
+- `balticporter/corpus/src/main/scala/balticporter/corpus/libgdx/GdxSharedIteratorFactory.scala` — its factory
+- `balticporter/corpus/src/main/resources/META-INF/services/balticporter.tir.TransformFactory` — one line
+- `balticporter/corpus/src/test/scala/balticporter/corpus/libgdx/GdxSharedIteratorRuleSpec.scala` — its spec
 
 Read those four before writing your own. What they demonstrate is exactly the three things a new port
 needs.

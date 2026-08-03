@@ -1,0 +1,34 @@
+# porter: injected-resource reason=universal rule=service-loader-resource(ENGINE-LIMITS.md P5) upstream=META-INF/services/liqp.spi.TypesSupport
+#
+# HAND-WRITTEN, and the only file of this port that is (CLAUDE.md §5.5 — `src/` is the port's
+# hand-written half, `src_managed/` is the build product). It exists because the engine emits
+# `.scala` AND NOTHING ELSE: no config key names a resource root and no phase carries one, so
+# upstream's `src/main/resources/META-INF/services/liqp.spi.TypesSupport` reaches the emitted port
+# by nothing at all. `ENGINE-LIMITS.md` P5 holds the gap and its two halves — the DEPENDENCE is
+# counted (`PortabilityCheck`'s `java.util.ServiceLoader` rule), the ARTEFACT lane is open.
+#
+# The `porter:` line above is written in §4.575's grammar and is NOT one of its notes: those are
+# DERIVED by `TirEmitter` from a `Decision` and rendered into emitted `.scala`, and this file is
+# neither emitted nor Scala. It is here because §4.575's reason applies unchanged — the agent's
+# question is asked at this file, and a record in a sibling TSV cannot be found from here.
+#
+# WHY IT MATTERS HERE, AND WHY IT IS SILENT. `liqp/spi/SPIHelper.findProviders()` does
+# `ServiceLoader.load(TypesSupport.class)`, and it is reached from `Template`'s `static { }` block
+# — i.e. effectively from the whole suite — and from `LiquidSupport`'s type-referencing setup, i.e.
+# from every render of a POJO. With this file absent the loader finds ZERO providers,
+# `applyCustomDateTypes()` becomes a no-op, and the date and `Inspectable` tests fail or, worse,
+# quietly drift: no compile error, no check count, no finding.
+#
+# BOTH NAMESPACES MOVED, which is why this is not a copy (CLAUDE.md §4.56). The port renames
+# `liqp` -> `ssg.liquid` (D-liqp-2, `corpus/ports/liqp/main.conf`), so the FILE NAME is the renamed
+# interface FQN and the LINES BELOW are renamed provider FQNs. Upstream's two lines are
+# `liqp.spi.Java7DateTypesSupport` and `liqp.spi.Java8DateTypesSupport`; both classes are ordinary
+# `public class … extends BasicTypesSupport` with an implicit no-arg constructor, so nothing else
+# about them is at risk. Change `packageRenames` and this file is stale with no error anywhere —
+# which is exactly what the open half of P5 would remove.
+#
+# HOW IT REACHES THE JVM: `--resource-dir ported/ssg-liquid/src/main/resources` on the `scala-cli test`
+# invocation in `just liqp-measure`. There is no other route; a resource directory is not a source
+# directory and scala-cli will not infer it.
+ssg.liquid.spi.Java7DateTypesSupport
+ssg.liquid.spi.Java8DateTypesSupport
