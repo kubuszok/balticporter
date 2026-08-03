@@ -67,7 +67,10 @@ object PorterNote:
     *     rendered, and the asymmetry is the line above applied rather than broken: a declaration
     *     that kept its upstream type looks like a translation nobody performed, and the diff shows
     *     nothing because nothing changed. It is also rare where the other is not — one row per
-    *     declaration a policy entry names, against one per retyped member.
+    *     declaration a policy entry names, against one per retyped member. The same reading puts
+    *     [[Decision.Kind.ReifiedTypeArg]] here rather than beside `RetypedSignature`: the note is
+    *     about the ONE type argument that did not move in a declaration whose others did, and no
+    *     diff can show a thing that stayed the same.
     *   - [[Decision.Kind.RedirectedCall]] — recorded per DECLARATION for the reason
     *     `Decision.declarationsUsing` gives, and the rewritten call is right there in the body.
     *     Note its sibling [[Decision.Kind.SubstitutedCall]] IS rendered, and the asymmetry is the
@@ -101,7 +104,7 @@ object PorterNote:
     import Decision.Kind.*
     Set(RenamedType, RenamedPackage, RenamedMember, DroppedType, DroppedMember,
         SubstitutedBody, SubstitutedCall, InjectedMember, DroppedSuperCall, WidenedVisibility,
-        Unrenderable, ScopedOut, DeferredInit, FunnelledCtor, RetainedParent)
+        Unrenderable, ScopedOut, DeferredInit, FunnelledCtor, RetainedParent, ReifiedTypeArg)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.

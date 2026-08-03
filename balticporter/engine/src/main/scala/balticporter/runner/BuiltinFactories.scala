@@ -76,19 +76,26 @@ final class PanamaFfiFactory extends TransformFactory:
 /** ```
   * { transform = "collections"
   *   scope { except = ["com.foo.Bridge"] }
-  *   retarget { "java.util.Comparator" = "scala.math.Ordering" } }
+  *   retarget { "java.util.Comparator" = "scala.math.Ordering" }
+  *   reifiedCarriers = ["com.fasterxml.jackson.core.type.TypeReference"] }
   * ```
   *
   * `retarget` is the type-only half: java FQN → scala FQN, retyped everywhere and API-mapped
   * nowhere. Legal exactly where the scala target is usable wherever the java source was — see the
   * constructor parameter for the precondition and why the engine cannot check it.
+  *
+  * `reifiedCarriers` names the external generic types whose type ARGUMENTS a third party reads back
+  * out of the class file at run time and constructs from — a super-type token
+  * (`ENGINE-LIMITS.md` K20). Those arguments stay in java's namespace and the value is bridged where
+  * it is used. `java.lang.Class` is included by the engine and needs no entry.
   */
 final class CollectionsFactory extends TransformFactory:
   def name = "collections"
   def fromConfig(config: ConfigView): Phase =
     new CollectionsTransform(
       TransformFactory.scopeOf(config),
-      config.stringMap("retarget").getOrElse(Map.empty))
+      config.stringMap("retarget").getOrElse(Map.empty),
+      config.strings("reifiedCarriers").getOrElse(Nil).toSet)
 
 /** `{ transform = "test-framework", suite = "munit.FunSuite", testMember = "test" }` */
 final class TestFrameworkFactory extends TransformFactory:

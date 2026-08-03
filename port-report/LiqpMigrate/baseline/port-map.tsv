@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-liquid	engine=balticporter/0.1.0-SNAPSHOT	sources=335f355ab142e65c	files=134	policy=9aea0b8997bd0df9
+# balticporter port map	schema=3	module=ssg-liquid	engine=balticporter/0.1.0-SNAPSHOT	sources=335f355ab142e65c	files=134	policy=34a10e998ef317d4
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	liqp.Examples	ssg.liquid.Examples	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	liqp.Insertion	ssg.liquid.Insertion	Renamed	-		0		companion=yes disambiguator=marker flags=abstract form=class parents=ssg.liquid.LValue primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(String)
@@ -891,9 +891,9 @@ member	liqp.parser.LiquidSupport$LiquidSerializer#serialVersionUID	ssg.liquid.pa
 member	liqp.parser.LiquidSupport$LiquidSerializer#serialize(LiquidSupport,JsonGenerator,SerializerProvider)	ssg.liquid.parser.LiquidSupport$LiquidSerializer#serialize(LiquidSupport,JsonGenerator,SerializerProvider)	Renamed	-	liqp/parser/LiquidSupport.java	61	253cd8f04e23a291	
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#<stmt1>	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#<stmt1>	Renamed	-	liqp/parser/LiquidSupport.java	77	16b01e6a942d8334	
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#<stmt2>	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#<stmt2>	Renamed	-	liqp/parser/LiquidSupport.java	78	8c8955af4a07a74e	
-member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#MAP_TYPE_REF	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#MAP_TYPE_REF	Renamed	-	liqp/parser/LiquidSupport.java	72	ddd3297fabc77589	placement=companion
+member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#MAP_TYPE_REF	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#MAP_TYPE_REF	Renamed	-	liqp/parser/LiquidSupport.java	72	624b0f719c1a5fba	placement=companion
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#mapper	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#mapper	Renamed	-	liqp/parser/LiquidSupport.java	73	b076f4736d913569	vis=private[LiquidSupport]
-member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#objectToMap(ObjectMapper,Object)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#objectToMap(ObjectMapper,Object)	Renamed	-	liqp/parser/LiquidSupport.java	81	b5b29e75edd56fe7	placement=companion
+member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#objectToMap(ObjectMapper,Object)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#objectToMap(ObjectMapper,Object)	Renamed	-	liqp/parser/LiquidSupport.java	81	74418af40a01f56d	placement=companion
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#toLiquid()	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#toLiquid()	Renamed	-	liqp/parser/LiquidSupport.java	93	0454cfa8513fa744	
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#variable	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#variable	Renamed	-	liqp/parser/LiquidSupport.java	74	ae41a0135e84606c	vis=private[LiquidSupport]
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#visit(Object)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visit(Object)	Renamed	-	liqp/parser/LiquidSupport.java	114	f253fb80c52cf530	placement=companion

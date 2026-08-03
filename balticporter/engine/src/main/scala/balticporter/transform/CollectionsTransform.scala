@@ -76,6 +76,33 @@ final class CollectionsTransform(
       * is a rewrite whose outcome depends on which table was read, which is not a thing a policy
       * author can reason about. Empty is the default and makes this a no-op with no code path. */
     val retarget: Map[String, String] = Map.empty,
+    /** REIFIED CARRIERS — external generic types whose type ARGUMENTS a third party reads back out
+      * of the class file's generic signature at run time (`ENGINE-LIMITS.md` K20).
+      *
+      * The retyping is right at every static slot and is a claim about a SLOT. A carrier's argument
+      * is not one: it survives erasure into the generic signature, and jackson's
+      * `TypeReference<Map<String,Object>>`, Gson's `TypeToken<T>` and Guice's `Key<T>` are read back
+      * and CONSTRUCTED FROM. Moved to `mutable.Map`, the port stops describing a slot and starts
+      * telling the framework to instantiate a trait — `Cannot construct instance of
+      * scala.collection.mutable.Map`, at run time, with 0 compile errors and every check count flat.
+      *
+      * So the argument stays in java's namespace ([[preservesTypeArgsOf]]) and the value is BRIDGED
+      * where it is used — which needs no new machinery, because a call whose result is now java's
+      * against a node that claims a mapping target is exactly the external-producer seam
+      * ([[externalProducer]]): it wraps into a live view where one exists, and counts the slot where
+      * none does. Do NOT reach for the two nearby answers instead — retyping-and-wrapping at the
+      * PRODUCER is K18's own 44-of-160 dead end (`asScala` is one level), and holding the whole
+      * declaration out with [[scope]] is K16 (27 → 47 errors). The argument has to stay java's while
+      * the surrounding declarations keep the mapping, which is what a per-ARGUMENT carrier list
+      * expresses and neither of those does.
+      *
+      * ==WHICH types are carriers is per-library, and the one universal is not a parameter==
+      * A carrier is a fact about a library's DEPENDENCIES, so the list is §1(b) policy and empty is
+      * the default — every arm below is a no-op by arithmetic where a port declares none.
+      * [[CollectionsTransform.UniversalCarriers]] is added to whatever the port declares, and it is
+      * not policy: `java.lang.Class<T>` is reified by java ITSELF, in every codebase there will ever
+      * be, which is §1(a) and belongs in this file exactly as `typeMap` does. */
+    val reifiedCarriers: Set[String] = Set.empty,
 ) extends Phase, RequiresRuntime, PolicySource, SurfacePolicy, PolicyBound:
   def name = "java-collections->scala"
 
@@ -90,11 +117,21 @@ final class CollectionsTransform(
     * `Owned` would report as never-matched while the rewrite worked. */
   private var boundRetarget: Map[String, Binding[SymId]] = Map.empty
 
+  /** …and each declared REIFIED CARRIER. [[Ownership.Either]] for the same reason a retarget takes
+    * it and a sharper one: a carrier is by construction a type the program only REFERENCES — a
+    * third party's super-type token — so `Owned` would report every entry as never-matched while
+    * the preservation worked. A carrier the program never names binds to nothing and is reported by
+    * the ordinary never-fired lane, which is the answer a port wants: a jackson entry in a port that
+    * does not use jackson is a line to delete. */
+  private var boundCarriers: Map[String, Binding[SymId]] = Map.empty
+
   def bindPolicy(binder: PolicyBinder): Unit =
     val setting = s"CollectionsTransform(scope) ${scope.productPrefix} entry"
     boundScope = scope.entries.toList.sorted.map(e => e -> binder.bindScope(name, setting, e)).toMap
     boundRetarget = retarget.keys.toList.sorted
       .map(k => k -> binder.bindType(name, RetargetSetting, k, Ownership.Either)).toMap
+    boundCarriers = reifiedCarriers.toList.sorted
+      .map(k => k -> binder.bindType(name, CarrierSetting, k, Ownership.Either)).toMap
 
   /** Two modules that scope this phase differently emit incompatible signatures for the shared
     * surface — a `java.util.List` parameter in the base against a `Buffer` argument in the
@@ -108,8 +145,19 @@ final class CollectionsTransform(
     * fingerprint. Sorted, and only rendered when non-empty, so a port that declares none has the
     * string it always had and no baseline moves. */
   def surfaceFingerprint: String =
-    if retarget.isEmpty then scope.fingerprint
-    else s"${scope.fingerprint};retarget=${retarget.toList.sorted.map((k, v) => s"$k->$v").mkString(",")}"
+    val parts = List(
+      scala.Option.when(retarget.nonEmpty)(
+        "retarget=" + retarget.toList.sorted.map((k, v) => s"$k->$v").mkString(",")),
+      // A CARRIER is the same fact one type argument in, and it is surface for the plainest reason
+      // there is: `TypeReference<Map<String,Object>>` is the emitted type of a `public static final`
+      // field. A base that preserves it and a dependent that does not emit two signatures that each
+      // compile alone and cannot compile together — SurfacePolicy's case exactly (§1.5).
+      scala.Option.when(reifiedCarriers.nonEmpty)(
+        "carriers=" + reifiedCarriers.toList.sorted.mkString(",")),
+    ).flatten
+    // …rendered only when non-empty, so a port that declares neither has the string it always had
+    // and no baseline moves.
+    if parts.isEmpty then scope.fingerprint else s"${scope.fingerprint};${parts.mkString(";")}"
 
   /** this phase retypes onto `balticporter.runtime` — declared once, so the run derives the port's
     * dependency, its vendored sources and the emitter's external-parent table from it. */
@@ -312,6 +360,19 @@ final class CollectionsTransform(
   /** the setting every retarget finding is filed under — the string an agent greps for (§4.575). */
   private val RetargetSetting = "CollectionsTransform(retarget) entry"
 
+  /** …and the same for a reified carrier. */
+  private val CarrierSetting = "CollectionsTransform(reifiedCarriers) entry"
+
+  /** the carriers that actually RUN — what the port declared plus the one java guarantees. A `val`,
+    * so [[preservesTypeArgsOf]], the recorder and the fingerprint cannot disagree. */
+  private val effectiveCarriers: Set[String] = reifiedCarriers ++ CollectionsTransform.UniversalCarriers
+
+  /** …resolved to THIS program's symbols, once per run. Read off `program.symbols` and not off the
+    * mapping, for the reason [[unmappedSupertypeSyms]] states: a carrier is a type this phase leaves
+    * alone, so its symbol keeps the id it arrived with. EMPTY where the program names none of them,
+    * which is what makes every arm below a no-op by arithmetic. */
+  private var carrierSyms: Set[SymId] = Set.empty
+
   /** the retarget entries that actually RUN: everything the port declared, minus any key
     * [[CollectionsTransform.typeMap]] already answers for (reported as `Malformed` instead — see
     * the constructor parameter). A `val`, so the two readers below and `run` cannot disagree. */
@@ -335,6 +396,8 @@ final class CollectionsTransform(
   def policyReport: PolicyReport =
     report ++ PolicyReport.fromBindings(boundRetarget.toList.sortBy(_._1).map { (k, b) =>
       PolicyBinder.Record(name, RetargetSetting, k, b.forget)
+    }) ++ PolicyReport.fromBindings(boundCarriers.toList.sortBy(_._1).map { (k, b) =>
+      PolicyBinder.Record(name, CarrierSetting, k, b.forget)
     }) ++ PolicyReport(
       retarget.keys.toList.sorted.filter(typeMap.contains).map { k =>
         PolicyFinding(name, RetargetSetting, k, PolicyIssue.Malformed,
@@ -439,6 +502,11 @@ final class CollectionsTransform(
     unmappedSupertypeSyms = program.symbols.all.collect {
       case s if CollectionsTransform.unmappedSupertypes(s.fullName) => s.id
     }.toSet
+    // …and the REIFIED CARRIERS this program actually names (K20). Resolved BEFORE the traversal
+    // starts, because `preservesTypeArgsOf` is asked from inside it.
+    carrierSyms = program.symbols.all.collect {
+      case s if effectiveCarriers(s.fullName) => s.id
+    }.toSet
     foreachSym          = mint("foreach", "foreach")
     removeHeadOptionSym = mint("removeHeadOption", "removeHeadOption")
     headOptionSym       = mint("headOption", "headOption")
@@ -480,6 +548,7 @@ final class CollectionsTransform(
     val symbols2 = mapSignatures(symbols) // retype signatures too
     recordRetypings(symbols, symbols2)
     recordScopedOut(symbols)
+    recordReifiedTypeArgs(symbols2)
     program.rebuilt(units, symbols2)
 
   // -------------------------------------------------------------------------
@@ -960,6 +1029,117 @@ final class CollectionsTransform(
   override def transformType(t: TypeRepr)(using Program): TypeRepr = t match
     case TypeRepr.TypeRef(prefix, s) if remap.contains(s) => TypeRepr.TypeRef(prefix, remap(s))
     case other                                            => other
+
+  // -------------------------------------------------------------------------------------------
+  // THE THIRD REIFIED POSITION — a type ARGUMENT a third party reads out of the class file (K20)
+  // -------------------------------------------------------------------------------------------
+  //
+  // K18 answered the two reified positions a java program WRITES — `x instanceof T` and `(T) x`.
+  // This one is written nowhere: the occurrence is a type argument in a declaration, so a phase that
+  // walked every `InstanceOf` and every `Typed` visits nothing, no coercion has anywhere to go
+  // (there is no value — the argument is a type), and no slot disagrees with another. Every
+  // instrument therefore reads clean, which is why the answer is at the TRAVERSAL: it is the one
+  // place that knows it is about to descend into an argument.
+  //
+  // The value's bridge is NOT built here. Once the argument stays java's, the call that consumes the
+  // carrier really does return java's type while the node claims a mapping target, and that is
+  // exactly `externalProducer`'s seam — it wraps into a live view where one exists and COUNTS the
+  // slot where none does. What changes for that arm is only `passesThrough`: the result type used to
+  // OCCUR inside the carrier argument, so the call read as a generic pass-through and was suppressed.
+  // With the argument left in java's namespace the occurrence is gone, and the same code that always
+  // handled `readValue(json, HashMap.class)` handles `convertValue(v, MAP_TYPE_REF)`.
+
+  /** WHICH type constructors' arguments this run must not move — the carriers, resolved to this
+    * program's own symbols. `false` by arithmetic where the port declares none and the program names
+    * no `java.lang.Class`, which is the §1(b) no-op with no code path. */
+  override def preservesTypeArgsOf(tc: TypeRepr)(using Program): Boolean =
+    carrierSyms.nonEmpty && headSym(tc).exists(carrierSyms.contains)
+
+  /** DECISION PROVENANCE for the preservation — one row per DECLARATION holding a carrier argument
+    * this phase would otherwise have retyped.
+    *
+    * `recordScopedOut`'s reasoning, one position in: the row that would explain the line is the one
+    * that is NOT there, and the diff against the java shows nothing because nothing changed. A
+    * reader of `MAP_TYPE_REF: TypeReference[java.util.Map[String, Object]]`, sitting beside a method
+    * that returns `mutable.Map`, is looking at the only java collection left in the file and has no
+    * way to tell a deliberate preservation from a retyping the phase missed.
+    *
+    * Two reasons, because the fix lives in two different repositories (§4.45): a carrier the PORT
+    * declared is `Configured` with the entry verbatim, and `java.lang.Class` is `Universal` — a port
+    * cannot turn that one off and should not be sent to its own manifest to try.
+    *
+    * Only declarations, and only where the argument mentions a type this phase MAPS: a
+    * `Class<String>` is a carrier application that no retyping would have touched, so preserving it
+    * decided nothing and a row for it would be noise in every port in the corpus. */
+  private def recordReifiedTypeArgs(after: SymbolTable)(using p: Program): Unit =
+    if carrierSyms.isEmpty then return
+    after.all.foreach { s =>
+      if Decision.isDeclaration(p, s) then
+        val hits = preservedCarrierArgs(s.info)
+        if hits.nonEmpty then
+          val carriers = hits.map(_._1).distinct.sorted
+          val (reason, why) = carriers.filterNot(CollectionsTransform.UniversalCarriers) match
+            case Nil =>
+              (Reason.Universal("reified-type-arg"),
+               "`java.lang.Class` is reified by java itself, so this argument names the class the " +
+                 "JVM will be asked for at run time and not a slot — retyped, it would name a " +
+                 "scala type no class file has")
+            case declared =>
+              (Reason.Configured(name, declared.mkString(", ")),
+               "this port declares the carrier as one whose type arguments a third party reads " +
+                 "back out of the class file's generic signature and CONSTRUCTS from, so the " +
+                 "argument stays java's and the value is bridged where it is used")
+          record(Decision(
+            kind       = Decision.Kind.ReifiedTypeArg,
+            subject    = s.id,
+            subjectFqn = s.fullName,
+            detail = Map(
+              "carrier" -> carriers.mkString(","),
+              "kept"    -> hits.map((_, a) => TirPrinter.tpe(a, TirPrinter.Style.canonical)).distinct.sorted.mkString(","),
+              "why"     -> why,
+            ),
+            reason = reason,
+            origin = Decision.originOf(p, s.id),
+          ))
+    }
+
+  /** every (carrier FQN, preserved argument) pair inside a signature whose argument mentions a type
+    * this phase MAPS — i.e. every position where the preservation actually decided something.
+    *
+    * Walked with [[StandardTraversal.mapType]] and not a private recursion, for the reason
+    * [[retargetKeysIn]] gives: a hand-rolled walk that stopped at `MethodType`'s parameters would
+    * answer "nothing preserved" for every method in the program, silently (§3). */
+  private def preservedCarrierArgs(t: TypeRepr)(using Program): List[(String, TypeRepr)] =
+    val hits = collection.mutable.ListBuffer[(String, TypeRepr)]()
+    val scan = new Phase:
+      def name = "reified-carrier-scan"
+      override def transformType(x: TypeRepr)(using p: Program): TypeRepr =
+        x match
+          case TypeRepr.AppliedType(tc, as) =>
+            for
+              h <- headSym(tc).toList if carrierSyms.contains(h)
+              fqn <- p.symbolOf(h).map(_.fullName).toList
+              a <- as if mentionsMapped(a)
+            do hits += (fqn -> a)
+          case _ => ()
+        x
+    StandardTraversal.mapType(scan, t)
+    hits.toList
+
+  /** does this type mention a java type THIS PHASE maps? The question `mentionsRetyped` asks in the
+    * other direction — that one reads the types the phase PRODUCED, this one the keys it consumes —
+    * and both are §4.56's "conclude only from what the phase itself did". */
+  private def mentionsMapped(t: TypeRepr)(using Program): Boolean =
+    var hit = false
+    val scan = new Phase:
+      def name = "mapped-mention-scan"
+      override def transformType(x: TypeRepr)(using Program): TypeRepr =
+        x match
+          case TypeRepr.TypeRef(_, s) if remap.contains(s) => hit = true
+          case _                                           => ()
+        x
+    StandardTraversal.mapType(scan, t)
+    hit
 
   /** `java.util.Set` has TWO faithful scala counterparts, and which one it is depends on where
     * the set came from — a distinction java's type system does not draw and scala's does.
@@ -3361,6 +3541,24 @@ object CollectionsTransform:
     * A class that IMPLEMENTS `java.util.Map.Entry` therefore cannot be emitted at that target at
     * all — see `restoreUninheritableParents`, which keeps java's parent and counts the refusal. */
   private[balticporter] val UninheritableTargets: Set[String] = Set("scala.Tuple2")
+
+  /** REIFIED CARRIERS java itself guarantees — the §1(a) half of `reifiedCarriers` (K20).
+    *
+    * `java.lang.Class<T>` is the only one. Its argument is not a claim about a slot: it names the
+    * class the JVM will be asked for, so `readValue(json, HashMap.class)` retyped to
+    * `classOf[mutable.HashMap]` asks a framework for a class file that does not exist. That is true
+    * of every codebase and takes no configuration, which is what puts it in this file beside
+    * [[typeMap]] rather than in a manifest. Every other carrier — jackson's `TypeReference`, Gson's
+    * `TypeToken`, Guice's `Key`/`TypeLiteral` — is a fact about a library's DEPENDENCIES and is the
+    * constructor parameter.
+    *
+    * Note this is only reached where the argument is a TYPE. A `classOf[…]` LITERAL carries its type
+    * in `Constant.ClassOfC`, which `StandardTraversal.mapTerm` does not map at all, so a class
+    * literal has always been preserved — by omission rather than by decision, and the omission is
+    * recorded in `ENGINE-LIMITS.md` K20 because it is the reason the corpus never measured this
+    * defect at a literal. What this entry covers is the DECLARED slot: a field or a parameter typed
+    * `Class<Map<String,Object>>`, which the traversal does reach. */
+  private[balticporter] val UniversalCarriers: Set[String] = Set("java.lang.Class")
 
   /** …and the members that RETAINED PARENT declares which its mapping target cannot carry.
     *

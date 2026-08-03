@@ -3957,7 +3957,7 @@ OPEN by construction, scoped out rather than solved.*
 
 ---
 
-### K20. A REIFIED TYPE ARGUMENT is read out of the CLASS FILE by someone else — **10 test failures on liqp, 0 compile errors, every check count flat. OPEN**
+### K20. A REIFIED TYPE ARGUMENT is read out of the CLASS FILE by someone else — **10 test failures on liqp, 0 compile errors, every check count flat. CLOSED**
 
 K18's two reified positions are written in the source: `x instanceof T` and `(T) x`. **There is a
 third and the port never writes it at all.** A generic type ARGUMENT survives into the class file's
@@ -4006,8 +4006,140 @@ and the values inside stay java's), and scoping the whole declaration out with `
 declarations keep the mapping, which is precisely what a per-argument carrier list expresses and
 what neither of those does.
 
-*Fix kind: (b) — mechanism universal, carrier list per library. OPEN; the census and the per-site
-diagnosis are in `PROGRESS.md`'s liqp residue table.*
+**WHAT CLOSED IT, and note how little of it is new machinery.** The mechanism is one hook on the
+TRAVERSAL — `Phase.preservesTypeArgsOf(tc)`, consulted by `StandardTraversal.mapType` at the
+`AppliedType` case, default `false` — because the traversal is the only place that knows it is about
+to descend into an argument. `CollectionsTransform(reifiedCarriers = …)` is the §1(b) policy
+(liqp: `com.fasterxml.jackson.core.type.TypeReference`), plus the one carrier java itself
+guarantees, which is NOT a parameter: `CollectionsTransform.UniversalCarriers = {java.lang.Class}`
+sits beside `typeMap` for the same reason `typeMap` does.
+
+**The BRIDGE needed no new machinery at all, and that is the load-bearing observation.** Once the
+argument stays java's, `convertValue(v, MAP_TYPE_REF)` really does return java's map while the node
+claims a mapping target — which is `externalProducer`'s seam exactly (K15): it wraps into a live view
+where one exists and counts the slot where none does. What changed for that arm is only
+`passesThrough`, whose own comment had already named this call: the result type used to OCCUR inside
+the carrier's argument, so the call read as a generic pass-through and was suppressed. Preserving the
+argument removes the occurrence, and the same code that always handled
+`readValue(json, HashMap.class)` handles this. **A K20 fix that also wrote a bridge would have been
+two mechanisms for one seam.**
+
+**The preservation is RECORDED, because it is a thing that did NOT happen.** `Decision.Kind
+.ReifiedTypeArg` (rendered as a porter note, §4.575) — `ScopedOut`'s reasoning one position in: the
+diff against the java shows nothing, and a reader of
+`MAP_TYPE_REF: TypeReference[java.util.Map[String, Object]]` sitting beside a method returning
+`mutable.Map` is looking at the only java collection left in the file. Recorded only where the
+argument mentions a type the phase MAPS — preserving a `Class<String>` decided nothing.
+
+**Measured on liqp: 552 → 554 passing, 23 → 21 failing, `errors 0` before and after.** The
+`Cannot construct instance of scala.collection.mutable.Map` family is **10 → 0**. Blast over all
+eleven lanes: **4 member digests, all in `LiquidSupport`** (the field, `objectToMap`, and their two
+enclosing units), **0 everywhere else**, every lane's error count equal to its baseline.
+
+**And ONE check count moved in the whole corpus, which is the confirmation worth having.**
+`collection-boundary` on the liqp MAIN port reads **15 → 14**, and the finding that left is this
+call by name:
+
+```
+- ExternalCallee: convertValue(java.lang.Object, com.fasterxml.jackson.core.type.TypeReference)
+  — external result (unverified pass-through, no signature)  (liqp/parser/LiquidSupport.java:87)
+```
+
+K15's own residue lane had been counting this exact site as a refusal resting on a guess, for the
+life of the port, and K20 turned it into a bridge. The seam was findable before the defect was
+diagnosed — which is what that lane is for, and the first time it has paid.
+
+**AND THE NUMBER TO READ IS 10 → 0, NOT 2.** Only two tests flipped, and the gap is the whole
+lesson: the exception was MASKING a second defect at the same call. With it gone, `objectToMap`
+provably works — probed directly, the map is a live `JMapWrapper` over jackson's own `LinkedHashMap`
+with all four values restored to their real types and the comparison answering correctly — and the
+eight tests that still fail fail for K21 below, which the throw had been hiding. **A defect that
+throws EARLY is a defect that hides every defect after it**, so "N failures are gated behind this
+one" is a hypothesis about a cause nobody has seen yet, and the honest form of it is a re-census
+after the fix.
+
+**One stated gap, so nobody reads the closure wider than it is.** The HOOK is universal and every
+retyping phase can take it; only `CollectionsTransform` declares it today, because that is the phase
+this was measured on. `PrimitiveToOpaqueTransform`, `TypeRedirectTransform` and
+`NullabilityTransform` would each move a type argument under a carrier exactly as this one did — a
+`Class<GLHandle>` is the shape — and none of them is asked. Unmeasured, so it is named here rather
+than fixed blind: no corpus port has a carrier application over a type those phases retype, which is
+why it costs zero today and not why it is right.
+
+**And a `classOf[…]` LITERAL has always been preserved BY OMISSION, which is the reason the corpus
+never met this at a class token.** `StandardTraversal.mapTerm` maps a `Tree.Literal`'s `tpe` and not
+its `Constant.ClassOfC`, so `HashMap.class` emitted `classOf[java.util.HashMap[?, ?]]` throughout —
+correct, and correct by accident. `UniversalCarriers` states the intent for the DECLARED slot (a
+field or parameter typed `Class<Map<String,Object>>`, which the traversal does reach); completing the
+literal's traversal would then be a no-op for this phase and is NOT to be done casually, because
+every other phase would start mapping inside class literals at the same moment.
+
+*Fix kind: (b) — mechanism universal, carrier list per library. CLOSED
+(`Phase.preservesTypeArgsOf`, `CollectionsTransform.reifiedCarriers`, `CollectionsCarrierSpec`).
+The per-site diagnosis stays in `PROGRESS.md`'s liqp residue table.*
+
+---
+
+### K21. A retyped VALUE and an emitted CLASS are read out of the class file at the OTHER end of the same call — **8 test failures on liqp, 0 compile errors, every check count flat, and three of the four assertions pass by accident. OPEN**
+
+K20 is the type ARGUMENT a third party reads out of the class file. **This is the OBJECT and its
+MEMBERS, read out of the class file by the same third party on the same call** — so it is not a
+second topic, it is K20's other end, and it was invisible until K20 stopped throwing in front of it.
+Two faces, one cause: *the port changed what the class file says, and a framework is reading the
+class file.*
+
+**FACE 1 — the port's own RETYPED COLLECTION crossing OUT to a serialiser.** Jackson knows
+`java.util.Map`. It does not know `scala.collection.mutable.Map`, has no module for it, and therefore
+falls back to BEAN serialisation over whatever getters the class happens to expose. Probed directly:
+
+```
+mapper.writeValueAsString(mutable.HashMap("key" -> "value"))
+  = {"scala$collection$mutable$HashMap$$table":[null,…,{},null],"empty":false,
+     "traversableAgain":true,"class":"scala.collection.mutable.HashMap"}
+```
+
+Every downstream symptom in liqp's residue falls out of that one line. `JsonTest` compares that
+string against `{"key":"value"}`. `Template.putStringKey`'s `convertValue(value, Map.class)` yields a
+map whose FIRST VALUE is the internal `table` array — a `java.util.ArrayList` — which is exactly the
+`java.util.ArrayList cannot be cast to scala.collection.mutable.Map` the `where` filter then throws,
+one hop away, at a cast that is correct in both languages. **Read the direction**: K15 and K18 are
+about a JDK value arriving at a scala slot; this is a SCALA value leaving through an `Object`-typed
+formal at an external callee, so there is no slot to disagree, no type to compare, and no coercion
+site — the formal is `Object` and the port's value conforms perfectly.
+
+**FACE 2 — a java `public` FIELD becomes a scala `var`, which is PRIVATE on the JVM.** The source
+level is faithful (`data.a` reads); the CLASS FILE is not — Scala emits a private field plus
+accessors, and an accessor named `a()` is not a JavaBean `getA()`. A framework that auto-detects
+public fields therefore sees NOTHING:
+
+```
+class Meta2 { var a: Object; var b: Object; var c: Object }   // java: three PUBLIC fields
+getClass.getFields  =  []          objectToMap(meta2).size  =  0
+```
+
+**And this is the face that should frighten a reader, because it does not throw.** Every property is
+absent, so every lookup is `null`, and liqp's non-strict comparison turns a `null` operand into
+`BigDecimal.ZERO` — so `a >= a`, `a >= b` and `a >= d` all answer `yes` CORRECTLY, from data that is
+not there, and only `a >= c` (the one whose right answer is `no`) exposes it. Four tests, three
+accidental passes each. A suite is the only instrument that ever sees this, and it sees it once.
+
+**What it is NOT.** Not a scoping question (K16): the collection mapping is right at every slot in
+the program, and it is wrong only at the instant the value leaves it. Not `RuleScope` either, for the
+same reason — holding the declarations out would give up the mapping everywhere to fix one call. Not
+K19's identity limit: nothing here is about `eq`.
+
+**The shape a fix would have to take** (unmeasured, so it is a direction and not a recommendation):
+face 1 wants a bridge in the OTHER direction at an external callee — `toJava` on an argument whose
+static type is `Object` but whose value this phase retyped — which is a real widening of K15's arm,
+because today the argument bridge fires on the FORMAL and here the formal says nothing. Face 2 is a
+question about the emitted member's JVM shape, not about its type, and the two candidate answers
+(`@BeanProperty` on a promoted public field; a genuinely public field) are surface changes that need
+their own measurement. **Do not fix them together**: they share a cause and nothing else.
+
+*Fix kind: (a) engine for both faces — face 1 is a boundary this phase owes and does not count, face
+2 is an emission the port makes for every public field in the corpus. OPEN, with the number above.
+Note neither face is counted by anything today, which is the first thing a fix has to change: the
+liqp lane reads `collection-boundary 14` with both faces live.*
 
 ---
 

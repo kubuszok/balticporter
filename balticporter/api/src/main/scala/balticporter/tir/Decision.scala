@@ -147,6 +147,15 @@ object Decision:
     case DroppedSuperCall, WidenedVisibility, Unrenderable, DeferredInit
     /** a PARENT this program's mapping could not move, because the target cannot BE a parent. */
     case RetainedParent
+    /** a generic type ARGUMENT kept in the upstream namespace because a third party reifies it out
+      * of the class file's generic signature (`ENGINE-LIMITS.md` K20) — jackson's `TypeReference`,
+      * Gson's `TypeToken`, `java.lang.Class`. [[ScopedOut]]'s reasoning applies verbatim and is why
+      * this is not folded into it: a declaration that kept its upstream type looks like a
+      * translation nobody performed, and the diff shows nothing because nothing changed. It is not
+      * [[ScopedOut]] itself because the two answer different questions — a scope holds a whole
+      * DECLARATION back, and this holds back ONE POSITION inside a declaration whose every other
+      * type moved, which is the fact a reader of that line needs. */
+    case ReifiedTypeArg
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

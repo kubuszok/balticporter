@@ -115,7 +115,28 @@ and no node to translate, so every instrument reads clean; measured at **10 of o
 remaining failures with every check count flat** (`ENGINE-LIMITS.md` K20). The mechanism is
 universal — do not retype a type argument a third party will reify, bridge at the USE — and WHICH
 external generics are reified carriers is a fact about that library's dependencies, so it is a (b)
-parameter and not a list in the engine.
+parameter and not a list in the engine. The MECHANISM belongs to the TRAVERSAL, which is the only
+place that knows it is about to descend into an argument, and the BRIDGE is the external-callee seam
+that already exists — a fix that writes its own is two mechanisms for one seam.
+
+**…and the same third party reads the OTHER end of that call, which is the port's own value and its
+own class file.** Everything above is about a type the port WRITES. A framework also reads what the
+port EMITTED: a retyped `mutable.Map` handed to a serialiser is not a `java.util.Map` to it, so it
+bean-serialises the internals (`{"scala$collection$mutable$HashMap$$table":[…]}`, whose first value
+is the `table` array — a `java.util.ArrayList`, which is then a cast failure three hops away); and a
+java `public` FIELD emitted as a scala `var` is PRIVATE on the JVM, so a framework auto-detecting
+public fields sees ZERO properties. Neither has a slot: the formal is `Object` and the port's value
+conforms perfectly. **The second one does not even throw** — every absent property reads `null`, and
+a library that coerces `null` to a default then answers three assertions out of four CORRECTLY from
+data that is not there (`ENGINE-LIMITS.md` K21, 8 failures at 0 errors and every count flat). So a
+retyping phase owes an answer where its value leaves the program, not only where one arrives.
+
+**And "N failures are gated behind this one" is a HYPOTHESIS, never a count.** A defect that THROWS
+hides every defect after it on the same path, so the tests attributed to it are the tests it is
+first on — not the tests it is the cause of. Both of K21's faces sat behind K20's exception and were
+invisible while it fired; closing K20 flipped **2** of the **10** predicted. Re-census after the fix,
+and quote the family that went to zero (`10 → 0`) rather than the suite delta, which is the only
+honest reading of either number.
 
 **And a class a FRAMEWORK instantiates has no caller to change.** Every such phase reasons from the
 program: it may add a parameter because it can see, and fix, each `new`. A test suite, a

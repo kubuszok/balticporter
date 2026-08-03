@@ -2508,6 +2508,39 @@ chain. A census is only a work list if its rows are causes; ours had four rows f
 `tests.tsv` and `expected-errors` are accepted from the run that produced these numbers, so the next
 change is diffed against 552/23.
 
+**THE FOURTH CENSUS — K20 closed, and the residue is now 21 rows over THREE causes.**
+`552 -> 554 passing, 23 -> 21 failing`, at `errors 0` before and after. The `TypeReference` carrier
+entry (D-liqp-8 in `main.conf`) took the `Cannot construct instance of scala.collection.mutable.Map`
+family **10 -> 0**. Blast over all eleven lanes: **4 member digests, all in `LiquidSupport`**, 0
+everywhere else. **One check count moved in the whole corpus** — `collection-boundary` on the MAIN
+port, **15 -> 14**, and the finding that left is
+`convertValue(Object, TypeReference)` at `LiquidSupport.java:87` filed as
+"external result (unverified pass-through, no signature)". K15's residue lane had been naming this
+call for the life of the port; K20 turned the refusal into a bridge.
+
+**Two of the ten flipped, and the other eight are the reason this census exists.** The row above
+predicted "9 more gated behind it"; that was a hypothesis about a cause nobody had seen, and it is
+wrong in the way `CLAUDE.md` §1 now records. K20's exception was thrown at the FIRST statement of
+each of those tests, so it was hiding everything after it on the same path. Probed directly with the
+carrier in place, `objectToMap` is provably correct — the returned map is a live `JMapWrapper` over
+jackson's own `LinkedHashMap`, all four temporal values restored to their real types, and the
+comparison answering `no` where it must. The eight are `ENGINE-LIMITS.md` K21.
+
+| n | root cause | §1 |
+|---|---|---|
+| **8** | **K21 — a retyped VALUE and an emitted CLASS read out of the class file at the other end of the same call.** Probed, not inferred: `writeValueAsString(mutable.HashMap("key" -> "value"))` is `{"scala$collection$mutable$HashMap$$table":[…],"empty":false,"traversableAgain":true,"class":"…"}`, whose first value is the internal `table` — a `java.util.ArrayList`, which is the `ArrayList cannot be cast to mutable.Map` the `where` filter throws three hops later at a cast correct in both languages; and `Meta2`'s three java `public` fields, emitted as scala `var`s, give `getFields = []` and `objectToMap(meta2).size = 0`. The four `testDateTypes` are the second face and pass three assertions each on absent data (`null` coerced to `BigDecimal.ZERO` answers `yes` correctly for `a>=a`, `a>=b`, `a>=d`) | **(a) engine**, both faces, `ENGINE-LIMITS.md` K21. Neither is counted by anything today |
+| **4** | `JsonTest` + `Relative_UrlTest` + `SizeTest` + `ForTest` — comparison failures on the same face-1 string | **(a)**, K21 face 1. **This is the verdict on the row the third census left "unclassified"**: `JsonTest`'s `mapper.writeValueAsString(value)` is that one line, with the port's own `mutable.HashMap` as `value` |
+| **2** | `java.lang.Long cannot be cast to java.lang.Double` at `Ceil`/`Floor` | **(a) engine**, `ENGINE-LIMITS.md` K17 / catalog `JS-E06`, still `Partial` — unchanged |
+| **1** | `Sort$ComparableMapEntry cannot be cast to scala.Tuple2` | **(a), REFUSED and COUNTED** — unchanged (K5.7 / K18's `ReifiedOccurrence`) |
+| **1** | `AppendTest.testAppendToDateTypeEager` | K21 face 2 by inspection (an `Inspectable` with public fields); not probed |
+| **5** | the remaining `JekyllWhereImplTest` comparison failures | **(a)**, K21 face 1/2 — same two data classes, observed at the assertion rather than at the throw |
+
+**The lesson is the third census's own, applied to itself.** That census said a census grouped by
+EXCEPTION CLASS is grouped by distance from the cause; this one adds that a census grouped by
+*which fix is first on the path* is grouped by ORDER OF THROWING. Both give a work list whose rows
+are not causes. The number that means something here is `10 -> 0` on the family K20 names, not
+`552 -> 554` on the suite.
+
 ---
 
 ## 11. Publishability — what sge and ssg need before they can depend on this

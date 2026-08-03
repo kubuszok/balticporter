@@ -163,7 +163,7 @@ ssg.liquid.blocks.UnlessTest	unless_elseTest	pass
 ssg.liquid.blocks.UnlessTest	unless_else_in_loopTest	pass
 ssg.liquid.blocks.UnlessTest	unless_in_loopTest	pass
 ssg.liquid.filters.AbsTest	applyTest	pass
-ssg.liquid.filters.AbsTest	ensureDateTypeIsZero	fail
+ssg.liquid.filters.AbsTest	ensureDateTypeIsZero	pass
 ssg.liquid.filters.AbsTest	testMathPrecise	pass
 ssg.liquid.filters.Absolute_UrlTest	notAppendForwardSlashIfBothInputAndBaseurlAreAimplySlash	pass
 ssg.liquid.filters.Absolute_UrlTest	shouldNormalizeInternationalURLs	pass
@@ -297,7 +297,7 @@ ssg.liquid.filters.SliceTest	noParamsThrowsException	pass
 ssg.liquid.filters.SliceTest	threeParamsThrowsException	pass
 ssg.liquid.filters.SortTest	applyOriginalTest	pass
 ssg.liquid.filters.SortTest	applyTest	pass
-ssg.liquid.filters.SortTest	testInspectable	fail
+ssg.liquid.filters.SortTest	testInspectable	pass
 ssg.liquid.filters.SortTest	testLiquidSupport	pass
 ssg.liquid.filters.SortTest	testSortMap	fail
 ssg.liquid.filters.Sort_NaturalTest	applyTest	pass

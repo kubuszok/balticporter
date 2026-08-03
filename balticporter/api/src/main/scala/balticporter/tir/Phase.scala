@@ -95,6 +95,37 @@ trait Phase:
     * traversal at every constituent, bottom-up. */
   def transformType(t: TypeRepr)(using Program): TypeRepr = t
 
+  /** A type constructor whose type ARGUMENTS this phase must NOT map — the traversal stops at the
+    * application and carries the arguments across verbatim (`ENGINE-LIMITS.md` K20).
+    *
+    * ==Why the traversal owes a hook at all==
+    * `transformType` is applied at every constituent and is POSITION-BLIND, which is exactly right
+    * for a type that is a claim about a SLOT. A generic type argument is not always one: it
+    * survives erasure into the class file's generic signature, and a third party reads it back at
+    * run time and CONSTRUCTS from it — jackson's `TypeReference<Map<String,Object>>`, Gson's
+    * `TypeToken<T>`, Guice's `Key<T>`/`TypeLiteral<T>`, and `java.lang.Class<T>`, the one java
+    * itself guarantees. Retyped there, the port is not describing a slot; it is telling the
+    * framework to instantiate a type that has no constructor:
+    * `Cannot construct instance of scala.collection.mutable.Map`.
+    *
+    * There is no NODE to translate — the occurrence is a type argument in a declaration, so a phase
+    * that walked every `InstanceOf` and every `Typed` (K18's two reified positions, both written in
+    * the source) visits nothing — and no instrument sees it: the port compiles, every check count is
+    * flat, and the evidence is an exception from someone else's library. So the answer has to be at
+    * the traversal, which is the one place that knows it is about to descend into an argument.
+    *
+    * ==…and why it is a HOOK and not a table the traversal owns==
+    * Whether a carrier's argument may move depends on what the phase is DOING to it, not on the
+    * carrier. A RETYPING phase moves a type to a different runtime class, so the argument must stay
+    * java's; a RENAMING phase moves the port's OWN class to the name the port emits it under, and
+    * `Class[ssg.liquid.Foo]` is then exactly right — the emitted class IS the runtime class. A
+    * single engine-wide carrier list would break the second to fix the first.
+    *
+    * The default is `false`, so a phase that declares nothing traverses as it always did; WHICH
+    * carriers a retyping phase names is §1(b) policy on that phase. Called with the UNMAPPED type
+    * constructor, before either it or its arguments are visited. */
+  def preservesTypeArgsOf(tc: TypeRepr)(using Program): Boolean = false
+
 /** A phase whose POLICY is a set of declared KEYS — implemented so the RUN can bind them ONCE,
   * before the pipeline starts.
   *
@@ -310,7 +341,13 @@ object StandardTraversal:
       case TypeRepr.TypeRef(p, s)       => TypeRepr.TypeRef(mapType(ph, p), s)
       case TypeRepr.TermRef(p, s)       => TypeRepr.TermRef(mapType(ph, p), s)
       case TypeRepr.SuperType(a, b)     => TypeRepr.SuperType(mapType(ph, a), mapType(ph, b))
-      case TypeRepr.AppliedType(tc, as) => TypeRepr.AppliedType(mapType(ph, tc), as.map(mapType(ph, _)))
+      // …the ARGUMENTS are skipped where the phase says this constructor's are reified by someone
+      // else (`Phase.preservesTypeArgsOf`, K20). Asked of the UNMAPPED constructor: the question is
+      // about the carrier the java named, and the head is still mapped either way — a rename must
+      // reach `TypeReference` itself even where nothing inside it may move.
+      case TypeRepr.AppliedType(tc, as) =>
+        TypeRepr.AppliedType(mapType(ph, tc),
+                             if ph.preservesTypeArgsOf(tc) then as else as.map(mapType(ph, _)))
       case TypeRepr.AndType(l, r)       => TypeRepr.AndType(mapType(ph, l), mapType(ph, r))
       case TypeRepr.OrType(l, r)        => TypeRepr.OrType(mapType(ph, l), mapType(ph, r))
       case TypeRepr.ByNameType(u)       => TypeRepr.ByNameType(mapType(ph, u))
