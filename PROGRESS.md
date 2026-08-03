@@ -95,7 +95,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
-| `ssg-liquid-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 552 passing, 23 failing** (§10.5.5) | **0** |
+| `ssg-liquid-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 574 passing, 1 failing** (§10.5.5; the one is K18's counted refusal and stays) | **0** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2001,7 +2001,7 @@ written, 987 members in the source map. `just liqp-measure`.
 | `jdk-surface` | **19 -> 10 -> 9** — `anyMatch`/`sortNatural`/`ConcurrentHashMap` stopped reading as this port's wall once the tables named them |
 | `collection-boundary` (main) | **6 -> 14 -> 13 -> 8 -> 18 -> 14 -> 15** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), rose by the one `InexpressibleParent` refusal K5.7 counts, and fell by five when the OWNED-callee bridge stopped being switched off by a shim this library never names (K2.5). It then ROSE to 18 and fell to 14 in one step, because the aliasing refusal became a TRANSLATION: twelve `Arrays.asList(arr)` sites stopped being untranslated calls the check cannot see and became boundaries it can, four of which the same change closed. The fifteenth is K5.7's other half: the member a RETAINED PARENT declares and the target cannot carry, now emitted as the interface's own documented refusal and counted at the slot. It then fell to **14** when K20's carrier turned the `convertValue(Object, TypeReference)` refusal into a bridge, and rose to **25** when K21 face 1 gave the check its `OpaqueEgress` lane — ELEVEN rows, one per external callee with a `java.lang.Object` formal a value this port may have retyped reaches. That is a REVIEW LIST and not a residue: it is where a port reads its `reflectiveSinks` candidates off, and on its first run it named `JsonGenerator#writeObject`, a jackson sink `main.conf` still does not declare |
 | `omissions` | **6 -> 4 -> 1** — `PlainBigDecimal`'s two `super(args)` are no longer dropped (with the external constructor's signature readable the funnel reaches K5.5's synthesised primary), and `LiquidException`'s three reach a primary synthesised at the JDK throwable's widest overload (C3) |
-| tests | 639 `@Test` upstream, **575 emitted, 575 RUN — 161 -> 357 -> 364 -> 392 -> 552 -> 554 -> 559 -> 567 passing, 414 -> 218 -> 211 -> 183 -> 23 -> 21 -> 16 -> 8 failing** (§10.5.5; the last three steps are K20's carrier, K21 face 1's egress bridge and K21 face 2's bean accessors, one measured commit each) |
+| tests | 639 `@Test` upstream, **575 emitted, 575 RUN — 161 -> 357 -> 364 -> 392 -> 552 -> 554 -> 559 -> 567 -> 572 -> 574 passing, 414 -> 218 -> 211 -> 183 -> 23 -> 21 -> 16 -> 8 -> 3 -> 1 failing** (§10.5.5; the last five steps are K20's carrier, K21 face 1's egress bridge, K21 face 2's bean accessors, K22's class-initialisation triggers and K17 face 3's cast-expression type, one measured commit each). **574/575 is the floor**: the last row is K18's counted refusal, which stays |
 | `bean-exposure` | **0** on the test port — every type is in scope (D-liqp-10 declares `except = []`) and no java class in this suite declares a bean name the phase would have needed. The MAIN port does not run the phase, so it reports nothing: the row exists to make a scope's own refusals visible, not to census a library's public fields |
 
 **The behavioural gate is now the measurement.** Every number above except the last row is a
@@ -2563,7 +2563,7 @@ outcomes identical. What is left:
 
 | n | test | root cause | §1 |
 |---|---|---|---|
-| **2** | `CeilTest.applyTest`, `FloorTest.applyTest` | `java.lang.Long cannot be cast to java.lang.Double` — a primitive cast is a CONVERSION in java and an assertion in Scala once a phase has retyped the value | **(a) engine**, `ENGINE-LIMITS.md` K17 / catalog `JS-E06`, still `Partial`. Unchanged since the third census |
+| **2** | `CeilTest.applyTest`, `FloorTest.applyTest` | `java.lang.Long cannot be cast to java.lang.Double` — a primitive cast is a CONVERSION in java and an assertion in Scala once a phase has retyped the value | **(a) engine**, `ENGINE-LIMITS.md` K17 / catalog `JS-E06`, still `Partial`. Unchanged since the third census — **FIXED, see the seventh census below** |
 | **1** | `SortTest.testSortMap` | `Sort$ComparableMapEntry cannot be cast to scala.Tuple2` — `Map.Entry -> Tuple2` is an `UninheritableTarget` and `Tuple2` is a concrete target no live view can be, so K18 refuses the reified cast | **(a), REFUSED AND COUNTED**. Unchanged since the third census |
 
 **And the new lane was not vacuous on either run**, which is what a coverage check most often is.
@@ -2592,6 +2592,44 @@ all — and it is why the two triggers were landed and measured one at a time ra
   one of them names `JsonGenerator#writeObject` — a jackson sink `main.conf` does NOT declare.
   `bean-exposure` is 0 on the test port (everything in scope, no name clash). Neither number is a
   defect count; both are lists a port picks entries from.
+
+**THE SEVENTH CENSUS — K17 face 3, and the residue is 1 row that STAYS.**
+`572 -> 574 passing, 3 -> 1 failing`, at `errors 0`, with the two newly passing being exactly
+`CeilTest.applyTest` and `FloorTest.applyTest` — the pair the sixth census named. What is left is
+the counted `ReifiedOccurrence` refusal alone:
+
+| n | test | root cause | §1 |
+|---|---|---|---|
+| **1** | `SortTest.testSortMap` | `Sort$ComparableMapEntry cannot be cast to scala.Tuple2` — `Map.Entry -> Tuple2` is an `UninheritableTarget` and `Tuple2` is a concrete target no live view can be, so K18 refuses the reified cast | **(a), REFUSED AND COUNTED.** Unchanged since the third census, and it stays: the refusal is the honest answer, not a gap |
+
+**574 of 575 is this port's floor and the last row is a decision, not a defect.** Trajectory over the
+catalog waves: `161 -> 357 -> 364 -> 392 -> 552 -> 554 -> 559 -> 567 -> 572 -> 574`.
+
+**Three things this census records that the numbers do not.**
+
+- **The blast was 1,800 members and MEANT something at two of them.** `coerce` reading the type the
+  term actually has moves every expression that carries a source cast, so the emission moved on
+  fourteen of fifteen port artifacts (libGDX core 1248, anim8 164, liqp 102, jbump 76, gltf 66,
+  liqp-test 50, sg 36, libgdx-test 28, ashley 20, noise4j 14, screens 8, vfx 8). Diffed line by line
+  against a re-emission at the previous commit, **libGDX core's 683 changed lines are 683 removals of
+  an adjacent duplicate identical cast and nothing else**, and liqp's 45 are 42 of those plus one
+  redundant upcast (`PlainBigDecimal` to its own supertype) plus **the 2 wrapper corrections that are
+  the fix**. A blast this size is only readable because it was classified; the member count alone
+  would have said nothing, and "errors 0, suites flat" would have been the same sentence for a
+  change that broke something.
+- **The measurement order was decided by a REGRESSION, and the regression is the useful part.**
+  `coerce` alone took libGDX **0 -> 4 errors** (`ComparableTimSort`'s raw `(Comparable)` casts),
+  because the accidental thing that had been emitting java's unchecked conversion was the very
+  branch the fix corrects. So the wave landed `uncheckedGeneric` FIRST as its own measured commit
+  (blast 6 on libGDX, 0 on the other fourteen, every lane flat) and `coerce` on top of it. A single
+  commit would have been green and would have hidden which half did what.
+- **An edge-case suite found a defect neither the corpus nor the compile can see.** The five new
+  `JS-E06` tests in `CatalogAreaESpec` include the cells that must STAY a `ClassCastException`
+  because java throws there too — and writing them surfaced that a java cast of a statically-known
+  WRAPPER to a primitive (`(double) aLong`) emits `v.asInstanceOf[scala.Double]`, a checkcast that
+  throws where java unboxes and widens. It was broken before this wave as well (the older emission
+  put a `.doubleValue()` after a checkcast that never reaches it), no corpus site exercises it, and
+  no count anywhere moves.
 
 ---
 

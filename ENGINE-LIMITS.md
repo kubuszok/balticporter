@@ -3619,17 +3619,20 @@ says so.*
 
 ---
 
-### K17. A java CONVERSION emitted as a scala CAST asserts where java CONVERTED — **34 test failures, 0 compile errors. BOTH FACES CLOSED**
+### K17. A java CONVERSION emitted as a scala CAST asserts where java CONVERTED — **36 test failures, 0 compile errors. ALL THREE FACES CLOSED**
 
-Two faces, found in the same run and the same defect twice: java's expression grammar performs a
+Three faces, the same defect three times: java's expression grammar performs a
 CONVERSION at a position where the emitter renders an `asInstanceOf`. The cast has the right static
 type — that is why nothing complains — and at run time it asserts a fact that is false, because the
 conversion never happened.
 
-**Read the two faces apart.** FACE 2 (the conditional, 7 failures) closed first — the conversion is
+**Read the faces apart.** FACE 2 (the conditional, 7 failures) closed first — the conversion is
 performed on each OPERAND now, so the `if` really has java's type and there is nothing to assert.
 FACE 1 (a lambda at a functional-interface slot, 27 failures) was the larger half and closed second,
-by a different mechanism. The general rule below is what they share.
+by a different mechanism. FACE 3 (a cast expression's own type at the slot that BOXES it, 2
+failures) closed last and is where the general rule stops being about expressions at all: the type a
+phase reads in order to decide an emission has to be the type the TERM has, not the one the parser
+recorded. The general rule below is what all three share.
 
 Both were invisible until C12 closed. They sit behind `Template`'s constructor, so every test that
 would have reached them died one frame earlier with C12's `NullPointerException`; they are not
@@ -3785,10 +3788,66 @@ invites: an `ENGINE-LIMITS.md` id and a catalog id are different namespaces, and
 citing K17" is not a way to name a row. **Cite the DiffId, and check that the row's sentence is the
 defect you are holding.**
 
+**FACE 3 — a CAST EXPRESSION'S OWN TYPE, at the slot that boxes it. 2 failures. CLOSED.**
+
+```java
+public Object apply(Object value, …) { … return (long) Math.ceil(super.asNumber(value).doubleValue()); }
+```
+```scala
+… java.lang.Math.ceil(…).asInstanceOf[scala.Long].asInstanceOf[java.lang.Double]   // threw
+… java.lang.Math.ceil(…).asInstanceOf[scala.Long].asInstanceOf[java.lang.Long]     // java's own boxing
+```
+
+JLS 5.1.7 boxes an expression at the expression's OWN type, and a cast expression's type is the
+CAST's — so `(long) Math.ceil(d)` returned from a method declared `Object` is a `java.lang.Long`.
+`SpoonTir.coerce` read `e.getType`, which is Spoon's answer for the expression BEFORE its own casts,
+while every caller hands it `t = expr(e)` — a term `expr` has ALREADY folded those casts onto. So
+the boxing branch, which does not merely decide WHETHER to convert but names the wrapper to convert
+TO, picked `java.lang.Double` for a term that is a `Long`:
+`class java.lang.Long cannot be cast to class java.lang.Double`.
+
+**The general rule this face adds** is not about numbers at all: **a phase that reads a type in
+order to decide what to EMIT must read the type the TERM has, not the type the parser recorded for
+the node** — the two differ by exactly the conversions the translation has already performed, and
+`SpoonTir.castType` is the one function that answers it. Its own doc comment predicted this:
+*"a seventh reader would have copied the seventh."* Two readers were wrong, in opposite directions,
+and neither was findable by a count:
+
+- `coerce` (the boxing above), and the same read also made the redundancy this entry already named —
+  `0.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]` in `JsonValue.asByte` — which this face
+  removes as predicted. **683 of libGDX core's 683 changed lines are that removal and nothing else**,
+  which is what makes a 1248-member blast readable: the emission moved everywhere and MEANT
+  something at two sites;
+- `uncheckedGeneric`, in the other direction. Java writes an unchecked conversion (JLS 5.1.9) for a
+  RAW cast at a parameterised formal — `gallopRight((Comparable) a[i], …)` against
+  `Comparable<Object>` — and read BEFORE the cast that argument is a plain `Object`, mentions no raw
+  generic, and declines. It was carried by `coerce`'s `downcast` branch firing on that same pre-cast
+  `Object`, which is an accident; fixing `coerce` alone took libGDX **0 -> 4 errors**, and that is
+  why the two land as two commits with the unchecked half FIRST.
+
+**AND THE PROBE REFUTED THE FIX THIS ROW WAS EXPECTED TO NEED.** The predicted defect was the OTHER
+direction — an `Object`-typed operand cast to a primitive — and the expected answer was a checked
+unbox-and-convert helper with runtime dispatch, on the reasoning that java converts (`Number
+.doubleValue()`-style) where `asInstanceOf` asserts. **Java does no such thing.** JLS 5.5 gives
+`(prim) objectExpr` a narrowing reference conversion to the EXACT wrapper followed by an unbox, so
+`(double) o` on an `Object` holding a `Long` throws `ClassCastException` — and so does it on a
+`Number`-typed operand, which is the shape that most invites the mistake. Measured on javac and on
+scalac 3.8.4, the same instrument faces 1 and 2 were settled with: **all 45 cells of (9 runtime
+classes x 5 primitives) agree between the two languages**, `Character`, `Boolean` and a non-`Number`
+`String` included. Writing the helper would have CONVERTED where java THROWS — an unfaithful port,
+arrived at by making tests pass. The direction that IS a conversion is a statically-known WRAPPER at
+a primitive slot (JLS 5.1.8 + 5.1.2), which `coerce.unbox` has always handled and which face 3
+leaves alone.
+
 *Fix kind: (a) engine. FACE 2 CLOSED (catalog `JS-E05`, `SpoonTir.promotedBranch`); FACE 1 CLOSED
-(catalog `JS-G31`, `SpoonTir.polyExpression` + `SpoonTir.polyArgsUncast`). Both found by RUNNING
-liqp's suite after C12 closed; the second was PREDICTED by the catalog before it was measured, which
-is the first time that has happened in this file.*
+(catalog `JS-G31`, `SpoonTir.polyExpression` + `SpoonTir.polyArgsUncast`); FACE 3 CLOSED (catalog
+`JS-E06`, `SpoonTir.coerce` and `SpoonTir.uncheckedGeneric` both reading `SpoonTir.castType`).
+Faces 1 and 2 were found by RUNNING liqp's suite after C12 closed; face 3 by running it after K22
+closed, at the port's honest floor — liqp `572/3 -> 574/1`, the two newly passing being exactly
+`CeilTest` and `FloorTest`, with 0 newly failing, errors 0 on all fifteen port artifacts and every
+other suite outcome identical. The second face was PREDICTED by the catalog before it was measured,
+which is the first time that has happened in this file; the third was predicted TOO, and predicted
+the wrong fix, which is the first time THAT has happened.*
 
 ---
 

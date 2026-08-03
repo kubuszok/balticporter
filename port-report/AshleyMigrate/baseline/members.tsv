@@ -26,10 +26,10 @@ sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler$ComponentOpe
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler$ComponentOperation$Type	class	5ff4dc9eba6fd613
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler$ComponentOperationPool	class	0cfd43b3f1427b8a
 sge.ecs.ComponentOperationHandler	sge.ecs.ComponentOperationHandler$ComponentOperationPool#newObject()	def	24d3da065393da0e
-sge.ecs.ComponentType	sge.ecs.ComponentType	class	662308bd75c0b96a
+sge.ecs.ComponentType	sge.ecs.ComponentType	class	90870083401fc80f
 sge.ecs.ComponentType	sge.ecs.ComponentType#<stmt1>	stmt	ef7992576402f428
 sge.ecs.ComponentType	sge.ecs.ComponentType#assignedComponentTypes	val	9216a131f3e41b75
-sge.ecs.ComponentType	sge.ecs.ComponentType#equals(Any)	def	098f36fb1cf12c37
+sge.ecs.ComponentType	sge.ecs.ComponentType#equals(Any)	def	8d4f7320f251b3d8
 sge.ecs.ComponentType	sge.ecs.ComponentType#getBitsFor(Array<Class<?>>)	def	025edd397f36592c
 sge.ecs.ComponentType	sge.ecs.ComponentType#getFor(Class<?>)	def	d471056bf4db0258
 sge.ecs.ComponentType	sge.ecs.ComponentType#getIndex()	def	3c25238ed828afcf
@@ -211,7 +211,7 @@ sge.ecs.FamilyManager	sge.ecs.FamilyManager$BitsPool#newObject()	def	f3b6f595eff
 sge.ecs.FamilyManager	sge.ecs.FamilyManager$EntityListenerData	class	eed94c4d4784b73f
 sge.ecs.FamilyManager	sge.ecs.FamilyManager$EntityListenerData#listener	val	bb185b9b86ed7316
 sge.ecs.FamilyManager	sge.ecs.FamilyManager$EntityListenerData#priority	val	bc5953a688ed8c85
-sge.ecs.PooledEngine	sge.ecs.PooledEngine	class	03c797d457cc77e4
+sge.ecs.PooledEngine	sge.ecs.PooledEngine	class	cc07140fe4e2eefd
 sge.ecs.PooledEngine	sge.ecs.PooledEngine#<init>()	ctor	70e80739cb62ed09
 sge.ecs.PooledEngine	sge.ecs.PooledEngine#<stmt1>	stmt	0fc41e5acd9ab292
 sge.ecs.PooledEngine	sge.ecs.PooledEngine#<stmt2>	stmt	b6490fc05b43367f
@@ -221,7 +221,7 @@ sge.ecs.PooledEngine	sge.ecs.PooledEngine#createComponent(Class<T>)	def	98fc18a9
 sge.ecs.PooledEngine	sge.ecs.PooledEngine#createEntity()	def	40194820c27dc8cf
 sge.ecs.PooledEngine	sge.ecs.PooledEngine#entityPool	val	da039147895ea191
 sge.ecs.PooledEngine	sge.ecs.PooledEngine#removeEntityInternal(Entity)	def	7041d9518e1eb7b1
-sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools	class	3f1f12ef1c0592f5
+sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools	class	0265ad1932a5be8f
 sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools#<stmt1>	stmt	16b4bc6c03c16349
 sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools#<stmt2>	stmt	3d9447d474ae91fe
 sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools#<stmt3>	stmt	c54125699dbbdf04
@@ -230,7 +230,7 @@ sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools#free(Object)	def	867fb6
 sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools#freeAll(Array<?>)	def	e6ba35d76cc2b3ac
 sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools#initialSize	val	83559131224c978c
 sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools#maxSize	val	3230ffc65bf20137
-sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools#obtain(Class<T>)	def	8bb3b5297d6a4296
+sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools#obtain(Class<T>)	def	c3d8cb92172a8a03
 sge.ecs.PooledEngine	sge.ecs.PooledEngine$ComponentPools#pools	val	b965ce0823f32bb8
 sge.ecs.PooledEngine	sge.ecs.PooledEngine$EntityPool	class	85f525c0a7a37411
 sge.ecs.PooledEngine	sge.ecs.PooledEngine$EntityPool#discard(PooledEntity)	def	a2cfdbaccf2f05f5
@@ -257,10 +257,10 @@ sge.ecs.SystemManager	sge.ecs.SystemManager$SystemListener#systemAdded(EntitySys
 sge.ecs.SystemManager	sge.ecs.SystemManager$SystemListener#systemRemoved(EntitySystem)	def	1fd1ac78d0c5a101
 sge.ecs.signals.Listener	sge.ecs.signals.Listener	class	1ae6b994b1068676
 sge.ecs.signals.Listener	sge.ecs.signals.Listener#receive(Signal<T>,T)	def	e3a5b81fbea33f79
-sge.ecs.signals.Signal	sge.ecs.signals.Signal	class	aa80b0fc25ee64d5
+sge.ecs.signals.Signal	sge.ecs.signals.Signal	class	8d666e9fef08e68f
 sge.ecs.signals.Signal	sge.ecs.signals.Signal#<stmt1>	stmt	8ec0cd4efb3d51ee
 sge.ecs.signals.Signal	sge.ecs.signals.Signal#add(Listener<T>)	def	79545e651df6ecd7
-sge.ecs.signals.Signal	sge.ecs.signals.Signal#dispatch(T)	def	23754774bf02d9d0
+sge.ecs.signals.Signal	sge.ecs.signals.Signal#dispatch(T)	def	64340719fa963327
 sge.ecs.signals.Signal	sge.ecs.signals.Signal#listeners	val	29196949d6180a5c
 sge.ecs.signals.Signal	sge.ecs.signals.Signal#remove(Listener<T>)	def	f2689657e569af77
 sge.ecs.signals.Signal	sge.ecs.signals.Signal#removeAllListeners()	def	c93cc2c4c4674b32
@@ -321,9 +321,9 @@ sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#sort
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#sortedEntities	val	95d254fee834c230
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#startProcessing()	def	fe1ec348163df205
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#update(float)	def	e929bda0252b83e1
-sge.ecs.utils.Bag	sge.ecs.utils.Bag	class	97027a1a32571853
+sge.ecs.utils.Bag	sge.ecs.utils.Bag	class	abee61b2cf114915
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#<init>()	ctor	47b6bd7ae280bd5b
-sge.ecs.utils.Bag	sge.ecs.utils.Bag#<stmt1>	stmt	2756649d52ee1803
+sge.ecs.utils.Bag	sge.ecs.utils.Bag#<stmt1>	stmt	33b7243d6c7dad20
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#add(E)	def	382060dad3b965f3
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#clear()	def	661bdc6438551529
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#contains(E)	def	f0085296c488c827
@@ -331,7 +331,7 @@ sge.ecs.utils.Bag	sge.ecs.utils.Bag#data	val	d26816777400a89f
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#get(int)	def	667b5fe16275603a
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#getCapacity()	def	86253e441b46012c
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#grow()	def	14c2b56fb3b35030
-sge.ecs.utils.Bag	sge.ecs.utils.Bag#grow(int)	def	b38aa48ea112c9cc
+sge.ecs.utils.Bag	sge.ecs.utils.Bag#grow(int)	def	3e214ae96dae1915
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#isEmpty()	def	29735818511137d9
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#isIndexWithinBounds(int)	def	e9eee9b5e59de8e2
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#remove(E)	def	b63762e764ef77db

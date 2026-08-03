@@ -2371,7 +2371,25 @@ object SpoonTir:
       private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term, arrayCov: Boolean = true,
                          tpToObject: Boolean = true, unchecked: Boolean = true): Term =
         val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
-        val et     = try e.getType catch { case _: Throwable => null }
+        // THE TYPE THE COERCED TERM ACTUALLY HAS — [[castType]], not `e.getType`. Every caller
+        // hands `t = expr(e)`, and `expr` has already folded the casts the SOURCE wrote onto that
+        // term, so `e.getType` describes something that is no longer on the tree. Java agrees: a
+        // cast expression's type IS the cast's type, and it is THAT type the surrounding
+        // assignment or invocation context converts (JLS 5.2, 5.3).
+        //
+        // Where it bites is the `boxing` branch below, because that branch does not merely decide
+        // WHETHER to convert, it names the wrapper to convert TO. `return (long) Math.ceil(d);`
+        // from a method returning `Object` boxes to `java.lang.Long` in java (JLS 5.1.7, at the
+        // cast's type); read as the pre-cast `double` it emitted
+        // `…asInstanceOf[scala.Long].asInstanceOf[java.lang.Double]`, which is an ASSERTION that a
+        // `Long` is a `Double` and throws — `ENGINE-LIMITS.md` K17's rule (a cast is not a
+        // conversion) reached through the wrapper CHOICE rather than through the cast.
+        //
+        // The other direction needs nothing and must not get it: `(double) anObject` is a
+        // checkcast to `java.lang.Double` followed by an unbox in java, never a `Number` dispatch,
+        // so it THROWS for a `Long` — and `asInstanceOf[scala.Double]` on an `Any` throws in
+        // exactly the same 45 cells. Probed both compilers; see K17 face 3.
+        val et     = castType(e)
         val narrowing = target.isPrimitive && et != null && et.isPrimitive &&
           primRank.get(target.getSimpleName).exists(tr => primRank.get(et.getSimpleName).exists(_ > tr))
         // a primitive flowing into a concrete REFERENCE slot (`Object`, `Number`, …) is Java

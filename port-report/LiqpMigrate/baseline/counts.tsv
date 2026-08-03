@@ -12,12 +12,12 @@ collection-closure	8
 collection-retarget	0
 jdk-surface	9
 manifest	0
-markers	1
+markers	0
 omissions	1
 policy	0
 port-map	0
-portability(all)	55
-portability(emitted)	55
+portability(all)	54
+portability(emitted)	54
 portability(injected)	0
 porter-notes	0
 remediation	11

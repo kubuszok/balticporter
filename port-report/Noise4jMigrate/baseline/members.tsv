@@ -65,7 +65,7 @@ sge.noise.Int2dArray	sge.noise.Int2dArray#array	val	bc5e6f6d4528fef8
 sge.noise.Int2dArray	sge.noise.Int2dArray#get(int,int)	def	e3a88a925bee507d
 sge.noise.Int2dArray	sge.noise.Int2dArray#set(int)	def	26fefbfd1c5a2144
 sge.noise.Int2dArray	sge.noise.Int2dArray#set(int,int,int)	def	6ebcdc07dfdef7ed
-sge.noise.Object2dArray	sge.noise.Object2dArray	class	97774cbb56f00e90
+sge.noise.Object2dArray	sge.noise.Object2dArray	class	960d925e1899e624
 sge.noise.Object2dArray	sge.noise.Object2dArray#<init>(Array<Type>,int)	ctor	e6a4bbdfd75e952a
 sge.noise.Object2dArray	sge.noise.Object2dArray#<init>(Array<Type>,int,int)	ctor	aafb3d8444eadc03
 sge.noise.Object2dArray	sge.noise.Object2dArray#<init>(int)	ctor	8b33d8b35daac89c
@@ -79,7 +79,7 @@ sge.noise.Object2dArray	sge.noise.Object2dArray#getObjectArray()	def	fbc5854421c
 sge.noise.Object2dArray	sge.noise.Object2dArray#getOrElse(int,int,Type)	def	ca1cf45da840749b
 sge.noise.Object2dArray	sge.noise.Object2dArray#getOrNull(int,int)	def	a7e44118815fe100
 sge.noise.Object2dArray	sge.noise.Object2dArray#iterator()	def	88f1bd9a73196ff1
-sge.noise.Object2dArray	sge.noise.Object2dArray#newNotTyped(int,int)	def	c754b4c343745dc0
+sge.noise.Object2dArray	sge.noise.Object2dArray#newNotTyped(int,int)	def	4fc4b76116e00cb1
 sge.noise.Object2dArray	sge.noise.Object2dArray#set(int,int,Type)	def	9f8e7a14b24fa109
 sge.noise.Object2dArray	sge.noise.Object2dArray#swap(int,int,int,int)	def	6e397470a574393c
 sge.noise.Object2dArray	sge.noise.Object2dArray$ArrayIterator	class	72642e011bb2d747
@@ -139,7 +139,7 @@ sge.noise.generator.cellular.CellularAutomataGenerator	sge.noise.generator.cellu
 sge.noise.generator.cellular.CellularAutomataGenerator	sge.noise.generator.cellular.CellularAutomataGenerator#shouldDie(int)	def	1aa55c5d739b722e
 sge.noise.generator.cellular.CellularAutomataGenerator	sge.noise.generator.cellular.CellularAutomataGenerator#spawnLivingCells(Grid)	def	80570ba655b44276
 sge.noise.generator.cellular.CellularAutomataGenerator	sge.noise.generator.cellular.CellularAutomataGenerator#temporaryGrid	val	fd15f330df343dee
-sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator	class	75cfd98f6181e464
+sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator	class	37c7cac0e592fd2a
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#INSTANCE	val	0000c940755243b4
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#algorithmProvider	val	a7d50cc65fcc08e9
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#consume(Grid,int,int,float)	def	c63af7a7e6b9ffca
@@ -157,8 +157,8 @@ sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerato
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#setModifier(float)	def	b463a0cb0647932e
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#setRadius(int)	def	4493b5c071cd58e1
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#setSeed(int)	def	9be07645010e3f97
-sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider	class	cf300d4b60d28c90
-sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider#PI	val	47ef20ace147ca73
+sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider	class	de4d06da51f85c14
+sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider#PI	val	411a498863aa59df
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider#interpolate(float,float,float)	def	617603cc3e1d103a
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider#noise(NoiseGenerator,int,int)	def	1c3198094a0a82cf
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider#smoothNoise(NoiseGenerator,int,int)	def	b609937dd31e278a
@@ -292,11 +292,11 @@ sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dunge
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator$Point#x()	def	caaf8e4ada6fd118
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator$Point#y	val	79fb25f9728bb009
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator$Point#y()	def	e0e3993ca226f638
-sge.noise.generator.util.Generators	sge.noise.generator.util.Generators	class	a77b69321421665d
+sge.noise.generator.util.Generators	sge.noise.generator.util.Generators	class	4540e8d12c772f06
 sge.noise.generator.util.Generators	sge.noise.generator.util.Generators#CALCULATOR	val	d44a70aff3be8a42
 sge.noise.generator.util.Generators	sge.noise.generator.util.Generators#DEFAULT_SEED_BIT_LENGTH	val	959326538a201309
 sge.noise.generator.util.Generators	sge.noise.generator.util.Generators#RANDOM	val	a9bd7b1ed0093487
-sge.noise.generator.util.Generators	sge.noise.generator.util.Generators#getCalculator()	def	a4201ddf19f74d0e
+sge.noise.generator.util.Generators	sge.noise.generator.util.Generators#getCalculator()	def	38395da5e8995634
 sge.noise.generator.util.Generators	sge.noise.generator.util.Generators#getRandom()	def	d28bb8f0bf40237a
 sge.noise.generator.util.Generators	sge.noise.generator.util.Generators#randomElement(List<Type>)	def	15b64f7f2ee66f96
 sge.noise.generator.util.Generators	sge.noise.generator.util.Generators#randomIndex(List<?>)	def	f2b1cc9714dede0b

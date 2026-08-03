@@ -202,21 +202,29 @@ class CatalogAreaESpec extends PortSuite:
     assertEmits(p, "i.asInstanceOf[scala.Double]")
   }
 
-  test("JS-E05 — an operand the SOURCE already cast is read AFTER its cast, not before") {
+  test("JS-E05 — an operand the SOURCE already cast is read AFTER its cast, and ONCE") {
     // The defect this pass shipped and the CORPUS caught, on the first `measure-all`. `be.getType`
     // is the type Spoon records BEFORE the source's own casts, which `expr` applies on top — so a
     // `(float) Math.asin(…)` operand of a `float` conditional reads as a `double`, earns a
     // narrowing, and gets one more `asInstanceOf[scala.Float]` stacked on a term that is already a
     // `Float`. It says nothing, it moves a member digest, and neither a compile nor any count can
-    // see it. The two casts this shape DOES emit are the source's own and the return coercion's,
-    // both older than this row; what must never appear is a third.
+    // see it.
+    //
+    // ONE cast now, not two. This assertion used to demand two — "the source's own and the return
+    // coercion's" — and the second was `coerce` asking `e.getType` the same stale question one
+    // level out: at a `float` return slot, an operand java already converted to `float` is owed
+    // nothing. `ENGINE-LIMITS.md` K17 named that redundancy at `JsonValue.asByte` and said the fix
+    // "belongs at `coerce` reading the TIR type it is handed, which is its own change and its own
+    // measurement"; K17 face 3 is that change, and this is the assertion it moves. Note WHY the
+    // old form passed: it asserted a PRESENCE that the defect supplied, so it would have failed the
+    // correct emission — the same trap face 2's `assertNotEmits` fell into, one direction over.
     val p = port(
       """public class E {
         |  float f(boolean b, float g) { return b ? (float) Math.asin(g) : g * 0.5f; }
         |}""".stripMargin)
     assertConsults(p, JS.E(5))
-    assertEmits(p, "asInstanceOf[scala.Float].asInstanceOf[scala.Float]")
-    assertNotEmits(p, "asInstanceOf[scala.Float].asInstanceOf[scala.Float].asInstanceOf[scala.Float]")
+    assertEmits(p, "asInstanceOf[scala.Float]")
+    assertNotEmits(p, "asInstanceOf[scala.Float].asInstanceOf[scala.Float]")
   }
 
   test("JS-E05 — TWO source casts: the effective type is the OUTERMOST one, which is the HEAD") {
@@ -242,6 +250,77 @@ class CatalogAreaESpec extends PortSuite:
     // conditional is a lub and scala's is also a lub. Only the numeric case is a conversion.
     val p = port("public class E { Object f(boolean b, String s, Integer i) { return b ? s : i; } }")
     assertConsults(p, JS.E(5))
+    assertNotEmits(p, "intValue")
+  }
+
+  // -- JS-E06: a cast expression's TYPE is the cast's, and the enclosing context converts THAT ----
+  //
+  // No `assertConsults` anywhere below: `JS-E06` is `Unmechanised`, so there is no obligation
+  // dispatch to consult and the partition test at the foot of this file asserts exactly that. The
+  // emitted text is the whole of the evidence here, which is why every one of these asserts a
+  // PRESENCE and not only an absence (`ENGINE-LIMITS.md` K17's own lesson about the E05 spec that
+  // enshrined the wrong claim).
+
+  test("JS-E06 — a cast expression at a REFERENCE slot boxes at the CAST's type, not the operand's") {
+    // `ENGINE-LIMITS.md` K17 face 3, at the shape that produced it. JLS 5.1.7 boxes the expression's
+    // OWN type, and a cast expression's type is the cast's — so `(long) Math.ceil(d)` returned from
+    // a method declared `Object` is a `java.lang.Long`. Read as the operand's pre-cast `double` the
+    // port wrote `.asInstanceOf[scala.Long].asInstanceOf[java.lang.Double]`, which is an ASSERTION
+    // that a `Long` is a `Double`: `class java.lang.Long cannot be cast to class java.lang.Double`,
+    // at run time, with a green compile and every check count flat.
+    val p = port(
+      """public class E {
+        |  public Object f(double d) { return (long) Math.ceil(d); }
+        |}""".stripMargin)
+    assertEmits(p, "asInstanceOf[scala.Long].asInstanceOf[java.lang.Long]")
+    assertNotEmits(p, "java.lang.Double")
+  }
+
+  test("JS-E06 — every primitive cast boxes at its OWN wrapper, including the two non-`Number`s") {
+    // The whole table, because the defect was a lookup keyed on the wrong type and a lookup is
+    // exactly the thing that can be right for one row and wrong for the next. `char`/`boolean` are
+    // the rows a `Number`-shaped assumption would get wrong twice over.
+    val p = port(
+      """public class E {
+        |  Object b(int v)  { return (byte) v; }
+        |  Object s(int v)  { return (short) v; }
+        |  Object c(int v)  { return (char) v; }
+        |  Object l(double v) { return (long) v; }
+        |  Object f(double v) { return (float) v; }
+        |  Object i(double v) { return (int) v; }
+        |}""".stripMargin)
+    assertEmits(p, "asInstanceOf[scala.Byte].asInstanceOf[java.lang.Byte]")
+    assertEmits(p, "asInstanceOf[scala.Short].asInstanceOf[java.lang.Short]")
+    assertEmits(p, "asInstanceOf[scala.Char].asInstanceOf[java.lang.Character]")
+    assertEmits(p, "asInstanceOf[scala.Long].asInstanceOf[java.lang.Long]")
+    assertEmits(p, "asInstanceOf[scala.Float].asInstanceOf[java.lang.Float]")
+    assertEmits(p, "asInstanceOf[scala.Int].asInstanceOf[java.lang.Integer]")
+  }
+
+  test("JS-E06 — the OTHER direction is already faithful and must stay a bare `asInstanceOf`") {
+    // The half this row was PREDICTED to need and does not, kept as a test because "we checked and
+    // the answer was do nothing" is otherwise indistinguishable from nobody having looked.
+    //
+    // PROBED against javac and scalac 3.8.4, the same instrument K17 faces 1 and 2 were settled
+    // with. Java's `(prim) objectExpr` is NOT a conversion and performs NO `Number` dispatch: JLS
+    // 5.5 gives it a narrowing reference conversion to the EXACT wrapper followed by an unbox, so
+    // `(double) o` on an `Object` holding a `Long` throws `ClassCastException` — and so does it on
+    // a `Number`-typed operand, which is the shape that most invites the mistake. Scala's
+    // `asInstanceOf[scala.Double]` on the same operand compiles to `unboxToDouble`, which throws in
+    // exactly the same cells: all 45 of (9 runtime classes x 5 primitives) agree between the two
+    // languages, `Character` and `Boolean` included.
+    //
+    // So a checked unbox-and-convert helper here would CONVERT where java THROWS — it would turn a
+    // faithful port into an unfaithful one, and it would do it while making tests pass.
+    val p = port(
+      """public class E {
+        |  double f(Object o) { return (double) o; }
+        |  int g(Number n)    { return (int) n; }
+        |}""".stripMargin)
+    assertEmits(p, "o.asInstanceOf[scala.Double]")
+    assertEmits(p, "n.asInstanceOf[scala.Int]")
+    // no runtime dispatch, and in particular not the `Number` accessors a conversion would need
+    assertNotEmits(p, "doubleValue")
     assertNotEmits(p, "intValue")
   }
 

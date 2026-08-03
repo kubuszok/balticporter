@@ -188,7 +188,7 @@ ssg.liquid.filters.At_LeastTest	applyTest	pass
 ssg.liquid.filters.At_MostTest	applyTest	pass
 ssg.liquid.filters.CapitalizeTest	applyOriginalTest	pass
 ssg.liquid.filters.CapitalizeTest	applyTest	pass
-ssg.liquid.filters.CeilTest	applyTest	fail
+ssg.liquid.filters.CeilTest	applyTest	pass
 ssg.liquid.filters.CompactTest	applyTest	pass
 ssg.liquid.filters.ConcatTest	applyTest	pass
 ssg.liquid.filters.ConcatTest	applyTestNoParam	pass
@@ -210,7 +210,7 @@ ssg.liquid.filters.FilterTest	testFlavoredFilters	pass
 ssg.liquid.filters.FirstTest	applyObjectTest	pass
 ssg.liquid.filters.FirstTest	applyOriginalTest	pass
 ssg.liquid.filters.FirstTest	applyTest	pass
-ssg.liquid.filters.FloorTest	applyTest	fail
+ssg.liquid.filters.FloorTest	applyTest	pass
 ssg.liquid.filters.HTest	applyOriginalTest	pass
 ssg.liquid.filters.HTest	applyTest	pass
 ssg.liquid.filters.JoinTest	applyOriginalTest	pass

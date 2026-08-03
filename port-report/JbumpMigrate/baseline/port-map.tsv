@@ -90,7 +90,7 @@ member	com.dongbat.jbump.Extra#DELTA	sge.jbump.Extra#DELTA	Renamed	-	com/dongbat
 member	com.dongbat.jbump.Extra#nearest(float,float,float)	sge.jbump.Extra#nearest(float,float,float)	Renamed	-	com/dongbat/jbump/Extra.java	35	6eae8b97c0fbb0e1	placement=companion
 member	com.dongbat.jbump.Extra#sign(float)	sge.jbump.Extra#sign(float)	Renamed	-	com/dongbat/jbump/Extra.java	26	265937126255f29e	placement=companion
 member	com.dongbat.jbump.Grid#grid_toCell(float,float,float,Point)	sge.jbump.Grid#grid_toCell(float,float,float,Point)	Renamed	-	com/dongbat/jbump/Grid.java	33	a9bf6695daa4af53	placement=companion
-member	com.dongbat.jbump.Grid#grid_toCellRect(float,float,float,float,float,Rect)	sge.jbump.Grid#grid_toCellRect(float,float,float,float,float,Rect)	Renamed	-	com/dongbat/jbump/Grid.java	138	56d95d8623093e85	
+member	com.dongbat.jbump.Grid#grid_toCellRect(float,float,float,float,float,Rect)	sge.jbump.Grid#grid_toCellRect(float,float,float,float,float,Rect)	Renamed	-	com/dongbat/jbump/Grid.java	138	153632e0ea8e53d5	
 member	com.dongbat.jbump.Grid#grid_toCellRect_cxy	sge.jbump.Grid#grid_toCellRect_cxy	Renamed	-	com/dongbat/jbump/Grid.java	136	0bc35ce09e5eeafa	vis=private
 member	com.dongbat.jbump.Grid#grid_toWorld(float,float,float,Point)	sge.jbump.Grid#grid_toWorld(float,float,float,Point)	Renamed	-	com/dongbat/jbump/Grid.java	29	92aba34dfe9fdefd	placement=companion
 member	com.dongbat.jbump.Grid#grid_traverse(float,float,float,float,float,TraverseCallback)	sge.jbump.Grid#grid_traverse(float,float,float,float,float,TraverseCallback)	Renamed	-	com/dongbat/jbump/Grid.java	61	e06e490d0d91cd6d	
@@ -103,7 +103,7 @@ member	com.dongbat.jbump.Grid#grid_traverse_initStepY	sge.jbump.Grid#grid_traver
 member	com.dongbat.jbump.Grid$TraverseCallback#onTraverse(float,float,int,int)	sge.jbump.Grid$TraverseCallback#onTraverse(float,float,int,int)	Renamed	-	com/dongbat/jbump/Grid.java	53	4b05bdcdb457cbf8	
 member	com.dongbat.jbump.IntPoint#<init>()	sge.jbump.IntPoint#<init>()	Renamed	-	com/dongbat/jbump/IntPoint.java	25	535b68e7828fc91e	
 member	com.dongbat.jbump.IntPoint#<init>(int,int)	sge.jbump.IntPoint#<init>(int,int)	Renamed	-	com/dongbat/jbump/IntPoint.java	28	2c5023200c19a33f	
-member	com.dongbat.jbump.IntPoint#equals(Any)	sge.jbump.IntPoint#equals(Any)	Renamed	-	com/dongbat/jbump/IntPoint.java	39	04f69508a6c1b5c4	
+member	com.dongbat.jbump.IntPoint#equals(Any)	sge.jbump.IntPoint#equals(Any)	Renamed	-	com/dongbat/jbump/IntPoint.java	39	ea4e9cbb789aa56c	
 member	com.dongbat.jbump.IntPoint#hashCode()	sge.jbump.IntPoint#hashCode()	Renamed	-	com/dongbat/jbump/IntPoint.java	49	5213c826a0b1af18	
 member	com.dongbat.jbump.IntPoint#set(int,int)	sge.jbump.IntPoint#set(int,int)	Renamed	-	com/dongbat/jbump/IntPoint.java	33	9803b9bc83773875	
 member	com.dongbat.jbump.IntPoint#toString()	sge.jbump.IntPoint#toString()	Renamed	-	com/dongbat/jbump/IntPoint.java	55	bea4b335e6b8ad58	
@@ -130,8 +130,8 @@ member	com.dongbat.jbump.ItemInfo#y1	sge.jbump.ItemInfo#y1	Renamed	-	com/dongbat
 member	com.dongbat.jbump.ItemInfo#y2	sge.jbump.ItemInfo#y2	Renamed	-	com/dongbat/jbump/ItemInfo.java	28	a85e5d006c2569e7	
 member	com.dongbat.jbump.Point#<init>()	sge.jbump.Point#<init>()	Renamed	-	com/dongbat/jbump/Point.java	25	f90efa454642b11e	
 member	com.dongbat.jbump.Point#<init>(float,float)	sge.jbump.Point#<init>(float,float)	Renamed	-	com/dongbat/jbump/Point.java	28	c607e3cb58bd86f3	
-member	com.dongbat.jbump.Point#equals(Any)	sge.jbump.Point#equals(Any)	Renamed	-	com/dongbat/jbump/Point.java	39	0c5fdd097a433fb3	
-member	com.dongbat.jbump.Point#hashCode()	sge.jbump.Point#hashCode()	Renamed	-	com/dongbat/jbump/Point.java	49	d322790a98db6ae2	
+member	com.dongbat.jbump.Point#equals(Any)	sge.jbump.Point#equals(Any)	Renamed	-	com/dongbat/jbump/Point.java	39	ca4ac0e89612d383	
+member	com.dongbat.jbump.Point#hashCode()	sge.jbump.Point#hashCode()	Renamed	-	com/dongbat/jbump/Point.java	49	d63c5acab2644bb3	
 member	com.dongbat.jbump.Point#set(float,float)	sge.jbump.Point#set(float,float)	Renamed	-	com/dongbat/jbump/Point.java	33	562ebec624a8b6aa	
 member	com.dongbat.jbump.Point#toString()	sge.jbump.Point#toString()	Renamed	-	com/dongbat/jbump/Point.java	55	bea4b335e6b8ad58	
 member	com.dongbat.jbump.Point#x	sge.jbump.Point#x	Renamed	-	com/dongbat/jbump/Point.java	23	aea6b25a036f1f7f	
@@ -239,18 +239,18 @@ member	com.dongbat.jbump.util.BooleanArray#<init>(BooleanArray)	sge.jbump.util.B
 member	com.dongbat.jbump.util.BooleanArray#<init>(boolean,Array,int,int)	sge.jbump.util.BooleanArray#<init>(boolean,Array<boolean>,int,int)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	65	5ca84dac7d9ed5c2	
 member	com.dongbat.jbump.util.BooleanArray#<init>(boolean,int)	sge.jbump.util.BooleanArray#<init>(boolean,int)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	40	a272a5ef0d87d78b	
 member	com.dongbat.jbump.util.BooleanArray#<init>(int)	sge.jbump.util.BooleanArray#<init>(int)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	33	70a39675c58150b6	
-member	com.dongbat.jbump.util.BooleanArray#add(boolean)	sge.jbump.util.BooleanArray#add(boolean)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	71	0395f1f9ba7e11fe	
+member	com.dongbat.jbump.util.BooleanArray#add(boolean)	sge.jbump.util.BooleanArray#add(boolean)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	71	693904c878e5c8a8	
 member	com.dongbat.jbump.util.BooleanArray#addAll(Array)	sge.jbump.util.BooleanArray#addAll(Array<boolean>)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	87	d1b2d603858dee59	
-member	com.dongbat.jbump.util.BooleanArray#addAll(Array,int,int)	sge.jbump.util.BooleanArray#addAll(Array<boolean>,int,int)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	91	d8daf9d2a26ce780	
+member	com.dongbat.jbump.util.BooleanArray#addAll(Array,int,int)	sge.jbump.util.BooleanArray#addAll(Array<boolean>,int,int)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	91	9f04026e907dea99	
 member	com.dongbat.jbump.util.BooleanArray#addAll(BooleanArray)	sge.jbump.util.BooleanArray#addAll(BooleanArray)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	77	6d94e0347838de23	
 member	com.dongbat.jbump.util.BooleanArray#addAll(BooleanArray,int,int)	sge.jbump.util.BooleanArray#addAll(BooleanArray,int,int)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	81	c457b5b2de45b1ad	
 member	com.dongbat.jbump.util.BooleanArray#clear()	sge.jbump.util.BooleanArray#clear()	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	194	f21fecb865063005	
 member	com.dongbat.jbump.util.BooleanArray#ensureCapacity(int)	sge.jbump.util.BooleanArray#ensureCapacity(int)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	209	2a240dcbb5575af9	
-member	com.dongbat.jbump.util.BooleanArray#equals(Any)	sge.jbump.util.BooleanArray#equals(Any)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	278	730434f61b943bb6	
+member	com.dongbat.jbump.util.BooleanArray#equals(Any)	sge.jbump.util.BooleanArray#equals(Any)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	278	565a5a760cd42c70	
 member	com.dongbat.jbump.util.BooleanArray#first()	sge.jbump.util.BooleanArray#first()	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	189	68156272a84c1ceb	
 member	com.dongbat.jbump.util.BooleanArray#get(int)	sge.jbump.util.BooleanArray#get(int)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	99	9a7107284b836c6d	
 member	com.dongbat.jbump.util.BooleanArray#hashCode()	sge.jbump.util.BooleanArray#hashCode()	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	269	117fa80a257c1869	
-member	com.dongbat.jbump.util.BooleanArray#insert(int,boolean)	sge.jbump.util.BooleanArray#insert(int,boolean)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	109	282d9248e21db204	
+member	com.dongbat.jbump.util.BooleanArray#insert(int,boolean)	sge.jbump.util.BooleanArray#insert(int,boolean)	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	109	42e7402b087d7d19	
 member	com.dongbat.jbump.util.BooleanArray#items	sge.jbump.util.BooleanArray#items	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	23	b96c7cf690cef4da	
 member	com.dongbat.jbump.util.BooleanArray#ordered	sge.jbump.util.BooleanArray#ordered	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	25	8f4c18a2d95693de	
 member	com.dongbat.jbump.util.BooleanArray#peek()	sge.jbump.util.BooleanArray#peek()	Renamed	-	com/dongbat/jbump/util/BooleanArray.java	184	9fe419363f678dd9	
@@ -278,22 +278,22 @@ member	com.dongbat.jbump.util.FloatArray#<init>(FloatArray)	sge.jbump.util.Float
 member	com.dongbat.jbump.util.FloatArray#<init>(boolean,Array,int,int)	sge.jbump.util.FloatArray#<init>(boolean,Array<float>,int,int)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	67	0d4f3faf803a576a	
 member	com.dongbat.jbump.util.FloatArray#<init>(boolean,int)	sge.jbump.util.FloatArray#<init>(boolean,int)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	42	a239e7266a763e6a	
 member	com.dongbat.jbump.util.FloatArray#<init>(int)	sge.jbump.util.FloatArray#<init>(int)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	35	70a39675c58150b6	
-member	com.dongbat.jbump.util.FloatArray#add(float)	sge.jbump.util.FloatArray#add(float)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	73	763e02dc92457f42	
+member	com.dongbat.jbump.util.FloatArray#add(float)	sge.jbump.util.FloatArray#add(float)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	73	fdeed5ff57bccb4d	
 member	com.dongbat.jbump.util.FloatArray#addAll(Array)	sge.jbump.util.FloatArray#addAll(Array<float>)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	89	13716b7e32ea6d46	
-member	com.dongbat.jbump.util.FloatArray#addAll(Array,int,int)	sge.jbump.util.FloatArray#addAll(Array<float>,int,int)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	93	562ac9ba8808113e	
+member	com.dongbat.jbump.util.FloatArray#addAll(Array,int,int)	sge.jbump.util.FloatArray#addAll(Array<float>,int,int)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	93	e6f3eb9efc4d44e8	
 member	com.dongbat.jbump.util.FloatArray#addAll(FloatArray)	sge.jbump.util.FloatArray#addAll(FloatArray)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	79	7da28a7b29b331c2	
 member	com.dongbat.jbump.util.FloatArray#addAll(FloatArray,int,int)	sge.jbump.util.FloatArray#addAll(FloatArray,int,int)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	83	7980203d80d1f8b9	
 member	com.dongbat.jbump.util.FloatArray#clear()	sge.jbump.util.FloatArray#clear()	Renamed	-	com/dongbat/jbump/util/FloatArray.java	239	f21fecb865063005	
 member	com.dongbat.jbump.util.FloatArray#contains(float)	sge.jbump.util.FloatArray#contains(float)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	142	8cdc36ebc8e011dd	
 member	com.dongbat.jbump.util.FloatArray#ensureCapacity(int)	sge.jbump.util.FloatArray#ensureCapacity(int)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	254	cdbc10bda4db376b	
-member	com.dongbat.jbump.util.FloatArray#equals(Any)	sge.jbump.util.FloatArray#equals(Any)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	327	08c8e592a3b85f9b	
-member	com.dongbat.jbump.util.FloatArray#equals(Object,float)	sge.jbump.util.FloatArray#equals(Object,float)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	342	b25f928ce985ec75	
+member	com.dongbat.jbump.util.FloatArray#equals(Any)	sge.jbump.util.FloatArray#equals(Any)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	327	35ecba1943a358c8	
+member	com.dongbat.jbump.util.FloatArray#equals(Object,float)	sge.jbump.util.FloatArray#equals(Object,float)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	342	f33a1a46489745e0	
 member	com.dongbat.jbump.util.FloatArray#first()	sge.jbump.util.FloatArray#first()	Renamed	-	com/dongbat/jbump/util/FloatArray.java	234	877bf05e5cb28ced	
 member	com.dongbat.jbump.util.FloatArray#get(int)	sge.jbump.util.FloatArray#get(int)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	101	58b4d1c347d192ae	
 member	com.dongbat.jbump.util.FloatArray#hashCode()	sge.jbump.util.FloatArray#hashCode()	Renamed	-	com/dongbat/jbump/util/FloatArray.java	318	6d48036792031829	
 member	com.dongbat.jbump.util.FloatArray#incr(int,float)	sge.jbump.util.FloatArray#incr(int,float)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	111	6e7d613ac778712d	
 member	com.dongbat.jbump.util.FloatArray#indexOf(float)	sge.jbump.util.FloatArray#indexOf(float)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	150	434e305ecb729f25	
-member	com.dongbat.jbump.util.FloatArray#insert(int,float)	sge.jbump.util.FloatArray#insert(int,float)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	121	34ac99f672e37367	
+member	com.dongbat.jbump.util.FloatArray#insert(int,float)	sge.jbump.util.FloatArray#insert(int,float)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	121	08cfe60781a43894	
 member	com.dongbat.jbump.util.FloatArray#items	sge.jbump.util.FloatArray#items	Renamed	-	com/dongbat/jbump/util/FloatArray.java	25	02637f71bc81bde1	
 member	com.dongbat.jbump.util.FloatArray#lastIndexOf(char)	sge.jbump.util.FloatArray#lastIndexOf(char)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	157	5372039f4e1a4c7a	
 member	com.dongbat.jbump.util.FloatArray#mul(int,float)	sge.jbump.util.FloatArray#mul(int,float)	Renamed	-	com/dongbat/jbump/util/FloatArray.java	116	954d7f0874d80be8	
@@ -325,21 +325,21 @@ member	com.dongbat.jbump.util.IntArray#<init>(IntArray)	sge.jbump.util.IntArray#
 member	com.dongbat.jbump.util.IntArray#<init>(boolean,Array,int,int)	sge.jbump.util.IntArray#<init>(boolean,Array<int>,int,int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	67	405da63a74ec9c59	
 member	com.dongbat.jbump.util.IntArray#<init>(boolean,int)	sge.jbump.util.IntArray#<init>(boolean,int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	42	c9deb22d050ba535	
 member	com.dongbat.jbump.util.IntArray#<init>(int)	sge.jbump.util.IntArray#<init>(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	35	70a39675c58150b6	
-member	com.dongbat.jbump.util.IntArray#add(int)	sge.jbump.util.IntArray#add(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	73	826262fd1293192d	
+member	com.dongbat.jbump.util.IntArray#add(int)	sge.jbump.util.IntArray#add(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	73	ec8587ff510dc0a1	
 member	com.dongbat.jbump.util.IntArray#addAll(Array)	sge.jbump.util.IntArray#addAll(Array<int>)	Renamed	-	com/dongbat/jbump/util/IntArray.java	89	f9eb1bad65a14ca0	
-member	com.dongbat.jbump.util.IntArray#addAll(Array,int,int)	sge.jbump.util.IntArray#addAll(Array<int>,int,int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	93	73c2ecab361d8ffb	
+member	com.dongbat.jbump.util.IntArray#addAll(Array,int,int)	sge.jbump.util.IntArray#addAll(Array<int>,int,int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	93	b7e2f3b22213f136	
 member	com.dongbat.jbump.util.IntArray#addAll(IntArray)	sge.jbump.util.IntArray#addAll(IntArray)	Renamed	-	com/dongbat/jbump/util/IntArray.java	79	355c158f19d8e610	
 member	com.dongbat.jbump.util.IntArray#addAll(IntArray,int,int)	sge.jbump.util.IntArray#addAll(IntArray,int,int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	83	e812a06fd081faaa	
 member	com.dongbat.jbump.util.IntArray#clear()	sge.jbump.util.IntArray#clear()	Renamed	-	com/dongbat/jbump/util/IntArray.java	239	f21fecb865063005	
 member	com.dongbat.jbump.util.IntArray#contains(int)	sge.jbump.util.IntArray#contains(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	142	b6c76046fd7b6808	
 member	com.dongbat.jbump.util.IntArray#ensureCapacity(int)	sge.jbump.util.IntArray#ensureCapacity(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	254	fec0c363361b6536	
-member	com.dongbat.jbump.util.IntArray#equals(Any)	sge.jbump.util.IntArray#equals(Any)	Renamed	-	com/dongbat/jbump/util/IntArray.java	327	3db495efa554859c	
+member	com.dongbat.jbump.util.IntArray#equals(Any)	sge.jbump.util.IntArray#equals(Any)	Renamed	-	com/dongbat/jbump/util/IntArray.java	327	a3ff910ec1476ccc	
 member	com.dongbat.jbump.util.IntArray#first()	sge.jbump.util.IntArray#first()	Renamed	-	com/dongbat/jbump/util/IntArray.java	234	c93f90f427c363bf	
 member	com.dongbat.jbump.util.IntArray#get(int)	sge.jbump.util.IntArray#get(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	101	7eee57434ae6581c	
 member	com.dongbat.jbump.util.IntArray#hashCode()	sge.jbump.util.IntArray#hashCode()	Renamed	-	com/dongbat/jbump/util/IntArray.java	318	0c92be64d2e4dcab	
 member	com.dongbat.jbump.util.IntArray#incr(int,int)	sge.jbump.util.IntArray#incr(int,int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	111	756da3dbb9cb2ecf	
 member	com.dongbat.jbump.util.IntArray#indexOf(int)	sge.jbump.util.IntArray#indexOf(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	150	22ff381a38e6ffab	
-member	com.dongbat.jbump.util.IntArray#insert(int,int)	sge.jbump.util.IntArray#insert(int,int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	121	db247fabca9d17df	
+member	com.dongbat.jbump.util.IntArray#insert(int,int)	sge.jbump.util.IntArray#insert(int,int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	121	07f64cbff507b836	
 member	com.dongbat.jbump.util.IntArray#items	sge.jbump.util.IntArray#items	Renamed	-	com/dongbat/jbump/util/IntArray.java	25	a705399443af2550	
 member	com.dongbat.jbump.util.IntArray#lastIndexOf(int)	sge.jbump.util.IntArray#lastIndexOf(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	157	117d34e7699985dc	
 member	com.dongbat.jbump.util.IntArray#mul(int,int)	sge.jbump.util.IntArray#mul(int,int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	116	4455545130ef1482	
@@ -367,19 +367,19 @@ member	com.dongbat.jbump.util.IntArray#truncate(int)	sge.jbump.util.IntArray#tru
 member	com.dongbat.jbump.util.IntArray#with(Array)	sge.jbump.util.IntArray#with(Array<int>)	Renamed	-	com/dongbat/jbump/util/IntArray.java	369	d60b599d2cb29535	placement=companion
 member	com.dongbat.jbump.util.@101#<init>(int,float)#initialCapacity	@101#<init>(int,float)#initialCapacity	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	60	b46a457eb0ff2d75	name=initialCapacity$p
 member	com.dongbat.jbump.util.IntIntMap#<init>()	sge.jbump.util.IntIntMap#<init>()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	47	a6900d1deddd58e2	
-member	com.dongbat.jbump.util.IntIntMap#<init>(IntIntMap)	sge.jbump.util.IntIntMap#<init>(IntIntMap)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	80	b192919e4945a6d8	
+member	com.dongbat.jbump.util.IntIntMap#<init>(IntIntMap)	sge.jbump.util.IntIntMap#<init>(IntIntMap)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	80	2389955c4a4fa259	
 member	com.dongbat.jbump.util.IntIntMap#<init>(int)	sge.jbump.util.IntIntMap#<init>(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	53	2e3e37df1a47a1ea	
 member	com.dongbat.jbump.util.IntIntMap#<stmt10>	sge.jbump.util.IntIntMap#<stmt10>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	72	fe2259fb851a6379	
 member	com.dongbat.jbump.util.IntIntMap#<stmt11>	sge.jbump.util.IntIntMap#<stmt11>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	73	15fa64f448ec87a8	
 member	com.dongbat.jbump.util.IntIntMap#<stmt12>	sge.jbump.util.IntIntMap#<stmt12>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	75	654f502aa19bf7ad	
 member	com.dongbat.jbump.util.IntIntMap#<stmt13>	sge.jbump.util.IntIntMap#<stmt13>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	76	79a48f2010299a0b	
 member	com.dongbat.jbump.util.IntIntMap#<stmt1>	sge.jbump.util.IntIntMap#<stmt1>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	61	4e215047b5978dc6	
-member	com.dongbat.jbump.util.IntIntMap#<stmt2>	sge.jbump.util.IntIntMap#<stmt2>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	62	9c15e826c4d32189	
+member	com.dongbat.jbump.util.IntIntMap#<stmt2>	sge.jbump.util.IntIntMap#<stmt2>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	62	7f7395960412e92d	
 member	com.dongbat.jbump.util.IntIntMap#<stmt3>	sge.jbump.util.IntIntMap#<stmt3>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	63	90806cc67d21f920	
 member	com.dongbat.jbump.util.IntIntMap#<stmt4>	sge.jbump.util.IntIntMap#<stmt4>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	64	32f2bbca679b97f6	
 member	com.dongbat.jbump.util.IntIntMap#<stmt5>	sge.jbump.util.IntIntMap#<stmt5>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	66	6d31ce1327d49310	
 member	com.dongbat.jbump.util.IntIntMap#<stmt6>	sge.jbump.util.IntIntMap#<stmt6>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	67	6e9f63ff84a4b13e	
-member	com.dongbat.jbump.util.IntIntMap#<stmt7>	sge.jbump.util.IntIntMap#<stmt7>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	69	67648a74f2545d62	
+member	com.dongbat.jbump.util.IntIntMap#<stmt7>	sge.jbump.util.IntIntMap#<stmt7>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	69	745b23873bfed26d	
 member	com.dongbat.jbump.util.IntIntMap#<stmt8>	sge.jbump.util.IntIntMap#<stmt8>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	70	5a0091ace06c2948	
 member	com.dongbat.jbump.util.IntIntMap#<stmt9>	sge.jbump.util.IntIntMap#<stmt9>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	71	4698ea30c6ad449e	
 member	com.dongbat.jbump.util.IntIntMap#EMPTY	sge.jbump.util.IntIntMap#EMPTY	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	28	a5ab876fd59f0055	placement=companion vis=private
@@ -392,11 +392,11 @@ member	com.dongbat.jbump.util.IntIntMap#clear(int)	sge.jbump.util.IntIntMap#clea
 member	com.dongbat.jbump.util.IntIntMap#containsKey(int)	sge.jbump.util.IntIntMap#containsKey(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	448	b50c4e75299ce163	
 member	com.dongbat.jbump.util.IntIntMap#containsKeyStash(int)	sge.jbump.util.IntIntMap#containsKeyStash(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	461	ac670b5d7a92fe5d	vis=private
 member	com.dongbat.jbump.util.IntIntMap#containsValue(int)	sge.jbump.util.IntIntMap#containsValue(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	440	dc5b0313dae87f71	
-member	com.dongbat.jbump.util.IntIntMap#ensureCapacity(int)	sge.jbump.util.IntIntMap#ensureCapacity(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	480	524f554b40366aaf	
+member	com.dongbat.jbump.util.IntIntMap#ensureCapacity(int)	sge.jbump.util.IntIntMap#ensureCapacity(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	480	93989b02650b884d	
 member	com.dongbat.jbump.util.IntIntMap#entries()	sge.jbump.util.IntIntMap#entries()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	602	dadd18a6027a84eb	
 member	com.dongbat.jbump.util.IntIntMap#entries1	sge.jbump.util.IntIntMap#entries1	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	42	a7de5dd93c693d3f	vis=private
 member	com.dongbat.jbump.util.IntIntMap#entries2	sge.jbump.util.IntIntMap#entries2	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	42	74f57abd751a8329	vis=private
-member	com.dongbat.jbump.util.IntIntMap#equals(Any)	sge.jbump.util.IntIntMap#equals(Any)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	541	e34136c53672b09c	
+member	com.dongbat.jbump.util.IntIntMap#equals(Any)	sge.jbump.util.IntIntMap#equals(Any)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	541	483e525dbce61be1	
 member	com.dongbat.jbump.util.IntIntMap#findKey(int,int)	sge.jbump.util.IntIntMap#findKey(int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	470	140717df1b3090c9	
 member	com.dongbat.jbump.util.IntIntMap#get(int,int)	sge.jbump.util.IntIntMap#get(int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	286	e75c69dce39fde53	
 member	com.dongbat.jbump.util.IntIntMap#getAndIncrement(int,int,int)	sge.jbump.util.IntIntMap#getAndIncrement(int,int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	311	e3a23b7b0da461c7	
@@ -423,7 +423,7 @@ member	com.dongbat.jbump.util.IntIntMap#putStash(int,int)	sge.jbump.util.IntIntM
 member	com.dongbat.jbump.util.IntIntMap#remove(int,int)	sge.jbump.util.IntIntMap#remove(int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	349	d9250dcb8424158d	
 member	com.dongbat.jbump.util.IntIntMap#removeStash(int,int)	sge.jbump.util.IntIntMap#removeStash(int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	384	d2c3dba7cd28c33b	
 member	com.dongbat.jbump.util.IntIntMap#removeStashIndex(int)	sge.jbump.util.IntIntMap#removeStashIndex(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	397	d30fedf5d0033ae7	
-member	com.dongbat.jbump.util.IntIntMap#resize(int)	sge.jbump.util.IntIntMap#resize(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	485	36afe24cce2869b2	vis=private
+member	com.dongbat.jbump.util.IntIntMap#resize(int)	sge.jbump.util.IntIntMap#resize(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	485	2b505f3473348bc0	vis=private
 member	com.dongbat.jbump.util.IntIntMap#shrink(int)	sge.jbump.util.IntIntMap#shrink(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	409	f82f3340d91cc790	
 member	com.dongbat.jbump.util.IntIntMap#size	sge.jbump.util.IntIntMap#size	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	30	184a3d5c6ff54828	
 member	com.dongbat.jbump.util.IntIntMap#stashCapacity	sge.jbump.util.IntIntMap#stashCapacity	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	39	6a1de49dbced6982	vis=private
@@ -475,7 +475,7 @@ member	com.dongbat.jbump.util.MathUtils#SIN_COUNT	sge.jbump.util.MathUtils#SIN_C
 member	com.dongbat.jbump.util.MathUtils#SIN_MASK	sge.jbump.util.MathUtils#SIN_MASK	Renamed	-	com/dongbat/jbump/util/MathUtils.java	35	935097831adb72fb	placement=companion vis=private
 member	com.dongbat.jbump.util.MathUtils#atan2(float,float)	sge.jbump.util.MathUtils#atan2(float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	85	30bfa0125e51c6da	placement=companion
 member	com.dongbat.jbump.util.MathUtils#ceil(float)	sge.jbump.util.MathUtils#ceil(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	297	53c861076acfd001	placement=companion
-member	com.dongbat.jbump.util.MathUtils#ceilPositive(float)	sge.jbump.util.MathUtils#ceilPositive(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	303	0d3d276703acf006	placement=companion
+member	com.dongbat.jbump.util.MathUtils#ceilPositive(float)	sge.jbump.util.MathUtils#ceilPositive(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	303	c5731e450a1738ec	placement=companion
 member	com.dongbat.jbump.util.MathUtils#clamp(double,double,double)	sge.jbump.util.MathUtils#clamp(double,double,double)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	238	f640ba61222753c7	placement=companion
 member	com.dongbat.jbump.util.MathUtils#clamp(float,float,float)	sge.jbump.util.MathUtils#clamp(float,float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	232	2e106091cfa1f9ba	placement=companion
 member	com.dongbat.jbump.util.MathUtils#clamp(int,int,int)	sge.jbump.util.MathUtils#clamp(int,int,int)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	220	a4da4b848f1e387e	placement=companion
@@ -488,7 +488,7 @@ member	com.dongbat.jbump.util.MathUtils#degRad	sge.jbump.util.MathUtils#degRad	R
 member	com.dongbat.jbump.util.MathUtils#degToIndex	sge.jbump.util.MathUtils#degToIndex	Renamed	-	com/dongbat/jbump/util/MathUtils.java	41	4a1e5b62c424aa06	placement=companion vis=private
 member	com.dongbat.jbump.util.MathUtils#degreesToRadians	sge.jbump.util.MathUtils#degreesToRadians	Renamed	-	com/dongbat/jbump/util/MathUtils.java	47	280ed4537a5b350a	placement=companion
 member	com.dongbat.jbump.util.MathUtils#floor(float)	sge.jbump.util.MathUtils#floor(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	285	49d9852c4566d750	placement=companion
-member	com.dongbat.jbump.util.MathUtils#floorPositive(float)	sge.jbump.util.MathUtils#floorPositive(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	291	59d959ae13131508	placement=companion
+member	com.dongbat.jbump.util.MathUtils#floorPositive(float)	sge.jbump.util.MathUtils#floorPositive(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	291	27091c9193f640e0	placement=companion
 member	com.dongbat.jbump.util.MathUtils#isEqual(float,float)	sge.jbump.util.MathUtils#isEqual(float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	332	d3f19f9481d4ecbb	placement=companion
 member	com.dongbat.jbump.util.MathUtils#isEqual(float,float,float)	sge.jbump.util.MathUtils#isEqual(float,float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	340	cb1e257271a449b6	placement=companion
 member	com.dongbat.jbump.util.MathUtils#isPowerOfTwo(int)	sge.jbump.util.MathUtils#isPowerOfTwo(int)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	208	8431d31216276a72	placement=companion
@@ -497,7 +497,7 @@ member	com.dongbat.jbump.util.MathUtils#isZero(float,float)	sge.jbump.util.MathU
 member	com.dongbat.jbump.util.MathUtils#lerp(float,float,float)	sge.jbump.util.MathUtils#lerp(float,float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	247	9c2ed3001630806c	placement=companion
 member	com.dongbat.jbump.util.MathUtils#lerpAngle(float,float,float)	sge.jbump.util.MathUtils#lerpAngle(float,float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	258	7c4ed1023cc4e652	placement=companion
 member	com.dongbat.jbump.util.MathUtils#lerpAngleDeg(float,float,float)	sge.jbump.util.MathUtils#lerpAngleDeg(float,float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	270	dc241cb5404d55b7	placement=companion
-member	com.dongbat.jbump.util.MathUtils#log(float,float)	sge.jbump.util.MathUtils#log(float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	345	485afa642e0f939c	placement=companion
+member	com.dongbat.jbump.util.MathUtils#log(float,float)	sge.jbump.util.MathUtils#log(float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	345	4841cdaafc2fdab4	placement=companion
 member	com.dongbat.jbump.util.MathUtils#log2(float)	sge.jbump.util.MathUtils#log2(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	350	983c5c3ec55ba67a	placement=companion
 member	com.dongbat.jbump.util.MathUtils#nanoToSec	sge.jbump.util.MathUtils#nanoToSec	Renamed	-	com/dongbat/jbump/util/MathUtils.java	25	c13756f66b726d14	placement=companion
 member	com.dongbat.jbump.util.MathUtils#nextPowerOfTwo(int)	sge.jbump.util.MathUtils#nextPowerOfTwo(int)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	197	c920b8954fc06d96	placement=companion
@@ -511,7 +511,7 @@ member	com.dongbat.jbump.util.MathUtils#random(float)	sge.jbump.util.MathUtils#r
 member	com.dongbat.jbump.util.MathUtils#random(float,float)	sge.jbump.util.MathUtils#random(float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	146	67228965383dc55e	placement=companion
 member	com.dongbat.jbump.util.MathUtils#random(int)	sge.jbump.util.MathUtils#random(int)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	106	e02793d985b6d3bd	placement=companion
 member	com.dongbat.jbump.util.MathUtils#random(int,int)	sge.jbump.util.MathUtils#random(int,int)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	111	ca80cd913b629862	placement=companion
-member	com.dongbat.jbump.util.MathUtils#random(long)	sge.jbump.util.MathUtils#random(long)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	116	d099cd2ec81ae18f	placement=companion
+member	com.dongbat.jbump.util.MathUtils#random(long)	sge.jbump.util.MathUtils#random(long)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	116	9d2167994aa78892	placement=companion
 member	com.dongbat.jbump.util.MathUtils#random(long,long)	sge.jbump.util.MathUtils#random(long,long)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	121	89479ad5bf1c01df	placement=companion
 member	com.dongbat.jbump.util.MathUtils#randomBoolean()	sge.jbump.util.MathUtils#randomBoolean()	Renamed	-	com/dongbat/jbump/util/MathUtils.java	126	cd77f845f0336d10	placement=companion
 member	com.dongbat.jbump.util.MathUtils#randomBoolean(float)	sge.jbump.util.MathUtils#randomBoolean(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	131	81d6dbfb113d6c59	placement=companion
@@ -521,8 +521,8 @@ member	com.dongbat.jbump.util.MathUtils#randomTriangular(float)	sge.jbump.util.M
 member	com.dongbat.jbump.util.MathUtils#randomTriangular(float,float)	sge.jbump.util.MathUtils#randomTriangular(float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	178	3b21da53c08a2aa7	placement=companion
 member	com.dongbat.jbump.util.MathUtils#randomTriangular(float,float,float)	sge.jbump.util.MathUtils#randomTriangular(float,float,float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	187	10032beb78d4c9a0	placement=companion
 member	com.dongbat.jbump.util.MathUtils#round(float)	sge.jbump.util.MathUtils#round(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	309	0389e3e0e433f2d0	placement=companion
-member	com.dongbat.jbump.util.MathUtils#roundPositive(float)	sge.jbump.util.MathUtils#roundPositive(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	314	0c152b7f8168ed23	placement=companion
+member	com.dongbat.jbump.util.MathUtils#roundPositive(float)	sge.jbump.util.MathUtils#roundPositive(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	314	a89c77cdcb1f661d	placement=companion
 member	com.dongbat.jbump.util.MathUtils#sin(float)	sge.jbump.util.MathUtils#sin(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	62	65f4952436855d2d	placement=companion
 member	com.dongbat.jbump.util.MathUtils#sinDeg(float)	sge.jbump.util.MathUtils#sinDeg(float)	Renamed	-	com/dongbat/jbump/util/MathUtils.java	72	69b9885b4b847883	placement=companion
-member	com.dongbat.jbump.util.MathUtils$Sin#<clinit>	sge.jbump.util.MathUtils$Sin#<clinit>	Renamed	-	com/dongbat/jbump/util/MathUtils.java	53	49d036e60d3097d8	placement=companion
+member	com.dongbat.jbump.util.MathUtils$Sin#<clinit>	sge.jbump.util.MathUtils$Sin#<clinit>	Renamed	-	com/dongbat/jbump/util/MathUtils.java	53	7b3982edf9cd0ca0	placement=companion
 member	com.dongbat.jbump.util.MathUtils$Sin#table	sge.jbump.util.MathUtils$Sin#table	Renamed	-	com/dongbat/jbump/util/MathUtils.java	51	73e4db9e014c298d	placement=companion
