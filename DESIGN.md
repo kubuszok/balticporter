@@ -380,7 +380,7 @@ outside a macro and its `Symbol` hides internals — it owns a close analogue th
 and adds `Origin`, `SymTag`, the whole-program `XrefIndex` and the decision log (§7).
 
 A rule is a `balticporter.tir.Phase` implementation **passed to the run** — that is the whole
-contract, and `corpus/.../libgdx/GdxSharedIteratorRule.scala` is the worked example of a §1(c) rule
+contract, and `balticporter/corpus/.../libgdx/GdxSharedIteratorRule.scala` is the worked example of a §1(c) rule
 living outside the engine. There is no plugin descriptor and nothing is loaded by class name.
 
 This section used to add "no registry, service loader": that is now half wrong and the correction
@@ -467,7 +467,21 @@ balticporter/
   engine/          // the MACHINERY: transforms, checks, emitter, vocab, sbt-gen, verify, PortRun
   testkit/         // golden-test harness for rule authors (used by ports too)
   corpus/          // the framework's own acceptance ports against ../ssg, ../sge
+ported/            // one directory per ported library — the OTHER half of the checkout
+  sge/ sge-ecs/ sge-gltf/ sge-anim8/ sge-vfx/ sge-screens/ sge-jbump/ sge-noise/
+  sge-graphs/ ssg-liquid/
+port-report/       // one directory per MIGRATOR CLASS — the measurement identity, keyed
+                   // on `LibgdxCoreMigrate` and not on `sge`, so a module rename does not
+                   // orphan a baseline
 ```
+
+**`ported/` names its directories for the REFERENCE PORT's module ids, never for the upstream
+libraries** (`CLAUDE.md` §2.1) — `sge` is libGDX core, `ssg-liquid` is liqp — and each port's
+`label` and `PortManifest.name` carry the same string, because `label` is what the run publishes as
+`module=` in `port-map.tsv` and `PortManifest.name` is what a dependent's base chain matches
+against it. Note the two directory trees answer different questions and must not be aligned by
+symmetry: `ported/<module>` is WHERE THE CODE GOES and `port-report/<Migrator>` is WHOSE
+MEASUREMENT IT IS.
 
 Dependency directions: `api` depends on nothing; `frontend-spoon` on `api`; `engine` on both;
 `testkit` and `corpus` on `engine`. Nothing depends on `corpus`. **`frontend-spoon` is the only
@@ -905,7 +919,7 @@ claim.
 
 ### 5.7 The CONFIG front door — a `.conf` plus an SPI, and why it is not a second truth
 
-**What was measured.** Every migration program in `corpus/` turned out to be hard-coded
+**What was measured.** Every migration program in `balticporter/corpus/` turned out to be hard-coded
 configuration plus one `PortRun(...)` call. `SimpleGraphsMigrate` was 90 lines of which the only
 non-declarative statement was a directory walk the engine can do itself. If that is what a port IS,
 then requiring a consumer to write a Scala program, a build that depends on the engine, and a `main`
@@ -964,7 +978,7 @@ transform" would reasonably conclude the feature is missing; it is not missing, 
 `manifest.packageRenames`, and the error says so.
 
 **Where the confs live, and what is converted.** A port's configuration lives at
-`corpus/ports/<library>/{main,test}.conf`, beside the other port inputs (`corpus/*-overrides/`) and
+`balticporter/corpus/ports/<library>/{main,test}.conf`, beside the other port inputs (`balticporter/corpus/*-overrides/`) and
 not under `src/`. Paths inside a conf resolve against THE CONF FILE, lexically, so a port directory
 is relocatable and needs no system property; `${balticporter.root}` substitution against `-D`
 properties remains for values an operator genuinely supplies.

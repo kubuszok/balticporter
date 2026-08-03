@@ -27,6 +27,11 @@ true of your library too. Re-deriving one is waste, and the record exists so you
 - **Worked examples name libGDX constructs.** That is deliberate and permitted (`CLAUDE.md` §1): the
   example documents *why* a general rule exists. It drives nothing. Substitute your own library's
   shape freely.
+- **A PORT NAME in an entry is the name that port had when the measurement was taken.** Every
+  corpus port was renamed to its destination module's id in one wave (`CLAUDE.md` §2.1) —
+  `libgdx-core` is `sge`, `ashley` is `sge-ecs`, `liqp` is `ssg-liquid`, and `PROGRESS.md` §1 has
+  the whole table. The numbers are unaffected: `port-report/<X>/` is keyed on the migrator CLASS,
+  which did not move, so every baseline an entry cites still resolves.
 - **The measurements live in `PROGRESS.md`**, in the section for the library that produced them. This
   file holds the rule; that one holds the per-site diagnosis, the trajectory and the counts in context.
 
@@ -619,7 +624,7 @@ all-or-nothing across the two kinds of type parameter, and "all" costs the wildc
 
 Three further things the retry should know:
 
-- **the port's HAND-WRITTEN half moves with it** (CLAUDE.md §1). `corpus/libgdx-overrides/sge/utils/Json.scala`
+- **the port's HAND-WRITTEN half moves with it** (CLAUDE.md §1). `balticporter/corpus/libgdx-overrides/sge/utils/Json.scala`
   carries `readValue[T <: Object]` precisely because the engine renders `Skin`'s override that way;
   the moment the engine stops, that line is a compile error and the answer is read off the generated
   override, not chosen. One site found, and only the sites the change reaches are findable;
@@ -1546,7 +1551,7 @@ the frontend produces them.
 `liqp/TemplateTest.java:145`, `liqp/filters/DateTest.java:166`,
 `liqp/parser/LiquidSupportTest.java:198` — every one of them a `class X implements Inspectable {…}`
 declared inside a `@Test` body, which is idiomatic for a suite that documents an API by using it.
-The refusal aborts the WHOLE run, so `corpus/ports/liqp/test.conf` states the four files in
+The refusal aborts the WHOLE run, so `balticporter/corpus/ports/liqp/test.conf` states the four files in
 `excludeGlobs`, 577 of the 639 `@Test` are emitted, and `just liqp-measure` prints
 `!! TESTS LOST — 62 of 639` on every run until the frontend grows the node. Read the second number
 too: the four excluded files are not isolated — four OTHER suites `import liqp.TemplateTest` for its
@@ -4509,7 +4514,7 @@ instead of the symbol table, and the three answers are the three cases:
 The refused `super(args)` is then dropped, `OmissionCheck.droppedSuperArgs` counts it, and the port
 compiles with a named divergence instead of failing (M6/C3). Measured on gdx-gltf: **errors 7 -> 3**
 — the 4 `copyNodes` errors are gone and what is left is the 2 C3 wall classes plus D7's `MeshLoader`
-— with **1** base-surface gap, `[base: libgdx-core]`, classified `§1(a) ENGINE, in the BASE`.
+— with **1** base-surface gap, `[base: sge]`, classified `§1(a) ENGINE, in the BASE`.
 
 **TWO THINGS THE FIX HAD TO REPAIR BEFORE THE LOOKUP WORKED AT ALL, both silent:**
 
@@ -5021,7 +5026,7 @@ no failing check.
 **And the engine's exposure is NARROWER than that hand port's, which is the part worth knowing.**
 ssg's witness is a java `return`, and a `return` is not this defect for this emitter: scala's
 method-level `return` is a jump, so the same source emits
-`liqp-core/…/filters/date/BasicDateParser.scala:30` as a plain `return` inside the `try` and is
+`ported/ssg-liquid/…/filters/date/BasicDateParser.scala:30` as a plain `return` inside the `try` and is
 immune — as is a `return` in a LAMBDA, which the emitter lowers to a nested `def` (F-family, the
 `Tree.Lambda` case) rather than to a boundary. What the engine can produce is the `break`/`continue`
 face, and only that. So do not read a hand port's occurrence as a port's: which java constructs a
@@ -6523,19 +6528,19 @@ phase mints there too, and the fallback then writes the object into the dependen
 `src_managed`. Nine files were emitted where one was owed:
 
 ```
-libgdx-core/src_managed/{main,test}/…/TextureHandle.scala   ← main is the only legitimate one
-ashley-core/src_managed/{main,test}/…/TextureHandle.scala
-gltf-core/src_managed/{main,test}/…/TextureHandle.scala
-anim8-core/src_managed/main/…/TextureHandle.scala
-vfx-core/src_managed/main/…/TextureHandle.scala
-screens-core/src_managed/main/…/TextureHandle.scala
+ported/sge/src_managed/{main,test}/…/TextureHandle.scala   ← main is the only legitimate one
+ported/sge-ecs/src_managed/{main,test}/…/TextureHandle.scala
+ported/sge-gltf/src_managed/{main,test}/…/TextureHandle.scala
+ported/sge-anim8/src_managed/main/…/TextureHandle.scala
+ported/sge-vfx/src_managed/main/…/TextureHandle.scala
+ported/sge-screens/src_managed/main/…/TextureHandle.scala
 ```
 
 Each duplicate costs exactly three errors — `24 = 8 × 3` — and the second and third are the part
 that makes this louder than a plain redefinition:
 
 ```
-[E161] TextureHandle is already defined as object TextureHandle in libgdx-core/src_managed/main/…
+[E161] TextureHandle is already defined as object TextureHandle in ported/sge/src_managed/main/…
 [E007] def apply(v: scala.Int): TextureHandle.T = v      Found: (v : Int)   Required: …TextureHandle.T
 [E007] def unwrap(v: TextureHandle.T): scala.Int = v     Found: (v : …TextureHandle.T)  Required: Int
 ```

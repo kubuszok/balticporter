@@ -172,7 +172,7 @@ liqp_test_deps := "--dependency junit:junit:4.13.1 --dependency org.scalameta::m
 gltf_deps     := "--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
 # libgdx-screenmanager's `build.gradle` declares gdx 1.13.5 and `com.github.crykn.guacamole:gdx`.
 # libGDX arrives as EMITTED SCALA on this compile, not as a jar, and guacamole is replaced by the
-# hand-written Scala in `screens-core/src/main/scala`. The annotation jar was the third coordinate
+# hand-written Scala in `ported/sge-screens/src/main/scala`. The annotation jar was the third coordinate
 # and IS NOW RETIRED: `ScreensPolicy.nullability` consumes `org.jspecify.annotations.Nullable` into
 # the TYPE, so no emitted declaration names it and nothing is left to resolve. That retirement is
 # the PROOF, not a tidy-up — a jar still on the compile line would let a surviving annotation
@@ -319,7 +319,7 @@ gdx-test-measure:
 
     echo "-- compile --"
     # `{{gdx_module}}/src/test/scala` is the HAND-WRITTEN half of this port's test source set, and it
-    # is on the line for the same reason `screens-core/src` and `vfx-core/src` are on theirs: an
+    # is on the line for the same reason `ported/sge-screens/src` and `ported/sge-vfx/src` are on theirs: an
     # emitted suite the globals policy marks `selfSupplied` gets `private given sge.Sge =
     # sge.SgeTestFixture.testSge()`, and the fixture is a `src/` file a human may write where the
     # generated one is not (CLAUDE.md §5.5, `ENGINE-LIMITS.md` CT7). Leaving it off compiles the
@@ -372,7 +372,7 @@ gdx-test-measure:
 # Ashley (main + its JUnit suite), compiled BOTH together with the ported libGDX core.
 #
 # Ashley is a DEPENDENT port (RuntimeMode.Dependency): the collection shims are vendored by
-# libgdx-core, so both source sets must be on the same scala-cli invocation. Compiling ashley-core
+# sge, so both source sets must be on the same scala-cli invocation. Compiling sge-ecs
 # alone measures nothing — every one of its 21 files resolves against libGDX.
 # ---------------------------------------------------------------------------------------------
 [doc("Ashley + its suite, compiled WITH libGDX core (a dependent port)")]
@@ -464,14 +464,14 @@ ashley-measure:
 # anim8-gdx, compiled TOGETHER with the ported libGDX core.
 #
 # A DEPENDENT port with the same shape as Ashley's — every one of its 16 files resolves against
-# libGDX, the collection shims are vendored by libgdx-core, so both source sets must be on the same
+# libGDX, the collection shims are vendored by sge, so both source sets must be on the same
 # scala-cli invocation and this lane must run AFTER `gdx-measure` has re-emitted the base.
 #
 # WHERE THIS LANE DIFFERS FROM EVERY OTHER ONE, and it is not a shortcut: anim8 has NO upstream
 # suite. Its `src/test/java` holds 20 files and ZERO `@Test` annotations — every one is an
 # `ApplicationAdapter` demo or a startup bench driven by `gdx-backend-lwjgl3`, and no backend is
 # ported. So there is no `Anim8TestMigrate` and no emitted test source set; the port's behavioural
-# gate is the HAND-WRITTEN MUnit suite committed under `anim8-core/src/test/scala` (CLAUDE.md §5.5:
+# gate is the HAND-WRITTEN MUnit suite committed under `ported/sge-anim8/src/test/scala` (CLAUDE.md §5.5:
 # `src/` is the hand-written half of a port). The discovery block below states both numbers
 # explicitly rather than letting `0 == 0` read as agreement — a suite with no discoverable tests
 # runs ZERO and reports SUCCESS, which is the exact failure `java_test_count` exists to catch, and
@@ -567,7 +567,7 @@ anim8-measure:
 #
 # A DEPENDENT port of the same shape as Ashley's and anim8's — all 118 distinct `com.badlogic.*`
 # imports across its 135 files resolve inside `gdx/src`, and the collection shims are vendored by
-# libgdx-core — so both source sets must be on the same scala-cli invocation and this lane must run
+# sge — so both source sets must be on the same scala-cli invocation and this lane must run
 # AFTER `gdx-measure` has re-emitted the base.
 #
 # WHERE THIS LANE'S TEST DISCOVERY EARNS ITS KEEP. Upstream `gltf/test` holds SEVEN files and only
@@ -620,7 +620,7 @@ gltf-measure:
     test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$TREPORT"
     # …and the HAND-WRITTEN half, counted and printed separately rather than summed into the line
     # above. Upstream's whole suite is 8 attribute-comparison tests, which says nothing about the
-    # glTF reader that is most of the library; `gltf-core/src/test/scala` is what covers the §4.4
+    # glTF reader that is most of the library; `ported/sge-gltf/src/test/scala` is what covers the §4.4
     # hazards in `GLTFTypes` (CLAUDE.md §5.5 — `src/` is the hand-written half of a port). Keeping
     # the two numbers apart is the point: a ported test and a written one are different evidence.
     HAND_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{gltf_module}}/src/test/scala 2>/dev/null | wc -l | tr -d ' ')
@@ -688,7 +688,7 @@ gltf-measure:
 # libgdx-screenmanager, compiled TOGETHER with the ported libGDX core.
 #
 # A DEPENDENT port of the same shape as Ashley's and anim8's — every one of its 22 files resolves
-# against libGDX and the collection shims are vendored by libgdx-core, so both source sets are on
+# against libGDX and the collection shims are vendored by sge, so both source sets are on
 # one scala-cli invocation and this lane must run AFTER `gdx-measure` has re-emitted the base.
 #
 # TWO THINGS THIS LANE HAS THAT NO OTHER ONE DOES:
@@ -805,14 +805,14 @@ screens-measure:
 # gdx-vfx, compiled TOGETHER with the ported libGDX core.
 #
 # A DEPENDENT port with the same shape as anim8's — every one of its 44 files resolves against
-# libGDX, the collection shims are vendored by libgdx-core, so both source sets must be on the same
+# libGDX, the collection shims are vendored by sge, so both source sets must be on the same
 # scala-cli invocation and this lane must run AFTER `gdx-measure` has re-emitted the base.
 #
 # THE TEST STORY, stated rather than assumed: gdx-vfx ships NO test source set. The `@Test` census
 # below runs over the WHOLE upstream checkout (library, gwt backend and the 74-file demo alike) and
 # is expected to be 0 — this is the third corpus library with no upstream suite and the only one
 # where the zero is total rather than "the test directory holds demos". The behavioural gate is
-# therefore the HAND-WRITTEN MUnit suite committed under `vfx-core/src/test/scala` (CLAUDE.md §5.5:
+# therefore the HAND-WRITTEN MUnit suite committed under `ported/sge-vfx/src/test/scala` (CLAUDE.md §5.5:
 # `src/` is the hand-written half of a port). Both numbers are printed, because `0 == 0` must not
 # read as agreement — a suite with no discoverable tests runs ZERO and reports SUCCESS, which is
 # the exact failure `java_test_count` exists to catch.

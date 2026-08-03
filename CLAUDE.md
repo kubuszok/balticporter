@@ -477,7 +477,7 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   success case, so a lane under `set -e` aborts exactly when the port is green.
 
   Each prints, untruncated and diffed against the committed baseline, **every engine check the
-  run's own pipeline registers — twenty-one rows on libgdx-core today, not four — plus any check the
+  run's own pipeline registers — twenty-one rows on `sge` today, not four — plus any check the
   port's own §1(c) rules register** (libGDX adds `gdx-shared-iterator`, so its lanes show
   twenty-two). The total is not a constant to memorise — quoting one is what went stale twice; it
   is the SIXTEEN required of every run (`signature`, `omissions`,

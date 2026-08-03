@@ -58,23 +58,44 @@ Measurements below are from one serial run of all lanes, 2026-07-31.
 Ten libraries are ported on the current (TIR) pipeline, across fifteen runs — a library and its own
 test suite are two ports, and the suite is a *dependent* of the library:
 
+**A port's name is its DESTINATION module's** (`CLAUDE.md` §2.1) — the id of the module in the
+reference port (`../sge/build.sbt`, `../ssg/build.sbt`) that this output is going to become. The
+directory, the `label` and the `PortManifest.name` all carry it, and it is what a dependent writes
+in `forBases(…)`. **Every port was renamed at once, and MEASUREMENT RECORDS BELOW KEEP THE NAME THE
+MODULE HAD WHEN THE NUMBER WAS TAKEN** — a row reading `libgdx-core scalac errors` is `sge`'s, from
+before the rename. What did NOT move is `port-report/<X>/`, which is keyed on the migrator class:
+`LibgdxCoreMigrate` is still where `sge`'s baseline lives, so every historical diff still resolves.
+
+| upstream library | port, before | port, now |
+|---|---|---|
+| libGDX core / its suite | `libgdx-core` / `libgdx-test` | `sge` / `sge-test` |
+| Ashley / its suite | `ashley` / `ashley-test` | `sge-ecs` / `sge-ecs-test` |
+| gdx-gltf / its suite | `gltf` / `gltf-test` | `sge-gltf` / `sge-gltf-test` |
+| anim8-gdx | `anim8` | `sge-anim8` |
+| gdx-vfx | `vfx` | `sge-vfx` |
+| libgdx-screenmanager | `screens` | `sge-screens` |
+| jbump | `jbump` | `sge-jbump` |
+| noise4j | `noise4j` | `sge-noise` |
+| simple-graphs / its suite | `simple-graphs` / `simple-graphs-test` | `sge-graphs` / `sge-graphs-test` |
+| liqp / its suite | `liqp` / `liqp-test` | `ssg-liquid` / `ssg-liquid-test` |
+
 | port | upstream | files in / out | tests | compile |
 |---|---|---|---|---|
-| `libgdx-core` | libGDX `gdx/src` | 604 in → **598 out** (11 dropped, 6 injected) | — | **0** |
-| `libgdx-test` | libGDX `gdx/test` | 29 → **29** | **221**, 217 pass / 4 expected-fail | **0** |
-| `ashley` | Ashley `ashley/src` | 21 → **21** (2 injected) | — | **0** |
-| `ashley-test` | Ashley `ashley/tests` | 18 → **18** | **112**, 108 pass / 2 fail / 2 skipped | **0** |
-| `anim8` | anim8-gdx `src/main/java` | 16 → **16** (0 dropped, 0 injected) | **23** hand-written, all passing — upstream has NO suite (§7.1) | **0** |
-| `gltf` | gdx-gltf `gltf/src` | 135 → **135** (0 dropped, 1 injected) | — | **3** (§8.4, all classified) |
-| `gltf-test` | gdx-gltf `gltf/test` | 1 of 7 → **1** (§8.1) | **8** ported + **22** hand-written, **none run** — the port does not compile | — |
-| `screens` | libgdx-screenmanager `src/main/java` | 22 → **22** (0 dropped, 0 injected) | **16** hand-written, all passing — upstream's 12 need an unported BACKEND (§9 libgdx-screenmanager) | **0** |
-| `vfx` | gdx-vfx `core/src` + `effects/src` | 44 → **44** (0 dropped, 0 injected) | **64** hand-written, all passing — upstream has NO test SOURCE SET (§10.1) | **0** |
-| `simple-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
-| `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
-| `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
-| `jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
-| `liqp` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
-| `liqp-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 357 passing, 218 failing**, 155 of them one collections seam (§10.5.5) | **0** |
+| `sge` | libGDX `gdx/src` | 604 in → **598 out** (11 dropped, 6 injected) | — | **0** |
+| `sge-test` | libGDX `gdx/test` | 29 → **29** | **221**, 217 pass / 4 expected-fail | **0** |
+| `sge-ecs` | Ashley `ashley/src` | 21 → **21** (2 injected) | — | **0** |
+| `sge-ecs-test` | Ashley `ashley/tests` | 18 → **18** | **112**, 108 pass / 2 fail / 2 skipped | **0** |
+| `sge-anim8` | anim8-gdx `src/main/java` | 16 → **16** (0 dropped, 0 injected) | **23** hand-written, all passing — upstream has NO suite (§7.1) | **0** |
+| `sge-gltf` | gdx-gltf `gltf/src` | 135 → **135** (0 dropped, 1 injected) | — | **3** (§8.4, all classified) |
+| `sge-gltf-test` | gdx-gltf `gltf/test` | 1 of 7 → **1** (§8.1) | **8** ported + **22** hand-written, **none run** — the port does not compile | — |
+| `sge-screens` | libgdx-screenmanager `src/main/java` | 22 → **22** (0 dropped, 0 injected) | **16** hand-written, all passing — upstream's 12 need an unported BACKEND (§9 libgdx-screenmanager) | **0** |
+| `sge-vfx` | gdx-vfx `core/src` + `effects/src` | 44 → **44** (0 dropped, 0 injected) | **64** hand-written, all passing — upstream has NO test SOURCE SET (§10.1) | **0** |
+| `sge-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
+| `sge-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
+| `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
+| `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
+| `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
+| `ssg-liquid-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 357 passing, 218 failing**, 155 of them one collections seam (§10.5.5) | **0** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -226,12 +247,12 @@ repository-level NOTICE / THIRD-PARTY files are still hand-maintained and are no
 
 ## 2. libGDX — the spearhead port
 
-`com.badlogic.gdx.* → sge.*`, Apache-2.0. Two ports: `libgdx-core` over `gdx/src`, and `libgdx-test`
+`com.badlogic.gdx.* → sge.*`, Apache-2.0. Two ports: `sge` over `gdx/src`, and `sge-test`
 over `gdx/test` as a **dependent** of it, inheriting its manifest.
 
 ### 2.1 Measured state
 
-| gate | `libgdx-core` | `libgdx-test` |
+| gate | `sge` | `sge-test` |
 |---|---|---|
 | compile errors (scala-cli, Scala 3.8.4) | **0** | **0** |
 | files emitted | **598** (12 dropped, 7 injected) | **29** |
@@ -540,7 +561,7 @@ single-module port cannot: agreeing with a base module's emitted surface while p
 
 Reproduce with `just ashley-measure`. It compiles **libGDX core's emitted Scala and both
 Ashley source sets on one scala-cli invocation** — Ashley is `RuntimeMode.Dependency`, so the
-collection shims are vendored by libGDX core and compiling `ashley-core` alone measures nothing.
+collection shims are vendored by libGDX core and compiling `ported/sge-ecs` alone measures nothing.
 
 ### 3.1 Scope, named rather than silently dropped
 
@@ -595,7 +616,7 @@ in a deliberate order:
 |---|---|
 | `TypeRedirectTransform(ReflectionPool → ComponentPool)` | `ReflectionPool` is used as a TYPE — a field's type, a local's type, a `new`, several cast targets — so no body seam can reach it, and a dependent may not inject at the base's FQN |
 | `MethodBodyTransform(Engine#createComponent(Class) → …)` | the one reflective site in 21 files. Dropping the TYPE to fix one method would fork 200 lines of mechanical entity/system bookkeeping from upstream permanently. This replaces the BODY only; the signature, and every call site, is untouched |
-| `PortMapTransform.forBases("libgdx-core")` — **LAST** | it reads what the base actually emitted and reports a reference the base does not ship, so it must run after the seams that re-point those references. Run first it reported 7 findings, every one repaired by the two phases above; run last it reports what an agent must act on |
+| `PortMapTransform.forBases("sge")` — **LAST** | it reads what the base actually emitted and reports a reference the base does not ship, so it must run after the seams that re-point those references. Run first it reported 7 findings, every one repaired by the two phases above; run last it reports what an agent must act on |
 
 The body substitution is where the two-namespace rule bites: the KEY names the member in the
 **upstream** namespace (the phase matches it before the rename runs), and the BODY is spliced verbatim
@@ -671,7 +692,7 @@ libGDX nor a dependent of it** — which is what makes its result meaningful. Re
 claim, two universal phases and a package rename. That is the outcome the corpus procedure aims for.
 
 **And therefore the CONFIG front door's acceptance proof.** Because its whole policy is data, this
-port is driven from `corpus/ports/simplegraphs/{main,test}.conf` (DESIGN.md §5.7) rather than from a
+port is driven from `balticporter/corpus/ports/simplegraphs/{main,test}.conf` (DESIGN.md §5.7) rather than from a
 hand-written `PortRun(...)`; `SimpleGraphsMigrate` and `SimpleGraphsTestMigrate` are now a `main`
 each. The lane above IS the equivalence proof — it measures the conf-driven path, and the conversion
 landed with every check count in the table unchanged and **0 members changed on both source sets**.
@@ -899,7 +920,7 @@ is reported rather than avoided. Reported, counted, baselined — not silent.
 first library in the corpus that ships NO TEST SUITE.** Reproduce with `just jbump-measure`.
 
 A 19-file, 4,045-line 2D AABB collision library (a Java port of kikito's `bump.lua`), dependency-free,
-Apache-2.0. The whole port is `corpus/ports/jbump/main.conf`; `JbumpMigrate` is a three-line `main`.
+Apache-2.0. The whole port is `balticporter/corpus/ports/jbump/main.conf`; `JbumpMigrate` is a three-line `main`.
 
 ### 6.1 Measured state
 
@@ -939,7 +960,7 @@ forms** — reference `==` in four `equals` bodies, `x++`/`x--`/`++x` read as a 
 `switch`, a `static { }` block, and secondary constructors funnelled into a promoted primary. Not one
 of them moves a compile-error count.
 
-So the port's gate is `corpus/ports/jbump/probe/{Probe.scala,ProbeJava.java}`: **the same scenario
+So the port's gate is `balticporter/corpus/ports/jbump/probe/{Probe.scala,ProbeJava.java}`: **the same scenario
 written twice, once against the emitted Scala and once against the upstream Java, with the two
 transcripts diffed line for line.** It is hand-written and is **not a ported test** — it is a
 measurement harness, in `scripts/_lib.sh`'s category, and it exists because a behavioural claim no
@@ -1067,7 +1088,7 @@ than repeated.
 genuine dependent port.** Reproduce with `just anim8-measure`, which compiles libGDX core's emitted
 Scala, anim8's emitted Scala and anim8's hand-written suite on **one** `scala-cli` invocation —
 anim8 is `RuntimeMode.Dependency`, so the collection shims are vendored by libGDX core and compiling
-`anim8-core` alone measures nothing.
+`ported/sge-anim8` alone measures nothing.
 
 **Why it is in the corpus.** Every library before it was many small files. anim8 is 16 files holding
 19,594 lines — `PNG8` alone is 8,351 and `PaletteReducer` 5,989 — and the two shapes that dominate
@@ -1092,7 +1113,7 @@ there is no `Anim8TestMigrate`. (This corrects §1.1's third fact, which listed 
 the available-and-unported test suites: 20 FILES, 0 tests.)
 
 That leaves the port with no behavioural gate at all, which `CLAUDE.md` §3 says is not a gate. So
-`anim8-core/src/test/scala` holds **23 hand-written MUnit tests** — the only thing in that module a
+`ported/sge-anim8/src/test/scala` holds **23 hand-written MUnit tests** — the only thing in that module a
 human wrote (`src_managed/` is the build product, CLAUDE.md §5.5) — adapted from the reference hand port's own
 four suites and extended where a property was checkable. `just anim8-measure`'s discovery block
 prints both numbers and says out loud that the java side is legitimately zero, because `0 == 0`
@@ -1185,7 +1206,7 @@ reference port that SOLVED a problem is not automatically a model; check the ans
 name           = "anim8",
 governs        = Set("com.github.tommyettinger.anim8"),
 packageRenames = Map("com.github.tommyettinger.anim8" -> "sge.anim8"),
-surface        = List(PortMapTransform.forBases("libgdx-core")),
+surface        = List(PortMapTransform.forBases("sge")),
 ```
 
 Everything else — `dropTypes`, `dropMethods`, libGDX's `com.badlogic.gdx -> sge` rename and all six
@@ -1195,7 +1216,7 @@ keeping:
 - **the rename is ADDITIVE, not a restatement.** Longest-prefix-wins keeps `com.badlogic.gdx -> sge`
   and `com.github.tommyettinger.anim8 -> sge.anim8` apart, so the dependent adds its own namespace
   without touching the base's.
-- **`PortMapTransform.forBases("libgdx-core")` goes LAST**, for the reason `AshleyPolicy` states: it
+- **`PortMapTransform.forBases("sge")` goes LAST**, for the reason `AshleyPolicy` states: it
   reads what the base actually EMITTED and reports a reference the base does not ship, so it must run
   after any seam that re-points such a reference. It reports **0** — anim8 touches none of libGDX's
   dropped types.
@@ -1203,7 +1224,7 @@ keeping:
   types *it* dropped, and §1.5's asymmetry means a dependent must not copy them.
 
 **The conf door cannot express this port today.** `base = "…"` in a `.conf` resolves another CONF,
-and there is no `corpus/ports/libgdx/main.conf` — `LibgdxPolicy` is Scala, because `ClassTableTransform`,
+and there is no `balticporter/corpus/ports/libgdx/main.conf` — `LibgdxPolicy` is Scala, because `ClassTableTransform`,
 `StaticForwarderTransform` and `GdxSharedIteratorRule` are behaviour rather than data. So anim8 is a
 hand-written `PortRun(...)` like Ashley. Converting it needs exactly one thing and it is not new
 mechanism: libGDX's own conf, with its two configured phases reached through `TransformFactory`
@@ -1277,7 +1298,7 @@ rather than globbing, and the lane's `java_test_count` runs over the WHOLE tree 
 re-derived on every run and a second file gaining a real `@Test` is reported.
 
 Eight attribute-comparison tests say nothing about the glTF reader that is most of the library, so
-`gltf-core/src/test/scala` adds **22 hand-written MUnit tests** over `GLTFTypes` — the file where the
+`ported/sge-gltf/src/test/scala` adds **22 hand-written MUnit tests** over `GLTFTypes` — the file where the
 specification's enumerations become libGDX values, 300 lines of pure functions with no GL context,
 no asset and no backend. Every assertion in it is pointed at a `CLAUDE.md` §4.4 hazard rather than at
 coverage: a `switch` with no `default` falling out to a `throw`, an `Integer` scrutinee against `int`
@@ -1349,7 +1370,7 @@ times that the base "emits nothing at that name and nothing replaces it" about a
 against. This is `CLAUDE.md` §4.56 at a third artifact.
 
 **And the D5 refusal NARROWED three members on `ashley-test`, which is the same fix seen from the
-other side.** A replay that reached an ashley-core `private` member had been accepted, and everything
+other side.** A replay that reached an `sge-ecs` `private` member had been accepted, and everything
 it touched was widened with it — including three of the TEST port's own `private static` fields
 (`IntervalSystemTest.deltaTime`, `IntervalIteratingTest.deltaTime`,
 `SortedIteratingSystemTest.comparator`), which were emitted with java's `private` dropped for no
@@ -1374,7 +1395,7 @@ SURFACE — not its own symbol table — whether a replay may reach a base's `pr
 refuses where the base published it `private`. `ModelInstanceHack`'s two `super(args)` are then
 DROPPED rather than replayed into a call that cannot compile, which is M6/C3's answer applied
 unchanged, and `run-latest/report.md` carries the one gap that says so:
-`[base: libgdx-core]  [§1(a) ENGINE, in the BASE]`.
+`[base: sge]  [§1(a) ENGINE, in the BASE]`.
 
 **Seven of the nine new omissions were ALWAYS TRUE and nothing was reporting them.** `OmissionCheck`
 and both decision recorders built their own `CtorFunnel.Plans` with no surface — a `TrivialSurface`,
@@ -1542,7 +1563,7 @@ what `just gdx-measure` reports.
 **Error trajectory.** Two numbers, because two different things were being counted:
 
 - **guacamole references the emitted Scala could not resolve: 26 → 0**, closed by the engine fix in
-  §9.5. Measured by `grep -o 'de\.damios[A-Za-z0-9_.]*' screens-core/src_managed`, NOT by the
+  §9.5. Measured by `grep -o 'de\.damios[A-Za-z0-9_.]*' ported/sge-screens/src_managed`, NOT by the
   compiler, because the compiler never saw them: the fix landed before the first compile. 23 static
   calls and 3 annotations.
 - **compile errors: 5 → 0.** Four `@org.jspecify.annotations.Nullable` (the annotation jar was not
@@ -1564,7 +1585,7 @@ to every `com.badlogic.gdx.*` name.
 
 **Emission** is `TypeRedirectTransform` — the engine's existing §1(b) mechanism for a type a module
 must reference and cannot ship — re-pointing all ten at `sge.screen.guacamole.*`, which
-`screens-core/src/main/scala` supplies. That is the whole of this port's library-specific policy:
+`ported/sge-screens/src/main/scala` supplies. That is the whole of this port's library-specific policy:
 **no §1(c) rule, no new phase, no new phase parameter.** The table is nine lines in `ScreensPolicy`.
 
 The replacements are hand-written, which is a statement about SCOPE and not about quality — they are
@@ -1601,7 +1622,7 @@ effort:
 Only `BasicInputMultiplexerTest` and `TimedScreenTransitionTest` need neither, and both of their
 bodies are reproduced in the hand-written suite, marked `(upstream)`.
 
-So the behavioural gate is **16 hand-written MUnit tests** in `screens-core/src/test/scala`, adapted
+So the behavioural gate is **16 hand-written MUnit tests** in `ported/sge-screens/src/test/scala`, adapted
 from upstream's two reachable tests and from the reference hand port's six suites. `just
 screens-measure` prints upstream `@Test`, emitted, and hand-written side by side and says which of
 the twelve are unreachable and why — `0` emitted must not read as agreement, and the day a backend
@@ -1703,7 +1724,7 @@ redesign no mechanical rule produces.
 dependent port.** Reproduce with `just vfx-measure`, which compiles libGDX core's emitted Scala,
 gdx-vfx's emitted Scala and gdx-vfx's hand-written suite on **one** `scala-cli` invocation — the
 port is `RuntimeMode.Dependency`, so the collection shims are vendored by libGDX core and compiling
-`vfx-core` alone measures nothing.
+`ported/sge-vfx` alone measures nothing.
 
 **Why it is in the corpus.** Every library before it either used libGDX as a toolbox (Ashley,
 anim8) or did not use it at all. gdx-vfx's whole reason for existing is a resource the JVM does not
@@ -1736,7 +1757,7 @@ Excluded, and named:
 **`@Test` over the WHOLE upstream checkout, comments stripped: 0.** gdx-vfx ships no test source set
 at all — not a set of demos misread as one (anim8) and not a runnable sample module (jbump), simply
 nothing. So there is no `VfxTestMigrate`, and the behavioural gate is anim8's precedent: **64
-hand-written MUnit tests** under `vfx-core/src/test/scala` (§10.5). `just vfx-measure` prints the
+hand-written MUnit tests** under `ported/sge-vfx/src/test/scala` (§10.5). `just vfx-measure` prints the
 upstream zero and the hand-written count side by side, because `0 == 0` reading as agreement is the
 silent success `java_test_count` exists to prevent.
 
@@ -1954,7 +1975,7 @@ method is a shader draw. That is 27 of 44 types resting on compilation alone.
 
 
 - **27 of 44 types rest on compilation alone** (§10.5). Every effect class needs a GL context; the
-  cheapest real step is a headless `GL20` implementation in `vfx-core/src/test`, which is a large
+  cheapest real step is a headless `GL20` implementation in `ported/sge-vfx/src/test`, which is a large
   hand-written file rather than a missing test.
 - **The two dropped file-leading licence blocks** (`ENGINE-LIMITS.md` V3, *Spoon attaches only ONE
   of several consecutive FILE-LEADING comment blocks*) are a frontend harvest away, and the fix is
@@ -2210,7 +2231,7 @@ Three things it cost, and the second is the one no compile could have found:
   returns the same singleton, so the parser's own `errorMode == ErrorMode.STRICT` reference
   comparison still holds. Verified standalone against real scalac output before it was written;
 - **the STUB is shape-honest or it is worse than nothing.** javac resolves the rewritten names
-  against `corpus/ports/liqp/javac-stub`, read as a `-sourcepath` under `-implicit:none` so it is
+  against `balticporter/corpus/ports/liqp/javac-stub`, read as a `-sourcepath` under `-implicit:none` so it is
   never written into the output (84 class files, all `liquid/parser/v4`). It declares no constants,
   so a form the runtime could not link is a javac error here rather than a run-time one; and
   upstream `liqp` is on NO classpath of that step, so a reference the rewrite missed cannot resolve
@@ -2290,7 +2311,7 @@ generated parser is a fixed artefact, when it is this port's own build step's ou
 
 ### 10.5.4 The test port — how it is built, and what it excludes
 
-`corpus/ports/liqp/test.conf` is a §1.5 dependent of `main.conf` (it inherits
+`balticporter/corpus/ports/liqp/test.conf` is a §1.5 dependent of `main.conf` (it inherits
 `packageRenames { liqp = "ssg.liquid" }` and the base's surface phases, and adds `test-framework`).
 `LiqpTestClasspath` derives its frontend classpath from the main one and adds `junit:junit:4.13.1`,
 the ONE test-scope coordinate the pom declares — `org.hamcrest:hamcrest-core:1.3` arrives with it
@@ -2357,7 +2378,7 @@ anonymous classes, a `switch` on `String` with NO `default` (`nodes/ComparingExp
 .java:142`, §4.4's fall-out row — and its NULL-selector sibling, which the emitter now guards), and
 the `ServiceLoader` lookup below. §10.5.5 is what it found.
 
-**`META-INF/services` is hand-written** (`liqp-core/src/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport`),
+**`META-INF/services` is hand-written** (`ported/ssg-liquid/src/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport`),
 because the engine emits `.scala` and nothing else and this file's NAME and CONTENTS are both
 upstream FQNs a rename has to move — `ENGINE-LIMITS.md` P5, whose counting half is shipped and whose
 artefact lane is not. `Template`'s `static { }` block reaches `ServiceLoader.load(TypesSupport.class)`,
@@ -2490,7 +2511,7 @@ with each item's state re-verified against the working tree.
 
 `Substitutions`' overload-precise `owner#m(P1,P2)` keys; `ClassTableTransform` and
 `StaticForwarderTransform` as correct (b) mechanisms (searched for smuggled libGDX knowledge, none
-found); `corpus/libgdx-overrides/**` as correct (c) content in the right place — the model for
+found); `balticporter/corpus/libgdx-overrides/**` as correct (c) content in the right place — the model for
 what a *consumer repo's* `src/` holds; `PrimitiveToOpaqueTransform` (then `IntToOpaqueTransform`) as
 the canonical (c) *policy* carried by a shareable (b) *mechanism*; `RewriteTrace`'s impact/check pair (blast radius *before* a rewrite — judged
 unique to this codebase); the stale-emit abort in every measure lane; and `Phase` / `Pipeline` /
@@ -3413,18 +3434,18 @@ Everything below is `src/` or manifest — no engine code changed in the deliver
 |---|---|---|
 | `LibgdxPolicy.globalsToContext` | the holder: `com.badlogic.gdx.Gdx`, injected `sge.Sge`, the 11-field path map with the five `gl*` two-hop through `graphics`, `attach = class`, `reader = summon`, `boundary = refuse`, two `sites` `lazy-init` keys, no `promoteToClass`, no `scope` | attach-clause |
 | `LibgdxPolicy.beanPropertyPairs` | four `Graphics#gl2x -> getGL2x/setGL2x` pairs — a path segment is an identifier, so `graphics.gl20` needs a member of that name | reader-rewrite |
-| `corpus/libgdx-overrides/sge/Sge.scala` | the INJECTED context type: the six services, `@implicitNotFound`, a public constructor and the `apply()` sugar. NOT minted — it is published API and the reference port's shape | hand-written |
-| `corpus/libgdx-overrides/sge/utils/Pools.scala` | the whole `static { }` block behind `def registerDefaults()(using sge.Sge)`; `Pools.get`'s miss message names it | deferred |
+| `balticporter/corpus/libgdx-overrides/sge/Sge.scala` | the INJECTED context type: the six services, `@implicitNotFound`, a public constructor and the `apply()` sugar. NOT minted — it is published API and the reference port's shape | hand-written |
+| `balticporter/corpus/libgdx-overrides/sge/utils/Pools.scala` | the whole `static { }` block behind `def registerDefaults()(using sge.Sge)`; `Pools.get`'s miss message names it | deferred |
 | `LibgdxPolicy.selfSuppliedSuites` (libgdx-test) | ONE `ContextHolderExtension` `selfSupplied` entry → `sge.SgeTestFixture.testSge()` | self-supplied |
-| `libgdx-core/src/test/scala/sge/SgeTestFixture.scala` | the ABSENT-service fixture, plus that directory on the `gdx-test-measure`, `vfx-measure` and `screens-measure` compile lines | hand-written |
+| `ported/sge/src/test/scala/sge/SgeTestFixture.scala` | the ABSENT-service fixture, plus that directory on the `gdx-test-measure`, `vfx-measure` and `screens-measure` compile lines | hand-written |
 | `VfxPolicy` — a `ContextHolderExtension` | `VfxFrameBuffer#tmpCam` → `lazy-init`. `VfxGLUtils#<clinit>` deliberately gets NO key: it READS the holder, so `lazy-init` is the wrong site kind and was a `never matched` finding when it was tried | deferred |
 | `VfxPolicy` — a second `MethodBodyTransform` entry | `VfxGLUtils#<clinit>` → `{ }`, and the construction moves to `VfxFrameBuffer#getBoundFboHandle` behind a null guard | boundary-exit |
-| `vfx-core/src/test/.../VfxFrameBufferSuite.scala` | one `private given sge.Sge` line — it is what turns "this suite stops at the first GL call" from a comment into an NPE | hand-written |
-| `screens-core/src/main/.../NestableFrameBuffer.scala` | `(using sge.Sge)` on both constructors; three `Gdx.gl20` reads become `summon` | attach-clause |
-| `screens-core/src/main/.../QuadMeshGenerator.scala` | `(using sge.Sge)` on all three overloads (it constructs a `Mesh`) | attach-clause |
-| `screens-core/src/main/.../ShaderProgramFactory.scala` | `(using sge.Sge)` on the three `fromString`s, on `ShaderCompatibilityHelper.fromString`, `mustUse32CShader` and `getDefaultShaderVersionStatement`; `Gdx.gl30` becomes `summon` | attach-clause |
-| `screens-core/src/main/.../GLUtils.scala` | `Gdx.gl` → `Gdx.graphics.gl20` — the RESIDUAL global, and NOT a clause | seam |
-| `screens-core/src/test/.../ScreenmanagerSuite.scala` | one `private given sge.Sge` line | hand-written |
+| `ported/sge-vfx/src/test/.../VfxFrameBufferSuite.scala` | one `private given sge.Sge` line — it is what turns "this suite stops at the first GL call" from a comment into an NPE | hand-written |
+| `ported/sge-screens/src/main/.../NestableFrameBuffer.scala` | `(using sge.Sge)` on both constructors; three `Gdx.gl20` reads become `summon` | attach-clause |
+| `ported/sge-screens/src/main/.../QuadMeshGenerator.scala` | `(using sge.Sge)` on all three overloads (it constructs a `Mesh`) | attach-clause |
+| `ported/sge-screens/src/main/.../ShaderProgramFactory.scala` | `(using sge.Sge)` on the three `fromString`s, on `ShaderCompatibilityHelper.fromString`, `mustUse32CShader` and `getDefaultShaderVersionStatement`; `Gdx.gl30` becomes `summon` | attach-clause |
+| `ported/sge-screens/src/main/.../GLUtils.scala` | `Gdx.gl` → `Gdx.graphics.gl20` — the RESIDUAL global, and NOT a clause | seam |
+| `ported/sge-screens/src/test/.../ScreenmanagerSuite.scala` | one `private given sge.Sge` line | hand-written |
 
 **The last two screens rows are the finding, and it is now a rule (`CLAUDE.md` §1b).** `GLUtils` and
 `NestableFrameBuffer` are two shims in one directory, and they take opposite answers — because the
@@ -3917,7 +3938,7 @@ TYPES and the failing set is a predicate over DECLARATIONS. Every other generic 
 **What the floor bought, in emitted text** (`skipPhases=nullability` against the delivered run, the
 §4.6 kill switch used as a measurement rather than as a debug aid):
 
-| in `libgdx-core/src_managed` | without | with |
+| in `ported/sge/src_managed` | without | with |
 |---|---:|---:|
 | `\| scala.Null` | 0 | **543** (540 declarations; the 65-position gap is `Json`, which the port DROPS and never emits) |
 | `@sge.utils.Null` | 161 | **32** — every consumed marker stripped; the 32 that remain are on refused and scoped-out declarations, deliberately, so the contract stays readable at the line |
@@ -4472,7 +4493,7 @@ changed** — so the after column below is a diff against a reproduction, not ag
 
 `SYNTHESISED UNITS` reads **`1, 0 at an FQN a base already emits` on libgdx-core and `0, 0` on all
 twelve other ports**, and `find -name TextureHandle.scala` returns exactly one path
-(`libgdx-core/src_managed/main/scala/sge/graphics/TextureHandle.scala`). That pair is the whole of
+(`ported/sge/src_managed/main/scala/sge/graphics/TextureHandle.scala`). That pair is the whole of
 O5's closure, measured rather than argued.
 
 #### The libgdx-core census, and the one number whose PROSE was wrong
