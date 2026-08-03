@@ -149,7 +149,7 @@ type	com.badlogic.gdx.graphics.g2d.BitmapFontCache	sge.graphics.g2d.BitmapFontCa
 type	com.badlogic.gdx.graphics.g2d.CpuSpriteBatch	sge.graphics.g2d.CpuSpriteBatch	Renamed	-		0		companion=yes form=class parents=sge.graphics.g2d.SpriteBatch primary=(int,ShaderProgram) primaryKind=unique-root primaryVis=public secondaries=();(int) statics=checkEqual,checkIdt
 type	com.badlogic.gdx.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont	Renamed	-		0		companion=yes form=class parents=sge.graphics.g2d.BitmapFont primary=() primaryKind=not-funnelled primaryVis=public secondaries=(BitmapFontData,Array,boolean);(BitmapFontData,TextureRegion,boolean);(FileHandle,boolean);(FileHandle,FileHandle,boolean,boolean);(FileHandle,FileHandle,boolean);(FileHandle,TextureRegion,boolean);(FileHandle,TextureRegion);(FileHandle) statics=DistanceFieldFontCache,createDistanceFieldShader
 type	com.badlogic.gdx.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache	sge.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache	Renamed	-		0		companion=yes disambiguator=marker form=class parents=sge.graphics.g2d.BitmapFontCache primary=(BitmapFont,boolean,?) primaryKind=synthesised-primary primaryVis=protected secondaries=(DistanceFieldFont);(DistanceFieldFont,boolean)
-type	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap	sge.graphics.g2d.Gdx2DPixmap	Renamed	-		0		companion=yes form=class parents=java.lang.AutoCloseable primary=() primaryKind=not-funnelled primaryVis=public secondaries=(byte[],int,int,int);(ByteBuffer,int,int,int);(InputStream,int);(int,int,int);(ByteBuffer,long[]) statics=GDX2D_BLEND_NONE,GDX2D_BLEND_SRC_OVER,GDX2D_FORMAT_ALPHA,GDX2D_FORMAT_LUMINANCE_ALPHA,GDX2D_FORMAT_RGB565,GDX2D_FORMAT_RGB888,GDX2D_FORMAT_RGBA4444,GDX2D_FORMAT_RGBA8888,GDX2D_SCALE_LINEAR,GDX2D_SCALE_NEAREST,clear,clear$8220$handle,drawCircle,drawCircle$8244$handle,drawLine,drawLine$8233$handle,drawPixmap,drawPixmap$8271$handle,drawRect,drawRect$8239$handle,fillCircle,fillCircle$8255$handle,fillRect,fillRect$8250$handle,fillTriangle,fillTriangle$8263$handle,free,free$8218$handle,getFailureReason,getFailureReason$8190$handle,getFormatString,getPixel,getPixel$8227$handle,load,load$8189$handle,loadByteBuffer,loadByteBuffer$8196$handle,newPixmap,newPixmap$8209$handle,setBlend,setBlend$8282$handle,setPixel,setPixel$8224$handle,setScale,setScale$8284$handle,toGlFormat,toGlType
+type	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap	sge.graphics.g2d.Gdx2DPixmap	Renamed	-		0		companion=yes form=class parents=java.lang.AutoCloseable primary=() primaryKind=not-funnelled primaryVis=public secondaries=(byte[],int,int,int);(ByteBuffer,int,int,int);(InputStream,int);(int,int,int);(ByteBuffer,long[]) statics=GDX2D_BLEND_NONE,GDX2D_BLEND_SRC_OVER,GDX2D_FORMAT_ALPHA,GDX2D_FORMAT_LUMINANCE_ALPHA,GDX2D_FORMAT_RGB565,GDX2D_FORMAT_RGB888,GDX2D_FORMAT_RGBA4444,GDX2D_FORMAT_RGBA8888,GDX2D_SCALE_LINEAR,GDX2D_SCALE_NEAREST,clear,clear$handle,drawCircle,drawCircle$handle,drawLine,drawLine$handle,drawPixmap,drawPixmap$handle,drawRect,drawRect$handle,fillCircle,fillCircle$handle,fillRect,fillRect$handle,fillTriangle,fillTriangle$handle,free,free$handle,getFailureReason,getFailureReason$handle,getFormatString,getPixel,getPixel$handle,load,load$handle,loadByteBuffer,loadByteBuffer$handle,newPixmap,newPixmap$handle,setBlend,setBlend$handle,setPixel,setPixel$handle,setScale,setScale$handle,toGlFormat,toGlType
 type	com.badlogic.gdx.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout	Renamed	-		0		companion=yes disambiguator=marker form=class parents=sge.utils.Pool$Poolable primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(BitmapFont,CharSequence);(BitmapFont,CharSequence,Color,float,int,boolean);(BitmapFont,CharSequence,int,int,Color,float,int,boolean,String) statics=GlyphRun,colorStack,epsilon,glyphRunPool
 type	com.badlogic.gdx.graphics.g2d.GlyphLayout$GlyphRun	sge.graphics.g2d.GlyphLayout$GlyphRun	Renamed	-		0		form=class parents=sge.utils.Pool$Poolable primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.graphics.g2d.NinePatch	sge.graphics.g2d.NinePatch	Renamed	-		0		companion=yes form=class primary=() primaryKind=not-funnelled primaryVis=public secondaries=(Texture,int,int,int,int);(TextureRegion,int,int,int,int);(Texture,Color);(Texture);(TextureRegion,Color);(TextureRegion);(TextureRegion[]);(NinePatch);(NinePatch,Color) statics=BOTTOM_CENTER,BOTTOM_LEFT,BOTTOM_RIGHT,MIDDLE_CENTER,MIDDLE_LEFT,MIDDLE_RIGHT,TOP_CENTER,TOP_LEFT,TOP_RIGHT,tmpDrawColor
@@ -579,7 +579,7 @@ type	com.badlogic.gdx.math.Intersector$SplitTriangle	sge.math.Intersector$SplitT
 type	com.badlogic.gdx.math.MathUtils	sge.math.MathUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.badlogic.gdx.math.MathUtils$Sin	sge.math.MathUtils$Sin	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=private[MathUtils]
 type	com.badlogic.gdx.math.Matrix3	sge.math.Matrix3	Renamed	-		0		companion=yes disambiguator=marker form=class parents=java.io.Serializable primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(Matrix3);(float[]) statics=M00,M01,M02,M10,M11,M12,M20,M21,M22,mul,serialVersionUID
-type	com.badlogic.gdx.math.Matrix4	sge.math.Matrix4	Renamed	-		0		companion=yes disambiguator=marker form=class parents=java.io.Serializable primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(Matrix4);(float[]);(Quaternion);(Vector3,Quaternion,Vector3) statics=M00,M01,M02,M03,M10,M11,M12,M13,M20,M21,M22,M23,M30,M31,M32,M33,det,inv,l_vex,l_vey,l_vez,mul,mulVec,mulVec$31365$handle,prj,prj$29473$handle,quat,quat2,right,rot,rot$31376$handle,serialVersionUID,tmpForward,tmpMat,tmpUp,tmpVec
+type	com.badlogic.gdx.math.Matrix4	sge.math.Matrix4	Renamed	-		0		companion=yes disambiguator=marker form=class parents=java.io.Serializable primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(Matrix4);(float[]);(Quaternion);(Vector3,Quaternion,Vector3) statics=M00,M01,M02,M03,M10,M11,M12,M13,M20,M21,M22,M23,M30,M31,M32,M33,det,inv,l_vex,l_vey,l_vez,mul,mulVec,mulVec$handle,prj,prj$handle,quat,quat2,right,rot,rot$handle,serialVersionUID,tmpForward,tmpMat,tmpUp,tmpVec
 type	com.badlogic.gdx.math.Octree	sge.math.Octree	Renamed	-		0		companion=yes form=class primary=(Vector3,Vector3,int,int,Collider) primaryKind=unique-root primaryVis=public statics=Collider,RayCastResult,tmp tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.math.Octree$Collider	sge.math.Octree$Collider	Renamed	-		0		form=trait tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.math.Octree$OctreeNode	sge.math.Octree$OctreeNode	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
@@ -4220,23 +4220,23 @@ member	com.badlogic.gdx.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#dr
 member	com.badlogic.gdx.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#draw(Batch,int,int)	sge.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#draw(Batch,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/DistanceFieldFont.java	169	5bb0ef07afd4d4a6	
 member	com.badlogic.gdx.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#getSmoothingFactor()	sge.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#getSmoothingFactor()	Renamed	-	com/badlogic/gdx/graphics/g2d/DistanceFieldFont.java	151	cc76b83df990640a	vis=private[DistanceFieldFont]
 member	com.badlogic.gdx.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#setSmoothingUniform(Batch,float)	sge.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#setSmoothingUniform(Batch,float)	Renamed	-	com/badlogic/gdx/graphics/g2d/DistanceFieldFont.java	156	86291952bdfc339e	vis=private[DistanceFieldFont]
-member	clear$8220$handle	clear$8220$handle	Ported	-	<synthetic>	0	eaa290d6f373e6bf	placement=companion vis=private
-member	drawCircle$8244$handle	drawCircle$8244$handle	Ported	-	<synthetic>	0	52baaebc8f1019c3	placement=companion vis=private
-member	drawLine$8233$handle	drawLine$8233$handle	Ported	-	<synthetic>	0	a9363f9f2c1d6558	placement=companion vis=private
-member	drawPixmap$8271$handle	drawPixmap$8271$handle	Ported	-	<synthetic>	0	51c6427677e2ebbf	placement=companion vis=private
-member	drawRect$8239$handle	drawRect$8239$handle	Ported	-	<synthetic>	0	9c55f76a3bc52ec4	placement=companion vis=private
-member	fillCircle$8255$handle	fillCircle$8255$handle	Ported	-	<synthetic>	0	7722bb8fb63fe895	placement=companion vis=private
-member	fillRect$8250$handle	fillRect$8250$handle	Ported	-	<synthetic>	0	57833d901e958fe8	placement=companion vis=private
-member	fillTriangle$8263$handle	fillTriangle$8263$handle	Ported	-	<synthetic>	0	7e19f6e605268d9d	placement=companion vis=private
-member	free$8218$handle	free$8218$handle	Ported	-	<synthetic>	0	46fe8f510623fba4	placement=companion vis=private
-member	getFailureReason$8190$handle	getFailureReason$8190$handle	Ported	-	<synthetic>	0	88a96a912e23c34f	placement=companion vis=private
-member	getPixel$8227$handle	getPixel$8227$handle	Ported	-	<synthetic>	0	88fb3dae544db14c	placement=companion vis=private
-member	load$8189$handle	load$8189$handle	Ported	-	<synthetic>	0	f44f8e3a89e8b4ef	placement=companion vis=private
-member	loadByteBuffer$8196$handle	loadByteBuffer$8196$handle	Ported	-	<synthetic>	0	9743b5e9cccf0dfe	placement=companion vis=private
-member	newPixmap$8209$handle	newPixmap$8209$handle	Ported	-	<synthetic>	0	2563ee2e6e13631a	placement=companion vis=private
-member	setBlend$8282$handle	setBlend$8282$handle	Ported	-	<synthetic>	0	834af8b9d70ed4cc	placement=companion vis=private
-member	setPixel$8224$handle	setPixel$8224$handle	Ported	-	<synthetic>	0	8eecffbbadae5734	placement=companion vis=private
-member	setScale$8284$handle	setScale$8284$handle	Ported	-	<synthetic>	0	f8b789ff2afd8f55	placement=companion vis=private
+member	clear$handle	clear$handle	Ported	-	<synthetic>	0	3863c52d0bdf877a	placement=companion vis=private
+member	drawCircle$handle	drawCircle$handle	Ported	-	<synthetic>	0	ecf0afa6ba8cdb71	placement=companion vis=private
+member	drawLine$handle	drawLine$handle	Ported	-	<synthetic>	0	2ffacb28df9a51bd	placement=companion vis=private
+member	drawPixmap$handle	drawPixmap$handle	Ported	-	<synthetic>	0	21987e59b9228a56	placement=companion vis=private
+member	drawRect$handle	drawRect$handle	Ported	-	<synthetic>	0	be9d75f05c84de67	placement=companion vis=private
+member	fillCircle$handle	fillCircle$handle	Ported	-	<synthetic>	0	98da0075abc0e224	placement=companion vis=private
+member	fillRect$handle	fillRect$handle	Ported	-	<synthetic>	0	631fa6632de68da7	placement=companion vis=private
+member	fillTriangle$handle	fillTriangle$handle	Ported	-	<synthetic>	0	e846b5292499f29d	placement=companion vis=private
+member	free$handle	free$handle	Ported	-	<synthetic>	0	e10113f49a9da5fc	placement=companion vis=private
+member	getFailureReason$handle	getFailureReason$handle	Ported	-	<synthetic>	0	cd326ddaba186b6c	placement=companion vis=private
+member	getPixel$handle	getPixel$handle	Ported	-	<synthetic>	0	9527fb6341f32134	placement=companion vis=private
+member	load$handle	load$handle	Ported	-	<synthetic>	0	8026b2447592879e	placement=companion vis=private
+member	loadByteBuffer$handle	loadByteBuffer$handle	Ported	-	<synthetic>	0	15409267dcd3a806	placement=companion vis=private
+member	newPixmap$handle	newPixmap$handle	Ported	-	<synthetic>	0	5acc89bd3f77b9cf	placement=companion vis=private
+member	setBlend$handle	setBlend$handle	Ported	-	<synthetic>	0	6e057e44e4ede5f0	placement=companion vis=private
+member	setPixel$handle	setPixel$handle	Ported	-	<synthetic>	0	4d2f2f70195d84bb	placement=companion vis=private
+member	setScale$handle	setScale$handle	Ported	-	<synthetic>	0	737cdd0fb5d1bed6	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#<init>(Array,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#<init>(Array<byte>,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	83	e69b7f867fa6dfc3	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#<init>(ByteBuffer,Array)	sge.graphics.g2d.Gdx2DPixmap#<init>(ByteBuffer,Array<long>)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	147	96fc3fd10ef7fdfb	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#<init>(ByteBuffer,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#<init>(ByteBuffer,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	97	57569f1f46d97c82	
@@ -4254,27 +4254,27 @@ member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#GDX2D_SCALE_LINEAR	sge.graphics
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#GDX2D_SCALE_NEAREST	sge.graphics.g2d.Gdx2DPixmap#GDX2D_SCALE_NEAREST	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	37	2e0ca5c26d8fddbb	placement=companion
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#basePtr	sge.graphics.g2d.Gdx2DPixmap#basePtr	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	76	ac5e3a7e30a041ea	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#clear(int)	sge.graphics.g2d.Gdx2DPixmap#clear(int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	173	342d8b5d7cefefe2	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#clear(long,int)	sge.graphics.g2d.Gdx2DPixmap#clear(long,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	359	e5399872ccd59dca	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#clear(long,int)	sge.graphics.g2d.Gdx2DPixmap#clear(long,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	359	1d58a020ced3cd09	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#close()	sge.graphics.g2d.Gdx2DPixmap#close()	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	169	aada8c7e239ab066	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#convert(int)	sge.graphics.g2d.Gdx2DPixmap#convert(int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	155	14900417cc96eade	vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawCircle(int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawCircle(int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	193	f0e01eee7a51bcc3	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawCircle(long,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawCircle(long,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	379	e0143a6b1cc6c6c1	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawCircle(long,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawCircle(long,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	379	daa6eb14e0a91c62	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawLine(int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawLine(int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	185	e0db266702c52f93	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawLine(long,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawLine(long,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	371	f6fd9ad7fdf69136	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawLine(long,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawLine(long,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	371	df9f1ece53bff17e	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawPixmap(Gdx2DPixmap,int,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawPixmap(Gdx2DPixmap,int,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	209	8ff34bef2a621278	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawPixmap(Gdx2DPixmap,int,int,int,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawPixmap(Gdx2DPixmap,int,int,int,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	213	583ebe9b5203934c	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawPixmap(long,long,int,int,int,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawPixmap(long,long,int,int,int,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	395	69772ef8c9e5ab3a	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawPixmap(long,long,int,int,int,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawPixmap(long,long,int,int,int,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	395	df349409596241eb	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawRect(int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawRect(int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	189	5535f0f9ee53db8b	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawRect(long,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawRect(long,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	375	f2fd777fa4ce99f5	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#drawRect(long,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#drawRect(long,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	375	a9e8294da34a5bfe	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#fillCircle(int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#fillCircle(int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	201	dffd72e7e7d2846b	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#fillCircle(long,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#fillCircle(long,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	387	07c1d58d3765ed3b	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#fillCircle(long,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#fillCircle(long,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	387	8a2e2d1adb66c816	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#fillRect(int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#fillRect(int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	197	43cd34432aa0f21c	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#fillRect(long,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#fillRect(long,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	383	ce163ff4ccfeef9f	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#fillRect(long,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#fillRect(long,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	383	f2526833308f5eee	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#fillTriangle(int,int,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#fillTriangle(int,int,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	205	b61167528cd4211d	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#fillTriangle(long,int,int,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#fillTriangle(long,int,int,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	391	057d3d2ef12807c2	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#fillTriangle(long,int,int,int,int,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#fillTriangle(long,int,int,int,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	391	79c72b2967eb9a2d	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#format	sge.graphics.g2d.Gdx2DPixmap#format	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	79	84a9d4482f1a5596	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#free(long)	sge.graphics.g2d.Gdx2DPixmap#free(long)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	355	ed27dc450a741adf	placement=companion vis=private
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getFailureReason()	sge.graphics.g2d.Gdx2DPixmap#getFailureReason()	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	408	2e8879f73b4443a2	placement=companion
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#free(long)	sge.graphics.g2d.Gdx2DPixmap#free(long)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	355	b27fcbd6f7fe4c8c	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getFailureReason()	sge.graphics.g2d.Gdx2DPixmap#getFailureReason()	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	408	57e2043484e98487	placement=companion
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getFormat()	sge.graphics.g2d.Gdx2DPixmap#getFormat()	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	254	304336599d767d45	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getFormatString()	sge.graphics.g2d.Gdx2DPixmap#getFormatString()	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	270	bbe70ac1dc43981a	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getFormatString(int)	sge.graphics.g2d.Gdx2DPixmap#getFormatString(int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	274	853f720ebb681390	placement=companion vis=private
@@ -4283,23 +4283,23 @@ member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getGLInternalFormat()	sge.graph
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getGLType()	sge.graphics.g2d.Gdx2DPixmap#getGLType()	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	266	c38e0560fae7abb1	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getHeight()	sge.graphics.g2d.Gdx2DPixmap#getHeight()	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	246	5b0a36211bc20052	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getPixel(int,int)	sge.graphics.g2d.Gdx2DPixmap#getPixel(int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	181	b9dbae28bde26a37	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getPixel(long,int,int)	sge.graphics.g2d.Gdx2DPixmap#getPixel(long,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	367	3692f168287b1484	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getPixel(long,int,int)	sge.graphics.g2d.Gdx2DPixmap#getPixel(long,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	367	e0a1d509b4e01811	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getPixels()	sge.graphics.g2d.Gdx2DPixmap#getPixels()	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	242	e79f22f27364b496	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getWidth()	sge.graphics.g2d.Gdx2DPixmap#getWidth()	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	250	7b8a631860df51ca	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#height	sge.graphics.g2d.Gdx2DPixmap#height	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	78	8a803c0735d766da	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#load(Array,Array,int,int)	sge.graphics.g2d.Gdx2DPixmap#load(Array<long>,Array<byte>,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	299	07f3a3d778f472ec	placement=companion vis=private
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#loadByteBuffer(Array,ByteBuffer,int,int)	sge.graphics.g2d.Gdx2DPixmap#loadByteBuffer(Array<long>,ByteBuffer,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	318	8d06d887cf0abf6a	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#load(Array,Array,int,int)	sge.graphics.g2d.Gdx2DPixmap#load(Array<long>,Array<byte>,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	299	8e3a8049608d8d64	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#loadByteBuffer(Array,ByteBuffer,int,int)	sge.graphics.g2d.Gdx2DPixmap#loadByteBuffer(Array<long>,ByteBuffer,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	318	cbfe630913b6ed6d	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#nativeData	sge.graphics.g2d.Gdx2DPixmap#nativeData	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	81	6216b911f210af8a	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#newPixmap(Array,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#newPixmap(Array<long>,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	339	ecf2d9efe847b5a5	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#newPixmap(Array,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#newPixmap(Array<long>,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	339	839efecffa1099b5	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#newPixmap(InputStream,int)	sge.graphics.g2d.Gdx2DPixmap#newPixmap(InputStream,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	226	e6c2aacccaa606f2	placement=companion
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#newPixmap(int,int,int)	sge.graphics.g2d.Gdx2DPixmap#newPixmap(int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	234	55fc542f87ea03db	placement=companion
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#pixelPtr	sge.graphics.g2d.Gdx2DPixmap#pixelPtr	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	80	0a3177da56ce95e1	
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#setBlend(int)	sge.graphics.g2d.Gdx2DPixmap#setBlend(int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	218	a42d9694e9646a81	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#setBlend(long,int)	sge.graphics.g2d.Gdx2DPixmap#setBlend(long,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	400	e3922d7dd93c2f3c	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#setBlend(long,int)	sge.graphics.g2d.Gdx2DPixmap#setBlend(long,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	400	1756b00859de50e0	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#setPixel(int,int,int)	sge.graphics.g2d.Gdx2DPixmap#setPixel(int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	177	bb6e24cc81d2599e	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#setPixel(long,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#setPixel(long,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	363	cb0f2f5201401e4f	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#setPixel(long,int,int,int)	sge.graphics.g2d.Gdx2DPixmap#setPixel(long,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	363	4e091f52a0eb3f5a	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#setScale(int)	sge.graphics.g2d.Gdx2DPixmap#setScale(int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	222	6dba6fbbc095bb44	
-member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#setScale(long,int)	sge.graphics.g2d.Gdx2DPixmap#setScale(long,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	404	508c6930cd3f4944	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#setScale(long,int)	sge.graphics.g2d.Gdx2DPixmap#setScale(long,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	404	94c278eeb0ba6ec8	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#toGlFormat(int)	sge.graphics.g2d.Gdx2DPixmap#toGlFormat(int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	43	1929cff76ffb84eb	placement=companion
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#toGlType(int)	sge.graphics.g2d.Gdx2DPixmap#toGlType(int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	60	3485313795c597ef	placement=companion
 member	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#width	sge.graphics.g2d.Gdx2DPixmap#width	Renamed	-	com/badlogic/gdx/graphics/g2d/Gdx2DPixmap.java	77	f1ab0bcb3abc7d98	
@@ -8390,28 +8390,28 @@ member	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#pixels	sge.graphics
 member	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#prepare()	sge.graphics.glutils.CustomTexture3DData#prepare()	Renamed	-	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	63	63347ee55ecb8da8	
 member	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#useMipMaps()	sge.graphics.glutils.CustomTexture3DData#useMipMaps()	Renamed	-	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	81	51e34a945db65f40	
 member	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#width	sge.graphics.glutils.CustomTexture3DData#width	Renamed	-	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	37	1c8d1b100e2d8990	vis=private
-member	decodeImage$20599$handle	decodeImage$20599$handle	Ported	-	<synthetic>	0	9bb75724c4ede6bf	placement=companion vis=private
-member	encodeImage$20577$handle	encodeImage$20577$handle	Ported	-	<synthetic>	0	4e051667a691d5a1	placement=companion vis=private
-member	encodeImagePKM$20584$handle	encodeImagePKM$20584$handle	Ported	-	<synthetic>	0	d55bf2709e11f95b	placement=companion vis=private
-member	formatHeader$20603$handle	formatHeader$20603$handle	Ported	-	<synthetic>	0	1be6bf7e33342f66	placement=companion vis=private
-member	getCompressedDataSize$20600$handle	getCompressedDataSize$20600$handle	Ported	-	<synthetic>	0	4c3f2f62b776dc3b	placement=companion vis=private
-member	getHeightPKM$20596$handle	getHeightPKM$20596$handle	Ported	-	<synthetic>	0	80d93416c15d0b50	placement=companion vis=private
-member	getWidthPKM$20594$handle	getWidthPKM$20594$handle	Ported	-	<synthetic>	0	4b02653cc7d79fb9	placement=companion vis=private
-member	isValidPKM$20612$handle	isValidPKM$20612$handle	Ported	-	<synthetic>	0	42429857abfc22b0	placement=companion vis=private
+member	decodeImage$handle	decodeImage$handle	Ported	-	<synthetic>	0	598f6f4bd7d4e28d	placement=companion vis=private
+member	encodeImage$handle	encodeImage$handle	Ported	-	<synthetic>	0	e30bc5c59e1a3745	placement=companion vis=private
+member	encodeImagePKM$handle	encodeImagePKM$handle	Ported	-	<synthetic>	0	d08fa1647efe0cee	placement=companion vis=private
+member	formatHeader$handle	formatHeader$handle	Ported	-	<synthetic>	0	c51350ba8f070290	placement=companion vis=private
+member	getCompressedDataSize$handle	getCompressedDataSize$handle	Ported	-	<synthetic>	0	3727df61c7ae72da	placement=companion vis=private
+member	getHeightPKM$handle	getHeightPKM$handle	Ported	-	<synthetic>	0	7018b7b80343bbb8	placement=companion vis=private
+member	getWidthPKM$handle	getWidthPKM$handle	Ported	-	<synthetic>	0	8f7c00aead3d7d6d	placement=companion vis=private
+member	isValidPKM$handle	isValidPKM$handle	Ported	-	<synthetic>	0	103f690e6fab2e38	placement=companion vis=private
 member	com.badlogic.gdx.graphics.glutils.ETC1#ETC1_RGB8_OES	sge.graphics.glutils.ETC1#ETC1_RGB8_OES	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	41	2e16ad5aab109468	placement=companion
 member	com.badlogic.gdx.graphics.glutils.ETC1#PKM_HEADER_SIZE	sge.graphics.glutils.ETC1#PKM_HEADER_SIZE	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	40	ec9527687453c179	placement=companion
-member	com.badlogic.gdx.graphics.glutils.ETC1#decodeImage(ByteBuffer,int,ByteBuffer,int,int,int,int)	sge.graphics.glutils.ETC1#decodeImage(ByteBuffer,int,ByteBuffer,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	248	fa557aea67899832	placement=companion vis=private
+member	com.badlogic.gdx.graphics.glutils.ETC1#decodeImage(ByteBuffer,int,ByteBuffer,int,int,int,int)	sge.graphics.glutils.ETC1#decodeImage(ByteBuffer,int,ByteBuffer,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	248	19bcf0a4137df46b	placement=companion vis=private
 member	com.badlogic.gdx.graphics.glutils.ETC1#decodeImage(ETC1Data,Format,Sge)	sge.graphics.glutils.ETC1#decodeImage(ETC1Data,Format,Sge)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	174	eb55b0c1eaca8ad2	placement=companion
-member	com.badlogic.gdx.graphics.glutils.ETC1#encodeImage(ByteBuffer,int,int,int,int)	sge.graphics.glutils.ETC1#encodeImage(ByteBuffer,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	260	d93a68316688f1f1	placement=companion vis=private
+member	com.badlogic.gdx.graphics.glutils.ETC1#encodeImage(ByteBuffer,int,int,int,int)	sge.graphics.glutils.ETC1#encodeImage(ByteBuffer,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	260	b35b56bb9084c517	placement=companion vis=private
 member	com.badlogic.gdx.graphics.glutils.ETC1#encodeImage(Pixmap)	sge.graphics.glutils.ETC1#encodeImage(Pixmap)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	151	873bfa8a28bd3b84	placement=companion
-member	com.badlogic.gdx.graphics.glutils.ETC1#encodeImagePKM(ByteBuffer,int,int,int,int)	sge.graphics.glutils.ETC1#encodeImagePKM(ByteBuffer,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	274	e8c6e16c7ce85058	placement=companion vis=private
+member	com.badlogic.gdx.graphics.glutils.ETC1#encodeImagePKM(ByteBuffer,int,int,int,int)	sge.graphics.glutils.ETC1#encodeImagePKM(ByteBuffer,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	274	679547f6f979c32f	placement=companion vis=private
 member	com.badlogic.gdx.graphics.glutils.ETC1#encodeImagePKM(Pixmap)	sge.graphics.glutils.ETC1#encodeImagePKM(Pixmap)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	162	1ad0ee82212638f8	placement=companion
-member	com.badlogic.gdx.graphics.glutils.ETC1#formatHeader(ByteBuffer,int,int,int)	sge.graphics.glutils.ETC1#formatHeader(ByteBuffer,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	214	82f607396d26c04c	placement=companion
-member	com.badlogic.gdx.graphics.glutils.ETC1#getCompressedDataSize(int,int)	sge.graphics.glutils.ETC1#getCompressedDataSize(int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	204	c31eecc6798ab54e	placement=companion
-member	com.badlogic.gdx.graphics.glutils.ETC1#getHeightPKM(ByteBuffer,int)	sge.graphics.glutils.ETC1#getHeightPKM(ByteBuffer,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	228	feaca3af68cc453b	placement=companion
+member	com.badlogic.gdx.graphics.glutils.ETC1#formatHeader(ByteBuffer,int,int,int)	sge.graphics.glutils.ETC1#formatHeader(ByteBuffer,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	214	ef2e897784f61e06	placement=companion
+member	com.badlogic.gdx.graphics.glutils.ETC1#getCompressedDataSize(int,int)	sge.graphics.glutils.ETC1#getCompressedDataSize(int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	204	a2373c63bdf666db	placement=companion
+member	com.badlogic.gdx.graphics.glutils.ETC1#getHeightPKM(ByteBuffer,int)	sge.graphics.glutils.ETC1#getHeightPKM(ByteBuffer,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	228	63da57c8b2fc24c3	placement=companion
 member	com.badlogic.gdx.graphics.glutils.ETC1#getPixelSize(Format)	sge.graphics.glutils.ETC1#getPixelSize(Format)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	142	596955643119916f	placement=companion vis=private
-member	com.badlogic.gdx.graphics.glutils.ETC1#getWidthPKM(ByteBuffer,int)	sge.graphics.glutils.ETC1#getWidthPKM(ByteBuffer,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	221	951b5d6eb16eed57	placement=companion
-member	com.badlogic.gdx.graphics.glutils.ETC1#isValidPKM(ByteBuffer,int)	sge.graphics.glutils.ETC1#isValidPKM(ByteBuffer,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	235	6a2405c08720454a	placement=companion
+member	com.badlogic.gdx.graphics.glutils.ETC1#getWidthPKM(ByteBuffer,int)	sge.graphics.glutils.ETC1#getWidthPKM(ByteBuffer,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	221	fb384919bc0d0caf	placement=companion
+member	com.badlogic.gdx.graphics.glutils.ETC1#isValidPKM(ByteBuffer,int)	sge.graphics.glutils.ETC1#isValidPKM(ByteBuffer,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	235	81b2df1eca83720e	placement=companion
 member	com.badlogic.gdx.graphics.glutils.ETC1$ETC1Data#<init>(FileHandle)	sge.graphics.glutils.ETC1$ETC1Data#<init>(FileHandle)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	63	b7b24427225e09ed	
 member	com.badlogic.gdx.graphics.glutils.ETC1$ETC1Data#<init>(int,int,ByteBuffer,int)	sge.graphics.glutils.ETC1$ETC1Data#<init>(int,int,ByteBuffer,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	55	06f4ce1ebc8c452a	
 member	com.badlogic.gdx.graphics.glutils.ETC1$ETC1Data#checkNPOT()	sge.graphics.glutils.ETC1$ETC1Data#checkNPOT()	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	89	cd0d2f69498431c2	vis=private[ETC1]
@@ -11570,9 +11570,9 @@ member	com.badlogic.gdx.math.Matrix3#trn(Vector2)	sge.math.Matrix3#trn(Vector2)	
 member	com.badlogic.gdx.math.Matrix3#trn(Vector3)	sge.math.Matrix3#trn(Vector3)	Renamed	-	com/badlogic/gdx/math/Matrix3.java	400	387e5e05510ae553	
 member	com.badlogic.gdx.math.Matrix3#trn(float,float)	sge.math.Matrix3#trn(float,float)	Renamed	-	com/badlogic/gdx/math/Matrix3.java	391	9c25fddcd7767c54	
 member	com.badlogic.gdx.math.Matrix3#val	sge.math.Matrix3#val	Renamed	-	com/badlogic/gdx/math/Matrix3.java	38	06bd6c6b10ba5702	
-member	mulVec$31365$handle	mulVec$31365$handle	Ported	-	<synthetic>	0	1678dd181bee3473	placement=companion vis=private
-member	prj$29473$handle	prj$29473$handle	Ported	-	<synthetic>	0	7641d820f763526f	placement=companion vis=private
-member	rot$31376$handle	rot$31376$handle	Ported	-	<synthetic>	0	14721de60ed58045	placement=companion vis=private
+member	mulVec$handle	mulVec$handle	Ported	-	<synthetic>	0	ea9e68471224519e	placement=companion vis=private
+member	prj$handle	prj$handle	Ported	-	<synthetic>	0	7e43cbe6087e10f7	placement=companion vis=private
+member	rot$handle	rot$handle	Ported	-	<synthetic>	0	537122ac8c67eee6	placement=companion vis=private
 member	com.badlogic.gdx.math.Matrix4#<init>()	sge.math.Matrix4#<init>()	Renamed	-	com/badlogic/gdx/math/Matrix4.java	90	8bd8305e9ab0fb39	
 member	com.badlogic.gdx.math.Matrix4#<init>(Array)	sge.math.Matrix4#<init>(Array<float>)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	107	ee689bf0fe06e943	
 member	com.badlogic.gdx.math.Matrix4#<init>(Matrix4)	sge.math.Matrix4#<init>(Matrix4)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	99	0e1c33fa17773723	
@@ -11625,14 +11625,14 @@ member	com.badlogic.gdx.math.Matrix4#mul(Array,Array)	sge.math.Matrix4#mul(Array
 member	com.badlogic.gdx.math.Matrix4#mul(Matrix4)	sge.math.Matrix4#mul(Matrix4)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	324	62502ff36a17ee3f	
 member	com.badlogic.gdx.math.Matrix4#mulLeft(Matrix4)	sge.math.Matrix4#mulLeft(Matrix4)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	337	9076f0b565f5afa5	
 member	com.badlogic.gdx.math.Matrix4#mulVec(Array,Array)	sge.math.Matrix4#mulVec(Array<float>,Array<float>)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1300	aa077eda909701cb	placement=companion
-member	com.badlogic.gdx.math.Matrix4#mulVec(Array,Array,int,int,int)	sge.math.Matrix4#mulVec(Array<float>,Array<float>,int,int,int)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1209	b92e6952067b536d	placement=companion
+member	com.badlogic.gdx.math.Matrix4#mulVec(Array,Array,int,int,int)	sge.math.Matrix4#mulVec(Array<float>,Array<float>,int,int,int)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1209	874446890192c303	placement=companion
 member	com.badlogic.gdx.math.Matrix4#prj(Array,Array)	sge.math.Matrix4#prj(Array<float>,Array<float>)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1315	f4cec373956f7791	placement=companion
-member	com.badlogic.gdx.math.Matrix4#prj(Array,Array,int,int,int)	sge.math.Matrix4#prj(Array<float>,Array<float>,int,int,int)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1227	6b7d37dcb1d32039	placement=companion
+member	com.badlogic.gdx.math.Matrix4#prj(Array,Array,int,int,int)	sge.math.Matrix4#prj(Array<float>,Array<float>,int,int,int)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1227	56d93912ede61e77	placement=companion
 member	com.badlogic.gdx.math.Matrix4#quat	sge.math.Matrix4#quat	Renamed	-	com/badlogic/gdx/math/Matrix4.java	76	3d9e16b076ae6e69	placement=companion
 member	com.badlogic.gdx.math.Matrix4#quat2	sge.math.Matrix4#quat2	Renamed	-	com/badlogic/gdx/math/Matrix4.java	77	f881a057e90c4efe	placement=companion
 member	com.badlogic.gdx.math.Matrix4#right	sge.math.Matrix4#right	Renamed	-	com/badlogic/gdx/math/Matrix4.java	83	c826859e05508821	placement=companion
 member	com.badlogic.gdx.math.Matrix4#rot(Array,Array)	sge.math.Matrix4#rot(Array<float>,Array<float>)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1331	218fcb37fcf6b45a	placement=companion
-member	com.badlogic.gdx.math.Matrix4#rot(Array,Array,int,int,int)	sge.math.Matrix4#rot(Array<float>,Array<float>,int,int,int)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1245	b370ba0da646c96d	placement=companion
+member	com.badlogic.gdx.math.Matrix4#rot(Array,Array,int,int,int)	sge.math.Matrix4#rot(Array<float>,Array<float>,int,int,int)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1245	b59a42ab32b57948	placement=companion
 member	com.badlogic.gdx.math.Matrix4#rotate(Quaternion)	sge.math.Matrix4#rotate(Quaternion)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1509	65262130ec0622d7	
 member	com.badlogic.gdx.math.Matrix4#rotate(Vector3,Vector3)	sge.math.Matrix4#rotate(Vector3,Vector3)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1561	889d28f575884528	
 member	com.badlogic.gdx.math.Matrix4#rotate(Vector3,float)	sge.math.Matrix4#rotate(Vector3,float)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	1462	71527bd55c4d479e	
@@ -16182,30 +16182,30 @@ member	com.badlogic.gdx.utils.BooleanArray#toString()	sge.utils.BooleanArray#toS
 member	com.badlogic.gdx.utils.BooleanArray#toString(String)	sge.utils.BooleanArray#toString(String)	Renamed	-	com/badlogic/gdx/utils/BooleanArray.java	393	b42588412677c822	
 member	com.badlogic.gdx.utils.BooleanArray#truncate(int)	sge.utils.BooleanArray#truncate(int)	Renamed	-	com/badlogic/gdx/utils/BooleanArray.java	338	e1cdeaf71282d6fa	
 member	com.badlogic.gdx.utils.BooleanArray#with(Array)	sge.utils.BooleanArray#with(Array<boolean>)	Renamed	-	com/badlogic/gdx/utils/BooleanArray.java	406	20bd5389c334e2e2	placement=companion
-member	clear$42835$handle	clear$42835$handle	Ported	-	<synthetic>	0	157cfbb77d4e13b4	placement=companion vis=private
-member	copyJni$42603$handle	copyJni$42603$handle	Ported	-	<synthetic>	0	484e955043956ed8	placement=companion vis=private
-member	copyJni$42610$handle	copyJni$42610$handle	Ported	-	<synthetic>	0	b1ae5a6566a1825c	placement=companion vis=private
-member	copyJni$42616$handle	copyJni$42616$handle	Ported	-	<synthetic>	0	579823d9fbf9cebb	placement=companion vis=private
-member	copyJni$42622$handle	copyJni$42622$handle	Ported	-	<synthetic>	0	15961ffeeff08f57	placement=companion vis=private
-member	copyJni$42628$handle	copyJni$42628$handle	Ported	-	<synthetic>	0	08c995dbc1fd56e0	placement=companion vis=private
-member	copyJni$42634$handle	copyJni$42634$handle	Ported	-	<synthetic>	0	abea91ecf9ac9993	placement=companion vis=private
-member	copyJni$42639$handle	copyJni$42639$handle	Ported	-	<synthetic>	0	83d9266444a67f3d	placement=companion vis=private
-member	copyJni$42645$handle	copyJni$42645$handle	Ported	-	<synthetic>	0	59ed266fc4ca3482	placement=companion vis=private
-member	copyJni$42676$handle	copyJni$42676$handle	Ported	-	<synthetic>	0	ce1ffaf5c5ead8a0	placement=companion vis=private
-member	find$42744$handle	find$42744$handle	Ported	-	<synthetic>	0	32c0a9327157f76b	placement=companion vis=private
-member	find$42750$handle	find$42750$handle	Ported	-	<synthetic>	0	9e420b673460de25	placement=companion vis=private
-member	find$42756$handle	find$42756$handle	Ported	-	<synthetic>	0	de3a837f72211288	placement=companion vis=private
-member	find$42762$handle	find$42762$handle	Ported	-	<synthetic>	0	57cef91cd388ae1d	placement=companion vis=private
-member	find$42769$handle	find$42769$handle	Ported	-	<synthetic>	0	7e8e1db98659963c	placement=companion vis=private
-member	find$42776$handle	find$42776$handle	Ported	-	<synthetic>	0	bcc7b88494e9f6bc	placement=companion vis=private
-member	find$42783$handle	find$42783$handle	Ported	-	<synthetic>	0	efcce14ec3ef35b3	placement=companion vis=private
-member	find$42790$handle	find$42790$handle	Ported	-	<synthetic>	0	d4072e6b5039ddd3	placement=companion vis=private
-member	freeMemory$42821$handle	freeMemory$42821$handle	Ported	-	<synthetic>	0	732ef13da740776f	placement=companion vis=private
-member	getBufferAddress$42829$handle	getBufferAddress$42829$handle	Ported	-	<synthetic>	0	6a7441b39014b63a	placement=companion vis=private
-member	newDisposableByteBuffer$42826$handle	newDisposableByteBuffer$42826$handle	Ported	-	<synthetic>	0	c72c8c7c2471b7d5	placement=companion vis=private
+member	clear$handle	clear$handle	Ported	-	<synthetic>	0	a19e678ffe3807e4	placement=companion vis=private
+member	copyJni$0$handle	copyJni$0$handle	Ported	-	<synthetic>	0	304d493565dca049	placement=companion vis=private
+member	copyJni$1$handle	copyJni$1$handle	Ported	-	<synthetic>	0	32ce87a4e6239d83	placement=companion vis=private
+member	copyJni$2$handle	copyJni$2$handle	Ported	-	<synthetic>	0	e2dbc4f3db4750d8	placement=companion vis=private
+member	copyJni$3$handle	copyJni$3$handle	Ported	-	<synthetic>	0	927b1ec8c56957b9	placement=companion vis=private
+member	copyJni$4$handle	copyJni$4$handle	Ported	-	<synthetic>	0	d183857b3c7fcaa7	placement=companion vis=private
+member	copyJni$5$handle	copyJni$5$handle	Ported	-	<synthetic>	0	ab71119e91c036f9	placement=companion vis=private
+member	copyJni$6$handle	copyJni$6$handle	Ported	-	<synthetic>	0	6bf58eea24acb08c	placement=companion vis=private
+member	copyJni$7$handle	copyJni$7$handle	Ported	-	<synthetic>	0	8cd75f43abe65ce8	placement=companion vis=private
+member	copyJni$8$handle	copyJni$8$handle	Ported	-	<synthetic>	0	5525848e94f74564	placement=companion vis=private
+member	find$0$handle	find$0$handle	Ported	-	<synthetic>	0	2570e39238c351f8	placement=companion vis=private
+member	find$1$handle	find$1$handle	Ported	-	<synthetic>	0	79fe2567edd32543	placement=companion vis=private
+member	find$2$handle	find$2$handle	Ported	-	<synthetic>	0	4eb5cfb7c5b91edb	placement=companion vis=private
+member	find$3$handle	find$3$handle	Ported	-	<synthetic>	0	0eb18b4b11814d03	placement=companion vis=private
+member	find$4$handle	find$4$handle	Ported	-	<synthetic>	0	3ce52a8a0c97d9b9	placement=companion vis=private
+member	find$5$handle	find$5$handle	Ported	-	<synthetic>	0	16d39986b3fffd55	placement=companion vis=private
+member	find$6$handle	find$6$handle	Ported	-	<synthetic>	0	e370e5acb548b26a	placement=companion vis=private
+member	find$7$handle	find$7$handle	Ported	-	<synthetic>	0	aae446fdd9a18c68	placement=companion vis=private
+member	freeMemory$handle	freeMemory$handle	Ported	-	<synthetic>	0	2edaec6f7c3eb8c6	placement=companion vis=private
+member	getBufferAddress$handle	getBufferAddress$handle	Ported	-	<synthetic>	0	b9e9452fc3f88c9e	placement=companion vis=private
+member	newDisposableByteBuffer$handle	newDisposableByteBuffer$handle	Ported	-	<synthetic>	0	4af2dabf1536c009	placement=companion vis=private
 member	com.badlogic.gdx.utils.BufferUtils#allocatedUnsafe	sge.utils.BufferUtils#allocatedUnsafe	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	41	06b3670a889d2f66	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#bytesToElements(Buffer,int)	sge.utils.BufferUtils#bytesToElements(Buffer,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	420	a3fb0a5504230e6c	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#clear(ByteBuffer,int)	sge.utils.BufferUtils#clear(ByteBuffer,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	574	cb15b2da5a32f965	placement=companion
+member	com.badlogic.gdx.utils.BufferUtils#clear(ByteBuffer,int)	sge.utils.BufferUtils#clear(ByteBuffer,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	574	edc4783dde178d51	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#copy(Array,int,Buffer,int)	sge.utils.BufferUtils#copy(Array<byte>,int,Buffer,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	71	4f57151c128077e8	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#copy(Array,int,Buffer,int)	sge.utils.BufferUtils#copy(Array<char>,int,Buffer,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	159	56d64194bbd478bf	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#copy(Array,int,int,Buffer)	sge.utils.BufferUtils#copy(Array<char>,int,int,Buffer)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	98	714b445735acbfff	placement=companion
@@ -16220,25 +16220,25 @@ member	com.badlogic.gdx.utils.BufferUtils#copy(Array,int,Buffer,int)	sge.utils.B
 member	com.badlogic.gdx.utils.BufferUtils#copy(Array,int,int,Buffer)	sge.utils.BufferUtils#copy(Array<long>,int,int,Buffer)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	122	34ce053e70464033	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#copy(Array,int,Buffer,int)	sge.utils.BufferUtils#copy(Array<short>,int,Buffer,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	85	9db9edaf1a11bb63	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#copy(Buffer,Buffer,int)	sge.utils.BufferUtils#copy(Buffer,Buffer,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	229	1fdd088ff1a0a844	placement=companion
-member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<byte>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	582	3d65d23c8bd1f444	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<char>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	586	55d0d5cc9b0744d6	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<double>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	606	85de6d570c60df5e	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<float>,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	578	63eb8c4192e2ab9e	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<float>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	602	4d2a455cb73ca496	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<int>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	594	505582bdb924c8f6	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<long>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	598	74d41cb903167d29	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<short>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	590	8f2d717667893012	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#copyJni(Buffer,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Buffer,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	610	c650c77626878771	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<byte>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	582	47a25b2c33ea7e32	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<char>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	586	48704e6deee1a851	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<double>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	606	e6fa6e42cc1f3224	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<float>,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	578	81aa5c8c9c649e2b	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<float>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	602	f20436d7bc02344f	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<int>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	594	a4758ccf3a367dcc	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<long>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	598	c46fd0fe9f9e2120	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#copyJni(Array,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Array<short>,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	590	171057f6b945d59f	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#copyJni(Buffer,int,Buffer,int,int)	sge.utils.BufferUtils#copyJni(Buffer,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	610	0de246696a8b89d8	placement=companion vis=private
 member	com.badlogic.gdx.utils.BufferUtils#disposeUnsafeByteBuffer(ByteBuffer)	sge.utils.BufferUtils#disposeUnsafeByteBuffer(ByteBuffer)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	500	4ff49d19a7c019f7	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#elementsToBytes(Buffer,int)	sge.utils.BufferUtils#elementsToBytes(Buffer,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	439	83f04d6be1e5fd98	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#find(Array,int,int,Array,int,int)	sge.utils.BufferUtils#find(Array<float>,int,int,Array<float>,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	761	10d27a2812954ae3	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#find(Array,int,int,Array,int,int,float)	sge.utils.BufferUtils#find(Array<float>,int,int,Array<float>,int,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	777	bb65768e96f2d846	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#find(Array,int,int,Buffer,int,int)	sge.utils.BufferUtils#find(Array<float>,int,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	753	c99383369ba0cd9e	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#find(Array,int,int,Buffer,int,int,float)	sge.utils.BufferUtils#find(Array<float>,int,int,Buffer,int,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	769	ec8eb84453c15c44	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#find(Buffer,int,int,Array,int,int)	sge.utils.BufferUtils#find(Buffer,int,int,Array<float>,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	757	df488102e0293f17	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#find(Buffer,int,int,Array,int,int,float)	sge.utils.BufferUtils#find(Buffer,int,int,Array<float>,int,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	773	44eed31e29879fc5	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#find(Buffer,int,int,Buffer,int,int)	sge.utils.BufferUtils#find(Buffer,int,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	749	78c8d54dae391c5d	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#find(Buffer,int,int,Buffer,int,int,float)	sge.utils.BufferUtils#find(Buffer,int,int,Buffer,int,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	765	3a1d597311781bc4	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#find(Array,int,int,Array,int,int)	sge.utils.BufferUtils#find(Array<float>,int,int,Array<float>,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	761	60ed265bbf9e2b90	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#find(Array,int,int,Array,int,int,float)	sge.utils.BufferUtils#find(Array<float>,int,int,Array<float>,int,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	777	b5d800cec23dd747	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#find(Array,int,int,Buffer,int,int)	sge.utils.BufferUtils#find(Array<float>,int,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	753	a2dd6041fd93411c	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#find(Array,int,int,Buffer,int,int,float)	sge.utils.BufferUtils#find(Array<float>,int,int,Buffer,int,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	769	5731baee6cabe7c1	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#find(Buffer,int,int,Array,int,int)	sge.utils.BufferUtils#find(Buffer,int,int,Array<float>,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	757	2390c9c743d0d7a8	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#find(Buffer,int,int,Array,int,int,float)	sge.utils.BufferUtils#find(Buffer,int,int,Array<float>,int,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	773	840a676a998fa126	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#find(Buffer,int,int,Buffer,int,int)	sge.utils.BufferUtils#find(Buffer,int,int,Buffer,int,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	749	b8211fdff2f65b83	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#find(Buffer,int,int,Buffer,int,int,float)	sge.utils.BufferUtils#find(Buffer,int,int,Buffer,int,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	765	5a368eeb86487fd6	placement=companion vis=private
 member	com.badlogic.gdx.utils.BufferUtils#findFloats(Array,int,Array,int)	sge.utils.BufferUtils#findFloats(Array<float>,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	381	ee379e827af28ad9	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#findFloats(Array,int,Array,int,float)	sge.utils.BufferUtils#findFloats(Array<float>,int,Array<float>,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	397	1f85539c138c533c	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#findFloats(Array,int,Buffer,int)	sge.utils.BufferUtils#findFloats(Array<float>,int,Buffer,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	373	80bda474e900dca9	placement=companion
@@ -16247,14 +16247,14 @@ member	com.badlogic.gdx.utils.BufferUtils#findFloats(Buffer,int,Array,int)	sge.u
 member	com.badlogic.gdx.utils.BufferUtils#findFloats(Buffer,int,Array,int,float)	sge.utils.BufferUtils#findFloats(Buffer,int,Array<float>,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	393	e15a1a200a3a9cc9	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#findFloats(Buffer,int,Buffer,int)	sge.utils.BufferUtils#findFloats(Buffer,int,Buffer,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	369	b5c47d70162ee21b	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#findFloats(Buffer,int,Buffer,int,float)	sge.utils.BufferUtils#findFloats(Buffer,int,Buffer,int,float)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	385	f98acdad9b7a0482	placement=companion
-member	com.badlogic.gdx.utils.BufferUtils#freeMemory(ByteBuffer)	sge.utils.BufferUtils#freeMemory(ByteBuffer)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	561	cb4911b3736b6906	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#freeMemory(ByteBuffer)	sge.utils.BufferUtils#freeMemory(ByteBuffer)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	561	c5db1cd1fa4abb39	placement=companion vis=private
 member	com.badlogic.gdx.utils.BufferUtils#getAllocatedBytesUnsafe()	sge.utils.BufferUtils#getAllocatedBytesUnsafe()	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	548	5749be6a191c99a4	placement=companion
-member	com.badlogic.gdx.utils.BufferUtils#getBufferAddress(Buffer)	sge.utils.BufferUtils#getBufferAddress(Buffer)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	569	ee824ea31522989f	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#getBufferAddress(Buffer)	sge.utils.BufferUtils#getBufferAddress(Buffer)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	569	ca67aa2da5ac7e36	placement=companion vis=private
 member	com.badlogic.gdx.utils.BufferUtils#getUnsafeBufferAddress(Buffer)	sge.utils.BufferUtils#getUnsafeBufferAddress(Buffer)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	531	674c3116d2b915c1	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#isUnsafeByteBuffer(ByteBuffer)	sge.utils.BufferUtils#isUnsafeByteBuffer(ByteBuffer)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	510	bd34ec133fc1b955	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#newByteBuffer(int)	sge.utils.BufferUtils#newByteBuffer(int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	470	0c25abad906d404d	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#newCharBuffer(int)	sge.utils.BufferUtils#newCharBuffer(int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	482	e7662406e43bff0a	placement=companion
-member	com.badlogic.gdx.utils.BufferUtils#newDisposableByteBuffer(int)	sge.utils.BufferUtils#newDisposableByteBuffer(int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	565	c58ae8849fb7699a	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#newDisposableByteBuffer(int)	sge.utils.BufferUtils#newDisposableByteBuffer(int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	565	fb469d47756b93de	placement=companion vis=private
 member	com.badlogic.gdx.utils.BufferUtils#newDoubleBuffer(int)	sge.utils.BufferUtils#newDoubleBuffer(int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	464	38997e84d2a6704a	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#newFloatBuffer(int)	sge.utils.BufferUtils#newFloatBuffer(int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	458	adfab60f60e03c62	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#newIntBuffer(int)	sge.utils.BufferUtils#newIntBuffer(int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	488	97cde7529c560f1e	placement=companion
@@ -16271,27 +16271,27 @@ member	com.badlogic.gdx.utils.BufferUtils#transform(Buffer,int,int,int,Matrix3)	
 member	com.badlogic.gdx.utils.BufferUtils#transform(Buffer,int,int,int,Matrix3,int)	sge.utils.BufferUtils#transform(Buffer,int,int,int,Matrix3,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	335	0a88846680e1e639	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#transform(Buffer,int,int,int,Matrix4)	sge.utils.BufferUtils#transform(Buffer,int,int,int,Matrix4)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	242	ffa3fcf40d453a32	placement=companion
 member	com.badlogic.gdx.utils.BufferUtils#transform(Buffer,int,int,int,Matrix4,int)	sge.utils.BufferUtils#transform(Buffer,int,int,int,Matrix4,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	265	a792af3e386f8742	placement=companion
-member	com.badlogic.gdx.utils.BufferUtils#transformV2M3Jni(Array,int,int,Array,int)	sge.utils.BufferUtils#transformV2M3Jni(Array<float>,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	745	23a7ddad0f1a7f5f	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#transformV2M3Jni(Buffer,int,int,Array,int)	sge.utils.BufferUtils#transformV2M3Jni(Buffer,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	741	6ed0bec1fc0f9fd6	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#transformV2M4Jni(Array,int,int,Array,int)	sge.utils.BufferUtils#transformV2M4Jni(Array<float>,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	729	cda186282c57cb36	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#transformV2M4Jni(Buffer,int,int,Array,int)	sge.utils.BufferUtils#transformV2M4Jni(Buffer,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	725	63cce1db3bbf149d	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#transformV3M3Jni(Array,int,int,Array,int)	sge.utils.BufferUtils#transformV3M3Jni(Array<float>,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	737	ff1c82f82f90b005	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#transformV3M3Jni(Buffer,int,int,Array,int)	sge.utils.BufferUtils#transformV3M3Jni(Buffer,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	733	8606547fbec3230d	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#transformV3M4Jni(Array,int,int,Array,int)	sge.utils.BufferUtils#transformV3M4Jni(Array<float>,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	721	0d4e576e7ee9522c	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#transformV3M4Jni(Buffer,int,int,Array,int)	sge.utils.BufferUtils#transformV3M4Jni(Buffer,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	717	7612109653c78311	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#transformV4M4Jni(Array,int,int,Array,int)	sge.utils.BufferUtils#transformV4M4Jni(Array<float>,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	713	00852a72b5288134	placement=companion vis=private
-member	com.badlogic.gdx.utils.BufferUtils#transformV4M4Jni(Buffer,int,int,Array,int)	sge.utils.BufferUtils#transformV4M4Jni(Buffer,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	709	20abc096bd3ac671	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#transformV2M3Jni(Array,int,int,Array,int)	sge.utils.BufferUtils#transformV2M3Jni(Array<float>,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	745	f3416114f3cf7d57	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#transformV2M3Jni(Buffer,int,int,Array,int)	sge.utils.BufferUtils#transformV2M3Jni(Buffer,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	741	ae88b781d7be2ed6	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#transformV2M4Jni(Array,int,int,Array,int)	sge.utils.BufferUtils#transformV2M4Jni(Array<float>,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	729	9e4f40f8c78823f6	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#transformV2M4Jni(Buffer,int,int,Array,int)	sge.utils.BufferUtils#transformV2M4Jni(Buffer,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	725	6e8e9091b23415fc	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#transformV3M3Jni(Array,int,int,Array,int)	sge.utils.BufferUtils#transformV3M3Jni(Array<float>,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	737	5955a26754192f9c	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#transformV3M3Jni(Buffer,int,int,Array,int)	sge.utils.BufferUtils#transformV3M3Jni(Buffer,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	733	34c7dcbdb8fdc7fb	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#transformV3M4Jni(Array,int,int,Array,int)	sge.utils.BufferUtils#transformV3M4Jni(Array<float>,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	721	2ff84df13c9255ff	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#transformV3M4Jni(Buffer,int,int,Array,int)	sge.utils.BufferUtils#transformV3M4Jni(Buffer,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	717	7fa967569e793492	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#transformV4M4Jni(Array,int,int,Array,int)	sge.utils.BufferUtils#transformV4M4Jni(Array<float>,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	713	7eaade019e519b9a	placement=companion vis=private
+member	com.badlogic.gdx.utils.BufferUtils#transformV4M4Jni(Buffer,int,int,Array,int)	sge.utils.BufferUtils#transformV4M4Jni(Buffer,int,int,Array<float>,int)	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	709	37f0652d42998337	placement=companion vis=private
 member	com.badlogic.gdx.utils.BufferUtils#unsafeBuffers	sge.utils.BufferUtils#unsafeBuffers	Renamed	-	com/badlogic/gdx/utils/BufferUtils.java	40	754671eb3db2e7b0	placement=companion
-member	transformV2M3Jni$42730$handle	transformV2M3Jni$42730$handle	Ported	-	<synthetic>	0	b88bc18e0417143e	placement=companion vis=private
-member	transformV2M3Jni$42738$handle	transformV2M3Jni$42738$handle	Ported	-	<synthetic>	0	420d6afad97d3467	placement=companion vis=private
-member	transformV2M4Jni$42699$handle	transformV2M4Jni$42699$handle	Ported	-	<synthetic>	0	2d54d1ea80f5843e	placement=companion vis=private
-member	transformV2M4Jni$42708$handle	transformV2M4Jni$42708$handle	Ported	-	<synthetic>	0	47f8d977011685bd	placement=companion vis=private
-member	transformV3M3Jni$42729$handle	transformV3M3Jni$42729$handle	Ported	-	<synthetic>	0	579b97dfc39434ad	placement=companion vis=private
-member	transformV3M3Jni$42737$handle	transformV3M3Jni$42737$handle	Ported	-	<synthetic>	0	0608a9f386acd5cf	placement=companion vis=private
-member	transformV3M4Jni$42698$handle	transformV3M4Jni$42698$handle	Ported	-	<synthetic>	0	87133693b3e84a3f	placement=companion vis=private
-member	transformV3M4Jni$42707$handle	transformV3M4Jni$42707$handle	Ported	-	<synthetic>	0	cd2e5fbb632babec	placement=companion vis=private
-member	transformV4M4Jni$42697$handle	transformV4M4Jni$42697$handle	Ported	-	<synthetic>	0	687ef7f0b7419e76	placement=companion vis=private
-member	transformV4M4Jni$42706$handle	transformV4M4Jni$42706$handle	Ported	-	<synthetic>	0	1362d66c00e6cae5	placement=companion vis=private
+member	transformV2M3Jni$0$handle	transformV2M3Jni$0$handle	Ported	-	<synthetic>	0	71c8a2fa7ab65caf	placement=companion vis=private
+member	transformV2M3Jni$1$handle	transformV2M3Jni$1$handle	Ported	-	<synthetic>	0	67753070b39b21dd	placement=companion vis=private
+member	transformV2M4Jni$0$handle	transformV2M4Jni$0$handle	Ported	-	<synthetic>	0	8fe318b5c7a88a5b	placement=companion vis=private
+member	transformV2M4Jni$1$handle	transformV2M4Jni$1$handle	Ported	-	<synthetic>	0	39612b3783b65f9a	placement=companion vis=private
+member	transformV3M3Jni$0$handle	transformV3M3Jni$0$handle	Ported	-	<synthetic>	0	ca2f45e5cb164e62	placement=companion vis=private
+member	transformV3M3Jni$1$handle	transformV3M3Jni$1$handle	Ported	-	<synthetic>	0	8dc0a88ea1090b78	placement=companion vis=private
+member	transformV3M4Jni$0$handle	transformV3M4Jni$0$handle	Ported	-	<synthetic>	0	338a26ad117f62a4	placement=companion vis=private
+member	transformV3M4Jni$1$handle	transformV3M4Jni$1$handle	Ported	-	<synthetic>	0	3031ce670c90063e	placement=companion vis=private
+member	transformV4M4Jni$0$handle	transformV4M4Jni$0$handle	Ported	-	<synthetic>	0	ce2950f252156090	placement=companion vis=private
+member	transformV4M4Jni$1$handle	transformV4M4Jni$1$handle	Ported	-	<synthetic>	0	826a19b7a79e950a	placement=companion vis=private
 member	com.badlogic.gdx.utils.ByteArray#<init>()	sge.utils.ByteArray#<init>()	Renamed	-	com/badlogic/gdx/utils/ByteArray.java	32	bf85050fa1a35e4a	
 member	com.badlogic.gdx.utils.ByteArray#<init>(Array)	sge.utils.ByteArray#<init>(Array<byte>)	Renamed	-	com/badlogic/gdx/utils/ByteArray.java	61	da67deb37c8ed451	
 member	com.badlogic.gdx.utils.ByteArray#<init>(ByteArray)	sge.utils.ByteArray#<init>(ByteArray)	Renamed	-	com/badlogic/gdx/utils/ByteArray.java	52	ddc98b6a5fd5ab0a	

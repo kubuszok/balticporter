@@ -40,9 +40,11 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
       id
     val mhSym = mint("MethodHandle", "java.lang.invoke.MethodHandle", Flags(), SymId.None, TypeRepr.NoType)
     mhRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, mhSym)
+    val names = handleNames(program, natives)
     val handleSym: Map[SymId, SymId] = natives.iterator.map { m =>
       val owner = program.symbolOf(m).map(_.owner).getOrElse(SymId.None)
-      m -> mint(handleName(program, m), handleName(program, m), Flags(isStatic = true, isPrivate = true), owner, mhRef)
+      val n     = names(m)
+      m -> mint(n, n, Flags(isStatic = true, isPrivate = true), owner, mhRef)
     }.toMap
 
     // DECISION PROVENANCE: one row per NATIVE method, which is already declaration-level — the
@@ -59,7 +61,7 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
           subjectFqn = s.fullName,
           detail = Map(
             "from" -> "java `native` (JNI), declared without a body",
-            "to"   -> s"a Panama downcall through the generated `${handleName(program, m)}` handle",
+            "to"   -> s"a Panama downcall through the generated `${names(m)}` handle",
             "why"  -> ("JNI glue is hand-written C on the JVM and absent from every other backend; " +
               "a `java.lang.foreign` downcall is derivable from the signature alone"),
           ),
@@ -92,9 +94,49 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
     cd.copy(body = body)
 
   // ---- FFI codegen ----
-  // include the method's SymId so OVERLOADED natives (same name, e.g. `copyJni(float[])` and
-  // `copyJni(int[])`) get DISTINCT handle fields instead of colliding.
-  private def handleName(p: Program, m: SymId): String = p.symbolOf(m).map(_.name).getOrElse("fn") + "$" + m.raw + "$handle"
+
+  /** THE HANDLE FIELD'S NAME, for every native at once — and it is keyed on a fact about the
+    * METHOD, never on a mint counter. `ENGINE-LIMITS.md` M10.
+    *
+    * It used to be `<method>$<SymId.raw>$handle`. `SymId.raw` is the FRONTEND'S MINT COUNTER, so
+    * the name held only for as long as nothing before that method interned one more symbol than it
+    * used to — and a conditional gaining a conversion in an unrelated compilation unit moved 122
+    * member digests across four types the change never touched. That is not a cosmetic problem:
+    * `members.tsv` is the blast radius `CLAUDE.md` §5.1 makes available BEFORE a compile and calls
+    * a stronger revert check than any count, and a name keyed on the counter is precisely what
+    * defeats it. The general rule, which is why this is worth a comment this long: **no identifier
+    * the engine EMITS may be keyed on a mint counter.**
+    *
+    * WHAT THE DISAMBIGUATOR IS FOR is the only question, and this transform already answered it:
+    * two `native` methods sharing one name in one owner — `copyJni(float[]…)`, `copyJni(int[]…)` —
+    * need distinct fields. So the key is what java itself overloads on, and the name says WHICH
+    * OVERLOAD rather than which mint:
+    *
+    *   - the only native of that name in that owner: `freeMemory$handle`, and nothing can move it;
+    *   - one of several: `copyJni$0$handle`, `copyJni$1$handle`, … ordered by the ERASED SIGNATURE,
+    *     sorted — so the ordinal follows a fact about the class and not the order the frontend
+    *     happened to visit them in. Adding or retyping an overload can renumber its siblings, and
+    *     that is honest: it is a change to the class, not to an unrelated file.
+    *
+    * NOT the `FunctionDescriptor`, which is the near-miss worth naming: it erases every reference
+    * to `ADDRESS`, so libGDX's three `copyJni` overloads share ONE descriptor between them and a
+    * name keyed on it would collide. The rendering is `TirPrinter.tpe` at `Style.canonical` — the
+    * existing total, id-free renderer — rather than a second one written here, for the same reason
+    * this file now derives the name ONCE: [[invoke]] reads it back off the minted symbol instead of
+    * re-deriving it, so there is no second copy to disagree. */
+  private def handleNames(program: Program, natives: Set[SymId]): Map[SymId, String] =
+    given Program = program
+    def nameOf(m: SymId): String  = program.symbolOf(m).map(_.name).getOrElse("fn")
+    def ownerOf(m: SymId): SymId  = program.symbolOf(m).map(_.owner).getOrElse(SymId.None)
+    def sigOf(m: SymId): String   = program.symbolOf(m).map(_.info) match
+      case Some(TypeRepr.MethodType(ps, r, _)) =>
+        ps.map((_, t) => TirPrinter.tpe(t, TirPrinter.Style.canonical)).mkString(",") +
+          ":" + TirPrinter.tpe(r, TirPrinter.Style.canonical)
+      case _ => ""
+    natives.toList.groupBy(m => (ownerOf(m), nameOf(m))).flatMap { case ((_, n), ms) =>
+      if ms.sizeIs == 1 then List(ms.head -> s"$n$$handle")
+      else ms.sortBy(sigOf).zipWithIndex.map((m, i) => m -> s"$n$$$i$$handle")
+    }
 
   /** `Linker.nativeLinker().downcallHandle(lookup.find("name").orElseThrow(), descriptor)`. */
   private def downcall(d: Tree.DefDef)(using p: Program): String =
@@ -109,7 +151,10 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
 
   /** `handle.invokeExact(params).asInstanceOf[Ret]` (or a Unit-discarding block for void). */
   private def invoke(d: Tree.DefDef, hs: SymId)(using p: Program): String =
-    val h      = handleName(p, d.symbol)
+    // read the name off the MINTED SYMBOL rather than re-deriving it: one derivation, so the field
+    // and the call that reads it cannot drift apart (the two used to be two calls of one function,
+    // which is the same defect with a shorter fuse).
+    val h      = p.symbolOf(hs).map(_.name).getOrElse("fn$handle")
     val params = d.paramss.flatten.flatMap(v => p.symbolOf(v.symbol).map(_.name)).mkString(", ")
     val ret    = d.returnTpt.tpe
     if isVoid(ret) then s"{ $h.invokeExact($params); () }"

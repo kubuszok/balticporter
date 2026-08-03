@@ -4442,7 +4442,7 @@ optional:
 
 *Fix kind: (a) engine — measurement machinery, no library involved.*
 
-### M10. An emitted IDENTIFIER keyed on a raw `SymId` turns a ONE-SYMBOL change into a 122-member blast — and `members.tsv` is exactly the instrument it defeats. **OPEN**
+### M10. An emitted IDENTIFIER keyed on a raw `SymId` turns a ONE-SYMBOL change into a 122-member blast — and `members.tsv` is exactly the instrument it defeats. **CLOSED**
 
 `PanamaFfiTransform.handleName` names a downcall handle `<method>$<SymId.raw>$handle`. `SymId.raw`
 is the frontend's MINT COUNTER, so the name is stable only for as long as nothing before that method
@@ -4476,13 +4476,44 @@ Two things this is NOT:
   2 findings for it. This is the same cause reaching EMITTED TEXT instead of a finding id, which is
   a larger blast and a worse one — a finding id is diagnostic, a member name is the port.
 
-The fix, priced and deliberately not taken in the wave that measured it (one change, one
-measurement): derive the disambiguator from something stable about the METHOD — its owner and erased
-signature — rather than from the mint counter. The general rule, which is what makes this worth an
-entry: **no identifier the engine EMITS may be keyed on a mint counter.** A name a human reads and a
-build product carries must not move because an unrelated file gained a conversion.
+The general rule, which is what makes this worth an entry: **no identifier the engine EMITS may be
+keyed on a mint counter.** A name a human reads and a build product carries must not move because an
+unrelated file gained a conversion.
 
-*Fix kind: (a) engine — `PanamaFfiTransform.handleName`.*
+**HOW IT CLOSED.** `PanamaFfiTransform.handleNames` asks what the disambiguator is FOR, which the
+transform's own comment had already answered: two `native` methods sharing one name in one owner
+(`copyJni(float[]…)`, `copyJni(int[]…)`) need distinct fields. So the key is what java itself
+overloads on — the erased signature — and the name says WHICH OVERLOAD:
+
+- the only native of that name in its owner is `freeMemory$handle`, with **no disambiguator at
+  all**, and nothing can move it. That is the majority case and the one the counter was taxing for
+  nothing;
+- one of several is `copyJni$0$handle`, `copyJni$1$handle`, … ordered by the erased signature,
+  SORTED, so the ordinal follows a fact about the class and not the order the frontend visited them
+  in. Adding or retyping an overload renumbers its siblings, and that is honest — it is a change to
+  that class.
+
+Three things worth keeping, because each is a place the obvious answer is wrong:
+
+- **not the `FunctionDescriptor`.** It is the natural key and it COLLIDES: every reference erases to
+  `ADDRESS`, so libGDX's three `copyJni` overloads share one descriptor between them. The parameter
+  TYPES distinguish them; the FFI layout does not;
+- **not a hash, and not a new renderer.** The signature is rendered with `TirPrinter.tpe` at
+  `Style.canonical` — the existing total, id-free renderer, which is what `canonical` is FOR — so a
+  node kind added to the IR cannot silently render as nothing here;
+- **the name is now derived ONCE.** `handleName` was a pure function called twice, at the field and
+  at the call that reads it; the minted symbol carries the name and `invoke` reads it back. Two
+  derivations of one identifier is the same defect with a longer fuse, which is `F8`'s finding and
+  the reason it is not left as "it is a pure function, it cannot drift".
+
+Measured on the corpus: **exactly the four Panama types moved — `BufferUtils` 63, `Gdx2DPixmap` 35,
+`ETC1` 17, `Matrix4` 7 — and every other member digest on all fifteen ports stayed put.** That is
+the same 122 rows the JS-E05 wave reported, moving ONCE, to names nothing can move again. The
+regression fixture is the entry itself: `PanamaFfiTransformSpec` emits one class twice, the second
+time with an unrelated method declared ahead of the natives, and asserts the handle names are
+identical — which fails on the old key and is the only thing in this repository that can see it.
+
+*Fix kind: (a) engine — `PanamaFfiTransform.handleNames`.*
 
 ---
 

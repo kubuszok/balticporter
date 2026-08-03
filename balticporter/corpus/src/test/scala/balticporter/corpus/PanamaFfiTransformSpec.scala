@@ -23,7 +23,7 @@ class PanamaFfiTransformSpec extends munit.FunSuite:
   private val out   = new TirEmitter(after).emit
 
   test("generates a downcall MethodHandle per native, with a signature-derived descriptor") {
-    assert(clue(out).matches("(?s).*private val add\\$\\d+\\$handle: java.lang.invoke.MethodHandle.*"))
+    assert(clue(out).contains("private val add$handle: java.lang.invoke.MethodHandle"))
     assert(out.contains("""java.lang.foreign.Linker.nativeLinker().downcallHandle("""))
     assert(out.contains("""defaultLookup().find("add").orElseThrow()"""))
     // int add(int,int) → descriptor of JAVA_INT × 3
@@ -51,10 +51,53 @@ class PanamaFfiTransformSpec extends munit.FunSuite:
   }
 
   test("replaces the native body with a handle invocation") {
-    assert(out.matches("(?s).*def add\\(a: scala.Int, b: scala.Int\\): scala.Int = add\\$\\d+\\$handle.invokeExact\\(a, b\\).asInstanceOf\\[scala.Int\\].*"))
+    assert(clue(out).contains(
+      "def add(a: scala.Int, b: scala.Int): scala.Int = add$handle.invokeExact(a, b).asInstanceOf[scala.Int]"))
   }
 
   test("void native uses ofVoid and a Unit-discarding body") {
     assert(out.contains("FunctionDescriptor.ofVoid(java.lang.foreign.ValueLayout.JAVA_INT)"))
-    assert(out.matches("(?s).*def log\\(level: scala.Int\\): scala.Unit = \\{ log\\$\\d+\\$handle.invokeExact\\(level\\); \\(\\) \\}.*"))
+    assert(clue(out).contains("def log(level: scala.Int): scala.Unit = { log$handle.invokeExact(level); () }"))
+  }
+
+  // -- ENGINE-LIMITS M10: the handle NAME is keyed on the method, never on the mint counter -------
+
+  private val overloaded =
+    """package demo;
+      |class Over {
+      |  public static native void copyJni(float[] src, int n);
+      |  public static native void copyJni(int[] src, int n);
+      |  public static native void copyJni(short[] src, int n);
+      |  public static native long only(long x);
+      |}
+      |""".stripMargin
+
+  private def emit(src: String): String =
+    new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new PanamaFfiTransform()))).emit
+
+  test("M10 — a native with NO same-named sibling needs no disambiguator at all") {
+    assert(clue(emit(overloaded)).contains("private val only$handle:"))
+  }
+
+  test("M10 — OVERLOADED natives get distinct handles, ordered by the erased signature") {
+    val o = emit(overloaded)
+    List("copyJni$0$handle", "copyJni$1$handle", "copyJni$2$handle").foreach(n =>
+      assert(clue(o).contains(s"private val $n:"), s"missing $n"))
+    // and each body reads ITS OWN handle — the field and the call are one derivation, not two.
+    assert(o.contains("copyJni$0$handle.invokeExact"))
+    assert(o.contains("copyJni$2$handle.invokeExact"))
+  }
+
+  test("M10 — an UNRELATED declaration ahead of the natives does not move a single handle name") {
+    // THE MEASUREMENT THIS ENTRY IS ABOUT, as a fixture. Every symbol the frontend interns shifts
+    // every later `SymId`, so under the old name the whole class's emitted text moved whenever a
+    // file above it gained one — 122 member digests in four types on the JS-E05 wave, in types that
+    // change never touched. Nothing else in this repository can see that: the port still compiled,
+    // every check count was flat, and the only instrument that COULD see it is the one the name
+    // defeated.
+    val shifted = overloaded.replace("class Over {", "class Over {\n  static int unrelated(int q) { return q + 1; }")
+    val a = emit(overloaded)
+    val b = emit(shifted)
+    val handles = (s: String) => "\\w+\\$(?:\\d+\\$)?handle".r.findAllIn(s).toList.distinct.sorted
+    assertEquals(clue(handles(b)), clue(handles(a)))
   }
