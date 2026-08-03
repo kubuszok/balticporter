@@ -49,7 +49,9 @@ object MarkerCheck:
       "deliverable emission by design — close it in the engine, or drop the declaration that uses " +
       "it and inject a replacement. An ERASED one is a defect in the phase named beside it: it " +
       "deleted a marked subtree instead of discharging it, which removes the finding rather than " +
-      "the problem."
+      "the problem. A SENTINEL is a name the frontend interned because it could not resolve one " +
+      "and could not refuse either; it does NOT block the emission, and it is counted so that the " +
+      "cost of converting those two mint sites is a number rather than a guess."
 
   /** one marker, with the declaration it was minted inside. */
   final case class Sited(marker: Tree.Unportable, owner: SymId, ownerFqn: String, unit: SymId)
@@ -137,17 +139,70 @@ object MarkerCheck:
           s"; ${s.marker.kind.remedies.headOption.map(_.render).getOrElse("no remedy is recorded for this kind")}",
         s.marker.origin))
 
-    (open ++ erased).sortBy(f => (f.kind, f.owner, f.origin.line))
+    (open ++ erased ++ sentinels(after, units)).sortBy(f => (f.kind, f.owner, f.origin.line))
+
+  /** SENTINEL SYMBOLS — the marker's shape from before there was a marker, and the ONE thing on
+    * `DESIGN.md` §6.5's mint list that could not simply be converted.
+    *
+    * Two sites mint one. `SpoonTir.tpe` mints `?T` for a type variable it cannot resolve and
+    * `SpoonTir.resolveVar` mints `?var$name` for a variable reference it cannot resolve; each is a
+    * name that MUST NEVER BE PRINTED, and each one's only defence is an emitter rule that does not
+    * print it (`TirEmitter.isUnresolvedTypeVar`). That is a degradation with no counter attached:
+    * it moves no error count, produces no finding, and the emitted file is valid Scala that has
+    * silently lost a type argument or a reference.
+    *
+    * WHY THESE ARE COUNTED AND NOT MARKED. Minting a `Tree.Unportable` at those two sites would be
+    * the obvious conversion and it is the wrong one, for a reason the gate makes concrete: an open
+    * marker refuses the emission, so a port that mints even one sentinel would stop BUILDING.
+    * Whether any port does was, until this lane existed, unknown — nothing in the engine could say
+    * — and converting a site whose live frequency nobody has measured is how a mechanism takes a
+    * whole corpus down. So the number comes first, and the conversion is a decision somebody takes
+    * ON it. `ENGINE-LIMITS.md` M6's discipline, applied to the engine's own refusals rather than to
+    * a library's constructs.
+    *
+    * Reported as `sentinel` findings on the `markers` lane rather than as their own check, because
+    * they are the same fact at a different level of the tree — §6.2's rejected "symbol tags only"
+    * alternative, observed rather than designed — and a reader asking "what did this port refuse"
+    * should not have to know there are two places to look. They do NOT feed the gate.
+    *
+    * Attributed through the XREF, not through the symbol: an external symbol has no origin worth
+    * printing, and the question a reader has is which of THEIR declarations reaches it. */
+  def sentinels(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+    val ownedRoots = units.map(_.symbol).toSet
+    def rooted(s: SymId, fuel: Int): Boolean =
+      s != SymId.None && fuel > 0 &&
+        (ownedRoots(s) || program.symbolOf(s).exists(sym => rooted(sym.owner, fuel - 1)))
+    program.symbols.all.toList
+      .filter(sym => Symbol.isUnresolvedTypeVar(sym.fullName) || sym.fullName.startsWith("?var$"))
+      .sortBy(_.fullName)
+      .flatMap { sym =>
+        val here = program.usages(sym.id).filter(u => rooted(u.enclosing, 64))
+        val what = if sym.fullName.startsWith("?var$") then "variable reference" else "type variable"
+        here.headOption.map { u =>
+          Finding("sentinel", program.symbolOf(u.enclosing).map(_.fullName).getOrElse("?"),
+            s"an unresolvable $what was interned as the sentinel `${sym.fullName}`, which must " +
+              s"never be printed and whose only defence is an emitter rule that does not print it; " +
+              s"${here.size} reference(s) in this module",
+            u.site.origin)
+        }
+      }
 
   /** the OPEN markers alone — the emission gate's input (`DESIGN.md` §6.4). */
   def openMarkers(program: Program, units: List[Tree.ClassDef]): List[Sited] =
     inventory(program, units).filter(_.marker.state.isOpen)
 
   def summary(findings: List[Finding], resolved: Int): String =
-    val o = findings.count(_.kind == "open")
-    val e = findings.count(_.kind == "erased")
-    if o == 0 && e == 0 && resolved == 0 then "  no construct was marked unportable"
+    val o    = findings.count(_.kind == "open")
+    val e    = findings.count(_.kind == "erased")
+    val sent = findings.count(_.kind == "sentinel")
+    if o == 0 && e == 0 && sent == 0 && resolved == 0 then "  no construct was marked unportable"
     else
+      // at most ten rendered: a sentinel lane on a large port is a LIST, and a check summary
+      // that scrolls is one nobody reads. The complete set is in `findings.tsv`, which is what
+      // the baseline diffs and what an agent greps — the split every other lane here uses.
+      val shown = findings.take(10).map("  " + _.render).mkString("\n")
+      val more  = if findings.sizeIs > 10 then s"\n  … and ${findings.size - 10} more (findings.tsv)" else ""
       s"  open $o (the deliverable gate refuses these), erased $e (an engine defect), " +
+        s"sentinel $sent (an unresolvable name interned rather than marked — counted, NOT gated), " +
         s"discharged $resolved" +
-        (if findings.isEmpty then "" else "\n" + findings.map("  " + _.render).mkString("\n"))
+        (if findings.isEmpty then "" else "\n" + shown + more)

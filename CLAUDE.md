@@ -1052,6 +1052,28 @@ construction site of that node kind and grep the trace for the source line. Thre
 to `uncheckedGeneric` measured no change at all before a kill switch showed, in one run, that the
 cast came from the emitter.
 
+**And a bare `catch` is a KILL SWITCH somebody left on.** The rule above is about finding which code
+produces a construct; this is its twin, about finding which code produces an ANSWER. A
+`try … catch { case _: Throwable => <default> }` around a parser lookup reads as defensive and is
+not: the default is a value the rest of the computation cannot distinguish from a real result, so a
+resolution failure becomes a statement about the program. `SpoonTir.formalArity` is the worked
+example — it computed a type's declared arity inside `catch { case _: Throwable => 0 }` at five
+sites, and arity ZERO is not "unknown", it is *this type takes no type arguments*, which is what the
+emitter then wrote. A generic emitted un-applied, silently, with a green compile and no moved count.
+
+So, before writing one: **name the ONE lookup where an absent value is normal, wrap only that, and
+let everything else be seen.** Two questions settle it —
+
+- *what does the default MEAN to the caller?* If it is indistinguishable from a real answer, it is
+  not a fallback, it is a fabricated fact. Where no honest default exists, there is no honest catch;
+- *how many callers share this one?* A `catch` copied to five sites is five different questions
+  answered by one `getOrElse`. Make it one function, so narrowing it is one edit and so the next
+  reader can see what it is FOR.
+
+`CLAUDE.md` §4.58 already says this about a trivia harvest ("wrap only the lookups where an absent
+value is NORMAL; let a harvest that throws be seen") — this is the same rule, and it is here because
+the second occurrence is what makes it a rule rather than a note about comments.
+
 `sbt -client` talks to a long-running server, so a shell environment variable never reaches the
 forked migration. Gate the switch on a marker FILE.
 

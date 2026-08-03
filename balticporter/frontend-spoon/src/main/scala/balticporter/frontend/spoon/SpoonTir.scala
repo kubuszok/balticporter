@@ -879,9 +879,40 @@ object SpoonTir:
         if args.nonEmpty then args.exists(mentionsRawGeneric)
         else formalArity(r) > 0
 
+    /** the DECLARED type-parameter arity of a type reference — `Map` → 2, `String` → 0.
+      *
+      * ONE function, and the bare `catch` narrowed to the one lookup where an absent value is
+      * NORMAL. It used to read
+      *
+      * {{{ try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)
+      *     catch { case _: Throwable => 0 } }}}
+      *
+      * at FIVE sites, and the shape is the one `CLAUDE.md` §4.58 names about a harvest and the
+      * auditor hunts for generally: a broad `catch` whose default quietly means *the rule does not
+      * apply*. Here the default means arity ZERO, and arity zero is not "unknown" — it is the
+      * statement that the type takes no arguments, which is what `tpe` then emits. So a resolution
+      * failure inside a declaration Spoon HAS became a raw type rendered un-applied, silently, with
+      * a green compile.
+      *
+      * The two halves are different facts and are now spelled differently:
+      *
+      *   - '''`getTypeDeclaration` absent''' — the type is not on the classpath. Normal, extremely
+      *     common (every external non-generic class), and 0 is the only answer available. Wrapped;
+      *   - '''a declaration that cannot state its own arity''' — an engine-visible defect in the
+      *     model, and it now propagates instead of being absorbed. There is no honest default: this
+      *     function's caller is about to decide how many type arguments to emit.
+      *
+      * Note what this does NOT claim to fix: a RAW use of a generic type whose declaration is
+      * absent still answers 0, because nothing available can say otherwise. That case is the
+      * classpath's, not the catch's. */
     private def formalArity(r: CtTypeReference[?]): Int =
-      try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)
-      catch { case _: Throwable => 0 }
+      typeDeclarationOf(r).map(_.getFormalCtTypeParameters.size).getOrElse(0)
+
+    /** the ONE Spoon lookup in the arity family where an absent value is normal — see
+      * [[formalArity]] for why nothing else in that computation may share its `catch`. */
+    private def typeDeclarationOf(r: CtTypeReference[?]): Option[spoon.reflect.declaration.CtType[?]] =
+      if r == null then scala.None
+      else try Option(r.getTypeDeclaration) catch { case _: Throwable => scala.None }
 
     /** a use of a GENERIC class — an instantiation (`Class<T>`) or a raw one (`Class`). */
     private def isGenericUse(tr: CtTypeReference[?]): Boolean = tr match
@@ -1145,8 +1176,7 @@ object SpoonTir:
             // declared arity with wildcards (`Class` → `Class[?]`), so the reference type-checks.
             // (Wildcards beat `Object` overall: a raw value more often flows INTO a generic slot
             // than needs a concrete arg. The residual raw-into-type-param sites are cast below.)
-            val arity = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)
-                        catch { case _: Throwable => 0 }
+            val arity = formalArity(r)
             // a raw use of the class we're currently INSIDE, in a NON-static member (where the class's
             // own type params are in scope): fill with them (`ArrayMap[K,V]`) instead of wildcards, so
             // member accesses stay on the enclosing instantiation rather than a path-dependent capture.
@@ -1162,8 +1192,7 @@ object SpoonTir:
                 if arity <= 0 then head
                 else if inStatic then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
                 else
-                  val formals = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-                                catch { case _: Throwable => Nil }
+                  val formals = typeDeclarationOf(r).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
                   if formals.isEmpty then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
                   else AppliedType(head, formals.map { f =>
                     // sge renders EVERY raw generic `[?]` — parent, overrides and fields alike
@@ -1773,15 +1802,20 @@ object SpoonTir:
       * The catalog id comes from [[SpoonKinds]] rather than from a table here: that registry
       * already says what this frontend does with every kind a Java source can produce, and a second
       * mapping beside it would be a second answer to one question. */
-    private def unlowered(el: CtElement, what: String, tpe: TypeRepr): Term =
+    private def unlowered(el: CtElement, what: String, tpe: TypeRepr,
+                          kind: Option[UnportableKind] = scala.None): Term =
       val o = originOf(el)
       if o == Origin.synthetic || o.javaPath.isEmpty then unsupported(el, what)
       else
         val kindName = SpoonKinds.nameOf(el.getClass)
         Tree.Unportable.open(
           inner  = Tree.Literal(Constant.UnitC, unitT, o),
-          kind   = UnportableKind.UnmodelledNodeKind(kindName),
-          diff   = SpoonKinds.byName.get(kindName).flatMap(_.catalog),
+          kind   = kind.getOrElse(UnportableKind.UnmodelledNodeKind(kindName)),
+          // the catalog pointer belongs to the NODE KIND, so it is only right when the refusal IS
+          // about the node kind. A blind spot INSIDE an arm that does dispatch on this kind is a
+          // different fact — the kind is handled, this shape of it is not — and pointing it at the
+          // kind's row would make the registry describe the engine's gap instead of Java's.
+          diff   = if kind.isEmpty then SpoonKinds.byName.get(kindName).flatMap(_.catalog) else scala.None,
           what   = what,
           tpe    = tpe,
           origin = o,
@@ -2701,6 +2735,18 @@ object SpoonTir:
             case POSTDEC => Tree.IncDec(expr(u.getOperand), "-", post = true, ty(u), originOf(u))
             case PREINC  => Tree.IncDec(expr(u.getOperand), "+", post = false, ty(u), originOf(u))
             case PREDEC  => Tree.IncDec(expr(u.getOperand), "-", post = false, ty(u), originOf(u))
+            // Java has eight unary operators and this arm enumerates all eight, so the default is
+            // unreachable TODAY and is not there for Java — it is there for SPOON. `getKind` is a
+            // Java enum from a dependency, not a sealed Scala one, so scalac cannot check this
+            // match: a Spoon upgrade that adds a kind produces a `MatchError` at some depth of the
+            // expression translator, with no origin, no construct name and nothing to classify it
+            // by. That is the one failure shape this frontend must not have — an error an agent
+            // cannot classify costs it a full investigation (§4.45) — so the default is a MARKER,
+            // located and named, and `FrontendBlindSpot` rather than `UnmodelledNodeKind` because
+            // the node kind IS dispatched on here. What is missing is one shape of it.
+            case other =>
+              unlowered(u, s"unary operator kind '$other' — this arm enumerates java's eight and " +
+                "the parser produced a ninth", ty(u), Some(UnportableKind.FrontendBlindSpot))
         // assignment used as a VALUE (`return a = v`, `while ((line = read()) != null)`):
         // Java yields the assigned value, Scala's `=` is Unit — lower to `{ lhs = rhs; lhs }`.
         case a: CtOperatorAssignment[?, ?] =>
@@ -3308,8 +3354,7 @@ object SpoonTir:
             case (a: Tree.Apply, Some(w)) if w != a.tpe => a.copy(tpe = w)
             case _                                      => t
           val rawErasedResult = declRet.filter(d => d != null && !d.isPrimitive && isRawGenericUse(d)).flatMap { d =>
-            val arity = try Option(d.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)
-                        catch { case _: Throwable => 0 }
+            val arity = formalArity(d)
             Option.when(arity > 0)(AppliedType(TypeRef(NoPrefix, typeSym(d)), List.fill(arity)(objectT)))
           }
           declRet match

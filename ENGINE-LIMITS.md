@@ -64,6 +64,48 @@ call sites agree with declarations.
 
 *Fix kind: (a).*
 
+### 0.1 The SECOND root cause: **five loud fallback arms, and ninety-five silent ones**
+
+`SpoonTir` is the only place in this engine where a match cannot be checked. Spoon's `CtElement` is
+a Java interface hierarchy with no sealedness, so scalac has nothing to enforce — and the file has
+grown ~100 `case _ =>` / `case other =>` arms of which **five throw**. The other ninety-five degrade.
+
+This is the shape behind more entries in this file than any single rule. Read it as three tiers, not
+as one number, because a port feels them completely differently:
+
+| tier | what happens | example |
+|---|---|---|
+| **refuses** | the whole COMPILATION UNIT fails to translate | `unsupported`'s default arms, before the marker (T9: 62 tests + 12 cascade errors for five local classes) |
+| **degrades and COUNTS** | the construct is dropped and a check reports it | `anonClass.dropped` → `OmissionCheck.droppedAnonMembers`; `annotationsOf`'s three drop paths → `Symbol.droppedAnnotations`. **These are what "right" looks like** and are not work items |
+| **degrades SILENTLY** | a value is produced that nothing can distinguish from a real answer | the arity family below; the two sentinel symbols; `withTrivia` dropping a comment on an unrecognised statement kind |
+
+The comparison that settles the intent: the legacy BIR frontend (`SpoonFrontend`, ~1,150 lines) has
+roughly **30** `unsupported` sites; the TIR frontend has **six**. The trade was deliberate and most
+of it was right. What it also produced is a third tier nobody was counting.
+
+**The worked example, and it is the sharpest one available.** A raw type's declared arity was
+computed as
+
+```
+try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)
+catch { case _: Throwable => 0 }
+```
+
+at **five sites**. Arity zero is not "unknown" — it is the statement *this type takes no type
+arguments*, which is exactly what the emitter then writes. So a resolution failure inside a
+declaration Spoon HAS became a generic emitted un-applied: valid Scala, green compile, no moved
+count, no finding, and a type that means something else. The `catch` is now narrowed to the one
+lookup where an absent value is normal (`getTypeDeclaration`, i.e. the type is not on the
+classpath), the five sites are one function, and a declaration that cannot state its own arity
+propagates instead of being absorbed. `CLAUDE.md` §4.6 carries the rule this generalises to.
+
+**The honest limit of that fix, stated so nobody re-derives it:** a RAW use of a generic type whose
+declaration is genuinely absent still answers 0, because nothing available can say otherwise. That
+case belongs to the classpath, not to the `catch`.
+
+*Fix kind: (a). The tiers are what to price: a refusal costs a FILE, a silent degradation costs a
+construct and is invisible, and the second is worse.*
+
 ---
 
 ## 1. Generics, raw types and wildcards
