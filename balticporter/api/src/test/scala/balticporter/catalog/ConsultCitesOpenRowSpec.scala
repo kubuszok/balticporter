@@ -27,6 +27,9 @@ import balticporter.tir.Origin
 class ConsultCitesOpenRowSpec extends munit.FunSuite:
 
   private val origin = Origin("Snippet.java", 1, 1)
+  /** a FRESH stand-in for the Java node being lowered — `Lowering.of`'s `subject`, which joins the
+    * two dispatches of ONE node by identity. A `def`, so every call site is a different node. */
+  private def node: AnyRef = new Object
 
   /** the rule, over a LOG. `Nil` when every consult the run made is fine. */
   private def findings(log: CatalogLog): List[String] =
@@ -44,7 +47,7 @@ class ConsultCitesOpenRowSpec extends munit.FunSuite:
   private def consulting(id: DiffId, applies: Boolean = false): CatalogLog =
     val log = new CatalogLog
     given CatalogLog = log
-    Lowering.of("CtBinaryOperator", Dispatch.Expression, origin) {
+    Lowering.of("CtBinaryOperator", Dispatch.Expression, origin, node) {
       Obligations.consult(id, origin)(if applies then Some(()) else scala.None)
     }
     log

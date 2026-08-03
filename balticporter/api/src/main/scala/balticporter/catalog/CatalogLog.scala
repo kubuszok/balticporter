@@ -54,15 +54,36 @@ object Lowering:
     * whole compilation unit, so there is no partial result to report an obligation about.
     *
     * Costs nothing where nothing attaches: the common case is an empty `owed` list, which takes a
-    * shared, allocation-free [[Obligations]] and skips the settle entirely. */
-  def of[A](kind: String, dispatch: Dispatch, at: Origin)(body: Obligations ?=> A)(using log: CatalogLog): A =
-    val owed = Differences.owedAt(kind, dispatch)
-    if owed.isEmpty then body(using log.unattached)
-    else
-      val o = new Obligations(log, owed)
-      val r = body(using o)
-      o.settle(kind, dispatch, at)
-      r
+    * shared, allocation-free [[Obligations]] and skips the settle entirely.
+    *
+    * ==`subject` and the DELEGATION SEAM==
+    *
+    * The frontend's two dispatches are not disjoint: a node reached as a STATEMENT is routinely
+    * handed straight to the EXPRESSION arm (`case inv: CtInvocation => expr(inv)`), so ONE node is
+    * lowered inside TWO scopes, and the consults all happen in the inner one. A row attached at
+    * `(kind, Statement)` would then be reported as a hole at every such node while the arm had in
+    * fact considered it — a phantom on the work list, which is the one thing a work list may not
+    * have. No row is in that position today; every one of them would be, the moment a statement
+    * kind whose arm delegates gains an attachment.
+    *
+    * So a consult marks the row seen in the enclosing scope too, and the scopes are joined by NODE
+    * IDENTITY (`subject`) rather than by kind or by origin. Identity is the exact question: two
+    * different nodes of the same kind on one line (`x += (y += 1)`) are two obligations, and reading
+    * `at` or `kind` would silently discharge the outer one from the inner node's consult. */
+  def of[A](kind: String, dispatch: Dispatch, at: Origin, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
+    val owed  = Differences.owedAt(kind, dispatch)
+    val outer = log.enterSubject(subject)
+    try
+      if owed.isEmpty then body(using log.unattached)
+      else
+        val o = new Obligations(log, owed, subject)
+        log.enterScope(o)
+        val r =
+          try body(using o)
+          finally log.exitScope()
+        o.settle(kind, dispatch, at)
+        r
+    finally log.exitSubject(outer)
 
 /** WHICH of the frontend's two term dispatches an obligation attaches at.
   *
@@ -117,8 +138,13 @@ enum Attaches:
   * thread-safe and deliberately so: one lowering is one call stack, and a shared counter would be
   * the process-global table §5.1 forbids.
   */
-final class Obligations private[catalog] (log: CatalogLog, owed: List[DiffId]):
+final class Obligations private[catalog] (log: CatalogLog, owed: List[DiffId],
+                                          private[catalog] val subject: AnyRef = null):
   private var seen: List[DiffId] = Nil
+
+  /** mark `id` considered HERE — reached from [[CatalogLog.markSeen]] for the enclosing scope of a
+    * delegated node, and from [[consult]] for this one. */
+  private[catalog] def see(id: DiffId): Unit = if !seen.contains(id) then seen ::= id
 
   /** CONSULT a difference at this site. `f` returns `Some(fix)` when the difference APPLIES here.
     *
@@ -130,7 +156,11 @@ final class Obligations private[catalog] (log: CatalogLog, owed: List[DiffId]):
     * §2.3(a) warns cannot be distinguished from a correct one without an edge-case suite. */
   def consult[A](id: DiffId, at: Origin)(f: => Option[A]): Option[A] =
     val r = f
-    seen ::= id
+    see(id)
+    // …and in every scope this node is ALSO being lowered inside. See `Lowering.of`'s note on the
+    // delegation seam: the statement dispatch hands whole nodes to the expression arm, and the arm
+    // that considered the difference is the inner one.
+    log.markSeen(id)
     log.record(id, fired = r.isDefined, at)
     r
 
@@ -166,6 +196,38 @@ final class CatalogLog(val fatal: Boolean = false):
     * and still RECORDS — an arm may consult a row the catalog attaches elsewhere, and a consult
     * that vanished because its kind had no attachment would be a coverage number that lies low. */
   private[catalog] val unattached: Obligations = new Obligations(this, Nil)
+
+  // ---- the LIVE scope stack, for the delegation seam (`Lowering.of`) ----------------------------
+  //
+  // A var on the log and not a `given` chain, for the reason `Obligations` is not thread-safe and
+  // says so: one lowering is one call stack, and the log is a value ONE RUN owns. It has to live
+  // here rather than in a parent pointer on `Obligations` because the inner scope of a delegated
+  // node is frequently the ALLOCATION-FREE `unattached` one — nothing attaches at the expression
+  // dispatch for that kind — and that instance is shared and can hold no parent.
+
+  /** the attached scopes running right now, INNERMOST FIRST. */
+  private var liveScopes: List[Obligations] = Nil
+  /** the node whose lowering is running right now, whether or not anything attaches to it. */
+  private var currentSubject: AnyRef = null
+
+  private[catalog] def enterScope(o: Obligations): Unit = liveScopes ::= o
+  private[catalog] def exitScope(): Unit = liveScopes = liveScopes.tail
+
+  /** set the node under lowering; the caller restores what this returns. */
+  private[catalog] def enterSubject(s: AnyRef): AnyRef =
+    val prev = currentSubject
+    currentSubject = s
+    prev
+  private[catalog] def exitSubject(prev: AnyRef): Unit = currentSubject = prev
+
+  /** DISCHARGE `id` in every live scope that is lowering THIS SAME NODE.
+    *
+    * Innermost first, stopping at the first scope whose subject is a different node — so a consult
+    * inside a CHILD (`if (x) y += 1`, the assignment's consult under the `CtIf`'s scope) discharges
+    * nothing of the parent's, which is the whole point of asking by identity. */
+  private[catalog] def markSeen(id: DiffId): Unit =
+    val s = currentSubject
+    if s != null then liveScopes.iterator.takeWhile(_.subject eq s).foreach(_.see(id))
 
   private[catalog] def record(id: DiffId, fired: Boolean, at: Origin): Unit =
     consults(id) = consults.getOrElse(id, 0) + 1

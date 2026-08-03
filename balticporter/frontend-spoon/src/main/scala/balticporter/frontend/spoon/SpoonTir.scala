@@ -2054,7 +2054,9 @@ object SpoonTir:
         * mechanism exists to catch (`DESIGN.md` §2.8). Cost is one `Map` lookup per statement, and
         * `Nil` for every kind nothing attaches to. */
       private def stmtKind(s: CtStatement): Statement =
-        Lowering.of(SpoonKinds.nameOf(s.getClass), Dispatch.Statement, originOf(s))(stmtArm(s))
+        // `s` is the SUBJECT — the node itself, so a delegation into the expression dispatch
+        // (`case inv: CtInvocation => expr(inv)`) can be joined to this scope by identity.
+        Lowering.of(SpoonKinds.nameOf(s.getClass), Dispatch.Statement, originOf(s), s)(stmtArm(s))
 
       private def stmtArm(s: CtStatement)(using Obligations): Statement = s match
         case v: CtLocalVariable[?] =>
@@ -2740,7 +2742,7 @@ object SpoonTir:
       /** THE EXPRESSION DISPATCH — the wrapper's second entry, symmetrical with [[stmtKind]] and
         * for the same reason. See that method for why it is here and not in the arms. */
       private def exprNoCast(e: CtExpression[?]): Term =
-        Lowering.of(SpoonKinds.nameOf(e.getClass), Dispatch.Expression, originOf(e))(exprArm(e))
+        Lowering.of(SpoonKinds.nameOf(e.getClass), Dispatch.Expression, originOf(e), e)(exprArm(e))
 
       private def exprArm(e: CtExpression[?])(using Obligations): Term = e match
         case l: CtLiteral[?]      => literal(l)

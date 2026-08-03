@@ -19,6 +19,9 @@ import balticporter.tir.{CatalogCheck, Origin}
 class CatalogCoverageSpec extends munit.FunSuite:
 
   private val origin = Origin("Snippet.java", 1, 1)
+  /** a FRESH stand-in for the Java node being lowered — `Lowering.of`'s `subject`, which joins the
+    * two dispatches of ONE node by identity. A `def`, so every call site is a different node. */
+  private def node: AnyRef = new Object
 
   // -------------------------------------------------------------------------------------------
   // The wrapper, in isolation — the mechanism, before any Java is involved.
@@ -27,7 +30,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
   test("an arm that CONSULTS its attached row leaves no hole") {
     val log = new CatalogLog
     given CatalogLog = log
-    Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin) {
+    Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node) {
       Obligations.consult(JS.E(3), origin)(scala.None)
     }
     assertEquals(log.undischarged.map(_.id), Nil)
@@ -41,7 +44,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
     // shape, written down.
     val log = new CatalogLog
     given CatalogLog = log
-    Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin)(())
+    Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node)(())
     val holes = log.undischarged
     assertEquals(holes.map(_.id), List(JS.E(3)))
     assertEquals(holes.head.kind, "CtOperatorAssignment")
@@ -52,9 +55,46 @@ class CatalogCoverageSpec extends munit.FunSuite:
   test("…and the hole is one finding per ROW, however many sites produced it") {
     val log = new CatalogLog
     given CatalogLog = log
-    (1 to 40).foreach(_ => Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin)(()))
+    (1 to 40).foreach(_ => Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node)(()))
     assertEquals(log.undischarged.size, 1)
     assertEquals(log.undischarged.head.sites, 40)
+  }
+
+  test("THE DELEGATION SEAM: one node lowered by BOTH dispatches is one obligation, not two") {
+    // `SpoonTir.stmtArm` hands whole nodes to the expression arm — `case inv: CtInvocation =>
+    // expr(inv)`, `case cc: CtConstructorCall => ctorCall(cc)`, and the `CtUnaryOperator` default.
+    // The inner dispatch opens a scope of its own, so every consult happens there; a row attached at
+    // the STATEMENT dispatch of such a kind would be reported as a hole at every one of those nodes
+    // while the arm had in fact considered it. No row is in that position today, and every row that
+    // ever attaches to a delegating statement kind would be.
+    val log = new CatalogLog
+    given CatalogLog = log
+    val one = node
+    Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, one) {
+      Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin, one) {
+        Obligations.consult(JS.E(3), origin)(scala.None)
+      }
+    }
+    assert(!log.undischarged.map(_.id).contains(JS.E(3)),
+      "the inner dispatch consulted it for this very node — the outer scope has no hole to report")
+    assertEquals(log.consulted(JS.E(3)), 1, "and it is counted ONCE: two scopes, one consideration")
+  }
+
+  test("…and the join is by NODE IDENTITY: a CHILD's consult discharges nothing of its parent's") {
+    // The negative that makes the rule above a rule rather than a leak. `if (x) y += 1` puts a
+    // second `CtOperatorAssignment` INSIDE a statement scope on the same line and of the same kind,
+    // so anything reading `at` or `kind` would take the child's consult for the parent's.
+    val log = new CatalogLog
+    given CatalogLog = log
+    Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node) {
+      Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin, node) {
+        Obligations.consult(JS.E(3), origin)(scala.None)
+      }
+    }
+    // (JS-E04 is a hole here too — the inner scope owes it and nothing consults it — which is the
+    // declared-open work list and not what this assertion is about.)
+    assert(log.undischarged.map(_.id).contains(JS.E(3)),
+      "a different node consulted it; this statement's own obligation is still owed")
   }
 
   test("the DISPATCH is part of the key — JS-E03 is owed at a statement and JS-E04 at an expression") {
@@ -69,14 +109,14 @@ class CatalogCoverageSpec extends munit.FunSuite:
     val fatal = new CatalogLog(fatal = true)
     intercept[AssertionError] {
       given CatalogLog = fatal
-      Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin)(())
+      Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node)(())
     }
     // JS-E04 is `Open`. It attaches, it is never consulted, and a testkit run must NOT die on it —
     // it is the work list, and a mode that died on the work list would make the work list
     // unrunnable. This is the one exemption, and it is derived from the row's own status.
     val alsoFatal = new CatalogLog(fatal = true)
     given CatalogLog = alsoFatal
-    Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin)(())
+    Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin, node)(())
     assertEquals(alsoFatal.undischarged.map(_.id), List(JS.E(4)))
   }
 
@@ -163,4 +203,81 @@ class CatalogCoverageSpec extends munit.FunSuite:
         (d.id, k)
     }.filterNot((_, k) => dispatched.contains(k))
     assertEquals(bad, Nil, s"attached to a kind no arm lowers: $bad")
+  }
+
+  /** WHICH of the two term dispatches a lowered kind can actually be reached at.
+    *
+    * Derived from the `by` symbol the registry already carries, which is the claim being checked:
+    * `stmtKind` is the statement dispatch and `exprNoCast` is the expression one, and a kind whose
+    * claim names one of them cannot be reached at the other. Where the claim names a NAMED HELPER
+    * instead (`SpoonTir.invocation`, `SpoonTir.literal`, `SpoonTir.classDef`), the helper says
+    * nothing about position, so the question falls to Spoon's own hierarchy — a node reaches
+    * `stmtKind` iff it is a `CtStatement` and `exprNoCast` iff it is a `CtExpression`, because those
+    * two wrappers are entered for every node of those types and for nothing else.
+    *
+    * Both halves are structural (§4.56): one reads the registry's own recorded symbol, the other
+    * reads the class hierarchy out of the jar. Neither is a hand-written table of kinds, which is
+    * what would go stale the first time an arm moved. */
+  private def legalDispatches(k: balticporter.frontend.spoon.SpoonKinds.Kind): Set[Dispatch] =
+    import balticporter.frontend.spoon.SpoonKinds
+    val by = k.claim match
+      case SpoonKinds.Claim.Lowered(b) => b
+      case _                           => ""
+    val fromClaim =
+      Set(Option.when(by.contains("stmtKind"))(Dispatch.Statement),
+          Option.when(by.contains("exprNoCast"))(Dispatch.Expression)).flatten
+    if fromClaim.nonEmpty then fromClaim
+    else
+      // …and a kind that is NEITHER — a `CtMethod`, a `CtField` — answers the empty set, which is
+      // the honest answer: no term dispatch is ever entered for it, so no `Lowered` attachment can
+      // be right about it. Resolved out of both node packages rather than one, because a name that
+      // does not resolve would otherwise throw where the sweep wants a finding.
+      def resolve(pkg: String): Option[Class[?]] =
+        try Some(Class.forName(s"$pkg.${k.name}", false, getClass.getClassLoader))
+        catch { case _: ClassNotFoundException => scala.None }
+      resolve("spoon.reflect.code").orElse(resolve("spoon.reflect.declaration")) match
+        case scala.None => Set.empty
+        case Some(cls)  => Set(
+          Option.when(classOf[spoon.reflect.code.CtStatement].isAssignableFrom(cls))(Dispatch.Statement),
+          Option.when(classOf[spoon.reflect.code.CtExpression[?]].isAssignableFrom(cls))(Dispatch.Expression),
+        ).flatten
+
+  test("…and about the DISPATCH — a kind only a statement arm reaches owes nothing as an expression") {
+    // The guard above validates the KIND and stops there, so `Lowered("CtAssert", Expression)` — a
+    // statement-only kind claimed at the expression dispatch — passes it while owing an obligation
+    // at a scope `exprNoCast` never opens for that kind. `Differences.owedAt` would answer with the
+    // row, `Lowering.of` would never be entered with that pair, and the obligation would read as
+    // coverage that can never fail: exactly the shape the kind half exists to prevent, one column
+    // over.
+    import balticporter.frontend.spoon.SpoonKinds
+    def complaint(id: String, k: String, disp: Dispatch): Option[String] =
+      val legal = SpoonKinds.byName.get(k).map(legalDispatches).getOrElse(Set.empty)
+      val asked = disp match
+        case Dispatch.Either => Set(Dispatch.Statement, Dispatch.Expression)
+        case one             => Set(one)
+      Option.when(!asked.subsetOf(legal))(
+        s"$id attaches $k/$disp, and $k is reached at ${legal.mkString("{", ", ", "}")}")
+
+    val bad = Differences.all.flatMap { d =>
+      d.attaches match
+        case Attaches.Lowered(k, disp) => complaint(d.id.toString, k, disp)
+        case _                         => scala.None
+    }
+    assertEquals(bad, Nil, bad.mkString("\n"))
+
+    // THE NEGATIVE, through the same function the sweep runs — a probe that poked at the derivation
+    // instead would prove the derivation and nothing about the guard. `CtAssert` is a `CtStatement`
+    // and not a `CtExpression`, and `SpoonTir` lowers it in `stmtKind`.
+    assert(complaint("JS-X99", "CtAssert", Dispatch.Expression).isDefined,
+      "a statement-only kind claimed at the expression dispatch must be reported")
+    assert(complaint("JS-X99", "CtAssert", Dispatch.Either).isDefined)
+    assert(complaint("JS-X99", "CtAssert", Dispatch.Statement).isEmpty)
+    assertEquals(legalDispatches(SpoonKinds.byName("CtAssert")), Set(Dispatch.Statement))
+    assertEquals(legalDispatches(SpoonKinds.byName("CtOperatorAssignment")),
+      Set(Dispatch.Statement, Dispatch.Expression))
+    assertEquals(legalDispatches(SpoonKinds.byName("CtBinaryOperator")), Set(Dispatch.Expression))
+    // a kind whose claim names a HELPER rather than either dispatcher — answered by the hierarchy.
+    assertEquals(legalDispatches(SpoonKinds.byName("CtInvocation")),
+      Set(Dispatch.Statement, Dispatch.Expression))
+    assertEquals(legalDispatches(SpoonKinds.byName("CtLiteral")), Set(Dispatch.Expression))
   }
