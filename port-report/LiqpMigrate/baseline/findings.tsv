@@ -31,6 +31,7 @@ b84375e7edfa	jdk-surface	unhandled	java.util.Map#clear()	liqp/spi/BasicTypesSupp
 ff9aa2708838	jdk-surface	unhandled	java.util.stream.Stream#concat(Stream,Stream)	liqp/parser/v4/NodeVisitor.java	479	java.util.stream.Stream#concat(Stream,Stream) — retyped to java.util.stream.Stream, no rewrite (1 site(s))
 1ff046d9d987	jdk-surface	unhandled	java.util.stream.Stream#of(T)	liqp/parser/v4/NodeVisitor.java	480	java.util.stream.Stream#of(T) — retyped to java.util.stream.Stream, no rewrite (1 site(s))
 0ae0b7e260da	jdk-surface	unhandled	java.util.stream.Stream#toArray(IntFunction)	liqp/parser/v4/NodeVisitor.java	484	java.util.stream.Stream#toArray(IntFunction) — retyped to java.util.stream.Stream, no rewrite (1 site(s))
+df5b37cb88d1	markers	sentinel	ssg.liquid.LValue#asList	liqp/LValue.java	164	an unresolvable type variable was interned as the sentinel `?E`, which must never be printed and whose only defence is an emitter rule that does not print it; 1 reference(s) in this module
 f17040cdcaa0	omissions	annotation dropped	ssg.liquid.parser.LiquidSupport	<synthetic>	0	com.fasterxml.jackson.databind.annotation.JsonSerialize
 9314659ad22b	portability(all)	java.lang.Thread	key	liqp/spi/BasicTypesSupport.java	68	TermRef — threads do not exist on Scala.js
 15023864e250	portability(all)	java.lang.ThreadLocal	ssg.liquid.spi.BasicTypesSupport#local	liqp/spi/BasicTypesSupport.java	17	Tycon — threads do not exist on Scala.js
