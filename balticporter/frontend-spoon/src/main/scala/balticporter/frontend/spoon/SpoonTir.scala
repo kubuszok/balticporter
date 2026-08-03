@@ -2343,7 +2343,7 @@ object SpoonTir:
         // perturbs surrounding resolution.
         if et != null && !et.isPrimitive && target.isPrimitive && wrapperOf.values.toSet(et.getQualifiedName)
           && wrapperOf.get(target.getSimpleName).exists(_ != et.getQualifiedName) then
-          return unbox(t, target.getSimpleName, e)
+          return unbox(t, et.getQualifiedName, target.getSimpleName, e)
         // a type-parameter value flowing into a genuinely-`Object` slot (a return/assignment/var-init
         // where the target type is really `java.lang.Object`, not an erased formal — call args are
         // handled by `typeParamToObject` off the DECLARED formal, so this stays off that path):
@@ -2413,18 +2413,45 @@ object SpoonTir:
       private val valueMethod = Map(
         "int" -> "intValue", "long" -> "longValue", "float" -> "floatValue", "double" -> "doubleValue",
         "short" -> "shortValue", "byte" -> "byteValue", "boolean" -> "booleanValue", "char" -> "charValue")
-      /** `wrapper.<prim>Value()` — explicit unboxing of a boxed number/boolean/char to a primitive. */
-      private def unbox(t: Term, prim: String, e: CtElement): Term =
-        val primT = TypeRef(NoPrefix, minter.external("scala." + primName(prim), prim))
-        valueMethod.get(prim) match
+      /** `wrapper.<prim>Value()` — explicit unboxing of a boxed number/boolean/char to a primitive,
+        * and the WIDENING beside it where the shortcut would name a member that does not exist.
+        *
+        * Java's unboxing is TWO conversions: JLS 5.1.8 unboxes at the WRAPPER'S OWN primitive, and
+        * 5.1.2's widening primitive conversion then takes it to the slot. Collapsing them into one
+        * `xxxValue()` keyed on the TARGET is exact for the six `java.lang.Number` wrappers — every
+        * one of them carries the whole `byteValue()`…`doubleValue()` family, so `Long` → `double`
+        * really is `doubleValue()`, which is the shape `ENGINE-LIMITS.md` K17 face 2 measured.
+        *
+        * `Character` and `Boolean` are NOT `Number`s. They carry `charValue()` / `booleanValue()`
+        * and nothing else, so a `Character` at an `int` slot emitted `c.intValue()` — a member no
+        * class in the chain declares. LOUD rather than silent, which is the one thing in its favour.
+        * The two steps are emitted instead: unbox at the wrapper's own primitive, then convert.
+        *
+        * @param from the wrapper's FQN — the SOURCE. Both callers know it (`coerce` from the
+        *             expression's type, `promotedBranch` from the branch's), and the question
+        *             "which primitive does this wrapper actually carry" cannot be asked without it. */
+      private def unbox(t: Term, from: String, prim: String, e: CtElement): Term =
+        def primT(p: String) = TypeRef(NoPrefix, minter.external("scala." + primName(p), p))
+        // the wrapper's OWN primitive, and whether reaching `prim` from it needs a second step.
+        val own    = wrapperOf.collectFirst { case (p, w) if w == from => p }.getOrElse(prim)
+        val viaOwn = own != prim && (own == "char" || own == "boolean")
+        val step   = if viaOwn then own else prim
+        valueMethod.get(step) match
           case Some(vm) =>
             // owner deliberately left None: the key is already a readable FQN, no portability
             // rule targets `Number`'s members, and interning `java.lang.Number` HERE moves it
             // earlier in the id sequence — which re-keys every downstream finding whose owner is
             // an external member (their `fullName` embeds the raw id). Measured: 2 findings
             // diffed as removed-and-re-added for no change in what was found.
-            val vsym = minter.external("java.lang.Number#" + vm, vm)
-            Tree.Apply(Tree.Select(t, vsym, NoType, originOf(e)), Nil, vsym, primT, originOf(e))
+            //
+            // The two-step path keys on the WRAPPER instead, and that is not an inconsistency to
+            // tidy: `charValue` is not a `Number` member, so filing it under one would hide it from
+            // any portability rule that names `java.lang.Character` — while MOVING the existing key
+            // would re-key every finding after it for no behavioural gain. New key, honest from the
+            // start; old key, left where it is.
+            val vsym = minter.external(if viaOwn then s"$from#$vm" else "java.lang.Number#" + vm, vm)
+            val call = Tree.Apply(Tree.Select(t, vsym, NoType, originOf(e)), Nil, vsym, primT(step), originOf(e))
+            if viaOwn then Tree.Typed(call, tt(primT(prim), e), primT(prim), originOf(e)) else call
           case None => t
       private def boxedPrimitive(prim: String): TypeRepr =
         wrapperOf.get(prim) match
@@ -3024,7 +3051,7 @@ object SpoonTir:
         else if !bj.isPrimitive then
           // a boxed operand at a primitive conditional: java UNBOXES it, then widens. Only a wrapper
           // can stand here in valid java — anything else needed a cast the source itself wrote.
-          if wrapperOf.values.toSet(bj.getQualifiedName) then unbox(t, cj.getSimpleName, be) else t
+          if wrapperOf.values.toSet(bj.getQualifiedName) then unbox(t, bj.getQualifiedName, cj.getSimpleName, be) else t
         else if primRank.contains(bj.getSimpleName) && primRank.contains(cj.getSimpleName) then
           // BOTH DIRECTIONS, and there is no third case: the two are primitive and they differ, so
           // java performed a conversion and the port owes it. The narrowing half is bullet 2's;
