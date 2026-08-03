@@ -525,10 +525,40 @@ final class TestFrameworkTransform(
     * The tree is returned UNCHANGED. This hook exists to observe, and an observation that moved a
     * byte of output would be a coverage mechanism that changes what it measures. */
   override def transformDefDef(t: Tree.DefDef)(using p: Program): Tree.DefDef =
-    if promotedHere then
-      cite(balticporter.catalog.JS.E(7), p.symbolOf(t.symbol).map(_.fullName).getOrElse(t.symbol.toString))
-      promotedHere = false
+    citeIfPromoted(t.symbol)
     t
+
+  /** …AND A FIELD INITIALISER IS NOT INSIDE A `DefDef`.
+    *
+    * The hook above reads a flag and clears it, which is only sound if EVERY declaration whose body
+    * can hold a widening clears it. A field's initialiser can — `Runnable check = () ->
+    * Assert.assertEquals(1, 2L)` puts the promotion inside a `ValDef`'s right-hand side — and the
+    * `ValDef` did not clear, so the flag survived to the NEXT `DefDef` the traversal reached and the
+    * citation named it. In the fixture that is the class's own `<init>`, a member the phase never
+    * touched; with the field last in a class body it is a member of the NEXT class.
+    *
+    * A citation is a claim about which declaration a phase decided at. One that names the wrong
+    * member sends an investigation to code with nothing in it, which is the single thing provenance
+    * may not do (`CLAUDE.md` §4.575) — and nothing else can see it: the emitted text is identical,
+    * every check count is identical, and `catalog(consulted)` counts the row either way. */
+  override def transformValDef(t: Tree.ValDef)(using p: Program): Tree.ValDef =
+    citeIfPromoted(t.symbol)
+    t
+
+  /** …and the CLASS BOUNDARY, which is the backstop rather than a third case.
+    *
+    * Whatever holds a widening that neither hook above owns — a class-body term some future lowering
+    * introduces — belongs to the type it was written in and to no member of the next one. Citing the
+    * class is honest ("this phase decided something in here") where leaking is not; and because both
+    * hooks above run first, this fires only for what they do not cover. */
+  override def transformClassDef(t: Tree.ClassDef)(using p: Program): Tree.ClassDef =
+    citeIfPromoted(t.symbol)
+    t
+
+  private def citeIfPromoted(sym: SymId)(using p: Program): Unit =
+    if promotedHere then
+      cite(balticporter.catalog.JS.E(7), p.symbolOf(sym).map(_.fullName).getOrElse(sym.toString))
+      promotedHere = false
 
   private def widen(t: Term, from: String, to: String, p: Program): Term =
     if from == to then t else select(guarded(t)(using p), widenSyms(to), t.origin, primTypes(to))

@@ -157,6 +157,40 @@ class CatalogAreaESpec extends PortSuite:
     assertCites(p, JS.E(7), about = "widened")
   }
 
+  test("JS-E07 — a widening in a FIELD INITIALISER is cited at the FIELD, not at the next member") {
+    // The citation state is a flag `promote` sets and the `DefDef` hook reads, which the bottom-up
+    // traversal reaches after the body. A field's initialiser is not inside a `DefDef` — a lambda in
+    // one holds the promotion perfectly well — so the flag survived to the next declaration the
+    // traversal reached and that one took the citation: here the class's own `<init>`, and with the
+    // field last in a body, a member of the NEXT class.
+    //
+    // Nothing else can see this. The emitted text is identical, every check count is identical, and
+    // `catalog(consulted)` counts the row either way; what moves is only WHICH declaration an agent
+    // is sent to, and it is sent to one with nothing in it (§4.575).
+    val a =
+      """package p;
+        |import org.junit.Assert;
+        |public class A {
+        |  static Runnable check = () -> Assert.assertEquals(1, 2L);
+        |}
+        |""".stripMargin
+    val b =
+      """package p;
+        |import org.junit.Assert;
+        |import org.junit.Test;
+        |public class B {
+        |  @Test public void untouched() { Assert.assertEquals("a", "a"); }
+        |}
+        |""".stripMargin
+    val p = portAll(List("A.java" -> a, "B.java" -> b), new balticporter.transform.TestFrameworkTransform())
+    assertCites(p, JS.E(7), about = "A#check")
+    val at = p.catalog.citedAt(JS.E(7))
+    assert(!at.exists(_.contains("<init>")) && !at.exists(_.contains("untouched")),
+      s"the widening is in `check` and the citation names a member the phase never touched: $at")
+  }
+
+
+
   // -- the partition, asserted rather than left to a reader ---------------------------------------
 
   test("every JS-E row is either wired, declared unmechanised, or owes nothing — and says which") {
