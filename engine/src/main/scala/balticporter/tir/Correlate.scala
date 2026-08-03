@@ -407,14 +407,24 @@ object Correlate:
         * and no pass/fail count can show that. See [[regressed]]. */
       newlySkipped: List[LocatedTest] = Nil,
   ):
-    /** the gate: an UNEXPECTED newly-failing test, or a test that stopped RUNNING.
+    /** the gate: an UNEXPECTED newly-failing test, or a test that stopped RUNNING — in either of
+      * the two ways a test stops running.
       *
-      * An expected failure is not a regression, and a test that vanished from the artifact is
-      * reported but does not fail the gate — deleting a test is a decision somebody made. A SKIP
-      * is neither: the test is still there, the runner still counted it, and it produced no
-      * assertion. It moves no pass count and no fail count, so without its own gate a suite
-      * abandoned mid-way reports success — which is the §3 defect shape exactly. */
-    def regressed: Boolean = newlyFailing.nonEmpty || newlySkipped.nonEmpty
+      * An expected failure is not a regression. The other two are, and they are the same defect
+      * seen from two sides, neither of which moves a pass count or a fail count:
+      *
+      *  - a SKIP — the test is still there, the runner still counted it, and it produced no
+      *    assertion. Without its own gate a suite abandoned mid-way reports success;
+      *  - a DISAPPEARANCE — the row is not in the artifact at all. This was reported and NOT gated,
+      *    on the grounds that deleting a test is a decision somebody made. That is true of a
+      *    deletion and false of the failure this project actually has: a CONVERSION regression that
+      *    stops EMITTING a suite removes its tests from both sides at once, so the run reports
+      *    success on a smaller suite and the only number that moved is one nobody was holding.
+      *
+      * A deliberate deletion is ACKNOWLEDGED by re-accepting the baseline, exactly as a fallen
+      * error count is (`scripts/_lib.sh error_baseline_guard`) — which turns "somebody decided
+      * this" into a recorded fact instead of an assumption the gate has to make. */
+    def regressed: Boolean = newlyFailing.nonEmpty || newlySkipped.nonEmpty || disappeared.nonEmpty
 
   def parseTestsTsv(p: Path): Map[String, String] =
     if !Files.isRegularFile(p) then Map.empty

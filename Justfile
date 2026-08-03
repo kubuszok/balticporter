@@ -310,7 +310,9 @@ gdx-test-measure:
     MUNIT_TESTS=$(munit_emitted {{gdx_module}}/src_managed/test/scala)
     SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
     echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
-    [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
+    # …and the LOSS IS BASELINED (scripts/_lib.sh). Printed and not gated, this was a digit inside a
+    # line an operator reads past; the verdict is deferred to `headline` so the compile still runs.
+    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$REPORT"
 
     echo
     break_residue {{gdx_module}}/src_managed/test/scala
@@ -411,7 +413,9 @@ ashley-measure:
     MUNIT_TESTS=$(munit_emitted {{ashley_module}}/src_managed/test/scala)
     SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
     echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
-    [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
+    # …and the LOSS IS BASELINED (scripts/_lib.sh). Printed and not gated, this was a digit inside a
+    # line an operator reads past; the verdict is deferred to `headline` so the compile still runs.
+    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$TREPORT"
 
     DEPS="{{ashley_deps}}"
 
@@ -611,7 +615,9 @@ gltf-measure:
     MUNIT_TESTS=$(munit_emitted {{gltf_module}}/src_managed/test/scala)
     SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
     echo "@Test in Java (whole {{gltf_tests}} tree): $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
-    [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
+    # …and the LOSS IS BASELINED (scripts/_lib.sh). Printed and not gated, this was a digit inside a
+    # line an operator reads past; the verdict is deferred to `headline` so the compile still runs.
+    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$TREPORT"
     # …and the HAND-WRITTEN half, counted and printed separately rather than summed into the line
     # above. Upstream's whole suite is 8 attribute-comparison tests, which says nothing about the
     # glTF reader that is most of the library; `gltf-core/src/test/scala` is what covers the §4.4
@@ -944,7 +950,9 @@ sg-measure:
     MUNIT_TESTS=$(munit_emitted {{sg_module}}/src_managed/test/scala)
     SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
     echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
-    [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
+    # …and the LOSS IS BASELINED (scripts/_lib.sh). Printed and not gated, this was a digit inside a
+    # line an operator reads past; the verdict is deferred to `headline` so the compile still runs.
+    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$TREPORT"
 
     echo
     break_residue {{sg_module}}/src_managed
@@ -1315,7 +1323,11 @@ liqp-measure:
     MUNIT_TESTS=$(munit_emitted {{liqp_module}}/src_managed/test/scala)
     SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
     echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
-    [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
+    # …and the LOSS IS BASELINED (scripts/_lib.sh). This lane is the reason: 64 is a PERMANENT
+    # figure here (D-liqp-5's four `excludeGlobs` files and D-liqp-7's three `dropMethods` keys),
+    # so an accidental 65th changed one digit inside a line nobody had to act on. Deferred to
+    # `headline` so the compile and the correlation still run.
+    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$TREPORT"
 
     # -------------------------------------------------------------------------------------------
     # THE RUN'S HAND-WRITTEN INPUTS, CHECKED HERE AND NOT AT THE RUN. Both are fatal, and both are
@@ -1839,6 +1851,14 @@ lane-selfcheck:
     printf 'TEST OUTCOMES: ok\n\n' > "$T/tests-diff.txt"
     want "a carried OUTCOMES-LOST status fails the lane" "$(test_outcome_guard "$T" 1 > /dev/null 2>&1; echo $?)" "1"
 
+    # …and the OTHER way a suite stops running: the tests are never EMITTED, so no row exists for
+    # any baseline to hold an opinion about. `TestDiff.disappeared` is what sees it, and it was
+    # rendered and ungated for the life of the field.
+    printf 'TEST OUTCOMES: 100 passing\n\n-- tests in the baseline that DID NOT RUN (2) — a suite that stopped running is not a suite that passed\n   p.S.a\n   p.S.b\n\n' > "$T/tests-diff.txt"
+    out=$(test_outcome_guard "$T" 0 2>&1); rc=$?
+    want "a test that DISAPPEARED from the artifact fails the lane" "$rc" "1"
+    case "$out" in *"baseline-accept"*) ok "…and names the promotion command" ;; *) bad "…names the promotion command" ;; esac
+
     echo "-- reconcile_outcomes --"
     printf '  + a 0.0s\n  + b 0.0s\n' > "$T/run.txt"
     want "an emitted test with NO outcome line is a failure" "$(reconcile_outcomes "$T/run.txt" 3 > /dev/null; echo $?)" "1"
@@ -1892,6 +1912,47 @@ lane-selfcheck:
     error_baseline_guard 7 "$T/eb" > /dev/null 2>&1
     ( headline 7 "$T/eb" ) > /dev/null 2>&1
     want "a STALE failure marker is cleared by the next guard" "$?" "0"
+
+    echo "-- test_discovery_guard --"
+    # The gate a NON-FAILING echo left open: `!! TESTS LOST — 64 of 639` printed on every liqp run,
+    # so a 65th accidental loss changed one digit in a line nobody had to act on. A port that
+    # DECLARES the loss (excludeGlobs, dropMethods) still loses those tests, so the number is real
+    # and is baselined exactly as the error count is — and moves in EITHER direction fail.
+    mkdir -p "$T/td/baseline" "$T/td/run-latest"
+    printf '64\n' > "$T/td/baseline/expected-lost"
+    out=$(test_discovery_guard 639 575 "$T/td" 2>&1); rc=$?
+    want "an ACKNOWLEDGED loss does not fail the lane" "$rc" "0"
+    want "…and the run's observed loss is written for baseline-accept" "$(cat "$T/td/run-latest/tests-lost")" "64"
+    ( headline 0 "$T/td" ) > /dev/null 2>&1
+    want "…and headline exits 0 after it" "$?" "0"
+
+    out=$(test_discovery_guard 639 574 "$T/td" 2>&1); rc=$?
+    want "one MORE test lost FAILS the lane" "$rc" "1"
+    case "$out" in *"64 -> 65"*) ok "…and states the before->after" ;; *) bad "…states the before->after" ;; esac
+    # …across a subshell, for the reason `error_baseline_guard` uses a marker rather than a variable.
+    ( headline 0 "$T/td" ) > /dev/null 2>&1
+    want "…and headline EXITS NON-ZERO for it, across the capture" "$?" "1"
+
+    out=$(test_discovery_guard 639 576 "$T/td" 2>&1); rc=$?
+    want "a GAIN fails too — it is a change, not an improvement to absorb" "$rc" "1"
+    case "$out" in *"baseline-accept"*) ok "…and names the promotion command" ;; *) bad "…names the promotion command" ;; esac
+
+    # A port that loses NOTHING is the normal case and must be held to zero, not exempted.
+    printf '0\n' > "$T/td/baseline/expected-lost"
+    want "a port that loses nothing passes at zero" "$(test_discovery_guard 221 221 "$T/td" > /dev/null 2>&1; echo $?)" "0"
+    out=$(test_discovery_guard 221 220 "$T/td" 2>&1); rc=$?
+    want "…and ONE lost test fails it" "$rc" "1"
+
+    rm -f "$T/td/baseline/expected-lost"
+    out=$(test_discovery_guard 639 575 "$T/td" 2>&1); rc=$?
+    want "a MISSING discovery baseline is fatal, never clean" "$rc" "1"
+    case "$out" in *"NO TEST-DISCOVERY BASELINE"*) ok "…and says nothing is comparing the count" ;; *) bad "…says so" ;; esac
+
+    # …and a marker from a PREVIOUS run must not fail a run that is now acknowledged.
+    printf '64\n' > "$T/td/baseline/expected-lost"
+    test_discovery_guard 639 575 "$T/td" > /dev/null 2>&1
+    ( headline 0 "$T/td" ) > /dev/null 2>&1
+    want "a STALE discovery marker is cleared by the next guard" "$?" "0"
 
     echo
     [ "$fail" = "0" ] && echo "lane-selfcheck: PASS" || { echo "lane-selfcheck: FAILED"; exit 1; }
@@ -1962,6 +2023,15 @@ baseline-accept PORT:
     if [ -f "$DIR/run-latest/errors-count" ]; then
       cp "$DIR/run-latest/errors-count" "$DIR/baseline/expected-errors"
       echo "expected-errors: $(cat "$DIR/baseline/expected-errors")"
+    fi
+    #   tests-lost                 — how many of the library's @Test this port does not emit,
+    #                                promoted as `expected-lost`. Same rule as the error count and
+    #                                for the same reason: written by `test_discovery_guard` on every
+    #                                run so nobody types it, and gated in BOTH directions, because a
+    #                                loss that grows is a suite that quietly got smaller and passed.
+    if [ -f "$DIR/run-latest/tests-lost" ]; then
+      cp "$DIR/run-latest/tests-lost" "$DIR/baseline/expected-lost"
+      echo "expected-lost:   $(cat "$DIR/baseline/expected-lost")"
     fi
     echo "baseline accepted for {{PORT}}:"
     cat "$DIR/baseline/counts.tsv"

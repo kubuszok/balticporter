@@ -236,6 +236,18 @@ test_outcome_guard() {
     echo "   If the skip is a state this port accepts, promote it: just baseline-accept <port>"
     bad=1
   fi
+  # …and the OTHER way a test stops running: the row is not in the artifact AT ALL. A skip is a test
+  # the runner reached and did not assert; a DISAPPEARANCE is a test the run never had — which is
+  # what a conversion regression that stops EMITTING a suite looks like from here. Both sides fall
+  # together, so no pass count drops and no fail count rises, and the run reports success on a
+  # smaller suite. `TestDiff.disappeared` rendered this from the beginning and nothing gated it.
+  if [ -f "$diff" ] && grep -q '^-- tests in the baseline that DID NOT RUN' "$diff"; then
+    echo "!! TESTS DISAPPEARED — a test the baseline holds has no row in this run's artifact at all."
+    echo "   It moves no pass count and no fail count; the suite simply got smaller and passed:"
+    sed -n '/^-- tests in the baseline that DID NOT RUN/,/^$/p' "$diff" | sed 's/^/     /'
+    echo "   If the test was DELETED on purpose, say so by promoting: just baseline-accept <port>"
+    bad=1
+  fi
   if [ "$reconciled" != "0" ]; then
     echo "!! OUTCOMES LOST (reported above) — an emitted test produced no outcome line at all, so it"
     echo "   has no row in tests.tsv for any baseline to hold an opinion about. Failing the lane."
@@ -391,6 +403,83 @@ error_baseline_guard() {
   : > "$marker"; return 1
 }
 
+# test_discovery_guard <java-@Test-count> <discoverable-scala-count> <report-dir>
+#
+# HOW MANY OF THIS LIBRARY'S TESTS THE PORT DOES NOT EMIT — baselined, and fatal when it moves.
+#
+# The count itself is old and right: a suite with no discoverable tests runs ZERO and reports
+# SUCCESS, so every test lane sums what each FRAMEWORK would discover in the emitted Scala and holds
+# it against the `@Test` count in the upstream java. What it was NOT was a gate. The line
+#
+#     !! TESTS LOST — 64 of 639 would never run, and the suite would report success
+#
+# printed, exited 0, and moved on. On liqp it is permanently 64 (an `excludeGlobs` of four files the
+# frontend cannot read, and a three-key `dropMethods`), so it is a line an operator has learned to
+# read past — and a 65th test lost to a CONVERSION regression changes one digit inside it. That is
+# the same false green `error_baseline_guard` was written for, at the one number that says whether
+# the behavioural evidence in CLAUDE.md §3 exists at all.
+#
+# So the expected loss is a ONE-LINE BASELINE FILE, `<report-dir>/baseline/expected-lost`, and a
+# mismatch fails the lane IN EITHER DIRECTION, for `error_baseline_guard`'s reasons exactly:
+#
+#   - MORE lost is a regression — tests that ran yesterday do not run today;
+#   - FEWER is a change too, and it is ACKNOWLEDGED by re-accepting rather than absorbed. A lane
+#     that silently tolerated recovery would let a gain and a loss cancel inside one run.
+#
+# The number is DERIVED FROM THE PORT: every test in it is one the port's own `excludeGlobs` or
+# `dropMethods` names, and the baseline is written by the run (`run-latest/tests-lost`) and promoted
+# by `just baseline-accept`, so nobody ever types it — the same rule that keeps a hand-edited error
+# floor from disagreeing with the run that produced it. A port that loses NOTHING is held to 0,
+# which is the normal case and deliberately not an exemption.
+#
+# A MISSING baseline file is FATAL: "nothing is comparing this" and "this compares clean" are
+# indistinguishable from the outside.
+#
+# The verdict is PRINTED here and EXITED in `headline`, and it travels between them as a MARKER FILE
+# for the reason `error_baseline_guard` states — a variable set inside `$(…)` reaches nobody, and
+# this guard runs BEFORE the compile, so exiting on the spot would take the compile, the correlation
+# and the whole diagnosis with it.
+test_discovery_guard() {
+  local java="$1" scala="$2" dir="$3"
+  local lost=$((java - scala))
+  local expected_file="$dir/baseline/expected-lost"
+  local marker="$dir/run-latest/tests-lost-baseline-failed"
+  mkdir -p "$dir/run-latest" 2>/dev/null
+  echo "$lost" > "$dir/run-latest/tests-lost"
+  rm -f "$marker"
+  if [ ! -f "$expected_file" ]; then
+    echo "!! NO TEST-DISCOVERY BASELINE — nothing is comparing how many of this library's tests the"
+    echo "   port fails to emit. $expected_file does not exist, so a 0 -> $lost regression would print"
+    echo "   and pass. Seed it from this run's honest state: just baseline-accept <port>"
+    : > "$marker"; return 1
+  fi
+  local expected
+  expected=$(tr -dc '0-9' < "$expected_file")
+  if [ -z "$expected" ]; then
+    echo "!! TEST-DISCOVERY BASELINE UNREADABLE — $expected_file holds no number."
+    : > "$marker"; return 1
+  fi
+  if [ "$lost" = "$expected" ]; then
+    if [ "$lost" = "0" ]; then
+      echo "  tests lost vs baseline: 0 = 0  (every @Test in the upstream java is emitted)"
+    else
+      echo "  tests lost vs baseline: $lost = $expected  (unchanged) — $lost of $java NEVER RUN."
+      echo "     Each one is named by this port's own excludeGlobs/dropMethods; a suite that runs a"
+      echo "     smaller number of tests than the library has is not a suite that passed."
+    fi
+    return 0
+  fi
+  if [ "$lost" -gt "$expected" ]; then
+    echo "!! TESTS LOST ROSE — $expected -> $lost of $java would never run, and the suite would report"
+    echo "   success. Nothing about this moves a pass count, a fail count or a compile-error count."
+  else
+    echo "!! TESTS LOST FELL — $expected -> $lost. That is a change, and it is ACKNOWLEDGED, not absorbed."
+    echo "   Re-accept the baseline so the new floor is the one the next run is held to:"
+    echo "     just baseline-accept <port>"
+  fi
+  : > "$marker"; return 1
+}
+
 # show_check_report <report-dir>
 # The persisted, UNTRUNCATED check results and their diff against the committed baseline.
 show_check_report() {
@@ -486,6 +575,12 @@ headline() {
   # `measure-all` stops the sequence exactly as it does for a lost test.
   if [ -f "$dir/run-latest/errors-baseline-failed" ]; then
     echo "!! this lane FAILED its error baseline — see the 'errors vs baseline' line above"
+    exit 1
+  fi
+  # …and the TEST-DISCOVERY gate, deferred here for the same reason: it is decided before the
+  # compile, and exiting there would take the compile and the correlation with it.
+  if [ -f "$dir/run-latest/tests-lost-baseline-failed" ]; then
+    echo "!! this lane FAILED its test-discovery baseline — see the 'tests lost' line above"
     exit 1
   fi
 }

@@ -476,7 +476,8 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
     in prose as "45, all switch-case" while nothing computed it; the real number was 55 (§4.4).
   - **the TEST lane** — `reconcile_outcomes` reconciles outcomes against the **emitted** test count,
     not against a sum of markers, so a test with no recognised line is reported whatever the reason
-    (§5.1). A skipped test is not a passing test.
+    (§5.1). A skipped test is not a passing test. Nor is one that was never EMITTED — the
+    discovery figure beside it is baselined too, and both directions of it are fatal.
   - **`members.tsv`** — which members' emitted text moved, available BEFORE any compile (§5.1).
   - **`decisions.tsv` + the porter notes** — how many non-mechanical decisions the port made, by
     kind, and whether every one of them reached the code (§4.575). `porter-notes` is the check;
@@ -492,6 +493,23 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   number — a hand-edited floor is the one baseline that can disagree with the run that produced it.
   **Fewer errors fails the lane as loudly as more**: a change is acknowledged by re-accepting, and a
   lane that absorbed improvement would let a fix and a regression cancel inside one run.
+- **…AND SO IS THE NUMBER OF TESTS THE PORT EMITS, for the same reason and with the same file.** The
+  error count was not the only measurement nothing compared. Every test lane already counted what
+  each framework would DISCOVER in the emitted Scala against the `@Test` count in the upstream java
+  — because a suite with no discoverable tests runs ZERO and reports SUCCESS — and then printed the
+  difference in a line that exited 0. On a port with a declared loss that line is a CONSTANT
+  (liqp: `!! TESTS LOST — 64 of 639`, from four `excludeGlobs` files and three `dropMethods` keys),
+  so an operator reads past it and a 65th test lost to a conversion regression changes one digit
+  inside it. Nothing else can see that loss: the test is not failing, it is not skipped, it has no
+  row in `tests.tsv` for any baseline to hold an opinion about, and no compile-error count moves.
+  So the expected loss is `baseline/expected-lost`, written by the run and promoted by
+  `just baseline-accept`, and `test_discovery_guard` fails the lane in EITHER direction — a
+  RECOVERED test is a change to acknowledge, not an improvement to absorb. A port that loses nothing
+  is held to 0, which is the normal case and deliberately not an exemption.
+  **`TestDiff.disappeared` is the same failure seen from the artifact side** and was rendered and
+  ungated on the grounds that deleting a test is somebody's decision — true of a deletion, false of
+  a conversion regression, which removes the rows from both sides at once. It gates now; a real
+  deletion is acknowledged by re-accepting, which is what makes the decision a recorded fact.
 - **Change one thing, then measure.** Two changes measured together cost a full cycle to untangle
   and tell you nothing about either.
 - **A DRY RUN of one phase is not a measurement of the pipeline.** Running a single phase over a
@@ -550,7 +568,11 @@ you should do:
   count and no fail count, which is exactly why it needs its own gate — `TestDiff.newlySkipped`,
   and `skipped` is kept apart from `ignored` because an ignored test is a DECISION and a skipped
   one is PREVENTION. Same rule for a missing INPUT: a `--tests` path that does not exist is fatal,
-  never a header-only artifact and a headline of "0 passing, 0 failing".
+  never a header-only artifact and a headline of "0 passing, 0 failing". And a test with no row at
+  all — `TestDiff.disappeared` — gates beside them: a skip is a test the runner REACHED and did not
+  assert, a disappearance is a test the run never had, which is what a conversion regression that
+  stops EMITTING a suite looks like from here. Both sides fall together, so the run reports success
+  on a smaller suite; a deliberate deletion is acknowledged by re-accepting the baseline.
 - **`decisions.tsv` says WHY the emitted code is not a mechanical translation.** The source map
   answers "which Java produced this line"; it cannot answer "why is this type simply absent, this
   package not the upstream one, this member from a hand-written file". Each of those is a
