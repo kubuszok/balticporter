@@ -2687,6 +2687,31 @@ that function's one answer. Three things measured while doing it:
 
 *Fix kind: (a). Universal.*
 
+**CORRECTION (audit-2 F3): "the argument is an array" is not the question — java's is ASSIGNABILITY,
+and a PRIMITIVE array is assignable to nothing but its own array type.** `passesArray` read the
+argument's type, asked whether it was an array at all, and never looked at the COMPONENT. So `int[]`
+at an `Object...`/`T...` slot was marked pass-through, when java does not forward it at all: it
+materialises `new Object[]{ intArr }`, ONE element holding the array. That is the classic gotcha —
+`Arrays.asList(intArr)` is a `List<int[]>` of size 1, not a list of ints, and
+`String.format("%s", intArr)` prints `[I@…` for one `%s`. Read as a pass-through it becomes the
+SPREAD above, and both faces are §4.4's:
+
+| java | emitted before | what it meant |
+|---|---|---|
+| `Arrays.asList(intArr)` — a `List<int[]>` of size 1 | `Arrays.asList(intArr*)` | COMPILES, and is a list of `intArr.length` ints. No error, no moved count |
+| `String.format("%s", intArr)` — one `%s`, printing `[I@…` | `String.format("%s", intArr*)` | the call's ARITY changed |
+| an OWNED callee, `def f(xs: Array[Object])` | `f(intArr)` | `Array[Int]` does not conform — Scala's `Array` is invariant |
+
+Pass-through now requires the components to AGREE: identical where either is primitive, and a
+reference component is left alone because `String[] <: Object[]` is java's own array covariance and
+the forward really is a forward. The CAST wins where there is one, which is the type java resolved
+the slot against and the same reason `(String[]) null` is read from the cast rather than the literal.
+
+Measured: **all eleven lanes, 0 member digests moved and every check count flat** — no library in
+this corpus forwards a primitive array through a reference vararg slot, which is exactly why the
+gate is `SpoonTirBodySpec`'s three cases (primitive-at-reference packs, primitive-at-same-primitive
+passes, reference-at-reference passes) and not a number. *Fix kind: (a). Universal.*
+
 **…and the third case COLLIDED with the first, which is what a composition costs.** The two halves
 above landed in different steps and each was green alone. The rewrite reads its ARGUMENTS and knew
 one pack shape (`Tree.NewArray`); the frontend now mints the other (`Tree.Repeated`) at exactly the

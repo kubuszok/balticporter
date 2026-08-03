@@ -2278,11 +2278,30 @@ object SpoonTir:
             // SPREAD, which is the mirror of the pack below and the same fact: see `passThrough`.
             // The CASTS matter: Spoon types `(String[]) null` by the literal, not the cast, and
             // packing it would build `Array[String](null: Array[String])`.
+            // …AND THE COMPONENT TYPES HAVE TO AGREE. Java's rule for the slot is ASSIGNABILITY,
+            // and a PRIMITIVE array is assignable to nothing but its own array type — so `int[]` at
+            // an `Object...`/`T...` slot is not a pass-through at all: java materialises
+            // `new Object[]{ intArr }`, ONE element holding the array. That is the classic gotcha
+            // `Arrays.asList(intArr)` (a `List<int[]>` of size 1) and `String.format("%s", intArr)`
+            // (one `%s`, printing `[I@…`) are both instances of, and reading it as a pass-through is
+            // CLAUDE.md §4.4's shape twice over: `Arrays.asList(intArr*)` compiles and yields a list
+            // of five, `String.format(fmt, intArr*)` changes the call's arity. Neither moves a
+            // count. A REFERENCE component is left alone — `String[] <: Object[]` is java's own
+            // array covariance and the forward really is a forward.
+            def componentAgrees(arr: CtArrayTypeReference[?]): Boolean =
+              val ac = try arr.getComponentType catch { case _: Throwable => null }
+              if ac == null || comp == null then true
+              else if ac.isPrimitive || comp.isPrimitive then ac.getQualifiedName == comp.getQualifiedName
+              else true
             val passesArray = argEs.sizeIs == l.size && {
               val e     = argEs.last
               val casts = try e.getTypeCasts.asScala.toList catch { case _: Throwable => Nil }
               val own   = try e.getType catch { case _: Throwable => null }
-              (own :: casts).exists(_.isInstanceOf[CtArrayTypeReference[?]]) ||
+              // the CAST wins where there is one, for the reason stated above — Spoon types
+              // `(String[]) null` by the literal — and it is also the type java resolved the slot
+              // against, so it is the one whose component decides.
+              (casts.reverse :+ own).collectFirst { case a: CtArrayTypeReference[?] => a }
+                .exists(componentAgrees) ||
                 // a BARE `null` is the array itself; `(String) null` is not. The cast names the
                 // COMPONENT type, which is exactly how java disambiguates the two — `test("null",
                 // "", (String) null)` passes a one-element array holding null, not a null array.

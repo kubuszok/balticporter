@@ -264,6 +264,60 @@ class SpoonTirBodySpec extends munit.FunSuite:
       case None                 => fail("no argument at all")
   }
 
+  // -- …and a pass-through is decided by the COMPONENT TYPE, not by "the argument is an array" ----
+  //
+  // Java's rule is assignability, and a PRIMITIVE array is assignable to nothing but its own array
+  // type. `int[]` at an `Object...` slot is therefore not a pass-through at all — java materialises
+  // `new Object[]{ intArr }`, ONE element holding the array — which is the classic gotcha
+  // `Arrays.asList(intArr)` (a `List<int[]>` of size 1, not a list of ints) and
+  // `String.format("%s", intArr)` (one `%s`, printing `[I@…`) are both instances of.
+  //
+  // Read as a pass-through it is CLAUDE.md §4.4's shape twice over: `Arrays.asList(intArr*)`
+  // compiles and yields a list of five, and `String.format(fmt, intArr*)` changes the arity of the
+  // format call. Neither moves an error count.
+
+  // One method per case, so each `callsIn` selection names exactly one call — two `asList`s in one
+  // body are told apart only by position, which is a test that passes for the wrong reason the day
+  // the traversal order changes.
+  private val componentProgram = SpoonTir.fromSource(
+    """package demo;
+      |class Comp {
+      |  static int sum(int... xs) { return xs.length; }
+      |  void primitiveAtObject(int[] ints)   { java.util.Arrays.asList(ints); }
+      |  void referenceAtObject(String[] strs) { java.util.Arrays.asList(strs); }
+      |  void primitiveAtPrimitive(int[] ints) { sum(ints); }
+      |}
+      |""".stripMargin)
+
+  private def compLastArg(member: String): Option[Tree] =
+    callsIn(componentProgram, s"demo.Comp#$member").headOption.flatMap(_.args.lastOption)
+
+  test("`int[]` at an `Object...`/`T...` slot is ONE element — java's pack, never a spread") {
+    // `Arrays.asList(ints)` is `List<int[]>` of size 1 in java. A `Spread` here is a list of five.
+    compLastArg("primitiveAtObject") match
+      case Some(_: Tree.Spread)          => fail("an int[] is not assignable to Object[] — java packs it")
+      case Some(Tree.Repeated(es, _, _)) => assertEquals(clue(es).size, 1)
+      case other                         => fail(s"expected a one-element Repeated, got $other")
+  }
+
+  test("…and `String[]` at the same slot still passes through — array covariance is java's own") {
+    // The negative test: a REFERENCE component is assignable (`String[] <: Object[]`), so java
+    // really does forward the array and the spread is the faithful rendering of that.
+    compLastArg("referenceAtObject") match
+      case Some(_: Tree.Spread) => ()
+      case other                => fail(s"expected Spread, got $other")
+  }
+
+  test("…and `int[]` at an `int...` slot passes through — the components AGREE") {
+    // `sum(int...)` is ours, so the pass-through renders as the bare array against the emitted
+    // `Array[Int]` formal. Packing here would build `Array[Int](intArr)` and fail to compile.
+    compLastArg("primitiveAtPrimitive") match
+      case Some(_: Tree.NewArray) => fail("the components agree — java forwards the array whole")
+      case Some(_: Tree.Repeated) => fail("the components agree — java forwards the array whole")
+      case Some(_)                => ()
+      case None                   => fail("no argument at all")
+  }
+
   // -- T14: a java STATIC is INHERITED by every subclass; a scala companion inherits NOTHING ------
   //
   // `ZoneOffset.systemDefault()` is ordinary java: `systemDefault` is declared `static` on
