@@ -3885,8 +3885,10 @@ a reader taking it for one would be wrong.
 *Fix kind: (a) engine — CLOSED. `CollectionsTransform.reifiedTest`/`reifiedCast` →
 `JavaCollections.Reified`, catalog `JS-G48`, counted refusal `Issue.ReifiedOccurrence`. The
 generalisation is CLAUDE.md's and is not about collections: **every retyping phase owes an answer at
-the REIFIED positions**, because a type test and a cast are the two places where a type is a
-statement about an object and not about a slot.*
+the REIFIED positions**, because a type test and a cast are two places where a type is a statement
+about an object and not about a slot — **two places IN THE SOURCE, and not the whole list.** A type
+ARGUMENT a third party reads back at run time is a third, it is written nowhere in the port's own
+expressions, and it is K20 below.*
 
 ---
 
@@ -3952,6 +3954,60 @@ on identity of a collection reference, this mapping is the wrong policy for it**
 *Fix kind: (a) engine for the chain — CLOSED (`balticporter.runtime.Wrapping`, `Reified.under`,
 `JavaCollectionsSpec`'s wrap-then-retest tests). (b) per-library policy for the identity half —
 OPEN by construction, scoped out rather than solved.*
+
+---
+
+### K20. A REIFIED TYPE ARGUMENT is read out of the CLASS FILE by someone else — **10 test failures on liqp, 0 compile errors, every check count flat. OPEN**
+
+K18's two reified positions are written in the source: `x instanceof T` and `(T) x`. **There is a
+third and the port never writes it at all.** A generic type ARGUMENT survives into the class file's
+generic signature, and a third-party framework reads it back at run time:
+
+```java
+static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {};
+…
+mapper.convertValue(value, MAP_TYPE_REF);      // jackson: CONSTRUCT the type named in the signature
+```
+
+`CollectionsTransform` retypes the argument to `mutable.Map`, which is exactly right for every
+static slot and is a fact jackson then acts on:
+
+```
+java.lang.IllegalArgumentException: Cannot construct instance of `scala.collection.mutable.Map`
+  (no Creators, like default constructor, exist)
+```
+
+**Read what is different about it, because it looks like K15 and is not.** There is no SLOT here
+whose two sides disagree — the argument is a type, not a value; nothing crosses a boundary; no
+coercion has anywhere to go. And unlike K18 there is no NODE to translate: the occurrence is a type
+argument in a declaration, so a phase that walked every `InstanceOf` and every `Typed` in the
+program would visit nothing. That is why every instrument reads clean: **0 compile errors, every
+check count flat, `collection-retarget` 0, `collection-boundary` unchanged** — measured on liqp,
+where this is **10 of the 23 remaining failures** (9 through `LiquidSupport$…#objectToMap`, 1
+through a filter).
+
+**It recurs, which is what makes it an engine limit rather than a liqp fact.** A super-type token is
+the standard JVM idiom for passing a generic type to a framework: jackson's `TypeReference<T>`,
+Gson's `TypeToken<T>`, Guice's `Key<T>` and `TypeLiteral<T>`, and every `Class<T>` literal. Any
+library that deserialises, injects or reflects hits it.
+
+**The fix is a (b), and the split is where the reuse is.** The MECHANISM is universal — *do not
+retype a type argument that a third party will reify; bridge at the USE instead, where a value
+exists and a live view can be built.* WHICH external generic types are reified carriers is
+per-library policy, because it is a fact about that library's dependencies: `java.lang.Class` is the
+only one java itself guarantees, and `TypeReference`/`TypeToken`/`Key` are facts about jackson, gson
+and guice. So it is a parameter on the retyping phase — a set of carrier FQNs whose type arguments
+are left in java's namespace — and an empty set makes it a no-op, per CLAUDE.md §1(b).
+
+**Do NOT reach for the two nearby answers.** Neither works and both are measured elsewhere in this
+file: retyping-and-wrapping at the producer is K18's own 44-of-160 dead end (`asScala` is ONE level
+and the values inside stay java's), and scoping the whole declaration out with `RuleScope` is K16 —
+27 → 47 errors narrow, 27 → 51 off. The argument has to stay java's while the surrounding
+declarations keep the mapping, which is precisely what a per-argument carrier list expresses and
+what neither of those does.
+
+*Fix kind: (b) — mechanism universal, carrier list per library. OPEN; the census and the per-site
+diagnosis are in `PROGRESS.md`'s liqp residue table.*
 
 ---
 
