@@ -6,6 +6,7 @@ da32b7817464	catalog(consulted)	reached	JS-E05	../../main/java/liqp/Examples.jav
 f86b2b8279f3	catalog(consulted)	reached	JS-E14	liqp/RenderSettingsTest.java	150	lowering CtBinaryOperator/Expression — consulted 1392, fired 4, declarations 0: string concatenation with a NON-`String` left operand
 ff03b60964f4	catalog(consulted)	reached	JS-E15	liqp/TestUtils.java	50	lowering CtAssignment/Expression — consulted 1, fired 1, declarations 0: an assignment IS an expression, with the assigned value
 e4681fa860ab	catalog(consulted)	reached	JS-G31	../../main/java/liqp/Insertions.java	113	lowering CtInvocation/Expression — consulted 7705, fired 13, declarations 0: a POLY EXPRESSION must never be cast as a whole
+7e1c3dffb875	catalog(consulted)	reached	JS-G48	-	0	phase collections — consulted 0, fired 0, declarations 29: a REIFIED type occurrence asks about a RUNTIME OBJECT, so a retyping moves the question and not the answer
 1f875123d9c3	catalog(uncited)	absent	JS-C30	-	0	UNCITED — Scala has a direct counterpart; only the capture wiring is missing (JLS side: JLS 14.3): method-LOCAL named classes
 ddd222cdb7e4	catalog(uncited)	absent	JS-C43	-	0	UNCITED — a case class differs in accessor naming and in three facets of `toString` (JLS side: JLS 8.10): Java `record`
 38c031beb630	catalog(uncited)	absent	JS-S09	-	0	UNCITED — a `match` is already an expression, so the image exists (JLS side: JLS 15.28, 14.21): switch EXPRESSIONS and `yield`
@@ -254,6 +255,8 @@ fa480aebedbe	collection-boundary	ExternalCallee	@3725#<init>()	liqp/filters/wher
 19d1a6c07fdc	collection-boundary	ExternalCallee	@4314#<init>()	liqp/nodes/LookupNodeTest.java	199	external result: Found scala.collection.mutable.HashMap[java.lang.String, java.lang.Object] / Required a live scala view
 d9ef4195c21c	collection-boundary	ExternalCallee	@4322#<init>()	liqp/nodes/LookupNodeTest.java	250	external result: Found scala.collection.mutable.HashMap[java.lang.String, java.lang.Object] / Required a live scala view
 27c676aa4c55	collection-boundary	ExternalCallee	@4326#<init>()	liqp/nodes/LookupNodeTest.java	253	external result: Found scala.collection.mutable.HashMap[java.lang.String, java.lang.Object] / Required a live scala view
+99751984eca6	collection-boundary	ReifiedOccurrence	?	liqp/nodes/LookupNodeTest.java	250	reified cast: Found scala.collection.mutable.HashMap[?, ?] / Required a representation-agnostic test or coercion
+99751984eca6/2	collection-boundary	ReifiedOccurrence	?	liqp/nodes/LookupNodeTest.java	253	reified cast: Found scala.collection.mutable.HashMap[?, ?] / Required a representation-agnostic test or coercion
 571ce71bd004	omissions	annotation dropped	ssg.liquid.blocks.ForTest$22#value	<synthetic>	0	java.lang.SuppressWarnings
 33f72fda266e	omissions	annotation dropped	ssg.liquid.filters.Relative_UrlTest$26#baseurl	<synthetic>	0	java.lang.SuppressWarnings
 7178372513c8	omissions	annotation dropped	ssg.liquid.filters.SizeTest$27#a	<synthetic>	0	java.lang.SuppressWarnings

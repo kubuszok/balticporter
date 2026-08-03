@@ -513,6 +513,127 @@ object JavaCollections:
   def comparingByKey[K, V](cmp: java.util.Comparator[? >: K]): java.util.Comparator[(K, V)] =
     (a: (K, V), b: (K, V)) => cmp.compare(a._1, b._1)
 
+  // -------------------------------------------------------------------------------------------
+  // REIFIED OCCURRENCES — an `instanceof` and a downcast ask about a RUNTIME OBJECT
+  //
+  // Everything above this block is about STATIC types: a retyping moves a declaration, and the
+  // seam it opens is a slot whose two sides disagree. `x instanceof java.util.Map` and
+  // `(Map<K,V>) x` are not that. They are questions asked of an OBJECT at run time, and the
+  // retyping moved neither the objects nor the classes they are instances of — so translating
+  // them by moving the type alone changes the ANSWER, silently, in valid Scala.
+  //
+  // After a retyping a program legitimately holds BOTH representations at an `Object` slot: the
+  // ones its own code made (the mapping's targets) and the ones an external producer made
+  // (java's own classes — jackson deserialising into a `HashMap`, a parser handing back an
+  // `ArrayList`, a caller passing the library a `Map` it built itself). Java's test accepted
+  // every one of those. So each predicate below is the DISJUNCTION of the representations one
+  // java type can have in a port, and each coercion accepts either and produces the port's.
+  //
+  // ==Why the disjunction is not just "the target, or java's own type"==
+  // The mapping preserves java's subtype relations wherever it can (see `typeMap`'s own notes),
+  // so for `Map`, `List`, `Set` and `Iterator` those two disjuncts are exact — every port
+  // representation of a java `Map` is a `mutable.Map`. The two SHIM targets are where it does
+  // not: `java.util.List <: java.util.Collection` in java, and `mutable.Buffer` is not a
+  // `JavaCollection`, because the shim exists precisely so a class can EXTEND
+  // `AbstractCollection` (CLAUDE.md §4.5). So `isCollection` names the targets of `Collection`'s
+  // mapped java subtypes as well, and `isIterable` names those plus the collection shim.
+  //
+  // ==and why it is not `scala.collection.Iterable` either==
+  // Widening the scala side to `Iterable` reads as the obvious simplification and is WRONG in the
+  // other direction: a `mutable.Map` is a `scala.collection.Iterable` and a `java.util.Map` is
+  // NOT a `java.util.Collection`, so `x instanceof Collection` would start answering true for a
+  // map. Measured on liqp, where `LValue.asArray` treats a `Map` as a single element by exactly
+  // that test: the loose form is TWO test failures worse than this one (552 vs 550 passing).
+  // -------------------------------------------------------------------------------------------
+
+  /** the two halves of a REIFIED occurrence: `is*` answers java's `instanceof`, `as*` performs
+    * java's downcast. `CollectionsTransform` emits these where it retyped the tested/cast type;
+    * where the target is a CONCRETE one no live view can produce (`mutable.HashMap`,
+    * `ArrayBuffer`, `Tuple2`) it emits nothing and counts the refusal instead. */
+  object Reified:
+
+    import scala.jdk.CollectionConverters.*
+
+    /** java's `x instanceof java.util.Map`. */
+    def isMap(x: Any): Boolean =
+      x.isInstanceOf[scala.collection.mutable.Map[?, ?]] || x.isInstanceOf[java.util.Map[?, ?]]
+
+    /** java's `x instanceof java.util.List`. */
+    def isBuffer(x: Any): Boolean =
+      x.isInstanceOf[scala.collection.mutable.Buffer[?]] || x.isInstanceOf[java.util.List[?]]
+
+    /** java's `x instanceof java.util.Set`. */
+    def isSet(x: Any): Boolean =
+      x.isInstanceOf[scala.collection.mutable.Set[?]] || x.isInstanceOf[java.util.Set[?]]
+
+    /** java's `x instanceof java.util.Collection` — the shim target, so the mapped subtypes'
+      * targets are named beside it (see the block comment). */
+    def isCollection(x: Any): Boolean =
+      x.isInstanceOf[JavaCollection[?]] || x.isInstanceOf[scala.collection.mutable.Buffer[?]] ||
+        x.isInstanceOf[scala.collection.mutable.Set[?]] || x.isInstanceOf[java.util.Collection[?]]
+
+    /** java's `x instanceof java.lang.Iterable` — every `Collection` representation plus the
+      * `Iterable` shim itself. A java `Map` is not an `Iterable`, so no map is named here. */
+    def isIterable(x: Any): Boolean =
+      x.isInstanceOf[JavaIterable[?]] || isCollection(x) || x.isInstanceOf[java.lang.Iterable[?]]
+
+    /** java's `x instanceof java.util.Iterator`. */
+    def isIterator(x: Any): Boolean =
+      x.isInstanceOf[JavaIterator[?]] || x.isInstanceOf[java.util.Iterator[?]]
+
+    // -----------------------------------------------------------------------------------------
+    // …and the CAST. Each returns the port's representation, LIVE where the value is java's —
+    // the same `asScala` view `fromJava` gives, for the same reason: the producer may still hold
+    // the collection, so a copy would detach every later change. The result carries wildcard type
+    // arguments and the emitter leaves java's own cast in place around the call, which is exact:
+    // java's cast to `Map<K,V>` is unchecked in its type arguments too (JLS 5.5).
+    // -----------------------------------------------------------------------------------------
+
+    /** java's `(java.util.Map<K,V>) x`. */
+    def asMap(x: Any): scala.collection.mutable.Map[?, ?] = x match
+      case m: java.util.Map[?, ?] => m.asInstanceOf[java.util.Map[Any, Any]].asScala
+      case m                      => m.asInstanceOf[scala.collection.mutable.Map[?, ?]]
+
+    /** java's `(java.util.List<A>) x`. */
+    def asBuffer(x: Any): scala.collection.mutable.Buffer[?] = x match
+      case xs: java.util.List[?] => xs.asInstanceOf[java.util.List[Any]].asScala
+      case xs                    => xs.asInstanceOf[scala.collection.mutable.Buffer[?]]
+
+    /** java's `(java.util.Set<A>) x`. */
+    def asSet(x: Any): scala.collection.mutable.Set[?] = x match
+      case xs: java.util.Set[?] => xs.asInstanceOf[java.util.Set[Any]].asScala
+      case xs                   => xs.asInstanceOf[scala.collection.mutable.Set[?]]
+
+    /** java's `(java.util.Collection<A>) x`.
+      *
+      * The port's own representations reach the shim through its two factories; a java value
+      * reaches it through [[JavaCollection.fromJava]], which is a live view over java's own
+      * collection and NOT a copy — this is the one direction `liveWrappable` refuses at a static
+      * slot, and the reason it can be taken here is that the object is in hand: there is no
+      * overload to resolve and no element type to lie about. */
+    def asCollection(x: Any): JavaCollection[?] = x match
+      case c: JavaCollection[?]                       => c
+      case xs: scala.collection.mutable.Buffer[?]     => JavaCollection.from(xs.asInstanceOf[scala.collection.mutable.Buffer[Any]])
+      case xs: scala.collection.mutable.Set[?]        => JavaCollection.fromSet(xs.asInstanceOf[scala.collection.mutable.Set[Any]])
+      case c: java.util.Collection[?]                 => JavaCollection.fromJava(c.asInstanceOf[java.util.Collection[Any]])
+      case other                                      => other.asInstanceOf[JavaCollection[?]]
+
+    /** java's `(java.lang.Iterable<A>) x`. */
+    def asIterable(x: Any): JavaIterable[?] = x match
+      case i: JavaIterable[?]     => i
+      case i: java.lang.Iterable[?] =>
+        JavaIterable.from(i.asInstanceOf[java.lang.Iterable[Any]].asScala)
+      case xs: scala.collection.Iterable[?] =>
+        JavaIterable.from(xs.asInstanceOf[scala.collection.Iterable[Any]])
+      case other => other.asInstanceOf[JavaIterable[?]]
+
+    /** java's `(java.util.Iterator<A>) x`. */
+    def asIterator(x: Any): JavaIterator[?] = x match
+      case it: JavaIterator[?]      => it
+      case it: java.util.Iterator[?] =>
+        JavaIterator.from(it.asInstanceOf[java.util.Iterator[Any]].asScala)
+      case other => other.asInstanceOf[JavaIterator[?]]
+
   def comparingByValue[K, V](cmp: java.util.Comparator[? >: V]): java.util.Comparator[(K, V)] =
     (a: (K, V), b: (K, V)) => cmp.compare(a._2, b._2)
 

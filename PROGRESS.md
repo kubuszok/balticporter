@@ -95,7 +95,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
-| `ssg-liquid-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 392 passing, 183 failing**, 155 of them one collections seam (§10.5.5) | **0** |
+| `ssg-liquid-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 552 passing, 23 failing** (§10.5.5) | **0** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2001,7 +2001,7 @@ written, 987 members in the source map. `just liqp-measure`.
 | `jdk-surface` | **19 -> 10 -> 9** — `anyMatch`/`sortNatural`/`ConcurrentHashMap` stopped reading as this port's wall once the tables named them |
 | `collection-boundary` (main) | **6 -> 14 -> 13 -> 8 -> 18 -> 14 -> 15** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), rose by the one `InexpressibleParent` refusal K5.7 counts, and fell by five when the OWNED-callee bridge stopped being switched off by a shim this library never names (K2.5). It then ROSE to 18 and fell to 14 in one step, because the aliasing refusal became a TRANSLATION: twelve `Arrays.asList(arr)` sites stopped being untranslated calls the check cannot see and became boundaries it can, four of which the same change closed. The fifteenth is K5.7's other half: the member a RETAINED PARENT declares and the target cannot carry, now emitted as the interface's own documented refusal and counted at the slot |
 | `omissions` | **6 -> 4 -> 1** — `PlainBigDecimal`'s two `super(args)` are no longer dropped (with the external constructor's signature readable the funnel reaches K5.5's synthesised primary), and `LiquidException`'s three reach a primary synthesised at the JDK throwable's widest overload (C3) |
-| tests | 639 `@Test` upstream, **575 emitted, 575 RUN — 161 -> 357 -> 364 -> 392 passing, 414 -> 218 -> 211 -> 183 failing** (§10.5.5) |
+| tests | 639 `@Test` upstream, **575 emitted, 575 RUN — 161 -> 357 -> 364 -> 392 -> 552 passing, 414 -> 218 -> 211 -> 183 -> 23 failing** (§10.5.5) |
 
 **The behavioural gate is now the measurement.** Every number above except the last row is a
 compile-time one, and §3 is explicit about what that is worth — which this port then demonstrated
@@ -2462,20 +2462,31 @@ the run measured is the translation, which is what it is for.
 **What is NOT yet evidence.** 392 passes is a real coverage statement in a way 161 was not — the §4.4
 forms §10.5.4 lists (46 `@Test(expected=…)`, the two `@Before`s, the 38 anonymous classes, the
 `default`-less `switch`) are now exercised broadly rather than only by whatever got past `Template`.
-But **155 of the remaining 183 are one seam** — the collections PRODUCER direction, which is now
-85% of everything left on this port. That is (a) work in the engine, not policy here, and with both
-K17 faces closed it is the whole of the next behavioural gate. The residue beside it is the 29
-assertion/comparison failures nobody has read individually, minus whatever the 28 took with them.
 
-**Two of the three unmasked families are closed, and the honest reading of that is a warning about
-the third.** Both closures were single, small, universal changes in the FRONTEND — a promotion on
-the operands, and a refusal to cast a poly expression — and each was worth its whole family at once
-because the defect sat in a translation rule rather than in a policy. The 155 is not that shape: it
-is a value a THIRD PARTY produces at a declaration the port retyped, and there is no one node to fix.
-Do not read two cheap closures as evidence about the expensive one.
+**THE THIRD CENSUS: the 183 were 160 of ONE defect, and it was not the one this section named.**
+`392 -> 552 passing, 183 -> 23 failing, 0 newly failing, 0 newly skipped`, at `errors 0` before and
+after and every other check count flat except `collection-boundary 12 -> 14`. The defect is
+`ENGINE-LIMITS.md` K18 / catalog `JS-G48`: **a retyping moves STATIC types, and an `instanceof` and a
+downcast ask about a RUNTIME OBJECT.** `value instanceof java.util.Map` became
+`value.isInstanceOf[mutable.Map[?, ?]]` — valid Scala asking a different question, since the retyping
+moved neither the objects nor their classes, and liqp's whole data model is `Map<String,Object>` with
+`Object` values discriminated by exactly that test.
+
+**Read what that says about the second census's own classification, which was wrong in a useful way.**
+This section had the 155 as "the collections retyping met at a PRODUCER … there is no one node to fix",
+and warned against expecting a cheap closure. Both halves were mistaken and the reason is worth
+keeping: **the four shapes it listed were SYMPTOMS at four different distances from one cause.** The
+`readValue` `ClassCastException` is the cause one hop away; the `ArrayList`/`FrozenBuffer` casts and
+the renderings that silently produced one table cell are the same cause reached through data the
+producer made. Grouping failures by their EXCEPTION grouped them by distance, not by defect. The
+producer direction was real and is worth **44 of the 160** on its own (measured: wrapping the
+`readValue` result in `fromJava` alone reads 436) — it stops there because `asScala` is one level and
+the values inside a deserialised map are still java's.
+
+**THE RESIDUE is 23 and has not been read per test yet.**
 
 `tests.tsv` and `expected-errors` are accepted from the run that produced these numbers, so the next
-change is diffed against 392/183.
+change is diffed against 552/23.
 
 ---
 

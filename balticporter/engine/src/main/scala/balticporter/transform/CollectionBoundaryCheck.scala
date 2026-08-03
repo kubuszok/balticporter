@@ -106,6 +106,11 @@ object CollectionBoundaryCheck:
       * BE A PARENT. The parent is left as java's rather than emitted at a type that cannot carry
       * it — see the classification for why that is the honest answer and not a gap. */
     case InexpressibleParent
+    /** an `instanceof` or a downcast at a type this phase retyped, whose TARGET no live view can
+      * be. The occurrence is REIFIED — it asks about a runtime object, and the retyping moved
+      * neither the objects nor their classes — so it is the one seam with no slot to look at and
+      * no compile error behind it. */
+    case ReifiedOccurrence
 
   object Issue:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
@@ -155,6 +160,18 @@ object CollectionBoundaryCheck:
           "A second target for the implements-case is NOT the fix: `entrySet()` yields a `Tuple2` " +
           "everywhere in every port, so a shim-typed class would need a coercion at every crossing " +
           "in both directions, which is a second truth about one java type (ENGINE-LIMITS K5.7)."
+      case ReifiedOccurrence =>
+        "§1(a) engine, and REFUSED on purpose: this is an `instanceof` or a downcast at a type the " +
+          "mapping covers — a REIFIED occurrence, which asks about a RUNTIME OBJECT while the " +
+          "retyping moved only the static type. `JavaCollections.Reified` answers java's question " +
+          "over both representations wherever the target is one a live view can BE " +
+          "(`mutable.Buffer`/`Set`/`Map`, the three shims); this site's target is a CONCRETE one " +
+          "(`mutable.HashMap`, `ArrayBuffer`, `ArrayDeque`, `scala.Tuple2`) that no view can be, so " +
+          "there is nothing to coerce to. Note there is no compile error to look for and never " +
+          "was: the emitted test and cast are valid Scala asking a DIFFERENT question, so this " +
+          "count is the only instrument that sees the site (`ENGINE-LIMITS.md` K18). Closing it " +
+          "needs the mapping to send this java type to an abstract target, or the java code to " +
+          "test the interface rather than the implementation class."
       case ExternalCallee =>
         "§1(a) engine, and REFUSED here on purpose: the other side of this slot is a method the " +
           "program does not declare, so its signature is a fact about a compiled class file and no " +

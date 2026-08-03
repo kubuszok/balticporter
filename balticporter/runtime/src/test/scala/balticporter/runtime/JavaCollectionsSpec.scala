@@ -646,3 +646,99 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assert(!(a eq b))
     assertEquals(a.toList, List(1))
   }
+
+  // -------------------------------------------------------------------------------------------
+  // Reified — `ENGINE-LIMITS.md` K18. Both representations, and the LIVENESS of the coercion.
+  //
+  // Nothing about these is visible to a compile: every one of them is an `isInstanceOf` or an
+  // `asInstanceOf` that already type-checked and simply answered java's question about the wrong
+  // set of classes. So this is the only place the semantics are stated as an assertion.
+  // -------------------------------------------------------------------------------------------
+
+  test("every predicate accepts BOTH representations — the port's and the producer's") {
+    assert(JavaCollections.Reified.isMap(scala.collection.mutable.Map("a" -> 1)))
+    assert(JavaCollections.Reified.isMap(new java.util.HashMap[String, Int]()))
+    assert(JavaCollections.Reified.isBuffer(ArrayBuffer(1)))
+    assert(JavaCollections.Reified.isBuffer(new java.util.ArrayList[Int]()))
+    assert(JavaCollections.Reified.isSet(scala.collection.mutable.Set(1)))
+    assert(JavaCollections.Reified.isSet(new java.util.HashSet[Int]()))
+    assert(JavaCollections.Reified.isIterator(new java.util.ArrayList[Int]().iterator()))
+  }
+
+  test("a MAP is not a COLLECTION — the loose widening to scala.collection.Iterable is WRONG") {
+    // The measured difference: a `mutable.Map` IS a `scala.collection.Iterable` while a
+    // `java.util.Map` is NOT a `java.util.Collection`, so widening the scala side turns
+    // `x instanceof Collection` true for a map — two liqp test failures worse (K18).
+    assert(!JavaCollections.Reified.isCollection(scala.collection.mutable.Map("a" -> 1)))
+    assert(!JavaCollections.Reified.isCollection(new java.util.HashMap[String, Int]()))
+    assert(!JavaCollections.Reified.isIterable(scala.collection.mutable.Map("a" -> 1)))
+  }
+
+  test("isCollection reaches the mapped SUBTYPES' targets — the shim does not inherit java's relation") {
+    // `java.util.List <: java.util.Collection` in java; `mutable.Buffer` is NOT a `JavaCollection`,
+    // because the shim exists so a class can EXTEND `AbstractCollection` (CLAUDE.md §4.5). Without
+    // this the port's own lists answer NO to a test java answered YES to.
+    assert(JavaCollections.Reified.isCollection(ArrayBuffer(1)))
+    assert(JavaCollections.Reified.isCollection(scala.collection.mutable.Set(1)))
+    assert(JavaCollections.Reified.isCollection(new java.util.ArrayList[Int]()))
+    assert(JavaCollections.Reified.isCollection(JavaCollection.from(ArrayBuffer(1))))
+    assert(JavaCollections.Reified.isIterable(ArrayBuffer(1)))
+  }
+
+  test("nothing unrelated is accepted — a predicate that says yes to everything measures nothing") {
+    assert(!JavaCollections.Reified.isMap("s"))
+    assert(!JavaCollections.Reified.isBuffer("s"))
+    assert(!JavaCollections.Reified.isSet(ArrayBuffer(1)))
+    assert(!JavaCollections.Reified.isBuffer(scala.collection.mutable.Set(1)))
+    assert(!JavaCollections.Reified.isCollection("s"))
+    assert(!JavaCollections.Reified.isMap(null))
+  }
+
+  test("the coercion of a JAVA value is a LIVE view, not a copy") {
+    // The reason the whole family is a view: the producer may still hold the collection, and a copy
+    // would detach every later change in both directions.
+    val jm = new java.util.HashMap[String, Int]()
+    jm.put("a", 1)
+    val sm = JavaCollections.Reified.asMap(jm).asInstanceOf[scala.collection.mutable.Map[String, Int]]
+    assertEquals(sm("a"), 1)
+    sm.put("b", 2)
+    assertEquals(jm.get("b"), 2)
+    jm.put("c", 3)
+    assertEquals(sm("c"), 3)
+  }
+
+  test("…and the coercion of a value the PORT made is the identity") {
+    val own: scala.collection.mutable.Map[String, Int] = scala.collection.mutable.Map("a" -> 1)
+    assert(JavaCollections.Reified.asMap(own) eq own)
+    val xs: Buffer[Int] = ArrayBuffer(1)
+    assert(JavaCollections.Reified.asBuffer(xs) eq xs)
+  }
+
+  test("asCollection reaches the shim from EITHER side, and the java side is live too") {
+    val jl = new java.util.ArrayList[Int]()
+    jl.add(1)
+    val c = JavaCollections.Reified.asCollection(jl).asInstanceOf[JavaCollection[Int]]
+    assertEquals(c.size(), 1)
+    c.add(2)
+    assertEquals(jl.size(), 2)          // live, not a copy
+    jl.add(3)
+    assertEquals(c.size(), 3)
+    // …and from the port's own buffer, through the factory that already existed.
+    val xs: Buffer[Int] = ArrayBuffer(9)
+    val c2 = JavaCollections.Reified.asCollection(xs).asInstanceOf[JavaCollection[Int]]
+    c2.add(8)
+    assertEquals(xs.toList, List(9, 8))
+  }
+
+  test("asBuffer / asSet are live views of java's own collections") {
+    val jl = new java.util.ArrayList[Int]()
+    jl.add(1)
+    val b = JavaCollections.Reified.asBuffer(jl).asInstanceOf[Buffer[Int]]
+    b += 2
+    assertEquals(jl.size(), 2)
+    val js = new java.util.HashSet[Int]()
+    js.add(1)
+    val s = JavaCollections.Reified.asSet(js).asInstanceOf[scala.collection.mutable.Set[Int]]
+    s += 2
+    assertEquals(js.size(), 2)
+  }

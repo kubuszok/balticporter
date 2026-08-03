@@ -7,6 +7,7 @@ e15682a122a1	catalog(consulted)	reached	JS-E04	-	0	lowering CtOperatorAssignment
 656157a28a44	catalog(consulted)	reached	JS-E14	com/badlogic/gdx/Graphics.java	79	lowering CtBinaryOperator/Expression — consulted 28960, fired 23, declarations 0: string concatenation with a NON-`String` left operand
 311674b0a67b	catalog(consulted)	reached	JS-E15	com/badlogic/gdx/assets/AssetManager.java	668	lowering CtAssignment/Expression — consulted 189, fired 189, declarations 0: an assignment IS an expression, with the assigned value
 338e4e4c3e1f	catalog(consulted)	reached	JS-G31	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	48	lowering CtInvocation/Expression — consulted 30560, fired 123, declarations 0: a POLY EXPRESSION must never be cast as a whole
+ded49dd1d5a7	catalog(consulted)	reached	JS-G48	-	0	phase collections — consulted 0, fired 0, declarations 5: a REIFIED type occurrence asks about a RUNTIME OBJECT, so a retyping moves the question and not the answer
 1f875123d9c3	catalog(uncited)	absent	JS-C30	-	0	UNCITED — Scala has a direct counterpart; only the capture wiring is missing (JLS side: JLS 14.3): method-LOCAL named classes
 ddd222cdb7e4	catalog(uncited)	absent	JS-C43	-	0	UNCITED — a case class differs in accessor naming and in three facets of `toString` (JLS side: JLS 8.10): Java `record`
 38c031beb630	catalog(uncited)	absent	JS-S09	-	0	UNCITED — a `match` is already an expression, so the image exists (JLS side: JLS 15.28, 14.21): switch EXPRESSIONS and `yield`

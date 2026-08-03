@@ -242,6 +242,20 @@ final class CollectionsTransform(
     * the program names none of them, which makes the wrap arm decline by arithmetic. */
   private var liveWrappableSyms: Set[SymId] = Set.empty
 
+  /** each mapping target this run named → the `JavaCollections.Reified` member that answers java's
+    * `instanceof` / performs java's cast at it. Keyed on `byScala`, so a target the program never
+    * names is simply absent and the reified arms decline by arithmetic — the same shape
+    * [[liveWrappableSyms]] takes, and for the same reason (§4.56: the phase's own record). */
+  private var reifiedIsSyms, reifiedAsSyms: Map[SymId, SymId] = Map.empty
+
+  /** did a REIFIED occurrence get translated inside the declaration currently being closed?
+    *
+    * The traversal is BOTTOM-UP, so a term hook cannot name its enclosing declaration and the
+    * declaration hook runs after its body — the same shape `TestFrameworkTransform.citeIfPromoted`
+    * uses. `JS-G48` is a `Cited` row, and a citation is per DECLARATION (§5.1), so the flag is set
+    * at the rewrite and drained at the nearest enclosing `DefDef`/`ValDef`. */
+  private var reifiedHere: Boolean = false
+
   // ---- the RuleScope's own record, for THIS run (see `applyScope`) ----
 
   /** `JavaCollections.fromJava` / `toJava` — the EXTERNAL seam's two directions. */
@@ -402,6 +416,18 @@ final class CollectionsTransform(
     liveWrappableSyms = byScala.collect {
       case (fqn, id) if CollectionsTransform.liveWrappable(fqn) => id
     }.toSet
+    // …and the REIFIED pair per target the program names. Two symbols each, minted rather than
+    // resolved: nothing in a java program declares `JavaCollections.Reified`.
+    reifiedIsSyms = byScala.collect {
+      case (fqn, id) if CollectionsTransform.reifiedHelper.contains(fqn) =>
+        val n = "is" + CollectionsTransform.reifiedHelper(fqn)
+        id -> mint(n, s"${CollectionsTransform.ReifiedFqn}.$n")
+    }.toMap
+    reifiedAsSyms = byScala.collect {
+      case (fqn, id) if CollectionsTransform.reifiedHelper.contains(fqn) =>
+        val n = "as" + CollectionsTransform.reifiedHelper(fqn)
+        id -> mint(n, s"${CollectionsTransform.ReifiedFqn}.$n")
+    }.toMap
     foreachSym          = mint("foreach", "foreach")
     removeHeadOptionSym = mint("removeHeadOption", "removeHeadOption")
     headOptionSym       = mint("headOption", "headOption")
@@ -937,7 +963,11 @@ final class CollectionsTransform(
     * `.to(mutable.Set)` to satisfy the declared type — would COPY, and silently turn a view of
     * the map into a detached snapshot. Provenance decides the type; the value is never touched.
     */
-  override def transformValDef(t: Tree.ValDef)(using Program): Tree.ValDef = t.rhs match
+  override def transformValDef(t: Tree.ValDef)(using Program): Tree.ValDef =
+    citeIfReified(t.symbol)
+    transformValDefRhs(t)
+
+  private def transformValDefRhs(t: Tree.ValDef)(using Program): Tree.ValDef = t.rhs match
     case Some(Tree.Select(recv, sym, _, _))
         if methodName(sym) == "keySet" && kindAt(recv).contains(Kind.Map) && headSym(t.tpt.tpe).exists(kindOf.get(_).contains(Kind.Set)) =>
       t.copy(tpt = TypeTree(withHead(t.tpt.tpe, roSetSym), t.tpt.origin))
@@ -969,10 +999,119 @@ final class CollectionsTransform(
       val (want, wantScoped) = actualOf(a.lhs)
       a.copy(rhs = coerce(want, a.rhs, wantScoped))
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
+    case ty: Tree.Typed   => reifiedCast(ty)
+    case io: Tree.InstanceOf => reifiedTest(io)
     case fe: Tree.ForEach => writeThroughEntries(fe)
     case mr: Tree.MethodRef => lowerMethodRef(mr)
     case sel: Tree.Select => externalFieldProducer(sel)
     case other          => other
+
+  // -------------------------------------------------------------------------------------------
+  // REIFIED OCCURRENCES — the retyping moved the TYPE and not the OBJECTS
+  //
+  // Every other seam this phase owes is a STATIC one: two sides of a slot disagree, and the
+  // compiler says so or a boundary finding does. An `instanceof` and a downcast are neither.
+  // They ask a question of a RUNTIME OBJECT, java answered it over java's own classes, and after
+  // the retyping the emitted `isInstanceOf`/`asInstanceOf` asks it over scala's — a DIFFERENT
+  // question, on a program that compiles, with every check count flat. CLAUDE.md §4.4's defect
+  // class arriving through a retype rather than through a statement form (`ENGINE-LIMITS.md`
+  // K18); measured on liqp at 160 of 183 remaining test failures.
+  //
+  // The values that can arrive at such a position are of BOTH representations, and that is not a
+  // corner case — it is the normal state of a ported library: a `Map<String,Object>` the port's
+  // own code built is a `mutable.Map`, and the one jackson deserialised, ANTLR returned or the
+  // library's own caller passed in is a `java.util.HashMap`. Java's test accepted every one.
+  // `JavaCollections.Reified` is that disjunction, and the coercion that goes with it.
+  // -------------------------------------------------------------------------------------------
+
+  /** java's `x instanceof T` where this phase retyped `T`. */
+  private def reifiedTest(t: Tree.InstanceOf)(using p: Program): Term =
+    reifiedTarget(t.tpt.tpe) match
+      case scala.None => t
+      case Some(tgt)  => reifiedIsSyms.get(tgt) match
+        case Some(f) =>
+          reifiedHere = true
+          Tree.Apply(Tree.Ident(f, TypeRepr.NoType, t.origin), List(t.expr), f, t.tpe, t.origin)
+        case scala.None =>
+          reifiedSeam("reified type test", t.tpt.tpe, t.origin)
+          t
+
+  /** java's `(T) x` where this phase retyped `T` and cannot VOUCH for what `x` produces.
+    *
+    * The cast is KEPT and the coercion goes INSIDE it. That is exact rather than tidy: java's own
+    * cast to a generic type is unchecked in its type arguments (JLS 5.5), which is precisely what
+    * the surviving `asInstanceOf` expresses, while the coercion answers the only part java checked
+    * — the erased class. Replacing the cast instead would silently narrow a wildcard-applied
+    * target the helper cannot name. */
+  private def reifiedCast(t: Tree.Typed)(using p: Program): Term =
+    if vouched(t.expr) || isNullLiteral(t.expr) then t
+    else reifiedTarget(t.tpt.tpe) match
+      case scala.None => t
+      case Some(tgt)  => reifiedAsSyms.get(tgt) match
+        case Some(f) =>
+          reifiedHere = true
+          t.copy(expr = Tree.Apply(Tree.Ident(f, TypeRepr.NoType, t.origin), List(t.expr), f,
+                                   t.tpt.tpe, t.origin))
+        case scala.None =>
+          reifiedSeam("reified cast", t.tpt.tpe, t.origin)
+          t
+
+  /** the head symbol of a type THIS PHASE produced, or `None` — §4.56's question, asked of the
+    * phase's own tables and never of a name. Nothing in java source names a
+    * `scala.collection.mutable.*` or a `balticporter.runtime.Java*`, so a reified occurrence at one
+    * of these is one this phase put there. */
+  private def reifiedTarget(t: TypeRepr): Option[SymId] =
+    headSym(t).filter(s => kindOf.contains(s) || shimSyms.contains(s))
+
+  /** Can this phase VOUCH for the REPRESENTATION of the value this expression produces?
+    *
+    * It can where the value comes out of a declaration it retyped — the port's own code puts a
+    * scala collection there, so java's cast was already a no-op on representation and the emitted
+    * `asInstanceOf` says the same thing. It cannot where the producer is EXTERNAL, and that is not
+    * a hedge: the node's type reads as a mapping target only because `transformType` is
+    * position-blind and moved it, while the value is whatever the class file makes —
+    * `mapper.readValue(json, HashMap.class)` is a `java.util.HashMap` under a node claiming
+    * `mutable.HashMap` (K15's own observation, met at a cast instead of at a slot).
+    *
+    * ==and a type the PROGRAM DECLARES is vouched for by ownership, not by the mapping==
+    * `(Iterator<T>) new QueueIterator<T>(…)` is a cast of a class this port EMITS to a shim that
+    * class already implements. The representation is not in question — every instance of a
+    * program-declared type is one the port made — so a coercion there is an identity call the
+    * emitted code pays for on a hot path (libGDX's `Queue.iterator()` and `Array.select`, 9
+    * members). `Program.owns` is the structural test §4.56 asks for, and it is a DIFFERENT reason
+    * from the mapping one: the first says "this phase put a scala collection here", the second says
+    * "this program declares what this is". Both are the phase reasoning from what it can see. */
+  private def vouched(e: Term)(using p: Program): Boolean =
+    (reifiedTarget(e.tpe).isDefined || headSym(e.tpe).exists(p.owns)) && !foreignProducer(e)
+
+  /** …and the one exception to it: a call or field read the PROGRAM DOES NOT DECLARE.
+    * [[externalCallee]] is K15's predicate unchanged, exclusions included. */
+  private def foreignProducer(e: Term)(using p: Program): Boolean = e match
+    case a: Tree.Apply  => externalCallee(a.method)
+    case s: Tree.Select => externalCallee(s.sym)
+    case _              => false
+
+  /** `null` is an instance of nothing and a cast of it checks nothing, in either language — so
+    * there is no runtime object for a reified question to be about. Left exactly as it was, which
+    * also keeps `TirEmitter`'s `null.asInstanceOf[T]` shapes (an uninitialised field, a funnel
+    * slot) recognisable to the passes that read them. */
+  private def isNullLiteral(e: Term): Boolean = e match
+    case Tree.Literal(Constant.NullC, _, _) => true
+    case _                                  => false
+
+  /** a reified occurrence at a target no live view can BE — `mutable.HashMap`, `ArrayBuffer`,
+    * `Tuple2`. Refused and counted rather than approximated (M6); the emitted code keeps java's own
+    * question asked of the wrong classes, which is what the finding says. */
+  /** …and drain [[reifiedHere]] at the declaration the rewrite happened in. */
+  private def citeIfReified(sym: SymId)(using p: Program): Unit =
+    if reifiedHere then
+      cite(balticporter.catalog.JS.G(48), p.symbolOf(sym).map(_.fullName).getOrElse(sym.toString))
+      reifiedHere = false
+
+  private def reifiedSeam(slot: String, target: TypeRepr, origin: Origin)(using Program): Unit =
+    seam(slot, "a representation-agnostic test or coercion",
+         TirPrinter.tpe(target, TirPrinter.Style.canonical), origin, SymId.None,
+         CollectionBoundaryCheck.Issue.ReifiedOccurrence)
 
   /** A FIELD the program does not declare, whose CLASS FILE types it as a collection this phase
     * retypes — [[externalProducer]]'s fact for the one member kind that has no call node.
@@ -2214,6 +2353,7 @@ final class CollectionsTransform(
     * (a `Return` sitting there is coerced) but never coerced AS a result; a frontend that lowered
     * the tail to a bare expression would need one more case here. */
   override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
+    citeIfReified(t.symbol)
     t.copy(rhs = t.rhs.map(coerceReturns(t.returnTpt.tpe, _)))
 
   private def coerceReturns(want: TypeRepr, t: Term)(using Program): Term = t match
@@ -3100,6 +3240,40 @@ object CollectionsTransform:
     "scala.collection.mutable.Buffer", "scala.collection.mutable.Set", "scala.collection.mutable.Map",
     JavaIteratorFqn, JavaIterableFqn,
   ).contains(target)
+
+  /** The mapping TARGETS at which a REIFIED occurrence — an `instanceof`, a downcast — can be
+    * translated, and the `JavaCollections.Reified` member that does it.
+    *
+    * A retyping moves STATIC types. An `instanceof` and a cast are questions asked of a RUNTIME
+    * OBJECT, and the retyping moved neither the objects nor their classes, so translating one by
+    * moving its type alone changes the ANSWER — valid Scala meaning something else, which is
+    * CLAUDE.md §4.4's defect class arriving through a retype (`ENGINE-LIMITS.md` K18). The runtime
+    * members named here answer java's question over BOTH representations a port legitimately holds
+    * at an `Object` slot: the ones its own code made, and the ones an external producer made.
+    *
+    * ==Why this is not [[liveWrappable]], one entry over==
+    * The two tables answer different questions and the difference is exactly `JavaCollection`.
+    * `liveWrappable` asks *can a wrap be emitted toward this target from a DECLARED type* — and for
+    * the shim the answer is no, because `java.util.Collection` has no `scala.jdk` converter and a
+    * wrapper over a copied `Buffer` would detach both directions. Here the OBJECT is in hand: there
+    * is no overload to resolve and no element type to guess, so `JavaCollection.fromJava` delegates
+    * to java's own collection and nothing is copied.
+    *
+    * ==and why the CONCRETE targets are absent==
+    * `mutable.HashMap`, `ArrayBuffer`, `ArrayDeque`, `TrieMap`, `Tuple2`: no live view can BE one of
+    * these, so a cast to one is a boundary with no coercion behind it. That is refused and COUNTED
+    * (`CollectionBoundaryCheck.Issue.ReifiedOccurrence`), never approximated (M6). */
+  private[transform] val reifiedHelper: Map[String, String] = Map(
+    "scala.collection.mutable.Buffer" -> "Buffer",
+    "scala.collection.mutable.Set"    -> "Set",
+    "scala.collection.mutable.Map"    -> "Map",
+    JavaCollectionFqn                 -> "Collection",
+    JavaIterableFqn                   -> "Iterable",
+    JavaIteratorFqn                   -> "Iterator",
+  )
+
+  /** `JavaCollections.Reified`, whose members [[reifiedHelper]] names. */
+  val ReifiedFqn = s"$JavaCollectionsFqn.Reified"
 
   /** every `JavaCollections` member the transform may emit. One list, so a new JDK utility is one
     * line here, one arm in `staticRewrite` and one method in the runtime object — and a typo is a

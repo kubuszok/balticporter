@@ -533,6 +533,13 @@ object Differences:
     Difference(gId(43), "METHOD REFERENCES are five forms sharing one syntax — static, unbound, bound, constructor, array constructor",
       "JLS 15.13", "UNCITED — each form is a different lambda, and `Flags.isStatic` is the discriminator",
       Loud, Handled, el("K8"), Universal, "SpoonTir.methodRef -> Tir.Tree.MethodRef; TirEmitter's Tree.MethodRef arm", notYetG),
+    Difference(gId(48), "a REIFIED type occurrence asks about a RUNTIME OBJECT, so a retyping moves the question and not the answer",
+      "JLS 15.20.2, 5.5, 4.7",
+      "SLS 12.1 — `isInstanceOf`/`asInstanceOf` test the ERASED runtime class, exactly as java does",
+      Silent, Handled, el("K18"), Universal,
+      "CollectionsTransform.reifiedTest/reifiedCast -> JavaCollections.Reified; the concrete-target " +
+        "refusal is CollectionBoundaryCheck.Issue.ReifiedOccurrence",
+      Cited("collections")),
   )
 
   /** every language row. THE COUNT IS DERIVED — it is not written down anywhere, here or in any

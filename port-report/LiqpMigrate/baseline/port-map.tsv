@@ -203,11 +203,11 @@ member	liqp.LValue#BREAK	ssg.liquid.LValue#BREAK	Renamed	-	liqp/LValue.java	31	a
 member	liqp.LValue#CONTINUE	ssg.liquid.LValue#CONTINUE	Renamed	-	liqp/LValue.java	38	1e43087d3104805e	placement=companion
 member	liqp.LValue#areEqual(Object,Object)	ssg.liquid.LValue#areEqual(Object,Object)	Renamed	-	liqp/LValue.java	60	b1c315854f65e456	placement=companion
 member	liqp.LValue#asAppendableObject(Object,TemplateContext)	ssg.liquid.LValue#asAppendableObject(Object,TemplateContext)	Renamed	-	liqp/LValue.java	353	fabc4e0d5180399d	
-member	liqp.LValue#asArray(Object,TemplateContext)	ssg.liquid.LValue#asArray(Object,TemplateContext)	Renamed	-	liqp/LValue.java	120	3b743b81fb97bfd5	
+member	liqp.LValue#asArray(Object,TemplateContext)	ssg.liquid.LValue#asArray(Object,TemplateContext)	Renamed	-	liqp/LValue.java	120	7fd563478890443b	
 member	liqp.LValue#asBoolean(Object)	ssg.liquid.LValue#asBoolean(Object)	Renamed	-	liqp/LValue.java	255	5a14b6cbe458972f	
 member	liqp.LValue#asFormattedNumber(BigDecimal)	ssg.liquid.LValue#asFormattedNumber(BigDecimal)	Renamed	-	liqp/LValue.java	307	eace2edf7492faee	placement=companion
-member	liqp.LValue#asList(Object,TemplateContext)	ssg.liquid.LValue#asList(Object,TemplateContext)	Renamed	-	liqp/LValue.java	154	6c6287375274a9c7	
-member	liqp.LValue#asMap(Object)	ssg.liquid.LValue#asMap(Object)	Renamed	-	liqp/LValue.java	493	1d86db2d1e6736f9	
+member	liqp.LValue#asList(Object,TemplateContext)	ssg.liquid.LValue#asList(Object,TemplateContext)	Renamed	-	liqp/LValue.java	154	c46bf2d49c941a94	
+member	liqp.LValue#asMap(Object)	ssg.liquid.LValue#asMap(Object)	Renamed	-	liqp/LValue.java	493	4cddc985aa42b2e5	
 member	liqp.LValue#asNumber(Object)	ssg.liquid.LValue#asNumber(Object)	Renamed	-	liqp/LValue.java	280	f7f4afcaa946675a	
 member	liqp.LValue#asRubyDate(Object,TemplateContext)	ssg.liquid.LValue#asRubyDate(Object,TemplateContext)	Renamed	-	liqp/LValue.java	214	693fdb1b93e075a1	placement=companion
 member	liqp.LValue#asStrictNumber(Object)	ssg.liquid.LValue#asStrictNumber(Object)	Renamed	-	liqp/LValue.java	295	9bcfa429b479d442	
@@ -216,12 +216,12 @@ member	liqp.LValue#asTemporal(Object,TemplateContext)	ssg.liquid.LValue#asTempor
 member	liqp.LValue#canBeDouble(Object)	ssg.liquid.LValue#canBeDouble(Object)	Renamed	-	liqp/LValue.java	477	66f15a523744e880	
 member	liqp.LValue#canBeInteger(Object)	ssg.liquid.LValue#canBeInteger(Object)	Renamed	-	liqp/LValue.java	473	afd1e1e29dd69eb8	
 member	liqp.LValue#canBeNumber(Object)	ssg.liquid.LValue#canBeNumber(Object)	Renamed	-	liqp/LValue.java	481	e2e95c9cbb988d88	
-member	liqp.LValue#isArray(Object)	ssg.liquid.LValue#isArray(Object)	Renamed	-	liqp/LValue.java	386	7d09ead1ccf0f965	
+member	liqp.LValue#isArray(Object)	ssg.liquid.LValue#isArray(Object)	Renamed	-	liqp/LValue.java	386	57eab424e3a8bc0a	
 member	liqp.LValue#isBlank(String)	ssg.liquid.LValue#isBlank(String)	Renamed	-	liqp/LValue.java	497	0523e76f0670233c	placement=companion
-member	liqp.LValue#isEmpty(Object)	ssg.liquid.LValue#isEmpty(Object)	Renamed	-	liqp/LValue.java	89	f0fdfa5ffa789e01	placement=companion vis=private
-member	liqp.LValue#isFalsy(Object,TemplateContext)	ssg.liquid.LValue#isFalsy(Object,TemplateContext)	Renamed	-	liqp/LValue.java	453	897081b55fba6d95	
+member	liqp.LValue#isEmpty(Object)	ssg.liquid.LValue#isEmpty(Object)	Renamed	-	liqp/LValue.java	89	be499fc783d287d4	placement=companion vis=private
+member	liqp.LValue#isFalsy(Object,TemplateContext)	ssg.liquid.LValue#isFalsy(Object,TemplateContext)	Renamed	-	liqp/LValue.java	453	c138ae24a35818d8	
 member	liqp.LValue#isInteger(Object)	ssg.liquid.LValue#isInteger(Object)	Renamed	-	liqp/LValue.java	399	9d089eb551104463	
-member	liqp.LValue#isMap(Object)	ssg.liquid.LValue#isMap(Object)	Renamed	-	liqp/LValue.java	488	2978c2c6f196132a	
+member	liqp.LValue#isMap(Object)	ssg.liquid.LValue#isMap(Object)	Renamed	-	liqp/LValue.java	488	f6d93cfa2c16649d	
 member	liqp.LValue#isNumber(Object)	ssg.liquid.LValue#isNumber(Object)	Renamed	-	liqp/LValue.java	411	12ad20818c203117	
 member	liqp.LValue#isString(Object)	ssg.liquid.LValue#isString(Object)	Renamed	-	liqp/LValue.java	444	6f25018c1d472960	
 member	liqp.LValue#isTemporal(Object)	ssg.liquid.LValue#isTemporal(Object)	Renamed	-	liqp/LValue.java	224	5b5a429adbcb2ebd	placement=companion
@@ -255,7 +255,7 @@ member	liqp.Template#getParseTree()	ssg.liquid.Template#getParseTree()	Renamed	-
 member	liqp.Template#getTemplateParser()	ssg.liquid.Template#getTemplateParser()	Renamed	-	liqp/Template.java	501	55b6e27bb0475b04	
 member	liqp.Template#newRootContext(Map)	ssg.liquid.Template#newRootContext(Map<String,Object>)	Renamed	-	liqp/Template.java	337	b716f713cbc02484	vis=private
 member	liqp.Template#parse(LiquidLexer)	ssg.liquid.Template#parse(LiquidLexer)	Renamed	-	liqp/Template.java	73	5b1244dcc5631345	vis=private
-member	liqp.Template#putStringKey(boolean,String,Object,Map)	ssg.liquid.Template#putStringKey(boolean,String,Object,Map<String,Object>)	Renamed	-	liqp/Template.java	484	ee01078a2b3d7170	vis=private
+member	liqp.Template#putStringKey(boolean,String,Object,Map)	ssg.liquid.Template#putStringKey(boolean,String,Object,Map<String,Object>)	Renamed	-	liqp/Template.java	484	153a6f72843ded2c	vis=private
 member	liqp.Template#render()	ssg.liquid.Template#render()	Renamed	-	liqp/Template.java	173	5a74d633e6ac13b7	
 member	liqp.Template#render(Inspectable)	ssg.liquid.Template#render(Inspectable)	Renamed	-	liqp/Template.java	181	4d48b4ef0d5e364f	
 member	liqp.Template#render(Map)	ssg.liquid.Template#render(Map<String,Object>)	Renamed	-	liqp/Template.java	250	78f83653137a4b04	
@@ -269,7 +269,7 @@ member	liqp.Template#renderToObject()	ssg.liquid.Template#renderToObject()	Renam
 member	liqp.Template#renderToObject(Inspectable)	ssg.liquid.Template#renderToObject(Inspectable)	Renamed	-	liqp/Template.java	185	267f5dbb50c78f3b	
 member	liqp.Template#renderToObject(Map)	ssg.liquid.Template#renderToObject(Map<String,Object>)	Renamed	-	liqp/Template.java	264	e3d1405388ae91d3	
 member	liqp.Template#renderToObject(Map,ExecutorService,boolean)	ssg.liquid.Template#renderToObject(Map<String,Object>,ExecutorService,boolean)	Renamed	-	liqp/Template.java	281	c758f51556411569	vis=private
-member	liqp.Template#renderToObject(String)	ssg.liquid.Template#renderToObject(String)	Renamed	-	liqp/Template.java	161	2ad7c674e5731bdd	
+member	liqp.Template#renderToObject(String)	ssg.liquid.Template#renderToObject(String)	Renamed	-	liqp/Template.java	161	65b04cbfd71901fc	
 member	liqp.Template#renderToObject(String,Object,Array)	ssg.liquid.Template#renderToObject(String,Object,Array<Object>)	Renamed	-	liqp/Template.java	221	12f65d8b6c8d9731	vis=private
 member	liqp.Template#renderToObject(boolean,String,Object,Array)	ssg.liquid.Template#renderToObject(boolean,String,Object,Array<Object>)	Renamed	-	liqp/Template.java	229	178d3f4537f71fd6	vis=private
 member	liqp.Template#renderToObjectUnguarded(Map)	ssg.liquid.Template#renderToObjectUnguarded(Map<String,Object>)	Renamed	-	liqp/Template.java	328	006772b7761de4b1	
@@ -510,7 +510,7 @@ member	liqp.blocks.For#getAttributes(int,TemplateContext,String,Array)	ssg.liqui
 member	liqp.blocks.For#getParentForloopDropStack(TemplateContext)	ssg.liquid.blocks.For#getParentForloopDropStack(TemplateContext)	Renamed	-	liqp/blocks/For.java	261	429ce81da6d7f402	vis=private
 member	liqp.blocks.For#popLoopDropFromStack(TemplateContext)	ssg.liquid.blocks.For#popLoopDropFromStack(TemplateContext)	Renamed	-	liqp/blocks/For.java	168	0c9bc3a1522d9a65	
 member	liqp.blocks.For#render(TemplateContext,Array)	ssg.liquid.blocks.For#render(TemplateContext,Array<LNode>)	Renamed	-	liqp/blocks/For.java	55	7e6f0455c6b59f37	
-member	liqp.blocks.For#renderArray(String,TemplateContext,String,boolean,Array)	ssg.liquid.blocks.For#renderArray(String,TemplateContext,String,boolean,Array<LNode>)	Renamed	-	liqp/blocks/For.java	80	5c129d77af40efbf	vis=private
+member	liqp.blocks.For#renderArray(String,TemplateContext,String,boolean,Array)	ssg.liquid.blocks.For#renderArray(String,TemplateContext,String,boolean,Array<LNode>)	Renamed	-	liqp/blocks/For.java	80	c43d44896a35f9e8	vis=private
 member	liqp.blocks.For#renderForLoopBody(TemplateContext,Controller,Buffer)	ssg.liquid.blocks.For#renderForLoopBody(TemplateContext,Controller,Buffer<LNode>)	Renamed	-	liqp/blocks/For.java	176	9cfae757b6aeb4ce	vis=private
 member	liqp.blocks.For#renderRange(String,TemplateContext,String,boolean,Array)	ssg.liquid.blocks.For#renderRange(String,TemplateContext,String,boolean,Array<LNode>)	Renamed	-	liqp/blocks/For.java	212	f7047dce5cc587c8	vis=private
 member	liqp.blocks.For$ForLoopDrop#<stmt1>	ssg.liquid.blocks.For$ForLoopDrop#<stmt1>	Renamed	-	liqp/blocks/For.java	316	0298925d2950f998	
@@ -635,7 +635,7 @@ member	liqp.filters.Join#apply(Object,TemplateContext,Array)	ssg.liquid.filters.
 member	liqp.filters.Json#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Json#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Json.java	10	8fce17afde0f27a6	
 member	liqp.filters.Last#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Last#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Last.java	13	801413a3539b9a30	
 member	liqp.filters.Lstrip#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Lstrip#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Lstrip.java	8	cabe52f2f5b0f0db	
-member	liqp.filters.Map#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Map#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Map.java	18	d9d9dd4456396391	
+member	liqp.filters.Map#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Map#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Map.java	18	4da16bed3e244b3f	
 member	liqp.filters.Minus#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Minus#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Minus.java	17	9e574947963901f6	
 member	liqp.filters.Modulo#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Modulo#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Modulo.java	16	c17a7e7c9e0081fd	
 member	liqp.filters.Newline_To_Br#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Newline_To_Br#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Newline_To_Br.java	13	0a52a01ea0015645	
@@ -661,8 +661,8 @@ member	liqp.filters.Rstrip#apply(Object,TemplateContext,Array)	ssg.liquid.filter
 member	liqp.filters.Shift#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Shift#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Shift.java	19	e0324cfe75ff3765	
 member	liqp.filters.Size#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Size#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Size.java	15	7f6eb0323b8673b0	
 member	liqp.filters.Slice#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Slice#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Slice.java	10	6f091710033740ec	
-member	liqp.filters.Sort#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Sort#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Sort.java	25	f0324f1c678cc8e9	
-member	liqp.filters.Sort#asComparableList(TemplateContext,Array,String)	ssg.liquid.filters.Sort#asComparableList(TemplateContext,Array<Object>,String)	Renamed	-	liqp/filters/Sort.java	111	a0fb090550502fa4	vis=private
+member	liqp.filters.Sort#apply(Object,TemplateContext,Array)	ssg.liquid.filters.Sort#apply(Object,TemplateContext,Array<Object>)	Renamed	-	liqp/filters/Sort.java	25	6f49c2978e3ec133	
+member	liqp.filters.Sort#asComparableList(TemplateContext,Array,String)	ssg.liquid.filters.Sort#asComparableList(TemplateContext,Array<Object>,String)	Renamed	-	liqp/filters/Sort.java	111	42b3b95e3e298f70	vis=private
 member	liqp.filters.Sort$ComparableMapEntry#<stmt1>	ssg.liquid.filters.Sort$ComparableMapEntry#<stmt1>	Renamed	-	liqp/filters/Sort.java	80	11dcdf942549e737	
 member	liqp.filters.Sort$ComparableMapEntry#compareTo(Tuple2)	ssg.liquid.filters.Sort$ComparableMapEntry#compareTo(Tuple2<K,V>)	Renamed	-	liqp/filters/Sort.java	100	e474824ce7219b50	
 member	liqp.filters.Sort$ComparableMapEntry#entry	ssg.liquid.filters.Sort$ComparableMapEntry#entry	Renamed	-	liqp/filters/Sort.java	77	091ab4962f3f853a	vis=private[Sort]
@@ -737,19 +737,19 @@ member	liqp.filters.date.Parser#<clinit>	ssg.liquid.filters.date.Parser#<clinit>
 member	liqp.filters.date.Parser#datePatterns	ssg.liquid.filters.date.Parser#datePatterns	Renamed	-	liqp/filters/date/Parser.java	27	3043e74151527da7	placement=companion
 member	liqp.filters.date.Parser#parse(String,Locale,ZoneId)	ssg.liquid.filters.date.Parser#parse(String,Locale,ZoneId)	Renamed	-	liqp/filters/date/Parser.java	164	bf5b790b0b3fd2f1	
 member	liqp.filters.date.Parser#toBeReplaced	ssg.liquid.filters.date.Parser#toBeReplaced	Renamed	-	liqp/filters/date/Parser.java	31	d25f800af2366c0f	placement=companion vis=private
-member	liqp.filters.where.JekyllWhereImpl#apply(Object,Array)	ssg.liquid.filters.where.JekyllWhereImpl#apply(Object,Array<Object>)	Renamed	-	liqp/filters/where/JekyllWhereImpl.java	109	7534d7c4487f6ed3	
+member	liqp.filters.where.JekyllWhereImpl#apply(Object,Array)	ssg.liquid.filters.where.JekyllWhereImpl#apply(Object,Array<Object>)	Renamed	-	liqp/filters/where/JekyllWhereImpl.java	109	c9244092bcc8631f	
 member	liqp.filters.where.JekyllWhereImpl#arrayToArrayList(Array)	ssg.liquid.filters.where.JekyllWhereImpl#arrayToArrayList(Array<T>)	Renamed	-	liqp/filters/where/JekyllWhereImpl.java	210	5e8d1f3c67e25427	placement=companion vis=private
 member	liqp.filters.where.JekyllWhereImpl#comparePropertyVsTarget(Object,Object)	ssg.liquid.filters.where.JekyllWhereImpl#comparePropertyVsTarget(Object,Object)	Renamed	-	liqp/filters/where/JekyllWhereImpl.java	158	6a4053d0eac4290f	vis=private
-member	liqp.filters.where.JekyllWhereImpl#itemProperty(Object,Object)	ssg.liquid.filters.where.JekyllWhereImpl#itemProperty(Object,Object)	Renamed	-	liqp/filters/where/JekyllWhereImpl.java	192	7893ea720ba7055d	vis=private
-member	liqp.filters.where.JekyllWhereImpl#joinedArray(Object)	ssg.liquid.filters.where.JekyllWhereImpl#joinedArray(Object)	Renamed	-	liqp/filters/where/JekyllWhereImpl.java	180	85c2108c786b0e73	vis=private
+member	liqp.filters.where.JekyllWhereImpl#itemProperty(Object,Object)	ssg.liquid.filters.where.JekyllWhereImpl#itemProperty(Object,Object)	Renamed	-	liqp/filters/where/JekyllWhereImpl.java	192	8b342adf16131cbc	vis=private
+member	liqp.filters.where.JekyllWhereImpl#joinedArray(Object)	ssg.liquid.filters.where.JekyllWhereImpl#joinedArray(Object)	Renamed	-	liqp/filters/where/JekyllWhereImpl.java	180	b4599cf111d95ce2	vis=private
 member	liqp.filters.where.JekyllWhereImpl#parseSortInput(Object)	ssg.liquid.filters.where.JekyllWhereImpl#parseSortInput(Object)	Renamed	-	liqp/filters/where/JekyllWhereImpl.java	200	c62ead8183ecce55	vis=private
 member	liqp.filters.where.LiquidWhereImpl#apply(Object,Array)	ssg.liquid.filters.where.LiquidWhereImpl#apply(Object,Array<Object>)	Renamed	-	liqp/filters/where/LiquidWhereImpl.java	64	52307be8b2d11f00	
-member	liqp.filters.where.LiquidWhereImpl#flatten(Object)	ssg.liquid.filters.where.LiquidWhereImpl#flatten(Object)	Renamed	-	liqp/filters/where/LiquidWhereImpl.java	106	bf43155bfdeb9cce	placement=companion vis=private
+member	liqp.filters.where.LiquidWhereImpl#flatten(Object)	ssg.liquid.filters.where.LiquidWhereImpl#flatten(Object)	Renamed	-	liqp/filters/where/LiquidWhereImpl.java	106	0b4e2df12a844810	placement=companion vis=private
 member	liqp.filters.where.LiquidWhereImpl#objectHasPropertyValue(Object,Array)	ssg.liquid.filters.where.LiquidWhereImpl#objectHasPropertyValue(Object,Array<Object>)	Renamed	-	liqp/filters/where/LiquidWhereImpl.java	79	0b93644765112404	vis=private
-member	liqp.filters.where.LiquidWhereImpl#toArray(Object)	ssg.liquid.filters.where.LiquidWhereImpl#toArray(Object)	Renamed	-	liqp/filters/where/LiquidWhereImpl.java	125	823300c1d7c9e25a	placement=companion vis=private
+member	liqp.filters.where.LiquidWhereImpl#toArray(Object)	ssg.liquid.filters.where.LiquidWhereImpl#toArray(Object)	Renamed	-	liqp/filters/where/LiquidWhereImpl.java	125	ffc93481f19b5c7f	placement=companion vis=private
 member	liqp.filters.where.PropertyResolverAdapter#getItemProperty(TemplateContext,Object,Object)	ssg.liquid.filters.where.PropertyResolverAdapter#getItemProperty(TemplateContext,Object,Object)	Renamed	-	liqp/filters/where/PropertyResolverAdapter.java	21	f10a72b05b74154b	
 member	liqp.filters.where.PropertyResolverAdapter#support(Object)	ssg.liquid.filters.where.PropertyResolverAdapter#support(Object)	Renamed	-	liqp/filters/where/PropertyResolverAdapter.java	23	95dce5a20a614904	
-member	liqp.filters.where.PropertyResolverHelper#<clinit>	ssg.liquid.filters.where.PropertyResolverHelper#<clinit>	Renamed	-	liqp/filters/where/PropertyResolverHelper.java	16	182d7b26f5a5e198	placement=companion
+member	liqp.filters.where.PropertyResolverHelper#<clinit>	ssg.liquid.filters.where.PropertyResolverHelper#<clinit>	Renamed	-	liqp/filters/where/PropertyResolverHelper.java	16	0010628b809a7d86	placement=companion
 member	liqp.filters.where.PropertyResolverHelper#<stmt1>	ssg.liquid.filters.where.PropertyResolverHelper#<stmt1>	Renamed	-	liqp/filters/where/PropertyResolverHelper.java	47	c4b8b9a592f15b94	
 member	liqp.filters.where.PropertyResolverHelper#INSTANCE	ssg.liquid.filters.where.PropertyResolverHelper#INSTANCE	Renamed	-	liqp/filters/where/PropertyResolverHelper.java	15	21eb9225a2d94c04	placement=companion
 member	liqp.filters.where.PropertyResolverHelper#add(PropertyResolverAdapter)	ssg.liquid.filters.where.PropertyResolverHelper#add(PropertyResolverAdapter)	Renamed	-	liqp/filters/where/PropertyResolverHelper.java	50	9fd56268c21701f6	
@@ -783,7 +783,7 @@ member	liqp.nodes.BlockNode#add(LNode)	ssg.liquid.nodes.BlockNode#add(LNode)	Ren
 member	liqp.nodes.BlockNode#children	ssg.liquid.nodes.BlockNode#children	Renamed	-	liqp/nodes/BlockNode.java	14	dd0bfa44fc05d3ac	vis=private
 member	liqp.nodes.BlockNode#getChildren()	ssg.liquid.nodes.BlockNode#getChildren()	Renamed	-	liqp/nodes/BlockNode.java	28	07ba8f47bac3a141	
 member	liqp.nodes.BlockNode#postprocess(Object,TemplateContext)	ssg.liquid.nodes.BlockNode#postprocess(Object,TemplateContext)	Renamed	-	liqp/nodes/BlockNode.java	71	886c72f114b27489	vis=private
-member	liqp.nodes.BlockNode#render(TemplateContext)	ssg.liquid.nodes.BlockNode#render(TemplateContext)	Renamed	-	liqp/nodes/BlockNode.java	33	0123a24d68dd6648	
+member	liqp.nodes.BlockNode#render(TemplateContext)	ssg.liquid.nodes.BlockNode#render(TemplateContext)	Renamed	-	liqp/nodes/BlockNode.java	33	b59141e77a38f18c	
 member	liqp.nodes.ComparingExpressionNode#<stmt1>	ssg.liquid.nodes.ComparingExpressionNode#<stmt1>	Renamed	-	liqp/nodes/ComparingExpressionNode.java	23	0fc65991315fc24a	
 member	liqp.nodes.ComparingExpressionNode#<stmt2>	ssg.liquid.nodes.ComparingExpressionNode#<stmt2>	Renamed	-	liqp/nodes/ComparingExpressionNode.java	24	570bc1a9afffa1f7	
 member	liqp.nodes.ComparingExpressionNode#<stmt3>	ssg.liquid.nodes.ComparingExpressionNode#<stmt3>	Renamed	-	liqp/nodes/ComparingExpressionNode.java	25	04f88c26facbd378	
@@ -841,13 +841,13 @@ member	liqp.nodes.LookupNode#indexes	ssg.liquid.nodes.LookupNode#indexes	Renamed
 member	liqp.nodes.LookupNode#render(TemplateContext)	ssg.liquid.nodes.LookupNode#render(TemplateContext)	Renamed	-	liqp/nodes/LookupNode.java	30	5a6eb57ccf75e015	
 member	liqp.nodes.LookupNode#toString()	ssg.liquid.nodes.LookupNode#toString()	Renamed	-	liqp/nodes/LookupNode.java	253	3bc3f88303503e49	
 member	liqp.nodes.LookupNode$Hash#<stmt1>	ssg.liquid.nodes.LookupNode$Hash#<stmt1>	Renamed	-	liqp/nodes/LookupNode.java	83	3fa9de8f12a84d2c	
-member	liqp.nodes.LookupNode$Hash#get(Object,TemplateContext)	ssg.liquid.nodes.LookupNode$Hash#get(Object,TemplateContext)	Renamed	-	liqp/nodes/LookupNode.java	87	aa9f0eb03e2c625b	
+member	liqp.nodes.LookupNode$Hash#get(Object,TemplateContext)	ssg.liquid.nodes.LookupNode$Hash#get(Object,TemplateContext)	Renamed	-	liqp/nodes/LookupNode.java	87	0219b790e28fc954	
 member	liqp.nodes.LookupNode$Hash#hash	ssg.liquid.nodes.LookupNode$Hash#hash	Renamed	-	liqp/nodes/LookupNode.java	80	8480edae8a2070b0	vis=private[LookupNode]
 member	liqp.nodes.LookupNode$Hash#toString()	ssg.liquid.nodes.LookupNode$Hash#toString()	Renamed	-	liqp/nodes/LookupNode.java	154	ad14efb2d9792364	
 member	liqp.nodes.LookupNode$Index#<stmt1>	ssg.liquid.nodes.LookupNode$Index#<stmt1>	Renamed	-	liqp/nodes/LookupNode.java	166	e05df80b013ab785	
 member	liqp.nodes.LookupNode$Index#<stmt2>	ssg.liquid.nodes.LookupNode$Index#<stmt2>	Renamed	-	liqp/nodes/LookupNode.java	167	cca0a63234303397	
 member	liqp.nodes.LookupNode$Index#expression	ssg.liquid.nodes.LookupNode$Index#expression	Renamed	-	liqp/nodes/LookupNode.java	161	f5c9540682709c1c	vis=private[LookupNode]
-member	liqp.nodes.LookupNode$Index#get(Object,TemplateContext)	ssg.liquid.nodes.LookupNode$Index#get(Object,TemplateContext)	Renamed	-	liqp/nodes/LookupNode.java	171	3887011073232379	
+member	liqp.nodes.LookupNode$Index#get(Object,TemplateContext)	ssg.liquid.nodes.LookupNode$Index#get(Object,TemplateContext)	Renamed	-	liqp/nodes/LookupNode.java	171	d974b14b24cb392c	
 member	liqp.nodes.LookupNode$Index#key	ssg.liquid.nodes.LookupNode$Index#key	Renamed	-	liqp/nodes/LookupNode.java	163	78343d518e224090	vis=private[LookupNode]
 member	liqp.nodes.LookupNode$Index#text	ssg.liquid.nodes.LookupNode$Index#text	Renamed	-	liqp/nodes/LookupNode.java	162	c0a276daa67b2027	vis=private[LookupNode]
 member	liqp.nodes.LookupNode$Index#toString()	ssg.liquid.nodes.LookupNode$Index#toString()	Renamed	-	liqp/nodes/LookupNode.java	246	7b05e0723234d149	
@@ -896,7 +896,7 @@ member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#mapper	ssg.liquid.
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#objectToMap(ObjectMapper,Object)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#objectToMap(ObjectMapper,Object)	Renamed	-	liqp/parser/LiquidSupport.java	81	b5b29e75edd56fe7	placement=companion
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#toLiquid()	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#toLiquid()	Renamed	-	liqp/parser/LiquidSupport.java	93	0454cfa8513fa744	
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#variable	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#variable	Renamed	-	liqp/parser/LiquidSupport.java	74	ae41a0135e84606c	vis=private[LiquidSupport]
-member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#visit(Object)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visit(Object)	Renamed	-	liqp/parser/LiquidSupport.java	114	d4fc8104d11b272a	placement=companion
+member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#visit(Object)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visit(Object)	Renamed	-	liqp/parser/LiquidSupport.java	114	f253fb80c52cf530	placement=companion
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#visitList(Buffer)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visitList(Buffer<Object>)	Renamed	-	liqp/parser/LiquidSupport.java	104	fce7be0fa4764b39	placement=companion
 member	liqp.parser.LiquidSupport$LiquidSupportFromInspectable#visitMap(Map)	ssg.liquid.parser.LiquidSupport$LiquidSupportFromInspectable#visitMap(Map<String,Object>)	Renamed	-	liqp/parser/LiquidSupport.java	97	6daa9a96c19401b6	placement=companion
 member	liqp.parser.v4.NodeVisitor#<stmt1>	ssg.liquid.parser.v4.NodeVisitor#<stmt1>	Renamed	-	liqp/parser/v4/NodeVisitor.java	110	a808eeaa9d09a83a	
@@ -966,7 +966,7 @@ member	liqp.spi.BasicTypesSupport#createReference(Object)	ssg.liquid.spi.BasicTy
 member	liqp.spi.BasicTypesSupport#getByReference(String)	ssg.liquid.spi.BasicTypesSupport#getByReference(String)	Renamed	-	liqp/spi/BasicTypesSupport.java	73	6037e650577c6c6d	placement=companion
 member	liqp.spi.BasicTypesSupport#local	ssg.liquid.spi.BasicTypesSupport#local	Renamed	-	liqp/spi/BasicTypesSupport.java	17	f838723e194561aa	placement=companion vis=private
 member	liqp.spi.BasicTypesSupport#registerType(SimpleModule,Class)	ssg.liquid.spi.BasicTypesSupport#registerType(SimpleModule,Class<T>)	Renamed	-	liqp/spi/BasicTypesSupport.java	25	05becd0194c77e5d	
-member	liqp.spi.BasicTypesSupport#restoreObject(Object)	ssg.liquid.spi.BasicTypesSupport#restoreObject(Object)	Renamed	-	liqp/spi/BasicTypesSupport.java	48	ab09847c2af3ad24	placement=companion
+member	liqp.spi.BasicTypesSupport#restoreObject(Object)	ssg.liquid.spi.BasicTypesSupport#restoreObject(Object)	Renamed	-	liqp/spi/BasicTypesSupport.java	48	ac7e8dca948c4e49	placement=companion
 member	liqp.spi.Java7DateTypesSupport#configureCustomDateTypes()	ssg.liquid.spi.Java7DateTypesSupport#configureCustomDateTypes()	Renamed	-	liqp/spi/Java7DateTypesSupport.java	23	777195dab4f8df82	
 member	liqp.spi.Java7DateTypesSupport#configureTypesForReferencing(ObjectMapper)	ssg.liquid.spi.Java7DateTypesSupport#configureTypesForReferencing(ObjectMapper)	Renamed	-	liqp/spi/Java7DateTypesSupport.java	15	6da2da7d0232bfe9	
 member	liqp.spi.Java8DateTypesSupport#configureTypesForReferencing(ObjectMapper)	ssg.liquid.spi.Java8DateTypesSupport#configureTypesForReferencing(ObjectMapper)	Renamed	-	liqp/spi/Java8DateTypesSupport.java	10	4850faf681e4a433	
@@ -985,7 +985,7 @@ member	liqp.tags.Decrement#render(TemplateContext,Array)	ssg.liquid.tags.Decreme
 member	liqp.tags.Include#<init>()	ssg.liquid.tags.Include#<init>()	Renamed	-	liqp/tags/Include.java	16	b37177446f91392a	
 member	liqp.tags.Include#<init>(String)	ssg.liquid.tags.Include#<init>(String)	Renamed	-	liqp/tags/Include.java	19	cdfe184c3f332b03	
 member	liqp.tags.Include#detectSource(TemplateContext,String)	ssg.liquid.tags.Include#detectSource(TemplateContext,String)	Renamed	-	liqp/tags/Include.java	61	b00b72de08ef0bf4	
-member	liqp.tags.Include#render(TemplateContext,Array)	ssg.liquid.tags.Include#render(TemplateContext,Array<LNode>)	Renamed	-	liqp/tags/Include.java	24	070f9059000a90ff	
+member	liqp.tags.Include#render(TemplateContext,Array)	ssg.liquid.tags.Include#render(TemplateContext,Array<LNode>)	Renamed	-	liqp/tags/Include.java	24	e4986b007596c198	
 member	liqp.tags.IncludeRelative#detectSource(TemplateContext,String)	ssg.liquid.tags.IncludeRelative#detectSource(TemplateContext,String)	Renamed	-	liqp/tags/IncludeRelative.java	41	808b4b1c1aff2dee	
 member	liqp.tags.Increment#INITIAL	ssg.liquid.tags.Increment#INITIAL	Renamed	-	liqp/tags/Increment.java	38	0cecd823fa2e2b32	placement=companion vis=private
 member	liqp.tags.Increment#render(TemplateContext,Array)	ssg.liquid.tags.Increment#render(TemplateContext,Array<LNode>)	Renamed	-	liqp/tags/Increment.java	41	6a6df56a5d859a54	

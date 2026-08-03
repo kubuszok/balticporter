@@ -217,6 +217,30 @@ object JavaCollection:
       if i < 0 then false else { xs.remove(i); true }
     override def clear(): Unit               = xs.clear()
 
+  /** the OTHER direction — a `java.util.Collection` a third party HANDED BACK, at a slot the
+    * retyping made this shim.
+    *
+    * `JavaCollections.fromJava` has no overload for this and deliberately so: at a static slot the
+    * only evidence is a declared type, `java.util.Collection` has no `scala.jdk` converter, and
+    * building one over a copied `Buffer` would detach both directions — the refusal
+    * `CollectionsTransform.liveWrappable` states and counts. Here there is no such doubt, because
+    * the OBJECT is in hand: this is a REIFIED occurrence (`(Collection<?>) x`), so the wrapper is a
+    * straight delegation to the java collection's own members and nothing is copied. Its
+    * `iterator()` is removal-capable through java's own iterator, as [[from]]'s is through the
+    * buffer's. */
+  def fromJava[A](c: java.util.Collection[A]): JavaCollection[A] = new JavaCollection[A]:
+    def iterator(): JavaIterator[A] = new JavaIterator[A]:
+      private val it = c.iterator()
+      def hasNext(): Boolean      = it.hasNext
+      def next(): A               = it.next()
+      override def remove(): Unit = it.remove()
+    def size(): Int                                     = c.size()
+    override def isEmpty(): Boolean                     = c.isEmpty()
+    override def contains(o: java.lang.Object): Boolean = c.contains(o)
+    override def add(e: A): Boolean                     = c.add(e)
+    override def remove(o: java.lang.Object): Boolean   = c.remove(o)
+    override def clear(): Unit                          = c.clear()
+
   /** The same seam for a `Kind.Set` source — `java.util.Set` IS a `java.util.Collection`, so a
     * ported method taking a `Collection` must still accept the port's `mutable.Set`.
     *

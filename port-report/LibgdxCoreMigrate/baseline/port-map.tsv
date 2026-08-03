@@ -17169,7 +17169,7 @@ member	com.badlogic.gdx.utils.Json#readField(Object,String,JsonValue)	sge.utils.
 member	com.badlogic.gdx.utils.Json#readField(Object,String,String,?,JsonValue)	sge.utils.Json#readField(Object,String,String,?,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	865	50aadfcba290c2d0	
 member	com.badlogic.gdx.utils.Json#readField(Object,String,String,JsonValue)	sge.utils.Json#readField(Object,String,String,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	860	40299e8d0100b969	
 member	com.badlogic.gdx.utils.Json#readFields(Object,JsonValue)	sge.utils.Json#readFields(Object,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	895	bc3948aceac102fe	
-member	com.badlogic.gdx.utils.Json#readValue(?,?,JsonValue)	sge.utils.Json#readValue(?,?,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	987	0d77496436487dbf	
+member	com.badlogic.gdx.utils.Json#readValue(?,?,JsonValue)	sge.utils.Json#readValue(?,?,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	987	d74b0eccf09703b8	
 member	com.badlogic.gdx.utils.Json#readValue(?,?,T,JsonValue)	sge.utils.Json#readValue(?,?,T,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	973	203c939b71116f6c	
 member	com.badlogic.gdx.utils.Json#readValue(?,JsonValue)	sge.utils.Json#readValue(?,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	980	ff0aaa5ebc0a1321	
 member	com.badlogic.gdx.utils.Json#readValue(String,?,?,JsonValue)	sge.utils.Json#readValue(String,?,?,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	958	36332499c0269d4f	
@@ -17223,7 +17223,7 @@ member	com.badlogic.gdx.utils.Json#writeObjectStart(String,Class,?)	sge.utils.Js
 member	com.badlogic.gdx.utils.Json#writeType(Class)	sge.utils.Json#writeType(Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	768	dd347912d201a4d1	
 member	com.badlogic.gdx.utils.Json#writeValue(?)	sge.utils.Json#writeValue(?)	Renamed	-	com/badlogic/gdx/utils/Json.java	473	eb78178549db47ab	
 member	com.badlogic.gdx.utils.Json#writeValue(?,?)	sge.utils.Json#writeValue(?,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	483	4294462207ebc782	
-member	com.badlogic.gdx.utils.Json#writeValue(?,?,?)	sge.utils.Json#writeValue(?,?,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	4ccf0f25450cfab7	
+member	com.badlogic.gdx.utils.Json#writeValue(?,?,?)	sge.utils.Json#writeValue(?,?,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	4a1863602fd4ab7f	
 member	com.badlogic.gdx.utils.Json#writeValue(String,?)	sge.utils.Json#writeValue(String,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	431	b9a37363441884fe	
 member	com.badlogic.gdx.utils.Json#writeValue(String,?,?)	sge.utils.Json#writeValue(String,?,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	448	a7cc3d638cd6438d	
 member	com.badlogic.gdx.utils.Json#writeValue(String,?,?,?)	sge.utils.Json#writeValue(String,?,?,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	462	9022871fdaf0bc3f	

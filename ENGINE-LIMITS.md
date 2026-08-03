@@ -3766,6 +3766,104 @@ is the first time that has happened in this file.*
 
 ---
 
+### K18. A retyping moves STATIC types; an `instanceof` and a downcast ask about a RUNTIME OBJECT — **160 test failures, 0 compile errors, every check count flat. CLOSED**
+
+**The largest single defect this project has measured after C12, and the one every instrument was
+blind to.** `CollectionsTransform` retypes `java.util.Map` to `mutable.Map`, and `transformType` is
+position-blind, so it moves the type wherever it occurs — including at the two positions where a
+type is not a static claim at all:
+
+```java
+if (value instanceof java.util.Map)  return ((Map<?,?>) value).isEmpty();
+```
+
+becomes `value.isInstanceOf[mutable.Map[?, ?]]` and `value.asInstanceOf[mutable.Map[?, ?]]`. Both
+are valid Scala. Both compile. Both ask a **different question** from the one java asked, because the
+retyping moved neither the objects nor the classes they are instances of.
+
+**And a ported library holds BOTH representations at every `Object` slot — that is its normal
+state, not a corner.** A `Map<String,Object>` the port's own code built is a `mutable.Map`; the one
+jackson deserialised (`mapper.readValue(json, HashMap.class)`), the one an ANTLR context returned, and
+the one the library's own CALLER passed in are `java.util.*`. Java's test accepted all of them. The
+port's accepts one.
+
+Measured on liqp, where the whole data model is `Map<String,Object>` with `Object` values discriminated
+by `instanceof`: **392 → 552 passing, 183 → 23 failing, 160 flipped and 0 newly failing, at `errors 0`
+before and after.** The 160 are the whole of what `PROGRESS.md` had censused as four separate
+families — 139 `HashMap cannot be cast to mutable.Map`, the tablerow/`for` renderings that silently
+produced one cell, the `where`-filter comparisons — and they are ONE defect.
+
+**Read this apart from K15, which it looks like and is not.** K15 is about a SLOT: two sides of an
+argument or a result disagree, and the fix is a live view at the boundary. This is about a
+QUESTION, and the two behave differently in the one way that matters — a K15 seam has a
+`CollectionBoundaryCheck` finding or a compile error behind it, and a reified occurrence has neither.
+It was in fact reachable through K15's machinery and the whole route was a dead end worth recording:
+
+- **the producer wrap at the external call is NOT the fix, and it is worth 44 of the 160.** Wrapping
+  `mapper.readValue(json, HashMap.class)` in `fromJava` compiles and flips **392 → 436**. It stops
+  there because `asScala` is ONE LEVEL: the values INSIDE the map are still java's, and every
+  `instanceof` one level in still answers no. A live view of the top of a tree does not make the tree
+  the port's.
+- **the reified rule SUBSUMES it.** With the cast at the assignment coerced, the same site reads
+  552 with NO producer wrap — measured both ways, one run apart. The `Class` token was never the
+  question; the cast that received its result was.
+- **`liveWrappable` did not have to be widened**, which is what K15 warns against. The node claims
+  `mutable.HashMap[?, ?]` and no view can be one — the arm still refuses and still counts.
+
+**The disjunction is EXACT, and the loose form is measurably worse.** Widening the scala side to
+`scala.collection.Iterable` reads as the obvious simplification: it is two test failures worse
+(**550 against 552**), because a `mutable.Map` IS a `scala.collection.Iterable` while a
+`java.util.Map` is NOT a `java.util.Collection` — so `x instanceof Collection` starts answering
+true for a map, and liqp's `LValue.asArray` treats a map as a single element by exactly that test.
+The mapping preserves java's subtype relations wherever it can (`typeMap`'s own notes say so four
+times), so for `Map`, `List`, `Set` and `Iterator` "the target, or java's own type" is complete; the
+two SHIM targets are where it is not, and `isCollection`/`isIterable` name the mapped subtypes'
+targets beside them.
+
+**What is refused and counted.** A reified occurrence whose target is a CONCRETE mapping target —
+`mutable.HashMap`, `ArrayBuffer`, `ArrayDeque`, `TrieMap`, `scala.Tuple2` — has nothing to coerce to,
+because no live view can BE one. `CollectionBoundaryCheck.Issue.ReifiedOccurrence` counts it with the
+§1 classification (liqp: 2, both `mutable.HashMap` in the suite). Note what that count is FOR: this
+is the one seam with no compile error and no slot, so the count is the only instrument that sees the
+site at all.
+
+**Three things the phase must not do, every one of them wrong in a first cut:**
+
+- **an UPCAST is not a reified question.** `other.map.asInstanceOf[Map[? <: String, ? <: Insertion]]`
+  is a cast whose operand this phase already retyped, so the representation is known and java's cast
+  was a no-op on it. Coercing there is 4 compile errors on liqp — a bounded-wildcard target the
+  helper cannot name — and the predicate that settles it is `vouched`: the phase vouches for a value
+  produced by a declaration it retyped, and not for one an EXTERNAL callee produced (`externalCallee`
+  is K15's own predicate, reused verbatim). That exception is exactly the `readValue` site, whose
+  node type reads as a mapping target only because `transformType` moved it.
+- **…and neither is a cast of a type the PROGRAM DECLARES**, which is a second reason and not the
+  same one. `(Iterator<T>) new QueueIterator<T>(…)` casts a class the port EMITS to a shim that
+  class already implements: every instance of a program-declared type is one the port made, so the
+  representation is not in question. Answered by `Program.owns`, the structural test §4.56 asks for.
+  Measured, and the reason it is a rule rather than a tidiness: without it libGDX emitted an
+  identity coercion at **9 members** including `Queue.iterator()` and `Array.select` — a runtime
+  dispatch added to the iterator of every `for` loop in a game engine, at 0 behavioural difference.
+  With it, libGDX's blast is **0 members**.
+- **the cast is KEPT and the coercion goes INSIDE it.** Replacing the cast would narrow a
+  wildcard-applied target; keeping it is also exact, because java's cast to a generic type is
+  unchecked in its type arguments (JLS 5.5) and the surviving `asInstanceOf` is precisely that.
+
+**One fact about the corpus that reads as a defect and is not.** libGDX cites `JS-G48` at 5
+declarations and emits no coercion at all, because every reified occurrence it has is inside
+`com.badlogic.gdx.utils.Json` — a type that port DROPS and replaces with injected Scala. The
+citation surface is not filtered by the port's drops (neither is `JS-E07`'s), so a `Cited` row can
+be reached at a declaration the port does not ship. That is what `catalog(consulted)` means by
+"reached" and it is accurate about the PIPELINE; it is not a statement about the emitted code, and
+a reader taking it for one would be wrong.
+
+*Fix kind: (a) engine — CLOSED. `CollectionsTransform.reifiedTest`/`reifiedCast` →
+`JavaCollections.Reified`, catalog `JS-G48`, counted refusal `Issue.ReifiedOccurrence`. The
+generalisation is CLAUDE.md's and is not about collections: **every retyping phase owes an answer at
+the REIFIED positions**, because a type test and a cast are the two places where a type is a
+statement about an object and not about a slot.*
+
+---
+
 ### P1. A `--js` compile proves NOTHING as a portability gate
 
 Scala.js type-checks against JDK signatures and compiles `java.lang.reflect` happily. **Only the
