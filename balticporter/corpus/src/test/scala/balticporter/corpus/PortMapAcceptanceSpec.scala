@@ -78,11 +78,20 @@ class PortMapAcceptanceSpec extends munit.FunSuite:
 
     // The other thing the map surfaces early on this corpus, kept as a number rather than a list so
     // it moves when the port does: Ashley's references to types the base drops — `ReflectionPool`
-    // in `PooledEngine`, and `ClassReflection` + `ReflectionException` in `Engine`.
+    // in `PooledEngine` (6 sites) and `ClassReflection` in `Engine` (1).
     //
     // 7 -> 8 when the map's `upstream` column stopped being derived by INVERTING the package rename
-    // and started coming from the java ORIGIN. The eighth is `Engine`'s `catch (ReflectionException
+    // and started coming from the java ORIGIN. The eighth was `Engine`'s `catch (ReflectionException
     // e)`: a genuine reference to a dropped type that the map could not name while its key was
     // wrong. A number that rises because the lookup got correct is the check starting to work.
-    assertEquals(phase.findings.count(_.issue == PortMapTransform.Issue.DroppedType), 8)
+    //
+    // 8 -> 7 when the base gained an INJECTED `sge.utils.reflect.ReflectionException`, which moves
+    // that type from `Dropped` to `Substituted` in the published map — and `DroppedType` is
+    // deliberately not raised for a `Substituted` one, because a replacement stands at the same
+    // name and the reference is callable. So the eighth site is still a reference to the same type;
+    // it is no longer a PROBLEM, and the phase saying so is the phase being right. Read the
+    // disposition in the map (`grep ReflectionException port-report/LibgdxCoreMigrate/baseline/
+    // port-map.tsv`) before ever moving this number: `Dropped` and `Substituted` are one column
+    // apart and mean opposite things here.
+    assertEquals(phase.findings.count(_.issue == PortMapTransform.Issue.DroppedType), 7)
   }

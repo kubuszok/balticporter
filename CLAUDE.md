@@ -602,6 +602,19 @@ you should do:
   assert, a disappearance is a test the run never had, which is what a conversion regression that
   stops EMITTING a suite looks like from here. Both sides fall together, so the run reports success
   on a smaller suite; a deliberate deletion is acknowledged by re-accepting the baseline.
+- **…and the same rule reaches the ENGINE'S OWN SPECS, where nothing is gating it.** The
+  ported-test lanes gate on `TestDiff.newlySkipped`; `sbt <project>/testOnly *` gates on nothing —
+  it prints `Skipped 1` and exits 0. So an `assume`-guarded spec whose precondition is ANOTHER
+  RUN'S ARTIFACT (a published `port-map.tsv`, an emitted source set, a vendored upstream tree) does
+  not run in a fresh checkout, and a hard-coded expectation inside it can go stale for as long as
+  nobody happens to run the port first. Measured: `PortMapAcceptanceSpec` asserted a
+  `DroppedType` count of **8** while the answer had been **7** since the base gained an injection —
+  it reads `port-report/<base>/run-latest/port-map.tsv`, which a fresh worktree does not have, so
+  every `corpus/test` since had reported success without executing it. **Two things follow**: a
+  spec that `assume`s on an artifact is one nobody is running unless a lane produces that artifact
+  first, so run the suites AFTER `just measure-all` and not before; and `sbt test` here is
+  `testQuick`, which re-runs only what the last change touched — the full suite is
+  `testOnly *`, and a wave that never types it is a wave that has not seen its own spec failures.
 - **`decisions.tsv` says WHY the emitted code is not a mechanical translation.** The source map
   answers "which Java produced this line"; it cannot answer "why is this type simply absent, this
   package not the upstream one, this member from a hand-written file". Each of those is a
