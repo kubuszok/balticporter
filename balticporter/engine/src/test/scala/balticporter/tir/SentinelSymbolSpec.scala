@@ -69,3 +69,43 @@ class SentinelSymbolSpec extends munit.FunSuite:
     val p     = programWith(List(cls), List(unit))
     assertEquals(MarkerCheck.sentinels(p, p.units), Nil)
   }
+
+  test("a `?`-PREFIXED name that is not a sentinel is NOT one — the filter is equality, not a prefix") {
+    // The defect this test pins, and it was found by RUNNING the lane rather than by reading it.
+    // `Symbol.isUnresolvedTypeVar` is `startsWith("?")`, and the frontend also mints a `?` prefix
+    // for a member whose OWNER it could not name (`Minter.fullNameOf`'s fallback) — `?#actual`,
+    // `?#points`, `?#stride`, which are ordinary method PARAMETERS. Asked the prefix question, this
+    // lane reported 10,417 of them on libGDX core and 29 on its own test set, not one a sentinel.
+    // CLAUDE.md §4.56 ("a prefix is not a structural fact about anything"), reproduced inside the
+    // check written to measure something else.
+    val clsId = SymId(0)
+    val defId = SymId(1)
+    val parId = SymId(2)
+    val o     = Origin("p/Holder.java", 3, 7)
+    val param = Symbol(parId, "actual", "?#actual", Flags(), SymId.None, TypeRepr.NoType)
+    val cls   = Symbol(clsId, "Holder", "p.Holder", Flags(), SymId.None, TypeRepr.NoType)
+    val mem   = Symbol(defId, "get", "p.Holder#get", Flags(), clsId, TypeRepr.NoType)
+    val dd    = Tree.DefDef(defId, Nil, TypeTree(TypeRepr.NoType, o),
+      Some(Tree.Ident(parId, TypeRepr.NoType, o)), o)
+    val unit  = Tree.ClassDef(clsId, Nil, scala.None, List(dd), o)
+    val p     = programWith(List(cls, mem, param), List(unit))
+    assertEquals(MarkerCheck.sentinels(p, p.units), Nil,
+      "a member whose OWNER could not be named is not an unresolvable name")
+  }
+
+  test("the `?var$` sentinel is recognised too, and named as a variable rather than a type") {
+    val clsId = SymId(0)
+    val defId = SymId(1)
+    val varId = SymId(2)
+    val o     = Origin("p/V.java", 9, 2)
+    val stub  = Symbol(varId, "count", MarkerCheck.VarSentinelPrefix + "count", Flags(), SymId.None, TypeRepr.NoType)
+    val cls   = Symbol(clsId, "V", "p.V", Flags(), SymId.None, TypeRepr.NoType)
+    val mem   = Symbol(defId, "run", "p.V#run", Flags(), clsId, TypeRepr.NoType)
+    val dd    = Tree.DefDef(defId, Nil, TypeTree(TypeRepr.NoType, o),
+      Some(Tree.Ident(varId, TypeRepr.NoType, o)), o)
+    val unit  = Tree.ClassDef(clsId, Nil, scala.None, List(dd), o)
+    val p     = programWith(List(cls, mem, stub), List(unit))
+    val fs    = MarkerCheck.sentinels(p, p.units)
+    assertEquals(fs.size, 1)
+    assert(fs.head.detail.contains("variable reference"), fs.head.detail)
+  }

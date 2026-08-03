@@ -106,6 +106,40 @@ case belongs to the classpath, not to the `catch`.
 *Fix kind: (a). The tiers are what to price: a refusal costs a FILE, a silent degradation costs a
 construct and is invisible, and the second is worse.*
 
+### 0.2 `Symbol.isUnresolvedTypeVar` is `startsWith("?")`, and **10,417 libGDX symbols match it**
+
+OPEN, and found by RUNNING the lane written to measure something else — which is the only way it
+could have been found, because nothing about it moves a number.
+
+The frontend mints a `?`-prefixed `fullName` for **two unrelated reasons**:
+
+- the SENTINEL — `SpoonTir.tpe` interns `?T` for a type variable it cannot resolve, and
+  `resolveVar` interns `?var$name` for a variable reference it cannot resolve. These are names that
+  must never be printed, and the emitter's standing rule is that they never are;
+- **incidentally** — `Minter.fullNameOf` falls back to `"?"` for a member whose OWNER it could not
+  name, producing `?#actual`, `?#points`, `?#stride`. Those are ordinary method PARAMETERS, and
+  there is nothing unresolved about them except their owner's name.
+
+`Symbol.isUnresolvedTypeVar(fullName) = fullName.startsWith("?")` cannot tell the two apart. Measured
+by the first version of `MarkerCheck.sentinels`, which asked the prefix question: **10,417 matches on
+libGDX core, 29 on its own test set, and zero of them sentinels.** `CLAUDE.md` §4.56's rule — *a
+prefix is not a structural fact about anything* — inside the engine's own predicate.
+
+**Why it has not corrupted output yet, stated so nobody assumes it is harmless.** The two consumers
+are `TirEmitter.typeSym` (renders `?` instead of the name) and the type-bound renderer, and both are
+reached only from a TYPE position. A parameter symbol does not normally arrive there, so the
+collision exists in the symbol table and has not yet been asked the question. That is a property of
+which symbols happen to reach one function today — not a guarantee — and it is exactly the shape
+§0's "two renderings of one Java type" family keeps producing.
+
+**Not fixed here, deliberately.** Narrowing the predicate changes what the emitter prints, so it is a
+measured commit of its own with a `before->after`; the honest first step was the number, and the
+number is what says the fix is not cosmetic. The reading side is already exact — `MarkerCheck` tests
+`fullName == "?" + name`, i.e. equality against what the mint site CONSTRUCTED, which is as
+structural as a key-interned external symbol allows.
+
+*Fix kind: (a). Cost of the wrong question, measured: 10,417 phantom findings on one port.*
+
 ---
 
 ## 1. Generics, raw types and wildcards

@@ -37,6 +37,12 @@ object MarkerCheck:
 
   val Name = "markers"
 
+  /** the key `SpoonTir.resolveVar` mints for a variable reference it cannot resolve. Here rather
+    * than in the frontend beside its mint site, because this is the READING half and the two must
+    * agree — the same reason `Symbol.UnresolvedTypeVarPrefix` lives in `api` rather than in the arm
+    * that writes it. */
+  val VarSentinelPrefix = "?var$"
+
   /** what a run does about each: an `Open` marker is the EMISSION GATE's input (§6.4), an erased
     * one is an engine defect, and a resolved one is work done and is reported as a count only. */
   final case class Finding(kind: String, owner: String, detail: String, origin: Origin):
@@ -166,18 +172,38 @@ object MarkerCheck:
     * should not have to know there are two places to look. They do NOT feed the gate.
     *
     * Attributed through the XREF, not through the symbol: an external symbol has no origin worth
-    * printing, and the question a reader has is which of THEIR declarations reaches it. */
+    * printing, and the question a reader has is which of THEIR declarations reaches it.
+    *
+    * ==THE FILTER IS EXACT, AND THE FIRST VERSION OF IT WAS NOT==
+    *
+    * `Symbol.isUnresolvedTypeVar` is `fullName.startsWith("?")`, and that is not the question. The
+    * frontend mints a `?` prefix for TWO unrelated reasons: this sentinel, and — incidentally —
+    * `Minter.fullNameOf`'s fallback for a member whose OWNER it could not name, which produces
+    * `?#actual`, `?#points`, `?#stride`. Those are ordinary method PARAMETERS. Asked the prefix
+    * question, this lane reported **10,417 on libGDX core and 29 on its test set**, none of them a
+    * sentinel — `CLAUDE.md` §4.56's own rule ("a prefix is not a structural fact about anything")
+    * reproduced inside the check written to measure a different one.
+    *
+    * So the test is EQUALITY against the mint site's own construction: `?` + the symbol's simple
+    * name, and `?var$` + the symbol's simple name. `?#actual` has the name `actual` and would have
+    * to be `?actual` to match. That is as structural as this can be made — the sentinel's identity
+    * IS its key, and the key is what the mint site built.
+    *
+    * The over-broad predicate is left where it is on purpose: it is the EMITTER's, it is load-bearing
+    * there, and narrowing it is a change to emitted text that belongs in its own measured commit. */
   def sentinels(program: Program, units: List[Tree.ClassDef]): List[Finding] =
     val ownedRoots = units.map(_.symbol).toSet
     def rooted(s: SymId, fuel: Int): Boolean =
       s != SymId.None && fuel > 0 &&
         (ownedRoots(s) || program.symbolOf(s).exists(sym => rooted(sym.owner, fuel - 1)))
+    def isTypeVarSentinel(sym: Symbol) = sym.fullName == Symbol.UnresolvedTypeVarPrefix + sym.name
+    def isVarSentinel(sym: Symbol)     = sym.fullName == VarSentinelPrefix + sym.name
     program.symbols.all.toList
-      .filter(sym => Symbol.isUnresolvedTypeVar(sym.fullName) || sym.fullName.startsWith("?var$"))
+      .filter(sym => isTypeVarSentinel(sym) || isVarSentinel(sym))
       .sortBy(_.fullName)
       .flatMap { sym =>
         val here = program.usages(sym.id).filter(u => rooted(u.enclosing, 64))
-        val what = if sym.fullName.startsWith("?var$") then "variable reference" else "type variable"
+        val what = if isVarSentinel(sym) then "variable reference" else "type variable"
         here.headOption.map { u =>
           Finding("sentinel", program.symbolOf(u.enclosing).map(_.fullName).getOrElse("?"),
             s"an unresolvable $what was interned as the sentinel `${sym.fullName}`, which must " +
