@@ -125,12 +125,20 @@ by the first version of `MarkerCheck.sentinels`, which asked the prefix question
 libGDX core, 29 on its own test set, and zero of them sentinels.** `CLAUDE.md` §4.56's rule — *a
 prefix is not a structural fact about anything* — inside the engine's own predicate.
 
-**Why it has not corrupted output yet, stated so nobody assumes it is harmless.** The two consumers
-are `TirEmitter.typeSym` (renders `?` instead of the name) and the type-bound renderer, and both are
-reached only from a TYPE position. A parameter symbol does not normally arrive there, so the
-collision exists in the symbol table and has not yet been asked the question. That is a property of
-which symbols happen to reach one function today — not a guarantee — and it is exactly the shape
-§0's "two renderings of one Java type" family keeps producing.
+**Why it has not corrupted output yet, stated so nobody assumes it is harmless.** There are THREE
+consumers, not two — `TirEmitter.typeSym` (renders `?` instead of the name), the type-bound renderer,
+and `CollectionsTransform.namesUnresolved`, which asks the question to decide whether a call's
+inferred element type may be written down as an explicit type argument. All three are reached only
+from a TYPE position. A parameter symbol does not normally arrive there, so the collision exists in
+the symbol table and has not yet been asked the question. That is a property of which symbols happen
+to reach one function today — not a guarantee — and it is exactly the shape §0's "two renderings of
+one Java type" family keeps producing.
+
+Note the third one FAILS DIFFERENTLY from the two renderers, which is why an inventory of consumers
+is worth keeping accurate: a false positive there prints nothing wrong, it DECLINES to write a type
+argument that was safe, and the emitted call falls back to scala's own inference. Silent either way,
+and not the same silence — an inventory that says "two renderers" invites the reader to conclude that
+narrowing the predicate can only change what is PRINTED.
 
 **Not fixed here, deliberately.** Narrowing the predicate changes what the emitter prints, so it is a
 measured commit of its own with a `before->after`; the honest first step was the number, and the

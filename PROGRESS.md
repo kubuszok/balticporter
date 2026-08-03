@@ -4831,7 +4831,13 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
   path is the one thing that could have made this design the wrong one: three runs of the libGDX
   core migration with the dispatch wrapper live read **35.96 / 38.01 / 34.97 s**, and three with it
   bypassed at the same commit read **35.55 / 38.98 / 34.43 s**. The difference is inside the
-  run-to-run spread. The fallback the design priced — compile-time-only enforcement, which keeps the
+  run-to-run spread. **The bypass is one uncommitted line** — `Lowering.of` returning
+  `body(using log.unattached)` before it consults `Differences.owedAt` — which removes the whole
+  per-node cost (the lookup, the allocation, the settle) and leaves the pipeline otherwise identical;
+  time `just gdx-measure`'s migration three times each way, at one commit. Written down because a
+  price nobody can re-derive is a price that gets re-argued: there is no flag for this and there
+  should not be (§4.6's flags are debuggers', and a flag that silently disabled the obligation
+  mechanism would be one somebody leaves on). The fallback the design priced — compile-time-only enforcement, which keeps the
   guarantee for every difference that has a test and loses it for every one that does not — is
   therefore not taken, and it was not taken on a number rather than on a preference.
 
