@@ -84,20 +84,55 @@ class CatalogAreaESpec extends PortSuite:
     intercept[munit.FailException](assertConsults(p, JS.E(3), fired = true))
   }
 
-  // -- JS-E04: the SAME difference in EXPRESSION position, and it is OPEN -------------------------
+  // -- JS-E04: the SAME difference in EXPRESSION position -----------------------------------------
+  //
+  // The row this whole mechanism was designed around: two arms lower a `CtOperatorAssignment`, the
+  // statement one narrowed and the expression one did not, twelve lines apart, for the whole life of
+  // the file. The predicate is ONE function (`SpoonTir.compoundNarrow`) and both dispatches consult
+  // it now — which is what these tests assert in BOTH directions, because a predicate consulted and
+  // never firing discharges the obligation and emits the same wrong code.
 
-  test("JS-E04 is OPEN, so nothing consults it — and the wrapper reports the hole rather than hiding it") {
-    // The row this whole mechanism was designed around: two arms lower a `CtOperatorAssignment`,
-    // the statement one narrows and the expression one does not. Rule (ii) forbids consulting a row
-    // the registry says nobody handles, so the honest state is a COUNTED hole — which is what makes
-    // `catalog(undischarged)` the work list rather than a defect count.
-    assertEquals(Differences.byId(JS.E(4)).status, Status.Open)
+  test("JS-E04 — `(b += 3)` used as a VALUE narrows back, exactly as the statement form does") {
+    assertEquals(Differences.byId(JS.E(4)).status, Status.Handled)
     val p = port("public class D { int f(byte b) { return (b += 3); } }")
+    assertConsults(p, JS.E(4), fired = true)
+    assertEmits(p, "scala.Byte")
+  }
+
+  test("JS-E04 — `short` and `char` are the other two shapes java's promotion widens past") {
+    val p = port("public class D { int f(short s, char c) { return (s += 1) + (c += 1); } }")
+    assertConsults(p, JS.E(4), fired = true)
+    assertEmits(p, "scala.Short")
+    assertEmits(p, "scala.Char")
+  }
+
+  test("JS-E04 — `int += int` as a value is consulted and does NOT narrow") {
+    val p = port("public class D { int f(int i) { return (i += 3); } }")
+    assertConsults(p, JS.E(4))
+    intercept[munit.FailException](assertConsults(p, JS.E(4), fired = true))
+  }
+
+  test("JS-E04 — a REFERENCE compound assignment (`String +=`) as a value is consulted and does not narrow") {
+    val p = port("public class D { String f(String s) { return (s += \"x\"); } }")
+    assertConsults(p, JS.E(4))
+    intercept[munit.FailException](assertConsults(p, JS.E(4), fired = true))
+  }
+
+  test("JS-E04 — the STATEMENT form of the same node consults JS-E03 and not JS-E04") {
+    // The dispatch discriminator, asserted at the pair it was introduced for: one Spoon kind, two
+    // rows, and a kind-keyed attachment could not have told them apart.
+    val p = port("public class D { void f(byte b) { b += 3; } }")
+    assertConsults(p, JS.E(3), fired = true)
     assertNotConsults(p, JS.E(4))
-    // JS-E17 is beside it and is `Open` for the same kind of reason — the lvalue's single
-    // evaluation, which no arm reproduces (`ENGINE-LIMITS.md` F7) — so the work list here is two
-    // rows and both are declared rather than defects.
-    assertEquals(p.catalog.undischarged.map(_.id), List(JS.E(4), JS.E(17)))
+  }
+
+  test("JS-E04 is discharged, and JS-E17 beside it is the whole remaining work list at this kind") {
+    // JS-E17 is `Open` for a reason that is MEASURED rather than overlooked — the lvalue's single
+    // evaluation, 161 duplicated sites in the corpus of which 0 misbehave today
+    // (`ENGINE-LIMITS.md` F7) — so it stays a COUNTED hole, which is what makes
+    // `catalog(undischarged)` a work list and not a defect count.
+    val p = port("public class D { int f(byte b) { return (b += 3); } }")
+    assertEquals(p.catalog.undischarged.map(_.id), List(JS.E(17)))
   }
 
   // -- JS-E05: the conditional operator's type is COMPUTED, not the lub of its branches -----------

@@ -98,8 +98,8 @@ class CatalogCoverageSpec extends munit.FunSuite:
         Obligations.consult(JS.E(3), origin)(scala.None)
       }
     }
-    // (JS-E04 is a hole here too — the inner scope owes it and nothing consults it — which is the
-    // declared-open work list and not what this assertion is about.)
+    // (JS-E04 and JS-E17 are holes here too — the inner scope owes both and this probe consults
+    // neither — which is not what this assertion is about.)
     assert(log.undischarged.map(_.id).contains(JS.E(3)),
       "a different node consulted it; this statement's own obligation is still owed")
   }
@@ -120,13 +120,16 @@ class CatalogCoverageSpec extends munit.FunSuite:
       given CatalogLog = fatal
       Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node)(())
     }
-    // JS-E04 is `Open`. It attaches, it is never consulted, and a testkit run must NOT die on it —
-    // it is the work list, and a mode that died on the work list would make the work list
-    // unrunnable. This is the one exemption, and it is derived from the row's own status.
+    // JS-E17 is `Open`. It attaches at BOTH dispatches, no arm consults it, and a testkit run must
+    // NOT die on it — it is the work list, and a mode that died on the work list would make the
+    // work list unrunnable. This is the one exemption, and it is derived from the row's own status,
+    // which is why the body below discharges the HANDLED row beside it and still does not raise.
     val alsoFatal = new CatalogLog(fatal = true)
     given CatalogLog = alsoFatal
-    Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin, node)(())
-    assertEquals(alsoFatal.undischarged.map(_.id), List(JS.E(4), JS.E(17)))
+    Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin, node) {
+      Obligations.consult(JS.E(4), origin)(scala.None)
+    }
+    assertEquals(alsoFatal.undischarged.map(_.id), List(JS.E(17)))
   }
 
   // -------------------------------------------------------------------------------------------
@@ -160,9 +163,20 @@ class CatalogCoverageSpec extends munit.FunSuite:
       assert(log.consulted(id) > 0, s"$id was never consulted")
       assert(log.fired(id) > 0, s"$id was consulted and never applied")
     }
-    // JS-E04 attaches at the expression dispatch (`k = (j = i)` is a plain assignment; a compound
-    // one in expression position is what would owe it) and is `Open`, so nothing consults it.
-    assert(!log.reached.contains(JS.E(4)), "JS-E04 is Open — no arm may consult it (rule (ii))")
+    // JS-E04 attaches at the EXPRESSION dispatch, and `k = (j = i)` is a plain assignment — so this
+    // snippet never opens a scope that owes it. That is what makes the `consulted` lane a
+    // measurement rather than a constant: a row is reached because the port has the shape, not
+    // because the arm exists.
+    assert(!log.reached.contains(JS.E(4)), "no compound assignment in expression position here")
+  }
+
+  test("…and a compound assignment IN EXPRESSION POSITION reaches JS-E04 and narrows") {
+    // The other half of the pair, and the one that would have been silently wrong: the identical
+    // narrowing sat twelve lines away in the statement arm for the whole life of the frontend, and
+    // what reported it was the wrapper rather than a compile or a count.
+    val log = lower("public class S { int f(byte c) { return (c += 3); } }")
+    assert(log.fired(JS.E(4)) > 0, "JS-E04 was consulted and never applied at a `byte` compound assign")
+    assert(log.fired(JS.E(3)) == 0, "the statement row must not fire for an expression-position node")
   }
 
   test("THE NEGATIVE for `unreached`: a port that lowers nothing reports every mechanised row") {

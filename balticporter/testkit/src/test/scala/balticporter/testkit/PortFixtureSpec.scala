@@ -72,6 +72,7 @@ class PortFixtureSpec extends PortSuite:
     // the work list unrunnable — and this is the assertion that says the log is fatal AND correct
     // rather than merely quiet.
     val (_, open) = PortFixture.parseWith("package demo; public class Q { int f(byte b) { return (b += 3); } }")
-    assertEquals(open.undischarged.map(_.id),
-      List(balticporter.catalog.JS.E(4), balticporter.catalog.JS.E(17)))
+    assertEquals(open.undischarged.map(_.id), List(balticporter.catalog.JS.E(17)))
+    assert(open.consulted(balticporter.catalog.JS.E(4)) > 0,
+      "the expression dispatch owes JS-E04 and discharges it; only the Open row is left")
   }

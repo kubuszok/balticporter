@@ -2807,8 +2807,16 @@ object SpoonTir:
         // Java yields the assigned value, Scala's `=` is Unit — lower to `{ lhs = rhs; lhs }`.
         case a: CtOperatorAssignment[?, ?] =>
           val lhs = expr(a.getAssigned)
-          val rhs2 = opText(a.getKind).fold(unknownOp(a.getKind, a, ty(a)))(
+          val res = opText(a.getKind).fold(unknownOp(a.getKind, a, ty(a)))(
             op => binApply(op, lhs, expr(a.getAssignment), ty(a)))
+          // JS-E04 — the same difference as JS-E03 at the other dispatch, and the same PREDICATE.
+          // `compoundNarrow` is one function precisely because this pair is what the catalog splits
+          // into two rows: the narrowing is java's implicit cast back to the left-hand type
+          // (JLS 15.26.2), and it is owed wherever the assignment happens — the position only
+          // decides whether the resulting value is also used. Without it the emitted store is an
+          // `int` into a `byte` slot, which is the LOUD half of the row.
+          val rhs2 = Obligations.consult(JS.E(4), originOf(a))(compoundNarrow(a))
+            .fold(res)(t => Tree.Typed(res, tt(tpe(t), a), tpe(t), originOf(a)))
           val st  = Tree.Assign(lhs, rhs2, unitT, originOf(a))
           Tree.Block(List(st), lhs, ty(a), originOf(a))
         case a: CtAssignment[?, ?] =>

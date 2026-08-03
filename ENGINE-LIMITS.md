@@ -5356,6 +5356,38 @@ work list; this entry is what it points at.
 
 ---
 
+### F8. The compound-assignment NARROWING was written once, for the STATEMENT arm; the EXPRESSION arm twelve lines away kept the defect — **CLOSED, at 0 moved member digests over fifteen ports**
+
+`b += 3` on a `byte` is `b = (byte)(b + 3)` in java: binary numeric promotion computes an `int` and
+JLS 15.26.2's implicit cast narrows it back. `SpoonTir`'s STATEMENT arm did that, through
+`primRank`, from the day the arm was written. Its EXPRESSION twin — the same Spoon node kind,
+reached when the assignment's VALUE is used (`return (b += 3)`, `f(b += 3)`) — did not, and stored a
+`scala.Int` into a `scala.Byte` slot.
+
+**Both halves of this entry are the finding, and the second is why it is recorded at all.**
+
+- the defect is LOUD. It is a type error, not one of §4.4's silent ones, so it needed no behavioural
+  test to see — it needed a SITE;
+- **there is no site.** Re-emitted over all fifteen ports with the fix in, `members.tsv` moved **0**
+  members on every one of them. Not one library in the corpus uses a `byte`/`short`/`char` compound
+  assignment as a value. Every other check count was flat and every suite outcome identical.
+
+So the defect was real, unreachable by every measurement this project has, and sat twelve lines from
+its own fix for the whole life of the file. What FOUND it was neither a compile nor a test but
+`catalog(undischarged)` — the expression dispatch owed `JS-E04` and the arm returned without
+consulting it — and what PROVES the fix is `CatalogAreaESpec`, because nothing in the corpus can.
+That is `DESIGN.md` §2.8's obligation wrapper argued as a measurement rather than as a design claim:
+its whole value is over the sites a corpus does not happen to have, and this is the first row to
+show what that is worth.
+
+The fix is that the predicate is ONE function both dispatches call (`SpoonTir.compoundNarrow`). Two
+copies would have been the same defect with a longer fuse — which is exactly what the two arms were.
+
+*Fix kind: (a). catalog: `JS-E04`. Note `JS-E17` sits on the same node and asks a different
+question — how many times the LVALUE is evaluated — and is still OPEN (F7 above).*
+
+---
+
 ## 10. Comments (trivia) — what still does not survive, with its number
 
 The governing rule is `CLAUDE.md` §4.58. This section is only the residue: what is measured to be
