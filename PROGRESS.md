@@ -4816,6 +4816,23 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
   first.
 - **`Collectors.toSet` / `toMap` deliberately unmapped** (`ENGINE-LIMITS.md` K6): each needs a different
   target type, and both a copy and the identity compile while being wrong.
+- **The difference catalog's four coverage lanes** (`DESIGN.md` §2.8). Their first honest numbers,
+  and none of them is a defect count:
+
+  | lane | reads | what it means |
+  |---|---|---|
+  | `catalog(consulted)` | 5–7 per port | rows the run REACHED. `LibgdxTestMigrate` is the 7 — the one port that reaches the PHASE surface, so no discharge site built so far is inert |
+  | `catalog(unreached)` | 1–3 per port | a row whose surface EXISTS and which this port never reached. Per-port informational; `just catalog-coverage` is where the question is really asked, and corpus-wide it is **one** row — JS-E04 |
+  | `catalog(unmechanised)` | **112**, identical on all fifteen | rows nothing is instrumented to answer for. Derived from the REGISTRY and not from the run, deliberately, so a reader comparing two ports can see it did not move. It goes down when a wave builds a surface, and area S's 25 rows are the first tranche |
+  | `catalog(undischarged)` | 0–1 per port | the WORK LIST. `1` on the nine ports that have a compound assignment in EXPRESSION position, and it is JS-E04 and nothing else |
+
+  The wrapper's COST was measured where it is largest, because a per-node cost on the frontend's hot
+  path is the one thing that could have made this design the wrong one: three runs of the libGDX
+  core migration with the dispatch wrapper live read **35.96 / 38.01 / 34.97 s**, and three with it
+  bypassed at the same commit read **35.55 / 38.98 / 34.43 s**. The difference is inside the
+  run-to-run spread. The fallback the design priced — compile-time-only enforcement, which keeps the
+  guarantee for every difference that has a test and loses it for every one that does not — is
+  therefore not taken, and it was not taken on a number rather than on a preference.
 
 ### 12.4 Cosmetic
 
@@ -4828,5 +4845,12 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
 
 ### 12.5 Not run
 
+- **`PortMapAcceptanceSpec` still `assume`s itself out in a WORKTREE.** It resolves
+  `<repoRoot>/../sge/original-src/...`, and a worktree's parent is `.claude/worktrees/`, not the
+  checkout's parent — so the vendored-sources `assume` fires and the spec is reported `Skipped 1` by
+  every `testOnly *` run made from one. §5.1's own rule is what this trips: a spec that `assume`s on
+  an artifact is one nobody is running unless something produces that artifact first, and here the
+  something is a path shape rather than a run. Pre-existing, unrelated to any catalog work, and named
+  here because a green `testOnly *` from a worktree does not mean this spec passed.
 - **The Auditor has not run over this delivery.** It is expensive (Fable 5) and the **user** runs it,
   once a whole piece of work is delivered (`CLAUDE.md` §4).
