@@ -897,13 +897,16 @@ final case class PortRun(
     // for the reason stated there: it records on EVERY run and the wiring living here is what makes
     // it unskippable, exactly as for `porter-notes`, `break-catch`, `try-resource` and
     // `switch-null`.
+    // ONE inventory, read three times. It is a full scan of every term the run owns, and asking
+    // for it per consumer would triple that walk over the largest port for no new information.
+    val markerInventory = MarkerCheck.inventory(program, checkedUnits)
     val markers  = MarkerCheck.check(translated.parsed, program, checkedUnits)
-    val resolved = MarkerCheck.inventory(program, checkedUnits).count(!_.marker.state.isOpen)
+    val resolved = markerInventory.count(!_.marker.state.isOpen)
     CheckReport.record(MarkerCheck.Name, markers.map(_.report))
     say(s"MARKERS (constructs with no faithful Scala): ${markers.size}")
     if markers.nonEmpty then say(MarkerCheck.Classification)
     println(MarkerCheck.summary(markers, resolved))
-    writeMarkers(program, MarkerCheck.inventory(program, checkedUnits))
+    writeMarkers(program, markerInventory)
 
     // ---- the CONTEXT boundary, RECORDED: the four the phase drew (collected above) plus the one
     // only the emitted text can show — a `using` clause the threading attached to a class's

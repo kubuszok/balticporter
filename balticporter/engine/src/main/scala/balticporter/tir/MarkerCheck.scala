@@ -98,13 +98,21 @@ object MarkerCheck:
     * phases decide about its base's units too, and reporting those attributes another module's
     * findings to this one). */
   def check(before: Program, after: Program, units: List[Tree.ClassDef]): List[Finding] =
-    val ownedNames = units.map(u => after.symbolOf(u.symbol).map(_.fullName).getOrElse("?")).toSet
-    val mintedIn   = before.units.filter(u => before.symbolOf(u.symbol).exists(s => ownedNames(s.fullName)))
-    val minted     = inventory(before, mintedIn)
-    val surviving  = inventory(after, units)
+    // MATCHED ON `SymId`, NEVER ON `fullName`. `before` is the frontend's output and `after` is the
+    // program a pipeline ending in `PackageRenameTransform` produced, so the two hold the SAME
+    // declarations under DIFFERENT names — the upstream ones and the emitted ones (`CLAUDE.md`
+    // §4.56: any artifact joining two namespaces has to say which is which). Compared by name, the
+    // owned-unit filter matches nothing on every renaming port, `minted` is empty, and this check
+    // reports a confident zero for the life of that port. A unit's symbol id is what survives the
+    // pipeline unchanged — it is the same fact `PortRun.runScope` relies on — and a rename moves
+    // `fullName` and never the id.
+    val ownedIds  = units.map(_.symbol).toSet
+    val mintedIn  = before.units.filter(u => ownedIds(u.symbol))
+    val minted    = inventory(before, mintedIn)
+    val surviving = inventory(after, units)
     val survivingKeys = surviving.map(_.marker.markerKey).toSet
     // a declaration that is GONE took its markers with it; one that survives and lost a marker did
-    // not. Compared by FQN and not by `SymId`, because interning order is per-translation.
+    // not.
     //
     // Read from the TREES and never from the symbol table: a phase that drops a member removes the
     // `DefDef` and leaves the `Symbol` behind — nothing prunes the table, and it would be wrong to,
@@ -112,11 +120,12 @@ object MarkerCheck:
     // check answers "the declaration survives" for a member that is gone, and then reports the
     // legitimate deletion §6.5's risk row is about as an engine defect. That is the false positive
     // that would have made the whole lane un-baselineable.
-    val survivorFqns = units.flatMap(members).map(_._1)
-      .flatMap(id => after.symbolOf(id).map(_.fullName)).toSet
+    //
+    // By id, for the same two-namespace reason as the unit filter above.
+    val survivorIds = units.flatMap(members).map(_._1).toSet
 
     val erased = minted.filterNot(s => survivingKeys(s.marker.markerKey))
-      .filter(s => survivorFqns(s.ownerFqn))
+      .filter(s => survivorIds(s.owner))
       .map(s => Finding("erased", s.ownerFqn,
         s"a ${s.marker.kind.label} marker was minted here and is gone from the final program, while " +
           s"the declaration survives — a phase deleted the marked subtree instead of discharging it " +

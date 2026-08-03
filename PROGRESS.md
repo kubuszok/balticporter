@@ -2484,7 +2484,7 @@ with each item's state re-verified against the working tree.
 | 2.1 | the canonical measure script threw the four checks away | **shipped** — every lane prints the full check report, diffed against the baseline |
 | 2.2 | check results were stdout-only, truncated, never persisted, never diffed | **shipped** — `findings.tsv` / `counts.tsv` / `report.md` / `diff.txt` / `subject.txt` per run, with a promotable baseline |
 | 2.3 | no TIR pretty-printer, no way to run/skip/dump a phase | **shipped** — `TirPrinter` (+ a `canonical` style and `digest`), `DebugEmit` (in `engine`, so it ships), and the five debug flags of `CLAUDE.md` §4.6, each reachable as a `just` recipe and each proven by a spec or by `just debug-selfcheck` |
-| 2.4 | the unportable-marker design's Stage 1, plus a forced test-correlation amendment | **shipped** — source map, member digests, scalac correlation and the **test-failure** correlation lane. Stage 2 (the marker itself) deliberately unbuilt; see `DESIGN.md` §6.5 |
+| 2.4 | the unportable-marker design's Stage 1, plus a forced test-correlation amendment | **shipped** — source map, member digests, scalac correlation and the **test-failure** correlation lane. **Stage 2 (the marker) is shipped too**: `Tree.Unportable` + `UnportableKind` + `MarkerCheck` + the emission gate + best-effort fences, landed together, with `SpoonTir.unsupported`'s two default arms as the first mint site and `markers.tsv` written for §6.3's marked-region lane to read. Zero markers mint on all fifteen lanes, so it was emission-neutral; what is still owed is the DEFINITION-level `SymTag`, four mint sites whose shape a term wrapper cannot take, and the correlation join — `DESIGN.md` §6.5 names each |
 | 2.5 | three ad-hoc debugging techniques should become first-class | **shipped** — all three are flags or a printer |
 | 3.1 | cross-port composition — blocking at sge's second module | **shipped** — `PortManifest` + `ManifestAgreement` (static and dynamic layers), and beyond the original design, the **port map** (`DESIGN.md` §5): a dependent now reads what its base *emitted*, not only what it *declared* |
 | 3.2 | test-framework coverage was JUnit-4-shaped | **mostly** — `@After`, `@Ignore`, `@BeforeClass`/`@AfterClass` and the assertion set are handled (`ENGINE-LIMITS.md` X5), and the VOCABULARY and SCOPE gaps a second library found are closed too (X6: JUnit 3's two assertion classes, `assertThrows`, and the rewrite no longer skipping a class that declares no `@Test`). The target side is honestly **(b) with exactly one implemented policy value**: `intercept` and the curried `test(name){body}` shape are MUnit facts baked into the phase |
@@ -2528,7 +2528,11 @@ signal at all**, and they are the bulk of a new library's first wall. The checks
 domains well — a portability hit points at configuring `Substitutions`, an orphaned call names the
 exact dropped member — and the correlator now locates every error to a member and a Java line. What it
 cannot yet say, for an *unmarked* error, is which of the three kinds the fix is. That is exactly what
-`DESIGN.md` §6's markers are for, and why Stage 2 is the next thing worth building.
+`DESIGN.md` §6's markers are for — and the marker is now BUILT, which moves the sentence rather than
+answering it. A marked region carries its `UnportableKind`, its catalog id and a ranked remedy list
+whose first entry states the §1 kind; what an unmarked typer error carries is still nothing, because
+the engine did not know it was going to be one. Closing the rest is a matter of MINT SITES, which is
+why §6.5 stages them one at a time and each one is measured.
 
 ---
 
