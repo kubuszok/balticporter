@@ -47,6 +47,15 @@ Current examples:
 `Everywhere(Set.empty)` the default and the pre-scope code path. Two things such a phase then owes,
 neither optional:
 
+**…and a rule that ADDS declarations takes one too, with the OPPOSITE default.** A scope on a
+retyping phase is an opt-OUT: the mapping is right everywhere and a declaration asks to be left
+alone, so `Everywhere(Set.empty)` is both the no-op and the behaviour the phase had before it was
+scoped. A phase that MINTS members has no pre-scope behaviour to preserve, and its unrestricted form
+is not a safe default at all — it would put new NAMES on every matching declaration in every port to
+serve the one port that hands objects to a framework. Its no-op is therefore `Only(Set.empty)`, and
+§1(b)'s rule is met exactly as written: an empty parameter is a no-op. What does NOT carry across is
+the SPELLING, so `TransformFactory.scopeOf` takes the phase's own default rather than assuming one.
+
 - **the scope is a fact about the emitted SURFACE**, so the phase implements `SurfacePolicy` — two
   modules scoping it differently emit signatures that each compile alone and cannot compile together
   (§1.5). **And a scope is not the only way a policy reaches the surface**: a parameter that decides

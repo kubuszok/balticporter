@@ -85,6 +85,11 @@ final class PublicFieldAccessorTransform(
   private var toJavaValueSym: SymId = SymId.None
   private var objectSym: SymId      = SymId.None
 
+  /** `scala.Unit`, as this program spells it — a java setter returns `void`, and a `TypeRepr.NoType`
+    * return renders `Any`, which is a bean setter no reader is looking at and a lie about what the
+    * member does. */
+  private var unitTpe: TypeRepr = TypeRepr.NoType
+
   /** every field this phase could NOT expose, and every type it was not asked about that has one —
     * [[PublicFieldAccessorTransform.exposure]]'s two rows. */
   private val refusals = collection.mutable.ListBuffer[BeanExposureCheck.Finding]()
@@ -106,6 +111,13 @@ final class PublicFieldAccessorTransform(
     if scope.isUnrestricted || scope.entries.nonEmpty then
       toJavaValueSym = mint("toJavaValue", PublicFieldAccessorTransform.ToJavaValueFqn,
                             Flags(), SymId.None, TypeRepr.NoType)
+    // …resolved where the program names it and minted where it does not, for the reason
+    // `CollectionsTransform.named` gives: two symbols for one FQN print the same text and compare
+    // unequal, which is how a later reader ends up asking about a type this run has twice.
+    val unitSym = program.symbols.all.find(_.fullName == PublicFieldAccessorTransform.UnitFqn)
+      .map(_.id).getOrElse(mint("Unit", PublicFieldAccessorTransform.UnitFqn, Flags(), SymId.None,
+                                TypeRepr.NoType))
+    unitTpe = TypeRepr.TypeRef(TypeRepr.NoPrefix, unitSym)
     given Program = program
     val units = program.units.map(u => StandardTraversal.mapClassDef(this, u))
     program.rebuilt(units, SymbolTable(program.symbols.all ++ added))
@@ -204,9 +216,9 @@ final class PublicFieldAccessorTransform(
       else
         val pSym = mint("v", "v", Flags(isParam = true), SymId.None, tpe)
         val sSym = mint("set" + bean, MemberKey(ownerFqn, "set" + bean).render, Flags(), cls,
-                        TypeRepr.MethodType(List("v" -> tpe), TypeRepr.NoType))
+                        TypeRepr.MethodType(List("v" -> tpe), unitTpe))
         List(Tree.DefDef(sSym, List(List(Tree.ValDef(pSym, TypeTree(tpe, o), scala.None, o))),
-                         TypeTree(TypeRepr.NoType, o),
+                         TypeTree(unitTpe, o),
                          Some(Tree.Assign(Tree.Select(self, fs.id, tpe, o),
                                           Tree.Ident(pSym, tpe, o), TypeRepr.NoType, o)), o))
     record(Decision(
@@ -247,6 +259,7 @@ object PublicFieldAccessorTransform:
   private val JavaCollectionsFqn = s"${RuntimeArtifact.Package}.JavaCollections"
   private val ToJavaValueFqn     = s"$JavaCollectionsFqn.Reified.toJavaValue"
   private val ObjectFqn          = "java.lang.Object"
+  private val UnitFqn            = "scala.Unit"
 
   /** the JavaBeans capitalisation, which is NOT `capitalize`. A name whose first two characters are
     * both upper case keeps its spelling (`URL` → `getURL`), because that is what

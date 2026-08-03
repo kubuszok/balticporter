@@ -91,9 +91,10 @@ class PolicyKeyLintSpec extends munit.FunSuite:
     ),
     "PublicFieldAccessorTransform.scala" -> Map(
       "fullName ==" ->
-        ("`java.lang.Object` is the one type whose name says NOTHING about a value, which is the " +
-          "whole reason the getter bridges at that field and nowhere else — an external the " +
-          "program never declares, so this is mint-or-reuse and there is no symbol to bind"),
+        ("`java.lang.Object` (the one type whose name says NOTHING about a value, which is why the " +
+          "getter bridges at that field and nowhere else) and `scala.Unit` (a java setter returns " +
+          "`void`) — both externals the program never declares, so this is mint-or-reuse and there " +
+          "is no symbol to bind"),
     ),
     "StaticForwarderTransform.scala" -> Map(
       "fullName ==" ->
