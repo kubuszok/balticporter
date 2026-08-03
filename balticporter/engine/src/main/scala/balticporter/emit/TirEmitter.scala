@@ -1352,6 +1352,16 @@ final class TirEmitter(
     * once the declaration reads `ResourceData[Object]` the same cast narrows to a wildcard the
     * callee will not take — and a cast to `T[?]` asserts nothing in the first place, so following
     * the alignment loses nothing. Only wildcarded targets on an aligned symbol are touched. */
+  /** a POLY EXPRESSION (JLS 15.2) — a lambda or a method reference, the two java forms that have no
+    * type of their own in EITHER language and take one from the slot they fill. The emitter's own
+    * copy of `SpoonTir.polyExpression`'s question, asked of the TIR rather than of Spoon, because
+    * this is the one place a cast on such a term can still be reached: the frontend's rule stops
+    * the ENGINE writing one, and a cast the java SOURCE wrote is kept by design. `uncomment`,
+    * because trivia wraps a term without changing what it is. */
+  private def polyOperand(t: Term): Boolean = Tree.uncomment(t) match
+    case _: Tree.Lambda | _: Tree.MethodRef => true
+    case _                                  => false
+
   private def castTarget(e: Term, target: TypeRepr): TypeRepr =
     if !hasWildcardArg(target) then target
     else
@@ -2801,6 +2811,19 @@ final class TirEmitter(
         // M6, and strictly better than a `def` with a wrong result type that compiles.
         case None => head + term(body, i)
     case Tree.If(c, th, el, _, _)       => s"if (${term(c, i)}) ${term(th, i)} else ${term(el, i)}"
+    // A cast ON A POLY EXPRESSION is an ASCRIPTION — `ENGINE-LIMITS.md` K17 face 1, at the one
+    // shape the frontend's answer to it cannot reach. `SpoonTir.polyExpression` stops the ENGINE
+    // casting a lambda; a cast the JAVA SOURCE wrote is kept on purpose, and java writes one
+    // wherever the target does not determine the literal's type — an overload to disambiguate,
+    // an `Object` or generic slot, a `return` of `Object`. Rendered `asInstanceOf` the literal
+    // elaborates to a `scala.Function0` FIRST and the cast then asserts that a `Function0` is a
+    // `Callable`, which it is not: the same ClassCastException, one syntax along.
+    //
+    // An ascription is what java's cast MEANT here — it supplies the expected type, which is
+    // exactly what javac did with it — and scala SAM-converts at one (probed on 3.8.4 at a bare
+    // slot, a wildcard-applied slot, a two-parameter one and a bare method name). `operand`
+    // parenthesises the lambda, which is not cosmetic: `(x => y: T)` ascribes the BODY.
+    case Tree.Typed(e, tpt, _, _) if polyOperand(e) => s"(${operand(e, i)}: ${tpe(castTarget(e, tpt.tpe))})"
     case Tree.Typed(e, tpt, _, _)       => s"${operand(e, i)}.asInstanceOf[${tpe(castTarget(e, tpt.tpe))}]" // Java cast
     case Tree.Repeated(es, _, _)        => es.map(term(_, i)).mkString(", ")
     // `xs*` — CLAUDE.md §6's spread, never `: _*`. `operand` because the array is an expression the

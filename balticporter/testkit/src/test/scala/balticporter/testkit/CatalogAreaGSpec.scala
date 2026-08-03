@@ -80,6 +80,45 @@ class CatalogAreaGSpec extends PortSuite:
     assertNotEmits(p, ").asInstanceOf[java.util.function.Supplier")
   }
 
+  test("JS-G31 — a java-written cast ON A POLY EXPRESSION is an ASCRIPTION, never an assertion") {
+    // The case the test below DODGES: it keeps a java-written cast and checks it survives, at a
+    // NON-poly operand where `asInstanceOf` is the right rendering. On a poly one it is not, and
+    // this cast is not an unusual shape — java REQUIRES it wherever the target does not determine
+    // the lambda's type: an overload to disambiguate, an `Object`/generic slot, a return of
+    // `Object`. `polyArgsUncast` is right to keep it (it is the source's own, the innermost
+    // `getTypeCasts` layers); what the emitter may not do is write it as an assertion, because the
+    // literal then elaborates to a `scala.Function0` FIRST and the cast asserts that a `Function0`
+    // is a `Callable`, which is K17 face 1's ClassCastException one syntax along.
+    //
+    // Scala SAM-converts at an ASCRIPTION — probed on 3.8.4 at a bare slot, a wildcard-applied one,
+    // a two-parameter one and a bare method name — so the ascription is the same fix face 1 took
+    // (hand the expected type to scalac where javac had it) written where the source demanded a
+    // cast rather than deleted.
+    val p = port(
+      """public class A {
+        |  Object f() { return (java.util.concurrent.Callable<String>) () -> "x"; }
+        |  Object g() { return (Runnable) () -> { System.out.println("y"); }; }
+        |}""".stripMargin)
+    assertNotEmits(p, "asInstanceOf[java.util.concurrent.Callable")
+    assertNotEmits(p, "asInstanceOf[java.lang.Runnable")
+    assertEmits(p, "): java.util.concurrent.Callable[java.lang.String])")
+    assertEmits(p, "): java.lang.Runnable)")
+  }
+
+  test("JS-G31 — …and at an ARGUMENT, where the row is consulted and the cast is java's own") {
+    // The same rendering at the dispatch that consults the row, so the two halves cannot drift:
+    // `polyArgsUncast` keeps the source's cast and the emitter still may not assert it.
+    val p = port(
+      """public class A {
+        |  static void run(Runnable r) {}
+        |  static void run(String s) {}
+        |  void f() { run((Runnable) () -> {}); }
+        |}""".stripMargin)
+    assertConsults(p, JS.G(31), fired = true)
+    assertNotEmits(p, "asInstanceOf[java.lang.Runnable")
+    assertEmits(p, "): java.lang.Runnable)")
+  }
+
   test("JS-G31 — a java-written CAST on the argument SURVIVES; only the arms' own casts are undone") {
     // The line the fix must not cross. `expr` folds the source's casts innermost-first, one node
     // per `getTypeCasts` entry, so those are exactly the layers this rule keeps — a rule that
