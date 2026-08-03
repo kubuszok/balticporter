@@ -103,6 +103,35 @@ final class CollectionsTransform(
       * not policy: `java.lang.Class<T>` is reified by java ITSELF, in every codebase there will ever
       * be, which is §1(a) and belongs in this file exactly as `typeMap` does. */
     val reifiedCarriers: Set[String] = Set.empty,
+    /** REFLECTIVE SINKS — external types that read the RUNTIME REPRESENTATION of a value handed to
+      * them at an opaque slot (`ENGINE-LIMITS.md` K21 face 1).
+      *
+      * [[reifiedCarriers]] is the same third party reading the class file's TYPE ARGUMENTS; this is
+      * the same third party reading the OBJECT. A serialiser, a bean mapper or an injector is
+      * declared `f(java.lang.Object)`, so the port's retyped collection CONFORMS — there is no slot
+      * whose sides disagree, no compile error and no seam any count can see — and what the callee
+      * then does with it is decided by the value's class, which the retyping moved:
+      * `writeValueAsString(aMap)` emits `{"scala$collection$mutable$HashMap$$table":[…]}` where java
+      * emitted the map's entries.
+      *
+      * The bridge is [[CollectionsTransform.ReifiedFqn]]`.toJavaValue`, and it is a RUN-TIME
+      * question because there is no static evidence at the call: the argument's own type is
+      * `java.lang.Object` too — the port's data model holds both representations at every such slot
+      * (K18) — so the phase cannot know, and the object can. It is identity for everything this
+      * engine did not put there, deep-by-view for everything it did.
+      *
+      * ==WHICH types are sinks is per-library, and there is no universal one to add==
+      * Unlike [[reifiedCarriers]], whose `java.lang.Class` java itself guarantees, java guarantees
+      * NO reflective sink: reading a value's representation is what a DEPENDENCY does, so the list
+      * is entirely §1(b) policy and empty is the default and the no-op. The match is on the callee's
+      * OWN owner, so a sink reached through a sibling facade (a writer, a builder) is a second entry
+      * rather than an inference — a never-fired entry is reported by the ordinary policy lane, and a
+      * MISSING one is invisible, which is what the `OpaqueEgress` boundary count exists to show.
+      *
+      * The parameter is deliberately NOT part of [[surfaceFingerprint]]: it changes arguments inside
+      * bodies and no signature, so a base and a dependent that declare different sinks still emit
+      * surfaces that compile together — which is the question that fingerprint answers. */
+    val reflectiveSinks: Set[String] = Set.empty,
 ) extends Phase, RequiresRuntime, PolicySource, SurfacePolicy, PolicyBound:
   def name = "java-collections->scala"
 
@@ -125,6 +154,10 @@ final class CollectionsTransform(
     * does not use jackson is a line to delete. */
   private var boundCarriers: Map[String, Binding[SymId]] = Map.empty
 
+  /** …and each declared REFLECTIVE SINK, for the reason a carrier takes [[Ownership.Either]] and
+    * with no exception: a sink is by construction a type the program only REFERENCES. */
+  private var boundSinks: Map[String, Binding[SymId]] = Map.empty
+
   def bindPolicy(binder: PolicyBinder): Unit =
     val setting = s"CollectionsTransform(scope) ${scope.productPrefix} entry"
     boundScope = scope.entries.toList.sorted.map(e => e -> binder.bindScope(name, setting, e)).toMap
@@ -132,6 +165,8 @@ final class CollectionsTransform(
       .map(k => k -> binder.bindType(name, RetargetSetting, k, Ownership.Either)).toMap
     boundCarriers = reifiedCarriers.toList.sorted
       .map(k => k -> binder.bindType(name, CarrierSetting, k, Ownership.Either)).toMap
+    boundSinks = reflectiveSinks.toList.sorted
+      .map(k => k -> binder.bindType(name, SinkSetting, k, Ownership.Either)).toMap
 
   /** Two modules that scope this phase differently emit incompatible signatures for the shared
     * surface — a `java.util.List` parameter in the base against a `Buffer` argument in the
@@ -213,7 +248,32 @@ final class CollectionsTransform(
       // the external signature is still readable, and filtered to the units this run EMITS for
       // ENGINE-LIMITS D2's reason — a dependent's program contains its base's units, and a seam
       // inside one of those is the base's finding.
-      externalSeams.toList.filter(f => emittedPaths(units).contains(f.origin.javaPath))
+      externalSeams.toList.filter(f => emittedPaths(units).contains(f.origin.javaPath)) ++
+      // …and the OPAQUE EGRESS review list (K21 face 1), built the same way and for the same
+      // reason: the formal is `java.lang.Object`, so after the retyping there is nothing on either
+      // side of the slot for a walk to disagree about. One row per external CALLEE.
+      opaqueEgressSites.toList
+        .filter((_, o) => emittedPaths(units).contains(o.javaPath))
+        .sortBy((m, o) => (o.javaPath, o.line, m.raw))
+        .map((m, o) => CollectionBoundaryCheck.Finding(
+          CollectionBoundaryCheck.Issue.OpaqueEgress,
+          s"argument (external callee, java.lang.Object formal): ${calleeLabel(m)(using program)}",
+          "java's own representation, IF this callee reads it",
+          "a value this port may have retyped", o, m))
+
+  /** an EXTERNAL callee as a reader must be able to act on it: `<owner FQN>#<member>`.
+    *
+    * An external member's own `fullName` is interned as `@<id>#name(params)` — the owner is a class
+    * file the frontend never gave a name to at that position — and the owner FQN is exactly the
+    * string a port would put in `reflectiveSinks`, so a row without it is a row nobody can use. */
+  private def calleeLabel(m: SymId)(using p: Program): String =
+    memberKeyOf(m).getOrElse("?")
+
+  /** `<owner FQN>#<member>` for a callee, in the one grammar this repository writes member identity
+    * in. Two readers: [[handledStatic]] asks the phase's own table with it, and [[calleeLabel]]
+    * prints it. */
+  private def memberKeyOf(m: SymId)(using p: Program): Option[String] =
+    p.symbolOf(m).flatMap(c => p.symbolOf(c.owner).map(o => MemberKey(o.fullName, c.name).render))
 
   /** the java files the units this run emits came from — the D2 filter, by SOURCE PATH, because a
     * recorded seam carries its `Origin` and not the unit it sat in. */
@@ -363,6 +423,9 @@ final class CollectionsTransform(
   /** …and the same for a reified carrier. */
   private val CarrierSetting = "CollectionsTransform(reifiedCarriers) entry"
 
+  /** …and for a reflective sink. */
+  private val SinkSetting = "CollectionsTransform(reflectiveSinks) entry"
+
   /** the carriers that actually RUN — what the port declared plus the one java guarantees. A `val`,
     * so [[preservesTypeArgsOf]], the recorder and the fingerprint cannot disagree. */
   private val effectiveCarriers: Set[String] = reifiedCarriers ++ CollectionsTransform.UniversalCarriers
@@ -372,6 +435,22 @@ final class CollectionsTransform(
     * alone, so its symbol keeps the id it arrived with. EMPTY where the program names none of them,
     * which is what makes every arm below a no-op by arithmetic. */
   private var carrierSyms: Set[SymId] = Set.empty
+
+  /** the REFLECTIVE SINKS this program actually names, as this program's own symbols. EMPTY where
+    * the port declares none, which is what makes the egress bridge a no-op with no code path. */
+  private var sinkSyms: Set[SymId] = Set.empty
+
+  /** `JavaCollections.Reified.toJavaValue` — the EGRESS bridge (K21 face 1). Minted like every
+    * other `Reified` member: nothing in a java program declares it. */
+  private var toJavaValueSym: SymId = SymId.None
+
+  /** every (sink callee, declared sink FQN) the egress bridge actually fired on, drained into
+    * `decisions.tsv` at the end of the run. A per-SITE rewrite recorded per DECLARATION (§5.1). */
+  private val bridgedSinkCallees = collection.mutable.Set[(SymId, String)]()
+
+  /** …and every external callee with an OPAQUE formal this port has NOT declared a sink, with the
+    * earliest site that reaches it — the review list [[opaqueEgress]] exists to publish. */
+  private val opaqueEgressSites = collection.mutable.Map[SymId, Origin]()
 
   /** the retarget entries that actually RUN: everything the port declared, minus any key
     * [[CollectionsTransform.typeMap]] already answers for (reported as `Malformed` instead — see
@@ -507,6 +586,12 @@ final class CollectionsTransform(
     carrierSyms = program.symbols.all.collect {
       case s if effectiveCarriers(s.fullName) => s.id
     }.toSet
+    // …and the REFLECTIVE SINKS (K21), read the same way and for the same reason: a sink is a type
+    // this phase leaves alone, so its symbol keeps the id it arrived with.
+    sinkSyms = program.symbols.all.collect {
+      case s if reflectiveSinks(s.fullName) => s.id
+    }.toSet
+    toJavaValueSym = mint("toJavaValue", s"${CollectionsTransform.ReifiedFqn}.toJavaValue")
     foreachSym          = mint("foreach", "foreach")
     removeHeadOptionSym = mint("removeHeadOption", "removeHeadOption")
     headOptionSym       = mint("headOption", "headOption")
@@ -531,6 +616,7 @@ final class CollectionsTransform(
     stringTpe        = TypeRepr.TypeRef(TypeRepr.NoPrefix, named("java.lang.String", "String"))
     externalSeams.clear()
     implicitPending.clear()
+    bridgedSinkCallees.clear()
 
     mintedSyms = added.map(_.id).toSet
     val symbols = SymbolTable(program.symbols.all ++ added)
@@ -549,6 +635,7 @@ final class CollectionsTransform(
     recordRetypings(symbols, symbols2)
     recordScopedOut(symbols)
     recordReifiedTypeArgs(symbols2)
+    recordEgressBridges()
     program.rebuilt(units, symbols2)
 
   // -------------------------------------------------------------------------
@@ -1103,6 +1190,39 @@ final class CollectionsTransform(
           ))
     }
 
+  /** DECISION PROVENANCE for the EGRESS BRIDGE (K21 face 1) — one row per DECLARATION that hands a
+    * value to a declared reflective sink.
+    *
+    * Recorded per declaration and not per site, for §5.1's reason: the call
+    * `…Reified.toJavaValue(value)` is already in the diff the reader is holding, and what the diff
+    * cannot say is WHICH manifest entry put it there. The key is the sink FQN verbatim, because it
+    * is the string an agent edits to turn this off.
+    *
+    * No porter note (`PorterNote.Rendered` does not carry the kind): the emitted call NAMES the
+    * bridge, so the note would restate what the line says — the same reasoning `RedirectedCall`
+    * already applies, and the opposite of an invented member. */
+  private def recordEgressBridges()(using p: Program): Unit =
+    bridgedSinkCallees.toList.sortBy((m, fqn) => (fqn, m.raw)).foreach { (callee, sink) =>
+      val calleeName = p.symbolOf(callee).map(_.fullName).getOrElse("?")
+      Decision.declarationsUsing(p, callee).foreach { (encl, origin) =>
+        record(Decision(
+          kind       = Decision.Kind.BridgedEgress,
+          subject    = encl,
+          subjectFqn = Decision.fqnOf(p, encl, calleeName),
+          detail = Map(
+            "sink"   -> sink,
+            "callee" -> calleeName,
+            "why"    -> ("this port declares the callee's owner as a type that reads the RUNTIME " +
+              "representation of what it is handed, so a collection this phase retyped is " +
+              "presented as java's at the call — the formal is `java.lang.Object`, which is why " +
+              "the port compiles either way and nothing static can see the difference"),
+          ),
+          reason = Reason.Configured(name, sink),
+          origin = origin,
+        ))
+      }
+    }
+
   /** every (carrier FQN, preserved argument) pair inside a signature whose argument mentions a type
     * this phase MAPS — i.e. every position where the preservation actually decided something.
     *
@@ -1555,7 +1675,7 @@ final class CollectionsTransform(
       else
         // …and on such a call the CONSUMER half of the seam is bridged where a live view exists,
         // BEFORE the count runs — a bridged slot is not a residue.
-        val bridged = bridgeJavaFormals(t2)
+        val bridged = bridgeSinkArgs(bridgeJavaFormals(t2))
         externalArgs(bridged)
         externalProducer(bridged)
     res match
@@ -1837,8 +1957,7 @@ final class CollectionsTransform(
     * phase DECLINED to rewrite — every arm that fired left its minted helper's symbol behind
     * instead — so its value is whatever java's was, whatever the node's retyped `tpe` now says. */
   private def handledStatic(m: SymId)(using p: Program): Boolean =
-    p.symbolOf(m).flatMap(c => p.symbolOf(c.owner).map(o => MemberKey(o.fullName, c.name).render))
-      .exists(CollectionsTransform.handledStatics.contains)
+    memberKeyOf(m).exists(CollectionsTransform.handledStatics.contains)
 
   /** the source half of the same fact — a value PRODUCED by a call this phase refused to rewrite.
     *
@@ -1921,6 +2040,44 @@ final class CollectionsTransform(
                TirPrinter.tpe(a.tpe, TirPrinter.Style.canonical), a.origin, t.method)
         }
       }
+    opaqueEgress(t)
+
+  /** THE SEAM WITH NOTHING WRONG WITH IT — `ENGINE-LIMITS.md` K21 face 1, counted.
+    *
+    * A `java.lang.Object` formal on an external callee takes anything, so a value this phase retyped
+    * CONFORMS and the port compiles; what changed is what the callee's `toString`, `instanceof` and
+    * serialiser see. There is no type error to find, and the argument's own static type is usually
+    * `Object` too — the port's data model holds both representations at every such slot (K18) — so
+    * the phase cannot tell from the site whether anything crossed. Only the port knows which of
+    * these callees READS the representation, which is what [[reflectiveSinks]] is; a missing entry
+    * is otherwise invisible, and this count is the review list that makes it visible.
+    *
+    * Deduplicated by CALLEE and not by site, because the question is per METHOD — "does this
+    * external method read what I hand it?" — and one row per call would bury it under `println`.
+    * A declared sink is bridged and does not appear. */
+  private def opaqueEgress(t: Tree.Apply)(using p: Program): Unit =
+    if !externalCallee(t.method) || sinkOf(t.method).isDefined then return
+    val formals = formalsOf(t)
+    def objectTyped(x: TypeRepr) =
+      headSym(x).flatMap(p.symbolOf).exists(_.fullName == CollectionsTransform.ObjectFqn)
+    val opaque =
+      if formals.sizeIs == t.args.size then
+        // …the argument is one the phase cannot rule out: a value it RETYPED (which `toJava` covers
+        // only one level deep), or one whose static type is `Object` and so says nothing. Anything
+        // else — a `String`, a boxed number, a type the phase never touched — is provably not a
+        // representation this engine introduced, and counting it would be noise.
+        t.args.zip(formals).exists((a, f) => objectTyped(f) && mayBeRetypedValue(a))
+      else
+        // …and with NO readable signature there is no formal to ask, which is the case a generic
+        // external method lands in. Held to an `Object`-TYPED argument on purpose: a
+        // collection-typed one at such a callee is already `externalArgs`' row, and one fact on two
+        // lanes is what teaches a reader to skim both.
+        t.args.exists(a => objectTyped(a.tpe))
+    if opaque then
+      val prev = opaqueEgressSites.get(t.method)
+      val take = prev.forall(o =>
+        Ordering[(String, Int)].lt((t.origin.javaPath, t.origin.line), (o.javaPath, o.line)))
+      if take then opaqueEgressSites(t.method) = t.origin
 
   /** record one external seam this phase could not close, for [[boundary]] to report. A refusal
     * that is not counted is indistinguishable from a seam that does not exist (M6). */
@@ -2550,9 +2707,63 @@ final class CollectionsTransform(
         // declaration is held back so that its own body keeps working — bridging into it would hand
         // a ported method a `java.util.List` its body no longer expects.
         val external = externalCallee(t.method)
+        // …and the one external callee whose OPAQUE slot is not opaque to IT: a declared reflective
+        // sink reads the runtime representation of what it is handed (K21 face 1). Asked here and
+        // not in `coerce`, because the sink is a fact about the CALLEE and `coerce` is per argument.
+        val sink = if external then sinkOf(t.method) else scala.None
         val as = t.args.zip(formals).map((a, f) =>
-          coerce(f, a, expectedScoped = true, expectedExternal = external))
+          coerce(f, a, expectedScoped = true, expectedExternal = external,
+                 expectedSink = sink.isDefined))
+        if as != t.args then sink.foreach(fqn => bridgedSinkCallees += (t.method -> fqn))
         if as == t.args then t else t.copy(args = as)
+
+  /** …and the SAME BRIDGE where there is no formal to read.
+    *
+    * A generic external method has no readable `MethodType` here — measured on the very call K20
+    * closed, whose seam this file already files as "no signature" — so the arity test above
+    * declines and the argument-side bridge never runs. For an ordinary external callee that
+    * refusal is the honest answer and is counted; for a DECLARED SINK it is not, because the port
+    * has already stated the fact the signature would have carried. The formal cannot say which
+    * slot is opaque, so the ARGUMENT does: a value this phase retyped, or one typed
+    * `java.lang.Object`, is a value it cannot prove it did not put there. Everything else — a
+    * class token, a super-type token, a `String` — is left exactly as it was, which is what keeps
+    * `convertValue(v, Map.class)` a two-argument call with one bridged argument.
+    *
+    * Measured: with the arity path alone, ONE of liqp's seven sink sites bridged. */
+  private def bridgeSinkArgs(t: Tree.Apply)(using p: Program): Tree.Apply =
+    if formalsOf(t).sizeIs == t.args.size || !externalCallee(t.method) then t
+    else sinkOf(t.method) match
+      case scala.None => t
+      case Some(fqn) =>
+        val as = t.args.map(a =>
+          if !mayBeRetypedValue(a) || toJavaValueSym == SymId.None then a
+          else Tree.Apply(Tree.Ident(toJavaValueSym, TypeRepr.NoType, a.origin), List(a),
+                          toJavaValueSym, objectTpe(a), a.origin))
+        if as == t.args then t
+        else
+          bridgedSinkCallees += (t.method -> fqn)
+          t.copy(args = as)
+
+  /** could this value be a representation THIS PHASE introduced? The three answers it cannot rule
+    * out: a type it retyped, one of its own shims, and `java.lang.Object`, which says nothing.
+    * Read from the phase's own tables, never from a name (§4.56). */
+  private def mayBeRetypedValue(a: Term)(using p: Program): Boolean =
+    headSym(a.tpe).exists(s => kindOf.contains(s) || shimSyms.contains(s) ||
+      p.symbolOf(s).exists(_.fullName == CollectionsTransform.ObjectFqn))
+
+  /** `java.lang.Object` as this program spells it — the bridge's result type. Falls back to the
+    * argument's own type where the program never names `Object`, which cannot happen for a value
+    * this bridge accepts and is still not worth a crash. */
+  private def objectTpe(a: Term)(using p: Program): TypeRepr =
+    p.symbols.all.find(_.fullName == CollectionsTransform.ObjectFqn)
+      .map(s => TypeRepr.TypeRef(TypeRepr.NoPrefix, s.id)).getOrElse(a.tpe)
+
+  /** the declared REFLECTIVE SINK this callee belongs to, by its OWNER — the phase's own policy
+    * read as symbols, never as a name test on the callee (§4.56). `None` where the port declares
+    * none, which is every port that has not met one. */
+  private def sinkOf(m: SymId)(using p: Program): Option[String] =
+    if sinkSyms.isEmpty then scala.None
+    else p.symbolOf(m).map(_.owner).filter(sinkSyms.contains).flatMap(p.symbolOf).map(_.fullName)
 
   /** a RETURN is a shim-typed slot exactly as a formal, a `val` and an assignment target are — the
     * method's declared return type is the expected type of every `return` in its body.
@@ -2667,7 +2878,7 @@ final class CollectionsTransform(
     * exactly as it did before this seam existed. `Map.values()` has no such problem: its rewrite
     * already restores the invariant by wrapping at the call. */
   private def coerce(expected: TypeRepr, actual: Term, expectedScoped: Boolean = false,
-                     expectedExternal: Boolean = false)(using p: Program): Term =
+                     expectedExternal: Boolean = false, expectedSink: Boolean = false)(using p: Program): Term =
     // the symbol table is retyped AFTER the trees (see `run`), so a formal read here is still the
     // ORIGINAL java symbol — `java.lang.Iterable`, not the shim. Compare through `remap`, which
     // makes this correct on either side of that pass.
@@ -2720,6 +2931,13 @@ final class CollectionsTransform(
     def wantsIs(s: SymId) = s != SymId.None && wants.contains(s)
     val factory = from match
       case _ if wants.isEmpty || isKeySetView(actual) || refusedRewriteSource(actual) => SymId.None
+      // …THE EGRESS BRIDGE (K21 face 1), ahead of every arm below because at a declared reflective
+      // sink it SUBSUMES them. `toJava` is one level and is refused outright where the element type
+      // is retyped; a sink walks the whole tree, so the one-level answer is wrong there in exactly
+      // the case the refusal already names. Fired on the FORMAL and not on `from`: the argument's
+      // own type is usually `java.lang.Object`, which is why nothing static could see this seam —
+      // the helper is identity for every value this engine did not put there.
+      case _ if expectedSink && wantsUniversal && toJavaValueSym != SymId.None => toJavaValueSym
       case Some(Kind.Seq | Kind.Set | Kind.Map) if wantsIs(javaIterableSym)    => iterableFromSym
       case Some(Kind.Seq)                       if wantsIs(javaCollectionSym)  => collectionFromSym
       case Some(Kind.Set)                       if wantsIs(javaCollectionSym)  => collectionFromSetSym

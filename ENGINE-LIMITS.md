@@ -4080,7 +4080,7 @@ The per-site diagnosis stays in `PROGRESS.md`'s liqp residue table.*
 
 ---
 
-### K21. A retyped VALUE and an emitted CLASS are read out of the class file at the OTHER end of the same call — **8 test failures on liqp, 0 compile errors, every check count flat, and three of the four assertions pass by accident. OPEN**
+### K21. A retyped VALUE and an emitted CLASS are read out of the class file at the OTHER end of the same call — **8 test failures on liqp, 0 compile errors, every check count flat, and three of the four assertions pass by accident. FACE 1 CLOSED (+5), face 2 below**
 
 K20 is the type ARGUMENT a third party reads out of the class file. **This is the OBJECT and its
 MEMBERS, read out of the class file by the same third party on the same call** — so it is not a
@@ -4128,18 +4128,58 @@ the program, and it is wrong only at the instant the value leaves it. Not `RuleS
 same reason — holding the declarations out would give up the mapping everywhere to fix one call. Not
 K19's identity limit: nothing here is about `eq`.
 
-**The shape a fix would have to take** (unmeasured, so it is a direction and not a recommendation):
-face 1 wants a bridge in the OTHER direction at an external callee — `toJava` on an argument whose
-static type is `Object` but whose value this phase retyped — which is a real widening of K15's arm,
-because today the argument bridge fires on the FORMAL and here the formal says nothing. Face 2 is a
-question about the emitted member's JVM shape, not about its type, and the two candidate answers
-(`@BeanProperty` on a promoted public field; a genuinely public field) are surface changes that need
-their own measurement. **Do not fix them together**: they share a cause and nothing else.
+**WHAT CLOSED FACE 1 — and the answer is not the one this entry predicted.** The prediction was
+"`toJava` on an argument whose static type is `Object` but whose value this phase retyped", i.e. a
+widening of K15's arm. **There is no such argument.** Probed on all seven of liqp's sites, every one
+of them passes a value whose static type is `java.lang.Object` and nothing more: liqp's data model
+is `Map<String,Object>`, so the phase has no static evidence at the call, at the declaration, or
+anywhere else. The question can only be asked of the OBJECT, at run time, which is what
+`JavaCollections.Reified.toJavaValue` is — the third member of the family that already answers
+java's `instanceof` and java's downcast over both representations.
 
-*Fix kind: (a) engine for both faces — face 1 is a boundary this phase owes and does not count, face
-2 is an emission the port makes for every public field in the corpus. OPEN, with the number above.
-Note neither face is counted by anything today, which is the first thing a fix has to change: the
-liqp lane reads `collection-boundary 14` with both faces live.*
+Three things about it that a first cut gets wrong:
+
+- **DEEP, and by VIEW.** `toJava` is `asJava` and converts ONE level, which is exactly the refusal
+  `coerce` already records for a nested element type — and a serialiser walks the whole tree. So
+  each view converts its elements on READ and stays live over the port's own collection; a copy
+  would detach both directions, which is K15's own refusal. Measured: with a one-level bridge the
+  nested map in `JsonTest` still serialised as a bean.
+- **ARRAYS are part of the tree.** `Array[Object]` whose elements are the port's maps is java's own
+  spine holding scala's values — `where`'s three `array_of_objects` fixtures are exactly that — so
+  the bridge descends and returns the ORIGINAL array when nothing moved. Worth **+2** of the +5 on
+  its own.
+- **THE FORMAL IS OFTEN NOT THERE.** A GENERIC external method has no readable `MethodType` in this
+  frontend — `convertValue(Object, Class<T>)` is one, and this file already files its seam as "no
+  signature" — so an argument bridge that fires on the formal reaches ONE of liqp's seven sites.
+  Measured that way first: **554 → 555**. Where the port has DECLARED the sink it has already stated
+  the fact the signature would have carried, so the argument stands in for the formal: a value the
+  phase retyped, or one typed `Object`, is bridged and everything else (a class token, a super-type
+  token, a `String`) is left alone. **554 → 559 with both arms.**
+
+**And the policy is a (b) for a reason one step stronger than K20's.** WHICH external types reflect
+is a fact about the library's dependencies, and — unlike carriers, where `java.lang.Class` is
+universal — **java guarantees no reflective sink at all**, so the engine ships an empty list and no
+`UniversalSinks` beside it.
+
+**THE COUNT, which is what K21 said a fix had to change first.**
+`CollectionBoundaryCheck.Issue.OpaqueEgress` counts every external callee with a `java.lang.Object`
+formal that a value this phase cannot prove it did not retype reaches — **one row per CALLEE, not
+per site**, because the question is "does this external method read what I hand it?" and one row per
+call would bury it under `println`. On liqp: **11 rows on the main port, 4 on the test port**, and
+the list immediately named a SECOND jackson sink the port had not declared
+(`JsonGenerator#writeObject`). That is what the row is for: a missing entry is otherwise invisible,
+and nothing else in the pipeline can see a slot where the value CONFORMS.
+
+**Measured on liqp: 554 → 559 passing, 21 → 16 failing, `errors 0` before and after**;
+`collection-boundary` 14 → 25 (main) and 14 → 18 (test), which is the new review list appearing and
+not a regression.
+
+**Face 2 is a question about the emitted member's JVM shape, not about its type.** Read it below;
+**do not fix them together** — they share a cause and nothing else.
+
+*Fix kind: face 1 (b) — mechanism universal (`JavaCollections.Reified.toJavaValue`,
+`CollectionsTransform.bridgeSinkArgs`), sink list per library. CLOSED, with the numbers above.
+Face 2 (a) engine, and OPEN at this line — see the entry it grew into.*
 
 ---
 

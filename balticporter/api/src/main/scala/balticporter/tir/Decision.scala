@@ -156,6 +156,13 @@ object Decision:
       * DECLARATION back, and this holds back ONE POSITION inside a declaration whose every other
       * type moved, which is the fact a reader of that line needs. */
     case ReifiedTypeArg
+    /** a value handed to an external REFLECTIVE SINK at an opaque slot, presented in java's own
+      * representation at run time (`ENGINE-LIMITS.md` K21 face 1). [[ReifiedTypeArg]]'s third party
+      * one end of the call over: that one reads the class file's TYPE ARGUMENTS, this one reads the
+      * OBJECT. It is a separate kind because the two are fixed in different places — the carrier by
+      * NOT retyping a position, this one by a bridge at the USE — and a reader who is told only
+      * "the third party reifies things" cannot tell which of the two a line is. */
+    case BridgedEgress
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

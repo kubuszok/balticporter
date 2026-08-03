@@ -800,3 +800,78 @@ class JavaCollectionsSpec extends munit.FunSuite:
     s += 2
     assertEquals(js.size(), 2)
   }
+
+  // -------------------------------------------------------------------------
+  // THE EGRESS DIRECTION — `ENGINE-LIMITS.md` K21 face 1
+  // -------------------------------------------------------------------------
+
+  private def jv(x: Any) = JavaCollections.Reified.toJavaValue(x)
+
+  test("a retyped MAP leaves as java's own — which is what a reflective consumer reads") {
+    val m = scala.collection.mutable.HashMap[String, Any]("key" -> "value")
+    val out = jv(m).asInstanceOf[java.util.Map[Any, Any]]
+    assertEquals(out.get("key"), "value": Any)
+    assertEquals(out.size(), 1)
+    assertEquals(out.entrySet().iterator().next().getKey, "key": Any)
+  }
+
+  test("…DEEP: `toJava` converts one level and a serialiser walks the whole tree") {
+    val m = scala.collection.mutable.HashMap[String, Any](
+      "in" -> scala.collection.mutable.HashMap[String, Any]("k" -> 1))
+    val out = jv(m).asInstanceOf[java.util.Map[Any, Any]]
+    assert(out.get("in").isInstanceOf[java.util.Map[?, ?]],
+           "one level is exactly the refusal `coerce` records for a nested element type")
+    assertEquals(out.get("in").asInstanceOf[java.util.Map[Any, Any]].get("k"), 1: Any)
+  }
+
+  test("a BUFFER and a SET leave as java's, elements converted on read") {
+    val b = scala.collection.mutable.Buffer[Any](scala.collection.mutable.HashMap("k" -> 1))
+    val jl = jv(b).asInstanceOf[java.util.List[Any]]
+    assertEquals(jl.size(), 1)
+    assert(jl.get(0).isInstanceOf[java.util.Map[?, ?]])
+    val s = scala.collection.mutable.Set[Any](scala.collection.mutable.Buffer[Any](1))
+    val js = jv(s).asInstanceOf[java.util.Set[Any]]
+    assertEquals(js.size(), 1)
+    assert(js.iterator().next().isInstanceOf[java.util.List[?]])
+  }
+
+  test("a MAP is not converted as an ITERABLE of pairs — the order `isCollection` is exact about") {
+    val out = jv(scala.collection.mutable.HashMap("k" -> 1))
+    assert(out.isInstanceOf[java.util.Map[?, ?]], clue(out.getClass.getName))
+    assert(!out.isInstanceOf[java.util.Collection[?]],
+           "a scala Map IS a scala Iterable, and java's Map is not a Collection at all")
+  }
+
+  test("IDENTITY for everything this engine did not put there") {
+    val s: Any = "x"
+    val jl = new java.util.ArrayList[Int]()
+    val o  = new Object
+    assert(jv(s) eq s.asInstanceOf[AnyRef])
+    assert(jv(jl) eq jl, "a java collection the port never touched leaves as itself")
+    assert(jv(o) eq o)
+    assertEquals(jv(null), null)
+  }
+
+  test("an ARRAY keeps its identity when nothing inside it moved") {
+    val untouched: Array[AnyRef] = Array("a", "b")
+    assert(jv(untouched) eq untouched, "the spine has to be copied to convert it, so it is copied " +
+      "only when an element actually moves")
+    val moved: Array[AnyRef] = Array(scala.collection.mutable.HashMap("k" -> 1))
+    val out = jv(moved).asInstanceOf[Array[AnyRef]]
+    assert(out ne moved)
+    assert(out(0).isInstanceOf[java.util.Map[?, ?]])
+  }
+
+  test("a DELEGATING shim leaves as what it wraps, not as a bean around it") {
+    val b = scala.collection.mutable.Buffer[Any](1, 2)
+    val out = jv(JavaCollection.from(b))
+    assert(out.isInstanceOf[java.util.Collection[?]], clue(out.getClass.getName))
+    assertEquals(out.asInstanceOf[java.util.Collection[Any]].size(), 2)
+  }
+
+  test("the view is READ-ONLY — a write java would have made is LOUD, never silent") {
+    val out = jv(scala.collection.mutable.HashMap("k" -> 1)).asInstanceOf[java.util.Map[Any, Any]]
+    intercept[UnsupportedOperationException](out.put("j", 2))
+    val jl = jv(scala.collection.mutable.Buffer[Any](1)).asInstanceOf[java.util.List[Any]]
+    intercept[UnsupportedOperationException](jl.add(2))
+  }

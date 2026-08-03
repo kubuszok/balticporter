@@ -665,6 +665,149 @@ object JavaCollections:
         JavaIterator.from(it.asInstanceOf[java.util.Iterator[Any]].asScala)
       case other => other.asInstanceOf[JavaIterator[?]]
 
+    // -----------------------------------------------------------------------------------------
+    // THE EGRESS DIRECTION — `ENGINE-LIMITS.md` K21 face 1
+    // -----------------------------------------------------------------------------------------
+    //
+    // Every `is*`/`as*` above answers a question the PORT asks about a value it is holding. This
+    // one answers a question SOMEBODY ELSE asks: a value the port retyped is handed to external
+    // java at a `java.lang.Object` slot, and the callee reads its RUNTIME representation —
+    // reflectively, through a serializer, an injector or a bean mapper. Java's value there was a
+    // `java.util.*`; the port's is a `scala.collection.*`, it CONFORMS to the formal, and jackson
+    // answers by bean-serializing the internals:
+    //
+    //   writeValueAsString(mutable.HashMap("key" -> "value"))
+    //     = {"scala$collection$mutable$HashMap$$table":[…],"empty":false,"class":"…"}
+    //
+    // Nothing static can see this. The formal is `Object`, so no slot disagrees, there is no type
+    // to compare and no compile error to look for; the argument's own static type is usually
+    // `Object` too, so the phase has no evidence at the call site either. The question is
+    // therefore asked where the answer exists — of the OBJECT, at run time — which is what makes
+    // this a member of `Reified` and not of the static `toJava` family beside it.
+    //
+    // ==DEEP, and by VIEW rather than by copy==
+    // `toJava` (i.e. `asJava`) converts ONE level, which is exactly the refusal `coerce` records
+    // for a nested element type. One level is not enough here: a serializer walks the whole tree,
+    // and liqp's data model is a `Map<String,Object>` whose values are maps and lists. So each
+    // view converts its elements ON READ, and the result is still a live view of the port's own
+    // collection — a COPY would detach both directions, which is K15's own refusal.
+    //
+    // ==READ-ONLY, deliberately==
+    // A java caller that MUTATES the value it was handed gets `UnsupportedOperationException`
+    // where java would have written through. That is the loud failure M6 asks for, and the
+    // alternative is worse: `entrySet().setValue` and `add` on a converting view have to guess
+    // what to write BACK through the conversion, which is precisely §4.4's mistake. The consumers
+    // this bridge exists for are readers.
+    //
+    // ==IDENTITY==
+    // A view is not the object it views (K19's open half, unchanged). The one place identity is
+    // cheaply preservable is an ARRAY, whose spine has to be copied to convert it — so the copy is
+    // made only when an element actually moved, and the ORIGINAL array is returned otherwise.
+
+    /** the value AS JAVA WOULD HAVE HELD IT, decided from the object rather than from its type.
+      *
+      * Identity for everything this engine did not put there — a `String`, a boxed number, a
+      * `java.util.*` the port never touched, a class the port emits — so it is safe to insert
+      * wherever a value crosses out and the phase cannot prove the value is harmless. */
+    def toJavaValue(x: Any): java.lang.Object = under(x) match
+      case null                             => null
+      // …`Map` BEFORE `Iterable`: a scala `Map` is a `scala.collection.Iterable` of pairs, and a
+      // java `Map` is not a `java.util.Collection` at all. The wrong order turns every map into a
+      // list of tuples, which is the same asymmetry `isCollection` is exact about.
+      case m: scala.collection.Map[?, ?]    => new MapView(m.asInstanceOf[scala.collection.Map[Any, Any]])
+      case s: scala.collection.Set[?]       => new SetView(s.asInstanceOf[scala.collection.Set[Any]])
+      case q: scala.collection.Seq[?]       => new ListView(q.asInstanceOf[scala.collection.Seq[Any]])
+      case i: scala.collection.Iterable[?]  => new IterableView(i.asInstanceOf[scala.collection.Iterable[Any]])
+      case it: scala.collection.Iterator[?] => new IteratorView(it.asInstanceOf[scala.collection.Iterator[Any]])
+      // …and the three SHIMS, which are the other representation this engine introduces: a scala
+      // trait with java's SHAPE is not a java type, so a java consumer sees a bean here too. A
+      // DELEGATING one never reaches these arms — `under` has already replaced it with the scala
+      // collection it wraps — so what is left is a class the port EMITS that implements the shim,
+      // which in java implemented `java.util.Collection` and must read as one.
+      case c: JavaCollection[?]             => new ShimCollectionView(c.asInstanceOf[JavaCollection[Any]])
+      case i: JavaIterable[?]               => new ShimIterableView(i.asInstanceOf[JavaIterable[Any]])
+      case it: JavaIterator[?]              => new ShimIteratorView(it.asInstanceOf[JavaIterator[Any]])
+      case a: Array[AnyRef] =>
+        // java and scala agree about arrays, so the SPINE is already right and only the elements
+        // can be wrong. Converted eagerly because an array has no view, and returned AS IT ARRIVED
+        // whenever nothing moved — an array of `String` crossing out is the same object it was.
+        var moved = false
+        val out = new Array[AnyRef](a.length)
+        var i = 0
+        while i < a.length do
+          out(i) = toJavaValue(a(i))
+          if out(i) ne a(i) then moved = true
+          i += 1
+        if moved then out else a
+      case other                            => other.asInstanceOf[java.lang.Object]
+
+    /** the one entry shape these views need. Not `java.util.AbstractMap.SimpleImmutableEntry`,
+      * whose availability is a platform question this module answers for itself; `equals` and
+      * `hashCode` are java's own documented contract for `Map.Entry`. */
+    private final class Entry(k: java.lang.Object, v: java.lang.Object) extends java.util.Map.Entry[Any, Any]:
+      def getKey(): Any = k
+      def getValue(): Any = v
+      def setValue(value: Any): Any = throw new UnsupportedOperationException("setValue")
+      override def equals(o: Any): Boolean = o match
+        case e: java.util.Map.Entry[?, ?] =>
+          (if k == null then e.getKey == null else k.equals(e.getKey)) &&
+            (if v == null then e.getValue == null else v.equals(e.getValue))
+        case _ => false
+      override def hashCode(): Int =
+        (if k == null then 0 else k.hashCode) ^ (if v == null then 0 else v.hashCode)
+
+    private final class MapView(m: scala.collection.Map[Any, Any]) extends java.util.AbstractMap[Any, Any]:
+      def entrySet(): java.util.Set[java.util.Map.Entry[Any, Any]] =
+        new java.util.AbstractSet[java.util.Map.Entry[Any, Any]]:
+          def iterator(): java.util.Iterator[java.util.Map.Entry[Any, Any]] =
+            new java.util.Iterator[java.util.Map.Entry[Any, Any]]:
+              private val it = m.iterator
+              def hasNext(): Boolean = it.hasNext
+              def next(): java.util.Map.Entry[Any, Any] =
+                val (k, v) = it.next()
+                new Entry(toJavaValue(k), toJavaValue(v))
+          def size(): Int = m.size
+      // `AbstractMap` derives both from `entrySet`, i.e. in O(n). The map this views has them, and
+      // a consumer that looks a key up should not pay for the whole spine.
+      override def size(): Int = m.size
+      override def isEmpty(): Boolean = m.isEmpty
+
+    private final class ListView(q: scala.collection.Seq[Any]) extends java.util.AbstractList[Any]:
+      def get(i: Int): Any = toJavaValue(q(i))
+      override def size(): Int = q.size
+
+    private final class SetView(s: scala.collection.Set[Any]) extends java.util.AbstractSet[Any]:
+      def iterator(): java.util.Iterator[Any] = new IteratorView(s.iterator)
+      def size(): Int = s.size
+
+    /** a scala `Iterable` that is neither a `Seq`, a `Set` nor a `Map` — java's nearest honest
+      * shape for it is a `Collection` whose `add` throws, which is what `AbstractCollection` is. */
+    private final class IterableView(i: scala.collection.Iterable[Any]) extends java.util.AbstractCollection[Any]:
+      def iterator(): java.util.Iterator[Any] = new IteratorView(i.iterator)
+      def size(): Int = i.size
+
+    private final class IteratorView(it: scala.collection.Iterator[Any]) extends java.util.Iterator[Any]:
+      def hasNext(): Boolean = it.hasNext
+      def next(): Any = toJavaValue(it.next())
+
+    private final class ShimCollectionView(c: JavaCollection[Any]) extends java.util.AbstractCollection[Any]:
+      def iterator(): java.util.Iterator[Any] = new ShimIteratorView(c.iterator())
+      def size(): Int = c.size()
+
+    private final class ShimIterableView(i: JavaIterable[Any]) extends java.util.AbstractCollection[Any]:
+      def iterator(): java.util.Iterator[Any] = new ShimIteratorView(i.iterator())
+      // `java.lang.Iterable` has no `size`, so the only honest answer is to count — which is what
+      // a java caller asking a `Collection` view of an `Iterable` is asking for.
+      def size(): Int =
+        val it = i.iterator()
+        var n = 0
+        while it.hasNext() do { it.next(); n += 1 }
+        n
+
+    private final class ShimIteratorView(it: JavaIterator[Any]) extends java.util.Iterator[Any]:
+      def hasNext(): Boolean = it.hasNext()
+      def next(): Any = toJavaValue(it.next())
+
   def comparingByValue[K, V](cmp: java.util.Comparator[? >: V]): java.util.Comparator[(K, V)] =
     (a: (K, V), b: (K, V)) => cmp.compare(a._2, b._2)
 

@@ -111,6 +111,11 @@ object CollectionBoundaryCheck:
       * neither the objects nor their classes — so it is the one seam with no slot to look at and
       * no compile error behind it. */
     case ReifiedOccurrence
+    /** an external callee with a `java.lang.Object` FORMAL, reached by a value this phase cannot
+      * prove it did not retype. Nothing is wrong with the slot — the value conforms — and that is
+      * the finding: if the callee READS the representation it was handed, the port hands it a
+      * different one from the java it was ported from, silently. */
+    case OpaqueEgress
 
   object Issue:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
@@ -172,6 +177,22 @@ object CollectionBoundaryCheck:
           "count is the only instrument that sees the site (`ENGINE-LIMITS.md` K18). Closing it " +
           "needs the mapping to send this java type to an abstract target, or the java code to " +
           "test the interface rather than the implementation class."
+      case OpaqueEgress =>
+        "§1(b) PER-LIBRARY, and NOTHING IS BROKEN AT THIS SLOT — which is the whole reason it is " +
+          "reported. The formal is `java.lang.Object`, so a collection this port retyped conforms " +
+          "perfectly and there is no compile error, no wrong type and no failing check to look " +
+          "for. What changed is what the CALLEE sees: java handed it a `java.util.*` and this port " +
+          "hands it a `scala.collection.*`, so anything that reads the value's runtime " +
+          "representation — a serialiser, a bean mapper, an injector, a `toString` — answers " +
+          "differently (`ENGINE-LIMITS.md` K21 face 1: a JSON filter emitted " +
+          "`{\"scala$collection$mutable$HashMap$$table\":[…]}` where java emitted the entries). " +
+          "This row is a REVIEW LIST and not a defect: one line per external method, and most of " +
+          "them do not care. Where one does, name its owner in " +
+          "`CollectionsTransform(reflectiveSinks)` and the phase bridges the argument through " +
+          "`JavaCollections.Reified.toJavaValue` — a run-time, deep, live view, because the " +
+          "argument's own static type is `Object` too and nothing at the call site can decide it. " +
+          "The engine cannot derive the list: which dependency reflects is a fact about the " +
+          "library, and java itself guarantees no such type."
       case ExternalCallee =>
         "§1(a) engine, and REFUSED here on purpose: the other side of this slot is a method the " +
           "program does not declare, so its signature is a fact about a compiled class file and no " +

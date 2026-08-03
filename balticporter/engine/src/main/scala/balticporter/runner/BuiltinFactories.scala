@@ -77,7 +77,8 @@ final class PanamaFfiFactory extends TransformFactory:
   * { transform = "collections"
   *   scope { except = ["com.foo.Bridge"] }
   *   retarget { "java.util.Comparator" = "scala.math.Ordering" }
-  *   reifiedCarriers = ["com.fasterxml.jackson.core.type.TypeReference"] }
+  *   reifiedCarriers = ["com.fasterxml.jackson.core.type.TypeReference"]
+  *   reflectiveSinks = ["com.fasterxml.jackson.databind.ObjectMapper"] }
   * ```
   *
   * `retarget` is the type-only half: java FQN → scala FQN, retyped everywhere and API-mapped
@@ -88,6 +89,12 @@ final class PanamaFfiFactory extends TransformFactory:
   * out of the class file at run time and constructs from — a super-type token
   * (`ENGINE-LIMITS.md` K20). Those arguments stay in java's namespace and the value is bridged where
   * it is used. `java.lang.Class` is included by the engine and needs no entry.
+  *
+  * `reflectiveSinks` is the same third party at the OTHER end of the same call
+  * (`ENGINE-LIMITS.md` K21 face 1): an external type that reads the RUNTIME REPRESENTATION of a
+  * value handed to it at a `java.lang.Object` slot. Arguments there are bridged through
+  * `JavaCollections.Reified.toJavaValue`. Nothing is included by the engine — java guarantees no
+  * such type — and the `OpaqueEgress` boundary rows are the review list a port picks entries from.
   */
 final class CollectionsFactory extends TransformFactory:
   def name = "collections"
@@ -95,7 +102,8 @@ final class CollectionsFactory extends TransformFactory:
     new CollectionsTransform(
       TransformFactory.scopeOf(config),
       config.stringMap("retarget").getOrElse(Map.empty),
-      config.strings("reifiedCarriers").getOrElse(Nil).toSet)
+      config.strings("reifiedCarriers").getOrElse(Nil).toSet,
+      config.strings("reflectiveSinks").getOrElse(Nil).toSet)
 
 /** `{ transform = "test-framework", suite = "munit.FunSuite", testMember = "test" }` */
 final class TestFrameworkFactory extends TransformFactory:
