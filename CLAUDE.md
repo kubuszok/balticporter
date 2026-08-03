@@ -727,6 +727,11 @@ Before adding a translation for a Java *statement* form, ask what it means when 
 control flow is used, not only what it looks like. And read §3 again: a green compile said nothing
 about any of these.
 
+**This table is the rows an agent must know BY HEART; it is not the complete set.**
+`balticporter.catalog.Differences` is — every Java-vs-Scala difference the engine knows about, as
+code, with its status re-derived against the engine rather than transcribed (`DESIGN.md` §2.8, and
+`just catalog` renders it). Each row above is a catalog row whose `twin` says so.
+
 ## 4.55 A renaming pass reads EFFECTIVE names, PARENTS-FIRST
 
 Java lets a name be reused where Scala cannot: a field shadows an inherited field, a field coexists

@@ -437,6 +437,77 @@ with no `SymId` and no origin, so two runs are comparable. What is shipped today
    the migration. The re-compiler is the tool; the agents are the operators. `CLAUDE.md` §4.45 is the
    standing consequence of that.
 
+### 2.8 The difference catalog — the (a) layer, made explicit
+
+Every Java-vs-Scala semantic difference the engine knows about is a VALUE in
+`balticporter.catalog` (`api`), not a table in a document. The decision, and the four arguments for
+it, in descending weight:
+
+1. a lowering arm, a transform and a check must be able to CITE a difference, and a coverage lane
+   must be able to report that one is never reached. A markdown table can do neither;
+2. `CLAUDE.md` §3.6 admits six documents and forbids a seventh, and none of the six fits — 126 rows
+   would swamp this file (decisions, not inventories), `ENGINE-LIMITS.md` is measured dead ends and
+   most rows are neither measured nor dead ends, `PROGRESS.md` is per-port state;
+3. `CLAUDE.md` §4.45 — the consumer is an agent in ANOTHER repository. A catalog in the engine jar
+   is one that agent has;
+4. the precedent is §6.2's own, on `UnportableKind`: *a closed engine enum — a new kind is an engine
+   change that arrives with its mint sites and its report text, which is the correct friction.*
+
+**Ids.** `JS-<AREA><NN>` — `E` expressions, `S` statements, `C` classes, `G` generics, `L` library
+surface, `P` platform capability. **Never reused, never renumbered**, which is why `Differences.retired`
+exists: an id absorbed into another row keeps its number out of circulation instead of freeing it,
+and a retirement with no record is an id the next agent assigns to a different fact. Always written
+with the `JS-` prefix, because `ENGINE-LIMITS.md` has its own `G22` and it is not the same thing.
+
+**The no-parameter rule, and it is the guard rail the whole taxonomy rests on.** A `Difference`
+takes no parameter — no `RuleScope`, no `Set[String]`, no predicate, no `SurfacePolicy`. A difference
+is a fact about Java and Scala; if a row needs to know something about a LIBRARY it is not a
+difference, it is a (b) phase's policy, and it belongs in that phase's constructor where §1.5's merge
+contract already governs it. `DifferenceTakesNoParameterSpec` asserts it by REFLECTION over the
+constructed rows — every field, recursively, a literal or an enum case — because a list of allowed
+field names is a list the next field is not on.
+
+The `JS-{L,P}` rows are the apparent exception and are not one. An `ApiRow` legitimately carries
+per-platform MAPS, because Scala.js and Scala Native genuinely disagree and one shared verdict is
+exactly what makes a rule wrong for one of them. So the guard is NARROWER rather than absent —
+`ApiRowCarriesNoPolicySpec` — and the line inside the row is: `by` (availability) is the (a) FACT,
+true of every port and contradicted by no manifest; `verdict` is a recommended DEFAULT; and a TARGET
+SET is neither, so no row may hold one. Which platforms a port cares about is the port's, in its
+manifest.
+
+**Two status-enforcement rules, both mechanical, because a status transcribed by hand is already
+wrong.** Four headline `Open` rows were fixed inside one week while the document describing them was
+being written, and nothing could see that they had.
+
+- **(i) a row whose twin names a CLOSED `ENGINE-LIMITS.md` entry may not claim `Open`.** That file is
+  maintained in the commit that measures, so the twin column is more current than the status column
+  by construction; `ClosedTwinStatusSpec` parses the stable ids and their marker, and
+  `scripts/catalog-status.sh` is the same rule for an agent holding a checkout. Its honest limit: it
+  sees a row only through its twin, which is why a row claiming `Open` may not have `Twin.NoTwin`.
+- **(ii) a consult that cites an `Open` or `Absent` row is a finding.** A lowering arm consulting a
+  difference the registry says nobody handles is a registry that has stopped describing the code.
+  The practical effect is what makes the pair land together: a wiring commit flips the status IN THE
+  SAME CHANGE, or it does not go green.
+
+**A row does NOT imply a decision.** `Decision` records why the emitted code is not a MECHANICAL
+translation; a JLS-mandated deterministic lowering *is* the mechanical translation, and a note there
+would be narration that `NoteCoverageCheck` polices in both directions. A row earns a decision only
+where the port could have gone another way, or where something is missing from the output.
+
+**What is deliberately not in a row yet.** No `attaches` and no `tests`. Both depend on a mechanism
+that does not exist — an obligation wrapper at the frontend dispatch, a symmetrical one at the
+emitter's, and a per-declaration citation from a phase. A field whose mechanism is unbuilt reads as a
+claim the engine cannot honour, and the lane that would check it would report every row as fine.
+
+**Rendering.** `just catalog` writes `.balticporter/catalog.md` — gitignored, a build product,
+§5.5's rule for emitted code applied one medium over. Committed, that markdown would be a seventh
+document nobody loads, and it would start disagreeing with the code it came from.
+
+**No row carries a number** — a measurement lives where §3.6 says and the row points at it with its
+twin. That includes the catalog's own size: `Differences.all.size` is derived and written down
+nowhere, which is `PortabilityCheck`'s phantom "34 rules" lesson applied to the thing that recorded
+it.
+
 ---
 
 ## 3. Architecture

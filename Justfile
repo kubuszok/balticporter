@@ -1463,6 +1463,33 @@ measure-all:
     done
 
 # ---------------------------------------------------------------------------------------------
+# The difference catalog, rendered.
+#
+# The registry (`balticporter.catalog`) is the truth and this is a VIEW of it, written to
+# `.balticporter/`, which is gitignored. That is CLAUDE.md §5.5's rule for emitted code applied one
+# medium over: committed, the markdown would be a seventh document nobody loads (§3.6), it would
+# accrete a status section, and it would start disagreeing with the code it was generated from.
+#
+# `catalog-twins` is the other half and is the one an agent runs while EDITING a status: it derives
+# CLOSED / OPEN / AMBIGUOUS / UNMARKED per ENGINE-LIMITS entry, and — given a `<id> <status> <twin>`
+# table — fails on a row that claims OPEN against a CLOSED twin. `ClosedTwinStatusSpec` is the same
+# rule inside the test run; both read the same file by the same shape, so they cannot disagree.
+# ---------------------------------------------------------------------------------------------
+[doc("render balticporter.catalog to .balticporter/catalog.md (a build product)")]
+catalog:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    mkdir -p .balticporter
+    sbt -batch "api/runMain balticporter.catalog.CatalogDoc" | sed -n '/^# The difference catalog/,$p' > .balticporter/catalog.md
+    echo "-> .balticporter/catalog.md ($(wc -l < .balticporter/catalog.md) lines)"
+
+[doc("ENGINE-LIMITS CLOSED/OPEN per entry; with a rows.tsv, fail on a stale OPEN status")]
+catalog-twins rows="":
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    scripts/catalog-status.sh {{rows}}
+
+# ---------------------------------------------------------------------------------------------
 # Per-port `decisions.tsv` row counts by KIND, for every port that has a run.
 #
 # The decision log is NOT baselined (`baseline-accept` promotes findings/counts/members/tests/
