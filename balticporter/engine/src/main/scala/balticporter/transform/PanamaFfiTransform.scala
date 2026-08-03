@@ -113,8 +113,9 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
     * OVERLOAD rather than which mint:
     *
     *   - the only native of that name in that owner: `freeMemory$handle`, and nothing can move it;
-    *   - one of several: `copyJni$0$handle`, `copyJni$1$handle`, … ordered by the ERASED SIGNATURE,
-    *     sorted — so the ordinal follows a fact about the class and not the order the frontend
+    *   - one of several: `copyJni$0$handle`, `copyJni$1$handle`, … ordered by the ERASED SIGNATURE
+    *     and, where two of those compare equal, by the DECLARATION'S OWN POSITION — so the ordinal
+    *     follows a fact about the class at every level of the key and never the order the frontend
     *     happened to visit them in. Adding or retyping an overload can renumber its siblings, and
     *     that is honest: it is a change to the class, not to an unrelated file.
     *
@@ -124,7 +125,7 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
     * existing total, id-free renderer — rather than a second one written here, for the same reason
     * this file now derives the name ONCE: [[invoke]] reads it back off the minted symbol instead of
     * re-deriving it, so there is no second copy to disagree. */
-  private def handleNames(program: Program, natives: Set[SymId]): Map[SymId, String] =
+  private[balticporter] def handleNames(program: Program, natives: Set[SymId]): Map[SymId, String] =
     given Program = program
     def nameOf(m: SymId): String  = program.symbolOf(m).map(_.name).getOrElse("fn")
     def ownerOf(m: SymId): SymId  = program.symbolOf(m).map(_.owner).getOrElse(SymId.None)
@@ -133,9 +134,21 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
         ps.map((_, t) => TirPrinter.tpe(t, TirPrinter.Style.canonical)).mkString(",") +
           ":" + TirPrinter.tpe(r, TirPrinter.Style.canonical)
       case _ => ""
+    // …AND THE TIEBREAK IS A POSITION, never the order the symbols arrive in. The `MethodType` case
+    // above is guaranteed by `run`'s own filter today, so the empty key is unreachable — which is
+    // precisely why it was worth removing: `sortBy` is STABLE, so a group whose keys all
+    // degenerated would fall back to the order `natives` iterates in, and that order is the MINT
+    // COUNTER. This entry exists because an emitted identifier was keyed on the mint counter once
+    // (122 member digests in four untouched types), and a fallback that quietly restores it is the
+    // same defect with a filter in front of it. The declaration's own source position is a fact
+    // about the class, exactly as the erased signature is, so the pair is counter-free all the way
+    // down and no branch of this key can return a constant.
+    def posOf(m: SymId): (String, Int, Int) =
+      val o = Decision.originOf(program, m)
+      (o.javaPath, o.line, o.col)
     natives.toList.groupBy(m => (ownerOf(m), nameOf(m))).flatMap { case ((_, n), ms) =>
       if ms.sizeIs == 1 then List(ms.head -> s"$n$$handle")
-      else ms.sortBy(sigOf).zipWithIndex.map((m, i) => m -> s"$n$$$i$$handle")
+      else ms.sortBy(m => (sigOf(m), posOf(m))).zipWithIndex.map((m, i) => m -> s"$n$$$i$$handle")
     }
 
   /** `Linker.nativeLinker().downcallHandle(lookup.find("name").orElseThrow(), descriptor)`. */

@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.Pipeline
+import balticporter.tir.{Decision, Pipeline, SymbolTable, TypeRepr}
 import balticporter.transform.PanamaFfiTransform
 
 /** JNI → Panama: `native` methods become generated `java.lang.foreign` downcall bindings —
@@ -100,4 +100,31 @@ class PanamaFfiTransformSpec extends munit.FunSuite:
     val b = emit(shifted)
     val handles = (s: String) => "\\w+\\$(?:\\d+\\$)?handle".r.findAllIn(s).toList.distinct.sorted
     assertEquals(clue(handles(b)), clue(handles(a)))
+  }
+
+  test("M10 — the key is counter-free ALL THE WAY DOWN: an unreadable signature falls back to POSITION") {
+    // The degenerate cell behind the fix, EXERCISED — and this test is deliberately not claimed as
+    // failing-first, because the cell cannot be reached from java at all. The `MethodType` case is
+    // guaranteed by `run`'s own filter, so no source produces the empty key; what made it worth
+    // removing is that `sortBy` is STABLE, so a group whose keys all degenerated would fall back to
+    // the order `natives` iterates in — the MINT COUNTER, which is the one thing M10 says no
+    // emitted identifier may be keyed on. Nothing would have reported it either: the names stay
+    // distinct and well-formed and only their ASSIGNMENT to declarations moves.
+    //
+    // So the signatures are stripped by hand to make the fallback the only key, and the
+    // perturbation is the one the test above uses, kept on ONE line so the declarations' own
+    // positions do not move. What this pins is that the fallback is TOTAL and positional: it runs,
+    // it names every native, and the mapping from a declaration's position to its handle is the
+    // same on both sides.
+    def byPosition(src: String): Map[(String, Int), String] =
+      val p0      = SpoonTir.fromSource(src)
+      val natives = p0.symbols.all.filter(_.flags.isNative).map(_.id).toSet
+      val blind   = p0.rebuilt(symbols = SymbolTable(p0.symbols.all.map(s =>
+        if natives(s.id) then s.copy(info = TypeRepr.NoType) else s)))
+      new PanamaFfiTransform().handleNames(blind, natives).map { (m, n) =>
+        val o = Decision.originOf(blind, m)
+        (o.javaPath.split('/').last, o.line) -> n
+      }
+    val sameLine = overloaded.replace("class Over {", "class Over { static int unrelated(int q) { return q + 1; }")
+    assertEquals(clue(byPosition(sameLine)), clue(byPosition(overloaded)))
   }
