@@ -147,6 +147,67 @@ class CatalogAreaESpec extends PortSuite:
     assertConsults(p, JS.E(5))
   }
 
+  test("JS-E05 — MIXED BOXED NUMERICS: java UNBOXES both branches, so the port must too") {
+    // `ENGINE-LIMITS.md` K17 face 2, at the shape that produced it. JLS 15.25.2 gives a conditional
+    // whose operands are `Long` and `Double` binary numeric promotion: both are unboxed, promoted to
+    // `double`, and the result re-boxed — so the expression's type really is `Double` and the `Long`
+    // branch really does become one. Scala's `if` types as the lub (`java.lang.Number`) and the
+    // branch value stays a `Long`, which is why writing java's type as a CAST at the enclosing slot
+    // throws: a cast is not a conversion.
+    val p = port(
+      """public class E {
+        |  Number f(String s) { return s.matches("d+") ? Long.valueOf(s) : Double.valueOf(s); }
+        |}""".stripMargin)
+    assertConsults(p, JS.E(5), fired = true)
+    // BOTH branches, and the `Double` one is the half a coercion rule that only fixes cross-type
+    // unboxing would miss — leaving the `if` at a lub of `Double` and `scala.Double`.
+    assertEmitsMatch(p, "(?s).*java\\.lang\\.Long\\.valueOf\\(s\\)\\.doubleValue\\(\\).*")
+    assertEmitsMatch(p, "(?s).*java\\.lang\\.Double\\.valueOf\\(s\\)\\.doubleValue\\(\\).*")
+  }
+
+  test("JS-E05 — BULLET 2: a `byte` branch against a representable constant `int` stays `byte`") {
+    // The case where an always-promote rule would be UNFAITHFUL. JLS 15.25.2 bullet 2 keeps the
+    // conditional at `byte`, so the constant narrows and the `byte` does not widen. The engine gets
+    // this by construction rather than by a rule of its own: the target is java's OWN answer for the
+    // conditional, never a promotion this pass computes.
+    val p = port("public class E { byte f(boolean b, byte v) { return b ? v : 1; } }")
+    assertConsults(p, JS.E(5), fired = true)
+    // the CONSTANT moves, not the `byte` — assert the direction, because `scala.Byte` alone is in
+    // the emitted text either way (it is the parameter's own type) and would pass vacuously.
+    assertEmitsMatch(p, "(?s).*else 1\\.asInstanceOf\\[scala\\.Byte\\].*")
+  }
+
+  test("JS-E05 — a WIDENING branch emits nothing: scala's `if` already conforms weakly") {
+    val p = port("public class E { double f(boolean b, int i, double d) { return b ? i : d; } }")
+    assertConsults(p, JS.E(5))
+    assertNotEmits(p, "doubleValue")
+  }
+
+  test("JS-E05 — an operand the SOURCE already cast is read AFTER its cast, not before") {
+    // The defect this pass shipped and the CORPUS caught, on the first `measure-all`. `be.getType`
+    // is the type Spoon records BEFORE the source's own casts, which `expr` applies on top — so a
+    // `(float) Math.asin(…)` operand of a `float` conditional reads as a `double`, earns a
+    // narrowing, and gets one more `asInstanceOf[scala.Float]` stacked on a term that is already a
+    // `Float`. It says nothing, it moves a member digest, and neither a compile nor any count can
+    // see it. The two casts this shape DOES emit are the source's own and the return coercion's,
+    // both older than this row; what must never appear is a third.
+    val p = port(
+      """public class E {
+        |  float f(boolean b, float g) { return b ? (float) Math.asin(g) : g * 0.5f; }
+        |}""".stripMargin)
+    assertConsults(p, JS.E(5))
+    assertEmits(p, "asInstanceOf[scala.Float].asInstanceOf[scala.Float]")
+    assertNotEmits(p, "asInstanceOf[scala.Float].asInstanceOf[scala.Float].asInstanceOf[scala.Float]")
+  }
+
+  test("JS-E05 — a REFERENCE conditional is consulted and no branch is converted") {
+    // The other half of the row, and the one that must NOT move: java's type for a reference
+    // conditional is a lub and scala's is also a lub. Only the numeric case is a conversion.
+    val p = port("public class E { Object f(boolean b, String s, Integer i) { return b ? s : i; } }")
+    assertConsults(p, JS.E(5))
+    assertNotEmits(p, "intValue")
+  }
+
   // -- JS-E14: string concatenation with a NON-`String` left operand ------------------------------
 
   test("JS-E14 — `obj + \"s\"` stringifies the left, because scala has no `+` on `obj`") {

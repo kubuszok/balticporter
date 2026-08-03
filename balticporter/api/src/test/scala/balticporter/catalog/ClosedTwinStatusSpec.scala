@@ -96,7 +96,12 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     assertEquals(verdicts.get("G22"), Some("CLOSED"))
     assertEquals(verdicts.get("C12"), Some("CLOSED"))
     assertEquals(verdicts.get("G24"), Some("OPEN"))
-    assertEquals(verdicts.get("K17"), Some("OPEN"))
+    // K17 was the second entry to reach AMBIGUOUS, and by the route the state exists for: one of its
+    // two faces closed and the other did not, so the heading says both and the verdict is derived
+    // rather than decided. It is pinned here because it is CITED by two rows with different statuses
+    // — `JS-E05` (`Handled`, the face that closed) and `JS-E06` (`Partial`, the face that did not) —
+    // which is the shape rule (i) must not fail on and must not silently excuse either.
+    assertEquals(verdicts.get("K17"), Some("AMBIGUOUS"))
     // UNMARKED is a real third state, not a parse failure: this entry describes a shipped fix and a
     // residue counted to zero without ever using the word, and calling that CLOSED would be the
     // spec inventing the claim it exists to check.

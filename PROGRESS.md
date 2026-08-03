@@ -95,7 +95,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
-| `ssg-liquid-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 357 passing, 218 failing**, 155 of them one collections seam (§10.5.5) | **0** |
+| `ssg-liquid-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 364 passing, 211 failing**, 155 of them one collections seam (§10.5.5) | **0** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2001,13 +2001,13 @@ written, 987 members in the source map. `just liqp-measure`.
 | `jdk-surface` | **19 -> 10 -> 9** — `anyMatch`/`sortNatural`/`ConcurrentHashMap` stopped reading as this port's wall once the tables named them |
 | `collection-boundary` (main) | **6 -> 14 -> 13 -> 8 -> 18 -> 14 -> 15** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), rose by the one `InexpressibleParent` refusal K5.7 counts, and fell by five when the OWNED-callee bridge stopped being switched off by a shim this library never names (K2.5). It then ROSE to 18 and fell to 14 in one step, because the aliasing refusal became a TRANSLATION: twelve `Arrays.asList(arr)` sites stopped being untranslated calls the check cannot see and became boundaries it can, four of which the same change closed. The fifteenth is K5.7's other half: the member a RETAINED PARENT declares and the target cannot carry, now emitted as the interface's own documented refusal and counted at the slot |
 | `omissions` | **6 -> 4 -> 1** — `PlainBigDecimal`'s two `super(args)` are no longer dropped (with the external constructor's signature readable the funnel reaches K5.5's synthesised primary), and `LiquidException`'s three reach a primary synthesised at the JDK throwable's widest overload (C3) |
-| tests | 639 `@Test` upstream, **575 emitted, 575 RUN — 161 -> 357 passing, 414 -> 218 failing** (§10.5.5) |
+| tests | 639 `@Test` upstream, **575 emitted, 575 RUN — 161 -> 357 -> 364 passing, 414 -> 218 -> 211 failing** (§10.5.5) |
 
 **The behavioural gate is now the measurement.** Every number above except the last row is a
 compile-time one, and §3 is explicit about what that is worth — which this port then demonstrated
 twice at scale. First: **409 of the first run's 414 failures were ONE constructor's statement ORDER,
 at 0 scalac errors and every check count flat** (`ENGINE-LIMITS.md` C12, now closed). Then, with that
-closed, **196 tests flipped to passing, 0 newly failed, and the 218 that remain are four families the
+closed, **196 tests flipped to passing, 0 newly failed, and the 218 that then remained are four families the
 first census could not see at all** — every one of them behind the same constructor, and every one of
 them still at 0 scalac errors with every check count flat. The compile said nothing about any of it.
 
@@ -2403,12 +2403,12 @@ sets, then the fixture symlink tree, the `--resource-dir` services file and `sca
 | upstream `@Test` | **639** |
 | emitted munit registrations | **575** (64 lost: 62 to T9's four excluded files, 2 to D-liqp-7 — §10.5.4) |
 | **outcomes recorded** | **575 of 575 emitted** — the full accounting, nothing inferred from a sum of markers |
-| passing | **161 -> 357** (C12 closed) |
-| failing | **414 -> 218** |
-| newly passing / newly failing / newly skipped | **196 / 0 / 0** |
+| passing | **161 -> 357** (C12 closed) **-> 364** (K17 face 2 / `JS-E05`) |
+| failing | **414 -> 218 -> 211** |
+| newly passing / newly failing / newly skipped | **196 / 0 / 0**, then **7 / 0 / 0** |
 | did not run (skipped) | **0** |
 | ignored | **0** |
-| derived expected failures | **0** — this port has no `dropTypes`, so `dropped-types.tsv` is empty and no failure is deliberate. All 218 are `unexpected`, which is the honest reading and not a gap |
+| derived expected failures | **0** — this port has no `dropTypes`, so `dropped-types.tsv` is empty and no failure is deliberate. All 211 are `unexpected`, which is the honest reading and not a gap |
 | declared expected failures | **0** — no `baseline/expected-failures.tsv` at all, which is the normal state of that escape hatch (§5.1) |
 
 The `expected 0` line is worth reading rather than skipping: liqp drops no TYPE, so there is nothing
@@ -2429,7 +2429,8 @@ Nothing in the pipeline could see it, because a Scala class body IS its construc
 order is valid Scala meaning something else — §4.4's defect class, arriving at the scale the rule
 warns about. `Template` is what every test parses through, so one ordering took 71% of the suite.
 
-**THE SECOND CENSUS: the 218 that remain, by ROOT cause.** C12's fix flipped 196 and failed nothing
+**THE SECOND CENSUS: the 218 that remained, by ROOT cause — of which 7 have since closed and 211
+remain.** C12's fix flipped 196 and failed nothing
 new; what it did do is let every test that used to die in `Template`'s constructor run far enough to
 reach the defect that was always underneath. The families below are therefore FINDINGS UNMASKED, not
 regressions — the first census could not have named one of them, and the run that produced them reads
@@ -2440,26 +2441,31 @@ in the whole port (`Template`):
 |---|---|---|
 | **155** | **the collections retyping met at a PRODUCER**, in four shapes: `java.util.HashMap cannot be cast to scala.collection.mutable.Map` (138, `Template#renderToObject`'s `mapper.readValue(json, HashMap.class)`), jackson's `Cannot construct instance of scala.collection.mutable.Map` (10, reflective), `java.util.ArrayList` → `mutable.Map` (4) and `JavaCollections$FrozenBuffer` → `mutable.Map` (2), plus one `cannot sort: ArrayBuffer`. Every one is a value a THIRD PARTY produced at a declaration the port retyped — K14's counted direction and K15's family, met at run time rather than at a formal. `collection-retarget` reads **0**, which is what that check exists to say it cannot see here | **(a) engine, K14/K15 family** |
 | **27** | **a java LAMBDA at an external functional-interface slot, emitted as a cast instead of a SAM conversion** — `TemplateParser$$Lambda cannot be cast to java.util.function.Supplier` at `Optional.orElseGet(() -> …)` | **(a) engine, `ENGINE-LIMITS.md` K17 (new, OPEN)** |
-| **7** | **a `? :` over mixed boxed numerics** — JLS 15.25 gives `Long`/`Double` binary numeric promotion and the port emits `if`/`else` plus `asInstanceOf[Double]`, which asserts instead of converting: `java.lang.Long cannot be cast to java.lang.Double` at `LValue#asNumber` | **(a) engine, `ENGINE-LIMITS.md` K17 (new, OPEN)** |
+| ~~7~~ **0** | **a `? :` over mixed boxed numerics** — JLS 15.25 gives `Long`/`Double` binary numeric promotion and the port emitted `if`/`else` plus `asInstanceOf[Double]`, which asserts instead of converting: `java.lang.Long cannot be cast to java.lang.Double` at `LValue#asNumber`. **CLOSED** — `SpoonTir.promotedBranch` performs the conversion on each OPERAND, so the `if` has java's type and there is nothing to assert. All seven flipped, 0 newly failed, and the whole blast on this port is `LValue` and its `asNumber` | **(a) engine, `ENGINE-LIMITS.md` K17 face 2, catalog `JS-E05`** |
 | **29** | assertion / comparison failures with no exception behind them — 27 `munit.ComparisonFailException` (the `Pop`/`Push`/`Shift`/`Unshift` filter families, the two `where` impls, `LookupNode`, `IncludeRelative`, `Json`) and 2 `AssertionError` in `ForTest`. Several are downstream of the 155 (a filter handed a shim renders differently); none has been read individually yet | unclassified — the next wave's work, and the first place a per-test read is worth doing |
 
 **Two of the three unmasked families are the SAME defect** — a java CONVERSION emitted as a scala
 CAST — which is why they are one `ENGINE-LIMITS.md` entry and not two. Neither is visible to a
 compile, to any check, or to a member digest: both emit valid Scala carrying java's own static type.
+**One of the two is now closed and the other is not**, which is worth reading rather than averaging:
+the conditional's fix is a conversion the frontend can synthesise from java's own computed type,
+while the lambda's needs the slot's EXPECTED type to do the SAM conversion — a different mechanism,
+still open, and the largest single family left after the 155.
 
 **The lane's own infrastructure held, on both runs.** No failure is a missing fixture, an unresolved
 `META-INF/services` provider or a working-directory miss: the 45 relative-path tests reach the
 symlink tree, the `ServiceLoader` finds its two providers, and the parser's class files resolve. What
 the run measured is the translation, which is what it is for.
 
-**What is NOT yet evidence.** 357 passes is a real coverage statement in a way 161 was not — the §4.4
+**What is NOT yet evidence.** 364 passes is a real coverage statement in a way 161 was not — the §4.4
 forms §10.5.4 lists (46 `@Test(expected=…)`, the two `@Before`s, the 38 anonymous classes, the
 `default`-less `switch`) are now exercised broadly rather than only by whatever got past `Template`.
-But 155 of the 218 are one seam, so the next behavioural gate is the collections PRODUCER direction,
-and it is (a) work in the engine, not policy in this port.
+But 155 of the remaining 211 are one seam, so the next behavioural gate is the collections PRODUCER
+direction, and it is (a) work in the engine, not policy in this port. The next largest is the 27, and
+it is K17's other face.
 
 `tests.tsv` and `expected-errors` are accepted from the run that produced these numbers, so the next
-change is diffed against 357/218.
+change is diffed against 364/211.
 
 ---
 

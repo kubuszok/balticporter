@@ -3619,12 +3619,17 @@ says so.*
 
 ---
 
-### K17. A java CONVERSION emitted as a scala CAST asserts where java CONVERTED — **34 test failures, 0 compile errors. OPEN**
+### K17. A java CONVERSION emitted as a scala CAST asserts where java CONVERTED — **34 test failures, 0 compile errors. FACE 2 CLOSED, FACE 1 OPEN**
 
 Two faces, found in the same run and the same defect twice: java's expression grammar performs a
 CONVERSION at a position where the emitter renders an `asInstanceOf`. The cast has the right static
 type — that is why nothing complains — and at run time it asserts a fact that is false, because the
 conversion never happened.
+
+**Read the two faces apart.** FACE 2 (the conditional, 7 failures) is CLOSED — the conversion is
+performed on each OPERAND now, so the `if` really has java's type and there is nothing to assert.
+FACE 1 (a lambda at a functional-interface slot, 27 failures) is OPEN and is the larger half. The
+general rule below is what they share and is what makes the closure of one evidence about the other.
 
 Both were invisible until C12 closed. They sit behind `Template`'s constructor, so every test that
 would have reached them died one frame earlier with C12's `NullPointerException`; they are not
@@ -3656,7 +3661,7 @@ never to cast a literal into an interface. Note the seam is at an EXTERNAL calle
 comes from a class file and is exactly readable (K15's rule); this is not a case where the engine
 cannot know.
 
-**FACE 2 — a conditional `? :` over MIXED BOXED NUMERICS. 7 failures.**
+**FACE 2 — a conditional `? :` over MIXED BOXED NUMERICS. 7 failures. CLOSED.**
 
 ```java
 return str.matches("\\d+") ? Long.valueOf(str) : Double.valueOf(str);   // JLS 15.25
@@ -3678,10 +3683,46 @@ branch, at the promoted type — and the general rule is that **wherever the fro
 expression type that differs from the scala expression's own type BY A CONVERSION, the emitter owes
 the conversion and not an assertion.**
 
-**Neither is visible to a compile, to any check, or to a member digest** — both emit valid Scala with
-the right static type. The gate that saw them is the one §3 names.
+**HOW IT CLOSED, and the two decisions inside it.** `SpoonTir.promotedBranch` converts each OPERAND
+to the conditional's own java type wherever that type is primitive. Two things about that are not
+incidental:
 
-*Fix kind: (a) engine, OPEN, both faces. Found by RUNNING liqp's suite after C12 closed.*
+- **the target is Spoon's ANSWER, never a promotion the pass computes.** JLS 15.25.2's bullet 2
+  keeps a conditional at `byte` when one operand is a `byte` and the other a constant `int`
+  representable in it, so an always-promote rule would be unfaithful in exactly that case. Reading
+  java's own computed type makes bullet 2 hold by construction — and it narrows the constant, which
+  is what java does. Spoon does implement it; `CatalogAreaESpec` asserts the DIRECTION, because
+  `scala.Byte` is in the emitted text either way and asserting on the name alone passes vacuously;
+- **the SAME-TYPE unbox happens here and `coerce` declines it, and that is not a contradiction.**
+  `coerce` leaves `Integer` → `int` to `Predef.Integer2int`, which needs an EXPECTED type. A
+  conditional branch has none — it is typed on its own and then lubbed — so a `java.lang.Double`
+  operand of a `double` conditional stays boxed, the lub misses java's type by one conversion, and
+  the enclosing coercion asserts the false fact all over again. Fixing only the CROSS-type unbox
+  would have emitted `Long.valueOf(s).doubleValue()` against a bare `Double.valueOf(s)` and moved
+  the failure rather than closed it.
+
+Measured: **liqp 357/218 → 364/211**, the seven newly passing being exactly the `asNumber` family
+this entry named, with 0 newly failing and every other lane's suite outcome identical. The blast is
+**2 rows on liqp** (`LValue` and its `asNumber`), **4 on gdx-gltf**, **9 real rows in two types on
+libGDX core** and **0 on the other twelve ports** — plus 122 rows of `SymId` churn in libGDX's four
+Panama types, which is M10 and not this fix.
+
+**One redundancy this leaves in place, named so it is not re-derived as a defect.** Where the
+conditional sits directly in a `return`, the enclosing `coerce` narrows again — `0.asInstanceOf[
+scala.Byte].asInstanceOf[scala.Byte]` in `JsonValue.asByte`. It is correct and it is older than this
+row: `coerce` decides from Spoon's type for the expression, so it re-emits a conversion the term
+already carries, and the then-branch of that same conditional (`(byte) 1`, a source cast) has read
+double for the life of the port. The narrowing is NOT redundant in general — a conditional passed
+to an `int` slot gets no outer coercion at all — so the fix belongs at `coerce` reading the TIR type
+it is handed, which is its own change and its own measurement.
+
+**Neither face is visible to a compile, to any check, or to a member digest** — both emit valid
+Scala with the right static type. The gate that saw them is the one §3 names, and it is the gate
+that confirmed this one.
+
+*Fix kind: (a) engine. FACE 2 CLOSED (catalog `JS-E05`); FACE 1 still OPEN (catalog `JS-E06`, whose
+fix is a lambda at a functional-interface slot and a different mechanism — do not read this closure
+as evidence about it). Found by RUNNING liqp's suite after C12 closed.*
 
 ---
 
@@ -4360,6 +4401,48 @@ optional:
   cases there now.
 
 *Fix kind: (a) engine — measurement machinery, no library involved.*
+
+### M10. An emitted IDENTIFIER keyed on a raw `SymId` turns a ONE-SYMBOL change into a 122-member blast — and `members.tsv` is exactly the instrument it defeats. **OPEN**
+
+`PanamaFfiTransform.handleName` names a downcall handle `<method>$<SymId.raw>$handle`. `SymId.raw`
+is the frontend's MINT COUNTER, so the name is stable only for as long as nothing before that method
+interns one more symbol than it used to.
+
+Measured on the JS-E05 wave, which is as small a change as this repository produces: converting a
+conditional's operands interned `java.lang.Number#intValue` one compilation unit earlier (in
+`sge.Version`), and every later id shifted by exactly **one**. On libGDX core:
+
+| | |
+|---|---|
+| members whose emitted text moved | **198** (the lane's own metric; 135 rows, 59 of them handle `val`s whose NAME changed by one digit, which is where the other 63 come from) |
+| in the four types that carry Panama handles | **122** — `BufferUtils` 63, `Gdx2DPixmap` 35, `ETC1` 17, `Matrix4` 7: the handle `val`s, the native methods that name them, and each owning class's whole-class digest |
+| the actual conditional conversions | **13**, in five types the reader had to find underneath |
+
+**Why this is a measurement entry and not a naming one.** `CLAUDE.md` §5.1 makes `members.tsv` the
+blast radius *available before a compile* and *a stronger revert check than any count*. A change that
+mints one symbol early makes that instrument report a blast an order of magnitude larger than the
+change, in types the change never touched — so reading it costs precisely the investigation the
+instrument exists to remove. What recovers the signal is masking the counter on both sides
+(`sed -E 's/\$[0-9]+\$/$N$/g'`), which is a workaround an agent has to know about and therefore is
+not a fix.
+
+Two things this is NOT:
+
+- **not non-determinism.** Two runs at one commit agree exactly; `Determinism.Full` is green. The
+  counter is deterministic and simply not STABLE ACROSS COMMITS, which is a different property and
+  the one a baseline needs;
+- **not the interning's fault.** `SpoonTir.unbox`'s own comment already warns that interning a
+  symbol earlier "re-keys every downstream finding whose owner is an external member", and measured
+  2 findings for it. This is the same cause reaching EMITTED TEXT instead of a finding id, which is
+  a larger blast and a worse one — a finding id is diagnostic, a member name is the port.
+
+The fix, priced and deliberately not taken in the wave that measured it (one change, one
+measurement): derive the disambiguator from something stable about the METHOD — its owner and erased
+signature — rather than from the mint counter. The general rule, which is what makes this worth an
+entry: **no identifier the engine EMITS may be keyed on a mint counter.** A name a human reads and a
+build product carries must not move because an unrelated file gained a conversion.
+
+*Fix kind: (a) engine — `PanamaFfiTransform.handleName`.*
 
 ---
 

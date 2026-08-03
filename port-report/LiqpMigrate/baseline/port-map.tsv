@@ -208,7 +208,7 @@ member	liqp.LValue#asBoolean(Object)	ssg.liquid.LValue#asBoolean(Object)	Renamed
 member	liqp.LValue#asFormattedNumber(BigDecimal)	ssg.liquid.LValue#asFormattedNumber(BigDecimal)	Renamed	-	liqp/LValue.java	307	eace2edf7492faee	placement=companion
 member	liqp.LValue#asList(Object,TemplateContext)	ssg.liquid.LValue#asList(Object,TemplateContext)	Renamed	-	liqp/LValue.java	154	6c6287375274a9c7	
 member	liqp.LValue#asMap(Object)	ssg.liquid.LValue#asMap(Object)	Renamed	-	liqp/LValue.java	493	1d86db2d1e6736f9	
-member	liqp.LValue#asNumber(Object)	ssg.liquid.LValue#asNumber(Object)	Renamed	-	liqp/LValue.java	280	3fdfe0fff69491ba	
+member	liqp.LValue#asNumber(Object)	ssg.liquid.LValue#asNumber(Object)	Renamed	-	liqp/LValue.java	280	f7f4afcaa946675a	
 member	liqp.LValue#asRubyDate(Object,TemplateContext)	ssg.liquid.LValue#asRubyDate(Object,TemplateContext)	Renamed	-	liqp/LValue.java	214	693fdb1b93e075a1	placement=companion
 member	liqp.LValue#asStrictNumber(Object)	ssg.liquid.LValue#asStrictNumber(Object)	Renamed	-	liqp/LValue.java	295	9bcfa429b479d442	
 member	liqp.LValue#asString(Object,TemplateContext)	ssg.liquid.LValue#asString(Object,TemplateContext)	Renamed	-	liqp/LValue.java	319	b6d2760beeb57357	

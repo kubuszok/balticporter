@@ -462,7 +462,7 @@ sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#sc
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#skinLoader	val	811b5466284ca405
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#supportedExtensions	val	3ad670810b953918
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#textureResolver	val	34ea0df435dc3a96
-sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes	class	d5b81626922d9e71
+sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes	class	1f3b830a89e660ce
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#C_BYTE	val	df6628d4f7cbf6eb
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#C_FLOAT	val	de3251c810dbf298
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#C_SHORT	val	9ce87392be1564d3
@@ -484,7 +484,7 @@ sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#isMipMapFilt
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(CubicQuaternion,Array<float>,int)	def	27b20269f3851710
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(CubicVector3,Array<float>,int)	def	08fc8a251d3a612f
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(CubicWeightVector,Array<float>,int)	def	430dd1e584d1098b
-sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(GLTFCamera,Sge)	def	e7d3fe476b72e930
+sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(GLTFCamera,Sge)	def	f6042c70123b58c6
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(Quaternion,Array<float>)	def	02acdcbe348b8f72
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(Quaternion,Array<float>,int)	def	1046076195e99d09
 sge.gltf.loaders.shared.GLTFTypes	sge.gltf.loaders.shared.GLTFTypes#map(Vector3,Array<float>)	def	baa731f7a76ab536
@@ -575,9 +575,9 @@ sge.gltf.loaders.shared.material.MaterialLoaderBase	sge.gltf.loaders.shared.mate
 sge.gltf.loaders.shared.material.MaterialLoaderBase	sge.gltf.loaders.shared.material.MaterialLoaderBase#loadMaterials(Array<GLTFMaterial>)	def	05d3e6c81b699c93
 sge.gltf.loaders.shared.material.MaterialLoaderBase	sge.gltf.loaders.shared.material.MaterialLoaderBase#materials	val	4c5c85d7bbfa1173
 sge.gltf.loaders.shared.material.MaterialLoaderBase	sge.gltf.loaders.shared.material.MaterialLoaderBase#textureResolver	val	58da6a4afea8987f
-sge.gltf.loaders.shared.material.PBRMaterialLoader	sge.gltf.loaders.shared.material.PBRMaterialLoader	class	6cbdfbd4d2e87e14
+sge.gltf.loaders.shared.material.PBRMaterialLoader	sge.gltf.loaders.shared.material.PBRMaterialLoader	class	130a92a65ad7e6b9
 sge.gltf.loaders.shared.material.PBRMaterialLoader	sge.gltf.loaders.shared.material.PBRMaterialLoader#getTexureMap(long,GLTFTextureInfo)	def	80068b9a9687794d
-sge.gltf.loaders.shared.material.PBRMaterialLoader	sge.gltf.loaders.shared.material.PBRMaterialLoader#loadMaterial(GLTFMaterial)	def	e70d422956db2cea
+sge.gltf.loaders.shared.material.PBRMaterialLoader	sge.gltf.loaders.shared.material.PBRMaterialLoader#loadMaterial(GLTFMaterial)	def	284713da346824e0
 sge.gltf.loaders.shared.scene.NodeResolver	sge.gltf.loaders.shared.scene.NodeResolver	class	4b0ce05d26429780
 sge.gltf.loaders.shared.scene.NodeResolver	sge.gltf.loaders.shared.scene.NodeResolver#get(int)	def	13e95230a3102275
 sge.gltf.loaders.shared.scene.NodeResolver	sge.gltf.loaders.shared.scene.NodeResolver#nodeMap	val	bd259baa71660097

@@ -2851,13 +2851,80 @@ object SpoonTir:
           def branch(be: CtExpression[?]): Term =
             val t      = expr(be)
             val isNull = be match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
-            if isNull then ascribe.fold(t)(a2 => Tree.Typed(t, tt(a2, be), a2, originOf(be))) else t
+            if isNull then ascribe.fold(t)(a2 => Tree.Typed(t, tt(a2, be), a2, originOf(be)))
+            else promotedBranch(c, be, t)
           Tree.If(expr(c.getCondition), branch(c.getThenExpression), branch(c.getElseExpression), ct, originOf(c))
         case ta: CtTypeAccess[?] => Tree.Literal(Constant.ClassOfC(tpe(ta.getAccessedType)), ty(e), originOf(e))
         // …and the same for an EXPRESSION. The marker carries the expression's own type, so the
         // tree stays typed and every phase after this one reads the slot exactly as it would
         // have — which is the whole reason the marker is a wrapper rather than a hole.
         case other => unlowered(other, s"expression ${SpoonKinds.nameOf(other.getClass)}", ty(e))
+
+      /** JS-E05's NUMERIC half — JLS §15.25.2's binary numeric promotion, performed ON THE OPERAND.
+        *
+        * Java COMPUTES a conditional's type; scala takes the lub of its branches, and wherever
+        * java's answer is a PRIMITIVE the two disagree BY A CONVERSION. The worked example, and the
+        * one that measured it:
+        *
+        * {{{
+        * str.matches("\\d+") ? Long.valueOf(str) : Double.valueOf(str)   // java: a `double`
+        * }}}
+        *
+        * JLS 15.25.2 unboxes both operands, promotes them to `double` and re-boxes the result, so
+        * the expression's type really is `Double` and the `Long` branch really does become one.
+        * Scala's `if` has no such rule: its type is the lub (`java.lang.Number`) and the branch value
+        * stays a `Long`. The engine read java's type correctly and wrote it as a CAST at the
+        * enclosing slot, which is the whole error — `java.lang.Long cannot be cast to
+        * java.lang.Double`. **A cast is not a conversion** (`ENGINE-LIMITS.md` K17).
+        *
+        * So the conversion goes where java performed it — on each operand — and the `if` then really
+        * HAS the type java says it has, which is also why the emitter has nothing left to ascribe.
+        *
+        * ==Two things this deliberately does not do==
+        *
+        *   - **it never promotes on its own.** The target is Spoon's own answer for the conditional,
+        *     so §15.25.2's bullet 2 — a `byte` operand against a constant `int` representable in
+        *     `byte` keeps the conditional at `byte` — holds by construction, and this NARROWS the
+        *     constant rather than widening the `byte`. A rule that always promoted would be
+        *     unfaithful in exactly that case;
+        *   - **it does not touch a REFERENCE conditional.** Java's type there is a lub and scala's is
+        *     also a lub; the one shape known to diverge is a `null` branch, which the ascription
+        *     beside this call already carries.
+        *
+        * ==Why the SAME-TYPE unbox happens here and is declined by `coerce`==
+        *
+        * `coerce` leaves `Integer` → `int` to `Predef.Integer2int`, and forcing `.intValue()` at an
+        * argument slot only perturbs the resolution around it. That reasoning needs an EXPECTED type,
+        * and a conditional branch has none — the branch is typed on its own and then lubbed. So a
+        * `java.lang.Double` operand of a `double` conditional stays boxed, the lub misses java's type
+        * by one conversion, and the enclosing coercion asserts a fact that is false. Both operands
+        * are converted here, cross-type and same-type alike.
+        *
+        * ==The operand's type is the one AFTER its own casts==
+        *
+        * `be.getType` is the type Spoon records for the expression BEFORE the source's own casts,
+        * which `expr` applies on top (`getTypeCasts`, outermost last). Read without them,
+        * `pole == 0 ? (float) Math.asin(…) : pole * PI * 0.5f` looks like a `double` operand of a
+        * `float` conditional and earns a narrowing this pass would emit on top of the one the source
+        * already wrote — a third `asInstanceOf[scala.Float]` on a term that is already a `Float`.
+        * Measured on libGDX before it was read: every such site's digest moved for a cast that says
+        * nothing. Same idiom as every other reader of this question in the file.
+        *
+        * A type Spoon cannot resolve leaves the branch ALONE, which is honest rather than a
+        * fabricated default (`CLAUDE.md` §4.6): it declines to convert, and never asserts a type. */
+      private def promotedBranch(c: CtConditional[?], be: CtExpression[?], t: Term): Term =
+        val cj = try c.getType catch { case _: Throwable => null }
+        val bj = try be.getTypeCasts.asScala.lastOption.getOrElse(be.getType) catch { case _: Throwable => null }
+        if cj == null || bj == null || !cj.isPrimitive || cj.getQualifiedName == bj.getQualifiedName then t
+        else if !bj.isPrimitive then
+          // a boxed operand at a primitive conditional: java UNBOXES it, then widens. Only a wrapper
+          // can stand here in valid java — anything else needed a cast the source itself wrote.
+          if wrapperOf.values.toSet(bj.getQualifiedName) then unbox(t, cj.getSimpleName, be) else t
+        else if primRank.get(bj.getSimpleName).exists(b => primRank.get(cj.getSimpleName).exists(_ < b)) then
+          // the NARROWING direction, which is bullet 2's and the only primitive-to-primitive one
+          // scala does not already take: `if` branches conform WEAKLY, so a widening needs nothing.
+          Tree.Typed(t, tt(tpe(cj), be), tpe(cj), originOf(be))
+        else t
 
       /** the conditional's static type is safe to ascribe onto a null branch — a concrete type, or a
         * type parameter that actually resolves in scope (not the `?T` unresolved stub). */
