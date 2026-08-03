@@ -479,10 +479,10 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   Each prints, untruncated and diffed against the committed baseline, **every engine check the
   run's own pipeline registers, plus any check the port's own §1(c) rules register**. The total is
   not a constant to memorise — quoting one is what went stale twice; it
-  is the TWENTY required of every run (`signature`, `omissions`,
+  is the TWENTY-ONE required of every run (`signature`, `omissions`,
   `portability(all|emitted|injected)`, `substitution(emitted|dangling)`, `remediation`, `policy`,
   `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`, `base-surface`,
-  `catalog(consulted|unreached|unmechanised|undischarged)`) plus
+  `catalog(consulted|unreached|unmechanised|undischarged|uncited)`) plus
   whatever the RUN'S OWN PIPELINE registers. `base-surface` is required of a BASE port too, which has
   no contract to ask: a run that asked nothing and a run whose recording was skipped are
   indistinguishable without the row. The trivia family is three lanes and all three
@@ -495,7 +495,12 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   nothing is instrumented to answer for) and the work list (`undischarged`) are reported apart.
   `just catalog-coverage` is the corpus-wide half, and it is the recipe an agent runs before
   claiming a rule is live: a row unreached on one small library is normal, a row unreached on all
-  fifteen is dead code or an untested rule;
+  fifteen is dead code or an untested rule. **`catalog(uncited)` rides beside those four and is not
+  one of them**: it counts registry rows with no Scala-side normative citation, which says nothing
+  about the port and everything about the registry — it is here because `counts.tsv` is the artifact
+  a baseline diffs and that number was a `println` in one spec beside `assert(uncited <= all)`, which
+  no registry can fail. It is never asserted on: a spec that failed on it is a spec somebody silences
+  by INVENTING a citation, which is worse than the gap;
   `porter-notes`, `break-catch`, `try-resource`, `switch-null` and `markers` record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget` record when
   `CollectionsTransform` is in the pipeline, and `nullability-boundary` when

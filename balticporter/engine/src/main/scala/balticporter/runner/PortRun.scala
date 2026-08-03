@@ -914,7 +914,7 @@ final case class PortRun(
     println(MarkerCheck.summary(markers, resolved))
     writeMarkers(program, markerInventory)
 
-    // ---- the DIFFERENCE CATALOG's four coverage lanes (`DESIGN.md` §2.8) ----
+    // ---- the DIFFERENCE CATALOG's four coverage lanes, and the REGISTRY's own (`DESIGN.md` §2.8) --
     //
     // Four and not one, following the `trivia(|recovered|deliberate)` precedent exactly: `lost = 0`
     // is a bar a run could hold by recovering everything, and here `unreached = 0` is a bar a run
@@ -923,20 +923,29 @@ final case class PortRun(
     // and every one of them is in `RequiredChecks` — a number that reaches stdout and not
     // `findings.tsv` fails the run.
     //
-    // `catalog(refused)` is deliberately NOT a fifth lane: it is the `markers` lane above, which
+    // `catalog(uncited)` rides beside them and is NOT a coverage lane: it counts registry rows with
+    // no Scala-side normative citation. It is here because `counts.tsv` is what a baseline diffs and
+    // that number was a `println` in one spec, beside an assertion (`uncited <= all`) that no
+    // registry could ever fail. It is never asserted on — a spec failing on it is a spec somebody
+    // silences by inventing a citation.
+    //
+    // `catalog(refused)` is deliberately NOT a lane at all: it is the `markers` lane above, which
     // already records a `Tree.Unportable` mint with its catalog id. Two lanes counting one thing is
     // how two numbers start disagreeing.
     val catalogLog     = translated.catalog
     val catConsulted   = CatalogCheck.consulted(catalogLog)
     val catUnreached   = CatalogCheck.unreached(catalogLog)
     val catUnmech      = CatalogCheck.unmechanised
+    val catUncited     = CatalogCheck.uncited
     val catUndischarged = CatalogCheck.undischargedAll(catalogLog)
     CheckReport.record(CatalogCheck.Consulted, catConsulted)
     CheckReport.record(CatalogCheck.Unreached, catUnreached)
     CheckReport.record(CatalogCheck.Unmechanised, catUnmech)
+    CheckReport.record(CatalogCheck.Uncited, catUncited)
     CheckReport.record(CatalogCheck.Undischarged, catUndischarged)
     say(s"CATALOG: ${catConsulted.size} row(s) consulted, ${catUnreached.size} mechanised and " +
-      s"unreached, ${catUnmech.size} not instrumented, ${catUndischarged.size} undischarged")
+      s"unreached, ${catUnmech.size} not instrumented, ${catUncited.size} without a scala-side " +
+      s"citation, ${catUndischarged.size} undischarged")
     if catUndischarged.nonEmpty then
       say(CatalogCheck.Classification)
       catUndischarged.take(10).foreach(f => say("  " + f.render))
@@ -2259,6 +2268,10 @@ object PortRun:
     // fact about the engine and a reader comparing two ports must be able to see it did not move.
     CatalogCheck.Consulted, CatalogCheck.Unreached, CatalogCheck.Unmechanised,
     CatalogCheck.Undischarged,
+    // …and the registry's own lane, which is not about coverage: `catalog(uncited)` is the count of
+    // rows with no Scala-side normative citation. Required for the reason it exists — the number
+    // was a `println` nothing diffed — and never asserted on anywhere.
+    CatalogCheck.Uncited,
     // recorded only when CollectionsTransform is in the pipeline; RequiredChecks asserts against
     // what RECORDED, and a port without the phase records neither, so requiring them here would
     // fail every phase-less port. They are made unskippable by the wiring living beside the

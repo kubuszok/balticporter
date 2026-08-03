@@ -479,11 +479,22 @@ manifest.
 wrong.** Four headline `Open` rows were fixed inside one week while the document describing them was
 being written, and nothing could see that they had.
 
-- **(i) a row whose twin names a CLOSED `ENGINE-LIMITS.md` entry may not claim `Open`.** That file is
+- **(i) a row whose twin names a CLOSED `ENGINE-LIMITS.md` entry may not claim `Open`, and a row
+  whose twin reads OPEN may not claim `Handled`.** That file is
   maintained in the commit that measures, so the twin column is more current than the status column
   by construction; `ClosedTwinStatusSpec` parses the stable ids and their marker, and
   `scripts/catalog-status.sh` is the same rule for an agent holding a checkout. Its honest limit: it
   sees a row only through its twin, which is why a row claiming `Open` may not have `Twin.NoTwin`.
+  **Both directions, because they are different failures.** The first is a status that went stale
+  downwards — a row still saying `Open` after somebody closed the entry — and it is the one four
+  headline rows fell into. The second is the one that costs something: a row claiming `Handled`
+  against a record that says the engine does not handle it is the registry asserting coverage its
+  own measurement contradicts, which reads as a guarantee to §4.45's agent. `Partial(why)` is
+  exempt, and that is the whole of the exemption — a partial row STATES which half is missing, which
+  is exactly what an open twin is evidence of. A twin that is CLOSED on one face and OPEN on another
+  is `AMBIGUOUS`: reported by both readers, failed on by neither, because a half-closed entry is a
+  human's call by construction (`ENGINE-LIMITS.md` K15 is the one, and its heading had to be made
+  honest before the state had any instance at all).
 - **(ii) a consult that cites an `Open` or `Absent` row is a finding.** A lowering arm consulting a
   difference the registry says nobody handles is a registry that has stopped describing the code.
   The practical effect is what makes the pair land together: a wiring commit flips the status IN THE
@@ -538,7 +549,7 @@ diagnostics at all, which is the wrong trade (`ENGINE-LIMITS.md` M6 is about ref
 never fatal in either mode — it is the work list, and a mode that died on the work list would make
 the work list unrunnable.
 
-**Coverage: four lanes and one artifact.** `catalog.tsv` holds one row per catalog entry, reached or
+**Coverage: four lanes, one registry lane, and one artifact.** `catalog.tsv` holds one row per catalog entry, reached or
 not — every row, because the question it exists to answer is "which branches does this port never
 touch" and a file listing only what fired answers the other one. It is written **through the
 artifact-layer gate**, without exception (`CLAUDE.md` §5.1): it comes from the frontend's own log, so
@@ -546,9 +557,18 @@ it is reachable from more test paths than `PortMap` is, and one unconditional `P
 enough to publish run directories into the checkout from a JVM with no port identity at all. The
 lanes are `catalog(consulted|unreached|unmechanised|undischarged)`, all four in
 `PortRun.RequiredChecks`, following the `trivia` family's precedent: `unreached = 0` is a bar a run
-could hold by declaring every row unmeasured. `catalog(refused)` is deliberately NOT a fifth lane —
+could hold by declaring every row unmeasured. `catalog(refused)` is deliberately NOT another lane —
 it is the `markers` lane, which already records a `Tree.Unportable` mint with its catalog id, and two
-lanes counting one thing is how two numbers start disagreeing. `just catalog-coverage` aggregates the
+lanes counting one thing is how two numbers start disagreeing.
+
+**A fifth lane that is not about coverage: `catalog(uncited)`.** It counts registry rows whose
+Scala-side citation is the literal `UNCITED — ` prefix, and it is derived from the REGISTRY rather
+than the run, exactly as `unmechanised` is. It is a lane and not a `println` because `counts.tsv` and
+the committed baseline are the only things in this project that DIFF a number: the gap lived in one
+spec beside `assert(uncited <= all)`, a comparison no possible registry can fail, so 121 rows sat
+there with nothing able to report the 122nd. It is required of every run and asserted on NOWHERE — a
+spec failing on this gap is a spec somebody silences by inventing a citation, which is worse than the
+gap it closes. `just catalog-coverage` aggregates the
 artifact across the corpus, which is the only place the useful question can be asked: a row unreached
 on one small library is normal, a row unreached on all of them is dead code or an untested rule.
 

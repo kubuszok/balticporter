@@ -4825,6 +4825,7 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
   | `catalog(unreached)` | 1–3 per port | a row whose surface EXISTS and which this port never reached. Per-port informational; `just catalog-coverage` is where the question is really asked, and corpus-wide it is **one** row — JS-E04 |
   | `catalog(unmechanised)` | **112**, identical on all fifteen | rows nothing is instrumented to answer for. Derived from the REGISTRY and not from the run, deliberately, so a reader comparing two ports can see it did not move. It goes down when a wave builds a surface, and area S's 25 rows are the first tranche |
   | `catalog(undischarged)` | 0–1 per port | the WORK LIST. `1` on the nine ports that have a compound assignment in EXPRESSION position, and it is JS-E04 and nothing else |
+  | `catalog(uncited)` | **121**, identical on all fifteen | NOT a coverage lane — rows with no Scala-side normative citation, derived from the registry like `unmechanised`. It is a lane because the number was a `println` in one spec beside `assert(uncited <= all)`, which no registry can fail, so nothing could report the 122nd; `counts.tsv` is the only thing here that diffs a number. Never asserted on, in either reader |
 
   The wrapper's COST was measured where it is largest, because a per-node cost on the frontend's hot
   path is the one thing that could have made this design the wrong one: three runs of the libGDX

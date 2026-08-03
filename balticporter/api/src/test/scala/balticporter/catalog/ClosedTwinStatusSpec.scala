@@ -125,6 +125,21 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     assertEquals(stale, Nil, stale.mkString("\n"))
   }
 
+  test("rule (i), THE OTHER DIRECTION: no row claims Handled against a twin that reads OPEN") {
+    // Rule (i) as written catches the status that went STALE downwards — a row still saying `Open`
+    // after the entry closed. The opposite claim is the one that costs something: a row saying
+    // `Handled` while the record it points at says the engine does NOT handle it is a registry
+    // asserting coverage the measurement contradicts, and it reads as a guarantee to §4.45's agent.
+    // `Partial(why)` is exempt and that is the whole of the exemption: a partial row STATES which
+    // half is missing, which is exactly what an open twin is evidence of.
+    val optimistic = engineLimitTwins.collect {
+      case (id, t, Status.Handled) if verdicts(t) == "OPEN" =>
+        s"$id claims Handled, but twin $t reads OPEN — say which half is missing (`Partial`), or " +
+          "close the entry in the commit that measures it"
+    }
+    assertEquals(optimistic, Nil, optimistic.mkString("\n"))
+  }
+
   test("a row claiming Open carries a twin — the rule above can only see a row that has one") {
     val untwinned = Differences.all.collect { case d if d.status.isOpen && d.twin == Twin.NoTwin => d.id.toString }
     assertEquals(untwinned, Nil,
@@ -170,13 +185,28 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     assertEquals(bad, Nil, bad.mkString("\n"))
   }
 
-  test("the Scala-side citation GAP is data, and its size is printed rather than asserted") {
+  test("the Scala-side citation GAP is a CHECK LANE — this spec only pins the state it is read by") {
     // `UNCITED — ` is a real state: for many of these rules there is a Scala 3 reference page and we
     // did not locate it, and for some there is genuinely no normative text. Making it a prefix means
-    // the gap is a number that can go DOWN, instead of a sentence in a document nobody re-reads. It
-    // is deliberately not a failing assertion — a spec that failed on it would be a spec someone
-    // silences by inventing a citation, which is worse than the gap.
-    val uncited = Differences.all.count(_.scala.startsWith("UNCITED"))
-    println(s"[catalog] Scala-side citation gap: $uncited of ${Differences.all.size} language rows")
-    assert(uncited <= Differences.all.size)
+    // the gap is a number that can go DOWN, instead of a sentence in a document nobody re-reads.
+    //
+    // It is deliberately not a failing assertion — a spec that failed on it would be a spec someone
+    // silences by inventing a citation, which is worse than the gap. But the version of that stance
+    // this test used to hold was `assert(uncited <= all)`, which is true of every possible registry:
+    // the number was printed and nothing diffed it, so 121 rows sat here with nothing able to report
+    // the 122nd. The count now records as `catalog(uncited)` on every port run, where `counts.tsv`
+    // and the committed baseline are what compare it (`CLAUDE.md` §5.1) — the same move the four
+    // coverage lanes made, and for the same reason.
+    //
+    // What is left here is the PREFIX itself, which is the lane's only input: spelled differently in
+    // one row, that row silently leaves the count.
+    val uncited = Differences.all.filter(_.scala.startsWith("UNCITED"))
+    println(s"[catalog] Scala-side citation gap: ${uncited.size} of ${Differences.all.size} " +
+      "language rows (diffed as `catalog(uncited)`, in every port's counts.tsv)")
+    val malformed = Differences.all
+      .filter(d => d.scala.toUpperCase.startsWith("UNCITED") && !d.scala.startsWith("UNCITED"))
+      .map(_.id.toString)
+    assertEquals(malformed, Nil,
+      s"the marker is the literal prefix `UNCITED`; these rows spell it otherwise and are counted " +
+        s"as CITED: ${malformed.mkString(", ")}")
   }

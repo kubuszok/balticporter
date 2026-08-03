@@ -2,7 +2,8 @@ package balticporter.tir
 
 import balticporter.catalog.{Attaches, CatalogLog, Difference, Differences, DiffId, Status}
 
-/** COVERAGE OF THE DIFFERENCE CATALOG — four lanes over one run's [[CatalogLog]].
+/** COVERAGE OF THE DIFFERENCE CATALOG — four lanes over one run's [[CatalogLog]], and a fifth over
+  * the REGISTRY.
   *
   * A registry nothing consults is dead weight, and the failure mode to avoid is named in
   * `DESIGN.md` §2.8: a facility with no call sites is indistinguishable from one that is not there.
@@ -32,6 +33,15 @@ import balticporter.catalog.{Attaches, CatalogLog, Difference, Differences, Diff
   *     never per site: a compound assignment in every method of a library would otherwise file a
   *     thousand findings saying one thing.
   *
+  * ==And one lane that is not about coverage at all==
+  *
+  *   - `catalog(uncited)` — rows carrying no Scala-side normative citation. Not a coverage
+  *     question: it says nothing about whether the engine handles the difference, only about
+  *     whether the registry can point at the text that governs the Scala half. It is here because
+  *     `counts.tsv` is the artifact a baseline diffs, and the number was previously a `println` in
+  *     one spec beside an assertion no registry could fail. Never a failing assertion, anywhere: a
+  *     spec that failed on it is a spec somebody silences by inventing a citation.
+  *
   * `catalog(refused)`, the fifth lane the design named, is not here and must not be added: it is
   * the `markers` lane, which already records a `Tree.Unportable` mint with its catalog id on every
   * run. Two lanes counting one thing is how two numbers start disagreeing.
@@ -57,6 +67,7 @@ object CatalogCheck:
   val Unreached    = "catalog(unreached)"
   val Unmechanised = "catalog(unmechanised)"
   val Undischarged = "catalog(undischarged)"
+  val Uncited      = "catalog(uncited)"
 
   /** the §1 classification every finding here carries, because an error an agent cannot classify as
     * (a)/(b)/(c) costs it a full investigation (`CLAUDE.md` §4.45). Every one of these is (a): the
@@ -102,6 +113,30 @@ object CatalogCheck:
         case Attaches.Unmechanised(w) => w
         case _                        => ""
       CheckReport.Finding(Unmechanised, kindOf(d), d.id.toString, "-", 0, s"$why: ${d.title}")
+    }
+
+  /** rows with NO Scala-side normative citation. Derived from the REGISTRY, not from the run.
+    *
+    * `UNCITED — ` is a real state and a deliberate prefix rather than an empty field: for many of
+    * these rules there is a Scala 3 reference page and nobody located it, and for some there is
+    * genuinely no normative text. What the prefix buys is a number that can go DOWN instead of a
+    * sentence in a document nobody re-reads — and that only works if something DIFFS the number.
+    * It was a `println` in one spec beside `assert(uncited <= all)`, a comparison no registry can
+    * fail, so 121 of them sat there with nothing able to report the 122nd.
+    *
+    * Recorded here for the same reason and in the same shape as [[unmechanised]]: `counts.tsv` and
+    * `findings.tsv` are the artifacts a baseline diffs, so a row that gains a citation shows up as a
+    * removed finding and a row added without one shows up as a new one. Deliberately NOT a failing
+    * assertion anywhere — a spec that failed on this gap is a spec somebody silences by INVENTING a
+    * citation, which is worse than the gap it closes.
+    *
+    * Registry-derived, so it reads the same on every port. That is the point, exactly as it is for
+    * `unmechanised`: it is a fact about the ENGINE's own documentation, and a reader comparing two
+    * ports must be able to see that it did not move. */
+  def uncited: List[CheckReport.Finding] =
+    Differences.all.filter(_.scala.startsWith("UNCITED")).map { d =>
+      CheckReport.Finding(Uncited, kindOf(d), d.id.toString, "-", 0,
+        s"${d.scala} (JLS side: ${d.jls}): ${d.title}")
     }
 
   /** a lowering that returned without consulting an attached row — one finding per ROW. */

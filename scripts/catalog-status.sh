@@ -21,8 +21,9 @@
 #
 # USAGE
 #   scripts/catalog-status.sh                 # every ENGINE-LIMITS entry: id, verdict, heading
-#   scripts/catalog-status.sh rows.tsv        # cross a catalog table against it; non-zero on a
-#                                             # row whose twin is CLOSED and whose status is OPEN
+#   scripts/catalog-status.sh rows.tsv        # cross a catalog table against it; non-zero on a row
+#                                             # whose twin is CLOSED and whose status is OPEN, and
+#                                             # on the reverse — HANDLED against an OPEN twin
 #
 #   rows.tsv is three tab-separated columns, `#` comments and blank lines ignored:
 #       <catalog id>  <status>  <twin>
@@ -100,11 +101,16 @@ if [ ! -f "$ROWS" ]; then
 fi
 
 # ---------------------------------------------------------------------------------------------
-# THE CROSS. Two findings, and they are different questions:
-#   STALE     — the twin reads CLOSED and the row still claims OPEN. This is the whole point.
-#   DANGLING  — the twin names an id `ENGINE-LIMITS.md` does not have, so the citation resolves to
-#               nothing and the row's status is unfalsifiable. A row that cites an id nobody can
-#               look up is worse than a row with no twin, which at least says so.
+# THE CROSS. Three findings, and they are different questions:
+#   STALE      — the twin reads CLOSED and the row still claims OPEN. This is the whole point.
+#   OPTIMISTIC — the OTHER direction, and the one that costs something: the row claims HANDLED while
+#                the record it points at says the engine does not handle it. A registry asserting
+#                coverage its own measurement contradicts reads as a guarantee to an agent in
+#                another repository. `PARTIAL` is exempt by construction — a partial row STATES
+#                which half is missing, which is what an open twin is evidence of.
+#   DANGLING   — the twin names an id `ENGINE-LIMITS.md` does not have, so the citation resolves to
+#                nothing and the row's status is unfalsifiable. A row that cites an id nobody can
+#                look up is worse than a row with no twin, which at least says so.
 # `REVIEW` is reported and does not fail: an AMBIGUOUS twin is a human's call by construction.
 # ---------------------------------------------------------------------------------------------
 verdicts > "${TMPDIR:-/tmp}/catalog-verdicts.$$"
@@ -122,10 +128,13 @@ awk -F'\t' -v V="${TMPDIR:-/tmp}/catalog-verdicts.$$" '
     if (verdict[twin] == "CLOSED" && status == "OPEN") {
       printf "STALE\t%s\t%s\ttwin %s reads CLOSED\n", id, status, twin; bad++
     }
+    if (verdict[twin] == "OPEN" && status == "HANDLED") {
+      printf "OPTIMISTIC\t%s\t%s\ttwin %s reads OPEN\n", id, status, twin; bad++
+    }
   }
   END { exit (bad > 0 ? 1 : 0) }
 ' "$ROWS"
 rc=$?
 rm -f "${TMPDIR:-/tmp}/catalog-verdicts.$$"
-[ $rc -eq 0 ] && echo "catalog-status: no row claims OPEN against a CLOSED twin, and every twin resolves"
+[ $rc -eq 0 ] && echo "catalog-status: no row claims OPEN against a CLOSED twin or HANDLED against an OPEN one, and every twin resolves"
 exit $rc
