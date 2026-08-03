@@ -40,7 +40,7 @@ object LibgdxCoreMigrate:
       .toList.sorted
 
     PortRun(
-      label     = "libgdx-core",
+      label     = "sge",
       portRoot  = repoRoot.resolve("ported/sge"),
       sourceSet = SourceSet.Main,
       frontend  = FrontendConfig(base, files, Nil, Nil),
@@ -89,7 +89,7 @@ object LibgdxPolicy:
   def core(repoRoot: Path): PortManifest =
     val s = substitutions(repoRoot)
     PortManifest(
-      name        = "libgdx-core",
+      name        = "sge",
       governs     = Set("com.badlogic.gdx"),
       dropTypes   = s.dropTypes,
       dropMethods = s.dropMethods,
@@ -116,7 +116,7 @@ object LibgdxPolicy:
     * correct argument that nothing checked and that the next module would have had to make again.
     */
   def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
-    name    = "libgdx-test",
+    name    = "sge-test",
     surface = List(new TestFrameworkTransform(), selfSuppliedSuites),
   ))
 

@@ -58,7 +58,7 @@ object GltfTestMigrate:
       sys.exit(1)
 
     PortRun(
-      label     = "gltf-test",
+      label     = "sge-gltf-test",
       portRoot  = repoRoot.resolve("ported/sge-gltf"),
       sourceSet = SourceSet.Test,
       // JUnit 4.12 — gdx-gltf's OWN version, from `build.gradle`'s `junitVersion`. On the FRONTEND

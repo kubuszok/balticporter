@@ -13,7 +13,7 @@ import java.io.{InputStream, Reader, StringWriter, Writer}
   * runtime. Porting it mechanically is also what produced the corpus's largest error cluster: its
   * own `Class[?]` plumbing drives overload storms on `readValue`/`writeValue`/`convertToString`.
   *
-  * This facade preserves the API the ported corpus calls, so libgdx-core compiles against a port
+  * This facade preserves the API the ported corpus calls, so the `sge` port compiles against a build
   * that genuinely does not contain the reflective serializer. Two tiers of behaviour:
   *
   *   - CONFIGURATION and the EXPLICIT WRITE path are real: `writeValue`/`writeObjectStart`/… drive

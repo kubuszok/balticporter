@@ -58,7 +58,7 @@ object Anim8Migrate:
       .toList.sorted
 
     PortRun(
-      label     = "anim8",
+      label     = "sge-anim8",
       portRoot  = repoRoot.resolve("ported/sge-anim8"),
       sourceSet = SourceSet.Main,
       frontend  = FrontendConfig(base, files, Nil, resolutionRoots = List(gdxSrc)),
@@ -94,7 +94,7 @@ object Anim8Policy:
 
   def core(repoRoot: Path): PortManifest =
     LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(
-      name    = "anim8",
+      name    = "sge-anim8",
       governs = Set("com.github.tommyettinger.anim8"),
       // sge puts anim8 at `sge.anim8` (`../sge/sge-extension/anim8/src/main/scala/sge/anim8`), so
       // the whole namespace moves with one pair. libGDX's `com.badlogic.gdx -> sge` is INHERITED
@@ -105,6 +105,6 @@ object Anim8Policy:
         // actually emitted and reports a reference the base does not ship, so it must run after
         // any seam that re-points such a reference, or it reports the very sites the next phase
         // repairs. A residue check, exactly like `PortabilityCheck`.
-        balticporter.transform.PortMapTransform.forBases("libgdx-core"),
+        balticporter.transform.PortMapTransform.forBases("sge"),
       ),
     ))

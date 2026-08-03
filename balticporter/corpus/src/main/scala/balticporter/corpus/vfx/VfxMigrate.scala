@@ -81,7 +81,7 @@ object VfxMigrate:
       .toList.sorted
 
     PortRun(
-      label     = "vfx",
+      label     = "sge-vfx",
       portRoot  = repoRoot.resolve("ported/sge-vfx"),
       sourceSet = SourceSet.Main,
       frontend  = FrontendConfig(base, files, Nil, resolutionRoots = List(gdxSrc)),
@@ -119,7 +119,7 @@ object VfxPolicy:
 
   def core(repoRoot: Path): PortManifest =
     LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(
-      name    = "vfx",
+      name    = "sge-vfx",
       governs = Set("com.crashinvaders.vfx"),
       // sge puts gdx-vfx at `sge.vfx` (`../sge/sge-extension/vfx/src/main/scala/sge/vfx`), with the
       // upstream subpackages carried straight through — `sge/vfx/effects`, `sge/vfx/framebuffer`,
@@ -253,6 +253,6 @@ object VfxPolicy:
         // emitted and reports a reference the base does not ship, so it must run after any seam
         // that re-points such a reference, or it reports the very sites the next phase repairs. A
         // residue check, exactly like `PortabilityCheck`.
-        balticporter.transform.PortMapTransform.forBases("libgdx-core"),
+        balticporter.transform.PortMapTransform.forBases("sge"),
       ),
     ))

@@ -101,7 +101,7 @@ class PortMapTransformSpec extends munit.FunSuite:
     published match
       case Some(m) => m
       case scala.None =>
-        PortMap.of("libgdx-core", "eng", List("com.badlogic.gdx.utils.Array"),
+        PortMap.of("sge", "eng", List("com.badlogic.gdx.utils.Array"),
           balticporter.tir.SrcMap.Recording(List(balticporter.tir.SrcMap.Entry(
             "com.badlogic.gdx.utils.Array", "com.badlogic.gdx.utils.Array#toArray()", "def", 1, 2,
             "com/badlogic/gdx/utils/Array.java", 589, "d0"))),
@@ -118,7 +118,7 @@ class PortMapTransformSpec extends munit.FunSuite:
     // the three things the message has to carry, and that `RewriteTrace`'s orphaned-call finding
     // cannot: WHICH member, WHICH module decided, and WHAT it decided.
     assertEquals(f.symbol, "com.badlogic.gdx.utils.Array#toArray(Class)")
-    assertEquals(f.base, "libgdx-core")
+    assertEquals(f.base, "sge")
     assert(clue(f.detail).contains("Dropped"))
     // and it is located in the DEPENDENT's Java, at the forwarder — the site an author has to fix.
     assert(clue(f.origin.javaPath).endsWith("ImmutableArray.java"))
@@ -239,7 +239,7 @@ class PortMapTransformSpec extends munit.FunSuite:
   test("a RENAMED type re-points, without the dependent restating the rename") {
     // The base emitted its `Array` at another name. The dependent inherits no rename map here —
     // that is the point: the only statement of the move is the base's published output.
-    val m = PortMap.of("libgdx-core", "eng", List("sge.utils.Array"),
+    val m = PortMap.of("sge", "eng", List("sge.utils.Array"),
       balticporter.tir.SrcMap.Recording(Nil), Set.empty, Set.empty, Set.empty, Set.empty,
       renames = Map("com.badlogic.gdx" -> "sge"))
     assertEquals(m.types.map(e => (e.upstream, e.emitted, e.disposition)),
@@ -258,7 +258,7 @@ class PortMapTransformSpec extends munit.FunSuite:
   }
 
   test("the re-point leaves a DECISION naming the base's map entry — the only statement of it") {
-    val m = PortMap.of("libgdx-core", "eng", List("sge.utils.Array"),
+    val m = PortMap.of("sge", "eng", List("sge.utils.Array"),
       balticporter.tir.SrcMap.Recording(Nil), Set.empty, Set.empty, Set.empty, Set.empty,
       renames = Map("com.badlogic.gdx" -> "sge"))
     val (_, _, log) = runTraced(model(baseArray, dependent), List(m))
@@ -277,7 +277,7 @@ class PortMapTransformSpec extends munit.FunSuite:
     assertEquals(d.reason,
       balticporter.tir.Reason.Configured("port-map-migration",
         "com.badlogic.gdx.utils.Array -> sge.utils.Array"))
-    assertEquals(d.detail("base"), "libgdx-core")
+    assertEquals(d.detail("base"), "sge")
     assertEquals(d.detail("to"), "sge.utils.Array")
   }
 
@@ -287,7 +287,7 @@ class PortMapTransformSpec extends munit.FunSuite:
   }
 
   test("a call into a HAND-SUPPLIED body is reported — the signature cannot show it") {
-    val m = PortMap.of("libgdx-core", "eng", List("com.badlogic.gdx.utils.Array"),
+    val m = PortMap.of("sge", "eng", List("com.badlogic.gdx.utils.Array"),
       balticporter.tir.SrcMap.Recording(List(balticporter.tir.SrcMap.Entry(
         "com.badlogic.gdx.utils.Array", "com.badlogic.gdx.utils.Array#toArray()", "def", 1, 2,
         "com/badlogic/gdx/utils/Array.java", 589, "d0"))),
@@ -297,7 +297,7 @@ class PortMapTransformSpec extends munit.FunSuite:
     val (phase, _) = run(model(baseArray, dependent), List(m))
     val body = phase.findings.filter(_.issue == PortMapTransform.Issue.SubstitutedBody)
     assertEquals(clue(body).map(_.symbol), List("com.badlogic.gdx.utils.Array#toArray()"))
-    assertEquals(body.head.base, "libgdx-core")
+    assertEquals(body.head.base, "sge")
     // Exactly ONE, and that is the assertion with teeth. A TIR symbol's `fullName` is `X#toArray`
     // for BOTH overloads, so the 1-argument call is a second, distinct symbol matching the same
     // bare key; attributing it to the map's 0-argument record reported the base's decision about a
@@ -326,7 +326,7 @@ class PortMapTransformSpec extends munit.FunSuite:
     // The distinction is the whole content of the entry for a caller: `Substituted` means injected
     // Scala stands at the name and the call is fine, `Dropped` means nothing does. A check that
     // conflated them would fire on every substitution the base ships, which is most of them.
-    def mapWith(injected: Set[String]) = PortMap.of("libgdx-core", "eng", Nil,
+    def mapWith(injected: Set[String]) = PortMap.of("sge", "eng", Nil,
       balticporter.tir.SrcMap.Recording(Nil),
       dropTypes = Set("com.badlogic.gdx.utils.Array"), dropMethods = Set.empty,
       injectedFqns = injected, bodyKeys = Set.empty, renames = Map.empty)

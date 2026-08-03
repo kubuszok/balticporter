@@ -58,7 +58,7 @@ object GltfMigrate:
       .toList.sorted
 
     PortRun(
-      label     = "gltf",
+      label     = "sge-gltf",
       portRoot  = repoRoot.resolve("ported/sge-gltf"),
       sourceSet = SourceSet.Main,
       // libGDX core is a RESOLUTION root: parsed so every reference resolves, never emitted here.
@@ -96,7 +96,7 @@ object GltfPolicy:
 
   def core(repoRoot: Path): PortManifest =
     LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(
-      name    = "gltf",
+      name    = "sge-gltf",
       governs = Set("net.mgsx.gltf"),
       // sge puts gdx-gltf at `sge.gltf` (`../sge/sge-extension/gltf/src/main/scala/sge/gltf`),
       // package for package: `net/mgsx/gltf/scene3d/shaders` is `sge/gltf/scene3d/shaders`, all 28
@@ -195,12 +195,12 @@ object GltfPolicy:
         // actually emitted and reports a reference the base does not ship, so it must run after
         // any seam that re-points such a reference, or it reports the very sites the next phase
         // repairs. A residue check, exactly like `PortabilityCheck`.
-        balticporter.transform.PortMapTransform.forBases("libgdx-core"),
+        balticporter.transform.PortMapTransform.forBases("sge"),
       ),
     ))
 
   /** gdx-gltf's own JUnit suite, as a dependent of [[core]]. */
   def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
-    name    = "gltf-test",
+    name    = "sge-gltf-test",
     surface = List(new balticporter.transform.TestFrameworkTransform()),
   ))

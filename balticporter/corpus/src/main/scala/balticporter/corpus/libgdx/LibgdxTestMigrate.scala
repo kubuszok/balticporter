@@ -44,7 +44,7 @@ object LibgdxTestMigrate:
       .toList.sorted
 
     PortRun(
-      label     = "libgdx-test",
+      label     = "sge-test",
       portRoot  = repoRoot.resolve("ported/sge"),
       sourceSet = SourceSet.Test,
       frontend  = FrontendConfig(testRoot, files, Nil, resolutionRoots = List(srcRoot)),

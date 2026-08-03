@@ -38,7 +38,7 @@ object AshleyTestMigrate:
       .toList.sorted
 
     PortRun(
-      label     = "ashley-test",
+      label     = "sge-ecs-test",
       portRoot  = repoRoot.resolve("ported/sge-ecs"),
       sourceSet = SourceSet.Test,
       // The suite's own test dependencies must be on the frontend's classpath or Spoon cannot

@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=liqp-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a41fd23e039e6add	files=101	policy=c3233d79f1885078
+# balticporter port map	schema=3	module=ssg-liquid-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a41fd23e039e6add	files=101	policy=c3233d79f1885078
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	liqp.ConditionTest	ssg.liquid.ConditionTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	liqp.InsertionTest	ssg.liquid.InsertionTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public

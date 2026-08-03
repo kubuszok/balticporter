@@ -35,7 +35,7 @@ report directory is two baselines overwriting each other.
 A run ends with a line you should grep for before believing any number downstream:
 
 ```
-[simple-graphs] wrote 33 Scala files (0 dropped, 0 injected) -> …/ported/sge-graphs/src_managed/main/scala
+[sge-graphs] wrote 33 Scala files (0 dropped, 0 injected) -> …/ported/sge-graphs/src_managed/main/scala
 ```
 
 If that line is absent the migration did not run, and every count you then read is the PREVIOUS

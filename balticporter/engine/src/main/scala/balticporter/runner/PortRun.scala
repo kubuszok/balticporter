@@ -1503,7 +1503,7 @@ final case class PortRun(
     * A dependent's `Program` CONTAINS its base — `resolutionRoots` parses it, so every phase runs
     * over the base's units too and decides about them identically to the base's own run. Unfiltered,
     * `libgdx-test` published 634 `RenamedPackage` rows of which **605 were libGDX core's**: the same
-    * 605 rows, byte for byte, that `libgdx-core`'s own `decisions.tsv` already carries, in a file
+    * 605 rows, byte for byte, that `sge`'s own `decisions.tsv` already carries, in a file
     * whose reader is looking for the 29 that are the test module's. That is `ENGINE-LIMITS.md` D2 —
     * now its fifth instance, after `OmissionCheck`, `PortabilityCheck`, the port-map findings and
     * the collection closure check — and its conclusion is not "annotate them": a report a repository

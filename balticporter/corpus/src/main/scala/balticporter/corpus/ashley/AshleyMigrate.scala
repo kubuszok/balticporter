@@ -20,7 +20,7 @@ import scala.jdk.CollectionConverters.*
   * sets.
   *
   * It also lands on the base's substitutions immediately, which is the interesting part. Ashley
-  * imports three types `libgdx-core` deliberately does NOT translate:
+  * imports three types `sge` deliberately does NOT translate:
   *
   *   - `utils.reflect.ClassReflection` + `ReflectionException` — `Engine.java:69` calls
   *     `ClassReflection.newInstance(componentType)` to fabricate a component from its `Class`.
@@ -62,7 +62,7 @@ object AshleyMigrate:
       .toList.sorted
 
     PortRun(
-      label     = "ashley",
+      label     = "sge-ecs",
       portRoot  = repoRoot.resolve("ported/sge-ecs"),
       sourceSet = SourceSet.Main,
       // libGDX core is a RESOLUTION root: parsed so every reference resolves, never emitted here.
@@ -100,7 +100,7 @@ object AshleyPolicy:
 
   def core(repoRoot: Path): PortManifest =
     LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(
-      name    = "ashley",
+      name    = "sge-ecs",
       governs = Set("com.badlogic.ashley"),
       // sge puts Ashley at `sge.ecs`, FLATTENING the `core` package away — its tree is
       // `sge/ecs/Engine.scala` with `signals`, `systems` and `utils` beside it. Two entries express
@@ -148,7 +148,7 @@ object AshleyPolicy:
         //
         // An absent or stale base map is a loud finding, never a silent fallback: the run says so
         // and falls back to re-derivation.
-        balticporter.transform.PortMapTransform.forBases("libgdx-core"),
+        balticporter.transform.PortMapTransform.forBases("sge"),
       ),
       dropMethods = Set(
         // `ImmutableArray.toArray(Class<V>)` (`ImmutableArray.java:77-79`) is a one-line forwarder
@@ -170,6 +170,6 @@ object AshleyPolicy:
 
   /** Ashley's own JUnit suite, as a dependent of [[core]]. */
   def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
-    name    = "ashley-test",
+    name    = "sge-ecs-test",
     surface = List(new balticporter.transform.TestFrameworkTransform()),
   ))

@@ -62,7 +62,7 @@ object ScreensMigrate:
     val gdxSrc   = repoRoot.resolve("../sge/original-src/libgdx/gdx/src").normalize
 
     PortRun(
-      label     = "screens",
+      label     = "sge-screens",
       portRoot  = repoRoot.resolve("ported/sge-screens"),
       sourceSet = SourceSet.Main,
       frontend  = FrontendConfig(
@@ -119,7 +119,7 @@ object ScreensPolicy:
 
   def core(repoRoot: Path): PortManifest =
     LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(
-      name    = "screens",
+      name    = "sge-screens",
       governs = Set("de.eskalon.commons"),
       // sge flattens this library's three upstream packages into `sge.screen` and
       // `sge.screen.utils` (`../sge/sge-extension/screens/src/main/scala/sge/screen`), so

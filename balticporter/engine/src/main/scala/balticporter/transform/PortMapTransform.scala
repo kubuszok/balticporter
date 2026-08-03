@@ -29,7 +29,7 @@ import balticporter.tir.*
   *     `RewriteTrace`'s orphaned-call finding AFTER emission, saying only "a member with no
   *     declaration". With one it is reportable before emission and the message names the base
   *     module and its disposition — which is the difference between "something is missing" and
-  *     "libgdx-core dropped this".
+  *     "sge dropped this".
   *   - '''a call into a HAND-SUPPLIED body is reported.''' `MethodBodyTransform` replaces behaviour
   *     while leaving the signature exactly as upstream declared it, so a caller cannot see from the
   *     signature that it is not calling upstream's code. Nothing else in the pipeline can tell it.
@@ -291,7 +291,7 @@ object PortMapTransform:
 
   /** The phase configured from whatever those base modules last PUBLISHED, for a porting program's
     * manifest:
-    * {{{ surface = List(PortMapTransform.forBases("libgdx-core")) }}}
+    * {{{ surface = List(PortMapTransform.forBases("sge")) }}}
     *
     * A base that has published nothing contributes nothing, and the phase says so through
     * [[PortMapTransform.policyReport]] rather than becoming a quiet no-op. FRESHNESS is not checked
@@ -323,7 +323,7 @@ object PortMapTransform:
     case Ambiguous
 
   /** @param base   the module that PUBLISHED the record — the whole point of the message. "A member
-    *               with no declaration" is what the engine could say before; "libgdx-core dropped
+    *               with no declaration" is what the engine could say before; "sge dropped
     *               it" is what an agent in another repository can act on (CLAUDE.md §4.45).
     * @param detail the base's own record, quoted rather than paraphrased. */
   final case class Finding(issue: Issue, base: String, symbol: String, detail: String, origin: Origin):

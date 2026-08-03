@@ -39,7 +39,7 @@ import scala.jdk.CollectionConverters.*
   * Exactly what `PortRun` takes, in the same words. Every key is optional unless marked required.
   *
   * {{{
-  * label = "simple-graphs"                # required — the prefix on every console line
+  * label = "sge-graphs"                   # required — the prefix on every console line
   * base  = "main.conf"                    # a dependent's BASE; see below
   *
   * input {
@@ -55,7 +55,7 @@ import scala.jdk.CollectionConverters.*
   * output { portRoot = "…", sourceSet = "main" }   # both required; sourceSet is main | test
   *
   * manifest {                             # required — a port without one is not a port (§1.5)
-  *   name           = "simple-graphs"     # required
+  *   name           = "sge-graphs"        # required
   *   governs        = ["space.earlygrey.simplegraphs"]
   *   dropTypes      = []
   *   dropMethods    = []

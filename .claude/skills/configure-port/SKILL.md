@@ -110,11 +110,19 @@ Emitted Scala goes to `<portRoot>/src_managed/{main,test}/scala` — gitignored,
 `sbt clean`, never `src/` (`CLAUDE.md` §5.5). `src/` holds only the hand-written part of a port.
 Do not try to redirect this; the layout is the contract.
 
+**Name the port for its DESTINATION, not for the upstream library** (`CLAUDE.md` §2.1): the
+directory, the top-level `label` and `manifest.name` all take the id of the module the emitted
+Scala is going to BECOME in the consuming project — `sge-graphs`, not `simple-graphs`. Those three
+must agree with each other and with what a dependent writes in `forBases(…)`: `label` is what the
+run publishes as `module=` in `port-map.tsv`, and `manifest.name` is what a dependent's base chain
+matches against it. Disagree and the dependent finds no base map, which it reports and does not
+fail on. `provenance.upstreamName` is the OTHER axis and keeps the library's own name.
+
 ## 4. `manifest` — the port's POLICY, and the only required block
 
 ```hocon
 manifest {
-  name           = "simple-graphs"                              # required
+  name           = "sge-graphs"                                 # required
   governs        = ["space.earlygrey.simplegraphs"]
   dropTypes      = []
   dropMethods    = []
@@ -224,7 +232,7 @@ nextStep = "just sg-measure"
 ## 6. The second module — `base = "…"`, which IS `extendedBy`
 
 ```hocon
-label = "simple-graphs-test"
+label = "sge-graphs-test"
 base  = "main.conf"           # relative to THIS conf file
 ```
 

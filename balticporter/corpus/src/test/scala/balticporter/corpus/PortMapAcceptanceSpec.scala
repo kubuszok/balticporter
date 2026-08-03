@@ -63,7 +63,7 @@ class PortMapAcceptanceSpec extends munit.FunSuite:
 
     val dropped = phase.findings.filter(_.issue == PortMapTransform.Issue.DroppedMember)
     assertEquals(clue(dropped).map(f => (f.symbol, f.base)),
-      List(("com.badlogic.gdx.utils.Array#toArray(Class)", "libgdx-core")))
+      List(("com.badlogic.gdx.utils.Array#toArray(Class)", "sge")))
     assert(clue(dropped.head.origin.javaPath).endsWith("com/badlogic/ashley/utils/ImmutableArray.java"))
 
     // Every finding is in ASHLEY's own files. libGDX is a resolution root, so its 596 units and

@@ -1298,7 +1298,7 @@ liqp-measure:
       OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.liqp.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
       if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
         echo "!! $M DID NOT RUN — refusing to measure stale output"
-        grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[liqp\]" <<<"$OUT" | head -30
+        grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[ssg-liquid\]" <<<"$OUT" | head -30
         exit 1
       fi
       echo "-- $M (ALL checks, untruncated, as the migration printed them) --"

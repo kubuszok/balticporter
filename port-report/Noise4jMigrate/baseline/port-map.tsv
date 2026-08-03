@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=noise4j	engine=balticporter/0.1.0-SNAPSHOT	sources=883167e7e3853c31	files=12	policy=8ad3c92b83f80104
+# balticporter port map	schema=3	module=sge-noise	engine=balticporter/0.1.0-SNAPSHOT	sources=883167e7e3853c31	files=12	policy=8ad3c92b83f80104
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.github.czyzby.noise4j.array.Array2D	sge.noise.Array2D	Renamed	-		0		flags=abstract form=class primary=(int,int) primaryKind=unique-root primaryVis=public secondaries=(int)
 type	com.github.czyzby.noise4j.map.Grid	sge.noise.Grid	Renamed	-		0		companion=yes form=class parents=sge.noise.Array2D primary=(float[],int,int) primaryKind=unique-root primaryVis=public secondaries=(int);(int,int);(float,int,int) statics=CellConsumer
