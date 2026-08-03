@@ -554,32 +554,55 @@ object JavaCollections:
 
     import scala.jdk.CollectionConverters.*
 
+    /** WHAT A SHIM IS DELEGATING TO — `ENGINE-LIMITS.md` K19, and the reason every predicate below
+      * asks twice.
+      *
+      * A coercion at a shim target BUILDS a wrapper, because `mutable.Buffer` is not a
+      * `JavaCollection` and no view can make it one. Java's cast was the identity, so a later
+      * reified question about that value is still a question about the ORIGINAL class:
+      * `(Collection) list` then `instanceof List` is TRUE in java. Asked of the wrapper alone it
+      * was false, and `asBuffer` on it threw — valid Scala, right static types, wrong answer, no
+      * count (`CLAUDE.md` §4.4 reached through a retyping).
+      *
+      * Transitive, because a chain of coercions is what produces the shape in the first place; and
+      * an UNMODIFIABLE wrapper is deliberately not `Wrapping`, so this stops there — see that
+      * trait for why handing back the guarded collection would be the worse defect. */
+    private def under(x: Any): Any = x match
+      case w: Wrapping => under(w.wrapped)
+      case other       => other
+
     /** java's `x instanceof java.util.Map`. */
     def isMap(x: Any): Boolean =
-      x.isInstanceOf[scala.collection.mutable.Map[?, ?]] || x.isInstanceOf[java.util.Map[?, ?]]
+      def test(v: Any) = v.isInstanceOf[scala.collection.mutable.Map[?, ?]] || v.isInstanceOf[java.util.Map[?, ?]]
+      test(x) || test(under(x))
 
     /** java's `x instanceof java.util.List`. */
     def isBuffer(x: Any): Boolean =
-      x.isInstanceOf[scala.collection.mutable.Buffer[?]] || x.isInstanceOf[java.util.List[?]]
+      def test(v: Any) = v.isInstanceOf[scala.collection.mutable.Buffer[?]] || v.isInstanceOf[java.util.List[?]]
+      test(x) || test(under(x))
 
     /** java's `x instanceof java.util.Set`. */
     def isSet(x: Any): Boolean =
-      x.isInstanceOf[scala.collection.mutable.Set[?]] || x.isInstanceOf[java.util.Set[?]]
+      def test(v: Any) = v.isInstanceOf[scala.collection.mutable.Set[?]] || v.isInstanceOf[java.util.Set[?]]
+      test(x) || test(under(x))
 
     /** java's `x instanceof java.util.Collection` — the shim target, so the mapped subtypes'
       * targets are named beside it (see the block comment). */
     def isCollection(x: Any): Boolean =
-      x.isInstanceOf[JavaCollection[?]] || x.isInstanceOf[scala.collection.mutable.Buffer[?]] ||
-        x.isInstanceOf[scala.collection.mutable.Set[?]] || x.isInstanceOf[java.util.Collection[?]]
+      def test(v: Any) = v.isInstanceOf[JavaCollection[?]] || v.isInstanceOf[scala.collection.mutable.Buffer[?]] ||
+        v.isInstanceOf[scala.collection.mutable.Set[?]] || v.isInstanceOf[java.util.Collection[?]]
+      test(x) || test(under(x))
 
     /** java's `x instanceof java.lang.Iterable` — every `Collection` representation plus the
       * `Iterable` shim itself. A java `Map` is not an `Iterable`, so no map is named here. */
     def isIterable(x: Any): Boolean =
-      x.isInstanceOf[JavaIterable[?]] || isCollection(x) || x.isInstanceOf[java.lang.Iterable[?]]
+      def test(v: Any) = v.isInstanceOf[JavaIterable[?]] || v.isInstanceOf[java.lang.Iterable[?]]
+      test(x) || test(under(x)) || isCollection(x)
 
     /** java's `x instanceof java.util.Iterator`. */
     def isIterator(x: Any): Boolean =
-      x.isInstanceOf[JavaIterator[?]] || x.isInstanceOf[java.util.Iterator[?]]
+      def test(v: Any) = v.isInstanceOf[JavaIterator[?]] || v.isInstanceOf[java.util.Iterator[?]]
+      test(x) || test(under(x))
 
     // -----------------------------------------------------------------------------------------
     // …and the CAST. Each returns the port's representation, LIVE where the value is java's —
@@ -589,18 +612,23 @@ object JavaCollections:
     // java's cast to `Map<K,V>` is unchecked in its type arguments too (JLS 5.5).
     // -----------------------------------------------------------------------------------------
 
+    // …and each cast is taken THROUGH `under`, for the reason stated there: java's cast is the
+    // identity, so `(Collection) list` followed by `(List) list` is two casts of ONE object, and
+    // the second one reached `asInstanceOf[Buffer]` on the wrapper the first one built — a
+    // `ClassCastException` in a program that compiled and whose every check count was flat.
+
     /** java's `(java.util.Map<K,V>) x`. */
-    def asMap(x: Any): scala.collection.mutable.Map[?, ?] = x match
+    def asMap(x: Any): scala.collection.mutable.Map[?, ?] = under(x) match
       case m: java.util.Map[?, ?] => m.asInstanceOf[java.util.Map[Any, Any]].asScala
       case m                      => m.asInstanceOf[scala.collection.mutable.Map[?, ?]]
 
     /** java's `(java.util.List<A>) x`. */
-    def asBuffer(x: Any): scala.collection.mutable.Buffer[?] = x match
+    def asBuffer(x: Any): scala.collection.mutable.Buffer[?] = under(x) match
       case xs: java.util.List[?] => xs.asInstanceOf[java.util.List[Any]].asScala
       case xs                    => xs.asInstanceOf[scala.collection.mutable.Buffer[?]]
 
     /** java's `(java.util.Set<A>) x`. */
-    def asSet(x: Any): scala.collection.mutable.Set[?] = x match
+    def asSet(x: Any): scala.collection.mutable.Set[?] = under(x) match
       case xs: java.util.Set[?] => xs.asInstanceOf[java.util.Set[Any]].asScala
       case xs                   => xs.asInstanceOf[scala.collection.mutable.Set[?]]
 
@@ -611,6 +639,9 @@ object JavaCollections:
       * collection and NOT a copy — this is the one direction `liveWrappable` refuses at a static
       * slot, and the reason it can be taken here is that the object is in hand: there is no
       * overload to resolve and no element type to lie about. */
+    // The three SHIM targets keep their identity arm FIRST and do not unwrap: a value that already
+    // IS the target is what java's identity cast yields, and rebuilding it from the underlying
+    // would replace one wrapper with another for no gain.
     def asCollection(x: Any): JavaCollection[?] = x match
       case c: JavaCollection[?]                       => c
       case xs: scala.collection.mutable.Buffer[?]     => JavaCollection.from(xs.asInstanceOf[scala.collection.mutable.Buffer[Any]])

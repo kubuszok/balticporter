@@ -21,13 +21,39 @@ package balticporter.runtime
 trait JavaIterable[A]:
   def iterator(): JavaIterator[A]
 
+/** A SHIM THAT DELEGATES, saying what it delegates TO — `ENGINE-LIMITS.md` K19.
+  *
+  * A reified coercion at a shim target has to BUILD something: `mutable.Buffer` is not a
+  * `JavaCollection` and no view can make it one, so the value that leaves
+  * `JavaCollections.Reified.asCollection` is a different OBJECT from the one that arrived. Java's
+  * cast was the IDENTITY, so every later reified question about that value was still a question
+  * about the original class — `(Collection) list` then `instanceof List` is TRUE in java, and
+  * false when asked of an opaque wrapper. That is `CLAUDE.md` §4.4's shape reached through a
+  * retyping: valid Scala, right static types, wrong answer, no count.
+  *
+  * So the delegating factories carry this and `Reified` looks through it. Two things it is not:
+  *
+  *   - '''not a general "unwrap me" protocol.''' It says only what a later REIFIED question must be
+  *     asked of. Nothing else in the engine or in emitted code reads it;
+  *   - '''never on an UNMODIFIABLE wrapper.''' `Collections.unmodifiableList(l) instanceof List` is
+  *     true in java and casting it back yields the VIEW, not the mutable original. A shim that
+  *     reported its underlying there would hand a caller the very buffer the wrapper exists to
+  *     protect — a silent write-through, which is a worse defect than the one this fixes.
+  *
+  * It does NOT restore reference identity, and nothing can: see K19 for the half that stays open.
+  */
+trait Wrapping:
+  /** the value this shim reads and writes THROUGH — never a copy of it. */
+  def wrapped: Any
+
 object JavaIterable:
   /** Adapt a plain scala collection to the java-shaped one. Inserted by the engine at call
     * sites where a shim-typed parameter meets a collection the port ITSELF mapped to scala
     * (`CharArray.appendAll(list)`). `remove()` stays at [[JavaIterator]]'s default —
     * `UnsupportedOperationException` — because a scala iterator genuinely cannot remove,
     * which is what java reports for a non-removable iterator too. */
-  def from[A](xs: scala.collection.Iterable[A]): JavaIterable[A] = new JavaIterable[A]:
+  def from[A](xs: scala.collection.Iterable[A]): JavaIterable[A] = new JavaIterable[A] with Wrapping:
+    def wrapped: Any = xs
     def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
 
   extension [A](self: JavaIterable[A])

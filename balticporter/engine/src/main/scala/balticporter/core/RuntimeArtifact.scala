@@ -129,6 +129,11 @@ object RuntimeArtifact:
   val concreteMembers: Map[String, Set[(String, List[Int])]] = Map(
     s"$Package.JavaIterator" -> Set(("remove", List(0))),
     s"$Package.JavaIterable" -> Set.empty,
+    // `Wrapping` is a MARKER the delegating shim factories carry so a reified question can be asked
+    // of the value underneath (`ENGINE-LIMITS.md` K19). Its one member is ABSTRACT, so it brings
+    // nothing a ported class could collide with — but it is a top-level trait in the published
+    // module, and this table is derived from those, so it needs its key.
+    s"$Package.Wrapping" -> Set.empty,
     // the DERIVED half of `JavaCollection` — what a ported class inherits without writing it, the
     // same members `java.util.AbstractCollection` supplies. Declaring them is what lets
     // `TirEmitter.diamondOverrides` see a conflict against this injected supertype; an empty set

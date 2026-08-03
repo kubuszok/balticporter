@@ -3890,6 +3890,71 @@ statement about an object and not about a slot.*
 
 ---
 
+### K19. A reified COERCION is a new OBJECT where java's cast was the IDENTITY — **the wrap-then-retest chain is CLOSED; reference IDENTITY is OPEN by construction**
+
+K18's answer at a reified position is a coercion: `(Collection) x` becomes
+`Reified.asCollection(x)`, which at a shim target has to BUILD something, because `mutable.Buffer`
+is not a `JavaCollection` and no view can make it one. **Java's cast produced no object at all.** So
+every question asked LATER about that value is a question java would have asked about the original,
+and the port asks it about a wrapper. Read the two halves apart, because only one of them has a fix.
+
+**THE FIXABLE HALF — the wrap-then-retest chain. CLOSED.**
+
+```java
+Collection<?> c = (Collection<?>) list;   // java: still an ArrayList
+if (c instanceof List) …                  // java: TRUE
+List<?> l = (List<?>) c;                  // java: the same object
+```
+
+Asked of an opaque wrapper the test answered NO and the second cast threw
+`ClassCastException: JavaCollection$$anon$1 cannot be cast to scala.collection.mutable.Buffer` — in
+a program that compiled, whose every check count was flat, and whose only symptom is an assertion.
+Closed by `balticporter.runtime.Wrapping`: the DELEGATING factories (`JavaCollection.from`,
+`fromSet`, `fromJava`, `JavaIterable.from`, `JavaIterator.from`) say what they read and write
+through, and every `Reified.is*`/`as*` looks through it, transitively.
+
+**Two rules inside that closure, both of which a first cut gets wrong:**
+
+- **an UNMODIFIABLE wrapper is NOT `Wrapping`.** `Collections.unmodifiableList(l) instanceof List`
+  is true in java and casting it back yields the VIEW, never the mutable original. A shim reporting
+  its underlying there would hand a caller the very buffer the wrapper exists to protect — a silent
+  write-through, which is a worse defect than the one being fixed;
+- **the identity arm stays FIRST in every `as*`.** A value that already IS the target is what java's
+  identity cast yields; rebuilding it from the underlying would replace one wrapper with another for
+  nothing.
+
+**THE UNFIXABLE HALF — reference identity and the equality family. OPEN, and it is a LIMIT.**
+
+A live view cannot be reference-identical to the value it views; that is what makes it a view. So:
+
+| java | the port |
+|---|---|
+| `(Collection) x == x` — TRUE, one object | `asCollection(x) eq x` — FALSE |
+| `(Collection) x == (Collection) x` | two wrappers, `eq` FALSE |
+| `x.equals(c)` / `c.hashCode()` at a `Collection`-typed slot | the wrapper's, not the underlying's |
+
+Reachable from ordinary java through `CLAUDE.md` §4.4's first row: a reference `==` becomes `eq`,
+faithfully, and `eq` on a coerced value then answers about the wrapper. **No implementation of the
+coercion can close this**, because the alternatives are worse and each is measured elsewhere in this
+file: a COPY detaches both directions (K15's own refusal), and NOT coercing is K18's 160 failures.
+Making the wrappers `equals`-transparent is a third option and is not taken — it would make
+`c.equals(x)` true while `c eq x` is false, which is a contract violation java does not have and
+which no ported class could then rely on either way.
+
+**What that costs, and how a port sees it.** Nothing today: no corpus port compares a coerced
+collection by reference, and the coercion sites are already counted per declaration (`JS-G48`) and
+refused-and-counted where no view exists (`Issue.ReifiedOccurrence`). What a port CANNOT get is a
+warning at the identity comparison itself — the `eq` is emitted from a java `==` that names no
+collection type, so no phase looking at collections is at that node. **If a library's semantics turn
+on identity of a collection reference, this mapping is the wrong policy for it**, and the answer is
+`RuleScope` (CLAUDE.md §1(b)) holding those declarations OUT of the retyping, not a cleverer wrapper.
+
+*Fix kind: (a) engine for the chain — CLOSED (`balticporter.runtime.Wrapping`, `Reified.under`,
+`JavaCollectionsSpec`'s wrap-then-retest tests). (b) per-library policy for the identity half —
+OPEN by construction, scoped out rather than solved.*
+
+---
+
 ### P1. A `--js` compile proves NOTHING as a portability gate
 
 Scala.js type-checks against JDK signatures and compiles `java.lang.reflect` happily. **Only the

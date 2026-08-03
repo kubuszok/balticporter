@@ -730,6 +730,64 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(xs.toList, List(9, 8))
   }
 
+  // -------------------------------------------------------------------------------------------
+  // …AND THE COERCION'S OWN RESULT IS ASKED ABOUT AGAIN. `ENGINE-LIMITS.md` K19.
+  //
+  // A coercion at a shim target has to BUILD something — `mutable.Buffer` is not a
+  // `JavaCollection` and no view can make it one — so the value that leaves `as*` is a different
+  // OBJECT from the one that arrived. Java's cast was the identity, so every later reified
+  // question about that value was still about the ORIGINAL class: `(Collection) list` then
+  // `instanceof List` is TRUE in java, and answered on the wrapper alone it is false.
+  //
+  // The fixable half is exactly this chain, and the fix is that the shims say what they DELEGATE
+  // to (`Wrapping`), so a later question can be asked of the value underneath. What no
+  // implementation can fix is reference IDENTITY — see K19.
+  // -------------------------------------------------------------------------------------------
+
+  test("WRAP-THEN-RETEST: a coerced value still answers for what it was made of") {
+    val xs: Buffer[Int] = ArrayBuffer(1)
+    val c = JavaCollections.Reified.asCollection(xs)
+    // java: `(Collection) list` leaves an ArrayList, so all three of these are TRUE
+    assert(JavaCollections.Reified.isCollection(c))
+    assert(JavaCollections.Reified.isBuffer(c), "the wrapper is still the buffer java would see")
+    assert(JavaCollections.Reified.isIterable(c))
+    assert(!JavaCollections.Reified.isSet(c), "and not something it never was")
+  }
+
+  test("…from the JAVA side too: the wrapper delegates to java's own collection") {
+    val jl = new java.util.ArrayList[Int]()
+    jl.add(1)
+    val c = JavaCollections.Reified.asCollection(jl)
+    assert(JavaCollections.Reified.isBuffer(c), "java's ArrayList is a List whatever we wrapped it in")
+    val it = JavaCollections.Reified.asIterator(jl.iterator())
+    assert(JavaCollections.Reified.isIterator(it))
+  }
+
+  test("…and the SECOND coercion hands back the value, not a cast that throws") {
+    // The chain that made this a defect rather than an inaccuracy: `(Collection) x` then
+    // `(List) x` is two casts of one object in java. With the wrapper opaque, the second one
+    // reached `asInstanceOf[Buffer]` on a `JavaCollection` and threw.
+    val xs: Buffer[Int] = ArrayBuffer(1)
+    val c = JavaCollections.Reified.asCollection(xs)
+    assert(JavaCollections.Reified.asBuffer(c) eq xs)
+    val jl = new java.util.ArrayList[Int]()
+    jl.add(7)
+    val cj = JavaCollections.Reified.asCollection(jl)
+    assertEquals(JavaCollections.Reified.asBuffer(cj).toList, List(7))
+  }
+
+  test("an UNMODIFIABLE wrapper does NOT unwrap — java's view is not the collection it guards") {
+    // The line the unwrapping must not cross. `Collections.unmodifiableList(l) instanceof List` is
+    // true in java, and casting it back yields the UNMODIFIABLE VIEW — never the mutable original.
+    // A shim that reported its underlying here would hand a caller the very buffer the wrapper
+    // exists to protect, which is a silent write-through and not a reified question at all.
+    val xs: Buffer[Int] = ArrayBuffer(1)
+    val u = JavaCollection.unmodifiableFrom(xs)
+    assert(JavaCollections.Reified.isCollection(u))
+    assert(!JavaCollections.Reified.isBuffer(u))
+    intercept[UnsupportedOperationException](u.add(2))
+  }
+
   test("asBuffer / asSet are live views of java's own collections") {
     val jl = new java.util.ArrayList[Int]()
     jl.add(1)

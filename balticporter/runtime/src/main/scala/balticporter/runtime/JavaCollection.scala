@@ -197,7 +197,10 @@ object JavaCollection:
     * so a shim standing in for one must too. The index bookkeeping below is
     * `java.util.ArrayList.Itr`'s, including `IllegalStateException` before the first `next()` and
     * on a second `remove()`. */
-  def from[A](xs: scala.collection.mutable.Buffer[A]): JavaCollection[A] = new JavaCollection[A]:
+  def from[A](xs: scala.collection.mutable.Buffer[A]): JavaCollection[A] = new JavaCollection[A] with Wrapping:
+    // …and it SAYS what it delegates to, so a later reified question is asked of the buffer java
+    // would still have been looking at (`ENGINE-LIMITS.md` K19).
+    def wrapped: Any = xs
     def iterator(): JavaIterator[A] = new JavaIterator[A]:
       private var cursor = 0
       private var last   = -1
@@ -228,7 +231,8 @@ object JavaCollection:
     * straight delegation to the java collection's own members and nothing is copied. Its
     * `iterator()` is removal-capable through java's own iterator, as [[from]]'s is through the
     * buffer's. */
-  def fromJava[A](c: java.util.Collection[A]): JavaCollection[A] = new JavaCollection[A]:
+  def fromJava[A](c: java.util.Collection[A]): JavaCollection[A] = new JavaCollection[A] with Wrapping:
+    def wrapped: Any = c
     def iterator(): JavaIterator[A] = new JavaIterator[A]:
       private val it = c.iterator()
       def hasNext(): Boolean      = it.hasNext
@@ -263,7 +267,8 @@ object JavaCollection:
     * own answer to iterating a `HashSet` while mutating it is `ConcurrentModificationException` —
     * so nothing correct depends on the difference, and the snapshot makes iterate-and-remove work
     * where the live iterator would corrupt the traversal. */
-  def fromSet[A](xs: scala.collection.mutable.Set[A]): JavaCollection[A] = new JavaCollection[A]:
+  def fromSet[A](xs: scala.collection.mutable.Set[A]): JavaCollection[A] = new JavaCollection[A] with Wrapping:
+    def wrapped: Any = xs
     def iterator(): JavaIterator[A] = new JavaIterator[A]:
       private val order          = xs.toList.iterator
       private var last: Option[A] = scala.None

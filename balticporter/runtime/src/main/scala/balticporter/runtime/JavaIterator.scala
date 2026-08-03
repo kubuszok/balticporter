@@ -28,7 +28,8 @@ object JavaIterator:
     * default above, which is the truth: there is nothing to remove through. */
   def from[A](it: scala.collection.Iterator[A]): JavaIterator[A] = it match
     case ji: JavaIterator[A @unchecked] => ji
-    case _ => new JavaIterator[A]:
+    case _ => new JavaIterator[A] with Wrapping:
+      def wrapped: Any = it
       def hasNext(): Boolean = it.hasNext
       def next(): A = it.next()
 
