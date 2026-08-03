@@ -639,6 +639,15 @@ you should do:
   subproject. A `git status` that cannot distinguish a decision from an artefact defeats §5.5, and
   the gate belongs at the write, not in each caller — a wrapper every spec must remember is a
   wrapper one spec will not.
+  **…and the gate is on the LAYER, never on a flag, because the DIRECTORY the layer would write to
+  is itself derived from ambient state.** `CheckReport.dir` falls back to
+  `port-report/<this JVM's main class>`, which is exactly right for a migration `main` — that is the
+  measurement identity §2.1 keeps stable across a module rename — and answers `WorkerMain` under
+  sbt's forked test JVM, whose command is the build's own worker. So reporting turned on WITHOUT an
+  explicit `reportDir` published a run directory into the checkout from a JVM that had no port
+  identity at all, and the flag read like the gate. Where no identity can be derived the layer is
+  OFF whatever the flags say; an explicit `reportDir` is an identity the caller supplied, and is
+  the one thing that still enables it.
 
 Deliberate failures are **DERIVED, not listed**. A test whose failure stack reaches a type in the
 port's `Substitutions.dropTypes` fails because the port deliberately does not have that type, so
