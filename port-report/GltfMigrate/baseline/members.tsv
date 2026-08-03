@@ -1514,9 +1514,9 @@ sge.gltf.scene3d.utils.LightUtils	sge.gltf.scene3d.utils.LightUtils$LightsInfo#m
 sge.gltf.scene3d.utils.LightUtils	sge.gltf.scene3d.utils.LightUtils$LightsInfo#pointLights	val	e5de3be992dcd138
 sge.gltf.scene3d.utils.LightUtils	sge.gltf.scene3d.utils.LightUtils$LightsInfo#reset()	def	dafc7e49d2df808d
 sge.gltf.scene3d.utils.LightUtils	sge.gltf.scene3d.utils.LightUtils$LightsInfo#spotLights	val	1260e4b393cc2939
-sge.gltf.scene3d.utils.MaterialConverter	sge.gltf.scene3d.utils.MaterialConverter	class	4e5045c89dde6957
+sge.gltf.scene3d.utils.MaterialConverter	sge.gltf.scene3d.utils.MaterialConverter	class	52203998f3761a0a
 sge.gltf.scene3d.utils.MaterialConverter	sge.gltf.scene3d.utils.MaterialConverter#makeCompatible(JavaIterable<Material>)	def	0c8227a789c91f71
-sge.gltf.scene3d.utils.MaterialConverter	sge.gltf.scene3d.utils.MaterialConverter#makeCompatible(Material)	def	26580e5f0ff48093
+sge.gltf.scene3d.utils.MaterialConverter	sge.gltf.scene3d.utils.MaterialConverter#makeCompatible(Material)	def	7475369a4ad2dfa6
 sge.gltf.scene3d.utils.MaterialConverter	sge.gltf.scene3d.utils.MaterialConverter#makeCompatible(Scene)	def	bd18733266a33ec6
 sge.gltf.scene3d.utils.ShaderParser	sge.gltf.scene3d.utils.ShaderParser	class	453d5bb6d8f55ce1
 sge.gltf.scene3d.utils.ShaderParser	sge.gltf.scene3d.utils.ShaderParser#includeAfter	val	2b6e849ea5e2cc91

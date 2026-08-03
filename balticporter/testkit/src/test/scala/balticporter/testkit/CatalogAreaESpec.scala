@@ -177,10 +177,29 @@ class CatalogAreaESpec extends PortSuite:
     assertEmitsMatch(p, "(?s).*else 1\\.asInstanceOf\\[scala\\.Byte\\].*")
   }
 
-  test("JS-E05 — a WIDENING branch emits nothing: scala's `if` already conforms weakly") {
+  test("JS-E05 — a WIDENING branch is converted TOO: scala 3 has NO weak conformance") {
+    // The cell this suite used to enshrine, and it was FALSE. Scala 2's weak conformance made
+    // `if (b) i else d` a `Double`; SCALA 3 DROPPED IT, so the two branches type as `Int | Double`,
+    // the `Int` branch BOXES, and the expression java computed as a `double` is a
+    // `java.lang.Integer` at run time. PROBED on 3.8.4 before this was written: `("" + x)` prints
+    // `3` where java prints `3.0`, and the `asInstanceOf[java.lang.Double]` an enclosing slot then
+    // writes throws — which is `ENGINE-LIMITS.md` K17's own defect, one cell along.
+    //
+    // The conversion is REDUNDANT wherever an expected type reaches the branch (a `double` return
+    // harmonises the `Int` on its own) and it is never WRONG: `asInstanceOf` between two statically
+    // primitive types is a CONVERSION in scala, in both directions (JS-E06).
     val p = port("public class E { double f(boolean b, int i, double d) { return b ? i : d; } }")
-    assertConsults(p, JS.E(5))
+    assertConsults(p, JS.E(5), fired = true)
+    assertEmits(p, "i.asInstanceOf[scala.Double]")
     assertNotEmits(p, "doubleValue")
+  }
+
+  test("JS-E05 — …and the widening one that has NO expected type to fall back on") {
+    // Where the conditional feeds a string concatenation there is no expected type at all, so the
+    // union is what the runtime sees: java's `+` sees the promoted `double` and prints `3.0`.
+    val p = port("public class E { String f(boolean b, int i, double d) { return \"\" + (b ? i : d); } }")
+    assertConsults(p, JS.E(5), fired = true)
+    assertEmits(p, "i.asInstanceOf[scala.Double]")
   }
 
   test("JS-E05 — an operand the SOURCE already cast is read AFTER its cast, not before") {

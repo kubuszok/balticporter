@@ -3731,6 +3731,32 @@ incidental:
   would have emitted `Long.valueOf(s).doubleValue()` against a bare `Double.valueOf(s)` and moved
   the failure rather than closed it.
 
+**AND THAT CLOSURE LEFT A CELL OF ITS OWN OPEN, BEHIND ITS OWN `Handled`.** The first cut converted
+the NARROWING direction only, under the sentence *"`if` branches conform WEAKLY, so a widening needs
+nothing"* — with a test in `CatalogAreaESpec` asserting exactly that. **It is SCALA 2's rule.**
+Scala 3 dropped weak conformance and harmonises only where an EXPECTED type reaches the branches, so
+where none does — a string concatenation, an `Object` slot, a bare `var` — `if (b) i else d` types
+as `Int | Double`, the `Int` branch BOXES, and java's `double` is a `java.lang.Integer` at run time.
+Probed on 3.8.4: `b ? 3 : 15.25` prints `3` where java prints `3.0`, and an enclosing
+`asInstanceOf[java.lang.Double]` throws on that shape — this entry's own defect, one cell along,
+re-entered through the fix for it. Both directions convert now; `asInstanceOf` between two
+statically primitive types is a CONVERSION in scala either way, so the widening cast is redundant
+wherever an expected type existed and wrong nowhere. Blast **82 member digests on libGDX core plus 2
+on gdx-gltf, 0 on the other nine lanes**, every check count flat, every suite outcome identical
+(liqp 552/23 → 552/23) — a LATENT defect, which is why no count found it and a probe did.
+
+**Two things that generalise past this row**, because the failure was not arithmetic:
+
+- **a claim about SCALA'S OWN typing rules is a PROBE, never a recollection.** "Weak conformance" is
+  a real rule with a real name, and reasoning from it is how a Scala 2 fact reaches a Scala 3 port.
+  Four lines under `testOnly` settle it — the same instrument that settled face 1's SAM question
+  before that fix was written, and the difference between the two faces is entirely that one of them
+  probed;
+- **a spec can ENSHRINE the wrong claim, and then it is the thing defending it.** The test here was
+  an `assertNotEmits` under a name that stated the false rule: it passed for the wrong reason and
+  would have failed the correct fix. An assertion of ABSENCE says nothing about why the thing is
+  absent, so pair it with the PRESENCE it implies — which is what the replacement does.
+
 Measured: **liqp 357/218 → 364/211**, the seven newly passing being exactly the `asNumber` family
 this entry named, with 0 newly failing and every other lane's suite outcome identical. The blast is
 **2 rows on liqp** (`LValue` and its `asNumber`), **4 on gdx-gltf**, **9 real rows in two types on

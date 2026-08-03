@@ -2925,12 +2925,19 @@ object SpoonTir:
           // won't satisfy a `V` slot. Cast a null branch to the conditional's own type so the ternary
           // stays `V`. Guarded: only when that type resolves (never emit the `?T` unresolved stub).
           val ct = ty(c)
-          // JS-E05, and note what this consult does and does not discharge. The row is `Partial`:
-          // java COMPUTES the conditional's type (JLS 15.25.2) where Scala takes the lub of the
-          // branches, and only the null-branch shape is reproduced here — the rest of the row is
-          // the emitter dropping `Tree.If`'s `tpe`, which is a different surface. Consulting here
-          // says the frontend considered it; it does not say the row is closed, and the row's own
-          // `Partial(missing)` is what says the other half is open.
+          // JS-E05, and note what this consult does and does not discharge — the comment that used
+          // to stand here said the row was `Partial` and that the open half was "the emitter
+          // dropping `Tree.If`'s `tpe`", which had been out of date since the row was closed and
+          // pointed a reader at the wrong file.
+          //
+          // The row is `Handled` and this arm is HALF of what handles it. Java COMPUTES the
+          // conditional's type (JLS 15.25.2) where scala takes the lub of the branches; the two
+          // disagree in exactly two shapes and each has its own answer here. A NULL branch is
+          // ascribed to the conditional's own type — that is this consult. Every PRIMITIVE
+          // disagreement is a conversion java performed, and it is performed on the OPERAND by
+          // [[promotedBranch]], in both directions, which is why nothing is left for the emitter to
+          // ascribe. A reference conditional with no null branch is a lub on both sides and needs
+          // neither.
           val ascribe = Obligations.consult(JS.E(5), originOf(c))(
             if ct != NoType && condTypeResolves(c) then Some(ct) else scala.None)
           def branch(be: CtExpression[?]): Term =
@@ -2964,6 +2971,18 @@ object SpoonTir:
         *
         * So the conversion goes where java performed it — on each operand — and the `if` then really
         * HAS the type java says it has, which is also why the emitter has nothing left to ascribe.
+        *
+        * ==BOTH DIRECTIONS, because scala 3 has no weak conformance==
+        *
+        * The first cut converted only the NARROWING direction, on the claim that "`if` branches
+        * conform weakly, so a widening needs nothing". That is SCALA 2's rule. Scala 3 dropped weak
+        * conformance and harmonises only where an EXPECTED type reaches the branches, so with none
+        * — a string concatenation, an `Object` slot, a `var` — `if (b) i else d` types as
+        * `Int | Double`, the `Int` branch boxes to a `java.lang.Integer`, and java's `double` is
+        * gone. Probed on 3.8.4: `b ? 3 : 15.25` prints `3` against java's `3.0`, and the
+        * `asInstanceOf[java.lang.Double]` an enclosing slot writes throws on it. The widening cast
+        * is redundant wherever the expected type existed and wrong nowhere, because between two
+        * statically primitive types `asInstanceOf` is a conversion in both directions.
         *
         * ==Two things this deliberately does not do==
         *
@@ -3006,9 +3025,22 @@ object SpoonTir:
           // a boxed operand at a primitive conditional: java UNBOXES it, then widens. Only a wrapper
           // can stand here in valid java — anything else needed a cast the source itself wrote.
           if wrapperOf.values.toSet(bj.getQualifiedName) then unbox(t, cj.getSimpleName, be) else t
-        else if primRank.get(bj.getSimpleName).exists(b => primRank.get(cj.getSimpleName).exists(_ < b)) then
-          // the NARROWING direction, which is bullet 2's and the only primitive-to-primitive one
-          // scala does not already take: `if` branches conform WEAKLY, so a widening needs nothing.
+        else if primRank.contains(bj.getSimpleName) && primRank.contains(cj.getSimpleName) then
+          // BOTH DIRECTIONS, and there is no third case: the two are primitive and they differ, so
+          // java performed a conversion and the port owes it. The narrowing half is bullet 2's;
+          // the WIDENING half was left out on the claim that "`if` branches conform weakly", which
+          // is SCALA 2's rule — scala 3 dropped weak conformance, so `if (b) i else d` types as
+          // `Int | Double`, the `Int` branch BOXES, and the value java computed as a `double` is a
+          // `java.lang.Integer` at run time. An enclosing `asInstanceOf[java.lang.Double]` then
+          // throws on a shape as small as `b ? 3 : 15.25`, and a string concatenation over it
+          // prints `3` where java prints `3.0`.
+          //
+          // Redundant where an expected type already reaches the branch, and never WRONG:
+          // `asInstanceOf` between two statically primitive types is a CONVERSION in scala, in
+          // both directions (JS-E06), so the widening one says exactly what java's promotion did.
+          // `primRank` is the guard rather than a direction test — it holds the NUMERIC primitives,
+          // and `boolean` is the one primitive no promotion can reach (a `boolean` conditional's
+          // operands are both `boolean`, which the same-name test above has already returned on).
           Tree.Typed(t, tt(tpe(cj), be), tpe(cj), originOf(be))
         else t
 
