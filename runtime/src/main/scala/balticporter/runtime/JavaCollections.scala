@@ -112,7 +112,19 @@ object JavaCollections:
     * CLAUDE.md §4.5 is not violated here for the same reason [[FrozenBuffer]] does not violate it:
     * nothing in a port ever EXTENDS this class, so there is no second java interface to satisfy and
     * no ported member for a collection trait's inherited names to collide with. */
-  def asListView[A](arr: Array[A]): scala.collection.mutable.Buffer[A] = new ArrayViewBuffer[A](arr)
+  def asListView[A](arr: Array[A]): scala.collection.mutable.Buffer[A] =
+    // …and it FAILS FAST, because java's does. `Arrays.asList(T[])` is `new ArrayList<>(a)`, whose
+    // constructor is `a = Objects.requireNonNull(array)`, so a null array is an NPE AT THE CALL and
+    // the caller never holds anything. Constructed lazily the view throws too — but at the first
+    // READ, an arbitrary distance away, in whichever member happened to touch it first. Same
+    // exception, different stack, different member, and a correlation that anchors the failure on
+    // the wrong frame. A one-line difference in WHEN is the whole of what translating a fail-fast
+    // contract means.
+    if arr == null then
+      throw new NullPointerException(
+        "java.util.Arrays.asList(T[]): the array is null. Java's own constructor calls " +
+          "Objects.requireNonNull, so this throws at the call rather than at the first read")
+    new ArrayViewBuffer[A](arr)
 
   /** `java.util.stream.Stream.noneMatch(Predicate)` — the one short-circuiting terminal with no
     * scala namesake.

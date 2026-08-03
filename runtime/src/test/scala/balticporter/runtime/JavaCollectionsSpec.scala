@@ -292,6 +292,18 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(arr.toList, List("a", "b"))
   }
 
+  test("asListView(null) throws AT THE CALL — java's `Objects.requireNonNull` in the constructor") {
+    // `java.util.Arrays.asList(T[])` is `new ArrayList<>(a)`, whose constructor is
+    // `a = Objects.requireNonNull(array)`: a null array is an NPE at the CALL, before the caller
+    // holds anything. The view constructed lazily throws too — but at the first READ, an arbitrary
+    // distance away, in whichever member happened to touch it first. Same exception, different
+    // stack, different member, and the correlator anchors the failure on the wrong frame.
+    //
+    // A one-line difference in WHEN, which is the whole of what a faithful translation of a
+    // fail-fast contract is.
+    intercept[NullPointerException](JavaCollections.asListView(null))
+  }
+
   test("asListView ITERATES the array, and a derived collection is an ordinary one") {
     val arr = Array(1, 2, 3)
     val xs  = JavaCollections.asListView(arr)

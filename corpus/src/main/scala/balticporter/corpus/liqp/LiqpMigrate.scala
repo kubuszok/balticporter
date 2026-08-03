@@ -296,7 +296,28 @@ object LiqpClasspath:
     * constant on any other type is untouched.
     *
     * Returned counts are printed and the caller refuses a rewrite that moved nothing at all — a
-    * build step whose policy fires nowhere is a decision that silently did not happen. */
+    * build step whose policy fires nowhere is a decision that silently did not happen.
+    *
+    * ==WHAT THIS REWRITE CANNOT SEE, and why that is currently safe==
+    * It is a TEXT rewrite over java source, so it does not distinguish CODE from a STRING LITERAL
+    * or a COMMENT. A `"liqp.Foo"` inside a literal would be rewritten exactly as an import is, and
+    * nothing downstream could report it: javac is happy either way, the port compiles, and the only
+    * symptom is a runtime string — a reflective class name, a generated error message, a token
+    * table entry — that names a class nobody has. That is `CLAUDE.md` §3's shape arriving through a
+    * build step.
+    *
+    * It is safe TODAY as an observation about the input, not as a property of the rule: the whole
+    * ANTLR output holds **exactly one** occurrence of the string, `import liqp.TemplateParser;` on
+    * line 5 of `LiquidParser.java`, and zero inside a literal or a comment. A generated parser is
+    * the one input where that is plausible to stay true — its literals are the grammar's own token
+    * text — but it is not guaranteed, and the shape to watch is a `_LITERAL_NAMES`/`_SYMBOLIC_NAMES`
+    * table or a `@header {}` block carrying java source through into a string.
+    *
+    * If a hit ever appears, the fix is NOT a cleverer regex: a lexer that tells the three apart is
+    * the only thing that can, and that is javac's job, not a `Pattern`'s. The honest answer would be
+    * to rewrite the generated `import` line ALONE and leave every other occurrence to fail loudly
+    * against the stub, which is what makes the current one-hit input worth re-deriving rather than
+    * assuming. */
   private[liqp] def rewriteReferences(text: String): (String, Int, Int) =
     val pkg = java.util.regex.Pattern.compile(
       raw"(?<![\p{L}\p{N}_$$.])" + java.util.regex.Pattern.quote(LibraryPackage) + raw"\.")

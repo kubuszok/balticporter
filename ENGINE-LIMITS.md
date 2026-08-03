@@ -2584,7 +2584,12 @@ Two rules the fix rests on:
   detach every aliased write (§4.4). It was REFUSED for two waves on the grounds that a faithful
   live view, though expressible, was not reachable from here — see the closure below for why that
   was a fact about the argument rather than about the tree. `JavaCollections.asListView(arr)` is
-  what it takes now.
+  what it takes now. **…and it FAILS FAST, because java's does** (audit-2 F7): `Arrays.asList(T[])`
+  is `new ArrayList<>(a)` over `a = Objects.requireNonNull(array)`, so a null array is an NPE at the
+  CALL and the caller never holds anything. Constructed lazily the view throws too — at the first
+  READ, an arbitrary distance away, in whichever member happened to touch it first: same exception,
+  different stack, different member, and a correlation anchored on the wrong frame. Translating a
+  fail-fast contract is entirely a question of WHEN.
 - …**and NOTHING DOWNSTREAM MAY PAINT OVER THAT REFUSAL.** The refused call keeps the JDK name, so
   the value really is a `java.util.List` — while its NODE says `Buffer`, because the position-blind
   retyping moved the type on both sides of it. Read from the node alone, `coerce` found a factory
