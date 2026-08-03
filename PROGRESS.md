@@ -2551,7 +2551,27 @@ to enumerate to the test, so it is enumerated to the test, with each row's §1 c
 |---|---|---|---|
 | **2** | `CeilTest.applyTest`, `FloorTest.applyTest` | `java.lang.Long cannot be cast to java.lang.Double` — a primitive cast is a CONVERSION in java and an assertion in Scala once a phase has retyped the value | **(a) engine**, `ENGINE-LIMITS.md` K17 / catalog `JS-E06`, still `Partial`. Unchanged since the third census |
 | **1** | `SortTest.testSortMap` | `Sort$ComparableMapEntry cannot be cast to scala.Tuple2` — `Map.Entry -> Tuple2` is an `UninheritableTarget` and `Tuple2` is a concrete target no live view can be, so K18 refuses the reified cast | **(a), REFUSED AND COUNTED** — one of this port's two `ReifiedOccurrence` findings. Unchanged since the third census |
-| **5** | `GtNodeTest`, `GtEqNodeTest`, `LtNodeTest`, `LtEqNodeTest` `.testDateTypes`; `LiquidWhereImplTest.testWhereWhenDateCompatibleTypes` | **K22 — a java `static { }` block emitted into the companion `object` and initialised by nothing.** `Template`'s block registers liqp's date-type SPI providers; `new Template(…)` does not touch the object, so `isCustomDateType(aDate)` is `false`, `asRubyDate` falls through to `ZonedDateTime.now()`, and every temporal comparison answers about NOW. Probed: forcing `SPIHelper.applyCustomDateTypes()` by hand flips all five, and it reproduces with a PLAIN `Map` and no reflection anywhere | **(a) engine**, `ENGINE-LIMITS.md` K22. OPEN — corpus-wide blast, needs its own measured wave |
+| **5** | `GtNodeTest`, `GtEqNodeTest`, `LtNodeTest`, `LtEqNodeTest` `.testDateTypes`; `LiquidWhereImplTest.testWhereWhenDateCompatibleTypes` | **K22 — a java `static { }` block emitted into the companion `object` and initialised by nothing.** `Template`'s block registers liqp's date-type SPI providers; `new Template(…)` does not touch the object, so `isCustomDateType(aDate)` is `false`, `asRubyDate` falls through to `ZonedDateTime.now()`, and every temporal comparison answers about NOW. Probed: forcing `SPIHelper.applyCustomDateTypes()` by hand flips all five, and it reproduces with a PLAIN `Map` and no reflection anywhere | **(a) engine**, `ENGINE-LIMITS.md` K22 — **FIXED**, see the sixth census below |
+
+**THE SIXTH CENSUS — K22's instantiation trigger, and the residue is 3 rows over TWO causes.**
+`567 -> 572 passing, 8 -> 3 failing`, at `errors 0`, with the five newly-passing tests exactly the
+five the fifth census predicted — the only wave in this port so far whose prediction was right to
+the test. The emission blast on liqp is **3 members** (`Template`, `filters.date.Parser`,
+`filters.where.PropertyResolverHelper`, each gaining one `val _ = <Type>` line and its porter note);
+corpus-wide it is 7 more on libGDX core, with every other lane's errors, check counts and suite
+outcomes identical. What is left:
+
+| n | test | root cause | §1 |
+|---|---|---|---|
+| **2** | `CeilTest.applyTest`, `FloorTest.applyTest` | `java.lang.Long cannot be cast to java.lang.Double` — a primitive cast is a CONVERSION in java and an assertion in Scala once a phase has retyped the value | **(a) engine**, `ENGINE-LIMITS.md` K17 / catalog `JS-E06`, still `Partial`. Unchanged since the third census |
+| **1** | `SortTest.testSortMap` | `Sort$ComparableMapEntry cannot be cast to scala.Tuple2` — `Map.Entry -> Tuple2` is an `UninheritableTarget` and `Tuple2` is a concrete target no live view can be, so K18 refuses the reified cast | **(a), REFUSED AND COUNTED**. Unchanged since the third census |
+
+**And the new lane was not vacuous on its first run**, which is what a coverage check most often is.
+`class-init-trigger` reports `Unforced` **0 on all fifteen ports** — every `static { }` block reached
+a trigger — and `SubclassInitUnforced` **18 on libGDX core** (every `Actor` subclass with statics of
+its own) **and 1 on anim8** (`QualityPalette <- PaletteReducer`). Those 19 are JLS 12.4.1 item 7,
+which the instantiation trigger does not reach when nothing is instantiated; they are a residue that
+EXISTS rather than a bar held at zero by looking away.
 
 **Three things this census records that the numbers do not.**
 

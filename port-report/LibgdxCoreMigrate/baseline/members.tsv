@@ -10722,7 +10722,7 @@ sge.math.FloatCounter	sge.math.FloatCounter#reset()	def	87d181e823fdc0ec
 sge.math.FloatCounter	sge.math.FloatCounter#toString()	def	5da6396c1b52113d
 sge.math.FloatCounter	sge.math.FloatCounter#total	val	d959fbae3e5a76e6
 sge.math.FloatCounter	sge.math.FloatCounter#value	val	de325184aebaf449
-sge.math.Frustum	sge.math.Frustum	class	0e3e0599914f80fc
+sge.math.Frustum	sge.math.Frustum	class	0ddb985ee12c20c0
 sge.math.Frustum	sge.math.Frustum#<clinit>	init	064e6ec87a10572f
 sge.math.Frustum	sge.math.Frustum#<stmt1>	stmt	d9946da078af8562
 sge.math.Frustum	sge.math.Frustum#boundsInFrustum(BoundingBox)	def	1668e480fdc56c02
@@ -11966,7 +11966,7 @@ sge.math.collision.BoundingBox	sge.math.collision.BoundingBox#set(Vector3,Vector
 sge.math.collision.BoundingBox	sge.math.collision.BoundingBox#tmpVector	val	01622bc30c7879cb
 sge.math.collision.BoundingBox	sge.math.collision.BoundingBox#toString()	def	9895160bef685e1d
 sge.math.collision.BoundingBox	sge.math.collision.BoundingBox#update()	def	971230619660576e
-sge.math.collision.OrientedBoundingBox	sge.math.collision.OrientedBoundingBox	class	1a47276dbb70a5b2
+sge.math.collision.OrientedBoundingBox	sge.math.collision.OrientedBoundingBox	class	fb34cb1cc8b7ee80
 sge.math.collision.OrientedBoundingBox	sge.math.collision.OrientedBoundingBox#<clinit>	init	89c7dc1ead2bc7da
 sge.math.collision.OrientedBoundingBox	sge.math.collision.OrientedBoundingBox#<init>()	ctor	e9314634fefd5bb2
 sge.math.collision.OrientedBoundingBox	sge.math.collision.OrientedBoundingBox#<init>(BoundingBox)	ctor	fd28f99e15e62858
@@ -12251,7 +12251,7 @@ sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#setPool(?)	def	08d188233d995
 sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#setTarget(Actor)	def	b4620b5bc2a7d8d8
 sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#target	val	3fda0e7121ebfe26
 sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#toString()	def	bf0999284c19077b
-sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor	class	762ab61cba822e90
+sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor	class	7260fbf86e3f1dfa
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#<clinit>	init	01321c3912e7f7da
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#POOLS	val	812711f18d77a316
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#act(float)	def	10fda0ed37fa0308
@@ -18801,7 +18801,7 @@ sge.utils.async.AsyncTask	sge.utils.async.AsyncTask	class	c130ac11b3dfa72a
 sge.utils.async.AsyncTask	sge.utils.async.AsyncTask#call()	def	d9da862c676f2bae
 sge.utils.async.ThreadUtils	sge.utils.async.ThreadUtils	class	690b95b296cdfea3
 sge.utils.async.ThreadUtils	sge.utils.async.ThreadUtils#yield()	def	2c4ab165b52458f6
-sge.utils.compression.CRC	sge.utils.compression.CRC	class	dfda7e287a151fab
+sge.utils.compression.CRC	sge.utils.compression.CRC	class	99a93b315357a874
 sge.utils.compression.CRC	sge.utils.compression.CRC#<clinit>	init	77b446cf6f51749e
 sge.utils.compression.CRC	sge.utils.compression.CRC#GetDigest()	def	96a85f1987318f8f
 sge.utils.compression.CRC	sge.utils.compression.CRC#Init()	def	c91a7f58f43dfe6c
@@ -18833,7 +18833,7 @@ sge.utils.compression.Lzma	sge.utils.compression.Lzma$CommandLine#Pb	val	4c45a18
 sge.utils.compression.Lzma	sge.utils.compression.Lzma$CommandLine#kBenchmak	val	c963add118f72d3d
 sge.utils.compression.Lzma	sge.utils.compression.Lzma$CommandLine#kDecode	val	de6e383b7e80ac7d
 sge.utils.compression.Lzma	sge.utils.compression.Lzma$CommandLine#kEncode	val	3ac2ee7c4baf2549
-sge.utils.compression.lz.BinTree	sge.utils.compression.lz.BinTree	class	d4d2fe9aee16233d
+sge.utils.compression.lz.BinTree	sge.utils.compression.lz.BinTree	class	03939526120a41d0
 sge.utils.compression.lz.BinTree	sge.utils.compression.lz.BinTree#<clinit>	init	ab42bf16bd76c324
 sge.utils.compression.lz.BinTree	sge.utils.compression.lz.BinTree#CrcTable	val	bf7038b7ee2df48e
 sge.utils.compression.lz.BinTree	sge.utils.compression.lz.BinTree#Create(int,int,int,int)	def	20e5c8e43c8c04a6
@@ -18983,7 +18983,7 @@ sge.utils.compression.lzma.Decoder	sge.utils.compression.lzma.Decoder$LiteralDec
 sge.utils.compression.lzma.Decoder	sge.utils.compression.lzma.Decoder$LiteralDecoder$Decoder2#DecodeWithMatchByte(Decoder,byte)	def	d440acd4c76d02a9
 sge.utils.compression.lzma.Decoder	sge.utils.compression.lzma.Decoder$LiteralDecoder$Decoder2#Init()	def	b99071a6b10c4829
 sge.utils.compression.lzma.Decoder	sge.utils.compression.lzma.Decoder$LiteralDecoder$Decoder2#m_Decoders	val	490b8b85055bc28f
-sge.utils.compression.lzma.Encoder	sge.utils.compression.lzma.Encoder	class	e32b8f10a03047eb
+sge.utils.compression.lzma.Encoder	sge.utils.compression.lzma.Encoder	class	9770f84e123a2bf0
 sge.utils.compression.lzma.Encoder	sge.utils.compression.lzma.Encoder#<clinit>	init	a5123ab598f12324
 sge.utils.compression.lzma.Encoder	sge.utils.compression.lzma.Encoder#<stmt1>	stmt	44f115f2da44f421
 sge.utils.compression.lzma.Encoder	sge.utils.compression.lzma.Encoder#<stmt2>	stmt	88cf2c2fd917dd18
@@ -19165,7 +19165,7 @@ sge.utils.compression.rangecoder.Decoder	sge.utils.compression.rangecoder.Decode
 sge.utils.compression.rangecoder.Decoder	sge.utils.compression.rangecoder.Decoder#kNumBitModelTotalBits	val	27d905baf1b6a5d7
 sge.utils.compression.rangecoder.Decoder	sge.utils.compression.rangecoder.Decoder#kNumMoveBits	val	bb19ba7c21e6328c
 sge.utils.compression.rangecoder.Decoder	sge.utils.compression.rangecoder.Decoder#kTopMask	val	bb4e56b8c16c61c7
-sge.utils.compression.rangecoder.Encoder	sge.utils.compression.rangecoder.Encoder	class	bb2524939b24a439
+sge.utils.compression.rangecoder.Encoder	sge.utils.compression.rangecoder.Encoder	class	073519303b29ced0
 sge.utils.compression.rangecoder.Encoder	sge.utils.compression.rangecoder.Encoder#<clinit>	init	b993fddccd881fc4
 sge.utils.compression.rangecoder.Encoder	sge.utils.compression.rangecoder.Encoder#Encode(Array<short>,int,int)	def	de8c9b495b5e2f22
 sge.utils.compression.rangecoder.Encoder	sge.utils.compression.rangecoder.Encoder#EncodeDirectBits(int,int)	def	139475b80dbf2a2c

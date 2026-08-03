@@ -4231,7 +4231,7 @@ whose consumer does that has to say so in its own shim.*
 
 ---
 
-### K22. A java `static { }` block runs at CLASS INITIALISATION; the `object` it is emitted into is initialised by nothing — **5 test failures on liqp, 0 compile errors, every check count flat, and the whole family was invisible until K21 closed. OPEN**
+### K22. A java `static { }` block runs at CLASS INITIALISATION; the `object` it is emitted into is initialised by nothing — **5 test failures on liqp, 0 compile errors, every check count flat, and the whole family was invisible until K21 closed. CLOSED for the INSTANTIATION trigger; the SUBCLASS one is now COUNTED at 19 and OPEN, and the REFLECTIVE one is refused**
 
 The block is translated, faithfully, into the companion:
 
@@ -4270,22 +4270,65 @@ failures are `GtNodeTest`/`GtEqNodeTest`/`LtNodeTest`/`LtEqNodeTest`'s `testDate
 `LiquidWhereImplTest.testWhereWhenDateCompatibleTypes`, and every one of them reproduces with a
 PLAIN `Map` and no reflection anywhere — so it is not a K21 residue, it is the defect underneath.
 
-**Why it is not fixed in the same wave that found it.** The shape of a fix is not in doubt — java's
-own trigger list is short, so a class with a static initialiser forces its companion from its
-primary constructor and from each static member, which is mechanical — but the blast is
-corpus-wide (every `static { }` in every port) and it lands exactly where §4.4's `static final`
-row already records an initialisation CYCLE (`Vector3`/`Matrix4`). Forcing an object from a
-constructor is precisely how such a cycle is re-entered, so this needs its own measured wave with
-`just measure-all`, not a rider on one that is measuring something else. liqp has 4 such blocks;
-the corpus-wide count is what the wave that takes it should open with.
-
 **Do NOT reach for "call it from every method".** Java's trigger is initialisation, not use, and a
 port that forced the object at each call site would run the block on a path java never did — the
 `static final` constant row in §4.4 is the same distinction from the other side, where java's
-INLINING means a read triggers nothing at all.
+INLINING means a read triggers nothing at all. That distinction is also what makes the fix SAFE
+against the cycle §4.4's `static final` row records (`Vector3`/`Matrix4`): the repair adds a trigger
+at `new`, where java already had one, and adds nothing at a constant read, where java has none. A
+port that is more faithful at `new` cannot enter a cycle java did not enter.
+
+**THE REPAIR IS JAVA'S OWN TRIGGER LIST, ENUMERATED — and only two of its items were broken.**
+JLS 12.4.1 lists instantiation, an access to a static the class DECLARES, a subclass's
+initialisation, certain reflective actions and `main`. Reading each against Scala:
+
+| JLS 12.4.1 | in the port | answer |
+|---|---|---|
+| `new T` | the constructor runs; nothing touches `object T` | **BROKEN** — `val _ = <T>` at the head of the class body, ahead of every field initialiser, which is where java ran `<clinit>` relative to them |
+| a static `T` declares is used or assigned | `T.member` IS an object access | already exact |
+| a CONSTANT is read | `inline val`, so no member read at all | already exact, and this is `JS-C08` |
+| a subclass `S` is initialised, by `new S` | `S`'s constructor calls `T`'s, which runs `T`'s class-body force | covered by the row above |
+| …by a bare `S.member` read | `object S` initialises and `object T` does not | **BROKEN, and COUNTED rather than repaired here** — `ClassInitTriggerCheck.Issue.SubclassInitUnforced`, 19 corpus-wide |
+| `Class.forName("T", true, cl)` | a reflective load of the emitted `T` does not touch `T$` | **REFUSED** — nothing in the program can see a reflective load that lives in its CONSUMER, so this is stated and not counted |
+
+`TirEmitter.forceCompanion` writes it, as a decision kind (`ForcedClassInit`) whose `trigger=` names
+which item it stands for — a reader's real question is whether THEIR path is covered, and the list
+is short enough to answer. `ClassInitTriggerCheck` is the count, and it takes the CENSUS of
+`static { }` blocks from the trees rather than from the emitter, so an empty forced-set reproduces
+the un-repaired engine on the same trees (`switch-null`'s two-source shape exactly). **The check is
+not vacuous on its first run**, which is the thing a coverage check most often is: `Unforced` is 0
+on all fifteen ports — every `static { }` block reached a trigger — while `SubclassInitUnforced`
+reads 18 on libGDX core and 1 on anim8, and those 19 are a residue that exists, not a bar held at
+zero by looking away.
+
+**`val _ = <path>`, not a bare reference and not a `private val`.** All three compile to the same
+`getstatic MODULE$` and all three force — measured on a seven-shape probe including re-entrance —
+but a bare reference is `E176 unused value` under `-Wall` and a named `private val` is `E198 unused
+private member`, and §4.45's consumer is an agent in another repository whose warning settings this
+engine does not choose. The path is FULLY QUALIFIED for §4.56's reason and not §6's: java permits
+`class Foo { int Foo; }`, so the simple name inside the body can resolve to a MEMBER, and the force
+would then read a field and initialise nothing, silently.
+
+**THE NUMBERS.** liqp `567 -> 572 passing, 8 -> 3 failing` at `errors 0`, the five newly-passing
+tests being exactly the five named above. Corpus-wide the emission blast is **7 whole-type digests
+on libGDX core** (`Frustum`, `OrientedBoundingBox`, `Actor`, `CRC`, `BinTree`, `lzma.Encoder`,
+`rangecoder.Encoder`) **and 3 on liqp** — the other five of libGDX's twelve `static { }` files
+collapse to an `object`, where every route in already touches the object. Every other lane's error
+count, check counts and suite outcomes are identical, `just measure-all` green end to end.
+
+**What stays approximate, said out loud rather than counted.** Java initialises the class before
+`<init>` runs at all, including before the SUPERCLASS constructor; a Scala class-body statement runs
+after it. The gap is observable only where a super constructor calls a method this class overrides
+which reads this class's statics, and no criterion for that is cheaper than the whole-program
+analysis it would take — an over-approximate review list here would be noise (`CLAUDE.md` §1).
 
 *Fix kind: (a) engine — universal, a fact about JLS 12.4.1 against Scala's object initialisation.
-OPEN, with the number above. The per-site diagnosis is in `PROGRESS.md`'s liqp residue table.*
+CLOSED for instantiation, OPEN and counted at 19 for subclass initialisation, REFUSED for
+reflection. Catalog `JS-C07`, whose `NonDiff("no observable difference except through JS-C08")` this
+entry refuted — the claim was that Scala's object-access trigger fires at least as often as any JLS
+12.4.1 case "since every `T.x` read is an object access", which is true of items 2-4 and false of
+items 1 and 7, the two that do not read a member at all. The per-site diagnosis is in `PROGRESS.md`'s
+liqp residue table.*
 
 ---
 

@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -901,6 +901,18 @@ final case class PortRun(
     say(s"SWITCH-NULL (reference-typed switches that fall out where java NPEs): ${switchNulls.size}")
     if switchNulls.nonEmpty then say(SwitchNullCheck.Issue.classification(SwitchNullCheck.Issue.NullFallsOut))
     println(SwitchNullCheck.summary(switchNulls))
+
+    // ---- §4.4: a `static { }` block emitted into a companion that nothing initialises ----
+    // The same two-source shape once more: the census of `static { }` blocks comes from the trees,
+    // the set of triggers actually attached from the emitter — and the FORM from the emitter too,
+    // because the all-static class-to-`object` collapse is decided inline and exists nowhere else
+    // (`ENGINE-LIMITS.md` K22).
+    val classInits = ClassInitTriggerCheck.check(program, checkedUnits,
+      translated.emitter.forcedClassInits, translated.emitter.emittedShapes.types.get(_).map(_.form))
+    CheckReport.record(ClassInitTriggerCheck.Name, classInits.map(_.report))
+    say(s"CLASS-INIT TRIGGER (`static { }` blocks nothing initialises): ${classInits.size}")
+    classInits.map(_.issue).distinct.foreach(i => say(ClassInitTriggerCheck.Issue.classification(i)))
+    println(ClassInitTriggerCheck.summary(classInits))
 
     // ---- §6.2's CONSERVATION LAW: a refusal may be DISCHARGED, never erased ----
     // Beside the three above and recorded the same way, because it asks the same two-source

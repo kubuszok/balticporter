@@ -105,7 +105,7 @@ object PorterNote:
     Set(RenamedType, RenamedPackage, RenamedMember, DroppedType, DroppedMember,
         SubstitutedBody, SubstitutedCall, InjectedMember, DroppedSuperCall, WidenedVisibility,
         Unrenderable, ScopedOut, DeferredInit, FunnelledCtor, RetainedParent, ReifiedTypeArg,
-        BeanAccessor)
+        BeanAccessor, ForcedClassInit)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.

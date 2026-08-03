@@ -169,6 +169,16 @@ object Decision:
       * carrying a note: the reader is looking at a `def getA()` with no upstream line behind it,
       * and the source map cannot answer that. */
     case BeanAccessor
+    /** a statement INVENTED in a class body (or in a companion's) whose only purpose is to touch
+      * this type's companion `object`, because java would have initialised the CLASS at that
+      * moment and Scala initialises the OBJECT at a different one (`ENGINE-LIMITS.md` K22, JLS
+      * 12.4.1). Like [[BeanAccessor]] it is a member no java declared, and it is the one line in an
+      * emitted file whose purpose is invisible from its text: `val _ = com.foo.T` reads as
+      * dead code to every reader who does not already know that a `static { }` block landed in the
+      * companion. The DETAIL says WHICH of java's triggers this statement stands for, because the
+      * list is short and knowing which one is what tells a reader whether their own path is
+      * covered. */
+    case ForcedClassInit
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

@@ -1531,7 +1531,17 @@ final class TirEmitter(
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
     val body1   = joinStats(orderBody(instance, cd.symbol, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty))
-    val body0   = if bnote.isEmpty then body1 else joinStats(bnote :: List(body1).filter(_.nonEmpty))
+    // K22 — the CLASS-INITIALISATION trigger, ahead of every other class-body statement because
+    // that is where java ran it. See [[forceCompanion]]; `statics` is where a `static { }` block
+    // lowers to, so this is asked of the very list that carries the defect.
+    // …and only where there is a CONSTRUCTOR to hang it on. A `trait` body statement runs at every
+    // implementor's initialisation, which is MORE than java does (JLS 12.4.1 does not initialise an
+    // interface when an implementor is initialised), and the annotation rendering below emits no
+    // body at all. Neither shape can arise from java — an interface may not declare a static
+    // initialiser (JLS 9.1.1) — so both are left to `class-init-trigger` rather than guessed at.
+    val force   = if hasClinit(statics) && kw == "class" && !s.flags.isAnnotation
+                  then forceCompanion(cd, balticporter.tir.ClassInitTriggerCheck.Instantiation, i + 1) else ""
+    val body0   = joinStats(List(bnote, force, body1).filter(_.nonEmpty))
     val diamonds = diamondOverrides(cd, i + 1)
     val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
@@ -1794,6 +1804,96 @@ final class TirEmitter(
   private def isInitBlock(d: Tree.DefDef): Boolean =
     val n = sym(d.symbol).name
     n == "<clinit>" || n == "<initblock>"
+
+  /** does this member list carry a java `static { … }` block — a CLASS INITIALISER, never the
+    * instance one? Asked by name rather than by `isInitBlock` because the two run at different
+    * times and only one of them has K22's problem. */
+  private def hasClinit(members: List[Statement]): Boolean = members.exists {
+    case d: Tree.DefDef => sym(d.symbol).name == "<clinit>"
+    case _              => false
+  }
+
+  // ---------------------------------------------------------------------------
+  // K22 — A `static { }` BLOCK RUNS AT CLASS INITIALISATION; THE `object` IT LANDS IN IS
+  // INITIALISED BY NOTHING.
+  //
+  // Java's trigger list (JLS 12.4.1) is short and exact — a class `T` is initialised on the first
+  // `new T`, the first access to a static `T` DECLARES (a compile-time constant excepted, §4.4's
+  // `inline val` row and JS-C08), the initialisation of one of `T`'s subclasses, certain reflective
+  // actions, and `main`. Scala has no such list: a companion `object` initialises when something
+  // touches the OBJECT, and `new T(…)` touches only the class.
+  //
+  // So a `static { }` block is emitted, faithfully, into the companion and NEVER RUNS. Where its
+  // effect is a REGISTRATION — an SPI provider, a factory, a codec, a pool — every later lookup
+  // answers "not registered", which a library turns into a plausible WRONG ANSWER rather than an
+  // error. Measured on one library as 5 test failures at 0 compile errors with every check count
+  // flat, and invisible to every instrument the project has: the block IS emitted, so no omission
+  // exists to count (`ENGINE-LIMITS.md` K22).
+  //
+  // THE REPAIR IS JAVA'S OWN TRIGGER LIST, NEVER "call it from every use". The two are not the same
+  // set and the difference is the whole of JS-C08: java's INLINING means reading a constant
+  // triggers nothing at all, so a port that forced the object at each use would run the block on
+  // paths java never did — and the initialisation CYCLE §4.4 records for `Vector3`/`Matrix4` is
+  // exactly what such a path re-enters. Only the triggers java has are reproduced:
+  //
+  //   - INSTANTIATION, here — a statement at the head of the class body, ahead of every field
+  //     initialiser, which is where java ran the class initialiser relative to them;
+  //   - a STATIC ACCESS needs nothing: `T.member` is already an access to the object;
+  //   - SUBCLASS INITIALISATION — `new S` reaches this same statement through `S`'s super
+  //     constructor, and `S.<own static>` is answered in the companion (see the sibling call site).
+  //
+  // …and REFLECTION is the one trigger no emitted Scala can carry: `Class.forName("T", true, cl)`
+  // initialises the java class, and a reflective load of the emitted `T` does not touch `T$`. That
+  // residue is stated in `ENGINE-LIMITS.md` K22 rather than counted, because nothing in the program
+  // can see a reflective load that lives in its CONSUMER.
+  //
+  // WHAT IS APPROXIMATE, and deliberately not counted: java initialises the class before `<init>`
+  // runs at all — including before the SUPERCLASS constructor — while a class-body statement runs
+  // after it. The gap is observable only where a super constructor calls a method this class
+  // overrides which reads this class's statics, and no criterion for that is cheaper than the
+  // whole-program analysis it would take; an over-approximate review list here would be noise
+  // (`CLAUDE.md` §1).
+  //
+  // `val _ = <path>` and not a bare reference: both compile to the same `getstatic MODULE$` and
+  // both force, but a bare one is `E176 unused value` under `-Wall` — and the consumer is an agent
+  // in ANOTHER repository (§4.45) whose build settings this engine does not choose. The path is
+  // FULLY QUALIFIED for §4.56's reason rather than §6's: java lets `class Foo { int Foo; }`, so the
+  // simple name inside the body can resolve to a MEMBER, and the force would then read a field and
+  // initialise nothing, silently.
+  // ---------------------------------------------------------------------------
+
+  /** The note and the statement that force `cd`'s companion, recorded as one [[Decision]] so the
+    * note is DERIVED rather than authored (§4.575) and `NoteCoverageCheck` sees the pair.
+    *
+    * @param trigger which of JLS 12.4.1's actions this statement stands for — the reader's real
+    *                question is whether THEIR path is covered, and the list is short enough to say.
+    */
+  private def forceCompanion(cd: Tree.ClassDef, trigger: String, i: Int): String =
+    val s = sym(cd.symbol)
+    val d = Decision(
+      kind       = Decision.Kind.ForcedClassInit,
+      subject    = cd.symbol,
+      subjectFqn = s.fullName,
+      detail     = Map(
+        "trigger" -> trigger,
+        "why"     -> ("java runs this class's `static { }` at class initialisation (JLS 12.4.1) and a " +
+                      "scala companion initialises on first access to the OBJECT, which `new` is not"),
+      ),
+      reason     = Reason.Universal("class-init-trigger(§4.4)"),
+      origin     = cd.origin,
+    )
+    recordedEmission.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty) += d
+    printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
+    forcedClinits += (cd.symbol -> trigger)
+    s"${PorterNote.render(d, ind(i))}${ind(i)}val _ = ${escPath(s.fullName).replace('$', '.')}"
+
+  /** every (type, trigger) pair this emitter forced — the input to `class-init-trigger`, which
+    * takes the CENSUS of `static { }` blocks from the trees itself. An empty set therefore
+    * reproduces the un-repaired engine on the same trees, exactly as `switch-null` does. Keyed by
+    * the TRIGGER as well as the type because the two are answered at different call sites and a
+    * type covered for one is not covered for the other. */
+  private val forcedClinits = collection.mutable.Set.empty[(SymId, String)]
+  def forcedClassInits: Set[(SymId, String)] = forcedClinits.toSet
 
   private def isStatic(s: Statement): Boolean = s match
     case d: Tree.ClassDef => sym(d.symbol).flags.isStatic

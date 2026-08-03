@@ -423,7 +423,7 @@ sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedD
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#load(GLTFImage)	def	16a2c6c211cf6cc6
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#loadBuffers(FileHandle)	def	9e3cb890c25c6333
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#path	val	b06a990a301e98e7
-sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase	class	5c0d00471d8d24c2
+sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase	class	575391847928fa35
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<clinit>	init	e65c5d88612fb8cb
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver,Sge)	ctor	cbbe4a0959ed2a94
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<stmt1>	stmt	40a160e5684e8c6c
@@ -707,13 +707,13 @@ sge.gltf.scene3d.attributes.MirrorSourceAttribute	sge.gltf.scene3d.attributes.Mi
 sge.gltf.scene3d.attributes.MirrorSourceAttribute	sge.gltf.scene3d.attributes.MirrorSourceAttribute#normal	val	2382b9a25b6ef0cd
 sge.gltf.scene3d.attributes.MirrorSourceAttribute	sge.gltf.scene3d.attributes.MirrorSourceAttribute#set(TextureDescriptor<Texture>,Vector3)	def	89e72eca765a65e5
 sge.gltf.scene3d.attributes.MirrorSourceAttribute	sge.gltf.scene3d.attributes.MirrorSourceAttribute#textureDescription	val	04523793eb4bb918
-sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute	class	5ba0d20819680901
+sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute	class	25d40642c4104b79
 sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute#<clinit>	init	0d7a97057cbf5b2e
 sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute#BaseColorFactor	val	0de09e0a6b6dcd8c
 sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute#BaseColorFactorAlias	val	af3c40befb79847c
 sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute#copy()	def	29f1e62366bb3eed
 sge.gltf.scene3d.attributes.PBRColorAttribute	sge.gltf.scene3d.attributes.PBRColorAttribute#createBaseColorFactor(Color)	def	41a803e56a0dc58c
-sge.gltf.scene3d.attributes.PBRCubemapAttribute	sge.gltf.scene3d.attributes.PBRCubemapAttribute	class	2a15447d8d36ed24
+sge.gltf.scene3d.attributes.PBRCubemapAttribute	sge.gltf.scene3d.attributes.PBRCubemapAttribute	class	d6f8af689486fec8
 sge.gltf.scene3d.attributes.PBRCubemapAttribute	sge.gltf.scene3d.attributes.PBRCubemapAttribute#<clinit>	init	2a289130af9850a7
 sge.gltf.scene3d.attributes.PBRCubemapAttribute	sge.gltf.scene3d.attributes.PBRCubemapAttribute#<init>(long,Cubemap)	ctor	5b769e5c3b0f9c17
 sge.gltf.scene3d.attributes.PBRCubemapAttribute	sge.gltf.scene3d.attributes.PBRCubemapAttribute#<init>(long,TextureDescriptor<Cubemap>)	ctor	8518d89e4884ef9d
@@ -790,7 +790,7 @@ sge.gltf.scene3d.attributes.PBRMatrixAttribute	sge.gltf.scene3d.attributes.PBRMa
 sge.gltf.scene3d.attributes.PBRMatrixAttribute	sge.gltf.scene3d.attributes.PBRMatrixAttribute#matrix	val	8a5e9afc82358cb2
 sge.gltf.scene3d.attributes.PBRMatrixAttribute	sge.gltf.scene3d.attributes.PBRMatrixAttribute#set(Matrix4)	def	ce0f5913441f4391
 sge.gltf.scene3d.attributes.PBRMatrixAttribute	sge.gltf.scene3d.attributes.PBRMatrixAttribute#set(float)	def	cb221ffd6a19e10d
-sge.gltf.scene3d.attributes.PBRTextureAttribute	sge.gltf.scene3d.attributes.PBRTextureAttribute	class	c8ecd9d7710f6b42
+sge.gltf.scene3d.attributes.PBRTextureAttribute	sge.gltf.scene3d.attributes.PBRTextureAttribute	class	82f8b8dbe203e859
 sge.gltf.scene3d.attributes.PBRTextureAttribute	sge.gltf.scene3d.attributes.PBRTextureAttribute#<clinit>	init	3d18d97234557027
 sge.gltf.scene3d.attributes.PBRTextureAttribute	sge.gltf.scene3d.attributes.PBRTextureAttribute#<init>(PBRTextureAttribute)	ctor	c591eaf16fe17317
 sge.gltf.scene3d.attributes.PBRTextureAttribute	sge.gltf.scene3d.attributes.PBRTextureAttribute#<init>(long)	ctor	f077a68233882788
