@@ -3835,9 +3835,19 @@ unbox-and-convert helper with runtime dispatch, on the reasoning that java conve
 scalac 3.8.4, the same instrument faces 1 and 2 were settled with: **all 45 cells of (9 runtime
 classes x 5 primitives) agree between the two languages**, `Character`, `Boolean` and a non-`Number`
 `String` included. Writing the helper would have CONVERTED where java THROWS — an unfaithful port,
-arrived at by making tests pass. The direction that IS a conversion is a statically-known WRAPPER at
-a primitive slot (JLS 5.1.8 + 5.1.2), which `coerce.unbox` has always handled and which face 3
-leaves alone.
+arrived at by making tests pass.
+
+**The direction that IS a conversion is a statically-known WRAPPER at a primitive target** (JLS
+5.1.8 unboxes at the wrapper's own primitive, 5.1.2 widens from there), and writing the test for
+that cell — the one NEXT to the cell being fixed — found it broken in both the old emission and the
+new. `(double) aLong` rendered `v.asInstanceOf[scala.Double]`, a `unboxToDouble` that demands a
+`java.lang.Double` and throws on a `Long`; the older form put a `.doubleValue()` after that
+checkcast, where nothing can reach it. `coerce.unbox` had always handled the shape at a SLOT and
+never at the CAST, which is where this row's own sentence puts it. Fixed at `SpoonTir.castOf`, in
+the fold that applies the source's casts, with the operand-must-be-a-known-wrapper gate the probe
+above justifies. **Blast: 0 members on all fifteen port artifacts** — no library in the corpus
+writes the shape, so the edge-case tests are the entire evidence in both directions, and no count,
+no compile and no suite could ever have moved for it.
 
 *Fix kind: (a) engine. FACE 2 CLOSED (catalog `JS-E05`, `SpoonTir.promotedBranch`); FACE 1 CLOSED
 (catalog `JS-G31`, `SpoonTir.polyExpression` + `SpoonTir.polyArgsUncast`); FACE 3 CLOSED (catalog

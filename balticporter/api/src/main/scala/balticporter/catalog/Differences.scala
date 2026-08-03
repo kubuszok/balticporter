@@ -96,10 +96,18 @@ object Differences:
       Mixed, Handled, el("K17"), Universal,
       "SpoonTir.promotedBranch converts each OPERAND to java's own computed type, beside the null-branch ascription in the CtConditional arm",
       Lowered("CtConditional", Dispatch.Expression)),
+    // The status is `Partial` and the reason is NOT the one this row shipped with, which named the
+    // wrong half. What was measured (K17 face 3) is that the mismatch needs no retyping phase at
+    // all: the FRONTEND manufactures it, by reading Spoon's pre-cast type for a term `expr` has
+    // already folded the casts onto. Both readers are fixed and both directions of the cast itself
+    // are now java's — so what remains is the cell this row's own sentence describes and nobody has
+    // ever measured, which is why it may not be called `Handled`. Note the PREDICTED fix here was
+    // refuted: `(prim) objectExpr` throws in java too (JLS 5.5 is a checkcast to the exact wrapper,
+    // not a `Number` dispatch), so converting there would be unfaithful — see K17 face 3.
     Difference(eId(6), "a primitive cast is a CONVERSION in Java and an assertion in Scala once a phase has retyped the value",
       "JLS 5.5", "UNCITED — `asInstanceOf` converts at a statically primitive type and checks otherwise",
-      Silent, Partial("the base case is right by dotty coincidence; the interaction with a retyping phase is unguarded"),
-      el("K17"), Universal, "TirEmitter's Tree.Typed arm and TirEmitter.castTarget, which realigns only wildcard arguments", Unmechanised("the EMITTER decides it, at the `Tree.Typed` rendering, and the emitter has no obligation dispatch")),
+      Silent, Partial("the FRONTEND's two readings are fixed — a cast expression's own type at the slot that boxes it, and a wrapper operand at a primitive target — but a value some later PHASE retypes after the frontend decided is still unguarded, and no corpus site has ever exercised it"),
+      el("K17"), Universal, "SpoonTir.expr via SpoonTir.castOf for the cast itself, and SpoonTir.coerce + SpoonTir.uncheckedGeneric reading SpoonTir.castType for the slot; TirEmitter's Tree.Typed arm renders what those decided", Unmechanised("the frontend decides it while lowering an expression's casts, which is not an obligation dispatch, and the EMITTER half has none either")),
     Difference(eId(7), "binary numeric promotion does not reach a GENERIC call boundary",
       "JLS 5.6.2", "UNCITED — weak conformance does not apply at a type-parameter slot",
       Loud, Partial("operators are free and the test-assertion shape is closed; the general call boundary is open"),

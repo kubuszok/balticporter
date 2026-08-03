@@ -2888,11 +2888,45 @@ object SpoonTir:
         Tree.Match(expr(s.getSelector), withDefault, unitT, originOf(s))
 
       // ---- expressions ----
+      /** the casts the SOURCE wrote, applied innermost-first — each one rendered as the thing java
+        * does AT it, which is not always an assertion.
+        *
+        * `(T) x` is `x.asInstanceOf[T]` for every combination but one, and that one is this row's
+        * own sentence: a cast whose OPERAND is a statically-known boxed WRAPPER and whose target is
+        * a primitive is a CONVERSION in java — JLS 5.1.8 unboxes at the wrapper's own primitive and
+        * 5.1.2 widens from there, so `(double) aLong` is `7.0`. Scala's `asInstanceOf[scala.Double]`
+        * on a reference is `unboxToDouble`, which demands a `java.lang.Double` and throws on a
+        * `Long`. Rendered as a cast the port asserts where java converted.
+        *
+        * WHY THE OPERAND HAS TO BE A KNOWN WRAPPER, and why `Object` and `Number` are deliberately
+        * NOT in this branch. Java's rule for a reference operand it does not know (JLS 5.5) is a
+        * narrowing reference conversion to the EXACT wrapper followed by an unbox — it performs no
+        * `Number` dispatch, so `(double) o` on an `Object` holding a `Long` throws in java too, and
+        * `asInstanceOf[scala.Double]` throws in exactly the same cells. Probed against javac and
+        * scalac 3.8.4 over all 45 of (9 runtime classes x 5 primitives); they agree everywhere.
+        * Converting there would be UNFAITHFUL — it would answer where java raises.
+        *
+        * A same-type unbox (`(int) anInteger`) is left alone for the reason [[coerce]] states: it
+        * is `Predef`'s already, and forcing the accessor only perturbs surrounding resolution. */
       private def expr(e: CtExpression[?]): Term =
-        val core = exprNoCast(e)
-        e.getTypeCasts.asScala.toList.foldRight(core) { (t, acc) =>
-          val ct = tpe(t); Tree.Typed(acc, tt(ct, e), ct, originOf(e))
-        }
+        val core  = exprNoCast(e)
+        val casts = e.getTypeCasts.asScala.toList
+        val et0: CtTypeReference[?] = try e.getType catch { case _: Throwable => null }
+        // the fold carries the type the term HAS at each step: `e.getType` under the innermost
+        // cast, and thereafter the cast below the one being applied.
+        casts.foldRight((core, et0)) { case (t, (acc, src)) =>
+          (castOf(t, src, acc, e), t: CtTypeReference[?])
+        }._1
+
+      /** one source cast, as the conversion or the assertion java performs there. See [[expr]]. */
+      private def castOf(target: CtTypeReference[?], src: CtTypeReference[?], acc: Term,
+                         e: CtExpression[?]): Term =
+        val unboxing = target != null && target.isPrimitive && src != null && !src.isPrimitive &&
+          wrapperOf.values.toSet(src.getQualifiedName) &&
+          wrapperOf.get(target.getSimpleName).exists(_ != src.getQualifiedName)
+        if unboxing then unbox(acc, src.getQualifiedName, target.getSimpleName, e)
+        else
+          val ct = tpe(target); Tree.Typed(acc, tt(ct, e), ct, originOf(e))
 
       /** THE TYPE AN EXPRESSION HAS WHERE IT STANDS — after the casts the SOURCE wrote, which is
         * the OUTERMOST one, which is the HEAD of `getTypeCasts`.

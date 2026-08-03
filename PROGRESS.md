@@ -2623,13 +2623,17 @@ catalog waves: `161 -> 357 -> 364 -> 392 -> 552 -> 554 -> 559 -> 567 -> 572 -> 5
   branch the fix corrects. So the wave landed `uncheckedGeneric` FIRST as its own measured commit
   (blast 6 on libGDX, 0 on the other fourteen, every lane flat) and `coerce` on top of it. A single
   commit would have been green and would have hidden which half did what.
-- **An edge-case suite found a defect neither the corpus nor the compile can see.** The five new
-  `JS-E06` tests in `CatalogAreaESpec` include the cells that must STAY a `ClassCastException`
-  because java throws there too — and writing them surfaced that a java cast of a statically-known
-  WRAPPER to a primitive (`(double) aLong`) emits `v.asInstanceOf[scala.Double]`, a checkcast that
-  throws where java unboxes and widens. It was broken before this wave as well (the older emission
-  put a `.doubleValue()` after a checkcast that never reaches it), no corpus site exercises it, and
-  no count anywhere moves.
+- **An edge-case suite found a defect neither the corpus nor the compile can see, and its fix has
+  ZERO blast.** The five `JS-E06` tests in `CatalogAreaESpec` include the cells that must STAY a
+  `ClassCastException` because java throws there too — and writing them surfaced that a java cast of
+  a statically-known WRAPPER to a primitive (`(double) aLong`) emitted `v.asInstanceOf[scala.Double]`,
+  a checkcast that throws where java unboxes and widens (JLS 5.1.8 + 5.1.2). It was broken before
+  this wave too, and worse: the older emission put a `.doubleValue()` AFTER that checkcast, where
+  nothing can reach it. The fix (`SpoonTir.castOf`) moves **0 members on all fifteen port artifacts**
+  — no library in the corpus writes the shape — so the tests are the entire evidence that it is
+  fixed, and would have been the entire evidence that it was broken. This is the third time in this
+  port's history that a defect was found by writing the test for the cell NEXT to the one being
+  fixed, and the first where the corpus could never have found it at all.
 
 ---
 

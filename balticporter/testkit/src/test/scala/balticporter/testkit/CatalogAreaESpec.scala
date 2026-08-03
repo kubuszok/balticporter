@@ -324,6 +324,34 @@ class CatalogAreaESpec extends PortSuite:
     assertNotEmits(p, "intValue")
   }
 
+  test("JS-E06 — a WRAPPER-typed operand at a primitive slot UNBOXES, because that is a conversion") {
+    // The cell that IS a conversion in java and must not be swept up by the row above: JLS 5.1.8
+    // unboxes at the wrapper's own primitive and 5.1.2 widens from there, so `(double) aLong` is
+    // `7.0`. `Long` is statically known here, which is exactly what makes it decidable — the
+    // `Object` operand above is the same expression with the knowledge removed, and java raises
+    // there for want of that knowledge rather than converting.
+    //
+    // This is the row's own sentence at the CAST rather than at the slot, and it was broken in both
+    // directions before it was written: the emission was `v.asInstanceOf[scala.Double]`, a
+    // `unboxToDouble` that demands a `java.lang.Double` and throws on a `Long`. The older form put a
+    // `.doubleValue()` AFTER that checkcast, where nothing can reach it. No corpus site exercises
+    // the shape, so no count and no compile could ever have said so.
+    val p = port("public class E { double f(Long v) { return (double) v; } }")
+    assertEmits(p, "v.doubleValue()")
+    assertNotEmits(p, "asInstanceOf[scala.Double]")
+  }
+
+  test("JS-E06 — `Character` is not a `Number`, so its unbox is TWO steps and never `intValue`") {
+    // `Character` and `Boolean` carry `charValue()`/`booleanValue()` and none of the `Number`
+    // family, so the collapse that is exact for the six numeric wrappers names a member no class in
+    // the chain declares. Loud rather than silent, which is the one thing in its favour — and the
+    // reason this is asserted rather than assumed. Java's own two steps: unbox at `char`, widen to
+    // `int`.
+    val p = port("public class E { int f(Character c) { return (int) c; } }")
+    assertEmits(p, "c.charValue().asInstanceOf[scala.Int]")
+    assertNotEmits(p, "c.intValue()")
+  }
+
   // -- JS-E14: string concatenation with a NON-`String` left operand ------------------------------
 
   test("JS-E14 — `obj + \"s\"` stringifies the left, because scala has no `+` on `obj`") {
