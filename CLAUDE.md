@@ -249,6 +249,19 @@ because the one library that has the shape happens to delegate (`ENGINE-LIMITS.m
 correction). Record what the substitution BROKE on the decision, too — a reader of the emitted throw
 cannot otherwise recover which call it replaced.
 
+**…and the same test governs a SYNTHESIS, where "already declared" decides whether to write a member
+at all.** The second occurrence is what makes this a rule about MATCHING A MEMBER rather than a rule
+about substitutions. Java derives a `record`'s `equals`/`hashCode`/`toString` unless the record
+declares them (JLS 8.10.3), so the emitter skips each where the class "already has it" — read as
+(name, ARITY), which is exact for the two arity-0 names (java cannot overload on a return type) and
+wrong for `equals`, whose one-argument form java resolves separately from `equals(String)`. And the
+failure is QUIETER than K5.7's: suppressing a derived `equals` does not leave the class abstract,
+because `AnyRef.equals` is concrete — the record simply falls back to REFERENCE equality, with a
+green compile, no moved count and no finding anywhere. **Ask what the derived member would COLLIDE
+with, in the SCOPE it is emitted into**, which is a third question again where the two differ: a
+record's extractor goes in the COMPANION, so an INSTANCE method called `unapply` cannot clash with
+it and declining on the bare name left every record pattern over that type naming nothing.
+
 ### (c) Genuinely library-specific — a SEPARATE, PLUGGED-IN RULE
 
 If a customisation needs knowledge so specific that it could only ever apply to **one** library, it

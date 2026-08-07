@@ -78,7 +78,7 @@ class RecordSpec extends PortSuite:
     assertEmits(p, "java.util.Objects.equals(this.s$field.asInstanceOf[java.lang.Object], that$rec.s$field.asInstanceOf[java.lang.Object])")
   }
 
-  test("a member the RECORD declares replaces the derived one — by NAME AND ARITY") {
+  test("a member the RECORD declares replaces the derived one — by SIGNATURE") {
     val p = rec("  @Override public String toString() { return \"OWN\"; }\n")
     assert(clue(p.out).contains("return \"OWN\""), p.out)
     // exactly one `toString`, and it is java's
@@ -93,6 +93,28 @@ class RecordSpec extends PortSuite:
     // synthesis instead of at a body substitution.
     val p = rec("  boolean equals(int a, int b) { return a == b; }\n")
     assertEmits(p, "override def equals(o$rec: scala.Any): scala.Boolean")
+  }
+
+  test("…and NEITHER does a same-ARITY overload — `equals(String)` is not java's `equals`") {
+    // K5.7's signature rule, one cell finer than the arity test above could see. Java resolves
+    // `equals(String)` and `equals(Object)` separately (JLS 8.4.9), so a record declaring the first
+    // still DERIVES the second — and suppressing it does not leave the class abstract, because
+    // `AnyRef.equals` is concrete: the record silently downgrades to REFERENCE equality, with a
+    // green compile, no moved count and no finding. The comment on the test above already stated
+    // "the member with the right SIGNATURE"; the code was reading (name, arity).
+    val p = rec("  public boolean equals(String s) { return false; }\n")
+    assertEmits(p, "override def equals(o$rec: scala.Any): scala.Boolean = o$rec match {")
+    // both, and no more: java's own is kept beside the derived one.
+    assertEquals(clue(p.out).sliding("def equals".length).count(_ == "def equals"), 2, p.out)
+  }
+
+  test("…and hashCode/toString stay on ARITY, because at arity 0 that IS the signature") {
+    // Not an inconsistency: java cannot overload on return type, so `hashCode()` and `toString()`
+    // name exactly one member each. The pair is asserted so a later widening of the equals rule
+    // cannot quietly take these with it.
+    val p = rec("  public int hashCode(int seed) { return seed; }\n  public String toString(int r) { return \"\"; }\n")
+    assertEmits(p, "override def hashCode(): scala.Int = {")
+    assertEmits(p, "override def toString(): java.lang.String = ")
   }
 
   test("the ZERO-component record still gets all four — java does") {
@@ -127,6 +149,20 @@ class RecordSpec extends PortSuite:
   test("a record that declares its own `unapply` keeps it — no duplicate definition") {
     val p = rec("  static Object unapply(Point p) { return null; }\n")
     assertEquals(clue(p.out).sliding("def unapply".length).count(_ == "def unapply"), 1, p.out)
+  }
+
+  test("…and an INSTANCE `unapply` is not that member — it is not even in the companion") {
+    // The derived extractor lives in the COMPANION, so only a STATIC java member can collide with
+    // it. Read on the bare name, an instance method called `unapply` declined the synthesis and
+    // every record pattern over the type then named nothing — the loud half of the same defect the
+    // `equals` cell above has silently.
+    val p = rec("  Object unapply(String s) { return null; }\n")
+    assertEmits(p, "def unapply(r$rec: Point): (scala.Int, scala.Int)")
+  }
+
+  test("…and neither is a STATIC one whose parameter is not the record — no erasure clash") {
+    val p = rec("  static Object unapply(String s) { return null; }\n")
+    assertEmits(p, "def unapply(r$rec: Point): (scala.Int, scala.Int)")
   }
 
   // ---------------------------------------------------------------------------------------------

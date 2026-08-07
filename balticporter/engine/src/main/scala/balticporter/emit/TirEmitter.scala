@@ -2511,8 +2511,14 @@ final class TirEmitter(
     * record PATTERN binds and changes neither the printed form nor the equality (measured).
     *
     * A member the record DECLARES ITSELF replaces the generated one (JLS 8.10.3), so each of the
-    * three is skipped where the class already has it — by NAME AND ARITY, because java's `equals`
-    * is the 1-argument one and a record may perfectly well declare an unrelated `equals(int, int)`.
+    * three is skipped where the class already has it — by SIGNATURE, which for `hashCode()` and
+    * `toString()` IS the arity (java cannot overload on a return type, so at arity 0 each of those
+    * names exactly one member) and for `equals` is the one-argument form whose parameter is
+    * `java.lang.Object`. Nothing coarser will do: java resolves `equals(String)` beside
+    * `equals(Object)` and derives the second anyway, and suppressing it does not even leave the
+    * class abstract — `AnyRef.equals` is concrete, so the record downgrades to REFERENCE equality
+    * with a green compile and no moved count. The EXTRACTOR asks a different question again, since
+    * it is emitted into the companion: see [[hasUnapply]]'s reasoning at the site.
     *
     * ==The `asInstanceOf[java.lang.Object]` on every reference component==
     *
@@ -2534,9 +2540,29 @@ final class TirEmitter(
       val tpArgs = if cd.tparams.isEmpty then "" else "[" + cd.tparams.map(tp => esc(sym(tp.symbol).name)).mkString(", ") + "]"
       val tpWild = if cd.tparams.isEmpty then "" else "[" + cd.tparams.map(_ => "?").mkString(", ") + "]"
       // a member the RECORD ITSELF declares, by (name, java arity) — JLS 8.10.3's own override rule.
+      // ARITY is the whole signature for `hashCode()` and `toString()`, which is why they use this:
+      // java cannot overload on a return type, so at arity 0 each of those names exactly one member.
+      // `equals` is the one that needs more — see [[declaresEquals]].
       val declared: Set[(String, Int)] = cd.body.collect {
         case d: Tree.DefDef => (sym(d.symbol).name, d.paramss.headOption.getOrElse(Nil).size)
       }.toSet
+      /** the FQN of a parameter's type head, for the two signature tests below. */
+      def paramHead(ps: List[Tree.ValDef]): Option[String] = ps match
+        case p :: Nil => headSymOf(p.tpt.tpe).map(x => sym(x).fullName)
+        case _        => None
+      /** does the record declare JAVA'S `equals` — the ONE-argument one whose parameter is
+        * `java.lang.Object` (JLS 8.10.3, 8.4.9)?
+        *
+        * By SIGNATURE and not by (name, arity), which is `ENGINE-LIMITS.md` K5.7's rule read one
+        * cell finer than the arity test can see. Java resolves `equals(String)` and `equals(Object)`
+        * separately, so a record declaring the first still gets the second derived; suppressed, the
+        * class does not even go abstract — `AnyRef.equals` is concrete — so the record silently
+        * downgrades to REFERENCE equality, with a green compile, no moved count and no finding. */
+      def declaresEquals: Boolean = cd.body.exists {
+        case d: Tree.DefDef if sym(d.symbol).name == "equals" =>
+          paramHead(d.paramss.headOption.getOrElse(Nil)).contains("java.lang.Object")
+        case _ => false
+      }
       val fieldTpe = cd.body.collect { case v: Tree.ValDef => v.symbol -> v.tpt.tpe }.toMap
       /** the emitted VALUE-CLASS name of a component, when it is a java primitive — the whole of
         * "does this compare, hash and print by value". Read through `TirEmitter.ScalaValueClasses`,
@@ -2563,7 +2589,7 @@ final class TirEmitter(
       def theirs(c: RecordComponent): String = s"that$$rec.${local(c.field)}"
 
       val eqM =
-        if declared(("equals", 1)) then Nil
+        if declaresEquals then Nil
         else if comps.isEmpty then
           List(s"${ind(i + 1)}override def equals(o$$rec: scala.Any): scala.Boolean = o$$rec.isInstanceOf[$self$tpWild]")
         else
@@ -2590,9 +2616,21 @@ final class TirEmitter(
           List(s"${ind(i + 1)}override def toString(): java.lang.String = $body")
 
       // THE EXTRACTOR — scala's half of JLS 14.30.1, deconstructing through the ACCESSORS exactly as
-      // java's record pattern does. Declined where the record already declares an `unapply` of its
-      // own (java permits a static one), because a synthesised twin would be a duplicate definition.
-      val hasUnapply = cd.body.exists { case d: Definition => sym(d.symbol).name == "unapply"; case _ => false }
+      // java's record pattern does. Declined where the record already declares an `unapply` that
+      // would COLLIDE with it, because a synthesised twin would be a duplicate definition.
+      //
+      // "Collide" is the whole test, and the bare name is not it. The derived extractor is emitted
+      // into the COMPANION, so only a STATIC java member reaches the same scope, and only one whose
+      // single parameter is the RECORD ITSELF erases to the same signature. An INSTANCE `unapply`
+      // is a member of the class and cannot clash with anything here; a static `unapply(String)` is
+      // an ordinary overload beside it. Read on the name alone, either of those DECLINED the
+      // synthesis — and then every record pattern over the type names a `Not Found`, which is the
+      // loud half of the same defect `declaresEquals` above has silently.
+      val hasUnapply = cd.body.exists {
+        case d: Tree.DefDef if sym(d.symbol).name == "unapply" && sym(d.symbol).flags.isStatic =>
+          paramHead(d.paramss.headOption.getOrElse(Nil)).contains(s.fullName)
+        case _ => false
+      }
       val unap =
         if hasUnapply then Nil
         else
