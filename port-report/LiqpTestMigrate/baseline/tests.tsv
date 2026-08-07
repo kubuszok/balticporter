@@ -447,7 +447,7 @@ ssg.liquid.nodes.OutputNodeTest	allowedKeywordAsVariableTest	pass
 ssg.liquid.nodes.OutputNodeTest	applyTest	pass
 ssg.liquid.nodes.OutputNodeTest	badKeywordAsVariableTest	pass
 ssg.liquid.nodes.OutputNodeTest	testDateWithFilter	pass
-ssg.liquid.parser.LiquidSupportTest	renderLiquidSupportWithNewRenderingSettings	fail
+ssg.liquid.parser.LiquidSupportTest	renderLiquidSupportWithNewRenderingSettings	pass
 ssg.liquid.parser.LiquidSupportTest	renderMapWithPojosWithMarkingInspectable	pass
 ssg.liquid.parser.LiquidSupportTest	renderMapWithPojosWithNewRenderingSettings	pass
 ssg.liquid.parser.LiquidSupportTest	testLiquidSupport	pass
@@ -456,7 +456,7 @@ ssg.liquid.parser.LiquidSupportTest	testLookupNode1b	pass
 ssg.liquid.parser.LiquidSupportTest	testLookupNode1c	pass
 ssg.liquid.parser.LiquidSupportTest	testLookupNode2a	pass
 ssg.liquid.parser.LiquidSupportTest	testLookupNode2b	pass
-ssg.liquid.parser.LiquidSupportTest	testLookupNode2c	fail
+ssg.liquid.parser.LiquidSupportTest	testLookupNode2c	pass
 ssg.liquid.parser.LiquidSupportTest	testLookupNodeSize1a	pass
 ssg.liquid.parser.LiquidSupportTest	testLookupNodeSize1b	pass
 ssg.liquid.parser.LiquidSupportTest	testLookupNodeSize1c	pass
@@ -468,7 +468,7 @@ ssg.liquid.parser.LiquidSupportTest	testMapFilter1b	pass
 ssg.liquid.parser.LiquidSupportTest	testMapFilter1c	pass
 ssg.liquid.parser.LiquidSupportTest	testMapFilter2a	pass
 ssg.liquid.parser.LiquidSupportTest	testMapFilter2b	pass
-ssg.liquid.parser.LiquidSupportTest	testMapFilter2c	fail
+ssg.liquid.parser.LiquidSupportTest	testMapFilter2c	pass
 ssg.liquid.parser.LiquidSupportTest	verifyOldBehaviorWorks	pass
 ssg.liquid.parser.ParseTest	error_on_empty_filterTest	pass
 ssg.liquid.parser.ParseTest	error_with_cssTest	pass

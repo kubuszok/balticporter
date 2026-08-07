@@ -3233,7 +3233,12 @@ final class TirEmitter(
       val args = if a.args.isEmpty then ""
                  // Java's single-element `@A(x)` names its value `value`; Scala takes it positionally.
                  else if a.args.sizeIs == 1 && a.args.head._1 == "value" then s"(${term(a.args.head._2, i)})"
-                 else s"(${a.args.map((k, v) => s"$k = ${term(v, i)}").mkString(", ")})"
+                 // …and a NAMED one goes through `esc` like every other identifier this emitter
+                 // writes. Java's identifier space is not Scala's, and the first argument-bearing
+                 // annotation the engine ever carried on a type names its element `using` — which
+                 // is in this emitter's own keyword list, so the un-escaped form is a parse error
+                 // in the middle of a declaration rather than anything a reader could attribute.
+                 else s"(${a.args.map((k, v) => s"${esc(k)} = ${term(v, i)}").mkString(", ")})"
       s"${ind(i)}@${tpe(a.tpe)}$args\n"
     }.mkString
 

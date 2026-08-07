@@ -8,7 +8,7 @@ catalog(undischarged)	5
 catalog(unmechanised)	5
 catalog(unreached)	15
 class-init-trigger	0
-collection-boundary	25
+collection-boundary	24
 collection-closure	0
 collection-retarget	0
 dependency-coverage	101
@@ -17,7 +17,7 @@ heap-pollution	0
 jdk-surface	9
 manifest	0
 markers	0
-omissions	1
+omissions	0
 overload-risk	30
 policy	0
 port-map	0

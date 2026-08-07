@@ -2131,7 +2131,11 @@ final case class PortRun(
     // a port run COUNTS an undischarged obligation, because a run that died on an incomplete rule
     // is a run that produces no diagnostics at all; the testkit is where a hole is an error.
     val catalog = new balticporter.catalog.CatalogLog(fatal = false)
-    val parsed  = SpoonTir.fromTypes(types, policySubs, catalog)
+    // `frontend.preservedAnnotations` — WHICH argument-bearing annotation families this port claims
+    // on a TYPE (`ENGINE-LIMITS.md` T16). Empty is the default and the no-op; it travels with the
+    // frontend config because it is a fact about what the HARVEST carries, and the harvest is the
+    // frontend's.
+    val parsed  = SpoonTir.fromTypes(types, policySubs, catalog, frontend.preservedAnnotations)
     // ---- POLICY BINDING (§8.1) — every declared key resolved ONCE, before any phase runs ----
     //
     // Before the pipeline and not inside it, for two reasons that are not scheduling. Every policy

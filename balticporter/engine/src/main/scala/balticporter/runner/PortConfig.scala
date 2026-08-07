@@ -1,7 +1,7 @@
 package balticporter.runner
 
 import balticporter.catalog.Platform
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RealPath, RuntimeMode}
+import balticporter.core.{AnnotationPolicy, FrontendConfig, PortManifest, Provenance, RealPath, RuntimeMode}
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{ConfigError, ConfigView}
 
@@ -51,6 +51,10 @@ import scala.jdk.CollectionConverters.*
   *   classpath       = ["…jar"]
   *   classpathFile   = "out/test-classpath.txt"   # one path-separator-joined line, as `cs` writes
   *   resolutionRoots = ["…/src/main/java"]
+  *   preservedAnnotations = ["com.fasterxml.jackson."]  # which ARGUMENT-BEARING annotation
+  *                                             # families this port claims ON A TYPE. Absent =
+  *                                             # none, which is what every port did before the
+  *                                             # key existed; a MARKER annotation needs no entry
   * }
   *
   * output { portRoot = "…", sourceSet = "main" }   # both required; sourceSet is main | test
@@ -185,6 +189,10 @@ object PortConfig:
       files           = selectFiles(input, srcRoot),
       classpath       = classpath(input, dir),
       resolutionRoots = input.strings("resolutionRoots").getOrElse(Nil).map(resolvePath(dir, _)),
+      // FQN prefixes, upstream namespace, and NOT paths — a family is a name, so nothing here is
+      // resolved against the config's directory. Absent is `AnnotationPolicy.none`, which is the
+      // behaviour every port had before the key existed (`ENGINE-LIMITS.md` T16).
+      preservedAnnotations = AnnotationPolicy(input.strings("preservedAnnotations").getOrElse(Nil)),
     )
 
     PortRun(

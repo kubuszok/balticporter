@@ -1975,7 +1975,7 @@ members, which says only that libGDX has no such receiver — not that the defec
 
 *Fix kind: (a) engine. Built — one call to `operand` in each of the four positions, and no new rule.*
 
-### T16. A TYPE's annotation is harvested where NO EXPRESSION TRANSLATOR exists, so every argument-bearing one is DROPPED — **OPEN; 3 liqp failures, 0 compile errors, and the check that reports it has read 1 since the port began**
+### T16. A TYPE's annotation is harvested where NO EXPRESSION TRANSLATOR exists, so every argument-bearing one is DROPPED — **CLOSED; liqp 633/4 -> 636/1, and the check that reported it had read 1 since the port began**
 
 `SpoonTir.annotationsOf` carries a MARKER annotation (`@Override`, `@Documented`, `@SafeVarargs`) at
 every declaration kind and needs nothing to do it. An annotation WITH ARGUMENTS needs its element
@@ -2015,10 +2015,62 @@ fix is TWO things and not one: a translator at the type harvest, and the (b) pol
 families a port claims. A third, smaller trap sits behind them — `TirEmitter.annots` renders a named
 argument as `k = …` with no keyword escaping, and jackson's element here is spelled `using`.
 
+**CLOSED, as both halves and a third the entry had spotted.** The harvest is (a) and is three lines:
+`defineType` calls `minter.resolve(q)` before `minter.define(q)` — they mint the same id for the
+same key, `define` calls `resolve` itself — and builds `new BodyTranslator(id, id)` against it,
+which is the shape `enumCase` has always used for an enum constant's arguments. The order every
+later pass depends on is unchanged, measured: **0 member digests on all fifteen ports** except the
+one that declares a family.
+
+The (b) half is `FrontendConfig.preservedAnnotations`, an `AnnotationPolicy` whose `none` is the
+default and whose matching cuts at a separator rather than being a `startsWith` (§4.56 — `com.foo`
+covers `com.foo.Bar$Baz` and not `com.foobar.Bar`, and a port may write the trailing dot or not).
+It rides on the FRONTEND config because it is a fact about what the HARVEST carries, and a `.conf`
+port writes `preservedAnnotations = [ … ]` in its `input` block.
+
+**Three things about the shape that are not incidental:**
+
+- **the gate is on the TYPE and on nothing else**, because that is the only site where the harvest
+  changed. A method's and a parameter's annotations already translated, so gating them would delete
+  emitted text on ports that never asked;
+- **…and the FIELD site is deliberately left DROPPING, though it has the same missing translator.**
+  `fieldDef1` harvests before its own `BodyTranslator` exists, and the ten `@SuppressWarnings` rows
+  on one corpus port's `omissions` lane are exactly that. Fixing it there would take the count down
+  and emit NOTHING, because `TirEmitter.annots` renders a class's and a method's annotations and
+  neither a field's nor a parameter's — a residue count that falls while nothing is emitted is
+  worse than the gap it names. The emission surface comes first, and the harvest follows it;
+- **the third trap was live, not hypothetical.** `TirEmitter.annots` interpolated a named argument's
+  key RAW, and `using` — the element jackson's `@JsonSerialize` names — is in this emitter's own
+  keyword list. Un-escaped it is a parse error in the middle of a declaration, which is strictly
+  worse than the dropped annotation it replaces: it takes the rest of the file with it and names
+  nothing. One `esc(k)`, and `TypeAnnotationSpec` asserts the backticks rather than the annotation
+  alone.
+
+**MEASURED, and the three tests came in TWO steps rather than one — which is the entry's own
+warning, met.** The harvest plus the port's declaration took `omissions` **1 -> 0** and the suite
+**633/4 -> 633/4**: one test newly passing, one newly FAILING, net zero. The regression is the
+interesting half. With the serializer finally in place jackson stopped bean-serialising the pojo and
+started calling `toLiquid()` — whose result is a RETYPED `mutable.Map` handed to
+`JsonGenerator.writeObject(Object)`, which is `ENGINE-LIMITS.md` K21 face 1 exactly. The seam had an
+ordinary shallow coercion on it (`JavaCollections.toJava`, one level), so jackson saw a java map of
+SCALA maps and `{{foo.child.size}}` answered about the wrong object.
+
+**And the instrument had already named the sink.** `JsonGenerator#writeObject` has been a row in
+this port's `OpaqueEgress` candidate list since K21 shipped — the list exists precisely so a port
+can read its `reflectiveSinks` off it — and `PROGRESS.md` had recorded it as "a jackson sink
+`main.conf` still does not declare". Declaring it swaps the shallow view for the deep
+`Reified.toJavaValue` and flips all three: **liqp 633/4 -> 636/1, `collection-boundary` 25 -> 24,
+3 members moved**, with the one remaining failure K18's counted `InexpressibleParent` refusal.
+
+So the transferable rule is not about annotations: **an (a) fix that removes an OMISSION can expose
+a (b) policy gap, because the omission was suppressing the code path the policy is about.** The
+count predicted (3) was right and the mechanism was two, which is why the census is re-run after the
+fix rather than subtracted from.
+
 *Fix kind: (a) for the harvest — a type's annotation values are constant expressions and there is no
 reason the frontend cannot translate them — plus (b) for WHICH families are carried, which is
-`SpoonFrontend.preservedAnnotationPrefixes` one path over. Counted today by `omissions`, which named
-it correctly and was read as decoration.*
+`SpoonFrontend.preservedAnnotationPrefixes` one path over. It was counted all along by `omissions`,
+which named it correctly and was read as decoration.*
 
 ### T17. Java resolves an overload in THREE PHASES and Scala in ONE — **the divergence cannot be predicted without a resolver; the RISK is counted instead**
 

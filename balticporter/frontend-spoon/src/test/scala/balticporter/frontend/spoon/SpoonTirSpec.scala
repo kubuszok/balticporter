@@ -1,5 +1,6 @@
 package balticporter.frontend.spoon
 
+import balticporter.core.AnnotationPolicy
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
 
@@ -164,4 +165,66 @@ class SpoonTirSpec extends munit.FunSuite:
     assertEquals(annotsOf(c), List("demo.Tag"))
     assertEquals(c.droppedAnnotations, Nil)
     assertEquals(c.annotations.head.args.map(_._1), List("value"))
+  }
+
+  // -------------------------------------------------------------------------
+  // …and the TYPE, which had no translator at all — `ENGINE-LIMITS.md` T16.
+  //
+  // A type's symbol is minted before any body exists, so `defineType` harvested with `None` and
+  // every argument-bearing annotation on every type in every port was reported and dropped. The
+  // fix is two things and not one: a translator at the harvest (universal — the values are
+  // constant expressions) and the §1(b) policy saying which families a port claims, whose default
+  // claims NONE so that nothing a port did not ask for starts being emitted.
+  // -------------------------------------------------------------------------
+
+  private val typeAnnotated =
+    """package demo;
+      |@interface Ser { Class<?> using(); }
+      |@Ser(using = Ser.class)
+      |interface Model {}
+      |@interface Marker {}
+      |@Marker
+      |class Plain {}
+      |""".stripMargin
+
+  private def typeAnns(p: Program, full: String): (List[String], List[String]) =
+    val s = p.symbols.all.find(_.fullName == full).getOrElse(fail(s"no symbol $full"))
+    (s.annotations.flatMap(a => a.tpe match
+       case TypeRef(_, x) => p.symbolOf(x).map(_.fullName)
+       case _             => None),
+     s.droppedAnnotations)
+
+  test("a TYPE's argument-bearing annotation is DROPPED when the port claims no family") {
+    // §1(b): the empty parameter is the no-op, and the no-op is what every port did before the
+    // translator existed. The drop is REPORTED — `omissions` is where a port reads it.
+    val p = SpoonTir.fromSource(typeAnnotated)
+    assertEquals(typeAnns(p, "demo.Model"), (Nil, List("demo.Ser")))
+  }
+
+  test("…and CARRIED, with its arguments, when the port claims the family") {
+    val p = SpoonTir.fromSource(typeAnnotated, annotations = AnnotationPolicy(List("demo.")))
+    val (carried, dropped) = typeAnns(p, "demo.Model")
+    assertEquals(carried, List("demo.Ser"))
+    assertEquals(dropped, Nil)
+    val a = p.symbols.all.find(_.fullName == "demo.Model").get.annotations.head
+    assertEquals(a.args.map(_._1), List("using"))
+  }
+
+  test("a MARKER on a type needs no policy — it never needed a translator") {
+    // The asymmetry is the whole reason the policy exists: a marker is carried unconditionally at
+    // every declaration kind (`@SafeVarargs` is a catalog row that depends on it), and only the
+    // ones whose ELEMENT VALUES have to be translated are a question at all.
+    val p = SpoonTir.fromSource(typeAnnotated)
+    assertEquals(typeAnns(p, "demo.Plain"), (List("demo.Marker"), Nil))
+  }
+
+  test("the policy cuts at a SEPARATOR, never on a bare prefix (§4.56)") {
+    val p = AnnotationPolicy(List("com.foo"))
+    assert(p.claims("com.foo.Bar"))
+    assert(p.claims("com.foo.Bar$Baz"))
+    assert(p.claims("com.foo"))
+    assert(!p.claims("com.foobar.Bar"), "a prefix is not a structural fact about anything")
+    assert(!AnnotationPolicy.none.claims("com.foo.Bar"), "the empty policy claims nothing")
+    // …and a port may write the trailing dot or not and get the same answer.
+    assertEquals(AnnotationPolicy(List("com.foo.")).claims("com.foo.Bar"), p.claims("com.foo.Bar"))
   }

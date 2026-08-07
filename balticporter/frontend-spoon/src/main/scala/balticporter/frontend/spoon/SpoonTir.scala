@@ -1,6 +1,6 @@
 package balticporter.frontend.spoon
 
-import balticporter.core.{FrontendConfig, RealPath, Substituted, Substitutions}
+import balticporter.core.{AnnotationPolicy, FrontendConfig, RealPath, Substituted, Substitutions}
 import balticporter.catalog.{CatalogLog, Dispatch, JS, Lowering, Obligations, Typing}
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
@@ -36,8 +36,9 @@ object SpoonTir:
     * discarding log, so a caller that does not want coverage does not have to hold one, and nothing
     * accumulates across two calls. */
   def fromTypes(types: List[CtType[?]], subs: Substitutions = Substitutions.none,
-                catalog: CatalogLog = CatalogLog.discarding): Program =
-    new Builder(subs, catalog = catalog).build(types)
+                catalog: CatalogLog = CatalogLog.discarding,
+                annotations: AnnotationPolicy = AnnotationPolicy.none): Program =
+    new Builder(subs, catalog = catalog, annotations = annotations).build(types)
 
   /** Build the Spoon model over a whole closure and return its top-level types. Full
     * classpath by default (like the BIR frontend); `lenient` uses noClasspath mode so a
@@ -79,8 +80,9 @@ object SpoonTir:
     * JDK types resolve by qualified name) and populate the TIR from its top-level types. */
   def fromSource(code: String, fileName: String = "Snippet.java",
                  subs: Substitutions = Substitutions.none,
-                 catalog: CatalogLog = CatalogLog.discarding): Program =
-    fromSources(List(fileName -> code), subs, catalog)
+                 catalog: CatalogLog = CatalogLog.discarding,
+                 annotations: AnnotationPolicy = AnnotationPolicy.none): Program =
+    fromSources(List(fileName -> code), subs, catalog, annotations)
 
   /** The same, over SEVERAL compilation units — because a Java file holds exactly one package, and
     * every rule about a PACKAGE BOUNDARY (default access, `protected`, a cross-package override)
@@ -91,7 +93,8 @@ object SpoonTir:
     * looked up by file name rather than by offset into a joined string. */
   def fromSources(sources: List[(String, String)],
                   subs: Substitutions = Substitutions.none,
-                  catalog: CatalogLog = CatalogLog.discarding): Program =
+                  catalog: CatalogLog = CatalogLog.discarding,
+                  annotations: AnnotationPolicy = AnnotationPolicy.none): Program =
     val launcher = new Launcher
     val env      = launcher.getEnvironment
     env.setComplianceLevel(21)
@@ -105,7 +108,7 @@ object SpoonTir:
     // fall back to Spoon's RE-PRINTED form and this convenience API would quietly be the one path
     // that does not preserve them verbatim. It is the same buffer either way; only its source
     // differs.
-    new Builder(subs, sources.toMap, catalog).build(tops)
+    new Builder(subs, sources.toMap, catalog, annotations).build(tops)
 
   // -------------------------------------------------------------------------
   /** Interns symbols by a stable string key (qualified names for types, `owner#member`
@@ -174,7 +177,8 @@ object SpoonTir:
     *   text is exactly the silent mis-preservation §4.58 is about. */
   private final class Builder(subs: Substitutions = Substitutions.none,
                               inMemorySources: Map[String, String] = Map.empty,
-                              catalog: CatalogLog = CatalogLog.discarding):
+                              catalog: CatalogLog = CatalogLog.discarding,
+                              annotations: AnnotationPolicy = AnnotationPolicy.none):
     /** the run's obligation log, in scope for every `Lowering.of` in this builder. `given` rather
       * than a parameter on every lowering method: the wrapper is at the DISPATCH and the dispatch
       * is one method, so threading it explicitly would be forty signatures carrying a value one of
@@ -1595,7 +1599,20 @@ object SpoonTir:
       // A substituted type stays in the model with its references resolved (see `Substituted`), but
       // carries the tag so later phases can rewrite uses into whatever replaces it.
       val tags: Set[SymTag] = if subs.dropsType(q) then Set(Substituted(q)) else Set.empty
-      val (anns, annDropped) = annotationsOf(t, None)
+      // A TYPE's annotation values are constant expressions, so they translate on the ordinary
+      // expression path — and this was the one harvest with no translator to run it, which dropped
+      // every argument-bearing annotation on every type in every port (`ENGINE-LIMITS.md` T16).
+      //
+      // `resolve` FIRST and `define` after: they mint the same id for the same key (`define` calls
+      // `resolve`), so the symbol order every later pass depends on is unchanged and the translator
+      // can be built against the id before the record exists. `methodId = classId = id` is the
+      // shape `enumCase` already uses for an enum constant's arguments — `this` denotes the type,
+      // and a constant expression owns no locals.
+      //
+      // WHICH families are carried is the port's ([[AnnotationPolicy]]); the default claims none,
+      // so this reads exactly as it did before the translator arrived.
+      val (anns, annDropped) =
+        annotationsOf(t, Some(new BodyTranslator(minter.resolve(q), minter.resolve(q))), annotations.claims)
       minter.define(q)(id =>
         Symbol(id, sourceName.getOrElse(t.getSimpleName), q, typeFlags(t),
                owner.getOrElse(ownerSym(t)), TypeRef(NoPrefix, id), tags = tags,
@@ -1782,7 +1799,8 @@ object SpoonTir:
       * silently emitted without its arguments, which would be the same defect one level down.
       * Spoon's `@interface` for a JDK/test annotation is a shadow, so the type is taken from the
       * reference's qualified name and needs no declaration. */
-    private def annotationsOf(el: CtElement, bt: Option[BodyTranslator]): (List[Annot], List[String]) =
+    private def annotationsOf(el: CtElement, bt: Option[BodyTranslator],
+                              claimed: String => Boolean = _ => true): (List[Annot], List[String]) =
       val out     = collection.mutable.ListBuffer[Annot]()
       val dropped = collection.mutable.ListBuffer[String]()
       val as = try el.getAnnotations.asScala.toList catch { case _: Throwable => Nil }
@@ -1797,6 +1815,12 @@ object SpoonTir:
           // `@A` where Java wrote `@A(x)` changes its meaning.
           if vals.isEmpty then
             out += Annot(TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn))), Nil, originOf(a))
+          // …and one WITH ARGUMENTS is carried only where a translator exists AND the port claims
+          // the family. `claimed` defaults to "every one", which is what a site with a translator
+          // has always done; the TYPE harvest passes the port's policy, whose default claims none.
+          // Either way an uncarried annotation is REPORTED rather than emitted bare — `@A` where
+          // java wrote `@A(x)` is a different annotation.
+          else if !claimed(fqn) then dropped += fqn
           else bt match
             case None => dropped += fqn
             case Some(b) =>
