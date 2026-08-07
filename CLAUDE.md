@@ -1090,6 +1090,19 @@ source positions. Note an in-memory compilation unit may have NO buffer (Spoon's
 `getOriginalSourceCode` returns null for a `VirtualFile`), so the convenience parse path has to be
 handed the text it was given, or it is silently the one path that does not preserve anything.
 
+**…and THE ABSENT BUFFER REACHES FURTHER THAN THE HARVEST, which is what makes it a rule.** A
+POSITION is derived from the same buffer: Spoon computes a COLUMN by scanning the compilation unit's
+original source, so `getColumn` throws a `NullPointerException` on a unit that has none — and
+`isValidPosition` answers TRUE there, because the position itself is perfectly good. The whole
+translation then dies with no origin, no construct name and nothing to classify it by, which is the
+one failure shape this frontend must not have (§4.45). Guard the buffer, not the position, and
+report the origin without the part that needs it: every reader of an `Origin` keys on the FILE and
+the LINE — `srcmap.tsv`, `errors.tsv`, a finding's location, the correlator — so a missing column
+costs decoration and inventing one would be §4.6's fabricated fact. `SpoonTir.columnOf` is that
+guard; it changes no port's output, because every corpus source is a real file with a buffer, and it
+is a crash only an in-memory parse can reach — which is exactly what §4.45's agent and every
+testkit fixture are.
+
 **One comment, one home: keep a CLAIMED identity set.** Harvesting is layered — a declaration takes
 its own, and a statement then scoops whatever expression-level comments its subtree still has (the
 TIR has no node for those). A coarse harvest must therefore run AFTER its children have translated

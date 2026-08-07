@@ -585,6 +585,52 @@ one says the surface is missing, the other says no surface is owed (a checked no
 difference the translation satisfies by construction with no site-level decision to take), and
 collapsing them would hide the first inside the second.
 
+**And an OBLIGATION is per NODE, so the consult goes in the ARM even where the RULE's convergence
+point is not one.** F8's rule — a rule stated once per arm is a rule the next arm will not have —
+says to put the rule where the arms converge, and area G is where that runs into the mechanism's own
+shape. Java's assignment conversion (JLS 5.2) is ONE conversion written out by ONE function
+(`SpoonTir.coerce`), reached from six node kinds: a local's initialiser, an assignment, a `return`, a
+call argument, a `new`'s argument, an array initialiser's element. The tempting move is to consult
+inside `coerce`. It is wrong, and silently: `coerce` is not reached at all for a local with no
+initialiser, a bare `return` or a zero-argument call, so the consult would report a hole at exactly
+the nodes where the difference does not apply — a phantom on the work list, which is the one thing a
+work list may not have. The answer is both halves at once: the rule is stated once
+(`SpoonTir.slotConsults`, one function) and CALLED from each of the six arms, where the node always
+is. F8 is satisfied by the single statement; the obligation is satisfied by the six call sites.
+
+**…and a node a PARENT consumes POSITIONALLY never enters the dispatch, so attaching a row to its
+kind is coverage that cannot fail.** The third face of "a dispatch is only a dispatch if every node
+goes through it", and the one with no symptom at all: `TirEmitter.argTerms` FLATTENS a
+`Tree.Repeated` in an argument position before `term` is called on it — a fact about the POSITION,
+since a node rendering `""` would leave `f(a, )` — so `JS-G39` attached at `Rendered("Repeated")`
+would have been neither consulted nor reported as a hole, because a node that does not enter the
+dispatch owes nothing. Every other shape of this defect leaves SOMETHING behind (a lower consult
+count, a hole on the work list); this one leaves a row sitting on `mechanised` with a surface that
+can never be reached. It is `SpoonKinds.Claim.Positional` met at the other end of the pipeline, and
+the answer is the same one the frontend's registry already gives: the decision belongs to the
+CONSUMING node, so the row attaches at the enclosing `Apply` where the flattening is decided.
+
+**And what hides it is that a `Both` row's consult count is ONE NUMBER.** `catalog(unreached)` and
+`just catalog-coverage` both ask "did this ROW get reached", so a live leaf answers for a dead one —
+`JS-G39` read *consulted 30,560* on the strength of its lowering half while its rendering half could
+not run. Neither instrument is wrong; they answer a question about the row, and this is a question
+about a leaf. Until something asks it per leaf, the guard is the review step named above: when a row
+attaches to a `Tree` kind nothing attached to before, check that the kind reaches its dispatch at
+all — the entry (`emitUnit`, chunk 11) and the parent (`argTerms`, this one) are the two ways it
+does not.
+
+**Area G's residue is a FOURTH SURFACE that does not exist, and it is named rather than defaulted.**
+Eleven `JS-G` rows are decided while lowering or rendering a TYPE REFERENCE — the wildcard grammar,
+the raw-type fill, the F-bound erasure, the diamond's unnameable inference variable. `SpoonTir.tpe`
+is a real dispatch on the Spoon reference kinds and `TirEmitter.tpe` is its mirror, and neither is
+reachable by either wrapper: a `CtTypeReference` is not a statement or an expression (nor is it in
+`SpoonKinds`' registry, whose totality is derived from `spoon.reflect.{code,declaration}`), and a
+`TypeTree` is a `Tree` that is not a `Statement`, so it never enters `TirEmitter.stat`/`term`. That
+is the same fact `JS-C29` records one area over. Building it is a wave of its own — a kind registry
+for `spoon.reflect.reference`, an `Attaches` case, and a price measured the way the frontend's and
+the emitter's were — so until then those rows carry `Unmechanised` with that sentence, which is what
+`catalog(unmechanised)` is for.
+
 **The DISPATCH is part of the key, and that is not an implementation detail leaking upward.** Java
 gives one node kind two meanings by position: `i += f` as a statement discards the compound
 assignment's value (JLS 14.8) and the same node as an expression yields it (JLS 15.26.2). The

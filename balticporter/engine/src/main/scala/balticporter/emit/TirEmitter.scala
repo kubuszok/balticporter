@@ -2453,7 +2453,18 @@ final class TirEmitter(
     Obligations.consult(JS.C(39), at)(Option.when(isEnum)(()))
     Obligations.consult(JS.C(40), at)(Option.when(isEnum && cd.enumCases.exists(_.body.nonEmpty))(()))
 
+    // JS-G35 — scala CHECKS an F-bound where javac does not, so a naive erasure of `N <: Node[N,…]`
+    // is rejected at every use. It is one decision seen from two declaration kinds (a class's formal
+    // parameters and a method's), which is why the row attaches at both and why the predicate is
+    // `fBounded` — stated once, called from here and from the `DefDef` case of the dispatch.
+    Obligations.consult(JS.G(35), at)(Option.when(fBounded(cd.tparams))(()))
+
     declVisibility(s, at)
+
+  /** does any of these type parameters mention ITSELF in its own bound — java's F-bound, which scala
+    * checks at every use and javac does not (JS-G35)? */
+  private def fBounded(tps: List[Tree.TypeDef]): Boolean =
+    tps.exists(tp => mentionsSym(tp.rhs.tpe, tp.symbol))
 
   private def statArm(s: Statement, i: Int)(using Obligations): String = s match
     // a commented STATEMENT: its comments at the statement's own indent, then the statement. A
@@ -2488,6 +2499,9 @@ final class TirEmitter(
       // exactly the member JS-C16 is about.
       Obligations.consult(JS.C(16), d.origin)(Option.when(isInitBlock(d))(()))
       Obligations.consult(JS.C(25), d.origin)(Option.when(sym(d.symbol).flags.isOverride)(()))
+      // JS-G35's other declaration kind — a METHOD's own formal parameters carry the same F-bound,
+      // and are consulted at the same convergence point for the same reason as the two rows above.
+      Obligations.consult(JS.G(35), d.origin)(Option.when(fBounded(d.tparams))(()))
       declVisibility(sym(d.symbol), d.origin)
       if isInitBlock(d) then
         d.rhs.map(r => s"${declNotes(d.symbol, i)}${ind(i)}locally ${term(r, i)}").getOrElse("")
@@ -3245,6 +3259,14 @@ final class TirEmitter(
       Obligations.consult(JS.C(6), a.origin)(Option.when(fun match
         case Tree.Select(recv, m, _, _) => staticThroughInstance(recv, m)
         case _                          => false)(()))
+      // JS-G39, the EMITTER half — an external callee's `T...` is a class file's, which scalac reads
+      // as a REPEATED parameter, so the pack becomes the argument list's TAIL rather than one
+      // argument. HERE and not at a `Rendered("Repeated")`, because `argTerms` flattens the node
+      // before the dispatch would ever see it (see the row's own note): a `Tree.Repeated` in an
+      // argument position never enters `term`, so an arm there could neither be consulted nor
+      // reported as a hole. The decision belongs where the flattening is.
+      Obligations.consult(JS.G(39), a.origin)(
+        Option.when(args.exists(_.isInstanceOf[Tree.Repeated]))(()))
       applyStr(fun, args, i)
     case Tree.TypeApply(fun, targs, _, _) => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
     case Tree.Assign(l, r, _, _)        => s"${term(l, i)} = ${term(r, i)}"
@@ -3290,20 +3312,53 @@ final class TirEmitter(
     // exactly what javac did with it — and scala SAM-converts at one (probed on 3.8.4 at a bare
     // slot, a wildcard-applied slot, a two-parameter one and a bare method name). `operand`
     // parenthesises the lambda, which is not cosmetic: `(x => y: T)` ascribes the BODY.
-    case Tree.Typed(e, tpt, _, _) if polyOperand(e) => s"(${operand(e, i)}: ${tpe(castTarget(e, tpt.tpe))})"
-    case Tree.Typed(e, tpt, _, _)       => s"${operand(e, i)}.asInstanceOf[${tpe(castTarget(e, tpt.tpe))}]" // Java cast
-    case Tree.Repeated(es, _, _)        => es.map(term(_, i)).mkString(", ")
+    //
+    // ONE arm rather than two guarded ones, because the obligation below is owed per NODE and a
+    // consult written into the first `case` would be a consult the second never takes — F8's shape
+    // in a `match`. The two renderings are unchanged and the branch is the same predicate.
+    case ty @ Tree.Typed(e, tpt, _, _)  =>
+      val target = castTarget(e, tpt.tpe)
+      // JS-G34 — java's INTERSECTION in a cast (`(A & B) x`, JLS 4.9) becomes scala's `A & B`. Read
+      // off the cast's own TARGET, which is the type this arm is about to render.
+      Obligations.consult(JS.G(34), ty.origin)(Option.when(target.isInstanceOf[TypeRepr.AndType])(()))
+      if polyOperand(e) then s"(${operand(e, i)}: ${tpe(target)})"
+      else s"${operand(e, i)}.asInstanceOf[${tpe(target)}]" // Java cast
+    // JS-G39 at the position `argTerms` does NOT reach — a `Tree.Repeated` outside an argument list
+    // still stands for a sequence of its own and renders here. Recorded without being owed: the row
+    // attaches at `Apply`, which is where the flattening decision is taken and the only place a
+    // packed tail can be seen at all.
+    case r @ Tree.Repeated(es, _, _)    =>
+      Obligations.consult(JS.G(39), r.origin)(Some(()))
+      es.map(term(_, i)).mkString(", ")
     // `xs*` — CLAUDE.md §6's spread, never `: _*`. `operand` because the array is an expression the
     // `*` binds tighter than: `(if (c) a else b)*` parses, `if (c) a else b*` does not.
-    case Tree.Spread(e, _, _)           => s"${operand(e, i)}*"
+    // JS-G40, the EMITTER half — JS-G38 composed with JS-G39: java already holds the array and
+    // forwards it whole through an EXTERNAL `T...` slot, where a bare array would conform as ONE
+    // element. `xs*`, never `: _*` (`CLAUDE.md` §6). Always fires, for the reason above.
+    case s @ Tree.Spread(e, _, _)       =>
+      Obligations.consult(JS.G(40), s.origin)(Some(()))
+      s"${operand(e, i)}*"
     case Tree.Return(e, _, _)           => "return" + e.map(x => " " + term(x, i)).getOrElse("")
     case Tree.While(c, b, _, _, lbl)    =>
       loopWithJumps(b, lbl, bd => s"while (${term(c, i)}) $bd", term(b, i))
     case Tree.Throw(e, _, _)            => s"throw ${term(e, i)}"
     // …and the other three receiver positions, by the same rule and for the same misparse.
-    case Tree.InstanceOf(e, tpt, _, _)  => s"${operand(e, i)}.isInstanceOf[${tpe(tpt.tpe)}]"
+    // JS-G21 — java restricts `instanceof` to a REIFIABLE type (JLS 4.7), which is a NON-difference:
+    // `isInstanceOf` tests the erased runtime class exactly as java's does, and javac already
+    // rejected the unreifiable forms. What the row is `Partial` for is the OTHER half — SE16's
+    // pattern BINDING, which has no representation at all (zero `CtTypePattern` hits, and
+    // `SpoonKinds` records that refusal). Fires at every `instanceof`, which is the population the
+    // reifiability question is asked of.
+    case io @ Tree.InstanceOf(e, tpt, _, _) =>
+      Obligations.consult(JS.G(21), io.origin)(Some(()))
+      s"${operand(e, i)}.isInstanceOf[${tpe(tpt.tpe)}]"
     case Tree.ArrayAccess(a, idx, _, _) => s"${operand(a, i)}(${term(idx, i)})"
-    case Tree.ArrayLength(a, _, _)      => s"${operand(a, i)}.length"
+    // JS-G17 — java's `.length` is a FIELD of the array and scala's is a method; the row's other two
+    // faces (an array's `Class` object, and `T[]::new`) are answered at the `MethodRef` arm, which
+    // is why it attaches at both. Always fires: every array length is the difference.
+    case al @ Tree.ArrayLength(a, _, _) =>
+      Obligations.consult(JS.G(17), al.origin)(Some(()))
+      s"${operand(a, i)}.length"
     case Tree.NewArray(el, dims, init, _, _) =>
       init match
         // `scala.Array`, fully qualified: a bare `Array` collides with libGDX's own
@@ -3333,6 +3388,15 @@ final class TirEmitter(
       // supertype; a scala generator is a `val` of the element's own type and permits neither. Read
       // off the two decisions the emitter has just taken, never re-derived (§4.56).
       Obligations.consult(JS.S(16), b.origin)(Option.when(mutable || widenedBinding(b, it).isDefined)(()))
+      // JS-G04 — a captured WILDCARD on iteration has no nameable type. Java relates the element it
+      // reads and the collection it read it from as ONE capture; scala captures per use, so the
+      // generator's binding cannot be written at the capture and the image is the same alias plus a
+      // widening cast (`ENGINE-LIMITS.md` K7). It is the same repair JS-S16 takes, asked at the one
+      // shape that has no scala NAME at all, so the predicate is the iterable's element being a
+      // wildcard rather than the repair having fired.
+      Obligations.consult(JS.G(4), b.origin)(Option.when(it.tpe match
+        case TypeRepr.AppliedType(_, args) => args.exists(_.isInstanceOf[TypeRepr.TypeBounds])
+        case _                             => false)(()))
       (widenedBinding(b, it), mutable) match
         case (None, false) => loopWithJumps(body, lbl, bd => s"for ($name <- ${term(it, i)}) $bd", term(body, i))
         case (widened, _) =>
@@ -3369,8 +3433,27 @@ final class TirEmitter(
       loopWithJumps(body, lbl, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
     case t: Tree.Try                    => tryStr(t, i)
     case m: Tree.Match                  => matchStr(m, i)
-    case Tree.MethodRef(q, s, mrT, _)   =>
+    case mr @ Tree.MethodRef(q, s, mrT, _) =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
+      // JS-G43, the EMITTER half — five java forms share one syntax and each becomes a DIFFERENT
+      // scala lambda. The discrimination is right here (`isCtor`, `Flags.isStatic`, and the array
+      // element test below), so the row attaches at both surfaces: the frontend carries the
+      // reference as a node, this arm chooses which of the five it is. Always fires.
+      Obligations.consult(JS.G(43), mr.origin)(Some(()))
+      // JS-G17's third face — `T[]::new` is an `IntFunction[T[]]` and not a no-arg supplier, because
+      // a scala array needs a LENGTH. (`.length` is the arm above; the array's `Class` object rides
+      // on the same row.) Fires only at the array-constructor form.
+      Obligations.consult(JS.G(17), mr.origin)(Option.when(isCtor && (q match
+        case Left(tt) => tt.tpe match
+          case TypeRepr.AppliedType(TypeRepr.TypeRef(_, as), List(_)) => sym(as).fullName == "scala.Array"
+          case _                                                     => false
+        case _ => false))(()))
+      // JS-G33 — SAM CONVERSION eligibility. `samAscribed` is the one place that asks it, and it is
+      // reached from the constructor-reference and unbound-instance forms; the static form is a
+      // qualified NAME and needs no conversion at all, which is what the negative half records.
+      Obligations.consult(JS.G(33), mr.origin)(Option.when(q match
+        case Left(_) => isCtor || !sym(s).flags.isStatic
+        case Right(_) => true)(()))
       q match
         // an ARRAY constructor reference `T[]::new` is an `IntFunction[T[]]` — `(size) => new T[size]`
         // (Scala arrays need a length), NOT a no-arg supplier. One-layer element = the array's row type.

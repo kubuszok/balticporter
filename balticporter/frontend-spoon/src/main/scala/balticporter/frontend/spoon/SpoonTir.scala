@@ -435,8 +435,28 @@ object SpoonTir:
     private def originOf(el: CtElement): Origin =
       val p = el.getPosition
       if p != null && p.isValidPosition then
-        Origin(Option(p.getFile).map(_.getPath).getOrElse("<unknown>"), p.getLine, p.getColumn)
+        Origin(Option(p.getFile).map(_.getPath).getOrElse("<unknown>"), p.getLine, columnOf(p))
       else Origin.synthetic
+
+    /** the position's COLUMN, or 0 where the unit has no source buffer to search.
+      *
+      * `isValidPosition` does not cover this and the failure is a CRASH, not a bad value: Spoon
+      * computes a column by SCANNING the compilation unit's original source
+      * (`SourcePositionImpl.searchColumnNumber`), and an in-memory unit may have none — the same
+      * null `getOriginalSourceCode` `CLAUDE.md` §4.58 makes the trivia harvest carry its text for.
+      * A position on such a unit is otherwise perfectly good, so the whole translation died on a
+      * `NullPointerException` with no origin and no construct name, which is the one failure shape
+      * this frontend must not have (§4.45).
+      *
+      * ZERO is honest here and is not a fabricated fact (§4.6): every reader of an `Origin` keys on
+      * the FILE and the LINE — `srcmap.tsv`, `errors.tsv`, a finding's location, the correlator —
+      * and the column is decoration none of them joins on. What is refused is inventing a column,
+      * not reporting the origin. A file-backed unit caches its buffer on first read, so this costs a
+      * cached field access per element and changes no port's output: every corpus source is a real
+      * file and every one of them has a buffer. */
+    private def columnOf(p: spoon.reflect.cu.SourcePosition): Int =
+      val cu = p.getCompilationUnit
+      if cu == null || cu.getOriginalSourceCode == null then 0 else p.getColumn
 
     private def tt(t: TypeRepr, el: CtElement): TypeTree = TypeTree(t, originOf(el))
 
@@ -2067,6 +2087,10 @@ object SpoonTir:
         case v: CtLocalVariable[?] =>
           val vt = tpe(v.getType)
           val id = defineLocal(v, vt) // sets isMutable when the local is reassigned
+          // the SLOT rows — JS-G09/G13/G14. A local with no initialiser has no slot, the list is
+          // empty and all three answer "does not apply", which is the honest discharge (see
+          // `slotConsults` on why the consult may not live inside `coerce`).
+          slotConsults(Option(v.getDefaultExpression).map(v.getType -> _).toList, originOf(v))
           val rhs = Option(v.getDefaultExpression).map(e => coerce(v.getType, e, expr(e)))
           Tree.ValDef(id, tt(vt, v), rhs, originOf(v))
         case a: CtOperatorAssignment[?, ?] =>
@@ -2085,6 +2109,7 @@ object SpoonTir:
           val tgt = Option(a.getAssigned.getType)
           val rhs = a.getAssignment
           val lhs = expr(a.getAssigned)
+          slotConsults(tgt.map(_ -> rhs).toList, originOf(a))
           val v   = tgt.map(coerce(_, rhs, expr(rhs))).getOrElse(expr(rhs))
           Tree.Assign(lhs, toDeclaredTypeParam(a.getAssigned, rhs, v), unitT, originOf(a))
         case i: CtIf =>
@@ -2093,6 +2118,7 @@ object SpoonTir:
         case r: CtReturn[?] =>
           // coerce the returned value to the method's declared return type (null → type param, etc.).
           val target = Option(r.getParent(classOf[CtMethod[?]])).flatMap(m => Option(m.getType))
+          slotConsults(target.zip(Option(r.getReturnedExpression)).toList, originOf(r))
           val ret = Option(r.getReturnedExpression).map(e => target.map(tp => coerce(tp, e, expr(e))).getOrElse(expr(e)))
           Tree.Return(ret, nothingT, originOf(r))
         case w: CtWhile =>
@@ -2384,6 +2410,67 @@ object SpoonTir:
                    finally inOverridingMember = savedOv
           Tree.Typed(t, tt(ct, e), ct, originOf(e))
 
+      /** JS-G13's clause, as a function of the SLOT — java's array covariance (JLS 10.10) put a value
+        * of one array type where another is declared, and scala's `Array` is invariant.
+        *
+        * Extracted so [[coerce]] and [[slotConsults]] read ONE predicate: a consult that re-derived
+        * the condition beside the clause it is about would be a second answer to one question, which
+        * is `ENGINE-LIMITS.md` F8's shape (`CLAUDE.md` §4.56). `coerce` keeps its own `arrayCov`
+        * gate on top — that flag is a fact about the CALLEE (own methods keep the invariant
+        * `Array[T]`), not about the slot. */
+      private def arrayCovSlot(target: CtTypeReference[?], et: CtTypeReference[?]): Boolean =
+        target != null && target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&
+          et.isInstanceOf[CtArrayTypeReference[?]] && target.getQualifiedName != et.getQualifiedName
+
+      /** JS-G14's clause — a primitive at a reference slot is java autoboxing, and the boxing's
+        * target is the WRAPPER rather than the (often erased) formal. See [[arrayCovSlot]] for why
+        * this is a named predicate rather than an inline condition. */
+      private def boxingSlot(target: CtTypeReference[?], et: CtTypeReference[?]): Boolean =
+        target != null && et != null && et.isPrimitive && !target.isPrimitive &&
+          !target.isInstanceOf[CtTypeParameterReference] && !target.isInstanceOf[CtArrayTypeReference[?]]
+
+      /** JS-G09's question at a slot — java's UNCHECKED CONVERSION (JLS 5.1.9), which is legal at a
+        * raw type and has no scala image but a cast.
+        *
+        * This one is a SHAPE test and deliberately not [[uncheckedGeneric]]'s gate list: the consult
+        * asks *does this difference APPLY here*, and `uncheckedGeneric` answers the narrower
+        * question *and is a cast emittable here* (it declines for a poly expression, for a class
+        * literal, for a callee-bounded formal). A consult keyed on the narrower one would report
+        * "the difference does not apply" at every site where it applies and the engine refuses. */
+      private def uncheckedSlot(target: CtTypeReference[?], et: CtTypeReference[?]): Boolean =
+        target != null && et != null && isGenericUse(target) &&
+          (mentionsRawGeneric(et) || mentionsRawGeneric(target))
+
+      /** THE SLOT ROWS, consulted at every arm that has a slot — JS-G09, JS-G13, JS-G14.
+        *
+        * One function and six call sites, which is the convergence `Differences.everySlot` names: a
+        * local's initialiser, an assignment, a `return`, a call argument, a `new`'s argument and an
+        * array initialiser's element are six node kinds reaching ONE conversion (JLS 5.2), and a rule
+        * stated once per arm is a rule the next arm will not have.
+        *
+        * Called from the ARM and never from [[coerce]]: `coerce` is not reached for a local with no
+        * initialiser, a bare `return` or a zero-argument call, so a consult inside it would leave a
+        * hole at exactly the nodes where the difference does not apply. `slots` is empty at those
+        * nodes, all three consults answer `scala.None`, and the obligation is discharged honestly.
+        *
+        * The type read at each slot is [[castType]], not `e.getType` — the same reading `coerce`
+        * takes, and for the same reason (`ENGINE-LIMITS.md` K17: a cast expression's type IS the
+        * cast's, and it is that type the surrounding context converts). */
+      private def slotConsults(slots: List[(CtTypeReference[?], CtExpression[?])], at: Origin)
+                              (using Obligations): Unit =
+        val pairs = slots.map((tg, e) => (tg, try castType(e) catch { case _: Throwable => null }))
+        Obligations.consult(JS.G(13), at)(Option.when(pairs.exists((tg, et) => arrayCovSlot(tg, et)))(()))
+        Obligations.consult(JS.G(14), at)(Option.when(pairs.exists((tg, et) => boxingSlot(tg, et)))(()))
+        Obligations.consult(JS.G(9),  at)(Option.when(pairs.exists((tg, et) => uncheckedSlot(tg, et)))(()))
+
+      /** the (formal, argument) pairs of a call — the slot list [[slotConsults]] wants at the two
+        * call dispatches. Empty where the arities disagree, which is exactly the case `coerceArgs`
+        * declines to coerce. */
+      private def argSlots(ex: CtExecutableReference[?], argEs: List[CtExpression[?]]):
+          List[(CtTypeReference[?], CtExpression[?])] =
+        val formals = try ex.getParameters.asScala.toList catch { case _: Throwable => Nil }
+        if formals.sizeIs == argEs.size then formals.zip(argEs).filter(_._1 != null) else Nil
+
       private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term, arrayCov: Boolean = true,
                          tpToObject: Boolean = true, unchecked: Boolean = true): Term =
         val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
@@ -2410,8 +2497,7 @@ object SpoonTir:
           primRank.get(target.getSimpleName).exists(tr => primRank.get(et.getSimpleName).exists(_ > tr))
         // a primitive flowing into a concrete REFERENCE slot (`Object`, `Number`, …) is Java
         // autoboxing — Scala won't box into every such position, so make it explicit.
-        val boxing = et != null && et.isPrimitive && !target.isPrimitive &&
-          !target.isInstanceOf[CtTypeParameterReference] && !target.isInstanceOf[CtArrayTypeReference[?]]
+        val boxing = boxingSlot(target, et)
         // a value erased to `Object` (a generic method's result) flowing into a more specific
         // slot — Java inserts an unchecked downcast; Scala needs it explicit.
         val downcast = et != null && et.getQualifiedName == "java.lang.Object" &&
@@ -2434,8 +2520,7 @@ object SpoonTir:
         val cast =
           tpObj ||                                                                // T → Object (non-arg)
           (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
-          (arrayCov && target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&  // array covariance
-            et.isInstanceOf[CtArrayTypeReference[?]] && target.getQualifiedName != et.getQualifiedName) ||
+          (arrayCov && arrayCovSlot(target, et)) ||                               // array covariance
           narrowing ||                                                            // int → short/byte/char
           boxing ||                                                               // int → Object/Number
           downcast                                                                // Object → specific
@@ -2566,10 +2651,84 @@ object SpoonTir:
         * (§4.56) from the DECLARING type being a shadow — a reconstruction from bytecode — never
         * from the name: a resolution root's java is parsed as source and stays ours, which is what
         * keeps a dependent port's calls into its base on the materialised form both modules emit. */
+      /** JS-G38's question, as a function of the vararg slot: does the argument in it ALREADY hold
+        * the array java would otherwise have built?
+        *
+        * Named because [[varargPack]] and [[callConsults]] both ask it, and a copy is a second
+        * answer (`ENGINE-LIMITS.md` F8). The two facts inside it are java's own, not conveniences:
+        *
+        *   - the CAST wins where there is one. Spoon types `(String[]) null` by the literal, and it
+        *     is the cast java resolved the slot against, so it is the cast's component that decides.
+        *     OUTERMOST first, which is the head (see [[castType]]);
+        *   - the COMPONENT TYPES have to agree. Java's rule for the slot is ASSIGNABILITY and a
+        *     PRIMITIVE array is assignable to nothing but its own array type, so `int[]` at an
+        *     `Object...`/`T...` slot is not a pass-through at all — java materialises
+        *     `new Object[]{ intArr }`, ONE element holding the array. That is what
+        *     `Arrays.asList(intArr)` (a `List<int[]>` of size 1) and `String.format("%s", intArr)`
+        *     (one `%s`, printing `[I@…`) both are, and reading it as a pass-through is
+        *     `CLAUDE.md` §4.4's shape twice over. A REFERENCE component is left alone —
+        *     `String[] <: Object[]` is java's own array covariance and the forward really is one;
+        *   - a BARE `null` IS the array; `(String) null` is not. The cast names the COMPONENT type,
+        *     which is exactly how java disambiguates the two. */
+      private def varargHoldsArray(comp: CtTypeReference[?], e: CtExpression[?]): Boolean =
+        def componentAgrees(arr: CtArrayTypeReference[?]): Boolean =
+          val ac = try arr.getComponentType catch { case _: Throwable => null }
+          if ac == null || comp == null then true
+          else if ac.isPrimitive || comp.isPrimitive then ac.getQualifiedName == comp.getQualifiedName
+          else true
+        val casts = try e.getTypeCasts.asScala.toList catch { case _: Throwable => Nil }
+        val own   = try e.getType catch { case _: Throwable => null }
+        (casts :+ own).collectFirst { case a: CtArrayTypeReference[?] => a }.exists(componentAgrees) ||
+          (e match { case lit: CtLiteral[?] => lit.getValue == null && casts.isEmpty; case _ => false })
+
+      /** the callee's declared parameters, or `scala.None` where the declaration cannot be read —
+        * the ONE lookup where an absent value is normal (`CLAUDE.md` §4.6), shared by [[varargPack]]
+        * and [[callConsults]] so the two never disagree about whether a callee is variadic. */
+      private def declParams(ex: CtExecutableReference[?]): Option[List[CtParameter[?]]] =
+        try Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList)
+        catch { case _: Throwable => scala.None }
+
+      /** THE CALL ROWS, consulted at every call dispatch — JS-G18, JS-G32, JS-G37…G40, JS-G42.
+        *
+        * Called from [[coerceArgs]], which is the ONE function both `invocation` and `ctorCall` reach
+        * unconditionally, so the two dispatches cannot answer differently and an anonymous-class
+        * construction is not a third copy.
+        *
+        * Every predicate is read off the callee's REFERENCE and DECLARATION rather than by re-running
+        * [[varargPack]]: the consult asks *does this difference apply at this call*, which is a
+        * question about the shape, and whether the pack, the spread or the erasure cast came out
+        * right is the edge-case suite's job (`CatalogAreaGSpec`). */
+      private def callConsults(ex: CtExecutableReference[?], argEs: List[CtExpression[?]], at: Origin)
+                              (using Obligations): Unit =
+        val external = try isExternalCallee(ex) catch { case _: Throwable => false }
+        val ps       = declParams(ex)
+        val variadic = ps.exists(l => l.nonEmpty && l.last.isVarArgs)
+        val comp     = ps.filter(_ => variadic).map(_.last.getType).collect {
+          case a: CtArrayTypeReference[?] => a.getComponentType }.orNull
+        val holds    = variadic && ps.exists(l => argEs.sizeIs == l.size) &&
+          argEs.lastOption.exists(varargHoldsArray(comp, _))
+        // JS-G18 — under `noClasspath` an executable REFERENCE erases its generic formals and the
+        // DECLARATION does not, so an argument at an external callee is where the two readings meet.
+        Obligations.consult(JS.G(18), at)(Option.when(external && argEs.nonEmpty)(()))
+        // JS-G32 — a formal written in the CALLEE's own type variables, which are not in scope here.
+        Obligations.consult(JS.G(32), at)(Option.when(
+          ps.exists(_.exists(p => Option(p.getType).exists(f => mentionsAnyTypeVar(f) && !tpResolvable(f)))))(()))
+        // JS-G37 — java materialised the array and an in-program callee's parameter is emitted
+        // `Array[T]`, so the call has to materialise it too.
+        Obligations.consult(JS.G(37), at)(Option.when(variadic && !external && !holds)(()))
+        // JS-G38 — …and where the slot already holds one, re-packing it would build an array of one.
+        Obligations.consult(JS.G(38), at)(Option.when(variadic && holds)(()))
+        // JS-G39 — an EXTERNAL callee's `T...` is a class file's, which scalac reads as a REPEATED
+        // parameter; JS-G40 is the two composed, which is java's own vararg-forwarding idiom.
+        Obligations.consult(JS.G(39), at)(Option.when(variadic && external)(()))
+        Obligations.consult(JS.G(40), at)(Option.when(variadic && external && holds)(()))
+        // JS-G42 — the component's element type is not at the call site whenever the declared
+        // component is not already a concrete type.
+        Obligations.consult(JS.G(42), at)(Option.when(variadic && comp != null && !tpConcrete(comp))(()))
+
       private def varargPack(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
                              recvSubst: Map[String, CtTypeReference[?]]): Option[List[Term]] =
-        val ps = try Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList)
-                 catch { case _: Throwable => None }
+        val ps = declParams(ex)
         ps match
           case Some(l) if l.nonEmpty && l.last.isVarArgs =>
             val fixed = l.size - 1
@@ -2591,28 +2750,7 @@ object SpoonTir:
             // of five, `String.format(fmt, intArr*)` changes the call's arity. Neither moves a
             // count. A REFERENCE component is left alone — `String[] <: Object[]` is java's own
             // array covariance and the forward really is a forward.
-            def componentAgrees(arr: CtArrayTypeReference[?]): Boolean =
-              val ac = try arr.getComponentType catch { case _: Throwable => null }
-              if ac == null || comp == null then true
-              else if ac.isPrimitive || comp.isPrimitive then ac.getQualifiedName == comp.getQualifiedName
-              else true
-            val passesArray = argEs.sizeIs == l.size && {
-              val e     = argEs.last
-              val casts = try e.getTypeCasts.asScala.toList catch { case _: Throwable => Nil }
-              val own   = try e.getType catch { case _: Throwable => null }
-              // the CAST wins where there is one, for the reason stated above — Spoon types
-              // `(String[]) null` by the literal — and it is also the type java resolved the slot
-              // against, so it is the one whose component decides. OUTERMOST first, which is the
-              // head (see [[castType]]); this list was reversed, which asked the innermost.
-              (casts :+ own).collectFirst { case a: CtArrayTypeReference[?] => a }
-                .exists(componentAgrees) ||
-                // a BARE `null` is the array itself; `(String) null` is not. The cast names the
-                // COMPONENT type, which is exactly how java disambiguates the two — `test("null",
-                // "", (String) null)` passes a one-element array holding null, not a null array.
-                // Treating every null literal as the array left the argument unpacked and no
-                // overload matched.
-                (e match { case lit: CtLiteral[?] => lit.getValue == null && casts.isEmpty; case _ => false })
-            }
+            val passesArray = argEs.sizeIs == l.size && varargHoldsArray(comp, argEs.last)
             // A GENERIC vararg component (`static <T> Array<T> with (T... array)`) cannot be named at
             // the call site — but Java materialises the array from the ARGUMENTS' own type, and
             // naming that lets Scala infer `T` exactly as Java did. Only when every trailing
@@ -2717,8 +2855,16 @@ object SpoonTir:
 
       /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing
         * that Scala won't do implicitly). Skipped when arities differ (varargs spread etc.). */
-      private def coerceArgs(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
-                             recvSubst: Map[String, CtTypeReference[?]] = Map.empty): List[Term] =
+      private def coerceArgs(ex: CtExecutableReference[?], argEs: List[CtExpression[?]], at: Origin,
+                             recvSubst: Map[String, CtTypeReference[?]] = Map.empty)
+                            (using Obligations): List[Term] =
+        // THE CALL DISPATCHES' AREA-G CONSULTS, both families, at the one function `invocation` and
+        // `ctorCall` reach unconditionally — an argument list is where java's method-invocation
+        // conversion (JLS 15.12.4.2) and its assignment conversion (JLS 5.2) are both performed.
+        // `at` is the CALL's origin and not the first argument's, because a zero-argument call has no
+        // argument to point at and a finding owes a line somebody can open.
+        callConsults(ex, argEs, at)
+        slotConsults(argSlots(ex, argEs), at)
         varargPack(ex, argEs, recvSubst).getOrElse(coerceArgsFixed(ex, argEs))
 
       /** the receiver's own type arguments, by the declaring class's parameter NAMES — `Graph<V>`
@@ -3074,6 +3220,7 @@ object SpoonTir:
           // `Array[Object]` the argument cast produced, in an `Array[T]` field.
           val lhs = expr(a.getAssigned)
           val rhs = a.getAssignment
+          slotConsults(Option(a.getAssigned.getType).map(_ -> rhs).toList, originOf(a))
           val v   = Option(a.getAssigned.getType).map(coerce(_, rhs, expr(rhs))).getOrElse(expr(rhs))
           val st  = Tree.Assign(lhs, toDeclaredTypeParam(a.getAssigned, rhs, v), unitT, originOf(a))
           // JS-E15. This consult ALWAYS fires and that is the honest answer, not a formality: an
@@ -3235,7 +3382,7 @@ object SpoonTir:
         if decl != null && varIds.containsKey(decl) then varIds.get(decl)
         else nameIds.getOrElse(ref.getSimpleName, minter.external("?var$" + ref.getSimpleName, ref.getSimpleName))
 
-      private def newArray(na: CtNewArray[?]): Term =
+      private def newArray(na: CtNewArray[?])(using Obligations): Term =
         val elemT = na.getType match
           case arr: CtArrayTypeReference[?] => tpe(arr.getComponentType)
           case t                            => tpe(t)
@@ -3250,6 +3397,18 @@ object SpoonTir:
           case _                            => null
         def elem(e: CtExpression[?]): Term =
           if comp == null then expr(e) else coerce(comp, e, expr(e))
+        // an array INITIALISER is a slot list — JS-G09/G13/G14, exactly as at a call.
+        slotConsults(if comp == null then Nil else inits.map(comp -> _), originOf(na))
+        // JS-G15 — java FORBIDS `new T[n]` (JLS 15.10.1), so the only generic array creation that can
+        // reach this arm is the CAST IDIOM, `(T[]) new Object[n]`. The predicate is therefore the
+        // idiom itself — a cast on this creation whose target is an array of something generic — and
+        // NOT "the component is a type variable", which javac already made unreachable. What handles
+        // it is JS-G13's generality: the idiom is a covariant array store and `coerce`'s `arrayCov`
+        // clause is what writes it out.
+        val idiomCasts = try na.getTypeCasts.asScala.toList catch { case _: Throwable => Nil }
+        Obligations.consult(JS.G(15), originOf(na))(Option.when(
+          idiomCasts.collect { case a: CtArrayTypeReference[?] => a.getComponentType }
+            .exists(c => c != null && (c.isInstanceOf[CtTypeParameterReference] || isGenericUse(c))))(()))
         if inits.nonEmpty || dims.isEmpty then Tree.NewArray(et, Nil, Some(inits.map(elem)), ty(na), originOf(na))
         else Tree.NewArray(et, dims.map(expr), None, ty(na), originOf(na))
 
@@ -3264,11 +3423,17 @@ object SpoonTir:
           else unsupported(l, "lambda without body")
         Tree.Lambda(pvs, body, ty(l), originOf(l))
 
-      private def methodRef(mr: CtExecutableReferenceExpression[?, ?]): Term =
+      private def methodRef(mr: CtExecutableReferenceExpression[?, ?])(using Obligations): Term =
         val mid = methodSym(mr.getExecutable)
         val qual: Either[TypeTree, Term] = mr.getTarget match
           case ta: CtTypeAccess[?] => Left(tt(tpe(ta.getAccessedType), mr))
           case t                   => Right(expr(t))
+        // JS-G43 — five forms share one java syntax and each is a different scala lambda, so the
+        // FRONTEND half of the row is exactly this: carry the reference as its own node rather than
+        // guessing a shape here. Always fires, and that is the honest answer — every method
+        // reference is one of the five and every one of them needs the discrimination the emitter
+        // then performs off `Flags.isStatic`.
+        Obligations.consult(JS.G(43), originOf(mr))(Some(()))
         Tree.MethodRef(qual, mid, ty(mr), originOf(mr))
 
       private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?], at: CtExpression[?])
@@ -3716,15 +3881,35 @@ object SpoonTir:
         val argEs = inv.getArguments.asScala.toList
         val erasedRecv = erasedReceiverView(inv)
         val recvSubst  = receiverTypeArgs(inv)
+        // JS-G22 — a raw member access through an ERASED RECEIVER types the CALL and not only the
+        // receiver: java inserted a checkcast on the way back out, and `erasedRecvResult` writes it.
+        // Read off the view this arm has just computed, never re-derived (§4.56).
+        Obligations.consult(JS.G(22), originOf(inv))(Option.when(erasedRecv.isDefined)(()))
+        // JS-G29 / JS-G30 — the two halves of java's inference at a call, consulted TOGETHER because
+        // `pinTypeArgs` forks into them and the fork is exactly the catalog's split: a variable some
+        // FORMAL mentions is determined by its argument and both languages infer it the same way
+        // (G29, the ordinary case), while one no formal mentions is constrained only by its BOUND —
+        // which java resolves TO that bound and scala resolves to `Nothing` (G30). Read off the
+        // callee's DECLARATION, which is where java read them, and not by re-running the pin.
+        val calleeTpNames = try Option(ex.getExecutableDeclaration)
+                                  .collect { case m: CtMethod[?] => m.getFormalCtTypeParameters.asScala.toList }
+                                  .getOrElse(Nil).map(_.getSimpleName).toSet
+                            catch { case _: Throwable => Set.empty[String] }
+        val constrained = calleeTpNames.nonEmpty && (try
+            Option(ex.getExecutableDeclaration).exists(
+              _.getParameters.asScala.exists(p => mentionsTypeVar(p.getType, calleeTpNames)))
+          catch { case _: Throwable => false })
+        Obligations.consult(JS.G(29), originOf(inv))(Option.when(constrained)(()))
+        Obligations.consult(JS.G(30), originOf(inv))(Option.when(calleeTpNames.nonEmpty && !constrained)(()))
         val args0 = erasedRecv match
           // A NAME-FILLED receiver needs no argument erasure at all. The callee's formals are then
           // expressed in the caller's OWN type variables (`addToTree(Tree<N,V>)` against a receiver
           // read as `Node[N, V, Actor]`), and the values at hand already have those types — `this`
           // IS a `Tree[N, V]`. Erasing them re-introduced the mismatch the name-fill just removed.
           case Some((_, subst, named)) if named.isEmpty =>
-            eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs, recvSubst), subst)
-          case Some((_, _, nm)) => selfTypeArgs(ex, argEs, coerceArgs(ex, argEs, recvSubst), nm)
-          case None             => coerceArgs(ex, argEs, recvSubst)
+            eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs, originOf(inv), recvSubst), subst)
+          case Some((_, _, nm)) => selfTypeArgs(ex, argEs, coerceArgs(ex, argEs, originOf(inv), recvSubst), nm)
+          case None             => coerceArgs(ex, argEs, originOf(inv), recvSubst)
         val o    = originOf(inv)
         // JS-G31. Every arm above may cast an argument to the formal it read; a POLY EXPRESSION is
         // the one argument that has no type to cast FROM, so the call answers for it here, once,
@@ -4021,7 +4206,7 @@ object SpoonTir:
         // shape: `Attaches` holds one surface, and a row nothing attaches here would still be a row
         // this arm had considered.
         val args = polyArgsUncast(
-          argEs, appliedCtorArgs(cc, argEs, rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs))), originOf(cc))
+          argEs, appliedCtorArgs(cc, argEs, rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs, originOf(cc)))), originOf(cc))
         // `CtNewClass` IS a `CtConstructorCall` — the anonymous body hangs off the subtype, and
         // reading only the supertype is what silently dropped every one of them.
         val anon = cc match
@@ -4038,6 +4223,14 @@ object SpoonTir:
           case nc: CtNewClass[?] =>
             Option(nc.getAnonymousClass).exists(!_.getAnonymousExecutables.isEmpty)
           case _ => false)(()))
+        // JS-G10 — a RAW anonymous class WITH a body, which is REFUSED rather than approximated
+        // (`ENGINE-LIMITS.md` G10): without a body scala infers the argument from the expected type,
+        // and with one the anonymous class's type is fixed, so a raw use gives `Parent[Nothing]` and
+        // naming the argument does not help either. Consulted at the kind that carries the body, so
+        // the refusal is a decision the coverage lane can count rather than a silence.
+        Obligations.consult(JS.G(10), originOf(cc))(Option.when(cc match
+          case nc: CtNewClass[?] => anon.isDefined && isRawGenericUse(nc.getType)
+          case _                 => false)(()))
         Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc), anon), args, cid, t, originOf(cc))
 
       /** A RAW constructor call — `return new Values(this)` inside `ArrayMap<K,V>`, where

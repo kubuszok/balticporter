@@ -3980,6 +3980,15 @@ be reached at a declaration the port does not ship. That is what `catalog(consul
 "reached" and it is accurate about the PIPELINE; it is not a statement about the emitted code, and
 a reader taking it for one would be wrong.
 
+**And the CATALOG row for this entry is `Partial`, not `Handled`, which is not a disagreement with
+the CLOSED above.** This entry is closed for the face it MEASURED — 160 failures, at every reified
+position whose target has a live view to answer over. Where the target is a CONCRETE retyped type
+(a hash map, a buffer, a tuple) there is no view, the occurrence is REFUSED and counted, and the
+port ships java's question asked of the wrong classes: one corpus port's last remaining test failure
+is exactly that refusal. `JS-G48` states which half is missing, which is what `Partial` is for and
+why rule (i) exempts it; the alternative was a row claiming coverage for a residue somebody is still
+failing a test on. Same correction as `JS-C44`'s, one chunk earlier.
+
 *Fix kind: (a) engine — CLOSED. `CollectionsTransform.reifiedTest`/`reifiedCast` →
 `JavaCollections.Reified`, catalog `JS-G48`, counted refusal `Issue.ReifiedOccurrence`. The
 generalisation is CLAUDE.md's and is not about collections: **every retyping phase owes an answer at

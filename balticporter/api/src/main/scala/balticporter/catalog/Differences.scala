@@ -33,7 +33,15 @@ import Attaches.*
   *     `ENGINE-LIMITS.md` K17 face 1's 27 test failures came from;
   *   - `JS-C22`'s twin was `T12`, which reads CLOSED. T12 closed a different FACE (accessibility as
   *     an input to the candidate set), so the CITATION was wrong rather than the status. That is
-  *     the finding step (1) produced on its first run.
+  *     the finding step (1) produced on its first run;
+  *   - `JS-G24` cited `ENGINE-LIMITS.md` **G23**, which is the WILDCARD-BOUND entry and says nothing
+  *     about unboxing — cited because `JS-G03` cites it, one row up. Step (2) applied to the ENTRY
+  *     rather than to the row is what found it, and re-reading the row's own sentence settled the
+  *     status too: scala unboxes through an instance method on the wrapper, so a null unbox is an
+  *     NPE on both sides. `NonDiff`, `NoTwin`, `NoObligation`;
+  *   - `JS-G48` claimed `Handled` while shipping a counted REFUSAL that is one corpus port's last
+  *     remaining test failure. `Partial`, on `JS-C44`'s precedent: a row states which half is
+  *     missing rather than claiming coverage for a residue somebody is still failing a test on.
   *
   * The count is DERIVED ([[all]]`.size`) and written down nowhere. `PortabilityCheck`'s phantom
   * "34 rules" is what a hand-written total becomes.
@@ -109,9 +117,59 @@ object Differences:
   private val everyStaticFieldRead: Attaches =
     Both(Lowered("CtFieldRead", Dispatch.Expression), Lowered("CtFieldWrite", Dispatch.Expression))
 
-  private val notYetG = Unmechanised(
-    "area G obligations are not declared: the JS-G rows are decided by the type lowering and by " +
-      "retyping phases, neither of which has an obligation surface")
+  /** every dispatch at which a value flows into a DECLARED TYPE — java's assignment conversion.
+    *
+    * `everyLoop`'s shape in area G, and the driver is the same one chunk 10 named: MORE THAN ONE
+    * KIND at one surface. JLS 5.2 is one conversion and `SpoonTir.coerce` is the one function that
+    * writes it out, but a slot is not a node kind — a local's initialiser, an assignment's
+    * right-hand side, a `return`ed value, a call argument, a `new`'s argument and an array
+    * initialiser's element are six kinds reaching that one function. Attaching the boxing rows to
+    * any one of them would leave the other five able to lower without considering it.
+    *
+    * The convergence point is `SpoonTir.slotConsults`, called from all six arms, so the rule is
+    * stated ONCE (`ENGINE-LIMITS.md` F8). It is called from the ARM and not from `coerce` itself,
+    * and that is not a detail: `coerce` is not reached at all for a local with no initialiser, a
+    * bare `return` or a zero-argument call, so a consult inside it would report a hole at exactly
+    * the nodes where the difference does not apply. */
+  /** the CALL dispatches, as one attachment — an invocation and a `new` resolve ONE
+    * method-invocation conversion (JLS 15.12.4.2) and all three kinds reach
+    * `SpoonTir.coerceArgs`, which is where the vararg family and the external-callee family are
+    * answered.
+    *
+    * `CtNewClass` is a `CtConstructorCall` and reaches the very same arm, and it is named ANYWAY:
+    * `SpoonKinds.nameOf` answers the MOST SPECIFIC registered interface, so a `new Foo(xs) { … }`
+    * enters the dispatch as `CtNewClass` and a two-kind attachment would leave every anonymous-class
+    * construction able to lower without considering the vararg pack java performed for it. */
+  private val everyCall: Attaches =
+    Both(Lowered("CtInvocation", Dispatch.Expression),
+      Both(Lowered("CtConstructorCall", Dispatch.Expression),
+           Lowered("CtNewClass", Dispatch.Expression)))
+
+  private val everySlot: Attaches =
+    Both(everyCall,
+      Both(Lowered("CtNewArray", Dispatch.Expression),
+        Both(Lowered("CtLocalVariable", Dispatch.Statement),
+          Both(Lowered("CtAssignment", Dispatch.Either),
+               Lowered("CtReturn", Dispatch.Statement)))))
+
+  /** the residue area G could NOT retire, and the surface each of these rows is waiting for.
+    *
+    * A java TYPE REFERENCE is lowered by `SpoonTir.tpe` and rendered by `TirEmitter.tpe`, and
+    * neither is an obligation dispatch. The frontend's wrapper sits at `stmtKind`/`exprNoCast`,
+    * which are the two dispatches a STATEMENT and an EXPRESSION go through; a `CtTypeReference` is
+    * neither, and it is not even in `SpoonKinds`' registry, whose totality is derived from
+    * `spoon.reflect.{code,declaration}`. The emitter's wrapper is keyed on a `Tree` kind reached
+    * from `stat`/`term`, and `TypeTree` is a `Tree` that is NOT a `Statement`, so it never enters
+    * either — the same fact `JS-C29` records one area over.
+    *
+    * So these rows are counted rather than claimed, exactly as `catalog(unmechanised)` is for. What
+    * would retire them is a THIRD lowering surface at `SpoonTir.tpe`'s own type-reference dispatch,
+    * which is a wave of its own: it wants a kind registry for `spoon.reflect.reference`, an
+    * `Attaches` case, and a price measured the way chunks 6 and 10 measured theirs. */
+  private val notYetTypes = Unmechanised(
+    "decided while LOWERING or RENDERING a type reference — `SpoonTir.tpe` and `TirEmitter.tpe` — " +
+      "and neither is a node dispatch an obligation wrapper can enter: a `CtTypeReference` is not a " +
+      "statement or an expression, and a `TypeTree` is a `Tree` that is not a `Statement`")
 
   // -------------------------------------------------------------------------------------------
   // EXPRESSIONS — JLS 15, 5.6
@@ -491,89 +549,116 @@ object Differences:
   val generics: List[Difference] = List(
     Difference(gId(1), "use-site wildcards, with the matching bound grammar",
       "JLS 4.5.1", "UNCITED — `?` with `<:`/`>:` bounds",
-      NoImpact, Handled, el("G2"), Universal, "SpoonTir.tpe's CtWildcardReference branch", notYetG),
+      NoImpact, Handled, el("G2"), Universal, "SpoonTir.tpe's CtWildcardReference branch", notYetTypes),
     Difference(gId(2), "CAPTURE CONVERSION relates two uses of one wildcard in a single expression",
       "JLS 5.1.10", "UNCITED — Scala captures per use, so the two uses are unrelated",
-      Loud, Open, el("G24"), Universal, "no rewrite exists; the fix is local (bind to a named local) and none is synthesised", notYetG),
+      Loud, Open, el("G24"), Universal, "no rewrite exists; the fix is local (bind to a named local) and none is synthesised", notYetTypes),
     Difference(gId(3), "`? super Object` has exactly one inhabitant",
       "JLS 4.5.1", "UNCITED — the corresponding Scala bound is not the same set",
-      Loud, Handled, el("G23"), Universal, "SpoonTir.tpe's `!w.isUpper && isObj` branch", notYetG),
+      Loud, Handled, el("G23"), Universal, "SpoonTir.tpe's `!w.isUpper && isObj` branch", notYetTypes),
     Difference(gId(4), "a captured wildcard on ITERATION has no nameable type",
       "JLS 5.1.10, 14.14.2", "UNCITED — the capture cannot be written, so an alias plus a widening cast is the image",
-      Loud, Handled, el("K7"), Universal, "TirEmitter.widenedBinding in the Tree.ForEach arm", notYetG),
+      Loud, Handled, el("K7"), Universal, "TirEmitter.widenedBinding in the Tree.ForEach arm", Rendered("ForEach")),
     Difference(gId(5), "a wildcard in an `extends` clause takes the parameter's DECLARED bound",
       "JLS 4.5.1, 8.1.4", "UNCITED — no wildcard is legal in a parent, so the bound has to be filled",
-      Loud, Handled, el("G7"), Universal, "SpoonTir.erasureOfFormal and the formal-bound fill in SpoonTir.tpe", notYetG),
+      Loud, Handled, el("G7"), Universal, "SpoonTir.erasureOfFormal and the formal-bound fill in SpoonTir.tpe", notYetTypes),
     Difference(gId(6), "a de-wildcarded raw PARENT and its overrides must agree",
       "JLS 4.8, 8.4.8.1", "UNCITED — an override is checked against the parent as emitted",
-      Loud, Handled, el("G6"), Universal, "SpoonTir's parent-instantiation fill", notYetG),
+      Loud, Handled, el("G6"), Universal, "SpoonTir's parent-instantiation fill", notYetTypes),
     Difference(gId(7), "a RAW type erases the REFERENCE's generics, not the class's",
       "JLS 4.8", "UNCITED — `[?]` everywhere is the only fill that round-trips across an override",
-      Loud, Handled, el("G2"), Universal, "SpoonTir.tpe's empty-actuals branch", notYetG),
+      Loud, Handled, el("G2"), Universal, "SpoonTir.tpe's empty-actuals branch", notYetTypes),
     Difference(gId(8), "the same raw Java type renders DIFFERENTLY per scope, and correctly so",
       "JLS 4.8", "UNCITED — the rendering depends on whether the scope is an override",
-      Silent, Handled, el("G3"), Universal, "SpoonTir.uncheckedGeneric's ownCallee/inOverridingMember save-and-restore", notYetG),
+      Silent, Handled, el("G3"), Universal, "SpoonTir.uncheckedGeneric's ownCallee/inOverridingMember save-and-restore", notYetTypes),
     Difference(gId(9), "UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala",
       "JLS 5.1.9", "UNCITED — an explicit cast is the image",
-      Loud, Handled, el("G12"), Universal, "SpoonTir.uncheckedGeneric emitting Tree.Typed, deciding on RENDERED types", notYetG),
+      Loud, Handled, el("G12"), Universal, "SpoonTir.uncheckedGeneric emitting Tree.Typed, deciding on RENDERED types", everySlot),
     Difference(gId(10), "a RAW anonymous class WITH a body",
       "JLS 4.8, 15.9.5", "UNCITED — no faithful Scala image exists",
       Loud, Refused("the parent's fill and the body's own uses cannot be made consistent"), el("G10"), Universal,
-      "no symbol — a refusal by design", notYetG),
+      "no symbol — a refusal by design; SpoonTir.ctorCall is where the shape is recognisable",
+      Lowered("CtNewClass", Dispatch.Expression)),
     Difference(gId(11), "a partially-nameable F-BOUNDED raw fill",
       "JLS 4.5, 4.8", "UNCITED — a genuine expressiveness limit; four closing attempts measured worse",
       Loud, Refused("no consistent fill exists for a partially-nameable F-bound"), el("G8"), Universal,
-      "SpoonTir.erasureOfFormal's cycle cut is the whole of the F-bound machinery", notYetG),
+      "SpoonTir.erasureOfFormal's cycle cut is the whole of the F-bound machinery", notYetTypes),
     Difference(gId(12), "a diamond's inference variable has NO NAMEABLE type",
       "JLS 15.9.1, 18", "UNCITED — the marker must never be printed",
-      Loud, Handled, el("G2"), Universal, "Symbol.UnresolvedTypeVarPrefix; TirEmitter.isUnresolvedTypeVar", notYetG),
+      Loud, Handled, el("G2"), Universal, "Symbol.UnresolvedTypeVarPrefix; TirEmitter.isUnresolvedTypeVar", notYetTypes),
     Difference(gId(13), "Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant",
       "JLS 4.10.3, 10.10", "UNCITED — `Array[T]` is invariant, so a cast is needed at the use",
-      Loud, Handled, el("G1"), Universal, "SpoonTir.coerce's arrayCov clause", notYetG),
+      Loud, Handled, el("G1"), Universal, "SpoonTir.coerce's arrayCov clause, through SpoonTir.arrayCovSlot", everySlot),
     Difference(gId(14), "a primitive at a generic slot boxes to the WRAPPER, not to the formal",
       "JLS 5.1.7, 5.3", "UNCITED — the target type of the boxing is the wrapper class",
       Mixed, Partial("scalar and array-initialiser positions are covered; a component that is a bare TYPE PARAMETER is excluded by construction and untested"),
-      el("G16"), Universal, "SpoonTir.coerce's boxing predicate and boxedPrimitive", notYetG),
+      el("G16"), Universal, "SpoonTir.coerce's boxing predicate, through SpoonTir.boxingSlot, and boxedPrimitive", everySlot),
     Difference(gId(15), "GENERIC ARRAY CREATION is illegal in Java, so only the cast idiom reaches the engine",
       "JLS 15.10.1", "UNCITED — the same restriction, reached through JS-G13's generality",
-      NoImpact, Handled, el("G1"), Universal, "SpoonTir.newArray with coerce's arrayCov", notYetG),
+      NoImpact, Handled, el("G1"), Universal, "SpoonTir.newArray with coerce's arrayCov",
+      Lowered("CtNewArray", Dispatch.Expression)),
     Difference(gId(16), "Scala's `Array[T]` needs a `ClassTag` to be CONSTRUCTED",
       "JLS 15.10.1", "UNCITED — `Array[T]` construction requires a `ClassTag[T]` in scope",
-      Loud, Open, Predicted, Universal, "RewriteTrace's scaladoc names this as the canonical hand-built rewrite; nothing synthesises it", notYetG),
+      Loud, Open, Predicted, Universal,
+      "TirEmitter's Tree.NewArray arm is where the construction is written and where the tag would " +
+        "have to be; RewriteTrace's scaladoc names this as the canonical hand-built rewrite, and " +
+        "nothing synthesises it. LATENT rather than dormant: java forbids `new T[n]`, and the one " +
+        "path that MINTS a NewArray (SpoonTir.varargPack) resolves a concrete element type first",
+      Rendered("NewArray")),
     Difference(gId(17), "`.length`, an array's `Class` object, and `T[]::new`",
       "JLS 10.7, 15.13", "UNCITED — `.length` is a method and the array constructor reference is a lambda",
-      NoImpact, Handled, el("K8"), Universal, "SpoonTir's array-length branch -> Tree.ArrayLength; TirEmitter's Tree.MethodRef array-ctor branch", notYetG),
+      NoImpact, Handled, el("K8"), Universal, "SpoonTir's array-length branch -> Tree.ArrayLength; TirEmitter's Tree.MethodRef array-ctor branch",
+      Both(Rendered("ArrayLength"), Rendered("MethodRef"))),
     Difference(gId(18), "under `noClasspath` a REFERENCE erases and a DECLARATION does not",
       "JLS 4.6", "UNCITED — a producer/consumer erasure conflict the frontend has to resolve",
-      Loud, Handled, el("G14"), Universal, "SpoonTir.isExternalCallee driving coerceArgsFixed's erasure cast", notYetG),
+      Loud, Handled, el("G14"), Universal, "SpoonTir.isExternalCallee driving coerceArgsFixed's erasure cast", everyCall),
     Difference(gId(19), "post-erasure overload clash",
       "JLS 4.6, 8.4.2", "UNCITED — the same erasure, and javac already rejected the clash",
       NoImpact, NonDiff("javac enforced it before the source reached the engine"), el("D1"), NoFix,
-      "no symbol; RewriteTrace.callArity is the only arity check", notYetG),
+      "no symbol; RewriteTrace.callArity is the only arity check",
+      NoObligation("a checked NON-difference: javac rejected the clash before the source reached the engine, so no arm has a decision to take")),
     Difference(gId(20), "an unchecked cast's TIMING — a cast that only becomes impossible AFTER a retyping",
       "JLS 5.5, 5.1.9", "UNCITED — the JLS timing is automatic; the retyping interaction is not",
       Silent, Partial("per-phase discipline rather than one central check; the producer side is counted, not coerced"),
-      el("K5.6"), Universal, "RetargetBoundaryCheck counts; nothing coerces", notYetG),
+      el("K5.6"), Universal, "RetargetBoundaryCheck counts; nothing coerces",
+      Unmechanised("the row is per-phase DISCIPLINE across every retyping phase rather than one " +
+        "mechanism, so there is no dispatch and no single phase that could own the citation; what " +
+        "measures it is the `collection-retarget` lane (`RetargetBoundaryCheck`), which runs beside " +
+        "the obligation log and not through it")),
     Difference(gId(21), "`instanceof` is restricted to REIFIABLE types, and SE16 added a pattern binding",
       "JLS 4.7, 15.20.2", "UNCITED — Scala patterns bind, but the frontend has no node for the Java form",
       Mixed, Partial("the reifiable-type restriction is a non-difference; the SE16 pattern BINDING has no representation — zero CtTypePattern hits"),
-      Predicted, Universal, "Tir.Tree.InstanceOf; no CtTypePattern arm anywhere", notYetG),
+      Predicted, Universal, "Tir.Tree.InstanceOf; no CtTypePattern arm anywhere", Rendered("InstanceOf")),
     Difference(gId(22), "a raw member access through an ERASED RECEIVER types the CALL, not just the receiver",
       "JLS 4.8", "UNCITED — the receiver view and the member's type through it must be produced together",
-      Loud, Handled, el("G21"), Universal, "SpoonTir.erasedRecvResult; ErasedReceiverResultSpec", notYetG),
+      Loud, Handled, el("G21"), Universal, "SpoonTir.erasedRecvResult; ErasedReceiverResultSpec",
+      Lowered("CtInvocation", Dispatch.Expression)),
+    // The status is `NonDiff` and the twin is gone, and BOTH were misattributions this wave found by
+    // re-reading the entry rather than the row. `ENGINE-LIMITS.md` G23 is the wildcard-bound entry
+    // (`?` is bounded by `Object` in java and by `Any` in scala) and says nothing about unboxing; the
+    // row cited it because JS-G03 does, one line up. And the SENTENCE this row states — unboxing a
+    // null throws NPE — is true in both languages by the same mechanism: scala unboxes through
+    // `Predef.Integer2int`, an instance method on the wrapper, so a null receiver is an NPE exactly
+    // where java's `intValue()` is. What `coerce`'s unbox clause really translates is a CROSS-TYPE
+    // unbox (`Integer` at a `float` slot), which is `JS-E06`/K17 face 2's fact and not this one.
     Difference(gId(24), "unboxing `null` throws NPE",
       "JLS 5.1.8", "UNCITED — the same unboxing, through the same wrapper method",
-      NoImpact, Handled, el("G23"), Universal, "SpoonTir.coerce's unbox clause, via wrapperOf/valueMethod", notYetG),
+      NoImpact, NonDiff("scala unboxes through an instance method on the wrapper, so a null unbox is an NPE on both sides"),
+      NoTwin, NoFix, "SpoonTir.coerce's unbox clause, via wrapperOf/valueMethod",
+      NoObligation("a checked NON-difference: both languages unbox through an instance method on the wrapper, so a null unbox throws NPE in either")),
     Difference(gId(28), "the `Int`/`Integer` boundary, and scalac's own boxing",
       "JLS 5.1.7", "UNCITED — `Predef.Integer2int` applies where Java unboxed",
-      NoImpact, NonDiff("scalac boxes at the same points"), NoTwin, NoFix, "SpoonTir.coerce's same-type-unbox comment, which defers deliberately", notYetG),
+      NoImpact, NonDiff("scalac boxes at the same points"), NoTwin, NoFix, "SpoonTir.coerce's same-type-unbox comment, which defers deliberately",
+      NoObligation("a checked NON-difference: scalac boxes at the same points, which is why the same-type unbox is deliberately not written out")),
     Difference(gId(29), "diamond inference in the ordinary case",
       "JLS 15.9.1", "UNCITED — Scala infers the same arguments where they are determined",
-      NoImpact, Handled, el("G2"), Universal, "SpoonTir.pinTypeArgs", notYetG),
+      NoImpact, Handled, el("G2"), Universal, "SpoonTir.pinTypeArgs",
+      Lowered("CtInvocation", Dispatch.Expression)),
     Difference(gId(30), "an UNCONSTRAINED method type parameter: Java infers its BOUND and Scala infers `Nothing`",
       "JLS 18.1.3", "UNCITED — an unconstrained inference variable resolves to the lower bound",
       Loud, Handled, el("G22"), Universal,
-      "SpoonTir.pinUnconstrainedTypeArgs, whose reach is bounded by ENGINE-LIMITS G24's still-open vacuous-bound case", notYetG),
+      "SpoonTir.pinUnconstrainedTypeArgs, whose reach is bounded by ENGINE-LIMITS G24's still-open vacuous-bound case",
+      Lowered("CtInvocation", Dispatch.Expression)),
     Difference(gId(31), "a POLY EXPRESSION must never be cast as a whole",
       // UNCITED for the same reason JS-G33 is, and deliberately not papered over: the behaviour is
       // PROBED (scala 3.8.4 SAM-converts a function literal at a wildcard-applied, a contravariant
@@ -588,44 +673,73 @@ object Differences:
       Lowered("CtInvocation", Dispatch.Expression)),
     Difference(gId(32), "a callee's OWN type variables never resolve at the caller",
       "JLS 18.5.1", "UNCITED — the callee's variables are not in scope at the call site",
-      Loud, Handled, el("G12"), Universal, "SpoonTir.uncheckedGeneric's tpResolvable/calleeBounded decline", notYetG),
+      Loud, Handled, el("G12"), Universal, "SpoonTir.uncheckedGeneric's tpResolvable/calleeBounded decline", everyCall),
     Difference(gId(33), "SAM conversion eligibility",
       "JLS 9.8, 15.27.3", "UNCITED — no Scala 3 reference page located for the eligibility rule",
-      Loud, Handled, Predicted, Universal, "TirEmitter.samAscribed", notYetG),
+      Loud, Handled, Predicted, Universal, "TirEmitter.samAscribed", Rendered("MethodRef")),
     Difference(gId(34), "a Java INTERSECTION in a cast becomes Scala's `&`",
       "JLS 4.9, 15.16", "UNCITED — `A & B` is the image",
-      NoImpact, Handled, Predicted, Universal, "SpoonTir.tpe's CtIntersectionTypeReference branch; TirEmitter.tpe's AndType arm", notYetG),
+      NoImpact, Handled, Predicted, Universal, "SpoonTir.tpe's CtIntersectionTypeReference branch; TirEmitter.tpe's AndType arm",
+      Rendered("Typed")),
     Difference(gId(35), "Scala CHECKS an F-bound where javac does not",
       "JLS 4.4", "UNCITED — the bound is checked at every use, so a naive erasure is rejected",
-      Loud, Handled, el("G9"), Universal, "SpoonTir.erasureOfFormal's `seen` cycle cut", notYetG),
+      Loud, Handled, el("G9"), Universal, "SpoonTir.erasureOfFormal's `seen` cycle cut",
+      Both(Rendered("ClassDef"), Rendered("DefDef"))),
     Difference(gId(36), "an override's TYPE-PARAMETER BOUNDS must be copied from the parent",
       "JLS 8.4.4, 8.4.2", "UNCITED — an override's own bounds must match the parent's, not be re-derived",
-      Loud, Open, el("G19"), Universal, "no symbol copies parent bounds; SpoonTir.erasureOfFormal is per-declaration", notYetG),
+      Loud, Open, el("G19"), Universal, "no symbol copies parent bounds; SpoonTir.erasureOfFormal is per-declaration",
+      Rendered("DefDef")),
     Difference(gId(37), "`T...` is an `Array[T]`, materialised at the port's OWN call sites",
       "JLS 8.4.1, 15.12.4.2", "UNCITED — a declared vararg becomes an array parameter, so callers must pack",
-      Loud, Handled, el("K6.5"), Universal, "SpoonTir.varargPack -> Tree.NewArray for an in-program callee", notYetG),
+      Loud, Handled, el("K6.5"), Universal, "SpoonTir.varargPack -> Tree.NewArray for an in-program callee", everyCall),
     Difference(gId(38), "a vararg slot ALREADY holding an array must not be re-packed — and a primitive array never forwards",
       "JLS 15.12.4.2", "UNCITED — the component type, not `is an array`, decides",
-      Silent, Handled, el("K6.5"), Universal, "SpoonTir.varargPack's passesArray with componentAgrees", notYetG),
+      Silent, Handled, el("K6.5"), Universal, "SpoonTir.varargPack's passesArray with componentAgrees", everyCall),
     Difference(gId(39), "an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter",
       "JLS 15.12.4.2", "UNCITED — a class file's `T...` is a repeated parameter, so a bare array conforms as ONE element",
-      Silent, Handled, el("K6.5"), Universal, "Tir.Tree.Repeated, emitted when SpoonTir.isExternalCallee holds", notYetG),
+      Silent, Handled, el("K6.5"), Universal, "Tir.Tree.Repeated, emitted when SpoonTir.isExternalCallee holds",
+      // …and the emitter half attaches at `Apply`, NOT at `Repeated`, which is the trap this row
+      // walked into first. `TirEmitter.argTerms` FLATTENS a `Tree.Repeated` in an argument position
+      // before the dispatch ever sees it — a fact about the POSITION (a node rendering `""` would
+      // leave `f(a, )`) — so the node never enters `term`, the arm never runs, and an attachment
+      // there would be a claim that reads as coverage and can never fail: no consult, and no hole
+      // either, because a node that does not enter the dispatch owes nothing. That is
+      // `SpoonKinds.Claim.Positional` seen at the OTHER end of the pipeline. The decision is taken
+      // where the flattening is, which is the enclosing `Apply`.
+      Both(everyCall, Rendered("Apply"))),
     Difference(gId(40), "the COMPOSITION of JS-G38 and JS-G39 — an array forwarded through an external vararg slot",
       "JLS 15.12.4.2", "UNCITED — only a spec over the composition finds it",
-      Loud, Handled, el("K6.5"), Universal, "SpoonTir.passedThrough -> Tir.Tree.Spread", notYetG),
+      Loud, Handled, el("K6.5"), Universal, "SpoonTir.passedThrough -> Tir.Tree.Spread",
+      Both(everyCall, Rendered("Spread"))),
     Difference(gId(41), "`@SafeVarargs` and heap pollution",
       "JLS 9.6.4.7, 4.12.2", "UNCITED — nothing to translate INTO, so the unsoundness is simply carried over",
-      Silent, Open, Predicted, Universal, "the annotation is on SpoonFrontend's dropped list; nothing counts the risk", notYetG),
+      Silent, Open, Predicted, Universal, "the annotation is on SpoonFrontend's dropped list; nothing counts the risk",
+      Unmechanised("there is no translation to owe: `@SafeVarargs` is advice javac gives ITSELF about " +
+        "a warning, so no arm has a decision to take and an attachment would be a false obligation. " +
+        "What is missing is a COUNTER of the carried-over risk, which is a check lane (chunk 18's " +
+        "shape) and not an obligation surface")),
     Difference(gId(42), "a generic vararg's COMPONENT element type has four layered sources",
       "JLS 15.12.4.2, 18", "UNCITED — the DECLARATION is the source that is correct in all four",
-      Loud, Handled, el("G1"), Universal, "SpoonTir.varargPack's elemRef, in its four documented steps", notYetG),
+      Loud, Handled, el("G1"), Universal, "SpoonTir.varargPack's elemRef, in its four documented steps", everyCall),
     Difference(gId(43), "METHOD REFERENCES are five forms sharing one syntax — static, unbound, bound, constructor, array constructor",
       "JLS 15.13", "UNCITED — each form is a different lambda, and `Flags.isStatic` is the discriminator",
-      Loud, Handled, el("K8"), Universal, "SpoonTir.methodRef -> Tir.Tree.MethodRef; TirEmitter's Tree.MethodRef arm", notYetG),
+      Loud, Handled, el("K8"), Universal, "SpoonTir.methodRef -> Tir.Tree.MethodRef; TirEmitter's Tree.MethodRef arm",
+      Both(Lowered("CtExecutableReferenceExpression", Dispatch.Expression), Rendered("MethodRef"))),
     Difference(gId(48), "a REIFIED type occurrence asks about a RUNTIME OBJECT, so a retyping moves the question and not the answer",
       "JLS 15.20.2, 5.5, 4.7",
       "SLS 12.1 — `isInstanceOf`/`asInstanceOf` test the ERASED runtime class, exactly as java does",
-      Silent, Handled, el("K18"), Universal,
+      // `Partial`, not `Handled`, and the correction is JS-C44's from one chunk earlier: the fix
+      // answers java's question over BOTH representations wherever a live view exists, and where the
+      // target is a CONCRETE retyped type there is no view to answer over at all — so the emitted
+      // code keeps java's question asked of the wrong classes and the port SHIPS that. It is
+      // counted, which is what changed; it is not translated. `ENGINE-LIMITS.md` K18 reads CLOSED
+      // for the face it measured, and rule (i) exempts a partial row precisely because it states
+      // which half is missing.
+      Silent, Partial("a reified occurrence whose target is a CONCRETE retyped type — a hash map, a " +
+        "buffer, a tuple — has no live view to answer over, so it is REFUSED and counted " +
+        "(CollectionBoundaryCheck.Issue.ReifiedOccurrence) rather than answered, and one corpus " +
+        "port's last remaining test failure is exactly that refusal"),
+      el("K18"), Universal,
       "CollectionsTransform.reifiedTest/reifiedCast -> JavaCollections.Reified; the concrete-target " +
         "refusal is CollectionBoundaryCheck.Issue.ReifiedOccurrence",
       Cited("collections")),
