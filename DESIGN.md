@@ -549,7 +549,8 @@ where the port could have gone another way, or where something is missing from t
 
 **`attaches`, and the exact strength of what it buys.** A row declares WHERE the engine owes it a
 decision, and the engine records whether that decision was taken (`balticporter.catalog.Attaches`).
-Three discharge surfaces were designed and **all three are built**:
+Three discharge surfaces were designed, all three are built, and a **fourth** was found by the
+residue the third could not retire (see *THE FOURTH SURFACE IS A TYPE* below). The three:
 
 - **frontend lowering** — `Lowering.of(kind, dispatch, at)` at `SpoonTir`'s statement and expression
   dispatches, `Obligations.consult(id, at)(predicate)` inside. **The wrapper goes at the DISPATCH,
@@ -661,17 +662,62 @@ attaches to a `Tree` kind nothing attached to before, check that the kind reache
 all — the entry (`emitUnit`, chunk 11) and the parent (`argTerms`, this one) are the two ways it
 does not.
 
-**Area G's residue is a FOURTH SURFACE that does not exist, and it is named rather than defaulted.**
-Eleven `JS-G` rows are decided while lowering or rendering a TYPE REFERENCE — the wildcard grammar,
-the raw-type fill, the F-bound erasure, the diamond's unnameable inference variable. `SpoonTir.tpe`
-is a real dispatch on the Spoon reference kinds and `TirEmitter.tpe` is its mirror, and neither is
-reachable by either wrapper: a `CtTypeReference` is not a statement or an expression (nor is it in
-`SpoonKinds`' registry, whose totality is derived from `spoon.reflect.{code,declaration}`), and a
-`TypeTree` is a `Tree` that is not a `Statement`, so it never enters `TirEmitter.stat`/`term`. That
-is the same fact `JS-C29` records one area over. Building it is a wave of its own — a kind registry
-for `spoon.reflect.reference`, an `Attaches` case, and a price measured the way the frontend's and
-the emitter's were — so until then those rows carry `Unmechanised` with that sentence, which is what
-`catalog(unmechanised)` is for.
+**THE FOURTH SURFACE IS A TYPE, and it is one surface with two ends.** The first three are all about
+a NODE — a java statement or expression, a `Tree`, a declaration a whole-program pass decided about.
+A whole family of differences is about none of them: the wildcard grammar, the raw-type fill, the
+F-bound no instantiation can eliminate, the diamond's unnameable inference variable, a nested type
+that is path-dependent in one language and not the other. Every one is decided while a TYPE is
+lowered or rendered, and a type is not a node at either end — a `CtTypeReference` is not a
+`CtStatement` or a `CtExpression`, and a `TypeRepr` is not a `Tree` at all: it is the algebra a
+`TypeTree` carries, and the `TypeTree` is rendered through its parent. Ten rows said exactly that in
+their `Unmechanised` text. `Typing.ofReference` at `SpoonTir.tpe` and `Typing.ofRepr` at
+`TirEmitter.tpe` are the wrappers, both at the DISPATCH, both delegating to the one `Lowering.scoped`
+the other surfaces share.
+
+- **TWO `Attaches` cases and not one**, because the KEYS are two vocabularies. `LoweredType(kind)`
+  takes Spoon's reference-INTERFACE name from a new registry for `spoon.reflect.reference` — a THIRD
+  jar scan, kept apart from `SpoonKinds.registry` so that a Spoon upgrade produces two readable diffs
+  rather than one number answering for two taxonomies, and needed for the same reason the node
+  registry is: `SpoonTir.tpe`'s match is ORDERED and its final arm is the supertype's, so a reference
+  kind Spoon adds tomorrow is absorbed there and renders as an ordinary class reference. That is
+  `CtTextBlock`'s shape where the wrong answer is a TYPE. `RenderedType(kind)` takes the `TypeRepr`
+  case's own `productPrefix`, derived from the class files exactly as the `Tree` kinds are. Neither
+  carries a `Dispatch`: java gives a NODE two meanings by position, and a type reference has only
+  ever had one;
+- **the emitter half has NO ORIGIN of its own, and that is a fact rather than an omission.** A
+  `TypeRepr` is a value the IR shares between every position naming the same type, so there is no one
+  place it was written. What exists is the origin of the node it is being rendered FOR, which
+  `CatalogLog.currentOrigin` now holds — maintained by `scoped` beside `currentSubject`, restored by
+  the same caller, and inherited rather than overwritten by a scope whose own origin is synthetic.
+  Reporting it is exact: a finding's job is to name a file and line somebody can open, and the line
+  where the type was NAMED is the one they want, where `Origin.synthetic` would put `-`/0 on every
+  type-surface finding in the catalog;
+- **three of the ten rows turned out NOT to need it**, and finding that out is what wiring them was
+  for. `JS-G05` (a wildcard in an `extends` clause takes the declared bound) and `JS-G11` (an
+  F-bounded slot cannot be eliminated at all) are decided ABOVE `TirEmitter.tpe`:
+  `deWildcardedArgs` REPLACES the wildcard before any type is rendered, so the `TypeBounds` arm never
+  sees the slot the rows are about. That is `JS-G39`'s rule read at the other end — the decision
+  belongs to the CONSUMING node — and the consuming node is the declaration whose `extends` clause it
+  is, so both attach at `Rendered("ClassDef")`. `JS-G06` (a de-wildcarded raw parent and its
+  overrides must agree) is `rawParentAlignment`, a whole-program pass at emitter construction, which
+  is the CITATION surface exactly as `resolveFieldShadowing` is for `JS-C04`. **The prediction that
+  the residue was one fact was right about nine rows out of eleven and wrong about which surface
+  three of them wanted** — the same shape as area C's prediction one wave earlier, and the same
+  lesson: the surface a row needs is read off the CODE THAT DECIDES IT, never off the row's own
+  sentence;
+- **and re-reading that code corrected four EVIDENCE strings, two of which named branches that are
+  switched off.** `inheritedTp` opens `if true || noInheritFill || !inOverridingMember then None`, so
+  the name-directed parent-instantiation fill has answered `None` unconditionally since the sge-design
+  revert — and it is the only reader of `inOverridingMember`. `JS-G06` cited that fill and `JS-G08`
+  cited the `uncheckedGeneric` save-and-restore that feeds it, so both rows explained the port with
+  machinery the port does not run. What is live is `rawParentAlignment` for the first and the
+  frame the raw fill reads (`inStatic`, `nestedInScope`) for the second. Nothing could have reported
+  this: an evidence string is prose, and the only thing that reads it is an agent — which is why
+  wiring a row is also the moment its evidence is re-derived.
+
+`Differences.mechanised` is written as the COMPLEMENT of the two honest negatives for exactly this
+reason (`CLAUDE.md` §4.56): a list of surfaces is a list the fourth was not on, and
+`just catalog-coverage`'s own filter had already been caught that way.
 
 **The DISPATCH is part of the key, and that is not an implementation detail leaking upward.** Java
 gives one node kind two meanings by position: `i += f` as a statement discards the compound

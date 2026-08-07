@@ -530,11 +530,51 @@ class CatalogAreaCSpec extends PortSuite:
     assert(Differences.byId(JS.C(43)).status.isInstanceOf[Status.Absent])
   }
 
+  // -- THE FOURTH SURFACE — the one JS-C row decided while a TYPE is RENDERED --------------------
+
+  test("JS-C29 — a java INNER class is a PATH-DEPENDENT type, and is named by PROJECTION") {
+    // Java's nested and inner classes are one syntax and two scala types, and only one of them is
+    // path-dependent. Named by simple name inside the enclosing class, `Inner` means `this.Inner`,
+    // so the same java type reached through two different instances never unifies — a method
+    // bounded `<T extends Inner>` cannot accept an initialiser written against the outer view. The
+    // projection is one type for all instances.
+    val p = port(
+      """public class A {
+        |  class Inner { }
+        |  Inner make() { return null; }
+        |}""".stripMargin)
+    assertConsults(p, JS.C(29), fired = true)
+    assertEmits(p, "A#Inner")
+  }
+
+  test("JS-C29 — a STATIC nested class is the other answer: a VALUE path, not a projection") {
+    // It is lowered into the enclosing type's companion `object`, so it is reached through the value
+    // path `Outer.Inner` — NOT by simple name (a companion's members are not in the class's scope)
+    // and NOT `Outer#Inner` (a projection cannot reach a companion member).
+    val p = port(
+      """public class A {
+        |  static class Nested { }
+        |  Nested make() { return null; }
+        |}""".stripMargin)
+    assertConsults(p, JS.C(29), fired = true)
+    assertEmits(p, "A.Nested")
+    assertNotEmits(p, "A#Nested")
+  }
+
+  test("JS-C29 — a TOP-LEVEL type asks the question and it does not apply") {
+    // The negative that makes the two above mean something: every type reference is asked, and a
+    // name with no enclosing type in it is the overwhelmingly common answer.
+    val p = port("public class A { java.lang.String f() { return null; } }")
+    assertConsults(p, JS.C(29))
+  }
+
   // -- the partition, asserted rather than left to a reader ---------------------------------------------------
 
   test("every JS-C row is wired, declared unmechanised, or owes nothing — and the residue is NAMED") {
     val byKind = Differences.classes.groupBy(d => Differences.leaves(d.attaches) match
       case ls if ls.exists(_.isInstanceOf[Attaches.Unmechanised]) => "unmechanised"
+      case ls if ls.exists(_.isInstanceOf[Attaches.LoweredType])  => "lowered-type"
+      case ls if ls.exists(_.isInstanceOf[Attaches.RenderedType]) => "rendered-type"
       case ls if ls.exists(_.isInstanceOf[Attaches.Rendered])     => "rendered"
       case ls if ls.exists(_.isInstanceOf[Attaches.Lowered])      => "lowered"
       case ls if ls.exists(_.isInstanceOf[Attaches.Cited])        => "cited"
@@ -546,9 +586,13 @@ class CatalogAreaCSpec extends PortSuite:
     // fail: the ONLY rows left are the six whose surface genuinely does not exist, and each names
     // which one it is waiting for.
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
-      Set(JS.C(22), JS.C(23), JS.C(29), JS.C(30), JS.C(42), JS.C(43)),
+      Set(JS.C(22), JS.C(23), JS.C(30), JS.C(42), JS.C(43)),
       "a JS-C row that is neither a refused construct, an absorbed one, nor a row whose surface " +
         "nobody has built still says nothing is measuring it")
+    // JS-C29 was the sixth and is the one row this area shares with area G's residue: it is decided
+    // while RENDERING A TYPE, which is the fourth obligation surface. Asserted here so the row
+    // cannot quietly go back.
+    assertEquals(byKind.getOrElse("rendered-type", Nil).map(_.id), List(JS.C(29)))
     assert(byKind.getOrElse("rendered", Nil).nonEmpty, "no JS-C row is wired to the RENDERING dispatch")
     assert(byKind.getOrElse("lowered", Nil).nonEmpty, "no JS-C row is wired to the LOWERING dispatch")
     assert(byKind.getOrElse("cited", Nil).nonEmpty, "no JS-C row is wired to the CITATION surface")

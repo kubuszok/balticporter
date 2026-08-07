@@ -1192,9 +1192,28 @@ object SpoonTir:
       * the dispatch owes nothing. Its answer is `objectT`, exactly as the arm it replaces was. */
     private def tpe(tr: CtTypeReference[?]): TypeRepr =
       if tr == null then objectT
-      else Typing.ofReference(SpoonKinds.refNameOf(tr.getClass), originOf(tr), tr)(tpeArm(tr))
+      else
+        val at = originOf(tr)
+        Typing.ofReference(SpoonKinds.refNameOf(tr.getClass), at, tr)(tpeArm(tr, at))
 
-    private def tpeArm(tr: CtTypeReference[?])(using Obligations): TypeRepr = tr match
+    /** JS-G07 and JS-G08 — the two questions a PLAIN class reference is asked, STATED ONCE and
+      * called from both arms that a `CtTypeReference` reaches.
+      *
+      * `slotConsults`' shape at the type surface, and needed for the same reason: the primitive
+      * fast path and the general arm are ONE Spoon kind, so a consult written in the general arm
+      * alone is a hole at every `int`, `boolean` and `void` in the program — which is most of them.
+      *
+      * Both predicates are about a RAW USE (JLS 4.8), which is where java stops checking and scala
+      * cannot: `isRawGenericUse` is the engine's own test for it, so the consult and the fill below
+      * read one predicate rather than two spellings of one. JS-G08 narrows it to the sites where
+      * the fill actually DEPENDS on the frame — a companion body cannot name the class's own
+      * parameters and a nested use can, so one java type genuinely renders two ways. */
+    private def rawUseConsults(r: CtTypeReference[?], at: Origin)(using Obligations): Unit =
+      val raw = isRawGenericUse(r)
+      Obligations.consult(JS.G(7), at)(Option.when(raw)(()))
+      Obligations.consult(JS.G(8), at)(Option.when(raw && (inStatic || nestedInScope(r)))(()))
+
+    private def tpeArm(tr: CtTypeReference[?], at: Origin)(using Obligations): TypeRepr = tr match
       case arr: CtArrayTypeReference[?] =>
         AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(tpe(arr.getComponentType)))
       case inter: CtIntersectionTypeReference[?] =>
@@ -1212,17 +1231,33 @@ object SpoonTir:
       case w: CtWildcardReference =>
         val bound = Option(w.getBoundingType)
         val isObj = bound.exists(_.getQualifiedName == "java.lang.Object")
+        val written = bound.filter(_.getQualifiedName != "java.lang.Object")
+        // JS-G01 — java's use-site variance HAS a scala counterpart, in a different grammar. The
+        // difference APPLIES where a bound has to be carried across: a bare `?` is the one form
+        // both languages spell the same way, and `? extends Object` IS a bare `?`.
+        Obligations.consult(JS.G(1), at)(written)
+        // JS-G03 — and `? super Object` is the one wildcard that is not a family at all. Java has
+        // no supertype of `Object`, so the lower bound admits exactly `Object`.
+        Obligations.consult(JS.G(3), at)(Option.when(!w.isUpper && isObj)(()))
         if !w.isUpper && isObj then objectT
         else
-          val b = bound.filter(_.getQualifiedName != "java.lang.Object").map(tpe)
+          val b = written.map(tpe)
           if w.isUpper then TypeBounds(NoType, b.getOrElse(NoType)) else TypeBounds(b.getOrElse(NoType), NoType)
       case tv: CtTypeParameterReference =>
-        val id = resolveTypeParam(tv.getSimpleName)
-          .getOrElse(minter.external(Symbol.UnresolvedTypeVarPrefix + tv.getSimpleName, tv.getSimpleName))
+        val here = resolveTypeParam(tv.getSimpleName)
+        // JS-G12 — this is where the frontend finds out that a type variable has NO NAMEABLE type:
+        // the name resolves to no binder in this scope, so what is minted is a MARKER rather than a
+        // name, and the emitter's standing obligation is that it never reaches the output.
+        Obligations.consult(JS.G(12), at)(Option.when(here.isEmpty)(()))
+        val id = here.getOrElse(minter.external(Symbol.UnresolvedTypeVarPrefix + tv.getSimpleName, tv.getSimpleName))
         TypeRef(NoPrefix, id)
       case p if p.isPrimitive =>
+        // a primitive is a plain `CtTypeReference` and reaches the SAME obligation scope the arm
+        // below does — see `rawUseConsults`.
+        rawUseConsults(p, at)
         TypeRef(NoPrefix, minter.external("scala." + primName(p.getSimpleName), p.getSimpleName))
       case r =>
+        rawUseConsults(r, at)
         val head = TypeRef(NoPrefix, typeSym(r))
         r.getActualTypeArguments.asScala.toList match
           case Nil =>

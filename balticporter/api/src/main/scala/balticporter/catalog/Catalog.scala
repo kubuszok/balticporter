@@ -24,10 +24,11 @@ package balticporter.catalog
   * already governs it. `DifferenceTakesNoParameterSpec` is that rule, mechanised — every field of
   * every row, recursively, must be a literal or an enum case.
   *
-  * `attaches` ARRIVED WITH ITS FIRST SURFACE, and only for the rows that surface reaches. The
-  * frontend's lowering dispatch is built ([[Lowering]]); the emitter's rendering dispatch and the
-  * per-declaration phase citation are not both there yet, and a row whose discharge site has no
-  * mechanism says so — [[Attaches.Unmechanised]], counted in its own lane. A field that claimed
+  * `attaches` ARRIVED WITH ITS FIRST SURFACE, and each later surface retired the rows that were
+  * waiting for it: [[Lowering]] at the frontend's two node dispatches, [[Rendering]] at the
+  * emitter's, [[Typing]] at both ends' TYPE dispatches, and [[CatalogLog.cite]] for a whole-program
+  * pass. A row whose discharge site still has no mechanism SAYS SO — [[Attaches.Unmechanised]],
+  * counted in its own lane, 112 → 88 → 47 → 20 → 10 as the surfaces landed. A field that claimed
   * coverage on the strength of a surface that does not exist would make the lane checking it report
   * every row as fine, which is worse than no lane. `tests` is still absent for the same reason: the
   * edge-case suites are per-area waves and a row pointing at a suite nobody wrote is a claim.

@@ -1350,6 +1350,12 @@ final class TirEmitter(
             // the SAME type at different arguments, so require the head constructor to agree.
             if !hasWildcardArg(aligned) && headSymOf(aligned) == headSymOf(op.tpt.tpe) then
               out(op.symbol) = aligned
+              // JS-G06 — the CITATION surface, and deliberately not an obligation: this is a
+              // whole-program pass and nothing can assert that it *should have* considered a
+              // difference at a declaration it never visited (`DESIGN.md` §2.8). Cited at the
+              // DECLARATION whose signature this moves, which is the granularity `Decision` uses,
+              // and idempotent per member for the same reason.
+              catalog.cite(JS.G(6), sym(od.symbol).fullName)
     program.units.foreach(u => declOf.values.foreach(visit(_, Set.empty)))
     out.toMap
 
@@ -2458,6 +2464,30 @@ final class TirEmitter(
     // parameters and a method's), which is why the row attaches at both and why the predicate is
     // `fBounded` — stated once, called from here and from the `DefDef` case of the dispatch.
     Obligations.consult(JS.G(35), at)(Option.when(fBounded(cd.tparams))(()))
+
+    // -- the RAW PARENT (JLS 4.8, 8.1.4) -----------------------------------------------------------
+    //
+    // JS-G05 and JS-G11 are ONE fold read at its two outcomes: a wildcard is illegal in an `extends`
+    // clause, so `deWildcardedArgs` eliminates it — to its own written bound, else the type
+    // PARAMETER's declared upper bound, else `AnyRef` — and REFUSES to for an F-bounded parameter,
+    // where no finite instantiation satisfies `N <: Node[N,…]` and the wildcard's weaker claim is
+    // the only one scalac accepts.
+    //
+    // CONSULTED HERE and not at the type dispatch, which is where the two rows were expected to
+    // land: the elimination is decided ABOVE `TirEmitter.tpe` — the wildcard is REPLACED before any
+    // type is rendered, so the `TypeBounds` arm never sees the slot these rows are about. That is
+    // `JS-G39`'s rule at the other end of the pipeline (a node its parent consumes positionally
+    // owes nothing), and the consuming node is the declaration whose `extends` clause it is.
+    // `deWildcardedArgs` is re-run rather than read off a cache, which is the same trade the header
+    // states: it is one linear fold over a parent's arguments, not one of this file's two walks.
+    val wildcardFills = cd.parents.flatMap { p =>
+      (p match { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }) match
+        case TypeRepr.AppliedType(tc, args) =>
+          args.zip(deWildcardedArgs(tc, args)).collect { case (_: TypeRepr.TypeBounds, chosen) => chosen }
+        case _ => Nil
+    }
+    Obligations.consult(JS.G(5), at)(Option.when(wildcardFills.exists(_.isDefined))(()))
+    Obligations.consult(JS.G(11), at)(Option.when(wildcardFills.contains(scala.None))(()))
 
     declVisibility(s, at)
 
@@ -4201,9 +4231,36 @@ final class TirEmitter(
   private def tpe(t: TypeRepr): String =
     Typing.ofRepr(TirKinds.ofType(t), t)(tpeArm(t))
 
+  /** JS-C29 and JS-G12 — the two questions a NAME is asked at the type dispatch's `TypeRef` arm.
+    *
+    * Both are read off the SYMBOL rather than by re-running `typeSym`'s cascade, which is
+    * `classConsults`' own trade: the consult asks *does this difference apply at this reference*,
+    * and what the repair emits is what the edge-case suite asserts. */
+  private def typeRefConsults(s: SymId)(using Obligations): Unit =
+    val full    = sym(s).fullName
+    val marker  = Symbol.isUnresolvedTypeVar(full)
+    // JS-C29 — a java NESTED type is one of two different scala types, and only one of them is
+    // path-dependent. Every `$` in a full name is that question being asked; a marker is not a name
+    // at all and is excluded, since it is the other row's.
+    Obligations.consult(JS.C(29), catalog.currentOrigin)(Option.when(!marker && full.contains('$'))(()))
+    // JS-G12 — the emitter's half: an unresolved type variable is a MARKER, so `?` is emitted in
+    // its place. `ENGINE-LIMITS.md` G2 — one occurrence took out the statement around it.
+    Obligations.consult(JS.G(12), catalog.currentOrigin)(Option.when(marker)(()))
+
+  /** JS-G01's EMITTER half — the bound GRAMMAR, stated once and called from BOTH `TypeBounds` arms.
+    *
+    * The bare-wildcard arm is a fast path for `TypeBounds(NoType, NoType)`, so a consult written in
+    * the general arm alone is a hole at every plain `?` the raw fill produces — which is most of
+    * them (`ENGINE-LIMITS.md` F8). It FIRES where a bound survives into the text, which is exactly
+    * where java's grammar and scala's differ: a bare `?` is the one form both languages spell the
+    * same way, and a bound that is itself a marker is dropped rather than printed. */
+  private def boundsConsults(lo: TypeRepr, hi: TypeRepr)(using Obligations): Unit =
+    def written(b: TypeRepr) = b != TypeRepr.NoType && !isUnresolvedTypeVar(b)
+    Obligations.consult(JS.G(1), catalog.currentOrigin)(Option.when(written(lo) || written(hi))(()))
+
   private def tpeArm(t: TypeRepr)(using Obligations): String = t match
     case TypeRepr.NoType | TypeRepr.NoPrefix   => "Any"
-    case TypeRepr.TypeRef(_, s)                => typeSym(s)
+    case TypeRepr.TypeRef(_, s)                => typeRefConsults(s); typeSym(s)
     case TypeRepr.TermRef(_, s)                => s"${typeSym(s)}.type"
     case TypeRepr.ThisType(_)                  => "this.type"
     case TypeRepr.SuperType(_, sup)            => tpe(sup)
@@ -4212,13 +4269,15 @@ final class TirEmitter(
     case TypeRepr.AndType(l, r)                => s"${tpe(l)} & ${tpe(r)}"
     case TypeRepr.OrType(l, r)                 => s"${tpe(l)} | ${tpe(r)}"
     case TypeRepr.ByNameType(u)                => s"=> ${tpe(u)}"
-    case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) => "?"
+    case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) =>
+      boundsConsults(TypeRepr.NoType, TypeRepr.NoType); "?"
     // A BOUND that is an unresolved type variable says nothing, and saying it is worse than
     // silence: `? <: ?E` names a type that does not exist and does not even lex. Dropping the
     // bound leaves `?`, which is exactly what G2 settles a raw generic renders as — and the
     // wildcard was already all the java said, since the variable it was bounded by has no binder
     // in this scope either. When BOTH bounds go, so does the whole `TypeBounds`.
     case TypeRepr.TypeBounds(lo, hi) =>
+      boundsConsults(lo, hi)
       val l = if lo == TypeRepr.NoType || isUnresolvedTypeVar(lo) then "" else s" >: ${tpe(lo)}"
       val h = if hi == TypeRepr.NoType || isUnresolvedTypeVar(hi) then "" else s" <: ${tpe(hi)}"
       s"?$l$h"

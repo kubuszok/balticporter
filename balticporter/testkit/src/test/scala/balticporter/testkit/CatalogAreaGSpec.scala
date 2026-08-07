@@ -512,6 +512,174 @@ class CatalogAreaGSpec extends PortSuite:
       "the SE16 pattern binding is still absent — flip this assertion with the row")
   }
 
+  // -- THE FOURTH SURFACE — the rows decided while a TYPE is lowered or rendered -----------------
+  //
+  // `SpoonTir.tpe` and `TirEmitter.tpe` (`DESIGN.md` §2.8). Each of these was `Unmechanised` until
+  // the surface existed, and each is asserted BOTH ways for the reason the file's header states:
+  // the wrapper detects an ABSENT consult and cannot detect a wrong one, so a suite that only ever
+  // showed the difference firing would pass against a predicate wired to a constant.
+
+  test("JS-G01 — a wildcard with a WRITTEN bound crosses into scala's grammar, at both ends") {
+    // The frontend chooses the IMAGE (a `TypeBounds`) and the emitter chooses the TEXT (`? <: X`),
+    // and the row attaches at both because they are two decisions. `? extends Object` is NOT this
+    // row — it is a bare `?`, the one form both languages spell the same way — which is the negative
+    // below.
+    val p = port("public class A { void f(java.util.List<? extends Number> l) { } }")
+    assertConsults(p, JS.G(1), fired = true)
+    assertEmits(p, "java.util.List[? <: java.lang.Number]")
+  }
+
+  test("JS-G01 — a BARE wildcard is consulted at both ends and fires at neither") {
+    val p = port("public class A { void f(java.util.List<?> l) { } }")
+    assertConsults(p, JS.G(1))
+    assertEmits(p, "java.util.List[?]")
+    assertNotEmits(p, "? <:")
+  }
+
+  test("JS-G03 — `? super Object` is the one wildcard that is not a family") {
+    // Java has no supertype of `Object`, so the lower bound admits exactly `Object` and naming it
+    // loses nothing. Rendered `[?]` — which is what `? extends Object` also becomes — the two
+    // collapse to one type and a call java accepts by capture conversion unifies to `Nothing`.
+    val p = port("public class A { void f(java.util.List<? super Object> l) { } }")
+    assertConsults(p, JS.G(3), fired = true)
+    assertEmits(p, "java.util.List[java.lang.Object]")
+  }
+
+  test("JS-G03 — `? super X` for any OTHER X really is a family; consulted, does not fire") {
+    val p = port("public class A { void f(java.util.List<? super String> l) { } }")
+    assertConsults(p, JS.G(3))
+    assertEmits(p, "java.util.List[? >: java.lang.String]")
+  }
+
+  test("JS-G07 — a RAW use erases the REFERENCE's generics, and the arguments are re-supplied") {
+    val p = port("public class A { java.util.List f() { return null; } }")
+    assertConsults(p, JS.G(7), fired = true)
+    assertEmits(p, "java.util.List[?]")
+  }
+
+  test("JS-G07 — a PARAMETERISED use is consulted and does not fire") {
+    val p = port("public class A { java.util.List<String> f() { return null; } }")
+    assertConsults(p, JS.G(7))
+    assertEmits(p, "java.util.List[java.lang.String]")
+  }
+
+  test("JS-G07 — a NON-generic reference is consulted and does not fire, and so is a primitive") {
+    // The primitive is the case the consult would have missed: `int` reaches the SAME Spoon kind as
+    // `String` does, through a different arm of `SpoonTir.tpe`, so a rule stated in the general arm
+    // alone is a hole at every primitive in the program. It is stated once (`rawUseConsults`) and
+    // called from both.
+    val p = port("public class A { int f(String s) { return 0; } }")
+    assertConsults(p, JS.G(7))
+    assertEmits(p, "scala.Int")
+  }
+
+  test("JS-G08 — the SAME raw java type renders two ways, and which one depends on the frame") {
+    // `Entries` is nested in `Box<T>`, so a raw use inside a non-static member fills from the
+    // enclosing instantiation's own name, while a STATIC frame — where the class's parameters are
+    // not in scope at all — must fall back to a wildcard. One java type, two renderings, and both
+    // are right (`ENGINE-LIMITS.md` G3, G20).
+    val p = port(
+      """public class A {
+        |  static class Box<T> {
+        |    static class Entries<E> { }
+        |    Entries here() { return null; }
+        |    static Entries there() { return null; }
+        |  }
+        |}""".stripMargin)
+    assertConsults(p, JS.G(8), fired = true)
+  }
+
+  test("JS-G08 — a raw use with NO enclosing instantiation to read is consulted and does not fire") {
+    val p = port("public class A { java.util.List f() { return null; } }")
+    assertConsults(p, JS.G(8))
+  }
+
+  test("JS-G05 — a wildcard is ILLEGAL in an `extends` clause, so it takes the declared bound") {
+    // `Box`'s parameter is bounded, so the parent's `?` — which our own raw fill produced — becomes
+    // that bound rather than `AnyRef`. The plain `AnyRef` fill is what got this wrong before
+    // `declBounds` was consulted: it produced a parent that failed its own bounds.
+    val p = port(
+      """public class A {
+        |  static class Box<T extends Number> { }
+        |  static class Sub extends Box { }
+        |}""".stripMargin)
+    assertConsults(p, JS.G(5), fired = true)
+    assertEmits(p, "extends A.Box[java.lang.Number]")
+  }
+
+  test("JS-G05 — a class with no wildcard in its parents is consulted and does not fire") {
+    val p = port("public class A { static class Box<T> { } static class Sub extends Box<String> { } }")
+    assertConsults(p, JS.G(5))
+  }
+
+  test("JS-G11 — an F-BOUNDED slot cannot be eliminated at all, and the refusal is CONSULTED") {
+    // No finite type satisfies `N <: Node[N]` except a real subclass, and every unrolling fails the
+    // same bound because `Node` is invariant. Java carries the bound and does not check it at an
+    // erased use; scala checks. The WILDCARD asserts only that SOME type satisfies it, which is
+    // exactly the erased claim — so the slot stays `?` and the row stays a refusal
+    // (`ENGINE-LIMITS.md` G8).
+    val p = port(
+      """public class A {
+        |  static class Node<N extends Node<N>> { }
+        |  static class Holder extends Node { }
+        |}""".stripMargin)
+    assertConsults(p, JS.G(11), fired = true)
+    assert(Differences.byId(JS.G(11)).status.isInstanceOf[Status.Refused],
+      "JS-G11 is no longer a refusal — flip this test with it")
+    assertEmits(p, "extends A.Node[?]")
+  }
+
+  test("JS-G11 — a NON-F-bounded wildcard parent is eliminated, so the refusal does not fire") {
+    val p = port(
+      """public class A {
+        |  static class Box<T extends Number> { }
+        |  static class Sub extends Box { }
+        |}""".stripMargin)
+    assertConsults(p, JS.G(11))
+  }
+
+  test("JS-G06 — a de-wildcarded raw PARENT and its overrides come from ONE answer, and it is CITED") {
+    // The parent could not keep its wildcard (`extends Cfg[?]` is illegal), so it was eliminated to
+    // `Cfg[Number]`; the override's own parameter was independently rendered `Box[?]` by the raw
+    // fill. Two renderings of one raw type in one class, and the override implemented neither.
+    // `rawParentAlignment` applies the parent's OWN substitution to the inherited signature, so
+    // agreement is by construction — and it is a whole-program pass, so what it owes is a CITATION
+    // and not an obligation (`DESIGN.md` §2.8).
+    val p = port(
+      """public class A {
+        |  static class Box<T> { }
+        |  interface Cfg<T extends Number> { void save(Box<T> b); }
+        |  static class Impl implements Cfg { public void save(Box b) { } }
+        |}""".stripMargin)
+    assertCites(p, JS.G(6), "save")
+  }
+
+  test("JS-G12 — every type VARIABLE is asked whether it has a binder here, and this one does") {
+    val p = port("public class A<T> { java.util.List<T> xs; }")
+    assertConsults(p, JS.G(12))
+    assertEmits(p, "java.util.List[T]")
+  }
+
+  test("JS-G12 — …and the marker NEVER reaches the output, which is the whole obligation") {
+    // WHAT THIS TEST CANNOT DO, stated rather than faked: the frontend's mint is unreachable from a
+    // single in-memory unit. `resolveTypeParam` searches every enclosing frame BY NAME, so a
+    // nested — even `static` nested — class still resolves the outer `T`, and the shape that does
+    // reach the mint needs a receiver instantiation read under `atDeclScope`, where an EXECUTABLE
+    // frame is skipped. Eight fixtures were probed across that space and every one resolved. So the
+    // FIRE is a corpus measurement (`catalog.tsv`'s `JS-G12` row) and what an edge-case suite can
+    // hold is the standing obligation itself: whatever the frontend minted, `?E` is neither a type
+    // nor a token sequence scala can lex, and one occurrence took out the statement around it
+    // (`ENGINE-LIMITS.md` G2). `TirEmitterSpec` holds the same line from the other side, on a
+    // hand-built marker, which is the only way to construct one deliberately.
+    val p = port(
+      """public class A<T> {
+        |  static class Inner { java.util.List<T> xs; }
+        |  <U> java.util.List<U> g(java.util.List<U> u) { return u; }
+        |}""".stripMargin)
+    assertConsults(p, JS.G(12))
+    assertNotEmits(p, balticporter.tir.Symbol.UnresolvedTypeVarPrefix)
+  }
+
   // -- a REFUSAL is a decision the lane can count: JS-G10 -----------------------------------------
 
   test("JS-G10 — a RAW anonymous class WITH a body has no faithful image, and the refusal is CONSULTED") {
@@ -552,9 +720,19 @@ class CatalogAreaGSpec extends PortSuite:
     }
   }
 
-  test("JS-G02 / JS-G20 / JS-G41 — a row with NO surface at all is counted, not claimed") {
+  test("JS-G02 — an OPEN row at the TYPE surface is the work list too, and is never consulted") {
+    // The third row in this file's `Open` family and the one the fourth surface added. Capture
+    // conversion relates two USES of one wildcard in a single expression; scala captures per use,
+    // and no rewrite is synthesised — so every `CtWildcardReference` is a hole, which is what a work
+    // list is. `CatalogLog.knownHole` is why the testkit's fatal mode does not raise on it.
+    val p = port("public class A { int f(java.util.List<?> l) { return l.size(); } }")
+    assertNotConsults(p, JS.G(2))
+    assert(Differences.byId(JS.G(2)).status.isOpen, "JS-G02 is no longer Open — flip this test with it")
+  }
+
+  test("JS-G20 / JS-G41 — a row with NO surface at all is counted, not claimed") {
     val p = port("public class A { int x = 1; }")
-    List(JS.G(2), JS.G(20), JS.G(41)).foreach { id =>
+    List(JS.G(20), JS.G(41)).foreach { id =>
       assertNotConsults(p, id)
       assert(Differences.leaves(Differences.byId(id).attaches).exists(_.isInstanceOf[Attaches.Unmechanised]),
         s"$id gained a surface — move it out of this test and give it one of its own")
@@ -566,28 +744,39 @@ class CatalogAreaGSpec extends PortSuite:
   test("every JS-G row is wired, declared unmechanised, or owes nothing — and the residue is NAMED") {
     val byKind = Differences.generics.groupBy(d => Differences.leaves(d.attaches) match
       case ls if ls.exists(_.isInstanceOf[Attaches.Unmechanised]) => "unmechanised"
+      case ls if ls.exists(_.isInstanceOf[Attaches.LoweredType])  => "lowered-type"
+      case ls if ls.exists(_.isInstanceOf[Attaches.RenderedType]) => "rendered-type"
       case ls if ls.exists(_.isInstanceOf[Attaches.Rendered])     => "rendered"
       case ls if ls.exists(_.isInstanceOf[Attaches.Lowered])      => "lowered"
       case ls if ls.exists(_.isInstanceOf[Attaches.Cited])        => "cited"
       case _                                                      => "none")
     assertEquals(byKind.values.map(_.size).sum, Differences.generics.size)
     // THE CHUNK'S OWN BAR, in the form that can fail. Area G opened with 38 of its 40 rows on
-    // `Unmechanised` — the largest such claim in the registry — and the audit question for this wave
-    // is whether the rows were really instrumented or renamed to keep a lane green. These eleven are
-    // the ONLY ones left, and every one of them is a type-reference decision, `JS-G20`'s per-phase
-    // discipline, or `JS-G41`'s absent counter.
+    // `Unmechanised` — the largest such claim in the registry — chunk 12 took it to eleven, and the
+    // fourth surface takes it to TWO. The audit question is unchanged: were the rows instrumented,
+    // or renamed to keep a lane green. What is left is `JS-G20`'s per-phase discipline (a fact about
+    // every retyping phase rather than one mechanism, which `collection-retarget` measures) and
+    // `JS-G41`'s absent counter (`@SafeVarargs` is advice javac gives ITSELF, so no arm has a
+    // decision to take and an attachment would be a false obligation).
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
-      Set(JS.G(1), JS.G(2), JS.G(3), JS.G(5), JS.G(6), JS.G(7), JS.G(8), JS.G(11), JS.G(12),
-          JS.G(20), JS.G(41)),
-      "a JS-G row that is neither a type-reference decision, JS-G20's per-phase discipline nor " +
-        "JS-G41's absent counter still says nothing is measuring it")
+      Set(JS.G(20), JS.G(41)),
+      "a JS-G row that is neither JS-G20's per-phase discipline nor JS-G41's absent counter still " +
+        "says nothing is measuring it")
     assert(byKind.getOrElse("rendered", Nil).nonEmpty, "no JS-G row is wired to the RENDERING dispatch")
     assert(byKind.getOrElse("lowered", Nil).nonEmpty, "no JS-G row is wired to the LOWERING dispatch")
-    // JS-G48 is the area's one CITATION and it is asserted here rather than tested above: a citation
-    // needs `CollectionsTransform`, whose reified rewrites
-    // `balticporter.corpus.CollectionsReifiedSpec` exercises. Without this line the row could lose
-    // its surface and nothing in this file would say so.
-    assertEquals(byKind.getOrElse("cited", Nil).map(_.id), List(JS.G(48)))
+    // …and the FOURTH surface, BOTH halves — asked of the LEAVES and not of the bucket, because the
+    // bucket is first-match and area G's two type rows attach at both ends (`Attaches.Both`), so a
+    // bucket test would report the emitter half as absent while `JS-G01` and `JS-G12` are wired to
+    // it. That is `JS-G39`'s lesson in a spec: a question about a LEAF may not be asked of a row.
+    def hasLeaf(f: Attaches => Boolean) = Differences.generics.exists(d => Differences.leaves(d.attaches).exists(f))
+    assert(hasLeaf(_.isInstanceOf[Attaches.LoweredType]), "no JS-G row is wired to the TYPE-REFERENCE dispatch")
+    assert(hasLeaf(_.isInstanceOf[Attaches.RenderedType]), "no JS-G row is wired to the emitter's TYPE dispatch")
+    // The area's TWO citations. `JS-G48` is asserted here rather than tested above because a
+    // citation needs `CollectionsTransform`, whose reified rewrites
+    // `balticporter.corpus.CollectionsReifiedSpec` exercises; `JS-G06` HAS a test above, and is
+    // listed anyway so that the row losing its surface fails here too. Without this line either
+    // could lose it and nothing in this file would say so.
+    assertEquals(byKind.getOrElse("cited", Nil).map(_.id), List(JS.G(6), JS.G(48)))
     // …and a row claiming NO obligation must not be one the registry calls Open.
     assertEquals(byKind.getOrElse("none", Nil).filter(_.status.isOpen).map(_.id), Nil,
       "an Open row claiming NoObligation is a gap no lane can see")

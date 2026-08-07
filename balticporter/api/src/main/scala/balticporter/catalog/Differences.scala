@@ -152,24 +152,22 @@ object Differences:
           Both(Lowered("CtAssignment", Dispatch.Either),
                Lowered("CtReturn", Dispatch.Statement)))))
 
-  /** the residue area G could NOT retire, and the surface each of these rows is waiting for.
+  /** the WILDCARD arm of the frontend's type dispatch — `SpoonTir.tpe`'s `CtWildcardReference`
+    * branch, where java's use-site variance becomes a scala `TypeBounds` or, at `? super Object`,
+    * stops being a family at all.
     *
-    * A java TYPE REFERENCE is lowered by `SpoonTir.tpe` and rendered by `TirEmitter.tpe`, and
-    * neither is an obligation dispatch. The frontend's wrapper sits at `stmtKind`/`exprNoCast`,
-    * which are the two dispatches a STATEMENT and an EXPRESSION go through; a `CtTypeReference` is
-    * neither, and it is not even in `SpoonKinds`' registry, whose totality is derived from
-    * `spoon.reflect.{code,declaration}`. The emitter's wrapper is keyed on a `Tree` kind reached
-    * from `stat`/`term`, and `TypeTree` is a `Tree` that is NOT a `Statement`, so it never enters
-    * either — the same fact `JS-C29` records one area over.
+    * Named once because three rows own that one arm and each asks a different question of it. Note
+    * `SpoonKinds.refNameOf` has to answer `CtWildcardReference` here and not the type-parameter
+    * kind its IMPLEMENTATION extends, which is why the registry lists both and
+    * `ReferenceKindTotalitySpec` pins the pair. */
+  private val everyWildcard: Attaches = LoweredType("CtWildcardReference")
+
+  /** the PLAIN reference arm — `SpoonTir.tpe`'s final `case r`, and its primitive fast path.
     *
-    * So these rows are counted rather than claimed, exactly as `catalog(unmechanised)` is for. What
-    * would retire them is a THIRD lowering surface at `SpoonTir.tpe`'s own type-reference dispatch,
-    * which is a wave of its own: it wants a kind registry for `spoon.reflect.reference`, an
-    * `Attaches` case, and a price measured the way chunks 6 and 10 measured theirs. */
-  private val notYetTypes = Unmechanised(
-    "decided while LOWERING or RENDERING a type reference — `SpoonTir.tpe` and `TirEmitter.tpe` — " +
-      "and neither is a node dispatch an obligation wrapper can enter: a `CtTypeReference` is not a " +
-      "statement or an expression, and a `TypeTree` is a `Tree` that is not a `Statement`")
+    * The two arms are ONE Spoon kind (`CtTypeReference`), so a consult written in the general arm
+    * alone is a hole at every `int`: the rule is stated once (`SpoonTir.rawUseConsults`) and called
+    * from both, which is `slotConsults`' shape at the type surface. */
+  private val everyPlainReference: Attaches = LoweredType("CtTypeReference")
 
   // -------------------------------------------------------------------------------------------
   // EXPRESSIONS — JLS 15, 5.6
@@ -458,7 +456,8 @@ object Differences:
     Difference(cId(29), "a static NESTED class and an INNER class are different types, and only one is path-dependent",
       "JLS 8.1.3", "UNCITED — `Outer#Inner` is the type projection; `outer.Inner` is the path-dependent type",
       Mixed, Handled, NoTwin, Universal,
-      "TirEmitter.tpe's cascade — nestedPath for a static nested type, a projection for an inner one, with namedInner opting out at `extends`/`new`", Unmechanised("the decision is taken while rendering a TYPE (TirEmitter.tpe), which every position needing a type calls and which is not a `Tree` dispatch — there is no node whose rendering could owe the consult, and the `Tree.TypeTree` a reference sits in is rendered through its parent")),
+      "TirEmitter.tpe's TypeRef arm, through typeSym's cascade — nestedPath for a static nested type, a projection for an inner one, with namedInner opting out at `extends`/`new`",
+      RenderedType("TypeRef")),
     Difference(cId(30), "method-LOCAL named classes",
       "JLS 14.3", "UNCITED — Scala has a direct counterpart; only the capture wiring is missing",
       Loud, Absent("refused outright by the frontend, and the refusal is UNIT-fatal rather than per-site"),
@@ -547,30 +546,61 @@ object Differences:
   // -------------------------------------------------------------------------------------------
 
   val generics: List[Difference] = List(
+    // The row is decided at BOTH ends of the pipeline and the two halves are different decisions:
+    // the frontend chooses the IMAGE (a `TypeBounds`, or nothing at all where the bound says
+    // `Object`) and the emitter chooses the GRAMMAR (`? >: lo <: hi`, with an unresolved bound
+    // dropped rather than printed). Attached to either alone it would read as coverage the other
+    // half does not have.
     Difference(gId(1), "use-site wildcards, with the matching bound grammar",
       "JLS 4.5.1", "UNCITED — `?` with `<:`/`>:` bounds",
-      NoImpact, Handled, el("G2"), Universal, "SpoonTir.tpe's CtWildcardReference branch", notYetTypes),
+      NoImpact, Handled, el("G2"), Universal,
+      "SpoonTir.tpe's CtWildcardReference branch; TirEmitter.tpe's two TypeBounds arms render the grammar",
+      Both(everyWildcard, RenderedType("TypeBounds"))),
     Difference(gId(2), "CAPTURE CONVERSION relates two uses of one wildcard in a single expression",
       "JLS 5.1.10", "UNCITED — Scala captures per use, so the two uses are unrelated",
-      Loud, Open, el("G24"), Universal, "no rewrite exists; the fix is local (bind to a named local) and none is synthesised", notYetTypes),
+      Loud, Open, el("G24"), Universal, "no rewrite exists; the fix is local (bind to a named local) and none is synthesised", everyWildcard),
     Difference(gId(3), "`? super Object` has exactly one inhabitant",
       "JLS 4.5.1", "UNCITED — the corresponding Scala bound is not the same set",
-      Loud, Handled, el("G23"), Universal, "SpoonTir.tpe's `!w.isUpper && isObj` branch", notYetTypes),
+      Loud, Handled, el("G23"), Universal, "SpoonTir.tpe's `!w.isUpper && isObj` branch", everyWildcard),
     Difference(gId(4), "a captured wildcard on ITERATION has no nameable type",
       "JLS 5.1.10, 14.14.2", "UNCITED — the capture cannot be written, so an alias plus a widening cast is the image",
       Loud, Handled, el("K7"), Universal, "TirEmitter.widenedBinding in the Tree.ForEach arm", Rendered("ForEach")),
+    // NOT the type surface, and finding that out is what wiring it was for. The elimination is
+    // decided ABOVE `TirEmitter.tpe` — `deWildcardedArgs` REPLACES the wildcard before any type is
+    // rendered, so the `TypeBounds` arm never sees the slot this row is about. That is `JS-G39`'s
+    // rule read at the other end (the decision belongs to the CONSUMING node), and the consuming
+    // node is the declaration whose `extends` clause it is. The evidence read
+    // `SpoonTir.erasureOfFormal and the formal-bound fill in SpoonTir.tpe`, which is the FRONTEND's
+    // erasure machinery and decides nothing about a parent.
     Difference(gId(5), "a wildcard in an `extends` clause takes the parameter's DECLARED bound",
       "JLS 4.5.1, 8.1.4", "UNCITED — no wildcard is legal in a parent, so the bound has to be filled",
-      Loud, Handled, el("G7"), Universal, "SpoonTir.erasureOfFormal and the formal-bound fill in SpoonTir.tpe", notYetTypes),
+      Loud, Handled, el("G7"), Universal,
+      "TirEmitter.deWildcardedArgs — a wildcard argument takes its own written bound, else the type PARAMETER's declared upper bound, else AnyRef, resolving left to right so a later bound can name an earlier parameter",
+      Rendered("ClassDef")),
+    // …and the evidence here named a fill that is SWITCHED OFF: `inheritedTp` opens
+    // `if true || noInheritFill || !inOverridingMember then None`, so the name-directed
+    // parent-instantiation fill has answered `None` unconditionally since the sge-design revert.
+    // What makes a parent and its overrides agree today is `rawParentAlignment`, a whole-program
+    // pass at emitter construction — which is the CITATION surface and not a dispatch, exactly as
+    // `resolveFieldShadowing` is for JS-C04.
     Difference(gId(6), "a de-wildcarded raw PARENT and its overrides must agree",
       "JLS 4.8, 8.4.8.1", "UNCITED — an override is checked against the parent as emitted",
-      Loud, Handled, el("G6"), Universal, "SpoonTir's parent-instantiation fill", notYetTypes),
+      Loud, Handled, el("G6"), Universal,
+      "TirEmitter.rawParentAlignment — deWildcardedArgs decides the parent's arguments and the SAME substitution re-renders the overriding parameters, so agreement is by construction rather than by two rules coinciding",
+      Cited("raw-parent-alignment")),
     Difference(gId(7), "a RAW type erases the REFERENCE's generics, not the class's",
       "JLS 4.8", "UNCITED — `[?]` everywhere is the only fill that round-trips across an override",
-      Loud, Handled, el("G2"), Universal, "SpoonTir.tpe's empty-actuals branch", notYetTypes),
+      Loud, Handled, el("G2"), Universal, "SpoonTir.tpe's empty-actuals branch", everyPlainReference),
+    // The evidence named `uncheckedGeneric`'s `inOverridingMember` save-and-restore, whose only
+    // reader is the dead `inheritedTp` above — so it explained nothing about what the port emits.
+    // The scope-dependence that is LIVE is the frame the raw fill reads: a companion body cannot
+    // name the class's own parameters (`inStatic`) and a use nested inside the declaring type can
+    // (`nestedInScope`), so one java type renders `[?]` in one member and `[K, V]` in another.
     Difference(gId(8), "the same raw Java type renders DIFFERENTLY per scope, and correctly so",
       "JLS 4.8", "UNCITED — the rendering depends on whether the scope is an override",
-      Silent, Handled, el("G3"), Universal, "SpoonTir.uncheckedGeneric's ownCallee/inOverridingMember save-and-restore", notYetTypes),
+      Silent, Handled, el("G3"), Universal,
+      "SpoonTir.tpe's empty-actuals branch reading inStatic and nestedInScope — a static frame fills with wildcards and a nested use with the enclosing instantiation's own names",
+      everyPlainReference),
     Difference(gId(9), "UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala",
       "JLS 5.1.9", "UNCITED — an explicit cast is the image",
       Loud, Handled, el("G12"), Universal, "SpoonTir.uncheckedGeneric emitting Tree.Typed, deciding on RENDERED types", everySlot),
@@ -582,10 +612,17 @@ object Differences:
     Difference(gId(11), "a partially-nameable F-BOUNDED raw fill",
       "JLS 4.5, 4.8", "UNCITED — a genuine expressiveness limit; four closing attempts measured worse",
       Loud, Refused("no consistent fill exists for a partially-nameable F-bound"), el("G8"), Universal,
-      "SpoonTir.erasureOfFormal's cycle cut is the whole of the F-bound machinery", notYetTypes),
+      "TirEmitter.deWildcardedArgs's `fBounded` slot, which STAYS `?` — no finite instantiation satisfies `N <: Node[N,…]` and every unrolling fails the same bound, so the wildcard's weaker claim is the only one scalac accepts; SpoonTir.erasureOfFormal's `seen` cut is the frontend half of the same cycle",
+      Rendered("ClassDef")),
+    // Both ends again, and here the two are a MINT and a REFUSAL TO PRINT: the frontend finds that
+    // the variable resolves to no binder in scope and mints a marker, and the emitter's whole
+    // standing obligation is that the marker never reaches the output — `?E` is not a type and does
+    // not even lex.
     Difference(gId(12), "a diamond's inference variable has NO NAMEABLE type",
       "JLS 15.9.1, 18", "UNCITED — the marker must never be printed",
-      Loud, Handled, el("G2"), Universal, "Symbol.UnresolvedTypeVarPrefix; TirEmitter.isUnresolvedTypeVar", notYetTypes),
+      Loud, Handled, el("G2"), Universal,
+      "SpoonTir.tpe's CtTypeParameterReference branch minting Symbol.UnresolvedTypeVarPrefix; TirEmitter.typeSym and isUnresolvedTypeVar rendering `?` instead",
+      Both(LoweredType("CtTypeParameterReference"), RenderedType("TypeRef"))),
     Difference(gId(13), "Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant",
       "JLS 4.10.3, 10.10", "UNCITED — `Array[T]` is invariant, so a cast is needed at the use",
       Loud, Handled, el("G1"), Universal, "SpoonTir.coerce's arrayCov clause, through SpoonTir.arrayCovSlot", everySlot),

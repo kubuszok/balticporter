@@ -23,14 +23,15 @@ import balticporter.tir.Origin
   * out is the same shape as the defect the mechanism exists to catch. Entered at the dispatch, an
   * arm is incapable of escaping its obligations because it never had the choice.
   *
-  * THREE DISCHARGE SURFACES, ONE LOG. Most rows do not discharge in the frontend at all:
+  * FOUR DISCHARGE SURFACES, ONE LOG. Most rows do not discharge in the frontend at all:
   *
-  *   - **frontend lowering** (Java AST → TIR) — [[Lowering.of]] at the dispatch, [[Obligations]]
-  *     inside. This is the surface built today;
-  *   - **emitter rendering** (TIR → Scala text) — a symmetrical wrapper keyed on the `Tree` kind
-  *     rather than on the Java node kind. NOT BUILT: the rows that would discharge there carry
-  *     [[Attaches.Unmechanised]] and are counted, because a lane that reported them as fine on the
-  *     strength of a surface that does not exist would be worse than no lane;
+  *   - **frontend lowering** (Java AST → TIR) — [[Lowering.of]] at `SpoonTir`'s statement and
+  *     expression dispatches, [[Obligations]] inside;
+  *   - **emitter rendering** (TIR → Scala text) — [[Rendering.of]] at `TirEmitter`'s `stat`/`term`
+  *     dispatches, keyed on the `Tree` kind rather than on the Java node kind;
+  *   - **types** — [[Typing]], at `SpoonTir.tpe` and `TirEmitter.tpe`. One surface with two ends,
+  *     because a TYPE is not a node at either: a `CtTypeReference` is not a statement or an
+  *     expression, and a `TypeRepr` is not a `Tree` at all;
   *   - **phases** (whole-program rewrites) — a phase does not walk one node kind, so a wrapper is
   *     the wrong shape. A phase CITES its row through [[CatalogLog.cite]], one row per DECLARATION
   *     it decides about, exactly the granularity `Decision` already uses (`CLAUDE.md` §5.1: one row
@@ -38,8 +39,14 @@ import balticporter.tir.Origin
   *     reported as its own thing: nothing can assert that a phase *should have* considered a
   *     difference at a declaration it never visited.
   *
-  * The three feed ONE log, because the coverage question is "was this row reached at all,
-  * anywhere" and three per-surface artifacts would answer three narrower questions and not that one.
+  * The four feed ONE log, because the coverage question is "was this row reached at all,
+  * anywhere" and four per-surface artifacts would answer four narrower questions and not that one.
+  *
+  * A row whose surface does not exist carries [[Attaches.Unmechanised]] and is COUNTED in its own
+  * lane, because a lane reporting it as fine on the strength of a mechanism nobody built would be
+  * worse than no lane. That number has gone 112 → 88 → 47 → 20 → 10 as the surfaces landed, and it
+  * is the only honest alternative to measuring: a number that can go down, rather than a silence
+  * that reads as coverage.
   *
   * A LOG IS A VALUE ONE RUN OWNS — never a process-global table, for the reason `TirEmitter.srcMap`
   * and `DecisionLog` are values one run owns (`CLAUDE.md` §5.1). `Determinism.Full` translates
@@ -196,10 +203,9 @@ enum Dispatch:
   *
   * ONE value per row rather than a list, and that is the [[Difference]] no-parameter rule holding:
   * `DifferenceTakesNoParameterSpec` rejects a collection in any row field, because a collection is
-  * the exact shape a per-library policy takes. A row that genuinely discharges at two surfaces will
-  * want a `Both(a, b)` case — a product of enum cases, which the spec admits by recursion — and it
-  * is deliberately not here yet, because a case with no constructor is the same dead facility this
-  * file's header warns about.
+  * the exact shape a per-library policy takes. A row that genuinely discharges at two surfaces has
+  * [[Attaches.Both]] instead — a product of enum cases, which the spec admits by the recursion it
+  * already performs.
   */
 enum Attaches:
   /** the frontend's lowering dispatch owes a consult for every node of `kind` at `dispatch`.
