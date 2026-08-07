@@ -298,7 +298,16 @@ object Visibility:
       /** widen, loudly. Every path out of this function that is not the mapping goes through it. */
       def widen(c: Cause, from: String): Vis = { record(id, c, from, "public"); Vis.Public }
 
-      if f.isPrivate then Vis.Private
+      // A METHOD-LOCAL CLASS TAKES NO MODIFIER AT ALL (`JS-C30`), and that is exactness rather than
+      // a widening. Java gives a local class no access modifier — JLS 14.3 permits none — so its
+      // default access reads as package-private here while its real scope is the BLOCK. Scala
+      // agrees exactly: a local definition is block-scoped, and a modifier on one is not merely
+      // unnecessary, it is a syntax error. So `isPackagePrivate` below must not reach it. The test
+      // is STRUCTURAL (§4.56) — a type whose owner is not itself a type this program declares is a
+      // type standing in a member's body — and it can only answer at all because `classDefs` above
+      // is built with `allClassDefs`.
+      if isType && !topLevel && !classDefs.contains(s.owner) then Vis.Public
+      else if f.isPrivate then Vis.Private
       else if f.isProtected then
         // P8: a `protected static` — member OR nested type — moves to the companion `object`, and
         // a subclass of the class is not a subclass of its companion, so NO qualified form there

@@ -180,7 +180,11 @@ object SpoonKinds:
     "CtUnaryOperator" -> "SpoonTir.exprNoCast", "CtVariableRead" -> "SpoonTir.exprNoCast",
     "CtVariableWrite" -> "SpoonTir.exprNoCast", "CtWhile" -> "SpoonTir.stmtKind",
     "CtAnnotationType" -> "SpoonTir.typeFlags", "CtAnonymousExecutable" -> "SpoonTir.classDef",
-    "CtClass" -> "SpoonTir.classDef", "CtConstructor" -> "SpoonTir.execDef",
+    // TWO walks, and naming only the first is what made this claim weaker than it read: the
+    // declaration walk takes a class reached from its declaring type, and `stmtArm` takes the one
+    // that stands in a member's BLOCK — java's method-LOCAL class, `JS-C30`.
+    "CtClass" -> "SpoonTir.classDef, from the declaration walk and from SpoonTir.stmtArm for a method-LOCAL class",
+    "CtConstructor" -> "SpoonTir.execDef",
     "CtEnum" -> "SpoonTir.classDef / enumCase", "CtField" -> "SpoonTir.classDef / fieldFlags",
     "CtInterface" -> "SpoonTir.typeFlags", "CtMethod" -> "SpoonTir.execDef",
   ).map((n, by) => Kind(n, Lowered(by), scala.None))

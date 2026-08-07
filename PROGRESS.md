@@ -2321,19 +2321,30 @@ source sets on one invocation and splits the wall by the path scalac printed.
 
 | | |
 |---|---|
-| emitted | **101 Scala test files** from 105 java (4 excluded, below), 788 members in the source map |
-| tests | 639 `@Test` upstream -> **575 emitted** (munit 575, junit residue **0** — the whole JUnit surface converted; 62 lost to the T9 exclusion below and 2 to D-liqp-7) |
+| emitted | **105 Scala test files** from 105 java (nothing excluded since T9 closed), members in the source map |
+| tests | 639 `@Test` upstream -> **637 emitted** (munit 637, junit residue **0** — the whole JUnit surface converted; the only 2 lost are D-liqp-7's) |
 | scalac errors | **main 27 -> 8 -> 7 -> 1 -> 0, test 49 -> 29 -> 25 -> 23 -> 11 -> 5 -> 3 -> 2 -> 0**; the two source sets are never summed, because a test-set error is frequently a cascade of a main-set one |
 | `portability(emitted)` | **1467**, dominated by hamcrest (725 `assertThat` + 667 `is`/`equalTo`), which the conversion deliberately leaves in place and `ENGINE-LIMITS.md` X6's `org.hamcrest.` rule is what counts |
 | `omissions` | **8** — dropped `@SuppressWarnings` on anonymous-class fields |
 | `trivia` | **0 lost**; recovered 1 -> 21 and deliberate 0 -> 36, both of them D-liqp-7's — the three dropped members took their comments with them, and the split is the point: a `lost = 0` held by RECOVERING everything says nothing |
 | `break_residue` | **0** over both source sets |
 
-**Four files are excluded and 62 tests go with them, and D-liqp-7 takes 2 more — 64 of 639.** `ENGINE-LIMITS.md` T9 — a method-LOCAL named
-class is refused by the frontend outright, aborting the whole run — has its first corpus sites here:
-five of them, in `ReadmeSamplesTest`, `TemplateTest`, `DateTest` and `LiquidSupportTest`. The lane's
-discovery gate prints `!! TESTS LOST — 64 of 639` on every run and is supposed to; the exclusion is
-stated in `test.conf` and is deleted, not narrowed, the day the frontend grows the node.
+**The four excluded files are BACK, and with them 62 tests — the loss is now 2 of 639.**
+`ENGINE-LIMITS.md` T9 had its first corpus sites here — five method-LOCAL named classes in
+`ReadmeSamplesTest`, `TemplateTest`, `DateTest` and `LiquidSupportTest`, each a
+`class X implements Inspectable {…}` inside a `@Test` body — and closing it deleted the four
+`excludeGlobs` lines and the D-liqp-5 injection their cascade needed, exactly as `test.conf` said
+it would. Discovery **575 -> 637 of 639** at **0 scalac errors before and after**; the lane's gate
+now reads `!! TESTS LOST — 2 of 639`, and the two are D-liqp-7's.
+
+**The suite went 574/1 -> 631/6, and the five new failures are the number to read.** None of them
+is in a local class: every one of the five recovered sites lowers and passes. The five are this
+port's own reflective-surface residue — K20's reified type argument and K21's bean-exposure seam,
+reached through liqp's `Inspectable`/`LiquidSupport` SPI (`TemplateTest.testRenderInspectable` and
+`testDeepInspectable`, `LiquidSupportTest.testLookupNode2c`, `testMapFilter2c` and
+`renderLiquidSupportWithNewRenderingSettings`) — and they were invisible only because the tests
+that exercise them had never run. Closing T9 did not cause five failures; it revealed five, which
+is CLAUDE.md §1's "N failures are gated behind this one is a HYPOTHESIS" read from the other end.
 
 **The other 2 are D-liqp-7** (§10.5.3) — `ComparingExpressionNodeTest`'s `cartesianProduct` helper
 and the two `@Test`s that call it, dropped at MEMBER granularity against G24's priced-and-refused
@@ -2346,7 +2357,7 @@ is now built. **The test source set reads 0.**
 | n | family | where it goes |
 |---|---|---|
 | ~~20~~ **0** | `ZoneOffset.systemDefault()` — a static reached through a SUBCLASS name. Java inherits statics, Scala companions do not | `ENGINE-LIMITS.md` **T14**, CLOSED in the frontend: the receiver is the interned symbol's OWNER, and the FIELD half's superclass-only walk became the inheritance closure (a java interface constant is inherited through `implements`) |
-| ~~12~~ **0** | `value TemplateTest is not a member of ssg.liquid` — four suites `import liqp.TemplateTest` for its nested `ComparableBase` | **NOT (a)** — CLOSED by D-liqp-5, an `inject` of that one nested type at the emitted FQN. It was T9's CASCADE and not T9's cost: four otherwise-portable suites failing over a data class they merely borrow. The 62-test T9 loss itself is untouched and stays loud, and the injection is DELETED — not grown — the day the frontend takes a method-local named class |
+| ~~12~~ **0** | `value TemplateTest is not a member of ssg.liquid` — four suites `import liqp.TemplateTest` for its nested `ComparableBase` | **NOT (a)** — closed first by D-liqp-5, an `inject` of that one nested type at the emitted FQN, and now closed by the real thing: T9 is CLOSED, `TemplateTest.java` ports, and both the exclusion and the injection are DELETED rather than grown, exactly as each said it would be |
 | ~~4~~ **0** | an unqualified inherited `add(…)` inside a double-brace anonymous subclass of a retyped collection | `ENGINE-LIMITS.md` **K5** (extended), CLOSED: inside a NAMED class the frontend already supplies `this.`/`Outer.this.`; inside an ANONYMOUS one it does not, so the enclosing `new … { … }` claims the pending call — and the same claim repaired 22 SILENT `put` sites the four errors never named |
 | ~~2~~ **0** | `Found: Object / Required: String` at `InsertionTest`'s two anonymous `Block.render` bodies | `ENGINE-LIMITS.md` **T15** (new), CLOSED: `(c ? a : b).toString()` emitted the call INSIDE the else branch. A receiver is an operand, and four receiver positions were not asking `operand` |
 | ~~6~~ **0** | one heterogeneous `Arrays.asList(98, "97", true, false, null)` — six per-element `Found: (98 : Int) / Required: String` | (a). Java infers `T` across all the arguments at once and BOXES; at an INFERRED `A` scalac declines the boxing conversion outright ("implicit conversions were not tried because the result of an implicit conversion must be more specific than T"). Java's answer is recorded on the CALL, so the rewrite writes it down as the explicit type argument and `Predef.int2Integer` applies. **What is left is ONE aggregate mismatch, and it is a different fact**: `cartesianProduct[T <: java.lang.Object]` will not take a `Buffer[Buffer[Serializable]]`, because scala 3 roots `java.io.Serializable` at `Any` (value classes are serialisable) while java's `<T>` bound — `T extends Object` — is VACUOUS and scala's `<: Object` is not. Reproduced standalone; the fix is to stop emitting the vacuous bound, whose blast radius is every generic signature in the corpus — built, measured at libGDX core 0 -> 50, reverted, and answered by D-liqp-7 instead (§10.5.3) |

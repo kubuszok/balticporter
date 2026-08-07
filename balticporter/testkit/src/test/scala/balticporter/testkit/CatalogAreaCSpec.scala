@@ -251,6 +251,64 @@ class CatalogAreaCSpec extends PortSuite:
     assertConsults(p, JS.C(18))
   }
 
+  // -- JS-C30: method-LOCAL named classes --------------------------------------------------------------
+
+  test("JS-C30 — a method-LOCAL named class LOWERS, and takes java's SOURCE name") {
+    val p = port(
+      """public class A {
+        |  public String run() {
+        |    class Local { int v() { return 7; } }
+        |    return "" + new Local().v();
+        |  }
+        |}""".stripMargin)
+    assertConsults(p, JS.C(30), fired = true)
+    // the name, and NOT spoon's `1Local` — java's qualified name carries a binary disambiguator
+    // that is the right interning key and is not an identifier (JLS 3.8 forbids a leading digit).
+    assertEmits(p, "class Local")
+    assertNotEmits(p, "1Local")
+    // …and the REFERENCE is the simple name. The owner is the enclosing EXECUTABLE, so `typeSym`
+    // must not reach `nestedPath` — a projection through a method names nothing at all.
+    assertEmits(p, "new Local()")
+  }
+
+  test("JS-C30 — a local class's CONSTRUCTOR is promoted like any other, and its captures close over") {
+    val p = port(
+      """public class A {
+        |  public int run(final int base) {
+        |    class Local {
+        |      private final int off;
+        |      Local(int off) { this.off = off; }
+        |      int v() { return off + base; }
+        |    }
+        |    return new Local(1).v();
+        |  }
+        |}""".stripMargin)
+    assertConsults(p, JS.C(30), fired = true)
+    // a class the funnel does not PLAN emits every constructor as a SECONDARY one delegating to a
+    // primary nothing synthesised — which is what `cd.body`-only walks produced before
+    // `StandardTraversal.allClassDefs`.
+    assertEmitsMatch(p, "(?s).*class Local[^\\n]*\\(off[^\\n]*: scala\\.Int\\).*")
+    // a capture needs no lowering: javac synthesises a constructor parameter, scala closes over it.
+    assertEmits(p, "base")
+  }
+
+  test("JS-C30 — a local class takes NO access modifier, which is exactness and not a widening") {
+    val p = port(
+      """public class A {
+        |  public void run() { class Local { } new Local(); }
+        |}""".stripMargin)
+    // java gives a local class no modifier (JLS 14.3), so its default access reads as
+    // package-private — and a modifier on a scala local definition is a syntax error, not merely
+    // redundant. The type therefore emits bare; only its own members carry visibility.
+    assertEmitsMatch(p, "(?s).*[^\\]]\\bclass Local\\b.*")
+    assertNotEmits(p, "private[p] class Local")
+  }
+
+  test("JS-C30 — a NESTED class is not a local one: the row is consulted only at the statement dispatch") {
+    val p = port("public class A { static class Nested { } }")
+    assertNotConsults(p, JS.C(30))
+  }
+
   // -- JS-C17 / JS-C31: anonymous classes --------------------------------------------------------------
 
   test("JS-C31 — an anonymous class keeps its BODY; dropping it was 156 silent sites") {
@@ -541,16 +599,16 @@ class CatalogAreaCSpec extends PortSuite:
     }
   }
 
-  test("JS-C30 / JS-C43 — a construct the frontend REFUSES or ABSORBS has no arm to owe a consult") {
-    // Two different absences and the same answer here. A method-local class is REFUSED — the
-    // statement dispatch enters, `unsupported` throws, the unit does not translate — so an
-    // obligation would be owed at a site that never returns. A `record` is ABSORBED SILENTLY: it
-    // extends `CtClass`, the class arm takes it, and no arm is even aware a record was there. What
-    // measures them is the other instrument, `SpoonKinds` plus `NodeKindTotalitySpec`.
+  test("JS-C43 — a construct the frontend ABSORBS SILENTLY has no arm to owe a consult") {
+    // This test used to hold JS-C30 too, and the pair is worth reading for the difference the
+    // local-class wave made. Both were `Absent` and neither owed a consult, for two DIFFERENT
+    // reasons: a `record` is ABSORBED SILENTLY — it extends `CtClass`, the class arm takes it, and
+    // no arm is even aware a record was there — while a method-local class was REFUSED, which is
+    // an absence a lowering arm can simply be written for. It now is (`JS-C30`, four tests above),
+    // and only the absorbed one is left. What measures this one is the other instrument,
+    // `SpoonKinds` plus `NodeKindTotalitySpec`.
     val p = port("public class A { int x = 1; }")
-    assertNotConsults(p, JS.C(30))
     assertNotConsults(p, JS.C(43))
-    assert(Differences.byId(JS.C(30)).status.isInstanceOf[Status.Absent])
     assert(Differences.byId(JS.C(43)).status.isInstanceOf[Status.Absent])
   }
 
@@ -610,7 +668,7 @@ class CatalogAreaCSpec extends PortSuite:
     // fail: the ONLY rows left are the six whose surface genuinely does not exist, and each names
     // which one it is waiting for.
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
-      Set(JS.C(22), JS.C(23), JS.C(30), JS.C(42), JS.C(43)),
+      Set(JS.C(22), JS.C(23), JS.C(42), JS.C(43)),
       "a JS-C row that is neither a refused construct, an absorbed one, nor a row whose surface " +
         "nobody has built still says nothing is measuring it")
     // JS-C29 was the sixth and is the one row this area shares with area G's residue: it is decided

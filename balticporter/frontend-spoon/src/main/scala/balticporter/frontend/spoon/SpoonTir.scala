@@ -1306,8 +1306,24 @@ object SpoonTir:
       case other     => other.capitalize
 
     // ---- declarations ----
-    private def classDef(t: CtType[?]): Tree.ClassDef =
-      val id   = defineType(t)
+    /** @param owner
+      *   overrides the DECLARING TYPE as the symbol's owner. Set only for a METHOD-LOCAL class
+      *   (JS-C30), whose owner is the enclosing executable — see the `stmtArm` arm for why the
+      *   declaring type is the wrong answer there.
+      * @param sourceName
+      *   overrides the name the symbol carries. Set only for a local class, where Spoon's
+      *   qualified name holds java's binary disambiguator (`Outer$1Local`) — the right INTERNING
+      *   key and not a legal Scala identifier.
+      * @param selfClass , outerVars
+      *   the ANONYMOUS-class wiring, reused verbatim: a local class reaches the enclosing
+      *   instance's members exactly as an anonymous one does, and captures the enclosing method's
+      *   locals the same way. Empty for every ordinary declaration, which is the pre-existing path.
+      */
+    private def classDef(t: CtType[?], owner: Option[SymId] = scala.None,
+                         sourceName: Option[String] = scala.None,
+                         selfClass: SymId = SymId.None,
+                         outerVars: Map[String, SymId] = Map.empty): Tree.ClassDef =
+      val id   = defineType(t, owner, sourceName)
       // claimed FIRST, before any member translates: the type's Javadoc is attached to the type
       // element, and a member's `deepComments` must not be able to reach it.
       val lead = leadingOf(t)
@@ -1325,10 +1341,15 @@ object SpoonTir:
       val parents = superTypes(t)
       // …carried WITH their source positions, because a field and an initialiser BLOCK are one
       // sequence in JLS 12.5 step 4 and the body list has to interleave them. See `step4` below.
+      // a LOCAL class takes the anonymous-class body wiring — see the parameter docs. `SymId.None`
+      // and `""` for every other declaration, which is the path every existing caller takes.
+      val local  = owner.isDefined
+      val bodySelf = if local then id else SymId.None
+      val bodyQName = if local then (try t.getQualifiedName catch { case _: Throwable => "" }) else ""
       val fields = t.getFields.asScala.toList
         .filterNot(_.isInstanceOf[CtEnumValue[?]])
         .sortBy(posKey)
-        .map(f => posKey(f) -> fieldDef(id, f))
+        .map(f => posKey(f) -> fieldDef(id, f, selfClass, outerVars, bodySelf, bodyQName))
       // include enum constructors too — the emitter folds their PARAMS into the sealed class's primary
       // constructor so each constant (`Nearest(GL_NEAREST)`) has a matching parameter to pass to.
       // Substitutions.dropMethods: a member opted out of mechanical translation (a ready Scala
@@ -1361,13 +1382,13 @@ object SpoonTir:
         }
       val ctors = t match
         case c: CtClass[?] => walked(c.getConstructors.asScala.toList.sortBy(posKey), _ => "<init>")(
-                                execDef(id, _, "<init>"))
+                                execDef(id, _, "<init>", selfClass, outerVars, false, bodySelf, bodyQName))
         case _             => Nil
       // ordinary methods went through with the DEFAULT `overrides = false`; only anonymous-class
       // methods ever consulted the hierarchy. Scala requires `override` where java requires
       // nothing, and RefChecks — the phase that says so — had never run to report it.
       val methods = walked(t.getMethods.asScala.toList.sortBy(posKey), _.getSimpleName)(m =>
-        execDef(id, m, m.getSimpleName, overrides = overridesInherited(m)))
+        execDef(id, m, m.getSimpleName, selfClass, outerVars, overridesInherited(m), bodySelf, bodyQName))
       // Java INITIALIZER BLOCKS — `static { … }` and instance `{ … }`. These were previously
       // dropped on the floor: nothing referenced `CtAnonymousExecutable`, so `MathUtils` never
       // built its sin/cos table, `CRC` never built its table and `Colors` never registered a
@@ -1380,7 +1401,7 @@ object SpoonTir:
         case c: CtClass[?] =>
           c.getAnonymousExecutables.asScala.toList.sortBy(posKey).map { ae =>
             val nm = if ae.hasModifier(ModifierKind.STATIC) then "<clinit>" else "<initblock>"
-            val d  = execDef(id, ae, nm)
+            val d  = execDef(id, ae, nm, selfClass, outerVars, false, bodySelf, bodyQName)
             // AN INITIALISER BLOCK IS AN INDEX ENTRY. It is an executable the frontend read out of
             // Java, and a port really does key policy on one — gdx-vfx replaces the BODY of
             // `VfxGLUtils#<clinit>`, whose Java branches on a reflective class the base drops.
@@ -1397,7 +1418,7 @@ object SpoonTir:
             posKey(ae) -> d
           }
         case _ => Nil
-      val nested  = t.getNestedTypes.asScala.toList.sortBy(posKey).map(classDef)
+      val nested  = t.getNestedTypes.asScala.toList.sortBy(posKey).map(n => classDef(n))
       val enumCases = t match
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
         case _            => Nil
@@ -1568,14 +1589,16 @@ object SpoonTir:
               (try c.getSuperInterfaces.asScala.exists(declares(_, 8)) catch { case _: Throwable => false })
           case _ => false
 
-    private def defineType(t: CtType[?]): SymId =
+    private def defineType(t: CtType[?], owner: Option[SymId] = scala.None,
+                          sourceName: Option[String] = scala.None): SymId =
       val q = typeKey(t.getReference)
       // A substituted type stays in the model with its references resolved (see `Substituted`), but
       // carries the tag so later phases can rewrite uses into whatever replaces it.
       val tags: Set[SymTag] = if subs.dropsType(q) then Set(Substituted(q)) else Set.empty
       val (anns, annDropped) = annotationsOf(t, None)
       minter.define(q)(id =>
-        Symbol(id, t.getSimpleName, q, typeFlags(t), ownerSym(t), TypeRef(NoPrefix, id), tags = tags,
+        Symbol(id, sourceName.getOrElse(t.getSimpleName), q, typeFlags(t),
+               owner.getOrElse(ownerSym(t)), TypeRef(NoPrefix, id), tags = tags,
                annotations = anns, droppedAnnotations = annDropped, permits = permittedTypes(t)))
 
     /** java's `permits` clause, INTERNED — see [[balticporter.tir.Symbol.permits]] for why the ids
@@ -1907,6 +1930,19 @@ object SpoonTir:
     private def posKey(el: CtElement): Int =
       val p = el.getPosition
       if p != null && p.isValidPosition then p.getSourceStart else Int.MaxValue
+
+    /** a METHOD-LOCAL class's SOURCE name — JLS 14.3, catalog JS-C30.
+      *
+      * Spoon reports the BINARY simple name for a local class (`1Local` for the first `Local` in a
+      * type), which is the right interning key and is not an identifier: JLS 3.8 says a java
+      * identifier may not BEGIN with a digit, so the leading run of digits is exactly the
+      * disambiguator and stripping it can never eat a name the source wrote. Where the strip would
+      * leave nothing the binary name is kept, which is a name that cannot compile rather than a
+      * name that silently means something else. */
+    private def localName(t: CtType[?]): String =
+      val binary  = t.getSimpleName
+      val stripped = binary.dropWhile(_.isDigit)
+      if stripped.isEmpty then binary else stripped
 
     private def simpleName(q: String): String =
       val afterDot = q.substring(q.lastIndexOf('.') + 1)
@@ -2283,6 +2319,31 @@ object SpoonTir:
         // — Java's empty statement. NOT claimed: leaving it unclaimed lets the enclosing
         // statement's `deepComments` pick the text up, which is the only place left to put it.
         case c: CtComment => Tree.Literal(Constant.UnitC, unitT, originOf(c))
+        // A METHOD-LOCAL NAMED CLASS — JLS 14.3, catalog JS-C30. `Tree.ClassDef` is a `Statement`,
+        // so the node the TIR needs already existed; what was missing was the arm. Two things this
+        // arm decides that the DECLARATION path does not:
+        //
+        //   - the OWNER is the enclosing EXECUTABLE, not the enclosing type. Spoon reports a
+        //     declaring TYPE for a local class (it is nested in the binary name), and taking that
+        //     would make every "is this a member of `Outer`?" question answer yes: the emitter
+        //     would render `Outer#Local`, a type projection naming a member that does not exist.
+        //     Owning it by the method is also the structurally true statement — §4.56's ownership
+        //     chain still reaches the unit through the method, so the symbol stays OWNED;
+        //   - the NAME is java's SOURCE name. Spoon's qualified name carries the binary
+        //     disambiguator (`p.Outer$1Local`), which is the right INTERNING key — the `new Local()`
+        //     reference resolves through it — and is not a legal Scala identifier.
+        //
+        // Captures need no lowering, exactly as for an anonymous class: javac synthesises
+        // constructor parameters for them and Scala closes over them directly.
+        case c: CtClass[?] =>
+          // JS-C30, consulted rather than merely done: the catalog attaches the row to THIS
+          // dispatch, so the wrapper reports an arm that returns without asking. It fires at every
+          // local class, which is the whole population the row is about — a `CtClass` reaching the
+          // STATEMENT dispatch is a local class by construction, since every other one is walked
+          // from its declaring type.
+          Obligations.consult(JS.C(30), originOf(c))(Some(()))
+          classDef(c, owner = Some(methodId), sourceName = Some(localName(c)),
+                   selfClass = classId, outerVars = varScope)
         // NO ARM EXISTS for this Java statement kind. A MARKER, not a throw: the failure is the
         // size of the construct rather than the size of the file, and the gate still refuses to
         // ship the port (§6.4). `unitT` because a statement produces no value.

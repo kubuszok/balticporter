@@ -75,7 +75,7 @@ as one number, because a port feels them completely differently:
 
 | tier | what happens | example |
 |---|---|---|
-| **refuses** | the whole COMPILATION UNIT fails to translate | `unsupported`'s default arms, before the marker (T9: 62 tests + 12 cascade errors for five local classes) |
+| **refuses** | the whole COMPILATION UNIT fails to translate | `unsupported`'s default arms, before the marker (T9 measured the price while it was open: 62 tests + 12 cascade errors for five local classes) |
 | **degrades and COUNTS** | the construct is dropped and a check reports it | `anonClass.dropped` → `OmissionCheck.droppedAnonMembers`; `annotationsOf`'s three drop paths → `Symbol.droppedAnnotations`. **These are what "right" looks like** and are not work items |
 | **degrades SILENTLY** | a value is produced that nothing can distinguish from a real answer | the arity family below; the two sentinel symbols; `withTrivia` dropping a comment on an unrecognised statement kind |
 
@@ -1645,58 +1645,80 @@ left.
 
 *Fix kind: (a). Field half BUILT; initializer-block and nested-type halves unbuilt.*
 
-### T9. A method-LOCAL named class is refused by the frontend outright
+### T9. A method-LOCAL named class is refused by the frontend outright — **CLOSED; the arm was twenty lines and the cost was twenty-eight OTHER walks**
 
 `class Holder { … }` written as a STATEMENT inside a method body — Java's local class, the named
-sibling of the anonymous class — reaches `SpoonTir.stmtKind` as a `CtClassImpl` and is refused:
-`unsupported construct: statement CtClassImpl`. Not dropped silently; the whole unit fails to
-translate, which is the right direction but is the whole story.
+sibling of the anonymous class — reached `SpoonTir.stmtKind` as a `CtClassImpl` and was refused.
+Recorded here rather than built because it was **zero sites** across libGDX core (604), libGDX test
+(29), Ashley (39), simple-graphs (36) and jbump (19), and it surfaced only when a spec for the
+captured-local rename (`CLAUDE.md` §4.55's fourth face) reached for one.
 
-It was **zero sites** across libGDX core (604), libGDX test (29), Ashley (39), simple-graphs (36) and
-jbump (19), which is why it was recorded rather than built. It surfaced only when a spec for the
-captured-local rename (`CLAUDE.md` §4.55's fourth face) reached for a local class as the second shape
-that shadows a capture; the pass itself is indifferent between the two, because it reads
-`Tree.ClassDef` and `Tree.AnonClass` through one traversal, so it will cover local classes the day
-the frontend produces them.
+**Its first corpus hit cost 62 of liqp's 639 tests plus 12 cascade errors** — five sites in four
+files (`liqp/ReadmeSamplesTest.java:65,76`, `liqp/TemplateTest.java:145`,
+`liqp/filters/DateTest.java:166`, `liqp/parser/LiquidSupportTest.java:198`), every one a
+`class X implements Inspectable {…}` inside a `@Test` body, which is idiomatic for a suite that
+documents an API by using it. That is the shape this entry predicted: java code that uses the form
+at all tends to use it a lot, so a library that hits this hits it as a wall rather than as a residue.
 
-**MEASURED, on the sixth library: liqp's own test suite is the first corpus hit, and it costs 62 of
-639 tests plus 12 compile errors.** Five sites in four files — `liqp/ReadmeSamplesTest.java:65,76`,
-`liqp/TemplateTest.java:145`, `liqp/filters/DateTest.java:166`,
-`liqp/parser/LiquidSupportTest.java:198` — every one of them a `class X implements Inspectable {…}`
-declared inside a `@Test` body, which is idiomatic for a suite that documents an API by using it.
-The refusal aborts the WHOLE run, so `balticporter/corpus/ports/liqp/test.conf` states the four files in
-`excludeGlobs`, 577 of the 639 `@Test` are emitted, and `just liqp-measure` prints
-`!! TESTS LOST — 62 of 639` on every run until the frontend grows the node. Read the second number
-too: the four excluded files are not isolated — four OTHER suites `import liqp.TemplateTest` for its
-nested `ComparableBase`, so the exclusion also produces **12 `value TemplateTest is not a member of
-ssg.liquid` errors**, a fifth of that source set's wall, which no fix to those four suites can
-remove. The exclusion is a stated, counted retreat and not a policy: when the construct lands, the
-four lines are DELETED rather than narrowed.
+**WHAT CLOSING IT ACTUALLY COST, which is not what this entry budgeted.** The exit note said
+"budget it as frontend work — the TIR already has the node", and that half was exactly right:
+`Tree.ClassDef` is a `Statement`, the emitter's `statArm` already had a `case c: Tree.ClassDef`
+arm, and the frontend arm is about twenty lines — `classDef` with the enclosing EXECUTABLE as the
+symbol's owner, java's SOURCE name, and the anonymous-class body wiring reused verbatim for captures
+and for `this`. Two facts a local class asks that a nested one does not:
 
-That is the shape this entry predicted — Java code that uses the form at all tends to use it a lot,
-so a library that hits this hits it as a wall rather than as a residue. Budget it as frontend work,
-not as a translation rule: the TIR already has the node.
+- **the NAME.** Spoon reports the BINARY simple name (`1Local`), which is the right interning key —
+  the `new Local()` reference resolves through it — and is not an identifier. JLS 3.8 forbids a
+  leading digit, so the leading run of digits is exactly the disambiguator (`SpoonTir.localName`);
+- **the OWNER is an EXECUTABLE.** Spoon reports a declaring TYPE for a local class, and taking it
+  makes every "is this a member of `Outer`?" question answer yes. §4.56's ownership chain still
+  reaches the unit through the method, so the symbol stays OWNED.
 
-**CORRECTION (2026-08-03): the refusal is now PER SITE, not per compilation unit — and that changes
-the cost, not the verdict.** `DESIGN.md` §6.2's marker landed and took over `SpoonTir.unsupported`'s
-statement and expression default arms, so a local class now mints a
-`Tree.Unportable(UnmodelledNodeKind("CtClass"))` and the rest of the file translates. Read what this
-does and does not buy. It does NOT make the construct portable: the emission gate refuses on any
-open marker, so a port that hits one still does not ship, and liqp's four `excludeGlobs` lines stay
-until the frontend grows the node. What it buys is that the failure is now the size of the CONSTRUCT
-rather than the size of the FILE — the four excluded suites would today report five located,
-taxonomised markers with a catalog id and a first remedy instead of five aborted translations — and
-that adopting the construct becomes an incremental measured step. The 12 cascade errors are
-unaffected; they follow from the exclusion, not from the refusal.
+The cost was everything ELSE. **Twenty-eight recursion lines across nine files walked nested types
+as `cd.body.foreach { case c: Tree.ClassDef => scan(c) }`** — the class's MEMBERS — and every one
+was exact for as long as the only `Tree.ClassDef` a program could hold was a type member, which is
+to say *for as long as this entry was open*. With the frontend arm in and those walks unchanged, a
+spike emitted, at ONE fixture, four separate defects and no compile error the reader could attribute:
 
-Also corrected here because it was stated loosely for the life of this entry: `unsupported` is
+| what | why |
+|---|---|
+| `new p.Outer#run#1Local(1)` | `TirEmitter.declaredTypes` said "not declared here", so `typeSym` fell through to `nestedPath` — a type projection through the enclosing METHOD, which names nothing at all |
+| `private[p] class Local` | `Visibility.plan`'s index did not hold it, so `decide` answered about it as a MEMBER; a modifier on a scala local definition is a syntax error, not merely redundant |
+| every constructor emitted SECONDARY | `CtorFunnel`'s class list did not hold it, so nothing was promoted to a primary and each `this(…)` delegated to a primary nobody synthesised |
+| the type left in the UPSTREAM namespace | `PackageRenameTransform.allClasses` did not hold it, while every REFERENCE to it moved |
+
+`StandardTraversal.allClassDefs` is the one walk those twenty-eight became, and
+`TirEmitter.allDeclaredClasses` its whole-program form. Landing it ALONE — before the frontend arm —
+measured **0 member digests on all eleven lanes**, every check count and every error count flat: a
+latent defect costs nothing to fix, and that is exactly why nobody had. The rule is lifted to
+`CLAUDE.md` §3.
+
+**MEASURED, on liqp.** The four `excludeGlobs` lines and the `inject` that carried their cascade are
+DELETED rather than narrowed, exactly as `test.conf` said they would be. Discovery **575 → 637 of
+639** (`!! TESTS LOST — 64 → 2`, and the two are D-liqp-7's, which G24 owns); **0 scalac errors
+before and after**; suite **574/1 → 631/6**.
+
+**Read the five new failures correctly, because they are the interesting number.** None of them is
+in a local class. `ReadmeSamplesTest`'s two sites, `DateTest.customDateTypeSupport`,
+`LiquidSupportTest.renderMapWithPojosWithMarkingInspectable` and `TemplateTest`'s `MyInspectable`
+all lower and PASS. The five are the reflective-surface family this port already counts — K20's
+reified type argument and K21's bean-exposure seam, reached through liqp's `Inspectable`/
+`LiquidSupport` SPI — and they were invisible for one reason only: **the tests that exercise them
+had never run.** A construct-level refusal hides every defect on the same path, which is CLAUDE.md
+§1's "N failures are gated behind this one is a HYPOTHESIS" read from the other end: closing T9 did
+not cause five failures, it revealed five.
+
+Also corrected here, because it was stated loosely for the life of this entry: `unsupported` is
 **loud but UNIT-FATAL, never per-site**, and it had **six** call sites (five default arms and one
-guard), not five. Two of the six are now mint sites; the other four are the ones whose SHAPE a
-term-level marker cannot take — a `Constant`, a `ValDef`, an `instanceof`'s type operand, a lambda
-with no body — and each wants a marker of its own kind (`DESIGN.md` §6.5).
+guard), not five. `DESIGN.md` §6.2's marker took over two of them, which is what made the failure
+the size of the CONSTRUCT rather than the size of the FILE and made this adoption an incremental
+measured step rather than an all-or-nothing one. The other four are the shapes a term-level marker
+cannot take — a `Constant`, a `ValDef`, an `instanceof`'s type operand, a lambda with no body — and
+each wants a marker of its own kind (`DESIGN.md` §6.5).
 
-*Fix kind: (a), unbuilt — frontend only. Cost, measured: 62 tests unportable + 12 cascade errors on
-one library.*
+*Fix kind: (a). Built — frontend arm plus one shared traversal; catalog `JS-C30` `Absent` ->
+`Handled`, `CatalogAreaCSpec` ×4. Cost, measured: 62 tests + 12 cascade errors on one library while
+it was open; 28 recursion lines and 0 blast to close.*
 
 ### T10. A java ENUM CONSTRUCTOR has a BODY, and it runs. **6 libGDX sides silently broken, 0 errors**
 

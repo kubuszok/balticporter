@@ -467,10 +467,25 @@ object Differences:
       Mixed, Handled, NoTwin, Universal,
       "TirEmitter.tpe's TypeRef arm, through typeSym's cascade — nestedPath for a static nested type, a projection for an inner one, with namedInner opting out at `extends`/`new`",
       RenderedType("TypeRef")),
+    // `Absent("refused outright by the frontend")` until this wave, and the sentence that replaced
+    // it is worth reading for what it says about the OTHER surfaces. The construct's own lowering
+    // was twenty lines — `Tree.ClassDef` is a `Statement` and always was, so the node the TIR
+    // needed already existed, which is exactly what T9's exit note predicted. What was not the
+    // frontend's was the rest: twenty-eight whole-program recursion lines walked `cd.body` and
+    // therefore could not reach a class standing in a member's BLOCK, and each of those four
+    // answers (the type's name, its visibility, its constructor plan, its package) is wrong in a
+    // different, silent way. Two things a local class asks that a nested one does not: java's
+    // qualified name carries a BINARY disambiguator that is not an identifier, and the owner is an
+    // EXECUTABLE, which is what makes the emitter name it by simple name rather than by a
+    // projection through a method.
     Difference(cId(30), "method-LOCAL named classes",
       "JLS 14.3", "UNCITED — Scala has a direct counterpart; only the capture wiring is missing",
-      Loud, Absent("refused outright by the frontend, and the refusal is UNIT-fatal rather than per-site"),
-      el("T9"), Universal, "SpoonTir.stmtKind's refusal arm, through SpoonTir.unsupported", Unmechanised("the construct is REFUSED where a CtClass reaches the STATEMENT dispatch rather than lowered, so no arm owes a consult — the refusal throws and the lowering never returns; the refusal is unit-fatal and `SpoonKinds` plus the `markers` lane are what measure the family")),
+      Loud, Handled, el("T9"), Universal,
+      "SpoonTir.stmtArm's CtClass arm -> SpoonTir.classDef with the enclosing EXECUTABLE as owner " +
+        "and SpoonTir.localName for java's source name; the anonymous-class body wiring reused " +
+        "verbatim for captures and for `this`; StandardTraversal.allClassDefs, which is what every " +
+        "whole-program pass walks to reach it at all",
+      Lowered("CtClass", Dispatch.Statement)),
     Difference(cId(31), "anonymous class construction and capture",
       "JLS 15.9.5", "UNCITED — the same construct, with a synthesised name",
       Silent, Handled, el("T1"), Universal, "SpoonTir.anonClass", Lowered("CtNewClass", Dispatch.Expression)),
