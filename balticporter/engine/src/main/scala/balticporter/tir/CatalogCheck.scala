@@ -85,10 +85,14 @@ object CatalogCheck:
       .filter(d => log.consulted(d.id) > 0 || log.declarations(d.id) > 0)
       .map { d =>
         val (path, line) = at(d.id, log)
-        val where = d.attaches match
+        val where = Differences.leaves(d.attaches).map {
           case Attaches.Lowered(k, disp) => s"lowering $k/$disp"
+          case Attaches.Rendered(k)      => s"rendering $k"
           case Attaches.Cited(ph)        => s"phase $ph"
-          case _                         => "?"
+          case Attaches.Unmechanised(_)  => "unmechanised"
+          case Attaches.NoObligation(_)  => "none"
+          case _: Attaches.Both          => "?" // `leaves` never yields one
+        }.mkString(" + ")
         CheckReport.Finding(Consulted, "reached", d.id.toString, path, line,
           s"$where — consulted ${log.consulted(d.id)}, fired ${log.fired(d.id)}, " +
             s"declarations ${log.declarations(d.id)}: ${d.title}")
@@ -109,9 +113,10 @@ object CatalogCheck:
   /** rows nothing is instrumented to answer for. Derived from the REGISTRY, not from the run. */
   def unmechanised: List[CheckReport.Finding] =
     Differences.unmechanised.map { d =>
-      val why = d.attaches match
-        case Attaches.Unmechanised(w) => w
-        case _                        => ""
+      // EVERY uninstrumented leaf, joined — a `Both` row with one surface built and one not is
+      // still on this lane, and the finding has to say which half is missing or the number stops
+      // being a work list.
+      val why = Differences.leaves(d.attaches).collect { case Attaches.Unmechanised(w) => w }.mkString("; ")
       CheckReport.Finding(Unmechanised, kindOf(d), d.id.toString, "-", 0, s"$why: ${d.title}")
     }
 
@@ -196,11 +201,14 @@ object CatalogCheck:
   /** one line per catalog row — `catalog.tsv`'s body. */
   def tsv(log: CatalogLog): List[String] =
     log.rows.map { r =>
-      val attaches = r.attaches match
+      val attaches = Differences.leaves(r.attaches).map {
         case Attaches.Lowered(k, disp)  => s"lowering:$k/$disp"
+        case Attaches.Rendered(k)       => s"rendering:$k"
         case Attaches.Cited(ph)         => s"phase:$ph"
         case Attaches.Unmechanised(_)   => "unmechanised"
         case Attaches.NoObligation(_)   => "none"
+        case _: Attaches.Both           => "?" // `leaves` never yields one
+      }.mkString("+")
       s"${r.id}\t${kindOf(Differences.byId(r.id))}\t$attaches\t${r.consulted}\t${r.fired}\t${r.declarations}"
     }
 

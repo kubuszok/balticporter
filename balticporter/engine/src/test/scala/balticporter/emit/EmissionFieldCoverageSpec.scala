@@ -746,6 +746,17 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
         "emitter never renders it. Either fix the emitter or say why the field is not emitted")
   }
 
+  test("every catalog row attaching to the RENDERING dispatch names a Tree kind that exists") {
+    // The registry's half of this derivation, asserted here because here is where the node set is
+    // already derived — a second, hand-written list of node names in the catalog's own suite is the
+    // shape this file exists to refuse. A misspelt `Attaches.Rendered` kind attaches to no node, so
+    // it owes no consult, produces no hole, and reports `unreached` on every port forever: the
+    // failure is indistinguishable from a branch the corpus does not exercise.
+    val phantom = (balticporter.catalog.Differences.renderedKinds -- nodeKinds).toList.sorted
+    assertEquals(phantom, Nil,
+      s"these rows attach to a `Tree` kind the IR does not have: ${phantom.mkString(", ")}")
+  }
+
   test("every `notEmitted` reason is one of the two admissible kinds, and says something") {
     val thin = List.newBuilder[String]
     for p <- probes; (f, why) <- p.notEmitted do

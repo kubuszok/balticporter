@@ -1,5 +1,6 @@
 package balticporter.emit
 
+import balticporter.catalog.{CatalogLog, JS, Obligations, Rendering}
 import balticporter.core.{EngineInfo, Provenance}
 import balticporter.tir.*
 
@@ -78,7 +79,22 @@ final class TirEmitter(
       * per path — the frontend already read it, and re-reading is what keeps this a pure function
       * of (program, sources) rather than of an object somebody had to thread through. */
     javaSource: String => Option[String] = TirEmitter.readJavaSource,
+    /** The run's OBLIGATION LOG — §2.3(c)'s second discharge surface (`balticporter.catalog`).
+      *
+      * Most `JS-S` rows are decided HERE and not in the frontend: a `switch` with no `default`, a
+      * `break` in the middle of a case, a `boundary` this emitter interposes, a `try`'s resources.
+      * The frontend has already discharged its obligations correctly by the time any of them arise,
+      * so a lowering-only mechanism can say nothing about them — which is what
+      * `Attaches.Unmechanised` said, and counted, until this parameter existed.
+      *
+      * `CatalogLog.discarding` is the default and it is not a no-op flag: it is the honest answer
+      * for a SECOND emitter over the same tree. The determinism twin, the preview emitter and the
+      * best-effort emitter all re-render every unit, and a shared log would count every consult
+      * twice — the same reason those instances do not share a source map (`CLAUDE.md` §5.1). Exactly
+      * one emitter per run holds the run's log: the one whose text is shipped. */
+    catalog: CatalogLog = CatalogLog.discarding,
 ):
+  private given CatalogLog = catalog
   private val surface: Surface = surfaceView.getOrElse(TrivialSurface(source))
   /** what the NORMALISATION below decided — a value, handed to the orchestrator rather than
     * recorded from here, so constructing an emitter has no side effect on the run's log. */
@@ -2216,7 +2232,17 @@ final class TirEmitter(
     case v: Tree.ValDef => stat(v.copy(leading = Nil), 0)
     case other          => stat(other, 0)
 
-  private def stat(s: Statement, i: Int): String = s match
+  /** THE STATEMENT RENDERING DISPATCH — §2.3(c)'s emitter surface, one of two.
+    *
+    * The wrapper is HERE and not in an arm, for the reason `Lowering.of` states about the frontend:
+    * an arm that could decline to wrap is an arm that can escape its obligations, which is the same
+    * shape as the defect the mechanism exists to catch. Entered at the dispatch, an arm never had
+    * the choice. `TirKinds.of` maps the node to the name the registry attaches on — its
+    * `productPrefix`, which is what `EmissionFieldCoverageSpec` derives from the class files. */
+  private def stat(s: Statement, i: Int): String =
+    Rendering.of(TirKinds.of(s), s.origin, s)(statArm(s, i))
+
+  private def statArm(s: Statement, i: Int)(using Obligations): String = s match
     // a commented STATEMENT: its comments at the statement's own indent, then the statement. A
     // DEFINITION never arrives here wrapped — it carries its own `leading` field — so this is
     // exactly the block-statement case and nothing else.
@@ -2234,9 +2260,16 @@ final class TirEmitter(
     // with no note, which `NoteCoverageCheck` fails the run for (CLAUDE.md §4.575: a note is
     // DERIVED, and the check runs in both directions). The trivia comes first and the note last,
     // for the reason `defDef` states.
-    case d: Tree.DefDef if isInitBlock(d) =>
-      d.rhs.map(r => s"${declNotes(d.symbol, i)}${ind(i)}locally ${term(r, i)}").getOrElse("")
-    case d: Tree.DefDef   => defDef(d, i)
+    // JS-S25 — consulted HERE and not inside `defDef`, because a `Tree.DefDef` reaches the page
+    // through TWO arms and only one of them is `defDef`: a java initializer block is a synthetic
+    // member rendered inline, and an obligation discharged in one arm is a hole in the other. The
+    // rule goes where the arms CONVERGE (`ENGINE-LIMITS.md` F8, twice) — which is the dispatch's
+    // own `case`, before it decides which shape the member takes.
+    case d: Tree.DefDef   =>
+      Obligations.consult(JS.S(25), d.origin)(Option.when(needsUnreachableTail(d))(()))
+      if isInitBlock(d) then
+        d.rhs.map(r => s"${declNotes(d.symbol, i)}${ind(i)}locally ${term(r, i)}").getOrElse("")
+      else defDef(d, i)
     case v: Tree.ValDef   => valDef(v, i)
     case t: Tree.TypeDef  => s"${ind(i)}${if sym(t.symbol).flags.isOpaque then "opaque " else ""}type ${esc(sym(t.symbol).name)} = ${tpe(t.rhs.tpe)}"
     case t: Term     => ind(i) + term(t, i)
@@ -2296,7 +2329,16 @@ final class TirEmitter(
         }
       }
 
-  private def defDef(d: Tree.DefDef, i: Int): String =
+  /** JS-S25 — java REJECTS unreachable code and Scala allows it, composed with `break`.
+    *
+    * A body ending in java's `while(true){ … return … }` idiom never falls through, but Scala types
+    * `while(true)` as `Unit`, so a non-Unit method needs a tail java did not have. One function
+    * because the dispatch consults it and `defDef` renders from it: two derivations of one decision
+    * is the F8 shape with a longer fuse. */
+  private def needsUnreachableTail(d: Tree.DefDef): Boolean =
+    sym(d.symbol).name != "<init>" && !isUnitType(d.returnTpt.tpe) && d.rhs.exists(endsInInfiniteLoop)
+
+  private def defDef(d: Tree.DefDef, i: Int)(using Obligations): String =
     val s     = sym(d.symbol)
     val isCtor = s.name == "<init>"
     val name  = if isCtor then "this" else esc(s.name)
@@ -2312,7 +2354,7 @@ final class TirEmitter(
     val ret   = if isCtor then "" else s": ${tpe(d.returnTpt.tpe)}"
     // a Java `while(true){ … return … }` idiom: the loop never falls through, but Scala types
     // `while(true)` as Unit, so a non-Unit method needs an unreachable tail after it.
-    val needsUnreachable = !isCtor && !isUnitType(d.returnTpt.tpe) && d.rhs.exists(endsInInfiniteLoop)
+    val needsUnreachable = needsUnreachableTail(d)
     val rhs =
       if isCtor then s" = ${ctorBody(d, i)}"
       else d.rhs.map(r =>
@@ -2424,11 +2466,24 @@ final class TirEmitter(
     case _                                 => scala.None
 
   private def loopWithJumps(body: Tree, label: Option[String], render: (=> String) => String,
-                            bodyStr: => String): String =
+                            bodyStr: => String)(using Obligations): String =
     val lblB = label.filter(l => jumpsTo(body, l, brk = true))
     val lblC = label.filter(l => jumpsTo(body, l, brk = false))
     val hasB = breaksOut(body) || lblB.isDefined
     val hasC = continuesIn(body) || lblC.isDefined
+    // JS-S01 — java's unlabelled jump binds LEXICALLY to this loop and scala's `boundary.break`
+    // binds to the innermost `Label` in implicit scope. Consulted at EVERY loop, whichever of the
+    // four `Tree` kinds it is (they all arrive here); it FIRES where a jump really belongs to this
+    // one, which is where a boundary has to exist for java's meaning to survive.
+    Obligations.consult(JS.S(1), body.origin)(Option.when(hasB || hasC)(()))
+    // JS-S03 — a boundary this emitter INTERPOSES steals the enclosing loop's un-annotated jumps,
+    // because `boundary.break` with no `using` resolves the innermost `Label`. Consulted at EVERY
+    // loop, beside JS-S01 and not down in the branch that emits a boundary: an obligation the arm
+    // discharges only on some paths is an obligation the other paths report as a hole. `&&` keeps
+    // the extra traversal off the loops that cannot be affected — with no jump there is nothing for
+    // an interposed boundary to steal.
+    val shielded = (hasB || hasC) && interposes(body)
+    Obligations.consult(JS.S(3), body.origin)(Option.when(shielded)(()))
     if !hasB && !hasC then render(bodyStr)
     else
       labelSeq += 1
@@ -2436,7 +2491,6 @@ final class TirEmitter(
       // the break boundary must be named when a body boundary sits inside it, when a labelled
       // `break` names it from a nested loop, or when some construct INSIDE the body renders with a
       // boundary of its own (`interposes`) — all three put another `Label` nearer than this one.
-      val shielded = interposes(body)
       val bName = if hasB && (hasC || lblB.isDefined || shielded) then s"brk$$$seq" else ""
       val cName = if hasC && (lblC.isDefined || shielded) then s"cnt$$$seq" else ""
       lblB.foreach(l => labelBreak(l) = bName)
@@ -2679,7 +2733,14 @@ final class TirEmitter(
     if t == TypeRepr.NoType then esc(sym(v.symbol).name)
     else s"${esc(sym(v.symbol).name)}: ${tpe(t)}"
 
-  private def valDef(v: Tree.ValDef, i: Int): String =
+  private def valDef(v: Tree.ValDef, i: Int)(using Obligations): String =
+    // JS-S19 — java's DEFINITE ASSIGNMENT (JLS 16) rejects a read before assignment; Scala requires
+    // an initialiser instead, so a declaration java left blank has to be given one here. Consulted
+    // at every `val`/`var`; it fires exactly where the emitter supplies a value java did not write,
+    // which is where the two languages' rules actually diverge. The row stays `Partial`: the FIELD
+    // half is what this branch closes and the LOCAL half is unexamined, so a consult that fired
+    // would still be saying nothing about a local silently taking a default.
+    Obligations.consult(JS.S(19), v.origin)(Option.when(v.rhs.isEmpty)(()))
     // trivia, then the porter note, then the `val` — see `defDef` for why that order is a rule.
     val note = declNotes(v.symbol, i)
     if v.leading.nonEmpty then leading(v.leading, i) + note + valDef0(v.copy(leading = Nil), i)
@@ -2918,7 +2979,17 @@ final class TirEmitter(
           classStack.exists(c => staticOwnersOf(c).contains(esc(sm.name)))
       }
 
-  private def term(t: Term, i: Int): String = t match
+  /** THE TERM RENDERING DISPATCH — the other half of §2.3(c)'s emitter surface.
+    *
+    * Not disjoint from [[stat]]: a `Term` reached as a statement is handed straight here, so ONE
+    * node is rendered inside TWO scopes and every consult happens in the inner one. That is exactly
+    * the delegation seam `Lowering.of` documents in the frontend, and it is why the scopes are
+    * joined by NODE IDENTITY rather than by kind or origin — two different nodes of one kind on one
+    * line are two obligations. */
+  private def term(t: Term, i: Int): String =
+    Rendering.of(TirKinds.of(t), t.origin, t)(termArm(t, i))
+
+  private def termArm(t: Term, i: Int)(using Obligations): String = t match
     case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeValue(s) else staticRef(s)
     case Tree.Literal(c, _, _)          => constant(c)
     case Tree.This(s, _, _)             => thisRef(s)
@@ -2945,6 +3016,10 @@ final class TirEmitter(
       // A new member of the §4.4 family, found the way the other ten were — by porting a test
       // suite, not by compiling the library (`AlgorithmsTest`, a `SearchProcessor` that returns
       // early to prune a search).
+      // JS-S21 — a `return` in a java lambda BODY leaves the LAMBDA (JLS 15.27.2); scala's lambda is
+      // an expression and rejects `return` outright, and a non-local return would leave the
+      // enclosing METHOD. Consulted at every lambda, fires where a `return` really occurs.
+      Obligations.consult(JS.S(21), body.origin)(Option.when(returnsIn(body))(()))
       if !returnsIn(body) then head + term(body, i)
       else lambdaResultType(body) match
         case Some(rt) =>
@@ -2996,6 +3071,11 @@ final class TirEmitter(
     case Tree.ForEach(b, it, body, _, _, lbl) =>
       val raw  = sym(b.symbol).name
       val name = esc(raw)
+      // JS-S15 — java's enhanced-for evaluates the ITERABLE once, and arrays and `Iterable` differ.
+      // Satisfied by construction here: the generator interpolates `term(it, …)` exactly once, so
+      // the consult fires at every one of them and the row records that the branch really is the
+      // single-evaluation shape rather than something a reader has to check.
+      Obligations.consult(JS.S(15), it.origin)(Some(()))
       // TWO independent reasons to re-bind, and they compose into one alias (K7 + F16). The
       // DECLARED TYPE may differ from the iterable's element type, which java resolved every use
       // against; and the binding may be REASSIGNED in the body, which java permits on an ordinary
@@ -3003,6 +3083,10 @@ final class TirEmitter(
       // the same fact `MutableParamsTransform` handles for a parameter, one node kind out.
       val mutable = reassignsBinding(body, b.symbol)
       val kw      = if mutable then "var" else "val"
+      // JS-S16 — the enhanced-for BINDING may be REASSIGNED in the body and may be DECLARED at a
+      // supertype; a scala generator is a `val` of the element's own type and permits neither. Read
+      // off the two decisions the emitter has just taken, never re-derived (§4.56).
+      Obligations.consult(JS.S(16), b.origin)(Option.when(mutable || widenedBinding(b, it).isDefined)(()))
       (widenedBinding(b, it), mutable) match
         case (None, false) => loopWithJumps(body, lbl, bd => s"for ($name <- ${term(it, i)}) $bd", term(body, i))
         case (widened, _) =>
@@ -3031,6 +3115,11 @@ final class TirEmitter(
       val is = init.map(flatStat).mkString("; ")
       val c  = cond.map(term(_, i)).getOrElse("true")
       val u  = upd.map(flatStat).mkString("; ")
+      // JS-S17 — java's classic `for` runs its UPDATE on a `continue` too, and scopes its `ForInit`
+      // to the loop. `while` has neither clause, so both have to be PLACED: the update outside the
+      // per-iteration boundary (where java runs it) and the init inside a block that ends with the
+      // loop. It fires wherever there is anything to place.
+      Obligations.consult(JS.S(17), body.origin)(Option.when(init.nonEmpty || upd.nonEmpty)(()))
       loopWithJumps(body, lbl, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
     case t: Tree.Try                    => tryStr(t, i)
     case m: Tree.Match                  => matchStr(m, i)
@@ -3122,6 +3211,11 @@ final class TirEmitter(
     // labelled jump crosses nested loops and switches by definition, and anything the statement
     // contains may open a nearer `Label`.
     case Tree.Labeled(name, s, _, _) =>
+      // JS-S02 — java's label sits on ANY statement (JLS 14.7) and `break L` leaves exactly that
+      // statement; scala has no labelled statement, so the image is a NAMED boundary around it.
+      // Fires where something really breaks to the label: java lets a label sit on a statement
+      // nobody jumps to, and an empty boundary would be noise that then has to be shielded against.
+      Obligations.consult(JS.S(2), s.origin)(Option.when(jumpsTo(s, name, brk = true))(()))
       if !jumpsTo(s, name, brk = true) then term(s, i) // a label nobody breaks to is not control flow
       else
         labelSeq += 1
@@ -3142,6 +3236,10 @@ final class TirEmitter(
       if post then s"{ val ${'$'}prev = ${term(tgt, i)}; ${term(tgt, i)} $op= 1; ${'$'}prev }"
       else s"{ ${term(tgt, i)} $op= 1; ${term(tgt, i)} }"
     case Tree.DoWhile(b, c, _, _, lbl)  => // Scala 3 has no do-while
+      // JS-S18 — Scala 3 REMOVED `do`-`while`, so there is no counterpart keyword and the body must
+      // be lifted into the condition. Always fires: every `do` in java needs the image, which is
+      // what makes this row's `Both` honest — the frontend chose the node and this chooses the text.
+      Obligations.consult(JS.S(18), b.origin)(Some(()))
       loopWithJumps(b, lbl, bd => s"while ({ $bd; ${term(c, i)} }) ()", term(b, i))
     case Tree.Synchronized(l, b, _, _)  => s"${term(l, i)}.synchronized ${term(b, i)}"
     // An EXPRESSION position, where a comment cannot be rendered safely: a `//` would comment out
@@ -3463,14 +3561,28 @@ final class TirEmitter(
     * catch in the corpus, and a repair nobody can point at a jump for is a repair nobody can
     * review. `finally` is untouched: a finalizer is not a handler, and both languages run it and
     * let the jump through. */
-  private def tryStr(t: Tree.Try, i: Int): String =
+  private def tryStr(t: Tree.Try, i: Int)(using Obligations): String =
     val (res, body, catches, fin) = (t.resources, t.body, t.catches, t.finalizer)
+    // JS-S13 — try-with-resources closes on ANY completion, in reverse order, BEFORE this try's own
+    // catch. It fires exactly where there are resources; this is the row `ENGINE-LIMITS.md` F5 is
+    // about, and the consult is what makes "the emitter considered it" a recorded fact rather than
+    // a property of the code somebody would have to re-read.
+    Obligations.consult(JS.S(13), t.origin)(Option.when(res.nonEmpty)(()))
+    // JS-S12 — a `finally` completing abruptly DISCARDS the try's own abrupt completion. Consulted
+    // at every `try`, fires where a finalizer exists at all; the row stays `Partial` because no
+    // corpus fixture has a `finally` that is itself the SOURCE of the abrupt completion, and a
+    // consult says the branch is live, never that the fixture exists (§2.3(a)).
+    Obligations.consult(JS.S(12), t.origin)(Option.when(fin.isDefined)(()))
     val guard =
       if catches.exists(c => Jumps.catchesBreak(c.param.tpt.tpe)(using program)) && crossesCatch(body) then
         breakGuarded += t.id
         s"${ind(i + 1)}case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard}" +
           s" // §4.4: a java jump is not catchable\n"
       else ""
+    // JS-S11 — a translated CATCH swallows a translated JUMP, because `scala.util.boundary.Break`
+    // extends `RuntimeException` and java's jump is not an exception at all. Read off the guard the
+    // emitter just decided to emit, so the consult cannot drift from the decision.
+    Obligations.consult(JS.S(11), t.origin)(Option.when(guard.nonEmpty)(()))
     val cs = catches.map(c => s"${ind(i + 1)}case ${esc(sym(c.param.symbol).name)}: ${tpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}").mkString("\n")
     val cl = if catches.isEmpty then "" else s" catch {\n$guard$cs\n${ind(i)}}"
     val fl = fin.map(f => s" finally ${term(f, i)}").getOrElse("")
@@ -3543,7 +3655,7 @@ final class TirEmitter(
     *
     * The catch-all's binder and the `primary` are numbered per nesting level, because two resources
     * in one statement are two of these blocks one inside the other and Scala would otherwise shadow. */
-  private def resourceStr(res: List[Tree.ValDef], body: Term, i: Int): String =
+  private def resourceStr(res: List[Tree.ValDef], body: Term, i: Int)(using Obligations): String =
     res match
       case Nil => term(body, i)
       case v :: rest =>
@@ -3659,8 +3771,17 @@ final class TirEmitter(
     * see null, and libGDX's scanners are full of those — and only when the java did not write a
     * `null` label itself, which is SE21's pattern-switch escape hatch (JLS 14.11.1) and the one
     * shape that must NOT gain a synthetic exception. */
-  private def matchStr(m: Tree.Match, i: Int): String =
+  private def matchStr(m: Tree.Match, i: Int)(using Obligations): String =
     val (scr, cases) = (m.scrutinee, m.cases)
+    // JS-S06 — an unlabelled `break` in the MIDDLE of a case ends the CASE, and a `match` arm
+    // cannot be left early. Consulted at every switch; it fires where an arm really needs the
+    // boundary that makes java's meaning expressible.
+    Obligations.consult(JS.S(6), m.origin)(Option.when(cases.exists(c => caseNeedsBoundary(c.body)))(()))
+    // JS-S08 — java throws NPE on a null reference selector IMPLICITLY (JLS 14.11.2), and a classic
+    // switch has no `case null` to opt out with. Read off `selectorCanBeNull`, which is the
+    // emitter's own decision and not a second copy of it (§4.56: a rule stated once per caller is a
+    // rule the next caller will not have).
+    Obligations.consult(JS.S(8), m.origin)(Option.when(selectorCanBeNull(scr, cases))(()))
     val cs = cases.map { c =>
       val bare = if c.isDefault then "_" else c.labels.map(term(_, i)).mkString(" | ")
       // …AND ITS GUARD. `Tree.CaseDef.guard` was populated-able, carried through every phase by
@@ -3847,6 +3968,24 @@ final class TirEmitter(
         case _      => b += c
     }
     b.result()
+
+/** THE `Tree` KIND, as the rendering dispatch names it.
+  *
+  * `SpoonKinds` is this for the java side and has to be a REGISTRY, because `CtElement` is an
+  * ordinary interface hierarchy with no sealedness and a kind can be absorbed by a supertype's arm.
+  * The TIR side needs none of that: `Tree` is sealed, every case is a case class, and the name is
+  * the compiler's own `productPrefix` — the same string `EmissionFieldCoverageSpec` reads out of the
+  * class files, so a registry row naming a kind the IR does not have is caught by a spec.
+  *
+  * A function and not a table for exactly that reason: a table is a list a new node kind is not on.
+  */
+private object TirKinds:
+  def of(t: Tree): String = t match
+    case p: Product => p.productPrefix
+    // unreachable: every concrete `Tree` is a case class. Named rather than defaulted, because a
+    // silent "" here would be a kind nothing attaches to and therefore a scope that owes nothing —
+    // which is indistinguishable from a node the catalog has nothing to say about.
+    case _          => "?"
 
 object TirEmitter:
 

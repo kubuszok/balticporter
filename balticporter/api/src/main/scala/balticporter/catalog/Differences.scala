@@ -61,9 +61,32 @@ object Differences:
   // measuring: a number that can go down, rather than a silence that reads as coverage.
   // -------------------------------------------------------------------------------------------
 
-  private val notYetS = Unmechanised(
-    "area S obligations are not declared: the JS-S rows split across the frontend's lowering " +
-      "dispatch and the EMITTER's rendering dispatch, and the emitter half does not exist")
+  /** the four `Tree` kinds a LOOP is, as one attachment.
+    *
+    * `Attaches.Both` nests, so this is a chain of four leaves and not a list — a list is the shape a
+    * per-library policy takes and `DifferenceTakesNoParameterSpec` rejects one in any row field.
+    * Named once because two rows own the whole family: an unlabelled jump binds to the innermost
+    * loop (`JS-S01`) and an interposed boundary steals one (`JS-S03`), and both are decided in
+    * `TirEmitter.loopWithJumps`, which every loop arm goes through. Writing the chain twice would be
+    * the F8 shape — one rule, two copies, and the next loop kind added to the IR is on only one. */
+  /** the honest attachment for a construct the frontend REFUSES rather than lowers.
+    *
+    * Not `Lowered`: a lowering attachment says an ARM owes a consult, and there is no arm — the
+    * dispatch enters, the refusal throws, and the unit fails to translate. The obligation would be
+    * owed at a site that never returns, so the row would sit on `mechanised` reading `unreached` on
+    * every port forever, which is a claim that reads as coverage and can never fail
+    * (`CatalogCoverageSpec` holds exactly that line). Not `NoObligation` either: there IS a gap.
+    *
+    * What measures these is the OTHER instrument — `SpoonKinds` records each refused kind with this
+    * row's own `DiffId`, and the `markers` lane counts every mint. Saying so here is §2.3(c)'s
+    * written narrowing: a number that says "we are not measuring this THROUGH THE OBLIGATION LOG",
+    * beside a lane that is. */
+  private val refusedAtTheKind = Unmechanised(
+    "the construct is REFUSED at its Spoon kind rather than lowered, so no arm owes a consult; " +
+      "`SpoonKinds` records the refusal against this row's id and the `markers` lane counts each mint")
+
+  private val everyLoop: Attaches =
+    Both(Rendered("While"), Both(Rendered("For"), Both(Rendered("ForEach"), Rendered("DoWhile"))))
 
   private val notYetC = Unmechanised(
     "area C obligations are not declared: most JS-C rows are decided by PHASES, and a per-phase " +
@@ -157,85 +180,85 @@ object Differences:
   val statements: List[Difference] = List(
     Difference(sId(1), "an unlabelled `break`/`continue` binds LEXICALLY to the innermost enclosing loop or switch",
       "JLS 14.15, 14.16", "UNCITED — `boundary`/`break` resolve the innermost `Label` in implicit scope",
-      Silent, Handled, el("F1"), Universal, "Jumps.breaksOut/continuesIn/jumpsTo; TirEmitter.loopWithJumps", notYetS),
+      Silent, Handled, el("F1"), Universal, "Jumps.breaksOut/continuesIn/jumpsTo; TirEmitter.loopWithJumps", everyLoop),
     Difference(sId(2), "a LABEL sits on any statement, not only on a loop",
       "JLS 14.7", "UNCITED — Scala has no labelled statement; a named `boundary` is the image",
-      Silent, Handled, el("F1"), Universal, "Tir.Tree.Labeled; TirEmitter's Tree.Labeled arm and labelNeedsBoundary", notYetS),
+      Silent, Handled, el("F1"), Universal, "Tir.Tree.Labeled; TirEmitter's Tree.Labeled arm and labelNeedsBoundary", Rendered("Labeled")),
     Difference(sId(3), "a `boundary` the emitter INTERPOSES steals the enclosing loop's un-annotated jumps",
       "JLS 14.15", "UNCITED — `boundary.break` with no `using` resolves the innermost `Label`",
-      Silent, Handled, el("F2"), Universal, "TirEmitter.interposes feeding TirEmitter.loopWithJumps", notYetS),
+      Silent, Handled, el("F2"), Universal, "TirEmitter.interposes feeding TirEmitter.loopWithJumps", everyLoop),
     Difference(sId(4), "switch FALLTHROUGH runs the next case's statements",
       "JLS 14.11.3", "UNCITED — a `match` arm never falls through",
-      Silent, Handled, el("F3"), Universal, "SpoonTir.switchStmt's tail-duplication closures", notYetS),
+      Silent, Handled, el("F3"), Universal, "SpoonTir.switchStmt's tail-duplication closures", Lowered("CtSwitch", Dispatch.Statement)),
     Difference(sId(5), "a `switch` with no `default` FALLS OUT; a `match` with no `case _` throws",
       "JLS 14.11.3", "UNCITED — an unmatched `match` throws `MatchError`",
-      Silent, Handled, Rule44, Universal, "SpoonTir.switchStmt's synthesised fall-out arm", notYetS),
+      Silent, Handled, Rule44, Universal, "SpoonTir.switchStmt's synthesised fall-out arm", Lowered("CtSwitch", Dispatch.Statement)),
     Difference(sId(6), "an unlabelled `break` in the MIDDLE of a case ends the CASE",
       "JLS 14.15", "UNCITED — a `match` arm cannot be left early",
-      Silent, Handled, el("F3"), Universal, "TirEmitter.matchStr and TirEmitter.caseNeedsBoundary", notYetS),
+      Silent, Handled, el("F3"), Universal, "TirEmitter.matchStr and TirEmitter.caseNeedsBoundary", Rendered("Match")),
     Difference(sId(7), "only an UNLABELLED trailing `break` terminates a case; a labelled one leaves the LOOP",
       "JLS 14.15", "UNCITED — no counterpart; the two must be told apart before stripping",
-      Silent, Handled, Rule44, Universal, "SpoonTir.switchStmt's `case (b: CtBreak) :: _ if b.getTargetLabel == null`", notYetS),
+      Silent, Handled, Rule44, Universal, "SpoonTir.switchStmt's `case (b: CtBreak) :: _ if b.getTargetLabel == null`", Lowered("CtSwitch", Dispatch.Statement)),
     Difference(sId(8), "a `null` selector throws NPE IMPLICITLY — a classic switch has no `case null` to opt out with",
       "JLS 14.11.2", "UNCITED — `null` matches no literal pattern and reaches the last arm",
-      Silent, Handled, el("F6"), Universal, "TirEmitter.matchStr's synthesised `case null` throw; SwitchNullCheck", notYetS),
+      Silent, Handled, el("F6"), Universal, "TirEmitter.matchStr's synthesised `case null` throw; SwitchNullCheck", Rendered("Match")),
     Difference(sId(9), "switch EXPRESSIONS and `yield`",
       "JLS 15.28, 14.21", "UNCITED — a `match` is already an expression, so the image exists",
       Loud, Absent("no TIR node and no CtSwitchExpression/CtYieldStatement arm; the unit fails to translate"),
-      Predicted, Universal, "SpoonTir.exprNoCast's refusal arm; SpoonTir.stmtKind's refusal arm", notYetS),
+      Predicted, Universal, "SpoonTir.exprNoCast's refusal arm; SpoonTir.stmtKind's refusal arm", refusedAtTheKind),
     Difference(sId(10), "pattern and record switch, with sealed exhaustiveness",
       "JLS 14.11.1, 14.30", "UNCITED — Scala patterns are a superset, so the image exists",
       Loud, Absent("case labels are read as plain expressions and refused"),
-      Predicted, Universal, "SpoonTir.switchStmt reads getCaseExpressions through `expr`", notYetS),
+      Predicted, Universal, "SpoonTir.switchStmt reads getCaseExpressions through `expr`", refusedAtTheKind),
     Difference(sId(11), "a translated CATCH swallows a translated JUMP — `boundary.Break` is a `RuntimeException`",
       "JLS 14.15, 14.20", "UNCITED — `scala.util.boundary.Break` extends `RuntimeException`",
-      Silent, Handled, el("F4"), Universal, "TirEmitter.tryStr's guard, via Jumps.catchesBreak; BreakCatchCheck", notYetS),
+      Silent, Handled, el("F4"), Universal, "TirEmitter.tryStr's guard, via Jumps.catchesBreak; BreakCatchCheck", Rendered("Try")),
     Difference(sId(12), "a `finally` completing abruptly DISCARDS the try's own abrupt completion",
       "JLS 14.20.2", "UNCITED — the same rule; what is missing is a test of it",
       Silent, Partial("no fixture in the corpus has a `finally` that is itself the SOURCE of the abrupt completion"),
-      Predicted, Universal, "TirEmitter.tryStr's `fl`", notYetS),
+      Predicted, Universal, "TirEmitter.tryStr's `fl`", Rendered("Try")),
     Difference(sId(13), "try-with-resources closes on ANY completion, in reverse order, before this try's own catch",
       "JLS 14.20.3", "UNCITED — no counterpart statement; `Using` is not one (it is a lambda)",
-      Silent, Handled, el("F5"), Universal, "TirEmitter.tryStr -> resourceStr; TryResourceCheck", notYetS),
+      Silent, Handled, el("F5"), Universal, "TirEmitter.tryStr -> resourceStr; TryResourceCheck", Rendered("Try")),
     Difference(sId(14), "multi-catch `A | B`",
       "JLS 14.20", "UNCITED — a union type in the pattern",
-      NoImpact, Handled, Predicted, Universal, "SpoonTir.tryStmt's getMultiTypes reduce to OrType", notYetS),
+      NoImpact, Handled, Predicted, Universal, "SpoonTir.tryStmt's getMultiTypes reduce to OrType", Lowered("CtTry", Dispatch.Statement)),
     Difference(sId(15), "the enhanced-for expression is evaluated ONCE, and arrays and `Iterable` differ",
       "JLS 14.14.2", "UNCITED — the same, by construction of the emitted loop",
-      NoImpact, Handled, NoTwin, Universal, "SpoonTir's CtForEach -> Tree.ForEach; TirEmitter emits the iterable once", notYetS),
+      NoImpact, Handled, NoTwin, Universal, "SpoonTir's CtForEach -> Tree.ForEach; TirEmitter emits the iterable once", Rendered("ForEach")),
     Difference(sId(16), "the enhanced-for BINDING may be reassigned in the body, and may be declared at a supertype",
       "JLS 14.14.2", "UNCITED — a `for` binding is a `val`",
-      Loud, Handled, el("K7"), Universal, "TirEmitter's Tree.ForEach arm — widenedBinding and reassignsBinding", notYetS),
+      Loud, Handled, el("K7"), Universal, "TirEmitter's Tree.ForEach arm — widenedBinding and reassignsBinding", Rendered("ForEach")),
     Difference(sId(17), "the classic `for`'s UPDATE runs on `continue`, and its `ForInit` scopes to the loop",
       "JLS 14.14.1", "UNCITED — `while` has no update clause, so it has to be placed",
-      Silent, Handled, Predicted, Universal, "TirEmitter's Tree.For arm — the update is outside the per-iteration boundary", notYetS),
+      Silent, Handled, Predicted, Universal, "TirEmitter's Tree.For arm — the update is outside the per-iteration boundary", Rendered("For")),
     Difference(sId(18), "`do`-`while` — Scala 3 removed it",
       "JLS 14.13", "UNCITED — Scala 3 has no `do`-`while`; `while ({ body; cond }) ()` is the image",
-      Silent, Handled, Predicted, Universal, "SpoonTir's CtDo -> Tree.DoWhile; TirEmitter's Tree.DoWhile arm", notYetS),
+      Silent, Handled, Predicted, Universal, "SpoonTir's CtDo -> Tree.DoWhile; TirEmitter's Tree.DoWhile arm", Both(Lowered("CtDo", Dispatch.Statement), Rendered("DoWhile"))),
     Difference(sId(19), "definite assignment for LOCALS — Java rejects a read before assignment",
       "JLS 16", "UNCITED — Scala requires an initialiser instead, so the analysis has no image",
       Mixed, Partial("the FIELD half is closed; the local half is unexamined — an uninitialised local silently takes a default"),
-      el("C10"), Universal, "TirEmitter.valDefStr's fieldOfAClass gate and defaultFor", notYetS),
+      el("C10"), Universal, "TirEmitter.valDefStr's fieldOfAClass gate and defaultFor", Rendered("ValDef")),
     Difference(sId(20), "redeclaring a local in a nested block",
       "JLS 14.4.3", "UNCITED — Scala permits the shadowing Java rejects",
-      NoImpact, NonDiff("javac rejects the input shape, so it never reaches the engine"), NoTwin, NoFix, "SpoonTir.defineLocal", notYetS),
+      NoImpact, NonDiff("javac rejects the input shape, so it never reaches the engine"), NoTwin, NoFix, "SpoonTir.defineLocal", NoObligation("a checked NON-difference: javac REJECTS the input shape, so a local redeclared in a nested block never reaches the engine and there is no site to decide anything at")),
     Difference(sId(21), "`return` inside a lambda body returns from the LAMBDA, not from the method",
       "JLS 15.27.2", "UNCITED — a `return` in a Scala lambda is a non-local return from the enclosing method",
-      Mixed, Handled, Rule44, Universal, "TirEmitter's Tree.Lambda arm and returnsIn -> a nested `def`", notYetS),
+      Mixed, Handled, Rule44, Universal, "TirEmitter's Tree.Lambda arm and returnsIn -> a nested `def`", Rendered("Lambda")),
     Difference(sId(22), "`synchronized` as a statement",
       "JLS 14.19", "UNCITED — `.synchronized`, with the same monitor bytecode",
-      NoImpact, Handled, NoTwin, Universal, "SpoonTir's CtSynchronized -> Tree.Synchronized", notYetS),
+      NoImpact, Handled, NoTwin, Universal, "SpoonTir's CtSynchronized -> Tree.Synchronized", Lowered("CtSynchronized", Dispatch.Statement)),
     Difference(sId(23), "`assert` is enabled at RUN TIME by `-ea` and OFF by default, so the condition is not evaluated",
       "JLS 14.10", "UNCITED — Scala's `assert` runs unless elided at COMPILE time by `-Xelide-below`",
       Silent, Open, Predicted, Universal,
-      "SpoonTir's CtAssert -> Tir.Tree.Assert -> TirEmitter's unconditional `assert(...)`; no decision, no note, no check", notYetS),
+      "SpoonTir's CtAssert -> Tir.Tree.Assert -> TirEmitter's unconditional `assert(...)`; no decision, no note, no check", Rendered("Assert")),
     Difference(sId(24), "`throw null`",
       "JLS 14.18", "UNCITED — the same `athrow`",
-      NoImpact, NonDiff("shared JVM instruction"), NoTwin, NoFix, "SpoonTir's CtThrow -> Tree.Throw", notYetS),
+      NoImpact, NonDiff("shared JVM instruction"), NoTwin, NoFix, "SpoonTir's CtThrow -> Tree.Throw", NoObligation("a checked NON-difference: `throw null` is the same `athrow` instruction on both sides — a JVM fact with no decision to take")),
     Difference(sId(25), "Java REJECTS unreachable code and Scala allows it — composed with `break`",
       "JLS 14.21", "UNCITED — Scala has no unreachable-statement rule",
       Silent, Handled, InCode("TirEmitter.endsInInfiniteLoop states the composition in its own comment"),
-      Universal, "TirEmitter.endsInInfiniteLoop, each arm excluding a loop that breaks out", notYetS),
+      Universal, "TirEmitter.endsInInfiniteLoop, each arm excluding a loop that breaks out", Rendered("DefDef")),
   )
 
   // -------------------------------------------------------------------------------------------
@@ -575,31 +598,55 @@ object Differences:
     * dispatch). `Dispatch.Either` expands to both, so a caller never has to ask twice, and a kind
     * nothing attaches to answers `Nil` — which is the fast path [[Lowering.of]] takes and the
     * reason the wrapper costs nothing on the overwhelming majority of nodes. */
+  /** a row's attachment, FLATTENED — `Both` is a tree and every index below wants its leaves. One
+    * function, so the three readers (the lowering index, the rendering index and `mechanised`) can
+    * never disagree about what a two-surface row attaches to. */
+  def leaves(a: Attaches): List[Attaches] = a match
+    case Attaches.Both(x, y) => leaves(x) ++ leaves(y)
+    case one                 => List(one)
+
   private val owed: Map[(String, Dispatch), List[DiffId]] =
     all
-      .collect { case d @ Difference(_, _, _, _, _, _, _, _, _, Attaches.Lowered(k, disp)) =>
+      .flatMap(d => leaves(d.attaches).collect { case Attaches.Lowered(k, disp) =>
         val at = disp match
           case Dispatch.Either => List(Dispatch.Statement, Dispatch.Expression)
           case one             => List(one)
         at.map(a => (k, a) -> d.id)
-      }
-      .flatten
+      }.flatten)
       .groupMap(_._1)(_._2)
 
   def owedAt(kind: String, dispatch: Dispatch): List[DiffId] = owed.getOrElse((kind, dispatch), Nil)
 
+  /** …and the EMITTER's half, keyed on the `Tree` kind. No `Dispatch`: see [[Rendering]]. */
+  private val owedRender: Map[String, List[DiffId]] =
+    all
+      .flatMap(d => leaves(d.attaches).collect { case Attaches.Rendered(k) => k -> d.id })
+      .groupMap(_._1)(_._2)
+
+  def owedAtRender(kind: String): List[DiffId] = owedRender.getOrElse(kind, Nil)
+
+  /** every `Tree` kind any row attaches to — what a spec compares against the IR's own node set, so
+    * a row naming a kind that does not exist is caught rather than silently owed by nothing. */
+  def renderedKinds: Set[String] = owedRender.keySet
+
   /** rows whose discharge surface EXISTS — the only rows an "unreached" claim may be made about.
     *
     * The narrowing is the whole point: a lane reporting "this row is live" on the strength of a
-    * surface nobody built would be reporting about a mechanism, not about the port. */
-  def mechanised: List[Difference] = all.filter(d => d.attaches match
-    case _: Attaches.Lowered | _: Attaches.Cited => true
-    case _                                       => false)
+    * surface nobody built would be reporting about a mechanism, not about the port.
+    *
+    * A `Both` row counts as mechanised when EVERY leaf is — a row half of whose discharge is
+    * instrumented is a row the lane may not claim, and the honest spelling for the other half is a
+    * leaf that still says `Unmechanised`. */
+  def mechanised: List[Difference] = all.filter(d => leaves(d.attaches).forall {
+    case _: Attaches.Lowered | _: Attaches.Rendered | _: Attaches.Cited => true
+    case _                                                             => false
+  })
 
   /** rows whose discharge surface is NOT built, which is the number that says "we are not measuring
     * these". Reported in its own lane rather than folded into a total (§3.6's rule about a number
     * that hides the half that matters, applied to coverage). */
-  def unmechanised: List[Difference] = all.filter(_.attaches.isInstanceOf[Attaches.Unmechanised])
+  def unmechanised: List[Difference] =
+    all.filter(d => leaves(d.attaches).exists(_.isInstanceOf[Attaches.Unmechanised]))
 
   /** ids that were ABSORBED and are therefore out of circulation forever (see [[Retired]]).
     *

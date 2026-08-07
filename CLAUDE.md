@@ -963,6 +963,17 @@ never names `Iterable` had the **whole pass inert**. So a guard is derived from 
 own targets or it is not written — the work each target would do already declines cheaply on its
 own.
 
+**And the rule reaches an INSTRUMENT'S OWN FILTER, in whatever language it is written.** The second
+occurrence was not a phase at all: `just catalog-coverage`'s aggregation matched
+`^(lowering|phase):` — the two obligation discharge surfaces that existed the day it was written —
+so when a THIRD was built its twenty rows were neither counted as mechanised nor eligible to be
+REPORTED as never reached, and the recipe went on printing a confident total. That is the recipe an
+agent runs *before claiming a rule is live*, which makes a stale filter there worse than one in a
+phase: a phase's silence is a missing fix, an instrument's silence is a wrong answer to the question
+"is this branch dead". State such a test as the COMPLEMENT — everything that is not one of the
+honest negatives is a surface — so a kind added tomorrow is included by construction rather than by
+somebody remembering a list.
+
 **And what makes it hard to see is a RESIDUE COUNT that cannot tell a refusal from a switched-off
 fix.** The boundary check reported all five seams, precisely, on every run since that port began —
 and a "no wrap was inserted" finding reads as *no wrap exists for this pair*, which is what the

@@ -36,12 +36,16 @@ final case class Ported(before: Program, after: Program, phases: List[Phase],
     * rather than a hand-assembled approximation of it. */
   lazy val plan: RuntimePlan = RuntimePlan.of(phases, runtimeMode)
 
-  private def emitterWith(preview: Boolean = false, bestEffort: Boolean = false): TirEmitter =
+  private def emitterWith(preview: Boolean = false, bestEffort: Boolean = false,
+                          log: CatalogLog = CatalogLog.discarding): TirEmitter =
     new TirEmitter(after, plan.concreteMembers,
                    javaSource = path => sources.collectFirst { case (n, c) if path.endsWith(n) => c },
-                   preview = preview, bestEffort = bestEffort)
+                   preview = preview, bestEffort = bestEffort, catalog = log)
 
-  lazy val emitter: TirEmitter = emitterWith()
+  /** the SHIPPED emitter, and the only one holding the fixture's obligation log — the preview and
+    * best-effort twins re-render the same tree, and a shared log would count every consult twice
+    * (the same reason they do not share a source map). */
+  lazy val emitter: TirEmitter = emitterWith(log = catalog)
 
   /** the emitted Scala for the whole program. */
   lazy val out: String = emitter.emit
@@ -262,7 +266,7 @@ abstract class PortSuite extends munit.FunSuite:
     * edge case wants to say the difference APPLIED here. `assertConsults(p, id, fired = true)` is
     * that; the default asserts only that the branch was live. */
   def assertConsults(p: Ported, id: DiffId, fired: Boolean = false)(using munit.Location): Unit =
-    val n = p.catalog.consulted(id)
+    val n = reached(p).consulted(id)
     if n == 0 then
       fail(s"$id was never consulted while lowering this fixture" +
         s"\n--- rows reached ---\n${renderReached(p)}\n---------------")
@@ -276,9 +280,21 @@ abstract class PortSuite extends munit.FunSuite:
     * positive form mean something — a fixture where every row reads as consulted is a fixture that
     * would pass with the wrapper wired to a constant. */
   def assertNotConsults(p: Ported, id: DiffId)(using munit.Location): Unit =
-    val n = p.catalog.consulted(id)
+    val n = reached(p).consulted(id)
     if n != 0 then
       fail(s"$id was consulted $n time(s) and should not have been at this construct")
+
+  /** THE LOG WITH BOTH SURFACES IN IT — forcing the emission first, then reading.
+    *
+    * There are two obligation dispatches and only one of them has run by the time a fixture is
+    * constructed. The frontend's consults are recorded while `port(…)` parses; the EMITTER's are
+    * recorded while `out` renders, and `out` is lazy — so an assertion that read the log directly
+    * would report every `Attaches.Rendered` row as never consulted, in a suite whose whole subject
+    * is that they are. Forcing here rather than in each assertion is the F8 shape avoided: one
+    * function, so a fourth assertion added tomorrow cannot be the one that forgets. */
+  private def reached(p: Ported): CatalogLog =
+    val _ = p.out
+    p.catalog
 
   /** a catalog row was CITED by a PHASE, at a declaration whose name contains `about`.
     *
@@ -292,7 +308,7 @@ abstract class PortSuite extends munit.FunSuite:
         s"\n--- ${at.size} citation(s) ---\n${if at.isEmpty then "  (none)" else at.map("  " + _).mkString("\n")}\n---------------")
 
   private def renderReached(p: Ported): String =
-    val rows = p.catalog.rows.filter(r => r.consulted > 0 || r.declarations > 0)
+    val rows = reached(p).rows.filter(r => r.consulted > 0 || r.declarations > 0)
     if rows.isEmpty then "  (none)"
     else rows.map(r => s"  ${r.id} consulted=${r.consulted} fired=${r.fired} declarations=${r.declarations}").mkString("\n")
 

@@ -1,11 +1,11 @@
 #check	count
 base-surface	0
 break-catch	0
-catalog(consulted)	9
+catalog(consulted)	24
 catalog(uncited)	121
 catalog(undischarged)	1
-catalog(unmechanised)	111
-catalog(unreached)	2
+catalog(unmechanised)	88
+catalog(unreached)	8
 class-init-trigger	0
 collection-boundary	0
 collection-closure	0

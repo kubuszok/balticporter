@@ -71,7 +71,13 @@ object Lowering:
     * different nodes of the same kind on one line (`x += (y += 1)`) are two obligations, and reading
     * `at` or `kind` would silently discharge the outer one from the inner node's consult. */
   def of[A](kind: String, dispatch: Dispatch, at: Origin, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
-    val owed  = Differences.owedAt(kind, dispatch)
+    scoped(Differences.owedAt(kind, dispatch), kind, dispatch, at, subject)(body)
+
+  /** the scope both dispatch surfaces enter — ONE implementation, because the delegation seam, the
+    * allocation-free fast path and the settle are the same question at either end of the pipeline
+    * and two copies would be two answers (`ENGINE-LIMITS.md` F8). */
+  private[catalog] def scoped[A](owed: List[DiffId], kind: String, dispatch: Dispatch, at: Origin,
+                                 subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
     val outer = log.enterSubject(subject)
     try
       if owed.isEmpty then body(using log.unattached)
@@ -84,6 +90,39 @@ object Lowering:
         o.settle(kind, dispatch, at)
         r
     finally log.exitSubject(outer)
+
+/** THE EMITTER'S HALF — the same wrapper at the OTHER end of the pipeline, keyed on the `Tree` kind.
+  *
+  * §2.3(c)'s second discharge surface. Most `JS-S` rows do not discharge in the frontend at all: a
+  * `switch` with no `default`, a `break` in the middle of a case, a `boundary` the emitter
+  * interposes, a `try`'s resources, a labelled statement — every one of them is a decision about
+  * TEXT, taken while rendering, and the frontend has already done its job correctly by the time they
+  * arise. A lowering-only mechanism can say nothing about any of them, which is why they carried
+  * `Attaches.Unmechanised` and were COUNTED rather than claimed.
+  *
+  * Two things are deliberately identical to [[Lowering]] and one is deliberately different.
+  *
+  * IDENTICAL: the wrapper is at the DISPATCH (`TirEmitter.stat` / `TirEmitter.term`), so no arm can
+  * decline to wrap; and the scopes are joined by NODE IDENTITY, because the emitter has the same
+  * delegation seam the frontend does — `stat` hands every `Term` straight to `term`, so one node is
+  * rendered inside two scopes and the consults all happen in the inner one.
+  *
+  * DIFFERENT: there is no [[Dispatch]]. Java gives one node kind two meanings by POSITION (`i += 1`
+  * as a statement discards its value; as an expression it yields one), which is a fact about JLS
+  * 14.8 vs 15.26.2 and is why the frontend's key carries it. The TIR has already resolved that
+  * question — the position is in the tree — so a second axis here would be a distinction with no
+  * fact behind it. `Dispatch.Either` is what the shared machinery records for a rendering, and it
+  * reads correctly: both of the emitter's dispatches owe it.
+  */
+object Rendering:
+
+  /** Enter the obligation scope for ONE `Tree` node, then render it.
+    *
+    * `kind` is the node's `productPrefix` — the same name `EmissionFieldCoverageSpec` derives from
+    * the class files, so a row attaching to a kind the IR does not have is caught by a spec rather
+    * than by silence. */
+  def of[A](kind: String, at: Origin, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
+    Lowering.scoped(Differences.owedAtRender(kind), kind, Dispatch.Either, at, subject)(body)
 
 /** WHICH of the frontend's two term dispatches an obligation attaches at.
   *
@@ -115,9 +154,35 @@ enum Attaches:
     * `kind` is Spoon's INTERFACE name, the key `SpoonKinds` registers. */
   case Lowered(kind: String, dispatch: Dispatch)
 
+  /** the EMITTER's rendering dispatch owes a consult for every `Tree` node of `kind` — the node's
+    * `productPrefix`, which is the same name `EmissionFieldCoverageSpec` derives from the class
+    * files. See [[Rendering]] for why this case carries no [[Dispatch]]. */
+  case Rendered(kind: String)
+
   /** a PHASE decides this row, and cites it per declaration. `phase` is the phase's `name`, so the
     * citation and the phase that owes it can be joined without reading either. */
   case Cited(phase: String)
+
+  /** the row discharges at more than one place, and every one of them owes it.
+    *
+    * Two different facts need this, and both arrived with area S:
+    *
+    *   - MORE THAN ONE KIND at one surface. An unlabelled jump binds to the innermost enclosing
+    *     loop (`JS-S01`), and a loop is four `Tree` kinds — `While`, `For`, `ForEach`, `DoWhile` —
+    *     all of which go through `TirEmitter.loopWithJumps`. Attaching the row to one of them would
+    *     leave the other three able to render without considering it;
+    *   - TWO SURFACES. `JS-S18` (`do`-`while`, which Scala 3 removed) is decided in the frontend,
+    *     which maps `CtDo` to a node the language has no keyword for, and again in the emitter,
+    *     which chooses `while ({ body; cond }) ()` as the image. Either half alone is a claim about
+    *     coverage the other half does not have.
+    *
+    * A product of enum cases, so `DifferenceTakesNoParameterSpec` admits it by the recursion it
+    * already performs — which is the reason it is this and not a `List`. A list is the exact shape a
+    * per-library policy takes, and relaxing that spec to hold one would take the whole rule with it.
+    *
+    * A `Both` whose leaves are not all instrumented is NOT mechanised: `Differences.mechanised`
+    * requires every leaf, so a row half of whose discharge nobody built keeps saying so. */
+  case Both(a: Attaches, b: Attaches)
 
   /** NO obligation surface exists for this row yet, and `why` says which one it wants.
     *

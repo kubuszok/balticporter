@@ -219,12 +219,13 @@ class CatalogCoverageSpec extends munit.FunSuite:
     // not claim a lowering attachment at a Spoon kind the frontend does not dispatch on, because
     // the obligation would then be owed at a site nothing ever enters — a claim that reads as
     // coverage and can never fail.
+    // …and through `leaves`, because a row may attach at more than one place: an `Attaches.Both`
+    // is not an `Attaches.Lowered`, so an `isInstanceOf` on the top-level value silently skips the
+    // lowering half of every two-surface row — which is the one shape this guard exists to hold.
     val dispatched = balticporter.frontend.spoon.SpoonKinds.lowered.map(_.name).toSet
-    val bad = Differences.all.collect {
-      case d if d.attaches.isInstanceOf[Attaches.Lowered] =>
-        val Attaches.Lowered(k, _) = d.attaches: @unchecked
-        (d.id, k)
-    }.filterNot((_, k) => dispatched.contains(k))
+    val bad = Differences.all.flatMap(d =>
+      Differences.leaves(d.attaches).collect { case Attaches.Lowered(k, _) => (d.id, k) })
+      .filterNot((_, k) => dispatched.contains(k))
     assertEquals(bad, Nil, s"attached to a kind no arm lowers: $bad")
   }
 

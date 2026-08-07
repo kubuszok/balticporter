@@ -1289,6 +1289,10 @@ final case class PortRun(
         // class's primary the pre-§8.3 way and reports a determinism violation for exactly the
         // classes the contract fixed. Measured: 2 units on gdx-gltf, both of them the wall classes
         // this item exists for.
+        // …and NOT the run's catalog log. It shares the DECISION log deliberately (it renders the
+        // same notes and records none of its own), but a consult is a COUNT: re-rendering every
+        // unit into the same log would double every number `catalog.tsv` reports, for a second
+        // emitter whose whole purpose is that its bytes are thrown away.
         val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions,
                                    preview, bestEffort, Some(once.surface))
         val diffs = once.emitOrder.filter(u => again.emitUnit(u) != once.sourceOf(u))
@@ -2040,8 +2044,12 @@ final case class PortRun(
       program, mine, basePorts.flatMap(b => b.map.map(b.name -> _)))
     // the emitter READS this log to render porter notes and never writes to it — its own decisions
     // come back as `TirEmitter.ownDecisions` and are recorded once, by `recordRunDecisions`.
+    // …and the emitter takes the run's OBLIGATION log, because it is the second discharge surface
+    // (`balticporter.catalog.Rendering`): most `JS-S` rows are decided while rendering and the
+    // frontend has nothing to say about them. THIS emitter and no other — the determinism twin
+    // below re-renders every unit, and a shared log would count every consult twice.
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, bestEffort,
-                                 Some(surface))
+                                 Some(surface), catalog = catalog)
     PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)),
                        decisions, binder, surface, parsed, catalog)
 

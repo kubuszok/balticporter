@@ -2130,8 +2130,19 @@ object SpoonTir:
         case b: CtBreak           => Tree.Break(Option(b.getTargetLabel), nothingT, originOf(b))
         case c: CtContinue        => Tree.Continue(Option(c.getTargetLabel), nothingT, originOf(c))
         case a: CtAssert[?]       => Tree.Assert(expr(a.getAssertExpression), Option(a.getExpression).map(expr), unitT, originOf(a))
-        case d: CtDo              => Tree.DoWhile(blockTerm(d.getBody), expr(d.getLoopingExpression), unitT, originOf(d), labelOf(d))
-        case y: CtSynchronized    => Tree.Synchronized(expr(y.getExpression), blockTerm(y.getBlock), unitT, originOf(y))
+        case d: CtDo              =>
+          // JS-S18, the FRONTEND half — Scala 3 removed `do`-`while`, so there is no keyword to map
+          // to and the loop needs a node of its own for the emitter to give it a shape. Always
+          // fires: every java `do` needs the image. The row attaches at BOTH surfaces, and this
+          // consult is why — the emitter's alone would claim coverage for a decision taken here.
+          Obligations.consult(JS.S(18), originOf(d))(Some(()))
+          Tree.DoWhile(blockTerm(d.getBody), expr(d.getLoopingExpression), unitT, originOf(d), labelOf(d))
+        case y: CtSynchronized    =>
+          // JS-S22 — java's `synchronized` STATEMENT has a scala image with the same monitor
+          // bytecode (`.synchronized`), and choosing it is the whole content of this row. Always
+          // fires: every `synchronized` block needs the mapping.
+          Obligations.consult(JS.S(22), originOf(y))(Some(()))
+          Tree.Synchronized(expr(y.getExpression), blockTerm(y.getBlock), unitT, originOf(y))
         case u: CtUnaryOperator[?] =>
           import UnaryOperatorKind.*
           val one = Tree.Literal(Constant.IntC(1), ty(u), originOf(u))
@@ -2825,22 +2836,26 @@ object SpoonTir:
             Tree.Typed(t, tt(obj, e), obj, originOf(e))
           case _ => t
 
-      private def tryStmt(t: CtTry, resources: List[Tree.ValDef]): Term =
+      private def tryStmt(t: CtTry, resources: List[Tree.ValDef])(using Obligations): Term =
+        var multiCatch = false
         val catches = t.getCatchers.asScala.toList.map { c =>
           val p  = c.getParameter
           val pt = p.getMultiTypes.asScala.toList match
             case Nil    => tpe(p.getType)
-            case multi  => multi.map(tpe).reduce(OrType(_, _))
+            case multi  => multiCatch = true; multi.map(tpe).reduce(OrType(_, _))
           val id = defineLocal(p, pt)
           Tree.CatchCase(Tree.ValDef(id, tt(pt, p), None, originOf(p)), blockTerm(c.getBody))
         }
+        // JS-S14 — java's multi-catch `A | B` has a scala image (a union type in the pattern), and
+        // that image is built HERE. Fires where the source really wrote one.
+        Obligations.consult(JS.S(14), originOf(t))(Option.when(multiCatch)(()))
         Tree.Try(resources, blockTerm(t.getBody), catches, Option(t.getFinalizer).map(blockTerm), unitT, originOf(t))
 
       /** Java switch → TIR `Match`. Empty (grouping) cases merge their labels into the next;
         * genuine fallthrough is lowered by TAIL DUPLICATION — a non-terminated case's body is
         * its own statements followed by the next case's closure (the same faithful lowering
         * the BIR frontend uses, RESEARCH §4.2), so no `Unsupported`. */
-      private def switchStmt(s: CtSwitch[?]): Term =
+      private def switchStmt(s: CtSwitch[?])(using Obligations): Term =
         val cases = s.getCases.asScala.toList
         def stmtsOf(c: CtCase[?]): List[CtStatement] = c.getStatements.asScala.toList match
           case List(b: CtBlock[?]) => b.getStatements.asScala.toList
@@ -2858,10 +2873,23 @@ object SpoonTir:
             case (b: CtBreak) :: _ if b.getTargetLabel == null => (raw.filterNot(_ eq b), true)
             case rest => (raw, rest.headOption.exists { case _: CtReturn[?] | _: CtThrow => true; case _ => false })
         }
+        // JS-S07 — only an UNLABELLED trailing `break` terminates a case; a labelled one leaves the
+        // enclosing LOOP, and stripping it as a terminator deletes the jump. Read off the split that
+        // has just been taken, so the consult cannot say something the code does not do. It fires
+        // where a case really ended on a bare `break`, which is the shape the distinction is about.
+        Obligations.consult(JS.S(7), originOf(s))(
+          Option.when(cases.zip(split).exists { (c, sp) => sp._2 && sp._1.size != stmtsOf(c).size })(()))
         val closures = new Array[List[CtStatement]](cases.length)
         for i <- cases.indices.reverse do
           val (body, terminated) = split(i)
           closures(i) = if terminated || i == cases.length - 1 then body else body ++ closures(i + 1)
+        // JS-S04 — java's switch FALLS THROUGH into the next case's statements and a `match` arm
+        // never does, so a non-terminated arm is lowered by DUPLICATING the next case's tail into
+        // it. Fires where an arm really runs on: a case that is neither terminated nor last and has
+        // statements of its own.
+        Obligations.consult(JS.S(4), originOf(s))(
+          Option.when(cases.indices.exists(i =>
+            !split(i)._2 && i != cases.length - 1 && split(i)._1.nonEmpty))(()))
         val out     = List.newBuilder[Tree.CaseDef]
         var pending = List.empty[Term]
         cases.zipWithIndex.foreach { case (c, idx) =>
@@ -2882,6 +2910,10 @@ object SpoonTir:
         // ordinary character is the normal path, not an error — it threw on the first letter of
         // every quoted string. Add the fall-out arm java already has.
         val arms = out.result()
+        // JS-S05 — a `switch` with no `default` FALLS OUT when nothing matches; a `match` with no
+        // `case _` throws `MatchError`, and falling out is often the NORMAL path (a scanner reading
+        // an ordinary character). Fires exactly where the arm has to be synthesised.
+        Obligations.consult(JS.S(5), originOf(s))(Option.when(!arms.exists(_.isDefault))(()))
         val withDefault =
           if arms.exists(_.isDefault) then arms
           else arms :+ Tree.CaseDef(Nil, None, unit(s), isDefault = true)

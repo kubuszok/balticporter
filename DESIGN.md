@@ -507,7 +507,7 @@ where the port could have gone another way, or where something is missing from t
 
 **`attaches`, and the exact strength of what it buys.** A row declares WHERE the engine owes it a
 decision, and the engine records whether that decision was taken (`balticporter.catalog.Attaches`).
-Three discharge surfaces were designed and **two are built**:
+Three discharge surfaces were designed and **all three are built**:
 
 - **frontend lowering** — `Lowering.of(kind, dispatch, at)` at `SpoonTir`'s statement and expression
   dispatches, `Obligations.consult(id, at)(predicate)` inside. **The wrapper goes at the DISPATCH,
@@ -518,9 +518,44 @@ Three discharge surfaces were designed and **two are built**:
   granularity `Decision` already uses (`CLAUDE.md` §5.1). Deliberately weaker and reported apart:
   nothing can assert that a phase *should have* considered a difference at a declaration it never
   visited;
-- **emitter rendering** — a symmetrical wrapper keyed on the `Tree` kind. NOT BUILT. The rows that
-  would discharge there carry `Attaches.Unmechanised(why)` and are COUNTED, because a lane reporting
-  them as fine on the strength of a surface that does not exist is worse than no lane.
+- **emitter rendering** — `Rendering.of(kind, at, subject)` at `TirEmitter`'s `stat` and `term`
+  dispatches, keyed on the `Tree` kind (`productPrefix`) rather than on the Java one. Built with
+  area S, which is the first area most of whose rows are decided HERE: a `switch` with no `default`,
+  a `break` in the middle of a case, a `boundary` the emitter interposes, a `try`'s resources — the
+  frontend has already discharged its obligations correctly by the time any of them arise. It shares
+  `Lowering`'s machinery exactly (one `scoped`, one delegation seam, one fast path), because the
+  emitter has the SAME seam the frontend does: `stat` hands every `Term` to `term`, so one node is
+  rendered inside two scopes and the consults happen in the inner one.
+
+  **It carries no `Dispatch`, and that absence is the design.** The frontend's key needs one because
+  java gives a node kind two meanings by POSITION; by the time a `Tree` exists that question is
+  answered — the position is in the tree — so a second axis here would be a distinction with no fact
+  behind it.
+
+  **Exactly one emitter per run holds the run's log.** The determinism twin, the preview emitter and
+  the best-effort emitter all re-render every unit, and a shared log would count every consult twice
+  — the same reason those instances do not share a source map (`CLAUDE.md` §5.1). They take
+  `CatalogLog.discarding`, which is not a flag but the honest answer for a second rendering whose
+  bytes are thrown away.
+
+**A row may attach at more than one place — `Attaches.Both`.** Two facts need it and both arrived
+with area S: MORE THAN ONE KIND at one surface (a loop is four `Tree` kinds, all reaching
+`loopWithJumps`, so `JS-S01` attached to one of them would leave three able to render without
+considering it) and TWO SURFACES (`JS-S18`'s `do`-`while` is decided in the frontend, which maps
+`CtDo` to a node the language has no keyword for, and again in the emitter, which chooses the image).
+It is a product of enum cases and not a `List` because `DifferenceTakesNoParameterSpec` rejects a
+collection in any row field — a collection is the exact shape a per-library policy takes — and a
+product is admitted by the recursion that spec already performs. `Differences.leaves` is the one
+place a `Both` is flattened, so the three indexes built from it can never disagree; a `Both` counts
+as mechanised only when EVERY leaf is.
+
+**And a construct the frontend REFUSES gets no obligation at all.** `JS-S09` (switch expressions) and
+`JS-S10` (pattern switch) are `Absent`, and attaching them to their Spoon kinds would be a claim that
+reads as coverage and can never fail: the dispatch enters, the refusal throws, the lowering never
+returns, so the row would sit on `mechanised` reading `unreached` on every port forever. They carry
+`Unmechanised` naming the instrument that DOES measure them — `SpoonKinds` records each refused kind
+against the row's own `DiffId` and the `markers` lane counts every mint. `CatalogCoverageSpec` holds
+that line for the whole registry: no row may claim a lowering attachment at a kind no arm lowers.
 
 `Attaches.NoObligation(why)` is the fourth answer and is kept apart from `Unmechanised` on purpose:
 one says the surface is missing, the other says no surface is owed (a checked non-difference, or a

@@ -1534,7 +1534,14 @@ catalog-coverage:
     for f in $files; do
       port=$(basename "$(dirname "$(dirname "$f")")")
       reached=$(awk -F'\t' '!/^#/ && ($4>0 || $6>0)' "$f" | wc -l | tr -d ' ')
-      mech=$(awk -F'\t' '!/^#/ && ($3 ~ /^(lowering|phase):/)' "$f" | wc -l | tr -d ' ')
+      # …and `rendering:` beside them. THE FILTER IS THE ONE THING HERE THAT CAN GO STALE SILENTLY:
+      # written when there were two discharge surfaces it kept answering for two after a third was
+      # built, so twenty area-S rows were neither counted as mechanised nor eligible to be REPORTED
+      # as never-reached — and this recipe is the one an agent runs before claiming a rule is live.
+      # It is CLAUDE.md §4.56's fast-path-guard rule in a shell script: a guard is derived from ALL
+      # of a mechanism's targets or it is not written. Anything not `unmechanised`/`none` is a
+      # surface, which is why the test is now stated that way round.
+      mech=$(awk -F'\t' '!/^#/ && $3!="unmechanised" && $3!="none"' "$f" | wc -l | tr -d ' ')
       unmech=$(awk -F'\t' '!/^#/ && $3=="unmechanised"' "$f" | wc -l | tr -d ' ')
       none=$(awk -F'\t' '!/^#/ && $3=="none"' "$f" | wc -l | tr -d ' ')
       echo "$port: $reached reached / $mech mechanised, $unmech unmechanised, $none owe nothing"
@@ -1547,7 +1554,7 @@ catalog-coverage:
     reached=$(mktemp); mech=$(mktemp)
     for f in $files; do
       awk -F'\t' '!/^#/ && ($4>0 || $6>0) {print $1}' "$f" >> "$reached"
-      awk -F'\t' '!/^#/ && ($3 ~ /^(lowering|phase):/) {print $1"\t"$2"\t"$3}' "$f" >> "$mech"
+      awk -F'\t' '!/^#/ && $3!="unmechanised" && $3!="none" {print $1"\t"$2"\t"$3}' "$f" >> "$mech"
     done
     sort -u "$reached" -o "$reached"; sort -u "$mech" -o "$mech"
     join -v1 -t$'\t' "$mech" "$reached" | sed 's/^/  /'
