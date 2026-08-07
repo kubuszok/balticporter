@@ -122,9 +122,17 @@ object Differences:
     * `everyLoop`'s shape in area G, and the driver is the same one chunk 10 named: MORE THAN ONE
     * KIND at one surface. JLS 5.2 is one conversion and `SpoonTir.coerce` is the one function that
     * writes it out, but a slot is not a node kind — a local's initialiser, an assignment's
-    * right-hand side, a `return`ed value, a call argument, a `new`'s argument and an array
-    * initialiser's element are six kinds reaching that one function. Attaching the boxing rows to
-    * any one of them would leave the other five able to lower without considering it.
+    * right-hand side, a `return`ed value, a call argument, a `new`'s argument, an array
+    * initialiser's element and a FIELD's initialiser are seven kinds reaching that one function.
+    * Attaching the boxing rows to any one of them would leave the other six able to lower without
+    * considering it.
+    *
+    * The seventh is the one that shows why the enumeration has to be written down rather than
+    * assumed: a `CtField` is neither a statement nor an expression, so it enters neither of the
+    * frontend's two dispatches, and for as long as the list was "the six node kinds we dispatch on"
+    * the slot was not merely unattached — it was UNREACHABLE. A port whose only boxing, array
+    * covariance or unchecked conversion sites were field initialisers read `consulted = 0` on all
+    * three rows, which is indistinguishable from "the difference does not arise in this library".
     *
     * The convergence point is `SpoonTir.slotConsults`, called from all six arms, so the rule is
     * stated ONCE (`ENGINE-LIMITS.md` F8). It is called from the ARM and not from `coerce` itself,
@@ -149,8 +157,9 @@ object Differences:
     Both(everyCall,
       Both(Lowered("CtNewArray", Dispatch.Expression),
         Both(Lowered("CtLocalVariable", Dispatch.Statement),
-          Both(Lowered("CtAssignment", Dispatch.Either),
-               Lowered("CtReturn", Dispatch.Statement)))))
+          Both(Lowered("CtField", Dispatch.Declaration),
+            Both(Lowered("CtAssignment", Dispatch.Either),
+                 Lowered("CtReturn", Dispatch.Statement))))))
 
   /** the WILDCARD arm of the frontend's type dispatch — `SpoonTir.tpe`'s `CtWildcardReference`
     * branch, where java's use-site variance becomes a scala `TypeBounds` or, at `? super Object`,

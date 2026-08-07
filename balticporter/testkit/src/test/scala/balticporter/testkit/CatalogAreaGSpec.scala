@@ -12,13 +12,15 @@ import balticporter.catalog.{Attaches, Differences, JS, Status}
   * WHAT MAKES AREA G DIFFERENT FROM THE THREE BEFORE IT. Its rows are not about a node kind at all;
   * they are about a SLOT and about a TYPE. Two consequences run through the whole suite:
   *
-  *   - the slot rows (`JS-G09`, `JS-G13`, `JS-G14`) attach at SIX dispatches, because java's
+  *   - the slot rows (`JS-G09`, `JS-G13`, `JS-G14`) attach at SEVEN dispatches, because java's
   *     assignment conversion (JLS 5.2) is one conversion reached from a local's initialiser, an
-  *     assignment, a `return`, a call argument, a `new`'s argument and an array initialiser's
-  *     element. `SpoonTir.slotConsults` is the one place that states them, and it is called from the
-  *     ARM rather than from `coerce` — `coerce` is not reached for a local with no initialiser or a
-  *     zero-argument call, so a consult inside it would report a hole at exactly the nodes where the
-  *     difference does not apply;
+  *     assignment, a `return`, a call argument, a `new`'s argument, an array initialiser's element
+  *     and a FIELD's initialiser. `SpoonTir.slotConsults` is the one place that states them, and it
+  *     is called from the ARM rather than from `coerce` — `coerce` is not reached for a local with
+  *     no initialiser or a zero-argument call, so a consult inside it would report a hole at
+  *     exactly the nodes where the difference does not apply. The seventh is the one that needed a
+  *     third `Dispatch`: a `CtField` is neither a statement nor an expression, so for as long as
+  *     the enumeration was "the kinds we dispatch on" that slot could not be owed anywhere;
   *   - ELEVEN rows are still `Unmechanised`, and the last test asserts exactly which. Every one of
   *     them is decided while lowering or rendering a TYPE REFERENCE, which is neither of the
   *     frontend's two dispatches (a `CtTypeReference` is not a statement or an expression) nor the
@@ -250,6 +252,35 @@ class CatalogAreaGSpec extends PortSuite:
         |}""".stripMargin)
     assertConsults(p, JS.G(14), fired = true)
     assertConsults(p, JS.G(9))
+  }
+
+  test("JS-G09 / JS-G13 / JS-G14 — a FIELD INITIALISER is the seventh slot, and the only one at no term dispatch") {
+    // The six above are all statements or expressions. A `CtField` is neither, so it enters neither
+    // of the frontend's two dispatches and NO row could be owed at it — the slot was not unattached,
+    // it was unreachable, and a library whose only boxing sites are field initialisers read
+    // `consulted = 0` on all three rows, which is indistinguishable from "the difference does not
+    // arise here". `Dispatch.Declaration` is that third position.
+    val p = port(
+      """public class A {
+        |  Object boxed = 1;
+        |  Object[] widened = new String[0];
+        |}""".stripMargin)
+    assertConsults(p, JS.G(14), fired = true)
+    assertConsults(p, JS.G(13), fired = true)
+    assertConsults(p, JS.G(9))
+    // …and the translation was already right at this slot: `coercedExprOf` is the same call the
+    // local arm makes. What was missing was only the record that it had been considered, which is
+    // exactly the shape a coverage lane cannot report on its own.
+    assertEmits(p, "asInstanceOf[java.lang.Integer]")
+  }
+
+  test("JS-G09 / JS-G13 / JS-G14 — a field with NO initialiser has no slot; consulted, none fires") {
+    // The declaration dispatch's half of the rule the local one states below: the scope opens for
+    // every field, and a field with nothing to convert answers `None` three times.
+    val p = port("public class A { Object f; }")
+    assertConsults(p, JS.G(9))
+    assertConsults(p, JS.G(13))
+    assertConsults(p, JS.G(14))
   }
 
   test("JS-G09 / JS-G13 / JS-G14 — a local with NO initialiser has no slot; consulted, none fires") {

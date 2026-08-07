@@ -135,7 +135,19 @@ object SpoonKinds:
     Kind("CtCatch", Positional("SpoonTir.tryStmt"), scala.None),
     Kind("CtCatchVariable", Positional("SpoonTir.tryStmt, then SpoonTir.defineLocal"), scala.None),
     Kind("CtCompilationUnit", Positional("SpoonTir.harvestHeader"), scala.None),
-    Kind("CtEnumValue", Positional("SpoonTir.enumCase, from classDef's getEnumValues"), scala.None),
+    // …and this one is weaker than it reads, in the same way `CtJavaDocTag` is. `enumCase` maps the
+    // constant's constructor ARGUMENTS with `bt.exprOf` — `expr` on each argument — so the
+    // `CtNewClass`/`CtConstructorCall` that holds them never enters the expression dispatch at all.
+    // The consequence is not a missing consult, it is a missing TRANSLATION: java performs its
+    // method-invocation conversion at those arguments (JLS 15.12.4.2) and this path performs none —
+    // no boxing, no narrowing, no vararg pack — while `coerceArgs`, which does all three and owes
+    // the `everyCall` rows, is never reached. Wiring the consult alone would discharge an
+    // obligation the arm does not meet, which is the one failure `CatalogLog` says it cannot
+    // detect; wiring the arm properly means the anonymous-class rows attached to that same scope,
+    // one of which (`CtAnonymousExecutable` in a constant's body) this walk drops outright — it
+    // collects `CtField` and `CtMethod` and nothing else. Recorded here, where the claim is, rather
+    // than half-instrumented.
+    Kind("CtEnumValue", Positional("SpoonTir.enumCase, from classDef's getEnumValues — the constant's ctor ARGUMENTS bypass coerceArgs and the call dispatch entirely"), scala.None),
     Kind("CtImport", Positional("SpoonTir.harvestHeader — only for its comments"), scala.None),
     Kind("CtJavaDoc", Positional("SpoonTir.triviaOf, through the CtComment arm"), scala.None),
     // NOT a node-level read: `getTags` is never called. The tag text survives only because the

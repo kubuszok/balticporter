@@ -196,7 +196,20 @@ enum Dispatch:
   case Statement
   /** the node reached as an EXPRESSION whose value is used — JLS 15. `SpoonTir.exprNoCast` */
   case Expression
-  /** both dispatches owe the consult */
+  /** the node reached as a MEMBER DECLARATION — neither of the two above, and that is the point.
+    *
+    * A `CtField` is not a `CtStatement` and not a `CtExpression`: it is walked out of its type's
+    * member list, so it enters neither dispatch and no row attached at either could ever be owed
+    * there. That made a whole JLS 5.2 slot invisible — a field's INITIALISER is an assignment
+    * conversion exactly as a local's is, and a port whose only boxing sites were field initialisers
+    * read "the difference does not apply" on every one of them.
+    *
+    * Deliberately not folded into [[Statement]]: `CatalogCoverageSpec` derives the legal dispatches
+    * for a kind from Spoon's own hierarchy, so `Lowered("CtField", Statement)` is a claim that
+    * spec rejects — correctly, because it says the frontend reaches a field somewhere it does not. */
+  case Declaration
+  /** both of the two POSITIONAL dispatches owe the consult. Not [[Declaration]]: a kind reached as
+    * a declaration is reached at exactly one place, so a row that means it says so. */
   case Either
 
 /** WHERE a row's obligation is discharged — the field that makes a row answerable to the code.

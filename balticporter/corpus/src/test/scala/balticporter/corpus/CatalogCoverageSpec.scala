@@ -252,10 +252,15 @@ class CatalogCoverageSpec extends munit.FunSuite:
           Option.when(by.contains("exprNoCast"))(Dispatch.Expression)).flatten
     if fromClaim.nonEmpty then fromClaim
     else
-      // …and a kind that is NEITHER — a `CtMethod`, a `CtField` — answers the empty set, which is
-      // the honest answer: no term dispatch is ever entered for it, so no `Lowered` attachment can
-      // be right about it. Resolved out of both node packages rather than one, because a name that
-      // does not resolve would otherwise throw where the sweep wants a finding.
+      // …and a kind that is NEITHER — a `CtMethod`, a `CtField` — is reached at neither TERM
+      // dispatch, and that used to be the end of the sentence: the empty set, so no `Lowered`
+      // attachment could be right about it. That was true of the mechanism and false of java, and
+      // it cost a whole JLS 5.2 slot — a field's INITIALISER is an assignment conversion with
+      // nowhere to be owed. `Dispatch.Declaration` is the third position, and it is derived the
+      // same structural way: a `CtTypeMember` is walked out of its type's member list, which is a
+      // place the frontend really does reach it. Resolved out of both node packages rather than
+      // one, because a name that does not resolve would otherwise throw where the sweep wants a
+      // finding.
       def resolve(pkg: String): Option[Class[?]] =
         try Some(Class.forName(s"$pkg.${k.name}", false, getClass.getClassLoader))
         catch { case _: ClassNotFoundException => scala.None }
@@ -264,6 +269,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
         case Some(cls)  => Set(
           Option.when(classOf[spoon.reflect.code.CtStatement].isAssignableFrom(cls))(Dispatch.Statement),
           Option.when(classOf[spoon.reflect.code.CtExpression[?]].isAssignableFrom(cls))(Dispatch.Expression),
+          Option.when(classOf[spoon.reflect.declaration.CtTypeMember].isAssignableFrom(cls))(Dispatch.Declaration),
         ).flatten
 
   test("…and about the DISPATCH — a kind only a statement arm reaches owes nothing as an expression") {
@@ -279,6 +285,8 @@ class CatalogCoverageSpec extends munit.FunSuite:
       val asked = disp match
         case Dispatch.Either => Set(Dispatch.Statement, Dispatch.Expression)
         case one             => Set(one)
+      // `Declaration` is asked and answered by the same rule as the other two — a kind that is not
+      // a `CtTypeMember` claiming it is exactly the failure this test is about, one column over.
       Option.when(!asked.subsetOf(legal))(
         s"$id attaches $k/$disp, and $k is reached at ${legal.mkString("{", ", ", "}")}")
 

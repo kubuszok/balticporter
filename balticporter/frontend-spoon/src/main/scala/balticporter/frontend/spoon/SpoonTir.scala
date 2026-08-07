@@ -1616,8 +1616,24 @@ object SpoonTir:
     private def selfOf(owner: SymId, selfClass: SymId): SymId =
       if selfClass == SymId.None then owner else selfClass
 
+    /** …inside the DECLARATION obligation scope, which is the third one this frontend opens.
+      *
+      * A field's initialiser is a JLS 5.2 assignment slot exactly as a local's is — `coercedExprOf`
+      * is literally the same call — and it was the one slot no row could be owed at, because a
+      * `CtField` is neither a `CtStatement` nor a `CtExpression` and therefore enters neither
+      * dispatch. `Differences.everySlot` names it now (`Dispatch.Declaration`), and the consults are
+      * the same three, through the same function: a rule stated twice is a rule that gets two
+      * answers (`ENGINE-LIMITS.md` F8).
+      *
+      * The scope opens for EVERY field, initialiser or not — the empty slot list answers `None`
+      * three times and discharges honestly, which is the same shape a local with no initialiser or
+      * a bare `return` already has. */
     private def fieldDef(owner: SymId, f: CtField[?], selfClass: SymId = SymId.None, outerVars: Map[String, SymId] = Map.empty,
-                         anonSelf: SymId = SymId.None, anonQName: String = ""): Tree.ValDef = withStatic(fieldFlags(f).isStatic) {
+                         anonSelf: SymId = SymId.None, anonQName: String = ""): Tree.ValDef =
+      Lowering.of(SpoonKinds.nameOf(f.getClass), Dispatch.Declaration, originOf(f), f)(fieldDef1(owner, f, selfClass, outerVars, anonSelf, anonQName))
+
+    private def fieldDef1(owner: SymId, f: CtField[?], selfClass: SymId, outerVars: Map[String, SymId],
+                          anonSelf: SymId, anonQName: String)(using Obligations): Tree.ValDef = withStatic(fieldFlags(f).isStatic) {
       val ft = tpe(f.getType)
       val flead = leadingOf(f)
       val (fanns, fannDropped) = annotationsOf(f, None)
@@ -1635,10 +1651,14 @@ object SpoonTir:
       val staticFrame = fieldFlags(f).isStatic
       if staticFrame then tpAccessible.prepend(Map.empty)
       val rhs =
-        try Option(f.getDefaultExpression).map { e =>
+        try
           val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
-          bt.seedVars(outerVars); bt.coercedExprOf(f.getType, e)
-        }
+          bt.seedVars(outerVars)
+          // …AT THE ARM, never inside `coerce` — `coerce` is not reached for a field with no
+          // initialiser, so a consult in there would report a hole at exactly the declarations
+          // where the difference does not apply (`slotConsults`' own note).
+          bt.slotConsultsAt(Option(f.getDefaultExpression).map(f.getType -> _).toList, originOf(f))
+          Option(f.getDefaultExpression).map(e => bt.coercedExprOf(f.getType, e))
         finally if staticFrame then tpAccessible.remove(0)
       // `deepComments` AFTER the initialiser translated: a comment inside `new Foo(/* why */ 3)`
       // has nowhere of its own in the TIR and hoists to the field.
@@ -2539,6 +2559,14 @@ object SpoonTir:
         Obligations.consult(JS.G(13), at)(Option.when(pairs.exists((tg, et) => arrayCovSlot(tg, et)))(()))
         Obligations.consult(JS.G(14), at)(Option.when(pairs.exists((tg, et) => boxingSlot(tg, et)))(()))
         Obligations.consult(JS.G(9),  at)(Option.when(pairs.exists((tg, et) => uncheckedSlot(tg, et)))(()))
+
+      /** [[slotConsults]] reached from the DECLARATION dispatch — `fieldDef`'s one caller.
+        *
+        * A forwarder and not a second statement of the rule: the slot rows are decided in one
+        * function whichever dispatch reached them, and this exists only because the three
+        * predicates read `castType`, which is a `BodyTranslator` member. */
+      def slotConsultsAt(slots: List[(CtTypeReference[?], CtExpression[?])], at: Origin)
+                        (using Obligations): Unit = slotConsults(slots, at)
 
       /** the (formal, argument) pairs of a call — the slot list [[slotConsults]] wants at the two
         * call dispatches. Empty where the arities disagree, which is exactly the case `coerceArgs`
