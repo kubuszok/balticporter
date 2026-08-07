@@ -506,13 +506,35 @@ object Tree:
     * line and column, and every synthesised node carries `Origin.synthetic`) nor object identity
     * (`StandardTraversal` rebuilds every node it walks) can answer that. */
   final case class Match(scrutinee: Term, cases: List[CaseDef], tpe: TypeRepr, origin: Origin,
+                         /** was this a switch EXPRESSION in the java (JLS 15.28), or a switch
+                           * STATEMENT (14.11)?
+                           *
+                           * One `Tree.Match` renders both, because a scala `match` IS an expression
+                           * — but the two java constructs BIND A `yield` differently and nothing
+                           * else in the node says which one this was. JLS 14.21 sends a `yield` to
+                           * the innermost enclosing switch EXPRESSION, and a switch STATEMENT
+                           * between it and its target is simply an intervening construct: javac
+                           * (22.0.2) runs `case 1 -> { switch (b) { case 2: yield 10; … } yield 20; }`
+                           * and answers 10. Read as "any `Tree.Match` re-binds a yield", the outer
+                           * arm got no value-carrying boundary and the inner statement switch
+                           * minted one at ITS own type — a `break(10)` at a `Label[Unit]`, which is
+                           * loudly uncompilable.
+                           *
+                           * `tpe` cannot stand in for this. A statement switch types as `Unit` and
+                           * a switch expression never does, so the pair happens to be
+                           * distinguishable today — but that is a coincidence of java's rule that a
+                           * switch expression has a value, not a fact this IR states, and a phase
+                           * that retypes a `Match` would silently decide a parsing question. */
+                         isExpr: Boolean = false,
                          id: MatchId = MatchId.fresh()) extends Term:
     // structural equality EXCLUDING `id`, exactly as `Try` does — every existing comparison keeps
-    // meaning and the token is used only where it is meant to be, as an explicit key.
+    // meaning and the token is used only where it is meant to be, as an explicit key. `isExpr` is
+    // IN, because two matches that bind a `yield` differently are not the same node.
     override def equals(o: Any): Boolean = o match
-      case m: Match => m.scrutinee == scrutinee && m.cases == cases && m.tpe == tpe && m.origin == origin
+      case m: Match => m.scrutinee == scrutinee && m.cases == cases && m.tpe == tpe &&
+                       m.origin == origin && m.isExpr == isExpr
       case _        => false
-    override def hashCode: Int = (scrutinee, cases, tpe, origin).hashCode
+    override def hashCode: Int = (scrutinee, cases, tpe, origin, isExpr).hashCode
   /** one case: `labels` are the constant patterns (empty ⇒ `default`/`case _`). */
   final case class CaseDef(labels: List[Term], guard: Option[Term], body: Term, isDefault: Boolean)
   /** a method value `qualifier :: method` (`Foo::bar`, `x::baz`, `Foo::new`). */

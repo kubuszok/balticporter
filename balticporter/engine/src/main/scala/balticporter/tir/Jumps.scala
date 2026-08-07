@@ -46,15 +46,22 @@ object Jumps:
     * Only a NON-TAIL yield is a [[Tree.Yield]] at all (the frontend peels the tail one into the
     * arm's value), so a `true` here means the arm needs a value-carrying `boundary` around it.
     *
-    * Stops at a nested `Tree.Match` for [[breaksOut]]'s reason and with a stronger guarantee behind
-    * it: java's `yield` binds to the innermost enclosing switch EXPRESSION, and JLS 15.28 forbids a
-    * `break`, `continue` or `return` whose target lies outside a switch expression — so a jump can
-    * never cross one of these boundaries in either direction, and the only construct that can
-    * re-bind a `yield` is another switch. Stops at a lambda, a `def` and a class body because a
-    * `yield` written there belongs to whatever switch expression stands INSIDE them. */
+    * Stops at a nested switch EXPRESSION and at NOTHING ELSE, which is JLS 14.21 read exactly:
+    * a `yield` binds to the innermost enclosing switch EXPRESSION, and a switch STATEMENT standing
+    * between one and its target is an intervening construct like any other. Stopping at every
+    * `Tree.Match` — which one node renders both java constructs as — was therefore wrong in the
+    * direction that emits code: javac (22.0.2) runs
+    * `case 1 -> { switch (b) { case 2: yield 10; default: break; } yield 20; }` and answers 10,
+    * while the port told the OUTER arm it held no yield and let the inner STATEMENT switch mint a
+    * boundary at its own `Unit` type, so `break(10)` had nothing of the right type to jump to.
+    *
+    * A jump cannot cross a switch expression in either direction — JLS 15.28 forbids a `break`,
+    * `continue` or `return` whose target lies outside one — so `isExpr` is the whole of the
+    * re-binding rule. Stops at a lambda, a `def` and a class body because a `yield` written there
+    * belongs to whatever switch expression stands INSIDE them. */
   def yieldsOut(t: Any): Boolean = t match
     case _: Tree.Yield                                            => true
-    case _: Tree.Match                                            => false // binds to the inner one
+    case m: Tree.Match if m.isExpr                                => false // binds to the inner one
     case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass |
          _: Tree.ClassDef                                         => false
     case xs: Iterable[?]                                          => xs.exists(yieldsOut)

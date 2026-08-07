@@ -210,6 +210,51 @@ class SwitchExpressionSpec extends PortSuite:
   }
 
   // ---------------------------------------------------------------------------------------------
+  // …and the construct that is NOT one of those: a `yield` through a nested switch STATEMENT.
+  //
+  // JLS 14.21 binds a `yield` to the innermost enclosing switch EXPRESSION, and a switch STATEMENT
+  // is not one — so this is ordinary java and javac (22.0.2) runs it: `f(1,2)` is 10, `f(1,3)` is
+  // 20, `f(5,2)` is 0. The `yield 10` completes the OUTER expression from two constructs down.
+  // ---------------------------------------------------------------------------------------------
+
+  private val throughStmt = port(
+    """package p;
+      |class T {
+      |  int f(int a, int b) {
+      |    return switch (a) {
+      |      case 1 -> {
+      |        switch (b) {
+      |          case 2: yield 10;
+      |          default: break;
+      |        }
+      |        yield 20;
+      |      }
+      |      default -> 0;
+      |    };
+      |  }
+      |}
+      |""".stripMargin)
+
+  test("a `yield` through a nested switch STATEMENT targets the OUTER expression") {
+    // Both halves of the defect are in one emission. `yieldsOut` stopped at any `Tree.Match`, so
+    // the OUTER arm was told it held no yield and got no value-carrying boundary; and `matchStr`
+    // minted one for the INNER match anyway, at that match's own type — `Label[Unit]` for a
+    // statement switch — so the emitted `break(10)` had nothing of the right type to jump to.
+    // A `Label[scala.Int]`, opened by the outer arm, is the only boundary in this program.
+    assert(clue(throughStmt.out).contains("scala.util.boundary.Label[scala.Int]"), throughStmt.out)
+    assert(!clue(throughStmt.out).contains("scala.util.boundary.Label[scala.Unit]"), throughStmt.out)
+    assertEquals(clue(throughStmt.out).sliding("scala.util.boundary {".length)
+      .count(_ == "scala.util.boundary {"), 1, throughStmt.out)
+    assert(clue(throughStmt.out).contains("scala.util.boundary.break(10)(using yield$1)"), throughStmt.out)
+  }
+
+  test("…and the statement switch inside it keeps its own fall-out arm and its own `break`") {
+    // The inner switch is still a statement switch: `default: break;` terminates its case, and
+    // nothing about the outer expression changes what it is.
+    assertEquals(clue(throughStmt.out).sliding(" match {".length).count(_ == " match {"), 2, throughStmt.out)
+  }
+
+  // ---------------------------------------------------------------------------------------------
   // THE STATEMENT FORM, arrow-style — Spoon's `CtYieldStatement` wrapper is NOT java
   // ---------------------------------------------------------------------------------------------
 
@@ -267,6 +312,27 @@ class SwitchExpressionSpec extends PortSuite:
     // catalog row records as the one cell where the two languages are not identical.
     assertEquals(exhaustiveShape("a"), 1)
     intercept[MatchError](exhaustiveShape("z"))
+  }
+
+  /** the emitter's rendering of a `yield` that leaves the outer expression from inside a nested
+    * switch STATEMENT — copied from the emitted text, not paraphrased. */
+  private def throughStmtShape(a: Int, b: Int): Int =
+    a match
+      case 1 => scala.util.boundary { (yield$1: scala.util.boundary.Label[scala.Int]) ?=>
+        b match
+          case 2 => scala.util.boundary.break(10)(using yield$1)
+          case _ => ()
+        20
+      }
+      case _ => 0
+
+  test("PROBE: a break at the OUTER label really leaves the inner match — javac's own answers") {
+    // Measured against javac 22.0.2 on the same java: 10, 20, 0. `boundary.break` is an exception
+    // throw, so it passes straight through the enclosing `match` with nothing to catch it — which
+    // is what makes ONE boundary, at the outer arm, the whole translation.
+    assertEquals(throughStmtShape(1, 2), 10)
+    assertEquals(throughStmtShape(1, 3), 20)
+    assertEquals(throughStmtShape(5, 2), 0)
   }
 
   test("PROBE: a case GUARD is evaluated after the pattern matches, and falls through on false") {

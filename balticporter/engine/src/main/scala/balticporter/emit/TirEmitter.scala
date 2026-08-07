@@ -3099,7 +3099,8 @@ final class TirEmitter(
     case l: Tree.Labeled => labelNeedsBoundary(l) || interposes(l.stmt)
     case m: Tree.Match   =>
       interposes(m.scrutinee) ||
-        m.cases.exists(c => caseNeedsBoundary(c.body) || caseYieldsOut(c.body) || interposes(c.body))
+        m.cases.exists(c => caseNeedsBoundary(c.body) || (m.isExpr && caseYieldsOut(c.body)) ||
+                            interposes(c.body))
     case _: Tree.While | _: Tree.DoWhile | _: Tree.For | _: Tree.ForEach     => false
     case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass | _: Tree.ClassDef => false
     case xs: Iterable[?] => xs.exists(interposes)
@@ -4539,7 +4540,11 @@ final class TirEmitter(
       // `yield` outside one), so the arm needs at most one of them — and the `Label`'s type is what
       // makes them two arms rather than one: a `break` carries `Unit` and a `yield` carries the
       // switch expression's own type.
-      if caseYieldsOut(c.body) then
+      // …and only a switch EXPRESSION opens one. `caseYieldsOut` now descends through a nested
+      // switch STATEMENT (JLS 14.21 re-binds a `yield` at an EXPRESSION and nowhere else), so a
+      // statement switch can perfectly well hold a `yield` that belongs to an arm further out —
+      // and minting a `Label` here would type it at this match's `Unit` and steal the jump.
+      if m.isExpr && caseYieldsOut(c.body) then
         labelSeq += 1
         val n = s"yield$$$labelSeq"
         val b = inYield(Some(n))(term(c.body, i + 1))

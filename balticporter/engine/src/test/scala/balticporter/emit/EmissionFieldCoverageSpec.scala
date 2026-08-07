@@ -593,6 +593,20 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
         "`SwitchNullCheck` can ask the emitter whether it guarded THIS switch across a traversal " +
         "that rebuilds every node")),
 
+    // …and a SECOND host for `isExpr`, because the field moves text only where the arm holds a
+    // non-tail `yield`: java's switch EXPRESSION opens a value-carrying `boundary` for one and its
+    // switch STATEMENT does not (JLS 14.21 re-binds a `yield` at an expression and nowhere else),
+    // so the arms above — which hold no yield at all — render identically either way. The
+    // group-coverage rule this file states is what makes a second probe the right shape.
+    probe(Tree.Match(refA, List(Tree.CaseDef(Nil, None,
+        Tree.Block(List(Tree.Yield(iLit(1), tInt, O)), iLit(0), tInt, O), isDefault = true)),
+        tInt, O, isExpr = true),
+      (x: Tree.Match) => hostTerm(Tree.Block(List(x), unitLit, tUnit, O)))(
+      "isExpr" -> Tree.Match(refA, List(Tree.CaseDef(Nil, None,
+        Tree.Block(List(Tree.Yield(iLit(1), tInt, O)), iLit(0), tInt, O), isDefault = true)),
+        tInt, O, isExpr = false),
+    )(),
+
     probe(Tree.CaseDef(List(iLit(1)), Some(Tree.Literal(Constant.BoolC(true), tBool, O)),
       Tree.Assign(refB, iLit(1), tUnit, O), isDefault = false),
       (x: Tree.CaseDef) => hostTerm(Tree.Block(List(
@@ -615,7 +629,7 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     probe(Tree.Yield(iLit(1), tInt, O),
       (x: Tree.Yield) => hostTerm(Tree.Block(List(
         Tree.Match(refA, List(Tree.CaseDef(Nil, None,
-          Tree.Block(List(x), iLit(0), tInt, O), isDefault = true)), tInt, O)), unitLit, tUnit, O)))(
+          Tree.Block(List(x), iLit(0), tInt, O), isDefault = true)), tInt, O, isExpr = true)), unitLit, tUnit, O)))(
       "value" -> Tree.Yield(iLit(2), tInt, O),
     )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
 

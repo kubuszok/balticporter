@@ -3568,7 +3568,8 @@ object SpoonTir:
         Obligations.consult(JS.S(9), originOf(sw))(Some(()))
         val cases = sw.getCases.asScala.toList
         val selT  = try Option(sw.getSelector.getType).map(tpe).getOrElse(NoType) catch { case _: Throwable => NoType }
-        Tree.Match(expr(sw.getSelector), switchArms(cases, sw, selT, resT, isExpr = true), resT, originOf(sw))
+        Tree.Match(expr(sw.getSelector), switchArms(cases, sw, selT, resT, isExpr = true), resT, originOf(sw),
+                   isExpr = true)
 
       /** the statements of one `case`, with Spoon's ARROW normalisation undone where java has no
         * such construct.

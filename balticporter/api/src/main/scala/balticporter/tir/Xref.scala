@@ -157,7 +157,7 @@ object Xref:
         walkTerm(body)
         catches.foreach { c => walkValDef(c.param); walkTerm(c.body) }
         fin.foreach(walkTerm)
-      case Tree.Match(scrut, cases, _, _, _) =>
+      case Tree.Match(scrut, cases, _, _, _, _) =>
         walkTerm(scrut)
         cases.foreach { c => c.labels.foreach(walkTerm); c.guard.foreach(walkTerm); walkTerm(c.body) }
       case mr @ Tree.MethodRef(qual, method, _, _) =>
