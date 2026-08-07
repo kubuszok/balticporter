@@ -16,11 +16,11 @@ markers	0
 omissions	1
 policy	0
 port-map	0
-portability(all)	52
-portability(emitted)	52
+portability(all)	56
+portability(emitted)	56
 portability(injected)	0
 porter-notes	0
-remediation	11
+remediation	12
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0

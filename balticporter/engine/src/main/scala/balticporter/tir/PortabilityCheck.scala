@@ -73,8 +73,9 @@ object PortabilityCheck:
   object Rule:
     /** both non-JVM backends — the answer for a rule whose two platforms agree, which is most of
       * them, and the value this list carried implicitly when it had no per-platform half. */
-    val OffJvm: Set[Platform] = Set(Platform.ScalaJs, Platform.ScalaNative)
-    val JsOnly: Set[Platform] = Set(Platform.ScalaJs)
+    val OffJvm: Set[Platform]     = Set(Platform.ScalaJs, Platform.ScalaNative)
+    val JsOnly: Set[Platform]     = Set(Platform.ScalaJs)
+    val NativeOnly: Set[Platform] = Set(Platform.ScalaNative)
 
   final case class Violation(api: String, why: String, origin: Origin, kind: UsageKind, enclosing: SymId):
     def render: String = s"$api — $why  (${origin.javaPath}:${origin.line})"
@@ -83,6 +84,7 @@ object PortabilityCheck:
         CheckReport.relativise(origin.javaPath), origin.line, s"$kind — $why")
 
   private def p(n: Int) = Some(DiffId(balticporter.catalog.Area.P, n))
+  private def l(n: Int) = Some(DiffId(balticporter.catalog.Area.L, n))
 
   /** APIs a non-JVM backend cannot provide as they stand, each with the backends it is about.
     *
@@ -105,6 +107,21 @@ object PortabilityCheck:
     // port was being told to remove seven categories of API that work on both of its targets, which
     // is the over-conservative rule §1's balance section warns about, and the fix is the target set
     // rather than a second list.
+    // …and the MEMBER-LEVEL exceptions to two of them, which is why they come FIRST: a re-scoped
+    // prefix says "Native is fine here" and Native is not fine at every member under it. `find`
+    // takes the first match, so the specific rule has to precede the family or its `why` never
+    // reaches a reader targeting both.
+    Rule("java.net.IDN", "the class exists on both backends and is unusable on either without " +
+      "ICU-like tables — a hand-written RFC 3492 Punycode replacement is what a reference port " +
+      "shipped, which is direct evidence the JDK class is not viable cross-platform",
+      at = p(14)),
+    Rule("java.nio.channels.SocketChannel", "verified absent from the Native javalib, which has " +
+      "real FileChannel/FileLock — this is the half of java.nio.channels the family prefix gets " +
+      "WRONG for Native, and it does not exist on Scala.js at all",
+      at = p(8)),
+    Rule("java.nio.channels.ServerSocketChannel", "the same split as SocketChannel: Native's " +
+      "java.nio.channels is FILE channels only",
+      at = p(9)),
     Rule("java.net.", "networking is JVM-only on Scala.js — a browser has no raw sockets, and " +
       "fetch/XHR is the JS-native equivalent; Scala Native implements the family, IPv6 included",
       on = Rule.JsOnly, at = p(11)),
@@ -150,6 +167,15 @@ object PortabilityCheck:
       "properties table, never the live host's — it works, with values the build decides, which is a " +
       "caveat to read rather than a call to remove; Scala Native has the real thing",
       exactMember = true, on = Rule.JsOnly, at = p(33)),
+    // …and its SIBLING, which had no rule at all and is the OPPOSITE shape. The one member the old
+    // "system properties are JVM-only" sentence was true of was the one nothing checked: Scala.js's
+    // `getenv()` is unconditionally an empty map and `getenv(name)` unconditionally null, while
+    // Scala Native reads the real environment. A read that silently returns nothing is exactly the
+    // §4.4 class of defect — no exception, no count, a plausible wrong answer.
+    Rule("java.lang.System#getenv", "Scala.js returns an empty map from getenv() and null from " +
+      "getenv(name), always and without failing — so a read silently answers 'not set' rather than " +
+      "throwing; Scala Native reads the real environment. The OPPOSITE shape from getProperty",
+      exactMember = true, on = Rule.JsOnly, at = p(34)),
     Rule("java.util.zip.", "no zlib in a browser without a JS dependency; Scala Native implements " +
       "the family and recently bug-fixed it for UTF-8",
       on = Rule.JsOnly, at = p(28)),
@@ -162,9 +188,21 @@ object PortabilityCheck:
     // there is no compile error, no other check count and no finding. This rule is not the fix —
     // the port has to ship the file by hand, and a rename moves both its NAME and its CONTENTS —
     // but it is what makes the dependence a NUMBER rather than a thing someone has to remember.
-    Rule("java.util.ServiceLoader", "reflective provider lookup is JVM-only, AND it reads a " +
-      "META-INF/services file no phase emits or renames — absent, it finds zero providers and " +
-      "the registration silently does nothing", at = p(25)),
+    // …and the two platforms need DIFFERENT verdicts, which one rule with one `why` was hiding: a
+    // NATIVE-only port has a cheaper fix available than a JS-targeting one, and could not learn it
+    // from a sentence that said "JVM-only". The JS rule is first because it is the stricter of the
+    // two — a port targeting both is told the thing that stops it dead.
+    Rule("java.util.ServiceLoader", "the class does not exist in the Scala.js javalib at all, so " +
+      "this is a COMPILE-TIME resolution failure there rather than a linker one — a Scala.js port " +
+      "must not port ServiceLoader usage, full stop",
+      on = Rule.JsOnly, at = p(25)),
+    Rule("java.util.ServiceLoader", "Scala Native has it FOR REAL, resolved at LINK time: the " +
+      "toolchain enlists every provider reachable from an entrypoint, discovering them from the " +
+      "META-INF/services resources of dependencies, with nativeConfig.withServiceProviders as the " +
+      "explicit override and a per-provider link-time status. So this is a MAP path and not a " +
+      "refusal — but it is gated on a resource file this pipeline emits nothing for (ENGINE-LIMITS " +
+      "P5), and a package rename moves both that file's NAME and its CONTENTS",
+      on = Rule.NativeOnly, at = p(25)),
     Rule("javax.", "the javax.* stack is JVM-only", at = p(29)),
     Rule("java.lang.Class#forName", "runtime class lookup by name is JVM-only", exactMember = true, at = p(24)),
     Rule("java.lang.Class#newInstance", "reflective instantiation is JVM-only", exactMember = true, at = p(24)),
@@ -185,6 +223,37 @@ object PortabilityCheck:
     Rule("java.lang.Class#getDeclaredMethod", "reflective member access is JVM-only", exactMember = true, at = p(24)),
     Rule("java.lang.Class#getField", "reflective member access is JVM-only", exactMember = true, at = p(24)),
     Rule("java.lang.Class#getMethod", "reflective member access is JVM-only", exactMember = true, at = p(24)),
+    // ---- TIME, TEXT AND LOCALE — the refusals. The whole area had ZERO rules. ----
+    //
+    // A survey of it found twenty rows and not one of them was checked, so a library formatting a
+    // date or collating a string passed this check clean while being unbuildable on either non-JVM
+    // backend. Most of the area is a DEPENDENCY rather than a refusal (`scala-java-time`,
+    // `scala-java-locales`), and those rows live on the `dependency-coverage` lane — conflating the
+    // two makes the finding unanswerable, because the reader is told to remove a call that a
+    // one-line `libraryDependencies` entry makes correct. What is HERE is the residue: the classes
+    // for which no implementation exists in any surveyed source tree, platform javalib and
+    // third-party artifact alike.
+    Rule("java.text.MessageFormat", "no implementation anywhere surveyed — not in either core " +
+      "javalib, not in the locales artifact. The only path is a hand-written shim over the format " +
+      "subset one library actually uses, which is §1(c) knowledge about that library",
+      at = l(68)),
+    Rule("java.text.Collator", "locale-aware collation has no cross-platform Scala answer today; " +
+      "both backends leave you lexicographic-by-codepoint ordering and nothing else",
+      at = l(69)),
+    Rule("java.text.BreakIterator", "no implementation in any surveyed source tree — the same " +
+      "answer as Collator, for the same reason",
+      at = l(70)),
+    Rule("java.util.Calendar", "no cross-platform implementation exists; java.time is the " +
+      "replacement and it is a DEPENDENCY rather than a rewrite of this class",
+      at = l(72)),
+    Rule("java.util.GregorianCalendar", "the same answer as its superclass — no cross-platform " +
+      "implementation exists",
+      at = l(72)),
+    Rule("java.util.TimeZone", "absent from both core javalibs AND from the locales artifact, whose " +
+      "java/util tree holds Currency alone. `java.time.ZoneId` is the cross-platform replacement " +
+      "and it is not a TimeZone shim: rewrite the CALL SITE where it can be rewritten, and shim " +
+      "only the surface a caller strictly needs",
+      at = l(71)),
   )
 
   /** THE §1(b) PARAMETER APPLIED: the rules any of `targets` asks about.

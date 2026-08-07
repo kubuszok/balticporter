@@ -19,11 +19,11 @@ nullability-boundary	102
 omissions	66
 policy	2
 port-map	0
-portability(all)	151
-portability(emitted)	151
+portability(all)	153
+portability(emitted)	153
 portability(injected)	2
 porter-notes	0
-remediation	29
+remediation	30
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0

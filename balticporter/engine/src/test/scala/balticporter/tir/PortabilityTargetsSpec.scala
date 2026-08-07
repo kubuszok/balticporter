@@ -39,10 +39,11 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     assertEquals(PortabilityCheck.rulesFor(Set(Platform.Jvm)), Nil)
   }
 
-  test("a JVM+Native port loses EXACTLY the eight re-scoped rules, and nothing else") {
+  test("a JVM+Native port loses EXACTLY the JS-only rules, and nothing else") {
     val jvmNative = Set(Platform.Jvm, Platform.ScalaNative)
     val dropped   = PortabilityCheck.all.filterNot(_.asks(jvmNative)).map(_.api).sorted
     assertEquals(dropped, List(
+      // the eight re-scoped families…
       "java.lang.ProcessBuilder",
       "java.lang.System#getProperty",
       "java.lang.Thread",
@@ -50,18 +51,78 @@ class PortabilityTargetsSpec extends munit.FunSuite:
       "java.nio.channels.",
       "java.nio.file.",
       "java.util.concurrent.",
+      // …plus the two the SPLITS put on the JS side: `getenv` (empty on JS, real on Native) and
+      // the JS half of ServiceLoader, whose Native half stays with a different `why`.
+      "java.lang.System#getenv",
+      "java.util.ServiceLoader",
       "java.util.zip.",
-    ))
+    ).sorted)
     // the negative half: everything that stays is a rule Scala Native genuinely cannot answer —
-    // reflection, class loading, javax, ServiceLoader, and the JUnit/Hamcrest test vocabulary.
+    // reflection, class loading, javax, the JUnit/Hamcrest test vocabulary, the socket channels its
+    // FILE-channel implementation does not cover, and the whole text/locale residue.
     val kept = PortabilityCheck.rulesFor(jvmNative).map(_.api)
     assert(kept.contains("java.lang.reflect."))
-    assert(kept.contains("java.util.ServiceLoader"))
     assert(kept.contains("org.junit."))
+    assert(kept.contains("java.nio.channels.SocketChannel"))
+    assert(kept.contains("java.text.Collator"))
+    // …and ServiceLoader stays too, as the OTHER rule — the one that says Native has it for real,
+    // link-time-resolved, gated on a resource file. One rule with one `why` hid exactly that.
+    val loaders = PortabilityCheck.rulesFor(jvmNative).filter(_.api == "java.util.ServiceLoader")
+    assertEquals(loaders.size, 1)
+    assert(clue(loaders.head.why).contains("LINK time"))
   }
 
-  test("a Scala.js-only port keeps all of them — the re-scoping is about NATIVE") {
-    assertEquals(PortabilityCheck.rulesFor(Set(Platform.ScalaJs)).size, PortabilityCheck.all.size)
+  test("a Scala.js-only port loses only the NATIVE-only rule — the ServiceLoader split's other half") {
+    val js      = Set(Platform.ScalaJs)
+    val dropped = PortabilityCheck.all.filterNot(_.asks(js))
+    assertEquals(dropped.map(_.api), List("java.util.ServiceLoader"))
+    assert(clue(dropped.head.why).contains("LINK time"))
+    // …and the JS half is the one it keeps, which is the stricter of the two.
+    val kept = PortabilityCheck.rulesFor(js).filter(_.api == "java.util.ServiceLoader")
+    assertEquals(kept.size, 1)
+    assert(clue(kept.head.why).contains("does not exist"))
+  }
+
+  test("a rule that SPLITS a family precedes it, or its `why` never reaches a reader") {
+    // `find` takes the first match. A member-level exception listed AFTER its family prefix is a
+    // rule that can only fire for a port targeting the one platform the prefix was re-scoped away
+    // from — which is not what "Native's channels are FILE channels only" is there to say.
+    def idx(api: String) = PortabilityCheck.all.indexWhere(_.api == api)
+    assert(idx("java.nio.channels.SocketChannel") < idx("java.nio.channels."))
+    assert(idx("java.nio.channels.ServerSocketChannel") < idx("java.nio.channels."))
+    assert(idx("java.net.IDN") < idx("java.net."))
+    // and the JS half of the ServiceLoader split precedes the Native half, so a port targeting
+    // both is told the thing that stops it dead rather than the thing that merely needs a resource.
+    val loaders = PortabilityCheck.all.zipWithIndex.filter(_._1.api == "java.util.ServiceLoader")
+    assertEquals(loaders.size, 2)
+    assertEquals(loaders.head._1.on, PortabilityCheck.Rule.JsOnly)
+  }
+
+  test("the rules the RESEARCH found missing are all present, each citing its row") {
+    val missing = List(
+      "java.lang.System#getenv", "java.nio.channels.SocketChannel", "java.nio.channels.ServerSocketChannel",
+      "java.net.IDN", "java.text.MessageFormat", "java.text.Collator", "java.text.BreakIterator",
+      "java.util.Calendar", "java.util.GregorianCalendar", "java.util.TimeZone",
+    ).filterNot(a => PortabilityCheck.all.exists(_.api == a))
+    assertEquals(missing, Nil, missing.mkString(", "))
+    // every one of them cites a row — the availability claim and its version anchor live there,
+    // never in the `why`.
+    val uncited = PortabilityCheck.all.filter(r => r.api.startsWith("java.text.") || r.api == "java.util.Calendar")
+      .filter(_.at.isEmpty).map(_.api)
+    assertEquals(uncited, Nil)
+  }
+
+  test("the text/locale rules do NOT reach the classes an ARTIFACT supplies") {
+    // The area's twenty rows are mostly a DEPENDENCY (`scala-java-time`, `scala-java-locales`), and
+    // a dependency reported as an unportability is a finding the reader cannot act on: they are
+    // told to remove a call that a one-line `libraryDependencies` entry makes correct. So the
+    // refusals here are the RESIDUE — the classes no surveyed source tree implements — and
+    // `java.time`, `Locale`, `DecimalFormat` and `SimpleDateFormat` must NOT be on this list.
+    val overreach = List("java.time.Instant", "java.util.Locale", "java.text.DecimalFormat",
+                         "java.text.SimpleDateFormat", "java.util.Currency", "java.util.Date",
+                         "java.nio.charset.StandardCharsets", "java.util.Formatter")
+      .filter(fqn => PortabilityCheck.all.exists(r => !r.exactMember && PortabilityCheck.names(r, fqn)))
+    assertEquals(overreach, Nil, s"reported as unportable, but supplied by an artifact: $overreach")
   }
 
   test("no rule claims a platform its own catalog row calls Keep") {

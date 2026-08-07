@@ -4641,6 +4641,18 @@ sentence was true of was the one nothing checked.
 `.` dodged it by accident, which is exactly why it survived — the one rule that did not end in a
 separator was the one that was wrong.
 
+**And the rules that were not there at all are the other half of it.** Re-scoping is what a wrong
+rule needs; a MISSING rule reports clean, which is P2's own lesson met a second time. The survey
+found the whole **time/text/locale area with ZERO rules** — a library formatting a date or collating
+a string passed this check while being unbuildable on either non-JVM backend — plus four named gaps:
+`java.security.MessageDigest`/`SecureRandom`, `java.lang.ref.WeakReference`/`ReferenceQueue`,
+`System#getenv` (the one member the "system properties are JVM-only" sentence was actually true of,
+and the one nothing checked), and the SOCKET channels a re-scoped `java.nio.channels.` now tells a
+Native port are fine. **Most of that area is a DEPENDENCY and not a refusal** — see the
+`dependency-coverage` lane — and only the residue no surveyed source tree implements
+(`MessageFormat`, `Collator`, `BreakIterator`, `Calendar`/`GregorianCalendar`, `TimeZone`) is a
+portability rule.
+
 *Fix kind: (a) engine for the matcher and the `why` strings; (b) for the rule set, whose parameter is
 `PortManifest.targets`. **The DEFAULT is the whole of the risk**: `Set.empty` or `Set(Jvm)` would
 have emptied the list on all fifteen ports at once and collapsed `portability(all|emitted|injected)`
@@ -4673,6 +4685,29 @@ Two halves, and only the first is closed:
   config key names one, no lane copies one. The milestone-1 answer is a file in the port's
   hand-written `src/main/resources` (§5.5 — `src/` is the hand-written half) plus a `--resource-dir`
   on the lane's runner, which is what liqp ships.
+
+**And the two non-JVM backends are NOT equally reachable, which one rule with one `why` was hiding.**
+This entry, and the rule it describes, said "JVM-only" of both. That is right for Scala.js and wrong
+for Scala Native, and the difference decides how expensive the fix is for a given port:
+
+- **Scala.js: `ServiceLoader` does not exist at the source level.** There is no `ServiceLoader.scala`
+  in its javalib, so a reference is a COMPILE-TIME resolution failure against the real Scala.js
+  classpath — earlier and stronger than the reflection failure mode P1 is about. A JS-targeting port
+  must not port `ServiceLoader` usage at all;
+- **Scala Native: it is REAL, and resolved at LINK time.** The toolchain enlists every provider of a
+  loaded service reachable from an entrypoint; discovery is two-tier — automatic from the
+  `META-INF/services/<fqn>` files in dependency RESOURCES, plus an explicit
+  `nativeConfig.withServiceProviders(Map(service -> Seq(impl, …)))` — and the linker reports one of
+  five statuses per provider (`Loaded`, `Available`, `UnknownConfigEntry`, `NotFoundOnClasspath`,
+  `NoProviders`), so a missing or misnamed provider is a link-time diagnostic rather than a silence.
+
+So the Native path is a MAP gated on exactly the resource file this entry's second half names, and
+the rule is now two rules with two `why` strings (the JS one first, being the stricter). What does
+NOT change is the second half's difficulty: the file's NAME is the renamed interface FQN and its
+CONTENTS are renamed provider FQNs, so it must translate through `PackageRenameTransform.renamed`.
+
+*The reference ports give no model: ssg dropped liqp's whole SPI package, so **no reference port
+ships a working cross-platform `ServiceLoader` seam** and its redesign is a documented non-model.*
 
 **Do not underestimate the second half by looking at the first.** A carried services file is not a
 copy: under a package rename the file's NAME is the renamed interface FQN and its CONTENTS are
