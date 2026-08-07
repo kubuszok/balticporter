@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
 import balticporter.tir.{Decision, DecisionLog, Pipeline, Program, RuleScope}
-import balticporter.transform.{BeanExposureCheck, PublicFieldAccessorTransform}
+import balticporter.transform.{BeanExposureCheck, CollectionsTransform, PublicFieldAccessorTransform}
 
 /** A JAVA `public` FIELD IS NOT PUBLIC ON THE JVM ONCE IT IS SCALA — `ENGINE-LIMITS.md` K21 face 2.
   *
@@ -20,9 +20,10 @@ import balticporter.transform.{BeanExposureCheck, PublicFieldAccessorTransform}
   *      does not invent one;
   *   3. out of scope nothing is emitted at all (an empty scope is the no-op) and the type is
   *      COUNTED instead, so a port can find the classes it should be naming;
-  *   4. the getter BRIDGES an `Object` field through the run-time egress helper. This is the half a
-  *      call-site rule cannot reach: a framework calls BACK IN through the accessor, and what it
-  *      gets is whatever the field holds;
+  *   4. the getter BRIDGES through the run-time egress helper, at `java.lang.Object`, for EVERY
+  *      field. This is the half a call-site rule cannot reach: a framework calls BACK IN through
+  *      the accessor, and what it gets is whatever the field holds — and a field whose type a
+  *      retyping phase moved is exactly the case the old `Object`-only bridge missed;
   *   5. an ANONYMOUS class is reached. It is the usual shape here — `new Inspectable() { public
   *      Date a; }` — and it lives inside a TERM, so a phase that only overrode the class hook would
   *      do nothing on the measured case with no error anywhere;
@@ -60,7 +61,8 @@ class PublicFieldAccessorSpec extends PortSuite:
     val (_, _, _, out) = ported(Shape)
     assert(clue(out).contains("def getA(): java.lang.Object"))
     assert(out.contains("def setA(v: java.lang.Object)"))
-    assert(out.contains("def getB(): java.lang.String"))
+    assert(out.contains("def getB(): java.lang.Object"),
+           "the GETTER's type is the phase's own, never the field's — see test 4")
     assert(!out.contains("def setB("), "java had no setter for a `final` field and neither has this")
   }
 
@@ -98,13 +100,39 @@ class PublicFieldAccessorSpec extends PortSuite:
   // 4. the bridge, which is the half a call-site rule cannot reach
   // -------------------------------------------------------------------------
 
-  test("an `Object` field's getter goes through the RUN-TIME egress bridge") {
+  test("EVERY field's getter goes through the RUN-TIME egress bridge, at `java.lang.Object`") {
     val (_, _, _, out) = ported(Shape)
     assert(clue(out).contains(
       "def getA(): java.lang.Object = balticporter.runtime.JavaCollections.Reified.toJavaValue(this.a)"),
       "a framework calls back IN through this accessor, one hop past the argument bridge")
-    assert(out.contains("def getB(): java.lang.String = this.b"),
-           "and a `String` cannot be a representation this engine introduced, so nothing is added")
+    assert(out.contains(
+      "def getB(): java.lang.Object = balticporter.runtime.JavaCollections.Reified.toJavaValue(this.b)"),
+      "…and a field typed as anything else takes the SAME accessor: java declared a FIELD and not a " +
+      "getter, so this signature is the phase's own and its only reader is the framework, reading " +
+      "the RUNTIME value. `toJavaValue` is the identity on a `String`, so this is behaviour-" +
+      "identical where the old `Object`-only bridge was right — and correct where it was not, at a " +
+      "field whose type a retyping phase moved (§4.56 forbids this phase asking which)")
+  }
+
+  test("…including a field whose type a RETYPING phase moved — the case the old rule missed") {
+    // K21 face 2's second half. `public Map<String,String> some` is a `scala.collection.mutable.Map`
+    // by the time this phase sees it, so the getter handed jackson the map's INTERNALS, exactly as
+    // K21 face 1's argument seam did one hop earlier. Asserted through the SETTER as well, because
+    // the two types are now deliberately different and a reader has to be able to see which is which.
+    val ph  = new PublicFieldAccessorTransform(RuleScope.Everywhere())
+    val src =
+      """package demo;
+        |import java.util.Map;
+        |class T { public Map<String,String> some; }
+        |""".stripMargin
+    val (after, notes) =
+      Pipeline.runTraced(SpoonTir.fromSource(src), List(new CollectionsTransform(), ph))
+    val out = new TirEmitter(after, notes = notes).emit
+    assert(clue(out).contains("var some: scala.collection.mutable.Map"),
+           "the premise: the retyping really did move this field, so the test is not vacuous")
+    assert(out.contains(
+      "def getSome(): java.lang.Object = balticporter.runtime.JavaCollections.Reified.toJavaValue(this.some)"),
+      "…and the accessor a bean reader sees is java's representation of it, not the scala map")
   }
 
   // -------------------------------------------------------------------------
@@ -120,7 +148,7 @@ class PublicFieldAccessorSpec extends PortSuite:
         |  }
         |}
         |""".stripMargin)
-    assert(clue(out).contains("def getTag(): java.lang.String"),
+    assert(clue(out).contains("def getTag(): java.lang.Object"),
            "an anonymous class lives in a TERM, and a walk over class bodies finds none of them")
   }
 
@@ -179,7 +207,7 @@ class PublicFieldAccessorSpec extends PortSuite:
         |""".stripMargin)
     assert(!clue(out).contains("getEMail"),
            "an accessor no bean reader will look for is worse than none — it reads as coverage")
-    assert(out.contains("def getName(): java.lang.String"),
+    assert(out.contains("def getName(): java.lang.Object"),
            "and the field beside it is unaffected: this is a refusal about ONE name")
     val fs = rows(ph, after).filter(_.issue == BeanExposureCheck.Issue.NameUnreachable)
     assertEquals(clue(fs).size, 1)

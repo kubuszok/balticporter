@@ -81,10 +81,10 @@ ssg.liquid.TemplateTest	renderVarArgsTest	pass
 ssg.liquid.TemplateTest	renderVarArgsTestInvalidKey2	pass
 ssg.liquid.TemplateTest	testCustomTagMissingErrorReporting	pass
 ssg.liquid.TemplateTest	testDeepData	pass
-ssg.liquid.TemplateTest	testDeepInspectable	fail
+ssg.liquid.TemplateTest	testDeepInspectable	pass
 ssg.liquid.TemplateTest	testInlineComment	pass
 ssg.liquid.TemplateTest	testRenderDateType	pass
-ssg.liquid.TemplateTest	testRenderInspectable	fail
+ssg.liquid.TemplateTest	testRenderInspectable	pass
 ssg.liquid.TemplateTest	testRenderInspectableDateType	pass
 ssg.liquid.TemplateTest	testUseVariableAndDividedByFilter	pass
 ssg.liquid.TemplateTest	testUseVariableAndTimesFilter	pass

@@ -11,8 +11,8 @@ class-init-trigger	0
 collection-boundary	22
 collection-closure	0
 collection-retarget	0
-dependency-coverage	146
-dependency-coverage(all)	249
+dependency-coverage	134
+dependency-coverage(all)	235
 jdk-surface	0
 manifest	0
 markers	0

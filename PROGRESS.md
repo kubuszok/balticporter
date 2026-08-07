@@ -95,7 +95,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
-| `ssg-liquid-test` | liqp `src/test/java` | 105 → **101** (4 excluded, §10.5.4) | **575** emitted, **575 run — 574 passing, 1 failing** (§10.5.5; the one is K18's counted refusal and stays) | **0** |
+| `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 633 passing, 4 failing** (§10.5.4's classification: 3 are T16's dropped jackson annotation, 1 is K18's counted refusal) | **0** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2001,7 +2001,7 @@ written, 987 members in the source map. `just liqp-measure`.
 | `jdk-surface` | **19 -> 10 -> 9** — `anyMatch`/`sortNatural`/`ConcurrentHashMap` stopped reading as this port's wall once the tables named them |
 | `collection-boundary` (main) | **6 -> 14 -> 13 -> 8 -> 18 -> 14 -> 15** — the residue nothing could count before (K15). It rose when the seam was first counted, fell to 12 when the frontend made the formals readable (two slots BRIDGED, two re-classified from "cannot verify" to what they actually are), rose by the one `InexpressibleParent` refusal K5.7 counts, and fell by five when the OWNED-callee bridge stopped being switched off by a shim this library never names (K2.5). It then ROSE to 18 and fell to 14 in one step, because the aliasing refusal became a TRANSLATION: twelve `Arrays.asList(arr)` sites stopped being untranslated calls the check cannot see and became boundaries it can, four of which the same change closed. The fifteenth is K5.7's other half: the member a RETAINED PARENT declares and the target cannot carry, now emitted as the interface's own documented refusal and counted at the slot. It then fell to **14** when K20's carrier turned the `convertValue(Object, TypeReference)` refusal into a bridge, and rose to **25** when K21 face 1 gave the check its `OpaqueEgress` lane — ELEVEN rows, one per external callee with a `java.lang.Object` formal a value this port may have retyped reaches. That is a REVIEW LIST and not a residue: it is where a port reads its `reflectiveSinks` candidates off, and on its first run it named `JsonGenerator#writeObject`, a jackson sink `main.conf` still does not declare |
 | `omissions` | **6 -> 4 -> 1** — `PlainBigDecimal`'s two `super(args)` are no longer dropped (with the external constructor's signature readable the funnel reaches K5.5's synthesised primary), and `LiquidException`'s three reach a primary synthesised at the JDK throwable's widest overload (C3) |
-| tests | 639 `@Test` upstream, **575 emitted, 575 RUN — 161 -> 357 -> 364 -> 392 -> 552 -> 554 -> 559 -> 567 -> 572 -> 574 passing, 414 -> 218 -> 211 -> 183 -> 23 -> 21 -> 16 -> 8 -> 3 -> 1 failing** (§10.5.5; the last five steps are K20's carrier, K21 face 1's egress bridge, K21 face 2's bean accessors, K22's class-initialisation triggers and K17 face 3's cast-expression type, one measured commit each). **574/575 is the floor**: the last row is K18's counted refusal, which stays |
+| tests | 639 `@Test` upstream, **575 emitted until T9 closed and 637 after — 161 -> 357 -> 364 -> 392 -> 552 -> 554 -> 559 -> 567 -> 572 -> 574 of 575, then 631 -> 633 of 637 passing** (§10.5.5, and §10.5.4 for the last two steps: T9's 62 recovered tests revealed five failures nothing had ever run, and K21 face 2's bridge guard took two of them). What remains is **4**: 3 at `ENGINE-LIMITS.md` T16's dropped `@JsonSerialize` and 1 at K18's counted refusal |
 | `bean-exposure` | **0** on the test port — every type is in scope (D-liqp-10 declares `except = []`) and no java class in this suite declares a bean name the phase would have needed. The MAIN port does not run the phase, so it reports nothing: the row exists to make a scope's own refusals visible, not to census a library's public fields |
 
 **The behavioural gate is now the measurement.** Every number above except the last row is a
@@ -2339,12 +2339,25 @@ now reads `!! TESTS LOST — 2 of 639`, and the two are D-liqp-7's.
 
 **The suite went 574/1 -> 631/6, and the five new failures are the number to read.** None of them
 is in a local class: every one of the five recovered sites lowers and passes. The five are this
-port's own reflective-surface residue — K20's reified type argument and K21's bean-exposure seam,
-reached through liqp's `Inspectable`/`LiquidSupport` SPI (`TemplateTest.testRenderInspectable` and
+port's own reflective-surface residue — K21's bean seam and a dropped jackson annotation, reached
+through liqp's `Inspectable`/`LiquidSupport` SPI (`TemplateTest.testRenderInspectable` and
 `testDeepInspectable`, `LiquidSupportTest.testLookupNode2c`, `testMapFilter2c` and
 `renderLiquidSupportWithNewRenderingSettings`) — and they were invisible only because the tests
 that exercise them had never run. Closing T9 did not cause five failures; it revealed five, which
 is CLAUDE.md §1's "N failures are gated behind this one is a HYPOTHESIS" read from the other end.
+
+**THE SIX, CLASSIFIED, AND TWO OF THEM ARE CLOSED — 631/6 -> 633/4.** Read each through
+`test-failures.tsv` (§5.1), never by opening an emitted file:
+
+| n | family | §1 | what says so |
+|---|---|---|---|
+| ~~2~~ **0** | K21 FACE 2's own bridge guard. `TemplateTest`'s two `Inspectable` fixtures declare `public final Map<String,String> some` and `public List<Object> d` — java-public fields whose type the COLLECTIONS RETYPING moved — and the bean accessor bridged only at a `java.lang.Object` field, so `getSome()` handed jackson a `scala.collection.mutable.Map`. The phase's own doc named this as its gap and said no corpus port had such a field; T9 gave it four | (a) engine, `ENGINE-LIMITS.md` **K21** — CLOSED: the accessor is a REFLECTIVE surface, not a java one, so it is typed `java.lang.Object` and ALWAYS bridged | `TemplateTest.testRenderInspectable` obtained empty output; `testDeepInspectable` threw `VariableNotExistException: 'a.b[2].d[3].e'` |
+| **3** | `@JsonSerialize(using = LiquidSupport.LiquidSerializer.class)` on the `LiquidSupport` INTERFACE is DROPPED — a TYPE's annotations are harvested at `defineType`, where no expression translator exists, so every argument-bearing one goes to `omissions`. Without it jackson bean-serialises a `LiquidSupport` instead of calling `toLiquid()`, and only the EAGER evaluate mode goes through jackson — which is why each failing test has a passing non-eager sibling | (a) engine + (b) policy, `ENGINE-LIMITS.md` **T16** (new) — OPEN | `omissions` has read **1** on this port's main lane since it began, and the row names the annotation |
+| **1** | `Sort$ComparableMapEntry implements Map.Entry<K,V>`, retyped to `scala.Tuple2`, which no class can implement | (a) engine, K18 family — a COUNTED REFUSAL, not a silence | `collection-boundary` `InexpressibleParent` on `liqp/filters/Sort.java:75`, one of the main port's 25 |
+
+Every one of the four that remain is already a row in a check this run records. That is the state
+the port is meant to be in: a failure whose only evidence is the suite is the failure this project
+cannot afford, and none of these is one.
 
 **The other 2 are D-liqp-7** (§10.5.3) — `ComparingExpressionNodeTest`'s `cartesianProduct` helper
 and the two `@Test`s that call it, dropped at MEMBER granularity against G24's priced-and-refused
@@ -2616,8 +2629,10 @@ the counted `ReifiedOccurrence` refusal alone:
 |---|---|---|---|
 | **1** | `SortTest.testSortMap` | `Sort$ComparableMapEntry cannot be cast to scala.Tuple2` — `Map.Entry -> Tuple2` is an `UninheritableTarget` and `Tuple2` is a concrete target no live view can be, so K18 refuses the reified cast | **(a), REFUSED AND COUNTED.** Unchanged since the third census, and it stays: the refusal is the honest answer, not a gap |
 
-**574 of 575 is this port's floor and the last row is a decision, not a defect.** Trajectory over the
-catalog waves: `161 -> 357 -> 364 -> 392 -> 552 -> 554 -> 559 -> 567 -> 572 -> 574`.
+**574 of 575 was this port's floor while 575 was the denominator.** Trajectory over the catalog
+waves: `161 -> 357 -> 364 -> 392 -> 552 -> 554 -> 559 -> 567 -> 572 -> 574`. Closing
+`ENGINE-LIMITS.md` T9 then moved the denominator to **637** and the floor with it — see §10.5.4 for
+the census of what the 62 recovered tests revealed and where the four that remain are counted.
 
 **Three things this census records that the numbers do not.**
 

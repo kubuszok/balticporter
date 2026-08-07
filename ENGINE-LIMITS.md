@@ -1975,6 +1975,51 @@ members, which says only that libGDX has no such receiver — not that the defec
 
 *Fix kind: (a) engine. Built — one call to `operand` in each of the four positions, and no new rule.*
 
+### T16. A TYPE's annotation is harvested where NO EXPRESSION TRANSLATOR exists, so every argument-bearing one is DROPPED — **OPEN; 3 liqp failures, 0 compile errors, and the check that reports it has read 1 since the port began**
+
+`SpoonTir.annotationsOf` carries a MARKER annotation (`@Override`, `@Documented`, `@SafeVarargs`) at
+every declaration kind and needs nothing to do it. An annotation WITH ARGUMENTS needs its element
+values translated, which is the ordinary expression path, so the harvest takes a `BodyTranslator` —
+and at `defineType` there is none, because a type's symbol is minted before any body exists. Every
+argument-bearing annotation on a TYPE is therefore reported through `OmissionCheck` and dropped,
+which is honest and is not free:
+
+```java
+@JsonSerialize(using = LiquidSupport.LiquidSerializer.class)
+public interface LiquidSupport extends Inspectable { Map<String,Object> toLiquid(); }
+```
+
+```scala
+trait LiquidSupport extends ssg.liquid.parser.Inspectable { … }   // the annotation is simply gone
+```
+
+**What it costs is a framework taking a completely different path.** jackson looks the serializer up
+on the interface; absent it, a `SuppPojo implements LiquidSupport` is BEAN-serialised, so
+`toLiquid()` is never called and liqp's EAGER evaluate mode renders the pojo's own properties.
+`testLookupNode2c`, `testMapFilter2c` and `renderLiquidSupportWithNewRenderingSettings` expect
+`SuppChild`/`OK` and read `childOK`/`not this` — **three failures at 0 compile errors, with the whole
+of the evidence being one `omissions` row that has read `1` on every run of this port**. The
+non-eager sibling of each test passes, because `LookupNode` reaches `LiquidSupport` through an
+`instanceof` the port does carry.
+
+**Why it is not fixed by simply passing a translator.** The population is small and mixed: over the
+whole corpus 16 type-level annotations are dropped — 11 `@SuppressWarnings`, 3
+`@java.lang.annotation.Target` on `@interface` declarations, 1 `@RunWith` on a suite the
+`TestFrameworkTransform` converts to MUnit, and this one. Carrying them all would emit a junit runner
+onto a munit suite and `@Target` onto an annotation type, neither of which any port asked for, and
+`@SuppressWarnings(Array(…))` on eleven classes for nobody. **WHICH annotations are behaviour-bearing
+is a fact about a library and its dependencies, never about java** — the BIR frontend already says so
+and takes `preservedAnnotationPrefixes` as a §1(b) parameter — and the TIR path has no annotation
+policy at all: it carries every marker unconditionally and drops every argument-bearing one. So the
+fix is TWO things and not one: a translator at the type harvest, and the (b) policy deciding which
+families a port claims. A third, smaller trap sits behind them — `TirEmitter.annots` renders a named
+argument as `k = …` with no keyword escaping, and jackson's element here is spelled `using`.
+
+*Fix kind: (a) for the harvest — a type's annotation values are constant expressions and there is no
+reason the frontend cannot translate them — plus (b) for WHICH families are carried, which is
+`SpoonFrontend.preservedAnnotationPrefixes` one path over. Counted today by `omissions`, which named
+it correctly and was read as decoration.*
+
 ---
 
 ## 4. Collections, shims and the JDK boundary
@@ -4209,7 +4254,7 @@ The per-site diagnosis stays in `PROGRESS.md`'s liqp residue table.*
 
 ---
 
-### K21. A retyped VALUE and an emitted CLASS are read out of the class file at the OTHER end of the same call — **13 test failures on liqp, 0 compile errors, every check count flat, and three of the four assertions pass by accident. BOTH FACES CLOSED (554/21 → 567/8)**
+### K21. A retyped VALUE and an emitted CLASS are read out of the class file at the OTHER end of the same call — **13 test failures on liqp, 0 compile errors, every check count flat, and three of the four assertions pass by accident. BOTH FACES CLOSED (554/21 → 567/8, and face 2's own bridge guard 631/6 → 633/4 once T9 gave it its first retyped field)**
 
 K20 is the type ARGUMENT a third party reads out of the class file. **This is the OBJECT and its
 MEMBERS, read out of the class file by the same third party on the same call** — so it is not a
@@ -4358,6 +4403,33 @@ parents this program declares as well as the type's own body, because `public Ob
 parent that declares `getMapper()` is the ordinary shape one level up and arrived as a bare typer
 error with nothing to classify it. An ancestor OUTSIDE the program is a class file this pass cannot
 read, and that residue is stated here rather than guessed at.
+
+**…AND THE BRIDGE'S OWN GUARD WAS THE FACE READ ONE MORE TIME — the accessor is a REFLECTIVE
+surface, not a java one.** As it shipped, the getter went through `toJavaValue` only where the
+FIELD's declared type was `java.lang.Object`, on the reasoning that a field typed as anything else is
+already java's own representation. That is exact for a primitive, a `String`, a `Date` and a class
+the port emits, and FALSE for a field whose type a RETYPING PHASE MOVED — `public Map<String,String>
+some` inside a `@Test` body is a `scala.collection.mutable.Map` by the time this phase sees it, so
+`getSome()` handed jackson the map's INTERNALS exactly as face 1's argument seam did one hop earlier.
+The phase's own doc named that as the gap and said no corpus port had such a field; **closing
+`ENGINE-LIMITS.md` T9 gave it four**, in `TemplateTest`'s two `Inspectable` fixtures.
+
+Asking WHICH types another phase moved is a question §4.56 forbids this phase, and it does not have
+to ask it: **java declared a FIELD and not a getter.** The accessor's signature is one the phase
+MINTED, no caller in the library names it, and its only reader is the framework that reads the
+RUNTIME value — so the getter is typed `java.lang.Object` and ALWAYS bridged. Behaviour-identical
+wherever the old rule was right (`Reified.toJavaValue` is the identity on a primitive, a `String`, a
+`Date` and every object the port emits) and correct where it was not. **Measured on liqp: 631 → 633
+passing, 6 → 4 failing, `errors 0` before and after, 69 member digests on the test port and 0 on the
+other ten lanes**; `dependency-coverage` 146 → 134 and `(all)` 249 → 235 on that port, which is
+twelve minted accessors that used to name `java.time.ZonedDateTime` in their return type and two on
+a BASE class the dependent's model contains and does not emit.
+
+**The SETTER is the same seam read backwards and is NOT closed.** Writing a property back would need
+java's value converted INTO this port's representation, which is the copy `Reified` refuses, so the
+setter keeps the field's own type — exact for every field a retyping did not move, and a residue
+where one did. No corpus consumer writes a property, so it is stated here rather than counted: an
+over-approximate row on every exposed field is the review list §1 calls noise.
 
 **THE COUNT.** `BeanExposureCheck` — `NameTaken` for a field the policy could not expose (the seam
 the scope created), `NameUnreachable` for a field whose bean name `decapitalize` cannot invert (the

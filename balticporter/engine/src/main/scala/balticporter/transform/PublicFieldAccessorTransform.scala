@@ -27,16 +27,30 @@ import balticporter.tir.*
   * ==Why the getter BRIDGES, which is the half a call-site rule cannot reach==
   * K21 face 1 bridges a value the port hands OUT at an opaque slot. A reflective framework does not
   * only receive values — it CALLS BACK IN, through exactly the accessors this phase adds, and what
-  * it gets back is whatever the field holds. A field typed `java.lang.Object` holding a collection
-  * this port retyped hands the framework a `scala.collection.*` again, one hop past the bridge that
-  * was supposed to have dealt with it. So the getter goes through the same run-time bridge, and for
-  * the same reason: `Object` is all the static evidence there is. Measured at +3 tests over
+  * it gets back is whatever the field holds. A field holding a collection this port retyped hands
+  * the framework a `scala.collection.*` again, one hop past the bridge that was supposed to have
+  * dealt with it. So the getter goes through the same run-time bridge. Measured at +3 tests over
   * `@BeanProperty`, whose generated getter cannot interpose anything.
   *
-  * A field typed as anything else is returned as it is. That is exact for a primitive, a `String`
-  * and a class the port emits; where the field's own type is one a retyping phase MOVED, the bean
-  * property is a scala collection and this phase has no standing to say so (§4.56 — a phase may
-  * only conclude from what IT did). No corpus port has such a field; K21 states the gap.
+  * ==And the accessor is a REFLECTIVE surface, not a java one — which is what settles its TYPE==
+  * The bridge used to fire only where the field's own type was `java.lang.Object`, on the reasoning
+  * that a field typed as anything else is already java's own representation. That is exact for a
+  * primitive, a `String` and a class the port emits, and FALSE for a field whose type a retyping
+  * phase MOVED — `public Map<String,String> some` is a `scala.collection.mutable.Map` by the time
+  * this phase sees it, and the accessor handed jackson the map's internals exactly as K21 face 1's
+  * argument seam did. Asking which types moved is a question §4.56 forbids this phase (a phase may
+  * only conclude from what IT did) and it does not have to ask it, because **java declared a FIELD
+  * and not a getter**: this signature is one the phase MINTED, no caller in the library names it,
+  * and its only reader is a framework that reads the RUNTIME value. So it is typed
+  * `java.lang.Object` and ALWAYS bridged, which is behaviour-identical wherever the old rule was
+  * right — `Reified.toJavaValue` is the identity on a primitive, a `String`, a `Date` and every
+  * object the port emits — and correct where it was not. Measured on the first port with such a
+  * field (`ENGINE-LIMITS.md` K21).
+  *
+  * The SETTER is the same seam read backwards and is NOT closed: writing a property back would need
+  * java's value converted INTO this port's representation, which is the copy `Reified` refuses. It
+  * keeps the field's own type, which is exact for every field a retyping did not move; K21 states
+  * that residue rather than guessing at it.
   *
   * ==Why it is a (b) and not a universal emission==
   * The FACT is universal. The REMEDY is not free: it adds two names per field to the emitted
@@ -104,8 +118,13 @@ final class PublicFieldAccessorTransform(
     added.clear()
     refusals.clear()
     toJavaValueSym = SymId.None
+    // …resolved where the program names it and MINTED where it does not, exactly as `unitSym` below
+    // is. `java.lang.Object` is now the type of every accessor this phase emits, so a program that
+    // happens never to have named it is a program whose accessors would otherwise render at
+    // `TypeRepr.NoType` — an emitted `Any`, which is not the java type a bean reader is looking at.
     objectSym = program.symbols.all.find(_.fullName == PublicFieldAccessorTransform.ObjectFqn)
-      .map(_.id).getOrElse(SymId.None)
+      .map(_.id).getOrElse(mint("Object", PublicFieldAccessorTransform.ObjectFqn, Flags(),
+                                SymId.None, TypeRepr.NoType))
     // minted like every other reference into the runtime: nothing in a java program declares it,
     // and the emitter prints a minted symbol's `fullName` verbatim (§6 — fully qualified, no import).
     if scope.isUnrestricted || scope.entries.nonEmpty then
@@ -236,7 +255,7 @@ final class PublicFieldAccessorTransform(
       case _ => Nil
     direct.flatMap(go(_, Set(cls))).toSet
 
-  /** `def getX(): T` and, for a java NON-FINAL field, `def setX(v: T): Unit`.
+  /** `def getX(): java.lang.Object` and, for a java NON-FINAL field, `def setX(v: T): Unit`.
     *
     * A `final` field is a `val` and has no setter to give — java had none either, and a bean reader
     * that only reads is served by the getter alone. */
@@ -245,18 +264,19 @@ final class PublicFieldAccessorTransform(
     val tpe  = v.tpt.tpe
     val self = Tree.This(cls, TypeRepr.ThisType(cls), o)
     val read = Tree.Select(self, fs.id, tpe, o)
+    // …the getter's OWN type, which is `java.lang.Object` for every field. See the class doc: java
+    // declared a field and not a getter, so this signature is one the phase minted and its only
+    // reader is a framework reading the RUNTIME value — which lets the bridge fire unconditionally
+    // instead of asking which types another phase moved (§4.56).
+    val getTpe = if objectSym == SymId.None then tpe else TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
     val body =
-      // …the bridge, and ONLY where the field's type is the one that says nothing. See the class
-      // doc: at any other type the value is what the field's type claims, and a cast back through
-      // the bridge would be a claim this phase cannot make.
-      if toJavaValueSym != SymId.None && objectSym != SymId.None &&
-         headSym(tpe).contains(objectSym) then
-        Tree.Apply(Tree.Ident(toJavaValueSym, TypeRepr.NoType, o), List(read), toJavaValueSym, tpe, o)
+      if toJavaValueSym != SymId.None then
+        Tree.Apply(Tree.Ident(toJavaValueSym, TypeRepr.NoType, o), List(read), toJavaValueSym, getTpe, o)
       else read
     val ownerFqn = p.symbolOf(cls).map(_.fullName).getOrElse("")
     val getSym = mint("get" + bean, MemberKey(ownerFqn, "get" + bean).render, Flags(), cls,
-                      TypeRepr.MethodType(Nil, tpe))
-    val getter = Tree.DefDef(getSym, List(Nil), TypeTree(tpe, o), Some(body), o)
+                      TypeRepr.MethodType(Nil, getTpe))
+    val getter = Tree.DefDef(getSym, List(Nil), TypeTree(getTpe, o), Some(body), o)
     val setter =
       if !fs.flags.isMutable then Nil
       else
@@ -277,7 +297,9 @@ final class PublicFieldAccessorTransform(
         "bridged"  -> (if body ne read then "yes" else "no"),
         "why"      -> ("java's `public` field is part of the class file's surface and scala emits " +
           "no public JVM field for any declaration form, so a framework auto-detecting one sees " +
-          "nothing at all — these accessors are what a bean reader can see instead"),
+          "nothing at all — these accessors are what a bean reader can see instead, and the getter " +
+          "is typed `java.lang.Object` through the run-time bridge because its only reader is that " +
+          "framework, reading the value and not the signature"),
       ),
       // …the KEY is the manifest entry VERBATIM where there is one (§4.575: it is the string an
       // agent edits). An UNRESTRICTED scope has no entry and its fingerprint is empty, so the key
@@ -287,11 +309,6 @@ final class PublicFieldAccessorTransform(
       origin = o,
     ))
     getter :: setter
-
-  private def headSym(t: TypeRepr): Option[SymId] = t match
-    case TypeRepr.TypeRef(_, s)     => Some(s)
-    case TypeRepr.AppliedType(c, _) => headSym(c)
-    case _                          => scala.None
 
   /** what this run could not expose, and what it was never asked about — for [[BeanExposureCheck]].
     * Held to the units the run EMITS by its caller, exactly as every other boundary count is
