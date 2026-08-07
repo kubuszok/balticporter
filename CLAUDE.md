@@ -152,7 +152,15 @@ halves are per-library policy for the same reason and one step past K20's: java 
 reflective sink and no reflectively-read class, so the engine ships both lists empty and publishes
 the CANDIDATES instead — one row per external callee with an opaque formal, one row per emitted
 type with java-public fields. A missing entry is otherwise invisible; the first run of that list
-named a second sink the port had not declared.
+named a second sink the port had not declared. **A candidate list is a residue of the POLICY,
+though, so it is published where the PHASE runs and nowhere else** — and the two halves therefore
+appear on different conditions, which is a difference to state rather than to average over. The
+egress list rides on a phase every port with collections already carries, so a missing sink shows up
+on every run of those; the bean list rides on a phase whose no-op is `Only(Set.empty)` and which a
+module only puts in its surface once it has said that something is read reflectively. Unscoped that
+list is every public field in the library, which is the over-approximate review list §1 calls noise
+— so a module that does not carry the phase publishes nothing here and is not claiming that nothing
+is exposed.
 
 **And "N failures are gated behind this one" is a HYPOTHESIS, never a count.** A defect that THROWS
 hides every defect after it on the same path, so the tests attributed to it are the tests it is

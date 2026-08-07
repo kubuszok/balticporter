@@ -1900,8 +1900,14 @@ final class TirEmitter(
   //
   // WHAT IS APPROXIMATE, and deliberately not counted: java initialises the class before `<init>`
   // runs at all — including before the SUPERCLASS constructor — while a class-body statement runs
-  // after it. The gap is observable only where a super constructor calls a method this class
-  // overrides which reads this class's statics, and no criterion for that is cheaper than the
+  // after it. The case that SOUNDS like the problem is the one that largely SELF-HEALS: a super
+  // constructor calling a method this class overrides which reads this class's statics is a read
+  // that IS an access to the companion, so it initialises it on the spot and the only difference
+  // left is that the object was built a few statements later than java built it, with nothing in
+  // between able to observe that. What does NOT heal is mutual ordering through a THIRD PARTY —
+  // the super constructor asks a registry what is registered and THIS class's initialiser is what
+  // registers it, so java answers "yes" and the port answers "no", and no read on either path
+  // touches the object early enough to fix it. No criterion for that is cheaper than the
   // whole-program analysis it would take; an over-approximate review list here would be noise
   // (`CLAUDE.md` §1).
   //
