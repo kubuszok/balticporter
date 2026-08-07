@@ -143,10 +143,27 @@ final case class ApiRow(
   * `UNSTATED` and says so in its `why` rather than guessing — there are several, and they are the
   * rows a later pass should measure first.
   *
-  * NOTHING READS THIS YET. `PortabilityCheck` still carries its own hand-written rule list; the
-  * chunk that parameterises it by a target set is where these rows become the rule source. Until
-  * then this is a registry with no consumer, which is a state worth naming rather than hiding: a
-  * facility with no call sites is indistinguishable from one that is not there.
+  * WHAT READS IT, and what each half of a row decides. It is no longer a registry without a
+  * consumer — `PortabilityCheck.rowOf` joins a rule to its row through `Rule.at`, and two questions
+  * are answered from there on every run:
+  *
+  *   - WHICH LANE a rule is in. `isDependency` asks whether every platform the rule still asks about
+  *     answers with an ARTIFACT, and that decides `rulesFor` (the removal lane, `portability(*)`)
+  *     against `dependencyRulesFor` (the build-graph lane, `dependency-coverage`). A rule with no
+  *     cited row is never a dependency: the survey is where a coordinate comes from, and a rule with
+  *     no row has none to give;
+  *   - WHETHER IT STILL ASKS AT ALL. `stillAsks` reads [[ApiRow.verdictOn]], which is the one half of
+  *     a row a port may override — so a `verdictOverrides` entry saying `Keep` retires the rule from
+  *     both lanes, and one saying it ships a shim stops the row from ever becoming a requirement.
+  *     [[ApiRow.by]], the availability FACT, no manifest can contradict.
+  *
+  * `DependencyCheck.requirements` is the third reader and the one that consumes an [[ArtifactDep]]:
+  * the coordinates a finding names are this file's, per platform, because two backends can want
+  * different artifacts for one API.
+  *
+  * WHERE THE ROWS ARE STILL SILENT is the honest residue: a row the survey did not reach carries
+  * `UNSTATED` in `asOf` and says so in its `why`, and `catalog(uncited)` counts the registry rows
+  * with no Scala-side citation on every run. Neither is hidden inside a number about the port.
   */
 object ApiRows:
 
