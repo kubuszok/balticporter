@@ -55,6 +55,22 @@ class RewriteCallSitesSpec extends PortSuite:
     def name: String = "unaccounted-mover"
     override def transformType(t: TypeRepr)(using Program): TypeRepr = repoint(t)
 
+  /** …and the SAME retype written the OTHER way a phase can write it: at the DECLARATION IN THE
+    * TREE, through the definition hooks, with `transformType` left alone so the symbol table never
+    * moves.
+    *
+    * Every retyping phase in the engine today happens to go through `transformType`, which
+    * `StandardTraversal` routes into the symbol records as well as into the trees — so an
+    * `info`-only comparison saw all of them and nothing said it was reading half the question. This
+    * is the half it was not reading, and it is a shape a phase is entitled to write: `tpt` and
+    * `returnTpt` are what the EMITTER prints. */
+  private class TreeOnlyMover extends Phase:
+    def name: String = "tree-only-mover"
+    override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef =
+      v.copy(tpt = TypeTree(repoint(v.tpt.tpe), v.tpt.origin))
+    override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
+      d.copy(returnTpt = TypeTree(repoint(d.returnTpt.tpe), d.returnTpt.origin))
+
   // -------------------------------------------------------------------------------------------
   // the observation: WHAT MOVED is derived from the pipeline, never declared by the phase
   // -------------------------------------------------------------------------------------------
@@ -69,6 +85,26 @@ class RewriteCallSitesSpec extends PortSuite:
     val p = port(src, new Unaccounted)
     assertEquals(p.rewrites.all.map(_.phase), List("unaccounted-mover"))
     assert(p.rewrites.all.head.retyped.nonEmpty, "the pipeline must observe the declarations the phase moved")
+  }
+
+  test("…and a phase that moves the DECLARATION IN THE TREE and not the symbol table is observed too") {
+    // `info` and `tpt`/`returnTpt` are two records of the same fact, and a phase may move either.
+    // Read through `info` alone this rewrite is invisible: no row, no `Unaccounted` finding, and a
+    // `rewrite-callsites` lane that reports a confident zero about a phase that retyped every
+    // declaration in the program.
+    val p = port(src, new TreeOnlyMover)
+    assertEquals(p.rewrites.all.map(_.phase), List("tree-only-mover"))
+    assert(p.rewrites.all.head.retyped.nonEmpty,
+           "a declaration whose EMITTED type moved is a declaration this phase retyped")
+    assertEquals(RewriteCallSitesCheck.check(p.rewrites, Some(Set.empty)).map(_.issue),
+                 List(Issue.Unaccounted))
+  }
+
+  test("…and the negative is still the negative: a phase that moves NEITHER record produces no row") {
+    // the guard on the widening above — a declared-type diff that reported every phase would be a
+    // lane nobody reads, which is the silence it exists to replace.
+    val p = port(src, new Silent)
+    assertEquals(p.rewrites.all.map(_.phase), Nil)
   }
 
   test("…and only OWNED declarations: an external's signature is a fact about a class file (§4.56)") {

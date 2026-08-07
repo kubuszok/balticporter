@@ -22,9 +22,16 @@ package balticporter.tir
   * ==What is DECLARED and what is OBSERVED — they are deliberately not the same half==
   * A phase declares [[Rewrite.accountedBy]]: the check lanes that count its residue. It does NOT
   * declare what it retyped, and that is the design. `Pipeline.runTraced` DERIVES the retyped set by
-  * comparing each owned symbol's `info` across the phase, so a phase cannot under-report its own
-  * reach — the one number a phase could be wrong about, or silently stop maintaining, is the one it
-  * is not asked for. What a phase alone can say is which lane it accounts through, and that claim is
+  * comparing, across the phase, BOTH records a declaration's type has — each owned symbol's `info`
+  * AND the type the definition WRITES DOWN (`ValDef.tpt`, `DefDef.returnTpt` and its parameters).
+  * Both, because a phase may move either: `StandardTraversal` routes both through `transformType`,
+  * so every retyping phase written so far moved them together and an `info`-only comparison happened
+  * to see all of them — but a phase that overrides the definition hooks and rebuilds the `tpt` moves
+  * only the tree, which is the record the EMITTER prints, and was invisible. So a phase cannot
+  * under-report its own reach — the one number a phase could be wrong about, or silently stop
+  * maintaining, is the one it is not asked for. One residue is left and is stated rather than
+  * counted: a SYMBOL SWAP is indistinguishable from a legitimate DROP (see `Pipeline.recordPatch`).
+  * What a phase alone can say is which lane it accounts through, and that claim is
   * checked too: [[balticporter.tir.Patch.accountedBy]] naming a lane that did not RECORD in this run
   * is `rewrite-callsites`'s second finding, which is exactly the shape of `PortRun`'s own worst
   * wiring defect (`LibgdxTestMigrate` never called `PortabilityCheck` at all, and nothing said so

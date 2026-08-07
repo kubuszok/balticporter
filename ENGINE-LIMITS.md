@@ -2855,7 +2855,26 @@ the output really is what the phase meant.
 residue, as symbols — and `Pipeline.runTraced` DERIVES what it moved, by comparing each owned
 symbol's `info` across the phase. The two halves come from different places deliberately: a phase is
 never asked what it retyped, because that is the one number it could be wrong about or silently stop
-maintaining. `rewrite-callsites` reports `Unaccounted` (moved, names no lane) and `UnwiredAccounting`
+maintaining.
+
+**…AND THE DERIVATION HAS TO READ BOTH RECORDS OF A DECLARATION'S TYPE, which the first cut did not.**
+A declaration says its type twice — the symbol's `info` and the definition's own `tpt` /
+`returnTpt` / parameter `tpt`s — and `StandardTraversal` routes both through `transformType`. So
+every retyping phase written so far moved them together and an `info`-only comparison happened to see
+all of them, which is exactly the shape of a guard that is right by accident (§4.56's fast-path rule,
+one instrument over). It is not a property of the IR: a phase that overrides `transformValDef` /
+`transformDefDef` and rebuilds the `tpt` moves only the TREE — the record the emitter prints — and
+produced no row, no `Unaccounted` finding, and a lane reporting a confident zero about a phase that
+retyped every declaration in the program. The tree half is free: `Xref.build` already indexes every
+definition at each phase boundary, so it is one map lookup per owned symbol and not a second
+traversal. Measured at **0 blast on every port** — no engine phase writes the tree-only shape today,
+which is why nothing could see it — and `RewriteCallSitesSpec` carries the fixture phase that does.
+
+**One residue stays, stated rather than counted.** A SYMBOL SWAP — a phase replacing `ValDef(s1)`
+with `ValDef(s2)` — is invisible to both halves, because `s1`'s declaration is simply absent from the
+`after` program, which is also what a legitimate DROP looks like (`Substitutions`, a policy that
+removes a member). Reporting the shape would put a false `Unaccounted` row on every phase that
+removes anything, so the two are not separated and the swap is not observed. `rewrite-callsites` reports `Unaccounted` (moved, names no lane) and `UnwiredAccounting`
 (names a lane that did not RECORD in this run — `RequiredChecks`'s guarantee for the lanes that exist
 only when their phase does, which that set cannot express).
 

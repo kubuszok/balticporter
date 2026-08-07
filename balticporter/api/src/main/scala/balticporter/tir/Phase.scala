@@ -306,15 +306,53 @@ object Pipeline:
     * Nothing is recorded where nothing moved: a phase that retyped no declaration has no seam to
     * account for, so it owes no lane and produces no row. That is what makes `rewrite-callsites` a
     * question about RETYPING phases without anybody having to maintain a list of which phases those
-    * are — the list is derived from what each one did, on every run. */
+    * are — the list is derived from what each one did, on every run.
+    *
+    * ==A declaration's type has TWO records and a phase may move either==
+    * The symbol's `info` and the DECLARATION IN THE TREE (`ValDef.tpt`, `DefDef.returnTpt` and its
+    * parameters' `tpt`s) say the same thing, and `StandardTraversal` routes both through
+    * `transformType` — which is why every retyping phase written so far moved both and an
+    * `info`-only comparison saw all of them. It is not a property of the IR: a phase that overrides
+    * `transformValDef`/`transformDefDef` and rebuilds the `tpt` moves only the tree, and the tree is
+    * what the EMITTER prints. Read through `info` alone that phase produces no row, no
+    * `Unaccounted` finding, and a `rewrite-callsites` lane reporting a confident zero about a phase
+    * that retyped every declaration in the program — the exact silence this check exists to replace,
+    * arriving through the half of the question it was not asking.
+    *
+    * The tree half costs nothing beyond the `info` half: `Xref.build` already indexes every
+    * definition on every phase boundary (`runTraced` rebuilds it), so this is a map lookup per owned
+    * symbol and not a second traversal.
+    *
+    * ==What stays out of reach, stated rather than counted as a zero==
+    * A SYMBOL SWAP — a phase that replaces `ValDef(s1)` with `ValDef(s2)` — is invisible to both
+    * halves, and deliberately: `s1`'s declaration is simply gone from `after`, which is also what a
+    * legitimate DROP looks like (`Substitutions`, a policy that removes a member), and a phase that
+    * dropped a declaration has not retyped one. Reporting the shape would put a false `Unaccounted`
+    * row on every phase that removes anything. `ENGINE-LIMITS.md` K5.6 carries the residue. */
   private def recordPatch(rewrites: RewriteLog, phase: Phase, before: Program, after: Program): Unit =
     val owned   = before.owned & after.owned
     val moved   = owned.filter(id =>
-      (before.symbolOf(id), after.symbolOf(id)) match
+      val infoMoved = (before.symbolOf(id), after.symbolOf(id)) match
         case (Some(b), Some(a)) => b.info != a.info
-        case _                  => false)
+        case _                  => false
+      infoMoved || declaredMoved(before, after, id))
     if moved.nonEmpty then
       rewrites.record(Patch(phase.name, moved, phase match { case r: Rewrite => r.accountedBy; case _ => Set.empty }))
+
+  /** the DECLARED types a definition WRITES DOWN — the record the emitter prints, as opposed to the
+    * symbol's `info`. `None` for a definition kind that declares no type of its own (a `ClassDef`
+    * has parents rather than a declared type, and a `TypeDef`'s rhs is its bounds). */
+  private def declaredTypes(d: Definition): Option[(TypeRepr, List[TypeRepr])] = d match
+    case v: Tree.ValDef => Some(v.tpt.tpe -> Nil)
+    case m: Tree.DefDef => Some(m.returnTpt.tpe -> m.paramss.flatten.map(_.tpt.tpe))
+    case _              => scala.None
+
+  /** …compared across the phase, for one owned symbol. Present-on-BOTH-sides only, for `recordPatch`'s
+    * own reason: a declaration that is gone was dropped, not retyped. */
+  private def declaredMoved(before: Program, after: Program, id: SymId): Boolean =
+    (before.definitionOf(id).flatMap(declaredTypes), after.definitionOf(id).flatMap(declaredTypes)) match
+      case (Some(b), Some(a)) => b != a
+      case _                  => false
 
   /** print the TIR at a phase boundary. `balticporter.dumpOnly=<fqn>` narrows it to one unit —
     * without that a whole-library dump is megabytes and nobody reads it. */
