@@ -209,6 +209,66 @@ object SpoonKinds:
 
   val byName: Map[String, Kind] = registry.map(k => k.name -> k).toMap
 
+  // -------------------------------------------------------------------------------------------
+  // THE REFERENCE REGISTRY — `spoon.reflect.reference`, and the FOURTH obligation surface's keys.
+  //
+  // A THIRD package, kept apart from [[registry]] rather than folded into it, and the split is
+  // the same one `NodeKindTotalitySpec`'s two directions are about: the node registry is derived
+  // from `spoon.reflect.{code,declaration}` and its total is asserted against that jar scan, so a
+  // fourteen-name addition would make one number answer for two questions and leave a Spoon
+  // upgrade's diff unreadable. Two registries, two scans, two diffs.
+  //
+  // The TOTALITY ARGUMENT is identical and is what makes this worth having at all:
+  // `CtTypeReference` is an ordinary interface with four sub-interfaces, `SpoonTir.tpe`'s match is
+  // ORDERED, and its final `case r` is the supertype's arm — so a reference kind Spoon adds
+  // tomorrow is absorbed there silently and renders as an ordinary class reference. That is the
+  // `CtTextBlock` shape one package over, at the surface where a wrong answer is a TYPE.
+  // -------------------------------------------------------------------------------------------
+
+  /** the reference types that are supertypes or mixins, so no parse produces one.
+    *
+    * Hand-maintained for [[excluded]]'s reason and grouped by the test that put each here: two have
+    * an `Impl` that is declared `abstract` and one has no `Impl` at all. */
+  val refMarkersWithAbstractImpl: Set[String] = Set("CtReference", "CtVariableReference")
+
+  /** no `Ct*Impl` exists anywhere under `spoon/support/reflect/reference/` — a pure mixin. */
+  val refMarkersWithoutImpl: Set[String] = Set("CtActualTypeContainer")
+
+  val refExcluded: Set[String] = refMarkersWithAbstractImpl ++ refMarkersWithoutImpl
+
+  /** the FIVE reference kinds `SpoonTir.tpe` dispatches on, and the nine it does not.
+    *
+    * The claim vocabulary is [[Claim]]'s, unchanged, and it reads the same way: `Lowered` is an arm
+    * of the type dispatch, `Positional` is a reference a PARENT's arm reads without ever handing it
+    * to `tpe`, and `Absent` is one nothing reaches. What differs from the node registry is which
+    * answers are even possible here — a reference has no body to refuse, so there is no
+    * `MarkedUnportable` and no `RefusedLoudly` on this list, and `AbsorbedSilently` is reserved for
+    * exactly the failure the totality spec exists to catch. */
+  val references: List[Kind] = List(
+    Kind("CtTypeReference", Lowered("SpoonTir.tpe's final arm — a class type, raw-filled when its actuals are empty"), scala.None),
+    Kind("CtArrayTypeReference", Lowered("SpoonTir.tpe's array arm -> scala.Array[component]"), scala.None),
+    Kind("CtIntersectionTypeReference", Lowered("SpoonTir.tpe's intersection arm -> AndType"), scala.None),
+    Kind("CtTypeParameterReference", Lowered("SpoonTir.tpe's type-variable arm, through resolveTypeParam"), Some(g(12))),
+    // ORDER matters and is why this is a separate row rather than a note: `CtWildcardReferenceImpl`
+    // EXTENDS `CtTypeParameterReferenceImpl`, so the wildcard arm has to come first in the match and
+    // `nameOf`'s most-specific rule has to answer `CtWildcardReference` here. Registered as its own
+    // kind, both facts are checkable instead of believed.
+    Kind("CtWildcardReference", Lowered("SpoonTir.tpe's wildcard arm — bounds, and the `? super Object` collapse"), Some(g(1))),
+
+    Kind("CtExecutableReference", Positional("SpoonTir.invocation / methodSym / coerceArgs — read for its declaration and its formals, never lowered as a type"), scala.None),
+    Kind("CtFieldReference", Positional("SpoonTir.fieldAccess, through fieldSym"), scala.None),
+    Kind("CtLocalVariableReference", Positional("SpoonTir.resolveVar, from the variable-read arm"), scala.None),
+    Kind("CtParameterReference", Positional("SpoonTir.resolveVar, from the variable-read arm"), scala.None),
+    Kind("CtCatchVariableReference", Positional("SpoonTir.resolveVar — the binder itself is minted by tryStmt"), scala.None),
+    Kind("CtUnboundVariableReference", Positional("SpoonTir.resolveVar's fallback, which mints an external `?var$<name>` symbol — the reference Spoon builds when it cannot resolve the declaration"), scala.None),
+    Kind("CtPackageReference", Positional("SpoonTir.typeKey reads getQualifiedName, which carries the package; the reference itself is never visited"), scala.None),
+
+    Kind("CtModuleReference", Absent(NeverVisited, "nothing walks the module tree — see CtModule"), scala.None),
+    Kind("CtTypeMemberWildcardImportReference", Absent(NeverVisited, "an `import static X.*` target; SpoonTir.harvestHeader reads a CtImport only for its comments, and fully-qualified emission removes the question the import answered"), Some(c(5))),
+  )
+
+  val byRefName: Map[String, Kind] = references.map(k => k.name -> k).toMap
+
   /** the REGISTRY name for a node the parser actually built.
     *
     * The registry is keyed on Spoon's INTERFACE names (`CtSwitchExpression`) and the parser hands
@@ -227,14 +287,29 @@ object SpoonKinds:
     * Falls back to the class's own simple name, which is honest: a kind outside the registry is
     * exactly what `NodeKindTotalitySpec` exists to fail on, and inventing a registered name for it
     * here would hide that. */
-  def nameOf(cls: Class[?]): String =
+  def nameOf(cls: Class[?]): String = nameIn(cls, byName)
+
+  /** the same rule against the REFERENCE registry — `SpoonTir.tpe`'s key, and the fourth obligation
+    * surface's.
+    *
+    * Its own resolver rather than a widened [[nameOf]], because the two registries answer two
+    * questions and a merged map would let a node kind answer for a reference. The most-specific
+    * rule matters more here than it does there: `CtWildcardReferenceImpl` extends
+    * `CtTypeParameterReferenceImpl`, so a shortcut answering the first registered supertype would
+    * key every wildcard as a type variable and hand it the wrong arm's obligations. */
+  def refNameOf(cls: Class[?]): String = nameIn(cls, byRefName)
+
+  /** ONE resolver for both registries (`ENGINE-LIMITS.md` F8): the `Impl` shortcut, the structural
+    * walk and the most-specific tie-break are the same three rules whichever taxonomy is asking,
+    * and a copy is the one that would not gain the next fix. */
+  private def nameIn(cls: Class[?], known: Map[String, Kind]): String =
     val stripped = cls.getSimpleName.stripSuffix("Impl")
-    if byName.contains(stripped) then stripped
+    if known.contains(stripped) then stripped
     else
       def all(c: Class[?]): List[Class[?]] =
         if c == null then Nil
         else c.getInterfaces.toList.flatMap(i => i :: all(i)) ++ all(c.getSuperclass)
-      val candidates = all(cls).distinct.filter(c => byName.contains(c.getSimpleName))
+      val candidates = all(cls).distinct.filter(c => known.contains(c.getSimpleName))
       candidates
         .find(c => candidates.forall(d => (d eq c) || !c.isAssignableFrom(d)))
         .map(_.getSimpleName)

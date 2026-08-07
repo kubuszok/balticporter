@@ -1,6 +1,6 @@
 package balticporter.emit
 
-import balticporter.catalog.{CatalogLog, JS, Obligations, Rendering}
+import balticporter.catalog.{CatalogLog, JS, Obligations, Rendering, Typing}
 import balticporter.core.{EngineInfo, Provenance}
 import balticporter.tir.*
 
@@ -4185,7 +4185,23 @@ final class TirEmitter(
     case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), List(e)) if sym(s).fullName == "scala.Array" => baseElem(e)
     case _ => t
 
-  private def tpe(t: TypeRepr): String = t match
+  /** THE TYPE DISPATCH — the emitter half of the catalog's FOURTH obligation surface.
+    *
+    * At the dispatch and never in an arm, for [[stat]]'s reason. A `TypeRepr` is not a `Tree`, so
+    * [[Rendering]] could never enter one: it is the algebra a `TypeTree` carries, and a `TypeTree`
+    * is rendered through its parent rather than through `stat`/`term`. Every difference about what
+    * a type LOOKS LIKE in Scala — a wildcard's bound grammar, the `?` that stands in for an
+    * unbindable variable, a nested type reached by projection or by value path — is decided here
+    * and nowhere a node wrapper can see.
+    *
+    * The subject is the `TypeRepr` itself and the origin is the enclosing scope's
+    * (`CatalogLog.currentOrigin`): a type is a value the IR shares across every position that names
+    * it, so it has no position of its own, and the node it is being rendered FOR is the site a
+    * reader of the finding would open. */
+  private def tpe(t: TypeRepr): String =
+    Typing.ofRepr(TirKinds.ofType(t), t)(tpeArm(t))
+
+  private def tpeArm(t: TypeRepr)(using Obligations): String = t match
     case TypeRepr.NoType | TypeRepr.NoPrefix   => "Any"
     case TypeRepr.TypeRef(_, s)                => typeSym(s)
     case TypeRepr.TermRef(_, s)                => s"${typeSym(s)}.type"
@@ -4314,6 +4330,14 @@ private object TirKinds:
     // unreachable: every concrete `Tree` is a case class. Named rather than defaulted, because a
     // silent "" here would be a kind nothing attaches to and therefore a scope that owes nothing —
     // which is indistinguishable from a node the catalog has nothing to say about.
+    case _          => "?"
+
+  /** …and the TYPE algebra's, for the fourth obligation surface. The same derivation for the same
+    * reason: `TypeRepr` is sealed and every case is a case class or a case OBJECT, both of which
+    * are `Product`s, so the name is the compiler's own and a table would be a list the next case is
+    * not on. */
+  def ofType(t: TypeRepr): String = t match
+    case p: Product => p.productPrefix
     case _          => "?"
 
 object TirEmitter:

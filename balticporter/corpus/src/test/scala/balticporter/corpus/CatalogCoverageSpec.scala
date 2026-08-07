@@ -282,11 +282,15 @@ class CatalogCoverageSpec extends munit.FunSuite:
       Option.when(!asked.subsetOf(legal))(
         s"$id attaches $k/$disp, and $k is reached at ${legal.mkString("{", ", ", "}")}")
 
-    val bad = Differences.all.flatMap { d =>
-      d.attaches match
+    // …through `leaves`, for the reason the KIND guard above states and this one did not follow:
+    // an `Attaches.Both` is not an `Attaches.Lowered`, so a top-level `match` skipped the lowering
+    // half of every two-surface row — which is exactly the population the DISPATCH question is
+    // about, since a `Both` exists precisely because one row is decided at more than one place.
+    // The two guards are one rule read at two columns and had two different answers.
+    val bad = Differences.all.flatMap(d =>
+      Differences.leaves(d.attaches).collect {
         case Attaches.Lowered(k, disp) => complaint(d.id.toString, k, disp)
-        case _                         => scala.None
-    }
+      }.flatten)
     assertEquals(bad, Nil, bad.mkString("\n"))
 
     // THE NEGATIVE, through the same function the sweep runs — a probe that poked at the derivation

@@ -100,6 +100,48 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     * emitted text exactly as a node's are, and perturbing the node's LIST field does not exercise
     * them: dropping a `CaseDef` from `Match.cases` says nothing about whether `CaseDef.guard` is
     * rendered. */
+  /** every `TypeRepr` case, by simple name — the fourth obligation surface's emitter-side keys.
+    *
+    * Derived from the class files for `nodeKinds`' reason, and it needs its OWN scan because
+    * [[tirClasses]] drops every name ending in `$`: that filter is right for a `Tree` (all of whose
+    * cases are case CLASSES, so a trailing `$` is a module class or a synthetic) and wrong here,
+    * where `NoType` and `NoPrefix` are case OBJECTS and are two of the cases `TirEmitter.tpe`
+    * dispatches on. Reading the module class and stripping the trailing `$` is what recovers them;
+    * a hand-written pair beside the scan would be the list the next case object is not on. */
+  private lazy val typeReprKinds: Set[String] =
+    val loc  = classOf[Tree].getProtectionDomain.getCodeSource.getLocation
+    val root = java.nio.file.Path.of(loc.toURI)
+    val names: List[String] =
+      if java.nio.file.Files.isDirectory(root) then
+        val dir = root.resolve("balticporter").resolve("tir")
+        val s   = java.nio.file.Files.list(dir)
+        try s.iterator.asScala.map(_.getFileName.toString).toList
+        finally s.close()
+      else
+        val zf = java.util.zip.ZipFile(root.toFile)
+        try
+          zf.entries().asScala.map(_.getName)
+            .filter(_.startsWith("balticporter/tir/"))
+            .map(n => n.substring(n.lastIndexOf('/') + 1))
+            .toList
+        finally zf.close()
+    names
+      .filter(_.endsWith(".class"))
+      .map(_.stripSuffix(".class"))
+      .filter(n => n.startsWith("TypeRepr$") && !n.contains("$$"))
+      .flatMap(n =>
+        try List(Class.forName(s"balticporter.tir.$n", false, classOf[Tree].getClassLoader))
+        catch case _: ClassNotFoundException => Nil)
+      .filter(c => classOf[TypeRepr].isAssignableFrom(c) && classOf[Product].isAssignableFrom(c))
+      .filter(c => !java.lang.reflect.Modifier.isAbstract(c.getModifiers) && !c.isInterface)
+      // the trailing `$` comes off BEFORE the cut, not after: `simpleName` slices at the LAST
+      // separator, so a module class `TypeRepr$NoType$` cut first yields the empty string — which
+      // is a kind nothing attaches to and would have made this assertion silently weaker for
+      // exactly the two cases it was added to cover.
+      .map(c => c.getName.stripSuffix("$"))
+      .map(n => n.substring(math.max(n.lastIndexOf('$'), n.lastIndexOf('.')) + 1))
+      .toSet
+
   private lazy val aggregates: Set[String] =
     tirClasses
       .filter(c => c.getName.startsWith("balticporter.tir.Tree$"))
@@ -755,6 +797,21 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     val phantom = (balticporter.catalog.Differences.renderedKinds -- nodeKinds).toList.sorted
     assertEquals(phantom, Nil,
       s"these rows attach to a `Tree` kind the IR does not have: ${phantom.mkString(", ")}")
+  }
+
+  test("every catalog row attaching to the TYPE dispatch names a `TypeRepr` case that exists") {
+    // The same derivation for the FOURTH obligation surface's emitter half. The scan is pinned by
+    // SHAPE first, because a filter that silently matched nothing would make the assertion below
+    // vacuous — and `TypeRepr$`-prefixed names are exactly the kind of predicate that goes quiet
+    // when a file moves.
+    assert(typeReprKinds.sizeIs > 10, s"only ${typeReprKinds.size} TypeRepr cases found — the class layout has moved")
+    assert(typeReprKinds("TypeRef"), typeReprKinds)
+    assert(typeReprKinds("AppliedType"), typeReprKinds)
+    assert(typeReprKinds("TypeBounds"), typeReprKinds)
+    assert(typeReprKinds("NoType"), typeReprKinds)      // a case OBJECT — the half a `$` filter drops
+    val phantom = (balticporter.catalog.Differences.renderedTypeKinds -- typeReprKinds).toList.sorted
+    assertEquals(phantom, Nil,
+      s"these rows attach to a `TypeRepr` case the algebra does not have: ${phantom.mkString(", ")}")
   }
 
   test("every `notEmitted` reason is one of the two admissible kinds, and says something") {

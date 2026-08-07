@@ -790,6 +790,32 @@ object Differences:
     * a row naming a kind that does not exist is caught rather than silently owed by nothing. */
   def renderedKinds: Set[String] = owedRender.keySet
 
+  /** …and the TYPE surface's two halves, keyed on the Spoon reference kind and on the `TypeRepr`
+    * case's `productPrefix`. Two indexes rather than one for the reason [[Typing]] is two entry
+    * points: the keys are two vocabularies, and a shared map would let a misspelt reference name
+    * silently answer for a `TypeRepr` case (and the reverse). */
+  private val owedLowerType: Map[String, List[DiffId]] =
+    all
+      .flatMap(d => leaves(d.attaches).collect { case Attaches.LoweredType(k) => k -> d.id })
+      .groupMap(_._1)(_._2)
+
+  def owedAtLowerType(kind: String): List[DiffId] = owedLowerType.getOrElse(kind, Nil)
+
+  private val owedRenderType: Map[String, List[DiffId]] =
+    all
+      .flatMap(d => leaves(d.attaches).collect { case Attaches.RenderedType(k) => k -> d.id })
+      .groupMap(_._1)(_._2)
+
+  def owedAtRenderType(kind: String): List[DiffId] = owedRenderType.getOrElse(kind, Nil)
+
+  /** every Spoon REFERENCE kind any row attaches to — held against `SpoonKinds.references` by
+    * `ReferenceKindTotalitySpec`, for `renderedKinds`' reason. */
+  def loweredTypeKinds: Set[String] = owedLowerType.keySet
+
+  /** every `TypeRepr` case any row attaches to — held against the class files by
+    * `EmissionFieldCoverageSpec`. */
+  def renderedTypeKinds: Set[String] = owedRenderType.keySet
+
   /** rows whose discharge surface EXISTS — the only rows an "unreached" claim may be made about.
     *
     * The narrowing is the whole point: a lane reporting "this row is live" on the strength of a
@@ -797,10 +823,16 @@ object Differences:
     *
     * A `Both` row counts as mechanised when EVERY leaf is — a row half of whose discharge is
     * instrumented is a row the lane may not claim, and the honest spelling for the other half is a
-    * leaf that still says `Unmechanised`. */
+    * leaf that still says `Unmechanised`.
+    *
+    * Written as the COMPLEMENT of the two honest negatives rather than as a list of the surfaces,
+    * because a list is what the fourth surface would not have been on: `just catalog-coverage`'s
+    * own filter named the surfaces that existed the day it was written, and twenty rows then became
+    * invisible to it in both directions (`CLAUDE.md` §4.56). A surface added tomorrow is included
+    * here by construction. */
   def mechanised: List[Difference] = all.filter(d => leaves(d.attaches).forall {
-    case _: Attaches.Lowered | _: Attaches.Rendered | _: Attaches.Cited => true
-    case _                                                             => false
+    case _: Attaches.Unmechanised | _: Attaches.NoObligation => false
+    case _                                                   => true
   })
 
   /** rows whose discharge surface is NOT built, which is the number that says "we are not measuring

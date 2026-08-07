@@ -78,7 +78,7 @@ object Lowering:
     * and two copies would be two answers (`ENGINE-LIMITS.md` F8). */
   private[catalog] def scoped[A](owed: List[DiffId], kind: String, dispatch: Dispatch, at: Origin,
                                  subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
-    val outer = log.enterSubject(subject)
+    val outer = log.enterSubject(subject, at)
     try
       if owed.isEmpty then body(using log.unattached)
       else
@@ -124,6 +124,58 @@ object Rendering:
   def of[A](kind: String, at: Origin, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
     Lowering.scoped(Differences.owedAtRender(kind), kind, Dispatch.Either, at, subject)(body)
 
+/** THE FOURTH SURFACE — a TYPE, at both ends of the pipeline.
+  *
+  * The first three surfaces are all about a NODE: a java statement or expression ([[Lowering]]), a
+  * `Tree` ([[Rendering]]), a declaration a whole-program pass decided about ([[CatalogLog.cite]]).
+  * A whole family of differences is about none of them — a use-site wildcard, a raw type's fill, an
+  * F-bound no instantiation can eliminate, a type variable with no binder in scope, a nested type
+  * that is path-dependent in one language and not in the other. Every one is decided while a TYPE
+  * is lowered or rendered, and a type is not a node at either end: a `CtTypeReference` is not a
+  * `CtStatement` or a `CtExpression`, and a `TypeRepr` is not a `Tree` at all — it is the algebra a
+  * `TypeTree` carries, and the `TypeTree` is rendered through its parent.
+  *
+  * So neither existing wrapper could enter one, and ten rows carried [[Attaches.Unmechanised]]
+  * saying exactly that. This is the surface that retires them.
+  *
+  * ONE SURFACE, TWO ENDS — the same shape the node surface has, and for the same reason. The
+  * pipeline has two ends and a type is decided at both: the frontend chooses the IMAGE (what a raw
+  * use fills with, whether `? super Object` is a wildcard at all, which variable has no binder) and
+  * the emitter chooses the TEXT (`? <: X`, a projection or a value path, the `?` that stands in for
+  * a marker). Two [[Attaches]] cases rather than one because the KEYS are two different
+  * vocabularies: Spoon's reference-interface names on one side — `SpoonKinds.references`, whose
+  * totality is derived from `spoon.reflect.reference` exactly as the node registry's is from
+  * `code`/`declaration` — and the `TypeRepr` case's own `productPrefix` on the other.
+  *
+  * NEITHER CARRIES A [[Dispatch]], for [[Rendering]]'s reason: java gives a NODE two meanings by
+  * position (JLS 14.8 vs 15.26.2), and a type reference has only ever had one.
+  *
+  * ==The origin, which the emitter half does not have==
+  *
+  * A `CtTypeReference` is a `CtElement` with a source position, so the frontend passes its own. A
+  * `TypeRepr` carries none and cannot: it is a VALUE the IR shares between every position naming
+  * the same type, so there is no one place it was written. What does exist is the origin of the
+  * node the type is being rendered FOR, which is what [[CatalogLog.currentOrigin]] holds. Reporting
+  * that is exact rather than approximate — a finding's job is to name a java file and line somebody
+  * can open, and the line where the type was NAMED is the one they want — where an
+  * `Origin.synthetic` would put `-`/0 on every type-surface finding in the catalog, which is a
+  * diagnostic nobody can act on.
+  */
+object Typing:
+
+  /** the FRONTEND's type-reference dispatch — `SpoonTir.tpe`.
+    *
+    * `kind` is the registry name of the Spoon *reference* interface, resolved by
+    * `SpoonKinds.refNameOf`'s most-specific rule — so a `CtWildcardReference` is not silently read
+    * as the `CtTypeParameterReference` its implementation extends, which is the same absorption
+    * `SpoonKinds` exists to prevent one package over. */
+  def ofReference[A](kind: String, at: Origin, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
+    Lowering.scoped(Differences.owedAtLowerType(kind), kind, Dispatch.Either, at, subject)(body)
+
+  /** the EMITTER's type dispatch — `TirEmitter.tpe`. No `at`: see this object's header. */
+  def ofRepr[A](kind: String, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
+    Lowering.scoped(Differences.owedAtRenderType(kind), kind, Dispatch.Either, log.currentOrigin, subject)(body)
+
 /** WHICH of the frontend's two term dispatches an obligation attaches at.
   *
   * Not decoration, and not a frontend implementation detail leaking into the registry: java gives
@@ -158,6 +210,18 @@ enum Attaches:
     * `productPrefix`, which is the same name `EmissionFieldCoverageSpec` derives from the class
     * files. See [[Rendering]] for why this case carries no [[Dispatch]]. */
   case Rendered(kind: String)
+
+  /** the FRONTEND's TYPE-REFERENCE dispatch owes a consult for every reference of `kind` —
+    * `SpoonTir.tpe`. `kind` is Spoon's reference-INTERFACE name, the key `SpoonKinds.references`
+    * registers. See [[Typing]] for why the type surface is two cases and not one, and why neither
+    * carries a [[Dispatch]]. */
+  case LoweredType(kind: String)
+
+  /** the EMITTER's TYPE dispatch owes a consult for every `TypeRepr` of `kind` — `TirEmitter.tpe`.
+    * `kind` is the `TypeRepr` case's `productPrefix`, derived from the class files by
+    * `EmissionFieldCoverageSpec` exactly as the `Tree` kinds are, so a row naming a case the
+    * algebra does not have is caught by a spec rather than by silence. */
+  case RenderedType(kind: String)
 
   /** a PHASE decides this row, and cites it per declaration. `phase` is the phase's `name`, so the
     * citation and the phase that owes it can be joined without reading either. */
@@ -275,15 +339,32 @@ final class CatalogLog(val fatal: Boolean = false):
   /** the node whose lowering is running right now, whether or not anything attaches to it. */
   private var currentSubject: AnyRef = null
 
+  /** …and WHERE it is, which is the one thing a `TypeRepr` cannot answer for itself.
+    *
+    * A type is a value the IR shares across every position that names it, so it has no origin of
+    * its own; the node it is being rendered FOR does, and that is the line a reader of a
+    * type-surface finding wants to open ([[Typing]]). Kept beside `currentSubject` and restored by
+    * the same caller, so the two can never disagree about which scope is innermost. */
+  private var origin: Origin = Origin.synthetic
+
+  /** the innermost live scope's origin — `Origin.synthetic` outside every scope, which is honest:
+    * nothing is being lowered or rendered, so there is no site. */
+  def currentOrigin: Origin = origin
+
   private[catalog] def enterScope(o: Obligations): Unit = liveScopes ::= o
   private[catalog] def exitScope(): Unit = liveScopes = liveScopes.tail
 
-  /** set the node under lowering; the caller restores what this returns. */
-  private[catalog] def enterSubject(s: AnyRef): AnyRef =
-    val prev = currentSubject
+  /** set the node under lowering and where it is; the caller restores what this returns. */
+  private[catalog] def enterSubject(s: AnyRef, at: Origin): (AnyRef, Origin) =
+    val prev = (currentSubject, origin)
     currentSubject = s
+    // a SYNTHETIC origin says nothing and must not blank out the enclosing node's, which is the
+    // only site a reader could open. An origin-less scope inherits rather than overwrites.
+    if at != Origin.synthetic then origin = at
     prev
-  private[catalog] def exitSubject(prev: AnyRef): Unit = currentSubject = prev
+  private[catalog] def exitSubject(prev: (AnyRef, Origin)): Unit =
+    currentSubject = prev._1
+    origin = prev._2
 
   /** DISCHARGE `id` in every live scope that is lowering THIS SAME NODE.
     *

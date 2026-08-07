@@ -1,7 +1,7 @@
 package balticporter.frontend.spoon
 
 import balticporter.core.{FrontendConfig, RealPath, Substituted, Substitutions}
-import balticporter.catalog.{CatalogLog, Dispatch, JS, Lowering, Obligations}
+import balticporter.catalog.{CatalogLog, Dispatch, JS, Lowering, Obligations, Typing}
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
 
@@ -1176,8 +1176,25 @@ object SpoonTir:
         case None       => tpe(tr)
 
     // ---- types ----
-    private def tpe(tr: CtTypeReference[?]): TypeRepr = tr match
-      case null => TypeRef(NoPrefix, minter.external("java.lang.Object", "Object"))
+    /** THE TYPE-REFERENCE DISPATCH — the frontend half of the catalog's FOURTH obligation surface,
+      * and the wrapper sits HERE for [[stmtKind]]'s reason: written inside each `case`, an arm
+      * could decline to wrap, and an arm that opts out is the same shape as the defect the
+      * mechanism exists to catch.
+      *
+      * A `CtTypeReference` is neither a statement nor an expression, so neither of the other two
+      * wrappers could ever enter one — which is why ten rows about wildcards, raw fills, F-bounds,
+      * unbound type variables and nested-vs-inner types carried `Attaches.Unmechanised` naming this
+      * exact gap. `SpoonKinds.refNameOf` maps the node's runtime class to its registry name ONCE,
+      * before any arm is tried.
+      *
+      * A NULL reference is not a node and enters no scope: there is nothing there to owe a consult,
+      * which is `SpoonKinds.Claim.Positional`'s rule read at its limit — a node that does not enter
+      * the dispatch owes nothing. Its answer is `objectT`, exactly as the arm it replaces was. */
+    private def tpe(tr: CtTypeReference[?]): TypeRepr =
+      if tr == null then objectT
+      else Typing.ofReference(SpoonKinds.refNameOf(tr.getClass), originOf(tr), tr)(tpeArm(tr))
+
+    private def tpeArm(tr: CtTypeReference[?])(using Obligations): TypeRepr = tr match
       case arr: CtArrayTypeReference[?] =>
         AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(tpe(arr.getComponentType)))
       case inter: CtIntersectionTypeReference[?] =>

@@ -88,6 +88,8 @@ object CatalogCheck:
         val where = Differences.leaves(d.attaches).map {
           case Attaches.Lowered(k, disp) => s"lowering $k/$disp"
           case Attaches.Rendered(k)      => s"rendering $k"
+          case Attaches.LoweredType(k)   => s"lowering-type $k"
+          case Attaches.RenderedType(k)  => s"rendering-type $k"
           case Attaches.Cited(ph)        => s"phase $ph"
           case Attaches.Unmechanised(_)  => "unmechanised"
           case Attaches.NoObligation(_)  => "none"
@@ -204,6 +206,8 @@ object CatalogCheck:
       val attaches = Differences.leaves(r.attaches).map {
         case Attaches.Lowered(k, disp)  => s"lowering:$k/$disp"
         case Attaches.Rendered(k)       => s"rendering:$k"
+        case Attaches.LoweredType(k)    => s"lowering-type:$k"
+        case Attaches.RenderedType(k)   => s"rendering-type:$k"
         case Attaches.Cited(ph)         => s"phase:$ph"
         case Attaches.Unmechanised(_)   => "unmechanised"
         case Attaches.NoObligation(_)   => "none"
