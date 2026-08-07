@@ -162,6 +162,10 @@ final class TirEmitter(
     val full = sym(cd.symbol).fullName
     currentUnitName = full
     printedNotes.clear()
+    // …and the EMISSION DECISIONS beside them, which is what makes `emissionDecisions`' documented
+    // idempotence true. The two are one record read from two sides — a note is derived from a
+    // decision — so clearing one and appending to the other is how they come to disagree.
+    emissionOf.clear()
     // …taken BEFORE the body renders, so the best-effort banner below names THIS file's regions.
     // The marker list is per-emitter and cumulative (it is the run's inventory); the slice from
     // here on is this unit's, and re-emitting a unit — which `Determinism.Emission` does for every
@@ -451,12 +455,38 @@ final class TirEmitter(
   // construction. The porter note is printed beside it so `NoteCoverageCheck` sees the pair.
   // ---------------------------------------------------------------------------
 
+  // per UNIT and CLEARED when that unit is re-emitted, exactly as `recordedNotes` is and for the
+  // same reason. The doc below claimed that idempotence and the buffer was never cleared, so a
+  // second `emitUnit` for one unit appended a second copy of every emission decision — and the
+  // notes, which ARE cleared, then disagreed with it: `NoteCoverageCheck`'s "one note per decision"
+  // arithmetic became a function of how many times the emitter had been called.
   private val recordedEmission =
     collection.mutable.LinkedHashMap.empty[String, collection.mutable.ListBuffer[Decision]]
+  private def emissionOf: collection.mutable.ListBuffer[Decision] =
+    recordedEmission.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty)
 
   /** what the EMITTER decided while rendering, per unit — idempotent, so re-emitting a unit does
     * not double it. Drained by `PortRun` into the run's log after emission. */
   def emissionDecisions: List[Decision] = recordedEmission.values.toList.flatten
+
+  /** Did rendering `unit` record anything the EMITTED TEXT alone cannot carry?
+    *
+    * The action cache's question, and the reason it is asked of the emitter rather than answered in
+    * `PortRun`: emission is not a pure function of the unit — beside the text it produces DECISIONS
+    * (`WidenedSeal`, `ForcedClassInit`, preview's `Unrenderable`) and the NOTE RECORDS that
+    * `NoteCoverageCheck` joins against. A cache HIT returns the text without rendering, so both
+    * vanish while the cached text still CARRIES the note — §4.575's exact defect, and invisible to
+    * the check that exists for it, because the check's two inputs both derive from the rendering
+    * that did not happen.
+    *
+    * So a unit that recorded either is never STORED, and a hit is therefore equal to a miss by
+    * construction. Refusal rather than replay: a `Decision` and a `PorterNote.Printed` are keyed on
+    * a `SymId`, which is interning order and dies with the run (see `Decision`'s class doc), so a
+    * value written to disk by one run and replayed by another would join against the wrong symbols
+    * — and re-resolving it by NAME is the join `NoteCoverageCheck` documents as empty on exactly
+    * the decisions it exists for. */
+  def recordedForCache(unit: String): Boolean =
+    recordedEmission.get(unit).exists(_.nonEmpty) || recordedNotes.get(unit).exists(_.nonEmpty)
 
   /** A construct with NO faithful Scala. Under the shipping default this is `residue` — the
     * comment M6 counts; under `preview` it is a `scala.compiletime.error` carrying the whole
@@ -476,7 +506,7 @@ final class TirEmitter(
         reason     = Reason.Universal(s"unrenderable/$what"),
         origin     = o,
       )
-      recordedEmission.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty) += d
+      emissionOf += d
       printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
       val msg = PorterNote.safe(s"balticporter: $what: $why; $action; origin ${o.javaPath}:${o.line}")
       PorterNote.render(d, "").stripSuffix("\n") + " " +
@@ -1964,7 +1994,7 @@ final class TirEmitter(
       reason     = Reason.Universal("class-init-trigger(§4.4)"),
       origin     = cd.origin,
     )
-    recordedEmission.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty) += d
+    emissionOf += d
     printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
     forcedClinits += (cd.symbol -> trigger)
     s"${PorterNote.render(d, ind(i))}${ind(i)}val _ = ${escPath(tg.fullName).replace('$', '.')}"
@@ -2414,7 +2444,7 @@ final class TirEmitter(
           reason     = Reason.Universal("sealed-hierarchy(JS-C44)"),
           origin     = cd.origin,
         )
-        recordedEmission.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty) += d
+        emissionOf += d
         printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
         ("", PorterNote.render(d, ind(i)))
 
@@ -3673,7 +3703,7 @@ final class TirEmitter(
           reason = Reason.Universal(s"unportable/${m.kind.slug}"),
           origin = m.origin,
         )
-        recordedEmission.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty) += d
+        emissionOf += d
         printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
         recordedMarkers += m
         if bestEffort then

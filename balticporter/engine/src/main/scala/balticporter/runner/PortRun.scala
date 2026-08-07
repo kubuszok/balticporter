@@ -1020,7 +1020,7 @@ final case class PortRun(
     if catUndischarged.nonEmpty then
       say(CatalogCheck.Classification)
       catUndischarged.take(10).foreach(f => say("  " + f.render))
-    writeCatalog(catalogLog)
+    writeCatalog(catalogLog, translated.cacheHits)
 
     // ---- the CONTEXT boundary, RECORDED: the four the phase drew (collected above) plus the one
     // only the emitted text can show — a `using` clause the threading attached to a class's
@@ -1264,13 +1264,21 @@ final case class PortRun(
     * GATED ON THE ARTIFACT LAYER, without exception (§5.1). This is written from the FRONTEND's own
     * log, so it is reachable from more test paths than `PortMap` is — and one unconditional
     * `PortMap.write` was enough to publish run directories into the checkout from a JVM with no
-    * port identity at all. */
-  private def writeCatalog(log: balticporter.catalog.CatalogLog): Unit =
+    * port identity at all.
+    *
+    * …AND IT CARRIES ITS OWN PROVENANCE, which is the half a count cannot state. A unit served from
+    * the action cache is a unit this run did not RENDER, so every `Rendering`/`Typing` consult it
+    * would have made is missing from the numbers below — and a partial coverage number that cannot
+    * say it is partial reads exactly like a smaller one. Zero on every port in this corpus (no port
+    * sets `cache`), and written anyway: a provenance line that only appears when it is non-zero is
+    * one no reader learns to look for. */
+  private def writeCatalog(log: balticporter.catalog.CatalogLog, fromCache: Int): Unit =
     if CheckReport.enabled then
       val dir = CheckReport.runDir
       Files.createDirectories(dir)
+      val provenance = s"#units-served-from-cache\t$fromCache"
       Files.writeString(dir.resolve("catalog.tsv"),
-        (CatalogCheck.TsvHeader :: CatalogCheck.tsv(log)).mkString("", "\n", "\n"))
+        (provenance :: CatalogCheck.TsvHeader :: CatalogCheck.tsv(log)).mkString("", "\n", "\n"))
 
   private def writeSrcMap(rec: balticporter.tir.SrcMap.Recording): Unit =
     if CheckReport.enabled then
@@ -2420,6 +2428,17 @@ object PortRun:
     // (porter notes). Read lazily, so the log is complete by the time the first unit is emitted.
     private lazy val keys = cache.map(_ => TirCacheKey.forUnits(program, emitOrder, decisions.all))
 
+    /** units this run was SERVED FROM THE CACHE — the provenance `catalog.tsv` carries.
+      *
+      * A hit skips `emitUnit`, so it skips every `Rendering`/`Typing` consult that unit would have
+      * made, and the catalog's per-row counts are then about the units this run RENDERED rather
+      * than the units it wrote. That is a legitimate thing for an advisory cache to trade away and
+      * an illegitimate thing to leave unsaid: a coverage number nobody can tell is partial is worse
+      * than a smaller one. Decisions and notes take the other answer — see
+      * `TirEmitter.recordedForCache`: they are not traded away, they are never cached. */
+    private var served = 0
+    def cacheHits: Int = served
+
     def sourceOf(u: Tree.ClassDef): String =
       memo.getOrElseUpdate(
         u.symbol, {
@@ -2427,14 +2446,24 @@ object PortRun:
           (cache, key) match
             case (Some(c), Some(k)) =>
               c.get(k) match
-                case Some(hit) => hit
+                case Some(hit) => served += 1; hit
                 case scala.None =>
                   val out = emitter.emitUnit(u)
-                  c.put(k, out)
+                  // …and it is STORED only if rendering it recorded nothing the text cannot carry.
+                  // A unit whose rendering produced a `Decision` or a porter-note record would, on
+                  // a later hit, come back as text with the note still in it and neither the
+                  // decision nor the record behind it — `decisions.tsv` short a row, and
+                  // `NoteCoverageCheck` blind to the pair because both of its inputs derive from
+                  // the rendering that was skipped. Refused at the STORE rather than at the hit, so
+                  // no such unit is ever in the cache to be hit.
+                  if !emitter.recordedForCache(nameOf(u)) then c.put(k, out)
                   out
             case _ => emitter.emitUnit(u)
         },
       )
+
+    private def nameOf(u: Tree.ClassDef): String =
+      program.symbolOf(u.symbol).map(_.fullName).getOrElse("")
 
 /** What a run FOUND, classified per CLAUDE.md §1 so an agent in another repository can act on it
   * without this session's context (§4.45).
