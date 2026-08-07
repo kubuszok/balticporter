@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -980,6 +980,19 @@ final case class PortRun(
     say(s"HEAP POLLUTION (unchecked varargs carried over from java): ${heapPollution.size}")
     heapPollution.map(_.issue).distinct.foreach(i => say(HeapPollutionCheck.Issue.classification(i)))
     println(HeapPollutionCheck.summary(heapPollution))
+
+    // ---- JS-C22 / JS-C23: java resolves an overload in THREE PHASES and scala in ONE ----
+    // A RISK COUNTER and explicitly not a resolver (`ENGINE-LIMITS.md` T17): predicting which member
+    // scala picks means modelling its resolution well enough to disagree with javac about a program
+    // neither compiler rejects. What is counted is the calls where the two rules CAN differ, and the
+    // population is derived from JLS 15.12.2's own phase boundaries — boxing, varargs, and the
+    // generic tie-break — rather than from "this call is overloaded". Over `checkedUnits`
+    // (ENGINE-LIMITS D2), through the same predicate the emitter's two consults read.
+    val overloadRisk = OverloadRiskCheck.check(program, checkedUnits, translated.emitter.overloads)
+    CheckReport.record(OverloadRiskCheck.Name, overloadRisk.findings.map(_.report))
+    say(s"OVERLOAD RISK (calls whose candidate set spans a java resolution phase): ${overloadRisk.findings.size}")
+    overloadRisk.findings.map(_.issue).distinct.foreach(i => say(OverloadRiskCheck.Issue.classification(i)))
+    println(OverloadRiskCheck.summary(overloadRisk))
 
     // ---- §4.4: a `static { }` block emitted into a companion that nothing initialises ----
     // The same two-source shape once more: the census of `static { }` blocks comes from the trees,

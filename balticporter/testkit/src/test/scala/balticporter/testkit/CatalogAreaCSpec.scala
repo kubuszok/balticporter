@@ -588,15 +588,54 @@ class CatalogAreaCSpec extends PortSuite:
 
   // -- the OPEN and ABSENT rows: rule (ii) makes CONSULTING one a finding ------------------------------------
 
-  test("JS-C12 / JS-C22 / JS-C23 / JS-C42 — an OPEN row is the WORK LIST and is never consulted") {
+  test("JS-C12 / JS-C42 — an OPEN row is the WORK LIST and is never consulted") {
     // JS-C12 ATTACHES — a forward reference is decided where the field it reads renders — so it is
-    // an `undischarged` hole on every port, which is exactly what a work list is. JS-C22, JS-C23
-    // and JS-C42 have no surface at all and say so.
+    // an `undischarged` hole on every port, which is exactly what a work list is. JS-C42 has no
+    // surface at all and says so.
+    //
+    // JS-C22 and JS-C23 USED TO BE ON THIS LIST and are three tests below: both became `Partial`
+    // when the risk counter landed, which is exactly the flip the sentence this test used to carry
+    // asked for. They are the worked example of the difference between "no surface exists" and "the
+    // surface counts the RISK and refuses the resolution".
     val p = port("public class A { int a = b; int b = 1; }")
-    List(JS.C(12), JS.C(22), JS.C(23), JS.C(42)).foreach { id =>
+    List(JS.C(12), JS.C(42)).foreach { id =>
       assertNotConsults(p, id)
       assert(Differences.byId(id).status.isOpen, s"$id is no longer Open — flip this test with it")
     }
+  }
+
+  test("JS-C22 — java's THREE PHASES against scala's one: a vararg candidate beside a fixed-arity one is a counted RISK") {
+    // Java tries the fixed-arity phases FIRST and reaches the vararg one only if both fail, so
+    // javac bound `f("x")` to `f(String)`. Scala has no such staging. Neither compiler rejects the
+    // program, which is why this is a count and not an error — and why the row is `Partial` and not
+    // `Handled`: WHICH member scalac binds is not modelled (`ENGINE-LIMITS.md` T17).
+    val p = port(
+      """public class A {
+        |  void f(String a) { }
+        |  void f(String... a) { }
+        |  void go() { f("x"); }
+        |}
+        |""".stripMargin)
+    assertConsults(p, JS.C(22), fired = true)
+    assert(!Differences.byId(JS.C(22)).status.isOpen)
+  }
+
+  test("…and a call with ONE candidate consults the row and does NOT fire — the answer at the overwhelming majority of calls") {
+    val p = port("public class A { void f(String a) { } void go() { f(\"x\"); } }")
+    assertConsults(p, JS.C(22))
+    assertConsults(p, JS.C(23))
+  }
+
+  test("JS-C23 — scala's relative-weight rule prefers the NON-GENERIC alternative and java's does not") {
+    val p = port(
+      """public class A {
+        |  <T> void f(T a) { }
+        |  void f(String a) { }
+        |  void go() { f("x"); }
+        |}
+        |""".stripMargin)
+    assertConsults(p, JS.C(23), fired = true)
+    assert(!Differences.byId(JS.C(23)).status.isOpen)
   }
 
   test("JS-C43 — a construct the frontend ABSORBS SILENTLY has no arm to owe a consult") {
@@ -668,9 +707,15 @@ class CatalogAreaCSpec extends PortSuite:
     // fail: the ONLY rows left are the six whose surface genuinely does not exist, and each names
     // which one it is waiting for.
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
-      Set(JS.C(22), JS.C(23), JS.C(42), JS.C(43)),
+      Set(JS.C(42), JS.C(43)),
       "a JS-C row that is neither a refused construct, an absorbed one, nor a row whose surface " +
         "nobody has built still says nothing is measuring it")
+    // JS-C22 and JS-C23 were on that set and left it when the RISK COUNTER landed. The pair is the
+    // worked example of the distinction `Unmechanised` is FOR: their sentence said no surface
+    // existed to owe a consult, and what did not exist was a RESOLVER — the rendered call is a
+    // surface, and what it owes is the risk, not the answer (`ENGINE-LIMITS.md` T17). Both are
+    // `Partial`, both attach at `Rendered("Apply")`, and neither claims the resolution.
+    assert(!Differences.byId(JS.C(22)).status.isOpen && !Differences.byId(JS.C(23)).status.isOpen)
     // JS-C29 was the sixth and is the one row this area shares with area G's residue: it is decided
     // while RENDERING A TYPE, which is the fourth obligation surface. Asserted here so the row
     // cannot quietly go back.

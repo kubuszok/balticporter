@@ -3,10 +3,10 @@ base-surface	0
 bean-exposure	0
 break-catch	0
 cast-conversion	0
-catalog(consulted)	88
+catalog(consulted)	90
 catalog(uncited)	121
 catalog(undischarged)	5
-catalog(unmechanised)	7
+catalog(unmechanised)	5
 catalog(unreached)	16
 class-init-trigger	0
 collection-boundary	22
@@ -19,6 +19,7 @@ jdk-surface	0
 manifest	0
 markers	0
 omissions	10
+overload-risk	24
 policy	0
 port-map	0
 portability(all)	1605

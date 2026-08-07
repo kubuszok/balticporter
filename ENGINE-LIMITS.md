@@ -2020,6 +2020,51 @@ reason the frontend cannot translate them — plus (b) for WHICH families are ca
 `SpoonFrontend.preservedAnnotationPrefixes` one path over. Counted today by `omissions`, which named
 it correctly and was read as decoration.*
 
+### T17. Java resolves an overload in THREE PHASES and Scala in ONE — **the divergence cannot be predicted without a resolver; the RISK is counted instead**
+
+Java picks an overload in three passes (JLS 15.12.2): STRICT (no boxing, no varargs), then LOOSE
+(boxing and unboxing admitted), then VARIABLE-ARITY. A candidate admitted in an earlier pass wins
+outright — javac never looks at a later one. Scala resolves in a single pass with conversions and
+defaults in scope, and its most-specific rule then PREFERS A NON-GENERIC alternative where java's
+does not (JLS 15.12.2.5).
+
+**Both programs typecheck, which is the whole difficulty.** A call javac bound to `f(int)` can bind
+to `f(Object)` in the port with no error on either side, no moved member digest that says which
+member was chosen, and no test unless the two members do different things. It is `CLAUDE.md` §4.4's
+defect class with no java statement form to key on.
+
+**Closing it is a compiler-sized project and is REFUSED.** Predicting the divergence means modelling
+scala's own overload resolution — including implicit conversion, default arguments, and the
+relative-weight rule — well enough to disagree with javac about a program neither compiler rejects.
+Two narrow faces are already closed and neither generalises: `Visibility.decide` restores javac's
+candidate set (T12 — accessibility is an input to resolution), and
+`TirEmitter.numericOverloadAscription` closes exact-match-against-widening at a numeric literal.
+
+**What IS affordable is the RISK, and its population is derived from JLS 15.12.2's own phase
+boundaries rather than from "this call is overloaded".** The phases are separated by exactly two
+conversions — boxing (1→2) and varargs (2→3) — and the tie-break inside a phase is where the generic
+rule differs, so there are exactly three ways for the two languages to disagree, each a fact about
+the CANDIDATE SET alone: a fixed-arity and a variable-arity candidate both applicable; two applicable
+candidates taking a primitive and its wrapper (or a universal slot) at one position; an applicable
+generic candidate beside a non-generic one. `overload-risk` counts those.
+
+**A candidate set separated only by unrelated REFERENCE types is deliberately NOT reported**, and
+that narrowing is the entry's real content. Both languages admit those in one phase and choose by
+applicability; reporting them would bury the three real spans under every overload in the library,
+and a lane a reader learns to ignore is the silence it replaced. The check therefore publishes its
+own DENOMINATOR on every run — calls examined, calls with more than one applicable candidate,
+calls spanning a phase — so the over-approximation's rate is a number rather than a claim in a
+comment.
+
+**Two structural limits, both stated rather than counted as zeros.** The candidate set is what the
+PROGRAM DECLARES: an external callee's overloads live in a class file the frontend interns lazily
+and only on reference, so a call into the JDK or a dependency has a set this check cannot see; and
+ancestors are followed only where the program declares them.
+
+*Fix kind: (a). Universal — java's rule and scala's rule are facts about the two languages.
+Catalog `JS-C22` (the phases) and `JS-C23` (the generic tie-break), both `Partial`: the risk is
+counted, the choice is not modelled.*
+
 ---
 
 ## 4. Collections, shims and the JDK boundary

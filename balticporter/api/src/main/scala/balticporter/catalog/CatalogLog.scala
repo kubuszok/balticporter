@@ -44,7 +44,7 @@ import balticporter.tir.Origin
   *
   * A row whose surface does not exist carries [[Attaches.Unmechanised]] and is COUNTED in its own
   * lane, because a lane reporting it as fine on the strength of a mechanism nobody built would be
-  * worse than no lane. That number has gone 112 → 88 → 47 → 20 → 10 as the surfaces landed, and it
+  * worse than no lane. That number has gone 112 → 88 → 47 → 20 → 10 → 5 as the surfaces landed, and it
   * is the only honest alternative to measuring: a number that can go down, rather than a silence
   * that reads as coverage.
   *

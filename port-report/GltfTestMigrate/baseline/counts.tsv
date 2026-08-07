@@ -2,10 +2,10 @@
 base-surface	0
 break-catch	0
 cast-conversion	0
-catalog(consulted)	76
+catalog(consulted)	78
 catalog(uncited)	121
 catalog(undischarged)	3
-catalog(unmechanised)	7
+catalog(unmechanised)	5
 catalog(unreached)	28
 class-init-trigger	0
 collection-boundary	0
@@ -21,6 +21,7 @@ manifest	0
 markers	0
 nullability-boundary	0
 omissions	0
+overload-risk	0
 policy	0
 port-map	0
 portability(all)	153

@@ -118,6 +118,17 @@ final class TirEmitter(
   // was computed over are untouched, so it still applies.
   private val program = TirEmitter.widen(prepared, plans.widenedMembers, own)
 
+  /** every same-named candidate a program-declared type and its program-declared ancestors declare
+    * — the index `JS-C22`/`JS-C23`'s consults read at each rendered call, and the one the RUN's
+    * `overload-risk` check reads too.
+    *
+    * EXPOSED and shared rather than rebuilt by the check, for `HeapPollutionCheck`'s reason one
+    * level up: the predicate is stated once so the obligation and the count cannot disagree about
+    * which calls the rows are about, and the INDEX that predicate reads is the other half of the
+    * same statement. Built over `program` — the emitter's own widened view, which is what a reader
+    * of the emitted call is looking at. */
+  private[balticporter] lazy val overloads = new balticporter.tir.OverloadRiskCheck.Overloads(program)
+
   /** Java's four access levels, decided once over the whole program — DESIGN §8.7, and the doc on
     * [[Visibility]] for why the LEVEL is decided there and the QUALIFIER supplied here. Computed at
     * construction like the renames above it, so its residual widenings travel with
@@ -3361,6 +3372,21 @@ final class TirEmitter(
       Obligations.consult(JS.C(6), a.origin)(Option.when(fun match
         case Tree.Select(recv, m, _, _) => staticThroughInstance(recv, m)
         case _                          => false)(()))
+      // JS-C22 and JS-C23 — java resolves an overload in THREE PHASES and scala in ONE, and the
+      // decision this arm takes is to RENDER THE CALL AS JAVA WROTE IT: the port names the member
+      // javac bound, and which member scalac then binds is not modelled (`ENGINE-LIMITS.md` T17 —
+      // that is a resolver, and a compiler-sized one). So both rows are consulted, never fired into
+      // a rewrite, and `OverloadRiskCheck` is the count beside them — through the same predicate and
+      // the same index, so the obligation and the number cannot disagree about which calls the rows
+      // are about. Two rows and not one because the JLS clauses are two: the PHASES (15.12.2) and
+      // the most-specific tie-break inside a phase (15.12.2.5).
+      locally {
+        val risks = balticporter.tir.OverloadRiskCheck.risks(a, overloads)(using program)
+        Obligations.consult(JS.C(22), a.origin)(
+          Option.when(risks.exists(_.issue != balticporter.tir.OverloadRiskCheck.Issue.GenericTieBreak))(()))
+        Obligations.consult(JS.C(23), a.origin)(
+          Option.when(risks.exists(_.issue == balticporter.tir.OverloadRiskCheck.Issue.GenericTieBreak))(()))
+      }
       // JS-G39, the EMITTER half — an external callee's `T...` is a class file's, which scalac reads
       // as a REPEATED parameter, so the pack becomes the argument list's TAIL rather than one
       // argument. HERE and not at a `Rendered("Repeated")`, because `argTerms` flattens the node
