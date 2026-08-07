@@ -302,7 +302,11 @@ abstract class PortSuite extends munit.FunSuite:
     * obligation — nothing can assert that a phase *should have* considered a difference at a
     * declaration it never visited — so a suite must not be able to spell the two the same way. */
   def assertCites(p: Ported, id: DiffId, about: String = "")(using munit.Location): Unit =
-    val at = p.catalog.citedAt(id)
+    // …through `reached`, which is the very thing its own doc warns about one assertion up: a
+    // citation is not only a PHASE's any more. `TirEmitter`'s whole-program renaming passes cite
+    // JS-C04 and JS-C46, and they run when the EMITTER is constructed — which `Ported.out` does,
+    // lazily. Read straight off `p.catalog` this assertion reported every one of them as absent.
+    val at = reached(p).citedAt(id)
     if !at.exists(_.contains(about)) then
       fail(s"$id was not cited by any phase${if about.isEmpty then "" else s" at a declaration containing '$about'"}" +
         s"\n--- ${at.size} citation(s) ---\n${if at.isEmpty then "  (none)" else at.map("  " + _).mkString("\n")}\n---------------")

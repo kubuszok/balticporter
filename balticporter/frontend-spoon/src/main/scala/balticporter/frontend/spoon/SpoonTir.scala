@@ -3266,7 +3266,27 @@ object SpoonTir:
           case t                   => Right(expr(t))
         Tree.MethodRef(qual, mid, ty(mr), originOf(mr))
 
-      private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?], at: CtExpression[?]): Term =
+      private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?], at: CtExpression[?])
+                             (using Obligations): Term =
+        // JS-C02 / JS-C05 — the same two facts as at an invocation, arriving at a FIELD. A static
+        // field reached through a type name is inherited through `extends` AND through `implements`
+        // (JLS 9.3), and a static nested CONSTANT reached through a subclass's name is the same
+        // question with a nested path on it. Both consulted here, at the one arm both field
+        // dispatches reach, and both read off the reference: `getDeclaringType` IS the declarer, so
+        // no BFS is re-run to answer a diagnostic.
+        val staticRecv = target.isInstanceOf[CtTypeAccess[?]]
+        Obligations.consult(JS.C(2), originOf(at))(Option.when(staticRecv && (target match
+          case ta: CtTypeAccess[?] =>
+            // Through `declaringStaticType` — this row's own evidence symbol — and not through the
+            // reference's `getDeclaringType` or its `getFieldDeclaration`. For `C.X` where `X` is
+            // `K`'s constant, Spoon's reference reads back the type the SOURCE WROTE and the
+            // declaration does not resolve at all, so both answered "not inherited" at exactly the
+            // interface-constant shape the row is named for. The BFS is the fact; asking it here
+            // costs one extra walk of an inheritance closure, and only at a STATIC field read.
+            Option(ta.getAccessedType).exists(a =>
+              declaringStaticType(a, ref.getSimpleName).exists(_.getQualifiedName != a.getQualifiedName))
+          case _ => false))(()))
+        Obligations.consult(JS.C(5), originOf(at))(Option.when(staticRecv)(()))
         if ref.getSimpleName == "class" then
           // `Foo.class` → `classOf[Foo]`: the argument is the ACCESSED type (`Foo`), not the type
           // of the `.class` expression (`java.lang.Class[Foo]`, which is what `ty(at)` gives).
@@ -3673,6 +3693,21 @@ object SpoonTir:
       private def invocation(inv: CtInvocation[?])(using Obligations): Term =
         val ex   = inv.getExecutable
         val mid  = methodSym(ex)
+        // JS-C01 / JS-C02 — a java `static` is INHERITED by every subclass and through every
+        // implemented interface; a scala companion inherits nothing, so `Sub.m()` has to be
+        // re-pointed at the type that DECLARES `m`. Consulted at the head of the one arm every
+        // invocation reaches, and read off the reference rather than by re-running
+        // `declaringStaticType`'s BFS: the executable reference already carries its declaring type.
+        // JS-C01 fires wherever the receiver is a TYPE (the position where the difference exists at
+        // all) and JS-C02 where that type is not the declarer — java's inheritance actually used.
+        val staticRecv = inv.getTarget.isInstanceOf[CtTypeAccess[?]]
+        Obligations.consult(JS.C(1), originOf(inv))(Option.when(staticRecv)(()))
+        Obligations.consult(JS.C(2), originOf(inv))(Option.when(staticRecv && (inv.getTarget match
+          case ta: CtTypeAccess[?] =>
+            val written = Option(ta.getAccessedType).map(_.getQualifiedName)
+            val decl    = Option(ex.getDeclaringType).map(_.getQualifiedName)
+            written.isDefined && decl.isDefined && written != decl
+          case _ => false))(()))
         val argEs = inv.getArguments.asScala.toList
         val erasedRecv = erasedReceiverView(inv)
         val recvSubst  = receiverTypeArgs(inv)
@@ -3987,6 +4022,17 @@ object SpoonTir:
         val anon = cc match
           case nc: CtNewClass[?] => anonClass(nc, classId, varScope)
           case _                 => None
+        // JS-C31 — anonymous class construction and capture; and JS-C17 — DOUBLE-BRACE
+        // INITIALISATION, which is that construct plus an instance initialiser and nothing else.
+        // Consulted here rather than inside `anonClass`, because `anonClass` returns `None` for a
+        // `CtNewClass` with no body and a row consulted only where it fires is a row whose consult
+        // count says nothing. A plain `CtConstructorCall` records both without being owed them —
+        // the attachment is at `CtNewClass`, which is the kind that carries the body.
+        Obligations.consult(JS.C(31), originOf(cc))(Option.when(anon.isDefined)(()))
+        Obligations.consult(JS.C(17), originOf(cc))(Option.when(cc match
+          case nc: CtNewClass[?] =>
+            Option(nc.getAnonymousClass).exists(!_.getAnonymousExecutables.isEmpty)
+          case _ => false)(()))
         Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc), anon), args, cid, t, originOf(cc))
 
       /** A RAW constructor call — `return new Values(this)` inside `ArrayMap<K,V>`, where

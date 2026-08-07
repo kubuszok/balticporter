@@ -109,7 +109,7 @@ final class TirEmitter(
     TirEmitter.resolveCapturedLocalClashes(
       TirEmitter.funnelParamRenames(
         TirEmitter.resolveFieldShadowing(
-          TirEmitter.resolveMemberClashes(source, own, surface), own, surface), own, surface), own)
+          TirEmitter.resolveMemberClashes(source, own, surface, catalog), own, surface, catalog), own, surface), own)
   /** which Java constructor becomes each class's Scala primary, and which `super(args)` can be
     * replayed as statements — whole-program decisions. */
   private val plans = CtorFunnel.Plans(prepared, Some(surface))
@@ -167,7 +167,12 @@ final class TirEmitter(
     // here on is this unit's, and re-emitting a unit — which `Determinism.Emission` does for every
     // unit on every run — appends to it exactly as it re-renders the text.
     val markersBefore = recordedMarkers.size
-    val body = classDef(cd, 0)
+    // …through the RENDERING DISPATCH, not straight into `classDef`. A nested type reaches the page
+    // through `stat` and a TOP-LEVEL one reached `classDef` directly, so every row attaching at
+    // `Rendered("ClassDef")` would have been owed — and discharged — only for the nested ones, which
+    // is `ENGINE-LIMITS.md` F8's shape at the entry rather than in an arm. `statArm`'s `ClassDef`
+    // case is `classDef(c, i)` and nothing else, so the emitted text is unchanged by construction.
+    val body = stat(cd, 0)
     val pkg  = if full.contains('.') then s"package ${escPath(full.substring(0, full.lastIndexOf('.')))}\n\n" else ""
     // The generated banner says what the FILE is; the upstream's own header — its licence — follows
     // verbatim, before the `package` clause it sat above in Java. Both, in that order: the banner
@@ -2281,12 +2286,121 @@ final class TirEmitter(
   private def stat(s: Statement, i: Int): String =
     Rendering.of(TirKinds.of(s), s.origin, s)(statArm(s, i))
 
+  /** JS-C47 / C48 / C49 / C50 — JAVA'S FOUR ACCESS LEVELS, consulted at every DECLARATION.
+    *
+    * The four rows are one decision seen from four sides — `Visibility.decide` runs over the whole
+    * program and [[visOf]] renders its answer at a class, a method and a field alike — so they
+    * attach at all three declaration kinds (`Differences.everyDeclaration`) and are consulted HERE,
+    * where the three arms of the rendering dispatch converge. Stated inside `classDef1`, `defDef`
+    * and `valDef` it would be three copies of one rule, which is `ENGINE-LIMITS.md` F8's shape and
+    * has now cost this engine three separate defects.
+    *
+    * Each fires where the two languages genuinely diverge, and the two package-private rows fire
+    * TOGETHER because they are the same fact read at its two ends: JS-C50 is java's DEFAULT being
+    * package-private where scala's is public (emit nothing and the member is published), JS-C47 is
+    * the `private[pkg]` that translation takes. */
+  private def declVisibility(s: Symbol, at: Origin)(using Obligations): Unit =
+    // Read off `visPlan` — the DECIDED level — and never off the raw java flags. `Visibility.decide`
+    // is allowed to widen (a `protected static` moving to the companion, §8.7's residues), so the
+    // flags say what java wrote and the plan says what this port emits, and a consult that answered
+    // from the first would be reporting about a decision it had not read.
+    val v = visPlan.getOrElse(s.id, Visibility.Vis.Public)
+    val packagePrivate = v match
+      case Visibility.Vis.PackagePrivate | Visibility.Vis.PrivateAt(_) => true
+      case _                                                           => false
+    Obligations.consult(JS.C(47), at)(Option.when(packagePrivate)(()))
+    Obligations.consult(JS.C(48), at)(Option.when(v match
+      case Visibility.Vis.ProtectedPkg | Visibility.Vis.ProtectedAt(_) => true
+      case _                                                           => false)(()))
+    // JS-C49 fires where java's `private` genuinely reaches further than scala's: a member of a
+    // NESTED type, which java scopes to the whole enclosing TOP-LEVEL class. On a top-level class's
+    // own member the two rules coincide exactly, and `privateQualifier` emits nothing there —
+    // asked through THAT function this would read the emitter's positional state, which at a
+    // `Tree.ClassDef` consult is still the ENCLOSING owner and at the render is the class itself.
+    Obligations.consult(JS.C(49), at)(
+      Option.when(v == Visibility.Vis.Private && s.owner != SymId.None && !topLevelSyms(s.owner))(()))
+    Obligations.consult(JS.C(50), at)(Option.when(packagePrivate)(()))
+
+  /** the program's TOP-LEVEL type symbols — one set, for the nested-owner test above. */
+  private lazy val topLevelSyms: Set[SymId] = program.units.map(_.symbol).toSet
+
+  /** THE AREA-C ROWS A TYPE DECLARATION OWES — consulted at the dispatch, above every arm.
+    *
+    * `classDef` forks into `enumDef` and `classDef1`, and most of these rows are decided inside one
+    * of the two. Consulted there, every row would be a HOLE at the other shape — an enum's rendering
+    * would owe `JS-C34` and never ask it — so the consults sit at the one point both arms are below,
+    * which is this dispatch's own `case`.
+    *
+    * The PREDICATES are read off the tree and the symbol table rather than by re-running the
+    * emitter's own machinery. That is deliberate and it is stated because it bounds what a `fired`
+    * count means: `consult` asks *does this difference APPLY at this declaration*, and the shape at
+    * which it applies is what the tree says. Re-deriving `diamondOverrides` or `orderBody` here
+    * would double the only two walks in this file that are not linear, to move a diagnostic number
+    * from "this class has the shape" to "the repair emitted text", which the edge-case suite
+    * asserts and the emitted diff already shows. */
+  private def classConsults(cd: Tree.ClassDef)(using Obligations): Unit =
+    val s       = sym(cd.symbol)
+    val at      = cd.origin
+    val plan    = if s.flags.isModule then CtorFunnel.Plan.none else plans(cd)
+    val statics = cd.body.filter(isStatic)
+    val inst    = cd.body.filterNot(isStatic)
+    val ctors   = cd.body.collect { case d: Tree.DefDef if sym(d.symbol).name == "<init>" => d }
+    val exports = parentSymsOf(cd).filter(p => staticsReachable(p))
+    /** a member java runs in a class-initialisation step — a field WITH an initialiser, or a block.
+      * The same predicate at both steps: JLS 12.4.2 step 9 for the static pair and 12.5 step 4 for
+      * the instance one, which is exactly why the two rows below share it. */
+    def stepMember(x: Statement): Boolean = x match
+      case v: Tree.ValDef => v.rhs.isDefined
+      case d: Tree.DefDef => isInitBlock(d)
+      case _              => false
+    val isEnum = s.flags.isEnum
+
+    // -- statics: java inherits them, a companion inherits nothing ------------------------------
+    Obligations.consult(JS.C(3), at)(Option.when(exports.nonEmpty && statics.nonEmpty)(()))
+    Obligations.consult(JS.C(34), at)(Option.when(exports.nonEmpty)(()))
+
+    // -- class initialisation (JLS 12.4) ---------------------------------------------------------
+    Obligations.consult(JS.C(7), at)(
+      Option.when(hasClinit(statics) || nearestClinitAncestor(cd.symbol).isDefined)(()))
+    Obligations.consult(JS.C(10), at)(Option.when(reentrantBearers.contains(cd.symbol))(()))
+    Obligations.consult(JS.C(9), at)(Option.when(statics.count(stepMember) > 1)(()))
+
+    // -- instance creation (JLS 12.5) ------------------------------------------------------------
+    Obligations.consult(JS.C(18), at)(
+      Option.when(inst.exists { case v: Tree.ValDef => v.rhs.isDefined; case _ => false } &&
+                  inst.exists { case d: Tree.DefDef => isInitBlock(d); case _ => false })(()))
+    Obligations.consult(JS.C(13), at)(Option.when(plan.primary.isDefined || plan.isSynthesised)(()))
+    Obligations.consult(JS.C(14), at)(Option.when(plan.superArgs.nonEmpty)(()))
+    Obligations.consult(JS.C(19), at)(Option.when(ctors.sizeIs > 1)(()))
+    Obligations.consult(JS.C(20), at)(Option.when(plan.isSynthesised)(()))
+    Obligations.consult(JS.C(21), at)(Option.when(ctors.sizeIs > 1)(()))
+
+    // -- inheritance ------------------------------------------------------------------------------
+    // JS-C33's shape and not its repair: `diamondOverrides` declines on `parents.sizeIs < 2` in its
+    // own first line, so this predicate is that test and the walk below it happens once.
+    Obligations.consult(JS.C(33), at)(Option.when(cd.parents.sizeIs >= 2)(()))
+
+    // -- enums (JLS 8.9) ---------------------------------------------------------------------------
+    Obligations.consult(JS.C(37), at)(Option.when(isEnum)(()))
+    // `enumDef.hasName`'s own two disjuncts and not a third spelling of them: java's TWO namespaces
+    // let a promoted constructor PARAMETER or a FIELD carry the name beside `Enum.name()`, and
+    // reading only the first said "does not apply" at the shape the row is named for.
+    Obligations.consult(JS.C(38), at)(Option.when(isEnum &&
+      (plan.primaryParams.exists(v => sym(v.symbol).name == "name") ||
+       cd.body.exists { case d: Definition => sym(d.symbol).name == "name"; case _ => false }))(()))
+    Obligations.consult(JS.C(39), at)(Option.when(isEnum)(()))
+    Obligations.consult(JS.C(40), at)(Option.when(isEnum && cd.enumCases.exists(_.body.nonEmpty))(()))
+
+    declVisibility(s, at)
+
   private def statArm(s: Statement, i: Int)(using Obligations): String = s match
     // a commented STATEMENT: its comments at the statement's own indent, then the statement. A
     // DEFINITION never arrives here wrapped — it carries its own `leading` field — so this is
     // exactly the block-statement case and nothing else.
     case c: Tree.Commented => leading(c.leading, i) + stat(c.stmt, i)
-    case c: Tree.ClassDef => classDef(c, i)
+    case c: Tree.ClassDef =>
+      classConsults(c)
+      classDef(c, i)
     // a Java initializer block is carried as a synthetic member; emit its BODY inline rather than
     // a `def`, since a block in a class/object body runs at initialisation — where Java runs it
     // too — and `orderBody` has already placed it after the field declarations it fills.
@@ -2306,6 +2420,13 @@ final class TirEmitter(
     // own `case`, before it decides which shape the member takes.
     case d: Tree.DefDef   =>
       Obligations.consult(JS.S(25), d.origin)(Option.when(needsUnreachableTail(d))(()))
+      // JS-C16 — an instance initialiser block; and JS-C25 — `override`, which java does not write.
+      // HERE for the reason JS-S25 is: a `Tree.DefDef` reaches the page through two arms, and an
+      // init block never carries `isOverride`, so a consult inside `defDef` would be a hole at
+      // exactly the member JS-C16 is about.
+      Obligations.consult(JS.C(16), d.origin)(Option.when(isInitBlock(d))(()))
+      Obligations.consult(JS.C(25), d.origin)(Option.when(sym(d.symbol).flags.isOverride)(()))
+      declVisibility(sym(d.symbol), d.origin)
       if isInitBlock(d) then
         d.rhs.map(r => s"${declNotes(d.symbol, i)}${ind(i)}locally ${term(r, i)}").getOrElse("")
       else defDef(d, i)
@@ -2778,6 +2899,21 @@ final class TirEmitter(
     // half is what this branch closes and the LOCAL half is unexamined, so a consult that fired
     // would still be saying nothing about a local silently taking a default.
     Obligations.consult(JS.S(19), v.origin)(Option.when(v.rhs.isEmpty)(()))
+    // …and the area-C rows a FIELD owes. `valDef` is the single arm a `Tree.ValDef` reaches, so
+    // this IS the convergence point and there is no second place for them to be a hole.
+    val vs      = sym(v.symbol)
+    val ownerCd = program.definitionOf(vs.owner).collect { case c: Tree.ClassDef => c }
+    // JS-C08 — a java CONSTANT VARIABLE is inlined by javac, so reading it triggers no class
+    // initialiser; a typed `val` would. Fires exactly where `valDef0` renders `inline val`.
+    Obligations.consult(JS.C(8), v.origin)(Option.when(v.rhs.isDefined && isJavaConstant(v, vs))(()))
+    // JS-C36 — an interface field is implicitly `public static final`, so it is a companion member
+    // of the emitted trait rather than one of its abstract members.
+    Obligations.consult(JS.C(36), v.origin)(
+      Option.when(vs.flags.isStatic && ownerCd.exists(c => sym(c.symbol).flags.isTrait))(()))
+    // JS-C45 — a `final` field's safe-publication guarantee, carried by `val`. A FIELD, not a local:
+    // the guarantee is about a construction the JMM freezes, and a local has no such moment.
+    Obligations.consult(JS.C(45), v.origin)(Option.when(!vs.flags.isMutable && ownerCd.isDefined)(()))
+    declVisibility(vs, v.origin)
     // trivia, then the porter note, then the `val` — see `defDef` for why that order is a rule.
     val note = declNotes(v.symbol, i)
     if v.leading.nonEmpty then leading(v.leading, i) + note + valDef0(v.copy(leading = Nil), i)
@@ -3034,7 +3170,15 @@ final class TirEmitter(
     // `if (c) a else b.toString()` — which parses, and calls the method on ONE BRANCH.
     case Tree.Select(q, s, _, _)        => s"${operand(q, i)}.${local(s)}"
     case Tree.New(tpt, _, _, anon)      => s"new ${ctorTpe(tpt.tpe)}${anonBody(anon, i)}"
-    case Tree.Apply(fun, args, _, _, _) => applyStr(fun, args, i)
+    case a @ Tree.Apply(fun, args, _, _, _) =>
+      // JS-C06 — `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and
+      // discards it. A companion call has no receiver slot to put the expression in, so the
+      // emitter has to keep the evaluation somewhere. Consulted at the dispatch's own `case`,
+      // above `applyStr`'s six arms, so no arm can be the only place it is asked.
+      Obligations.consult(JS.C(6), a.origin)(Option.when(fun match
+        case Tree.Select(recv, m, _, _) => staticThroughInstance(recv, m)
+        case _                          => false)(()))
+      applyStr(fun, args, i)
     case Tree.TypeApply(fun, targs, _, _) => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
     case Tree.Assign(l, r, _, _)        => s"${term(l, i)} = ${term(r, i)}"
     case Tree.Block(stats, expr, _, _, tr) => block(stats, expr, tr, i)
@@ -4356,7 +4500,14 @@ object TirEmitter:
     * are the same defect through Java's separate namespaces for the two, and are renamed here too.
     * Statics are exempt: they land in the companion, which inherits nothing. */
   def resolveFieldShadowing(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
-                            surface: Surface = null): Program =
+                            surface: Surface = null,
+                            /** JS-C04's citation surface. A whole-program pass does not walk one node
+                              * kind, so a `Lowering`/`Rendering` wrapper is the wrong shape for it
+                              * (`CatalogLog`'s header): it CITES the row once per declaration it
+                              * decided about, which is `Decision`'s own granularity. Discarding by
+                              * default, exactly as the emitter's own log parameter is — this pass runs
+                              * once per emitter and the determinism twin must not double the count. */
+                            catalog: CatalogLog = CatalogLog.discarding): Program =
     val view    = if surface eq null then TrivialSurface(p) else surface
     val renames = collection.mutable.Map[SymId, String]()
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
@@ -4428,6 +4579,12 @@ object TirEmitter:
       }
       cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () })
     p.units.foreach(scan)
+    // JS-C04 — a subclass field SHADOWS a superclass field: two storage cells in java, ONE
+    // virtually-dispatched member in scala. Cited per renamed declaration, and cited whether or not
+    // anything was renamed is NOT what happens: a citation is a statement that this pass decided
+    // about THAT declaration, and a class with no shadowing field is one it decided nothing about.
+    renames.keys.foreach(id =>
+      catalog.cite(JS.C(4), p.symbolOf(id).map(_.fullName).getOrElse(id.toString)))
     if renames.isEmpty then p
     else
       // same visibility relaxation as `resolveMemberClashes`: a renamed field must stay reachable
@@ -4692,7 +4849,9 @@ object TirEmitter:
     * in the same scope and the partition collapses — stated here rather than assumed, because a
     * synthesized object is exactly where an assumption about `isStatic` stops holding. */
   def resolveMemberClashes(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
-                           surface: Surface = null): Program =
+                           surface: Surface = null,
+                           /** JS-C46's citation surface — see [[resolveFieldShadowing]]'s. */
+                           catalog: CatalogLog = CatalogLog.discarding): Program =
     val view    = if surface eq null then TrivialSurface(p) else surface
     val renames = collection.mutable.Map[SymId, String]()
     /** METHOD renames, kept apart from [[renames]] for one reason that is not tidiness: the field
@@ -4848,6 +5007,11 @@ object TirEmitter:
       }
       cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () })
     p.units.foreach(scan)
+    // JS-C46 — java has TWO name namespaces and scala has one, so a field `x` beside a method `x()`
+    // is legal there and illegal here. Cited per declaration this pass moved, in either direction:
+    // the field can take the new name or the METHODS can, and both are the same decision.
+    (renames.keys ++ methodRenames.keys).foreach(id =>
+      catalog.cite(JS.C(46), p.symbolOf(id).map(_.fullName).getOrElse(id.toString)))
     if renames.isEmpty && methodRenames.isEmpty then p
     else
       // also relax visibility: Java lets the enclosing class read a nested class's private
