@@ -187,6 +187,26 @@ class RecordSpec extends PortSuite:
     assert(clue(body).indexOf("IllegalArgumentException") < clue(body).indexOf("this.x$field = x$p"), body)
   }
 
+  test("a DELEGATING constructor beside a NORMALISING compact one — both construction paths") {
+    // javac 22.0.2 on this exact record: `new R(3, 4)` prints `R[x=6, y=4]` and `new R(3)` prints
+    // `R[x=6, y=0]`. Both paths run the canonical constructor, so both double `x`.
+    //
+    // Two engine facts compose here and neither was exercised before. `CtorFunnel` promotes the
+    // canonical constructor and leaves `R(int)` a `def this` delegating to it — which is exactly
+    // java's own shape, since a non-canonical record constructor MUST begin with `this(…)` (JLS
+    // 8.10.4). And the compact body ASSIGNS a component, which is what compact constructors are
+    // FOR: promoted as a plain class parameter that is `Reassignment to val`, so the parameter is
+    // emitted `private var` (`CtorFunnelMutatedParamSpec`).
+    val p = port("package p;\npublic record R(int x, int y) {\n  R(int x) { this(x, 0); }\n  public R { x = x * 2; }\n}\n")
+    assertEmits(p, "final class R(private var x$p: scala.Int, y$p: scala.Int)")
+    assertEmits(p, "def this(x: scala.Int)")
+    assertEmits(p, "this(x, 0)")
+    // …and JLS 8.10.4's order: the written body first, the appended field assignments after it, so
+    // the fields read what the normalisation left.
+    val body = p.out
+    assert(clue(body).indexOf("x$p = x$p * 2") < clue(body).indexOf("this.x$field = x$p"), body)
+  }
+
   test("the canonical constructor's parameters are the HEADER's order, not the parser's field order") {
     // Spoon builds the implicit constructor from `getFields()`, which for
     // `record Prims(boolean, byte, short, char, int, long, float, double)` hands back
@@ -366,6 +386,34 @@ class RecordSpec extends PortSuite:
         case _       => ()
     }
     assertEquals(t.getMessage, "boom")
+  }
+
+  /** the emitted image of
+    * `record Del(int x, int y) { Del(int x) { this(x, 0); } public Del { x = x * 2; } }` —
+    * a normalising COMPACT constructor beside a DELEGATING one, both construction paths. */
+  final class Del(private var x$p: scala.Int, y$p: scala.Int) extends java.lang.Record:
+    var x$field: scala.Int = 0
+    var y$field: scala.Int = 0
+    def this(x: scala.Int) = this(x, 0)
+    x$p = x$p * 2
+    this.x$field = x$p
+    this.y$field = y$p
+    def x(): scala.Int = this.x$field
+    def y(): scala.Int = this.y$field
+    override def equals(o$rec: scala.Any): scala.Boolean = o$rec match
+      case that$rec: Del => this.x$field == that$rec.x$field && this.y$field == that$rec.y$field
+      case _             => false
+    override def hashCode(): scala.Int = 0
+    override def toString(): java.lang.String =
+      "Del[" + "x=" + java.lang.String.valueOf(this.x$field) + ", " + "y=" + java.lang.String.valueOf(this.y$field) + "]"
+
+  test("PROBE: both construction paths run the canonical body — javac's own two answers") {
+    // javac 22.0.2 printed `R[x=6, y=4]` and `R[x=6, y=0]` for the same pair of `new`s. The
+    // delegation is what makes the second one interesting: java requires a non-canonical record
+    // constructor to begin with `this(…)`, and scala's secondary runs the primary body for the same
+    // reason — so the doubling happens once, on both paths.
+    assertEquals(new Del(3, 4).toString(), "Del[x=6, y=4]")
+    assertEquals(new Del(3).toString(), "Del[x=6, y=0]")
   }
 
   test("PROBE: a REFERENCE component prints through String.valueOf(Object), which a char[] needs") {

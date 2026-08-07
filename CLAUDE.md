@@ -996,6 +996,19 @@ is** — and check the FRONTEND as well as the emitter, because a body assembled
 (`ENGINE-LIMITS.md` C12's correction: 16 member digests over five ports, every headline, check count
 and suite outcome identical — the same §3-only evidence as C12 itself).
 
+**…and it moves MUTABILITY, which is the third axis and the only loud one.** A java constructor
+parameter is an ordinary LOCAL (JLS 8.8.1) and may be reassigned; a scala class parameter is a
+`val`. So `C(int x) { x = x * 2; this.f = x; }` promotes to `Reassignment to val x$p` — and a
+record's COMPACT constructor is the shape that makes this ordinary rather than exotic, because JLS
+8.10.4 exists PRECISELY so that a record can normalise its components by assigning the parameters
+before the appended field assignments read them. The emission is `private var`: it keeps the value
+per-construction, keeps the header's arity, types and descriptor, and puts no name on the emitted
+SURFACE, which a bare `var` would — java's parameter is not a member and the promotion must not make
+one a consumer can see. Narrow it to the parameters really ASSIGNED, decided by SYMBOL over the
+LOWERED body (every write in this IR is a `Tree.Assign`, so the scan is complete); rendered
+unconditionally it would put a private field on every promoted parameter in every port, which is a
+JVM shape change for a defect that fires only at the assignment.
+
 ## 4.56 A rename decides OWNERSHIP structurally, never by name
 
 Any pass that rewrites a name by prefix — package rename above all — must first answer *does this

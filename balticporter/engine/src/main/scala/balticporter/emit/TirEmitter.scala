@@ -1544,10 +1544,45 @@ final class TirEmitter(
     // dependent module in another package can still extend the class, and narrower in the package
     // direction, where nothing legitimate calls it but this class's own secondaries.
     val ctorVis = plan.primary.map(pc => vis(sym(pc.symbol), privateQualifier(s.owner))).getOrElse("")
+    // …and a promoted parameter the java constructor ASSIGNS TO is a `var`.
+    //
+    // A java constructor parameter is an ordinary LOCAL and may be reassigned; a scala class
+    // parameter is a `val`. Promoted unchanged, `C(int x) { x = x * 2; this.f = x; }` emits
+    // `x$p = x$p * 2` — `E052 Reassignment to val`, loud but uncounted, because no library in this
+    // corpus happens to write it. A record's COMPACT constructor is the shape that makes it
+    // ordinary rather than exotic: JLS 8.10.4 exists PRECISELY so a record can normalise its
+    // components by assigning the parameters, and the appended field assignments then read what the
+    // body left.
+    //
+    // `private var` and not `var`: java's parameter is not a member at all, so the promotion must
+    // not put a name on the emitted surface. Class-private is enough for every reference there can
+    // be — they are all inside the class that promoted the constructor — and it keeps the header's
+    // arity, its types and its descriptor exactly as they were.
+    //
+    // Decided from the LOWERED body, which is where the promoted statements are (`plan.primaryBody`
+    // is only half of the picture once `lowerCtors` has run), and by SYMBOL rather than by name
+    // (§4.56). Every write in this IR is a `Tree.Assign` — the frontend desugars `x *= 2`, `x++`
+    // and `--x` into one — so the scan is complete.
+    val mutatedParams: Set[SymId] =
+      if pparams.isEmpty then Set.empty
+      else
+        val ps  = pparams.map(_.symbol).toSet
+        val acc = collection.mutable.Set.empty[SymId]
+        val scan = new Phase:
+          def name: String = "emit/mutated-primary-params"
+          override def transformTerm(t: Term)(using Program): Term =
+            t match
+              case Tree.Assign(Tree.Ident(sy, _, _), _, _, _) if ps(sy) => acc += sy
+              case _                                                    => ()
+            t
+        StandardTraversal.mapClassDef(scan, cd.copy(body = loweredBody))(using source)
+        acc.toSet
+    def primaryParam(v: Tree.ValDef): String =
+      if mutatedParams(v.symbol) then s"private var ${param(v)}" else param(v)
     val prim    =
       if plan.isSynthesised then
         s" protected (${(plan.synthetic.map((n, t) => s"$n: ${tpe(t)}") ++ markerParam).mkString(", ")})$givenClause"
-      else if pparams.nonEmpty then s"${if ctorVis.isEmpty then "" else " " + ctorVis}(${pparams.map(param).mkString(", ")})$givenClause"
+      else if pparams.nonEmpty then s"${if ctorVis.isEmpty then "" else " " + ctorVis}(${pparams.map(primaryParam).mkString(", ")})$givenClause"
       // a class whose constructor java declared NILARY and the pipeline gave a clause: the clause is
       // the whole parameter list, and `class C(using T)` is what puts the given in scope for the
       // body, the field initialisers and the `extends` clause at once.
