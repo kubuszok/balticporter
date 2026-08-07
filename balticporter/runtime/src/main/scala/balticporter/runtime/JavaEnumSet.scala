@@ -12,10 +12,23 @@ final class JavaEnumSet[E <: java.lang.Enum[E]] extends scala.collection.mutable
   private given byOrdinal: Ordering[E] = Ordering.by((e: E) => e.ordinal)
   private val under = scala.collection.mutable.TreeSet.empty[E]
 
-  def contains(elem: E): Boolean      = under.contains(elem)
+  /** NULL is [[JavaEnumMap]]'s rule verbatim, and the reasoning is stated once there: java has ONE
+    * gate (`isValidKey`/`typeCheck`) read two ways — `add` THROWS, every READER answers absent, so
+    * `contains(null)` is `false` and `remove(null)` is `false` with the set untouched
+    * (`null instanceof Enum` is false, and `RegularEnumSet` filters rather than throws). Both
+    * halves are EXPLICIT for the reason given there: a `TreeSet` consults its ordering only when
+    * there is something to compare, so an empty set would accept a null that every later insertion
+    * rejects, and a query would answer absent on an empty set and throw out of the `Ordering` on a
+    * populated one. */
+  private def valid(elem: E): Boolean = elem != null
+
+  def contains(elem: E): Boolean      = valid(elem) && under.contains(elem)
   def iterator: Iterator[E]           = under.iterator
-  def addOne(elem: E): this.type      = { under.addOne(elem); this }
-  def subtractOne(elem: E): this.type = { under.subtractOne(elem); this }
+  def addOne(elem: E): this.type      =
+    if !valid(elem) then throw new NullPointerException("EnumSet does not permit a null element")
+    under.addOne(elem)
+    this
+  def subtractOne(elem: E): this.type = { if valid(elem) then under.subtractOne(elem); this }
   override def knownSize: Int         = under.knownSize
   override def clear(): Unit          = under.clear()
 

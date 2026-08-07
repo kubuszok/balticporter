@@ -18,30 +18,44 @@ package balticporter.runtime
   * `new EnumMap<>(K.class)` call site is the only place to get. Ordering by ordinal is observably
   * the same for every operation this type has: iteration, `head`, `last`, `keySet`, `toString`.
   *
-  * Null KEYS throw, as java's do, and the check is EXPLICIT rather than left to the ordering: a
-  * comparator is only consulted when there is something to compare, so the FIRST insertion into an
-  * empty map would have accepted a null and every later one rejected it — a divergence that shows
-  * up as an ordering failure three operations away instead of as java's `NullPointerException` at
-  * the call that made it. Null VALUES are permitted, as java's are.
+  * ==Null, which is NOT one rule but two==
+  * `java.util.EnumMap` has exactly ONE gate — `isValidKey` — and it is read in two different ways.
+  * The WRITER (`put`) runs `typeCheck` and throws a `NullPointerException`; every READER
+  * (`get`, `containsKey`, `remove`) uses it as a FILTER and answers absent — `null`, `false`,
+  * `null`, with the map untouched. So a shim that throws at a query is LOUDER than java, and that
+  * is the direction that turns a caller's null-tolerant lookup into an exception three frames up.
+  *
+  * Both halves are EXPLICIT rather than left to the ordering, and for one reason: a comparator is
+  * only consulted when there is something to compare. Left implicit, the FIRST insertion into an
+  * empty map would have accepted a null and every later one rejected it, and every QUERY would
+  * answer absent on an empty map and throw out of `Ordering.by` on a populated one — a divergence
+  * that shows up as an ordering failure or an NPE somewhere else instead of at the call that made
+  * it. Null VALUES are permitted, as java's are.
   */
 final class JavaEnumMap[K <: java.lang.Enum[K], V] extends scala.collection.mutable.AbstractMap[K, V]:
   private given byOrdinal: Ordering[K] = Ordering.by((k: K) => k.ordinal)
   private val under = scala.collection.mutable.TreeMap.empty[K, V]
 
-  /** java's own contract: a null key is a `NullPointerException` at every operation that takes one.
-    * `get`/`contains` are query-only and java allows a null there (it answers absent), which is why
-    * only the two MUTATORS check. */
+  /** java's `typeCheck` — the WRITER's reading of `isValidKey`. */
   private def requireKey(key: K): K =
     if key == null then throw new NullPointerException("EnumMap does not permit a null key")
     key
 
-  def get(key: K): Option[V]                 = under.get(key)
+  /** …and java's `isValidKey` as the READERS use it: not a key this map can hold, so it is absent.
+    * Named apart from [[requireKey]] because the two are the same question with two answers, and a
+    * single helper would have to pick one. */
+  private def validKey(key: K): Boolean = key != null
+
+  def get(key: K): Option[V]                 = if validKey(key) then under.get(key) else scala.None
   def iterator: Iterator[(K, V)]             = under.iterator
   def addOne(kv: (K, V)): this.type          = { requireKey(kv._1); under.addOne(kv); this }
-  def subtractOne(key: K): this.type         = { requireKey(key); under.subtractOne(key); this }
+  // `remove(null)` is java's `null` return and NOT a throw — the map is not touched and the caller
+  // is told nothing was there. `mutable.Map.remove` is derived from `get` + this, so it answers
+  // `None` by construction.
+  def subtractOne(key: K): this.type         = { if validKey(key) then under.subtractOne(key); this }
   override def knownSize: Int                = under.knownSize
   override def clear(): Unit                 = under.clear()
-  override def contains(key: K): Boolean     = under.contains(key)
+  override def contains(key: K): Boolean     = validKey(key) && under.contains(key)
 
 object JavaEnumMap:
   /** the COPY constructor's target — `new EnumMap<>(m)`. */

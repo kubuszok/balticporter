@@ -42,6 +42,50 @@ class JavaEnumCollectionsSpec extends munit.FunSuite:
     intercept[NullPointerException](m.put(null.asInstanceOf[Level], "x"))
   }
 
+  // -- …and the OTHER HALF of java's null contract, which is NOT "throw everywhere" -------------
+  //
+  // `java.util.EnumMap` throws on a null key at `put` ONLY. Every QUERY answers absent — `get`
+  // returns null, `containsKey` returns false, and `remove` returns null without touching the map
+  // (`isValidKey` is the one gate, and it is a filter for the readers and a `typeCheck` NPE only
+  // for the writer). A shim that throws at a query is LOUDER than java, which is the direction
+  // that turns a caller's null-tolerant lookup into an exception, and the ordering is what would
+  // have thrown it — so, like the `put` check, these are EXPLICIT: an empty map never consults a
+  // comparator, so the divergence would appear only once something was in the map.
+
+  test("a null QUERY answers absent, as java's does — never an exception out of the ordering") {
+    val m = new JavaEnumMap[Level, String]
+    m(Level.Mid) = "m"                      // NON-empty: an empty TreeMap never consults its ordering
+    assertEquals(m.get(null.asInstanceOf[Level]), None)
+    assertEquals(m.contains(null.asInstanceOf[Level]), false)
+    assertEquals(m.remove(null.asInstanceOf[Level]), None)
+    assertEquals(m.size, 1)                 // …and the map is untouched
+  }
+
+  test("…and on an EMPTY map too, so the two paths cannot answer differently") {
+    val m = new JavaEnumMap[Level, String]
+    assertEquals(m.get(null.asInstanceOf[Level]), None)
+    assertEquals(m.contains(null.asInstanceOf[Level]), false)
+    assertEquals(m.remove(null.asInstanceOf[Level]), None)
+  }
+
+  test("JavaEnumSet: adding null throws as java's EnumSet does — checked, not left to the ordering") {
+    val s = new JavaEnumSet[Level]
+    intercept[NullPointerException](s.addOne(null.asInstanceOf[Level]))
+    // the FIRST insertion is the one a TreeSet accepts without ever comparing, which is why the
+    // check has to be explicit rather than a consequence of the `Ordering`.
+    assert(s.isEmpty)
+  }
+
+  test("…and its null QUERIES answer false, on a populated set and on an empty one") {
+    val s = JavaEnumSet.of(Level.Mid)
+    assertEquals(s.contains(null.asInstanceOf[Level]), false)
+    assertEquals(s.remove(null.asInstanceOf[Level]), false)
+    assertEquals(s.size, 1)
+    val e = new JavaEnumSet[Level]
+    assertEquals(e.contains(null.asInstanceOf[Level]), false)
+    assertEquals(e.remove(null.asInstanceOf[Level]), false)
+  }
+
   test("JavaEnumMap.from copies, and re-orders — the copy constructor's target") {
     val src = scala.collection.mutable.LinkedHashMap(Level.High -> "h", Level.Low -> "l")
     assertEquals(JavaEnumMap.from(src).keys.toList, List(Level.Low, Level.High))
