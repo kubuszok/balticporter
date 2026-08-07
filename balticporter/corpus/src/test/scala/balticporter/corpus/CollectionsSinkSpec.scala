@@ -140,6 +140,41 @@ class CollectionsSinkSpec extends PortSuite:
   }
 
   // -------------------------------------------------------------------------
+  // 4b. the D2 filter, which the DEDUP has to survive
+  // -------------------------------------------------------------------------
+
+  test("a DEPENDENT's row survives a BASE that reaches the same callee at a smaller (path, line)") {
+    // "One row per callee" is right, and the site kept for it is a REPORTING detail that the D2
+    // filter then reads as if it were the whole population. Keep ONE origin per callee across the
+    // whole program — base units included — and `boundary(units)` drops the row whenever the
+    // surviving origin is in a file this module does not emit: the dependent has the seam, has no
+    // row, and nothing anywhere says so. `Base.java` sorts before `Dep.java`, so the base wins the
+    // minimum and the shape is exactly the one a dependent port has.
+    val ph = new CollectionsTransform(reflectiveSinks = Set.empty)
+    val (after, _) = Pipeline.runTraced(SpoonTir.fromSources(List(
+      "Base.java" ->
+        """package demo;
+          |class Base { static void b(Object v) { StringBuilder sb = new StringBuilder(); sb.append(v); } }
+          |""".stripMargin,
+      "Dep.java" ->
+        """package demo;
+          |class Dep { static void d(Object v) { StringBuilder sb = new StringBuilder(); sb.append(v); } }
+          |""".stripMargin)), List(ph))
+    def unit(n: String) = after.units.filter(u => after.symbolOf(u.symbol).exists(_.fullName == n))
+    def egressOf(us: List[balticporter.tir.Tree.ClassDef]) =
+      ph.boundary(after, us).filter(_.issue == CollectionBoundaryCheck.Issue.OpaqueEgress)
+    assertEquals(clue(egressOf(unit("demo.Base"))).size, 1)
+    assertEquals(clue(egressOf(unit("demo.Dep"))).size, 1,
+                 "the dependent has the same seam and must have its own row; a dedup that keeps " +
+                   "one global origin makes this zero, silently")
+    assertEquals(egressOf(unit("demo.Dep")).head.origin.javaPath.endsWith("Dep.java"), true,
+                 "and the row it gets must be a site THIS module emits, or the finding points at " +
+                   "a file its reader does not have")
+    assertEquals(clue(egressOf(after.units)).size, 1,
+                 "…while the whole program still reports ONE row per callee — the dedup's own claim")
+  }
+
+  // -------------------------------------------------------------------------
   // 5. the record
   // -------------------------------------------------------------------------
 

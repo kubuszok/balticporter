@@ -252,8 +252,20 @@ final class CollectionsTransform(
       // …and the OPAQUE EGRESS review list (K21 face 1), built the same way and for the same
       // reason: the formal is `java.lang.Object`, so after the retyping there is nothing on either
       // side of the slot for a walk to disagree about. One row per external CALLEE.
+      //
+      // THE DEDUP AND THE D2 FILTER ARE APPLIED IN THAT ORDER, and getting it the other way round
+      // is silent. "One row per callee" is right; the SITE chosen for that row is a reporting
+      // detail — and a single global minimum makes it a fact about the whole program, which the
+      // filter below then reads as if it were the population. A dependent whose base reaches the
+      // same callee at a smaller (path, line) loses its row entirely: it has the seam, has no
+      // finding, and nothing anywhere says so. So the recording is per (callee, java file) and the
+      // MINIMUM is taken among the paths THIS module emits — one row per callee still, at a site
+      // its reader can open.
       opaqueEgressSites.toList
-        .filter((_, o) => emittedPaths(units).contains(o.javaPath))
+        .filter((k, _) => emittedPaths(units).contains(k._2))
+        .groupBy((k, _) => k._1)
+        .toList
+        .map((m, rows) => m -> rows.map(_._2).minBy(o => (o.javaPath, o.line)))
         .sortBy((m, o) => (o.javaPath, o.line, m.raw))
         .map((m, o) => CollectionBoundaryCheck.Finding(
           CollectionBoundaryCheck.Issue.OpaqueEgress,
@@ -448,9 +460,15 @@ final class CollectionsTransform(
     * `decisions.tsv` at the end of the run. A per-SITE rewrite recorded per DECLARATION (§5.1). */
   private val bridgedSinkCallees = collection.mutable.Set[(SymId, String)]()
 
-  /** …and every external callee with an OPAQUE formal this port has NOT declared a sink, with the
-    * earliest site that reaches it — the review list [[opaqueEgress]] exists to publish. */
-  private val opaqueEgressSites = collection.mutable.Map[SymId, Origin]()
+  /** …and every external callee with an OPAQUE formal this port has NOT declared a sink, keyed by
+    * (callee, JAVA FILE) with the earliest site in that file — the review list [[opaqueEgress]]
+    * exists to publish.
+    *
+    * The FILE is in the key and it is not redundancy: `boundary` reports one row per CALLEE and
+    * filters to the units this module emits (`ENGINE-LIMITS.md` D2), and those two steps only
+    * compose if the choice of site is made AFTER the filter. One global origin per callee makes a
+    * dependent's row vanish whenever its base reaches the same callee from an earlier path. */
+  private val opaqueEgressSites = collection.mutable.Map[(SymId, String), Origin]()
 
   /** the retarget entries that actually RUN: everything the port declared, minus any key
     * [[CollectionsTransform.typeMap]] already answers for (reported as `Malformed` instead — see
@@ -2074,10 +2092,13 @@ final class CollectionsTransform(
         // lanes is what teaches a reader to skim both.
         t.args.exists(a => objectTyped(a.tpe))
     if opaque then
-      val prev = opaqueEgressSites.get(t.method)
-      val take = prev.forall(o =>
-        Ordering[(String, Int)].lt((t.origin.javaPath, t.origin.line), (o.javaPath, o.line)))
-      if take then opaqueEgressSites(t.method) = t.origin
+      // …the earliest site PER JAVA FILE, never per callee. The row is still one per callee; which
+      // of a callee's files it is reported from is decided at report time, among the paths the
+      // module actually emits (see [[boundary]]). Recorded per callee alone, a base's site wins the
+      // minimum for the whole program and a dependent's row silently disappears.
+      val key  = t.method -> t.origin.javaPath
+      val prev = opaqueEgressSites.get(key)
+      if prev.forall(o => t.origin.line < o.line) then opaqueEgressSites(key) = t.origin
 
   /** record one external seam this phase could not close, for [[boundary]] to report. A refusal
     * that is not counted is indistinguishable from a seam that does not exist (M6). */

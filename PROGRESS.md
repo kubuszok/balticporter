@@ -2588,7 +2588,10 @@ all — and it is why the two triggers were landed and measured one at a time ra
   time in this port that closing one defect revealed the next — which is why the honest form of
   "N are gated behind this" is a re-census, never a prediction (`CLAUDE.md` §1).
 - **The two new review lanes are populated and were right on their first run.**
-  `collection-boundary` carries 11 `OpaqueEgress` rows on the main port and 4 on the test port, and
+  `collection-boundary` carries 11 `OpaqueEgress` rows on the main port and 6 on the test port
+  (**4 until the dedup stopped keeping one GLOBAL origin per callee** — the base reached
+  `BigDecimal#valueOf(Object)` and `StringBuilder#append(Object)` from an earlier path, so the D2
+  filter dropped the test module's own rows for those two and nothing said so), and
   one of them names `JsonGenerator#writeObject` — a jackson sink `main.conf` does NOT declare.
   `bean-exposure` is 0 on the test port (everything in scope, no name clash). Neither number is a
   defect count; both are lists a port picks entries from.
