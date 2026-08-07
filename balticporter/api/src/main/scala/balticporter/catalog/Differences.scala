@@ -292,7 +292,12 @@ object Differences:
       Silent, Handled, el("F3"), Universal, "SpoonTir.switchStmt's tail-duplication closures", Lowered("CtSwitch", Dispatch.Statement)),
     Difference(sId(5), "a `switch` with no `default` FALLS OUT; a `match` with no `case _` throws",
       "JLS 14.11.3", "UNCITED — an unmatched `match` throws `MatchError`",
-      Silent, Handled, Rule44, Universal, "SpoonTir.switchStmt's synthesised fall-out arm", Lowered("CtSwitch", Dispatch.Statement)),
+      Silent, Handled, Rule44, Universal,
+      "SpoonTir.switchStmt's synthesised fall-out arm, gated on SpoonTir.isEnhanced — which asks " +
+        "BOTH of the enhanced-switch disjuncts, the labels AND (through " +
+        "SpoonTir.selectorOutsideClassicSet) the selector's own type, because a qualified enum " +
+        "constant is an enhanced switch no label betrays",
+      Lowered("CtSwitch", Dispatch.Statement)),
     Difference(sId(6), "an unlabelled `break` in the MIDDLE of a case ends the CASE",
       "JLS 14.15", "UNCITED — a `match` arm cannot be left early",
       Silent, Handled, el("F3"), Universal, "TirEmitter.matchStr and TirEmitter.caseNeedsBoundary", Rendered("Match")),

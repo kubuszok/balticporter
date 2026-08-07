@@ -3515,7 +3515,7 @@ object SpoonTir:
         // every quoted string. Add the fall-out arm java already has.
         //
         // …EXCEPT where java does NOT fall out, which is what [[isEnhanced]] answers.
-        val needsFallOut = !arms.exists(_.isDefault) && !isEnhanced(cases)
+        val needsFallOut = !arms.exists(_.isDefault) && !isEnhanced(cases, s.getSelector)
         // JS-S05 — a `switch` with no `default` FALLS OUT when nothing matches; a `match` with no
         // `case _` throws `MatchError`, and falling out is often the NORMAL path (a scanner reading
         // an ordinary character). Fires exactly where the arm has to be synthesised — read off the
@@ -3812,24 +3812,70 @@ object SpoonTir:
       /** is this an ENHANCED switch STATEMENT — one java requires to be EXHAUSTIVE (JLS 14.11.2),
         * and therefore one it does NOT fall out of?
         *
-        * Decided from the LABELS and never from the selector's type, which is both cheaper and
-        * exact. JLS 14.11.2 calls a switch enhanced when its selector type is outside the classic
-        * set (`char`/`byte`/`short`/`int`, their boxes, `String`, an enum) OR any label is a
-        * pattern or `null` — and the first disjunct cannot make a difference here: a selector
-        * outside that set admits no constant label at all, so such a switch carries patterns, a
-        * `null`, or nothing but `default`, and a switch that HAS a default is one this question is
-        * never asked about. Reading the selector's type would also mean resolving it, which
-        * `noClasspath` cannot always do — and a fall-out arm dropped because a type failed to
-        * resolve is §4.4's defect in the other direction, on every classic switch in the corpus.
+        * JLS 14.11.2 gives TWO disjuncts and this asks BOTH, which is a correction: it used to ask
+        * the labels alone, on the argument that a selector outside the classic set
+        * (`char`/`byte`/`short`/`int`, their boxes, `String`, an enum) admits no constant label at
+        * all. JEP 441 is what makes that false — a QUALIFIED ENUM CONSTANT is a constant label at a
+        * selector typed as the enum's SUPERTYPE, and it is neither a pattern nor a `null`, so
+        * nothing in the label list betrays it. Measured against javac 22.0.2: on
+        * `switch (c) { case Coin.HEADS: …; case Coin.TAILS: … }` over a sealed `Currency`, javac
+        * calls the statement AFTER the switch an `unreachable statement` and compiles
+        * `new MatchException` at the fall-out — so a synthesised `case _ => ()` is a silent §4.4,
+        * the exceptional path turned into a no-op.
+        *
+        * ==THE SELECTOR'S TYPE, AND NOT THE LABEL'S SHAPE==
+        *
+        * The tempting cheaper test — "does any label read a qualified enum constant" — is WRONG,
+        * and also measured: `switch (e) { case E.A: return 1; }` on a selector of the enum's own
+        * type compiles, runs and FALLS OUT (JLS 14.11.2's first disjunct is about the selector, and
+        * an enum type is inside the classic set however its constants are spelled). Deciding from
+        * the label would delete the arm java is exercising there.
+        *
+        * ==AND `PROVABLY` OUTSIDE, WHICH IS THE HALF THE OLD ARGUMENT HAD RIGHT==
+        *
+        * Reading the selector's type means RESOLVING it, and `noClasspath` cannot always do that. A
+        * fall-out arm dropped because a type failed to resolve is §4.4's defect in the other
+        * direction, on every classic switch in a corpus — so [[selectorOutsideClassicSet]] answers
+        * `false` wherever it cannot see a declaration, which is exactly the behaviour this question
+        * had before it asked.
         *
         * Where it fires, scala's `match` throws `MatchError` where java throws `MatchException`:
         * both throw, which is the honest image of an exhaustiveness java checks and scala cannot. */
-      private def isEnhanced(cases: List[CtCase[?]]): Boolean =
+      private def isEnhanced(cases: List[CtCase[?]], selector: CtExpression[?]): Boolean =
         cases.exists(_.getCaseExpressions.asScala.exists {
           case _: CtCasePattern      => true
           case l: CtLiteral[?]       => l.getValue == null
           case _                     => false
-        })
+        }) || selectorOutsideClassicSet(selector)
+
+      /** JLS 14.11.2's classic selector set, by qualified name. A selector typed as one of these is
+        * a classic switch however its labels are spelled; an ENUM is the set's sixth member and is
+        * asked structurally below, because there is no name to list. */
+      private val ClassicSelectorTypes = Set(
+        "char", "byte", "short", "int",
+        "java.lang.Character", "java.lang.Byte", "java.lang.Short", "java.lang.Integer",
+        "java.lang.String")
+
+      /** does the selector's type PROVABLY resolve to something outside [[ClassicSelectorTypes]]?
+        *
+        * `false` is the answer for everything this cannot see — an absent type, a name that is not
+        * in the set but whose declaration does not resolve, a type parameter, an annotation type —
+        * and that default is the pre-existing behaviour rather than a fabricated fact (§4.6): it
+        * says *this switch keeps the fall-out arm java's classic form has*, which is what every
+        * switch in this engine's corpora got before the question was asked at all. The one lookup
+        * wrapped is the RESOLUTION, where an absent value is normal under `noClasspath`. */
+      private def selectorOutsideClassicSet(selector: CtExpression[?]): Boolean =
+        val ref = try Option(selector.getType) catch { case _: Throwable => None }
+        ref.exists { r =>
+          !r.isPrimitive && !ClassicSelectorTypes.contains(r.getQualifiedName) && {
+            val decl = try Option(r.getTypeDeclaration) catch { case _: Throwable => None }
+            decl.exists {
+              case _: CtEnum[?]                       => false
+              case _: CtClass[?] | _: CtInterface[?]  => true
+              case _                                  => false
+            }
+          }
+        }
 
       // ---- expressions ----
       /** the casts the SOURCE wrote, applied innermost-first — each one rendered as the thing java

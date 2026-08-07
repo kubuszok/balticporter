@@ -170,3 +170,67 @@ class PatternSwitchSpec extends PortSuite:
     // lowering rather than two halves that happen to agree.
     assert(clue(theRecord.out).contains("def unapply(r$rec: Pt): (scala.Int, scala.Int)"), theRecord.out)
   }
+
+  // ---------------------------------------------------------------------------------------------
+  // A QUALIFIED ENUM CONSTANT label (JEP 441) — the OTHER way a switch STATEMENT becomes enhanced,
+  // and the one no case label betrays. Both cells below are javac-verified (22.0.2):
+  //
+  //   - selector a SUPERTYPE of the enum: `javac` calls `return 0;` after the switch an
+  //     `unreachable statement`, and compiles `new MatchException` at the fall-out — so the switch
+  //     is enhanced and exhaustive, and a synthesised `case _ => ()` is §4.4's defect;
+  //   - selector the ENUM ITSELF, one constant listed, no default: compiles, RUNS, and FALLS OUT
+  //     (prints the statement after the switch). A qualified label is therefore NOT what makes a
+  //     switch enhanced — the SELECTOR'S TYPE is, which is JLS 14.11.2's own first disjunct.
+  // ---------------------------------------------------------------------------------------------
+
+  /** the sealed interface, the enum that implements it, and a switch over the INTERFACE. Several
+    * units, because the shape needs a type the switch's own compilation unit does not declare. */
+  private def qualifiedEnumSwitch(selector: String, body: String) = portAll(List(
+    "Currency.java" -> "package p;\npublic sealed interface Currency permits Coin { }\n",
+    "Coin.java"     -> "package p;\npublic enum Coin implements Currency { HEADS, TAILS }\n",
+    "Q2.java"       -> s"package p;\nclass Q2 {\n  int f($selector c) {\n$body  }\n}\n"))
+
+  test("a QUALIFIED ENUM label at a SUPERTYPE selector is an ENHANCED switch — no fall-out arm") {
+    val p = qualifiedEnumSwitch("Currency",
+      """    switch (c) {
+        |      case Coin.HEADS: return 1;
+        |      case Coin.TAILS: return 2;
+        |    }
+        |    return 0;
+        |""".stripMargin)
+    assert(clue(p.out).contains("case p.Coin.HEADS =>"), p.out)
+    // javac throws MatchException here; scala's `match` throws MatchError. Both throw — and a
+    // synthesised `case _ => ()` throws NOTHING, which is the silent half of §4.4.
+    assert(!clue(p.out).contains("case _ => ()"), p.out)
+    // …and the implicit NPE stays: java's enhanced switch still NPEs on a null selector (JLS
+    // 14.11.3), which the probe confirmed at run time.
+    assert(clue(p.out).contains("case null =>"), p.out)
+  }
+
+  test("…and a qualified label at the ENUM'S OWN selector is CLASSIC, so the fall-out arm stays") {
+    // Measured against javac: this one compiles, runs and falls out. Deciding "enhanced" from the
+    // LABEL rather than from the selector's type would delete the arm java is exercising here.
+    val p = qualifiedEnumSwitch("Coin",
+      """    switch (c) {
+        |      case Coin.HEADS: return 1;
+        |    }
+        |    return 7;
+        |""".stripMargin)
+    assert(clue(p.out).contains("case _ => ()"), p.out)
+  }
+
+  test("an UNRESOLVABLE selector type keeps the fall-out arm — the conservative arm, not a guess") {
+    // The reason the disjunct is `provably outside`: under `noClasspath` a type that does not
+    // resolve says nothing, and dropping the arm on a resolution failure is §4.4's defect in the
+    // other direction, on every classic switch in a corpus.
+    val p = port(
+      """package p;
+        |class U {
+        |  int f(some.unknown.Kind k) {
+        |    switch (k) { case 1: return 1; }
+        |    return 0;
+        |  }
+        |}
+        |""".stripMargin)
+    assert(clue(p.out).contains("case _ => ()"), p.out)
+  }
