@@ -179,6 +179,22 @@ object PortabilityCheck:
     Rule("java.util.zip.", "no zlib in a browser without a JS dependency; Scala Native implements " +
       "the family and recently bug-fixed it for UTF-8",
       on = Rule.JsOnly, at = p(28)),
+    // The one COLLECTION on this list, and the one row of the platform survey whose answer is a
+    // REFUSAL rather than a mapping. Every other absent `java.util` type has a Scala counterpart
+    // with the same meaning and is retyped by `CollectionsTransform`; this one has none anywhere.
+    // JS's own `WeakMap` requires OBJECT keys and cannot be enumerated, so it cannot back a `Map`
+    // — and degrading to a strong-referencing map would compile, pass, and silently change what the
+    // program retains, which is exactly what `Collections.unmodifiableXxx` was correctly refused
+    // for (ENGINE-LIMITS M6). Native has the real thing, so the rule is JS-only and a JVM+Native
+    // port is told nothing.
+    //
+    // NOTE the rule list is HAND-WRITTEN and does NOT derive from `ApiRows`: a survey row saying
+    // `Refuse` on a platform produces no question by itself, which is why this row sat stated and
+    // unasked. The two are joined by `at`, and that is the whole of the join.
+    Rule("java.util.WeakHashMap", "JS's WeakMap requires object keys and cannot enumerate, so no " +
+      "faithful target exists there and a strong-referencing map would silently change what the " +
+      "program retains; Scala Native has the real class",
+      on = Rule.JsOnly, at = l(37)),
     // `ServiceLoader` is JVM-only twice over, and the SECOND reason is the one nothing else can
     // see. It is reflective instantiation, so Scala.js / Native cannot provide it — and it reads a
     // `META-INF/services` FILE, which this engine does not emit: the pipeline produces `.scala` and

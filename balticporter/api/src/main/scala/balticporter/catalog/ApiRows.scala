@@ -277,8 +277,15 @@ object ApiRows:
     row(l(34), "java.util.EnumMap", true,
       (Full, Shim("engine runtime")), (Absent, Shim("engine runtime")), (Absent, Shim("engine runtime")), JsNative,
       "absent on both non-JVM backends AND no Scala type reproduces the ordinal-array iteration-order guarantee, so a shim rather than a map is the honest answer"),
-    mapped(l(35), "java.util.EnumSet", true, "scala.collection.mutable.Set", Absent, Full,
-      "Native has it and Scala.js does not, so KEEPing would let a Native-tested port break silently on JS"),
+    // A SHIM and not a `mapped(…, "scala.collection.mutable.Set", …)`, which is what this row said
+    // until the mapping was built. The availability half is right — Native has it, Scala.js does
+    // not — and it is not the whole question: `EnumSet` GUARANTEES iteration in ordinal order and a
+    // `mutable.Set` does not, so the map would have reproduced the gap and dropped the guarantee,
+    // which is `JS-C42` and the failure mode the engine refuses by name. Its sibling row above said
+    // `Shim` for the same reason all along; the two are one decision.
+    row(l(35), "java.util.EnumSet", true,
+      (Full, Shim("engine runtime")), (Absent, Shim("engine runtime")), (Full, Shim("engine runtime")), JsNative,
+      "absent on Scala.js, and no Scala set reproduces the ordinal-order iteration guarantee, so a shim rather than a map is the honest answer"),
     everywhere(l(36), "java.util.IdentityHashMap", true,
       "present on all three, with no corpus use and no stdlib reference-identity map to move to"),
     row(l(37), "java.util.WeakHashMap", true,

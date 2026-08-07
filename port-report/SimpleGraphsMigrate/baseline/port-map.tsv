@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-graphs	engine=balticporter/0.1.0-SNAPSHOT	sources=9ed1f1dd5d69fea0	files=27	policy=257fa4581f82d1c6
+# balticporter port map	schema=3	module=sge-graphs	engine=balticporter/0.1.0-SNAPSHOT	sources=9ed1f1dd5d69fea0	files=27	policy=3dc15a4b2f41e628
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	space.earlygrey.simplegraphs.Array	sge.graphs.Array	Renamed	-		0		form=class parents=balticporter.runtime.JavaCollection primary=(int,boolean) primaryKind=unique-root primaryVis=public secondaries=();(int) tparams="[T <: java.lang.Object]"
 type	space.earlygrey.simplegraphs.Array$ArrayIterator	sge.graphs.Array$ArrayIterator	Renamed	-		0		form=class parents=balticporter.runtime.JavaIterator primary=() primaryKind=unique-root primaryVis=public
@@ -36,8 +36,13 @@ type	space.earlygrey.simplegraphs.utils.SearchProcessor	sge.graphs.utils.SearchP
 type	space.earlygrey.simplegraphs.utils.WeightFunction	sge.graphs.utils.WeightFunction	Renamed	-		0		form=trait tparams="[V <: java.lang.Object]"
 type		balticporter.runtime.JavaCollection	Added	-		0		
 type		balticporter.runtime.JavaCollections	Added	-		0		
+type		balticporter.runtime.JavaEnumMap	Added	-		0		
+type		balticporter.runtime.JavaEnumSet	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaOptionalDouble	Added	-		0		
+type		balticporter.runtime.JavaOptionalInt	Added	-		0		
+type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
 member	space.earlygrey.simplegraphs.Array#<init>()	sge.graphs.Array#<init>()	Renamed	-	space/earlygrey/simplegraphs/Array.java	37	6b8c02987a386f8b	
 member	space.earlygrey.simplegraphs.Array#<init>(int)	sge.graphs.Array#<init>(int)	Renamed	-	space/earlygrey/simplegraphs/Array.java	41	e5be362f9598894d	

@@ -349,6 +349,18 @@ final class CollectionsTransform(
     * `isEmpty`, and `empty` on a `Buffer` is the companion's factory, so leaving the name alone
     * emits something that means "an empty buffer" where java asked "is this one empty". */
   private var isEmptySym: SymId = SymId.None
+  /** `scala.Option`'s side of the [[Kind.Opt]] arms: `get` for `getAsInt`/`orElseThrow`,
+    * `isDefined` for `isPresent`, and `Some`/`None` for the two static factories. */
+  private var getSym, isDefinedSym, someSym, noneSym: SymId = SymId.None
+  /** `JavaEnumMap.ofType`, the class-token constructor's target ([[tokenConstructor]]), and
+    * `JavaEnumSet`'s six statics, which are the ONLY way java reaches an `EnumSet` — it has no
+    * public constructor. Minted rather than resolved: nothing in a java program declares them. */
+  private var enumMapOfTypeSym: SymId = SymId.None
+  private var enumSetSyms: Map[String, SymId] = Map.empty
+  /** this run's symbol for a scala/shim FQN, or `SymId.None` where the program never names it. */
+  private var byScalaSyms: Map[String, SymId] = Map.empty
+  private def byScalaSym(fqn: String): SymId = byScalaSyms.getOrElse(fqn, SymId.None)
+  private def enumSetSym(n: String): SymId   = enumSetSyms.getOrElse(n, SymId.None)
   /** java 8 `Collection.forEach(Consumer)` — scala's is `foreach`, differing only in case, which
     * makes the failure read like a typo rather than a missing mapping. */
   private var foreachSym: SymId = SymId.None
@@ -594,7 +606,13 @@ final class CollectionsTransform(
     // target type actually has. `Tuple2` is excluded: it is a `Kind.Entry`, not a collection, and
     // `Tuple2.from` does not exist — the `kindOf` gate in `copyConstructor` never offers it one.
     fromSyms = byScala.collect {
-      case (fqn, id) if fqn.startsWith("scala.collection.") => id -> mint("from", s"$fqn.from")
+      // …and the RUNTIME targets that publish a `from` of their own. Listed rather than matched on
+      // the package, because "is this one of mine" is a membership test against the phase's own
+      // record and a prefix is not a structural fact about anything (§4.56). `JavaEnumMap` is the
+      // only one: `JavaStack`'s java type has no copy constructor and `JavaEnumSet`'s copy is a
+      // STATIC, so neither is ever reached through a `new`.
+      case (fqn, id) if fqn.startsWith("scala.collection.") || fqn == CollectionsTransform.JavaEnumMapFqn =>
+        id -> mint("from", s"$fqn.from")
     }.toMap
     // The scala collections whose only paramful constructor is `(initialCapacity, loadFactor)`.
     // Listed rather than derived because there is nothing in the TIR to derive it FROM — these are
@@ -646,6 +664,14 @@ final class CollectionsTransform(
     orNullSym           = mint("orNull", "orNull")
     prependSym          = mint("prepend", "prepend")
     isEmptySym          = mint("isEmpty", "isEmpty")
+    getSym              = mint("get", "get")
+    isDefinedSym        = mint("isDefined", "isDefined")
+    someSym             = mint("Some", "scala.Some")
+    noneSym             = mint("None", "scala.None")
+    byScalaSyms         = byScala.toMap
+    enumMapOfTypeSym    = mint("ofType", s"${CollectionsTransform.JavaEnumMapFqn}.ofType")
+    enumSetSyms = List("noneOf", "allOf", "of", "copyOf", "range", "complementOf")
+      .map(n => n -> mint(n, s"${CollectionsTransform.JavaEnumSetFqn}.$n")).toMap
     putSym       = mint("put", "put")     // scala `mutable.Map.put`: returns the PREVIOUS value
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
     fromJavaSym  = staticSyms.getOrElse("fromJava", SymId.None)
@@ -1136,8 +1162,36 @@ final class CollectionsTransform(
             reason = reason,
             origin = Decision.originOf(p, s.id),
           ))
+          // …and the ORDER-KEEPING targets are a catalog row of their own (`JS-C42`), cited here
+          // because the difference is discharged by the TABLE and not by a per-site decision: a
+          // reference to `EnumMap` is lowered by the same arm as every other type, so making that
+          // arm owe a consult would demand one at every type in every program. `cite` is the
+          // phase-level surface for exactly this shape.
+          if mentionsOrderedShim(now.info) then
+            cite(balticporter.catalog.JS.C(42), s.fullName)
       }
     }
+
+  /** does this signature mention one of the two ORDINAL-ORDER shims anywhere inside it?
+    *
+    * Read off the phase's own mapping (§4.56: what the phase DID, never what a name looks like) and
+    * walked with `StandardTraversal.mapType` for the reason [[retargetKeysIn]] is — a hand-rolled
+    * recursion that stopped at a `MethodType`'s parameters would answer "no" for every method. */
+  private def mentionsOrderedShim(t: TypeRepr)(using Program): Boolean =
+    val targets = Set(byScalaSym(CollectionsTransform.JavaEnumMapFqn),
+                      byScalaSym(CollectionsTransform.JavaEnumSetFqn)) - SymId.None
+    if targets.isEmpty then false
+    else
+      var found = false
+      val scan = new Phase:
+        def name = "ordered-shim-scan"
+        override def transformType(x: TypeRepr)(using Program): TypeRepr =
+          x match
+            case TypeRepr.TypeRef(_, s) if targets.contains(s) => found = true
+            case _                                             => ()
+          x
+      StandardTraversal.mapType(scan, t)
+      found
 
   /** which RETARGET entries this signature mentions, anywhere inside it — `Set.empty` when none,
     * which is every signature in a port that declares no retarget.
@@ -1707,7 +1761,8 @@ final class CollectionsTransform(
 
   override def transformApply(t: Tree.Apply)(using Program): Term =
     val t2 = wrapIterableArgs(t)
-    val out = copyConstructor(t2).orElse(capacityConstructor(t2)).orElse(staticRewrite(t2)).getOrElse {
+    val out = tokenConstructor(t2).orElse(copyConstructor(t2)).orElse(capacityConstructor(t2))
+      .orElse(staticRewrite(t2)).getOrElse {
       t2.fun match
         case Tree.Select(recv, m, _, so) => kindAt(recv).orElse(inheritedKind(recv, m)) match
           case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
@@ -2150,6 +2205,26 @@ final class CollectionsTransform(
     * `<Companion>.from(c)` is the scala counterpart, and every `scala.collection.mutable` companion
     * this phase targets has it. Gated on the ARGUMENT being a collection, so a capacity hint is left
     * exactly as it is. */
+  /** Java's CLASS-TOKEN constructor — `new EnumMap<K, V>(K.class)`.
+    *
+    * A third constructor shape beside [[copyConstructor]]'s and [[capacityConstructor]]'s, and the
+    * only one whose argument the target does not want at all: java needs the token to size its
+    * ordinal ARRAY, and the shim orders by `ordinal` instead, so there is nothing to size. It is
+    * routed to a named factory rather than having the argument deleted, because a factory reads
+    * back as the java it came from and a silently-dropped argument does not.
+    *
+    * Ordered BEFORE `copyConstructor`, and they are disjoint anyway: this one takes a `classOf[…]`
+    * LITERAL, which no `kindOf` covers. */
+  private def tokenConstructor(t: Tree.Apply)(using Program): Option[Term] = t.fun match
+    case n: Tree.New if enumMapOfTypeSym != SymId.None =>
+      val isToken = t.args match
+        case List(Tree.Literal(Constant.ClassOfC(_), _, _)) => true
+        case _                                              => false
+      for tgt <- headSym(n.tpe) if isToken && tgt == byScalaSym(CollectionsTransform.JavaEnumMapFqn)
+      yield Tree.Apply(Tree.Ident(enumMapOfTypeSym, TypeRepr.NoType, t.origin), t.args,
+                       enumMapOfTypeSym, n.tpe, t.origin)
+    case _ => scala.None
+
   private def copyConstructor(t: Tree.Apply)(using Program): Option[Term] = t.fun match
     case n: Tree.New =>
       val target = headSym(n.tpe).filter(kindOf.contains)
@@ -2255,6 +2330,29 @@ final class CollectionsTransform(
       // targets were the STDLIB's — scala has no read-only `Buffer`/`Set`/`Map` view, so the shapes
       // available were a copy (detaches the view) and the identity (drops the immutability). The
       // runtime's `Frozen*` delegate every READ to the collection they wrap, which is java's answer.
+      // ---- `java.util.EnumSet`, which has NO PUBLIC CONSTRUCTOR — every java site is a static ----
+      //
+      // So the shim's companion is where the whole type is reached from, and the class token is
+      // KEPT rather than dropped: `allOf`, `range` and `complementOf` need the enum's CONSTANTS,
+      // which is what `Class.getEnumConstants` is for and what java's own implementation uses.
+      // `of` has five fixed arities plus a vararg in java and ONE repeated parameter here — the
+      // arities exist only to avoid an array allocation, so a single arm serves them all.
+      case (Some("java.util.EnumSet#noneOf"), List(c))       => Some(factory(enumSetSym("noneOf"), List(c)))
+      case (Some("java.util.EnumSet#allOf"), List(c))        => Some(factory(enumSetSym("allOf"), List(c)))
+      case (Some("java.util.EnumSet#copyOf"), List(c))       => Some(factory(enumSetSym("copyOf"), List(c)))
+      case (Some("java.util.EnumSet#range"), List(a, b))     => Some(factory(enumSetSym("range"), List(a, b)))
+      case (Some("java.util.EnumSet#complementOf"), List(s)) => Some(factory(enumSetSym("complementOf"), List(s)))
+      case (Some("java.util.EnumSet#of"), args)              => Some(factory(enumSetSym("of"), args))
+      // ---- the primitive optionals' two factories, which are `Some`/`None` and nothing else ----
+      //
+      // The target is an ALIAS for `Option[…]`, so these need no runtime member: java's `of(x)` IS
+      // `Some(x)` and java's `empty()` IS `None`. `ofNullable` has no arm — `OptionalInt` does not
+      // declare one (a primitive cannot be null), and the reference `Optional` this table does not
+      // map has it, so there is nothing to be silent about.
+      case (Some("java.util.OptionalInt#of" | "java.util.OptionalLong#of" | "java.util.OptionalDouble#of"), List(x)) =>
+        Some(factory(someSym, List(x)))
+      case (Some("java.util.OptionalInt#empty" | "java.util.OptionalLong#empty" | "java.util.OptionalDouble#empty"), Nil) =>
+        Some(Tree.Ident(noneSym, t.tpe, t.origin))
       case (Some("java.util.Collections#unmodifiableList"), List(c)) => Some(factory(sym("unmodifiableList"), List(c)))
       case (Some("java.util.Collections#unmodifiableSet"), List(c))  => Some(factory(sym("unmodifiableSet"), List(c)))
       case (Some("java.util.Collections#unmodifiableMap"), List(c))  => Some(factory(sym("unmodifiableMap"), List(c)))
@@ -3083,6 +3181,19 @@ final class CollectionsTransform(
       // and the call is renamed to the predicate that asks the same question.
       case ("empty", Nil, Kind.Stack) => Some(Tree.Select(recv, isEmptySym, t.tpe, t.origin))
       case ("push" | "pop" | "peek" | "search", _, Kind.Stack) => None
+      // ---- `java.util.Optional{Int,Long,Double}`, whose target is an `Option[…]` alias ----
+      //
+      // Pure renames, all of them: the VALUE is the same object and only the member name differs.
+      // `get`/`isDefined` are PARAMETERLESS on `Option` where java's are nilary, so they are a
+      // `Select` and not an `Apply` — the same distinction `parenless` exists for, met at names
+      // that also change. `orElseThrow()` is `get` because java's no-argument overload throws
+      // `NoSuchElementException` on an empty optional and so does `Option.get`; the SUPPLIER
+      // overload is a different exception and gets no arm, so it reaches `jdk-surface`.
+      case ("getAsInt" | "getAsLong" | "getAsDouble" | "orElseThrow", Nil, Kind.Opt) =>
+        Some(Tree.Select(recv, getSym, t.tpe, t.origin))
+      case ("isPresent", Nil, Kind.Opt)      => Some(Tree.Select(recv, isDefinedSym, t.tpe, t.origin))
+      case ("orElse", List(d), Kind.Opt)     => Some(call(recv, getOrElseSym, List(d), t, so))
+      case ("ifPresent", List(f), Kind.Opt)  => Some(call(recv, foreachSym, List(f), t, so))
       // `m.entrySet()` is the VIEW of the map as its (key, value) pairs, and a scala `Map[K, V]`
       // already IS an `Iterable[(K, V)]` — so the view is the map itself. `m.toSet` would be the
       // unfaithful choice: java's `entrySet` is live, and a snapshot silently changes what a
@@ -3613,6 +3724,12 @@ object CollectionsTransform:
       * falls back to [[Seq]] once the five have declined — see its own arm for why that is a
       * fallback rather than a second copy of the table. */
     case Stack
+    /** a `java.util.Optional{Int,Long,Double}`, mapped to an `Option[…]` ALIAS. Not a collection at
+      * all, and a kind for the one reason the others are: its member names differ — `getAsInt` is
+      * `get`, `isPresent` is `isDefined`, `orElse` is `getOrElse` — and the arms are keyed on
+      * `(name, args, kind)`. It shares no arm with any other kind, so nothing here can misfire on a
+      * collection and nothing there on an `Option`. */
+    case Opt
 
   val JavaIteratorFqn = s"${RuntimeArtifact.Package}.JavaIterator"
   val JavaIterableFqn = s"${RuntimeArtifact.Package}.JavaIterable"
@@ -3620,6 +3737,15 @@ object CollectionsTransform:
   /** `java.util.Stack`'s target — a `mutable.ArrayBuffer` carrying java's own LIFO five. See the
     * [[typeMap]] entry for why the stdlib type is the wrong answer and why this is not a rewrite. */
   val JavaStackFqn = s"${RuntimeArtifact.Package}.JavaStack"
+  /** `java.util.EnumMap`/`EnumSet`'s targets — a `mutable.Map`/`Set` that iterates in ORDINAL
+    * order, which is the GUARANTEE no stdlib type carries (catalog `JS-C42`). */
+  val JavaEnumMapFqn = s"${RuntimeArtifact.Package}.JavaEnumMap"
+  val JavaEnumSetFqn = s"${RuntimeArtifact.Package}.JavaEnumSet"
+  /** `java.util.Optional{Int,Long,Double}`'s targets — type ALIASES for `Option[…]`, because the
+    * retype is arity-changing and the head swap is not. See the alias's own doc. */
+  val JavaOptionalIntFqn    = s"${RuntimeArtifact.Package}.JavaOptionalInt"
+  val JavaOptionalLongFqn   = s"${RuntimeArtifact.Package}.JavaOptionalLong"
+  val JavaOptionalDoubleFqn = s"${RuntimeArtifact.Package}.JavaOptionalDouble"
   /** `java.util.Collections`' statics — a receiver-less utility class, which is why they need their
     * own home rather than a rewrite keyed on a receiver's collection kind. */
   val JavaCollectionsFqn = s"${RuntimeArtifact.Package}.JavaCollections"
@@ -3781,6 +3907,28 @@ object CollectionsTransform:
     // the dotted spelling is an alias for frontends that name nested types with `.`.
     "java.util.Map$Entry"     -> ("scala.Tuple2", Kind.Entry),
     "java.util.Map.Entry"     -> ("scala.Tuple2", Kind.Entry),
+    // `EnumMap`/`EnumSet` are SHIMS and not mappings, which is the one place this table says
+    // "no stdlib type will do" about a SEMANTIC rather than about a shape. Both are absent from
+    // BOTH non-JVM backends, so keeping the JDK type is a link error there — and both GUARANTEE
+    // iteration in the enum's declaration (ordinal) order, which a `HashMap` does not have and a
+    // `LinkedHashMap` answers with INSERTION order instead. Mapping onto either would reproduce the
+    // AVAILABILITY and silently drop the GUARANTEE, which is catalog row `JS-C42` and CLAUDE.md
+    // §4.4's defect class reached through a type mapping. The shims keep java's order; see their
+    // own docs for how, and `JavaEnumSet`'s companion for why its statics carry the class token
+    // (java's `allOf`/`range`/`complementOf` need the CONSTANTS, and that is where they come from).
+    "java.util.EnumMap"       -> (JavaEnumMapFqn, Kind.Map),
+    "java.util.EnumSet"       -> (JavaEnumSetFqn, Kind.Set),
+    // …and the three PRIMITIVE optionals, absent from Scala.js and present on Native, which is a
+    // disagreement one emitted program cannot straddle. The targets are type ALIASES rather than
+    // `scala.Option` itself because the retype is ARITY-CHANGING: this phase moves a type by
+    // replacing the head symbol and carrying the arguments across, `OptionalInt` has none and
+    // `Option` takes one, so the head swap alone would emit `scala.Option` un-applied at every
+    // occurrence. An alias is that type with the argument already supplied — nothing wrapped and
+    // nothing copied. `java.util.Optional` itself is deliberately absent: it is present on all
+    // three backends, so mapping it would be a shape preference rather than a portability need.
+    "java.util.OptionalInt"    -> (JavaOptionalIntFqn, Kind.Opt),
+    "java.util.OptionalLong"   -> (JavaOptionalLongFqn, Kind.Opt),
+    "java.util.OptionalDouble" -> (JavaOptionalDoubleFqn, Kind.Opt),
     "java.util.Set"           -> ("scala.collection.mutable.Set", Kind.Set),
     "java.util.HashSet"       -> ("scala.collection.mutable.HashSet", Kind.Set),
     "java.util.LinkedHashSet" -> ("scala.collection.mutable.LinkedHashSet", Kind.Set),
@@ -3987,6 +4135,21 @@ object CollectionsTransform:
     "java.util.Collections#unmodifiableCollection",
     "java.util.Collections#unmodifiableList",
     "java.util.Collections#unmodifiableMap",
+    // `java.util.EnumSet` reaches its shim ENTIRELY through these six: the java type has no public
+    // constructor, so a member missing here is a member with no way in at all.
+    "java.util.EnumSet#noneOf",
+    "java.util.EnumSet#allOf",
+    "java.util.EnumSet#of",
+    "java.util.EnumSet#copyOf",
+    "java.util.EnumSet#range",
+    "java.util.EnumSet#complementOf",
+    // …and the primitive optionals' two, which are `Some`/`None` and need no runtime member.
+    "java.util.OptionalInt#of",
+    "java.util.OptionalInt#empty",
+    "java.util.OptionalLong#of",
+    "java.util.OptionalLong#empty",
+    "java.util.OptionalDouble#of",
+    "java.util.OptionalDouble#empty",
     "java.util.Collections#unmodifiableSet",
     "java.util.List#stream",
     "java.util.Map$Entry#comparingByKey",
@@ -4042,6 +4205,10 @@ object CollectionsTransform:
     // A Stack's own five — `empty` renamed, the other four DECLARED BY THE SHIM, which is a
     // rewrite the phase performed exactly as much as any other: `jdk-surface` asks "does this
     // phase answer for that member", and "the target already has it" is an answer.
+    // the primitive optionals' renames. `orElseThrow` is the NO-ARGUMENT overload only; the
+    // supplier one throws something else and has no arm, which is why it is absent here.
+    Kind.Opt.toString   -> Set("getAsInt", "getAsLong", "getAsDouble", "orElseThrow",
+                               "isPresent", "orElse", "ifPresent"),
     Kind.Stack.toString -> (Set("push", "pop", "peek", "search", "empty") ++
                             Set("get", "set", "remove", "addLast", "offer", "offerLast",
                                 "addFirst", "offerFirst", "poll", "pollFirst", "peekFirst", "element",
@@ -4099,7 +4266,9 @@ object CollectionsTransform:
     * would stop type-checking. Two types, one decision.
     */
   val runtimeTypes: Set[String] =
-    Set(JavaIteratorFqn, JavaIterableFqn, JavaCollectionFqn, JavaCollectionsFqn, JavaStackFqn)
+    Set(JavaIteratorFqn, JavaIterableFqn, JavaCollectionFqn, JavaCollectionsFqn, JavaStackFqn,
+        JavaEnumMapFqn, JavaEnumSetFqn,
+        JavaOptionalIntFqn, JavaOptionalLongFqn, JavaOptionalDoubleFqn)
 
   /** What [[runtimeSources]] BRINGS, for a consumer that must reason about the injected
     * supertypes it cannot parse. `JavaIterator.remove` is concrete (java's own documented default),

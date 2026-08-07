@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=4e1a34ad16477c8d
+# balticporter port map	schema=3	module=sge-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=31a8e0b8ff050842
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -46,8 +46,13 @@ type	com.badlogic.gdx.utils.reflect.Method		Dropped	-		0
 type	com.badlogic.gdx.utils.reflect.ReflectionException		Dropped	-		0		
 type		balticporter.runtime.JavaCollection	Added	-		0		
 type		balticporter.runtime.JavaCollections	Added	-		0		
+type		balticporter.runtime.JavaEnumMap	Added	-		0		
+type		balticporter.runtime.JavaEnumSet	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaOptionalDouble	Added	-		0		
+type		balticporter.runtime.JavaOptionalInt	Added	-		0		
+type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
 member	com.badlogic.gdx.graphics.g3d.utils.Sge#<given>	sge.Sge#<given>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	14	a8d8ec35fb5be7d2	vis=private
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest#<stmt1>	sge.graphics.g3d.utils.AnimationControllerTest#<stmt1>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	17	398a3e9a5967b18c	

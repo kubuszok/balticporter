@@ -45,8 +45,14 @@ class RuntimeArtifactSpec extends munit.FunSuite:
     RuntimeArtifact.vendored.foreach { (fqn, src) =>
       val simple = fqn.substring(RuntimeArtifact.Package.length + 1)
       assert(src.startsWith(s"package ${RuntimeArtifact.Package}\n"), s"$fqn: wrong package header")
+      // FOUR forms, and the fourth is not decoration: a top-level `type` alias is how a mapping
+      // target with a DIFFERENT ARITY from its java source is expressed (`OptionalInt` takes no
+      // argument and `Option` takes one), so it is a real member of the published module and not a
+      // convenience. `RuntimeMembersDerivationSpec` collects TRAITS only, which is why an alias
+      // correctly contributes no `concreteMembers` key.
       assert(
-        src.contains(s"trait $simple") || src.contains(s"class $simple") || src.contains(s"object $simple"),
+        src.contains(s"trait $simple") || src.contains(s"class $simple") ||
+          src.contains(s"object $simple") || src.contains(s"type $simple"),
         s"$fqn: no declaration of $simple in the vendored text",
       )
     }

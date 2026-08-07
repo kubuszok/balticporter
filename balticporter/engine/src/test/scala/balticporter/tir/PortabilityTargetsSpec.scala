@@ -62,6 +62,9 @@ class PortabilityTargetsSpec extends munit.FunSuite:
       // NOT here: its JS half leaves and its NATIVE half stays, under the same api, which is the
       // whole point of the split — the assertion below reads which of the two survived.
       "java.lang.System#getenv",
+      // …and the one COLLECTION on the list, whose answer is a REFUSAL rather than a mapping:
+      // JS's `WeakMap` cannot enumerate and Native has the real class.
+      "java.util.WeakHashMap",
       "java.util.zip.",
     ).sorted)
     // the negative half: everything that stays is a rule Scala Native genuinely cannot answer —

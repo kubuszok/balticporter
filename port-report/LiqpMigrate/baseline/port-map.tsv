@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-liquid	engine=balticporter/0.1.0-SNAPSHOT	sources=335f355ab142e65c	files=134	policy=406248ded5dcc7c0
+# balticporter port map	schema=3	module=ssg-liquid	engine=balticporter/0.1.0-SNAPSHOT	sources=335f355ab142e65c	files=134	policy=9d63fb2d4d02ab1c
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	liqp.Examples	ssg.liquid.Examples	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	liqp.Insertion	ssg.liquid.Insertion	Renamed	-		0		companion=yes disambiguator=marker flags=abstract form=class parents=ssg.liquid.LValue primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(String)
@@ -159,8 +159,13 @@ type	liqp.tags.Increment	ssg.liquid.tags.Increment	Renamed	-		0		companion=yes f
 type	liqp.tags.Tag	ssg.liquid.tags.Tag	Renamed	-		0		companion=yes flags=abstract form=class parents=ssg.liquid.Insertion primary=() primaryKind=no-arg-root primaryVis=public secondaries=(String)
 type		balticporter.runtime.JavaCollection	Added	-		0		
 type		balticporter.runtime.JavaCollections	Added	-		0		
+type		balticporter.runtime.JavaEnumMap	Added	-		0		
+type		balticporter.runtime.JavaEnumSet	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaOptionalDouble	Added	-		0		
+type		balticporter.runtime.JavaOptionalInt	Added	-		0		
+type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
 member	liqp.Examples#customFilter()	ssg.liquid.Examples#customFilter()	Renamed	-	liqp/Examples.java	198	ed45b3444b8b177e	placement=companion
 member	liqp.Examples#customLoopBlock()	ssg.liquid.Examples#customLoopBlock()	Renamed	-	liqp/Examples.java	118	40e98117e5c83800	placement=companion vis=private

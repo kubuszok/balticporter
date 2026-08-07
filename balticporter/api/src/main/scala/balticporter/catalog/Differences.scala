@@ -534,9 +534,15 @@ object Differences:
       Silent, Partial("fields and methods are collected; instance-init blocks and nested types are not, so the step-4 order inside a constant body is unreached"),
       el("T8"), Universal, "SpoonTir.enumCase, which collects only CtField and CtMethod", Rendered("ClassDef")),
     Difference(cId(42), "`EnumMap`/`EnumSet` GUARANTEE declaration-order iteration",
-      "JLS 8.9 with the java.util contract", "UNCITED — no Scala collection reproduces the ordinal-array guarantee",
-      Silent, Open, Predicted, Parameterised,
-      "CollectionsTransform.typeMap has no EnumMap/EnumSet key, so the types pass through — and no boundary check can see an iteration-ORDER regression", Unmechanised("the surface is a SHIM in CollectionsTransform.typeMap and there is none: an ordinary map/set reproduces the AVAILABILITY of EnumMap/EnumSet and not the ordinal-array guarantee, so nothing at a dispatch could discharge the row until the shim exists")),
+      "JLS 8.9 with the java.util contract",
+      "SLS 5.3 — the guarantee is carried by the SHIM's own ordering, not by any stdlib collection",
+      Silent, Handled, Predicted, Universal,
+      "CollectionsTransform.typeMap sends both to balticporter.runtime.JavaEnumMap/JavaEnumSet, which order by ordinal; JavaEnumCollectionsSpec asserts the order against an insertion order that would expose a stdlib map",
+      // `Cited` and not `LoweredType`: the difference is discharged by a TABLE ENTRY, so there is
+      // no per-site decision an arm could consult about. A type reference to `EnumMap` is lowered
+      // by the same one arm that lowers every other reference, and making that arm owe this row
+      // would demand a consult at every type in every program.
+      Cited("collections")),
     Difference(cId(43), "Java `record`",
       "JLS 8.10", "UNCITED — a case class differs in accessor naming and in three facets of `toString`",
       Loud, Absent("no CtRecord/CtRecordComponent handling; a record is silently degraded to a plain class"),

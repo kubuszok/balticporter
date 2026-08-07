@@ -3406,6 +3406,33 @@ eight.*
 
 ## 5. Portability and platform
 
+### K12.5 The SURVEY and the RULE LIST are two artifacts, and a row can be STATED for two waves without ever being ASKED
+
+CLOSED for the one row it was found on, and worth keeping because the shape is invisible from either
+side alone. `ApiRows` is the platform SURVEY — one row per API, per-platform availability and a
+recommended verdict — and `PortabilityCheck.all` is the RULE LIST a run actually matches every
+external symbol against. They are joined by `at = l(n)`, and that join is the whole of the
+relationship: **a survey row does not produce a question.**
+
+So `java.util.WeakHashMap` carried `(Absent, Refuse("JS's WeakMap requires object keys and cannot
+enumerate"))` from the day the survey was transcribed, was quoted in the design proposal as the
+platform-conditional refusal, and asked NOTHING of any port — because nobody had written the rule.
+Nothing reports that: `portability(all)` counts what the rules matched, `catalog(uncited)` is about
+the registry's citations, and a row with an honest verdict and no rule is indistinguishable from a
+row whose rule never fired. It is one `Rule("java.util.WeakHashMap", …, on = Rule.JsOnly, at = l(37))`.
+
+**The general form, for whoever adds the next survey row: a verdict is a CLAIM and a rule is a
+QUESTION, and only the question reaches a port.** The two are deliberately not derived from each
+other — a `MapTo` row is answered by `CollectionsTransform.typeMap`, a `Shim` row by a runtime type,
+a `Depend` row by `DependencyCheck`, and a `Keep` row by nothing at all, so a generated rule per row
+would ask four different things under one mechanism. What is owed instead is that a row whose
+verdict is `Refuse` has a rule, since `Refuse` is the one verdict whose entire content IS the
+question.
+
+*Fix kind: (a) engine, one rule. `PortabilityTargetsSpec` pins the JS-only set, so the rule's
+absence would have been visible there as an absent NAME — which is why the fix is one line and the
+finding is worth an entry.*
+
 ### K13. `T | Null` is NOT transparent at an ABSTRACT type parameter — the union floor is free only at CONCRETE types
 
 `Null` is a subtype of every concrete reference type, so `String | Null` simplifies at every use and

@@ -588,17 +588,18 @@ class CatalogAreaCSpec extends PortSuite:
 
   // -- the OPEN and ABSENT rows: rule (ii) makes CONSULTING one a finding ------------------------------------
 
-  test("JS-C12 / JS-C42 — an OPEN row is the WORK LIST and is never consulted") {
+  test("JS-C12 — an OPEN row is the WORK LIST and is never consulted") {
     // JS-C12 ATTACHES — a forward reference is decided where the field it reads renders — so it is
-    // an `undischarged` hole on every port, which is exactly what a work list is. JS-C42 has no
-    // surface at all and says so.
+    // an `undischarged` hole on every port, which is exactly what a work list is.
     //
-    // JS-C22 and JS-C23 USED TO BE ON THIS LIST and are three tests below: both became `Partial`
-    // when the risk counter landed, which is exactly the flip the sentence this test used to carry
-    // asked for. They are the worked example of the difference between "no surface exists" and "the
-    // surface counts the RISK and refuses the resolution".
+    // THREE rows have LEFT this list, and each left it a different way, which is the distinction
+    // `Unmechanised` exists to keep visible. JS-C22 and JS-C23 became `Partial` when the RISK
+    // COUNTER landed: what did not exist was a RESOLVER, and the rendered call was a surface all
+    // along. JS-C42 became `Handled` when the ordinal-order SHIMS landed: what did not exist was a
+    // TARGET, and the row is discharged by a table entry rather than by an arm — so it is `Cited`
+    // by the phase and not consulted at a site, which is why it is not asserted here.
     val p = port("public class A { int a = b; int b = 1; }")
-    List(JS.C(12), JS.C(42)).foreach { id =>
+    List(JS.C(12)).foreach { id =>
       assertNotConsults(p, id)
       assert(Differences.byId(id).status.isOpen, s"$id is no longer Open — flip this test with it")
     }
@@ -707,7 +708,7 @@ class CatalogAreaCSpec extends PortSuite:
     // fail: the ONLY rows left are the six whose surface genuinely does not exist, and each names
     // which one it is waiting for.
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
-      Set(JS.C(42), JS.C(43)),
+      Set(JS.C(43)),
       "a JS-C row that is neither a refused construct, an absorbed one, nor a row whose surface " +
         "nobody has built still says nothing is measuring it")
     // JS-C22 and JS-C23 were on that set and left it when the RISK COUNTER landed. The pair is the

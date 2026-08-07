@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-jbump	engine=balticporter/0.1.0-SNAPSHOT	sources=be818d0761d560e5	files=19	policy=257fa4581f82d1c6
+# balticporter port map	schema=3	module=sge-jbump	engine=balticporter/0.1.0-SNAPSHOT	sources=be818d0761d560e5	files=19	policy=3dc15a4b2f41e628
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.dongbat.jbump.Cell	sge.jbump.Cell	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
 type	com.dongbat.jbump.Collision	sge.jbump.Collision	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
@@ -29,8 +29,13 @@ type	com.dongbat.jbump.util.MathUtils	sge.jbump.util.MathUtils	Renamed	-		0		fla
 type	com.dongbat.jbump.util.MathUtils$Sin	sge.jbump.util.MathUtils$Sin	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=private[MathUtils]
 type		balticporter.runtime.JavaCollection	Added	-		0		
 type		balticporter.runtime.JavaCollections	Added	-		0		
+type		balticporter.runtime.JavaEnumMap	Added	-		0		
+type		balticporter.runtime.JavaEnumSet	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaOptionalDouble	Added	-		0		
+type		balticporter.runtime.JavaOptionalInt	Added	-		0		
+type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
 member	com.dongbat.jbump.Cell#itemCount	sge.jbump.Cell#itemCount	Renamed	-	com/dongbat/jbump/Cell.java	25	3912b8124c4f7882	
 member	com.dongbat.jbump.Cell#items	sge.jbump.Cell#items	Renamed	-	com/dongbat/jbump/Cell.java	28	de420db0b20b5165	

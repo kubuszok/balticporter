@@ -55,12 +55,18 @@ class RuntimePlanSpec extends munit.FunSuite:
       assert(!Files.exists(dir.resolve("balticporter/runtime/JavaIterator.scala")))
 
       val n = RuntimePlan.of(List(new CollectionsTransform), RuntimeMode.Vendored).writeSources(dir)
-      // five: the three shims (java's `AbstractCollection` has no scala counterpart a class can
-      // EXTEND — CLAUDE.md §4.5), `JavaCollections`, which is not a shim at all but a mirror of
-      // `java.util.Collections`' STATICS — a receiver-less utility no receiver-keyed rewrite can
-      // see — and `JavaStack`, whose target has to be its own type because the phase decides a
-      // rewrite from the RETYPED receiver and `java.util.ArrayList` already owns `ArrayBuffer`.
-      assertEquals(n, 5)
+      // TEN, and the list is the phase's `runtimeTypes`: the three shims (java's
+      // `AbstractCollection` has no scala counterpart a class can EXTEND — CLAUDE.md §4.5),
+      // `JavaCollections` (a mirror of `java.util.Collections`' STATICS, which no receiver-keyed
+      // rewrite can see), `JavaStack` (its own type because the phase decides a rewrite from the
+      // RETYPED receiver and `java.util.ArrayList` already owns `ArrayBuffer`), `JavaEnumMap` and
+      // `JavaEnumSet` (ordinal-order guarantees no stdlib collection carries), and the three
+      // `JavaOptional*` ALIASES (an arity-changing retype the head swap cannot express).
+      //
+      // A vendoring port writes all ten whether or not it names them, because `runtimeTypes` is
+      // asked of the PHASE before any program is read — the price of a delivery decision that
+      // cannot depend on the parse.
+      assertEquals(n, 10)
       val written = Files.readString(dir.resolve("balticporter/runtime/JavaIterator.scala"))
       assertEquals(written, RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator"))
     finally
