@@ -1716,9 +1716,38 @@ measured step rather than an all-or-nothing one. The other four are the shapes a
 cannot take — a `Constant`, a `ValDef`, an `instanceof`'s type operand, a lambda with no body — and
 each wants a marker of its own kind (`DESIGN.md` §6.5).
 
+**TWO SHAPES THE LOWERING DOES NOT REACH, both OPEN, both LOUD, both at zero corpus sites.** Hunted
+for deliberately after this entry closed, because a construct nothing in the fifteen modules
+exercises is one whose gaps close by accident. `T9ResidueProbeSpec` pins each in BOTH directions —
+what is emitted today, and the negative that says which nearby shape is fine — for
+`AbsorbedProbeSpec`'s reason: with no corpus site, only a fixture can notice the path moving.
+
+- **a local class COLLIDES with a non-static INNER class of the same name.** §4.55 counts what the
+  constructor funnel PROMOTES — its parameters and its top-level LOCALS — and a local CLASS is
+  neither, while it becomes a member of the emitted class body exactly as a promoted local does.
+  Two `class Inner` in one body: `Inner is already defined`. Narrower than it first reads, and the
+  negative is why: java's STATIC nested class is emitted into the COMPANION OBJECT and the local
+  class into the CLASS, so those two never collide — only a non-static inner class shares a
+  namespace with it. The fix belongs to the member-clash pass, which today does not consider a
+  class a member at all;
+- **a method-local ENUM lowers its DECLARATION and mis-spells every REFERENCE.** `CtEnum <:
+  CtClass`, so the statement dispatch's `case c: CtClass[?]` takes it with no arm aware an enum was
+  there — `JS-C43`'s absorption, one construct over — and that turns out to be harmless for the
+  declaration: the enum lowering runs and emits the sealed class and its companion. The reference
+  is emitted `demo.Holder.1Level.HIGH`, which is wrong twice. `1Level` is javac's BINARY simple
+  name, which `SpoonTir.localName` strips for the declaration (JLS 3.8 makes the strip safe) and
+  which `Symbol.fullName` still carries for the reference — and it is not a Scala identifier at
+  all. And the PROJECTION is wrong whatever the name: a method-local type is not a member of the
+  enclosing class, it is lexically in scope, so the reference wants the SIMPLE name. The control
+  that isolates it: an all-static local class becomes a local `object` and `Local.k()` resolves
+  with no projection, so the defect is in the reference path and not in the lowering.
+
+Neither ships a plausible wrong answer — each is a scalac error, so §3's own gate is the instrument
+that counts them, and a frontend REFUSAL would take the shapes that do work down with it.
+
 *Fix kind: (a). Built — frontend arm plus one shared traversal; catalog `JS-C30` `Absent` ->
 `Handled`, `CatalogAreaCSpec` ×4. Cost, measured: 62 tests + 12 cascade errors on one library while
-it was open; 28 recursion lines and 0 blast to close.*
+it was open; 28 recursion lines and 0 blast to close. Two residues OPEN, above.*
 
 ### T10. A java ENUM CONSTRUCTOR has a BODY, and it runs. **6 libGDX sides silently broken, 0 errors**
 
