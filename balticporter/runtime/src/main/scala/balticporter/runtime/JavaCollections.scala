@@ -360,6 +360,27 @@ object JavaCollections:
       case None    => null.asInstanceOf[V]
     if cur == null then { m.put(k, v); null.asInstanceOf[V] } else cur
 
+  /** `java.util.Optional.orElse(other)` — STRICT, which is the whole reason it needs a member here
+    * rather than a rename.
+    *
+    * Every other `Kind.Opt` arm in `CollectionsTransform` is a pure rename: `getAsInt` is `get`,
+    * `isPresent` is `isDefined`, the VALUE is the same object and only the member name differs.
+    * `orElse` is not, and the difference is one word in a signature. Java's parameter is
+    * `T other` — a VALUE, evaluated at the call, whatever the optional holds — and scala's
+    * `Option.getOrElse` takes `=> B`, evaluated only when the option is empty. So a default with a
+    * side effect (a counter, a `remove`, a lazily-built fallback that registers itself) runs in
+    * java and does not run in the port, and a costly one runs in java and does not in the port:
+    * same name, same answer, different program. `CLAUDE.md` §4.4's class exactly — valid Scala
+    * meaning something else, with a green compile and no moved count.
+    *
+    * Here and not on the alias, because the alias IS `Option` and a type alias cannot carry a
+    * member; and taking the default by VALUE is the entire content of the fix, so the body is
+    * `getOrElse` and the signature is the translation.
+    *
+    * Kept in this object for the reason its own header gives for the `Map.Entry` statics: these are
+    * the members a MAPPING left without a home, not members of a collection type. */
+  def optionalOrElse[A](o: Option[A], other: A): A = o.getOrElse(other)
+
   // -------------------------------------------------------------------------------------------
   // The EXTERNAL SEAM — a collection that crosses into or out of code the port does not emit.
   //

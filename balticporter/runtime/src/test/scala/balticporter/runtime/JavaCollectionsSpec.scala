@@ -902,6 +902,19 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(out.asInstanceOf[java.util.Collection[Any]].size(), 2)
   }
 
+  test("optionalOrElse evaluates its default EXACTLY ONCE, and whatever the optional holds") {
+    // `java.util.Optional.orElse(T other)` takes a VALUE. Java evaluates the argument expression
+    // before the call, so a side-effecting default runs even on a PRESENT optional; scala's
+    // `Option.getOrElse` takes it by name and runs it only on an empty one. Both directions are
+    // asserted, because a helper that fixed one and not the other would still be a §4.4 defect.
+    var runs = 0
+    def d(): Int = { runs += 1; 7 }
+    assertEquals(JavaCollections.optionalOrElse(Some(1), d()), 1)
+    assertEquals(runs, 1, "java evaluates the default at a PRESENT optional too")
+    assertEquals(JavaCollections.optionalOrElse(None, d()), 7)
+    assertEquals(runs, 2, "…and exactly once at an empty one")
+  }
+
   test("the view is READ-ONLY — a write java would have made is LOUD, never silent") {
     val out = jv(scala.collection.mutable.HashMap("k" -> 1)).asInstanceOf[java.util.Map[Any, Any]]
     intercept[UnsupportedOperationException](out.put("j", 2))

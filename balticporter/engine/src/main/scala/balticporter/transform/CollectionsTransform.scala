@@ -3200,7 +3200,8 @@ final class CollectionsTransform(
       case ("push" | "pop" | "peek" | "search", _, Kind.Stack) => None
       // ---- `java.util.Optional{Int,Long,Double}`, whose target is an `Option[…]` alias ----
       //
-      // Pure renames, all of them: the VALUE is the same object and only the member name differs.
+      // Pure renames, all of them EXCEPT `orElse` — see its own arm. The VALUE is the same object
+      // and only the member name differs.
       // `get`/`isDefined` are PARAMETERLESS on `Option` where java's are nilary, so they are a
       // `Select` and not an `Apply` — the same distinction `parenless` exists for, met at names
       // that also change. `orElseThrow()` is `get` because java's no-argument overload throws
@@ -3209,7 +3210,16 @@ final class CollectionsTransform(
       case ("getAsInt" | "getAsLong" | "getAsDouble" | "orElseThrow", Nil, Kind.Opt) =>
         Some(Tree.Select(recv, getSym, t.tpe, t.origin))
       case ("isPresent", Nil, Kind.Opt)      => Some(Tree.Select(recv, isDefinedSym, t.tpe, t.origin))
-      case ("orElse", List(d), Kind.Opt)     => Some(call(recv, getOrElseSym, List(d), t, so))
+      // …and the ONE that is not a rename. `Optional.orElse(T other)` takes a VALUE — java
+      // evaluates the argument at the call whatever the optional holds — while
+      // `Option.getOrElse(=> B)` evaluates it only when empty. Rendered as `getOrElse` a
+      // side-effecting or costly default runs in java and does not run in the port: same name,
+      // same answer, different program, with a green compile and no count to see it
+      // (`CLAUDE.md` §4.4). `JavaCollections.optionalOrElse` is `getOrElse` with a BY-VALUE
+      // parameter, which restores java's evaluation at the call and nothing else.
+      case ("orElse", List(d), Kind.Opt) if sym("optionalOrElse") != SymId.None =>
+        val f = sym("optionalOrElse")
+        Some(Tree.Apply(Tree.Ident(f, TypeRepr.NoType, so), List(recv, d), f, t.tpe, t.origin))
       case ("ifPresent", List(f), Kind.Opt)  => Some(call(recv, foreachSym, List(f), t, so))
       // `m.entrySet()` is the VIEW of the map as its (key, value) pairs, and a scala `Map[K, V]`
       // already IS an `Iterable[(K, V)]` — so the view is the map itself. `m.toSet` would be the
@@ -4116,7 +4126,8 @@ object CollectionsTransform:
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
-         "toSet", "toMap", "fromJava", "toJava", "toStream", "mapGet", "mapContainsKey", "mapRemove")
+         "toSet", "toMap", "fromJava", "toJava", "toStream", "mapGet", "mapContainsKey", "mapRemove",
+         "optionalOrElse")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give
