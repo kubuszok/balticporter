@@ -862,6 +862,39 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assert(out(0).isInstanceOf[java.util.Map[?, ?]])
   }
 
+  test("…and where an element DID move, the copy is DETACHED — stated, because it is not the view") {
+    // The identity note's second half, asserted rather than left to read as the identity its first
+    // half promises. An array has no view to build (java's `[]` is a bytecode instruction, not an
+    // interface), so a converted array is a COPY: a write through it reaches nothing, which is not
+    // even the read-only compromise the collection arms make — that one THROWS, this one accepts
+    // the write and silently loses it.
+    val moved: Array[AnyRef] = Array(scala.collection.mutable.HashMap("k" -> 1))
+    val out = jv(moved).asInstanceOf[Array[AnyRef]]
+    out(0) = "written"
+    assert(moved(0).isInstanceOf[scala.collection.mutable.Map[?, ?]],
+           "the port's own array does not see it — the detachment K15 refuses elsewhere")
+  }
+
+  test("a SELF-REFERENTIAL array terminates — the one arm with no view's laziness to stop it") {
+    // `Object[] a = new Object[1]; a[0] = a;` is legal java, and this arm is EAGER. Every other arm
+    // is a lazy view that re-enters per read and terminates by construction; only the array chain
+    // needs a guard, and an array already on the path is returned AS IT ARRIVED because no detached
+    // copy of a cyclic array exists.
+    val a: Array[AnyRef] = new Array[AnyRef](2)
+    a(0) = a
+    a(1) = scala.collection.mutable.HashMap("k" -> 1)
+    val out = jv(a).asInstanceOf[Array[AnyRef]]
+    assert(out ne a, "the map moved, so the spine was copied")
+    assert(out(0) eq a, "the cycle closes on the array as it arrived")
+    assert(out(1).isInstanceOf[java.util.Map[?, ?]])
+
+    // …and a MUTUAL cycle, which a one-element guard would not catch.
+    val x: Array[AnyRef] = new Array[AnyRef](1)
+    val y: Array[AnyRef] = new Array[AnyRef](1)
+    x(0) = y; y(0) = x
+    assert(jv(x) eq x, "nothing inside moved, so the original comes back")
+  }
+
   test("a DELEGATING shim leaves as what it wraps, not as a bean around it") {
     val b = scala.collection.mutable.Buffer[Any](1, 2)
     val out = jv(JavaCollection.from(b))

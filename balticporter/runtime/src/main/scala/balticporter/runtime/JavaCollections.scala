@@ -703,6 +703,22 @@ object JavaCollections:
     // A view is not the object it views (K19's open half, unchanged). The one place identity is
     // cheaply preservable is an ARRAY, whose spine has to be copied to convert it — so the copy is
     // made only when an element actually moved, and the ORIGINAL array is returned otherwise.
+    //
+    // WHERE AN ELEMENT DID MOVE, THE ARRAY IS A COPY AND THEREFORE DETACHED — say it rather than
+    // let it read as the identity the sentence above promises. Java handed the callee the port's
+    // own array; the port hands it a new one, so a WRITE through it reaches nothing and a later
+    // read of the port's array does not see it. That is the same detachment the collection arms
+    // refuse by using views, and it is a refusal here too — an array has no view to build, since
+    // java's `[]` access is a bytecode instruction and not an interface — so it is STATED rather
+    // than counted. It is not the read-only compromise either: the copy accepts the write and
+    // silently loses it, where a view would throw. Nothing in the corpus reaches this arm with an
+    // element that moves, which is exactly why the sentence is here rather than a number.
+    //
+    // …and a SELF-REFERENTIAL array terminates. `Object[] a = new Object[1]; a[0] = a;` is legal
+    // java and this arm is EAGER, so the recursion has no view's laziness to stop it — the guard is
+    // an identity set threaded through the array chain alone (every other arm is lazy and re-enters
+    // per read, which terminates by construction). An array already in the set is returned AS IT
+    // ARRIVED, which is also the only honest answer: no detached copy of a cyclic array exists.
 
     /** the value AS JAVA WOULD HAVE HELD IT, decided from the object rather than from its type.
       *
@@ -727,19 +743,32 @@ object JavaCollections:
       case c: JavaCollection[?]             => new ShimCollectionView(c.asInstanceOf[JavaCollection[Any]])
       case i: JavaIterable[?]               => new ShimIterableView(i.asInstanceOf[JavaIterable[Any]])
       case it: JavaIterator[?]              => new ShimIteratorView(it.asInstanceOf[JavaIterator[Any]])
-      case a: Array[AnyRef] =>
-        // java and scala agree about arrays, so the SPINE is already right and only the elements
-        // can be wrong. Converted eagerly because an array has no view, and returned AS IT ARRIVED
-        // whenever nothing moved — an array of `String` crossing out is the same object it was.
+      case a: Array[AnyRef]                 => arrayValue(a, new java.util.IdentityHashMap[AnyRef, AnyRef]())
+      case other                            => other.asInstanceOf[java.lang.Object]
+
+    /** java and scala agree about arrays, so the SPINE is already right and only the elements can be
+      * wrong. Converted eagerly because an array has no view, and returned AS IT ARRIVED whenever
+      * nothing moved — an array of `String` crossing out is the same object it was.
+      *
+      * `seen` is the cycle guard the IDENTITY note above is about, and it is allocated only on this
+      * path: every other arm is a lazy view that re-enters per read and terminates by construction,
+      * so paying for a map at each bridged argument would be a cost for a shape that cannot recurse.
+      * An array already in it is returned unchanged, which is the only honest answer — no detached
+      * copy of a self-referential array exists. */
+    private def arrayValue(a: Array[AnyRef], seen: java.util.IdentityHashMap[AnyRef, AnyRef]): AnyRef =
+      if seen.containsKey(a) then a
+      else
+        seen.put(a, a)
         var moved = false
         val out = new Array[AnyRef](a.length)
         var i = 0
         while i < a.length do
-          out(i) = toJavaValue(a(i))
+          out(i) = a(i) match
+            case n: Array[AnyRef] => arrayValue(n, seen)
+            case _                => toJavaValue(a(i))
           if out(i) ne a(i) then moved = true
           i += 1
         if moved then out else a
-      case other                            => other.asInstanceOf[java.lang.Object]
 
     /** the one entry shape these views need. Not `java.util.AbstractMap.SimpleImmutableEntry`,
       * whose availability is a platform question this module answers for itself; `equals` and
