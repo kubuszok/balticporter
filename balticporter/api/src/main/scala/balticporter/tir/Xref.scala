@@ -174,6 +174,12 @@ object Xref:
       // already reaches. Nothing records a `Definition` for it because it is not one — a pattern is
       // a `Term`, and `defs` is keyed on `Definition`.
       case tp @ Tree.TypePattern(_, tpt, _, _) => walkType(tpt.tpe, UsageKind.TypeRefPos, tp)
+      // …and a RECORD pattern, whose own type is a reference for the same reason and whose component
+      // patterns are ordinary terms the walk must reach — a nested one names a second record.
+      case rp @ Tree.RecordPattern(tpt, ps, _, _) =>
+        walkType(tpt.tpe, UsageKind.TypeRefPos, rp); ps.foreach(walkTerm)
+      // an UNCONDITIONAL component binding names no type at all — that is what makes it that node.
+      case Tree.BindPattern(_, _, _)        => ()
       // a java label is not a symbol; everything it names is in the statement under it
       case Tree.Labeled(_, s, _, _)         => walkTerm(s)
       case Tree.Assert(c, m, _, _)          => walkTerm(c); m.foreach(walkTerm)

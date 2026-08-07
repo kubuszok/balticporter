@@ -367,6 +367,12 @@ object TirPrinter:
     case x: Tree.TypePattern =>
       line(sb, indent, s"TypePattern ${sym(x.bind, style)}${ofType(x.tpe, style)}${origin(x.origin, style)}")
       sub(sb, indent + 1, "tpt", x.tpt, style)
+    case x: Tree.RecordPattern =>
+      line(sb, indent, s"RecordPattern${ofType(x.tpe, style)}${origin(x.origin, style)}")
+      sub(sb, indent + 1, "tpt", x.tpt, style)
+      group(sb, indent + 1, "patterns", x.patterns.map(y => y: Tree), style)
+    case x: Tree.BindPattern =>
+      line(sb, indent, s"BindPattern ${sym(x.bind, style)}${ofType(x.tpe, style)}${origin(x.origin, style)}")
     case x: Tree.Labeled =>
       line(sb, indent, s"Labeled ${x.name}${origin(x.origin, style)}")
       sub(sb, indent + 1, "stmt", x.stmt, style)

@@ -5031,6 +5031,14 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
   written from — and `just catalog-coverage`'s "unreached on all fifteen means dead code or an
   untested rule" heuristic does NOT apply to this family: the rule is tested, by construction,
   somewhere the corpus cannot see.
+  **…and the THIRD one in the family moved a different pair, which is what says the rule above is
+  about the SURFACE and not about the syntax.** `JS-C43` (java `record`) went `unmechanised` -1 and
+  **`catalog(consulted)` +1** on all fifteen, with `unreached` FLAT — because its consult sits at the
+  `ClassDef` rendering, which every port reaches thousands of times and at which the difference
+  simply never applies (`consulted 27, fired 0` on jbump). A modern-java row lands in `unreached`
+  when its surface is the CONSTRUCT and in `consulted` when its surface is a declaration every
+  program has; the row is equally untestable by the corpus either way, and only the fixtures
+  (`RecordSpec`, `PatternSwitchSpec`) are evidence for it.
 - **`overload-risk` is a RISK COUNTER with its own denominator, and the denominator is the point.**
   Java resolves an overload in three phases and scala in one, so javac and scalac can bind the same
   call to different members with no error on either side (`ENGINE-LIMITS.md` T17, catalog

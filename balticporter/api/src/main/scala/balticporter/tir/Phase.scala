@@ -594,6 +594,9 @@ object StandardTraversal:
       case x: Tree.Labeled  => x.copy(stmt = mapTerm(ph, x.stmt), tpe = mapType(ph, x.tpe))
       case x: Tree.Yield    => x.copy(value = mapTerm(ph, x.value), tpe = mapType(ph, x.tpe))
       case x: Tree.TypePattern => x.copy(tpt = mapTpt(ph, x.tpt), tpe = mapType(ph, x.tpe))
+      case x: Tree.RecordPattern =>
+        x.copy(tpt = mapTpt(ph, x.tpt), patterns = x.patterns.map(mapTerm(ph, _)), tpe = mapType(ph, x.tpe))
+      case x: Tree.BindPattern => x.copy(tpe = mapType(ph, x.tpe))
       case x: Tree.Assert   => x.copy(cond = mapTerm(ph, x.cond), msg = x.msg.map(mapTerm(ph, _)), tpe = mapType(ph, x.tpe))
       case x: Tree.IncDec   => x.copy(target = mapTerm(ph, x.target), tpe = mapType(ph, x.tpe))
       case x: Tree.DoWhile  => x.copy(body = mapTerm(ph, x.body), cond = mapTerm(ph, x.cond), tpe = mapType(ph, x.tpe))

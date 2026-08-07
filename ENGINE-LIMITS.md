@@ -2224,7 +2224,7 @@ file.
 
 *Fix kind: (a). The subset with an exact image is named above and is not a rider on this entry.*
 
-### T19. A RECORD PATTERN is blocked by the RECORD and not by the pattern — and the UNNAMED pattern is not reachable at all
+### T19. A RECORD PATTERN is blocked by the RECORD and not by the pattern — **CLOSED once `JS-C43` derived an extractor over the ACCESSORS**; and the UNNAMED pattern is not reachable at all
 
 Two facts about SE21's pattern labels, both PROBED rather than reasoned to, and both corrections to
 what the registry said before the probe. They sit together because they are what splits `JS-S10`:
@@ -2241,15 +2241,36 @@ type with no extractor. Refused per site, with a marker naming `CtRecordPattern`
 `JS-C43` emits an extractor, and not before — a wave that tried them in the other order would be
 building a pattern for a type that cannot be matched.
 
-**THE GATE HAS SINCE OPENED, and the prediction above was right about the ORDER and wrong about the
-TARGET.** This entry said "the day `JS-C43` emits a scala `case class`". It does not, and it must not:
-a case class's generated `unapply` reads the constructor PARAMETERS, and java's record pattern reads
-the ACCESSOR — so on `record Over(int x) { public int x() { return x * 2; } }` java binds `6` and a
-case class would have bound `3`, silently, which is the very divergence this row is about. What
-unblocked the pattern is an `unapply` DERIVED OVER THE ACCESSORS on every emitted record, which is
-JLS 14.30.1's own member. Read the lesson as stated rather than as scoped: a gate names the
-CAPABILITY it needs (an extractor that reads what java reads), never the implementation somebody
-guessed would supply it.
+**THE GATE OPENED, and the prediction above was right about the ORDER and wrong about the TARGET.**
+This entry said "the day `JS-C43` emits a scala `case class`". It does not, and it must not: a case
+class's generated `unapply` reads the constructor PARAMETERS, and java's record pattern reads the
+ACCESSOR — so on `record Over(int x) { public int x() { return x * 2; } }` java binds `6` and a case
+class would have bound `3`, silently, which is the very divergence this row is about. What unblocked
+the pattern is an `unapply` DERIVED OVER THE ACCESSORS on every emitted record, which is JLS
+14.30.1's own member. Read the lesson as stated rather than as scoped: **a gate names the CAPABILITY
+it needs**, never the implementation somebody guessed would supply it.
+
+**And the pattern needed ONE thing the extractor did not give it: JLS 14.30.2's UNCONDITIONAL
+component pattern.** Where a component pattern's type already covers the component's declared type,
+java performs no test at all — so it matches a `null` component. Scala's typed pattern is the image
+of the NARROWING case and not of that one: `case One(s: String)` does not match a null `s`. Both
+directions measured, in both languages, on the same fixtures:
+
+| written | java | the faithful scala |
+|---|---|---|
+| `case One(String s)`, component `String` | unconditional — matches `new One(null)` | `case One(s)`, the binding alone |
+| `case One(Object x)`, component `String` | unconditional (a WIDENING pattern is one too) — matches `new One(null)` | `case One(x)` |
+| `case Two(String s, int n)`, component `Object` | a real test — does NOT match `new Two(null, 1)` | `case Two(s: String, n)` |
+| the whole scrutinee is `null` | no match | no match (the extractor's own type test) |
+
+So the two are DIFFERENT NODES (`Tree.BindPattern` beside `Tree.TypePattern`) rather than one node
+with a flag, and the question is asked of the parser's own subtype relation (`isSubtypeOf`, JLS 4.10)
+rather than of type equality, which would miss the widening row. Where the parser cannot resolve the
+component's type the NARROWING arm is taken — a type test where java performs one is exact, and the
+residue is a `null` component under an unresolvable widening pattern, which is the conservative side.
+
+*What it cost: two IR nodes, one frontend arm, two emitter arms, and 0 corpus sites — `PatternSwitchSpec`
+gained six tests and no port moved a byte.*
 
 **`CtUnnamedPattern` is `NeverVisited`, and its `RefusedLoudly` claim was false in both halves.** No
 source Spoon 11.5 accepts produces one:
@@ -2267,8 +2288,9 @@ the first). **The transferable rule is `T16.5`'s, one classification over**: a c
 is a hypothesis until a fixture reaches the kind, and the cheapest thing to do with one is write the
 fixture.
 
-*Fix kind: (a) for the record pattern, and it WAS gated on `JS-C43` rather than open on its own. The
-unnamed pattern is not a fix at all — it is a claim corrected.*
+*Fix kind: (a) for the record pattern, and it WAS gated on `JS-C43` rather than open on its own —
+CLOSED. The unnamed pattern is not a fix at all; it is a claim corrected, and it stays refused
+because nothing can reach the refusal.*
 
 ### T20. A ported record is not a JVM RECORD, and no image can make it one — **the one residue `JS-C43` cannot close**
 

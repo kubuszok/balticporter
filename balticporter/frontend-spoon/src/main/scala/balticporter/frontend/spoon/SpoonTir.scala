@@ -3681,12 +3681,12 @@ object SpoonTir:
         * from the implicit NPE (`JS-S08`), and a pattern label makes the switch ENHANCED, which
         * `isEnhanced` already reads as "java does not fall out of this one".
         *
-        * A RECORD or UNNAMED pattern does not, and keeps the refusal — but the REASON has moved.
-        * The blocker was one row over: java deconstructs a record through its ACCESSORS and scala
-        * through an `unapply`, and the engine emitted a java record as a plain class with neither.
-        * `JS-C43` now derives an `unapply` over the accessors on every emitted record, so the
-        * TARGET exists; what is still missing is the ARM here, which is `ENGINE-LIMITS.md` T19 and
-        * is open rather than blocked.
+        * A RECORD pattern does too, now that `JS-C43` derives an `unapply` over the very accessors
+        * java reads (JLS 14.30.1) — see [[recordPattern]] for the one distinction it has to make
+        * that a type pattern does not.
+        *
+        * An UNNAMED pattern keeps the refusal, and it is a refusal nobody can trigger: no source
+        * Spoon 11.5 accepts builds a `CtUnnamedPattern` at all (`ENGINE-LIMITS.md` T19).
         *
         * THE MARKER IS MINTED HERE rather than reached through `expr`'s default, because the
         * pattern node carries no source POSITION: Spoon builds `CtCasePattern` as an unpositioned
@@ -3712,13 +3712,79 @@ object SpoonTir:
             val v  = tp.getVariable
             val vt = tpe(v.getType)
             Tree.TypePattern(defineLocal(v, vt), tt(vt, v), vt, originOf(c))
+          case rp: CtRecordPattern => recordPattern(rp, c, selT)
           case other =>
             unlowered(c, s"a pattern case label — ${SpoonKinds.nameOf(other.getClass)} " +
-              "(JLS 14.11.1). Java deconstructs a record through its ACCESSORS and scala through " +
-              "an `unapply`; JS-C43 now derives one over the accessors on every emitted record, so " +
-              "the target exists and what is missing is this arm (ENGINE-LIMITS T19)",
+              "(JLS 14.11.1). No source this parser accepts builds one, so this refusal is a " +
+              "claim about a node that has never been handed over (ENGINE-LIMITS T19)",
               selT, about = other)
         case other => expr(other)
+
+      /** `case Point(int x, int y) ->` — java's RECORD PATTERN, as scala's constructor pattern.
+        *
+        * THE ONE DISTINCTION THIS HAS TO MAKE, and it is not cosmetic. JLS 14.30.2 calls a component
+        * pattern UNCONDITIONAL when its type already covers the component's, and an unconditional
+        * pattern matches a `null` component; a narrowing one does not. Scala's typed pattern is the
+        * image of the second and NOT of the first — `case One(s: String)` fails on a null `s` where
+        * java's `case One(String s)` binds it — so the two need different scala text, which is what
+        * `Tree.BindPattern` beside `Tree.TypePattern` is for. Both directions measured, in both
+        * languages, on the same fixtures.
+        *
+        * The question is asked of SPOON — `isSubtypeOf`, which is JLS 4.10's own relation — and not
+        * of type equality alone, because a WIDENING pattern (`case One(Object x)` at a `String`
+        * component) is unconditional too. Where it cannot answer, the narrowing arm is taken: a type
+        * test where java performs one is exact, and the residue is a `null` component under a
+        * widening pattern the parser could not resolve, which is the conservative side.
+        *
+        * A component pattern that is neither a type pattern nor a nested record pattern is refused
+        * IN PLACE, at the size of the component, rather than taking the whole label down.
+        *
+        * ==AND THE RECORD ITSELF HAS TO BE ONE THIS RUN LOWERS==
+        *
+        * The extractor this arm names is DERIVED — `JS-C43` writes an `unapply` into the companion of
+        * every record the run emits — so a pattern over a record the run does NOT model has nothing
+        * to name. A java record from a DEPENDENCY is the shape: scala derives no extractor for a
+        * java record read out of a class file, so the emitted `case dep.Rec(x, y)` would be a bare
+        * `Not Found`. Refused per site instead, and refused STRUCTURALLY — the question is *does
+        * this parse hold a `CtRecord` declaration for the type the pattern names*, never a name test
+        * (§4.56). A record in a RESOLUTION ROOT passes, and correctly: the base module emits it, and
+        * `JS-C43` puts the same `unapply` there. */
+      private def recordPattern(rp: CtRecordPattern, c: CtCase[?], selT: TypeRepr): Term =
+        val rt   = tpe(rp.getRecordType)
+        val at   = originOf(c)
+        // the DECLARATION the pattern names, if this parse has one — the licence for the extractor
+        // and, in its `getRecordComponents`, java's own answer to "is this pattern unconditional".
+        val decl = Option(rp.getRecordType).flatMap(r => Option(r.getTypeDeclaration)).collect {
+          case r: CtRecord => r
+        }
+        if decl.isEmpty then
+          return unlowered(c, "a RECORD PATTERN over a record this run does not model (JLS 14.30.1). " +
+            "The extractor a record pattern deconstructs through is DERIVED — JS-C43 writes an " +
+            "`unapply` over the accessors into every record this run emits — and scala derives none " +
+            "for a java record read out of a class file, so a pattern over one from a dependency " +
+            "would name nothing", selT, about = rp)
+        val comps = decl.toList
+          .flatMap(_.getRecordComponents.asScala.toList.sortBy(posKey).map(_.getType))
+        val subs = rp.getPatternList.asScala.toList.zipWithIndex.map { (p, k) =>
+          p match
+            case tp: CtTypePattern =>
+              val v  = tp.getVariable
+              val vt = tpe(v.getType)
+              val id = defineLocal(v, vt)
+              if unconditional(comps.lift(k), v.getType) then Tree.BindPattern(id, vt, at)
+              else Tree.TypePattern(id, tt(vt, v), vt, at)
+            case nested: CtRecordPattern => recordPattern(nested, c, selT)
+            case other =>
+              unlowered(c, s"a record-pattern COMPONENT — ${SpoonKinds.nameOf(other.getClass)} " +
+                "(JLS 14.30.1)", tpe(rp.getRecordType), about = other)
+        }
+        Tree.RecordPattern(tt(rt, rp), subs, rt, at)
+
+      /** is a component pattern UNCONDITIONAL — does its type already cover the component's (JLS
+        * 14.30.2)? `false` where the component's type is unknown, which is the narrowing arm and the
+        * conservative side. */
+      private def unconditional(component: Option[CtTypeReference[?]], pattern: CtTypeReference[?]): Boolean =
+        component.exists(ct => ct == pattern || ct.isSubtypeOf(pattern))
 
       /** one switch-EXPRESSION arm's statements as a term whose VALUE is the arm's.
         *

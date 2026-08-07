@@ -271,7 +271,25 @@ enum Attaches:
     *
     * This is the honest alternative to measuring: a row whose discharge site has no mechanism is
     * EXCLUDED from the undischarged lane and counted in its own, so "we are not measuring these" is
-    * a number that can go down rather than a silence that reads as coverage. */
+    * a number that can go down rather than a silence that reads as coverage.
+    *
+    * ==A construct the frontend REFUSES takes this, and neither of the two it looks like==
+    *
+    * Not [[Lowered]]: that says an ARM owes a consult, and a refused kind has none — the dispatch
+    * enters, the refusal mints a marker or throws, and the obligation would be owed at a site that
+    * never returns. The row would then sit on `mechanised` reading `unreached` on every port
+    * forever, which is a claim that reads as coverage and can never fail. Not [[NoObligation]]
+    * either, because there IS a gap. What measures such a row is the OTHER instrument: `SpoonKinds`
+    * records the refused kind against the row's own id and the `markers` lane counts every mint.
+    *
+    * ==And "no surface exists" is a HYPOTHESIS about the engine, twice falsified==
+    *
+    * `JS-C22`/`JS-C23` said no surface could owe the overload question, and what did not exist was a
+    * RESOLVER — the rendered call had been a surface all along (`ENGINE-LIMITS.md` T17). `JS-C43`
+    * said the same of a java `record`, and a record renders through the same `ClassDef` dispatch as
+    * every other declaration: the whole of the gap was that no arm could KNOW one was there, which
+    * one flag on the type symbol fixed. So before writing this case, ask whether the surface is
+    * missing or only the INFORMATION at it. */
   case Unmechanised(why: String)
 
   /** there is NOTHING to discharge — the row records a checked non-difference, or a difference the

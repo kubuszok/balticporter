@@ -236,6 +236,16 @@ object SpoonKinds:
       Lowered("SpoonTir.classDef — typeFlags.isRecord, recordComponents, createCanonicalConstructorIfMissing, " +
               "canonicalised and accessorBodies; TirEmitter.recordMembers writes equals/hashCode/toString/unapply"),
       Some(c(43))),
+    // …and the PATTERN, which became lowerable the day the row above derived an extractor over the
+    // ACCESSORS — JLS 14.30.1's own member, and the reason a `case class` could not have supplied
+    // it. Reached only as a CASE LABEL: as an `instanceof` operand the whole expression is refused
+    // for `JS-G21`'s reason, which is about the binding's FLOW SCOPE and not about the pattern.
+    Kind("CtRecordPattern",
+      Lowered("SpoonTir.recordPattern, from caseLabel — Tree.RecordPattern, with Tree.BindPattern " +
+              "at a component pattern JLS 14.30.2 makes unconditional. Marks per site where the " +
+              "record is one this run does not MODEL: the extractor is derived into the emitted " +
+              "record's companion, and a java record read out of a class file has none"),
+      Some(s(10))),
   )
 
   /** kinds NOTHING reaches. The list the whole mechanism exists to keep honest.
@@ -255,7 +265,6 @@ object SpoonKinds:
     // and is `ENGINE-LIMITS.md` T18's — java's binding is flow-scoped and no lexical `val`
     // placement is faithful — but its SIZE is now one expression rather than one file.
     Kind("CtTypePattern", Absent(MarkedUnportable, "reached as the instanceof right operand (JLS 15.20.2); the binding is FLOW-scoped and is refused, and the marker stands at the enclosing boolean expression"), Some(g(21))),
-    Kind("CtRecordPattern", Absent(MarkedUnportable, "both pattern paths — as a CASE LABEL through switchArms, and as the instanceof right operand. No longer for want of an extractor: JS-C43 derives an `unapply` over the ACCESSORS, which is what JLS 14.30.1 reads, so what is missing is the arm (ENGINE-LIMITS T19)"), Some(s(10))),
 
     // PROBED, and the claim it used to carry ("both pattern paths above") was false in both halves:
     // NO java source this parser accepts produces one. An `_` standing where a TYPE PATTERN goes

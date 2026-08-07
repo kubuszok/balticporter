@@ -3874,6 +3874,16 @@ final class TirEmitter(
     // guard `matchStr` already renders. Valid only in a label position, which is where the frontend
     // mints it; anywhere else this text is not an expression and scalac says so.
     case Tree.TypePattern(b, tpt, _, _) => s"${local(b)}: ${tpe(tpt.tpe)}"
+    // `case Point(x, y)` — java's RECORD PATTERN through the extractor `JS-C43` derives over the
+    // record's ACCESSORS, which is what JLS 14.30.1 reads. Named through `typeValue` — the
+    // COMPANION's value path, where the `unapply` is — and never through `tpe`, which would give the
+    // TYPE and, for a static nested record, a projection no extractor lives at.
+    case Tree.RecordPattern(tpt, ps, _, _) =>
+      val nm = headSymOf(tpt.tpe).map(typeValue).getOrElse(tpe(tpt.tpe))
+      s"$nm(${ps.map(term(_, i)).mkString(", ")})"
+    // …and an UNCONDITIONAL component: the binding alone. See `Tree.BindPattern` — a type test here
+    // would be a different program at a `null` component.
+    case Tree.BindPattern(b, _, _)      => local(b)
     case Tree.Yield(v, _, _) if yieldTarget.isDefined =>
       s"scala.util.boundary.break(${term(v, i)})(using ${yieldTarget.get})"
     case y @ Tree.Yield(v, _, _) =>

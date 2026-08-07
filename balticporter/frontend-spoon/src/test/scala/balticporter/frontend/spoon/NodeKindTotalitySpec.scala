@@ -121,12 +121,14 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // a lowering retired a refusal.
     // `CtCasePattern` left when `JS-S10`'s TYPE-pattern half was lowered: the wrapper's arm exists
     // and reads the pattern, and WHICH pattern it holds is a fact the three rows below carry. What
-    // is left here is the two PATTERN kinds, each refused for a reason of its own — a type pattern
-    // only where it is an `instanceof` operand (T18), and a record one everywhere, no longer for
-    // want of an extractor (`JS-C43` derives one over the accessors now) but for want of the
-    // frontend's own arm (T19).
+    // ONE, and the one that left is `CtRecordPattern`: `JS-C43` derives an `unapply` over the
+    // ACCESSORS — JLS 14.30.1's own member — so the pattern is an ordinary constructor pattern and
+    // the arm is written (T19). What is left is a TYPE pattern, and only where it is an `instanceof`
+    // OPERAND: java flow-scopes that binding and no lexical `val` placement is faithful (T18). As a
+    // CASE LABEL the same kind lowers, which is why the refusal is about the position and not the
+    // kind — and is exactly what this list cannot express, so it is said here.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.MarkedUnportable),
-      List("CtRecordPattern", "CtTypePattern"))
+      List("CtTypePattern"))
     // EMPTY, and the last three to leave are the correction worth keeping. The comment that used to
     // stand here named "the type operand of an `instanceof`" as a shape a term-level marker cannot
     // take — true of the OPERAND and false of the construct, because the whole `instanceof` is a

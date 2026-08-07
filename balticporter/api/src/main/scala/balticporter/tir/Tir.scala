@@ -556,12 +556,40 @@ object Tree:
     * same NAME, and Spoon gives the pattern wrapper no source position for a per-variable key to
     * use, so keying on the variable would intern both arms' bindings as one symbol with one type.
     *
-    * A RECORD pattern is deliberately not here, and the reason has moved one row over. It used to be
-    * that scala deconstructs through an `unapply` and the engine emitted a java record as a plain
-    * class with none; `JS-C43` now derives one over the ACCESSORS — which is exactly what java's
-    * record pattern reads (JLS 14.30.1) — so the target exists and the frontend's own arm is what is
-    * still missing (`ENGINE-LIMITS.md` T19). Refused per site until it is written. */
+    * A RECORD pattern is [[RecordPattern]] and an UNCONDITIONAL component pattern is [[BindPattern]]
+    * — three nodes for three different scala texts, rather than one node with a flag. */
   final case class TypePattern(bind: SymId, tpt: TypeTree, tpe: TypeRepr, origin: Origin) extends Term
+
+  /** `case Point(int x, int y) ->` — java's RECORD PATTERN (JLS 14.30.1), as a case label.
+    *
+    * Scala's constructor pattern is the exact image, and the languages differ only in what they
+    * deconstruct THROUGH: java calls the record's ACCESSORS and scala calls an `unapply`. `JS-C43`
+    * derives one over exactly those accessors on every emitted record, which is what makes this
+    * node renderable at all — and what makes it EXACT rather than approximate, because an overridden
+    * accessor changes what java binds and would not change what a case class's generated extractor
+    * bound (`ENGINE-LIMITS.md` T19, T20).
+    *
+    * `patterns` are the component patterns IN ORDER, each a [[BindPattern]], a [[TypePattern]] or a
+    * nested `RecordPattern`. Which of the first two a component takes is JLS 14.30.2's own
+    * distinction and it is not cosmetic: an UNCONDITIONAL component pattern matches a `null`
+    * component and a scala type test does not (measured, both languages).
+    *
+    * `tpt` is the RECORD's type. The emitter names the extractor through it — the companion's VALUE
+    * path — never through the scrutinee, which may be any supertype. */
+  final case class RecordPattern(tpt: TypeTree, patterns: List[Term], tpe: TypeRepr, origin: Origin) extends Term
+
+  /** `case Point(x, y)`'s `x` — a component binding with NO type test (JLS 14.30.2's UNCONDITIONAL
+    * pattern), which is what java writes when the pattern's type already covers the component's.
+    *
+    * Its own node and not a [[TypePattern]] whose test happens to be trivial, because the two are
+    * different scala programs at a `null` component: `case One(s)` binds `null` and `case One(s:
+    * String)` does not match at all. Java's answer is the first (measured: `new One(null)` matches
+    * `case One(String s)` and does NOT match `case Two(String s, int n)` where the component is
+    * `Object`), so the two cases must be spellable apart.
+    *
+    * Valid only INSIDE a [[RecordPattern]]: a bare binding standing as a whole case label would be
+    * scala's catch-all, which is a different arm from java's. */
+  final case class BindPattern(bind: SymId, tpe: TypeRepr, origin: Origin) extends Term
 
   /** `name: stmt` — a java label on a statement that is NOT a loop, the target of `break name`.
     *

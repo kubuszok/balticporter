@@ -77,21 +77,15 @@ object Differences:
     * loop (`JS-S01`) and an interposed boundary steals one (`JS-S03`), and both are decided in
     * `TirEmitter.loopWithJumps`, which every loop arm goes through. Writing the chain twice would be
     * the F8 shape — one rule, two copies, and the next loop kind added to the IR is on only one. */
-  /** the honest attachment for a construct the frontend REFUSES rather than lowers.
-    *
-    * Not `Lowered`: a lowering attachment says an ARM owes a consult, and there is no arm — the
-    * dispatch enters, the refusal throws, and the unit fails to translate. The obligation would be
-    * owed at a site that never returns, so the row would sit on `mechanised` reading `unreached` on
-    * every port forever, which is a claim that reads as coverage and can never fail
-    * (`CatalogCoverageSpec` holds exactly that line). Not `NoObligation` either: there IS a gap.
-    *
-    * What measures these is the OTHER instrument — `SpoonKinds` records each refused kind with this
-    * row's own `DiffId`, and the `markers` lane counts every mint. Saying so here is §2.3(c)'s
-    * written narrowing: a number that says "we are not measuring this THROUGH THE OBLIGATION LOG",
-    * beside a lane that is. */
-  private val refusedAtTheKind = Unmechanised(
-    "the construct is REFUSED at its Spoon kind rather than lowered, so no arm owes a consult; " +
-      "`SpoonKinds` records the refusal against this row's id and the `markers` lane counts each mint")
+  // A NAMED `Unmechanised` FOR A REFUSED KIND STOOD HERE — `refusedAtTheKind` — and it is gone
+  // because its last user is. Its argument is not: a construct the frontend REFUSES cannot take a
+  // `Lowered` attachment, since that says an ARM owes a consult and there is no arm — the dispatch
+  // enters, the refusal mints a marker or throws, and a row attached there would sit on
+  // `mechanised` reading `unreached` on every port forever, which is a claim that reads as coverage
+  // and can never fail. It cannot take `NoObligation` either, because there IS a gap. That argument
+  // lives on `Attaches.Unmechanised` itself, where the next refused kind will read it; what was
+  // here was one phrasing of it with two users, and both rows now LOWER (`JS-S10`'s record half,
+  // `JS-C43`'s declaration).
 
   private val everyLoop: Attaches =
     Both(Rendered("While"), Both(Rendered("For"), Both(Rendered("ForEach"), Rendered("DoWhile"))))
@@ -329,19 +323,32 @@ object Differences:
         "`yield` peeled at the tail and carried as Tree.Yield elsewhere, which " +
         "TirEmitter.matchStr wraps in a value-carrying arm boundary",
       Lowered("CtSwitchExpression", Dispatch.Expression)),
-    // SPLIT, and the split is the row: "Scala patterns are a superset" is true of a TYPE pattern
+    // The SPLIT this row was is closed. "Scala patterns are a superset" was true of a TYPE pattern
     // and false of a RECORD one, because the two languages deconstruct through different members —
-    // java through the record's accessors, scala through an `unapply`. That used to be a BLOCK,
-    // since the engine emitted a java record as a plain class with neither; `JS-C43` now derives an
-    // `unapply` over the accessors on every emitted record, so the target exists and what the
-    // record half is waiting on is this frontend's own arm (`ENGINE-LIMITS.md` T19).
+    // java through the record's ACCESSORS (JLS 14.30.1), scala through an `unapply` — and the engine
+    // emitted a java record as a plain class with neither. `JS-C43` derives one over exactly those
+    // accessors now, so the record half is an ordinary constructor pattern.
+    //
+    // What the record half had to get right beyond the extractor is JLS 14.30.2's UNCONDITIONAL
+    // component pattern: where the pattern's type already covers the component's, java matches a
+    // `null` component and a scala type test does not. So an unconditional component emits the
+    // BINDING ALONE and a narrowing one the typed pattern, and the two are different nodes rather
+    // than one node with a flag (`Tree.BindPattern` / `Tree.TypePattern`). Measured in both
+    // languages: `new One(null)` matches `case One(String s)` and does not match a pattern that
+    // really narrows.
     Difference(sId(10), "pattern and record switch, with sealed exhaustiveness",
-      "JLS 14.11.1, 14.30", "UNCITED — a scala typed pattern is the image; a record pattern is a constructor pattern over JS-C43's derived extractor",
-      Loud, Partial("the TYPE pattern, its `when` guard, `case null` and `case null, default` all " +
-        "lower exactly; a RECORD or UNNAMED pattern is refused per site — no longer for want of an " +
-        "extractor, which JS-C43 now derives over the accessors, but for want of the arm (T19)"),
+      "JLS 14.11.1, 14.30", "UNCITED — a scala typed pattern is the image of one half and a constructor pattern over JS-C43's derived extractor is the image of the other",
+      Loud, Partial("the TYPE pattern, its `when` guard, `case null`, `case null, default` and the " +
+        "RECORD pattern — nested, and with JLS 14.30.2's unconditional/narrowing split — all lower " +
+        "exactly. Two cells are not claimed: a component whose declared type the parser cannot " +
+        "resolve takes the NARROWING arm, which differs from java only at a `null` component under " +
+        "a widening pattern; and EXHAUSTIVENESS, where java checks a sealed switch and scala does " +
+        "not — both throw where the guarantee fails at run time and only the class differs, which " +
+        "is JS-S09's cell read at the other switch"),
       Predicted, Universal,
-      "SpoonTir.caseLabel -> Tree.TypePattern and CaseDef.guard; TirEmitter's TypePattern arm",
+      "SpoonTir.caseLabel -> Tree.TypePattern and CaseDef.guard; SpoonTir.recordPattern -> " +
+        "Tree.RecordPattern with Tree.BindPattern at an unconditional component; TirEmitter's three " +
+        "pattern arms, the record one naming the extractor through the COMPANION's value path",
       Both(Lowered("CtSwitch", Dispatch.Statement), Lowered("CtSwitchExpression", Dispatch.Expression))),
     Difference(sId(11), "a translated CATCH swallows a translated JUMP — `boundary.Break` is a `RuntimeException`",
       "JLS 14.15, 14.20", "UNCITED — `scala.util.boundary.Break` extends `RuntimeException`",

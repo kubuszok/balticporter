@@ -631,6 +631,33 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
       "tpt"  -> Tree.TypePattern(L1, tt(tOth), tStr, O),
     )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
 
+    // ---- RecordPattern ------------------------------------------------------------------------
+    // A java RECORD PATTERN as a case LABEL (JLS 14.30.1), lowered to scala's constructor pattern
+    // over the extractor `JS-C43` derives. Same host as `TypePattern` for the same reason — it is
+    // valid in a label position and nowhere else — and `tpt` is what NAMES the extractor, so
+    // perturbing it moves the emitted text even though nothing else about the pattern changes.
+    probe(Tree.RecordPattern(tt(tStr), List(Tree.BindPattern(L1, tStr, O)), tStr, O),
+      (x: Tree.RecordPattern) => hostTerm(Tree.Block(List(
+        Tree.Match(refA, List(
+          Tree.CaseDef(List(x), None, Tree.Assign(refB, iLit(1), tUnit, O), isDefault = false),
+          Tree.CaseDef(Nil, None, unitLit, isDefault = true)), tUnit, O)), unitLit, tUnit, O)))(
+      "tpt"      -> Tree.RecordPattern(tt(tOth), List(Tree.BindPattern(L1, tStr, O)), tStr, O),
+      "patterns" -> Tree.RecordPattern(tt(tStr), List(Tree.BindPattern(L2, tStr, O)), tStr, O),
+    )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
+
+    // ---- BindPattern --------------------------------------------------------------------------
+    // An UNCONDITIONAL component of a record pattern (JLS 14.30.2) — the binding alone, which is
+    // what makes it a different node from `TypePattern` rather than one with a trivial test. Hosted
+    // INSIDE a `RecordPattern`, which is the only position it is valid in.
+    probe(Tree.BindPattern(L1, tStr, O),
+      (x: Tree.BindPattern) => hostTerm(Tree.Block(List(
+        Tree.Match(refA, List(
+          Tree.CaseDef(List(Tree.RecordPattern(tt(tStr), List(x), tStr, O)), None,
+            Tree.Assign(refB, iLit(1), tUnit, O), isDefault = false),
+          Tree.CaseDef(Nil, None, unitLit, isDefault = true)), tUnit, O)), unitLit, tUnit, O)))(
+      "bind" -> Tree.BindPattern(L2, tStr, O),
+    )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
+
     // ---- MethodRef ----------------------------------------------------------------------------
     probe(Tree.MethodRef(Left(tt(tOth)), M1, tOth, O), hostTerm)(
       "qualifier" -> Tree.MethodRef(Right(Tree.Ident(OTHER, tOth, O)), M1, tOth, O),

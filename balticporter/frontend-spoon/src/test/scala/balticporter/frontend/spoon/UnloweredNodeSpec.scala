@@ -40,15 +40,13 @@ class UnloweredNodeSpec extends munit.FunSuite:
 
   private def markers(p: Program): List[Tree.Unportable] = scan(p) { case m: Tree.Unportable => m }
 
-  test("a PATTERN CASE LABEL mints a marker — and the rest of the class still translates") {
-    // `CtCasePattern` is a `CtExpression` and NOT a `CtPattern`, so the switch's case-expression
-    // map hands it to `expr`, which has no arm for it and lands on `exprNoCast`'s default. Before
-    // the marker this threw, and the whole file was lost.
-    //
-    // The construct this spec was written against MOVED when `JS-S09` landed: a switch EXPRESSION
-    // is lowered now, so it mints nothing. That is the mechanism working — a marker inventory is a
-    // work list and a work list shrinks — and it is why the spec names its construct rather than
-    // "whichever one is unlowered".
+  test("a RECORD PATTERN case label mints NOTHING — and the rest of the class still translates") {
+    // THIS SPEC HAS NOW OUTLIVED TWO OF ITS OWN CONSTRUCTS, which is the mechanism working: a
+    // marker inventory is a WORK LIST and a work list shrinks. It was written against a switch
+    // EXPRESSION, which `JS-S09` lowered; it was then re-pointed at the RECORD PATTERN, which
+    // `JS-S10`'s second half lowers now that `JS-C43` derives an `unapply` over the record's
+    // ACCESSORS. Kept as the NEGATIVE rather than deleted, because a marker that stops being minted
+    // and a MINT SITE that stops being reached are indistinguishable from a count alone.
     val p = SpoonTir.fromSource(
       """package p;
         |public class Sw {
@@ -58,37 +56,51 @@ class UnloweredNodeSpec extends munit.FunSuite:
         |}
         |""".stripMargin)
 
-    val ms = markers(p)
-    assertEquals(ms.size, 1, s"expected exactly one marker, got ${ms.map(_.what)}")
-    assertEquals(ms.head.kind, UnportableKind.UnmodelledNodeKind("CtRecordPattern"))
-    assertEquals(ms.head.state, MarkerState.Open)
-    // the CATALOG id comes from the kind registry, so the two artifacts join and a report can say
-    // WHICH known difference this is rather than only that something was refused.
-    assertEquals(ms.head.diff.map(_.toString), Some("JS-S10"))
-    // the marker points at real Java — §6.2's rule and `markerKey`'s precondition.
-    assert(ms.head.origin.line > 0, ms.head.origin.toString)
+    assertEquals(markers(p), Nil)
+    // …and the POSITIVE beside it, so "nothing was minted" cannot be "nothing was translated": the
+    // label really is a constructor pattern, with an unconditional binding per component.
+    assertEquals(scan(p) { case rp: Tree.RecordPattern => rp }.size, 1)
+    assertEquals(scan(p) { case bp: Tree.BindPattern => bp }.size, 2)
 
-    // …and the point of the whole conversion: the sibling method is still here.
+    // …and the point the marker used to make: the sibling method is still here.
     val names = p.symbols.all.map(_.name).toSet
     assert(names.contains("untouched"), s"the unit lost declarations it should have kept: $names")
   }
 
-  test("the marker names the kind the REGISTRY knows, not the parser's implementation class") {
-    // …and it names the PATTERN, not the `CtCasePattern` wrapper the marker is minted at: the
-    // wrapper has an arm (it is `Lowered`), and pointing the marker at it would make the registry
-    // describe a kind the frontend handles.
-    val p  = SpoonTir.fromSource(
+  test("a record pattern over a record this run does NOT model is refused — the extractor is DERIVED") {
+    // The half of `JS-S10`'s record lowering that is not a lowering. The `unapply` a record pattern
+    // deconstructs through is written into the companion of every record THIS RUN EMITS; scala
+    // derives none for a java record read out of a class file, so a pattern over one from a
+    // dependency would emit `dep.Rec(x, y)` naming nothing. Refused per site, and refused
+    // STRUCTURALLY — "does this parse hold a `CtRecord` for the type the pattern names" — rather
+    // than by any test on its name (§4.56).
+    val p = SpoonTir.fromSource(
       """package p;
-        |public class S2 {
-        |  public record Pt(int x, int y) {}
-        |  public int f(Object o) { return switch (o) { case Pt(int x, int y) -> x; default -> 0; }; }
+        |public class S3 {
+        |  public int untouched(int a) { return a + 1; }
+        |  public int f(Object o) { return switch (o) { case dep.Rec(int x, int y) -> x; default -> 0; }; }
         |}
         |""".stripMargin)
     val ms = markers(p)
-    assertEquals(ms.map(_.kind.detail), List(Some("CtRecordPattern")))
-    // the join is what the name is FOR: a kind outside the registry would report a name nothing can
-    // be looked up by, and `NodeKindTotalitySpec` is what fails on that.
-    assert(SpoonKinds.byName.contains("CtRecordPattern"))
+    assertEquals(ms.size, 1, s"expected exactly one marker, got ${ms.map(_.what)}")
+    assertEquals(ms.head.kind, UnportableKind.UnmodelledNodeKind("CtRecordPattern"))
+    assertEquals(ms.head.diff.map(_.toString), Some("JS-S10"))
+    assert(ms.head.what.contains("does not model"), ms.head.what)
+    // …and the unit survives, which is the whole of `DESIGN.md` §6.2's subject-vs-site rule.
+    assert(p.symbols.all.map(_.name).toSet.contains("untouched"))
+  }
+
+  test("a NESTED record pattern lowers too — the arm recurses, which is what java's grammar does") {
+    val p = SpoonTir.fromSource(
+      """package p;
+        |public class S2 {
+        |  public record Pt(int x, int y) {}
+        |  public record Line(Pt a, Pt b) {}
+        |  public int f(Object o) { return switch (o) { case Line(Pt(int x, int y), Pt b) -> x + y; default -> 0; }; }
+        |}
+        |""".stripMargin)
+    assertEquals(markers(p), Nil)
+    assertEquals(scan(p) { case rp: Tree.RecordPattern => rp }.size, 2)
   }
 
   test("a TYPE PATTERN case label mints NOTHING — `JS-S10`'s lowered half, and the negative is the evidence") {
