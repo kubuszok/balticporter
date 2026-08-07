@@ -2072,6 +2072,35 @@ reason the frontend cannot translate them — plus (b) for WHICH families are ca
 `SpoonFrontend.preservedAnnotationPrefixes` one path over. It was counted all along by `omissions`,
 which named it correctly and was read as decoration.*
 
+### T16.5 "ABSORBED SILENTLY" is a SUSPICION, and a probe either retires it or sharpens it — three kinds, three different answers
+
+Not a dead end: a PROCEDURE, recorded because the first family to be probed produced three outcomes
+and none of them was the one the classification implied. `SpoonKinds.Absence.AbsorbedSilently` says
+a supertype's arm takes a node and no arm knows the construct was there. That is a true statement
+about DISPATCH and it says nothing about the OUTPUT — which is the whole question, and one fixture
+answers it.
+
+| kind | what the classification implied | what the probe found |
+|---|---|---|
+| `CtTextBlock` | "one string constant with raw newlines in it" — the sharpest of the four | **NOT A DIFFERENCE.** `CtLiteral.getValue` is JLS 3.10.6's DENOTED string (incidental whitespace stripped, terminators normalised, escapes applied) and the frontend calls `getOriginalSourceFragment` nowhere, so the value is java's; the emitter re-escapes it (L1), so the SHAPE changes and the VALUE does not. Kind moved to `Lowered`, catalog `JS-E18` is a `NonDiff` with `TextBlockSpec` as evidence |
+| `CtRecord` | "a record is silently degraded to a plain class" | **WRONG IN BOTH HALVES, and worse than stated.** Spoon exposes the components as FIELDS and the accessors as METHODS, so the canonical constructor, the state and `x()`/`y()` all arrive — and the emitted class extends `java.lang.Record` WITHOUT the `equals`/`hashCode`/`toString` javac generates and that class declares abstract. It is not concrete, and §3 says when you find out: `RefChecks` does not run while a typer error remains, so a port carrying a record learns this on the day it reaches zero |
+| `CtAnnotationMethod` | "an ordinary abstract method; only the `default` clause is dropped" | **UNDERSTATED.** The ELEMENT itself is dropped: an emitted `@interface` has no members at all. Newly reachable, because T16 has just made a TYPE's argument-bearing annotation carryable — an emitted `@p.Tag(value = "x")` needs the emitted `Tag` to take that argument, which for an EXTERNAL annotation scalac reads from a class file (the case every corpus port is in) and for a PORTED one is a compile error |
+
+The fourth, `CtAnnotationFieldAccess`, is NOT probed and is recorded as such rather than guessed at:
+the obvious fixture (an annotation element read in an annotation's own argument) never reaches it,
+because the annotation is dropped by the policy first.
+
+**What the table is FOR.** Each of those three needed one fixture and no engine change to establish,
+and the classification each carries now is what the probe showed — so the next reader inherits a
+measurement instead of an assumption. Where the probe found a defect the assertions PIN IT, written
+to fail when it is fixed (`AbsorbedProbeSpec`), which is the difference between a measurement and a
+description. And note the cheapest outcome is the one nobody predicts: the sharpest-looking kind of
+the four was not a difference at all, and finding that out cost one spec.
+
+*Fix kind: (a) for the two real ones, both unbuilt and neither with a corpus site — a record needs
+three generated members with exact contracts, an annotation type needs its elements. Both are now
+NAMED with what they really emit rather than with what somebody feared they emit.*
+
 ### T17. Java resolves an overload in THREE PHASES and Scala in ONE — **the divergence cannot be predicted without a resolver; the RISK is counted instead**
 
 Java picks an overload in three passes (JLS 15.12.2): STRICT (no boxing, no varargs), then LOOSE

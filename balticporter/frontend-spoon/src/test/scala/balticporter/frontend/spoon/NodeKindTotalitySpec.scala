@@ -102,7 +102,12 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // kind costs whatever was written in a file the walk does not enter. A single number would let
     // one shrink while another grew.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.AbsorbedSilently),
-      List("CtAnnotationFieldAccess", "CtAnnotationMethod", "CtRecord", "CtTextBlock"))
+      // THREE, not four: `CtTextBlock` left this list when `TextBlockSpec` established that the
+      // absorption is FAITHFUL — `CtLiteral.getValue` is JLS 3.10.6's denoted string, so the arm
+      // that takes it is the right arm and the kind is `Lowered`. That is the outcome this
+      // classification exists to make reachable: "absorbed silently" is a SUSPICION, and a probe
+      // either turns it into a defect or retires it.
+      List("CtAnnotationFieldAccess", "CtAnnotationMethod", "CtRecord"))
     // …and a FOURTH, added when `DESIGN.md` §6.2's marker took over the first two of
     // `SpoonTir.unsupported`'s six sites. A marked kind still blocks the port — the emission gate
     // refuses on any open marker — but the failure is now the size of the CONSTRUCT rather than the

@@ -261,6 +261,22 @@ object Differences:
       Silent, Open, el("F7"), Universal,
       "SpoonTir.stmtArm's CtOperatorAssignment and CtUnaryOperator arms, and exprArm's twins — each translates the lvalue once and USES the translation twice",
       Lowered("CtOperatorAssignment", Dispatch.Either)),
+    // A row that exists because a SUSPICION was priced, and the price was zero. `CtTextBlock` was
+    // filed as ABSORBED SILENTLY — `SpoonKinds`' own "dangerous one" — on the true observation that
+    // it subclasses `CtLiteral` and no arm knows it was there. What that could not settle is WHICH
+    // STRING arrives, which is the entire question, and a probe settled it in one run.
+    Difference(eId(18), "a TEXT BLOCK denotes the PROCESSED string, not its source text",
+      "JLS 3.10.6",
+      "SLS 1.3.6 — a Scala string literal has no incidental-whitespace rule and needs none: the value the frontend holds is already java's",
+      NoImpact,
+      NonDiff("the frontend reads `CtLiteral.getValue`, which Spoon has already resolved through " +
+        "JLS 3.10.6 — incidental whitespace stripped, line terminators normalised, escapes " +
+        "applied — so a `Constant.StringC` holding exactly the denoted string reaches the TIR. The " +
+        "emitter then re-escapes it (ENGINE-LIMITS L1), so the SHAPE changes (one `\"…\"` with " +
+        "`\\n` where java wrote three lines) and the VALUE does not. PROBED, not assumed"),
+      Predicted, NoFix,
+      "SpoonTir.literal reads getValue and the frontend calls getOriginalSourceFragment nowhere; TirEmitter.escape puts every newline back; TextBlockSpec",
+      NoObligation("a checked NON-difference: the two languages denote the same string, so no arm has a decision to take")),
   )
 
   // -------------------------------------------------------------------------------------------
@@ -545,8 +561,14 @@ object Differences:
       Cited("collections")),
     Difference(cId(43), "Java `record`",
       "JLS 8.10", "UNCITED — a case class differs in accessor naming and in three facets of `toString`",
-      Loud, Absent("no CtRecord/CtRecordComponent handling; a record is silently degraded to a plain class"),
-      Predicted, Universal, "SpoonTir.classDef's CtClass arms take it, and SpoonTir.typeFlags has no isRecord", Unmechanised("the construct is ABSORBED SILENTLY — CtRecord extends CtClass, so the class arm takes it and no arm is even aware a record was there; `SpoonKinds.absent` records it against this row and `NodeKindTotalitySpec` pins it, which is the instrument that measures the family")),
+      // PROBED, and the sentence this row used to carry — "a record is silently degraded to a plain
+      // class" — was wrong in both halves. Spoon exposes the components as fields and the accessors
+      // as methods, so most of the construct DOES arrive; and what is emitted is not a plain class
+      // but one extending `java.lang.Record` with that class's three abstract members
+      // unimplemented, which is LOUD and arrives only at §3's gate, since `RefChecks` does not run
+      // while a typer error remains.
+      Loud, Absent("the components and accessors arrive, and the emitted class extends java.lang.Record without the equals/hashCode/toString javac generates — so it is not concrete, and nothing says so until the port reaches zero typer errors"),
+      Predicted, Universal, "SpoonTir.classDef's CtClass arms take it and SpoonTir.typeFlags has no isRecord; AbsorbedProbeSpec pins what is emitted today, in both directions", Unmechanised("the construct is ABSORBED SILENTLY — CtRecord extends CtClass, so the class arm takes it and no arm is even aware a record was there; `SpoonKinds.absent` records it against this row and `NodeKindTotalitySpec` pins it, which is the instrument that measures the family")),
     // `Open` — "SpoonTir.typeFlags never populates Flags.isSealed, so a sealed hierarchy ships as
     // an ordinary open class, a silent widening with no refusal and no finding" — until this wave.
     // What the two languages have is not one feature: java seals by NAMING its subclasses anywhere

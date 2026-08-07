@@ -171,6 +171,13 @@ object SpoonKinds:
     "CtForEach" -> "SpoonTir.stmtKind", "CtIf" -> "SpoonTir.stmtKind",
     "CtInvocation" -> "SpoonTir.invocation", "CtLambda" -> "SpoonTir.exprNoCast",
     "CtLiteral" -> "SpoonTir.literal", "CtLocalVariable" -> "SpoonTir.defineLocal",
+    // A TEXT BLOCK is `CtLiteral`'s subtype and `literal` is the arm that runs, so it is LOWERED
+    // and was only ever filed as absorbed-silently because nobody had asked WHICH STRING arrives.
+    // `TextBlockSpec` asked: `getValue` hands back JLS 3.10.6's denoted string — incidental
+    // whitespace stripped, terminators normalised, escapes applied — and the emitter re-escapes it
+    // (L1), so the SHAPE changes and the VALUE does not. Catalog `JS-E18` records the non-difference
+    // with that spec as its evidence.
+    "CtTextBlock" -> "SpoonTir.literal",
     "CtNewArray" -> "SpoonTir.newArray", "CtNewClass" -> "SpoonTir.anonClass",
     "CtOperatorAssignment" -> "SpoonTir.stmtKind / exprNoCast", "CtReturn" -> "SpoonTir.stmtKind",
     "CtSuperAccess" -> "SpoonTir.exprNoCast", "CtSwitch" -> "SpoonTir.switchStmt",
@@ -197,10 +204,9 @@ object SpoonKinds:
     * `CtLiteral`, so a Java 15 text block collapses into an ordinary string constant whose payload
     * holds raw newlines, and correctness then rests entirely on the emitter's re-escaping. */
   val absent: List[Kind] = List(
-    Kind("CtTextBlock", Absent(AbsorbedSilently, "extends CtLiteral, so SpoonTir.literal takes it; the multi-line form becomes one string constant with raw newlines in it"), scala.None),
     Kind("CtAnnotationFieldAccess", Absent(AbsorbedSilently, "extends CtVariableRead, not CtFieldAccess, so the variable arm takes it and the TARGET is dropped"), scala.None),
-    Kind("CtRecord", Absent(AbsorbedSilently, "extends CtClass, so classDef treats it as a plain class and typeFlags has no isRecord"), Some(c(43))),
-    Kind("CtAnnotationMethod", Absent(AbsorbedSilently, "extends CtMethod, so execDef emits an ordinary abstract method; getDefaultExpression is never called and the `default` clause is dropped"), scala.None),
+    Kind("CtRecord", Absent(AbsorbedSilently, "extends CtClass, so classDef treats it as a plain class and typeFlags has no isRecord — and PROBED (AbsorbedProbeSpec) the result is worse than a plain class: the components and accessors DO arrive, and the emitted class extends java.lang.Record without implementing its three abstract members, which RefChecks rejects on the day the port reaches zero typer errors"), Some(c(43))),
+    Kind("CtAnnotationMethod", Absent(AbsorbedSilently, "extends CtMethod — and PROBED (AbsorbedProbeSpec) the ELEMENT ITSELF is dropped, not merely its `default` clause: an emitted @interface has no members at all, so a ported annotation cannot take the argument T16 now lets a type carry"), scala.None),
 
     Kind("CtSwitchExpression", Absent(MarkedUnportable, "extends CtExpression and CtAbstractSwitch, NOT CtSwitch, so the switch arm cannot catch it"), Some(s(9))),
     Kind("CtYieldStatement", Absent(MarkedUnportable, "extends CtCFlowBreak, not CtBreak or CtReturn; in practice the enclosing switch expression refuses first"), Some(s(9))),
