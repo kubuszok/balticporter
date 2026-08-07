@@ -42,12 +42,14 @@ package balticporter.tir
   * than hidden — see [[Report]], which carries its own denominator so the over-approximation's rate
   * is a number on every run and not a claim in this comment.
   *
-  * ==Two limits, both structural==
+  * ==Three limits, all structural==
   * The candidate set is what the PROGRAM DECLARES. An external callee's overloads live in a class
   * file the frontend interns lazily and only on reference, so a call into the JDK or a dependency
   * has a candidate set this check cannot see — it is not reported, and that is stated rather than
   * counted as a zero. And ancestors are followed only where the program declares them: an inherited
-  * overload from an external supertype is invisible for the same reason.
+  * overload from an external supertype is invisible for the same reason. The third is `super.f(x)`,
+  * whose candidate set is the SUPERCLASS's and which is therefore left at the callee's own owner
+  * rather than widened to the receiver's type — see [[rootOf]] and `ENGINE-LIMITS.md` T17.
   */
 object OverloadRiskCheck:
 
@@ -165,10 +167,7 @@ object OverloadRiskCheck:
             case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == name) => d
           })))
 
-    private def head(t: TypeRepr): Option[SymId] = t match
-      case TypeRepr.TypeRef(_, s)      => Some(s)
-      case TypeRepr.AppliedType(tc, _) => head(tc)
-      case _                           => scala.None
+    private def head(t: TypeRepr): Option[SymId] = headSym(t)
 
   // -------------------------------------------------------------------------------------------
   // THE PREDICATE, STATED ONCE — read by this check and by the emitter's JS-C22/JS-C23 consults
@@ -200,14 +199,70 @@ object OverloadRiskCheck:
     * everything-is-overloaded count. The narrowing is stated in [[Report]]'s denominator. */
   private val universals = Set("java.lang.Object", "scala.Any", "scala.AnyRef")
 
+  /** the head symbol of a type, for the receiver root below and for [[Overloads]]'s parent walk —
+    * one function, because the two ask the same question and a `ThisType` reaching only one of them
+    * is how an implicit receiver stops resolving. */
+  private def headSym(t: TypeRepr): Option[SymId] = t match
+    case TypeRepr.TypeRef(_, s)      => Some(s)
+    case TypeRepr.AppliedType(tc, _) => headSym(tc)
+    case TypeRepr.ThisType(c)        => Some(c)
+    case _                           => scala.None
+
+  /** WHERE JAVA LOOKED — the receiver's STATIC TYPE, which is the type whose members (its own and
+    * its inherited ones) JLS 15.12.1 makes the candidate set.
+    *
+    * Not the resolved callee's OWNER, which is where the winner happened to be DECLARED. The two
+    * coincide whenever the winner is the most derived declaration and differ exactly when it is
+    * not: javac binds `f(1)` to an inherited `P.f(int)` in phase 1 while the subclass `C` declares
+    * `f(Integer)`, so an upward-only climb from `P` never sees the candidate that spans the
+    * boundary — the `BoxingPhaseSpan` this lane exists for, invisible in the one direction it is
+    * most likely to arrive in. Rooting at the receiver is a strict WIDENING of the old set (the
+    * owner is always the receiver's type or an ancestor of it), so nothing previously reported can
+    * be lost.
+    *
+    * Three shapes, and the fallback is what keeps the widening honest:
+    *
+    *   - a SELECT — the qualifier's type head. `T.f(x)`, `x.f(y)` and the implicit `this.f(y)` are
+    *     all this, because the frontend renders the last as a `This` qualifier whose type is a
+    *     `ThisType`;
+    *   - a bare IDENT — the ENCLOSING class, which is what java resolves a simple name against and
+    *     which no node in the expression carries. The caller supplies it (the check tracks it on
+    *     the traversal, the emitter has it on its class stack); `SymId.None` where it does not, and
+    *     the fallback then answers;
+    *   - `super.f(x)` — NOT widened. Java resolves it over the SUPERCLASS's members and the
+    *     receiver root here would be the subclass's, which is a set java never considered. Left at
+    *     the callee's owner and stated in `ENGINE-LIMITS.md` T17.
+    *
+    * The guard is the whole of the safety argument: a root is used only where its candidate set
+    * CONTAINS the member javac actually bound. Java's set must contain the winner, so a root whose
+    * set does not is a root this reasoning got wrong — an unowned receiver type, a type variable, a
+    * `null` enclosing class — and the pre-widening root answers instead. */
+  private def rootOf(a: Tree.Apply, callee: SymId, owner: SymId, name: String,
+                     ov: Overloads, enclosing: SymId)(using Program): SymId =
+    def unwrap(t: Term): Term = t match
+      case ta: Tree.TypeApply => unwrap(ta.fun)
+      case other              => other
+    val candidate = unwrap(a.fun) match
+      case Tree.Select(_: Tree.Super, _, _, _) => SymId.None
+      case Tree.Select(q, _, _, _)             => headSym(q.tpe).getOrElse(SymId.None)
+      case _: Tree.Ident                       => enclosing
+      case _                                   => SymId.None
+    if candidate != SymId.None && candidate != owner &&
+       ov.sameName(candidate, name).exists(_.symbol == callee)
+    then candidate
+    else owner
+
   /** WHAT THIS CALL RISKS, or nothing.
     *
     * `None` where the question does not arise at all — an external callee (its overloads are in a
     * class file), or fewer than two program-declared candidates applicable to this argument count.
     * `Some(n, fs)` otherwise, with `n` the size of the applicable candidate set, so a caller that
     * wants the denominator gets it from the same computation that produced the findings and the two
-    * cannot disagree. */
-  def analyse(a: Tree.Apply, ov: Overloads)(using p: Program): Option[(Int, List[Finding])] =
+    * cannot disagree.
+    *
+    * `enclosing` is the class the call is written IN — see [[rootOf]], which needs it for the one
+    * shape that carries no receiver. `SymId.None` is honest and costs only that shape's widening. */
+  def analyse(a: Tree.Apply, ov: Overloads, enclosing: SymId = SymId.None)(using p: Program): Option[(Int, List[Finding])] =
     if !p.owns(a.method) then scala.None
     else
       val callee = p.symbolOf(a.method)
@@ -215,10 +270,14 @@ object OverloadRiskCheck:
       val name   = callee.map(_.name).getOrElse("")
       if owner == SymId.None || name.isEmpty then scala.None
       else
-        val cands = ov.sameName(owner, name).filter(applicable(_, a.args.size))
+        val root  = rootOf(a, a.method, owner, name, ov, enclosing)
+        val cands = ov.sameName(root, name).filter(applicable(_, a.args.size))
         if cands.sizeIs < 2 then scala.None
         else
-          val ownerName = p.symbolOf(owner).map(_.fullName).getOrElse("?")
+          // the ROOT and not the callee's owner: the row's whole job is to let a reader re-derive
+          // the candidate set without re-deriving it, and the set is a fact about the type java
+          // looked in.
+          val ownerName = p.symbolOf(root).map(_.fullName).getOrElse("?")
           val alts      = cands.map(spell).sorted
           def f(i: Issue) = Finding(i, ownerName, s"$name/${a.args.size}", alts, a.origin)
           val fs = List(
@@ -229,8 +288,8 @@ object OverloadRiskCheck:
           Some(cands.size -> fs)
 
   /** the emitter's half — the same answer, without the denominator. */
-  def risks(a: Tree.Apply, ov: Overloads)(using Program): List[Finding] =
-    analyse(a, ov).map(_._2).getOrElse(Nil)
+  def risks(a: Tree.Apply, ov: Overloads, enclosing: SymId = SymId.None)(using Program): List[Finding] =
+    analyse(a, ov, enclosing).map(_._2).getOrElse(Nil)
 
   /** JLS 15.12.2's own arity test, and the only part of applicability this check performs: a
     * fixed-arity candidate takes exactly its parameter count, a variable-arity one takes that many
@@ -282,13 +341,30 @@ object OverloadRiskCheck:
     var overld = 0
     // `StandardTraversal`, never a private recursion (§3): a call inside an ANONYMOUS class lives
     // in a TERM, and a walk over class bodies would find none of them.
+    //
+    // The ENCLOSING CLASS falls out of that same traversal rather than needing a second one. It is
+    // BOTTOM-UP — every child is transformed before `transformClassDef` fires — so a call is held
+    // unclaimed until the FIRST `ClassDef` closes over it, and that class is by construction the
+    // innermost one containing it: a nested, local or anonymous class closes before its enclosing
+    // type does. `rootOf` needs it for a bare `Ident`, which carries no receiver at all.
+    val pending = collection.mutable.ListBuffer.empty[Tree.Apply]
     val scan = new Phase:
       def name: String = "overload-risk/scan"
       override def transformApply(a: Tree.Apply)(using Program): Term =
         calls += 1
-        analyse(a, ov).foreach { (n, fs) => overld += 1; out ++= fs }
+        pending += a
         a
-    units.foreach(u => StandardTraversal.mapClassDef(scan, u))
+      override def transformClassDef(c: Tree.ClassDef)(using Program): Tree.ClassDef =
+        pending.foreach(a => analyse(a, ov, c.symbol).foreach { (_, fs) => overld += 1; out ++= fs })
+        pending.clear()
+        c
+    units.foreach { u =>
+      StandardTraversal.mapClassDef(scan, u)
+      // a call that no `ClassDef` closed over — there is none today, and an unclaimed one must
+      // still reach the denominator rather than silently leaving the report.
+      pending.foreach(a => analyse(a, ov).foreach { (_, fs) => overld += 1; out ++= fs })
+      pending.clear()
+    }
     Report(out.toList.sortBy(f => (f.issue.toString, f.origin.javaPath, f.origin.line, f.member)),
            calls, overld)
 

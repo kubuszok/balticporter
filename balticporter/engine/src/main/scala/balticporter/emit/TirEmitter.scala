@@ -3408,7 +3408,13 @@ final class TirEmitter(
       // are about. Two rows and not one because the JLS clauses are two: the PHASES (15.12.2) and
       // the most-specific tie-break inside a phase (15.12.2.5).
       locally {
-        val risks = balticporter.tir.OverloadRiskCheck.risks(a, overloads)(using program)
+        // …with the class the call is written IN, which the check's own walk derives from its
+        // traversal and this one already holds: a bare `Ident` carries no receiver, and the
+        // candidate set java used is the ENCLOSING type's (see `OverloadRiskCheck.rootOf`).
+        // Without it the emitter's consult and the count would answer differently about the same
+        // call, which is the one thing the shared predicate exists to prevent.
+        val risks = balticporter.tir.OverloadRiskCheck
+          .risks(a, overloads, classStack.lastOption.getOrElse(balticporter.tir.SymId.None))(using program)
         Obligations.consult(JS.C(22), a.origin)(
           Option.when(risks.exists(_.issue != balticporter.tir.OverloadRiskCheck.Issue.GenericTieBreak))(()))
         Obligations.consult(JS.C(23), a.origin)(

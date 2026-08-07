@@ -2137,10 +2137,29 @@ own DENOMINATOR on every run — calls examined, calls with more than one applic
 calls spanning a phase — so the over-approximation's rate is a number rather than a claim in a
 comment.
 
-**Two structural limits, both stated rather than counted as zeros.** The candidate set is what the
+**The set is rooted at the RECEIVER'S STATIC TYPE, and rooting it at the resolved callee's OWNER
+made the lane blind in the one direction it will meet most.** JLS 15.12.1 makes the candidate set
+the members of the type the receiver is statically known to have — its own and its inherited ones.
+The callee's owner is where the WINNER happened to be declared, and the two coincide only when the
+winner is the most derived declaration. Reverse that and the climb runs the wrong way: javac binds
+`f(1)` to an inherited `P.f(int)` in phase 1 while the subclass `C` declares `f(Integer)`, so an
+upward-only walk from `P` never sees the candidate that spans the boundary — precisely the
+`BoxingPhaseSpan` the lane exists for, reported in one direction and silent in the other. Rooting at
+the receiver is a strict widening of the old set (the owner is always the receiver's type or an
+ancestor of it), so nothing previously reported can be lost; the root is USED only where its
+candidate set contains the member javac actually bound, which is the guard that keeps an unowned
+receiver type, a type variable or an absent enclosing class from emptying the set instead. A bare
+`Ident` carries no receiver at all and takes the ENCLOSING class, which both readers derive
+structurally — the check from its own bottom-up traversal (the innermost `ClassDef` to close over a
+pending call is the one that contains it) and the emitter from its class stack.
+
+**Three structural limits, all stated rather than counted as zeros.** The candidate set is what the
 PROGRAM DECLARES: an external callee's overloads live in a class file the frontend interns lazily
 and only on reference, so a call into the JDK or a dependency has a set this check cannot see; and
-ancestors are followed only where the program declares them.
+ancestors are followed only where the program declares them. The third is `super.f(x)`, whose
+candidate set is the SUPERCLASS's members: rooting it at the receiver would offer java a set it
+never considered (the subclass's own overrides), so it is left at the callee's owner and the calls
+it would have widened are not reported.
 
 *Fix kind: (a). Universal — java's rule and scala's rule are facts about the two languages.
 Catalog `JS-C22` (the phases) and `JS-C23` (the generic tie-break), both `Partial`: the risk is

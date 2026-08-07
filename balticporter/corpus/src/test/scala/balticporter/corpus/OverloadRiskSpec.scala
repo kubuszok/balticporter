@@ -145,3 +145,53 @@ class OverloadRiskSpec extends PortSuite:
         |""".stripMargin)
     assert(r.findings.map(_.issue).contains(Issue.BoxingPhaseSpan), r.findings.toString)
   }
+
+  // -- …AND THE OTHER DIRECTION, which a candidate set rooted at the CALLEE'S OWNER cannot see ----
+  //
+  // The test above happens to work with either root: javac binds `f(1)` to `C.f(int)`, so the
+  // callee's owner IS the receiver's type and climbing to `P` finds the second candidate. Reverse
+  // the two declarations and the walk runs the other way — javac binds the INHERITED `P.f(int)` in
+  // phase 1, and the candidate that spans the boundary is declared BELOW the owner, where an
+  // upward-only climb never looks. That is exactly the `BoxingPhaseSpan` this lane exists for.
+
+  test("a candidate declared BELOW the resolved callee's owner is in the set — the receiver's type is the root") {
+    val (_, r) = report(
+      """public class A {
+        |  static class P { void f(int a) { } }
+        |  static class C extends P { void f(Integer a) { } void go() { f(1); } }
+        |}
+        |""".stripMargin)
+    assert(r.findings.map(_.issue).contains(Issue.BoxingPhaseSpan), r.findings.toString)
+  }
+
+  test("…the same direction for GenericTieBreak: javac binds the inherited non-generic, the generic one is below") {
+    val (_, r) = report(
+      """public class A {
+        |  static class P { void f(String a) { } }
+        |  static class C extends P { <T> void f(T a) { } void go() { f("x"); } }
+        |}
+        |""".stripMargin)
+    assert(r.findings.map(_.issue).contains(Issue.GenericTieBreak), r.findings.toString)
+  }
+
+  test("…and through an EXPLICIT receiver, whose static type is the root java itself used") {
+    val (_, r) = report(
+      """public class A {
+        |  static class P { void f(int a) { } }
+        |  static class C extends P { void f(Integer a) { } }
+        |  void go(C c) { c.f(1); }
+        |}
+        |""".stripMargin)
+    assert(r.findings.map(_.issue).contains(Issue.BoxingPhaseSpan), r.findings.toString)
+  }
+
+  test("a receiver whose static type is the SUPERCLASS keeps java's own narrower set — no subclass candidate") {
+    val (_, r) = report(
+      """public class A {
+        |  static class P { void f(int a) { } }
+        |  static class C extends P { void f(Integer a) { } }
+        |  void go(P p) { p.f(1); }
+        |}
+        |""".stripMargin)
+    assertEquals(r.findings, Nil)
+  }
