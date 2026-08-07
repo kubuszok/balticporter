@@ -1,5 +1,6 @@
 package balticporter.core
 
+import balticporter.catalog.{DiffId, Platform, Verdict}
 import balticporter.tir.{Phase, RuleScope}
 
 import java.nio.file.Path
@@ -127,6 +128,47 @@ final case class PortManifest(
       * one `port-report/`, which `PortMap.reportRoot` already finds. §4.45's consumer, whose base was
       * run in another repository, is the caller this exists for. */
     baseReports: List[Path] = Nil,
+    /** WHICH BACKENDS this module is ported FOR — the parameter `PortabilityCheck` is a §1(b) phase
+      * by.
+      *
+      * ==The default is TODAY'S SEMANTICS, and that is the whole design==
+      * `PortabilityCheck` applied one undifferentiated JS-and-Native rule list to every port, because
+      * no port declared a target. So the default here is all three platforms — *keep asking every
+      * question* — and not `Set(Jvm)` or `Set.empty`, either of which would empty the rule set on
+      * every port at once and collapse `portability(all|emitted|injected)` to a floor in one commit.
+      * Fifteen baselines "improving" to zero is a baseline promotion nobody can read. With this
+      * default a port that declares nothing is checked exactly as it was, and a port that wants the
+      * narrower behaviour declares `targets = Set(Platform.Jvm)` and takes the drop as its own
+      * decision, with a row in `decisions.tsv` saying so.
+      *
+      * ==NOT inherited, and why that is not a hole==
+      * It sits in §1.5's right-hand column beside `runtimeMode`: `targets` moves no emitted
+      * signature, only which findings are reported, so a base and a dependent disagreeing about it
+      * does not produce two ports that compile alone and cannot compile together. What it DOES have
+      * is a one-directional constraint, checked by
+      * [[balticporter.core.ManifestAgreement.Kind.TargetWidening]]: a dependent may target FEWER
+      * platforms than its base (it merely asks fewer questions of its own declarations) and may not
+      * target MORE, because a dependent targeting Scala.js while its base is JVM-only depends on
+      * emitted Scala that was never checked against — and may not be portable to — the platform it
+      * claims. `ENGINE-LIMITS.md` D2's ownership filter is exactly what hides that, since the
+      * dependent is forbidden to report about the base's declarations.
+      *
+      * If a future rule ever makes `targets` change emitted TEXT — a per-platform injection — that
+      * rule owes `SurfacePolicy` and this field moves columns. Stated here so the move is a decision
+      * rather than a surprise. */
+    targets: Set[Platform] = Platform.values.toSet,
+    /** WHERE THIS PORT DISAGREES with the catalog's recommendation, per platform.
+      *
+      * An [[balticporter.catalog.ApiRow]] carries two epistemic kinds. Its `by` is the (a) FACT and
+      * nothing here may contradict it — asserting that `java.time` is present on Scala Native is how
+      * a port silently declares a gap closed. Its `verdict` is a recommended DEFAULT, and this is
+      * the key that overrides one: *this port ships its own shim*, *this port vendors a subset*,
+      * *this port accepts the refusal*. The next agent's question is "why does this port not depend
+      * on the artifact the engine recommends", and the answer has to be the string they would edit —
+      * so an override is recorded as a `Decision` with `Reason.Configured` naming this entry.
+      *
+      * NOT inherited, for `targets`' reason: it decides which findings this module is told about. */
+    verdictOverrides: Map[DiffId, Map[Platform, Verdict]] = Map.empty,
     /** Does this manifest INHERIT its [[bases]]' policy, or merely declare that it must AGREE
       * with them?
       *

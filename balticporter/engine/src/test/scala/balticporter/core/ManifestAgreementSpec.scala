@@ -198,3 +198,52 @@ class ManifestAgreementSpec extends munit.FunSuite:
     val bad = ManifestAgreement.check(Some(dep), List(SharedType("up.Map", "sge.Map", false)), true, Nil)
     assertEquals(bad.filter(_.kind == Kind.SurfaceNameDivergence).size, 1)
   }
+
+  /** TARGETS: not inherited, and constrained in one direction only.
+    *
+    * `targets` decides which findings a module is told about and moves no emitted signature, so a
+    * base and a dependent may hold different sets. What they may not do is hold them in the wrong
+    * ORDER: a dependent targeting a backend its base does not is a port that depends on emitted
+    * Scala nobody checked for that backend, and D2's ownership filter is exactly what stops it
+    * seeing the base's findings — so the unbuildable half is the half nothing looks at.
+    */
+  private def targeted(baseT: Set[balticporter.catalog.Platform],
+                       depT: Set[balticporter.catalog.Platform]) =
+    val b = PortManifest(name = "base", governs = Set("up"), targets = baseT)
+    val d = b.extendedBy(PortManifest(name = "dep", targets = depT))
+    ManifestAgreement.check(Some(d), Nil, foreignRoots = true, Nil).filter(_.kind == Kind.TargetWidening)
+
+  private val Jvm    = balticporter.catalog.Platform.Jvm
+  private val Js     = balticporter.catalog.Platform.ScalaJs
+  private val Native = balticporter.catalog.Platform.ScalaNative
+
+  test("a dependent may target FEWER platforms than its base, and equally many") {
+    assertEquals(targeted(Set(Jvm, Js, Native), Set(Jvm)).map(_.render), Nil)
+    assertEquals(targeted(Set(Jvm, Native), Set(Jvm, Native)).map(_.render), Nil)
+    assertEquals(targeted(Set(Jvm, Js, Native), Set.empty).map(_.render), Nil)
+    // …and the DEFAULT on both sides is the ordinary case, which must be silent or every port in
+    // the corpus gains a fatal finding for declaring nothing.
+    val plain = PortManifest(name = "base", governs = Set("up")).extendedBy(PortManifest(name = "dep"))
+    assertEquals(ManifestAgreement.check(Some(plain), Nil, true, Nil)
+      .filter(_.kind == Kind.TargetWidening), Nil)
+  }
+
+  test("a dependent may NOT target a platform its base does not — and the finding names both sets") {
+    val fs = targeted(Set(Jvm, Native), Set(Jvm, Js, Native))
+    assertEquals(fs.size, 1)
+    assertEquals(fs.head.subject, "ScalaJs")
+    assert(clue(fs.head.detail).contains("Jvm/ScalaJs/ScalaNative"))
+    assert(clue(fs.head.detail).contains("Jvm/ScalaNative"))
+    assert(fs.head.kind.fatal, "a port that cannot be built is not a warning")
+  }
+
+  test("a base that narrowed and a dependent that did NOT is the DEFAULT-shaped trap") {
+    // The realistic shape: a base declares `targets = [jvm]` deliberately and a dependent simply
+    // never declares one, so it inherits nothing and gets the all-three default. That is a widening
+    // by omission, and it is the case the rule exists for.
+    val b   = PortManifest(name = "base", governs = Set("up"), targets = Set(Jvm))
+    val dep = b.extendedBy(PortManifest(name = "dep"))
+    val fs  = ManifestAgreement.check(Some(dep), Nil, true, Nil).filter(_.kind == Kind.TargetWidening)
+    assertEquals(fs.size, 1)
+    assertEquals(fs.head.subject, "ScalaJs, ScalaNative")
+  }

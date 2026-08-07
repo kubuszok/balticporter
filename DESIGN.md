@@ -475,6 +475,28 @@ true of every port and contradicted by no manifest; `verdict` is a recommended D
 SET is neither, so no row may hold one. Which platforms a port cares about is the port's, in its
 manifest.
 
+**And that line is what `PortabilityCheck` is built along.** The check is the `JS-{L,P}` half's first
+consumer and CLAUDE.md §1(b) in its purest form: one mechanism (match a rule against
+`ExternalUsage`), one parameter (`PortManifest.targets`), and a `Rule` that carries the set of
+platforms it is a refusal FOR. Seven of its rules were measurably too broad for Scala Native 0.5.x
+and an eighth (`System#getProperty`) was not merely broad but factually wrong for Scala.js, which
+implements it against a link-time table; all eight now claim Scala.js alone.
+
+Two things about the direction of the coupling, because both are easy to get backwards:
+
+- **the registry does not GENERATE the rule list.** A generated list would silently drop every rule
+  the javalib survey has no row for — `org.junit.`, `org.hamcrest.`, `java.lang.ClassLoader`, the
+  exact `Class#…` readers — which is a lane reset rather than a re-scoping, and fifteen baselines
+  "improving" to zero is a promotion nobody can read. Each rule CITES its row instead, and
+  `PortabilityTargetsSpec` holds the pair together in the direction that matters: **a rule may not
+  claim a platform on which its own cited row says `Keep`**, so a row corrected in the registry
+  cannot leave a rule firing against it;
+- **a `Depend` verdict is not an unportability**, it is a BUILD-GRAPH fact — the API exists, in an
+  artifact the port's build does not name — and conflating the two makes the finding unanswerable:
+  the reader is told to remove a call that a one-line `libraryDependencies` entry makes correct. So
+  `Verdict.dependency` splits the rule list in two, and the `Depend`-shaped half feeds
+  `dependency-coverage` rather than `portability(*)`.
+
 **Two status-enforcement rules, both mechanical, because a status transcribed by hand is already
 wrong.** Four headline `Open` rows were fixed inside one week while the document describing them was
 being written, and nothing could see that they had.
@@ -797,24 +819,41 @@ compared against what actually registered with `CheckReport`, so a number that r
 **The required set is NAMED, not derived.** The property being asserted is "the orchestrator invoked
 all of them", and a list derived from what was invoked would assert nothing. Adding a check to the run
 means adding it to the set, and forgetting fails the next run rather than shipping a silently narrower
-report. Twelve are required unconditionally:
+report.
 
-| | | |
-|---|---|---|
-| `signature` | `omissions` | `trivia` |
-| `portability(all)` | `portability(emitted)` | `portability(injected)` |
-| `substitution(emitted)` | `substitution(dangling)` | `remediation` |
-| `policy` | `manifest` | `port-map` |
+**The set's SIZE is not restated here, and that is deliberate.** This paragraph said "twelve are
+required unconditionally" beside a twelve-row table for long enough that both went stale — the same
+failure `PortabilityCheck`'s own docstring had with its phantom "34 rules", one document over.
+`PortRun.RequiredChecks` is the list; `CLAUDE.md` §5 names every member in the sentence an agent
+actually reads before a measurement, and that sentence is maintained in the commit that changes the
+set. A count in a third place is a count that disagrees with both.
 
-Four more record on every run that reaches them but are deliberately outside the set, because the set
+Some checks record on every run that reaches them but are deliberately outside the set, because the set
 is asserted against what actually recorded and a port without the relevant phase records nothing:
 `porter-notes` (§7.2), and `collection-closure`, `collection-boundary`, `collection-retarget`
 (recorded only when the collections transform is in the pipeline). They are made unskippable by their wiring living in the
 orchestrator, not by the set. A port's own §1(c) rule may register a check of its own beside these.
 
 `PortManifest` is the **shared-surface policy as an ordinary Scala value** — `name`, `governs`,
-`dropTypes`, `dropMethods`, `packageRenames`, `surface`, `inject`, `bases` — composed with
-`base.extendedBy(dependent)`. A manifest DSL would move the policy out of reach of the consumer's
+`dropTypes`, `dropMethods`, `packageRenames`, `surface`, `inject`, `bases`, and the two
+platform fields below — composed with `base.extendedBy(dependent)`.
+
+**`targets` and `verdictOverrides` — the platform half, and both are NOT inherited.** `targets` is
+the set of backends this module is ported for, and it is the §1(b) parameter `PortabilityCheck`
+reads (§2.8). It moves no emitted signature — only which findings are reported — so it sits in
+§1.5's right-hand column beside `runtimeMode`, and a base and a dependent may legitimately hold
+different sets. The default is ALL THREE platforms, which is exactly what the check asked before it
+had a parameter: no port's `portability(*)` baseline moves because the engine gained a target set,
+and a port that wants the narrower question declares it and takes the drop as its own decision.
+There is one constraint, in ONE direction only — `ManifestAgreement.Kind.TargetWidening` — and it is
+fatal: a dependent may target FEWER platforms than its base and may not target MORE, because a
+dependent built for Scala.js while its base is JVM-only depends on emitted Scala nobody checked
+against that platform, and `ENGINE-LIMITS.md` D2's ownership filter is precisely what stops the
+dependent seeing the base's findings about it. `verdictOverrides` is the same field's other half: an
+`ApiRow`'s `verdict` is a recommended DEFAULT and this is where a port says it ships its own shim,
+vendors a subset or accepts the refusal. What an override may NOT touch is `by`, the availability
+FACT — a manifest that could contradict a platform's coverage is a manifest in which a port silently
+declares a gap closed. A manifest DSL would move the policy out of reach of the consumer's
 compiler; a copied block of policy is not a mechanism but a habit, and it fails one module at a time.
 `CLAUDE.md` §1.5 is the governing rule and states the inherited/not-inherited line; `ManifestAgreement`
 is the check, in a static layer (declaration against declaration) and a dynamic one (the base's policy

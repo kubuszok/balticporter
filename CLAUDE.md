@@ -41,6 +41,18 @@ Current examples:
 | `Substitutions` | do not emit these types/methods; inject this Scala instead | which ones, and the replacement sources |
 | `CollectionsTransform(RuleScope)` | retype JDK collections and API-map their call sites | WHICH declarations — a bridge class that must keep the JDK shape opts out |
 | `PrimitiveToOpaqueTransform(OpaqueSpec)` | seed, propagate along pure-move flows, retype, coerce at the boundary | which primitive, what the type is called, where it is minted, which declarations seed it, how far propagation may reach |
+| `PortabilityCheck(targets)` | match a rule against every external symbol the program references, and report each site | WHICH BACKENDS the module is ported for (`PortManifest.targets`) — the rule LIST is derived from them, because JS and Native disagree on nine families and one shared verdict is wrong for one of them either way |
+
+**A (b) whose empty parameter is a no-op still needs its DEFAULT chosen against what the phase did
+BEFORE it had one.** The two questions look like one and are not: `Everywhere(Set.empty)` is both
+the no-op and the pre-scope behaviour for a retyping phase, so nobody had to notice. For
+`PortabilityCheck` they come apart — the empty target set really is the no-op, and it is emphatically
+not the default, because `Set.empty` (or `Set(Jvm)`) would empty the rule list on all fifteen ports
+at once and collapse three counted lanes to a floor in a single commit. Fifteen baselines
+"improving" to zero is a baseline promotion nobody can read, and it is indistinguishable from
+fifteen ports that got better. So the default is *every question the phase asked before it was
+parameterised*, the narrowing is a port's own declaration, and the parameter's arrival is provably
+flat.
 
 **Every rule that RETYPES declarations takes a `RuleScope`** (`api`) — `Everywhere(except)` or
 `Only(include)`, matched by FQN and cut only at a `Symbol.fullName` separator (§4.56), with
@@ -284,7 +296,22 @@ The line between what must agree and what must not:
 | inherited — a fact about the SHARED SURFACE | not inherited — a fact about THIS module's build |
 |---|---|
 | `dropTypes`, `dropMethods`, `packageRenames`, `surface` | `sourceSet`, `frontend`, `provenance`, `runtimeMode`, `supportSources`, `project` |
-| the PER-TYPE half of the rename policy — `typeRenames`, `subPackages`, `flattenNestedTypes`, and `allowPackageSplit` beside them | **`inject`** |
+| the PER-TYPE half of the rename policy — `typeRenames`, `subPackages`, `flattenNestedTypes`, and `allowPackageSplit` beside them | **`inject`**, `targets`, `verdictOverrides` |
+
+**`targets` is not-inherited with a ONE-DIRECTIONAL constraint, which is a third shape the table
+cannot state.** Which backends a module is ported for moves no emitted signature — it decides which
+findings the module is TOLD about — so two modules may hold different sets and neither produces a
+port that compiles alone and cannot compile with the other. That is the whole argument for the
+right-hand column, and it runs out halfway: a dependent targeting FEWER platforms than its base
+merely asks fewer questions of its own declarations, while a dependent targeting MORE is a port that
+**cannot be built** — it depends on emitted Scala that was never checked against, and may not be
+portable to, the platform it claims. `ENGINE-LIMITS.md` D2's ownership filter is exactly what hides
+this, since a dependent is forbidden to report about its base's declarations, so the unbuildable
+half is the half nothing looks at. `ManifestAgreement.Kind.TargetWidening` is that rule, fatal, and
+its honest escape hatch is §1.5's own: if the base genuinely IS portable and only never said so,
+widen the BASE — a statement, not a loophole. Note the DEFAULT is what makes this reachable at all:
+a dependent that declares nothing gets all three platforms, so a base that narrowed and a dependent
+that did not is a widening BY OMISSION, and it is the shape the rule will meet first.
 
 `inject` is the one that looks wrong and is not. A drop and its replacement read as one decision and
 are two: the DROP is an observation about the shared API and binds every module that sees the type;

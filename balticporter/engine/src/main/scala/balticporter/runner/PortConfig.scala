@@ -1,5 +1,6 @@
 package balticporter.runner
 
+import balticporter.catalog.Platform
 import balticporter.core.{FrontendConfig, PortManifest, Provenance, RealPath, RuntimeMode}
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{ConfigError, ConfigView}
@@ -66,6 +67,10 @@ import scala.jdk.CollectionConverters.*
   *   allowPackageSplit  = []                                  # boundary moves declared deliberate
   *   inject         = ["corpus/overrides"]
   *   surface        = [ { transform = "collections" }, { transform = "mutable-params" } ]
+  *   targets        = ["jvm", "js", "native"]  # default: all three — what `PortabilityCheck`
+  *                                             # asked before it had a parameter. Narrowing is
+  *                                             # this module's decision; a DEPENDENT may not
+  *                                             # declare a platform its base does not.
   * }
   *
   * provenance {                           # omitted ⇒ None
@@ -269,6 +274,11 @@ object PortConfig:
       surface        = m.children("surface").getOrElse(Nil).map(surfaceEntry(registry)),
       inject         = m.strings("inject").getOrElse(Nil).map(resolvePath(dir, _)),
       baseReports    = if seen.isEmpty then reports else Nil,
+      // WHICH BACKENDS this module is ported for — omitted means all three, which is the semantics
+      // `PortabilityCheck` had before it took a parameter. Not inherited (§1.5's right-hand column),
+      // so a base conf's value is the base's; unlike `baseReports` there is nothing to anchor,
+      // because the value is read off the manifest the run holds.
+      targets        = m.strings("targets").map(readTargets(m)).getOrElse(Platform.values.toSet),
     )
     view.string("base") match
       case scala.None    => own
@@ -289,6 +299,23 @@ object PortConfig:
         val base = readManifest(baseView, baseFile, registry, seen :+ baseFile)
         refuseUnread(baseView, baseFile)
         base.extendedBy(own)
+
+  /** `targets = ["jvm", "native"]` — the backends this module is ported for.
+    *
+    * An unknown name is a `ConfigError` and not a silent drop, for `PortManifest.targets`' own
+    * reason: a misspelt platform would NARROW the target set, which narrows the rule set, which
+    * makes `portability(*)` fall — a port improving because somebody typed `scalanative` is exactly
+    * the unreadable baseline promotion the default was chosen to avoid. */
+  private val TargetNames: Map[String, Platform] = Map(
+    "jvm" -> Platform.Jvm, "js" -> Platform.ScalaJs, "scala-js" -> Platform.ScalaJs,
+    "native" -> Platform.ScalaNative, "scala-native" -> Platform.ScalaNative,
+  )
+
+  private def readTargets(m: ConfigView)(names: List[String]): Set[Platform] =
+    names.map { n =>
+      TargetNames.getOrElse(n.toLowerCase, throw ConfigError(m.at("targets"),
+        s"'$n' is not a platform; one of ${TargetNames.keys.toList.sorted.mkString(", ")}"))
+    }.toSet
 
   private def surfaceEntry(registry: TransformRegistry)(entry: ConfigView): balticporter.tir.Phase =
     val name = entry.requireString("transform")

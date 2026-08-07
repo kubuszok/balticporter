@@ -207,6 +207,19 @@ final case class PortRun(
 
   private def declaredPhases: List[Phase] = manifest.map(_.effectiveSurface).getOrElse(phases)
 
+  /** THE BACKENDS this module is ported for — the §1(b) parameter `PortabilityCheck` reads.
+    *
+    * A run with no manifest gets the same default a manifest carries (all three platforms), which is
+    * the semantics the check had before it took a parameter at all. That equality is the point: no
+    * port's `portability(*)` baseline moves because the engine gained a target set, and a port that
+    * wants the narrower question has to say so. */
+  private def targets: Set[balticporter.catalog.Platform] =
+    manifest.map(_.targets).getOrElse(balticporter.catalog.Platform.values.toSet)
+
+  /** …and the rules those targets ask about. One derivation, read by both the emitted-code lane and
+    * the injected-source scan, so the two numbers can never be against different rule sets. */
+  private def portabilityRules: List[PortabilityCheck.Rule] = PortabilityCheck.rulesFor(targets)
+
   private def renames: Map[String, String] = manifest.map(_.effectivePackageRenames).getOrElse(packageRenames)
 
   /** THE rename phase this run appends, or none — a `lazy val` and not a `def`, because the phase
@@ -512,7 +525,7 @@ final case class PortRun(
     // port reports its base's findings as its own (see `PortabilityCheck.inEmittedCode`).
     val foreignIds  = translated.foreign.map(_.symbol).toSet
     val notShipped  = (id: SymId) => droppedIds(id) || foreignIds(id)
-    val allViolations = PortabilityCheck.check(program)
+    val allViolations = PortabilityCheck.check(program, portabilityRules)
     val portability   = PortabilityCheck.inEmittedCode(program, allViolations, notShipped)
     // the remediations are computed HERE, where the `Program` is in scope, and handed to `summary`
     // as an argument. They used to travel through a `private var` in `PortabilityCheck` keyed to
@@ -529,8 +542,13 @@ final case class PortRun(
     // carried a hand-written one for long enough that it detached from the list and then escaped
     // into two commit subjects nobody can regenerate; the fix is a number the code computes, at the
     // one line a reader is looking at when they ask "against what?".
-    say(s"PORTABILITY (Scala.js/Native): ${portability.size} site(s) on JVM-only APIs in EMITTED code" +
-      s", against ${PortabilityCheck.jsAndNative.size} rules")
+    // …and the TARGETS beside the count, because the rule set is now derived from them: "12 sites
+    // against 27 rules" says nothing an operator can act on unless they can see WHICH backends this
+    // port declared. A run reporting fewer sites because it narrowed its targets and one reporting
+    // fewer because it fixed something are otherwise the same line.
+    say(s"PORTABILITY (${targets.toList.map(_.toString).sorted.mkString("/")}): ${portability.size} " +
+      s"site(s) on APIs those backends cannot provide, in EMITTED code" +
+      s", against ${portabilityRules.size} rules")
     if portability.nonEmpty then say(PortReport.Kind.Portability.classification)
     println(PortabilityCheck.summary(portability, fixes))
 
@@ -760,7 +778,8 @@ final case class PortRun(
     // hand-written shim cannot quietly reintroduce the API the substitution was meant to remove.
     val injectedViolations = ownSubs.inject.filter(Files.exists(_)).flatMap { root =>
       SubstitutionCheck.scalaSources(root).flatMap { src =>
-        PortabilityCheck.inInjectedSource(root.relativize(src).toString, Files.readString(src))
+        PortabilityCheck.inInjectedSource(root.relativize(src).toString, Files.readString(src),
+                                          portabilityRules)
       }
     }
     // Recorded even with nothing to inject: a check that never names itself leaves `counts.tsv`

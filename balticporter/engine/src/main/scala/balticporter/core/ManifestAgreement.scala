@@ -184,6 +184,16 @@ object ManifestAgreement:
         "nothing to screen against cannot be told from one that passed. Declare the base's " +
         "`governs`. Leave it empty only for a resolution root that is not a ported module, which " +
         "is stated by an EMPTY manifest and reports nothing here.")
+    /** this module is ported for a backend its base is not. */
+    case TargetWidening extends Kind(true,
+      "§1(b) PER-LIBRARY: this module declares a `targets` platform its base does not, so it is " +
+        "about to be built for a backend the emitted Scala it compiles against was never checked " +
+        "for — and may not be portable to. The base's own findings are the ones that would have " +
+        "said so, and D2's ownership filter is exactly what stops this module reporting them, so " +
+        "the unbuildable half is the half nothing looks at. NARROWING is free (a dependent may " +
+        "target fewer platforms than its base and simply asks fewer questions); widening is not. " +
+        "Either drop the platform here, or — if the base genuinely IS portable and only never said " +
+        "so — widen the BASE's `targets`, which is a statement rather than a loophole.")
     /** a resolution-root type the base drops that this run did not tag. */
     case TagMissing extends Kind(true,
       "§1(b) PER-LIBRARY: the base module substitutes this type, and this run translated it as an " +
@@ -321,6 +331,10 @@ object ManifestAgreement:
   // static — declaration against declaration
   // -------------------------------------------------------------------------
 
+  /** a target set, ordered so two runs render it the same way. */
+  private def render(ts: Set[balticporter.catalog.Platform]): String =
+    if ts.isEmpty then "nothing" else ts.toList.map(_.toString).sorted.mkString("/")
+
   private def statik(m: PortManifest, fired: Set[String], ports: List[BasePort]): List[Finding] =
     val mine        = m.effectiveDropTypes
     val myMethods   = m.effectiveDropMethods
@@ -429,8 +443,22 @@ object ManifestAgreement:
               "inside it can be screened"))
         else Nil
 
+      // TARGETS: not inherited, and constrained in ONE direction. `targets` moves no emitted
+      // signature — it decides which findings a module is told about — so a base and a dependent
+      // may hold different sets, and the asymmetry is the whole content of the rule: fewer is
+      // harmless (this module asks fewer questions of its own declarations) and MORE is a port that
+      // cannot be built, because it depends on emitted Scala nobody checked against the platform it
+      // claims. `ENGINE-LIMITS.md` D2's ownership filter is precisely what hides that — a dependent
+      // is forbidden to report about the base's declarations, so the unbuildable half is the half
+      // nothing looks at.
+      val widened = (m.targets -- b.targets).toList.map(_.toString).sorted
+      val targetGap =
+        if widened.isEmpty then Nil
+        else List(Finding(Kind.TargetWidening, b.name, widened.mkString(", "),
+          s"this module targets ${render(m.targets)} and its base targets ${render(b.targets)}"))
+
       missingTypes ++ missingMethods ++ extraTypes ++ extraMethods ++ renameDiff ++ renameExtra ++
-        typeDiff ++ typeExtra ++ splitDiff ++ surfaceGap ++ unclaimed
+        typeDiff ++ typeExtra ++ splitDiff ++ surfaceGap ++ unclaimed ++ targetGap
     }
 
     val neverFired = m.inheritedKeysNeverFired(fired).toList.sortBy(_._1).flatMap { (base, keys) =>

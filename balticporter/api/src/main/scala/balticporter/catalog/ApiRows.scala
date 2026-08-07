@@ -37,6 +37,24 @@ enum Verdict:
   /** no faithful target exists — say so loudly rather than degrade */
   case Refuse(why: String)
 
+  /** Does a port TARGETING THIS PLATFORM have to do something about the row?
+    *
+    * `Keep` is the only "nothing to do", and everything else is work of one kind or another — which
+    * is what makes this the criterion a portability rule is derived through rather than
+    * `isInstanceOf[Refuse]`. Two of the engine's oldest rules settle it: `java.lang.Thread` and
+    * `java.util.concurrent.` are `MapTo` on Scala.js (a per-backend trait, the reference port's own
+    * answer) and have been reported as violations since the check had a rule for them. Reading only
+    * `Refuse` would have deleted both, which is the lane reset the platform chunk exists not to be. */
+  def actionable: Boolean = this != Keep
+
+  /** …and WHICH KIND of work. A `Depend` is a BUILD-GRAPH fact — the API exists, in an artifact the
+    * port's build does not name — and conflating that with "no faithful target exists" is what makes
+    * a `WeakReference` finding unanswerable: the reader is told to remove a call that a one-line
+    * `libraryDependencies` entry makes correct. */
+  def dependency: Option[ArtifactDep] = this match
+    case Depend(d) => Some(d)
+    case _         => scala.None
+
 /** a build-graph coordinate a [[Verdict.Depend]] names.
   *
   * Three fields, all literals. The cross-build kind, the platform set and the `because: DiffId`
@@ -79,7 +97,23 @@ final case class ApiRow(
     verdict: Map[Platform, Verdict],
     asOf: Map[String, String],
     why: String,
-)
+):
+
+  /** The verdict THIS PORT reads for `p` — the row's own recommendation unless the port overrode it.
+    *
+    * The two halves of a row are two epistemic kinds and only one of them is overridable. [[by]] is
+    * the (a) FACT: *`java.time` is absent on Scala Native at 0.5.11* is true of every port, and a
+    * manifest that could contradict it is a manifest in which a port silently declares a gap closed.
+    * [[verdict]] is a RECOMMENDATION — another port may ship its own shim, vendor a subset, or accept
+    * the refusal — so it is the half `PortManifest.verdictOverrides` reaches, and the override is a
+    * `Decision` naming the manifest entry verbatim.
+    */
+  def verdictOn(p: Platform, overrides: Map[DiffId, Map[Platform, Verdict]] = Map.empty): Verdict =
+    overrides.get(id).flatMap(_.get(p)).getOrElse(verdict(p))
+
+  /** every declared target this row asks the port to do something for. */
+  def actionableOn(targets: Set[Platform], overrides: Map[DiffId, Map[Platform, Verdict]] = Map.empty): Set[Platform] =
+    targets.filter(p => verdictOn(p, overrides).actionable)
 
 /** The library and platform halves of the catalog.
   *

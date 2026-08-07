@@ -4562,7 +4562,7 @@ Both gates that should have caught "the ported test suite is JUnit, and neither 
 Native has JUnit" missed it, in the two independent ways a gate can miss:
 
 - the test migration ran two checks and **never called `PortabilityCheck` at all**;
-- `PortabilityCheck.jsAndNative` **had no `org.junit` rule**, so it would have reported clean anyway.
+- `PortabilityCheck`'s rule list (`jsAndNative` then, `all` now) **had no `org.junit` rule**, so it would have reported clean anyway.
 
 Fix the wiring and the rule *before* the translation: that turns a silent assumption into a number,
 which is worth more than the conversion itself. Check invocation being copy-paste rather than
@@ -4616,6 +4616,40 @@ Cost: a whole audit pass to notice, twice independently. What made it findable w
 (P2). **When a check reports zero, name an API you know is present and confirm the check sees it.**
 
 *Fix kind: (a) engine — one field in the frontend's interning.*
+
+### P6. ONE portability rule list for TWO backends is wrong for one of them — **8 of 27 rules measured too broad, and one of the eight factually WRONG. CLOSED by a target set**
+
+`PortabilityCheck` applied a single `jsAndNative` list to every port, because no port declared a
+target. A survey of the two javalibs at Scala.js 1.22.0 / Scala Native 0.5.11 measured **seven** of
+its rules as *demonstrably real and maintained on Scala Native* — `java.nio.channels.`,
+`java.nio.file.`, `java.util.concurrent.`, `java.lang.Thread`, `java.lang.ProcessBuilder`,
+`java.util.zip.`, `java.net.` — so a JVM+Native port (which is what three of this corpus's ports
+would be) was being told to remove seven categories of API that work on both of its targets. That is
+the over-conservative rule `CLAUDE.md` §1's balance section warns about, and the fix is the target
+SET, not a second list.
+
+**The eighth was not merely broad, it was FALSE, and that is the one to remember.** The rule's `why`
+read *"system properties are JVM-only"*. Scala.js implements `System.getProperty` — against a table
+populated at LINK time from the build's own options — so it compiles, runs, and returns whatever the
+port configured. A reader acting on that sentence deletes a call that works. `System.getenv` is the
+OPPOSITE shape (always empty on JS, real on Native) and had no rule at all, so the one member the
+sentence was true of was the one nothing checked.
+
+**And a NINTH defect was in the matcher, not the list.** The match was
+`fullName == api || fullName.startsWith(api)`, which is §4.56's own hazard with no separator cut:
+`java.lang.Thread` covered `java.lang.ThreadLocal`, which Scala.js implements. Every rule ending in
+`.` dodged it by accident, which is exactly why it survived — the one rule that did not end in a
+separator was the one that was wrong.
+
+*Fix kind: (a) engine for the matcher and the `why` strings; (b) for the rule set, whose parameter is
+`PortManifest.targets`. **The DEFAULT is the whole of the risk**: `Set.empty` or `Set(Jvm)` would
+have emptied the list on all fifteen ports at once and collapsed `portability(all|emitted|injected)`
+to a floor in one commit, which reads as fifteen ports improving. The default is all three
+platforms — every question the check asked before it was parameterised — so the parameter's arrival
+is provably flat and the narrowing is a port's own declaration. Measured: `portability(all)` and
+`portability(emitted)` unchanged on every lane; the only movement is finding IDs, because the
+corrected `why` strings hash into the id, plus liqp's `java.lang.ThreadLocal` sites leaving on the
+separator cut.*
 
 ### P5. The engine emits `.scala` AND NOTHING ELSE — a `META-INF/services` file is a deliverable no phase carries, and a rename moves both its NAME and its CONTENTS — **OPEN; the counting is closed, the pipeline is not**
 
