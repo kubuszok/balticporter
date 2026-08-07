@@ -331,15 +331,15 @@ object Differences:
       Lowered("CtSwitchExpression", Dispatch.Expression)),
     // SPLIT, and the split is the row: "Scala patterns are a superset" is true of a TYPE pattern
     // and false of a RECORD one, because the two languages deconstruct through different members —
-    // java through the record's accessors, scala through an `unapply` — and the engine emits a java
-    // record as a plain class with neither (`JS-C43`, still `Absent`). So the half with an exact
-    // image is lowered and the half without keeps a per-site refusal, rather than the whole row
-    // waiting on the half.
+    // java through the record's accessors, scala through an `unapply`. That used to be a BLOCK,
+    // since the engine emitted a java record as a plain class with neither; `JS-C43` now derives an
+    // `unapply` over the accessors on every emitted record, so the target exists and what the
+    // record half is waiting on is this frontend's own arm (`ENGINE-LIMITS.md` T19).
     Difference(sId(10), "pattern and record switch, with sealed exhaustiveness",
-      "JLS 14.11.1, 14.30", "UNCITED — a scala typed pattern is the image; a record pattern has none",
+      "JLS 14.11.1, 14.30", "UNCITED — a scala typed pattern is the image; a record pattern is a constructor pattern over JS-C43's derived extractor",
       Loud, Partial("the TYPE pattern, its `when` guard, `case null` and `case null, default` all " +
-        "lower exactly; a RECORD or UNNAMED pattern is refused per site, because a java record " +
-        "emits as a plain class with no `unapply` for a nested pattern to bind against (JS-C43)"),
+        "lower exactly; a RECORD or UNNAMED pattern is refused per site — no longer for want of an " +
+        "extractor, which JS-C43 now derives over the accessors, but for want of the arm (T19)"),
       Predicted, Universal,
       "SpoonTir.caseLabel -> Tree.TypePattern and CaseDef.guard; TirEmitter's TypePattern arm",
       Both(Lowered("CtSwitch", Dispatch.Statement), Lowered("CtSwitchExpression", Dispatch.Expression))),
@@ -586,16 +586,45 @@ object Differences:
       // by the same one arm that lowers every other reference, and making that arm owe this row
       // would demand a consult at every type in every program.
       Cited("collections")),
+    // LOWERED, and the image is a PLAIN FINAL CLASS with javac's four members written out — not a
+    // scala `case class`, which was priced against javac cell by cell and loses six of them. Two of
+    // the six cannot be repaired at all: an EXPLICIT accessor (`public int y() { return y * 2; }`,
+    // which java permits) is `E120 Conflicting definitions` beside a case class's `val y`, and the
+    // generated `unapply` reads the constructor PARAMETERS where java's record pattern reads the
+    // ACCESSOR (JLS 14.30.1) — so java binds `6` on that record and a case class would bind `3`,
+    // silently. The other four are `toString`'s format (`Pt[x=1, y=2]` against `Pt(1,2)`),
+    // `hashCode` (javac's 31-fold from zero against `MurmurHash3.productHash` — unspecified by the
+    // JLS, so it binds nothing on its own, but two hash values are two bucket orders), `equals` on
+    // `double`/`float` (`Double.compare`, so `NaN` equals `NaN` and `0.0` does not equal `-0.0` —
+    // scala's `==` is the opposite on both), and the added surface (`copy`, `apply`, `productArity`,
+    // `canEqual` — the last for a problem records cannot have, being final by construction).
+    //
+    // Three things the PARSER hands over wrong were found by the fixtures and are repaired in the
+    // frontend, none of them visible to a compile: a COMPACT constructor arrives without JLS
+    // 8.10.4's appended field assignments (every accessor answered the type's default); the implicit
+    // canonical constructor's parameters arrive in the parser's FIELD order rather than the header's
+    // (so every translated `new` transposes them); and a NESTED record arrives with NO constructor
+    // at all and with accessors whose field read does not resolve, which in scala's one namespace
+    // makes each accessor call ITSELF.
+    //
+    // `Partial` and not `Handled`, for one residue no image can close: scalac emits no JVM record,
+    // so the class file carries no `Record` attribute. `x instanceof java.lang.Record` still answers
+    // true — the emitted class really does extend it — while `getClass.isRecord` answers false and
+    // `getRecordComponents` answers null, which a framework that discovers records reflectively acts
+    // on. Recorded on the `RecordMembers` decision at every emitted record.
     Difference(cId(43), "Java `record`",
-      "JLS 8.10", "UNCITED — a case class differs in accessor naming and in three facets of `toString`",
-      // PROBED, and the sentence this row used to carry — "a record is silently degraded to a plain
-      // class" — was wrong in both halves. Spoon exposes the components as fields and the accessors
-      // as methods, so most of the construct DOES arrive; and what is emitted is not a plain class
-      // but one extending `java.lang.Record` with that class's three abstract members
-      // unimplemented, which is LOUD and arrives only at §3's gate, since `RefChecks` does not run
-      // while a typer error remains.
-      Loud, Absent("the components and accessors arrive, and the emitted class extends java.lang.Record without the equals/hashCode/toString javac generates — so it is not concrete, and nothing says so until the port reaches zero typer errors"),
-      Predicted, Universal, "SpoonTir.classDef's CtClass arms take it and SpoonTir.typeFlags has no isRecord; AbsorbedProbeSpec pins what is emitted today, in both directions", Unmechanised("no arm is aware a record was there — CtRecord extends CtClass, so the class arm takes it and nothing consults `isRecord`; what the PROBE then measured is that the absorption is not silent, since the emitted class extends `java.lang.Record` with three abstract members unimplemented and stops compiling at §3's gate. `SpoonKinds.absent` records the kind against this row and `NodeKindTotalitySpec` pins it, which is the instrument that measures the family")),
+      "JLS 8.10", "UNCITED — a case class differs in accessor naming, in three facets of `toString`, in `hashCode`, in float equality and in what its extractor reads",
+      Loud,
+      Partial("the declaration, the components, the canonical and compact constructors, the " +
+        "accessors and javac's own equals/hashCode/toString are reproduced exactly — probed " +
+        "value by value against `javac`. What no image can carry is the REFLECTIVE record: scalac " +
+        "emits no JVM record, so `Class.isRecord` is false and `getRecordComponents` is null on the " +
+        "emitted class, and a framework that discovers records reflectively sees none"),
+      Predicted, Universal,
+      "SpoonTir.typeFlags's isRecord, SpoonTir.recordComponents/canonicalised/accessorBodies, and " +
+        "TirEmitter.recordMembers, which writes equals/hashCode/toString over the FIELDS and an " +
+        "`unapply` over the ACCESSORS — java's own split, and the reason a case class cannot be the image",
+      Rendered("ClassDef")),
     // `Open` — "SpoonTir.typeFlags never populates Flags.isSealed, so a sealed hierarchy ships as
     // an ordinary open class, a silent widening with no refusal and no finding" — until this wave.
     // What the two languages have is not one feature: java seals by NAMING its subclasses anywhere

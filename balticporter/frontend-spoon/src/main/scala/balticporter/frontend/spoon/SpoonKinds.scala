@@ -162,6 +162,10 @@ object SpoonKinds:
     // the buffer, never re-print"), which is the right answer and is not the same as handling it.
     Kind("CtJavaDocTag", Positional("SpoonTir.triviaOf — by verbatim source slice, with no node-level read"), scala.None),
     Kind("CtParameter", Positional("SpoonTir.execDef"), scala.None),
+    // Consumed inside `classDef`'s record arm: a component is not a member the walk reaches, it is
+    // the DECLARATION the three members javac derives are read from — the backing field, the
+    // bare-name accessor and the canonical constructor's parameter at that position.
+    Kind("CtRecordComponent", Positional("SpoonTir.recordComponents, from classDef"), Some(c(43))),
     Kind("CtTypeParameter", Positional("SpoonTir.mintTypeParams / boundsOf / erasureOfFormal"), scala.None),
   )
 
@@ -217,7 +221,22 @@ object SpoonKinds:
     "CtConstructor" -> "SpoonTir.execDef",
     "CtEnum" -> "SpoonTir.classDef / enumCase", "CtField" -> "SpoonTir.classDef / fieldFlags",
     "CtInterface" -> "SpoonTir.typeFlags", "CtMethod" -> "SpoonTir.execDef",
-  ).map((n, by) => Kind(n, Lowered(by), scala.None))
+  ).map((n, by) => Kind(n, Lowered(by), scala.None)) ++ List(
+    // A RECORD, and it is `Lowered` on a stricter reading than "the class arm takes it". `CtRecord`
+    // extends `CtClass`, so that arm always did; what it produced was a class extending
+    // `java.lang.Record` with the three members javac generates missing, a canonical constructor
+    // whose parameters were in the parser's FIELD order rather than the header's, a compact
+    // constructor with none of JLS 8.10.4's appended assignments, and — for a NESTED record — no
+    // constructor at all and accessors that called themselves. Every one of those is now derived
+    // from the components, and the emitted record answers exactly what javac answers (probed
+    // against `javac` over all eight primitives, NaN/±0.0, reference/array/null components, a
+    // generic record, the zero-component and one-component shapes, and an explicitly written
+    // accessor and `toString`).
+    Kind("CtRecord",
+      Lowered("SpoonTir.classDef — typeFlags.isRecord, recordComponents, createCanonicalConstructorIfMissing, " +
+              "canonicalised and accessorBodies; TirEmitter.recordMembers writes equals/hashCode/toString/unapply"),
+      Some(c(43))),
+  )
 
   /** kinds NOTHING reaches. The list the whole mechanism exists to keep honest.
     *
@@ -228,7 +247,6 @@ object SpoonKinds:
     * holds raw newlines, and correctness then rests entirely on the emitter's re-escaping. */
   val absent: List[Kind] = List(
     Kind("CtAnnotationFieldAccess", Absent(AbsorbedSilently, "extends CtVariableRead, not CtFieldAccess, so the variable arm takes it and the TARGET is dropped"), scala.None),
-    Kind("CtRecord", Absent(AbsorbedSilently, "extends CtClass, so classDef treats it as a plain class and typeFlags has no isRecord — and PROBED (AbsorbedProbeSpec) the result is worse than a plain class: the components and accessors DO arrive, and the emitted class extends java.lang.Record without implementing its three abstract members, which RefChecks rejects on the day the port reaches zero typer errors"), Some(c(43))),
     Kind("CtAnnotationMethod", Absent(AbsorbedSilently, "extends CtMethod — and PROBED (AbsorbedProbeSpec) the ELEMENT ITSELF is dropped, not merely its `default` clause: an emitted @interface has no members at all, so a ported annotation cannot take the argument T16 now lets a type carry"), scala.None),
 
     // The THREE PATTERN NODES, and what changed about all three: the marker for an `instanceof`
@@ -237,7 +255,7 @@ object SpoonKinds:
     // and is `ENGINE-LIMITS.md` T18's — java's binding is flow-scoped and no lexical `val`
     // placement is faithful — but its SIZE is now one expression rather than one file.
     Kind("CtTypePattern", Absent(MarkedUnportable, "reached as the instanceof right operand (JLS 15.20.2); the binding is FLOW-scoped and is refused, and the marker stands at the enclosing boolean expression"), Some(g(21))),
-    Kind("CtRecordPattern", Absent(MarkedUnportable, "both pattern paths — as a CASE LABEL through switchArms, and as the instanceof right operand; the loudest reachable outcome is what this claim states"), Some(s(10))),
+    Kind("CtRecordPattern", Absent(MarkedUnportable, "both pattern paths — as a CASE LABEL through switchArms, and as the instanceof right operand. No longer for want of an extractor: JS-C43 derives an `unapply` over the ACCESSORS, which is what JLS 14.30.1 reads, so what is missing is the arm (ENGINE-LIMITS T19)"), Some(s(10))),
 
     // PROBED, and the claim it used to carry ("both pattern paths above") was false in both halves:
     // NO java source this parser accepts produces one. An `_` standing where a TYPE PATTERN goes
@@ -251,7 +269,6 @@ object SpoonKinds:
     Kind("CtPackage", Absent(NeverVisited, "the builder enters at the top-level types; package names are recovered from qualified names"), scala.None),
     Kind("CtPackageDeclaration", Absent(NeverVisited, "not read; its comments survive only through the positional file-header harvest"), scala.None),
     Kind("CtReceiverParameter", Absent(NeverVisited, "execDef reads getParameters, which excludes it; any annotation written on the receiver is dropped with it"), scala.None),
-    Kind("CtRecordComponent", Absent(NeverVisited, "getRecordComponents is never called — see CtRecord"), Some(c(43))),
     Kind("CtModule", Absent(NeverVisited, "nothing walks the module tree; a module-info.java reaches nothing"), scala.None),
     Kind("CtModuleRequirement", Absent(NeverVisited, "as CtModule"), scala.None),
     Kind("CtPackageExport", Absent(NeverVisited, "as CtModule"), scala.None),

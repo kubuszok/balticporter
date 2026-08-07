@@ -72,7 +72,8 @@ class T9ResidueProbeSpec extends PortSuite:
   // -- 2. a method-local ENUM --------------------------------------------------------------------
   //
   // `CtEnum <: CtClass`, so the statement dispatch's `case c: CtClass[?]` takes it with no arm
-  // aware an enum was there — the same absorption `JS-C43` records for a record, one construct over.
+  // aware an enum was there — the same absorption `JS-C43` recorded for a record, one construct
+  // over, until that row's own flag made the question askable.
   // The DECLARATION survives that: the enum lowering runs and emits the sealed class plus its
   // companion. The REFERENCE does not.
 

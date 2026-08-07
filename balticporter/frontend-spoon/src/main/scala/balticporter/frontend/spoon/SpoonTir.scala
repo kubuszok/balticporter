@@ -178,6 +178,14 @@ object SpoonTir:
 
     def table: SymbolTable        = SymbolTable(syms.values)
     def idOf(key: String): SymId  = byKey(key)
+    /** the symbol at `key` IF one was really defined there.
+      *
+      * Deliberately not `resolve`: that MINTS an id for a key nobody defined, and a dangling id — a
+      * `SymId` with no `Symbol` behind it — reaches the emitter as `?`. The one caller asks about a
+      * member java DERIVED and this program may still not have (a record accessor a port's
+      * `dropMethods` removed), where "there is nothing here" is the answer, not a new id. */
+    def defined(key: String): Option[(SymId, Symbol)] =
+      byKey.get(key).flatMap(id => syms.get(id).map(id -> _))
     def fullNameOf(id: SymId): String = syms.get(id).map(_.fullName).getOrElse("?")
     /** the interned OWNER of a member — the type that DECLARES it, which for a member reached
       * through a subclass name is NOT the type the source wrote (T14). `SymId.None` for a type,
@@ -1406,6 +1414,15 @@ object SpoonTir:
             note(e, nm, Some(d.symbol), dropped = false)
             List(d)
         }
+      // JS-C43 — A NESTED RECORD ARRIVES WITH NO CONSTRUCTOR AT ALL. Spoon synthesises a record's
+      // implicit canonical constructor for a TOP-LEVEL declaration and not for a nested one
+      // (`getConstructors.size` is 1 and 0, probed on the same file), so the emitted class had no
+      // way to be constructed and no statement assigning a single component. `createCanonical-
+      // ConstructorIfMissing` is Spoon's own repair for exactly this and is idempotent, so it is a
+      // no-op on the top-level shape and on a record that wrote its constructor out.
+      t match
+        case r: CtRecord => r.createCanonicalConstructorIfMissing()
+        case _           => ()
       val ctors = t match
         case c: CtClass[?] => walked(c.getConstructors.asScala.toList.sortBy(posKey), _ => "<init>")(
                                 execDef(id, _, "<init>", selfClass, outerVars, false, bodySelf, bodyQName))
@@ -1462,8 +1479,197 @@ object SpoonTir:
       // deterministic artifact is keyed on (see `walked` above for the same reasoning). `sortBy` is
       // stable, so members with no valid position keep the grouping they had.
       val step4 = (fields ++ initBlocks).sortBy(_._1).map(_._2)
-      Tree.ClassDef(id, parents, selfType = None, body = step4 ++ ctors ++ methods ++ nested,
+      // JS-C43 — the two things a java RECORD needs that its members do not carry. Both are read
+      // HERE, where the components' field and accessor symbols have just been minted and the
+      // Spoon node is still in hand; neither is derivable downstream (see `recordComponents`).
+      //
+      // `isRecord` is CLEARED where the join failed, and that is the flag's whole contract: it does
+      // not say "java wrote `record`", it says "java wrote `record` AND this program still declares
+      // every member the synthesis reads". A flag that meant only the first would license a
+      // synthesis over a subset of the components.
+      val comps = recordComponents(t, id)
+      if t.isInstanceOf[CtRecord] then
+        minter.defined(typeKey(t.getReference)).foreach((sid, sy) =>
+          minter.set(sid, sy.copy(components = comps.getOrElse(Nil),
+                                  flags = sy.flags.copy(isRecord = comps.isDefined))))
+        // NOTHING IS DONE TO THE COMPONENT FIELD'S ACCESS, and that was PROBED rather than assumed.
+        // JLS 8.10.1 makes it `private final` and Spoon reports exactly that, so there is no flag to
+        // repair; what the emitted `var x$field` then shows is `TirEmitter.recordClashWidening` —
+        // every renamed field is widened to public, with its own recorded decision, because a name
+        // java read from an enclosing class is not reachable at the new one. A record's field is
+        // renamed on EVERY record (the component, the field and the accessor share one java name),
+        // so that rule always applies here; it is a universal §4.55 rule with its own note and it is
+        // not this row's to narrow.
+      Tree.ClassDef(id, parents, selfType = None,
+        body = step4 ++ canonicalised(t, id, comps.getOrElse(Nil), ctors) ++
+               accessorBodies(t, id, comps.getOrElse(Nil), methods) ++ nested,
         origin = originOf(t), tparams = tpDefs, enumCases = enumCases, leading = lead)
+
+    /** JS-C43 — an IMPLICIT record accessor RETURNS ITS COMPONENT'S FIELD (JLS 8.10.3), written out.
+      *
+      * The third thing the parser hands over wrong, and the worst of the three. Spoon gives a nested
+      * record's implicit accessor a body whose field read does not resolve, so `def bo()` emitted
+      * `return bo` — which in scala's ONE namespace is the METHOD, and the accessor calls itself
+      * forever. It type-checks; the compile is green; the port stack-overflows the first time
+      * anything reads a component.
+      *
+      * Written out for EVERY implicit accessor rather than only where the resolution failed, so that
+      * the emitted record does not depend on whether it was declared at the top level (where Spoon
+      * resolves the same body correctly). What java derives, this derives, and it derives it once.
+      *
+      * An accessor the record WROTE is untouched — `isImplicit` is the whole test — because that one
+      * is real java whose body may be anything, and JLS 8.10.3 says java calls it. */
+    private def accessorBodies(t: CtType[?], id: SymId, comps: List[RecordComponent],
+                               methods: List[Tree.DefDef]): List[Tree.DefDef] =
+      if comps.isEmpty then methods
+      else
+        val derived: Map[SymId, RecordComponent] = comps.flatMap { c =>
+          t.getMethods.asScala
+            .find(m => m.isImplicit && m.getSimpleName == c.name && m.getParameters.isEmpty)
+            .flatMap(m => minter.defined(memberKey(id, c.name + erasedSig(m))).map(_._1 -> c))
+        }.toMap
+        methods.map { d =>
+          derived.get(d.symbol) match
+            case scala.None    => d
+            case Some(c) =>
+              val at = d.origin
+              val ft = minter.defined(memberKey(id, c.name)).map(_._2.info).getOrElse(NoType)
+              val read = Tree.Select(Tree.This(id, TypeRef(NoPrefix, id), at), c.field, ft, at)
+              // `scala.Nothing` on the `Return` and `Unit` on the block — the shapes `stmts` gives a
+              // real `return`, so a derived accessor and a written one are the same tree.
+              val nothing = TypeRef(NoPrefix, minter.external("scala.Nothing", "Nothing"))
+              d.copy(rhs = Some(Tree.Block(List(Tree.Return(Some(read), nothing, at)),
+                                           Tree.Literal(Constant.UnitC, unitT, at), unitT, at)))
+        }
+
+    /** java's RECORD COMPONENTS, in DECLARATION ORDER, each joined to the FIELD and the ACCESSOR
+      * javac derived from it — see [[balticporter.tir.RecordComponent]] for why both.
+      *
+      * Read from the SPOON node and interned through the same keys `fieldDef1` and `execDef` used,
+      * which is what makes the join structural. A name-keyed join at emission cannot work: java
+      * gives the component, the field and the accessor ONE name and scala has one namespace, so the
+      * emitter has already renamed the field by the time anything is written.
+      *
+      * SORTED BY POSITION rather than taken in `getRecordComponents`' iteration order. Spoon's
+      * return type is a `Set` — its implementation happens to be insertion-ordered, which is a fact
+      * about a class this engine does not own — and the order is the whole semantics of `toString`,
+      * `equals`, `hashCode` and every deconstruction.
+      *
+      * ALL OR NOTHING, which is what the `Option` is for. A component whose field or accessor this
+      * program does not DECLARE — a port may `dropMethods` an accessor — answers `None` for the
+      * WHOLE record rather than shortening the list, and `None` is also what clears `isRecord`, so
+      * the class ships exactly as it did before this row was lowered. A SHORT list is the one answer
+      * worse than none: `equals` and `hashCode` over a SUBSET of the components are valid scala
+      * computing something java never computed, at no error and no moved count. `Some(Nil)` is a
+      * different fact and a legal one — `record Empty()` has no components, and java gives it an
+      * `equals` and a `toString` all the same. */
+    private def recordComponents(t: CtType[?], id: SymId): Option[List[RecordComponent]] = t match
+      case r: CtRecord =>
+        val declared = r.getRecordComponents.asScala.toList.sortBy(posKey)
+        val joined = declared.flatMap { c =>
+          val nm  = c.getSimpleName
+          // the ACCESSOR is java's own definition of one (JLS 8.10.3): the NILARY method with the
+          // component's name. Looked up on the Spoon type so that an EXPLICITLY WRITTEN accessor —
+          // which java permits, and which then answers something other than the field — is the one
+          // that is found, exactly as it is the one java calls.
+          val acc = t.getMethods.asScala.find(m => m.getSimpleName == nm && m.getParameters.isEmpty)
+          for
+            (fid, _) <- minter.defined(memberKey(id, nm))
+            m        <- acc
+            (aid, _) <- minter.defined(memberKey(id, nm + erasedSig(m)))
+          yield RecordComponent(nm, fid, aid)
+        }
+        Option.when(joined.sizeIs == declared.size)(joined)
+      case _ => scala.None
+
+    /** THE CANONICAL CONSTRUCTOR AS JLS 8.10.4 DECLARES IT — two repairs, both of them defects the
+      * parser hands over and neither of them visible to a compile.
+      *
+      * ==1. A compact constructor's implicit field assignments==
+      *
+      * `public Point { if (x < 0) throw …; }` is the whole constructor a record may write, and java
+      * appends `this.x = x;` for every component AFTER that body, reading the parameters as the
+      * body left them (which is what makes a compact constructor able to NORMALISE its arguments).
+      * Spoon models the written body and not the appended half, so the emitted class assigned
+      * nothing: every backing field kept its default and every accessor answered `0`/`null`, in a
+      * class that compiles perfectly. That is a §4.4-class defect arriving through a declaration —
+      * no error, no moved count, and only a run could see it.
+      *
+      * The canonical constructor written out IN FULL is untouched, because its assignments are real
+      * java statements the ordinary path already translated; `isCompactConstructor` is Spoon's own
+      * answer to which is which, and it is asked rather than inferred from "does this body assign
+      * the field", which would be a guess about a body that may assign it conditionally.
+      *
+      * Components are matched to parameters BY POSITION — a compact constructor's parameter list is
+      * the header's, in order, by construction (JLS 8.10.4) — never by name.
+      *
+      * ==2. The IMPLICIT constructor's parameter ORDER==
+      *
+      * JLS 8.10.4 makes the canonical constructor's formal parameters the components, IN THE HEADER'S
+      * ORDER. Spoon builds its implicit one from `getFields()`, which is not that order and is not
+      * even stable across component types — `record Prims(boolean bo, byte by, short sh, char ch,
+      * int in, long lo, float fl, double du)` arrives as `(bo, du, fl, lo, in, ch, sh, by)`. The
+      * `CtorFunnel` then promotes those parameters into the emitted class's own list while every
+      * translated `new Prims(…)` keeps java's argument order, so the two disagree PER SLOT: a
+      * compile error where the types differ, and a silently transposed pair where they do not.
+      *
+      * Reordered by WHICH FIELD EACH PARAMETER IS ASSIGNED TO, read out of the constructor's own
+      * body, rather than by matching parameter names to component names. The name correspondence is
+      * real (JLS 8.10.1 gives all three one name) but it is a string test about a list this function
+      * is reordering, and the body already states the pairing structurally. A constructor whose body
+      * does not have that shape — one the record WROTE, which may assign conditionally or not at all
+      * — accounts for no component and is left exactly as it is. */
+    private def canonicalised(t: CtType[?], id: SymId, comps: List[RecordComponent],
+                              ctors: List[Tree.DefDef]): List[Tree.DefDef] =
+      if comps.isEmpty then ctors
+      else
+        val byId: Map[SymId, CtConstructor[?]] = t match
+          case c: CtClass[?] =>
+            c.getConstructors.asScala.toList
+              .flatMap(k => minter.defined(memberKey(id, "<init>" + erasedSig(k))).map(_._1 -> k))
+              .toMap
+          case _ => Map.empty
+        val compact = byId.collect { case (sid, k) if k.isCompactConstructor => sid }.toSet
+        val implicitCanonical = byId.collect { case (sid, k) if k.isImplicit => sid }.toSet
+        ctors.map(reordered(comps, implicitCanonical, _)).map { d =>
+          if !compact.contains(d.symbol) then d
+          else
+            val ps = d.paramss.headOption.getOrElse(Nil)
+            val at = d.origin
+            val assigns = comps.zipWithIndex.flatMap { (c, k) =>
+              ps.lift(k).map { p =>
+                val ft = minter.defined(memberKey(id, c.name)).map(_._2.info).getOrElse(NoType)
+                Tree.Assign(
+                  Tree.Select(Tree.This(id, TypeRef(NoPrefix, id), at), c.field, ft, at),
+                  Tree.Ident(p.symbol, p.tpt.tpe, at), unitT, at)
+              }
+            }
+            d.copy(rhs = d.rhs.map {
+              case b: Tree.Block => b.copy(stats = b.stats ++ assigns)
+              case other         => Tree.Block(other :: assigns, Tree.Literal(Constant.UnitC, unitT, at), unitT, at)
+            })
+        }
+
+    /** …repair 2 of [[canonicalised]] — the implicit canonical constructor's parameter ORDER, read
+      * off the assignments in its own body. Untouched where the body does not account for EVERY
+      * component exactly once, which is both the java-written constructor and any shape this rule
+      * has not seen. */
+    private def reordered(comps: List[RecordComponent], implicitCanonical: Set[SymId],
+                          d: Tree.DefDef): Tree.DefDef =
+      if !implicitCanonical.contains(d.symbol) then d
+      else
+        val ps = d.paramss.headOption.getOrElse(Nil)
+        /** parameter -> the component field this constructor assigns it to. */
+        val assignedTo: Map[SymId, SymId] = d.rhs.toList.flatMap {
+          case b: Tree.Block => b.stats
+          case other         => List(other)
+        }.collect {
+          case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), Tree.Ident(p, _, _), _, _) => p -> f
+        }.toMap
+        val want = comps.map(_.field)
+        val inOrder = want.flatMap(f => ps.find(p => assignedTo.get(p.symbol).contains(f)))
+        if inOrder.sizeIs != ps.size || inOrder.sizeIs != want.size then d
+        else d.copy(paramss = List(inOrder) ++ d.paramss.drop(1))
 
     /** a Java enum constant → `EnumCase`: its ctor args, and any per-constant method overrides
       * (from its anonymous-class body), each keyed under the CONSTANT so it doesn't collide
@@ -1967,6 +2173,13 @@ object SpoonTir:
         isSealed = has(t, SEALED),
         isTrait = isTrait,
         isEnum = t.isInstanceOf[CtEnum[?]],
+        // JS-C43 — the raw java fact, exactly as `isSealed` above. `CtRecord` extends `CtClass`, so
+        // the class arm takes a record and, before this flag existed, nothing downstream could tell
+        // that it had: the components arrived as ordinary fields, the accessors as ordinary
+        // methods, and the class extended `java.lang.Record` with the three members javac generates
+        // simply absent. Which members that licenses SYNTHESISING is the emitter's question and
+        // this is the one fact it needs.
+        isRecord = t.isInstanceOf[CtRecord],
         isPrivate = priv,
         isProtected = prot,
         isPackagePrivate = pkg && !anonymous,
@@ -3468,11 +3681,12 @@ object SpoonTir:
         * from the implicit NPE (`JS-S08`), and a pattern label makes the switch ENHANCED, which
         * `isEnhanced` already reads as "java does not fall out of this one".
         *
-        * A RECORD or UNNAMED pattern does not, and keeps the refusal. Java deconstructs a record
-        * through its ACCESSORS and scala through an `unapply`; the engine emits a java record as a
-        * plain class with neither (`JS-C43`, `Absent`), so there is nothing for the nested patterns
-        * to bind against — lowering it would emit a pattern scalac reads as a constructor pattern
-        * on a type that has no extractor.
+        * A RECORD or UNNAMED pattern does not, and keeps the refusal — but the REASON has moved.
+        * The blocker was one row over: java deconstructs a record through its ACCESSORS and scala
+        * through an `unapply`, and the engine emitted a java record as a plain class with neither.
+        * `JS-C43` now derives an `unapply` over the accessors on every emitted record, so the
+        * TARGET exists; what is still missing is the ARM here, which is `ENGINE-LIMITS.md` T19 and
+        * is open rather than blocked.
         *
         * THE MARKER IS MINTED HERE rather than reached through `expr`'s default, because the
         * pattern node carries no source POSITION: Spoon builds `CtCasePattern` as an unpositioned
@@ -3500,9 +3714,9 @@ object SpoonTir:
             Tree.TypePattern(defineLocal(v, vt), tt(vt, v), vt, originOf(c))
           case other =>
             unlowered(c, s"a pattern case label — ${SpoonKinds.nameOf(other.getClass)} " +
-              "(JLS 14.11.1). A java record is deconstructed through its ACCESSORS and a scala " +
-              "pattern through an `unapply`; the engine emits a java record as a plain class with " +
-              "neither (JS-C43), so there is nothing for the nested patterns to bind against",
+              "(JLS 14.11.1). Java deconstructs a record through its ACCESSORS and scala through " +
+              "an `unapply`; JS-C43 now derives one over the accessors on every emitted record, so " +
+              "the target exists and what is missing is this arm (ENGINE-LIMITS T19)",
               selT, about = other)
         case other => expr(other)
 

@@ -190,6 +190,19 @@ object Decision:
       * not be kept" and "nothing in this program extends it" are different situations with the same
       * emitted shape. */
     case WidenedSeal
+    /** the `equals`/`hashCode`/`toString` javac DERIVES from a java record's components (JLS
+      * 8.10.3), written out, plus the `unapply` scala needs to deconstruct one and java does not
+      * have (catalog `JS-C43`). [[BeanAccessor]]'s and [[ForcedClassInit]]'s case for carrying a
+      * note, one construct over: no java line declares any of these, so the source map has nothing
+      * to point at and a reader of the emitted `override def toString` cannot tell it from a member
+      * somebody wrote.
+      *
+      * The DETAIL says which of the four were written and which the record declared for itself,
+      * because a record may override any of the three and then the absence is java's own decision —
+      * and it names the one part of the construct no image carries, since scalac emits no JVM
+      * record: `Class.isRecord` answers false and `getRecordComponents` answers null, which a
+      * framework that discovers records reflectively will act on. */
+    case RecordMembers
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

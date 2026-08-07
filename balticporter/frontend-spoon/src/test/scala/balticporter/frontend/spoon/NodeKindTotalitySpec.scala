@@ -102,12 +102,13 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // kind costs whatever was written in a file the walk does not enter. A single number would let
     // one shrink while another grew.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.AbsorbedSilently),
-      // THREE, not four: `CtTextBlock` left this list when `TextBlockSpec` established that the
-      // absorption is FAITHFUL — `CtLiteral.getValue` is JLS 3.10.6's denoted string, so the arm
-      // that takes it is the right arm and the kind is `Lowered`. That is the outcome this
-      // classification exists to make reachable: "absorbed silently" is a SUSPICION, and a probe
-      // either turns it into a defect or retires it.
-      List("CtAnnotationFieldAccess", "CtAnnotationMethod", "CtRecord"))
+      // TWO, and the two kinds that left went the two DIFFERENT ways this classification exists to
+      // tell apart. `CtTextBlock` left when `TextBlockSpec` established that the absorption is
+      // FAITHFUL — `CtLiteral.getValue` is JLS 3.10.6's denoted string, so the arm that takes it is
+      // the right arm — and `CtRecord` left when the absorption turned out to be four defects at
+      // once (`JS-C43`) and each was fixed. "Absorbed silently" is a SUSPICION; a probe either
+      // retires it or turns it into work, and both outcomes have now happened.
+      List("CtAnnotationFieldAccess", "CtAnnotationMethod"))
     // …and a FOURTH, added when `DESIGN.md` §6.2's marker took over the first two of
     // `SpoonTir.unsupported`'s six sites. A marked kind still blocks the port — the emission gate
     // refuses on any open marker — but the failure is now the size of the CONSTRUCT rather than the
@@ -120,9 +121,10 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // a lowering retired a refusal.
     // `CtCasePattern` left when `JS-S10`'s TYPE-pattern half was lowered: the wrapper's arm exists
     // and reads the pattern, and WHICH pattern it holds is a fact the three rows below carry. What
-    // is left here is the three PATTERN kinds, each refused for a reason of its own — a type
-    // pattern only where it is an `instanceof` operand (T18), a record or unnamed one everywhere,
-    // because a java record emits as a plain class with no `unapply` (`JS-C43`).
+    // is left here is the two PATTERN kinds, each refused for a reason of its own — a type pattern
+    // only where it is an `instanceof` operand (T18), and a record one everywhere, no longer for
+    // want of an extractor (`JS-C43` derives one over the accessors now) but for want of the
+    // frontend's own arm (T19).
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.MarkedUnportable),
       List("CtRecordPattern", "CtTypePattern"))
     // EMPTY, and the last three to leave are the correction worth keeping. The comment that used to
@@ -131,13 +133,16 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // boolean expression and marking there refuses the same thing at the size of an expression.
     // No kind a java source can produce now costs a whole compilation unit.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.RefusedLoudly), Nil)
-    // TEN, and the tenth is a kind that was on the REFUSED list until a probe went looking for a
+    // NINE, and the ninth is a kind that was on the REFUSED list until a probe went looking for a
     // fixture that reaches it and found none: `CtUnnamedPattern` is not something this parser builds
     // from any source it accepts. A refusal nobody can trigger reads exactly like a refusal that
     // fires, which is the reason this census is three named lists and not a total.
+    // `CtRecordComponent` left this list for `positional`: `getRecordComponents` IS called now, and
+    // the component is not a member the walk reaches but the declaration `JS-C43`'s three derived
+    // members are read from.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.NeverVisited),
       List("CtModule", "CtModuleRequirement", "CtPackage", "CtPackageDeclaration", "CtPackageExport",
-        "CtProvidedService", "CtReceiverParameter", "CtRecordComponent", "CtUnnamedPattern",
+        "CtProvidedService", "CtReceiverParameter", "CtUnnamedPattern",
         "CtUsedService"))
   }
 

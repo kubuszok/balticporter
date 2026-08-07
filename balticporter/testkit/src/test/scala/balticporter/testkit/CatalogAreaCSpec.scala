@@ -639,17 +639,19 @@ class CatalogAreaCSpec extends PortSuite:
     assert(!Differences.byId(JS.C(23)).status.isOpen)
   }
 
-  test("JS-C43 — a construct the frontend ABSORBS SILENTLY has no arm to owe a consult") {
-    // This test used to hold JS-C30 too, and the pair is worth reading for the difference the
-    // local-class wave made. Both were `Absent` and neither owed a consult, for two DIFFERENT
-    // reasons: a `record` is ABSORBED SILENTLY — it extends `CtClass`, the class arm takes it, and
-    // no arm is even aware a record was there — while a method-local class was REFUSED, which is
-    // an absence a lowering arm can simply be written for. It now is (`JS-C30`, four tests above),
-    // and only the absorbed one is left. What measures this one is the other instrument,
-    // `SpoonKinds` plus `NodeKindTotalitySpec`.
-    val p = port("public class A { int x = 1; }")
-    assertNotConsults(p, JS.C(43))
-    assert(Differences.byId(JS.C(43)).status.isInstanceOf[Status.Absent])
+  test("JS-C43 — a RECORD owes the consult and an ordinary class does not") {
+    // This test used to say the opposite, and what it said was the honest reading at the time: a
+    // `record` was ABSORBED SILENTLY — `CtRecord` extends `CtClass`, the class arm took it, and no
+    // arm was aware a record had been there — so no arm could owe a consult and the row was
+    // `Unmechanised`. It is `isRecord` on the type symbol that made the question askable, and the
+    // predicate below is that flag: the difference applies at a record and at nothing else.
+    val rec = port("package p;\npublic record R(int a, java.lang.String b) { }\n")
+    assertConsults(rec, JS.C(43), fired = true)
+    assert(!Differences.byId(JS.C(43)).status.isInstanceOf[Status.Absent])
+    // …and the direction that makes the first one mean something.
+    val cls = port("public class A { int x = 1; }")
+    assertConsults(cls, JS.C(43))
+    assertEquals(cls.catalog.fired(JS.C(43)), 0)
   }
 
   // -- THE FOURTH SURFACE — the one JS-C row decided while a TYPE is RENDERED --------------------
@@ -707,8 +709,12 @@ class CatalogAreaCSpec extends PortSuite:
     // instrumented or renamed to keep a lane green. This is that question in the exact form that can
     // fail: the ONLY rows left are the six whose surface genuinely does not exist, and each names
     // which one it is waiting for.
+    // …and it is now EMPTY. `JS-C43` was the last one and it left the same way `JS-C22`/`JS-C23`
+    // did: what was missing was never a surface. A record is rendered through the same `ClassDef`
+    // dispatch as everything else in this area; what did not exist was any way for an arm to KNOW
+    // one was there, which is one flag on the type symbol.
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
-      Set(JS.C(43)),
+      Set.empty,
       "a JS-C row that is neither a refused construct, an absorbed one, nor a row whose surface " +
         "nobody has built still says nothing is measuring it")
     // JS-C22 and JS-C23 were on that set and left it when the RISK COUNTER landed. The pair is the

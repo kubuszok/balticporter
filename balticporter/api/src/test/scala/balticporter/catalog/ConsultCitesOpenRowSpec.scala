@@ -31,13 +31,21 @@ class ConsultCitesOpenRowSpec extends munit.FunSuite:
     * two dispatches of ONE node by identity. A `def`, so every call site is a different node. */
   private def node: AnyRef = new Object
 
-  /** the rule, over a LOG. `Nil` when every consult the run made is fine. */
-  private def findings(log: CatalogLog): List[String] =
+  /** the rule, over a LOG. `Nil` when every consult the run made is fine.
+    *
+    * `statusOf` is a PARAMETER and defaults to the live registry, for one reason that is not
+    * generality: the rule has three arms and the registry does not always have a row in each. It has
+    * no `Absent` row at all since `JS-C43`'s record lowering landed, and an assertion that quietly
+    * skipped that arm — or an `assume` guarding it — is the vacuity `CLAUDE.md` §5.1 is about. The
+    * arm is exercised against a stated status instead, and every other test here still reads the
+    * registry. */
+  private def findings(log: CatalogLog,
+                       statusOf: DiffId => Option[Status] = id => Differences.byId.get(id).map(_.status)): List[String] =
     log.reached.toList.sortBy(_.toString).flatMap { id =>
-      Differences.byId.get(id) match
+      statusOf(id) match
         case scala.None => Some(s"$id is cited by a consult and is not in the registry")
-        case Some(d) =>
-          d.status match
+        case Some(st) =>
+          st match
             case Status.Open      => Some(s"$id is consulted while the registry says nobody handles it")
             case Status.Absent(w) => Some(s"$id is consulted while the frontend has no model for it: $w")
             case _                => scala.None
@@ -59,8 +67,11 @@ class ConsultCitesOpenRowSpec extends munit.FunSuite:
     val handled = Differences.all.find(_.status == Status.Handled).getOrElse(fail("no Handled row"))
     assertEquals(findings(consulting(handled.id)), Nil)
 
-    val absent = Differences.all.find(_.status.isInstanceOf[Status.Absent]).getOrElse(fail("no Absent row"))
-    assert(findings(consulting(absent.id)).nonEmpty, s"consulting ${absent.id} must be a finding")
+    // …and the third arm, against a STATED status. The registry has no `Absent` row today —
+    // `JS-C43` was the last one and left when the record lowering landed — and the arm still has to
+    // be tested, because the next syntax family this engine meets will put a row back on it.
+    assertEquals(Differences.all.filter(_.status.isInstanceOf[Status.Absent]), Nil)
+    assert(findings(consulting(handled.id), _ => Some(Status.Absent("the frontend has no model"))).nonEmpty)
   }
 
   test("a consult citing an id the registry does not have is a finding — not a silent no-op") {
@@ -93,6 +104,8 @@ class ConsultCitesOpenRowSpec extends munit.FunSuite:
     // it was `Open` and unconsulted here until the commit that wrote its fix flipped it.
     val open = Differences.all.filter(d => d.status.isOpen || d.status.isInstanceOf[Status.Absent])
     assert(open.nonEmpty, "the registry has no Open or Absent row — this test would be vacuous")
+    // …and it is `Open` rows alone that keep it non-vacuous now: the `Absent` set is empty since
+    // `JS-C43`'s lowering, so the guard above is entirely carried by the work list.
     // `Attaches.Lowered` on an Open row is EXPECTED and is not a violation: it is the work list.
     // What must not exist is a CONSULT, and a consult is a call site rather than a value, so what
     // the api module can assert is the contrapositive — the rule, applied to the log a real run

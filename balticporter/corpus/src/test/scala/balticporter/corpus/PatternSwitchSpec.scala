@@ -11,9 +11,10 @@ import balticporter.testkit.PortSuite
   *     label and `case null, default ->` are all things a scala `match` arm writes natively, so
   *     they LOWER;
   *   - a RECORD PATTERN (`case Point(int x, int y) ->`) and an UNNAMED pattern (`case _ ->`) do
-  *     not: java's record deconstruction reads the record's ACCESSORS, and the engine emits a java
-  *     record as a plain class with no `unapply` for a scala pattern to use (`JS-C43`, still
-  *     `Absent`). Those keep the loud refusal, per site, with a marker.
+  *     not, and the reason has moved: java's record deconstruction reads the record's ACCESSORS,
+  *     and `JS-C43` now derives an `unapply` over exactly those on every emitted record — so the
+  *     target exists and what is missing is the frontend's own arm (`ENGINE-LIMITS.md` T19). Those
+  *     keep the loud refusal, per site, with a marker.
   *
   * Fixtures are the whole evidence, for `SwitchExpressionSpec`'s reason: no corpus library is
   * written to SE21.

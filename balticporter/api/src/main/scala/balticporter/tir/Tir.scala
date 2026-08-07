@@ -59,6 +59,23 @@ final case class Flags(
     isTrait: Boolean = false,
     isModule: Boolean = false, // `object`
     isEnum: Boolean = false,
+    /** Java `record` (JLS 8.10) — a declaration whose components javac turns into a private final
+      * field, a bare-name accessor, a canonical constructor and `equals`/`hashCode`/`toString`.
+      *
+      * A FLAG and not "does this class extend `java.lang.Record`", although both hold of every
+      * record. The parent is a fact about a class file the port cannot write — scalac emits no JVM
+      * record, so `Class.isRecord` is false whatever is named in the `extends` clause — and, going
+      * the other way, scalac ACCEPTS `extends java.lang.Record` on a class that is not one, where
+      * javac refuses it outright (JLS 8.1.4, both halves measured). What licenses synthesising the
+      * four members javac generated is the java DECLARATION, and this flag is it.
+      *
+      * It carries ONE more conjunct than "java wrote `record`", deliberately: *and this program
+      * still declares every member the synthesis reads*. A port may `dropMethods` an accessor, and
+      * a synthesis over a SUBSET of the components would emit an `equals` and a `hashCode` java
+      * never computed, at no error and no moved count. So a record whose [[Symbol.components]]
+      * could not be joined in full arrives with this flag CLEAR and ships exactly as it did before
+      * the row was lowered — which is loud, at §3's gate. */
+    isRecord: Boolean = false,
     /** Java `@interface` — a declaration of an ANNOTATION type, not an ordinary interface. */
     isAnnotation: Boolean = false,
     isOpaque: Boolean = false, // `opaque type`
@@ -191,7 +208,33 @@ final case class Symbol(
       * It is NOT a [[Flags]], although it travels with `Flags.isSealed`: flags mirror
       * `reflect.Flags`, and `permits` is a class-header CLAUSE rather than a modifier. */
     permits: List[SymId] = Nil,
+    /** java's RECORD COMPONENTS, in DECLARATION ORDER — empty for everything that is not a record.
+      *
+      * Order is the whole of it: `equals`, `hashCode`, `toString` and every deconstruction read the
+      * components in the order the header wrote them, so a `Set` (which is what Spoon hands back)
+      * is not the shape this can be carried in. Sorted by source position at the harvest.
+      *
+      * INTERNED, for [[permits]]'s reason and one more of its own: the field, the accessor and the
+      * component all share ONE java name (JLS 8.10.1) and scala has one namespace, so the emitter's
+      * clash resolution renames the field (`x` -> `x$field`) before anything is written. A
+      * name-keyed lookup at emission would therefore find the accessor for both, which is not a
+      * hypothetical — it is the shape every record has. */
+    components: List[RecordComponent] = Nil,
 )
+
+/** one java RECORD COMPONENT (JLS 8.10.1) — the three declarations java derives from one name.
+  *
+  * `field` and `accessor` are both carried because java reads DIFFERENT ones: `equals`, `hashCode`
+  * and `toString` are generated over the FIELDS (measured — a record whose accessor is overridden
+  * to double its component still prints and hashes the undoubled field), while a record PATTERN
+  * deconstructs through the ACCESSOR (JLS 14.30.1, measured at the same fixture: the pattern binds
+  * the doubled value). A synthesis that read one of the two for both would be right on every record
+  * that does not override an accessor, which is most of them.
+  *
+  * @param name the component's own name — the java one, before any clash resolution, which is what
+  *   java's `toString` prints as the `name=` label.
+  */
+final case class RecordComponent(name: String, field: SymId, accessor: SymId)
 
 object Symbol:
 
@@ -513,10 +556,11 @@ object Tree:
     * same NAME, and Spoon gives the pattern wrapper no source position for a per-variable key to
     * use, so keying on the variable would intern both arms' bindings as one symbol with one type.
     *
-    * A RECORD pattern is deliberately not here. Java deconstructs a record through its ACCESSORS and
-    * scala through an `unapply`; the engine emits a java record as a plain class with neither
-    * (`JS-C43`), so there is nothing for a nested pattern to bind against and the frontend refuses
-    * per site instead. */
+    * A RECORD pattern is deliberately not here, and the reason has moved one row over. It used to be
+    * that scala deconstructs through an `unapply` and the engine emitted a java record as a plain
+    * class with none; `JS-C43` now derives one over the ACCESSORS — which is exactly what java's
+    * record pattern reads (JLS 14.30.1) — so the target exists and the frontend's own arm is what is
+    * still missing (`ENGINE-LIMITS.md` T19). Refused per site until it is written. */
   final case class TypePattern(bind: SymId, tpt: TypeTree, tpe: TypeRepr, origin: Origin) extends Term
 
   /** `name: stmt` — a java label on a statement that is NOT a loop, the target of `break name`.

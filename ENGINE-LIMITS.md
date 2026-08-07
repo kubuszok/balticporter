@@ -2233,13 +2233,23 @@ the TYPE pattern half has an exact image and lowers, and these two are the rest.
 **A record pattern is refused for a reason that is not about patterns.** Scala's constructor pattern
 is a perfectly good image of `case Point(int x, int y) ->` — the languages differ only in what they
 deconstruct THROUGH. Java reads the record's ACCESSORS (JLS 14.30.1) and scala reads an `unapply`,
-and this engine emits a java record as a plain class with neither (`JS-C43`, `Absent`; and per
-`T16.5` the emitted class does not even satisfy `java.lang.Record`'s own abstract members). So the
-blocker is one row over, and lowering the pattern would emit a constructor pattern against a type
-with no extractor. Refused per site, with a marker naming `CtRecordPattern` and pointing at
+and this engine emitted a java record as a plain class with neither (`JS-C43`, then `Absent`; and per
+`T16.5` the emitted class did not even satisfy `java.lang.Record`'s own abstract members). So the
+blocker was one row over, and lowering the pattern would have emitted a constructor pattern against a
+type with no extractor. Refused per site, with a marker naming `CtRecordPattern` and pointing at
 `JS-S10`. **The order this implies is worth stating**: the record pattern becomes reachable the day
-`JS-C43` emits a scala `case class`, and not before — a wave that tried them in the other order
-would be building a pattern for a type that cannot be matched.
+`JS-C43` emits an extractor, and not before — a wave that tried them in the other order would be
+building a pattern for a type that cannot be matched.
+
+**THE GATE HAS SINCE OPENED, and the prediction above was right about the ORDER and wrong about the
+TARGET.** This entry said "the day `JS-C43` emits a scala `case class`". It does not, and it must not:
+a case class's generated `unapply` reads the constructor PARAMETERS, and java's record pattern reads
+the ACCESSOR — so on `record Over(int x) { public int x() { return x * 2; } }` java binds `6` and a
+case class would have bound `3`, silently, which is the very divergence this row is about. What
+unblocked the pattern is an `unapply` DERIVED OVER THE ACCESSORS on every emitted record, which is
+JLS 14.30.1's own member. Read the lesson as stated rather than as scoped: a gate names the
+CAPABILITY it needs (an extractor that reads what java reads), never the implementation somebody
+guessed would supply it.
 
 **`CtUnnamedPattern` is `NeverVisited`, and its `RefusedLoudly` claim was false in both halves.** No
 source Spoon 11.5 accepts produces one:
@@ -2257,8 +2267,40 @@ the first). **The transferable rule is `T16.5`'s, one classification over**: a c
 is a hypothesis until a fixture reaches the kind, and the cheapest thing to do with one is write the
 fixture.
 
-*Fix kind: (a) for the record pattern, and it is GATED on `JS-C43` rather than open on its own. The
+*Fix kind: (a) for the record pattern, and it WAS gated on `JS-C43` rather than open on its own. The
 unnamed pattern is not a fix at all — it is a claim corrected.*
+
+### T20. A ported record is not a JVM RECORD, and no image can make it one — **the one residue `JS-C43` cannot close**
+
+The declaration lowers exactly: `equals`, `hashCode`, `toString` and the accessors answer, value for
+value, what `javac` answers (29 observations run side by side, byte-identical, over all eight
+primitive component types, `NaN`/`±0.0`, reference/array/null components, a generic record, the
+zero- and one-component shapes and an explicitly written accessor). What does not carry is the
+CLASS FILE: scalac emits no `Record` attribute, because it has no way to.
+
+The three observables come apart, which is why this is a named residue rather than "records do not
+work":
+
+| asked of an emitted record | answers |
+|---|---|
+| `x instanceof java.lang.Record` | **true**, as java's does — the emitted class really does extend it, and scalac accepts that `extends` clause where javac refuses it outright (JLS 8.1.4, both halves measured) |
+| `x.getClass.isRecord()` | **false** |
+| `x.getClass.getRecordComponents()` | **null** |
+
+So a framework that DISCOVERS records reflectively — a serialiser choosing a canonical-constructor
+strategy, a mapper reading component names — sees none, and takes its non-record path. That is
+`K20`/`K21`'s family one construct over: no slot disagrees, nothing fails to compile, no check count
+moves, and the only evidence is the third party doing something else. It is recorded on the
+`RecordMembers` decision at every emitted record (`reflective=isRecord=false;getRecordComponents=null`)
+and therefore reaches the emitted file as a porter note, which is where §4.45's reader is.
+
+**Do not try to close it.** There is no scala construct that emits a JVM record — a `case class` does
+not either (measured: `Pt(1,2).getClass.isRecord` is false for a scala case class extending
+`java.lang.Record` exactly as it is for the plain-class image), so the case-class image would pay six
+behavioural divergences for zero gain here. The honest answers are the note and, for a port whose
+consumer really does reflect on records, a hand-written shim at that seam.
+
+*Fix kind: (a) — and it is a REFUSAL, not a gap. Nothing in scala can emit the attribute.*
 
 ---
 

@@ -6,40 +6,21 @@ import balticporter.testkit.PortSuite
   *
   * `SpoonKinds.Absence.AbsorbedSilently` is a SUSPICION and not a finding: it says a supertype's
   * arm takes the node and no arm knows the construct was there, which is a reason to look and not a
-  * defect by itself. `CtTextBlock` is the worked example of the other outcome — `TextBlockSpec`
-  * asked which string arrives, the answer was JLS 3.10.6's own, and the kind is now `Lowered` with a
-  * `NonDiff` catalog row.
+  * defect by itself. Both outcomes have now happened. `CtTextBlock` is the worked example of one —
+  * `TextBlockSpec` asked which string arrives, the answer was JLS 3.10.6's own, and the kind is now
+  * `Lowered` with a `NonDiff` catalog row. `CtRecord` is the worked example of the other: looking
+  * found FOUR defects at once, they were fixed, and what the probe used to pin here is now
+  * `RecordSpec` asserting the repair (`JS-C43`).
   *
-  * These two are the ones where looking found something, and the assertions below PIN THE DEFECT.
-  * They are written to FAIL when it is fixed, which is what makes them a measurement rather than a
-  * description: a probe whose expectations move with the code says nothing.
+  * What is left on this list is the one below, and the assertion PINS THE DEFECT — written to FAIL
+  * when it is fixed, which is what makes it a measurement rather than a description: a probe whose
+  * expectations move with the code says nothing.
   *
-  * Neither construct has a single site in any ported module — records need SE16 and no corpus
-  * library declares an `@interface` with elements — so nothing but a fixture can see either, and
-  * the classification each carries in `SpoonKinds` is now what the probe showed rather than what it
-  * was assumed to be.
+  * No corpus library declares an `@interface` with elements, so nothing but a fixture can see it,
+  * and the classification the kind carries in `SpoonKinds` is what the probe showed rather than
+  * what it was assumed to be.
   */
 class AbsorbedProbeSpec extends PortSuite:
-
-  test("a RECORD emits a class extending java.lang.Record with its three abstract members UNIMPLEMENTED") {
-    // The good half, and it is most of the construct: Spoon exposes the components as FIELDS and the
-    // accessors as METHODS, so the canonical constructor, the backing state and `x()`/`y()` all
-    // arrive. `JS-C43`'s own sentence — "a record is silently degraded to a plain class" — is
-    // therefore not what happens.
-    val p = port("package p;\npublic record Point(int x, int y) {\n  int sum() { return x + y; }\n}\n")
-    assertEmits(p, "extends java.lang.Record")
-    assertEmits(p, "def x(): scala.Int")
-    assertEmits(p, "def y(): scala.Int")
-
-    // …and the defect, which is LOUD and arrives late. `java.lang.Record` declares `equals`,
-    // `hashCode` and `toString` ABSTRACT, and javac generates all three for a record; nothing here
-    // does, so the emitted class does not implement its parent and is not concrete. §3 is why that
-    // matters: `RefChecks` does not run while any typer error remains, so a port carrying a record
-    // learns this on the day it reaches zero errors and not before.
-    assertNotEmits(p, "override def equals")
-    assertNotEmits(p, "override def hashCode")
-    assertNotEmits(p, "override def toString")
-  }
 
   test("an @interface's ELEMENTS are dropped entirely — not just their `default` clauses") {
     // `CtAnnotationMethod`'s classification said `execDef` emits an ordinary abstract method and

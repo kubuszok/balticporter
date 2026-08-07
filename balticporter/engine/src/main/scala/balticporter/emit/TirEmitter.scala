@@ -1625,7 +1625,9 @@ final class TirEmitter(
                      !reentrantBearers.contains(cd.symbol)
                   then forceCompanion(cd, cd.symbol, balticporter.tir.ClassInitTriggerCheck.Instantiation, i + 1)
                   else ""
-    val body0   = joinStats(List(bnote, force, body1).filter(_.nonEmpty))
+    // JS-C43 — the members javac derives from a record header, which no java declaration carries.
+    val (recMembers, recStatics, recNote) = recordMembers(cd, s, i)
+    val body0   = joinStats(List(bnote, force, body1, recMembers.mkString("\n")).filter(_.nonEmpty))
     val diamonds = diamondOverrides(cd, i + 1)
     val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
@@ -1657,7 +1659,7 @@ final class TirEmitter(
     val cls     =
       if s.flags.isAnnotation then
         s"${leading(cd.leading, i)}$cnote${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$prim extends scala.annotation.StaticAnnotation"
-      else s"${leading(cd.leading ++ ctorLead, i)}$cnote$sealNote${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${esc(s.name)}$tps$prim$ext$open"
+      else s"${leading(cd.leading ++ ctorLead, i)}$cnote$sealNote$recNote${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${esc(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
@@ -1716,7 +1718,10 @@ final class TirEmitter(
     // engine's runtime artifact for a purely local encoding (`DESIGN.md` §8.2). A class that needs
     // one may have no companion at all, so the companion is emitted for it.
     val markerDecl = plan.marker.toList.map(n => s"${ind(i + 1)}protected final class ${esc(n)}")
-    val hasCompanion = !(statics.isEmpty && parentExports.isEmpty && markerDecl.isEmpty)
+    // …and the record's EXTRACTOR, which is the one member of JS-C43's synthesis with no home in
+    // the class. A record with no statics has no companion at all, so it is emitted for it — the
+    // marker declaration above is the same shape and the same reason.
+    val hasCompanion = !(statics.isEmpty && parentExports.isEmpty && markerDecl.isEmpty && recStatics.isEmpty)
     // …and the OTHER three forms, recorded from the values that decided them. `companion` and
     // `statics` are the two an `export Base.*` in a dependent has to read rather than recompute from
     // the base's Java: a base with no companion makes the export an error outright, and a static
@@ -1743,7 +1748,8 @@ final class TirEmitter(
         .map(a => forceCompanion(cd, a, balticporter.tir.ClassInitTriggerCheck.SubclassInit, i + 1))
         .toList.filter(_.nonEmpty)
       val sb = (superForce ++ parentExports ++ markerDecl ++
-                orderBody(statics, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
+                orderBody(statics, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
+                recStatics).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
 
   /** `this.x = x` — the NAME assigned, when the assignment is a field taking its own same-named
@@ -2466,6 +2472,171 @@ final class TirEmitter(
         printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
         ("", PorterNote.render(d, ind(i)))
 
+  /** JS-C43 — the members javac DERIVES from a record header (JLS 8.10.3), which no java
+    * declaration in the tree carries, plus the one member scala needs and java does not have.
+    *
+    * ==Why a plain class and not a `case class`==
+    *
+    * A `case class` is the obvious image and it was PRICED against this one, cell by cell, against
+    * javac's own answers. It loses six of them, and two of the six cannot be repaired at all:
+    *
+    *   - `toString` — java `Pt[x=1, y=2]`, case class `Pt(1,2)`: different bracket, no field names,
+    *     no space. Overridable, but then the case class's own rendering is dead weight;
+    *   - `hashCode` — java folds `31 * h + <boxed component hash>` from 0 (`Pt(1,2)` is `33`); a
+    *     case class uses `MurmurHash3.productHash` (`2081183297`). JLS 8.10.3 leaves the ALGORITHM
+    *     unspecified, so this one binds nothing on its own — but two values that disagree are two
+    *     hash-bucket orders, and a ported test that iterates a `HashMap` sees the difference;
+    *   - `equals` on `double`/`float` — java compares with `Double.compare`, so `NaN` equals `NaN`
+    *     and `0.0` does NOT equal `-0.0`; scala's `==` on a primitive is the opposite on both
+    *     (measured, both directions);
+    *   - an EXPLICIT accessor — java lets a record write `public int y() { return y * 2; }` beside
+    *     the component. A case class's `val y` and that `def y()` are `E120 Conflicting
+    *     definitions`, so the shape is not expressible at all;
+    *   - the DECONSTRUCTION — a case class's `unapply` reads the constructor parameters, and java's
+    *     record pattern reads the ACCESSOR (JLS 14.30.1). On the record above, java binds `6` and a
+    *     case class would bind `3`. Silent, and not repairable while the extractor is generated;
+    *   - the added surface — `copy`, `apply`, `productArity`, `productElementName`, `canEqual` are
+    *     names java did not put on the type, and `canEqual` exists for a problem records do not
+    *     have (a record is final by construction).
+    *
+    * So the image is a plain `final class` with each of javac's four members written out, which
+    * reproduces every one of those cells exactly (all measured against `javac`, both languages run).
+    * What it does NOT reproduce is `Class.isRecord`/`getRecordComponents`, because scalac emits no
+    * JVM record — that is a residue no image can close and it is what the DECISION records.
+    *
+    * ==What each member reads==
+    *
+    * `equals`, `hashCode` and `toString` read the FIELDS and the extractor reads the ACCESSORS, and
+    * that is java's own split rather than a convenience: an overridden accessor changes what a
+    * record PATTERN binds and changes neither the printed form nor the equality (measured).
+    *
+    * A member the record DECLARES ITSELF replaces the generated one (JLS 8.10.3), so each of the
+    * three is skipped where the class already has it — by NAME AND ARITY, because java's `equals`
+    * is the 1-argument one and a record may perfectly well declare an unrelated `equals(int, int)`.
+    *
+    * ==The `asInstanceOf[java.lang.Object]` on every reference component==
+    *
+    * Not decoration and not defensive. `Objects.equals`, `Objects.hashCode` and `String.valueOf`
+    * all take `Object`, and a component's type may be a TYPE VARIABLE — `T <: Any` in scala — which
+    * does not conform. It also fixes the one place the overloads would diverge from java: a
+    * `char[]` component reaches `String.valueOf(char[])` unascribed, which prints the CHARACTERS,
+    * where javac's concat uses `String.valueOf(Object)` and prints `[C@…`.
+    *
+    * @return the members for the CLASS body, the members for the COMPANION, and the porter note. */
+  private def recordMembers(cd: Tree.ClassDef, s: Symbol, i: Int): (List[String], List[String], String) =
+    if !s.flags.isRecord then (Nil, Nil, "")
+    else
+      val comps = s.components
+      val self  = esc(s.name)
+      // the class's own parameters, re-declared on the extractor. Rendered through `typeParam`, the
+      // same function the class header uses, so the two spellings cannot drift.
+      val tpDecl = if cd.tparams.isEmpty then "" else "[" + cd.tparams.map(typeParam).mkString(", ") + "]"
+      val tpArgs = if cd.tparams.isEmpty then "" else "[" + cd.tparams.map(tp => esc(sym(tp.symbol).name)).mkString(", ") + "]"
+      val tpWild = if cd.tparams.isEmpty then "" else "[" + cd.tparams.map(_ => "?").mkString(", ") + "]"
+      // a member the RECORD ITSELF declares, by (name, java arity) — JLS 8.10.3's own override rule.
+      val declared: Set[(String, Int)] = cd.body.collect {
+        case d: Tree.DefDef => (sym(d.symbol).name, d.paramss.headOption.getOrElse(Nil).size)
+      }.toSet
+      val fieldTpe = cd.body.collect { case v: Tree.ValDef => v.symbol -> v.tpt.tpe }.toMap
+      /** the emitted VALUE-CLASS name of a component, when it is a java primitive — the whole of
+        * "does this compare, hash and print by value". Read through `TirEmitter.ScalaValueClasses`,
+        * which is the one place that set is spelled. */
+      def primOf(c: RecordComponent): Option[String] =
+        headSymOf(fieldTpe.getOrElse(c.field, sym(c.field).info)).map(x => sym(x).fullName)
+          .filter(TirEmitter.ScalaValueClasses.contains)
+      def boxed(v: String): String = s"$v.asInstanceOf[java.lang.Object]"
+      def eqOf(c: RecordComponent, a: String, b: String): String = primOf(c) match
+        // JLS 8.10.3 names `Double.compare`/`Float.compare` for exactly these two, which is NOT what
+        // `==` does at either end of the float domain.
+        case Some("scala.Double") => s"java.lang.Double.compare($a, $b) == 0"
+        case Some("scala.Float")  => s"java.lang.Float.compare($a, $b) == 0"
+        case Some(_)              => s"$a == $b"
+        case None                 => s"java.util.Objects.equals(${boxed(a)}, ${boxed(b)})"
+      def hashOf(c: RecordComponent, v: String): String =
+        primOf(c).flatMap(TirEmitter.RecordBoxes.get) match
+          case Some(box) => s"$box.hashCode($v)"
+          case None      => s"java.util.Objects.hashCode(${boxed(v)})"
+      def strOf(c: RecordComponent, v: String): String = primOf(c) match
+        case Some(_) => s"java.lang.String.valueOf($v)"
+        case None    => s"java.lang.String.valueOf(${boxed(v)})"
+      def mine(c: RecordComponent): String  = s"this.${local(c.field)}"
+      def theirs(c: RecordComponent): String = s"that$$rec.${local(c.field)}"
+
+      val eqM =
+        if declared(("equals", 1)) then Nil
+        else if comps.isEmpty then
+          List(s"${ind(i + 1)}override def equals(o$$rec: scala.Any): scala.Boolean = o$$rec.isInstanceOf[$self$tpWild]")
+        else
+          val cmp = comps.map(c => eqOf(c, mine(c), theirs(c))).mkString(" && ")
+          List(s"${ind(i + 1)}override def equals(o$$rec: scala.Any): scala.Boolean = o$$rec match {",
+               s"${ind(i + 2)}case that$$rec: $self$tpWild => $cmp",
+               s"${ind(i + 2)}case _ => false",
+               s"${ind(i + 1)}}")
+      val hashM =
+        if declared(("hashCode", 0)) then Nil
+        else if comps.isEmpty then List(s"${ind(i + 1)}override def hashCode(): scala.Int = 0")
+        else
+          List(s"${ind(i + 1)}override def hashCode(): scala.Int = {",
+               s"${ind(i + 2)}var hash$$rec: scala.Int = 0") ++
+          comps.map(c => s"${ind(i + 2)}hash$$rec = hash$$rec * 31 + ${hashOf(c, mine(c))}") ++
+          List(s"${ind(i + 2)}hash$$rec", s"${ind(i + 1)}}")
+      val strM =
+        if declared(("toString", 0)) then Nil
+        else
+          // the SIMPLE name as this port emits it, which is the same answer `enumDef` gives
+          // `Enum.name()` and `valueOf`'s arms: a renamed declaration reports the name it now has.
+          val parts = comps.map(c => s""""${c.name}=" + ${strOf(c, mine(c))}""").mkString(""" + ", " + """)
+          val body  = if comps.isEmpty then s""""$self[]"""" else s""""$self[" + $parts + "]""""
+          List(s"${ind(i + 1)}override def toString(): java.lang.String = $body")
+
+      // THE EXTRACTOR — scala's half of JLS 14.30.1, deconstructing through the ACCESSORS exactly as
+      // java's record pattern does. Declined where the record already declares an `unapply` of its
+      // own (java permits a static one), because a synthesised twin would be a duplicate definition.
+      val hasUnapply = cd.body.exists { case d: Definition => sym(d.symbol).name == "unapply"; case _ => false }
+      val unap =
+        if hasUnapply then Nil
+        else
+          val ps = comps.map(c => s"r$$rec.${local(c.accessor)}()")
+          val ts = comps.map(c => tpe(fieldTpe.getOrElse(c.field, sym(c.field).info)))
+          val sig = s"${ind(i + 1)}def unapply$tpDecl(r$$rec: $self$tpArgs)"
+          if comps.isEmpty then List(s"$sig: scala.Boolean = true")
+          // `Tuple1` and not the bare component: scala's extractor rules want a result with `_1`,
+          // and an arity-1 tuple is the only product type that has exactly one.
+          else if comps.sizeIs == 1 then List(s"$sig: scala.Tuple1[${ts.head}] = scala.Tuple1(${ps.head})")
+          else List(s"$sig: (${ts.mkString(", ")}) = (${ps.mkString(", ")})")
+
+      // …and the members the RECORD declared for itself, which are the ones this did NOT write. The
+      // pair is reported rather than the positive alone: "synthesised=toString" reads as a gap
+      // unless the reader can see that java's own `equals` is right there in the file.
+      val synthesised = List("equals" -> eqM, "hashCode" -> hashM, "toString" -> strM, "unapply" -> unap)
+        .collect { case (n, ms) if ms.nonEmpty => n }
+      val kept = List("equals" -> eqM, "hashCode" -> hashM, "toString" -> strM, "unapply" -> unap)
+        .collect { case (n, ms) if ms.isEmpty => n }
+      val d = Decision(
+        kind       = Decision.Kind.RecordMembers,
+        subject    = cd.symbol,
+        subjectFqn = s.fullName,
+        detail     = Map(
+          "components" -> comps.size.toString,
+          "synthesised" -> (if synthesised.isEmpty then "none" else synthesised.mkString(",")),
+          "declared" -> (if kept.isEmpty then "none" else kept.mkString(",")),
+          // the residue, and the only part of the construct no image can carry: scalac emits no JVM
+          // record, so the class file carries no `Record` attribute whatever its `extends` clause
+          // says. `x instanceof java.lang.Record` still answers true; `getClass.isRecord` answers
+          // false and `getRecordComponents` answers null, which a framework that discovers records
+          // reflectively WILL act on.
+          "reflective" -> "isRecord=false;getRecordComponents=null",
+          "why" -> ("javac derives equals/hashCode/toString from a record's components and scala " +
+            "derives nothing from a plain class; a case class derives all three with different " +
+            "answers, so each is written out to java's own contract"),
+        ),
+        reason     = Reason.Universal("record-members(JS-C43)"),
+        origin     = cd.origin,
+      )
+      emissionOf += d
+      printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
+      (eqM ++ hashM ++ strM, unap, PorterNote.render(d, ind(i)))
+
   /** THE AREA-C ROWS A TYPE DECLARATION OWES — consulted at the dispatch, above every arm.
     *
     * `classDef` forks into `enumDef` and `classDef1`, and most of these rows are decided inside one
@@ -2522,6 +2693,9 @@ final class TirEmitter(
     // own first line, so this predicate is that test and the walk below it happens once.
     Obligations.consult(JS.C(33), at)(Option.when(cd.parents.sizeIs >= 2)(()))
     Obligations.consult(JS.C(44), at)(Option.when(s.flags.isSealed)(()))
+
+    // -- records (JLS 8.10) -------------------------------------------------------------------
+    Obligations.consult(JS.C(43), at)(Option.when(s.flags.isRecord)(()))
 
     // -- enums (JLS 8.9) ---------------------------------------------------------------------------
     Obligations.consult(JS.C(37), at)(Option.when(isEnum)(()))
@@ -4587,6 +4761,19 @@ object TirEmitter:
   val ScalaValueClasses: Set[String] = Set(
     "scala.Boolean", "scala.Byte", "scala.Short", "scala.Char",
     "scala.Int", "scala.Long", "scala.Float", "scala.Double", "scala.Unit")
+
+  /** the WRAPPER whose static `hashCode` javac uses for a primitive record component (JS-C43).
+    *
+    * `Integer.hashCode(int)` and its seven siblings, and nothing else: javac's generated `hashCode`
+    * folds `31 * h + <this>` from zero, which is exactly reproducible and was verified value by
+    * value against `javac` for every primitive. Keyed on [[ScalaValueClasses]]' own spellings so the
+    * two sets cannot drift, and DELIBERATELY short of it by one — `scala.Unit` is in that set and no
+    * record component can have it, so a lookup that misses simply takes the reference arm. */
+  val RecordBoxes: Map[String, String] = Map(
+    "scala.Boolean" -> "java.lang.Boolean", "scala.Byte"   -> "java.lang.Byte",
+    "scala.Short"   -> "java.lang.Short",   "scala.Char"   -> "java.lang.Character",
+    "scala.Int"     -> "java.lang.Integer", "scala.Long"   -> "java.lang.Long",
+    "scala.Float"   -> "java.lang.Float",   "scala.Double" -> "java.lang.Double")
 
   /** Scala's reserved words, plus the soft keywords a bare occurrence can still steer the parser
     * into. Backticking one that did not need it costs two characters and can never change meaning,
