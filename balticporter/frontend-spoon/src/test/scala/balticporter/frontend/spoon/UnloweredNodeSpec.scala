@@ -60,7 +60,7 @@ class UnloweredNodeSpec extends munit.FunSuite:
 
     val ms = markers(p)
     assertEquals(ms.size, 1, s"expected exactly one marker, got ${ms.map(_.what)}")
-    assertEquals(ms.head.kind, UnportableKind.UnmodelledNodeKind("CtCasePattern"))
+    assertEquals(ms.head.kind, UnportableKind.UnmodelledNodeKind("CtRecordPattern"))
     assertEquals(ms.head.state, MarkerState.Open)
     // the CATALOG id comes from the kind registry, so the two artifacts join and a report can say
     // WHICH known difference this is rather than only that something was refused.
@@ -74,13 +74,38 @@ class UnloweredNodeSpec extends munit.FunSuite:
   }
 
   test("the marker names the kind the REGISTRY knows, not the parser's implementation class") {
+    // …and it names the PATTERN, not the `CtCasePattern` wrapper the marker is minted at: the
+    // wrapper has an arm (it is `Lowered`), and pointing the marker at it would make the registry
+    // describe a kind the frontend handles.
     val p  = SpoonTir.fromSource(
-      "package p; public class S2 { public int f(Object o) { return switch (o) { case String s -> 1; default -> 0; }; } }")
+      """package p;
+        |public class S2 {
+        |  public record Pt(int x, int y) {}
+        |  public int f(Object o) { return switch (o) { case Pt(int x, int y) -> x; default -> 0; }; }
+        |}
+        |""".stripMargin)
     val ms = markers(p)
-    assertEquals(ms.map(_.kind.detail), List(Some("CtCasePattern")))
+    assertEquals(ms.map(_.kind.detail), List(Some("CtRecordPattern")))
     // the join is what the name is FOR: a kind outside the registry would report a name nothing can
     // be looked up by, and `NodeKindTotalitySpec` is what fails on that.
-    assert(SpoonKinds.byName.contains("CtCasePattern"))
+    assert(SpoonKinds.byName.contains("CtRecordPattern"))
+  }
+
+  test("a TYPE PATTERN case label mints NOTHING — `JS-S10`'s lowered half, and the negative is the evidence") {
+    val p = SpoonTir.fromSource(
+      "package p; public class S3 { public int f(Object o) { return switch (o) { case String s -> s.length(); default -> 0; }; } }")
+    assertEquals(markers(p), Nil)
+    assertEquals(scan(p) { case tp: Tree.TypePattern => tp }.size, 1)
+  }
+
+  test("an UNNAMED pattern is a TYPE PATTERN whose variable is `_` — and lowers, which is why nothing refuses it") {
+    // `SpoonKinds` used to file `CtUnnamedPattern` as a refusal on both pattern paths. It is not
+    // reachable at all: `case Object _ ->` is built as a `CtTypePattern` named `_`, which is exactly
+    // scala's own `case _: T`. The kind is `NeverVisited` now, and this is the fixture that says so.
+    val p = SpoonTir.fromSource(
+      "package p; public class S4 { public int f(Object o) { return switch (o) { case Object _ -> 1; default -> 0; }; } }")
+    assertEquals(markers(p), Nil)
+    assertEquals(scan(p) { case tp: Tree.TypePattern => tp }.size, 1)
   }
 
   test("an `instanceof` PATTERN marks the whole EXPRESSION — the unit survives, and JS-G21 says why") {

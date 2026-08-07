@@ -169,6 +169,11 @@ object Xref:
       // a `yield` is a jump like the two above and names no symbol of its own — but it CARRIES a
       // value, and that value names everything an ordinary expression does.
       case Tree.Yield(v, _, _)              => walkTerm(v)
+      // a TYPE PATTERN is a runtime type test that BINDS: the type is a reference exactly as an
+      // `instanceof`'s is, and the binder is a local whose USES are ordinary `Ident`s the walk
+      // already reaches. Nothing records a `Definition` for it because it is not one — a pattern is
+      // a `Term`, and `defs` is keyed on `Definition`.
+      case tp @ Tree.TypePattern(_, tpt, _, _) => walkType(tpt.tpe, UsageKind.TypeRefPos, tp)
       // a java label is not a symbol; everything it names is in the statement under it
       case Tree.Labeled(_, s, _, _)         => walkTerm(s)
       case Tree.Assert(c, m, _, _)          => walkTerm(c); m.foreach(walkTerm)

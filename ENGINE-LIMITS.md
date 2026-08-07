@@ -2176,6 +2176,42 @@ file.
 
 *Fix kind: (a). The subset with an exact image is named above and is not a rider on this entry.*
 
+### T19. A RECORD PATTERN is blocked by the RECORD and not by the pattern — and the UNNAMED pattern is not reachable at all
+
+Two facts about SE21's pattern labels, both PROBED rather than reasoned to, and both corrections to
+what the registry said before the probe. They sit together because they are what splits `JS-S10`:
+the TYPE pattern half has an exact image and lowers, and these two are the rest.
+
+**A record pattern is refused for a reason that is not about patterns.** Scala's constructor pattern
+is a perfectly good image of `case Point(int x, int y) ->` — the languages differ only in what they
+deconstruct THROUGH. Java reads the record's ACCESSORS (JLS 14.30.1) and scala reads an `unapply`,
+and this engine emits a java record as a plain class with neither (`JS-C43`, `Absent`; and per
+`T16.5` the emitted class does not even satisfy `java.lang.Record`'s own abstract members). So the
+blocker is one row over, and lowering the pattern would emit a constructor pattern against a type
+with no extractor. Refused per site, with a marker naming `CtRecordPattern` and pointing at
+`JS-S10`. **The order this implies is worth stating**: the record pattern becomes reachable the day
+`JS-C43` emits a scala `case class`, and not before — a wave that tried them in the other order
+would be building a pattern for a type that cannot be matched.
+
+**`CtUnnamedPattern` is `NeverVisited`, and its `RefusedLoudly` claim was false in both halves.** No
+source Spoon 11.5 accepts produces one:
+
+| written | what the parser builds |
+|---|---|
+| `case Object _ ->` | a `CtTypePattern` whose VARIABLE is named `_` — so the type-pattern arm lowers it, to scala's own `case _: T`, which is exact |
+| `o instanceof Pt(int x, _)` | nothing at all: `spoon.JLSViolation: Not allowed javaletter or keyword in identifier found. Identifier: _`, thrown out of `ReferenceBuilder` before any model exists |
+| `case Pt(int x, _) ->` | no pattern node under the method at all |
+
+A refusal nobody can trigger reads exactly like a refusal that fires, which is why the census is
+three named lists and not a total — and it is the second time this wave that a claim about a kind
+turned out to be about a node the parser never hands over (`CtCasePattern`'s missing position was
+the first). **The transferable rule is `T16.5`'s, one classification over**: a claim in that registry
+is a hypothesis until a fixture reaches the kind, and the cheapest thing to do with one is write the
+fixture.
+
+*Fix kind: (a) for the record pattern, and it is GATED on `JS-C43` rather than open on its own. The
+unnamed pattern is not a fix at all — it is a claim corrected.*
+
 ---
 
 ## 4. Collections, shims and the JDK boundary

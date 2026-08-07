@@ -619,6 +619,18 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
       "value" -> Tree.Yield(iLit(2), tInt, O),
     )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
 
+    // ---- TypePattern --------------------------------------------------------------------------
+    // A java TYPE PATTERN as a case LABEL (JLS 14.11.1) — the only position it is valid in, which is
+    // why the host is a `Match` arm's label list and not the arm's body.
+    probe(Tree.TypePattern(L1, tt(tStr), tStr, O),
+      (x: Tree.TypePattern) => hostTerm(Tree.Block(List(
+        Tree.Match(refA, List(
+          Tree.CaseDef(List(x), None, Tree.Assign(refB, iLit(1), tUnit, O), isDefault = false),
+          Tree.CaseDef(Nil, None, unitLit, isDefault = true)), tUnit, O)), unitLit, tUnit, O)))(
+      "bind" -> Tree.TypePattern(L2, tt(tStr), tStr, O),
+      "tpt"  -> Tree.TypePattern(L1, tt(tOth), tStr, O),
+    )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
+
     // ---- MethodRef ----------------------------------------------------------------------------
     probe(Tree.MethodRef(Left(tt(tOth)), M1, tOth, O), hostTerm)(
       "qualifier" -> Tree.MethodRef(Right(Tree.Ident(OTHER, tOth, O)), M1, tOth, O),

@@ -196,6 +196,11 @@ object SpoonKinds:
     // in one, which JLS 14.21 says is not java — `SpoonTir.caseBody` undoes that before the
     // dispatch sees it.
     "CtYieldStatement" -> "SpoonTir.stmtKind, then SpoonTir.armValue (tail) / SpoonTir.caseBody (Spoon's arrow-statement wrapper)",
+    // The case-label WRAPPER, and it is `Lowered` even though half of what it can wrap is refused:
+    // the arm exists and reads the pattern, and WHICH pattern it holds is a fact the three pattern
+    // kinds' own rows carry. A type pattern becomes `Tree.TypePattern`; a record or unnamed one
+    // mints a marker, which is what `CtRecordPattern`/`CtUnnamedPattern` say above.
+    "CtCasePattern" -> "SpoonTir.caseLabel",
     "CtNewArray" -> "SpoonTir.newArray", "CtNewClass" -> "SpoonTir.anonClass",
     "CtOperatorAssignment" -> "SpoonTir.stmtKind / exprNoCast", "CtReturn" -> "SpoonTir.stmtKind",
     "CtSuperAccess" -> "SpoonTir.exprNoCast", "CtSwitch" -> "SpoonTir.switchStmt",
@@ -233,8 +238,15 @@ object SpoonKinds:
     // placement is faithful — but its SIZE is now one expression rather than one file.
     Kind("CtTypePattern", Absent(MarkedUnportable, "reached as the instanceof right operand (JLS 15.20.2); the binding is FLOW-scoped and is refused, and the marker stands at the enclosing boolean expression"), Some(g(21))),
     Kind("CtRecordPattern", Absent(MarkedUnportable, "both pattern paths — as a CASE LABEL through switchArms, and as the instanceof right operand; the loudest reachable outcome is what this claim states"), Some(s(10))),
-    Kind("CtCasePattern", Absent(MarkedUnportable, "a CtExpression, not a CtPattern, so switchStmt's case-expression map refuses it — and the marker is minted at the enclosing CtCase, because Spoon leaves this wrapper UNPOSITIONED and a marker must point at real java"), Some(s(10))),
-    Kind("CtUnnamedPattern", Absent(MarkedUnportable, "both pattern paths above"), Some(s(10))),
+
+    // PROBED, and the claim it used to carry ("both pattern paths above") was false in both halves:
+    // NO java source this parser accepts produces one. An `_` standing where a TYPE PATTERN goes
+    // (`case Object _ ->`) is built as a `CtTypePattern` whose variable is named `_`, which the
+    // pattern arm lowers to scala's own `case _: T`; an `_` NESTED in a record pattern is not
+    // reachable either — Spoon 11.5 raises `JLSViolation` on the `instanceof` form
+    // (`o instanceof Pt(int x, _)`) before any model exists, and produces no pattern node at all
+    // for the case-label form. Filed here rather than left as a refusal nobody can trigger.
+    Kind("CtUnnamedPattern", Absent(NeverVisited, "no source this parser accepts builds one: `_` in a TYPE PATTERN position is a CtTypePattern named `_`, and `_` nested in a record pattern raises spoon's own JLSViolation (instanceof) or yields no node (case label)"), Some(s(10))),
 
     Kind("CtPackage", Absent(NeverVisited, "the builder enters at the top-level types; package names are recovered from qualified names"), scala.None),
     Kind("CtPackageDeclaration", Absent(NeverVisited, "not read; its comments survive only through the positional file-header harvest"), scala.None),

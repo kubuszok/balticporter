@@ -3689,6 +3689,11 @@ final class TirEmitter(
     // named it; the `using` is explicit for §4.4's reason, so nothing that nests inside the arm can
     // steal the jump. A TAIL yield never reaches here: it is the arm's value and the frontend peels
     // it into the arm block's result term.
+    // `case String s ->` — a java TYPE PATTERN as a case label (JLS 14.11.1). Scala's typed pattern
+    // is the exact image and needs no help: it binds, it narrows, and it composes with the `if`
+    // guard `matchStr` already renders. Valid only in a label position, which is where the frontend
+    // mints it; anywhere else this text is not an expression and scalac says so.
+    case Tree.TypePattern(b, tpt, _, _) => s"${local(b)}: ${tpe(tpt.tpe)}"
     case Tree.Yield(v, _, _) if yieldTarget.isDefined =>
       s"scala.util.boundary.break(${term(v, i)})(using ${yieldTarget.get})"
     case y @ Tree.Yield(v, _, _) =>

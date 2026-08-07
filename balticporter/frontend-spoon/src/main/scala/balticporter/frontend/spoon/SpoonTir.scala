@@ -3376,6 +3376,13 @@ object SpoonTir:
         Obligations.consult(JS.S(4), originOf(el))(
           Option.when(cases.indices.exists(i =>
             !split(i)._2 && i != cases.length - 1 && split(i)._1.nonEmpty))(()))
+        // JS-S10 — a PATTERN case label (JLS 14.11.1). Consulted at every switch and fired where one
+        // is really written, and stated HERE rather than inside `caseLabel` for two reasons: the
+        // obligation is owed at the two switch kinds' dispatches, which is where the scope is; and
+        // `caseLabel` has two arms — the lowered type pattern and the refused record one — so a
+        // consult written in each would be the F8 shape, one rule with two copies.
+        Obligations.consult(JS.S(10), originOf(el))(
+          Option.when(cases.exists(_.getCaseExpressions.asScala.exists(_.isInstanceOf[CtCasePattern])))(()))
         val out     = List.newBuilder[Tree.CaseDef]
         var pending = List.empty[Term]
         cases.zipWithIndex.foreach { case (c, idx) =>
@@ -3398,23 +3405,52 @@ object SpoonTir:
         }
         out.result()
 
-      /** one case LABEL.
+      /** one case LABEL — and the SPLIT `JS-S10` is about.
         *
-        * A PATTERN label (`CtCasePattern`, JLS 14.11.1) has no arm, and the marker for it is minted
-        * HERE rather than reached through `expr`'s default — because the pattern node carries no
-        * source POSITION. Spoon builds `CtCasePattern` as an unpositioned wrapper, so a marker
-        * minted at it falls back to the unit-fatal throw, and the registry's `MarkedUnportable`
-        * claim for the kind was therefore false in every port. The enclosing `CtCase` is real java
-        * at a real line; the KIND, and with it the catalog row, still comes from the node the
-        * frontend has no arm for.
+        * A TYPE PATTERN (`case String s ->`, JLS 14.11.1) has an EXACT image and is lowered: a
+        * scala arm's typed pattern binds, narrows and composes with the `if` guard the emitter
+        * already renders, so the whole construct is `Tree.TypePattern` plus `CaseDef.guard`. Note
+        * what that composes with elsewhere and needs no help for: `case null ->` is an ordinary
+        * literal label, which `TirEmitter.selectorCanBeNull` already reads as java's own opt-out
+        * from the implicit NPE (`JS-S08`), and a pattern label makes the switch ENHANCED, which
+        * `isEnhanced` already reads as "java does not fall out of this one".
         *
-        * The marker carries the SELECTOR's type, which is what a case label's type is: a
-        * `CtCasePattern` reports `java.lang.Void`, and typing the label slot with that would put a
-        * type in the tree that no later phase could read as the scrutinee's. */
+        * A RECORD or UNNAMED pattern does not, and keeps the refusal. Java deconstructs a record
+        * through its ACCESSORS and scala through an `unapply`; the engine emits a java record as a
+        * plain class with neither (`JS-C43`, `Absent`), so there is nothing for the nested patterns
+        * to bind against — lowering it would emit a pattern scalac reads as a constructor pattern
+        * on a type that has no extractor.
+        *
+        * THE MARKER IS MINTED HERE rather than reached through `expr`'s default, because the
+        * pattern node carries no source POSITION: Spoon builds `CtCasePattern` as an unpositioned
+        * wrapper, so a marker minted at it falls back to the unit-fatal throw. The enclosing
+        * `CtCase` is real java at a real line; the KIND, and with it the catalog row, still comes
+        * from the pattern the frontend has no arm for. It carries the SELECTOR's type, which is
+        * what a case label's type is — a `CtCasePattern` reports `java.lang.Void`, and typing the
+        * label slot with that would put a type in the tree no later phase could read as the
+        * scrutinee's.
+        *
+        * THE BINDING IS AN ORDINARY LOCAL, and that was worth PROBING rather than assuming, because
+        * the missing position above makes the opposite plausible: java lets two arms of one switch
+        * bind the same NAME (`case String v ->` beside `case Integer v ->`), `defineLocal`'s key is
+        * `name#sourceStart`, and `posKey` answers `Int.MaxValue` where there is no position — so a
+        * pattern variable that inherited the wrapper's missing position would intern both arms'
+        * bindings as ONE symbol with ONE type. It does not: the `CtLocalVariable` inside a
+        * `CtTypePattern` carries its own valid position (measured at two distinct source offsets for
+        * exactly that fixture), so `defineLocal` is exact here with no special case. The unpositioned
+        * node is the WRAPPER and only the wrapper. */
       private def caseLabel(e: CtExpression[?], c: CtCase[?], selT: TypeRepr): Term = e match
-        case cp: CtCasePattern =>
-          unlowered(c, s"a pattern case label — ${SpoonKinds.nameOf(cp.getPattern.getClass)} " +
-            "(JLS 14.11.1); the frontend has no arm for it", selT, about = cp)
+        case cp: CtCasePattern => cp.getPattern match
+          case tp: CtTypePattern =>
+            val v  = tp.getVariable
+            val vt = tpe(v.getType)
+            Tree.TypePattern(defineLocal(v, vt), tt(vt, v), vt, originOf(c))
+          case other =>
+            unlowered(c, s"a pattern case label — ${SpoonKinds.nameOf(other.getClass)} " +
+              "(JLS 14.11.1). A java record is deconstructed through its ACCESSORS and a scala " +
+              "pattern through an `unapply`; the engine emits a java record as a plain class with " +
+              "neither (JS-C43), so there is nothing for the nested patterns to bind against",
+              selT, about = other)
         case other => expr(other)
 
       /** one switch-EXPRESSION arm's statements as a term whose VALUE is the arm's.

@@ -364,6 +364,9 @@ object TirPrinter:
     case x: Tree.Yield =>
       line(sb, indent, s"Yield${origin(x.origin, style)}")
       sub(sb, indent + 1, "value", x.value, style)
+    case x: Tree.TypePattern =>
+      line(sb, indent, s"TypePattern ${sym(x.bind, style)}${ofType(x.tpe, style)}${origin(x.origin, style)}")
+      sub(sb, indent + 1, "tpt", x.tpt, style)
     case x: Tree.Labeled =>
       line(sb, indent, s"Labeled ${x.name}${origin(x.origin, style)}")
       sub(sb, indent + 1, "stmt", x.stmt, style)

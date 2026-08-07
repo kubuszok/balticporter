@@ -329,10 +329,20 @@ object Differences:
         "`yield` peeled at the tail and carried as Tree.Yield elsewhere, which " +
         "TirEmitter.matchStr wraps in a value-carrying arm boundary",
       Lowered("CtSwitchExpression", Dispatch.Expression)),
+    // SPLIT, and the split is the row: "Scala patterns are a superset" is true of a TYPE pattern
+    // and false of a RECORD one, because the two languages deconstruct through different members —
+    // java through the record's accessors, scala through an `unapply` — and the engine emits a java
+    // record as a plain class with neither (`JS-C43`, still `Absent`). So the half with an exact
+    // image is lowered and the half without keeps a per-site refusal, rather than the whole row
+    // waiting on the half.
     Difference(sId(10), "pattern and record switch, with sealed exhaustiveness",
-      "JLS 14.11.1, 14.30", "UNCITED — Scala patterns are a superset, so the image exists",
-      Loud, Absent("case labels are read as plain expressions and refused"),
-      Predicted, Universal, "SpoonTir.switchStmt reads getCaseExpressions through `expr`", refusedAtTheKind),
+      "JLS 14.11.1, 14.30", "UNCITED — a scala typed pattern is the image; a record pattern has none",
+      Loud, Partial("the TYPE pattern, its `when` guard, `case null` and `case null, default` all " +
+        "lower exactly; a RECORD or UNNAMED pattern is refused per site, because a java record " +
+        "emits as a plain class with no `unapply` for a nested pattern to bind against (JS-C43)"),
+      Predicted, Universal,
+      "SpoonTir.caseLabel -> Tree.TypePattern and CaseDef.guard; TirEmitter's TypePattern arm",
+      Both(Lowered("CtSwitch", Dispatch.Statement), Lowered("CtSwitchExpression", Dispatch.Expression))),
     Difference(sId(11), "a translated CATCH swallows a translated JUMP — `boundary.Break` is a `RuntimeException`",
       "JLS 14.15, 14.20", "UNCITED — `scala.util.boundary.Break` extends `RuntimeException`",
       Silent, Handled, el("F4"), Universal, "TirEmitter.tryStr's guard, via Jumps.catchesBreak; BreakCatchCheck", Rendered("Try")),

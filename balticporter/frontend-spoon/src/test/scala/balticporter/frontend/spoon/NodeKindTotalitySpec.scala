@@ -118,17 +118,27 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // along — what was missing was the arm, not the node. The same shape as `CtTextBlock`'s exit
     // from the list above, arrived at the other way round: there a probe retired a suspicion, here
     // a lowering retired a refusal.
+    // `CtCasePattern` left when `JS-S10`'s TYPE-pattern half was lowered: the wrapper's arm exists
+    // and reads the pattern, and WHICH pattern it holds is a fact the three rows below carry. What
+    // is left here is the three PATTERN kinds, each refused for a reason of its own — a type
+    // pattern only where it is an `instanceof` operand (T18), a record or unnamed one everywhere,
+    // because a java record emits as a plain class with no `unapply` (`JS-C43`).
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.MarkedUnportable),
-      List("CtCasePattern", "CtRecordPattern", "CtTypePattern", "CtUnnamedPattern"))
+      List("CtRecordPattern", "CtTypePattern"))
     // EMPTY, and the last three to leave are the correction worth keeping. The comment that used to
     // stand here named "the type operand of an `instanceof`" as a shape a term-level marker cannot
     // take — true of the OPERAND and false of the construct, because the whole `instanceof` is a
     // boolean expression and marking there refuses the same thing at the size of an expression.
     // No kind a java source can produce now costs a whole compilation unit.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.RefusedLoudly), Nil)
+    // TEN, and the tenth is a kind that was on the REFUSED list until a probe went looking for a
+    // fixture that reaches it and found none: `CtUnnamedPattern` is not something this parser builds
+    // from any source it accepts. A refusal nobody can trigger reads exactly like a refusal that
+    // fires, which is the reason this census is three named lists and not a total.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.NeverVisited),
       List("CtModule", "CtModuleRequirement", "CtPackage", "CtPackageDeclaration", "CtPackageExport",
-        "CtProvidedService", "CtReceiverParameter", "CtRecordComponent", "CtUsedService"))
+        "CtProvidedService", "CtReceiverParameter", "CtRecordComponent", "CtUnnamedPattern",
+        "CtUsedService"))
   }
 
   test("the accounting, printed — derived from the jar, stated as a constant nowhere") {

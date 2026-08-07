@@ -321,16 +321,16 @@ class CatalogAreaSSpec extends PortSuite:
     assert(!Differences.byId(JS.S(9)).status.isInstanceOf[Status.Absent])
   }
 
-  test("JS-S10 — a construct the frontend REFUSES has no arm to owe a consult, and says so") {
-    // `Absent`, and not attached to a lowering dispatch. That is deliberate and it is the line
-    // `CatalogCoverageSpec` holds: an obligation owed at a site that never RETURNS — the dispatch
-    // enters, the refusal mints a marker or throws, and no arm settles — would leave the row on
-    // `mechanised` reading `unreached` on every port forever, which is a claim that reads as
-    // coverage and can never fail. What measures it is the other instrument: `SpoonKinds` records
-    // the refused kind against this row's own id and the `markers` lane counts every mint.
-    val p = port("public class U { int n; void f(int i) { switch (i) { case 1: n = 1; break; } } }")
-    assertNotConsults(p, JS.S(10))
-    assert(Differences.byId(JS.S(10)).status.isInstanceOf[Status.Absent])
+  test("JS-S10 — a TYPE pattern label lowers, and the arm owes the consult at BOTH switch kinds") {
+    // The row is a SPLIT: a scala typed pattern is the exact image of `case String s ->`, and a
+    // RECORD pattern has none (a java record emits as a plain class with no `unapply`). The consult
+    // is issued in `switchArms`, which both switch kinds go through — attached at `CtCasePattern`
+    // instead it would read `unreached` forever, because `caseLabel` intercepts before `expr`'s
+    // dispatch is ever entered.
+    val p = port("public class U { int f(Object o) { return switch (o) { case String s -> 1; default -> 0; }; } }")
+    assertConsults(p, JS.S(10), fired = true)
+    assertEmits(p, "case s: java.lang.String =>")
+    assert(!Differences.byId(JS.S(10)).status.isInstanceOf[Status.Absent])
   }
 
   // -- the partition, asserted rather than left to a reader --------------------------------------------------
@@ -346,11 +346,12 @@ class CatalogAreaSSpec extends PortSuite:
     // no obligation dispatch; the audit point for this wave is "were the emitter-side rows really
     // instrumented, or marked unmechanised to keep the lane green". This is that question, asserted
     // in the exact form that can fail: the ONLY rows left are the two whose construct the frontend
-    // REFUSES, and the reason it cannot carry an obligation is above. It was TWO until `JS-S09`
-    // gained an arm, which is the only way a row leaves this set.
-    assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet, Set(JS.S(10)),
-      "a JS-S row that is not a refused construct still says nothing is measuring it, and the " +
-        "emitter's rendering dispatch now exists")
+    // NONE is left: the set was 25 when area S opened, TWO after chunk 11 (the two constructs the
+    // frontend refused at their kind), one after `JS-S09` gained an arm and zero after `JS-S10`'s
+    // TYPE-pattern half did. A row leaves this set exactly one way — by gaining a discharge site
+    // that RETURNS.
+    assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet, Set.empty,
+      "a JS-S row still says nothing is measuring it, and all three dispatch surfaces now exist")
     assert(byKind.getOrElse("rendered", Nil).nonEmpty, "no JS-S row is wired to the RENDERING dispatch")
     assert(byKind.getOrElse("lowered", Nil).nonEmpty, "no JS-S row is wired to the LOWERING dispatch")
     // …and a row claiming NO obligation must not be one the registry calls Open: that would be a

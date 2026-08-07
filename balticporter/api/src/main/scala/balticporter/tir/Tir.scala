@@ -501,6 +501,24 @@ object Tree:
     * — so the frontend unwraps it there rather than carrying a node java does not have. */
   final case class Yield(value: Term, tpe: TypeRepr, origin: Origin)                     extends Term
 
+  /** `case String s ->` — java's TYPE PATTERN standing as a case label (JLS 14.11.1, 14.30.1).
+    *
+    * A `Term` because [[CaseDef.labels]] is a list of them, and valid in NO OTHER POSITION: the
+    * emitter renders it `name: Type`, which is a pattern and not an expression. Modelled as a node
+    * rather than as a `Typed(Ident(bind), tpt)` because those two mean different things — a `Typed`
+    * is an ascription of a term that already exists, and this BINDS one that does not.
+    *
+    * `bind` is a local symbol the frontend mints for the pattern's variable, interned against the
+    * enclosing `CtCase` rather than against the variable: java lets two arms of one switch bind the
+    * same NAME, and Spoon gives the pattern wrapper no source position for a per-variable key to
+    * use, so keying on the variable would intern both arms' bindings as one symbol with one type.
+    *
+    * A RECORD pattern is deliberately not here. Java deconstructs a record through its ACCESSORS and
+    * scala through an `unapply`; the engine emits a java record as a plain class with neither
+    * (`JS-C43`), so there is nothing for a nested pattern to bind against and the frontend refuses
+    * per site instead. */
+  final case class TypePattern(bind: SymId, tpt: TypeTree, tpe: TypeRepr, origin: Origin) extends Term
+
   /** `name: stmt` — a java label on a statement that is NOT a loop, the target of `break name`.
     *
     * Java's `LabeledStatement` accepts ANY statement, and `break L` leaves exactly that statement
