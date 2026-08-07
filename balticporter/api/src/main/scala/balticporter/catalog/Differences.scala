@@ -772,13 +772,25 @@ object Differences:
       "JLS 15.12.4.2", "UNCITED — only a spec over the composition finds it",
       Loud, Handled, el("K6.5"), Universal, "SpoonTir.passedThrough -> Tir.Tree.Spread",
       Both(everyCall, Rendered("Spread"))),
+    // The evidence string used to read "the annotation is on SpoonFrontend's dropped list", which
+    // described the BIR path only: `SpoonTir.annotationsOf` has NO ignore list and carries every
+    // MARKER annotation, so `@SafeVarargs` reaches the emitted file — onto a method whose vararg
+    // JS-G37 has already turned into a plain `Array` parameter, where scalac neither checks its
+    // placement nor derives anything from it. Read one path over, the row's own claim was wrong
+    // about which half of the difference the port actually has.
     Difference(gId(41), "`@SafeVarargs` and heap pollution",
-      "JLS 9.6.4.7, 4.12.2", "UNCITED — nothing to translate INTO, so the unsoundness is simply carried over",
-      Silent, Open, Predicted, Universal, "the annotation is on SpoonFrontend's dropped list; nothing counts the risk",
-      Unmechanised("there is no translation to owe: `@SafeVarargs` is advice javac gives ITSELF about " +
-        "a warning, so no arm has a decision to take and an attachment would be a false obligation. " +
-        "What is missing is a COUNTER of the carried-over risk, which is a check lane (chunk 18's " +
-        "shape) and not an obligation surface")),
+      "JLS 9.6.4.7, 4.12.2", "UNCITED — no `@SafeVarargs` and no unchecked-vararg warning exist, so the unsoundness is carried over unmarked",
+      // NOT `Handled`, and not `Open` either. The port reproduces java's heap pollution EXACTLY —
+      // there is nothing to translate and a phase that "fixed" it would emit a different program —
+      // so the missing half is java's CONVERSATION about it: javac's warning at the declaration and
+      // the annotation that answers it. That half now has a number instead of a silence.
+      Silent, Partial("java's unsoundness is reproduced exactly and needs no translation; what has " +
+        "no scala image is the ACKNOWLEDGEMENT — javac warns at a non-reifiable vararg and scalac " +
+        "does not, and the `@SafeVarargs` that answers the warning is emitted onto a method that is " +
+        "not even variadic in scala. Counted per declaration rather than translated"),
+      Predicted, Universal,
+      "SpoonTir.annotationsOf carries the marker and TirEmitter.annots renders it; HeapPollutionCheck counts both the acknowledged and the unacknowledged declarations",
+      Rendered("DefDef")),
     Difference(gId(42), "a generic vararg's COMPONENT element type has four layered sources",
       "JLS 15.12.4.2, 18", "UNCITED — the DECLARATION is the source that is correct in all four",
       Loud, Handled, el("G1"), Universal, "SpoonTir.varargPack's elemRef, in its four documented steps", everyCall),

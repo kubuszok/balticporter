@@ -1,10 +1,10 @@
 #check	count
 base-surface	0
 break-catch	0
-catalog(consulted)	94
+catalog(consulted)	95
 catalog(uncited)	121
 catalog(undischarged)	6
-catalog(unmechanised)	9
+catalog(unmechanised)	8
 catalog(unreached)	8
 class-init-trigger	2
 collection-boundary	6
@@ -14,6 +14,7 @@ context-seam	44
 dependency-coverage	37
 dependency-coverage(all)	37
 gdx-shared-iterator	0
+heap-pollution	17
 jdk-surface	24
 manifest	0
 markers	0

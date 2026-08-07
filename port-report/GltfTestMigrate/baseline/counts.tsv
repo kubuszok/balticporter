@@ -4,8 +4,8 @@ break-catch	0
 catalog(consulted)	75
 catalog(uncited)	121
 catalog(undischarged)	3
-catalog(unmechanised)	9
-catalog(unreached)	27
+catalog(unmechanised)	8
+catalog(unreached)	28
 class-init-trigger	0
 collection-boundary	0
 collection-closure	0
@@ -14,6 +14,7 @@ context-seam	0
 dependency-coverage	0
 dependency-coverage(all)	37
 gdx-shared-iterator	0
+heap-pollution	0
 jdk-surface	0
 manifest	0
 markers	0

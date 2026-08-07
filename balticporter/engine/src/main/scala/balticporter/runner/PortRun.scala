@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -958,6 +958,17 @@ final case class PortRun(
     say(s"SWITCH-NULL (reference-typed switches that fall out where java NPEs): ${switchNulls.size}")
     if switchNulls.nonEmpty then say(SwitchNullCheck.Issue.classification(SwitchNullCheck.Issue.NullFallsOut))
     println(SwitchNullCheck.summary(switchNulls))
+
+    // ---- JS-G41: java's HEAP POLLUTION, carried over with no scala warning and no annotation ----
+    // A COUNTER and not a repair, which is the whole shape of this row: the port reproduces java's
+    // unsoundness exactly, so there is nothing to translate — what has no scala image is javac's
+    // warning at a non-reifiable vararg and the `@SafeVarargs` that answers it. Over `checkedUnits`
+    // (ENGINE-LIMITS D2), through the same predicate the emitter's consult reads.
+    val heapPollution = HeapPollutionCheck.check(program, checkedUnits)
+    CheckReport.record(HeapPollutionCheck.Name, heapPollution.map(_.report))
+    say(s"HEAP POLLUTION (unchecked varargs carried over from java): ${heapPollution.size}")
+    heapPollution.map(_.issue).distinct.foreach(i => say(HeapPollutionCheck.Issue.classification(i)))
+    println(HeapPollutionCheck.summary(heapPollution))
 
     // ---- §4.4: a `static { }` block emitted into a companion that nothing initialises ----
     // The same two-source shape once more: the census of `static { }` blocks comes from the trees,

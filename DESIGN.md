@@ -628,6 +628,21 @@ one says the surface is missing, the other says no surface is owed (a checked no
 difference the translation satisfies by construction with no site-level decision to take), and
 collapsing them would hide the first inside the second.
 
+**And HAVING NOTHING TO TRANSLATE IS NOT HAVING NOTHING TO DECIDE, which is the distinction that
+moved `JS-G41` off `Unmechanised`.** That row's own text said an attachment would be "a false
+obligation" because `@SafeVarargs` is advice javac gives ITSELF — true about the ANNOTATION and
+false about the row. Java's heap pollution has no repair to owe (the port reproduces the unsoundness
+exactly; a phase that "fixed" it would emit a different program), and the decision an emitted
+declaration takes about it is nevertheless a real one: *carry it, and say where*. So the row is a
+consult at `Rendered("DefDef")` plus a COUNTER lane (`HeapPollutionCheck`), which is the shape the
+proposal's chunk 18 named — and the counter's population is derived, never keyed on the annotation.
+A census of java's ACKNOWLEDGEMENTS reports six declarations in one corpus library and calls that
+the risk, while the declarations javac warned about and nobody annotated — carrying the same
+unsoundness with no marker of any kind — are the ones a reader cannot otherwise find. That is
+`CLAUDE.md` §4.56's rule about an instrument whose silence is a wrong answer, met at the population
+rather than at a filter. Read it as the general shape: **`Unmechanised` is a claim about the
+DISCHARGE SURFACE, and a row that needs a counter rather than a rewrite still has one.**
+
 **And an OBLIGATION is per NODE, so the consult goes in the ARM even where the RULE's convergence
 point is not one.** F8's rule — a rule stated once per arm is a rule the next arm will not have —
 says to put the rule where the arms converge, and area G is where that runs into the mechanism's own

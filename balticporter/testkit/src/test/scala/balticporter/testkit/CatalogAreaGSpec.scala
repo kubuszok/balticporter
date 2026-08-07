@@ -1,6 +1,7 @@
 package balticporter.testkit
 
 import balticporter.catalog.{Attaches, Differences, JS, Status}
+import balticporter.tir.HeapPollutionCheck
 
 /** THE `JS-G` EDGE-CASE SUITE — the generics rows the engine wires, at the shape each row is about.
   *
@@ -25,8 +26,10 @@ import balticporter.catalog.{Attaches, Differences, JS, Status}
   *     them is decided while lowering or rendering a TYPE REFERENCE, which is neither of the
   *     frontend's two dispatches (a `CtTypeReference` is not a statement or an expression) nor the
   *     emitter's (a `TypeTree` is a `Tree` that is not a `Statement`) — plus `JS-G20`, which is
-  *     per-phase discipline rather than one mechanism, and `JS-G41`, which has nothing to translate
-  *     into and wants a COUNTER rather than an obligation.
+  *     per-phase discipline rather than one mechanism. `JS-G41` was on that list and is not any
+  *     more: having nothing to TRANSLATE is not having nothing to DECIDE, and the decision an
+  *     emitted declaration takes about java's heap pollution is to carry it, which is a consult at
+  *     `Rendered("DefDef")` and a count in `HeapPollutionCheck`.
   *
   * `JS-G48` is `Cited("collections")` and has no test here: a citation needs the phase, and the
   * phase's own reified rewrites are exercised by `balticporter.corpus.CollectionsReifiedSpec`. The
@@ -761,13 +764,73 @@ class CatalogAreaGSpec extends PortSuite:
     assert(Differences.byId(JS.G(2)).status.isOpen, "JS-G02 is no longer Open — flip this test with it")
   }
 
-  test("JS-G20 / JS-G41 — a row with NO surface at all is counted, not claimed") {
+  test("JS-G20 — a row with NO surface at all is counted, not claimed") {
     val p = port("public class A { int x = 1; }")
-    List(JS.G(20), JS.G(41)).foreach { id =>
-      assertNotConsults(p, id)
-      assert(Differences.leaves(Differences.byId(id).attaches).exists(_.isInstanceOf[Attaches.Unmechanised]),
-        s"$id gained a surface — move it out of this test and give it one of its own")
-    }
+    assertNotConsults(p, JS.G(20))
+    assert(Differences.leaves(Differences.byId(JS.G(20)).attaches).exists(_.isInstanceOf[Attaches.Unmechanised]),
+      "JS-G20 gained a surface — move it out of this test and give it one of its own")
+  }
+
+  // -- JS-G41: heap pollution, which is COUNTED because there is nothing to translate -------------
+  //
+  // The row's decision at a declaration is to CARRY java's unsoundness — the port reproduces it
+  // exactly, and a phase that "fixed" it would emit a different program. So the consult is reached
+  // at every method and fires where the declaration is one javac had an opinion about; the number
+  // lives in `HeapPollutionCheck` beside it, through the same predicate.
+
+  test("JS-G41 — a vararg whose component is a TYPE VARIABLE fires, and it is UNACKNOWLEDGED") {
+    val p = port("public class A { @SafeVarargs final <T> void f(T... xs) { } void g(String s) { } }")
+    assertConsults(p, JS.G(41), fired = true)
+    val fs = HeapPollutionCheck.check(p.after, p.after.units)
+    assertEquals(clue(fs).map(_.issue), List(HeapPollutionCheck.Issue.Acknowledged))
+    assertEquals(fs.head.param, "xs")
+  }
+
+  test("JS-G41 — javac's warning has no scala image, so an UNANNOTATED one is the row's other half") {
+    // The population that matters and the one a census keyed on the annotation would miss: java
+    // WARNED at this declaration and the author left it, so nothing in the emitted file mentions it
+    // at all. `Class<? extends Number>` is JLS 4.7's second shape — a parameterised type whose
+    // argument is a BOUNDED wildcard — and it is two characters from the reifiable `Class<?>`.
+    val p = port("public class A { void f(java.lang.Class<? extends Number>... xs) { } }")
+    assertConsults(p, JS.G(41), fired = true)
+    val fs = HeapPollutionCheck.check(p.after, p.after.units)
+    assertEquals(clue(fs).map(_.issue), List(HeapPollutionCheck.Issue.Unacknowledged))
+  }
+
+  test("JS-G41 — a REIFIABLE vararg component is consulted and does not fire") {
+    // The negative, and it is what keeps the counter from being a census of every vararg: `String…`,
+    // `Class<?>…` and `String[]…` are all reifiable (JLS 4.7), javac warns at none of them, and
+    // nothing is carried. The ARRAY is the one that needs its own clause and would otherwise be
+    // reported: an array is spelled as an APPLICATION here, so the parameterised-type rule sees
+    // `scala.Array[java.lang.String]` and a non-wildcard argument. A lane counting a risk that is
+    // not there is worse than one counting none.
+    val p = port(
+      """public class A {
+        |  void f(String... xs) { }
+        |  void g(java.lang.Class<?>... ys) { }
+        |  void h(String[]... zs) { }
+        |}""".stripMargin)
+    assertConsults(p, JS.G(41))
+    assertNoFindings(HeapPollutionCheck.check(p.after, p.after.units).map(_.report))
+  }
+
+  test("JS-G41 — …but an array OF a type variable is not reifiable, so the clause is not a blanket") {
+    // The other side of the same clause, because "arrays are reifiable" is exactly the shape of
+    // over-approximation that turns a counter off: JLS 4.7 makes an array reifiable IFF its
+    // component is, and `T[]…` has a type variable at the bottom.
+    val p = port("public class A { <T> void f(T[]... xs) { } }")
+    assertConsults(p, JS.G(41), fired = true)
+    assertEquals(clue(HeapPollutionCheck.check(p.after, p.after.units)).size, 1)
+  }
+
+  test("JS-G41 — the acknowledgement is EMITTED, onto a method that is not even variadic in scala") {
+    // Why the row is `Partial` and not `Handled`: `SpoonTir.annotationsOf` has no ignore list, so
+    // the marker crosses — and `JS-G37` has already turned the vararg into a plain `Array`
+    // parameter, so what a reader of the emitted file sees is java's acknowledgement of a risk on a
+    // declaration where scalac derives nothing from it.
+    val p = port("public class A { @SafeVarargs final <T> void f(T... xs) { } }")
+    assertEmits(p, "@java.lang.SafeVarargs")
+    assertEmits(p, "xs: scala.Array[T]")
   }
 
   // -- the partition, asserted rather than left to a reader ---------------------------------------
@@ -784,15 +847,13 @@ class CatalogAreaGSpec extends PortSuite:
     assertEquals(byKind.values.map(_.size).sum, Differences.generics.size)
     // THE CHUNK'S OWN BAR, in the form that can fail. Area G opened with 38 of its 40 rows on
     // `Unmechanised` — the largest such claim in the registry — chunk 12 took it to eleven, and the
-    // fourth surface takes it to TWO. The audit question is unchanged: were the rows instrumented,
-    // or renamed to keep a lane green. What is left is `JS-G20`'s per-phase discipline (a fact about
-    // every retyping phase rather than one mechanism, which `collection-retarget` measures) and
-    // `JS-G41`'s absent counter (`@SafeVarargs` is advice javac gives ITSELF, so no arm has a
-    // decision to take and an attachment would be a false obligation).
+    // fourth surface takes it to TWO, and `JS-G41`'s counter to ONE. The audit question is
+    // unchanged: were the rows instrumented, or renamed to keep a lane green. What is left is
+    // `JS-G20`'s per-phase discipline — a fact about every retyping phase rather than one
+    // mechanism, which `collection-retarget` measures.
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
-      Set(JS.G(20), JS.G(41)),
-      "a JS-G row that is neither JS-G20's per-phase discipline nor JS-G41's absent counter still " +
-        "says nothing is measuring it")
+      Set(JS.G(20)),
+      "a JS-G row that is not JS-G20's per-phase discipline still says nothing is measuring it")
     assert(byKind.getOrElse("rendered", Nil).nonEmpty, "no JS-G row is wired to the RENDERING dispatch")
     assert(byKind.getOrElse("lowered", Nil).nonEmpty, "no JS-G row is wired to the LOWERING dispatch")
     // …and the FOURTH surface, BOTH halves — asked of the LEAVES and not of the bucket, because the

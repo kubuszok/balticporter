@@ -2596,6 +2596,14 @@ final class TirEmitter(
       // JS-G35's other declaration kind — a METHOD's own formal parameters carry the same F-bound,
       // and are consulted at the same convergence point for the same reason as the two rows above.
       Obligations.consult(JS.G(35), d.origin)(Option.when(fBounded(d.tparams))(()))
+      // JS-G41 — a vararg whose component is not reifiable (JLS 4.7) carries java's HEAP POLLUTION,
+      // and the decision this arm takes about it is to carry it: the port reproduces java's
+      // semantics exactly, and what has no scala image is the WARNING javac gave and the
+      // `@SafeVarargs` that answered it. So the row is consulted, never fired into a rewrite, and
+      // `HeapPollutionCheck` is the count beside it — through the same predicate, so the obligation
+      // and the number cannot disagree about which declarations the row is about.
+      Obligations.consult(JS.G(41), d.origin)(
+        HeapPollutionCheck.uncheckedVararg(d)(using program).map(_ => ()))
       declVisibility(sym(d.symbol), d.origin)
       if isInitBlock(d) then
         d.rhs.map(r => s"${declNotes(d.symbol, i)}${ind(i)}locally ${term(r, i)}").getOrElse("")

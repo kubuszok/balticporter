@@ -2,10 +2,10 @@
 base-surface	0
 bean-exposure	0
 break-catch	0
-catalog(consulted)	86
+catalog(consulted)	87
 catalog(uncited)	121
 catalog(undischarged)	5
-catalog(unmechanised)	9
+catalog(unmechanised)	8
 catalog(unreached)	16
 class-init-trigger	0
 collection-boundary	22
@@ -13,6 +13,7 @@ collection-closure	0
 collection-retarget	0
 dependency-coverage	134
 dependency-coverage(all)	235
+heap-pollution	0
 jdk-surface	0
 manifest	0
 markers	0

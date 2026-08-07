@@ -644,7 +644,8 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   found nothing, a rule list that matched nothing, or a target set that emptied it.
   `dependency-coverage(all)` is the enumeration behind it and the difference is one subtraction. It
   is deliberately not spelled `(emitted)`: naming one of the two filters would hide the other;
-  `porter-notes`, `break-catch`, `try-resource`, `switch-null` and `markers` record on every run,
+  `porter-notes`, `break-catch`, `try-resource`, `switch-null`, `heap-pollution` and `markers`
+  record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget` record when
   `CollectionsTransform` is in the pipeline, and `nullability-boundary` when
   `NullabilityTransform` is. **A retype has TWO directions and a subtyping argument
