@@ -8,6 +8,7 @@ catalog(unmechanised)	10
 catalog(unreached)	25
 class-init-trigger	0
 dependency-coverage	0
+dependency-coverage(all)	0
 jdk-surface	2
 manifest	0
 markers	0

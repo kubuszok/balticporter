@@ -42,7 +42,23 @@ import balticporter.catalog.{ApiRow, ArtifactDep, DiffId, Platform}
   */
 object DependencyCheck:
 
+  /** the RESIDUE lane: requirements that survived BOTH filters — this module's own emitted code
+    * (D2), and no declared dependency covering them. The number a reader acts on. */
   val Name = "dependency-coverage"
+
+  /** …and the ENUMERATION behind it — every requirement the walk found, before either filter.
+    *
+    * `portability(all|emitted)`'s reason, one check over: a residue of zero and a walk that found
+    * nothing are the same row, and a dependent port is exactly where they come apart. A dependent's
+    * program holds its BASE's units, so `inEmittedCode` legitimately removes every requirement that
+    * belongs to the base — and the honest `0` it then reports is indistinguishable from a rule list
+    * that matched nothing, a target set that emptied it, or a walk that broke. With both lanes the
+    * difference is one subtraction.
+    *
+    * NOT spelled `(emitted)`, because the residue passes TWO filters and naming one of them would
+    * hide the other: a requirement can leave this port's number by belonging to the base OR by being
+    * covered by a declared dependency, and those are different facts about the port. */
+  val All = "dependency-coverage(all)"
 
   val Classification: String =
     "[§1(b) PER-LIBRARY, in the port's manifest] the API exists off the JVM, in an artifact this " +
@@ -106,10 +122,15 @@ object DependencyCheck:
   def inEmittedCode(program: Program, reqs: List[Requirement], isExcluded: SymId => Boolean): List[Requirement] =
     reqs.filterNot(r => PortabilityCheck.owningType(program, r.enclosing).exists(isExcluded))
 
-  def report(reqs: List[Requirement], declared: List[ArtifactDep])(using program: Program): List[CheckReport.Finding] =
+  /** @param lane which of the two counts these rows are being recorded as — [[All]] or [[Name]].
+    *   A parameter rather than a constant for `PortabilityCheck.Violation.report`'s reason: the
+    *   rows are the same shape, the lane is the caller's question, and a finding that hard-coded
+    *   one name would put both counts in one bucket in `findings.tsv`. */
+  def report(reqs: List[Requirement], declared: List[ArtifactDep], lane: String = Name)
+            (using program: Program): List[CheckReport.Finding] =
     reqs.map { r =>
       val want = r.deps.toList.sortBy(_._1.toString).map((p, d) => s"$p needs $d").mkString("; ")
-      CheckReport.Finding(Name, r.api,
+      CheckReport.Finding(lane, r.api,
         program.symbolOf(r.enclosing).map(_.fullName).getOrElse("?"),
         CheckReport.relativise(r.origin.javaPath), r.origin.line,
         s"${r.kind} — $want. This port declares ${declared.size} dependency/ies and no " +

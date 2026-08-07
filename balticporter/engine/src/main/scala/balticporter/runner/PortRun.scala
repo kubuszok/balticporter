@@ -573,9 +573,16 @@ final case class PortRun(
                          DependencyCheck.inEmittedCode(program, allRequired, notShipped), declaredDeps)
     locally {
       given Program = program
+      // TWO numbers, for `portability(all|emitted)`'s reason: the residue alone cannot distinguish
+      // a dependent whose requirements all belong to its base — an honest 0 — from a walk that
+      // found nothing at all, and D2's ownership filter is exactly what makes that the normal case
+      // on every dependent port in this corpus.
+      CheckReport.record(DependencyCheck.All,
+                         DependencyCheck.report(allRequired, declaredDeps, DependencyCheck.All))
       CheckReport.record(DependencyCheck.Name, DependencyCheck.report(needed, declaredDeps))
     }
     say(s"DEPENDENCY COVERAGE: ${needed.size} site(s) needing an artifact this build does not name" +
+      s" (of ${allRequired.size} the walk found)" +
       s", against ${PortabilityCheck.dependencyRulesFor(targets, verdictOverrides).size} rules" +
       s" (${declaredDeps.size} declared)")
     if needed.nonEmpty then say(DependencyCheck.Classification)
@@ -2367,10 +2374,12 @@ object PortRun:
     // rows with no Scala-side normative citation. Required for the reason it exists — the number
     // was a `println` nothing diffed — and never asserted on anywhere.
     CatalogCheck.Uncited,
-    // …and the build-graph half of the portability enumeration. Required for the same reason
-    // `portability(injected)` is: it records on every run, `0 of 0` included, and a port whose
-    // artifact list nobody has written is indistinguishable from one whose check never ran.
-    DependencyCheck.Name,
+    // …and the build-graph half of the portability enumeration, BOTH lanes. Required for the same
+    // reason `portability(injected)` is: each records on every run, `0 of 0` included, and a port
+    // whose artifact list nobody has written is indistinguishable from one whose check never ran.
+    // The PAIR is required for `portability(all|emitted)`'s reason on top of that — a dependent's
+    // honest 0 and a walk that found nothing are one row until the enumeration is beside it.
+    DependencyCheck.All, DependencyCheck.Name,
     // recorded only when CollectionsTransform is in the pipeline; RequiredChecks asserts against
     // what RECORDED, and a port without the phase records neither, so requiring them here would
     // fail every phase-less port. They are made unskippable by the wiring living beside the

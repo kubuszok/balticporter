@@ -589,8 +589,8 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   Each prints, untruncated and diffed against the committed baseline, **every engine check the
   run's own pipeline registers, plus any check the port's own §1(c) rules register**. The total is
   not a constant to memorise — quoting one is what went stale twice; it
-  is the TWENTY-TWO required of every run (`signature`, `omissions`,
-  `portability(all|emitted|injected)`, `dependency-coverage`, `substitution(emitted|dangling)`,
+  is the TWENTY-THREE required of every run (`signature`, `omissions`,
+  `portability(all|emitted|injected)`, `dependency-coverage(all|)`, `substitution(emitted|dangling)`,
   `remediation`, `policy`,
   `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`, `base-surface`,
   `catalog(consulted|unreached|unmechanised|undischarged|uncited)`) plus
@@ -612,7 +612,8 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   a baseline diffs and that number was a `println` in one spec beside `assert(uncited <= all)`, which
   no registry can fail. It is never asserted on: a spec that failed on it is a spec somebody silences
   by INVENTING a citation, which is worse than the gap.
-  **`dependency-coverage` is the twenty-second and is the OTHER half of `portability(*)`, not a
+  **`dependency-coverage` is the twenty-second and twenty-third and is the OTHER half of
+  `portability(*)`, not a
   subset of it**: half of the platform matrix's answers are that the API EXISTS off the JVM, in an
   artifact the build does not name, and a build-graph fact reported as a symbol-reference one is a
   finding the reader cannot act on — they are told to remove a call that one `libraryDependencies`
@@ -620,7 +621,13 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   covers it, the port declared no alternative) and only the middle one is a filter: the third is
   read THROUGH `PortManifest.verdictOverrides`, so a port that says it ships its own shim never
   produces the requirement at all. Written as a second filter that conjunct could disagree with the
-  first, which is the shape of a check reporting a row it has already excused;
+  first, which is the shape of a check reporting a row it has already excused. **And it is a PAIR
+  for `portability(all|emitted)`'s reason**: the residue passes two filters — this module's own
+  emitted code (D2) and coverage by a declared dependency — so a dependent port, whose requirements
+  legitimately belong to its base, reports an honest `0` that is indistinguishable from a walk that
+  found nothing, a rule list that matched nothing, or a target set that emptied it.
+  `dependency-coverage(all)` is the enumeration behind it and the difference is one subtraction. It
+  is deliberately not spelled `(emitted)`: naming one of the two filters would hide the other;
   `porter-notes`, `break-catch`, `try-resource`, `switch-null` and `markers` record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget` record when
   `CollectionsTransform` is in the pipeline, and `nullability-boundary` when

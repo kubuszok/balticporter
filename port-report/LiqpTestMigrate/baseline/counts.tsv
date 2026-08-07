@@ -12,6 +12,7 @@ collection-boundary	20
 collection-closure	0
 collection-retarget	0
 dependency-coverage	125
+dependency-coverage(all)	228
 jdk-surface	0
 manifest	0
 markers	0
