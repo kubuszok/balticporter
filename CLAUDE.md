@@ -1019,6 +1019,21 @@ phase: a phase's silence is a missing fix, an instrument's silence is a wrong an
 honest negatives is a surface — so a kind added tomorrow is included by construction rather than by
 somebody remembering a list.
 
+**And the SURVIVORS are not the DECLARATION, which is the same mistake read off the parse instead of
+off a string.** A rule may conclude something from what the program DECLARES; it may not conclude it
+from what this run happened to PARSE, and the two look identical whenever the port converts a whole
+library. `TirEmitter.sealOf` reconstructed java's `permits` set from the extends-edges it could see,
+so a permitted subtype in an `excludeGlobs` file — or in a unit whose translation was refused — was
+simply not in the set, and a hierarchy whose remaining subclasses all land in one file read as *the
+seal is exact* and shipped `sealed`. Whatever supplies the missing FQN then cannot extend a type java
+said it could: an injected shim, or §4.45's consumer. **A WRONGFUL SEAL IS INVISIBLE TO EVERY
+INSTRUMENT** — only the widening is recorded, so a decision NOT taken has no row anywhere, no member
+digest moves, and the corpus has no sealed type to notice with. The general form: where java WROTE
+the set down, carry it (interned, never as names — §4.56's own rule, and the permits clause and the
+emitted FQN are two namespaces on a renaming port), and let anything the parse cannot account for
+take the conservative arm. A count of the survivors answers a different question than the one the
+construct asked.
+
 **And what makes it hard to see is a RESIDUE COUNT that cannot tell a refusal from a switched-off
 fix.** The boundary check reported all five seams, precisely, on every run since that port began —
 and a "no wrap was inserted" finding reads as *no wrap exists for this pair*, which is what the

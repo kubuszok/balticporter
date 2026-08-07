@@ -518,7 +518,7 @@ object Differences:
         "the same answer for the same reason — ships OPEN, because scala has no `permits` to name " +
         "it with. That half is a counted `WidenedSeal` decision and not a translation"),
       InCode("TirEmitter.sealOf, which states the file-scope condition it can and cannot meet"), Universal,
-      "SpoonTir.typeFlags's isSealed carries java's raw modifier; TirEmitter.sealOf decides the image from where the subtypes land, and records Decision.Kind.WidenedSeal where none exists",
+      "SpoonTir.typeFlags's isSealed carries java's raw modifier and SpoonTir.permittedTypes the clause itself, INTERNED; TirEmitter.sealOf keeps the seal only where the program's own subtypes account for every permitted type AND all land in this file, and records Decision.Kind.WidenedSeal otherwise",
       Rendered("ClassDef")),
     Difference(cId(45), "a `final` field's JMM safe-publication guarantee",
       "JLS 17.5", "UNCITED — a `val` carries the same guarantee",

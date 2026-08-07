@@ -2359,6 +2359,22 @@ final class TirEmitter(
     * and the direction it fails in is a scala COMPILE ERROR in whatever module holds the subclass.
     * Conservative is the only safe side of that.
     *
+    * ==THE SURVIVORS ARE NOT THE PERMITS LIST==
+    *
+    * `subtypesBySym` is built from the extends-edges this run PARSED, and that is a different set
+    * from the one java wrote: a permitted subtype in a file the port excluded (`excludeGlobs`), or
+    * in a unit whose translation was refused, leaves no edge at all. Decided from the survivors
+    * alone, a hierarchy whose only remaining subclass is in this file reads as "the seal is exact"
+    * and ships `sealed` — and the shim injected at the excluded FQN, or §4.45's consumer, then gets
+    * a scalac error extending a type java said it could extend. The WIDENING is counted; a wrongful
+    * SEAL is invisible in every instrument, because nothing is recorded for a decision not taken.
+    *
+    * So the seal is kept only where the program-declared subtype set ACCOUNTS FOR every type java
+    * PERMITTED ([[balticporter.tir.Symbol.permits]], interned by the frontend), and anything
+    * unaccounted widens with the rest. An empty permits list is not a gap: java lets the clause be
+    * omitted exactly when every subclass is in the same compilation unit, which is the one case
+    * where the parse cannot have missed one.
+    *
     * `non-sealed` needs nothing. Where the seal survives, every permitted subtype is in the same
     * file and scala already allows each to be extended further; where it does not, there is no seal
     * for a child to opt out of.
@@ -2371,7 +2387,12 @@ final class TirEmitter(
       val mine     = topLevelOf(cd.symbol)
       val subs     = subtypesBySym.getOrElse(cd.symbol, Nil)
       val elsewhere = subs.filterNot(x => topLevelOf(x) == mine)
-      if subs.nonEmpty && elsewhere.isEmpty then ("sealed ", "")
+      // …and the types java NAMED that this program does not declare as a subtype of it at all —
+      // an excluded file, a refused unit, a subtype another module owns. Compared as interned ids,
+      // never as names: the permits list and the emitted FQN are two namespaces on a renaming port
+      // (§4.56), and a name join would widen every seal there and none anywhere else.
+      val unaccounted = s.permits.filterNot(subs.contains)
+      if subs.nonEmpty && elsewhere.isEmpty && unaccounted.isEmpty then ("sealed ", "")
       else
         val d = Decision(
           kind       = Decision.Kind.WidenedSeal,
@@ -2380,6 +2401,12 @@ final class TirEmitter(
           detail     = Map(
             "subtypes"  -> subs.size.toString,
             "elsewhere" -> elsewhere.size.toString,
+            // the two residues are reported apart because they are different situations with one
+            // emitted shape: `elsewhere` is a subtype this run EMITS into another file, and
+            // `unaccounted` is one java permitted that this run never saw — which is the only one
+            // of the two that a reader cannot discover by looking at the port's output.
+            "permitted" -> s.permits.size.toString,
+            "unaccounted" -> unaccounted.size.toString,
             "why"       -> ("java sealed this type and named its permitted subclasses; scala's " +
               "`sealed` restricts extension to THIS FILE and has no `permits` clause, so a " +
               "hierarchy whose subtypes are not all emitted here ships open"),

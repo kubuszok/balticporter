@@ -174,6 +174,23 @@ final case class Symbol(
       * PROPERTY, not part of the symbol's NAME, and every promoted artifact in every lane is keyed
       * on the name. See [[MemberKey]] for the whole of that argument. */
     descriptor: Option[Descriptor] = None,
+    /** java's `permits` clause — the types this `sealed` declaration NAMES as its subclasses (JLS
+      * 8.1.1.2). Empty for everything that is not a sealed type, and empty for a sealed type that
+      * omitted the clause because java infers it from the compilation unit.
+      *
+      * '''Interned, never a name.''' The one question this list is asked is *does the set of
+      * subtypes this program declares account for every type java permitted* — and a permitted type
+      * the parse never saw (an `excludeGlobs` file, a unit-fatal refusal) is precisely the case that
+      * must be detected. A NAME could not answer it: the permitted string is written in the UPSTREAM
+      * namespace and a rename runs last (§4.56), so a name-keyed join would report every permitted
+      * type unaccounted on a renaming port and none on any other. An interned id is the structural
+      * answer — a permitted type the program declares resolves to the SAME id its `ClassDef` carries
+      * (`Minter.external` never clobbers a definition), and one it does not stays an external stub
+      * that no subtype set can contain.
+      *
+      * It is NOT a [[Flags]], although it travels with `Flags.isSealed`: flags mirror
+      * `reflect.Flags`, and `permits` is a class-header CLAUSE rather than a modifier. */
+    permits: List[SymId] = Nil,
 )
 
 object Symbol:

@@ -498,6 +498,30 @@ class CatalogAreaCSpec extends PortSuite:
     assertEmits(p, "porter: widened-seal")
   }
 
+  test("JS-C44 — a PERMITTED subtype this run never parsed widens the seal, and is counted apart") {
+    // The two tests above are both about subtypes the run CAN see — one file or two. This is the
+    // shape neither of them reaches and the one a seal decided from the survivors gets wrong: java
+    // permits `p.B` and `p.C`, the port ships only `p.B` (the other is excluded, refused, or
+    // another module's), and every surviving subtype is in this very file. Read off the parsed
+    // extends-edges alone the seal looks EXACT and `sealed p.A` ships — and whatever supplies
+    // `p.C`, an injected shim or §4.45's consumer, then cannot extend a type java said it could.
+    // Nothing would report it: only the widening is recorded, so a wrongful seal is a decision NOT
+    // taken and no instrument has a row for one.
+    val p = portAll(List(
+      "A.java" -> "package p;\npublic sealed class A permits A.B, C {\n  public static final class B extends A { }\n}\n",
+      "D.java" -> "package p;\npublic class D { }\n"))
+    assertConsults(p, JS.C(44), fired = true)
+    assertNotEmits(p, "sealed class A")
+    val ds = p.emitter.emissionDecisions.filter(_.kind == Decision.Kind.WidenedSeal)
+    assertEquals(ds.map(_.subjectFqn), List("p.A"))
+    // the surviving subtype is in THIS file, so the file-scope half is satisfied and says so —
+    // the permits half is the whole of the reason, and the detail has to be able to say which.
+    assertEquals(ds.head.detail.get("elsewhere"), Some("0"))
+    assertEquals(ds.head.detail.get("permitted"), Some("2"))
+    assertEquals(ds.head.detail.get("unaccounted"), Some("1"))
+    assertEmits(p, "porter: widened-seal")
+  }
+
   test("JS-C44 — an ordinary class is consulted, does not fire, and records nothing") {
     val p = port("public class A { }")
     assertConsults(p, JS.C(44))

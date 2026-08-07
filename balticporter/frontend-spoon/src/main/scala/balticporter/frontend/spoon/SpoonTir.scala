@@ -1576,7 +1576,27 @@ object SpoonTir:
       val (anns, annDropped) = annotationsOf(t, None)
       minter.define(q)(id =>
         Symbol(id, t.getSimpleName, q, typeFlags(t), ownerSym(t), TypeRef(NoPrefix, id), tags = tags,
-               annotations = anns, droppedAnnotations = annDropped))
+               annotations = anns, droppedAnnotations = annDropped, permits = permittedTypes(t)))
+
+    /** java's `permits` clause, INTERNED — see [[balticporter.tir.Symbol.permits]] for why the ids
+      * and not the names, and `TirEmitter.sealOf` for the one question they answer.
+      *
+      * `Minter.external` is exactly the right interning door: a permitted type this program declares
+      * is (or will be) `define`d under the same key, so both sides of the accounting compare one id;
+      * a permitted type the parse never saw — an `excludeGlobs` file, a unit whose translation was
+      * refused — interns as an external stub that no subtype set can contain, which is the case the
+      * seal must be widened for.
+      *
+      * SORTED by key, because Spoon hands back a `Set` and this list reaches an emitted DECISION's
+      * detail: an artifact whose row order is a hash order is one no baseline can diff. */
+    private def permittedTypes(t: CtType[?]): List[SymId] =
+      t match
+        case s: spoon.reflect.declaration.CtSealable =>
+          s.getPermittedTypes.asScala.toList
+            .map(r => typeKey(r) -> r)
+            .sortBy(_._1)
+            .map((k, r) => minter.external(k, r.getSimpleName))
+        case _ => Nil
 
     private def ownerSym(t: CtType[?]): SymId =
       Option(t.getDeclaringType).map(dt => minter.external(typeKey(dt.getReference), dt.getSimpleName)).getOrElse(SymId.None)
@@ -1819,6 +1839,11 @@ object SpoonTir:
         // question about where the permitted subtypes LAND, which is an emitted-file question and
         // therefore the emitter's (`TirEmitter.sealOf`); deciding it here would put half a rule in
         // a frontend that has no idea what the port writes to which file.
+        //
+        // The OTHER half of java's clause — WHICH types it permits — is not a flag and is recorded
+        // beside this one, on the symbol (`permittedTypes`). The emitter cannot reconstruct it from
+        // the extends-edges it can see: a permitted subtype in a file this run never parsed leaves
+        // no edge at all, and a seal decided from the survivors alone is a seal java did not write.
         isSealed = has(t, SEALED),
         isTrait = isTrait,
         isEnum = t.isInstanceOf[CtEnum[?]],
