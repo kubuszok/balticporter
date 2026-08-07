@@ -2552,10 +2552,13 @@ object SpoonTir:
         *
         * The type read at each slot is [[castType]], not `e.getType` — the same reading `coerce`
         * takes, and for the same reason (`ENGINE-LIMITS.md` K17: a cast expression's type IS the
-        * cast's, and it is that type the surrounding context converts). */
+        * cast's, and it is that type the surrounding context converts). READ BARE, too: `castType`
+        * already answers `null` where Spoon has no answer, and its callers each decline on that, so
+        * a second `catch` around it here could only ever hide a divergence between this reading and
+        * `coerce`'s — which is the same call, two lines apart (`CLAUDE.md` §4.6). */
       private def slotConsults(slots: List[(CtTypeReference[?], CtExpression[?])], at: Origin)
                               (using Obligations): Unit =
-        val pairs = slots.map((tg, e) => (tg, try castType(e) catch { case _: Throwable => null }))
+        val pairs = slots.map((tg, e) => (tg, castType(e)))
         Obligations.consult(JS.G(13), at)(Option.when(pairs.exists((tg, et) => arrayCovSlot(tg, et)))(()))
         Obligations.consult(JS.G(14), at)(Option.when(pairs.exists((tg, et) => boxingSlot(tg, et)))(()))
         Obligations.consult(JS.G(9),  at)(Option.when(pairs.exists((tg, et) => uncheckedSlot(tg, et)))(()))
@@ -2570,10 +2573,18 @@ object SpoonTir:
 
       /** the (formal, argument) pairs of a call — the slot list [[slotConsults]] wants at the two
         * call dispatches. Empty where the arities disagree, which is exactly the case `coerceArgs`
-        * declines to coerce. */
+        * declines to coerce.
+        *
+        * The formals are read BARE, exactly as `coerceArgsFixed` reads them one function away. A
+        * `catch` here would answer `Nil`, and `Nil` is not "unknown" — it is *this callee takes no
+        * parameters*, which makes every arity disagree and reports all three slot rows as not
+        * applying at every argument of that call (`CLAUDE.md` §4.6: a default the caller cannot
+        * distinguish from a real answer is a fabricated fact). If this reading throws, the
+        * translation about to run throws on the same call, so swallowing it here only removes the
+        * evidence. */
       private def argSlots(ex: CtExecutableReference[?], argEs: List[CtExpression[?]]):
           List[(CtTypeReference[?], CtExpression[?])] =
-        val formals = try ex.getParameters.asScala.toList catch { case _: Throwable => Nil }
+        val formals = ex.getParameters.asScala.toList
         if formals.sizeIs == argEs.size then formals.zip(argEs).filter(_._1 != null) else Nil
 
       private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term, arrayCov: Boolean = true,
@@ -2775,14 +2786,24 @@ object SpoonTir:
         *     `String[] <: Object[]` is java's own array covariance and the forward really is one;
         *   - a BARE `null` IS the array; `(String) null` is not. The cast names the COMPONENT type,
         *     which is exactly how java disambiguates the two. */
+      /* …and every one of the three reads below is BARE, because `varargPack` — the TRANSLATION
+         this predicate is about, which calls this very function — reads all three bare within ten
+         lines: `arr.getComponentType` in its own `comp`, `e.getTypeCasts` in `expr`'s cast fold,
+         `e.getType` through `ty`. A `catch` on the consult side of a value the translation reads
+         unwrapped can only ever hide a divergence between the two, and each default was a
+         statement rather than an absence: `getComponentType` failing answered *the components
+         agree* (so the argument passes through and java's `new Object[]{ x }` is not built),
+         `getTypeCasts` failing answered *the source wrote no cast*. `CLAUDE.md` §4.6. The `null`
+         handling is unchanged — an absent `getType` is normal under `noClasspath` and is what the
+         `collectFirst` declines on. */
       private def varargHoldsArray(comp: CtTypeReference[?], e: CtExpression[?]): Boolean =
         def componentAgrees(arr: CtArrayTypeReference[?]): Boolean =
-          val ac = try arr.getComponentType catch { case _: Throwable => null }
+          val ac = arr.getComponentType
           if ac == null || comp == null then true
           else if ac.isPrimitive || comp.isPrimitive then ac.getQualifiedName == comp.getQualifiedName
           else true
-        val casts = try e.getTypeCasts.asScala.toList catch { case _: Throwable => Nil }
-        val own   = try e.getType catch { case _: Throwable => null }
+        val casts = e.getTypeCasts.asScala.toList
+        val own   = e.getType
         (casts :+ own).collectFirst { case a: CtArrayTypeReference[?] => a }.exists(componentAgrees) ||
           (e match { case lit: CtLiteral[?] => lit.getValue == null && casts.isEmpty; case _ => false })
 
@@ -2805,7 +2826,11 @@ object SpoonTir:
         * right is the edge-case suite's job (`CatalogAreaGSpec`). */
       private def callConsults(ex: CtExecutableReference[?], argEs: List[CtExpression[?]], at: Origin)
                               (using Obligations): Unit =
-        val external = try isExternalCallee(ex) catch { case _: Throwable => false }
+        // BARE, for [[argSlots]]' reason: `coerceArgsFixed` and `passedThrough` both read
+        // `isExternalCallee` unwrapped, and `false` here is not "unknown" — it is *this callee is
+        // one of ours*, which is the fact JS-G37 and JS-G39/G40 are the two sides of, so a swallowed
+        // failure would move the consult from one row to its opposite (`CLAUDE.md` §4.6).
+        val external = isExternalCallee(ex)
         val ps       = declParams(ex)
         val variadic = ps.exists(l => l.nonEmpty && l.last.isVarArgs)
         val comp     = ps.filter(_ => variadic).map(_.last.getType).collect {
