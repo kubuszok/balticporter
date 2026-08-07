@@ -2999,9 +2999,18 @@ final class CollectionsTransform(
     * | source \ target | `JavaIterable` | `JavaCollection` |
     * |---|---|---|
     * | `Kind.Seq` (`Buffer`, `ArrayBuffer`, `Queue`, `ArrayDeque`) | `JavaIterable.from` | `JavaCollection.from` |
+    * | `Kind.Stack` (`JavaStack`) | `JavaIterable.from` | `JavaCollection.from` |
     * | `Kind.Set` (`mutable.Set` & co) | `JavaIterable.from` | `JavaCollection.fromSet` |
     * | `Kind.Map` (`mutable.Map` & co) | `JavaIterable.from` | REFUSED — see below |
     * | `Kind.Entry` (`Tuple2`) | n/a | n/a |
+    *
+    * `Kind.Stack` shares `Kind.Seq`'s row rather than having one of its own, and the reason is
+    * worth stating because the kind's whole existence argues the other way: `JavaStack` extends
+    * `mutable.ArrayBuffer`, so as a VALUE at a slot it simply IS a `Kind.Seq` and the subtyping
+    * licence is identical. The kind is a fact about the CALL REWRITE table — `peek()` means the
+    * opposite end from the `Deque` `peek` and one arm cannot answer both — and nothing about that
+    * reaches a boundary. Absent from these arms it matched no factory at all, and the boundary
+    * check then reported a seam that reads exactly like the honest refusals beside it.
     *
     * `JavaIterable.from` takes a `scala.collection.Iterable`, so every kind reaches it with nothing
     * added — and a scala `Map[K, V]` IS an `Iterable[(K, V)]`, which is exactly what java's
@@ -3088,20 +3097,28 @@ final class CollectionsTransform(
       // own type is usually `java.lang.Object`, which is why nothing static could see this seam —
       // the helper is identity for every value this engine did not put there.
       case _ if expectedSink && wantsUniversal && toJavaValueSym != SymId.None => toJavaValueSym
-      case Some(Kind.Seq | Kind.Set | Kind.Map) if wantsIs(javaIterableSym)    => iterableFromSym
-      case Some(Kind.Seq)                       if wantsIs(javaCollectionSym)  => collectionFromSym
+      // `Kind.Stack` rides with `Kind.Seq` in every arm below, and the licence is the SAME one and
+      // not a resemblance: `JavaStack` extends `mutable.ArrayBuffer`, so at a slot it IS a
+      // `Kind.Seq` value — `JavaIterable.from` takes a `scala.collection.Iterable` and
+      // `JavaCollection.from` a `scala.collection.Seq`, and it conforms to both. The kind exists
+      // for the CALL REWRITE table, where `peek()` means the opposite end from the `Deque` `peek`
+      // and one arm cannot be both (see [[Kind.Stack]]); nothing about that reaches a boundary.
+      // Left out, a stack at a bridged slot matched no factory and the boundary check reported it
+      // as a refusal indistinguishable from the honest ones beside it — `ENGINE-LIMITS.md` K2.5.
+      case Some(Kind.Seq | Kind.Stack | Kind.Set | Kind.Map) if wantsIs(javaIterableSym) => iterableFromSym
+      case Some(Kind.Seq | Kind.Stack)          if wantsIs(javaCollectionSym)  => collectionFromSym
       case Some(Kind.Set)                       if wantsIs(javaCollectionSym)  => collectionFromSetSym
       // `asJava` converts ONE level, exactly as `asScala` does, so a `Buffer[Buffer[String]]` at a
       // `java.util.List<java.util.List<String>>` formal would emit a wrap that lies one type
       // argument in. Refused and counted, the same way [[externalProducer]] refuses the mirror.
-      case Some(Kind.Seq | Kind.Set | Kind.Map)
+      case Some(Kind.Seq | Kind.Stack | Kind.Set | Kind.Map)
         if (wantsJava || wantsUniversal || wantsStream) && mentionsRetyped(actualT)     => SymId.None
-      case Some(Kind.Seq | Kind.Set | Kind.Map)
+      case Some(Kind.Seq | Kind.Stack | Kind.Set | Kind.Map)
         if (wantsJava || wantsUniversal) && toJavaSym != SymId.None                     => toJavaSym
       // …and a `Stream` FORMAL takes the collapse's result back to java. `Kind.Map` is excluded:
       // java's `Map` has no `stream()`, so no valid java sends one to such a slot — the same
       // asymmetry the `JavaCollection` row above records.
-      case Some(Kind.Seq | Kind.Set) if wantsStream && toStreamSym != SymId.None        => toStreamSym
+      case Some(Kind.Seq | Kind.Stack | Kind.Set) if wantsStream && toStreamSym != SymId.None => toStreamSym
       case _                                                                          => SymId.None
     if factory == SymId.None then actual
     else
