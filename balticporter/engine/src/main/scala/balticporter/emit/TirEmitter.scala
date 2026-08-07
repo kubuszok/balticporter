@@ -834,6 +834,22 @@ final class TirEmitter(
           s"$raw  (path as recorded — set Provenance.sourceRoot to relativise it)"
         case scala.None => raw // already relative: reproducible as it stands
 
+  /** EVERY class the program declares, at any depth — the one walk the whole-program passes below
+    * share, and the reason they are written as a `foreach` over a list rather than as thirteen
+    * recursions.
+    *
+    * Each of those recursions descended `cd.body`, which is the class's MEMBERS. That is one node
+    * short of java: a method-LOCAL class (JLS 14.3, catalog `JS-C30`) is a `BlockStatement` in a
+    * member's body, so a body walk never reaches it — and thirteen separate passes then answered
+    * about a type the program declares as if it were not there. Stated once, a node kind that
+    * starts appearing in a new position is a fix in one place (`ENGINE-LIMITS.md` F8), and
+    * `StandardTraversal` is the walk that is kept complete (CLAUDE.md §3).
+    *
+    * Enum-constant bodies are included by the same traversal, which is why the passes below no
+    * longer carry a second `enumCases.foreach` line beside the first. */
+  private lazy val allDeclaredClasses: List[Tree.ClassDef] =
+    program.units.flatMap(u => StandardTraversal.allClassDefs(u)(using program))
+
   /** every type symbol that appears as a parent (extends/mixin) anywhere in the program — an
     * all-static class in this set must stay a `class`, since an `object` can't be extended. */
   private lazy val extendedTypes: Set[SymId] =
@@ -842,13 +858,12 @@ final class TirEmitter(
       case TypeRepr.TypeRef(_, s)      => Some(s)
       case TypeRepr.AppliedType(tc, _) => headSym(tc)
       case _                           => None
-    def scan(cd: Tree.ClassDef): Unit =
+    allDeclaredClasses.foreach { cd =>
       cd.parents.foreach {
         case tt: TypeTree => headSym(tt.tpe).foreach(acc += _)
         case term: Term   => headSym(term.tpe).foreach(acc += _)
       }
-      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
-    program.units.foreach(scan)
+    }
     acc.toSet
 
   /** every type symbol the program INSTANTIATES — an all-static class in this set must stay a
@@ -1007,10 +1022,14 @@ final class TirEmitter(
       }
       .sortBy(_.subject)
 
+  /** every type this unit DECLARES — what `typeSym` reads to decide "in scope by simple name".
+    *
+    * `StandardTraversal.allClassDefs` and not a body recursion, because a METHOD-LOCAL class
+    * (`JS-C30`) stands in a member's block: read off `cd.body` alone the answer is "not declared
+    * here", and the emitter then names it through `nestedPath` — a projection through the enclosing
+    * METHOD, which names nothing at all. */
   private def declaredTypes(cd: Tree.ClassDef): Set[SymId] =
-    val acc = collection.mutable.Set[SymId](cd.symbol)
-    cd.body.foreach { case c: Tree.ClassDef => acc ++= declaredTypes(c); case _ => () }
-    acc.toSet
+    StandardTraversal.allClassDefs(cd)(using program).map(_.symbol).toSet
 
   /** head symbols of a class's parent types (extends + mixins). */
   private def parentSymsOf(cd: Tree.ClassDef): List[SymId] =
@@ -1056,8 +1075,7 @@ final class TirEmitter(
         case Some(published) => published.nonEmpty
         case scala.None      => cd.body.exists { case d: Definition => sym(d.symbol).flags.isStatic; case _ => false }
       if statics then acc += cd.symbol
-      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
-    program.units.foreach(scan)
+    allDeclaredClasses.foreach(scan)
     acc.toSet
 
   /** each type → the names of the `static` members it DECLARES itself. */
@@ -1066,8 +1084,7 @@ final class TirEmitter(
     def scan(cd: Tree.ClassDef): Unit =
       m(cd.symbol) = basePublishedStatics(cd.symbol).getOrElse(
         cd.body.collect { case d: Definition if sym(d.symbol).flags.isStatic => esc(sym(d.symbol).name) }.toSet)
-      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
-    program.units.foreach(scan); m.toMap
+    allDeclaredClasses.foreach(scan); m.toMap
 
   /** every static name a companion re-export of `s` delivers, mapped to the type that DECLARES it —
     * `s`'s own statics, then its ancestors' (nearest declaration wins, as in Java). The owner is
@@ -1096,8 +1113,7 @@ final class TirEmitter(
           (!d.isInstanceOf[Tree.DefDef] || !isInitBlock(d.asInstanceOf[Tree.DefDef])) =>
           esc(sym(d.symbol).name) -> d.symbol
       }.toMap
-      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
-    program.units.foreach(scan); m.toMap
+    allDeclaredClasses.foreach(scan); m.toMap
 
   /** The names a companion re-export must NOT forward: a parent static that did not render PUBLIC.
     *
@@ -1120,9 +1136,7 @@ final class TirEmitter(
   /** each type → its parent symbols (whole program). */
   private lazy val parentsBySym: Map[SymId, List[SymId]] =
     val m = collection.mutable.Map[SymId, List[SymId]]()
-    def scan(cd: Tree.ClassDef): Unit =
-      m(cd.symbol) = parentSymsOf(cd); cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
-    program.units.foreach(scan); m.toMap
+    allDeclaredClasses.foreach(cd => m(cd.symbol) = parentSymsOf(cd)); m.toMap
 
   /** does this type OR any ancestor have static members? (so its companion carries or re-exports
     * them — the export chain must pass THROUGH intermediates that add no statics of their own). */
@@ -1329,11 +1343,7 @@ final class TirEmitter(
     val out    = collection.mutable.Map[SymId, TypeRepr]()
     val done   = collection.mutable.Set[SymId]()
     val declOf = collection.mutable.Map[SymId, Tree.ClassDef]()
-    def index(cd: Tree.ClassDef): Unit =
-      declOf(cd.symbol) = cd
-      cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
-      cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => index(c); case _ => () })
-    program.units.foreach(index)
+    allDeclaredClasses.foreach(cd => declOf(cd.symbol) = cd)
     def methodsOf(cd: Tree.ClassDef) = cd.body.collect {
       case d: Tree.DefDef if sym(d.symbol).name != "<init>" => d
     }
@@ -2003,10 +2013,7 @@ final class TirEmitter(
     * question (JLS 12.4.2 step 9), asked of the DECLARED body. */
   private lazy val clinitBearers: Map[SymId, Tree.ClassDef] =
     val acc = collection.mutable.Map[SymId, Tree.ClassDef]()
-    def scan(cd: Tree.ClassDef): Unit =
-      if hasClinit(cd.body) then acc(cd.symbol) = cd
-      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
-    program.units.foreach(scan)
+    allDeclaredClasses.foreach(cd => if hasClinit(cd.body) then acc(cd.symbol) = cd)
     acc.toMap
 
   /** …and the ones whose force would be RE-ENTRANT, which the repair declines and
@@ -4655,10 +4662,8 @@ object TirEmitter:
         case _                           => scala.None
       cd.parents.flatMap { case tt: TypeTree => hs(tt.tpe); case t: Term => hs(t.tpe) }
     val declOf   = collection.mutable.Map[SymId, Tree.ClassDef]()
-    def index(cd: Tree.ClassDef): Unit =
-      declOf(cd.symbol) = cd
-      cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
-    p.units.foreach(index)
+    // `allClassDefs`, so a METHOD-LOCAL class (`JS-C30`) is indexed too — see `allDeclaredClasses`.
+    p.units.foreach(u => StandardTraversal.allClassDefs(u)(using p).foreach(cd => declOf(cd.symbol) = cd))
     // EFFECTIVE names: a parent's promoted param already renamed to `attributes$p` must read as
     // TAKEN here, or the child renames its own `attributes` to the same thing and the collision
     // simply moves up a level (measured on `DepthShader extends DefaultShader`). Requires the
@@ -4767,8 +4772,9 @@ object TirEmitter:
               ),
               MemberRenameRule)
         }
-      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
-    p.units.foreach(scan)
+    // driven over EVERY declared class, method-local ones included (`JS-C30`); the `scanned` memo
+    // and the parents-first recursion above are what keep §4.55's ordering, not the walk order.
+    p.units.foreach(u => StandardTraversal.allClassDefs(u)(using p).foreach(scan))
     if renames.isEmpty then p
     else p.rebuilt(symbols = SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))))
 
@@ -4804,11 +4810,8 @@ object TirEmitter:
     def headSym(t: TypeRepr): Option[SymId] = t match
       case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(tc, _) => headSym(tc); case _ => None
     val declOf  = collection.mutable.Map[SymId, Tree.ClassDef]()
-    def index(cd: Tree.ClassDef): Unit =
-      declOf(cd.symbol) = cd
-      cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
-      cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => index(c); case _ => () })
-    p.units.foreach(index)
+    // `allClassDefs`, so a METHOD-LOCAL class (`JS-C30`) is indexed too — see `allDeclaredClasses`.
+    p.units.foreach(u => StandardTraversal.allClassDefs(u)(using p).foreach(cd => declOf(cd.symbol) = cd))
     /** EFFECTIVE names — a renamed ancestor field contributes its NEW name, so a descendant asking
       * "is this taken?" sees what will actually be emitted. Requires parents-first scanning. */
     def eff(id: SymId): String = renames.getOrElse(id, nm(id))
@@ -4864,11 +4867,11 @@ object TirEmitter:
                 "chose, so renaming the symbol re-points exactly those and no others"),
             ),
             MemberRenameRule)
-        case c: Tree.ClassDef => scan(c)
         case _                => ()
       }
-      cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () })
-    p.units.foreach(scan)
+    // driven over EVERY declared class, method-local ones included (`JS-C30`); `scanned` and the
+    // parents-first recursion above are what keep §4.55's ordering, not the walk order.
+    p.units.foreach(u => StandardTraversal.allClassDefs(u)(using p).foreach(scan))
     // JS-C04 — a subclass field SHADOWS a superclass field: two storage cells in java, ONE
     // virtually-dispatched member in scala. Cited per renamed declaration, and cited whether or not
     // anything was renamed is NOT what happens: a citation is a statement that this pass decided
@@ -5172,8 +5175,8 @@ object TirEmitter:
       instMethodSyms(cd.symbol) = inst.map(_.symbol)
       statMethodsOf(cd.symbol) = stat.map(d => nm(d.symbol)).toSet
       cd.parents.foreach { case tt: TypeTree => headSym(tt.tpe).foreach(pp => childrenOf(pp) = cd.symbol :: childrenOf(pp)); case _ => () }
-      cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
-    p.units.foreach(index)
+    // `allClassDefs`, so a METHOD-LOCAL class (`JS-C30`) is indexed too — see `allDeclaredClasses`.
+    p.units.foreach(u => StandardTraversal.allClassDefs(u)(using p).foreach(index))
     def selfOrDescMethods(c: SymId, seen: Set[SymId] = Set.empty): Set[String] =
       if seen(c) then Set.empty
       else instMethodsOf.getOrElse(c, Set.empty) ++ childrenOf(c).flatMap(ch => selfOrDescMethods(ch, seen + c))
@@ -5292,11 +5295,11 @@ object TirEmitter:
             case TirEmitter.BaseName.Derive      => moveField(v)
             case TirEmitter.BaseName.Renamed(to) => renames(v.symbol) = to
             case TirEmitter.BaseName.Kept        => moveOwnMethods(v)
-        case c: Tree.ClassDef                           => scan(c)
         case _                                           => ()
       }
-      cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () })
-    p.units.foreach(scan)
+    // driven over EVERY declared class, method-local ones included (`JS-C30`) — see
+    // `allDeclaredClasses` for why a body walk is one node short of java.
+    p.units.foreach(u => StandardTraversal.allClassDefs(u)(using p).foreach(scan))
     // JS-C46 — java has TWO name namespaces and scala has one, so a field `x` beside a method `x()`
     // is legal there and illegal here. Cited per declaration this pass moved, in either direction:
     // the field can take the new name or the METHODS can, and both are the same decision.

@@ -454,6 +454,22 @@ So:
   zero is only as good as its coverage.
 - **Walk the tree with `StandardTraversal`**, never a private recursion — two of those four defects
   were hand-rolled traversals that stopped one node short.
+
+  **…and the recursion that reads RIGHT is the one to look at hardest, because a construct the
+  frontend REFUSES makes a short walk correct by accident.** Twenty-eight recursion lines across
+  nine files walked nested types as `cd.body.foreach { case c: Tree.ClassDef => scan(c) }` — the
+  class's MEMBERS — and every one of them was exact for as long as the only `Tree.ClassDef` in the
+  program was a type member. A method-LOCAL class is a `BlockStatement` (JLS 14.3), so the day the
+  frontend grows that node all twenty-eight answer *there is no nested type here* about a type the
+  program declares: the emitter names it through a projection that names nothing, the visibility
+  plan calls it a member, the constructor funnel plans nothing for it, and the package rename leaves
+  it in the upstream namespace. None of that is reachable while the construct is refused, so nothing
+  can measure it and no reviewer sees a bug. The rule is therefore not "walk with `StandardTraversal`
+  where a node kind can appear" but **where the IR says it can** — `Tree.ClassDef` has been a
+  `Statement` since the IR was written. State the walk ONCE
+  (`StandardTraversal.allClassDefs`, `TirEmitter.allDeclaredClasses`) so growing a node is one edit
+  and not twenty-two. Measured at **0 blast on all fifteen ports**, which is exactly what a latent
+  defect costs to fix and exactly why nobody had.
 - **Prefer running ported tests over any number of further compile fixes.** Assertions are the only
   evidence of behaviour this project can have.
 - **Read the emitted output**, not just the count, when confirming a fix.

@@ -216,8 +216,10 @@ object ClassInitTriggerCheck:
     (unforced ++ subclass).sortBy(f => (f.issue.toString, f.owner))
 
   /** every class DECLARED under `cd`, itself included. */
-  private def nested(cd: Tree.ClassDef): List[Tree.ClassDef] =
-    cd :: cd.body.collect { case c: Tree.ClassDef => nested(c) }.flatten
+  private def nested(cd: Tree.ClassDef)(using Program): List[Tree.ClassDef] =
+    // `allClassDefs`, not a `cd.body` recursion — see `TirEmitter.allDeclaredClasses`: a class body
+    // is one node short of java, because a method-LOCAL class (`JS-C30`) is a block statement.
+    StandardTraversal.allClassDefs(cd)
 
   /** THE ANCESTOR EDGES JLS 12.4.1 ITEM 7 ACTUALLY TRAVERSES, for the whole program — the walk both
     * the subclass census and the emitter's `nearestClinitAncestor` climb.

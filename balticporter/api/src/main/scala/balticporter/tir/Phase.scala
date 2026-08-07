@@ -326,6 +326,28 @@ object StandardTraversal:
     mapTerm(ph, t)
     read()
 
+  /** every `Tree.ClassDef` a unit CONTAINS — itself, its nested types, the types inside an enum
+    * constant's body, and a METHOD-LOCAL class standing in a member's block (JLS 14.3, catalog
+    * `JS-C30`).
+    *
+    * The hand-rolled `cd.body.foreach { case c: Tree.ClassDef => scan(c) }` recursions this exists
+    * to replace each stop at the class BODY, which is one node short of java: a local class is a
+    * `BlockStatement`, not a type member, so every one of them answers "no nested types here" about
+    * a type the program declares. That is CLAUDE.md §3's defect shape — a hand-rolled traversal
+    * that stops one node short — and it is invisible for as long as the frontend refuses the
+    * construct, because the answer is then right by accident.
+    *
+    * `transformClassDef` rather than the term `scanner`, for the reason stated above it: a scan
+    * that needs DEFINITIONS overrides the definition hook, and overriding one hook is what keeps
+    * this complete as node kinds are added. Bottom-up, like every other scan here. */
+  def allClassDefs(t: Tree.ClassDef)(using Program): List[Tree.ClassDef] =
+    val acc = List.newBuilder[Tree.ClassDef]
+    val ph = new Phase:
+      def name: String = "standard-traversal/scan-classes"
+      override def transformClassDef(x: Tree.ClassDef)(using Program): Tree.ClassDef = { acc += x; x }
+    mapClassDef(ph, t)
+    acc.result()
+
   private def scanner[A](init: A)(f: (A, Term) => A): (Phase, () => A) =
     var acc = init
     val ph = new Phase:

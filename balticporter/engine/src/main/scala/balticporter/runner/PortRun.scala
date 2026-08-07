@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -848,9 +848,11 @@ final case class PortRun(
     // carrying only units would answer `Unknown` for precisely the questions §8.3 exists for.
     // Dropped types are filtered out on the same rule as the units', which is why this shares one
     // expression with them rather than a second one that can drift.
+    // `allClassDefs`, not a `cd.body` recursion: a class body is the type's MEMBERS, one node
+    // short of java — a method-LOCAL class (`JS-C30`) stands in a member's block, and a port map
+    // that omits it claims the port emitted a type it did not.
     def emittedFqns(cd: Tree.ClassDef): List[String] =
-      program.symbolOf(cd.symbol).map(_.fullName).toList ++
-        cd.body.collect { case c: Tree.ClassDef => emittedFqns(c) }.flatten
+      StandardTraversal.allClassDefs(cd)(using program).flatMap(c => program.symbolOf(c.symbol).map(_.fullName))
     val portMap = PortMap.of(
       module       = label,
       engine       = balticporter.core.EngineInfo.fingerprint,
@@ -1473,9 +1475,8 @@ final case class PortRun(
     * ranges over, spelled once so two of them cannot disagree about which classes are this module's
     * (`ENGINE-LIMITS.md` D2). */
   private def emittedClasses(program: Program, translated: PortRun.Translated): List[Tree.ClassDef] =
-    def nested(cd: Tree.ClassDef): List[Tree.ClassDef] =
-      cd :: cd.body.collect { case c: Tree.ClassDef => nested(c) }.flatten
-    emittedUnits(program, translated.emitOrder).flatMap(nested)
+    // `allClassDefs` — see `emittedFqns` above; D2's ownership range must not stop at the body.
+    emittedUnits(program, translated.emitOrder).flatMap(u => StandardTraversal.allClassDefs(u)(using program))
 
   private def recordDroppedSuperArgs(program: Program, translated: PortRun.Translated): Unit =
     given Program = program
@@ -1590,9 +1591,9 @@ final case class PortRun(
     // `ParallelArray$ChannelDescriptor` renders its porter note inside that nested class instead of
     // nowhere — which is the whole point of recording a subject.
     val typesByFqn: Map[String, Tree.ClassDef] =
-      def all(cd: Tree.ClassDef): List[Tree.ClassDef] =
-        cd :: cd.body.collect { case c: Tree.ClassDef => all(c) }.flatten
-      program.units.flatMap(all).flatMap(u => program.symbolOf(u.symbol).map(_.fullName -> u)).toMap
+      program.units
+        .flatMap(u => StandardTraversal.allClassDefs(u)(using program))
+        .flatMap(u => program.symbolOf(u.symbol).map(_.fullName -> u)).toMap
     // Which declared keys FIRED, from the run's binder — see `firedKeys` above for why this is no
     // longer a tally accumulated on the policy value itself.
     val fired = translated.binder.bindings.filter(_.binding.isBound).map(_.entry).toSet
@@ -1738,8 +1739,7 @@ final case class PortRun(
   private def recordCtorFunnel(program: Program, translated: PortRun.Translated): Unit =
     given Program = program
     val plans = CtorFunnel.Plans(program, Some(translated.surface))
-    def nested(cd: Tree.ClassDef): List[Tree.ClassDef] =
-      cd :: cd.body.collect { case c: Tree.ClassDef => nested(c) }.flatten
+    def nested(cd: Tree.ClassDef): List[Tree.ClassDef] = StandardTraversal.allClassDefs(cd)
     // this run's OWN units, minus the ones it does not write: a dropped type's constructors are
     // replaced wholesale by injected Scala, so the funnel's answer about them describes nothing on
     // disk. (`translated.foreign` is excluded by construction — `emitOrder` is the other half.)

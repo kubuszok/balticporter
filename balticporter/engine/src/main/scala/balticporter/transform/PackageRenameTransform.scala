@@ -610,9 +610,11 @@ object PackageRenameTransform:
     * per-type rename names a nested type as readily as a top-level one, and a walk over `units`
     * alone would silently accept the key and record nothing. */
   private[transform] def allClasses(program: Program): List[Tree.ClassDef] =
-    def all(cd: Tree.ClassDef): List[Tree.ClassDef] =
-      cd :: cd.body.collect { case c: Tree.ClassDef => all(c) }.flatten
-    program.units.flatMap(all)
+    // `StandardTraversal.allClassDefs`, and NOT a `cd.body` recursion: a class body is the type's
+    // MEMBERS, which is one node short of java — a method-LOCAL class (JLS 14.3, `JS-C30`) stands
+    // in a member's block, and a rename that cannot reach it leaves one type of this program in
+    // the UPSTREAM namespace while every reference to it moved.
+    program.units.flatMap(u => StandardTraversal.allClassDefs(u)(using program))
 
   /** every symbol under `root` in the owner chain, `root` included. */
   private def under(program: Program, root: SymId): Set[SymId] =

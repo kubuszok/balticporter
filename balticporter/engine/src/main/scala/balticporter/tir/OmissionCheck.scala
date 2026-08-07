@@ -128,8 +128,10 @@ object OmissionCheck:
 
   def droppedSuperArgs(program: Program, units: List[Tree.ClassDef],
                   surface: Option[Surface] = scala.None): List[Finding] =
+    // `allClassDefs`, not a `cd.body` recursion: a class body is the type's MEMBERS, which is one
+    // node short of java — a method-LOCAL class (JLS 14.3, `JS-C30`) stands in a member's block.
     def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
-      cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
+      StandardTraversal.allClassDefs(cd)(using program)
 
     val plans = CtorFunnel.Plans(program, surface)
     units.flatMap(classes).flatMap { cd =>
@@ -164,8 +166,10 @@ object OmissionCheck:
 
   def droppedCauseMessages(program: Program, units: List[Tree.ClassDef],
                   surface: Option[Surface] = scala.None): List[Finding] =
+    // `allClassDefs`, not a `cd.body` recursion: a class body is the type's MEMBERS, which is one
+    // node short of java — a method-LOCAL class (JLS 14.3, `JS-C30`) stands in a member's block.
     def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
-      cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
+      StandardTraversal.allClassDefs(cd)(using program)
     val plans = CtorFunnel.Plans(program, surface)
     units.flatMap(classes).flatMap { cd =>
       CtorFunnel.ctorsOf(program, cd.body).filter(plans.causeMessageLost(cd, _)).map { d =>
@@ -203,8 +207,10 @@ object OmissionCheck:
 
   def promotedBodyOnEveryPath(program: Program, units: List[Tree.ClassDef],
                   surface: Option[Surface] = scala.None): List[Finding] =
+    // `allClassDefs`, not a `cd.body` recursion: a class body is the type's MEMBERS, which is one
+    // node short of java — a method-LOCAL class (JLS 14.3, `JS-C30`) stands in a member's block.
     def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
-      cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
+      StandardTraversal.allClassDefs(cd)(using program)
     val plans = CtorFunnel.Plans(program, surface)
     units.flatMap(classes).flatMap { cd =>
       val n = plans(cd).primaryBody.size
@@ -238,8 +244,10 @@ object OmissionCheck:
 
   def droppedNilaryCtors(program: Program, units: List[Tree.ClassDef],
                   surface: Option[Surface] = scala.None): List[Finding] =
+    // `allClassDefs`, not a `cd.body` recursion: a class body is the type's MEMBERS, which is one
+    // node short of java — a method-LOCAL class (JLS 14.3, `JS-C30`) stands in a member's block.
     def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
-      cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
+      StandardTraversal.allClassDefs(cd)(using program)
     val plans = CtorFunnel.Plans(program, surface)
     units.flatMap(classes).flatMap { cd =>
       plans.droppedNilaryCtor(cd).map { d =>

@@ -314,8 +314,10 @@ final class TestFrameworkTransform(
             "and registers zero tests.")
         case _ => ()
       }
-      cd.body.foreach { case c: Tree.ClassDef => scanParents(c); case _ => () }
-    program.units.foreach(scanParents)
+    // `allClassDefs`, not a `cd.body` recursion: a class body is the type's MEMBERS, one node short
+    // of java — a method-LOCAL class (`JS-C30`) stands in a member's block, and a JUnit-3 suite
+    // declared as one would be reported by nothing.
+    program.units.foreach(u => StandardTraversal.allClassDefs(u)(using program).foreach(scanParents))
     // Hamcrest: a whole second assertion vocabulary, reached either through the deprecated
     // `org.junit.Assert.assertThat` or through `org.hamcrest.MatcherAssert`.
     program.referenced.foreach { id =>

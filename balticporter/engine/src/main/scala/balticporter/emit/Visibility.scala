@@ -134,10 +134,10 @@ object Visibility:
     given Program = p
     val unitSyms  = p.units.map(_.symbol).toSet
     val classDefs = collection.mutable.LinkedHashMap.empty[SymId, Tree.ClassDef]
-    def index(cd: Tree.ClassDef): Unit =
-      classDefs(cd.symbol) = cd
-      cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
-    p.units.foreach(index)
+    // `allClassDefs` and not a body recursion: a METHOD-LOCAL class (`JS-C30`) stands in a member's
+    // block, so a walk over class bodies does not reach it — and a type missing from this index is
+    // one `decide` answers about as if it were a MEMBER.
+    p.units.foreach(u => StandardTraversal.allClassDefs(u).foreach(cd => classDefs(cd.symbol) = cd))
 
     /** ANONYMOUS classes, which are not `ClassDef`s at all — a `Tree.New` carries its body, so a
       * walk over class bodies finds none of them (CLAUDE.md §3, and the reason this uses

@@ -296,10 +296,12 @@ object CtorFunnel:
       * argument cannot refer to another parameter of the same list. `None` reads as what it is. */
     private val surface: Surface = surfaceView.getOrElse(TrivialSurface(program))
 
+    // `allClassDefs` and not a body recursion: a METHOD-LOCAL class (`JS-C30`) has its own
+    // constructors and stands in a member's block, so a walk over class bodies plans NOTHING for
+    // it — and a class the funnel does not plan emits every constructor as a SECONDARY one,
+    // delegating to a primary that was never synthesised.
     private val classes: List[Tree.ClassDef] =
-      def walk(cd: Tree.ClassDef): List[Tree.ClassDef] =
-        cd :: cd.body.collect { case c: Tree.ClassDef => walk(c) }.flatten
-      program.units.flatMap(walk)
+      program.units.flatMap(u => StandardTraversal.allClassDefs(u)(using program))
 
     /** …and the ones this run EMITS, which is the fixpoint's whole domain. */
     private val ownedClasses: List[Tree.ClassDef] = classes.filter(cd => surface.owns(cd.symbol))
