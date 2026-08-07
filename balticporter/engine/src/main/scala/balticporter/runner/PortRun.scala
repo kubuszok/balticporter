@@ -724,7 +724,7 @@ final case class PortRun(
         write(emitDir.resolve(full.replace('.', '/') + ".scala"), text)
         shipped += TriviaCheck.Unit(PortRun.real(Path.of(u.origin.javaPath)), text)
         writtenTexts += (full -> text)
-        PortRun.declaredSymbols(u, emittedSubjects)
+        PortRun.declaredSymbols(u, emittedSubjects)(using program)
         written += 1
     }
     // ---- the upstream NOTICE, beside the derived work (CLAUDE.md §4.57) --------------------
@@ -2261,17 +2261,29 @@ object PortRun:
     * in the file that was written". Not the symbol table filtered by owner: that also holds
     * parameters, locals and type parameters, none of which the emitter renders a note above, so a
     * decision about one would report as an uncovered finding forever. Read from the TREE, which is
-    * the thing that was emitted. */
-  def declaredSymbols(cd: Tree.ClassDef, into: collection.mutable.Set[SymId]): Unit =
-    into += cd.symbol
-    cd.body.foreach {
-      case c: Tree.ClassDef => declaredSymbols(c, into)
-      case d: Definition    => into += d.symbol
-      case _                => ()
-    }
-    cd.enumCases.foreach { ec =>
-      into += ec.symbol
-      ec.body.foreach { case c: Tree.ClassDef => declaredSymbols(c, into); case d: Definition => into += d.symbol; case _ => () }
+    * the thing that was emitted.
+    *
+    * WHICH class defs, through `StandardTraversal.allClassDefs` and never a `cd.body` recursion
+    * (§3): a METHOD-LOCAL class is a `BlockStatement` (JLS 14.3), not a type member, so a walk over
+    * class bodies answers *no nested types here* about a type the program declares — and the
+    * consequence HERE is the quietest one that shape has. The subject set is what
+    * `NoteCoverageCheck` joins on, and a decision about a subject that is not in it is EXCLUDED
+    * DELIBERATELY (a policy key that matched nothing, a type another module owns). So a local
+    * class's members were not an uncovered finding; they were a silent EXEMPTION from note
+    * coverage, indistinguishable from the three cases that exemption is for.
+    *
+    * The emission half moves with it, which is M8's rule: a local class is emitted through
+    * `TirEmitter.statArm`'s `ClassDef` arm into `classDef`, which renders `declNotes` for every
+    * non-top-level type and the ordinary `def`/`val` notes for its members. So the check can now
+    * ask, and the emitter can already answer. */
+  def declaredSymbols(cd: Tree.ClassDef, into: collection.mutable.Set[SymId])(using Program): Unit =
+    StandardTraversal.allClassDefs(cd).foreach { c =>
+      into += c.symbol
+      c.body.foreach { case d: Definition => into += d.symbol; case _ => () }
+      c.enumCases.foreach { ec =>
+        into += ec.symbol
+        ec.body.foreach { case d: Definition => into += d.symbol; case _ => () }
+      }
     }
 
   /** a path with symlinks resolved, falling back to lexical normalisation when it does not exist

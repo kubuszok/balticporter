@@ -62,7 +62,27 @@ object MarkerCheck:
   /** one marker, with the declaration it was minted inside. */
   final case class Sited(marker: Tree.Unportable, owner: SymId, ownerFqn: String, unit: SymId)
 
-  /** every marker in `units`, sited on the declaration that holds it. */
+  /** every marker in `units`, sited on the declaration that holds it.
+    *
+    * The siting is INNERMOST-FIRST and the mechanism is a CLAIMED IDENTITY SET, §4.58's rule for a
+    * layered harvest met one file over. `StandardTraversal.allClassDefs` is bottom-up, so a nested,
+    * LOCAL or anonymous class is offered its own markers before the type that contains it; each
+    * class keeps what no deeper one already took, and only then adds its own to the claim. A marker
+    * in a method-local class is therefore sited on THAT class's member rather than on the enclosing
+    * method — which is what a `cd.body` recursion could not do, since a local class is a
+    * `BlockStatement` (JLS 14.3) and not a type member, and the enclosing member's own term scan
+    * reaches straight through it.
+    *
+    * The claim is keyed on `markerKey` and NOT on node identity, because every walk here REBUILDS:
+    * `StandardTraversal` copies each node on the way through, so the `Unportable` a nested class's
+    * scan sees and the one the enclosing member's scan sees are equal values and different objects.
+    * `markerKey` is the same key `check` matches minted against surviving on, and it is
+    * distinguishing by construction — `Unportable.open` refuses a synthetic origin precisely so
+    * that it is.
+    *
+    * The claim is added AFTER a class's own rows are filtered, never during: two occurrences of one
+    * marker inside a SINGLE member are two rows and must stay two (a `switch` fallthrough lowering
+    * duplicates a case's tail). Only the CROSS-CLASS question is settled by the claim. */
   def inventory(program: Program, units: List[Tree.ClassDef]): List[Sited] =
     given Program = program
     units.flatMap { cd =>
@@ -77,29 +97,32 @@ object MarkerCheck:
           }
           case _ => Nil
         }
-      members(cd).flatMap((owner, ts) => inMember(owner, ts))
+      val claimed = collection.mutable.Set.empty[String]
+      StandardTraversal.allClassDefs(cd).flatMap { c =>
+        val rows = ownMembers(c).flatMap((owner, ts) => inMember(owner, ts))
+        val kept = rows.filterNot(r => claimed(r.marker.markerKey))
+        claimed ++= kept.map(_.marker.markerKey)
+        kept
+      }
     }
 
-  /** the member-level decomposition of a unit: every declaration that can hold a term, with the
-    * terms it holds. A nested class is recursed into, so a marker inside one is sited on ITS
-    * member rather than on the outer type. */
-  private def members(cd: Tree.ClassDef): List[(SymId, List[Tree])] =
-    def go(c: Tree.ClassDef): List[(SymId, List[Tree])] =
-      c.body.flatMap {
-        case d: Tree.DefDef   => List(d.symbol -> d.rhs.toList)
-        case v: Tree.ValDef   => List(v.symbol -> v.rhs.toList)
-        case n: Tree.ClassDef => go(n)
-        case s: Term          => List(c.symbol -> List(s))
-        case _                => Nil
-      } ++
-      // an enum CONSTANT is not in `body` — it is a field of its own, and a walk over the body
-      // alone reaches neither its constructor arguments nor its per-constant overrides. Sited on
-      // the CONSTANT, because that is the declaration a reader would open.
-      c.enumCases.flatMap { e =>
-        List(e.symbol -> (e.ctorArgs ++ e.body.collect { case t: Term => t })) ++
-          e.body.collect { case n: Tree.ClassDef => go(n) }.flatten
-      }
-    go(cd)
+  /** the member-level decomposition of ONE class: every declaration of ITS OWN that can hold a term,
+    * with the terms it holds. Deliberately NOT recursive — `inventory` walks the class defs with
+    * `StandardTraversal.allClassDefs`, which reaches a method-local class a body recursion cannot,
+    * and a second recursion here would site the same marker twice. */
+  private def ownMembers(c: Tree.ClassDef): List[(SymId, List[Tree])] =
+    c.body.flatMap {
+      case d: Tree.DefDef   => List(d.symbol -> d.rhs.toList)
+      case v: Tree.ValDef   => List(v.symbol -> v.rhs.toList)
+      case _: Tree.ClassDef => Nil
+      case s: Term          => List(c.symbol -> List(s))
+      case _                => Nil
+    } ++
+    // an enum CONSTANT is not in `body` — it is a field of its own, and a walk over the body
+    // alone reaches neither its constructor arguments nor its per-constant overrides. Sited on
+    // the CONSTANT, because that is the declaration a reader would open. Its nested classes are
+    // `allClassDefs`'s to reach, exactly as a body one's are.
+    c.enumCases.map(e => e.symbol -> (e.ctorArgs ++ e.body.collect { case t: Term => t }))
 
   /** THE CHECK. `before` is the frontend's own output and `after` the program the pipeline
     * produced; `units` restricts both to what this run OWNS (`ENGINE-LIMITS.md` D2 — a dependent's
@@ -129,8 +152,12 @@ object MarkerCheck:
     // legitimate deletion §6.5's risk row is about as an engine defect. That is the false positive
     // that would have made the whole lane un-baselineable.
     //
-    // By id, for the same two-namespace reason as the unit filter above.
-    val survivorIds = units.flatMap(members).map(_._1).toSet
+    // By id, for the same two-namespace reason as the unit filter above. And through
+    // `allClassDefs`, so a member of a METHOD-LOCAL class counts as a survivor: read through a
+    // `cd.body` recursion its declaration is not in the set at all, and a marker sited there would
+    // be filtered out of `erased` as "the declaration is gone" when it is standing right there.
+    val survivorIds = units.flatMap(u => StandardTraversal.allClassDefs(u)(using after))
+      .flatMap(ownMembers).map(_._1).toSet
 
     val erased = minted.filterNot(s => survivingKeys(s.marker.markerKey))
       .filter(s => survivorIds(s.owner))
