@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -958,6 +958,17 @@ final case class PortRun(
     say(s"SWITCH-NULL (reference-typed switches that fall out where java NPEs): ${switchNulls.size}")
     if switchNulls.nonEmpty then say(SwitchNullCheck.Issue.classification(SwitchNullCheck.Issue.NullFallsOut))
     println(SwitchNullCheck.summary(switchNulls))
+
+    // ---- JS-E06: java's UNBOXING CONVERSION emitted as a scala type ASSERTION ----
+    // A lane that reads 0 on every corpus port, and kept for `try-resource`'s reason: the frontend
+    // answers this cell from the java, so the only way to reach it is a PHASE that retypes an
+    // operand after the frontend decided — a path nobody has exercised, which is exactly the kind
+    // that gets dropped whole for the life of a backend. Over `checkedUnits` (ENGINE-LIMITS D2).
+    val castConversions = CastConversionCheck.check(program, checkedUnits)
+    CheckReport.record(CastConversionCheck.Name, castConversions.map(_.report))
+    say(s"CAST CONVERSION (java's unbox emitted as a scala assertion): ${castConversions.size}")
+    castConversions.map(_.issue).distinct.foreach(i => say(CastConversionCheck.Issue.classification(i)))
+    println(CastConversionCheck.summary(castConversions))
 
     // ---- JS-G41: java's HEAP POLLUTION, carried over with no scala warning and no annotation ----
     // A COUNTER and not a repair, which is the whole shape of this row: the port reproduces java's

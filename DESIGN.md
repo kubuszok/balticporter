@@ -643,6 +643,16 @@ unsoundness with no marker of any kind — are the ones a reader cannot otherwis
 rather than at a filter. Read it as the general shape: **`Unmechanised` is a claim about the
 DISCHARGE SURFACE, and a row that needs a counter rather than a rewrite still has one.**
 
+**And the second half of that lesson is that an `Unmechanised` sentence can be false about a surface
+THAT ALREADY EXISTS.** `JS-E06` read *"the frontend decides it while lowering an expression's casts,
+which is not an obligation dispatch, and the EMITTER half has none either"* — and the second clause
+was simply wrong: `Tree.Typed` enters the rendering dispatch, and `JS-G34` had been consulting there
+since chunk 10. Nothing could report it. An `Unmechanised` text is prose whose only reader is an
+agent, so it goes stale exactly like an evidence string, and the moment it is re-derived is the
+moment somebody tries to wire the row. **Re-read the sentence against the CODE before believing
+it** — which is the same instruction the fourth surface's wave arrived at from the other side, where
+three rows' sentences named a surface they did not want.
+
 **And an OBLIGATION is per NODE, so the consult goes in the ARM even where the RULE's convergence
 point is not one.** F8's rule — a rule stated once per arm is a rule the next arm will not have —
 says to put the rule where the arms converge, and area G is where that runs into the mechanism's own

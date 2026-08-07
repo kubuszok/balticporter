@@ -211,8 +211,16 @@ object Differences:
     // not a `Number` dispatch), so converting there would be unfaithful — see K17 face 3.
     Difference(eId(6), "a primitive cast is a CONVERSION in Java and an assertion in Scala once a phase has retyped the value",
       "JLS 5.5", "UNCITED — `asInstanceOf` converts at a statically primitive type and checks otherwise",
-      Silent, Partial("the FRONTEND's two readings are fixed — a cast expression's own type at the slot that boxes it, and a wrapper operand at a primitive target — but a value some later PHASE retypes after the frontend decided is still unguarded, and no corpus site has ever exercised it"),
-      el("K17"), Universal, "SpoonTir.expr via SpoonTir.castOf for the cast itself, and SpoonTir.coerce + SpoonTir.uncheckedGeneric reading SpoonTir.castType for the slot; TirEmitter's Tree.Typed arm renders what those decided", Unmechanised("the frontend decides it while lowering an expression's casts, which is not an obligation dispatch, and the EMITTER half has none either")),
+      // …and the ATTACHMENT is the emitter's, which the row denied it had. `Tree.Typed` DOES enter
+      // the rendering dispatch — `JS-G34` consults there — so "the EMITTER half has none either"
+      // was false about a surface that already existed. The consult is the CHECKABLE cell: a
+      // primitive target over a WRAPPER of a DIFFERENT primitive, which is the one shape the
+      // frontend's own answer (`SpoonTir.castOf`) makes unreachable from a translation and which
+      // therefore only a RETYPING can produce. It is COUNTED and not repaired, because the repair
+      // belongs where the retyping is.
+      Silent, Partial("the FRONTEND's two readings are fixed — a cast expression's own type at the slot that boxes it, and a wrapper operand at a primitive target — but a value some later PHASE retypes after the frontend decided is still unrepaired: the emitter COUNTS that cell (`cast-conversion`) and no corpus site has ever produced one"),
+      el("K17"), Universal, "SpoonTir.expr via SpoonTir.castOf for the cast itself, and SpoonTir.coerce + SpoonTir.uncheckedGeneric reading SpoonTir.castType for the slot; TirEmitter's Tree.Typed arm renders what those decided and CastConversionCheck counts what a later phase moved under it",
+      Rendered("Typed")),
     Difference(eId(7), "binary numeric promotion does not reach a GENERIC call boundary",
       "JLS 5.6.2", "UNCITED — weak conformance does not apply at a type-parameter slot",
       Loud, Partial("operators are free and the test-assertion shape is closed; the general call boundary is open"),

@@ -3945,6 +3945,25 @@ above justifies. **Blast: 0 members on all fifteen port artifacts** — no libra
 writes the shape, so the edge-case tests are the entire evidence in both directions, and no count,
 no compile and no suite could ever have moved for it.
 
+**AND THE CELL THAT IS LEFT IS NOW COUNTED, WHICH IS ALL IT CAN HONESTLY BE.** `JS-E06` stays
+`Partial` for a residue this entry named and nobody had instrumented: **a value some later PHASE
+retypes after the frontend has decided.** The frontend answers the cast from the type the operand has
+IN THE JAVA, so no translation can produce the shape — but a retyping moves an operand's static type
+and moves no cast, so an assertion that was right when it was built is java's CONVERSION by the time
+it is rendered. `TirEmitter`'s `Tree.Typed` arm is where both facts are in scope, and it turned out
+to be an obligation surface the row had denied it had: `Tree.Typed` enters the rendering dispatch
+and `JS-G34` already consults there. So the row attaches at `Rendered("Typed")` with the checkable
+cell as its predicate — a primitive target over a wrapper of a DIFFERENT primitive — and
+`CastConversionCheck` (`cast-conversion`) counts every one.
+
+**COUNTED and not repaired, deliberately.** The repair belongs where the retyping is: a phase that
+moves a slot's type owes the coercion at that slot, and a second unbox written at the emitter would
+be two mechanisms for one seam. **The lane reads 0 on all fifteen ports** and is kept for
+`try-resource`'s reason — that construct was dropped WHOLE for the life of a backend precisely
+because nothing counted a path nobody had exercised. Its non-vacuity is therefore a FIXTURE and not a
+corpus number: a five-line spec phase retypes one `Object` operand to `java.lang.Long` and the
+consult fires, which is the same evidence shape `JS-G12` has in the other direction.
+
 *Fix kind: (a) engine. FACE 2 CLOSED (catalog `JS-E05`, `SpoonTir.promotedBranch`); FACE 1 CLOSED
 (catalog `JS-G31`, `SpoonTir.polyExpression` + `SpoonTir.polyArgsUncast`); FACE 3 CLOSED (catalog
 `JS-E06`, `SpoonTir.coerce` and `SpoonTir.uncheckedGeneric` both reading `SpoonTir.castType`).

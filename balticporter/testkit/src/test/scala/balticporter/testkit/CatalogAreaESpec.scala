@@ -1,6 +1,7 @@
 package balticporter.testkit
 
 import balticporter.catalog.{Attaches, Differences, JS, Status}
+import balticporter.tir.{CastConversionCheck, Phase, Program, Term, Tree, TypeRepr}
 
 /** THE `JS-E` EDGE-CASE SUITE — one test per expression row the engine wires, at the shape the row
   * is about.
@@ -255,9 +256,12 @@ class CatalogAreaESpec extends PortSuite:
 
   // -- JS-E06: a cast expression's TYPE is the cast's, and the enclosing context converts THAT ----
   //
-  // No `assertConsults` anywhere below: `JS-E06` is `Unmechanised`, so there is no obligation
-  // dispatch to consult and the partition test at the foot of this file asserts exactly that. The
-  // emitted text is the whole of the evidence here, which is why every one of these asserts a
+  // The row attaches at `Rendered("Typed")` — a cast IS a node in the emitter's rendering dispatch,
+  // which the row denied for as long as it was `Unmechanised`. What the consult asks is the ONE
+  // checkable cell (a primitive target over a wrapper of a DIFFERENT primitive), so most of these
+  // fixtures consult it without firing: the frontend's answer has already put the conversion where
+  // java had it, and the cell that remains needs a RETYPING to reach — which is the last test here.
+  // The emitted text is still the bulk of the evidence, which is why every one of these asserts a
   // PRESENCE and not only an absence (`ENGINE-LIMITS.md` K17's own lesson about the E05 spec that
   // enshrined the wrong claim).
 
@@ -272,6 +276,7 @@ class CatalogAreaESpec extends PortSuite:
       """public class E {
         |  public Object f(double d) { return (long) Math.ceil(d); }
         |}""".stripMargin)
+    assertConsults(p, JS.E(6))
     assertEmits(p, "asInstanceOf[scala.Long].asInstanceOf[java.lang.Long]")
     assertNotEmits(p, "java.lang.Double")
   }
@@ -317,6 +322,11 @@ class CatalogAreaESpec extends PortSuite:
         |  double f(Object o) { return (double) o; }
         |  int g(Number n)    { return (int) n; }
         |}""".stripMargin)
+    // …and the consult is REACHED and does not fire, which is the assertion that separates "java
+    // does no conversion here" from "nobody asked": `Object` and `Number` are not wrappers, so the
+    // cell this row can check is not this one.
+    assertConsults(p, JS.E(6))
+    assertNoFindings(CastConversionCheck.check(p.after, p.after.units).map(_.report))
     assertEmits(p, "o.asInstanceOf[scala.Double]")
     assertEmits(p, "n.asInstanceOf[scala.Int]")
     // no runtime dispatch, and in particular not the `Number` accessors a conversion would need
@@ -350,6 +360,39 @@ class CatalogAreaESpec extends PortSuite:
     val p = port("public class E { int f(Character c) { return (int) c; } }")
     assertEmits(p, "c.charValue().asInstanceOf[scala.Int]")
     assertNotEmits(p, "c.intValue()")
+  }
+
+  test("JS-E06 — the RESIDUE is a value a later PHASE retyped, and the emitter COUNTS it") {
+    // The cell this row's `Partial` names, and the reason it has never been measured: the frontend
+    // decides a cast from the type the operand has IN THE JAVA (`SpoonTir.castOf`), so a wrapper at
+    // a primitive target is already `v.doubleValue()` before the emitter sees it. What no frontend
+    // reading can answer for is a RETYPING that lands after it — a phase moves an operand's static
+    // type and moves no cast, so an assertion that was right when it was built is java's CONVERSION
+    // by the time it is rendered, with a green compile and no count able to see it.
+    //
+    // No corpus port has the shape — this lane reads 0 on all fifteen — which is exactly why the
+    // FIXTURE is the evidence. The phase below is the smallest thing that produces it: it retypes
+    // one `Object`-typed operand to `java.lang.Long` and touches nothing else, which is what a
+    // retyping phase does to a slot.
+    val retype = new Phase:
+      def name: String = "spec/retype-operand"
+      override def transformIdent(i: Tree.Ident)(using p: Program): Term =
+        val long = p.symbols.all.find(_.fullName == "java.lang.Long").map(_.id)
+        if p.symbolOf(i.sym).exists(_.name == "o") && long.isDefined
+        then i.copy(tpe = TypeRepr.TypeRef(TypeRepr.NoPrefix, long.get))
+        else i
+    val src =
+      """public class E {
+        |  int f(Object o) { return (int) o; }
+        |  Long keep() { return null; }
+        |}""".stripMargin
+    // the PREMISE, asserted so the test cannot pass for the wrong reason: without the phase the
+    // frontend's own answer stands and there is nothing here to count.
+    val plain = port(src)
+    assertNoFindings(CastConversionCheck.check(plain.after, plain.after.units).map(_.report))
+    val p = port(src, retype)
+    assertConsults(p, JS.E(6), fired = true)
+    assertFinds(CastConversionCheck.check(p.after, p.after.units).map(_.report), "UnboxAsserted")
   }
 
   // -- JS-E14: string concatenation with a NON-`String` left operand ------------------------------
@@ -439,9 +482,10 @@ class CatalogAreaESpec extends PortSuite:
   test("every JS-E row is either wired, declared unmechanised, or owes nothing — and says which") {
     val byKind = Differences.expressions.groupBy(_.attaches match
       case _: Attaches.Lowered      => "lowered"
+      case _: Attaches.Rendered     => "rendered"
       case _: Attaches.Cited        => "cited"
       case _: Attaches.Unmechanised => "unmechanised"
-      case _: Attaches.NoObligation => "none")
+      case _                        => "none")
     // Every row is in exactly one bucket by construction; what this asserts is that no bucket has
     // silently swallowed the others. A wave that marked area E `Unmechanised` to keep a lane green
     // is what this test exists to catch.

@@ -3423,6 +3423,15 @@ final class TirEmitter(
       // JS-G34 — java's INTERSECTION in a cast (`(A & B) x`, JLS 4.9) becomes scala's `A & B`. Read
       // off the cast's own TARGET, which is the type this arm is about to render.
       Obligations.consult(JS.G(34), ty.origin)(Option.when(target.isInstanceOf[TypeRepr.AndType])(()))
+      // JS-E06 — a cast to a PRIMITIVE over a WRAPPER of a DIFFERENT primitive is java's UNBOXING
+      // CONVERSION (JLS 5.1.8 + 5.1.2) and `asInstanceOf` is an assertion that throws. The frontend
+      // answers it from the type the operand has in the JAVA (`SpoonTir.castOf`), so a node still
+      // carrying that shape HERE is one a later PHASE retyped — which is the residue the row's own
+      // `Partial` names and the one nothing had ever counted. Consulted at the node the row is
+      // about, and counted by `CastConversionCheck` through the same predicate, so the obligation
+      // and the number cannot disagree about which casts the row is about.
+      Obligations.consult(JS.E(6), ty.origin)(
+        CastConversionCheck.crossTypeUnbox(ty)(using program).map(_ => ()))
       if polyOperand(e) then s"(${operand(e, i)}: ${tpe(target)})"
       else s"${operand(e, i)}.asInstanceOf[${tpe(target)}]" // Java cast
     // JS-G39 at the position `argTerms` does NOT reach — a `Tree.Repeated` outside an argument list
