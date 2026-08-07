@@ -746,10 +746,19 @@ object Differences:
         "mechanism, so there is no dispatch and no single phase that could own the citation; what " +
         "measures it is the `collection-retarget` lane (`RetargetBoundaryCheck`), which runs beside " +
         "the obligation log and not through it")),
+    // The SE16 half is REFUSED rather than absent, and the two words are not interchangeable: an
+    // arm exists, it has read the pattern, and what it does is mint a marker with the reason on it.
+    // The reason is `ENGINE-LIMITS.md` T18 — java's binding is FLOW-scoped (JLS 6.3.1), so no
+    // lexical `val` placement is faithful and a hoisted `var` diverges under capture — and the one
+    // shape with an exact image is named there rather than half-built here.
     Difference(gId(21), "`instanceof` is restricted to REIFIABLE types, and SE16 added a pattern binding",
-      "JLS 4.7, 15.20.2", "UNCITED — Scala patterns bind, but the frontend has no node for the Java form",
-      Mixed, Partial("the reifiable-type restriction is a non-difference; the SE16 pattern BINDING has no representation — zero CtTypePattern hits"),
-      Predicted, Universal, "Tir.Tree.InstanceOf; no CtTypePattern arm anywhere", Rendered("InstanceOf")),
+      "JLS 4.7, 15.20.2", "UNCITED — Scala patterns bind, but the binding's SCOPE has no image",
+      Mixed, Partial("the reifiable-type restriction is a non-difference; the SE16 pattern BINDING " +
+        "is REFUSED per site with a marker — java flow-scopes the binding and scala has no " +
+        "expression that binds outside itself"),
+      el("T18"), Universal,
+      "Tir.Tree.InstanceOf; SpoonTir's instanceof arm marks a CtPattern operand rather than throwing",
+      Rendered("InstanceOf")),
     Difference(gId(22), "a raw member access through an ERASED RECEIVER types the CALL, not just the receiver",
       "JLS 4.8", "UNCITED — the receiver view and the member's type through it must be produced together",
       Loud, Handled, el("G21"), Universal, "SpoonTir.erasedRecvResult; ErasedReceiverResultSpec",

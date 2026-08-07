@@ -119,13 +119,13 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // from the list above, arrived at the other way round: there a probe retired a suspicion, here
     // a lowering retired a refusal.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.MarkedUnportable),
-      List("CtCasePattern"))
-    // What is LEFT here is the four sites whose SHAPE a term-level marker cannot take: a `Constant`,
-    // a `ValDef`, the type operand of an `instanceof`, a lambda with no body. Each is a real mint
-    // site wanting a marker of its own kind, and putting a term where the tree needs a declaration
-    // would be worse than the throw.
-    assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.RefusedLoudly),
-      List("CtRecordPattern", "CtTypePattern", "CtUnnamedPattern"))
+      List("CtCasePattern", "CtRecordPattern", "CtTypePattern", "CtUnnamedPattern"))
+    // EMPTY, and the last three to leave are the correction worth keeping. The comment that used to
+    // stand here named "the type operand of an `instanceof`" as a shape a term-level marker cannot
+    // take — true of the OPERAND and false of the construct, because the whole `instanceof` is a
+    // boolean expression and marking there refuses the same thing at the size of an expression.
+    // No kind a java source can produce now costs a whole compilation unit.
+    assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.RefusedLoudly), Nil)
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.NeverVisited),
       List("CtModule", "CtModuleRequirement", "CtPackage", "CtPackageDeclaration", "CtPackageExport",
         "CtProvidedService", "CtReceiverParameter", "CtRecordComponent", "CtUsedService"))

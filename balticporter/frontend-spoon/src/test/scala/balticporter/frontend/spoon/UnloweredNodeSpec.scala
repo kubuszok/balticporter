@@ -83,6 +83,39 @@ class UnloweredNodeSpec extends munit.FunSuite:
     assert(SpoonKinds.byName.contains("CtCasePattern"))
   }
 
+  test("an `instanceof` PATTERN marks the whole EXPRESSION — the unit survives, and JS-G21 says why") {
+    // The last kind to leave `RefusedLoudly`. `SpoonKinds` used to name the type operand of an
+    // `instanceof` as a shape a term-level marker cannot take, which is true of the OPERAND and
+    // false of the construct: the whole `instanceof` is a boolean expression. The refusal itself
+    // is unchanged (`ENGINE-LIMITS.md` T18 — java's binding is flow-scoped and scala has no
+    // expression that binds outside itself); what changed is that it costs one expression.
+    val p = SpoonTir.fromSource(
+      """package p;
+        |public class Iof {
+        |  public int untouched(int a) { return a + 1; }
+        |  public boolean f(Object o) { return o instanceof String s && s.length() > 2; }
+        |}
+        |""".stripMargin)
+
+    val ms = markers(p)
+    assertEquals(ms.size, 1, s"expected exactly one marker, got ${ms.map(_.what)}")
+    assertEquals(ms.head.kind, UnportableKind.UnmodelledNodeKind("CtTypePattern"))
+    assertEquals(ms.head.diff.map(_.toString), Some("JS-G21"))
+    assert(ms.head.origin.line > 0, ms.head.origin.toString)
+    // the whole point: the unit TRANSLATED. Before this it threw and took the sibling with it.
+    assert(p.symbols.all.map(_.name).toSet.contains("untouched"))
+    // …and the marker says WHY, in the emitted report — a refusal a reader cannot act on is the
+    // failure `CLAUDE.md` §4.45 is about.
+    assert(ms.head.what.contains("FLOW-SCOPED"), ms.head.what)
+  }
+
+  test("an ORDINARY `instanceof` is untouched — the marker arm is a narrowing, not a refusal") {
+    val p = SpoonTir.fromSource(
+      "package p; public class I2 { public boolean f(Object o) { return o instanceof String; } }")
+    assertEquals(markers(p), Nil)
+    assertEquals(scan(p) { case i: Tree.InstanceOf => i }.size, 1)
+  }
+
   test("a SWITCH EXPRESSION mints NOTHING — `JS-S09` is lowered, and the negative is the evidence") {
     // The construct the two tests above used to be written against. Asserted rather than deleted,
     // because a marker inventory that shrinks silently is one nobody can tell from a mint site that

@@ -42,11 +42,18 @@ object SpoonKinds:
     /** reaches `SpoonTir.unsupported`, which throws — so the whole COMPILATION UNIT fails to
       * translate, not one node. That is the honest cost of one `record` in a 135-file library.
       *
-      * What is left here after `DESIGN.md` §6.2's marker landed are the refusal points whose SHAPE
-      * a term-level marker cannot take: a `Constant`, a `ValDef`, the type operand of an
-      * `instanceof`. Each is a real mint site and each wants a marker of its own kind; none of them
-      * is one an expression wrapper can stand in for, and pretending otherwise would put a term
-      * where the tree needs a declaration */
+      * NO KIND IS HERE ANY MORE, and the last one to leave is the correction worth keeping: the
+      * list used to name "the type operand of an `instanceof`" as a shape a term-level marker
+      * cannot take, which is true of the OPERAND and false of the construct — the whole
+      * `instanceof` is a boolean expression, and marking there refuses exactly the same thing at
+      * the size of an expression rather than the size of a file. The reading generalises: when a
+      * refusal site cannot carry a marker, ask what the nearest ENCLOSING node is before concluding
+      * the construct is unmarkable (`DESIGN.md` §6.2's subject-vs-site rule).
+      *
+      * `SpoonTir.unsupported` still exists and is still right for what remains — the blind spots
+      * INSIDE arms that do dispatch (a `Constant` shape the literal arm does not know, a
+      * try-with-resources resource that is not a declaration, a lambda with no body), none of which
+      * is a node KIND and so none of which this census can hold */
     case RefusedLoudly
 
     /** reaches a mint site that produces a `Tree.Unportable` marker: the node is refused PER SITE,
@@ -219,10 +226,15 @@ object SpoonKinds:
     Kind("CtRecord", Absent(AbsorbedSilently, "extends CtClass, so classDef treats it as a plain class and typeFlags has no isRecord — and PROBED (AbsorbedProbeSpec) the result is worse than a plain class: the components and accessors DO arrive, and the emitted class extends java.lang.Record without implementing its three abstract members, which RefChecks rejects on the day the port reaches zero typer errors"), Some(c(43))),
     Kind("CtAnnotationMethod", Absent(AbsorbedSilently, "extends CtMethod — and PROBED (AbsorbedProbeSpec) the ELEMENT ITSELF is dropped, not merely its `default` clause: an emitted @interface has no members at all, so a ported annotation cannot take the argument T16 now lets a type carry"), scala.None),
 
-    Kind("CtTypePattern", Absent(RefusedLoudly, "reached as the instanceof right operand, which refuses — and that site is one of the four whose SHAPE a term-level marker cannot take"), Some(g(21))),
-    Kind("CtRecordPattern", Absent(RefusedLoudly, "the instanceof right operand still THROWS — a term marker cannot stand where the tree wants a type operand; as a CASE LABEL it now mints a marker instead, and the loudest reachable outcome is what this claim states"), Some(s(10))),
-    Kind("CtCasePattern", Absent(MarkedUnportable, "a CtExpression, not a CtPattern, so switchStmt's case-expression map refuses it"), Some(s(10))),
-    Kind("CtUnnamedPattern", Absent(RefusedLoudly, "both pattern paths above — the case-label one marks, the instanceof one still throws"), Some(s(10))),
+    // The THREE PATTERN NODES, and what changed about all three: the marker for an `instanceof`
+    // pattern is minted at the WHOLE `instanceof`, which is a boolean expression, rather than at
+    // the type operand, which is a position a term marker cannot stand in. The refusal is unchanged
+    // and is `ENGINE-LIMITS.md` T18's — java's binding is flow-scoped and no lexical `val`
+    // placement is faithful — but its SIZE is now one expression rather than one file.
+    Kind("CtTypePattern", Absent(MarkedUnportable, "reached as the instanceof right operand (JLS 15.20.2); the binding is FLOW-scoped and is refused, and the marker stands at the enclosing boolean expression"), Some(g(21))),
+    Kind("CtRecordPattern", Absent(MarkedUnportable, "both pattern paths — as a CASE LABEL through switchArms, and as the instanceof right operand; the loudest reachable outcome is what this claim states"), Some(s(10))),
+    Kind("CtCasePattern", Absent(MarkedUnportable, "a CtExpression, not a CtPattern, so switchStmt's case-expression map refuses it — and the marker is minted at the enclosing CtCase, because Spoon leaves this wrapper UNPOSITIONED and a marker must point at real java"), Some(s(10))),
+    Kind("CtUnnamedPattern", Absent(MarkedUnportable, "both pattern paths above"), Some(s(10))),
 
     Kind("CtPackage", Absent(NeverVisited, "the builder enters at the top-level types; package names are recovered from qualified names"), scala.None),
     Kind("CtPackageDeclaration", Absent(NeverVisited, "not read; its comments survive only through the positional file-header harvest"), scala.None),

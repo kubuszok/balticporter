@@ -2146,6 +2146,36 @@ ancestors are followed only where the program declares them.
 Catalog `JS-C22` (the phases) and `JS-C23` (the generic tie-break), both `Partial`: the risk is
 counted, the choice is not modelled.*
 
+### T18. An `instanceof` PATTERN BINDING is FLOW-SCOPED, and no lexical placement of a `val` is faithful — **REFUSED, and the refusal moved from unit-fatal to per-site**
+
+SE16's `if (o instanceof String s) use(s)` binds `s` by a rule Scala has no counterpart for, and the
+gap is not the pattern — Scala's `case s: String =>` binds perfectly — it is the SCOPE. JLS 6.3.1
+gives the binding a FLOW scope: it is in scope exactly where the pattern has definitely matched, and
+that region is computed from the surrounding control flow rather than from any bracket in the source.
+
+```java
+if (!(o instanceof String s)) return;
+use(s);                              // `s` is in scope AFTER the `if`, because the other path left
+```
+
+Three placements were considered and each fails on a shape java writes:
+
+| placement | fails on |
+|---|---|
+| a `val` where the `instanceof` stands | `a && o instanceof T s` — java does not evaluate the operand when `&&` short-circuits, and a `val` bound ahead of the test does |
+| a `var` hoisted to the enclosing block, assigned on a successful test | **CAPTURE.** Java's binding is a fresh effectively-final variable per evaluation, so `if (o instanceof T s) rs.add(() -> use(s))` inside a loop captures a different value each iteration; a Scala closure over a hoisted `var` captures the VARIABLE, and every lambda then sees the last value. No compile error and no moved count — §4.4's defect class exactly |
+| rewrite the enclosing `if` to a `match` — `o match { case s: T => …; case _ => … }` | the one shape with an exact image, and it is not takeable as written: `TirEmitter.caseNeedsBoundary` is a fact about a java SWITCH (an unlabelled `break` in a case body means *leave the case*), so a `Tree.Match` minted from an `if` inside a LOOP would wrap that loop's `break` in an arm boundary and steal it. Taking this subset means teaching the emitter that a `Match` has two provenances, which is a node field and a measured step of its own — and it still covers only the sub-subset where the binding is not read after the `if`, which the flow scope above puts outside it |
+
+So the construct is REFUSED. What changed is the SIZE of the refusal: the type operand of an
+`instanceof` is a position a term-level marker cannot stand in — which is why this was one of
+`SpoonTir.unsupported`'s sites and cost the whole compilation unit — but the WHOLE `instanceof` is a
+boolean EXPRESSION, and that shape a term marker takes exactly. `SpoonKinds.absentBy(RefusedLoudly)`
+goes **3 -> 0** and the three pattern kinds become `MarkedUnportable`: the port still does not ship
+(the emission gate refuses on any open marker), and the failure is now one expression rather than one
+file.
+
+*Fix kind: (a). The subset with an exact image is named above and is not a rider on this entry.*
+
 ---
 
 ## 4. Collections, shims and the JDK boundary

@@ -3559,10 +3559,28 @@ object SpoonTir:
           val stringified = Obligations.consult(JS.E(14), originOf(b))(stringConcatLeft(b))
           val identity    = Obligations.consult(JS.E(1), originOf(b))(referenceIdentity(b))
           if b.getKind == BinaryOperatorKind.INSTANCEOF then
-            val tp = b.getRightHandOperand match
-              case ta: CtTypeAccess[?] => tpe(ta.getAccessedType)
-              case other               => unsupported(other, "instanceof right operand")
-            Tree.InstanceOf(expr(b.getLeftHandOperand), tt(tp, b), ty(b), originOf(b))
+            b.getRightHandOperand match
+              case ta: CtTypeAccess[?] =>
+                val tp = tpe(ta.getAccessedType)
+                Tree.InstanceOf(expr(b.getLeftHandOperand), tt(tp, b), ty(b), originOf(b))
+              // SE16's PATTERN form — `o instanceof String s`, JLS 15.20.2. REFUSED, and the
+              // refusal is the whole content of `ENGINE-LIMITS.md` T18: the pattern is not the
+              // gap (scala's `case s: T =>` binds perfectly), the SCOPE is. JLS 6.3.1 gives the
+              // binding a FLOW scope — `if (!(o instanceof T s)) return; use(s);` puts it in scope
+              // AFTER the `if` — so no lexical placement of a `val` is faithful, and a hoisted
+              // `var` diverges under CAPTURE, which is a §4.4 defect with no compile error.
+              //
+              // MARKED rather than thrown, which is the half that changed. The TYPE OPERAND is a
+              // position a term-level marker cannot stand in, and that is why this was one of
+              // `unsupported`'s sites and cost the whole compilation unit — but the WHOLE
+              // `instanceof` is a boolean EXPRESSION, and that shape a term marker takes exactly.
+              // The kind, and with it the catalog row, still names the pattern node.
+              case p: CtPattern =>
+                unlowered(b, s"an `instanceof` PATTERN binding — ${SpoonKinds.nameOf(p.getClass)} " +
+                  "(JLS 15.20.2). Java's binding is FLOW-SCOPED (JLS 6.3.1), so no lexical `val` " +
+                  "placement is faithful and a hoisted `var` diverges under capture; see " +
+                  "ENGINE-LIMITS T18 for the three placements measured", ty(b), about = p)
+              case other => unsupported(other, "instanceof right operand")
           else
             stringified.orElse(identity).getOrElse(
               opText(b.getKind).fold(unknownOp(b.getKind, b, ty(b)))(
