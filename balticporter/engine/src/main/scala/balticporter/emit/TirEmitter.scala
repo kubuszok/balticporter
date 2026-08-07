@@ -2501,8 +2501,17 @@ final class TirEmitter(
     *
     * So the image is a plain `final class` with each of javac's four members written out, which
     * reproduces every one of those cells exactly (all measured against `javac`, both languages run).
-    * What it does NOT reproduce is `Class.isRecord`/`getRecordComponents`, because scalac emits no
-    * JVM record — that is a residue no image can close and it is what the DECISION records.
+    *
+    * ==THREE RESIDUES, all on the DECISION==
+    *
+    * `Class.isRecord`/`getRecordComponents`, because scalac emits no JVM record whatever the
+    * `extends` clause says. And two more that the EXTRACTOR's shape decides, both measured against
+    * javac 22.0.2 and neither closable by anything in this file: a scala `unapply` returning a
+    * tuple is a FUNCTION, so it calls EVERY accessor before one component pattern is tried, where
+    * java calls them left to right and stops at the first failing component (`[a]`, not `[a, b]`);
+    * and it PROPAGATES what an accessor throws, where java wraps it in a `java.lang.MatchException`
+    * with the original as the cause. The exact image is name-based extractors matched lazily, which
+    * scala has no form for. Recorded, so the port's own reader can find them.
     *
     * ==What each member reads==
     *
@@ -2664,6 +2673,17 @@ final class TirEmitter(
           // false and `getRecordComponents` answers null, which a framework that discovers records
           // reflectively WILL act on.
           "reflective" -> "isRecord=false;getRecordComponents=null",
+          // …and the two residues of the DECONSTRUCTION, which the extractor's shape decides and
+          // no assertion in this file can close. A scala `unapply` returning a tuple is a
+          // FUNCTION: it evaluates every accessor before one component pattern is tried, and it
+          // propagates whatever an accessor throws. Java's record pattern does neither (JLS
+          // 14.30.2, both measured against javac 22.0.2). Recorded rather than repaired: the exact
+          // image is name-based extractors matched lazily, which scala has no form for at a
+          // pattern this engine also has to keep readable.
+          "patternAccessors" -> ("ALL, eagerly (java calls them left to right and STOPS at the " +
+            "first component pattern that fails)"),
+          "patternThrow" -> ("raw (java wraps an accessor's exception in java.lang.MatchException, " +
+            "with the original as its cause)"),
           "why" -> ("javac derives equals/hashCode/toString from a record's components and scala " +
             "derives nothing from a plain class; a case class derives all three with different " +
             "answers, so each is written out to java's own contract"),

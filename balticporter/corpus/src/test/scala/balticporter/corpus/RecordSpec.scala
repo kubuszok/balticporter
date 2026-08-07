@@ -44,8 +44,11 @@ class RecordSpec extends PortSuite:
     assertEquals(ds.head.detail.get("components"), Some("2"))
     assertEquals(ds.head.detail.get("synthesised"), Some("equals,hashCode,toString,unapply"))
     assertEquals(ds.head.detail.get("declared"), Some("none"))
-    // the residue no image closes, named on the decision so a reader of the emitted class can find it
+    // the THREE residues no image closes, named on the decision so a reader of the emitted class
+    // can find them — see the probes at the bottom, which measure the last two in both languages.
     assert(clue(ds.head.detail("reflective")).contains("isRecord=false"))
+    assert(clue(ds.head.detail("patternAccessors")).contains("ALL, eagerly"))
+    assert(clue(ds.head.detail("patternThrow")).contains("MatchException"))
     // …and the note beside the code (§4.575), which is the only form §4.45's agent can find
     assertEmits(p, "/* porter: record-members reason=universal rule=record-members(JS-C43)")
   }
@@ -302,6 +305,67 @@ class RecordSpec extends PortSuite:
     (new One1("z"): scala.Any) match
       case One1(s) => assertEquals(s, "z")
       case _       => fail("the Tuple1 extractor did not match")
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // THE TWO DECONSTRUCTION RESIDUES — measured in both languages, recorded rather than repaired
+  // ---------------------------------------------------------------------------------------------
+
+  /** the emitted image of a record whose accessors are OBSERVABLE — the shape the two probes below
+    * need, and the shape java permits (an explicit accessor is JLS 8.10.3's own allowance). */
+  final class Obs(a$p: java.lang.Object, b$p: java.lang.Object) extends java.lang.Record:
+    var a$field: java.lang.Object = null
+    var b$field: java.lang.Object = null
+    this.a$field = a$p
+    this.b$field = b$p
+    def a(): java.lang.Object = { Obs.log += "a"; this.a$field }
+    def b(): java.lang.Object = { Obs.log += "b"; this.b$field }
+    override def equals(o$rec: scala.Any): scala.Boolean = o$rec match
+      case that$rec: Obs =>
+        java.util.Objects.equals(this.a$field, that$rec.a$field) &&
+        java.util.Objects.equals(this.b$field, that$rec.b$field)
+      case _ => false
+    override def hashCode(): scala.Int = 0
+    override def toString(): java.lang.String = "Obs[]"
+
+  object Obs:
+    val log = collection.mutable.ListBuffer.empty[String]
+    def unapply(r$rec: Obs): (java.lang.Object, java.lang.Object) = (r$rec.a(), r$rec.b())
+
+  test("PROBE: the extractor calls EVERY accessor, where java stops at the first failing component") {
+    // javac 22.0.2 on the same shape: `o instanceof P(String s, Object b)` against a P whose first
+    // component is an Integer logs `[a]` — `b()` is never invoked (JLS 14.30.2 matches component
+    // patterns left to right and fails at the first). A scala `unapply` returning a tuple is a
+    // FUNCTION, so both accessors run before any component pattern is tried.
+    Obs.log.clear()
+    (new Obs(java.lang.Integer.valueOf(1), "s"): scala.Any) match
+      case Obs(_: java.lang.String, _) => fail("the first component should not have matched")
+      case _                           => ()
+    assertEquals(Obs.log.toList, List("a", "b"))
+  }
+
+  /** the same image with an accessor that throws — the second residue. */
+  final class Boom(a$p: java.lang.Object) extends java.lang.Record:
+    var a$field: java.lang.Object = null
+    this.a$field = a$p
+    def a(): java.lang.Object = throw new java.lang.IllegalStateException("boom")
+    override def equals(o$rec: scala.Any): scala.Boolean = o$rec.isInstanceOf[Boom]
+    override def hashCode(): scala.Int = 0
+    override def toString(): java.lang.String = "Boom[]"
+
+  object Boom:
+    def unapply(r$rec: Boom): scala.Tuple1[java.lang.Object] = scala.Tuple1(r$rec.a())
+
+  test("PROBE: an accessor that throws propagates RAW, where java wraps it in a MatchException") {
+    // Measured: javac answers `java.lang.MatchException` with the `IllegalStateException` as its
+    // cause (JLS 14.30.2). There is no scala form that re-wraps from inside an `unapply` without
+    // making every extractor a `try`, so the difference is recorded on the decision instead.
+    val t = intercept[java.lang.IllegalStateException] {
+      (new Boom("x"): scala.Any) match
+        case Boom(_) => ()
+        case _       => ()
+    }
+    assertEquals(t.getMessage, "boom")
   }
 
   test("PROBE: a REFERENCE component prints through String.valueOf(Object), which a char[] needs") {

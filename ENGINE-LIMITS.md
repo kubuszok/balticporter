@@ -2306,7 +2306,7 @@ fixture.
 CLOSED. The unnamed pattern is not a fix at all; it is a claim corrected, and it stays refused
 because nothing can reach the refusal.*
 
-### T20. A ported record is not a JVM RECORD, and no image can make it one — **the one residue `JS-C43` cannot close**
+### T20. A ported record is not a JVM RECORD, and its extractor is a FUNCTION — **three residues `JS-C43` cannot close**
 
 The declaration lowers exactly: `equals`, `hashCode`, `toString` and the accessors answer, value for
 value, what `javac` answers (29 observations run side by side, byte-identical, over all eight
@@ -2336,7 +2336,27 @@ not either (measured: `Pt(1,2).getClass.isRecord` is false for a scala case clas
 behavioural divergences for zero gain here. The honest answers are the note and, for a port whose
 consumer really does reflect on records, a hand-written shim at that seam.
 
-*Fix kind: (a) — and it is a REFUSAL, not a gap. Nothing in scala can emit the attribute.*
+**AND THE DECONSTRUCTION HAS TWO MORE, which are about the extractor's SHAPE rather than the class
+file's.** JLS 14.30.2 makes a record pattern a matching PROCESS; a scala `unapply` returning a tuple
+is a FUNCTION, and the two differ wherever an accessor is observable — which java expressly permits
+(JLS 8.10.3 lets a record write its own accessor, and `JS-C43` deconstructs through exactly that
+member). Both measured against javac 22.0.2 and against the emitted image, side by side:
+
+| asked of a record pattern | java | the emitted extractor |
+|---|---|---|
+| which accessors run when the FIRST component pattern fails | only the first — `[a]` | **all of them** — `[a, b]`, because the tuple is built before one component pattern is tried |
+| what an accessor's exception arrives as | `java.lang.MatchException`, original as `getCause` | **the original, raw** |
+
+Neither is repairable at the extractor: lazy, per-component matching is name-based extractors, which
+scala has no form for, and re-wrapping would make every derived `unapply` a `try` whose own failure
+mode is worse than the difference. Both are recorded on the `RecordMembers` decision
+(`patternAccessors=`, `patternThrow=`) and therefore reach the emitted file as a porter note — the
+same answer, and the same reason, as the reflective row above. What they are NOT is exotic: an
+accessor with a side effect is rare, but an accessor that THROWS is an ordinary validating record,
+and the difference there is a caught `MatchException` in java becoming an uncaught one in the port.
+
+*Fix kind: (a) — and all three are REFUSALS, not gaps. Nothing in scala emits the attribute, and
+nothing in scala matches a product lazily by component.*
 
 ---
 

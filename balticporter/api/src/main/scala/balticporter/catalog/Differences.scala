@@ -619,19 +619,28 @@ object Differences:
     // at all and with accessors whose field read does not resolve, which in scala's one namespace
     // makes each accessor call ITSELF.
     //
-    // `Partial` and not `Handled`, for one residue no image can close: scalac emits no JVM record,
-    // so the class file carries no `Record` attribute. `x instanceof java.lang.Record` still answers
-    // true — the emitted class really does extend it — while `getClass.isRecord` answers false and
-    // `getRecordComponents` answers null, which a framework that discovers records reflectively acts
-    // on. Recorded on the `RecordMembers` decision at every emitted record.
+    // `Partial` and not `Handled`, for THREE residues no image can close, all recorded on the
+    // `RecordMembers` decision at every emitted record. One is the class file: scalac emits no JVM
+    // record, so it carries no `Record` attribute — `x instanceof java.lang.Record` still answers
+    // true (the emitted class really does extend it) while `getClass.isRecord` answers false and
+    // `getRecordComponents` answers null, which a framework that discovers records reflectively
+    // acts on. The other two are the DECONSTRUCTION, and they are about the extractor's shape: a
+    // record pattern is a matching PROCESS and a tuple-returning `unapply` is a FUNCTION, so the
+    // port calls EVERY accessor where java stops at the first failing component, and an accessor's
+    // exception arrives raw where java wraps it in a `MatchException`. Both measured in both
+    // languages; neither is repairable without name-based lazy extractors, which scala has no form
+    // for.
     Difference(cId(43), "Java `record`",
       "JLS 8.10", "UNCITED — a case class differs in accessor naming, in three facets of `toString`, in `hashCode`, in float equality and in what its extractor reads",
       Loud,
       Partial("the declaration, the components, the canonical and compact constructors, the " +
         "accessors and javac's own equals/hashCode/toString are reproduced exactly — probed " +
-        "value by value against `javac`. What no image can carry is the REFLECTIVE record: scalac " +
+        "value by value against `javac`. What no image can carry is the REFLECTIVE record — scalac " +
         "emits no JVM record, so `Class.isRecord` is false and `getRecordComponents` is null on the " +
-        "emitted class, and a framework that discovers records reflectively sees none"),
+        "emitted class, and a framework that discovers records reflectively sees none — and the two " +
+        "cells where a record pattern is a matching PROCESS and a tuple `unapply` is a FUNCTION: " +
+        "every accessor runs where java stops at the first failing component, and an accessor's " +
+        "exception arrives raw where java wraps it"),
       Predicted, Universal,
       "SpoonTir.typeFlags's isRecord, SpoonTir.recordComponents/canonicalised/accessorBodies, and " +
         "TirEmitter.recordMembers, which writes equals/hashCode/toString over the FIELDS and an " +
