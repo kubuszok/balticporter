@@ -52,10 +52,10 @@ class SbtGenRuntimeSpec extends munit.FunSuite:
       val plan = SbtGen.emitPort(root, spec, List(new CollectionsTransform), RuntimeMode.Vendored)
       val build = Files.readString(root.resolve("build.sbt"))
       assert(!build.contains(RuntimeArtifact.artifact), clue(build))
-      // four: three shims (CLAUDE.md §4.5: java's `AbstractCollection` has no scala counterpart a
-      // ported class can EXTEND) plus `JavaCollections`, the mirror of `java.util.Collections`'
-      // statics.
-      assertEquals(plan.sources.size, 4)
+      // five: three shims (CLAUDE.md §4.5: java's `AbstractCollection` has no scala counterpart a
+      // ported class can EXTEND), `JavaCollections`, the mirror of `java.util.Collections`'
+      // statics, and `JavaStack`, `java.util.Stack`'s target.
+      assertEquals(plan.sources.size, 5)
       assertEquals(plan.sources.get(s"${RuntimeArtifact.Package}.JavaIterator"),
                    Some(RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator")))
       // …and this did NOT write them. The build generator cannot know which source set the run is

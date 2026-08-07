@@ -193,6 +193,20 @@ final class CollectionsTransform(
     * string it always had and no baseline moves. */
   def surfaceFingerprint: String =
     val parts = List(
+      // …and the MAPPING TABLE itself, which is not a constructor parameter and is surface all the
+      // same. Everything else here differs between two INSTANCES; this differs between two ENGINE
+      // BUILDS, and §1.5's question — "can these two modules' emitted signatures compile together?"
+      // — is asked of a base that was ported months ago against a dependent ported today. A base
+      // whose `Vector` fields are `java.util.Vector` and a dependent whose are `ArrayBuffer` emit
+      // exactly the incompatible pair `SurfacePolicy` exists to catch, and NOTHING else in the port
+      // map could see it: `engine=` is a released version string that does not move between
+      // commits, and the source digest is about the base's JAVA, which did not change at all.
+      //
+      // A DIGEST rather than the table, because the fingerprint is compared and published, never
+      // read: a hundred `k->v` pairs in every port map's header is a diff nobody reads. It is
+      // rendered unconditionally, so it is also the answer to "did this change reach the
+      // fingerprint" — a mapping edit that left every published map identical would mean it had not.
+      Some("mapping=" + CollectionsTransform.mappingDigest),
       scala.Option.when(retarget.nonEmpty)(
         "retarget=" + retarget.toList.sorted.map((k, v) => s"$k->$v").mkString(",")),
       // A CARRIER is the same fact one type argument in, and it is surface for the plainest reason
@@ -202,9 +216,9 @@ final class CollectionsTransform(
       scala.Option.when(reifiedCarriers.nonEmpty)(
         "carriers=" + reifiedCarriers.toList.sorted.mkString(",")),
     ).flatten
-    // …rendered only when non-empty, so a port that declares neither has the string it always had
-    // and no baseline moves.
-    if parts.isEmpty then scope.fingerprint else s"${scope.fingerprint};${parts.mkString(";")}"
+    // `retarget` and `carriers` are rendered only when non-empty, so a port that declares neither
+    // adds nothing; `mapping` is always there, which is why there is no longer an empty case.
+    s"${scope.fingerprint};${parts.mkString(";")}"
 
   /** this phase retypes onto `balticporter.runtime` — declared once, so the run derives the port's
     * dependency, its vendored sources and the emitter's external-parent table from it. */
@@ -331,6 +345,10 @@ final class CollectionsTransform(
     * throw, so both go through an `Option` and `orNull` — the difference is invisible in a
     * compile and shows up as a MatchError-shaped failure at runtime (CLAUDE.md §4.4). */
   private var removeHeadOptionSym, headOptionSym, orNullSym, prependSym: SymId = SymId.None
+  /** `java.util.Stack.empty()` — a RENAME rather than a paren strip: scala's predicate is
+    * `isEmpty`, and `empty` on a `Buffer` is the companion's factory, so leaving the name alone
+    * emits something that means "an empty buffer" where java asked "is this one empty". */
+  private var isEmptySym: SymId = SymId.None
   /** java 8 `Collection.forEach(Consumer)` — scala's is `foreach`, differing only in case, which
     * makes the failure read like a typo rather than a missing mapping. */
   private var foreachSym: SymId = SymId.None
@@ -627,6 +645,7 @@ final class CollectionsTransform(
     headOptionSym       = mint("headOption", "headOption")
     orNullSym           = mint("orNull", "orNull")
     prependSym          = mint("prepend", "prepend")
+    isEmptySym          = mint("isEmpty", "isEmpty")
     putSym       = mint("put", "put")     // scala `mutable.Map.put`: returns the PREVIOUS value
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
     fromJavaSym  = staticSyms.getOrElse("fromJava", SymId.None)
@@ -3050,6 +3069,20 @@ final class CollectionsTransform(
       // Left alone, this is a call to a member that does not exist.
       case ("forEach", List(f), _) => Some(call(recv, foreachSym, List(f), t, so))
       case _ if onShim             => None
+      // ---- `java.util.Stack`, whose target DECLARES four of its five (see [[Kind.Stack]]) ----
+      //
+      // `push`/`pop`/`peek`/`search` are members of the shim with java's own names, arity and
+      // contracts, so the faithful rewrite is NO rewrite — and saying so explicitly is the point of
+      // these two arms rather than an omission. Left to fall through, `peek()` would reach the
+      // `Kind.Seq` arm below, which answers the DEQUE `peek`: the FIRST element and `null` when
+      // empty, where java's `Stack.peek()` is the LAST and THROWS. That is a wrong answer at both
+      // ends of one call with no compile error, and it is the reason `Kind.Stack` exists at all.
+      //
+      // `empty()` is the one member that cannot be java's: scala's collection API already declares
+      // `empty` — the FACTORY, with an incompatible result type — so the shim may not redeclare it
+      // and the call is renamed to the predicate that asks the same question.
+      case ("empty", Nil, Kind.Stack) => Some(Tree.Select(recv, isEmptySym, t.tpe, t.origin))
+      case ("push" | "pop" | "peek" | "search", _, Kind.Stack) => None
       // `m.entrySet()` is the VIEW of the map as its (key, value) pairs, and a scala `Map[K, V]`
       // already IS an `Iterable[(K, V)]` — so the view is the map itself. `m.toSet` would be the
       // unfaithful choice: java's `entrySet` is live, and a snapshot silently changes what a
@@ -3198,6 +3231,16 @@ final class CollectionsTransform(
       case ("addAll" | "putAll", List(c), _)    => Some(infix(recv, opPlusPlusEq, List(c), t, so))// xs ++= c
       case ("remove", List(x), Kind.Set)        => Some(infix(recv, opMinusEq, List(x), t, so)) // xs -= x
       case ("containsKey", List(key), Kind.Map) => Some(call(recv, containsSym, List(keyArg(key, recv)), t, so))
+      // …and a STACK is a `List` for everything the five LIFO arms above did not take, because java
+      // says so: `Stack extends Vector extends List`, and the target is the same `Buffer` a
+      // `java.util.List` maps to. So `stack.get(i)`, `stack.remove(x)`, `stack.subList(a, b)` and
+      // the rest are answered by the arms already above, re-entered at `Kind.Seq`.
+      //
+      // A RE-ENTRY and not a second copy of the table: two spellings of `get` is two things to keep
+      // in step, which is the mistake `superIsThis`'s own retry avoids the same way. It terminates
+      // because `Kind.Seq` is not `Kind.Stack`, and the arms keyed on `_` have already been offered
+      // this call at `Kind.Stack` — they answer identically either way.
+      case _ if k == Kind.Stack                 => rewrite(Kind.Seq, recv, m, so, t)
       case _                                    => None
     if !onSuper then out
     else
@@ -3560,10 +3603,23 @@ object CollectionsTransform:
     case Seq, Map, Set
     /** a `java.util.Map.Entry`, mapped to `Tuple2` — `getKey`/`getValue` are `_1`/`_2`. */
     case Entry
+    /** a `java.util.Stack`, which is a [[Seq]] PLUS five LIFO members whose names scala does not
+      * have on a `Buffer` — and one of which, `peek`, means the opposite end from the `Deque`
+      * `peek` the [[Seq]] arms already answer for. That collision is the whole reason this is its
+      * own kind rather than another Seq entry: java's `Stack.peek()` is the LAST element and throws
+      * when empty, java's `Deque.peek()` is the FIRST and returns null, and one arm cannot be both.
+      *
+      * Everything ELSE a stack can be sent is a `List` member (it extends `Vector`), so `rewrite`
+      * falls back to [[Seq]] once the five have declined — see its own arm for why that is a
+      * fallback rather than a second copy of the table. */
+    case Stack
 
   val JavaIteratorFqn = s"${RuntimeArtifact.Package}.JavaIterator"
   val JavaIterableFqn = s"${RuntimeArtifact.Package}.JavaIterable"
   val JavaCollectionFqn = s"${RuntimeArtifact.Package}.JavaCollection"
+  /** `java.util.Stack`'s target — a `mutable.ArrayBuffer` carrying java's own LIFO five. See the
+    * [[typeMap]] entry for why the stdlib type is the wrong answer and why this is not a rewrite. */
+  val JavaStackFqn = s"${RuntimeArtifact.Package}.JavaStack"
   /** `java.util.Collections`' statics — a receiver-less utility class, which is why they need their
     * own home rather than a rewrite keyed on a receiver's collection kind. */
   val JavaCollectionsFqn = s"${RuntimeArtifact.Package}.JavaCollections"
@@ -3616,6 +3672,39 @@ object CollectionsTransform:
     // `mutable.Queue` extends `ArrayDeque` extends `Buffer`, so every Seq rewrite above still
     // applies and `removeHeadOption` exists — which `ListBuffer` does not have.
     "java.util.LinkedList"    -> ("scala.collection.mutable.Queue", Kind.Seq),
+    // `Vector` and `Stack` are java's two LEGACY sequences, and both are ABSENT from Scala.js —
+    // `Stack` from Scala Native too — so a port that leaves them alone compiles on the JVM and does
+    // not link anywhere else. Neither had a corpus site when the mapping was written except
+    // `Stack`, which has one.
+    //
+    // `Vector` is an `ArrayBuffer` for `ArrayList`'s reasons and preserves the relation java
+    // declares (`Vector implements List`, and `ArrayBuffer <: Buffer`). What it does NOT preserve is
+    // the `synchronized` on every method — a fact about the JDK type that no scala collection has
+    // and that a port relying on it would lose silently. It is stated here and in the platform
+    // survey rather than approximated, because the alternative (wrapping every access) is a
+    // performance decision this engine has no standing to take on a caller's behalf. Vector's
+    // ENUMERATION-era members (`addElement`, `elementAt`, `setElementAt`, `elements`) have no arm:
+    // they reach `jdk-surface` as a hole, which is the loud answer, and adding an arm apiece is one
+    // line each the day a port has one.
+    "java.util.Vector"        -> ("scala.collection.mutable.ArrayBuffer", Kind.Seq),
+    // `Stack` is a SHIM, and NOT `scala.collection.mutable.Stack` — the target the platform survey
+    // recommended, and which this mapping deliberately does not take. Java's
+    // `Stack extends Vector extends List`: its top is its LAST element, `get(0)` is the bottom, and
+    // its iterator runs bottom-to-top. Scala's `mutable.Stack` is an `ArrayDeque` whose `push`
+    // PREPENDS, so its top is element 0 and it iterates top-to-bottom. The two agree on
+    // `push`/`pop`/`peek` in isolation and disagree on every LIST-shaped read of the same object,
+    // with no compile error anywhere — CLAUDE.md §4.4's shape at a type, and precisely the failure
+    // mode the survey names ("an AVAILABILITY gap reproduced without the SEMANTIC guarantee").
+    //
+    // Nor is it `ArrayBuffer`, which was built first and cannot work: [[kindOf]] is keyed on the
+    // TARGET, so two java types sharing one map to the same rewrites, and `java.util.ArrayList` is
+    // already there. A `Stack` receiver would then be a receiver the phase cannot tell from a list
+    // — and `peek()` at `Kind.Seq` is the DEQUE `peek`, the FIRST element and `null` when empty.
+    //
+    // Its own type, so java's five can simply BE members with java's names and java's contracts;
+    // `JavaStack extends ArrayBuffer` is what keeps `Stack <: Vector <: List` on the scala side.
+    // See [[Kind.Stack]] for the one member that cannot be java's.
+    "java.util.Stack"         -> (JavaStackFqn, Kind.Stack),
     // `java.util.Queue` maps to `ArrayDeque` and NOT to `mutable.Queue`, because the two libraries
     // order these types OPPOSITELY: java has `ArrayDeque <: Deque <: Queue`, scala has
     // `Queue <: ArrayDeque`. Sending the interface to `mutable.Queue` and the class to
@@ -3697,6 +3786,17 @@ object CollectionsTransform:
     "java.util.LinkedHashSet" -> ("scala.collection.mutable.LinkedHashSet", Kind.Set),
     "java.util.TreeSet"       -> ("scala.collection.mutable.TreeSet", Kind.Set),
   )
+
+  /** [[typeMap]] as ONE stable string — the half of [[CollectionsTransform.surfaceFingerprint]]
+    * that belongs to the ENGINE rather than to an instance.
+    *
+    * Sorted by java FQN and carrying both the target and the kind, because both decide emitted
+    * text: a key that moved from `Kind.Seq` to `Kind.Stack` changes what `peek()` becomes without
+    * changing one type name. Declared here beside the table so a new entry cannot be added without
+    * passing it. */
+  private[transform] def mappingDigest: String =
+    balticporter.tir.TirPrinter.sha256(
+      typeMap.toList.map((k, v) => s"$k->${v._1}:${v._2}").sorted.mkString(",")).take(16)
 
   /** Can `JavaCollections.fromJava`/`toJava` express a LIVE view for this retype target?
     *
@@ -3934,6 +4034,18 @@ object CollectionsTransform:
     Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values", "putIfAbsent"),
     Kind.Set.toString   -> Set("remove", "toArray"),
     Kind.Entry.toString -> Set("getKey", "getValue"),
+    // a Stack's own five, PLUS everything `Kind.Seq` covers — the re-entry arm at the foot of
+    // `rewrite` really does answer those for a stack receiver, so listing them here is the table
+    // saying what the phase does rather than what one arm's pattern spells (and §"err WIDE" in
+    // `CollectionsHandledDerivationSpec`: a name assigned to FEWER kinds than its arm covers makes
+    // `jdk-surface` report a hole that is filled).
+    // A Stack's own five — `empty` renamed, the other four DECLARED BY THE SHIM, which is a
+    // rewrite the phase performed exactly as much as any other: `jdk-surface` asks "does this
+    // phase answer for that member", and "the target already has it" is an answer.
+    Kind.Stack.toString -> (Set("push", "pop", "peek", "search", "empty") ++
+                            Set("get", "set", "remove", "addLast", "offer", "offerLast",
+                                "addFirst", "offerFirst", "poll", "pollFirst", "peekFirst", "element",
+                                "toArray", "subList")),
   )
 
   /** This phase's record, in the shape [[balticporter.tir.JdkSurfaceCheck]] reads.
@@ -3986,7 +4098,8 @@ object CollectionsTransform:
     * (`Predicate.PredicateIterator`, `CharArray.appendWithSeparators`, `ModelLoader.loadSync`)
     * would stop type-checking. Two types, one decision.
     */
-  val runtimeTypes: Set[String] = Set(JavaIteratorFqn, JavaIterableFqn, JavaCollectionFqn, JavaCollectionsFqn)
+  val runtimeTypes: Set[String] =
+    Set(JavaIteratorFqn, JavaIterableFqn, JavaCollectionFqn, JavaCollectionsFqn, JavaStackFqn)
 
   /** What [[runtimeSources]] BRINGS, for a consumer that must reason about the injected
     * supertypes it cannot parse. `JavaIterator.remove` is concrete (java's own documented default),

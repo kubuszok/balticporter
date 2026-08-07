@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-ecs-test	engine=balticporter/0.1.0-SNAPSHOT	sources=4763fb93c6d8686a	files=18	policy=f467e99ccbf06ca5
+# balticporter port map	schema=3	module=sge-ecs-test	engine=balticporter/0.1.0-SNAPSHOT	sources=4763fb93c6d8686a	files=18	policy=79921672e4f9a27f
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.ashley.core.ComponentClassFactory	sge.ecs.ComponentClassFactory	Renamed	-		0		form=class parents=java.lang.ClassLoader primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.ashley.core.ComponentOperationHandlerTests	sge.ecs.ComponentOperationHandlerTests	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=BooleanInformerMock,ComponentSpy
@@ -107,6 +107,7 @@ type		balticporter.runtime.JavaCollection	Added	-		0
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaStack	Added	-		0		
 member	com.badlogic.ashley.core.ComponentClassFactory#createComponentType(String)	sge.ecs.ComponentClassFactory#createComponentType(String)	Renamed	-	com/badlogic/ashley/core/ComponentClassFactory.java	25	86513dad698c1047	
 member	com.badlogic.ashley.core.ComponentOperationHandlerTests#<stmt1>	sge.ecs.ComponentOperationHandlerTests#<stmt1>	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandlerTests.java	32	e9d3463819de4d1c	
 member	com.badlogic.ashley.core.ComponentOperationHandlerTests#<stmt2>	sge.ecs.ComponentOperationHandlerTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandlerTests.java	47	ac521cb518264fb3	

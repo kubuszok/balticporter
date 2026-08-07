@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-vfx	engine=balticporter/0.1.0-SNAPSHOT	sources=9c70572f550ff922	files=44	policy=fb9ed0b2ef214c87
+# balticporter port map	schema=3	module=sge-vfx	engine=balticporter/0.1.0-SNAPSHOT	sources=9c70572f550ff922	files=44	policy=b69852d8f5939a03
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	core.src.com.crashinvaders.vfx.VfxManager	sge.vfx.VfxManager	Renamed	-		0		companion=yes flags=final form=class parents=java.lang.AutoCloseable primary=(Format,int,int) primaryKind=unique-root primaryVis=public secondaries=(Format) statics=MAX_FRAME_BUFFER_SIDE,constrainFrameBufferSize,tmpVec
 type	core.src.com.crashinvaders.vfx.VfxRenderContext	sge.vfx.VfxRenderContext	Renamed	-		0		form=class parents=java.lang.AutoCloseable primary=(Format,int,int) primaryKind=unique-root primaryVis=public
@@ -79,6 +79,7 @@ type		balticporter.runtime.JavaCollection	Added	-		0
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaStack	Added	-		0		
 member	core.src.com.crashinvaders.vfx.VfxManager#<init>(Format,Sge)	sge.vfx.VfxManager#<init>(Format,Sge)	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	67	0420247a10ed7572	
 member	core.src.com.crashinvaders.vfx.VfxManager#<stmt1>	sge.vfx.VfxManager#<stmt1>	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	72	bc7eab8e0abb0a05	
 member	core.src.com.crashinvaders.vfx.VfxManager#<stmt2>	sge.vfx.VfxManager#<stmt2>	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	73	68cf25b6767b63d6	

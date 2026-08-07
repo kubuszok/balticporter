@@ -311,8 +311,12 @@ class CollectionsScopeSpec extends PortSuite:
     assertEquals(log.of(Decision.Kind.ScopedOut), Nil)
   }
 
-  test("the surface fingerprint separates two differently-scoped modules and is empty by default") {
-    assertEquals(new CollectionsTransform().surfaceFingerprint, "")
+  test("the surface fingerprint separates two differently-scoped modules; the SCOPE half is empty by default") {
+    // The scope's own half renders empty when nothing is scoped, which is what keeps a port that
+    // sets no scope comparing as it always did. What follows it is the MAPPING TABLE's digest —
+    // engine policy rather than instance policy, and in the fingerprint because a base ported
+    // before a mapping changed and a dependent ported after emit signatures that cannot meet.
+    assert(clue(new CollectionsTransform().surfaceFingerprint).startsWith(";mapping="))
     assertNotEquals(
       new CollectionsTransform(RuleScope.Only(Set("demo.Model"))).surfaceFingerprint,
       new CollectionsTransform(RuleScope.Everywhere(Set("demo.Model"))).surfaceFingerprint,

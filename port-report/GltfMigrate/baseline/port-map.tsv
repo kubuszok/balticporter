@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=56557bd360c2dc33
+# balticporter port map	schema=3	module=sge-gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=0383932bcdfe96ff
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	net.mgsx.gltf.data.GLTF	sge.gltf.data.GLTF	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.data.GLTFAsset	sge.gltf.data.GLTFAsset	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
@@ -165,6 +165,7 @@ type		balticporter.runtime.JavaCollection	Added	-		0
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaStack	Added	-		0		
 type		sge.gltf.data.extensions.GLTFExtensionFactories	Added	-		0		
 member	net.mgsx.gltf.data.GLTF#accessors	sge.gltf.data.GLTF#accessors	Renamed	-	net/mgsx/gltf/data/GLTF.java	34	bb022c1c5c524055	
 member	net.mgsx.gltf.data.GLTF#animations	sge.gltf.data.GLTF#animations	Renamed	-	net/mgsx/gltf/data/GLTF.java	31	e0967a9b9f60a65b	

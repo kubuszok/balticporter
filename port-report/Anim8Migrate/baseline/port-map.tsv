@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-anim8	engine=balticporter/0.1.0-SNAPSHOT	sources=6b96efbdb888cc69	files=16	policy=cde915fda3f53b5e
+# balticporter port map	schema=3	module=sge-anim8	engine=balticporter/0.1.0-SNAPSHOT	sources=6b96efbdb888cc69	files=16	policy=0237f22c73a0fd3b
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.github.tommyettinger.anim8.AnimatedGif	sge.anim8.AnimatedGif	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,sge.anim8.Dithered primary=() primaryKind=unique-root primaryVis=public
 type	com.github.tommyettinger.anim8.AnimatedPNG	sge.anim8.AnimatedPNG	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,java.lang.AutoCloseable primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=COLOR_ARGB,COMPRESSION_DEFLATE,FILTER_NONE,IDAT,IEND,IHDR,INTERLACE_NONE,SIGNATURE,acTL,fcTL,fdAT
@@ -35,6 +35,7 @@ type		balticporter.runtime.JavaCollection	Added	-		0
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaStack	Added	-		0		
 member	com.github.tommyettinger.anim8.AnimatedGif#addFrame(Pixmap)	sge.anim8.AnimatedGif#addFrame(Pixmap)	Renamed	-	com/github/tommyettinger/anim8/AnimatedGif.java	327	7eb406a53c4eba9c	
 member	com.github.tommyettinger.anim8.AnimatedGif#analyzeAdditive()	sge.anim8.AnimatedGif#analyzeAdditive()	Renamed	-	com/github/tommyettinger/anim8/AnimatedGif.java	601	124ea3da4194b226	
 member	com.github.tommyettinger.anim8.AnimatedGif#analyzeBanter()	sge.anim8.AnimatedGif#analyzeBanter()	Renamed	-	com/github/tommyettinger/anim8/AnimatedGif.java	885	07cb67a9c41ef6c9	

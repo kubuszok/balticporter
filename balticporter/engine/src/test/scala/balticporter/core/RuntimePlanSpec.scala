@@ -55,10 +55,12 @@ class RuntimePlanSpec extends munit.FunSuite:
       assert(!Files.exists(dir.resolve("balticporter/runtime/JavaIterator.scala")))
 
       val n = RuntimePlan.of(List(new CollectionsTransform), RuntimeMode.Vendored).writeSources(dir)
-      // four: the three shims (java's `AbstractCollection` has no scala counterpart a class can
-      // EXTEND — CLAUDE.md §4.5) plus `JavaCollections`, which is not a shim at all but a mirror of
-      // `java.util.Collections`' STATICS — a receiver-less utility no receiver-keyed rewrite can see.
-      assertEquals(n, 4)
+      // five: the three shims (java's `AbstractCollection` has no scala counterpart a class can
+      // EXTEND — CLAUDE.md §4.5), `JavaCollections`, which is not a shim at all but a mirror of
+      // `java.util.Collections`' STATICS — a receiver-less utility no receiver-keyed rewrite can
+      // see — and `JavaStack`, whose target has to be its own type because the phase decides a
+      // rewrite from the RETYPED receiver and `java.util.ArrayList` already owns `ArrayBuffer`.
+      assertEquals(n, 5)
       val written = Files.readString(dir.resolve("balticporter/runtime/JavaIterator.scala"))
       assertEquals(written, RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator"))
     finally

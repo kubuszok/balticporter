@@ -3208,6 +3208,56 @@ to a retyped map, which is why the seam went four libraries without being seen. 
 
 *Fix kind: (a) engine.*
 
+### K10.5 Two java types mapped to ONE scala target share every call rewrite — and `java.util.Stack` is where that costs a semantic
+
+CLOSED, and it is the third thing a mapping TARGET decides after "does the relation survive" (K10's
+neighbours) and "can a value be coerced at the seam" (M6). The rewrite table is keyed on `(name,
+args, KIND)` and `kindOf` is keyed on the **scala symbol**, so the kind is a property of the TARGET
+and not of the java type: two java types sent to one target are, from the phase's point of view
+after `transformType`, the same receiver. The phase cannot tell them apart, because there is nothing
+left to tell them apart WITH.
+
+That is invisible while every shared target wants the same rewrites — `ArrayList`, `Vector` and a
+plain `List` all do — and it is not invisible at `java.util.Stack`, whose five LIFO members collide
+with a `Deque`'s at exactly one name:
+
+| call | java's `Stack` | java's `Deque` | what one shared arm answers |
+|---|---|---|---|
+| `peek()` | the LAST element; THROWS when empty | the FIRST element; `null` when empty | whichever the arm was written for |
+
+Mapping `Stack` onto `mutable.ArrayBuffer` beside `ArrayList` was built first and measured: the five
+`Kind.Stack` arms never fired at all, because `kindOf(ArrayBuffer)` had already been claimed by
+`java.util.ArrayList` as `Kind.Seq`, and `stack.peek()` reached the DEQUE arm — `headOption.orNull`,
+the wrong end and the wrong empty behaviour, valid Scala, no compile error. The tell was a spec in
+which `stack.get(0)` and `stack.size` rewrote correctly while `stack.empty()` and `stack.search(s)`
+came out verbatim: the SEQ arms answering for a receiver whose own arms could not.
+
+**So a java type that needs its own rewrites needs its own TARGET**, and once it has one the
+rewrites are usually not needed: `balticporter.runtime.JavaStack extends mutable.ArrayBuffer`
+declares `push`/`pop`/`peek`/`search` with java's names, java's arities and java's contracts
+(`push` returns the item, `pop`/`peek` throw `java.util.EmptyStackException`, `search` counts
+1-based from the top), so the faithful rewrite is NO rewrite and the phase's only arm is the one
+member scala's collection API had already taken — `empty()`, which is a FACTORY there, renamed to
+`isEmpty`. Extending `ArrayBuffer` is what keeps `Stack <: Vector <: List` intact on the scala side.
+
+**And the stdlib type is the wrong target for a reason no availability survey can see.** The
+platform survey recommended `scala.collection.mutable.Stack`, which has all three of java's LIFO
+names — and is an `ArrayDeque` whose `push` PREPENDS. Java's `Stack extends Vector extends List`
+puts its top LAST: `get(0)` is the bottom and the iterator runs bottom-to-top. The two therefore
+agree on `push`/`pop`/`peek` in isolation and disagree on every LIST-shaped read of the same
+object — a `for`, a `get(i)`, an `indexOf`, a `toString` — silently. That is `CLAUDE.md` §4.4's
+defect class reached through a type mapping, and it is exactly the failure mode the chunk's own gate
+names: *an AVAILABILITY gap reproduced without the SEMANTIC guarantee.* `JavaStackSpec` pins the
+stdlib type's order beside java's rather than asserting java's alone, so the reason survives the
+next reader.
+
+Measured on the one corpus site (`liqp/blocks/For.java`, the only `java.util.Stack` in any ported
+module): **4 members changed, liqp 633/4 flat, `collection-closure` 8 -> 0** — those eight findings
+were `java.util.Stack` itself, reported for five libraries' worth of runs as an unmapped JDK subtype
+of a mapped type, which is the closure check having named this row before anyone read it.
+
+*Fix kind: (a) engine — the mapping table and the shim are both universal.*
+
 ### K11. A CAPACITY hint at a HASHED collection has no one-argument scala constructor
 
 CLOSED. `copyConstructor`'s own note says a java capacity hint "maps correctly by accident", and for

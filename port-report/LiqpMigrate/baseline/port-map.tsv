@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-liquid	engine=balticporter/0.1.0-SNAPSHOT	sources=335f355ab142e65c	files=134	policy=34a10e998ef317d4
+# balticporter port map	schema=3	module=ssg-liquid	engine=balticporter/0.1.0-SNAPSHOT	sources=335f355ab142e65c	files=134	policy=406248ded5dcc7c0
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	liqp.Examples	ssg.liquid.Examples	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	liqp.Insertion	ssg.liquid.Insertion	Renamed	-		0		companion=yes disambiguator=marker flags=abstract form=class parents=ssg.liquid.LValue primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(String)
@@ -161,6 +161,7 @@ type		balticporter.runtime.JavaCollection	Added	-		0
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaStack	Added	-		0		
 member	liqp.Examples#customFilter()	ssg.liquid.Examples#customFilter()	Renamed	-	liqp/Examples.java	198	ed45b3444b8b177e	placement=companion
 member	liqp.Examples#customLoopBlock()	ssg.liquid.Examples#customLoopBlock()	Renamed	-	liqp/Examples.java	118	40e98117e5c83800	placement=companion vis=private
 member	liqp.Examples#customRandomTag()	ssg.liquid.Examples#customRandomTag()	Renamed	-	liqp/Examples.java	183	6ac48659219da246	placement=companion
@@ -505,10 +506,10 @@ member	liqp.blocks.For#OFFSET	ssg.liquid.blocks.For#OFFSET	Renamed	-	liqp/blocks
 member	liqp.blocks.For#PARENTLOOP	ssg.liquid.blocks.For#PARENTLOOP	Renamed	-	liqp/blocks/For.java	49	b1d787856ca4dd32	placement=companion
 member	liqp.blocks.For#RINDEX	ssg.liquid.blocks.For#RINDEX	Renamed	-	liqp/blocks/For.java	44	b949f3b63818dd1f	placement=companion
 member	liqp.blocks.For#RINDEX0	ssg.liquid.blocks.For#RINDEX0	Renamed	-	liqp/blocks/For.java	45	28644f5e3c29a58e	placement=companion
-member	liqp.blocks.For#createLoopDropInStack(TemplateContext,String,int)	ssg.liquid.blocks.For#createLoopDropInStack(TemplateContext,String,int)	Renamed	-	liqp/blocks/For.java	156	02ae8a0938720e99	vis=private
+member	liqp.blocks.For#createLoopDropInStack(TemplateContext,String,int)	ssg.liquid.blocks.For#createLoopDropInStack(TemplateContext,String,int)	Renamed	-	liqp/blocks/For.java	156	ef3d093312f715d1	vis=private
 member	liqp.blocks.For#getAttributes(int,TemplateContext,String,Array)	ssg.liquid.blocks.For#getAttributes(int,TemplateContext,String,Array<LNode>)	Renamed	-	liqp/blocks/For.java	271	a2be6cd538238c51	vis=private
-member	liqp.blocks.For#getParentForloopDropStack(TemplateContext)	ssg.liquid.blocks.For#getParentForloopDropStack(TemplateContext)	Renamed	-	liqp/blocks/For.java	261	429ce81da6d7f402	vis=private
-member	liqp.blocks.For#popLoopDropFromStack(TemplateContext)	ssg.liquid.blocks.For#popLoopDropFromStack(TemplateContext)	Renamed	-	liqp/blocks/For.java	168	0c9bc3a1522d9a65	
+member	liqp.blocks.For#getParentForloopDropStack(TemplateContext)	ssg.liquid.blocks.For#getParentForloopDropStack(TemplateContext)	Renamed	-	liqp/blocks/For.java	261	7afa4a55aa66666e	vis=private
+member	liqp.blocks.For#popLoopDropFromStack(TemplateContext)	ssg.liquid.blocks.For#popLoopDropFromStack(TemplateContext)	Renamed	-	liqp/blocks/For.java	168	6cb4d395d4e02098	
 member	liqp.blocks.For#render(TemplateContext,Array)	ssg.liquid.blocks.For#render(TemplateContext,Array<LNode>)	Renamed	-	liqp/blocks/For.java	55	7e6f0455c6b59f37	
 member	liqp.blocks.For#renderArray(String,TemplateContext,String,boolean,Array)	ssg.liquid.blocks.For#renderArray(String,TemplateContext,String,boolean,Array<LNode>)	Renamed	-	liqp/blocks/For.java	80	583407ffaeb00b6e	vis=private
 member	liqp.blocks.For#renderForLoopBody(TemplateContext,Controller,Buffer)	ssg.liquid.blocks.For#renderForLoopBody(TemplateContext,Controller,Buffer<LNode>)	Renamed	-	liqp/blocks/For.java	176	9cfae757b6aeb4ce	vis=private

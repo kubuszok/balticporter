@@ -367,8 +367,15 @@ class ManifestSpec extends munit.FunSuite:
     // …and one that DOES carries it, even when the policy is the default: the collections phase
     // takes a `RuleScope`, and two modules scoping it differently emit signatures that each compile
     // alone and cannot compile together, which is precisely what `SurfacePolicy` is for (§1.5). The
-    // default renders empty, so a port that sets no scope compares as it always did.
-    assertEquals(PortManifest.fingerprint(new CollectionsTransform), "java-collections->scala[]")
+    // default scope renders empty; what follows the `;` is the MAPPING TABLE's digest, which is
+    // engine policy rather than instance policy and is in the fingerprint for §1.5's own reason —
+    // a base ported before a mapping changed and a dependent ported after emit the incompatible
+    // pair, and the published `policy=` is the only thing that could say so. Asserted by SHAPE:
+    // pinning the digest here would mean editing this spec on every mapping change, which is the
+    // spec asking to be silenced rather than read.
+    val collections = PortManifest.fingerprint(new CollectionsTransform)
+    assert(collections.startsWith("java-collections->scala[;mapping="), clue(collections))
+    assertEquals(collections, PortManifest.fingerprint(new CollectionsTransform), "not stable")
     assertNotEquals(
       PortManifest.fingerprint(new CollectionsTransform),
       PortManifest.fingerprint(new CollectionsTransform(RuleScope.Everywhere(Set("com.demo.Bridge")))),

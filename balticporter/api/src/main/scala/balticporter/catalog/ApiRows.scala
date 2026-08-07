@@ -215,9 +215,14 @@ object ApiRows:
     mapped(l(3), "java.util.LinkedList", true, "scala.collection.mutable.Queue", Full, Full,
       "Queue rather than ListBuffer, chosen to preserve the source's own subtype relations"),
     mapped(l(4), "java.util.Vector", true, "scala.collection.mutable.ArrayBuffer", Absent, Full,
-      "passes through untouched today although Scala.js has no implementation, so it is a latent JS-only link error"),
-    mapped(l(5), "java.util.Stack", true, "scala.collection.mutable.Stack", Absent, Absent,
-      "absent on BOTH non-JVM backends, and `search` (1-indexed from the top, -1 when absent) has no Scala counterpart"),
+      "Scala.js has no implementation, and the mapping's one loss is the per-method `synchronized`, which no Scala collection has"),
+    // NOT `scala.collection.mutable.Stack`, which this survey recommended until the mapping was
+    // built: java's `Stack` is a `List` whose top is its LAST element, and scala's `Stack` is an
+    // `ArrayDeque` whose `push` prepends — so the two agree on push/pop/peek and DISAGREE on every
+    // list-shaped read of the same object, silently. The `Buffer` keeps java's layout and pays for
+    // it with five member rewrites, `search` among them.
+    mapped(l(5), "java.util.Stack", true, "scala.collection.mutable.ArrayBuffer", Absent, Absent,
+      "absent on BOTH non-JVM backends, and mapping to scala's own Stack would INVERT the sequence order every List-shaped read sees"),
     mapped(l(6), "java.util.Map", false, "scala.collection.mutable.Map", Full, Full,
       "no exact Scala counterpart, and java's null-returning `get` has to be rewritten against Scala's Option"),
     mapped(l(7), "java.util.HashMap", true, "scala.collection.mutable.HashMap", Full, Full,

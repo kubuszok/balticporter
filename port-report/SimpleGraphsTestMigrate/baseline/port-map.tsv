@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-graphs-test	engine=balticporter/0.1.0-SNAPSHOT	sources=5c8d26fe03d48b7d	files=7	policy=c3233d79f1885078
+# balticporter port map	schema=3	module=sge-graphs-test	engine=balticporter/0.1.0-SNAPSHOT	sources=5c8d26fe03d48b7d	files=7	policy=fb551d3e0317f798
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	space.earlygrey.simplegraphs.AlgorithmsTest	sge.graphs.AlgorithmsTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=pathIsConnected
 type	space.earlygrey.simplegraphs.ArrayTest	sge.graphs.ArrayTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
@@ -12,6 +12,7 @@ type		balticporter.runtime.JavaCollection	Added	-		0
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaStack	Added	-		0		
 member	space.earlygrey.simplegraphs.AlgorithmsTest#<stmt1>	sge.graphs.AlgorithmsTest#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/AlgorithmsTest.java	42	e3153b7603123803	
 member	space.earlygrey.simplegraphs.AlgorithmsTest#<stmt2>	sge.graphs.AlgorithmsTest#<stmt2>	Renamed	-	space/earlygrey/simplegraphs/AlgorithmsTest.java	107	1ad5d53a26b23583	
 member	space.earlygrey.simplegraphs.AlgorithmsTest#<stmt3>	sge.graphs.AlgorithmsTest#<stmt3>	Renamed	-	space/earlygrey/simplegraphs/AlgorithmsTest.java	158	7aa73f093b6fef49	

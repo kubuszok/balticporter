@@ -9,7 +9,7 @@ catalog(unmechanised)	5
 catalog(unreached)	15
 class-init-trigger	0
 collection-boundary	25
-collection-closure	8
+collection-closure	0
 collection-retarget	0
 dependency-coverage	101
 dependency-coverage(all)	101

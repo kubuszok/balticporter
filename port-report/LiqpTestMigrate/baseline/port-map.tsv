@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-liquid-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b3fd549b8bf92693	files=105	policy=c96b1da422e56530
+# balticporter port map	schema=3	module=ssg-liquid-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b3fd549b8bf92693	files=105	policy=c70153981530d7b8
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	liqp.ConditionTest	ssg.liquid.ConditionTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	liqp.InsertionTest	ssg.liquid.InsertionTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
@@ -134,6 +134,7 @@ type		balticporter.runtime.JavaCollection	Added	-		0
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaStack	Added	-		0		
 member	liqp.ConditionTest#<stmt1>	ssg.liquid.ConditionTest#<stmt1>	Renamed	-	liqp/ConditionTest.java	19	4924d1cd7edc3479	
 member	liqp.ConditionTest#<stmt2>	ssg.liquid.ConditionTest#<stmt2>	Renamed	-	liqp/ConditionTest.java	44	158b0a2e4cfcbf37	
 member	liqp.ConditionTest#<stmt3>	ssg.liquid.ConditionTest#<stmt3>	Renamed	-	liqp/ConditionTest.java	76	937ac8f368a47310	

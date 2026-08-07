@@ -111,8 +111,9 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     val (_, fs) = findings(
       """package demo;
         |import java.util.*;
+        |import java.util.concurrent.*;
         |class U {
-        |  Vector<String> own = new Vector<String>();
+        |  CopyOnWriteArrayList<String> own = new CopyOnWriteArrayList<String>();
         |  List<String> widen() { return own; }
         |  void take(List<String> xs) {}
         |  void call() { take(own); }
@@ -121,7 +122,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     )
     assertEquals(clue(fs).map(_.issue).distinct, List(Issue.UnmappedSubtype))
     assertEquals(fs.map(_.slot).sorted, List("argument", "return"))
-    assert(fs.forall(_.actual == "java.util.Vector"), clue(fs).toString)
+    assert(fs.forall(_.actual == "java.util.concurrent.CopyOnWriteArrayList"), clue(fs).toString)
     assert(fs.forall(_.expected == "scala.collection.mutable.Buffer"), clue(fs).toString)
   }
 
@@ -191,7 +192,8 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     val p = port(
       """package demo;
         |import java.util.*;
-        |class Base { Vector<String> v = new Vector<String>(); List<String> w() { return v; } }
+        |import java.util.concurrent.*;
+        |class Base { CopyOnWriteArrayList<String> v = new CopyOnWriteArrayList<String>(); List<String> w() { return v; } }
         |class Dep  { List<String> l = new ArrayList<String>(); List<String> w() { return l; } }
         |""".stripMargin,
       ph,

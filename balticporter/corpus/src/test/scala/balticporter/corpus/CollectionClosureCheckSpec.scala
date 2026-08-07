@@ -22,9 +22,9 @@ class CollectionClosureCheckSpec extends PortSuite:
   private val unmapped =
     """package demo;
       |import java.util.List;
-      |import java.util.Vector;
+      |import java.util.concurrent.CopyOnWriteArrayList;
       |class U {
-      |  Vector<String> own = new Vector<String>();
+      |  CopyOnWriteArrayList<String> own = new CopyOnWriteArrayList<String>();
       |  List<String> widen() { return own; }
       |  void take(List<String> xs) {}
       |  void call() { take(own); }
@@ -35,9 +35,9 @@ class CollectionClosureCheckSpec extends PortSuite:
     val p = port(unmapped, new CollectionsTransform)
     // `java.util.List` is mapped and every occurrence of it is retyped …
     assertEmits(p, "scala.collection.mutable.Buffer[java.lang.String]")
-    // … while `java.util.Vector`, which java declares a `List`, is left exactly as it was.
-    assertEmits(p, "java.util.Vector[java.lang.String]")
-    // So `return own` and `take(own)` are now a `java.util.Vector` meeting a `Buffer`. In java
+    // … while `java.util.concurrent.CopyOnWriteArrayList`, which java declares a `List`, is left exactly as it was.
+    assertEmits(p, "java.util.concurrent.CopyOnWriteArrayList[java.lang.String]")
+    // So `return own` and `take(own)` are now a `java.util.concurrent.CopyOnWriteArrayList` meeting a `Buffer`. In java
     // these are the SAME assignment that has always compiled; here neither side knows about the
     // other, and nothing in the pipeline said so.
     assertEmits(p, "def widen(): scala.collection.mutable.Buffer[java.lang.String]")
@@ -51,16 +51,16 @@ class CollectionClosureCheckSpec extends PortSuite:
     val ph = new CollectionsTransform
     val p  = port(unmapped, ph)
     val fs = ph.closure(p.after)
-    val vs = fs.filter(_.tpe == "java.util.Vector")
+    val vs = fs.filter(_.tpe == "java.util.concurrent.CopyOnWriteArrayList")
     assert(clue(fs).nonEmpty)
-    assert(vs.nonEmpty, "java.util.Vector is referenced and unmapped while java.util.List is mapped")
+    assert(vs.nonEmpty, "java.util.concurrent.CopyOnWriteArrayList is referenced and unmapped while java.util.List is mapped")
     // the nearest mapped ancestor, so the finding says which target keeps the relation. Not
     // `java.lang.Iterable`, which is also mapped and also an ancestor — and useless as advice.
     assertEquals(vs.map(_.coveredBy).distinct, List("java.util.List"))
     assertEquals(vs.map(_.mapsTo).distinct, List("scala.collection.mutable.Buffer"))
     // located, so the finding is actionable without opening the emitted file (CLAUDE.md §5.1).
     assert(vs.forall(_.origin.line > 0), clue(vs.map(_.origin.line)))
-    assert(clue(CollectionClosureCheck.summary(vs)).contains("java.util.Vector"))
+    assert(clue(CollectionClosureCheck.summary(vs)).contains("java.util.concurrent.CopyOnWriteArrayList"))
   }
 
   test("the ZERO is asserted: a program whose every collection type IS mapped reports nothing") {
@@ -166,7 +166,8 @@ class CollectionClosureCheckSpec extends PortSuite:
     val p = port(
       """package demo;
         |import java.util.*;
-        |class Base { Vector<String> v = new Vector<String>(); }
+        |import java.util.concurrent.*;
+        |class Base { CopyOnWriteArrayList<String> v = new CopyOnWriteArrayList<String>(); }
         |class Dep  { List<String> l = new ArrayList<String>(); }
         |""".stripMargin,
       ph,
