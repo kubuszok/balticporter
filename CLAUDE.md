@@ -296,7 +296,7 @@ The line between what must agree and what must not:
 | inherited — a fact about the SHARED SURFACE | not inherited — a fact about THIS module's build |
 |---|---|
 | `dropTypes`, `dropMethods`, `packageRenames`, `surface` | `sourceSet`, `frontend`, `provenance`, `runtimeMode`, `supportSources`, `project` |
-| the PER-TYPE half of the rename policy — `typeRenames`, `subPackages`, `flattenNestedTypes`, and `allowPackageSplit` beside them | **`inject`**, `targets`, `verdictOverrides` |
+| the PER-TYPE half of the rename policy — `typeRenames`, `subPackages`, `flattenNestedTypes`, and `allowPackageSplit` beside them | **`inject`**, `targets`, `verdictOverrides`, `dependencies` |
 
 **`targets` is not-inherited with a ONE-DIRECTIONAL constraint, which is a third shape the table
 cannot state.** Which backends a module is ported for moves no emitted signature — it decides which
@@ -589,8 +589,9 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   Each prints, untruncated and diffed against the committed baseline, **every engine check the
   run's own pipeline registers, plus any check the port's own §1(c) rules register**. The total is
   not a constant to memorise — quoting one is what went stale twice; it
-  is the TWENTY-ONE required of every run (`signature`, `omissions`,
-  `portability(all|emitted|injected)`, `substitution(emitted|dangling)`, `remediation`, `policy`,
+  is the TWENTY-TWO required of every run (`signature`, `omissions`,
+  `portability(all|emitted|injected)`, `dependency-coverage`, `substitution(emitted|dangling)`,
+  `remediation`, `policy`,
   `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`, `base-surface`,
   `catalog(consulted|unreached|unmechanised|undischarged|uncited)`) plus
   whatever the RUN'S OWN PIPELINE registers. `base-surface` is required of a BASE port too, which has
@@ -610,7 +611,16 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   about the port and everything about the registry — it is here because `counts.tsv` is the artifact
   a baseline diffs and that number was a `println` in one spec beside `assert(uncited <= all)`, which
   no registry can fail. It is never asserted on: a spec that failed on it is a spec somebody silences
-  by INVENTING a citation, which is worse than the gap;
+  by INVENTING a citation, which is worse than the gap.
+  **`dependency-coverage` is the twenty-second and is the OTHER half of `portability(*)`, not a
+  subset of it**: half of the platform matrix's answers are that the API EXISTS off the JVM, in an
+  artifact the build does not name, and a build-graph fact reported as a symbol-reference one is a
+  finding the reader cannot act on — they are told to remove a call that one `libraryDependencies`
+  line makes correct. A finding needs three conjuncts (the usage fired, no declared dependency
+  covers it, the port declared no alternative) and only the middle one is a filter: the third is
+  read THROUGH `PortManifest.verdictOverrides`, so a port that says it ships its own shim never
+  produces the requirement at all. Written as a second filter that conjunct could disagree with the
+  first, which is the shape of a check reporting a row it has already excused;
   `porter-notes`, `break-catch`, `try-resource`, `switch-null` and `markers` record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget` record when
   `CollectionsTransform` is in the pipeline, and `nullability-boundary` when

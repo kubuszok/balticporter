@@ -22,11 +22,15 @@ class PortabilityTargetsSpec extends munit.FunSuite:
 
   private val All = Platform.values.toSet
 
-  test("the default target set selects EVERY rule — today's semantics, unchanged") {
-    assertEquals(PortabilityCheck.rulesFor(All), PortabilityCheck.all)
-    // …and the order is preserved, because `portability(all)`'s promoted baselines in thirteen
-    // lanes are byte-identical rather than merely equal in count.
-    assertEquals(PortabilityCheck.rulesFor(All).map(_.api), PortabilityCheck.all.map(_.api))
+  test("the default target set selects every UNPORTABILITY rule, in list order") {
+    // `== all` is no longer the statement: the list also carries the `Verdict.Depend` rules, which
+    // are the `dependency-coverage` lane's and never this one's. What must hold is that a port
+    // declaring nothing gets every rule that IS an unportability, in `all`'s own order — the
+    // promoted `portability(all)` baselines are byte-identical rather than merely equal in count.
+    val lane = PortabilityCheck.rulesFor(All)
+    assertEquals(lane, PortabilityCheck.all.filter(lane.contains))
+    assertEquals(lane.toSet & PortabilityCheck.dependencyRulesFor(All).toSet,
+                 Set.empty[PortabilityCheck.Rule])
   }
 
   test("an EMPTY target set is the no-op §1(b) asks for") {
@@ -41,7 +45,10 @@ class PortabilityTargetsSpec extends munit.FunSuite:
 
   test("a JVM+Native port loses EXACTLY the JS-only rules, and nothing else") {
     val jvmNative = Set(Platform.Jvm, Platform.ScalaNative)
-    val dropped   = PortabilityCheck.all.filterNot(_.asks(jvmNative)).map(_.api).sorted
+    // over the PORTABILITY lane alone: the `Verdict.Depend` rules narrow by target too, and their
+    // narrowing is `DependencyCoverageSpec`'s to assert.
+    val dropped = (PortabilityCheck.rulesFor(All).map(_.api).toSet --
+                   PortabilityCheck.rulesFor(jvmNative).map(_.api).toSet).toList.sorted
     assertEquals(dropped, List(
       // the eight re-scoped families…
       "java.lang.ProcessBuilder",
@@ -51,10 +58,10 @@ class PortabilityTargetsSpec extends munit.FunSuite:
       "java.nio.channels.",
       "java.nio.file.",
       "java.util.concurrent.",
-      // …plus the two the SPLITS put on the JS side: `getenv` (empty on JS, real on Native) and
-      // the JS half of ServiceLoader, whose Native half stays with a different `why`.
+      // …plus `getenv`, empty on JS and real on Native. `java.util.ServiceLoader` is deliberately
+      // NOT here: its JS half leaves and its NATIVE half stays, under the same api, which is the
+      // whole point of the split — the assertion below reads which of the two survived.
       "java.lang.System#getenv",
-      "java.util.ServiceLoader",
       "java.util.zip.",
     ).sorted)
     // the negative half: everything that stays is a rule Scala Native genuinely cannot answer —
@@ -121,7 +128,7 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     val overreach = List("java.time.Instant", "java.util.Locale", "java.text.DecimalFormat",
                          "java.text.SimpleDateFormat", "java.util.Currency", "java.util.Date",
                          "java.nio.charset.StandardCharsets", "java.util.Formatter")
-      .filter(fqn => PortabilityCheck.all.exists(r => !r.exactMember && PortabilityCheck.names(r, fqn)))
+      .filter(fqn => PortabilityCheck.rulesFor(All).exists(r => !r.exactMember && PortabilityCheck.names(r, fqn)))
     assertEquals(overreach, Nil, s"reported as unportable, but supplied by an artifact: $overreach")
   }
 

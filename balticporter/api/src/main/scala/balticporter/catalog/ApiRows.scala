@@ -55,14 +55,34 @@ enum Verdict:
     case Depend(d) => Some(d)
     case _         => scala.None
 
+/** How a dependency's ARTIFACT NAME is built — the `%` / `%%` / `%%%` question, as a fact about the
+  * artifact rather than about the port. */
+enum CrossKind:
+  /** a plain Java artifact: `"org" % "name" % "rev"`. */
+  case Java
+  /** cross-built per SCALA version: `%%`. */
+  case Scala
+  /** cross-built per scala version AND per PLATFORM: `%%%`, which needs the crossproject plugin —
+    * which a port declaring a platform-cross dependency necessarily has. */
+  case Platform
+
 /** a build-graph coordinate a [[Verdict.Depend]] names.
   *
-  * Three fields, all literals. The cross-build kind, the platform set and the `because: DiffId`
-  * back-reference belong to the chunk that makes `SbtGen` emit `libraryDependencies`, and adding
-  * them here would be a field with no mechanism — see [[Catalog]] on why that is the trap this
-  * registry is trying not to fall into. */
-final case class ArtifactDep(org: String, name: String, rev: String):
-  override def toString: String = s"$org::$name:$rev"
+  * Every field is a literal or an enum case. What is deliberately NOT here is the PLATFORM SET: a
+  * `platforms` field would be a second statement of something the ROW already makes — which
+  * platforms need the artifact is exactly `verdict`'s per-platform map, and two coordinates for one
+  * artifact (`MessageDigest` wants `scala-crypto` on Scala.js and `scala-native-crypto` on Native)
+  * are two `Depend` verdicts rather than one dep with a set. It would also be the one shape
+  * `ApiRowCarriesNoPolicySpec` forbids outright. */
+final case class ArtifactDep(org: String, name: String, rev: String, cross: CrossKind = CrossKind.Scala):
+  override def toString: String = s"$org${CrossKind.sep(cross)}$name:$rev"
+
+object CrossKind:
+  /** the separator as a build file spells it, and as a `toString` reads it. */
+  def sep(k: CrossKind): String = k match
+    case Java     => ":"
+    case Scala    => "::"
+    case Platform => ":::"
 
 /** ONE ROW of the library and platform halves — `JS-L` and `JS-P`.
   *
@@ -142,7 +162,10 @@ object ApiRows:
   private val ScalaJavaTime   = ArtifactDep("io.github.cquiroz", "scala-java-time", "2.6.0")
   private val ScalaJavaTzdb   = ArtifactDep("io.github.cquiroz", "scala-java-time-tzdb", "2.6.0")
   private val ScalaJavaLocale = ArtifactDep("io.github.cquiroz", "scala-java-locales", "1.5.4")
-  private val WeakRefs        = ArtifactDep("org.scala-js", "scalajs-weakreferences", "1.0.0")
+  // `scalajs-weakreferences` is published per Scala.js version as well as per Scala version, which
+  // is what `%%%` is for and what makes the cross kind a fact about the ARTIFACT rather than about
+  // the port that adds it.
+  private val WeakRefs        = ArtifactDep("org.scala-js", "scalajs-weakreferences", "1.0.0", CrossKind.Platform)
   private val NativeCrypto    = ArtifactDep("com.github.lolgab", "scala-native-crypto", "0.1.0")
   private val CrossCrypto     = ArtifactDep("com.dedipresta", "scala-crypto", "1.0.0")
 

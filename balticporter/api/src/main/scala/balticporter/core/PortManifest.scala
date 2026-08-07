@@ -169,6 +169,16 @@ final case class PortManifest(
       *
       * NOT inherited, for `targets`' reason: it decides which findings this module is told about. */
     verdictOverrides: Map[DiffId, Map[Platform, Verdict]] = Map.empty,
+    /** THE ARTIFACTS THIS MODULE'S BUILD ADDS. Not inherited — `inject`'s line exactly: it is a
+      * build fact, and exactly one module's build file names each coordinate.
+      *
+      * A `Verdict.Depend` says the API exists off the JVM in a third-party artifact; this is where a
+      * port says it took that advice. `SbtGen` writes these into the generated `libraryDependencies`
+      * and `dependency-coverage` reports every requirement no entry here covers. Empty is the
+      * default and the honest state of this corpus: no port has written the artifact list, which is
+      * exactly the "compiles on the platform I happened to test" hole the lane exists to make
+      * visible at PORT time rather than at somebody else's build time. */
+    dependencies: List[balticporter.catalog.ArtifactDep] = Nil,
     /** Does this manifest INHERIT its [[bases]]' policy, or merely declare that it must AGREE
       * with them?
       *

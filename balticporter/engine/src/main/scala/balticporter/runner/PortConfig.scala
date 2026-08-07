@@ -71,6 +71,8 @@ import scala.jdk.CollectionConverters.*
   *                                             # asked before it had a parameter. Narrowing is
   *                                             # this module's decision; a DEPENDENT may not
   *                                             # declare a platform its base does not.
+  *   dependencies   = [ { org = "io.github.cquiroz", name = "scala-java-time",
+  *                        rev = "2.6.0", cross = "scala" } ]   # java | scala (default) | platform
   * }
   *
   * provenance {                           # omitted ⇒ None
@@ -279,6 +281,9 @@ object PortConfig:
       // so a base conf's value is the base's; unlike `baseReports` there is nothing to anchor,
       // because the value is read off the manifest the run holds.
       targets        = m.strings("targets").map(readTargets(m)).getOrElse(Platform.values.toSet),
+      // …and the artifacts this module's build adds because it took a `Verdict.Depend`'s advice.
+      // A build fact, so not inherited (`inject`'s line); empty is the no-op and the whole corpus.
+      dependencies   = m.children("dependencies").getOrElse(Nil).map(dependencyEntry),
     )
     view.string("base") match
       case scala.None    => own
@@ -316,6 +321,22 @@ object PortConfig:
       TargetNames.getOrElse(n.toLowerCase, throw ConfigError(m.at("targets"),
         s"'$n' is not a platform; one of ${TargetNames.keys.toList.sorted.mkString(", ")}"))
     }.toSet
+
+  /** one `dependencies = [ { org, name, rev, cross } ]` entry.
+    *
+    * `cross` decides `%` / `%%` / `%%%` and defaults to `scala`, which is what most JVM-ecosystem
+    * artifacts are. An unknown value is a `ConfigError` rather than a silent default, for
+    * `readTargets`' reason: the wrong separator resolves to an artifact that does not exist, and a
+    * config typo should say so here rather than in somebody's resolver output. */
+  private def dependencyEntry(entry: ConfigView): balticporter.catalog.ArtifactDep =
+    val cross = entry.string("cross").getOrElse("scala").toLowerCase match
+      case "java"     => balticporter.catalog.CrossKind.Java
+      case "scala"    => balticporter.catalog.CrossKind.Scala
+      case "platform" => balticporter.catalog.CrossKind.Platform
+      case other      => throw ConfigError(entry.at("cross"),
+        s"'$other' is not a cross kind; one of java, scala, platform")
+    balticporter.catalog.ArtifactDep(
+      entry.requireString("org"), entry.requireString("name"), entry.requireString("rev"), cross)
 
   private def surfaceEntry(registry: TransformRegistry)(entry: ConfigView): balticporter.tir.Phase =
     val name = entry.requireString("transform")

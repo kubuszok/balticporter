@@ -497,6 +497,26 @@ Two things about the direction of the coupling, because both are easy to get bac
   `Verdict.dependency` splits the rule list in two, and the `Depend`-shaped half feeds
   `dependency-coverage` rather than `portability(*)`.
 
+**`dependency-coverage`, and the shape of its three conjuncts.** A finding is *a usage FIRED* ∧ *no
+declared dependency covers it* ∧ *the port declared no alternative*, and only the middle one is a
+FILTER. The first is the walk itself (the same `ExternalUsage` enumeration `PortabilityCheck`
+performs, over the complementary rules). The third is read THROUGH `PortManifest.verdictOverrides`,
+inside `ApiRow.verdictOn`, so a port that declared it ships its own shim has changed the verdict and
+the row never becomes a requirement at all. Written as a second filter that conjunct could disagree
+with the first — one of them consulting the override and the other not — which is the shape of a
+check reporting a row it has already excused. Each conjunct is still separately OBSERVABLE, and the
+finding's detail says so: how many dependencies the port declares, and which row and platform went
+unanswered. Coverage is matched on organisation and NAME and never on the revision: the catalog's
+`rev` is the version the survey checked, not a floor, and a lane that policed versions is one nobody
+asked for.
+
+Two things it deliberately does not do. It does not write a `Decision`: an override changes no
+emitted code, and `decisions.tsv` answers "why is the emitted code not a mechanical translation" —
+the override's record is the finding lane itself, which a baseline diffs. And `ArtifactDep` carries
+no PLATFORM SET: which platforms need the artifact is the row's own `verdict` map (`MessageDigest`
+wants `scala-crypto` on Scala.js and `scala-native-crypto` on Native — two `Depend` verdicts, not
+one dep with a set), and a set in a row is the one shape `ApiRowCarriesNoPolicySpec` forbids.
+
 **Two status-enforcement rules, both mechanical, because a status transcribed by hand is already
 wrong.** Four headline `Open` rows were fixed inside one week while the document describing them was
 being written, and nothing could see that they had.
@@ -853,7 +873,10 @@ dependent seeing the base's findings about it. `verdictOverrides` is the same fi
 `ApiRow`'s `verdict` is a recommended DEFAULT and this is where a port says it ships its own shim,
 vendors a subset or accepts the refusal. What an override may NOT touch is `by`, the availability
 FACT — a manifest that could contradict a platform's coverage is a manifest in which a port silently
-declares a gap closed. A manifest DSL would move the policy out of reach of the consumer's
+declares a gap closed. **`dependencies` is the third**, and it is a build fact on `inject`'s line:
+exactly one module's build file names each coordinate. `SbtGen` writes them into the generated
+`libraryDependencies` and `dependency-coverage` reports every requirement none of them covers. Empty
+is the default and the whole corpus, which is the honest state the lane exists to make visible. A manifest DSL would move the policy out of reach of the consumer's
 compiler; a copied block of policy is not a mechanism but a habit, and it fails one module at a time.
 `CLAUDE.md` §1.5 is the governing rule and states the inherited/not-inherited line; `ManifestAgreement`
 is the check, in a static layer (declaration against declaration) and a dynamic one (the base's policy

@@ -5032,6 +5032,32 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
   is emitted-type bodies plus the injected files' prepended headers — 16 + 12 notes on libGDX core
   alone, which is why it did not travel with the phase fix.
 
+### 12.4.5 The platform matrix — what the target set turned on, and what it found
+
+`PortabilityCheck` is a §1(b) phase now (`DESIGN.md` §2.8, `ENGINE-LIMITS.md` P6): one mechanism, one
+parameter (`PortManifest.targets`), and a rule list carrying the platforms each rule is a refusal
+FOR, each rule citing the `ApiRows` row that holds the availability claim and its version anchor.
+Four things this repository can now say that it could not before, and only one of them is a defect:
+
+| | |
+|---|---|
+| the RE-SCOPING | 8 of the pre-existing rules claim Scala.js alone (7 measured too broad for Scala Native 0.5.x, plus `System#getProperty`, whose `why` was not broad but FALSE). **No port's count moved for it**: the default target set is all three platforms, so a JS-refusal still fires. It is observable only to a port declaring `targets = [jvm, native]`, and none does |
+| the MATCHER | `startsWith` became `RuleScope.covers` with the trailing separator stripped (§4.56). The one live victim: `java.lang.Thread` covering `java.lang.ThreadLocal`, which Scala.js implements — **LiqpMigrate 54 → 52, LiqpTestMigrate 1521 → 1519**, and no other corpus library writes a `ThreadLocal` |
+| the MISSING rules | the time/text/locale area had **zero**. Its refusal residue found a real site on the first run: libGDX's `TextFormatter` uses `java.text.MessageFormat`, which no surveyed source tree implements on either backend — **LibgdxCoreMigrate 151 → 153**, `remediation` 29 → 30 with a concrete `dropTypes` line, and +2 through the resolution root on all six gdx-family dependents with their `portability(emitted)` flat. liqp gains **4** `java.util.Calendar` sites; `IDN` and `ServiceLoader` are re-attributions at net 0 |
+| `dependency-coverage` | the twenty-second required check, and the OTHER half of the same enumeration. Half the matrix's answers are `Depend` — the API exists off the JVM, in an artifact the build does not name — and reported as an unportability the finding is unanswerable. First run, and it is not vacuous anywhere it should not be: **libGDX 37 sites** (`java.util.Locale` → `scala-java-locales`), against **15 dependency rules** and **0 declared artifacts** on every port |
+
+**Nothing is wired into any port.** No port declares a target, a `verdictOverride` or a dependency,
+and that is the state the machinery was landed into deliberately — whether sge and ssg genuinely
+ship all three backends is their maintainers' answer, and the rev-1 default is what makes the wrong
+answer cheap either way: a port that never declares one is checked exactly as it was.
+
+**Not built, and priced rather than attempted:** `RegexConstructCheck`. Scala Native's
+`java.util.regex` is RE2-backed and its unsupported-construct list is 40 items long and verbatim
+from that project's own docs; the Scala.js side of that list was never fetched, and the survey says
+so. A construct check shipping a JS list on an INFERENCE would be a check asserting coverage it does
+not have, which is the one failure mode the whole catalog is built against — so it ships when the
+list is fetched, or it ships Native-only, and neither happened here.
+
 ### 12.5 Not run
 
 - **`PortMapAcceptanceSpec` still `assume`s itself out in a WORKTREE.** It resolves

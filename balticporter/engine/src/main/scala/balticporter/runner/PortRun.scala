@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -216,9 +216,15 @@ final case class PortRun(
   private def targets: Set[balticporter.catalog.Platform] =
     manifest.map(_.targets).getOrElse(balticporter.catalog.Platform.values.toSet)
 
+  /** …and the port's own answers where it disagrees with the catalog's RECOMMENDATION. Never with
+    * its availability: `by` is the (a) fact and no manifest reaches it. */
+  private def verdictOverrides: PortabilityCheck.Overrides =
+    manifest.map(_.verdictOverrides).getOrElse(Map.empty)
+
   /** …and the rules those targets ask about. One derivation, read by both the emitted-code lane and
     * the injected-source scan, so the two numbers can never be against different rule sets. */
-  private def portabilityRules: List[PortabilityCheck.Rule] = PortabilityCheck.rulesFor(targets)
+  private def portabilityRules: List[PortabilityCheck.Rule] =
+    PortabilityCheck.rulesFor(targets, verdictOverrides)
 
   private def renames: Map[String, String] = manifest.map(_.effectivePackageRenames).getOrElse(packageRenames)
 
@@ -551,6 +557,29 @@ final case class PortRun(
       s", against ${portabilityRules.size} rules")
     if portability.nonEmpty then say(PortReport.Kind.Portability.classification)
     println(PortabilityCheck.summary(portability, fixes))
+
+    // ---- and the OTHER half of the same enumeration: what the declared backends need from the
+    // BUILD GRAPH rather than from the source. Half the catalog's platform answers are `Depend` —
+    // the API exists off the JVM, in an artifact nobody has added — and reported as an
+    // unportability that finding is unanswerable, because the reader is told to remove a call one
+    // `libraryDependencies` line makes correct. Three conjuncts, and two of them are structural:
+    // the usage FIRED (this walk), the port declared no ALTERNATIVE (read through
+    // `verdictOverrides`, so it cannot disagree with the first), and no declared dependency
+    // COVERS it (the one real filter, below). Held to this module's own units by the same
+    // `notShipped` predicate every other check carries (D2).
+    val declaredDeps = manifest.map(_.dependencies).getOrElse(Nil)
+    val allRequired  = DependencyCheck.requirements(program, targets, verdictOverrides)
+    val needed       = DependencyCheck.uncovered(
+                         DependencyCheck.inEmittedCode(program, allRequired, notShipped), declaredDeps)
+    locally {
+      given Program = program
+      CheckReport.record(DependencyCheck.Name, DependencyCheck.report(needed, declaredDeps))
+    }
+    say(s"DEPENDENCY COVERAGE: ${needed.size} site(s) needing an artifact this build does not name" +
+      s", against ${PortabilityCheck.dependencyRulesFor(targets, verdictOverrides).size} rules" +
+      s" (${declaredDeps.size} declared)")
+    if needed.nonEmpty then say(DependencyCheck.Classification)
+    println(DependencyCheck.summary(needed))
 
     // ---- the port's JDK WALL, classified — DESIGN.md §8.9 ----
     // Second consumer of the enumeration `PortabilityCheck` just used, with no new traversal. The
@@ -1103,7 +1132,15 @@ final case class PortRun(
     // into `managedMain` unconditionally, so a `sourceSet = Test` port with a generated project
     // defined every support type twice — and did so only when `project` was `Some`, which made the
     // emitted file set depend on whether a build was also generated.
-    project.foreach { spec => SbtGen.emitPort(portRoot, spec, effectivePhases, runtimeMode) }
+    // …plus whatever the MANIFEST says this module's build must add. `PortManifest.dependencies` is
+    // where a port records that it took a `Verdict.Depend`'s advice, and the generated build is the
+    // only place that fact can have an effect — so the two meet here rather than in the caller's
+    // `ProjectSpec`, which would leave a port free to declare the dependency and not ship it.
+    // Empty on every port today, so no generated build file moves.
+    project.foreach { spec =>
+      val declared = manifest.map(_.dependencies).getOrElse(Nil).map(SbtGen.Dep.of)
+      SbtGen.emitPort(portRoot, spec.copy(deps = spec.deps ++ declared), effectivePhases, runtimeMode)
+    }
 
     val report = PortReport(
       label = label,
@@ -2322,6 +2359,10 @@ object PortRun:
     // rows with no Scala-side normative citation. Required for the reason it exists — the number
     // was a `println` nothing diffed — and never asserted on anywhere.
     CatalogCheck.Uncited,
+    // …and the build-graph half of the portability enumeration. Required for the same reason
+    // `portability(injected)` is: it records on every run, `0 of 0` included, and a port whose
+    // artifact list nobody has written is indistinguishable from one whose check never ran.
+    DependencyCheck.Name,
     // recorded only when CollectionsTransform is in the pipeline; RequiredChecks asserts against
     // what RECORDED, and a port without the phase records neither, so requiring them here would
     // fail every phase-less port. They are made unskippable by the wiring living beside the

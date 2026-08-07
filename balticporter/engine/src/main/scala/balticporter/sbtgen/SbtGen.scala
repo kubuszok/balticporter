@@ -11,14 +11,29 @@ import balticporter.tir.Phase
 object SbtGen:
 
   /** @param crossScala `%%` rather than `%` — a Scala library, cross-versioned by the port's own
-    *                   `scalaVersion` rather than pinned to the engine's. */
-  final case class Dep(org: String, artifact: String, version: String, crossScala: Boolean = false):
+    *                   `scalaVersion` rather than pinned to the engine's.
+    * @param crossPlatform `%%%` — cross-versioned by the SCALA.JS / NATIVE version as well, which is
+    *                   a fact about the artifact (`scalajs-weakreferences` is published that way)
+    *                   rather than about the port. It needs the crossproject plugin — which a port
+    *                   declaring such a dependency necessarily has — so the spelling is emitted
+    *                   rather than downgraded: a `%%` written where `%%%` was meant resolves to an
+    *                   artifact that does not exist, loudly, which is the right failure. */
+  final case class Dep(org: String, artifact: String, version: String, crossScala: Boolean = false,
+                       crossPlatform: Boolean = false):
     def sbtString: String =
-      val sep = if crossScala then "%%" else "%"
+      val sep = if crossPlatform then "%%%" else if crossScala then "%%" else "%"
       s""""$org" $sep "$artifact" % "$version""""
 
   object Dep:
     def apply(c: RuntimeArtifact.Coordinates): Dep = Dep(c.organization, c.artifact, c.version, c.crossScala)
+
+    /** …and the coordinate a catalog `Verdict.Depend` names, which a port copies into
+      * `PortManifest.dependencies` when it takes the recommendation. */
+    def of(d: balticporter.catalog.ArtifactDep): Dep = Dep(
+      d.org, d.name, d.rev,
+      crossScala    = d.cross == balticporter.catalog.CrossKind.Scala,
+      crossPlatform = d.cross == balticporter.catalog.CrossKind.Platform,
+    )
 
   /** @param runtime
     *   what the RUN owes this port: the `balticporter-runtime` dependency, or the vendored sources,

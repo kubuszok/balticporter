@@ -254,16 +254,115 @@ object PortabilityCheck:
       "and it is not a TimeZone shim: rewrite the CALL SITE where it can be rewritten, and shim " +
       "only the surface a caller strictly needs",
       at = l(71)),
+    // ---- TIME, TEXT AND LOCALE — the DEPENDENCIES. Twenty rows, and NOT ONE was checked. ----
+    //
+    // These are the other half of the area, and they are a different KIND of answer: the API exists
+    // off the JVM, in an artifact the build has to add. Reported as an unportability the finding is
+    // unanswerable — the reader is told to remove a call that a one-line `libraryDependencies` entry
+    // makes correct — so `Verdict.Depend` routes them to `dependency-coverage` instead, and
+    // `rulesFor` never yields one. They are HERE, in the same list, because the matcher, the
+    // enumeration and the citation are identical; only the finding kind differs.
+    Rule("java.time.ZoneId#of", "zone lookup is BY STRING, so the whole IANA database ships unless " +
+      "the build generates a trimmed one — this is a BUILD-TIME action (`sbt-tzdb`) and not only a " +
+      "library add, and the untrimmed database is a measurable bundle cost",
+      exactMember = true, at = l(63)),
+    Rule("java.time.", "Scala.js's working java.time classes live only in an unpublished " +
+      "ext-dummies module application code cannot depend on, and Scala Native has no java.time " +
+      "package at all — its own docs point at this artifact. Covers java.time.format and " +
+      "java.time.temporal at no separate cost",
+      at = l(60)),
+    Rule("java.util.Locale", "the same unpublished-stub story on Scala.js (its default is ROOT) and " +
+      "absent on Native. The replacement is CLDR-backed at a NEWER CLDR than the JDK's, so " +
+      "locale-derived STRINGS can differ from the JVM's even where the API matches",
+      at = l(65)),
+    Rule("java.text.DecimalFormat", "an ext-dummies placeholder with almost no surface on Scala.js " +
+      "and absent on Native; the artifact covers the family, setRoundingMode included",
+      at = l(66)),
+    Rule("java.text.NumberFormat", "the same artifact as DecimalFormat, which it is the supertype of",
+      at = l(66)),
+    Rule("java.text.DecimalFormatSymbols", "the same artifact as DecimalFormat", at = l(66)),
+    Rule("java.text.SimpleDateFormat", "an ext-dummies placeholder on Scala.js and absent on Native",
+      at = l(67)),
+    Rule("java.text.DateFormat", "the same artifact as SimpleDateFormat", at = l(67)),
+    Rule("java.text.DateFormatSymbols", "the same artifact as SimpleDateFormat", at = l(67)),
+    Rule("java.util.Currency", "supplied by the locales artifact's java/util tree, which holds this " +
+      "class and nothing else", at = l(74)),
+    // ---- and the two families spec-7 found with NO rule at all ----
+    Rule("java.security.MessageDigest", "absent from BOTH core javalibs — the exception types " +
+      "(NoSuchAlgorithmException) exist so a catch site still compiles while nothing throws them " +
+      "from a working digest, which is the quietest possible shape for this gap",
+      at = p(26)),
+    Rule("java.security.SecureRandom", "absent from Scala.js's core javalib. UNSTATED for Native — " +
+      "the survey did not confirm its absence there, so this rule claims Scala.js alone",
+      on = Rule.JsOnly, at = p(27)),
+    Rule("java.lang.ref.WeakReference", "removed from Scala.js's core javalib in 1.6.0 — its " +
+      "maintainers took OUT a stub that silently held STRONG references rather than leave a " +
+      "wrong-but-compiling one, which is CLAUDE.md §3's argument made by a platform team about " +
+      "their own stdlib. The opt-in artifact implements it over ECMAScript 2021's WeakRef; Scala " +
+      "Native's is GC-integrated with a dedicated handler thread",
+      on = Rule.JsOnly, at = p(31)),
+    Rule("java.lang.ref.ReferenceQueue", "the same artifact as WeakReference, which it is useless " +
+      "without", on = Rule.JsOnly, at = p(31)),
+    Rule("java.lang.ref.Cleaner", "expected to be the same opt-in artifact as WeakReference. " +
+      "UNSTATED on both non-JVM platforms — the survey did not reach this class and the verdict is " +
+      "inherited by expectation rather than by measurement",
+      on = Rule.JsOnly, at = p(32)),
   )
 
-  /** THE §1(b) PARAMETER APPLIED: the rules any of `targets` asks about.
+  /** THE §1(b) PARAMETER APPLIED: the UNPORTABILITY rules any of `targets` asks about.
     *
     * An empty target set selects nothing and makes the check a no-op, which is §1(b)'s own rule for
     * a parameter's empty value — but it is deliberately NOT the default any port gets. See
     * `PortManifest.targets`: the default is all three platforms, i.e. what this check did before it
     * had a parameter, so no port's baseline moves by acquiring one.
+    *
+    * The complement is [[dependencyRulesFor]], and the two PARTITION [[all]].
     */
-  def rulesFor(targets: Set[Platform]): List[Rule] = all.filter(_.asks(targets))
+  def rulesFor(targets: Set[Platform], overrides: Overrides = Map.empty): List[Rule] =
+    all.filter(r => stillAsks(r, targets, overrides) && !isDependency(r, targets, overrides))
+
+  /** …and the rules whose answer is an ARTIFACT rather than a removal.
+    *
+    * These feed `DependencyCheck`, never `portability(*)`. A `Verdict.Depend` is a build-graph fact
+    * — the API exists off the JVM, in something the build does not name — and reported as an
+    * unportability the finding is unanswerable: the reader is told to remove a call that one
+    * `libraryDependencies` line makes correct. */
+  def dependencyRulesFor(targets: Set[Platform], overrides: Overrides = Map.empty): List[Rule] =
+    all.filter(r => stillAsks(r, targets, overrides) && isDependency(r, targets, overrides))
+
+  /** the map a port may override a row's RECOMMENDATION with — never its availability. */
+  type Overrides = Map[DiffId, Map[Platform, balticporter.catalog.Verdict]]
+
+  /** Does this rule still ask a question of any declared target, AFTER the port's own overrides?
+    *
+    * Without an override this is exactly [[Rule.asks]], because commit 1's spec already forbids a
+    * rule from claiming a platform its row calls `Keep`. WITH one it is the port's own escape: a
+    * `verdictOverrides` entry saying `Keep` is a statement that this port accepts the JDK type on
+    * that backend, and the rule then leaves BOTH lanes rather than falling through to the
+    * unportability one. What such an override cannot touch is `by`, the availability FACT.
+    *
+    * A rule with no cited row always asks — there is nothing to override. */
+  private def stillAsks(r: Rule, targets: Set[Platform], overrides: Overrides): Boolean =
+    r.asks(targets) && rowOf(r).forall { row =>
+      r.on.intersect(targets).exists(p => row.verdictOn(p, overrides).actionable)
+    }
+
+  /** Is every platform this rule still asks about answered by an ARTIFACT?
+    *
+    * ALL rather than ANY, deliberately, and `DependencyCoverageSpec` asserts that no rule in the
+    * list is MIXED — some targets `Depend` and others not — so the classification is exact rather
+    * than a rounding. A rule with no cited row is never a dependency: the survey is where a
+    * coordinate comes from, and a rule with no row (`org.junit.`, `ClassLoader`) has none to give.
+    *
+    * Read THROUGH the overrides, which is what makes the third of `dependency-coverage`'s three
+    * conjuncts structural rather than a second filter that could disagree with the first: a port
+    * that declared it ships its own shim has changed the verdict, so the row stops being a
+    * dependency here and never becomes a requirement at all. */
+  private def isDependency(r: Rule, targets: Set[Platform], overrides: Overrides): Boolean =
+    rowOf(r).exists { row =>
+      val asked = r.on.intersect(targets).filter(p => row.verdictOn(p, overrides).actionable)
+      asked.nonEmpty && asked.forall(p => row.verdictOn(p, overrides).dependency.isDefined)
+    }
 
   /** THE CATALOG ROW behind a rule, where the survey has one. */
   def rowOf(r: Rule): Option[ApiRow] = r.at.flatMap(ApiRows.byId.get)
