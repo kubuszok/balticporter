@@ -278,3 +278,44 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(clue(text).contains("for (obj <- "), clue(text))
     assert(!text.contains("obj$e"), clue(text))
   }
+
+  // -- a CASE's GUARD ---------------------------------------------------------------------------
+  //
+  // `Tree.CaseDef.guard` reached the emitter, was carried by `Phase.mapTerm`'s `Match` arm and
+  // printed by `TirPrinter`, and `matchStr` never rendered it — so every diagnostic said the guard
+  // was there while the emitted arm matched every scrutinee the PATTERN matched. `ENGINE-LIMITS.md`
+  // F5's shape, and unreachable from the corpus (nothing mints a guard: java's classic switch has
+  // none and the pattern switch is refused), which is why it is pinned here rather than measured.
+  // Found by `EmissionFieldCoverageSpec`, which is the instrument that can see a field the emitter
+  // silently does not read.
+
+  private def guardedSwitch(guard: Option[Term]): String =
+    val CLS = SymId(80); val M = SymId(81); val X = SymId(82); val I = SymId(83); val BL = SymId(84)
+    val tI  = TypeRef(NoPrefix, I)
+    val scr = Tree.Select(Tree.This(CLS, TypeRef(NoPrefix, CLS), O), X, tI, O)
+    val mtch = Tree.Match(scr, List(
+      Tree.CaseDef(List(Tree.Literal(Constant.IntC(1), tI, O)), guard,
+        Tree.Literal(Constant.UnitC, NoType, O), isDefault = false),
+      Tree.CaseDef(Nil, None, Tree.Literal(Constant.UnitC, NoType, O), isDefault = true),
+    ), NoType, O)
+    val d  = Tree.DefDef(M, List(Nil), TypeTree(NoType, O), rhs = Some(mtch), origin = O)
+    val cd = Tree.ClassDef(CLS, parents = Nil, selfType = None, body = List(d), origin = O)
+    val syms = SymbolTable(List(
+      Symbol(CLS, "S", "demo.S", Flags(), SymId.None, TypeRef(NoPrefix, CLS)),
+      Symbol(M, "run", "demo.S#run", Flags(), CLS, MethodType(Nil, NoType)),
+      Symbol(X, "x", "demo.S#x", Flags(), CLS, tI),
+      Symbol(I, "Int", "scala.Int", Flags(), SymId.None, NoType),
+      Symbol(BL, "Boolean", "scala.Boolean", Flags(), SymId.None, NoType),
+    ))
+    new TirEmitter(new Program(List(cd), syms, Xref.build(List(cd)), MemberIndex.empty)).emit
+
+  test("a guarded case renders its guard — a dropped one WIDENS the arm to every matching scrutinee") {
+    val text = guardedSwitch(Some(Tree.Literal(Constant.BoolC(true), TypeRef(NoPrefix, SymId(84)), O)))
+    assert(clue(text).contains("case 1 if true =>"), clue(text))
+  }
+
+  test("an UNGUARDED case is byte-identical to what it always was — the fix adds nothing where there is no guard") {
+    val text = guardedSwitch(None)
+    assert(clue(text).contains("case 1 =>"), clue(text))
+    assert(!text.contains(" if "), clue(text))
+  }

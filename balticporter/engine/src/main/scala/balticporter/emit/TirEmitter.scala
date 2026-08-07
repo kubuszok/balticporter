@@ -3662,7 +3662,17 @@ final class TirEmitter(
   private def matchStr(m: Tree.Match, i: Int): String =
     val (scr, cases) = (m.scrutinee, m.cases)
     val cs = cases.map { c =>
-      val pat = if c.isDefault then "_" else c.labels.map(term(_, i)).mkString(" | ")
+      val bare = if c.isDefault then "_" else c.labels.map(term(_, i)).mkString(" | ")
+      // …AND ITS GUARD. `Tree.CaseDef.guard` was populated-able, carried through every phase by
+      // `Phase.mapTerm`'s `Match` arm, printed by `TirPrinter` — and never rendered here, which is
+      // `ENGINE-LIMITS.md` F5's shape exactly one node over: a field every diagnostic says is there
+      // and the emitter drops. A guard NARROWS a case, so dropping one widens the arm to every
+      // scrutinee matching the pattern — silent, compiling, and wrong in the direction that runs
+      // MORE code. Nothing in the corpus mints one today (java's classic switch has no guard and
+      // JS-S10's pattern switch is `Absent`), which is why no count could ever have found it; a
+      // PHASE that synthesises a narrowed arm is all it takes, and the next one would have been
+      // written against a field that does nothing.
+      val pat = bare + c.guard.fold("")(g => s" if ${term(g, i)}")
       if !caseNeedsBoundary(c.body) then s"${ind(i + 1)}case $pat => ${inSwitch(scala.None)(term(c.body, i + 1))}"
       else
         labelSeq += 1
