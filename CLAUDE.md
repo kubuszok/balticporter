@@ -107,6 +107,24 @@ the SPELLING, so `TransformFactory.scopeOf` takes the phase's own default rather
   `items ++= JavaCollection.from(other.items)`, and `++=` takes an `IterableOnce`. Measured at 4
   errors on a port that had 0, with every check count flat and only the member digests moving.
 
+**And the obligation to COUNT is now asked of the pipeline, so a phase cannot simply not have it.**
+Everything above was per-phase discipline, arrived at four times the same way — a port shipped, a
+wall of `Found: … / Required: …` arrived, and somebody wrote the count afterwards. A phase that
+retypes and counts NOTHING is invisible to every instrument here: the retyping is position-blind so
+both sides of most slots move together, the port compiles, no check count moves because there is no
+check, and the seams reach whoever compiles the port next as bare typer errors with no §1
+classification. So a retyping phase declares `Rewrite.accountedBy` — the check LANES that count its
+residue, as symbols, never as strings — and `Pipeline.runTraced` DERIVES what it actually moved by
+comparing each owned symbol's `info` across the phase. The two halves come from different places on
+purpose: **a phase is not asked what it retyped**, because that is the one number it could be wrong
+about or silently stop maintaining, and the pipeline can simply see it. `rewrite-callsites` then
+reports two things nothing could see before — a phase that moved declarations and names no lane, and
+a phase naming a lane that did not RECORD in this run (`RequiredChecks`'s guarantee for the lanes
+that are required only when their phase is present, which that set cannot express). It counts PHASES
+and not usages, and that is measured rather than assumed: the generic `usagesOf(s) \ callSites` form
+is not the boundary counts and cannot become them — `ENGINE-LIMITS.md` K5.10 carries both numbers,
+and its first run named two retyping phases that had never answered.
+
 **And a retyping owes an answer at the REIFIED positions, which are not slots at all.** Everything
 above is about a SLOT — two sides disagree, and a compiler or a boundary count says so. An
 `instanceof` and a downcast are neither: they ask about a RUNTIME OBJECT, java answered over java's
@@ -605,10 +623,11 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   Each prints, untruncated and diffed against the committed baseline, **every engine check the
   run's own pipeline registers, plus any check the port's own §1(c) rules register**. The total is
   not a constant to memorise — quoting one is what went stale twice; it
-  is the TWENTY-THREE required of every run (`signature`, `omissions`,
+  is the TWENTY-FOUR required of every run (`signature`, `omissions`,
   `portability(all|emitted|injected)`, `dependency-coverage(all|)`, `substitution(emitted|dangling)`,
   `remediation`, `policy`,
   `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`, `base-surface`,
+  `rewrite-callsites`,
   `catalog(consulted|unreached|unmechanised|undischarged|uncited)`) plus
   whatever the RUN'S OWN PIPELINE registers. `base-surface` is required of a BASE port too, which has
   no contract to ask: a run that asked nothing and a run whose recording was skipped are

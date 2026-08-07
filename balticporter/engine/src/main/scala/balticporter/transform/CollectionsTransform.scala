@@ -132,8 +132,20 @@ final class CollectionsTransform(
       * bodies and no signature, so a base and a dependent that declare different sinks still emit
       * surfaces that compile together — which is the question that fingerprint answers. */
     val reflectiveSinks: Set[String] = Set.empty,
-) extends Phase, RequiresRuntime, PolicySource, SurfacePolicy, PolicyBound:
+) extends Phase, Rewrite, RequiresRuntime, PolicySource, SurfacePolicy, PolicyBound:
   def name = "java-collections->scala"
+
+  /** THE THREE LANES that count what this retyping opened and could not close (`Rewrite`).
+    *
+    * Three and not one, because they are three different residues and a reader acts on each
+    * differently: [[CollectionClosureCheck]] is a TYPE the mapping does not reach, [[CollectionBoundaryCheck]]
+    * is a SLOT whose two sides ended up on opposite sides of a line this phase drew, and
+    * [[RetargetBoundaryCheck]] is the direction a subtyping argument does not license — a value the
+    * JDK PRODUCES at a type this phase retargeted, which the boundary check cannot see because the
+    * position-blind retyping moved the node type on both sides of that slot. Named as symbols
+    * rather than as strings so a renamed lane is a compile error and not a silently unwired claim. */
+  def accountedBy: Set[String] =
+    Set(CollectionClosureCheck.Name, CollectionBoundaryCheck.Name, RetargetBoundaryCheck.Name)
 
   /** What the RUN resolved each declared scope entry to, before the pipeline started (§8.1). This
     * phase is the one whose own matcher already reports [[balticporter.tir.NotBound.ExternalOnly]]

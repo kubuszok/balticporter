@@ -252,6 +252,24 @@ object Pipeline:
     * artifacts would answer three narrower questions and never "was this row reached at all". */
   def runTraced(program: Program, phases: List[Phase], binder: PolicyBinder,
                 catalog: balticporter.catalog.CatalogLog): (Program, DecisionLog) =
+    runTraced(program, phases, binder, catalog, RewriteLog.discarding)
+
+  /** …and with the run's REWRITE LOG, which records what each phase MOVED.
+    *
+    * The record is taken HERE and not by the phases, and that is the point of it. A phase declares
+    * which check lane counts its residue ([[Rewrite.accountedBy]]) and is not asked what it retyped,
+    * because the pipeline can SEE that: it holds the symbol table on both sides of every phase, so
+    * "which owned declarations did this phase's `info` rewrite move" is a comparison rather than a
+    * claim. A phase cannot under-report its own reach to make `rewrite-callsites` quiet, and a phase
+    * that stops maintaining a hand-written set cannot exist.
+    *
+    * Owned symbols only, and present-on-BOTH-sides only. A symbol the phase MINTED has no `info` to
+    * have moved, and an external's signature is a fact about a class file that no phase may move at
+    * all (§4.56, and `mapSymbols` already refuses to walk one) — counting either would make the set
+    * mean something other than "declarations this rewrite retyped".
+    */
+  def runTraced(program: Program, phases: List[Phase], binder: PolicyBinder,
+                catalog: balticporter.catalog.CatalogLog, rewrites: RewriteLog): (Program, DecisionLog) =
     val log     = new DecisionLog
     val ordered = order(phases)
     ordered.foreach { case p: PolicyBound => p.bindPolicy(binder); case _ => () }
@@ -270,6 +288,7 @@ object Pipeline:
         phase.cites.clear()     // …and this run's citations only, for the same reason
         val out  = phase.run(prog)
         val next = out.rebuilt(xref = Xref.build(out.units))
+        recordPatch(rewrites, phase, prog, next)
         log.recordAll(phase.decisions.drain())
         phase.cites.foreach((id, decl) => catalog.cite(id, decl))
         phase.cites.clear()
@@ -280,6 +299,22 @@ object Pipeline:
         next
     }
     (out, log)
+
+  /** WHICH declarations this phase's rewrite MOVED, derived rather than declared — see the
+    * `runTraced` overload above for why the pipeline takes this record and the phase does not.
+    *
+    * Nothing is recorded where nothing moved: a phase that retyped no declaration has no seam to
+    * account for, so it owes no lane and produces no row. That is what makes `rewrite-callsites` a
+    * question about RETYPING phases without anybody having to maintain a list of which phases those
+    * are — the list is derived from what each one did, on every run. */
+  private def recordPatch(rewrites: RewriteLog, phase: Phase, before: Program, after: Program): Unit =
+    val owned   = before.owned & after.owned
+    val moved   = owned.filter(id =>
+      (before.symbolOf(id), after.symbolOf(id)) match
+        case (Some(b), Some(a)) => b.info != a.info
+        case _                  => false)
+    if moved.nonEmpty then
+      rewrites.record(Patch(phase.name, moved, phase match { case r: Rewrite => r.accountedBy; case _ => Set.empty }))
 
   /** print the TIR at a phase boundary. `balticporter.dumpOnly=<fqn>` narrows it to one unit —
     * without that a whole-library dump is megabytes and nobody reads it. */

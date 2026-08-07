@@ -4345,3 +4345,58 @@ that passed. `ManifestAgreement.Kind.BaseNamespaceUnclaimed` reports it, non-fat
 dependent's side (the run that holds both manifests) with the fix named in the base's. The empty
 manifest that declares "this resolution root is not a ported module" states no policy and reports
 nothing — `PortManifest.declaresPolicy` is the one line that separates the two.
+
+### 8.14 The RETYPING contract — a phase declares its LANE, the pipeline observes its REACH — as built
+
+`CLAUDE.md` §1 states what a retyping phase owes in prose, and four phases discharge it: every seam
+the retyping opened and could not close is counted, with the §1 classification a bare typer error
+cannot carry. Each of those four answers was written after a port hit the wall, and
+`ENGINE-LIMITS.md` K5.6 recorded the residue of that process in one sentence — *a NEW retyping phase
+can reintroduce this shape until it too asks the question*. Nothing could see a phase that had not
+asked.
+
+**Why it is invisible without a mechanism.** A retyping is position-blind, so both sides of nearly
+every slot move together and the port compiles; there is no check, so no count moves; the emitted
+text is exactly what the phase meant, so no member digest is wrong. The evidence arrives in another
+repository, as a wall of `Found: … / Required: …` with nothing to classify it (§4.45).
+
+**The two halves come from different places, and that is the design.**
+
+- a phase DECLARES `Rewrite.accountedBy`: the check lanes that count its residue, as `Check.Name`
+  symbols rather than string literals, so a renamed lane is a compile error and not a silently
+  unwired claim;
+- the PIPELINE OBSERVES `Patch.retyped`: the owned declarations whose `info` that phase changed,
+  compared across the phase inside `Pipeline.runTraced`, which is the only place both symbol tables
+  exist at once. A phase is never asked what it retyped — that is the one number it could be wrong
+  about, or silently stop maintaining, and asking for it would put the mechanism's own population
+  under the control of the thing it polices.
+
+`rewrite-callsites` then reports two things: a phase that moved declarations and names no lane
+(`Unaccounted`), and a phase naming a lane that did not RECORD in this run (`UnwiredAccounting`).
+The second is `PortRun.RequiredChecks`'s guarantee for the lanes that exist only when their phase
+does — which that set cannot express, because a lane required of every run and a lane required of
+every run *that carries a phase* are different claims. It is the LAST check to run, and that
+position is part of it: it asks whether a lane recorded, and a lane not yet called has not.
+
+**It counts PHASES, never usages, and that is measured rather than assumed.** The generic form
+`usagesOf(s) \ callSites` — every usage of a retyped declaration the phase did not also rewrite — is
+not the four boundary counts and cannot become them: what makes a usage a seam is the type
+comparison the four checks perform with their own `typeMap`, which §4.56 forbids reasoning without.
+On libGDX core it is 3,045 usages against 152 counted seams (`ENGINE-LIMITS.md` K5.10). The scale
+line the check prints recomputes both on every run, so the refusal cannot become prose that goes
+stale.
+
+**The wiring question takes an `Option`, and that is not defensiveness.** `CheckReport.record` is a
+no-op when the artifact layer is off (§5.1: the gate is on the LAYER, and a run with no derivable
+port identity has it off whatever the flags say), so `snapshot()` is then empty for EVERY lane. Read
+as an answer, that reports every accounted phase in the engine as unwired — a finding manufactured by
+a diagnostic switch rather than by the program, at exactly the fixtures (`testkit`, a §1(c) rule's own
+harness) where a phase author would first meet it. `None` is "the question cannot be asked here"; the
+`Unaccounted` lane is unaffected, because it reads the pipeline's own observation and no artifact
+switch touches that.
+
+**What the first run found.** Two retyping phases had never answered — `PrimitiveToOpaqueTransform`
+and `TypeRedirectTransform`. Both hold a `PolicyReport`, which is why neither looked silent, and
+naming `policy` in `accountedBy` would have been the suppression the lane exists to prevent: a
+declared key that never fired is a different residue from a slot two sides of which disagree. They
+stay counted, and the count is the work list — derived, not guessed.

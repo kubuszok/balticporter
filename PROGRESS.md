@@ -5005,6 +5005,17 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
 
 ### 12.3 Counted residues that are not defects
 
+- **`rewrite-callsites` is 2 on the libGDX family and 0 everywhere else, and those 2 ARE the work
+  list.** The lane asks the question `ENGINE-LIMITS.md` K5.6 left open — does every phase that
+  RETYPES declarations count the seams that creates — and its first run named two phases that never
+  had: `PrimitiveToOpaqueTransform` (7 declarations moved) and `TypeRedirectTransform` (15). Neither
+  looked silent, because both hold a `PolicyReport`; `policy` counts DECLARED KEYS THAT NEVER FIRED,
+  which is a different residue from a slot whose two sides disagree, and naming it in `accountedBy`
+  would be the suppression the lane exists to prevent. Closing either means the same work the other
+  four retyping phases already did — a check of its own, with a §1 classification per issue kind —
+  and is a measured step of its own, not a rider. The lane reads 0 on every port that carries neither
+  phase, which is a provable zero rather than an absence: the population is derived from what each
+  phase DID, on every run (`DESIGN.md` §8.14).
 - **Trivia `lost` is 0 on every port** (D4t, below). What remains counted is `trivia(recovered)` —
   comments the attachment channel could not place and the backstop relocated with their java
   coordinates — and `trivia(deliberate)`, derived from the port's own drops. Neither is a defect;

@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -1145,6 +1145,23 @@ final case class PortRun(
     say(s"POLICY (declared keys that never fired): ${policy.findings.size}")
     if policy.nonEmpty then println(policy.render)
 
+    // ---- the question every RETYPING phase owes, asked of the pipeline (`Rewrite`) ----
+    //
+    // LAST of the checks, and that position is the check itself: its second finding asks whether a
+    // lane a phase NAMES actually recorded in this run, and a lane that has not been called yet has
+    // not. Recorded unconditionally — including the empty result, and including a pipeline with no
+    // retyping phase in it — for `RequiredChecks`'s own reason: a port whose phases all account and
+    // a port whose check never ran are one silence otherwise. The retyped sets come from
+    // `Pipeline.runTraced`'s observation, so nothing here trusts a phase's account of its own reach.
+    // `Option`, never the bare set: with the artifact layer off nothing has recorded, and reading
+    // that as an answer would report every accounted phase as unwired — a finding manufactured by a
+    // diagnostic switch. See the check's own doc.
+    val rewriteFindings = RewriteCallSitesCheck.check(
+      translated.rewrites, Option.when(CheckReport.enabled)(CheckReport.snapshot().keySet))
+    CheckReport.record(RewriteCallSitesCheck.Name, rewriteFindings.map(_.report))
+    say(s"REWRITE CALL SITES (retyping phases that answer nothing): ${rewriteFindings.size}")
+    println(RewriteCallSitesCheck.summary(rewriteFindings, translated.rewrites, program))
+
     // Every check this run believes it ran must ALSO have registered itself with the persistence
     // layer, or a number reaches the operator's terminal and never reaches `findings.tsv`. That is
     // the same class of gap as a check nobody invoked, one layer down, and it is invisible without
@@ -2120,7 +2137,10 @@ final case class PortRun(
     // is only coherent because neither log is shared (CLAUDE.md §5.1).
     // The binder is handed to the pipeline, which binds every `PolicyBound` phase before the first
     // one runs — a phase run unbound matches nothing, silently.
-    val (program, decisions) = Pipeline.runTraced(parsed, effectivePhases, binder, catalog)
+    // …and the REWRITE log, which the pipeline fills by OBSERVING each phase rather than by asking
+    // it (`Rewrite`): a value this translation owns, for the same reason the two logs above are.
+    val rewrites = new RewriteLog
+    val (program, decisions) = Pipeline.runTraced(parsed, effectivePhases, binder, catalog, rewrites)
     val plan    = RuntimePlan.of(effectivePhases, runtimeMode)
     // `externalConcrete` is DERIVED, never passed in: a caller who has to remember it is a caller
     // who forgets it, and forgetting it silently disables diamond-conflict detection against an
@@ -2144,7 +2164,7 @@ final case class PortRun(
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, bestEffort,
                                  Some(surface), catalog = catalog)
     PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)),
-                       decisions, binder, surface, parsed, catalog)
+                       decisions, binder, surface, parsed, catalog, rewrites)
 
   /** Ask the binder about every key this run DECLARES — its drops, and every keyed phase's own.
     *
@@ -2402,6 +2422,11 @@ object PortRun:
     // The PAIR is required for `portability(all|emitted)`'s reason on top of that — a dependent's
     // honest 0 and a walk that found nothing are one row until the enumeration is beside it.
     DependencyCheck.All, DependencyCheck.Name,
+    // …and the standing question every RETYPING phase owes (`Rewrite`, ENGINE-LIMITS K5.6).
+    // Required of EVERY port, including one whose pipeline retypes nothing: the check reports the
+    // pipeline's own phases, so a run with no retyping phase and a run whose check never ran are
+    // indistinguishable without the row — the same argument `JdkSurface` and `BaseSurface` carry.
+    RewriteCallSitesCheck.Name,
     // recorded only when CollectionsTransform is in the pipeline; RequiredChecks asserts against
     // what RECORDED, and a port without the phase records neither, so requiring them here would
     // fail every phase-less port. They are made unskippable by the wiring living beside the
@@ -2453,6 +2478,15 @@ object PortRun:
         * hand-built `Translated` in a spec is still constructible; every catalog lane then reports
         * the registry's own answer and claims nothing about a run. */
       val catalog: balticporter.catalog.CatalogLog = balticporter.catalog.CatalogLog.discarding,
+      /** what each PHASE MOVED — the observed half of `Rewrite`'s contract (`RewriteCallSitesCheck`).
+        *
+        * Observed by `Pipeline.runTraced` rather than declared by the phases, so it cannot be
+        * carried anywhere else: the symbol table on both sides of a phase exists only while the
+        * pipeline is running it. A value this translation owns, for the same reason `decisions` is.
+        * Defaults to an empty log so a hand-built `Translated` in a spec is still constructible; the
+        * check then reports nothing and claims nothing, which is the honest answer for a program no
+        * pipeline produced. */
+      val rewrites: RewriteLog = RewriteLog.discarding,
   ):
     private val memo = collection.mutable.Map.empty[SymId, String]
     // the DECISIONS are part of the key: they are not in the tree and they are in the emitted text

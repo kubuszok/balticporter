@@ -4,7 +4,7 @@ import balticporter.core.{RuntimeMode, RuntimePlan}
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.catalog.{CatalogLog, DiffId}
-import balticporter.tir.{CheckReport, Decision, Phase, Pipeline, Program, SymId}
+import balticporter.tir.{CheckReport, Decision, Phase, Pipeline, Program, RewriteLog, SymId}
 
 /** One Java snippet taken through the pipeline, with everything a test wants to assert on.
   *
@@ -29,7 +29,15 @@ final case class Ported(before: Program, after: Program, phases: List[Phase],
                         sources: Map[String, String] = Map.empty,
                         decisions: List[Decision] = Nil,
                         runtimeMode: RuntimeMode = RuntimeMode.Dependency,
-                        catalog: CatalogLog = CatalogLog.discarding):
+                        catalog: CatalogLog = CatalogLog.discarding,
+                        /** what each phase MOVED, observed by the pipeline (`balticporter.tir.Rewrite`).
+                          *
+                          * Here for the reason every other log on this fixture is: the record is
+                          * taken while the pipeline holds the symbol table on BOTH sides of a phase,
+                          * so it cannot be re-derived afterwards from `before` and `after` alone
+                          * once more than one phase ran. A spec asserting that its phase accounts
+                          * for what it retyped has nowhere else to read it. */
+                        rewrites: RewriteLog = RewriteLog.discarding):
 
   /** what the phases that ran require of `balticporter-runtime`. Derived, not passed: the fixture
     * is a miniature of the orchestrator, so a test exercises the same derivation a real port does
@@ -110,10 +118,11 @@ object PortFixture:
     // registry itself calls `Open` or `Absent` is never fatal — it is the work list, and a mode
     // that died on it would make the work list unrunnable.
     val catalog       = new CatalogLog(fatal = true)
+    val rewrites      = new RewriteLog
     val before        = SpoonTir.fromSource(java, catalog = catalog)
     val (after, log)  = Pipeline.runTraced(before, phases.toList,
-                          new balticporter.tir.PolicyBinder(before, before.members), catalog)
-    Ported(before, after, phases.toList, Map("Snippet.java" -> java), log.all, mode, catalog)
+                          new balticporter.tir.PolicyBinder(before, before.members), catalog, rewrites)
+    Ported(before, after, phases.toList, Map("Snippet.java" -> java), log.all, mode, catalog, rewrites)
 
   /** the same over SEVERAL compilation units, each `fileName -> code`. A Java file declares exactly
     * one package, so every rule about a PACKAGE BOUNDARY — default access, `protected`, an override
@@ -123,10 +132,11 @@ object PortFixture:
 
   def portAllIn(mode: RuntimeMode, sources: List[(String, String)], phases: Phase*): Ported =
     val catalog      = new CatalogLog(fatal = true)
+    val rewrites     = new RewriteLog
     val before       = SpoonTir.fromSources(sources, catalog = catalog)
     val (after, log) = Pipeline.runTraced(before, phases.toList,
-                         new balticporter.tir.PolicyBinder(before, before.members), catalog)
-    Ported(before, after, phases.toList, sources.toMap, log.all, mode, catalog)
+                         new balticporter.tir.PolicyBinder(before, before.members), catalog, rewrites)
+    Ported(before, after, phases.toList, sources.toMap, log.all, mode, catalog, rewrites)
 
   /** parse only — for tests about the FRONTEND rather than about a phase.
     *

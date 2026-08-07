@@ -94,11 +94,16 @@ final class GlobalsToImplicitsTransform(
       * (`ENGINE-LIMITS.md` CT8). Empty in a base, which is why every existing fingerprint is
       * byte-identical. */
     val extensions: List[ContextHolderExtension] = Nil,
-) extends Phase, PolicySource, MergeablePolicy, PolicyBound:
+) extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
 
   import GlobalsToImplicitsTransform.*
 
   def name = "globals->implicits"
+
+  /** the lane that counts every place the threading STOPPED — a declaration a framework constructs
+    * reflectively, a hand-written caller no manifest key can add a clause to, a residual global
+    * (`Rewrite`, and CLAUDE.md §1's "a class a FRAMEWORK instantiates has no caller to change"). */
+  def accountedBy: Set[String] = Set(ContextSeamCheck.Name)
 
   /** every policy key is written in the UPSTREAM namespace, and the package rename runs LAST
     * (§4.56). */

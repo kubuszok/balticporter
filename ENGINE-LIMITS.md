@@ -2396,6 +2396,11 @@ suite sees it, which makes it CLAUDE.md §4.4's defect class arriving without a 
 the cast turns a runtime failure into a compile error on the same line (ENGINE-LIMITS M6), and here it
 also let `coerce` see the argument and bridge it properly — the cast had been standing between them.
 
+**The sentence this entry used to end on — *a NEW retyping phase can reintroduce this shape until it
+too asks the question* — is CLOSED by K5.10**: `Rewrite.accountedBy` plus the pipeline's own
+observation of what each phase moved, so a phase that counts nothing is a finding rather than a
+silence. What is NOT closed is the cast itself, which is why this entry stays.
+
 *Fix kind: (a).*
 
 ### K5.7 A class that IMPLEMENTS `Map.Entry` — the target is FINAL, so the PARENT stays java's
@@ -2623,6 +2628,57 @@ Measured on liqp: **8 -> 7**, one site (`Insertions#getNames`), 3 member digests
 flat.
 
 *Fix kind: (a). Universal — a rewrite owes every node shape its member can appear in.*
+
+### K5.10 The standing question every RETYPING phase owes — asked of the PIPELINE, and NOT as a usage count. **K5.6's open sentence CLOSED; the generic `usagesOf \ callSites` form REFUSED at 3,045 against 152**
+
+K5.6 ends with the sentence that made it an entry rather than a fix: *a NEW retyping phase can
+reintroduce this shape until it too asks the question*. Four phases ask it — `CollectionsTransform`
+(three lanes), `NullabilityTransform`, `GlobalsToImplicitsTransform` — and each answer was arrived at
+the same way, after a port shipped and a wall of `Found: … / Required: …` arrived. Nothing in the
+engine could see a phase that had not asked, and a phase that has not asked is invisible to every
+instrument here: the retyping is position-blind so both sides of most slots move together and the
+port COMPILES, no check count moves because there is no check, and no member digest is wrong because
+the output really is what the phase meant.
+
+**What was built.** A retyping phase declares `Rewrite.accountedBy` — the check LANES that count its
+residue, as symbols — and `Pipeline.runTraced` DERIVES what it moved, by comparing each owned
+symbol's `info` across the phase. The two halves come from different places deliberately: a phase is
+never asked what it retyped, because that is the one number it could be wrong about or silently stop
+maintaining. `rewrite-callsites` reports `Unaccounted` (moved, names no lane) and `UnwiredAccounting`
+(names a lane that did not RECORD in this run — `RequiredChecks`'s guarantee for the lanes that exist
+only when their phase does, which that set cannot express).
+
+**First run: TWO phases had never answered**, on the largest port in the corpus —
+`primitive->opaque` (7 declarations) and `type-redirect` (15). Both hold a `PolicyReport`, which is
+why neither looked silent: `policy` counts DECLARED KEYS THAT NEVER FIRED, which is a different
+residue from a seam, and naming it in `accountedBy` would be exactly the suppression the lane exists
+to prevent. They stay counted; the count is the work list.
+
+**AND THE GENERIC FORM IS REFUSED, ON A NUMBER.** The design this came from had the standing check
+as `usagesOf(s) \ callSites` for every retyped `s` — every usage the phase did not also rewrite. That
+question is not the four boundary counts and cannot become them. A position-blind retyping moves the
+node type on BOTH sides of nearly every usage, so nearly every usage is fine; what makes a usage a
+SEAM is the type comparison the four checks already perform, and asking it generically means asking
+it without the phase's own `typeMap`, which §4.56 forbids reasoning without. Measured on libGDX core:
+**1,077 declaration-moves with 3,045 recorded usages, against 152 seams the four lanes count** — a
+review list twenty times the size of the residue, every row of which is a usage that is correct. A
+second count of one residue, free to disagree with the first, is what `DESIGN.md` §2.8 refused for
+the catalog's lanes and what chunk 4 refused for `markers`. The SCALE line in
+`RewriteCallSitesCheck.summary` recomputes both numbers on every run, so this refusal cannot go
+stale in prose.
+
+**And the SITE COUNT BEFORE THE PHASE RUNS is refused for a second, independent reason.** The other
+half of that design made a phase's site count available *before it ran* — the honest way to price a
+policy, and what §5's "a DRY RUN of one phase is not a measurement of the pipeline" warns is
+currently expensive. It cannot be retrofitted: every retyping phase here resolves the symbols its
+own `transformType` reads INSIDE its `run` (`CollectionsTransform`'s `remap`, `NullabilityTransform`'s
+annotation binding), so applying `transformType` to the symbol table beforehand moves **0**
+declarations while the same phase moves them all once it has run. `RewriteCallSitesSpec`'s last test
+asserts that zero, so the claim dies the day a phase becomes predictable rather than living in a
+comment.
+
+*Fix kind: (a). Universal — the obligation is a fact about retyping, not about a library; WHICH
+lanes a phase names is the phase's own, not a port's.*
 
 ### K6. `java.util.stream` — the CHAIN collapses; and the two rules that make that safe
 

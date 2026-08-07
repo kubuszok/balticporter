@@ -68,12 +68,16 @@ final class NullabilityTransform(
     val annotations: Set[String] = Set.empty,
     val target: NullabilityTransform.Target = NullabilityTransform.Target.Union,
     val scope: RuleScope = RuleScope.Everywhere(),
-) extends Phase, PolicySource, MergeablePolicy, PolicyBound:
+) extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
 
   import NullabilityTransform.*
   import NullabilityBoundaryCheck.{Finding, Issue}
 
   def name: String = NullabilityTransform.Name
+
+  /** the lane that counts every site this phase refused, every wrapper seam it could not close, and
+    * every retype whose transparency the LANGUAGE does not grant (`Rewrite`). */
+  def accountedBy: Set[String] = Set(NullabilityBoundaryCheck.Name)
 
   /** After the collection retypes (they must land first — see the class doc) and before the
     * namespace rename (the annotation FQNs are upstream). Both are declared by NAME and

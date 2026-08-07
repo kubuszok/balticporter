@@ -438,3 +438,5 @@ e0737af523a3	portability(injected)	getConstructor	sge/ecs/ComponentFactories.sca
 fbf7eb2c9373	portability(injected)	java.lang.reflect.	sge/ecs/ComponentFactories.scala	sge/ecs/ComponentFactories.scala	1	runtime reflection does not exist on Scala.js / Native
 7023319c9218	portability(injected)	java.util.concurrent.	sge/ecs/ComponentFactories.scala	sge/ecs/ComponentFactories.scala	1	Scala.js is single-threaded and ships no ExecutorService family — the reference port's answer is one concurrency trait with a per-backend implementation; Scala Native has the JSR-166 ports for real
 5c087ccb5cbd	portability(injected)	newInstance	sge/ecs/ComponentFactories.scala	sge/ecs/ComponentFactories.scala	1	reflective instantiation is JVM-only
+51c7f58bb0e3	rewrite-callsites	Unaccounted	primitive->opaque:com.badlogic.gdx.graphics.TextureHandle	<pipeline>	0	retyped 7 owned declaration(s) and names no check lane
+6c80cec1ac43	rewrite-callsites	Unaccounted	type-redirect	<pipeline>	0	retyped 19 owned declaration(s) and names no check lane
