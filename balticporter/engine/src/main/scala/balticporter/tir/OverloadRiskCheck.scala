@@ -333,37 +333,47 @@ object OverloadRiskCheck:
   // the walk
   // -------------------------------------------------------------------------------------------
 
+  /** every call in this subtree, paired with the class it is WRITTEN IN — the innermost `ClassDef`
+    * that CONTAINS it.
+    *
+    * `rootOf` needs that class for the one shape carrying no receiver at all, so getting it wrong
+    * is not a reporting detail: it reads the candidate set out of a type java never looked in.
+    *
+    * ==WHY A PRODUCT-REFLECTION WALK AND NOT `StandardTraversal`==
+    *
+    * `Jumps`'s reason, one construct over. A `StandardTraversal` phase reaches every node by
+    * contract and cannot express "which construct am I INSIDE", so the attribution used to be
+    * derived from the traversal's bottom-up ORDER: hold each call unclaimed until some `ClassDef`
+    * closes, on the stated invariant that the first one to close is the innermost one containing
+    * it. That is false for a SIBLING — `void go() { f(1); } static class Inner extends A { … }`
+    * hands `go`'s call to `Inner`, whose own overload set climbs to the callee and therefore passes
+    * `rootOf`'s guard. Measured: one `BoxingPhaseSpan` reported at owner `A$Inner` for a call java
+    * had no choice about at all.
+    *
+    * The walk is TOTAL by construction — every node reaches the `Product` arm, so no node kind can
+    * be forgotten (§3's real concern) — and it descends INTO an `Apply` because a call's arguments
+    * hold calls of their own. An ANONYMOUS class is deliberately not a boundary: `Tree.AnonClass`
+    * is not a `ClassDef`, its symbol is not in the overload index, and a bare name written there
+    * resolves against the enclosing class exactly as `rootOf` would then answer. */
+  private def callsIn(t: Any, enclosing: SymId, f: (Tree.Apply, SymId) => Unit): Unit = t match
+    case c: Tree.ClassDef => c.productIterator.foreach(callsIn(_, c.symbol, f))
+    case a: Tree.Apply    => f(a, enclosing); a.productIterator.foreach(callsIn(_, enclosing, f))
+    case xs: Iterable[?]  => xs.foreach(callsIn(_, enclosing, f))
+    case Some(x)          => callsIn(x, enclosing, f)
+    case p: Product       => p.productIterator.foreach(callsIn(_, enclosing, f))
+    case _                => ()
+
   /** Over the units the run EMITS — the same D2 filter every other per-site report carries. */
   def check(program: Program, units: List[Tree.ClassDef], ov: Overloads): Report =
     given Program = program
     val out    = collection.mutable.ListBuffer.empty[Finding]
     var calls  = 0
     var overld = 0
-    // `StandardTraversal`, never a private recursion (§3): a call inside an ANONYMOUS class lives
-    // in a TERM, and a walk over class bodies would find none of them.
-    //
-    // The ENCLOSING CLASS falls out of that same traversal rather than needing a second one. It is
-    // BOTTOM-UP — every child is transformed before `transformClassDef` fires — so a call is held
-    // unclaimed until the FIRST `ClassDef` closes over it, and that class is by construction the
-    // innermost one containing it: a nested, local or anonymous class closes before its enclosing
-    // type does. `rootOf` needs it for a bare `Ident`, which carries no receiver at all.
-    val pending = collection.mutable.ListBuffer.empty[Tree.Apply]
-    val scan = new Phase:
-      def name: String = "overload-risk/scan"
-      override def transformApply(a: Tree.Apply)(using Program): Term =
-        calls += 1
-        pending += a
-        a
-      override def transformClassDef(c: Tree.ClassDef)(using Program): Tree.ClassDef =
-        pending.foreach(a => analyse(a, ov, c.symbol).foreach { (_, fs) => overld += 1; out ++= fs })
-        pending.clear()
-        c
     units.foreach { u =>
-      StandardTraversal.mapClassDef(scan, u)
-      // a call that no `ClassDef` closed over — there is none today, and an unclaimed one must
-      // still reach the denominator rather than silently leaving the report.
-      pending.foreach(a => analyse(a, ov).foreach { (_, fs) => overld += 1; out ++= fs })
-      pending.clear()
+      callsIn(u, u.symbol, { (a, enclosing) =>
+        calls += 1
+        analyse(a, ov, enclosing).foreach { (_, fs) => overld += 1; out ++= fs }
+      })
     }
     Report(out.toList.sortBy(f => (f.issue.toString, f.origin.javaPath, f.origin.line, f.member)),
            calls, overld)

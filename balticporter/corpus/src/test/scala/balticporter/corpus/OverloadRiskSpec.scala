@@ -1,6 +1,6 @@
 package balticporter.corpus
 
-import balticporter.testkit.PortSuite
+import balticporter.testkit.{Ported, PortSuite}
 import balticporter.tir.*
 import balticporter.tir.OverloadRiskCheck.Issue
 
@@ -194,4 +194,92 @@ class OverloadRiskSpec extends PortSuite:
         |}
         |""".stripMargin)
     assertEquals(r.findings, Nil)
+  }
+
+  // -- WHICH CLASS a call is written IN, which is the whole of `enclosing` -----------------------
+  //
+  // `rootOf` needs it for the one shape that carries no receiver, and a bare `Ident` is the common
+  // case in every library. Claiming a call for a class it is not written in is therefore not a
+  // reporting detail: it reads the candidate set out of the wrong type.
+
+  /** the same units with every unqualified `this.m(…)` rewritten to the BARE `Ident` form.
+    *
+    * `rootOf` has exactly one arm that consults the enclosing class — the call with NO receiver —
+    * and SpoonTir almost never builds it, because Spoon materialises an implicit `CtThisAccess` and
+    * the frontend renders that as a `Select`. So the arm is real, documented and reachable (the
+    * `case null` branch of the invocation lowering builds it whenever Spoon leaves the target
+    * unset), and a fixture that only parses java cannot get to it. Rewriting the one node is how
+    * this suite asks the question the arm exists to answer, through the shipped `check`. */
+  private def bareIdentCalls(p: Ported): List[Tree.ClassDef] =
+    given Program = p.after
+    val bare = new Phase:
+      def name: String = "spec/bare-ident-calls"
+      override def transformApply(a: Tree.Apply)(using Program): Term = a.fun match
+        case Tree.Select(_: Tree.This, m, t, o) => a.copy(fun = Tree.Ident(m, t, o))
+        case _                                  => a
+    p.after.units.map(u => StandardTraversal.mapClassDef(bare, u))
+
+  private def bareReport(java: String) =
+    val p  = port(java)
+    val ov = new OverloadRiskCheck.Overloads(p.after)
+    OverloadRiskCheck.check(p.after, bareIdentCalls(p), ov)
+
+  test("a call is claimed by the class it is WRITTEN IN, never by a SIBLING nested class") {
+    // `go()` is `A`'s, where `f` has one candidate — so java had no choice to make and there is
+    // nothing to report. Claimed by `Inner` (which extends `A`, so `sameName` climbs to the callee
+    // and the guard in `rootOf` passes), the same call reads TWO candidates and reports a boxing
+    // span that does not exist. Bottom-up claiming is what put it there: a nested class closes over
+    // whatever calls are still unclaimed, and a call written EARLIER in the enclosing body is one
+    // of them — so the invariant "the first ClassDef to close is the innermost one containing it"
+    // is false for every sibling pair.
+    val r = bareReport(
+      """public class A {
+        |  void f(int a) { }
+        |  void go() { f(1); }
+        |  static class Inner extends A { void f(Integer a) { } }
+        |}
+        |""".stripMargin)
+    assertEquals(r.findings, Nil, r.findings.toString)
+  }
+
+  test("…and the OWNER a finding names is the class java looked in") {
+    // The same shape with the risk really present: both candidates are `A`'s, so the row must say
+    // `A` however many nested classes follow the call in the body.
+    val r = bareReport(
+      """public class A {
+        |  void f(int a) { }
+        |  void f(Integer a) { }
+        |  void go() { f(1); }
+        |  static class Inner extends A { }
+        |}
+        |""".stripMargin)
+    assertEquals(r.findings.map(_.owner).distinct, List("A"), r.findings.toString)
+  }
+
+  test("…and a call really written in the NESTED class is still that class's") {
+    // The other direction, which is what makes the fix a narrowing rather than a switch-off: the
+    // subclass's own set is what java resolved against for a call written there.
+    val r = bareReport(
+      """public class A {
+        |  void f(int a) { }
+        |  static class Inner extends A { void f(Integer a) { } void go() { f(1); } }
+        |}
+        |""".stripMargin)
+    assert(r.findings.map(_.issue).contains(Issue.BoxingPhaseSpan), r.findings.toString)
+    assertEquals(r.findings.map(_.owner).distinct, List("A$Inner"), r.findings.toString)
+  }
+
+  test("every call in a unit reaches the DENOMINATOR exactly once, nested classes included") {
+    // The partition has to be TOTAL as well as correct: a call attributed to no class at all would
+    // leave the report silently, and the denominator is what makes an over-approximation readable.
+    // Seven and not five — each of the two classes carries a constructor, whose own super call is a
+    // call like any other.
+    val (_, r) = report(
+      """public class A {
+        |  void f(int a) { }
+        |  void go() { f(1); f(2); }
+        |  static class Inner { void h(int a) { } void go2() { h(1); h(2); h(3); } }
+        |}
+        |""".stripMargin)
+    assertEquals(r.calls, 7)
   }

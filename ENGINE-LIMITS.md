@@ -2178,9 +2178,23 @@ the receiver is a strict widening of the old set (the owner is always the receiv
 ancestor of it), so nothing previously reported can be lost; the root is USED only where its
 candidate set contains the member javac actually bound, which is the guard that keeps an unowned
 receiver type, a type variable or an absent enclosing class from emptying the set instead. A bare
-`Ident` carries no receiver at all and takes the ENCLOSING class, which both readers derive
-structurally — the check from its own bottom-up traversal (the innermost `ClassDef` to close over a
-pending call is the one that contains it) and the emitter from its class stack.
+`Ident` carries no receiver at all and takes the ENCLOSING class, and that class is decided by
+CONTAINMENT — the innermost `ClassDef` the call is written inside — which the check derives from a
+walk that carries it down and the emitter from its class stack.
+
+**The check used to derive it from TRAVERSAL ORDER instead, and the invariant it stated was false.**
+A `StandardTraversal` phase is bottom-up, so every call was held unclaimed until some `ClassDef`
+closed over it, on the reasoning that the first one to close is the innermost one containing it.
+That holds for an ENCLOSING class and fails for a SIBLING: in
+`void go() { f(1); } static class Inner extends A { void f(Integer a) { } }` the nested class closes
+after `go` and takes `go`'s call with it, and `Inner`'s own set climbs to the callee, so `rootOf`'s
+guard passes and the set is read out of `Inner`. Measured on that fixture: one `BoxingPhaseSpan`
+reported at owner `A$Inner` for a call whose real candidate set has ONE member — an invented row, in
+the lane whose whole value is that a reader can trust its narrowing. Zero corpus movement, because
+`SpoonTir` renders almost every unqualified call as `Select(This, m)` (Spoon materialises the
+implicit access) and the enclosing class is consulted only for the bare `Ident` the `case null`
+branch builds — so the fixture reaches it by rewriting that one node rather than by parsing java.
+A traversal ORDER is not a containment relation; the walk carries the class down instead.
 
 **Three structural limits, all stated rather than counted as zeros.** The candidate set is what the
 PROGRAM DECLARES: an external callee's overloads live in a class file the frontend interns lazily
