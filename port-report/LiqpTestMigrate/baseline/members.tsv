@@ -379,7 +379,7 @@ ssg.liquid.filters.SliceTest	ssg.liquid.filters.SliceTest#<stmt2>	stmt	190158d6e
 ssg.liquid.filters.SliceTest	ssg.liquid.filters.SliceTest#<stmt3>	stmt	d9d1108af0bd4861
 ssg.liquid.filters.SliceTest	ssg.liquid.filters.SliceTest#<stmt4>	stmt	5fbbe723a3a656a0
 ssg.liquid.filters.SliceTest	ssg.liquid.filters.SliceTest#<stmt5>	stmt	01afd812b918bad2
-ssg.liquid.filters.SortTest	ssg.liquid.filters.SortTest	class	75eec6d21cec3efa
+ssg.liquid.filters.SortTest	ssg.liquid.filters.SortTest	class	6ae1b79970630f72
 ssg.liquid.filters.SortTest	ssg.liquid.filters.SortTest#<stmt1>	stmt	92364b0a4ac92d3d
 ssg.liquid.filters.SortTest	ssg.liquid.filters.SortTest#<stmt2>	stmt	1e9522f132c280a6
 ssg.liquid.filters.SortTest	ssg.liquid.filters.SortTest#<stmt3>	stmt	ed727f0a25f71aab

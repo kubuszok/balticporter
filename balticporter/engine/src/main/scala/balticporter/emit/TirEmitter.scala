@@ -1548,14 +1548,19 @@ final class TirEmitter(
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
     val body1   = joinStats(orderBody(instance, cd.symbol, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty))
     // K22 — the CLASS-INITIALISATION trigger, ahead of every other class-body statement because
-    // that is where java ran it. See [[forceCompanion]]; `statics` is where a `static { }` block
-    // lowers to, so this is asked of the very list that carries the defect.
+    // that is where java ran it. See [[forceCompanion]]; `statics` is where BOTH halves of java's
+    // class initialiser lower to — the `static { }` blocks and the static field initialisers — so
+    // this is asked of the very list that carries the defect.
     // …and only where there is a CONSTRUCTOR to hang it on. A `trait` body statement runs at every
     // implementor's initialisation, which is MORE than java does (JLS 12.4.1 does not initialise an
     // interface when an implementor is initialised), and the annotation rendering below emits no
     // body at all. Neither shape can arise from java — an interface may not declare a static
     // initialiser (JLS 9.1.1) — so both are left to `class-init-trigger` rather than guessed at.
-    val force   = if hasClinit(statics) && kw == "class" && !s.flags.isAnnotation
+    // …and never where forcing would RE-ENTER an initialisation already in progress: java tolerates
+    // a cyclic pair of class initialisers and a scala companion does not, so the trigger is
+    // declined and `class-init-trigger` counts the refusal (`ENGINE-LIMITS.md` K22 face 2).
+    val force   = if hasClinit(statics) && kw == "class" && !s.flags.isAnnotation &&
+                     !reentrantBearers.contains(cd.symbol)
                   then forceCompanion(cd, cd.symbol, balticporter.tir.ClassInitTriggerCheck.Instantiation, i + 1)
                   else ""
     val body0   = joinStats(List(bnote, force, body1).filter(_.nonEmpty))
@@ -1668,6 +1673,7 @@ final class TirEmitter(
       // That is why this asks `hasCompanion` rather than re-deriving "does anything read a static
       // of this type", which is the string-shaped guess §4.56 is about.
       val superForce = nearestClinitAncestor(cd.symbol)
+        .filterNot(reentrantBearers.contains)
         .map(a => forceCompanion(cd, a, balticporter.tir.ClassInitTriggerCheck.SubclassInit, i + 1))
         .toList.filter(_.nonEmpty)
       val sb = (superForce ++ parentExports ++ markerDecl ++
@@ -1836,16 +1842,20 @@ final class TirEmitter(
     val n = sym(d.symbol).name
     n == "<clinit>" || n == "<initblock>"
 
-  /** does this member list carry a java `static { … }` block — a CLASS INITIALISER, never the
-    * instance one? Asked by name rather than by `isInitBlock` because the two run at different
-    * times and only one of them has K22's problem. */
-  private def hasClinit(members: List[Statement]): Boolean = members.exists {
-    case d: Tree.DefDef => sym(d.symbol).name == "<clinit>"
-    case _              => false
-  }
+  /** does this member list carry java CLASS INITIALISER content — JLS 12.4.2 step 9, never the
+    * instance initialiser, which runs at construction in both languages?
+    *
+    * `ClassInitTriggerCheck.stepNine`'s and not a local test, which is the whole point: the repair
+    * and its watchdog have to answer this from ONE definition or the check is silent exactly where
+    * the emitter is wrong. Keyed on the block alone it missed the registration written as a static
+    * FIELD — the same construct, java's `<clinit>` runs both in one sequence — while the constant
+    * variable stays out of it, because javac inlines that one and so does the `inline val` arm
+    * below (`JS-C08`). */
+  private def hasClinit(members: List[Statement]): Boolean =
+    balticporter.tir.ClassInitTriggerCheck.stepNine(members)(using program)
 
   // ---------------------------------------------------------------------------
-  // K22 — A `static { }` BLOCK RUNS AT CLASS INITIALISATION; THE `object` IT LANDS IN IS
+  // K22 — A JAVA CLASS INITIALISER RUNS AT CLASS INITIALISATION; THE `object` IT LANDS IN IS
   // INITIALISED BY NOTHING.
   //
   // Java's trigger list (JLS 12.4.1) is short and exact — a class `T` is initialised on the first
@@ -1854,12 +1864,22 @@ final class TirEmitter(
   // actions, and `main`. Scala has no such list: a companion `object` initialises when something
   // touches the OBJECT, and `new T(…)` touches only the class.
   //
-  // So a `static { }` block is emitted, faithfully, into the companion and NEVER RUNS. Where its
+  // So the class initialiser is emitted, faithfully, into the companion and NEVER RUNS. Where its
   // effect is a REGISTRATION — an SPI provider, a factory, a codec, a pool — every later lookup
   // answers "not registered", which a library turns into a plausible WRONG ANSWER rather than an
   // error. Measured on one library as 5 test failures at 0 compile errors with every check count
-  // flat, and invisible to every instrument the project has: the block IS emitted, so no omission
+  // flat, and invisible to every instrument the project has: the code IS emitted, so no omission
   // exists to count (`ENGINE-LIMITS.md` K22).
+  //
+  // AND "THE CLASS INITIALISER" IS JLS 12.4.2 STEP 9, NOT A NODE KIND. Step 9 runs the static FIELD
+  // INITIALISERS and the `static { }` BLOCKS as one sequence in textual order, so
+  // `static { Registry.register(…); }` and `static final boolean R = Registry.register(…)` are one
+  // construct written two ways and java initialises `T` at `new T` for either. Keyed on the block
+  // alone this repair answered for one of them and left the other silent, with the watchdog reading
+  // 0 on trees that had the defect. `ClassInitTriggerCheck.stepNine` is the one predicate both ask,
+  // and the CONSTANT VARIABLE stays outside it for JS-C08's reason: javac inlines it, the arm below
+  // emits `inline val`, and a trigger there would be a trigger java never had — which is also the
+  // whole of why this cannot re-enter §4.4's `Vector3`/`Matrix4` cycle.
   //
   // THE REPAIR IS JAVA'S OWN TRIGGER LIST, NEVER "call it from every use". The two are not the same
   // set and the difference is the whole of JS-C08: java's INLINING means reading a constant
@@ -1909,11 +1929,12 @@ final class TirEmitter(
     val tg = sym(target)
     val why =
       if target == cd.symbol then
-        "java runs this class's `static { }` at class initialisation (JLS 12.4.1) and a scala " +
+        "java runs this class's initialiser — its `static { }` blocks and its static field " +
+          "initialisers, one sequence, JLS 12.4.2 step 9 — at class initialisation, and a scala " +
           "companion initialises on first access to the OBJECT, which `new` is not"
       else
         s"initialising this type initialises `${tg.fullName}` first (JLS 12.4.1 item 7), which runs " +
-          "that type's `static { }`; a scala object's initialisation reaches no other object"
+          "that type's class initialiser; a scala object's initialisation reaches no other object"
     val d = Decision(
       kind       = Decision.Kind.ForcedClassInit,
       subject    = cd.symbol,
@@ -1927,23 +1948,35 @@ final class TirEmitter(
     forcedClinits += (cd.symbol -> trigger)
     s"${PorterNote.render(d, ind(i))}${ind(i)}val _ = ${escPath(tg.fullName).replace('$', '.')}"
 
-  /** every type this program declares that carries a java `static { }` block. */
-  private lazy val clinitBearers: Set[SymId] =
-    val acc = collection.mutable.Set[SymId]()
+  /** every type this program declares whose class initialiser does anything — [[hasClinit]]'s
+    * question (JLS 12.4.2 step 9), asked of the DECLARED body. */
+  private lazy val clinitBearers: Map[SymId, Tree.ClassDef] =
+    val acc = collection.mutable.Map[SymId, Tree.ClassDef]()
     def scan(cd: Tree.ClassDef): Unit =
-      if hasClinit(cd.body) then acc += cd.symbol
+      if hasClinit(cd.body) then acc(cd.symbol) = cd
       cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
     program.units.foreach(scan)
-    acc.toSet
+    acc.toMap
 
-  /** the nearest ancestor of `s` carrying a `static { }` block — the ONE this type's companion has
+  /** …and the ones whose force would be RE-ENTRANT, which the repair declines and
+    * `class-init-trigger` counts. The check's own function, so the refusal and the count cannot
+    * disagree about which types it names (`ENGINE-LIMITS.md` K22 face 2). */
+  private lazy val reentrantBearers: Map[SymId, SymId] =
+    balticporter.tir.ClassInitTriggerCheck.reentrantBearers(program, clinitBearers)
+
+  /** the ancestor edges JLS 12.4.1 item 7 traverses — the SUPERCLASS chain plus a superinterface
+    * declaring a default method, and never `parentsBySym`, whose edges are every parent there is. */
+  private lazy val item7ParentsBySym: Map[SymId, List[SymId]] =
+    balticporter.tir.ClassInitTriggerCheck.item7Parents(program)
+
+  /** the nearest ancestor of `s` carrying a class initialiser — the ONE this type's companion has
     * to force. Java initialises the whole superclass chain, and forcing only the nearest reproduces
     * that because THAT type's companion carries the same line for ITS own nearest, recursively.
     * Breadth-first, so "nearest" means nearest and not "first found down one branch". */
   private def nearestClinitAncestor(s: SymId): Option[SymId] =
     def go(front: List[SymId], seen: Set[SymId]): Option[SymId] =
-      val next = front.flatMap(parentsBySym.getOrElse(_, Nil)).filterNot(seen).distinct
-      next.find(clinitBearers) match
+      val next = front.flatMap(item7ParentsBySym.getOrElse(_, Nil)).filterNot(seen).distinct
+      next.find(clinitBearers.contains) match
         case Some(a)         => Some(a)
         case _ if next.isEmpty => scala.None
         case _               => go(next, seen ++ next)
@@ -2696,8 +2729,6 @@ final class TirEmitter(
       // the arguments really are lost here, and `OmissionCheck` says so on the same run
       case CtorFunnel.SuperCall.Dropped        => "this()"
 
-  private val primitiveNames = CtorFunnel.primitiveTypeNames
-
   /** a parameter clause; a clause of `given` params renders as a Scala 3 `using` clause. */
   private def paramClause(ps: List[Tree.ValDef]): String =
     if ps.nonEmpty && ps.forall(p => sym(p.symbol).flags.isGiven) then s"(using ${ps.map(givenParam).mkString(", ")})"
@@ -2836,15 +2867,13 @@ final class TirEmitter(
         case _                          => constant(c)
     case _ => term(r, 0)
 
-  /** a java CONSTANT VARIABLE: `static final`, primitive or `String`, literal initialiser. */
+  /** a java CONSTANT VARIABLE: `static final`, primitive or `String`, literal initialiser.
+    *
+    * `ClassInitTriggerCheck`'s and not a second copy — K22's safety argument is that the fields
+    * this arm inlines are exactly the fields the class-init census does NOT count as step-9
+    * content, and two spellings of one predicate is how that stops being true. */
   private def isJavaConstant(v: Tree.ValDef, s: Symbol): Boolean =
-    s.flags.isStatic && s.flags.isFinal && !s.flags.isMutable &&
-      (v.rhs match { case Some(_: Tree.Literal) => true; case _ => false }) &&
-      (v.tpt.tpe match
-        case TypeRepr.TypeRef(_, x) =>
-          val n = sym(x).fullName
-          primitiveNames(n) || n == "java.lang.String"
-        case _ => false)
+    balticporter.tir.ClassInitTriggerCheck.constantVariable(v, s)(using program)
 
   private def defaultFor(t: TypeRepr): String = t match
     // A union with `Null` STATES its own default, so the placeholder cast is not merely redundant

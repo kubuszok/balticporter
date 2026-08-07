@@ -139,7 +139,7 @@ sge.noise.generator.cellular.CellularAutomataGenerator	sge.noise.generator.cellu
 sge.noise.generator.cellular.CellularAutomataGenerator	sge.noise.generator.cellular.CellularAutomataGenerator#shouldDie(int)	def	1aa55c5d739b722e
 sge.noise.generator.cellular.CellularAutomataGenerator	sge.noise.generator.cellular.CellularAutomataGenerator#spawnLivingCells(Grid)	def	80570ba655b44276
 sge.noise.generator.cellular.CellularAutomataGenerator	sge.noise.generator.cellular.CellularAutomataGenerator#temporaryGrid	val	fd15f330df343dee
-sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator	class	37c7cac0e592fd2a
+sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator	class	2c9685e6fd752fa2
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#INSTANCE	val	0000c940755243b4
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#algorithmProvider	val	a7d50cc65fcc08e9
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#consume(Grid,int,int,float)	def	c63af7a7e6b9ffca
@@ -157,7 +157,7 @@ sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerato
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#setModifier(float)	def	b463a0cb0647932e
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#setRadius(int)	def	4493b5c071cd58e1
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator#setSeed(int)	def	9be07645010e3f97
-sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider	class	de4d06da51f85c14
+sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider	class	c5db08da199b1f60
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider#PI	val	411a498863aa59df
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider#interpolate(float,float,float)	def	617603cc3e1d103a
 sge.noise.generator.noise.NoiseGenerator	sge.noise.generator.noise.NoiseGenerator$DefaultNoiseAlgorithmProvider#noise(NoiseGenerator,int,int)	def	1c3198094a0a82cf

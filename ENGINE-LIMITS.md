@@ -4300,7 +4300,7 @@ whose consumer does that has to say so in its own shim.*
 
 ---
 
-### K22. A java `static { }` block runs at CLASS INITIALISATION; the `object` it is emitted into is initialised by nothing — **5 test failures on liqp, 0 compile errors, every check count flat, and the whole family was invisible until K21 closed. CLOSED for both port-visible triggers; the REFLECTIVE one is refused**
+### K22. A java CLASS INITIALISER runs at CLASS INITIALISATION; the `object` it is emitted into is initialised by nothing — **5 test failures on liqp, 0 compile errors, every check count flat, and the whole family was invisible until K21 closed. CLOSED for both port-visible triggers; the REFLECTIVE one is refused, and so is a companion whose initialisation is CYCLIC (face 2)**
 
 The block is translated, faithfully, into the companion:
 
@@ -4406,17 +4406,87 @@ count, check counts and suite outcomes are identical, `just measure-all` green e
 
 **What stays approximate, said out loud rather than counted.** Java initialises the class before
 `<init>` runs at all, including before the SUPERCLASS constructor; a Scala class-body statement runs
-after it. The gap is observable only where a super constructor calls a method this class overrides
-which reads this class's statics, and no criterion for that is cheaper than the whole-program
-analysis it would take — an over-approximate review list here would be noise (`CLAUDE.md` §1).
+after it. The case that SOUNDS like the problem — a super constructor calling a method this class
+overrides which reads this class's statics — largely SELF-HEALS, because that read is an access to
+the companion and initialises it on the spot; what is left is the object having been built a few
+statements later than java built it, with nothing in between able to observe the difference. What
+does NOT heal is mutual ordering through a THIRD PARTY: the superclass constructor asks a registry
+what is registered and this class's initialiser is what registers it, so java answers "yes" and the
+port answers "no", and no read on either path touches the object early enough to fix it. No criterion
+for that is cheaper than the whole-program analysis it would take — an over-approximate review list
+here would be noise (`CLAUDE.md` §1).
 
-*Fix kind: (a) engine — universal, a fact about JLS 12.4.1 against Scala's object initialisation.
-CLOSED for instantiation, OPEN and counted at 19 for subclass initialisation, REFUSED for
-reflection. Catalog `JS-C07`, whose `NonDiff("no observable difference except through JS-C08")` this
-entry refuted — the claim was that Scala's object-access trigger fires at least as often as any JLS
-12.4.1 case "since every `T.x` read is an object access", which is true of items 2-4 and false of
-items 1 and 7, the two that do not read a member at all. The per-site diagnosis is in `PROGRESS.md`'s
-liqp residue table.*
+#### K22 face 2. "The class initialiser" is JLS 12.4.2 STEP 9, not a node kind — and the widened repair meets a cycle java survives and Scala does not
+
+Face 1 above keyed the census, and the repair, on the `static { }` BLOCK. Java's class initialiser is
+not a block: **JLS 12.4.2 step 9 runs the static FIELD INITIALISERS and the blocks as ONE sequence in
+textual order** (the static twin of the step-4 pairing `C12`'s correction records), so
+
+```java
+static { Registry.register("r"); }
+static final boolean R = Registry.register("r");
+```
+
+are one construct written two ways and `new T` initialises `T` for either. Keyed on the block, the
+repair answered for one of them and `class-init-trigger` reported **0 on trees that had the defect** —
+a watchdog reading the same number as a working repair. `ClassInitTriggerCheck.stepNine` is now the
+one predicate both the census and `TirEmitter.hasClinit` ask, with the java CONSTANT VARIABLE outside
+it for `JS-C08`'s reason (javac inlines it, this port emits `inline val`, and a trigger there is a
+trigger java never had).
+
+**Widening it unconditionally is a MEASURED DEAD END, and the number is the point.** The claim that
+made face 1 safe against §4.4's `Vector3`/`Matrix4` cycle was "the repair adds a trigger at `new`,
+where java already had one". That claim is TRUE and it is not sufficient — java has a trigger there
+that this engine cannot reproduce. libGDX has `Vector3.tmpMat = new Matrix4()` and
+`Matrix4.l_vez = new Vector3()`, so each class initialiser instantiates the other; **the JVM tolerates
+that** (JLS 12.4.2 step 3: a thread already initialising `T` that re-enters `T` proceeds and reads
+whatever `T`'s statics hold so far) and a Scala companion in a MUTUAL cycle does not — its `MODULE$`
+has not been assigned at all yet. Measured on `gdx-test-measure`, at `errors=0` throughout:
+**217 passing / 4 failing → 191 / 10, with 20 more tests never reached**, every one of them
+`ExceptionInInitializerError` or `NoClassDefFoundError: Could not initialize class sge.math.Vector3$`
+at the first `new Vector3(…)` in the suite. Do NOT retry the unconditional form.
+
+So the repair DECLINES a force whose companion initialisation is re-entrant, and
+`ClassInitTriggerCheck.Issue.ReentrantRefused` counts it — **2 on libGDX core**, `Vector3` and
+`Matrix4`, naming each other. The graph is over bearers only, an edge `B -> C` is drawn where B's own
+step-9 members instantiate C or read a static C declares, and constructor and method bodies are not
+followed (an over-approximation here declines a repair that would have worked rather than leaving a
+defect). **A SELF-edge is not re-entrance** and that distinction is the whole of it: dotty assigns
+`MODULE$` as the first statement of the module constructor, so `static { hits = 1; }` survives
+exactly as java's does — counted as a cycle, the self-edge declined the trigger for every plain
+`static { }` bearer in the corpus, which is the repair switched off wearing a refusal's name.
+
+**Two more exactness corrections the widening forced, both of them things the block-shaped census
+could not reach:**
+
+- **an INTERFACE bearer is not a defect.** JLS 9.1.1 keeps a block out of an interface and says
+  nothing about a FIELD, so `ArraySupplier.ANY = size -> new Object[size]` IS step-9 content and the
+  census correctly sees it — while java's only route into an interface's initialisation is a use of a
+  non-constant static it declares, which in Scala is an access to the companion and is already exact.
+  Nothing can `new` an interface. Read as defects these were **4 findings on libGDX core** (`GL30`,
+  `GL31`, `GLErrorListener`, `ArraySupplier`), and the exclusion list is now derived from "does this
+  form have a `new`" rather than from what the emitter happens to decline;
+- **item 7 stops at a default-less superinterface.** "Initialising a class initialises its
+  superclasses" is the half everybody quotes; the JLS sentence continues *"…as well as any
+  superinterfaces that declare any default methods"*. With FIELDS in the census, libGDX's
+  `GL31Interceptor` promptly acquired a `val _ = sge.graphics.GL30` that item 7 does not sanction —
+  a trigger java does not have, which is the one thing this repair may not add.
+  `ClassInitTriggerCheck.item7Parents` is the walk both the census and `nearestClinitAncestor` climb.
+
+**THE NUMBERS for face 2.** libGDX core `errors 0 -> 0`, `class-init-trigger 0 -> 2`
+(`ReentrantRefused`, the refusal), **248 member digests** — 247 whole classes acquiring the trigger
+line and its note. `gdx-test` 217 passing / 4 failing, unchanged. Every other lane's error count,
+check counts and suite outcomes identical.
+
+*Fix kind: (a) engine — universal, a fact about JLS 12.4.1/12.4.2 against Scala's object
+initialisation. CLOSED for instantiation and for subclass initialisation, REFUSED for reflection and
+REFUSED-AND-COUNTED for a re-entrant companion. Catalog `JS-C07`, whose
+`NonDiff("no observable difference except through JS-C08")` this entry refuted — the claim was that
+Scala's object-access trigger fires at least as often as any JLS 12.4.1 case "since every `T.x` read
+is an object access", which is true of items 2-4 and false of items 1 and 7, the two that do not read
+a member at all — and `JS-C10`, whose `NonDiff("shared JVM mechanism")` face 2 refuted for the same
+kind of reason: circular initialisation IS the same JVM mechanism for a java class and is not what a
+Scala companion does. The per-site diagnosis is in `PROGRESS.md`'s liqp residue table.*
 
 ---
 

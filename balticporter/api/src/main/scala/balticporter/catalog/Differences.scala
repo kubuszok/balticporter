@@ -291,15 +291,20 @@ object Differences:
     // least as often as any JLS 12.4.1 case, "since every `T.x` read is an object access" — true of
     // items 2-4, and FALSE of items 1 and 7, which read no member at all. `new T` runs a
     // constructor and touches no object; a subclass's initialisation touches only the subclass's.
-    // A `static { }` block therefore lands in the companion and never runs.
+    // A class initialiser therefore lands in the companion and never runs.
     Difference(cId(7), "JLS's class-initialisation TRIGGER list vs Scala's uniform accessor trigger",
       "JLS 12.4.1", "UNCITED — a Scala object initialises on first access to any member",
       Silent,
-      Partial("the SUBCLASS trigger (item 7, reached by a bare `S.member` read) is counted and not " +
-        "yet forced, and the REFLECTIVE one (item 6) is refused: a reflective load of the emitted " +
-        "class does not touch its module, and the load lives in the port's CONSUMER"),
+      // Both port-visible triggers are FORCED; what is left is two refusals and one approximation,
+      // and each is named because a reader's question is whether THEIR path is covered. This
+      // sentence said "the SUBCLASS trigger is counted and not yet forced" for as long as the
+      // subclass trigger HAD been forced, which is a status line that outlived its own commit.
+      Partial("the REFLECTIVE trigger (item 6) is refused — a reflective load of the emitted " +
+        "class does not touch its module, and the load lives in the port's CONSUMER; a companion " +
+        "whose initialisation is a MUTUAL CYCLE is refused and counted (JS-C10); and the ORDER a " +
+        "force fires in is approximate where two initialisers meet through a third party"),
       el("K22"), Universal,
-      "TirEmitter.forceCompanion and its `hasClinit` call site; ClassInitTriggerCheck", notYetC),
+      "TirEmitter.forceCompanion and its `hasClinit` call site; ClassInitTriggerCheck.stepNine", notYetC),
     Difference(cId(8), "a CONSTANT VARIABLE is inlined, so reading it never triggers class initialisation",
       "JLS 4.12.4, 13.1", "UNCITED — `inline val` is the image; a typed `val` triggers the initialiser",
       Silent, Handled, Rule44, Universal, "TirEmitter.isJavaConstant and its `inline val` rendering", notYetC),
@@ -307,9 +312,20 @@ object Differences:
       "JLS 12.4.2", "UNCITED — an object body is one sequence, so the order has to survive the frontend",
       Silent, Handled, el("C12"), Universal,
       "SpoonTir.classDef's merged position-key sort over fields and init blocks; TirEmitter.orderBody's isStep4, which covers `<clinit>`", notYetC),
+    // `NonDiff("shared JVM mechanism")` until K22 face 2 measured it wrong, for the same shape of
+    // reason as JS-C07's: the mechanism IS shared for a java class and a scala COMPANION is not one.
+    // The JVM lets a thread that is already initialising `T` re-enter `T` and read whatever its
+    // statics hold; a module in a MUTUAL cycle has not assigned `MODULE$` at all yet, so the
+    // re-entrant read is not a default, it is a failure. Invisible until JS-C07's repair started
+    // putting java's own trigger at `new`, which is what walks into the cycle.
     Difference(cId(10), "circular class initialisation delivers DEFAULT values on the same thread",
-      "JLS 12.4.2", "UNCITED — the same JVM mechanism",
-      NoImpact, NonDiff("shared JVM mechanism"), NoTwin, NoFix, "no symbol — a JVM fact", notYetC),
+      "JLS 12.4.2", "UNCITED — a scala module in a MUTUAL cycle has no MODULE$ yet, and throws",
+      Loud,
+      Partial("a self-cycle is exact — dotty assigns `MODULE$` first — and a MUTUAL one is " +
+        "refused and counted: JS-C07's instantiation trigger is not attached where forcing the " +
+        "companion would re-enter an initialisation in progress"),
+      el("K22"), Universal,
+      "ClassInitTriggerCheck.reentrantBearers; ClassInitTriggerCheck.Issue.ReentrantRefused", notYetC),
     Difference(cId(11), "a superclass is initialised before its subclass",
       "JLS 12.4.2", "UNCITED — the same JVM mechanism",
       NoImpact, NonDiff("shared JVM mechanism"), NoTwin, NoFix, "no symbol — a JVM fact", notYetC),

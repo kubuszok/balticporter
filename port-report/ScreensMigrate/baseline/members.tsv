@@ -112,7 +112,7 @@ sge.screen.transition.impl.BlankTimedTransition	sge.screen.transition.impl.Blank
 sge.screen.transition.impl.BlendingTransition	sge.screen.transition.impl.BlendingTransition	class	3d11deb2c4858192
 sge.screen.transition.impl.BlendingTransition	sge.screen.transition.impl.BlendingTransition#<init>(SpriteBatch,float,Sge)	ctor	dae95b2d3f4c17bb
 sge.screen.transition.impl.BlendingTransition	sge.screen.transition.impl.BlendingTransition#render(float,TextureRegion,TextureRegion,float)	def	af13afff10a929aa
-sge.screen.transition.impl.GLTransitionsShaderTransition	sge.screen.transition.impl.GLTransitionsShaderTransition	class	260d29d816b65505
+sge.screen.transition.impl.GLTransitionsShaderTransition	sge.screen.transition.impl.GLTransitionsShaderTransition	class	9c185cfdae33c323
 sge.screen.transition.impl.GLTransitionsShaderTransition	sge.screen.transition.impl.GLTransitionsShaderTransition#<init>(String,float,Sge)	ctor	b1a319e75ac81f5e
 sge.screen.transition.impl.GLTransitionsShaderTransition	sge.screen.transition.impl.GLTransitionsShaderTransition#FRAG_SHADER_POSTPEND	val	ecb0fae5945abce0
 sge.screen.transition.impl.GLTransitionsShaderTransition	sge.screen.transition.impl.GLTransitionsShaderTransition#FRAG_SHADER_PREPEND	val	fd6f21360f7357a0
