@@ -4781,6 +4781,18 @@ retarget — "the fingerprint change reaching nine published port maps and nothi
 not a surprise and it is not confined to one port; a delivery of a base-surface phase that promotes
 only the base leaves eight stale published maps behind.
 
+**"One header line each" is this wave's number and NOT the shape's, which the next wave to quote it
+found out.** A base-surface change moves the `policy=` digest and nothing else in a dependent's map
+*only when the wave adds no RUNTIME ARTIFACT*. `RuntimeArtifact` vendoring is unconditional — the
+published module's types are listed in every module's map whether or not that module names one — so
+a wave that adds a runtime type adds a SECOND line, `type <fqn> Added`, to every port map in the
+corpus at the same time. Chunk 17 was measured against the sentence above and read TWO lines per
+dependent, not one: the `policy=` digest and `type balticporter.runtime.JavaStack Added`. Both are
+consistent and neither is a defect; what was wrong was quoting a wave's number as a rule. The gate
+to state before such a step is therefore: **`policy=` per inheriting module, PLUS one `Added` row
+per new runtime type in EVERY module's map** — and `simple-graphs`, `noise4j` and `jbump`, which
+inherit no libGDX manifest, move for the second reason and not the first.
+
 #### The GL evidence says ONE family, not twenty — and that is a measurement, not a scoping choice
 
 The plan carried "GLHandle 8, GLEnum 12, Pixels/Seconds" from the adoption-gap catalog (§11.9). Those
