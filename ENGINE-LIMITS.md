@@ -4280,12 +4280,32 @@ inside a TERM, so a phase that overrode only the class hook would do nothing on 
 with no error anywhere (§3, §4.55). And the bean suffix is `java.beans.Introspector`'s, not
 `capitalize`: `URL` stays `getURL`, or the accessor is one no framework looks for.
 
+**…and the capitalisation is a ROUND TRIP, not a rule — a name it cannot invert is REFUSED.** The
+sentence above is only half of it, and the other half is this face's own defect re-emitted by its own
+repair. A bean reader derives the PROPERTY name it registers by running
+`java.beans.Introspector.decapitalize` over the accessor's suffix, and for a `lowerUpper` field that
+is not the field's name: `eMail` capitalises to `getEMail`, whose suffix decapitalises to `EMail` —
+two leading capitals keep their spelling — so the property is registered under a name the framework
+never asks for. Emitted anyway, the accessor exists, the port compiles, every count is flat and the
+lookup reads ABSENT, which is exactly the failure this face was opened for. `eTag`, `xAxis`,
+`iValue` are the same shape. So the gate is `decapitalize(beanSuffix(name)) == name`, the refusal is
+counted as `NameUnreachable`, and there is nothing to configure: no capitalisation of a `lowerUpper`
+java field round-trips, so the property is only reachable if the LIBRARY renames the field. Two
+things fall out of the gate rather than needing rules of their own — `beanSuffix` is INJECTIVE on the
+names it admits, so two exposed fields can never collide on one `getX` (`a` and `A` are separated
+because `A` is not invertible), and the screen for a name JAVA already declares now climbs the
+parents this program declares as well as the type's own body, because `public Object mapper` under a
+parent that declares `getMapper()` is the ordinary shape one level up and arrived as a bare typer
+error with nothing to classify it. An ancestor OUTSIDE the program is a class file this pass cannot
+read, and that residue is stated here rather than guessed at.
+
 **THE COUNT.** `BeanExposureCheck` — `NameTaken` for a field the policy could not expose (the seam
-the scope created) and `Unexposed`, one row per TYPE, for a type with java-public fields the port
-did not ask about (the review list, the same shape as face 1's `OpaqueEgress`). Recorded only where
-the phase is in the pipeline, exactly as the collection and nullability boundaries are: without a
-declared reflective consumer the population is every public field in the library, and a review list
-nobody can act on is noise.
+the scope created), `NameUnreachable` for a field whose bean name `decapitalize` cannot invert (the
+seam the CAPITALISATION creates), and `Unexposed`, one row per TYPE, for a type with java-public
+fields the port did not ask about (the review list, the same shape as face 1's `OpaqueEgress`).
+Recorded only where the phase is in the pipeline, exactly as the collection and nullability
+boundaries are: without a declared reflective consumer the population is every public field in the
+library, and a review list nobody can act on is noise.
 
 **Measured on liqp: 559 → 567 passing, 16 → 8 failing, `errors 0` before and after**, with
 `bean-exposure 0` on the test port (everything in scope, no clash). Read the whole of K21 as

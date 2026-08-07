@@ -163,3 +163,84 @@ class PublicFieldAccessorSpec extends PortSuite:
                    "for, and `getURL` is what `decapitalize` inverts")
     assertEquals(PublicFieldAccessorTransform.beanSuffix("a"), "A")
   }
+
+  test("a name `decapitalize` cannot INVERT is REFUSED and counted — the accessor would be for nobody") {
+    // `eMail` -> `getEMail`, and `Introspector.decapitalize("EMail")` is `"EMail"` (two leading
+    // capitals keep their spelling), so the property a bean reader registers is `EMail` and the one
+    // the framework asks for is `eMail`. That is K21 face 2's OWN failure class arriving through
+    // the repair for it: an accessor is emitted, the port compiles, every count is flat, and the
+    // lookup reads absent. `lowerUpper` is not exotic — `eTag`, `xAxis`, `iValue`.
+    val (_, after, ph, out) = ported(
+      """package demo;
+        |class T {
+        |  public String eMail;
+        |  public String name;
+        |}
+        |""".stripMargin)
+    assert(!clue(out).contains("getEMail"),
+           "an accessor no bean reader will look for is worse than none — it reads as coverage")
+    assert(out.contains("def getName(): java.lang.String"),
+           "and the field beside it is unaffected: this is a refusal about ONE name")
+    val fs = rows(ph, after).filter(_.issue == BeanExposureCheck.Issue.NameUnreachable)
+    assertEquals(clue(fs).size, 1)
+    assert(fs.head.subject.endsWith("#eMail"), clue(fs.head.subject))
+    assert(clue(BeanExposureCheck.Issue.classification(BeanExposureCheck.Issue.NameUnreachable)).contains("§1(a)"))
+  }
+
+  test("…and the same field gets NO accessors at all, never a getter without a setter") {
+    val (_, _, _, out) = ported(
+      """package demo;
+        |class T { public String eMail; }
+        |""".stripMargin)
+    assert(!clue(out).contains("def get"), out)
+    assert(!out.contains("def set"), out)
+  }
+
+  test("`invertible` is exactly the round trip — a name it admits IS what a bean reader registers") {
+    // The invariant the refusal exists to hold, stated as the round trip rather than as a list of
+    // shapes: what a bean reader registers is `decapitalize(suffix)`, and a framework handed this
+    // port's object asks for the FIELD's name. Every name is on one side of the line or the other,
+    // and the predicate is the line.
+    for f <- List("url", "URL", "a", "A", "name", "aB", "eMail", "isbn", "ISBNCode", "") do
+      val back = PublicFieldAccessorTransform.decapitalize(PublicFieldAccessorTransform.beanSuffix(f))
+      assertEquals(PublicFieldAccessorTransform.invertible(f), back == f, clue(f))
+    assert(PublicFieldAccessorTransform.invertible("url"))
+    assert(PublicFieldAccessorTransform.invertible("URL"))
+    assert(!PublicFieldAccessorTransform.invertible("eMail"))
+    assert(!PublicFieldAccessorTransform.invertible("A"), "single upper decapitalises to `a`")
+  }
+
+  test("two fields cannot COLLIDE on one bean name once the round trip is the gate") {
+    // The audit's third minor, and the answer is that it cannot arise rather than that it is
+    // handled: `decapitalize(beanSuffix(f)) == f` makes `beanSuffix` INJECTIVE on the names this
+    // phase admits, so two admitted fields never want the same `getX`. `a` and `A` — the shape that
+    // would collide — are separated because `A` is not invertible (it decapitalises to `a`), so it
+    // is refused and only one `def getA` is ever minted. The accumulating screen is still what
+    // holds this: a duplicate mint is the one failure with no finding behind it, so the invariant
+    // is asserted on the OUTPUT and not on the arithmetic.
+    val (_, after, ph, out) = ported(
+      """package demo;
+        |class T {
+        |  public String a;
+        |  public String A;
+        |}
+        |""".stripMargin)
+    assertEquals(clue(out).sliding("def getA(".length).count(_ == "def getA("), 1, out)
+    assertEquals(clue(rows(ph, after)).map(_.issue), List(BeanExposureCheck.Issue.NameUnreachable))
+  }
+
+  test("an INHERITED accessor is seen — the screen climbs the parents this program declares") {
+    // `memberNames` read the type's OWN body, so a subclass whose PARENT declares `getMapper()`
+    // minted a second one: a bare typer error with no finding and no §1 classification behind it.
+    // An ancestor outside the program is a class file this pass cannot read, and K21 states that
+    // half rather than guessing at it.
+    val (_, after, ph, out) = ported(
+      """package demo;
+        |class Base { public Object getMapper() { return null; } }
+        |class Sub extends Base { public Object mapper; }
+        |""".stripMargin)
+    assertEquals(clue(out).sliding("def getMapper".length).count(_ == "def getMapper"), 1, out)
+    val fs = rows(ph, after).filter(_.issue == BeanExposureCheck.Issue.NameTaken)
+    assertEquals(clue(fs).size, 1)
+    assert(fs.head.subject.endsWith("#mapper"), clue(fs.head.subject))
+  }

@@ -30,6 +30,10 @@ object BeanExposureCheck:
     case NameTaken
     /** the type has java-public fields and was not in scope — the list a port picks entries from. */
     case Unexposed
+    /** the field's name has no accessor a bean reader would look under: `decapitalize` does not
+      * invert the JavaBeans capitalisation for it, so the property would be registered under a name
+      * nobody asks for. */
+    case NameUnreachable
 
   object Issue:
     def classification(i: Issue): String = i match
@@ -42,6 +46,17 @@ object BeanExposureCheck:
           "It is not a defect to fix in the engine: the java already publishes that property " +
           "through the accessor it declares, so a framework reading beans sees it. What it does " +
           "NOT see is the FIELD, which is K21's stated limit and is not expressible in Scala."
+      case NameUnreachable =>
+        "§1(a) ENGINE, and a REFUSAL. A bean reader derives the PROPERTY name it registers by " +
+          "running `java.beans.Introspector.decapitalize` over the accessor's suffix, and for a " +
+          "`lowerUpper` field name (`eMail`, `eTag`, `xAxis`) that is not the field's name: " +
+          "`eMail` capitalises to `getEMail`, whose suffix decapitalises to `EMail` — two leading " +
+          "capitals keep their spelling — so the property is registered under a name the framework " +
+          "never asks for. Emitting it anyway is this face's OWN failure class arriving through " +
+          "the repair for it: the accessor exists, the port compiles, every count is flat, and the " +
+          "lookup reads ABSENT. So the field is left unexposed and counted here. There is nothing " +
+          "to configure: no capitalisation of a `lowerUpper` java field round-trips through " +
+          "`decapitalize`, and the property is only reachable if the LIBRARY renames the field."
       case Unexposed =>
         "§1(b) PER-LIBRARY, and a REVIEW LIST rather than a defect. This type has fields java " +
           "declared `public` — part of its class file's surface — and the emitted scala publishes " +

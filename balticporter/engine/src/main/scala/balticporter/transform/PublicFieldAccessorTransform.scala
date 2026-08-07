@@ -151,12 +151,28 @@ final class PublicFieldAccessorTransform(
           fields.flatMap(v => p.symbolOf(v.symbol)).map(_.name).sorted.mkString(","), origin)
       body
     else
-      val existing = memberNames(body)
+      // …the screen ACCUMULATES, and it starts from the inherited names as well as this body's.
+      // Two shapes fall through a screen that is a fixed set of the type's own members, and both
+      // are bare typer errors with no finding and no §1 classification behind them: a parent that
+      // declares `getMapper()` while the subclass declares the FIELD, and two fields whose bean
+      // names collide (`a` and `A` both want `getA` — java keeps them apart by case and one
+      // emitted `def getA` cannot). An ancestor OUTSIDE the program is a class file this pass
+      // cannot read; K21 states that half rather than guessing at it.
+      val existing = collection.mutable.Set.from(memberNames(body) ++ inheritedNames(cls))
       val extra = publicFields(body).flatMap { v =>
         val fs   = p.symbolOf(v.symbol).get
         val bean = PublicFieldAccessorTransform.beanSuffix(fs.name)
         val want = List("get" + bean, "set" + bean, "is" + bean)
-        if want.exists(existing.contains) then
+        if !PublicFieldAccessorTransform.invertible(fs.name) then
+          // …the property a bean reader would register is not this field's name, so the accessor is
+          // one nothing looks for — this face's own defect, re-emitted by its own repair. Refused
+          // and counted rather than emitted as coverage.
+          refusals += BeanExposureCheck.Finding(
+            BeanExposureCheck.Issue.NameUnreachable, MemberKey(owner.get.fullName, fs.name).render,
+            s"get$bean would register the property `${PublicFieldAccessorTransform.decapitalize(bean)}`",
+            v.origin)
+          Nil
+        else if want.exists(existing.contains) then
           // …a java class that declares BOTH a public field and its own accessor is ordinary, and
           // emitting a second `getX` is an error the port cannot recover from. `is` is refused
           // beside `get` because a bean reader that sees both reports a conflicting property, which
@@ -165,7 +181,10 @@ final class PublicFieldAccessorTransform(
             BeanExposureCheck.Issue.NameTaken, MemberKey(owner.get.fullName, fs.name).render,
             want.filter(existing.contains).mkString(","), v.origin)
           Nil
-        else accessors(cls, v, fs, bean)
+        else
+          val added = accessors(cls, v, fs, bean)
+          existing ++= added.collect { case d: Tree.DefDef => p.symbolOf(d.symbol).map(_.name) }.flatten
+          added
       }
       if extra.isEmpty then body else body ++ extra
 
@@ -189,6 +208,33 @@ final class PublicFieldAccessorTransform(
       case c: Tree.ClassDef => p.symbolOf(c.symbol).map(_.name)
       case _                => scala.None
     }.toSet
+
+  /** every member name `cls` INHERITS from an ancestor this program declares.
+    *
+    * The screen above reads one body, and a java class that declares `public Object mapper` while
+    * its PARENT declares `getMapper()` is the same ordinary shape one level up — the emitted `def
+    * getMapper` is then a duplicate the port cannot recover from, arriving as a bare typer error
+    * with nothing to classify it. Bounded to the program on purpose (§4.56): an ancestor's members
+    * are otherwise a fact about a class file this pass cannot read, and `ENGINE-LIMITS.md` K21
+    * states that residue rather than guessing at it. */
+  private def inheritedNames(cls: SymId)(using p: Program): Set[String] =
+    def headSym(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s)      => Some(s)
+      case TypeRepr.AppliedType(tc, _) => headSym(tc)
+      case _                           => scala.None
+    def go(s: SymId, seen: Set[SymId]): Set[String] =
+      p.definitionOf(s) match
+        case Some(cd: Tree.ClassDef) =>
+          val parents = cd.parents.flatMap {
+            case tt: TypeTree => headSym(tt.tpe); case term: Term => headSym(term.tpe)
+          }.filterNot(seen)
+          memberNames(cd.body) ++ parents.flatMap(go(_, seen + s)).toSet
+        case _ => Set.empty
+    val direct = p.definitionOf(cls) match
+      case Some(cd: Tree.ClassDef) =>
+        cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case term: Term => headSym(term.tpe) }
+      case _ => Nil
+    direct.flatMap(go(_, Set(cls))).toSet
 
   /** `def getX(): T` and, for a java NON-FINAL field, `def setX(v: T): Unit`.
     *
@@ -270,3 +316,27 @@ object PublicFieldAccessorTransform:
     if field.isEmpty then field
     else if field.length > 1 && field.charAt(0).isUpper && field.charAt(1).isUpper then field
     else field.head.toUpper.toString + field.tail
+
+  /** `java.beans.Introspector.decapitalize`, spelled out — the function every bean reader runs on
+    * `getX`'s suffix to get the PROPERTY NAME it registers.
+    *
+    * Reproduced here rather than called because it is the half [[beanSuffix]] has to be checked
+    * against, and a check that calls the JDK cannot be stated as an identity in this module's own
+    * terms. Its rule is `beanSuffix`'s read backwards, and the two are NOT inverse: they compose to
+    * the identity everywhere except a `lowerUpper` name (see [[invertible]]). */
+  def decapitalize(bean: String): String =
+    if bean.isEmpty then bean
+    else if bean.length > 1 && bean.charAt(0).isUpper && bean.charAt(1).isUpper then bean
+    else bean.head.toLower.toString + bean.tail
+
+  /** DOES THE ROUND TRIP HOLD FOR THIS FIELD? — the one question that decides whether an accessor is
+    * worth emitting at all.
+    *
+    * A framework handed this port's object asks for the FIELD's name; what it finds is
+    * `decapitalize(beanSuffix(name))`. For `eMail` those differ — `getEMail` decapitalises to
+    * `EMail`, because two leading capitals keep their spelling — so the property is registered under
+    * a name nobody asks for. That is K21 face 2's own failure class arriving through the repair for
+    * it: an accessor IS emitted, the port compiles, every count is flat, and the lookup reads
+    * absent. `lowerUpper` is not an exotic shape (`eTag`, `xAxis`, `iValue`), and the honest answer
+    * is a refusal rather than an accessor that reads as coverage. */
+  def invertible(field: String): Boolean = decapitalize(beanSuffix(field)) == field
