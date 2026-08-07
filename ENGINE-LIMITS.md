@@ -6070,6 +6070,37 @@ day a library writes one. None does.
 
 *Fix kind: (a). Universal — a java statement form with no Scala counterpart, no library involved.*
 
+### F5.1 The SAME defect one node over — `Tree.CaseDef.guard` was carried by every phase and never rendered. **CLOSED, 0 blast, found by an INSTRUMENT rather than by a port**
+
+F5's own argument is that the corpus count was zero and that is why it survived. This is the second
+instance of its exact shape, and it is here because of HOW it was found: not by a port, not by a
+compile and not by a test, but by `EmissionFieldCoverageSpec` — the spec whose whole content is
+*perturb every field of every `Tree` node and require the emitted text to move*.
+
+`Tree.CaseDef.guard` was populated-able by any phase, carried through every pass by
+`Phase.mapTerm`'s `Match` arm, printed by `TirPrinter` in the debug view — and `TirEmitter.matchStr`
+built its pattern from `labels`/`isDefault` and never read it. A guard NARROWS a case, so dropping
+one widens the arm to every scrutinee the pattern matches: silent, compiling, and wrong in the
+direction that runs MORE code.
+
+Nothing in this repository could have reported it. No corpus site mints a guard (java's classic
+switch has none, and JS-S10's pattern switch is `Absent` — the frontend refuses it), so the fix is
+byte-identical on all fifteen ports: **`members.tsv` 0, every check count flat, every suite
+unchanged.** A port would only have met it on the day a phase first synthesised a narrowed arm, and
+that phase would have been written against a field that does nothing.
+
+**What generalises is the instrument, not the field.** F5 closed with a check that counts
+try-with-resources in the trees against the lowered set — an instrument for ONE construct, written
+after the loss. `EmissionFieldCoverageSpec` is the general form of the same question, and it derives
+BOTH enumerations rather than listing either: the node kinds from the class files (a `Tree` case
+added tomorrow has no probe and fails), the fields from `productElementNames` on the fixture (a field
+added to an EXISTING node — which is exactly what `Tree.Try.resources` was — is on no list and the
+default for an unknown field is NOT COVERED). Where a field legitimately does not reach the page it
+carries one of two reasons and no third: the emitter SYMBOL that reads it, or what the field is
+instead. An entry with neither is a suppression, and that is the one place the spec can be defanged.
+
+*Fix kind: (a) engine — `TirEmitter.matchStr`.*
+
 ### F6. A NULL selector must NPE — the fall-out arm's own defect, read at the other value
 
 CLOSED. Java throws a `NullPointerException` the instant a `switch` on a REFERENCE type sees a null
