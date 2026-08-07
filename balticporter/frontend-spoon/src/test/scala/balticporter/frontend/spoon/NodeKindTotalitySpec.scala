@@ -113,8 +113,13 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // refuses on any open marker — but the failure is now the size of the CONSTRUCT rather than the
     // size of the FILE, which is the difference between "this library cannot be ported" and "these
     // three declarations cannot".
+    // ONE, and the two that left are `JS-S09`: `CtSwitchExpression` and `CtYieldStatement` are
+    // `Lowered` now, because a scala `match` IS an expression and the image was `Tree.Match` all
+    // along — what was missing was the arm, not the node. The same shape as `CtTextBlock`'s exit
+    // from the list above, arrived at the other way round: there a probe retired a suspicion, here
+    // a lowering retired a refusal.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.MarkedUnportable),
-      List("CtCasePattern", "CtSwitchExpression", "CtYieldStatement"))
+      List("CtCasePattern"))
     // What is LEFT here is the four sites whose SHAPE a term-level marker cannot take: a `Constant`,
     // a `ValDef`, the type operand of an `instanceof`, a lambda with no body. Each is a real mint
     // site wanting a marker of its own kind, and putting a term where the tree needs a declaration

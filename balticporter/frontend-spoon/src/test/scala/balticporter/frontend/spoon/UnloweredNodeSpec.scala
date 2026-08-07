@@ -40,25 +40,31 @@ class UnloweredNodeSpec extends munit.FunSuite:
 
   private def markers(p: Program): List[Tree.Unportable] = scan(p) { case m: Tree.Unportable => m }
 
-  test("a SWITCH EXPRESSION mints a marker — and the rest of the class still translates") {
-    // `CtSwitchExpression` extends `CtExpression` and `CtAbstractSwitch` and NOT `CtSwitch`, so the
-    // switch arm cannot catch it and it lands on `exprNoCast`'s default. Before the marker this
-    // threw, and the whole file was lost.
+  test("a PATTERN CASE LABEL mints a marker — and the rest of the class still translates") {
+    // `CtCasePattern` is a `CtExpression` and NOT a `CtPattern`, so the switch's case-expression
+    // map hands it to `expr`, which has no arm for it and lands on `exprNoCast`'s default. Before
+    // the marker this threw, and the whole file was lost.
+    //
+    // The construct this spec was written against MOVED when `JS-S09` landed: a switch EXPRESSION
+    // is lowered now, so it mints nothing. That is the mechanism working — a marker inventory is a
+    // work list and a work list shrinks — and it is why the spec names its construct rather than
+    // "whichever one is unlowered".
     val p = SpoonTir.fromSource(
       """package p;
         |public class Sw {
+        |  public record Pt(int x, int y) {}
         |  public int untouched(int a) { return a + 1; }
-        |  public int pick(int a) { return switch (a) { default -> 7; }; }
+        |  public int pick(Object o) { return switch (o) { case Pt(int x, int y) -> x; default -> 7; }; }
         |}
         |""".stripMargin)
 
     val ms = markers(p)
     assertEquals(ms.size, 1, s"expected exactly one marker, got ${ms.map(_.what)}")
-    assertEquals(ms.head.kind, UnportableKind.UnmodelledNodeKind("CtSwitchExpression"))
+    assertEquals(ms.head.kind, UnportableKind.UnmodelledNodeKind("CtCasePattern"))
     assertEquals(ms.head.state, MarkerState.Open)
     // the CATALOG id comes from the kind registry, so the two artifacts join and a report can say
     // WHICH known difference this is rather than only that something was refused.
-    assertEquals(ms.head.diff.map(_.toString), Some("JS-S09"))
+    assertEquals(ms.head.diff.map(_.toString), Some("JS-S10"))
     // the marker points at real Java — §6.2's rule and `markerKey`'s precondition.
     assert(ms.head.origin.line > 0, ms.head.origin.toString)
 
@@ -69,13 +75,29 @@ class UnloweredNodeSpec extends munit.FunSuite:
 
   test("the marker names the kind the REGISTRY knows, not the parser's implementation class") {
     val p  = SpoonTir.fromSource(
-      "package p; public class S2 { public int f(int a) { return switch (a) { default -> 1; }; } }")
+      "package p; public class S2 { public int f(Object o) { return switch (o) { case String s -> 1; default -> 0; }; } }")
     val ms = markers(p)
-    assertEquals(ms.map(_.kind.detail), List(Some("CtSwitchExpression")))
+    assertEquals(ms.map(_.kind.detail), List(Some("CtCasePattern")))
     // the join is what the name is FOR: a kind outside the registry would report a name nothing can
     // be looked up by, and `NodeKindTotalitySpec` is what fails on that.
-    assert(SpoonKinds.byName.contains("CtSwitchExpression"))
+    assert(SpoonKinds.byName.contains("CtCasePattern"))
   }
+
+  test("a SWITCH EXPRESSION mints NOTHING — `JS-S09` is lowered, and the negative is the evidence") {
+    // The construct the two tests above used to be written against. Asserted rather than deleted,
+    // because a marker inventory that shrinks silently is one nobody can tell from a mint site that
+    // stopped being reached.
+    val p = SpoonTir.fromSource(
+      """package p;
+        |public class Sw2 {
+        |  public int pick(int a) { return switch (a) { case 1 -> 2; default -> 7; }; }
+        |}
+        |""".stripMargin)
+    assertEquals(markers(p), Nil)
+    assertEquals(SpoonKinds.byName("CtSwitchExpression").claim,
+      SpoonKinds.Claim.Lowered("SpoonTir.switchExpr"))
+  }
+
 
   test("SpoonKinds.nameOf resolves an implementation to its MOST SPECIFIC registered interface") {
     // `CtSwitchExpressionImpl` implements `CtSwitchExpression` AND `CtExpression`; answering the

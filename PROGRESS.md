@@ -5007,6 +5007,17 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
 
 ### 12.3 Counted residues that are not defects
 
+- **`catalog(unreached)` GROWS by one on every port each time a MODERN-JAVA row is mechanised, and
+  that is the lane telling the truth.** Every corpus library is written to java 8 or below, so a row
+  about SE14+ syntax — a switch expression, `yield`, a pattern label, an `instanceof` binding — can
+  never be reached by a corpus port however well it is built. Before it is mechanised such a row
+  sits in `catalog(unmechanised)`; the moment it gains a discharge surface it moves to
+  `catalog(unreached)`, on all fifteen lanes at once. Measured on `JS-S09`: `unmechanised` 4 -> 3
+  and `unreached` +1 everywhere, at **0 member digests on all fifteen and every other count flat**.
+  The evidence for such a row is therefore ENTIRELY FIXTURES (`SwitchExpressionSpec`), which is the
+  same position `TextBlockSpec` was written from — and `just catalog-coverage`'s "unreached on all
+  fifteen means dead code or an untested rule" heuristic does NOT apply to this family: the rule is
+  tested, by construction, somewhere the corpus cannot see.
 - **`overload-risk` is a RISK COUNTER with its own denominator, and the denominator is the point.**
   Java resolves an overload in three phases and scala in one, so javac and scalac can bind the same
   call to different members with no error on either side (`ENGINE-LIMITS.md` T17, catalog

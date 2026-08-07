@@ -41,6 +41,27 @@ object Jumps:
     case p: Product                                                       => p.productIterator.exists(continuesIn)
     case _                                                                => false
 
+  /** a `yield` that completes THIS switch expression's arm abruptly — JLS 14.21.
+    *
+    * Only a NON-TAIL yield is a [[Tree.Yield]] at all (the frontend peels the tail one into the
+    * arm's value), so a `true` here means the arm needs a value-carrying `boundary` around it.
+    *
+    * Stops at a nested `Tree.Match` for [[breaksOut]]'s reason and with a stronger guarantee behind
+    * it: java's `yield` binds to the innermost enclosing switch EXPRESSION, and JLS 15.28 forbids a
+    * `break`, `continue` or `return` whose target lies outside a switch expression — so a jump can
+    * never cross one of these boundaries in either direction, and the only construct that can
+    * re-bind a `yield` is another switch. Stops at a lambda, a `def` and a class body because a
+    * `yield` written there belongs to whatever switch expression stands INSIDE them. */
+  def yieldsOut(t: Any): Boolean = t match
+    case _: Tree.Yield                                            => true
+    case _: Tree.Match                                            => false // binds to the inner one
+    case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass |
+         _: Tree.ClassDef                                         => false
+    case xs: Iterable[?]                                          => xs.exists(yieldsOut)
+    case Some(x)                                                  => yieldsOut(x)
+    case p: Product                                               => p.productIterator.exists(yieldsOut)
+    case _                                                        => false
+
   /** a `break L` / `continue L` naming this construct, at ANY depth — a labelled jump crosses
     * nested loops and switches by definition, which is what it is for. */
   def jumpsTo(t: Any, label: String, brk: Boolean): Boolean = t match

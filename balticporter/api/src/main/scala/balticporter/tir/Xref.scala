@@ -166,6 +166,9 @@ object Xref:
           case Left(tpt)   => walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)
           case Right(term) => walkTerm(term)
       case _: Tree.Break | _: Tree.Continue => () // control-flow leaves, no symbol refs
+      // a `yield` is a jump like the two above and names no symbol of its own — but it CARRIES a
+      // value, and that value names everything an ordinary expression does.
+      case Tree.Yield(v, _, _)              => walkTerm(v)
       // a java label is not a symbol; everything it names is in the statement under it
       case Tree.Labeled(_, s, _, _)         => walkTerm(s)
       case Tree.Assert(c, m, _, _)          => walkTerm(c); m.foreach(walkTerm)

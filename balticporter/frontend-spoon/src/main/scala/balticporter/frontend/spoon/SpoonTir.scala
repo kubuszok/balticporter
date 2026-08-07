@@ -2001,12 +2001,24 @@ object SpoonTir:
       * The catalog id comes from [[SpoonKinds]] rather than from a table here: that registry
       * already says what this frontend does with every kind a Java source can produce, and a second
       * mapping beside it would be a second answer to one question. */
+    /** `about` is the node the refusal is ABOUT, where that is not the node the marker STANDS at.
+      *
+      * The two are the same at every dispatch default, and they come apart wherever the unlowered
+      * node carries no source POSITION. Spoon builds `CtCasePattern` as an unpositioned wrapper, so
+      * a marker minted at the pattern itself hits the fallback above and the whole unit is lost —
+      * which made the registry's `MarkedUnportable` claim for that kind false, with nothing able to
+      * report it: the claim is prose, and the one spec that would have seen it was written against
+      * a different kind. The enclosing `CtCase` is real java at a real line, which is what §6.2
+      * requires of a marker, while the KIND and therefore the catalog row still come from the node
+      * the frontend actually has no arm for. */
     private def unlowered(el: CtElement, what: String, tpe: TypeRepr,
-                          kind: Option[UnportableKind] = scala.None): Term =
+                          kind: Option[UnportableKind] = scala.None,
+                          about: CtElement = null): Term =
+      val subject = if about == null then el else about
       val o = originOf(el)
       if o == Origin.synthetic || o.javaPath.isEmpty then unsupported(el, what)
       else
-        val kindName = SpoonKinds.nameOf(el.getClass)
+        val kindName = SpoonKinds.nameOf(subject.getClass)
         Tree.Unportable.open(
           inner  = Tree.Literal(Constant.UnitC, unitT, o),
           kind   = kind.getOrElse(UnportableKind.UnmodelledNodeKind(kindName)),
@@ -2316,6 +2328,12 @@ object SpoonTir:
         case t: CtTry             => tryStmt(t, Nil)
         case s: CtSwitch[?]       => switchStmt(s)
         case b: CtBreak           => Tree.Break(Option(b.getTargetLabel), nothingT, originOf(b))
+        // `yield v` — JLS 14.21, and only ever a NON-TAIL one by the time it is reached from here:
+        // a switch-expression arm's LAST statement is peeled into the arm's value by `armValue`,
+        // and an arrow-form STATEMENT arm's Spoon-synthesised wrapper is undone by `caseBody`. What
+        // is left is a `yield` that leaves the arm from inside an `if` or a nested block, which
+        // scala can only express as a value-carrying `boundary` the emitter puts around the ARM.
+        case y: CtYieldStatement  => Tree.Yield(expr(y.getExpression), nothingT, originOf(y))
         case c: CtContinue        => Tree.Continue(Option(c.getTargetLabel), nothingT, originOf(c))
         case a: CtAssert[?]       => Tree.Assert(expr(a.getAssertExpression), Option(a.getExpression).map(expr), unitT, originOf(a))
         case d: CtDo              =>
@@ -3223,12 +3241,103 @@ object SpoonTir:
         * the BIR frontend uses, RESEARCH §4.2), so no `Unsupported`. */
       private def switchStmt(s: CtSwitch[?])(using Obligations): Term =
         val cases = s.getCases.asScala.toList
-        def stmtsOf(c: CtCase[?]): List[CtStatement] = c.getStatements.asScala.toList match
+        val selT  = try Option(s.getSelector.getType).map(tpe).getOrElse(NoType) catch { case _: Throwable => NoType }
+        val arms  = switchArms(cases, s, selT, unitT, isExpr = false)
+        // Java's switch with no `default` simply FALLS OUT when nothing matches; scala's `match`
+        // throws `MatchError`. `switch (data[p]) { case '\\': …; case '"': … }` scanning an
+        // ordinary character is the normal path, not an error — it threw on the first letter of
+        // every quoted string. Add the fall-out arm java already has.
+        //
+        // …EXCEPT where java does NOT fall out, which is what [[isEnhanced]] answers.
+        val needsFallOut = !arms.exists(_.isDefault) && !isEnhanced(cases)
+        // JS-S05 — a `switch` with no `default` FALLS OUT when nothing matches; a `match` with no
+        // `case _` throws `MatchError`, and falling out is often the NORMAL path (a scanner reading
+        // an ordinary character). Fires exactly where the arm has to be synthesised — read off the
+        // decision itself, so the consult cannot say something the code does not do.
+        Obligations.consult(JS.S(5), originOf(s))(Option.when(needsFallOut)(()))
+        val withDefault =
+          if !needsFallOut then arms
+          else arms :+ Tree.CaseDef(Nil, None, unit(s), isDefault = true)
+        Tree.Match(expr(s.getSelector), withDefault, unitT, originOf(s))
+
+      /** A SWITCH EXPRESSION — JLS 15.28, catalog `JS-S09`. `switch` in value position, with `yield`
+        * (JLS 14.21) as the arm's own way of producing one.
+        *
+        * `CtSwitchExpression` extends `CtExpression` and `CtAbstractSwitch` and NOT `CtSwitch`, so
+        * the statement arm could never have caught it — which is why the construct was refused at
+        * its kind rather than mis-lowered. What it needs is not a new node: a scala `match` IS an
+        * expression, so [[Tree.Match]] already carries the shape and the emitter already renders it
+        * in either position. The work is the arms.
+        *
+        * THREE things differ from the statement form, each of them a JLS rule and not a
+        * convenience:
+        *
+        *   - '''no fall-out arm.''' JLS 15.28.1 requires a switch expression to be EXHAUSTIVE, so
+        *     java never falls out of one — appending `case _ => ()` would answer `()` where java
+        *     answers nothing, and would widen the expression's type to boot. Where java's own
+        *     exhaustiveness fails at run time (a separately-compiled enum that gained a constant)
+        *     it throws, and so does scala's `match`; the two throw different classes and both
+        *     throw, which is the faithful half of that cell;
+        *   - '''an arm produces a VALUE.''' A `yield` written as the arm's last statement IS the
+        *     arm's value and is peeled into the block's result term; one written anywhere else is
+        *     an abrupt completion from depth and stays a [[Tree.Yield]] for the emitter to wrap in
+        *     a value-carrying `boundary`. An arm that cannot complete normally at all — `case 1 ->
+        *     throw new X()`, or a block whose every path yields — carries its last statement as the
+        *     block's result, which java's own definite-completion rule (JLS 15.28.1) is what makes
+        *     safe: the term is a `Throw` or an `if` both of whose branches jump, and both are
+        *     `Nothing` in scala;
+        *   - '''`yield` is NOT unwrapped.''' Spoon normalises an arrow-form STATEMENT arm's
+        *     expression into a `CtYieldStatement` too, which is a parser artifact — java has no
+        *     such construct (JLS 14.21) — so [[caseBody]] undoes it there and leaves it here.
+        *
+        * Everything else is shared with the statement form through [[switchArms]], deliberately:
+        * fallthrough, the labelled-vs-unlabelled break distinction and the empty-arm label
+        * accumulation are the SAME rules at either position (a colon-form switch expression falls
+        * through exactly as a colon-form statement does), and a second copy is the shape
+        * `ENGINE-LIMITS.md` F8 is about. */
+      private def switchExpr(sw: CtSwitchExpression[?, ?])(using Obligations): Term =
+        val resT = ty(sw)
+        // JS-S09 — always fires: every switch expression needs the image, and choosing `Tree.Match`
+        // for it is the whole content of the row.
+        Obligations.consult(JS.S(9), originOf(sw))(Some(()))
+        val cases = sw.getCases.asScala.toList
+        val selT  = try Option(sw.getSelector.getType).map(tpe).getOrElse(NoType) catch { case _: Throwable => NoType }
+        Tree.Match(expr(sw.getSelector), switchArms(cases, sw, selT, resT, isExpr = true), resT, originOf(sw))
+
+      /** the statements of one `case`, with Spoon's ARROW normalisation undone where java has no
+        * such construct.
+        *
+        * Two shapes are flattened. An arrow-form arm with a BLOCK body arrives as a single
+        * `CtBlock`, and its statements are the arm's — the same flattening the colon form has
+        * always needed. An arrow-form STATEMENT arm (`case 1 -> doIt();`) arrives as a
+        * `CtYieldStatement` wrapping the statement expression, which JLS 14.21 says is not a java
+        * construct at all: `yield` is legal only inside a switch EXPRESSION. Carried through, it
+        * would put a [[Tree.Yield]] in a switch statement's arm and the emitter would look for a
+        * boundary that is not there. */
+      private def caseBody(c: CtCase[?], isExpr: Boolean): List[CtStatement] =
+        val raw = c.getStatements.asScala.toList match
           case List(b: CtBlock[?]) => b.getStatements.asScala.toList
           case l                   => l
+        if isExpr then raw
+        else raw.map {
+          case y: CtYieldStatement => y.getExpression match
+            case st: CtStatement => st
+            case _               => y
+          case other => other
+        }
+
+      /** ONE java switch's arms, at either of its two positions.
+        *
+        * The fallthrough lowering, the labelled-vs-unlabelled break distinction and the empty-arm
+        * label accumulation are the same rules for a statement and for an expression — java's
+        * colon form falls through in both — so they are stated once. What the caller supplies is
+        * how an arm's BODY becomes a term: a statement arm is a `Unit` block, an expression arm is
+        * a block whose result is the arm's value. */
+      private def switchArms(cases: List[CtCase[?]], el: CtElement, selT: TypeRepr, resT: TypeRepr,
+                             isExpr: Boolean)(using Obligations): List[Tree.CaseDef] =
         // per case: (body without a trailing break, terminated?)
         val split = cases.map { c =>
-          val raw = stmtsOf(c)
+          val raw = caseBody(c, isExpr)
           // A trailing COMMENT is not a terminator. With comments enabled Spoon hands back a
           // free-floating `// …` as a statement of its own, and it can be the last one — reading
           // `last` literally would then miss the `break` behind it and fall the case through.
@@ -3237,14 +3346,25 @@ object SpoonTir:
             // enclosing LOOP; stripping it as a terminator silently deleted the jump, and the
             // quoted-string scanner in `JsonSkimmer` ran off the end of every string.
             case (b: CtBreak) :: _ if b.getTargetLabel == null => (raw.filterNot(_ eq b), true)
-            case rest => (raw, rest.headOption.exists { case _: CtReturn[?] | _: CtThrow => true; case _ => false })
+            // An ARROW arm NEVER falls through — JLS 14.11.2 gives the arrow form exactly one
+            // statement group and no fallthrough at all, which is the whole reason SE14 added it.
+            // Read off the CASE KIND and not off the body: an arrow arm's body carries no
+            // terminator to find, so a rule that only looked for one would duplicate the NEXT
+            // arm's tail into every arrow arm in the switch.
+            case rest => (raw, c.getCaseKind == CaseKind.ARROW || rest.headOption.exists {
+              // …and a `yield` terminates a colon-form EXPRESSION arm, exactly as a `return` and a
+              // `throw` terminate a statement one: JLS 14.21 completes the whole switch expression
+              // abruptly, so nothing after it in the next case can be reached from here.
+              case _: CtReturn[?] | _: CtThrow | _: CtYieldStatement => true
+              case _                                                 => false
+            })
         }
         // JS-S07 — only an UNLABELLED trailing `break` terminates a case; a labelled one leaves the
         // enclosing LOOP, and stripping it as a terminator deletes the jump. Read off the split that
         // has just been taken, so the consult cannot say something the code does not do. It fires
         // where a case really ended on a bare `break`, which is the shape the distinction is about.
-        Obligations.consult(JS.S(7), originOf(s))(
-          Option.when(cases.zip(split).exists { (c, sp) => sp._2 && sp._1.size != stmtsOf(c).size })(()))
+        Obligations.consult(JS.S(7), originOf(el))(
+          Option.when(cases.zip(split).exists { (c, sp) => sp._2 && sp._1.size != caseBody(c, isExpr).size })(()))
         val closures = new Array[List[CtStatement]](cases.length)
         for i <- cases.indices.reverse do
           val (body, terminated) = split(i)
@@ -3253,37 +3373,94 @@ object SpoonTir:
         // never does, so a non-terminated arm is lowered by DUPLICATING the next case's tail into
         // it. Fires where an arm really runs on: a case that is neither terminated nor last and has
         // statements of its own.
-        Obligations.consult(JS.S(4), originOf(s))(
+        Obligations.consult(JS.S(4), originOf(el))(
           Option.when(cases.indices.exists(i =>
             !split(i)._2 && i != cases.length - 1 && split(i)._1.nonEmpty))(()))
         val out     = List.newBuilder[Tree.CaseDef]
         var pending = List.empty[Term]
         cases.zipWithIndex.foreach { case (c, idx) =>
-          val labels    = c.getCaseExpressions.asScala.toList.map(expr)
-          val isDefault = labels.isEmpty
+          val labels    = c.getCaseExpressions.asScala.toList.map(caseLabel(_, c, selT))
+          // `case null, default ->` (JLS 14.11.1) is ONE case that is both a null label and the
+          // default. Read from `getIncludesDefault` rather than from an empty label list, or the
+          // arm would render `case null` and leave the switch without the default java wrote.
+          val isDefault = labels.isEmpty || c.getIncludesDefault
           val isLast    = idx == cases.length - 1
-          if split(idx)._1.isEmpty && stmtsOf(c).isEmpty && !isDefault && !isLast then pending = pending ++ labels
+          if split(idx)._1.isEmpty && caseBody(c, isExpr).isEmpty && !isDefault && !isLast then pending = pending ++ labels
           else
             // …through `blockOf`, so an arm that ENDS on a comment keeps it. This is where the
-            // shape is MANUFACTURED as often as it is written: `:2313` deletes the case-terminator
-            // `break`, and a comment written above that break becomes the arm's last statement the
-            // moment it goes.
-            out += Tree.CaseDef(pending ++ labels, None, blockOf(closures(idx), c), isDefault)
+            // shape is MANUFACTURED as often as it is written: the case-terminator `break` is
+            // deleted above, and a comment written above that break becomes the arm's last
+            // statement the moment it goes.
+            val body =
+              if isExpr then armValue(closures(idx), c, resT) else blockOf(closures(idx), c)
+            out += Tree.CaseDef(pending ++ labels, Option(c.getGuard).map(expr), body, isDefault)
             pending = Nil
         }
-        // Java's switch with no `default` simply FALLS OUT when nothing matches; scala's `match`
-        // throws `MatchError`. `switch (data[p]) { case '\\': …; case '"': … }` scanning an
-        // ordinary character is the normal path, not an error — it threw on the first letter of
-        // every quoted string. Add the fall-out arm java already has.
-        val arms = out.result()
-        // JS-S05 — a `switch` with no `default` FALLS OUT when nothing matches; a `match` with no
-        // `case _` throws `MatchError`, and falling out is often the NORMAL path (a scanner reading
-        // an ordinary character). Fires exactly where the arm has to be synthesised.
-        Obligations.consult(JS.S(5), originOf(s))(Option.when(!arms.exists(_.isDefault))(()))
-        val withDefault =
-          if arms.exists(_.isDefault) then arms
-          else arms :+ Tree.CaseDef(Nil, None, unit(s), isDefault = true)
-        Tree.Match(expr(s.getSelector), withDefault, unitT, originOf(s))
+        out.result()
+
+      /** one case LABEL.
+        *
+        * A PATTERN label (`CtCasePattern`, JLS 14.11.1) has no arm, and the marker for it is minted
+        * HERE rather than reached through `expr`'s default — because the pattern node carries no
+        * source POSITION. Spoon builds `CtCasePattern` as an unpositioned wrapper, so a marker
+        * minted at it falls back to the unit-fatal throw, and the registry's `MarkedUnportable`
+        * claim for the kind was therefore false in every port. The enclosing `CtCase` is real java
+        * at a real line; the KIND, and with it the catalog row, still comes from the node the
+        * frontend has no arm for.
+        *
+        * The marker carries the SELECTOR's type, which is what a case label's type is: a
+        * `CtCasePattern` reports `java.lang.Void`, and typing the label slot with that would put a
+        * type in the tree that no later phase could read as the scrutinee's. */
+      private def caseLabel(e: CtExpression[?], c: CtCase[?], selT: TypeRepr): Term = e match
+        case cp: CtCasePattern =>
+          unlowered(c, s"a pattern case label — ${SpoonKinds.nameOf(cp.getPattern.getClass)} " +
+            "(JLS 14.11.1); the frontend has no arm for it", selT, about = cp)
+        case other => expr(other)
+
+      /** one switch-EXPRESSION arm's statements as a term whose VALUE is the arm's.
+        *
+        * The last statement is the arm's result, and where it is a `yield` the node is peeled: a
+        * tail `yield` is what a scala arm already means, so carrying it would make every arm need a
+        * boundary it does not want. Everything else is left exactly as translated — a `Throw`, or
+        * an `if` whose branches all jump, is `Nothing` in scala and conforms wherever the switch's
+        * type is used, which is java's own definite-completion rule (JLS 15.28.1) doing the work. */
+      private def armValue(ss: List[CtStatement], el: CtElement, resT: TypeRepr): Term =
+        val (sts, trail)  = stmts(ss)
+        val (init, value) = sts.lastOption match
+          case Some(t: Term) => (sts.init, unYield(t))
+          case _             => (sts, unit(el))
+        Tree.Block(init, value, resT, originOf(el), trail)
+
+      /** peel a TAIL `yield` to the value it carries — through a comment wrapper, which is where
+        * the trivia harvest puts an arm's own comments. */
+      private def unYield(t: Term): Term = t match
+        case y: Tree.Yield     => y.value
+        case c: Tree.Commented => c.stmt match
+          case y: Tree.Yield => c.copy(stmt = y.value)
+          case _             => t
+        case _                 => t
+
+      /** is this an ENHANCED switch STATEMENT — one java requires to be EXHAUSTIVE (JLS 14.11.2),
+        * and therefore one it does NOT fall out of?
+        *
+        * Decided from the LABELS and never from the selector's type, which is both cheaper and
+        * exact. JLS 14.11.2 calls a switch enhanced when its selector type is outside the classic
+        * set (`char`/`byte`/`short`/`int`, their boxes, `String`, an enum) OR any label is a
+        * pattern or `null` — and the first disjunct cannot make a difference here: a selector
+        * outside that set admits no constant label at all, so such a switch carries patterns, a
+        * `null`, or nothing but `default`, and a switch that HAS a default is one this question is
+        * never asked about. Reading the selector's type would also mean resolving it, which
+        * `noClasspath` cannot always do — and a fall-out arm dropped because a type failed to
+        * resolve is §4.4's defect in the other direction, on every classic switch in the corpus.
+        *
+        * Where it fires, scala's `match` throws `MatchError` where java throws `MatchException`:
+        * both throw, which is the honest image of an exhaustiveness java checks and scala cannot. */
+      private def isEnhanced(cases: List[CtCase[?]]): Boolean =
+        cases.exists(_.getCaseExpressions.asScala.exists {
+          case _: CtCasePattern      => true
+          case l: CtLiteral[?]       => l.getValue == null
+          case _                     => false
+        })
 
       // ---- expressions ----
       /** the casts the SOURCE wrote, applied innermost-first — each one rendered as the thing java
@@ -3472,6 +3649,7 @@ object SpoonTir:
             else promotedBranch(c, be, t)
           Tree.If(expr(c.getCondition), branch(c.getThenExpression), branch(c.getElseExpression), ct, originOf(c))
         case ta: CtTypeAccess[?] => Tree.Literal(Constant.ClassOfC(tpe(ta.getAccessedType)), ty(e), originOf(e))
+        case sw: CtSwitchExpression[?, ?] => switchExpr(sw)
         // …and the same for an EXPRESSION. The marker carries the expression's own type, so the
         // tree stays typed and every phase after this one reads the slot exactly as it would
         // have — which is the whole reason the marker is a wrapper rather than a hole.

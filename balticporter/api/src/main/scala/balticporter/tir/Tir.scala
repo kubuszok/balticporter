@@ -479,6 +479,28 @@ object Tree:
   /** `continue` / `continue label`. `tpe` is Nothing. */
   final case class Continue(label: Option[String], tpe: TypeRepr, origin: Origin)        extends Term
 
+  /** `yield v` from a switch EXPRESSION's arm, at a position that is NOT the arm's value — JLS
+    * 14.21.
+    *
+    * Only the non-tail ones reach the IR, and that is the whole design. A `yield` written as the
+    * last statement of an arm is the arm's VALUE and needs no node: the frontend peels it into the
+    * arm block's result term, which is what scala's `match` arm already means. One written anywhere
+    * else — inside an `if`, inside a nested block, before another statement — is an ABRUPT
+    * COMPLETION of the enclosing switch expression from arbitrary depth, and scala has no
+    * expression-level jump. Its exact image is a value-carrying `scala.util.boundary`, which the
+    * emitter interposes around the ARM exactly as it interposes one for a mid-case `break`, and
+    * this node is what tells it to.
+    *
+    * `tpe` is Nothing: a `yield` completes abruptly, so it produces no value where it stands — the
+    * value it carries belongs to the switch expression. Modelled as [[Break]] and [[Return]] are,
+    * for the same reason.
+    *
+    * A `yield` NEVER reaches a switch STATEMENT's arm. Spoon normalises an arrow-form statement
+    * arm (`case 1 -> doIt();`) into a `CtYieldStatement` wrapping the statement expression, which
+    * is a parser artifact and not java — JLS 14.21 permits `yield` only inside a switch expression
+    * — so the frontend unwraps it there rather than carrying a node java does not have. */
+  final case class Yield(value: Term, tpe: TypeRepr, origin: Origin)                     extends Term
+
   /** `name: stmt` — a java label on a statement that is NOT a loop, the target of `break name`.
     *
     * Java's `LabeledStatement` accepts ANY statement, and `break L` leaves exactly that statement

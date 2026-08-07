@@ -178,6 +178,17 @@ object SpoonKinds:
     // (L1), so the SHAPE changes and the VALUE does not. Catalog `JS-E18` records the non-difference
     // with that spec as its evidence.
     "CtTextBlock" -> "SpoonTir.literal",
+    // JLS 15.28 — a scala `match` IS an expression, so the image was `Tree.Match` all along and
+    // what was missing was the arm. `CtSwitchExpression` extends `CtExpression` and
+    // `CtAbstractSwitch` and NOT `CtSwitch`, which is exactly why the statement arm could never
+    // have caught it.
+    "CtSwitchExpression" -> "SpoonTir.switchExpr",
+    // …and its jump. Every `yield` enters the STATEMENT dispatch and this arm mints a `Tree.Yield`;
+    // the TAIL one is then peeled into the arm's value by `SpoonTir.armValue`, because that is what
+    // a scala `match` arm already means. Spoon also wraps an arrow-form STATEMENT arm's expression
+    // in one, which JLS 14.21 says is not java — `SpoonTir.caseBody` undoes that before the
+    // dispatch sees it.
+    "CtYieldStatement" -> "SpoonTir.stmtKind, then SpoonTir.armValue (tail) / SpoonTir.caseBody (Spoon's arrow-statement wrapper)",
     "CtNewArray" -> "SpoonTir.newArray", "CtNewClass" -> "SpoonTir.anonClass",
     "CtOperatorAssignment" -> "SpoonTir.stmtKind / exprNoCast", "CtReturn" -> "SpoonTir.stmtKind",
     "CtSuperAccess" -> "SpoonTir.exprNoCast", "CtSwitch" -> "SpoonTir.switchStmt",
@@ -208,8 +219,6 @@ object SpoonKinds:
     Kind("CtRecord", Absent(AbsorbedSilently, "extends CtClass, so classDef treats it as a plain class and typeFlags has no isRecord — and PROBED (AbsorbedProbeSpec) the result is worse than a plain class: the components and accessors DO arrive, and the emitted class extends java.lang.Record without implementing its three abstract members, which RefChecks rejects on the day the port reaches zero typer errors"), Some(c(43))),
     Kind("CtAnnotationMethod", Absent(AbsorbedSilently, "extends CtMethod — and PROBED (AbsorbedProbeSpec) the ELEMENT ITSELF is dropped, not merely its `default` clause: an emitted @interface has no members at all, so a ported annotation cannot take the argument T16 now lets a type carry"), scala.None),
 
-    Kind("CtSwitchExpression", Absent(MarkedUnportable, "extends CtExpression and CtAbstractSwitch, NOT CtSwitch, so the switch arm cannot catch it"), Some(s(9))),
-    Kind("CtYieldStatement", Absent(MarkedUnportable, "extends CtCFlowBreak, not CtBreak or CtReturn; in practice the enclosing switch expression refuses first"), Some(s(9))),
     Kind("CtTypePattern", Absent(RefusedLoudly, "reached as the instanceof right operand, which refuses — and that site is one of the four whose SHAPE a term-level marker cannot take"), Some(g(21))),
     Kind("CtRecordPattern", Absent(RefusedLoudly, "the instanceof right operand still THROWS — a term marker cannot stand where the tree wants a type operand; as a CASE LABEL it now mints a marker instead, and the loudest reachable outcome is what this claim states"), Some(s(10))),
     Kind("CtCasePattern", Absent(MarkedUnportable, "a CtExpression, not a CtPattern, so switchStmt's case-expression map refuses it"), Some(s(10))),

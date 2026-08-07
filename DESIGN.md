@@ -1430,6 +1430,19 @@ of what a hand-porter would write plus ranked remediations against the engine's 
   confidently. It carries `Option[DiffId]` beside its `UnportableKind`, so a refusal report says
   *which known difference* this is rather than only *which kind of problem*; `None` is an honest
   state and is better than inventing a catalog row to point at.
+- **…and the node the marker STANDS at is not always the node the refusal is ABOUT.** The
+  constructor's rejection of a synthetic origin is right and is what `markerKey` needs — but a
+  parser hands back nodes that carry no position at all, and for those the fallback is the
+  unit-fatal throw. So a kind the registry files as `MarkedUnportable` can be `RefusedLoudly` in
+  every actual run, with nothing able to report it: the claim is prose, the census reads off the
+  claim, and the emitted output of a unit that failed to translate is a file that is simply not
+  there. Measured on `CtCasePattern`, which Spoon builds as an unpositioned wrapper around the real
+  pattern — every pattern case label took the whole compilation unit with it while the registry said
+  it cost one construct. `SpoonTir.unlowered` therefore takes the SUBJECT apart from the SITE: the
+  kind, and with it the catalog row, comes from the node the frontend has no arm for; the origin
+  comes from the nearest enclosing node that is real java at a real line (the `CtCase`). Neither
+  half is guessed and the fallback is untouched, so a refusal with no position anywhere near it is
+  still the honest throw.
 - **Definition level**: a `SymTag`, for findings whose subject is a declaration's *shape* rather than
   an expression — a constructor topology with no single-primary encoding, a signature that cannot be
   expressed.

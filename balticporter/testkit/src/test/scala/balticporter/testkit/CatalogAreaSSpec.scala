@@ -313,17 +313,23 @@ class CatalogAreaSSpec extends PortSuite:
 
   // -- the ABSENT rows: rule (ii) makes CONSULTING one a finding --------------------------------------------
 
-  test("JS-S09 / JS-S10 — a construct the frontend REFUSES has no arm to owe a consult, and says so") {
-    // Both are `Absent`, and neither is attached to a lowering dispatch. That is deliberate and it
-    // is the line `CatalogCoverageSpec` holds: an obligation owed at a site that never RETURNS —
-    // the dispatch enters, the refusal throws, the unit fails to translate — would leave the row on
+  test("JS-S09 — a switch EXPRESSION lowers, and the arm is what owes the consult") {
+    // The row was on this list beside `JS-S10` for the reason below, and left it when the arm was
+    // written: `SpoonTir.switchExpr` RETURNS, so the obligation is owed at a site that settles.
+    val p = port("public class U { int f(int i) { return switch (i) { case 1 -> 2; default -> 3; }; } }")
+    assertConsults(p, JS.S(9), fired = true)
+    assert(!Differences.byId(JS.S(9)).status.isInstanceOf[Status.Absent])
+  }
+
+  test("JS-S10 — a construct the frontend REFUSES has no arm to owe a consult, and says so") {
+    // `Absent`, and not attached to a lowering dispatch. That is deliberate and it is the line
+    // `CatalogCoverageSpec` holds: an obligation owed at a site that never RETURNS — the dispatch
+    // enters, the refusal mints a marker or throws, and no arm settles — would leave the row on
     // `mechanised` reading `unreached` on every port forever, which is a claim that reads as
-    // coverage and can never fail. What measures these is the other instrument: `SpoonKinds`
-    // records each refused kind against this row's own id and the `markers` lane counts every mint.
+    // coverage and can never fail. What measures it is the other instrument: `SpoonKinds` records
+    // the refused kind against this row's own id and the `markers` lane counts every mint.
     val p = port("public class U { int n; void f(int i) { switch (i) { case 1: n = 1; break; } } }")
-    assertNotConsults(p, JS.S(9))
     assertNotConsults(p, JS.S(10))
-    assert(Differences.byId(JS.S(9)).status.isInstanceOf[Status.Absent])
     assert(Differences.byId(JS.S(10)).status.isInstanceOf[Status.Absent])
   }
 
@@ -340,8 +346,9 @@ class CatalogAreaSSpec extends PortSuite:
     // no obligation dispatch; the audit point for this wave is "were the emitter-side rows really
     // instrumented, or marked unmechanised to keep the lane green". This is that question, asserted
     // in the exact form that can fail: the ONLY rows left are the two whose construct the frontend
-    // REFUSES, and the reason those cannot carry an obligation is above.
-    assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet, Set(JS.S(9), JS.S(10)),
+    // REFUSES, and the reason it cannot carry an obligation is above. It was TWO until `JS-S09`
+    // gained an arm, which is the only way a row leaves this set.
+    assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet, Set(JS.S(10)),
       "a JS-S row that is not a refused construct still says nothing is measuring it, and the " +
         "emitter's rendering dispatch now exists")
     assert(byKind.getOrElse("rendered", Nil).nonEmpty, "no JS-S row is wired to the RENDERING dispatch")

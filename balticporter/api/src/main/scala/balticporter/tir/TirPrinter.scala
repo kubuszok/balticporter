@@ -361,6 +361,9 @@ object TirPrinter:
       line(sb, indent, s"Break${x.label.map(l => s" $l").getOrElse("")}${origin(x.origin, style)}")
     case x: Tree.Continue =>
       line(sb, indent, s"Continue${x.label.map(l => s" $l").getOrElse("")}${origin(x.origin, style)}")
+    case x: Tree.Yield =>
+      line(sb, indent, s"Yield${origin(x.origin, style)}")
+      sub(sb, indent + 1, "value", x.value, style)
     case x: Tree.Labeled =>
       line(sb, indent, s"Labeled ${x.name}${origin(x.origin, style)}")
       sub(sb, indent + 1, "stmt", x.stmt, style)

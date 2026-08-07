@@ -606,6 +606,19 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
                        Tree.Assign(refB, iLit(1), tUnit, O), isDefault = true),
     )(),
 
+    // ---- Yield --------------------------------------------------------------------------------
+    // A NON-TAIL `yield` (JLS 14.21), which is the only shape that reaches the IR — the frontend
+    // peels a tail one into the arm's value. It renders only inside a switch-EXPRESSION arm, which
+    // is what makes this host a `Match` with the node standing as a STATEMENT of the arm's block:
+    // put in the block's result position it would be a tail yield, and `Jumps.yieldsOut` would
+    // correctly report that no boundary is needed and nothing would render.
+    probe(Tree.Yield(iLit(1), tInt, O),
+      (x: Tree.Yield) => hostTerm(Tree.Block(List(
+        Tree.Match(refA, List(Tree.CaseDef(Nil, None,
+          Tree.Block(List(x), iLit(0), tInt, O), isDefault = true)), tInt, O)), unitLit, tUnit, O)))(
+      "value" -> Tree.Yield(iLit(2), tInt, O),
+    )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
+
     // ---- MethodRef ----------------------------------------------------------------------------
     probe(Tree.MethodRef(Left(tt(tOth)), M1, tOth, O), hostTerm)(
       "qualifier" -> Tree.MethodRef(Right(Tree.Ident(OTHER, tOth, O)), M1, tOth, O),

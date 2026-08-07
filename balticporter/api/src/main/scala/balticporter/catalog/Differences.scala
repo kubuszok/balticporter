@@ -308,10 +308,27 @@ object Differences:
     Difference(sId(8), "a `null` selector throws NPE IMPLICITLY — a classic switch has no `case null` to opt out with",
       "JLS 14.11.2", "UNCITED — `null` matches no literal pattern and reaches the last arm",
       Silent, Handled, el("F6"), Universal, "TirEmitter.matchStr's synthesised `case null` throw; SwitchNullCheck", Rendered("Match")),
+    // The image was `Tree.Match` all along — a scala `match` IS an expression — so what was absent
+    // was the ARM and not the node, and the row closes without one line of new IR for the switch
+    // itself. `Tree.Yield` is the one node it did need, and only for the shape scala has no image
+    // for at all: a `yield` that is not the arm's last statement completes the switch expression
+    // abruptly from depth, which is a value-carrying `boundary` the emitter interposes around the
+    // ARM. A TAIL `yield` needs nothing, because it is what a scala arm already means.
+    //
+    // `Handled` rather than `Partial`, and the difference is worth stating: the one cell where the
+    // two languages do not agree exactly is EXHAUSTIVENESS. JLS 15.28.1 makes java's switch
+    // expression exhaustive by construction and scala's `match` is not checked to be — so where
+    // java's own guarantee fails at run time (a separately-compiled enum that gained a constant) it
+    // throws `MatchException` and scala throws `MatchError`. Both throw, at the same place, for the
+    // same reason; the class differs and nothing else does.
     Difference(sId(9), "switch EXPRESSIONS and `yield`",
       "JLS 15.28, 14.21", "UNCITED — a `match` is already an expression, so the image exists",
-      Loud, Absent("no TIR node and no CtSwitchExpression/CtYieldStatement arm; the unit fails to translate"),
-      Predicted, Universal, "SpoonTir.exprNoCast's refusal arm; SpoonTir.stmtKind's refusal arm", refusedAtTheKind),
+      Loud, Handled,
+      Predicted, Universal,
+      "SpoonTir.switchExpr — no fall-out arm, since the JLS makes a switch expression exhaustive; " +
+        "`yield` peeled at the tail and carried as Tree.Yield elsewhere, which " +
+        "TirEmitter.matchStr wraps in a value-carrying arm boundary",
+      Lowered("CtSwitchExpression", Dispatch.Expression)),
     Difference(sId(10), "pattern and record switch, with sealed exhaustiveness",
       "JLS 14.11.1, 14.30", "UNCITED — Scala patterns are a superset, so the image exists",
       Loud, Absent("case labels are read as plain expressions and refused"),

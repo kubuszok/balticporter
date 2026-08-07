@@ -2753,6 +2753,21 @@ final class TirEmitter(
     breakTarget = brk
     try f finally breakTarget = sb
 
+  /** the value-carrying `Label` a non-tail `yield` must name — a switch EXPRESSION's arm boundary.
+    *
+    * Kept apart from [[breakTarget]] rather than folded into it, because the two are not the same
+    * jump and cannot share a `Label`: a `break` carries `Unit` and a `yield` carries the switch
+    * expression's own type, so one boundary cannot serve both. They also never coexist — JLS 15.28
+    * forbids a `break`, `continue` or `return` whose target lies outside a switch expression, so a
+    * switch-expression arm holds `yield`s and nothing else, and a switch STATEMENT's arm holds no
+    * `yield` at all (JLS 14.21). ALWAYS named, for the reason `matchStr`'s break boundary is: the
+    * jump is emitted `break(v)(using n)`, so nothing nearer can steal it. */
+  private var yieldTarget: Option[String] = scala.None
+  private def inYield[A](y: Option[String])(f: => A): A =
+    val sy = yieldTarget
+    yieldTarget = y
+    try f finally yieldTarget = sy
+
   /** java LABEL -> the scala boundary name a `break`/`continue` naming it must target. A labelled
     * jump can sit at any depth, so unlike the unlabelled ones these are looked up, not scoped. */
   private val labelBreak = collection.mutable.Map[String, String]()
@@ -2871,7 +2886,8 @@ final class TirEmitter(
   private def interposes(t: Any): Boolean = t match
     case l: Tree.Labeled => labelNeedsBoundary(l) || interposes(l.stmt)
     case m: Tree.Match   =>
-      interposes(m.scrutinee) || m.cases.exists(c => caseNeedsBoundary(c.body) || interposes(c.body))
+      interposes(m.scrutinee) ||
+        m.cases.exists(c => caseNeedsBoundary(c.body) || caseYieldsOut(c.body) || interposes(c.body))
     case _: Tree.While | _: Tree.DoWhile | _: Tree.For | _: Tree.ForEach     => false
     case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass | _: Tree.ClassDef => false
     case xs: Iterable[?] => xs.exists(interposes)
@@ -2889,6 +2905,12 @@ final class TirEmitter(
     * lowers real fallthrough by duplicating the next case's tail — so a `break` still standing in
     * a case body means "stop HERE and leave the switch", over statements that follow it. */
   private def caseNeedsBoundary(body: Term): Boolean = breaksOut(body)
+
+  /** a non-tail `yield` in a switch EXPRESSION's arm — the value-carrying twin of the predicate
+    * above. The frontend peels the TAIL yield into the arm's value, so anything reaching this is a
+    * `yield` that leaves the arm from inside an `if`, a nested block or ahead of another statement,
+    * and scala has no expression-level jump to render it with. */
+  private def caseYieldsOut(body: Term): Boolean = Jumps.yieldsOut(body)
 
   // The three predicates below say which construct a java jump BELONGS to. They live in
   // `balticporter.tir.Jumps` because the `break-catch` check has to ask the same questions of the
@@ -3662,6 +3684,19 @@ final class TirEmitter(
       unrenderable("break", s"labelled `break $l` whose label is not in scope at this point",
         s"the labelled statement `$l` needs a NAMED boundary (§4.4); check `Tree.Labeled` reached it",
         b.origin, s"/* break $l: label not in scope */ ()")
+    // A NON-TAIL `yield` (JLS 14.21) — the switch expression's arm is left with this value from
+    // wherever the `yield` stands. `matchStr` has put a value-carrying `boundary` around the arm and
+    // named it; the `using` is explicit for §4.4's reason, so nothing that nests inside the arm can
+    // steal the jump. A TAIL yield never reaches here: it is the arm's value and the frontend peels
+    // it into the arm block's result term.
+    case Tree.Yield(v, _, _) if yieldTarget.isDefined =>
+      s"scala.util.boundary.break(${term(v, i)})(using ${yieldTarget.get})"
+    case y @ Tree.Yield(v, _, _) =>
+      unrenderable("yield", "no enclosing switch EXPRESSION arm — a `yield` outside one is not a " +
+        "java construct (JLS 14.21), so the tree was built by something other than the switch arm",
+        "check that the node was minted by `SpoonTir`'s switch-expression arm; a tail `yield` must " +
+        "be peeled into the arm's value rather than carried as a node",
+        y.origin, s"/* yield: no enclosing switch expression */ ${term(v, i)}")
     case Tree.Continue(scala.None, _, _) if contTarget.isDefined =>
       contTarget.filter(_.nonEmpty) match
         case Some(n) => s"scala.util.boundary.break(())(using $n)"
@@ -4265,7 +4300,18 @@ final class TirEmitter(
       // PHASE that synthesises a narrowed arm is all it takes, and the next one would have been
       // written against a field that does nothing.
       val pat = bare + c.guard.fold("")(g => s" if ${term(g, i)}")
-      if !caseNeedsBoundary(c.body) then s"${ind(i + 1)}case $pat => ${inSwitch(scala.None)(term(c.body, i + 1))}"
+      // A switch EXPRESSION's arm with a non-tail `yield` gets a VALUE-carrying boundary, the same
+      // shape a mid-case `break` gets and at the same place. The two are mutually exclusive by
+      // java's own rules (JLS 15.28 forbids a jump out of a switch expression; JLS 14.21 forbids a
+      // `yield` outside one), so the arm needs at most one of them — and the `Label`'s type is what
+      // makes them two arms rather than one: a `break` carries `Unit` and a `yield` carries the
+      // switch expression's own type.
+      if caseYieldsOut(c.body) then
+        labelSeq += 1
+        val n = s"yield$$$labelSeq"
+        val b = inYield(Some(n))(term(c.body, i + 1))
+        s"${ind(i + 1)}case $pat => scala.util.boundary { ($n: scala.util.boundary.Label[${tpe(m.tpe)}]) ?=> $b }"
+      else if !caseNeedsBoundary(c.body) then s"${ind(i + 1)}case $pat => ${inSwitch(scala.None)(term(c.body, i + 1))}"
       else
         labelSeq += 1
         val n = s"case$$$labelSeq"
