@@ -27,6 +27,22 @@ import scala.jdk.CollectionConverters.*
   * F-bounds. The whole liqp corpus (135 types) translates with no `Unsupported`.
   */
 object SpoonTir:
+
+  /** the three SENTINEL entries `annotationsOf` can put in `Symbol.droppedAnnotations` beside real
+    * annotation names, so `omissions` distinguishes the reasons a drop happened.
+    *
+    * `<unresolved>` (the oldest) is an annotation whose TYPE would not resolve — there is no name to
+    * report. `<unreadable-annotations>` is the whole SET failing to read, which used to be an
+    * uncounted `Nil` and therefore a declaration that looked as though it carried none.
+    * `<annotation-arguments-failed>` marks the one drop that is an ENGINE DEFECT rather than
+    * policy: the constant-expression path threw. Sentinels rather than decorated names, because
+    * `Symbol.droppedAnnotations` is documented as annotations BY NAME and every consumer matches an
+    * FQN exactly (`TestFrameworkTransform` must still recognise a `@Test` whose arguments would not
+    * translate). */
+  val UnresolvedAnnotation = "<unresolved>"
+  val UnreadableAnnotations = "<unreadable-annotations>"
+  val FailedAnnotationArguments = "<annotation-arguments-failed>"
+
   /** Build a [[Program]] from already-resolved top-level Spoon types.
     *
     * `catalog` is the run's OBLIGATION LOG (`balticporter.catalog`). It is a parameter and not a
@@ -1349,7 +1365,13 @@ object SpoonTir:
       // and `""` for every other declaration, which is the path every existing caller takes.
       val local  = owner.isDefined
       val bodySelf = if local then id else SymId.None
-      val bodyQName = if local then (try t.getQualifiedName catch { case _: Throwable => "" }) else ""
+      // NO `catch` here, and its absence is the point (§4.6): `""` is precisely the value the
+      // NON-local path uses, so a swallowed failure would be indistinguishable from "this is not a
+      // local class" — a fabricated fact, at a value the anonymous-class body wiring then reads.
+      // And the default would be unreachable anyway: `isDropped` and `seenTypes` below call
+      // `t.getQualifiedName` unguarded a few lines later, so a `CtType` that cannot spell its own
+      // name takes the whole translation down there rather than degrading here.
+      val bodyQName = if local then t.getQualifiedName else ""
       val fields = t.getFields.asScala.toList
         .filterNot(_.isInstanceOf[CtEnumValue[?]])
         .sortBy(posKey)
@@ -1803,17 +1825,30 @@ object SpoonTir:
                               claimed: String => Boolean = _ => true): (List[Annot], List[String]) =
       val out     = collection.mutable.ListBuffer[Annot]()
       val dropped = collection.mutable.ListBuffer[String]()
-      val as = try el.getAnnotations.asScala.toList catch { case _: Throwable => Nil }
+      // …and a set that cannot be READ AT ALL is COUNTED, not read as "this declaration has none"
+      // (§4.6). `Nil` alone is a fabricated fact of the worst kind here: every annotation on the
+      // declaration disappears, `OmissionCheck` sees an empty `droppedAnnotations` and reports
+      // nothing, and a `@Test` or a `@JsonProperty` is simply not there. The sentinel is the one
+      // this function already uses one line down for an annotation whose TYPE will not resolve.
+      val as =
+        try el.getAnnotations.asScala.toList
+        catch { case _: Throwable => dropped += SpoonTir.UnreadableAnnotations; Nil }
       as.foreach { a =>
         val ref = try a.getAnnotationType catch { case _: Throwable => null }
-        if ref == null then dropped += "<unresolved>"
+        if ref == null then dropped += SpoonTir.UnresolvedAnnotation
         else
           val fqn = ref.getQualifiedName
-          val vals = try a.getValues.asScala.toList catch { case _: Throwable => Nil }
+          // …and a VALUE LIST that will not read is not an EMPTY one. Left as `Nil` it took the
+          // marker-annotation path below and emitted `@A` BARE — the exact thing the comment under
+          // that path forbids, arriving through a catch rather than through the logic. `None` here
+          // is "unknown" and routes to the reporting arm; `Some(Nil)` is a real marker annotation.
+          val vals: Option[List[(String, Object)]] =
+            try Some(a.getValues.asScala.toList)
+            catch { case _: Throwable => scala.None }
           // Without an expression translator in scope only MARKER annotations can be carried
           // faithfully; one with arguments is REPORTED rather than emitted bare, since emitting
           // `@A` where Java wrote `@A(x)` changes its meaning.
-          if vals.isEmpty then
+          if vals.contains(Nil) then
             out += Annot(TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn))), Nil, originOf(a))
           // …and one WITH ARGUMENTS is carried only where a translator exists AND the port claims
           // the family. `claimed` defaults to "every one", which is what a site with a translator
@@ -1821,16 +1856,34 @@ object SpoonTir:
           // Either way an uncarried annotation is REPORTED rather than emitted bare — `@A` where
           // java wrote `@A(x)` is a different annotation.
           else if !claimed(fqn) then dropped += fqn
-          else bt match
-            case None => dropped += fqn
-            case Some(b) =>
+          else (bt, vals) match
+            case (None, _)          => dropped += fqn
+            // the value list would not READ — reported, and the arguments are unknown rather than
+            // absent, which is the distinction the `Option` above exists to carry.
+            case (_, scala.None)    =>
+              dropped += fqn
+              dropped += SpoonTir.UnreadableAnnotations
+            case (Some(b), Some(vs)) =>
               try
-                val args = vals.map { (k, v) =>
+                val args = vs.map { (k, v) =>
                   val e0 = v.asInstanceOf[CtExpression[?]]
                   k -> arrayShorthand(ref, k, e0, b.exprOf(e0))
                 }
                 out += Annot(TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn))), args, originOf(a))
-              catch case _: Throwable => dropped += fqn
+              // A TRANSLATION THAT FAILED is not a translation DECLINED, and both used to write the
+              // same one string. `!claimed` and a missing translator are POLICY — the port said no —
+              // while this is the expression path throwing on a constant expression, which is an
+              // engine defect somebody has to be able to see. The FQN stays in the list on its own,
+              // because every consumer of `droppedAnnotations` matches it exactly and by name
+              // (`TestFrameworkTransform` still has to recognise a `@Test` whose arguments would not
+              // translate, or the suite loses a test); the sentinel rides BESIDE it, as
+              // `<unresolved>` already does, so `omissions` shows one extra row saying which of the
+              // two kinds of drop happened. Not folded into the FQN: `Symbol.droppedAnnotations` is
+              // documented as annotations "by name", and a decorated name is a name nothing matches.
+              catch
+                case _: Throwable =>
+                  dropped += fqn
+                  dropped += SpoonTir.FailedAnnotationArguments
       }
       (out.toList, dropped.toList)
 
