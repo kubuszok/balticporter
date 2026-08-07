@@ -1,6 +1,7 @@
 package balticporter.testkit
 
 import balticporter.catalog.{Attaches, Differences, JS, Status}
+import balticporter.tir.Decision
 
 /** THE `JS-C` EDGE-CASE SUITE — one test per class/member/initialisation row the engine wires, at
   * the shape the row is about.
@@ -468,14 +469,49 @@ class CatalogAreaCSpec extends PortSuite:
     assertEquals(p.catalog.citedAt(JS.C(46)), Nil)
   }
 
+  // -- JS-C44: java's `sealed`/`permits` against scala's FILE-SCOPED `sealed` ---------------------------------
+
+  test("JS-C44 — a seal whose permitted subtypes are all in THIS file is reproduced exactly") {
+    val p = port(
+      """public sealed class A permits A.X, A.Y {
+        |  public static final class X extends A { }
+        |  public static final class Y extends A { }
+        |}""".stripMargin)
+    assertConsults(p, JS.C(44), fired = true)
+    assertEmits(p, "sealed class A")
+    assertEquals(p.emitter.emissionDecisions.filter(_.kind == Decision.Kind.WidenedSeal), Nil)
+  }
+
+  test("JS-C44 — a seal reaching ANOTHER emitted file has no image, and the widening is RECORDED") {
+    // Scala's `sealed` restricts extension to the declaring FILE and there is no `permits` clause
+    // to name `p.B` with, so the type ships OPEN — a widening of who may extend it that is
+    // invisible in the emitted text, which is exactly why it is a decision and a porter note
+    // rather than nothing at all.
+    val p = portAll(List(
+      "A.java" -> "package p;\npublic sealed class A permits B { }\n",
+      "B.java" -> "package p;\npublic final class B extends A { }\n"))
+    assertConsults(p, JS.C(44), fired = true)
+    assertNotEmits(p, "sealed class A")
+    val ds = p.emitter.emissionDecisions.filter(_.kind == Decision.Kind.WidenedSeal)
+    assertEquals(ds.map(_.subjectFqn), List("p.A"))
+    assertEquals(ds.head.detail.get("elsewhere"), Some("1"))
+    assertEmits(p, "porter: widened-seal")
+  }
+
+  test("JS-C44 — an ordinary class is consulted, does not fire, and records nothing") {
+    val p = port("public class A { }")
+    assertConsults(p, JS.C(44))
+    assertEquals(p.emitter.emissionDecisions.filter(_.kind == Decision.Kind.WidenedSeal), Nil)
+  }
+
   // -- the OPEN and ABSENT rows: rule (ii) makes CONSULTING one a finding ------------------------------------
 
-  test("JS-C12 / JS-C22 / JS-C23 / JS-C42 / JS-C44 — an OPEN row is the WORK LIST and is never consulted") {
-    // JS-C12 and JS-C44 ATTACH — a forward reference is decided where a field renders and a seal
-    // where a type does — so each is an `undischarged` hole on every port, which is exactly what a
-    // work list is. JS-C22, JS-C23 and JS-C42 have no surface at all and say so.
+  test("JS-C12 / JS-C22 / JS-C23 / JS-C42 — an OPEN row is the WORK LIST and is never consulted") {
+    // JS-C12 ATTACHES — a forward reference is decided where the field it reads renders — so it is
+    // an `undischarged` hole on every port, which is exactly what a work list is. JS-C22, JS-C23
+    // and JS-C42 have no surface at all and say so.
     val p = port("public class A { int a = b; int b = 1; }")
-    List(JS.C(12), JS.C(22), JS.C(23), JS.C(42), JS.C(44)).foreach { id =>
+    List(JS.C(12), JS.C(22), JS.C(23), JS.C(42)).foreach { id =>
       assertNotConsults(p, id)
       assert(Differences.byId(id).status.isOpen, s"$id is no longer Open — flip this test with it")
     }
@@ -507,7 +543,7 @@ class CatalogAreaCSpec extends PortSuite:
     // THE CHUNK'S OWN BAR. Area C opened with all 47 rows on `Unmechanised` — a claim that nothing
     // was measuring any of them — and the audit point for this wave is whether the rows were really
     // instrumented or renamed to keep a lane green. This is that question in the exact form that can
-    // fail: the ONLY rows left are the five whose surface genuinely does not exist, and each names
+    // fail: the ONLY rows left are the six whose surface genuinely does not exist, and each names
     // which one it is waiting for.
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
       Set(JS.C(22), JS.C(23), JS.C(29), JS.C(30), JS.C(42), JS.C(43)),

@@ -1,11 +1,11 @@
 #check	count
 base-surface	0
 break-catch	0
-catalog(consulted)	47
+catalog(consulted)	48
 catalog(uncited)	121
-catalog(undischarged)	3
+catalog(undischarged)	2
 catalog(unmechanised)	47
-catalog(unreached)	20
+catalog(unreached)	19
 class-init-trigger	0
 jdk-surface	2
 manifest	0

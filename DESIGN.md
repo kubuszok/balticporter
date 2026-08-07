@@ -514,10 +514,13 @@ Three discharge surfaces were designed and **all three are built**:
   never in an arm**: written inside each `case`, an arm could decline to wrap, and an arm that opts
   out is the same shape as the defect the mechanism exists to catch. Entered at the dispatch, an arm
   never had the choice;
-- **a phase** — `Phase.cite(id, decl)`, one row per DECLARATION it decided about, which is the
-  granularity `Decision` already uses (`CLAUDE.md` §5.1). Deliberately weaker and reported apart:
-  nothing can assert that a phase *should have* considered a difference at a declaration it never
-  visited;
+- **a whole-program pass** — `CatalogLog.cite(id, decl)`, one row per DECLARATION it decided about,
+  which is the granularity `Decision` already uses (`CLAUDE.md` §5.1). Deliberately weaker and
+  reported apart: nothing can assert that a pass *should have* considered a difference at a
+  declaration it never visited. Reached from `Phase.cite` for a pipeline phase, and directly by the
+  emitter's own construction-time passes — `resolveFieldShadowing` (JS-C04) and
+  `resolveMemberClashes` (JS-C46) are not phases and are exactly this shape: they walk the program,
+  not a node kind, so a dispatch wrapper is the wrong instrument for them;
 - **emitter rendering** — `Rendering.of(kind, at, subject)` at `TirEmitter`'s `stat` and `term`
   dispatches, keyed on the `Tree` kind (`productPrefix`) rather than on the Java one. Built with
   area S, which is the first area most of whose rows are decided HERE: a `switch` with no `default`,
@@ -548,6 +551,26 @@ collection in any row field — a collection is the exact shape a per-library po
 product is admitted by the recursion that spec already performs. `Differences.leaves` is the one
 place a `Both` is flattened, so the three indexes built from it can never disagree; a `Both` counts
 as mechanised only when EVERY leaf is.
+
+**AREA C NEEDED NO FOURTH SURFACE, and the prediction that it would is worth recording.** The
+implementation plan said *most `JS-C` rows discharge in PHASES*; chunk 0's re-derivation had already
+disproved it, putting a `SpoonTir` or `TirEmitter` symbol against almost every row. What made the
+three surfaces sufficient is a fact about the IR rather than about area C: a `Tree.ClassDef`, a
+`Tree.DefDef` and a `Tree.ValDef` are `Statement`s, so the emitter's rendering dispatch has reached
+every declaration since it was built. Two consequences, both general:
+
+- **a dispatch is only a dispatch if EVERY node goes through it.** `TirEmitter.emitUnit` called
+  `classDef` directly, so a TOP-LEVEL type never entered the rendering scope while every nested one
+  did — every `Rendered("ClassDef")` row would have been owed, and discharged, only by the nested
+  ones, on every port, forever. That is `ENGINE-LIMITS.md` F8's shape at an ENTRY rather than in an
+  arm, and it is the second thing to check when an area attaches to a kind nothing attached to
+  before;
+- **the consult goes above the FORK, not in the arm that decides.** `classDef` forks into `enumDef`
+  and `classDef1`; consulted below the fork, an enum's rendering would owe `JS-C34` and never ask
+  it. The predicates are therefore read off the tree and the symbol table rather than by re-running
+  `orderBody` or `diamondOverrides`, and that trade is stated where it bounds what a `fired` count
+  means: `consult` asks *does this difference APPLY at this declaration*, which is a question about
+  the shape, and whether the repair emitted text is what the edge-case suite asserts.
 
 **And a construct the frontend REFUSES gets no obligation at all.** `JS-S09` (switch expressions) and
 `JS-S10` (pattern switch) are `Absent`, and attaching them to their Spoon kinds would be a claim that

@@ -1743,6 +1743,11 @@ object SpoonTir:
         isAnnotation = isAnnot,
         isAbstract = (has(t, ABSTRACT) || isTrait) && !isAnnot,
         isFinal = has(t, FINAL),
+        // JS-C44 — the RAW java fact and nothing more. Whether scala can reproduce the seal is a
+        // question about where the permitted subtypes LAND, which is an emitted-file question and
+        // therefore the emitter's (`TirEmitter.sealOf`); deciding it here would put half a rule in
+        // a frontend that has no idea what the port writes to which file.
+        isSealed = has(t, SEALED),
         isTrait = isTrait,
         isEnum = t.isInstanceOf[CtEnum[?]],
         isPrivate = priv,

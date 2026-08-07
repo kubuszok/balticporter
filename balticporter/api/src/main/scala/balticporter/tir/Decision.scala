@@ -179,6 +179,17 @@ object Decision:
       * list is short and knowing which one is what tells a reader whether their own path is
       * covered. */
     case ForcedClassInit
+    /** a java `sealed` hierarchy shipped as an ORDINARY OPEN type, because scala's `sealed` is
+      * FILE-scoped and has no `permits` clause to name a subclass in another file with (JLS 8.1.1.2,
+      * catalog `JS-C44`). Kept apart from [[WidenedVisibility]] although both widen: that one is
+      * about an ACCESS LEVEL and `Visibility` decides it over the whole program, while this is about
+      * who may EXTEND the type and is decided at the declaration from where its subtypes land. A
+      * reader of the emitted `class` sees no modifier missing — there is nothing in the text to
+      * notice — which is exactly the case §4.575 says a note exists for. The DETAIL says how many
+      * subtypes this program declares and how many of them leave this file, because "the seal could
+      * not be kept" and "nothing in this program extends it" are different situations with the same
+      * emitted shape. */
+    case WidenedSeal
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

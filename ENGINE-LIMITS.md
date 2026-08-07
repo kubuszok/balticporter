@@ -1457,6 +1457,35 @@ moved, which is the signature of a pure reordering: `LibgdxCoreMigrate` 8 (`Vers
 *Fix kind: (a) engine. CLOSED in `TirEmitter.orderBody` and `SpoonTir.classDef`, pinned by
 `CtorFunnelPromotedLocalOrderSpec`. Found by RUNNING a suite and by nothing else.*
 
+### C13. A DORMANT `Flags` BIT IS A RENDERING RULE NOBODY WROTE — populating `isSealed` emitted `sealed` at every hierarchy the rule had just refused
+
+`Flags.isSealed` has existed since the TIR's first commit, `SpoonTir.typeFlags` never set it, and
+`TirEmitter.mods` carried `if f.isSealed then "sealed " else ""` in its modifier list the whole time.
+Dead code that read as a feature waiting for its input.
+
+It is not one, and the reason is the fact the bit stands for. **`Flags.isSealed` is JAVA'S RAW
+MODIFIER and scala's `sealed` is a different restriction** — java seals by NAMING its permitted
+subclasses anywhere in the module, scala by CONTAINING them in the declaring FILE — so "java said
+sealed" and "emit `sealed`" are two facts, and a generic modifier builder had silently equated them.
+The moment the frontend populated the bit (JS-C44's fix), every sealed hierarchy got the keyword
+INCLUDING the ones `TirEmitter.sealOf` had just refused: the emitted file carried the porter note
+saying the seal could not be kept and the keyword keeping it, three lines apart.
+
+**The general rule, which is `CLAUDE.md` §4.56's fast-path guard one artifact over.** Before
+populating a `Flags` field nothing sets, grep what already READS it. A modifier list, a keyword
+builder, a `mods`-shaped function — each is written once against the flags of its day and then
+answers for every flag added since, with no way for the new flag's author to know it was consulted.
+The fix is that the DECISION has exactly one home (`sealOf`, which is the only place that can ask
+where the subtypes land) and the flag stays what its name says: a fact about the java, never an
+instruction to the emitter.
+
+Cost: one spec failure, caught by the row's own edge-case test in the commit that populated the bit,
+and nothing else could have seen it — no corpus library has a java-17 source file, so every port
+emits the same bytes with the bit set or clear (**0 member digests on all fifteen**).
+
+*Fix kind: (a) engine. CLOSED — `TirEmitter.mods` no longer renders the keyword and says why;
+`CatalogAreaCSpec`'s JS-C44 pair is the gate. Catalog twin: `JS-C44`.*
+
 ---
 
 ## 3. `this`, inner classes and anonymous classes

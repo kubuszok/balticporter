@@ -445,10 +445,24 @@ object Differences:
       "JLS 8.10", "UNCITED — a case class differs in accessor naming and in three facets of `toString`",
       Loud, Absent("no CtRecord/CtRecordComponent handling; a record is silently degraded to a plain class"),
       Predicted, Universal, "SpoonTir.classDef's CtClass arms take it, and SpoonTir.typeFlags has no isRecord", Unmechanised("the construct is ABSORBED SILENTLY — CtRecord extends CtClass, so the class arm takes it and no arm is even aware a record was there; `SpoonKinds.absent` records it against this row and `NodeKindTotalitySpec` pins it, which is the instrument that measures the family")),
+    // `Open` — "SpoonTir.typeFlags never populates Flags.isSealed, so a sealed hierarchy ships as
+    // an ordinary open class, a silent widening with no refusal and no finding" — until this wave.
+    // What the two languages have is not one feature: java seals by NAMING its subclasses anywhere
+    // in the module, scala by CONTAINING them in one file. Where they coincide the image is EXACT
+    // and is emitted; where they do not there is no image at all, and the residue is RECORDED
+    // rather than approximated. `Partial` and not `Handled`, because the second half is a widening
+    // the port still ships — what changed is that it now says so.
     Difference(cId(44), "`sealed` / `non-sealed` / `permits`",
-      "JLS 8.1.1.2, 9.1.1.4", "UNCITED — Scala has no `non-sealed` and no explicit `permits`",
-      Silent, Open, Predicted, Universal,
-      "SpoonTir.typeFlags never populates Flags.isSealed, so a sealed hierarchy ships as an ordinary open class", Rendered("ClassDef")),
+      "JLS 8.1.1.2, 9.1.1.4",
+      "UNCITED — Scala has no `non-sealed` and no explicit `permits`; `sealed` restricts extension to the declaring FILE",
+      Silent,
+      Partial("a seal whose subtypes all land in ONE emitted file is reproduced exactly; one that " +
+        "reaches another file — or whose permitted set this program does not declare, which takes " +
+        "the same answer for the same reason — ships OPEN, because scala has no `permits` to name " +
+        "it with. That half is a counted `WidenedSeal` decision and not a translation"),
+      InCode("TirEmitter.sealOf, which states the file-scope condition it can and cannot meet"), Universal,
+      "SpoonTir.typeFlags's isSealed carries java's raw modifier; TirEmitter.sealOf decides the image from where the subtypes land, and records Decision.Kind.WidenedSeal where none exists",
+      Rendered("ClassDef")),
     Difference(cId(45), "a `final` field's JMM safe-publication guarantee",
       "JLS 17.5", "UNCITED — a `val` carries the same guarantee",
       NoImpact, Handled, NoTwin, Universal, "SpoonTir.fieldFlags — isFinal/isMutable off the FINAL modifier", Rendered("ValDef")),

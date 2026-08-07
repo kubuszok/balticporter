@@ -1593,10 +1593,14 @@ final class TirEmitter(
     // exactly the constructor `lowerCtors` replaces with its body, so this can never duplicate a
     // doc that is still attached to a `def this` somewhere in the class.
     val ctorLead = plan.primary.toList.flatMap(_.leading)
+    // JS-C44 — the keyword where java's seal survives the file split, and the note where it does
+    // not. The note goes AFTER `cnote` for §4.575's order: the upstream's own trivia first, the
+    // port's note last, the member next.
+    val (seal, sealNote) = sealOf(cd, s, i)
     val cls     =
       if s.flags.isAnnotation then
         s"${leading(cd.leading, i)}$cnote${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$prim extends scala.annotation.StaticAnnotation"
-      else s"${leading(cd.leading ++ ctorLead, i)}$cnote${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}$abs$kw ${esc(s.name)}$tps$prim$ext$open"
+      else s"${leading(cd.leading ++ ctorLead, i)}$cnote$sealNote${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${esc(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
@@ -2324,6 +2328,63 @@ final class TirEmitter(
   /** the program's TOP-LEVEL type symbols — one set, for the nested-owner test above. */
   private lazy val topLevelSyms: Set[SymId] = program.units.map(_.symbol).toSet
 
+  /** the top-level type a symbol is emitted INSIDE — which is the emitted FILE, since a unit is a
+    * file. `SymId.None` for anything this program does not own, and that answer is load-bearing:
+    * a permitted subtype the port does not declare is one no file of ours contains. */
+  private def topLevelOf(id: SymId, seen: Set[SymId] = Set.empty): SymId =
+    if id == SymId.None || topLevelSyms(id) || seen(id) then id
+    else program.symbolOf(id).map(s => topLevelOf(s.owner, seen + id)).getOrElse(SymId.None)
+
+  /** every DIRECT subtype this program declares, by parent — `parentsBySym` inverted. */
+  private lazy val subtypesBySym: Map[SymId, List[SymId]] =
+    parentsBySym.toList.flatMap((c, ps) => ps.map(p => p -> c)).groupMap(_._1)(_._2)
+
+  /** JS-C44 — java's `sealed`/`permits` against scala's FILE-SCOPED `sealed`.
+    *
+    * Java seals a hierarchy by NAMING its subclasses, wherever in the module they live; scala seals
+    * one by CONTAINING them, in the file the parent is declared in. Where the two coincide — every
+    * subtype this program declares lands in the same emitted unit — `sealed` is the exact image and
+    * is emitted. Where they do not, there is no image at all: scala has no `permits`, so the type
+    * ships OPEN, which is a widening of who may extend it and is invisible in the emitted text.
+    * That residue is RECORDED and counted rather than approximated (`ENGINE-LIMITS.md` M6).
+    *
+    * A sealed type with NO subtype in this program takes the same answer as one whose subtypes are
+    * elsewhere, and deliberately: emitting `sealed` there would be a claim this run cannot check,
+    * and the direction it fails in is a scala COMPILE ERROR in whatever module holds the subclass.
+    * Conservative is the only safe side of that.
+    *
+    * `non-sealed` needs nothing. Where the seal survives, every permitted subtype is in the same
+    * file and scala already allows each to be extended further; where it does not, there is no seal
+    * for a child to opt out of.
+    *
+    * Returns the KEYWORD and the note that goes above the declaration — the pair, because a
+    * widening with no note is exactly the silence this row was `Open` for. */
+  private def sealOf(cd: Tree.ClassDef, s: Symbol, i: Int): (String, String) =
+    if !s.flags.isSealed then ("", "")
+    else
+      val mine     = topLevelOf(cd.symbol)
+      val subs     = subtypesBySym.getOrElse(cd.symbol, Nil)
+      val elsewhere = subs.filterNot(x => topLevelOf(x) == mine)
+      if subs.nonEmpty && elsewhere.isEmpty then ("sealed ", "")
+      else
+        val d = Decision(
+          kind       = Decision.Kind.WidenedSeal,
+          subject    = cd.symbol,
+          subjectFqn = s.fullName,
+          detail     = Map(
+            "subtypes"  -> subs.size.toString,
+            "elsewhere" -> elsewhere.size.toString,
+            "why"       -> ("java sealed this type and named its permitted subclasses; scala's " +
+              "`sealed` restricts extension to THIS FILE and has no `permits` clause, so a " +
+              "hierarchy whose subtypes are not all emitted here ships open"),
+          ),
+          reason     = Reason.Universal("sealed-hierarchy(JS-C44)"),
+          origin     = cd.origin,
+        )
+        recordedEmission.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty) += d
+        printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
+        ("", PorterNote.render(d, ind(i)))
+
   /** THE AREA-C ROWS A TYPE DECLARATION OWES — consulted at the dispatch, above every arm.
     *
     * `classDef` forks into `enumDef` and `classDef1`, and most of these rows are decided inside one
@@ -2379,6 +2440,7 @@ final class TirEmitter(
     // JS-C33's shape and not its repair: `diamondOverrides` declines on `parents.sizeIs < 2` in its
     // own first line, so this predicate is that test and the walk below it happens once.
     Obligations.consult(JS.C(33), at)(Option.when(cd.parents.sizeIs >= 2)(()))
+    Obligations.consult(JS.C(44), at)(Option.when(s.flags.isSealed)(()))
 
     // -- enums (JLS 8.9) ---------------------------------------------------------------------------
     Obligations.consult(JS.C(37), at)(Option.when(isEnum)(()))
@@ -3096,7 +3158,12 @@ final class TirEmitter(
       vis(s, privateIn),
       if f.isOverride && !javaPrivate then "override " else "",
       if f.isFinal then "final " else "",
-      if f.isSealed then "sealed " else "",
+      // NOT `sealed`, and the omission is the rule. `Flags.isSealed` is java's raw modifier
+      // (`SpoonTir.typeFlags`) and java's seal is not scala's — one names its subclasses anywhere
+      // in the module, the other contains them in a file — so whether the keyword may be written
+      // is a question about where the subtypes LAND. [[sealOf]] is the one place that asks it, and
+      // a second, flag-shaped answer here would emit `sealed` at every hierarchy the first one
+      // refused. This line existed and was dead for as long as nothing populated the flag.
       if f.isImplicit then "implicit " else "",
       if f.isLazy then "lazy " else "",
     )
