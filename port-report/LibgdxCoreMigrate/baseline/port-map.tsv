@@ -16469,7 +16469,7 @@ member	com.badlogic.gdx.utils.CharArray#equalsString(?)	sge.utils.CharArray#equa
 member	com.badlogic.gdx.utils.CharArray#first()	sge.utils.CharArray#first()	Renamed	-	com/badlogic/gdx/utils/CharArray.java	368	15fc17012204c332	
 member	com.badlogic.gdx.utils.CharArray#get(int)	sge.utils.CharArray#get(int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	201	21fa491e34fd0a7e	
 member	com.badlogic.gdx.utils.CharArray#getChars(?)	sge.utils.CharArray#getChars(?)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1433	f874595142adb505	
-member	com.badlogic.gdx.utils.CharArray#getChars(int,int,Array,int)	sge.utils.CharArray#getChars(int,int,Array<char>,int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1447	9bccca0db9e75170	
+member	com.badlogic.gdx.utils.CharArray#getChars(int,int,Array,int)	sge.utils.CharArray#getChars(int,int,Array<char>,int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1447	53335b8b4bad259b	
 member	com.badlogic.gdx.utils.CharArray#hashCode()	sge.utils.CharArray#hashCode()	Renamed	-	com/badlogic/gdx/utils/CharArray.java	2147	13392ef197f341ee	
 member	com.badlogic.gdx.utils.CharArray#incr(char)	sge.utils.CharArray#incr(char)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	216	e1b8046303ca30ce	
 member	com.badlogic.gdx.utils.CharArray#incr(int,char)	sge.utils.CharArray#incr(int,char)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	211	55781fbb2762666b	

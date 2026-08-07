@@ -5169,6 +5169,69 @@ identical — which fails on the old key and is the only thing in this repositor
 
 *Fix kind: (a) engine — `PanamaFfiTransform.handleNames`.*
 
+### M11. A commit that changes EMISSION and does not re-accept the baseline ships a digest ITS OWN CODE CANNOT REPRODUCE — and every lane still exits 0. **CLOSED, and the cost is that the next wave pays for it**
+
+`CLAUDE.md` §5.1 already says a baseline is a claim about the run that PRODUCED it, and warns about
+accepting one from a `run-latest` that predates a later edit in the same wave. This is the same
+failure at the other end of the sequence — the last commit of a wave changing emission and touching
+no baseline at all — and it is worth its own entry because of what it does to the NEXT wave.
+
+**What was found.** At `af8273ca` (the JS-E06 wave's third commit, subject "blast 0"), a pristine
+checkout reads:
+
+| | |
+|---|---|
+| lanes carrying libGDX core's units | **2** members changed — `sge.utils.CharArray` and `sge.utils.CharArray#getChars(int,int,Array<char>,int)` |
+| lanes that do not (`noise4j`, `jbump`, `sg`) | 0 |
+| `just measure-all` | **exit 0** |
+
+`af8273ca` changed `SpoonTir.scala` and its diff contains no `port-report/**/baseline/*`; those files
+were last written two commits earlier, at `0b66ab9f`. So the committed digest is one the commit that
+shipped it could not produce.
+
+**And it was not one artifact but three, which is the part that decides how much this matters.**
+Re-accepting the lane moved:
+
+| artifact | what was stale |
+|---|---|
+| `baseline/members.tsv` | the 2 digests above |
+| `baseline/port-map.tsv` | the same member's digest, published for every DEPENDENT to read |
+| `baseline/findings.tsv` | one `catalog(unmechanised)` row — `af8273ca` also edited `JS-E06`'s `attaches` sentence in `Differences.scala`, so the finding's TEXT and its stable id both moved |
+
+The findings row is the sharpest of the three: a changed message re-hashes the id, so the row diffs
+as removed-and-re-added and **the COUNT does not move** — and a count is exactly what every lane
+gates on. `CLAUDE.md` §4.6's "a baseline that reproduces only through one `just` recipe is not a
+baseline" is the same observation about ids; this is it about their contents.
+
+**Why every gate passed.** `members.tsv` is a DIAGNOSTIC inside a lane, not one of its gates — the
+lane gates on errors, check counts and test outcomes, all of which were genuinely flat. `just
+members-unchanged` is the recipe that is fatal on it, and it is a SEPARATE recipe an agent runs
+deliberately. So a stale baseline is invisible to the one command a wave is required to run.
+
+**Why it is expensive rather than cosmetic.** The blast radius is the instrument a later wave reads
+FIRST, before any compile, to answer "did my change move anything". Arriving at a non-zero reading
+it did not cause, that wave has to spend a full lane run on a stashed tree to establish that the
+digits are not its own — which is precisely the investigation the instrument exists to remove
+(`M10`'s argument, one layer out). Worse, the next wave that legitimately re-accepts a baseline for
+an unrelated reason ABSORBS the stale rows silently, and the disagreement between master's code and
+master's baseline is then gone with nothing having ever reported it.
+
+**How it was settled, and the technique to reuse.** Not by reading the emitted file and not by
+reasoning about the diff: `git stash` the wave's own changes, run the ONE lane, and compare. Identical
+digests on both sides is proof the reading belongs to `HEAD` and not to the working tree — and it is
+two commands. `CLAUDE.md` §5.1's "compare checkout against checkout at one commit" is the same idea
+where a second checkout is available; this is its cheap form inside one.
+
+**Closed by re-accepting the six affected lanes**, in a commit of its own that changes no code, so
+the correction is attributable and the wave that found it does not carry two stories in one diff.
+
+*Fix kind: (a) process — the fix is the rule below, not a code change.*
+
+**THE RULE, which is what this entry is for: a commit whose diff touches anything under
+`api/`, `engine/`, `frontend-spoon/` or `runtime/` either re-accepts a baseline or is measured to
+`0` on `just members-unchanged`.** "The subject says blast 0" is not that measurement; it is a claim
+about a run, and the run is what has to have been current when the claim was written.
+
 ---
 
 ## 8. A DEPENDENT reading its base's published port map
