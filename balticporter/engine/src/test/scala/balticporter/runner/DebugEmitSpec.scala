@@ -110,6 +110,36 @@ class DebugEmitSpec extends munit.FunSuite:
     assert(clue(why).contains("packageRenames"), "the thing to write instead")
   }
 
+  test("…and the phases `PortRun` WEAVES are nameable too — the SPI is not the whole pipeline") {
+    // An idiom phase is §1(a), so it reaches no `TransformFactory` — a knob on an (a) is the shape
+    // §1 forbids. Resolved through the registry alone the diagnostic answered "unknown transform"
+    // about phases that run in EVERY port and cannot be turned off, which is exactly §4.6's promise
+    // ("is this phase even responsible" costs one run and no diff) failing for the two phases an
+    // operator cannot switch off any other way.
+    assertEquals(DebugEmit.phasesFor(List("sam-anon->lambda")).map(_.map(_.name)),
+                 Right(List("sam-anon->lambda")))
+    assertEquals(DebugEmit.phasesFor(List("collections", "sam-anon->lambda")).map(_.map(_.name)),
+                 Right(List("java-collections->scala", "sam-anon->lambda")))
+  }
+
+  test("…named by PortRun's own list, so the two doors cannot drift — and each call is a FRESH phase") {
+    // The `panama`/`panama-ffi` lesson at one more door: a copy of the woven list here would model a
+    // pipeline the run does not have. And a phase carries the buffers it fills, so handing two
+    // `--phases` runs one instance would make each file the other's rows.
+    val woven = PortRun.wovenIdiomPhases.map(_.name)
+    assertEquals(DebugEmit.phasesFor(woven).map(_.map(_.name)), Right(woven))
+    val a = DebugEmit.phasesFor(List("sam-anon->lambda")).toOption.get.head
+    val b = DebugEmit.phasesFor(List("sam-anon->lambda")).toOption.get.head
+    assert(!(a eq b), "two resolutions must not share one phase instance")
+  }
+
+  test("…and an unknown name LISTS them beside the SPI's, or it sends the reader after a factory\n" +
+       "     that does not exist") {
+    val why = DebugEmit.phasesFor(List("no-such-phase")).swap.getOrElse("")
+    assert(clue(why).contains("sam-anon->lambda"), "the woven half")
+    assert(why.contains("collections"), "…and the SPI half")
+  }
+
   test("the dump flags it sets are RESTORED — an unforked run must not leave one behind") {
     val keys = List("balticporter.dumpTirBefore", "balticporter.dumpTirAfter", "balticporter.dumpOnly")
     val before = keys.map(k => k -> Option(System.getProperty(k)))

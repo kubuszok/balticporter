@@ -332,41 +332,12 @@ object SamLambda:
     case TypeRepr.AppliedType(tc, _)  => typeName(tc)
     case other                        => other.toString
 
-  // -------------------------------------------------------------------------------------------
-  // the walk both consumers share
-  // -------------------------------------------------------------------------------------------
-
-  /** every anonymous-class site in a unit, with the DECLARATION it sits in.
-    *
-    * The subject is the enclosing DECLARATION and never the site, because `CLAUDE.md` §5.1 says a
-    * decider records one row per declaration whose emitted form the decision changes — and because
-    * a decision subjected at a `Tree.New` has no declaration symbol for the wave's blast
-    * classification to join on, so every converted site would land in `members.tsv Δ \ blast` and
-    * the gate would fail on its own successes.
-    *
-    * Reached through `StandardTraversal` — `allClassDefs` for the types (a method-LOCAL class is a
-    * block statement, not a type member) and `scanTerm` for the terms, so a node kind added
-    * tomorrow is visited by construction (§3). */
-  def sites(unit: Tree.ClassDef)(using p: Program): List[(SymId, String, Tree.New, Tree.AnonClass)] =
-    val out = List.newBuilder[(SymId, String, Tree.New, Tree.AnonClass)]
-    StandardTraversal.allClassDefs(unit).foreach { cd =>
-      val clsFqn = p.symbolOf(cd.symbol).map(_.fullName).getOrElse("<anon>")
-      cd.body.foreach { st =>
-        val (subj, fqn, terms) = st match
-          case d: Tree.DefDef => (d.symbol, p.symbolOf(d.symbol).map(_.fullName).getOrElse(clsFqn), d.rhs.toList)
-          case v: Tree.ValDef => (v.symbol, p.symbolOf(v.symbol).map(_.fullName).getOrElse(clsFqn), v.rhs.toList)
-          case t: Term        => (cd.symbol, clsFqn, List(t))
-          case _              => (cd.symbol, clsFqn, Nil)
-        terms.foreach { t =>
-          StandardTraversal.scanTerm(t, ()) { (_, x) =>
-            x match
-              case n @ Tree.New(_, _, _, Some(a)) => out += ((subj, fqn, n, a))
-              case _                              => ()
-          }
-        }
-      }
-    }
-    out.result()
+  // A `sites(unit)` walk stood here — "every anonymous-class site in a unit, with the DECLARATION it
+  // sits in" — and its only caller was the wave-0 census the transformer RETIRED. Left standing it
+  // is a second, unexercised enumeration of the population beside the one `Converter` actually
+  // walks, which is the disagreement §4.6 is about with nothing left to disagree with it: no spec
+  // covers it, no run reaches it, and the first reader to reuse it would be reading a walk nothing
+  // has held to §3 since the census went.
 
 /** WAVE 1 — the conversion itself. An anonymous class implementing a single-abstract-method
   * interface becomes a LAMBDA, ASCRIBED to that interface.

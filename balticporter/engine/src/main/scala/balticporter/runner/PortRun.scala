@@ -2058,7 +2058,7 @@ final case class PortRun(
     *     one the port wrote once.
     */
   private def idiomPhases(declared: List[Phase]): List[Phase] =
-    val first = List(new balticporter.transform.SamLambdaTransform, new balticporter.transform.ReturnThisCensus)
+    val first = PortRun.wovenIdiomPhases
     // the K21-face-2 contradiction the collapse must refuse, and the ONE place both halves of it are
     // visible: a port's `public-field-accessors` scope is that phase's own policy, and handing it to
     // `bean-properties` here is what keeps it one policy with one home (§8.5's "Rejected").
@@ -2459,6 +2459,23 @@ object PortRun:
                           g.subject, "", 0,
                           g.why + g.module.fold("")(m => s"  [base: $m]") + s"  [${g.fix}]")
     }
+
+  /** THE IDIOM PHASES EVERY RUN CARRIES, whatever its manifest says — constructed HERE so the one
+    * list is the one every door opens.
+    *
+    * They are §1(a) and therefore reach no `TransformFactory`: a factory would make them nameable in
+    * a port `.conf`, which is the knob §1 forbids on an (a). The consequence is that they are also
+    * invisible to every consumer of the SPI — and `DebugEmit` is one, so `--phases sam-anon->lambda`
+    * answered "unknown transform" for a phase that runs in every port. §4.6's promise is that "is
+    * this phase even responsible" costs one run and no diff; a phase the tooling cannot name breaks
+    * exactly that, and it breaks it for the two phases nobody can turn off.
+    *
+    * A LIST and not a second construction site, for `DESIGN.md` §5.7's reason one level down: two
+    * places building the woven set would be free to drift, and the drift would be a diagnostic that
+    * models a pipeline the run does not have. Fresh instances per call, because a phase carries the
+    * buffers it fills. */
+  def wovenIdiomPhases: List[Phase] =
+    List(new balticporter.transform.SamLambdaTransform, new balticporter.transform.ReturnThisCensus)
 
   /** Every check's name as it appears in `counts.tsv`. Named here, in the orchestrator, because the
     * orchestrator is now the only thing that records: a check is a pure function of a `Program` and

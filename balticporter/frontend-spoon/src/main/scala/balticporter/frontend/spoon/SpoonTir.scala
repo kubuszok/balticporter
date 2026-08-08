@@ -1103,21 +1103,33 @@ object SpoonTir:
          catch { case _: Throwable => false })
 
     /** does this type's ancestry reach `java.io.Serializable`? Read through the same declaration
-      * lookup, so an unreadable ancestor answers `false` and the SAM answer is `Unreadable`
-      * anyway — the two cannot disagree in a direction that converts. */
+      * lookup, so an UNREADABLE ancestor answers `false` — and that half really cannot disagree in a
+      * direction that converts, because the SAM answer for a type this run cannot read is
+      * `Unreadable` and the site is refused under its own guard.
+      *
+      * ==What that argument does NOT cover, and why the fuel is gone==
+      * It says nothing about a READABLE ancestry that is simply DEEP. Bounded at `fuel = 6` the walk
+      * answered `false` seven links up while the SAM answer was `Yes`, so the site converted a
+      * SERIALIZABLE target — the one thing guard 6 exists to decline — with no error, no moved count
+      * and nothing to see. The comment that stood here read as if the bound were safe.
+      *
+      * The `seen` set is the real bound and always was: a qualified name is walked at most once and
+      * the type graph is finite, so the recursion terminates without a counter. A fuel beside it is
+      * not a belt to that brace, it is a SECOND bound that can only ever be wrong — a hierarchy is
+      * as deep as somebody wrote it, and 6 was a number nothing derived. */
     private def serializableAncestry(r: CtTypeReference[?]): Boolean =
       val seen = collection.mutable.Set.empty[String]
-      def walk(x: CtTypeReference[?], fuel: Int): Boolean =
-        if x == null || fuel <= 0 then false
+      def walk(x: CtTypeReference[?]): Boolean =
+        if x == null then false
         else if x.getQualifiedName == "java.io.Serializable" then true
         else if !seen.add(x.getQualifiedName) then false
         else typeDeclarationOf(x).exists { d =>
           val ups: List[CtTypeReference[?]] =
             (d match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
               (try d.getSuperInterfaces.asScala.toList catch { case _: Throwable => Nil })
-          ups.exists(walk(_, fuel - 1))
+          ups.exists(walk)
         }
-      walk(r, 6)
+      walk(r)
 
     /** a use of a GENERIC class — an instantiation (`Class<T>`) or a raw one (`Class`). */
     private def isGenericUse(tr: CtTypeReference[?]): Boolean = tr match

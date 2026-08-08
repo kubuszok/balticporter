@@ -388,6 +388,25 @@ class IdiomCensusSpec extends PortSuite:
     assertIdiomRefuses(p, IdiomKind.SamLambda, "Serializable", "C#make")
   }
 
+  test("…and a DEEP ancestry reaches it too — the walk's bound was FUEL, and fuel is a wrong answer") {
+    // `serializableAncestry` walked with `fuel = 6` under a comment claiming an unreadable ancestor
+    // "answers false and the SAM answer is Unreadable anyway — the two cannot disagree in a
+    // direction that converts". That is true of an UNREADABLE ancestor and says nothing about a
+    // READABLE one seven links up: the walk answers `false`, the SAM answer is `Yes`, and the site
+    // CONVERTS a serializable target. The `seen` set is what makes the walk terminate (a qualified
+    // name is walked once, and the type graph is finite), so the fuel was a second bound that could
+    // only ever be wrong.
+    val chain = (1 to 8).map(i =>
+      s"I$i.java" -> (if i == 1 then "interface I1 extends java.io.Serializable { }"
+                      else s"interface I$i extends I${i - 1} { }")).toList
+    val p = portAll(chain ++ List(
+      "S.java" -> "interface S extends I8 { int f(int x); }",
+      "C.java" -> """class C { S make(final int b) { return new S() {
+                    |  public int f(int x) { return x + b; }
+                    |}; } }""".stripMargin), new SamLambdaTransform)
+    assertIdiomRefuses(p, IdiomKind.SamLambda, "Serializable", "C#make")
+  }
+
   // -------------------------------------------------------------------------------------------
   // the `return this` census — the go/no-go split, and its POPULATION
   // -------------------------------------------------------------------------------------------

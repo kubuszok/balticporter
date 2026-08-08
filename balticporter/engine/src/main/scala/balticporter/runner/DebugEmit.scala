@@ -56,7 +56,7 @@ import scala.jdk.CollectionConverters.*
   * | `--include <substr>` | only CONVERT files whose path under the root contains this. Repeatable. |
   * | `--fast` | do not add the root as a resolution root — parse only the included files. Seconds instead of minutes on a large library, at the cost of resolution fidelity. |
   * | `--fqn <FullName>` | the one type to print. Omit to list what the model contains. |
-  * | `--phases a,b` | run these transforms first, named EXACTLY as a port `.conf` names them (`collections`, `mutable-params`, `panama-ffi`, …). Resolved through the same `TransformFactory` SPI, so the list is whatever is on the classpath — run with an unknown name to have it printed. A phase that needs policy is refused here and belongs to `PortRun`. |
+  * | `--phases a,b` | run these transforms first, named EXACTLY as a port `.conf` names them (`collections`, `mutable-params`, `panama-ffi`, …), or by their OWN name for the ones `PortRun` weaves and no `.conf` can configure (`sam-anon->lambda`, `return-this-census`). Resolved through the same `TransformFactory` SPI plus that woven list — run with an unknown name to have the whole set printed. A phase that needs policy is refused here and belongs to `PortRun`. |
   * | `--dump-before <phase>` / `--dump-after <phase>` | print the TIR at that boundary (`*` = every phase). Narrowed to `--fqn` automatically. |
   * | `--scala` | also print the emitted Scala for `--fqn` |
   * | `--canonical` | print the canonical form (no symbol ids, no origins) — the digest input |
@@ -81,6 +81,20 @@ object DebugEmit:
     * against the empty config, and that refusal is passed through with the one thing the operator
     * needs to hear — a phase configured by a port is driven by the port, through `PortRun`.
     *
+    * ==…AND THE SPI IS NOT THE WHOLE PIPELINE, which is what made this answer wrongly==
+    * A phase reaches a `TransformFactory` only if a port may CONFIGURE it, and the idiom layer may
+    * not: it is §1(a), so a knob on it is the shape §1 forbids, and `PortRun` WEAVES it into every
+    * pipeline instead. Resolved through the registry alone, `--phases sam-anon->lambda` therefore
+    * answered "unknown transform" — about a phase that runs in every port, cannot be turned off, and
+    * is exactly the kind an agent reaches for this tool to bracket. §4.6's promise is that "is this
+    * phase even responsible" costs one run and no diff; it does not hold for a phase the tooling
+    * cannot name.
+    *
+    * So the woven list is consulted FIRST, by the phase's OWN name — which is the name
+    * `skipPhases`, `dumpTirBefore` and `dumpTirAfter` already take, so an operator types one string
+    * everywhere — and it is `PortRun`'s list rather than a copy, because a second construction site
+    * would model a pipeline the run does not have.
+    *
     * Returns `Left(message)` rather than exiting, so a spec can assert what the operator is told
     * without taking the JVM down with it. */
   def phasesFor(names: List[String],
@@ -88,17 +102,33 @@ object DebugEmit:
     val empty = HoconView.root(com.typesafe.config.ConfigFactory.empty)
     names.foldLeft[Either[String, List[Phase]]](Right(Nil)) { (acc, n) =>
       acc.flatMap { done =>
-        try Right(done :+ registry.phase(n, empty, s"--phases $n"))
-        catch
-          case e: ConfigError if registry.get(n).isDefined =>
-            // the factory's own error, VERBATIM and with the key it names — a message rewritten
-            // here would be a second statement of a contract only the factory holds.
-            Left(s"[debug-emit] '$n' takes POLICY and this tool reads no port configuration — " +
-              s"drive it through `PortRun` with the port's `.conf`. The factory said: ${e.where}: ${e.why}")
-          case e: ConfigError =>
-            Left(s"[debug-emit] ${e.why}\n  available: ${registry.names.mkString(", ")}")
+        wovenPhase(n) match
+          case Some(p) => Right(done :+ p)
+          case scala.None =>
+            try Right(done :+ registry.phase(n, empty, s"--phases $n"))
+            catch
+              case e: ConfigError if registry.get(n).isDefined =>
+                // the factory's own error, VERBATIM and with the key it names — a message rewritten
+                // here would be a second statement of a contract only the factory holds.
+                Left(s"[debug-emit] '$n' takes POLICY and this tool reads no port configuration — " +
+                  s"drive it through `PortRun` with the port's `.conf`. The factory said: ${e.where}: ${e.why}")
+              case e: ConfigError =>
+                Left(s"[debug-emit] ${e.why}\n  available: ${nameable(registry).mkString(", ")}")
       }
     }
+
+  /** one of the phases `PortRun` weaves into every pipeline, by its own `name`.
+    *
+    * A FRESH instance per call, and that is what `PortRun.wovenIdiomPhases` being a `def` buys: a
+    * phase carries the buffers it fills, so two `--phases` runs handed one instance would file each
+    * other's rows. */
+  private def wovenPhase(name: String): Option[Phase] =
+    PortRun.wovenIdiomPhases.find(_.name == name)
+
+  /** every name `--phases` accepts — the SPI's and the woven ones, which is what an unknown-name
+    * error has to list or it sends the reader looking for a factory that does not exist. */
+  def nameable(registry: TransformRegistry): List[String] =
+    (registry.names ++ PortRun.wovenIdiomPhases.map(_.name)).distinct.sorted
 
   private def opts(args: List[String]): Map[String, List[String]] =
     args.foldLeft((Map.empty[String, List[String]], Option.empty[String])) {
@@ -118,7 +148,7 @@ object DebugEmit:
     val registry = TransformRegistry.discover()
     val rootArg = one("root").getOrElse {
       System.err.println("DebugEmit: --root <java-source-root> is required (there is deliberately no default).")
-      System.err.println(s"  phases available to --phases: ${registry.names.mkString(", ")}")
+      System.err.println(s"  phases available to --phases: ${nameable(registry).mkString(", ")}")
       sys.exit(2)
     }
     val root = { val p = Path.of(rootArg); (if p.isAbsolute then p else repoRoot.resolve(p)).normalize }
