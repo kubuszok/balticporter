@@ -2971,11 +2971,12 @@ final class TirEmitter(
     // a Java `while(true){ … return … }` idiom: the loop never falls through, but Scala types
     // `while(true)` as Unit, so a non-Unit method needs an unreachable tail after it.
     val needsUnreachable = needsUnreachableTail(d)
-    val rhs =
+    val rhs = inDeclaration {
       if isCtor then s" = ${ctorBody(d, i)}"
       else d.rhs.map(r =>
         if needsUnreachable then s" = {\n${ind(i + 1)}${term(r, i + 1)}\n${ind(i + 1)}throw new java.lang.RuntimeException(\"unreachable\")\n${ind(i)}}"
         else s" = ${term(r, i)}").getOrElse("")
+    }
     tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
     // ORIGINAL TRIVIA FIRST, porter note LAST, member next. The note explains the port's own
     // decision and the trivia is the upstream's documentation (a licence among them, §4.58) — a
@@ -3009,8 +3010,28 @@ final class TirEmitter(
   private var breakTarget: Option[String] = scala.None
   private var contTarget: Option[String]  = scala.None
   private var labelSeq = 0
-  /** names the `def` that carries a lambda body containing `return` — see the `Tree.Lambda` case. */
+  /** names the `def` that carries a lambda body containing `return` — see the `Tree.Lambda` case.
+    *
+    * SCOPED TO ONE DECLARATION by [[inDeclaration]], never to the program. An emitted NAME keyed on
+    * a program-global counter is `ENGINE-LIMITS.md` M10's defect exactly: the name of a construct in
+    * one member then depends on how many of them exist in every member emitted before it, so a
+    * change anywhere renumbers everything after it and `members.tsv` reports churn instead of blast
+    * (M10 measured 122 of 135 rows that way). Measured here at 2 members on the libGDX base — the
+    * conversions in `Cubemap` and `Pixmap` renamed `TextField`'s three `body$N` — which is small
+    * only because the construct is rare, and it is the same defect at any size. */
   private var lambdaSeq = 0
+
+  /** run `f` with the synthetic-name counters SAVED, reset, and restored.
+    *
+    * Save-and-restore rather than plain reset, because a declaration nests: an anonymous class's
+    * method inside a lambda inside a member is its own scope and must not consume the enclosing
+    * member's numbers. Two `def body$1` in different blocks are two different scopes and scala is
+    * happy with both, which is what makes the LOCAL name the correct one rather than merely the
+    * tidier one. */
+  private def inDeclaration[A](f: => A): A =
+    val saved = lambdaSeq
+    lambdaSeq = 0
+    try f finally lambdaSeq = saved
   private def inLoop[A](brk: Option[String], cont: Option[String])(f: => A): A =
     val (sb, sc) = (breakTarget, contTarget)
     breakTarget = brk; contTarget = cont
@@ -3409,8 +3430,11 @@ final class TirEmitter(
     declVisibility(vs, v.origin)
     // trivia, then the porter note, then the `val` — see `defDef` for why that order is a rule.
     val note = declNotes(v.symbol, i)
-    if v.leading.nonEmpty then leading(v.leading, i) + note + valDef0(v.copy(leading = Nil), i)
-    else note + valDef0(v, i)
+    // …and the synthetic-name counters are this declaration's, for the reason `defDef`'s are.
+    inDeclaration {
+      if v.leading.nonEmpty then leading(v.leading, i) + note + valDef0(v.copy(leading = Nil), i)
+      else note + valDef0(v, i)
+    }
 
   private def valDef0(v: Tree.ValDef, i: Int): String =
     val s = sym(v.symbol)

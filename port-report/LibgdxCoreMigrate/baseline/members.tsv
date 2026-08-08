@@ -14554,7 +14554,7 @@ sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyl
 sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyle#font	val	31f9258075a11f9b
 sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyle#fontColor	val	7b29554e78f37885
 sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyle#overFontColor	val	78777bfcb0ccc08d
-sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField	class	5760cf4eb649a7e8
+sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField	class	0c525bf5bc7e2f52
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#<init>(?,Skin,Sge)	ctor	cbc8f0c830ffdbb2
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#<init>(?,Skin,String,Sge)	ctor	b8ecd20fdf96f55e
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#<init>(?,TextFieldStyle,Sge)	ctor	5d577b61a5d4827e
@@ -14689,9 +14689,9 @@ sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$DefaultOnscreenK
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$KeyRepeatTask	class	99550f24b360a633
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$KeyRepeatTask#keycode	val	74b2e23ce08cb431
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$KeyRepeatTask#run()	def	975d4087cda24878
-sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$NativeOnscreenKeyboard	class	5e992afcf1caf18b
+sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$NativeOnscreenKeyboard	class	5792ad45a60b467d
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$NativeOnscreenKeyboard#close()	def	fb2f3a9a3bef9433
-sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$NativeOnscreenKeyboard#openNativeInputField(TextField)	def	5d171586c69241b9
+sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$NativeOnscreenKeyboard#openNativeInputField(TextField)	def	2e82e84da1840bdc
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$NativeOnscreenKeyboard#show(TextField)	def	c1658df8010e2a74
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$OnscreenKeyboard	class	09444618ccd02d5c
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$OnscreenKeyboard#close()	def	1294204c568408e1
