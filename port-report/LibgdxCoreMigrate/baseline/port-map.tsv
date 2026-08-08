@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge	engine=balticporter/0.1.0-SNAPSHOT	sources=d4e1a1128812d482	files=597	policy=0ae0144e30e7b794
+# balticporter port map	schema=3	module=sge	engine=balticporter/0.1.0-SNAPSHOT	sources=d4e1a1128812d482	files=597	policy=a43bc17974078cdb
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -10206,21 +10206,16 @@ member	com.badlogic.gdx.maps.ImageResolver$TextureAtlasImageResolver#<stmt1>	sge
 member	com.badlogic.gdx.maps.ImageResolver$TextureAtlasImageResolver#atlas	sge.maps.ImageResolver$TextureAtlasImageResolver#atlas	Renamed	-	com/badlogic/gdx/maps/ImageResolver.java	59	962d45768526c0d4	vis=private[ImageResolver]
 member	com.badlogic.gdx.maps.ImageResolver$TextureAtlasImageResolver#getImage(String)	sge.maps.ImageResolver$TextureAtlasImageResolver#getImage(String)	Renamed	-	com/badlogic/gdx/maps/ImageResolver.java	66	256841c47896183e	
 member	com.badlogic.gdx.maps.Map#close()	sge.maps.Map#close()	Renamed	-	com/badlogic/gdx/maps/Map.java	67	292c04a6862850c4	
-member	com.badlogic.gdx.maps.Map#layers	sge.maps.Map#layers	Renamed	-	com/badlogic/gdx/maps/Map.java	47	626b19adcf9e8c31	name=layers$field
-member	com.badlogic.gdx.maps.Map#layers()	sge.maps.Map#layers()	Renamed	-	com/badlogic/gdx/maps/Map.java	56	5ceb4617bd8c8042	
-member	com.badlogic.gdx.maps.Map#properties	sge.maps.Map#properties	Renamed	-	com/badlogic/gdx/maps/Map.java	48	a5819f5a3d0ba7b1	name=properties$field
-member	com.badlogic.gdx.maps.Map#properties()	sge.maps.Map#properties()	Renamed	-	com/badlogic/gdx/maps/Map.java	61	abea700ad88b5a25	
+member	com.badlogic.gdx.maps.Map#layers	sge.maps.Map#layers	Renamed	-	com/badlogic/gdx/maps/Map.java	47	31b8b6d95f742ee1	
+member	com.badlogic.gdx.maps.Map#properties	sge.maps.Map#properties	Renamed	-	com/badlogic/gdx/maps/Map.java	48	ae2393ec5c9a6089	
 member	com.badlogic.gdx.maps.MapGroupLayer#getLayers()	sge.maps.MapGroupLayer#getLayers()	Renamed	-	com/badlogic/gdx/maps/MapGroupLayer.java	25	6063c87209dc9619	
 member	com.badlogic.gdx.maps.MapGroupLayer#invalidateRenderOffset()	sge.maps.MapGroupLayer#invalidateRenderOffset()	Renamed	-	com/badlogic/gdx/maps/MapGroupLayer.java	30	311b680559e81695	
 member	com.badlogic.gdx.maps.MapGroupLayer#layers	sge.maps.MapGroupLayer#layers	Renamed	-	com/badlogic/gdx/maps/MapGroupLayer.java	22	296cc39cf92e9af1	vis=private
 member	com.badlogic.gdx.maps.MapLayer#calculateRenderOffsets()	sge.maps.MapLayer#calculateRenderOffsets()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	172	6febb5804a17d8d9	
 member	com.badlogic.gdx.maps.MapLayer#combinedTintColor()	sge.maps.MapLayer#combinedTintColor()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	66	80279ba9fdf4559f	
 member	com.badlogic.gdx.maps.MapLayer#invalidateRenderOffset()	sge.maps.MapLayer#invalidateRenderOffset()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	137	7a3bdc0fb8da6d01	
-member	com.badlogic.gdx.maps.MapLayer#name	sge.maps.MapLayer#name	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	24	ceadb3a64430f345	name=name$field
-member	com.badlogic.gdx.maps.MapLayer#name()	sge.maps.MapLayer#name()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	41	09d8223fe194eecb	
-member	com.badlogic.gdx.maps.MapLayer#name_=(String)	sge.maps.MapLayer#name_=(String)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	46	de4425edabf0a418	
-member	com.badlogic.gdx.maps.MapLayer#objects	sge.maps.MapLayer#objects	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	37	a08fb3e200c5a489	name=objects$field
-member	com.badlogic.gdx.maps.MapLayer#objects()	sge.maps.MapLayer#objects()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	153	0c9a43ce059cd8f5	
+member	com.badlogic.gdx.maps.MapLayer#name	sge.maps.MapLayer#name	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	24	f56aa4299880e8a9	
+member	com.badlogic.gdx.maps.MapLayer#objects	sge.maps.MapLayer#objects	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	37	23a8790c11c8dbb0	
 member	com.badlogic.gdx.maps.MapLayer#offsetX	sge.maps.MapLayer#offsetX	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	29	21f92099990e9a4d	name=offsetX$field
 member	com.badlogic.gdx.maps.MapLayer#offsetX()	sge.maps.MapLayer#offsetX()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	85	658a2a91063b99c8	
 member	com.badlogic.gdx.maps.MapLayer#offsetX_=(float)	sge.maps.MapLayer#offsetX_=(float)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	90	33a21657639eacbd	
@@ -10230,17 +10225,12 @@ member	com.badlogic.gdx.maps.MapLayer#offsetY_=(float)	sge.maps.MapLayer#offsetY
 member	com.badlogic.gdx.maps.MapLayer#opacity	sge.maps.MapLayer#opacity	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	25	337a49f184eaf2fb	name=opacity$field
 member	com.badlogic.gdx.maps.MapLayer#opacity()	sge.maps.MapLayer#opacity()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	51	04ad20f9a24c06a2	
 member	com.badlogic.gdx.maps.MapLayer#opacity_=(float)	sge.maps.MapLayer#opacity_=(float)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	59	1f64a63cd9f2b728	
-member	com.badlogic.gdx.maps.MapLayer#parallaxX	sge.maps.MapLayer#parallaxX	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	33	dd6f7ffe34267233	name=parallaxX$field
-member	com.badlogic.gdx.maps.MapLayer#parallaxX()	sge.maps.MapLayer#parallaxX()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	107	459b884646f6e3d2	
-member	com.badlogic.gdx.maps.MapLayer#parallaxX_=(float)	sge.maps.MapLayer#parallaxX_=(float)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	111	6b06af19bd140a71	
-member	com.badlogic.gdx.maps.MapLayer#parallaxY	sge.maps.MapLayer#parallaxY	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	34	eaabb964ed5bbdbd	name=parallaxY$field
-member	com.badlogic.gdx.maps.MapLayer#parallaxY()	sge.maps.MapLayer#parallaxY()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	116	8490d6b17ef6eb4a	
-member	com.badlogic.gdx.maps.MapLayer#parallaxY_=(float)	sge.maps.MapLayer#parallaxY_=(float)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	120	20dd4518b41d5bd9	
+member	com.badlogic.gdx.maps.MapLayer#parallaxX	sge.maps.MapLayer#parallaxX	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	33	1b1520b0beebd712	
+member	com.badlogic.gdx.maps.MapLayer#parallaxY	sge.maps.MapLayer#parallaxY	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	34	830b9818c7ffb4f6	
 member	com.badlogic.gdx.maps.MapLayer#parent	sge.maps.MapLayer#parent	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	36	5ad4ceca6d471784	name=parent$field
 member	com.badlogic.gdx.maps.MapLayer#parent()	sge.maps.MapLayer#parent()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	142	977bbfcdb474edf3	
 member	com.badlogic.gdx.maps.MapLayer#parent_=(MapLayer)	sge.maps.MapLayer#parent_=(MapLayer)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	147	1ca315338643cc86	
-member	com.badlogic.gdx.maps.MapLayer#properties	sge.maps.MapLayer#properties	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	38	988c863eb18dce5c	name=properties$field
-member	com.badlogic.gdx.maps.MapLayer#properties()	sge.maps.MapLayer#properties()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	168	2459dd051d5be490	
+member	com.badlogic.gdx.maps.MapLayer#properties	sge.maps.MapLayer#properties	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	38	57ac87a365ce4338	
 member	com.badlogic.gdx.maps.MapLayer#renderOffsetDirty	sge.maps.MapLayer#renderOffsetDirty	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	35	a78400d6b91809c7	vis=private
 member	com.badlogic.gdx.maps.MapLayer#renderOffsetX	sge.maps.MapLayer#renderOffsetX	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	31	7d2a00213920e73e	name=renderOffsetX$field
 member	com.badlogic.gdx.maps.MapLayer#renderOffsetX()	sge.maps.MapLayer#renderOffsetX()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	125	eb4c5724a2cfc979	
@@ -10250,9 +10240,7 @@ member	com.badlogic.gdx.maps.MapLayer#tempColor	sge.maps.MapLayer#tempColor	Rena
 member	com.badlogic.gdx.maps.MapLayer#tintColor	sge.maps.MapLayer#tintColor	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	26	86628d914557355a	name=tintColor$field
 member	com.badlogic.gdx.maps.MapLayer#tintColor()	sge.maps.MapLayer#tintColor()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	75	49d136267bb0a92d	
 member	com.badlogic.gdx.maps.MapLayer#tintColor_=(Color)	sge.maps.MapLayer#tintColor_=(Color)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	80	066057a49aea9dba	
-member	com.badlogic.gdx.maps.MapLayer#visible	sge.maps.MapLayer#visible	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	28	a37e2a2d43c64a0c	name=visible$field
-member	com.badlogic.gdx.maps.MapLayer#visible()	sge.maps.MapLayer#visible()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	158	6f406a8d16327ec1	
-member	com.badlogic.gdx.maps.MapLayer#visible_=(boolean)	sge.maps.MapLayer#visible_=(boolean)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	163	718e74c8fb4e0292	
+member	com.badlogic.gdx.maps.MapLayer#visible	sge.maps.MapLayer#visible	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	28	6643d42f9b7bfda9	
 member	com.badlogic.gdx.maps.MapLayers#add(MapLayer)	sge.maps.MapLayers#add(MapLayer)	Renamed	-	com/badlogic/gdx/maps/MapLayers.java	62	89b9c57d43b25d21	
 member	com.badlogic.gdx.maps.MapLayers#get(String)	sge.maps.MapLayers#get(String)	Renamed	-	com/badlogic/gdx/maps/MapLayers.java	36	907ad342bc63859e	
 member	com.badlogic.gdx.maps.MapLayers#get(int)	sge.maps.MapLayers#get(int)	Renamed	-	com/badlogic/gdx/maps/MapLayers.java	30	81b379c4ab940411	
@@ -10266,20 +10254,11 @@ member	com.badlogic.gdx.maps.MapLayers#layers	sge.maps.MapLayers#layers	Renamed	
 member	com.badlogic.gdx.maps.MapLayers#remove(MapLayer)	sge.maps.MapLayers#remove(MapLayer)	Renamed	-	com/badlogic/gdx/maps/MapLayers.java	72	1d88ea78d371068e	
 member	com.badlogic.gdx.maps.MapLayers#remove(int)	sge.maps.MapLayers#remove(int)	Renamed	-	com/badlogic/gdx/maps/MapLayers.java	67	64d6ec46e2668913	
 member	com.badlogic.gdx.maps.MapLayers#size()	sge.maps.MapLayers#size()	Renamed	-	com/badlogic/gdx/maps/MapLayers.java	77	6af1078bae8ae092	
-member	com.badlogic.gdx.maps.MapObject#color	sge.maps.MapObject#color	Renamed	-	com/badlogic/gdx/maps/MapObject.java	27	c8a3979f90587589	name=color$field
-member	com.badlogic.gdx.maps.MapObject#color()	sge.maps.MapObject#color()	Renamed	-	com/badlogic/gdx/maps/MapObject.java	40	d97841bc427d752b	
-member	com.badlogic.gdx.maps.MapObject#color_=(Color)	sge.maps.MapObject#color_=(Color)	Renamed	-	com/badlogic/gdx/maps/MapObject.java	45	70231f05152341fe	
-member	com.badlogic.gdx.maps.MapObject#name	sge.maps.MapObject#name	Renamed	-	com/badlogic/gdx/maps/MapObject.java	23	83367b915d4cc094	name=name$field
-member	com.badlogic.gdx.maps.MapObject#name()	sge.maps.MapObject#name()	Renamed	-	com/badlogic/gdx/maps/MapObject.java	30	2b86a414ea60228a	
-member	com.badlogic.gdx.maps.MapObject#name_=(String)	sge.maps.MapObject#name_=(String)	Renamed	-	com/badlogic/gdx/maps/MapObject.java	35	ab3e64c273f911c7	
-member	com.badlogic.gdx.maps.MapObject#opacity	sge.maps.MapObject#opacity	Renamed	-	com/badlogic/gdx/maps/MapObject.java	24	889ca133eb103ae4	name=opacity$field
-member	com.badlogic.gdx.maps.MapObject#opacity()	sge.maps.MapObject#opacity()	Renamed	-	com/badlogic/gdx/maps/MapObject.java	50	18e74943b728f4f6	
-member	com.badlogic.gdx.maps.MapObject#opacity_=(float)	sge.maps.MapObject#opacity_=(float)	Renamed	-	com/badlogic/gdx/maps/MapObject.java	55	b479ea256739c48d	
-member	com.badlogic.gdx.maps.MapObject#properties	sge.maps.MapObject#properties	Renamed	-	com/badlogic/gdx/maps/MapObject.java	26	23c1131b3bac64a5	name=properties$field
-member	com.badlogic.gdx.maps.MapObject#properties()	sge.maps.MapObject#properties()	Renamed	-	com/badlogic/gdx/maps/MapObject.java	70	0f848b886b48b00a	
-member	com.badlogic.gdx.maps.MapObject#visible	sge.maps.MapObject#visible	Renamed	-	com/badlogic/gdx/maps/MapObject.java	25	02f064859502708e	name=visible$field
-member	com.badlogic.gdx.maps.MapObject#visible()	sge.maps.MapObject#visible()	Renamed	-	com/badlogic/gdx/maps/MapObject.java	60	fe38ec56cb98fef4	
-member	com.badlogic.gdx.maps.MapObject#visible_=(boolean)	sge.maps.MapObject#visible_=(boolean)	Renamed	-	com/badlogic/gdx/maps/MapObject.java	65	8ebf92603a9ce5bd	
+member	com.badlogic.gdx.maps.MapObject#color	sge.maps.MapObject#color	Renamed	-	com/badlogic/gdx/maps/MapObject.java	27	e950412ca8638627	
+member	com.badlogic.gdx.maps.MapObject#name	sge.maps.MapObject#name	Renamed	-	com/badlogic/gdx/maps/MapObject.java	23	3a12887df738076d	
+member	com.badlogic.gdx.maps.MapObject#opacity	sge.maps.MapObject#opacity	Renamed	-	com/badlogic/gdx/maps/MapObject.java	24	1f085a0ade3aafc3	
+member	com.badlogic.gdx.maps.MapObject#properties	sge.maps.MapObject#properties	Renamed	-	com/badlogic/gdx/maps/MapObject.java	26	eb7e4257d027fb20	
+member	com.badlogic.gdx.maps.MapObject#visible	sge.maps.MapObject#visible	Renamed	-	com/badlogic/gdx/maps/MapObject.java	25	ebedbe4251253576	
 member	com.badlogic.gdx.maps.MapObjects#<stmt1>	sge.maps.MapObjects#<stmt1>	Renamed	-	com/badlogic/gdx/maps/MapObjects.java	31	e41af8864a27e950	
 member	com.badlogic.gdx.maps.MapObjects#add(MapObject)	sge.maps.MapObjects#add(MapObject)	Renamed	-	com/badlogic/gdx/maps/MapObjects.java	68	bbff39b7f0cae48b	
 member	com.badlogic.gdx.maps.MapObjects#get(String)	sge.maps.MapObjects#get(String)	Renamed	-	com/badlogic/gdx/maps/MapObjects.java	42	0b6bf2b7b83c4e3e	

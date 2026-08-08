@@ -407,7 +407,45 @@ object LibgdxPolicy:
     * states that for the two engine phases whose names are static, and the list position states the rest.
     */
   def beanProperties: balticporter.transform.BeanPropertyTransform =
-    new balticporter.transform.BeanPropertyTransform(beanPropertyPairs)
+    new balticporter.transform.BeanPropertyTransform(beanPropertyPairs, beanPropertyTargets)
+
+  /** WHICH pairs collapse to a plain `var`/`val` instead of a `def` pair (`DESIGN.md` §8.5).
+    *
+    * Per ENTRY, because that is where the decision belongs: `def-pair` is the default and every
+    * entry not named here keeps exactly the form it has always had. The phase REFUSES a mismatch
+    * rather than picking — a `var` needs the setter java published and a `val` needs storage nothing
+    * writes — so a wrong answer here is a counted `idiom(refused)` row and never a silent change of
+    * surface.
+    *
+    * ==This first tranche is HAND-READ, and the family is the reason==
+    * `com.badlogic.gdx.maps` is the flattest data model in this library: `Map`, `MapLayer` and
+    * `MapObject` are plain attribute carriers whose java is a private field, a `return this.f` and a
+    * `this.f = v`, which is exactly the shape §8.5's obligations admit. Every entry below was read
+    * against its upstream file before it was written; the rest of the collapsible population is a
+    * later step, and sizing it is what the `NotRequested` rows in `idiom(refused)` are for.
+    *
+    * `MapLayer#opacity` is deliberately ABSENT although it is a `getOpacity/setOpacity` pair beside
+    * these: its getter multiplies by the parent's, so it is a computed property and the phase
+    * refuses it under `ComputedBody`. It is named here so a reader does not add it back. */
+  def beanPropertyTargets: Map[String, balticporter.transform.BeanPropertyTransform.Target] =
+    import balticporter.transform.BeanPropertyTransform.Target
+    Map(
+      // -- the get/set pairs: a public `var` is exactly the surface java published --
+      "com.badlogic.gdx.maps.MapLayer#name" -> Target.Var,
+      "com.badlogic.gdx.maps.MapLayer#visible" -> Target.Var,
+      "com.badlogic.gdx.maps.MapLayer#parallaxX" -> Target.Var,
+      "com.badlogic.gdx.maps.MapLayer#parallaxY" -> Target.Var,
+      "com.badlogic.gdx.maps.MapObject#name" -> Target.Var,
+      "com.badlogic.gdx.maps.MapObject#color" -> Target.Var,
+      "com.badlogic.gdx.maps.MapObject#opacity" -> Target.Var,
+      "com.badlogic.gdx.maps.MapObject#visible" -> Target.Var,
+      // -- and the get-only ones, over storage the declaration fills and nothing reassigns --
+      "com.badlogic.gdx.maps.Map#layers" -> Target.Val,
+      "com.badlogic.gdx.maps.Map#properties" -> Target.Val,
+      "com.badlogic.gdx.maps.MapLayer#objects" -> Target.Val,
+      "com.badlogic.gdx.maps.MapLayer#properties" -> Target.Val,
+      "com.badlogic.gdx.maps.MapObject#properties" -> Target.Val,
+    )
 
   /** the harvested pairs. KEY is the emitted property in the UPSTREAM namespace (§4.56 — the package
     * rename runs last); VALUE names the accessors explicitly, because a hand port's names are not

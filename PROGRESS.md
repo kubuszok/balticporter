@@ -5086,29 +5086,34 @@ already goes.
 
 Maintained by deletion. Items are ordered by what they block, not by size.
 
-### 12.0 The bean-pair `var`/`val` collapse — BUILT; what is left is the ENABLEMENT
+### 12.0 The bean-pair `var`/`val` collapse — BUILT and ENABLED on the first tranche
 
-The mechanism, its guards and its fixtures ship (`DESIGN.md` §8.5). No port asks for it yet: every
-entry's `target` defaults to `def-pair`, so the whole population sits in `idiom(refused)` under
-`Guard.NotRequested`, which is what that guard is FOR — a denominator a maintainer can read before
-deciding how far to widen.
+The mechanism, its guards and its fixtures ship (`DESIGN.md` §8.5). The libGDX base asks for it on
+**13 hand-read `com.badlogic.gdx.maps` entries** — 8 `var` and 5 `val` — and every other entry keeps
+its `def` pair.
 
-- **The collapsible population on the libGDX base is 90 of 137**, one row per configured pair:
-  30 `ComputedBody`, 14 `OverriddenBelow`, 2 `PairRefused`, 1 `ConcreteRelative`, 90 `NotRequested`.
-  libGDX core is the only port carrying a `bean-properties` phase. The residue a full enablement
-  removes is **280 `$field` declarations and 2,998 references** in `ported/sge/src_managed/main` and
-  13 references in `ported/ssg-liquid`.
+- **`idiom(converted)` 23 -> 36 on libGDX core, against a PREDICTED 13** (the enablement's own entry
+  count), `idiom(refused)` 978 -> 965, `idiom(residue)` 0, `rewrite-callsites` flat at 2. Blast: **37
+  baseline rows on libGDX core and 0 on every other port** — 21 accessor declarations deleted, 13
+  property declarations moved, 3 owning-type digests — all attributable, and the `$field` DECLARATION
+  count fell **280 -> 267**, exactly one per collapsed pair. Suite outcomes identical on all eleven
+  lanes; 0 compile errors everywhere, dependents included.
+- **The remaining collapsible population is 77 of 137**, one row per configured pair in
+  `idiom(refused)`: 30 `ComputedBody`, 14 `OverriddenBelow`, 2 `PairRefused`, 1 `ConcreteRelative`,
+  77 `NotRequested`. libGDX core is the only port carrying a `bean-properties` phase. Read the run's
+  own breakdown before widening — the census that used to publish this number over-counted it by
+  three, which is why it is retired.
 - **The `val` half is narrower than the `var` half and deliberately so.** `Guard.MutableStorage`
   admits only storage that is written at its own declaration and nowhere else, because every other
   shape's `val`/`var` keyword is the constructor funnel's answer and the phase cannot see the funnel.
-  39 of the 137 entries are get-only, and how many of them that guard admits is not yet measured —
-  the first `target = "val"` enablement is what answers it, and an over-refusal there is a counted
-  skip rather than a defect.
+  All five `val` entries in this tranche are that shape (`private X f = new X();` and nothing
+  assigns it); how much of the get-only population beyond `maps` it admits is what the next widening
+  measures, and an over-refusal there is a counted skip rather than a defect.
 - **It is measured with `just measure-all`, never `just gdx-measure`** — the base's dependents read
   its `base-surface` and its published `port-map.tsv`, and a base port's green numbers are not
-  evidence about its dependents (§1.5). Expect the enablement's blast to be large and CLASSIFIED
-  rather than minimised: two accessor declarations disappear and one field declaration moves per
-  collapsed pair, plus the `renamed-member` note the `$field` rename no longer needs.
+  evidence about its dependents (§1.5). This tranche moved 0 dependent members because no dependent
+  in the corpus touches `com.badlogic.gdx.maps`; a widening that reaches a package they do use is the
+  first one whose dependent blast is not zero.
 
 ### 12.1 Provenance coverage — decisions that are not yet recorded
 
