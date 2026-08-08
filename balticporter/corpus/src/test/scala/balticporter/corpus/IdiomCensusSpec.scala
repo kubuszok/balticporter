@@ -296,6 +296,56 @@ class IdiomCensusSpec extends PortSuite:
     assert(!why.toLowerCase.contains("hotspot"))
   }
 
+  test("…and a bare reference to an ENCLOSING INSTANCE MEMBER is a capture too — the node that is\n" +
+       "     not there, read at guard 5 instead of at guard 4") {
+    // `isEnclosingBinding` asks for an owner whose DEFINITION is a `DefDef` — a local or a
+    // parameter — so a bare reference to a MEMBER of an enclosing instance answers "not capturing",
+    // and the site is refused under a reason that is not true: the lambda closes over that instance
+    // and allocates at every evaluation, which is exactly what guard 5 is buying.
+    //
+    // The fixture is the `Pixmap.downloadFromUrl` shape with everything else taken away, because
+    // that is what makes it reachable: `C.this.n` and a bare `n` on the ENCLOSING CLASS both arrive
+    // as a `Tree.This` and were already counted. What does not is a member reached through the
+    // frontend's receiver-dropping fallback (`SpoonTir.thisOf`) — here `failed(...)`, declared by
+    // the interface the OUTER anonymous class implements, which arrives as `Tree.Ident(L#failed)`
+    // owned by a TYPE.
+    val p = portAll(List(
+      "L.java" -> """interface L {
+                    |  void handle(int code);
+                    |  void failed(java.lang.Throwable t);
+                    |}""".stripMargin,
+      "C.java" -> """class C {
+                    |  L make() {
+                    |    return new L() {
+                    |      public void handle(int code) {
+                    |        java.lang.Runnable r = new java.lang.Runnable() {
+                    |          public void run() { failed(null); }
+                    |        };
+                    |        r.run();
+                    |      }
+                    |      public void failed(java.lang.Throwable t) { t.printStackTrace(); }
+                    |    };
+                    |  }
+                    |}""".stripMargin), new SamLambdaTransform)
+    assertNoGuard(p, "NonCapturing")
+    assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
+  }
+
+  test("…and a STATIC member is NOT a capture — nothing is closed over, so the identity gap stands") {
+    // The cell that keeps the widening honest, and the reason the test is on the `static` FLAG and
+    // not on the owner's kind. A `static` member is reached without an instance, so a lambda naming
+    // it captures nothing and MAY be the same object at two evaluations — which is precisely the
+    // unspecified identity guard 5 refuses on.
+    val p = portAll(List(
+      "K.java" -> "class K { static int n = 1; }",
+      "C.java" -> """class C {
+                    |  Runnable make() {
+                    |    return new Runnable() { public void run() { System.out.println(K.n); } };
+                    |  }
+                    |}""".stripMargin), new SamLambdaTransform)
+    assertIdiomRefuses(p, IdiomKind.SamLambda, "NonCapturing", "C#make")
+  }
+
   test("an OUTER `this` capture counts as a capture — the lambda closes over the instance") {
     val p = port(
       """class C {
@@ -304,8 +354,23 @@ class IdiomCensusSpec extends PortSuite:
         |    return new Runnable() { public void run() { System.out.println(C.this.n); } };
         |  }
         |}""".stripMargin, new SamLambdaTransform)
-    assertIdiomIgnores(p, IdiomKind.SamLambda, "NonCapturing")
+    assertNoGuard(p, "NonCapturing")
   }
+
+  /** NO `SamLambda` refusal was filed under this GUARD.
+    *
+    * Spelled here rather than reached for from the testkit because the testkit's nearest helper —
+    * `assertIdiomIgnores` — matches its third argument against the SUBJECT, and the two calls that
+    * passed a guard name to it were asserting *no candidate has a subject containing
+    * "NonCapturing"*, which no candidate ever could. Two vacuous assertions, both in the cell that
+    * decides whether guard 5 declines the population it is meant to. */
+  private def assertNoGuard(p: balticporter.testkit.Ported, guard: String)(using munit.Location): Unit =
+    val hits = p.idioms.all.filter(_.verdict match
+      case IdiomVerdict.Refused(g, _) => g == guard
+      case _                          => false)
+    if hits.nonEmpty then
+      fail(s"a refusal under guard `$guard` was filed and should not have been:\n" +
+        hits.map("  " + _.render).mkString("\n"))
 
   // -------------------------------------------------------------------------------------------
   // guard 6 — serialization

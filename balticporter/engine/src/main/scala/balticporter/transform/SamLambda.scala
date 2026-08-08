@@ -270,11 +270,23 @@ object SamLambda:
   /** does the body CAPTURE an enclosing binding? See the object doc, delta 5, for why this decides
     * anything at all.
     *
-    * Two shapes count and both are structural: a `this` naming an ENCLOSING class (the lambda then
-    * closes over the outer instance), and a reference to a local or parameter owned by an
-    * executable that is not the anon's own method. A local declared INSIDE the body is owned by
-    * that method and is therefore not a capture, which is exactly right — it does not make the
-    * lambda allocate.
+    * Three shapes count and all three are structural: a `this` naming an ENCLOSING class (the lambda
+    * then closes over the outer instance), a reference to a local or parameter owned by an
+    * executable that is not the anon's own method, and a reference to an INSTANCE MEMBER of an
+    * enclosing instance. A local declared INSIDE the body is owned by that method and is therefore
+    * not a capture, which is exactly right — it does not make the lambda allocate.
+    *
+    * ==The third one is guard 4's absent node, read here instead==
+    * `Outer.this.n` and a bare `n` on the enclosing CLASS are the same capture in java and only the
+    * first arrives as a `Tree.This`; the frontend drops the receiver for the other
+    * (`SpoonTir.thisOf`). Where that fallback fires the reference is a bare `Tree.Ident` whose
+    * symbol is owned by a TYPE — `Pixmap.downloadFromUrl`'s inner `Runnable` calling `failed(t)`,
+    * declared by the interface the OUTER anonymous class implements — and `isEnclosingBinding` asks
+    * for an owner whose definition is a `DefDef`, so it answers NO. Refused under `NonCapturing`,
+    * the site is declined for a reason that is not true: the lambda closes over that instance and
+    * allocates at every evaluation, which is exactly what guard 5 is buying. The test is on the
+    * `static` FLAG and not on the owner's kind, because a `static` member is reached without an
+    * instance and a lambda naming one really does capture nothing.
     *
     * The design's other disjunct — "or the site is provably evaluated once" — is NOT implemented
     * and is not silently approximated: a purity/one-shot answer over an arbitrary expression is a
@@ -284,7 +296,8 @@ object SamLambda:
     d.rhs.exists(b => StandardTraversal.scanTerm(b, false) { (acc, t) =>
       acc || (t match
         case Tree.This(c, _, _) => c != anonSym
-        case Tree.Ident(s, _, _) => isEnclosingBinding(s, d.symbol, anonSym)
+        case Tree.Ident(s, _, _) =>
+          isEnclosingBinding(s, d.symbol, anonSym) || isEnclosingMember(s, anonSym)
         case _                   => false)
     })
 
@@ -294,6 +307,19 @@ object SamLambda:
       val owner = sym.owner
       owner != SymId.None && owner != anonMethod && owner != anonSym &&
         p.definitionOf(owner).exists(_.isInstanceOf[Tree.DefDef])
+    }
+
+  /** …and is `s` an INSTANCE member of an ENCLOSING instance? See [[captures]]'s third shape.
+    *
+    * `selfReferences` has already refused every reference the anon itself inherits, so a bare
+    * reference owned by a type that reaches here names something an ENCLOSING instance carries —
+    * and naming it is closing over that instance. `static` is the whole of the exclusion, and it is
+    * read off the referenced symbol rather than off its owner, which is what keeps a companion-level
+    * constant from reading as a capture. */
+  private def isEnclosingMember(s: SymId, anonSym: SymId)(using p: Program): Boolean =
+    p.symbolOf(s).exists { sym =>
+      !sym.flags.isStatic && sym.owner != SymId.None && sym.owner != anonSym &&
+        p.symbolOf(sym.owner).exists(o => !PolicyBinder.isExecutable(o.info))
     }
 
   /** the name java gave the anonymous class — `Outer$1`. Recorded on the conversion's decision
