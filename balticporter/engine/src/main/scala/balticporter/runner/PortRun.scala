@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -181,6 +181,19 @@ final case class PortRun(
     bestEffort: Boolean = false,
     /** printed as the last line — what the operator does next. */
     nextStep: String = "",
+    /** REMEDIES THIS CLASSPATH DECLARES that this run's own pipeline does not — see
+      * [[balticporter.tir.RemedyVocabulary]] for why the KNOWN set and the ACTIVE set are two sets.
+      *
+      * The active set is derived from what the run holds (its phases, and the checks the
+      * orchestrator registers) and needs no parameter. This is the rest of the KNOWN one: a
+      * `TransformFactory` on the classpath speaks for the phase it would build, so the config loader
+      * can tell a TYPO (`ConfigError`, at load) from a port that selected a remedy and forgot to
+      * enable the phase (a policy finding naming the phase). Without it the second reads as the
+      * first, and the reader is sent looking for a spelling mistake in a correct id.
+      *
+      * Empty is the default and the whole of the Scala front door, where there is no registry to
+      * ask — a run built by hand knows exactly the phases it was given. */
+    knownRemedies: RemedyVocabulary = RemedyVocabulary.empty,
 ):
 
   private def say(s: String): Unit = println(s"[$label] $s")
@@ -560,7 +573,20 @@ final case class PortRun(
       CheckReport.record(PortRun.PortabilityAll, allViolations.map(_.report(PortRun.PortabilityAll)))
       CheckReport.record(PortRun.PortabilityEmitted, portability.map(_.report(PortRun.PortabilityEmitted)))
     }
-    CheckReport.record(PortRun.Remediation, Remediator.reports(fixes))
+    // …and the OTHER half of the same check: what a remedy SELECTION actually did.
+    //
+    // One lane and not two, deliberately. `remediation` already carries `Remediator`'s suggestions —
+    // the manifest line an operator would paste — and an APPLIED resolution is that loop closed: the
+    // engine pasted it. It is also already a `RequiredChecks` member, so a run that stopped
+    // recording resolutions fails exactly the way a run that stopped recording suggestions does,
+    // which a new top-level check would only have got by somebody remembering to add it to that set.
+    //
+    // The kind column is what keeps them apart (`resolved`), and it is what makes the accounting
+    // readable: a baseline diff must show `remediation(resolved) 0->N` beside the refusal lane the
+    // remedy drained falling by exactly N. That is `CLAUDE.md` §5's trivia-family rule one artifact
+    // over — a number that only ever grows says nothing about what it was drawn from.
+    val appliedRemedies = translated.binder.resolutions.all
+    CheckReport.record(PortRun.Remediation, Remediator.reports(fixes) ++ appliedRemedies.map(_.finding))
     // the rule count is DERIVED here and stated nowhere else. `PortabilityCheck`'s own scaladoc
     // carried a hand-written one for long enough that it detached from the list and then escaped
     // into two commit subjects nobody can regenerate; the fix is a number the code computes, at the
@@ -1188,7 +1214,21 @@ final case class PortRun(
       case scala.None => typeRenames.keySet ++ subPackages.keySet ++ flattenNestedTypes ++ allowPackageSplit
     val renameFindings = PolicyReport(
       renamePhase.toList.flatMap(_.policyReport.findings).filter(f => ownRenameKeys(f.key)))
-    val policy = dropFindings ++ renameFindings ++ PolicyReport(
+    // …and the per-location SELECTIONS. Two halves, from two places, because they are two questions:
+    // whether the KEY named a declaration is the binder's (it recorded one row per selection under
+    // `Resolution.Seam`, so `Ambiguous`, `NeverMatched` and `Malformed` arrive with everything
+    // else's), and whether the SELECTION did anything is the plan's — a key can bind perfectly and
+    // be inert, which no binding can say. Held to THIS module's own keys by the rule the drops
+    // follow: an inherited selection that matched nothing here is `ManifestAgreement`'s to report,
+    // and it says which base declared it.
+    val ownResolutionKeys: Set[String] =
+      manifest.map(_.resolutions.keySet).getOrElse(Set.empty)
+    val resolutionFindings =
+      PolicyReport(PolicyReport.fromBindings(translated.binder.bindings).findings
+        .filter(f => f.phase == balticporter.tir.Resolution.Seam && ownResolutionKeys(f.key))) ++
+        PolicyReport(PolicyReport.fromResolutions(translated.binder.resolutions.troubles).findings
+          .filter(f => ownResolutionKeys(f.key)))
+    val policy = dropFindings ++ renameFindings ++ resolutionFindings ++ PolicyReport(
       PolicyReport.from(ownPhases.collect { case p: PolicySource if ownPhaseNames(p.name) => p })
         .findings.filter(f =>
           ownSurfaceKeys.get(f.phase).forall(_.contains(balticporter.core.MergeablePolicy.subjectOf(f.key)))))
@@ -1430,6 +1470,13 @@ final case class PortRun(
       plan: RuntimePlan,
   ): Int =
     t.decisions.recordAll(t.emitter.ownDecisions)
+    // …and one row per APPLIED REMEDY SELECTION. Recorded by the RUN and not by the phase that
+    // applied it, so the row and the `remediation(resolved)` finding beside it come from ONE value
+    // (`AppliedResolution`) and cannot disagree about what the resolution did. `Reason.Configured`
+    // names the manifest entry, which is the string an agent edits; the porter note follows from
+    // `Decision.Kind.SelectedRemedy` being in `PorterNote.Rendered`, so the reader at the emitted
+    // line is told there was a menu and which entry this port picked.
+    t.decisions.recordAll(t.binder.resolutions.all.map(_.decision))
     val withheld = retainOwnDecisions(t.program, t)
     recordCtorFunnel(t.program, t)
     recordDroppedSuperArgs(t.program, t)
@@ -2044,6 +2091,23 @@ final case class PortRun(
     * @see [[idiomPhases]] for WHERE each one is placed, which is the whole of the D1 argument. */
   private def effectivePhases: List[Phase] = idiomPhases(declaredPhases) ++ renamePhase
 
+  /** THE REMEDIES THIS RUN CAN ACTUALLY CARRY OUT — derived from what the run HOLDS, never listed.
+    *
+    * `Rewrite.accountedBy`'s shape one level up: a claim each source makes about itself, gathered per
+    * run. A table of "the engine's remedies" kept beside this would be a second answer somebody has
+    * to remember to edit, and its failure mode is the worst one available here — a port selects a
+    * remedy the table forgot and is told it does not exist.
+    *
+    * Both halves are here because a residue lane has two kinds of producer: the pipeline's PHASES,
+    * and the CHECKS the orchestrator calls, which are plain objects and not phases at all. */
+  private def activeRemedies: RemedyVocabulary =
+    RemedyVocabulary.from(effectivePhases.collect { case r: RemedySource => r } ++ PortRun.CheckRemedies)
+
+  /** …and the KNOWN set: what this run can carry out, PLUS whatever the classpath declared and this
+    * pipeline did not enable. The difference between the two is the whole of the staleness answer —
+    * see [[PortRun.knownRemedies]]. */
+  private def knownVocabulary: RemedyVocabulary = activeRemedies ++ knownRemedies
+
   /** THE IDIOM LAYER, WOVEN AT THE POSITION EACH PHASE WILL OCCUPY.
     *
     * `CLAUDE.md` §5's dry-run rule read in the other direction: '''a phase measures what it is
@@ -2123,13 +2187,14 @@ final case class PortRun(
     * conflated them would make the comparison silently inert for every port with an empty surface —
     * which is most of the corpus. */
   private def surfacePolicyFingerprint: String =
-    PortMap.policyDigest(manifest.map(_.effectiveSurface).getOrElse(effectivePhases).map(PortManifest.fingerprint))
+    PortMap.policyDigest(
+      manifest.map(_.surfaceDigestInputs).getOrElse(effectivePhases.map(PortManifest.fingerprint)))
 
   /** …and the fingerprint of the BASE's manifest, as THIS run inherited it (§1.5 — a value the
     * dependent holds, never the base's build). What `PortMap.freshness` compares the published one
     * against. */
   private def basePolicyFingerprint(b: PortManifest): String =
-    PortMap.policyDigest(b.effectiveSurface.map(PortManifest.fingerprint))
+    PortMap.policyDigest(b.surfaceDigestInputs)
 
   /** the bases' published contracts, discovered ONCE.
     *
@@ -2244,6 +2309,14 @@ final case class PortRun(
     // translates twice): a value one run owns, never a process-global table (§5.1).
     val binder = new PolicyBinder(parsed, parsed.members, runScope(parsed))
     bindDeclaredPolicy(binder)
+    // …and the PER-LOCATION REMEDY SELECTIONS, bound through the same binder and at the same moment,
+    // for the same two reasons: every key is written in the upstream namespace, and "did this
+    // selection fire?" must be a property of the policy and the program rather than of phase order.
+    // The plan rides on the binder because a selection IS a bound key (`ResolutionPlan`), so a phase
+    // that already binds its own policy reaches it with no wiring anybody can forget.
+    binder.resolving(ResolutionPlan.of(
+      manifest.map(_.effectiveResolutions).getOrElse(Map.empty),
+      knownVocabulary, activeRemedies.byId.keySet, binder))
     // `runTraced`, so the phases' DECISIONS travel with the program they produced. The log belongs
     // to THIS translation: `Determinism.Full` translates twice and the run keeps the first, which
     // is only coherent because neither log is shared (CLAUDE.md §5.1).
@@ -2607,6 +2680,19 @@ object PortRun:
   def wovenIdiomPhases: List[Phase] =
     List(new balticporter.transform.SamLambdaTransform, new balticporter.transform.ReturnThisCensus)
 
+  /** THE CHECK-SIDE REMEDY SOURCES — the objects that mint a residue finding and can also answer it.
+    *
+    * A list beside [[wovenIdiomPhases]] and for its reason: half of the lanes a remedy could drain
+    * are produced by plain objects the orchestrator calls, which are not phases and cannot be
+    * collected out of the pipeline. Naming them here is what makes
+    * [[balticporter.tir.RemedyVocabulary]]'s ACTIVE set complete without a table of ids anybody has
+    * to maintain — each object still declares its own menu.
+    *
+    * EMPTY, and that is the honest state: the plumbing ships before any menu does, so every port's
+    * `remediation(resolved)` is provably zero and the mechanism's arrival moves no count. A check
+    * that gains a menu adds itself here. */
+  val CheckRemedies: List[balticporter.tir.RemedySource] = Nil
+
   /** Every check's name as it appears in `counts.tsv`. Named here, in the orchestrator, because the
     * orchestrator is now the only thing that records: a check is a pure function of a `Program` and
     * does not know it is being persisted. */
@@ -2615,7 +2701,10 @@ object PortRun:
   val PortabilityAll       = "portability(all)"
   val PortabilityEmitted   = "portability(emitted)"
   val PortabilityInjected  = "portability(injected)"
-  val Remediation          = "remediation"
+  /** …and the lane an APPLIED remedy selection files under too — one name, read off the api value
+    * that builds the row, so the check and the finding cannot drift apart
+    * ([[balticporter.tir.Resolution.Check]] says why they share a lane at all). */
+  val Remediation          = balticporter.tir.Resolution.Check
   /** the two [[SubstitutionCheck]] halves. */
   val SubstitutionEmitted  = "substitution(emitted)"
   val SubstitutionDangling = "substitution(dangling)"

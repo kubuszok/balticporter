@@ -769,3 +769,60 @@ class PortRunSpec extends munit.FunSuite:
     assert(!PortRun.isSynthesised(parsed.origin), clue(parsed.origin))
     assert(PortRun.isSynthesised(minted.origin))
   }
+
+  // -------------------------------------------------------------------------------------------
+  // per-location REMEDY SELECTION, through a whole run
+  // -------------------------------------------------------------------------------------------
+
+  test("an APPLIED selection reaches the emitted file as a porter note") {
+    // The whole loop in one assertion: the manifest names a member and a remedy id, the run binds
+    // the key before the pipeline, the phase that DECLARED that remedy is handed the selection, its
+    // application becomes a `Decision`, and the decision becomes the note §4.575 owes the reader at
+    // the line. Nothing else in the run can see any of it — a resolution moves no check count that a
+    // port without one would not also report.
+    val (root, src) = fixture()
+    val r = PortRun(
+      label     = "demo",
+      portRoot  = root.resolve("port"),
+      sourceSet = SourceSet.Main,
+      frontend  = FrontendConfig(src, List("com/demo/Widget.java"), Nil),
+      phases    = Nil,
+      manifest  = Some(PortManifest(
+        name        = "demo",
+        governs     = Set("com.demo"),
+        surface     = List(new balticporter.tir.SpecRemedyPhase),
+        resolutions = Map("com.demo.Widget#label" -> "spec-noop"),
+      )),
+    ).execute()
+    val text = Files.readString(r.outDir.resolve("com/demo/Widget.scala"))
+    assert(clue(text).contains("/* porter: selected-remedy"))
+    assert(clue(text).contains("remedy=spec-noop"))
+    // …and the selection is not ALSO reported as inert, which is the failure mode of a ledger the
+    // report cannot see.
+    assertEquals(r.report.policy.findings.map(_.issue), Nil)
+  }
+
+  test("…and a selection nothing applies is a classified POLICY finding, never silence") {
+    // The key is right, the remedy is live, and the phase never asks about that lane. Emitted text,
+    // every check count and every member digest are identical to a port that selected nothing — so
+    // if this did not report, nothing in the run could.
+    val (root, src) = fixture()
+    val inert = new balticporter.tir.SpecRemedyPhase(
+      remedy = balticporter.tir.SpecRemedyPhase.Noop.copy(lane = "a-lane-nobody-asks-about"))
+    val r = PortRun(
+      label     = "demo",
+      portRoot  = root.resolve("port"),
+      sourceSet = SourceSet.Main,
+      frontend  = FrontendConfig(src, List("com/demo/Widget.java"), Nil),
+      phases    = Nil,
+      manifest  = Some(PortManifest(
+        name        = "demo",
+        governs     = Set("com.demo"),
+        surface     = List(inert),
+        resolutions = Map("com.demo.Widget#label" -> "spec-noop"),
+      )),
+    ).execute()
+    assertEquals(r.report.policy.findings.map(_.issue), List(PolicyIssue.NeverApplied))
+    assertEquals(r.report.policy.findings.map(_.key), List("com.demo.Widget#label"))
+    assert(!Files.readString(r.outDir.resolve("com/demo/Widget.scala")).contains("porter: selected-remedy"))
+  }
