@@ -660,10 +660,15 @@ object OverloadRiskCheck extends RemedySource:
 
     /** one ledger row per DRAINED ROW, never one per call: a call may have filed two of JLS
       * 15.12.2's boundaries and one act answers both, so the lane falls by two and
-      * `remediation(resolved)` must gain two. */
+      * `remediation(resolved)` must gain two.
+      *
+      * The SITE's line rides in the text, and that is not decoration. A selection BROADCASTS, so one
+      * key answers every matching call in the member, and the porter note sits at the DECLARATION —
+      * two sites therefore put two notes above one `def`, and without the line they are the same
+      * sentence twice, which reads as a duplicated note rather than as two answered calls. */
     private def record(r: Resolution, subject: String, decl: SymId, f: Finding, what: String): Unit =
       plan.applied(r, subject, decl, f.origin,
-        s"$what (${f.issue}); candidates: ${f.alternatives.mkString(", ")}")
+        s"$what at line ${f.origin.line} (${f.issue}); candidates: ${f.alternatives.mkString(", ")}")
 
   /** grouped one-line summary, worst family first, each with its §1 classification — and the
     * DENOMINATOR first, because an over-approximation whose rate a reader cannot see is one they

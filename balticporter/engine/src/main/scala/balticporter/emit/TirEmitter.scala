@@ -3824,7 +3824,15 @@ final class TirEmitter(
     // so the phase mints the node and the emitter does every bit of the printing: a phase that wrote
     // the type as TEXT would be writing the UPSTREAM namespace into a file the rename has not
     // reached yet (§4.56).
-    case Tree.Typed(e, tpt, _, _) if tpt.tpe.isInstanceOf[TypeRepr.MethodType] =>
+    case ty @ Tree.Typed(e, tpt, _, _) if tpt.tpe.isInstanceOf[TypeRepr.MethodType] =>
+      // …and the two rows a `Tree.Typed` OWES are discharged here as well, NOT FIRED. The obligation
+      // is owed per NODE, so an arm that renders one and consults nothing is an `ENGINE GAP` in
+      // `catalog(undischarged)` — which is exactly what this arm's first run reported (5 -> 7 on one
+      // port). Both answers are `None` and both are facts rather than defaults: `JS-G34` is java's
+      // INTERSECTION in a cast and `JS-E06` is java's UNBOXING CONVERSION, and this node is neither
+      // — it is not a cast at all.
+      Obligations.consult(JS.G(34), ty.origin)(scala.None)
+      Obligations.consult(JS.E(6), ty.origin)(scala.None)
       s"(${operand(e, i)}: ${tpe(tpt.tpe)})"
     case ty @ Tree.Typed(e, tpt, _, _)  =>
       val target = castTarget(e, tpt.tpe)
