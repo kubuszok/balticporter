@@ -187,18 +187,39 @@ final class TypeRedirectFactory extends TransformFactory:
 
 /** ```
   * { transform = "bean-properties"
-  *   pairs { "a.B#opacity" = "getOpacity/setOpacity"
-  *           "a.B#layers"  = "getLayers" } }
+  *   pairs { "a.B#opacity" = "getOpacity/setOpacity"                       # def-pair, unchanged
+  *           "a.B#layers"  = "getLayers"
+  *           "a.B#name"    = { accessors = "getName/setName", target = "var" }
+  *           "a.B#props"   = { accessors = "getProps",        target = "val" } } }
   * ```
   *
   * The key is the emitted PROPERTY in the upstream namespace; the value names the accessor(s)
   * explicitly. An absent `pairs` is an empty map, which makes the phase a structural no-op — the
   * §1(b) requirement that "turned off" needs no code path.
+  *
+  * TWO SHAPES IN ONE MAP, exactly as [[TypeRedirectFactory]]'s `redirects` carries them, and for
+  * the same reason: an entry that wants the default shape has nothing to say beyond its accessors,
+  * and making it write `{ accessors = "…" }` would rewrite every port that already publishes the
+  * flat form for no information. `target` defaults to `def-pair`, so a config written before this
+  * key existed constructs exactly the phase it constructed before. The value is read as an object
+  * only when it IS one ([[ConfigView.isObject]]) — a PROBE that does not count as a read, so a
+  * misspelling INSIDE an entry still reaches the unread-key refusal — never by catching the error
+  * the other reader would throw, which would turn a genuine shape mistake into a silent fallback.
   */
 final class BeanPropertyFactory extends TransformFactory:
   def name = "bean-properties"
   def fromConfig(config: ConfigView): Phase =
-    new BeanPropertyTransform(config.stringMap("pairs").getOrElse(Map.empty))
+    import balticporter.transform.BeanPropertyTransform.Target
+    val entries = config.child("pairs").toList.flatMap(ps => ps.keys.map { k =>
+      if !ps.isObject(k) then (k, ps.requireString(k), Target.DefPair)
+      else
+        val e = ps.requireChild(k)
+        (k, e.requireString("accessors"),
+          e.enumerated("target", Target.byConfigName).getOrElse(Target.DefPair))
+    })
+    new BeanPropertyTransform(
+      pairs   = entries.map((k, v, _) => k -> v).toMap,
+      targets = entries.collect { case (k, _, t) if t != Target.DefPair => k -> t }.toMap)
 
 /** `{ transform = "method-body", bodies { "a.B#m()" = "{ … }" } }` */
 final class MethodBodyFactory extends TransformFactory:

@@ -2,8 +2,8 @@ package balticporter.runner
 
 import balticporter.core.{FrontendConfig, ManifestAgreement, PortManifest, Provenance, RuntimeMode}
 import balticporter.tir.{ConfigError, RuleScope}
-import balticporter.transform.{CollectionsTransform, MutableParamsTransform, TestFrameworkTransform,
-  TypeRedirectTransform}
+import balticporter.transform.{BeanPropertyTransform, CollectionsTransform, MutableParamsTransform,
+  TestFrameworkTransform, TypeRedirectTransform}
 
 import java.nio.file.{Files, Path}
 
@@ -342,6 +342,41 @@ class PortConfigSpec extends munit.FunSuite:
            |  "a.Disposable" = { to = "java.lang.AutoCloseable"
            |                     memberRenames { dispose = "close" } }  """.stripMargin),
       "a.B->c.D,a.Disposable->java.lang.AutoCloseable[dispose=close]")
+  }
+
+  test("`bean-properties` reads BOTH entry shapes out of one map, and the TARGET is in the fingerprint") {
+    // The same compatible extension as `type-redirect`'s, one phase over — and the assertion that
+    // matters is the LAST one: two entries that name the same accessors and ask for different
+    // SHAPES must not compare equal, or `SurfaceMissing` cannot see the difference and a same-name
+    // pair can be neither compared nor composed (`ENGINE-LIMITS.md` CT9).
+    def fp(entries: String) = PortConfig.load(fixture(Minimal.replace(
+      """manifest { name = "demo" }""",
+      s"""manifest { name = "demo", surface = [ { transform = "bean-properties", pairs { $entries } } ] }"""
+    ))).manifest.get.effectiveSurface.collectFirst { case t: BeanPropertyTransform => t.surfaceFingerprint }.get
+
+    assertEquals(fp(""""a.B#x" = "getX/setX""""), "a.B#x=getX/setX>def-pair")
+    assertEquals(fp("""  "a.B#x" = { accessors = "getX/setX" }  """), "a.B#x=getX/setX>def-pair")
+    assertEquals(fp("""  "a.B#x" = { accessors = "getX/setX", target = "var" }  """),
+      "a.B#x=getX/setX>var")
+    assertNotEquals(fp(""""a.B#x" = "getX/setX""""),
+      fp("""  "a.B#x" = { accessors = "getX/setX", target = "var" }  """))
+  }
+
+  test("…and a `target` outside the closed set names every spelling rather than defaulting") {
+    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "bean-properties",
+        |  pairs { "a.B#x" = { accessors = "getX", target = "lazy-val" } } } ] }""".stripMargin))
+    val e = intercept[ConfigError](PortConfig.load(f))
+    assert(clue(e.getMessage).contains("def-pair"))
+    assert(clue(e.getMessage).contains("val"))
+  }
+
+  test("a misspelt key INSIDE a bean-properties entry fails the run — the shape probe is not a read") {
+    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "bean-properties",
+        |  pairs { "a.B#x" = { accessor = "getX" } } } ] }""".stripMargin))
+    val e = intercept[ConfigError](PortConfig.load(f))
+    assert(clue(e.getMessage).contains("accessor"))
   }
 
   test("`base` composes a phase's POLICY through the SAME fold — no second truth on the conf path") {

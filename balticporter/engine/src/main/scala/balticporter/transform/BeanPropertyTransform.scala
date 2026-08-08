@@ -26,21 +26,22 @@ import balticporter.tir.*
   * {{{
   * { transform = "bean-properties"
   *   pairs { "com.foo.MapLayer#opacity" = "getOpacity/setOpacity"
-  *           "com.foo.Map#properties"   = "getProperties" } }
+  *           "com.foo.Map#properties"   = "getProperties"
+  *           "com.foo.MapLayer#name"    = { accessors = "getName/setName", target = "var" } } }
   * }}}
   * The KEY is the emitted property, in the UPSTREAM namespace like every policy key (§4.56 — the
   * package rename runs last). The VALUE names the accessor(s) EXPLICITLY rather than deriving them
   * from the property name, for two reasons: a hand port's names are not always bean-derivable
   * (`getDragActor` → `currentDragActor`), and a `neverFired` report needs the accessors as DATA.
   *
-  * ==The target is `def x` / `def x_=(v: R): Unit`, bodies kept VERBATIM==
-  * Never a bare `var`. Collapsing a trivial pair into a public `var` is what a hand port usually
-  * writes and it deletes the `$field` noise the emitter's `resolveMemberClashes` leaves behind — and
-  * it carries three silent-correctness obligations (a `var` cannot be overridden; every call must
-  * provably route through the pair; direct field access elsewhere must be equivalent). It is
-  * DEFERRED behind the measured `$field` residue this phase's first enablement prints, not rejected
+  * ==The default target is `def x` / `def x_=(v: R): Unit`, bodies kept VERBATIM==
+  * Collapsing a trivial pair into a public `var` is what a hand port usually writes and it deletes
+  * the `$field` noise the emitter's `resolveMemberClashes` leaves behind — and it carries three
+  * silent-correctness obligations (a `var` cannot be overridden; every call must provably route
+  * through the pair; direct field access elsewhere must be equivalent), so it is OPT-IN PER ENTRY —
+  * `target = "var"` / `"val"` — and refused whenever an obligation cannot be discharged
   * (DESIGN.md §8.5). Keeping the bodies is what makes a computed accessor and a side-effecting
-  * setter correct by construction.
+  * setter correct by construction, and it is what an entry that says nothing still gets.
   *
   * ==Refusals — each counted, each with a spec==
   * A pair is applied whole or not at all, because a renamed getter with an unrenameable setter is
@@ -72,15 +73,31 @@ import balticporter.tir.*
   * against the base's Java and must see the same conversion, or the two ports each compile alone
   * and cannot compile together (§1.5).
   */
-final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty)
+final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
+                                  targets: Map[String, BeanPropertyTransform.Target] = Map.empty)
     extends Phase, PolicySource, SurfacePolicy, PolicyBound:
 
   def name: String = "bean-properties"
 
   override def runsBefore: Set[String] = Set("java-collections->scala", "package-rename")
 
-  /** the pairs, sorted and rendered — two modules that agree must compare equal (§1.5). */
-  def surfaceFingerprint: String = pairs.toList.sorted.map((k, v) => s"$k=$v").mkString(",")
+  /** WHAT SHAPE this entry asked for — [[BeanPropertyTransform.Target.DefPair]] where it said
+    * nothing, which is what every published config already says and what makes the second map a
+    * compatible extension rather than a second policy home (DESIGN.md §8.5). */
+  def targetOf(key: String): BeanPropertyTransform.Target =
+    targets.getOrElse(key, BeanPropertyTransform.Target.DefPair)
+
+  /** the pairs, sorted and rendered — two modules that agree must compare equal (§1.5).
+    *
+    * '''The TARGET is part of it, and it is one line that is easy to miss.''' Two configurations
+    * that name the same accessors and ask for different SHAPES emit different signatures; rendered
+    * without the target they compare EQUAL, `SurfaceMissing` cannot see the difference, and a
+    * same-name pair can be neither compared nor composed — which is `ENGINE-LIMITS.md` CT9's
+    * recorded failure exactly. Rendered UNCONDITIONALLY rather than only where a target was
+    * declared: a fingerprint whose grammar depends on the value is one whose collisions depend on
+    * it too. */
+  def surfaceFingerprint: String =
+    pairs.toList.sorted.map((k, v) => s"$k=$v>${targetOf(k).config}").mkString(",")
 
   /** THE INCLUDE LIST, readable — for the one consumer that must intersect against exactly the
     * pairs THIS phase will see and may not declare a second list of its own
@@ -344,6 +361,38 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty)
     case _                      => false
 
 object BeanPropertyTransform:
+
+  /** WHAT SHAPE an entry asks for.
+    *
+    * Three cases and not a boolean, because "collapse this" is two different declarations with two
+    * different obligations: a `var` needs a setter to be a faithful surface and a `val` needs the
+    * storage to be written once. Naming them separately is what lets the phase REFUSE a mismatch
+    * (a `val` target on a pair with a setter is a contradiction the port can be told about) rather
+    * than pick one and be silently right or wrong.
+    *
+    * [[DefPair]] is the default, so every existing port and every existing config is byte-identical
+    * by construction — §1(b)'s "an empty parameter is a no-op" met at the ENTRY level, which is the
+    * right granularity for a per-key policy.
+    */
+  enum Target:
+    /** `def x` / `def x_=(v: R): Unit`, bodies verbatim — the phase's original and only shape. */
+    case DefPair
+    /** a public `var x`: the accessors go, and the backing field becomes the property. */
+    case Var
+    /** a public `val x`: a get-only entry over storage java wrote once. */
+    case Val
+
+    /** the spelling a `.conf` writes. Derived nowhere else, so the config grammar and the enum
+      * cannot drift. */
+    def config: String = this match
+      case DefPair => "def-pair"
+      case Var     => "var"
+      case Val     => "val"
+
+  object Target:
+    /** the CLOSED set a `target = …` key is read against — `ConfigView.enumerated`'s loud door,
+      * which names every alternative in the error rather than falling back to the default. */
+    val byConfigName: Map[String, Target] = values.map(t => t.config -> t).toMap
 
   /** One applied property: the policy key it came from, the emitted name, the accessors the entry
     * NAMED, and every declaration of each accessor's override COMPONENT — which is what the arity
