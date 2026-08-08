@@ -136,6 +136,49 @@ class BeanPropertyPortSpec extends PortSuite:
     assertEquals(log.all, Nil)
   }
 
+  // -------------------------------------------------------------------------------------------
+  // the MIXED inherited shape — a shadowed FIELD and an implemented `def` under ONE name
+  // -------------------------------------------------------------------------------------------
+
+  private val mixed =
+    """
+    package demo;
+
+    public interface HasW { int getW(); void setW(int v); }
+
+    class Above { protected int w = 1; }
+
+    class Below extends Above implements HasW {
+      private int w;
+      public int getW() { return w; }
+      public void setW(int v) { this.w = v; }
+    }
+    """
+
+  test("a collapsed `var` under BOTH an inherited field and an inherited parameterless `def` keeps\n" +
+       "     the IMPLEMENTATION — the rename would un-implement it, silently") {
+    // `implementsInherited` asked `same.forall(parameterless def)`. With the same name reaching the
+    // class from TWO directions — `Above`'s FIELD and `HasW`'s collapsed accessor — `forall` is
+    // false, so the pass renamed the property to `w$shadow` and `Below` stopped implementing
+    // `HasW.w`. Neither answer is free: renaming loses the implementation, keeping the name leaves a
+    // `var` shadowing an inherited one.
+    //
+    // The implementation WINS, and the argument is which failure is VISIBLE (`ENGINE-LIMITS.md`
+    // K5.7's trade). An unimplemented member is invisible until the port reaches 0 typer errors,
+    // because `RefChecks` does not run before then (§3) — it arrives on the day the port goes green,
+    // in a member nobody is looking at. A `var` that shadows an inherited one is a TYPER error:
+    // scalac says so on the first run, with the member named.
+    val phase = new BeanPropertyTransform(
+      Map("demo.HasW#w" -> "getW/setW", "demo.Below#w" -> "getW/setW"),
+      Map("demo.Below#w" -> BeanPropertyTransform.Target.Var))
+    val before       = SpoonTir.fromSource(mixed, "Mixed.java")
+    val (after, log) = Pipeline.runTraced(before, List(phase))
+    val out          = new TirEmitter(after, notes = log).emit
+    assert(!clue(out).contains("w$shadow"),
+      "the property was renamed out from under the interface member it implements")
+    assert(out.contains("def w: scala.Int"), "the interface still declares the property")
+  }
+
   test("emitted probe is written for a real compiler") {
     val (_, _, _, out) = ported()
     val p = _root_.java.nio.file.Path

@@ -5319,12 +5319,26 @@ object TirEmitter:
         *
         * A CONCRETE inherited `def` would be an OVERRIDE rather than an implementation and a `var`
         * cannot do that — but the conversion that produces this shape has already refused that case
-        * (`BeanCollapse.Guard.ConcreteRelative`), so the two compose and this one does not re-ask. */
+        * (`BeanCollapse.Guard.ConcreteRelative`), so the two compose and this one does not re-ask.
+        *
+        * ==THE MIXED SHAPE — `exists`, not `forall`, and the reason is which failure is VISIBLE==
+        * The same name can reach a class from TWO directions at once: an ancestor's FIELD, which is
+        * a shadowing clash, and an ancestor's collapsed accessor, which is an implementation
+        * obligation. Asked as `forall`, the mixed set answers "not an implementation pair" and the
+        * field is renamed — so the class silently stops implementing the member, which is the ONE
+        * outcome this test exists to prevent, arriving in exactly the shape it was written against.
+        *
+        * Neither answer is free and there is no third: scala has one namespace, so a name cannot be
+        * both moved and kept. What decides it is `ENGINE-LIMITS.md` K5.7's trade — an unimplemented
+        * member is invisible until the port reaches 0 typer errors, because `RefChecks` does not run
+        * before then (§3), so it arrives on the day the port goes green in a member nobody is
+        * looking at; a `var` that shadows an inherited one is a TYPER error, named on the first run.
+        * The implementation therefore wins and the shadow is left LOUD. */
       lazy val inheritedDecls = inheritedSyms(cd)
       def implementsInherited(v: Tree.ValDef): Boolean =
         val n    = nm(v.symbol)
         val same = inheritedDecls.filter(s => eff(s) == n)
-        same.nonEmpty && same.forall(s => p.definitionOf(s) match
+        same.exists(s => p.definitionOf(s) match
           case Some(d: Tree.DefDef) => d.paramss.isEmpty
           case _                    => false)
 
