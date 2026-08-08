@@ -8757,3 +8757,29 @@ jbump (3), 1 on noise4j (1), 0 everywhere else; 23/4/2 members changed, every on
 `SamLambda` decision or being the class that holds one; `trivia(recovered)` 4 → 6 and `trivia(lost)`
 0; `context-seam` 44 → 43; every error baseline, every `expected-lost` and every suite outcome
 unchanged on all fifteen ports. `PROGRESS.md` §11.99 carries the table.
+
+### I9. A RAW-typed SAM target — **PREDICTED loud, MEASURED clean, §1(a). Do not add the guard**
+
+The conversion ascribes to `nw.tpt`, and a RAW generic use renders `[?]` (the reference port's own
+answer, `CLAUDE.md` §3.5). So `new Comparator(){ public int compare(Object a, Object b){…} }` emits
+
+```scala
+((a: java.lang.Object, b: java.lang.Object) => …): java.util.Comparator[?]
+```
+
+— a scala lambda at a WILDCARD-APPLIED type, which is a shape worth doubting: if scalac declines to
+instantiate a SAM there, every such site is a compile error, and **no corpus site has this shape**,
+so the corpus lanes could not tell anyone. The obvious answer is a seventh guard (`RawTarget`), and a
+guard is not free — it declines conversions permanently on a suspicion.
+
+**Measured instead.** The emitted text above was put through `scala-cli compile --scala 3.8.4
+--server=false`: **exit 0, no diagnostics.** The wildcard instantiates to the erasure the raw type
+already had and the lambda's parameters are `java.lang.Object` on both sides, which is exactly what
+the java anonymous class compiled to. So the refusal enumeration is unchanged and there is no guard
+here.
+
+What keeps the measurement attached to the thing it was made about is a FIXTURE
+(`SamLambdaTransformSpec`) pinning the emission — the conversion, the `[?]` ascription and the
+`Object` parameters. A number in a document that no test holds is a number the next emitter change
+invalidates silently; this is the same rule §4.58's text-to-text check is written from, read at a
+measurement instead of at a comment.

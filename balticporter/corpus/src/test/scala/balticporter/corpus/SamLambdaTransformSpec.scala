@@ -214,6 +214,33 @@ class SamLambdaTransformSpec extends PortSuite:
     assertEquals(PorterNote.slug(Decision.Kind.SamLambda), "sam-lambda")
   }
 
+  test("a RAW-typed target converts, and the ascription it writes is the WILDCARD one — measured,\n" +
+       "     not assumed, because the guard it would have justified is not free") {
+    // The ascription is `nw.tpt`, and for a RAW generic use this engine renders `[?]` (the reference
+    // port's own answer, §3.5). So a raw `new Comparator(){…}` emits
+    // `((a, b) => …): java.util.Comparator[?]`, and a scala lambda at a WILDCARD-APPLIED type is a
+    // shape worth doubting: if scalac refuses to instantiate a SAM there, the conversion is a
+    // compile error the corpus cannot see, because no corpus site has this shape.
+    //
+    // MEASURED rather than guarded: the emitted text was put through `scala-cli compile --scala
+    // 3.8.4` and accepted, exit 0 — the wildcard instantiates to the erasure the raw type already
+    // had, and the lambda's parameters are `Object` on both sides. So there is no guard here and
+    // the refusal enumeration is unchanged; what this fixture pins is the EMISSION, so that the
+    // measurement stays attached to the thing it was made about (`ENGINE-LIMITS.md` S1).
+    val p = port(
+      """import java.util.Comparator;
+        |class C {
+        |  Comparator raw(final int bias) {
+        |    return new Comparator() {
+        |      public int compare(Object a, Object b) { return bias; }
+        |    };
+        |  }
+        |}""".stripMargin, new SamLambdaTransform)
+    assertIdiomConverts(p, IdiomKind.SamLambda, "C#raw")
+    assertEmits(p, "): java.util.Comparator[?])")
+    assertEmitsMatch(p, """\(a: java\.lang\.Object, b: java\.lang\.Object\) =>""")
+  }
+
   test("the phase DECLARES its kind, so a run where it found nothing still prints a zero") {
     assertEquals(new SamLambdaTransform().idiomKinds, Set(IdiomKind.SamLambda))
   }
