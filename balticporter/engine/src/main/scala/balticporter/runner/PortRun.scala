@@ -865,6 +865,39 @@ final case class PortRun(
     if notices.nonEmpty then
       say(s"notice(s) shipped beside the emitted code: ${notices.map(_.getFileName).mkString(", ")}")
 
+    // ---- the upstream SERVICE DESCRIPTORS, with BOTH namespaces moved (ENGINE-LIMITS.md P5) ----
+    // The one deliverable of a port that is not `.scala`. Nothing in the pipeline could carry it: a
+    // provider is constructed reflectively from OUTSIDE the program, so the closure sees no
+    // instantiation and concludes correctly and uselessly that nothing has to be fixed — and with
+    // the resource absent the loader finds ZERO providers, at no compile error, no check count and
+    // no finding. Ungated on the artifact layer for the notices' reason above; scoped by the same
+    // two things — an empty declaration writes nothing, and the destination is `src_managed/`.
+    val declaredServices = manifest.map(_.serviceProviders).getOrElse(Nil)
+    declaredServices.foreach { src =>
+      // FATAL, `Provenance.notices`' rule exactly: a descriptor the port meant to ship and silently
+      // did not looks exactly like one it shipped — and this one is worse, because the library then
+      // answers "not registered" as a plausible wrong result rather than as an error.
+      if !Files.isRegularFile(src) then
+        sys.error(s"[$label] the manifest declares a service descriptor that is not there: $src. " +
+          "A `META-INF/services` resource the port does not ship makes every `ServiceLoader.load` " +
+          "find zero providers, with no compile error, no check count and no finding to say so " +
+          "(ENGINE-LIMITS.md P5).")
+    }
+    // `emittedName` and not `packageRenames`: the run's own rename PHASE answers for `typeRenames`
+    // and `subPackages` too, and a provider moved by one of those is a line a prefix map cannot
+    // translate (§4.56 — never a hand-written `startsWith`).
+    val descriptors = balticporter.tir.ServiceProviders.plan(declaredServices, emittedName)
+    if descriptors.nonEmpty then
+      val wrote = balticporter.tir.ServiceProviders.write(
+        descriptors, SbtGen.managedResources(portRoot, sourceSet.configName))
+      written += wrote.size
+      CheckReport.record(balticporter.tir.ServiceProviders.Name,
+        balticporter.tir.ServiceProviders.findings(descriptors, policySubs.dropsType,
+                     renaming = manifest.exists(_.effectivePackageRenames.nonEmpty)))
+      say(s"SERVICE PROVIDERS: ${descriptors.size} descriptor(s), " +
+        s"${descriptors.map(_.providers.size).sum} provider line(s), rewritten into this port's namespace")
+      println(balticporter.tir.ServiceProviders.summary(descriptors))
+
     // Support types a phase RETYPED code onto. Two feeds, one rule: what the phases DECLARE
     // (RequiresRuntime → RuntimePlan) and what a phase that cannot declare it hands over.
     written += plan.writeSources(emitDir)
@@ -2167,7 +2200,7 @@ final case class PortRun(
     * requirement is DERIVED from the same declaration the work is. */
   private def requiredChecks: Set[String] =
     PortRun.RequiredChecks ++
-      (if manifest.exists(_.serviceProviders.nonEmpty) then Set(ServiceProviders.Name) else Set.empty)
+      (if manifest.exists(_.serviceProviders.nonEmpty) then Set(balticporter.tir.ServiceProviders.Name) else Set.empty)
 
   private def verifyRecorded(): Unit =
     if CheckReport.enabled then
