@@ -5185,30 +5185,41 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
   boundary shifts every subsequent label name. Nothing is wrong with the output; the *diff* is
   unreadable, which is a measurement cost (`CLAUDE.md` §5).
 
-### 12.2.5 `findings.tsv` is a COMMITTED baseline that NO lane compares
+### 12.2.5 `findings.tsv` was a COMMITTED baseline that no lane compared — and the divergence it hid was a STALE ACCEPT, not a checkout
 
-`just baseline-accept` promotes five artifacts and the lanes gate on four of them: `counts.tsv`
-through `show_check_report`, `members.tsv`, `tests.tsv`, plus `expected-errors`/`expected-lost`.
-`findings.tsv` is promoted and never diffed, so **every row's DETAIL — the owner it is attributed to,
-the `UsageKind` it was seen at, and the running totals some checks print inside their own text — can
-move with nothing reporting it.** That is deliberate for the row IDs, which are position-sensitive
-and would churn; it is not deliberate for the content.
+`just baseline-accept` promotes seven artifacts and the lanes gated on six of them: `counts.tsv`
+through `show_check_report`, `members.tsv` through `just members-unchanged`, `tests.tsv` through the
+correlator's diff, plus `expected-errors` and `expected-lost`. `findings.tsv` was promoted and never
+diffed, so **every row's DETAIL — the owner it is attributed to, the `UsageKind` it was seen at, and
+the running totals some checks print inside their own text — could move with nothing reporting it.**
+That is deliberate for the row IDs, which are position-sensitive and would churn; it was never
+deliberate for the content, and `findings_baseline_guard` now compares the id-stripped file
+(`cut -f2-`) and fails the lane in either direction.
 
-Measured while reproducing wave 2's starting point in a git worktree: at the SAME commit that ships
-them, eight committed `findings.tsv` baselines carry rows this checkout cannot reproduce —
-`catalog(consulted)`'s `JS-G07`/`JS-G08` rows read `consulted N+3` on every libGDX DEPENDENT (and
-exactly N on the base), and two `portability(all)` rows on libgdx-test are attributed to
-`AsyncExecutor#<init>` at `TypeRefPos` where the baseline says `AsyncExecutor$156#newThread` at
-`MemberType`. **It is pre-existing**, which was established the only way it can be (`CLAUDE.md`
-§5.1): the parent commit was checked out in the same worktree and its run reproduced the divergence
-byte for byte, so it belongs to the checkout and not to the change. Every count is identical on both
-sides, every member digest is unchanged, and every lane is green — which is precisely the shape a
-baseline nothing compares produces.
+**The first thing it found was its own reason for existing, and the attribution recorded here was
+WRONG.** Eight committed baselines — every libGDX DEPENDENT, and not the base — carried rows the
+checkout could not reproduce: `catalog(consulted)`'s member-clash row, and two `portability(all)`
+rows on libgdx-test attributed to `AsyncExecutor#<init>` at `TypeRefPos` where the baseline said
+`AsyncExecutor$165#newThread` at `MemberType`. This section previously read that as belonging to the
+CHECKOUT — a worktree-versus-primary difference of the §5.4 family — on the evidence that the parent
+commit reproduced it byte for byte in the same worktree. That evidence is real and it does not
+support that conclusion: reproducing at the parent proves the divergence is PRE-EXISTING, which is
+equally true of a stale accept.
 
-Two things follow for anyone accepting a baseline from a worktree: the `findings.tsv` it promotes may
-not be what the primary checkout writes, and no run will tell them so. Gating the file is not
-obviously right — the IDs really would churn — but promoting a file nothing reads is worse than not
-promoting it, so this is recorded rather than absorbed.
+What settles it is the CONTENT of the row, which nobody had looked at. It reads
+`phase member-clash — consulted 0, fired 0, declarations 281`, and the base's own wave-2 commit moved
+that population `280 -> 220`. The dependents' number is therefore the one from BEFORE that commit:
+the baselines were last accepted at waves 0/1 (`git log -1 -- port-report/<dep>/baseline/findings.tsv`
+names them), the engine moved under them, and no gate could demand a re-accept because nothing
+compared the file. A declaration COUNT and an anonymous-class ordinal are not path-derived, so no
+symlink and no relativisation can produce either difference — this is `M11`'s shape exactly, one
+artifact over.
+
+The eight are re-accepted from a fresh sweep of every lane at the commit that ships the gate, and the
+gate is what keeps them current: the same drift now fails the lane on the run that causes it. The
+worktree caution below still stands on its own terms, and is now enforced rather than advised —
+re-run the lane before `just baseline-accept` (`CLAUDE.md` §5.1), because a baseline promoted from a
+`run-latest` that predates a later edit in the same wave is exactly what produced these eight.
 
 ### 12.3 Counted residues that are not defects
 

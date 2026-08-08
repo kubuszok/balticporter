@@ -239,6 +239,7 @@ gdx-measure:
     echo
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
 
     echo
     break_residue {{gdx_module}}/src_managed/main/scala
@@ -300,6 +301,7 @@ gdx-test-measure:
     echo
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -402,7 +404,9 @@ ashley-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
     show_check_report "$TREPORT"
+    findings_baseline_guard "$TREPORT"
 
     echo
     echo "-- test discovery --"
@@ -459,7 +463,7 @@ ashley-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-    headline "$ERRORS" "$TREPORT"
+    headline "$ERRORS" "$TREPORT" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
 # anim8-gdx, compiled TOGETHER with the ported libGDX core.
@@ -501,6 +505,7 @@ anim8-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -605,7 +610,9 @@ gltf-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
     show_check_report "$TREPORT"
+    findings_baseline_guard "$TREPORT"
 
     echo
     echo "-- test discovery --"
@@ -683,7 +690,7 @@ gltf-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-    headline "$ERRORS" "$TREPORT"
+    headline "$ERRORS" "$TREPORT" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
 # libgdx-screenmanager, compiled TOGETHER with the ported libGDX core.
@@ -729,6 +736,7 @@ screens-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -841,6 +849,7 @@ vfx-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -939,7 +948,9 @@ sg-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
     show_check_report "$TREPORT"
+    findings_baseline_guard "$TREPORT"
 
     echo
     echo "-- test discovery --"
@@ -1007,7 +1018,7 @@ sg-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-    headline "$ERRORS" "$TREPORT"
+    headline "$ERRORS" "$TREPORT" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
 # noise4j — the same gate as `sg-measure`, minus the run.
@@ -1050,6 +1061,7 @@ noise4j-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -1131,6 +1143,7 @@ jbump-measure:
     echo
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -1309,7 +1322,9 @@ liqp-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
     show_check_report "$TREPORT"
+    findings_baseline_guard "$TREPORT"
 
     echo
     echo "-- test discovery --"
@@ -1439,7 +1454,7 @@ liqp-measure:
       echo "   Every CLAUDE.md §4.4 form in this port is UNMEASURED until that line stops printing."
     fi
 
-    headline "$ERRORS" "$TREPORT"
+    headline "$ERRORS" "$TREPORT" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
@@ -2035,6 +2050,52 @@ lane-selfcheck:
     ( headline 0 "$T/td" ) > /dev/null 2>&1
     want "a STALE discovery marker is cleared by the next guard" "$?" "0"
 
+    echo "-- findings_baseline_guard --"
+    # The FIFTH promoted baseline and the one nothing read. Its whole point is that every COUNT can
+    # be identical while a row's owner, its UsageKind or a running total printed inside its own text
+    # has moved — so the fixtures below hold `counts.tsv` constant by construction and move only the
+    # content, which is exactly the shape that used to pass.
+    mkdir -p "$T/fb/baseline" "$T/fb/run-latest"
+    hdr='#id\tcheck\tkind\towner\tpath\tline\tdetail\n'
+    printf "$hdr"'aaa\tportability(all)\tJdk\tp.A#m\ta/A.java\t7\tsome detail\n' > "$T/fb/baseline/findings.tsv"
+    printf "$hdr"'aaa\tportability(all)\tJdk\tp.A#m\ta/A.java\t7\tsome detail\n' > "$T/fb/run-latest/findings.tsv"
+    out=$(findings_baseline_guard "$T/fb" 2>&1); rc=$?
+    want "IDENTICAL findings do not fail the lane" "$rc" "0"
+    ( headline 0 "$T/fb" ) > /dev/null 2>&1
+    want "…and headline exits 0 after it" "$?" "0"
+
+    # the same row, a DIFFERENT id — the churn the file was left ungated for. Must not fail.
+    printf "$hdr"'zzz\tportability(all)\tJdk\tp.A#m\ta/A.java\t7\tsome detail\n' > "$T/fb/run-latest/findings.tsv"
+    want "a row whose ID moved but whose CONTENT did not is not a change" \
+      "$(findings_baseline_guard "$T/fb" > /dev/null 2>&1; echo $?)" "0"
+
+    # a moved OWNER at an identical count — one row out, one row in, `counts.tsv` unchanged.
+    printf "$hdr"'aaa\tportability(all)\tJdk\tp.A$1#run\ta/A.java\t7\tsome detail\n' > "$T/fb/run-latest/findings.tsv"
+    out=$(findings_baseline_guard "$T/fb" 2>&1); rc=$?
+    want "a moved OWNER fails the lane, at an unchanged count" "$rc" "1"
+    case "$out" in *"FINDINGS CONTENT MOVED"*) ok "…and says what moved" ;; *) bad "…says what moved" ;; esac
+    case "$out" in *"baseline-accept"*) ok "…and names the promotion command" ;; *) bad "…names the promotion command" ;; esac
+    ( headline 0 "$T/fb" ) > /dev/null 2>&1
+    want "…and headline EXITS NON-ZERO for it, across the capture" "$?" "1"
+
+    # …and a lane that gated TWO reports must have named both, or the second's marker reaches nobody.
+    mkdir -p "$T/fb2/run-latest"
+    : > "$T/fb2/run-latest/findings-baseline-failed"
+    ( headline 0 "$T/fb" "$T/fb2" ) > /dev/null 2>&1
+    want "a SECOND report's marker fails the lane when headline is told about it" "$?" "1"
+
+    rm -f "$T/fb/baseline/findings.tsv"
+    printf "$hdr"'aaa\tportability(all)\tJdk\tp.A#m\ta/A.java\t7\tsome detail\n' > "$T/fb/run-latest/findings.tsv"
+    out=$(findings_baseline_guard "$T/fb" 2>&1); rc=$?
+    want "a MISSING findings baseline is fatal, never clean" "$rc" "1"
+    case "$out" in *"NO FINDINGS BASELINE"*) ok "…and says nothing is comparing the content" ;; *) bad "…says so" ;; esac
+
+    # …and a marker from a PREVIOUS run must not fail a run that is now acknowledged.
+    printf "$hdr"'aaa\tportability(all)\tJdk\tp.A#m\ta/A.java\t7\tsome detail\n' > "$T/fb/baseline/findings.tsv"
+    findings_baseline_guard "$T/fb" > /dev/null 2>&1
+    ( headline 0 "$T/fb" ) > /dev/null 2>&1
+    want "a STALE findings marker is cleared by the next guard" "$?" "0"
+
     echo
     [ "$fail" = "0" ] && echo "lane-selfcheck: PASS" || { echo "lane-selfcheck: FAILED"; exit 1; }
 
@@ -2086,7 +2147,14 @@ baseline-accept PORT:
     [ -f "$DIR/run-latest/findings.tsv" ] || { echo "no run-latest for {{PORT}} — run the migration first"; exit 1; }
     mkdir -p "$DIR/baseline"
     # Only DETERMINISTIC, position-free files are promoted:
-    #   findings.tsv / counts.tsv  — every check
+    #   findings.tsv / counts.tsv  — every check. `counts.tsv` is gated by `show_check_report` and
+    #                                `findings.tsv` by `findings_baseline_guard`, which diffs it with
+    #                                the ID COLUMN STRIPPED: the id is a hash with a `/2`, `/3`
+    #                                sequence assigned in line order, so an upstream whitespace edit
+    #                                renumbers rows that did not change. Ungated it hid eight stale
+    #                                dependent baselines for two waves (PROGRESS.md §12.2.5), because
+    #                                a moved OWNER, a moved `UsageKind` and a moved running total are
+    #                                none of them a count
     #   members.tsv                — one digest per emitted member; this is what makes "you changed
     #                                3 members you did not intend to" answerable before a compile,
     #                                and it is line-free so a member that only MOVED does not churn

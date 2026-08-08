@@ -764,6 +764,20 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   ungated on the grounds that deleting a test is somebody's decision — true of a deletion, false of
   a conversion regression, which removes the rows from both sides at once. It gates now; a real
   deletion is acknowledged by re-accepting, which is what makes the decision a recorded fact.
+- **…AND SO IS THE CONTENT OF `findings.tsv`, which was PROMOTED and never read.** The third
+  baseline nothing compared, and the one whose absence is hardest to see: every check COUNT can be
+  identical while a finding's OWNER, the `UsageKind` it was seen at, or a running total printed
+  inside its own text has moved — none of those is a count, so `counts.tsv` holds and the lane is
+  green over a changed answer. The file was left ungated for a good reason, and it is a reason about
+  ONE COLUMN: `Finding.id` is a hash with a `/2`, `/3` sequence assigned in LINE order, so an
+  upstream whitespace edit renumbers rows that did not change. `findings_baseline_guard` drops
+  exactly that column (`cut -f2-`) and diffs the six that carry meaning, in the writer's own sort, in
+  either direction. What it found first was its own justification: **eight dependent baselines had
+  been stale since waves 0/1**, carrying a declaration count the base's own commit had moved
+  `280 -> 220` — invisible to every other artifact, and mis-attributed in prose to a
+  worktree-versus-primary difference until somebody read the row rather than the diff summary
+  (`PROGRESS.md` §12.2.5). A count is not path-derived; a §5.4 explanation could never have produced
+  it.
 - **Change one thing, then measure.** Two changes measured together cost a full cycle to untangle
   and tell you nothing about either.
 - **A DRY RUN of one phase is not a measurement of the pipeline.** Running a single phase over a

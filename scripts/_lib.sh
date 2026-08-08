@@ -492,6 +492,66 @@ show_check_report() {
   echo "  full, untruncated findings: $dir/run-latest/findings.tsv"
 }
 
+# findings_baseline_guard <report-dir>
+#
+# THE FIFTH BASELINE, and the one `just baseline-accept` promoted while NOTHING compared it.
+#
+# `counts.tsv` is gated through the check report, `members.tsv` through `just members-unchanged`,
+# `tests.tsv` through the correlator's diff, and `expected-errors`/`expected-lost` by their own
+# guards. `findings.tsv` was promoted and never read — so every row's DETAIL (the owner a finding is
+# attributed to, the `UsageKind` it was seen at, the running totals some checks print inside their
+# own text) could move with nothing reporting it. A count that stays 100 while three of its hundred
+# rows now say something else is a green lane over a changed answer.
+#
+# WHAT IS COMPARED IS THE CONTENT, NOT THE ROW ID. `CheckReport.Finding.id` is a hash over
+# `check|kind|owner|path|detail` with a `/2`, `/3` sequence appended in LINE order, so an upstream
+# whitespace edit renumbers rows that did not change — which is the reason the file was left ungated
+# and it is a good one. `cut -f2-` drops exactly that column and leaves the six that carry meaning.
+# The remaining order is the writer's own sort (`check, kind, owner, path, line, detail`), identical
+# on both sides, so a plain `diff` pairs the rows a reader would pair.
+#
+# A MISSING baseline is FATAL, for `error_baseline_guard`'s reason: "nothing is comparing this" and
+# "this compares clean" are indistinguishable from the outside.
+#
+# The verdict is PRINTED here and EXITED in `headline`, through the marker file the other two use —
+# the diff is decided before the compile, and exiting here would take the compile and the
+# correlation with it.
+findings_baseline_guard() {
+  local dir="$1"
+  local base="$dir/baseline/findings.tsv" run="$dir/run-latest/findings.tsv"
+  local marker="$dir/run-latest/findings-baseline-failed"
+  mkdir -p "$dir/run-latest" 2>/dev/null
+  rm -f "$marker"
+  if [ ! -f "$run" ]; then
+    echo "  (no findings.tsv at $dir/run-latest — the migration recorded no checks)"
+    return 0
+  fi
+  if [ ! -f "$base" ]; then
+    echo "!! NO FINDINGS BASELINE — nothing is comparing this lane's finding CONTENT."
+    echo "   $base does not exist, so a changed owner, a changed UsageKind or a changed running"
+    echo "   total would print and pass. Seed it from this run's honest state:"
+    echo "     just baseline-accept <port>"
+    : > "$marker"; return 1
+  fi
+  local b="$MEASURE_TMP/findings-base-$$.tsv" r="$MEASURE_TMP/findings-run-$$.tsv"
+  grep -v '^#' "$base" | cut -f2- > "$b"
+  grep -v '^#' "$run"  | cut -f2- > "$r"
+  local moved
+  moved=$(diff "$b" "$r" | grep -c '^[<>]')
+  if [ "$moved" = "0" ]; then
+    echo "  findings vs baseline: $(grep -c '' < "$r") row(s), content unchanged (ids not compared)"
+    rm -f "$b" "$r"; return 0
+  fi
+  echo "!! FINDINGS CONTENT MOVED — $moved id-stripped line(s) differ from the committed baseline."
+  echo "   Every check COUNT can be identical while this moves: a finding's owner, the usage it was"
+  echo "   seen at and the totals printed inside its own text are none of them a count."
+  diff "$b" "$r" | grep '^[<>]' | head -20 | sed 's/^/     /'
+  [ "$moved" -gt 20 ] && echo "     … $((moved - 20)) more; full files: $base and $run"
+  echo "   If this is the change you made, ACKNOWLEDGE it: just baseline-accept <port>"
+  rm -f "$b" "$r"
+  : > "$marker"; return 1
+}
+
 # correlate <out-report-dir> [--scalac f] [--tests f] [--srcmap [scope=]f]...
 # Join compiler and test-runner output back to the MEMBER and the JAVA ORIGIN that produced it
 # (DESIGN.md §6.3, and the amendment that extends it to the TEST runner). Without this, a
@@ -536,12 +596,20 @@ correlate() {
   rm -f "$cap"
 }
 
-# headline <error-count> <report-dir>
+# headline <error-count> <report-dir> [more-report-dirs...]
 # One line carrying BOTH gates, so the check numbers never bury the compile-error count and the
 # compile-error count never hides the checks. `subject.txt` is the before->after fragment
 # CLAUDE.md §5 wants in the commit subject.
+#
+# EVERY dir given is checked for a deferred gate's marker, and a lane must name every dir it gated.
+# A two-module lane runs `show_check_report`/`findings_baseline_guard` over the LIBRARY's report and
+# the SUITE's, and then called this with one of them — so a gate that fired on the other wrote a
+# marker nothing read. The headline itself is still about the FIRST dir, which is the one whose
+# compile the error count belongs to.
 headline() {
   local errors="$1" dir="$2"
+  shift 2
+  local extra=("$@")
   local checks="(no check report)"
   [ -f "$dir/run-latest/subject.txt" ] && checks="$(cat "$dir/run-latest/subject.txt")"
   local tests=""
@@ -583,4 +651,13 @@ headline() {
     echo "!! this lane FAILED its test-discovery baseline — see the 'tests lost' line above"
     exit 1
   fi
+  # …and the FINDINGS-CONTENT gate, over every report this lane produced. Last of the three, because
+  # it is the one whose diff is already printed in full above.
+  local d
+  for d in "$dir" "${extra[@]}"; do
+    if [ -f "$d/run-latest/findings-baseline-failed" ]; then
+      echo "!! this lane FAILED its findings baseline ($d) — see the 'FINDINGS CONTENT MOVED' block above"
+      exit 1
+    fi
+  done
 }
