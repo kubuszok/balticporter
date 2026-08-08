@@ -5221,6 +5221,17 @@ worktree caution below still stands on its own terms, and is now enforced rather
 re-run the lane before `just baseline-accept` (`CLAUDE.md` §5.1), because a baseline promoted from a
 `run-latest` that predates a later edit in the same wave is exactly what produced these eight.
 
+**`port-map.tsv` IS THE SAME SHAPE AND IS STILL UNGATED — OPEN.** `just baseline-accept` promotes it;
+no lane compares it. It is not a hypothetical: publishing `Surface.MemberShape.form` moved **60
+member rows** in the libGDX base's map in one commit, and the only reason anybody saw it was that the
+commit was expected to move exactly those rows and somebody diffed the file by hand. A base's map
+decides a dependent's EMITTED TEXT (`TirEmitter.baseName`, and now the collapse comparison), so a row
+that changes there without an acknowledgement is the F3 failure with a larger blast radius. The
+mechanism is already written and is simpler than `findings_baseline_guard` — the map has no id column
+to strip, so it is a plain `diff` — and the reason it is recorded rather than built is that this wave
+measured the gate it did build and did not measure a second one. Next agent: build it beside
+`findings_baseline_guard`, with its own `lane-selfcheck` cell, and expect the promotion to be flat.
+
 ### 12.3 Counted residues that are not defects
 
 - **`catalog(unreached)` GROWS by one on every port each time a MODERN-JAVA row is mechanised, and
