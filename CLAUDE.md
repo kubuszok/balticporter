@@ -504,6 +504,27 @@ So:
 - **Prefer running ported tests over any number of further compile fixes.** Assertions are the only
   evidence of behaviour this project can have.
 - **Read the emitted output**, not just the count, when confirming a fix.
+- **AN IDIOM TRANSFORM'S SAFETY ARGUMENT IS A REFUSAL ENUMERATION, NEVER A SUITE RESULT.** Every
+  other layer here derives its mandate from a DIFFERENCE — java does X, scala does Y — and its
+  evidence is that the port stopped doing Y. An idiom transformer has no such mandate: the faithful
+  translation already exists, compiles and behaves identically (`DESIGN.md` §8.15 says what licenses
+  it instead), so it moves code that already means the right thing and a green suite is exactly what
+  it would produce either way. Suites are necessary and not sufficient, and this repository has the
+  receipts one paragraph up. So for each transformer the set of behavioural differences between the
+  java shape and the scala shape is ENUMERATED, and every member is (i) made impossible by a
+  structural GUARD, (ii) made impossible by the SHAPE the transformer emits, or (iii) COUNTED. **A
+  transformer that cannot enumerate its deltas does not ship.** And the enumeration is what a run
+  reports: the refusal population is a lane, one row per declined site NAMING THE GUARD, because a
+  count of conversions says nothing about what was declined and `refused = 0` is a bar met by
+  converting nothing.
+- **…and such a wave's `members.tsv` blast is CLASSIFIED, not minimised.** These waves move emitted
+  text by design, so 0 digests is the wrong gate. The gate is that every changed digest is
+  attributable — to a declaration this phase recorded a `Decision` for, to a declaration holding a
+  call site it rewrote, or to a declaration whose porter NOTES changed — and the residue is EMPTY. A
+  digest that moved with nothing to attribute it to is an unexplained rewrite and the commit does not
+  land. Measured: the SAM wiring came back with two members no decision explained, and they were an
+  emitted NAME keyed on a program-global counter renumbering itself (`ENGINE-LIMITS.md` M10's shape);
+  the gate is what found it, and a "small enough" reading of the diff would not have.
 - **"REFUSE LOUDLY" IS A CLAIM ABOUT THE EMITTED TEXT, and you do not control whether it holds.**
   Refusing a translation and leaving the construct alone is right (`ENGINE-LIMITS.md` M6) — the part
   that is not a decision is whether scalac then rejects what was left. Where the untranslated form

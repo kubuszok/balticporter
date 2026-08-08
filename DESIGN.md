@@ -2988,6 +2988,117 @@ collapse degenerates to the def-pair whenever its guards fail.
 not a synthesis. The audit found the hand port **authored** getters to complete pairs; that is
 authoring, permanently outside mechanism scope.
 
+#### The `var`/`val` collapse — DESIGNED, its residue MEASURED, and not yet built
+
+The count the deferral was gated on has been taken and the design is here rather than in a scratch
+file, because the gate is met: `ported/sge/src_managed/main` carries **280 `$field` DECLARATIONS and
+2,998 references** to a name no human wrote, and `ported/ssg-liquid` 13 references. The population
+the collapse can actually reach is smaller and is PUBLISHED on every run rather than predicted:
+`BeanCollapseCensus` reports **91 collapsible of 137 configured pairs** on the libGDX base — the
+intersection of *configured* ∩ *trivial body* ∩ *unanchored closure* ∩ *no override below* — with 32
+declined for `ComputedBody` and 14 for `OverriddenBelow`. That is §8.5's deferred half measured, and
+it is what a wave-2 agent starts from.
+
+**Kind: the SAME §1(b), no new phase, and NO `RuleScope`.** The pairs map already IS the include list
+and the "Rejected" list above forbids a second knob beside it. §1(b)'s adds-vs-retypes rule chooses a
+DEFAULT for a scope; it does not say every phase has one, and a phase whose policy is a per-key
+include list has its no-op in the empty map. A scope beside it would let a pair be listed and then
+silently scoped out, which is the exact failure §1(b) exists to prevent.
+
+**How a port asks for it — the pair's VALUE gains an object form,** which is
+`TypeRedirectTransform`'s landed precedent read once more (`redirects { "a.B" = "c.D" }` beside
+`"a.B" = { to = "c.D", memberRenames { … } }`, read apart by `ConfigView.isObject`, a PROBE that does
+not count as a read so the unread-key refusal still catches a misspelling inside an entry):
+
+```hocon
+pairs {
+  "com.foo.MapLayer#opacity" = "getOpacity/setOpacity"                    # def-pair, unchanged
+  "com.foo.MapLayer#name"    = { accessors = "getName/setName", target = "var" }
+  "com.foo.Map#properties"   = { accessors = "getProperties",   target = "val" }
+}
+```
+
+`target` defaults to `def-pair`, so every existing port and every existing config is byte-identical
+by construction — §1(b)'s no-op met at the ENTRY level, which is the right granularity for a per-key
+policy. The Scala constructor mirrors the two halves the way `TypeRedirectTransform` does (a second
+map keyed by the same key), never a second config home.
+
+**`SurfacePolicy`: the fingerprint MUST include the target.** `surfaceFingerprint` renders
+`pairs.toList.sorted` today; two configurations that differ only in `target` would compare EQUAL,
+which is `ENGINE-LIMITS.md` CT9's recorded failure exactly — `SurfaceMissing` cannot see the
+difference and a same-name pair can be neither compared nor composed. One line, easy to miss,
+load-bearing. `MergeablePolicy` is NOT owed while no dependent constructs a `bean-properties` phase,
+which is a fact about today's ports and is re-asked with one grep before the wave writes policy
+(§1.5's instance-count question).
+
+**THE COLLAPSE RETYPES THE SURVIVING GETTER SYMBOL — it never drops the pair and mints a `var`.** The
+two produce the same emitted text and only one of them is visible to anything. `Pipeline.runTraced`
+derives what a phase moved by comparing each owned symbol's `info` ACROSS the phase, so a retype is a
+`Patch.retyped` row and a drop-plus-mint is not: the dropped symbol has no post-phase info, the
+minted one has no pre-phase info, and the pair cancels to nothing (§8.14 says exactly this about the
+shape). Mint the `var` and the collapse owes no lane either — `rewrite-callsites` reports 0,
+`idiom(residue)` reports 0, and the usages the phase failed to rewrite are invisible to the one
+instrument built to find them. It is also what keeps the rest of the run coherent: the surviving
+symbol carries the `usagesOf` edges every call-site rewrite reads, the `srcmap` row that attributes
+an error to a java line, and the `port-map.tsv` member row a dependent's `base-surface` compares
+against. So: **retype the GETTER** (a `MethodType(Nil, R)` becomes `R`), **drop the SETTER** (java's
+`setX` has no survivor; the `var`'s `x_=` is scala's own generated member, not a declaration this IR
+holds), and drop the backing field only where the `$field` rename gave it a name nothing else
+references. Pin the direction with a fixture asserting on `Patch.retyped`, not only on emitted text.
+
+Because it moves an `info`, the phase `extends Rewrite` with `accountedBy = Set(IdiomCheck.Residue)`
+and **must not name `policy`**: a declared key that never fired is a different residue from a slot
+whose two sides disagree (§8.14).
+
+**The three obligations, each a structural guard with a fixture, none of them approximable** — and
+they are the whole safety argument:
+
+1. **a `var` cannot be overridden.** Legal only where the `OverrideGraph.Closure` has no member BELOW
+   the declaring class. An interface ABOVE is fine (a scala `var` implements an abstract `def x` and
+   `def x_=`); a subclass overriding the accessor is not, and an ANCHORED closure refuses the whole
+   component. Whole-or-none, as for every other edit a consumer applies;
+2. **deleting the accessors requires that every call provably route through the pair.**
+   `XrefIndex.usagesOf` over both accessor symbols, every one of them a call this phase rewrites. A
+   `Tree.MethodRef` or a value-position `Select` is already a refusal in the def-pair path and stays
+   one;
+3. **direct field access elsewhere in the class must be equivalent post-collapse.** The class's own
+   body reads `this.x$field`; after the collapse those become `this.x`, which routes through the
+   accessor. Equivalent iff the getter's body is exactly `return this.f` and the setter's exactly
+   `this.f = v` — the TRIVIAL-BODY test. A computed getter or a side-effecting setter is precisely
+   why the def-pair keeps bodies verbatim, and is a refusal here rather than a widening.
+
+**Edge cases the suite must pin**, each an `assertEmits`/`assertDecides` fixture plus a refusal
+assertion where the answer is no: a computed getter (REFUSED, `ScopedOut` + `detail`); a validating
+or listener-firing setter (REFUSED); getter and setter touching DIFFERENT fields (REFUSED — there is
+no single field to become the `var`); a subclass overriding the getter (whole component REFUSED); an
+INTERFACE above with no subclass below (COLLAPSES, and the emitted `var x` must satisfy the trait's
+abstract `def x` — pin both halves); a `private` field with `public` accessors (the `var`'s
+visibility is the ACCESSORS', because the field is the implementation and the pair is the surface —
+taking the field's would silently narrow the port's API with a green compile); a `$field` rename the
+collapse makes unnecessary (the field's name returns to `x` and the `renamed-member` /
+`widened-visibility` notes for it must DISAPPEAR — two notes per collapsed pair, a large share of the
+wave's digest blast, and it must be predicted rather than discovered); a java-`final` single-write
+field (emit whatever the existing field emission says, and RECORD it as a candidate for
+`PROGRESS.md`'s open `val` item — fixing that inside this wave is two changes in one measurement);
+and TRIVIA, where the getter's and the setter's Javadoc both lose their declaration, so both go to
+the surviving node's `leading` in DECLARATION ORDER and the second is RECOVERED with its coordinates
+where they disagree (`trivia(recovered)` will move; `trivia(lost)` may not, and that is a gate).
+
+**Perf is zero and the argument is bytecode-exact**: a scala `var x: T` emits a private field plus
+`x()`/`x_$eq()`, which is what the `def x` / `def x_=` pair already emits, which is what java's
+`getX()`/`setX()` already emitted — three spellings, one class file. The one runtime-visible delta is
+the JVM METHOD NAMES, which matters only to a reflective reader; that is K21 face 2's seam, so **a
+port declaring both `PublicFieldAccessorTransform` and a collapse on one type is asking for two
+opposite things and must be refused and counted**, with the finding naming both policy keys.
+
+**Wave shape**: (1) the `Target` config/constructor + fingerprint, NO entry using it — gate is 0
+digests everywhere and a MOVED `policy=` fingerprint on the ports carrying the phase, accounted;
+(2) the mechanism + the three obligations + refusals, spec'd, still no entry; (3) enable on five to
+ten hand-read libGDX pairs, measured with `just measure-all` because the base's six dependents ARE
+the measurement; (4) widen to the 91 the census publishes. §1.5's machinery is exercised throughout:
+`SurfacePolicy` fingerprint, published `port-map.tsv` member rows (the accessors vanish, the property
+gains a name), `base-surface` on six dependents.
+
 Refusals, each counted, each with a spec: an accessor overriding an external member — **the whole pair
 is skipped**, because a renamed getter with an anchored setter is half a property; a **fluent** setter
 returning the declaring type (`o.x = v` is `Unit` and a chain has no assignment rendering); a

@@ -5086,6 +5086,25 @@ already goes.
 
 Maintained by deletion. Items are ordered by what they block, not by size.
 
+### 12.0 The bean-pair `var`/`val` collapse — DESIGNED and MEASURED, not built
+
+The idiom layer's second transformer (`DESIGN.md` §8.5's "The `var`/`val` collapse", which carries
+the whole obligation set, the config shape, the `Patch.retyped` rule and the four-commit wave shape).
+Everything a wave needs is committed; what is missing is the code.
+
+- **The population is published on every run and is 91 of 137** configured pairs on the libGDX base —
+  the only port carrying a `bean-properties` phase — with 32 declined `ComputedBody` and 14
+  `OverriddenBelow`. The residue it removes is **280 `$field` declarations and 2,998 references** in
+  `ported/sge/src_managed/main`, 13 references in `ported/ssg-liquid`.
+- **The two things a wave will get wrong if it does not read §8.5 first**: the collapse RETYPES the
+  surviving getter symbol rather than dropping the pair and minting a `var` (a drop-plus-mint is
+  invisible to `Pipeline.runTraced`, so the phase would owe no `accountedBy` lane and every
+  unrewritten usage would be unreported); and `surfaceFingerprint` must include the `target`, or two
+  configurations that differ only in it compare EQUAL, which is `ENGINE-LIMITS.md` CT9.
+- **It is measured with `just measure-all`, never `just gdx-measure`** — the base's six dependents
+  read its `base-surface` and its published `port-map.tsv`, and a base port's green numbers are not
+  evidence about its dependents (§1.5).
+
 ### 12.1 Provenance coverage — decisions that are not yet recorded
 
 - **`TestFrameworkTransform`'s synthesised `beforeAll`/`afterAll` record no decision.** They are
@@ -5245,6 +5264,13 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
   nothing counted a path nobody had exercised. Its non-vacuity is therefore a FIXTURE (a five-line
   spec phase retypes one `Object` operand to `java.lang.Long` and the consult fires), which is
   `JS-G12`'s evidence shape read in the other direction.
+- **`try-resource` — 0 on all fifteen, and the reason is the CORPUS rather than the lowering.** A
+  literal `try (` appears **0 times** across every upstream tree this engine parses, so the whole
+  JLS 14.20.3 lowering — one of the most intricate pieces of the emitter — is structurally
+  unreachable on this corpus and its zero says nothing about whether it works. Its evidence is
+  therefore its FIXTURES and nothing else, which is the same footing `cast-conversion` is on one
+  bullet up. Recorded because a reader who takes the zero as coverage is reading it backwards, and
+  because the next library to arrive with a `try`-with-resources is the first to test it.
 - **2 collection-closure findings on libGDX**, both `java.util.concurrent`: portability decides those
   first.
 - **`Collectors.toSet` / `toMap` deliberately unmapped** (`ENGINE-LIMITS.md` K6): each needs a different
