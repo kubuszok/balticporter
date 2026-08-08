@@ -159,6 +159,108 @@ class IdiomCensusSpec extends PortSuite:
     assertIdiomRefuses(p, IdiomKind.SamLambda, "SelfReference", "C#make")
   }
 
+  test("…and an inherited DEFAULT METHOD is refused too — `java.lang.Object` was never the whole list") {
+    // The enumeration guard 4 rests on is "the members a bare reference can reach that a lambda
+    // would re-resolve", and it was spelled as `java.lang.Object`'s. That is only the half every
+    // anonymous class inherits UNCONDITIONALLY. A functional interface may also carry `default`
+    // methods — `java.util.Comparator` ships six — and java binds a bare `helper()` inside the anon
+    // to the INTERFACE's, through the anon instance. A lambda has no such member, so the emitted
+    // call either resolves to nothing or, worse, SILENTLY re-resolves to a same-named member of the
+    // enclosing class. Zero corpus sites; this fixture is the whole evidence.
+    val p = portAll(List(
+      "F.java" -> """interface F {
+                    |  void go();
+                    |  default int helper() { return 7; }
+                    |}""".stripMargin,
+      "C.java" -> """class C {
+                    |  F make(final int b) {
+                    |    return new F() { public void go() { System.out.println(helper() + b); } };
+                    |  }
+                    |}""".stripMargin), new SamLambdaTransform)
+    assertIdiomRefuses(p, IdiomKind.SamLambda, "SelfReference", "C#make")
+  }
+
+  test("…and an inherited interface CONSTANT is answered by the QUALIFIER, not by this guard —\n" +
+       "     which is why it CONVERTS and is still correct") {
+    // The other half of what an interface contributes, and it was PREDICTED as a second face of the
+    // defect above and MEASURED not to be one. A field declared in an interface is implicitly
+    // `public static final` (JLS 9.3) and is inherited, so java binds a bare `K` inside the anon to
+    // the interface's — but the frontend does not hand that over as a bare reference: it resolves
+    // the implicit static access to `Select(Ident(F), F#K)`, so the emitted Scala names `F` and
+    // re-resolves to the same constant with or without a lambda around it.
+    //
+    // Asserted on the EMITTED QUALIFIER and not merely on the conversion, because the qualifier IS
+    // the mechanism: a `converts` assertion alone would go on passing if the frontend ever started
+    // emitting the bare form, which is precisely the shape the guard next door exists for.
+    val p = portAll(List(
+      "F.java" -> """interface F {
+                    |  int K = 3;
+                    |  void go();
+                    |}""".stripMargin,
+      "C.java" -> """class C {
+                    |  F make(final int b) {
+                    |    return new F() { public void go() { System.out.println(K + b); } };
+                    |  }
+                    |}""".stripMargin), new SamLambdaTransform)
+    assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
+    assertEmits(p, "F.K")
+  }
+
+  test("…and a member of an ENCLOSING anonymous class is NOT one of those, however it is declared —\n" +
+       "     java resolves a bare name INNERMOST-FIRST, and only the INNER anon's own members move") {
+    // The cell that decides how wide guard 4's complement may be, and it is a corpus shape rather
+    // than an invented one: this is `Pixmap.downloadFromUrl`. The inner `Runnable`'s body calls
+    // `failed(t)` — a member of the OUTER anonymous class, DECLARED by the interface that one
+    // implements. Read as "the owner is a type that does not lexically enclose the site" the guard
+    // refuses it, because `L` is not an enclosing type; read as the ANON'S OWN ANCESTRY it converts,
+    // because the inner `Runnable` does not inherit `failed` and java therefore bound it to the
+    // enclosing instance — which a lambda around the inner one does not move. Measured at
+    // `idiom(converted) 83 -> 82` on the libGDX base for the wide reading, on a site that was never
+    // a defect.
+    val p = portAll(List(
+      "L.java" -> """interface L {
+                    |  void handle(int code);
+                    |  void failed(java.lang.Throwable t);
+                    |}""".stripMargin,
+      "C.java" -> """class C {
+                    |  L make(final int b) {
+                    |    return new L() {
+                    |      public void handle(int code) {
+                    |        java.lang.Runnable r = new java.lang.Runnable() {
+                    |          public void run() {
+                    |            try { System.out.println(code + b); }
+                    |            catch (java.lang.Throwable t) { failed(t); }
+                    |          }
+                    |        };
+                    |        r.run();
+                    |      }
+                    |      public void failed(java.lang.Throwable t) { t.printStackTrace(); }
+                    |    };
+                    |  }
+                    |}""".stripMargin), new SamLambdaTransform)
+    // the OUTER anon has two members, so it is `BodyNotSingle`; the INNER one is the subject here.
+    assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
+  }
+
+  test("…and a NESTED functional interface's own QUALIFIER is not mistaken for one of those —\n" +
+       "     an over-refusal here would decline a large share of the real population") {
+    // The cell that keeps guard 4's complement honest. `Outer.F` reaches the body as an `Ident`
+    // whose symbol's OWNER is `Outer` — a TYPE, and not one of the site's enclosing types — which
+    // is exactly the shape the guard refuses. It is a TYPE REFERENCE, not a member reference, and a
+    // type reference re-resolves identically under a lambda.
+    val p = portAll(List(
+      "Outer.java" -> """public class Outer {
+                        |  public interface F { void go(); }
+                        |  public static final int K = 3;
+                        |}""".stripMargin,
+      "C.java" -> """class C {
+                    |  Outer.F make(final int b) {
+                    |    return new Outer.F() { public void go() { System.out.println(Outer.K + b); } };
+                    |  }
+                    |}""".stripMargin), new SamLambdaTransform)
+    assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
+  }
+
   test("…and a QUALIFIED OUTER `this` is NOT refused — the test is on the SYMBOL, not the node") {
     // The cell that decides whether the transformer is worth having: `Outer.this.field` is most of
     // the real population, and a guard written on the node KIND would decline every one of them.

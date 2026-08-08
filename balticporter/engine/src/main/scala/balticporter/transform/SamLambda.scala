@@ -146,7 +146,7 @@ object SamLambda:
               if d.rhs.isEmpty then refuse(Guard.BodyNotSingle)
               else if d.tparams.nonEmpty then refuse(Guard.GenericMethod)
               else if name != m || d.paramss.flatten.sizeIs != arity then refuse(Guard.MethodMismatch)
-              else if selfReferences(d, anon.symbol) then refuse(Guard.SelfReference)
+              else if selfReferences(d, anon.symbol, ancestryOf(nw, anon)) then refuse(Guard.SelfReference)
               else if !captures(d, anon.symbol) then refuse(Guard.NonCapturing)
               else Verdict.Convert(d, iface, javaClassNameOf(anon))
             case _ => refuse(Guard.BodyNotSingle)
@@ -173,29 +173,95 @@ object SamLambda:
     * this guard's own fixture, which is the only place it exists: zero corpus sites today.
     *
     * Guard 3 has already established that the anon body is exactly ONE method, so the members a
-    * bare reference can reach that a lambda would re-resolve are enumerable and small: the public
-    * members of `java.lang.Object` (which is what every anonymous class inherits and what java
-    * bound to the ANON), and the anon's own SAM method reached recursively. Both are a bare
-    * `Tree.Ident` whose symbol's OWNER says which it is — a structural test, and the same shape
-    * §4.56 asks for. A reference to an enclosing class's own member has that class as its owner and
-    * is untouched, which is the case that must keep working. */
-  private def selfReferences(d: Tree.DefDef, anonSym: SymId)(using p: Program): Boolean =
+    * bare reference can reach THROUGH THE ANON are exactly the anon's own — and that set was
+    * spelled as `java.lang.Object`'s public members plus the anon's own SAM method. That is only
+    * the half every anonymous class inherits UNCONDITIONALLY. An anonymous class also inherits
+    * whatever THE SAM INTERFACE AND ITS ANCESTORS declare: a `default` method
+    * (`java.util.Comparator` ships six) and, in principle, an interface CONSTANT. A bare `helper()`
+    * inside the anon binds to the interface's default THROUGH THE ANON INSTANCE; a lambda inherits
+    * nothing at all, so the emitted reference either resolves to nothing — loud — or SILENTLY
+    * re-resolves to a same-named member of the enclosing class, which is the §4.4-shaped half and
+    * the one no count can see. (The CONSTANT face was predicted and MEASURED not to be one: the
+    * frontend resolves the implicit static access to `Select(Ident(F), F#K)`, so the emitted
+    * reference names the interface and needs no guard — `IdiomCensusSpec` pins the qualifier.)
+    *
+    * ==And the set is the ANON'S ANCESTRY, not "every type that is not lexically enclosing"==
+    * Those two differ on exactly the shape java's resolution rule is about, and the wider one costs
+    * a correct conversion. Java resolves a bare name INNERMOST-FIRST (JLS 15.12.1): the anon's own
+    * members — declared, or inherited from the interface and from `Object` — win, and only then does
+    * an ENCLOSING instance's. So a reference the anon does NOT inherit was bound to an enclosing
+    * instance in java and is bound to the same enclosing instance under a lambda, whatever type
+    * happens to DECLARE it. Written as "the owner is a type that does not lexically enclose the
+    * site", the guard refused `Pixmap.downloadFromUrl`'s inner `Runnable`, whose body calls
+    * `failed(t)` — a member of the OUTER anonymous class, declared by the interface THAT one
+    * implements, which no lambda around the inner one moves. Measured: `idiom(converted) 83 -> 82`
+    * on the libGDX base for one site that was never a defect. */
+  private def selfReferences(d: Tree.DefDef, anonSym: SymId, ancestry: Set[SymId])
+                            (using p: Program): Boolean =
     d.rhs.exists(b => StandardTraversal.scanTerm(b, false) { (acc, t) =>
       acc || (t match
         case Tree.This(c, _, _)  => c == anonSym
         case Tree.Super(c, _, _) => c == anonSym
         // the bare, lexically-resolved half — see the doc above
-        case Tree.Ident(s, _, _) => p.symbolOf(s).exists { sym =>
-          sym.owner == anonSym ||
+        case Tree.Ident(s, _, _) => !namesAType(s) && p.symbolOf(s).exists { sym =>
+          sym.owner == anonSym || ancestry.contains(sym.owner) ||
             p.symbolOf(sym.owner).exists(_.fullName == SamLambda.JavaLangObject)
         }
         case _ => false)
     })
 
-  /** the root every java class inherits from, and therefore the owner of every member a bare
-    * reference inside an anonymous body could reach that the anonymous body did not declare. A fact
-    * about java, spelled once. */
+  /** the root every java class inherits from, and therefore the owner of the members every
+    * anonymous class inherits whatever it implements. Kept as a NAME because `java.lang.Object` is
+    * never a parent the tree writes down — it is the implicit one — so an ancestry walk over
+    * declared parents cannot reach it. A fact about java, spelled once. */
   private val JavaLangObject = "java.lang.Object"
+
+  /** the anonymous class's own strict ANCESTRY — the SAM interface it named and every parent of
+    * that this program DECLARES, transitively.
+    *
+    * Seeded from `nw.tpt` rather than from the anon's symbol, because an anonymous class's TIR
+    * symbol carries no parent list: the type java wrote at the `new` IS its one declared parent.
+    * From there the walk is over `Tree.ClassDef.parents`, so a program-declared super-interface
+    * bearing a `default` method is reached and an EXTERNAL one is not — which is the honest state
+    * rather than a guess: the members of a type this run cannot read are not a set this phase can
+    * enumerate, and `Guard.Unreadable` is what covers a target the frontend could not resolve at
+    * all. Cycle-safe and fuel-bounded, for `serializableAncestry`'s reason. */
+  private def ancestryOf(nw: Tree.New, anon: Tree.AnonClass)(using p: Program): Set[SymId] =
+    def headSym(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s)      => Some(s)
+      case TypeRepr.AppliedType(tc, _) => headSym(tc)
+      case _                           => scala.None
+    val out  = collection.mutable.Set.empty[SymId]
+    val work = collection.mutable.Queue.from(headSym(nw.tpt.tpe))
+    var fuel = 256
+    while work.nonEmpty && fuel > 0 do
+      fuel -= 1
+      val s = work.dequeue()
+      if s != SymId.None && out.add(s) then
+        p.definitionOf(s).collect { case cd: Tree.ClassDef => cd }.foreach { cd =>
+          cd.parents.foreach {
+            case tt: TypeTree => headSym(tt.tpe).foreach(work.enqueue)
+            case t: Term      => headSym(t.tpe).foreach(work.enqueue)
+          }
+        }
+    out.toSet
+
+  /** does this `Ident` name a TYPE rather than a member?
+    *
+    * It has to be asked, and it is the difference between a guard and an over-refusal: a QUALIFIER
+    * is an `Ident` too, and a type NESTED INSIDE the SAM interface is owned by a symbol the ancestry
+    * set above contains. The emitter writes fully-qualified names for types (§6), so a type
+    * reference cannot re-resolve when a lambda replaces the anonymous class, and refusing one would
+    * be a refusal with no defect behind it.
+    *
+    * A class symbol's `info` is the class `TypeRef` pointing at ITSELF, which a field of that same
+    * type does not satisfy — so this is exact rather than a name test (§4.56), and it answers for an
+    * external symbol, which has no `Definition` to look up. */
+  private def namesAType(s: SymId)(using p: Program): Boolean =
+    p.definitionOf(s).exists(_.isInstanceOf[Tree.ClassDef]) ||
+      p.symbolOf(s).exists(_.info match
+        case TypeRepr.TypeRef(_, head) => head == s
+        case _                         => false)
 
   /** what one conversion was, carried from the rewrite to the attribution one hook later. */
   private[transform] final case class Converted(iface: String, javaClassName: String,
