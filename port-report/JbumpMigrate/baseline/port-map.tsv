@@ -182,7 +182,7 @@ member	com.dongbat.jbump.World#cellMaxY	sge.jbump.World#cellMaxY	Renamed	-	com/d
 member	com.dongbat.jbump.World#cellMinX	sge.jbump.World#cellMinX	Renamed	-	com/dongbat/jbump/World.java	35	d81a788e2c7f50c6	vis=private
 member	com.dongbat.jbump.World#cellMinY	sge.jbump.World#cellMinY	Renamed	-	com/dongbat/jbump/World.java	35	c4c0433153217171	vis=private
 member	com.dongbat.jbump.World#cellSize	sge.jbump.World#cellSize	Renamed	-	com/dongbat/jbump/World.java	39	bcf2d7703eba9a3d	vis=private
-member	com.dongbat.jbump.World#check(Item,float,float,CollisionFilter)	sge.jbump.World#check(Item<?>,float,float,CollisionFilter)	Renamed	-	com/dongbat/jbump/World.java	414	b42b8b0cf01ea06a	
+member	com.dongbat.jbump.World#check(Item,float,float,CollisionFilter)	sge.jbump.World#check(Item<?>,float,float,CollisionFilter)	Renamed	-	com/dongbat/jbump/World.java	414	46f3bc8b594a135e	
 member	com.dongbat.jbump.World#check_cols	sge.jbump.World#check_cols	Renamed	-	com/dongbat/jbump/World.java	410	8ccebfe36f4e5ede	vis=private
 member	com.dongbat.jbump.World#check_projectedCols	sge.jbump.World#check_projectedCols	Renamed	-	com/dongbat/jbump/World.java	411	78850c82d9a3d842	vis=private
 member	com.dongbat.jbump.World#check_result	sge.jbump.World#check_result	Renamed	-	com/dongbat/jbump/World.java	412	03297dc90c8a930c	vis=private
@@ -191,8 +191,8 @@ member	com.dongbat.jbump.World#countCells()	sge.jbump.World#countCells()	Renamed
 member	com.dongbat.jbump.World#countItems()	sge.jbump.World#countItems()	Renamed	-	com/dongbat/jbump/World.java	308	40638ef3890ef6d1	
 member	com.dongbat.jbump.World#getCellSize()	sge.jbump.World#getCellSize()	Renamed	-	com/dongbat/jbump/World.java	465	e71640b5c1201e45	
 member	com.dongbat.jbump.World#getCells()	sge.jbump.World#getCells()	Renamed	-	com/dongbat/jbump/World.java	296	3274f640bca4b0e4	
-member	com.dongbat.jbump.World#getCellsTouchedByRay(float,float,float,float,ArrayBuffer)	sge.jbump.World#getCellsTouchedByRay(float,float,float,float,ArrayBuffer<Cell>)	Renamed	-	com/dongbat/jbump/World.java	136	e1c2a0bd0d730a87	
-member	com.dongbat.jbump.World#getCellsTouchedBySegment(float,float,float,float,ArrayBuffer)	sge.jbump.World#getCellsTouchedBySegment(float,float,float,float,ArrayBuffer<Cell>)	Renamed	-	com/dongbat/jbump/World.java	109	4eb456bb4531693c	
+member	com.dongbat.jbump.World#getCellsTouchedByRay(float,float,float,float,ArrayBuffer)	sge.jbump.World#getCellsTouchedByRay(float,float,float,float,ArrayBuffer<Cell>)	Renamed	-	com/dongbat/jbump/World.java	136	723b85978e76cd32	
+member	com.dongbat.jbump.World#getCellsTouchedBySegment(float,float,float,float,ArrayBuffer)	sge.jbump.World#getCellsTouchedBySegment(float,float,float,float,ArrayBuffer<Cell>)	Renamed	-	com/dongbat/jbump/World.java	109	033bbb6f302d60f1	
 member	com.dongbat.jbump.World#getCellsTouchedBySegment_visited	sge.jbump.World#getCellsTouchedBySegment_visited	Renamed	-	com/dongbat/jbump/World.java	107	c6440da704e5588a	vis=private
 member	com.dongbat.jbump.World#getDictItemsInCellRect(float,float,float,float,LinkedHashSet)	sge.jbump.World#getDictItemsInCellRect(float,float,float,float,LinkedHashSet<Item<?>>)	Renamed	-	com/dongbat/jbump/World.java	92	890335f018d6f764	vis=private
 member	com.dongbat.jbump.World#getInfoAboutItemsTouchedByRay(float,float,float,float,CollisionFilter,ArrayBuffer)	sge.jbump.World#getInfoAboutItemsTouchedByRay(float,float,float,float,CollisionFilter,ArrayBuffer<ItemInfo>)	Renamed	-	com/dongbat/jbump/World.java	203	c716af0e89432907	vis=private

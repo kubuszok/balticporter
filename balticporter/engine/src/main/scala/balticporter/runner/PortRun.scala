@@ -2034,11 +2034,14 @@ final case class PortRun(
     * transformer will never see, and over- or under-counts depending on which surface phase moved
     * what. So placement is not scheduling here — it is the measurement:
     *
-    *   - the SAM census and the `return this` census go FIRST, which is where their transformers
-    *     go, so the descriptors and the return types they match are java's own. A
-    *     `CollectionsTransform` retarget moving `java.util.Comparator` to `scala.math.Ordering`
-    *     changes what a SAM conversion would ascribe to, and a census asked afterwards would
-    *     publish a denominator that is not the population the phase will meet;
+    *   - the SAM TRANSFORMER and the `return this` census go FIRST, so the descriptors and the
+    *     return types they match are java's own. A `CollectionsTransform` retarget moving
+    *     `java.util.Comparator` to `scala.math.Ordering` changes what a SAM conversion would
+    *     ASCRIBE to, and a phase asked afterwards would write a type java never named at that
+    *     site. The SAM CENSUS that stood here through wave 0 is RETIRED, and by the rule that put
+    *     it there: the transformer files one row per site considered — `Converted` or
+    *     `Refused(guard)` — which IS the denominator, so a census beside it would be a second
+    *     answer to its own question and would double every row in the lane (§4.6);
     *   - the BEAN COLLAPSE census is spliced immediately before `bean-properties`, because the
     *     intersection it publishes is a fact about the pairs THAT phase will see and about the tree
     *     the phases ahead of it have already produced. It reads that phase's own include list and
@@ -2047,7 +2050,7 @@ final case class PortRun(
     *     there are no configured pairs to intersect.
     */
   private def idiomPhases(declared: List[Phase]): List[Phase] =
-    val first = List(new balticporter.transform.SamLambdaCensus, new balticporter.transform.ReturnThisCensus)
+    val first = List(new balticporter.transform.SamLambdaTransform, new balticporter.transform.ReturnThisCensus)
     val spliced = declared.flatMap {
       case b: balticporter.transform.BeanPropertyTransform =>
         List(new balticporter.transform.BeanCollapseCensus(b.configuredPairs), b)

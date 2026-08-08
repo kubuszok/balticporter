@@ -2,8 +2,8 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** THE ANONYMOUS-SAM DECISION, STATED ONCE — read by the census that measures it and by the
-  * transformer that acts on it.
+/** THE ANONYMOUS-SAM DECISION, STATED ONCE — and the transformer that acts on it publishes its own
+  * denominator, so there is nothing else to ask.
   *
   * ==What this is about==
   * A java anonymous class implementing a single-abstract-method interface and a scala lambda at
@@ -11,12 +11,15 @@ import balticporter.tir.*
   * anonymous class — already compiles and already behaves correctly, so this is not a `JS-` row and
   * this layer has no difference to discharge (`DESIGN.md` §8.15 states what licenses it instead).
   *
-  * ==Why one function and not two==
-  * `CLAUDE.md` §4.6's one-mechanism-one-seam. The census publishes the DENOMINATOR before anything
-  * converts, and the transformer converts; a second copy of the guards would be free to disagree
-  * with the first, and the disagreement would look exactly like a real change in the population.
-  * So the guards live here, both consumers call [[decide]], and the census is the transformer with
-  * the rewrite removed rather than a re-derivation of its question.
+  * ==Why the wave-0 CENSUS is gone, and why that is the same rule that made it===
+  * Wave 0 shipped a `SamLambdaCensus` — this decision with the rewrite removed — so the population
+  * was published BEFORE anything converted and wave 1's blast could be confirmed rather than
+  * discovered. It did that (155 considered / 23 convertible on the libGDX base, and the wiring
+  * converted exactly 23). With the transformer IN the pipeline the census is a SECOND ANSWER to a
+  * question the transformer already answers: it files one row per site considered, `Converted` or
+  * `Refused(guard)`, which IS the denominator. Two phases at one position filing about one site
+  * would double every row in the lane, and `CLAUDE.md` §4.6's one-mechanism-one-seam is what
+  * retired it. What survives is [[decide]], which both of them always called.
   *
   * ==THE DELTA ENUMERATION — the whole safety argument==
   * An idiom transform's safety argument is a REFUSAL ENUMERATION, not a suite result. The
@@ -273,59 +276,6 @@ object SamLambda:
     }
     out.result()
 
-/** WAVE 0's INERT CENSUS — the SAM population, published at the POSITION its transformer will take
-  * and nowhere else.
-  *
-  * ==Why a phase and not a check==
-  * `CLAUDE.md` §5's dry-run rule, read in the other direction, and it is the same failure either
-  * way: '''a phase measures what it is HANDED'''. A dry run hands a phase untransformed input and
-  * under-counts (measured: a warning lane priced at 1 by a dry run reads 25 in the live pipeline);
-  * a POST-PIPELINE census hands it a tree every surface phase has already moved, and over- or
-  * under-counts depending on which phase moved what. There is a live instance of the second
-  * direction in this very transformer's ordering constraint — a `CollectionsTransform` retarget
-  * moving `java.util.Comparator` to `scala.math.Ordering` changes what the conversion would ascribe
-  * to — so a census asked at the end of the pipeline would publish a denominator that is not the
-  * population the phase will meet, and the wave's blast would then be DISCOVERED rather than
-  * confirmed. Which is the one thing this census exists to prevent.
-  *
-  * ==Inert, and the gate proves it==
-  * `run` returns its argument. The wave-0 gate is 0 member digests on every port; a post-pipeline
-  * check could not have been wrong about that and therefore could not have proved it either.
-  */
-final class SamLambdaCensus extends Phase, IdiomPhase:
-
-  def name: String = "idiom-sam-census"
-
-  def idiomKinds: Set[IdiomKind] = Set(IdiomKind.SamLambda)
-
-  /** the transformer's own position, verbatim — so the descriptors it matches are java's own. */
-  override def runsBefore: Set[String] = Set("java-collections->scala", "package-rename")
-
-  override def run(program: Program): Program =
-    given Program = program
-    program.units.foreach { u =>
-      SamLambda.sites(u).foreach { (_, fqn, nw, anon) =>
-        val v = SamLambda.decide(nw, anon)
-        val c = v match
-          case SamLambda.Verdict.Convert(_, iface, _) =>
-            // NOT `Converted` — nothing converted, and a lane that said otherwise would be a
-            // number about a rewrite that did not happen. NOT a silent omission either: this is
-            // the DENOMINATOR, filed under a guard whose whole content is "the transformer is not
-            // here", so the wave that adds it moves exactly these rows from `refused` to
-            // `converted` and the movement is predicted rather than discovered.
-            IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Refused("PhaseNotEnabled",
-              "NOT a property of the site: it passes every guard. The transformer that would " +
-                "convert it is not in this pipeline, so this row is the population a later wave " +
-                "converts — read it as the denominator, not as a delta the port carries"),
-              fqn, s"anonymous `$iface`", nw.origin)
-          case SamLambda.Verdict.Refuse(g, iface) =>
-            IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Refused(g.toString, g.why), fqn,
-              s"anonymous `$iface`", nw.origin)
-        consider(c)
-      }
-    }
-    program
-
 /** WAVE 1 — the conversion itself. An anonymous class implementing a single-abstract-method
   * interface becomes a LAMBDA, ASCRIBED to that interface.
   *
@@ -388,6 +338,7 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
     def name: String = "sam-anon->lambda/convert"
 
     private val pending = collection.mutable.ListBuffer.empty[SamLambda.Converted]
+    private val refused = collection.mutable.ListBuffer.empty[(SamLambda.Guard, String, Origin)]
 
     /** THE CONVERSION HAPPENS AT THE `Apply`, NOT AT THE `Tree.New` — and that is not a detail.
       *
@@ -430,8 +381,7 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
       case _ => t
 
     private def file(g: SamLambda.Guard, iface: String, nw: Tree.New): Unit =
-      owner.consider(IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Refused(g.toString, g.why),
-        declOf(nw), s"anonymous `$iface`", nw.origin))
+      refused += ((g, iface, nw.origin))
 
     override def transformDefDef(t: Tree.DefDef)(using p: Program): Tree.DefDef =
       claim(t.symbol, t.origin); t
@@ -454,9 +404,23 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
     private def isMember(sym: SymId)(using p: Program): Boolean =
       p.symbolOf(sym).map(_.owner).flatMap(p.definitionOf).exists(_.isInstanceOf[Tree.ClassDef])
 
-    /** everything converted since the last MEMBER-level definition hook belongs to THIS declaration. */
+    /** everything CONSIDERED since the last MEMBER-level definition hook belongs to THIS declaration
+      * — the conversions and the refusals alike.
+      *
+      * The refusals are subjected at the enclosing declaration for the same reason the conversions
+      * are, and it is not the blast gate's (a refusal moves no emitted text, so there is nothing to
+      * join): it is that `idiom(refused)` is a POPULATION a reader reads per declaration, and the
+      * census this phase replaces filed it that way. Two phases answering one question in two
+      * spellings is the disagreement §4.6 is about, seen in the report rather than in the tree. */
     private def claim(sym: SymId, at: Origin)(using p: Program): Unit =
       val fqn = p.symbolOf(sym).map(_.fullName).getOrElse("<unknown>")
+      if refused.nonEmpty && isMember(sym) then
+        val rs = refused.toList
+        refused.clear()
+        rs.foreach { (g, iface, o) =>
+          owner.consider(IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Refused(g.toString, g.why),
+            fqn, s"anonymous `$iface`", o))
+        }
       if pending.nonEmpty && isMember(sym) then
         val cs = pending.toList
         pending.clear()
@@ -472,10 +436,3 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
                           "class, so getClass/getSimpleName/toString read differently here"),
         ), Reason.Universal("anon-SAM->lambda(DESIGN §8.15)"), at))
 
-    /** a refusal filed from inside the traversal has no declaration in hand either; it is attributed
-      * the same way every other row is, at the next definition hook — but a REFUSAL changes no
-      * emitted text, so there is nothing for the blast gate to join and the site's own origin is the
-      * more useful subject. Named rather than left implicit, because the two rows deliberately
-      * differ. */
-    private def declOf(t: Tree.New): String =
-      s"${t.origin.javaPath}:${t.origin.line}"

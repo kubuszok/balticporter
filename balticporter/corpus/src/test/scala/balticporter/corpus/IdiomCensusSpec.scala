@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 import balticporter.tir.{IdiomCandidate, IdiomCheck, IdiomKind, IdiomLog, IdiomVerdict, Origin, Sam, Tree}
-import balticporter.transform.{BeanCollapseCensus, ReturnThisCensus, SamLambda, SamLambdaCensus}
+import balticporter.transform.{BeanCollapseCensus, ReturnThisCensus, SamLambda, SamLambdaTransform}
 
 /** WAVE 0 OF THE IDIOM LAYER — the census phases, and the three lanes they feed.
   *
@@ -32,9 +32,8 @@ class IdiomCensusSpec extends PortSuite:
         |  Runnable make(final String s) {
         |    return new Runnable() { public void run() { System.out.println(s); } };
         |  }
-        |}""".stripMargin, new SamLambdaCensus)
-    // filed under PhaseNotEnabled, which is the wave-0 denominator: NOT a property of the site.
-    assertIdiomRefuses(p, IdiomKind.SamLambda, "PhaseNotEnabled", "C#make")
+        |}""".stripMargin, new SamLambdaTransform)
+    assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
   }
 
   test("java's SAM rule EXCLUDES java.lang.Object's public methods — a Comparator IS one") {
@@ -51,8 +50,8 @@ class IdiomCensusSpec extends PortSuite:
         |      public int compare(String a, String b) { return a.length() - b.length() + bias; }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaCensus)
-    assertIdiomRefuses(p, IdiomKind.SamLambda, "PhaseNotEnabled", "C#byLen")
+        |}""".stripMargin, new SamLambdaTransform)
+    assertIdiomConverts(p, IdiomKind.SamLambda, "C#byLen")
   }
 
   test("an interface with TWO abstract methods is NotSam, and the refusal says so") {
@@ -61,7 +60,7 @@ class IdiomCensusSpec extends PortSuite:
       "C.java" -> """class C { I make(final int n) { return new I() {
                     |  public void a() { System.out.println(n); }
                     |  public void b() {}
-                    |}; } }""".stripMargin), new SamLambdaCensus)
+                    |}; } }""".stripMargin), new SamLambdaTransform)
     assertIdiomRefuses(p, IdiomKind.SamLambda, "NotSam", "C#make")
   }
 
@@ -70,7 +69,7 @@ class IdiomCensusSpec extends PortSuite:
       "B.java" -> "abstract class B { abstract void go(); }",
       "C.java" -> """class C { B make(final int n) { return new B() {
                     |  void go() { System.out.println(n); }
-                    |}; } }""".stripMargin), new SamLambdaCensus)
+                    |}; } }""".stripMargin), new SamLambdaTransform)
     assertIdiomRefuses(p, IdiomKind.SamLambda, "NotSam", "C#make")
   }
 
@@ -97,7 +96,7 @@ class IdiomCensusSpec extends PortSuite:
         |      public void run() { calls++; System.out.println(s + calls); }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaCensus)
+        |}""".stripMargin, new SamLambdaTransform)
     assertIdiomRefuses(p, IdiomKind.SamLambda, "BodyNotSingle", "C#make")
   }
 
@@ -110,7 +109,7 @@ class IdiomCensusSpec extends PortSuite:
         |      public void run() { System.out.println(hi()); }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaCensus)
+        |}""".stripMargin, new SamLambdaTransform)
     assertIdiomRefuses(p, IdiomKind.SamLambda, "BodyNotSingle", "C#make")
   }
 
@@ -118,7 +117,7 @@ class IdiomCensusSpec extends PortSuite:
     // `new I(){}` really has no members, which `AnonClass` states rather than confuses with "not an
     // anonymous class". There is no method to become a lambda.
     val p = port(
-      """class C { Runnable make() { return new Runnable() {}; } }""", new SamLambdaCensus)
+      """class C { Runnable make() { return new Runnable() {}; } }""", new SamLambdaTransform)
     assertIdiomRefuses(p, IdiomKind.SamLambda, "BodyNotSingle", "C#make")
   }
 
@@ -141,7 +140,7 @@ class IdiomCensusSpec extends PortSuite:
         |      public void run() { System.out.println(this.toString() + s); }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaCensus)
+        |}""".stripMargin, new SamLambdaTransform)
     assertIdiomRefuses(p, IdiomKind.SamLambda, "SelfReference", "C#make")
   }
 
@@ -156,7 +155,7 @@ class IdiomCensusSpec extends PortSuite:
         |      public void run() { System.out.println(toString() + s); }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaCensus)
+        |}""".stripMargin, new SamLambdaTransform)
     assertIdiomRefuses(p, IdiomKind.SamLambda, "SelfReference", "C#make")
   }
 
@@ -169,8 +168,8 @@ class IdiomCensusSpec extends PortSuite:
         |  Runnable make() {
         |    return new Runnable() { public void run() { System.out.println(C.this.n); } };
         |  }
-        |}""".stripMargin, new SamLambdaCensus)
-    assertIdiomRefuses(p, IdiomKind.SamLambda, "PhaseNotEnabled", "C#make")
+        |}""".stripMargin, new SamLambdaTransform)
+    assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
   }
 
   // -------------------------------------------------------------------------------------------
@@ -181,7 +180,7 @@ class IdiomCensusSpec extends PortSuite:
     val p = port(
       """class C { Runnable make() { return new Runnable() {
         |  public void run() { System.out.println("hi"); }
-        |}; } }""".stripMargin, new SamLambdaCensus)
+        |}; } }""".stripMargin, new SamLambdaTransform)
     assertIdiomRefuses(p, IdiomKind.SamLambda, "NonCapturing", "C#make")
   }
 
@@ -202,7 +201,7 @@ class IdiomCensusSpec extends PortSuite:
         |  Runnable make() {
         |    return new Runnable() { public void run() { System.out.println(C.this.n); } };
         |  }
-        |}""".stripMargin, new SamLambdaCensus)
+        |}""".stripMargin, new SamLambdaTransform)
     assertIdiomIgnores(p, IdiomKind.SamLambda, "NonCapturing")
   }
 
@@ -218,7 +217,7 @@ class IdiomCensusSpec extends PortSuite:
       "S.java" -> "interface S extends java.io.Serializable { int f(int x); }",
       "C.java" -> """class C { S make(final int b) { return new S() {
                     |  public int f(int x) { return x + b; }
-                    |}; } }""".stripMargin), new SamLambdaCensus)
+                    |}; } }""".stripMargin), new SamLambdaTransform)
     assertIdiomRefuses(p, IdiomKind.SamLambda, "Serializable", "C#make")
   }
 
@@ -269,7 +268,12 @@ class IdiomCensusSpec extends PortSuite:
   // the phases are INERT, and the lanes report apart
   // -------------------------------------------------------------------------------------------
 
-  test("both census phases are EMISSION-INERT — the tree they hand back IS the tree they got") {
+  test("the CENSUS phases are EMISSION-INERT — the tree they hand back IS the tree they got") {
+    // The wave-0 property, still true of the two phases that are still censuses. The SAM phase is
+    // NOT one of them any more: wave 1 wired the transformer, and a census beside it would be a
+    // second answer to its own question (§4.6). What replaces this assertion for the SAM lane is
+    // `SamLambdaTransformSpec`'s "every REFUSAL leaves the anonymous class BYTE-IDENTICAL", which
+    // is the same property asked of the sites the transformer declines.
     val src =
       """class C {
         |  int n = 1;
@@ -277,7 +281,7 @@ class IdiomCensusSpec extends PortSuite:
         |  Runnable make() { return new Runnable() { public void run() { System.out.println(n); } }; }
         |}""".stripMargin
     val bare  = port(src)
-    val censused = port(src, new SamLambdaCensus, new ReturnThisCensus)
+    val censused = port(src, new ReturnThisCensus, new BeanCollapseCensus(Map.empty))
     assertEquals(censused.out, bare.out)
     assert(clue(censused.idioms.size) > 0, "the phases must be inert, not idle")
   }
@@ -318,7 +322,7 @@ class IdiomCensusSpec extends PortSuite:
   }
 
   test("…and each census phase DECLARES the kind it files, so that zero can be printed at all") {
-    assertEquals(new SamLambdaCensus().idiomKinds, Set(IdiomKind.SamLambda))
+    assertEquals(new SamLambdaTransform().idiomKinds, Set(IdiomKind.SamLambda))
     assertEquals(new ReturnThisCensus().idiomKinds, Set(IdiomKind.NarrowedReturn))
     assertEquals(new BeanCollapseCensus(Map.empty).idiomKinds, Set(IdiomKind.BeanCollapse))
   }

@@ -5020,20 +5020,52 @@ the other thirteen ports; suite outcomes identical (gdx-test 217/4, liqp 636/1).
 refused is a SAM whose result type is a TYPE VARIABLE (`Supplier<String>.get` is `T get()`), which is
 0 sites corpus-wide and non-vacuous by fixture.
 
-### Wave 1 is BUILT and NOT WIRED, and the number that says why
+### Wave 1 is WIRED, and its blast was PREDICTED rather than discovered
 
-`SamLambdaTransform` ships spec'd (14 fixtures) and in no pipeline. Wiring it into every port was
-measured and reverted: the libGDX base goes **0 -> 4 typer errors**, and the cause is `M6` — the
-emitter refuses to interpose the nested `def` that restores java's `return`-leaves-the-lambda where
-it cannot name that `def`'s result type. A converted anonymous METHOD body is the first construct in
-this engine to reach that refusal at scale.
+`SamLambdaTransform` is in every port's pipeline, FIRST, `runsBefore` the two engine phases whose
+retyping would move what it ascribes to. It is §1(a), so `PortRun.idiomPhases` weaves it exactly as
+it appends the package rename: no manifest entry, no fingerprint, no switch.
 
-Everything the transformer itself claims held on that run, which is what makes the number actionable
-rather than a wall: **23 conversions, exactly the 23 the census had published**, a `members.tsv`
-blast of **exactly 23** members with every one carrying a `SamLambda` decision, `trivia(lost)` still
-0 and `trivia(recovered)` 4 -> 6 as predicted. `ENGINE-LIMITS.md` I9 carries the diagnosis and the
-fix, which is in reach precisely because the conversion holds the anon's own `Tree.DefDef` and
-therefore the result type M6 says the TIR does not have.
+**The wave-0 census is retired with it.** `SamLambdaCensus` was this decision with the rewrite
+removed, and its whole purpose — publish the population before anything converts — is served. With
+the transformer in the pipeline it would be a SECOND answer to a question the transformer already
+answers, since the transformer files one row per site CONSIDERED (`Converted`, or `Refused` naming
+the guard), which IS the denominator. Two phases at one position filing about one site would double
+every row in the lane; §4.6's one-mechanism-one-seam retired it, and `SamLambda.decide` — which both
+always called — is what survives.
+
+| port | wave-0 predicted | wave-1 converted | `idiom(refused)` | `members.tsv` |
+|---|---|---|---|---|
+| `sge` (libGDX core) | 23 of 155 | **23** | 1001 -> 978 | 23 members |
+| `sge-jbump` | 3 of 9 | **3** | 9 -> 6 | 4 members |
+| `sge-noise` | 1 of 3 | **1** | 17 -> 16 | 2 members |
+| every other port | 0 | **0** | flat | **0** |
+
+Every changed digest is attributable: 11 of the 23 libGDX rows are members carrying a `SamLambda`
+decision (`AsyncExecutor#<stmt1>` is the promoted constructor's body, whose decision is subjected at
+`#<init>`), and the other 12 are the enclosing class digests those members sit in. **`Δ \ blast` is
+empty on all three ports.** The twelfth decision, `NetJavaImpl#sendHttpRequest`, has no member row at
+all — that type is dropped — which is why `porter-notes` stays 0 rather than reporting it.
+
+Three other counts moved and each is explained:
+
+- **`trivia(recovered)` 4 -> 6** on the libGDX base, predicted in the design: the anon method's
+  Javadoc loses its carrier and the emitter's backstop quotes it with its coordinates.
+  `trivia(lost)` stays 0, which is the gate;
+- **`context-seam` 44 -> 43**, because a converted anonymous class is one fewer synthetic type for
+  that walk to reach;
+- **`catalog(consulted)` +1 and `catalog(unreached)` -1 on jbump and noise4j and NOWHERE ELSE.**
+  This is the design's `[rev-2: D4]` correction measured from the other side: the count is a count of
+  ROWS, so a port where `JS-S21` was already consulted cannot move it — and a port that had no lambda
+  at all until the conversion made one moves it by exactly one. A constant prediction would have been
+  wrong on both halves of the corpus.
+
+Two engine defects were found by this wave's own gate and fixed in their own commits before it
+landed: the emitter's `body$N` counter was PROGRAM-global (`ENGINE-LIMITS.md` M10's defect at a
+second construct — conversions in `Cubemap` renamed `TextField`'s lambdas), and a `SamLambda`
+decision subjected at a PROMOTED CONSTRUCTOR had no `def` to sit above, so its note never appeared
+(`porter-notes` 0 -> 1). The promoted constructor's notes now join the class's, where its Javadoc
+already goes.
 
 ### Two things the census found that no count would have
 

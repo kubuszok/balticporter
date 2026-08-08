@@ -4546,6 +4546,18 @@ The one exception is the bean collapse, and it is not an exception to that rule:
 of `bean-properties`' EXISTING per-key include list (§8.5), so its opt-in is the entry, not a boolean
 beside a policy map.
 
+#### …and a census is RETIRED the moment its transformer runs, by the same rule
+
+A census is the transformer with the rewrite removed, so once the transformer is in the pipeline the
+census is a SECOND ANSWER to a question the transformer already answers: an idiom phase files one row
+per site CONSIDERED — `Converted`, or `Refused` naming the guard — and that IS the denominator. Two
+phases at one position filing about one site double every row in the lane, which is §4.6's
+one-mechanism-one-seam read in the report rather than in the tree. `SamLambdaCensus` was deleted the
+commit its transformer was wired; `SamLambda.decide`, which both of them always called, is what
+survives. A census is therefore a WAVE-0 ARTIFACT with a defined end, not a permanent second lane —
+and the refusal rows it filed keep the same SUBJECT (the enclosing declaration) under the
+transformer, so the wiring moves rows between lanes and moves nothing else.
+
 #### A CENSUS IS A PHASE, AT THE POSITION ITS TRANSFORMER WILL OCCUPY
 
 `CLAUDE.md` §5's dry-run rule read in the other direction, and it is the same failure either way:

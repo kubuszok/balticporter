@@ -148,7 +148,7 @@ sge.jbump.Response	sge.jbump.Response$Result#goalX	val	829206762cc30df8
 sge.jbump.Response	sge.jbump.Response$Result#goalY	val	c0baed8121df15b3
 sge.jbump.Response	sge.jbump.Response$Result#projectedCollisions	val	81668b6114a1d7eb
 sge.jbump.Response	sge.jbump.Response$Result#set(float,float)	def	87bde75fa692e30a
-sge.jbump.World	sge.jbump.World	class	bb3b80e9e4431d71
+sge.jbump.World	sge.jbump.World	class	88c0b5f02a71837a
 sge.jbump.World	sge.jbump.World#<init>()	ctor	4407a8f4d83d2d13
 sge.jbump.World	sge.jbump.World#<stmt1>	stmt	52a1c0f0b75c69f7
 sge.jbump.World	sge.jbump.World#add(Item<E>,float,float,float,float)	def	fc1c7f4f4e9b445d
@@ -160,7 +160,7 @@ sge.jbump.World	sge.jbump.World#cellMaxY	val	02ee6f9fba03e2cf
 sge.jbump.World	sge.jbump.World#cellMinX	val	d81a788e2c7f50c6
 sge.jbump.World	sge.jbump.World#cellMinY	val	c4c0433153217171
 sge.jbump.World	sge.jbump.World#cellSize	val	bcf2d7703eba9a3d
-sge.jbump.World	sge.jbump.World#check(Item<?>,float,float,CollisionFilter)	def	b42b8b0cf01ea06a
+sge.jbump.World	sge.jbump.World#check(Item<?>,float,float,CollisionFilter)	def	46f3bc8b594a135e
 sge.jbump.World	sge.jbump.World#check_cols	val	8ccebfe36f4e5ede
 sge.jbump.World	sge.jbump.World#check_projectedCols	val	78850c82d9a3d842
 sge.jbump.World	sge.jbump.World#check_result	val	03297dc90c8a930c
@@ -169,8 +169,8 @@ sge.jbump.World	sge.jbump.World#countCells()	def	0a22f5f90176884f
 sge.jbump.World	sge.jbump.World#countItems()	def	40638ef3890ef6d1
 sge.jbump.World	sge.jbump.World#getCellSize()	def	e71640b5c1201e45
 sge.jbump.World	sge.jbump.World#getCells()	def	3274f640bca4b0e4
-sge.jbump.World	sge.jbump.World#getCellsTouchedByRay(float,float,float,float,ArrayBuffer<Cell>)	def	e1c2a0bd0d730a87
-sge.jbump.World	sge.jbump.World#getCellsTouchedBySegment(float,float,float,float,ArrayBuffer<Cell>)	def	4eb456bb4531693c
+sge.jbump.World	sge.jbump.World#getCellsTouchedByRay(float,float,float,float,ArrayBuffer<Cell>)	def	723b85978e76cd32
+sge.jbump.World	sge.jbump.World#getCellsTouchedBySegment(float,float,float,float,ArrayBuffer<Cell>)	def	033bbb6f302d60f1
 sge.jbump.World	sge.jbump.World#getCellsTouchedBySegment_visited	val	c6440da704e5588a
 sge.jbump.World	sge.jbump.World#getDictItemsInCellRect(float,float,float,float,LinkedHashSet<Item<?>>)	def	890335f018d6f764
 sge.jbump.World	sge.jbump.World#getInfoAboutItemsTouchedByRay(float,float,float,float,CollisionFilter,ArrayBuffer<ItemInfo>)	def	c716af0e89432907

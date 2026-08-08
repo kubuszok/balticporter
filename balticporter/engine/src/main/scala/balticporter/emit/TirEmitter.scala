@@ -1687,6 +1687,14 @@ final class TirEmitter(
     // exactly the constructor `lowerCtors` replaces with its body, so this can never duplicate a
     // doc that is still attached to a `def this` somewhere in the class.
     val ctorLead = plan.primary.toList.flatMap(_.leading)
+    // …and its NOTES go the same way, for the same reason and by §4.575's own rule. A PROMOTED
+    // constructor has no `def` left for an `AtDeclaration` note to sit above, so a decision
+    // subjected at it — a SAM conversion inside a constructor body, a substituted call, any kind in
+    // that set — simply produced NO NOTE: `NoteCoverageCheck` reported `decision with no note` and
+    // nothing else in the run could see it (measured at 1 on the libGDX base, `ENGINE-LIMITS.md`
+    // I9). The class is where scala documents a primary constructor, which is where the javadoc
+    // above already goes.
+    val ctorNote = plan.primary.toList.map(c => declNotes(c.symbol, i)).mkString
     // JS-C44 — the keyword where java's seal survives the file split, and the note where it does
     // not. The note goes AFTER `cnote` for §4.575's order: the upstream's own trivia first, the
     // port's note last, the member next.
@@ -1694,7 +1702,7 @@ final class TirEmitter(
     val cls     =
       if s.flags.isAnnotation then
         s"${leading(cd.leading, i)}$cnote${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$prim extends scala.annotation.StaticAnnotation"
-      else s"${leading(cd.leading ++ ctorLead, i)}$cnote$sealNote$recNote${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${esc(s.name)}$tps$prim$ext$open"
+      else s"${leading(cd.leading ++ ctorLead, i)}$cnote$ctorNote$sealNote$recNote${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${esc(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.

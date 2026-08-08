@@ -11,13 +11,13 @@ class-init-trigger	2
 collection-boundary	6
 collection-closure	0
 collection-retarget	0
-context-seam	44
+context-seam	43
 dependency-coverage	37
 dependency-coverage(all)	37
 gdx-shared-iterator	0
 heap-pollution	17
-idiom(converted)	0
-idiom(refused)	1001
+idiom(converted)	23
+idiom(refused)	978
 idiom(residue)	0
 jdk-surface	24
 manifest	0
@@ -39,5 +39,5 @@ substitution(emitted)	0
 switch-null	0
 trivia	0
 trivia(deliberate)	12
-trivia(recovered)	4
+trivia(recovered)	6
 try-resource	0

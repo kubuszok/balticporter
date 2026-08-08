@@ -8733,14 +8733,27 @@ rather than approximated:
   That is the residue M6 now stands for, and it is **0 across the corpus**, non-vacuous by fixture
   (`CatalogAreaSSpec`'s `JS-S21` type-variable cell).
 
-**One more finding rode in with it, and it is a `PorterNote` PLACEMENT question at a CONSTRUCTOR.**
-`porter-notes` reported 0 → 1: a `SamLambda` decision subjected at `AsyncExecutor#<init>`, whose note
-has no `def` to sit above because the constructor funnel promoted that body into the class body.
-`Decision.Kind.SamLambda` is in `AtDeclaration` by the set arithmetic, which is right for every
-ordinary member and has no answer for a promoted constructor. `CLAUDE.md` §4.575's rule is exactly
+**One more finding rode in with it, and it is a `PorterNote` PLACEMENT question at a CONSTRUCTOR —
+FIXED.** `porter-notes` reported 0 → 1: a `SamLambda` decision subjected at `AsyncExecutor#<init>`,
+whose note had no `def` to sit above because the constructor funnel promoted that body into the class
+body. `Decision.Kind.SamLambda` is in `AtDeclaration` by the set arithmetic, which is right for every
+ordinary member and had no answer for a promoted constructor. `CLAUDE.md` §4.575's rule is exactly
 this — *a kind in the wrong placement set is a note that never appears* — read at the one subject
-that is neither a member nor a type.
+that is neither a member nor a type. The answer is the one the JAVADOC already takes: a promoted
+constructor's `leading` joins the class's, so its NOTES do too, and the fix is general — every
+`AtDeclaration` kind subjected at a promoted constructor was silent, not only this one.
 
-**Two other counts moved and both are explained by the conversion**: `context-seam` 44 → 43 and
-`portability(all|emitted)` 153 → 152, because a converted anonymous class is one fewer synthetic type
-for either walk to reach. Neither is a residue; both go away with the wiring.
+**And a THIRD defect the wiring's own gate found, which is `M10` at a second construct.**
+`TirEmitter.lambdaSeq` named the nested `def` from a counter that ran for the whole EMISSION, so
+converting a lambda in `Cubemap` renumbered `TextField`'s three `body$N` two files later — two
+members in the blast with no decision, no note and no rewritten call site. Fixed in its own commit
+(`inDeclaration` saves/resets/restores, because a declaration nests), blast 3 members on the libGDX
+base and 0 on the other fourteen. The general form is M10's own: **an emitted NAME keyed on anything
+wider than the declaration that holds it turns `members.tsv` into churn**, and the wave that finds it
+is whichever wave first adds a second instance of the construct.
+
+**WIRED, and the blast was PREDICTED**: 23 conversions on the libGDX base (wave 0 said 23), 3 on
+jbump (3), 1 on noise4j (1), 0 everywhere else; 23/4/2 members changed, every one carrying a
+`SamLambda` decision or being the class that holds one; `trivia(recovered)` 4 → 6 and `trivia(lost)`
+0; `context-seam` 44 → 43; every error baseline, every `expected-lost` and every suite outcome
+unchanged on all fifteen ports. `PROGRESS.md` §11.99 carries the table.
