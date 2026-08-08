@@ -1,5 +1,6 @@
 package balticporter.transform
 
+import balticporter.catalog.FixKind
 import balticporter.tir.*
 
 /** The CONTEXT BOUNDARY, counted — every place the threading stopped, and why.
@@ -74,10 +75,68 @@ import balticporter.tir.*
   * by arithmetic: the phase records no seam, so this records nothing, exactly the way
   * `collection-boundary` records nothing for a port with no collections phase.
   */
-object ContextSeamCheck:
+object ContextSeamCheck extends RemedySource:
 
   /** The check's name in `findings.tsv`. */
   val Name = "context-seam"
+
+  /** THE MENU — see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16.
+    *
+    * This check is the one where the ONE-SPELLING rule does most of the work, because nearly every
+    * act its classifications name ALREADY HAS A KEY. A remedy that restated one would be a second
+    * way to say the same thing, which is the drift §1.5 exists to kill, so those are POINTERS and
+    * not entries:
+    *
+    *   - a framework really does construct this class → `GlobalsToImplicitsTransform(selfSupplied)`,
+    *     which is `ENGINE-LIMITS.md` CT7's third answer and is already shipped;
+    *   - this static initialiser should become lazy → a `sites` entry (`lazy-init`);
+    *   - this trait's own body needs the context → `promoteToClass`;
+    *   - the residual reads should at least name the context → `boundary = "residual-global"`;
+    *   - the frozen component's parent is itself portable → port it in the same run, which is a
+    *     build act and not a per-site one.
+    *
+    * What NONE of those spells is the port saying *I have looked at this one and it is FINE* — and
+    * that is the whole of what is added here, at the two kinds where "fine" is a real answer:
+    *
+    *   - `unconstructed-thread` is a WARNING and the check says so in its own classification: "if
+    *     YOUR USERS construct it, this is correct as it stands and the clause is part of the ported
+    *     API: the engine cannot tell the two apart". A port CAN. Its subject is the CLASS, which is
+    *     why [[balticporter.tir.Remedy.Subject.OwnedType]] exists at all — the clause is on every
+    *     constructor java gave it, so a member key would have to pick one;
+    *   - `residual-global-read` is the count a port drives to zero, and some of it cannot go: a
+    *     static field's initialiser runs before anything could pass it a context. Accepting one site
+    *     is not the same statement as `boundary = "residual-global"`, which is a whole-phase setting
+    *     about how EVERY residual read is spelled.
+    *
+    * The other five kinds take no entry, and each is absent for its own reason:
+    * `captured-context` and `self-supplied` are OUTCOME rows — the first is correct by construction
+    * and the second is a `selfSupplied` entry's own result, so "accepting" either would drain a
+    * report of something that already worked; `deferred-init` is what a `sites` entry ASKED for;
+    * `frozen-component`'s two acts are spelled above and its own residue is counted as
+    * `residual-global-read`, where the accept is; and `lost-clause` is an ENGINE BUG in the
+    * constructor region (`DESIGN.md` §8.2, `ENGINE-LIMITS.md` CT5) that is "reachable from no
+    * manifest key" — a remedy for it would let a port silence a defect the engine caused, which
+    * `CLAUDE.md` §1's rule about engine-created obligations forbids outright.
+    */
+  def remedies: List[Remedy] = List(
+    Remedy(
+      id = "accept-unconstructed-thread", lane = Name, kind = Kind.UnconstructedThread.label,
+      emissionAffecting = false, fix = FixKind.Parameterised,
+      subject = Remedy.Subject.OwnedType,
+      what = "the port states that this class is constructed by its USERS and not by a framework, " +
+        "so the `using` clause is part of the ported API and there is nothing to supply — the " +
+        "answer the warning says the engine cannot derive"),
+    Remedy(
+      id = "accept-residual-global", lane = Name, kind = Kind.ResidualGlobalRead.label,
+      emissionAffecting = false, fix = FixKind.Parameterised,
+      what = "the port states that this read stays global on purpose — no signature reaches it and " +
+        "no `sites` entry should move it, which is a per-site statement `boundary` cannot make"),
+  )
+
+  /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. */
+  def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
+    plan.drain(Name, findings)(f =>
+      ResolutionPlan.Residue(f.kind.label, f.enclosing, f.subject, f.origin, f.detail))
 
   /** what kind of seam this is, which is what decides who fixes it (CLAUDE.md §1). */
   enum Kind(val label: String):

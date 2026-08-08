@@ -620,7 +620,23 @@ final class NullabilityTransform(
     }
 
   private def refuse(p: Program, s: Symbol, key: String, issue: Issue): Unit =
-    issues += Finding(issue, s.fullName, s"`$key` on ${describe(p, s)}", Decision.originOf(p, s.id), unitOf(p, s.id))
+    issues += Finding(issue, s.fullName, s"`$key` on ${describe(p, s)}", Decision.originOf(p, s.id),
+                      unitOf(p, s.id), declarationOf(p, s))
+
+  /** THE DECLARATION a site belongs to — what a per-location selection keys on, and not the same
+    * question as [[unitOf]].
+    *
+    * The commonest site this check reports is a PARAMETER or a method LOCAL, neither of which is a
+    * declaration a policy key can name: `Decision.isDeclaration` is exactly that test, and its
+    * answer for both is the enclosing executable. Climbing ONE level is enough by construction —
+    * java nests no declaration inside a parameter — and the climb stops rather than continuing to
+    * the unit, because a fallback that always answered would let one selection drain every row in a
+    * file (see `NullabilityBoundaryCheck.Finding.at`). Where nothing above is a declaration either,
+    * the honest answer is `SymId.None`: the site is UNSELECTABLE, which is a fact about the site and
+    * not a reason to invent a coarser key for it. */
+  private def declarationOf(p: Program, s: Symbol): SymId =
+    if Decision.isDeclaration(p, s) then s.id
+    else p.symbolOf(s.owner).filter(o => Decision.isDeclaration(p, o)).map(_.id).getOrElse(SymId.None)
 
   private def describe(p: Program, s: Symbol): String =
     if s.flags.isParam then
@@ -642,7 +658,7 @@ final class NullabilityTransform(
       // must be a number instead. The finding is attributed to the declaration's own unit, so a
       // dependent does not report its base's exclusions (D2).
       issues += Finding(Issue.ScopedOut, s.fullName, s"`$entry` on ${describe(p, s)}",
-                        Decision.originOf(p, s.id), unitOf(p, s.id))
+                        Decision.originOf(p, s.id), unitOf(p, s.id), declarationOf(p, s))
       record(Decision(
         kind       = Decision.Kind.ScopedOut,
         subject    = s.id,

@@ -767,6 +767,16 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   bind to a real declaration, name a live remedy, and be inert because the finding never fired —
   which no binding can say, so it is reported apart (`PolicyIssue.NeverApplied`), declared beside
   applied, on §5.5's `expected#derived`/`#declared` model.
+  **And ONE POLICY, ONE SPELLING: a remedy may never be a second way to state what a manifest or
+  phase key already states.** Every lane's candidate list opens with acts the port can already ask
+  for — a scope entry, a table row, a `selfSupplied` — and offering one as a remedy gives a single
+  act two spellings, which is the drift §1.5 exists to kill. So a candidate becomes an entry only
+  where the act has NO existing spelling; where it has one, the menu carries the POINTER instead, and
+  where it is refused, the `ENGINE-LIMITS.md` id sits at the declaration IN CODE so the option is
+  visibly refused rather than silently missing. Measured on the first three menus: twenty candidates,
+  six entries, and every one of the six is the same act — *the port has read this site and states the
+  residue is right here* — which had no spelling on any lane and is why those counts could only ever
+  go up.
 
   Four more measurements are NOT check counts and are printed beside them, because each catches a
   class nothing else can see:

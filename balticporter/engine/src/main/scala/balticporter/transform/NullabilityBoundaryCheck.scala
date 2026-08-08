@@ -1,5 +1,6 @@
 package balticporter.transform
 
+import balticporter.catalog.FixKind
 import balticporter.tir.*
 
 /** The NULLABILITY boundary, counted — every annotated site the phase could not honour, every seam
@@ -35,10 +36,64 @@ import balticporter.tir.*
   * §1(a) in mechanism; it holds no library's names. An empty annotation set produces an empty
   * findings list by arithmetic rather than by a branch.
   */
-object NullabilityBoundaryCheck:
+object NullabilityBoundaryCheck extends RemedySource:
 
   /** the check's name in `findings.tsv`. */
   val Name = "nullability-boundary"
+
+  /** THE MENU — see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16.
+    *
+    * Two entries, and the ONE-SPELLING rule accounts for every act that is not here. Widening or
+    * narrowing the exclusion is `NullabilityTransform(scope)`; choosing between a union and a
+    * wrapper is its `target`; deciding whether an annotation belongs in the set at all is
+    * `annotations`; and `-Yexplicit-nulls -language:unsafeNulls` is a BUILD act, which no manifest
+    * key can or should hold. A remedy restating any of those would be a second spelling of a key a
+    * port already has.
+    *
+    * What none of them spells is the port having READ a site and stating that the residue is
+    * acceptable THERE, which is what these two are:
+    *
+    *   - `ScopedOut` — this declaration keeps its upstream type and its upstream marker because the
+    *     port's own scope holds it back. The check exists because "a residue nobody counts is a
+    *     residue that grows"; a review that reached the opposite conclusion at one declaration had
+    *     nowhere to be recorded, so the number could only ever go up. Deleting the scope entry is
+    *     the OTHER answer and it is already spelled;
+    *   - `AbstractTypeParameter` — the classification names three ways out and says all three are
+    *     policy: scope it out, stage the build, or ACCEPT THE ERRORS. The first two are spelled; the
+    *     third is a statement about the USES, which is the one thing no key here can see, and on a
+    *     port that compiles it is a statement the compile itself corroborates.
+    *
+    * The other seven take none. `VarargParameter` and `AnnotationArguments` are refused
+    * STRUCTURALLY — a Scala vararg has no nullable form and `@A` is not `@A(x)` — so there is
+    * nothing to accept and no site at which accepting would mean anything. `PrimitiveType` is an
+    * upstream ANNOTATION ERROR: the entry names a site its own library cannot mean, and a port that
+    * accepted it would be recording agreement with a mistake. `OverrideCrossing` and
+    * `UncoercibleSeam` are wrapper-mode gaps whose answers are `target`/`scope` and the same K15
+    * external-callee limit the collection lane counts. `ScopedOutParent` is a scope EXIT THAT DID
+    * NOT CLOSE — half an override pair, which is the one shape a union floor may not emit — so its
+    * only answer is the missing scope entry (`ENGINE-LIMITS.md` K13: 35 -> 6 -> 0). And
+    * `NotAValuePosition` is an OUTCOME row: its own classification says the emitted signature is
+    * already correct, which makes it `captured-context`'s neighbour rather than a residue, and
+    * draining it would move a report of something that worked.
+    */
+  def remedies: List[Remedy] = List(
+    Remedy(
+      id = "accept-scoped-out", lane = Name, kind = Issue.ScopedOut.toString,
+      emissionAffecting = false, fix = FixKind.Parameterised,
+      what = "the port states that this declaration is meant to keep its upstream type and marker — " +
+        "the review outcome the count had no way to record, as opposed to deleting the scope entry, " +
+        "which is `NullabilityTransform(scope)`'s own spelling"),
+    Remedy(
+      id = "accept-abstract-type-parameter", lane = Name, kind = Issue.AbstractTypeParameter.toString,
+      emissionAffecting = false, fix = FixKind.Parameterised,
+      what = "the port ACCEPTS what this retype costs at the USES — the third of the three ways out " +
+        "the classification names, and the only one no manifest key or build flag already states"),
+  )
+
+  /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. */
+  def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
+    plan.drain(Name, findings)(f =>
+      ResolutionPlan.Residue(f.issue.toString, f.at, f.subject, f.origin, f.detail))
 
   /** what kind of boundary this is, which is what decides who fixes it (CLAUDE.md §1). */
   enum Issue:
@@ -134,8 +189,18 @@ object NullabilityBoundaryCheck:
           "to `-Yexplicit-nulls -language:unsafeNulls`, under which the whole exit disappears."
 
   /** one boundary site. `unit` is the top-level symbol it belongs to, which is how a dependent
-    * port holds a finding to the module that EMITS it (`ENGINE-LIMITS.md` D2). */
-  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId):
+    * port holds a finding to the module that EMITS it (`ENGINE-LIMITS.md` D2).
+    *
+    * `at` is a DIFFERENT symbol answering a different question and the two are deliberately not one:
+    * the unit is for OWNERSHIP and the declaration is for SELECTION ([[remedies]]). They coincide
+    * only for a top-level type, and the site this check reports most often is a PARAMETER, whose
+    * declaration is the method it belongs to and whose unit is the file's outermost class. Defaulted
+    * to [[SymId.None]] rather than to `unit`, because a finding minted without one must be
+    * UNSELECTABLE rather than selectable at the wrong granularity — `SymId.None` matches no key by
+    * construction, and a fallback to `unit` would silently let one selection drain every row in a
+    * file. */
+  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId,
+                           at: SymId = SymId.None):
     def render: String = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
       CheckReport.Finding(Name, issue.toString, subject,

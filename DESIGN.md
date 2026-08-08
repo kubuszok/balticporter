@@ -5052,6 +5052,43 @@ rather than the declaration is what makes a REFUSAL honest — a selection a pha
 declined (its guard says the remedy does not apply at this site) records nothing, so its finding
 stays in the lane exactly as it should, and the two ends of the loop read one value.
 
+**ONE POLICY, ONE SPELLING — the rule that decides what becomes a remedy at all.** The menu is a new
+front door onto the engine, and the first thing every lane's candidate list produces is a set of acts
+the port can ALREADY ask for: `selfSupplied`, `sites`, `promoteToClass`, a `RuleScope` entry, a
+`typeMap` row, a `reflectiveSinks` name. Offering any of those as a remedy would give one act two
+spellings, which is precisely the drift §1.5 exists to kill — two modules would state the same policy
+two ways, `surfaceFingerprint` would compare them as different, and a reader meeting one would have
+to know the other existed to be sure they had seen the whole answer.
+
+So each candidate is decided ONE way:
+
+- the act has NO existing spelling → it becomes a remedy;
+- the act HAS a spelling → **it is not added**, and the check's own menu documentation carries the
+  POINTER. The menu is then complete as documentation even where selection is not the mechanism,
+  which is the reader's real question (*what can I do about this row?*) rather than the narrower one
+  the field can answer;
+- the act is REFUSED → absent, with its `ENGINE-LIMITS.md` id **at the declaration site, in code**,
+  so the option is visibly refused rather than silently missing.
+
+Applied to the boundary trio, that leaves six entries out of roughly twenty candidates, and every one
+of them is the same act: **the port has read this site and states that the residue is right here.**
+That act had no spelling anywhere, on any lane, and its absence is why these counts could only ever
+go up — a review that concluded "this one is fine" had nowhere to be recorded.
+
+| lane | remedy | pointer instead (existing spelling) | absent, and why |
+|---|---|---|---|
+| `collection-boundary` | `accept-external-callee`, `accept-opaque-egress` | `UnmappedSubtype` → `typeMap`; the egress WRAP → `CollectionsTransform(reflectiveSinks)`; `ScopedOut` → `CollectionsTransform(scope)` | `wrap-at-seam` — a row reaches this lane only where the phase found NO factory (K2.5), and a forced bridge over a refused value names the wrapper instead of the boundary (K6.5); `copy-detach` — a copy detaches both directions (§4.4, K15); scope-as-residue-reduction (K16, `27 -> 47`/`27 -> 51`); a second shim-typed parent (K5.7); a coercion at a CONCRETE reified target (K18); a retarget-table wrapper (K14) |
+| `context-seam` | `accept-unconstructed-thread`, `accept-residual-global` | a framework really builds it → `selfSupplied`; lazy static → a `sites` entry; a trait body → `promoteToClass`; how residual reads are SPELLED → `boundary` | `lost-clause` — an engine bug in the constructor region reachable from no manifest key (§8.2, CT5), and a remedy for it would let a port silence a defect the engine caused; `captured-context`, `self-supplied`, `deferred-init` — OUTCOME rows, so accepting one would drain a report of something that already worked; `frozen-component` — its acts are spelled, and its own residue is counted as `residual-global-read`, where the accept is |
+| `nullability-boundary` | `accept-scoped-out`, `accept-abstract-type-parameter` | widen/narrow → `NullabilityTransform(scope)`; union vs wrapper → `target`; is this really a marker → `annotations`; `-Yexplicit-nulls -language:unsafeNulls` → a BUILD act no manifest key should hold | `VarargParameter`, `AnnotationArguments` — refused STRUCTURALLY, so there is no site at which accepting would mean anything; `PrimitiveType` — an upstream ANNOTATION ERROR, and accepting it would record agreement with a mistake; `OverrideCrossing`, `UncoercibleSeam` — `target`/`scope`, and the same K15 external-callee limit; `ScopedOutParent` — half an override pair, whose only answer is the missing scope entry (K13, `35 -> 6 -> 0`); `NotAValuePosition` — an OUTCOME row, its own classification saying the emitted signature is already correct |
+
+Two consequences of that table worth stating, because both were surprises. **Every entry it produced
+is `emissionAffecting = false`** — which is not a coincidence but the rule's own shadow: an act that
+changes emitted text at one of these seams is an act somebody already needed, and therefore already
+has a key. A future menu on a lane with no such key would produce the other kind. And **the pointer
+column is most of the value**: the `context-seam` lane's largest cluster gets one entry and four
+pointers, and a reader of that check now finds every answer in one place instead of inferring the set
+from three phases' constructor parameters.
+
 **The SUBJECT KIND is the remedy's to declare, which the first menus taught this section twice.** The
 paragraph above says the key is a `MemberKey` naming a declaration this run owns, and that was exact
 for as long as there was no menu to disagree with it. Two of the boundary trio's residues disagree,

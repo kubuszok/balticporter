@@ -380,15 +380,19 @@ final case class PortRun(
       val ret = c.retargetBoundary(program, checkedUnits)
       locally {
         given Program = program
+        // …minus what the port SELECTED a remedy for. A resolution is a MOVE, so the drained rows
+        // leave this lane and arrive in `remediation(resolved)` (CLAUDE.md §5); the drain runs
+        // BEFORE the record, because a row recorded and then also resolved would be counted twice.
+        val kept = CollectionBoundaryCheck.resolved(translated.binder.resolutions, bnd)
         CheckReport.record(CollectionClosureCheck.Name, clo.map(_.report))
-        CheckReport.record(CollectionBoundaryCheck.Name, bnd.map(_.report))
+        CheckReport.record(CollectionBoundaryCheck.Name, kept.map(_.report))
         CheckReport.record(RetargetBoundaryCheck.Name, ret.map(_.report))
+        say(s"COLLECTION BOUNDARY (stranded slots the phase created): ${kept.size}")
+        println(CollectionBoundaryCheck.summary(kept))
       }
       say(s"COLLECTION CLOSURE (mapped supertype, unmapped subtype): ${clo.size}")
       if clo.nonEmpty then say(CollectionClosureCheck.Classification)
       println(CollectionClosureCheck.summary(clo))
-      say(s"COLLECTION BOUNDARY (stranded slots the phase created): ${bnd.size}")
-      println(CollectionBoundaryCheck.summary(bnd))
       say(s"RETARGET BOUNDARY (values the JDK produces at a retargeted type): ${ret.size}")
       println(RetargetBoundaryCheck.summary(ret))
     }
@@ -409,7 +413,8 @@ final case class PortRun(
     // collection checks are — a port that configures no annotation has no boundary to police — and
     // over `checkedUnits`, so a dependent does not report its base's refusals (ENGINE-LIMITS D2).
     effectivePhases.collect { case n: NullabilityTransform => n }.foreach { n =>
-      val bnd = n.boundary(checkedUnits)
+      // …minus the port's own selections, drained BEFORE the record — see the collection lane above.
+      val bnd = NullabilityBoundaryCheck.resolved(translated.binder.resolutions, n.boundary(checkedUnits))
       CheckReport.record(NullabilityBoundaryCheck.Name, bnd.map(_.report))
       say(s"NULLABILITY BOUNDARY (sites refused, wrapper seams left open, retypes the language " +
         s"does not make transparent): ${bnd.size}")
@@ -573,20 +578,6 @@ final case class PortRun(
       CheckReport.record(PortRun.PortabilityAll, allViolations.map(_.report(PortRun.PortabilityAll)))
       CheckReport.record(PortRun.PortabilityEmitted, portability.map(_.report(PortRun.PortabilityEmitted)))
     }
-    // …and the OTHER half of the same check: what a remedy SELECTION actually did.
-    //
-    // One lane and not two, deliberately. `remediation` already carries `Remediator`'s suggestions —
-    // the manifest line an operator would paste — and an APPLIED resolution is that loop closed: the
-    // engine pasted it. It is also already a `RequiredChecks` member, so a run that stopped
-    // recording resolutions fails exactly the way a run that stopped recording suggestions does,
-    // which a new top-level check would only have got by somebody remembering to add it to that set.
-    //
-    // The kind column is what keeps them apart (`resolved`), and it is what makes the accounting
-    // readable: a baseline diff must show `remediation(resolved) 0->N` beside the refusal lane the
-    // remedy drained falling by exactly N. That is `CLAUDE.md` §5's trivia-family rule one artifact
-    // over — a number that only ever grows says nothing about what it was drawn from.
-    val appliedRemedies = translated.binder.resolutions.all
-    CheckReport.record(PortRun.Remediation, Remediator.reports(fixes) ++ appliedRemedies.map(_.finding))
     // the rule count is DERIVED here and stated nowhere else. `PortabilityCheck`'s own scaladoc
     // carried a hand-written one for long enough that it detached from the list and then escaped
     // into two commit subjects nobody can regenerate; the fix is a number the code computes, at the
@@ -1168,10 +1159,36 @@ final case class PortRun(
           "so nothing in its body can summon it", l.origin, l.subject)
     }
     if contextPhases.nonEmpty || lostClauses.nonEmpty then
-      val ss = contextSeams ++ lostClauses
+      // …minus the port's own selections, drained BEFORE the record — see the collection lane above.
+      // `lostClauses` is in the same list on purpose: nothing may select a remedy for it (the check
+      // declares none for an engine bug), and passing it through the same drain is what makes that
+      // a property of the MENU rather than of which list the row happened to be in.
+      val ss = ContextSeamCheck.resolved(translated.binder.resolutions, contextSeams ++ lostClauses)
       CheckReport.record(ContextSeamCheck.Name, ss.map(_.report))
       say(s"CONTEXT SEAMS (where the context threading stopped): ${ss.size}")
       println(ContextSeamCheck.summary(ss))
+
+    // ---- what a remedy SELECTION actually did — the OTHER half of `remediation` ----
+    //
+    // One lane and not two, deliberately. `remediation` already carries `Remediator`'s suggestions —
+    // the manifest line an operator would paste — and an APPLIED resolution is that loop closed: the
+    // engine pasted it. It is also already a `RequiredChecks` member, so a run that stopped
+    // recording resolutions fails exactly the way a run that stopped recording suggestions does,
+    // which a new top-level check would only have got by somebody remembering to add it to that set.
+    //
+    // The kind column is what keeps them apart (`resolved`), and it is what makes the accounting
+    // readable: a baseline diff must show `remediation(resolved) 0->N` beside the refusal lane the
+    // remedy drained falling by exactly N. That is `CLAUDE.md` §5's trivia-family rule one artifact
+    // over — a number that only ever grows says nothing about what it was drawn from.
+    //
+    // …RECORDED HERE, after the LAST lane that can drain, and that position is load-bearing rather
+    // than tidy. The ledger is read once; recorded beside the portability suggestions it used to sit
+    // with, it would hold every collection and nullability resolution and NONE of the context-seam
+    // ones, because that lane is only assembled after emission (its `LostClause` half is the
+    // emitter's reading of the header it wrote). The two halves of the move would then disagree by
+    // exactly the rows a reader is least likely to check — the ones the manifest just added.
+    val appliedRemedies = translated.binder.resolutions.all
+    CheckReport.record(PortRun.Remediation, Remediator.reports(fixes) ++ appliedRemedies.map(_.finding))
 
     // CHECK 2 — over the FINAL tree.
     val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs))
@@ -2700,9 +2717,19 @@ object PortRun:
     * A check that gains a menu adds itself here. It shipped EMPTY with the plumbing, so the
     * mechanism's own arrival was provably flat on all fifteen lanes; what a name on this list buys
     * is that a `.conf` can VALIDATE the id at load (`PortConfig.knownRemedies` reads it), which is
-    * how a typo is told apart from a real remedy whose phase a port forgot to enable. */
+    * how a typo is told apart from a real remedy whose phase a port forgot to enable.
+    *
+    * The three BOUNDARY lanes joined them and are a DIFFERENT SHAPE, which is worth one sentence:
+    * every one of their entries is `accept`-shaped and NOT emission-affecting, because every act
+    * that changes the emission at one of those seams already has a manifest key and a remedy
+    * restating one would be a second spelling of it (`DESIGN.md` §8.16). So they need no `Apply`
+    * phase below — nothing is carried out, a row is MOVED — and the check that mints the residue
+    * drains it where it records. */
   val CheckRemedies: List[balticporter.tir.RemedySource] =
-    List(HeapPollutionCheck, OverloadRiskCheck)
+    List(HeapPollutionCheck, OverloadRiskCheck,
+         balticporter.transform.CollectionBoundaryCheck,
+         balticporter.transform.ContextSeamCheck,
+         balticporter.transform.NullabilityBoundaryCheck)
 
   /** …and the phases that CARRY those menus out — woven, never declared by a port.
     *
@@ -2711,6 +2738,10 @@ object PortRun:
     * `recordRunDecisions` runs before the first file is written. A check runs after all of it, so
     * the object that DECLARES a menu and the phase that CARRIES it out are two things — see
     * `HeapPollutionCheck.Apply`, whose doc is the argument in full.
+    *
+    * A menu whose entries only MOVE a row needs no entry here, which is why the boundary trio has
+    * none: there is nothing to carry out, and the check that mints the residue drains it at the
+    * moment it records (its own `resolved`).
     *
     * Woven for [[wovenIdiomPhases]]'s reason, arrived at from the other side: these phases have no
     * constructor policy at all. Their whole configuration is `PortManifest.resolutions`, which is

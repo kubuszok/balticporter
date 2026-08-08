@@ -1,5 +1,6 @@
 package balticporter.transform
 
+import balticporter.catalog.FixKind
 import balticporter.core.RuntimeArtifact
 import balticporter.tir.*
 
@@ -71,10 +72,61 @@ import balticporter.tir.*
   * no type list of its own except [[CollectionClosureCheck.jdkFamily]], which is the JDK's, and
   * the stream family below, which is the JDK's too.
   */
-object CollectionBoundaryCheck:
+object CollectionBoundaryCheck extends RemedySource:
 
   /** The check's name in `findings.tsv`. */
   val Name = "collection-boundary"
+
+  /** THE MENU — see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16.
+    *
+    * Two entries, both `accept`-shaped, both at an EXTERNAL callee, and the reason they are the only
+    * two is the ONE-SPELLING rule: a remedy may not be a second way to state something a manifest key
+    * already states. Every other act this check's classifications name is already spelled somewhere:
+    *
+    *   - `UnmappedSubtype` → add the row to `CollectionsTransform(typeMap)`;
+    *   - `ScopedOut` → move the declaration in or out of `CollectionsTransform(scope)`. RULED OUT as
+    *     a general remedy besides: scope-as-residue-reduction measured `27 -> 47` errors scoped and
+    *     `27 -> 51` turned off (`ENGINE-LIMITS.md` K16), so it is safe only for a genuine island;
+    *   - `OpaqueEgress`'s WRAP → name the callee's owner in `CollectionsTransform(reflectiveSinks)`
+    *     and the phase bridges the argument through `JavaCollections.Reified.toJavaValue`. A bridged
+    *     slot never reaches this lane, so a `wrap-at-seam` remedy here would be a second spelling of
+    *     that key with no site left to act on.
+    *
+    * And three acts are ABSENT rather than unspelled, each with the measurement that refused it:
+    *
+    *   - `wrap-at-seam` for `ShimBoundary`/`ExternalCallee` — a row reaches this lane only where the
+    *     phase found NO factory for the pair, which the phase itself now asserts (`ENGINE-LIMITS.md`
+    *     K2.5: 5 findings had been misreading a switched-off fix as a residue for the life of a
+    *     port). A remedy that forced one would have to invent the converter, and a bridge over a
+    *     value the phase REFUSED to move names the wrapper instead of the boundary — the seam stops
+    *     being findable (K6.5);
+    *   - `copy-detach` for `ExternalCallee` — a copy compiles and DETACHES BOTH DIRECTIONS (§4.4),
+    *     which is a behaviour change with no error and no count behind it. `ENGINE-LIMITS.md` K15 is
+    *     the measurement that made this lane exist at all; it is not closed by making the seam
+    *     silent;
+    *   - a second, shim-typed target for `InexpressibleParent` — `ENGINE-LIMITS.md` K5.7: "a second
+    *     truth about one java type", every crossing needing a coercion in both directions. And a
+    *     coercion for a CONCRETE `ReifiedOccurrence` target is refused structurally (K18): no live
+    *     view can BE a `mutable.HashMap`. Neither kind takes an `accept` either — they are known
+    *     divergences the engine refuses to repair, not review lists, and accepting one would drain a
+    *     defect rather than a question.
+    */
+  def remedies: List[Remedy] = List(
+    Remedy(
+      id = "accept-external-callee", lane = Name, kind = Issue.ExternalCallee.toString,
+      emissionAffecting = false, fix = FixKind.Parameterised,
+      subject = Remedy.Subject.ExternalMember,
+      what = "the port has READ this seam and states that the value crossing it is one this callee " +
+        "handles — the row moves to remediation(resolved), the emitted text does not change, and " +
+        "nothing is wrapped or copied"),
+    Remedy(
+      id = "accept-opaque-egress", lane = Name, kind = Issue.OpaqueEgress.toString,
+      emissionAffecting = false, fix = FixKind.Parameterised,
+      subject = Remedy.Subject.ExternalMember,
+      what = "the port has READ this external method and states that it does NOT read the runtime " +
+        "representation it is handed — the complement of a `reflectiveSinks` entry, which is the " +
+        "only answer this review list previously had no way to record"),
+  )
 
   /** what kind of stranding this is, which is what decides who fixes it (CLAUDE.md §1). */
   enum Issue:
@@ -211,8 +263,20 @@ object CollectionBoundaryCheck:
     def detail: String = s"$slot: Found $actual / Required $expected"
     def render: String = s"$issue $slot — Found $actual / Required $expected  (${origin.javaPath}:${origin.line})"
     def report(using program: Program): CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, program.symbolOf(enclosing).map(_.fullName).getOrElse("?"),
-        CheckReport.relativise(origin.javaPath), origin.line, detail)
+      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
+                          origin.line, detail)
+
+    /** the string both artifacts key on — the drained row's `remediation(resolved)` finding uses this
+      * one too, so a reader can join the two halves of the move by the column they are looking at.
+      * For the two remedied kinds `enclosing` is the CALLEE, which is what a selection names. */
+    def owner(using program: Program): String =
+      program.symbolOf(enclosing).map(_.fullName).getOrElse("?")
+
+  /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. Returns the findings that
+    * remain; the rest are in the plan's ledger and become `remediation(resolved)` rows. */
+  def resolved(plan: ResolutionPlan, findings: List[Finding])(using Program): List[Finding] =
+    plan.drain(Name, findings)(f =>
+      ResolutionPlan.Residue(f.issue.toString, f.enclosing, f.owner, f.origin, f.detail))
 
   /** JDK collection families that are NOT in the closure of anything `typeMap` covers and are not
     * retyped at all. `java.util.stream` is the whole of it today and the reason the list exists:
