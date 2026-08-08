@@ -115,8 +115,9 @@ class BoundaryRemedySpec extends munit.FunSuite:
 
   test("…and NOTHING drains a `lost-clause`, which is an engine bug and not a port's to silence") {
     // The one kind in this check that is reachable from no manifest key (`DESIGN.md` §8.2,
-    // `ENGINE-LIMITS.md` CT5). It is passed through the same drain as every other row on purpose, so
-    // that "no remedy answers it" is a property of the MENU rather than of which list it sat in.
+    // `ENGINE-LIMITS.md` CT5). Asserted on the MENU and not on the run's plumbing on purpose: the
+    // run appends those rows after the drain has already happened, and a property that held only
+    // because of WHERE a list was concatenated is a property one refactor away from being false.
     val ids = ContextSeamCheck.remedies.map(_.kind).toSet
     assert(!clue(ids).contains(ContextSeamCheck.Kind.LostClause.label))
   }

@@ -432,7 +432,17 @@ final case class PortRun(
     // `CheckReport.record` per check name is the contract — a second call REPLACES the first — so
     // the two halves cannot be recorded where each is computed.
     val contextPhases = effectivePhases.collect { case g: GlobalsToImplicitsTransform => g }
-    val contextSeams  = contextPhases.flatMap(_.seams(program, checkedUnits))
+    // …and the DRAIN runs HERE, where the other lanes' do, even though the record cannot. A
+    // resolution has two artifacts and `AppliedResolution` exists so they cannot disagree — but the
+    // decision half has a deadline the finding half does not: every decision must be in the log
+    // BEFORE a byte is emitted, because a porter note IS emitted text. Drained at the record site
+    // instead, these three applications reached `remediation(resolved)` and no `decisions.tsv` row
+    // at all, which is exactly the disagreement that type was written to make impossible. The fifth
+    // kind (`LostClause`) is the one that cannot move: it is the emitter's own reading of the header
+    // it wrote, and no remedy targets it — which is stated in the menu rather than left to the fact
+    // that it is appended after this line.
+    val contextSeams  = ContextSeamCheck.resolved(translated.binder.resolutions,
+                                                  contextPhases.flatMap(_.seams(program, checkedUnits)))
 
     // ---- cross-port composition: does the shared surface agree with the module that emits it? ----
     // Runs on EVERY port. On a base port `shared` is empty and the check is a no-op by arithmetic
@@ -1159,11 +1169,11 @@ final case class PortRun(
           "so nothing in its body can summon it", l.origin, l.subject)
     }
     if contextPhases.nonEmpty || lostClauses.nonEmpty then
-      // …minus the port's own selections, drained BEFORE the record — see the collection lane above.
-      // `lostClauses` is in the same list on purpose: nothing may select a remedy for it (the check
-      // declares none for an engine bug), and passing it through the same drain is what makes that
-      // a property of the MENU rather than of which list the row happened to be in.
-      val ss = ContextSeamCheck.resolved(translated.binder.resolutions, contextSeams ++ lostClauses)
+      // `contextSeams` has ALREADY been drained, up where the phase's own seams are collected — see
+      // there for why the drain cannot wait for this line. `lostClauses` is appended undrained and
+      // that is not an omission: no remedy targets `lost-clause`, because it is an engine bug in the
+      // constructor region reachable from no manifest key (`ENGINE-LIMITS.md` CT5).
+      val ss = contextSeams ++ lostClauses
       CheckReport.record(ContextSeamCheck.Name, ss.map(_.report))
       say(s"CONTEXT SEAMS (where the context threading stopped): ${ss.size}")
       println(ContextSeamCheck.summary(ss))
@@ -1181,12 +1191,12 @@ final case class PortRun(
     // remedy drained falling by exactly N. That is `CLAUDE.md` §5's trivia-family rule one artifact
     // over — a number that only ever grows says nothing about what it was drawn from.
     //
-    // …RECORDED HERE, after the LAST lane that can drain, and that position is load-bearing rather
-    // than tidy. The ledger is read once; recorded beside the portability suggestions it used to sit
-    // with, it would hold every collection and nullability resolution and NONE of the context-seam
-    // ones, because that lane is only assembled after emission (its `LostClause` half is the
-    // emitter's reading of the header it wrote). The two halves of the move would then disagree by
-    // exactly the rows a reader is least likely to check — the ones the manifest just added.
+    // …RECORDED HERE, after every lane, because the ledger is read ONCE and a lane drained after
+    // this line contributes nothing to it — silently, with the drained rows simply missing from the
+    // count that is supposed to balance them. The DECISION half has the tighter deadline of the two
+    // (`recordRunDecisions`, which must run before a byte is emitted, because a porter note IS
+    // emitted text), so a drain is bound by that one; this position costs nothing and removes the
+    // second way to get it wrong.
     val appliedRemedies = translated.binder.resolutions.all
     CheckReport.record(PortRun.Remediation, Remediator.reports(fixes) ++ appliedRemedies.map(_.finding))
 
