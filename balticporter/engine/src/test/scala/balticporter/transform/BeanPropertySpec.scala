@@ -467,6 +467,31 @@ class BeanPropertySpec extends munit.FunSuite:
     assert(clue(guards(r)).contains("OverriddenBelow") || clue(guards(r)).contains("ConcreteRelative"))
   }
 
+  test("…and one TWO levels down does too — the direction test was on DIRECT parents only") {
+    // `overriddenBelow` asked whether the other declaration's owner names THIS owner as a parent —
+    // one hop. A re-declaration two levels down names the class in BETWEEN, so it answered "nothing
+    // below" about a subclass that really does re-declare the member, and the collapse emitted a
+    // `var` under it. Made ABSTRACT so `concreteRelative` cannot catch it by accident: the belt is
+    // the whole of the test, and a fixture the other guard also declines would prove nothing.
+    //
+    // …and the failure is the quietest kind there is (§3): a `var` cannot be overridden at all, and
+    // `RefChecks` does not run until the port reaches 0 typer errors — so it arrives on the day the
+    // port goes green, in a member nobody is looking at.
+    val r = collapse(
+      """
+      class B {
+        private int w;
+        public int getW() { return w; }
+        public void setW(int v) { this.w = v; }
+      }
+      class M extends B { }
+      abstract class S extends M {
+        public abstract int getW();
+      }
+      """, BeanPropertyTransform.Target.Var, "B#w" -> "getW/setW")
+    assertEquals(clue(guards(r)), List("OverriddenBelow"))
+  }
+
   test("an INTERFACE above with no subclass below COLLAPSES, and the trait keeps its abstract pair") {
     val r = collapse(
       """

@@ -139,7 +139,7 @@ object BeanCollapse:
     val g   = prop.getter
     val acc = g :: prop.setter.toList
     if acc.exists(a => graph.closureOf(a).isAnchored) then Verdict.Refuse(Guard.AnchoredClosure)
-    else if acc.exists(a => overriddenBelow(p, graph, a)) then Verdict.Refuse(Guard.OverriddenBelow)
+    else if acc.exists(a => overriddenBelow(graph, a)) then Verdict.Refuse(Guard.OverriddenBelow)
     else if acc.exists(a => concreteRelative(p, graph, a)) then Verdict.Refuse(Guard.ConcreteRelative)
     else
       trivialField(p, g) match
@@ -270,9 +270,20 @@ object BeanCollapse:
 
   /** does a SUBCLASS of the declaring class declare this member too? See [[Guard.OverriddenBelow]] —
     * an ancestor is fine and a descendant is not, so the test is on the direction of the edge and
-    * not on the size of the component. */
-  def overriddenBelow(p: Program, g: OverrideGraph, m: SymId): Boolean =
-    val owner = p.symbolOf(m).map(_.owner)
-    g.closureOf(m).members.exists(o => o != m &&
-      p.symbolOf(o).map(_.owner) != owner && g.parentsOf(p.symbolOf(o).map(_.owner).getOrElse(SymId.None))
-        .contains(owner.getOrElse(SymId.None)))
+    * not on the size of the component.
+    *
+    * ==Asked of the GRAPH's own transitive answer, because the one-hop form was not the question==
+    * This walked the closure and asked whether the other declaration's owner names THIS owner as a
+    * DIRECT parent — `g.parentsOf(theirs).contains(mine)`. A re-declaration two levels down names
+    * the class in BETWEEN, so the test answered "nothing below" about a subclass that really does
+    * re-declare the member, and the collapse emitted a `var` under an abstract `def` it cannot
+    * implement and a concrete one it cannot override. **Nothing reports that until the port is
+    * already at 0 typer errors**, because `RefChecks` does not run before then (§3), so it arrives
+    * on the day the port goes green in a member nobody is looking at.
+    *
+    * `OverrideGraph.overriders` is exactly this question — "the declarations BELOW `m` that override
+    * or implement it, every subclass, every anonymous body, transitively" — memoised on
+    * `descendantsOf` and published once. Re-deriving the direction here was the second answer §4.6
+    * is about, and it was the wrong one. */
+  def overriddenBelow(g: OverrideGraph, m: SymId): Boolean =
+    g.overriders(m).nonEmpty
