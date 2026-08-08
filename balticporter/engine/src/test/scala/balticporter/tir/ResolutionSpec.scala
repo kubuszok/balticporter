@@ -83,6 +83,54 @@ class ResolutionSpec extends munit.FunSuite:
     assertEquals(plan.troubles.map(_.issue), List(ResolutionPlan.Issue.NeverApplied))
   }
 
+  test("a remedy answers ONE kind by default — the shape every declarer had before `alsoKinds`") {
+    assert(SpecRemedyPhase.Noop.answers(SpecRemedyPhase.Lane, SpecRemedyPhase.Kind))
+    assert(!SpecRemedyPhase.Noop.answers(SpecRemedyPhase.Lane, "second-kind"))
+    assertEquals(SpecRemedyPhase.Noop.target, "spec-lane(spec-kind)")
+  }
+
+  test("…and a remedy for a lane that splits ONE SITE answers every kind it named — never a lane") {
+    // The `overload-risk` shape: JLS 15.12.2's three phase boundaries are three rows about ONE
+    // candidate set, and one act answers all of them. Per-member keys mean the alternative is a
+    // member that can drain only one of its own rows.
+    val wide = SpecRemedyPhase.Noop.copy(alsoKinds = List("second-kind"))
+    assert(wide.answers(SpecRemedyPhase.Lane, SpecRemedyPhase.Kind))
+    assert(wide.answers(SpecRemedyPhase.Lane, "second-kind"))
+    assert(!wide.answers(SpecRemedyPhase.Lane, "third-kind"))
+    // it does NOT widen across lanes: the drained lane must fall by exactly what `resolved` gained.
+    assert(!wide.answers("another-lane", "second-kind"))
+    assertEquals(wide.target, "spec-lane(spec-kind|second-kind)")
+  }
+
+  test("…and the PLAN narrows through the same predicate, so a widened remedy reaches both callers") {
+    val p     = program
+    val wide  = new SpecRemedyPhase(remedy = SpecRemedyPhase.Noop.copy(alsoKinds = List("second-kind")))
+    val vocab = RemedyVocabulary.from(List(wide))
+    val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-noop"), vocab, vocab.byId.keySet)
+    val size      = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
+    assertEquals(plan.selected(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind).map(_.remedy.id),
+                 Some("spec-noop"))
+    assertEquals(plan.selected(size.id, SpecRemedyPhase.Lane, "second-kind").map(_.remedy.id),
+                 Some("spec-noop"))
+    assertEquals(plan.selected(size.id, SpecRemedyPhase.Lane, "third-kind"), scala.None)
+  }
+
+  test("the DRAIN reads what a phase RECORDED, never what the manifest declared") {
+    val p         = program
+    val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)
+    val size      = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
+    // declared and bound, and nothing has applied it: the check that mints the lane must still
+    // report the row, or a refused selection would silently erase a residue.
+    assert(!plan.appliedAt(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind))
+    plan.applied(plan.selected(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind).get,
+                 "com.demo.Widget#size", size.id, Origin.synthetic, "applied")
+    assert(plan.appliedAt(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind))
+    // …at THIS declaration and this lane only.
+    assert(!plan.appliedAt(SymId.None, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind))
+    assert(!plan.appliedAt(size.id, "another-lane", SpecRemedyPhase.Kind))
+    assert(!plan.appliedAt(size.id, SpecRemedyPhase.Lane, "another-kind"))
+  }
+
   test("…and it is NOT handed to a caller asking about another lane or kind") {
     val p         = program
     val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)

@@ -63,9 +63,42 @@ final case class Remedy(
     /** one sentence: what the port gets if it picks this. Rendered in the menu and in the porter
       * note beside the code, so it is written for a reader who is holding neither. */
     what: String,
+    /** the OTHER kinds in [[lane]] this same remedy also answers. Empty by default, which is the
+      * one-kind remedy the mechanism shipped with and the reading every existing declarer keeps.
+      *
+      * ==Why a lane's kinds are sometimes FACETS of one decision==
+      * A `kind` normally PARTITIONS a lane into questions a port answers separately —
+      * `heap-pollution`'s `Acknowledged` and `Unacknowledged` are two statements about two different
+      * declarations, and a remedy for one has nothing to say about the other. A lane may instead
+      * split ONE SITE into several rows: `overload-risk` files up to three at a single call, because
+      * JLS 15.12.2's three phase boundaries are three ways for the SAME candidate set to diverge. One
+      * act — pin javac's alternative, or accept the divergence — answers all of them, and it is taken
+      * once.
+      *
+      * Without this field such a lane needs one id per kind, and the selection key is per MEMBER
+      * ([[Resolution]]) — so a member holding two kinds could answer only ONE of them and its
+      * remaining rows would be residue no key can ever drain. That is a bar the MECHANISM cannot
+      * meet, not a port's omission, and it is exactly what `DESIGN.md` §8.16 refused the compound key
+      * for: writing one decision three times is three places to be wrong.
+      *
+      * It does NOT widen across lanes, and that is what keeps the accounting readable: a remedy
+      * drains rows in exactly one `CheckReport` check, so `CLAUDE.md` §5's rule — the drained lane
+      * falls by exactly what `remediation(resolved)` gained — still reads off one number.
+      */
+    alsoKinds: List[String] = Nil,
 ):
-  /** the `lane(kind)` pair, as the residue count spells it. */
-  def target: String = s"$lane($kind)"
+  /** the `lane(kind)` pair, as the residue count spells it — every kind this remedy answers. */
+  def target: String =
+    if alsoKinds.isEmpty then s"$lane($kind)"
+    else s"$lane(${(kind :: alsoKinds).mkString("|")})"
+
+  /** IS THIS THE ROW IN FRONT OF ME? — the one question [[ResolutionPlan.selected]] asks.
+    *
+    * A method rather than two equality tests at the caller, so [[alsoKinds]] cannot become a field
+    * one consulting site reads and another silently does not (`CLAUDE.md` §4.56's fast-path guard,
+    * one type over). */
+  def answers(l: String, k: String): Boolean =
+    l == lane && (k == kind || alsoKinds.contains(k))
 
   def render: String = s"$id — $what  [drains $target; ${fix.section}]"
 

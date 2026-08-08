@@ -141,11 +141,15 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
     * `None` for every selection ever written. `lane`/`kind` are the residue row this caller is about
     * to file, so a selection aimed at a different lane is not consulted — an id is globally unique,
     * so this can only ever narrow an entry to the one caller that declared it.
+    *
+    * The match is [[Remedy.answers]] and never two equality tests written here, because a lane may
+    * split ONE SITE into several kinds ([[Remedy.alsoKinds]]) and a remedy that answers such a site
+    * answers every row it produced.
     */
   def selected(target: SymId, lane: String, kind: String): Option[Resolution] =
     byTarget.getOrElse(target, Nil).iterator
       .flatMap(_.resolution)
-      .find(r => r.remedy.lane == lane && r.remedy.kind == kind)
+      .find(_.remedy.answers(lane, kind))
 
   /** …and the record that it fired. Separate from [[selected]] because a caller may legitimately ask
     * and then refuse for a reason of its own, and a plan that counted the question as the answer
@@ -159,6 +163,21 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
     record(AppliedResolution(r, subjectFqn, subject, origin, what))
 
   def all: List[AppliedResolution] = log.toList
+
+  /** DID A REMEDY ALREADY ANSWER THIS ROW? — the DRAIN, asked by the check that mints the lane.
+    *
+    * A resolution that is not emission-affecting changes no tree, so the residue it answered is
+    * still standing where the check walks and the check would report it beside the
+    * `remediation(resolved)` row that says it was answered — two rows for one site, and a lane that
+    * cannot fall by what `resolved` gained (`CLAUDE.md` §5). So the check asks HERE, and asks about
+    * what the phase RECORDED rather than about what the manifest DECLARED: a selection the phase
+    * examined and refused (a guard said the remedy does not apply at this site) has no row here, and
+    * its finding stays in the lane exactly as it should. One ledger, read from both ends — never two
+    * derivations of "did this fire", which is what `AppliedResolution` exists to prevent.
+    */
+  def appliedAt(subject: SymId, lane: String, kind: String): Boolean =
+    subject != SymId.None &&
+      log.exists(a => a.subject == subject && a.remedy.answers(lane, kind))
 
   /** everything recorded so far, with the ledger emptied — how the run moves a translation's
     * applications into its artifacts without the buffer outliving the translation. */

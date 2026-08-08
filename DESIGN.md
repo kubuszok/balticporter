@@ -4947,6 +4947,32 @@ this corpus uses `mirroring`, and building it would have gone out with `measure-
 in the run could exercise — the shape §5's dry-run rule refuses. The fix is two comparisons per base,
 over `baseChain :+ this`, and it belongs to the wave that ships the first menu.
 
+**A KIND SOMETIMES PARTITIONS A LANE AND SOMETIMES SPLITS ONE SITE, and the first menu is where the
+difference bites.** A remedy names the `lane(kind)` it drains, and the plumbing shipped reading that
+as one pair, on the model every lane in the corpus looked like: `heap-pollution`'s `Acknowledged` and
+`Unacknowledged` are two statements about two DIFFERENT declarations, so a remedy for one has nothing
+to say about the other. `overload-risk` is the other shape — its three kinds are JLS 15.12.2's three
+phase boundaries, all three asked of the SAME candidate set at the SAME call, so a single call files
+up to three rows and ONE act (pin javac's alternative, or accept the divergence) answers all of them.
+
+Read through the one-pair rule that lane needs one id per kind, and the selection key is per MEMBER —
+so a member holding two kinds could answer only one of them and its remaining rows would be residue
+**no key can ever drain**. That is a bar the MECHANISM cannot meet, not a port's omission, and it is
+also the compound key's own failure re-arriving: the port writes one decision three times, in three
+places it can be wrong. So `Remedy.alsoKinds` names the other kinds of the SAME lane one remedy
+answers, `Remedy.answers` is the single predicate `ResolutionPlan.selected` matches through, and the
+default is `Nil` — every declarer written before it keeps the pair it had, byte for byte. It does not
+widen across LANES, and that restriction is what keeps §5's accounting readable: a remedy drains rows
+in exactly one check, so "the drained lane fell by what `resolved` gained" is still one subtraction.
+
+**The DRAIN is read off the LEDGER, not off the manifest** (`ResolutionPlan.appliedAt`). A remedy
+that is not emission-affecting changes no tree, so the residue it answered is still standing where
+the check walks: without a drain the check reports the row BESIDE the `remediation(resolved)` row
+that says it was answered, and the lane cannot fall by what `resolved` gained. Asking the ledger
+rather than the declaration is what makes a REFUSAL honest — a selection a phase examined and
+declined (its guard says the remedy does not apply at this site) records nothing, so its finding
+stays in the lane exactly as it should, and the two ends of the loop read one value.
+
 **Rejected: a compound key.** `resolutions { "owner#member" { lane = "…", remedy = "…" } }` was the
 obvious shape and it is redundant by construction — a remedy id is globally unique, so the id already
 determines the lane and the kind, and writing them again gives a port a second place to be wrong. The
