@@ -778,6 +778,17 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   residue is right here* — which had no spelling on any lane and is why those counts could only ever
   go up.
 
+  **And the arithmetic is `sum(drained)`, never `count(rows)`, because a selection is not always at
+  the row it drains.** A remedy selected at a TYPE takes every site inside it, so one applied row
+  answers for fifteen lane rows and a diff read by counting rows leaves fourteen with nothing to
+  attribute them to — the exact reading the rule refuses. So an application CARRIES the number it
+  claims (`AppliedResolution.drained`), states it in its own text, and claims ZERO where it cannot
+  know: a rewrite that RELOCATES a call rather than removing one moves the lane by an amount only the
+  lane can measure, and over-claiming would break the one arithmetic this rule rests on. **A DECLINE
+  is a lane too** (`remediation(refused)`): a remedy that verified its own precondition and refused
+  is neither applied nor inert, and reported as silence it reads exactly like success — so it is one
+  row per declined site NAMING THE GUARD, which is §3's refusal-enumeration rule read at a menu.
+
   Four more measurements are NOT check counts and are printed beside them, because each catches a
   class nothing else can see:
 

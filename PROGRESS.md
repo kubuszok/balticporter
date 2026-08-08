@@ -5288,6 +5288,60 @@ to strip, so it is a plain `diff` — and the reason it is recorded rather than 
 measured the gate it did build and did not measure a second one. Next agent: build it beside
 `findings_baseline_guard`, with its own `lane-selfcheck` cell, and expect the promotion to be flat.
 
+### 12.2.6 The portability MENU, and the two things measuring it found
+
+`DESIGN.md` §8.16 shipped the selection plumbing with no menu; §8.18 is the first one — `Remediator`'s
+three verified templates made selectable (`RemediationTransform`: `substitutions-drop`,
+`static-forwarder-inline`, `class-table`) plus `PortabilityCheck`'s own `accept-jvm-only`. Two things
+came out of trying to demonstrate it on real ports, and both are results rather than notes.
+
+**`portability(emitted)` had never excluded a dropped type on a RENAMING port** (`ENGINE-LIMITS.md`
+P7). The emission gate reads the frontend's `Substituted` TAG; the portability block read the
+`dropTypes` KEY against a renamed `Symbol.fullName`, so the set was always empty and
+`portability(emitted)` equalled `portability(all)` exactly. libGDX core **153 -> 69**, `remediation`
+**30 -> 15**, `jdk-surface` **24 -> 22**, at 0 compile errors and **0 moved member digests** — nothing
+in the run could see it, and what found it was asking why the menu had no defensible site.
+
+**And after the fix it still has almost none, which is the honest state of this corpus.** Of the
+three tree-changing remedies:
+
+- `substitutions-drop` — two genuine HIGH chokepoints remain on libGDX core (`sge.input.RemoteInput`,
+  `sge.utils.AtomicQueue`) and neither is droppable for a reason OUTSIDE the engine: the reference
+  hand port PORTS `RemoteInput` (§3.5 — quote what they emitted), and `AtomicQueue` has a suite in
+  this port's own test source set. That is exactly what `Remediator`'s own doc says the HIGH grade is
+  and is not: the engine's half of the claim is measured, and whether the port SHOULD drop is the
+  port's judgement;
+- `static-forwarder-inline` and `class-table` — the one port that had a site for either is libGDX
+  core, and it already carries the hand-written equivalents (`unwrapReflection`, `classTable`) plus
+  the `dropTypes` entry that removes the wrapper. With P7 fixed, both suggestions correctly disappear.
+
+So the three ship with **fixture coverage and no live selection** (`RemediationMenuSpec`, 14 cases
+including every refusal guard), and saying so is better than inventing a demonstration on a port that
+does not want one.
+
+**`accept-jvm-only` IS demonstrated live, on liqp, and the arm that fires is the refusal**
+(`ENGINE-LIMITS.md` P6). `liqp.spi.SPIHelper#findProviders` is `ServiceLoader.load(TypesSupport.class)`
+— the site §12.2.7's descriptor exists for — and liqp declares all three platforms, so accepting is a
+contradiction the run reports with both real knobs named. `remediation` **12 -> 14** with
+`portability(emitted)` FLAT at 56: the refusal did not drain, which is exactly what its own row says.
+
+### 12.2.7 `serviceProviders` — P5's second half, and liqp's last hand-written file
+
+`ENGINE-LIMITS.md` P5 is CLOSED. `PortManifest.serviceProviders` names the upstream
+`META-INF/services` descriptors a module ships and the run copies each into
+`src_managed/<config>/resources/`, translating the FILE NAME and every PROVIDER LINE through the run's
+own `emittedName` (`DESIGN.md` §8.17). liqp is the only corpus library that ships one, and it is the
+whole of the real-port evidence: its hand-written
+`ported/ssg-liquid/src/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport` — kept in step
+with `packageRenames` by hand — is DELETED, the same two lines are emitted renamed, the lane's
+`--resource-dir` moved to the build product, and the suite is unchanged (**636 passing, 1 failing**,
+no new failure). New lane `service-providers` **0 -> 2** on that port and recorded on no other, which
+is `PortRun.requiredChecks` deriving the requirement from the same declaration the work is.
+
+The negatives — a dropped provider, a dropped service, an empty descriptor, a name the rename did not
+move, a line the format does not admit — are reachable on NO corpus port and are `ServiceProvidersSpec`'s
+ten cases. That spec is the coverage.
+
 ### 12.3 Counted residues that are not defects
 
 - **`catalog(unreached)` GROWS by one on every port each time a MODERN-JAVA row is mechanised, and
