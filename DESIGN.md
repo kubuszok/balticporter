@@ -4815,11 +4815,13 @@ and both halves are counted.** Nothing about the mechanism moves into the manife
 names a choice from a list the engine published, which is the shape a `RuleScope` and a
 `verdictOverrides` entry already have.
 
-This section is the PLUMBING as built. It ships with **no menu**: no phase and no check declares a
-remedy, so every port's `remediation(resolved)` is zero, the surface fingerprint is byte-identical on
-a manifest that selects nothing, and the mechanism's arrival is provably flat on all fifteen lanes.
-That is deliberate — §1(b)'s rule that an empty parameter must be a no-op, applied to a whole
-mechanism.
+The PLUMBING shipped with **no menu** — no phase and no check declared a remedy — so every port's
+`remediation(resolved)` was zero, the surface fingerprint was byte-identical on a manifest that
+selects nothing, and the mechanism's arrival was provably flat on all fifteen lanes. That was
+deliberate, and §1(b)'s rule that an empty parameter must be a no-op still holds for a port that
+selects nothing: the menus below add ids to a vocabulary, and a vocabulary nobody names moves nothing.
+The first menus are the three BOUNDARY checks (`collection-boundary`, `context-seam`,
+`nullability-boundary`), registered in `PortRun.CheckRemedies`, and they arrived flat on every lane.
 
 **The KEY is a `MemberKey`, and the granularity is PER MEMBER.** `owner#name` or
 `owner#name(P1,P2)`, in the upstream namespace — the one grammar `dropMethods`, `ClassTableTransform`
@@ -4974,6 +4976,21 @@ other side: they have no constructor policy at all, their whole configuration is
 | `heap-pollution` | `acknowledge` | no | the operator states this vararg use is safe |
 | `overload-risk` | `ascribe-javac-choice` | **yes** | name javac's alternative, as a method-value ascription |
 | `overload-risk` | `accept-risk` | no | the operator read the candidate set and accepts the divergence |
+| `collection-boundary` | `accept-external-callee` | no | the port read the seam; the value crossing it is one this callee handles |
+| `collection-boundary` | `accept-opaque-egress` | no | the port read this external method; it does not read the representation |
+| `context-seam` | `accept-unconstructed-thread` | no | the port's USERS construct this class, so the clause is part of the ported API |
+| `context-seam` | `accept-residual-global` | no | this read stays global on purpose — a per-SITE statement `boundary` cannot make |
+| `nullability-boundary` | `accept-scoped-out` | no | this declaration is meant to keep its upstream type and marker |
+| `nullability-boundary` | `accept-abstract-type-parameter` | no | the port accepts what this retype costs at the USES |
+
+**The boundary trio is a DIFFERENT SHAPE from the two above it, and the difference is not an accident
+of which lanes came first.** Every one of its six entries is `accept`-shaped and none is
+emission-affecting, so none of them appears in `remedyPhases`: there is no act to carry out and no
+deadline to beat — the check that mints the residue is the only thing that ever holds the row, so it
+partitions and records in one traversal (`ResolutionPlan.drain`, whose doc states the split against
+`appliedAt` in full). That uniformity is the ONE-SPELLING rule's own shadow, and it is stated below:
+at these three seams every act that CHANGES the emission already has a manifest key, so the only
+entries left to add are the ones that move a row.
 
 `acknowledge` is java's own conversation given a home: javac warns at a non-reifiable vararg and
 `@SafeVarargs` is the author answering, and NEITHER half exists in scala. Nothing is translated —

@@ -39,10 +39,14 @@ class BoundaryRemedySpec extends munit.FunSuite:
 
   test("…and the whole check-side vocabulary assembles: no two remedies claim one id") {
     // `RemedyVocabulary.from` REFUSES a duplicate rather than resolving it, so this is the assertion
-    // that the engine's own three menus can be held at once — the thing a run does on every port.
+    // that EVERY check-side menu the engine ships can be held at once — the thing a run does on
+    // every port, and the property that breaks the day two lanes reach for the same obvious slug.
+    //
+    // Asserted against the whole of `CheckRemedies` and not against this file's three, deliberately:
+    // scoped to the boundary trio it would pass while a fourth menu collided with one of them.
     val v = RemedyVocabulary.from(PortRun.CheckRemedies)
     assertEquals(v.ids.size, PortRun.CheckRemedies.map(_.remedies.size).sum)
-    assertEquals(v.ids, menus.flatMap(_._1.remedies.map(_.id)).sorted)
+    menus.foreach((source, _, _) => source.remedies.foreach(r => assert(clue(v).contains(clue(r).id))))
   }
 
   test("…and none of them is emission-affecting, which is what an `accept` MEANS") {

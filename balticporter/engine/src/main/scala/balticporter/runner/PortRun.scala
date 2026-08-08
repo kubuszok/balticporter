@@ -378,21 +378,22 @@ final case class PortRun(
       // Recorded even at zero, for the reason the other two are: a number nobody prints is a
       // sentence living in prose.
       val ret = c.retargetBoundary(program, checkedUnits)
+      // …minus what the port SELECTED a remedy for. A resolution is a MOVE, so the drained rows
+      // leave this lane and arrive in `remediation(resolved)` (CLAUDE.md §5), and every reader below
+      // — the record, the count and the summary — sees the SAME list, which is what stops the three
+      // from ever disagreeing about how big this residue is.
+      val bndKept = CollectionBoundaryCheck.resolved(translated.binder.resolutions, bnd)(using program)
       locally {
         given Program = program
-        // …minus what the port SELECTED a remedy for. A resolution is a MOVE, so the drained rows
-        // leave this lane and arrive in `remediation(resolved)` (CLAUDE.md §5); the drain runs
-        // BEFORE the record, because a row recorded and then also resolved would be counted twice.
-        val kept = CollectionBoundaryCheck.resolved(translated.binder.resolutions, bnd)
         CheckReport.record(CollectionClosureCheck.Name, clo.map(_.report))
-        CheckReport.record(CollectionBoundaryCheck.Name, kept.map(_.report))
+        CheckReport.record(CollectionBoundaryCheck.Name, bndKept.map(_.report))
         CheckReport.record(RetargetBoundaryCheck.Name, ret.map(_.report))
-        say(s"COLLECTION BOUNDARY (stranded slots the phase created): ${kept.size}")
-        println(CollectionBoundaryCheck.summary(kept))
       }
       say(s"COLLECTION CLOSURE (mapped supertype, unmapped subtype): ${clo.size}")
       if clo.nonEmpty then say(CollectionClosureCheck.Classification)
       println(CollectionClosureCheck.summary(clo))
+      say(s"COLLECTION BOUNDARY (stranded slots the phase created): ${bndKept.size}")
+      println(CollectionBoundaryCheck.summary(bndKept))
       say(s"RETARGET BOUNDARY (values the JDK produces at a retargeted type): ${ret.size}")
       println(RetargetBoundaryCheck.summary(ret))
     }
@@ -1511,7 +1512,10 @@ final case class PortRun(
     // names the manifest entry, which is the string an agent edits; the porter note follows from
     // `Decision.Kind.SelectedRemedy` being in `PorterNote.Rendered`, so the reader at the emitted
     // line is told there was a menu and which entry this port picked.
-    t.decisions.recordAll(t.binder.resolutions.all.map(_.decision))
+    // …`decisions` and not `all.map(_.decision)`: the ledger is per SITE, because that is what the
+    // drained lane's count has to balance against, and a decision is per DECLARATION (§5.1). One per
+    // site put the same sentence twice above one `val` the first time a selection broadcast.
+    t.decisions.recordAll(t.binder.resolutions.decisions)
     val withheld = retainOwnDecisions(t.program, t)
     recordCtorFunnel(t.program, t)
     recordDroppedSuperArgs(t.program, t)

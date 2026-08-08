@@ -290,34 +290,45 @@ class ResolutionSpec extends munit.FunSuite:
   // the DRAIN — a resolution is a MOVE, and both halves come from one traversal (CLAUDE.md §5)
   // -------------------------------------------------------------------------------------------
 
-  private case class Row(kind: String, at: SymId, subject: String)
+  /** a residue row as every real lane has one: a SITE (its own line) inside a DECLARATION. The two
+    * are separate fields here for the same reason they are separate in the artifacts — see the
+    * granularity assertion below. */
+  private case class Row(kind: String, at: SymId, subject: String, line: Int)
 
   private def drainRows(plan: ResolutionPlan, rows: List[Row]): List[Row] =
     plan.drain(SpecRemedyPhase.Lane, rows)(r =>
-      ResolutionPlan.Residue(r.kind, r.at, r.subject, Origin.synthetic, s"accepted ${r.subject}"))
+      ResolutionPlan.Residue(r.kind, r.at, r.subject, Origin("Widget.java", r.line, 1),
+                             s"accepted ${r.subject} at ${r.line}"))
 
   test("draining moves the selected rows OUT of the lane and INTO the ledger, by exactly that count") {
     val p         = program
     val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)
     val size      = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
     val label     = p.symbols.all.find(_.fullName.startsWith("com.demo.Widget#label")).get
-    val rows = List(Row(SpecRemedyPhase.Kind, size.id, "a"), Row(SpecRemedyPhase.Kind, size.id, "b"),
-                    Row(SpecRemedyPhase.Kind, label.id, "c"))
+    val rows = List(Row(SpecRemedyPhase.Kind, size.id, "com.demo.Widget#size", 4),
+                    Row(SpecRemedyPhase.Kind, size.id, "com.demo.Widget#size", 5),
+                    Row(SpecRemedyPhase.Kind, label.id, "com.demo.Widget#label", 2))
     val kept = drainRows(plan, rows)
     // BROADCAST: one key, two sites in the member it names — and the third row is another member's.
-    assertEquals(kept.map(_.subject), List("c"))
-    assertEquals(plan.all.map(_.subjectFqn), List("a", "b"))
+    assertEquals(kept.map(_.line), List(2))
+    assertEquals(plan.all.map(_.origin.line), List(4, 5))
     assertEquals(plan.all.map(_.finding.check).distinct, List("remediation"))
     assertEquals(plan.all.map(_.finding.kind).distinct, List("resolved"))
     assertEquals(plan.troubles, Nil)
+    // …and the two artifacts answer at DIFFERENT granularities on purpose: two rows MOVED, so two
+    // `resolved` findings — the drained lane must fall by exactly that — and ONE decision, because a
+    // decision is per DECLARATION (§5.1) and becomes a porter note. One per site put the same
+    // sentence twice above one `val` the first time a real selection broadcast.
+    assertEquals(plan.decisions.map(_.subjectFqn), List("com.demo.Widget#size"))
+    assertEquals(plan.decisions.map(_.origin.line), List(4))
   }
 
   test("…and it does NOT fire at a row of a kind the remedy does not serve") {
     val p         = program
     val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)
     val size      = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
-    val kept      = drainRows(plan, List(Row("another-kind", size.id, "a")))
-    assertEquals(kept.map(_.subject), List("a"))
+    val kept      = drainRows(plan, List(Row("another-kind", size.id, "com.demo.Widget#size", 4)))
+    assertEquals(kept.map(_.subject), List("com.demo.Widget#size"))
     assertEquals(plan.all, Nil)
     // the entry bound, the remedy is live, and the finding it answers never occurred HERE — which is
     // the third staleness state and not a typo.
@@ -325,8 +336,8 @@ class ResolutionSpec extends munit.FunSuite:
   }
 
   test("…and an EMPTY plan is the identity, decided from the plan's own state and not the rows") {
-    val kept = drainRows(ResolutionPlan.empty, List(Row(SpecRemedyPhase.Kind, SymId.None, "a")))
-    assertEquals(kept.map(_.subject), List("a"))
+    val kept = drainRows(ResolutionPlan.empty, List(Row(SpecRemedyPhase.Kind, SymId.None, "x", 1)))
+    assertEquals(kept.map(_.subject), List("x"))
     assertEquals(ResolutionPlan.empty.all, Nil)
   }
 

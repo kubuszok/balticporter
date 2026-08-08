@@ -183,6 +183,21 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
     * The empty-plan fast path is derived from THIS plan's own state and nothing else, which is
     * `CLAUDE.md` §4.56's rule for a guard: a port that selected nothing has no entry to match, so
     * skipping is arithmetic rather than a second opinion about the findings.
+    *
+    * ==Why this and [[appliedAt]] are BOTH here, and what decides which one a lane uses==
+    * They are not two spellings of one act — they are the two halves of a single rule ("a row a
+    * remedy answered leaves the lane"), split by WHO carried the remedy out:
+    *
+    *   - a remedy that CHANGES THE EMISSION must be applied by a phase, before the emitter runs, so
+    *     by the time the check walks, the application is already in the ledger and the check's job is
+    *     to ASK — [[appliedAt]], at the SITE, because such a remedy may refuse at one site of a
+    *     member and apply at another;
+    *   - a remedy that only MOVES A ROW has no phase and nothing to carry out. There is no earlier
+    *     moment and no separate applier: the check that mints the residue is the only thing that ever
+    *     holds the row, so it partitions and records in one traversal — this.
+    *
+    * A third function would be a third answer to a question these two already partition. Which one a
+    * lane needs is read off `Remedy.emissionAffecting` and nothing else.
     */
   def drain[F](lane: String, findings: List[F])(residue: F => ResolutionPlan.Residue): List[F] =
     if entries.isEmpty then findings
@@ -217,6 +232,23 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
   def appliedAt(subject: SymId, lane: String, kind: String, origin: Origin): Boolean =
     subject != SymId.None &&
       log.exists(a => a.subject == subject && a.origin == origin && a.remedy.answers(lane, kind))
+
+  /** THE DECISION ROWS — one per (declaration, remedy), never one per SITE.
+    *
+    * The two artifacts of an application are deliberately not the same shape, and this is where they
+    * part. A `remediation(resolved)` FINDING is per site, because it is the row that MOVED and the
+    * drained lane has to fall by exactly as many; a `Decision` is per DECLARATION, because
+    * `CLAUDE.md` §5.1 says so in as many words — "one row per declaration whose emitted form the
+    * decision changes, never one per expression" — and because a decision becomes a PORTER NOTE, so
+    * one per site is the same sentence printed twice above one `val`. Measured on the first
+    * broadcast selection in the corpus: two residual-global reads, two identical notes.
+    *
+    * That is not the two artifacts disagreeing, which is what [[AppliedResolution]] exists to
+    * prevent: they still come from one value and say the same thing. It is each of them answering at
+    * the granularity its own reader has.
+    */
+  def decisions: List[Decision] =
+    log.toList.map(_.decision).distinctBy(d => (d.kind, d.subject, d.subjectFqn, d.detail.get("remedy")))
 
   /** everything recorded so far, with the ledger emptied — how the run moves a translation's
     * applications into its artifacts without the buffer outliving the translation. */
