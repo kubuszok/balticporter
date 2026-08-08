@@ -4993,6 +4993,21 @@ is the libGDX base alone.
   removed downcasts is a wave spent on churn, so the transformer is not built. This is the row whose
   go/no-go nobody had a number for, and the number says no.
 
+### Wave 1 is BUILT and NOT WIRED, and the number that says why
+
+`SamLambdaTransform` ships spec'd (14 fixtures) and in no pipeline. Wiring it into every port was
+measured and reverted: the libGDX base goes **0 -> 4 typer errors**, and the cause is `M6` — the
+emitter refuses to interpose the nested `def` that restores java's `return`-leaves-the-lambda where
+it cannot name that `def`'s result type. A converted anonymous METHOD body is the first construct in
+this engine to reach that refusal at scale.
+
+Everything the transformer itself claims held on that run, which is what makes the number actionable
+rather than a wall: **23 conversions, exactly the 23 the census had published**, a `members.tsv`
+blast of **exactly 23** members with every one carrying a `SamLambda` decision, `trivia(lost)` still
+0 and `trivia(recovered)` 4 -> 6 as predicted. `ENGINE-LIMITS.md` I9 carries the diagnosis and the
+fix, which is in reach precisely because the conversion holds the anon's own `Tree.DefDef` and
+therefore the result type M6 says the TIR does not have.
+
 ### Two things the census found that no count would have
 
 - **`Pipeline.order`'s tie-break was a FIFO**, so a phase added with a `runsBefore` edge reordered

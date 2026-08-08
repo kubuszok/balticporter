@@ -8645,3 +8645,47 @@ count, and the only evidence would be a library that logs a handler's class or k
 `getSimpleName`. So it is COUNTED on the conversion's own `Decision`
 (`Decision.Kind.SamLambda`, `was=`), which puts it where §4.45's reader is: at the emitted line. That
 is the same answer `T20` gives its two record-deconstruction cells.
+
+### I9. The SAM conversion is BLOCKED on M6, not on its own guards — 0 → 4 errors on libGDX core, §1(a)
+
+Wave 1 wired `SamLambdaTransform` into every pipeline and the libGDX base went **0 → 4 typer
+errors**. The wiring was reverted; the phase ships built and spec'd and in no pipeline. What the run
+measured is worth more than the wave was:
+
+**Everything the transformer itself claims held exactly.** 23 conversions on the base — precisely the
+23 `PhaseNotEnabled` rows the census had published before anything converted, so the blast was
+PREDICTED and not discovered. `members.tsv` moved by **exactly 23** members, every one of them a
+declaration carrying a `SamLambda` decision, so `Δ \ (decisions ∪ notes)` was EMPTY. `trivia(lost)`
+stayed 0 and `trivia(recovered)` rose 4 → 6, which is the anon method's Javadoc losing its carrier
+and the emitter's backstop quoting it with its coordinates — predicted in the same place.
+
+**The blocker is `M6`, and it is the emitter's rather than the phase's.** `TirEmitter`'s `Tree.Lambda`
+arm restores java's *`return` means leave the lambda* by interposing a nested `def` (`JS-S21`) — and
+only when `lambdaResultType(body)` can name that `def`'s result type. Where it cannot, the arm
+REFUSES and renders the body bare, which M6 records as the right trade: a loud error naming the
+line, rather than a `def` with a guessed result type that compiles. Until now nothing reached that
+refusal at scale, because a java lambda's body arrives already lowered. **A converted anonymous
+METHOD body is the first construct that does**: 4 of the 23 conversions hold a `return`
+(`EventAction#listener`, `AsyncExecutor#submit` and its promoted constructor), and each emitted a
+bare `return` inside a function literal — `E091`/`E007`.
+
+**And the fix is in reach precisely BECAUSE of this transformer, which is why this is a work item and
+not a refusal.** M6's sentence is *"a value-returning lambda needs the SAM's result type, which the
+TIR carries as the functional interface rather than as the method"* — and that is no longer true at
+this site: the conversion holds the anon's own `Tree.DefDef`, whose `returnTpt` IS the method's
+result type, and `Sam.Answer.Yes` carries the method's name and arity beside it. So the conversion
+can emit the nested `def` itself rather than leave the emitter to infer one. Two things to get right
+when it is done: the `def`'s result type is the `DefDef`'s `returnTpt` and never the interface's, and
+the emitter's own arm must not then wrap it twice.
+
+**One more finding rode in with it, and it is a `PorterNote` PLACEMENT question at a CONSTRUCTOR.**
+`porter-notes` reported 0 → 1: a `SamLambda` decision subjected at `AsyncExecutor#<init>`, whose note
+has no `def` to sit above because the constructor funnel promoted that body into the class body.
+`Decision.Kind.SamLambda` is in `AtDeclaration` by the set arithmetic, which is right for every
+ordinary member and has no answer for a promoted constructor. `CLAUDE.md` §4.575's rule is exactly
+this — *a kind in the wrong placement set is a note that never appears* — read at the one subject
+that is neither a member nor a type.
+
+**Two other counts moved and both are explained by the conversion**: `context-seam` 44 → 43 and
+`portability(all|emitted)` 153 → 152, because a converted anonymous class is one fewer synthetic type
+for either walk to reach. Neither is a residue; both go away with the wiring.
