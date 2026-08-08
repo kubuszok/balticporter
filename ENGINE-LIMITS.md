@@ -2150,6 +2150,20 @@ Two narrow faces are already closed and neither generalises: `Visibility.decide`
 candidate set (T12 — accessibility is an input to resolution), and
 `TirEmitter.numericOverloadAscription` closes exact-match-against-widening at a numeric literal.
 
+**And a PER-LOCATION remedy is not a weaker version of the refused resolver — it is a different
+question, and the distinction is the whole of its licence.** `overload-risk` publishes a menu
+(`DESIGN.md` §8.16) whose emission-affecting entry, `ascribe-javac-choice`, writes
+`(recv.m: (A, B) => R)(x, y)` at a call a PORT selected. It predicts nothing: which member javac
+bound is not inferred, it is READ — the frontend resolved the call, so `Tree.Apply.method` is javac's
+own answer, and what the remedy does is name it where scala's single-phase rule could pick another.
+The refused act is the ENGINE deciding, unasked, that the two languages disagree at some site; that
+still needs scala's resolution modelled and is still refused, so the remedy never fires on its own.
+Do NOT read the menu as this entry having been closed: the lane's population is unchanged, the
+denominator is unchanged, and every row a port does not select stays exactly where it was. What the
+remedy also cannot do is write an alternative that has no method value — a generic or vararg callee,
+a constructor, an operator, a static, a `super` receiver — and each of those is a counted refusal
+rather than an approximation.
+
 **What IS affordable is the RISK, and its population is derived from JLS 15.12.2's own phase
 boundaries rather than from "this call is overloaded".** The phases are separated by exactly two
 conversions — boxing (1→2) and varargs (2→3) — and the tie-break inside a phase is where the generic

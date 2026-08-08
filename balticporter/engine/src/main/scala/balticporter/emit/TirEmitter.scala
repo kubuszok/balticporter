@@ -3813,6 +3813,19 @@ final class TirEmitter(
     // ONE arm rather than two guarded ones, because the obligation below is owed per NODE and a
     // consult written into the first `case` would be a consult the second never takes — F8's shape
     // in a `match`. The two renderings are unchanged and the branch is the same predicate.
+    // A METHOD-VALUE ASCRIPTION — `(recv.m: (A, B) => R)`, the shape that PINS which overload scala
+    // binds, and the only thing the engine can do about `JS-C22`/`JS-C23` at a call
+    // (`OverloadRiskCheck.AscribeJavacChoice`, minted by a port's own `resolutions` selection).
+    //
+    // Structurally unambiguous, which is why it is an arm and not a flag: JAVA HAS NO METHOD TYPES,
+    // so a `Tree.Typed` whose target is a `MethodType` cannot be a cast the source wrote — the arm
+    // below would render it `.asInstanceOf[(A, B) => R]`, which asserts something about the RECEIVER
+    // and does not choose an overload at all. `tpe` already renders a `MethodType` as `(A, B) => R`,
+    // so the phase mints the node and the emitter does every bit of the printing: a phase that wrote
+    // the type as TEXT would be writing the UPSTREAM namespace into a file the rename has not
+    // reached yet (§4.56).
+    case Tree.Typed(e, tpt, _, _) if tpt.tpe.isInstanceOf[TypeRepr.MethodType] =>
+      s"(${operand(e, i)}: ${tpe(tpt.tpe)})"
     case ty @ Tree.Typed(e, tpt, _, _)  =>
       val target = castTarget(e, tpt.tpe)
       // JS-G34 — java's INTERSECTION in a cast (`(A & B) x`, JLS 4.9) becomes scala's `A & B`. Read
@@ -4261,11 +4274,15 @@ final class TirEmitter(
     case Tree.Select(_, m, _, _) if numericOverloadAscription(m).isDefined =>
       s"(${term(fun, i)}: ${numericOverloadAscription(m).get})(${args.map(term(_, i)).mkString(", ")})"
     case _ =>
-      val as = (fun match
-        case Tree.Select(_, m, _, _) => alignedArgs(m, args, i)
-        case Tree.Ident(m, _, _)     => alignedArgs(m, args, i)
-        case _                       => scala.None
-      ).getOrElse(args.map(term(_, i)))
+      // …through an ASCRIPTION, which wraps the callee without changing which member it is: a
+      // `resolutions` selection that pinned this call must not take the raw-parent alignment with
+      // it, and reading the symbol through the wrapper is how one rewrite stops disabling another.
+      def callee(t: Term): Option[SymId] = t match
+        case Tree.Select(_, m, _, _)    => Some(m)
+        case Tree.Ident(m, _, _)        => Some(m)
+        case Tree.Typed(inner, _, _, _) => callee(inner)
+        case _                          => scala.None
+      val as = callee(fun).flatMap(alignedArgs(_, args, i)).getOrElse(args.map(term(_, i)))
       s"${term(fun, i)}(${as.mkString(", ")})"
 
   /** widening rank — a value of rank r converts implicitly to any numeric type of higher rank.

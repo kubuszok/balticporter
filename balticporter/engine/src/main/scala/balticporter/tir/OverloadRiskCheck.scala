@@ -1,5 +1,7 @@
 package balticporter.tir
 
+import balticporter.catalog.FixKind
+
 /** Every emitted CALL whose candidate set spans one of JAVA'S OWN RESOLUTION PHASES — the risk
   * catalog rows `JS-C22` (JLS 15.12.2) and `JS-C23` (JLS 15.12.2.5) carry, counted rather than
   * resolved.
@@ -51,7 +53,7 @@ package balticporter.tir
   * whose candidate set is the SUPERCLASS's and which is therefore left at the callee's own owner
   * rather than widened to the receiver's type — see [[rootOf]] and `ENGINE-LIMITS.md` T17.
   */
-object OverloadRiskCheck:
+object OverloadRiskCheck extends RemedySource:
 
   val Name = "overload-risk"
 
@@ -91,10 +93,100 @@ object OverloadRiskCheck:
           "error on either side. A sub-case of `JS-C22` with its own JLS clause, reported apart " +
           "because the fix — if one is ever affordable — is a different rule."
 
+  // -------------------------------------------------------------------------------------------
+  // THE MENU (`DESIGN.md` §8.16) — what a port may ASK FOR at one of these calls
+  // -------------------------------------------------------------------------------------------
+
+  /** the three kinds one remedy answers. All three are asked of the SAME candidate set at the SAME
+    * call — JLS 15.12.2's three phase boundaries — so one act answers whichever of them fired, and
+    * `Remedy.alsoKinds` is what stops a member with two of them being able to drain only one. */
+  private val AllKinds = Issue.values.toList.map(_.toString)
+
+  /** PIN THE ALTERNATIVE JAVAC BOUND — the ascription, and the only face of this lane the engine can
+    * mechanise.
+    *
+    * ==What is derivable and what is not==
+    * `ENGINE-LIMITS.md` T17 rules out the general act: predicting WHICH member scala will bind means
+    * modelling scala's own resolution — implicits, defaults, relative weight — well enough to
+    * disagree with javac about a program neither compiler has rejected, which is a compiler-sized
+    * project. That is not what this remedy does, and the difference is the whole of its safety
+    * argument: **which member JAVAC bound is not predicted, it is READ** — the frontend resolved the
+    * call, so `Tree.Apply.method` IS javac's answer. What the remedy carries out is naming that
+    * answer explicitly, and the only question left is whether the name can be WRITTEN.
+    *
+    * ==So the shape is a METHOD-VALUE ASCRIPTION, which is already shipped==
+    * `(recv.m: (A, B) => R)(x, y)`. Scala picks an overload at an ascribed method value by the
+    * EXPECTED TYPE, which is exactly what pins it, and `TirEmitter.numericOverloadAscription` has
+    * emitted this shape unconditionally for one closed face (exact-match-against-widening at a
+    * numeric literal) since before this menu existed. This is that emission with its trigger moved
+    * from a hard-coded predicate to a port's selection — not a new mechanism.
+    *
+    * ==And it REFUSES wherever the name cannot be written, which is counted rather than guessed==
+    * See [[ascription]] for the enumeration. A refusal records nothing, so the finding stays in the
+    * lane, and a selection that refused everywhere is reported as `NeverApplied` rather than as
+    * silence — which is the difference between a remedy that did not apply and a lane that stopped
+    * asking.
+    *
+    * EMISSION-AFFECTING, and it is the reason the field exists: two modules ascribing one shared
+    * declaration's call differently would emit two ports that each compile alone (§1.5).
+    */
+  val AscribeJavacChoice: Remedy = Remedy(
+    id = "ascribe-javac-choice", lane = Name, kind = Issue.VarargPhaseSpan.toString,
+    emissionAffecting = true, fix = FixKind.Universal,
+    what = "name the alternative javac bound, as a method-value ascription, so scala's " +
+      "single-phase resolution cannot pick another",
+    alsoKinds = AllKinds.filterNot(_ == Issue.VarargPhaseSpan.toString))
+
+  /** …and the other answer, which is a STATEMENT and not an act: the operator read this call, read
+    * the candidates the finding names, and accepts that scala may bind another.
+    *
+    * Not a suppression. The row moves into `remediation(resolved)` with the port's name on it and a
+    * porter note beside the emitted call, so what was an unexamined risk becomes an examined one —
+    * which is the only thing that can ever empty an over-approximated lane honestly. A port that
+    * merely wants the number smaller has no way to write this without saying, per member, that
+    * somebody looked.
+    *
+    * NOT emission-affecting: it changes no tree, so two modules may disagree about it exactly as
+    * they may disagree about `verdictOverrides`.
+    */
+  val AcceptRisk: Remedy = Remedy(
+    id = "accept-risk", lane = Name, kind = Issue.VarargPhaseSpan.toString,
+    emissionAffecting = false, fix = FixKind.Universal,
+    what = "the operator read this call's candidate set and accepts that scala may bind a " +
+      "different alternative than javac did",
+    alsoKinds = AllKinds.filterNot(_ == Issue.VarargPhaseSpan.toString))
+
+  /** …and WHAT IS NOT ON THE MENU, stated where the menu is so a reader sees a refusal and not a gap.
+    *
+    *   - '''resolve the call — auto-ascribe at every spanning site'''. RULED OUT, `ENGINE-LIMITS.md`
+    *     T17: an ENGINE act needs to know that scala and javac disagree HERE, and that is scala's
+    *     resolution modelled well enough to contradict javac about a program both compilers accept.
+    *     [[AscribeJavacChoice]] is not a weaker version of it — it does not predict anything, it
+    *     writes down an answer the frontend already has, and it fires only where a PORT asked;
+    *   - '''ascribe the ARGUMENT rather than the method'''. REFUSED: it does not pin anything. The
+    *     candidates in a `BoxingPhaseSpan` differ by a primitive against its wrapper, and an
+    *     argument ascribed to either one still admits both alternatives under scala's single phase —
+    *     the expected type has to sit on the METHOD for the choice to be made there;
+    *   - '''a per-callee table — "always bind `remove(int)`"'''. REFUSED: the phase java resolved in
+    *     is a fact about the ARGUMENTS at one site, not about the member, so a table would state one
+    *     answer for calls java answered differently. The key is per member for exactly this reason
+    *     (`DESIGN.md` §8.16), and the finding names the candidates so the reader decides per site;
+    *   - '''emit both and let scalac pick'''. There is nothing to emit: both alternatives typecheck,
+    *     which is the entire premise of the lane.
+    */
+  def remedies: List[Remedy] = List(AscribeJavacChoice, AcceptRisk)
+
   /** one call at risk. `alternatives` names the candidates so a reader can dismiss the row without
-    * re-deriving the candidate set, which is the whole cost of an over-approximation. */
+    * re-deriving the candidate set, which is the whole cost of an over-approximation.
+    *
+    * @param declaration the MEMBER this call is written in — never reported, and the key a
+    *   `resolutions` entry names ([[Resolution]]'s granularity). Absent from the row's own text on
+    *   purpose: a finding says what is at risk and where, and the declaration is how a SELECTION
+    *   reaches it, which is a different question asked by a different reader.
+    */
   final case class Finding(issue: Issue, owner: String, member: String,
-                           alternatives: List[String], origin: Origin):
+                           alternatives: List[String], origin: Origin,
+                           declaration: SymId = SymId.None):
     def detail: String =
       s"call to `$member` has ${alternatives.size} applicable candidates spanning java's " +
         s"resolution phases (${issue.toString}): ${alternatives.mkString(", ")} — javac bound one " +
@@ -261,8 +353,14 @@ object OverloadRiskCheck:
     * cannot disagree.
     *
     * `enclosing` is the class the call is written IN — see [[rootOf]], which needs it for the one
-    * shape that carries no receiver. `SymId.None` is honest and costs only that shape's widening. */
-  def analyse(a: Tree.Apply, ov: Overloads, enclosing: SymId = SymId.None)(using p: Program): Option[(Int, List[Finding])] =
+    * shape that carries no receiver. `SymId.None` is honest and costs only that shape's widening.
+    *
+    * `declaration` is the MEMBER it is written in, which nothing here reads and which every row
+    * carries: it is the granularity a `resolutions` key has, so a caller that wants to ask "did the
+    * port choose something for this row?" needs it on the row rather than re-derived from a second
+    * walk (`CLAUDE.md` §4.56 — two derivations of one fact are free to disagree). */
+  def analyse(a: Tree.Apply, ov: Overloads, enclosing: SymId = SymId.None,
+              declaration: SymId = SymId.None)(using p: Program): Option[(Int, List[Finding])] =
     if !p.owns(a.method) then scala.None
     else
       val callee = p.symbolOf(a.method)
@@ -279,7 +377,7 @@ object OverloadRiskCheck:
           // looked in.
           val ownerName = p.symbolOf(root).map(_.fullName).getOrElse("?")
           val alts      = cands.map(spell).sorted
-          def f(i: Issue) = Finding(i, ownerName, s"$name/${a.args.size}", alts, a.origin)
+          def f(i: Issue) = Finding(i, ownerName, s"$name/${a.args.size}", alts, a.origin, declaration)
           val fs = List(
             Option.when(cands.exists(isVararg) && cands.exists(!isVararg(_)))(f(Issue.VarargPhaseSpan)),
             Option.when(boxingSpan(cands))(f(Issue.BoxingPhaseSpan)),
@@ -354,29 +452,218 @@ object OverloadRiskCheck:
     * be forgotten (§3's real concern) — and it descends INTO an `Apply` because a call's arguments
     * hold calls of their own. An ANONYMOUS class is deliberately not a boundary: `Tree.AnonClass`
     * is not a `ClassDef`, its symbol is not in the overload index, and a bare name written there
-    * resolves against the enclosing class exactly as `rootOf` would then answer. */
-  private def callsIn(t: Any, enclosing: SymId, f: (Tree.Apply, SymId) => Unit): Unit = t match
-    case c: Tree.ClassDef => c.productIterator.foreach(callsIn(_, c.symbol, f))
-    case a: Tree.Apply    => f(a, enclosing); a.productIterator.foreach(callsIn(_, enclosing, f))
-    case xs: Iterable[?]  => xs.foreach(callsIn(_, enclosing, f))
-    case Some(x)          => callsIn(x, enclosing, f)
-    case p: Product       => p.productIterator.foreach(callsIn(_, enclosing, f))
+    * resolves against the enclosing class exactly as `rootOf` would then answer.
+    *
+    * …and with the MEMBER it is written in beside the class, which is a second question and not a
+    * refinement of the first: the class is what java resolved the NAME against, the member is what a
+    * `resolutions` key names. A `ValDef` counts only where no member is open — that is a FIELD, whose
+    * initialiser holds calls and which a port can key on, while a `ValDef` reached INSIDE a member is
+    * a local variable whose symbol no manifest grammar can name. Decided from the walk's own state
+    * (the `ClassDef` arm resets it) rather than from a symbol lookup, because this walk holds no
+    * `Program` — and the two agree by construction: a declaration directly in a class body is
+    * exactly one whose owner is that class. */
+  private def callsIn(t: Any, enclosing: SymId, decl: SymId,
+                      f: (Tree.Apply, SymId, SymId) => Unit): Unit = t match
+    case c: Tree.ClassDef => c.productIterator.foreach(callsIn(_, c.symbol, SymId.None, f))
+    case d: Tree.DefDef   => d.productIterator.foreach(callsIn(_, enclosing, d.symbol, f))
+    case v: Tree.ValDef if decl == SymId.None =>
+      v.productIterator.foreach(callsIn(_, enclosing, v.symbol, f))
+    case a: Tree.Apply    => f(a, enclosing, decl); a.productIterator.foreach(callsIn(_, enclosing, decl, f))
+    case xs: Iterable[?]  => xs.foreach(callsIn(_, enclosing, decl, f))
+    case Some(x)          => callsIn(x, enclosing, decl, f)
+    case p: Product       => p.productIterator.foreach(callsIn(_, enclosing, decl, f))
     case _                => ()
 
-  /** Over the units the run EMITS — the same D2 filter every other per-site report carries. */
-  def check(program: Program, units: List[Tree.ClassDef], ov: Overloads): Report =
+  /** Over the units the run EMITS — the same D2 filter every other per-site report carries.
+    *
+    * @param resolutions what the port SELECTED, as the phase recorded it. A row a remedy answered
+    *   has left this lane for `remediation(resolved)` and must not be counted twice (`CLAUDE.md`
+    *   §5). Matched at the SITE and not at the declaration: a selection broadcasts across a member,
+    *   but `ascribe-javac-choice` REFUSES at a call whose alternative cannot be written, so a member
+    *   with two calls may have one answered and one not — drained per declaration the lane would
+    *   fall by two where `resolved` gained one. Empty is the default and the pre-menu behaviour.
+    */
+  def check(program: Program, units: List[Tree.ClassDef], ov: Overloads,
+            resolutions: ResolutionPlan = ResolutionPlan.empty): Report =
     given Program = program
     val out    = collection.mutable.ListBuffer.empty[Finding]
     var calls  = 0
     var overld = 0
     units.foreach { u =>
-      callsIn(u, u.symbol, { (a, enclosing) =>
+      callsIn(u, u.symbol, SymId.None, { (a, enclosing, decl) =>
         calls += 1
-        analyse(a, ov, enclosing).foreach { (_, fs) => overld += 1; out ++= fs }
+        analyse(a, ov, enclosing, decl).foreach { (_, fs) =>
+          overld += 1
+          out ++= fs.filterNot(f =>
+            resolutions.appliedAt(f.declaration, Name, f.issue.toString, f.origin))
+        }
       })
     }
     Report(out.toList.sortBy(f => (f.issue.toString, f.origin.javaPath, f.origin.line, f.member)),
            calls, overld)
+
+  // -------------------------------------------------------------------------------------------
+  // THE MENU, CARRIED OUT
+  // -------------------------------------------------------------------------------------------
+
+  /** CAN JAVAC'S ALTERNATIVE BE WRITTEN HERE? — the whole of [[AscribeJavacChoice]]'s guard, and the
+    * `Some`/`None` is the difference between an act and a counted refusal.
+    *
+    * The answer is a `MethodType`, which is the SIGNATURE of the member the frontend resolved: the
+    * emitter renders it `(A, B) => R` through its own type printer, so every rename, retype and
+    * package move that runs after this phase reaches it exactly as it reaches any other type. A
+    * phase that produced the ascription as TEXT would be writing the upstream namespace into the
+    * output (§4.56) — which is why the phase mints a node and prints nothing.
+    *
+    * Every arm below is a shape where the ascription would be WRONG rather than merely ugly, and
+    * each is refused rather than approximated:
+    *
+    *   - a GENERIC callee — a polymorphic method value has no plain function type, so the
+    *     ascription would either not compile or instantiate the parameters at whatever scala infers,
+    *     which is a different member;
+    *   - a VARARG callee — `JS-G37` emits its pack as `Array[T]`, so the emitted arity is not java's
+    *     and a function type built from java's parameters names a signature the port does not have;
+    *   - a CONSTRUCTOR — `new C(x)` has no method value to ascribe at all;
+    *   - an OPERATOR (`scala.<op>#…`) — the emitter renders it infix, and an ascription would have
+    *     to change the call's whole shape;
+    *   - a STATIC callee — java lets a static be called through an INSTANCE and the emitter has to
+    *     move the receiver (JS-C06); wrapping the callee here would take that arm's place and emit a
+    *     companion member selected on a value;
+    *   - a `super` receiver — scala admits `super` only as a member selection's qualifier, so there
+    *     is no method value to ascribe (and `rootOf` already leaves such a call at its own owner);
+    *   - a SPREAD argument, or an argument count that is not the callee's — the call is not the
+    *     plain application this shape assumes;
+    *   - a parameter or result type that is a bare WILDCARD — `(?) => R` names nothing.
+    *
+    * A refusal records NOTHING, so the finding stays in the lane: the residue is what says the port
+    * asked for something the engine could not do here, and a selection that refused everywhere is
+    * reported as `NeverApplied`.
+    */
+  def ascription(a: Tree.Apply)(using p: Program): Option[TypeRepr.MethodType] =
+    def bareWildcard(t: TypeRepr): Boolean = t.isInstanceOf[TypeRepr.TypeBounds]
+    val fun = a.fun match
+      case ta: Tree.TypeApply => ta.fun
+      case other              => other
+    val shapeOk = fun match
+      case Tree.Select(_: Tree.Super, _, _, _) => false
+      case _: Tree.Select | _: Tree.Ident      => true
+      case _                                   => false
+    for
+      s <- p.symbolOf(a.method)
+      if shapeOk && s.name != "<init>" && !s.flags.isStatic && !s.fullName.startsWith("scala.<op>#")
+      d <- p.definitionOf(a.method).collect { case x: Tree.DefDef => x }
+      if d.tparams.isEmpty && !isVararg(d)
+      ps = d.paramss.flatten
+      if ps.sizeIs == a.args.size
+      if !a.args.exists(_.isInstanceOf[Tree.Repeated])
+      if !bareWildcard(d.returnTpt.tpe) && !ps.exists(v => bareWildcard(v.tpt.tpe))
+    yield TypeRepr.MethodType(
+      ps.map(v => p.symbolOf(v.symbol).map(_.name).getOrElse("_") -> v.tpt.tpe),
+      d.returnTpt.tpe)
+
+  /** THE MENU, CARRIED OUT — a phase, for `HeapPollutionCheck.Apply`'s reason (a resolution has to be
+    * recorded before emission, and this check runs after it) plus one this lane adds: the
+    * `ascribe-javac-choice` half REWRITES A NODE, and only a phase may.
+    *
+    * ==One decision point, so the count and the emission cannot disagree==
+    * The phase decides, records, and mints the node the emitter renders. The alternative — the
+    * emitter re-deriving "did the port select here?" while the phase records — is two derivations of
+    * one fact, free to drift, and `CLAUDE.md` §4.56 is a list of exactly that failure. What the
+    * emitter contributes is the one thing a phase may not do: PRINTING (the ascription's type text).
+    *
+    * ==The ascription is a `Tree.Typed` over the callee, and the `Apply` survives==
+    * Wrapping the whole call in an `Opaque` would drain the lane structurally — the check would stop
+    * seeing a call there at all — and that is precisely what makes it wrong: the drain would then be
+    * a SIDE EFFECT of the rewrite rather than a recorded move, and a call whose ascription refused
+    * would be indistinguishable from one that was never asked about. Keeping the `Apply` keeps every
+    * row visible and lets the ledger say which of them moved.
+    *
+    * ==Per DECLARATION, walked with `StandardTraversal`==
+    * The selection key is a member, so the phase asks at each `DefDef`/`ValDef` and rewrites within
+    * it. The inner walk is `StandardTraversal.mapTerm` — never a private recursion (§3) — and the
+    * enclosing CLASS handed to `rootOf` is the declaration's own owner, which is what java resolved a
+    * bare name against.
+    */
+  final class Apply extends Phase, PolicyBound:
+    def name: String = "overload-risk/remedy"
+
+    private var plan: ResolutionPlan = ResolutionPlan.empty
+    private var scope: RunScope      = RunScope.whole
+    /** the candidate index, built once per program — the same value the check and the emitter read,
+      * so all three answer one question about one program. */
+    private var index: Option[(Program, Overloads)] = scala.None
+
+    def bindPolicy(binder: PolicyBinder): Unit =
+      plan  = binder.resolutions
+      scope = binder.run
+
+    override def run(program: Program): Program =
+      if plan.isEmpty then program
+      else
+        index = Some(program -> new Overloads(program))
+        try super.run(program) finally index = scala.None
+
+    override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
+      d.rhs.flatMap(rewritten(d.symbol, _)).fold(d)(b => d.copy(rhs = Some(b)))
+
+    /** A FIELD initialiser holds calls too, and a field is a declaration a `resolutions` key can
+      * name. A LOCAL `val` is not: it is a statement inside a member, its symbol's owner is that
+      * member, and attributing a call to it would hand every port a key naming something no manifest
+      * grammar reaches. Decided from OWNERSHIP (§4.56) — the owner is a class — never from position
+      * in a body. */
+    override def transformValDef(v: Tree.ValDef)(using p: Program): Tree.ValDef =
+      if !isField(v.symbol) then v
+      else v.rhs.flatMap(rewritten(v.symbol, _)).fold(v)(b => v.copy(rhs = Some(b)))
+
+    private def isField(s: SymId)(using p: Program): Boolean =
+      p.symbolOf(s).map(_.owner).flatMap(p.definitionOf).exists(_.isInstanceOf[Tree.ClassDef])
+
+    /** bind the declaration, then rewrite the calls in its body. `None` where there is nothing to
+      * do at all, so an untouched declaration is returned as itself rather than rebuilt. */
+    private def rewritten(decl: SymId, body: Term)(using p: Program): Option[Term] =
+      index.collect { case (prog, ov) if (prog eq p) && scope.emitsSymbol(p, decl) => ov }
+        .map { ov =>
+          val enclosing = p.symbolOf(decl).map(_.owner).getOrElse(SymId.None)
+          val subject   = p.symbolOf(decl).map(_.fullName).getOrElse("?")
+          val walk = new Phase:
+            def name: String = "overload-risk/remedy/site"
+            override def transformApply(a: Tree.Apply)(using Program): Term =
+              act(a, decl, subject, enclosing, ov)
+          StandardTraversal.mapTerm(walk, body)
+        }
+
+    /** ONE call. `None` from the plan at every kind is the ordinary answer and the phase's no-op. */
+    private def act(a: Tree.Apply, decl: SymId, subject: String, enclosing: SymId, ov: Overloads)
+                   (using Program): Term =
+      // A call this run has ALREADY answered — the bottom-up traversal hands a nested declaration's
+      // body to its enclosing one a second time, and acting twice would put two ledger rows and two
+      // ascriptions on one site. Keyed on the site, which is what the ledger records.
+      val fs = risks(a, ov, enclosing).filterNot(f =>
+        plan.all.exists(x => x.origin == f.origin && x.remedy.lane == Name))
+      // one entry per KIND that fired here — the selection is one key, so at most one remedy answers.
+      val chosen = fs.flatMap(f => plan.selected(decl, Name, f.issue.toString).map(f -> _))
+      chosen.headOption match
+        case scala.None                                                => a
+        case Some((_, r)) if r.remedy.id != AscribeJavacChoice.id      =>
+          chosen.foreach((f, sel) => record(sel, subject, decl, f,
+            s"risk at `${f.member}` accepted by this port"))
+          a
+        case Some(_) =>
+          ascription(a) match
+            // REFUSED — the alternative cannot be written here, so nothing is recorded and every
+            // finding stays in the lane. See `ascription` for the enumeration.
+            case scala.None     => a
+            case Some(mt) =>
+              chosen.foreach((f, sel) => record(sel, subject, decl, f,
+                s"call to `${f.member}` pinned to the alternative javac bound"))
+              a.copy(fun = Tree.Typed(a.fun, TypeTree(mt, a.origin), mt, a.origin))
+
+    /** one ledger row per DRAINED ROW, never one per call: a call may have filed two of JLS
+      * 15.12.2's boundaries and one act answers both, so the lane falls by two and
+      * `remediation(resolved)` must gain two. */
+    private def record(r: Resolution, subject: String, decl: SymId, f: Finding, what: String): Unit =
+      plan.applied(r, subject, decl, f.origin,
+        s"$what (${f.issue}); candidates: ${f.alternatives.mkString(", ")}")
 
   /** grouped one-line summary, worst family first, each with its §1 classification — and the
     * DENOMINATOR first, because an over-approximation whose rate a reader cannot see is one they

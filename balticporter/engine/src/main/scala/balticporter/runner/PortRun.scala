@@ -1058,7 +1058,11 @@ final case class PortRun(
     // population is derived from JLS 15.12.2's own phase boundaries — boxing, varargs, and the
     // generic tie-break — rather than from "this call is overloaded". Over `checkedUnits`
     // (ENGINE-LIMITS D2), through the same predicate the emitter's two consults read.
-    val overloadRisk = OverloadRiskCheck.check(program, checkedUnits, translated.emitter.overloads)
+    // …minus the rows a SELECTION already answered (`DESIGN.md` §8.16), matched at the SITE: a
+    // selection broadcasts across a member, but `ascribe-javac-choice` REFUSES where javac's
+    // alternative cannot be written, so one member may have one call answered and one not.
+    val overloadRisk = OverloadRiskCheck.check(program, checkedUnits, translated.emitter.overloads,
+                                               translated.binder.resolutions)
     CheckReport.record(OverloadRiskCheck.Name, overloadRisk.findings.map(_.report))
     say(s"OVERLOAD RISK (calls whose candidate set spans a java resolution phase): ${overloadRisk.findings.size}")
     overloadRisk.findings.map(_.issue).distinct.foreach(i => say(OverloadRiskCheck.Issue.classification(i)))
@@ -2698,7 +2702,7 @@ object PortRun:
     * is that a `.conf` can VALIDATE the id at load (`PortConfig.knownRemedies` reads it), which is
     * how a typo is told apart from a real remedy whose phase a port forgot to enable. */
   val CheckRemedies: List[balticporter.tir.RemedySource] =
-    List(HeapPollutionCheck)
+    List(HeapPollutionCheck, OverloadRiskCheck)
 
   /** …and the phases that CARRY those menus out — woven, never declared by a port.
     *
@@ -2719,7 +2723,8 @@ object PortRun:
     * left, and every key is written in the upstream namespace (§4.56) — though the keys are bound at
     * the front of the run either way, so this position decides what the phase SEES and not what it
     * binds. Fresh instances per call, because a phase carries the state it binds. */
-  def remedyPhases: List[Phase] = List(new HeapPollutionCheck.Apply)
+  def remedyPhases: List[Phase] =
+    List(new HeapPollutionCheck.Apply, new OverloadRiskCheck.Apply)
 
   /** Every check's name as it appears in `counts.tsv`. Named here, in the orchestrator, because the
     * orchestrator is now the only thing that records: a check is a pure function of a `Program` and

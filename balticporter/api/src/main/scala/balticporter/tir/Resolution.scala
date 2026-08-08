@@ -174,10 +174,17 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
     * examined and refused (a guard said the remedy does not apply at this site) has no row here, and
     * its finding stays in the lane exactly as it should. One ledger, read from both ends — never two
     * derivations of "did this fire", which is what `AppliedResolution` exists to prevent.
+    *
+    * '''Matched at the SITE, not at the declaration.''' A selection BROADCASTS across the member it
+    * names, so a per-declaration test looks equivalent and is not: a remedy may REFUSE at one site
+    * of a member and apply at another (`ascribe-javac-choice` cannot write every alternative), and
+    * the lane would then fall by two where `resolved` gained one. The `origin` is the one the
+    * applier recorded, which is the finding's own — so the two sides are the same value and not two
+    * spellings of a position.
     */
-  def appliedAt(subject: SymId, lane: String, kind: String): Boolean =
+  def appliedAt(subject: SymId, lane: String, kind: String, origin: Origin): Boolean =
     subject != SymId.None &&
-      log.exists(a => a.subject == subject && a.remedy.answers(lane, kind))
+      log.exists(a => a.subject == subject && a.origin == origin && a.remedy.answers(lane, kind))
 
   /** everything recorded so far, with the ledger emptied — how the run moves a translation's
     * applications into its artifacts without the buffer outliving the translation. */

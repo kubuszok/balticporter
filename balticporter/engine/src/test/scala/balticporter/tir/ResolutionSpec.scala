@@ -119,16 +119,21 @@ class ResolutionSpec extends munit.FunSuite:
     val p         = program
     val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)
     val size      = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
+    val here      = Origin("Widget.java", 4, 3)
+    val elsewhere = Origin("Widget.java", 9, 3)
     // declared and bound, and nothing has applied it: the check that mints the lane must still
     // report the row, or a refused selection would silently erase a residue.
-    assert(!plan.appliedAt(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind))
+    assert(!plan.appliedAt(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind, here))
     plan.applied(plan.selected(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind).get,
-                 "com.demo.Widget#size", size.id, Origin.synthetic, "applied")
-    assert(plan.appliedAt(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind))
-    // …at THIS declaration and this lane only.
-    assert(!plan.appliedAt(SymId.None, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind))
-    assert(!plan.appliedAt(size.id, "another-lane", SpecRemedyPhase.Kind))
-    assert(!plan.appliedAt(size.id, SpecRemedyPhase.Lane, "another-kind"))
+                 "com.demo.Widget#size", size.id, here, "applied")
+    assert(plan.appliedAt(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind, here))
+    // …at THIS declaration, this lane and THIS SITE only. The site is what keeps a broadcast
+    // selection honest: a remedy may refuse at one site of a member and apply at another, and a
+    // per-declaration drain would empty the lane by more than `resolved` gained.
+    assert(!plan.appliedAt(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind, elsewhere))
+    assert(!plan.appliedAt(SymId.None, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind, here))
+    assert(!plan.appliedAt(size.id, "another-lane", SpecRemedyPhase.Kind, here))
+    assert(!plan.appliedAt(size.id, SpecRemedyPhase.Lane, "another-kind", here))
   }
 
   test("…and it is NOT handed to a caller asking about another lane or kind") {

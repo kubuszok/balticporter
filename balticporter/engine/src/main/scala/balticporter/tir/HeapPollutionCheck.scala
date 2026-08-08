@@ -216,7 +216,7 @@ object HeapPollutionCheck extends RemedySource:
       def name: String = "heap-pollution/scan"
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
         uncheckedVararg(d)
-          .filterNot(f => resolutions.appliedAt(d.symbol, Name, f.issue.toString))
+          .filterNot(f => resolutions.appliedAt(d.symbol, Name, f.issue.toString, f.origin))
           .foreach(out += _)
         d
     units.foreach(u => StandardTraversal.mapClassDef(scan, u))
@@ -256,6 +256,13 @@ object HeapPollutionCheck extends RemedySource:
     def bindPolicy(binder: PolicyBinder): Unit =
       plan  = binder.resolutions
       scope = binder.run
+
+    /** the NO-OP, taken before the traversal rather than inside it: with no selections the phase has
+      * nothing it could do, and returning the program untouched means it does not even rebuild the
+      * units — which is what makes "the menu's arrival is flat" a structural claim rather than a
+      * measured one. */
+    override def run(program: Program): Program =
+      if plan.isEmpty then program else super.run(program)
 
     override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
       if plan.isEmpty || !scope.emitsSymbol(p, d.symbol) then d

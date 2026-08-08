@@ -4960,6 +4960,8 @@ other side: they have no constructor policy at all, their whole configuration is
 | lane | remedy | emission-affecting | what it does |
 |---|---|---|---|
 | `heap-pollution` | `acknowledge` | no | the operator states this vararg use is safe |
+| `overload-risk` | `ascribe-javac-choice` | **yes** | name javac's alternative, as a method-value ascription |
+| `overload-risk` | `accept-risk` | no | the operator read the candidate set and accepts the divergence |
 
 `acknowledge` is java's own conversation given a home: javac warns at a non-reifiable vararg and
 `@SafeVarargs` is the author answering, and NEITHER half exists in scala. Nothing is translated —
@@ -4973,6 +4975,44 @@ code where the menu is declared: a scala-side marker (inert, since scala has no 
 proving the body safe (an analysis nothing here performs — the operator ASSERTS, and the assertion is
 recorded with their name on it), and narrowing the emitted signature (the port would stop being the
 library).
+
+`ascribe-javac-choice` is the first EMISSION-AFFECTING remedy, and the whole of its safety argument is
+one distinction against `ENGINE-LIMITS.md` T17. T17 refuses a RESOLVER: an engine act would have to
+know that scala and javac disagree HERE, which is scala's own resolution modelled well enough to
+contradict javac about a program both compilers accept. This remedy predicts nothing — **which member
+javac bound is not inferred, it is READ**, because the frontend resolved the call and `Tree.Apply.method`
+IS javac's answer. What it carries out is writing that answer down, as the method-value ascription
+`(recv.m: (A, B) => R)(x, y)` — the shape `TirEmitter.numericOverloadAscription` has emitted
+unconditionally for one closed face since before the menu existed, with its trigger moved from a
+hard-coded predicate to a port's selection. Scala picks an overload at an ascribed method value by the
+EXPECTED TYPE, which is exactly what pins it; an ARGUMENT ascription would pin nothing, since both
+alternatives stay applicable under scala's single phase.
+
+Three things about how it is built, each of which is a rule read at a new place:
+
+- the phase mints a `Tree.Typed` whose target is a `MethodType` and prints NOTHING. A phase that
+  produced the ascription as text would be writing the upstream namespace into a file the rename has
+  not reached (§4.56); `TirEmitter` already renders a `MethodType` as `(A, B) => R`, so one new arm —
+  guarded on the target being a `MethodType`, which java can never produce, since java has no method
+  types — does every bit of the printing;
+- the `Tree.Apply` SURVIVES the rewrite. Wrapping the whole call in an `Opaque` would drain the lane
+  structurally (the check would stop seeing a call there), and that is what makes it wrong: the drain
+  would be a SIDE EFFECT rather than a recorded move, and a call whose ascription refused would be
+  indistinguishable from one nobody asked about;
+- it REFUSES wherever javac's alternative cannot be WRITTEN — a generic callee (a polymorphic method
+  value has no plain function type), a vararg one (`JS-G37` emits the pack as `Array[T]`, so java's
+  parameter list names a signature the port does not have), a constructor, an operator, a `super`
+  receiver, a static (java lets a static be called through an instance and `JS-C06` has to move the
+  receiver), a spread argument, a bare wildcard in the signature. A refusal records nothing, so the
+  finding stays in the lane and a selection that refused everywhere is `NeverApplied` — never silence.
+
+`accept-risk` beside it is a STATEMENT rather than an act, and it is what can empty an
+over-approximated lane honestly: the row moves with the port's name on it and a porter note beside the
+emitted call, so an unexamined risk becomes an examined one and a port that merely wants the number
+smaller has no way to write it without saying, per member, that somebody looked. Also ruled out where
+the menu is declared: the general resolver (T17), the argument ascription (pins nothing), a per-callee
+table (the phase java resolved in is a fact about the ARGUMENTS at one site, not about the member), and
+emitting both alternatives (there is nothing to emit — both typecheck, which is the lane's premise).
 
 **A KIND SOMETIMES PARTITIONS A LANE AND SOMETIMES SPLITS ONE SITE, and the first menu is where the
 difference bites.** A remedy names the `lane(kind)` it drains, and the plumbing shipped reading that
