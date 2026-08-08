@@ -467,6 +467,35 @@ class BeanPropertySpec extends munit.FunSuite:
     assert(clue(guards(r)).contains("OverriddenBelow") || clue(guards(r)).contains("ConcreteRelative"))
   }
 
+  test("a `val`'s decision records the SECOND reflective fact — its backing field is `final` and\n" +
+       "     java's was not") {
+    // §8.5's guard 5 records that the JVM METHOD NAMES move. A `val` moves one more thing, at the
+    // FIELD and in the other direction: `MutableStorage` asks for a declaration initialiser and no
+    // assignment IN THIS PROGRAM — never for java's `final` keyword, deliberately — so the java
+    // field routinely was not final and the emitted one is. A reflective writer (`setAccessible` +
+    // `Field.set`) that worked against java's does not work against this one. K21's shape at the
+    // storage rather than at the accessor: no guard can reach it, nothing compiles differently, no
+    // count moves, and §4.45's reader is at this line.
+    val r = collapse(
+      """
+      class V {
+        private final java.lang.String n = "x";
+        public java.lang.String getN() { return n; }
+      }
+      """, BeanPropertyTransform.Target.Val, "V#n" -> "getN")
+    val d = r.log.all.find(_.kind == Decision.Kind.CollapsedProperty).get
+    assertEquals(d.detail.get("form"), Some("val"))
+    assert(clue(d.detail("why")).contains("`final` on the JVM"))
+    assert(d.detail("why").contains("setAccessible"))
+  }
+
+  test("…and a `var`'s does NOT — its field is not final, and an untrue note is worse than none") {
+    val r = collapse(varSrc, BeanPropertyTransform.Target.Var, "Layer#name" -> "getName/setName")
+    val d = r.log.all.find(_.kind == Decision.Kind.CollapsedProperty).get
+    assertEquals(d.detail.get("form"), Some("var"))
+    assert(!clue(d.detail("why")).contains("final"))
+  }
+
   test("…and one TWO levels down does too — the direction test was on DIRECT parents only") {
     // `overriddenBelow` asked whether the other declaration's owner names THIS owner as a parent —
     // one hop. A re-declaration two levels down names the class in BETWEEN, so it answered "nothing

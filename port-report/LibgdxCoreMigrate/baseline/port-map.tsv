@@ -10204,8 +10204,8 @@ member	com.badlogic.gdx.maps.ImageResolver$TextureAtlasImageResolver#<stmt1>	sge
 member	com.badlogic.gdx.maps.ImageResolver$TextureAtlasImageResolver#atlas	sge.maps.ImageResolver$TextureAtlasImageResolver#atlas	Renamed	-	com/badlogic/gdx/maps/ImageResolver.java	59	962d45768526c0d4	vis=private[ImageResolver]
 member	com.badlogic.gdx.maps.ImageResolver$TextureAtlasImageResolver#getImage(String)	sge.maps.ImageResolver$TextureAtlasImageResolver#getImage(String)	Renamed	-	com/badlogic/gdx/maps/ImageResolver.java	66	256841c47896183e	
 member	com.badlogic.gdx.maps.Map#close()	sge.maps.Map#close()	Renamed	-	com/badlogic/gdx/maps/Map.java	67	292c04a6862850c4	
-member	com.badlogic.gdx.maps.Map#layers	sge.maps.Map#layers	Renamed	-	com/badlogic/gdx/maps/Map.java	47	31b8b6d95f742ee1	form=val
-member	com.badlogic.gdx.maps.Map#properties	sge.maps.Map#properties	Renamed	-	com/badlogic/gdx/maps/Map.java	48	ae2393ec5c9a6089	form=val
+member	com.badlogic.gdx.maps.Map#layers	sge.maps.Map#layers	Renamed	-	com/badlogic/gdx/maps/Map.java	47	b1ec64854942e755	form=val
+member	com.badlogic.gdx.maps.Map#properties	sge.maps.Map#properties	Renamed	-	com/badlogic/gdx/maps/Map.java	48	9d18a1df0f2f7a12	form=val
 member	com.badlogic.gdx.maps.MapGroupLayer#getLayers()	sge.maps.MapGroupLayer#getLayers()	Renamed	-	com/badlogic/gdx/maps/MapGroupLayer.java	25	6063c87209dc9619	
 member	com.badlogic.gdx.maps.MapGroupLayer#invalidateRenderOffset()	sge.maps.MapGroupLayer#invalidateRenderOffset()	Renamed	-	com/badlogic/gdx/maps/MapGroupLayer.java	30	311b680559e81695	
 member	com.badlogic.gdx.maps.MapGroupLayer#layers	sge.maps.MapGroupLayer#layers	Renamed	-	com/badlogic/gdx/maps/MapGroupLayer.java	22	296cc39cf92e9af1	vis=private
@@ -10213,7 +10213,7 @@ member	com.badlogic.gdx.maps.MapLayer#calculateRenderOffsets()	sge.maps.MapLayer
 member	com.badlogic.gdx.maps.MapLayer#combinedTintColor()	sge.maps.MapLayer#combinedTintColor()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	66	80279ba9fdf4559f	
 member	com.badlogic.gdx.maps.MapLayer#invalidateRenderOffset()	sge.maps.MapLayer#invalidateRenderOffset()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	137	7a3bdc0fb8da6d01	
 member	com.badlogic.gdx.maps.MapLayer#name	sge.maps.MapLayer#name	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	24	f56aa4299880e8a9	form=var
-member	com.badlogic.gdx.maps.MapLayer#objects	sge.maps.MapLayer#objects	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	37	23a8790c11c8dbb0	form=val
+member	com.badlogic.gdx.maps.MapLayer#objects	sge.maps.MapLayer#objects	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	37	9ba147352c69d3eb	form=val
 member	com.badlogic.gdx.maps.MapLayer#offsetX	sge.maps.MapLayer#offsetX	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	29	21f92099990e9a4d	name=offsetX$field
 member	com.badlogic.gdx.maps.MapLayer#offsetX()	sge.maps.MapLayer#offsetX()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	85	658a2a91063b99c8	
 member	com.badlogic.gdx.maps.MapLayer#offsetX_=(float)	sge.maps.MapLayer#offsetX_=(float)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	90	33a21657639eacbd	
@@ -10228,7 +10228,7 @@ member	com.badlogic.gdx.maps.MapLayer#parallaxY	sge.maps.MapLayer#parallaxY	Rena
 member	com.badlogic.gdx.maps.MapLayer#parent	sge.maps.MapLayer#parent	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	36	5ad4ceca6d471784	name=parent$field
 member	com.badlogic.gdx.maps.MapLayer#parent()	sge.maps.MapLayer#parent()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	142	977bbfcdb474edf3	
 member	com.badlogic.gdx.maps.MapLayer#parent_=(MapLayer)	sge.maps.MapLayer#parent_=(MapLayer)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	147	1ca315338643cc86	
-member	com.badlogic.gdx.maps.MapLayer#properties	sge.maps.MapLayer#properties	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	38	57ac87a365ce4338	form=val
+member	com.badlogic.gdx.maps.MapLayer#properties	sge.maps.MapLayer#properties	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	38	f88b98cfe015dbfd	form=val
 member	com.badlogic.gdx.maps.MapLayer#renderOffsetDirty	sge.maps.MapLayer#renderOffsetDirty	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	35	a78400d6b91809c7	vis=private
 member	com.badlogic.gdx.maps.MapLayer#renderOffsetX	sge.maps.MapLayer#renderOffsetX	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	31	7d2a00213920e73e	name=renderOffsetX$field
 member	com.badlogic.gdx.maps.MapLayer#renderOffsetX()	sge.maps.MapLayer#renderOffsetX()	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	125	eb4c5724a2cfc979	
@@ -10255,7 +10255,7 @@ member	com.badlogic.gdx.maps.MapLayers#size()	sge.maps.MapLayers#size()	Renamed	
 member	com.badlogic.gdx.maps.MapObject#color	sge.maps.MapObject#color	Renamed	-	com/badlogic/gdx/maps/MapObject.java	27	e950412ca8638627	form=var
 member	com.badlogic.gdx.maps.MapObject#name	sge.maps.MapObject#name	Renamed	-	com/badlogic/gdx/maps/MapObject.java	23	3a12887df738076d	form=var
 member	com.badlogic.gdx.maps.MapObject#opacity	sge.maps.MapObject#opacity	Renamed	-	com/badlogic/gdx/maps/MapObject.java	24	1f085a0ade3aafc3	form=var
-member	com.badlogic.gdx.maps.MapObject#properties	sge.maps.MapObject#properties	Renamed	-	com/badlogic/gdx/maps/MapObject.java	26	eb7e4257d027fb20	form=val
+member	com.badlogic.gdx.maps.MapObject#properties	sge.maps.MapObject#properties	Renamed	-	com/badlogic/gdx/maps/MapObject.java	26	ed23073f060d6dc5	form=val
 member	com.badlogic.gdx.maps.MapObject#visible	sge.maps.MapObject#visible	Renamed	-	com/badlogic/gdx/maps/MapObject.java	25	ebedbe4251253576	form=var
 member	com.badlogic.gdx.maps.MapObjects#<stmt1>	sge.maps.MapObjects#<stmt1>	Renamed	-	com/badlogic/gdx/maps/MapObjects.java	31	e41af8864a27e950	
 member	com.badlogic.gdx.maps.MapObjects#add(MapObject)	sge.maps.MapObjects#add(MapObject)	Renamed	-	com/badlogic/gdx/maps/MapObjects.java	68	bbff39b7f0cae48b	
@@ -12274,7 +12274,7 @@ member	com.badlogic.gdx.math.collision.OrientedBoundingBox#<init>()	sge.math.col
 member	com.badlogic.gdx.math.collision.OrientedBoundingBox#<init>(BoundingBox)	sge.math.collision.OrientedBoundingBox#<init>(BoundingBox)	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	58	3eec421733e0c25d	
 member	com.badlogic.gdx.math.collision.OrientedBoundingBox#<init>(BoundingBox,Matrix4)	sge.math.collision.OrientedBoundingBox#<init>(BoundingBox,Matrix4)	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	67	366325076911fab0	
 member	com.badlogic.gdx.math.collision.OrientedBoundingBox#axes	sge.math.collision.OrientedBoundingBox#axes	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	46	de324014751d6984	vis=private
-member	com.badlogic.gdx.math.collision.OrientedBoundingBox#bounds	sge.math.collision.OrientedBoundingBox#bounds	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	41	0e12bbfac19ed2d1	form=val
+member	com.badlogic.gdx.math.collision.OrientedBoundingBox#bounds	sge.math.collision.OrientedBoundingBox#bounds	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	41	9392cdf34d4024ad	form=val
 member	com.badlogic.gdx.math.collision.OrientedBoundingBox#contains(BoundingBox)	sge.math.collision.OrientedBoundingBox#contains(BoundingBox)	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	170	09d431420f0121a5	
 member	com.badlogic.gdx.math.collision.OrientedBoundingBox#contains(OrientedBoundingBox)	sge.math.collision.OrientedBoundingBox#contains(OrientedBoundingBox)	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	181	c05eff9150ca40ad	
 member	com.badlogic.gdx.math.collision.OrientedBoundingBox#contains(Vector3)	sge.math.collision.OrientedBoundingBox#contains(Vector3)	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	158	fd76162ebe0d09d6	
@@ -12303,7 +12303,7 @@ member	com.badlogic.gdx.math.collision.OrientedBoundingBox#tempVertices	sge.math
 member	com.badlogic.gdx.math.collision.OrientedBoundingBox#tmpVectors	sge.math.collision.OrientedBoundingBox#tmpVectors	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	30	c8230e8da9cceb89	placement=companion vis=private
 member	com.badlogic.gdx.math.collision.OrientedBoundingBox#transform	sge.math.collision.OrientedBoundingBox#transform	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	43	347cfe160ee8c95d	
 member	com.badlogic.gdx.math.collision.OrientedBoundingBox#update()	sge.math.collision.OrientedBoundingBox#update()	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	263	54589736bf4933cc	vis=private
-member	com.badlogic.gdx.math.collision.OrientedBoundingBox#vertices	sge.math.collision.OrientedBoundingBox#vertices	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	47	80b90c01b8229962	form=val
+member	com.badlogic.gdx.math.collision.OrientedBoundingBox#vertices	sge.math.collision.OrientedBoundingBox#vertices	Renamed	-	com/badlogic/gdx/math/collision/OrientedBoundingBox.java	47	cef707b4c2cc414a	form=val
 member	com.badlogic.gdx.math.collision.Ray#<init>()	sge.math.collision.Ray#<init>()	Renamed	-	com/badlogic/gdx/math/collision/Ray.java	32	f4fdf1af8de4a237	
 member	com.badlogic.gdx.math.collision.Ray#<init>(Vector3,Vector3)	sge.math.collision.Ray#<init>(Vector3,Vector3)	Renamed	-	com/badlogic/gdx/math/collision/Ray.java	39	e274554424b622e6	
 member	com.badlogic.gdx.math.collision.Ray#cpy()	sge.math.collision.Ray#cpy()	Renamed	-	com/badlogic/gdx/math/collision/Ray.java	45	8d291052092e98a3	

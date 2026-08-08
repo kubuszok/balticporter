@@ -410,7 +410,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
           "why"   -> ("java's bean pair over a trivial field and a scala property are the same " +
             "value with two spellings, and the port publishes the scala one — but the JVM METHOD " +
             "NAMES move with it, so a framework that discovers `getX`/`setX` reflectively finds " +
-            "neither"),
+            "neither" + finality(c)),
         ),
         reason = Reason.Configured(name, c.key),
         origin = Decision.originOf(p, c.getter),
@@ -423,6 +423,28 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
       residue(p, c, c.field, "a reference to the backing field the property replaced")
       residue(p, c, c.getter, "a CALL of a member that is now a `var`", _.kind == UsageKind.Call)
     }
+
+  /** the SECOND reflective fact, and it belongs only to `target = "val"`.
+    *
+    * Guard 5 of the §8.5 enumeration records that the JVM METHOD NAMES move. A `val` moves one more
+    * thing, in the other direction and at the FIELD: scalac emits a `val`'s backing field `final`,
+    * and java's was not — `MutableStorage` requires a declaration initialiser and no assignment IN
+    * THIS PROGRAM, which is a fact about the program and never about the `final` keyword (that is
+    * deliberate, and it is what keeps the guard from declining most of the get-only population).
+    *
+    * So a reflective WRITER that worked against the java field — `setAccessible(true)` and
+    * `Field.set`, which every deserialiser and every test fixture reaches for — does not work
+    * against the emitted one. It is `ENGINE-LIMITS.md` K21's shape at the storage rather than at the
+    * accessor: no guard can reach it (every reference to an object can reach its `Class`), the port
+    * compiles, no count moves, and the only reader who can act on it is §4.45's, at this line.
+    *
+    * Recorded ONLY for `val`, because a `var`'s field is not final and the sentence would then be
+    * false — a note that says something untrue about the code below it is worse than no note. */
+  private def finality(c: BeanPropertyTransform.Collapsed): String =
+    if c.target != BeanPropertyTransform.Target.Val then ""
+    else "; and this one is a `val`, so its BACKING FIELD is `final` on the JVM where java's was " +
+      "not — a reflective writer (`setAccessible` + `Field.set`) that worked against the java " +
+      "field does not work against this one"
 
   private def residue(p: Program, c: BeanPropertyTransform.Collapsed, sym: SymId, what: String,
                       keep: Usage => Boolean = _ => true): Unit =
