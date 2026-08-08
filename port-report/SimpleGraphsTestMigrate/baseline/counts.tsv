@@ -14,6 +14,9 @@ collection-retarget	0
 dependency-coverage	0
 dependency-coverage(all)	0
 heap-pollution	0
+idiom(converted)	0
+idiom(refused)	0
+idiom(residue)	0
 jdk-surface	1
 manifest	0
 markers	0

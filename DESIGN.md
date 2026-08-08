@@ -4437,3 +4437,174 @@ and `TypeRedirectTransform`. Both hold a `PolicyReport`, which is why neither lo
 naming `policy` in `accountedBy` would have been the suppression the lane exists to prevent: a
 declared key that never fired is a different residue from a slot two sides of which disagree. They
 stay counted, and the count is the work list — derived, not guessed.
+
+### 8.15 The IDIOM layer — what licenses it, and the three lanes that hold it to that licence
+
+**Every other layer in this engine derives its mandate from a DIFFERENCE**: java does X, scala does
+Y, and the port must not silently do Y where java did X. `Differences` is that mandate as code, and
+`catalog(unmechanised)` is the residue of it.
+
+The idiom layer has no such mandate, by construction. An anonymous class implementing a
+single-abstract-method interface and a lambda at that interface are the same value with two
+spellings; a `getX()`/`setX(v)` pair and a `var x` are one property with two spellings. The faithful
+translation already exists, already compiles and already behaves identically — so *why change
+anything at all* has to be answered before the first transformer, or every future row is argued from
+taste. The answer is:
+
+> **An idiom transformer's mandate is the REFERENCE PORTS, read as this layer's Scala EVIDENCE SET —
+> and read under §3.5, which means the SHAPE they emitted is evidence and the COUNT beside it is
+> not an opportunity.** A transformer ships when a hand port of this same library wrote the scala
+> form, when the delta between the two forms is ENUMERABLE, and when every member of that
+> enumeration is either structurally impossible or counted. Nothing else licenses moving code that
+> already means the right thing.
+
+The narrowing is what makes the layer's small size reproducible rather than a verdict a reader has to
+accept. The raw java populations look enormous — 1,545 bean-shaped getters, 1,650 null checks, 1,588
+index loops — and the hand port converted about **14 %** of the first and **none** of the second. That
+difference is not laziness: a hand port fixes every caller by hand in the same commit, where a
+mechanical port moves whole families at once, and reading the first as an option for the second is
+`ENGINE-LIMITS.md` K16's measured mistake (27 -> 47 errors). Read through the narrowing, ten candidate
+families leave **two transformers with a mandate, one worth pricing and six refused with an
+argument**.
+
+**And ONE row ships against negative reference-port evidence, which the charter permits and must not
+permit silently.** Both hand ports wrote the java anonymous class where scala's SAM conversion was
+available — deliberately, which is the strongest negative evidence a reference port can give. That
+row (`SamLambdaTransform`) ships on the other half of the charter alone: *the shape is strictly
+smaller and the refusals are decidable*. When a row ships on that half, **its refusal population is
+published before it converts anything** — which is what the census phases are for.
+
+#### An idiom transformer is a PHASE, never a beautification backend
+
+`CLAUDE.md` §6 admits one optional beautification backend — human-readable imports — and that is a
+RENDERING choice: it moves no declaration, no symbol, no source-map row and no published surface.
+Every idiom transformer changes a DECLARATION or a TERM in the TIR. §8.5's own rejected list settles
+the closest case in one sentence: *rendering `getX()` calls as `x` without renaming symbols
+desynchronises the surface from the source map, and the emitted surface is what an adopter consumes.*
+So the beautification-backend question is answered NO for the whole layer, once, here.
+
+#### The safety argument is a REFUSAL ENUMERATION, not a suite result
+
+Suite outcomes are the strongest oracle this project has and §3 says to prefer them over any number
+of further compile fixes. They are **not sufficient here**, and this repository has the receipts:
+the dropped `static { }` blocks, the dropped `super(args)`, the 156 anonymous-class bodies, and K21
+face 2 — where a framework read ZERO properties and the library's null-coercion then answered three
+assertions out of four CORRECTLY from data that was not there. Every one compiled green and moved no
+check count. And the oracle strength across the corpus spans two orders of magnitude, from a
+637-test ported suite down to one port with no suite at all.
+
+So for each transformer the set of behavioural differences between the java shape and the scala shape
+is ENUMERATED, and each member is either (i) made impossible by a structural GUARD, (ii) made
+impossible by the SHAPE the transformer emits, or (iii) COUNTED. **A transformer that cannot
+enumerate its deltas does not ship** — the Hoare bar applied to a transformer rather than to a
+lowering.
+
+Arm (ii) is the cheapest and is worth naming, because it removes a guard rather than adding one. A
+java anonymous class is a value whose type javac WROTE DOWN; a bare scala function literal is a POLY
+EXPRESSION whose type the CALLEE decides. So `SamLambdaTransform` emits the lambda ASCRIBED to the
+interface the anonymous class named, and overload resolution leaves the enumeration entirely: the
+argument's type at every callee is what it was before the phase ran, so the candidate set and the
+most-specific answer cannot move. Without the ascription the transformer would be standing in
+`JS-C22`/`JS-C23`'s risk — the one place this engine knows it cannot follow javac — for no gain.
+
+#### `idiom(converted|refused|residue)` — three lanes, and why not one number
+
+The trivia family's argument, one artifact over. `idiom(refused) = 0` is a bar a run could hold by
+CONVERTING NOTHING, and `idiom(converted) = N` says nothing about the population `N` was drawn from.
+So the positive, the refusal population (one row per declined site, naming the GUARD, in §1's
+grammar) and the unrewritten-usage residue are reported apart, from ONE log, with each row carrying
+`kind=` so a lane stays readable per transformer. The DENOMINATOR is recomputed and printed beside
+the numerator on every run, so it cannot go stale as prose can — chunk 18's shape.
+
+Three things about the wiring that are not incidental:
+
+- **the data comes from the PHASES, never from a second walk.** A check that re-derived *would this
+  have converted* would be a second answer to the phase's own question, free to disagree with it —
+  §4.6's one-mechanism-one-seam, and `ENGINE-LIMITS.md` K2.5's measured shape (five findings that had
+  been misreading themselves for the life of a port). The refusal lane is only trustworthy because
+  the phase holds both halves at the moment it files: a refusal whose guard the phase itself could
+  pass is an ENGINE BUG, not a residue, and nothing else can tell the two apart;
+- **all three are in `PortRun.RequiredChecks`**, required of every port including one with no idiom
+  phase, carrying `JdkSurface`'s own argument: three rows of zero and a check that never ran are one
+  row otherwise;
+- **a phase DECLARES the kinds it files** (`IdiomPhase.idiomKinds`), so a kind whose phase ran and
+  found nothing prints `0 considered` while a kind with no phase prints no row. Averaged into one
+  line those two are indistinguishable, and the first is the number a reader needs: a census whose
+  population fell to zero is exactly what a conversion regression looks like from here.
+
+#### The layer is §1(a) and the RUN weaves it — there is no switch
+
+Which types are SAM is a structural fact about a class file; whether a body is a single method is a
+structural fact about a tree. There is no library policy in any of it, so there is no constructor
+parameter, no `RuleScope`, no `SurfacePolicy` and no fingerprint — **and no on/off switch, because a
+knob on an (a) is the shape §1 forbids**. `PortRun.idiomPhases` weaves them, exactly as it appends
+the package rename, so they are outside every manifest `surface`: no fingerprint moves, no published
+port map changes, and §1.5 owes nothing, which is right because there is nothing for two modules to
+configure differently.
+
+The one exception is the bean collapse, and it is not an exception to that rule: it is a refinement
+of `bean-properties`' EXISTING per-key include list (§8.5), so its opt-in is the entry, not a boolean
+beside a policy map.
+
+#### A CENSUS IS A PHASE, AT THE POSITION ITS TRANSFORMER WILL OCCUPY
+
+`CLAUDE.md` §5's dry-run rule read in the other direction, and it is the same failure either way:
+**a phase measures what it is HANDED**. A dry run hands a phase untransformed input and under-counts
+(measured: a warning lane priced at 1 by a dry run reads 25 in the live pipeline, `ENGINE-LIMITS.md`
+CT7). A POST-PIPELINE census hands it a tree every surface phase has already moved, and over- or
+under-counts depending on which phase moved what — and there is a live instance of the second
+direction in this layer: a `CollectionsTransform` retarget moving `java.util.Comparator` to
+`scala.math.Ordering` changes what a SAM conversion would ascribe to. A census asked at the end of
+the pipeline would publish a denominator that is not the population the phase will meet, and the
+transformer wave's blast would then be DISCOVERED rather than confirmed — which is the one thing a
+census exists to prevent.
+
+So the SAM and `return this` censuses take FIRST position, which is their transformers'; the bean
+census is spliced immediately before `bean-properties`, whose own policy it reads. Two consequences
+worth stating because they are what makes this affordable: the censuses are PHASES, so
+`RequiredChecks` gains three CHECK names and not six; and the wave gate — **0 member digests on all
+fifteen ports** — is what proves each is really inert at the position it took, which a post-pipeline
+check could neither have been wrong about nor have proved.
+
+#### What the SAM oracle is, and why it lives in the FRONTEND
+
+"Is this interface a functional interface" is a fact about a CLASS FILE: JLS 9.8 counts the abstract
+methods a type declares AND inherits, excludes `static` and `default` ones, and excludes anything
+override-equivalent to a public method of `java.lang.Object` — which is exactly why
+`java.util.Comparator`, with its `equals` redeclaration, is one. **Nothing in the TIR can answer it**:
+the frontend interns an external symbol lazily and its MEMBERS only where the program references
+them, so an interface whose single method the program never calls has no members in the symbol table
+at all. A phase deriving the answer from what is interned would be reading what this run happened to
+PARSE rather than what the class DECLARES, which is §4.56's rule and whose recorded failure mode is a
+wrongful seal.
+
+So `SpoonTir.samAnswerOf` asks it once, where the shadow model is, and the answer travels on the node
+(`Tree.AnonClass.sam`). `Sam.Answer.Unreadable` is a FIRST-CLASS answer and never `false`:
+`getTypeDeclaration` returns null for a type not on the classpath, which is normal and common, and
+both answers lead to the same ACTION (leave the anonymous class) — which is precisely why the refusal
+must be COUNTED, or a port whose classpath is incomplete reads as a port with no SAM sites.
+
+One consequence is worth stating because it is easy to read the other way: the answer being computed
+in the frontend makes it java's own BY CONSTRUCTION, and it does not relax the ordering constraint.
+The transformer still runs before every retyping phase, because what that constraint is about is the
+type the conversion ASCRIBES TO.
+
+#### …and the §4.4-shaped face guard 4 could not see, which the fixtures found and the corpus has none of
+
+Guard 4 is the `this`-binding difference: inside a java anonymous class `this` is the ANON instance,
+inside a scala lambda it is the ENCLOSING class. Written as *does the body contain
+`Tree.This(anonSym)`* it is right for a `this` used as a VALUE and blind to the whole of the other
+half — because where `this` is the TARGET of a member access the frontend deliberately builds no such
+node. Spoon reports the anonymous class as the receiver's type whatever the member's real owner is,
+so trusting it would qualify half the corpus's references with a type that does not exist in the
+emitted code; the fallback is a BARE reference that scala resolves LEXICALLY, exactly as java did
+(`SpoonTir.thisOf`).
+
+`this.toString()` in an anonymous `Runnable` therefore arrives as
+`Tree.Ident(java.lang.Object#toString)` — no `This`, no `Select`, nothing a guard reading `This` can
+see — and converting it prints the ENCLOSING object with a green compile and no moved count. Guard 3
+has already established the body is exactly ONE method, so the members a bare reference can reach
+that a lambda would re-resolve are enumerable and small: `java.lang.Object`'s public members, and the
+anon's own SAM method reached recursively. Both are a bare `Tree.Ident` whose symbol's OWNER says
+which it is, which is the structural test §4.56 asks for. Zero corpus sites; the fixture is the whole
+evidence, which is `JS-E06`'s third commit again.

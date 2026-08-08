@@ -636,11 +636,11 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   Each prints, untruncated and diffed against the committed baseline, **every engine check the
   run's own pipeline registers, plus any check the port's own §1(c) rules register**. The total is
   not a constant to memorise — quoting one is what went stale twice; it
-  is the TWENTY-FOUR required of every run (`signature`, `omissions`,
+  is the TWENTY-SEVEN required of every run (`signature`, `omissions`,
   `portability(all|emitted|injected)`, `dependency-coverage(all|)`, `substitution(emitted|dangling)`,
   `remediation`, `policy`,
   `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`, `base-surface`,
-  `rewrite-callsites`,
+  `rewrite-callsites`, `idiom(converted|refused|residue)`,
   `catalog(consulted|unreached|unmechanised|undischarged|uncited)`) plus
   whatever the RUN'S OWN PIPELINE registers. `base-surface` is required of a BASE port too, which has
   no contract to ask: a run that asked nothing and a run whose recording was skipped are
@@ -654,7 +654,13 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   nothing is instrumented to answer for) and the work list (`undischarged`) are reported apart.
   `just catalog-coverage` is the corpus-wide half, and it is the recipe an agent runs before
   claiming a rule is live: a row unreached on one small library is normal, a row unreached on all
-  fifteen is dead code or an untested rule. **`catalog(uncited)` rides beside those four and is not
+  fifteen is dead code or an untested rule.
+  **The idiom family is three, for the trivia family's reason one artifact over again**:
+  `idiom(refused) = 0` is a bar a run could hold by CONVERTING NOTHING, and `idiom(converted) = N`
+  says nothing about the population `N` was drawn from — so the positive, the refusal population
+  (one row per declined site, naming the guard) and the unrewritten-usage residue are reported
+  apart, with the DENOMINATOR recomputed beside them on every run. All three are required of every
+  port including one with no idiom phase, for `jdk-surface`'s own reason. **`catalog(uncited)` rides beside those four and is not
   one of them**: it counts registry rows with no Scala-side normative citation, which says nothing
   about the port and everything about the registry — it is here because `counts.tsv` is the artifact
   a baseline diffs and that number was a `println` in one spec beside `assert(uncited <= all)`, which

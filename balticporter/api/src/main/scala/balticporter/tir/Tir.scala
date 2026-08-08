@@ -406,7 +406,16 @@ object Tree:
     * An empty `body` is meaningful: `new Base(){}` (the super-type-token idiom) really has none.
     * `New.anon = None` means "not an anonymous class at all", which is why the distinction is an
     * `Option` and not a possibly-empty list. */
-  final case class AnonClass(symbol: SymId, body: List[Statement], origin: Origin, dropped: List[String] = Nil)
+  final case class AnonClass(symbol: SymId, body: List[Statement], origin: Origin, dropped: List[String] = Nil,
+                             /** what the CLASS FILE says about the type this anonymous class named —
+                               * see [[Sam]] for why the question is answered in the frontend and
+                               * carried here rather than asked by the phase that acts on it.
+                               *
+                               * Defaults to [[Sam.Answer.unknown]], which is the conservative arm:
+                               * a tree nobody asked the question about refuses loudly in
+                               * `idiom(refused)` rather than converting on a fact nothing
+                               * established. */
+                             sam: Sam.Answer = Sam.Answer.unknown)
 
   /** `new T` / `new T { … }`. `anon` is present exactly when Java wrote an anonymous-class body
     * (a `CtNewClass`); its members are Scala's anonymous-class-expression members. Dropping it

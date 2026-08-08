@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -611,6 +611,29 @@ final case class PortRun(
     JdkSurfaceCheck.classifications(jdkFindings).foreach(c => say("  " + c))
     jdkFindings.take(20).foreach(f => println("  " + f.render))
     if jdkFindings.sizeIs > 20 then println(s"  … ${jdkFindings.size - 20} more (see findings.tsv)")
+    // THE THREE IDIOM LANES, recorded UNCONDITIONALLY and beside the JDK wall on purpose: this is
+    // `JdkSurface`'s wiring, verbatim, because it carries the same argument. A port with no idiom
+    // phase records three rows of ZERO, and a run that asked nothing is otherwise indistinguishable
+    // from a run whose recording was skipped.
+    //
+    // The DATA comes from the phases (`translated.idioms`), never from a second walk here: a check
+    // that re-derived "would this have converted" would be a second answer to the phase's own
+    // question, free to disagree with it (§4.6; `ENGINE-LIMITS.md` K2.5 is the measured shape of
+    // that disagreement).
+    // …scoped to THIS MODULE's own declarations (`ENGINE-LIMITS.md` D2). A dependent's model
+    // CONTAINS its base's units, so an idiom phase considers the base's sites too and republishing
+    // those puts a module's own rows in a minority in its own report — measured on the first run of
+    // these lanes, where five dependents each reported the libGDX base's identical 24 convertible
+    // SAM sites as their own. Filtered on the JAVA PATH of the units this run CONVERTS, which is the
+    // same partition every other owner question in this file uses.
+    val ownPaths = checkedUnits.map(u => PortRun.real(java.nio.file.Paths.get(u.origin.javaPath)).toString).toSet
+    val ownIdioms = new IdiomLog
+    ownIdioms.recordAll(translated.idioms.all.filter(c =>
+      ownPaths.contains(PortRun.real(java.nio.file.Paths.get(c.origin.javaPath)).toString)))
+    IdiomCheck.Lanes.foreach(l => CheckReport.record(l, IdiomCheck.findings(ownIdioms, l)))
+    println(IdiomCheck.summary(ownIdioms,
+      effectivePhases.collect { case p: balticporter.tir.IdiomPhase => p.idiomKinds }.flatten.toSet))
+    IdiomCheck.refusalsByGuard(ownIdioms).foreach(r => say(r))
     // …and the ARTIFACT, both lanes. Gated on the artifact layer without exception (§5.1): with
     // reporting off the report directory falls back to `<cwd>/port-report/…`, and a forked test's
     // cwd is the subproject.
@@ -1990,8 +2013,47 @@ final case class PortRun(
             "vanish from findings.tsv while stdout still showed them]"
         )
 
-  /** the phases that actually RUN: the declared surface, then the namespace rename LAST (§4.56). */
-  private def effectivePhases: List[Phase] = declaredPhases ++ renamePhase
+  /** the phases that actually RUN: the ENGINE's own idiom phases, the declared surface, then the
+    * namespace rename LAST (§4.56).
+    *
+    * The idiom phases are woven by the RUN and not declared by the port, exactly as the rename is,
+    * and for a reason §1 states rather than a convenience: an idiom transformer is §1(a) —
+    * "is this interface single-abstract-method" is a fact about a class file and "is this body one
+    * method" is a fact about a tree, so there is no library policy in it and '''a knob on an (a) is
+    * the shape §1 forbids'''. Woven here they are also OUTSIDE the manifest `surface`, so no
+    * `SurfacePolicy` fingerprint moves, no published port map changes and §1.5 owes nothing —
+    * which is exactly right, because there is nothing for two modules to configure differently.
+    *
+    * @see [[idiomPhases]] for WHERE each one is placed, which is the whole of the D1 argument. */
+  private def effectivePhases: List[Phase] = idiomPhases(declaredPhases) ++ renamePhase
+
+  /** THE IDIOM LAYER, WOVEN AT THE POSITION EACH PHASE WILL OCCUPY.
+    *
+    * `CLAUDE.md` §5's dry-run rule read in the other direction: '''a phase measures what it is
+    * HANDED'''. A census that runs where its transformer will not run measures a tree the
+    * transformer will never see, and over- or under-counts depending on which surface phase moved
+    * what. So placement is not scheduling here — it is the measurement:
+    *
+    *   - the SAM census and the `return this` census go FIRST, which is where their transformers
+    *     go, so the descriptors and the return types they match are java's own. A
+    *     `CollectionsTransform` retarget moving `java.util.Comparator` to `scala.math.Ordering`
+    *     changes what a SAM conversion would ascribe to, and a census asked afterwards would
+    *     publish a denominator that is not the population the phase will meet;
+    *   - the BEAN COLLAPSE census is spliced immediately before `bean-properties`, because the
+    *     intersection it publishes is a fact about the pairs THAT phase will see and about the tree
+    *     the phases ahead of it have already produced. It reads that phase's own include list and
+    *     declares none of its own (§8.5 forbids a second policy home beside `pairs`), so a port
+    *     with no `bean-properties` phase gets no census — which is not a gap but the honest answer:
+    *     there are no configured pairs to intersect.
+    */
+  private def idiomPhases(declared: List[Phase]): List[Phase] =
+    val first = List(new balticporter.transform.SamLambdaCensus, new balticporter.transform.ReturnThisCensus)
+    val spliced = declared.flatMap {
+      case b: balticporter.transform.BeanPropertyTransform =>
+        List(new balticporter.transform.BeanCollapseCensus(b.configuredPairs), b)
+      case other => List(other)
+    }
+    first ++ spliced
 
   /** does this run resolve against sources OUTSIDE its own tree? That is the structural signature
     * of a dependent port — a root that is merely the run's own tree (self-resolution, which several
@@ -2157,7 +2219,11 @@ final case class PortRun(
     // …and the REWRITE log, which the pipeline fills by OBSERVING each phase rather than by asking
     // it (`Rewrite`): a value this translation owns, for the same reason the two logs above are.
     val rewrites = new RewriteLog
-    val (program, decisions) = Pipeline.runTraced(parsed, effectivePhases, binder, catalog, rewrites)
+    // …and the IDIOM log, which the pipeline drains from every `IdiomPhase` as it returns: a value
+    // this translation owns, for the reason the three above are (`Determinism.Full` translates
+    // twice, and a shared log would double every candidate).
+    val idioms   = new IdiomLog
+    val (program, decisions) = Pipeline.runTraced(parsed, effectivePhases, binder, catalog, rewrites, idioms)
     val plan    = RuntimePlan.of(effectivePhases, runtimeMode)
     // `externalConcrete` is DERIVED, never passed in: a caller who has to remember it is a caller
     // who forgets it, and forgetting it silently disables diamond-conflict detection against an
@@ -2181,7 +2247,7 @@ final case class PortRun(
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, bestEffort,
                                  Some(surface), catalog = catalog)
     PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)),
-                       decisions, binder, surface, parsed, catalog, rewrites)
+                       decisions, binder, surface, parsed, catalog, rewrites, idioms)
 
   /** Ask the binder about every key this run DECLARES — its drops, and every keyed phase's own.
     *
@@ -2410,6 +2476,11 @@ object PortRun:
   val TriviaDeliberate     = "trivia(deliberate)"
   /** the port's JDK wall — every `java.*` member the emitted code still calls, classified. */
   val JdkSurface           = JdkSurfaceCheck.Name
+  /** the IDIOM layer's three lanes — what it converted, what it declined and why, and what it moved
+    * and did not rewrite ([[balticporter.tir.IdiomCheck]]). */
+  val IdiomConverted       = IdiomCheck.Converted
+  val IdiomRefused         = IdiomCheck.Refused
+  val IdiomResidue         = IdiomCheck.Residue
 
   /** Every check a run MUST have recorded by the time it finishes. Named rather than derived,
     * because the property being asserted is "the orchestrator invoked all of them" — deriving the
@@ -2434,6 +2505,13 @@ object PortRun:
     // check still reports the port's kept JDK surface and K9's ForEach demand, and a port that
     // reported nothing there would be indistinguishable from one whose check never ran.
     JdkSurface,
+    // …and all THREE idiom lanes, for the trivia family's reason one artifact over:
+    // `idiom(refused) = 0` is a bar a run could hold by converting NOTHING, and
+    // `idiom(converted) = N` says nothing about the population N was drawn from. So the positive,
+    // the refusal population and the unrewritten-usage residue are reported apart. Required of
+    // EVERY port including one with no idiom phase, for `JdkSurface`'s own reason: three rows of
+    // zero and a check that never ran are one row otherwise.
+    IdiomConverted, IdiomRefused, IdiomResidue,
     // all four catalog lanes, and all four for the trivia family's reason: `unreached = 0` is a bar
     // a run could hold by declaring every row `Unmechanised`, and reporting the bar without the
     // residues says nothing about how it was met. `unmechanised` is derived from the REGISTRY
@@ -2516,6 +2594,14 @@ object PortRun:
         * check then reports nothing and claims nothing, which is the honest answer for a program no
         * pipeline produced. */
       val rewrites: RewriteLog = RewriteLog.discarding,
+      /** what every `IdiomPhase` CONSIDERED — the denominator the three `idiom(*)` lanes report
+        * apart (`IdiomCheck`).
+        *
+        * Carried rather than re-derived for the reason the log exists: a check that asked "would
+        * this have converted" would be a second answer to the phase's own question, free to
+        * disagree with it (§4.6, and `ENGINE-LIMITS.md` K2.5's measured shape). Defaults to an
+        * empty log, so a hand-built `Translated` reports three honest zeros. */
+      val idioms: IdiomLog = IdiomLog.discarding,
   ):
     private val memo = collection.mutable.Map.empty[SymId, String]
     // the DECISIONS are part of the key: they are not in the tree and they are in the emitted text

@@ -203,6 +203,18 @@ object Decision:
       * record: `Class.isRecord` answers false and `getRecordComponents` answers null, which a
       * framework that discovers records reflectively will act on. */
     case RecordMembers
+    /** an anonymous class implementing a single-abstract-method interface was emitted as a LAMBDA,
+      * ascribed to that interface (`DESIGN.md` §8.15).
+      *
+      * The mechanical translation is the anonymous class and it is perfectly correct, so the reader
+      * at the line is owed the reason the port went the other way — and one thing more, which is
+      * why this kind carries data rather than sharing an existing one: java's anonymous class has a
+      * STABLE CLASS NAME (`Outer$1`) that a `getClass().getName()`, a `getSimpleName()`, a
+      * `toString()` or a log line can print, and a lambda's is a hidden class spelled
+      * `Outer$$Lambda$14/0x…`. No structural guard can reach that — every reference to a value can
+      * reach `getClass()` — so it is a residue RECORDED on the conversion, where §4.45's reader is,
+      * and `was=` is the name it had. */
+    case SamLambda
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

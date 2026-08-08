@@ -4,7 +4,8 @@ import balticporter.core.{RuntimeMode, RuntimePlan}
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.catalog.{CatalogLog, DiffId}
-import balticporter.tir.{CheckReport, Decision, Phase, Pipeline, Program, RewriteLog, SymId}
+import balticporter.tir.{CheckReport, Decision, IdiomCandidate, IdiomKind, IdiomLog, IdiomVerdict,
+  Phase, Pipeline, Program, RewriteLog, SymId}
 
 /** One Java snippet taken through the pipeline, with everything a test wants to assert on.
   *
@@ -37,7 +38,18 @@ final case class Ported(before: Program, after: Program, phases: List[Phase],
                           * so it cannot be re-derived afterwards from `before` and `after` alone
                           * once more than one phase ran. A spec asserting that its phase accounts
                           * for what it retyped has nowhere else to read it. */
-                        rewrites: RewriteLog = RewriteLog.discarding):
+                        rewrites: RewriteLog = RewriteLog.discarding,
+                        /** what every `IdiomPhase` CONSIDERED, drained by the pipeline as it went
+                          * (`balticporter.tir.IdiomLog`).
+                          *
+                          * Here for the reason `decisions` and `rewrites` are: the log is a value
+                          * ONE translation owns and is drained at each phase boundary, so a fixture
+                          * that re-ran the phases to get it would be asserting about a second
+                          * translation. It is also the only surface a spec has for an idiom
+                          * transform's REFUSALS, which are its whole safety argument — a spec that
+                          * could only assert on emitted text would be able to see the conversions
+                          * and nothing the phase declined. */
+                        idioms: IdiomLog = IdiomLog.discarding):
 
   /** what the phases that ran require of `balticporter-runtime`. Derived, not passed: the fixture
     * is a miniature of the orchestrator, so a test exercises the same derivation a real port does
@@ -119,10 +131,12 @@ object PortFixture:
     // that died on it would make the work list unrunnable.
     val catalog       = new CatalogLog(fatal = true)
     val rewrites      = new RewriteLog
+    val idioms        = new IdiomLog
     val before        = SpoonTir.fromSource(java, catalog = catalog)
     val (after, log)  = Pipeline.runTraced(before, phases.toList,
-                          new balticporter.tir.PolicyBinder(before, before.members), catalog, rewrites)
-    Ported(before, after, phases.toList, Map("Snippet.java" -> java), log.all, mode, catalog, rewrites)
+                          new balticporter.tir.PolicyBinder(before, before.members), catalog, rewrites, idioms)
+    Ported(before, after, phases.toList, Map("Snippet.java" -> java), log.all, mode, catalog, rewrites,
+           idioms)
 
   /** the same over SEVERAL compilation units, each `fileName -> code`. A Java file declares exactly
     * one package, so every rule about a PACKAGE BOUNDARY — default access, `protected`, an override
@@ -133,10 +147,11 @@ object PortFixture:
   def portAllIn(mode: RuntimeMode, sources: List[(String, String)], phases: Phase*): Ported =
     val catalog      = new CatalogLog(fatal = true)
     val rewrites     = new RewriteLog
+    val idioms       = new IdiomLog
     val before       = SpoonTir.fromSources(sources, catalog = catalog)
     val (after, log) = Pipeline.runTraced(before, phases.toList,
-                         new balticporter.tir.PolicyBinder(before, before.members), catalog, rewrites)
-    Ported(before, after, phases.toList, sources.toMap, log.all, mode, catalog, rewrites)
+                         new balticporter.tir.PolicyBinder(before, before.members), catalog, rewrites, idioms)
+    Ported(before, after, phases.toList, sources.toMap, log.all, mode, catalog, rewrites, idioms)
 
   /** parse only — for tests about the FRONTEND rather than about a phase.
     *
@@ -231,6 +246,54 @@ abstract class PortSuite extends munit.FunSuite:
     val hits = p.decisions.filter(d => d.kind == kind && d.subjectFqn.contains(about))
     if hits.nonEmpty then
       fail(s"$kind was recorded and should not have been:\n${hits.map("  " + render(_)).mkString("\n")}")
+
+  // ---------------------------------------------------------------------------------------------
+  // IDIOM candidates — the surface an idiom transform's SAFETY ARGUMENT is asserted on.
+  //
+  // An idiom transform moves code that already means the right thing, so its licence is not a suite
+  // result but a REFUSAL ENUMERATION: every behavioural difference between the java shape and the
+  // scala shape is made impossible by a guard, made impossible by the emitted shape, or COUNTED. A
+  // spec that could only assert on emitted text would see the conversions and nothing the phase
+  // declined — which is the half that carries the argument.
+  // ---------------------------------------------------------------------------------------------
+
+  /** the phase CONVERTED a site of `kind`, at a subject containing `about`. */
+  def assertIdiomConverts(p: Ported, kind: IdiomKind, about: String = "")(using munit.Location): Unit =
+    if !p.idioms.all.exists(c => c.kind == kind && c.verdict == IdiomVerdict.Converted &&
+                                 c.subject.contains(about)) then
+      fail(s"no $kind CONVERSION${label(about)} was filed\n${renderIdioms(p)}")
+
+  /** …and DECLINED one, naming the guard. `guard` is matched exactly, because the guard IS the
+    * classification a reader acts on: a substring match would let a spec pass on a different
+    * refusal that happens to share a prefix. */
+  def assertIdiomRefuses(p: Ported, kind: IdiomKind, guard: String, about: String = "")
+                        (using munit.Location): Unit =
+    if !p.idioms.all.exists(c => c.kind == kind && c.subject.contains(about) && (c.verdict match
+          case IdiomVerdict.Refused(g, _) => g == guard
+          case _                          => false)) then
+      fail(s"no $kind REFUSAL under guard `$guard`${label(about)} was filed\n${renderIdioms(p)}")
+
+  /** the site was CONSIDERED at all — the denominator half, and the one a spec needs to prove a
+    * census is not silently skipping a shape. A site nothing filed is invisible to both assertions
+    * above, and "no conversion" and "never looked" are the two answers those cannot tell apart. */
+  def assertIdiomConsiders(p: Ported, kind: IdiomKind, about: String = "")(using munit.Location): Unit =
+    if !p.idioms.all.exists(c => c.kind == kind && c.subject.contains(about)) then
+      fail(s"no $kind candidate${label(about)} was filed at all\n${renderIdioms(p)}")
+
+  /** …and the complement: nothing of `kind` was filed about this subject. */
+  def assertIdiomIgnores(p: Ported, kind: IdiomKind, about: String)(using munit.Location): Unit =
+    val hits = p.idioms.all.filter(c => c.kind == kind && c.subject.contains(about))
+    if hits.nonEmpty then
+      fail(s"$kind candidates were filed and should not have been:\n" +
+        hits.map("  " + _.render).mkString("\n"))
+
+  private def label(about: String): String =
+    if about.isEmpty then "" else s" at a subject containing '$about'"
+
+  private def renderIdioms(p: Ported): String =
+    if p.idioms.isEmpty then "--- 0 idiom candidate(s) ---"
+    else s"--- ${p.idioms.size} idiom candidate(s) ---\n" +
+      p.idioms.all.map("  " + _.render).mkString("\n") + "\n---------------"
 
   private def renderDecisions(p: Ported): String =
     if p.decisions.isEmpty then "  (none)" else p.decisions.map("  " + render(_)).mkString("\n")

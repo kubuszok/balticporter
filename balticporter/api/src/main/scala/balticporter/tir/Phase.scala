@@ -294,6 +294,20 @@ object Pipeline:
     */
   def runTraced(program: Program, phases: List[Phase], binder: PolicyBinder,
                 catalog: balticporter.catalog.CatalogLog, rewrites: RewriteLog): (Program, DecisionLog) =
+    runTraced(program, phases, binder, catalog, rewrites, IdiomLog.discarding)
+
+  /** …and with the run's IDIOM LOG, which collects what every [[IdiomPhase]] CONSIDERED.
+    *
+    * Drained here for [[DecisionLog]]'s reason and not for a new one: a phase instance reused
+    * across two translations (`Determinism.Full` translates twice) would otherwise report the first
+    * run's candidates as the second's, and the three `idiom(*)` lanes would each read double on
+    * every port. The drain is unconditional over the phase list, so a census phase and the
+    * transformer that replaces it are indistinguishable to it — which is the point: wave 0's
+    * denominator and wave 1's numerator are the same question asked at the same position.
+    */
+  def runTraced(program: Program, phases: List[Phase], binder: PolicyBinder,
+                catalog: balticporter.catalog.CatalogLog, rewrites: RewriteLog,
+                idioms: IdiomLog): (Program, DecisionLog) =
     val log     = new DecisionLog
     val ordered = order(phases)
     ordered.foreach { case p: PolicyBound => p.bindPolicy(binder); case _ => () }
@@ -310,12 +324,14 @@ object Pipeline:
       else
         phase.decisions.clear() // this run's decisions only — see `runTraced`
         phase.cites.clear()     // …and this run's citations only, for the same reason
+        phase match { case ip: IdiomPhase => ip.candidates.clear(); case _ => () } // …and its candidates
         val out  = phase.run(prog)
         val next = out.rebuilt(xref = Xref.build(out.units))
         recordPatch(rewrites, phase, prog, next)
         log.recordAll(phase.decisions.drain())
         phase.cites.foreach((id, decl) => catalog.cite(id, decl))
         phase.cites.clear()
+        phase match { case ip: IdiomPhase => idioms.recordAll(ip.candidates.drain()); case _ => () }
         if DebugFlags.tracePhases then
           println(s"[balticporter] phase '${phase.name}': ${next.units.size} units, ${next.symbols.all.size} symbols" +
             (if log.isEmpty then "" else s", decisions so far: ${log.size}"))

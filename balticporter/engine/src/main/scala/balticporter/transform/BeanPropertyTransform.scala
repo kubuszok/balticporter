@@ -82,6 +82,13 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty)
   /** the pairs, sorted and rendered — two modules that agree must compare equal (§1.5). */
   def surfaceFingerprint: String = pairs.toList.sorted.map((k, v) => s"$k=$v").mkString(",")
 
+  /** THE INCLUDE LIST, readable — for the one consumer that must intersect against exactly the
+    * pairs THIS phase will see and may not declare a second list of its own
+    * ([[BeanCollapseCensus]]). A copy of the map, not a knob: §8.5's "Rejected" list forbids a
+    * second policy home beside `pairs`, so a reader of the pairs is not the same thing as a second
+    * writer of them. */
+  def configuredPairs: Map[String, String] = pairs
+
   // ---- policy, bound before the pipeline starts ---------------------------------------------
 
   private var parsed: List[BeanPropertyTransform.Entry] = Nil

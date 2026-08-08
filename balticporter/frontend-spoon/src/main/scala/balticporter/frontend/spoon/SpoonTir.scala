@@ -28,6 +28,16 @@ import scala.jdk.CollectionConverters.*
   */
 object SpoonTir:
 
+  /** the PUBLIC instance methods of `java.lang.Object`, by Spoon signature — the exclusion JLS 9.8
+    * makes when counting a functional interface's abstract methods, and the reason
+    * `java.util.Comparator` (which redeclares `equals`) is one.
+    *
+    * `clone` and `finalize` are deliberately absent: they are `protected`, so JLS 9.8 does not
+    * exclude them and an interface redeclaring one abstract really does have two. */
+  private[spoon] val ObjectPublicSignatures: Set[String] = Set(
+    "equals(java.lang.Object)", "hashCode()", "toString()", "getClass()",
+    "notify()", "notifyAll()", "wait()", "wait(long)", "wait(long,int)")
+
   /** the three SENTINEL entries `annotationsOf` can put in `Symbol.droppedAnnotations` beside real
     * annotation names, so `omissions` distinguishes the reasons a drop happened.
     *
@@ -979,6 +989,75 @@ object SpoonTir:
       if r == null then scala.None
       else try Option(r.getTypeDeclaration) catch { case _: Throwable => scala.None }
 
+    /** JAVA'S FUNCTIONAL-INTERFACE QUESTION (JLS 9.8), asked of the class file — the ONE place it
+      * is asked, and the ONLY place it can be.
+      *
+      * See [[balticporter.tir.Sam]] for why the answer is computed here and carried on the node
+      * rather than derived by the phase that acts on it: the TIR interns an external type's members
+      * only where the program REFERENCES them, so a phase deriving the answer from the symbol table
+      * would be reading what this run happened to parse rather than what the class DECLARES
+      * (`CLAUDE.md` §4.56).
+      *
+      * The rule is java's own, item by item, and each item is a refusal the census counts:
+      *
+      *   - the target must be an INTERFACE. Interfaces only, because that is java's rule, and
+      *     because a scala SAM conversion to an abstract CLASS carries a constructor question no
+      *     guard downstream answers;
+      *   - abstract methods are counted INHERITED as well as declared (`getAllMethods`), which is
+      *     why a name-based classification cannot do this job;
+      *   - `static` and `default` methods do not count — a `default` method has a body;
+      *   - a method override-equivalent to a PUBLIC method of `java.lang.Object` does not count.
+      *     That exclusion is not a detail: it is the whole reason `java.util.Comparator`, which
+      *     redeclares `equals(Object)` beside `compare`, is a functional interface at all.
+      *
+      * `java.io.Serializable` is reported BESIDE the answer rather than folded into it, because it
+      * is not a statement about SAM-ness: such a type IS a functional interface and the port
+      * declines the CONVERSION, since a serializable lambda's serialized form is not the anonymous
+      * class's. Two different facts, two different fields.
+      *
+      * The ONE lookup wrapped is [[typeDeclarationOf]]'s, which is where an absent value is normal
+      * (`CLAUDE.md` §4.6) — and its default here is [[Sam.Answer.Unreadable]] and never `No`, so a
+      * classpath gap is counted as one instead of reading as "this port has no SAM sites". */
+    private def samAnswerOf(r: CtTypeReference[?]): Sam.Answer =
+      typeDeclarationOf(r) match
+        case scala.None       => Sam.Answer.Unreadable
+        case Some(d: CtInterface[?]) =>
+          val all = d.getAllMethods.asScala.toList
+          val abstracts = all.filter { m =>
+            m.hasModifier(ModifierKind.ABSTRACT) &&
+              !m.hasModifier(ModifierKind.STATIC) &&
+              // a `default` method is not abstract, so the modifier test above already declines it;
+              // this is the belt to that brace and is spelled through Spoon's own predicate rather
+              // than through a modifier constant it does not have.
+              !m.isDefaultMethod &&
+              !SpoonTir.ObjectPublicSignatures.contains(m.getSignature)
+          }.map(m => m.getSignature -> m).toMap.values.toList
+          abstracts match
+            case one :: Nil =>
+              Sam.Answer.Yes(one.getSimpleName, one.getParameters.size, serializableAncestry(r))
+            case Nil        => Sam.Answer.No("no abstract method — nothing for a lambda to implement")
+            case several    =>
+              Sam.Answer.No(s"${several.size} abstract methods (${several.map(_.getSimpleName).sorted.distinct
+                .mkString(", ")}) — java's own SAM rule (JLS 9.8) admits exactly one")
+        case Some(_)          => Sam.Answer.No("the target is a CLASS, not an interface")
+
+    /** does this type's ancestry reach `java.io.Serializable`? Read through the same declaration
+      * lookup, so an unreadable ancestor answers `false` and the SAM answer is `Unreadable`
+      * anyway — the two cannot disagree in a direction that converts. */
+    private def serializableAncestry(r: CtTypeReference[?]): Boolean =
+      val seen = collection.mutable.Set.empty[String]
+      def walk(x: CtTypeReference[?], fuel: Int): Boolean =
+        if x == null || fuel <= 0 then false
+        else if x.getQualifiedName == "java.io.Serializable" then true
+        else if !seen.add(x.getQualifiedName) then false
+        else typeDeclarationOf(x).exists { d =>
+          val ups: List[CtTypeReference[?]] =
+            (d match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
+              (try d.getSuperInterfaces.asScala.toList catch { case _: Throwable => Nil })
+          ups.exists(walk(_, fuel - 1))
+        }
+      walk(r, 6)
+
     /** a use of a GENERIC class — an instantiation (`Class<T>`) or a raw one (`Class`). */
     private def isGenericUse(tr: CtTypeReference[?]): Boolean = tr match
       case null                         => false
@@ -1755,7 +1834,10 @@ object SpoonTir:
             dropped += s"${other.getClass.getSimpleName.stripSuffix("Impl")} ${other.getSimpleName}"
             Nil
         }
-        Tree.AnonClass(id, members, originOf(nc), dropped.result())
+        // java's SAM question, asked ONCE, where the class file is — see `samAnswerOf`. The target
+        // is the type the `new` NAMED, not the anonymous class Spoon synthesised for it.
+        val sam = try samAnswerOf(nc.getType) catch { case _: Throwable => Sam.Answer.Unreadable }
+        Tree.AnonClass(id, members, originOf(nc), dropped.result(), sam)
       }
 
     /** Does this anonymous-class method OVERRIDE an inherited one? Scala REQUIRES `override` when

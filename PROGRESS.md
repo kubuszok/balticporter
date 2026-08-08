@@ -4926,6 +4926,88 @@ first.
   above, and any successor gap in this phase should be classified the same way before a manifest
   entry is written.
 
+## 11.99 The idiom layer — wave 0's published denominators, and what they decide
+
+`DESIGN.md` §8.15 says what licenses this layer and why its safety argument is a refusal enumeration
+rather than a suite result. This section is the NUMBERS: what the three census phases found, per
+port, on the run that shipped them. They are reproducible with `just measure-all` and they are
+re-derived on every run — the check prints its own denominator, so nothing here can go stale as
+prose while the code moves.
+
+**The wave was EMISSION-INERT and that is what makes the numbers worth anything**: 0 member digests
+on all fifteen ports, every `expected-errors` and every `expected-lost` unchanged, every suite
+outcome identical. A census that moved emitted text would be measuring a tree it had already
+changed.
+
+### What the three lanes count, and the one thing to read first
+
+Every row is a REFUSAL at wave 0, because nothing converts yet — but the guard `PhaseNotEnabled` is
+NOT a property of the site. It means *this site passes every guard and the transformer that would
+convert it is not in this pipeline*, so it is the DENOMINATOR a later wave converts. Read it as the
+population; read every other guard as a delta the port carries deliberately.
+
+### Per port
+
+| port | SamLambda considered / convertible | BeanCollapse considered / collapsible | `return this` considered / ancestor-typed |
+|---|---|---|---|
+| `sge` (libGDX core) | **155 / 23** — 127 `NotSam`, 5 `NonCapturing` | **137 / 91** — 32 `ComputedBody`, 14 `OverriddenBelow` | **709 / 2** — 678 `SelfTyped`, 29 `NotAlwaysThis` |
+| `sge` test set | 9 / 0 — 6 `NonCapturing`, 3 `NotSam` | — | 0 |
+| `sge-ecs` | 0 | — | 5 / 0 |
+| `sge-ecs` test set | 13 / 0 — all `NotSam` | — | 0 |
+| `sge-gltf` | 48 / 0 — all `NotSam` | — | **29 / 2** |
+| `sge-gltf` test sets | 0 | — | 0 |
+| `sge-vfx` | 1 / 0 | — | 14 / 0 |
+| `sge-anim8` | 3 / 0 — all `NonCapturing` | — | 5 / 0 |
+| `sge-screens` | 0 | — | 0 |
+| `sge-graphs` | 0 | — | 0 |
+| `sge-noise` | 3 / 1 | — | 14 / 0 |
+| `sge-jbump` | 9 / 3 — 6 `NonCapturing` | — | 0 |
+| `ssg-liquid` | 24 / 0 — 23 `NotSam`, 1 `NonCapturing` | — | 29 / 0 — 26 `SelfTyped`, 3 `NotAlwaysThis` |
+| `ssg-liquid` test set | 50 / 0 — all `NotSam` | — | 0 |
+
+Every row is scoped to THAT MODULE's own declarations (`ENGINE-LIMITS.md` D2). The first run of these
+lanes was not, and it showed exactly the shape D2 describes: five dependents each reported the libGDX
+base's identical 24 convertible SAM sites as their own, so a dependent's own rows were a minority in
+its own report. `BeanCollapse` has a row only where the port carries a `bean-properties` phase, which
+is the libGDX base alone.
+
+### What the numbers decide
+
+- **the SAM transformer has a real population and a large honest refusal set.** On the libGDX base,
+  155 anonymous-class sites considered: **23 convertible**, 127 declined because java's own SAM rule
+  (JLS 9.8) does not admit the target at all — libGDX's listeners are abstract CLASSES, not
+  interfaces — and 5 declined on instance identity. A **15 %** conversion rate, which is the shape
+  §8.15's charter narrowing predicts and not the raw `197 anonymous-class instantiations` an
+  upstream grep suggests. It is also the number wave 1's blast must PREDICT: 23 declarations on the
+  base, 3 on jbump, 1 on noise4j, and zero everywhere else;
+- **the bean `var` collapse has a population of 91 on the only port that carries the phase**, out of
+  137 configured pairs: 32 declined because the getter's body is not `return this.f` (the exact
+  refusal §8.5 kept bodies verbatim for) and 14 because a subclass overrides the accessor and a
+  scala `var` cannot be overridden. That is §8.5's deferred half measured rather than predicted, and
+  it is large enough to justify a wave and small enough to read line by line;
+- **`return this` → `this.type` is REFUSED on its own number.** 709 methods in the libGDX base answer
+  `this`; **678** already declare the declaring class as their return type, where `this.type` buys
+  precision only at a call on a subclass, and **29** answer something else on another path. The
+  bucket that removes a downcast at every chained call — a declared return type that is a strict
+  ANCESTOR — is **2** on the base and **4** on gdx-gltf. A wave spent on 709 member digests for six
+  removed downcasts is a wave spent on churn, so the transformer is not built. This is the row whose
+  go/no-go nobody had a number for, and the number says no.
+
+### Two things the census found that no count would have
+
+- **`Pipeline.order`'s tie-break was a FIFO**, so a phase added with a `runsBefore` edge reordered
+  the phases already there — `CollectionsTransform` ran ELEVENTH on the libGDX base where the port
+  wrote it SECOND. Found because two phases whose `run` returns its argument moved a
+  `collection-boundary` count 22 → 20 and two member digests. Fixed in its own commit
+  (`DESIGN.md` §8.13's last subsection), corpus blast 0;
+- **guard 4 (`this` binds to the ANON in java, to the ENCLOSING class in scala) is blind to the
+  shape it will meet most**, because where `this` is the TARGET of a member access the frontend
+  builds no `Tree.This` at all — `this.toString()` in an anonymous `Runnable` arrives as a bare
+  `Tree.Ident(java.lang.Object#toString)`. Zero corpus sites; the fixture is the whole evidence.
+  `DESIGN.md` §8.15's last subsection carries the rule.
+
+---
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.

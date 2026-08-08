@@ -8512,3 +8512,136 @@ spanning name pattern refuses from BOTH modules' side, the same pattern over ONE
 normally (the rule is about the line, not about patterns), and an exact-FQN hint over the same
 two-module tree is untouched — which is the measurement behind "zero corpus movement" rather than an
 assertion about it. All 13 ports: 0 members changed, every check count identical.
+
+## 14. The IDIOM layer — what was REFUSED, with its number
+
+`DESIGN.md` §8.15 states what licenses this layer at all: an idiom transformer has no DIFFERENCE to
+discharge, so its mandate is the reference ports read as a Scala evidence set, and its safety
+argument is a REFUSAL ENUMERATION rather than a suite result. This section is the other half — the
+rows that were priced and NOT built, each with the number that decided it, so the next agent does
+not re-derive them. Every one is classified (a)/(b)/(c) exactly as the rest of this file is.
+
+### I1. `return this;` → `this.type` — **REFUSED on a measured 2 of 709, §1(a)**
+
+`this.type` is a genuine (a) rule and the reference port wrote it (`Vectors.scala:625,648-653`
+against `Vector3.java`). What it BUYS depends entirely on a split nobody had measured: for a method
+whose declared return type IS the declaring class it adds precision only at a call on a SUBCLASS;
+for one whose declared return type is a STRICT ANCESTOR — a fluent builder returning the interface —
+it removes a downcast at every chained call.
+
+`ReturnThisCensus` publishes that split on every run. On the libGDX base: **709** methods answer
+`this`, of which **678** are self-typed, **29** answer something else on another path, and the
+ancestor-typed bucket — the one that buys anything — is **2**. It is **4** on gdx-gltf and **0**
+everywhere else. libGDX's `Vector<T extends Vector<T>>` already self-types, which is why.
+
+A wave narrowing 709 declarations for six removed downcasts is churn, and it is not free churn:
+`this.type` is a singleton type, so a base narrowing constrains every DEPENDENT's override —
+`SurfaceIntrusion`'s shape one level down, on six dependent lanes whose base's own numbers would stay
+green throughout. **Do not build it without re-reading the census first**: the number is re-derived
+on every run, so the day a corpus library is fluent-builder-shaped it will say so.
+
+### I2. instanceof-cascade → `match` — **REFUSED on three independent mechanisms, §1(b)**
+
+Payoff: 29 chains corpus-wide (libGDX 12, gltf 7, liqp 10), typically 2–3 arms. Cost: three problems,
+any one larger than the payoff.
+
+1. **it cannot compose with K18.** K18's answer at a reified position is not a type test — it is a
+   RUNTIME DISJUNCTION over both representations a ported `Object` slot can hold, plus a REFUSAL
+   where the target is a concrete type no live view can be. That is not expressible as a Scala type
+   pattern. So a conversion either runs BEFORE the retyping phases and teaches the reified coercion
+   `Tree.TypePattern`, or runs after and refuses every chain containing an arm K18 coerced — which
+   on liqp, the library with 10 of the 29 chains and the whole `Object`-typed value model, is
+   plausibly zero;
+2. **scrutinee re-evaluation.** A java `else if` chain re-evaluates the scrutinee EXPRESSION at every
+   arm; a `match` evaluates it once. Identical for a stable path, different for a call or a volatile
+   read, and the difference is silent. A purity test over an arbitrary expression is not something
+   this engine has — `JS-E17`/F7's 161 duplicated lvalue sites are the same question, declared Open
+   rather than answered;
+3. **arms carry control flow.** The emitted chains sit in expression position and their bodies hold
+   `return`s and `boundary.break`s. §4.4's own row says `match` cannot leave an arm early and needs a
+   named `boundary` around the ARM, and a conversion that introduces one steals the enclosing loop's
+   jumps unless every enclosing boundary is named — the `caseNeedsBoundary` hazard T18 already
+   refused `JS-G21` over.
+
+### I3. StringBuilder → interpolation — **REFUSED, §1(a), and the evidence is the hand ports'**
+
+Both reference ports KEEP `StringBuilder` and reach for `s"…"` independently for one-shot messages;
+no sampled file replaces a loop-accumulated builder. `java.lang.StringBuilder` is the same class from
+Scala, so there is nothing to translate and the transform would be pure style. Payoff: 15 fixed-shape
+sites out of 82 `new StringBuilder`. And the perf claim behind it is unverified — dotty's
+`StringInterpolatorOpt` does rewrite simple `s"…"` into concatenation, which makes it PLAUSIBLE, and
+plausible is not the bar §5 sets. The detection is also a dataflow question this engine does not
+have; gated on a textual heuristic it would both over- and under-fire.
+
+### I4. equals/hashCode → `case class` / derivation — **REFUSED, §1(b)/(c), zero hand-port evidence**
+
+`case class` appears ONCE in the sampled hand port, inside a file-level redesign that unified four
+java classes, and there purely for the free `equals`/`hashCode`/`toString`/pattern-matchability with
+mutable `var` fields kept deliberately. That is a new class, not a translation of a java pair. Three
+structural blockers beyond the absent evidence:
+
+- a `case class` MINTS `apply`, `unapply`, `copy`, `productArity`, `productElement` and `toString`
+  into the emitted surface — a §1.5 shared-surface change and a §4.55 clash generator, for a
+  cosmetic gain;
+- case-class equality is over the PRIMARY CONSTRUCTOR's parameters, and what the primary IS is
+  decided by the constructor funnel (§8.2). "The class's declared fields" and "the emitted primary's
+  parameters" are different sets, so the derived `equals` would compare a set the java pair did not;
+- a mutable case class's `hashCode` is a live hazard the moment an instance is a `HashMap` key — and
+  the corpus's value-shaped classes are exactly the ones used as keys.
+
+`JS-C43`'s record work is the worked precedent for why this is not a shortcut: six cells of a java
+`record` differ from a `case class` measured against javac, and two cannot be repaired at all.
+
+### I5. C-style array-init loop → `Array.fill`/`tabulate` — **REFUSED, §1(a), negative evidence**
+
+`Array.tabulate(n)(f)` allocates the function per CALL in addition to the array. Gating it on
+"provably one-shot" is a dataflow answer this engine does not have. And the hand port did the
+OPPOSITE on purpose in the hot files: `DelaunayTriangulator.scala` has twelve indexed `while` loops,
+zero `.map`/`.foreach`, and GROWS a reused buffer rather than re-allocating. Population: ≤514
+candidates, 2 confirmed, self-declared under-sampled.
+
+### I6. try/finally-close → `Using` or the JLS 14.20.3 lowering — **REFUSED twice, §1(b)**
+
+- **`Using` is already forbidden** by §4.4: the body holds `return`s and `boundary.break`s bound
+  OUTSIDE the try, and neither survives a lambda. Confirmed from the human side too — **zero**
+  `Using(` sites in either reference corpus;
+- **rewriting a hand-written `finally { r.close(); }` into the try-with-resources lowering is a
+  BEHAVIOUR CHANGE at the exception path, in the direction the engine must not take.** Java's
+  hand-written pair does NOT suppress: if `close()` throws while the body is already unwinding, the
+  close exception REPLACES the primary. JLS 14.20.3's lowering PRESERVES the primary and records the
+  close exception with `addSuppressed`. The two differ exactly where it matters, the second is
+  usually what the author WANTED, and **porting is not bug-fixing** — emitting the better semantics
+  is the port silently disagreeing with the library, with a green compile and no moved count.
+  Population: 16 sites.
+
+And the remaining gain is nil: `try { … } finally { r.close() }` is already valid, idiomatic Scala.
+
+### I7. null → `Option`, and index-`for` → `Range` — **REFUSED, and both briefs and the engine agree**
+
+- **null → `Option`**: `Some(x)` allocates on a hot path; `NullabilityTransform`'s `T | Null` floor
+  already makes `if (x != null)` the idiomatic consumption of an annotated declaration, so the
+  correct transform for the annotated case is NO transform. The unannotated case — 7 of 11 libraries
+  carry no nullability annotation at all — needs whole-program null-flow analysis no phase has. The
+  hand port is unambiguous: 34 `Option[` against 301 `null` in translated-only files, and `Option`
+  appears only at named seams a human identified, including one (`-1` sentinel → `Option[Int]`) that
+  is undecidable from the java type;
+- **index-`for` → `Range`**: 1,588 sites, concentrated in exactly the pixel/physics/math code the
+  charter names as perf-critical (anim8's 378 are three files of dithering; jbump is a broadphase).
+  In the hot files sampled, indexed `while` is the ONLY loop shape the hand port uses, and the engine
+  and the hand port independently converged on `for` → `while`. Closed by agreement, not open by
+  count.
+
+### I8. The `getClass()` residue a SAM conversion leaves, which NO guard can close — §1(a), COUNTED
+
+Guard 5 buys per-evaluation allocation by refusing every non-capturing site, and that closes the
+IDENTITY half of the difference. It does not close the other half: java's anonymous class has a
+STABLE class name (`Outer$1`) that `getClass().getName()`, `getSimpleName()`, a `toString()` or a
+log line can print, and a lambda's is a hidden class spelled `Outer$$Lambda$14/0x…` — synthetic,
+unstable across runs, and different in shape as well as in text.
+
+**There is no structural test for it**: every reference to a value can reach `getClass()`, so a guard
+would refuse every conversion. It is a §4.4-shaped residue — valid scala, green compile, no moved
+count, and the only evidence would be a library that logs a handler's class or keys a map on
+`getSimpleName`. So it is COUNTED on the conversion's own `Decision`
+(`Decision.Kind.SamLambda`, `was=`), which puts it where §4.45's reader is: at the emitted line. That
+is the same answer `T20` gives its two record-deconstruction cells.
