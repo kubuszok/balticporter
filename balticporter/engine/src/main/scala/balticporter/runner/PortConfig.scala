@@ -71,6 +71,11 @@ import scala.jdk.CollectionConverters.*
   *   allowPackageSplit  = []                                  # boundary moves declared deliberate
   *   inject         = ["corpus/overrides"]
   *   surface        = [ { transform = "collections" }, { transform = "mutable-params" } ]
+  *   resolutions { "com.foo.Bar#baz" = "wrap-checked" }  # PER-LOCATION remedy selection: pick one
+  *                                             # of the alternatives a phase or check OFFERED at
+  *                                             # this member. Ids are validated at load against the
+  *                                             # remedies this classpath declares. Inherited, and
+  *                                             # MUST agree across a chain
   *   targets        = ["jvm", "js", "native"]  # default: all three — what `PortabilityCheck`
   *                                             # asked before it had a parameter. Narrowing is
   *                                             # this module's decision; a DEPENDENT may not
@@ -227,6 +232,10 @@ object PortConfig:
       lenient     = view.bool("lenient").getOrElse(true),
       preview     = view.bool("preview").getOrElse(false),
       nextStep    = view.string("nextStep").getOrElse(""),
+      // …and every remedy this CLASSPATH declares, so the run can tell a selection whose phase is
+      // simply not enabled from one whose id does not exist. A factory speaks for the phase it would
+      // build, which is what makes the known set complete without constructing anything.
+      knownRemedies = registry.remedies,
     )
 
   /** A CLI `--determinism=` flag beats the file, and the file beats the default.
@@ -268,6 +277,9 @@ object PortConfig:
     if reports.nonEmpty && seen.isEmpty then
       System.setProperty(balticporter.tir.DebugFlags.Prefix + "baseReports",
                          reports.mkString(java.io.File.pathSeparator))
+    // read BEFORE the manifest is built, because the per-location SELECTIONS are validated against
+    // the remedies this module's own surface offers and a `PortManifest` cannot be half-constructed.
+    val surface = m.children("surface").getOrElse(Nil).map(surfaceEntry(registry))
     val own = PortManifest(
       name           = m.requireString("name"),
       governs        = m.strings("governs").getOrElse(Nil).toSet,
@@ -281,7 +293,13 @@ object PortConfig:
       subPackages        = m.stringMap("subPackages").getOrElse(Map.empty),
       flattenNestedTypes = m.strings("flattenNestedTypes").getOrElse(Nil).toSet,
       allowPackageSplit  = m.strings("allowPackageSplit").getOrElse(Nil).toSet,
-      surface        = m.children("surface").getOrElse(Nil).map(surfaceEntry(registry)),
+      surface        = surface,
+      // PER-LOCATION REMEDY SELECTION. Data like the maps above — `ConfigView` stays dumb and the
+      // LOADER validates, exactly as `TransformFactory.scopeOf` builds a `RuleScope` here and not in
+      // the view. What cannot survive this door is anything but a flat lookup: a predicate-selected
+      // remedy is refused for `OpaqueSpec.hints`' reason (DESIGN.md §5.7), and a port that needs one
+      // writes a §1(c) rule in Scala.
+      resolutions    = readResolutions(m, surface, registry),
       inject         = m.strings("inject").getOrElse(Nil).map(resolvePath(dir, _)),
       baseReports    = if seen.isEmpty then reports else Nil,
       // WHICH BACKENDS this module is ported for — omitted means all three, which is the semantics
@@ -312,6 +330,57 @@ object PortConfig:
         val base = readManifest(baseView, baseFile, registry, seen :+ baseFile)
         refuseUnread(baseView, baseFile)
         base.extendedBy(own)
+
+  /** `resolutions { "com.foo.Bar#baz" = "wrap-checked" }` — which remedy this port picks WHERE.
+    *
+    * The value is validated against the CLOSED remedy vocabulary at LOAD, and an unrecognised token
+    * is a `ConfigError` naming the alternatives. That is `TransformFactory.scopeOf`'s door, one key
+    * over: `ConfigView` reports the map and knows nothing about remedies, and the consuming code
+    * turns the strings into a policy or refuses them. A silently ignored value here would be exactly
+    * the §1(b) no-op the whole config front door exists to prevent — worse than most, because a port
+    * that selected a remedy and got none reads as a port that never asked.
+    *
+    * The vocabulary is assembled from three places, and the third is what stops this door being too
+    * strict: the checks the engine registers, whatever the classpath's `TransformFactory` instances
+    * DECLARE (a factory speaks for the phase it would build, so nothing has to be constructed), and
+    * the surface phases this module actually configured. An id known to none of those cannot be
+    * carried out by any run of this engine and is a typo; an id known to one of them and not enabled
+    * HERE is a different mistake, and it is reported at run time as a policy finding naming the
+    * phase to add rather than refused here as a spelling error.
+    *
+    * The KEY's shape is deliberately NOT checked here. It is a `MemberKey`, the binder parses every
+    * one of them and its `Malformed` refusal already says what to write — so validating it twice
+    * would give the two front doors two different sentences for one mistake. */
+  private def readResolutions(
+      m: ConfigView, surface: List[balticporter.tir.Phase], registry: TransformRegistry,
+  ): Map[String, String] =
+    val declared = m.stringMap("resolutions").getOrElse(Map.empty)
+    if declared.isEmpty then Map.empty
+    else
+      val known = knownRemedies(surface, registry)
+      declared.toList.sortBy(_._1).foreach { (key, id) =>
+        if !known.contains(id) then
+          throw ConfigError(m.at("resolutions"),
+            s"""'$id' (selected at "$key") is not a remedy this engine offers. """ +
+              (if known.isEmpty then
+                 "No phase or check on this classpath declares one at all — a remedy is DECLARED by " +
+                   "the mechanism that can carry it out, so either the phase that offers it is " +
+                   "missing from this `surface`, or its library is not on the classpath."
+               else s"Declared here: ${known.ids.mkString(", ")}."))
+      }
+      declared
+
+  /** every remedy a run loaded from THIS conf could possibly know about — see [[readResolutions]].
+    *
+    * A factory-declared remedy and the same remedy declared by the phase the factory builds are ONE
+    * entry, not a duplicate: `RemedyVocabulary` refuses two DIFFERENT remedies claiming one id and
+    * accepts the same one twice, which is exactly the shape this union has. */
+  private def knownRemedies(
+      surface: List[balticporter.tir.Phase], registry: TransformRegistry,
+  ): balticporter.tir.RemedyVocabulary =
+    balticporter.tir.RemedyVocabulary.from(
+      PortRun.CheckRemedies ++ surface.collect { case r: balticporter.tir.RemedySource => r }
+    ) ++ registry.remedies
 
   /** `targets = ["jvm", "native"]` — the backends this module is ported for.
     *

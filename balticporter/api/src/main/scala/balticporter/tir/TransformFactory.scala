@@ -49,6 +49,24 @@ trait TransformFactory:
   /** build the phase from its own config object. Throws [[ConfigError]] on anything unhonourable. */
   def fromConfig(config: ConfigView): Phase
 
+  /** The REMEDIES the phase this factory builds can carry out — declared HERE as well as on the
+    * phase, and the duplication is the point.
+    *
+    * A `resolutions` entry is validated at LOAD, before a pipeline exists, and the two mistakes a
+    * port can make there need different answers: a TYPO is refused with the alternatives listed,
+    * while a port that picked a real remedy and forgot to enable the phase that offers it must be
+    * told to add the phase — a `ConfigError` there would send it hunting for a spelling mistake in a
+    * correct id. Only a declaration that costs no construction can tell them apart, and a factory is
+    * the one thing on the classpath that speaks for a phase without building one.
+    *
+    * State the SAME values the phase's own [[RemedySource]] returns. The vocabulary treats one
+    * remedy declared twice as one entry and refuses two DIFFERENT remedies claiming one id, so a
+    * copy that drifts is a loud failure rather than a silent second menu.
+    *
+    * `Nil` is the default and the honest answer for a factory whose phase offers no menu — which is
+    * every factory this engine ships today. */
+  def remedies: List[Remedy] = Nil
+
 object TransformFactory:
 
   /** THE shared grammar for a [[RuleScope]] in config, so every retyping rule spells it the same

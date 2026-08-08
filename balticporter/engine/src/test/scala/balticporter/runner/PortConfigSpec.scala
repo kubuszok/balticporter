@@ -579,3 +579,46 @@ class PortConfigSpec extends munit.FunSuite:
       """manifest { name = "demo", surface = [ { transform = "spec-echo", tag = "hello" } ] }"""))
     assertEquals(PortConfig.load(f).manifest.get.effectiveSurface.map(_.name), List("spec-echo(hello)"))
   }
+
+  // -------------------------------------------------------------------------------------------
+  // per-location REMEDY SELECTION (`resolutions`)
+  // -------------------------------------------------------------------------------------------
+
+  test("`resolutions` is read as data and reaches the manifest") {
+    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
+      """manifest {
+        |  name    = "demo"
+        |  surface = [ { transform = "spec-echo", tag = "hi" } ]
+        |  resolutions { "com.demo.Widget#labels" = "spec-echo-remedy" }
+        |}""".stripMargin))
+    assertEquals(PortConfig.load(f).manifest.get.resolutions,
+                 Map("com.demo.Widget#labels" -> "spec-echo-remedy"))
+  }
+
+  test("an UNKNOWN remedy id is refused at LOAD, with the alternatives listed") {
+    // The loud door. A value silently ignored here is a port that selected a remedy and got none,
+    // which reads exactly like a port that never asked — the §1(b) no-op this whole front door
+    // exists to prevent.
+    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", resolutions { "com.demo.Widget#labels" = "no-such-remedy" } }"""))
+    val e = intercept[ConfigError](PortConfig.load(f))
+    assert(clue(e.why).contains("no-such-remedy"))
+    assert(clue(e.why).contains("spec-echo-remedy"))
+  }
+
+  test("…but a KNOWN id whose phase this port did not enable is NOT a load error") {
+    // The distinction only a factory-side declaration can make: the id exists on this classpath, so
+    // the mistake is a missing `surface` entry and not a typo. It is reported at RUN time as a
+    // policy finding naming the phase, and refusing it here would send the reader hunting for a
+    // spelling mistake in a correct id.
+    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", resolutions { "com.demo.Widget#labels" = "spec-echo-remedy" } }"""))
+    assertEquals(PortConfig.load(f).manifest.get.resolutions,
+                 Map("com.demo.Widget#labels" -> "spec-echo-remedy"))
+  }
+
+  test("a factory DECLARES its phase's menu, so the registry knows it without building anything") {
+    val r = TransformRegistry.of(new SpecEchoFactory)
+    assertEquals(r.remedies.ids, List("spec-echo-remedy"))
+    assertEquals(r.remedies.get("spec-echo-remedy").map(_.lane), Some("spec-echo-lane"))
+  }

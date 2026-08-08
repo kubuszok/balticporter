@@ -39,6 +39,16 @@ final class TransformRegistry(val factories: List[TransformFactory]):
 
   def get(name: String): Option[TransformFactory] = byName.get(name)
 
+  /** every REMEDY this classpath declares, whether or not a port enables the declaring phase — see
+    * [[TransformFactory.remedies]] for why a factory answers for a phase it has not built.
+    *
+    * Assembled with the same refusal `byName` above uses, and by the same argument: a remedy id is
+    * published API, so two different remedies claiming one id is a run that cannot say which
+    * mechanism a port asked for. */
+  lazy val remedies: balticporter.tir.RemedyVocabulary =
+    factories.foldLeft(balticporter.tir.RemedyVocabulary.empty)((acc, f) =>
+      acc ++ balticporter.tir.RemedyVocabulary.declared(f.getClass.getName, f.remedies))
+
   /** Build one surface entry. `where` is the config path, for the error. */
   def phase(name: String, config: ConfigView, where: String): Phase =
     TransformRegistry.Reserved.get(name) match
