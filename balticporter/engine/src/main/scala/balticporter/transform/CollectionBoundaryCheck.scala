@@ -110,6 +110,14 @@ object CollectionBoundaryCheck extends RemedySource:
     *     view can BE a `mutable.HashMap`. Neither kind takes an `accept` either — they are known
     *     divergences the engine refuses to repair, not review lists, and accepting one would drain a
     *     defect rather than a question.
+    *
+    * And the NEIGHBOURING lane declares no menu at all, which belongs here because a reader arriving
+    * with a collections question will look at this object first: [[RetargetBoundaryCheck]]'s
+    * `ExternalProducer` would need a per-pair wrapper synthesised from the `retarget` table, and
+    * `ENGINE-LIMITS.md` K14 refused exactly that — "a coercion would have to arrive as policy beside
+    * the entry, a factory FQN the port supplies … that is a table shape, not a rule the engine can
+    * derive". A remedy there would be that missing table wearing a one-word name, and the corpus has
+    * 0 real producers to measure one against.
     */
   def remedies: List[Remedy] = List(
     Remedy(
