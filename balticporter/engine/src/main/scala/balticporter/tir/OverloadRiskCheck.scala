@@ -674,9 +674,15 @@ object OverloadRiskCheck extends RemedySource:
     * DENOMINATOR first, because an over-approximation whose rate a reader cannot see is one they
     * will learn to ignore. */
   def summary(r: Report): String =
+    // "…and NOT ANSWERED" is not decoration. The denominator is the population this walk saw, which
+    // a `resolutions` selection does not change — but `findings` is what is left after the drain, so
+    // reading the third number as "how many span a phase" would understate the population by exactly
+    // the rows a port took responsibility for, in a line whose whole job is to make the
+    // over-approximation's rate visible.
     val scale =
       s"  ${r.calls} program-declared call(s) examined, ${r.overloaded} with more than one " +
-        s"applicable candidate, ${r.findings.size} spanning a java resolution phase"
+        s"applicable candidate, ${r.findings.size} spanning a java resolution phase and not " +
+        "answered by a `resolutions` selection"
     val body =
       if r.findings.isEmpty then "  none"
       else
