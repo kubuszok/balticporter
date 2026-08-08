@@ -727,6 +727,30 @@ replacing an argument-only wrapper), `.staticRewrite` (receiver-less JDK utiliti
 and `.copyConstructor`; `TirEmitter.widenedBinding`; and a conditional's unchecked conversion applied
 to its BRANCHES in the frontend.
 
+### 4.2b Open residue — two `ExternalCallee` rows the emitted text does not have
+
+`collection-boundary` reports `Path#removeAll`/`retainAll` (Path.java:103, 109) as
+`Found balticporter.runtime.JavaCollection / Required java.util.Collection`. **Both rows describe a
+seam the port does not emit**, and the compile is the proof: were the callee really
+`java.util.Collection#removeAll`, handing it a `JavaCollection` would be an error, and this port is
+at 0. What happened is that `Array` — `Path`'s parent — was itself retyped to extend the shim, so the
+emitted `super.removeAll(c)` binds to `JavaCollection#removeAll`, whose formal IS `JavaCollection`.
+The finding is minted from the CALLEE SYMBOL the frontend interned against java's own
+`Collection`, which is right for a call whose receiver stayed java's and describes nothing here.
+
+The check already knows how to ask this — `CollectionBoundaryCheck.foreign` excludes a callee whose
+owner the mapping moved — but that question is asked only on the `Side.Universal` arm, deliberately
+("the existing `expectedExternal` classification is untouched"). Widening it is a change to a
+classification two ports depend on, so it is recorded rather than done: the number is 2 of this
+port's 3 `collection-boundary` rows, at 0 errors and 16 of 16 tests passing.
+
+**It is not an `accept-external-callee` candidate** (`DESIGN.md` §8.16). A remedy would move both rows
+into `remediation(resolved)` and read as a port's judgement about a third party's method, when what
+is actually true is that the engine's own retyping already closed the slot — `CLAUDE.md` §1's rule
+that an obligation the engine's translation created is not a port's to discharge, and §4.56's
+K2.5 lesson read one lane over: a residue count is only as good as the assumption that a reported
+seam is one nothing already closed.
+
 ### 4.3 What the SUITE found that no count did
 
 `0` is a real 0 twice over: the compile count reached 0, `RefChecks` ran, the count **rose to 8**, those
