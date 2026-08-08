@@ -70,6 +70,12 @@ import scala.jdk.CollectionConverters.*
   *   flattenNestedTypes = ["p.Connection$DirectedConnection"] # promoted to top level
   *   allowPackageSplit  = []                                  # boundary moves declared deliberate
   *   inject         = ["corpus/overrides"]
+  *   serviceProviders = ["../upstream/src/main/resources/META-INF/services/p.Spi"]
+  *                                             # upstream SPI descriptors this module ships. Copied
+  *                                             # into src_managed's resource tree with the SERVICE
+  *                                             # and every PROVIDER renamed through this port's own
+  *                                             # rules. Not inherited (`inject`'s line); a declared
+  *                                             # file that is not there is fatal
   *   surface        = [ { transform = "collections" }, { transform = "mutable-params" } ]
   *   resolutions { "com.foo.Bar#baz" = "wrap-checked" }  # PER-LOCATION remedy selection: pick one
   *                                             # of the alternatives a phase or check OFFERED at
@@ -301,6 +307,11 @@ object PortConfig:
       // writes a §1(c) rule in Scala.
       resolutions    = readResolutions(m, surface, registry),
       inject         = m.strings("inject").getOrElse(Nil).map(resolvePath(dir, _)),
+      // …and the SPI half of the deliverable, which is `inject`'s line at a RESOURCE: the upstream
+      // `META-INF/services` files this module ships, copied with BOTH namespaces moved through this
+      // port's own rename rules. A build fact, so not inherited; empty is the no-op; a declared file
+      // that is not there is fatal at the run (ENGINE-LIMITS.md P5).
+      serviceProviders = m.strings("serviceProviders").getOrElse(Nil).map(resolvePath(dir, _)),
       baseReports    = if seen.isEmpty then reports else Nil,
       // WHICH BACKENDS this module is ported for — omitted means all three, which is the semantics
       // `PortabilityCheck` had before it took a parameter. Not inherited (§1.5's right-hand column),

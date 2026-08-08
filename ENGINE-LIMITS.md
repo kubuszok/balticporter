@@ -5280,7 +5280,7 @@ is provably flat and the narrowing is a port's own declaration. Measured: `porta
 corrected `why` strings hash into the id, plus liqp's `java.lang.ThreadLocal` sites leaving on the
 separator cut.*
 
-### P5. The engine emits `.scala` AND NOTHING ELSE — a `META-INF/services` file is a deliverable no phase carries, and a rename moves both its NAME and its CONTENTS — **OPEN; the counting is closed, the pipeline is not**
+### P5. The engine emits `.scala` AND NOTHING ELSE — a `META-INF/services` file is a deliverable no phase carries, and a rename moves both its NAME and its CONTENTS — **CLOSED; `PortManifest.serviceProviders`, one hand-written file traded for one manifest key**
 
 A `ServiceLoader.load(X.class)` reads `META-INF/services/<X's FQN>`, whose lines are provider class
 names. Nothing in this pipeline emits, copies or renames that file, and the failure is CT7's family
@@ -5292,16 +5292,23 @@ silently no-ops. Found by the liqp census: `SPIHelper.findProviders()` is reache
 `static { }` block in `Template`, i.e. effectively from the whole suite, and from
 `LiquidSupport`'s type-referencing setup, i.e. from every render of a POJO.
 
-Two halves, and only the first is closed:
+Two halves, and BOTH are now closed:
 
-- **the DEPENDENCE is now counted.** `PortabilityCheck` has a `java.util.ServiceLoader` rule, whose
+- **the DEPENDENCE is counted.** `PortabilityCheck` has a `java.util.ServiceLoader` rule, whose
   `why` names both reasons — reflective provider lookup is JVM-only, and the resource it reads is
   not emitted. That converts "silent" into a number an agent can act on, which is `CLAUDE.md` §3's
   bar and is all a rule can do;
-- **the ARTEFACT is still hand-written.** The engine has no notion of a resource input at all: no
-  config key names one, no lane copies one. The milestone-1 answer is a file in the port's
-  hand-written `src/main/resources` (§5.5 — `src/` is the hand-written half) plus a `--resource-dir`
-  on the lane's runner, which is what liqp ships.
+- **the ARTEFACT is now EMITTED.** `PortManifest.serviceProviders` (`serviceProviders = […]` in a
+  `.conf`) names the upstream descriptors this module ships; `balticporter.tir.ServiceProviders`
+  copies each into `src_managed/<config>/resources/META-INF/services/`, translating the FILE NAME
+  and every PROVIDER LINE through the run's own `emittedName` — the rename PHASE's rule, so
+  `typeRenames` and `subPackages` are covered and not only the prefix map. §1(b) throughout: the
+  mechanism is the engine's, the file list is the port's, the empty default is the no-op, and a
+  declared file that is not there is FATAL (`Provenance.notices`' rule). The residues are a lane,
+  `service-providers`, with a POSITIVE row per shipped provider so the count has a denominator, plus
+  `dropped-provider`, `dropped-service`, `unrenamed` and `empty` — required of a run whose key is
+  non-empty and of no other, which `PortRun.requiredChecks` derives rather than `RequiredChecks`
+  listing.
 
 **And the two non-JVM backends are NOT equally reachable, which one rule with one `why` was hiding.**
 This entry, and the rule it describes, said "JVM-only" of both. That is right for Scala.js and wrong
@@ -5326,17 +5333,30 @@ CONTENTS are renamed provider FQNs, so it must translate through `PackageRenameT
 *The reference ports give no model: ssg dropped liqp's whole SPI package, so **no reference port
 ships a working cross-platform `ServiceLoader` seam** and its redesign is a documented non-model.*
 
-**Do not underestimate the second half by looking at the first.** A carried services file is not a
-copy: under a package rename the file's NAME is the renamed interface FQN and its CONTENTS are
-renamed provider FQNs, so it is §4.56's "an artifact that joins POLICY to OBSERVED code carries BOTH
-names" in a format `PackageRenameTransform` has never seen — and it must translate through
-`PackageRenameTransform.renamed`, never a hand-written `startsWith`. That, plus a `resourceRoot`
-the config would have to grow, is why this is not the one-line (a) a census can mistake it for: the
-COUNTING is (a) and shipped, the resource lane is (a)-mechanism with a (b) input and is unbuilt.
+**The second half was never a copy, and that is what the mechanism had to be built around.** Under a
+package rename the file's NAME is the renamed interface FQN and its CONTENTS are renamed provider
+FQNs, so it is §4.56's "an artifact that joins POLICY to OBSERVED code carries BOTH names" in a
+format `PackageRenameTransform` had never seen — translated through the run's own `emittedName` and
+never a hand-written `startsWith`. Two things fell out of building it that the census could not have
+predicted: the resource root is per SOURCE SET (a test-set descriptor on the main classpath
+registers a provider the shipped library does not have), and a drop is asked of the UPSTREAM name,
+because a `dropTypes` key is written in that namespace — the same two-namespace error
+`dropped-types.tsv` carried for the life of every renaming port.
 
-*Fix kind: (a) engine for the rule — SHIPPED, and no corpus port referenced `ServiceLoader`, so
-every lane is unchanged. (a) engine for the artefact lane — OPEN. Port-side workaround: a
-hand-written `src/main/resources` tree, which is what exists today.*
+**What it cost, and what the evidence is.** liqp is the only corpus library that ships a descriptor
+(`src/main/resources/META-INF/services/liqp.spi.TypesSupport`, two providers), and it is the whole of
+the real-port demonstration: its one hand-written file
+(`ported/ssg-liquid/src/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport`, kept in step
+with `packageRenames` by hand) is DELETED and the same two lines are emitted, renamed, from the
+upstream file. Every other port declares nothing and writes nothing, which is what makes the key's
+arrival flat on fourteen lanes. The negatives — a dropped provider, a dropped service, an empty
+descriptor, a name the rename did not move, a line the format does not admit — are not reachable on
+any corpus port and are `ServiceProvidersSpec`'s ten cases; that spec is the coverage, and saying so
+is better than implying a port exercises them.
+
+*Fix kind: (a) engine for the rule — SHIPPED. (b) engine mechanism + port-declared file list for the
+artefact lane — SHIPPED. The port-side workaround it replaces was a hand-written `src/main/resources`
+tree.*
 
 ---
 

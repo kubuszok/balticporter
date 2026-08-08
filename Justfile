@@ -1351,11 +1351,16 @@ liqp-measure:
     # on the day the port went green, which is the one day nobody is looking for a missing fixture.
     # A missing input is fatal, never a smaller measurement (CLAUDE.md §5.1).
     # -------------------------------------------------------------------------------------------
-    SERVICES="{{liqp_module}}/src/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport"
+    # The SPI descriptor is now EMITTED (`serviceProviders` in main.conf, ENGINE-LIMITS.md P5) — a
+    # build product under `src_managed/`, not the hand-written file this used to guard. The guard
+    # stays, and is now a guard on the RUN: if the run stopped writing it the suite's ServiceLoader
+    # lookups find zero providers and say nothing, which is the whole reason the key exists.
+    SERVICES="{{liqp_module}}/src_managed/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport"
     if [ ! -f "$SERVICES" ]; then
       echo "!! $SERVICES is MISSING — the suite's ServiceLoader lookups would find zero providers,"
       echo "   applyCustomDateTypes() would silently no-op, and no compile error, check count or"
-      echo "   finding would say so (ENGINE-LIMITS.md P5). It is HAND-WRITTEN and committed; restore it."
+      echo "   finding would say so (ENGINE-LIMITS.md P5). The run writes it from the port's"
+      echo "   \`serviceProviders\` key; a run that emitted nothing here did not emit this."
       exit 1
     fi
     for F in snippets _includes src/test/jekyll; do
@@ -1422,13 +1427,16 @@ liqp-measure:
       ln -sfn "$ROOT/{{liqp_src}}/_includes"       "$FIX/_includes"
       ln -sfn "$ROOT/{{liqp_src}}/src/test/jekyll" "$FIX/src/test/jekyll"
       # `--workspace` keeps scala-cli's own `.scala-build/` beside the fixture rather than under the
-      # cwd it inherits; `--resource-dir` is what puts the hand-written
+      # cwd it inherits; `--resource-dir` is what puts the EMITTED
       # META-INF/services/ssg.liquid.spi.TypesSupport on the test JVM's classpath, and without it the
-      # suite's ServiceLoader lookups find nothing AND SAY NOTHING (ENGINE-LIMITS.md P5).
+      # suite's ServiceLoader lookups find nothing AND SAY NOTHING (ENGINE-LIMITS.md P5). It reads
+      # `src_managed/main/resources` because the descriptor is a build product the run writes from
+      # the port's `serviceProviders` key — it was a hand-written `src/main/resources` file until
+      # that key existed, which is the state P5's second half described.
       ( cd "$FIX" && scala-cli test --workspace "$FIX" --scala {{scala_version}} --server=false $DEPS \
           -Duser.language=en -Duser.country=US \
           --jar "$ROOT/{{liqp_parser_classes}}" \
-          --resource-dir "$ROOT/{{liqp_module}}/src/main/resources" \
+          --resource-dir "$ROOT/{{liqp_module}}/src_managed/main/resources" \
           "$ROOT/{{liqp_module}}/src_managed/main/scala" \
           "$ROOT/{{liqp_module}}/src_managed/test/scala" ) \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/liqprun.txt

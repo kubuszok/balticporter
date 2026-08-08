@@ -61,7 +61,9 @@ import java.nio.file.Path
   *     same FQN into its own source set and fail to compile. So [[inject]] is declared per manifest
   *     and is NOT inherited by [[extendedBy]], while the drops beside it are. This asymmetry is the
   *     single most important thing on this page to get right, and it is why `inject` is a field of
-  *     the manifest rather than being folded into [[substitutions]] wholesale.
+  *     the manifest rather than being folded into [[substitutions]] wholesale. [[serviceProviders]]
+  *     is that same asymmetry read at a RESOURCE: the drops that decide whether a provider still
+  *     exists are inherited, and the descriptor FILE is shipped by exactly one module's build.
   *
   * ==What [[governs]] is for — and what an EMPTY one switches off==
   * A namespace claim, used where a check genuinely needs prefixes. Substitution agreement does NOT
@@ -140,6 +142,35 @@ final case class PortManifest(
     resolutions: Map[String, String] = Map.empty,
     /** ready-made Scala this module ships. NOT inherited — see the class doc. */
     inject: List[Path] = Nil,
+    /** UPSTREAM `META-INF/services/<interface FQN>` FILES THIS MODULE SHIPS — the SPI half of the
+      * deliverable, which no phase can carry because the engine emits `.scala` and nothing else.
+      *
+      * ==What it closes==
+      * `ServiceLoader.load(X.class)` reads `META-INF/services/<X's FQN>`, whose lines are provider
+      * class names. Nothing in the pipeline emitted, copied or renamed that file, and the failure is
+      * the quietest one this project has: with the resource absent the loader finds ZERO providers,
+      * every registration the library performs at class-initialisation silently no-ops, and there is
+      * no compile error, no check count and no finding (`ENGINE-LIMITS.md` P5).
+      *
+      * ==Why it is a declaration and not a scan==
+      * A resource ROOT is not a source root, and which of a library's resources are service
+      * descriptors is a fact about that library rather than about java — the engine has no standing
+      * to guess, and a scan that picked up a dependency's descriptor out of a shaded tree would ship
+      * a provider list this port did not write. So it is §1(b) policy: the mechanism (copy, rewrite
+      * BOTH namespaces through this port's own rename rules, count what the rewrite could not
+      * honour) is the engine's, the file list is the port's, and an empty list is the no-op.
+      *
+      * ==NOT inherited — [[inject]]'s line exactly==
+      * A descriptor is a build artefact: exactly one module's build ships each resource, and a
+      * dependent that copied its base's list would write a second `META-INF/services/<X>` at the
+      * same path and win or lose by classpath order. The DROPS that decide whether a provider still
+      * exists are inherited, which is what makes the dropped-provider finding meaningful in a
+      * dependent.
+      *
+      * Paths are the UPSTREAM files, resolved like `Provenance.notices` (relative to the `.conf`),
+      * and a declared file that is not there is FATAL for that key's reason: a descriptor the port
+      * meant to ship and silently did not looks exactly like one it shipped. */
+    serviceProviders: List[Path] = Nil,
     /** the modules this one is a dependent OF, nearest last. */
     bases: List[PortManifest] = Nil,
     /** WHERE THOSE BASES PUBLISHED. Extra directories to look for a base module's `port-map.tsv`

@@ -5161,3 +5161,78 @@ remediation attached to an `Unportable` marker, renamed from `Remedy` in this wa
 it. `RemedyHint` and `Remedy` stay different TYPES: one is advice a human carries out, the other is a
 named alternative the engine performs, and a single type would have to pretend every sentence in the
 first is something the engine could be asked to do.
+
+### 8.17 `serviceProviders` — the one deliverable of a port that is not `.scala`
+
+The engine emitted `.scala` AND NOTHING ELSE, and a `ServiceLoader.load(X.class)` reads
+`META-INF/services/<X's FQN>` — whose lines are provider class names. Nothing in the pipeline could
+carry that file, and the failure is the quietest one this project has (`ENGINE-LIMITS.md` P5): the
+providers are constructed reflectively from OUTSIDE the program, so the closure sees no
+instantiation and concludes, correctly and uselessly, that nothing has to be fixed. With the
+resource absent the loader finds ZERO providers, every registration the library performs at
+class-initialisation silently no-ops, and there is **no compile error, no check count and no
+finding**. A library then turns "not registered" into a plausible wrong answer rather than an error.
+
+**`PortManifest.serviceProviders` is the §1(b) key** (`serviceProviders = […]` in a `.conf`), and
+the split is the ordinary one: the MECHANISM — copy, rewrite, count the residue — is the engine's
+(`balticporter.tir.ServiceProviders`), WHICH upstream files a module ships is the port's, and the
+empty default is the no-op, so fourteen of the fifteen corpus ports declare nothing and write
+nothing.
+
+**It is a REWRITE and not a copy, which is the whole of the difficulty.** §4.56: the descriptor's
+NAME is an interface FQN and its LINES are implementation FQNs, so a renaming port moves all of them.
+Copied verbatim the file names a service the port does not declare and lists providers that do not
+exist — and no instrument can see it, because a resource is on no check's traversal. So every name
+goes through the RUN'S OWN `emittedName`, which is the rename PHASE's rule and therefore covers
+`typeRenames` and `subPackages` as well as the prefix map; `packageRenames` alone would silently miss
+a provider moved by one of the other two.
+
+Five decisions that are not incidental:
+
+- **NOT inherited — `inject`'s line, read at a resource.** Exactly one module's build ships each
+  descriptor, and a dependent that copied its base's list would write a second
+  `META-INF/services/<X>` at the same path and win or lose by classpath order. The DROPS that decide
+  whether a provider still exists ARE inherited, which is what makes the dropped-provider finding
+  meaningful in a dependent;
+- **per SOURCE SET, not beside the notices.** `Provenance.notices` belongs to the MODULE and both
+  source sets write the same bytes; a resource is on ONE configuration's classpath, and a test-set
+  descriptor on the main classpath registers a provider the shipped library does not have. So the
+  destination is `SbtGen.managedResources(root, config)` and `SbtGen.managedSources` adds both
+  `unmanagedResourceDirectories` — a `sourceGenerator` cannot carry a non-source file, and a
+  descriptor that is not on the classpath is exactly the silence the key removes;
+- **the drop is asked of the UPSTREAM name.** A `Substitutions.dropTypes` key is written in the
+  upstream namespace, so asking it of the emitted one is the same key read in the wrong namespace —
+  the error `dropped-types.tsv` carried for the life of every renaming port;
+- **a declared file that is not there is FATAL**, `Provenance.notices`' rule exactly, and one step
+  worse: a descriptor the port meant to ship and silently did not looks identical to one it shipped,
+  and the library answers wrongly rather than failing;
+- **the write is NOT gated on the artifact layer**, for the notices' reason — a deliverable that
+  shipped only when a diagnostic switch was on would be met by accident. What keeps it scoped is the
+  empty default and the destination, `src_managed/` (§5.5).
+
+**The lane is `service-providers`, and it carries its own denominator.** One POSITIVE row per shipped
+provider, beside `dropped-provider` (the descriptor would advertise a class the port removed —
+`ServiceConfigurationError` at the first load and nothing before it), `dropped-service` (the same
+fact one level up, kept apart because the next action is to drop the descriptor rather than fix a
+line), `unrenamed` (a name this port's rules did not move: legitimate for a provider genuinely
+outside the namespace, and identical to a stale descriptor, so the engine states it and the port
+decides) and `empty`. A lane that only ever reported trouble could hold its bar at zero by shipping
+nothing, which is the trivia family's argument one artifact over.
+
+**Required CONDITIONALLY, and derived rather than listed.** `PortRun.RequiredChecks` is what every
+run owes whatever it is configured as, and a lane a port with no key never records cannot go in it.
+Left out entirely, a run that stopped writing descriptors would report success with the row gone. So
+`PortRun.requiredChecks` adds the lane exactly when the manifest's key is non-empty — the
+requirement derived from the same declaration the work is. (The other conditional shape,
+`collection-*`, is required by a PHASE being present and is made unskippable by the wiring living
+beside the block that records it.)
+
+**Rejected: scanning a resource ROOT.** A resource root is not a source root, and which of a
+library's resources are service descriptors is a fact about that library rather than about java. A
+scan would ship a provider list the port did not write the moment an upstream tree carried a shaded
+dependency's descriptor — the over-approximation §1 calls noise, in the one artifact where being
+wrong is silent.
+
+**Rejected: rewriting a line the format does not admit.** Two tokens on one line is not a binary
+class name; a best-effort rewrite of one would be §4.6's fabricated fact, so such a line is carried
+verbatim and is not counted as a provider.

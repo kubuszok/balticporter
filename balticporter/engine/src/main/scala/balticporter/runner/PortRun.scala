@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, ServiceProviders, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -820,6 +820,38 @@ final case class PortRun(
     }
     if notices.nonEmpty then
       say(s"notice(s) shipped beside the emitted code: ${notices.map(_.getFileName).mkString(", ")}")
+
+    // ---- the upstream SERVICE DESCRIPTORS, with BOTH namespaces moved (ENGINE-LIMITS P5) ------
+    // The one deliverable of a port that is not `.scala`. Nothing in the pipeline could carry it:
+    // a provider is constructed reflectively from outside the program, so the closure sees no
+    // instantiation and concludes correctly and uselessly that nothing has to be fixed — and with
+    // the resource absent the loader finds ZERO providers, at no compile error, no check count and
+    // no finding. Ungated on the artifact layer for the notices' reason above; scoped by the same
+    // two things — an empty declaration writes nothing, and the destination is `src_managed/`.
+    val declaredServices = manifest.map(_.serviceProviders).getOrElse(Nil)
+    declaredServices.foreach { src =>
+      // FATAL, `Provenance.notices`' rule exactly: a descriptor the port meant to ship and silently
+      // did not looks exactly like one it shipped — and this one is worse, because the library then
+      // answers "not registered" as a plausible wrong result rather than as an error.
+      if !Files.isRegularFile(src) then
+        sys.error(s"[$label] the manifest declares a service descriptor that is not there: $src. " +
+          "A `META-INF/services` resource the port does not ship makes every `ServiceLoader.load` " +
+          "find zero providers, with no compile error, no check count and no finding to say so " +
+          "(ENGINE-LIMITS.md P5).")
+    }
+    // `emittedName` and not `packageRenames`: the run's own rename PHASE answers for `typeRenames`
+    // and `subPackages` too, and a provider moved by one of those is a line a prefix map cannot
+    // translate (§4.56 — never a hand-written `startsWith`).
+    val descriptors = ServiceProviders.plan(declaredServices, emittedName)
+    if descriptors.nonEmpty then
+      val wrote = ServiceProviders.write(descriptors, SbtGen.managedResources(portRoot, sourceSet.configName))
+      written += wrote.size
+      CheckReport.record(ServiceProviders.Name,
+        ServiceProviders.findings(descriptors, policySubs.dropsType,
+                                  renaming = manifest.exists(_.effectivePackageRenames.nonEmpty)))
+      say(s"SERVICE PROVIDERS: ${descriptors.size} descriptor(s), " +
+        s"${descriptors.map(_.providers.size).sum} provider line(s), rewritten into this port's namespace")
+      println(ServiceProviders.summary(descriptors))
 
     // Support types a phase RETYPED code onto. Two feeds, one rule: what the phases DECLARE
     // (RequiresRuntime → RuntimePlan) and what a phase that cannot declare it hands over.
@@ -2106,9 +2138,22 @@ final case class PortRun(
   /** Every check named here must have registered a result. The persistence layer already
     * distinguishes "found 0" from "never ran"; this is the same guarantee one layer up, where the
     * decision to invoke a check is made. */
+  /** …plus the lanes a run is required to have because of what its own MANIFEST declares.
+    *
+    * `PortRun.RequiredChecks` is what every run owes whatever it is configured as. A CONDITIONAL
+    * lane cannot go in that set — a port with no `serviceProviders` key records nothing there and
+    * requiring it would fail every one of the other fourteen — and it must not simply be left out
+    * either, because then a run that stopped writing descriptors would report success with the row
+    * gone. So the requirement is derived from the same declaration the work is: non-empty key,
+    * required lane. (`collection-*` is the other shape — required by the PHASE being present — and
+    * is made unskippable by the wiring living beside the block that records it.) */
+  private def requiredChecks: Set[String] =
+    PortRun.RequiredChecks ++
+      (if manifest.exists(_.serviceProviders.nonEmpty) then Set(ServiceProviders.Name) else Set.empty)
+
   private def verifyRecorded(): Unit =
     if CheckReport.enabled then
-      val missing = PortRun.RequiredChecks -- CheckReport.snapshot().keySet
+      val missing = requiredChecks -- CheckReport.snapshot().keySet
       if missing.nonEmpty then
         sys.error(
           s"[$label] ${missing.size} check(s) produced no record: ${missing.toList.sorted.mkString(", ")}" +

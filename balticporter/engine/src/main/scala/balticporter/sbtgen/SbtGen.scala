@@ -79,6 +79,16 @@ object SbtGen:
   def managedMain(root: Path): Path = managedDir(root, "main")
   def managedTest(root: Path): Path = managedDir(root, "test")
 
+  /** …and the RESOURCE tree of one source set, beside its `scala` one.
+    *
+    * A `META-INF/services` descriptor is a deliverable of the port and not a source file
+    * (`balticporter.tir.ServiceProviders`), so it needs a home the build already treats as a build
+    * product. Per SOURCE SET rather than beside the notices, because a resource is on ONE
+    * configuration's classpath: a test-set descriptor on the main classpath would register a
+    * provider the shipped library does not have. */
+  def managedResources(root: Path, config: String): Path =
+    managedRoot(root).resolve(config).resolve("resources")
+
   /** THE entry point for a port's BUILD: emit the skeleton with runtime delivery DERIVED from the
     * phases that were run.
     *
@@ -190,5 +200,10 @@ object SbtGen:
       |Test / sourceGenerators += Def.task {
       |  ((baseDirectory.value / "src_managed" / "test" / "scala") ** "*.scala").get()
       |}.taskValue
+      |// …and the RESOURCE half, which a sourceGenerator cannot carry: a `META-INF/services`
+      |// descriptor the run wrote is on the CLASSPATH or the ServiceLoader finds nothing, and
+      |// "finds nothing" is exactly the silent failure the key exists to remove.
+      |Compile / unmanagedResourceDirectories += baseDirectory.value / "src_managed" / "main" / "resources"
+      |Test / unmanagedResourceDirectories += baseDirectory.value / "src_managed" / "test" / "resources"
       |cleanFiles += baseDirectory.value / "src_managed"
       |""".stripMargin
