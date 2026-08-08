@@ -8712,6 +8712,27 @@ emitted text, and it is only true where the refusal leaves something scalac reje
 un-translated construct is also valid scala, the refusal is a silent divergence and the count is the
 only instrument there is.
 
+**And the SECOND supplier closed all four**, because a lambda the source wrote does have a method —
+in a CLASS FILE, which is where java's SAM question is already asked. `SpoonTir.samResultTpt` reads
+the single abstract method's declared result off the same `samAbstracts` list `Sam.Answer` is
+computed from (one rule, one place), and fills `resultTpt`. **libGDX core `omissions` 69 → 66 and its
+test set 4 → 3, at 0 errors, 4 members moved and nothing else on any of the fifteen ports** — the
+whole blast being `TextField$NativeOnscreenKeyboard#show`/`#openNativeInputField` and
+`JsonMatcherTests#watcher`, which now render `(toCheck: String) => { def body$2(): scala.Boolean = …;
+body$2() }` and mean what java meant. Two boundaries of that fix are deliberate and both are counted
+rather than approximated:
+
+- **it is asked only where the lambda NEEDS it** — a body with a value-returning `return` of its own,
+  by JLS 15.27.2's binding rule read off Spoon's `CtExecutable` parent and not off a guess. The field
+  means *the type this node's nested `def` must declare*, and filling it on every lambda in a corpus
+  would register a `Xref` usage for a type the emitted text never names;
+- **a result type that mentions a TYPE VARIABLE is refused.** `Supplier<String>.get` is declared
+  `T get()`, and substituting the reference's actual arguments for the declaration's formals is a
+  different mechanism from reading a class file. `T` is not a name the emitted code can write and an
+  erased `Object` compiles, which is §4.6's fabricated fact — so the site keeps its `omissions` row.
+  That is the residue M6 now stands for, and it is **0 across the corpus**, non-vacuous by fixture
+  (`CatalogAreaSSpec`'s `JS-S21` type-variable cell).
+
 **One more finding rode in with it, and it is a `PorterNote` PLACEMENT question at a CONSTRUCTOR.**
 `porter-notes` reported 0 → 1: a `SamLambda` decision subjected at `AsyncExecutor#<init>`, whose note
 has no `def` to sit above because the constructor funnel promoted that body into the class body.

@@ -220,7 +220,7 @@ member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,Array,Array)	sge.util
 member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,String,Array)	sge.utils.JsonMatcherTests#test(String,String,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1435	3c3e8ad79e3459ea	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(Array)	sge.utils.JsonMatcherTests#toString(Array<JsonValue>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1505	d7e5a497c8e2bf6c	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(JsonMatcher,Array)	sge.utils.JsonMatcherTests#toString(JsonMatcher,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1494	5df07723d5b7f6d3	placement=companion
-member	com.badlogic.gdx.utils.JsonMatcherTests#watcher	sge.utils.JsonMatcherTests#watcher	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1570	992d2d5e056db94f	
+member	com.badlogic.gdx.utils.JsonMatcherTests#watcher	sge.utils.JsonMatcherTests#watcher	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1570	068f55377982e83a	
 member	com.badlogic.gdx.utils.JsonTest#<stmt1>	sge.utils.JsonTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	11	2e1cbbff80a35641	
 member	com.badlogic.gdx.utils.JsonTest#<stmt2>	sge.utils.JsonTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	18	1b9adb317945b7dc	
 member	com.badlogic.gdx.utils.JsonTest#<stmt3>	sge.utils.JsonTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	26	e61adcbd3afbc46a	

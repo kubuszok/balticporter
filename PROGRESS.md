@@ -5010,6 +5010,16 @@ the port unwinds out of `openNativeInputField`, long after it returned. M6's *"l
 error deliberately"* is false for this construct and `ENGINE-LIMITS.md` M6 now says so with these
 numbers.
 
+**All four are now fixed, and the residue M6 still stands for is 0.** The frontend is the second
+supplier — a lambda the source wrote has its method in a CLASS FILE, which is where java's SAM
+question is already asked, so `SpoonTir.samResultTpt` reads the result off the same abstract-method
+list `Sam.Answer` is computed from. **`omissions` 69 → 66 on libGDX core and 4 → 3 on its test set, at
+0 errors, with a blast of exactly 4 members** (`TextField$NativeOnscreenKeyboard#show` and
+`#openNativeInputField`, `JsonMatcherTests#watcher`, and the two enclosing class digests) and 0 on
+the other thirteen ports; suite outcomes identical (gdx-test 217/4, liqp 636/1). What is still
+refused is a SAM whose result type is a TYPE VARIABLE (`Supplier<String>.get` is `T get()`), which is
+0 sites corpus-wide and non-vacuous by fixture.
+
 ### Wave 1 is BUILT and NOT WIRED, and the number that says why
 
 `SamLambdaTransform` ships spec'd (14 fixtures) and in no pipeline. Wiring it into every port was

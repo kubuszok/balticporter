@@ -1021,9 +1021,22 @@ object SpoonTir:
     private def samAnswerOf(r: CtTypeReference[?]): Sam.Answer =
       typeDeclarationOf(r) match
         case scala.None       => Sam.Answer.Unreadable
+        case Some(_: CtInterface[?]) =>
+          samAbstracts(r) match
+            case one :: Nil =>
+              Sam.Answer.Yes(one.getSimpleName, one.getParameters.size, serializableAncestry(r))
+            case Nil        => Sam.Answer.No("no abstract method — nothing for a lambda to implement")
+            case several    =>
+              Sam.Answer.No(s"${several.size} abstract methods (${several.map(_.getSimpleName).sorted.distinct
+                .mkString(", ")}) — java's own SAM rule (JLS 9.8) admits exactly one")
+        case Some(_)          => Sam.Answer.No("the target is a CLASS, not an interface")
+
+    /** JLS 9.8's COUNT, as a list — the one place the rule is spelled, so [[samAnswerOf]] and
+      * [[samResultTpt]] cannot disagree about which method a functional interface has. */
+    private def samAbstracts(r: CtTypeReference[?]): List[CtMethod[?]] =
+      typeDeclarationOf(r) match
         case Some(d: CtInterface[?]) =>
-          val all = d.getAllMethods.asScala.toList
-          val abstracts = all.filter { m =>
+          d.getAllMethods.asScala.toList.filter { m =>
             m.hasModifier(ModifierKind.ABSTRACT) &&
               !m.hasModifier(ModifierKind.STATIC) &&
               // a `default` method is not abstract, so the modifier test above already declines it;
@@ -1032,14 +1045,62 @@ object SpoonTir:
               !m.isDefaultMethod &&
               !SpoonTir.ObjectPublicSignatures.contains(m.getSignature)
           }.map(m => m.getSignature -> m).toMap.values.toList
-          abstracts match
-            case one :: Nil =>
-              Sam.Answer.Yes(one.getSimpleName, one.getParameters.size, serializableAncestry(r))
-            case Nil        => Sam.Answer.No("no abstract method — nothing for a lambda to implement")
-            case several    =>
-              Sam.Answer.No(s"${several.size} abstract methods (${several.map(_.getSimpleName).sorted.distinct
-                .mkString(", ")}) — java's own SAM rule (JLS 9.8) admits exactly one")
-        case Some(_)          => Sam.Answer.No("the target is a CLASS, not an interface")
+        case _ => Nil
+
+    /** THE SAM METHOD'S RESULT TYPE, for a lambda the SOURCE wrote — the second supplier of
+      * [[Tree.Lambda.resultTpt]] and the one `ENGINE-LIMITS.md` I9 left open.
+      *
+      * A java lambda body is a METHOD body: `return` is legal in it and leaves the LAMBDA. Scala's
+      * lambda is an expression, so the emitter interposes a nested `def` (`JS-S21`) — and a `def`
+      * needs a result type, which is the SAM METHOD's and not the functional interface's. An
+      * anonymous class hands the conversion its own `DefDef`; a lambda has no method ANYWHERE in
+      * the program, because javac inferred the type from a class file. This is that class file,
+      * read once, at the only place that holds it.
+      *
+      * ==Asked only where the lambda NEEDS it, which is not the emitter's condition leaking==
+      * The field's meaning is *the type this node's nested `def` must declare*, and a lambda with
+      * no value-returning `return` renders no `def` at all. Filling it everywhere would put a type
+      * on ~every lambda in the corpus that the emitted text never names — and `Xref` registers it
+      * as a USAGE, so a portability or dependency count would move for a type nothing writes.
+      *
+      * ==And a GENERIC result is REFUSED, which is M6 narrowed one more turn==
+      * `Supplier<String>.get` is declared `T get()`. The declaration's `T` is not a name the
+      * emitted code can write, and substituting the reference's actual arguments for it is a
+      * different mechanism from reading a class file — so a result type that mentions a type
+      * VARIABLE yields `None` and `OmissionCheck.unnameableLambdaReturn` counts the site. A
+      * guessed `T`, or an erased `Object`, is exactly §4.6's fabricated fact: it compiles. */
+    private def samResultTpt(l: CtLambda[?]): Option[TypeTree] =
+      if !returnsAValue(l) then scala.None
+      else samAbstracts(l.getType) match
+        case one :: Nil =>
+          val rt = one.getType
+          Option.when(rt != null && !mentionsTypeVariable(rt, 8))(tt(tpe(rt), l))
+        case _ => scala.None
+
+    /** does THIS lambda hold a `return` with a VALUE — stopping at a nested lambda or anonymous
+      * method, whose `return`s are that construct's. The same question `TirEmitter.collectReturns`
+      * and `OmissionCheck.valuedReturns` ask of the lowered tree, asked here of the java because
+      * this runs before the body is translated. Spoon answers it directly: a `CtLambda` IS a
+      * `CtExecutable`, and so is an anonymous class's `CtMethod`, so "the nearest enclosing
+      * executable is me" is exactly the binding rule (JLS 15.27.2) and not an approximation of it. */
+    private def returnsAValue(l: CtLambda[?]): Boolean =
+      val body = l.getBody
+      body != null &&
+        body.getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtReturn[?]]))
+          .asScala.exists(r => r.getReturnedExpression != null &&
+            (r.getParent(classOf[spoon.reflect.declaration.CtExecutable[?]]) eq l))
+
+    /** a type that mentions a TYPE VARIABLE anywhere — the declaration's own `T`, an array of one,
+      * or one inside an argument. Fuel-bounded, because a bound can be recursive
+      * (`T extends Comparable<T>`) and an unbounded walk on a class file is a hang. */
+    private def mentionsTypeVariable(r: CtTypeReference[?], fuel: Int): Boolean =
+      if r == null || fuel <= 0 then false
+      else r.isInstanceOf[CtTypeParameterReference] ||
+        (r match
+          case a: CtArrayTypeReference[?] => mentionsTypeVariable(a.getComponentType, fuel - 1)
+          case _                          => false) ||
+        (try r.getActualTypeArguments.asScala.exists(mentionsTypeVariable(_, fuel - 1))
+         catch { case _: Throwable => false })
 
     /** does this type's ancestry reach `java.io.Serializable`? Read through the same declaration
       * lookup, so an unreadable ancestor answers `false` and the SAM answer is `Unreadable`
@@ -4330,7 +4391,11 @@ object SpoonTir:
           if l.getExpression != null then expr(l.getExpression)
           else if l.getBody != null then blockTerm(l.getBody)
           else unsupported(l, "lambda without body")
-        Tree.Lambda(pvs, body, ty(l), originOf(l))
+        // …and the SAM METHOD's result type where the class file states one (`ENGINE-LIMITS.md` I9).
+        // Without it the emitter cannot name the nested `def` that restores java's
+        // `return`-leaves-the-LAMBDA, and what it leaves instead is not a compile error but a scala
+        // NON-LOCAL RETURN from the enclosing method — valid, green, and something else (M6).
+        Tree.Lambda(pvs, body, ty(l), originOf(l), resultTpt = samResultTpt(l))
 
       private def methodRef(mr: CtExecutableReferenceExpression[?, ?])(using Obligations): Term =
         val mid = methodSym(mr.getExecutable)

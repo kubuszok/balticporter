@@ -262,25 +262,30 @@ class CatalogAreaSSpec extends PortSuite:
 
   // -- JS-S21: `return` inside a lambda returns from the LAMBDA -------------------------------------------
 
-  test("JS-S21 — a `return` in a lambda body is CONSULTED and FIRES; scala's lambda rejects `return` outright") {
+  test("JS-S21 — a `return` in a lambda body is CONSULTED, FIRES, and is LOWERED into a nested `def`") {
+    // The happy path, which this suite could not assert before `ENGINE-LIMITS.md` I9: the nested
+    // `def` needs the SAM METHOD's result type — `String`, not `Str` — and nothing carried it. The
+    // frontend reads it off the interface now, so the lowering is here rather than one repair away.
     val p = port(
       "public class R { interface Str { String get(); } Str s = () -> { return \"x\"; }; }")
     assertConsults(p, JS.S(21), fired = true)
+    assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
     assertEmits(p, "return \"x\"")
   }
 
-  test("JS-S21 — where the SAM's RESULT TYPE is unknowable the branch fires and the engine REFUSES") {
-    // §2.3(a) in one test, and the reason the happy path is NOT asserted here. The nested `def`
-    // needs the interface's result type; the TIR carries a lambda's type as the FUNCTIONAL
-    // INTERFACE rather than as its method, so a classpath-free snippet cannot supply one and the
-    // emitter leaves a loud compile error at the exact line rather than guessing a type (M6). The
-    // repair itself is live — `sge-graphs`' `AlgorithmsTest` emits `body$1` — so what a fixture
-    // here can honestly assert is that the difference was CONSIDERED and APPLIED, never that it
-    // was answered. A suite that asserted the happy path from a snippet would be asserting that
-    // the classpath was absent.
+  test("JS-S21 — where the SAM's result type is a TYPE VARIABLE the branch fires and the engine REFUSES") {
+    // §2.3(a) in one test, and what I9 did NOT close. `Supplier<String>.get` is declared `T get()`,
+    // and `T` is not a name the emitted code can write: substituting the reference's actual
+    // arguments for the declaration's formals is a different mechanism from reading a class file,
+    // so the site is REFUSED and `OmissionCheck.unnameableLambdaReturn` counts it. A guessed `T`,
+    // or an erased `Object`, is §4.6's fabricated fact — it compiles.
+    //
+    // And the refusal is NOT loud, which is why the count exists: what is left is a bare `return`
+    // under a function literal, and that is scala's NON-LOCAL RETURN from the enclosing method.
     val p = port("public class R2 { java.util.function.Supplier<String> s = () -> { return \"x\"; }; }")
     assertConsults(p, JS.S(21), fired = true)
     assertNotEmits(p, "body$")
+    assertEquals(clue(balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)).size, 1)
   }
 
   test("JS-S21 — an expression lambda is consulted and does not fire") {
