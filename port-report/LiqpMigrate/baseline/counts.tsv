@@ -8,7 +8,7 @@ catalog(undischarged)	5
 catalog(unmechanised)	1
 catalog(unreached)	17
 class-init-trigger	0
-collection-boundary	24
+collection-boundary	18
 collection-closure	0
 collection-retarget	0
 dependency-coverage	101
@@ -28,7 +28,7 @@ portability(all)	56
 portability(emitted)	56
 portability(injected)	0
 porter-notes	0
-remediation	12
+remediation	18
 rewrite-callsites	0
 signature	0
 substitution(dangling)	0
