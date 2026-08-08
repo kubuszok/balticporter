@@ -489,6 +489,17 @@ final case class PortRun(
     // emitted `extends` clause depended on an answer nobody published fails. If a port ever needs
     // more than that, the fix is to run the base — not to widen the exemption, which would restore
     // exactly the fallback this replaces.
+    // …and the one contract question no PHASE can ask, because it needs the base's published map and
+    // this run's own idiom log at once: does the collapse verdict this run DERIVED over a BASE's
+    // declaration agree with the shape the base emitted? See `collapseDivergence` — the verdict is
+    // whole-program-dependent, so a dependent's own subclass silently re-decides it, at an equal
+    // fingerprint and with every count flat.
+    effectivePhases.collect { case b: balticporter.transform.BeanPropertyTransform => b }.foreach { b =>
+      PortRun.collapseDivergence(translated.idioms,
+                                 basePorts.flatMap(p => p.map.map(p.name -> _)),
+                                 b.pairsTable, b.targetOf)
+        .foreach(translated.surface.gap)
+    }
     val surfaceGaps = (translated.surface.gaps ++ translated.emitter.surfaceGaps).distinct
     val fatalGaps   = surfaceGaps.filter(_.fatal)
     // RECORDED BEFORE THE REFUSAL BELOW, and including the fatal ones. A fatal gap stops the run, so
@@ -2453,6 +2464,104 @@ object PortRun:
     * SYMBOL, not a line of Java — so the path is empty rather than a plausible-looking guess (§4.57's
     * rule, from the other side), and the SUBJECT is the FQN a reader greps for. The `fix` rides in
     * `detail` so an agent holding only `findings.tsv` still gets §1's classification (§4.45). */
+  /** DOES THIS RUN'S COLLAPSE VERDICT AGREE WITH THE ONE THE BASE PUBLISHED? A pure function, for
+    * `baseSurfaceFindings`' reason — the disagreement is testable without a two-module port on disk.
+    *
+    * ==Why the question exists at all==
+    * Every other §1(b) policy is a TABLE, and a dependent inherits the base's instance, so the two
+    * modules agree by construction. `BeanCollapse`'s verdict is not a table: it is DERIVED, from
+    * `overriddenBelow` over the run's descendants, `concreteRelative` over the run's override
+    * closure, `writtenSymbols` over the run's assignments and `closureOf(_).isAnchored` over the
+    * run's parents. Every one of those ranges over the WHOLE PROGRAM, and a dependent's model
+    * CONTAINS its base's units plus its own. So a dependent that declares ONE subclass overriding
+    * the accessor — or one write of the field, for a `val` — re-derives `Refuse` for a pair the base
+    * COLLAPSED, and emits `def getW()` where the base emitted `var w`.
+    *
+    * Nothing else can see it. The manifest entry is identical on both sides, so `surfaceFingerprint`
+    * is EQUAL and `SurfaceDivergence` has nothing to compare; the phase agrees with itself, so
+    * `idiom(refused)` reports an honest refusal with a real guard; every count is flat; and the two
+    * ports each compile alone. §1.5's failure exactly, arriving through a derivation rather than
+    * through a table.
+    *
+    * ==What is compared, and what is NOT evidence==
+    * The base's answer is read from its published map's `MemberShape.form`, which exists precisely
+    * because the ABSENCE of an accessor row is not evidence — a `dropMethods` entry produces the
+    * same absence. The question is asked only where the base's map has a TYPE row for the pair's
+    * OWNER, which is §1.5's rule read here: ask what the base EMITS, never what its `governs` claim
+    * says, and never about a pair this module declares over its own type.
+    *
+    * Three answers, and the third is not the second:
+    *
+    *   - the two agree — nothing;
+    *   - they DISAGREE — a FATAL gap naming both, because this run has already emitted the losing
+    *     shape and `Surface.Gap.fatal` is set by the asker (`DESIGN.md` §8.3);
+    *   - the base emitted the type and published NO member row for the pair — an `Unknown`, and a
+    *     non-fatal gap. A run that assumed "not collapsed" there would be manufacturing the base's
+    *     answer out of a map that does not carry it, which is §4.6's fabricated fact.
+    *
+    * @param idioms  what this run's `BeanPropertyTransform` DECIDED — the verdict is read from the
+    *                phase's own log and never re-derived here (§4.6, `ENGINE-LIMITS.md` K2.5)
+    * @param bases   each declared base's name and its published map, in `baseChain` order
+    * @param pairs   the port's configured pairs, `key -> "getX/setX"`
+    * @param targetOf the shape each key asked for, as the phase itself answers it */
+  def collapseDivergence(idioms: balticporter.tir.IdiomLog,
+                         bases: List[(String, balticporter.core.PortMap.Map0)],
+                         pairs: Map[String, String],
+                         targetOf: String => balticporter.transform.BeanPropertyTransform.Target)
+      : List[balticporter.tir.Surface.Gap] =
+    import balticporter.core.PortMap
+    import balticporter.tir.{IdiomKind, IdiomVerdict, Surface}
+    if bases.isEmpty || pairs.isEmpty then Nil
+    else
+      // what the base EMITTED, per base: the types it wrote, and the `form=` of each member row.
+      val emittedTypes = bases.map((m, map) =>
+        m -> map.entries.filter(e => e.kind == "type" &&
+          e.disposition != PortMap.Disposition.Dropped).map(_.upstream).toSet).toMap
+      val memberForm = bases.map((m, map) =>
+        m -> map.entries.filter(e => e.kind == "member" &&
+          e.disposition != PortMap.Disposition.Dropped)
+          .map(e => e.upstream -> e.memberShape.form).toMap).toMap
+      val mine = idioms.all.iterator.collect {
+        case c if c.kind == IdiomKind.BeanCollapse => c.subject -> (c.verdict match
+          case IdiomVerdict.Converted => targetOf(c.subject).config
+          case _                      => "")
+      }.toMap
+      val out = for
+        (key, derived) <- mine.toList.sortBy(_._1)
+        owner           = key.takeWhile(_ != '#')
+        (module, _)    <- bases
+        if emittedTypes(module).contains(owner)
+        gap            <- memberForm(module).get(key) match
+          case Some(published) if published == derived => Nil
+          case Some(published) =>
+            List(Surface.Gap(key,
+              s"the collapse verdict DISAGREES with the base: it published " +
+                describe(published) + s" and this run derived " + describe(derived) +
+                " — the collapse's verdict is DERIVED over the whole program (`overriddenBelow` " +
+                "reaches this run's subclasses, `writtenSymbols` this run's assignments), so a " +
+                "dependent that declares one override or one write re-decides a base declaration's " +
+                "shape. The manifest entry is identical on both sides, so no fingerprint moves and " +
+                "no count moves",
+              Some(module), fatal = true,
+              fix = "§1(b) PER-LIBRARY: this module may not re-shape the base's surface (§1.5). " +
+                s"Either drop `$key` from the pairs table so the base's shape stands, or move the " +
+                "declaration that changed the derivation (the overriding accessor, or the write) " +
+                "and re-run the BASE so both modules derive the same verdict"))
+          case scala.None if derived.isEmpty => Nil
+          case scala.None =>
+            List(Surface.Gap(key,
+              s"this run COLLAPSED a pair on a type the base emits, and the base's map carries no " +
+                s"member row for it — so ${describe(derived)} could not be checked against what the " +
+                "base published. Assuming the base did not collapse it would be a fabricated fact",
+              Some(module), fatal = false,
+              fix = "§1(b) PER-LIBRARY, OPERATIONAL: re-run the base port with this engine so its " +
+                "port map carries a `form=` row for this member"))
+      yield gap
+      out.distinct
+
+  private def describe(form: String): String =
+    if form.isEmpty then "NO collapse (the `def` pair)" else s"a collapsed `$form`"
+
   def baseSurfaceFindings(gaps: List[balticporter.tir.Surface.Gap]): List[CheckReport.Finding] =
     gaps.map { g =>
       CheckReport.Finding(BaseSurface, if g.fatal then "shaped emitted text" else "unanswered",

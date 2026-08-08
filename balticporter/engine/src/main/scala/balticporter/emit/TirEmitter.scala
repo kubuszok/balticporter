@@ -584,8 +584,27 @@ final class TirEmitter(
         // a java `static` lands in the COMPANION; a dependent emitting `Base.m()` needs the base's
         // answer, not its own re-derivation from the base's Java.
         placement = if m.flags.isStatic then "companion" else "class",
+        // …and whether this member is a java BEAN PAIR this run COLLAPSED, and into which shape.
+        form      = collapsedForms.getOrElse(id, ""),
       )
     }
+
+  /** every member the `bean-properties` collapse turned into a PROPERTY, by symbol → `var`/`val`.
+    *
+    * Read off the phase's own `Decision`, never re-derived from the symbol table. `isMutable` is
+    * true of every non-`final` java field this port emits, so it says "this is a `var`" and nothing
+    * at all about whether a PAIR was collapsed into it — and the whole point of publishing this key
+    * is that a dependent cannot tell the two apart (`Surface.MemberShape.form`). The decision is the
+    * one place both halves are known, and the phase already records it per collapsed declaration.
+    *
+    * From `notes`, the PIPELINE's log, and not from `own`: this decision belongs to a phase, where
+    * `renamedMembers` above belongs to the emitter's own §4.55 passes. */
+  private lazy val collapsedForms: Map[SymId, String] =
+    notes.all.iterator.collect {
+      case d if d.kind == Decision.Kind.CollapsedProperty && d.subject != SymId.None &&
+                d.detail.get("form").exists(_.nonEmpty) =>
+        d.subject -> d.detail("form")
+    }.toMap
 
   /** A member's stable identity. `owner#name` for anything that has a symbol — the form the rest
     * of this engine already uses (`Substitutions.dropMethods`, `RewriteTrace`) — with the

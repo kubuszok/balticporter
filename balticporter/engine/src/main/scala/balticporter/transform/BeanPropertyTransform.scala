@@ -122,6 +122,16 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
   def surfaceFingerprint: String =
     pairs.toList.sorted.map((k, v) => s"$k=$v>${targetOf(k).config}").mkString(",")
 
+  /** the port's own pairs table, verbatim — the policy this phase was constructed WITH.
+    *
+    * Exposed for the one question the phase itself cannot ask: whether the shape this run derived
+    * for a BASE's pair is the shape the base PUBLISHED. That comparison needs the base's port map
+    * and the run's own idiom log, and neither is a thing a phase holds — it belongs to `PortRun`
+    * (`PortRun.collapseDivergence`). What a phase must not do is answer it twice, so this hands over
+    * the CONFIGURATION and nothing else: the verdict still comes from the idiom log the phase filled
+    * (§4.6, and `ENGINE-LIMITS.md` K2.5's measured shape of two answers to one question). */
+  def pairsTable: Map[String, String] = pairs
+
 
   // ---- policy, bound before the pipeline starts ---------------------------------------------
 

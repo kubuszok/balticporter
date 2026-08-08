@@ -406,6 +406,28 @@ two instances holding two halves of one table are not a map. So a parameterised 
 Measured on the libGDX base's first `TypeRedirectTransform`, which is what closed `ENGINE-LIMITS.md`
 D9.
 
+**And a policy whose effect is DERIVED rather than TABULATED escapes every one of those rules, at an
+EQUAL fingerprint.** Everything above compares POLICY: two instances, two tables, one fold, one
+`surfaceFingerprint`. That machinery is exact for a phase whose emitted shape is a function of its
+constructor arguments, and it is blind to one whose arguments only NOMINATE a subject whose shape the
+phase then derives from the program. `BeanCollapse` is the worked example: the manifest says *this
+pair*, and whether the pair becomes a `var` is decided by `overriddenBelow` over the run's
+descendants, `concreteRelative` over its override closure, `writtenSymbols` over its assignments and
+`closureOf(_).isAnchored` over its parents. A dependent's model CONTAINS its base's units, so ONE
+subclass overriding the accessor — or one write of the field — makes the dependent re-derive `Refuse`
+for a declaration the base COLLAPSED, and emit `def getW()` where the base emitted `var w`.
+
+Nothing in the merge contract can see that. The entry is identical on both sides, so the fingerprints
+are EQUAL and `SurfaceDivergence` has nothing to compare; the phase agrees with itself, so the
+refusal is reported honestly under a real guard; every count is flat; both ports compile alone. So a
+phase whose surface is derived owes a THIRD answer beside "merge" and "refuse": **publish the derived
+shape in the port map, and compare the dependent's derivation against the base's PUBLISHED one, as a
+fatal `base-surface` finding naming both.** Two things that are not incidental — the base's answer
+must be STATED (`Surface.MemberShape.form`) rather than inferred from an absent accessor row, since
+a `dropMethods` entry produces the same absence and inferring would be §4.6's fabricated fact; and
+the question is asked only where the base's map has a row for the OWNER TYPE, which is this section's
+own rule read one level down (ask what the base EMITS, never what its `governs` claim says).
+
 **And what a merge is even needed FOR is an INSTANCE count, not a policy count** — the distinction
 that decides how a base policy lands. New policy on a phase the base ALREADY carries reaches no fold
 at all: there is only ever one instance, the dependents inherit that one value, and their effective

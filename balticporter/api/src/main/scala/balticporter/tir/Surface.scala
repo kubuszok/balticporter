@@ -207,6 +207,23 @@ object Surface:
         * sentence belongs in `decisions.tsv` and in the porter note, both of which the base already
         * writes. */
       refusal: String = "",
+      /** `var` | `val` — this member is a java BEAN PAIR the base COLLAPSED into a property, and
+        * this is the shape it emitted. Empty for every member that is what java declared, which is
+        * almost all of them.
+        *
+        * It has to be published, and a dependent cannot derive it. The collapse verdict is
+        * WHOLE-PROGRAM: `overriddenBelow` ranges over the run's descendants and `writtenSymbols`
+        * over the run's assignments, and a dependent's model CONTAINS its base's units — so a
+        * dependent that declares one subclass overriding the accessor, or one write of the field,
+        * RE-DERIVES `Refuse` for a pair the base collapsed. Two ports that each compile alone and
+        * cannot compile together (§1.5), at an EQUAL `SurfacePolicy` fingerprint, because the
+        * manifest entry is identical on both sides and only the program differs.
+        *
+        * What the base's map said WITHOUT this key could not answer it either: a collapsed pair
+        * emits a member row keyed on the PROPERTY and no rows for the accessors, and so does a
+        * member java simply declared under that name. The absence of an accessor row is not
+        * evidence — a `dropMethods` entry produces the same absence — so the answer is stated. */
+      form: String = "",
   )
 
   /** '''NOT carried, and named rather than left to be discovered.''' §8.3's schema listed a
@@ -246,6 +263,7 @@ object Surface:
   def render(m: MemberShape): String =
     val d = MemberShape()
     KeyValues.render(List(
+      Option.when(m.form.nonEmpty)("form" -> m.form),
       Option.when(m.name.nonEmpty)("name" -> m.name),
       Option.when(m.placement != d.placement)("placement" -> m.placement),
       Option.when(m.refusal.nonEmpty)("refusal" -> m.refusal),
@@ -284,6 +302,11 @@ object Surface:
       vis       = kv.getOrElse("vis", "public"),
       placement = kv.getOrElse("placement", "class"),
       refusal   = kv.getOrElse("refusal", ""),
+      // A map published by an engine that did not carry this key answers "" — which reads as "not
+      // collapsed" and would be a FABRICATED FACT if it reached a comparison (§4.6). What keeps it
+      // from doing so is `PortMap.freshness`: a map written by another engine build is `Stale`, so
+      // the base is refused wholesale and the question is `Unknown` rather than wrongly answered.
+      form      = kv.getOrElse("form", ""),
     )
 
   /** A descriptor from its own rendering. Not `Descriptor.total`: a slot the publisher could not

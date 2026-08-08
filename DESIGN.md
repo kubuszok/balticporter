@@ -3071,6 +3071,33 @@ load-bearing. `MergeablePolicy` is NOT owed while no dependent constructs a `bea
 which is a fact about today's ports and is re-asked with one grep before the wave writes policy
 (§1.5's instance-count question).
 
+**…AND THE FINGERPRINT IS NOT ENOUGH, BECAUSE THE VERDICT IS DERIVED AND NOT TABULATED.** The two
+paragraphs above are the whole of the §1.5 machinery — one instance, one fingerprint, one fold — and
+every one of them compares POLICY. That is exact for a phase whose emitted shape is a function of its
+constructor arguments. Here the arguments only NOMINATE a pair; whether it becomes a `var` is decided
+by `overriddenBelow` over the run's descendants, `concreteRelative` over its override closure,
+`writtenSymbols` over its assignments and `closureOf(_).isAnchored` over its parents — all four
+whole-program, and a dependent's model CONTAINS its base's units. One subclass overriding the
+accessor, or one write of the field, and the dependent re-derives `Refuse` for a declaration the base
+COLLAPSED: it emits `def getW()` where the base emitted `var w`, the entry is identical on both sides
+so the fingerprints are EQUAL, the phase agrees with itself so `idiom(refused)` reports an honest
+guard, every count is flat, and both ports compile alone.
+
+So the shape is PUBLISHED and COMPARED: `Surface.MemberShape.form` carries `var`/`val` on the base's
+member row, and `PortRun.collapseDivergence` holds the dependent's derivation against it as a FATAL
+`base-surface` gap naming both answers. Three details are load-bearing:
+
+- **the base's answer is STATED, never inferred.** A collapsed pair emits a member row keyed on the
+  PROPERTY and no rows for the accessors — and so does a member java simply declared under that name,
+  and so does a `dropMethods` entry. Absence is not evidence, and reading it as one would be §4.6's
+  fabricated fact;
+- **the question is asked only where the base's map has a row for the OWNER TYPE.** §1.5's own rule
+  read one level down: ask what the base EMITS, never what its `governs` claim says, or every pair a
+  dependent writes about its own types becomes a finding (`ENGINE-LIMITS.md` D10's shape);
+- **the run's own answer comes from the phase's IDIOM LOG.** Re-deriving the verdict inside the check
+  would be a second answer to the phase's own question, free to disagree with it — `ENGINE-LIMITS.md`
+  K2.5 is the measured shape of that, and a FATAL finding is the last place to introduce one.
+
 **THE COLLAPSE RETYPES THE SURVIVING GETTER SYMBOL — it never drops the pair and mints a `var`.** The
 two produce the same emitted text and only one of them is visible to anything. `Pipeline.runTraced`
 derives what a phase moved by comparing each owned symbol's `info` ACROSS the phase, so a retype is a
