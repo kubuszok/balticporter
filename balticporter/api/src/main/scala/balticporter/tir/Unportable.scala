@@ -109,65 +109,76 @@ enum UnportableKind(val slug: String, val summary: String):
   def label: String = detail.fold(slug)(d => s"$slug($d)")
 
   /** DEFAULT ranked remediations. See the class doc for the two rules these follow. */
-  def remedies: List[Remedy] = this match
+  def remedies: List[RemedyHint] = this match
     case RawGenericConversion => List(
-      Remedy(FixKind.Universal, "render the raw reference `[?]` at every position, parents and " +
+      RemedyHint(FixKind.Universal, "render the raw reference `[?]` at every position, parents and " +
         "overrides included — the answer measured against the reference port"),
-      Remedy(FixKind.Parameterised, "if one fill is right for this library, state it as a type " +
+      RemedyHint(FixKind.Parameterised, "if one fill is right for this library, state it as a type " +
         "redirect rather than letting the frontend guess"),
     )
     case ContextDependentRawFill => List(
-      Remedy(FixKind.Universal, "bind the value to a NAMED local of the de-wildcarded type, so the " +
+      RemedyHint(FixKind.Universal, "bind the value to a NAMED local of the de-wildcarded type, so the " +
         "two uses see one capture"),
-      Remedy(FixKind.LibraryRule, "where the shape recurs in one library only, a rule may rewrite " +
+      RemedyHint(FixKind.LibraryRule, "where the shape recurs in one library only, a rule may rewrite " +
         "the declaration; four general answers have been measured worse"),
     )
     case JdkBoundaryFlow => List(
-      Remedy(FixKind.Universal, "insert the coercion at the seam, in the direction the DECLARATION " +
+      RemedyHint(FixKind.Universal, "insert the coercion at the seam, in the direction the DECLARATION " +
         "requires — never the reference node's type, which a position-blind retyping already moved"),
-      Remedy(FixKind.Parameterised, "scope the retyping phase OUT of the declaration that must " +
+      RemedyHint(FixKind.Parameterised, "scope the retyping phase OUT of the declaration that must " +
         "keep the JDK shape"),
     )
     case ConstructorTopology => List(
-      Remedy(FixKind.Universal, "promote the widest super call to the PRIMARY and delegate; where " +
+      RemedyHint(FixKind.Universal, "promote the widest super call to the PRIMARY and delegate; where " +
         "no single primary exists the residue is counted rather than padded"),
     )
     case PlatformHostileApi => List(
-      Remedy(FixKind.Parameterised, "drop the type and inject a replacement, or re-point the call " +
+      RemedyHint(FixKind.Parameterised, "drop the type and inject a replacement, or re-point the call " +
         "at a portable one — which of the two is the port's judgement"),
-      Remedy(FixKind.Universal, "accept it, and record that this port targets the JVM only"),
+      RemedyHint(FixKind.Universal, "accept it, and record that this port targets the JVM only"),
     )
     case ReflectiveLookup => List(
-      Remedy(FixKind.Parameterised, "re-point the lookup at an EXPLICIT table, so the answer is a " +
+      RemedyHint(FixKind.Parameterised, "re-point the lookup at an EXPLICIT table, so the answer is a " +
         "declaration rather than a name"),
-      Remedy(FixKind.LibraryRule, "where the lookup's targets are knowable only for one library, a " +
+      RemedyHint(FixKind.LibraryRule, "where the lookup's targets are knowable only for one library, a " +
         "plugged-in rule supplies them"),
     )
     case OverloadDivergence => List(
-      Remedy(FixKind.Universal, "make the chosen alternative EXPLICIT — an ascription at the " +
+      RemedyHint(FixKind.Universal, "make the chosen alternative EXPLICIT — an ascription at the " +
         "argument javac's phase would have taken"),
-      Remedy(FixKind.Universal, "where the divergence cannot be decided, COUNT it: a resolver for " +
+      RemedyHint(FixKind.Universal, "where the divergence cannot be decided, COUNT it: a resolver for " +
         "Scala's own overload resolution is a compiler-sized project and a guess is worse than a " +
         "number"),
     )
     case FrontendBlindSpot => List(
-      Remedy(FixKind.Universal, "narrow the lookup that absented — a broad `catch` around a " +
+      RemedyHint(FixKind.Universal, "narrow the lookup that absented — a broad `catch` around a " +
         "resolution turns an unknown into a DEFAULT, and the default is what ships"),
     )
     case UnmodelledNodeKind(_) => List(
-      Remedy(FixKind.Universal, "add the lowering arm, with its edge-case suite; the kind registry " +
+      RemedyHint(FixKind.Universal, "add the lowering arm, with its edge-case suite; the kind registry " +
         "is what says this one was never claimed"),
-      Remedy(FixKind.Parameterised, "until then, drop the declaration that uses it and inject a " +
+      RemedyHint(FixKind.Parameterised, "until then, drop the declaration that uses it and inject a " +
         "replacement — a port that ships without the member is a statement, and a port that ships " +
         "it wrong is not"),
     )
     case AnnotationResidue => List(
-      Remedy(FixKind.Universal, "translate the annotation's arguments; emitting `@A` where Java " +
+      RemedyHint(FixKind.Universal, "translate the annotation's arguments; emitting `@A` where Java " +
         "wrote `@A(x)` is a different annotation and the port would compile"),
     )
 
-/** one ranked remediation, with the §1 classification that says whose it is. */
-final case class Remedy(fix: FixKind, what: String):
+/** one ranked remediation, in PROSE, with the §1 classification that says whose it is.
+  *
+  * A HINT and not a [[Remedy]], and the two are deliberately different types: this is advice a
+  * reader carries out, ranked by the engine and applicable by nobody but a human; a `Remedy` is a
+  * NAMED alternative the engine itself can perform, which a port selects by id. They share a
+  * vocabulary ([[balticporter.catalog.FixKind]]) because they answer the same first question — which
+  * repository the fix lives in — and nothing else, and a single type would have to pretend that
+  * every sentence here is something the engine could be asked to do.
+  */
+final case class RemedyHint(fix: FixKind, what: String):
+  /** deliberately NOT [[balticporter.catalog.FixKind.section]]: this rendering reaches emitted
+    * marker text, so its exact spelling is a fact about the output rather than about the
+    * classification, and the two are free to differ. */
   def render: String = s"${label(fix)} ${what}"
   private def label(f: FixKind): String = f match
     case FixKind.Universal     => "§1(a) ENGINE:"

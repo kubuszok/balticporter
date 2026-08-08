@@ -125,6 +125,19 @@ enum FixKind:
   /** the row is a non-difference; there is nothing to fix */
   case NoFix
 
+  /** WHICH REPOSITORY the fix lives in, spelled as [[balticporter.tir.Reason.section]] spells it —
+    * one vocabulary, because a reader meeting a catalog row's classification and then a decision's
+    * must not have to work out that they are the same three answers.
+    *
+    * A method rather than an enum PARAMETER, deliberately: `DifferenceTakesNoParameterSpec` holds
+    * every catalog value to being a literal or a bare enum case, and a parameter here would make
+    * `FixKind.Universal` stop being one. */
+  def section: String = this match
+    case Universal     => "§1(a) ENGINE"
+    case Parameterised => "§1(b) PER-LIBRARY POLICY"
+    case LibraryRule   => "§1(c) LIBRARY RULE"
+    case NoFix         => "no fix owed"
+
 /** ONE ROW of the language half of the catalog — `JS-{E,S,C,G}`.
   *
   * Every field is a literal or an enum case, and `DifferenceTakesNoParameterSpec` enforces exactly
