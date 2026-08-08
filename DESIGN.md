@@ -5236,3 +5236,59 @@ wrong is silent.
 **Rejected: rewriting a line the format does not admit.** Two tokens on one line is not a binary
 class name; a best-effort rewrite of one would be §4.6's fabricated fact, so such a line is carried
 verbatim and is not counted as a provider.
+
+### 8.18 The FIRST menu — the portability four, as built
+
+§8.16 shipped the plumbing with no menu, so nothing exercised selection → application → accounting on
+a real lane. This is the first one, and it is the lane `Remediator` was already writing manifest lines
+for: a human read the snippet, opened the manifest and pasted it. The engine now pastes it.
+
+**Four remedies, three of them a PHASE and one a CHECK.** `RemediationTransform` declares
+`substitutions-drop`, `static-forwarder-inline` and `class-table` — the ids are `Remediator`'s own
+`mechanism` strings, deliberately, so the loop reads as one thing from both ends. `PortabilityCheck`
+declares `accept-jvm-only` and is the first entry in `PortRun.CheckRemedies`, because that lane's
+producer is a plain object the orchestrator calls and there is no pipeline phase to collect it out of.
+
+**The precondition is `Remediator`'s, verified by `Remediator`'s own code.** The phase calls
+`Remediator.suggest` on the program it is handed and acts on the answer; a second implementation of
+"is this a chokepoint" would be free to disagree with the one the report prints, which is §4.6's two
+answers to one question. What the templates gained is `Suggestion.payload` — the machine-readable half
+of the same expression that builds the snippet, because a phase that parsed the snippet back would be
+deciding from a string (§4.56).
+
+Four decisions the first menu forced, none of them foreseen by §8.16:
+
+- **a remedy DECLARES the shape of key it is selected at** (`Remedy.Subject`). Two of these templates
+  name a TYPE — `Substitutions(dropTypes = …)`, `Forwarder(wrapper = …)` — and have no member to be
+  selected at; forcing one would make a port write an arbitrary member of the type it means.
+  `ResolutionPlan.of` binds through `bindType` or `bindMember` accordingly, read off the REMEDY and
+  never off the key's punctuation, so a `#`-less key at a member remedy still reaches the binder's own
+  `Malformed` sentence;
+- **`Remedy.AnyKind`**, because `portability(emitted)`'s kind column is the offending API's FQN. A
+  per-location remedy there is about the LOCATION, and declaring `kind = "java.net.URL"` would be a
+  remedy that answers one row of one port. The precise question a phase asks is therefore
+  `ResolutionPlan.selected(target, remedy)` — keyed on the globally-unique id, which cannot collide
+  with a sibling on the same lane;
+- **`AppliedResolution.drained`**, because one selection at a TYPE takes many rows out of the lane.
+  §5's drain rule is `sum(drained)` and never `count(rows)`, or a diff reads "one applied, fifteen
+  gone" and fourteen have nothing to attribute them to. An inline claims **0** and says why: it
+  RELOCATES a call rather than removing one, and over-claiming would break the one arithmetic the rule
+  rests on;
+- **`Resolution.RefusedKind`** — the refusal POPULATION, one row per declined site naming its GUARD.
+  A remedy that verified its own precondition and declined is not `NeverApplied` (the selection was
+  consulted and answered) and it is emphatically not silence, which reads exactly like success. Four
+  guards, four different next actions: `needs-injection`, `not-a-chokepoint`, `no-table`,
+  `targets-contradiction`.
+
+**A site the key cannot name is asked for UP THE OWNER CHAIN.** `PortabilityCheck.Violation.enclosing`
+is the nearest enclosing DEFINITION, which for a site inside a method body is routinely a LOCAL — the
+corpus's one `ServiceLoader` row is owned by a val called `loader`. Asked only at `enclosing`, a
+selection would answer `None` for exactly the sites a port most wants to speak about; the fix is not a
+finer key but to ask the question at each declaration the key CAN name (`PortRun.ownerChain`).
+
+**What the menu does NOT offer, stated at the declaration.** A MEDIUM-grade drop with an
+engine-written replacement (the replacement is library semantics, and a stand-in that compiles and
+silently does nothing is what §1 refuses); a `dropMethods`-scale drop of only the touching members
+(`Remediator` observes the ratio rather than thresholding it, because "nothing calls them" is the
+port's judgement about its own consumers); and a table `class-table` could invent (a redirect with no
+destination leaves the lookup reflective and the port JVM-only with nothing said).

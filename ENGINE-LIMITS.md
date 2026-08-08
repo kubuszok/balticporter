@@ -5358,6 +5358,58 @@ is better than implying a port exercises them.
 artefact lane — SHIPPED. The port-side workaround it replaces was a hand-written `src/main/resources`
 tree.*
 
+### P6. `accept-jvm-only` — the menu entry whose APPLY ARM cannot fire, and why it ships anyway — **CLOSED as a design finding; 0 of the portability rules name `Platform.Jvm`**
+
+The obvious first entry on a portability menu is *this location is JVM-only and I know it; stop
+reporting it*. It is shipped (`PortabilityCheck.AcceptJvmOnly`) with both arms implemented, and
+measuring it produced a result worth writing down rather than a feature.
+
+A port's `PortManifest.targets` is a statement about the MODULE. Accepting a JVM-only API at a
+location is a statement about the same module in the opposite direction, so a selection on a port that
+declares Scala.js or Scala Native is a CONTRADICTION and is reported rather than applied. That test
+then makes the other arm unreachable, because `rulesFor` filters the rule list by the declared
+targets and **no rule in that list asks about the JVM** — so `targets = Set(Jvm)` yields zero
+portability findings and a port with nothing to accept is the only port that could accept
+consistently. Measured: `PortabilityCheck.rulesFor(Set(Platform.Jvm)) == Nil`.
+
+The conclusion is not "loosen the test". It is that `accept-jvm-only` and `targets` are two spellings
+of one decision and the module-level one is the honest one — with `verdictOverrides` as the per-API
+spelling where a port ships its own answer. What the remedy is FOR is the contradiction itself: a port
+reaching for "accept" is told, with both real knobs named, instead of silently ignoring the row, which
+is what every port did before the menu existed. Demonstrated live on liqp at
+`liqp.spi.SPIHelper#findProviders` (`java.util.ServiceLoader`), `remediation` 12 -> 14 with
+`portability(emitted)` flat at 56 — the refusal did not drain, which is exactly what its own row says.
+
+*Fix kind: (a) engine for the mechanism — SHIPPED. The design conclusion is (b): the knob a port
+actually wants here is `targets` or `verdictOverrides`.*
+
+### P7. `portability(emitted)` counted every DROPPED type on every RENAMING port — **CLOSED; libGDX core 153 -> 69, `remediation` 30 -> 15, at 0 errors and 0 moved member digests**
+
+`PortRun` builds the "types this run does not ship" set two ways and only one of them was right.
+`isDropped` — the EMISSION gate — asks `Substituted.tags(s) || policySubs.dropsType(s.fullName)`,
+where the tag is what the frontend attaches when it reads a `dropTypes` key. The portability block
+asked the KEY alone. A `dropTypes` key is the UPSTREAM FQN and `Symbol.fullName` at that point is the
+EMITTED one, so on a renaming port the set was always EMPTY: `portability(emitted)` equalled
+`portability(all)` exactly, every violation inside a type the port deliberately does not ship was
+counted as shipped, and `Remediator` spent fifteen of libGDX's thirty `remediation` rows suggesting
+`dropTypes` entries the manifest already had.
+
+It is §4.56's "an artifact that joins POLICY to OBSERVED code carries BOTH names" for the third time,
+and it hid the same way `dropped-types.tsv` did: the two answers agree on a port that renames nothing,
+so the corpus's non-renaming ports never disagreed, and the equal `all`/`emitted` pair read as a port
+with nothing dropped rather than as a filter that never fired.
+
+**What it cost to find, and what it unblocked.** Nothing in the run could see it — 0 compile errors,
+0 member digests moved, no check FAILED — it was found by asking why a menu had no defensible site:
+every HIGH-confidence chokepoint `Remediator` offered on libGDX core was a type the manifest already
+dropped. With the tag read, two genuine ones remain (`RemoteInput`, `AtomicQueue`) and neither is
+droppable for a reason outside the engine: the reference hand port PORTS `RemoteInput`, and
+`AtomicQueue` has a suite in the port's own test source set. That is the honest state of the corpus
+and it is why the three tree-changing remedies ship with fixture coverage and no live selection.
+
+*Fix kind: (a) engine — one predicate, `PortRun`'s `droppedIds`. `dependency-coverage` and
+`jdk-surface` read the same set and moved with it (libGDX core `jdk-surface` 24 -> 22).*
+
 ---
 
 ## 6. Porting a test suite
