@@ -5052,6 +5052,43 @@ rather than the declaration is what makes a REFUSAL honest — a selection a pha
 declined (its guard says the remedy does not apply at this site) records nothing, so its finding
 stays in the lane exactly as it should, and the two ends of the loop read one value.
 
+**The SUBJECT KIND is the remedy's to declare, which the first menus taught this section twice.** The
+paragraph above says the key is a `MemberKey` naming a declaration this run owns, and that was exact
+for as long as there was no menu to disagree with it. Two of the boundary trio's residues disagree,
+and neither is exotic:
+
+- a residue can be a fact about a TYPE, with no member to name. A class threaded with a `using`
+  clause that nothing in the program constructs (`ENGINE-LIMITS.md` CT7) has as many constructors as
+  java gave it and the clause is on all of them, so a member key would have to pick one arbitrarily
+  and a bare one is `Ambiguous` — a grammar with no way to comply with it;
+- a residue can sit at a member this program does NOT declare. An egress row asks *does this external
+  method read the representation I hand it?* and is deduplicated BY CALLEE for exactly that reason,
+  so the thing a port has an opinion about is the callee — the same string it would write into the
+  phase's own sink list. Keyed at the enclosing declaration instead, one row would answer for a site
+  chosen by a `min(path, line)` that moves whenever the upstream does.
+
+So `Remedy.subject` (`OwnedMember` | `OwnedType` | `ExternalMember`) says which seam binds the key and
+with what `Ownership`, and `ResolutionPlan.of` asks the remedy rather than assuming. Doing it the
+other way round — binding every key with `Ownership.Either` and letting the subject fall out — would
+let a typo'd owned key bind to an interned external and then report `NeverApplied`, whose sentence is
+"the key names a declaration this run OWNS": a refusal that states something false. The two refusals
+stay each other's opposite and each stays right for its own remedy — a bare FQN is `Malformed` for an
+`OwnedMember` remedy and binds for an `OwnedType` one; `java.lang.StringBuilder#append` is
+`ExternalOnly` for the first and binds for `ExternalMember`. `Resolution.key` is therefore
+`Option[MemberKey]`, absent for a type subject, because a `MemberKey(fqn, "")` would be §4.6's
+fabricated fact; `declaredKey` is what every consumer renders. There is deliberately no
+`ExternalType`: no residue in this engine sits at one, and a case nothing produces is a case no spec
+can hold to its meaning.
+
+**The DRAIN is ONE function, not one per check.** §5's obligation — `<lane> N->M` beside
+`remediation(resolved) 0->(N-M)` — is a property of the pair, and written per check it would have
+been three chances to record one half and not the other, which is exactly the shape "a lane that fell
+with nothing to attribute the fall to" describes. `ResolutionPlan.drain(lane, findings)(residue)`
+partitions and records in one traversal, returns the rows that were NOT drained, and takes one
+`ResolutionPlan.Residue` per row (`kind`, `at`, `subject`, `origin`, `what`) rather than five curried
+functions, because a positional lambda list is where two of them get swapped silently. Its empty-plan
+fast path is derived from the plan's own entries and nothing else (§4.56).
+
 **Rejected: a compound key.** `resolutions { "owner#member" { lane = "…", remedy = "…" } }` was the
 obvious shape and it is redundant by construction — a remedy id is globally unique, so the id already
 determines the lane and the kind, and writing them again gives a port a second place to be wrong. The

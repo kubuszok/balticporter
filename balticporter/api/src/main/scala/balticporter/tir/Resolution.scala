@@ -3,7 +3,8 @@ package balticporter.tir
 /** ONE LOCATION'S SELECTION — the port picked [[remedy]] at [[key]], and the run BOUND that key to a
   * declaration it owns.
   *
-  * The key is a [[MemberKey]] and the granularity is therefore PER MEMBER, which is the compromise
+  * The key is a [[MemberKey]] — or, where the remedy says so ([[Remedy.Subject]]), a bare type FQN —
+  * and the granularity is therefore PER DECLARATION, which is the compromise
   * the whole engine already made: [[Decision.declarationsUsing]] records one row per (declaration,
   * kind) and never one per expression, `IdiomCandidate.subject` is `owner#member` and never the
   * site's own expression, and `Remediator.Suggestion.subject` is a declared FQN. A finer key would
@@ -22,7 +23,11 @@ package balticporter.tir
 final case class Resolution(
     /** the manifest entry verbatim — the string an agent edits (`CLAUDE.md` §4.575). */
     declaredKey: String,
-    key: MemberKey,
+    /** the PARSE of [[declaredKey]], where there is one. Absent for a remedy whose
+      * [[Remedy.Subject]] is a TYPE, because a type key is not a member key and inventing a
+      * `MemberKey(fqn, "")` for it would be §4.6's fabricated fact — a value the reader cannot tell
+      * from a real answer. [[declaredKey]] is what every consumer renders. */
+    key: Option[MemberKey],
     /** the declaration the key bound to. `SymId.None` where the member was DROPPED before a symbol
       * was minted: the key fired against the index and there is nothing left to resolve at. */
     target: SymId,
@@ -162,6 +167,33 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
   def applied(r: Resolution, subjectFqn: String, subject: SymId, origin: Origin, what: String): Unit =
     record(AppliedResolution(r, subjectFqn, subject, origin, what))
 
+  /** DRAIN a residue lane — the move `CLAUDE.md` §5 requires, performed once rather than per check.
+    *
+    * A resolution is not a fix, it is a MOVE: the row leaves the refusal lane that counted it and
+    * arrives in `remediation(resolved)`, and a baseline diff must read `<lane> N->M` beside
+    * `remediation(resolved) 0->(N-M)`. Written per check that would have been three chances to
+    * record one half and not the other — which is exactly the shape "a lane that fell with nothing
+    * to attribute the fall to" describes. So the partition and the ledger row come from ONE
+    * traversal, the way `AppliedResolution` makes the finding and the `Decision` come from one value.
+    *
+    * Returns the findings that were NOT drained, in their original order. A caller records those and
+    * nothing else; the drained ones are already in this plan's ledger and become
+    * `remediation(resolved)` rows and `decisions.tsv` rows through [[all]].
+    *
+    * The empty-plan fast path is derived from THIS plan's own state and nothing else, which is
+    * `CLAUDE.md` §4.56's rule for a guard: a port that selected nothing has no entry to match, so
+    * skipping is arithmetic rather than a second opinion about the findings.
+    */
+  def drain[F](lane: String, findings: List[F])(residue: F => ResolutionPlan.Residue): List[F] =
+    if entries.isEmpty then findings
+    else
+      findings.filter { f =>
+        val r = residue(f)
+        selected(r.at, lane, r.kind) match
+          case Some(res) => applied(res, r.subject, r.at, r.origin, r.what); false
+          case scala.None => true
+      }
+
   def all: List[AppliedResolution] = log.toList
 
   /** DID A REMEDY ALREADY ANSWER THIS ROW? — the DRAIN, asked by the check that mints the lane.
@@ -227,6 +259,19 @@ object ResolutionPlan:
 
   val empty: ResolutionPlan = new ResolutionPlan(Nil)
 
+  /** WHAT A RESIDUE ROW MUST BE ABLE TO SAY for a remedy to drain it — [[ResolutionPlan.drain]]'s
+    * one argument.
+    *
+    * A record and not five curried functions, because every field answers a different question and a
+    * positional lambda list is where two of them get swapped silently: `kind` is the lane's own
+    * finding kind (the remedy names it, so a selection aimed elsewhere is not consulted), `at` is
+    * the DECLARATION the selection keys on — never the site's own symbol, which is the granularity
+    * `Resolution` chose — `subject` and `origin` are what the `remediation(resolved)` row and the
+    * `decisions.tsv` row are written from, and `what` is the one phrase a reader gets in the porter
+    * note.
+    */
+  final case class Residue(kind: String, at: SymId, subject: String, origin: Origin, what: String)
+
   /** ONE declared entry, with everything the run learned about it before any phase ran.
     *
     * @param declared    the manifest key verbatim.
@@ -272,6 +317,11 @@ object ResolutionPlan:
     * bare key naming two overloads is `Ambiguous` with both candidates listed — the binder's own
     * vocabulary, which is what `CLAUDE.md`'s §1(b) reader already knows how to act on.
     *
+    * WHICH binding seam, and with what [[Ownership]], is the REMEDY's declaration and not this
+    * function's ([[Remedy.Subject]]): a residue at a TYPE has no member to name, and an egress row's
+    * subject is a member this program references and does not declare. Every refusal still arrives
+    * through the same binder and the same vocabulary, so a reader sees one grammar.
+    *
     * @param declared   the manifest's effective `resolutions`, key → remedy id.
     * @param vocabulary the KNOWN set — every remedy this engine and classpath ship.
     * @param active     the ids whose declaring source is in THIS run. A subset of the vocabulary's.
@@ -284,9 +334,20 @@ object ResolutionPlan:
   ): ResolutionPlan =
     new ResolutionPlan(declared.toList.sortBy(_._1).map { (key, id) =>
       val remedy = vocabulary.get(id)
-      val bound  = binder.bindMember(Resolution.Seam, Resolution.Setting, key)
+      // WHICH SEAM binds the key is the REMEDY's answer, not this function's — see [[Remedy.Subject]]
+      // for the two menus that made it one. An UNKNOWN id has no answer, and takes the default: it
+      // is about to be reported as a typo, and binding it through the commonest seam is what gives
+      // that report a second, concrete sentence about the key itself.
+      val subject = remedy.map(_.subject).getOrElse(Remedy.Subject.OwnedMember)
+      val bound   =
+        if subject.isType then
+          binder.bindType(Resolution.Seam, Resolution.Setting, key, subject.ownership)
+            .map(s => (scala.None: Option[MemberKey]) -> Some(s))
+        else
+          binder.bindMember(Resolution.Seam, Resolution.Setting, key, subject.ownership)
+            .map(h => Some(h.key) -> h.sym)
       val hit    = bound.toOption
-      val target = hit.flatMap(_.sym)
+      val target = hit.flatMap(_._2)
       Entry(
         declared     = key,
         id           = id,
@@ -294,7 +355,7 @@ object ResolutionPlan:
                          r <- remedy if active.contains(id)
                          h <- hit
                          t <- target
-                       yield Resolution(key, h.key, t, r),
+                       yield Resolution(key, h._1, t, r),
         target       = target,
         unknown      = remedy.isEmpty,
         sourceAbsent = remedy.isDefined && !active.contains(id),

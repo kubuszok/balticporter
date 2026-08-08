@@ -86,6 +86,10 @@ final case class Remedy(
       * falls by exactly what `remediation(resolved)` gained — still reads off one number.
       */
     alsoKinds: List[String] = Nil,
+    /** WHAT KIND OF THING THE SELECTION KEY NAMES — see [[Remedy.Subject]]. Defaulted to
+      * `OwnedMember`, which is what every remedy whose residue sits at a declaration this run emits
+      * wants, and which is therefore the answer nothing has to state. */
+    subject: Remedy.Subject = Remedy.Subject.OwnedMember,
 ):
   /** the `lane(kind)` pair, as the residue count spells it — every kind this remedy answers. */
   def target: String =
@@ -103,6 +107,44 @@ final case class Remedy(
   def render: String = s"$id — $what  [drains $target; ${fix.section}]"
 
 object Remedy:
+
+  /** WHAT A SELECTION KEY FOR THIS REMEDY NAMES.
+    *
+    * `DESIGN.md` §8.16 shipped with one answer — a `MemberKey` naming a declaration the run owns —
+    * because the plumbing shipped with no menu and there was nothing to disagree with it. The first
+    * menus disagreed with it twice, and neither is an exotic case:
+    *
+    *   - a residue can sit at a TYPE, with no member to name. A class threaded with a `using` clause
+    *     that nothing in the program constructs (`ENGINE-LIMITS.md` CT7) is a fact about the CLASS —
+    *     it has as many constructors as java gave it and the clause is on all of them — so a member
+    *     key would have to pick one of them arbitrarily, and a bare one would be `Ambiguous`;
+    *   - a residue can sit at a member this program does NOT declare. An egress row asks *does this
+    *     external method read the representation I hand it?* and is deduplicated BY CALLEE for
+    *     exactly that reason, so the thing a port has an opinion about is the callee — the same
+    *     string it would write into the phase's own sink list. Keyed at the enclosing declaration
+    *     instead, one row would answer for a site chosen by a `min(path, line)` that moves whenever
+    *     the upstream does.
+    *
+    * So the SUBJECT KIND is the remedy's to declare, and the plan binds each key the way its remedy
+    * says (`ResolutionPlan.of`). Doing it the other way round — binding every key with
+    * `Ownership.Either` and letting the subject fall out — would make a typo'd owned key bind to an
+    * interned external and then report as `NeverApplied` ("the key names a declaration this run
+    * OWNS"), which is a sentence that would be false.
+    *
+    * There is deliberately no `ExternalType`: no residue in this engine sits at one, and a case
+    * nothing produces is a case no spec can hold to its meaning. Adding it is one line the day a
+    * remedy needs it.
+    */
+  enum Subject(val ownership: Ownership, val isType: Boolean):
+    /** `owner#member`, naming a declaration this run emits — the default and the common case. */
+    case OwnedMember    extends Subject(Ownership.Owned, false)
+    /** a bare type FQN, for a residue that is a fact about the TYPE and not about one of its
+      * members. Bound through `PolicyBinder.bindType`, so a `#` in such a key is `Malformed` with
+      * that seam's own sentence rather than this one's. */
+    case OwnedType      extends Subject(Ownership.Owned, true)
+    /** `owner#member` naming a member this program REFERENCES and does not declare — the one shape
+      * `Ownership.External` exists for, and the one where `ExternalOnly` is the WRONG refusal. */
+    case ExternalMember extends Subject(Ownership.External, false)
 
   /** Why an id is not an id. Lower-case kebab, exactly as [[TransformFactory.name]] is, and for the
     * same reason: it is what a `.conf` writes and what an error message lists, so it must survive a

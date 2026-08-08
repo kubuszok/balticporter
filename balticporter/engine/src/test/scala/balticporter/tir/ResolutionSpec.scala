@@ -22,6 +22,7 @@ class ResolutionSpec extends munit.FunSuite:
       |  public String label() { return "w"; }
       |  public String label(int n) { return "w" + n; }
       |  public int size() { return 1; }
+      |  public String show() { return new StringBuilder().append(size()).toString(); }
       |}""".stripMargin
 
   private def program: Program = SpoonTir.fromSource(Java, catalog = CatalogLog.discarding)
@@ -230,12 +231,112 @@ class ResolutionSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // the SUBJECT KIND — which seam binds the key is the REMEDY's answer (`Remedy.Subject`)
+  // -------------------------------------------------------------------------------------------
+
+  private val typeRemedy = SpecRemedyPhase.Noop.copy(
+    id = "spec-type", subject = Remedy.Subject.OwnedType, what = "a residue that is a fact about the TYPE")
+  private val externalRemedy = SpecRemedyPhase.Noop.copy(
+    id = "spec-external", subject = Remedy.Subject.ExternalMember,
+    what = "a residue whose subject is a member this program REFERENCES")
+
+  private def vocabOf(rs: Remedy*): RemedyVocabulary = RemedyVocabulary.declared("spec", rs.toList)
+
+  test("a TYPE-subject remedy binds a BARE FQN — the key a member grammar calls malformed") {
+    val p    = program
+    val v    = vocabOf(typeRemedy)
+    val (plan, binder) = planFor(p, Map("com.demo.Widget" -> "spec-type"), v, v.byId.keySet)
+    val widget = p.symbols.all.find(_.fullName == "com.demo.Widget").get
+    assertEquals(plan.entries.head.target, Some(widget.id))
+    assertEquals(plan.selected(widget.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind).map(_.remedy.id),
+                 Some("spec-type"))
+    // …and it carries NO `MemberKey`, because a type key is not one and fabricating a member name
+    // for it would be a value the reader could not tell from a real answer (§4.6).
+    assertEquals(plan.entries.head.resolution.flatMap(_.key), scala.None)
+    assertEquals(PolicyReport.fromBindings(binder.bindings).findings.filter(_.phase == Resolution.Seam), Nil)
+  }
+
+  test("…and the SAME key under an OwnedMember remedy is Malformed, in the member seam's words") {
+    val p           = program
+    val (_, binder) = planFor(p, Map("com.demo.Widget" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)
+    val issues      = PolicyReport.fromBindings(binder.bindings).findings.filter(_.phase == Resolution.Seam)
+    assertEquals(issues.map(_.issue), List(PolicyIssue.Malformed))
+  }
+
+  test("an EXTERNAL-subject remedy binds a callee this program references and does not declare") {
+    val p = program
+    val v = vocabOf(externalRemedy)
+    val (plan, _) = planFor(p, Map("java.lang.StringBuilder#append" -> "spec-external"), v, v.byId.keySet)
+    val target = plan.entries.head.target
+    assert(clue(target).isDefined)
+    assert(!p.owns(target.get))
+    assertEquals(plan.selected(target.get, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind).map(_.remedy.id),
+                 Some("spec-external"))
+  }
+
+  test("…and the same key under an OwnedMember remedy is ExternalOnly, which is the RIGHT refusal there") {
+    val p           = program
+    val (_, binder) = planFor(p, Map("java.lang.StringBuilder#append" -> "spec-noop"),
+                              vocabulary, vocabulary.byId.keySet)
+    // `ExternalOnly` renders as `NeverMatched` — from the manifest's point of view the entry did
+    // nothing — and the DETAIL is what tells the two apart, which is exactly why the subject kind
+    // has to be declared rather than guessed: this sentence would be a lie about an egress row.
+    val issues      = PolicyReport.fromBindings(binder.bindings).findings.filter(_.phase == Resolution.Seam)
+    assertEquals(issues.map(_.issue), List(PolicyIssue.NeverMatched))
+    assert(clue(issues.head.detail).contains("does not DECLARE"))
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // the DRAIN — a resolution is a MOVE, and both halves come from one traversal (CLAUDE.md §5)
+  // -------------------------------------------------------------------------------------------
+
+  private case class Row(kind: String, at: SymId, subject: String)
+
+  private def drainRows(plan: ResolutionPlan, rows: List[Row]): List[Row] =
+    plan.drain(SpecRemedyPhase.Lane, rows)(r =>
+      ResolutionPlan.Residue(r.kind, r.at, r.subject, Origin.synthetic, s"accepted ${r.subject}"))
+
+  test("draining moves the selected rows OUT of the lane and INTO the ledger, by exactly that count") {
+    val p         = program
+    val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)
+    val size      = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
+    val label     = p.symbols.all.find(_.fullName.startsWith("com.demo.Widget#label")).get
+    val rows = List(Row(SpecRemedyPhase.Kind, size.id, "a"), Row(SpecRemedyPhase.Kind, size.id, "b"),
+                    Row(SpecRemedyPhase.Kind, label.id, "c"))
+    val kept = drainRows(plan, rows)
+    // BROADCAST: one key, two sites in the member it names — and the third row is another member's.
+    assertEquals(kept.map(_.subject), List("c"))
+    assertEquals(plan.all.map(_.subjectFqn), List("a", "b"))
+    assertEquals(plan.all.map(_.finding.check).distinct, List("remediation"))
+    assertEquals(plan.all.map(_.finding.kind).distinct, List("resolved"))
+    assertEquals(plan.troubles, Nil)
+  }
+
+  test("…and it does NOT fire at a row of a kind the remedy does not serve") {
+    val p         = program
+    val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)
+    val size      = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
+    val kept      = drainRows(plan, List(Row("another-kind", size.id, "a")))
+    assertEquals(kept.map(_.subject), List("a"))
+    assertEquals(plan.all, Nil)
+    // the entry bound, the remedy is live, and the finding it answers never occurred HERE — which is
+    // the third staleness state and not a typo.
+    assertEquals(plan.troubles.map(_.issue), List(ResolutionPlan.Issue.NeverApplied))
+  }
+
+  test("…and an EMPTY plan is the identity, decided from the plan's own state and not the rows") {
+    val kept = drainRows(ResolutionPlan.empty, List(Row(SpecRemedyPhase.Kind, SymId.None, "a")))
+    assertEquals(kept.map(_.subject), List("a"))
+    assertEquals(ResolutionPlan.empty.all, Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
   // the ledger's two artifacts — ONE value, so they cannot disagree
   // -------------------------------------------------------------------------------------------
 
   test("an applied resolution files under `remediation` with kind `resolved`, naming its lane") {
     val a = AppliedResolution(
-      Resolution("com.demo.Widget#size", MemberKey.of("com.demo.Widget#size"), SymId.None,
+      Resolution("com.demo.Widget#size", Some(MemberKey.of("com.demo.Widget#size")), SymId.None,
                  SpecRemedyPhase.Noop),
       "com.demo.Widget#size", SymId.None, Origin("Widget.java", 4, 3), "wrapped at the seam")
     assertEquals(a.finding.check, "remediation")
@@ -248,7 +349,7 @@ class ResolutionSpec extends munit.FunSuite:
 
   test("…and one `decisions.tsv` row whose reason is the MANIFEST ENTRY, not the remedy's own kind") {
     val a = AppliedResolution(
-      Resolution("com.demo.Widget#size", MemberKey.of("com.demo.Widget#size"), SymId.None,
+      Resolution("com.demo.Widget#size", Some(MemberKey.of("com.demo.Widget#size")), SymId.None,
                  SpecRemedyPhase.Noop),
       "com.demo.Widget#size", SymId.None, Origin("Widget.java", 4, 3), "wrapped at the seam")
     assertEquals(a.decision.kind, Decision.Kind.SelectedRemedy)
