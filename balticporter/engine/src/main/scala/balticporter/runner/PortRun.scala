@@ -495,10 +495,16 @@ final case class PortRun(
     // whole-program-dependent, so a dependent's own subclass silently re-decides it, at an equal
     // fingerprint and with every count flat.
     effectivePhases.collect { case b: balticporter.transform.BeanPropertyTransform => b }.foreach { b =>
-      PortRun.collapseDivergence(translated.idioms,
-                                 basePorts.flatMap(p => p.map.map(p.name -> _)),
-                                 b.pairsTable, b.targetOf)
-        .foreach(translated.surface.gap)
+      val a = PortRun.collapseDivergence(translated.idioms,
+                                         basePorts.flatMap(p => p.map.map(p.name -> _)),
+                                         b.pairsTable, b.targetOf)
+      a.gaps.foreach(translated.surface.gap)
+      // the DENOMINATOR beside the finding, and §3's rule read at a check this run owns: `0 gaps`
+      // because sixty verdicts agreed and `0 gaps` because the comparison never ran are the same
+      // line otherwise, and the second is every way this silently stops working.
+      if a.checked > 0 || a.gaps.nonEmpty then
+        say(s"COLLAPSE AGREEMENT (this run's derived shape vs the base's published one): " +
+          s"${a.checked} verdict(s) compared, ${a.gaps.size} disagreeing")
     }
     val surfaceGaps = (translated.surface.gaps ++ translated.emitter.surfaceGaps).distinct
     val fatalGaps   = surfaceGaps.filter(_.fatal)
@@ -2504,14 +2510,24 @@ object PortRun:
     * @param bases   each declared base's name and its published map, in `baseChain` order
     * @param pairs   the port's configured pairs, `key -> "getX/setX"`
     * @param targetOf the shape each key asked for, as the phase itself answers it */
+  /** what [[collapseDivergence]] found AND how many verdicts it compared to find it.
+    *
+    * The denominator is not decoration and it is §3's own rule read at a check this wave built: a
+    * dependent that reports `base-surface 0` because sixty verdicts AGREED and one that reports 0
+    * because the comparison never ran are indistinguishable from the outside, and the second is
+    * every way this can silently stop working — a base map that was not discovered, a pairs table
+    * the merge did not carry, a type row the base stopped emitting. `checked` is the only thing that
+    * can tell them apart, so the run prints it beside the gaps. */
+  final case class CollapseAgreement(checked: Int, gaps: List[balticporter.tir.Surface.Gap])
+
   def collapseDivergence(idioms: balticporter.tir.IdiomLog,
                          bases: List[(String, balticporter.core.PortMap.Map0)],
                          pairs: Map[String, String],
                          targetOf: String => balticporter.transform.BeanPropertyTransform.Target)
-      : List[balticporter.tir.Surface.Gap] =
+      : CollapseAgreement =
     import balticporter.core.PortMap
     import balticporter.tir.{IdiomKind, IdiomVerdict, Surface}
-    if bases.isEmpty || pairs.isEmpty then Nil
+    if bases.isEmpty || pairs.isEmpty then CollapseAgreement(0, Nil)
     else
       // what the base EMITTED, per base: the types it wrote, and the `form=` of each member row.
       val emittedTypes = bases.map((m, map) =>
@@ -2526,11 +2542,16 @@ object PortRun:
           case IdiomVerdict.Converted => targetOf(c.subject).config
           case _                      => "")
       }.toMap
-      val out = for
+      // every (pair, base) the question is OWED for — the denominator, computed once and used for
+      // both, so the count and the findings can never be about different populations.
+      val asked = for
         (key, derived) <- mine.toList.sortBy(_._1)
         owner           = key.takeWhile(_ != '#')
         (module, _)    <- bases
         if emittedTypes(module).contains(owner)
+      yield (key, derived, module)
+      val out = for
+        (key, derived, module) <- asked
         gap            <- memberForm(module).get(key) match
           case Some(published) if published == derived => Nil
           case Some(published) =>
@@ -2557,7 +2578,7 @@ object PortRun:
               fix = "§1(b) PER-LIBRARY, OPERATIONAL: re-run the base port with this engine so its " +
                 "port map carries a `form=` row for this member"))
       yield gap
-      out.distinct
+      CollapseAgreement(asked.size, out.distinct)
 
   private def describe(form: String): String =
     if form.isEmpty then "NO collapse (the `def` pair)" else s"a collapsed `$form`"

@@ -39,12 +39,19 @@ class CollapseDivergenceSpec extends munit.FunSuite:
       IdiomCandidate(IdiomKind.BeanCollapse, v, k, s"property via `getW/setW`", Origin.synthetic)))
     l
 
+  /** the GAPS half. Every assertion below is about what disagreed; the DENOMINATOR — how many
+    * verdicts were compared at all — has its own cell at the bottom, because `0 gaps` because
+    * everything agreed and `0 gaps` because nothing was compared are the same line otherwise. */
+  private def gapsOf(idioms: IdiomLog, bases: List[(String, PortMap.Map0)],
+                     pairs: Map[String, String], t: String => Target): List[Surface.Gap] =
+    PortRun.collapseDivergence(idioms, bases, pairs, t).gaps
+
   private val pairs   = Map("p.Base#w" -> "getW/setW")
   private val asVar   = (_: String) => Target.Var
   private val collapsed = base("base-mod", List("p.Base"), List("p.Base#w" -> "var"))
 
   test("a base that COLLAPSED and a dependent that REFUSES is FATAL, and the gap names BOTH answers") {
-    val gaps = PortRun.collapseDivergence(
+    val gaps = gapsOf(
       log("p.Base#w" -> IdiomVerdict.Refused("OverriddenBelow", "a subclass overrides it")),
       List(collapsed), pairs, asVar)
     assertEquals(clue(gaps).size, 1)
@@ -60,7 +67,7 @@ class CollapseDivergenceSpec extends munit.FunSuite:
 
   test("…and the other direction too — a dependent that COLLAPSES what the base did not") {
     val plain = base("base-mod", List("p.Base"), List("p.Base#w" -> ""))
-    val gaps  = PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+    val gaps  = gapsOf(log("p.Base#w" -> IdiomVerdict.Converted),
                                            List(plain), pairs, asVar)
     assertEquals(clue(gaps).size, 1)
     assert(gaps.head.fatal)
@@ -68,10 +75,10 @@ class CollapseDivergenceSpec extends munit.FunSuite:
   }
 
   test("AGREEMENT is silent — in both shapes") {
-    assertEquals(PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+    assertEquals(gapsOf(log("p.Base#w" -> IdiomVerdict.Converted),
                                             List(collapsed), pairs, asVar), Nil)
     val plain = base("base-mod", List("p.Base"), List("p.Base#w" -> ""))
-    assertEquals(PortRun.collapseDivergence(
+    assertEquals(gapsOf(
       log("p.Base#w" -> IdiomVerdict.Refused("NotRequested", "the port did not ask")),
       List(plain), pairs, asVar), Nil)
   }
@@ -81,7 +88,7 @@ class CollapseDivergenceSpec extends munit.FunSuite:
     // declarations routinely live inside the base's namespace, and a rule that screened by the claim
     // would report every pair such a module writes about its OWN members (`ENGINE-LIMITS.md` D10).
     val elsewhere = base("base-mod", List("p.Other"), List("p.Other#x" -> "var"))
-    assertEquals(PortRun.collapseDivergence(
+    assertEquals(gapsOf(
       log("p.Base#w" -> IdiomVerdict.Refused("OverriddenBelow", "mine")),
       List(elsewhere), pairs, asVar), Nil)
   }
@@ -91,19 +98,19 @@ class CollapseDivergenceSpec extends munit.FunSuite:
     // cannot tell from a real answer. Non-fatal, and only where this run DID collapse — a run that
     // refused agrees with every reading of an absent row.
     val silent = base("base-mod", List("p.Base"), Nil)
-    val gaps   = PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+    val gaps   = gapsOf(log("p.Base#w" -> IdiomVerdict.Converted),
                                             List(silent), pairs, asVar)
     assertEquals(clue(gaps).size, 1)
     assert(!gaps.head.fatal, "an unanswered question is a finding, not a refusal")
     assert(clue(gaps.head.why).contains("fabricated fact"))
-    assertEquals(PortRun.collapseDivergence(
+    assertEquals(gapsOf(
       log("p.Base#w" -> IdiomVerdict.Refused("NotRequested", "mine")), List(silent), pairs, asVar), Nil)
   }
 
   test("a BASE port — no bases, or no pairs — asks nothing at all") {
-    assertEquals(PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+    assertEquals(gapsOf(log("p.Base#w" -> IdiomVerdict.Converted),
                                             Nil, pairs, asVar), Nil)
-    assertEquals(PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+    assertEquals(gapsOf(log("p.Base#w" -> IdiomVerdict.Converted),
                                             List(collapsed), Map.empty, asVar), Nil)
   }
 
@@ -111,7 +118,7 @@ class CollapseDivergenceSpec extends munit.FunSuite:
     // K2.5's measured shape: a residue count that re-derived its own question could not tell a
     // refusal from a switched-off fix. Here the same rule keeps a fatal finding honest — every
     // answer this function gives about THIS run is a row the phase filed.
-    val gaps = PortRun.collapseDivergence(
+    val gaps = gapsOf(
       log("p.Base#w" -> IdiomVerdict.Refused("AnchoredClosure", "an unparsed parent")),
       List(collapsed), pairs, asVar)
     assertEquals(clue(gaps).size, 1, "the guard's NAME does not matter — only that it refused")
@@ -119,11 +126,34 @@ class CollapseDivergenceSpec extends munit.FunSuite:
 
   test("…and the SHAPE comes from the port's own `targetOf`, so `val` and `var` are not one answer") {
     val asVal = (_: String) => Target.Val
-    assertEquals(PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+    assertEquals(gapsOf(log("p.Base#w" -> IdiomVerdict.Converted),
                                             List(collapsed), pairs, asVal).size, 1,
       "the base published `var` and this run derived `val` — two different emitted surfaces")
-    assert(PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+    assert(gapsOf(log("p.Base#w" -> IdiomVerdict.Converted),
                                       List(collapsed), pairs, asVal).head.why.contains("a collapsed `val`"))
+  }
+
+  test("the DENOMINATOR is published beside the gaps — §3, read at this check") {
+    // A dependent reporting `base-surface 0` because sixty verdicts AGREED and one reporting 0
+    // because the comparison never ran are indistinguishable from the outside, and the second is
+    // every way this silently stops working: a base map that was not discovered, a pairs table the
+    // merge did not carry, a type row the base stopped emitting. `checked` is the only thing that
+    // can tell them apart — and it is computed from the SAME list the gaps are, so the count and
+    // the findings can never be about different populations.
+    val agreed = PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+                                            List(collapsed), pairs, asVar)
+    assertEquals(agreed.gaps, Nil)
+    assertEquals(clue(agreed.checked), 1, "…and it says the comparison HAPPENED")
+
+    // the three ways it is legitimately zero, each of which must not read as agreement
+    assertEquals(PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+                                            Nil, pairs, asVar).checked, 0, "no base")
+    assertEquals(PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+                                            List(collapsed), Map.empty, asVar).checked, 0, "no pairs")
+    val elsewhere = base("base-mod", List("p.Other"), List("p.Other#x" -> "var"))
+    assertEquals(PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
+                                            List(elsewhere), pairs, asVar).checked, 0,
+      "the base does not emit this type")
   }
 
   test("`MemberShape.form` ROUND-TRIPS, and is absent from every row that is not a collapse") {
