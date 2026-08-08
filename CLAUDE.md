@@ -745,6 +745,20 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   position-blind retyping moved the node type on both sides of that slot. `PortRun.RequiredChecks` is asserted against what
   actually recorded, so a number that reaches stdout and not `findings.tsv` fails the run.
 
+  **And a RESOLUTION DRAINS A LANE VISIBLY — both halves, or the improvement is unreadable.** Where
+  the engine has no single right answer, a phase or check publishes a MENU of named remedies and a
+  port SELECTS one per location (`DESIGN.md` §8.16). Applying one is not a fix, it is a MOVE: a row
+  leaves the refusal lane that counted it and arrives in `remediation(resolved)`. So a baseline diff
+  must read `<lane> N->M, remediation(resolved) 0->(N-M)`, and a lane that fell with nothing to
+  attribute the fall to is exactly the shape §1's residue rules already refuse — indistinguishable
+  from a check that stopped asking, from a rule list that emptied, and from a port that got better.
+  That is the trivia family's own argument (`lost = 0` is a bar met by RECOVERING everything) read one
+  artifact over, and it is why a remedy DECLARES the lane and kind it drains rather than merely
+  claiming to have helped. **And a selection that did nothing is a finding, not silence**: a key can
+  bind to a real declaration, name a live remedy, and be inert because the finding never fired —
+  which no binding can say, so it is reported apart (`PolicyIssue.NeverApplied`), declared beside
+  applied, on §5.5's `expected#derived`/`#declared` model.
+
   Four more measurements are NOT check counts and are printed beside them, because each catches a
   class nothing else can see:
 

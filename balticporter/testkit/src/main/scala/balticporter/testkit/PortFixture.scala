@@ -5,7 +5,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.catalog.{CatalogLog, DiffId}
 import balticporter.tir.{CheckReport, Decision, IdiomCandidate, IdiomKind, IdiomLog, IdiomVerdict,
-  Phase, Pipeline, Program, RewriteLog, SymId}
+  MemberIndex, Phase, Pipeline, PolicyBinder, Program, RemedySource, RemedyVocabulary, ResolutionPlan,
+  RewriteLog, SymId, SymbolTable, Xref}
 
 /** One Java snippet taken through the pipeline, with everything a test wants to assert on.
   *
@@ -49,7 +50,20 @@ final case class Ported(before: Program, after: Program, phases: List[Phase],
                           * transform's REFUSALS, which are its whole safety argument — a spec that
                           * could only assert on emitted text would be able to see the conversions
                           * and nothing the phase declined. */
-                        idioms: IdiomLog = IdiomLog.discarding):
+                        idioms: IdiomLog = IdiomLog.discarding,
+                        /** the binder the pipeline bound this translation's policy through —
+                          * including its [[balticporter.tir.ResolutionPlan]].
+                          *
+                          * Here for the reason `decisions` and `idioms` are: a plan is a value ONE
+                          * translation owns and it accumulates as the phases run, so a fixture that
+                          * re-ran them to get it would be asserting about a second translation. It
+                          * is also the only surface a spec has for the THIRD staleness state — a
+                          * selection that bound and was never applied moves no emitted text, no
+                          * check count and no decision, so a spec that could only assert on `out`
+                          * would see nothing at all. */
+                        binder: PolicyBinder =
+                          new PolicyBinder(new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty),
+                                           MemberIndex.empty)):
 
   /** what the phases that ran require of `balticporter-runtime`. Derived, not passed: the fixture
     * is a miniature of the orchestrator, so a test exercises the same derivation a real port does
@@ -121,8 +135,25 @@ object PortFixture:
   def port(java: String, phases: Phase*): Ported =
     portIn(RuntimeMode.Dependency, java, phases*)
 
+  /** …with the port having SELECTED a remedy at one or more locations
+    * (`balticporter.core.PortManifest.resolutions`).
+    *
+    * The vocabulary is derived from the phases handed in — every `RemedySource` among them — so a
+    * fixture cannot select a remedy nothing offers, and the ACTIVE set is the KNOWN set by
+    * construction. A spec that wants the two to DIFFER (a selection whose declaring phase this run
+    * does not hold) builds the `ResolutionPlan` directly: that is a question about the PLAN and not
+    * about a translation, and a second vocabulary parameter here would make every caller state a
+    * distinction only one of them is asking about.
+    */
+  def portResolving(java: String, resolutions: Map[String, String], phases: Phase*): Ported =
+    portIn(RuntimeMode.Dependency, java, resolutions, phases.toList)
+
   /** …for a port whose runtime delivery is not the default. See [[Ported.runtimeMode]]. */
   def portIn(mode: RuntimeMode, java: String, phases: Phase*): Ported =
+    portIn(mode, java, Map.empty, phases.toList)
+
+  private def portIn(mode: RuntimeMode, java: String, resolutions: Map[String, String],
+                     phases: List[Phase]): Ported =
     // `fatal = true` — the TESTKIT is the mode where an undischarged obligation is an ERROR.
     // `DESIGN.md` §2.8 stages enforcement deliberately: a port run counts, because a run that died
     // on an incomplete rule produces no diagnostics at all, and a spec fails, because every
@@ -133,10 +164,14 @@ object PortFixture:
     val rewrites      = new RewriteLog
     val idioms        = new IdiomLog
     val before        = SpoonTir.fromSource(java, catalog = catalog)
-    val (after, log)  = Pipeline.runTraced(before, phases.toList,
-                          new balticporter.tir.PolicyBinder(before, before.members), catalog, rewrites, idioms)
-    Ported(before, after, phases.toList, Map("Snippet.java" -> java), log.all, mode, catalog, rewrites,
-           idioms)
+    val binder        = new PolicyBinder(before, before.members)
+    // the miniature of what `PortRun` does: bind every selection through the run's own binder,
+    // BEFORE the pipeline, and hand the plan to the phases through it.
+    val vocabulary    = RemedyVocabulary.from(phases.collect { case r: RemedySource => r })
+    binder.resolving(ResolutionPlan.of(resolutions, vocabulary, vocabulary.byId.keySet, binder))
+    val (after, log)  = Pipeline.runTraced(before, phases, binder, catalog, rewrites, idioms)
+    Ported(before, after, phases, Map("Snippet.java" -> java), log.all, mode, catalog, rewrites,
+           idioms, binder)
 
   /** the same over SEVERAL compilation units, each `fileName -> code`. A Java file declares exactly
     * one package, so every rule about a PACKAGE BOUNDARY — default access, `protected`, an override
@@ -149,9 +184,10 @@ object PortFixture:
     val rewrites     = new RewriteLog
     val idioms       = new IdiomLog
     val before       = SpoonTir.fromSources(sources, catalog = catalog)
-    val (after, log) = Pipeline.runTraced(before, phases.toList,
-                         new balticporter.tir.PolicyBinder(before, before.members), catalog, rewrites, idioms)
-    Ported(before, after, phases.toList, sources.toMap, log.all, mode, catalog, rewrites, idioms)
+    val binder       = new PolicyBinder(before, before.members)
+    val (after, log) = Pipeline.runTraced(before, phases.toList, binder, catalog, rewrites, idioms)
+    Ported(before, after, phases.toList, sources.toMap, log.all, mode, catalog, rewrites, idioms,
+           binder)
 
   /** parse only — for tests about the FRONTEND rather than about a phase.
     *

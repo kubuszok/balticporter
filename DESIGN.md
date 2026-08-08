@@ -4798,3 +4798,158 @@ that a lambda would re-resolve are enumerable and small: `java.lang.Object`'s pu
 anon's own SAM method reached recursively. Both are a bare `Tree.Ident` whose symbol's OWNER says
 which it is, which is the structural test §4.56 asks for. Zero corpus sites; the fixture is the whole
 evidence, which is `JS-E06`'s third commit again.
+
+### 8.16 Per-location remediation SELECTION — a MENU the phase publishes, one word the port writes
+
+`CLAUDE.md` §1 splits every rule three ways and the split is about MECHANISMS. It leaves a gap the
+corpus keeps falling into: a difference with **no single right answer**, where the engine could
+faithfully do either of two things and only the port knows which one it wants at THIS declaration.
+Today a port has exactly two reachable answers — accept the residue finding, or write a §1(c) rule —
+and the second is a compiled artifact, a `TransformFactory`, a `META-INF/services` line and a test
+suite for a decision that is one word long. So ports accept, the residue lanes stay high, and the
+engine's own `Remediator` prints the manifest line a human then pastes by hand.
+
+The mechanism closes that loop from the other end. **The phase or check that MINTS a residue finding
+declares the alternatives it could carry out; a port SELECTS one per location; the engine applies it
+and both halves are counted.** Nothing about the mechanism moves into the manifest — the manifest
+names a choice from a list the engine published, which is the shape a `RuleScope` and a
+`verdictOverrides` entry already have.
+
+This section is the PLUMBING as built. It ships with **no menu**: no phase and no check declares a
+remedy, so every port's `remediation(resolved)` is zero, the surface fingerprint is byte-identical on
+a manifest that selects nothing, and the mechanism's arrival is provably flat on all fifteen lanes.
+That is deliberate — §1(b)'s rule that an empty parameter must be a no-op, applied to a whole
+mechanism.
+
+**The KEY is a `MemberKey`, and the granularity is PER MEMBER.** `owner#name` or
+`owner#name(P1,P2)`, in the upstream namespace — the one grammar `dropMethods`, `ClassTableTransform`
+and `PolicyBinder` already speak, and the one that survives an upstream reformat by construction.
+Per-member is not a new compromise: `Decision.declarationsUsing` records one row per (declaration,
+kind) and never one per expression, `IdiomCandidate.subject` is `owner#member` and never the site's
+own expression, and `Remediator.Suggestion` has been declaration-scoped since it was written. Two
+consequences follow and both are decisions:
+
+- a selection **BROADCASTS** across two sites of the targeted finding kind inside one member. The
+  alternative is an occurrence index, which reintroduces line-number-shaped fragility one level down
+  — the exact fragility `CheckReport.Finding` already refuses by excluding the line from its id. A
+  member that genuinely wants two remedies at two sites is a feature nobody has needed, and it will
+  be an EXPLICIT one when somebody does;
+- an **overload set is not broadcast**. `PolicyBinder.bindMember` is what binds a selection, so a
+  bare key naming two overloads is `Ambiguous` with both candidates rendered — they are two different
+  members and picking one by position is what this grammar exists to stop. A key naming nothing is
+  `NeverMatched`, a key outside the grammar is `Malformed`, and all three arrive through the same
+  vocabulary every other policy key uses.
+
+**A REMEDY is DECLARED by the mechanism that can carry it out** (`balticporter.tir.Remedy`,
+`RemedySource`), with four fields and none of them optional. The `id` is a globally-unique kebab slug,
+which is what lets the selection key stay flat — `"owner#member" = "remedy-id"` and never a compound
+`(lane, kind, id)`; the `lane` and `kind` name the residue row it drains, without which a resolution
+is a verdict with no denominator; `emissionAffecting` is what puts a selection in §1.5's MUST-agree
+column, declared rather than assumed so that the day a remedy only re-files a finding, THAT one can
+move to the not-inherited column beside `verdictOverrides`; and `fix` is §1's classification of the
+remedy's own CODE, which is `balticporter.catalog.FixKind` reused rather than a second enum with the
+same three cases.
+
+**Two vocabularies, and the difference between them is the whole staleness story.** The ACTIVE set is
+assembled per run from what the run HOLDS — its pipeline's phases plus `PortRun.CheckRemedies`, which
+is `Rewrite.accountedBy`'s shape one level up: a claim each source makes about itself, gathered by the
+run rather than kept in a table somebody has to remember to edit. The KNOWN set is that plus whatever
+the classpath DECLARES without being constructed, which is why `TransformFactory.remedies` exists
+beside the phase's own: a factory speaks for the phase it would build, so the config loader can tell
+a TYPO from a port that picked a real remedy and forgot to enable the phase. Refused at load, the
+second reads as the first and sends its reader hunting for a spelling mistake in a correct id. A
+duplicate id is refused and never resolved, exactly as `TransformRegistry` refuses two factories
+claiming one name; the same remedy declared twice (factory and phase) is ONE entry, which is the
+shape that union has by construction.
+
+**The HOME is one `PortManifest.resolutions` field**, and the precedent is `verdictOverrides`: a table
+dispatched by finding kind, consulted from more than one place in the pipeline by code that shares no
+phase instance — which is `RuleScope`'s disqualifying property, since a scope is owned by exactly one
+phase. It is consulted through the `PolicyBinder` (`PolicyBinder.resolutions`), which is documented as
+the only place a phase may learn what a key names, and a selection is precisely that: a key, bound,
+with the port's answer attached. That costs no pipeline wiring anybody can forget — a phase that
+consults one already implements `PolicyBound` to bind its own keys.
+
+**INHERITANCE is §1.5's strictest case.** A remedy decides emitted text at a declaration a dependent
+compiles against, so `effectiveResolutions` unions the chain bases-first like every other inherited
+map — and, unlike `packageRenames`, nearest-wins is emphatically not the reported answer. A package
+rename disagreement is a fact about the dependent's OWN namespace; a selection disagreement is two
+answers to one question about a SHARED one. So:
+
+- the same key with two values anywhere in a chain is a fatal
+  `ManifestAgreement.Kind.ResolutionDivergence`, a sibling of `SurfaceDivergence` and not an instance
+  of it (that one is two phase INSTANCES that could not be composed; this is one key that composes
+  perfectly and composes wrong). The union still stands, because the effective policy has to be well
+  defined; the disagreement is a finding beside it, which is the shape `MergeablePolicy` refusals
+  already take;
+- a dependent's key naming a declaration inside a base's `governs` claim that the base's own
+  `resolutions` does not answer is a fatal `ResolutionIntrusion` — `SurfaceIntrusion`'s screen read
+  at a member key, through the SAME `standsAt`, which asks the base's PUBLISHED MAP what it EMITS and
+  never its claim. `ENGINE-LIMITS.md` D10 is why: a dependent's own declarations routinely sit inside
+  the base's namespace and a test source set always does, so a claim-based screen is a rule with no
+  way to comply with it. A key the base itself answers is not an intrusion — it is inheritance, or it
+  is already a divergence;
+- both are asked in `surfacePairs`, so both are **load-bearing**: `surfaceGate` stops the run before
+  any phase runs rather than reporting the disagreement beside output an operator would then have to
+  read to work out which of the two answers produced it;
+- selections join the published surface fingerprint (`PortManifest.surfaceDigestInputs`, folded into
+  `PortMap.policyDigest`), so a base whose choices moved cannot look fresh to a dependent. A manifest
+  with no selections contributes no lines and digests exactly as the surface list alone did — which is
+  what makes the field's arrival flat rather than something to preserve by hand.
+
+**STALENESS gains a THIRD state, and it is a state no binding can express.** `PolicyBinder` answers
+one question — did this key name a real declaration? — and its five refusals are complete for it. A
+selection can bind perfectly, name a live remedy, and still do nothing, because the FINDING it
+resolves never fired this run. Reported as `NeverMatched` it would send its author looking for a
+member that is right there; reported as `Unverifiable` it would claim the engine could not check
+something it checked. So `PolicyIssue` gains a fourth case, `NeverApplied`, and
+`ResolutionPlan.troubles` reports declared beside applied — `CLAUDE.md` §5.5's
+`expected#derived`/`expected#declared` split one artifact over, and the reason the plan is a value one
+TRANSLATION owns rather than a process-global table (`Determinism.Full` translates twice). The other
+two troubles are its neighbours and are kept apart for `PolicyBinder`'s own reason: an unknown id is
+`Malformed` (it could never have named a mechanism), and a known id whose declarer is not in this
+pipeline is `NeverMatched` with the phase named in the detail (the entry did nothing, and the fix is
+one `surface` line).
+
+**ACCOUNTING reuses the `remediation` check with a new kind, `resolved`.** A new top-level lane would
+have had to be added to `PortRun.RequiredChecks` by somebody remembering to; `remediation` is already
+a member, so a run that stopped recording resolutions fails exactly the way a run that stopped
+recording `Remediator`'s suggestions does. The two are the same loop seen from its two ends — that
+check already carries the manifest line an operator would paste, and an applied resolution is the
+engine having pasted it. The `finding` and the `Decision` come from ONE value (`AppliedResolution`),
+so the count and the row cannot disagree about what a resolution did, and the decision's reason is
+`Reason.Configured("resolutions", key)` — never the remedy's own `FixKind`, because the reader's first
+question is which repository to edit and for a SELECTION the answer is always this port's manifest.
+`Decision.Kind.SelectedRemedy` is in `PorterNote.Rendered`, so the reader at the emitted line is told
+there was a menu and which entry this port picked; whose code carried it out travels in the detail.
+
+The obligation the lane's arrival creates is stated in `CLAUDE.md` §5 and not restated here: a
+resolution must DRAIN the refusal lane it names, by exactly the count that moved.
+
+**CONFIG.** `resolutions { "owner#member" = "remedy-id" }` through `ConfigView.stringMap`, with the
+LOADER validating each id against the vocabulary and `ConfigView` staying dumb —
+`TransformFactory.scopeOf`'s door, one key over. The KEY's shape is deliberately NOT checked there:
+the binder parses every one and its `Malformed` refusal already says what to write, so a second parser
+would give the two front doors two sentences for one mistake. What cannot survive the door at all is a
+predicate-selected remedy, refused for `OpaqueSpec.hints`' reason (§5.7): a port that needs one writes
+a §1(c) rule in Scala, and that rule publishes its menu through `TransformFactory.remedies` like any
+other.
+
+**Rejected: a compound key.** `resolutions { "owner#member" { lane = "…", remedy = "…" } }` was the
+obvious shape and it is redundant by construction — a remedy id is globally unique, so the id already
+determines the lane and the kind, and writing them again gives a port a second place to be wrong. The
+flat key is what globally-unique ids BUY.
+
+**Rejected: a `RuleScope`-shaped phase parameter.** A selection spans several phases' findings and is
+consulted by checks that are not phases at all, which is exactly `RuleScope`'s disqualifying property.
+Threaded through N constructors it would also be N places for two modules to disagree, where the
+manifest field is one value §1.5 already knows how to compare.
+
+**Rejected: a new `FixKind` enum in `balticporter.tir`.** A remedy's §1 classification is the same
+three answers `balticporter.catalog.FixKind` already carries for a difference row, so the catalog's
+enum is reused and gained a `section` accessor rendering them the way `Reason.section` does. Two enums
+with identical cases would be two vocabularies for one question — the failure `RemedyHint` (the PROSE
+remediation attached to an `Unportable` marker, renamed from `Remedy` in this wave) avoids by sharing
+it. `RemedyHint` and `Remedy` stay different TYPES: one is advice a human carries out, the other is a
+named alternative the engine performs, and a single type would have to pretend every sentence in the
+first is something the engine could be asked to do.
