@@ -4993,6 +4993,23 @@ is the libGDX base alone.
   removed downcasts is a wave spent on churn, so the transformer is not built. This is the row whose
   go/no-go nobody had a number for, and the number says no.
 
+### I9 is CLOSED, and closing it found a live silent defect in the spearhead library
+
+`Tree.Lambda` now carries `resultTpt` — the SAM METHOD's own result type, filled by whoever holds
+the method — so the emitter's `JS-S21` arm can interpose the nested `def` that restores java's
+*`return` leaves the LAMBDA* instead of refusing. `SamLambdaTransform` fills it from the anonymous
+class's own `DefDef`, which is exactly the type M6 said the TIR did not have.
+
+What the narrowing left is COUNTED (`OmissionCheck.unnameableLambdaReturn`), and the count is the
+finding: **libGDX core `omissions` 66 → 69, its test set 3 → 4, at 0 compile errors on both, 0 member
+digests on all fifteen ports and every other count flat.** Those four rows are lambdas the SOURCE
+wrote — `TextField$NativeOnscreenKeyboard`'s validator and close callback, and `JsonMatcherTests`'
+watcher — where the port emits `(toCheck: String) => { …; return true }` inside a `def …: scala.Unit`.
+That is a scala NON-LOCAL RETURN from the enclosing method: java returns `true` to the framework, and
+the port unwinds out of `openNativeInputField`, long after it returned. M6's *"left as a compile
+error deliberately"* is false for this construct and `ENGINE-LIMITS.md` M6 now says so with these
+numbers.
+
 ### Wave 1 is BUILT and NOT WIRED, and the number that says why
 
 `SamLambdaTransform` ships spec'd (14 fixtures) and in no pipeline. Wiring it into every port was

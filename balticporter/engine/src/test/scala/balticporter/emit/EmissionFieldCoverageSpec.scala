@@ -432,9 +432,21 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
 
     // ---- Lambda -------------------------------------------------------------------------------
-    probe(Tree.Lambda(List(Tree.ValDef(P1, tt(tInt), None, O)), iLit(1), tOth, O), hostTerm)(
-      "params" -> Tree.Lambda(List(Tree.ValDef(P2, tt(tInt), None, O)), iLit(1), tOth, O),
-      "body"   -> Tree.Lambda(List(Tree.ValDef(P1, tt(tInt), None, O)), iLit(2), tOth, O),
+    //
+    // The base body is a value-returning `return`, which is the ONE shape `resultTpt` is visible
+    // in: a java lambda body is a method body, so the emitter interposes a nested `def` (`JS-S21`)
+    // and that `def`'s result type is the SAM METHOD's. With no `return` the field is invisible by
+    // construction, and a probe built on `iLit(1)` would have declared it metadata — which is
+    // exactly the mistake `ENGINE-LIMITS.md` I9 was: the emitter could not read a type nothing
+    // carried, and nothing said so.
+    probe(Tree.Lambda(List(Tree.ValDef(P1, tt(tInt), None, O)), Tree.Return(Some(iLit(1)), tInt, O),
+                      tOth, O, resultTpt = Some(tt(tInt))), hostTerm)(
+      "params"    -> Tree.Lambda(List(Tree.ValDef(P2, tt(tInt), None, O)), Tree.Return(Some(iLit(1)), tInt, O),
+                                 tOth, O, resultTpt = Some(tt(tInt))),
+      "body"      -> Tree.Lambda(List(Tree.ValDef(P1, tt(tInt), None, O)), Tree.Return(Some(iLit(2)), tInt, O),
+                                 tOth, O, resultTpt = Some(tt(tInt))),
+      "resultTpt" -> Tree.Lambda(List(Tree.ValDef(P1, tt(tInt), None, O)), Tree.Return(Some(iLit(1)), tInt, O),
+                                 tOth, O, resultTpt = Some(tt(tStr))),
     )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
 
     // ---- If -----------------------------------------------------------------------------------
@@ -784,6 +796,12 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
         "spells an anonymous class by position and never by name"),
       "dropped" -> Indirect("what the FRONTEND could not translate, read by `OmissionCheck` so a " +
         "lost member is reported instead of vanishing — a residue about the input, never output"),
+      "sam" -> Indirect("JAVA'S OWN single-abstract-method answer about the target's CLASS FILE " +
+        "(`Sam.Answer`), computed by the frontend because nothing in the TIR can — an interface " +
+        "whose method the program never calls has no interned members at all. Read by " +
+        "`SamLambda.decide` and by nothing in the emitter: an anonymous class emits identically " +
+        "whatever this says, and the node the CONVERSION produces is a `Lambda` rather than this " +
+        "one"),
       "origin" -> originIsMetadata),
 
     // ---- EnumCase -----------------------------------------------------------------------------

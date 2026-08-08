@@ -73,25 +73,72 @@ class SamLambdaTransformSpec extends PortSuite:
     assertEmits(p, ": java.util.Comparator[java.lang.String])")
   }
 
-  test("a `return` inside the converted body still means LEAVE THE LAMBDA") {
+  private val valuedReturn =
+    """import java.util.Comparator;
+      |class C {
+      |  Comparator<String> c(final int bias) {
+      |    return new Comparator<String>() {
+      |      public int compare(String a, String b) {
+      |        if (a == null) { return -1; }
+      |        return a.compareTo(b) + bias;
+      |      }
+      |    };
+      |  }
+      |}""".stripMargin
+
+  test("a VALUE-returning `return` inside the converted body gets the SAM METHOD's result type\n" +
+       "     — `ENGINE-LIMITS.md` I9, and the shape that took wave 1 from 0 to 4 typer errors") {
     // java's lambda body is a METHOD body, so `return` is legal in it; scala's lambda is an
-    // expression and rejects `return` outright. The emitter's own `Tree.Lambda` arm restores java's
-    // meaning with a nested `def` (`JS-S21`), and this pins that the conversion hands it a body it
-    // can render rather than one that will not compile.
+    // expression and rejects `return` outright. The emitter restores java's meaning with a nested
+    // `def` (`JS-S21`) — and a `def` needs a RESULT TYPE, which is `compare`'s `int` and NEVER the
+    // interface's `Comparator[String]`. Before I9 nothing carried it, so the emitter refused (M6)
+    // and rendered the body bare: `(a, b) => { if (…) return -1; … }`, four of which were the whole
+    // of wave 1's failure on the libGDX base.
+    //
+    // Asserted on the RENDERED `def` and not on the string "def ", which the ENCLOSING method's own
+    // declaration already satisfies — a vacuous assertion is how this passed while the emission was
+    // broken.
+    val p = port(valuedReturn, new SamLambdaTransform)
+    assertIdiomConverts(p, IdiomKind.SamLambda, "C#c")
+    assertEmitsMatch(p, """def body\$\d+\(\): scala\.Int = """)
+  }
+
+  test("…and the refusal that USED to fire there is counted at ZERO for it") {
+    // `OmissionCheck.unnameableLambdaReturn` is M6's residue turned into a number. The point of
+    // asserting it here is the NARROWING: this exact tree used to be the residue, and after the
+    // thread it is not, so the count is evidence about the fix rather than about the corpus.
+    val p = port(valuedReturn, new SamLambdaTransform)
+    assertEquals(clue(balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)).map(_.owner), Nil)
+  }
+
+  test("…and it FIRES where M6 still stands — a lambda the SOURCE wrote, whose method is a class file") {
+    // The other half of the narrowing, and what makes the zero above mean anything. javac inferred
+    // this lambda's type from `Supplier`'s class file; the program holds no `DefDef` for `get`, so
+    // nothing can name the `def`'s result type and the emitter refuses rather than guessing (M6).
+    // Non-vacuity by FIXTURE, since the corpus has no such site — which is exactly the state a
+    // residue count is worthless without (§3: a check reporting zero is only as good as its
+    // coverage).
     val p = port(
-      """import java.util.Comparator;
-        |class C {
-        |  Comparator<String> c(final int bias) {
-        |    return new Comparator<String>() {
-        |      public int compare(String a, String b) {
-        |        if (a == null) { return -1; }
-        |        return a.compareTo(b) + bias;
-        |      }
+      """class C {
+        |  java.util.function.Supplier<String> s() {
+        |    return () -> { return "x"; };
+        |  }
+        |}""".stripMargin)
+    val fs = balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)
+    assertEquals(clue(fs).map(_.owner), List("C#s"))
+    assertNotEmits(p, "body$")
+  }
+
+  test("a VOID-returning `return` keeps rendering `scala.Unit` — the arm the body could always decide") {
+    val p = port(
+      """class C {
+        |  Runnable r(final int n) {
+        |    return new Runnable() {
+        |      public void run() { if (n < 0) { return; } System.out.println(n); }
         |    };
         |  }
         |}""".stripMargin, new SamLambdaTransform)
-    assertIdiomConverts(p, IdiomKind.SamLambda, "C#c")
-    assertEmits(p, "def ")   // the nested `def` the emitter interposes for a `return`
+    assertEmitsMatch(p, """def body\$\d+\(\): scala\.Unit = """)
   }
 
   test("every REFUSAL leaves the anonymous class BYTE-IDENTICAL to what the port shipped before") {

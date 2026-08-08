@@ -281,6 +281,10 @@ object TirPrinter:
     case x: Tree.Lambda =>
       line(sb, indent, s"Lambda${ofType(x.tpe, style)}${origin(x.origin, style)}")
       group(sb, indent + 1, "params", x.params.map(y => y: Tree), style)
+      // printed only where it is THERE, so a tree nobody told the SAM's result type prints exactly
+      // as it always has — the `None` case is the whole corpus's frontend-built lambdas, and a
+      // line that said `result <absent>` on every one of them would move every dump for nothing.
+      x.resultTpt.foreach(t => line(sb, indent + 1, s"result ${tpe(t.tpe, style)}"))
       sub(sb, indent + 1, "body", x.body, style)
     case x: Tree.If =>
       line(sb, indent, s"If${ofType(x.tpe, style)}${origin(x.origin, style)}")

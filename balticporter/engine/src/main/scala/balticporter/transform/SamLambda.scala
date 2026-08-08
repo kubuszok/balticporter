@@ -413,7 +413,17 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
             // the ASCRIPTION, and it is the whole of `TirEmitter`'s `(expr: T)` form:
             // `polyOperand` answers true for a lambda, so a `Typed` over one renders as an
             // ascription rather than as the `asInstanceOf` a java CAST renders as.
-            Tree.Typed(Tree.Lambda(d.paramss.flatten, d.rhs.get, nw.tpe, nw.origin),
+            //
+            // …and `resultTpt` is the OTHER type this node needs, which is not the same one and is
+            // the whole of `ENGINE-LIMITS.md` I9. The ASCRIPTION says what the value IS (the
+            // functional interface javac wrote down); the RESULT TYPE says what the SAM METHOD
+            // returns, and the emitter needs it to restore java's `return`-leaves-the-lambda with a
+            // nested `def` (`JS-S21`). Nothing else in the program holds it once this conversion
+            // has consumed the anonymous class's `DefDef`, which is why threading it here is the
+            // fix rather than a convenience: `d.returnTpt` is the method's OWN declared type, never
+            // the interface's, and never `nw.tpt`.
+            Tree.Typed(Tree.Lambda(d.paramss.flatten, d.rhs.get, nw.tpe, nw.origin,
+                                   resultTpt = Some(d.returnTpt)),
                        nw.tpt, nw.tpe, nw.origin)
           case SamLambda.Verdict.Refuse(g, iface) =>
             file(g, iface, nw); t

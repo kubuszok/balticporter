@@ -3203,12 +3203,26 @@ final class TirEmitter(
 
   /** the result type to give the `def` that carries a lambda body containing `return`.
     *
-    * `Unit` exactly when every `return` in the body is VALUELESS — a java `void` lambda, which is
-    * what a functional interface with a `void` SAM produces and the only case this can type without
-    * reading the interface's abstract method. `None` means "do not rewrite", not "use Any". */
-  private def lambdaResultType(body: Tree): Option[String] =
-    val valued = collectReturns(body).exists(_.expr.isDefined)
-    Option.when(!valued)("scala.Unit")
+    * TWO SOURCES, and the order between them is the whole of `ENGINE-LIMITS.md` I9:
+    *
+    *   1. '''the node's own `resultTpt`''', where whoever built the lambda held the SAM METHOD and
+    *      therefore its `returnTpt`. `SamLambdaTransform` does — it converts an anonymous class,
+    *      whose single `DefDef` states the type java wrote. That is a FACT the program carries, not
+    *      an inference, so it is read first and it is read whatever the body looks like;
+    *   2. '''the body''', for the one case a body can decide alone: every `return` VALUELESS is a
+    *      java `void` lambda. This is what the arm had before a node could carry (1), and it is
+    *      exactly why M6's refusal used to be so wide — a value-returning lambda has no `void` to
+    *      read and the interface's own type is not the method's.
+    *
+    * `None` still means '''do not rewrite''', never "use `Any`": a `def` with a guessed result type
+    * COMPILES and means something else, where the refusal is a loud error naming the line (M6).
+    * `OmissionCheck.unnameableLambdaReturn` counts what is left, so the refusal is a number rather
+    * than a silence. */
+  private def lambdaResultType(lam: Tree.Lambda): Option[String] =
+    lam.resultTpt.map(t => tpe(t.tpe)).orElse {
+      val valued = collectReturns(lam.body).exists(_.expr.isDefined)
+      Option.when(!valued)("scala.Unit")
+    }
 
   private def collectReturns(t: Any): List[Tree.Return] = t match
     case r: Tree.Return                                   => List(r)
@@ -3700,7 +3714,7 @@ final class TirEmitter(
     case Tree.TypeApply(fun, targs, _, _) => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
     case Tree.Assign(l, r, _, _)        => s"${term(l, i)} = ${term(r, i)}"
     case Tree.Block(stats, expr, _, _, tr) => block(stats, expr, tr, i)
-    case Tree.Lambda(ps, body, _, _)    =>
+    case lam @ Tree.Lambda(ps, body, _, _, _) =>
       val head = s"(${ps.map(param).mkString(", ")}) => "
       // A java LAMBDA BODY IS A METHOD BODY, so `return` is legal in it and means "leave the
       // lambda". Scala's lambda is an expression and rejects `return` outright — `return outside
@@ -3718,15 +3732,18 @@ final class TirEmitter(
       // enclosing METHOD. Consulted at every lambda, fires where a `return` really occurs.
       Obligations.consult(JS.S(21), body.origin)(Option.when(returnsIn(body))(()))
       if !returnsIn(body) then head + term(body, i)
-      else lambdaResultType(body) match
+      else lambdaResultType(lam) match
         case Some(rt) =>
           lambdaSeq += 1
           val n = s"body$$$lambdaSeq"
           head + s"{ def $n(): $rt = ${term(body, i)}; $n() }"
-        // REFUSED rather than guessed: a value-returning lambda needs the SAM's result type, which
-        // the TIR carries as the functional interface rather than as the method. Left alone this is
-        // a loud compile error naming the exact line — which is the right outcome per ENGINE-LIMITS
-        // M6, and strictly better than a `def` with a wrong result type that compiles.
+        // REFUSED rather than guessed, and NARROWED (`ENGINE-LIMITS.md` I9): the `def` needs the SAM
+        // METHOD's result type, and a lambda the SOURCE wrote carries no method for anything to read
+        // it off — javac inferred it from the target type, which is a class file the emitter is not
+        // the place to open. A lambda a PHASE built from an anonymous class does carry one, and takes
+        // the arm above. Left alone this is a loud compile error naming the exact line — the right
+        // outcome per M6, and strictly better than a `def` with a guessed result type that compiles.
+        // Counted by `OmissionCheck.unnameableLambdaReturn`, so the residue is a number.
         case None => head + term(body, i)
     case Tree.If(c, th, el, _, _)       => s"if (${term(c, i)}) ${term(th, i)} else ${term(el, i)}"
     // A cast ON A POLY EXPRESSION is an ASCRIPTION — `ENGINE-LIMITS.md` K17 face 1, at the one

@@ -137,7 +137,11 @@ object Xref:
       case Tree.Typed(expr, tpt, _, _)      => walkTerm(expr); walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)
       case Tree.Assign(lhs, rhs, _, _)      => walkTerm(lhs); walkTerm(rhs)
       case Tree.Block(stats, expr, _, _, _) => stats.foreach(walkStat); walkTerm(expr)
-      case Tree.Lambda(params, body, _, _)  => params.foreach(walkValDef); walkTerm(body)
+      // the SAM method's result type is a type the EMITTED code names (the nested `def`'s), so it
+      // is a usage exactly as an ascription's target is — and registering it is what keeps the
+      // count STILL where a conversion consumed the `DefDef` that used to name it.
+      case Tree.Lambda(params, body, _, _, rt) =>
+        params.foreach(walkValDef); rt.foreach(t => walkType(t.tpe, UsageKind.TypeRefPos, t)); walkTerm(body)
       case Tree.If(c, th, el, _, _)         => walkTerm(c); walkTerm(th); walkTerm(el)
       case Tree.Repeated(elems, _, _)       => elems.foreach(walkTerm)
       case Tree.Spread(e, _, _)             => walkTerm(e)

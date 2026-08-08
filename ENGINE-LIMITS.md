@@ -5800,6 +5800,21 @@ call:
 A residue comment count (`/* break */ ()`) is itself a measure — do not delete it to make output
 tidy.
 
+**…and the LAST of those four is a claim about the EMITTED TEXT, not about the refusal — which is
+where this entry was wrong.** *"Left as a compile error deliberately, because the compiler is a
+louder tracker than a silent omission"* is true only where what the refusal leaves is something
+scalac REJECTS. Where the un-translated construct is ALSO VALID SCALA, the same refusal is a silent
+divergence and the compiler tracks nothing at all. Measured on the emitter's own `Tree.Lambda` arm
+(`I9`): a java lambda body is a method body, so `return` is legal in it and leaves the LAMBDA; the
+arm refused to interpose the nested `def` where it could not name the result type, and what it left
+— a bare `return` inside a function literal — is a scala NON-LOCAL RETURN from the ENCLOSING METHOD.
+**libGDX core carried three of them at 0 compile errors** (`TextField$NativeOnscreenKeyboard`, whose
+validator lambda unwinds out of `openNativeInputField` where java returns `true` to the framework),
+and nothing in the run could see them until the refusal was COUNTED: `omissions` 66 → 69, and 3 → 4
+on the test set. So the rule is not "refuse loudly" but **refuse, and COUNT — because whether the
+refusal is loud is a fact you do not control**. Where a count is the only instrument, it is not the
+weaker half of this entry's title; it is the whole of it.
+
 **…and `PortRun(preview = true)` is the other half, for a library nobody has ported yet.** Refusing
 and counting is right for a port that ships and wrong for the first week of a NEW one, where the
 operator is an agent in another repository that has to FIND the residue before it can act — and
@@ -8646,7 +8661,7 @@ count, and the only evidence would be a library that logs a handler's class or k
 (`Decision.Kind.SamLambda`, `was=`), which puts it where §4.45's reader is: at the emitted line. That
 is the same answer `T20` gives its two record-deconstruction cells.
 
-### I9. The SAM conversion is BLOCKED on M6, not on its own guards — 0 → 4 errors on libGDX core, §1(a)
+### I9. The SAM conversion was BLOCKED on M6, not on its own guards — 0 → 4 errors on libGDX core, §1(a). **CLOSED**
 
 Wave 1 wired `SamLambdaTransform` into every pipeline and the libGDX base went **0 → 4 typer
 errors**. The wiring was reverted; the phase ships built and spec'd and in no pipeline. What the run
@@ -8669,14 +8684,33 @@ METHOD body is the first construct that does**: 4 of the 23 conversions hold a `
 (`EventAction#listener`, `AsyncExecutor#submit` and its promoted constructor), and each emitted a
 bare `return` inside a function literal — `E091`/`E007`.
 
-**And the fix is in reach precisely BECAUSE of this transformer, which is why this is a work item and
-not a refusal.** M6's sentence is *"a value-returning lambda needs the SAM's result type, which the
-TIR carries as the functional interface rather than as the method"* — and that is no longer true at
-this site: the conversion holds the anon's own `Tree.DefDef`, whose `returnTpt` IS the method's
-result type, and `Sam.Answer.Yes` carries the method's name and arity beside it. So the conversion
-can emit the nested `def` itself rather than leave the emitter to infer one. Two things to get right
-when it is done: the `def`'s result type is the `DefDef`'s `returnTpt` and never the interface's, and
-the emitter's own arm must not then wrap it twice.
+**And the fix was in reach precisely BECAUSE of this transformer, which is why this was a work item
+and not a refusal — DONE, and what it took is one FIELD.** M6's sentence was *"a value-returning
+lambda needs the SAM's result type, which the TIR carries as the functional interface rather than as
+the method"*, and it was a statement about the IR rather than about the language: nothing in
+`Tree.Lambda` could hold a method's result type, so the emitter had nothing to read and could only
+decide the one case a BODY decides alone (every `return` valueless ⇒ a java `void` lambda).
+`Tree.Lambda.resultTpt` is that field, `None` by default and filled by whoever holds the SAM METHOD.
+`SamLambdaTransform` does — it consumes the anon's own `Tree.DefDef`, whose `returnTpt` is the type
+java wrote — so the arm that used to refuse now renders `{ def body$1(): scala.Int = …; body$1() }`,
+and the emitter's own `returnsIn` stops at a nested `def`, so nothing wraps twice. The refusal that
+remains is NARROW and stated at exactly the sites it is about: a lambda the SOURCE wrote carries no
+method anywhere in the program, because javac inferred its type from a class file.
+
+**…and NARROWING it is what showed that the refusal was never LOUD, which is the part worth more
+than the fix.** M6's own text says the residue is *"a loud compile error naming the exact line"*, and
+for this construct that is FALSE. Counting it (`OmissionCheck.unnameableLambdaReturn`) put
+**libGDX core at `omissions` 66 → 69 and its test set at 3 → 4** with **0 compile errors on both**,
+because a scala `return` inside a closure is a NON-LOCAL RETURN from the enclosing method — legal,
+green, and something else entirely. `TextField$NativeOnscreenKeyboard` ships three of them
+(`setValidator`, `setCloseCallback`, `closeTextInputField`), each emitted as
+`(toCheck: String) => { …; return true }` inside a `def …: scala.Unit`: java returns `true` from the
+VALIDATOR, and the port unwinds out of `openNativeInputField` — and out of the framework's call, long
+after that method returned. A §4.4-shaped defect with a green compile and no moved count, invisible
+until something counted it. Read the general rule off it: **"refuse loudly" is a CLAIM about the
+emitted text, and it is only true where the refusal leaves something scalac rejects.** Where the
+un-translated construct is also valid scala, the refusal is a silent divergence and the count is the
+only instrument there is.
 
 **One more finding rode in with it, and it is a `PorterNote` PLACEMENT question at a CONSTRUCTOR.**
 `porter-notes` reported 0 → 1: a `SamLambda` decision subjected at `AsyncExecutor#<init>`, whose note

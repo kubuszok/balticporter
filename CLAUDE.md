@@ -504,6 +504,16 @@ So:
 - **Prefer running ported tests over any number of further compile fixes.** Assertions are the only
   evidence of behaviour this project can have.
 - **Read the emitted output**, not just the count, when confirming a fix.
+- **"REFUSE LOUDLY" IS A CLAIM ABOUT THE EMITTED TEXT, and you do not control whether it holds.**
+  Refusing a translation and leaving the construct alone is right (`ENGINE-LIMITS.md` M6) — the part
+  that is not a decision is whether scalac then rejects what was left. Where the untranslated form
+  is ALSO VALID SCALA, the refusal is a silent divergence and the compiler tracks nothing: the
+  emitter's `Tree.Lambda` arm declined to interpose the nested `def` that restores java's
+  *`return` leaves the LAMBDA*, and a bare `return` under a function literal is scala's NON-LOCAL
+  RETURN FROM THE ENCLOSING METHOD — three of them in libGDX core at **0 compile errors**, one of
+  them a validator that unwinds out of the method that installed it. So a refusal is COUNTED at the
+  moment it is written, and the count is not the weaker half of "refuse and count": where the
+  residue compiles, it is the only instrument there is.
 
 ---
 

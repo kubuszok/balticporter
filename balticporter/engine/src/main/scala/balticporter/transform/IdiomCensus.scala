@@ -136,11 +136,41 @@ final class ReturnThisCensus extends Phase, IdiomPhase:
   * `bean-properties` phase gets no census, which is not a gap: there are no configured pairs to
   * intersect, so the honest denominator is that there is nothing to say.
   */
-final class BeanCollapseCensus(pairs: Map[String, String]) extends Phase, IdiomPhase:
+final class BeanCollapseCensus(pairs: Map[String, String]) extends Phase, IdiomPhase, PolicyBound:
 
   def name: String = "idiom-bean-collapse-census"
 
   def idiomKinds: Set[IdiomKind] = Set(IdiomKind.BeanCollapse)
+
+  /** THE ACCESSORS, BOUND — never looked up by name.
+    *
+    * §8.1's convention and the transform-package lint that enforces it: a member found by scanning
+    * the symbol table for `name == x && owner.fullName == y` is overload-blind and is a policy
+    * decision taken from a string (§4.56). `PolicyBinder` is the one place that question is
+    * answered, and asking it HERE rather than copying `BeanPropertyTransform`'s answer is the same
+    * key resolved by the same two stages — which is what makes the census's denominator a fact
+    * about the pairs THAT phase will see (§8.15's census rule) rather than a second opinion about
+    * them.
+    *
+    * The key is RENDERED from a `MemberKey` and is BARE, exactly as the phase's own is: a bare key
+    * names every overload, and the census then asks each hit whether it has the accessor's SHAPE
+    * (arity 0 for a getter, 1 for a setter), because `getX(int)` beside `getX()` is a member the
+    * collapse must not touch. Nothing here is REPORTED as policy — a never-matched pair is
+    * `bean-properties`' finding and one key producing two rows would be the double-count §8.5's
+    * "one decision, one home" rule is about — so the census reads the bindings and files its own
+    * `AccessorNotFound` refusal instead, in the lane the reader of a denominator is looking at. */
+  private var boundAccessors: Map[String, List[SymId]] = Map.empty
+
+  def bindPolicy(binder: PolicyBinder): Unit =
+    boundAccessors = pairs.toList.flatMap { (key, accessors) =>
+      val owner = key.takeWhile(_ != '#')
+      val (getter, setter) = BeanCollapseCensus.split(accessors)
+      (getter :: setter.toList).map { a =>
+        val k = MemberKey(owner, a).render
+        k -> binder.bindMembers(name, s"BeanCollapseCensus(pairs) `$key`", k)
+          .toOption.getOrElse(Nil).flatMap(_.sym)
+      }
+    }.toMap
 
   /** immediately before the phase whose policy it reads. Not "first" — the intersection is a fact
     * about the pairs THAT phase will see, and every surface phase ahead of it has already moved
@@ -156,7 +186,7 @@ final class BeanCollapseCensus(pairs: Map[String, String]) extends Phase, IdiomP
         val (getter, setter) = BeanCollapseCensus.split(accessors)
         val owner = key.takeWhile(_ != '#')
         val prop  = key.dropWhile(_ != '#').drop(1)
-        val g = member(program, owner, getter)
+        val g = member(program, owner, getter, arity = 0)
         val verdict = g match
           case scala.None => refuse("AccessorNotFound",
             "the configured getter is not a declaration this program has — `bean-properties` " +
@@ -177,7 +207,7 @@ final class BeanCollapseCensus(pairs: Map[String, String]) extends Phase, IdiomP
               "the getter's body is not exactly `return this.f`, so the field and the property are " +
                 "not the same value and collapsing them would change what a read computes. This is " +
                 "why §8.5 kept bodies verbatim")
-            else setter.flatMap(s => member(program, owner, s)) match
+            else setter.flatMap(s => member(program, owner, s, arity = 1)) match
               case scala.None if setter.isDefined => refuse("AccessorNotFound",
                 "the configured setter is not a declaration this program has")
               case ss =>
@@ -200,9 +230,15 @@ final class BeanCollapseCensus(pairs: Map[String, String]) extends Phase, IdiomP
 
   private def refuse(g: String, why: String): IdiomVerdict = IdiomVerdict.Refused(g, why)
 
-  private def member(p: Program, owner: String, name: String): Option[SymId] =
-    p.symbols.all.find(s => s.owner != SymId.None && s.name == name &&
-      p.symbolOf(s.owner).exists(_.fullName == owner)).map(_.id)
+  /** the bound declaration with the ACCESSOR'S SHAPE — see [[bindPolicy]] for why the key is bare
+    * and why the arity is asked here rather than in the key. `arity` is the java accessor's: 0 for
+    * a getter, 1 for a setter. A hit whose definition this program does not hold (an external, a
+    * dropped member) has no shape to ask about and is not a candidate for a collapse either. */
+  private def member(p: Program, owner: String, accessor: String, arity: Int): Option[SymId] =
+    val hits = boundAccessors.getOrElse(MemberKey(owner, accessor).render, Nil)
+    hits.find(s => p.definitionOf(s).collect {
+      case d: Tree.DefDef => d.paramss.flatten.sizeIs == arity
+    }.getOrElse(false))
 
   /** the field a TRIVIAL getter reads — `return this.f`, and nothing else. `None` for every other
     * body, which is a refusal and never a widening.

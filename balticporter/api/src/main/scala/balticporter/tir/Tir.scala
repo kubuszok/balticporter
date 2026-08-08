@@ -441,8 +441,31 @@ object Tree:
     *   (a comment printed above a member says something false about it). */
   final case class Block(stats: List[Statement], expr: Term, tpe: TypeRepr, origin: Origin,
                          trailing: List[Trivia] = Nil) extends Term
-  /** anonymous function (`reflect.Closure`/`Block(DefDef,Closure)` simplified). */
-  final case class Lambda(params: List[ValDef], body: Term, tpe: TypeRepr, origin: Origin) extends Term
+  /** anonymous function (`reflect.Closure`/`Block(DefDef,Closure)` simplified).
+    *
+    * @param resultTpt THE SAM METHOD'S OWN RESULT TYPE, where whoever built this node knew it.
+    *
+    * A java lambda body is a METHOD body, so `return` is legal in it and means *leave the lambda*;
+    * a scala lambda is an EXPRESSION and rejects `return` outright. The emitter restores java's
+    * meaning by interposing a nested `def` (`JS-S21`) — and a `def` needs a RESULT TYPE, which is
+    * the method's and never the functional interface's. `tpe` above is the INTERFACE
+    * (`java.util.Comparator[String]`); the type the `def` needs is `compare`'s `int`, and no
+    * amount of reading `tpe` produces it, which is `ENGINE-LIMITS.md` M6's own sentence and was
+    * true of every lambda in the IR until a node could carry the answer.
+    *
+    * `None` means NOBODY KNEW, never `Unit`: the emitter then falls back to the one case it can
+    * decide from the body alone (every `return` valueless ⇒ a java `void` lambda) and REFUSES the
+    * rest, loudly and counted (`OmissionCheck.unnameableLambdaReturn`). §4.6's rule literally — a
+    * default indistinguishable from a real answer is a fabricated fact, and a guessed result type
+    * is a `def` that COMPILES while meaning something else.
+    *
+    * Who fills it in is a fact about who holds a `DefDef`: `SamLambdaTransform` converts an
+    * anonymous class and therefore holds the anon's own method, `returnTpt` included. A lambda the
+    * SOURCE wrote has no `DefDef` anywhere — java wrote the body and javac inferred the type from
+    * the target — so the frontend leaves this `None` and M6's refusal stands there, narrowed to
+    * exactly the sites where nothing in the program states the type. */
+  final case class Lambda(params: List[ValDef], body: Term, tpe: TypeRepr, origin: Origin,
+                          resultTpt: Option[TypeTree] = None) extends Term
   final case class If(cond: Term, thenp: Term, elsep: Term, tpe: TypeRepr, origin: Origin) extends Term
   final case class Typed(expr: Term, tpt: TypeTree, tpe: TypeRepr, origin: Origin)      extends Term
   /** varargs sequence (`reflect.Repeated`). */

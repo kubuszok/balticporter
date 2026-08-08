@@ -46,6 +46,7 @@ object OmissionCheck:
       ++ promotedBodyOnEveryPath(program, units, surface)
       ++ droppedNilaryCtors(program, units, surface)
       ++ droppedAnonMembers(program, units)
+      ++ unnameableLambdaReturn(program, units)
       ++ droppedAnnotations(program, ownedBy(program, units))
 
   /** Every symbol whose top-level owner is one of `units` — the symbol-side counterpart of the unit
@@ -102,6 +103,78 @@ object OmissionCheck:
     given Program = program
     units.foreach(u => StandardTraversal.mapClassDef(collect, u))
     out.toList
+
+  /** A `return` inside a LAMBDA whose result type nothing in the program states — M6's refusal,
+    * NARROWED, and turned into a number.
+    *
+    * A java lambda body is a METHOD body: `return` is legal in it and leaves the LAMBDA (JLS
+    * 15.27.2). A scala lambda is an EXPRESSION and rejects `return` outright, so `TirEmitter`
+    * interposes a nested `def` (`JS-S21`) — and a `def` needs a RESULT TYPE, which is the SAM
+    * METHOD's and not the functional interface's. The emitter can decide one case from the body
+    * alone (every `return` valueless ⇒ a java `void` lambda) and reads [[Tree.Lambda.resultTpt]]
+    * for the rest. What is LEFT is a lambda with a value-returning `return` that nobody told the
+    * type — and the emitter refuses it, correctly, because a guessed result type is a `def` that
+    * COMPILES and means something else (§4.6).
+    *
+    * '''Why this belongs here and not in a lane of its own.''' This object's whole subject is
+    * *constructs the port carries in the TIR and does NOT emit faithfully*, and that is exactly
+    * what the refusal leaves: the `return` is in the tree, the emitted text is a bare `return`
+    * inside a function literal, and the only other evidence is a scalac error somebody has to
+    * classify. Counted here it is a number on every run, with no new required check and no
+    * fifteen-baseline promotion for a residue that is at zero.
+    *
+    * '''What moves it.''' Nothing about the SITE — the site is java, and java is fine. What moves
+    * it is a builder that knows the method: `SamLambdaTransform` converts an anonymous class and
+    * hands the emitter the anon's own `returnTpt`, which is why `ENGINE-LIMITS.md` I9 was a work
+    * item and not a refusal. A lambda the SOURCE wrote has no method anywhere in the program —
+    * javac inferred its type from the target's class file — so this row is what M6 still stands
+    * for, stated at exactly the sites where it does. */
+  def unnameableLambdaReturn(program: Program): List[Finding] =
+    unnameableLambdaReturn(program, program.units)
+
+  def unnameableLambdaReturn(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+    given Program = program
+    val out = collection.mutable.ListBuffer[Finding]()
+    // `allClassDefs` + a term scan per member, so the finding names the DECLARATION a reader would
+    // open — and so a method-LOCAL class is reached, which a `cd.body` recursion cannot (§3).
+    units.foreach { u =>
+      StandardTraversal.allClassDefs(u).foreach { cd =>
+        val clsFqn = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
+        cd.body.foreach { st =>
+          val (fqn, terms) = st match
+            case d: Tree.DefDef => (program.symbolOf(d.symbol).map(_.fullName).getOrElse(clsFqn), d.rhs.toList)
+            case v: Tree.ValDef => (program.symbolOf(v.symbol).map(_.fullName).getOrElse(clsFqn), v.rhs.toList)
+            case t: Term        => (clsFqn, List(t))
+            case _              => (clsFqn, Nil)
+          terms.foreach { t =>
+            StandardTraversal.scanTerm(t, ()) { (_, x) =>
+              x match
+                case lam: Tree.Lambda if lam.resultTpt.isEmpty && valuedReturns(lam.body).nonEmpty =>
+                  out += Finding("lambda `return` with an unnameable result type", fqn,
+                    s"${valuedReturns(lam.body).size} value-returning `return`(s) in a lambda body; " +
+                      "the nested `def` that restores java's meaning (JS-S21) needs the SAM " +
+                      "METHOD's result type and nothing in the program states it [§1(a) engine: a " +
+                      "builder that holds the method fills `Tree.Lambda.resultTpt`; " +
+                      "ENGINE-LIMITS M6/I9]",
+                    lam.origin)
+                case _ => ()
+            }
+          }
+        }
+      }
+    }
+    out.toList
+
+  /** the value-returning `return`s that belong to THIS construct — stopping at a nested one for the
+    * same reason the emitter's own walk does: a `return` inside a nested lambda, `def` or anonymous
+    * body is that construct's, and counting it here would attribute one refusal to two sites. */
+  private def valuedReturns(t: Any): List[Tree.Return] = t match
+    case r: Tree.Return                                      => r.expr.map(_ => r).toList
+    case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass => Nil
+    case xs: Iterable[?]                                     => xs.toList.flatMap(valuedReturns)
+    case Some(x)                                             => valuedReturns(x)
+    case p: Product                                          => p.productIterator.toList.flatMap(valuedReturns)
+    case _                                                   => Nil
 
   /** A Java secondary constructor whose `super(args)` cannot be expressed in Scala.
     *

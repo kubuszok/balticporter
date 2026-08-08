@@ -140,6 +140,15 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "types this program never declares, so there is no symbol to bind — the same mint-or-reuse " +
           "question `PrimitiveToOpaqueTransform` asks about its underlying primitive"),
     ),
+    "SamLambda.scala" -> Map(
+      "fullName ==" ->
+        ("`java.lang.Object` is the root EVERY java class inherits and no program declares, so " +
+          "there is no symbol to bind — mint-or-reuse, exactly as `PrimitiveToOpaqueTransform` " +
+          "asks it of `scala.Int`. It is also load-bearing rather than incidental: guard 4 has to " +
+          "know which members a BARE reference inside an anonymous body would re-resolve under a " +
+          "lambda, and those are precisely the ones java bound to the ANON through this root. The " +
+          "phase has no policy keys at all — it is §1(a) and takes no parameters"),
+    ),
     "ClassTableTransform.scala" -> Map(
       "fullName ==" ->
         ("the redirect DESTINATION is an injected table this program never parses — mint or reuse, " +
