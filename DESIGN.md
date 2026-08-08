@@ -4947,6 +4947,33 @@ this corpus uses `mirroring`, and building it would have gone out with `measure-
 in the run could exercise — the shape §5's dry-run rule refuses. The fix is two comparisons per base,
 over `baseChain :+ this`, and it belongs to the wave that ships the first menu.
 
+**THE MENUS THAT EXIST, and where each half of one lives.** A lane's menu is DECLARED by the check
+or phase that mints its rows (`RemedySource`), and where the minting object is a CHECK the menu needs
+a second half: a check runs after the units are written, and a resolution must be recorded before
+emission, because the emitter renders a `Decision.Kind.SelectedRemedy` as a porter note while it
+writes the member. So the declarer and the carrier are two things — `PortRun.CheckRemedies` names the
+first (which is also what lets a `.conf` validate an id at load) and `PortRun.remedyPhases` weaves the
+second. Those phases are woven rather than declared for `wovenIdiomPhases`' reason arrived at from the
+other side: they have no constructor policy at all, their whole configuration is
+`PortManifest.resolutions`, and with no selections each is a no-op on its first line.
+
+| lane | remedy | emission-affecting | what it does |
+|---|---|---|---|
+| `heap-pollution` | `acknowledge` | no | the operator states this vararg use is safe |
+
+`acknowledge` is java's own conversation given a home: javac warns at a non-reifiable vararg and
+`@SafeVarargs` is the author answering, and NEITHER half exists in scala. Nothing is translated —
+the port reproduces java's unsoundness exactly, and a phase that "fixed" it would be emitting a
+different program — so what the remedy carries out is the ANSWER, recorded as a decision that reaches
+`decisions.tsv` and the emitted line. That is strictly more than the java said, because scalac neither
+checks `@SafeVarargs`'s placement nor derives anything from it. It answers `Unacknowledged` alone:
+`Acknowledged` is a different statement — java's own author already made that call — and draining it
+with the port's would erase the distinction the two kinds were split for. Ruled out beside it, in the
+code where the menu is declared: a scala-side marker (inert, since scala has no warning to suppress),
+proving the body safe (an analysis nothing here performs — the operator ASSERTS, and the assertion is
+recorded with their name on it), and narrowing the emitted signature (the port would stop being the
+library).
+
 **A KIND SOMETIMES PARTITIONS A LANE AND SOMETIMES SPLITS ONE SITE, and the first menu is where the
 difference bites.** A remedy names the `lane(kind)` it drains, and the plumbing shipped reading that
 as one pair, on the model every lane in the corpus looked like: `heap-pollution`'s `Acknowledged` and

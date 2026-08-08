@@ -48,7 +48,27 @@ trait RunScope:
     */
   def contributed(phase: String): Option[Set[String]]
 
+  /** …the SAME question asked of a MEMBER, which is what a phase actually holds.
+    *
+    * [[emits]] takes a top-level unit because that is the granularity the run classifies at; every
+    * caller holds a declaration and has to climb the owner chain to it. Written here once because
+    * the climb is not the caller's decision — it is fuel-bounded so a corrupt owner chain cannot
+    * hang a phase, and a caller that wrote its own would be free to choose a different bound or to
+    * stop at a nested type, which answers `emits` about a symbol that is not a unit at all. */
+  final def emitsSymbol(program: Program, id: SymId): Boolean =
+    emits(RunScope.unitOf(program, id))
+
 object RunScope:
+
+  /** the TOP-LEVEL unit a symbol belongs to. Fuel-bounded for [[Program.owned]]'s reason: a cycle
+    * in an owner chain must not hang a run, and a truncated climb answers about a symbol that is
+    * not a unit — which [[RunScope.whole]] accepts and a real scope refuses, the direction that
+    * does not silently widen a rewrite. */
+  private[tir] def unitOf(p: Program, id: SymId, fuel: Int = 64): SymId =
+    p.symbolOf(id) match
+      case Some(s) if s.owner != SymId.None && fuel > 0 => unitOf(p, s.owner, fuel - 1)
+      case _                                            => id
+
 
   /** the whole program is this run's, and no phase's policy is scoped — the default everywhere. */
   val whole: RunScope = new RunScope:

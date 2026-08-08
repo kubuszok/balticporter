@@ -1041,7 +1041,11 @@ final case class PortRun(
     // unsoundness exactly, so there is nothing to translate — what has no scala image is javac's
     // warning at a non-reifiable vararg and the `@SafeVarargs` that answers it. Over `checkedUnits`
     // (ENGINE-LIMITS D2), through the same predicate the emitter's consult reads.
-    val heapPollution = HeapPollutionCheck.check(program, checkedUnits)
+    // …minus the rows a SELECTION already answered (`DESIGN.md` §8.16). `acknowledge` is not
+    // emission-affecting, so the declaration it answered is still standing where this walk goes:
+    // without the drain the run would report the residue BESIDE the `remediation(resolved)` row
+    // saying it was answered, and the lane could not fall by what `resolved` gained (§5).
+    val heapPollution = HeapPollutionCheck.check(program, checkedUnits, translated.binder.resolutions)
     CheckReport.record(HeapPollutionCheck.Name, heapPollution.map(_.report))
     say(s"HEAP POLLUTION (unchecked varargs carried over from java): ${heapPollution.size}")
     heapPollution.map(_.issue).distinct.foreach(i => say(HeapPollutionCheck.Issue.classification(i)))
@@ -2089,7 +2093,8 @@ final case class PortRun(
     * which is exactly right, because there is nothing for two modules to configure differently.
     *
     * @see [[idiomPhases]] for WHERE each one is placed, which is the whole of the D1 argument. */
-  private def effectivePhases: List[Phase] = idiomPhases(declaredPhases) ++ renamePhase
+  private def effectivePhases: List[Phase] =
+    idiomPhases(declaredPhases) ++ PortRun.remedyPhases ++ renamePhase
 
   /** THE REMEDIES THIS RUN CAN ACTUALLY CARRY OUT — derived from what the run HOLDS, never listed.
     *
@@ -2688,10 +2693,33 @@ object PortRun:
     * [[balticporter.tir.RemedyVocabulary]]'s ACTIVE set complete without a table of ids anybody has
     * to maintain — each object still declares its own menu.
     *
-    * EMPTY, and that is the honest state: the plumbing ships before any menu does, so every port's
-    * `remediation(resolved)` is provably zero and the mechanism's arrival moves no count. A check
-    * that gains a menu adds itself here. */
-  val CheckRemedies: List[balticporter.tir.RemedySource] = Nil
+    * A check that gains a menu adds itself here. It shipped EMPTY with the plumbing, so the
+    * mechanism's own arrival was provably flat on all fifteen lanes; what a name on this list buys
+    * is that a `.conf` can VALIDATE the id at load (`PortConfig.knownRemedies` reads it), which is
+    * how a typo is told apart from a real remedy whose phase a port forgot to enable. */
+  val CheckRemedies: List[balticporter.tir.RemedySource] =
+    List(HeapPollutionCheck)
+
+  /** …and the phases that CARRY those menus out — woven, never declared by a port.
+    *
+    * A resolution has to be recorded BEFORE emission: an applied one produces a `Decision`, the
+    * emitter renders that decision as a porter note while it writes the member (§4.575), and
+    * `recordRunDecisions` runs before the first file is written. A check runs after all of it, so
+    * the object that DECLARES a menu and the phase that CARRIES it out are two things — see
+    * `HeapPollutionCheck.Apply`, whose doc is the argument in full.
+    *
+    * Woven for [[wovenIdiomPhases]]'s reason, arrived at from the other side: these phases have no
+    * constructor policy at all. Their whole configuration is `PortManifest.resolutions`, which is
+    * already a manifest field and already part of the surface fingerprint, so there is nothing for
+    * two modules to configure differently, nothing for a `surface` line to add, and no
+    * `SurfacePolicy` fingerprint to move. With no selections each is a no-op on its first line,
+    * which is §1(b)'s empty-parameter rule read at a whole phase.
+    *
+    * AFTER the declared surface and BEFORE the rename: a remedy answers what the port's own phases
+    * left, and every key is written in the upstream namespace (§4.56) — though the keys are bound at
+    * the front of the run either way, so this position decides what the phase SEES and not what it
+    * binds. Fresh instances per call, because a phase carries the state it binds. */
+  def remedyPhases: List[Phase] = List(new HeapPollutionCheck.Apply)
 
   /** Every check's name as it appears in `counts.tsv`. Named here, in the orchestrator, because the
     * orchestrator is now the only thing that records: a check is a pure function of a `Program` and

@@ -1,5 +1,7 @@
 package balticporter.tir
 
+import balticporter.catalog.FixKind
+
 /** Every declaration whose VARARG parameter has a NON-REIFIABLE component type — java's heap
   * pollution, carried into the port with nothing on the Scala side that mentions it.
   *
@@ -39,7 +41,7 @@ package balticporter.tir
   * gives a type parameter and what nothing else has — never from the `$$` in its interning key
   * (§4.56).
   */
-object HeapPollutionCheck:
+object HeapPollutionCheck extends RemedySource:
 
   val Name = "heap-pollution"
 
@@ -69,6 +71,56 @@ object HeapPollutionCheck:
           "declaration whose vararg component is not reifiable (JLS 4.7) and scalac has no such " +
           "warning, so this declaration crossed with neither an annotation nor a diagnostic. " +
           "Nothing in the emitted file mentions it and no other count can see it."
+
+  // -------------------------------------------------------------------------------------------
+  // THE MENU (`DESIGN.md` §8.16) — what a port may ASK FOR at one of these declarations
+  // -------------------------------------------------------------------------------------------
+
+  /** JAVA'S OWN ANSWER, GIVEN A HOME — the operator states that the vararg use at this member is
+    * safe, and the row moves from the residue into `remediation(resolved)`.
+    *
+    * ==Why an acknowledgement is a REMEDY and not a suppression==
+    * There is nothing to translate here and there never will be: the port reproduces java's
+    * unsoundness exactly, so a phase that "fixed" it would be emitting a different program. What
+    * java HAS and scala has not is the CONVERSATION — javac warns at the declaration and
+    * `@SafeVarargs` is the author answering it. This remedy is that answer, carried out where the
+    * java one could not be: it is recorded as a `Decision`, so it reaches `decisions.tsv` AND the
+    * emitted line as a porter note (§4.575), which is strictly more than the java said, because
+    * scalac neither checks `@SafeVarargs`'s placement nor derives anything from it.
+    *
+    * ==NOT emission-affecting, and that is a claim about the SIGNATURE==
+    * Applying it changes no type, no parameter and no body — only the porter note, which is a
+    * comment. Two modules choosing differently therefore cannot produce two ports that compile
+    * alone and fail together, which is exactly the test §1.5 puts a selection to.
+    *
+    * ==It answers `Unacknowledged` ALONE, on purpose==
+    * An `Acknowledged` row is a DIFFERENT statement — java's own author already made this call, and
+    * the row exists to say that the promise crossed into a file where nothing can check it.
+    * Draining it with the port's own acknowledgement would erase the distinction the two kinds were
+    * split for, and would let a port report zero for a lane whose whole point is that java's
+    * assertion is now unverified. The two kinds here PARTITION the lane; they do not split a site.
+    */
+  val Acknowledge: Remedy = Remedy(
+    id = "acknowledge", lane = Name, kind = Issue.Unacknowledged.toString,
+    emissionAffecting = false, fix = FixKind.Universal,
+    what = "the operator states this vararg use is safe — java's `@SafeVarargs` conversation, " +
+      "carried out where java could not always hold it")
+
+  /** …and WHAT IS NOT ON THE MENU, stated where the menu is so a reader sees a refusal and not a gap.
+    *
+    *   - '''emit a scala-side marker equivalent to `@SafeVarargs`'''. REFUSED. Scala has no warning
+    *     to suppress, so the marker would be inert exactly as the carried-over annotation already is
+    *     (see the class doc: `@SafeVarargs` crosses verbatim onto a method whose vararg is now a
+    *     plain `Array` parameter, where scalac derives nothing from it). A second inert marker is a
+    *     mechanism a port could select and get nothing from, which is worse than the count;
+    *   - '''prove the body safe'''. REFUSED as a remedy: it is not a choice a port makes, it is an
+    *     analysis nothing here performs. [[Acknowledge]] is the honest shape — the operator asserts
+    *     it, and the assertion is RECORDED with their name on it rather than derived;
+    *   - '''change the emitted signature so the pollution cannot arise'''. REFUSED: the port would
+    *     stop being the library. `JS-G37` already renders a `T…` as `Array[T]`, and narrowing it
+    *     further is a different API.
+    */
+  def remedies: List[Remedy] = List(Acknowledge)
 
   /** @param param     the vararg parameter's name
     * @param component the emitted COMPONENT type — the thing that is not reifiable */
@@ -145,8 +197,17 @@ object HeapPollutionCheck:
     case TypeRepr.TypeBounds(_, hi)   => if hi == TypeRepr.NoType then "?" else s"? <: ${render(hi)}"
     case other                        => headFqn(other).getOrElse(other.toString)
 
-  /** Over the units the run EMITS — the same D2 filter every other per-site report carries. */
-  def check(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+  /** Over the units the run EMITS — the same D2 filter every other per-site report carries.
+    *
+    * @param resolutions what the port SELECTED, as the phase above recorded it. A row a remedy
+    *   answered has left this lane for `remediation(resolved)`, and reporting it here as well would
+    *   put two rows on one site and leave the lane unable to fall by what `resolved` gained
+    *   (`CLAUDE.md` §5). Read off the LEDGER and not off the manifest, so a selection the phase
+    *   examined and refused still has its finding — see [[ResolutionPlan.appliedAt]]. Empty is the
+    *   default and the pre-menu behaviour exactly.
+    */
+  def check(program: Program, units: List[Tree.ClassDef],
+            resolutions: ResolutionPlan = ResolutionPlan.empty): List[Finding] =
     given Program = program
     val out = collection.mutable.ListBuffer.empty[Finding]
     // `StandardTraversal`, never a private recursion (§3): a vararg declaration inside an ANONYMOUS
@@ -154,9 +215,60 @@ object HeapPollutionCheck:
     val scan = new Phase:
       def name: String = "heap-pollution/scan"
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
-        uncheckedVararg(d).foreach(out += _); d
+        uncheckedVararg(d)
+          .filterNot(f => resolutions.appliedAt(d.symbol, Name, f.issue.toString))
+          .foreach(out += _)
+        d
     units.foreach(u => StandardTraversal.mapClassDef(scan, u))
     out.toList.sortBy(f => (f.issue.toString, f.origin.javaPath, f.origin.line, f.param))
+
+  /** THE MENU, CARRIED OUT — a phase, because a resolution has to be recorded BEFORE emission.
+    *
+    * ==Why the applier is not the check==
+    * The check runs after the units are written, which is exactly right for a count and impossible
+    * for a resolution: an applied one produces a `Decision`, the emitter renders that decision as a
+    * porter note while it writes the member (§4.575), and the run records its decisions before the
+    * first file is emitted. Recorded from the check the row would reach `decisions.tsv` too late for
+    * any note — a `NoteCoverageCheck` failure at best, and at worst a decision the reader at the
+    * line is never told about. So the DECLARER of the menu is this check (it mints the rows, and
+    * `PortRun.CheckRemedies` is where it says so) and the CARRIER is a phase in the pipeline. Both
+    * read [[uncheckedVararg]], which is the predicate stated once, so the count and the application
+    * cannot disagree about which declarations the row is about.
+    *
+    * ==A no-op with no selections, by construction==
+    * With an empty plan every `transformDefDef` returns immediately, and the phase is woven into
+    * every port for that reason: it has no constructor policy of its own — its whole configuration
+    * is `PortManifest.resolutions`, which is already part of the surface fingerprint — so there is
+    * nothing for two modules to configure differently and nothing for a `surface` line to add.
+    *
+    * ==And it applies only where THIS RUN emits the declaration==
+    * A dependent's `Program` contains its base's units, so an inherited selection binds there too;
+    * applied, it would file a `remediation(resolved)` row about a declaration this module does not
+    * emit — `ENGINE-LIMITS.md` D2 read at the resolution ledger. `RunScope` is the run's own answer
+    * and arrives on the binder like every other thing a phase may not derive from the tree.
+    */
+  final class Apply extends Phase, PolicyBound:
+    def name: String = "heap-pollution/remedy"
+
+    private var plan: ResolutionPlan = ResolutionPlan.empty
+    private var scope: RunScope      = RunScope.whole
+
+    def bindPolicy(binder: PolicyBinder): Unit =
+      plan  = binder.resolutions
+      scope = binder.run
+
+    override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
+      if plan.isEmpty || !scope.emitsSymbol(p, d.symbol) then d
+      else
+        uncheckedVararg(d).foreach { f =>
+          plan.selected(d.symbol, Name, f.issue.toString).foreach { r =>
+            plan.applied(r, f.owner, d.symbol, d.origin,
+              s"vararg `${f.param}` (component `${f.component}`) is stated safe by this port: " +
+                "java warned here and scala neither warns nor carries an annotation that means " +
+                "anything — the assertion had no other home")
+          }
+        }
+        d
 
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
