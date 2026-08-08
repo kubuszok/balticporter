@@ -55,6 +55,30 @@ object PortabilityCheck extends RemedySource:
     * exactly the half of the residue population `RemedySource` exists beside `Phase` for. */
   def remedies: List[Remedy] = List(AcceptJvmOnly)
 
+  /** …and WHAT IS NOT ON THIS MENU, stated where the menu is so a reader sees a refusal and not a
+    * gap (`OverloadRiskCheck`'s convention).
+    *
+    *   - '''drop the type / inline the wrapper / redirect the lookup'''. These ARE on a menu — the
+    *     PHASE's (`balticporter.transform.RemediationTransform`), because each changes the tree and
+    *     a resolution has to be recorded before emission. A check runs after all of it, so the
+    *     object that DECLARES a menu and the phase that CARRIES it out are two things;
+    *   - '''suppress the row'''. REFUSED, and [[AcceptJvmOnly]] is not a quiet version of it: an
+    *     acceptance moves the row into `remediation(resolved)` with the port's name on it, so what
+    *     was an unexamined dependency becomes an examined one. A port that merely wants the number
+    *     smaller narrows `PortManifest.targets`, which is a statement about the module and is
+    *     already the knob;
+    *   - '''a per-API acceptance keyed on the FQN'''. REFUSED: that is `verdictOverrides`, which
+    *     exists, is per-`DiffId`, and is read by `rulesFor` before this check walks anything. A
+    *     second spelling of it here would be two tables answering one question.
+    *
+    * '''And why [[Remedy.AnyKind]] rather than `alsoKinds`.''' Wave B's field enumerates the kinds
+    * one remedy answers, which is exact for a lane whose kinds are a closed enum. This lane's kind
+    * column is the offending API's FQN — an open set of hundreds — so an enumeration would have to
+    * be rewritten every time a rule is added, and a remedy declaring one API would answer one row of
+    * one port. The two are the same idea at two cardinalities, and the phase asks
+    * `ResolutionPlan.selected(target, remedy)` (by globally-unique id) rather than by kind, so
+    * nothing collides. */
+
   /** `accept-jvm-only` — *this location is JVM-only and I know it; stop reporting it.*
     *
     * ==What it does, and what it deliberately does not==

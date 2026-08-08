@@ -5266,9 +5266,13 @@ Four decisions the first menu forced, none of them foreseen by §8.16:
   `Malformed` sentence;
 - **`Remedy.AnyKind`**, because `portability(emitted)`'s kind column is the offending API's FQN. A
   per-location remedy there is about the LOCATION, and declaring `kind = "java.net.URL"` would be a
-  remedy that answers one row of one port. The precise question a phase asks is therefore
+  remedy that answers one row of one port. It is `Remedy.alsoKinds` at the other cardinality and not
+  a competitor to it: `alsoKinds` ENUMERATES the kinds one remedy answers, which is exact for a lane
+  whose kinds are a closed enum (`overload-risk`'s three phase spans) and unwritable for one whose
+  kinds are an open set of hundreds, where the enumeration would have to be rewritten every time a
+  rule is added. The precise question a phase asks is therefore
   `ResolutionPlan.selected(target, remedy)` — keyed on the globally-unique id, which cannot collide
-  with a sibling on the same lane;
+  with a sibling on the same lane and needs no kind at all;
 - **`AppliedResolution.drained`**, because one selection at a TYPE takes many rows out of the lane.
   §5's drain rule is `sum(drained)` and never `count(rows)`, or a diff reads "one applied, fifteen
   gone" and fourteen have nothing to attribute them to. An inline claims **0** and says why: it
@@ -5279,6 +5283,16 @@ Four decisions the first menu forced, none of them foreseen by §8.16:
   consulted and answered) and it is emphatically not silence, which reads exactly like success. Four
   guards, four different next actions: `needs-injection`, `not-a-chokepoint`, `no-table`,
   `targets-contradiction`.
+
+**And this menu's phase is DECLARED in `surface`, where Wave B's two are WOVEN — the difference is
+constructor policy.** `HeapPollutionCheck.Apply` and `OverloadRiskCheck.Apply` have none: their whole
+configuration is `PortManifest.resolutions`, which is already a manifest field and already in the
+surface fingerprint, so there is nothing for two modules to configure differently and nothing a
+`surface` line would add. `RemediationTransform` has two parameters a port really can disagree about
+— the `class-table` destination and the target set the questions are asked for — so it is an ordinary
+§1(b) phase with a `TransformFactory`, a `SurfacePolicy` fingerprint and a `surface` line, and its
+no-op is the empty pair. Weaving it would have put a policy-bearing phase in every port to serve the
+ones that configured it.
 
 **A site the key cannot name is asked for UP THE OWNER CHAIN.** `PortabilityCheck.Violation.enclosing`
 is the nearest enclosing DEFINITION, which for a site inside a method body is routinely a LOCAL — the
