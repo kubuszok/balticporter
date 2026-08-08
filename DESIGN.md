@@ -4942,10 +4942,22 @@ IN FULL rather than inheriting it can restate a base's selection differently, or
 made, and neither is reported: the `ResolutionDivergence` above sees one manifest, and there is no
 `MissingDrop`-shaped counterpart asking whether every base selection is answered here. That is
 exactly the asymmetry `mirroring` exists to expose for the drops (`MissingDrop` and `SurfaceMissing`
-can only ever fire on that path), so the counterpart is owed. It is not built here because no port in
-this corpus uses `mirroring`, and building it would have gone out with `measure-all` numbers nothing
-in the run could exercise — the shape §5's dry-run rule refuses. The fix is two comparisons per base,
-over `baseChain :+ this`, and it belongs to the wave that ships the first menu.
+can only ever fire on that path), so the counterpart is owed. It is not built with the plumbing
+because no port in this corpus uses `mirroring`, and building it there would have gone out with
+`measure-all` numbers nothing in the run could exercise — the shape §5's dry-run rule refuses. The
+fix is two comparisons per base, over `baseChain`, and it belongs to the wave that ships the first
+menu.
+
+**CLOSED with the first menu**, as that sentence said it would be, and its evidence is a SPEC rather
+than a lane — which is the honest form for a path no corpus port takes. Two comparisons per base in
+`surfacePairs` (so both are gate-visible, for the reason the other two are): a base selection this
+module restates DIFFERENTLY is `ResolutionDivergence` again, and one it does not answer at all is a
+new `MissingResolution`, fatal, `MissingDrop` read at a member key. The loop is SCOPED to `!inherit`,
+and that is structural rather than an optimisation — for an inheriting module the omission half is
+vacuous by construction (its `effectiveResolutions` already contains its base's) while the divergence
+half is NOT, since an override is a real disagreement `chainConflicts` already reports from the
+chain, naming both claimants. Unscoped, the loop told that one mistake a second time in a shorter
+sentence, which leaves a reader two things to reconcile where there is one.
 
 **THE MENUS THAT EXIST, and where each half of one lives.** A lane's menu is DECLARED by the check
 or phase that mints its rows (`RemedySource`), and where the minting object is a CHECK the menu needs

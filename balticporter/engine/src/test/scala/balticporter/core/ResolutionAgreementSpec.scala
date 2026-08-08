@@ -113,6 +113,63 @@ class ResolutionAgreementSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // the `mirroring` path — the one shape the CHAIN check cannot see
+  // -------------------------------------------------------------------------------------------
+
+  test("a MIRRORING module that omits a base's selection is fatal — the chain check sees one manifest") {
+    // `resolutionConflicts` reads `policyChain`, which is `List(this)` here: one manifest, nothing
+    // to disagree with. So the omission is invisible to it and to every count, and the two modules
+    // emit that declaration two ways.
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = PortManifest(name = "dep").mirroring(base)
+    assertEquals(dep.policyChain.map(_.name), List("dep"))
+    assertEquals(dep.resolutionConflicts, Nil)
+    val fs = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
+      .filter(_.kind == Kind.MissingResolution)
+    assertEquals(fs.map(_.subject), List("up.A#m"))
+    assert(fs.forall(_.kind.fatal))
+    assert(clue(fs.head.detail).contains("""selects "wrap" here; this module selects nothing"""))
+  }
+
+  test("…and one that RESTATES it differently is the same divergence, reported the same way") {
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = PortManifest(name = "dep", resolutions = Map("up.A#m" -> "copy")).mirroring(base)
+    val fs = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
+      .filter(_.kind == Kind.ResolutionDivergence)
+    assertEquals(fs.map(_.subject), List("up.A#m"))
+    assert(clue(fs.head.detail).contains("""selects "wrap", this module "copy""""))
+  }
+
+  test("…and restating it IDENTICALLY is not a finding — that is what `mirroring` is FOR") {
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = PortManifest(name = "dep", resolutions = Map("up.A#m" -> "wrap")).mirroring(base)
+    assertEquals(kinds(check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))),
+                 Nil)
+  }
+
+  test("…and it STOPS THE RUN, because a selection decides emitted text") {
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = PortManifest(name = "dep").mirroring(base)
+    assertEquals(ManifestAgreement.surfaceGate(Some(dep)).map(_.kind), List(Kind.MissingResolution))
+  }
+
+  test("the comparison is SCOPED to `!inherit`, so an override is told once and not twice") {
+    // For an inheriting module the OMISSION half is vacuous by construction — its effective map
+    // contains its base's — while the DIVERGENCE half is not: an override is a real disagreement,
+    // and `chainConflicts` already reports it from the chain, naming both claimants. Unscoped, this
+    // loop said the same thing again in a shorter sentence, which is one mistake told twice.
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m" -> "copy")))
+    val fs   = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
+    assertEquals(kinds(fs), List(Kind.ResolutionDivergence))
+    assert(clue(fs.head.detail).contains("""`base` selects "wrap""""))
+    // …and a module that adds a key of its own reports nothing at all.
+    val other = base.extendedBy(PortManifest(name = "dep", resolutions = Map("dep.B#n" -> "copy")))
+    assertEquals(kinds(check(other, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))),
+                 Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
   // the fingerprint
   // -------------------------------------------------------------------------------------------
 

@@ -178,6 +178,20 @@ object ManifestAgreement:
         "compile alone and could not compile together. Reconcile the two entries: move the " +
         "selection to the module that owns the declaration, and inherit it with " +
         "`base.extendedBy(...)` rather than restating it.")
+    /** a base selects a remedy at a location this module answers NOTHING at.
+      *
+      * `MissingDrop` read at a member key, and reachable only on the `mirroring` path for the same
+      * reason: an INHERITING module's `effectiveResolutions` already contains its base's, so the
+      * comparison is vacuous there by construction. A module that states its policy IN FULL has no
+      * such guarantee, and the omission is invisible to [[ResolutionDivergence]] — that one compares
+      * a `policyChain` which is `List(this)` here, so it sees one manifest and nothing to disagree
+      * with. */
+    case MissingResolution extends Kind(true,
+      "§1(b) PER-LIBRARY: the base module SELECTS a remedy at this location and this module selects " +
+        "none, so the same declaration is emitted two ways and the two ports cannot compile " +
+        "together. This is only reachable for a module that restates its policy in full " +
+        "(`PortManifest.mirroring`): add the entry here, or inherit the base's policy with " +
+        "`base.extendedBy(...)` and stop restating it.")
     /** a dependent selects a remedy at a declaration its base EMITS and does not select one at. */
     case ResolutionIntrusion extends Kind(true,
       "§1(b) PER-LIBRARY: this module selects a remedy at a declaration inside a base's declared " +
@@ -551,6 +565,34 @@ object ManifestAgreement:
         claims.map((who, id) => s"""`$who` selects "$id"""").mkString(", "))
     }
 
+    // …and THE ONE HOLE `chainConflicts` CANNOT SEE, which is the `mirroring` path.
+    //
+    // `resolutionConflicts` reads `policyChain` — `baseChain :+ this` for an inheriting dependent,
+    // and therefore complete — but `List(this)` for a module that states its policy IN FULL
+    // (`PortManifest.mirroring`). One manifest has nothing to disagree with, so such a module could
+    // restate a base's selection differently, or omit one the base made, and NEITHER was reported.
+    // This is the counterpart, and it is the same pair of comparisons `MissingDrop` and
+    // `RenameDivergence` already make one policy over. Here rather than in `statik`, because a
+    // selection decides EMITTED TEXT and the gate must stop the run before any phase runs.
+    //
+    // SCOPED TO `!inherit`, and that is structural rather than an optimisation. For an inheriting
+    // module the OMISSION half is vacuous (its `effectiveResolutions` contains its base's, so every
+    // base key is present with the base's value) while the DIVERGENCE half is not — an override is
+    // a real disagreement, and `chainConflicts` above already reports it, from the chain, naming
+    // both claimants. Unscoped this loop reported that same override a SECOND time under a shorter
+    // sentence, which is one mistake told twice and a reader given two things to reconcile.
+    val myRes = m.effectiveResolutions
+    val mirrored = if m.inherit then Nil else m.baseChain.flatMap { b =>
+      b.effectiveResolutions.toList.sorted.flatMap { (key, id) =>
+        myRes.get(key) match
+          case Some(`id`)  => Nil
+          case Some(other) => List(Finding(Kind.ResolutionDivergence, b.name, key,
+            s"""base `${b.name}` selects "$id", this module "$other""""))
+          case None        => List(Finding(Kind.MissingResolution, b.name, key,
+            s"""base `${b.name}` selects "$id" here; this module selects nothing"""))
+      }
+    }
+
     // …and the INTRUSION screen, which is `SurfaceIntrusion`'s exactly — asked of what the base
     // EMITS (its published map, through `standsAt`) and never of its `governs` CLAIM, because a
     // dependent's own declarations routinely sit inside that namespace and a TEST SOURCE SET always
@@ -569,7 +611,7 @@ object ManifestAgreement:
       s"""selects "$id" at a declaration of `$subject`, which is inside `${b.name}`'s declared """ +
         s"namespace and which `${b.name}` emits" + evidence(ports, b.name, subject))
 
-    divergent ++ intrusions ++ chainConflicts ++ resolutionIntrusions
+    divergent ++ intrusions ++ chainConflicts ++ mirrored ++ resolutionIntrusions
 
   /** Does anything STAND at `subject` in `base`'s output — asked of its PUBLISHED MAP where there
     * is a usable one, and of its manifest where there is not.
