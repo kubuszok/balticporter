@@ -2988,16 +2988,57 @@ collapse degenerates to the def-pair whenever its guards fail.
 not a synthesis. The audit found the hand port **authored** getters to complete pairs; that is
 authoring, permanently outside mechanism scope.
 
-#### The `var`/`val` collapse — DESIGNED, its residue MEASURED, and not yet built
+#### The `var`/`val` collapse — BUILT, and what building it settled
+
+**Five things the design below left open or got slightly wrong**, each fixed in the mechanism rather
+than left for an enablement:
+
+- **the population is 90, and the census said 93 while this section said 91** — three numbers for one
+  question, which is what a census beside a transformer buys. 91 was prose transcribed before two
+  pairs stopped being `ComputedBody`; 93 was the census, which OVER-counted by three because it asked
+  neither question the transformer asks: **2** of its rows are pairs the def-pair path itself refuses
+  (`Guard.PairRefused` — there is no property there to collapse) and **1** is a concrete relative.
+  Read `idiom(refused)`'s guard breakdown on the run in front of you; never a sentence, and never a
+  second phase's opinion.
+- **`overriddenBelow` is only half the override question.** A scala `var` IMPLEMENTS an abstract
+  `def x`/`def x_=` and cannot OVERRIDE a concrete one — so a CONCRETE accessor anywhere in the
+  component refuses, whichever direction it lies in. `BeanCollapse.Guard.ConcreteRelative`; without
+  it a class whose parent has a real `getX()` collapses into a `var` that scalac rejects, and only
+  at 0 typer errors (§3).
+- **`val` does not turn on java's `final`.** A java field is routinely non-`final` and never
+  reassigned (`private MapObjects objects = new MapObjects();`), and refusing on the modifier would
+  decline most of the get-only population for a fact about java's syntax. What decides whether a
+  `val` COMPILES is that the value is at the declaration and that NOTHING in the program writes it,
+  which is a whole-program scan and is what `Guard.MutableStorage` asks. A field the constructor
+  fills is refused whatever its modifier says: its keyword is the constructor funnel's answer and
+  this phase cannot see the funnel, so guessing it would be §4.6's fabricated fact.
+- **`isMutable` on the surviving symbol is the TARGET, never the field's.** The guards are what make
+  that sound. Read off the field, a get-only property over an ordinary non-`final` java field emits
+  a public `var` and publishes a writer java never had — no error, no moved count.
+- **THE EMITTER'S SHADOWING PASS UNDOES THE COLLAPSE, silently, and this is the finding worth
+  keeping.** `resolveFieldShadowing` renames a field whose name is an inherited member's, which is
+  exact for java (fields shadow, and a java field beside an inherited method is illegal in scala's
+  one namespace) and WRONG the moment a field is a property: the emitted `var w` under an interface's
+  abstract `def w` is that member's IMPLEMENTATION, and the pass emitted `var w$shadow`, leaving the
+  class abstract. Nothing reports it until the port is already at 0 typer errors, because `RefChecks`
+  does not run before then (§3) — so it arrives on the day a port goes green, in a member nobody is
+  looking at. The fix is a fact about SCALA and universal: a `val`/`var` and a PARAMETERLESS `def` of
+  the same name across a subtype edge are an implementation pair, and java cannot produce that shape
+  because a java method always has a parameter clause. `ConcreteRelative` above is what makes the
+  admission safe, so the two guards compose and neither re-asks the other's question.
+
+#### The design, as written before it was built
 
 The count the deferral was gated on has been taken and the design is here rather than in a scratch
 file, because the gate is met: `ported/sge/src_managed/main` carries **280 `$field` DECLARATIONS and
 2,998 references** to a name no human wrote, and `ported/ssg-liquid` 13 references. The population
-the collapse can actually reach is smaller and is PUBLISHED on every run rather than predicted:
-`BeanCollapseCensus` reports **91 collapsible of 137 configured pairs** on the libGDX base — the
-intersection of *configured* ∩ *trivial body* ∩ *unanchored closure* ∩ *no override below* — with 32
-declined for `ComputedBody` and 14 for `OverriddenBelow`. That is §8.5's deferred half measured, and
-it is what a wave-2 agent starts from.
+the collapse can actually reach is smaller and is PUBLISHED on every run rather than predicted: the
+`BeanCollapse` lane of `idiom(refused)` reports the intersection of *configured* ∩ *trivial body* ∩
+*unanchored closure* ∩ *no override below* ∩ *no concrete relative* on the libGDX base, one row per
+configured pair, grouped by the guard that declined it. `BeanPropertyTransform` files those rows
+itself; the `BeanCollapseCensus` that published them through wave 0 is retired, because a
+transformer that files one row per site CONSIDERED already IS the denominator and a census beside it
+is a second answer to its own question (§4.6).
 
 **Kind: the SAME §1(b), no new phase, and NO `RuleScope`.** The pairs map already IS the include list
 and the "Rejected" list above forbids a second knob beside it. §1(b)'s adds-vs-retypes rule chooses a

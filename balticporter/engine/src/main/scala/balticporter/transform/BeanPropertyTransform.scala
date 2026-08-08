@@ -74,12 +74,35 @@ import balticporter.tir.*
   * and cannot compile together (§1.5).
   */
 final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
-                                  targets: Map[String, BeanPropertyTransform.Target] = Map.empty)
-    extends Phase, PolicySource, SurfacePolicy, PolicyBound:
+                                  targets: Map[String, BeanPropertyTransform.Target] = Map.empty,
+                                  exposedFields: RuleScope = RuleScope.Only(Set.empty))
+    extends Phase, PolicySource, SurfacePolicy, PolicyBound, IdiomPhase, Rewrite:
 
   def name: String = "bean-properties"
 
   override def runsBefore: Set[String] = Set("java-collections->scala", "package-rename")
+
+  /** the lane that publishes what this phase CONSIDERED — one row per configured pair, `Converted`
+    * or `Refused(guard)`, which IS the collapse's denominator ([[BeanCollapse]]). */
+  def idiomKinds: Set[IdiomKind] = Set(IdiomKind.BeanCollapse)
+
+  /** the lane that counts what a collapse MOVED and did not rewrite.
+    *
+    * Owed because the collapse retypes the surviving getter's `info`, which `Pipeline.runTraced`
+    * SEES — and deliberately NOT `policy`: a declared key that never fired is a different residue
+    * from a usage a rewrite left behind, and naming a lane that answers the first question about
+    * the second is the shape `ENGINE-LIMITS.md` K2.5 measured. */
+  def accountedBy: Set[String] = Set(IdiomCheck.Residue)
+
+  /** THE K21-FACE-2 POLICY THIS PHASE MUST NOT CONTRADICT, threaded by the run.
+    *
+    * `PublicFieldAccessorTransform` PUTS java-bean names on a field so a reflective framework can
+    * find them; the collapse TAKES them off. A port declaring both over one type is asking for two
+    * opposite things, and the only place that can SEE both is the run that assembles the pipeline —
+    * so it hands this phase the other phase's own `RuleScope` rather than the port declaring a
+    * second copy of it (`PortRun.idiomPhases`). A copy, never a mutation: a phase is a value. */
+  def withExposed(scope: RuleScope): BeanPropertyTransform =
+    new BeanPropertyTransform(pairs, targets, scope)
 
   /** WHAT SHAPE this entry asked for — [[BeanPropertyTransform.Target.DefPair]] where it said
     * nothing, which is what every published config already says and what makes the second map a
@@ -99,12 +122,6 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
   def surfaceFingerprint: String =
     pairs.toList.sorted.map((k, v) => s"$k=$v>${targetOf(k).config}").mkString(",")
 
-  /** THE INCLUDE LIST, readable — for the one consumer that must intersect against exactly the
-    * pairs THIS phase will see and may not declare a second list of its own
-    * ([[BeanCollapseCensus]]). A copy of the map, not a knob: §8.5's "Rejected" list forbids a
-    * second policy home beside `pairs`, so a reader of the pairs is not the same thing as a second
-    * writer of them. */
-  def configuredPairs: Map[String, String] = pairs
 
   // ---- policy, bound before the pipeline starts ---------------------------------------------
 
@@ -151,8 +168,11 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     * the class it is written in. */
   private var lhsOf: Map[SymId, SymId] = Map.empty
 
+  /** the collapses this run applied — decided once, applied once, reported once. */
+  private var collapsed: List[BeanPropertyTransform.Collapsed] = Nil
+
   override def run(program: Program): Program =
-    getters = Map.empty; setters = Map.empty; lhsOf = Map.empty
+    getters = Map.empty; setters = Map.empty; lhsOf = Map.empty; collapsed = Nil
     if pairs.isEmpty then return program
 
     val refusals = collection.mutable.ListBuffer.empty[PolicyFinding]
@@ -195,6 +215,37 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     ownFindings = ownFindings.filterNot(f => refusals.exists(_.key == f.key)) ++ refusals.toList
 
     val applied = properties.filterNot(p => refusedKeys.contains(p.key))
+
+    // ---- 3. THE COLLAPSE DECISION, per entry, on the PRE-rename program ---------------------
+    // A rename moves NAMES and every §8.5 obligation is about a SHAPE, so the two questions are
+    // independent and the cheaper program answers this one. Filed for EVERY parsed entry, including
+    // the ones the def-pair path refused, because `idiom(refused)` is a DENOMINATOR: a run that
+    // reported only the entries it could have collapsed would answer "how many did you convert" and
+    // nothing at all about the population that number is drawn from.
+    lazy val written = BeanCollapse.writtenSymbols(program)
+    val verdicts = parsed.map { e =>
+      e -> (applied.find(_.key == e.key) match
+        case scala.None =>
+          BeanCollapse.Verdict.Refuse(BeanCollapse.Guard.PairRefused)
+        case Some(prop) =>
+          BeanCollapse.decide(program, graph, prop, targetOf(e.key), exposedFields, written))
+    }
+    verdicts.foreach { (e, v) =>
+      val at   = applied.find(_.key == e.key)
+        .map(p => Decision.originOf(program, p.getter)).getOrElse(Origin.synthetic)
+      val what = s"property `${e.property}` via `${e.value}`"
+      val verdict = v match
+        case BeanCollapse.Verdict.Collapse(_) => IdiomVerdict.Converted
+        case BeanCollapse.Verdict.Refuse(g)   => IdiomVerdict.Refused(g.toString, g.why)
+      consider(IdiomCandidate(IdiomKind.BeanCollapse, verdict, e.key, what, at))
+    }
+    collapsed = verdicts.collect { case (e, BeanCollapse.Verdict.Collapse(f)) =>
+      val p = applied.find(_.key == e.key).get
+      BeanPropertyTransform.Collapsed(e.key, e.value, p.property, p.getter, p.setter, f,
+        targetOf(e.key),
+        triviaOf(program, p.getter) ++ p.setter.toList.flatMap(s => triviaOf(program, s)))
+    }
+
     if applied.isEmpty then return renamed
 
     getters = applied.flatMap(p => p.getterMembers.map(_ -> p)).toMap
@@ -204,7 +255,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
       p.setterMembers.map(s => s -> byOwner.getOrElse(renamed.symbolOf(s).map(_.owner), p.getter))
     }.toMap
 
-    // ---- 3. the tree edits: the getter's empty parameter clause, and every call site ---------
+    // ---- 4. the tree edits: the getter's empty parameter clause, and every call site ---------
     // A `paramss` of `List(Nil)` renders `()` and `Nil` renders nothing, so this is what turns a
     // java nilary method into a scala PARAMETERLESS one — and it is why the call sites must move in
     // the same pass: `o.x()` on a parameterless def is a type error.
@@ -213,8 +264,12 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     // IS a method, its descriptor is still the empty one, and every arity reader in the engine reads
     // `paramss`. Retyping it would make `PolicyBinder.isExecutable` and `OverrideGraph.signatureOf`
     // stop recognising the member they had just renamed.
-    given Program = renamed
-    renamed.rebuilt(units = renamed.units.map(u => StandardTraversal.mapClassDef(this, u)))
+    val paired =
+      given Program = renamed
+      renamed.rebuilt(units = renamed.units.map(u => StandardTraversal.mapClassDef(this, u)))
+
+    // ---- 5. …and the COLLAPSE, applied last, over what the def-pair path has already moved ---
+    if collapsed.isEmpty then paired else applyCollapse(paired)
 
   override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
     if getters.contains(t.symbol) then t.copy(paramss = Nil) else t
@@ -253,6 +308,118 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     case _: Tree.Ident            => Some(scala.None)
     case Tree.Select(q, _, _, _)  => Some(Some(q))
     case _                        => scala.None
+
+  // ---- the collapse ---------------------------------------------------------------------------
+
+  /** an accessor's own comments, harvested BEFORE its declaration is deleted.
+    *
+    * §4.58: a comment whose construct the emission CONSUMES needs a home, and the honest one here is
+    * the node that SURVIVES — the getter's javadoc was describing the property. Taken in DECLARATION
+    * ORDER (getter, then setter) and appended after the field's own, so the emitted file reads the
+    * way the java did and nothing is lost. */
+  private def triviaOf(p: Program, m: SymId): List[Trivia] =
+    p.definitionOf(m).collect { case d: Tree.DefDef => d.leading }.getOrElse(Nil)
+
+  /** APPLY the collapses: the getter's SYMBOL becomes the property's storage, the field's `ValDef`
+    * becomes the property's declaration, and both accessors' declarations go.
+    *
+    * ==Why the GETTER survives and the field does not==
+    * The two orders emit the same text and only one of them is visible to anything.
+    * `Pipeline.runTraced` derives what a phase moved by comparing each owned symbol's `info` ACROSS
+    * the phase, so retyping the getter is a `Patch.retyped` row while dropping the pair and MINTING a
+    * `var` is not: the dropped symbol has no post-phase `info`, the minted one has no pre-phase one,
+    * and the pair cancels to nothing. Minted, this phase would owe no `accountedBy` lane at all —
+    * `rewrite-callsites` would report 0, `idiom(residue)` would report 0, and every usage the phase
+    * failed to rewrite would be invisible to the one instrument built to find it. The surviving
+    * symbol also carries the `usagesOf` edges the call-site rewrite has already moved, the `srcmap`
+    * row that attributes an error to a java line, and the `port-map.tsv` member row a dependent's
+    * `base-surface` compares against.
+    *
+    * ==…and why the FIELD's NODE is the one that stays in the body==
+    * A scala class body IS its constructor, so the property's POSITION among the field initialisers
+    * and instance-initialiser blocks is the whole of what the class computes (§4.55, JLS 12.5 step
+    * 4). The field is where java put that value; the getter is somewhere else entirely. So the node
+    * keeps its place, its initialiser and its declared type, and only its SYMBOL changes.
+    *
+    * ==The flags are a SPLIT, and it is the one §8.5 states==
+    * VISIBILITY comes from the ACCESSORS — the field is the implementation and the pair is the
+    * surface, so taking the field's `private` would silently narrow the port's API with a green
+    * compile. Everything else comes from the FIELD, whose modifiers are facts about the slot java
+    * allocated. `isMutable` is neither: it is the SHAPE the port asked for, which the guards are
+    * what make sound (`Var` was refused without a setter, `Val` without storage nothing writes).
+    * Read off the field's own `isMutable` instead, a get-only property over an ordinary non-`final`
+    * java field would emit a public `var` and publish a writer java never had.
+    */
+  private def applyCollapse(p: Program): Program =
+    val byGetter = collapsed.map(c => c.getter -> c).toMap
+    val syms = p.symbols.all.map { s =>
+      byGetter.get(s.id).flatMap(c => p.symbolOf(c.field).map(f => (c, f))) match
+        case Some((c, f)) =>
+          s.copy(
+            info = f.info,
+            // a field has no parameter spelling; leaving the getter's would tell every overload
+            // reader that this member is still executable (§8.1).
+            descriptor = scala.None,
+            flags = f.flags.copy(
+              isPrivate        = s.flags.isPrivate,
+              isProtected      = s.flags.isProtected,
+              isPackagePrivate = s.flags.isPackagePrivate,
+              isOverride       = false,
+              isMutable        = c.target == BeanPropertyTransform.Target.Var,
+            ))
+        case scala.None => s
+    }
+    val retyped = p.rebuilt(symbols = SymbolTable(syms))
+    val out =
+      given Program = retyped
+      retyped.rebuilt(units = retyped.units.map(u =>
+        StandardTraversal.mapClassDef(new BeanPropertyTransform.Collapser(collapsed), u)))
+    val indexed = out.rebuilt(xref = Xref.build(out.units))
+    recordCollapse(indexed)
+    indexed
+
+  /** the DECISION per collapsed property, and the RESIDUE the shape cannot rule out.
+    *
+    * One decision per surviving declaration (§5.1), carrying the one thing the emitted text cannot
+    * say: the JVM METHOD NAMES moved. `getName()`/`setName()` became `name()`/`name_$eq()`, which is
+    * invisible to a compiler, to every count and to every test, and visible to exactly the reflective
+    * reader `ENGINE-LIMITS.md` K21 is about.
+    */
+  private def recordCollapse(p: Program): Unit =
+    collapsed.foreach { c =>
+      record(Decision(
+        kind       = Decision.Kind.CollapsedProperty,
+        subject    = c.getter,
+        subjectFqn = Decision.fqnOf(p, c.getter, c.key),
+        detail = Map(
+          "form"  -> c.target.config,
+          "from"  -> c.accessors,
+          "to"    -> c.property,
+          "field" -> Decision.fqnOf(p, c.field, "?"),
+          "was"   -> c.accessors.split('/').map(_.trim + "()").mkString(" "),
+          "why"   -> ("java's bean pair over a trivial field and a scala property are the same " +
+            "value with two spellings, and the port publishes the scala one — but the JVM METHOD " +
+            "NAMES move with it, so a framework that discovers `getX`/`setX` reflectively finds " +
+            "neither"),
+        ),
+        reason = Reason.Configured(name, c.key),
+        origin = Decision.originOf(p, c.getter),
+      ))
+      // …and the RESIDUE. Delta 2 of the enumeration is made impossible by the SHAPE — the def-pair
+      // path refuses a pair with an unrewritable reference and has already moved every rewritable
+      // one — so these three counts SHOULD be zero, and that is exactly why they are taken: a claim
+      // a phase makes about itself and never checks is the shape `ENGINE-LIMITS.md` K2.5 measured.
+      c.setter.foreach(s => residue(p, c, s, "a reference to the setter this collapse deleted"))
+      residue(p, c, c.field, "a reference to the backing field the property replaced")
+      residue(p, c, c.getter, "a CALL of a member that is now a `var`", _.kind == UsageKind.Call)
+    }
+
+  private def residue(p: Program, c: BeanPropertyTransform.Collapsed, sym: SymId, what: String,
+                      keep: Usage => Boolean = _ => true): Unit =
+    p.usages(sym).filter(keep).map(_.enclosing).distinct.sortBy(_.raw).foreach { encl =>
+      consider(IdiomCandidate(IdiomKind.BeanCollapse, IdiomVerdict.Residue(what),
+        Decision.fqnOf(p, encl, c.key), s"property `${c.property}`", Decision.originOf(p, encl)))
+    }
 
   // ---- validation ---------------------------------------------------------------------------
 
@@ -393,6 +560,52 @@ object BeanPropertyTransform:
     /** the CLOSED set a `target = …` key is read against — `ConfigView.enumerated`'s loud door,
       * which names every alternative in the error rather than falling back to the default. */
     val byConfigName: Map[String, Target] = values.map(t => t.config -> t).toMap
+
+  /** ONE COLLAPSED PROPERTY: the policy key, the accessors as the entry spelled them, the emitted
+    * name, the surviving symbol, the setter that goes, the field that becomes the storage, the shape
+    * the port asked for, and the comments the deleted declarations were carrying. */
+  final case class Collapsed(key: String, accessors: String, property: String,
+                             getter: SymId, setter: Option[SymId], field: SymId,
+                             target: Target, trivia: List[Trivia])
+
+  /** THE TREE EDIT — one traversal, bottom-up, so every reference has been re-pointed by the time
+    * the owning class's body is rebuilt.
+    *
+    * A `StandardTraversal` phase and not a private recursion, for §3's reason: the references this
+    * has to move are wherever java wrote them, an anonymous body and a method-local class included.
+    */
+  private[transform] final class Collapser(cs: List[Collapsed]) extends Phase:
+    def name: String = "bean-properties/collapse"
+
+    private val byField = cs.map(c => c.field -> c).toMap
+    private val gone    = cs.flatMap(c => c.getter :: c.setter.toList).toSet
+
+    override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef =
+      val touches = t.body.exists {
+        case v: Tree.ValDef => byField.contains(v.symbol)
+        case d: Tree.DefDef => gone.contains(d.symbol)
+        case _              => false
+      }
+      if !touches then t
+      else t.copy(body = t.body.flatMap {
+        case v: Tree.ValDef if byField.contains(v.symbol) =>
+          val c = byField(v.symbol)
+          List(v.copy(symbol = c.getter, leading = v.leading ++ c.trivia))
+        case d: Tree.DefDef if gone.contains(d.symbol) => Nil
+        case other                                     => List(other)
+      })
+
+    /** every read and write of the backing field now names the PROPERTY.
+      *
+      * Exact, and it is obligation 3 of the enumeration cashed in: the trivial-body guard has
+      * already established that the getter is `return this.f` and the setter `this.f = v`, so
+      * `this.f` and `this.x` are the same storage — a plain scala `var` compiles to the same field
+      * access the java field did. */
+    override def transformIdent(t: Tree.Ident)(using Program): Term =
+      byField.get(t.sym).map(c => t.copy(sym = c.getter)).getOrElse(t)
+
+    override def transformSelect(t: Tree.Select)(using Program): Term =
+      byField.get(t.sym).map(c => t.copy(sym = c.getter)).getOrElse(t)
 
   /** One applied property: the policy key it came from, the emitted name, the accessors the entry
     * NAMED, and every declaration of each accessor's override COMPONENT — which is what the arity

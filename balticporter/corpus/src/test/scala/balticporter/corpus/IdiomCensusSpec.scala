@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 import balticporter.tir.{IdiomCandidate, IdiomCheck, IdiomKind, IdiomLog, IdiomVerdict, Origin, Sam, Tree}
-import balticporter.transform.{BeanCollapseCensus, ReturnThisCensus, SamLambda, SamLambdaTransform}
+import balticporter.transform.{BeanPropertyTransform, ReturnThisCensus, SamLambda, SamLambdaTransform}
 
 /** WAVE 0 OF THE IDIOM LAYER — the census phases, and the three lanes they feed.
   *
@@ -268,11 +268,13 @@ class IdiomCensusSpec extends PortSuite:
   // the phases are INERT, and the lanes report apart
   // -------------------------------------------------------------------------------------------
 
-  test("the CENSUS phases are EMISSION-INERT — the tree they hand back IS the tree they got") {
-    // The wave-0 property, still true of the two phases that are still censuses. The SAM phase is
-    // NOT one of them any more: wave 1 wired the transformer, and a census beside it would be a
-    // second answer to its own question (§4.6). What replaces this assertion for the SAM lane is
-    // `SamLambdaTransformSpec`'s "every REFUSAL leaves the anonymous class BYTE-IDENTICAL", which
+  test("the CENSUS phase is EMISSION-INERT — the tree it hands back IS the tree it got") {
+    // The wave-0 property, still true of the ONE phase that is still a census. Neither the SAM
+    // phase nor the bean collapse is one any more: each wired its transformer, and a census beside
+    // one is a second answer to its own question (§4.6). What replaces this assertion for those two
+    // lanes is the refusal assertion in each transformer's own suite —
+    // `SamLambdaTransformSpec`'s "every REFUSAL leaves the anonymous class BYTE-IDENTICAL" and
+    // `BeanPropertySpec`'s "a refused collapse degenerates to the def-pair, byte for byte" — which
     // is the same property asked of the sites the transformer declines.
     val src =
       """class C {
@@ -281,7 +283,7 @@ class IdiomCensusSpec extends PortSuite:
         |  Runnable make() { return new Runnable() { public void run() { System.out.println(n); } }; }
         |}""".stripMargin
     val bare  = port(src)
-    val censused = port(src, new ReturnThisCensus, new BeanCollapseCensus(Map.empty))
+    val censused = port(src, new ReturnThisCensus)
     assertEquals(censused.out, bare.out)
     assert(clue(censused.idioms.size) > 0, "the phases must be inert, not idle")
   }
@@ -324,7 +326,7 @@ class IdiomCensusSpec extends PortSuite:
   test("…and each census phase DECLARES the kind it files, so that zero can be printed at all") {
     assertEquals(new SamLambdaTransform().idiomKinds, Set(IdiomKind.SamLambda))
     assertEquals(new ReturnThisCensus().idiomKinds, Set(IdiomKind.NarrowedReturn))
-    assertEquals(new BeanCollapseCensus(Map.empty).idiomKinds, Set(IdiomKind.BeanCollapse))
+    assertEquals(new BeanPropertyTransform().idiomKinds, Set(IdiomKind.BeanCollapse))
   }
 
   test("every lane carries a §1 CLASSIFICATION — an error an agent cannot classify costs a full\n" +

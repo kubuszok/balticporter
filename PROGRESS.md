@@ -5086,24 +5086,29 @@ already goes.
 
 Maintained by deletion. Items are ordered by what they block, not by size.
 
-### 12.0 The bean-pair `var`/`val` collapse — DESIGNED and MEASURED, not built
+### 12.0 The bean-pair `var`/`val` collapse — BUILT; what is left is the ENABLEMENT
 
-The idiom layer's second transformer (`DESIGN.md` §8.5's "The `var`/`val` collapse", which carries
-the whole obligation set, the config shape, the `Patch.retyped` rule and the four-commit wave shape).
-Everything a wave needs is committed; what is missing is the code.
+The mechanism, its guards and its fixtures ship (`DESIGN.md` §8.5). No port asks for it yet: every
+entry's `target` defaults to `def-pair`, so the whole population sits in `idiom(refused)` under
+`Guard.NotRequested`, which is what that guard is FOR — a denominator a maintainer can read before
+deciding how far to widen.
 
-- **The population is published on every run and is 91 of 137** configured pairs on the libGDX base —
-  the only port carrying a `bean-properties` phase — with 32 declined `ComputedBody` and 14
-  `OverriddenBelow`. The residue it removes is **280 `$field` declarations and 2,998 references** in
-  `ported/sge/src_managed/main`, 13 references in `ported/ssg-liquid`.
-- **The two things a wave will get wrong if it does not read §8.5 first**: the collapse RETYPES the
-  surviving getter symbol rather than dropping the pair and minting a `var` (a drop-plus-mint is
-  invisible to `Pipeline.runTraced`, so the phase would owe no `accountedBy` lane and every
-  unrewritten usage would be unreported); and `surfaceFingerprint` must include the `target`, or two
-  configurations that differ only in it compare EQUAL, which is `ENGINE-LIMITS.md` CT9.
-- **It is measured with `just measure-all`, never `just gdx-measure`** — the base's six dependents
-  read its `base-surface` and its published `port-map.tsv`, and a base port's green numbers are not
-  evidence about its dependents (§1.5).
+- **The collapsible population on the libGDX base is 90 of 137**, one row per configured pair:
+  30 `ComputedBody`, 14 `OverriddenBelow`, 2 `PairRefused`, 1 `ConcreteRelative`, 90 `NotRequested`.
+  libGDX core is the only port carrying a `bean-properties` phase. The residue a full enablement
+  removes is **280 `$field` declarations and 2,998 references** in `ported/sge/src_managed/main` and
+  13 references in `ported/ssg-liquid`.
+- **The `val` half is narrower than the `var` half and deliberately so.** `Guard.MutableStorage`
+  admits only storage that is written at its own declaration and nowhere else, because every other
+  shape's `val`/`var` keyword is the constructor funnel's answer and the phase cannot see the funnel.
+  39 of the 137 entries are get-only, and how many of them that guard admits is not yet measured —
+  the first `target = "val"` enablement is what answers it, and an over-refusal there is a counted
+  skip rather than a defect.
+- **It is measured with `just measure-all`, never `just gdx-measure`** — the base's dependents read
+  its `base-surface` and its published `port-map.tsv`, and a base port's green numbers are not
+  evidence about its dependents (§1.5). Expect the enablement's blast to be large and CLASSIFIED
+  rather than minimised: two accessor declarations disappear and one field declaration moves per
+  collapsed pair, plus the `renamed-member` note the `$field` rename no longer needs.
 
 ### 12.1 Provenance coverage — decisions that are not yet recorded
 
@@ -5191,6 +5196,31 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
 - **`labelSeq` is program-global**, so a control-flow diff is never file-local: emitting one new
   boundary shifts every subsequent label name. Nothing is wrong with the output; the *diff* is
   unreadable, which is a measurement cost (`CLAUDE.md` §5).
+
+### 12.2.5 `findings.tsv` is a COMMITTED baseline that NO lane compares
+
+`just baseline-accept` promotes five artifacts and the lanes gate on four of them: `counts.tsv`
+through `show_check_report`, `members.tsv`, `tests.tsv`, plus `expected-errors`/`expected-lost`.
+`findings.tsv` is promoted and never diffed, so **every row's DETAIL — the owner it is attributed to,
+the `UsageKind` it was seen at, and the running totals some checks print inside their own text — can
+move with nothing reporting it.** That is deliberate for the row IDs, which are position-sensitive
+and would churn; it is not deliberate for the content.
+
+Measured while reproducing wave 2's starting point in a git worktree: at the SAME commit that ships
+them, eight committed `findings.tsv` baselines carry rows this checkout cannot reproduce —
+`catalog(consulted)`'s `JS-G07`/`JS-G08` rows read `consulted N+3` on every libGDX DEPENDENT (and
+exactly N on the base), and two `portability(all)` rows on libgdx-test are attributed to
+`AsyncExecutor#<init>` at `TypeRefPos` where the baseline says `AsyncExecutor$156#newThread` at
+`MemberType`. **It is pre-existing**, which was established the only way it can be (`CLAUDE.md`
+§5.1): the parent commit was checked out in the same worktree and its run reproduced the divergence
+byte for byte, so it belongs to the checkout and not to the change. Every count is identical on both
+sides, every member digest is unchanged, and every lane is green — which is precisely the shape a
+baseline nothing compares produces.
+
+Two things follow for anyone accepting a baseline from a worktree: the `findings.tsv` it promotes may
+not be what the primary checkout writes, and no run will tell them so. Gating the file is not
+obviously right — the IDs really would churn — but promoting a file nothing reads is worse than not
+promoting it, so this is recorded rather than absorbed.
 
 ### 12.3 Counted residues that are not defects
 

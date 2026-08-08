@@ -215,6 +215,17 @@ object Decision:
       * reach `getClass()` — so it is a residue RECORDED on the conversion, where §4.45's reader is,
       * and `was=` is the name it had. */
     case SamLambda
+    /** a java BEAN PAIR over a trivial backing field was emitted as a scala `var`/`val`, the two
+      * accessors deleted and the field's declaration made the property (`DESIGN.md` §8.5).
+      *
+      * [[SamLambda]]'s case for carrying data rather than sharing a kind, one construct over. The
+      * mechanical translation — `def x` / `def x_=`, bodies verbatim — already compiles and already
+      * behaves identically, so the reader at the line is owed the reason the port went further; and
+      * one thing more that no emitted text can say: the JVM METHOD NAMES moved. `getName()` and
+      * `setName()` became `name()` and `name_$eq()`, which is invisible to the compiler, to every
+      * count and to every test, and visible to exactly the reflective reader `ENGINE-LIMITS.md` K21
+      * is about. `was=` is what those methods were called. */
+    case CollapsedProperty
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

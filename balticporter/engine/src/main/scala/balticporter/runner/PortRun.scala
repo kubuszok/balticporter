@@ -2042,19 +2042,32 @@ final case class PortRun(
     *     it there: the transformer files one row per site considered — `Converted` or
     *     `Refused(guard)` — which IS the denominator, so a census beside it would be a second
     *     answer to its own question and would double every row in the lane (§4.6);
-    *   - the BEAN COLLAPSE census is spliced immediately before `bean-properties`, because the
-    *     intersection it publishes is a fact about the pairs THAT phase will see and about the tree
-    *     the phases ahead of it have already produced. It reads that phase's own include list and
-    *     declares none of its own (§8.5 forbids a second policy home beside `pairs`), so a port
-    *     with no `bean-properties` phase gets no census — which is not a gap but the honest answer:
-    *     there are no configured pairs to intersect.
+    *   - the BEAN COLLAPSE census that stood immediately before `bean-properties` is RETIRED for the
+    *     same reason and by the same rule. That phase now DECIDES the collapse and files one row per
+    *     configured pair — `Converted` or `Refused(guard)` — which IS the intersection the census
+    *     published, taken at the position the census occupied and from the same `PolicyBinder`
+    *     bindings. Two phases answering one question in two spellings is the disagreement §4.6 is
+    *     about, seen in the report rather than in the tree, and it would have doubled every row in
+    *     the lane. A port with no `bean-properties` phase still gets no `BeanCollapse` row, which is
+    *     not a gap but the honest answer: there are no configured pairs to intersect;
+    *   - `bean-properties` is handed `public-field-accessors`' own scope where the port declares
+    *     both. It is the one contradiction the collapse cannot see for itself — that phase PUTS
+    *     java-bean names on a field for a reflective framework to find and this one TAKES them off
+    *     (`ENGINE-LIMITS.md` K21 face 2) — and the run is the only place that holds both policies.
+    *     A COPY of the phase, never a mutation of it, and no second policy home: the scope stays the
+    *     one the port wrote once.
     */
   private def idiomPhases(declared: List[Phase]): List[Phase] =
     val first = List(new balticporter.transform.SamLambdaTransform, new balticporter.transform.ReturnThisCensus)
-    val spliced = declared.flatMap {
-      case b: balticporter.transform.BeanPropertyTransform =>
-        List(new balticporter.transform.BeanCollapseCensus(b.configuredPairs), b)
-      case other => List(other)
+    // the K21-face-2 contradiction the collapse must refuse, and the ONE place both halves of it are
+    // visible: a port's `public-field-accessors` scope is that phase's own policy, and handing it to
+    // `bean-properties` here is what keeps it one policy with one home (§8.5's "Rejected").
+    val exposed = declared.collectFirst {
+      case p: balticporter.transform.PublicFieldAccessorTransform => p.scope
+    }
+    val spliced = declared.map {
+      case b: balticporter.transform.BeanPropertyTransform => exposed.fold(b)(b.withExposed)
+      case other                                           => other
     }
     first ++ spliced
 

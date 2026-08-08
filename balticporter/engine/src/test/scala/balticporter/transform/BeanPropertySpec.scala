@@ -12,16 +12,28 @@ import balticporter.tir.*
   */
 class BeanPropertySpec extends munit.FunSuite:
 
-  private case class Ran(before: Program, after: Program, phase: BeanPropertyTransform, log: DecisionLog):
+  private case class Ran(before: Program, after: Program, phase: BeanPropertyTransform,
+                         log: DecisionLog, idioms: IdiomLog = IdiomLog.discarding,
+                         rewrites: RewriteLog = RewriteLog.discarding):
     def out: String = new TirEmitter(after).emit
     def refusals: List[String] = phase.policyReport.findings.map(_.detail)
     def named(fqn: String): Option[Symbol] = after.symbols.all.find(_.fullName == fqn)
 
   private def run(java: String, pairs: (String, String)*): Ran =
-    val before = SpoonTir.fromSource(java)
-    val phase  = new BeanPropertyTransform(pairs.toMap)
-    val (after, log) = Pipeline.runTraced(before, List(phase))
-    Ran(before, after, phase, log)
+    ran(java, new BeanPropertyTransform(pairs.toMap))
+
+  /** THE IDIOM LOG IS DRAINED AT THE PHASE BOUNDARY, so a fixture that reads the phase's own buffer
+    * afterwards reads an empty one — `Pipeline.runTraced` clears it precisely so a phase reused
+    * across two translations cannot report the first run's candidates as the second's. Every
+    * fixture therefore owns the log it asserts on, which is also the shape a run has. */
+  private def ran(java: String, phase: BeanPropertyTransform): Ran =
+    val before   = SpoonTir.fromSource(java)
+    val idioms   = new IdiomLog
+    val rewrites = RewriteLog()
+    val (after, log) = Pipeline.runTraced(before, List(phase),
+      new PolicyBinder(before, before.members), balticporter.catalog.CatalogLog.discarding,
+      rewrites, idioms)
+    Ran(before, after, phase, log, idioms, rewrites)
 
   /** what the member the UPSTREAM called `fqn` is called now. Resolved by SYMBOL — a rename moves
     * `fullName` too (§4.56), so looking the result up by the old name finds nothing and reads as a
@@ -314,6 +326,270 @@ class BeanPropertySpec extends munit.FunSuite:
     val a = new BeanPropertyTransform(Map("b#y" -> "getY", "a#x" -> "getX/setX"))
     val b = new BeanPropertyTransform(Map("a#x" -> "getX/setX", "b#y" -> "getY"))
     assertEquals(a.surfaceFingerprint, b.surfaceFingerprint)
-    assertEquals(a.surfaceFingerprint, "a#x=getX/setX,b#y=getY")
+    assertEquals(a.surfaceFingerprint, "a#x=getX/setX>def-pair,b#y=getY>def-pair")
     assertEquals(new BeanPropertyTransform().surfaceFingerprint, "")
+  }
+
+  test("…and two configurations differing ONLY in `target` do NOT compare equal (CT9)") {
+    val d = new BeanPropertyTransform(Map("a#x" -> "getX/setX"))
+    val v = new BeanPropertyTransform(Map("a#x" -> "getX/setX"),
+                                      Map("a#x" -> BeanPropertyTransform.Target.Var))
+    assertNotEquals(d.surfaceFingerprint, v.surfaceFingerprint)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // THE `var`/`val` COLLAPSE — DESIGN.md §8.5. One positive per shape, and one negative per guard:
+  // an idiom transform's safety argument IS its refusal enumeration, so a guard with no fixture is
+  // a claim nothing checks (`CLAUDE.md` §3).
+  // -------------------------------------------------------------------------------------------
+
+  private def collapse(java: String, target: BeanPropertyTransform.Target,
+                       pairs: (String, String)*): Ran =
+    ran(java, new BeanPropertyTransform(pairs.toMap, pairs.map((k, _) => k -> target).toMap))
+
+  /** the guard a run declined every configured pair under — the `idiom(refused)` row's own string,
+    * read from the log the run owns rather than re-derived, because the phase is the one place that
+    * holds both halves at the moment it files (§4.6, K2.5). */
+  private def guards(r: Ran): List[String] =
+    r.idioms.all.collect { case IdiomCandidate(_, IdiomVerdict.Refused(g, _), _, _, _) => g }
+
+  private def converted(r: Ran): Int =
+    r.idioms.all.count(_.verdict == IdiomVerdict.Converted)
+
+  private val varSrc =
+    """
+    class Layer {
+      private String name = "";
+      public String getName() { return name; }
+      public void setName(String n) { this.name = n; }
+      void rename() { this.name = this.name + "!"; }
+    }
+    class Use {
+      void go(Layer l) { l.setName(l.getName() + "x"); }
+    }
+    """
+
+  test("a trivial get/set pair over one field becomes a public `var`, and BOTH accessors go") {
+    val r = collapse(varSrc, BeanPropertyTransform.Target.Var, "Layer#name" -> "getName/setName")
+    assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
+    assertEquals(converted(r), 1)
+    assert(clue(r.out).contains("var name: java.lang.String = \"\""))
+    assertEquals(r.out.linesIterator.count(_.contains("def name")), 0)
+    // …and the `$field` noise the emitter's §4.55 pass used to leave behind is GONE with it: there
+    // is no method called `name` any more, so there is no clash to resolve.
+    assert(!clue(r.out).contains("name$field"))
+  }
+
+  test("the collapse RETYPES the surviving getter — `Patch.retyped`, never a drop plus a mint") {
+    // The two emit the same text and only one of them is visible to anything: a drop-plus-mint has
+    // no `info` on either side of the phase, so `Pipeline.runTraced` records nothing, the phase
+    // owes no `accountedBy` lane, and every unrewritten usage is invisible. Asserted on the PATCH
+    // and not on the emitted text, which is exactly the distinction that makes it worth pinning.
+    val r = collapse(varSrc, BeanPropertyTransform.Target.Var, "Layer#name" -> "getName/setName")
+    val before = r.before
+    val patch = r.rewrites.all.find(_.phase == "bean-properties")
+    assert(clue(patch).isDefined, "a collapse that records no patch owes no lane and counts nothing")
+    assertEquals(patch.get.accountedBy, Set(IdiomCheck.Residue))
+    val getter = before.symbols.all.find(_.fullName == "Layer#getName").get.id
+    assert(clue(patch.get.retyped).contains(getter))
+  }
+
+  test("the in-class field reads and writes route through the property, and so do the call sites") {
+    val r = collapse(varSrc, BeanPropertyTransform.Target.Var, "Layer#name" -> "getName/setName")
+    assert(clue(r.out).contains("this.name = this.name + \"!\""))
+    assert(clue(r.out).contains("l.name = l.name + \"x\""))
+    // …and NOTHING is left unrewritten: the residue lane is the phase's own check on that claim.
+    assertEquals(r.phase.candidates.all.count(_.verdict.lane == "residue"), 0)
+  }
+
+  test("a get-only entry over storage NOTHING writes becomes a `val`") {
+    val r = collapse(
+      """
+      class Map0 {
+        private String props = "p";
+        public String getProps() { return props; }
+      }
+      """, BeanPropertyTransform.Target.Val, "Map0#props" -> "getProps")
+    assertEquals(converted(r), 1)
+    assert(clue(r.out).contains("val props: java.lang.String = \"p\""))
+  }
+
+  test("a COMPUTED getter is refused — collapsing it would change what a read computes") {
+    val r = collapse(
+      """
+      class L {
+        private float o = 1.0f;
+        private L parent;
+        public float getO() { if (parent != null) return o * parent.getO(); return o; }
+        public void setO(float v) { this.o = v; }
+      }
+      """, BeanPropertyTransform.Target.Var, "L#o" -> "getO/setO")
+    assertEquals(guards(r), List("ComputedBody"))
+    assert(clue(r.out).contains("def o"), "a refused collapse degenerates to the def-pair")
+  }
+
+  test("a VALIDATING setter is refused for the same reason, at the other accessor") {
+    val r = collapse(
+      """
+      class L {
+        private int w;
+        public int getW() { return w; }
+        public void setW(int v) { if (v < 0) throw new RuntimeException("no"); this.w = v; }
+      }
+      """, BeanPropertyTransform.Target.Var, "L#w" -> "getW/setW")
+    assertEquals(guards(r), List("ComputedBody"))
+  }
+
+  test("a getter and a setter over DIFFERENT fields are refused — there is no single `var`") {
+    val r = collapse(
+      """
+      class L {
+        private int a; private int b;
+        public int getA() { return a; }
+        public void setA(int v) { this.b = v; }
+      }
+      """, BeanPropertyTransform.Target.Var, "L#a" -> "getA/setA")
+    assertEquals(guards(r), List("SplitFields"))
+  }
+
+  test("a SUBCLASS overriding the accessor refuses the whole component — a `var` has no override") {
+    val r = collapse(
+      """
+      class B {
+        private int w;
+        public int getW() { return w; }
+        public void setW(int v) { this.w = v; }
+      }
+      class S extends B {
+        public int getW() { return 7; }
+      }
+      """, BeanPropertyTransform.Target.Var, "B#w" -> "getW/setW")
+    assert(clue(guards(r)).contains("OverriddenBelow") || clue(guards(r)).contains("ConcreteRelative"))
+  }
+
+  test("an INTERFACE above with no subclass below COLLAPSES, and the trait keeps its abstract pair") {
+    val r = collapse(
+      """
+      interface HasW {
+        int getW();
+        void setW(int v);
+      }
+      class B implements HasW {
+        private int w;
+        public int getW() { return w; }
+        public void setW(int v) { this.w = v; }
+      }
+      """, BeanPropertyTransform.Target.Var, "B#w" -> "getW/setW")
+    assertEquals(converted(r), 1)
+    assert(clue(r.out).contains("def w: scala.Int"), "the interface keeps the abstract getter")
+    assert(clue(r.out).contains("def w_="), "…and the abstract setter")
+    assert(clue(r.out).contains("var w: scala.Int"), "…which the class's `var` implements")
+  }
+
+  test("a CONCRETE accessor above is refused — a `var` implements an abstract member, never an\n" +
+       "     override of a concrete one") {
+    val r = collapse(
+      """
+      class P {
+        public int getW() { return 0; }
+        public void setW(int v) {}
+      }
+      class C extends P {
+        private int w;
+        public int getW() { return w; }
+        public void setW(int v) { this.w = v; }
+      }
+      """, BeanPropertyTransform.Target.Var, "C#w" -> "getW/setW")
+    assertEquals(guards(r), List("ConcreteRelative"))
+  }
+
+  test("a PRIVATE field with PUBLIC accessors takes the ACCESSORS' visibility, never the field's") {
+    // The field is the implementation and the pair is the surface: taking the field's `private`
+    // would silently narrow the port's API with a green compile.
+    val r = collapse(varSrc, BeanPropertyTransform.Target.Var, "Layer#name" -> "getName/setName")
+    assert(!clue(r.out).linesIterator.exists(l => l.contains("var name") && l.contains("private")))
+  }
+
+  test("`target = \"var\"` on a GET-ONLY entry is refused — it would publish a writer java lacked") {
+    val r = collapse(
+      """
+      class L { private int w = 1; public int getW() { return w; } }
+      """, BeanPropertyTransform.Target.Var, "L#w" -> "getW")
+    assertEquals(guards(r), List("VarWithoutSetter"))
+  }
+
+  test("`target = \"val\"` on a pair WITH a setter is refused — it would delete a writer java had") {
+    val r = collapse(varSrc, BeanPropertyTransform.Target.Val, "Layer#name" -> "getName/setName")
+    assertEquals(guards(r), List("ValWithSetter"))
+  }
+
+  test("`target = \"val\"` over storage SOMETHING writes is refused, whatever java's `final` says") {
+    val r = collapse(
+      """
+      class L {
+        private int w = 1;
+        public int getW() { return w; }
+        void bump() { this.w = this.w + 1; }
+      }
+      """, BeanPropertyTransform.Target.Val, "L#w" -> "getW")
+    assertEquals(guards(r), List("MutableStorage"))
+  }
+
+  test("…and `val` over storage the CONSTRUCTOR fills is refused too — the keyword would be the\n" +
+       "     constructor funnel's answer and this phase cannot see it") {
+    val r = collapse(
+      """
+      class L {
+        private final int w;
+        public L(int v) { this.w = v; }
+        public int getW() { return w; }
+      }
+      """, BeanPropertyTransform.Target.Val, "L#w" -> "getW")
+    assertEquals(guards(r), List("MutableStorage"))
+  }
+
+  test("a pair the port has NOT asked for is a counted DENOMINATOR row, not a silence") {
+    // `refused = 0` is a bar a run could hold by converting nothing, so an entry with no `target`
+    // still files — and it files the guard that says the collapse COULD have applied, which is the
+    // number a maintainer deciding whether to widen an enablement reads.
+    val r = run(varSrc, "Layer#name" -> "getName/setName")
+    assertEquals(guards(r), List("NotRequested"))
+    assertEquals(converted(r), 0)
+  }
+
+  test("a pair the DEF-PAIR path refused files `PairRefused`, never a collapse verdict") {
+    val r = collapse(
+      """
+      class Builder {
+        private int w;
+        public int getW() { return w; }
+        public Builder setW(int v) { this.w = v; return this; }
+      }
+      """, BeanPropertyTransform.Target.Var, "Builder#w" -> "getW/setW")
+    assertEquals(guards(r), List("PairRefused"))
+  }
+
+  test("declaring the collapse AND `public-field-accessors` over one type is a contradiction") {
+    // K21 face 2 PUTS java-bean names on a field for a reflective framework to find; the collapse
+    // TAKES them off. The two policies are asked for separately and only the run sees both, so the
+    // refusal is what stops a port getting neither.
+    val r = ran(varSrc, new BeanPropertyTransform(Map("Layer#name" -> "getName/setName"),
+                          Map("Layer#name" -> BeanPropertyTransform.Target.Var),
+                          RuleScope.Only(Set("Layer"))))
+    assertEquals(guards(r), List("ExposedField"))
+    assert(clue(r.out).contains("def name"), "a refused collapse degenerates to the def-pair")
+  }
+
+  test("every collapse guard has a WHY that says whether the refusal is permanent") {
+    BeanCollapse.Guard.values.foreach { g =>
+      assert(clue(g.why).length > 40, s"$g")
+    }
+  }
+
+  test("a collapsed property carries a PORTER NOTE naming the JVM methods that moved") {
+    val r = collapse(varSrc, BeanPropertyTransform.Target.Var, "Layer#name" -> "getName/setName")
+    val d = r.log.all.filter(_.kind == Decision.Kind.CollapsedProperty)
+    assertEquals(clue(d).size, 1)
+    assertEquals(d.head.detail("was"), "getName() setName()")
+    assertEquals(d.head.detail("form"), "var")
   }

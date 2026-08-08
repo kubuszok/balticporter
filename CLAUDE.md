@@ -1001,6 +1001,20 @@ Two things every such pass must do, learned by getting both wrong:
   Note the nested class is usually ANONYMOUS, so it lives inside a TERM — a walk over class bodies
   finds none of them (§3).
 
+**…and a NAME CLASH and an IMPLEMENTATION PAIR look identical, so a renaming pass must ask which it
+is.** Every pass above renames because two declarations cannot share a name; none of them asks
+whether the two are the SAME MEMBER. That question does not arise while the emitted forms are java's
+own — a java field never implements a java method — and it arises the moment any phase turns a
+member into a PROPERTY. `resolveFieldShadowing` renamed a collapsed `var w` to `w$shadow` under the
+interface's abstract `def w` it was the implementation of, leaving the class abstract; and **nothing
+reports that until the port is already at 0 typer errors**, because `RefChecks` does not run before
+then (§3), so it arrives on the day a port goes green in a member nobody is looking at. Decide it
+from the EMITTED SHAPE, which is exact rather than heuristic: a scala `val`/`var` and a scala
+PARAMETERLESS `def` of the same name across a subtype edge are an implementation pair, and java
+cannot produce that shape at all because a java method always has a parameter clause. The general
+form is §4.56's, read at a rename: *a pass may only conclude "these two are different members" from
+a structural fact, and two names being equal is not one.*
+
 And count what the constructor funnel PROMOTES — the chosen constructor's parameters *and* its
 top-level locals. Neither is in the class body, both become members, and a Java constructor local
 becoming a Scala member is exactly what a subclass then collides with.

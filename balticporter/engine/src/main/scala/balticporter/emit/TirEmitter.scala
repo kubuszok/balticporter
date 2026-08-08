@@ -5275,6 +5275,17 @@ object TirEmitter:
         .flatMap(declOf.get)
         .flatMap(pcd => instanceMembers(pcd) ++ inherited(pcd, seen + cd.symbol))
         .toSet
+    /** the inherited DECLARATIONS behind those names — a name is not enough to answer
+      * [[implementsInherited]], and a shadowing decision taken from a name alone is §4.56's rule
+      * read at the emitter. */
+    def inheritedSyms(cd: Tree.ClassDef, seen: Set[SymId] = Set.empty): List[SymId] =
+      cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case t: Term => headSym(t.tpe) }
+        .filterNot(seen)
+        .flatMap(declOf.get)
+        .flatMap(pcd => pcd.body.collect {
+          case d: Tree.DefDef if !p.symbolOf(d.symbol).exists(_.flags.isStatic) => d.symbol
+          case v: Tree.ValDef if !p.symbolOf(v.symbol).exists(_.flags.isStatic) => v.symbol
+        } ++ inheritedSyms(pcd, seen + cd.symbol))
     val scanned = collection.mutable.Set[SymId]()
     def scan(cd: Tree.ClassDef): Unit =
       if scanned(cd.symbol) then return
@@ -5294,9 +5305,32 @@ object TirEmitter:
           case TirEmitter.BaseName.Derive      => false
           case TirEmitter.BaseName.Renamed(to) => renames(v.symbol) = to; true
           case TirEmitter.BaseName.Kept        => true
+      /** A scala `val`/`var` and a scala PARAMETERLESS `def` of the same name, one inherited from
+        * the other's type, are an IMPLEMENTATION pair and not a shadowing one — so moving the field
+        * would break the very contract it is answering, and would do it silently until the port
+        * reaches 0 typer errors and `RefChecks` finally runs (§3).
+        *
+        * The test is EXACT rather than a heuristic, and what makes it exact is that java cannot
+        * produce this shape: a java method always has a parameter clause, so it never renders
+        * parameterless. An emitted `paramss == Nil` is therefore a member the property conversion
+        * made, and the field standing under it is that property's storage. Measured on the first
+        * `bean-properties` collapse over a type with an interface above: the pass emitted
+        * `var w$shadow` under an abstract `def w` it was the implementation of.
+        *
+        * A CONCRETE inherited `def` would be an OVERRIDE rather than an implementation and a `var`
+        * cannot do that — but the conversion that produces this shape has already refused that case
+        * (`BeanCollapse.Guard.ConcreteRelative`), so the two compose and this one does not re-ask. */
+      lazy val inheritedDecls = inheritedSyms(cd)
+      def implementsInherited(v: Tree.ValDef): Boolean =
+        val n    = nm(v.symbol)
+        val same = inheritedDecls.filter(s => eff(s) == n)
+        same.nonEmpty && same.forall(s => p.definitionOf(s) match
+          case Some(d: Tree.DefDef) => d.paramss.isEmpty
+          case _                    => false)
+
       cd.body.foreach {
         case v: Tree.ValDef if shadowed(nm(v.symbol)) && !p.symbolOf(v.symbol).exists(_.flags.isStatic) &&
-                               !settledByBase(v) =>
+                               !implementsInherited(v) && !settledByBase(v) =>
           // The fresh name must not ITSELF be inherited. `CheckBox.style` shadows
           // `TextButton.style`, which shadows `Button.style` — renaming both to `style$shadow`
           // just relocated the collision one level up. Keep appending until the name is free
