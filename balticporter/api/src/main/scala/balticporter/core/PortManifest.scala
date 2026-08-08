@@ -34,7 +34,8 @@ import java.nio.file.Path
   * The fields of this class are precisely the things a dependent module must NOT decide for itself.
   * Everything a [[balticporter.runner.PortRun]] takes that is NOT here is free to differ:
   *
-  *   - '''MUST agree (here)''' — [[dropTypes]], [[dropMethods]], [[packageRenames]], [[surface]].
+  *   - '''MUST agree (here)''' — [[dropTypes]], [[dropMethods]], [[packageRenames]], [[surface]],
+  *     [[resolutions]].
   *     Each one changes the SHAPE of the shared surface as the dependent will compile against it. A
   *     type the base does not translate mechanically must not be translated mechanically here
   *     either, or this port emits references to a class the base never wrote. A method the base
@@ -108,6 +109,35 @@ final case class PortManifest(
     allowPackageSplit: Set[String] = Set.empty,
     /** the phases that shape EMITTED SIGNATURES. Inherited, and placed before a dependent's own. */
     surface: List[Phase] = Nil,
+    /** PER-LOCATION REMEDY SELECTION — `owner#member` → the id of one of the remedies a phase or
+      * check OFFERED there ([[balticporter.tir.Remedy]]).
+      *
+      * ==What it is for==
+      * Where the engine has no single right answer, the phase that mints the residue finding
+      * publishes a MENU and a port picks one entry per location instead of writing a §1(c) rule for
+      * a decision that is one word long. The key is a `MemberKey` in the UPSTREAM namespace, which
+      * is the grammar `dropMethods` and every other §1(b) table already speaks; the value is a
+      * globally-unique remedy id, which is what lets the key stay flat rather than becoming a
+      * compound `(lane, kind, id)`.
+      *
+      * ==INHERITED, and it is the strictest field on this page==
+      * A remedy that changes emitted text at a shared declaration and is chosen differently by two
+      * modules produces exactly §1.5's failure — two ports that each compile alone and cannot
+      * compile together — so this is MUST-agree surface and [[effectiveResolutions]] unions the
+      * chain bases-first like every other inherited map. What it does NOT do is let the nearest
+      * manifest silently win: a package rename disagreement is a fact about the DEPENDENT's own
+      * namespace, and a selection disagreement is two answers to one question about a SHARED one. So
+      * the same key with two values anywhere in a chain is a fatal
+      * [[ManifestAgreement.Kind.ResolutionDivergence]], and a dependent's key naming a declaration a
+      * base EMITS that the base's own `resolutions` does not answer is a fatal
+      * [[ManifestAgreement.Kind.ResolutionIntrusion]] — the `SurfaceIntrusion` screen, read at a
+      * member key.
+      *
+      * If a future remedy provably moves no emitted text ([[balticporter.tir.Remedy]]'s
+      * `emissionAffecting = false`), THAT one belongs in the not-inherited column beside
+      * `verdictOverrides`. Stated here so the move is a decision rather than a surprise, exactly as
+      * `targets` states its own. */
+    resolutions: Map[String, String] = Map.empty,
     /** ready-made Scala this module ships. NOT inherited — see the class doc. */
     inject: List[Path] = Nil,
     /** the modules this one is a dependent OF, nearest last. */
@@ -241,6 +271,45 @@ final case class PortManifest(
 
   def effectiveFlattenNestedTypes: Set[String] = policyChain.flatMap(_.flattenNestedTypes).toSet
 
+  /** every per-location remedy SELECTION in the chain, bases first — so the nearest declaration
+    * wins a conflict and [[ManifestAgreement.Kind.ResolutionDivergence]] reports it rather than the
+    * engine hiding it. Composed exactly as [[effectivePackageRenames]] is, for the same reason. */
+  def effectiveResolutions: Map[String, String] =
+    policyChain.foldLeft(Map.empty[String, String])((acc, m) => acc ++ m.resolutions)
+
+  /** …and the KEYS TWO MANIFESTS IN THIS CHAIN ANSWER DIFFERENTLY, which the union above cannot
+    * show. One row per contested key: the key, and every (manifest name, remedy id) pair that
+    * claims it, sorted so two runs render it identically.
+    *
+    * A `Map` union is the right composition and the WRONG report: nearest-wins is what makes the
+    * effective policy well defined, and it is also what would let a dependent quietly re-answer a
+    * selection its base made about a declaration they share. So the union stands and the
+    * disagreement is a FATAL finding beside it — which is the same shape `MergeablePolicy`'s
+    * refusals take (`a refusal is a finding, never an approximation`). */
+  def resolutionConflicts: List[(String, List[(String, String)])] =
+    policyChain
+      .flatMap(m => m.resolutions.toList.map((k, v) => (k, m.name, v)))
+      .groupBy(_._1).toList
+      .collect { case (k, rows) if rows.map(_._3).distinct.sizeIs > 1 =>
+        k -> rows.map((_, who, id) => (who, id)).distinct.sorted }
+      .sortBy(_._1)
+
+  /** WHAT THIS MODULE'S SHARED SURFACE IS FINGERPRINTED FROM — the effective surface phases, and
+    * every per-location selection beside them.
+    *
+    * The selections belong here for the reason the phases do: a resolution decides emitted text at a
+    * declaration a dependent compiles against, so a base whose selections moved and whose published
+    * `policy=` digest did not would let `PortMap.freshness` call a stale map current. One derivation
+    * because two would be free to drift — `PortRun` fingerprints THIS module through it and a base
+    * through the same method on the base's own manifest.
+    *
+    * A module with no selections contributes no lines, so the digest is byte-identical to the one
+    * the surface list alone produced. That is not a coincidence to preserve by hand; it is what
+    * makes this field's arrival provably flat on every port that does not use it. */
+  def surfaceDigestInputs: List[String] =
+    effectiveSurface.map(PortManifest.fingerprint) ++
+      effectiveResolutions.toList.sorted.map((k, v) => s"resolution[$k=$v]")
+
   def effectiveAllowPackageSplit: Set[String] = policyChain.flatMap(_.allowPackageSplit).toSet
 
   /** every per-TYPE destination this manifest declares, keyed by the type it names — the one view
@@ -300,7 +369,12 @@ final case class PortManifest(
   def inheritedKeysNeverFired(fired: Set[String]): Map[String, Set[String]] =
     baseChain.map(b =>
       b.name -> ((b.dropTypes ++ b.dropMethods ++
-        b.typeRenames.keySet ++ b.subPackages.keySet ++ b.flattenNestedTypes) -- fired))
+        b.typeRenames.keySet ++ b.subPackages.keySet ++ b.flattenNestedTypes ++
+        // …and the base's per-location SELECTIONS, which are keys like any other and bind through
+        // the same binder, so `fired` already answers for them. A narrower dependent legitimately
+        // never reaches the declaration a base selected a remedy at, which is exactly what this
+        // non-fatal finding is for.
+        b.resolutions.keySet) -- fired))
       .filter(_._2.nonEmpty).toMap
 
   /** the drops THIS module is answerable for — its own, minus anything a base also declares.
@@ -370,7 +444,11 @@ final case class PortManifest(
     * an obligation only where there is policy to protect. One predicate, read by
     * `ManifestAgreement` on both sides of that line. */
   def declaresPolicy: Boolean =
-    dropTypes.nonEmpty || dropMethods.nonEmpty || packageRenames.nonEmpty || surface.nonEmpty
+    dropTypes.nonEmpty || dropMethods.nonEmpty || packageRenames.nonEmpty || surface.nonEmpty ||
+      // a SELECTION is shared surface (see [[resolutions]]), so a module that states one is a
+      // module whose surface a dependent must be screened against — and therefore one that owes a
+      // `governs` claim and a published map.
+      resolutions.nonEmpty
 
   /** the EMITTED FQNs this module's own [[inject]] roots supply — one derivation, in
     * [[Substitutions.injectedSources]], which the run's copy loop and `PortMap` read too.

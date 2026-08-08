@@ -1,0 +1,131 @@
+package balticporter.core
+
+import balticporter.core.ManifestAgreement.{BasePort, Kind}
+import balticporter.tir.SrcMap
+
+/** PER-LOCATION SELECTION AS SHARED SURFACE — the §1.5 half of `resolutions`.
+  *
+  * A remedy decides emitted text at a declaration, so two modules that answer one location
+  * differently produce two ports that each compile alone and cannot compile together. That is the
+  * failure this file pins, in both of its shapes: a chain that disagrees with itself, and a
+  * dependent quietly answering for a declaration its base EMITS.
+  *
+  * Both are checked in `surfacePairs`, which means both are load-bearing — `surfaceGate` stops the
+  * run before any phase runs rather than reporting the disagreement beside output an operator would
+  * then have to read to work out which of the two answers produced it.
+  */
+class ResolutionAgreementSpec extends munit.FunSuite:
+
+  private def mapOf(module: String = "base", emitted: List[String] = Nil,
+                    dropTypes: Set[String] = Set.empty, injected: Set[String] = Set.empty) =
+    PortMap.of(module, "eng", emitted, SrcMap.Recording(Nil), dropTypes, Set.empty, injected,
+      Set.empty, Map.empty)
+
+  private def kinds(fs: List[ManifestAgreement.Finding]) =
+    fs.map(_.kind).filterNot(_ == Kind.InheritedKeyNeverFired).sortBy(_.toString)
+
+  private def check(m: PortManifest, ports: List[BasePort] = Nil) =
+    ManifestAgreement.check(Some(m), Nil, foreignRoots = false, ports)
+
+  // -------------------------------------------------------------------------------------------
+  // the union, and what it deliberately does NOT hide
+  // -------------------------------------------------------------------------------------------
+
+  test("resolutions are INHERITED — a dependent applies its base's selections without restating them") {
+    val base = PortManifest(name = "base", governs = Set("up"),
+                            resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("dep.B#n" -> "copy")))
+    assertEquals(dep.effectiveResolutions, Map("up.A#m" -> "wrap", "dep.B#n" -> "copy"))
+  }
+
+  test("the same key with two values anywhere in a chain is FATAL, naming both claimants") {
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m" -> "copy")))
+    // the union still answers — nearest wins, which is what makes the effective policy well
+    // defined — and the disagreement is a finding beside it rather than a silent override.
+    assertEquals(dep.effectiveResolutions, Map("up.A#m" -> "copy"))
+    val fs = check(dep).filter(_.kind == Kind.ResolutionDivergence)
+    assertEquals(fs.map(_.subject), List("up.A#m"))
+    assert(fs.forall(_.kind.fatal))
+    assert(clue(fs.head.detail).contains("""`base` selects "wrap""""))
+    assert(clue(fs.head.detail).contains("""`dep` selects "copy""""))
+  }
+
+  test("…and it STOPS THE RUN: the gate asks it before any phase runs") {
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m" -> "copy")))
+    assertEquals(ManifestAgreement.surfaceGate(Some(dep)).map(_.kind), List(Kind.ResolutionDivergence))
+  }
+
+  test("agreeing on the same key is not a divergence — a longhand module may restate shared policy") {
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m" -> "wrap")))
+    assertEquals(check(dep).filter(_.kind == Kind.ResolutionDivergence), Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // the intrusion screen — asked of what the base EMITS, never of its `governs` CLAIM
+  // -------------------------------------------------------------------------------------------
+
+  test("a dependent selecting a remedy at a declaration its base EMITS is FATAL") {
+    val base = PortManifest(name = "base", governs = Set("up"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m" -> "wrap")))
+    val fs   = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
+    assertEquals(kinds(fs), List(Kind.ResolutionIntrusion))
+    assert(clue(fs.head.detail).contains("""published map emits it as "up.A""""))
+  }
+
+  test("…and a declaration the base does NOT emit is admitted — D10's rule, at a member key") {
+    // A dependent's own declarations routinely sit inside the base's claimed namespace: a TEST
+    // source set always does. Screened by the CLAIM every such key would be an intrusion, which is a
+    // rule with no way to comply with it.
+    val base = PortManifest(name = "base", governs = Set("up"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.MyTest#m" -> "wrap")))
+    val fs   = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
+    assertEquals(kinds(fs), Nil)
+  }
+
+  test("…nor is a key the base ITSELF answers: that is inheritance, or already a divergence") {
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m" -> "wrap")))
+    val fs   = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
+    assertEquals(kinds(fs), Nil)
+  }
+
+  test("a base with NO usable map falls back to refusing, which is the safe direction") {
+    val base = PortManifest(name = "base", governs = Set("up"), dropTypes = Set("up.Gone"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m" -> "wrap")))
+    assert(kinds(check(dep, List(BasePort(base)))).contains(Kind.ResolutionIntrusion))
+  }
+
+  test("a subject the base DROPS and leaves empty is the allowed case") {
+    val base = PortManifest(name = "base", governs = Set("up"), dropTypes = Set("up.Gone"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.Gone#m" -> "wrap")))
+    val m    = mapOf(emitted = List("up.A"), dropTypes = Set("up.Gone"))
+    assertEquals(kinds(check(dep, List(BasePort(base, Some(m), "run-latest")))), Nil)
+  }
+
+  test("a BASE's own selections are its own business — nothing here reports them") {
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep"))
+    assertEquals(kinds(check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))),
+                 Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // the fingerprint
+  // -------------------------------------------------------------------------------------------
+
+  test("a selection MOVES the surface fingerprint — a base whose choices changed is not fresh") {
+    val a = PortManifest(name = "m")
+    val b = PortManifest(name = "m", resolutions = Map("up.A#m" -> "wrap"))
+    val c = PortManifest(name = "m", resolutions = Map("up.A#m" -> "copy"))
+    assertNotEquals(PortMap.policyDigest(a.surfaceDigestInputs), PortMap.policyDigest(b.surfaceDigestInputs))
+    assertNotEquals(PortMap.policyDigest(b.surfaceDigestInputs), PortMap.policyDigest(c.surfaceDigestInputs))
+  }
+
+  test("…and a manifest with NO selections digests exactly as the surface list alone did") {
+    // what makes this field's arrival provably flat on every port that does not use it.
+    val m = PortManifest(name = "m")
+    assertEquals(m.surfaceDigestInputs, m.effectiveSurface.map(PortManifest.fingerprint))
+  }

@@ -165,6 +165,27 @@ object ManifestAgreement:
         "implements no `SurfacePolicy` either is reported HOWEVER it is configured — its " +
         "fingerprint is its NAME, so the engine cannot tell two policies from one, and both " +
         "instances would run over one program (§1(a), engine: implement `SurfacePolicy`).")
+    /** one location, two remedy SELECTIONS, in one policy chain.
+      *
+      * A sibling of [[SurfaceDivergence]] and not an instance of it: that one is about two INSTANCES
+      * of a phase whose policies could not be composed, and this is about one key with two values,
+      * which composes perfectly (nearest wins) and composes WRONG. */
+    case ResolutionDivergence extends Kind(true,
+      "§1(b) PER-LIBRARY: two manifests in this chain select DIFFERENT remedies at the same " +
+        "location. A remedy decides emitted text at a declaration both modules compile against, so " +
+        "the union that makes the effective policy well defined (nearest wins) is exactly what " +
+        "would let a dependent silently re-answer its base — and the two ports would then each " +
+        "compile alone and could not compile together. Reconcile the two entries: move the " +
+        "selection to the module that owns the declaration, and inherit it with " +
+        "`base.extendedBy(...)` rather than restating it.")
+    /** a dependent selects a remedy at a declaration its base EMITS and does not select one at. */
+    case ResolutionIntrusion extends Kind(true,
+      "§1(b) PER-LIBRARY: this module selects a remedy at a declaration inside a base's declared " +
+        "namespace that the base EMITS and says nothing about, so the remedy would re-shape the " +
+        "SHARED surface from the dependent's side. `SurfaceIntrusion`'s rule, read at a member key: " +
+        "move the entry to the base's manifest, or (if the declaration is genuinely not part of the " +
+        "shared surface) say so there. A subject the base leaves EMPTY is the allowed case — " +
+        "nothing stands at that name in the base's output.")
     /** a dependent's merged-in key edits a namespace a base emits. */
     case SurfaceIntrusion extends Kind(true,
       "§1(b) PER-LIBRARY: this module adds policy for a type INSIDE a base's declared namespace " +
@@ -520,7 +541,35 @@ object ManifestAgreement:
             (if is.size > 1 then s" (${is.size} such subjects; the first is named)" else ""))
       }
 
-    divergent ++ intrusions
+    // ---- the same two questions asked of PER-LOCATION REMEDY SELECTIONS -----------------------
+    // They belong in `surfacePairs` and not in `statik` for the reason the pair refusals do: a
+    // selection decides EMITTED TEXT, so a chain that disagrees about one must stop BEFORE the
+    // pipeline runs (`surfaceGate`) rather than be reported beside output an operator would then be
+    // reading to work out which of the two answers produced it.
+    val chainConflicts = m.resolutionConflicts.map { (key, claims) =>
+      Finding(Kind.ResolutionDivergence, claims.map(_._1).mkString("+"), key,
+        claims.map((who, id) => s"""`$who` selects "$id"""").mkString(", "))
+    }
+
+    // …and the INTRUSION screen, which is `SurfaceIntrusion`'s exactly — asked of what the base
+    // EMITS (its published map, through `standsAt`) and never of its `governs` CLAIM, because a
+    // dependent's own declarations routinely sit inside that namespace and a TEST SOURCE SET always
+    // does (`ENGINE-LIMITS.md` D10). THIS module's own keys only: a base's selection is the base's
+    // business, which is the same line `extraTypes` draws for a drop.
+    //
+    // A key the base ALSO answers is not an intrusion — the two either agree (a longhand module
+    // restating shared policy) or they are already a `ResolutionDivergence` above, and reporting
+    // both would tell one reader to do two contradictory things.
+    val resolutionIntrusions = for
+      (key, id) <- m.resolutions.toList.sortBy(_._1)
+      subject    = MergeablePolicy.subjectOf(key)
+      b         <- m.baseChain
+      if b.claims(subject) && !b.effectiveResolutions.contains(key) && standsAt(ports, b.name, subject)
+    yield Finding(Kind.ResolutionIntrusion, b.name, key,
+      s"""selects "$id" at a declaration of `$subject`, which is inside `${b.name}`'s declared """ +
+        s"namespace and which `${b.name}` emits" + evidence(ports, b.name, subject))
+
+    divergent ++ intrusions ++ chainConflicts ++ resolutionIntrusions
 
   /** Does anything STAND at `subject` in `base`'s output — asked of its PUBLISHED MAP where there
     * is a usable one, and of its manifest where there is not.
