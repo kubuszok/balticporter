@@ -128,8 +128,12 @@ object LiqpClasspath:
         n.startsWith("antlr4-runtime") || n.startsWith("liqp")
       }
       if depCp.isEmpty then throw new RuntimeException("antlr4-runtime/liqp not on fetched classpath")
+      // `--release` pinned for LiqpMigrate's reason: the cached classes outlive the JDK that wrote
+      // them, and a class-file version newer than the reading JVM's is an UnsupportedClassVersionError
+      // on a cache nothing invalidates.
       run(
-        List("javac", "-cp", depCp.map(_.toString).mkString(java.io.File.pathSeparator), "-d", genClasses.toString)
+        List("javac", "--release", "17",
+          "-cp", depCp.map(_.toString).mkString(java.io.File.pathSeparator), "-d", genClasses.toString)
           ++ javaFiles
       )
     genClasses
