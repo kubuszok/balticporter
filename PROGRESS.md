@@ -4941,16 +4941,19 @@ changed.
 
 ### What the three lanes count, and the one thing to read first
 
-Every row is a REFUSAL at wave 0, because nothing converts yet — but the guard `PhaseNotEnabled` is
-NOT a property of the site. It means *this site passes every guard and the transformer that would
-convert it is not in this pipeline*, so it is the DENOMINATOR a later wave converts. Read it as the
-population; read every other guard as a delta the port carries deliberately.
+A row is `Converted` or `Refused(guard)`, and the guard is the first thing to read. `NotRequested` is
+NOT a property of the site: it means *this site passes every guard and the port has not asked*, so it
+is the DENOMINATOR a widening converts. Every other guard is a delta the port carries deliberately,
+and a guard's own `why` says whether it is permanent. At wave 0 every row here was a refusal because
+nothing converted yet; the SAM lane and the bean lane both convert now, and the censuses that
+published their denominators are retired — a transformer files one row per site CONSIDERED, which IS
+the denominator, and a census beside it would be a second answer to its own question (§4.6).
 
 ### Per port
 
 | port | SamLambda considered / convertible | BeanCollapse considered / collapsible | `return this` considered / ancestor-typed |
 |---|---|---|---|
-| `sge` (libGDX core) | **155 / 23** — 127 `NotSam`, 5 `NonCapturing` | **137 / 91** — 32 `ComputedBody`, 14 `OverriddenBelow` | **709 / 2** — 678 `SelfTyped`, 29 `NotAlwaysThis` |
+| `sge` (libGDX core) | **155 / 23** — 127 `NotSam`, 5 `NonCapturing` | **137 / 60 CONVERTED** — 30 `ComputedBody`, 30 `MutableStorage`, 14 `OverriddenBelow`, 2 `PairRefused`, 1 `ConcreteRelative` | **709 / 2** — 678 `SelfTyped`, 29 `NotAlwaysThis` |
 | `sge` test set | 9 / 0 — 6 `NonCapturing`, 3 `NotSam` | — | 0 |
 | `sge-ecs` | 0 | — | 5 / 0 |
 | `sge-ecs` test set | 13 / 0 — all `NotSam` | — | 0 |
@@ -4980,11 +4983,20 @@ is the libGDX base alone.
   §8.15's charter narrowing predicts and not the raw `197 anonymous-class instantiations` an
   upstream grep suggests. It is also the number wave 1's blast must PREDICT: 23 declarations on the
   base, 3 on jbump, 1 on noise4j, and zero everywhere else;
-- **the bean `var` collapse has a population of 91 on the only port that carries the phase**, out of
-  137 configured pairs: 32 declined because the getter's body is not `return this.f` (the exact
-  refusal §8.5 kept bodies verbatim for) and 14 because a subclass overrides the accessor and a
-  scala `var` cannot be overridden. That is §8.5's deferred half measured rather than predicted, and
-  it is large enough to justify a wave and small enough to read line by line;
+- **the bean `var` collapse CONVERTS 60 of 137 on the only port that carries the phase**, and the
+  three numbers this line used to hold are the reason the census behind it is gone. Wave 0's census
+  said 91, this document said 93, and the transformer says the collapsible population was 90 —
+  because a census beside a transformer answers the transformer's question without asking the
+  transformer's guards (2 of its rows were pairs the def-pair path itself refuses, 1 a concrete
+  relative). The port asks for all 90 and gets 60; the 30 it does not get are one shape under one
+  guard, `MutableStorage` — a get-only property over storage the program assigns elsewhere, where a
+  `val` would not compile and a `var` would publish a writer java never had, so the `def` pair is the
+  faithful form and stays. The other 77 rows are permanent library facts: 30 `ComputedBody` (the
+  exact refusal §8.5 kept bodies verbatim for), 14 `OverriddenBelow`, 2 `PairRefused`, 1
+  `ConcreteRelative`. `NotRequested` is 0 — nothing collapsible is left unasked. The residue the
+  whole design was gated on fell with it: **280 -> 220 `$field` DECLARATIONS** in
+  `ported/sge/src_managed/main`, exactly one per collapsed pair, and 13 references in
+  `ported/ssg-liquid` untouched because that port carries no `bean-properties` phase;
 - **`return this` → `this.type` is REFUSED on its own number.** 709 methods in the libGDX base answer
   `this`; **678** already declare the declaring class as their return type, where `this.type` buys
   precision only at a call on a subclass, and **29** answer something else on another path. The
@@ -5085,35 +5097,6 @@ already goes.
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
-
-### 12.0 The bean-pair `var`/`val` collapse — BUILT and ENABLED on the first tranche
-
-The mechanism, its guards and its fixtures ship (`DESIGN.md` §8.5). The libGDX base asks for it on
-**13 hand-read `com.badlogic.gdx.maps` entries** — 8 `var` and 5 `val` — and every other entry keeps
-its `def` pair.
-
-- **`idiom(converted)` 23 -> 36 on libGDX core, against a PREDICTED 13** (the enablement's own entry
-  count), `idiom(refused)` 978 -> 965, `idiom(residue)` 0, `rewrite-callsites` flat at 2. Blast: **37
-  baseline rows on libGDX core and 0 on every other port** — 21 accessor declarations deleted, 13
-  property declarations moved, 3 owning-type digests — all attributable, and the `$field` DECLARATION
-  count fell **280 -> 267**, exactly one per collapsed pair. Suite outcomes identical on all eleven
-  lanes; 0 compile errors everywhere, dependents included.
-- **The remaining collapsible population is 77 of 137**, one row per configured pair in
-  `idiom(refused)`: 30 `ComputedBody`, 14 `OverriddenBelow`, 2 `PairRefused`, 1 `ConcreteRelative`,
-  77 `NotRequested`. libGDX core is the only port carrying a `bean-properties` phase. Read the run's
-  own breakdown before widening — the census that used to publish this number over-counted it by
-  three, which is why it is retired.
-- **The `val` half is narrower than the `var` half and deliberately so.** `Guard.MutableStorage`
-  admits only storage that is written at its own declaration and nowhere else, because every other
-  shape's `val`/`var` keyword is the constructor funnel's answer and the phase cannot see the funnel.
-  All five `val` entries in this tranche are that shape (`private X f = new X();` and nothing
-  assigns it); how much of the get-only population beyond `maps` it admits is what the next widening
-  measures, and an over-refusal there is a counted skip rather than a defect.
-- **It is measured with `just measure-all`, never `just gdx-measure`** — the base's dependents read
-  its `base-surface` and its published `port-map.tsv`, and a base port's green numbers are not
-  evidence about its dependents (§1.5). This tranche moved 0 dependent members because no dependent
-  in the corpus touches `com.badlogic.gdx.maps`; a widening that reaches a package they do use is the
-  first one whose dependent blast is not zero.
 
 ### 12.1 Provenance coverage — decisions that are not yet recorded
 

@@ -2973,16 +2973,15 @@ the emitter's four passes still run afterwards, so a rename that lands a method 
 name is resolved by the *field* moving. The utility refuses only when the collision is with something
 those passes will **not** move.
 
-**The property target is `def x` / `def x_=(v: R): Unit` ONLY, bodies kept verbatim.** The `var x`
+**The DEFAULT property target is `def x` / `def x_=(v: R): Unit`, bodies kept verbatim.** The `var x`
 collapse — which is what the reference port actually wrote for most harvested pairs, and which deletes
-the `$field` noise — is **deferred behind a measured `$field`-residue count, not rejected**, because it
-carries three silent-correctness obligations: a `var` cannot be overridden (legal only when the closure
-has no members *below* the declaring class, though an interface *above* is fine); deleting the
-accessors requires that every call provably route through the pair; and any direct field access
-elsewhere in the class must be verified equivalent post-collapse. The frozen BIR path's
-`collapsedAccessors` — a trivial-body test plus an override guard — shows the mechanism is real and
-already survived a corpus. §5's *change one thing*: the def-pair blast is measurable alone, and the
-collapse degenerates to the def-pair whenever its guards fail.
+the `$field` noise — is **opt-in per entry** (`target = "var" | "val"`), because it carries three
+silent-correctness obligations: a `var` cannot be overridden (legal only when the closure has no
+members *below* the declaring class, though an ABSTRACT one *above* is fine); deleting the accessors
+requires that every call provably route through the pair; and any direct field access elsewhere in the
+class must be verified equivalent post-collapse. §5's *change one thing* is what makes the two shapes
+one phase rather than two: the def-pair blast was measurable alone, and **the collapse degenerates to
+the def-pair whenever a guard fails**, so every refusal is a port that keeps working.
 
 **Never invent a member.** An entry naming an accessor that does not exist is a `NeverMatched` finding,
 not a synthesis. The audit found the hand port **authored** getters to complete pairs; that is

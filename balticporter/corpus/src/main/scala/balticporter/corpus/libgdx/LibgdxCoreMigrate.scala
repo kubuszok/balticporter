@@ -417,34 +417,128 @@ object LibgdxPolicy:
     * writes — so a wrong answer here is a counted `idiom(refused)` row and never a silent change of
     * surface.
     *
-    * ==This first tranche is HAND-READ, and the family is the reason==
-    * `com.badlogic.gdx.maps` is the flattest data model in this library: `Map`, `MapLayer` and
-    * `MapObject` are plain attribute carriers whose java is a private field, a `return this.f` and a
-    * `this.f = v`, which is exactly the shape §8.5's obligations admit. Every entry below was read
-    * against its upstream file before it was written; the rest of the collapsible population is a
-    * later step, and sizing it is what the `NotRequested` rows in `idiom(refused)` are for.
+    * ==THIS LIST IS THE WHOLE COLLAPSIBLE POPULATION, refusals included==
+    * The first tranche was 13 hand-read `com.badlogic.gdx.maps` entries; widening it to every pair
+    * the run reported collapsible asked for **77 more and got 47**, at 0 compile errors. The 30 that
+    * did not are one shape under one guard — `MutableStorage`, a GET-ONLY property over storage the
+    * program assigns elsewhere (`ClickListener#pressed`, `DragAndDrop#currentDragActor`,
+    * `Polygon#vertices`, …). Their refusal is PERMANENT and correct rather than an engine gap: a
+    * `val` there would not compile and a `var` would publish a writer java never had, so the `def`
+    * pair is the faithful form.
     *
-    * `MapLayer#opacity` is deliberately ABSENT although it is a `getOpacity/setOpacity` pair beside
-    * these: its getter multiplies by the parent's, so it is a computed property and the phase
-    * refuses it under `ComputedBody`. It is named here so a reader does not add it back. */
+    * They are declared ANYWAY. A permanent refusal in `policy` would be a noise floor — that lane is
+    * a work list an operator is meant to clear, and this file carries the lesson one policy up. This
+    * one lands in `idiom(refused)`, which is a DENOMINATOR, and the difference is the whole reason
+    * the idiom layer has three lanes: a declared entry makes the run SAY `MutableStorage` at that
+    * property, while dropping the entry makes it say `NotRequested`, which would be false.
+    *
+    * `MapLayer#opacity` is the one collapsible-looking pair that is NOT here, for the neighbouring
+    * reason: its getter multiplies by the parent's, so it is computed and never converts. Named so a
+    * reader does not add it back.
+    *
+    * What the run then reports is the honest denominator, with nothing left unasked: 30
+    * `ComputedBody`, 30 `MutableStorage`, 14 `OverriddenBelow`, 2 `PairRefused`, 1
+    * `ConcreteRelative`, 0 `NotRequested`. */
   def beanPropertyTargets: Map[String, balticporter.transform.BeanPropertyTransform.Target] =
     import balticporter.transform.BeanPropertyTransform.Target
     Map(
-      // -- the get/set pairs: a public `var` is exactly the surface java published --
+      // -- `var`: a get/set pair, where a public `var` is exactly the surface java published
+      "com.badlogic.gdx.graphics.profiling.GLProfiler#listener" -> Target.Var,
       "com.badlogic.gdx.maps.MapLayer#name" -> Target.Var,
-      "com.badlogic.gdx.maps.MapLayer#visible" -> Target.Var,
       "com.badlogic.gdx.maps.MapLayer#parallaxX" -> Target.Var,
       "com.badlogic.gdx.maps.MapLayer#parallaxY" -> Target.Var,
-      "com.badlogic.gdx.maps.MapObject#name" -> Target.Var,
+      "com.badlogic.gdx.maps.MapLayer#visible" -> Target.Var,
       "com.badlogic.gdx.maps.MapObject#color" -> Target.Var,
+      "com.badlogic.gdx.maps.MapObject#name" -> Target.Var,
       "com.badlogic.gdx.maps.MapObject#opacity" -> Target.Var,
       "com.badlogic.gdx.maps.MapObject#visible" -> Target.Var,
-      // -- and the get-only ones, over storage the declaration fills and nothing reassigns --
+      "com.badlogic.gdx.maps.objects.PolygonMapObject#polygon" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.PolylineMapObject#polyline" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#bold" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#fontFamily" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#horizontalAlign" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#italic" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#kerning" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#pixelSize" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#rotation" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#strikeout" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#text" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#underline" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#verticalAlign" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextMapObject#wrap" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextureMapObject#originX" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextureMapObject#originY" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextureMapObject#rotation" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextureMapObject#scaleX" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextureMapObject#scaleY" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextureMapObject#textureRegion" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextureMapObject#x" -> Target.Var,
+      "com.badlogic.gdx.maps.objects.TextureMapObject#y" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#region" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#repeatX" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#repeatY" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#x" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#y" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.TiledMapTileSet#name" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject#flipHorizontally" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject#flipVertically" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject#tile" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer#hexSideLength" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer#staggerAxisX" -> Target.Var,
+      "com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer#staggerIndexEven" -> Target.Var,
+      "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#button" -> Target.Var,
+      "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#tapCount" -> Target.Var,
+      "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#tapSquareSize" -> Target.Var,
+      "com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#dragTime" -> Target.Var,
+      "com.badlogic.gdx.scenes.scene2d.utils.DragListener#button" -> Target.Var,
+      "com.badlogic.gdx.scenes.scene2d.utils.DragListener#tapSquareSize" -> Target.Var,
+      "com.badlogic.gdx.scenes.scene2d.utils.Selection#multiple" -> Target.Var,
+      "com.badlogic.gdx.scenes.scene2d.utils.Selection#programmaticChangeEvents" -> Target.Var,
+      "com.badlogic.gdx.scenes.scene2d.utils.Selection#required" -> Target.Var,
+      "com.badlogic.gdx.scenes.scene2d.utils.Selection#toggle" -> Target.Var,
+      // -- `val`: a get-only property over storage the declaration fills and nothing reassigns
       "com.badlogic.gdx.maps.Map#layers" -> Target.Val,
       "com.badlogic.gdx.maps.Map#properties" -> Target.Val,
       "com.badlogic.gdx.maps.MapLayer#objects" -> Target.Val,
       "com.badlogic.gdx.maps.MapLayer#properties" -> Target.Val,
       "com.badlogic.gdx.maps.MapObject#properties" -> Target.Val,
+      "com.badlogic.gdx.math.collision.OrientedBoundingBox#bounds" -> Target.Val,
+      "com.badlogic.gdx.math.collision.OrientedBoundingBox#vertices" -> Target.Val,
+      // -- and the get-only ones the engine REFUSES under `MutableStorage`, declared ANYWAY:
+      //    the port's answer for the whole collapsible population then lives in one place,
+      //    and the lane says WHY each of these is still a `def` pair rather than saying
+      //    nothing about it. `idiom(refused)` is a DENOMINATOR and not a work list, which is
+      //    what makes a permanent refusal belong in it.
+      "com.badlogic.gdx.graphics.Cubemap#cubemapData" -> Target.Val,
+      "com.badlogic.gdx.graphics.Texture#textureData" -> Target.Val,
+      "com.badlogic.gdx.graphics.g2d.SpriteCache#customShader" -> Target.Val,
+      "com.badlogic.gdx.graphics.profiling.GLProfiler#enabled" -> Target.Val,
+      "com.badlogic.gdx.maps.objects.CircleMapObject#circle" -> Target.Val,
+      "com.badlogic.gdx.maps.objects.EllipseMapObject#ellipse" -> Target.Val,
+      "com.badlogic.gdx.maps.objects.PointMapObject#point" -> Target.Val,
+      "com.badlogic.gdx.maps.objects.RectangleMapObject#rectangle" -> Target.Val,
+      "com.badlogic.gdx.maps.objects.TextMapObject#rectangle" -> Target.Val,
+      "com.badlogic.gdx.maps.tiled.TiledMapTileSet#properties" -> Target.Val,
+      "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#frameTiles" -> Target.Val,
+      "com.badlogic.gdx.math.Polygon#rotation" -> Target.Val,
+      "com.badlogic.gdx.math.Polygon#vertices" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.ui.List#cullingArea" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#fadeScrollBars" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#overscrollDistance" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#variableSizeKnobs" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.ui.SelectBox#clickListener" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable#name" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#pressed" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#pressedButton" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#pressedPointer" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#touchDownX" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.ClickListener#touchDownY" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#currentDragActor" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#currentPayload" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#currentSource" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.DragListener#dragging" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable#align" -> Target.Val,
+      "com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable#scale" -> Target.Val,
     )
 
   /** the harvested pairs. KEY is the emitted property in the UPSTREAM namespace (§4.56 — the package
