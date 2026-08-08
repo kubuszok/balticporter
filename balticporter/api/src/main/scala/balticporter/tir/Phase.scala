@@ -172,6 +172,28 @@ object Pipeline:
     * cannot silently under-constrain. Ties stay stable in declaration order and successors are
     * still visited in NAME order, so a pipeline with no duplicate names orders byte-identically to
     * the way it always did.
+    *
+    * ==DECLARATION ORDER IS THE TIE-BREAK GLOBALLY, and a FIFO could not give that==
+    * "Stable by declaration order on ties" is the contract every port relies on — a phase whose name
+    * no `runsBefore` can spell places itself by writing it earlier in `surface` (`bean-properties`'
+    * own doc says exactly this about the opaque-type phase). Kahn's algorithm with a QUEUE does not
+    * deliver it: a node becomes ready when its last predecessor is processed, so a CONSTRAINED phase
+    * that only just became ready is appended AFTER an unconstrained phase declared later, and the
+    * declaration order between the two is silently inverted.
+    *
+    * That is not a corner: it is what happens whenever a phase is ADDED with a `runsBefore` edge
+    * onto an existing one. Measured — adding two edge-bearing phases at the HEAD of a two-phase
+    * pipeline (`collections`, then `mutable-params`) inverted those two, because `mutable-params`
+    * had no edges and sat in the initial ready set while `collections` had to wait for the new
+    * phases. The added phases rewrote NOTHING and the port's `collection-boundary` count still moved
+    * 22 -> 20 with two member digests, which is the worst shape a defect can have here: an inert
+    * phase that is inert on the TREE and not on the PIPELINE, with the evidence landing on a check
+    * that has nothing to do with it.
+    *
+    * So `ready` is a MIN-HEAP on declaration index rather than a queue. The result is the unique
+    * topological order that is lexicographically smallest by declaration index — i.e. every phase
+    * runs as early as its constraints allow, in the order the port wrote them — which is what the
+    * sentence above always claimed and what a caller adding a phase is entitled to assume.
     */
   def order(phases: List[Phase]): List[Phase] =
     val instances = phases.toVector
@@ -185,17 +207,19 @@ object Pipeline:
         val befores = p.runsBefore.toList.flatMap(b => byName.getOrElse(b, Nil)).map(b => (i, b)) // p before b
         (afters ++ befores).foldLeft(m)((mm, e) => mm.updated(e._1, mm(e._1) + e._2))
       }
-    // Kahn's algorithm (deterministic: stable by declaration order on ties)
+    // Kahn's algorithm over a MIN-HEAP on declaration index — see the doc above for why a FIFO
+    // silently inverts declaration order across a constraint edge, and for the number that found it.
     val indeg = collection.mutable.Map[Int, Int]().withDefaultValue(0)
     instances.indices.foreach(i => indeg.getOrElseUpdate(i, 0))
     edges.values.flatten.foreach(t => indeg(t) += 1)
-    val ready = collection.mutable.Queue(instances.indices.filter(i => indeg(i) == 0)*)
+    val ready = collection.mutable.TreeSet.from(instances.indices.filter(i => indeg(i) == 0))
     val out   = collection.mutable.ListBuffer[Int]()
     while ready.nonEmpty do
-      val n = ready.dequeue()
+      val n = ready.head
+      ready.remove(n)
       out += n
       edges(n).toList.sortBy(m => (instances(m).name, m))
-        .foreach { m => indeg(m) -= 1; if indeg(m) == 0 then ready.enqueue(m) }
+        .foreach { m => indeg(m) -= 1; if indeg(m) == 0 then ready.add(m) }
     if out.size != instances.size then
       throw new IllegalStateException(
         s"phase ordering has a cycle among: ${(instances.indices.toSet -- out.toSet).map(instances(_).name)}")

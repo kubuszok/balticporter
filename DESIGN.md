@@ -4000,6 +4000,30 @@ gate and the report cannot drift. It is the only manifest finding that runs earl
 for that is stated rather than assumed: every other one describes EMITTED TEXT an operator reads
 beside it, and this one describes the pipeline that is about to run.
 
+#### …and "stable in declaration order" is the tie-break GLOBALLY, which a FIFO could not give
+
+Every port places a phase whose predecessor no `runsBefore` can spell by writing it earlier in
+`surface` — `BeanPropertyTransform`'s own doc says exactly this about the opaque-type phase, whose
+name embeds an FQN. That guarantee was not delivered. Kahn's algorithm over a QUEUE appends a node
+when its last predecessor is processed, so a CONSTRAINED phase that only just became ready lands
+AFTER every unconstrained phase declared later — and the declaration order between them is silently
+inverted. On the libGDX base, `CollectionsTransform` is written SECOND of eleven, behind one
+`runsBefore` edge from `bean-properties`, and ran ELEVENTH.
+
+The failure only becomes visible when somebody ADDS a phase, and then it is the worst shape a defect
+can have here: two phases whose `run` returns its argument, prepended with a `runsBefore` edge onto
+an existing phase, moved a port's `collection-boundary` count 22 → 20 and two member digests. An
+inert phase that is inert on the TREE and not on the PIPELINE, with the evidence landing on a check
+that has nothing to do with it.
+
+So `ready` is a **min-heap on declaration index**, and the result is the unique topological order
+that is lexicographically smallest by that index: every phase runs as early as its constraints
+allow, in the order the port wrote them. Measured across the corpus — **0 member digests on all
+fifteen ports**, every error baseline and every suite outcome unchanged, and ONE moved count: the
+libGDX TEST lane gains one `collection-boundary` `OpaqueEgress` REVIEW row, because the collections
+phase now takes its egress census over the tree the port asked it to see rather than over the one
+nine later phases had already moved.
+
 #### …and the EQUAL pair is the third answer, because ordering instances changed what "equal" costs
 
 Face B's two changes made the refused pair loud and left the pair beside it silent. `SurfaceFold.of`

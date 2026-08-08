@@ -77,10 +77,56 @@ class PipelineOrderSpec extends munit.FunSuite:
   // this produces for them has to be the one it always produced (CLAUDE.md §5: zero movement).
   // -------------------------------------------------------------------------------------------
 
-  test("distinct names order exactly as before: stable in declaration order, successors by name") {
+  test("stable in declaration order: every phase as EARLY as its constraints allow") {
+    // declaration order is z, m, a, k; the only constraints are m<z and a<k. `z` is declared FIRST,
+    // so the moment `m` has run there is nothing left holding `z` back — and putting `a` in front of
+    // it (which a FIFO does, because `a` was in the initial ready set and `z` was not) inverts a
+    // declaration order the port wrote and nothing asked to invert.
     val ps = List(new Named("z"), new Named("m", runsBefore = Set("z")), new Named("a"),
                   new Named("k", runsAfter = Set("a")))
-    assertEquals(Pipeline.order(ps).map(_.name), List("m", "a", "z", "k"))
+    assertEquals(Pipeline.order(ps).map(_.name), List("m", "z", "a", "k"))
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // …and the defect that made the tie-break a min-heap rather than a queue.
+  // -------------------------------------------------------------------------------------------
+
+  test("ADDING an edge-bearing phase at the HEAD does not reorder the phases already there") {
+    // The shape that found this: a two-phase pipeline where the FIRST phase carries an edge and the
+    // second carries none. Prepending a phase that also names the first inverts the pair under a
+    // FIFO — `second` sits in the initial ready set while `first` waits for the newcomer — so an
+    // ADDED phase that rewrites nothing changes what the pipeline computes. Measured on a real port:
+    // `collection-boundary` 22 -> 20 with two member digests moved, from two phases whose `run`
+    // returns its argument.
+    val first  = new Named("first", runsBefore = Set("last"))
+    val second = new Named("second")
+    val last   = new Named("last")
+    val before = Pipeline.order(List(first, second, last)).map(_.name)
+    val after  = Pipeline.order(List(new Named("added", runsBefore = Set("last")), first, second, last))
+      .map(_.name)
+    assertEquals(before, List("first", "second", "last"))
+    assertEquals(after, List("added", "first", "second", "last"))
+    assertEquals(after.filter(before.contains), before)
+  }
+
+  test("…and the general property: an INERT phase prepended with any subset of edges preserves the\n" +
+       "     relative order of every phase that was already there") {
+    // stated as the property rather than as the one case, because the case is only the instance
+    // somebody happened to hit. Three pipelines, each with a different constrained/unconstrained mix.
+    val pipelines = List(
+      List(new Named("c", runsBefore = Set("d")), new Named("b"), new Named("d"), new Named("a")),
+      List(new Named("p"), new Named("q", runsAfter = Set("p")), new Named("r"),
+           new Named("s", runsBefore = Set("r"))),
+      List(new Named("x", runsBefore = Set("y")), new Named("y"), new Named("z", runsAfter = Set("y"))),
+    )
+    pipelines.foreach { ps =>
+      val before = Pipeline.order(ps).map(_.name)
+      ps.map(_.name).foreach { target =>
+        val after = Pipeline.order(new Named("added", runsBefore = Set(target)) :: ps).map(_.name)
+        assertEquals(clue(after).head, "added")
+        assertEquals(clue(after.tail), clue(before), s"prepending an edge to `$target` reordered them")
+      }
+    }
   }
 
   test("an edge naming a phase this pipeline does not have is ignored, as it always was") {
