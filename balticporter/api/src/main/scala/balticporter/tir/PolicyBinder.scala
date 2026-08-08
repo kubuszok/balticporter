@@ -41,6 +41,25 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
 
   private val log = collection.mutable.ListBuffer.empty[PolicyBinder.Record]
 
+  private var plan: ResolutionPlan = ResolutionPlan.empty
+
+  /** WHAT THE PORT SELECTED at each location, bound — see [[ResolutionPlan]].
+    *
+    * It rides on the binder rather than on a pipeline parameter or a second trait beside
+    * [[PolicyBound]], because a selection IS a bound key and this type is documented as the only
+    * place a phase may learn what a key names. A phase that consults one already implements
+    * `PolicyBound` to bind its own, so the seam costs no wiring a caller can forget — which is the
+    * argument `Pipeline.runTraced` makes for binding inside itself rather than in each caller.
+    *
+    * `ResolutionPlan.empty` until the run attaches one, which is the truth for every caller that has
+    * no manifest: a spec, a testkit fixture, a §1(c) rule's own harness. */
+  def resolutions: ResolutionPlan = plan
+
+  /** attach the run's plan. Called ONCE, by the layer that holds the manifest and the vocabulary —
+    * the plan is built FROM this binder (every key is bound through it), so the two cannot be
+    * constructed together and this is the seam where they meet. */
+  def resolving(p: ResolutionPlan): PolicyBinder = { plan = p; this }
+
   /** every binding this run asked for, with WHO asked — the never-fired report, unified. */
   def bindings: List[PolicyBinder.Record] = log.toList
 

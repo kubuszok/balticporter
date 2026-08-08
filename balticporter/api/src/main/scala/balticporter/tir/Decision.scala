@@ -226,6 +226,18 @@ object Decision:
       * count and to every test, and visible to exactly the reflective reader `ENGINE-LIMITS.md` K21
       * is about. `was=` is what those methods were called. */
     case CollapsedProperty
+    /** the port SELECTED one of the remedies a phase or check OFFERED at this declaration, and the
+      * engine carried it out ([[Remedy]], [[AppliedResolution]]).
+      *
+      * A kind of its own rather than the kind of whatever the remedy DID, and the reason is the one
+      * §4.575 gives: the reader at the line is looking at emitted text that no other port with the
+      * same engine and the same java would have, and the fact that explains it is not in the code —
+      * it is one word in this port's manifest. `Reason.Configured` names the entry to edit; this
+      * kind is what says the entry was a MENU CHOICE rather than a table lookup, which is the
+      * difference between "change this value" and "there was another option and somebody picked
+      * this one". The DETAIL carries the remedy's id, the residue lane it drained and which of §1's
+      * three kinds owns the code that carried it out. */
+    case SelectedRemedy
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

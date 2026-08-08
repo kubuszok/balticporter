@@ -105,7 +105,13 @@ object PorterNote:
     Set(RenamedType, RenamedPackage, RenamedMember, DroppedType, DroppedMember,
         SubstitutedBody, SubstitutedCall, InjectedMember, DroppedSuperCall, WidenedVisibility,
         Unrenderable, ScopedOut, DeferredInit, FunnelledCtor, RetainedParent, ReifiedTypeArg,
-        BeanAccessor, ForcedClassInit, WidenedSeal, RecordMembers, SamLambda, CollapsedProperty)
+        BeanAccessor, ForcedClassInit, WidenedSeal, RecordMembers, SamLambda, CollapsedProperty,
+        // …and a MENU CHOICE. It is here rather than beside `RetypedSignature` for the line this
+        // list is drawn on: the emitted text is a translation the engine could have done another way
+        // and did not, so a reader diffing against the java sees a shape with no local evidence of
+        // WHY it is that shape rather than the other one. The alternatives existed; one word in this
+        // port's manifest chose between them, and nothing but a note can say so at the line.
+        SelectedRemedy)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.
