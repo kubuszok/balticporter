@@ -1,5 +1,5 @@
 #unit	member	kind	digest
-sge.graphs.Array	sge.graphs.Array	class	602b98a05c831e0e
+sge.graphs.Array	sge.graphs.Array	class	74dc2bb58ec790c9
 sge.graphs.Array	sge.graphs.Array#<init>()	ctor	6b8c02987a386f8b
 sge.graphs.Array	sge.graphs.Array#<init>(int)	ctor	e5be362f9598894d
 sge.graphs.Array	sge.graphs.Array#<stmt1>	stmt	20883c50d3706a84
@@ -14,7 +14,7 @@ sge.graphs.Array	sge.graphs.Array#indexOf(Object)	def	60a7133de2b5cadd
 sge.graphs.Array	sge.graphs.Array#isEmpty()	def	818effe647923e42
 sge.graphs.Array	sge.graphs.Array#items	val	7f441e6cd62d9c60
 sge.graphs.Array	sge.graphs.Array#iterator()	def	0354d0c3490bee9e
-sge.graphs.Array	sge.graphs.Array#remove(Object)	def	8648fc664cf147c7
+sge.graphs.Array	sge.graphs.Array#remove(Object)	def	4f2bcbff4aba26b9
 sge.graphs.Array	sge.graphs.Array#remove(int)	def	fd82806fcf864394
 sge.graphs.Array	sge.graphs.Array#resize(int)	def	10b929bbfd9425d9
 sge.graphs.Array	sge.graphs.Array#set(int,T)	def	d91504697fd91d32
@@ -105,7 +105,7 @@ sge.graphs.Errors	sge.graphs.Errors#throwNullItemException()	def	78a18a5fbf7bdac
 sge.graphs.Errors	sge.graphs.Errors#throwNullVertexException()	def	ddd8c0cdc8751ff4
 sge.graphs.Errors	sge.graphs.Errors#throwSameVertexException()	def	47065a31ad375fa8
 sge.graphs.Errors	sge.graphs.Errors#throwVertexNotInGraphVertexException(boolean)	def	4aaf3680dd9c0194
-sge.graphs.Graph	sge.graphs.Graph	class	33b336fe505b6f0d
+sge.graphs.Graph	sge.graphs.Graph	class	e52194709f38bb4b
 sge.graphs.Graph	sge.graphs.Graph#<init>()	ctor	43f091e9332a747c
 sge.graphs.Graph	sge.graphs.Graph#<init>(Graph<V>)	ctor	597a0ac94476d734
 sge.graphs.Graph	sge.graphs.Graph#<init>(JavaCollection<V>)	ctor	83079add4086211c
@@ -116,7 +116,7 @@ sge.graphs.Graph	sge.graphs.Graph#addEdge(V,V)	def	713f88de48d8ae37
 sge.graphs.Graph	sge.graphs.Graph#addEdge(V,V,WeightFunction<V>)	def	f684b5d7b10d6f6d
 sge.graphs.Graph	sge.graphs.Graph#addEdge(V,V,float)	def	a7a27d0aa2e09fa2
 sge.graphs.Graph	sge.graphs.Graph#addVertex(V)	def	5d89eba702a3292b
-sge.graphs.Graph	sge.graphs.Graph#addVertices(Array<V>)	def	4362ec43400accf4
+sge.graphs.Graph	sge.graphs.Graph#addVertices(Array<V>)	def	553462abc9ad9637
 sge.graphs.Graph	sge.graphs.Graph#addVertices(JavaCollection<V>)	def	66d017acc39925ea
 sge.graphs.Graph	sge.graphs.Graph#algorithms()	def	cd89d3cd424c0d4d
 sge.graphs.Graph	sge.graphs.Graph#connectionExists(Node<V>,Node<V>)	def	11acee39b24baab3
@@ -169,7 +169,7 @@ sge.graphs.Internals	sge.graphs.Internals#getConnections()	def	c302e8e0171f9285
 sge.graphs.Internals	sge.graphs.Internals#getNode(V)	def	55eb1477a4219b5a
 sge.graphs.Internals	sge.graphs.Internals#getNodes()	def	b51df8df9ca63cf1
 sge.graphs.Internals	sge.graphs.Internals#graph	val	d8334402474338ec
-sge.graphs.Node	sge.graphs.Node	class	3b488f145c05a52b
+sge.graphs.Node	sge.graphs.Node	class	456841c410df8c3c
 sge.graphs.Node	sge.graphs.Node#<stmt1>	stmt	a6d8dfc48cc1a0f9
 sge.graphs.Node	sge.graphs.Node#<stmt2>	stmt	d58187a73b657450
 sge.graphs.Node	sge.graphs.Node#<stmt3>	stmt	d423c6a0e980dfe4
@@ -212,7 +212,7 @@ sge.graphs.Node	sge.graphs.Node#outEdges	val	98acf4123540f447
 sge.graphs.Node	sge.graphs.Node#prev	val	3d627500e75dfb3e
 sge.graphs.Node	sge.graphs.Node#prevInOrder	val	f9609b0c76b15d0e
 sge.graphs.Node	sge.graphs.Node#processed	val	c168ba601b5a626a
-sge.graphs.Node	sge.graphs.Node#removeEdge(Node<V>)	def	c43da702ff4c7d8a
+sge.graphs.Node	sge.graphs.Node#removeEdge(Node<V>)	def	48820863dcacb066
 sge.graphs.Node	sge.graphs.Node#resetAlgorithmAttribs(int)	def	dd6df366843e7062
 sge.graphs.Node	sge.graphs.Node#seen	val	437dc016f7b33fa8
 sge.graphs.Node	sge.graphs.Node#setConnection(Connection<V>)	def	d783408e932a6610

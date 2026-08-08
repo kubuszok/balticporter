@@ -763,6 +763,38 @@ finding nobody made.**
 | `Collectors.toSet` / `toMap` / `unmodifiableList` mapped to something approximate | not attempted, deliberately | each needs a different target type, and both a copy and the identity compile while being wrong |
 | `IO.copyFile` → `IO.write` in the vendoring generator | reverted | the staleness was sbt's classloader-layer cache, not the mtime (`ENGINE-LIMITS.md` M5.5) |
 
+### 4.45 The corpus's FIRST per-location remedy selections — the drain, measured
+
+simple-graphs is the first port to write `resolutions` (`DESIGN.md` §8.16), and it carries one
+selection per remedy on the two lanes that gained a menu first. It was chosen for the demonstration
+because it is the smallest port that holds all three shapes, and because its 16 tests RUN — an
+emission-affecting remedy whose only evidence is a green compile is evidence of nothing (§3).
+
+| key | remedy | why THIS site |
+|---|---|---|
+| `Graph#addVertices(V[])` | `acknowledge` | the body reads each element AT `V` and hands it to `addVertex(V)` — no store, no write into the array, no cast. And java gave the author **nowhere to put the assertion**: JLS 9.6.4.7 allows `@SafeVarargs` only on a static, final or private method, and this is a public non-final instance method of a public abstract class |
+| `Array#remove(Object)` | `ascribe-javac-choice` | `remove(indexOf(item))` beside `T remove(int)` — `CLAUDE.md` §4.4's `remove` shape asked of a library's own declarations. `indexOf` returns `int`, so javac bound `remove(int)` in phase 1 while `remove(Object)` is applicable only after boxing, and the two members do entirely different things |
+| `Node#removeEdge(Node)` | `accept-risk` | TWO calls of that same pair, with a `Connection<V>` argument that converts to `int` in neither language — so both compilers can only bind `remove(Object)` and the rows are the lane's declared over-approximation. One key, both sites: §8.16's broadcast, measured |
+
+**The drain, in one baseline diff:** `heap-pollution 1 -> 0`, `overload-risk 6 -> 3`,
+`remediation 1 -> 5` — four rows left the two refusal lanes and four arrived as
+`remediation(resolved)`, which is the arithmetic §5 requires and the only reading under which those
+two lanes falling is an improvement rather than a check that stopped asking. **0 errors before and
+after, 16 of 16 tests still passing**, and the `members.tsv` blast is **6**: the three selected
+declarations and the three whole-class digests that contain them, every one attributable to a
+`Decision` row. The published `port-map.tsv` policy digest moved on BOTH modules, which is the field
+being shared surface — a base whose selections moved cannot look fresh to a dependent.
+
+The emitted ascription is `(this.remove: (scala.Int) => T)(this.indexOf(item))` — a method-value
+ascription, which is what pins the overload, verified compiling under 3.8.4 and named by a porter
+note beside the `def`.
+
+**Three overload-risk rows are deliberately LEFT.** Two are `super.remove(…)` in `Path`, where the
+candidate set is the SUPERCLASS's and the check leaves the root at the callee's own owner (T17); one
+is `MinimumWeightSpanningTree`'s `addVertices(graph.getVertices())`, a fixed-arity candidate beside a
+vararg one where the argument is a `Collection` and only one candidate is applicable at all. A port
+that selected them would be reporting that somebody looked at sites nobody had.
+
 ### 4.5 Licence — a discrepancy worth keeping
 
 Upstream ships **MIT** ("MIT License, Copyright (c) 2020 earlygrey"). The reference hand port's file
