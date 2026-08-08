@@ -557,6 +557,15 @@ So:
   them a validator that unwinds out of the method that installed it. So a refusal is COUNTED at the
   moment it is written, and the count is not the weaker half of "refuse and count": where the
   residue compiles, it is the only instrument there is.
+- **A NEW ARM FOR AN EXISTING NODE KIND INHERITS THAT NODE'S OBLIGATIONS — discharge them
+  NOT-FIRED.** The catalog's discharge surface is owed per NODE, not per arm, so adding a `case` to
+  a dispatch that already answers a difference row silently stops answering it for whatever the new
+  arm now catches. The emitted text is fine, the port compiles, and the only instrument that can see
+  it is `catalog(undischarged)`, whose rows say `ENGINE GAP` — which reads as an engine defect in
+  the ROW rather than as a `match` somebody split. Measured at `5 -> 7` the first time an emitter
+  arm was added for a phase-minted `Tree.Typed`, at 0 errors with every other count flat. Both
+  answers are usually `None`, and `None` is a FACT here rather than a default: the new arm's node
+  really is not the construct those rows are about, which is exactly why it needed its own arm.
 
 ---
 
