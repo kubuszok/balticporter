@@ -4935,6 +4935,18 @@ predicate-selected remedy, refused for `OpaqueSpec.hints`' reason (§5.7): a por
 a §1(c) rule in Scala, and that rule publishes its menu through `TransformFactory.remedies` like any
 other.
 
+**The one hole this leaves, stated rather than left to be found.** `resolutionConflicts` reads
+`policyChain`, which for an inheriting dependent IS `baseChain :+ this` and is therefore complete —
+and for a `mirroring` module (`inherit = false`) is `List(this)`. So a module that states its policy
+IN FULL rather than inheriting it can restate a base's selection differently, or omit one the base
+made, and neither is reported: the `ResolutionDivergence` above sees one manifest, and there is no
+`MissingDrop`-shaped counterpart asking whether every base selection is answered here. That is
+exactly the asymmetry `mirroring` exists to expose for the drops (`MissingDrop` and `SurfaceMissing`
+can only ever fire on that path), so the counterpart is owed. It is not built here because no port in
+this corpus uses `mirroring`, and building it would have gone out with `measure-all` numbers nothing
+in the run could exercise — the shape §5's dry-run rule refuses. The fix is two comparisons per base,
+over `baseChain :+ this`, and it belongs to the wave that ships the first menu.
+
 **Rejected: a compound key.** `resolutions { "owner#member" { lane = "…", remedy = "…" } }` was the
 obvious shape and it is redundant by construction — a remedy id is globally unique, so the id already
 determines the lane and the kind, and writing them again gives a port a second place to be wrong. The
