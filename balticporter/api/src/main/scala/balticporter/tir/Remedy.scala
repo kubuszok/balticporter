@@ -102,11 +102,28 @@ final case class Remedy(
     * one consulting site reads and another silently does not (`CLAUDE.md` §4.56's fast-path guard,
     * one type over). */
   def answers(l: String, k: String): Boolean =
-    l == lane && (k == kind || alsoKinds.contains(k))
+    l == lane && (kind == Remedy.AnyKind || k == kind || alsoKinds.contains(k))
 
   def render: String = s"$id — $what  [drains $target; ${fix.section}]"
 
 object Remedy:
+
+  /** the [[Remedy.kind]] of a remedy that answers EVERY kind in its lane — [[alsoKinds]] at the
+    * cardinality an enumeration cannot reach.
+    *
+    * `alsoKinds` ENUMERATES, which is exact for a lane whose kinds are a closed enum (`overload-risk`
+    * has three phase spans, `heap-pollution` two acknowledgements) and unwritable for one whose kind
+    * column is an OPEN set: `portability(emitted)` files each row under the offending API's FQN, of
+    * which there are hundreds and one more every time a rule is added. A per-location remedy there is
+    * about the LOCATION and not about one API — declaring `kind = "java.net.URL"` would be a remedy
+    * that answers one row of one port, and enumerating the rule list here would put a two-hundred-name
+    * string in every finding this remedy ever writes.
+    *
+    * It is read in [[answers]] and nowhere else, so [[ResolutionPlan.drain]] and
+    * [[ResolutionPlan.appliedAt]] both honour it without a second code path — which is the whole
+    * reason it is a `kind` value rather than a fourth field somebody has to remember to consult
+    * (`CLAUDE.md` §4.56's fast-path guard, one type over). */
+  val AnyKind: String = "*"
 
   /** WHAT A SELECTION KEY FOR THIS REMEDY NAMES.
     *

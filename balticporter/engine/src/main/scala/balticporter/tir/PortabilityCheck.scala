@@ -1,6 +1,6 @@
 package balticporter.tir
 
-import balticporter.catalog.{ApiRow, ApiRows, DiffId, Platform}
+import balticporter.catalog.{ApiRow, ApiRows, DiffId, FixKind, Platform}
 
 /** Which JDK APIs the port still depends on that a cross-platform target cannot provide.
   *
@@ -48,7 +48,44 @@ import balticporter.catalog.{ApiRow, ApiRows, DiffId, Platform}
   * (`org.junit.`, `org.hamcrest.`, `java.lang.ClassLoader`, the exact `Class#…` readers) and that is
   * a lane reset rather than a re-scoping.
   */
-object PortabilityCheck:
+object PortabilityCheck extends RemedySource:
+
+  /** THE ONE REMEDY THIS CHECK CAN CARRY OUT — see [[AcceptJvmOnly]]. Declared here rather than on a
+    * phase because this lane's producer IS a check: a plain object the orchestrator calls, which is
+    * exactly the half of the residue population `RemedySource` exists beside `Phase` for. */
+  def remedies: List[Remedy] = List(AcceptJvmOnly)
+
+  /** `accept-jvm-only` — *this location is JVM-only and I know it; stop reporting it.*
+    *
+    * ==What it does, and what it deliberately does not==
+    * It changes NO tree. It moves a row out of `portability(emitted)` and into
+    * `remediation(resolved)`, which is why `emissionAffecting` is `false` — the one remedy so far
+    * that `DESIGN.md` §8.16 predicted would belong in §1.5's not-inherited column if any ever did.
+    * (The FIELD is what states that; `PortManifest.resolutions` is still inherited as a whole,
+    * because it holds the other three as well.)
+    *
+    * ==The CONSISTENCY test, and the finding it produced==
+    * A port's `PortManifest.targets` is a statement about the MODULE: *this port is built for these
+    * backends*. Accepting a JVM-only API at a location is a statement about the same module in the
+    * opposite direction, so the two cannot both be true — and the honest answers are the two knobs
+    * that already exist: narrow `targets`, or state a `verdictOverrides` entry for the API this port
+    * ships its own answer for. So a selection on a port whose `targets` include Scala.js or Scala
+    * Native is REPORTED as a contradiction and never applied.
+    *
+    * '''That test makes the apply arm unreachable, and it is a RESULT rather than an oversight.'''
+    * `rulesFor` filters the rule list by the declared targets and NO rule in it asks about the JVM,
+    * so a port with `targets = Set(Jvm)` has zero portability findings and nothing to accept, while
+    * any other port contradicts itself by accepting. Measured on the corpus: 0 of the rules name
+    * `Platform.Jvm`. What the remedy is therefore FOR is the contradiction itself — a port reaching
+    * for "accept" is told, with the two real knobs named, instead of silently ignoring the row,
+    * which is what every port does today. `ENGINE-LIMITS.md` P6 carries the number and the reasoning.
+    */
+  val AcceptJvmOnly: Remedy = Remedy(
+    id = "accept-jvm-only", lane = "portability(emitted)", kind = Remedy.AnyKind,
+    emissionAffecting = false, fix = FixKind.Universal, subject = Remedy.Subject.OwnedMember,
+    what = "accept this location as JVM-only: the row moves to `remediation(resolved)` and no tree " +
+      "changes — refused, with both real knobs named, on a port whose `targets` claim Scala.js or " +
+      "Scala Native")
 
   /** @param api         a prefix (`java.nio.file.`) or an exact `owner#member`
     * @param why         one sentence, and it is what the reader acts on

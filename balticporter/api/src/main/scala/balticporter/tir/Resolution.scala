@@ -51,6 +51,18 @@ object Resolution:
   val Check: String        = "remediation"
   val ResolvedKind: String = "resolved"
 
+  /** …and the OTHER half of the same lane. A remedy that verified its own precondition and DECLINED
+    * is not a resolution that did nothing, and it is not `NeverApplied` either: the selection was
+    * consulted, the engine answered, and the answer is *no, and here is why*. Reported as silence it
+    * would read as applied — the port's key is there, the lane did not move, and no compile error,
+    * moved digest or drained row says so.
+    *
+    * `CLAUDE.md` §3's refusal-enumeration rule read at a menu: the refusal POPULATION is a lane, one
+    * row per declined site NAMING THE GUARD, because a count of applications says nothing about what
+    * was declined and `refused = 0` is a bar met by applying nothing. It rides on `remediation` for
+    * `ResolvedKind`'s own reason — one required check, two kinds. */
+  val RefusedKind: String  = "refused"
+
   /** the phase name every resolutions binding and finding is recorded under — one string, so the
     * binder's records and the policy report cannot disagree about which seam asked. */
   val Seam: String    = "resolutions"
@@ -75,6 +87,16 @@ final case class AppliedResolution(
     /** what the remedy DID here, in one phrase. Free text; the machine-readable half is the
       * remedy's own id and lane. */
     what: String,
+    /** HOW MANY ROWS THIS ONE APPLICATION TOOK OUT OF [[Remedy.lane]].
+      *
+      * One, and that is the whole of [[ResolutionPlan.drain]]'s world: it partitions a lane SITE by
+      * site, so `count(rows)` and `sum(drained)` are the same number and no caller has to think about
+      * it. The exception is a remedy whose SUBJECT is a type (`Remedy.Subject.OwnedType`): dropping
+      * one takes every site inside it, so one row here answers for fifteen there and a diff read by
+      * counting rows leaves fourteen with nothing to attribute them to — exactly what §5's drain rule
+      * refuses. Carried on the value, and stated in the finding's own text so a reader of one row can
+      * do the arithmetic. */
+    drained: Int = 1,
 ):
   def remedy: Remedy = resolution.remedy
 
@@ -82,7 +104,8 @@ final case class AppliedResolution(
   def finding: CheckReport.Finding =
     CheckReport.Finding(Resolution.Check, Resolution.ResolvedKind, subjectFqn,
       CheckReport.relativise(origin.javaPath), origin.line,
-      s"${remedy.id} — $what  ·  selected at `${resolution.declaredKey}`, draining ${remedy.target}")
+      s"${remedy.id} — $what  ·  selected at `${resolution.declaredKey}`, draining $drained row(s) " +
+        s"from ${remedy.target}")
 
   /** …and the `decisions.tsv` row, which is what carries a PORTER NOTE to the emitted line.
     *
@@ -97,6 +120,36 @@ final case class AppliedResolution(
       Reason.Configured(Resolution.Seam, resolution.declaredKey), origin)
 
   def render: String = s"${remedy.id} at $subjectFqn: $what  (${origin.javaPath}:${origin.line})"
+
+/** A RESOLUTION THAT WAS CONSULTED AND DECLINED — see [[Resolution.RefusedKind]].
+  *
+  * It carries no [[Decision]] on purpose, and that is the two-deadline rule read from its other end: a
+  * `remediation(resolved)` row may be recorded after the emitter has run, a `Decision` may not,
+  * because a porter note is EMITTED TEXT. A refusal changed nothing, so a note above the member would
+  * tell its reader that something happened there. The finding is the whole record.
+  *
+  * It names the GUARD rather than merely reporting failure, which is what lets its reader act: every
+  * guard has a different next step, and a decline that said only "no" would send its author looking
+  * for a typo in a key that bound perfectly.
+  */
+final case class RefusedResolution(
+    resolution: Resolution,
+    subjectFqn: String,
+    origin: Origin,
+    /** the guard that declined, as a short slug — what the population is grouped BY. */
+    guard: String,
+    /** why, in the reader's next action. */
+    why: String,
+):
+  def remedy: Remedy = resolution.remedy
+
+  def finding: CheckReport.Finding =
+    CheckReport.Finding(Resolution.Check, Resolution.RefusedKind, subjectFqn,
+      CheckReport.relativise(origin.javaPath), origin.line,
+      s"${remedy.id} declined ($guard) — $why  ·  selected at `${resolution.declaredKey}`, " +
+        s"which therefore did NOT drain ${remedy.target}")
+
+  def render: String = s"${remedy.id} at $subjectFqn: DECLINED ($guard) — $why"
 
 /** WHAT THE PORT SELECTED, BOUND — a value ONE TRANSLATION owns.
   *
@@ -125,6 +178,7 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
 
   private val log   = collection.mutable.ListBuffer.empty[AppliedResolution]
   private val fired = collection.mutable.Set.empty[String]
+  private val declined = collection.mutable.ListBuffer.empty[RefusedResolution]
 
   /** entries by the declaration they bound to — the lookup a phase makes per site. Built once;
     * a key that did not bind has no target and is absent by construction. */
@@ -164,8 +218,9 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
     log += a
 
   /** apply-and-record in one call, for the ordinary caller that has already decided. */
-  def applied(r: Resolution, subjectFqn: String, subject: SymId, origin: Origin, what: String): Unit =
-    record(AppliedResolution(r, subjectFqn, subject, origin, what))
+  def applied(r: Resolution, subjectFqn: String, subject: SymId, origin: Origin, what: String,
+              drained: Int = 1): Unit =
+    record(AppliedResolution(r, subjectFqn, subject, origin, what, drained))
 
   /** DRAIN a residue lane — the move `CLAUDE.md` §5 requires, performed once rather than per check.
     *
@@ -208,6 +263,24 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
           case Some(res) => applied(res, r.subject, r.at, r.origin, r.what); false
           case scala.None => true
       }
+
+  /** DID THE PORT PICK **THIS** REMEDY HERE? — the precise question a PHASE that offers a menu has.
+    *
+    * [[selected]] narrows by `(lane, kind)` and is right for a caller about to file one residue row.
+    * A phase holding a specific `Remedy` wants to know whether this declaration chose IT, and asked
+    * through `(lane, kind)` it would match a SIBLING on the same lane — which is unavoidable where a
+    * lane's remedies all declare `Remedy.AnyKind`. An id is globally unique, so this cannot. */
+  def selected(target: SymId, remedy: Remedy): Option[Resolution] =
+    byTarget.getOrElse(target, Nil).iterator.flatMap(_.resolution).find(_.remedy.id == remedy.id)
+
+  /** …and the DECLINE, which counts as having FIRED for exactly the reason `record` does: the
+    * selection was consulted and answered, so reporting it as `NeverApplied` beside its own refusal
+    * row would give one entry two contradictory diagnoses. */
+  def refuse(r: Resolution, subjectFqn: String, origin: Origin, guard: String, why: String): Unit =
+    fired += r.declaredKey
+    declined += RefusedResolution(r, subjectFqn, origin, guard, why)
+
+  def refusals: List[RefusedResolution] = declined.toList
 
   def all: List[AppliedResolution] = log.toList
 

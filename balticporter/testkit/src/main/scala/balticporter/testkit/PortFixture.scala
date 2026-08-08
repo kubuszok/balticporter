@@ -179,14 +179,29 @@ object PortFixture:
   def portAll(sources: List[(String, String)], phases: Phase*): Ported =
     portAllIn(RuntimeMode.Dependency, sources, phases*)
 
+  /** …several units WITH selections, which is the shape a menu's own precondition needs.
+    *
+    * A `Remediator` chokepoint grade is decided by whether ANOTHER UNIT references the type, so the
+    * difference between its two answers cannot be written in one snippet at all — the same reason
+    * [[portAll]] exists for a package boundary. */
+  def portAllResolving(sources: List[(String, String)], resolutions: Map[String, String],
+                       phases: Phase*): Ported =
+    portAllIn(RuntimeMode.Dependency, sources, resolutions, phases.toList)
+
   def portAllIn(mode: RuntimeMode, sources: List[(String, String)], phases: Phase*): Ported =
+    portAllIn(mode, sources, Map.empty, phases.toList)
+
+  private def portAllIn(mode: RuntimeMode, sources: List[(String, String)],
+                        resolutions: Map[String, String], phases: List[Phase]): Ported =
     val catalog      = new CatalogLog(fatal = true)
     val rewrites     = new RewriteLog
     val idioms       = new IdiomLog
     val before       = SpoonTir.fromSources(sources, catalog = catalog)
     val binder       = new PolicyBinder(before, before.members)
-    val (after, log) = Pipeline.runTraced(before, phases.toList, binder, catalog, rewrites, idioms)
-    Ported(before, after, phases.toList, sources.toMap, log.all, mode, catalog, rewrites, idioms,
+    val vocabulary   = RemedyVocabulary.from(phases.collect { case r: RemedySource => r })
+    binder.resolving(ResolutionPlan.of(resolutions, vocabulary, vocabulary.byId.keySet, binder))
+    val (after, log) = Pipeline.runTraced(before, phases, binder, catalog, rewrites, idioms)
+    Ported(before, after, phases, sources.toMap, log.all, mode, catalog, rewrites, idioms,
            binder)
 
   /** parse only — for tests about the FRONTEND rather than about a phase.

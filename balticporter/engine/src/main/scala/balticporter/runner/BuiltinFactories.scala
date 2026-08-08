@@ -1,6 +1,7 @@
 package balticporter.runner
 
-import balticporter.tir.{ConfigError, ConfigView, OpaqueSpec, Phase, RuleScope, TransformFactory}
+import balticporter.catalog.Platform
+import balticporter.tir.{ConfigError, ConfigView, OpaqueSpec, Phase, Remedy, RuleScope, TransformFactory}
 import balticporter.transform.*
 
 /** The engine's own [[TransformFactory]] registrations — one per transform it ships that a config
@@ -53,7 +54,7 @@ object BuiltinFactories:
     new TypeRedirectFactory, new MethodBodyFactory, new CallSiteSubstitutionFactory,
     new PortMapMigrationFactory,
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
-    new NullabilityFactory, new PublicFieldAccessorFactory,
+    new NullabilityFactory, new PublicFieldAccessorFactory, new RemediationFactory,
   )
 
 // ---------------------------------------------------------------------------------------------
@@ -145,6 +146,32 @@ final class StaticForwarderFactory extends TransformFactory:
           throw ConfigError(f.at("members"), "required, and absent — a forwarder with no members " +
             "forwards nothing, which is a policy entry that can only ever be a mistake")).toSet,
       )))
+
+/** ```
+  * { transform = "remediation"
+  *   classTables { "a.B#forName" = "c.D#classFor" }
+  *   targets = ["jvm", "js", "native"] }
+  * ```
+  *
+  * THE PORTABILITY MENU (`RemediationTransform`). It takes no location list: WHICH locations is a
+  * `resolutions` selection and lives in the manifest, because a selection spans several producers
+  * and is compared across a chain (`DESIGN.md` §8.16). What is here is the one value a template
+  * cannot compute — the destination table for `class-table` — and the target set the questions are
+  * asked for.
+  *
+  * `remedies` restates the phase's own menu, and the duplication is the point: a `resolutions` entry
+  * is validated at LOAD, before a pipeline exists, so a TYPO and a port that picked a real remedy
+  * and forgot the `surface` line need different answers, and only a declaration that costs no
+  * construction can tell them apart.
+  */
+final class RemediationFactory extends TransformFactory:
+  def name = RemediationTransform.Name
+  override def remedies: List[Remedy] = RemediationTransform.Remedies
+  def fromConfig(config: ConfigView): Phase =
+    new RemediationTransform(
+      classTables = config.stringMap("classTables").getOrElse(Map.empty),
+      targets     = config.strings("targets").map(PortConfig.readTargets(config)).getOrElse(Platform.values.toSet),
+    )
 
 /** `{ transform = "class-table", redirects { "a.B#forName" = "c.D#classFor" } }` */
 final class ClassTableFactory extends TransformFactory:

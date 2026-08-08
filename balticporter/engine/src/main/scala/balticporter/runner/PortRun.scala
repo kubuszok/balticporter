@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, ServiceProviders, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -571,14 +571,58 @@ final case class PortRun(
     // Two portability numbers, recorded separately: what the PROGRAM references, and what the
     // SHIPPED code references. A run that reported only one of them could not show a substitution
     // moving a violation out of the deliverable.
-    val droppedIds  = program.symbols.all.collect { case s if policySubs.dropsType(s.fullName) => s.id }.toSet
+    // …by the TAG the frontend attached, and only THEN by the key. §4.56's "an artifact that joins
+    // POLICY to OBSERVED code carries BOTH names", found the way that rule keeps being found: a
+    // `dropTypes` key is the UPSTREAM FQN and `Symbol.fullName` here is the EMITTED one, so on a
+    // RENAMING port this set was always EMPTY and `portability(emitted)` was `portability(all)` —
+    // every violation inside a type the port deliberately does not ship, counted as shipped, and
+    // `Remediator` suggesting a `dropTypes` entry the manifest already has. `isDropped` (the
+    // emission gate) had the tag from the start and this line did not, which is why the two agreed
+    // on a non-renaming port and disagreed on every other one (ENGINE-LIMITS.md P7).
+    val droppedIds  = program.symbols.all.collect {
+      case s if Substituted.tags(s) || policySubs.dropsType(s.fullName) => s.id
+    }.toSet
     // A type this run does not ship is either DROPPED by policy or FOREIGN — resolved against and
     // emitted by another module. Both must be excluded from the shipped-code number, or a dependent
     // port reports its base's findings as its own (see `PortabilityCheck.inEmittedCode`).
     val foreignIds  = translated.foreign.map(_.symbol).toSet
     val notShipped  = (id: SymId) => droppedIds(id) || foreignIds(id)
     val allViolations = PortabilityCheck.check(program, portabilityRules)
-    val portability   = PortabilityCheck.inEmittedCode(program, allViolations, notShipped)
+    val emittedSites  = PortabilityCheck.inEmittedCode(program, allViolations, notShipped)
+    // ---- `accept-jvm-only`, the one remedy this CHECK carries out (`PortabilityCheck.AcceptJvmOnly`)
+    //
+    // It changes no tree, so it is `ResolutionPlan.drain`'s half of the rule and not `appliedAt`'s:
+    // the check that mints the row is the only thing that ever holds it, so the partition and the
+    // ledger row come from one traversal. ONE drain path — never a third.
+    //
+    // The CONSISTENCY test comes first and is a fact about the MODULE, so it is asked once rather
+    // than per site: a port's `targets` says which backends it is built for, and accepting an API
+    // those backends cannot provide is the same module saying the opposite. Where they contradict,
+    // every selection is REFUSED with both real knobs named and nothing drains.
+    val resolutions = translated.binder.resolutions
+    val offJvm      = targets - balticporter.catalog.Platform.Jvm
+    val portability =
+      if offJvm.isEmpty then
+        resolutions.drain(PortRun.PortabilityEmitted, emittedSites) { v =>
+          val at = PortRun.acceptSubject(program, v, resolutions)
+          balticporter.tir.ResolutionPlan.Residue(v.api, at,
+            program.symbolOf(at).map(_.fullName).getOrElse("?"),
+            v.origin, s"accepted as JVM-only: ${v.api} — ${v.why}")
+        }
+      else
+        emittedSites.foreach { v =>
+          val at = PortRun.acceptSubject(program, v, resolutions)
+          resolutions.selected(at, PortabilityCheck.AcceptJvmOnly).foreach { r =>
+            resolutions.refuse(r, program.symbolOf(at).map(_.fullName).getOrElse("?"), v.origin,
+              "targets-contradiction",
+              s"this port declares `targets = ${targets.toList.map(_.toString).sorted.mkString("[", ", ", "]")}`" +
+                s", and ${v.api} is exactly what ${offJvm.toList.map(_.toString).sorted.mkString(" / ")} " +
+                "cannot provide — a module cannot be built for a backend and accept an API that " +
+                "backend does not have. The two honest knobs are `targets` (module-wide) and " +
+                "`verdictOverrides` (per API, where this port ships its own answer) [§1(b)]")
+          }
+        }
+        emittedSites
     // the remediations are computed HERE, where the `Program` is in scope, and handed to `summary`
     // as an argument. They used to travel through a `private var` in `PortabilityCheck` keyed to
     // the exact violation list, because `summary` has no `Program` and there was no orchestrator to
@@ -820,38 +864,6 @@ final case class PortRun(
     }
     if notices.nonEmpty then
       say(s"notice(s) shipped beside the emitted code: ${notices.map(_.getFileName).mkString(", ")}")
-
-    // ---- the upstream SERVICE DESCRIPTORS, with BOTH namespaces moved (ENGINE-LIMITS P5) ------
-    // The one deliverable of a port that is not `.scala`. Nothing in the pipeline could carry it:
-    // a provider is constructed reflectively from outside the program, so the closure sees no
-    // instantiation and concludes correctly and uselessly that nothing has to be fixed — and with
-    // the resource absent the loader finds ZERO providers, at no compile error, no check count and
-    // no finding. Ungated on the artifact layer for the notices' reason above; scoped by the same
-    // two things — an empty declaration writes nothing, and the destination is `src_managed/`.
-    val declaredServices = manifest.map(_.serviceProviders).getOrElse(Nil)
-    declaredServices.foreach { src =>
-      // FATAL, `Provenance.notices`' rule exactly: a descriptor the port meant to ship and silently
-      // did not looks exactly like one it shipped — and this one is worse, because the library then
-      // answers "not registered" as a plausible wrong result rather than as an error.
-      if !Files.isRegularFile(src) then
-        sys.error(s"[$label] the manifest declares a service descriptor that is not there: $src. " +
-          "A `META-INF/services` resource the port does not ship makes every `ServiceLoader.load` " +
-          "find zero providers, with no compile error, no check count and no finding to say so " +
-          "(ENGINE-LIMITS.md P5).")
-    }
-    // `emittedName` and not `packageRenames`: the run's own rename PHASE answers for `typeRenames`
-    // and `subPackages` too, and a provider moved by one of those is a line a prefix map cannot
-    // translate (§4.56 — never a hand-written `startsWith`).
-    val descriptors = ServiceProviders.plan(declaredServices, emittedName)
-    if descriptors.nonEmpty then
-      val wrote = ServiceProviders.write(descriptors, SbtGen.managedResources(portRoot, sourceSet.configName))
-      written += wrote.size
-      CheckReport.record(ServiceProviders.Name,
-        ServiceProviders.findings(descriptors, policySubs.dropsType,
-                                  renaming = manifest.exists(_.effectivePackageRenames.nonEmpty)))
-      say(s"SERVICE PROVIDERS: ${descriptors.size} descriptor(s), " +
-        s"${descriptors.map(_.providers.size).sum} provider line(s), rewritten into this port's namespace")
-      println(ServiceProviders.summary(descriptors))
 
     // Support types a phase RETYPED code onto. Two feeds, one rule: what the phases DECLARE
     // (RequiresRuntime → RuntimePlan) and what a phase that cannot declare it hands over.
@@ -1231,7 +1243,15 @@ final case class PortRun(
     // emitted text), so a drain is bound by that one; this position costs nothing and removes the
     // second way to get it wrong.
     val appliedRemedies = translated.binder.resolutions.all
-    CheckReport.record(PortRun.Remediation, Remediator.reports(fixes) ++ appliedRemedies.map(_.finding))
+    val refusedRemedies = translated.binder.resolutions.refusals
+    CheckReport.record(PortRun.Remediation,
+      Remediator.reports(fixes) ++ appliedRemedies.map(_.finding) ++ refusedRemedies.map(_.finding))
+    if appliedRemedies.nonEmpty || refusedRemedies.nonEmpty then
+      say(s"RESOLUTIONS: ${appliedRemedies.size} applied, draining " +
+        s"${appliedRemedies.map(_.drained).sum} row(s); ${refusedRemedies.size} declined")
+      appliedRemedies.foreach(a => println("  + " + a.render))
+      // the refusal POPULATION, one row per declined site naming its GUARD — §3's rule at a menu.
+      refusedRemedies.foreach(a => println("  ! " + a.render))
 
     // CHECK 2 — over the FINAL tree.
     val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs))
@@ -2138,15 +2158,13 @@ final case class PortRun(
   /** Every check named here must have registered a result. The persistence layer already
     * distinguishes "found 0" from "never ran"; this is the same guarantee one layer up, where the
     * decision to invoke a check is made. */
-  /** …plus the lanes a run is required to have because of what its own MANIFEST declares.
+  /** …plus the lanes a run owes because of what its own MANIFEST declares.
     *
     * `PortRun.RequiredChecks` is what every run owes whatever it is configured as. A CONDITIONAL
     * lane cannot go in that set — a port with no `serviceProviders` key records nothing there and
-    * requiring it would fail every one of the other fourteen — and it must not simply be left out
-    * either, because then a run that stopped writing descriptors would report success with the row
-    * gone. So the requirement is derived from the same declaration the work is: non-empty key,
-    * required lane. (`collection-*` is the other shape — required by the PHASE being present — and
-    * is made unskippable by the wiring living beside the block that records it.) */
+    * requiring it would fail every other port — and it must not simply be left out either, because
+    * then a run that stopped writing descriptors would report success with the row gone. So the
+    * requirement is DERIVED from the same declaration the work is. */
   private def requiredChecks: Set[String] =
     PortRun.RequiredChecks ++
       (if manifest.exists(_.serviceProviders.nonEmpty) then Set(ServiceProviders.Name) else Set.empty)
@@ -2784,11 +2802,34 @@ object PortRun:
     * restating one would be a second spelling of it (`DESIGN.md` §8.16). So they need no `Apply`
     * phase below — nothing is carried out, a row is MOVED — and the check that mints the residue
     * drains it where it records. */
+  /** WHERE A PORTABILITY SITE'S SELECTION IS ASKED FOR — the site's enclosing DEFINITION, or the
+    * nearest owner above it that a key can name.
+    *
+    * `PortabilityCheck.Violation.enclosing` is the nearest enclosing definition, which for a site
+    * inside a method body is routinely a LOCAL — the corpus's one `ServiceLoader` row is owned by a
+    * val called `loader`. A selection key is per MEMBER (`Resolution`), so asking only at `enclosing`
+    * answers `None` for exactly the sites a port most wants to speak about, and the fix is not a
+    * finer key: it is to ask at the declaration the key CAN name. Returns `enclosing` unchanged when
+    * nothing above it was selected, so an undrained row keeps the position it always had. */
+  private[runner] def acceptSubject(program: Program, v: PortabilityCheck.Violation,
+                                    plan: balticporter.tir.ResolutionPlan): SymId =
+    ownerChain(program, v.enclosing)
+      .find(id => plan.selected(id, balticporter.tir.PortabilityCheck.AcceptJvmOnly).isDefined)
+      .getOrElse(v.enclosing)
+
+  /** a symbol and every owner above it, nearest first. Fuel-bounded for `Program.owned`'s reason: a
+    * corrupt owner cycle must not hang a check. */
+  def ownerChain(program: Program, from: SymId): List[SymId] =
+    def climb(s: SymId, fuel: Int): List[SymId] =
+      if s == SymId.None || fuel == 0 then Nil
+      else s :: program.symbolOf(s).map(sym => climb(sym.owner, fuel - 1)).getOrElse(Nil)
+    climb(from, 64)
+
   val CheckRemedies: List[balticporter.tir.RemedySource] =
     List(HeapPollutionCheck, OverloadRiskCheck,
          balticporter.transform.CollectionBoundaryCheck,
          balticporter.transform.ContextSeamCheck,
-         balticporter.transform.NullabilityBoundaryCheck)
+         balticporter.transform.NullabilityBoundaryCheck, balticporter.tir.PortabilityCheck)
 
   /** …and the phases that CARRY those menus out — woven, never declared by a port.
     *

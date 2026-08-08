@@ -404,7 +404,10 @@ object PortConfig:
     "native" -> Platform.ScalaNative, "scala-native" -> Platform.ScalaNative,
   )
 
-  private def readTargets(m: ConfigView)(names: List[String]): Set[Platform] =
+  /** the platform names a `.conf` writes, shared by the manifest's own `targets` and by any factory
+    * whose phase takes the same §1(b) parameter — one spelling, so a port cannot write `js` in one
+    * place and have it mean something else in the other. */
+  def readTargets(m: ConfigView)(names: List[String]): Set[Platform] =
     names.map { n =>
       TargetNames.getOrElse(n.toLowerCase, throw ConfigError(m.at("targets"),
         s"'$n' is not a platform; one of ${TargetNames.keys.toList.sorted.mkString(", ")}"))

@@ -57,6 +57,17 @@ object Remediator:
       observed: String,
       snippet: Option[String] = None,
       caveat: Option[String] = None,
+      /** THE MACHINE-READABLE HALF of the same computation the snippet renders.
+        *
+        * It exists because the loop this file opens is now closed from the other end: a port can
+        * SELECT one of these templates (`DESIGN.md` §8.16) and the engine carries it out, which
+        * needs the VALUES — the wrapper, the receiver, the member set — and not a line of Scala a
+        * phase would have to parse back. Parsing the snippet was the alternative and it is the shape
+        * §4.56 refuses: a string is not a structural fact about anything.
+        *
+        * Built in the same expression as `snippet`, so the two cannot describe different templates;
+        * empty for the OBSERVATION fallback, which proposes nothing to carry out. */
+      payload: Map[String, String] = Map.empty,
   ):
     def render: String =
       val head = s"  [$mechanism] $subject — ${confidence.label}\n      $observed"
@@ -143,7 +154,8 @@ object Remediator:
         (Suggestion("substitutions-drop", name, Confidence.High,
           s"$obs, and no other unit in this port references it — it can be dropped outright",
           Some(s"""Substitutions(dropTypes = Set("$name"))"""),
-          Some("verify the drop with SubstitutionCheck: a reference left behind is a dangling type, not a smaller number")),
+          Some("verify the drop with SubstitutionCheck: a reference left behind is a dangling type, not a smaller number"),
+          Map("type" -> name, "sites" -> sites.toString, "referrers" -> "0")),
          apis)
       else
         val (touched, total) = memberSpread(program, w, sited)
@@ -163,7 +175,8 @@ object Remediator:
           s"$obs; ${outside.size} other type(s) reference it (${outside.take(3).mkString(", ")}" +
             (if outside.sizeIs > 3 then ", …)" else ")") + proportion,
           Some(s"""Substitutions(dropTypes = Set("$name"), inject = List(<dir holding your replacement>))"""),
-          Some("the replacement must declare the SAME FQN, or every referring type stops compiling")),
+          Some("the replacement must declare the SAME FQN, or every referring type stops compiling"),
+          Map("type" -> name, "sites" -> sites.toString, "referrers" -> outside.size.toString)),
          apis)
     }
 
@@ -237,7 +250,8 @@ object Remediator:
               // here, and inlining an unportable one moves the problem to every call site.
               s"The exclusions above are the members `PortabilityCheck` has a rule for. Confirm the " +
                 s"rest are on YOUR target's $xn before pasting — an inlined member the rules do not " +
-                "know about relocates the dependency silently.")),
+                "know about relocates the dependency silently."),
+            Map("wrapper" -> wn, "receiver" -> xn, "members" -> ok.toList.sorted.mkString(","))),
             Set.empty[String]))
         case _ => scala.None
       }
@@ -294,7 +308,8 @@ object Remediator:
       List((Suggestion("class-table", keys.head, Confidence.Medium,
         s"a runtime class lookup by name — $via",
         Some(s"""new ClassTableTransform(Map("${keys.head}" -> "<your.pkg.TypeTable>#classFor"))"""),
-        Some("you supply the table: an injected object mapping each name this port can round-trip to a `classOf[…]` literal")),
+        Some("you supply the table: an injected object mapping each name this port can round-trip to a `classOf[…]` literal"),
+        Map("callee" -> keys.head, "sites" -> lookups.size.toString)),
         Set(ClassForName)))
 
   private val ClassForName = "java.lang.Class#forName"
