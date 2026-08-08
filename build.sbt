@@ -281,6 +281,16 @@ lazy val corpus = project
     publish / skip := true,
     Compile / run / fork := true,
     Compile / run / javaOptions += s"-Dbalticporter.root=${(ThisBuild / baseDirectory).value}",
+    // …AND FOR TESTS, which is not symmetry — it is the one thing that makes an `assume`-guarded
+    // spec RUN. `balticporter.root` was set for `run` only, so a FORKED test JVM answered `.` — the
+    // SUBPROJECT directory — and every spec resolving a vendored upstream tree from it looked under
+    // `balticporter/corpus/../sge`, which does not exist. `PortMapAcceptanceSpec` therefore
+    // `assume`d itself away on every run of the corpus suite, silently: `sbt testOnly *` prints
+    // `Skipped 1` and exits 0 (`CLAUDE.md` §5.1). That is the same spec whose hard-coded expectation
+    // had already gone stale once for exactly this reason, and the previous fix addressed the OTHER
+    // precondition. Nothing else about the build changes: a test that does not read the property is
+    // unaffected, and one that does was not running.
+    Test / javaOptions += s"-Dbalticporter.root=${(ThisBuild / baseDirectory).value}",
   )
 
 // A migration TARGET, not part of the tool: the TIR-emitted Scala of libGDX's core module
