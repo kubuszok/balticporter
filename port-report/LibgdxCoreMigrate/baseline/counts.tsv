@@ -8,10 +8,10 @@ catalog(undischarged)	6
 catalog(unmechanised)	1
 catalog(unreached)	10
 class-init-trigger	2
-collection-boundary	6
+collection-boundary	5
 collection-closure	0
 collection-retarget	0
-context-seam	43
+context-seam	40
 dependency-coverage	37
 dependency-coverage(all)	37
 gdx-shared-iterator	0
@@ -22,7 +22,7 @@ idiom(residue)	0
 jdk-surface	24
 manifest	0
 markers	0
-nullability-boundary	102
+nullability-boundary	98
 omissions	66
 overload-risk	367
 policy	2
@@ -31,7 +31,7 @@ portability(all)	153
 portability(emitted)	153
 portability(injected)	2
 porter-notes	0
-remediation	30
+remediation	38
 rewrite-callsites	2
 signature	0
 substitution(dangling)	0

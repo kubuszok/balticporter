@@ -107,7 +107,73 @@ object LibgdxPolicy:
       // The keys of every OTHER policy — dropTypes, dropMethods, the forwarder and class-table
       // maps — stay upstream, because they are consulted at the frontend, before this runs.
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
+      resolutions    = reviewedBoundaries,
     )
+
+  /** THE BOUNDARY ROWS THIS PORT HAS READ AND ACCEPTS — `DESIGN.md` §8.16.
+    *
+    * Every entry here is the same statement, at a site somebody opened: *the residue this check
+    * counts is the right outcome here*. That statement had no spelling before the menu — the three
+    * boundary counts could only ever go up, because a review that concluded "this one is fine" had
+    * nowhere to be recorded — and it is deliberately not the same statement as any of the keys these
+    * checks point at, each of which changes what the port EMITS. Nothing below moves a byte; each
+    * row leaves its refusal lane and arrives in `remediation(resolved)` with the key that moved it.
+    *
+    * They are on `core` and not on a dependent because they are facts about libGDX core's OWN
+    * declarations, which is what §1.5 puts in the inherited column. A dependent binds them and drains
+    * nothing, because a finding about a base's unit is the base's (`ENGINE-LIMITS.md` D2).
+    */
+  def reviewedBoundaries: Map[String, String] = Map(
+    // `System.identityHashCode` is specified to answer "the same hash code that would be returned by
+    // the default hashCode(), regardless of the object's class" — it reads the object's IDENTITY and
+    // never its representation, which is the exact question `OpaqueEgress` asks. Note the other five
+    // rows in this lane STAY: `StringBuilder#append(Object)`, `Objects#toString`, `Object#equals`,
+    // `Comparable#compareTo` and `Comparator#compare` all read the value they are handed, so a
+    // retyped collection reaching one of them is precisely K21 face 1 and is still counted.
+    //
+    // BARE, and that is worth one sentence because the row it drains is not spelled this way: a
+    // finding's owner column carries `Symbol.fullName`, which the frontend interns for an external
+    // member with FULLY QUALIFIED parameters, while a `Descriptor` is SIMPLE names by construction.
+    // `identityHashCode(java.lang.Object)` copied out of the report is therefore `never matched`.
+    // A bare key names every overload and this method has exactly one, so it is exact here.
+    "java.lang.System#identityHashCode" -> "accept-opaque-egress",
+
+    // `Stage` is the scene graph's root and is the most-written `new` in libGDX's own documentation:
+    // application code builds one. Nothing INSIDE the library constructs it, which is why the closure
+    // sees no instantiation, and the external ancestor the warning keys on is `java.lang.AutoCloseable`
+    // — a JDK interface every `Disposable` has, not a framework base type. So this is the second of
+    // the two cases the check says it cannot tell apart ("if YOUR USERS construct it, this is correct
+    // as it stands and the clause is part of the ported API"), and a `selfSupplied` entry would be
+    // the wrong answer: it would take the context away from the caller who has one.
+    "com.badlogic.gdx.scenes.scene2d.Stage" -> "accept-unconstructed-thread",
+
+    // TWO rows, one key — the broadcast this grammar is per-declaration for. Both reads are inside
+    // the anonymous `GLErrorListener` that IS this `static final` field's initialiser: its
+    // `onError(int)` overrides the interface's, so its signature is not this program's to change, and
+    // the field runs at class initialisation, before any caller exists to pass a context. The two
+    // spelled alternatives are both worse here — `lazy-init` would change WHEN a diagnostic listener
+    // is built for no benefit, and `boundary = "residual-global"` is a WHOLE-PHASE setting that would
+    // re-spell every residual read in the library to serve these two.
+    "com.badlogic.gdx.graphics.profiling.GLErrorListener#LOGGING_LISTENER" -> "accept-residual-global",
+
+    // ONE java line — `public @Null Drawable down, over, background;` — and the annotated type is a
+    // CONCRETE `Drawable`, not `List`'s type parameter, so the union floor would be transparent at
+    // every use. They are held back only because [[nullabilityExempt]] names the ENCLOSING type and
+    // `RuleScope.covers` cuts at `$`: this is the over-approximation that entry documents (92 of 632
+    // declarations held back to clear 35 errors). And there is no key that would fix it — an
+    // `Everywhere(except)` scope has an exclusion set and no way to RE-include a nested type — so
+    // accepting is not the easier of two answers here, it is the only one.
+    "com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#background" -> "accept-scoped-out",
+    "com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#down"       -> "accept-scoped-out",
+    "com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#over"       -> "accept-scoped-out",
+
+    // `@Null <T> T optional (String, Class<T>)` — the annotation IS the method's whole contract, and
+    // the retype states it in the type. What this lane counts is what that costs at the USES, and on
+    // this port the compile answers: 0 errors. So the cost is measured and it is zero, while both
+    // spelled alternatives give the contract up — scoping `Skin` out returns it to an unannotated
+    // `T`, and `-Yexplicit-nulls -language:unsafeNulls` erases the distinction library-wide.
+    "com.badlogic.gdx.scenes.scene2d.ui.Skin#optional" -> "accept-abstract-type-parameter",
+  )
 
   /** libGDX's own JUnit suite, as a DEPENDENT of [[core]].
     *
