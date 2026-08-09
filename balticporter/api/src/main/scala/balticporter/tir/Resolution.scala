@@ -189,10 +189,6 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
   def nonEmpty: Boolean = entries.nonEmpty
   def size: Int         = entries.size
 
-  /** every key that BOUND, whatever it went on to do — what the run's `fired` set is fed from, so an
-    * inherited selection that bound is not reported as never-fired by `ManifestAgreement`. */
-  def boundKeys: Set[String] = entries.filter(_.target.isDefined).map(_.declared).toSet
-
   /** WHAT DID THE PORT CHOOSE HERE? — the one question a phase or check asks.
     *
     * `target` is the DECLARATION the site sits in, never the site's own symbol: that is the
@@ -282,6 +278,15 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
 
   def refusals: List[RefusedResolution] = declined.toList
 
+  /** everything recorded, READ and never flushed — the run's `PortRun.appliedRemedies` reads this,
+    * and so does [[decisions]] and [[appliedAt]] afterwards.
+    *
+    * There is deliberately no flushing variant. A `drain()` that emptied the ledger sat here with a
+    * doc claiming the run used it, and nothing did: the buffer belongs to a `ResolutionPlan` which
+    * belongs to ONE translation (see this class's own doc), so it never outlives what it records and
+    * has nothing to be flushed for. What it did have was a NAME that collided with the lane-partition
+    * [[drain]] beside it — two unrelated acts one word apart, in a file whose whole subject is a
+    * residue lane falling by what the ledger gained. */
   def all: List[AppliedResolution] = log.toList
 
   /** DID A REMEDY ALREADY ANSWER THIS ROW? — the DRAIN, asked by the check that mints the lane.
@@ -322,10 +327,6 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
     */
   def decisions: List[Decision] =
     log.toList.map(_.decision).distinctBy(d => (d.kind, d.subject, d.subjectFqn, d.detail.get("remedy")))
-
-  /** everything recorded so far, with the ledger emptied — how the run moves a translation's
-    * applications into its artifacts without the buffer outliving the translation. */
-  def drain(): List[AppliedResolution] = { val out = log.toList; log.clear(); out }
 
   /** DECLARED BESIDE APPLIED — every entry that did not do what its author asked, classified.
     *

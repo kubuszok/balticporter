@@ -389,7 +389,11 @@ class ResolutionSpec extends munit.FunSuite:
     Pipeline.runTraced(p, List(phase), binder)
     assertEquals(binder.resolutions.all.map(_.subjectFqn), List("com.demo.Widget#size"))
     assertEquals(binder.resolutions.troubles, Nil)
-    assertEquals(binder.resolutions.boundKeys, Set("com.demo.Widget#size"))
+    // …and the key counts as HAVING FIRED for the run's never-fired tally — which is read off the
+    // BINDER's own records, the way every other policy key's is, and not off a second set the plan
+    // kept beside them. `ResolutionPlan.boundKeys` was that second set: nothing outside a spec read
+    // it, and its doc claimed the run did.
+    assertEquals(binder.bindings.filter(_.binding.isBound).map(_.entry), List("com.demo.Widget#size"))
   }
 
   test("…and a phase not in the pipeline applies nothing, which is an INERT entry and not silence") {
