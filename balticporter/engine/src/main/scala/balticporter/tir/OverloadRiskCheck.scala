@@ -545,31 +545,79 @@ object OverloadRiskCheck extends RemedySource:
     *     plain application this shape assumes;
     *   - a parameter or result type that is a bare WILDCARD — `(?) => R` names nothing.
     *
-    * A refusal records NOTHING, so the finding stays in the lane: the residue is what says the port
-    * asked for something the engine could not do here, and a selection that refused everywhere is
-    * reported as `NeverApplied`.
+    * The finding STAYS IN THE LANE — the residue is what says the port asked for something the
+    * engine could not do here — and the refusal is COUNTED beside it ([[Decline]]), one row per
+    * declined SITE naming its guard. It used to be recorded nowhere at all, and the failure that
+    * exposes is a PARTIAL one: a selection BROADCASTS across the member it names, so a member with
+    * two risky calls can have one ascribed and one declined, which produced an applied row, a lane
+    * residue, no refusal row, and no `NeverApplied` (the key did fire, once). Nothing said the
+    * engine had refused anything — `CLAUDE.md` §3's refusal-enumeration rule read at a menu, and the
+    * exact shape `Resolution.RefusedKind` exists for.
     */
-  def ascription(a: Tree.Apply)(using p: Program): Option[TypeRepr.MethodType] =
+  def ascription(a: Tree.Apply)(using p: Program): Either[Decline, TypeRepr.MethodType] =
+    def no(guard: String, why: String) = Left(Decline(guard, why))
     def bareWildcard(t: TypeRepr): Boolean = t.isInstanceOf[TypeRepr.TypeBounds]
     val fun = a.fun match
       case ta: Tree.TypeApply => ta.fun
       case other              => other
-    val shapeOk = fun match
-      case Tree.Select(_: Tree.Super, _, _, _) => false
-      case _: Tree.Select | _: Tree.Ident      => true
-      case _                                   => false
-    for
-      s <- p.symbolOf(a.method)
-      if shapeOk && s.name != "<init>" && !s.flags.isStatic && !s.fullName.startsWith("scala.<op>#")
-      d <- p.definitionOf(a.method).collect { case x: Tree.DefDef => x }
-      if d.tparams.isEmpty && !isVararg(d)
-      ps = d.paramss.flatten
-      if ps.sizeIs == a.args.size
-      if !a.args.exists(_.isInstanceOf[Tree.Repeated])
-      if !bareWildcard(d.returnTpt.tpe) && !ps.exists(v => bareWildcard(v.tpt.tpe))
-    yield TypeRepr.MethodType(
-      ps.map(v => p.symbolOf(v.symbol).map(_.name).getOrElse("_") -> v.tpt.tpe),
-      d.returnTpt.tpe)
+    val shape = fun match
+      case Tree.Select(_: Tree.Super, _, _, _) =>
+        no("super-receiver", "scala admits `super` only as a member selection's qualifier, so there " +
+          "is no method value to ascribe here")
+      case _: Tree.Select | _: Tree.Ident => Right(())
+      case _ =>
+        no("not-a-selection", "the callee is not named by a selection or an identifier, so this is " +
+          "not the plain application the ascription's shape assumes")
+    shape.flatMap { _ =>
+      p.symbolOf(a.method) match
+        case scala.None =>
+          no("callee-unresolved", "the frontend interned no symbol for this callee, so there is no " +
+            "signature to write down — and javac's answer is the whole of what this remedy carries out")
+        case Some(s) if s.name == "<init>" =>
+          no("constructor", "`new C(x)` has no method value to ascribe at all")
+        case Some(s) if s.flags.isStatic =>
+          no("static-callee", "java lets a static be called through an INSTANCE and the emitter has " +
+            "to move the receiver (`JS-C06`); an ascription here would take that arm's place and " +
+            "emit a companion member selected on a value")
+        case Some(s) if s.fullName.startsWith("scala.<op>#") =>
+          no("operator", "the emitter renders this call infix, and an ascription would have to " +
+            "change the call's whole shape")
+        case Some(_) =>
+          p.definitionOf(a.method).collect { case x: Tree.DefDef => x } match
+            case scala.None =>
+              no("callee-external", "this program does not DECLARE the callee, so its parameter list " +
+                "is a fact about a class file and the candidate set is one this check cannot see")
+            case Some(d) =>
+              val ps = d.paramss.flatten
+              if d.tparams.nonEmpty then
+                no("generic-callee", "a polymorphic method value has no plain function type, so the " +
+                  "ascription would either not compile or instantiate the parameters at whatever " +
+                  "scala infers — which is a different member")
+              else if isVararg(d) then
+                no("vararg-callee", "`JS-G37` emits the pack as `Array[T]`, so the emitted arity is " +
+                  "not java's and a function type built from java's parameters names a signature " +
+                  "this port does not have")
+              else if ps.sizeIs != a.args.size then
+                no("arity-mismatch", s"the call passes ${a.args.size} argument(s) where the callee " +
+                  s"declares ${ps.size} — not the plain application this shape assumes")
+              else if a.args.exists(_.isInstanceOf[Tree.Repeated]) then
+                no("spread-argument", "a spread argument makes this a variable-arity application, " +
+                  "whose emitted shape is not the one a function type names")
+              else if bareWildcard(d.returnTpt.tpe) || ps.exists(v => bareWildcard(v.tpt.tpe)) then
+                no("bare-wildcard", "a parameter or the result is a bare wildcard, and `(?) => R` " +
+                  "names nothing")
+              else Right(TypeRepr.MethodType(
+                ps.map(v => p.symbolOf(v.symbol).map(_.name).getOrElse("_") -> v.tpt.tpe),
+                d.returnTpt.tpe))
+    }
+
+  /** WHY THE ASCRIPTION COULD NOT BE WRITTEN HERE — the guard, as the refusal population groups by,
+    * and the sentence its reader acts on.
+    *
+    * Produced by [[ascription]] itself and by nothing else, which is the same rule the emission and
+    * the refusal already shared: two derivations of "can this be written" would eventually let the
+    * phase refuse a call the emitter would have printed, or the reverse. */
+  final case class Decline(guard: String, why: String)
 
   /** THE MENU, CARRIED OUT — a phase, for `HeapPollutionCheck.Apply`'s reason (a resolution has to be
     * recorded before emission, and this check runs after it) plus one this lane adds: the
@@ -661,12 +709,23 @@ object OverloadRiskCheck extends RemedySource:
           chosen.foreach((f, sel) => record(sel, subject, decl, f,
             s"risk at `${f.member}` accepted by this port"))
           a
-        case Some(_) =>
+        case Some((f0, r0)) =>
           ascription(a) match
-            // REFUSED — the alternative cannot be written here, so nothing is recorded and every
-            // finding stays in the lane. See `ascription` for the enumeration.
-            case scala.None     => a
-            case Some(mt) =>
+            // REFUSED — the alternative cannot be written here, so the findings STAY in the lane and
+            // the decline is COUNTED, naming its guard (`Resolution.RefusedKind`). Recorded nowhere,
+            // a PARTIAL refusal was invisible: a selection broadcasts, so a member with two risky
+            // calls could have one ascribed and one declined, leaving an applied row, a lane residue,
+            // no refusal row and no `NeverApplied` — nothing saying the engine had refused anything.
+            //
+            // ONE row per declined SITE and not per KIND: a call files up to three of JLS 15.12.2's
+            // boundaries and this is one act declining once. The applied side counts per kind for the
+            // opposite reason — there the lane FALLS, and by exactly as many rows as it gained.
+            case Left(d) =>
+              plan.refuse(r0, subject, f0.origin, d.guard,
+                s"${d.why} — the ${chosen.size} `$Name` row(s) at `${f0.member}` (line " +
+                  s"${f0.origin.line}) therefore stay in the lane")
+              a
+            case Right(mt) =>
               chosen.foreach((f, sel) => record(sel, subject, decl, f,
                 s"call to `${f.member}` pinned to the alternative javac bound"))
               a.copy(fun = Tree.Typed(a.fun, TypeTree(mt, a.origin), mt, a.origin))

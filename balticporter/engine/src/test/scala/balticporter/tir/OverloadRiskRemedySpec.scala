@@ -163,9 +163,46 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
     assertEquals(plan.all, Nil)
     assert(clue(lane(out, plan)).contains("BoxingPhaseSpan tag/1@13"))
     assertEquals(emitted(out), before)
-    // …and the selection is reported as INERT rather than as silence.
-    assertEquals(PolicyReport.fromResolutions(plan.troubles).findings.map(_.issue),
-                 List(PolicyIssue.NeverApplied))
+    // …and the decline is a COUNTED row naming its guard, never silence and never `NeverApplied`:
+    // the selection WAS consulted and the engine answered. Reported as inert it would send its
+    // author looking for a call that is right there.
+    val List(r) = plan.refusals: @unchecked
+    assertEquals(r.guard, "static-callee")
+    assertEquals(r.finding.kind, Resolution.RefusedKind)
+    assert(clue(r.why).contains("stay in the lane"))
+    assertEquals(plan.troubles, Nil)
+  }
+
+  test("…and a PARTIAL refusal is the shape silence hid: one call ascribed, one declined, both said") {
+    // A selection BROADCASTS across the member it names, so this is not an exotic case — it is what
+    // any member holding two risky calls does. Recorded nowhere, the decline left an applied row, a
+    // lane residue, no refusal row and no `NeverApplied` (the key fired, once), so nothing at all
+    // said the engine had refused something the port asked for.
+    val Mixed =
+      """package com.demo;
+        |public class Mix {
+        |  public boolean remove(Object item) { return false; }
+        |  public String remove(int index) { return null; }
+        |  public static void tag(Object o) { }
+        |  public static void tag(int n) { }
+        |  public void both() {
+        |    remove(1);
+        |    tag(1);
+        |  }
+        |}""".stripMargin
+    val p      = SpoonTir.fromSource(Mixed, catalog = CatalogLog.discarding)
+    val binder = new PolicyBinder(p, p.members)
+    binder.resolving(ResolutionPlan.of(
+      Map("com.demo.Mix#both()" -> "ascribe-javac-choice"), vocabulary, vocabulary.byId.keySet, binder))
+    val out  = Pipeline.runTraced(p, List(new OverloadRiskCheck.Apply), binder)._1
+    val plan = binder.resolutions
+    assertEquals(plan.all.size, 1)
+    assert(clue(plan.all.head.what).contains("remove"))
+    val List(r) = plan.refusals: @unchecked
+    assertEquals(r.guard, "static-callee")
+    assert(clue(r.why).contains("tag"))
+    // the drained half fell and the refused half stayed — which is the pair §5 asks a reader to read.
+    assertEquals(lane(out, plan), List("BoxingPhaseSpan tag/1@9"))
   }
 
   test("…and the guard is STATED ONCE, so the refusal and the emission read one predicate") {
@@ -177,7 +214,7 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
       def name: String = "spec/scan"
       override def transformApply(a: Tree.Apply)(using Program): Term =
         if p.owns(a.method) then
-          out += (p.symbolOf(a.method).map(_.name).getOrElse("?") -> OverloadRiskCheck.ascription(a).isDefined)
+          out += (p.symbolOf(a.method).map(_.name).getOrElse("?") -> OverloadRiskCheck.ascription(a).isRight)
         a
     p.units.foreach(u => StandardTraversal.mapClassDef(scan, u))
     // a STATIC callee is refused; an instance, fixed-arity, non-generic one is not.

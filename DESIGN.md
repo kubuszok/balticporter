@@ -5032,8 +5032,22 @@ Three things about how it is built, each of which is a rule read at a new place:
   value has no plain function type), a vararg one (`JS-G37` emits the pack as `Array[T]`, so java's
   parameter list names a signature the port does not have), a constructor, an operator, a `super`
   receiver, a static (java lets a static be called through an instance and `JS-C06` has to move the
-  receiver), a spread argument, a bare wildcard in the signature. A refusal records nothing, so the
-  finding stays in the lane and a selection that refused everywhere is `NeverApplied` — never silence.
+  receiver), a spread argument, a bare wildcard in the signature. The finding stays in the lane, and
+  the decline is COUNTED beside it — one row per declined SITE naming its GUARD, which is the
+  `remediation(refused)` population §5 asks for.
+
+  **It used to record nothing, and "a selection that refused everywhere is `NeverApplied`" was the
+  whole of the answer.** That is true of a selection that refused EVERYWHERE and says nothing about
+  the ordinary case, because a selection BROADCASTS: a member with two risky calls can have one
+  ascribed and one declined, which left an applied row, a lane residue, no refusal row and no
+  `NeverApplied` — the key had fired, once. Nothing anywhere said the engine had refused something the
+  port asked for, which is exactly what `Resolution.RefusedKind` exists to make sayable. The guard is
+  produced by `OverloadRiskCheck.ascription` itself (an `Either`), never by a second predicate beside
+  it, for the reason the emission and the refusal already shared one: two derivations of *can this be
+  written* would eventually refuse a call the emitter would have printed. One row per declined SITE
+  and not per KIND — a call files up to three of JLS 15.12.2's boundaries and this is one act
+  declining once, where the APPLIED side counts per kind because there the lane falls by exactly as
+  many rows as `resolved` gains.
 
 `accept-risk` beside it is a STATEMENT rather than an act, and it is what can empty an
 over-approximated lane honestly: the row moves with the port's name on it and a porter note beside the
