@@ -188,9 +188,21 @@ class RemediationMenuSpec extends munit.FunSuite:
     assertEquals(factory.name, new RemediationTransform().name)
   }
 
+  test("ONE spelling of the drained lane — the check's constant, read by the phase and by the run") {
+    // `Remedy.lane`'s own scaladoc: a lane is a constant so a rename is a COMPILE ERROR. This lane
+    // had three literals (here, `AcceptJvmOnly`, `PortRun`), which agree by inspection and cannot be
+    // made to disagree by a compiler — so the assertion is on the IDENTITY of the constant, and the
+    // grep beside it is what would fail if a fourth literal reappeared.
+    assertEquals(PortabilityCheck.EmittedLane, "portability(emitted)")
+    assertEquals(balticporter.runner.PortRun.PortabilityEmitted, PortabilityCheck.EmittedLane)
+    assertEquals(PortabilityCheck.AcceptJvmOnly.lane, PortabilityCheck.EmittedLane)
+    assertEquals(new RemediationTransform().remedies.map(_.lane).distinct,
+                 List(PortabilityCheck.EmittedLane))
+  }
+
   test("the phase's remedies all name the lane they drain, and all of them are the portability one") {
     val rs = new RemediationTransform().remedies
-    assertEquals(rs.map(_.lane).distinct, List("portability(emitted)"))
+    assertEquals(rs.map(_.lane).distinct, List(PortabilityCheck.EmittedLane))
     assert(rs.forall(_.emissionAffecting))
     assertEquals(rs.map(_.id).sorted, List("class-table", "static-forwarder-inline", "substitutions-drop"))
   }

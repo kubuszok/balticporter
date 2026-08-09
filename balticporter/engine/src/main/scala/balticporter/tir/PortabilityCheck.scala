@@ -50,6 +50,20 @@ import balticporter.catalog.{ApiRow, ApiRows, DiffId, FixKind, Platform}
   */
 object PortabilityCheck extends RemedySource:
 
+  /** THE `CheckReport` LANE THIS CHECK'S EMITTED-CODE RESIDUE IS COUNTED IN — one spelling, here,
+    * because `Remedy.lane`'s own scaladoc asks for exactly that ("not a string literal, so a renamed
+    * lane is a compile error rather than a silently unwired claim") and this lane had THREE: the
+    * orchestrator's `PortRun.PortabilityEmitted`, [[AcceptJvmOnly]]'s own literal, and
+    * `RemediationTransform.Lane`'s. Three literals agree by inspection and cannot be made to disagree
+    * by a compiler, which is the whole of the objection: a lane renamed in one of them would leave a
+    * remedy claiming to drain a check that no longer exists, at no error and no moved count, and the
+    * only symptom would be a `remediation(resolved)` row beside a residue that never fell.
+    *
+    * It lives on the CHECK and not on the orchestrator because the check is what MINTS the rows;
+    * `PortRun` names it as this run's report lane and `RemediationTransform`'s remedies read it as
+    * the lane they drain. */
+  val EmittedLane: String = "portability(emitted)"
+
   /** THE ONE REMEDY THIS CHECK CAN CARRY OUT — see [[AcceptJvmOnly]]. Declared here rather than on a
     * phase because this lane's producer IS a check: a plain object the orchestrator calls, which is
     * exactly the half of the residue population `RemedySource` exists beside `Phase` for. */
@@ -105,7 +119,7 @@ object PortabilityCheck extends RemedySource:
     * which is what every port does today. `ENGINE-LIMITS.md` P6 carries the number and the reasoning.
     */
   val AcceptJvmOnly: Remedy = Remedy(
-    id = "accept-jvm-only", lane = "portability(emitted)", kind = Remedy.AnyKind,
+    id = "accept-jvm-only", lane = EmittedLane, kind = Remedy.AnyKind,
     emissionAffecting = false, fix = FixKind.Universal, subject = Remedy.Subject.OwnedMember,
     what = "accept this location as JVM-only: the row moves to `remediation(resolved)` and no tree " +
       "changes — refused, with both real knobs named, on a port whose `targets` claim Scala.js or " +

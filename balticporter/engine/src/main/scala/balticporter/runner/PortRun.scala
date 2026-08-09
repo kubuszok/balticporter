@@ -2896,7 +2896,11 @@ object PortRun:
   val Signature            = "signature"
   val Omissions            = "omissions"
   val PortabilityAll       = "portability(all)"
-  val PortabilityEmitted   = "portability(emitted)"
+  /** …read off the CHECK, because a REMEDY names this lane too and `Remedy.lane` asks for a constant
+    * rather than a literal so a rename is a compile error. Three literals used to spell it — here,
+    * `PortabilityCheck.AcceptJvmOnly` and `RemediationTransform.Lane` — which agree by inspection and
+    * cannot be made to disagree by a compiler. */
+  val PortabilityEmitted   = PortabilityCheck.EmittedLane
   val PortabilityInjected  = "portability(injected)"
   /** …and the lane an APPLIED remedy selection files under too — one name, read off the api value
     * that builds the row, so the check and the finding cannot drift apart

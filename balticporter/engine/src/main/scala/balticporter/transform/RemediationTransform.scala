@@ -270,8 +270,12 @@ object RemediationTransform:
 
   /** the lane every remedy here drains. A type this phase removes takes its sites with it, so both
     * portability lanes fall — `portability(emitted)` is the one named because it is the DELIVERABLE
-    * number and the one a drain is read against. */
-  private val Lane: String = "portability(emitted)"
+    * number and the one a drain is read against.
+    *
+    * Read from the CHECK that mints the rows (`PortabilityCheck.EmittedLane`) and never spelled
+    * here: `Remedy.lane`'s own scaladoc asks for a constant so that a renamed lane is a compile
+    * error, and this file was one of three places the name was written out. */
+  private val Lane: String = PortabilityCheck.EmittedLane
 
   /** `Remediator`'s own `mechanism` strings, and that is not a coincidence to be tidied away: the id
     * a port writes in `resolutions` is the id printed beside the snippet in the `remediation` lane,
