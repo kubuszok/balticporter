@@ -216,6 +216,25 @@ enum Param:
     case Arr(of)    => of.render + "[]"
     case Unresolved => "?"
 
+  /** …the SIMPLE spelling, which is what this grammar is: `java.lang.Object` is `Object` and
+    * `java.util.Map$Entry` is `Entry`.
+    *
+    * A [[Named]] is supposed to hold a simple name already — [[Descriptor]] says so — and a POLICY
+    * AUTHOR routinely writes the qualified one, because that is what the reports show them. An
+    * external member's `Symbol.fullName` is its interning key, so a `collection-boundary` row prints
+    * `…#identityHashCode(java.lang.Object)`; copied into a manifest that key matched NOTHING, and two
+    * ports carry a comment explaining that it must be written bare. This is that trap removed rather
+    * than documented.
+    *
+    * Cut only at a SEPARATOR and only at the LAST one (§4.56): `.` between packages and the
+    * top-level type, `$` before a nested type. A key already written simply is its own answer, so the
+    * normalisation is the identity on every key any manifest holds today. */
+  def simple: Param = this match
+    case Named(n)   => Named(n.substring(math.max(n.lastIndexOf('.'), n.lastIndexOf('$')) + 1))
+    case Prim(n)    => Prim(n)
+    case Arr(of)    => Arr(of.simple)
+    case Unresolved => Unresolved
+
 /** A member's parameter spelling — the half of member identity `Symbol.fullName` does not carry.
   *
   * ==The two divergences this closes, and where they came from==
@@ -239,6 +258,23 @@ final case class Descriptor(params: List[Param]):
   /** the spelling: SIMPLE names, comma-separated, no spaces — `int,String,Class`. */
   def render: String = params.map(_.render).mkString(",")
   def arity: Int     = params.size
+  /** DOES A DECLARED DESCRIPTOR NAME THIS ONE? — compared through [[Param.simple]] on both sides.
+    *
+    * Never `==`, and the reason is one an equality cannot express: this grammar is the SIMPLE
+    * spelling, while every report a policy author copies a key out of shows the QUALIFIED one (an
+    * external member's `Symbol.fullName` is its interning key, parameters and all). Two ports carry a
+    * comment saying "write it bare, the descriptor form never matches" — which is a trap documented
+    * twice and removed nowhere, and the binder holds both strings at the moment it fails.
+    *
+    * Arity first, because that is the cheap half and the one that is never ambiguous. What this can
+    * admit that `==` could not is two overloads whose parameter simple names collide across packages
+    * (`m(java.util.List)` beside `m(com.foo.List)`, which java permits): both then match one key, and
+    * the binder's own `Ambiguous` refusal names them with their qualified signatures — a refusal that
+    * says which two, rather than a silent pick. */
+  def matches(other: Descriptor): Boolean =
+    params.sizeIs == other.params.size &&
+      params.iterator.zip(other.params.iterator).forall((a, b) => a.simple == b.simple)
+
   /** does every parameter have a name? A descriptor with an [[Param.Unresolved]] in it is not a key
     * and must never be stored on a `Symbol` — see [[Descriptor.total]]. */
   def isTotal: Boolean = params.forall {

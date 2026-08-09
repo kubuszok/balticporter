@@ -48,9 +48,19 @@ final class MemberIndex(
     byKey.iterator.filter((k, _) => k.owner == owner && k.name == name)
       .flatMap((k, fs) => fs.map(k -> _)).toList.sortBy(_._1.render)
 
-  /** …for a key, precise or bare. A precise key names one identity; a bare key names the set. */
+  /** …for a key, precise or bare. A precise key names one identity; a bare key names the set.
+    *
+    * A precise key is matched through `Descriptor.matches` over the overload set rather than by a
+    * `Map` lookup on the whole `MemberKey`, so a parameter written QUALIFIED — which is how every
+    * report shows one — names the member it obviously means. The lookup is per POLICY KEY and there
+    * are tens of those in a manifest, so the scan costs nothing a run can measure. */
   def matching(k: MemberKey): List[(MemberKey, MemberFacts)] =
-    if k.isBare then overloads(k.owner, k.name) else exact(k).map(f => k -> f)
+    if k.isBare then overloads(k.owner, k.name)
+    else
+      exact(k).map(f => k -> f) match
+        case Nil  => overloads(k.owner, k.name)
+                       .filter((k2, _) => k2.descriptor.exists(d => k.descriptor.exists(_.matches(d))))
+        case hits => hits
 
   def all: List[(MemberKey, MemberFacts)] =
     byKey.toList.flatMap((k, fs) => fs.map(k -> _)).sortBy(_._1.render)

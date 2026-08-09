@@ -140,3 +140,39 @@ class MemberKeySpec extends munit.FunSuite:
     assertEquals(Descriptor.paramOf("boolean"), Param.Prim("boolean"))
     assertEquals(Descriptor.paramOf("Int"), Param.Named("Int")) // scala's name is an ordinary type name
   }
+
+  // -------------------------------------------------------------------------
+  // the QUALIFIED spelling a report shows, matched against the SIMPLE one this grammar is
+  // -------------------------------------------------------------------------
+
+  test("a QUALIFIED parameter matches the simple one — the trap two ports documented and neither could fix") {
+    // Every report a policy author copies a key out of shows the QUALIFIED name: an external
+    // member's `Symbol.fullName` is its interning key, so a boundary row prints
+    // `…#identityHashCode(java.lang.Object)`. Compared by equality that key named nothing, and the
+    // only advice was "write it bare" — exact for a one-overload member and wrong the day there are
+    // two.
+    val written = MemberKey.of("java.lang.System#identityHashCode(java.lang.Object)").descriptor.get
+    val known   = MemberKey.of("java.lang.System#identityHashCode(Object)").descriptor.get
+    assert(written.matches(known))
+    assert(known.matches(written))
+    assertNotEquals(written, known)
+  }
+
+  test("…cut at a SEPARATOR and only the LAST one, so a NESTED type spells as the parser does") {
+    assertEquals(Param.Named("java.util.Map$Entry").simple, Param.Named("Entry"))
+    assertEquals(Param.Named("Entry").simple, Param.Named("Entry"))
+    assertEquals(Param.Arr(Param.Named("java.lang.String")).simple, Param.Arr(Param.Named("String")))
+    assertEquals(Param.Prim("int").simple, Param.Prim("int"))
+    // a prefix is not a separator: `com.foobar.X` cuts at its own last one (§4.56)
+    assertEquals(Param.Named("com.foobar.X").simple, Param.Named("X"))
+  }
+
+  test("…and it is the IDENTITY on every key a manifest holds today — arity first, never a prefix") {
+    val k = MemberKey.of("com.foo.Bar#baz(int,String,Class)").descriptor.get
+    assert(k.matches(k))
+    assert(!k.matches(MemberKey.of("com.foo.Bar#baz(int,String)").descriptor.get))
+    assert(!k.matches(MemberKey.of("com.foo.Bar#baz(int,String,Object)").descriptor.get))
+    // two DISTINCT simple names stay distinct — the leniency is about the PACKAGE and nothing else
+    assert(!MemberKey.of("X#m(java.util.List)").descriptor.get
+             .matches(MemberKey.of("X#m(Map)").descriptor.get))
+  }

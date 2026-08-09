@@ -182,6 +182,45 @@ class PolicyBinderSpec extends munit.FunSuite:
     assert(b.bindScope("spec", "CollectionsTransform(scope)", "com.demo.Shop").isBound)
   }
 
+  // -------------------------------------------------------------------------
+  // the QUALIFIED spelling a report shows — the descriptor trap, removed
+  // -------------------------------------------------------------------------
+
+  test("a key whose parameters are QUALIFIED binds to the member it obviously names — OWNED") {
+    // The grammar is SIMPLE names and every report a key is copied out of shows the qualified ones.
+    // Compared by equality this key named nothing and the binder said `never matched` about a member
+    // that is right there — the failure two ports document in a comment and neither can fix.
+    val p    = tree(Substitutions.none)(source)
+    val hit  = bind(p, "com.demo.Shop#make(java.lang.Class)")
+    assert(clue(hit).isBound)
+    assertEquals(hit.toOption.flatMap(_.sym).flatMap(p.symbolOf).flatMap(_.descriptor).map(_.render),
+                 Some("Class"))
+    // …and it is still the OVERLOAD it names, not the set: the other one is not admitted.
+    assertEquals(bind(p, "com.demo.Shop#make(java.lang.String)").toOption
+                   .flatMap(_.sym).flatMap(p.symbolOf).flatMap(_.descriptor).map(_.render),
+                 Some("String"))
+  }
+
+  test("…and EXTERNAL, which is where the trap was actually met") {
+    // An external member's `Symbol.fullName` IS its interning key, so the row a port reads prints
+    // `…#identityHashCode(java.lang.Object)` — the qualified spelling — while its `descriptor` holds
+    // the simple one. Both spellings must reach the same symbol, or the engine's own report is a
+    // key nobody can use.
+    val p = tree(Substitutions.none)(
+      source,
+      "com/demo/Uses.java" ->
+        """package com.demo;
+          |public class Uses {
+          |  public int h(Object o) { return System.identityHashCode(o); }
+          |}""".stripMargin)
+    def bindExt(k: String) =
+      binderOf(p).bindMember("spec", "setting", k, Ownership.External).toOption.flatMap(_.sym)
+    val simple    = bindExt("java.lang.System#identityHashCode(Object)")
+    val qualified = bindExt("java.lang.System#identityHashCode(java.lang.Object)")
+    assert(clue(simple).isDefined)
+    assertEquals(qualified, simple)
+  }
+
   test("a MALFORMED key is named at the `<`, never silently NeverMatched") {
     val p = tree(Substitutions.none)(source)
     val b = bind(p, "com.demo.Shop#make(Class<?>)")

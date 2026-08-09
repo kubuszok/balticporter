@@ -116,8 +116,23 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
     record(phase, setting, entry, resolve(entry, need).flatMap { (_, hits) =>
       hits match
         case List(one) => Binding.Bound(entry, one, 1)
-        case many      => Binding.Unbound(entry, NotBound.Ambiguous(many.map(_.key.render).sorted))
+        case many      => Binding.Unbound(entry, NotBound.Ambiguous(candidates(many)))
     })
+
+  /** the candidate list an [[NotBound.Ambiguous]] refusal names — rendered keys, and the QUALIFIED
+    * signature beside each only where the rendered keys cannot tell two candidates apart.
+    *
+    * That case is what `Descriptor.matches` admits and equality did not: two overloads whose
+    * parameter simple names collide across packages (`m(java.util.List)` beside `m(com.foo.List)`,
+    * which java permits) render identically in this grammar, and a refusal listing one string twice
+    * tells its reader nothing. Conditional, so every ambiguity message that could already be written
+    * is byte-identical to the one it was. */
+  private def candidates(hits: List[PolicyBinder.Hit]): List[String] =
+    val rendered = hits.map(_.key.render)
+    if rendered.distinct.sizeIs == rendered.size then rendered.sorted
+    else hits.map { h =>
+      h.key.render + h.sym.flatMap(program.symbolOf).map(s => s"  [${s.fullName}]").getOrElse("")
+    }.sorted
 
   /** bind a key to the symbol a CALL SITE names — exactly one overload, like [[bindMember]], and
     * differing from it in one documented place.
@@ -152,7 +167,7 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
     record(phase, setting, entry, resolve(entry, need, callSite = true).flatMap { (_, hits) =>
       hits match
         case List(one) => Binding.Bound(entry, one, 1)
-        case many      => Binding.Unbound(entry, NotBound.Ambiguous(many.map(_.key.render).sorted))
+        case many      => Binding.Unbound(entry, NotBound.Ambiguous(candidates(many)))
     })
 
   /** bind a SCOPE entry — a package, a type or a member prefix. It names a REGION, so the answer is
@@ -196,7 +211,12 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
           // ENGINE minted after the frontend ran.
           val syms = program.symbols.all.iterator.filter { s =>
             s.name == key.name && program.symbolOf(s.owner).exists(_.fullName == key.owner) &&
-              key.descriptor.forall(d => s.descriptor.contains(d))
+              // …through `Descriptor.matches` and never `contains`: this grammar is SIMPLE names and
+              // every report a key is copied out of shows the QUALIFIED ones, an external member's
+              // `Symbol.fullName` being its interning key (`@8#identityHashCode(java.lang.Object)`).
+              // Compared by equality that key matched nothing, which two ports document and neither
+              // could fix from their side.
+              key.descriptor.forall(d => s.descriptor.exists(d.matches))
           }.toList
           val (owned, external) = syms.partition(s => program.owns(s.id))
           // `dropped` is carried from STAGE 1's answer: on the call-site fall-through the index

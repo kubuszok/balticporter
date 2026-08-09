@@ -131,11 +131,12 @@ object LibgdxPolicy:
     // `Comparable#compareTo` and `Comparator#compare` all read the value they are handed, so a
     // retyped collection reaching one of them is precisely K21 face 1 and is still counted.
     //
-    // BARE, and that is worth one sentence because the row it drains is not spelled this way: a
-    // finding's owner column carries `Symbol.fullName`, which the frontend interns for an external
-    // member with FULLY QUALIFIED parameters, while a `Descriptor` is SIMPLE names by construction.
-    // `identityHashCode(java.lang.Object)` copied out of the report is therefore `never matched`.
-    // A bare key names every overload and this method has exactly one, so it is exact here.
+    // BARE because it is EXACT: this method has exactly one overload and a bare key names the set.
+    // It used to be bare because it had to be — a finding's owner column carries `Symbol.fullName`,
+    // which the frontend interns for an external member with FULLY QUALIFIED parameters, while a
+    // `Descriptor` is SIMPLE names, so `identityHashCode(java.lang.Object)` copied out of the report
+    // was `never matched`. The binder compares descriptors through `Descriptor.matches` now (simple
+    // names on both sides), so either spelling binds and this is a choice.
     "java.lang.System#identityHashCode" -> "accept-opaque-egress",
 
     // `Stage` is the scene graph's root and is the most-written `new` in libGDX's own documentation:

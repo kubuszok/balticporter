@@ -1890,6 +1890,25 @@ key reports `NeverMatched`, which reads as a typo. The fix is one negative spec 
 binds from *both* sides with the exact spelling `int[]` and `Array` does *not* bind; the `equals` key
 binds as `Object`, never `Any`, with the descriptor asserted to be read before the retyping.
 
+**A THIRD divergence was not latent: the QUALIFIED spelling every report shows.** The two above are
+traps for the next library; this one was met by two ports, documented in two comments and removed by
+neither. This grammar is SIMPLE names, and an EXTERNAL member's `Symbol.fullName` is its interning
+key, parameters and all — so a `collection-boundary` row prints
+`…#identityHashCode(java.lang.Object)`, and a key copied out of it matched NOTHING. Both ports wrote
+the same workaround (`# BARE on purpose`, with a paragraph explaining why the precise form cannot be
+written), which is exact for a one-overload member and wrong the day there are two — and it is advice
+that reaches a reader only if they find the comment.
+
+The binder holds both strings at the moment it fails, so the fix is a comparison and not a note:
+`Descriptor.matches` compares `Param.simple` on both sides, cutting at the LAST `.` or `$` and only
+there (§4.56 — `java.util.Map$Entry` is `Entry`, and the normalisation is the identity on every key
+any manifest holds today). Two things follow. Two DISTINCT simple names stay distinct, so the
+leniency is about the PACKAGE and nothing else. And what it newly admits is one shape java permits —
+two overloads whose parameter simple names collide across packages (`m(java.util.List)` beside
+`m(com.foo.List)`) — which is not a silent pick but the binder's own `Ambiguous` refusal, rendering
+each candidate with its qualified signature *only* where the rendered keys cannot tell them apart, so
+every message that could already be written is byte-identical.
+
 **A dropped member is never interned, and that forces the binder to be two-stage.** The frontend
 filters an executable out *before* the method symbol is minted, so a `dropMethods` key names a member
 with no `SymId`, no `Symbol` and no row in the symbol table — it cannot be resolved against a
