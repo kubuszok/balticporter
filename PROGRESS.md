@@ -5342,6 +5342,24 @@ The negatives — a dropped provider, a dropped service, an empty descriptor, a 
 move, a line the format does not admit — are reachable on NO corpus port and are `ServiceProvidersSpec`'s
 ten cases. That spec is the coverage.
 
+### 12.2.8 What the menu program deliberately did not build
+
+Two recurring hand-written shapes were surveyed for mechanisation alongside the menus and left
+unbuilt, each with the reason stated so the decision is not re-derived:
+
+- **Reflective-instantiation-to-registry as a §1(b) phase.** Three ports hand-wrote the same shape —
+  libGDX core's injected `Pools`, Ashley's `ComponentFactories`, gdx-gltf's
+  `GLTFExtensionFactories` — a `Class`-keyed factory table replacing `newInstance()`, differing in
+  exactly two parameters (open registry with a fallback vs closed without; null vs throw on a miss).
+  Three instances of one mechanism is the §1 threshold for parameterising, and it remains the
+  strongest candidate for the next engine wave; it was scoped out of the menu program to keep Wave D
+  at two measured deliverables rather than three rushed ones.
+- **The loud-refusal facade stays hand-written.** A faithful static half beside a reflective half
+  that throws `UnsupportedOperationException` naming the seam (libGDX's injected `Json` is the
+  worked example) recurs as a SHAPE, but each instance's split — which members are static-faithful,
+  which throw — is a semantic fact about that library's API, which is §1(c)'s definition. A scaffold
+  would generate the throwing half from a member list, and a member list is most of the work.
+
 ### 12.3 Counted residues that are not defects
 
 - **`catalog(unreached)` GROWS by one on every port each time a MODERN-JAVA row is mechanised, and
