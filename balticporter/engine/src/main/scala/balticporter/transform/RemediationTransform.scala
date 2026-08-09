@@ -94,10 +94,22 @@ final class RemediationTransform(
   private var plan: ResolutionPlan   = ResolutionPlan.empty
   private var binder: Option[PolicyBinder] = scala.None
   private var unusedTables: List[String]   = Nil
+  /** …and WHICH DECLARATIONS THIS RUN EMITS — `ENGINE-LIMITS.md` D2 read at the resolution ledger,
+    * the guard `HeapPollutionCheck.Apply` and `OverloadRiskCheck.Apply` already carry.
+    *
+    * `resolutions` is INHERITED (`DESIGN.md` §8.16: a remedy decides emitted text at a declaration a
+    * dependent compiles against), and a dependent's `Program` CONTAINS its base's units — so every
+    * selection a base made binds here too, at the very same symbols. Unguarded, this phase re-applies
+    * them: it would DROP a base's unit out of the dependent's model, inline a base's wrapper, and
+    * file `remediation(resolved)` rows and `SelectedRemedy` decisions about declarations this module
+    * does not write. The base already did all of that in its own run, and none of it is this
+    * module's to redo or to report. */
+  private var scope: RunScope = RunScope.whole
 
   def bindPolicy(b: PolicyBinder): Unit =
     plan   = b.resolutions
     binder = Some(b)
+    scope  = b.run
 
   /** A table entry no selection reaches is DEAD POLICY, and the failure mode is the §1(b) silent
     * no-op: the port wrote a destination, the lookup stayed reflective, and nothing said so. It is
@@ -137,7 +149,7 @@ final class RemediationTransform(
       fixes: List[Remediator.Suggestion],
       violations: List[PortabilityCheck.Violation],
   ): Program =
-    val chosen = program.units.flatMap { u =>
+    val chosen = program.units.filter(u => scope.emits(u.symbol)).flatMap { u =>
       plan.selected(u.symbol, RemediationTransform.Drop).map(u -> _)
     }
     if chosen.isEmpty then program
@@ -181,7 +193,7 @@ final class RemediationTransform(
       program: Program,
       fixes: List[Remediator.Suggestion],
   ): Program =
-    val chosen = program.units.flatMap { u =>
+    val chosen = program.units.filter(u => scope.emits(u.symbol)).flatMap { u =>
       plan.selected(u.symbol, RemediationTransform.Forward).map(u -> _)
     }
     if chosen.isEmpty then program
@@ -228,9 +240,9 @@ final class RemediationTransform(
   // ---- class-table -----------------------------------------------------------------------------
 
   private def applyClassTables(program: Program, asked: collection.mutable.Set[String]): Program =
-    val chosen = program.symbols.all.toList.sortBy(_.id.raw).flatMap { s =>
-      plan.selected(s.id, RemediationTransform.ClassTable).map(s -> _)
-    }
+    val chosen = program.symbols.all.toList.sortBy(_.id.raw)
+      .filter(s => scope.emitsSymbol(program, s.id))
+      .flatMap { s => plan.selected(s.id, RemediationTransform.ClassTable).map(s -> _) }
     if chosen.isEmpty then program
     else
       val redirects = chosen.flatMap { (sym, r) =>

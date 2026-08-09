@@ -213,6 +213,46 @@ class RemediationMenuSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // D2 — a dependent's Program CONTAINS its base's units, and a selection is INHERITED
+  // -------------------------------------------------------------------------------------------
+
+  /** the dependent's shape: this run emits NOTHING of what it is handed, which is what a base's
+    * units look like from inside a module that only resolves against them (`RunScope.of(Set.empty)`,
+    * the same fixture `HeapPollutionRemedySpec` and `OverloadRiskRemedySpec` use). */
+  private def asDependent(sources: List[(String, String)], resolutions: Map[String, String],
+                          phase: RemediationTransform): (Program, PolicyBinder) =
+    val p      = PortFixture.portAll(sources).before
+    val vocab  = RemedyVocabulary.from(List(phase))
+    val binder = new PolicyBinder(p, p.members, RunScope.of(Set.empty, Map.empty))
+    binder.resolving(ResolutionPlan.of(resolutions, vocab, vocab.byId.keySet, binder))
+    (Pipeline.runTraced(p, List(phase), binder)._1, binder)
+
+  test("a base's selection does NOT re-apply in a dependent — the D2 guard both Wave B appliers carry") {
+    // `PortManifest.resolutions` is inherited (§8.16: a remedy decides emitted text at a shared
+    // declaration), and a dependent's model holds its base's units — so the key binds HERE too, at
+    // the very same symbol. Unguarded, this phase drops a base's unit out of the dependent's model
+    // and files `remediation(resolved)` rows and `SelectedRemedy` decisions about declarations this
+    // module does not write. The base already did all of it in its own run.
+    val (out, binder) = asDependent(
+      List("Reflector.java" -> Chokepoint), Map("com.demo.Reflector" -> "substitutions-drop"),
+      new RemediationTransform())
+    assert(unitNames(out).contains("com.demo.Reflector"), unitNames(out))
+    assertEquals(binder.resolutions.all, Nil)
+    // …and NOT a refusal either: a refusal row names a declaration, and this one is the base's.
+    assertEquals(binder.resolutions.refusals, Nil)
+  }
+
+  test("…and the same holds for a member-keyed selection, which walks the SYMBOLS and not the units") {
+    val (out, binder) = asDependent(
+      List("Names.java" -> Lookup), Map("com.demo.Names#forName" -> "class-table"),
+      new RemediationTransform(classTables = Map("com.demo.Names#forName" -> "com.demo.Table#classFor")))
+    assertEquals(binder.resolutions.all, Nil)
+    assertEquals(binder.resolutions.refusals, Nil)
+    val untouched = PortFixture.portAll(List("Names.java" -> Lookup)).before
+    assertEquals(new balticporter.emit.TirEmitter(out).emit, new balticporter.emit.TirEmitter(untouched).emit)
+  }
+
+  // -------------------------------------------------------------------------------------------
   // the plumbing the menu needed, and the no-op
   // -------------------------------------------------------------------------------------------
 
