@@ -28,8 +28,9 @@ portability(all)	56
 portability(emitted)	56
 portability(injected)	0
 porter-notes	0
-remediation	18
+remediation	20
 rewrite-callsites	0
+service-providers	2
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0
