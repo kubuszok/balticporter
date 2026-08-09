@@ -1,5 +1,7 @@
 package balticporter.core
 
+import balticporter.tir.MemberKey
+
 /** Does this module's policy agree with the modules it is a DEPENDENT of?
   *
   * ==Why a check and not just composition==
@@ -561,8 +563,9 @@ object ManifestAgreement:
     // pipeline runs (`surfaceGate`) rather than be reported beside output an operator would then be
     // reading to work out which of the two answers produced it.
     val chainConflicts = m.resolutionConflicts.map { (key, claims) =>
-      Finding(Kind.ResolutionDivergence, claims.map(_._1).mkString("+"), key,
-        claims.map((who, id) => s"""`$who` selects "$id"""").mkString(", "))
+      Finding(Kind.ResolutionDivergence, claims.map(_._1).distinct.mkString("+"), key,
+        claims.map((who, k, id) =>
+          s"""`$who` selects "$id"""" + (if k == key then "" else s" at `$k`")).mkString(", "))
     }
 
     // …and THE ONE HOLE `chainConflicts` CANNOT SEE, which is the `mirroring` path.
@@ -581,14 +584,19 @@ object ManifestAgreement:
     // a real disagreement, and `chainConflicts` above already reports it, from the chain, naming
     // both claimants. Unscoped this loop reported that same override a SECOND time under a shorter
     // sentence, which is one mistake told twice and a reader given two things to reconcile.
-    val myRes = m.effectiveResolutions
+    // …asked of what the two keys NAME and not of the two STRINGS (`MemberKey.mayNameSame`): a
+    // mirroring module restating its base's `Foo#bar` as `Foo#bar(int)` is agreeing, and took a fatal
+    // `MissingResolution` for it, while the same pair with DIFFERENT ids is a real disagreement this
+    // comparison could not see at all.
+    val myRes = m.effectiveResolutions.toList.sorted
     val mirrored = if m.inherit then Nil else m.baseChain.flatMap { b =>
       b.effectiveResolutions.toList.sorted.flatMap { (key, id) =>
-        myRes.get(key) match
-          case Some(`id`)  => Nil
-          case Some(other) => List(Finding(Kind.ResolutionDivergence, b.name, key,
-            s"""base `${b.name}` selects "$id", this module "$other""""))
-          case None        => List(Finding(Kind.MissingResolution, b.name, key,
+        myRes.find((k, _) => MemberKey.mayNameSame(k, key)) match
+          case Some((_, `id`)) => Nil
+          case Some((k, other)) => List(Finding(Kind.ResolutionDivergence, b.name, key,
+            s"""base `${b.name}` selects "$id", this module "$other"""" +
+              (if k == key then "" else s""" at `$k` — the same member under the other spelling""")))
+          case None => List(Finding(Kind.MissingResolution, b.name, key,
             s"""base `${b.name}` selects "$id" here; this module selects nothing"""))
       }
     }
@@ -606,7 +614,11 @@ object ManifestAgreement:
       (key, id) <- m.resolutions.toList.sortBy(_._1)
       subject    = MergeablePolicy.subjectOf(key)
       b         <- m.baseChain
-      if b.claims(subject) && !b.effectiveResolutions.contains(key) && standsAt(ports, b.name, subject)
+      // `mayNameSame` and not `contains`: a base that answered this very member under the other
+      // legal spelling ANSWERED it, and calling that an intrusion is the false positive one
+      // string comparison away from the false negative above.
+      if b.claims(subject) && !b.effectiveResolutions.keys.exists(MemberKey.mayNameSame(_, key)) &&
+        standsAt(ports, b.name, subject)
     yield Finding(Kind.ResolutionIntrusion, b.name, key,
       s"""selects "$id" at a declaration of `$subject`, which is inside `${b.name}`'s declared """ +
         s"namespace and which `${b.name}` emits" + evidence(ports, b.name, subject))

@@ -126,6 +126,10 @@ object PolicyReport:
         // `NeverMatched` means to its reader. The DETAIL says which phase to enable.
         case ResolutionPlan.Issue.SourceAbsent  => PolicyIssue.NeverMatched
         case ResolutionPlan.Issue.NeverApplied  => PolicyIssue.NeverApplied
+        // the `Ambiguous` family: the key BOUND and the engine cannot say the act it authorises is
+        // the one intended, because another key of this port's own authorises a different one at the
+        // same declaration and lane. `NeverApplied` would state something false about the loser.
+        case ResolutionPlan.Issue.ConflictingSelection => PolicyIssue.Unverifiable
       PolicyFinding(Resolution.Seam, Resolution.Setting, t.declared, issue, t.detail)
     }.toList)
 

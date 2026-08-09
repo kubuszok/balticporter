@@ -4913,6 +4913,37 @@ two troubles are its neighbours and are kept apart for `PolicyBinder`'s own reas
 pipeline is `NeverMatched` with the phase named in the detail (the entry did nothing, and the fix is
 one `surface` line).
 
+**…and a FOURTH, which is the flat map's one hole: TWO KEYS AT ONE DECLARATION.** `resolutions` is a
+`Map[String, String]`, so two entries can never share a key — a duplicate in a `.conf` merges
+last-wins before the loader is reached, and there is nothing to report. What a map does not prevent is
+two SPELLINGS of one member: `Foo#bar` and `Foo#bar(int)` are both legal and name one declaration
+wherever `bar` has one overload, which is routine across a chain where a base wrote one and a
+dependent the other. `ResolutionPlan.selected` takes the first match, so the second is silently inert
+and reported `NeverApplied`, whose sentence — *no finding occurred at it this run* — is false: one
+did, and the other key answered it.
+
+Only the BINDING can see this, which is why it is here and not in `ManifestAgreement`: two declared
+keys can only ever be said to POSSIBLY name one member, while two bound entries name the same `SymId`.
+It is grouped by (declaration, LANE) and not by declaration, because **one member holding rows on two
+lanes may legitimately hold two selections** — a `collection-boundary` accept beside an `overload-risk`
+one is two answers to two questions, and there is no key that could express them jointly. Same
+declaration and same lane is the finding, in the `Ambiguous` family (`PolicyIssue.Unverifiable`), and
+the effective policy still stands beside it — `MergeablePolicy`'s own shape: the union has to be well
+defined and the disagreement is a finding, never an approximation.
+
+**And the same identity question is the one `ManifestAgreement` was answering with `==`.** Every
+comparison of two DECLARED selection keys — the chain's `resolutionConflicts`, the mirroring module's
+`MissingResolution`, the `ResolutionIntrusion` screen — grouped or looked up by the key STRING, which
+is `CLAUDE.md` §4.56 at the newest layer this engine has: a key is not a string, it is a `MemberKey`,
+and two spellings of one member are equal as members and unequal as text. Both directions were live: a
+base's `Foo#bar = accept-risk` beside a dependent's `Foo#bar(int) = ascribe-javac-choice` was two
+contradictory answers about one declaration with NO divergence reported, and a mirroring module
+restating its base's selection under the more precise spelling took a fatal `MissingResolution` for
+agreeing. `MemberKey.mayNameSame` is the test, `MemberKey.overloadSetOf` is what a comparison groups
+by (overlap is not transitive — two distinct descriptors meet only through a bare key), and two
+DISTINCT descriptors stay two members, because a source-level descriptor is injective within an
+overload set and collapsing them would be the over-approximation in the other direction.
+
 **ACCOUNTING reuses the `remediation` check with a new kind, `resolved`.** A new top-level lane would
 have had to be added to `PortRun.RequiredChecks` by somebody remembering to; `remediation` is already
 a member, so a run that stopped recording resolutions fails exactly the way a run that stopped

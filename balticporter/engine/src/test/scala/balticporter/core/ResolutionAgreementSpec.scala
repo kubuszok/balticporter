@@ -64,6 +64,37 @@ class ResolutionAgreementSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // …and the comparison is what two keys NAME, never the two strings (§4.56 at a policy key)
+  // -------------------------------------------------------------------------------------------
+
+  test("TWO SPELLINGS of one member with two ids is the same divergence — the string test saw none") {
+    // `Foo#bar` and `Foo#bar(int)` are both legal and name one member wherever `bar` has one
+    // overload. Compared by string this chain agreed with itself while emitting that declaration two
+    // ways — the exact failure `ResolutionDivergence` exists for, one spelling out of reach.
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m(int)" -> "copy")))
+    val fs   = check(dep).filter(_.kind == Kind.ResolutionDivergence)
+    assertEquals(fs.map(_.subject), List("up.A#m"))
+    assert(clue(fs.head.detail).contains("""`base` selects "wrap""""))
+    assert(clue(fs.head.detail).contains("""`dep` selects "copy" at `up.A#m(int)`"""))
+    assert(fs.forall(_.kind.fatal))
+  }
+
+  test("…and TWO DISTINCT descriptors are two members, which is the over-approximation refused") {
+    // A source-level descriptor is injective within an overload set, so `m(int)` and `m(String)`
+    // really are two declarations and one answer each is not a disagreement.
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m(int)" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m(String)" -> "copy")))
+    assertEquals(check(dep).filter(_.kind == Kind.ResolutionDivergence), Nil)
+  }
+
+  test("…and the same member under the other spelling with the SAME id is agreement, not a finding") {
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m(int)" -> "wrap")))
+    assertEquals(check(dep).filter(_.kind == Kind.ResolutionDivergence), Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
   // the intrusion screen — asked of what the base EMITS, never of its `governs` CLAIM
   // -------------------------------------------------------------------------------------------
 
@@ -90,6 +121,16 @@ class ResolutionAgreementSpec extends munit.FunSuite:
     val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m" -> "wrap")))
     val fs   = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
     assertEquals(kinds(fs), Nil)
+  }
+
+  test("…and a base that answers it under the OTHER SPELLING has answered it — not an intrusion") {
+    // The false positive that rides on the same string comparison as the missed divergence above:
+    // the base said `up.A#m`, this module says `up.A#m(int)`, and `contains` calls that an intrusion
+    // into a namespace the base emits. It is the same answer at the same member.
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("up.A#m(int)" -> "wrap")))
+    val fs   = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
+    assertEquals(kinds(fs).filter(_ == Kind.ResolutionIntrusion), Nil)
   }
 
   test("a base with NO usable map falls back to refusing, which is the safe direction") {
@@ -145,6 +186,24 @@ class ResolutionAgreementSpec extends munit.FunSuite:
     val dep  = PortManifest(name = "dep", resolutions = Map("up.A#m" -> "wrap")).mirroring(base)
     assertEquals(kinds(check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))),
                  Nil)
+  }
+
+  test("…nor under the OTHER LEGAL SPELLING, which a string comparison called a MISSING selection") {
+    // A mirroring module writes its policy in full, so it may reasonably spell a key more precisely
+    // than its base did. Compared by string that is `MissingResolution`, fatal, for agreeing.
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = PortManifest(name = "dep", resolutions = Map("up.A#m(int)" -> "wrap")).mirroring(base)
+    assertEquals(kinds(check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))),
+                 Nil)
+  }
+
+  test("…and the same pair with two IDS is the divergence, naming the spelling that differs") {
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
+    val dep  = PortManifest(name = "dep", resolutions = Map("up.A#m(int)" -> "copy")).mirroring(base)
+    val fs = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
+      .filter(_.kind == Kind.ResolutionDivergence)
+    assertEquals(fs.map(_.subject), List("up.A#m"))
+    assert(clue(fs.head.detail).contains("the same member under the other spelling"))
   }
 
   test("…and it STOPS THE RUN, because a selection decides emitted text") {

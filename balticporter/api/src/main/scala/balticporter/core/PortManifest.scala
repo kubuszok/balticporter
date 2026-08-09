@@ -1,7 +1,7 @@
 package balticporter.core
 
 import balticporter.catalog.{DiffId, Platform, Verdict}
-import balticporter.tir.{Phase, RuleScope}
+import balticporter.tir.{MemberKey, Phase, RuleScope}
 
 import java.nio.file.Path
 
@@ -317,12 +317,28 @@ final case class PortManifest(
     * selection its base made about a declaration they share. So the union stands and the
     * disagreement is a FATAL finding beside it — which is the same shape `MergeablePolicy`'s
     * refusals take (`a refusal is a finding, never an approximation`). */
-  def resolutionConflicts: List[(String, List[(String, String)])] =
+  /** …and it compares what two keys NAME, never the two strings.
+    *
+    * `Foo#bar` and `Foo#bar(int)` are two legal spellings of one selection, so a `groupBy` on the
+    * string reported a chain holding `Foo#bar = accept-risk` and `Foo#bar(int) = ascribe-javac-choice`
+    * as no disagreement at all — two contradictory answers about one member, each honest, with the
+    * union silently keeping the nearer one. `MemberKey.mayNameSame` is the test; the GROUP is the
+    * overload set, because overlap is not transitive (two distinct descriptors meet only through a
+    * bare key) and the group is the widest set a disagreement can live in.
+    *
+    * Each claimant carries the KEY IT WROTE beside its name: with two spellings in play, a report
+    * that named only the manifests would leave its reader unable to find either entry. */
+  def resolutionConflicts: List[(String, List[(String, String, String)])] =
     policyChain
       .flatMap(m => m.resolutions.toList.map((k, v) => (k, m.name, v)))
-      .groupBy(_._1).toList
-      .collect { case (k, rows) if rows.map(_._3).distinct.sizeIs > 1 =>
-        k -> rows.map((_, who, id) => (who, id)).distinct.sorted }
+      .groupBy((k, _, _) => MemberKey.overloadSetOf(k)).toList
+      .flatMap { (subject, rows) =>
+        val contested = rows.filter { (k, _, id) =>
+          rows.exists((k2, _, id2) => id2 != id && MemberKey.mayNameSame(k, k2))
+        }
+        if contested.isEmpty then Nil
+        else List(subject -> contested.map((k, who, id) => (who, k, id)).distinct.sorted)
+      }
       .sortBy(_._1)
 
   /** WHAT THIS MODULE'S SHARED SURFACE IS FINGERPRINTED FROM — the effective surface phases, and

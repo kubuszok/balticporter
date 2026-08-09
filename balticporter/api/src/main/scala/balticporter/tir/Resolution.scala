@@ -185,6 +185,32 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
   private val byTarget: Map[SymId, List[ResolutionPlan.Entry]] =
     entries.filter(_.actionable).groupBy(_.target.getOrElse(SymId.None)) - SymId.None
 
+  /** TWO ENTRIES BINDING ONE DECLARATION ON ONE LANE — the one shape a flat `Map` cannot refuse and
+    * only the BINDING can see.
+    *
+    * `PortManifest.resolutions` is `Map[String, String]`, so two entries can never share a key: a
+    * duplicate in a `.conf` merges last-wins before the loader ever sees it, and there is nothing
+    * here to report. What a map does NOT prevent is two DIFFERENT keys naming one member —
+    * `Foo#bar` beside `Foo#bar(int)`, which is legal in both spellings and routine across a chain,
+    * where a base wrote one and a dependent the other. `ManifestAgreement` compares the DECLARED
+    * keys and can only ever say they MAY name the same member; the binder KNOWS, because both keys
+    * bound to the same `SymId`.
+    *
+    * Grouped by (declaration, LANE) and not by declaration alone, because one member holding rows on
+    * two lanes may legitimately hold two selections — a `collection-boundary` accept beside an
+    * `overload-risk` one is two answers to two questions. Same lane is the finding: `selected` takes
+    * the first match, so the second entry is silently inert and reports `NeverApplied`, whose
+    * sentence ("the finding never fired") is false — it fired and another key answered it.
+    *
+    * The effective policy still stands (first wins), which is `MergeablePolicy`'s own shape: the
+    * union has to be well defined and the disagreement is a finding beside it. */
+  private val conflicting: Map[String, List[ResolutionPlan.Entry]] =
+    entries.filter(e => e.actionable && e.target.isDefined)
+      .groupBy(e => (e.target, e.resolution.map(_.remedy.lane)))
+      .values.filter(_.sizeIs > 1)
+      .flatMap(group => group.map(e => e.declared -> group))
+      .toMap
+
   def isEmpty: Boolean  = entries.isEmpty
   def nonEmpty: Boolean = entries.nonEmpty
   def size: Int         = entries.size
@@ -368,6 +394,17 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
         Some(ResolutionPlan.Trouble(e.declared, e.id, ResolutionPlan.Issue.SourceAbsent,
           s"'${e.id}' is declared by `${e.declaredBy}`, which is not in this run's pipeline — nothing " +
             "here can carry it out. Add that phase to this manifest's `surface`, or remove the entry"))
+      else if conflicting.contains(e.declared) then
+        val others = conflicting(e.declared).filterNot(_.declared == e.declared)
+        Some(ResolutionPlan.Trouble(e.declared, e.id, ResolutionPlan.Issue.ConflictingSelection,
+          s"this key and ${others.map(o => s"`${o.declared}` (\"${o.id}\")").mkString(", ")} bound to " +
+            s"the SAME declaration and answer the SAME lane " +
+            s"(${e.resolution.map(_.remedy.lane).getOrElse("?")}). Two spellings of one member key " +
+            "are legal — `Foo#bar` and `Foo#bar(int)` — and a flat map cannot refuse them, so only " +
+            "the binding can see this: the first entry answers and the rest are inert, which would " +
+            "otherwise be reported as `never applied` about a finding that DID fire. Two selections " +
+            "on DIFFERENT lanes at one member are fine; delete one of these, or narrow it to another " +
+            "overload"))
       else if e.target.isDefined && !fired.contains(e.declared) then
         Some(ResolutionPlan.Trouble(e.declared, e.id, ResolutionPlan.Issue.NeverApplied,
           s"the key names a declaration this run OWNS and '${e.id}' is live, but no " +
@@ -426,12 +463,16 @@ object ResolutionPlan:
     /** can a phase be handed this? Bound, live, and with a declaration to act at. */
     def actionable: Boolean = resolution.isDefined && !unknown && !sourceAbsent
 
-  /** Why a declared selection did nothing. Three answers because there are three different next
+  /** Why a declared selection did nothing. Four answers because there are four different next
     * actions, which is `PolicyBinder`'s own argument for its five: collapsed into one, "you typed
-    * the id wrong", "you did not enable the phase" and "the finding stopped occurring" read
-    * identically and mean entirely different things. */
+    * the id wrong", "you did not enable the phase", "the finding stopped occurring" and "another key
+    * of yours already answered this" read identically and mean entirely different things. */
   enum Issue:
     case UnknownRemedy, SourceAbsent, NeverApplied
+    /** two entries bound ONE declaration and answer ONE lane — see [[ResolutionPlan.conflicting]].
+      * Kept apart from [[NeverApplied]] because the loser of such a pair would take that one, whose
+      * sentence says the finding never fired: it fired, and the other key answered it. */
+    case ConflictingSelection
 
   /** THE THIRD CAUSE OF `NeverApplied`, and the only one this value can OBSERVE rather than list.
     *

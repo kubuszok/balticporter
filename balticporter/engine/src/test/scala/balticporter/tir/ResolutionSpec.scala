@@ -246,6 +246,49 @@ class ResolutionSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // TWO KEYS, ONE DECLARATION — the shape a flat `Map` cannot refuse and only the BINDING can see
+  // -------------------------------------------------------------------------------------------
+
+  test("two entries binding ONE declaration on ONE lane is reported — not silently first-wins") {
+    // `resolutions` is `Map[String, String]`, so a duplicate KEY merges last-wins in the config
+    // before anything sees it. What a map cannot prevent is two SPELLINGS of one member — routine
+    // across a chain, where a base wrote `Foo#bar` and a dependent `Foo#bar(int)`. `selected` takes
+    // the first, so the loser is silently inert and used to report `NeverApplied`, whose sentence
+    // ("no finding occurred") is false: one did, and the other key answered it.
+    val p     = program
+    val other = SpecRemedyPhase.Noop.copy(id = "spec-other", what = "the other answer")
+    val vocab = RemedyVocabulary.declared("spec", List(SpecRemedyPhase.Noop, other))
+    val (plan, _) = planFor(p, Map("com.demo.Widget#size"      -> "spec-noop",
+                                   "com.demo.Widget#size()"    -> "spec-other"), vocab, vocab.byId.keySet)
+    val issues = PolicyReport.fromResolutions(plan.troubles).findings
+    assertEquals(issues.map(_.issue), List(PolicyIssue.Unverifiable, PolicyIssue.Unverifiable))
+    assertEquals(issues.map(_.key).sorted, List("com.demo.Widget#size", "com.demo.Widget#size()"))
+    assert(clue(issues.head.detail).contains("SAME declaration"))
+    // …and the effective policy still stands, which is `MergeablePolicy`'s own shape: the union has
+    // to be well defined and the disagreement is a finding beside it.
+    val size = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
+    assert(plan.selected(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind).isDefined)
+  }
+
+  test("…and two selections at one member on DIFFERENT LANES are legal, and say nothing") {
+    // One declaration can hold rows on two lanes and answer both — a `spec-lane` accept beside an
+    // `other-lane` one is two answers to two questions, and the (declaration, LANE) grouping is what
+    // keeps that out of the conflict report.
+    val p     = program
+    val other = SpecRemedyPhase.Noop.copy(id = "spec-other", lane = "other-lane")
+    val vocab = RemedyVocabulary.declared("spec", List(SpecRemedyPhase.Noop, other))
+    val (plan, _) = planFor(p, Map("com.demo.Widget#size"   -> "spec-noop",
+                                   "com.demo.Widget#size()" -> "spec-other"), vocab, vocab.byId.keySet)
+    assertEquals(plan.troubles.map(_.issue),
+                 List(ResolutionPlan.Issue.NeverApplied, ResolutionPlan.Issue.NeverApplied))
+    val size = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
+    assertEquals(plan.selected(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind).map(_.remedy.id),
+                 Some("spec-noop"))
+    assertEquals(plan.selected(size.id, "other-lane", SpecRemedyPhase.Kind).map(_.remedy.id),
+                 Some("spec-other"))
+  }
+
+  // -------------------------------------------------------------------------------------------
   // the SUBJECT KIND — which seam binds the key is the REMEDY's answer (`Remedy.Subject`)
   // -------------------------------------------------------------------------------------------
 

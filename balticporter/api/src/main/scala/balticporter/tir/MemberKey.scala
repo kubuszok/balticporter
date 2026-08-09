@@ -34,6 +34,28 @@ final case class MemberKey(owner: String, name: String, descriptor: Option[Descr
   /** the same member with its parameter list forgotten — what an overload SET is grouped by. */
   def bare: MemberKey = if isBare then this else copy(descriptor = None)
 
+  /** COULD THESE TWO KEYS NAME ONE MEMBER? — the question every policy layer that compares two
+    * DECLARED keys has to ask, and the one they were all asking of the STRINGS.
+    *
+    * `Foo#bar` and `Foo#bar(int)` are two legal spellings of one selection wherever `bar` has a
+    * single overload, and a comparison by string says they are unrelated. Both directions of that
+    * are wrong and both were live in `ManifestAgreement`: a base's `Foo#bar = accept-risk` beside a
+    * dependent's `Foo#bar(int) = ascribe-javac-choice` is two contradictory answers about one member
+    * with NO divergence reported, and a mirroring module restating its base's selection under the
+    * other spelling took a fatal `MissingResolution` for agreeing.
+    *
+    * Two DISTINCT descriptors are a different matter and stay unrelated: a source-level descriptor is
+    * injective within an overload set ([[Descriptor]]), so `bar(int)` and `bar(String)` really are two
+    * members and reporting them as one answer would be the over-approximation in the other direction.
+    * So: same owner, same name, and at least one side bare — or the very same descriptor.
+    *
+    * It is deliberately NOT `equals`: this is a "may", asked before a `Program` exists. Where one
+    * does, the BINDER answers exactly (`ResolutionPlan.troubles`' conflict lane compares the
+    * declarations two keys BOUND to), and the two are the same rule at two levels of evidence. */
+  def overlaps(other: MemberKey): Boolean =
+    owner == other.owner && name == other.name &&
+      (isBare || other.isBare || descriptor == other.descriptor)
+
 object MemberKey:
 
   /** Why a declared key is not a key at all. Distinct from "named nothing": a malformed key COULD
@@ -142,6 +164,23 @@ object MemberKey:
     * no manifest's contributed set, and the run's own-keys filter DROPS the finding — a malformed
     * entry silently unreported on exactly the merged phase where a dependent's typo lives. */
   def spell(owner: String, member: String): String = owner + "#" + member
+
+  /** [[MemberKey.overlaps]] over two DECLARED strings — what a manifest layer holds.
+    *
+    * A key outside the grammar (a TYPE key, which has no `#`, or a typo the binder will refuse) is
+    * compared by string, which is exact for the first and honest for the second: an unparseable key
+    * names nothing, so claiming it might name the same member as another would be a fact invented
+    * about a string (§4.6). */
+  def mayNameSame(a: String, b: String): Boolean =
+    (parse(a), parse(b)) match
+      case (Right(x), Right(y)) => x.overlaps(y)
+      case _                    => a == b
+
+  /** the OVERLOAD SET a declared key belongs to — `owner#name`, or the key itself where it is not a
+    * member key at all. What a comparison groups by before asking [[mayNameSame]] pairwise: overlap
+    * is not transitive (`bar(int)` and `bar(String)` meet only through a bare `bar`), so the group is
+    * the widest set that can possibly contain a disagreement and the pairwise test is what finds one. */
+  def overloadSetOf(key: String): String = parse(key).fold(_ => key, _.bare.render)
 
   /** parse, or throw — for a literal written in engine code or a spec, never for policy. */
   def of(key: String): MemberKey =
