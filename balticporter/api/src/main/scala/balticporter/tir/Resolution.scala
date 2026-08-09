@@ -348,8 +348,9 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
         Some(ResolutionPlan.Trouble(e.declared, e.id, ResolutionPlan.Issue.NeverApplied,
           s"the key names a declaration this run OWNS and '${e.id}' is live, but no " +
             s"${e.resolution.map(_.remedy.target).getOrElse("?")} finding occurred at it this run — " +
-            "the selection is not wrong, it is inert. Either the site it was written for is gone, or " +
-            "something upstream in the pipeline already answered it"))
+            "the selection is not wrong, it is inert. Either the site it was written for is gone, " +
+            "something upstream in the pipeline already answered it, or the phase that carries the " +
+            "remedy out was OMITTED FROM THIS RUN" + ResolutionPlan.skipNote))
       else scala.None
     }
 
@@ -407,6 +408,27 @@ object ResolutionPlan:
     * identically and mean entirely different things. */
   enum Issue:
     case UnknownRemedy, SourceAbsent, NeverApplied
+
+  /** THE THIRD CAUSE OF `NeverApplied`, and the only one this value can OBSERVE rather than list.
+    *
+    * `SourceAbsent` answers for a remedy whose declarer is not in the manifest's `surface`; it
+    * cannot answer for one that IS and was then skipped, because `balticporter.skipPhases` is read
+    * inside `Pipeline.run` and the vocabulary is assembled from the phase LIST before it. So a
+    * kill-switch run — or, worse, a LEFTOVER `.balticporter/debug.properties` entry, which moves no
+    * count and fails no check (`CLAUDE.md` §4.6) — produces exactly this issue with a sentence that
+    * offers two causes and not the one that is true.
+    *
+    * Named rather than merely mentioned: where the flag really is set this appends WHAT is being
+    * skipped, which turns the reader's next step from a hypothesis into a check. */
+  private[tir] def skipNote: String =
+    val skipped = DebugFlags.skipPhases
+    if skipped.isEmpty then
+      " — `balticporter.skipPhases` is not set in this run, so if the remedy's phase is in `surface` " +
+        "it did run (CLAUDE.md §4.6)"
+    else
+      s" — THIS RUN SKIPS ${skipped.toList.sorted.mkString(", ")} (`balticporter.skipPhases`), which " +
+        "is the first thing to clear before reading this row as a fact about the program " +
+        "(`just debug-clear`, CLAUDE.md §4.6)"
 
   final case class Trouble(declared: String, id: String, issue: Issue, detail: String)
 

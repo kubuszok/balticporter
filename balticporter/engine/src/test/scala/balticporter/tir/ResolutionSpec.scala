@@ -197,6 +197,21 @@ class ResolutionSpec extends munit.FunSuite:
     assertEquals(plan.troubles, Nil)
   }
 
+  test("…and `NeverApplied` names the THIRD cause — a phase this run SKIPPED") {
+    // `SourceAbsent` answers for a remedy whose declarer is not in `surface`; nothing answers for one
+    // that IS and was killed by `balticporter.skipPhases` (read inside `Pipeline.run`, after the
+    // vocabulary is assembled), which is §4.6's own hazard — a leftover `debug.properties` entry
+    // moves no count and fails no check.
+    val p         = program
+    val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)
+    val detail    = PolicyReport.fromResolutions(plan.troubles).findings.head.detail
+    assert(clue(detail).contains("OMITTED FROM THIS RUN"))
+    assert(clue(detail).contains("skipPhases"))
+    // …and where the flag is not set it SAYS SO, which is what turns the reader's next step from a
+    // hypothesis into a fact this value can observe.
+    assert(clue(detail).contains("is not set in this run"))
+  }
+
   test("a BARE key naming two overloads is Ambiguous, with both candidates listed") {
     val p              = program
     val (_, binder)    = planFor(p, Map("com.demo.Widget#label" -> "spec-noop"), vocabulary, vocabulary.byId.keySet)
