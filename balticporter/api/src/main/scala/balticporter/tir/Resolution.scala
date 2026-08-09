@@ -249,16 +249,40 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
     *
     * A third function would be a third answer to a question these two already partition. Which one a
     * lane needs is read off `Remedy.emissionAffecting` and nothing else.
+    *
+    * ==And it is keyed on the CALLER'S OWN MENU, never on the lane==
+    * It used to take a lane name and match through `(lane, kind)`, which is the colliding form
+    * [[selected]]'s own doc warns about two members down: where a lane's remedies declare
+    * `Remedy.AnyKind`, `(lane, kind)` cannot tell them apart, so a drain would fire on a SIBLING's
+    * selection. `portability(emitted)` is exactly that lane — `PortabilityCheck.AcceptJvmOnly`
+    * beside `RemediationTransform`'s three, all four `AnyKind` — so a port that selected
+    * `class-table` at a member and got the phase's honest `no-table` REFUSAL would have had its
+    * finding drained anyway by the check, filing a `remediation(resolved)` row saying "accepted as
+    * JVM-only" for a decision the port never made. Kept dead only by the current rule list (a
+    * JVM-only target set empties it), which is not a property of the mechanism.
+    *
+    * So the caller passes the remedies IT declares — a `RemedySource` hands its own `remedies` — and
+    * an id is globally unique, so nothing else can match. The lane is derived from those remedies
+    * rather than named beside them, which also removes the last place a lane could be spelled twice.
     */
-  def drain[F](lane: String, findings: List[F])(residue: F => ResolutionPlan.Residue): List[F] =
-    if entries.isEmpty then findings
+  def drain[F](remedies: List[Remedy], findings: List[F])(residue: F => ResolutionPlan.Residue): List[F] =
+    if entries.isEmpty || remedies.isEmpty then findings
     else
+      val ids = remedies.map(_.id).toSet
       findings.filter { f =>
         val r = residue(f)
-        selected(r.at, lane, r.kind) match
+        selectedAmong(r.at, ids, r.kind) match
           case Some(res) => applied(res, r.subject, r.at, r.origin, r.what); false
           case scala.None => true
       }
+
+  /** the narrowing [[drain]] performs: a selection at this declaration whose remedy is one of MINE
+    * and which answers this row's kind. Private, because "one of mine" is only meaningful to the
+    * declarer — every other caller wants [[selected]] with a specific `Remedy`. */
+  private def selectedAmong(target: SymId, ids: Set[String], kind: String): Option[Resolution] =
+    byTarget.getOrElse(target, Nil).iterator
+      .flatMap(_.resolution)
+      .find(r => ids(r.remedy.id) && r.remedy.answers(r.remedy.lane, kind))
 
   /** DID THE PORT PICK **THIS** REMEDY HERE? — the precise question a PHASE that offers a menu has.
     *

@@ -5137,11 +5137,24 @@ can hold to its meaning.
 **The DRAIN is ONE function, not one per check.** §5's obligation — `<lane> N->M` beside
 `remediation(resolved) 0->(N-M)` — is a property of the pair, and written per check it would have
 been three chances to record one half and not the other, which is exactly the shape "a lane that fell
-with nothing to attribute the fall to" describes. `ResolutionPlan.drain(lane, findings)(residue)`
+with nothing to attribute the fall to" describes. `ResolutionPlan.drain(remedies, findings)(residue)`
 partitions and records in one traversal, returns the rows that were NOT drained, and takes one
 `ResolutionPlan.Residue` per row (`kind`, `at`, `subject`, `origin`, `what`) rather than five curried
 functions, because a positional lambda list is where two of them get swapped silently. Its empty-plan
 fast path is derived from the plan's own entries and nothing else (§4.56).
+
+**…and it is keyed on the CALLER'S OWN MENU, which the first lane with two declarers forced.** It
+took a LANE NAME and matched through `(lane, kind)` — the colliding form `ResolutionPlan.selected`'s
+own doc warns about — and that is exact only while one source declares a lane's remedies. The
+portability lane has two: `PortabilityCheck.AcceptJvmOnly` beside `RemediationTransform`'s three, and
+all four declare `Remedy.AnyKind`, so `(lane, kind)` cannot tell them apart at all. A port that
+selected `class-table` and got the phase's honest `no-table` REFUSAL would have had its finding
+drained anyway, by the check, under a `remediation(resolved)` row saying *accepted as JVM-only* — a
+decision that port never made, recorded on the very row whose remedy declined. Nothing was measurable:
+the drain is what makes the lane fall, so the two halves agree with each other and disagree with the
+manifest. So a caller passes the remedies IT declares (a `RemedySource` hands its own `remedies`), an
+id is globally unique, and the lane is DERIVED from those remedies rather than named beside them —
+which removes the last seam where a lane could be spelled twice.
 
 **Rejected: a compound key.** `resolutions { "owner#member" { lane = "…", remedy = "…" } }` was the
 obvious shape and it is redundant by construction — a remedy id is globally unique, so the id already

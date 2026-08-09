@@ -283,7 +283,7 @@ object CollectionBoundaryCheck extends RemedySource:
   /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. Returns the findings that
     * remain; the rest are in the plan's ledger and become `remediation(resolved)` rows. */
   def resolved(plan: ResolutionPlan, findings: List[Finding])(using Program): List[Finding] =
-    plan.drain(Name, findings)(f =>
+    plan.drain(remedies, findings)(f =>
       ResolutionPlan.Residue(f.issue.toString, f.enclosing, f.owner, f.origin, f.detail))
 
   /** JDK collection families that are NOT in the closure of anything `typeMap` covers and are not

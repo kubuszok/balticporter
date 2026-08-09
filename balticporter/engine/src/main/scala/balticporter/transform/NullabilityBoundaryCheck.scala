@@ -92,7 +92,7 @@ object NullabilityBoundaryCheck extends RemedySource:
 
   /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. */
   def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
-    plan.drain(Name, findings)(f =>
+    plan.drain(remedies, findings)(f =>
       ResolutionPlan.Residue(f.issue.toString, f.at, f.subject, f.origin, f.detail))
 
   /** what kind of boundary this is, which is what decides who fixes it (CLAUDE.md §1). */

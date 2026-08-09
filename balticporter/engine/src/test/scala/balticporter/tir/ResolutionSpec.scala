@@ -310,8 +310,9 @@ class ResolutionSpec extends munit.FunSuite:
     * granularity assertion below. */
   private case class Row(kind: String, at: SymId, subject: String, line: Int)
 
-  private def drainRows(plan: ResolutionPlan, rows: List[Row]): List[Row] =
-    plan.drain(SpecRemedyPhase.Lane, rows)(r =>
+  private def drainRows(plan: ResolutionPlan, rows: List[Row],
+                        menu: List[Remedy] = List(SpecRemedyPhase.Noop)): List[Row] =
+    plan.drain(menu, rows)(r =>
       ResolutionPlan.Residue(r.kind, r.at, r.subject, Origin("Widget.java", r.line, 1),
                              s"accepted ${r.subject} at ${r.line}"))
 
@@ -348,6 +349,32 @@ class ResolutionSpec extends munit.FunSuite:
     // the entry bound, the remedy is live, and the finding it answers never occurred HERE — which is
     // the third staleness state and not a typo.
     assertEquals(plan.troubles.map(_.issue), List(ResolutionPlan.Issue.NeverApplied))
+  }
+
+  test("…and a SIBLING's selection on the same lane is not this caller's to drain") {
+    // The colliding form `selected(target, lane, kind)`'s own doc warns about, made real by the
+    // portability lane: `accept-jvm-only` (a CHECK's) sits beside `class-table`,
+    // `substitutions-drop` and `static-forwarder-inline` (a PHASE's), and all four declare
+    // `Remedy.AnyKind` — so a lane-keyed drain fires on whichever entry the plan holds. A port that
+    // selected the phase's remedy and got its honest REFUSAL would have had the finding drained
+    // anyway, under a `remediation(resolved)` row saying something the port never chose.
+    val p     = program
+    val mine  = SpecRemedyPhase.Noop.copy(id = "spec-mine", kind = Remedy.AnyKind)
+    val yours = SpecRemedyPhase.Noop.copy(id = "spec-yours", kind = Remedy.AnyKind)
+    val vocab = RemedyVocabulary.declared("spec", List(mine, yours))
+    val (plan, _) = planFor(p, Map("com.demo.Widget#size" -> "spec-yours"), vocab, vocab.byId.keySet)
+    val size  = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
+    val rows  = List(Row(SpecRemedyPhase.Kind, size.id, "com.demo.Widget#size", 4))
+    // the WITNESS, and the reason `drain` no longer asks this way: the `(lane, kind)` primitive
+    // hands the sibling's selection to whichever caller asks first, and cannot do otherwise.
+    assertEquals(plan.selected(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind).map(_.remedy.id),
+                 Some("spec-yours"))
+    // asked with MY menu: the port chose the other declarer's remedy, so the row stays.
+    assertEquals(drainRows(plan, rows, List(mine)).map(_.line), List(4))
+    assertEquals(plan.all, Nil)
+    // …and asked with the menu the port really picked from, it moves.
+    assertEquals(drainRows(plan, rows, List(yours)), Nil)
+    assertEquals(plan.all.map(_.remedy.id), List("spec-yours"))
   }
 
   test("…and an EMPTY plan is the identity, decided from the plan's own state and not the rows") {

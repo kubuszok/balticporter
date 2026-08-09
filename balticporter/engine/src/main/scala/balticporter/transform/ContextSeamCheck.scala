@@ -135,7 +135,7 @@ object ContextSeamCheck extends RemedySource:
 
   /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. */
   def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
-    plan.drain(Name, findings)(f =>
+    plan.drain(remedies, findings)(f =>
       ResolutionPlan.Residue(f.kind.label, f.enclosing, f.subject, f.origin, f.detail))
 
   /** what kind of seam this is, which is what decides who fixes it (CLAUDE.md §1). */

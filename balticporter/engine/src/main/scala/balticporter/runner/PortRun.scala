@@ -603,7 +603,11 @@ final case class PortRun(
     val offJvm      = targets - balticporter.catalog.Platform.Jvm
     val portability =
       if offJvm.isEmpty then
-        resolutions.drain(PortRun.PortabilityEmitted, emittedSites) { v =>
+        // …by the CHECK'S OWN MENU and not by the lane: `RemediationTransform`'s three remedies
+        // drain `portability(emitted)` too and all four declare `Remedy.AnyKind`, so a lane-keyed
+        // drain would fire on a phase's selection here — filing "accepted as JVM-only" for a
+        // decision the port never made, and doing it on exactly the row whose phase REFUSED.
+        resolutions.drain(PortabilityCheck.remedies, emittedSites) { v =>
           val at = PortRun.acceptSubject(program, v, resolutions)
           balticporter.tir.ResolutionPlan.Residue(v.api, at,
             program.symbolOf(at).map(_.fullName).getOrElse("?"),
