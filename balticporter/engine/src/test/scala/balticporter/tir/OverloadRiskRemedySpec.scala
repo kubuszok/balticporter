@@ -192,6 +192,64 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
                  List(PolicyIssue.NeverApplied))
   }
 
+  // -------------------------------------------------------------------------------------------
+  // ONE derivation of "the declaration a `resolutions` key can name" — read by BOTH sides
+  // -------------------------------------------------------------------------------------------
+
+  /** the shape neither side could see the other's answer for: a risky call written inside an
+    * ANONYMOUS class in a member's body. The check attributed it to the anon method (a real
+    * declaration whose owner is a type — and a name no key can write, `Outer$1#run`), the applier to
+    * the member whose body it walked. */
+  private val Anon =
+    """package com.demo;
+      |public class Holder {
+      |  public boolean remove(Object item) { return false; }
+      |  public String remove(int index) { return null; }
+      |  public Runnable inMethod() {
+      |    return new Runnable() { public void run() { remove(1); } };
+      |  }
+      |}""".stripMargin
+
+  private def anonProgram: Program = SpoonTir.fromSource(Anon, catalog = CatalogLog.discarding)
+
+  private def anonRun(declared: Map[String, String]): (Program, PolicyBinder) =
+    val p      = anonProgram
+    val binder = new PolicyBinder(p, p.members)
+    binder.resolving(ResolutionPlan.of(declared, vocabulary, vocabulary.byId.keySet, binder))
+    (Pipeline.runTraced(p, List(new OverloadRiskCheck.Apply), binder)._1, binder)
+
+  test("a call inside an ANON class is the ENCLOSING MEMBER's row — the check says so, not just the applier") {
+    val p = anonProgram
+    assert(clue(lane(p)).contains("BoxingPhaseSpan remove/1@6"))
+    val decl = OverloadRiskCheck.check(p, p.units, new OverloadRiskCheck.Overloads(p))
+      .findings.head.declaration
+    // the anon method is a real declaration and an unwritable KEY (`Holder$1#run`, numbered by a
+    // per-class counter), so the row is attributed to the member a port can actually name.
+    assertEquals(p.symbolOf(decl).map(_.fullName), Some("com.demo.Holder#inMethod"))
+  }
+
+  test("…so `accept-risk` at that member DRAINS it — the two sides name one declaration") {
+    val (out, binder) = anonRun(Map("com.demo.Holder#inMethod()" -> "accept-risk"))
+    val plan          = binder.resolutions
+    assertEquals(plan.all.size, 1)
+    assertEquals(plan.all.map(_.subjectFqn), List("com.demo.Holder#inMethod"))
+    // the half that used to be missing: the residue really left the lane. Attributed differently by
+    // the two sides, the lane fell by 0 while `remediation(resolved)` gained 1, at no error and no
+    // moved digest.
+    assertEquals(lane(out, plan), Nil)
+    assertEquals(plan.troubles, Nil)
+  }
+
+  test("…and `ascribe-javac-choice` there both PINS the call and drains, from the same key") {
+    val before        = emitted(anonProgram)
+    val (out, binder) = anonRun(Map("com.demo.Holder#inMethod()" -> "ascribe-javac-choice"))
+    val plan          = binder.resolutions
+    assertEquals(plan.all.map(_.subjectFqn), List("com.demo.Holder#inMethod"))
+    assert(clue(emitted(out)).contains(": (scala.Int) => "))
+    assertNotEquals(emitted(out), before)
+    assertEquals(lane(out, plan), Nil)
+  }
+
   test("a declaration this run does NOT emit is another module's row — D2 at the ledger") {
     val p      = program
     val binder = new PolicyBinder(p, p.members, RunScope.of(Set.empty, Map.empty))

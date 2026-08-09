@@ -456,22 +456,32 @@ object OverloadRiskCheck extends RemedySource:
     *
     * …and with the MEMBER it is written in beside the class, which is a second question and not a
     * refinement of the first: the class is what java resolved the NAME against, the member is what a
-    * `resolutions` key names. A `ValDef` counts only where no member is open — that is a FIELD, whose
-    * initialiser holds calls and which a port can key on, while a `ValDef` reached INSIDE a member is
-    * a local variable whose symbol no manifest grammar can name. Decided from the walk's own state
-    * (the `ClassDef` arm resets it) rather than from a symbol lookup, because this walk holds no
-    * `Program` — and the two agree by construction: a declaration directly in a class body is
-    * exactly one whose owner is that class. */
+    * `resolutions` key names. Which declarations those are is `Decision.isKeyable` and NOT this
+    * walk's own state, and the difference is the anonymous class: a `DefDef` inside one is a real
+    * declaration whose owner is a type, so a walk that reset its member at every `DefDef` attributed
+    * a call written in `Outer$1.clicked` to `Outer$1#clicked` — a name no `resolutions` key can
+    * write, and NOT the name the applier used for the same call (it walks the enclosing member's
+    * whole body, anonymous subtrees included). Applied row and residue row then named different
+    * declarations, the lane fell by 0 and `remediation(resolved)` gained 1, with both answers honest
+    * and neither measurable. One predicate, read by both sides.
+    *
+    * A local `val` falls out of the same test rather than out of a `decl == SymId.None` position
+    * check: its owner is the METHOD, and a FIELD's is the class. The walk still has to carry `decl`,
+    * because the owner chain cannot recover the enclosing member from an anonymous class's method —
+    * `SpoonTir.anonClass` interns the anon type under the enclosing CLASS — so only a walk that
+    * descended through the member knows it. */
   private def callsIn(t: Any, enclosing: SymId, decl: SymId,
-                      f: (Tree.Apply, SymId, SymId) => Unit): Unit = t match
+                      f: (Tree.Apply, SymId, SymId) => Unit)(using p: Program): Unit = t match
     case c: Tree.ClassDef => c.productIterator.foreach(callsIn(_, c.symbol, SymId.None, f))
-    case d: Tree.DefDef   => d.productIterator.foreach(callsIn(_, enclosing, d.symbol, f))
-    case v: Tree.ValDef if decl == SymId.None =>
+    case d: Tree.DefDef   =>
+      val at = if Decision.isKeyable(p, d.symbol) then d.symbol else decl
+      d.productIterator.foreach(callsIn(_, enclosing, at, f))
+    case v: Tree.ValDef if Decision.isKeyable(p, v.symbol) =>
       v.productIterator.foreach(callsIn(_, enclosing, v.symbol, f))
     case a: Tree.Apply    => f(a, enclosing, decl); a.productIterator.foreach(callsIn(_, enclosing, decl, f))
     case xs: Iterable[?]  => xs.foreach(callsIn(_, enclosing, decl, f))
     case Some(x)          => callsIn(x, enclosing, decl, f)
-    case p: Product       => p.productIterator.foreach(callsIn(_, enclosing, decl, f))
+    case p2: Product      => p2.productIterator.foreach(callsIn(_, enclosing, decl, f))
     case _                => ()
 
   /** Over the units the run EMITS — the same D2 filter every other per-site report carries.
@@ -603,8 +613,14 @@ object OverloadRiskCheck extends RemedySource:
         index = Some(program -> new Overloads(program))
         try super.run(program) finally index = scala.None
 
+    /** …at a declaration a `resolutions` key can NAME, through the same `Decision.isKeyable` the
+      * check reads. An anonymous class's method is skipped HERE and covered by the enclosing
+      * member's own walk, which descends through the whole body — so the site is answerable, and it
+      * is answerable under the one name a port can write. Asked separately, the two sides named
+      * different declarations for one call and the drain silently stopped matching. */
     override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
-      d.rhs.flatMap(rewritten(d.symbol, _)).fold(d)(b => d.copy(rhs = Some(b)))
+      if !Decision.isKeyable(p, d.symbol) then d
+      else d.rhs.flatMap(rewritten(d.symbol, _)).fold(d)(b => d.copy(rhs = Some(b)))
 
     /** A FIELD initialiser holds calls too, and a field is a declaration a `resolutions` key can
       * name. A LOCAL `val` is not: it is a statement inside a member, its symbol's owner is that
@@ -612,11 +628,8 @@ object OverloadRiskCheck extends RemedySource:
       * grammar reaches. Decided from OWNERSHIP (§4.56) — the owner is a class — never from position
       * in a body. */
     override def transformValDef(v: Tree.ValDef)(using p: Program): Tree.ValDef =
-      if !isField(v.symbol) then v
+      if !Decision.isKeyable(p, v.symbol) then v
       else v.rhs.flatMap(rewritten(v.symbol, _)).fold(v)(b => v.copy(rhs = Some(b)))
-
-    private def isField(s: SymId)(using p: Program): Boolean =
-      p.symbolOf(s).map(_.owner).flatMap(p.definitionOf).exists(_.isInstanceOf[Tree.ClassDef])
 
     /** bind the declaration, then rewrite the calls in its body. `None` where there is nothing to
       * do at all, so an untouched declaration is returned as itself rather than rebuilt. */

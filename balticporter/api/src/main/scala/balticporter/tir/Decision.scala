@@ -315,6 +315,37 @@ object Decision:
   def isDeclaration(program: Program, s: Symbol): Boolean =
     !s.flags.isParam && !program.symbolOf(s.owner).exists(o => isMethodLike(o.info))
 
+  /** …and the STRICTER question a per-location POLICY KEY asks: can `owner#member` NAME this?
+    *
+    * [[isDeclaration]] answers what this channel RECORDS, and it is deliberately generous — an
+    * anonymous class's method is a declaration in that sense (its owner is a type, not a method), and
+    * a decision recorded about one is a decision a reader can act on. A `PortManifest.resolutions`
+    * key cannot name it: the owner's `fullName` is `Outer$1`, minted from a per-class counter that
+    * renumbers whenever a `new` is added above it (`ENGINE-LIMITS.md` M10's shape), so a key written
+    * against it is a key that moves under an unrelated upstream edit. A method-LOCAL `val` is
+    * unnameable for the other reason — its owner is the METHOD, and the grammar has no spelling for
+    * one.
+    *
+    * So a lane that both MINTS rows at declarations and APPLIES a remedy at them needs this, and
+    * needs both halves to read the SAME function: `OverloadRiskCheck`'s two sides answered it
+    * separately, and a call inside an anonymous class in a member's body was attributed to the anon
+    * method by the check and to the enclosing member by the applier — so the applied row and the
+    * residue row named different declarations, the lane fell by 0 and `remediation(resolved)` gained
+    * 1. Nothing measured it: both answers are honest, they are just not the same one.
+    *
+    * The answer is a fact about the OWNER (§4.56): the owner's definition is a `Tree.ClassDef` this
+    * program declares. An anonymous class has no `Definition` at all, and a method's is a `DefDef` —
+    * so both fall out of the same test rather than needing a case each.
+    *
+    * ==What this cannot do, and where the walk has to answer instead==
+    * It says whether a symbol IS keyable; it cannot say WHICH keyable declaration an unkeyable one
+    * belongs to, and the owner chain does not hold that: an anonymous class is interned under the
+    * enclosing CLASS (`SpoonTir.anonClass`), never under the member whose body holds the `new`. That
+    * member is known only to a WALK that descended through it, which is why the two sides of a lane
+    * share this predicate and each applies it at its own traversal rather than sharing a climb. */
+  def isKeyable(program: Program, s: SymId): Boolean =
+    program.symbolOf(s).map(_.owner).flatMap(program.definitionOf).exists(_.isInstanceOf[Tree.ClassDef])
+
   private def isMethodLike(t: TypeRepr): Boolean = t match
     case _: TypeRepr.MethodType => true
     case _: TypeRepr.PolyType   => true
