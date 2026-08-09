@@ -167,11 +167,12 @@ final class StaticForwarderFactory extends TransformFactory:
 final class RemediationFactory extends TransformFactory:
   def name = RemediationTransform.Name
   override def remedies: List[Remedy] = RemediationTransform.Remedies
+  /** `targets` is NOT a key here, deliberately: which backends the module is ported for is
+    * `PortManifest.targets`, the phase reads it off the run (`RunScope.platform`), and a second
+    * spelling under this transform could disagree with the lane the run reports. A `.conf` that
+    * writes one is caught by the loader's unread-key refusal, which is the right sentence. */
   def fromConfig(config: ConfigView): Phase =
-    new RemediationTransform(
-      classTables = config.stringMap("classTables").getOrElse(Map.empty),
-      targets     = config.strings("targets").map(PortConfig.readTargets(config)).getOrElse(Platform.values.toSet),
-    )
+    new RemediationTransform(classTables = config.stringMap("classTables").getOrElse(Map.empty))
 
 /** `{ transform = "class-table", redirects { "a.B#forName" = "c.D#classFor" } }` */
 final class ClassTableFactory extends TransformFactory:

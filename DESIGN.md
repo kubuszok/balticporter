@@ -5293,11 +5293,28 @@ Four decisions the first menu forced, none of them foreseen by §8.16:
 constructor policy.** `HeapPollutionCheck.Apply` and `OverloadRiskCheck.Apply` have none: their whole
 configuration is `PortManifest.resolutions`, which is already a manifest field and already in the
 surface fingerprint, so there is nothing for two modules to configure differently and nothing a
-`surface` line would add. `RemediationTransform` has two parameters a port really can disagree about
-— the `class-table` destination and the target set the questions are asked for — so it is an ordinary
-§1(b) phase with a `TransformFactory`, a `SurfacePolicy` fingerprint and a `surface` line, and its
-no-op is the empty pair. Weaving it would have put a policy-bearing phase in every port to serve the
-ones that configured it.
+`surface` line would add. `RemediationTransform` has ONE parameter a port really can disagree about —
+the `class-table` destination — so it is an ordinary §1(b) phase with a `TransformFactory`, a
+`SurfacePolicy` fingerprint and a `surface` line, and its no-op is the empty table. Weaving it would
+have put a policy-bearing phase in every port to serve the ones that configured it.
+
+**It had a SECOND parameter, and the second parameter was a manifest field spelled twice.** WHICH
+BACKENDS the questions are asked for was `RemediationTransform(targets)`, defaulted to all three —
+which agrees with `PortManifest.targets` by CONVENTION and by nothing else, in a phase whose whole
+job is to reason about the lane that field decides. A port with `targets = ["jvm"]` reports an EMPTY
+`portability(emitted)` lane (no rule asks about the JVM, `ENGINE-LIMITS.md` P6) while the phase at its
+default computed violations against all three and could claim to drain rows from a lane reading zero.
+Nothing compared the two, and nothing could: a `SurfacePolicy` fingerprint compares a phase against
+ANOTHER MODULE'S instance of the same phase, never against the manifest beside it.
+
+So it is not a parameter. It arrives on the binder — `RunScope.platform`, a `PlatformPolicy` carrying
+`targets` AND `verdictOverrides`, because `PortabilityCheck.rulesFor` takes both and a phase reading
+one of them would ask a third question nobody reports on. That is `RunScope`'s own charter read once
+more (*what the RUN knows about ITSELF and a phase cannot derive from the `Program` it is handed*),
+and the default is the pre-parameterised answer exactly, so `RunScope.whole` — every spec, `DebugEmit`
+and every run with no manifest — behaves as it did. The general rule is one line longer than the case:
+**a phase parameter that RESTATES a manifest field is a divergence with no instrument**, and the fix
+is the channel, never a comparison.
 
 **A site the key cannot name is asked for UP THE OWNER CHAIN.** `PortabilityCheck.Violation.enclosing`
 is the nearest enclosing DEFINITION, which for a site inside a method body is routinely a LOCAL — the

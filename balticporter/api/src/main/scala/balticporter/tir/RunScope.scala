@@ -48,6 +48,23 @@ trait RunScope:
     */
   def contributed(phase: String): Option[Set[String]]
 
+  /** WHICH BACKENDS THIS MODULE IS PORTED FOR, and where it ships its own answer — the third thing
+    * a phase cannot derive from its `Program` and must not restate.
+    *
+    * `PortManifest.targets` decides the rule list `PortabilityCheck` asks its questions from, and
+    * `verdictOverrides` narrows it further. A phase that reasons about portability was taking BOTH
+    * as constructor parameters of its own, defaulted to all-three-and-nothing — which agrees with
+    * the manifest by CONVENTION and by nothing else: a port with `targets = ["jvm"]` reports an
+    * empty `portability(emitted)` lane (no rule in the list asks about the JVM) while the phase at
+    * its default computed violations against all three and could claim to drain rows from a lane
+    * reading zero. Two spellings of one fact, in two files, with no comparison between them.
+    *
+    * It belongs here for [[emits]]'s reason exactly: it is a fact about the RUN, the run holds the
+    * manifest, and the binder is already the one object every `PolicyBound` phase is handed.
+    * [[RunScope.PlatformPolicy.everyPlatform]] is the default and is precisely the pre-parameterised
+    * behaviour — every question the check asked before it had a target set (`CLAUDE.md` §1(b)). */
+  def platform: RunScope.PlatformPolicy = RunScope.PlatformPolicy.everyPlatform
+
   /** …the SAME question asked of a MEMBER, which is what a phase actually holds.
     *
     * [[emits]] takes a top-level unit because that is the granularity the run classifies at; every
@@ -70,13 +87,41 @@ object RunScope:
       case _                                            => id
 
 
+  /** WHAT THIS MODULE'S MANIFEST SAYS ABOUT PLATFORMS — see [[RunScope.platform]].
+    *
+    * A record and not two members, because the two are asked TOGETHER and always through
+    * `PortabilityCheck.rulesFor(targets, overrides)`: a phase that read one of them and not the
+    * other would ask a question the run does not report on, which is the same disagreement one field
+    * down.
+    *
+    * @param targets          the backends this module is ported for (`PortManifest.targets`).
+    * @param verdictOverrides the port's own answers where it disagrees with the catalog's
+    *                         RECOMMENDATION — never with its availability. */
+  final case class PlatformPolicy(
+      targets: Set[balticporter.catalog.Platform],
+      verdictOverrides: Map[balticporter.catalog.DiffId,
+                            Map[balticporter.catalog.Platform, balticporter.catalog.Verdict]] = Map.empty,
+  )
+
+  object PlatformPolicy:
+    /** every question the portability rules asked before a target set existed — the §1(b) default,
+      * and the answer for a run with no manifest, a spec and `DebugEmit`. */
+    val everyPlatform: PlatformPolicy =
+      PlatformPolicy(balticporter.catalog.Platform.values.toSet, Map.empty)
+
   /** the whole program is this run's, and no phase's policy is scoped — the default everywhere. */
   val whole: RunScope = new RunScope:
     def emits(unit: SymId): Boolean                     = true
     def contributed(phase: String): Option[Set[String]] = scala.None
 
-  /** @param emitted the top-level unit symbols this run converts.
-    * @param own     phase name → the subjects THIS manifest contributed to that phase's policy. */
-  def of(emitted: Set[SymId], own: Map[String, Set[String]]): RunScope = new RunScope:
-    def emits(unit: SymId): Boolean                     = emitted(unit)
-    def contributed(phase: String): Option[Set[String]] = own.get(phase)
+  /** @param emitted  the top-level unit symbols this run converts.
+    * @param own      phase name → the subjects THIS manifest contributed to that phase's policy.
+    * @param platform the manifest's own platform declaration, defaulted to the pre-parameterised
+    *                 answer so every existing construction keeps its behaviour exactly. */
+  def of(emitted: Set[SymId], own: Map[String, Set[String]],
+         platform: PlatformPolicy = PlatformPolicy.everyPlatform): RunScope =
+    val p = platform
+    new RunScope:
+      def emits(unit: SymId): Boolean                     = emitted(unit)
+      def contributed(phase: String): Option[Set[String]] = own.get(phase)
+      override def platform: PlatformPolicy               = p

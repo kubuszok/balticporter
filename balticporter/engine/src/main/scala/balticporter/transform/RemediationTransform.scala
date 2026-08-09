@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.catalog.{FixKind, Platform}
+import balticporter.catalog.FixKind
 import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
@@ -63,19 +63,23 @@ import balticporter.tir.*
   *   - `accept-jvm-only`, which is not a phase's remedy at all: it changes no tree and re-files a
   *     row, so it belongs to the CHECK that mints the row (`PortabilityCheck`).
   *
+  * ==WHICH BACKENDS the questions are asked for is the RUN's, not this phase's==
+  * It used to be a second constructor parameter, defaulted to all three, which agreed with
+  * `PortManifest.targets` by CONVENTION and by nothing else — a port with `targets = ["jvm"]`
+  * reports an empty `portability(emitted)` lane (no rule in the list asks about the JVM) while this
+  * phase at its default computed violations against all three and could claim to drain rows from a
+  * lane reading zero. Two spellings of one fact with no comparison between them, which is exactly
+  * the §1.5 drift a manifest field exists to prevent. It now arrives on the binder
+  * (`RunScope.platform`), with the port's `verdictOverrides` beside it, so this phase asks the
+  * question the run reports on and there is nothing for a manifest to state twice.
+  *
   * @param classTables the destination for a `class-table` selection, keyed by the SAME manifest key
   *                    the selection uses (`owner#member` of the CALLEE), valued `owner#member` of
   *                    the table's lookup. Empty is the no-op and makes every such selection a
   *                    counted refusal rather than a silent one.
-  * @param targets     WHICH BACKENDS the questions are asked for — `PortabilityCheck`'s own §1(b)
-  *                    parameter, with `PortabilityCheck`'s own default: all three, i.e. every
-  *                    question the check asked before it had one. A port that narrowed
-  *                    `PortManifest.targets` states the same set here, and the phase then reasons
-  *                    about the same rule list its run reports on.
   */
 final class RemediationTransform(
     val classTables: Map[String, String] = Map.empty,
-    val targets: Set[Platform] = Platform.values.toSet,
 ) extends Phase, RemedySource, PolicyBound, PolicySource, SurfacePolicy:
 
   def name: String = RemediationTransform.Name
@@ -86,10 +90,13 @@ final class RemediationTransform(
     * dropped type is not there at all — so the selections are surface. They live in the MANIFEST and
     * are fingerprinted there (`PortManifest.surfaceDigestInputs`); what this adds is the one value
     * that is a phase parameter, so a base and a dependent redirecting one lookup at two different
-    * tables cannot compare equal. */
+    * tables cannot compare equal.
+    *
+    * The target set is NOT here, and no longer can be: it is the run's (`RunScope.platform`), and
+    * `PortManifest.targets` is already the one place two modules' declarations are compared —
+    * fingerprinting a copy of it would be the second spelling this phase just stopped carrying. */
   def surfaceFingerprint: String =
-    classTables.toList.sorted.map((k, v) => s"$k->$v").mkString(",") +
-      "|" + targets.toList.map(_.toString).sorted.mkString(",")
+    classTables.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
 
   private var plan: ResolutionPlan   = ResolutionPlan.empty
   private var binder: Option[PolicyBinder] = scala.None
@@ -127,7 +134,8 @@ final class RemediationTransform(
   override def run(program: Program): Program =
     if plan.isEmpty then program
     else
-      val rules      = PortabilityCheck.rulesFor(targets)
+      // the RUN's question, both halves of it — never a set of this phase's own (see the class doc).
+      val rules      = PortabilityCheck.rulesFor(scope.platform.targets, scope.platform.verdictOverrides)
       val violations = PortabilityCheck.check(program, rules)
       // The SAME verification, by the same code, that prints the snippet a human would paste. A
       // second implementation of "is this a chokepoint" would be free to disagree with the one the

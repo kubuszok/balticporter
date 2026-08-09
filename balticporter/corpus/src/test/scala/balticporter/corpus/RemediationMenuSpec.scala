@@ -216,16 +216,23 @@ class RemediationMenuSpec extends munit.FunSuite:
   // D2 — a dependent's Program CONTAINS its base's units, and a selection is INHERITED
   // -------------------------------------------------------------------------------------------
 
+  /** run the phase under a `RunScope` this spec chooses — which is how a run reaches it: the two
+    * facts a phase may not derive (what this module EMITS, and which BACKENDS it is ported for)
+    * arrive on the binder and nowhere else. */
+  private def underScope(sources: List[(String, String)], resolutions: Map[String, String],
+                         phase: RemediationTransform, scope: Program => RunScope): (Program, PolicyBinder) =
+    val p      = PortFixture.portAll(sources).before
+    val vocab  = RemedyVocabulary.from(List(phase))
+    val binder = new PolicyBinder(p, p.members, scope(p))
+    binder.resolving(ResolutionPlan.of(resolutions, vocab, vocab.byId.keySet, binder))
+    (Pipeline.runTraced(p, List(phase), binder)._1, binder)
+
   /** the dependent's shape: this run emits NOTHING of what it is handed, which is what a base's
     * units look like from inside a module that only resolves against them (`RunScope.of(Set.empty)`,
     * the same fixture `HeapPollutionRemedySpec` and `OverloadRiskRemedySpec` use). */
   private def asDependent(sources: List[(String, String)], resolutions: Map[String, String],
                           phase: RemediationTransform): (Program, PolicyBinder) =
-    val p      = PortFixture.portAll(sources).before
-    val vocab  = RemedyVocabulary.from(List(phase))
-    val binder = new PolicyBinder(p, p.members, RunScope.of(Set.empty, Map.empty))
-    binder.resolving(ResolutionPlan.of(resolutions, vocab, vocab.byId.keySet, binder))
-    (Pipeline.runTraced(p, List(phase), binder)._1, binder)
+    underScope(sources, resolutions, phase, _ => RunScope.of(Set.empty, Map.empty))
 
   test("a base's selection does NOT re-apply in a dependent — the D2 guard both Wave B appliers carry") {
     // `PortManifest.resolutions` is inherited (§8.16: a remedy decides emitted text at a shared
@@ -250,6 +257,42 @@ class RemediationMenuSpec extends munit.FunSuite:
     assertEquals(binder.resolutions.refusals, Nil)
     val untouched = PortFixture.portAll(List("Names.java" -> Lookup)).before
     assertEquals(new balticporter.emit.TirEmitter(out).emit, new balticporter.emit.TirEmitter(untouched).emit)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // WHICH BACKENDS the questions are asked for is the RUN's — never a set of the phase's own
+  // -------------------------------------------------------------------------------------------
+
+  test("a port that targets the JVM ALONE has nothing to remediate, and the phase asks THAT question") {
+    // `rulesFor(Set(Jvm))` is empty (no rule in the list asks about the JVM), so this port's
+    // `portability(emitted)` lane reads 0 and there is no chokepoint to drop. The phase used to take
+    // its own `targets`, defaulted to all three, so it computed violations the run does not report
+    // and could claim to drain rows from a lane reading zero — two spellings of one manifest field.
+    val (out, binder) = underScope(
+      List("Reflector.java" -> Chokepoint), Map("com.demo.Reflector" -> "substitutions-drop"),
+      new RemediationTransform(),
+      p => RunScope.of(p.units.map(_.symbol).toSet, Map.empty,
+                       RunScope.PlatformPolicy(Set(Platform.Jvm))))
+    assert(unitNames(out).contains("com.demo.Reflector"), unitNames(out))
+    assertEquals(binder.resolutions.all, Nil)
+    val List(r) = binder.resolutions.refusals: @unchecked
+    assertEquals(r.guard, "not-a-chokepoint")
+  }
+
+  test("…and the SAME program under the run's default target set is dropped, so the difference is the scope") {
+    val (out, binder) = underScope(
+      List("Reflector.java" -> Chokepoint), Map("com.demo.Reflector" -> "substitutions-drop"),
+      new RemediationTransform(), p => RunScope.of(p.units.map(_.symbol).toSet, Map.empty))
+    assertEquals(unitNames(out), Set.empty[String])
+    assertEquals(binder.resolutions.all.map(_.remedy.id), List("substitutions-drop"))
+  }
+
+  test("the phase declares no target set of its own — nothing for a manifest to state twice") {
+    // A `SurfacePolicy` fingerprint over a COPY of `PortManifest.targets` would be exactly the second
+    // spelling this fix removed, so the fingerprint is the `classTables` table and nothing else.
+    assertEquals(new RemediationTransform().surfaceFingerprint, "")
+    assertEquals(new RemediationTransform(classTables = Map("a.B#c" -> "d.E#f")).surfaceFingerprint,
+                 "a.B#c->d.E#f")
   }
 
   // -------------------------------------------------------------------------------------------
