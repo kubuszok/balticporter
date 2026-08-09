@@ -826,3 +826,30 @@ class PortRunSpec extends munit.FunSuite:
     assertEquals(r.report.policy.findings.map(_.key), List("com.demo.Widget#label"))
     assert(!Files.readString(r.outDir.resolve("com/demo/Widget.scala")).contains("porter: selected-remedy"))
   }
+
+  // -------------------------------------------------------------------------------------------
+  // `serviceProviders` — "does this port rename anything" is asked of the PHASE, not of one policy
+  // -------------------------------------------------------------------------------------------
+
+  private def runWith(manifest: PortManifest): PortRun =
+    val (root, src) = fixture()
+    PortRun(
+      label     = "demo",
+      portRoot  = root.resolve("port"),
+      sourceSet = SourceSet.Main,
+      frontend  = FrontendConfig(src, List("com/demo/Widget.java"), Nil),
+      phases    = Nil,
+      manifest  = Some(manifest))
+
+  test("a port that renames only PER TYPE renames — the flag is derived from every rename policy") {
+    // The `Unrenamed` row means "this port moves names and did not move THIS one". Derived from
+    // `packageRenames` alone, a port whose whole rename policy is `typeRenames`/`subPackages`/
+    // `flattenNestedTypes` was told, of every provider line it DID move, that it renames nothing —
+    // §4.56's fast-path guard, in a lane whose whole subject is the two namespaces.
+    assert(runWith(PortManifest("demo", typeRenames = Map("com.demo.Widget" -> "q.W"))).renamesAnything)
+    assert(runWith(PortManifest("demo", subPackages = Map("com.demo.Widget" -> "inner"))).renamesAnything)
+    assert(runWith(PortManifest("demo", flattenNestedTypes = Set("com.demo.Widget"))).renamesAnything)
+    assert(runWith(PortManifest("demo", packageRenames = Map("com.demo" -> "q"))).renamesAnything)
+    // …and a port with no rename policy at all renames nothing, which is what keeps the lane quiet.
+    assert(!runWith(PortManifest("demo")).renamesAnything)
+  }

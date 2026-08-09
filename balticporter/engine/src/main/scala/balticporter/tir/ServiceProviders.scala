@@ -109,8 +109,8 @@ object ServiceProviders:
         source          = src,
         upstreamService = service,
         emittedService  = emittedName(service),
-        lines           = Files.readAllLines(src, java.nio.charset.StandardCharsets.UTF_8)
-          .toArray(Array.empty[String]).toList.map { raw =>
+        lines           = stripBom(Files.readAllLines(src, java.nio.charset.StandardCharsets.UTF_8)
+          .toArray(Array.empty[String]).toList).map { raw =>
             val body = raw.indexOf('#') match
               case -1 => raw
               case i  => raw.substring(0, i)
@@ -124,6 +124,26 @@ object ServiceProviders:
           },
       )
     }
+
+  /** the UTF-8 BYTE ORDER MARK, which `Files.readAllLines` hands over as the first character of the
+    * first line and which nothing downstream can be expected to notice.
+    *
+    * Left in place it is part of the first provider NAME: the rename does not match it (so the line
+    * ships unmoved and is reported `Unrenamed`, which reads as a legitimate provider outside the
+    * renamed namespace), and `ServiceLoader.parseLine` rejects it — `U+FEFF` is not a
+    * `Character.isJavaIdentifierPart` — so the port ships a resource whose first entry throws
+    * `ServiceConfigurationError`, with the lane counting it `shipped`.
+    *
+    * Stripped from the RAW line and not merely from the parsed name, because the raw text is what
+    * this port writes: carrying the mark into the emitted resource would reproduce the defect in the
+    * deliverable. It is the one edit made to upstream's own bytes, and it is made because those bytes
+    * are not part of the notice §4.58 obliges a derived work to reproduce — they are an encoding
+    * artefact of the file this run just decoded. */
+  private val Bom: Char = 0xFEFF.toChar
+
+  private def stripBom(lines: List[String]): List[String] = lines match
+    case first :: rest if first.nonEmpty && first.head == Bom => first.tail :: rest
+    case all                                                  => all
 
   /** the lane, one row per provider shipped plus one per residue. `isDropped` is asked of the
     * UPSTREAM name, because a `Substitutions.dropTypes` key is written in the upstream namespace

@@ -115,6 +115,33 @@ class ServiceProvidersSpec extends munit.FunSuite:
     assertEquals(flat.count(_.kind == ServiceProviders.Kind.Shipped.slug), 1)
   }
 
+  tmp.test("a UTF-8 BOM is not part of the first provider's NAME — nor of what this port ships") { dir =>
+    // `Files.readAllLines` hands the mark over as the first character of the first line. Left there
+    // it is part of the name: the rename does not match it (so the line ships unmoved and is
+    // reported `Unrenamed`, which reads as a provider legitimately outside the renamed namespace),
+    // and `ServiceLoader.parseLine` rejects it — `U+FEFF` is no `isJavaIdentifierPart` — so the
+    // resource's first entry throws while the lane counts it `shipped`.
+    val bom = 0xFEFF.toChar
+    val f   = descriptor(dir, "p.Spi", s"$bom" + "p.impl.Alpha\np.impl.Beta\n")
+    val List(d) = ServiceProviders.plan(List(f), rename): @unchecked
+    assertEquals(d.providers.flatMap(_.upstream), List("p.impl.Alpha", "p.impl.Beta"))
+    assertEquals(d.providers.flatMap(_.emitted), List("q.port.impl.Alpha", "q.port.impl.Beta"))
+    // …and the EMITTED text carries no mark either: the raw line is what this port writes.
+    assertEquals(d.text, "q.port.impl.Alpha\nq.port.impl.Beta\n")
+    val fs = ServiceProviders.findings(List(d), _ => false, renaming = true)
+    assertEquals(fs.count(_.kind == ServiceProviders.Kind.Unrenamed.slug), 0)
+    assertEquals(fs.count(_.kind == ServiceProviders.Kind.Shipped.slug), 2)
+  }
+
+  tmp.test("…and only the FIRST line, and only a real mark — nothing else is touched") { dir =>
+    val bom = 0xFEFF.toChar
+    val f   = descriptor(dir, "p.Spi", s"p.impl.Alpha\n$bom" + "p.impl.Beta\n")
+    val List(d) = ServiceProviders.plan(List(f), rename): @unchecked
+    // a mark in the MIDDLE of a file is not an encoding artefact of the decode; it is content, and
+    // guessing at it would be the fabricated fact this file already refuses for a two-token line.
+    assertEquals(d.providers.flatMap(_.upstream), List("p.impl.Alpha", s"$bom" + "p.impl.Beta"))
+  }
+
   tmp.test("an entry the format does not admit is carried verbatim, never guessed at (§4.6)") { dir =>
     // two tokens on one line is not a binary class name; a "best effort" rewrite of it would be a
     // fabricated fact, so it is neither rewritten nor counted as a provider.

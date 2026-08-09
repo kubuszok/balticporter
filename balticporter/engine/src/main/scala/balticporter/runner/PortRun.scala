@@ -258,6 +258,18 @@ final case class PortRun(
     * joining policy to observed code carries both namespaces, and only the run holds both). */
   private def emittedName(fqn: String): String = renamePhase.fold(fqn)(_.emittedName(fqn))
 
+  /** DOES THIS RUN MOVE ANY NAME AT ALL? — read off the same `Option` [[emittedName]] is, and never
+    * off one of the four policies that build it.
+    *
+    * The question a report asks is "is an unmoved name worth reporting here", and it is exactly the
+    * question `renamePhase` already answers: with no phase, `emittedName` is the identity and every
+    * name is unmoved by construction. Derived from `packageRenames` alone — which is what the
+    * `service-providers` lane did — a port that renames only per type (`typeRenames`, `subPackages`,
+    * `flattenNestedTypes`) moved its provider names and was told, of every one of them, that it
+    * renames nothing. §4.56's fast-path guard: a guard is derived from ALL of the pass's targets, or
+    * it answers for the one it was written against and silently for every one added since. */
+  private[runner] def renamesAnything: Boolean = renamePhase.isDefined
+
   /** where this source set's emitted Scala goes. From [[SbtGen]], never composed by hand (§5.5). */
   def outDir: Path = SbtGen.managedDir(portRoot, sourceSet.configName)
 
@@ -896,8 +908,14 @@ final case class PortRun(
         descriptors, SbtGen.managedResources(portRoot, sourceSet.configName))
       written += wrote.size
       CheckReport.record(balticporter.tir.ServiceProviders.Name,
+        // `renamePhase.isDefined` and NOT `packageRenames.nonEmpty`: the rewrite above goes through
+        // `emittedName`, which is the PHASE's rule and honours `typeRenames`, `subPackages` and
+        // `flattenNestedTypes` as well — so a port that renames only per-type moved its provider
+        // names and was told, for every one of them, that it renames nothing (§4.56's fast-path
+        // guard: a guard is derived from ALL of the pass's targets). Read off the same `Option` the
+        // phase is built from, so the two cannot disagree about whether this port renames.
         balticporter.tir.ServiceProviders.findings(descriptors, policySubs.dropsType,
-                     renaming = manifest.exists(_.effectivePackageRenames.nonEmpty)))
+                     renaming = renamesAnything))
       say(s"SERVICE PROVIDERS: ${descriptors.size} descriptor(s), " +
         s"${descriptors.map(_.providers.size).sum} provider line(s), rewritten into this port's namespace")
       println(balticporter.tir.ServiceProviders.summary(descriptors))
