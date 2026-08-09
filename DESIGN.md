@@ -5277,7 +5277,12 @@ Four decisions the first menu forced, none of them foreseen by §8.16:
   §5's drain rule is `sum(drained)` and never `count(rows)`, or a diff reads "one applied, fifteen
   gone" and fourteen have nothing to attribute them to. An inline claims **0** and says why: it
   RELOCATES a call rather than removing one, and over-claiming would break the one arithmetic the rule
-  rests on;
+  rests on. **So does a REDIRECT, and that took a second reading to see.** `class-table` claimed the
+  number of CALL SITES of the wrapper — a real number about a real thing, and not this lane's: the row
+  `portability(emitted)` holds is the `Class.forName` inside the WRAPPER'S BODY, which the rewrite
+  does not touch, so `resolved` gained N while the lane fell by 0. Relocation is the shape, not the
+  mechanism: any remedy that moves a call rather than removing one claims **0**, whatever it can count
+  about the move;
 - **`Resolution.RefusedKind`** — the refusal POPULATION, one row per declined site naming its GUARD.
   A remedy that verified its own precondition and declined is not `NeverApplied` (the selection was
   consulted and answered) and it is emphatically not silence, which reads exactly like success. Four
@@ -5299,6 +5304,17 @@ is the nearest enclosing DEFINITION, which for a site inside a method body is ro
 corpus's one `ServiceLoader` row is owned by a val called `loader`. Asked only at `enclosing`, a
 selection would answer `None` for exactly the sites a port most wants to speak about; the fix is not a
 finer key but to ask the question at each declaration the key CAN name (`PortRun.ownerChain`).
+
+**A PRINTED KEY AND A BINDABLE KEY ARE THE SAME KEY, or the loop this menu closes runs backwards.**
+`Remediator` prints the line a human pastes and the menu is the engine pasting it, so a template that
+prints a key no front door can accept has made the round trip WORSE than silence — the reader pastes
+it, gets a policy finding, and spends the cycle this file exists to save. Both doors onto
+`class-table` bind at `Ownership.Owned` (`ClassTableTransform.bindPolicy` through `bindMembers`, and
+the remedy through `Remedy.Subject.OwnedMember`), so `java.lang.Class#forName` — which the direct-site
+arm used to print — is `ExternalOnly` at both. The arm proposes NOTHING there instead, and says which
+key shape the mechanism needs. The general form is one line longer than the case: **whatever prints a
+manifest key states the OWNERSHIP the reader's door will demand of it**, and a template that cannot
+meet it says so rather than printing the nearest thing.
 
 **What the menu does NOT offer, stated at the declaration.** A MEDIUM-grade drop with an
 engine-written replacement (the replacement is library semantics, and a stand-in that compiles and

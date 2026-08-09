@@ -285,6 +285,18 @@ object Remediator:
     * write, listing the classes it can name. The KEY is exact, and the key is the part that is
     * easy to get wrong — it is `owner#member` of the CALLEE, which is not what a reader looking at
     * the emitted code would guess.
+    *
+    * ==And the key it prints must be one a FRONT DOOR can accept — which `java.lang.Class#forName`
+    * is not==
+    * Both doors bind this key with `Ownership.Owned`: `ClassTableTransform.bindPolicy` calls
+    * `bindMembers` at its default, and the `class-table` REMEDY declares
+    * `Remedy.Subject.OwnedMember`, so `ResolutionPlan.of` binds it through `bindMember` at the same
+    * ownership. An EXTERNAL member is `ExternalOnly` at both — the whole point of that refusal — so
+    * a snippet naming `java.lang.Class#forName` is a line an agent pastes and then gets a policy
+    * finding for, which is strictly worse for its reader than silence (this file's own opening
+    * argument). The direct-site case therefore says, in as many words, that THERE IS NO SELECTABLE
+    * KEY here, and proposes nothing: the mechanism needs a member this program DECLARES, and a
+    * direct call names java's own.
     */
   private def classTableSuggestions(
       program: Program,
@@ -293,24 +305,41 @@ object Remediator:
     val lookups = sited.filter((v, _) => v.api == ClassForName)
     if lookups.isEmpty then Nil
     else
-      // prefer the port's OWN forwarding wrapper as the key when there is exactly one: redirecting
+      // the port's OWN forwarding wrapper is the ONLY key either door can bind: redirecting
       // `W.forName` leaves W's body (the `Class.forName` call itself) as the only thing to drop,
       // which is what makes the wrapper removable at all.
       val wrappers = lookups.flatMap { (v, _) =>
         program.symbolOf(v.enclosing).filter(s => s.flags.isStatic && declares(program, s.owner))
           .map(s => s"${fullName(program, s.owner)}#${s.name}")
       }.distinct.sorted
-      val keys = if wrappers.sizeIs == 1 then wrappers else List(ClassForName)
-      val via  = if wrappers.sizeIs == 1 then
-        s"reached through this port's own static wrapper ${wrappers.head}, so redirecting the WRAPPER " +
-          "leaves nothing but the wrapper's own body to remove"
-      else s"${lookups.size} direct site(s); redirect the callee itself"
-      List((Suggestion("class-table", keys.head, Confidence.Medium,
-        s"a runtime class lookup by name — $via",
-        Some(s"""new ClassTableTransform(Map("${keys.head}" -> "<your.pkg.TypeTable>#classFor"))"""),
-        Some("you supply the table: an injected object mapping each name this port can round-trip to a `classOf[…]` literal"),
-        Map("callee" -> keys.head, "sites" -> lookups.size.toString)),
-        Set(ClassForName)))
+      wrappers match
+        case List(w) =>
+          List((Suggestion("class-table", w, Confidence.Medium,
+            "a runtime class lookup by name — reached through this port's own static wrapper " +
+              s"$w, so redirecting the WRAPPER leaves nothing but the wrapper's own body to remove",
+            Some(s"""new ClassTableTransform(Map("$w" -> "<your.pkg.TypeTable>#classFor"))"""),
+            Some("you supply the table: an injected object mapping each name this port can round-trip to a `classOf[…]` literal"),
+            Map("callee" -> w, "sites" -> lookups.size.toString)),
+            Set(ClassForName)))
+        case ws =>
+          // NOTHING PROPOSED. Both front doors take an OWNED member key, and every remaining shape
+          // here names java's own: no wrapper at all (a direct `Class.forName`), or several, where
+          // picking one would redirect a third of the sites and say nothing about the rest.
+          val shape =
+            if ws.isEmpty then s"${lookups.size} direct site(s) of `$ClassForName`"
+            else s"${lookups.size} site(s) reached through ${ws.size} of this port's own static " +
+              s"wrappers (${ws.take(3).mkString(", ")}${if ws.sizeIs > 3 then ", …" else ""})"
+          List((Suggestion("class-table", ClassForName, Confidence.Observation,
+            s"$shape — NO SELECTABLE KEY: the redirect is keyed on a member this program DECLARES " +
+              s"(both `ClassTableTransform(redirects)` and a `class-table` selection bind at " +
+              s"`Ownership.Owned`), and `$ClassForName` is java's own, so a key naming it binds " +
+              "nowhere. Route these through one static wrapper this port declares and select at " +
+              (if ws.isEmpty then "THAT" else "ONE of them") + ", or hand-port each site",
+            scala.None,
+            Some("no snippet, deliberately: a pasted `java.lang.Class#forName` key is `ExternalOnly` " +
+              "at both doors and costs its reader a cycle to disprove"),
+            Map("sites" -> lookups.size.toString, "wrappers" -> ws.size.toString)),
+            Set(ClassForName)))
 
   private val ClassForName = "java.lang.Class#forName"
 

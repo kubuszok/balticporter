@@ -238,9 +238,21 @@ final class RemediationTransform(
         classTables.get(r.declaredKey) match
           case Some(dest) if dest.contains('#') =>
             asked += r.declaredKey
-            val sites = program.usages(sym.id).count(_.kind == UsageKind.Call)
+            // `drained = 0`, and it is the SAME claim `static-forwarder-inline` makes one arm up: a
+            // redirect RELOCATES a call. `Wrapper.forName(s)` becomes `Table.classFor(s)` at each
+            // CALL SITE, and the row this lane counts is the `Class.forName` inside the WRAPPER'S
+            // BODY — which this rewrite does not touch, so the lane falls by nothing here and only
+            // falls at all if the now-unreferenced wrapper is later dropped.
+            //
+            // It used to claim the number of CALL SITES of the wrapper, which is neither the rows
+            // removed nor a number this lane holds: `resolved` gained N while the lane fell by 0,
+            // and `sum(drained)` — the one arithmetic §5's drain rule rests on — was fiction. A
+            // remedy that cannot know what it moved claims ZERO and says why (`DESIGN.md` §8.18).
             plan.applied(r, sym.fullName, sym.id, origin,
-              s"redirected this runtime class lookup at $dest", drained = sites)
+              s"redirected this runtime class lookup at $dest; the lookup INSIDE this member is " +
+                "still what the lane counts, so the redirect claims no rows — the lane's own " +
+                "before/after is the measurement",
+              drained = 0)
             Some(r.declaredKey -> dest)
           case Some(bad) =>
             asked += r.declaredKey

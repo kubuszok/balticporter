@@ -116,6 +116,28 @@ class RemediationMenuSpec extends munit.FunSuite:
     assert(a.what.contains("com.demo.Table#classFor"), a.what)
   }
 
+  test("…and it claims ZERO rows, because a redirect RELOCATES a call and the lane counts the body") {
+    // The row `portability(emitted)` holds for this port is the `Class.forName` INSIDE
+    // `Names#forName`; the redirect rewrites the wrapper's CALL SITES and leaves that body alone,
+    // so the lane falls by nothing here. `drained` used to be the number of call sites of the
+    // wrapper, which is neither the rows removed nor a number this lane holds — `resolved` gained N
+    // while the lane fell by 0, and `sum(drained)` is the one arithmetic §5's drain rule rests on.
+    val caller =
+      """package com.demo;
+        |public class Uses {
+        |  public Class<?> a() throws Exception { return Names.forName("x"); }
+        |  public Class<?> b() throws Exception { return Names.forName("y"); }
+        |}""".stripMargin
+    val out = PortFixture.portAllResolving(
+      List("Names.java" -> Lookup, "Uses.java" -> caller),
+      Map("com.demo.Names#forName" -> "class-table"),
+      new RemediationTransform(classTables = Map("com.demo.Names#forName" -> "com.demo.Table#classFor")))
+    val List(a) = out.binder.resolutions.all: @unchecked
+    assertEquals(a.drained, 0)
+    assert(a.what.contains("claims no rows"), a.what)
+    assert(a.finding.detail.contains("draining 0 row(s)"), a.finding.detail)
+  }
+
   test("a table row no selection reaches is DEAD POLICY and is reported — the §1(b) silent no-op") {
     val out = PortFixture.portResolving(
       Lookup, Map("com.demo.Names#forName" -> "class-table"),
@@ -126,6 +148,40 @@ class RemediationMenuSpec extends munit.FunSuite:
     val fs    = phase.policyReport.findings
     assertEquals(fs.map(_.key), List("com.demo.Gone#forName"))
     assertEquals(fs.head.issue, PolicyIssue.NeverMatched)
+  }
+
+  /** the suggestions `Remediator` prints for a program, as the run computes them. */
+  private def suggestions(sources: List[(String, String)]): List[Remediator.Suggestion] =
+    val p = PortFixture.portAll(sources).before
+    Remediator.suggest(p, PortabilityCheck.check(p, PortabilityCheck.rulesFor(Platform.values.toSet)))
+
+  test("the KEY `Remediator` prints for `class-table` is one the REMEDY can bind — the wrapper's") {
+    val List(s) = suggestions(List("Names.java" -> Lookup)).filter(_.mechanism == "class-table"): @unchecked
+    assertEquals(s.subject, "com.demo.Names#forName")
+    // …and the two ends agree: the printed key, pasted into `resolutions`, BINDS.
+    val out = PortFixture.portResolving(Lookup, Map(s.subject -> "class-table"), new RemediationTransform())
+    assertEquals(out.binder.unbound.filter(_.phase == Resolution.Seam), Nil)
+  }
+
+  test("…and where there is no wrapper it proposes NOTHING, rather than a key no door can accept") {
+    // `java.lang.Class#forName` is `ExternalOnly` at BOTH doors — `ClassTableTransform.bindPolicy`
+    // and the `class-table` remedy's `Remedy.Subject.OwnedMember` — so printing it as the key of a
+    // pasteable snippet costs its reader a cycle to disprove, which is the one thing this file's
+    // design forbids.
+    val direct =
+      """package com.demo;
+        |public class Direct {
+        |  public Class<?> a(String n) throws Exception { return Class.forName(n); }
+        |}""".stripMargin
+    val List(s) = suggestions(List("Direct.java" -> direct)).filter(_.mechanism == "class-table"): @unchecked
+    assertEquals(s.confidence, Remediator.Confidence.Observation)
+    assertEquals(s.snippet, scala.None)
+    assert(clue(s.observed).contains("NO SELECTABLE KEY"))
+    // and the proof that this is the right refusal: that key really does bind nowhere.
+    val out = PortFixture.portResolving(direct, Map("java.lang.Class#forName" -> "class-table"),
+                                        new RemediationTransform())
+    assertEquals(out.binder.unbound.filter(_.phase == Resolution.Seam).map(_.entry),
+                 List("java.lang.Class#forName"))
   }
 
   // -------------------------------------------------------------------------------------------
