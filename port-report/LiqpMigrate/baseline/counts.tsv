@@ -13,6 +13,7 @@ collection-closure	0
 collection-retarget	0
 dependency-coverage	0
 dependency-coverage(all)	101
+dependency-coverage(declared)	3
 heap-pollution	0
 idiom(converted)	0
 idiom(refused)	53
@@ -22,7 +23,7 @@ manifest	0
 markers	0
 omissions	0
 overload-risk	30
-policy	1
+policy	0
 port-map	0
 portability(all)	54
 portability(emitted)	54

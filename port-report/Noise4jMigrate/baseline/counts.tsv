@@ -10,6 +10,7 @@ catalog(unreached)	28
 class-init-trigger	0
 dependency-coverage	0
 dependency-coverage(all)	0
+dependency-coverage(declared)	0
 heap-pollution	0
 idiom(converted)	1
 idiom(refused)	16
