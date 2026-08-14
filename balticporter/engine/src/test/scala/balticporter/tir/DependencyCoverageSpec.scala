@@ -88,6 +88,36 @@ class DependencyCoverageSpec extends munit.FunSuite:
     assertEquals(DependencyCheck.uncovered(List(req), List(dep.copy(name = "something-else"))).size, 1)
   }
 
+  test("…and a declaration that covers NOTHING is a policy finding, not silence") {
+    // The direction the lane itself cannot show: coverage SUBTRACTS, so an entry naming an artifact
+    // no requirement wants leaves `dependency-coverage` exactly where it was — 0 before, 0 after —
+    // and the port ships a jar on every backend for a call it does not make.
+    val time    = ArtifactDep("io.github.cquiroz", "scala-java-time", "2.6.0")
+    val locales = ArtifactDep("io.github.cquiroz", "scala-java-locales", "1.5.4")
+    val row     = ApiRows.byId(DiffId(balticporter.catalog.Area.L, 60))
+    val req = DependencyCheck.Requirement(
+      PortabilityCheck.all.find(_.api == "java.time.").get, row,
+      Map(Platform.ScalaJs -> time, Platform.ScalaNative -> time),
+      "java.time.Instant", Origin.synthetic, UsageKind.MemberType, SymId.None)
+    // the one the requirement names is NOT reported, whatever version the port pinned
+    assertEquals(DependencyCheck.unneeded(List(req), List(time)), Nil)
+    assertEquals(DependencyCheck.unneeded(List(req), List(time.copy(rev = "9.9.9"))), Nil)
+    // the one nothing names IS, and only that one
+    assertEquals(DependencyCheck.unneeded(List(req), List(time, locales)), List(locales))
+    // a port that declares nothing has nothing to answer for — the empty parameter is the no-op
+    assertEquals(DependencyCheck.unneeded(List(req), Nil), Nil)
+    // …and with no requirement at all, every declaration is one (the shape a port reaches after an
+    // upstream change removes the last call, which nothing else in the run can see)
+    assertEquals(DependencyCheck.unneeded(Nil, List(time)), List(time))
+
+    // and its CLASSIFICATION, which is `core`'s half: `NeverApplied` rather than either neighbour —
+    // the entry is well formed and names a real artifact, and what did not happen is the requirement.
+    val report = balticporter.core.PolicyReport.fromDependencies(List(locales))
+    assertEquals(report.findings.map(_.issue), List(balticporter.core.PolicyIssue.NeverApplied))
+    assertEquals(report.findings.map(_.key), List(locales.toString))
+    assertEquals(report.findings.map(_.setting), List("PortManifest.dependencies"))
+  }
+
   test("an empty target set makes BOTH lanes no-ops") {
     assertEquals(PortabilityCheck.rulesFor(Set.empty), Nil)
     assertEquals(PortabilityCheck.dependencyRulesFor(Set.empty), Nil)

@@ -116,6 +116,30 @@ object DependencyCheck:
     val have = declared.map(d => (d.org, d.name)).toSet
     reqs.filterNot(r => r.deps.values.forall(d => have((d.org, d.name))))
 
+  /** …and the SAME FILTER READ BACKWARDS: a declared artifact no requirement in this module's own
+    * emitted code names.
+    *
+    * [[uncovered]] is the residue a port ACTS on; this is the one nothing could see. A
+    * `dependencies` entry is a §1(b) policy key like any other, and a key that fires on nothing is
+    * exactly what `PolicyReport` exists to report — a coordinate copied from another module,
+    * surviving an upstream change that removed the last call, or answering a row this port has since
+    * overridden. Silently accepted it costs a resolution and a jar on every backend, and the lane it
+    * was written for reads a clean `0` either way, because coverage subtracts and never adds.
+    *
+    * It is `NeverApplied` and not `NeverMatched`: the entry is well formed and names a real
+    * artifact, and what did not happen is the REQUIREMENT — the reader's action is to find out
+    * whether the usage went away or whether it lives somewhere this walk cannot see, which is a
+    * question the two neighbours would send them to the wrong place for.
+    *
+    * Asked of the EMITTED requirements ([[inEmittedCode]]) rather than of the whole walk, for D2's
+    * own reason in the other direction: a dependent's program holds its base's units, so reading the
+    * unfiltered list would credit a dependent's declaration for a call only its base makes — the
+    * artifact its own build does not need. A hand-written source set is the one thing this cannot
+    * see, and the detail says so rather than the check guessing. */
+  def unneeded(reqs: List[Requirement], declared: List[ArtifactDep]): List[ArtifactDep] =
+    val wanted = reqs.flatMap(_.deps.values).map(d => (d.org, d.name)).toSet
+    declared.filterNot(d => wanted((d.org, d.name)))
+
   /** Violations occurring in code this run actually EMITS — the same D2 filter every other check
     * carries, for the same measured reason: a dependent's program holds its base's units, and an
     * artifact a base's declaration needs is the BASE's to add. */

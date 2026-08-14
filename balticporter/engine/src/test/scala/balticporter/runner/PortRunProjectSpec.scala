@@ -164,6 +164,36 @@ class PortRunProjectSpec extends munit.FunSuite:
     assert(Files.exists(port.resolve("build.sbt")))
   }
 
+  test("a manifest's `dependencies` reach the GENERATED BUILD — at this run's own configuration") {
+    // The other end of `dependency-coverage`. The check CREDITS a declaration and stops reporting
+    // the requirement; if the coordinate never reached a build file the credit would be a lie, and
+    // nothing else in the run could say so — no count moves, no emitted source changes, and the
+    // port compiles on the one backend somebody happened to test. So the two halves are asserted
+    // together, in the file that owns the build-generation gate.
+    val (root, src) = fixture()
+    val dep = balticporter.catalog.ArtifactDep("io.github.cquiroz", "scala-java-time", "2.6.0")
+    val spec = SbtGen.ProjectSpec("demo", "org.demo", "3.8.4", "2.0.0-M4", Nil, engineFingerprint = "test")
+    val mf   = PortManifest(name = "demo", governs = Set("com.demo"), dependencies = List(dep))
+
+    val main = root.resolve("main-port")
+    run(main, src)(_.copy(project = Some(spec), manifest = Some(mf)))
+    val mainBuild = Files.readString(main.resolve("build.sbt"))
+    assert(mainBuild.contains(""""io.github.cquiroz" %% "scala-java-time" % "2.6.0""""), clue(mainBuild))
+    assert(!mainBuild.contains("% Test"), clue(mainBuild))
+
+    // …and a TEST source set's artifacts are its SUITE's: written into main's `libraryDependencies`
+    // they would publish, on the shipped library, a coordinate only its tests call.
+    val test = root.resolve("test-port")
+    run(test, src, SourceSet.Test)(_.copy(project = Some(spec), manifest = Some(mf)))
+    val testBuild = Files.readString(test.resolve("build.sbt"))
+    assert(testBuild.contains(""""io.github.cquiroz" %% "scala-java-time" % "2.6.0" % Test"""), clue(testBuild))
+
+    // the gate still holds over both: no manifest declaration writes a build where none was asked for
+    val none = root.resolve("no-project")
+    run(none, src)(_.copy(manifest = Some(mf)))
+    assert(!Files.exists(none.resolve("build.sbt")), "a declared dependency is not a request for a build")
+  }
+
   // -- the upstream NOTICE, for a library whose licence lives in ONE file (CLAUDE.md §4.57) -------
   //
   // The per-file banner NAMES a licence; MIT's single condition is that the copyright and

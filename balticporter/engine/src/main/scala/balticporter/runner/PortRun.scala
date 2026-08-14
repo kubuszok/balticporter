@@ -674,8 +674,13 @@ final case class PortRun(
     // `notShipped` predicate every other check carries (D2).
     val declaredDeps = manifest.map(_.dependencies).getOrElse(Nil)
     val allRequired  = DependencyCheck.requirements(program, targets, verdictOverrides)
-    val needed       = DependencyCheck.uncovered(
-                         DependencyCheck.inEmittedCode(program, allRequired, notShipped), declaredDeps)
+    val ownRequired  = DependencyCheck.inEmittedCode(program, allRequired, notShipped)
+    val needed       = DependencyCheck.uncovered(ownRequired, declaredDeps)
+    // …and the SAME PAIR read backwards, which no count in this lane can show: coverage SUBTRACTS,
+    // so an entry naming an artifact nothing here needs leaves every number on this lane exactly
+    // where it was. It is a declared key that fired on nothing, so it goes where every other one
+    // goes — the `policy` lane, folded in below where that report is assembled.
+    val unneededDeps = DependencyCheck.unneeded(ownRequired, declaredDeps)
     locally {
       given Program = program
       // TWO numbers, for `portability(all|emitted)`'s reason: the residue alone cannot distinguish
@@ -1371,7 +1376,11 @@ final case class PortRun(
         .filter(f => f.phase == balticporter.tir.Resolution.Seam && ownResolutionKeys(f.key))) ++
         PolicyReport(PolicyReport.fromResolutions(translated.binder.resolutions.troubles).findings
           .filter(f => ownResolutionKeys(f.key)))
-    val policy = dropFindings ++ renameFindings ++ resolutionFindings ++ PolicyReport(
+    // …and the ARTIFACT declarations that answered nothing. Not filtered by an `own*Keys` set like
+    // the four above: `dependencies` is NOT inherited (§1.5), so every entry a run reads is one this
+    // module's own manifest wrote and one this module's own build ships.
+    val dependencyFindings = PolicyReport.fromDependencies(unneededDeps)
+    val policy = dropFindings ++ renameFindings ++ resolutionFindings ++ dependencyFindings ++ PolicyReport(
       PolicyReport.from(ownPhases.collect { case p: PolicySource if ownPhaseNames(p.name) => p })
         .findings.filter(f =>
           ownSurfaceKeys.get(f.phase).forall(_.contains(balticporter.core.MergeablePolicy.subjectOf(f.key)))))
@@ -1420,10 +1429,20 @@ final case class PortRun(
     // where a port records that it took a `Verdict.Depend`'s advice, and the generated build is the
     // only place that fact can have an effect — so the two meet here rather than in the caller's
     // `ProjectSpec`, which would leave a port free to declare the dependency and not ship it.
-    // Empty on every port today, so no generated build file moves.
+    //
+    // …AT THIS RUN'S OWN CONFIGURATION, which is the half a build generator cannot guess and this
+    // line can. A manifest's `dependencies` are the artifacts THAT MODULE'S declarations need, and a
+    // `sourceSet = Test` run's declarations are its suite's — so writing them into the main
+    // `libraryDependencies` publishes, on the shipped library, a coordinate only its tests call. The
+    // same split `managedResources` already makes for a descriptor, one file over: a resource, a
+    // source and a dependency all belong to ONE configuration, and the run is the only place that
+    // knows which. No corpus port generates a build, so no generated file moves either way.
     project.foreach { spec =>
       val declared = manifest.map(_.dependencies).getOrElse(Nil).map(SbtGen.Dep.of)
-      SbtGen.emitPort(portRoot, spec.copy(deps = spec.deps ++ declared), effectivePhases, runtimeMode)
+      val withDeps = sourceSet match
+        case SourceSet.Main => spec.copy(deps = spec.deps ++ declared)
+        case SourceSet.Test => spec.copy(testDeps = spec.testDeps ++ declared)
+      SbtGen.emitPort(portRoot, withDeps, effectivePhases, runtimeMode)
     }
 
     val report = PortReport(

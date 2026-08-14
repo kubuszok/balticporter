@@ -133,6 +133,31 @@ object PolicyReport:
       PolicyFinding(Resolution.Seam, Resolution.Setting, t.declared, issue, t.detail)
     }.toList)
 
+  /** The ARTIFACT declarations that answered nothing — `PortManifest.dependencies` entries no
+    * requirement in this module's own emitted code names (`DependencyCheck.unneeded`).
+    *
+    * Here for [[fromBindings]]' reason once more, and with one difference worth stating: the other
+    * two seams are keys naming DECLARATIONS, and this one names a BUILD COORDINATE, so the finding
+    * is filed under the manifest field rather than under a phase. There is no phase to file it
+    * under — `dependencies` is read by the check and by the build generator and by nothing that
+    * runs.
+    *
+    * The key is the coordinate as [[balticporter.catalog.ArtifactDep]] itself renders one — the
+    * same spelling the `dependency-coverage` findings print, so the entry a reader removes and the
+    * requirement they were told about are one string apart. */
+  def fromDependencies(unneeded: Iterable[balticporter.catalog.ArtifactDep]): PolicyReport =
+    PolicyReport(unneeded.iterator.map { d =>
+      PolicyFinding(DependencySeam, DependencySetting, d.toString,
+        PolicyIssue.NeverApplied,
+        "no API this module EMITS needs this artifact on any platform it targets — remove the entry, " +
+          "or check whether the usage is in a hand-written source this run does not walk")
+    }.toList)
+
+  /** the two strings [[fromDependencies]] files under, named so a reader of `findings.tsv` and a
+    * reader of the manifest are looking at the same words. */
+  val DependencySeam    = "dependencies"
+  val DependencySetting = "PortManifest.dependencies"
+
   /** [[balticporter.tir.NotBound]] → [[PolicyIssue]]. This mapping adds NO case, deliberately: the
     * issue says what the READER should do, and the binder's five reasons are five answers to ONE
     * question — did the key name anything — with only three actions between them (it named nothing,
