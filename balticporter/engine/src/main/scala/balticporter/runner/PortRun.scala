@@ -943,8 +943,14 @@ final case class PortRun(
         // names and was told, for every one of them, that it renames nothing (§4.56's fast-path
         // guard: a guard is derived from ALL of the pass's targets). Read off the same `Option` the
         // phase is built from, so the two cannot disagree about whether this port renames.
+        // …and `offJvm` is the port's own declared non-JVM targets, read off the same accessor
+        // `PortabilityCheck` uses. A descriptor answers a CLASSPATH SCAN, which is a JVM mechanism:
+        // every other backend resolves providers by registration, and the registration a
+        // cross-platform wrapper needs is a trigger this engine does not emit (`ENGINE-LIMITS.md`
+        // P9). Shipping the file and saying nothing would put P5's own silence back on two of the
+        // three platforms this port claims.
         balticporter.tir.ServiceProviders.findings(descriptors, policySubs.dropsType,
-                     renaming = renamesAnything))
+                     renaming = renamesAnything, offJvm = offJvm))
       say(s"SERVICE PROVIDERS: ${descriptors.size} descriptor(s), " +
         s"${descriptors.map(_.providers.size).sum} provider line(s), rewritten into this port's namespace")
       println(balticporter.tir.ServiceProviders.summary(descriptors))

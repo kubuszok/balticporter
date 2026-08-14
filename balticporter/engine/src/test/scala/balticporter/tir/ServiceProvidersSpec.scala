@@ -115,6 +115,43 @@ class ServiceProvidersSpec extends munit.FunSuite:
     assertEquals(flat.count(_.kind == ServiceProviders.Kind.Shipped.slug), 1)
   }
 
+  // -------------------------------------------------------------------------------------------
+  // …and the residue that is about the READER rather than about the file (ENGINE-LIMITS.md P9)
+  // -------------------------------------------------------------------------------------------
+
+  tmp.test("a descriptor shipped by a port with a NON-JVM target is counted unwired — `shipped` alone would say the opposite") { dir =>
+    val f  = descriptor(dir, "p.Spi", "p.impl.Alpha\np.impl.Beta\n")
+    val ds = ServiceProviders.plan(List(f), rename)
+    val fs = ServiceProviders.findings(ds, _ => false, renaming = true,
+      offJvm = Set(balticporter.catalog.Platform.ScalaJs, balticporter.catalog.Platform.ScalaNative))
+    // ONE row per descriptor and not per provider: what is missing is the registration TRIGGER for
+    // the service, which every line of one file shares.
+    val unwired = fs.filter(_.kind == ServiceProviders.Kind.OffJvmUnwired.slug)
+    assertEquals(unwired.size, 1)
+    assertEquals(unwired.head.owner, "p.Spi")
+    assert(clue(unwired.head.detail).contains("Js"))
+    assert(clue(unwired.head.detail).contains("Native"))
+    assert(clue(unwired.head.detail).contains("P9"))
+    // …and the positives are untouched, so the lane still carries its denominator beside the residue.
+    assertEquals(fs.count(_.kind == ServiceProviders.Kind.Shipped.slug), 2)
+  }
+
+  tmp.test("…and a JVM-ONLY port has no such residue: the empty target set is the no-op") { dir =>
+    val f  = descriptor(dir, "p.Spi", "p.impl.Alpha\n")
+    val fs = ServiceProviders.findings(ServiceProviders.plan(List(f), rename), _ => false,
+      renaming = true, offJvm = Set.empty)
+    assertEquals(fs.count(_.kind == ServiceProviders.Kind.OffJvmUnwired.slug), 0)
+    assertEquals(fs.size, 1)
+  }
+
+  tmp.test("an EMPTY descriptor is not also reported unwired — there is no provider for a trigger to reach") { dir =>
+    val f  = descriptor(dir, "p.Spi", "# nothing here\n")
+    val fs = ServiceProviders.findings(ServiceProviders.plan(List(f), rename), _ => false,
+      renaming = true, offJvm = Set(balticporter.catalog.Platform.ScalaJs))
+    assertEquals(fs.count(_.kind == ServiceProviders.Kind.Empty.slug), 1)
+    assertEquals(fs.count(_.kind == ServiceProviders.Kind.OffJvmUnwired.slug), 0)
+  }
+
   tmp.test("a UTF-8 BOM is not part of the first provider's NAME — nor of what this port ships") { dir =>
     // `Files.readAllLines` hands the mark over as the first character of the first line. Left there
     // it is part of the name: the rename does not match it (so the line ships unmoved and is

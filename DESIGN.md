@@ -5521,6 +5521,21 @@ phase, and bridges through `JavaIterator.from`. Every way this redirect can be w
 SLOT WHOSE TWO SIDES DISAGREE and the compiler is the instrument: there is no residue that compiles
 and means something else, which is the case CLAUDE.md §3 says a count has to stand in for.
 
+**…AND THAT CLAIM IS ABOUT THE TYPES, NOT ABOUT THE REGISTRATION — one delta the compiler cannot
+see.** The paragraph above is exact for every MEMBER of the wrapper and says nothing about what its
+`load` FINDS, which is a different question with a different instrument. Java's trigger for a
+descriptor is the CLASSPATH SCAN `load` performs: no code runs first, so a port that ships the
+resource (§8.17) has done everything the JVM needs. Off the JVM there is no scan — both backends
+resolve by REGISTRATION — and the wrapper's registration lives in a generated object body that
+nothing in a ported LIBRARY ever forces: the port emits no entry point, and neither the emitted
+Scala nor the generated build names that object. So on a future JS or Native build `load` answers an
+EMPTY ITERATOR, silently, which is `ENGINE-LIMITS.md` P5's own defect one platform over and
+`CLAUDE.md` §4.4's class-initialiser row read at a generated declaration. Nothing here is wired to
+fix it and nothing in the corpus builds off-JVM yet, so the delta is COUNTED rather than closed:
+`service-providers` files an `off-jvm-unwired` row per descriptor on every port whose `targets`
+reach past the JVM, and `ENGINE-LIMITS.md` P9 names the trigger emission as the future mechanism and
+says what it needs that no manifest key carries.
+
 **What it cost, on the demonstration port**: `remediation` 20 -> 17 (the two `accept-jvm-only`
 refusal rows and the `substitutions-drop` candidate derived from the same findings),
 `portability(all|emitted)` 56 -> 54, `policy` 0 -> 1 (`ENGINE-LIMITS.md` P8 — the declared coordinate

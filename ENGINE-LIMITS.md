@@ -5518,6 +5518,54 @@ lane and appears at `0 -> N` on all fifteen.
 *Fix kind: (a) engine — `DependencyCheck.declarations` (the 2×2, pure), `ArtifactIndex` (the
 provides-set), one new required lane. The port changed nothing.*
 
+### P9. OPEN — the descriptor SHIPS and nothing OFF THE JVM ever reads it: P5's silence, one platform over — **COUNTED, not closed; liqp `service-providers` 2 -> 3**
+
+P5 closed the JVM half of the SPI deliverable: `PortManifest.serviceProviders` emits the
+`META-INF/services` file with both namespaces moved, and a port that ships it has done everything the
+JVM needs. **That is a fact about the JVM's TRIGGER and it does not carry.** `ServiceLoader.load`
+performs a CLASSPATH SCAN — no code has to run first, which is exactly why the resource alone is the
+whole fix there. Scala.js and Scala Native have no scan: both resolve providers by REGISTRATION, and
+the cross-platform wrapper §8.19 maps `java.util.ServiceLoader` onto registers its providers in a
+GENERATED OBJECT BODY, from the same descriptors, at object initialisation.
+
+**Nothing in a ported LIBRARY ever forces that object.** A library has no entry point; the emitted
+Scala names the generated registration object nowhere, and neither does the generated build. So on a
+JS or Native build `PlatformServiceLoader.load` answers an EMPTY ITERATOR — no compile error, no
+moved member digest, no other check count, and a library that turns "not registered" into a plausible
+wrong answer rather than an error. It is P5's own failure mode with the platform changed, and it is
+`CLAUDE.md` §4.4's class-initialiser row (catalog `JS-C07`) read at a declaration a code GENERATOR
+wrote: java initialises a class on the first `new`, the first static access or a subclass's init, and
+a Scala object nothing touches is never initialised at all.
+
+**Two documents said the opposite, and both are corrected in the same commit.** `DESIGN.md` §8.19's
+"every way this redirect can be wrong is a SLOT WHOSE TWO SIDES DISAGREE and the compiler is the
+instrument" — restated verbatim in liqp's `main.conf` — is true of the wrapper's TYPES and false of
+its registration, which has no slot at all. The catalog's p(25) `why` carried the same claim by
+implication and now names the delta.
+
+**What ships instead is the COUNT, which is the only honest state while the wiring does not exist.**
+`ServiceProviders.findings` takes the port's declared non-JVM targets and files ONE
+`off-jvm-unwired` row per descriptor — per descriptor and not per provider, because what is missing
+is the registration trigger for the SERVICE, which every line of one file shares. The lane therefore
+cannot read `shipped` while a declared target cannot see the providers, which is precisely the
+`shipped`-as-denominator argument P5 built the positive row for, read one question over. `Set.empty`
+is the no-op, so a `targets = ["jvm"]` port reports nothing here and is not being told about a
+platform it does not build for.
+
+**WHY THE WIRING IS NAMED AND NOT BUILT**, both halves stated because either alone reads as an
+excuse: no corpus port builds off the JVM yet, so a trigger emitted today would be measured by
+nothing; and the emission needs the FQN OF THE GENERATED REGISTRATION OBJECT, which is
+multiarch-serviceloader's codegen's to choose and which no manifest key carries — the port declares
+the DESCRIPTOR (`serviceProviders`) and the COORDINATE (`dependencies`), and neither names a
+generated type. The mechanism when it is built is K22's, unchanged: a `val _ = <RegistrationObject>`
+forced ahead of the first use, at the emitted surrogate for the java class initialiser this port
+already emits — plus a §1(b) key for the object's FQN, since which type a wrapper generates is not a
+fact about java.
+
+*Fix kind: (a) engine for the count — SHIPPED. (a) engine + (b) one new manifest key for the trigger
+— OPEN. The port-side workaround is `targets = ["jvm"]`, which is a statement about the module and
+not a silencer.*
+
 ---
 
 ## 6. Porting a test suite

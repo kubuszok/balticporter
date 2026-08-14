@@ -36,6 +36,18 @@ import java.nio.file.{Files, Path}
   *     legitimate (a provider genuinely outside the renamed namespace) and it is also exactly what a
   *     stale descriptor looks like, so the engine states the fact and the port decides.
   *
+  * ==…and a FOURTH, which is about what the descriptor CANNOT do off the JVM==
+  * The three above are about the file's CONTENT. The fourth is about its READER, and it is the
+  * defect this whole object closes, resurrected one platform over. The JVM's trigger for a
+  * descriptor is `ServiceLoader.load` performing a CLASSPATH SCAN — no code has to run first. Off
+  * the JVM there is no scan: Scala.js and Scala Native resolve providers by REGISTRATION, and a
+  * cross-platform wrapper's registration lives in a generated object body that nothing in a ported
+  * LIBRARY ever forces (`DESIGN.md` §8.19, `ENGINE-LIMITS.md` P9, catalog `JS-C07`'s trigger-list
+  * rule read one artifact over). So a port that ships a descriptor AND declares a non-JVM target has
+  * a `load` that answers an EMPTY iterator on that backend, silently, exactly as P5's absent file
+  * did on the JVM — and the wiring that would fix it is not built, so the residue is COUNTED and the
+  * lane cannot read `shipped` while a declared target cannot see the providers.
+  *
   * ==Format==
   * The JDK's own (`ServiceLoader`'s specification): UTF-8, one binary class name per line, `#`
   * begins a comment, blank lines and surrounding whitespace ignored. Comments and blank lines are
@@ -64,6 +76,9 @@ object ServiceProviders:
     case Unrenamed
     /** the file holds no provider line at all. */
     case Empty
+    /** the descriptor SHIPS and a declared non-JVM target cannot read it — see the object doc's
+      * fourth residue. Not a defect in the file; a defect in what reads it. */
+    case OffJvmUnwired
 
     def slug: String = this match
       case Shipped         => "shipped"
@@ -71,6 +86,7 @@ object ServiceProviders:
       case DroppedService  => "dropped-service"
       case Unrenamed       => "unrenamed"
       case Empty           => "empty"
+      case OffJvmUnwired   => "off-jvm-unwired"
 
   /** ONE provider line, in both namespaces. `comment` is a line that is not a provider at all —
     * carried so the emitted file can be reproduced without a second parse. */
@@ -152,8 +168,15 @@ object ServiceProviders:
     *
     * `renames` is asked only for the [[Kind.Unrenamed]] row and is a BOOLEAN question — does this
     * port move anything at all — so a port with no rename policy does not report every line of every
-    * descriptor as unmoved. */
-  def findings(ds: List[Descriptor], isDropped: String => Boolean, renaming: Boolean): List[CheckReport.Finding] =
+    * descriptor as unmoved.
+    *
+    * `offJvm` is the port's own DECLARED non-JVM targets (`PortManifest.targets` minus
+    * `Platform.Jvm`), and it produces one [[Kind.OffJvmUnwired]] row PER DESCRIPTOR rather than per
+    * provider: the missing thing is the registration TRIGGER for the service, which every line of
+    * one file shares. Empty is the no-op — a JVM-only port ships a descriptor the JVM reads and has
+    * no residue here at all. */
+  def findings(ds: List[Descriptor], isDropped: String => Boolean, renaming: Boolean,
+               offJvm: Set[balticporter.catalog.Platform] = Set.empty): List[CheckReport.Finding] =
     ds.flatMap { d =>
       val path = CheckReport.relativise(d.source.toString)
       def row(kind: Kind, owner: String, line: Int, detail: String) =
@@ -166,6 +189,26 @@ object ServiceProviders:
               "emitted code does not declare — drop the descriptor with it, or keep the type " +
               "[§1(b): `Substitutions.dropTypes` and `serviceProviders` disagree about one type]"))
         else Nil
+
+      // THE TRIGGER, not the file — one row per descriptor, and reported even where every line of it
+      // is perfect. `shipped` is a claim about the RESOURCE and says nothing about whether anything
+      // reads it, which is precisely how P5's defect could return: the JVM's reader scans the
+      // classpath and needs no code to run first, and every other backend needs a registration this
+      // engine does not yet emit.
+      val offJvmRow =
+        if offJvm.isEmpty || d.providers.isEmpty then Nil
+        else
+          val ps = offJvm.toList.map(_.toString).sorted.mkString(", ")
+          List(row(Kind.OffJvmUnwired, d.upstreamService, 0,
+            s"`${d.target}` is shipped for JVM discovery, and this port declares $ps — where there " +
+              "is NO classpath scan and providers resolve by REGISTRATION. The wrapper's " +
+              "registration sits in a generated object body that nothing in a ported library ever " +
+              "forces, so `load` answers an EMPTY iterator on those backends with no compile error " +
+              "and no other count — P5's defect one platform over. UNWIRED, not broken: the " +
+              "trigger emission is named as future work rather than built " +
+              "[§1(a) ENGINE: `ENGINE-LIMITS.md` P9, `DESIGN.md` §8.19 — narrow `targets` to " +
+              "`[jvm]` if this module is not built off the JVM, which is a statement and not a " +
+              "silencer]"))
 
       val empty =
         if d.providers.isEmpty then
@@ -193,7 +236,7 @@ object ServiceProviders:
                    "[§1(b): confirm against `packageRenames`/`typeRenames`]"))
              else Nil)
       }
-      service ++ empty ++ perLine
+      service ++ empty ++ offJvmRow ++ perLine
     }
 
   /** WRITE the planned descriptors under `resourceRoot`, returning what was written.

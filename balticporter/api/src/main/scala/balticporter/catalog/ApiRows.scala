@@ -525,7 +525,7 @@ object ApiRows:
     row(p(25), "java.util.ServiceLoader", false,
       (Full, Keep), (Absent, Depend(MultiArchSpi)),
       (Partial("real, but `load` is a LINK-TIME intrinsic that only accepts a literal classOf, so no Class-taking wrapper can call it"), Depend(MultiArchSpi)), JsNative,
-      "the two platforms need DIFFERENT verdicts about what EXISTS and the same one about what to do — one artifact answers both, and a Native-only port still learns that its gap is narrower"),
+      "the two platforms need DIFFERENT verdicts about what EXISTS and the same one about what to do — one artifact answers both, and a Native-only port still learns that its gap is narrower; and the artifact answers the TYPES only, because off the JVM there is no classpath scan and the wrapper's registration is an object body a ported library never forces, which is COUNTED as `service-providers(off-jvm-unwired)` rather than closed (ENGINE-LIMITS.md P9)"),
     row(p(26), "java.security.MessageDigest", false,
       (Full, Keep), (Absent, Depend(CrossCrypto)), (Absent, Depend(NativeCrypto)), JsNative,
       "the exception types exist so catch sites still compile while nothing throws them from a working digest, and both platforms push to a third-party library — but the JS coordinate is published for SCALA 2.12/2.13 ONLY, so a Scala 3 port taking that half of the advice resolves nothing and needs another artifact or an override"),
