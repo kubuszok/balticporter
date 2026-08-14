@@ -680,7 +680,24 @@ final case class PortRun(
     // so an entry naming an artifact nothing here needs leaves every number on this lane exactly
     // where it was. It is a declared key that fired on nothing, so it goes where every other one
     // goes — the `policy` lane, folded in below where that report is assembled.
-    val unneededDeps = DependencyCheck.unneeded(ownRequired, declaredDeps)
+    //
+    // ASKED OF TWO PROGRAMS, which is what closed ENGINE-LIMITS P8. The walk above enumerates JDK
+    // usages, and a `Verdict.Depend` is answered by declaring the artifact AND REDIRECTING INTO IT
+    // (DESIGN.md §8.19) — the redirect is what removes the usage, so after it runs the coordinate the
+    // port needs most reads as the one that fired on nothing, and the instruction says remove it. The
+    // pre-pipeline program is where that usage still is, and the artifact's own class list is where
+    // the emitted reference is; `DependencyCheck.declarations` is the 2×2 over the two. Note this is
+    // provably one-directional: the emitted column is a SUPERSET of the test that used to be the
+    // whole answer, so a `policy` row can only turn off.
+    val beforeRequired = DependencyCheck.inEmittedCode(translated.parsed,
+      DependencyCheck.requirements(translated.parsed, targets, verdictOverrides), notShipped)
+    val beforeExternal = ExternalUsage.external(translated.parsed, notShipped)
+    val externalAll     = ExternalUsage.all(program).filterNot(r => program.owns(r.symbol))
+    val externalEmitted = ExternalUsage.external(program, notShipped)
+    val declaredCells = DependencyCheck.declarations(declaredDeps,
+      beforeRequired, beforeExternal, ownRequired, externalEmitted,
+      ArtifactIndex.supplier(ArtifactIndex.defaultCacheDir))
+    val unneededDeps = DependencyCheck.unneeded(declaredCells)
     locally {
       given Program = program
       // TWO numbers, for `portability(all|emitted)`'s reason: the residue alone cannot distinguish
@@ -690,6 +707,9 @@ final case class PortRun(
       CheckReport.record(DependencyCheck.All,
                          DependencyCheck.report(allRequired, declaredDeps, DependencyCheck.All))
       CheckReport.record(DependencyCheck.Name, DependencyCheck.report(needed, declaredDeps))
+      // …and the THIRD, which counts DECLARATIONS: `policy = 0` here is a bar a port holds by
+      // declaring nothing, and an artifact a phase redirected into has no row on either lane above.
+      CheckReport.record(DependencyCheck.Declared, DependencyCheck.reportDeclared(declaredCells))
     }
     say(s"DEPENDENCY COVERAGE: ${needed.size} site(s) needing an artifact this build does not name" +
       s" (of ${allRequired.size} the walk found)" +
@@ -697,6 +717,9 @@ final case class PortRun(
       s" (${declaredDeps.size} declared)")
     if needed.nonEmpty then say(DependencyCheck.Classification)
     println(DependencyCheck.summary(needed))
+    if declaredCells.nonEmpty then
+      say(s"DECLARED ARTIFACTS: ${declaredCells.count(_.cell.keep)} of ${declaredCells.size} still needed")
+      declaredCells.foreach(d => println(s"  ${d.render}"))
 
     // ---- the port's JDK WALL, classified — DESIGN.md §8.9 ----
     // Second consumer of the enumeration `PortabilityCheck` just used, with no new traversal. The
@@ -708,8 +731,7 @@ final case class PortRun(
     // the retyping phase in the pipeline an unmapped member on a retyped owner is a hole the phase
     // MADE; with the phase absent — which noise4j chooses deliberately — the same member is JDK code
     // the port KEPT, and the row says only that a mapping exists if the port wants it.
-    val externalAll     = ExternalUsage.all(program).filterNot(r => program.owns(r.symbol))
-    val externalEmitted = ExternalUsage.external(program, notShipped)
+    // (`externalAll`/`externalEmitted` are computed above, where the dependency 2×2 needed them.)
     val jdkMapping      = CollectionsTransform.jdkMapping(
       ran = effectivePhases.exists(_.isInstanceOf[CollectionsTransform]))
     val jdkClassified   = JdkSurfaceCheck.classify(externalEmitted, jdkMapping)
@@ -3028,6 +3050,12 @@ object PortRun:
     // The PAIR is required for `portability(all|emitted)`'s reason on top of that — a dependent's
     // honest 0 and a walk that found nothing are one row until the enumeration is beside it.
     DependencyCheck.All, DependencyCheck.Name,
+    // …and the DECLARATIONS beside the two usage lanes, for the trivia family's reason one artifact
+    // over: the `policy` residue that used to be the only evidence here is a bar a port meets by
+    // declaring nothing, and an artifact a phase redirected INTO has no row on either lane above at
+    // all (ENGINE-LIMITS.md P8). Required of a port that declares none, which records 0 — a fact
+    // about that port, and `jdk-surface`'s own argument for being unconditional.
+    DependencyCheck.Declared,
     // …and the standing question every RETYPING phase owes (`Rewrite`, ENGINE-LIMITS K5.6).
     // Required of EVERY port, including one whose pipeline retypes nothing: the check reports the
     // pipeline's own phases, so a run with no retyping phase and a run whose check never ran are

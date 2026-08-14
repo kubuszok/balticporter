@@ -88,34 +88,162 @@ class DependencyCoverageSpec extends munit.FunSuite:
     assertEquals(DependencyCheck.uncovered(List(req), List(dep.copy(name = "something-else"))).size, 1)
   }
 
+  // ---- the 2×2 (ENGINE-LIMITS.md P8) --------------------------------------------------------
+  //
+  // "Does this coordinate answer anything?" was asked of ONE program, and the answer is exact for a
+  // copied coordinate and WRONG for one a phase redirected INTO — the redirect removes the very JDK
+  // usage the coordinate answers, so the artifact the port needs most reads as the one that fired on
+  // nothing. All four cells below, plus the arm where the artifact's jar cannot be read at all.
+
+  private val Time    = ArtifactDep("io.github.cquiroz", "scala-java-time", "2.6.0")
+  private val Wrapper = ArtifactDep("org.example", "wrapper", "1.0")
+
+  /** one requirement naming `dep`, as the catalog-row walk produces them. */
+  private def req(dep: ArtifactDep) =
+    val row = ApiRows.byId(DiffId(balticporter.catalog.Area.L, 60))
+    DependencyCheck.Requirement(
+      PortabilityCheck.all.find(_.api == "java.time.").get, row,
+      Map(Platform.ScalaJs -> dep, Platform.ScalaNative -> dep),
+      "java.time.Instant", Origin.synthetic, UsageKind.MemberType, SymId.None)
+
+  /** an external TYPE row, as `ExternalUsage.all` produces one: `owner` is None for a type, so the
+    * name the provides-set is matched against is `fullName` itself. */
+  private def typeRow(fqn: String) =
+    ExternalUsage.Row(SymId.None, fqn, scala.None, fqn.split('.').last, scala.None,
+      List(Usage(UsageKind.MemberType, Tree.Literal(Constant.NullC, TypeRepr.NoType, Origin.synthetic))))
+
+  private def known(fqns: String*): ArtifactDep => DependencyCheck.Provides =
+    _ => DependencyCheck.Provides.Known(fqns.toSet)
+
+  private def cellOf(before: List[DependencyCheck.Requirement], beforeExt: List[ExternalUsage.Row],
+                     after: List[DependencyCheck.Requirement], afterExt: List[ExternalUsage.Row],
+                     dep: ArtifactDep, provides: ArtifactDep => DependencyCheck.Provides) =
+    DependencyCheck.declarations(List(dep), before, beforeExt, after, afterExt, provides).head
+
+  test("2×2 yes/yes — COVERED: the ordinary case, and the one today's single walk already got right") {
+    val d = cellOf(List(req(Time)), Nil, List(req(Time)), Nil, Time, known())
+    assertEquals(d.cell, DependencyCheck.Cell.Covered)
+    assert(d.cell.keep)
+    assertEquals(DependencyCheck.unneeded(List(d)), Nil)
+  }
+
+  test("2×2 no/yes — INTRODUCED: a phase redirected INTO the artifact, and the entry must STAY") {
+    // the pre-pipeline program uses nothing this artifact answers; the emitted program names one of
+    // its classes outright, because a `type-redirect` put it there (DESIGN.md §8.19). Today's check
+    // reports this as a coordinate that fired on nothing and tells the reader to remove it, which
+    // emits a build that cannot resolve the code the redirect wrote.
+    val emitted = List(typeRow("org.example.wrapper.Providers"))
+    val d = cellOf(Nil, Nil, Nil, emitted, Wrapper, known("org.example.wrapper.Providers"))
+    assertEquals(d.cell, DependencyCheck.Cell.Introduced)
+    assert(d.cell.keep, "the coordinate the emitted code names must never be reported as removable")
+    assertEquals(DependencyCheck.unneeded(List(d)), Nil)
+    // …and it is now VISIBLE, which is the other half of P8: both usage lanes were blind to it.
+    assertEquals(DependencyCheck.reportDeclared(List(d)).map(_.kind), List("introduced by translation"))
+  }
+
+  test("2×2 yes/no — STALE: the port rewrote away its last usage, and the remove instruction is right") {
+    // the case the pre-pipeline-only walk would have LOST — which is why the fix is a pair of
+    // programs and not a better single one.
+    val d = cellOf(List(req(Time)), Nil, Nil, Nil, Time, known())
+    assertEquals(d.cell, DependencyCheck.Cell.Stale)
+    assert(!d.cell.keep)
+    assertEquals(DependencyCheck.unneeded(List(d)).map(_._1), List(Time))
+    assert(DependencyCheck.unneeded(List(d)).head._2.contains("rewrote away the last usage"))
+  }
+
+  test("2×2 no/no — UNUSED: copied from another module, and the remove instruction is right") {
+    val d = cellOf(Nil, Nil, Nil, Nil, Time, known())
+    assertEquals(d.cell, DependencyCheck.Cell.Unused)
+    assert(!d.cell.keep)
+    assertEquals(DependencyCheck.unneeded(List(d)).map(_._1), List(Time))
+  }
+
+  test("…and an UNREADABLE jar is a THIRD value, never a `no`") {
+    // §4.6: a default the caller cannot tell from a real answer is a fabricated fact. Read as "the
+    // artifact provides nothing" an offline run invents a remove instruction for a live coordinate;
+    // read as "it provides everything" it silences every genuinely stale one. So the cell says so,
+    // and it KEEPS — a run that knows less does not get to give an instruction.
+    val d = cellOf(Nil, Nil, Nil, Nil, Wrapper,
+      _ => DependencyCheck.Provides.Unverifiable("no network"))
+    assertEquals(d.cell, DependencyCheck.Cell.Unverifiable)
+    assert(d.cell.keep)
+    assertEquals(DependencyCheck.unneeded(List(d)), Nil)
+    assert(d.emitted.why.contains("no network"), d.emitted.why)
+  }
+
+  test("the CATALOG half is asked first, so a covered coordinate resolves NOTHING") {
+    // not an optimisation: it is what keeps fourteen of fifteen ports off the network entirely, and
+    // it is why this change cannot move a port that declares only catalog-answered artifacts.
+    var asked = 0
+    val d = cellOf(List(req(Time)), Nil, List(req(Time)), Nil, Time,
+      { _ => asked += 1; DependencyCheck.Provides.Unverifiable("must not be reached") })
+    assertEquals(d.cell, DependencyCheck.Cell.Covered)
+    assertEquals(asked, 0)
+  }
+
+  test("the emitted column is a SUPERSET of the old test — a finding can only turn OFF") {
+    // the flatness argument, mechanised: wherever the old `unneeded` was silent (a requirement named
+    // the artifact) the new one is silent too, whatever the provides-set says.
+    val silentBefore = List(req(Time))
+    List(known(), known("anything.at.All"), (_: ArtifactDep) => DependencyCheck.Provides.Unverifiable("x"))
+      .foreach { p =>
+        assertEquals(DependencyCheck.unneeded(
+          DependencyCheck.declarations(List(Time), Nil, Nil, silentBefore, Nil, p)), Nil)
+      }
+  }
+
+  test("a NESTED class matches at a SEPARATOR and never by prefix") {
+    // the provides-set holds every enclosing prefix, so the test is equality (§4.56). A jar declaring
+    // `a.b.Outer` must not answer for `a.b.OuterThing`.
+    val d = cellOf(Nil, Nil, Nil, List(typeRow("a.b.OuterThing")), Wrapper, known("a.b.Outer"))
+    assertEquals(d.cell, DependencyCheck.Cell.Unused)
+    val nested = cellOf(Nil, Nil, Nil, List(typeRow("a.b.Outer$Inner")), Wrapper,
+      known("a.b.Outer", "a.b.Outer$Inner"))
+    assertEquals(nested.cell, DependencyCheck.Cell.Introduced)
+  }
+
+  test("a MEMBER row is asked about its OWNER — the jar declares types, not members") {
+    val member = ExternalUsage.Row(SymId.None, "org.example.wrapper.Providers#load",
+      Some("org.example.wrapper.Providers"), "load", scala.None,
+      List(Usage(UsageKind.Call, Tree.Literal(Constant.NullC, TypeRepr.NoType, Origin.synthetic))))
+    val d = cellOf(Nil, Nil, Nil, List(member), Wrapper, known("org.example.wrapper.Providers"))
+    assertEquals(d.cell, DependencyCheck.Cell.Introduced)
+  }
+
+  test("a port that declares NOTHING records an honest zero on the declared lane") {
+    assertEquals(DependencyCheck.declarations(Nil, Nil, Nil, Nil, Nil, known()), Nil)
+    assertEquals(DependencyCheck.reportDeclared(Nil), Nil)
+  }
+
   test("…and a declaration that covers NOTHING is a policy finding, not silence") {
     // The direction the lane itself cannot show: coverage SUBTRACTS, so an entry naming an artifact
     // no requirement wants leaves `dependency-coverage` exactly where it was — 0 before, 0 after —
     // and the port ships a jar on every backend for a call it does not make.
     val time    = ArtifactDep("io.github.cquiroz", "scala-java-time", "2.6.0")
     val locales = ArtifactDep("io.github.cquiroz", "scala-java-locales", "1.5.4")
-    val row     = ApiRows.byId(DiffId(balticporter.catalog.Area.L, 60))
-    val req = DependencyCheck.Requirement(
-      PortabilityCheck.all.find(_.api == "java.time.").get, row,
-      Map(Platform.ScalaJs -> time, Platform.ScalaNative -> time),
-      "java.time.Instant", Origin.synthetic, UsageKind.MemberType, SymId.None)
+    def unneeded(declared: List[ArtifactDep], reqs: List[DependencyCheck.Requirement]) =
+      DependencyCheck.unneeded(
+        DependencyCheck.declarations(declared, reqs, Nil, reqs, Nil, known())).map(_._1)
     // the one the requirement names is NOT reported, whatever version the port pinned
-    assertEquals(DependencyCheck.unneeded(List(req), List(time)), Nil)
-    assertEquals(DependencyCheck.unneeded(List(req), List(time.copy(rev = "9.9.9"))), Nil)
+    assertEquals(unneeded(List(time), List(req(time))), Nil)
+    assertEquals(unneeded(List(time.copy(rev = "9.9.9")), List(req(time))), Nil)
     // the one nothing names IS, and only that one
-    assertEquals(DependencyCheck.unneeded(List(req), List(time, locales)), List(locales))
+    assertEquals(unneeded(List(time, locales), List(req(time))), List(locales))
     // a port that declares nothing has nothing to answer for — the empty parameter is the no-op
-    assertEquals(DependencyCheck.unneeded(List(req), Nil), Nil)
+    assertEquals(unneeded(Nil, List(req(time))), Nil)
     // …and with no requirement at all, every declaration is one (the shape a port reaches after an
     // upstream change removes the last call, which nothing else in the run can see)
-    assertEquals(DependencyCheck.unneeded(Nil, List(time)), List(time))
+    assertEquals(unneeded(List(time), Nil), List(time))
 
     // and its CLASSIFICATION, which is `core`'s half: `NeverApplied` rather than either neighbour —
     // the entry is well formed and names a real artifact, and what did not happen is the requirement.
-    val report = balticporter.core.PolicyReport.fromDependencies(List(locales))
+    val report = balticporter.core.PolicyReport.fromDependencies(List(locales -> "unused — remove it"))
     assertEquals(report.findings.map(_.issue), List(balticporter.core.PolicyIssue.NeverApplied))
     assertEquals(report.findings.map(_.key), List(locales.toString))
     assertEquals(report.findings.map(_.setting), List("PortManifest.dependencies"))
+    // …and the DETAIL is the CHECK's sentence now, so the reader is told WHICH removable cell they
+    // are in rather than one paragraph naming a blind spot nothing had closed.
+    assertEquals(report.findings.map(_.detail), List("unused — remove it"))
   }
 
   test("an empty target set makes BOTH lanes no-ops") {

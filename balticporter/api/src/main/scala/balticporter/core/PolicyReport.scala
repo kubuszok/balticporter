@@ -145,17 +145,16 @@ object PolicyReport:
     * The key is the coordinate as [[balticporter.catalog.ArtifactDep]] itself renders one — the
     * same spelling the `dependency-coverage` findings print, so the entry a reader removes and the
     * requirement they were told about are one string apart. */
-  def fromDependencies(unneeded: Iterable[balticporter.catalog.ArtifactDep]): PolicyReport =
-    PolicyReport(unneeded.iterator.map { d =>
-      PolicyFinding(DependencySeam, DependencySetting, d.toString,
-        PolicyIssue.NeverApplied,
-        "no API this module EMITS needs this artifact on any platform it targets — remove the entry, " +
-          "or check whether the usage is in a hand-written source this run does not walk, or whether " +
-          "a SURFACE PHASE of this port redirected it: a `type-redirect` or `call-site-substitution` " +
-          "INTO this artifact removes the very JDK usage the coordinate answers, so the emitted code " +
-          "names the artifact directly and this walk — which enumerates JDK usages, not emitted " +
-          "references — cannot see it. Removing the entry there emits a build that cannot resolve " +
-          "the code the redirect wrote (ENGINE-LIMITS.md P8)")
+  /** …and the DETAIL is the CHECK's sentence, not this function's.
+    *
+    * It used to be one paragraph written here, and most of that paragraph was a caveat: *or a surface
+    * phase redirected into it, in which case do not remove it* — the blind spot named rather than
+    * closed (`ENGINE-LIMITS.md` P8). With the check reading both programs, the reader is in exactly
+    * one of two removable cells and each wants a different investigation, so the sentence is the one
+    * `DependencyCheck.Cell` carries and this function does not get to have an opinion about it. */
+  def fromDependencies(unneeded: Iterable[(balticporter.catalog.ArtifactDep, String)]): PolicyReport =
+    PolicyReport(unneeded.iterator.map { (d, why) =>
+      PolicyFinding(DependencySeam, DependencySetting, d.toString, PolicyIssue.NeverApplied, why)
     }.toList)
 
   /** the two strings [[fromDependencies]] files under, named so a reader of `findings.tsv` and a
