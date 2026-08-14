@@ -5416,3 +5416,25 @@ silently does nothing is what §1 refuses); a `dropMethods`-scale drop of only t
 (`Remediator` observes the ratio rather than thresholding it, because "nothing calls them" is the
 port's judgement about its own consumers); and a table `class-table` could invent (a redirect with no
 destination leaves the lookup reflective and the port JVM-only with nothing said).
+
+### 8.19 Platform-divergent JDK FAMILIES map to `multiarch-scala` — the decision, ahead of its build
+
+The maintainer's ruling (2026-08-14), recorded before any code exists so the scoping does not
+re-open it: where a JDK family exists on all three platforms but with DIFFERENT mechanics —
+`java.util.ServiceLoader` is the first instance; JNI-adjacent loading is the standing second — the
+port's mapping target is a cross-platform wrapper in **multiarch-scala** (`../multiarch-scala`,
+`com.kubuszok`), not a per-port shim and not a JVM-only acceptance. The split follows §1 exactly:
+
+- the WRAPPER is multiarch-scala's deliverable — built-in delegation on JVM and Scala Native
+  (Native's `ServiceLoader` support rides linker config, which its sbt plugins already own), a
+  registration shim on Scala.js fed from the same `META-INF/services` descriptors §8.17 already
+  ships. Its `panama-api`/`panama-jdk` modules are likewise the JVM half of the recorded
+  JNI-is-never-carried posture (`CLAUDE.md` §1.5);
+- the TRANSFORMER is this engine's — a §1(b) redirect from the JDK family to the wrapper, in the
+  same class as `scala-java-time` in the catalog's `Depend` rows: an infrastructure artifact the
+  engine may name, parameterised only by what cannot be derived. The catalog rows for the family
+  then carry the honest off-JVM verdict (`Depend` on multiarch's artifact + redirect) instead of
+  JVM-only;
+- liqp is the demonstration port: `SPIHelper#findProviders` currently holds the
+  `accept-jvm-only` targets-contradiction refusal (`ENGINE-LIMITS.md` P6), which this mapping is
+  what discharges.
