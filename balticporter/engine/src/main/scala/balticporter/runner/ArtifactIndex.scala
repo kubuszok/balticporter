@@ -62,10 +62,17 @@ object ArtifactIndex:
       case CrossKind.Scala | CrossKind.Platform => s"${d.name}_$scalaBinary"
     s"${d.org}:$artifact:${d.rev}"
 
-  /** …and the whole invocation, which is also the cache fingerprint. */
+  /** …and the whole invocation, which is also the cache fingerprint.
+    *
+    * `--intransitive` comes AFTER the repositories and not before, which is not style: `cs` reads
+    * everything after that flag as a MODULE, so `--intransitive -r <url>` fails with
+    * *malformed module: -r* — a resolution failure, which this object reports honestly as
+    * `Unverifiable` and which is therefore exactly the shape that would have shipped as a permanent
+    * unknown on the one port that needs the answer. Measured: liqp's coordinate read `unverifiable`
+    * on the first live run with the flags the other way round. */
   def command(d: ArtifactDep, scalaBinary: String = "3"): List[String] =
-    List("cs", "fetch", "--intransitive") ++
-      d.resolver.toList.flatMap(r => List("-r", r)) ++ List(coordinate(d, scalaBinary))
+    List("cs", "fetch") ++ d.resolver.toList.flatMap(r => List("-r", r)) ++
+      List("--intransitive", coordinate(d, scalaBinary))
 
   /** every class an entry NAMES, as `Symbol.fullName` spells it, with each enclosing prefix beside it.
     *

@@ -41,7 +41,11 @@ class ArtifactIndexSpec extends munit.FunSuite:
     // `scala.*`, and every port then "references" every coordinate it declares.
     val cmd = ArtifactIndex.command(ArtifactDep("o", "n", "1", CrossKind.Platform, Some("https://r")))
     assert(cmd.contains("--intransitive"), cmd.mkString(" "))
-    assertEquals(cmd, List("cs", "fetch", "--intransitive", "-r", "https://r", "o:n_3:1"))
+    // …and it comes AFTER the repositories: `cs` reads everything past that flag as a MODULE, so the
+    // other order fails with `malformed module: -r`, which this object reports as `Unverifiable` —
+    // a permanent unknown on the one port that needs the answer, and the shape a spec must pin.
+    assertEquals(cmd, List("cs", "fetch", "-r", "https://r", "--intransitive", "o:n_3:1"))
+    assert(cmd.indexOf("--intransitive") > cmd.indexOf("-r"))
   }
 
   test("an entry names its class and EVERY ENCLOSING PREFIX, cut only at `$`") {

@@ -5528,3 +5528,63 @@ is invisible to a walk that enumerates JDK usages, because the redirect removed 
 `rewrite-callsites` 0 -> 1 (`type-redirect` names no accounting lane, the row libGDX core and screens
 have carried since they gained the phase), two member digests, 0 errors and 636 passing / 1 expected
 failure unchanged.
+
+### 8.20 What an ARTIFACT provides is READ FROM THE ARTIFACT — the provides-set, and the 2×2 it feeds
+
+`PortManifest.dependencies` is checked in both directions: a requirement no coordinate covers
+(`dependency-coverage`), and a coordinate no requirement wants (`policy`). The second was asked of ONE
+program — the one the run emits — which is exact for a coordinate copied from another module and
+wrong for the shape §8.19 introduced: a `Verdict.Depend` is answered by declaring the artifact AND
+REDIRECTING INTO IT, and the redirect is what removes the JDK usage the coordinate answers. The port's
+most load-bearing coordinate therefore read as the one that fired on nothing, and the finding said
+*remove it* (`ENGINE-LIMITS.md` P8, where the numbers and the three rejected candidates live).
+
+**The decision (maintainer, 2026-08-14) is that the entry's state is a PAIR, not a walk.** Does the
+PRE-pipeline code use the artifact, × does the EMITTED code use it — four cells, and the asymmetry
+between the axes is the part worth stating: the EMITTED column alone decides keep-or-remove, and the
+ORIGINAL column decides which SENTENCE the reader gets (`Stale` and `Unused` want different
+investigations; `Introduced` has to say that a phase of this port put the artifact there, or it reads
+as `Covered`). A better single walk cannot produce that, which is why running the old test
+pre-pipeline was rejected rather than adopted.
+
+**And the piece that had no mechanism is the PROVIDES-SET.** To answer the emitted column you must
+know which symbols an artifact provides, and there is no structural link between `org:name` and a
+package name — deriving one is §4.56's hazard at a build coordinate, which is exactly why P8 stood
+open. `ArtifactIndex` reads it **from the artifact**: resolve the coordinate, enumerate the jar's
+class entries, and match a program's external references against that set. The jar is the one
+authority on what the jar provides, so nothing is guessed and no manifest key is invented — which
+matters because a second key linking coordinate to package would be a second spelling of a decision
+the coordinate and the redirect already state twice (§1.5).
+
+Five properties that are decisions rather than implementation:
+
+- **`--intransitive`**, or the set is `scala-library` and every port references every coordinate;
+- **the coordinate is built EXPLICITLY** — `org:name_3:rev`, never `cs`'s `::`, whose suffix is an
+  ambient fact about the machine. Two checkouts reading two different jars is a divergence with every
+  count agreeing, which §5 exists to make impossible;
+- **the JVM jar, and the limit stated out loud.** A platform-crossed artifact publishes three, and
+  their shared API surface is what the JVM listing approximates — `scala-java-time_sjs1_3` exists so
+  `java.time.Instant` resolves off the JVM and declares the same types. A class published on ONE
+  backend only is one this does not see; nothing in the corpus has that shape, and this is the
+  sentence it would contradict;
+- **THREE-valued.** A jar that cannot be fetched is `Unverifiable` — neither "provides it" nor "does
+  not". Collapsed either way it is §4.6's fabricated fact (an offline run inventing a remove
+  instruction, or a silence over a real stale coordinate), so the cell keeps and gives no advice. Note
+  this is the OPPOSITE arm from `ClasspathCache`'s, where a fetch failure is FATAL, and the difference
+  is what the value decides: a frontend with no classpath resolves WRONGLY rather than failing, while
+  this decides one column of one check;
+- **the catalog half first.** The jar is consulted only where the old test would already have
+  reported, so fourteen of fifteen ports touch no network and the emitted column is a strict SUPERSET
+  of what `unneeded` used to read — the change can turn a finding off and never on. That is a spec,
+  not a claim.
+
+The listing is cached beside its own invocation under `.balticporter/` on `ClasspathCache`'s
+fingerprint discipline and for its reason: a cache keyed on existence alone answers `yes` after a
+coordinate bump, and the port is then checked against the classes it used to declare. It is not the
+same object because the engine cannot depend on `corpus`, which is where that one lives.
+
+**`dependency-coverage(declared)` is the positive beside the residue**, required of every run: one row
+per declared coordinate naming its cell and the evidence for each half. The trivia family's argument
+one lane over — `policy = 0` on this seam is a bar a port meets by declaring nothing, and an artifact a
+phase redirected into had no row on either usage lane at all, which is precisely how P8 stayed
+invisible for the life of the port that had it.

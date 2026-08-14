@@ -708,8 +708,8 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   Each prints, untruncated and diffed against the committed baseline, **every engine check the
   run's own pipeline registers, plus any check the port's own §1(c) rules register**. The total is
   not a constant to memorise — quoting one is what went stale twice; it
-  is the TWENTY-SEVEN required of every run (`signature`, `omissions`,
-  `portability(all|emitted|injected)`, `dependency-coverage(all|)`, `substitution(emitted|dangling)`,
+  is the TWENTY-EIGHT required of every run (`signature`, `omissions`,
+  `portability(all|emitted|injected)`, `dependency-coverage(all|declared|)`, `substitution(emitted|dangling)`,
   `remediation`, `policy`,
   `manifest`, `port-map`, `trivia(|recovered|deliberate)`, `jdk-surface`, `base-surface`,
   `rewrite-callsites`, `idiom(converted|refused|residue)`,
@@ -738,8 +738,8 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   a baseline diffs and that number was a `println` in one spec beside `assert(uncited <= all)`, which
   no registry can fail. It is never asserted on: a spec that failed on it is a spec somebody silences
   by INVENTING a citation, which is worse than the gap.
-  **`dependency-coverage` is the twenty-second and twenty-third and is the OTHER half of
-  `portability(*)`, not a
+  **`dependency-coverage` is the twenty-second, twenty-third and twenty-fourth and is the OTHER half
+  of `portability(*)`, not a
   subset of it**: half of the platform matrix's answers are that the API EXISTS off the JVM, in an
   artifact the build does not name, and a build-graph fact reported as a symbol-reference one is a
   finding the reader cannot act on — they are told to remove a call that one `libraryDependencies`
@@ -753,7 +753,18 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   legitimately belong to its base, reports an honest `0` that is indistinguishable from a walk that
   found nothing, a rule list that matched nothing, or a target set that emptied it.
   `dependency-coverage(all)` is the enumeration behind it and the difference is one subtraction. It
-  is deliberately not spelled `(emitted)`: naming one of the two filters would hide the other;
+  is deliberately not spelled `(emitted)`: naming one of the two filters would hide the other.
+  **`dependency-coverage(declared)` is the third and counts DECLARATIONS rather than usage sites**,
+  for the trivia family's reason at the other end of the same seam: the residue in the other direction
+  is on the `policy` lane, and `policy = 0` there is a bar a port meets by DECLARING NOTHING. A
+  declared coordinate is classified by a 2×2 over BOTH programs — does the PRE-pipeline code use it ×
+  does the EMITTED code — because a `Verdict.Depend` is answered by declaring the artifact *and
+  redirecting into it*, and the redirect removes the very JDK usage the coordinate answers. The
+  emitted column alone decides keep-or-remove and the original column decides the SENTENCE; what the
+  artifact provides is READ FROM THE ARTIFACT'S OWN JAR and never derived from the coordinate string,
+  which is §4.56's hazard at a build coordinate (`DESIGN.md` §8.20, `ENGINE-LIMITS.md` P8). A jar this
+  run could not read is `Unverifiable` — a third value, never a `no`, because both collapses are
+  §4.6's fabricated fact;
   `porter-notes`, `break-catch`, `try-resource`, `switch-null`, `heap-pollution`,
   `cast-conversion`, `overload-risk` and `markers` record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget` record when

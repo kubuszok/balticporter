@@ -5634,7 +5634,7 @@ that is `E134`, **0 -> 1 errors, measured**; substituted ahead of it and bridged
 |---|---|---|
 | `remediation` | **20 -> 17** | the two `accept-jvm-only` refusal rows (`ENGINE-LIMITS.md` P6, discharged) and the `substitutions-drop` candidate derived from the same two findings |
 | `portability(all)` / `(emitted)` | **56 -> 54** | the two `java.util.ServiceLoader` rows; the rules are `dependencyRulesFor` now |
-| `policy` | **0 -> 1** | `ENGINE-LIMITS.md` P8, new and OPEN — the declared coordinate is invisible to a walk that enumerates JDK usages, because the redirect is what removed the usage |
+| `policy` | **0 -> 1**, and **1 -> 0** in the wave that CLOSED `ENGINE-LIMITS.md` P8 | the declared coordinate was invisible to a walk that enumerates JDK usages, because the redirect is what removed the usage. The check reads TWO programs now, and the artifact's own jar for the emitted half |
 | `rewrite-callsites` | **0 -> 1** | `type-redirect` names no accounting lane; the identical row libGDX core and screens have carried since they gained the phase |
 | `members.tsv` | **2** | `SPIHelper` and `SPIHelper#findProviders()`, one `RetypedSignature` and two `SubstitutedCall` decisions between them |
 | errors / suite | **0 / 636 passing, 1 expected failure** | both unchanged |
@@ -5643,13 +5643,30 @@ On `LiqpTestMigrate`: `portability(all)` **1605 -> 1603** (the same two rows, se
 resolution root), `rewrite-callsites` **0 -> 1**, `portability(emitted)` flat at 1549, 0 members
 moved. The other thirteen lanes are byte-identical.
 
-**`dependency-coverage(all)` did NOT grow, and that is P8.** The expectation was that the walk would
+**`dependency-coverage(all)` did NOT grow, and that WAS P8.** The expectation was that the walk would
 find a ServiceLoader requirement for the declaration to cover. It cannot: the redirect removes the
-JDK usage, which is its job, so the requirement never arrives and `DependencyCheck.unneeded` reads
+JDK usage, which is its job, so the requirement never arrives and `DependencyCheck.unneeded` read
 the coordinate as never applied. The entry stays — the emitted Scala names
 `multiarch.serviceloader.PlatformServiceLoader` outright and a build without the coordinate cannot
-resolve it — and the finding's own detail now names this blind spot beside the hand-written-source one
-it already named, so a reader is not instructed to remove a coordinate the port needs.
+resolve it.
+
+**CLOSED (2026-08-14).** A declared coordinate is now a 2×2 over BOTH programs (`DESIGN.md` §8.20),
+and the emitted half reads the artifact's OWN class list. liqp `policy` **1 -> 0**, with the row
+arriving on the new `dependency-coverage(declared)` lane where both usage lanes were blind to it:
+
+```
+covered  com.kubuszok:::multiarch-serviceloader:…
+  original: 2 site(s) at java.util.ServiceLoader — a catalog `Depend` row names it
+  emitted:  1 reference(s) to multiarch.serviceloader.ServiceProviders — the artifact's own class list declares them
+```
+
+Note the CELL, because the prediction was `introduced by translation` and the answer is `covered`:
+`ApiRows` p(25) maps liqp's ORIGINAL `java.util.ServiceLoader` usage to this artifact, so the
+pre-pipeline column answers from the catalog and the pair is yes/yes. The provides-set is still what
+makes the row right rather than merely different — without it the emitted column reads `No`, the cell
+is `stale`, and the remove instruction is wrong in the same way for a different reason. No corpus port
+lands in `introduced` or in either removable cell today; `dependency-coverage(declared)` is `1` on
+libGDX core and its dependents, `3` on both liqp lanes and `0` elsewhere.
 
 **The coordinate is the first to need a RESOLVER.** `ArtifactDep.resolver` carries the URL beside the
 `org`/`name`/`rev`/`cross` it is the fourth fact of, and `SbtGen` renders one deduplicated `resolvers`

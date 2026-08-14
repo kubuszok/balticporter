@@ -5430,7 +5430,7 @@ and it is why the three tree-changing remedies ship with fixture coverage and no
 *Fix kind: (a) engine — one predicate, `PortRun`'s `droppedIds`. `dependency-coverage` and
 `jdk-surface` read the same set and moved with it (libGDX core `jdk-surface` 24 -> 22).*
 
-### P8. `DependencyCheck.unneeded` cannot see an artifact a port's own PHASE redirected INTO — **OPEN; liqp `policy` 0 -> 1, and the finding's instruction is the wrong one**
+### P8. CLOSED — a declared coordinate is a 2×2 over BOTH programs, and the PROVIDES-SET is read from the artifact
 
 `dependency-coverage` enumerates JDK USAGES whose catalog row answers with an artifact, and
 `unneeded` reads the same pair backwards: a `PortManifest.dependencies` entry no requirement names is
@@ -5446,22 +5446,77 @@ the emitted Scala names `multiarch.serviceloader.PlatformServiceLoader` outright
 `Depend` artifact: `policy` 0 -> 1, with `dependency-coverage` 0 and `dependency-coverage(all)` 101
 both flat — the requirement never arrives to be covered, so neither number can show it.
 
-**Why it is not simply fixed here.** The check would have to know that an EMITTED reference answers a
-coordinate, and there is no structural link between `com.kubuszok:multiarch-serviceloader` and
-`multiarch.serviceloader.ServiceProviders`: deriving one from the other is a package-prefix guess,
-which is §4.56's own hazard at a build coordinate. Three shapes were considered and none is free —
-running the `unneeded` walk over the PRE-pipeline program (loses a genuinely stale coordinate whose
-last usage the port DROPPED), a second manifest key linking coordinate to package (two spellings of
-one decision, §5), and deriving the artifact from the phase the way `RuntimePlan` derives
-`balticporter-runtime` from the phase list (right in shape, but it needs a phase parameter that names
-a build coordinate, which no keyed seam carries today). The third is the one to build.
+**Why none of the three candidates was the fix.** The check would have to know that an EMITTED
+reference answers a coordinate, and there is no structural link between
+`com.kubuszok:multiarch-serviceloader` and `multiarch.serviceloader.ServiceProviders`: deriving one
+from the other is a package-prefix guess, which is §4.56's own hazard at a build coordinate. Three
+shapes were considered and none is free — running the `unneeded` walk over the PRE-pipeline program
+(loses a genuinely stale coordinate whose last usage the port DROPPED), a second manifest key linking
+coordinate to package (two spellings of one decision, §5), and deriving the artifact from the phase
+the way `RuntimePlan` derives `balticporter-runtime` from the phase list (it needs a phase parameter
+that names a build coordinate, which no keyed seam carries).
 
-Until then the finding's DETAIL names the blind spot beside the hand-written-source one it already
-named, so a reader is not told to remove a coordinate the port needs — which is the same answer
-`unneeded` already gives for the case it cannot walk.
+**THE FIX (maintainer, 2026-08-14): the question was asked of ONE program, and it takes TWO.** Every
+candidate above tried to find a better single walk, and the entry's honest state is a PAIR — does the
+pre-pipeline code use the artifact × does the emitted code use it:
 
-*Fix kind: (a) engine, unbuilt. The port's own answer is to keep the entry: it is what a
-build-generating consumer needs, and it is right in every namespace except the one this check reads.*
+|  | EMITTED yes | EMITTED no |
+|---|---|---|
+| **ORIGINAL yes** | `Covered` — keep | `Stale` — the port rewrote away its last usage; remove |
+| **ORIGINAL no** | `Introduced` — a phase redirected in; **keep** | `Unused` — copied or superseded; remove |
+
+Read the two axes for what each decides, because they are not symmetric: **the EMITTED column alone
+decides keep-or-remove**, and **the ORIGINAL column decides the SENTENCE**. That is exactly why the
+first candidate is not this one wearing a different hat — the pre-pipeline walk answers the column
+that decides nothing, and it loses `Stale` outright.
+
+**The piece that was missing is the PROVIDES-SET, and it is read from the ARTIFACT.** `ArtifactIndex`
+resolves the coordinate (`cs fetch --intransitive`, the JVM `_3` jar) and enumerates the class
+entries; the jar is the one authority on what the jar provides, so nothing is derived from the
+coordinate string and §4.56's hazard never arises. Four things that are not incidental:
+
+- **`--intransitive` is not an optimisation.** Without it the resolution pulls the artifact's own
+  dependencies, `scala-library` first, and the provides-set becomes the whole of `scala.*` — after
+  which every port "references" every coordinate it declares and the check answers `Covered` for
+  anything at all;
+- **the coordinate is built EXPLICITLY** (`org:name_3:rev`) rather than handed to `cs`'s `::`, whose
+  suffix comes from whatever Scala version that installation defaults to. An ambient fact about the
+  machine would let two checkouts read two different jars with every count agreeing;
+- **the catalog half is asked FIRST**, so the jar is consulted only for a coordinate the old check
+  would already have reported. Fourteen of the fifteen ports resolve nothing at all, and the emitted
+  column is a strict SUPERSET of the test `unneeded` used to be — so a `policy` row can only turn OFF,
+  which is the whole flatness argument and is mechanised as a spec rather than hoped for;
+- **`Provides` is THREE-valued.** A jar that cannot be fetched is `Unverifiable`, which is neither
+  "provides it" nor "does not": collapsed to the empty set an offline run invents a remove instruction
+  for a live coordinate, and collapsed the other way it silences every genuinely stale one. Both are
+  §4.6's fabricated fact, so the cell says so, KEEPS, and gives no instruction. Measured as more than
+  a hypothetical — the first live run read `unverifiable` on liqp's coordinate because `cs` parses
+  everything after `--intransitive` as a module, so `--intransitive -r <url>` fails with
+  *malformed module: -r*. A flag order shipped as a permanent unknown on the one port that needs the
+  answer; the order is now pinned by a spec.
+
+**THE LIMIT to state rather than hide**: the JVM jar is an APPROXIMATION of what a platform-crossed
+coordinate provides. `scala-java-time_sjs1_3` exists so `java.time.Instant` resolves on Scala.js and
+declares the same types the `_3` jar does, which is what makes the reading right in the normal case; a
+class published on ONE backend only is a class this does not see, and it would cost an `Unused` cell
+where the true one is `Introduced` — a wrong remove instruction. No corpus port has that shape. The
+day one does, this is the paragraph it contradicts.
+
+**Measured, and the correction to the prediction.** liqp `policy` **1 -> 0**, and the new
+`dependency-coverage(declared)` lane carries the row both usage lanes were blind to. The cell it
+lands in is **`Covered`, not `Introduced`** — the prediction assumed no catalog row maps liqp's
+original JDK usage to this artifact, and `ApiRows` p(25) does: `java.util.ServiceLoader` answers
+`Depend(multiarch-serviceloader)` on both non-JVM backends, so the ORIGINAL column reads `2 site(s) at
+java.util.ServiceLoader` from the pre-pipeline program. The EMITTED column is the provides-set's, and
+it is what makes the row right rather than merely different: `1 reference(s) to
+multiarch.serviceloader.ServiceProviders — the artifact's own class list declares them`. Without that
+half the emitted column reads `No`, the cell is `Stale`, and the remove instruction is still wrong.
+The `Introduced` cell is therefore live and specced and fires on no corpus port today, which is the
+honest state of it. Every other count on every port flat; `dependency-coverage(declared)` is a new
+lane and appears at `0 -> N` on all fifteen.
+
+*Fix kind: (a) engine — `DependencyCheck.declarations` (the 2×2, pure), `ArtifactIndex` (the
+provides-set), one new required lane. The port changed nothing.*
 
 ---
 
