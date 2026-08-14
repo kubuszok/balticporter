@@ -172,29 +172,56 @@ object ArtifactIndex:
   /** `cs fetch --intransitive`, filtered to the jars — `ClasspathCache.fetch`'s two lessons, which
     * are not this object's to re-learn: merge the streams so a failure is reportable, then keep only
     * the lines that hold a jar, because the progress output once cached `Downloading https…` as a
-    * classpath entry. */
+    * classpath entry.
+    *
+    * **A LINE IS A PATH, SPACES INCLUDED.** `cs fetch` prints one filesystem path per line, and the
+    * progress lines it interleaves are told apart by the path EXISTING and not by its shape — which
+    * is the only test that is a fact rather than a guess. Filtered on `!contains(' ')` instead, a
+    * coursier cache under a space-bearing directory (`~/Library/Application Support/Coursier` is the
+    * platform default on macOS; a Windows profile is the other) drops every jar it resolved, the
+    * list is empty, and the coordinate reads a PERMANENT `Unverifiable` on a machine that is online
+    * and has the artifact on disk — the same shape as the `--intransitive` flag order, which shipped
+    * exactly that (`ENGINE-LIMITS.md` P8). `Path.of` is guarded per line rather than around the
+    * whole read: one unparseable line is not a failed resolution, and letting it escape would turn
+    * a good listing into an unknown. */
   def fetch(cmd: List[String]): Either[String, List[Path]] =
     try
       val proc = new ProcessBuilder(cmd*).redirectErrorStream(true).start()
       val raw  = new String(proc.getInputStream.readAllBytes()).trim
-      val jars = raw.linesIterator.filter(l => l.endsWith(".jar") && !l.contains(' ')).toList
+      val jars = raw.linesIterator.map(_.trim).filter(_.endsWith(".jar")).flatMap(asPath).toList
       if proc.waitFor() != 0 || jars.isEmpty then
         Left(s"could not resolve `${cmd.mkString(" ")}` (is `cs` installed, and is this machine " +
           s"online?): ${raw.linesIterator.toList.takeRight(3).mkString(" / ")}")
-      else Right(jars.map(Path.of(_)).filter(Files.exists(_)))
+      else Right(jars)
     catch
       case NonFatal(e) =>
         Left(s"could not run `${cmd.mkString(" ")}`: ${e.getClass.getSimpleName}: ${e.getMessage}")
+
+  /** a printed line as a jar THIS MACHINE HAS. `None` for a progress line, a URL, or anything the
+    * platform's path syntax refuses — none of which is a resolution failure. */
+  private[runner] def asPath(line: String): Option[Path] =
+    try Option(Path.of(line)).filter(Files.isRegularFile(_))
+    catch case NonFatal(_) => scala.None
 
   /** the whole supplier a run hands `DependencyCheck.declarations`, memoised per RUN.
     *
     * Memoised because the 2×2 asks about the same coordinate up to twice (once per program) and a
     * cold cache would then resolve it twice; a `Map` built here rather than a global for the reason
-    * every other run-scoped table has one — two runs in one JVM are two answers (§5.1). */
+    * every other run-scoped table has one — two runs in one JVM are two answers (§5.1).
+    *
+    * **THE KEY IS EVERY FIELD THE INVOCATION READS**, which is [[command]]'s own input and not a
+    * subset of it: `cross` decides the ARTIFACT ID (`name` against `name_3`) and `resolver` decides
+    * which repository is searched, so two entries agreeing on org/name/rev and differing in either
+    * are two different jars — and keyed on that triple the second one silently receives the first
+    * one's listing. One manifest holding both a java and a scala-cross spelling of a coordinate is
+    * the shape, and the wrong answer would be a cell nothing in the report could explain. Keyed on
+    * the command STRING so it cannot drift from what is actually run; [[cacheFile]] is the on-disk
+    * half of the same question and carries the same invocation as its fingerprint. */
   def supplier(cacheDir: Option[Path], scalaBinary: String = "3",
                resolve: List[String] => Either[String, List[Path]] = fetch): ArtifactDep => DependencyCheck.Provides =
-    val memo = scala.collection.mutable.Map.empty[(String, String, String), DependencyCheck.Provides]
-    d => memo.getOrElseUpdate((d.org, d.name, d.rev), provides(d, cacheDir, scalaBinary, resolve))
+    val memo = scala.collection.mutable.Map.empty[String, DependencyCheck.Provides]
+    d => memo.getOrElseUpdate(command(d, scalaBinary).mkString(" "),
+                              provides(d, cacheDir, scalaBinary, resolve))
 
   /** the scratch directory a run caches into — `<root>/.balticporter/artifact-index`, the gitignored
     * location every other run capture already uses (§3.7), anchored on the same `root` the debug

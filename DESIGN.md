@@ -5612,7 +5612,16 @@ Five properties that are decisions rather than implementation:
   instruction, or a silence over a real stale coordinate), so the cell keeps and gives no advice. Note
   this is the OPPOSITE arm from `ClasspathCache`'s, where a fetch failure is FATAL, and the difference
   is what the value decides: a frontend with no classpath resolves WRONGLY rather than failing, while
-  this decides one column of one check;
+  this decides one column of one check. It reaches the CELLS as two values and not one: the emitted
+  column can answer `Yes` from the catalog half without a jar, leaving the ORIGINAL column unknown,
+  and `Introduced`'s sentence asserts *no original usage names this artifact* — so that pair is
+  `IntroducedOriginalUnknown`, which keeps exactly as `Introduced` does and says unknown instead of
+  asserting the one thing the run does not know;
+- **a LINE OF `cs` OUTPUT IS A PATH, spaces included**, and a progress line is told apart by the path
+  not EXISTING rather than by its shape. The coursier cache's platform default on macOS is under
+  `~/Library/Application Support/`, so a shape test on whitespace drops every jar the resolution
+  found and reports a permanent `Unverifiable` on a machine that is online and holds the artifact —
+  the `--intransitive` flag order's own failure, one line down;
 - **the catalog half first.** The jar is consulted only where the old test would already have
   reported, so fourteen of fifteen ports touch no network and the emitted column is a strict SUPERSET
   of what `unneeded` used to read — the change can turn a finding off and never on. That is a spec,

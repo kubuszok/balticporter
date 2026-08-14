@@ -5668,6 +5668,18 @@ is `stale`, and the remove instruction is wrong in the same way for a different 
 lands in `introduced` or in either removable cell today; `dependency-coverage(declared)` is `1` on
 libGDX core and its dependents, `3` on both liqp lanes and `0` elsewhere.
 
+**THE ACCEPTED COST: a FRESH OFFLINE CHECKOUT cannot reproduce this port's declared row.** The cell
+above is the only one in the corpus whose emitted half is read from a JAR, and the jar is a snapshot
+on a repository that is not Maven Central. With a cold `.balticporter/artifact-index` cache and no
+network, `cs fetch` fails, the coordinate answers `Provides.Unverifiable`, and the row becomes
+`unverifiable` — which KEEPS, so no wrong instruction is produced and the `policy` and
+`dependency-coverage*` COUNTS do not move. What does move is the row's own TEXT, so
+`findings_baseline_guard` fails the liqp lane (`CLAUDE.md` §5's third baseline, which diffs the six
+columns that carry meaning). That is the right direction — the alternative is a run that quietly
+answers a different question than the baseline it is being compared against — and it is stated here
+rather than worked around: the fix for an operator who hits it is a network, not a flag. Every other
+port resolves nothing at all, because the catalog half is asked first.
+
 **The coordinate is the first to need a RESOLVER.** `ArtifactDep.resolver` carries the URL beside the
 `org`/`name`/`rev`/`cross` it is the fourth fact of, and `SbtGen` renders one deduplicated `resolvers`
 block from the dependencies it is already writing, naming each entry from its own URL. The revision is

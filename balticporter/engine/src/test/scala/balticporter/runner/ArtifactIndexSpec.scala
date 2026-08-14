@@ -149,3 +149,40 @@ class ArtifactIndexSpec extends munit.FunSuite:
     assertEquals(supply(dep.copy(rev = "2")), DependencyCheck.Provides.Known(Set("p.A")))
     assertEquals(calls, 2)
   }
+
+  test("…and so is a different CROSS KIND or a different RESOLVER — the memo key is the invocation") {
+    // `cross` decides the ARTIFACT ID (`n` against `n_3`) and `resolver` decides which repository is
+    // searched, so a key of (org, name, rev) hands the second entry the FIRST one's listing — a cell
+    // nothing in the report could explain. One manifest holding a java and a scala-cross spelling of
+    // one coordinate, or a snapshot beside its release, is the shape.
+    var seen   = List.empty[String]
+    val supply = ArtifactIndex.supplier(scala.None, "3",
+      { cmd => seen = seen :+ cmd.mkString(" "); Right(List(jarOf("p/A.class"))) })
+    val java   = ArtifactDep("o", "n", "1", CrossKind.Java)
+    supply(java)
+    supply(java.copy(cross = CrossKind.Scala))
+    supply(java.copy(resolver = Some("https://snapshots")))
+    assertEquals(seen.size, 3, clue(seen))
+    assertEquals(seen.distinct.size, 3, clue(seen))
+  }
+
+  // ---- the FETCH's own parse: a LINE IS A PATH -----------------------------------------------
+
+  test("a jar under a SPACE-BEARING path is a jar — the parse is existence, never shape") {
+    // `~/Library/Application Support/Coursier` is the platform default on macOS. Filtered on
+    // `!contains(' ')` the resolution drops every jar it found, the list is empty, and the
+    // coordinate reads a PERMANENT `Unverifiable` on a machine that is online and has the artifact
+    // on disk — exactly the shape the `--intransitive` flag order shipped (ENGINE-LIMITS.md P8).
+    val dir  = Files.createTempDirectory("artifact index ")
+    val here = Files.copy(jarOf("p/Spaced.class"), dir.resolve("app support.jar"))
+    assert(here.toString.contains(' '), here.toString)
+    assertEquals(ArtifactIndex.asPath(here.toString), Some(here))
+    // …while a progress line, a URL and a path this machine does not have are all still refused —
+    // the test is that the path EXISTS, which is a fact rather than a guess about the line's shape.
+    assertEquals(ArtifactIndex.asPath("Downloading https://repo1.maven.org/x/y/z-1.0.jar"), scala.None)
+    assertEquals(ArtifactIndex.asPath(dir.resolve("never-fetched.jar").toString), scala.None)
+    // and the whole resolution answers with it: this is the arm the check's emitted column reads
+    assertEquals(ArtifactIndex.provides(ArtifactDep("o", "n", "1"), scala.None, "3",
+                   _ => Right(List(here))),
+                 DependencyCheck.Provides.Known(Set("p.Spaced")))
+  }

@@ -279,6 +279,21 @@ class DependencyCoverageSpec extends munit.FunSuite:
     assertEquals(DependencyCheck.splicedNames(TinyProgram.program), Set.empty[String])
   }
 
+  test("…and (unknown, yes) says UNKNOWN rather than asserting there was no original usage") {
+    // the one pair the four cells could not spell. The columns are not asked the same way: the
+    // emitted one can answer `Yes` from the CATALOG half, which needs no jar, and the original one
+    // then falls through to a listing this run could not read. `Introduced`'s advice opens with
+    // "no ORIGINAL usage names this artifact", which is exactly what is not known — §4.6's
+    // fabricated fact in the column that decides nothing. Same KEEP; a different sentence.
+    val d = DependencyCheck.declarations(List(Time), Nil, Nil, List(req(Time)), Nil,
+      _ => DependencyCheck.Provides.Unverifiable("no network")).head
+    assertEquals(d.cell, DependencyCheck.Cell.IntroducedOriginalUnknown)
+    assert(d.cell.keep)
+    assertEquals(DependencyCheck.unneeded(List(d)), Nil)
+    assert(clue(d.cell.advice).contains("UNKNOWN"))
+    assert(!clue(d.cell.advice).contains("no ORIGINAL usage"))
+  }
+
   test("a port that declares NOTHING records an honest zero on the declared lane") {
     assertEquals(DependencyCheck.declarations(Nil, Nil, Nil, Nil, Nil, known()), Nil)
     assertEquals(DependencyCheck.reportDeclared(Nil), Nil)

@@ -255,6 +255,20 @@ object DependencyCheck:
         "original code did either — a coordinate copied from another module, or one whose last call " +
         "an upstream change removed. Remove the entry, unless the usage is in a hand-written source " +
         "this run does not walk")
+    /** [[Introduced]] with the ORIGINAL column UNKNOWN — the one pair the four cells could not
+      * spell, and the reason it needs its own sentence rather than its own instruction.
+      *
+      * The columns are not asked the same way: the emitted one can answer `Yes` from the CATALOG
+      * half, which needs no jar, while the original one then falls through to a listing this run
+      * could not read. `Introduced`'s advice opens with *no ORIGINAL usage names this artifact*,
+      * which would be asserting exactly what the run does not know — §4.6's fabricated fact, in the
+      * one column that decides nothing. So the KEEP verdict is unchanged (the emitted column alone
+      * decides it, and it said yes) and the sentence says unknown. */
+    case IntroducedOriginalUnknown extends Cell("introduced by translation (original unknown)", true,
+      "the EMITTED code needs this coordinate — that half is answered and it KEEPS. Whether the " +
+        "ORIGINAL code needed it is UNKNOWN, not `no`: this run could not read the artifact's own " +
+        "class list, and the original column is the one that would have distinguished a coordinate " +
+        "a phase introduced from one that was always right. No instruction depends on it")
     case Unverifiable extends Cell("unverifiable", true,
       "this run could not read the artifact's own class list, so whether the emitted code references " +
         "it is UNKNOWN — not `no`. No instruction is given, because the two honest ones contradict " +
@@ -400,10 +414,15 @@ object DependencyCheck:
           case Answer.Unknown(_) => Answer.Unknown("not asked — the emitted column is unverifiable")
           case _                 => uses(d, originalReqs, originalExt, provides)
         val cell = (original, emitted) match
-          case (_, Answer.Unknown(_))         => Cell.Unverifiable
-          case (Answer.Yes(_), Answer.Yes(_)) => Cell.Covered
-          case (Answer.Yes(_), _)             => Cell.Stale
-          case (_, Answer.Yes(_))             => Cell.Introduced
+          case (_, Answer.Unknown(_))             => Cell.Unverifiable
+          case (Answer.Yes(_), Answer.Yes(_))     => Cell.Covered
+          case (Answer.Yes(_), _)                 => Cell.Stale
+          // the pair the four cells could not spell: the emitted column answered from the CATALOG
+          // half, which needs no jar, and the original one then fell through to a listing this run
+          // could not read. `Introduced`'s sentence asserts there was no original usage, which is
+          // the one thing not known here — same KEEP, different sentence.
+          case (Answer.Unknown(_), Answer.Yes(_)) => Cell.IntroducedOriginalUnknown
+          case (_, Answer.Yes(_))                 => Cell.Introduced
           case _                              => Cell.Unused
         Declaration(d, cell, original, emitted)
       }
