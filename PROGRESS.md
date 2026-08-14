@@ -5515,10 +5515,13 @@ Four things this repository can now say that it could not before, and only one o
 | the MISSING rules | the time/text/locale area had **zero**. Its refusal residue found a real site on the first run: libGDX's `TextFormatter` uses `java.text.MessageFormat`, which no surveyed source tree implements on either backend — **LibgdxCoreMigrate 151 → 153**, `remediation` 29 → 30 with a concrete `dropTypes` line, and +2 through the resolution root on all six gdx-family dependents with their `portability(emitted)` flat. liqp gains **4** `java.util.Calendar` sites; `IDN` and `ServiceLoader` are re-attributions at net 0 |
 | `dependency-coverage` | the twenty-second required check, and the OTHER half of the same enumeration. Half the matrix's answers are `Depend` — the API exists off the JVM, in an artifact the build does not name — and reported as an unportability the finding is unanswerable. First run, and it is not vacuous anywhere it should not be: **libGDX 37 sites** (`java.util.Locale` → `scala-java-locales`), against **15 dependency rules** and **0 declared artifacts** on every port |
 
-**Nothing is wired into any port.** No port declares a target, a `verdictOverride` or a dependency,
-and that is the state the machinery was landed into deliberately — whether sge and ssg genuinely
-ship all three backends is their maintainers' answer, and the rev-1 default is what makes the wrong
-answer cheap either way: a port that never declares one is checked exactly as it was.
+**Nothing was wired into any port at that point.** That is the state the machinery was landed into
+deliberately — whether sge and ssg genuinely ship all three backends is their maintainers' answer,
+and the rev-1 default is what makes the wrong answer cheap either way: a port that never declares one
+is checked exactly as it was. The maintainer's answer arrived in 2026-08 (`CLAUDE.md` §1.5): all
+three platforms wherever possible, JVM-only reserved for modules whose whole point is a JVM facility.
+§12.4.6 is what that unlocked. `targets` and `verdictOverrides` are still declared by no port, which
+is now a statement rather than a gap: no module has claimed the exception.
 
 **Not built, and priced rather than attempted:** `RegexConstructCheck`. Scala Native's
 `java.util.regex` is RE2-backed and its unsupported-construct list is 40 items long and verbatim
@@ -5526,6 +5529,75 @@ from that project's own docs; the Scala.js side of that list was never fetched, 
 so. A construct check shipping a JS list on an INFERENCE would be a check asserting coverage it does
 not have, which is the one failure mode the whole catalog is built against — so it ships when the
 list is fetched, or it ships Native-only, and neither happened here.
+
+### 12.4.6 The `Depend` half, WIRED — three ports declare, and what the wiring found on the way
+
+§12.4.5 landed the lane with `0 declared artifacts on every port`. This is the wave that answered it,
+under `CLAUDE.md` §1.5's maintainer statement: a `Verdict.Depend` is answered by DECLARING the
+artifact, never by rewriting a call one `libraryDependencies` line makes correct.
+
+| port | `dependency-coverage` | `(all)` | declared |
+|---|---|---|---|
+| LibgdxCoreMigrate | **37 → 0** | 37 (flat) | `scala-java-locales` |
+| LiqpMigrate | **101 → 0** | 101 (flat) | `scala-java-time`, `scala-java-locales` |
+| LiqpTestMigrate | **134 → 0** | 235 (flat) | the same two plus `scala-java-time-tzdb` |
+| the other twelve | 0 (flat) | flat | nothing — their requirements are their BASE's (D2) |
+
+**The residue falls and the enumeration does not, which is the shape a DRAINED lane has here.**
+Coverage subtracts from the residue and never from the walk, so `(all)` is exactly the number that
+says the walk still runs — a distinction §12.4.5 built the pair for and this is the first wave to
+exercise. Every other count is flat on all fifteen lanes, **0 members' emitted text moved anywhere**,
+every error count and test-discovery figure is unchanged (libGDX 217/4, ashley 108/2 + 2 not run,
+gltf 64/0, liqp 636/1, sg 16/0, screens 16/0, anim8 23/0), and no port gained a `policy` row — which
+is the check that says the five declarations are exactly the ones some requirement wanted.
+
+**What the wiring had to build, because declaring alone would have made the check a liar.**
+
+- **a declaration that answers NOTHING is a `policy` finding** (`DependencyCheck.unneeded`,
+  `PolicyIssue.NeverApplied`). Coverage subtracts, so an entry naming an artifact no requirement
+  wants leaves both numbers where they were — 0 before, 0 after — while the port resolves and ships a
+  jar on every backend for a call it does not make. It is asked of the EMITTED requirements, so a
+  dependent cannot take credit for a call only its base makes;
+- **the artifacts land at the RUN's own `SourceSet`.** A `sourceSet = Test` run's declarations are
+  its suite's, and written into the main `libraryDependencies` they would publish, on the shipped
+  library, a coordinate only its tests call. liqp's tzdb entry is the live case;
+- **the credit was UNTESTED.** Nothing asserted that a declared coordinate reaches a build file at
+  all — a check that stops reporting a requirement on the strength of a manifest entry is a liar
+  until it does. `PortRunProjectSpec` asserts both halves now. (No corpus port generates a build:
+  `project` is opt-in and every port here is emitted into a build the repository already owns, so
+  this is asserted in the engine's own spec and not by a lane.)
+
+**And the coordinates themselves were checked against the repository, which found two defects in the
+survey.** An artifact a `Depend` names is one a NON-JVM backend has to resolve:
+
+- **four of the five coordinates were `%%` where only `%%%` resolves.** `scala-java-time`,
+  `scala-java-time-tzdb` and `scala-java-locales` are published per PLATFORM (`_sjs1_3`,
+  `_native0.5_3`) as well as per Scala version, and so is `scala-native-crypto` — which exists at
+  `_native0.5_3` and NOWHERE else. `%%` asks a JS build for the JVM jar, which for the first three
+  resolves and then fails at link time. `CrossKind.Platform` on all four; `scalajs-weakreferences`
+  already carried it with the reasoning written out beside it, and the other four were that same fact
+  unchecked;
+- **one coordinate a Scala 3 port cannot use at all.** `com.dedipresta:scala-crypto` is published for
+  2.12 and 2.13 and for no Scala 3, so the JS half of `MessageDigest`/`SecureRandom` (`JS-P26`,
+  `JS-P27`) names an artifact that resolves nothing. Recorded in both rows' `why` and at the artifact
+  rather than repaired with an invented replacement — a survey row may not fabricate a fact (§4.6).
+  No corpus port references either API, so no lane moves for it; it is open work for whoever ports a
+  library that hashes.
+
+The JVM resolution of all five declared coordinates was verified directly
+(`cs fetch --scala-version 3.8.4`); the JS/Native halves are the catalog's claim, and this wave does
+not build for those backends.
+
+**One thing the accepts exposed and this wave did NOT cause: `port-map.tsv` is a SIXTH committed
+baseline that no lane compares.** Nine dependent maps (`Anim8`, both `Ashley`, both `Gltf`,
+`LibgdxTest`, `LiqpTest`, `Screens`, `Vfx`) had a stale `policy=` header — the digest covers the
+POLICY CHAIN, so libGDX core's `reviewedBoundaries` (2026-08-09) and liqp's `resolutions` moved every
+dependent's digest while only the two bases' baselines were re-accepted. The control is decisive: the
+two manifests this wave actually edited are the two whose own maps did NOT move, because
+`surfaceDigestInputs` reads the surface and the selections and not `dependencies`. The diff is the
+header line and nothing else on all nine, and they are refreshed here. `just baseline-accept` promotes
+the file, `headline` gates the other five, and nothing reads this one — which is §12.2.5's finding
+exactly, one artifact over, and the guard is not built here.
 
 ### 12.5 Not run
 

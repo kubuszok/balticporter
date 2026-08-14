@@ -35,10 +35,22 @@ import balticporter.catalog.{ApiRow, ArtifactDep, DiffId, Platform}
   * dependencies the port declares, and which catalog row and platform went unanswered. A reader who
   * cannot tell "declared nothing" from "declared the wrong thing" has to go and look.
   *
-  * ==Empty is the honest state, not a hole==
-  * No port in this corpus declares a dependency or an override, so every requirement is reported.
-  * That is the number this lane exists to make visible: a port that compiles on the one backend
-  * somebody happened to test, against an artifact list nobody has written.
+  * ==What the corpus declares, and what the lane reads once it does==
+  * Three ports answer this lane now — libGDX core (`scala-java-locales`, for `I18NBundle`'s 37
+  * `Locale` sites) and liqp's two source sets (`scala-java-time` and `scala-java-locales`, plus
+  * `scala-java-time-tzdb` on the suite, which is the one module that calls `ZoneId.of(String)`).
+  * Their residue is 0 and their `(all)` enumeration is unchanged, which is exactly the shape a
+  * DRAINED lane has here: coverage subtracts from the residue and never from the walk.
+  *
+  * The remaining ports report an honest 0 for the OTHER reason — every requirement their program
+  * holds belongs to a base, and D2 removes it. That is why both lanes are recorded: with only the
+  * residue, a port that declared the artifacts and a port whose requirements are all its base's read
+  * the same number.
+  *
+  * ==…and the direction coverage cannot show==
+  * Because coverage SUBTRACTS, a declaration that answers nothing leaves both numbers where they
+  * were. [[unneeded]] is that half, and it is reported on the `policy` lane rather than here: it is a
+  * declared key that fired on nothing, which is not a fact about this port's PORTABILITY at all.
   */
 object DependencyCheck:
 

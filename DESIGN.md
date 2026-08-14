@@ -510,6 +510,35 @@ unanswered. Coverage is matched on organisation and NAME and never on the revisi
 `rev` is the version the survey checked, not a floor, and a lane that policed versions is one nobody
 asked for.
 
+**…and the fourth question, which is the same pair read backwards.** Coverage SUBTRACTS, so a
+`dependencies` entry naming an artifact no requirement wants leaves both numbers on this lane exactly
+where they were — 0 before and 0 after — while the port resolves and ships a jar on every backend for
+a call it does not make. `DependencyCheck.unneeded` is that half, and it is reported on the `policy`
+lane and not here, because it is a declared key that fired on nothing rather than a fact about this
+port's portability. `PolicyIssue.NeverApplied` rather than either neighbour: the entry is well formed
+and names a real artifact, and what did not happen is the REQUIREMENT — `NeverMatched` would send its
+author looking for a typo in a coordinate that is correct. It is asked of the EMITTED requirements
+for `ENGINE-LIMITS.md` D2's reason in the other direction: the unfiltered walk would credit a
+dependent's declaration for a call only its base makes.
+
+**Where a declared artifact LANDS in the generated build is the run's own `SourceSet`.** A manifest's
+`dependencies` are the artifacts that module's declarations need, and a `sourceSet = Test` run's
+declarations are its suite's — written into the main `libraryDependencies` they would publish, on the
+shipped library, a coordinate only its tests call. `PortRun` therefore folds them into `deps` or
+`testDeps` by the set it is emitting, which is the split `SbtGen.managedResources` already makes for
+a descriptor: a resource, a source and a dependency each belong to ONE configuration, and the run is
+the only place that knows which. This is also the half that makes the check honest — a lane that
+stops reporting a requirement because a coordinate was declared is a liar unless that coordinate
+reaches a build file.
+
+**The CROSS KIND of a `Depend` coordinate is checked against the repository, never inferred.** An
+artifact a `Depend` names is one a NON-JVM backend has to resolve, so `%%` is almost never the right
+spelling: `scala-java-time`, `scala-java-time-tzdb`, `scala-java-locales` and `scala-native-crypto`
+are all published per PLATFORM (`_sjs1_3`, `_native0.5_3`), and the first three ALSO publish the JVM
+jar `%%` would resolve — which then fails at link time rather than at resolution. One surveyed
+coordinate cannot be made good on at all (`com.dedipresta:scala-crypto` is Scala 2 only), and that is
+recorded in the rows that name it rather than repaired with an invented replacement.
+
 Two things it deliberately does not do. It does not write a `Decision`: an override changes no
 emitted code, and `decisions.tsv` answers "why is the emitted code not a mechanical translation" —
 the override's record is the finding lane itself, which a baseline diffs. And `ArtifactDep` carries
@@ -946,8 +975,10 @@ vendors a subset or accepts the refusal. What an override may NOT touch is `by`,
 FACT — a manifest that could contradict a platform's coverage is a manifest in which a port silently
 declares a gap closed. **`dependencies` is the third**, and it is a build fact on `inject`'s line:
 exactly one module's build file names each coordinate. `SbtGen` writes them into the generated
-`libraryDependencies` and `dependency-coverage` reports every requirement none of them covers. Empty
-is the default and the whole corpus, which is the honest state the lane exists to make visible. A manifest DSL would move the policy out of reach of the consumer's
+`libraryDependencies` — at the run's own `SourceSet`, so a suite's artifacts do not reach the shipped
+library — and `dependency-coverage` reports every requirement none of them covers, while a key that
+covers nothing is a `policy` finding. Empty is still the default and the no-op; it is no longer the
+whole corpus, three ports having declared the artifacts their `Depend` sites need. A manifest DSL would move the policy out of reach of the consumer's
 compiler; a copied block of policy is not a mechanism but a habit, and it fails one module at a time.
 `CLAUDE.md` §1.5 is the governing rule and states the inherited/not-inherited line; `ManifestAgreement`
 is the check, in a static layer (declaration against declaration) and a dynamic one (the base's policy
