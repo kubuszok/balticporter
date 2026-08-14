@@ -5380,6 +5380,18 @@ is what every port did before the menu existed. Demonstrated live on liqp at
 `liqp.spi.SPIHelper#findProviders` (`java.util.ServiceLoader`), `remediation` 12 -> 14 with
 `portability(emitted)` flat at 56 — the refusal did not drain, which is exactly what its own row says.
 
+**That demonstration is now DISCHARGED, which is the ending the refusal was pointing at.** liqp's
+entry is gone and the site is fixed the way the refusal named: `java.util.ServiceLoader`'s row carries
+a `Verdict.Depend` on both non-JVM backends (a cross-platform wrapper, `DESIGN.md` §8.19) and the port
+redirects into it, so the finding the selection was declining no longer fires at all. Keeping the
+entry would have made it an INERT selection — a key that binds to a real declaration, names a live
+remedy and can never apply, which `PolicyIssue.NeverApplied` reports. Measured on liqp:
+`remediation` 20 -> 17 (the two `accept-jvm-only` refusal rows and the `substitutions-drop` candidate
+derived from the same two findings), `portability(all|emitted)` 56 -> 54, 0 errors before and after,
+636 passing / 1 expected failure unchanged. The corpus therefore has no live `accept-jvm-only`
+selection left, and that is the honest state rather than a regression: the one port that reached for
+it now has a real answer.
+
 *Fix kind: (a) engine for the mechanism — SHIPPED. The design conclusion is (b): the knob a port
 actually wants here is `targets` or `verdictOverrides`.*
 
@@ -5417,6 +5429,39 @@ and it is why the three tree-changing remedies ship with fixture coverage and no
 
 *Fix kind: (a) engine — one predicate, `PortRun`'s `droppedIds`. `dependency-coverage` and
 `jdk-surface` read the same set and moved with it (libGDX core `jdk-surface` 24 -> 22).*
+
+### P8. `DependencyCheck.unneeded` cannot see an artifact a port's own PHASE redirected INTO — **OPEN; liqp `policy` 0 -> 1, and the finding's instruction is the wrong one**
+
+`dependency-coverage` enumerates JDK USAGES whose catalog row answers with an artifact, and
+`unneeded` reads the same pair backwards: a `PortManifest.dependencies` entry no requirement names is
+a coordinate that fired on nothing. That is exact for a coordinate copied from another module, and it
+is WRONG for the one shape this wave introduced.
+
+A `Verdict.Depend` is answered by declaring the artifact **and redirecting into it** (`DESIGN.md`
+§8.19). The redirect is what removes the JDK usage — that is its whole job — so after it runs the
+walk finds nothing, `unneeded` reports the coordinate as `NeverApplied`, and its instruction says
+*remove the entry*. Removing it emits a build that cannot resolve the code the redirect just wrote:
+the emitted Scala names `multiarch.serviceloader.PlatformServiceLoader` outright, and no
+`libraryDependencies` line would supply it. Measured on liqp, the first port to redirect into a
+`Depend` artifact: `policy` 0 -> 1, with `dependency-coverage` 0 and `dependency-coverage(all)` 101
+both flat — the requirement never arrives to be covered, so neither number can show it.
+
+**Why it is not simply fixed here.** The check would have to know that an EMITTED reference answers a
+coordinate, and there is no structural link between `com.kubuszok:multiarch-serviceloader` and
+`multiarch.serviceloader.ServiceProviders`: deriving one from the other is a package-prefix guess,
+which is §4.56's own hazard at a build coordinate. Three shapes were considered and none is free —
+running the `unneeded` walk over the PRE-pipeline program (loses a genuinely stale coordinate whose
+last usage the port DROPPED), a second manifest key linking coordinate to package (two spellings of
+one decision, §5), and deriving the artifact from the phase the way `RuntimePlan` derives
+`balticporter-runtime` from the phase list (right in shape, but it needs a phase parameter that names
+a build coordinate, which no keyed seam carries today). The third is the one to build.
+
+Until then the finding's DETAIL names the blind spot beside the hand-written-source one it already
+named, so a reader is not told to remove a coordinate the port needs — which is the same answer
+`unneeded` already gives for the case it cannot walk.
+
+*Fix kind: (a) engine, unbuilt. The port's own answer is to keep the entry: it is what a
+build-generating consumer needs, and it is right in every namespace except the one this check reads.*
 
 ---
 

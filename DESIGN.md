@@ -5484,3 +5484,47 @@ port's mapping target is a cross-platform wrapper in **multiarch-scala** (`../mu
 - liqp is the demonstration port: `SPIHelper#findProviders` currently holds the
   `accept-jvm-only` targets-contradiction refusal (`ENGINE-LIMITS.md` P6), which this mapping is
   what discharges.
+
+**AS BUILT (2026-08-14), and the one thing the ruling got wrong about Scala Native.** The wrapper is
+`com.kubuszok %%% multiarch-serviceloader`, and the ruling above expected "built-in delegation on JVM
+and Scala Native". Native's delegation is IMPOSSIBLE, measured against 0.5.12: its
+`java.util.ServiceLoader.load` is a toolchain INTRINSIC resolved at link time, and the compiler
+rejects any call whose argument is not a literal class — *first argument of method load needs to be
+literal constant of class type* — which a `Class`-taking wrapper cannot write and `classOf[T]` at an
+abstract `T` cannot satisfy either. So `nativeConfig.withServiceProviders` enlistment serves only
+direct `load(classOf[Concrete])` sites, which a ported library's generic lookup is never one of, and
+Native resolves providers by REGISTRATION exactly as Scala.js does, off the same `META-INF/services`
+descriptors §8.17 already ships. **That is the reason the wrapper exists at all** rather than a thin
+JVM-and-Native passthrough with a JS shim, and it is what the catalog row's Native verdict now says.
+
+**The TRANSFORMER is TWO EXISTING KEYED SEAMS and no new phase**, which is the part worth stating
+because the obvious reading is that a redirect wants one. `java.util.ServiceLoader` is both a FACTORY
+and a HANDLE — java hangs `load` off the type it returns — and scala splits them, so the wrapper's
+`PlatformServiceLoader.load` returns a `ServiceProviders[T]` and one redirect table cannot name two
+targets. `TypeRedirectTransform` moves the TYPE occurrences and `CallSiteSubstitutionTransform` moves
+the STATIC CALL, in that order in the port's `surface` and for a reason the port states: the redirect
+mints a static TWIN owned by its target, after which the substitution's callee symbol occurs nowhere
+and it matches nothing silently. A `staticsTo` parameter on the redirect was the alternative and is
+refused — it would be a second mechanism for a seam the engine already has.
+
+**The GUARD is the SHAPE of the target, not a check, and the wrapper's `iterator()` is the one seam
+it does create.** `ServiceProviders` declares `iterator()` and `toList` and nothing else — no
+`stream()`, no `reload()`, no `Provider`, and it is not an `Iterable` — so every member java's
+`ServiceLoader` has and the wrapper does not simply fails to resolve. The one member both spell
+carries java's ARITY and not java's ELEMENT TYPE: it answers a `scala.collection.Iterator` where java
+answered a `java.util.Iterator`, which `CollectionsTransform` retypes to
+`balticporter.runtime.JavaIterator` (§4.5 is why, and it is why "drop-in for `ServiceLoader#iterator()`"
+is true of the arity and not of the type). Left alone the collections phase coerces at that external
+callee and emits `JavaCollections.fromJava(loader.iterator())` — measured, 0 -> 1 errors, `E134`,
+no overload taking a scala iterator — so the port substitutes that call too, ahead of the collections
+phase, and bridges through `JavaIterator.from`. Every way this redirect can be wrong is therefore a
+SLOT WHOSE TWO SIDES DISAGREE and the compiler is the instrument: there is no residue that compiles
+and means something else, which is the case CLAUDE.md §3 says a count has to stand in for.
+
+**What it cost, on the demonstration port**: `remediation` 20 -> 17 (the two `accept-jvm-only`
+refusal rows and the `substitutions-drop` candidate derived from the same findings),
+`portability(all|emitted)` 56 -> 54, `policy` 0 -> 1 (`ENGINE-LIMITS.md` P8 — the declared coordinate
+is invisible to a walk that enumerates JDK usages, because the redirect removed the usage),
+`rewrite-callsites` 0 -> 1 (`type-redirect` names no accounting lane, the row libGDX core and screens
+have carried since they gained the phase), two member digests, 0 errors and 636 passing / 1 expected
+failure unchanged.

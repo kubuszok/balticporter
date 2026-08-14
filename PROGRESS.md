@@ -5319,11 +5319,16 @@ So the three ship with **fixture coverage and no live selection** (`RemediationM
 including every refusal guard), and saying so is better than inventing a demonstration on a port that
 does not want one.
 
-**`accept-jvm-only` IS demonstrated live, on liqp, and the arm that fires is the refusal**
-(`ENGINE-LIMITS.md` P6). `liqp.spi.SPIHelper#findProviders` is `ServiceLoader.load(TypesSupport.class)`
-— the site §12.2.7's descriptor exists for — and liqp declares all three platforms, so accepting is a
-contradiction the run reports with both real knobs named. `remediation` **12 -> 14** with
-`portability(emitted)` FLAT at 56: the refusal did not drain, which is exactly what its own row says.
+**`accept-jvm-only` WAS demonstrated live on liqp, the arm that fired was the refusal, and the site is
+now FIXED** (`ENGINE-LIMITS.md` P6). `liqp.spi.SPIHelper#findProviders` is
+`ServiceLoader.load(TypesSupport.class)` — the site §12.2.7's descriptor exists for — and liqp
+declares all three platforms, so accepting was a contradiction the run reported with both real knobs
+named: `remediation` **12 -> 14** with `portability(emitted)` FLAT at 56, the refusal not draining,
+which is exactly what its own row said. §12.4.7 is what that refusal was pointing at, and the
+selection is gone rather than kept as commentary — a key that binds, names a live remedy and can
+never apply is an inert selection, which is a `policy` finding of its own. **The corpus therefore has
+no live `accept-jvm-only` selection**, and that is the honest state: the one port that reached for it
+has a real answer now, and the entry's fixture coverage (`RemediationMenuSpec`) is unchanged.
 
 ### 12.2.7 `serviceProviders` — P5's second half, and liqp's last hand-written file
 
@@ -5598,6 +5603,60 @@ two manifests this wave actually edited are the two whose own maps did NOT move,
 header line and nothing else on all nine, and they are refreshed here. `just baseline-accept` promotes
 the file, `headline` gates the other five, and nothing reads this one — which is §12.2.5's finding
 exactly, one artifact over, and the guard is not built here.
+
+### 12.4.7 `java.util.ServiceLoader` maps to a cross-platform WRAPPER — the first `Depend` a port both declares AND redirects into
+
+`DESIGN.md` §8.19's ruling, built. `com.kubuszok %%% multiarch-serviceloader` is published (Central
+Portal snapshots, all three platform artifacts verified resolvable with `cs fetch`), the catalog row
+`JS-P25`'s two non-JVM verdicts moved from `Refuse`/`MapTo("link-time provider enlistment")` to
+`Depend`, and liqp — the corpus's only `ServiceLoader` user, one site — redirects into it.
+
+**The ruling was wrong about Scala Native, and the correction is the reason the wrapper exists.**
+Native's `ServiceLoader.load` is a link-time INTRINSIC that only accepts a literal `classOf`, so no
+`Class`-taking wrapper can delegate to it and `nativeConfig.withServiceProviders` enlistment serves
+only direct `load(classOf[Concrete])` sites, which a ported library's generic lookup never is. Native
+therefore registers exactly as Scala.js does, off the same `META-INF/services` descriptor §12.2.7
+already ships. Measured against Scala Native 0.5.12 and recorded in the row's availability half.
+
+**No new engine phase.** `java.util.ServiceLoader` is a FACTORY and a HANDLE in one type and the
+wrapper splits them the way scala does, so the port names two existing keyed seams —
+`call-site-substitution` for `load(Class)`, `type-redirect` for the type — ordered against each other
+and against `collections` for reasons its `.conf` states. The one seam the redirect creates is the
+wrapper's `iterator()`, which carries java's ARITY and not java's ELEMENT TYPE: it answers a
+`scala.collection.Iterator` where this port retypes `java.util.Iterator` to
+`balticporter.runtime.JavaIterator` (§4.5). Left to the collections phase's external-callee coercion
+that is `E134`, **0 -> 1 errors, measured**; substituted ahead of it and bridged through
+`JavaIterator.from` it is 0.
+
+**What moved, and every line of it attributed:**
+
+| lane | LiqpMigrate | why |
+|---|---|---|
+| `remediation` | **20 -> 17** | the two `accept-jvm-only` refusal rows (`ENGINE-LIMITS.md` P6, discharged) and the `substitutions-drop` candidate derived from the same two findings |
+| `portability(all)` / `(emitted)` | **56 -> 54** | the two `java.util.ServiceLoader` rows; the rules are `dependencyRulesFor` now |
+| `policy` | **0 -> 1** | `ENGINE-LIMITS.md` P8, new and OPEN — the declared coordinate is invisible to a walk that enumerates JDK usages, because the redirect is what removed the usage |
+| `rewrite-callsites` | **0 -> 1** | `type-redirect` names no accounting lane; the identical row libGDX core and screens have carried since they gained the phase |
+| `members.tsv` | **2** | `SPIHelper` and `SPIHelper#findProviders()`, one `RetypedSignature` and two `SubstitutedCall` decisions between them |
+| errors / suite | **0 / 636 passing, 1 expected failure** | both unchanged |
+
+On `LiqpTestMigrate`: `portability(all)` **1605 -> 1603** (the same two rows, seen through the
+resolution root), `rewrite-callsites` **0 -> 1**, `portability(emitted)` flat at 1549, 0 members
+moved. The other thirteen lanes are byte-identical.
+
+**`dependency-coverage(all)` did NOT grow, and that is P8.** The expectation was that the walk would
+find a ServiceLoader requirement for the declaration to cover. It cannot: the redirect removes the
+JDK usage, which is its job, so the requirement never arrives and `DependencyCheck.unneeded` reads
+the coordinate as never applied. The entry stays — the emitted Scala names
+`multiarch.serviceloader.PlatformServiceLoader` outright and a build without the coordinate cannot
+resolve it — and the finding's own detail now names this blind spot beside the hand-written-source one
+it already named, so a reader is not instructed to remove a coordinate the port needs.
+
+**The coordinate is the first to need a RESOLVER.** `ArtifactDep.resolver` carries the URL beside the
+`org`/`name`/`rev`/`cross` it is the fourth fact of, and `SbtGen` renders one deduplicated `resolvers`
+block from the dependencies it is already writing, naming each entry from its own URL. The revision is
+a git-described SNAPSHOT and is provisional until multiarch-scala's next release, stated at the
+coordinate in both places it appears. The measure lane spells the same pair as
+`--dependency … --repository …`, because it compiles with `scala-cli` and no generated build.
 
 ### 12.5 Not run
 
