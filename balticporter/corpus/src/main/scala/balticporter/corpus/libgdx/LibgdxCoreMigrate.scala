@@ -108,6 +108,25 @@ object LibgdxPolicy:
       // maps — stay upstream, because they are consulted at the frontend, before this runs.
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
       resolutions    = reviewedBoundaries,
+      // THE ARTIFACT THIS MODULE'S BUILD ADDS — what a `Verdict.Depend` is answered WITH
+      // (CLAUDE.md §1.5). This manifest declares no `targets`, so it claims all three, and 37 sites
+      // of this port's own emitted code name `java.util.Locale`: `I18NBundle` and its loader, which
+      // is a whole feature of the library rather than an incidental call. Locale EXISTS on both
+      // non-JVM backends, in `scala-java-locales` (`JS-L65`), so the reader's action was never to
+      // remove one of those calls — it was this line, and `dependency-coverage` had reported all 37
+      // on every run since the lane existed.
+      //
+      // ONE entry: nothing here calls `java.time` or `java.text`, and an entry naming an artifact
+      // no requirement wants is now a `policy` finding of its own. It is NOT inherited (§1.5's
+      // right-hand column, `inject`'s line): every dependent's own emitted code is Locale-free, so
+      // each of the six declares nothing and the `dependency-coverage` residue it reports is an
+      // honest zero rather than a credit taken from here.
+      //
+      // `cross = Platform` is what the artifact IS — `scala-java-locales_sjs1_3` and
+      // `_native0.5_3` are published beside `_3`, so `%%` would ask a JS build for the JVM jar.
+      dependencies   = List(
+        balticporter.catalog.ArtifactDep("io.github.cquiroz", "scala-java-locales", "1.5.4",
+                                         balticporter.catalog.CrossKind.Platform)),
     )
 
   /** THE BOUNDARY ROWS THIS PORT HAS READ AND ACCEPTS — `DESIGN.md` §8.16.
