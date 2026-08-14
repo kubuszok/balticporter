@@ -176,15 +176,28 @@ object ApiRows:
   private val TimeLib                = Map("scala-java-time" -> "2.6.0")
   private val LocaleLib              = Map("scala-java-locales" -> "1.5.4")
 
-  private val ScalaJavaTime   = ArtifactDep("io.github.cquiroz", "scala-java-time", "2.6.0")
-  private val ScalaJavaTzdb   = ArtifactDep("io.github.cquiroz", "scala-java-time-tzdb", "2.6.0")
-  private val ScalaJavaLocale = ArtifactDep("io.github.cquiroz", "scala-java-locales", "1.5.4")
+  // THE CROSS KIND IS CHECKED AGAINST THE REPOSITORY, not inferred from the organisation. An
+  // artifact a `Depend` names is one a NON-JVM backend has to resolve, so the question the row is
+  // really answering is "does this exist for scala.js / native", and every one of the four below is
+  // published per PLATFORM as well as per Scala version — `scala-java-time_sjs1_3` and
+  // `scala-java-time_native0.5_3` exist beside `scala-java-time_3`, `scala-native-crypto` exists at
+  // `_native0.5_3` and NOWHERE else. Spelled `%%` (the default this file used to take) the emitted
+  // build asks for the JVM jar on a JS build, which for the first three RESOLVES and then fails at
+  // link time, and for the fourth resolves nothing at all.
+  private val ScalaJavaTime   = ArtifactDep("io.github.cquiroz", "scala-java-time", "2.6.0", CrossKind.Platform)
+  private val ScalaJavaTzdb   = ArtifactDep("io.github.cquiroz", "scala-java-time-tzdb", "2.6.0", CrossKind.Platform)
+  private val ScalaJavaLocale = ArtifactDep("io.github.cquiroz", "scala-java-locales", "1.5.4", CrossKind.Platform)
   // `scalajs-weakreferences` is published per Scala.js version as well as per Scala version, which
   // is what `%%%` is for and what makes the cross kind a fact about the ARTIFACT rather than about
   // the port that adds it.
   private val WeakRefs        = ArtifactDep("org.scala-js", "scalajs-weakreferences", "1.0.0", CrossKind.Platform)
-  private val NativeCrypto    = ArtifactDep("com.github.lolgab", "scala-native-crypto", "0.1.0")
-  private val CrossCrypto     = ArtifactDep("com.dedipresta", "scala-crypto", "1.0.0")
+  private val NativeCrypto    = ArtifactDep("com.github.lolgab", "scala-native-crypto", "0.1.0", CrossKind.Platform)
+  // …and the fifth is a coordinate a SCALA 3 port cannot resolve at all: `com.dedipresta` publishes
+  // `scala-crypto` for 2.12 and 2.13, JVM and sjs1, and for no Scala 3 at all. The cross kind is
+  // right and the ADVICE is not usable as it stands — recorded here and in the two rows that name
+  // it rather than silently corrected, because inventing a replacement artifact is the one thing a
+  // survey row may not do (CLAUDE.md §4.6: an answer the caller cannot tell from a real one).
+  private val CrossCrypto     = ArtifactDep("com.dedipresta", "scala-crypto", "1.0.0", CrossKind.Platform)
 
   private def row(id: DiffId, fqn: String, exact: Boolean,
                   jvm: (Availability, Verdict), js: (Availability, Verdict), nat: (Availability, Verdict),
@@ -477,10 +490,10 @@ object ApiRows:
       "the two platforms need DIFFERENT verdicts and one conflated rule hides that a Native-only port has a cheaper fix than a JS-targeting one"),
     row(p(26), "java.security.MessageDigest", false,
       (Full, Keep), (Absent, Depend(CrossCrypto)), (Absent, Depend(NativeCrypto)), JsNative,
-      "the exception types exist so catch sites still compile while nothing throws them from a working digest, and both platforms push to a third-party library"),
+      "the exception types exist so catch sites still compile while nothing throws them from a working digest, and both platforms push to a third-party library — but the JS coordinate is published for SCALA 2.12/2.13 ONLY, so a Scala 3 port taking that half of the advice resolves nothing and needs another artifact or an override"),
     row(p(27), "java.security.SecureRandom", false,
       (Full, Keep), (Absent, Depend(CrossCrypto)), (Absent, Keep), Unstated,
-      "UNSTATED for Native — the survey did not confirm its absence, so the rule should be added only once a corpus library is found using it"),
+      "UNSTATED for Native — the survey did not confirm its absence, so the rule should be added only once a corpus library is found using it; the JS coordinate carries p(26)'s caveat, being published for Scala 2 only"),
     row(p(28), "java.util.zip.", false,
       (Full, Keep), (Absent, Refuse("no zlib in a browser without a JS dependency")), (Full, Keep), JsNative,
       "covers ZipFile/ZipInputStream/Deflater/Inflater/CRC32/GZIP — actively maintained on Native and absent on JS"),
