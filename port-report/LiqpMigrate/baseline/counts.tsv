@@ -31,7 +31,7 @@ portability(injected)	0
 porter-notes	0
 remediation	17
 rewrite-callsites	1
-service-providers	2
+service-providers	3
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0

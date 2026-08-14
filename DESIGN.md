@@ -5646,6 +5646,11 @@ the emitted code NAMES is one it cannot resolve without, and an unverifiable one
 arm — the opposite direction from the cell's own advice, and for the opposite reason (a jar nothing
 needs costs a resolution; a missing one is a wall of errors that are not the port's).
 
+The file is deliberately NOT a baseline — it is an INPUT to the lane, and the thing a reader wants
+held constant is already held: `dependency-coverage(declared)`'s own finding names the coordinate
+with its revision, and `findings.tsv` is diffed in both directions, so a rev bump is a row that
+moves and a lane that stops.
+
 **`dependency-coverage(declared)` is the positive beside the residue**, required of every run: one row
 per declared coordinate naming its cell and the evidence for each half. The trivia family's argument
 one lane over — `policy = 0` on this seam is a bar a port meets by declaring nothing, and an artifact a
