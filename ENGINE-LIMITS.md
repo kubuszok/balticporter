@@ -5383,6 +5383,14 @@ is what every port did before the menu existed. Demonstrated live on liqp at
 *Fix kind: (a) engine for the mechanism — SHIPPED. The design conclusion is (b): the knob a port
 actually wants here is `targets` or `verdictOverrides`.*
 
+**The maintainer's answer (2026-08) makes the unreachable arm the DESIGNED common case, not a gap.**
+The reference ports (sge, ssg) target all three platforms wherever possible; a module is JVM-only
+ONLY where its whole point is a JVM facility, and native bindings are never carried as JNI — the
+stated direction is `java.lang.foreign` (Panama) on the JVM beside Scala Native bindings on Native.
+So on this corpus the contradiction arm firing IS the feature working: a port reaching for "accept"
+is almost always a port that should be declaring a dependency (`Verdict.Depend` →
+`PortManifest.dependencies`) or an alternative (`verdictOverrides`), and the refusal names both.
+
 ### P7. `portability(emitted)` counted every DROPPED type on every RENAMING port — **CLOSED; libGDX core 153 -> 69, `remediation` 30 -> 15, at 0 errors and 0 moved member digests**
 
 `PortRun` builds the "types this run does not ship" set two ways and only one of them was right.

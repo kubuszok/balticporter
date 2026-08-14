@@ -344,6 +344,16 @@ widen the BASE — a statement, not a loophole. Note the DEFAULT is what makes t
 a dependent that declares nothing gets all three platforms, so a base that narrowed and a dependent
 that did not is a widening BY OMISSION, and it is the shape the rule will meet first.
 
+**And the all-platform default is the reference ports' STATED INTENT, not an accident of the
+default** (maintainer, 2026-08). sge and ssg target every platform wherever possible; a module is
+JVM-only ONLY where its whole point is a JVM facility, and native bindings are never carried as
+JNI — the direction is `java.lang.foreign` (Panama) on the JVM beside Scala Native bindings on
+Native. Three consequences for every port: narrowing `targets` is the exception and carries its
+reason; a `Verdict.Depend` finding is answered by DECLARING the artifact
+(`PortManifest.dependencies` — `scala-java-time`, `scala-java-locales`, both already in the
+catalog's rows), never by rewriting a call the dependency makes correct; and `accept-jvm-only`
+refusing with the targets-contradiction is the feature working (`ENGINE-LIMITS.md` P6).
+
 `inject` is the one that looks wrong and is not. A drop and its replacement read as one decision and
 are two: the DROP is an observation about the shared API and binds every module that sees the type;
 the INJECTION is a build artefact, and exactly one module must ship each replacement file — a
