@@ -12,7 +12,7 @@ collection-boundary	5
 collection-closure	0
 collection-retarget	0
 context-seam	40
-dependency-coverage	37
+dependency-coverage	0
 dependency-coverage(all)	37
 gdx-shared-iterator	0
 heap-pollution	17

@@ -11,7 +11,7 @@ class-init-trigger	0
 collection-boundary	18
 collection-closure	0
 collection-retarget	0
-dependency-coverage	101
+dependency-coverage	0
 dependency-coverage(all)	101
 heap-pollution	0
 idiom(converted)	0
