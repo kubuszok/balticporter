@@ -1,0 +1,2 @@
+#suite	test	reason
+ssg.liquid.filters.SortTest	testSortMap	maintainer decision 2026-08-14: Map.Entry stays Tuple2 (idiomatic pairs) and a class IMPLEMENTING Map.Entry is unsupported — scala's idiom for custom-comparison sorting is an Ordering, not an entry subclass; the counted InexpressibleParent/ReifiedOccurrence refusal on Sort$ComparableMapEntry is the mechanism (ENGINE-LIMITS K18/K5.7)

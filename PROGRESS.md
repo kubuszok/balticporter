@@ -95,7 +95,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
-| `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal) | **0** |
+| `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
