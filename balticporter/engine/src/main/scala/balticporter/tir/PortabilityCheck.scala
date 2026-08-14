@@ -283,16 +283,24 @@ object PortabilityCheck extends RemedySource:
     // NATIVE-only port has a cheaper fix available than a JS-targeting one, and could not learn it
     // from a sentence that said "JVM-only". The JS rule is first because it is the stricter of the
     // two — a port targeting both is told the thing that stops it dead.
+    //
+    // BOTH ARE DEPENDENCY RULES NOW, because the row's non-JVM verdicts are `Depend` (DESIGN.md
+    // §8.19): the API exists off the JVM, in a cross-platform wrapper, so the reader's action is a
+    // `libraryDependencies` line plus a redirect and never "remove this call". The rules stay two
+    // because what is TRUE of the two platforms is still different, and that difference is what a
+    // reader needs to size the change.
     Rule("java.util.ServiceLoader", "the class does not exist in the Scala.js javalib at all, so " +
-      "this is a COMPILE-TIME resolution failure there rather than a linker one — a Scala.js port " +
-      "must not port ServiceLoader usage, full stop",
+      "this is a COMPILE-TIME resolution failure there rather than a linker one — Scala.js reaches " +
+      "providers only by REGISTRATION, which is what the wrapper's build-time codegen supplies from " +
+      "the same META-INF/services descriptor `PortManifest.serviceProviders` already ships",
       on = Rule.JsOnly, at = p(25)),
-    Rule("java.util.ServiceLoader", "Scala Native has it FOR REAL, resolved at LINK time: the " +
-      "toolchain enlists every provider reachable from an entrypoint, discovering them from the " +
-      "META-INF/services resources of dependencies, with nativeConfig.withServiceProviders as the " +
-      "explicit override and a per-provider link-time status. So this is a MAP path and not a " +
-      "refusal — but it is gated on a resource file this pipeline emits nothing for (ENGINE-LIMITS " +
-      "P5), and a package rename moves both that file's NAME and its CONTENTS",
+    Rule("java.util.ServiceLoader", "Scala Native has it FOR REAL, resolved at LINK time — but its " +
+      "`load` is a toolchain INTRINSIC that only accepts a literal classOf, so no Class-taking " +
+      "wrapper can delegate to it and nativeConfig.withServiceProviders enlistment serves only " +
+      "direct load(classOf[Concrete]) sites, which a ported library's generic lookup is not. Native " +
+      "therefore resolves providers by REGISTRATION exactly as Scala.js does, off the same " +
+      "descriptor (ENGINE-LIMITS P5), and a package rename moves both that file's NAME and its " +
+      "CONTENTS",
       on = Rule.NativeOnly, at = p(25)),
     Rule("javax.", "the javax.* stack is JVM-only", at = p(29)),
     Rule("java.lang.Class#forName", "runtime class lookup by name is JVM-only", exactMember = true, at = p(24)),

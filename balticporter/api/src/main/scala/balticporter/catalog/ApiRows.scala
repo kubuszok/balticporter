@@ -214,6 +214,21 @@ object ApiRows:
   // it rather than silently corrected, because inventing a replacement artifact is the one thing a
   // survey row may not do (CLAUDE.md §4.6: an answer the caller cannot tell from a real one).
   private val CrossCrypto     = ArtifactDep("com.dedipresta", "scala-crypto", "1.0.0", CrossKind.Platform)
+  // …and the sixth is the first coordinate this engine's own maintainer publishes (DESIGN.md §8.19):
+  // a cross-platform stand-in for a JDK family that EXISTS on all three backends with DIFFERENT
+  // mechanics, rather than a third party's fill-in for one that is absent. It is `%%%` for the
+  // reason every row above is — `multiarch-serviceloader_sjs1_3` and `_native0.5_3` are published
+  // beside `_3` — and it is the first to need a RESOLVER: the artifact is on the Central Portal
+  // SNAPSHOT repository and on NO release repository, so a build naming the coordinate and not the
+  // repository resolves nothing.
+  //
+  // THE REVISION IS PROVISIONAL, until multiarch-scala's next release: `0.4.0-12-gc168b2f-SNAPSHOT`
+  // is a git-described snapshot of that repository's `master`, and the release that supersedes it
+  // will carry a plain version and need no `resolver` at all. Both halves move together when it
+  // lands, and the check matches on organisation and NAME and never on the revision, so a port
+  // pinning either one is covered.
+  private val MultiArchSpi    = ArtifactDep("com.kubuszok", "multiarch-serviceloader", "0.4.0-12-gc168b2f-SNAPSHOT",
+    CrossKind.Platform, Some("https://central.sonatype.com/repository/maven-snapshots"))
 
   private def row(id: DiffId, fqn: String, exact: Boolean,
                   jvm: (Availability, Verdict), js: (Availability, Verdict), nat: (Availability, Verdict),
@@ -500,10 +515,17 @@ object ApiRows:
       (Stub("Array/AccessibleObject/Executable and the exception types are present; Method/Field/Constructor dispatch is not"),
       Refuse("no reflective dispatch; it breaks the Scala Native link")), JsNative,
       "covers Class.forName, Method.invoke, the Field accessors and Constructor.newInstance; the Native link failure was measured directly and fixed by per-platform substitution"),
+    // THE AVAILABILITY HALVES STILL DISAGREE and the VERDICTS no longer do — which is what a
+    // cross-platform wrapper IS (DESIGN.md §8.19). JS has no class to reference; Native has a real
+    // one whose `load` is a LINK-TIME INTRINSIC accepting only a literal `classOf`, so no
+    // `Class`-taking API can delegate to it and `nativeConfig.withServiceProviders` enlistment
+    // serves only direct `load(classOf[Concrete])` sites. That measured correction is why the Native
+    // verdict is no longer `MapTo("link-time provider enlistment")`: the enlistment is real and it
+    // is not reachable from a ported library's generic lookup.
     row(p(25), "java.util.ServiceLoader", false,
-      (Full, Keep), (Absent, Refuse("the class does not exist to reference on Scala.js")),
-      (Partial("real, but LINK-TIME resolved; it needs META-INF/services on the link path"), MapTo("link-time provider enlistment")), JsNative,
-      "the two platforms need DIFFERENT verdicts and one conflated rule hides that a Native-only port has a cheaper fix than a JS-targeting one"),
+      (Full, Keep), (Absent, Depend(MultiArchSpi)),
+      (Partial("real, but `load` is a LINK-TIME intrinsic that only accepts a literal classOf, so no Class-taking wrapper can call it"), Depend(MultiArchSpi)), JsNative,
+      "the two platforms need DIFFERENT verdicts about what EXISTS and the same one about what to do — one artifact answers both, and a Native-only port still learns that its gap is narrower"),
     row(p(26), "java.security.MessageDigest", false,
       (Full, Keep), (Absent, Depend(CrossCrypto)), (Absent, Depend(NativeCrypto)), JsNative,
       "the exception types exist so catch sites still compile while nothing throws them from a working digest, and both platforms push to a third-party library — but the JS coordinate is published for SCALA 2.12/2.13 ONLY, so a Scala 3 port taking that half of the advice resolves nothing and needs another artifact or an override"),

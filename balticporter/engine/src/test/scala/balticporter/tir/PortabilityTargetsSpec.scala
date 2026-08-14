@@ -75,9 +75,11 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     assert(kept.contains("org.junit."))
     assert(kept.contains("java.nio.channels.SocketChannel"))
     assert(kept.contains("java.text.Collator"))
-    // …and ServiceLoader stays too, as the OTHER rule — the one that says Native has it for real,
-    // link-time-resolved, gated on a resource file. One rule with one `why` hid exactly that.
-    val loaders = PortabilityCheck.rulesFor(jvmNative).filter(_.api == "java.util.ServiceLoader")
+    // …and ServiceLoader is on NEITHER removal list any more: its row's non-JVM verdicts are
+    // `Depend` on a cross-platform wrapper (DESIGN.md §8.19), so both halves moved to the
+    // build-graph lane. The Native half is the one this port still asks, and it is asked THERE.
+    assertEquals(PortabilityCheck.rulesFor(jvmNative).filter(_.api == "java.util.ServiceLoader"), Nil)
+    val loaders = PortabilityCheck.dependencyRulesFor(jvmNative).filter(_.api == "java.util.ServiceLoader")
     assertEquals(loaders.size, 1)
     assert(clue(loaders.head.why).contains("LINK time"))
   }
@@ -87,8 +89,12 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     val dropped = PortabilityCheck.all.filterNot(_.asks(js))
     assertEquals(dropped.map(_.api), List("java.util.ServiceLoader"))
     assert(clue(dropped.head.why).contains("LINK time"))
-    // …and the JS half is the one it keeps, which is the stricter of the two.
-    val kept = PortabilityCheck.rulesFor(js).filter(_.api == "java.util.ServiceLoader")
+    // …and the JS half is the one it keeps — as a DEPENDENCY rule, which is where both halves went
+    // the day the row gained an artifact. The removal lane must not still be asking: a reader told
+    // to delete a call that one `libraryDependencies` line plus a redirect makes correct is the
+    // unanswerable finding `dependency-coverage` exists to stop.
+    assertEquals(PortabilityCheck.rulesFor(js).filter(_.api == "java.util.ServiceLoader"), Nil)
+    val kept = PortabilityCheck.dependencyRulesFor(js).filter(_.api == "java.util.ServiceLoader")
     assertEquals(kept.size, 1)
     assert(clue(kept.head.why).contains("does not exist"))
   }
