@@ -282,6 +282,48 @@ break_residue() {
   fi
 }
 
+# declared_dep_flags <report-dir> [<report-dir> …]
+#
+# The scala-cli `--dependency`/`--repository` flags for the coordinates THE PORT ITSELF DECLARED,
+# read from what the run published (`run-latest/dependencies.tsv`, written by `PortRun` from
+# `PortManifest.dependencies`).
+#
+# WHY THIS IS NOT A STRING IN THE Justfile. The multiarch coordinate was stated THREE times — the
+# port's `.conf`, the generated build's `resolvers`/`libraryDependencies`, and a hand-maintained
+# `--dependency … --repository …` here — and nothing compared the third with the first. A revision
+# bumped in the manifest and not in the lane compiles the port against a DIFFERENT JAR, with every
+# check count, every member digest and every test outcome flat: exactly the divergence §5 exists to
+# make impossible, and the same one-value-one-spelling rule §1.5 applies to a manifest. So the run
+# publishes and the lane derives; a coordinate can now only be wrong in one place.
+#
+# WHICH coordinates: the ones the run marked `onClasspath=yes`, which it decides from the EVIDENCE
+# and not from the coordinate's shape (`DependencyCheck.Evidence`). An artifact that answers a JDK
+# API off the JVM — `scala-java-time` exists so `java.time` resolves on Scala.js — is one this JVM
+# compile already has, and putting it on the line would shadow the JDK's own `java.time`. An
+# artifact the emitted code NAMES is one this compile cannot resolve without. Unknown takes the
+# INCLUDING arm at the run: a jar nothing needs costs a resolution, a missing one is a wall of
+# errors that are not the port's.
+#
+# A report directory with no such file contributes NOTHING and is not an error — twelve of the
+# corpus's fifteen ports declare no dependency at all, and a lane whose port declares none is a lane
+# whose `{{x}}_deps` variable is the whole answer, exactly as before.
+declared_dep_flags() {
+  local dir f
+  for dir in "$@"; do
+    f="$dir/run-latest/dependencies.tsv"
+    [ -f "$f" ] || continue
+    awk -F'\t' '!/^#/ && $7 == "yes" && $6 != "" { print "--dependency\n" $6 }' "$f"
+  done
+  # …and the repositories, DEDUPLICATED across every declaration that named one: `-r` is a search
+  # path and not a per-coordinate flag, so repeating one is noise and dropping one is a coordinate
+  # that resolves nothing.
+  for dir in "$@"; do
+    f="$dir/run-latest/dependencies.tsv"
+    [ -f "$f" ] || continue
+    awk -F'\t' '!/^#/ && $7 == "yes" && $5 != "" { print $5 }' "$f"
+  done | sort -u | while read -r r; do printf '%s\n%s\n' "--repository" "$r"; done
+}
+
 # compile_guard <scala-cli-exit-status> <counted-errors> <capture-file>
 # A compile that never happened must not report 0. `scala-cli` aborting before compilation
 # ("input file not found", a bad flag) exits non-zero and prints a line that matches neither

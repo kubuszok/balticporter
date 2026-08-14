@@ -719,6 +719,22 @@ final case class PortRun(
       // …and the THIRD, which counts DECLARATIONS: `policy = 0` here is a bar a port holds by
       // declaring nothing, and an artifact a phase redirected into has no row on either lane above.
       CheckReport.record(DependencyCheck.Declared, DependencyCheck.reportDeclared(declaredCells))
+      // …and the same rows as an artifact a BUILD can read. One value, one spelling (§1.5) at the
+      // build layer: a coordinate this manifest declares was ALSO written by hand into the measure
+      // lane's scala-cli flags, and nothing compared the two — a revision bumped here and not there
+      // compiles the port against a DIFFERENT JAR with every count flat. `scripts/_lib.sh`
+      // (`declared_dep_flags`) derives the lane's `--dependency`/`--repository` from this file, so
+      // the coordinate is stated once and the drift has nowhere to happen.
+      //
+      // GATED ON THE ARTIFACT LAYER, without exception (§5.1): with reporting off `runDir` falls
+      // back to `<cwd>/port-report/<this JVM's main class>`, and one unconditional write was enough
+      // to publish a forked test suite's run directory into the checkout.
+      if CheckReport.enabled && declaredCells.nonEmpty then
+        Files.createDirectories(CheckReport.runDir)
+        Files.writeString(CheckReport.runDir.resolve("dependencies.tsv"),
+          (DependencyCheck.DeclaredHeader ::
+            DependencyCheck.declaredTsv(declaredCells, ArtifactIndex.coordinate(_)))
+            .mkString("", "\n", "\n"))
     }
     say(s"DEPENDENCY COVERAGE: ${needed.size} site(s) needing an artifact this build does not name" +
       s" (of ${allRequired.size} the walk found)" +

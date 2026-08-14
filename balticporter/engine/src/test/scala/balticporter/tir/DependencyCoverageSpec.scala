@@ -294,6 +294,33 @@ class DependencyCoverageSpec extends munit.FunSuite:
     assert(!clue(d.cell.advice).contains("no ORIGINAL usage"))
   }
 
+  // ---- the artifact a BUILD reads (`run-latest/dependencies.tsv`) ---------------------------
+
+  test("the published rows say which coordinates a JVM COMPILE of the emitted code needs") {
+    // one value, one spelling (§1.5) at the build layer: this file is what `scripts/_lib.sh`
+    // derives a lane's `--dependency`/`--repository` from, so a coordinate can be wrong in one
+    // place instead of three. The column is derived from the EVIDENCE and never from the shape of
+    // the coordinate — a catalog `Depend` artifact answers a JDK API this JVM already has
+    // (`scala-java-time` exists so `java.time` resolves OFF the jvm), and putting it on the line
+    // would shadow the JDK's own.
+    val viaCatalog = cellOf(List(req(Time)), Nil, List(req(Time)), Nil, Time, known())
+    val named      = cellWithSpliced(Nil, Set("org.example.wrapper.Providers.load"),
+                                     known("org.example.wrapper.Providers"))
+    val rows = DependencyCheck.declaredTsv(List(viaCatalog, named), d => s"${d.org}:${d.name}_3:${d.rev}")
+    assertEquals(rows.map(_.split('\t')(6)), List("no", "yes"))
+    assertEquals(rows(1).split('\t')(5), "org.example:wrapper_3:1.0")
+    // the header names every column the shell reads positionally
+    assertEquals(DependencyCheck.DeclaredHeader.split('\t').length, rows.head.split('\t').length)
+  }
+
+  test("…and an UNVERIFIABLE coordinate takes the INCLUDING arm") {
+    // a jar on a classpath that does not need it costs a resolution; a missing one is a wall of
+    // errors that are not the port's — so the unknown side of §4.6's rule is the safe one HERE,
+    // which is the opposite direction from the cell's own advice and is stated as such.
+    val d = cellOf(Nil, Nil, Nil, Nil, Wrapper, _ => DependencyCheck.Provides.Unverifiable("offline"))
+    assertEquals(DependencyCheck.declaredTsv(List(d), _.toString).head.split('\t')(6), "yes")
+  }
+
   test("a port that declares NOTHING records an honest zero on the declared lane") {
     assertEquals(DependencyCheck.declarations(Nil, Nil, Nil, Nil, Nil, known()), Nil)
     assertEquals(DependencyCheck.reportDeclared(Nil), Nil)

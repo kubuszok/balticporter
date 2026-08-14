@@ -155,14 +155,16 @@ jbump_deps    := ""
 # cost). The ANTLR-generated parser is NOT a coordinate — it is a directory of class files the
 # lane adds with `--jar` (see `liqp_parser_classes`).
 #
-# …plus ONE coordinate that is NOT in `pom.xml` and cannot be: `multiarch-serviceloader` is what
-# D-liqp-12's redirect points `java.util.ServiceLoader` at, so the EMITTED scala names it and both
-# the compile and the run need it. It is the corpus's first coordinate off Maven Central — the
-# `--repository` beside it is multiarch-scala's Central Portal snapshot repo, and without it the
-# coordinate resolves nothing. The generated build gets the same pair from `ArtifactDep.resolver`
-# (`resolver = "…"` in the port's `dependencies`); this lane compiles with `scala-cli` and no
-# generated build, which is why the fact is spelled here as well as there.
-liqp_deps     := "--dependency org.antlr:antlr4-runtime:4.13.0 --dependency com.fasterxml.jackson.core:jackson-core:2.15.0 --dependency com.fasterxml.jackson.core:jackson-databind:2.13.4.2 --dependency com.fasterxml.jackson.core:jackson-annotations:2.15.0 --dependency com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0 --dependency ua.co.k:strftime4j:1.0.6 --dependency com.kubuszok::multiarch-serviceloader:0.4.0-12-gc168b2f-SNAPSHOT --repository https://central.sonatype.com/repository/maven-snapshots"
+# WHAT IS NOT HERE, and why: `multiarch-serviceloader` — the coordinate D-liqp-12's redirect points
+# `java.util.ServiceLoader` at, which the EMITTED scala names outright — used to be spelled here as
+# a third copy of a fact the port's `.conf` and the generated build already state. Nothing compared
+# the copies, so a revision bumped in the manifest and not here would compile this lane against a
+# DIFFERENT JAR with every check count, every member digest and every test outcome flat. The run now
+# PUBLISHES what it declared (`run-latest/dependencies.tsv`) and the lane derives its
+# `--dependency`/`--repository` from that file through `declared_dep_flags` (scripts/_lib.sh), so
+# the coordinate — and the Central Portal snapshot repo it needs, which is not Maven Central — can
+# only be wrong in one place. What stays below is what `pom.xml` declares and the manifest does not.
+liqp_deps     := "--dependency org.antlr:antlr4-runtime:4.13.0 --dependency com.fasterxml.jackson.core:jackson-core:2.15.0 --dependency com.fasterxml.jackson.core:jackson-databind:2.13.4.2 --dependency com.fasterxml.jackson.core:jackson-annotations:2.15.0 --dependency com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0 --dependency ua.co.k:strftime4j:1.0.6"
 # …and what the TEST source set adds on top of it. `junit:junit:4.13.1` is the ONE test-scope
 # dependency `pom.xml` declares; `org.hamcrest:hamcrest-core:1.3` arrives with it TRANSITIVELY and
 # is deliberately NOT named here — a port resolves what the library DECLARES, and hamcrest is not
@@ -1397,7 +1399,21 @@ liqp-measure:
     # that does not compile — a false NEGATIVE on the headline number.
     # BOTH source sets on one invocation: the main port is RuntimeMode.Vendored, so the shims live in
     # `src_managed/main` and the suite links against them there. Compiling either alone measures nothing.
-    DEPS="{{liqp_deps}} {{liqp_test_deps}}"
+    # …plus whatever THE PORT ITSELF DECLARED, read from what the run published rather than
+    # re-typed here (`declared_dep_flags`, scripts/_lib.sh). Both report directories, because the
+    # two source sets are one compile and the suite's manifest may declare a coordinate the main
+    # one does not; the helper deduplicates the repositories across them.
+    DECLARED=$(declared_dep_flags "$REPORT" "$TREPORT" | tr '\n' ' ')
+    if [ -z "$DECLARED" ]; then
+      echo "!! run-latest/dependencies.tsv named no classpath coordinate for either source set —"
+      echo "   this port DECLARES multiarch-serviceloader and the emitted scala names it outright,"
+      echo "   so an empty derivation is a missing artifact and not an empty manifest. Refusing to"
+      echo "   compile against a classpath that is short one jar and to report the result as errors."
+      exit 1
+    fi
+    echo "-- declared coordinates, from the run's own dependencies.tsv --"
+    echo "   $DECLARED"
+    DEPS="{{liqp_deps}} {{liqp_test_deps}} $DECLARED"
     scala-cli compile --scala {{scala_version}} --server=false $DEPS \
       --jar "{{liqp_parser_classes}}" \
       {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala \

@@ -226,11 +226,22 @@ object DependencyCheck:
     case Known(classes: Set[String])
     case Unverifiable(why: String)
 
+  /** WHICH of [[uses]]' three evidences answered — carried as a value and never re-derived from the
+    * `why` sentence, which is prose a reader edits.
+    *
+    * It decides one thing nothing else can: whether a JVM COMPILE of the emitted code needs the
+    * coordinate on its classpath. [[Catalog]] means the artifact answers a JDK API that exists off
+    * the JVM and the JVM already has (`scala-java-time` exists so `java.time` resolves on Scala.js),
+    * so a jvm compile does not need it; the other two mean the emitted code NAMES the artifact and
+    * that compile cannot resolve without it. See [[declaredTsv]]. */
+  enum Evidence:
+    case Catalog, Classes, Spliced
+
   /** the answer ONE program gives about ONE artifact — three-valued for [[Provides]]'s reason, and
     * carrying its own evidence because "yes" and "yes, for a reason the reader can check" are not
     * the same row in a report somebody has to act on. */
   enum Answer(val why: String):
-    case Yes(override val why: String) extends Answer(why)
+    case Yes(override val why: String, evidence: Evidence) extends Answer(why)
     case No extends Answer("no reference this run can see")
     case Unknown(override val why: String) extends Answer(why)
 
@@ -362,7 +373,8 @@ object DependencyCheck:
     if byCatalog.nonEmpty then
       val apis = byCatalog.map(_.api).distinct.sorted
       Answer.Yes(s"${byCatalog.size} site(s) at ${apis.take(3).mkString(", ")}" +
-        (if apis.sizeIs > 3 then s" (+${apis.size - 3} more)" else "") + " — a catalog `Depend` row names it")
+        (if apis.sizeIs > 3 then s" (+${apis.size - 3} more)" else "") + " — a catalog `Depend` row names it",
+        Evidence.Catalog)
     else
       provides(dep) match
         case Provides.Unverifiable(why) => Answer.Unknown(why)
@@ -375,7 +387,7 @@ object DependencyCheck:
             val names = hits.map(r => r.owner.getOrElse(r.fullName)).distinct.sorted
             Answer.Yes(s"${hits.map(_.sites).sum} reference(s) to ${names.take(3).mkString(", ")}" +
               (if names.sizeIs > 3 then s" (+${names.size - 3} more)" else "") +
-              " — the artifact's own class list declares them")
+              " — the artifact's own class list declares them", Evidence.Classes)
           else
             // …and the same listing read against SPLICED TEXT, which has no symbol to be a row.
             val text = spliced.filter(namesClass(_, classes)).toList.sorted
@@ -383,7 +395,8 @@ object DependencyCheck:
             else
               Answer.Yes(s"${text.size} spliced name(s) — ${text.take(3).mkString(", ")}" +
                 (if text.sizeIs > 3 then s" (+${text.size - 3} more)" else "") +
-                " — written as literal Scala by a surface phase, which interns no symbol")
+                " — written as literal Scala by a surface phase, which interns no symbol",
+                Evidence.Spliced)
 
   /** the 2×2 itself: one [[Declaration]] per declared coordinate.
     *
@@ -415,14 +428,14 @@ object DependencyCheck:
           case _                 => uses(d, originalReqs, originalExt, provides)
         val cell = (original, emitted) match
           case (_, Answer.Unknown(_))             => Cell.Unverifiable
-          case (Answer.Yes(_), Answer.Yes(_))     => Cell.Covered
-          case (Answer.Yes(_), _)                 => Cell.Stale
+          case (Answer.Yes(_, _), Answer.Yes(_, _)) => Cell.Covered
+          case (Answer.Yes(_, _), _)                => Cell.Stale
           // the pair the four cells could not spell: the emitted column answered from the CATALOG
           // half, which needs no jar, and the original one then fell through to a listing this run
           // could not read. `Introduced`'s sentence asserts there was no original usage, which is
           // the one thing not known here — same KEEP, different sentence.
-          case (Answer.Unknown(_), Answer.Yes(_)) => Cell.IntroducedOriginalUnknown
-          case (_, Answer.Yes(_))                 => Cell.Introduced
+          case (Answer.Unknown(_), Answer.Yes(_, _)) => Cell.IntroducedOriginalUnknown
+          case (_, Answer.Yes(_, _))                => Cell.Introduced
           case _                              => Cell.Unused
         Declaration(d, cell, original, emitted)
       }
@@ -493,6 +506,39 @@ object DependencyCheck:
       CheckReport.Finding(Declared, d.cell.label, d.dep.toString,
         balticporter.core.PolicyReport.DependencySetting, 0,
         s"original: ${d.original.why} | emitted: ${d.emitted.why} — ${d.cell.advice}")
+    }
+
+  /** …and the same rows as an ARTIFACT a BUILD can read.
+    *
+    * `run-latest/dependencies.tsv`, and the reason it exists is a `CLAUDE.md` §1.5 one at the build
+    * layer: a coordinate this port declares was ALSO written by hand into the measure lane's
+    * scala-cli flags, and nothing compared the two — a revision bumped in the manifest and not in
+    * the lane compiles the port against a different jar with every count flat. One value, one
+    * spelling: the run publishes what it declared and the lane derives its flags from that.
+    *
+    * `coordinate` is the EXPLICIT jvm form (`org:name_3:rev`), never `cs`'s or scala-cli's `::`,
+    * for [[balticporter.runner.ArtifactIndex.coordinate]]'s own reason — the suffix that shorthand
+    * picks is an ambient fact about the machine, and two checkouts resolving two different jars is
+    * a divergence with every count agreeing.
+    *
+    * `onClasspath` is the one DERIVED column, and it is derived HERE rather than in a shell script
+    * because the run is the only thing that knows the evidence: a coordinate whose emitted evidence
+    * is the CATALOG half answers a JDK API the JVM already has (`scala-java-time` exists so
+    * `java.time` resolves OFF the jvm), so a jvm compile of the emitted code does not need it —
+    * while a coordinate the emitted code NAMES, through a reference or a splice, is one that compile
+    * cannot resolve without. Anything unknown takes the INCLUDING arm: a jar on a classpath that
+    * does not need it costs a resolution, and a missing one is a wall of errors that are not the
+    * port's. */
+  val DeclaredHeader = "#org\tname\trev\tcross\tresolver\tcoordinate\tonClasspath\tcell\twhy"
+
+  def declaredTsv(decls: List[Declaration], coordinateOf: ArtifactDep => String): List[String] =
+    decls.map { d =>
+      val onCp = d.emitted match
+        case Answer.Yes(_, Evidence.Catalog) => false
+        case _                               => true
+      List(d.dep.org, d.dep.name, d.dep.rev, d.dep.cross.toString.toLowerCase,
+           d.dep.resolver.getOrElse(""), coordinateOf(d.dep),
+           if onCp then "yes" else "no", d.cell.label, d.emitted.why).mkString("\t")
     }
 
   /** grouped one-line summary, most-referenced first — `PortabilityCheck.summary`'s shape, because

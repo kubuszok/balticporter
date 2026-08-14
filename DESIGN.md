@@ -5632,6 +5632,20 @@ fingerprint discipline and for its reason: a cache keyed on existence alone answ
 coordinate bump, and the port is then checked against the classes it used to declare. It is not the
 same object because the engine cannot depend on `corpus`, which is where that one lives.
 
+**…and the same rows are PUBLISHED as an artifact a BUILD reads.** `run-latest/dependencies.tsv` is
+one row per declared coordinate — org, name, rev, cross, resolver, the EXPLICIT jvm coordinate, and
+whether a jvm compile of the emitted code needs it — and it exists because §1.5's rule holds at the
+build layer too. A port's coordinate was stated three times (the `.conf`, the generated build, and a
+hand-maintained `--dependency … --repository …` in the measure lane) and nothing compared the third
+with the first, so a revision bumped in the manifest and not in the lane compiles the port against a
+DIFFERENT JAR with every check count, every member digest and every test outcome flat. The run
+publishes and `scripts/_lib.sh`'s `declared_dep_flags` derives, so the coordinate can only be wrong
+in one place. The `onClasspath` column is decided from the EVIDENCE and never from the coordinate's
+shape: an artifact answering a JDK API off the JVM is one this jvm compile already has, an artifact
+the emitted code NAMES is one it cannot resolve without, and an unverifiable one takes the including
+arm — the opposite direction from the cell's own advice, and for the opposite reason (a jar nothing
+needs costs a resolution; a missing one is a wall of errors that are not the port's).
+
 **`dependency-coverage(declared)` is the positive beside the residue**, required of every run: one row
 per declared coordinate naming its cell and the evidence for each half. The trivia family's argument
 one lane over — `policy = 0` on this seam is a bar a port meets by declaring nothing, and an artifact a
