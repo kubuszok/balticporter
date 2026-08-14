@@ -210,6 +210,75 @@ class DependencyCoverageSpec extends munit.FunSuite:
     assertEquals(d.cell, DependencyCheck.Cell.Introduced)
   }
 
+  // ---- the THIRD evidence: a name a phase SPLICED, which no symbol table holds ----------------
+
+  private def cellWithSpliced(after: List[ExternalUsage.Row], spliced: Set[String],
+                              provides: ArtifactDep => DependencyCheck.Provides) =
+    DependencyCheck.declarations(List(Wrapper), Nil, Nil, Nil, after,
+      provides, splicedAfter = spliced).head
+
+  test("a `call-site-substitution` ALONE answers the emitted column — the static-utility shape") {
+    // The shape P8's fix cannot see through either of its two evidences: the port rewrites the CALL
+    // and declares no TYPE, so the emitted program names the artifact on every line the template
+    // wrote and interns NOTHING for it (`Tree.Opaque.raw` is text the engine deliberately does not
+    // parse). Both halves read `No`, the cell is `Stale`, and the instruction says remove the
+    // coordinate the emitted code cannot compile without — P8 re-entering through the other seam.
+    // liqp is masked only because its `type-redirect` interns a symbol for the same artifact.
+    val spliced = Set("org.example.wrapper.Providers.load")
+    val d = cellWithSpliced(Nil, spliced, known("org.example.wrapper.Providers"))
+    assertEquals(d.cell, DependencyCheck.Cell.Introduced)
+    assert(d.cell.keep, "a coordinate only the spliced text names must never be reported removable")
+    assertEquals(DependencyCheck.unneeded(List(d)), Nil)
+    assert(clue(d.emitted.why).contains("spliced"))
+    // …and with the same jar and no spliced name it is still `Unused`: the evidence is what moved
+    // the cell, not the artifact being readable.
+    assertEquals(cellWithSpliced(Nil, Set.empty, known("org.example.wrapper.Providers")).cell,
+                 DependencyCheck.Cell.Unused)
+  }
+
+  test("a spliced name is cut at a SEPARATOR against the jar's own listing, never by prefix") {
+    // the member half: `…Providers.load` is not a class, and only the artifact's listing can say
+    // which prefix of it is (§4.56).
+    assert(DependencyCheck.namesClass("a.b.Providers.load", Set("a.b.Providers")))
+    assert(DependencyCheck.namesClass("a.b.Providers", Set("a.b.Providers")))
+    assert(!DependencyCheck.namesClass("a.b.ProvidersThing.load", Set("a.b.Providers")))
+    assert(!DependencyCheck.namesClass("a.b.Other", Set("a.b.Providers")))
+  }
+
+  test("…and the SPLICED half never answers the ORIGINAL column — the pre-pipeline tree has no text") {
+    // asymmetric on purpose: passing it to both columns would answer `Covered` where the truth is
+    // `Introduced`, and `Introduced` is the cell that has to SAY a phase put the artifact there.
+    val d = cellWithSpliced(Nil, Set("org.example.wrapper.Providers.load"),
+      known("org.example.wrapper.Providers"))
+    assertEquals(d.cell, DependencyCheck.Cell.Introduced)
+    assert(clue(d.original.why).contains("no reference"))
+  }
+
+  test("the dotted runs of a real substitution TEMPLATE, hole markers and all") {
+    val tmpl = balticporter.transform.CallSiteSubstitutionTransform.Template
+      .parse("org.example.wrapper.Providers.load({arg0}, {recv}.tag)").toOption.get
+    val op = tmpl.splice(Some(Tree.Literal(Constant.NullC, TypeRepr.NoType, Origin.synthetic)),
+      List(Tree.Literal(Constant.IntC(1), TypeRepr.NoType, Origin.synthetic)),
+      TypeRepr.NoType, Origin.synthetic)
+    val runs = DependencyCheck.dottedRuns(op.asInstanceOf[Tree.Opaque].raw)
+    // the FQN survives whole; the NUL hole marker is not an identifier character, so a spliced TERM
+    // can never be glued onto the literal name in front of it.
+    assert(clue(runs).contains("org.example.wrapper.Providers.load"))
+    assert(runs.forall(r => !r.contains(Tree.Opaque.Mark)))
+  }
+
+  test("…and the runs are read off the PROGRAM, so any phase that mints a `Tree.Opaque` is covered") {
+    // derived and never asked of the phases (`CLAUDE.md` §1): a phase is the one thing that could be
+    // wrong about what it introduced, and the tree simply has the node.
+    val body = Tree.Opaque("org.example.wrapper.Providers.load()", TinyProgram.tInt, TinyProgram.O)
+    val add  = TinyProgram.addDef.copy(rhs = Some(body))
+    val foo  = TinyProgram.foo.copy(body = List(TinyProgram.countDef, add))
+    val p    = new Program(List(foo), TinyProgram.symbols, Xref.build(List(foo)), MemberIndex.empty)
+    assert(clue(DependencyCheck.splicedNames(p)).contains("org.example.wrapper.Providers.load"))
+    // a program with no spliced text answers the empty set rather than anything derived from names.
+    assertEquals(DependencyCheck.splicedNames(TinyProgram.program), Set.empty[String])
+  }
+
   test("a port that declares NOTHING records an honest zero on the declared lane") {
     assertEquals(DependencyCheck.declarations(Nil, Nil, Nil, Nil, Nil, known()), Nil)
     assertEquals(DependencyCheck.reportDeclared(Nil), Nil)

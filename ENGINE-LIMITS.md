@@ -5515,6 +5515,26 @@ The `Introduced` cell is therefore live and specced and fires on no corpus port 
 honest state of it. Every other count on every port flat; `dependency-coverage(declared)` is a new
 lane and appears at `0 -> N` on all fifteen.
 
+**THE CORRECTION: the emitted column could not see a SPLICE, and the masking is the whole story.**
+The 2×2's emitted half reads two evidences and both need a SYMBOL — a catalog row the
+`ExternalUsage` walk answered, or a class name one of those rows carries. A `Tree.Opaque` has none:
+its `raw` is ready-made Scala the engine deliberately does not parse (`CLAUDE.md` §6 requires FQNs
+in it, and nothing interns them). So a `Verdict.Depend` answered by a `call-site-substitution`
+ALONE — the STATIC-UTILITY shape, where the port rewrites the calls and declares no type at all —
+produces an emitted program that names the artifact on every line the template wrote and answers
+`No` on both halves, lands in `Cell.Stale`, and is told *remove the entry*. That is the same wrong
+remove instruction P8 was opened for, one seam over, and the demonstration port cannot show it: liqp
+pairs its substitution with a `type-redirect`, which interns `ServiceProviders` and answers the
+column for both. A port that only needed the call rewrite would have shipped the defect. Closed by a
+THIRD evidence — the dotted runs of every `Tree.Opaque` in the emitted program
+(`DependencyCheck.splicedNames`), cut at a separator against the same listing, derived from the tree
+rather than asked of the phases (§1) and fed to the emitted column only. One thing it cost that is
+worth keeping: `Character.isJavaIdentifierPart` answers TRUE for `Tree.Opaque.Mark`, since NUL is
+IDENTIFIER-IGNORABLE (JLS 3.8) — read through that predicate alone the hole marker glues onto the
+name in front of it and the evidence is silently empty for every template that has a hole, which is
+every template worth writing. The spec is what found it. Flat on all fifteen ports: liqp's cell was
+already `Covered` by the catalog half, which is asked first.
+
 *Fix kind: (a) engine — `DependencyCheck.declarations` (the 2×2, pure), `ArtifactIndex` (the
 provides-set), one new required lane. The port changed nothing.*
 

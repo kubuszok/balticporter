@@ -5571,6 +5571,20 @@ authority on what the jar provides, so nothing is guessed and no manifest key is
 matters because a second key linking coordinate to package would be a second spelling of a decision
 the coordinate and the redirect already state twice (§1.5).
 
+**And it is matched against TWO KINDS OF REFERENCE, because one of the two seams interns no symbol.**
+An `ExternalUsage` row needs a symbol the frontend resolved; a `Tree.Opaque` is ready-made Scala the
+engine deliberately does not parse, so a `call-site-substitution` template names an artifact on every
+line it wrote and the symbol table holds nothing for it. A `Verdict.Depend` answered by a
+substitution ALONE — the static-utility shape, where the port rewrites the CALL and declares no
+type — therefore read `No` on both halves, landed in `Stale`, and was told to remove the coordinate
+its own emitted code cannot compile without: P8's defect re-entering through the other seam, masked
+on the demonstration port only because its `type-redirect` interns a symbol for the same artifact.
+So the emitted column also reads the DOTTED NAMES of every `Tree.Opaque` in the program
+(`DependencyCheck.splicedNames`), cut at a separator against the same listing. DERIVED from the tree
+and never asked of the phases, for `Rewrite.accountedBy`'s reason (§1) — a phase is the one thing
+that could be wrong about what it introduced — and fed to the EMITTED column only, since the
+pre-pipeline tree holds no spliced text at all.
+
 Five properties that are decisions rather than implementation:
 
 - **`--intransitive`**, or the set is `scala-library` and every port references every coordinate;

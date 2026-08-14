@@ -93,6 +93,23 @@ import balticporter.catalog.{ApiRow, ArtifactDep, DiffId, Platform}
   *      half a redirect needs, and it is READ FROM THE ARTIFACT — never derived from the coordinate.
   *      There is no structural link between `org:name` and a package, so deriving one would be
   *      §4.56's hazard at a build coordinate; the jar is the one authority on what it provides.
+  *   3. …or the artifact's class list answers a name a phase SPLICED into the program as LITERAL
+  *      TEXT. That third source is not a refinement of the second: an `ExternalUsage` row needs an
+  *      INTERNED SYMBOL, and a `Tree.Opaque` has none — its `raw` is ready-made Scala the frontend
+  *      never resolved. So a `Depend` answered by a `call-site-substitution` ALONE — the static
+  *      utility shape, where the port rewrites the CALL and declares no type — makes an emitted
+  *      program that names the artifact on every line the template wrote and reads `No` on both
+  *      halves above, lands in `Cell.Stale`, and is told to REMOVE the coordinate its own emitted
+  *      code cannot compile without. That is `ENGINE-LIMITS.md` P8's defect re-entering through the
+  *      other seam, and it is masked wherever a `type-redirect` runs beside the substitution and
+  *      interns a symbol for the same artifact.
+  *
+  *      It is DERIVED FROM THE EMITTED PROGRAM ([[splicedNames]]) and never asked of the phases,
+  *      which is §1's own split read at a check: a phase could be wrong about what it introduced or
+  *      silently stop maintaining the answer, while the tree simply HAS the `Tree.Opaque` nodes —
+  *      so every phase that mints one is covered, including the ones written after this paragraph.
+  *      And it feeds the EMITTED column only: the pre-pipeline program holds no spliced text by
+  *      construction, so answering the original column from it would be a fabricated fact (§4.6).
   *
   * [[Provides]] is therefore THREE-valued, and the third value is not a default. A jar that cannot be
   * fetched is `Unverifiable`, which is neither "provides it" nor "does not" — collapsed either way it
@@ -247,16 +264,86 @@ object DependencyCheck:
   final case class Declaration(dep: ArtifactDep, cell: Cell, original: Answer, emitted: Answer):
     def render: String = s"$dep — ${cell.label} (original: ${original.why}; emitted: ${emitted.why})"
 
+  /** EVERY DOTTED NAME A PHASE SPLICED INTO THIS PROGRAM AS LITERAL TEXT — the third evidence, and
+    * the one no symbol table holds.
+    *
+    * A `Tree.Opaque` is ready-made Scala: a call-site substitution's template, a replaced method
+    * body, a generated FFI downcall. The engine deliberately does not parse it (`Tree.Opaque`'s own
+    * doc), so its `raw` interns nothing and every check keyed on symbols reads past it — including
+    * the `ExternalUsage` walk the emitted column's second evidence is built on.
+    *
+    * Walked with `StandardTraversal` and read off the PROGRAM rather than asked of the phases, for
+    * the reason `Rewrite.accountedBy` is DERIVED rather than declared (`CLAUDE.md` §1): a phase is
+    * the one thing that could be wrong about what it introduced, and the tree simply has the nodes.
+    * A phase that mints a `Tree.Opaque` tomorrow is covered without knowing this exists.
+    *
+    * What comes back is the MAXIMAL dotted run, uncut — `a.b.C.member` and not `a.b.C` — because
+    * which prefix of it is a CLASS is a question only the artifact's own listing can answer, and
+    * cutting it here would be a guess at a name (§4.56). [[namesClass]] does the cutting, at a
+    * separator, against a set that already holds every enclosing prefix. */
+  def splicedNames(program: Program): Set[String] =
+    given Program = program
+    program.units.foldLeft(Set.empty[String]) { (acc, u) =>
+      StandardTraversal.scanClassDef(u, acc) {
+        case (a, o: Tree.Opaque) => a ++ dottedRuns(o.raw)
+        case (a, _)              => a
+      }
+    }
+
+  /** the maximal `ident(.ident)+` runs of a piece of ready-made Scala. Not a parse and not meant to
+    * be one: it is a CANDIDATE list, every member of which is then tested for equality against a
+    * jar's own class listing, so a run that is not a name matches nothing and costs one lookup.
+    *
+    * THE HOLE MARKER IS AN IDENTIFIER CHARACTER, which is the one thing about this that is not
+    * obvious. `Tree.Opaque.Mark` is NUL, chosen precisely because it cannot occur in Scala source —
+    * and `Character.isJavaIdentifierPart` answers TRUE for it, along with every other
+    * IDENTIFIER-IGNORABLE control character (JLS 3.8 lets an identifier contain them). Read through
+    * that predicate alone the marker glues onto the literal name in front of it, so
+    * `…Providers.load(<NUL>0<NUL>` is one run, matches no class, and the whole evidence is silently
+    * empty for every template that has a hole — which is every template worth writing. The
+    * ignorable set is excluded rather than the marker alone, because what makes this wrong is the
+    * CLASS of character and not the one this engine happens to have picked. */
+  private[tir] def dottedRuns(raw: String): Set[String] =
+    val out = Set.newBuilder[String]
+    val cur = new StringBuilder
+    def part(c: Char) = Character.isJavaIdentifierPart(c) && !Character.isIdentifierIgnorable(c)
+    def flush(): Unit =
+      val s = cur.toString.stripSuffix(".")
+      if s.contains('.') && !s.head.isDigit then out += s
+      cur.setLength(0)
+    raw.foreach { c =>
+      if part(c) || (c == '.' && cur.nonEmpty) then cur.append(c)
+      else flush()
+    }
+    flush()
+    out.result()
+
+  /** does `name` — or any prefix of it cut at a `.` — name a class this artifact declares?
+    *
+    * Equality against the listing at every cut, never a `startsWith` (§4.56): `classes` already
+    * holds each enclosing prefix of a nested entry, and a spliced name routinely reaches PAST the
+    * class into a member (`…PlatformServiceLoader.load`). */
+  private[tir] def namesClass(name: String, classes: Set[String]): Boolean =
+    var i   = name.length
+    var hit = classes(name)
+    while !hit && i > 0 do
+      i = name.lastIndexOf('.', i - 1)
+      if i > 0 then hit = classes(name.substring(0, i))
+    hit
+
   /** does THIS program use THIS artifact — the one derivation both columns of the 2×2 read.
     *
-    * The union of the two evidences, catalog half first (see the object doc for why that order is
-    * load-bearing): a `Depend` row naming this artifact that the walk answered, or a reference the
-    * program makes to a class the artifact itself declares.
+    * The union of the THREE evidences, catalog half first (see the object doc for why that order is
+    * load-bearing): a `Depend` row naming this artifact that the walk answered, a reference the
+    * program makes to a class the artifact itself declares, or a name a phase SPLICED into it as
+    * literal text.
     *
     * `external` is the program's own EXTERNAL usage rows, already held to this module's emitted code
-    * by the caller's D2 predicate — the same list `jdk-surface` reads, never a second walk (§3). */
+    * by the caller's D2 predicate — the same list `jdk-surface` reads, never a second walk (§3).
+    * `spliced` is [[splicedNames]] over the same program, and is `Set.empty` for the pre-pipeline
+    * one because no phase has run there. */
   def uses(dep: ArtifactDep, reqs: List[Requirement], external: List[ExternalUsage.Row],
-           provides: ArtifactDep => Provides): Answer =
+           provides: ArtifactDep => Provides, spliced: Set[String] = Set.empty): Answer =
     val byCatalog = reqs.filter(_.deps.values.exists(d => (d.org, d.name) == (dep.org, dep.name)))
     if byCatalog.nonEmpty then
       val apis = byCatalog.map(_.api).distinct.sorted
@@ -270,12 +357,19 @@ object DependencyCheck:
           // row IS its own name. Equality against a set that already holds every enclosing prefix —
           // never a prefix TEST, which is the hazard this whole derivation exists to avoid.
           val hits = external.filter(r => classes(r.owner.getOrElse(r.fullName)))
-          if hits.isEmpty then Answer.No
-          else
+          if hits.nonEmpty then
             val names = hits.map(r => r.owner.getOrElse(r.fullName)).distinct.sorted
             Answer.Yes(s"${hits.map(_.sites).sum} reference(s) to ${names.take(3).mkString(", ")}" +
               (if names.sizeIs > 3 then s" (+${names.size - 3} more)" else "") +
               " — the artifact's own class list declares them")
+          else
+            // …and the same listing read against SPLICED TEXT, which has no symbol to be a row.
+            val text = spliced.filter(namesClass(_, classes)).toList.sorted
+            if text.isEmpty then Answer.No
+            else
+              Answer.Yes(s"${text.size} spliced name(s) — ${text.take(3).mkString(", ")}" +
+                (if text.sizeIs > 3 then s" (+${text.size - 3} more)" else "") +
+                " — written as literal Scala by a surface phase, which interns no symbol")
 
   /** the 2×2 itself: one [[Declaration]] per declared coordinate.
     *
@@ -287,16 +381,19 @@ object DependencyCheck:
     * @param before this module's own requirements over the PRE-pipeline program
     * @param beforeExternal …and its external usage rows
     * @param after  the same over the program the run EMITS — [[unneeded]]'s old input, unchanged
+    * @param splicedAfter [[splicedNames]] over the EMITTED program, and over that one only: the
+    *   pre-pipeline program holds no spliced text, so there is no original column to feed
     */
   def declarations(declared: List[ArtifactDep],
                    before: => List[Requirement], beforeExternal: => List[ExternalUsage.Row],
                    after: List[Requirement], afterExternal: List[ExternalUsage.Row],
-                   provides: ArtifactDep => Provides): List[Declaration] =
+                   provides: ArtifactDep => Provides,
+                   splicedAfter: Set[String] = Set.empty): List[Declaration] =
     if declared.isEmpty then Nil else
       val originalReqs = before
       val originalExt  = beforeExternal
       declared.map { d =>
-        val emitted = uses(d, after, afterExternal, provides)
+        val emitted = uses(d, after, afterExternal, provides, splicedAfter)
         // asked only where it can change the SENTENCE — an emitted `Unknown` gives no instruction
         // whatever the original column says, so there is nothing for a second walk to decide.
         val original = emitted match

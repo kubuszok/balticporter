@@ -696,9 +696,16 @@ final case class PortRun(
     lazy val beforeExternal = ExternalUsage.external(translated.parsed, notShipped)
     val externalAll     = ExternalUsage.all(program).filterNot(r => program.owns(r.symbol))
     val externalEmitted = ExternalUsage.external(program, notShipped)
+    // …and the THIRD evidence, which neither walk above can hold: a phase that SPLICES ready-made
+    // Scala interns no symbol for what it wrote, so a `Depend` answered by a `call-site-substitution`
+    // alone reads `No` on both halves and lands in `Stale` — told to remove the coordinate its own
+    // emitted code cannot compile without. Derived from the EMITTED program (never asked of the
+    // phases, §1) and fed to the emitted column only: the pre-pipeline tree has no spliced text.
+    lazy val splicedEmitted = DependencyCheck.splicedNames(program)
     val declaredCells = DependencyCheck.declarations(declaredDeps,
       beforeRequired, beforeExternal, ownRequired, externalEmitted,
-      ArtifactIndex.supplier(ArtifactIndex.defaultCacheDir))
+      ArtifactIndex.supplier(ArtifactIndex.defaultCacheDir),
+      if declaredDeps.isEmpty then Set.empty else splicedEmitted)
     val unneededDeps = DependencyCheck.unneeded(declaredCells)
     locally {
       given Program = program
