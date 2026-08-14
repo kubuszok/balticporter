@@ -142,6 +142,67 @@ class CorrelateSpec extends munit.FunSuite:
     assert(d.regressed)
   }
 
+  // ---- the ANCHOR half of a DECLARED entry -------------------------------------------------
+
+  test("a declared row may be ANCHORED, and holds only while the failure is still at that class") {
+    // `wraps` anchors `main-frame` at `p.Buf` (see the anchoring tests above), so the row holds…
+    val at = List(Correlate.Expected("p.BufTest", "wraps", "substituted", frame = Some("p.Buf")))
+    val d  = Correlate.diffTests(Map.empty, Correlate.locateTests(Correlate.parseTests(testLog), idx, at))
+    assertEquals(d.expectedFailing.map(_.outcome.name), List("wraps"))
+    assertEquals(d.staleExpectations, Nil)
+  }
+
+  test("…and a NEW failure with a DIFFERENT cause in the same test is no longer absorbed silently") {
+    // Keyed on (suite, test) alone this row matches whatever `wraps` does: the artifact reads
+    // `expected#declared`, no count moves, and the sentence in the `reason` column is about a
+    // failure that is not happening. Anchored, the claim stops holding the moment the failure moves.
+    val stale = List(Correlate.Expected("p.BufTest", "wraps", "substituted", frame = Some("p.SomewhereElse")))
+    val d = Correlate.diffTests(Map.empty, Correlate.locateTests(Correlate.parseTests(testLog), idx, stale))
+    assertEquals(d.expectedFailing, Nil)
+    assertEquals(d.newlyFailing.map(_.outcome.name), List("compares", "wraps"))
+    assertEquals(d.staleExpectations.map(_.outcome.name), List("wraps"))
+    // the artifact says WHICH kind of unexpected it is, so the row is findable from the file
+    val tsv = d.staleExpectations.map(_.tsv).mkString("\n")
+    assert(clue(tsv).contains("unexpected#stale-declaration"))
+    assert(clue(Correlate.renderTests(Nil, d)).contains("NO LONGER HOLDS"))
+  }
+
+  test("a row with NO anchor keeps today's behaviour exactly — the column is optional") {
+    // the compatibility half: these files predate the column, and reading an absent anchor as "does
+    // not match" would turn every port's escape hatch into a wall of unexpected failures.
+    val at = List(Correlate.Expected("p.BufTest", "wraps", "substituted"))
+    val d  = Correlate.diffTests(Map.empty, Correlate.locateTests(Correlate.parseTests(testLog), idx, at))
+    assertEquals(d.expectedFailing.map(_.outcome.name), List("wraps"))
+    assertEquals(d.staleExpectations, Nil)
+  }
+
+  test("the anchor column is PARSED from the file, tagged rather than positional") {
+    val f = java.nio.file.Files.createTempFile("bp-expected", ".tsv")
+    java.nio.file.Files.writeString(f,
+      s"${Correlate.ExpectedHeader}\n" +
+      "p.BufTest\twraps\tthe reason, with prose\tframe=p.Buf\n" +
+      "p.BufTest\tcompares\tan older row with no anchor at all\n")
+    val List(a, b) = Correlate.parseExpected(f): @unchecked
+    assertEquals(a.frame, Some("p.Buf"))
+    assertEquals(a.reason, "the reason, with prose")
+    // the reason has always absorbed every trailing field, so a positional column would be read as
+    // reason text by one side and as an anchor by the other.
+    assertEquals(b.frame, scala.None)
+    assertEquals(b.reason, "an older row with no anchor at all")
+    java.nio.file.Files.deleteIfExists(f)
+  }
+
+  test("a DERIVED expectation is never reported stale — a drop is a fact, not a claim") {
+    // a declared row beside a drop that explains the same failure: the drop classifies it, and the
+    // claim is neither wrong nor the reader's next step.
+    val dropped = Set(Correlate.Dropped("p.Buf"))
+    val stale   = List(Correlate.Expected("p.BufTest", "wraps", "something else", frame = Some("p.Nope")))
+    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx, stale, Set.empty, dropped)
+    val d  = Correlate.diffTests(Map.empty, ts)
+    assertEquals(d.expectedFailing.map(_.expected.get.source), List("derived"))
+    assertEquals(d.staleExpectations, Nil)
+  }
+
   test("an expected failure that started PASSING is reported — a substitution that works is news") {
     val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx,
                                    List(Correlate.Expected("p.BufTest", "addsOne", "was substituted")))

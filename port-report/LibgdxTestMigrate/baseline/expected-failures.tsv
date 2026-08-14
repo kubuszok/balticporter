@@ -16,4 +16,12 @@
 # then hides a fifth.
 #
 # `test` may be `*` to declare a whole suite.
-#suite	test	reason
+#
+# A row may also carry `frame=<ported class>` as a trailing TAB-separated field — the `unit` the
+# correlator anchors the failure at, copied from `run-latest/test-failures.tsv`. While it holds the
+# row classifies as before; where it stops holding the failure counts UNEXPECTED and the entry is
+# reported as a reason that no longer holds. It is OPTIONAL because these files predate it, and a
+# row without one keeps exactly the old behaviour — but a claim keyed on the test's NAME alone
+# absorbs a NEW failure with a DIFFERENT cause in the same test, silently, which is the same rot
+# one column over. New rows should carry it.
+#suite	test	reason	[frame=<ported class>]

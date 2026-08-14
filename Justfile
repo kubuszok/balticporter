@@ -2211,14 +2211,19 @@ baseline-accept PORT:
     # `Substitutions.dropTypes` is DERIVED as expected from `run-latest/dropped-types.tsv`, which
     # PortRun regenerates every run. The warning below is for the residue — a failure no drop
     # explains and that is still a decision.
-    if [ -f "$DIR/run-latest/test-failures.tsv" ] && grep -q $'\tunexpected\t' "$DIR/run-latest/test-failures.tsv"; then
+    # Matched WITHOUT a trailing tab, so `unexpected#stale-declaration` is caught by the same test:
+    # a declared row whose ANCHOR stopped matching is the one shape here that already has a line in
+    # the file and is still a failure nobody has read.
+    if [ -f "$DIR/run-latest/test-failures.tsv" ] && grep -q $'\tunexpected' "$DIR/run-latest/test-failures.tsv"; then
       echo
       echo "NOTE: this baseline contains failing tests that NO SUBSTITUTION explains:"
-      grep $'\tunexpected\t' "$DIR/run-latest/test-failures.tsv" | cut -f1,2 | sed 's/^/        /'
+      grep $'\tunexpected' "$DIR/run-latest/test-failures.tsv" | cut -f1,2 | sed 's/^/        /'
       echo "      Either they are regressions, or they are decisions — and a decision belongs in"
-      echo "      baseline/expected-failures.tsv ('#suite<TAB>test<TAB>reason', '*' for a whole"
-      echo "      suite) with a reason someone can defend. Left unstated they read as regressions"
-      echo "      that someone once accepted."
+      echo "      baseline/expected-failures.tsv ('#suite<TAB>test<TAB>reason<TAB>frame=<class>',"
+      echo "      '*' for a whole suite) with a reason someone can defend. Left unstated they read"
+      echo "      as regressions that someone once accepted."
+      echo "      A row marked 'unexpected#stale-declaration' ALREADY has a line: its anchor moved,"
+      echo "      so what fails is not what the row is about — read the failure, then re-anchor it."
     fi
     echo
     echo "commit port-report/{{PORT}}/baseline/ with the change that produced it."

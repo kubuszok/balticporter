@@ -68,6 +68,28 @@ import java.nio.file.{Files, Path}
   * expected failure that PASSES is reported too, because a substitution that started working is
   * news. (A derived one cannot: a passing test has no failure stack, so it simply stops being
   * expected — which is the same news, arrived at without a file to edit.)
+  *
+  * ## …and a DECLARED entry may be keyed on the ANCHOR as well as on the name
+  *
+  * The rot the two forms are kept apart to avoid has a second face, and `(suite, test)` cannot see
+  * it: a NEW failure with a DIFFERENT cause, in the same test, is silently absorbed. The row still
+  * matches, the artifact still reads `expected#declared`, no pass count moves, and the sentence
+  * somebody wrote in the `reason` column is now about something that is not happening — "we always
+  * ignore that one" arrived at from the other direction. The derived form does not have this,
+  * because a drop is re-checked against the stack on every run.
+  *
+  * So a declared row may carry `frame=<ported class>` — the `unit` the correlator anchors the
+  * failure at, which is the `main-frame` class in the ordinary case and is already in
+  * `test-failures.tsv` for a reader to copy. While it holds, the row classifies as before; where it
+  * stops holding the failure counts UNEXPECTED and the entry is reported as a reason that no longer
+  * holds ([[TestDiff.staleExpectations]]) — apart from `expectedButPassing`, because the next
+  * action is different: that one says delete the row, this one says read the new failure first.
+  *
+  * The column is OPTIONAL, and that is compatibility rather than preference: these files predate
+  * it, and a run that read an absent anchor as "does not match" would turn every port's escape
+  * hatch into a wall of unexpected failures on the commit that shipped this. A row without it keeps
+  * exactly today's behaviour. A NEW row should carry one — a claim that can go stale without saying
+  * so is the thing this whole section is about.
   */
 object Correlate:
 
@@ -185,12 +207,43 @@ object Correlate:
   /** @param derived true when this was computed from the port's `Substitutions.dropTypes` rather
     *                than read from the hand-written escape hatch. The distinction is kept because
     *                a declared entry is a CLAIM and a derived one is a consequence, and a reader
-    *                who cannot tell them apart is back to "we always ignore those four". */
-  final case class Expected(suite: String, test: String, reason: String, derived: Boolean = false):
+    *                who cannot tell them apart is back to "we always ignore those four".
+    * @param frame   the PORTED CLASS this failure is expected AT — the `unit` the correlator
+    *                anchors it on, and normally the `main-frame` one. See [[anchorHolds]]. */
+  final case class Expected(suite: String, test: String, reason: String, derived: Boolean = false,
+                            frame: Option[String] = scala.None):
     def matches(o: Outcome): Boolean = o.suite == suite && (test == "*" || test == o.name)
     def source: String = if derived then "derived" else "declared"
 
-  val ExpectedHeader = "#suite\ttest\treason"
+    /** DOES THE REASON STILL HOLD? — the half `(suite, test)` cannot answer.
+      *
+      * A declared entry is a CLAIM about WHY one test fails, and it is keyed on the test's NAME. So
+      * a NEW failure with a different cause, in the same test, is absorbed by it silently: the row
+      * still matches, the artifact still says `expected#declared`, the pass count does not move and
+      * nothing anywhere reports that the sentence in the `reason` column is now about something
+      * that is not happening. That is exactly the rot a hand-maintained list is kept apart from the
+      * derived set to avoid, and the escape hatch had it.
+      *
+      * So a row may carry the ANCHOR the correlator already computes, and the claim then holds only
+      * while the failure is still at that class. Where it stops matching the failure counts
+      * UNEXPECTED and the entry is reported as a reason that no longer holds — which is the loud
+      * direction, because the alternative is a green lane over a defect nobody has read.
+      *
+      * OPTIONAL, and that is a compatibility statement rather than a preference: this file predates
+      * the column, an existing row carries no anchor, and a run that treated an absent one as "does
+      * not match" would turn every port's escape hatch into a wall of unexpected failures on the
+      * commit that shipped this. A row without it keeps today's behaviour exactly; a row that
+      * carries one is the stronger claim, and new rows should. */
+    def anchorHolds(anchoredUnit: Option[String]): Boolean =
+      frame.isEmpty || frame == anchoredUnit
+
+  val ExpectedHeader = "#suite\ttest\treason\t[frame=<ported class>]"
+
+  /** the anchor column's TAG. The column is tagged rather than positional because the `reason` has
+    * always absorbed every trailing field — a positional fourth would be read as reason text by one
+    * side and as an anchor by the other, depending on whether a reason happens to hold a tab — and
+    * because `k=v` is the grammar a porter note already writes decisions in (§4.575). */
+  private val FrameTag = "frame="
 
   /** the DECLARED escape hatch. Normally empty: a failure a drop explains needs no entry here. */
   def parseExpected(p: Path): List[Expected] =
@@ -200,8 +253,11 @@ object Correlate:
         if l.startsWith("#") || l.isBlank then scala.None
         else
           l.split('\t').toList match
-            case s :: t :: rest => Some(Expected(s.trim, t.trim, rest.mkString(" ").trim))
-            case _              => scala.None
+            case s :: t :: rest =>
+              val (tagged, prose) = rest.map(_.trim).partition(_.startsWith(FrameTag))
+              Some(Expected(s.trim, t.trim, prose.mkString(" ").trim,
+                            frame = tagged.headOption.map(_.drop(FrameTag.length).trim).filter(_.nonEmpty)))
+            case _ => scala.None
       }
 
   /** One `Substitutions.dropTypes` entry, IN BOTH NAMESPACES.
@@ -342,6 +398,11 @@ object Correlate:
       portedFrames: List[(Frame, SrcMap.Entry)],
       expected: Option[Expected],
       digestChanged: Boolean,
+      /** a DECLARED entry that matched this test by name and whose ANCHOR no longer does — so the
+        * claim in its `reason` column is about a failure that is not the one happening. Reported
+        * apart, and NOT put in [[expected]]: the failure counts unexpected, which is the loud
+        * direction. Always empty for a derived expectation, which has no claim to go stale. */
+      staleExpectation: Option[Expected] = scala.None,
       /** how many members of the ANCHORED UNIT changed since the baseline. The per-member flag is
         * exact but narrow: a class-initialiser cycle is *triggered* by a member that did not
         * itself change (its `inline val` siblings did), and the unit count is what points at that
@@ -352,7 +413,9 @@ object Correlate:
       val e = entry
       s"${outcome.suite}\t${outcome.name}\t${outcome.status}\t$anchor\t${e.map(_.unit).getOrElse("")}\t" +
       s"${e.map(_.member).getOrElse("")}\t${e.map(_.javaPath).getOrElse("")}\t${e.map(_.javaLine).getOrElse(0)}\t" +
-      s"${expected.map(x => s"expected#${x.source}").getOrElse("unexpected")}\t${digestChanged}\t$unitChanged\t${outcome.detail}"
+      s"${expected.map(x => s"expected#${x.source}")
+           .orElse(staleExpectation.map(_ => "unexpected#stale-declaration"))
+           .getOrElse("unexpected")}\t${digestChanged}\t$unitChanged\t${outcome.detail}"
 
   val FailuresHeader =
     "#suite\ttest\tstatus\tanchor\tunit\tmember\tjavaPath\tjavaLine\texpectation\tdigestChanged\tunitChanged\tdetail"
@@ -384,10 +447,22 @@ object Correlate:
             .getOrElse(("none", scala.None))
       // DERIVED first: a drop is a fact about the manifest, a declaration is somebody's claim about
       // it, and preferring the claim would let a stale line outrank the thing it describes.
-      val why = derivedExpectation(o, droppedTypes).orElse(expected.find(_.matches(o)))
+      //
+      // …and a DECLARED entry is admitted only while its ANCHOR still holds. Keyed on (suite, test)
+      // alone the row absorbs a NEW failure with a DIFFERENT cause in the same test: it still
+      // matches, the artifact still reads `expected#declared`, no count moves, and the sentence in
+      // the `reason` column is now about something that is not happening. An entry that carries no
+      // anchor is unaffected, which is the compatibility half (see `Expected.anchorHolds`).
+      val declared = expected.find(_.matches(o))
+      val holds    = declared.filter(_.anchorHolds(entry.map(_.unit)))
+      val why      = derivedExpectation(o, droppedTypes).orElse(holds)
       LocatedTest(o, anchor, entry, ported, why,
                   entry.exists(x => changedMembers(s"${x.unit}\t${x.member}")),
-                  entry.flatMap(x => changedPerUnit.get(x.unit)).getOrElse(0))
+                  // a stale declaration is only ever reported where nothing else explains the
+                  // failure: a drop that explains it is a FACT about the manifest, and a claim
+                  // beside it is neither wrong nor the reader's next step.
+                  staleExpectation = if why.isDefined then scala.None else declared,
+                  unitChanged = entry.flatMap(x => changedPerUnit.get(x.unit)).getOrElse(0))
     }
 
   // ---------------------------------------------------------------------------
@@ -406,6 +481,12 @@ object Correlate:
       /** a test the runner SKIPPED that the baseline does not record as skipped — it did not run,
         * and no pass/fail count can show that. See [[regressed]]. */
       newlySkipped: List[LocatedTest] = Nil,
+      /** a DECLARED expectation whose ANCHOR no longer holds — the test still fails and the reason
+        * on the row is about a different failure. Reported apart from [[expectedButPassing]]
+        * because the next action differs: that one says DELETE the row, this one says READ the new
+        * failure and then decide. Not its own gate: the failure itself is already in
+        * [[newlyFailing]] or [[stillFailing]], since the entry no longer excuses it. */
+      staleExpectations: List[LocatedTest] = Nil,
   ):
     /** the gate: an UNEXPECTED newly-failing test, or a test that stopped RUNNING — in either of
       * the two ways a test stops running.
@@ -458,6 +539,7 @@ object Correlate:
       newlySkipped       = latest.filter(t => t.outcome.status == "skipped" &&
                                               !baseline.get(t.outcome.id).contains("skipped"))
                                  .sortBy(_.outcome.id),
+      staleExpectations  = latest.filter(_.staleExpectation.isDefined).sortBy(_.outcome.id),
     )
 
   // ---------------------------------------------------------------------------
@@ -536,6 +618,17 @@ object Correlate:
     if d.expectedButPassing.nonEmpty then
       sb.append(s"\n-- expected to fail but PASSED (${d.expectedButPassing.size}) — remove from expected-failures.tsv\n")
       d.expectedButPassing.foreach(e => sb.append(s"   ${e.suite}.${e.test}\n"))
+    if d.staleExpectations.nonEmpty then
+      sb.append(s"\n-- EXPECTED FOR A REASON THAT NO LONGER HOLDS (${d.staleExpectations.size}) — the " +
+        "declared row still names this test and its ANCHOR has moved, so what fails is not what the " +
+        "row is about. The failure counts UNEXPECTED above; read it, then re-anchor the row or delete it\n")
+      d.staleExpectations.take(limit).foreach { t =>
+        t.staleExpectation.foreach(e =>
+          sb.append(s"   ${e.suite}.${e.test}\n" +
+            s"        declared frame=${e.frame.getOrElse("?")}, now anchored at " +
+            s"${t.entry.map(_.unit).getOrElse("(not located)")} (${t.anchor})\n" +
+            s"        the claim: ${e.reason.take(160)}\n"))
+      }
     if d.disappeared.nonEmpty then
       sb.append(s"\n-- tests in the baseline that DID NOT RUN (${d.disappeared.size}) — a suite that stopped running is not a suite that passed\n")
       d.disappeared.take(limit).foreach(x => sb.append(s"   ${x.replace('\t', '.')}\n"))
