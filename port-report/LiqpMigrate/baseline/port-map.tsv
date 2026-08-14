@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-liquid	engine=balticporter/0.1.0-SNAPSHOT	sources=335f355ab142e65c	files=134	policy=7aa1212e751fe096
+# balticporter port map	schema=3	module=ssg-liquid	engine=balticporter/0.1.0-SNAPSHOT	sources=335f355ab142e65c	files=134	policy=4f41fed762be3f20
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	liqp.Examples	ssg.liquid.Examples	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	liqp.Insertion	ssg.liquid.Insertion	Renamed	-		0		companion=yes disambiguator=marker flags=abstract form=class parents=ssg.liquid.LValue primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(String)
@@ -979,7 +979,7 @@ member	liqp.spi.Java8DateTypesSupport#configureTypesForReferencing(ObjectMapper)
 member	liqp.spi.SPIHelper#applyCustomDateTypes()	ssg.liquid.spi.SPIHelper#applyCustomDateTypes()	Renamed	-	liqp/spi/SPIHelper.java	22	3fefc9ab4387eee6	placement=companion
 member	liqp.spi.SPIHelper#applyTypeReferencing(ObjectMapper)	ssg.liquid.spi.SPIHelper#applyTypeReferencing(ObjectMapper)	Renamed	-	liqp/spi/SPIHelper.java	14	0eb3556b786732ca	placement=companion
 member	liqp.spi.SPIHelper#copyIterator(JavaIterator)	ssg.liquid.spi.SPIHelper#copyIterator(JavaIterator<T>)	Renamed	-	liqp/spi/SPIHelper.java	39	f2bf47ec2c10aa66	placement=companion vis=private
-member	liqp.spi.SPIHelper#findProviders()	ssg.liquid.spi.SPIHelper#findProviders()	Renamed	-	liqp/spi/SPIHelper.java	31	f6b87962d3a5f9cc	placement=companion vis=private
+member	liqp.spi.SPIHelper#findProviders()	ssg.liquid.spi.SPIHelper#findProviders()	Renamed	-	liqp/spi/SPIHelper.java	31	165776fa957d3401	placement=companion vis=private
 member	liqp.spi.SPIHelper#typeSupporters	ssg.liquid.spi.SPIHelper#typeSupporters	Renamed	-	liqp/spi/SPIHelper.java	12	e41b8f1707682dc4	placement=companion vis=private
 member	liqp.spi.TypesSupport#configureCustomDateTypes()	ssg.liquid.spi.TypesSupport#configureCustomDateTypes()	Renamed	-	liqp/spi/TypesSupport.java	7	1a9e147f3663020e	
 member	liqp.spi.TypesSupport#configureTypesForReferencing(ObjectMapper)	ssg.liquid.spi.TypesSupport#configureTypesForReferencing(ObjectMapper)	Renamed	-	liqp/spi/TypesSupport.java	6	8262399e45079523	

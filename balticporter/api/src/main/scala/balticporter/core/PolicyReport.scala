@@ -150,7 +150,12 @@ object PolicyReport:
       PolicyFinding(DependencySeam, DependencySetting, d.toString,
         PolicyIssue.NeverApplied,
         "no API this module EMITS needs this artifact on any platform it targets — remove the entry, " +
-          "or check whether the usage is in a hand-written source this run does not walk")
+          "or check whether the usage is in a hand-written source this run does not walk, or whether " +
+          "a SURFACE PHASE of this port redirected it: a `type-redirect` or `call-site-substitution` " +
+          "INTO this artifact removes the very JDK usage the coordinate answers, so the emitted code " +
+          "names the artifact directly and this walk — which enumerates JDK usages, not emitted " +
+          "references — cannot see it. Removing the entry there emits a build that cannot resolve " +
+          "the code the redirect wrote (ENGINE-LIMITS.md P8)")
     }.toList)
 
   /** the two strings [[fromDependencies]] files under, named so a reader of `findings.tsv` and a

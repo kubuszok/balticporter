@@ -154,7 +154,15 @@ jbump_deps    := ""
 # the same pom. A port resolves what the library DECLARES (see `ashley_deps` for what guessing
 # cost). The ANTLR-generated parser is NOT a coordinate — it is a directory of class files the
 # lane adds with `--jar` (see `liqp_parser_classes`).
-liqp_deps     := "--dependency org.antlr:antlr4-runtime:4.13.0 --dependency com.fasterxml.jackson.core:jackson-core:2.15.0 --dependency com.fasterxml.jackson.core:jackson-databind:2.13.4.2 --dependency com.fasterxml.jackson.core:jackson-annotations:2.15.0 --dependency com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0 --dependency ua.co.k:strftime4j:1.0.6"
+#
+# …plus ONE coordinate that is NOT in `pom.xml` and cannot be: `multiarch-serviceloader` is what
+# D-liqp-12's redirect points `java.util.ServiceLoader` at, so the EMITTED scala names it and both
+# the compile and the run need it. It is the corpus's first coordinate off Maven Central — the
+# `--repository` beside it is multiarch-scala's Central Portal snapshot repo, and without it the
+# coordinate resolves nothing. The generated build gets the same pair from `ArtifactDep.resolver`
+# (`resolver = "…"` in the port's `dependencies`); this lane compiles with `scala-cli` and no
+# generated build, which is why the fact is spelled here as well as there.
+liqp_deps     := "--dependency org.antlr:antlr4-runtime:4.13.0 --dependency com.fasterxml.jackson.core:jackson-core:2.15.0 --dependency com.fasterxml.jackson.core:jackson-databind:2.13.4.2 --dependency com.fasterxml.jackson.core:jackson-annotations:2.15.0 --dependency com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0 --dependency ua.co.k:strftime4j:1.0.6 --dependency com.kubuszok::multiarch-serviceloader:0.4.0-12-gc168b2f-SNAPSHOT --repository https://central.sonatype.com/repository/maven-snapshots"
 # …and what the TEST source set adds on top of it. `junit:junit:4.13.1` is the ONE test-scope
 # dependency `pom.xml` declares; `org.hamcrest:hamcrest-core:1.3` arrives with it TRANSITIVELY and
 # is deliberately NOT named here — a port resolves what the library DECLARES, and hamcrest is not

@@ -25,12 +25,12 @@ omissions	10
 overload-risk	24
 policy	0
 port-map	0
-portability(all)	1605
+portability(all)	1603
 portability(emitted)	1549
 portability(injected)	0
 porter-notes	0
 remediation	8
-rewrite-callsites	0
+rewrite-callsites	1
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0

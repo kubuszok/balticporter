@@ -955,11 +955,11 @@ ssg.liquid.spi.Java7DateTypesSupport	ssg.liquid.spi.Java7DateTypesSupport#config
 ssg.liquid.spi.Java7DateTypesSupport	ssg.liquid.spi.Java7DateTypesSupport#configureTypesForReferencing(ObjectMapper)	def	6da2da7d0232bfe9
 ssg.liquid.spi.Java8DateTypesSupport	ssg.liquid.spi.Java8DateTypesSupport	class	0387bc9db936df07
 ssg.liquid.spi.Java8DateTypesSupport	ssg.liquid.spi.Java8DateTypesSupport#configureTypesForReferencing(ObjectMapper)	def	4850faf681e4a433
-ssg.liquid.spi.SPIHelper	ssg.liquid.spi.SPIHelper	class	b1edb6a017aa2d78
+ssg.liquid.spi.SPIHelper	ssg.liquid.spi.SPIHelper	class	d08ed669e7e4c7c4
 ssg.liquid.spi.SPIHelper	ssg.liquid.spi.SPIHelper#applyCustomDateTypes()	def	3fefc9ab4387eee6
 ssg.liquid.spi.SPIHelper	ssg.liquid.spi.SPIHelper#applyTypeReferencing(ObjectMapper)	def	0eb3556b786732ca
 ssg.liquid.spi.SPIHelper	ssg.liquid.spi.SPIHelper#copyIterator(JavaIterator<T>)	def	f2bf47ec2c10aa66
-ssg.liquid.spi.SPIHelper	ssg.liquid.spi.SPIHelper#findProviders()	def	f6b87962d3a5f9cc
+ssg.liquid.spi.SPIHelper	ssg.liquid.spi.SPIHelper#findProviders()	def	165776fa957d3401
 ssg.liquid.spi.SPIHelper	ssg.liquid.spi.SPIHelper#typeSupporters	val	e41b8f1707682dc4
 ssg.liquid.spi.TypesSupport	ssg.liquid.spi.TypesSupport	class	2eefa5ae67738736
 ssg.liquid.spi.TypesSupport	ssg.liquid.spi.TypesSupport#configureCustomDateTypes()	def	1a9e147f3663020e
