@@ -4989,12 +4989,23 @@ did, and the other key answered it.
 
 Only the BINDING can see this, which is why it is here and not in `ManifestAgreement`: two declared
 keys can only ever be said to POSSIBLY name one member, while two bound entries name the same `SymId`.
-It is grouped by (declaration, LANE) and not by declaration, because **one member holding rows on two
+It is narrowed by (declaration, ROW) and not by declaration, because **one member holding rows on two
 lanes may legitimately hold two selections** — a `collection-boundary` accept beside an `overload-risk`
-one is two answers to two questions, and there is no key that could express them jointly. Same
-declaration and same lane is the finding, in the `Ambiguous` family (`PolicyIssue.Unverifiable`), and
-the effective policy still stands beside it — `MergeablePolicy`'s own shape: the union has to be well
-defined and the disagreement is a finding, never an approximation.
+one is two answers to two questions, and there is no key that could express them jointly.
+
+**And the LANE is only half of that argument, which cost one wrong finding shape.** `selected`
+dispatches by `(lane, kind)`, so two selections at one declaration on ONE lane whose KINDS are
+disjoint are also both live and both do their job — `heap-pollution`'s `Acknowledged` beside its
+`Unacknowledged` is two statements about two different rows, and `collection-boundary` at one member
+is the same shape. Grouped by lane alone the pair is reported and the port is told to delete one of
+two entries it needs, which is a finding with no way to comply with it. So the test is
+`Remedy.overlaps` — *could these two answer the SAME ROW* — which is `answers`' own question read
+between two remedies, derived beside it so the two cannot drift (§4.56's fast-path guard, one type
+over): equal kinds, an `alsoKinds` intersection, or either side declaring `Remedy.AnyKind`, which
+overlaps everything on its lane by construction. That is the finding, in the `Ambiguous` family
+(`PolicyIssue.Unverifiable`), and the effective policy still stands beside it — `MergeablePolicy`'s
+own shape: the union has to be well defined and the disagreement is a finding, never an
+approximation.
 
 **And the same identity question is the one `ManifestAgreement` was answering with `==`.** Every
 comparison of two DECLARED selection keys — the chain's `resolutionConflicts`, the mirroring module's

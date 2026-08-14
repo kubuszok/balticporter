@@ -288,6 +288,44 @@ class ResolutionSpec extends munit.FunSuite:
                  Some("spec-other"))
   }
 
+  test("…and two on ONE lane with DISJOINT KINDS are legal too — the lane is only half the question") {
+    // `selected` dispatches by `(lane, kind)`, so a pair whose kinds cannot both answer one row is
+    // two live selections doing two jobs — `heap-pollution`'s `Acknowledged` beside its
+    // `Unacknowledged` is the shipped shape of this. Reported on lane equality alone the port is
+    // told to delete one of two entries it needs, which is a finding with no way to comply.
+    val p     = program
+    val other = SpecRemedyPhase.Noop.copy(id = "spec-other", kind = "other-kind")
+    val vocab = RemedyVocabulary.declared("spec", List(SpecRemedyPhase.Noop, other))
+    val (plan, _) = planFor(p, Map("com.demo.Widget#size"   -> "spec-noop",
+                                   "com.demo.Widget#size()" -> "spec-other"), vocab, vocab.byId.keySet)
+    assertEquals(plan.troubles.map(_.issue),
+                 List(ResolutionPlan.Issue.NeverApplied, ResolutionPlan.Issue.NeverApplied))
+    val size = p.symbols.all.find(_.fullName == "com.demo.Widget#size").get
+    assertEquals(plan.selected(size.id, SpecRemedyPhase.Lane, SpecRemedyPhase.Kind).map(_.remedy.id),
+                 Some("spec-noop"))
+    assertEquals(plan.selected(size.id, SpecRemedyPhase.Lane, "other-kind").map(_.remedy.id),
+                 Some("spec-other"))
+  }
+
+  test("…while `AnyKind` and an ALSO-KIND still overlap, and are still reported") {
+    // the two ways a pair on one lane CAN answer the same row: a remedy that answers every kind
+    // cannot be disjoint from one that answers some, and `alsoKinds` is the enumerated form of the
+    // same fact. Both stay findings, so narrowing the test narrowed nothing that mattered.
+    val p = program
+    List(SpecRemedyPhase.Noop.copy(id = "spec-other", kind = Remedy.AnyKind),
+         SpecRemedyPhase.Noop.copy(id = "spec-other", kind = "other-kind",
+                                   alsoKinds = List(SpecRemedyPhase.Kind)))
+      .foreach { other =>
+        val vocab = RemedyVocabulary.declared("spec", List(SpecRemedyPhase.Noop, other))
+        val (plan, _) = planFor(p, Map("com.demo.Widget#size"   -> "spec-noop",
+                                       "com.demo.Widget#size()" -> "spec-other"), vocab, vocab.byId.keySet)
+        assertEquals(plan.troubles.map(_.issue),
+                     List(ResolutionPlan.Issue.ConflictingSelection,
+                          ResolutionPlan.Issue.ConflictingSelection),
+                     clue(other.id + "/" + other.kind))
+      }
+  }
+
   // -------------------------------------------------------------------------------------------
   // the SUBJECT KIND — which seam binds the key is the REMEDY's answer (`Remedy.Subject`)
   // -------------------------------------------------------------------------------------------

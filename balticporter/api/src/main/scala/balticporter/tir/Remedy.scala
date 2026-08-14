@@ -104,6 +104,28 @@ final case class Remedy(
   def answers(l: String, k: String): Boolean =
     l == lane && (kind == Remedy.AnyKind || k == kind || alsoKinds.contains(k))
 
+  /** every kind this remedy names, [[alsoKinds]] included. `AnyKind` is IN it and is not a kind —
+    * [[overlaps]] is the only reader and treats it as the whole lane. */
+  def kinds: Set[String] = (kind :: alsoKinds).toSet
+
+  /** COULD THIS REMEDY AND THAT ONE ANSWER THE SAME ROW? — the question a CONFLICT is, and it is
+    * not "are they on the same lane".
+    *
+    * [[ResolutionPlan.selected]] dispatches by `(lane, kind)`, so two selections at one declaration
+    * on one lane whose kinds are DISJOINT are both live and both do their job — `heap-pollution`'s
+    * `Acknowledged` and `Unacknowledged` are two statements about two different rows, and a port
+    * making both has written no duplicate. Asked as lane equality alone the pair is reported as
+    * `ConflictingSelection` and the port is told to delete one of two entries it needs, which is a
+    * finding with no way to comply with it.
+    *
+    * `AnyKind` overlaps everything on its lane by construction: a remedy that answers every kind
+    * cannot be disjoint from one that answers some. Derived here rather than at the one caller so
+    * it stays in step with [[answers]] — the same field read by two sites is §4.56's fast-path
+    * guard waiting to happen. */
+  def overlaps(other: Remedy): Boolean =
+    lane == other.lane && (kind == Remedy.AnyKind || other.kind == Remedy.AnyKind ||
+      kinds.exists(other.kinds))
+
   def render: String = s"$id — $what  [drains $target; ${fix.section}]"
 
 object Remedy:

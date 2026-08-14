@@ -196,20 +196,32 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
     * keys and can only ever say they MAY name the same member; the binder KNOWS, because both keys
     * bound to the same `SymId`.
     *
-    * Grouped by (declaration, LANE) and not by declaration alone, because one member holding rows on
-    * two lanes may legitimately hold two selections — a `collection-boundary` accept beside an
-    * `overload-risk` one is two answers to two questions. Same lane is the finding: `selected` takes
-    * the first match, so the second entry is silently inert and reports `NeverApplied`, whose
-    * sentence ("the finding never fired") is false — it fired and another key answered it.
+    * Grouped by DECLARATION and then narrowed by [[Remedy.overlaps]], which is the same question
+    * [[selected]] asks and not an approximation of it. One member holding rows on two lanes may
+    * legitimately hold two selections — a `collection-boundary` accept beside an `overload-risk` one
+    * is two answers to two questions — and the lane is only HALF of that argument: `selected`
+    * dispatches by `(lane, kind)`, so two selections on ONE lane whose kinds are DISJOINT are also
+    * both live and both do their job (`heap-pollution`'s `Acknowledged` beside its `Unacknowledged`
+    * is two statements about two different rows). Reported on lane equality alone, such a pair is
+    * told to delete one of two entries the port needs, which is a finding with no way to comply.
+    *
+    * What remains the finding is a pair that could answer the SAME ROW: `selected` takes the first
+    * match, so the second entry is silently inert and reports `NeverApplied`, whose sentence ("the
+    * finding never fired") is false — it fired and another key answered it.
     *
     * The effective policy still stands (first wins), which is `MergeablePolicy`'s own shape: the
     * union has to be well defined and the disagreement is a finding beside it. */
   private val conflicting: Map[String, List[ResolutionPlan.Entry]] =
-    entries.filter(e => e.actionable && e.target.isDefined)
-      .groupBy(e => (e.target, e.resolution.map(_.remedy.lane)))
-      .values.filter(_.sizeIs > 1)
-      .flatMap(group => group.map(e => e.declared -> group))
-      .toMap
+    val live = entries.filter(e => e.actionable && e.target.isDefined)
+    live.groupBy(_.target).values.flatMap { group =>
+      group.flatMap { e =>
+        val rivals = group.filter { o =>
+          o.declared != e.declared &&
+            e.resolution.exists(a => o.resolution.exists(b => a.remedy.overlaps(b.remedy)))
+        }
+        Option.when(rivals.nonEmpty)(e.declared -> (e :: rivals))
+      }
+    }.toMap
 
   def isEmpty: Boolean  = entries.isEmpty
   def nonEmpty: Boolean = entries.nonEmpty
@@ -398,13 +410,13 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
         val others = conflicting(e.declared).filterNot(_.declared == e.declared)
         Some(ResolutionPlan.Trouble(e.declared, e.id, ResolutionPlan.Issue.ConflictingSelection,
           s"this key and ${others.map(o => s"`${o.declared}` (\"${o.id}\")").mkString(", ")} bound to " +
-            s"the SAME declaration and answer the SAME lane " +
-            s"(${e.resolution.map(_.remedy.lane).getOrElse("?")}). Two spellings of one member key " +
+            s"the SAME declaration and can answer the SAME ROW " +
+            s"(${e.resolution.map(_.remedy.target).getOrElse("?")}). Two spellings of one member key " +
             "are legal — `Foo#bar` and `Foo#bar(int)` — and a flat map cannot refuse them, so only " +
             "the binding can see this: the first entry answers and the rest are inert, which would " +
             "otherwise be reported as `never applied` about a finding that DID fire. Two selections " +
-            "on DIFFERENT lanes at one member are fine; delete one of these, or narrow it to another " +
-            "overload"))
+            "at one member on DIFFERENT lanes, or on one lane with DISJOINT kinds, are fine and are " +
+            "not reported; delete one of these, or narrow it to another overload"))
       else if e.target.isDefined && !fired.contains(e.declared) then
         Some(ResolutionPlan.Trouble(e.declared, e.id, ResolutionPlan.Issue.NeverApplied,
           s"the key names a declaration this run OWNS and '${e.id}' is live, but no " +
