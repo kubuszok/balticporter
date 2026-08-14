@@ -689,9 +689,11 @@ final case class PortRun(
     // the emitted reference is; `DependencyCheck.declarations` is the 2×2 over the two. Note this is
     // provably one-directional: the emitted column is a SUPERSET of the test that used to be the
     // whole answer, so a `policy` row can only turn off.
-    val beforeRequired = DependencyCheck.inEmittedCode(translated.parsed,
+    // LAZY, and not for speed alone: twelve of the corpus's fifteen ports declare no dependency at
+    // all, and a second whole-program walk they cannot use is a walk that could only ever go wrong.
+    lazy val beforeRequired = DependencyCheck.inEmittedCode(translated.parsed,
       DependencyCheck.requirements(translated.parsed, targets, verdictOverrides), notShipped)
-    val beforeExternal = ExternalUsage.external(translated.parsed, notShipped)
+    lazy val beforeExternal = ExternalUsage.external(translated.parsed, notShipped)
     val externalAll     = ExternalUsage.all(program).filterNot(r => program.owns(r.symbol))
     val externalEmitted = ExternalUsage.external(program, notShipped)
     val declaredCells = DependencyCheck.declarations(declaredDeps,

@@ -279,29 +279,37 @@ object DependencyCheck:
 
   /** the 2×2 itself: one [[Declaration]] per declared coordinate.
     *
+    * The PRE-pipeline halves are BY NAME and forced exactly once, here: twelve of the corpus's
+    * fifteen ports declare no dependency at all, and a second whole-program walk none of them can
+    * use is a walk that could only ever go wrong. Forced once and not per declaration, because a
+    * by-name parameter read inside the `map` would re-walk the program per coordinate.
+    *
     * @param before this module's own requirements over the PRE-pipeline program
     * @param beforeExternal …and its external usage rows
     * @param after  the same over the program the run EMITS — [[unneeded]]'s old input, unchanged
     */
   def declarations(declared: List[ArtifactDep],
-                   before: List[Requirement], beforeExternal: List[ExternalUsage.Row],
+                   before: => List[Requirement], beforeExternal: => List[ExternalUsage.Row],
                    after: List[Requirement], afterExternal: List[ExternalUsage.Row],
                    provides: ArtifactDep => Provides): List[Declaration] =
-    declared.map { d =>
-      val emitted  = uses(d, after, afterExternal, provides)
-      // asked only where it can change the SENTENCE — an emitted `Unknown` gives no instruction
-      // whatever the original column says, so there is nothing for a second walk to decide.
-      val original = emitted match
-        case Answer.Unknown(_) => Answer.Unknown("not asked — the emitted column is unverifiable")
-        case _                 => uses(d, before, beforeExternal, provides)
-      val cell = (original, emitted) match
-        case (_, Answer.Unknown(_))  => Cell.Unverifiable
-        case (Answer.Yes(_), Answer.Yes(_)) => Cell.Covered
-        case (Answer.Yes(_), _)             => Cell.Stale
-        case (_, Answer.Yes(_))             => Cell.Introduced
-        case _                              => Cell.Unused
-      Declaration(d, cell, original, emitted)
-    }
+    if declared.isEmpty then Nil else
+      val originalReqs = before
+      val originalExt  = beforeExternal
+      declared.map { d =>
+        val emitted = uses(d, after, afterExternal, provides)
+        // asked only where it can change the SENTENCE — an emitted `Unknown` gives no instruction
+        // whatever the original column says, so there is nothing for a second walk to decide.
+        val original = emitted match
+          case Answer.Unknown(_) => Answer.Unknown("not asked — the emitted column is unverifiable")
+          case _                 => uses(d, originalReqs, originalExt, provides)
+        val cell = (original, emitted) match
+          case (_, Answer.Unknown(_))         => Cell.Unverifiable
+          case (Answer.Yes(_), Answer.Yes(_)) => Cell.Covered
+          case (Answer.Yes(_), _)             => Cell.Stale
+          case (_, Answer.Yes(_))             => Cell.Introduced
+          case _                              => Cell.Unused
+        Declaration(d, cell, original, emitted)
+      }
 
   /** …and the SAME FILTER READ BACKWARDS: a declared artifact no requirement in this module's own
     * emitted code names.
