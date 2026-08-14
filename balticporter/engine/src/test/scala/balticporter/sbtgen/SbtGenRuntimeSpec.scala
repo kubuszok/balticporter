@@ -97,3 +97,32 @@ class SbtGenRuntimeSpec extends munit.FunSuite:
       assert(build.indexOf("\"org.example\" % \"thing\"") < build.indexOf(RuntimeArtifact.artifact), clue(build))
     }
   }
+
+  // A coordinate published outside the default resolver set resolves NOTHING, and the failure is a
+  // resolver error in somebody else's build with no finding anywhere here. The URL therefore travels
+  // WITH the coordinate (`ArtifactDep.resolver`) and this is where it lands.
+  test("a dependency's own repository reaches the generated build, ONCE, named from its URL") {
+    withRoot { root =>
+      val snaps = "https://central.sonatype.com/repository/maven-snapshots"
+      val s = spec.copy(deps = List(
+        SbtGen.Dep.of(balticporter.catalog.ArtifactDep("com.example", "a", "1.0-SNAPSHOT",
+          balticporter.catalog.CrossKind.Platform, Some(snaps))),
+        SbtGen.Dep.of(balticporter.catalog.ArtifactDep("com.example", "b", "1.0-SNAPSHOT",
+          balticporter.catalog.CrossKind.Platform, Some(snaps))),
+      ))
+      SbtGen.emit(root, s)
+      val build = Files.readString(root.resolve("build.sbt"))
+      val entry = s"""resolvers += "central.sonatype.com-repository-maven-snapshots" at "$snaps""""
+      assertEquals(build.linesIterator.count(_ == entry), 1, clue(build))
+      // …and the cross kind is still the artifact's own: `%%%`, not the `%%` a JS build cannot use.
+      assert(build.contains(""""com.example" %%% "a" % "1.0-SNAPSHOT""""), clue(build))
+    }
+  }
+
+  test("…and a spec whose coordinates are all on the default resolvers writes no block at all") {
+    withRoot { root =>
+      val s = spec.copy(deps = List(SbtGen.Dep("org.example", "thing", "1.0")))
+      SbtGen.emit(root, s)
+      assert(!Files.readString(root.resolve("build.sbt")).contains("resolvers"))
+    }
+  }

@@ -18,8 +18,13 @@ object SbtGen:
     *                   declaring such a dependency necessarily has — so the spelling is emitted
     *                   rather than downgraded: a `%%` written where `%%%` was meant resolves to an
     *                   artifact that does not exist, loudly, which is the right failure. */
+  /** @param resolver where this artifact resolves FROM, when the default resolver set does not have
+    *                 it. Rendered as a `resolvers` entry beside the dependency and deduplicated
+    *                 across the spec, because a repository is a property of the BUILD and a
+    *                 coordinate is a property of one line — see [[resolverBlock]] for why the entry
+    *                 is NAMED from its own URL rather than from anything a caller could type. */
   final case class Dep(org: String, artifact: String, version: String, crossScala: Boolean = false,
-                       crossPlatform: Boolean = false):
+                       crossPlatform: Boolean = false, resolver: Option[String] = None):
     def sbtString: String =
       val sep = if crossPlatform then "%%%" else if crossScala then "%%" else "%"
       s""""$org" $sep "$artifact" % "$version""""
@@ -33,6 +38,7 @@ object SbtGen:
       d.org, d.name, d.rev,
       crossScala    = d.cross == balticporter.catalog.CrossKind.Scala,
       crossPlatform = d.cross == balticporter.catalog.CrossKind.Platform,
+      resolver      = d.resolver,
     )
 
   /** @param runtime
@@ -141,6 +147,7 @@ object SbtGen:
     Files.writeString(root.resolve(".gitignore"), gitignore)
     if spec.testDeps.nonEmpty then Files.createDirectories(managedTest(root))
     EnginePin.write(root, EnginePin.current(spec.runtime))
+    val resolvers = resolverBlock(spec.allDeps ++ spec.testDeps)
     val deps =
       if spec.allDeps.isEmpty then ""
       else
@@ -170,9 +177,39 @@ object SbtGen:
          |// CI runs English — the faithful translation inherits that assumption
          |Test / fork := true
          |Test / javaOptions ++= Seq("-Duser.language=en", "-Duser.country=US")
-         |$managedSources
+         |$managedSources$resolvers
          |$deps$testDeps""".stripMargin,
     )
+
+  /** The `resolvers` a spec's dependencies imply — EMPTY where every coordinate resolves from the
+    * default set, which is every port that predates the field.
+    *
+    * ==Why the repository travels with the coordinate==
+    * A `libraryDependencies` line naming an artifact the build cannot reach resolves NOTHING, and
+    * the failure is a resolver error in somebody's build rather than anything this engine reports.
+    * The coordinate already knows where it lives (`ArtifactDep.resolver`), so the build says it
+    * here and no port has to remember a second, unlinked fact — which is CLAUDE.md §1.5's rule read
+    * at a repository: a build fact stated twice is one that drifts.
+    *
+    * ==The NAME is derived, and that is not cosmetic==
+    * sbt's `"name" at "url"` wants a label, and a label is a value a caller could type — so it is a
+    * value that can disagree with the URL beside it, and nothing could ever check it. Deriving it
+    * from the URL makes it a rendering of a fact rather than a second fact, keeps the emitted build
+    * byte-deterministic (`SbtGenRuntimeSpec`'s own gate), and makes two ports naming one repository
+    * emit one entry rather than two that differ by a word. */
+  def resolverBlock(deps: List[Dep]): String =
+    deps.flatMap(_.resolver).distinct.sorted match
+      case Nil => ""
+      case rs  =>
+        rs.map(u => s"""resolvers += "${resolverName(u)}" at "$u"""")
+          .mkString("\n// …and WHERE they resolve from: a coordinate published outside the default\n" +
+            "// resolver set is a coordinate this build otherwise cannot fetch.\n", "\n", "\n")
+
+  /** a stable, injective-enough label for a repository URL: the scheme dropped and every character
+    * sbt would not want in an identifier folded to `-`. Never a name a caller supplied — see
+    * [[resolverBlock]]. */
+  def resolverName(url: String): String =
+    url.replaceFirst("^[a-zA-Z]+://", "").replaceAll("[^A-Za-z0-9.]+", "-").stripSuffix("-")
 
   /** `.gitignore` for a port: the emitted Scala is a build product, not source. */
   val gitignore: String =

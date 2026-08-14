@@ -539,6 +539,21 @@ jar `%%` would resolve — which then fails at link time rather than at resoluti
 coordinate cannot be made good on at all (`com.dedipresta:scala-crypto` is Scala 2 only), and that is
 recorded in the rows that name it rather than repaired with an invented replacement.
 
+**…and WHERE it resolves from is the same kind of fact, one layer out.** The cross kind decides which
+artifact NAME a build asks for; `ArtifactDep.resolver` decides which repository it asks. Both are
+properties of the artifact rather than of the port, and both fail identically when they are wrong: a
+coordinate published outside the default resolver set resolves NOTHING, in somebody's build, with no
+finding here and nothing in the emitted Scala to see. So the URL travels WITH the coordinate — in the
+catalog row that recommends it and in the `dependencies` entry that declares it (`resolver = "…"`) —
+and `SbtGen` renders a deduplicated `resolvers` block from the dependencies it is already writing.
+`None` is the default and emits nothing, so every port that predates the field generates the build it
+always did. The entry's NAME is DERIVED from the URL and never supplied: a label is a value a caller
+could type, therefore one that can disagree with the URL beside it, and nothing could ever check it —
+derived, it is a rendering of a fact rather than a second fact, and the generated build stays
+byte-deterministic. The first coordinate to need it is `com.kubuszok:multiarch-serviceloader`, which
+§8.19 maps `java.util.ServiceLoader` to and which is published to the Central Portal SNAPSHOT
+repository and to no release repository at all.
+
 Two things it deliberately does not do. It does not write a `Decision`: an override changes no
 emitted code, and `decisions.tsv` answers "why is the emitted code not a mechanical translation" —
 the override's record is the finding lane itself, which a baseline diffs. And `ArtifactDep` carries

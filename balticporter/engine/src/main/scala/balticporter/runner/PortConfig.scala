@@ -413,12 +413,18 @@ object PortConfig:
         s"'$n' is not a platform; one of ${TargetNames.keys.toList.sorted.mkString(", ")}"))
     }.toSet
 
-  /** one `dependencies = [ { org, name, rev, cross } ]` entry.
+  /** one `dependencies = [ { org, name, rev, cross, resolver } ]` entry.
     *
     * `cross` decides `%` / `%%` / `%%%` and defaults to `scala`, which is what most JVM-ecosystem
     * artifacts are. An unknown value is a `ConfigError` rather than a silent default, for
     * `readTargets`' reason: the wrong separator resolves to an artifact that does not exist, and a
-    * config typo should say so here rather than in somebody's resolver output. */
+    * config typo should say so here rather than in somebody's resolver output.
+    *
+    * `resolver` is the URL the artifact is published at when the default resolver set does not have
+    * it, and it is optional for the same reason `cross` has a default — almost every coordinate is
+    * on Maven Central, and a port that says nothing gets the build it always got. It travels WITH
+    * the coordinate rather than in a `project` key of its own because a repository stated apart from
+    * the artifact that needs it is a build fact stated twice (CLAUDE.md §1.5). */
   private def dependencyEntry(entry: ConfigView): balticporter.catalog.ArtifactDep =
     val cross = entry.string("cross").getOrElse("scala").toLowerCase match
       case "java"     => balticporter.catalog.CrossKind.Java
@@ -427,7 +433,8 @@ object PortConfig:
       case other      => throw ConfigError(entry.at("cross"),
         s"'$other' is not a cross kind; one of java, scala, platform")
     balticporter.catalog.ArtifactDep(
-      entry.requireString("org"), entry.requireString("name"), entry.requireString("rev"), cross)
+      entry.requireString("org"), entry.requireString("name"), entry.requireString("rev"), cross,
+      entry.string("resolver"))
 
   private def surfaceEntry(registry: TransformRegistry)(entry: ConfigView): balticporter.tir.Phase =
     val name = entry.requireString("transform")

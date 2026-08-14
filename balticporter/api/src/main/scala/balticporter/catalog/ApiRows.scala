@@ -73,8 +73,24 @@ enum CrossKind:
   * platforms need the artifact is exactly `verdict`'s per-platform map, and two coordinates for one
   * artifact (`MessageDigest` wants `scala-crypto` on Scala.js and `scala-native-crypto` on Native)
   * are two `Depend` verdicts rather than one dep with a set. It would also be the one shape
-  * `ApiRowCarriesNoPolicySpec` forbids outright. */
-final case class ArtifactDep(org: String, name: String, rev: String, cross: CrossKind = CrossKind.Scala):
+  * `ApiRowCarriesNoPolicySpec` forbids outright.
+  *
+  * @param resolver
+  *   WHERE the artifact resolves from, when that is not the default repository. A fact about the
+  *   ARTIFACT and not about the port, exactly as [[cross]] is — and it fails the same way when it is
+  *   absent: `%%` written where `%%%` was meant asks for a jar that does not exist, and a coordinate
+  *   published outside Maven Central asks a resolver set that has never heard of it. `None` is the
+  *   default and means the ordinary resolver set, so every coordinate written before this field
+  *   existed says exactly what it always did and no generated build moves.
+  *
+  *   ONE URL, not a name/URL pair and not a collection. The NAME an sbt `resolvers` entry needs
+  *   carries no information a reader could check, so [[balticporter.sbtgen.SbtGen.Dep]] derives it
+  *   from the URL — deterministically, which is what stops it from lying — and a coordinate
+  *   resolvable from two places is one this file has no way to choose between.
+  *   `ApiRowCarriesNoPolicySpec` forbids a collection in a row for its own reason, and an `Option`
+  *   of a literal is exactly what stays inside it. */
+final case class ArtifactDep(org: String, name: String, rev: String, cross: CrossKind = CrossKind.Scala,
+                             resolver: Option[String] = scala.None):
   override def toString: String = s"$org${CrossKind.sep(cross)}$name:$rev"
 
 object CrossKind:
