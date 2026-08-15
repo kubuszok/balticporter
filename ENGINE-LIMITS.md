@@ -5588,6 +5588,83 @@ not a silencer.*
 
 ---
 
+### P10. "Reflective instantiation becomes a REGISTRY" is a SHAPE three ports share and a MECHANISM none of them can deliver — the abstraction that covers all three is a `Map`, and the one that is not a `Map` covers only the two that cannot ship it. **REFUSED, 0 lines shipped, 16 lines it would have saved**
+
+`Class#newInstance` is the one thing Scala.js and Scala Native genuinely cannot do, and three corpus
+ports independently replaced it with the same shape: a `Class`-keyed table the port populates.
+`PROGRESS.md` §12.2.8 recorded that as three instances of one mechanism differing in exactly two
+parameters, and called it the strongest candidate for the next engine wave. Read out, it is not a
+mechanism, and each of the four reasons is a fact about this checkout rather than a preference.
+
+**The three, and how each is WIRED — which is the first thing that decides whether a transform is
+even needed.** libGDX core's injected `Pools` is a whole-type replacement (`dropTypes` + `inject`);
+Ashley's `ComponentFactories` and gdx-gltf's `GLTFExtensionFactories` are each reached by ONE
+`MethodBodyTransform` key, a §1(b) phase that already exists. The call-site half is therefore already
+mechanised, at both of the two spellings a port has, and a `ReflectiveInstantiationTransform` would
+be a THIRD spelling of an act two keys already state — `CLAUDE.md` §5's *one policy, one spelling*.
+There is nothing left at the call site to build, and reading the wiring is what says so; reading the
+three FILES suggests the opposite, because they look alike.
+
+**§12.2.8's two free parameters are ONE, and the other was a misreading.** "Open registry with a
+fallback vs closed without" is not a difference between the two survivors: both expose a public
+`register` — gdx-gltf's says so in its own doc, *"Open so a downstream port that adds a vendor
+extension can supply its own"* — and what actually differs is the JVM reflective FALLBACK. And
+"fallback vs none" and "null vs throw" are the SAME parameter, both being what the port does at a
+MISS: Ashley returns `null` after a reflective retry (upstream's own three outcomes), gdx-gltf throws
+naming the registry, and libGDX's `Pools` does BOTH AT ONE TABLE — `getOrNull` answers `null` and
+`get` throws, on the same map, by design. That third instance is what kills the parameter: a registry
+with ONE declared miss policy cannot express a table that is read two ways.
+
+**The dichotomy, which is the whole finding.** An abstraction covering all three has to be
+VALUE-generic: `Pools`'s table holds shared `Pool` values rather than factories, and its registration
+derives the key by PROBING a factory for the class of what it makes. Value-generic, with a miss
+policy, it is a `Class`-keyed map — i.e. a `Map`, which every target language already has.
+`balticporter/runtime/package.scala`'s admission rule refuses exactly that shape: *"could a correct
+emitter have avoided it? If yes, it does not belong in this module at any level of generality"*, and
+that module has already argued an assertion-helper and a suite base class in and back out on the same
+test. Narrow the abstraction to the two that really ARE instance registries and it stops being a
+`Map` — and those two are the two DEPENDENTS, which are the ports that cannot deliver it.
+
+**The delivery fact, read off the corpus's own runtime plan and not asserted.** `RuntimePlan.of`
+derives a run's required support types from the PHASES that ran (`RequiresRuntime`), and libGDX core
+is the family's carrier: it is `RuntimeMode.Vendored` and writes the shims into
+`ported/sge/src_managed`, which the Ashley and gdx-gltf lanes compile beside. Both dependents are
+`RuntimeMode.Dependency` with NO runtime artifact on their compile line, and both INHERIT the base's
+`CollectionsTransform` through `surface` — so each dependent's own `plan.required` equals the base's,
+and switching either to `Vendored` defines every shim twice (each migrator's own comment says so, and
+that is why they are `Dependency`). **A dependent cannot ship a support type; only the base can.** So
+putting an instance registry in the published artifact makes libGDX core vendor a type nothing in
+libGDX core references, purely for its dependents — one module carrying another's build artefact,
+which is the asymmetry `CLAUDE.md` §1.5 draws `inject`'s line at.
+
+**What it would have bought, since that is the number.** The shared class replaces **5** lines of
+`ComponentFactories` (51), **7** of `GLTFExtensionFactories` (66) and **4** of `Pools` (169), and
+drains **one** finding on **one** port: Ashley's `portability(injected)` is **4**, of which one is the
+`java.util.concurrent` map its table happens to use and the other three are the reflective fallback
+the port keeps on purpose. libGDX's `Pools` files **0** injected-portability findings — its
+`ObjectMap` is the port's own portable map — so the third instance gains nothing measurable at all.
+Against that: one published support type, one delivery declaration on a port that does not use it,
+and Ashley's table silently losing its concurrency, because the runtime module forbids threads and a
+shared table therefore cannot be the concurrent one.
+
+**WHAT WOULD FLIP IT**, stated so this is a refusal and not a closed door. Two conditions, both about
+the next library and neither about this code: a fourth instance in a port that is a BASE rather than a
+dependent — that port vendors for itself and the delivery objection goes — and a fourth instance whose
+miss is read ONE way, which is what would make the single parameter real. Until both hold the shape
+stays hand-written, and each of the three instances now carries a pointer here so the next reader of
+any one of them finds the verdict instead of re-deriving it.
+
+**The general form, and it is the durable half** (`CLAUDE.md` §1's balance now states it): a SHAPE
+that recurs is not a MECHANISM. Three instances is §2's threshold for *looking*, not for extracting —
+what settles it is whether the abstraction covering every instance is something the language already
+has, and whether the ports that would use it can DELIVER it.
+
+*Fix kind: (b) refused — the mechanism is real and its home is not the engine. What the engine already
+provides is the whole of the mechanised half: `MethodBodyTransform` for a body seam, `dropTypes` +
+`inject` for a whole type.*
+
+---
+
 ## 6. Porting a test suite
 
 ### X1. Converting JUnit to MUnit is a STRUCTURAL transform, not an annotation rename

@@ -281,6 +281,25 @@ mechanism genuinely cannot be shared. Most things that look library-specific are
 policy inlined — that is exactly the mistake `ReflectionToPortableTransform` made, hard-coding
 `com.badlogic.gdx.utils.reflect.ClassReflection` and its member list inside the engine.
 
+**…and the counterweight, because the balance tips both ways: A SHAPE THAT RECURS IS NOT A
+MECHANISM.** §2's "a rule that survives three libraries unchanged is probably universal" is a
+threshold for LOOKING, never for extracting, and two further questions decide it — both answerable
+before a line is written, neither answerable from the three FILES, which is what makes this a rule.
+*Is the abstraction that covers EVERY instance something the target language already has?* Generalise
+until the last instance fits and the shared part is often a `Map`, a `List` or a `try` — and
+`balticporter/runtime/package.scala`'s admission rule refuses exactly that ("could a correct emitter
+have avoided it?"). *And can the ports that would use it DELIVER it?* A support type reaches a port
+through `RuntimePlan`, which derives it from the PHASES that ran, so a DEPENDENT — inheriting its
+base's `RequiresRuntime` phase through `surface` — cannot vendor one without defining every one of
+its base's shims twice. Only a BASE can ship a support type, and a base carrying a type nothing in it
+references, for its dependents, is one module holding another's build artefact (§1.5's `inject`
+line). Measured on the strongest candidate the corpus had — three hand-written `Class`-keyed
+registries replacing reflective instantiation, whose extraction would have saved **16 lines across
+three ports and drained one check finding on one of them**, at the cost of a published type the base
+does not use (`ENGINE-LIMITS.md` P10). Read the WIRING before the files: two of those three were
+already reached by one `MethodBodyTransform` key each, so the half that looked unmechanised was the
+half already done.
+
 ### Enforcing it
 
 No file under `balticporter/{api,engine,frontend-spoon,runtime}/` may name a ported library **in

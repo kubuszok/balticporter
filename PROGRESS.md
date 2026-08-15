@@ -5352,13 +5352,25 @@ ten cases. That spec is the coverage.
 Two recurring hand-written shapes were surveyed for mechanisation alongside the menus and left
 unbuilt, each with the reason stated so the decision is not re-derived:
 
-- **Reflective-instantiation-to-registry as a §1(b) phase.** Three ports hand-wrote the same shape —
-  libGDX core's injected `Pools`, Ashley's `ComponentFactories`, gdx-gltf's
-  `GLTFExtensionFactories` — a `Class`-keyed factory table replacing `newInstance()`, differing in
-  exactly two parameters (open registry with a fallback vs closed without; null vs throw on a miss).
-  Three instances of one mechanism is the §1 threshold for parameterising, and it remains the
-  strongest candidate for the next engine wave; it was scoped out of the menu program to keep Wave D
-  at two measured deliverables rather than three rushed ones.
+- **Reflective-instantiation-to-registry as a §1(b) phase — READ OUT AND REFUSED**
+  (`ENGINE-LIMITS.md` P10). Three ports hand-wrote the same shape — libGDX core's injected `Pools`,
+  Ashley's `ComponentFactories`, gdx-gltf's `GLTFExtensionFactories` — and this entry recorded it as
+  three instances of one mechanism with two free parameters, the strongest candidate for the next
+  engine wave. Both halves of that description were wrong, and the correction is what the reading
+  produced. **The two parameters are one**: both survivors expose a public `register` (gdx-gltf's is
+  open, not closed), and "reflective fallback vs none" and "null vs throw" are the same axis — what
+  the port does at a MISS — which `Pools` then breaks by reading ONE table two ways (`getOrNull`
+  answers `null`, `get` throws). **And it is not one mechanism**: the abstraction that covers all
+  three has to be value-generic, because `Pools` holds shared `Pool` VALUES rather than factories and
+  derives its key by probing a factory — value-generic it is a `Class`-keyed `Map`, which
+  `balticporter/runtime/package.scala`'s admission rule refuses by name, and narrowed to the two real
+  instance registries it is deliverable only by a BASE port, which neither of those two is. What it
+  would have saved is **5 lines of `ComponentFactories` (51), 7 of `GLTFExtensionFactories` (66), 4
+  of `Pools` (169)** and **one** finding on **one** port (Ashley's `portability(injected)` 4 → 3, the
+  `java.util.concurrent` map; libGDX's `Pools` files 0 there). Two of the three sites were already
+  reached by one `MethodBodyTransform` key each and the third by `dropTypes` + `inject`, so no
+  transform was missing either. The three instances now cite P10 in their own doc comments; the
+  conditions that would re-open it are stated there.
 - **The loud-refusal facade stays hand-written.** A faithful static half beside a reflective half
   that throws `UnsupportedOperationException` naming the seam (libGDX's injected `Json` is the
   worked example) recurs as a SHAPE, but each instance's split — which members are static-faithful,
