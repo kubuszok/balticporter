@@ -289,10 +289,10 @@ before a line is written, neither answerable from the three FILES, which is what
 until the last instance fits and the shared part is often a `Map`, a `List` or a `try` — and
 `balticporter/runtime/package.scala` admits only *semantics the target LACKS*, and a `Map` is not one
 (its stated test, "could a correct emitter have avoided it?", answers NO and would let it in — the
-criterion the test serves is what refuses it). *And can the ports that would use it DELIVER it?* A support type reaches a port
-through `RuntimePlan`, which derives it from the PHASES that ran, so a DEPENDENT — inheriting its
-base's `RequiresRuntime` phase through `surface` — cannot vendor one without defining every one of
-its base's shims twice. Only a BASE can ship a support type, and a base carrying a type nothing in it
+criterion the test serves is what refuses it). *And can the ports that would use it DELIVER it?* A
+support type reaches a port through `RuntimePlan`, which derives it from the PHASES that ran, so a
+DEPENDENT — inheriting its base's `RequiresRuntime` phase through `surface` — cannot vendor one
+without defining every one of its base's shims twice. Only a BASE can ship a support type, and a base carrying a type nothing in it
 references, for its dependents, is one module holding another's build artefact (§1.5's `inject`
 line). Measured on the strongest candidate the corpus had — three hand-written `Class`-keyed
 registries replacing reflective instantiation, whose extraction would have saved **8 net lines across

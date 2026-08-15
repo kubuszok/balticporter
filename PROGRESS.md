@@ -5363,18 +5363,19 @@ unbuilt, each with the reason stated so the decision is not re-derived:
   answers `null`, `get` throws). **And it is not one mechanism**: the abstraction that covers all
   three has to be value-generic, because `Pools` holds shared `Pool` VALUES rather than factories and
   derives its key by probing a factory — value-generic it is a `Class`-keyed `Map`, which
-  `balticporter/runtime/package.scala` does not admit (it takes *semantics the target LACKS*, and
-  a `Map` is not one — its stated "could a correct emitter have avoided it?" test answers NO and would
-  let it in, which P10 spells out), and narrowed to the two real
-  instance registries it is deliverable only by a BASE port, which neither of those two is. What it
-  would have saved is the table declaration and the hit/miss dispatch and nothing else — **5 lines of
-  `ComponentFactories` (of 51), 5 of `GLTFExtensionFactories` (of 66), 4 of `Pools` (of 169)**, less
-  a construction line back in each, so **8 net across three ports** — plus **one** finding on **one**
-  port (Ashley's `portability(injected)` 4 → 3, the `java.util.concurrent` map; libGDX's `Pools`
-  files 0 there). Two of the three sites were already
-  reached by one `MethodBodyTransform` key each and the third by `dropTypes` + `inject`, so no
-  transform was missing either. The three instances now cite P10 in their own doc comments; the
-  conditions that would re-open it are stated there.
+  `balticporter/runtime/package.scala` does not admit (it takes *semantics the target LACKS*, and a
+  `Map` is not one; its stated "could a correct emitter have avoided it?" test answers NO and would
+  let it in, which is the half P10 spells out). Narrowed to the two real instance registries it stops
+  being a `Map` and is then deliverable only by a BASE port, which neither of those two is —
+  `RuntimePlan` reads its required set off the phases that ran, a dependent inherits the base's, and
+  vendoring on a dependent writes every base shim twice. What the extraction would have saved is the
+  table declaration and the hit/miss dispatch and nothing else — **5 lines of `ComponentFactories`
+  (of 51), 5 of `GLTFExtensionFactories` (of 66), 4 of `Pools` (of 169)**, less a construction line
+  back in each, so **8 net across three ports** — plus **one** finding on **one** port (Ashley's
+  `portability(injected)` 4 → 3, the `java.util.concurrent` map; libGDX's `Pools` files 0 there).
+  Two of the three sites were already reached by one `MethodBodyTransform` key each and the third by
+  `dropTypes` + `inject`, so no transform was missing either. The three instances now cite P10 in
+  their own doc comments; the two conditions that would re-open it are stated there.
 - **The loud-refusal facade stays hand-written.** A faithful static half beside a reflective half
   that throws `UnsupportedOperationException` naming the seam (libGDX's injected `Json` is the
   worked example) recurs as a SHAPE, but each instance's split — which members are static-faithful,
