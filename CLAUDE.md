@@ -819,6 +819,22 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   residue is right here* — which had no spelling on any lane and is why those counts could only ever
   go up.
 
+  **And an ACCEPT answers a QUESTION, never a DEFECT — which is a different test from the one above,
+  and the one a heterogeneous lane forces.** The three menus that produced that table sat on lanes
+  whose kinds were all the same question asked of different populations, so "does this act have a
+  spelling?" was the only screen anybody needed. `omissions` has SEVEN kinds that are seven different
+  constructs, and one `accept` per kind — the obvious menu — would have been wrong for five of them
+  in a way NO COUNT can show: an accept that should not exist looks exactly like one that should, the
+  row leaves the lane, `remediation(resolved)` gains it, and the arithmetic balances perfectly over a
+  defect nobody will look at again. So the second screen is whether the ENGINE HAS DECLINED TO
+  DECIDE, and the evidence is the mechanism's own words where it refused: `promotionEscapes` says it
+  is "deliberately NOT a purity question about the body", and `preservedAnnotations` exists because
+  which annotations bear behaviour "is a fact about a library … never about java". A residue whose
+  citation instead reads *measured worse* is not a question, it is an answer the port is being told,
+  and accepting it retires the only instrument there is — which is why a LOSS (the port runs less
+  than java) and a WORK ITEM (a fix somebody has not built) both take no entry, however honestly a
+  port could claim to have read the site.
+
   **And the arithmetic is `sum(drained)`, never `count(rows)`, because a selection is not always at
   the row it drains.** A remedy selected at a TYPE takes every site inside it, so one applied row
   answers for fifteen lane rows and a diff read by counting rows leaves fourteen with nothing to

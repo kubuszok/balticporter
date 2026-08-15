@@ -5669,3 +5669,97 @@ per declared coordinate naming its cell and the evidence for each half. The triv
 one lane over — `policy = 0` on this seam is a bar a port meets by declaring nothing, and an artifact a
 phase redirected into had no row on either usage lane at all, which is precisely how P8 stayed
 invisible for the life of the port that had it.
+
+### 8.21 The LAST two menus — `omissions` and `jdk-surface`, and the line an ACCEPT is cut on
+
+§8.16 shipped the plumbing, §8.18 the first menu and the boundary trio the three that followed.
+These are the two lanes the programme priced and never assigned, and between them they carry the
+largest per-site residues in the corpus that had no front door at all: `omissions` at 97 rows and
+`jdk-surface` at 57.
+
+**They also force the question the earlier menus never had to answer, because every lane they
+touched was homogeneous.** `heap-pollution` has two kinds and both are the same question asked of
+two populations; `collection-boundary` has ten and the six it refuses are refused one at a time,
+each with its own citation. `omissions` has SEVEN kinds that are seven different constructs, and the
+first attempt at a menu here is one `accept` per kind — which would have been wrong for five of
+them, and wrong in a way no count could have shown, because an accept that should not exist looks
+exactly like one that should: the row leaves the lane, `remediation(resolved)` gains it, and the
+arithmetic balances perfectly over a defect nobody will now look at.
+
+**The line is whether the ENGINE HAS DECLINED TO DECIDE, and it is written in the engine's own
+code.** An accept is licensed where the mechanism can see the site, can see both answers, and has
+said — in a doc comment beside the refusal — that WHICH of them is right is not something it can
+compute. Two of `omissions`' kinds are like that and both say so in as many words:
+
+- `CtorFunnel.Plans.promotionEscapes` is "deliberately NOT a purity question about the body", because
+  whether re-running the promoted statements is observable "depends on what the other constructor
+  overwrites, on what the callee touches, and on the caller". 59 of libGDX's 771 promotions escape,
+  "most only waste an allocation", and two do not. The engine computes the structural fact and stops;
+  the port reads the body. That is §8.16's premise stated by the mechanism itself;
+- an annotation the frontend could not carry is `FrontendConfig.preservedAnnotations`' subject, and
+  that parameter exists because "WHICH annotations are behaviour-bearing is a fact about a library
+  and its dependencies, never about java" (`ENGINE-LIMITS.md` T16). The corpus population is 19
+  `@SuppressWarnings` of 25, which suppress a JAVAC warning scala does not have; the same lane holds
+  a `@RunWith` on a suite a phase converts to MUnit, which would be actively WRONG to carry.
+
+The other five are LOSSES: the port runs LESS than java, and there is no reading of the site that
+yields *this is fine*. `super(args) dropped` is C3 — every one of the corpus's 41 rows is a copy
+constructor that copies nothing or a `super(type, texture)` that builds an untextured attribute, and
+PADDING was measured and refused. `nilary constructor dropped` is C11, where all three ways of
+keeping the delegation were measured worse, and its accept would say *nothing constructs `new C()`* —
+a claim about the port's CONSUMERS rather than about a site the port can read, which is §8.18's own
+reason for refusing the `dropMethods`-scale drop. `Throwable(cause) message dropped` is the same
+shape one member in. `anonymous-class member dropped` is an ENGINE GAP (T1's residue).
+And `lambda return with an unnameable result type` is a WORK ITEM rather than a refusal (M6/I9 — a
+builder that holds the SAM method fills `Tree.Lambda.resultTpt`, which is how `SamLambdaTransform`
+closed part of it), so accepting it would RETIRE it silently, which is the one thing a residue lane
+must not let a port do.
+
+Stated as a rule rather than as five cases: **an accept answers a question, never a defect, and the
+evidence that it is a question is that the mechanism said so where it declined.** A residue with a
+citation that reads *measured worse* is not a question — it is an answer the port is being told.
+
+**`jdk-surface` cuts the same way with three kinds and one entry.** `unhandled` is coverage by
+COINCIDENCE, which the check's own doc already names: `java.util.Arrays#fill(float[],float)` compiles
+and behaves because a `scala.Array[Float]` IS a `float[]`, and `java.util.Map#clear()` survives
+because scala spells the member the same way. Whether THIS port relies on the coincidence is a
+reading of the call and not of a table, and it is emphatically not a `Refusals` entry: a `Refusal` is
+the ENGINE saying *no translation exists, here is the citation*, and it silences the row for all
+fifteen ports at once. `kept-iterable` takes nothing because the row stands for a compile error that
+is really there — noise4j's two errors ARE those two rows (K9) — and `stale-refusal` takes nothing
+because it reports two ENGINE tables contradicting each other, which is a fact about no port.
+
+**The SUBJECT axis produced the one shape §8.16 had not met: TWO IDS FOR ONE ACT.** `Remedy.subject`
+is declared per remedy, and `omissions`' annotation rows sit at BOTH kinds of subject — a
+`@SuppressWarnings` on a class is a row over a TYPE symbol and one on a field is a row over a MEMBER
+symbol, from one line of the check. A single id would have to pick one seam and the other half of the
+population would be residue no key could ever drain, which is the bar `Remedy.alsoKinds` exists to
+stop a MECHANISM failing, met here on a different axis. So `accept-dropped-annotation` and
+`accept-dropped-type-annotation` are one sentence spelled twice, and the pair is safe by
+construction rather than by care: a bare FQN binds through `bindType` and `owner#member` through
+`bindMember`, so no key can name both and no declaration can hold both — `Remedy.overlaps` is never
+even asked about a pair that could answer one row.
+
+**The POINTERS, which are again most of the value** (`CLAUDE.md` §5's one-policy-one-spelling):
+
+| lane | remedy | pointer instead (existing spelling) | absent, and why |
+|---|---|---|---|
+| `omissions` | `accept-promoted-body`, `accept-dropped-annotation`, `accept-dropped-type-annotation` | carry the annotation → `FrontendConfig.preservedAnnotations`; supply a constructor the funnel could not express → `Substitutions.inject` beside its `dropMethods`/`dropTypes` key | `super(args)` (C3), `nilary constructor` (C11), `Throwable(cause) message`, `anonymous-class member` (T1) — LOSSES, and an accept would drain a defect; `lambda return` — a WORK ITEM (M6/I9); keeping java's construction paths apart — no key AND no engine act, since tightening `supersedes` "removes no effect and costs the constructor's argument" (C6) |
+| `jdk-surface` | `accept-jdk-member` | retarget the owner → `CollectionsTransform(retarget)`; hold the calling declaration back → `CollectionsTransform(scope)`, ruled out as a general answer at `27 -> 47`/`27 -> 51` (K16) | `kept-iterable` — the row IS a compile error (K9); `stale-refusal` — two engine tables disagreeing, and accepting it preserves the reason not to look; the mapping and the `Refusals` entry beside it — ENGINE edits with no manifest key, so neither competes |
+
+**And `jdk-surface`'s key is the finding's own SUBJECT COLUMN, verbatim.** That lane files one row per
+MEMBER (however many call sites) rather than per calling declaration, deliberately, so the thing a
+port has an opinion about is the external callee — `Remedy.Subject.ExternalMember`, the same seam
+`accept-opaque-egress` uses, and the same round trip §8.18 states as a rule: whatever prints a
+manifest key states the OWNERSHIP the reader's door will demand of it. An `Ownership.Owned` binding
+would refuse every key a reader could copy out of that report.
+
+**Mechanically both are `RemedySource`s the CHECK declares and nothing carries out**, so neither
+appears in `PortRun.remedyPhases` — the boundary trio's shape and for its reason: every entry is
+`accept`-shaped, there is no act and no deadline, and the check that mints the residue drains it in
+the traversal that records it. What the two lanes needed that the trio did not is a `Finding.at`: an
+`omissions` row is per CONSTRUCTOR or per annotated symbol and a `jdk-surface` row is per external
+member, and neither type carried the `SymId` a selection keys on. `SymId.None` is what a row with no
+nameable declaration takes, and it makes that row UNSELECTABLE rather than selectable by whatever
+else happens to hold that id — a fallback to the enclosing unit would let one key drain every row in
+a file.
