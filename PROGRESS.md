@@ -5243,7 +5243,8 @@ whole of what `ENGINE-LIMITS.md` D4/D5 measured.
 
 ### 12.2.5 `findings.tsv` was a COMMITTED baseline that no lane compared — and the divergence it hid was a STALE ACCEPT, not a checkout
 
-`just baseline-accept` promotes seven artifacts and the lanes gated on six of them: `counts.tsv`
+`just baseline-accept` promotes seven artifacts and the lanes gated on five of them at the time:
+`counts.tsv`
 through `show_check_report`, `members.tsv` through `just members-unchanged`, `tests.tsv` through the
 correlator's diff, plus `expected-errors` and `expected-lost`. `findings.tsv` was promoted and never
 diffed, so **every row's DETAIL — the owner it is attributed to, the `UsageKind` it was seen at, and
@@ -5277,16 +5278,14 @@ worktree caution below still stands on its own terms, and is now enforced rather
 re-run the lane before `just baseline-accept` (`CLAUDE.md` §5.1), because a baseline promoted from a
 `run-latest` that predates a later edit in the same wave is exactly what produced these eight.
 
-**`port-map.tsv` IS THE SAME SHAPE AND IS STILL UNGATED — OPEN.** `just baseline-accept` promotes it;
-no lane compares it. It is not a hypothetical: publishing `Surface.MemberShape.form` moved **60
-member rows** in the libGDX base's map in one commit, and the only reason anybody saw it was that the
-commit was expected to move exactly those rows and somebody diffed the file by hand. A base's map
-decides a dependent's EMITTED TEXT (`TirEmitter.baseName`, and now the collapse comparison), so a row
-that changes there without an acknowledgement is the F3 failure with a larger blast radius. The
-mechanism is already written and is simpler than `findings_baseline_guard` — the map has no id column
-to strip, so it is a plain `diff` — and the reason it is recorded rather than built is that this wave
-measured the gate it did build and did not measure a second one. Next agent: build it beside
-`findings_baseline_guard`, with its own `lane-selfcheck` cell, and expect the promotion to be flat.
+**`port-map.tsv` was the SAME SHAPE and stayed ungated for two more waves — SHIPPED in §12.4.6.** It
+was never a hypothetical: publishing `Surface.MemberShape.form` moved **60 member rows** in the
+libGDX base's map in one commit, and the only reason anybody saw it was that the commit was expected
+to move exactly those rows and somebody diffed the file by hand. A base's map decides a dependent's
+EMITTED TEXT (`TirEmitter.baseName`, and now the collapse comparison), so a row that changes there
+without an acknowledgement is the F3 failure with a larger blast radius. `port_map_guard` is that
+gate; the second incident, the numbers it landed on and the one place it is NOT a plain `diff` are in
+§12.4.6.
 
 ### 12.2.6 The portability MENU, and the two things measuring it found
 
@@ -5682,7 +5681,40 @@ two manifests this wave actually edited are the two whose own maps did NOT move,
 `surfaceDigestInputs` reads the surface and the selections and not `dependencies`. The diff is the
 header line and nothing else on all nine, and they are refreshed here. `just baseline-accept` promotes
 the file, `headline` gates the other five, and nothing reads this one — which is §12.2.5's finding
-exactly, one artifact over, and the guard is not built here.
+exactly, one artifact over.
+
+**GATED, in the wave after this one.** `port_map_guard` sits beside `findings_baseline_guard` in
+`scripts/_lib.sh`, is called by all fifteen report dirs across the eleven lanes, and defers its
+verdict to `headline` through a marker file for the reason the other four do. It landed **flat on
+every port** — 27,330 rows over fifteen maps, header and rows unchanged, no baseline re-accepted and
+no other count moved (libGDX core 19,498; liqp 996; liqp-test 953; vfx 953; gltf 1,562; anim8 607;
+jbump 532; sg 476; ashley and ashley-test 401 each; libgdx-test 329; noise4j 311; screens 213;
+gltf-test 47; sg-test 51).
+
+Three things about it that are decisions rather than mechanism:
+
+- **nothing is stripped.** `findings_baseline_guard` drops `Finding.id` because it is renumbered in
+  LINE order by unrelated edits; the map has no such column. Every header field is a fact somebody
+  has to acknowledge — `engine=` most of all, since `PortMap.freshness` turns a mismatch into `Stale`
+  outright — and every row column is deterministic: `javaPath` is relativised against a root DERIVED
+  from the unit's own FQN (`SrcMap.sourceRootOf`, a string operation, so none of §5.4's realpath
+  hazard reaches it), `javaLine` is upstream java's, `digest` is the one `members.tsv` is already
+  baselined on, and the row order is `PortMap.of`'s own section-by-section sort. The fifteen flat
+  runs are the evidence for that claim rather than the argument for it;
+- **the metadata line is diffed FIELD BY FIELD**, because this section's own incident read as a raw
+  diff is two sixteen-character digests and says nothing about which of six moved or what it means;
+- **a run that published NO map fails too**, and is not symmetric with a missing baseline:
+  `PortMap.discoverIn` prefers `run-latest` and falls back to `baseline`, so a port that stopped
+  publishing hands its dependents the COMMITTED map and nothing else can see it.
+
+**Negative-tested on a real lane, both halves** — a guard that has never failed is not known to work,
+which is `CLAUDE.md` §3's "a check reporting zero is only as good as its coverage" read at the
+instrument rather than at the port. With jbump's committed
+`policy=` digest edited and every row left alone, `just jbump-measure` exited 1 at
+`policy= 0000stale0000dead -> 3dc15a4b2f41e628 / the base's MANIFEST changed`, `rows: unchanged`; with
+the header restored and one `shape` cell moved `form=class -> form=trait`, it exited 1 naming the two
+rows; restored, it exits 0 at `532 row(s), header and rows unchanged`. Sixteen `just lane-selfcheck`
+cells hold the same shapes without sbt.
 
 ### 12.4.7 `java.util.ServiceLoader` maps to a cross-platform WRAPPER — the first `Depend` a port both declares AND redirects into
 

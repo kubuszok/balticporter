@@ -901,6 +901,17 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   worktree-versus-primary difference until somebody read the row rather than the diff summary
   (`PROGRESS.md` §12.2.5). A count is not path-derived; a §5.4 explanation could never have produced
   it.
+- **…AND SO IS `port-map.tsv`, the one committed baseline another RUN reads.** Same argument one
+  artifact over and with a larger blast radius: a dependent's emitted text comes out of its base's
+  published map, so a row that moves there unacknowledged is §1.5's two-ports-that-cannot-compile-
+  together arriving through the artifact built to prevent it — and it went stale twice, both times
+  found by hand (60 member rows in one commit; nine dependents' `policy=` headers for days,
+  `PROGRESS.md` §12.2.5 and §12.4.6). `port_map_guard` diffs the WHOLE file in either direction,
+  stripping nothing — the map has no id column, the rows are the writer's own sort and every header
+  field is a fact somebody has to acknowledge — and reads the metadata line field by field, because a
+  moved `policy=` read as a raw diff is two sixteen-character digests. A run that published NO map
+  while a baseline exists fails it too: `PortMap.discoverIn` then silently hands its dependents the
+  COMMITTED map instead.
 - **Change one thing, then measure.** Two changes measured together cost a full cycle to untangle
   and tell you nothing about either.
 - **A DRY RUN of one phase is not a measurement of the pipeline.** Running a single phase over a
