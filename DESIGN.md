@@ -1090,6 +1090,19 @@ Scala.js and Native linkers — which are the platforms the target repos exist f
 survives only as an explicit `RuntimeMode.Vendored` fallback for a standalone single-module port.
 `ENGINE-LIMITS.md` K3 is the measured form of this rule.
 
+**And the corollary that decides where a NEW support type may go: only a BASE port can ship one.**
+`RuntimePlan.of` derives a run's required types from the PHASES that ran (`RequiresRuntime`), and a
+dependent INHERITS its base's phases through `PortManifest.surface` — so a dependent's `required` set
+CONTAINS its base's, and `RuntimeMode.Vendored` on a dependent writes a second copy of every shim the
+base already wrote. That is why every dependent port in this corpus is `RuntimeMode.Dependency` while
+its base vendors, and why a dependent compiled beside its base sees the support types through the
+BASE's `src_managed` rather than through anything of its own. The consequence for a proposed runtime
+type is the part that is easy to miss: if the ports that want it are dependents, the only module that
+can deliver it is the base — which then vendors a type nothing in it references, one module carrying
+another's build artefact, the asymmetry `CLAUDE.md` §1.5 draws `inject`'s line at. Measured as the
+thing that refused the reflective-instantiation registry (`ENGINE-LIMITS.md` P10); stated here because
+until now it lived only as the same paragraph copied into two migrators' comments.
+
 ### 3.8 Override layer
 
 Replayable, never patches on generated text (§1.5), in descending order of preference:
