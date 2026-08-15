@@ -287,8 +287,9 @@ threshold for LOOKING, never for extracting, and two further questions decide it
 before a line is written, neither answerable from the three FILES, which is what makes this a rule.
 *Is the abstraction that covers EVERY instance something the target language already has?* Generalise
 until the last instance fits and the shared part is often a `Map`, a `List` or a `try` — and
-`balticporter/runtime/package.scala`'s admission rule refuses exactly that ("could a correct emitter
-have avoided it?"). *And can the ports that would use it DELIVER it?* A support type reaches a port
+`balticporter/runtime/package.scala` admits only *semantics the target LACKS*, and a `Map` is not one
+(its stated test, "could a correct emitter have avoided it?", answers NO and would let it in — the
+criterion the test serves is what refuses it). *And can the ports that would use it DELIVER it?* A support type reaches a port
 through `RuntimePlan`, which derives it from the PHASES that ran, so a DEPENDENT — inheriting its
 base's `RequiresRuntime` phase through `surface` — cannot vendor one without defining every one of
 its base's shims twice. Only a BASE can ship a support type, and a base carrying a type nothing in it

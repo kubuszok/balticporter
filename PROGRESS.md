@@ -5363,7 +5363,9 @@ unbuilt, each with the reason stated so the decision is not re-derived:
   answers `null`, `get` throws). **And it is not one mechanism**: the abstraction that covers all
   three has to be value-generic, because `Pools` holds shared `Pool` VALUES rather than factories and
   derives its key by probing a factory — value-generic it is a `Class`-keyed `Map`, which
-  `balticporter/runtime/package.scala`'s admission rule refuses by name, and narrowed to the two real
+  `balticporter/runtime/package.scala` does not admit (it takes *semantics the target LACKS*, and
+  a `Map` is not one — its stated "could a correct emitter have avoided it?" test answers NO and would
+  let it in, which P10 spells out), and narrowed to the two real
   instance registries it is deliverable only by a BASE port, which neither of those two is. What it
   would have saved is the table declaration and the hit/miss dispatch and nothing else — **5 lines of
   `ComponentFactories` (of 51), 5 of `GLTFExtensionFactories` (of 66), 4 of `Pools` (of 169)**, less

@@ -5618,12 +5618,16 @@ with ONE declared miss policy cannot express a table that is read two ways.
 **The dichotomy, which is the whole finding.** An abstraction covering all three has to be
 VALUE-generic: `Pools`'s table holds shared `Pool` values rather than factories, and its registration
 derives the key by PROBING a factory for the class of what it makes. Value-generic, with a miss
-policy, it is a `Class`-keyed map — i.e. a `Map`, which every target language already has.
-`balticporter/runtime/package.scala`'s admission rule refuses exactly that shape: *"could a correct
-emitter have avoided it? If yes, it does not belong in this module at any level of generality"*, and
-that module has already argued an assertion-helper and a suite base class in and back out on the same
-test. Narrow the abstraction to the two that really ARE instance registries and it stops being a
-`Map` — and those two are the two DEPENDENTS, which are the ports that cannot deliver it.
+policy, it is a `Class`-keyed map — i.e. a `Map`, which every target language already has, and
+`balticporter/runtime/package.scala` admits exactly one thing: *semantics the target language LACKS*.
+**Be precise about which half of that rule bites, because the other half reads the other way.** The
+module's stated test — *"could a correct emitter have avoided it?"* — answers NO here, since no
+emitter can synthesise an instance from a `Class` off the JVM, so the test taken alone would let it
+in. What refuses it is the criterion the test serves: a `Class`-keyed map is not a lacked semantic and
+not an emission shape, it is CONVENIENCE — the ground on which that module has already argued an
+assertion-helper and a suite base class in and then back out, at real cost, which is why its own doc
+records both. Narrow the abstraction to the two that really ARE instance registries and it stops being
+a `Map` — and those two are the two DEPENDENTS, which are the ports that cannot deliver it.
 
 **The delivery fact, read off the corpus's own runtime plan and not asserted.** `RuntimePlan.of`
 derives a run's required support types from the PHASES that ran (`RequiresRuntime`), and libGDX core

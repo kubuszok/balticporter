@@ -30,9 +30,10 @@ package sge.utils
   * the key by probing a factory for the class of what it makes, which no other instance does; and
   * the SAME table is read two ways — `getOrNull` answers `null`, `get` throws — so a registry with
   * one declared miss policy cannot express it. Generalise past all three and what is left is a
-  * `Class`-keyed map, which the runtime module's admission rule refuses. This file also files ZERO
-  * `portability(injected)` findings today, its map being the port's own portable `ObjectMap`, so
-  * there is no residue for a shared table to drain here either.
+  * `Class`-keyed map, which the runtime module does not admit — it takes semantics the target LACKS,
+  * and a map is not one. This file also files ZERO `portability(injected)` findings today, its map
+  * being the port's own portable `ObjectMap`, so there is no residue for a shared table to drain
+  * here either.
   */
 object Pools:
 

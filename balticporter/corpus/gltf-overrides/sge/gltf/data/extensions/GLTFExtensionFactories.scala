@@ -14,9 +14,10 @@ package sge.gltf.data.extensions
   * registry" was moving from a per-library rule towards a shared one. **It is not, and the reading
   * that settled it is `ENGINE-LIMITS.md` P10.** The abstraction that covers all three has to be
   * value-generic — `Pools` keys shared pool VALUES, not factories — at which point it is a
-  * `Class`-keyed map, which the runtime module's own admission rule refuses; narrowed to the two
-  * that really are instance registries it is deliverable only by a BASE port, which this module and
-  * Ashley are not. So it stays here, and P10 states the two conditions that would re-open it.
+  * `Class`-keyed map, which the runtime module does not admit (it takes semantics the target LACKS,
+  * and a map is not one); narrowed to the two that really are instance registries it is deliverable
+  * only by a BASE port, which this module and Ashley are not. So it stays here, and P10 states the
+  * two conditions that would re-open it.
   *
   * Note also what P10 corrects about THIS file: the registry below is OPEN — `register` is public —
   * so "open with a fallback vs closed without" was never the axis between it and Ashley's. The one
