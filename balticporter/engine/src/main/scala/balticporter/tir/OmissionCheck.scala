@@ -1,5 +1,7 @@
 package balticporter.tir
 
+import balticporter.catalog.FixKind
+
 /** Constructs the port carries in the TIR but does NOT emit — counted, located, and reported.
   *
   * The engine's stance is anti-omission (DESIGN.md §3.4): a construct it cannot translate faithfully
@@ -12,12 +14,175 @@ package balticporter.tir
   *
   * This turns that class of defect into a number that shows up on every migration run.
   */
-object OmissionCheck:
+object OmissionCheck extends RemedySource:
 
-  final case class Finding(what: String, owner: String, detail: String, origin: Origin):
+  /** the check's name in `findings.tsv`, as a CONSTANT — because a [[Remedy]] names this lane too,
+    * and `Remedy.lane` asking for a literal is how a renamed lane becomes a silently unwired claim
+    * rather than a compile error. `PortRun.Omissions` reads it, so there is one spelling. */
+  val Name = "omissions"
+
+  /** THE KINDS THIS LANE FILES, as constants for the reason [[Name]] is one.
+    *
+    * The `what` column of a `Finding` IS the kind a `CheckReport.Finding` carries and IS what a
+    * [[Remedy]] declares it drains, and until there was a menu those three were one string literal
+    * written at one site. A remedy naming a kind by literal cannot be told from a remedy naming a
+    * kind that does not exist — the vocabulary accepts the id, the key binds, and the port reads
+    * `NeverApplied` about a site that is right there (`BoundaryRemedySpec`'s own subject).
+    *
+    * The strings are UNCHANGED from the literals they replace: this lane's kinds are in every
+    * committed `findings.tsv` baseline and in `counts.tsv`, so re-wording one is a baseline move
+    * that says nothing about a port. */
+  object Kind:
+    val DroppedSuperArgs        = "super(args) dropped"
+    val DroppedCauseMessage     = "Throwable(cause) message dropped"
+    val PromotedBodyEveryPath   = "promoted constructor body runs on every path"
+    val DroppedNilaryCtor       = "nilary constructor dropped"
+    val DroppedAnonMember       = "anonymous-class member dropped"
+    val UnnameableLambdaReturn  = "lambda `return` with an unnameable result type"
+    val DroppedAnnotation       = "annotation dropped"
+
+    /** every kind this lane files — `Issue.values`' role for a set of strings, and what a menu spec
+      * checks a remedy's declared kind against. A kind absent here is a kind no such spec can see,
+      * so it is added beside the `val` above and not remembered separately. */
+    val all: List[String] = List(DroppedSuperArgs, DroppedCauseMessage, PromotedBodyEveryPath,
+      DroppedNilaryCtor, DroppedAnonMember, UnnameableLambdaReturn, DroppedAnnotation)
+
+  /** @param at the DECLARATION a per-location selection keys on ([[Resolution]]) — the constructor
+    *   for a constructor-shaped row, the annotated symbol for an annotation one. `SymId.None` where
+    *   the row has no nameable declaration, which makes it UNSELECTABLE rather than selectable by
+    *   whatever else happens to carry that id: a fallback to the enclosing unit would let one key
+    *   drain every row in a file. */
+  final case class Finding(what: String, owner: String, detail: String, origin: Origin, at: SymId):
     def render: String = s"$what: $owner — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding("omissions", what, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
+      CheckReport.Finding(Name, what, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
+
+  // -------------------------------------------------------------------------------------------
+  // THE MENU (`DESIGN.md` §8.16) — what a port may ASK FOR at one of these rows
+  // -------------------------------------------------------------------------------------------
+
+  /** THE PORT RAN MORE THAN JAVA DID, AND READ THE BODY — the one omission kind that is an ADDITION.
+    *
+    * `CtorFunnel` nominates one java constructor as scala's primary and its body becomes the class
+    * body, which runs on EVERY construction path; java's non-delegating constructors ran disjoint
+    * bodies. Refusing the promotion was measured at **0 -> 41 compile errors** on libGDX
+    * (`ENGINE-LIMITS.md` C6/C7), so the emission stands and the divergence is counted.
+    *
+    * ==Why THIS kind takes an accept where its four neighbours do not==
+    * `CtorFunnel.Plans.promotionEscapes` says in as many words that this is "deliberately NOT a
+    * purity question about the body": whether re-running the promoted statements is OBSERVABLE
+    * "depends on what the other constructor overwrites, on what the callee touches, and on the
+    * caller", and 59 of libGDX's 771 promotions land here of which "most only waste an allocation"
+    * while `Material` bumps a static id counter and `Button` adds a second listener to every button.
+    * That is §8.16's premise exactly — a difference with no single right answer, where only the port
+    * can read this body and say which of the two it is — and the engine has declined to compute it
+    * on purpose rather than for want of a mechanism.
+    *
+    * ==NOT emission-affecting==
+    * The promoted body is already the class body; applying this changes no statement, no signature
+    * and no order. Only the porter note moves, which is a comment — so two modules choosing
+    * differently cannot produce two ports that compile alone and fail together (§1.5).
+    *
+    * ==Keyed at the ESCAPING constructor, not at the class==
+    * The row is per CONSTRUCTOR because that is where the emitter answers it, and a class routinely
+    * has one escaping path whose body is harmless beside another whose is not — libGDX `BitmapFont`
+    * has 9. A type key would broadcast the port's reading of one path onto all of them. */
+  val AcceptPromotedBody: Remedy = Remedy(
+    id = "accept-promoted-body", lane = Name, kind = Kind.PromotedBodyEveryPath,
+    emissionAffecting = false, fix = FixKind.Universal,
+    what = "the port has READ the promoted constructor body and states that running it on this " +
+      "path is not observable — the divergence C6 counts, examined")
+
+  /** THE ANNOTATION IS RIGHT TO LOSE HERE — the complement of `FrontendConfig.preservedAnnotations`.
+    *
+    * An argument-bearing java annotation the frontend could not carry is reported rather than
+    * emitted bare, because `@A` where java wrote `@A(x)` is a different annotation. Which of them
+    * MATTER is not java's question and cannot be the engine's: `preservedAnnotations` exists
+    * precisely because "WHICH annotations are behaviour-bearing is a fact about a library and its
+    * dependencies, never about java" (`ENGINE-LIMITS.md` T16). The corpus population is mostly
+    * `@SuppressWarnings`, which suppresses a JAVAC warning scala does not have and therefore means
+    * nothing wherever it lands; the same lane also holds a `@RunWith` on a suite a phase converts to
+    * MUnit, which would be actively WRONG to carry, and one annotation that decides behaviour.
+    *
+    * So the two answers are `preservedAnnotations` (carry the family) and this (the drop is right
+    * at this declaration) — the same pair `accept-opaque-egress` is one half of, one lane over.
+    *
+    * ==Why there are TWO ids for one act==
+    * [[Remedy.subject]] is declared PER REMEDY and this lane's rows sit at both kinds of subject: a
+    * `@SuppressWarnings` on a class and one on a field are the same row shape over a TYPE symbol and
+    * a MEMBER symbol. A single id would have to pick one seam, and the other half of the population
+    * would then be residue no key can drain — the bar `Remedy.alsoKinds` exists to stop a MECHANISM
+    * failing, met here at the subject axis instead. They cannot collide: a bare FQN binds a type and
+    * `owner#member` binds a member, so no key can name both and no declaration can hold both.
+    *
+    * NOT emission-affecting: nothing was emitted for this annotation before the selection and
+    * nothing is after. */
+  val AcceptDroppedAnnotation: Remedy = Remedy(
+    id = "accept-dropped-annotation", lane = Name, kind = Kind.DroppedAnnotation,
+    emissionAffecting = false, fix = FixKind.Universal,
+    what = "the port has READ this member's dropped annotation and states that it carries no " +
+      "meaning in scala — the complement of a `preservedAnnotations` family")
+
+  /** …the same statement at a TYPE. See [[AcceptDroppedAnnotation]] for why the pair is two ids. */
+  val AcceptDroppedTypeAnnotation: Remedy = Remedy(
+    id = "accept-dropped-type-annotation", lane = Name, kind = Kind.DroppedAnnotation,
+    emissionAffecting = false, fix = FixKind.Universal,
+    subject = Remedy.Subject.OwnedType,
+    what = "the port has READ this type's dropped annotation and states that it carries no " +
+      "meaning in scala — the complement of a `preservedAnnotations` family")
+
+  /** THE MENU, AND WHAT IS DELIBERATELY NOT ON IT.
+    *
+    * ==The line this lane is cut on==
+    * Every other kind here is a LOSS: the port runs LESS than java, and there is no site at which
+    * reading it yields *this is fine*. An accept on one would drain a DEFECT rather than a question,
+    * which is the same refusal `collection-boundary` makes for `ReifiedOccurrence` and
+    * `context-seam` makes for `lost-clause` — a remedy for an engine-caused loss lets a port silence
+    * it, and the row is the only instrument there is. The two kinds that DO take one are the two
+    * where the engine has said, in code, that it cannot decide: the promoted body's observability
+    * (`promotionEscapes`' own doc) and an annotation's meaning to a library (T16).
+    *
+    * ==Absent, each with what refused it==
+    *   - '''`super(args) dropped`''' — `ENGINE-LIMITS.md` C3. Scala's secondary constructors cannot
+    *     reach `super`, so a root the funnel could neither promote nor replay loses its arguments,
+    *     and PADDING them was measured and refused (it is a guess outside the JDK throwables). Every
+    *     one of the corpus's rows is a real loss — a copy constructor that copies nothing, a
+    *     `super(type, texture)` that builds an untextured attribute — so an accept has no honest
+    *     site. The port's answer is to write the constructor by hand (§1.5's `inject`), which is a
+    *     POINTER below and not a remedy;
+    *   - '''`nilary constructor dropped`''' — `ENGINE-LIMITS.md` C11, where all three ways of
+    *     keeping the delegation were measured WORSE. The accept would say *nothing constructs
+    *     `new C()`*, which is a claim about the port's CONSUMERS and not about a site the port can
+    *     read — the same reason `DESIGN.md` §8.18 refuses to offer a `dropMethods`-scale drop of the
+    *     members nothing calls;
+    *   - '''`Throwable(cause) message dropped`''' — a refusal inside the delegation (a cause the
+    *     port cannot read twice), and the JDK's own computed message is gone. A loss, as above;
+    *   - '''`anonymous-class member dropped`''' — an ENGINE GAP (`ENGINE-LIMITS.md` T1's residue):
+    *     the frontend could not carry a member kind. Nothing about the site licenses it;
+    *   - '''`lambda `return` with an unnameable result type`''' — a WORK ITEM rather than a refusal
+    *     (`ENGINE-LIMITS.md` M6/I9: a builder that holds the SAM method fills `Tree.Lambda
+    *     .resultTpt`, which is why `SamLambdaTransform` closed part of it). Accepting a work item
+    *     retires it silently, which is the one thing a residue lane must not let a port do.
+    *
+    * ==Pointers — acts that already have a spelling, so they are NOT remedies (`CLAUDE.md` §5)==
+    *   - carry the annotation instead → `FrontendConfig.preservedAnnotations` (`annotations = […]`
+    *     in a `.conf`), which is per-library policy with an empty default;
+    *   - supply a constructor the funnel could not express → `Substitutions.inject`, plus the
+    *     `dropTypes`/`dropMethods` entry beside it;
+    *   - keep java's construction paths apart → there is no key, and there is no engine act either:
+    *     `CtorFunnel.Plans.supersedes` was the obvious place and tightening it "removes no effect and
+    *     costs the constructor's argument" (C6). The finding is the answer. */
+  def remedies: List[Remedy] =
+    List(AcceptPromotedBody, AcceptDroppedAnnotation, AcceptDroppedTypeAnnotation)
+
+  /** DRAIN what this port selected — `CLAUDE.md` §5's move, performed through the one function that
+    * performs it for every lane. Returns the rows that were NOT drained; the rest are in the plan's
+    * ledger and become `remediation(resolved)` rows and `decisions.tsv` rows.
+    *
+    * Passed THIS object's own remedies and never a lane name, because an id is globally unique while
+    * a `(lane, kind)` pair is not — see `ResolutionPlan.drain`. */
+  def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
+    plan.drain(remedies, findings)(f => ResolutionPlan.Residue(f.what, f.at, f.owner, f.origin, f.detail))
 
   /** The complete result. A PURE function of the program: persisting it is the orchestrator's job
     * (`PortRun` records `omissions` from this list), so a caller's `take(n)` render can never be
@@ -73,7 +238,10 @@ object OmissionCheck:
 
   def droppedAnnotations(program: Program, owned: SymId => Boolean): List[Finding] =
     program.symbols.all.toList.filter(s => s.droppedAnnotations.nonEmpty && owned(s.id)).sortBy(_.fullName).map { s =>
-      Finding("annotation dropped", s.fullName, s.droppedAnnotations.mkString(", "), s.origin)
+      // …`at = s.id`, which is the ANNOTATED symbol itself and is a type for some rows and a member
+      // for others. That is why the menu carries two ids: `Remedy.subject` is per remedy, and a bare
+      // FQN binds one seam while `owner#member` binds the other (see `AcceptDroppedAnnotation`).
+      Finding(Kind.DroppedAnnotation, s.fullName, s.droppedAnnotations.mkString(", "), s.origin, s.id)
     }
 
   /** A member of a Java ANONYMOUS class body that did not survive translation.
@@ -96,8 +264,9 @@ object OmissionCheck:
       def name: String = "omission-check/anonymous-class"
       override def transformNew(t: Tree.New)(using Program): Term =
         t.anon.filter(_.dropped.nonEmpty).foreach { a =>
-          out += Finding("anonymous-class member dropped",
-            program.symbolOf(a.symbol).map(_.fullName).getOrElse("?"), a.dropped.mkString(", "), a.origin)
+          out += Finding(Kind.DroppedAnonMember,
+            program.symbolOf(a.symbol).map(_.fullName).getOrElse("?"), a.dropped.mkString(", "), a.origin,
+            a.symbol)
         }
         t
     given Program = program
@@ -141,22 +310,22 @@ object OmissionCheck:
       StandardTraversal.allClassDefs(u).foreach { cd =>
         val clsFqn = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
         cd.body.foreach { st =>
-          val (fqn, terms) = st match
-            case d: Tree.DefDef => (program.symbolOf(d.symbol).map(_.fullName).getOrElse(clsFqn), d.rhs.toList)
-            case v: Tree.ValDef => (program.symbolOf(v.symbol).map(_.fullName).getOrElse(clsFqn), v.rhs.toList)
-            case t: Term        => (clsFqn, List(t))
-            case _              => (clsFqn, Nil)
+          val (fqn, at, terms) = st match
+            case d: Tree.DefDef => (program.symbolOf(d.symbol).map(_.fullName).getOrElse(clsFqn), d.symbol, d.rhs.toList)
+            case v: Tree.ValDef => (program.symbolOf(v.symbol).map(_.fullName).getOrElse(clsFqn), v.symbol, v.rhs.toList)
+            case t: Term        => (clsFqn, cd.symbol, List(t))
+            case _              => (clsFqn, cd.symbol, Nil)
           terms.foreach { t =>
             StandardTraversal.scanTerm(t, ()) { (_, x) =>
               x match
                 case lam: Tree.Lambda if lam.resultTpt.isEmpty && valuedReturns(lam.body).nonEmpty =>
-                  out += Finding("lambda `return` with an unnameable result type", fqn,
+                  out += Finding(Kind.UnnameableLambdaReturn, fqn,
                     s"${valuedReturns(lam.body).size} value-returning `return`(s) in a lambda body; " +
                       "the nested `def` that restores java's meaning (JS-S21) needs the SAM " +
                       "METHOD's result type and nothing in the program states it [§1(a) engine: a " +
                       "builder that holds the method fills `Tree.Lambda.resultTpt`; " +
                       "ENGINE-LIMITS M6/I9]",
-                    lam.origin)
+                    lam.origin, at)
                 case _ => ()
             }
           }
@@ -219,7 +388,7 @@ object OmissionCheck:
         if args.isEmpty || plans.superExpressed(cd, d) then Nil
         else
           val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
-          List(Finding("super(args) dropped", owner, s"${args.size} argument(s) discarded", d.origin))
+          List(Finding(Kind.DroppedSuperArgs, owner, s"${args.size} argument(s) discarded", d.origin, d.symbol))
       }
     }
 
@@ -247,8 +416,9 @@ object OmissionCheck:
     units.flatMap(classes).flatMap { cd =>
       CtorFunnel.ctorsOf(program, cd.body).filter(plans.causeMessageLost(cd, _)).map { d =>
         val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
-        Finding("Throwable(cause) message dropped", owner,
-                "cause expression cannot be re-read, so the JDK's own message is not rebuilt", d.origin)
+        Finding(Kind.DroppedCauseMessage, owner,
+                "cause expression cannot be re-read, so the JDK's own message is not rebuilt", d.origin,
+                d.symbol)
       }
     }
 
@@ -289,9 +459,12 @@ object OmissionCheck:
       val n = plans(cd).primaryBody.size
       plans.promotionEscapes(cd).map { d =>
         val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
-        Finding("promoted constructor body runs on every path", owner,
+        // `at = d.symbol` — the ESCAPING constructor, which is where the row is and where a
+        // selection names it. Not `cd.symbol`: a class routinely has one escaping path whose
+        // promoted body is harmless beside another whose is not (see [[AcceptPromotedBody]]).
+        Finding(Kind.PromotedBodyEveryPath, owner,
                 s"$n statement(s) of the promoted constructor also run here; java ran them only on its own path",
-                d.origin)
+                d.origin, d.symbol)
       }
     }
 
@@ -326,10 +499,10 @@ object OmissionCheck:
       plans.droppedNilaryCtor(cd).map { d =>
         val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
         val n     = CtorFunnel.delegationOnlyNilary(program, d).map(_.size).getOrElse(0)
-        Finding("nilary constructor dropped", owner,
+        Finding(Kind.DroppedNilaryCtor, owner,
                 s"its delegation passed $n argument(s); scala's implicit nilary primary runs nothing, " +
                   "so `new C()` no longer performs it",
-                d.origin)
+                d.origin, d.symbol)
       }
     }
 

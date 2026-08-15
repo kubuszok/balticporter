@@ -368,7 +368,11 @@ final case class PortRun(
     // base's `private` member is still reported EXPRESSED here, and the `super(args)` the port drops
     // moves no count at all. Measured on gdx-gltf: `omissions` sat at 3 while the emitter had just
     // lowered two constructors to a bare `this()` (`ENGINE-LIMITS.md` D5).
-    val omissions = OmissionCheck.check(program, checkedUnits, Some(translated.surface))
+    // …minus what the port SELECTED a remedy for, for the boundary trio's reason below: a resolution
+    // is a MOVE, so a drained row leaves this lane and arrives in `remediation(resolved)`
+    // (CLAUDE.md §5), and the record, the count and the summary all read the SAME list.
+    val omissions = OmissionCheck.resolved(translated.binder.resolutions,
+      OmissionCheck.check(program, checkedUnits, Some(translated.surface)))
     CheckReport.record(PortRun.Omissions, omissions.map(_.report))
     say(s"OMISSIONS (emitted code silently loses these): ${omissions.size}")
     if omissions.nonEmpty then say(PortReport.Kind.Omission.classification)
@@ -760,7 +764,11 @@ final case class PortRun(
     val jdkMapping      = CollectionsTransform.jdkMapping(
       ran = effectivePhases.exists(_.isInstanceOf[CollectionsTransform]))
     val jdkClassified   = JdkSurfaceCheck.classify(externalEmitted, jdkMapping)
-    val jdkFindings     = JdkSurfaceCheck.check(program, externalEmitted, checkedUnits, jdkMapping)
+    // …minus the selections, exactly as `omissions` above. `classify` is NOT drained: it is the
+    // DENOMINATOR the summary prints (`N classified`), and a port that accepted a member has not
+    // stopped calling it.
+    val jdkFindings     = JdkSurfaceCheck.resolved(translated.binder.resolutions,
+      JdkSurfaceCheck.check(program, externalEmitted, checkedUnits, jdkMapping))
     CheckReport.record(PortRun.JdkSurface, jdkFindings.map(_.report))
     say(s"JDK SURFACE (external java.* members this port still calls): " +
       s"${jdkClassified.size} classified, ${jdkFindings.size} unresolved")
@@ -2958,7 +2966,7 @@ object PortRun:
     climb(from, 64)
 
   val CheckRemedies: List[balticporter.tir.RemedySource] =
-    List(HeapPollutionCheck, OverloadRiskCheck,
+    List(HeapPollutionCheck, OverloadRiskCheck, OmissionCheck, JdkSurfaceCheck,
          balticporter.transform.CollectionBoundaryCheck,
          balticporter.transform.ContextSeamCheck,
          balticporter.transform.NullabilityBoundaryCheck, balticporter.tir.PortabilityCheck)
@@ -2993,7 +3001,10 @@ object PortRun:
     * orchestrator is now the only thing that records: a check is a pure function of a `Program` and
     * does not know it is being persisted. */
   val Signature            = "signature"
-  val Omissions            = "omissions"
+  /** …read off the CHECK, for `PortabilityAll`'s reason two members down: a REMEDY names this lane
+    * too, and `Remedy.lane` takes a constant so a renamed lane is a compile error rather than a
+    * silently unwired claim. */
+  val Omissions            = OmissionCheck.Name
   val PortabilityAll       = "portability(all)"
   /** …read off the CHECK, because a REMEDY names this lane too and `Remedy.lane` asks for a constant
     * rather than a literal so a rename is a compile error. Three literals used to spell it — here,

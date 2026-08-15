@@ -1,5 +1,7 @@
 package balticporter.tir
 
+import balticporter.catalog.FixKind
+
 /** The port's JDK WALL, named — every `java.*` member the emitted code still calls, classified by
   * what the port's own machinery does about it, before any compiler runs.
   *
@@ -56,7 +58,7 @@ package balticporter.tir
   * it changing — so it is a row in the work list and not a silent pass, which is the whole point of
   * baselining the initial numbers.
   */
-object JdkSurfaceCheck:
+object JdkSurfaceCheck extends RemedySource:
 
   /** the check's name in `findings.tsv`. */
   val Name = "jdk-surface"
@@ -214,8 +216,91 @@ object JdkSurfaceCheck:
   val noMapping: Mapping =
     Mapping("", ran = false, Map.empty, Set.empty, Map.empty, Map.empty, scala.None)
 
-  /** one classified row. */
-  final case class Finding(subject: String, disposition: Disposition, sites: Int, origin: Origin):
+  // -------------------------------------------------------------------------------------------
+  // THE MENU (`DESIGN.md` §8.16) — what a port may ASK FOR at one of these rows
+  // -------------------------------------------------------------------------------------------
+
+  /** THE EMITTED CALL IS RIGHT AS IT STANDS — the port read this JDK member and states so.
+    *
+    * ==What an `Unhandled` row actually claims, and why only the port can settle it==
+    * It claims the phase has no ENTRY for this member, and it explicitly does NOT claim the emitted
+    * call is broken (see the class doc): a `java.util.List#indexOf` on a `mutable.Buffer` survives
+    * because scala happens to spell the member the same way, and a `java.util.Arrays#fill(float[],
+    * float)` on a `scala.Array[Float]` survives because the two are one JVM type. That is coverage
+    * by COINCIDENCE — nothing recorded it, nothing would notice it changing — which is exactly why
+    * the row exists and exactly why it cannot be closed from inside the engine: whether the
+    * coincidence is one this port relies on is a reading of the call, not of a table.
+    *
+    * So this is the third answer beside the two the classification already names — add the mapping,
+    * or record a cited [[Refusal]] — and it is the one neither of them can express, because both of
+    * those are statements the ENGINE makes about every port at once. A `Refusal` says *no
+    * translation exists, here is the citation*; this says *this port emits this call against the JDK
+    * on purpose*. Filed as an engine refusal instead, one port's reading would silence the row for
+    * all fifteen.
+    *
+    * ==Keyed at the EXTERNAL CALLEE==
+    * A `jdk-surface` row's subject is the MEMBER (one member, however many call sites) and never the
+    * declaration that happened to call it first — the class doc says why. So the thing a port has an
+    * opinion about is the callee, `Remedy.Subject.ExternalMember` binds it, and the key a port writes
+    * is the finding's own subject column verbatim: `java.util.Arrays#fill(float[],float)`. An
+    * `Ownership.Owned` binding would refuse every one of them as `ExternalOnly`.
+    *
+    * ==NOT emission-affecting==
+    * The call is emitted as it already was; only the porter note follows, and an external member has
+    * no emitted declaration for one to sit above, so in practice the selection changes not one byte
+    * (`PortRun.declaredSymbols` excludes it from note coverage deliberately). Two modules choosing
+    * differently therefore cannot produce two ports that fail to compile together (§1.5) — and one
+    * of them is genuinely likely, since a base and a dependent may call the same JDK member and only
+    * one of them may have read it.
+    *
+    * ==What is NOT on this menu==
+    *   - '''`kept-iterable`''' (K9) — ABSENT. The emitted `for (x <- xs)` asks a kept
+    *     `java.util.List` for a `foreach` it does not have, so the row stands for a compile error
+    *     that is really there (noise4j's two errors ARE these two rows). An accept would be the port
+    *     stating that an uncompilable emission is correct, which no reading of a site can support.
+    *     The fix K9 specifies is a phase with an EMPTY default that rewrites a declared set of kept
+    *     iterables to the iterator protocol, and it is unbuilt — a row whose answer is a mechanism
+    *     nobody has written is a work item, and accepting a work item retires it silently;
+    *   - '''`stale-refusal`''' — ABSENT. It reports that [[Refusals]] and a phase table CONTRADICT
+    *     each other, which is a fact about the engine and about no port. Accepting it would preserve
+    *     the exact thing the guard exists to remove: "a refusal that names a case the code handles is
+    *     worse than no refusal — it is the reason not to look."
+    *
+    * ==Pointers — acts that already have a spelling (`CLAUDE.md` §5's ONE POLICY, ONE SPELLING)==
+    *   - retarget the member's OWNER at a type the port can use → `CollectionsTransform(retarget)`;
+    *   - hold the calling declaration back so its receiver keeps the JDK type →
+    *     `CollectionsTransform(scope)`. RULED OUT as a general answer besides:
+    *     scope-as-residue-reduction measured `27 -> 47` errors scoped and `27 -> 51` off
+    *     (`ENGINE-LIMITS.md` K16);
+    *   - the mapping itself and the cited refusal beside it are ENGINE edits — the phase's
+    *     static/instance tables and [[Refusals]] — with no manifest key, which is why neither
+    *     competes with this entry. */
+  val AcceptJdkMember: Remedy = Remedy(
+    // …the kind read off the DISPOSITION's own `label`, never a literal: that is the string a
+    // `findings.tsv` row carries and the string `resolved` matches through, and three spellings of
+    // one lane's kind is what `Remedy.lane` being a constant already refuses one field over.
+    id = "accept-jdk-member", lane = Name, kind = Disposition.Unhandled("").label,
+    emissionAffecting = false, fix = FixKind.Parameterised,
+    subject = Remedy.Subject.ExternalMember,
+    what = "the port has READ this JDK member and states that the call it emits against the JDK is " +
+      "correct here — coverage by coincidence, examined and recorded rather than left to be " +
+      "rediscovered")
+
+  def remedies: List[Remedy] = List(AcceptJdkMember)
+
+  /** DRAIN what this port selected — `CLAUDE.md` §5's move, through the one function every lane
+    * uses. Returns the rows that were NOT drained. */
+  def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
+    plan.drain(remedies, findings)(f =>
+      ResolutionPlan.Residue(f.disposition.label, f.at, f.subject, f.origin, f.detail))
+
+  /** one classified row.
+    *
+    * @param at the symbol a per-location selection keys on — the EXTERNAL MEMBER for a member row
+    *   (that is what the subject column names), and `SymId.None` for a K9 row, which is a fact about
+    *   a SITE and offers this menu nothing. */
+  final case class Finding(subject: String, disposition: Disposition, sites: Int, origin: Origin,
+                           at: SymId = SymId.None):
     def detail: String = disposition match
       case Disposition.Unhandled(t)    => s"$subject — retyped to $t, no rewrite ($sites site(s))"
       case Disposition.KeptIterable(_) => s"enhanced-for over $subject, which nothing retyped and no shim covers"
@@ -247,7 +332,7 @@ object JdkSurfaceCheck:
 
   private def members(rows: List[Row], m: Mapping): List[Finding] =
     classify(rows, m).collect {
-      case (r, d) if d.isFinding => Finding(r.key.getOrElse(r.fullName), d, r.sites, r.firstOrigin)
+      case (r, d) if d.isFinding => Finding(r.key.getOrElse(r.fullName), d, r.sites, r.firstOrigin, r.symbol)
     }
 
   private def dispositionOf(r: Row, m: Mapping): Disposition =
