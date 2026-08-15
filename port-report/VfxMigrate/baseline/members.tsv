@@ -398,7 +398,7 @@ sge.vfx.effects.RadialDistortionEffect	sge.vfx.effects.RadialDistortionEffect#re
 sge.vfx.effects.RadialDistortionEffect	sge.vfx.effects.RadialDistortionEffect#setDistortion(float)	def	b17b55ebd50441be
 sge.vfx.effects.RadialDistortionEffect	sge.vfx.effects.RadialDistortionEffect#setZoom(float)	def	dc95d89251396716
 sge.vfx.effects.RadialDistortionEffect	sge.vfx.effects.RadialDistortionEffect#zoom	val	1a3336303582e5e1
-sge.vfx.effects.ShaderVfxEffect	sge.vfx.effects.ShaderVfxEffect	class	58ffb087001dc356
+sge.vfx.effects.ShaderVfxEffect	sge.vfx.effects.ShaderVfxEffect	class	ef484fc6f02116da
 sge.vfx.effects.ShaderVfxEffect	sge.vfx.effects.ShaderVfxEffect#<stmt1>	stmt	5a8b345b0e745b4c
 sge.vfx.effects.ShaderVfxEffect	sge.vfx.effects.ShaderVfxEffect#TEXTURE_HANDLE0	val	640c0c01fd194540
 sge.vfx.effects.ShaderVfxEffect	sge.vfx.effects.ShaderVfxEffect#TEXTURE_HANDLE1	val	b593cfb179a22884

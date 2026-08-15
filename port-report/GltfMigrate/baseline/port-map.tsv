@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=1e548522aa4d3a09
+# balticporter port map	schema=3	module=sge-gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=d4ea75ffde812235
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	net.mgsx.gltf.data.GLTF	sge.gltf.data.GLTF	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.data.GLTFAsset	sge.gltf.data.GLTFAsset	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
@@ -528,7 +528,7 @@ member	net.mgsx.gltf.loaders.gltf.SeparatedDataFileResolver#load(GLTFImage)	sge.
 member	net.mgsx.gltf.loaders.gltf.SeparatedDataFileResolver#loadBuffers(FileHandle)	sge.gltf.loaders.gltf.SeparatedDataFileResolver#loadBuffers(FileHandle)	Renamed	-	net/mgsx/gltf/loaders/gltf/SeparatedDataFileResolver.java	40	9e3cb890c25c6333	vis=private
 member	net.mgsx.gltf.loaders.gltf.SeparatedDataFileResolver#path	sge.gltf.loaders.gltf.SeparatedDataFileResolver#path	Renamed	-	net/mgsx/gltf/loaders/gltf/SeparatedDataFileResolver.java	26	b06a990a301e98e7	vis=private
 member	net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<clinit>	sge.gltf.loaders.shared.GLTFLoaderBase#<clinit>	Renamed	-	net/mgsx/gltf/loaders/shared/GLTFLoaderBase.java	56	e65c5d88612fb8cb	placement=companion
-member	net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver,Sge)	sge.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver,Sge)	Renamed	-	net/mgsx/gltf/loaders/shared/GLTFLoaderBase.java	104	cbbe4a0959ed2a94	
+member	net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver,Sge)	sge.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver,Sge)	Renamed	-	net/mgsx/gltf/loaders/shared/GLTFLoaderBase.java	104	e417fe40a16e9e7f	
 member	net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<stmt1>	sge.gltf.loaders.shared.GLTFLoaderBase#<stmt1>	Renamed	-	net/mgsx/gltf/loaders/shared/GLTFLoaderBase.java	106	40a160e5684e8c6c	
 member	net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<stmt2>	sge.gltf.loaders.shared.GLTFLoaderBase#<stmt2>	Renamed	-	net/mgsx/gltf/loaders/shared/GLTFLoaderBase.java	107	dbfbcf99bc34e215	
 member	net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<stmt3>	sge.gltf.loaders.shared.GLTFLoaderBase#<stmt3>	Renamed	-	net/mgsx/gltf/loaders/shared/GLTFLoaderBase.java	108	aa1c4efba3f8aae7	

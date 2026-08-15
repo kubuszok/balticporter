@@ -127,6 +127,41 @@ object VfxPolicy:
       // whole library. libGDX's `com.badlogic.gdx -> sge` is INHERITED from the base manifest, not
       // restated; longest-prefix-wins keeps the two apart.
       packageRenames = Map("com.crashinvaders.vfx" -> "sge.vfx"),
+      // TWO PER-LOCATION SELECTIONS (`DESIGN.md` §8.16/§8.21), one on each of the two lanes that
+      // gained a menu last. Both are `accept`-shaped, neither changes a byte of emitted code, and
+      // what each changes is that a residue nobody had read becomes a residue somebody has.
+      resolutions = Map(
+        // `@SuppressWarnings("unchecked")` on the CLASS — `omissions`' `annotation dropped`, at a
+        // TYPE subject, which is why the id is the `-type-` one (`Remedy.subject` is per remedy and
+        // this lane's rows sit at both kinds of subject).
+        //
+        // READ, and the reading is stronger than the general argument. `@SuppressWarnings` names a
+        // javac WARNING and scala has neither the warning nor the annotation, so carrying it would
+        // put text on the emitted class that says nothing to any tool that reads it — that much is
+        // true of every row of this kind. What is true HERE is that the annotation suppresses
+        // nothing even in JAVA: all 193 lines are a non-generic abstract class over a
+        // `ShaderProgram`, with no cast, no type variable and no raw type anywhere in it, so there
+        // is no unchecked conversion for javac to have warned about. The port drops a marker that
+        // was already vestigial upstream. This is exactly the population
+        // `FrontendConfig.preservedAnnotations` exists to let a port claim FAMILY BY FAMILY
+        // (ENGINE-LIMITS.md T16), and this entry is its complement: the port states that this one is
+        // right to lose rather than claiming the whole `java.lang` family is worth carrying.
+        "com.crashinvaders.vfx.effects.ShaderVfxEffect" -> "accept-dropped-type-annotation",
+
+        // `java.util.Map#clear()` — `jdk-surface`'s `unhandled`, at the EXTERNAL CALLEE, which is
+        // what that lane's subject column names and therefore what its key is, verbatim.
+        //
+        // READ: the one site is `ValueArrayMap#clear()`, whose `map` field
+        // `CollectionsTransform` retyped from `java.util.Map<K,V>` to
+        // `scala.collection.mutable.Map[K,V]`. The phase has no table entry for `clear`, and the
+        // emitted `this.map.clear()` compiles and behaves because `mutable.Map` inherits `clear()`
+        // from `Clearable` with java's own semantics — remove every mapping. That is COVERAGE BY
+        // COINCIDENCE, which is precisely what the row is for; whether this port relies on the
+        // coincidence is a reading of the call and not of a table, and it is emphatically not a
+        // `JdkSurfaceCheck.Refusals` entry, which would be the ENGINE silencing the row on all
+        // fifteen ports at once.
+        "java.util.Map#clear()" -> "accept-jdk-member",
+      ),
       surface = List(
         // `VfxGLUtils`' STATIC INITIALISER is gdx-vfx's one reflective site, and the reflection is
         // there to reach a class this port does not have:

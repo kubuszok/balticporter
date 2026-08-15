@@ -100,6 +100,27 @@ object Anim8Policy:
       // the whole namespace moves with one pair. libGDX's `com.badlogic.gdx -> sge` is INHERITED
       // from the base manifest, not restated; longest-prefix-wins keeps the two apart.
       packageRenames = Map("com.github.tommyettinger.anim8" -> "sge.anim8"),
+      // ONE PER-LOCATION SELECTION on `jdk-surface` (`DESIGN.md` §8.16/§8.21), at the biggest
+      // `unhandled` row in the corpus. The key is the finding's own SUBJECT COLUMN verbatim, because
+      // that lane files one row per external MEMBER rather than per calling declaration — so a port
+      // pastes what it read (§8.18's printed-key-is-a-bindable-key rule).
+      //
+      // READ: 195 sites, all of them `java.util.Arrays.fill(<float[]>, 0, w, 0)` in `PNG8`'s and
+      // `AnimatedGif`'s dithering loops, clearing an error-diffusion row between scanlines. The
+      // receiver is a `scala.Array[scala.Float]` — a `float[]` on the JVM and under both non-JVM
+      // backends' array model — so the emitted call is the java call, unchanged and correct. The
+      // phase has no table entry for it and that is what the row says; it does NOT say the call is
+      // broken (`JdkSurfaceCheck`'s own doc), and here it is the whole reason nothing was ever
+      // written: `Arrays.fill` over a primitive array is not a collection operation and has no
+      // scala-collection image to be mapped onto. Coverage by coincidence, examined.
+      //
+      // The other six `java.util.Arrays` rows on this port stay, deliberately. They are the same
+      // SHAPE and this entry is not a claim about the family: `copyOf`, `sort` and the `byte[]`/
+      // `int[]` fills each want their own reading, and a port that accepted them in one gesture
+      // would be doing exactly what a per-location menu exists to stop.
+      resolutions = Map(
+        "java.util.Arrays#fill(float[],int,int,float)" -> "accept-jdk-member",
+      ),
       surface = List(
         // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE
         // actually emitted and reports a reference the base does not ship, so it must run after

@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-liquid-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b3fd549b8bf92693	files=105	policy=c5d1673dcbd88397
+# balticporter port map	schema=3	module=ssg-liquid-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b3fd549b8bf92693	files=105	policy=28269d10786ff6e6
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	liqp.ConditionTest	ssg.liquid.ConditionTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	liqp.InsertionTest	ssg.liquid.InsertionTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
@@ -256,7 +256,7 @@ member	liqp.TemplateTest$ComparableBase#getVal()	ssg.liquid.TemplateTest$Compara
 member	liqp.TemplateTest$ComparableBase#val	ssg.liquid.TemplateTest$ComparableBase#val	Renamed	-	liqp/TemplateTest.java	36	5295b8d08e7323d5	
 member	liqp.TemplateTest$Foo#a	ssg.liquid.TemplateTest$Foo#a	Renamed	-	liqp/TemplateTest.java	50	9838902942352dae	
 member	liqp.TemplateTest$Foo#b	ssg.liquid.TemplateTest$Foo#b	Renamed	-	liqp/TemplateTest.java	51	05ec30ebe81cf5f2	vis=private[TemplateTest]
-member	liqp.TemplateTest$Foo#c	ssg.liquid.TemplateTest$Foo#c	Renamed	-	liqp/TemplateTest.java	53	c07faa6922b52c87	vis=private[TemplateTest]
+member	liqp.TemplateTest$Foo#c	ssg.liquid.TemplateTest$Foo#c	Renamed	-	liqp/TemplateTest.java	53	b11ba4bc5c90f171	vis=private[TemplateTest]
 member	liqp.TemplateTest$Foo#getA()	ssg.liquid.TemplateTest$Foo#getA()	Renamed	-	liqp/TemplateTest.java	50	c76b459b6cf1220d	
 member	liqp.TemplateTest$Foo#getB()	ssg.liquid.TemplateTest$Foo#getB()	Renamed	-	liqp/TemplateTest.java	55	f1b1caf4ed3bafac	
 member	liqp.TemplateTest$Foo#setA(String)	ssg.liquid.TemplateTest$Foo#setA(String)	Renamed	-	liqp/TemplateTest.java	50	b0c2dcbbfe639f6e	
@@ -595,9 +595,9 @@ member	liqp.filters.where.JekyllWhereImplTest#<stmt6>	ssg.liquid.filters.where.J
 member	liqp.filters.where.JekyllWhereImplTest#<stmt7>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt7>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	280	313d1c25b86fc339	
 member	liqp.filters.where.JekyllWhereImplTest#<stmt8>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt8>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	375	616d9650a13ac04c	
 member	liqp.filters.where.JekyllWhereImplTest#<stmt9>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt9>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	407	67f4384e46e8cfba	
-member	liqp.filters.where.JekyllWhereImplTest#array_of_objects1	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects1	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	49	cbed639ca91c04a0	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#array_of_objects1	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects1	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	49	b702c19b8927ea27	vis=private
 member	liqp.filters.where.JekyllWhereImplTest#array_of_objects2	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects2	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	71	a292a67ae460c049	vis=private
-member	liqp.filters.where.JekyllWhereImplTest#array_of_objects3	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects3	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	79	3c680bb3451dac54	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#array_of_objects3	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects3	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	79	1ff04b70a340e9c1	vis=private
 member	liqp.filters.where.JekyllWhereImplTest#parse(String)	ssg.liquid.filters.where.JekyllWhereImplTest#parse(String)	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	25	9fda53205910682e	vis=private
 member	liqp.filters.where.JekyllWhereImplTest$Child#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest$Child#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	41	1589f61a20dca30b	
 member	liqp.filters.where.JekyllWhereImplTest$Child#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest$Child#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	42	b1094de479f8809f	

@@ -104,6 +104,41 @@ object GltfPolicy:
       // `com.badlogic.gdx -> sge` is INHERITED from the base manifest, not restated; longest-
       // prefix-wins keeps the two apart.
       packageRenames = Map("net.mgsx.gltf" -> "sge.gltf"),
+      // ONE PER-LOCATION SELECTION (`DESIGN.md` §8.16/§8.21) — the `omissions` lane's only
+      // answerable kind, at this port's only row of it.
+      //
+      // `CtorFunnel` promoted the NILARY `GLTFLoaderBase()` — whose java body is `this(null)` — so
+      // its inlined five statements are the emitted class body and run on EVERY construction path.
+      // `GLTFLoaderBase(TextureResolver)` is therefore an ESCAPING path: java ran those statements
+      // once, the port runs them twice. That is what `omissions`' `promoted constructor body runs on
+      // every path` counts, and the engine deliberately does not decide whether it MATTERS —
+      // `CtorFunnel.Plans.promotionEscapes` says in as many words that this is "NOT a purity
+      // question about the body", because the answer depends on what the other constructor
+      // overwrites (ENGINE-LIMITS.md C6/C7, where refusing the promotion measured 0 -> 41 errors).
+      //
+      // READ, at this site. The five statements are `textureResolver = null` plus four `new`s, and
+      // the secondary re-assigns all five before the object escapes its own constructor:
+      //
+      //   this.textureResolver = null                              // overwritten one line later
+      //   this.animationLoader = new AnimationLoader()             // \
+      //   this.nodeResolver    = new NodeResolver()                //  | four objects allocated
+      //   this.meshLoader      = new MeshLoader()                  //  | and immediately discarded
+      //   this.skinLoader      = new SkinLoader()                  // /
+      //
+      // All four have java's implicit no-arg constructor and initialise nothing but their own
+      // containers — `AnimationLoader` an `Array`, `NodeResolver` and `MeshLoader` an `ObjectMap`,
+      // `SkinLoader` an `int` field. No static state, no registry, no I/O, so nothing observes the
+      // discarded copies; and `null` is upstream's own sentinel for `textureResolver` (`load()`
+      // tests it and builds a default), so even the transient value is one this class already
+      // handles. The final state on both paths is java's, exactly. This is the "most only waste an
+      // allocation" half of C6's own census, stated per site with the port's name on it.
+      //
+      // The class's OTHER omission rows are untouched and stay: nine `super(args) dropped` on
+      // `PBRTextureAttribute`, `PBRCubemapAttribute` and `ModelInstanceHack` are LOSSES (a
+      // `super(type, texture)` that builds an untextured attribute), and no accept exists for them.
+      resolutions = Map(
+        "net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver)" -> "accept-promoted-body",
+      ),
       // gdx-gltf's OWN replacements. `inject` is not inherited — exactly one module ships each
       // replacement file, and libGDX core ships the ones for the types IT dropped.
       inject  = List(repoRoot.resolve("balticporter/corpus/gltf-overrides")),

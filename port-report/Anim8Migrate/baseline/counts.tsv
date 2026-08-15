@@ -20,7 +20,7 @@ heap-pollution	0
 idiom(converted)	0
 idiom(refused)	8
 idiom(residue)	0
-jdk-surface	7
+jdk-surface	6
 manifest	0
 markers	0
 nullability-boundary	0
@@ -32,7 +32,7 @@ portability(all)	265
 portability(emitted)	112
 portability(injected)	0
 porter-notes	0
-remediation	4
+remediation	5
 rewrite-callsites	2
 signature	0
 substitution(dangling)	0

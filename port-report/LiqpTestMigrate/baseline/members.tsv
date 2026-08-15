@@ -94,7 +94,7 @@ ssg.liquid.StatementsTest	ssg.liquid.StatementsTest#<stmt6>	stmt	ffee4a44fdb1c23
 ssg.liquid.StatementsTest	ssg.liquid.StatementsTest#<stmt7>	stmt	4f20b499a4bd76d0
 ssg.liquid.StatementsTest	ssg.liquid.StatementsTest#<stmt8>	stmt	b93dbcf04c5e9eed
 ssg.liquid.StatementsTest	ssg.liquid.StatementsTest#<stmt9>	stmt	6e7b30aa3a97085b
-ssg.liquid.TemplateTest	ssg.liquid.TemplateTest	class	fbe44edaaf423cf8
+ssg.liquid.TemplateTest	ssg.liquid.TemplateTest	class	36cdf790662d2b85
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest#<stmt10>	stmt	15bc4fa7a9d83c7e
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest#<stmt11>	stmt	5cab791f38c26f3e
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest#<stmt12>	stmt	3f13f01920aaea28
@@ -124,10 +124,10 @@ ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$ComparableBase#<stmt1>	stmt	4aaf
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$ComparableBase#compareTo(ComparableBase)	def	7db983da8306135b
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$ComparableBase#getVal()	def	ab0973d8c7d9c832
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$ComparableBase#val	val	5295b8d08e7323d5
-ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$Foo	class	b8aefab462584fc6
+ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$Foo	class	4a271e0d639a0447
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$Foo#a	val	9838902942352dae
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$Foo#b	val	05ec30ebe81cf5f2
-ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$Foo#c	val	c07faa6922b52c87
+ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$Foo#c	val	b11ba4bc5c90f171
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$Foo#getA()	def	c76b459b6cf1220d
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$Foo#getB()	def	f1b1caf4ed3bafac
 ssg.liquid.TemplateTest	ssg.liquid.TemplateTest$Foo#setA(String)	def	b0c2dcbbfe639f6e
@@ -526,7 +526,7 @@ ssg.liquid.filters.Where_ExpTest	ssg.liquid.filters.Where_ExpTest#objectWithGrou
 ssg.liquid.filters.Where_ExpTest	ssg.liquid.filters.Where_ExpTest#parse(String)	def	48f7b99a3cb9a055
 ssg.liquid.filters.date.FuzzyDateDateParserTest	ssg.liquid.filters.date.FuzzyDateDateParserTest	class	af5faa305a85d7a9
 ssg.liquid.filters.date.FuzzyDateDateParserTest	ssg.liquid.filters.date.FuzzyDateDateParserTest#parser	val	52aad5a118f1da30
-ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest	class	2e2c8072568139c7
+ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest	class	b6b3920c46151ff0
 ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt10>	stmt	60dff3928749dd65
 ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt11>	stmt	b3b3ff79629a6443
 ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt12>	stmt	b6adf3cf67cd8755
@@ -540,9 +540,9 @@ ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWher
 ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt7>	stmt	313d1c25b86fc339
 ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt8>	stmt	616d9650a13ac04c
 ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt9>	stmt	67f4384e46e8cfba
-ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects1	val	cbed639ca91c04a0
+ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects1	val	b702c19b8927ea27
 ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects2	val	a292a67ae460c049
-ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects3	val	3c680bb3451dac54
+ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects3	val	1ff04b70a340e9c1
 ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest#parse(String)	def	9fda53205910682e
 ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest$Child	class	66a550596759de12
 ssg.liquid.filters.where.JekyllWhereImplTest	ssg.liquid.filters.where.JekyllWhereImplTest$Child#<stmt1>	stmt	1589f61a20dca30b

@@ -5382,6 +5382,69 @@ unbuilt, each with the reason stated so the decision is not re-derived:
   which throw — is a semantic fact about that library's API, which is §1(c)'s definition. A scaffold
   would generate the throwing half from a member list, and a member list is most of the work.
 
+### 12.2.9 The LAST two menus — `omissions` and `jdk-surface`, and the five kinds that take nothing
+
+`DESIGN.md` §8.21 is the decision; this is what it measured. These are the two lanes the menu
+programme priced and never assigned, and between them they were the largest per-site residues in the
+corpus with no front door at all — `omissions` at 97 rows and `jdk-surface` at 57.
+
+**The MENU shipped flat, and that was the first measurement.** Four remedies added to the vocabulary,
+both checks registered in `PortRun.CheckRemedies`, both draining through `ResolutionPlan.drain`, and
+no port selecting anything: **all eleven lanes green, every check count identical, every
+`errors vs baseline` unchanged, and `members whose EMITTED TEXT changed: 0` on all eleven.** That is
+§1(b)'s empty-parameter rule read at a menu, and it is a structural claim rather than a lucky one —
+`drain` returns its input on the first line when the plan is empty.
+
+**Then FOUR PORTS SELECTED, one per remedy, on four different lanes-and-subjects.** Each site was
+READ before it was written; the reasoning is in each port's own file beside the key, which is where
+§4.575 says it belongs.
+
+| port | key | remedy | why THIS site |
+|---|---|---|---|
+| gdx-gltf | `net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver)` | `accept-promoted-body` | the funnel promoted the NILARY constructor, whose java body is `this(null)`, so its five inlined statements are the class body and run on the paramful path too. Those five are `textureResolver = null` plus four `new`s of `AnimationLoader`/`NodeResolver`/`MeshLoader`/`SkinLoader`, and the secondary re-assigns all five before the object escapes: all four have java's implicit no-arg constructor and initialise nothing but their own containers, and `null` is upstream's own sentinel for `textureResolver`. Four allocations discarded, final state java's exactly — the "most only waste an allocation" half of C6's own census, stated per site |
+| gdx-vfx | `com.crashinvaders.vfx.effects.ShaderVfxEffect` | `accept-dropped-type-annotation` | `@SuppressWarnings("unchecked")` on a class whose 193 lines hold no cast, no type variable and no raw type — the annotation suppresses nothing even in JAVA. The port drops a marker that was already vestigial upstream |
+| gdx-vfx | `java.util.Map#clear()` | `accept-jdk-member` | one site, `ValueArrayMap#clear()`, whose `map` field the collections phase retyped to `mutable.Map`. `mutable.Map` inherits `clear()` from `Clearable` with java's own semantics, so the emitted call is correct — coverage by COINCIDENCE, which is exactly what the row is for |
+| anim8-gdx | `java.util.Arrays#fill(float[],int,int,float)` | `accept-jdk-member` | 195 sites in `PNG8`'s and `AnimatedGif`'s dithering loops, clearing an error-diffusion row. The receiver is a `scala.Array[scala.Float]`, which IS a `float[]`, so the emitted call is the java call; and `Arrays.fill` over a primitive array has no scala-collection image, which is why nothing was ever written for it |
+| liqp (test) | `liqp.TemplateTest$Foo#c`, `liqp.filters.where.JekyllWhereImplTest#array_of_objects1`, `…3` | `accept-dropped-annotation` | three `@SuppressWarnings` on FIELDS — one `"unused"` (a private field with no accessor, the fixture for what liqp's property lookup must NOT see) and two `"serial"` (the double-brace `new HashMap<>() {{ … }}` idiom). Neither warning exists in scala and neither does the annotation |
+
+**The drain, per lane** — `<lane> N->M` beside `remediation(resolved) 0->(N-M)`, which is the only
+reading under which a falling residue is an improvement rather than a check that stopped asking:
+
+| lane | before -> after | member digests | errors |
+|---|---|---|---|
+| `GltfMigrate` | `omissions 12 -> 11`, `remediation 0 -> 1` | **2** — the selected constructor and its enclosing class | 3 = 3 |
+| `VfxMigrate` | `omissions 1 -> 0`, `jdk-surface 1 -> 0`, `remediation 0 -> 2` | **1** — `ShaderVfxEffect`, the type the note sits above | 0 = 0 |
+| `Anim8Migrate` | `jdk-surface 7 -> 6`, `remediation 4 -> 5` | **0** | 0 = 0 |
+| `LiqpTestMigrate` | `omissions 10 -> 7`, `remediation 8 -> 11` | **6** — three selected `val`s plus the three enclosing class digests | 0 = 0 |
+
+Corpus-wide: **`omissions` 97 -> 92, `jdk-surface` 57 -> 55, `remediation(resolved)` +7**, and every
+other port flat. Every changed digest is attributable to a `Decision` this run recorded, and the
+residue is empty.
+
+**The `jdk-surface` selections moved NO digest, and that is the mechanism working rather than a
+weaker demonstration.** Their subject is an EXTERNAL member, which has no emitted declaration for a
+porter note to sit above, so `PortRun.declaredSymbols` excludes the decision from note coverage by
+construction. The `omissions` ones do move digests, because their subjects are declarations this run
+emits — which is exactly the split `Remedy.Subject` exists to state.
+
+**Three things the demonstration found that no spec had asked for.**
+
+- **liqp's test source set is `ResolutionIntrusion`'s D10 case, and it passed.** All three keys name
+  declarations inside the base's `governs` claim (`liqp`), because a test source set always declares
+  its suites in the base's packages. The screen reads the base's PUBLISHED PORT MAP rather than the
+  claim, so it asks what the base EMITS, finds no entry, and admits all three. A claim-based screen
+  would have been three fatal findings for a manifest with no way to comply.
+- **Seven of liqp's ten rows are unselectable, and saying so is the point.** Every one is a
+  `@SuppressWarnings` on a field of an ANONYMOUS class — `ReadmeSamplesTest$21`, `ForTest$34`,
+  `Relative_UrlTest$39`, `SizeTest$40` — whose owner is named by a FRONTEND-MINTED index. §4.56
+  forbids keying policy on a name the engine invented and is free to renumber, so those rows stay,
+  and the port's file says why rather than leaving a reader to wonder which three were special.
+- **A selection is shared surface even when it changes no byte.** All four ports' published
+  `port-map.tsv` policy digests moved, which is the field doing its job — a base whose choices moved
+  cannot look fresh to a dependent — and `GltfTestMigrate` inherited gdx-gltf's selection, bound it,
+  found no row of its own to drain (D2), and reported nothing, because `PolicyReport` holds a module
+  to its OWN keys.
+
 ### 12.3 Counted residues that are not defects
 
 - **`catalog(unreached)` GROWS by one on every port each time a MODERN-JAVA row is mechanised, and
