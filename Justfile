@@ -250,6 +250,7 @@ gdx-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
 
     echo
     break_residue {{gdx_module}}/src_managed/main/scala
@@ -312,6 +313,7 @@ gdx-test-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -415,8 +417,10 @@ ashley-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
     show_check_report "$TREPORT"
     findings_baseline_guard "$TREPORT"
+    port_map_guard "$TREPORT"
 
     echo
     echo "-- test discovery --"
@@ -516,6 +520,7 @@ anim8-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -621,8 +626,10 @@ gltf-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
     show_check_report "$TREPORT"
     findings_baseline_guard "$TREPORT"
+    port_map_guard "$TREPORT"
 
     echo
     echo "-- test discovery --"
@@ -747,6 +754,7 @@ screens-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -860,6 +868,7 @@ vfx-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -959,8 +968,10 @@ sg-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
     show_check_report "$TREPORT"
     findings_baseline_guard "$TREPORT"
+    port_map_guard "$TREPORT"
 
     echo
     echo "-- test discovery --"
@@ -1072,6 +1083,7 @@ noise4j-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -1154,6 +1166,7 @@ jbump-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
 
     echo
     echo "-- test discovery --"
@@ -1333,8 +1346,10 @@ liqp-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
     findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
     show_check_report "$TREPORT"
     findings_baseline_guard "$TREPORT"
+    port_map_guard "$TREPORT"
 
     echo
     echo "-- test discovery --"
@@ -2128,6 +2143,72 @@ lane-selfcheck:
     ( headline 0 "$T/fb" ) > /dev/null 2>&1
     want "a STALE findings marker is cleared by the next guard" "$?" "0"
 
+    echo "-- port_map_guard --"
+    # The SIXTH promoted baseline and the second one nothing read — and the only one another RUN
+    # reads, because a dependent's emitted text comes out of its base's map. It went stale twice
+    # (PROGRESS.md §12.2.5's 60 member rows, §12.4.6's nine stale `policy=` headers) and both were
+    # found by hand. The fixtures below are those two shapes plus the three absences.
+    mkdir -p "$T/pm/baseline" "$T/pm/run-latest"
+    pmhdr() { printf '# balticporter port map\tschema=3\tmodule=sge\tengine=bp/0.1\tsources=aaaa\tfiles=2\tpolicy=%s\n' "$1"; }
+    pmbody() { printf '#kind\tupstream\temitted\tdisposition\tbody\tjavaPath\tjavaLine\tdigest\tshape\ntype\tp.A\tq.A\tRenamed\t-\t\t0\t\t%s\n' "$1"; }
+    { pmhdr pol1; pmbody 'form=var'; } > "$T/pm/baseline/port-map.tsv"
+    { pmhdr pol1; pmbody 'form=var'; } > "$T/pm/run-latest/port-map.tsv"
+    out=$(port_map_guard "$T/pm" 2>&1); rc=$?
+    want "an IDENTICAL port map does not fail the lane" "$rc" "0"
+    ( headline 0 "$T/pm" ) > /dev/null 2>&1
+    want "…and headline exits 0 after it" "$?" "0"
+
+    # §12.4.6's shape: the ROWS are byte-identical and only the policy fingerprint moved, which is
+    # what a dependent carries stale when a base's manifest changes under it.
+    { pmhdr pol2; pmbody 'form=var'; } > "$T/pm/run-latest/port-map.tsv"
+    out=$(port_map_guard "$T/pm" 2>&1); rc=$?
+    want "a stale policy= HEADER fails the lane, at identical rows" "$rc" "1"
+    case "$out" in *"policy="*"pol1"*"pol2"*) ok "…and names the field and its before->after" ;; *) bad "…names the field" ;; esac
+    case "$out" in *"MANIFEST changed"*) ok "…and says what a moved policy digest MEANS" ;; *) bad "…says what it means" ;; esac
+    ( headline 0 "$T/pm" ) > /dev/null 2>&1
+    want "…and headline EXITS NON-ZERO for it, across the capture" "$?" "1"
+
+    # §12.2.5's shape: the header is identical and a member's published SHAPE moved — the column a
+    # dependent's collapse comparison reads, and one no check COUNT can see.
+    { pmhdr pol1; pmbody 'form=accessor'; } > "$T/pm/run-latest/port-map.tsv"
+    out=$(port_map_guard "$T/pm" 2>&1); rc=$?
+    want "a moved SHAPE column fails the lane, at an identical header" "$rc" "1"
+    case "$out" in *"PORT MAP MOVED"*) ok "…and says what moved" ;; *) bad "…says what moved" ;; esac
+    case "$out" in *"baseline-accept"*) ok "…and names the promotion command" ;; *) bad "…names the promotion command" ;; esac
+    case "$out" in *"DEPENDENT"*) ok "…and says the dependents must be re-measured" ;; *) bad "…says the dependents must be re-measured" ;; esac
+
+    # …and a lane that gated TWO reports must have named both, or the second's marker reaches nobody.
+    mkdir -p "$T/pm2/run-latest"
+    : > "$T/pm2/run-latest/port-map-baseline-failed"
+    ( headline 0 "$T/pm" "$T/pm2" ) > /dev/null 2>&1
+    want "a SECOND report's marker fails the lane when headline is told about it" "$?" "1"
+
+    { pmhdr pol1; pmbody 'form=var'; } > "$T/pm/run-latest/port-map.tsv"
+    rm -f "$T/pm/baseline/port-map.tsv"
+    out=$(port_map_guard "$T/pm" 2>&1); rc=$?
+    want "a MISSING port-map baseline is fatal, never clean" "$rc" "1"
+    case "$out" in *"NO PORT-MAP BASELINE"*) ok "…and says nothing is comparing what it publishes" ;; *) bad "…says so" ;; esac
+
+    # The other absence, and the one that is NOT symmetric: a run that stopped publishing leaves its
+    # dependents reading the COMMITTED map (PortMap.discoverIn falls back to baseline/), so the
+    # regression is invisible from every other artifact.
+    { pmhdr pol1; pmbody 'form=var'; } > "$T/pm/baseline/port-map.tsv"
+    rm -f "$T/pm/run-latest/port-map.tsv"
+    out=$(port_map_guard "$T/pm" 2>&1); rc=$?
+    want "a run that PUBLISHED NO MAP fails the lane" "$rc" "1"
+    case "$out" in *"PORT MAP DISAPPEARED"*) ok "…and says the dependents fall back to the committed one" ;; *) bad "…says so" ;; esac
+
+    # …and a report that has neither is a caller with no artifact layer, not a failure.
+    rm -f "$T/pm/baseline/port-map.tsv"
+    want "a report with NEITHER map is not a failure" "$(port_map_guard "$T/pm" > /dev/null 2>&1; echo $?)" "0"
+
+    # …and a marker from a PREVIOUS run must not fail a run that is now acknowledged.
+    { pmhdr pol1; pmbody 'form=var'; } > "$T/pm/baseline/port-map.tsv"
+    { pmhdr pol1; pmbody 'form=var'; } > "$T/pm/run-latest/port-map.tsv"
+    port_map_guard "$T/pm" > /dev/null 2>&1
+    ( headline 0 "$T/pm" ) > /dev/null 2>&1
+    want "a STALE port-map marker is cleared by the next guard" "$?" "0"
+
     echo
     [ "$fail" = "0" ] && echo "lane-selfcheck: PASS" || { echo "lane-selfcheck: FAILED"; exit 1; }
 
@@ -2192,6 +2273,12 @@ baseline-accept PORT:
     #                                and it is line-free so a member that only MOVED does not churn
     #   tests.tsv                  — the pass/fail set; the behavioural baseline, and the only one
     #                                that can catch a CLAUDE.md §4.4 regression
+    #   port-map.tsv               — what this port PUBLISHES to its dependents, and the only
+    #                                baseline another RUN reads. Gated by `port_map_guard`, which
+    #                                strips nothing: the file has no id column and every field it
+    #                                does have is a fact somebody has to acknowledge. Ungated it went
+    #                                stale twice — 60 member rows in one commit, and nine dependent
+    #                                `policy=` headers for days (PROGRESS.md §12.2.5, §12.4.6)
     #   errors-count               — the LANE's compile-error total, promoted as `expected-errors`.
     #                                Written by `error_baseline_guard` on every run precisely so
     #                                that nobody ever types this number: a hand-edited floor is the

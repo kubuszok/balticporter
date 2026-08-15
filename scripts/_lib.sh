@@ -594,6 +594,142 @@ findings_baseline_guard() {
   : > "$marker"; return 1
 }
 
+# port_map_guard <report-dir>
+#
+# THE SIXTH BASELINE, and the second one `just baseline-accept` promoted while NOTHING compared it.
+#
+# `findings_baseline_guard`'s argument, one artifact over — and with a larger blast radius, because
+# `port-map.tsv` is the only committed baseline that another RUN reads. A dependent resolves against
+# its base's JAVA, so what the base actually EMITTED reaches it through this file and nothing else:
+# `PortMapTransform` looks its base up in it, `TirEmitter.baseName` takes emitted names from it, and
+# the base-surface comparison reads the `shape` column out of it. A row that moves here without an
+# acknowledgement is §1.5's two-ports-that-cannot-compile-together, produced by the artifact built to
+# prevent it.
+#
+# It went stale TWICE, and both times it was found by accident:
+#   - publishing `Surface.MemberShape.form` moved 60 member rows in the libGDX base's map, seen only
+#     because somebody diffed the file by hand (`PROGRESS.md` §12.2.5);
+#   - nine DEPENDENT maps carried a stale `policy=` header for days, because two bases' manifests
+#     moved the policy chain every dependent digests and only the two bases were re-accepted
+#     (`PROGRESS.md` §12.4.6).
+#
+# WHAT IS COMPARED IS THE WHOLE FILE — no column is stripped, and that is a decision rather than an
+# omission. `findings_baseline_guard` drops `Finding.id` because it is a hash with a `/2`, `/3`
+# sequence assigned in LINE order, so an unrelated edit renumbers rows that did not change. The port
+# map has no such column, and every field it does have is a fact somebody has to acknowledge:
+#
+#   header  schema=   the file's own format. A bump regenerates all fifteen maps at once, which is
+#                     exactly the shape a reader must be told about rather than shown as noise
+#           module=   what a dependent's `baseChain` matches (`CLAUDE.md` §2.1); a moved one is a
+#                     base no dependent can find any more
+#           engine=   the publishing engine. `PortMap.freshness` turns a mismatch into `Stale`
+#                     outright, so a version bump is the LOUDEST meaningful change here, never noise
+#           sources=  a digest over the base's JAVA — content, not paths, so it is checkout- and
+#                     worktree-independent, and it moves when the upstream tree does
+#           files=    how much of the base that digest covers
+#           policy=   the publisher's sorted `SurfacePolicy` fingerprint — the field the nine
+#                     dependents carried stale, and the one neither `sources=` nor `engine=` can see
+#   rows    every column is deterministic: `javaPath` is relativised against a root DERIVED from the
+#           unit's own FQN (`SrcMap.sourceRootOf`, a string operation, so no §5.4 realpath hazard),
+#           `javaLine` is the upstream java's line, and `digest` is the same emitted-member digest
+#           `members.tsv` is already baselined on. The ORDER is the writer's own sort, sorted
+#           section by section (`PortMap.of`), identical on both sides, so a plain `diff` pairs the
+#           rows a reader would pair.
+#
+# The header is diffed FIELD BY FIELD ahead of the rows, because that is the incident that has
+# actually happened: read as a raw diff, a moved `policy=` is one line of two sixteen-character
+# digests and says nothing about which of six fields moved or what it means.
+#
+# A MISSING baseline is FATAL, for `error_baseline_guard`'s reason: "nothing is comparing this" and
+# "this compares clean" are indistinguishable from the outside. So is a run that published NO map
+# while a baseline exists — that is `TestDiff.disappeared`'s shape at this artifact, and a dependent
+# then silently falls back to the COMMITTED map (`PortMap.discoverIn` prefers `run-latest` and takes
+# `baseline` when it is absent), so the failure is a run reading an artifact nobody produced.
+#
+# The verdict is PRINTED here and EXITED in `headline`, through the marker file the other guards use
+# — the diff is decided before the compile, and exiting here would take the compile and the
+# correlation with it.
+port_map_guard() {
+  local dir="$1"
+  local base="$dir/baseline/port-map.tsv" run="$dir/run-latest/port-map.tsv"
+  local marker="$dir/run-latest/port-map-baseline-failed"
+  mkdir -p "$dir/run-latest" 2>/dev/null
+  rm -f "$marker"
+  if [ ! -f "$run" ]; then
+    if [ ! -f "$base" ]; then
+      echo "  (no port-map.tsv at $dir/run-latest — this run published no port map)"
+      return 0
+    fi
+    echo "!! PORT MAP DISAPPEARED — the baseline has one and this run published none."
+    echo "   $run does not exist. A dependent that looks this base up now takes the COMMITTED map"
+    echo "   instead (PortMap.discoverIn falls back to baseline/), so it would compile against an"
+    echo "   artifact no run produced — with every other count flat."
+    : > "$marker"; return 1
+  fi
+  if [ ! -f "$base" ]; then
+    echo "!! NO PORT-MAP BASELINE — nothing is comparing what this port PUBLISHES to its dependents."
+    echo "   $base does not exist, so a moved emitted name, a moved shape or a stale policy= header"
+    echo "   would print and pass. Seed it from this run's honest state:"
+    echo "     just baseline-accept <port>"
+    : > "$marker"; return 1
+  fi
+
+  # the METADATA line, field by field. Tab-delimited, so a value may contain `=` (PortMap.field).
+  local bh rh moved=0 hdr=0
+  bh=$(head -1 "$base"); rh=$(head -1 "$run")
+  if [ "$bh" != "$rh" ]; then hdr=1; fi
+
+  local b="$MEASURE_TMP/portmap-base-$$.tsv" r="$MEASURE_TMP/portmap-run-$$.tsv"
+  grep -v '^#' "$base" > "$b"
+  grep -v '^#' "$run"  > "$r"
+  moved=$(diff "$b" "$r" | grep -c '^[<>]')
+
+  if [ "$hdr" = "0" ] && [ "$moved" = "0" ]; then
+    echo "  port map vs baseline: $(grep -c '' < "$r") row(s), header and rows unchanged"
+    rm -f "$b" "$r"; return 0
+  fi
+
+  echo "!! PORT MAP MOVED — what this port publishes to its DEPENDENTS is not what is committed."
+  if [ "$hdr" = "1" ]; then
+    echo "   header:"
+    local f bv rv why named=0
+    for f in schema module engine sources files policy; do
+      bv=$(tr '\t' '\n' <<<"$bh" | grep "^$f=" | head -1 | cut -d= -f2-)
+      rv=$(tr '\t' '\n' <<<"$rh" | grep "^$f=" | head -1 | cut -d= -f2-)
+      [ "$bv" = "$rv" ] && continue
+      case "$f" in
+        schema)  why="the map's own format — every port's map is regenerated by this" ;;
+        module)  why="a dependent's baseChain matches THIS string (CLAUDE.md §2.1)" ;;
+        engine)  why="PortMap.freshness reports a mismatch as Stale — every dependent must re-run" ;;
+        sources) why="the base's JAVA changed (content digest, not paths)" ;;
+        files)   why="how many java files that digest covers" ;;
+        policy)  why="the base's MANIFEST changed — the field nine dependents carried stale" ;;
+      esac
+      echo "     $f=  $bv  ->  $rv"
+      echo "         $why"
+      named=1
+    done
+    # …and a field this guard does not know about is still a change, printed raw rather than
+    # silently summarised as "the header moved". A schema bump is exactly how that arrives.
+    if [ "$named" = "0" ]; then
+      echo "     (no named field moved — a field this guard does not enumerate did)"
+      echo "     - $bh"
+      echo "     + $rh"
+    fi
+    [ "$moved" = "0" ] && echo "   rows: unchanged."
+  fi
+  if [ "$moved" != "0" ]; then
+    echo "   $moved row(s) differ — each is an emitted name, a disposition or a shape a dependent reads:"
+    diff "$b" "$r" | grep '^[<>]' | head -20 | sed 's/^/     /'
+    [ "$moved" -gt 20 ] && echo "     … $((moved - 20)) more; full files: $base and $run"
+  fi
+  echo "   If this is the change you made, ACKNOWLEDGE it: just baseline-accept <port>"
+  echo "   …and re-measure every DEPENDENT of this module: a base's map decides their emitted text,"
+  echo "   and a base port's green numbers are not evidence about its dependents (CLAUDE.md §1.5)."
+  rm -f "$b" "$r"
+  : > "$marker"; return 1
+}
+
 # correlate <out-report-dir> [--scalac f] [--tests f] [--srcmap [scope=]f]...
 # Join compiler and test-runner output back to the MEMBER and the JAVA ORIGIN that produced it
 # (DESIGN.md §6.3, and the amendment that extends it to the TEST runner). Without this, a
@@ -699,6 +835,14 @@ headline() {
   for d in "$dir" "${extra[@]}"; do
     if [ -f "$d/run-latest/findings-baseline-failed" ]; then
       echo "!! this lane FAILED its findings baseline ($d) — see the 'FINDINGS CONTENT MOVED' block above"
+      exit 1
+    fi
+  done
+  # …and the PORT-MAP gate, over every report this lane produced, for the same reason: a two-module
+  # lane publishes two maps and a dependent may read either.
+  for d in "$dir" "${extra[@]}"; do
+    if [ -f "$d/run-latest/port-map-baseline-failed" ]; then
+      echo "!! this lane FAILED its port-map baseline ($d) — see the 'PORT MAP MOVED' block above"
       exit 1
     fi
   done
