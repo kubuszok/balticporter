@@ -21,6 +21,18 @@ package sge.utils
   * relied on creation-on-demand fails to compile instead of failing at runtime. The
   * `WARN_ON_REFLECTION_POOL_CREATION` / `THROW_ON_REFLECTION_POOL_CREATION` switches go with it —
   * they existed only to police the reflective path that no longer exists.
+  *
+  * ==Why this is NOT an instance of the shared registry the corpus has three of==
+  * Ashley's `ComponentFactories` and gdx-gltf's `GLTFExtensionFactories` are the other two, and this
+  * one is the reason extracting a single mechanism was refused (`ENGINE-LIMITS.md` P10). Three
+  * differences, each of which a shared class would have to bend: the table holds shared pool VALUES
+  * rather than factories, so a factory-valued registry does not fit it at all; registration DERIVES
+  * the key by probing a factory for the class of what it makes, which no other instance does; and
+  * the SAME table is read two ways — `getOrNull` answers `null`, `get` throws — so a registry with
+  * one declared miss policy cannot express it. Generalise past all three and what is left is a
+  * `Class`-keyed map, which the runtime module's admission rule refuses. This file also files ZERO
+  * `portability(injected)` findings today, its map being the port's own portable `ObjectMap`, so
+  * there is no residue for a shared table to drain here either.
   */
 object Pools:
 

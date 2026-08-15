@@ -10,9 +10,17 @@ package sge.gltf.data.extensions
   *
   * This is the third library in the corpus to need exactly this shape (libGDX's own injected
   * `Pools` takes a factory; Ashley's `ComponentFactories` is the same registry one repository out),
-  * which is the CLAUDE.md §2 signal that "reflective no-arg instantiation becomes a registry" is
-  * moving from a per-library rule towards a shared one. It is still a VALUE each library supplies,
-  * not a mechanism, so it stays here.
+  * and that looked like the CLAUDE.md §2 signal that "reflective no-arg instantiation becomes a
+  * registry" was moving from a per-library rule towards a shared one. **It is not, and the reading
+  * that settled it is `ENGINE-LIMITS.md` P10.** The abstraction that covers all three has to be
+  * value-generic — `Pools` keys shared pool VALUES, not factories — at which point it is a
+  * `Class`-keyed map, which the runtime module's own admission rule refuses; narrowed to the two
+  * that really are instance registries it is deliverable only by a BASE port, which this module and
+  * Ashley are not. So it stays here, and P10 states the two conditions that would re-open it.
+  *
+  * Note also what P10 corrects about THIS file: the registry below is OPEN — `register` is public —
+  * so "open with a fallback vs closed without" was never the axis between it and Ashley's. The one
+  * axis is what each does at a MISS, which is the paragraph below.
   *
   * ==The seven types this actually has to build==
   * `ext` is reached from seven one-line wrappers in `GLTFMaterialExporter`, each with a concrete

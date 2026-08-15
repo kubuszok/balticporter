@@ -13,6 +13,17 @@ package sge.ecs
   * hand-port `../sge/sge-extension/ecs` puts it on the `Engine` instead; that is a nicer API and a
   * larger divergence, and it is available to a port that also wants to change the signature.)
   *
+  * ==Why this is still hand-written, with two other ports holding the same shape==
+  * libGDX core's injected `Pools` and gdx-gltf's `GLTFExtensionFactories` are the other two, and
+  * extracting the three into one engine mechanism was read out and REFUSED — `ENGINE-LIMITS.md`
+  * P10, which carries the numbers. Two things there bear on this file directly: the covering
+  * abstraction is a `Class`-keyed map (`Pools` holds shared pool VALUES, not factories), which the
+  * runtime module's admission rule refuses by name; and a DEPENDENT port cannot ship a support type
+  * at all, because it inherits the base's runtime-requiring phases and vendoring would define every
+  * base shim twice. The one thing the extraction would have drained here is the `concurrent` map
+  * below — one `portability(injected)` finding of the four this file files, the other three being
+  * the reflective fallback the port keeps on purpose.
+  *
   * ==Faithfulness of the fallback, which is subtler than it looks==
   * libGDX's `ClassReflection.newInstance` (`ClassReflection.java:91-99`) calls the deprecated
   * `c.newInstance()` and wraps exactly two exceptions — `InstantiationException` and
