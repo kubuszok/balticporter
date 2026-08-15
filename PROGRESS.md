@@ -5365,9 +5365,11 @@ unbuilt, each with the reason stated so the decision is not re-derived:
   derives its key by probing a factory — value-generic it is a `Class`-keyed `Map`, which
   `balticporter/runtime/package.scala`'s admission rule refuses by name, and narrowed to the two real
   instance registries it is deliverable only by a BASE port, which neither of those two is. What it
-  would have saved is **5 lines of `ComponentFactories` (51), 7 of `GLTFExtensionFactories` (66), 4
-  of `Pools` (169)** and **one** finding on **one** port (Ashley's `portability(injected)` 4 → 3, the
-  `java.util.concurrent` map; libGDX's `Pools` files 0 there). Two of the three sites were already
+  would have saved is the table declaration and the hit/miss dispatch and nothing else — **5 lines of
+  `ComponentFactories` (of 51), 5 of `GLTFExtensionFactories` (of 66), 4 of `Pools` (of 169)**, less
+  a construction line back in each, so **8 net across three ports** — plus **one** finding on **one**
+  port (Ashley's `portability(injected)` 4 → 3, the `java.util.concurrent` map; libGDX's `Pools`
+  files 0 there). Two of the three sites were already
   reached by one `MethodBodyTransform` key each and the third by `dropTypes` + `inject`, so no
   transform was missing either. The three instances now cite P10 in their own doc comments; the
   conditions that would re-open it are stated there.

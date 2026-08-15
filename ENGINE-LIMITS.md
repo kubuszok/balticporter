@@ -5588,7 +5588,7 @@ not a silencer.*
 
 ---
 
-### P10. "Reflective instantiation becomes a REGISTRY" is a SHAPE three ports share and a MECHANISM none of them can deliver — the abstraction that covers all three is a `Map`, and the one that is not a `Map` covers only the two that cannot ship it. **REFUSED, 0 lines shipped, 16 lines it would have saved**
+### P10. "Reflective instantiation becomes a REGISTRY" is a SHAPE three ports share and a MECHANISM none of them can deliver — the abstraction that covers all three is a `Map`, and the one that is not a `Map` covers only the two that cannot ship it. **REFUSED, 0 lines shipped against 8 net lines across three ports**
 
 `Class#newInstance` is the one thing Scala.js and Scala Native genuinely cannot do, and three corpus
 ports independently replaced it with the same shape: a `Class`-keyed table the port populates.
@@ -5637,11 +5637,15 @@ putting an instance registry in the published artifact makes libGDX core vendor 
 libGDX core references, purely for its dependents — one module carrying another's build artefact,
 which is the asymmetry `CLAUDE.md` §1.5 draws `inject`'s line at.
 
-**What it would have bought, since that is the number.** The shared class replaces **5** lines of
-`ComponentFactories` (51), **7** of `GLTFExtensionFactories` (66) and **4** of `Pools` (169), and
-drains **one** finding on **one** port: Ashley's `portability(injected)` is **4**, of which one is the
-`java.util.concurrent` map its table happens to use and the other three are the reflective fallback
-the port keeps on purpose. libGDX's `Pools` files **0** injected-portability findings — its
+**What it would have bought, since that is the number, and it is counted rather than estimated.**
+What a shared class can take is the TABLE DECLARATION and the hit/miss dispatch — never the public
+members, which are each library's own API and must stay byte-identical, and never the miss TEXT,
+which is the port's policy. That is **5** lines of `ComponentFactories` (of 51), **5** of
+`GLTFExtensionFactories` (of 66) and **4** of `Pools` (of 169); each file then gets a construction
+line back naming its miss policy, so the honest figure is **8 net lines across three ports**. It
+drains **one** finding on **one** of them: Ashley's `portability(injected)` is **4**, of which one is
+the `java.util.concurrent` map its table happens to use and the other three are the reflective
+fallback the port keeps on purpose. libGDX's `Pools` files **0** injected-portability findings — its
 `ObjectMap` is the port's own portable map — so the third instance gains nothing measurable at all.
 Against that: one published support type, one delivery declaration on a port that does not use it,
 and Ashley's table silently losing its concurrency, because the runtime module forbids threads and a

@@ -294,7 +294,7 @@ base's `RequiresRuntime` phase through `surface` — cannot vendor one without d
 its base's shims twice. Only a BASE can ship a support type, and a base carrying a type nothing in it
 references, for its dependents, is one module holding another's build artefact (§1.5's `inject`
 line). Measured on the strongest candidate the corpus had — three hand-written `Class`-keyed
-registries replacing reflective instantiation, whose extraction would have saved **16 lines across
+registries replacing reflective instantiation, whose extraction would have saved **8 net lines across
 three ports and drained one check finding on one of them**, at the cost of a published type the base
 does not use (`ENGINE-LIMITS.md` P10). Read the WIRING before the files: two of those three were
 already reached by one `MethodBodyTransform` key each, so the half that looked unmechanised was the
