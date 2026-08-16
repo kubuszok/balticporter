@@ -2806,13 +2806,16 @@ not an engine change.
 | `portability(emitted)` | **18** sites against 37 rules — `javax.imageio.ImageIO` 8, `java.lang.reflect.Array` 2, `java.nio.file.Files` 2, and one each of `javax.swing.*` (2), `java.net.URL*` (3), `java.text.MessageFormat`. Six `substitutions-drop` remedies published, four of them naming exactly the types the hand port silently omitted |
 | `dependency-coverage` | **10 of 10** — `java.util.Locale` 6 and `java.text.NumberFormat` 4, both answered by `scala-java-locales` on both non-JVM backends. Not a call to remove; a coordinate to declare |
 | `decisions.tsv` | **2,014 rows** — 715 `RetypedSignature`, 507 `RenamedMember`, 458 `RenamedPackage`, 146 `ForcedClassInit`, 107 `FunnelledCtor`, 57 `WidenedVisibility`, 12 `DroppedSuperCall`, 10 `InjectedMember`, 2 `RetainedParent` |
-| tests | **NONE.** The twelve scoped modules ship no `src/test` at all — flexmark's 1,306 `@Test` methods live in `flexmark-util` (723 by the comment-aware count), `flexmark-core-test` and the extensions, none of which this milestone parses. Every `CLAUDE.md` §4.4 form in this port is UNMEASURED, which matters more here than on any port before it |
+| tests | **723, EMITTED AS OF WAVE 7 and not yet run** — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
 
-**The behavioural gate does not exist yet, and that is the largest single thing wrong with this
-port.** §3 is explicit about what a compile-error count is worth, and every number above except the
-zero in the last row is a compile-time one. On liqp the compile said nothing about **409 of 414**
-first-run failures; this library is a parser, so the population §4.4 governs here is larger, not
-smaller.
+**The behavioural gate is now BUILT and does not yet RUN, which is a smaller gap than the one this
+paragraph used to describe and is not zero.** §3 is explicit about what a compile-error count is
+worth, and every number above except the last row is a compile-time one. On liqp the compile said
+nothing about **409 of 414** first-run failures; this library is a parser, so the population §4.4
+governs here is larger, not smaller. What wave 7 changed is that the 723 tests now EXIST as emitted
+MUnit registrations with a lane, a discovery guard and an error baseline holding them — §10.6.6 —
+so the remaining distance is a number (44 test-set errors on top of the library's 43) rather than an
+absent source set.
 
 ### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 45 after wave 7**
 
@@ -3000,6 +3003,59 @@ PARAMETERLESS `keySet` (§4.5's family), and the same class overrides `entrySet(
   a translation — §1(c) or a hand-written injection, never a rule to derive from one library.
 - **`SegmentedSequenceTree`'s `ThreadLocal<Cache>`.** The hand port dropped it to a plain `var`, so
   thread confinement is simply gone. Correctness-relevant, and not a general "ThreadLocal → var" rule.
+### 10.6.6 The test port — the first behavioural evidence this port has, and its first census
+
+`just md-test-measure`, `balticporter/corpus/ports/ssg-md/test.conf`, `port-report/FlexmarkTestMigrate`.
+A DEPENDENT of `main.conf` (`base = "main.conf"`), so it inherits `packageRenames` and both surface
+phases and adds exactly one of its own — `test-framework`.
+
+**The scope is a THIRTEENTH module, and that is not a scope slip.** The twelve modules this port
+converts ship no `src/test` at all: the split `flexmark-util-*` libraries are tested from the
+`flexmark-util` AGGREGATOR, whose own `src/main/java` is empty and whose pom depends on all eleven.
+So `md-measure`'s discovery block goes on asserting its zero — a true statement about ITS scope — and
+this lane counts a different tree. The two numbers are not each other's residue.
+
+| | |
+|---|---|
+| files | **52 converted → 52 Scala test files** (0 dropped, 0 injected) |
+| `@Test` → emitted | **723 → 723 munit registrations, `expected-lost` = 0.** Not the raw grep's 730: `java_test_count` is comment-aware and seven are commented out upstream. The discovery guard holds it in BOTH directions from the first run |
+| scalac errors | **87 total on one compile of both source sets — 43 main, 44 test, 0 elsewhere.** Baselined at 87 against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 43 stays `md-measure`'s and is reproduced by that lane alone |
+| the 44, by owner | `HtmlAppendableBaseTest` 9, `OrderedMultiMapTest` 8, `OrderedMapTest` 8, `PlaceholderReplacerTest` 6, `BitFieldSetTest` 6, `HtmlBuilderTest` 3, `OrderedSetTest` 3, `PlainSegmentBuilderTest` 1 — **eight files of fifty-two**, and every one of them is a caller of a residue §10.6.3 already names. `tagLine` (12) is the library's own overload row seen from a caller; the `OrderedSet`/`OrderedMultiMap` rows (13, including 10 `E051 Ambiguous overload` on `remove`) are the shim-against-a-scala-collection family and java's `remove(Object)`/`remove(int)` split (§4.4); `BitFieldSet` (6) is K25's held-back `iterator()` met by a `for` loop |
+| test-framework refusals | **26, every one reported by the phase with its §1 classification** — `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (`ExpectedException`; the field is emitted and NEVER APPLIED, so an expected throw propagates and MUnit records a FAILURE rather than a silent pass), and one hamcrest `Description`. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
+| `omissions` / `portability(emitted)` / `collection-boundary` / `overload-risk` | 13 / 14 / 6 / 1,655 |
+| `manifest` | **1** — `BaseMapUnverified`, and see below |
+
+**THE SUITE DOES NOT RUN, and the lane says so rather than skipping the stage.** The run is gated on
+0 errors exactly as `liqp-measure` and `sg-measure` gate theirs; at 87 it prints that 723 tests are
+emitted and none of them runs. A lane that silently skipped that stage would read as a lane whose
+tests passed.
+
+**What building it found in the BASE, which is the part worth carrying forward.** The first run
+reported **459 fatal `manifest` findings** — one per type — saying the base's published map had no
+entry for classes the base emits perfectly well. It did not: for seven waves the base had been
+publishing `flexmark.src.main.java.com.vladsch.flexmark.ast.Heading` as the UPSTREAM name of
+`ssg.md.ast.Heading`, because `PortMap.upstreamOf` reads the package off the java file's DIRECTORY
+and D-md-1 makes this port's `sourceRoot` a 53-module checkout. 9,261 of 9,370 rows. Nothing could
+see it — the column is read by a dependent and there was none — and the first dependent is the
+instrument. `ENGINE-LIMITS.md` D11; `manifest` 459 → 1 with every other count flat. **And it was not
+only this port**: fixing it moved 1,792 rows of `gdx-vfx`'s map too, whose `sourceRoot` spans that
+library's `core/src` and `effects/src` — the same defect, equally invisible, and found by
+`port_map_guard` on the corpus-wide run rather than by anything here.
+
+**The residual 1 is the same decision's other half and has no fix yet.** `BaseMapUnverified`: the
+base's map records source paths relative to ITS root, so all **422 of 422** lie outside a dependent's
+resolution roots and `PortMap.freshness` cannot check the map at all. It is honest (`Unverified` is
+deliberately a third value and never a `no`) and it is inherited by every one of milestone 2's 29
+dependent ports, so the freshness guarantee is switched off for the whole chain by one port's root.
+Recorded with its number in D11 rather than worked around here.
+
+**What the census does NOT yet include, and why it is not a skip.** Nothing in this tree needs a
+`dropMethods` key, an `excludeGlobs` entry or a `public-field-accessors` scope, so `test.conf`
+carries none — the residues above are the engine's, they are counted, and every one of the 723 tests
+is emitted. The 114 `ComboSpecTestCase` subclasses, the CommonMark conformance oracle and
+`flexmark-core-test` remain out of scope for milestone 1 and want `flexmark-test-util`, which is the
+documented refusal §10.6.1 already states.
+
 
 ---
 

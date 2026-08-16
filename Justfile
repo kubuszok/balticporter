@@ -14,6 +14,7 @@
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
 #   just liqp-measure                liqp + its own 105-file suite (emitted and censused; RUN when it compiles)
 #   just md-measure                  flexmark-java core + the eleven util modules (no test set in scope)
+#   just md-test-measure             flexmark-util's own 730-@Test suite (emitted and censused; RUN when it compiles)
 #   just measure-all                 every lane, SERIALLY, in dependency order
 #   just decision-counts             decisions.tsv row counts by kind, every port
 #   just catalog-coverage            catalog.tsv across every port — rows the corpus never reaches
@@ -222,6 +223,20 @@ vfx_deps      := "--dependency org.scalameta::munit:1.0.2"
 # the number), and it has a portability half beside it — this module claims all three platforms and
 # that jar is JVM-only. Both are the next wave's, with a measurement each.
 md_deps       := "--dependency org.jetbrains:annotations:24.0.1"
+
+# ssg-md's SUITE lives in a THIRTEENTH module the port does not convert — the `flexmark-util`
+# aggregator, whose own `src/main/java` is empty and whose pom depends on all eleven split libraries
+# (`corpus/ports/ssg-md/test.conf` D-mdt-1). So this is not one of `md_modules` and `md-measure`'s
+# discovery zero stays a true statement about ITS scope: the two lanes count different trees.
+md_test_src   := "../ssg/original-src/flexmark-java/flexmark-util/src/test"
+
+# junit is a RUN dependency and not only a frontend one: six files declare
+# `@Rule ExpectedException` fields the phase emits as ordinary values and reports as unconvertible
+# (test.conf D-mdt-3), and `org.hamcrest:hamcrest-core:1.3` arrives with junit transitively for the
+# two files that import it — deliberately not named, exactly as `liqp_test_deps` does not name it.
+# 4.13.2 is what the parent pom's `dependencyManagement` pins. munit is the runner the conversion
+# targets.
+md_test_deps  := "--dependency junit:junit:4.13.2 --dependency org.scalameta::munit:1.0.2"
 
 root          := justfile_directory()
 
@@ -1657,6 +1672,140 @@ md-measure:
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
+# ssg-md's SUITE — `flexmark-util/src/test/java`, 52 files and 730 plain `@Test`.
+#
+# `gdx-test-measure`'s two-lane shape rather than `liqp-measure`'s one-lane one, and the reason is
+# `md-measure`'s number: ssg-md MAIN is a census this repository quotes (`PROGRESS.md` §10.6.3), so
+# it keeps a lane of its own that reproduces it alone. This lane then compiles BOTH source sets on
+# one invocation — it must, the suite links against what the main port emitted, and the main port is
+# `RuntimeMode.Vendored` so the shims live in `src_managed/main` — and SPLITS the count by the path
+# scalac itself printed. A test-set error is frequently a cascade of a main-set one, which is exactly
+# why the two are never added into one wall.
+#
+# Three things about it worth reading before quoting a number:
+#
+#   * THE SUITE IS EMITTED AND, TODAY, NOT RUN. ssg-md MAIN stands at a measured wall, so the run
+#     stage is gated on 0 errors exactly as `liqp-measure` and `sg-measure` gate theirs — with a line
+#     that SAYS the suite did not run. A lane that silently skipped the stage would read as a lane
+#     whose tests passed, which is the failure `noise4j-measure` states from the other direction.
+#     Everything `CLAUDE.md` §4.4 lists stays unmeasured for this port until that line stops
+#     printing, and on a character-level markdown parser that is the largest such population the
+#     corpus has.
+#   * THE TEST TREE IS NOT ONE OF THE TWELVE MODULES THE PORT CONVERTS. The split `flexmark-util-*`
+#     libraries are tested from the `flexmark-util` AGGREGATOR, whose own `src/main/java` is empty.
+#     So `md-measure`'s discovery block still asserts its zero and this lane counts a different tree
+#     — the two numbers are about different scopes and neither is the other's residue.
+#   * THE COMPILE CARRIES THREE COORDINATES AND ONLY ONE IS THIS SOURCE SET'S. `md_deps` is the
+#     annotation jar the EMITTED main code names (a marker annotation is carried whatever the port
+#     claims — 237 of 468 files); junit is here because the six `@Rule ExpectedException` fields and
+#     one JUnit-3 static import survive the conversion (test.conf D-mdt-3), and hamcrest arrives with
+#     it transitively; munit is the runner the conversion targets.
+# ---------------------------------------------------------------------------------------------
+[doc("flexmark-util's own 730-@Test suite: emit, checks, discovery, break residue, compile, RUN when it compiles")]
+md-test-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
+    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{md_src}}"
+    REPORT="$ROOT/port-report/FlexmarkMigrate"
+    TREPORT="$ROOT/port-report/FlexmarkTestMigrate"
+
+    # ABORT if the migration did not run, or the lane measures the PREVIOUS emit and reports a stale
+    # number as a result. Only the TEST port runs here: `md-measure` precedes this lane in
+    # `measure-all` and has already re-emitted the main source set this compiles against.
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.flexmark.FlexmarkTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
+      echo "!! FlexmarkTestMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[ssg-md\]" <<<"$OUT" | head -30
+      exit 1
+    fi
+    echo "-- FlexmarkTestMigrate (ALL checks, untruncated, as the migration printed them) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala\( test\)\? files/p' <<<"$OUT"
+    echo
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$TREPORT"
+    findings_baseline_guard "$TREPORT"
+    port_map_guard "$TREPORT"
+
+    echo
+    echo "-- test discovery --"
+    # Both frameworks summed: a ported suite is MUnit and any residue is still JUnit, so counting one
+    # under-reports by every converted suite — in the safe-looking direction. A suite with no
+    # discoverable tests runs ZERO and reports SUCCESS, which is the whole reason this is baselined.
+    JAVA_TESTS=$(java_test_count {{md_test_src}})
+    JUNIT_LEFT=$(junit_residue {{md_module}}/src_managed/test/scala)
+    MUNIT_TESTS=$(munit_emitted {{md_module}}/src_managed/test/scala)
+    SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
+    echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
+    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$TREPORT"
+
+    echo
+    break_residue {{md_module}}/src_managed/test
+
+    echo "-- compile --"
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
+    # port that does not compile — a false NEGATIVE on the headline number.
+    # BOTH source sets on one invocation: the main port is RuntimeMode.Vendored, so the shims live in
+    # `src_managed/main` and the suite links against them there. Compiling either alone measures
+    # nothing.
+    DEPS="{{md_deps}} {{md_test_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdtestmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdtestmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/mdtestmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/mdtestmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/mdtestmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$TREPORT"
+    # …and the SPLIT, from the path scalac printed in each error header. `md-measure`'s figure is
+    # what PROGRESS.md §10.6.3 quotes, and a test-set error is often a cascade of a main-set one.
+    E_MAIN=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdtestmeasure.txt | grep -c "/src_managed/main/")
+    E_TEST=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdtestmeasure.txt | grep -c "/src_managed/test/")
+    echo "  main source set: $E_MAIN   test source set: $E_TEST   elsewhere: $((ERRORS - E_MAIN - E_TEST))"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/mdtestmeasure.txt | sort | uniq -c | sort -rn | head -20
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/mdtestmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
+
+    if [ "$ERRORS" = "0" ]; then
+      echo
+      echo "-- run --"
+      scala-cli test --scala {{scala_version}} --server=false $DEPS \
+        {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala \
+        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdtestrun.txt
+      reconcile_outcomes "$MEASURE_TMP"/mdtestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
+      echo
+      echo "-- correlation: test failures located to members and Java origins --"
+      correlate "$TREPORT/run-latest" --tests "$MEASURE_TMP"/mdtestrun.txt \
+        --srcmap "$REPORT/run-latest/srcmap.tsv" \
+        --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+      test_outcome_guard "$TREPORT/run-latest" "$RECONCILED" || exit 1
+    else
+      echo
+      echo "-- correlation: every error located to its member and its Java origin --"
+      # BOTH maps, scoped: an error in the emitted suite resolves through the test port's map and one
+      # in the library through the main port's, so the two walls stay distinguishable after the join.
+      # The OUTPUT goes to the TEST report and not the main one, which is the difference a two-lane
+      # split makes: this compile carries both source sets, so writing its 87-row `errors.tsv` into
+      # `FlexmarkMigrate/run-latest` would overwrite the 43-row artifact `md-measure` had just
+      # written — the file `PROGRESS.md` §10.6.3's census is counted from, replaced by a superset
+      # after the lane that produced it had already passed.
+      correlate "$TREPORT/run-latest" --scalac "$MEASURE_TMP"/mdtestmeasure.txt \
+        --srcmap "$REPORT/run-latest/srcmap.tsv" \
+        --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+      echo "   $JAVA_TESTS java @Test are emitted as $MUNIT_TESTS munit registrations and NONE OF THEM RUNS."
+      echo "   Every CLAUDE.md §4.4 form in this port is UNMEASURED until that line stops printing."
+    fi
+
+    headline "$ERRORS" "$TREPORT"
+
+# ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
@@ -1669,11 +1818,14 @@ md-measure:
 measure-all:
     #!/usr/bin/env bash
     cd "{{root}}"
-    # `md-measure` is LAST and is not a dependency of anything: ssg-md is a standalone base port at
-    # milestone 1, so nothing downstream compiles against what it wrote, and a lane that stops the
-    # sequence there costs no other lane its number. That is a property of THIS port's position and
-    # not a general licence — the ordering above is a dependency order and stays one.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure; do
+    # The two ssg-md lanes are LAST and nothing downstream compiles against what they wrote — ssg-md
+    # is a standalone base port at milestone 1 — so a lane that stops the sequence there costs no
+    # other lane its number. That is a property of THIS port's position and not a general licence:
+    # the ordering is a dependency order and stays one, which is exactly why `md-test-measure`
+    # follows `md-measure` and not the other way round. The test port is a DEPENDENT (`test.conf`
+    # has `base = "main.conf"`) and its compile links against the main source set's `src_managed/`,
+    # so run first it would measure the PREVIOUS engine's emit of the library it tests.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
