@@ -370,7 +370,7 @@ member	com.badlogic.ashley.utils.ImmutableArray#<init>()	sge.ecs.utils.Immutable
 member	com.badlogic.ashley.utils.ImmutableArray#<stmt1>	sge.ecs.utils.ImmutableArray#<stmt1>	Renamed	-	com/badlogic/ashley/utils/ImmutableArray.java	38	7806eb1a90208b07	
 member	com.badlogic.ashley.utils.ImmutableArray#array	sge.ecs.utils.ImmutableArray#array	Renamed	-	com/badlogic/ashley/utils/ImmutableArray.java	30	678982532a88f8f7	vis=private
 member	com.badlogic.ashley.utils.ImmutableArray#contains(T,boolean)	sge.ecs.utils.ImmutableArray#contains(T,boolean)	Renamed	-	com/badlogic/ashley/utils/ImmutableArray.java	49	77894e143bf86f4d	
-member	com.badlogic.ashley.utils.ImmutableArray#equals(Any)	sge.ecs.utils.ImmutableArray#equals(Any)	Renamed	-	com/badlogic/ashley/utils/ImmutableArray.java	85	70e7104c8ca8312e	
+member	com.badlogic.ashley.utils.ImmutableArray#equals(Any)	sge.ecs.utils.ImmutableArray#equals(Any)	Renamed	-	com/badlogic/ashley/utils/ImmutableArray.java	85	8d6e1a025a9f4eea	
 member	com.badlogic.ashley.utils.ImmutableArray#first()	sge.ecs.utils.ImmutableArray#first()	Renamed	-	com/badlogic/ashley/utils/ImmutableArray.java	65	02318c81fab451bf	
 member	com.badlogic.ashley.utils.ImmutableArray#get(int)	sge.ecs.utils.ImmutableArray#get(int)	Renamed	-	com/badlogic/ashley/utils/ImmutableArray.java	45	0bc58fea13ec222a	
 member	com.badlogic.ashley.utils.ImmutableArray#hashCode()	sge.ecs.utils.ImmutableArray#hashCode()	Renamed	-	com/badlogic/ashley/utils/ImmutableArray.java	81	4435245b4e45d884	

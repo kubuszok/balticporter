@@ -1132,9 +1132,18 @@ object CtorFunnel:
       * CONSTRUCTOR declares (java permits `<T> C(T x)`) is left alone, because the promoted body
       * lands in the class body where the constructor's own frame is gone. */
     private def nullAtFormal(ctor: SymId, p: Tree.ValDef, a: Term): Term = a match
-      case lit @ Tree.Literal(Constant.NullC, _, o) if p.tpt.tpe != TypeRepr.NoType && !ctorScoped(ctor, p.tpt.tpe) =>
+      case lit @ Tree.Literal(Constant.NullC, _, o)
+        if p.tpt.tpe != TypeRepr.NoType && !ctorScoped(ctor, p.tpt.tpe) && !statesNull(p.tpt.tpe) =>
         Tree.Typed(lit, p.tpt, p.tpt.tpe, o)
       case _ => a
+
+    /** a `T | scala.Null` STATES its own default, so the ascription there is not merely redundant —
+      * it is the placeholder cast the nullability union was introduced to RETIRE (C10, and
+      * `TirEmitter.defaultFor` says the same at a field). */
+    private def statesNull(t: TypeRepr): Boolean = t match
+      case TypeRepr.OrType(_, TypeRepr.TypeRef(_, s)) => program.symbolOf(s).exists(_.fullName == "scala.Null")
+      case TypeRepr.OrType(TypeRepr.TypeRef(_, s), _) => program.symbolOf(s).exists(_.fullName == "scala.Null")
+      case _                                          => false
 
     /** does this type mention a symbol the CONSTRUCTOR owns — its own `<T>`? Walked with
       * `StandardTraversal.mapType`, so it is total over `TypeRepr` by construction (§3). */

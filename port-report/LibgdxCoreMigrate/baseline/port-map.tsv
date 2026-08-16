@@ -5470,7 +5470,7 @@ member	com.badlogic.gdx.graphics.g3d.Material#<init>(String,Array)	sge.graphics.
 member	com.badlogic.gdx.graphics.g3d.Material#<init>(String,Material)	sge.graphics.g3d.Material#<init>(String,Material)	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	66	6082e6b54bdb0faa	
 member	com.badlogic.gdx.graphics.g3d.Material#copy()	sge.graphics.g3d.Material#copy()	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	73	c98c4ddc40f8e40b	
 member	com.badlogic.gdx.graphics.g3d.Material#counter	sge.graphics.g3d.Material#counter	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	22	50cb1617f05b7d64	placement=companion vis=private
-member	com.badlogic.gdx.graphics.g3d.Material#equals(Any)	sge.graphics.g3d.Material#equals(Any)	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	83	c0283ccb4f67acd4	
+member	com.badlogic.gdx.graphics.g3d.Material#equals(Any)	sge.graphics.g3d.Material#equals(Any)	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	83	9a515d8d95f0ae3a	
 member	com.badlogic.gdx.graphics.g3d.Material#hashCode()	sge.graphics.g3d.Material#hashCode()	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	78	5e7a5f899157f940	
 member	com.badlogic.gdx.graphics.g3d.Material#id	sge.graphics.g3d.Material#id	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	24	165b9eed0fb9b7dc	
 member	com.badlogic.gdx.graphics.g3d.Model#<init>(ModelData,Sge)	sge.graphics.g3d.Model#<init>(ModelData,Sge)	Renamed	-	com/badlogic/gdx/graphics/g3d/Model.java	99	26167e69194fcb25	
@@ -10335,7 +10335,7 @@ member	com.badlogic.gdx.maps.objects.TextMapObject#underline	sge.maps.objects.Te
 member	com.badlogic.gdx.maps.objects.TextMapObject#verticalAlign	sge.maps.objects.TextMapObject#verticalAlign	Renamed	-	com/badlogic/gdx/maps/objects/TextMapObject.java	40	1b8036f2757d648a	form=var
 member	com.badlogic.gdx.maps.objects.TextMapObject#wrap	sge.maps.objects.TextMapObject#wrap	Renamed	-	com/badlogic/gdx/maps/objects/TextMapObject.java	35	ebadf61391d5bfb9	form=var
 member	com.badlogic.gdx.maps.objects.TextureMapObject#<init>(TextureRegion)	sge.maps.objects.TextureMapObject#<init>(TextureRegion)	Renamed	-	com/badlogic/gdx/maps/objects/TextureMapObject.java	122	729991ad25a44e62	
-member	com.badlogic.gdx.maps.objects.TextureMapObject#<stmt1>	sge.maps.objects.TextureMapObject#<stmt1>	Renamed	-	com/badlogic/gdx/maps/objects/TextureMapObject.java	124	c535498f4ed2d5f9	
+member	com.badlogic.gdx.maps.objects.TextureMapObject#<stmt1>	sge.maps.objects.TextureMapObject#<stmt1>	Renamed	-	com/badlogic/gdx/maps/objects/TextureMapObject.java	124	068707b761c96d17	
 member	com.badlogic.gdx.maps.objects.TextureMapObject#originX	sge.maps.objects.TextureMapObject#originX	Renamed	-	com/badlogic/gdx/maps/objects/TextureMapObject.java	27	22f01084fa5ea64d	form=var
 member	com.badlogic.gdx.maps.objects.TextureMapObject#originY	sge.maps.objects.TextureMapObject#originY	Renamed	-	com/badlogic/gdx/maps/objects/TextureMapObject.java	28	5bc4a95dbc9a144e	form=var
 member	com.badlogic.gdx.maps.objects.TextureMapObject#rotation	sge.maps.objects.TextureMapObject#rotation	Renamed	-	com/badlogic/gdx/maps/objects/TextureMapObject.java	31	32c8215d1acff813	form=var

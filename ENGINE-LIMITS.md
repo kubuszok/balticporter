@@ -432,6 +432,14 @@ took, which scalac type-checks all the same.
   type and to no ABSTRACT one, so `x -> null` at a `Function<A, String>` takes nothing. An
   over-approximation there would be text on every such lambda in a corpus, which is the one shape no
   count can see (`CLAUDE.md` §5);
+  **…and "always" has ONE exception, which the corpus found and ssg-md could not.** A formal typed
+  `T | scala.Null` STATES its own default, so an ascription there is not merely redundant — it is
+  the placeholder cast the nullability union exists to RETIRE (C10, and `TirEmitter.defaultFor`
+  says the same at a field). Written without that guard the pin emitted
+  `this.skin = null.asInstanceOf[Skin | scala.Null]` on libGDX, a port with no such error and no
+  reason to move; the guard puts that file back byte-identical. What remains over-approximate is one
+  member on the same port (`TextureMapObject#<stmt1>`, a plain reference formal): correct, and
+  unnecessary, which is exactly the residue §5 says is visible only in `members.tsv`;
 - **the variable is resolved from the TARGET's own instantiation, composed along the hierarchy.**
   `Maker<V> extends Fn<String, V>` with the SAM at `Fn.apply(): R` needs `R := V := T`, one edge at
   a time. Spoon's `TypeAdaptor` is what this replaces, measurably: under `noClasspath` it handed

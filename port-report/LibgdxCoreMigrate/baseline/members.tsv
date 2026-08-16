@@ -4671,7 +4671,7 @@ sge.graphics.g3d.Environment	sge.graphics.g3d.Environment#remove(DirectionalLigh
 sge.graphics.g3d.Environment	sge.graphics.g3d.Environment#remove(PointLight)	def	8216d33a282b3511
 sge.graphics.g3d.Environment	sge.graphics.g3d.Environment#remove(SpotLight)	def	2180a42de36f75ad
 sge.graphics.g3d.Environment	sge.graphics.g3d.Environment#shadowMap	val	fc60107e190dcd3b
-sge.graphics.g3d.Material	sge.graphics.g3d.Material	class	be74c2f7dac470b0
+sge.graphics.g3d.Material	sge.graphics.g3d.Material	class	eab2f81db176ef17
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>()	ctor	23ee73ea3eb575fe
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>(Array<Attribute>)	ctor	1fc07519b12078dd
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>(Array<Attribute>)	ctor	f4974799fb91c5b7
@@ -4682,7 +4682,7 @@ sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>(String,Array<Attribut
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>(String,Material)	ctor	6082e6b54bdb0faa
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#copy()	def	c98c4ddc40f8e40b
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#counter	val	50cb1617f05b7d64
-sge.graphics.g3d.Material	sge.graphics.g3d.Material#equals(Any)	def	c0283ccb4f67acd4
+sge.graphics.g3d.Material	sge.graphics.g3d.Material#equals(Any)	def	9a515d8d95f0ae3a
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#hashCode()	def	5e7a5f899157f940
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#id	val	165b9eed0fb9b7dc
 sge.graphics.g3d.Model	sge.graphics.g3d.Model	class	4b33835e9c421e46
@@ -9844,9 +9844,9 @@ sge.maps.objects.TextMapObject	sge.maps.objects.TextMapObject#text	val	ac1dd423a
 sge.maps.objects.TextMapObject	sge.maps.objects.TextMapObject#underline	val	f1632248f64dafcd
 sge.maps.objects.TextMapObject	sge.maps.objects.TextMapObject#verticalAlign	val	1b8036f2757d648a
 sge.maps.objects.TextMapObject	sge.maps.objects.TextMapObject#wrap	val	ebadf61391d5bfb9
-sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject	class	9fc00ea13d5339a2
+sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject	class	cfa1c94bc42b6cac
 sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject#<init>(TextureRegion)	ctor	729991ad25a44e62
-sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject#<stmt1>	stmt	c535498f4ed2d5f9
+sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject#<stmt1>	stmt	068707b761c96d17
 sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject#originX	val	22f01084fa5ea64d
 sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject#originY	val	5bc4a95dbc9a144e
 sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject#rotation	val	32c8215d1acff813
