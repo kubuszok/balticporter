@@ -3541,7 +3541,7 @@ final class CollectionsTransform(
       // helpers answer the other half of that seam, an argument still carrying java's `Object`
       // PROBE at a receiver whose key type this phase moved ([[objectProbe]]). `keyArg` runs FIRST,
       // so a coercion it can strip is stripped and never reaches the helper.
-      case (n, List(key), Kind.Map) if wildcardMapCall(n, recv) || probeMapCall(n, keyArg(key, recv), recv) =>
+      case (n, List(key), Kind.Map) if wildcardMapCall(n, recv, keyArg(key, recv)) || probeMapCall(n, keyArg(key, recv), recv) =>
         Some(staticCall(wildcardMapSym(n), List(recv, keyArg(key, recv)), t, so))
       case ("get", List(key), Kind.Map)         => Some(call(recv, getOrElseSym, List(keyArg(key, recv), dflt(nullOf(so), recv, so)), t, so))
       case ("getOrDefault", List(key, d), _)    => Some(call(recv, getOrElseSym, List(keyArg(key, recv), dflt(d, recv, so)), t, so))
@@ -3870,9 +3870,72 @@ final class CollectionsTransform(
     *
     * `put` and `getOrDefault` are deliberately absent: each needs a VALUE at the capture, and javac
     * rejects both on a `Map<?, ?>` for exactly that reason. There is no java to translate. */
-  private def wildcardMapCall(name: String, recv: Term)(using Program): Boolean =
+  /** does this type MENTION a wildcard — at any depth?
+    *
+    * Deliberately NOT a nameability test, which is what it looks like and what it was first written
+    * as. A wildcard-APPLIED type is nameable (`Class[? <: N]` is a type a call site can write), so
+    * this answers a narrower question for [[wildcardMapCall]]'s third condition only: *could scala's
+    * INVARIANCE bite at this key*. It is paired there with an equality against the probe's own type,
+    * because a wildcard that both sides spell identically unifies and needs nothing.
+    *
+    * Complete over `TypeRepr` rather than over the two constructors this port happens to need — a
+    * partial walk here would answer "no invariance risk" for a shape nobody enumerated. */
+  private def mentionsWildcard(t: TypeRepr): Boolean = t match
+    case _: TypeRepr.TypeBounds             => true
+    case TypeRepr.AppliedType(tc, args)     => mentionsWildcard(tc) || args.exists(mentionsWildcard)
+    case TypeRepr.TypeRef(p, _)             => mentionsWildcard(p)
+    case TypeRepr.TermRef(p, _)             => mentionsWildcard(p)
+    case TypeRepr.SuperType(t1, t2)         => mentionsWildcard(t1) || mentionsWildcard(t2)
+    case TypeRepr.AndType(l, r)             => mentionsWildcard(l) || mentionsWildcard(r)
+    case TypeRepr.OrType(l, r)              => mentionsWildcard(l) || mentionsWildcard(r)
+    case TypeRepr.ByNameType(u)             => mentionsWildcard(u)
+    case TypeRepr.Refinement(p, _, i)       => mentionsWildcard(p) || mentionsWildcard(i)
+    case TypeRepr.MethodType(ps, r, _)      => ps.exists((_, p) => mentionsWildcard(p)) || mentionsWildcard(r)
+    case TypeRepr.PolyType(_, r)            => mentionsWildcard(r)
+    case TypeRepr.TypeLambda(_, b)          => mentionsWildcard(b)
+    case TypeRepr.NoPrefix | TypeRepr.NoType | _: TypeRepr.ConstantType | _: TypeRepr.ThisType => false
+
+  /** THREE conditions, and the third is not the same question as the first two — which two ports
+    * had to measure before it could be stated.
+    *
+    * The obvious reading of `Map<Class<? extends N>, H>` is that its key is unnameable one
+    * constructor deeper than the one-level test looked, i.e. that the original predicate was a
+    * partial type walk. **That reading is wrong**, and the corpus says so twice: a wildcard-APPLIED
+    * type is perfectly nameable and inhabited — `Class[? <: N]` and `Item[?]` are both types a call
+    * site can write down — so a walk that fires on "mentions a wildcard" is not answering this
+    * function's question at all. What actually fails at `getAction(Class<?> nodeClass)` is that
+    * scala's `Map[K, V]` is INVARIANT in `K`, so the probe's own `Class[?]` does not conform to the
+    * key's `Class[? <: N]`; java, whose `get` takes `Object`, never asked.
+    *
+    * So the three conditions are:
+    *
+    *   - a BARE capture KEY (`Map<?, V>`) — genuinely unnameable, and what this function was
+    *     originally written for. Unchanged;
+    *   - a BARE capture VALUE (`Map<K, ?>`) — nameable as a key, but `get`'s ascribed `null` default
+    *     ([[dflt]]) cannot be written at a capture. Also unchanged, and the reason the original
+    *     predicate looked at both arguments;
+    *   - a key that merely CONTAINS a wildcard, where the PROBE's rendered type is not the key's.
+    *     Invariance makes those two irreconcilable and java had no such rule. Where they are EQUAL,
+    *     scala unifies and the ordinary rewrite is exactly right.
+    *
+    * The third is an equality, never a conformance oracle (`CLAUDE.md` §4.56): `TypeRepr` equality
+    * is decidable here and a subtype test is not. It over-approximates in one direction only — a
+    * probe at a strict subtype of a wildcard-bearing key takes the helper it did not need — which is
+    * emitted text and never a wrong answer.
+    *
+    * Both looser spellings were MEASURED, on ports that have no such seam at all: deep on the value
+    * as well routed libGDX core's `Map<Application, Array<GLFrameBuffer<?>>>` through the helpers
+    * (6 members, 0 errors), and deep on the key without the equality routed jbump's
+    * `HashMap<Item, Rect>`, whose raw `Item` key renders `Item[?]` and whose probe is an `Item[?]`
+    * that conforms perfectly (9 members, 0 errors). Neither is WRONG and both are the review noise
+    * `CLAUDE.md` §1 refuses — an over-approximation moves no count, so the diff is the only thing
+    * that can ever see it. */
+  private def wildcardMapCall(name: String, recv: Term, key: Term)(using Program): Boolean =
     CollectionsTransform.WildcardMapMembers.contains(name) && wildcardMapSym(name) != SymId.None &&
       (actualOf(recv)._1 match
+        case TypeRepr.AppliedType(_, List(k, v)) =>
+          k.isInstanceOf[TypeRepr.TypeBounds] || v.isInstanceOf[TypeRepr.TypeBounds] ||
+            (mentionsWildcard(k) && key.tpe != k)
         case TypeRepr.AppliedType(_, args) => args.exists(_.isInstanceOf[TypeRepr.TypeBounds])
         case _                             => false)
 

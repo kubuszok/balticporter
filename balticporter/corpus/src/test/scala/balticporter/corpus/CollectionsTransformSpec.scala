@@ -1416,6 +1416,96 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(m, \"k\")")
   }
 
+  test("a wildcard-bearing KEY the probe does not SPELL takes the helpers — invariance, not naming") {
+    // The third condition, and it is not the first two read deeper. `Class<? extends N>` is
+    // perfectly NAMEABLE — a call site can write it — so "the key is a capture" does not explain
+    // this at all. What fails is that scala's `Map[K, V]` is INVARIANT in `K`, so the probe's own
+    // `Class[?]` does not conform to the key's `Class[? <: N]`; java, whose `get` takes `Object`,
+    // never asked. The test is an EQUALITY against the probe's rendered type and never a
+    // conformance oracle (§4.56).
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Deep<N> {
+        |  private final Map<Class<? extends N>, String> handlers = new HashMap<>();
+        |  String at(Class<?> c) { return handlers.get(c); }
+        |  boolean has(Class<?> c) { return handlers.containsKey(c); }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertNotEmits(p, "getOrElse")
+    assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(this.handlers, c)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.mapContainsKey(this.handlers, c)")
+  }
+
+  test("NEGATIVE: …and where the probe SPELLS the key, scala unifies and nothing changes") {
+    // The cell that separates invariance from naming, and the one a "mentions a wildcard" test
+    // loses. A RAW `Item` key renders `Item[?]` and the probe is an `Item[?]` too — the two spell
+    // the same type, scala unifies them, and the ordinary rewrite is exactly right. Measured the
+    // other way on jbump, whose `HashMap<Item, Rect>` is this shape: routing it through the helpers
+    // moved 9 members at 0 errors, which is an over-approximation and not a fix.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Item<T> { }
+        |class Rect { }
+        |@SuppressWarnings("rawtypes")
+        |class Raw {
+        |  private final Map<Item, Rect> rects = new HashMap<>();
+        |  Rect at(Item i) { return rects.get(i); }
+        |  boolean has(Item i) { return rects.containsKey(i); }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertNotEmits(p, "mapGet")
+    assertNotEmits(p, "mapContainsKey")
+    assertEmits(p, "this.rects.contains(i)")
+  }
+
+  test("NEGATIVE: a wildcard deep in the VALUE is not the key's problem — a nameable key stays") {
+    // The two argument positions are two different questions, which `args.exists` did the work of
+    // for as long as the walk stopped at one level. The KEY is the probe's slot, so a wildcard
+    // anywhere inside it makes the key unnameable; the VALUE reaches the rewrite only through
+    // `get`'s ascribed `null` default, and `null.asInstanceOf[Buffer[Box[?]]]` is perfectly good
+    // Scala. Only a BARE wildcard value is unwriteable, which the cell above already covers.
+    //
+    // Read deeply on both, this shape routes six libGDX members through the `Any`-keyed helpers at
+    // 0 errors — nothing WRONG, and a diff saying something moved that did not need to.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Box<T> { }
+        |class DeepValue {
+        |  private final Map<String, List<Box<?>>> m = new HashMap<>();
+        |  List<Box<?>> at(String k) { return m.get(k); }
+        |  boolean has(String k) { return m.containsKey(k); }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertNotEmits(p, "mapGet")
+    assertNotEmits(p, "mapContainsKey")
+    assertEmits(p, "this.m.getOrElse(k, null.asInstanceOf[scala.collection.mutable.Buffer[demo.Box[?]]])")
+    assertEmits(p, "this.m.contains(k)")
+  }
+
+  test("NEGATIVE: a map with no wildcard ANYWHERE keeps scala's own K-keyed members") {
+    // The bound of the rule above: `Class<String>` is a perfectly nameable key, so the ordinary
+    // rewrite is right and routing it through the `Any`-keyed helper would give up scala's own
+    // type checking at every map call in every port for nothing. A nested APPLIED type is not a
+    // nested wildcard, which is the distinction a "does the key type have arguments" test would
+    // lose.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Flat {
+        |  private final Map<Class<String>, String> handlers = new HashMap<>();
+        |  String at(Class<String> c) { return handlers.get(c); }
+        |  boolean has(Class<String> c) { return handlers.containsKey(c); }
+        |}
+        |""".stripMargin, new CollectionsTransform)
+    assertNotEmits(p, "mapGet")
+    assertNotEmits(p, "mapContainsKey")
+    assertEmits(p, "this.handlers.getOrElse(c, null.asInstanceOf[java.lang.String])")
+    assertEmits(p, "this.handlers.contains(c)")
+  }
+
   // ---------------------------------------------------------------------------------------------
   // A PARENT the target cannot BE.
   // ---------------------------------------------------------------------------------------------

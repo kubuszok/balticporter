@@ -148,10 +148,10 @@ sge.jbump.Response	sge.jbump.Response$Result#goalX	val	829206762cc30df8
 sge.jbump.Response	sge.jbump.Response$Result#goalY	val	c0baed8121df15b3
 sge.jbump.Response	sge.jbump.Response$Result#projectedCollisions	val	81668b6114a1d7eb
 sge.jbump.Response	sge.jbump.Response$Result#set(float,float)	def	87bde75fa692e30a
-sge.jbump.World	sge.jbump.World	class	94ccade78ccc3a97
+sge.jbump.World	sge.jbump.World	class	e738414ac8c8411a
 sge.jbump.World	sge.jbump.World#<init>()	ctor	4407a8f4d83d2d13
 sge.jbump.World	sge.jbump.World#<stmt1>	stmt	52a1c0f0b75c69f7
-sge.jbump.World	sge.jbump.World#add(Item<E>,float,float,float,float)	def	fc1c7f4f4e9b445d
+sge.jbump.World	sge.jbump.World#add(Item<E>,float,float,float,float)	def	faa14f2d4234c53c
 sge.jbump.World	sge.jbump.World#addItemToCell(Item<E>,float,float)	def	41dd6993ee70b4c6
 sge.jbump.World	sge.jbump.World#add_c	val	3edce56e3acd1def
 sge.jbump.World	sge.jbump.World#cellMap	val	4cf470293f8b58f2

@@ -912,6 +912,20 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   moved `policy=` read as a raw diff is two sixteen-character digests. A run that published NO map
   while a baseline exists fails it too: `PortMap.discoverIn` then silently hands its dependents the
   COMMITTED map instead.
+- **WIDENING A GUARD IS MEASURED ON THE PORTS IT WAS NOT AIMED AT, because an OVER-APPROXIMATION is
+  invisible to every count.** Narrowing a predicate breaks something and a count says so. Widening
+  one is the opposite shape and has no instrument pointed at it: the extra sites take a translation
+  that is *correct but unnecessary*, so the port still compiles, every check count is flat, every
+  finding is unchanged, and the only trace is `members.tsv` on a port the author was not thinking
+  about. That is the one artifact §5.1 calls the blast radius, and this is the case where reading it
+  on the TARGET port tells you nothing at all — ssg-md's own diff looked reasonable at every step.
+  Measured twice in one wave on one predicate: a map-key test widened to "mentions a wildcard at any
+  depth" moved **6 libGDX members** (a nameable key beside a nameable `null` default) and then **9
+  jbump members** (a raw key the probe spells identically), both at **0 errors and 0 moved counts**,
+  and each collapsed a stated rule into a truer one — the second disproving the diagnosis the first
+  had been fixed under. So a widened guard is not done when the target port improves; it is done
+  when every other port is BYTE-IDENTICAL or the difference is stated. `just measure-all`, and read
+  the member diffs rather than the headline.
 - **Change one thing, then measure.** Two changes measured together cost a full cycle to untangle
   and tell you nothing about either.
 - **A DRY RUN of one phase is not a measurement of the pipeline.** Running a single phase over a

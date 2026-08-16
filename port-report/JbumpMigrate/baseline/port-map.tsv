@@ -173,7 +173,7 @@ member	com.dongbat.jbump.Response$Result#projectedCollisions	sge.jbump.Response$
 member	com.dongbat.jbump.Response$Result#set(float,float)	sge.jbump.Response$Result#set(float,float)	Renamed	-	com/dongbat/jbump/Response.java	32	87bde75fa692e30a	
 member	com.dongbat.jbump.World#<init>()	sge.jbump.World#<init>()	Renamed	-	com/dongbat/jbump/World.java	41	4407a8f4d83d2d13	
 member	com.dongbat.jbump.World#<stmt1>	sge.jbump.World#<stmt1>	Renamed	-	com/dongbat/jbump/World.java	46	52a1c0f0b75c69f7	
-member	com.dongbat.jbump.World#add(Item,float,float,float,float)	sge.jbump.World#add(Item<E>,float,float,float,float)	Renamed	-	com/dongbat/jbump/World.java	324	fc1c7f4f4e9b445d	
+member	com.dongbat.jbump.World#add(Item,float,float,float,float)	sge.jbump.World#add(Item<E>,float,float,float,float)	Renamed	-	com/dongbat/jbump/World.java	324	faa14f2d4234c53c	
 member	com.dongbat.jbump.World#addItemToCell(Item,float,float)	sge.jbump.World#addItemToCell(Item<E>,float,float)	Renamed	-	com/dongbat/jbump/World.java	57	41dd6993ee70b4c6	vis=private
 member	com.dongbat.jbump.World#add_c	sge.jbump.World#add_c	Renamed	-	com/dongbat/jbump/World.java	322	3edce56e3acd1def	vis=private
 member	com.dongbat.jbump.World#cellMap	sge.jbump.World#cellMap	Renamed	-	com/dongbat/jbump/World.java	33	4cf470293f8b58f2	vis=private

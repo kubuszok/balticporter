@@ -6221,7 +6221,7 @@ asserted, plus the two refusals.*
 
 ---
 
-### K24. Java declares `get`, `contains` and `remove` over `Object` ON PURPOSE, and a retyping types them at the element — **ssg-md 106 → 89, `jdk-surface` 27 → 25, every other port's error count flat. CLOSED**
+### K24. Java declares `get`, `contains` and `remove` over `Object` ON PURPOSE, and a retyping types them at the element — **ssg-md 106 → 89 at the PROBE face, then 49 → 47 at a third condition on the RECEIVER face: scala's `Map[K, V]` is INVARIANT in `K` and java's `get(Object)` never asked. CLOSED**
 
 `Map.get(Object)`, `Map.containsKey(Object)`, `Map.remove(Object)`, `Collection.contains(Object)` and
 `Set.remove(Object)` are not erasure accidents: java looks the argument up BY VALUE, so a probe of an
@@ -6274,6 +6274,64 @@ reachable. No site in the corpus reaches one, so the arm is not written and the 
 *Fix kind: (a) — the phase's own guard, widened from a fact about the receiver to a fact about the
 probe. `CollectionsObjectProbeSpec` (three faces, three negatives) and four cells in
 `JavaCollectionsSpec`, including the `checkcast` one that is the whole reason this is a helper.*
+
+**AND THE OTHER FACE — the RECEIVER one this entry left alone — had a THIRD condition nobody had
+separated out: ssg-md 49 → 47** (wave 6). `wildcardMapCall` fired on
+`args.exists(_.isInstanceOf[TypeBounds])`, and `getAction(Class<?> nodeClass)` on a
+`Map<Class<? extends N>, H>` reached the ordinary `getOrElse` rewrite: perfectly good Scala that does
+not type-check at the argument, which is why only scalac ever saw it.
+
+**The obvious diagnosis is wrong, and two ports say so.** It reads as `CLAUDE.md` §4.56's partial
+type walk — *the key is a capture one constructor deeper than the test looked* — and that explanation
+does not survive contact with the corpus, because **a wildcard-APPLIED type is perfectly nameable**.
+`Class[? <: N]` and `Item[?]` are both types a call site can write down; neither is a capture. What
+actually fails is that scala's `Map[K, V]` is **INVARIANT in `K`**, so the probe's own `Class[?]` does
+not conform to the key's `Class[? <: N]`. Java, whose `get` takes `Object`, never asked. So the
+condition is about CONFORMANCE at the probe and not about naming at all, and the three conditions are
+three different facts:
+
+| condition | why the helper |
+|---|---|
+| a BARE capture KEY (`Map<?, V>`) | genuinely unnameable — what this function was written for |
+| a BARE capture VALUE (`Map<K, ?>`) | nameable as a key, but `get`'s ascribed `null` default cannot be written at a capture |
+| a key CONTAINING a wildcard whose probe does not SPELL it | invariance makes the two irreconcilable; where they are EQUAL, scala unifies and the ordinary rewrite is right |
+
+The third is an EQUALITY and never a conformance oracle — `TypeRepr` equality is decidable here and a
+subtype test is not — so it over-approximates in exactly one direction: a probe at a strict subtype
+of a wildcard-bearing key takes a helper it did not need. That is emitted text and never a wrong
+answer, and it is 2 members on the whole corpus.
+
+**What this is NOT**: a widening of the `objectProbe` guard above, which declines at those two sites
+CORRECTLY — it asks whether the ARGUMENT stands at `java.lang.Object`, and the argument here is a
+`Class[?]`. Read as one failure, the repair would have widened the guard that is RIGHT, giving up the
+oracle-free property this entry is built on, and left the real condition unstated.
+
+**BOTH LOOSER SPELLINGS WERE MEASURED, and each on a port with no such seam at all** — which is how
+the third condition got stated rather than guessed:
+
+| spelling | measured |
+|---|---|
+| deep on the KEY **and** the VALUE | libGDX core's `Map<Application, Array<GLFrameBuffer<?>>>` — a nameable key beside a nameable default — **6 members, 0 errors** |
+| deep on the KEY, no equality | jbump's `HashMap<Item, Rect>`, whose raw `Item` key renders `Item[?]` and whose probe is an `Item[?]` that conforms perfectly — **9 members, 0 errors**; and 20 of ssg-md's own 38 |
+
+Neither is WRONG and both are the review noise `CLAUDE.md` §1 refuses. An over-approximation moves no
+count, so the DIFF is the only instrument that can ever see one — which is the whole argument for
+reading `members.tsv` on a port the change was not aimed at.
+
+**Measured, final**: ssg-md 49 → 47, both `AstActionHandler` rows, **18 member digests**; jbump 2
+(the documented subtype over-approximation, 0 errors); every other port 0 errors and 0 member digests
+moved, every check count flat everywhere. The findings movement is **5 rows and every one is a
+printed consult DENOMINATOR that FELL** — the rewrite corroborating itself, since the helper replaces
+a `getOrElse(k, null.asInstanceOf[V])` and `JS-E06`/`JS-G34`'s `rendering Typed` goes 1693 → 1682,
+exactly the eleven ascribed defaults that stopped being minted. Nothing new is interned, so M10's
+diagnostic half is silent here and the whole diff is five rows a human can read — the contrast with
+G26's 276 in the same wave is what makes that entry's point concrete.
+
+*Fix kind: (a) — `CollectionsTransform.wildcardMapCall`'s three conditions, with `mentionsWildcard`
+complete over `TypeRepr` for the third. Four cells in `CollectionsTransformSpec`: the invariance
+positive, a negative where the probe SPELLS a wildcard-bearing key (jbump's shape), a negative on a
+wildcard deep in the VALUE (libGDX's shape), and a negative on `Map<Class<String>, String>`, whose key
+is a nested APPLIED type and no wildcard.*
 
 ---
 
