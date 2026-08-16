@@ -5407,7 +5407,8 @@ object SpoonTir:
                 case Some((et, _, _)) => Tree.Typed(recv, tt(et, t), et, originOf(t))
                 case None             => recv
               Tree.Select(recv2, mid, NoType, o)
-        val app = Tree.Apply(pinTypeArgs(fun, inv, o), args, mid, erasedResult(args, ty(inv)), o)
+        val app = ascribeUnconstrainedResult(inv,
+          Tree.Apply(pinTypeArgs(fun, inv, o), args, mid, erasedResult(args, ty(inv)), o), o)
         erasedRecvResult(inv, erasedRecv, app)
 
       /** The downcast an ERASED RECEIVER's result needs.
@@ -5606,6 +5607,90 @@ object SpoonTir:
               else if !isReceiverOfSelection(inv) then fun
               else Tree.TypeApply(fun, bounds.flatten.map(b => tt(tpe(b), inv)), NoType, o)
         catch { case _: Throwable => fun }
+
+      /** G22's pin at the shape its FOURTH condition declines — an F-BOUND — by ascribing the
+        * RESULT instead of instantiating the ARGUMENT. `ENGINE-LIMITS.md` G8.7.
+        *
+        * {{{
+        * <B extends ISequenceBuilder<B, T>> B getBuilder();   // in IRichSequence<T>
+        * …
+        * getBuilder().append(padding).append(this).toSequence()
+        * }}}
+        *
+        * The two pins answer the same disagreement — scala instantiates an unconstrained variable at
+        * `Nothing` and a selection on `Nothing` is rejected — and they differ in WHAT can be written
+        * down. A type ARGUMENT must satisfy the bound, and no denotable `X` satisfies
+        * `X <: ISequenceBuilder<X, T>`; that is `ENGINE-LIMITS.md` G8's expressiveness limit, priced
+        * four times. An ASCRIPTION does not have to: the argument still infers `Nothing` (legal —
+        * `Nothing` is below every bound), and what the ascription supplies is the TYPE THE SELECTION
+        * READS. `ISequenceBuilder[?, T]` is a perfectly ordinary type to write there, and its
+        * `append` returns the capture, which is itself an `ISequenceBuilder[capture, T]` — so the
+        * whole java chain re-types with nothing filled in.
+        *
+        * So this is NOT a fifth attempt at G8's fill and must not be read as one. It fires exactly
+        * where the fill CANNOT be written, and its conditions are G22's first three unchanged plus
+        * two of its own:
+        *
+        *   - **the RESULT is one of the method's own variables**, which is what makes the ascription
+        *     land on the value the selection is about;
+        *   - **every named variable in the bound is either the METHOD's own (rendered `?`) or one
+        *     THIS scope can write** (`tpNameableHere`). The first is what makes an F-bound
+        *     expressible at all; the second is §4.6 — a bound naming a variable only the callee
+        *     declares has no honest text, and the call keeps its error. */
+      private def ascribeUnconstrainedResult(inv: CtInvocation[?], app: Term, o: Origin): Term =
+        try
+          Option(inv.getExecutable.getExecutableDeclaration).collect { case m: CtMethod[?] => m } match
+            case scala.None => app
+            case Some(m) =>
+              val fs    = m.getFormalCtTypeParameters.asScala.toList
+              val names = fs.map(_.getSimpleName).toSet
+              val resultVar = Option(m.getType).collect {
+                case tp: CtTypeParameterReference if !tp.isInstanceOf[CtWildcardReference] && names(tp.getSimpleName) => tp
+              }
+              val bound = resultVar
+                .flatMap(tp => fs.find(_.getSimpleName == tp.getSimpleName))
+                .flatMap(f => Option(f.getSuperclass))
+                .filter(_.getQualifiedName != "java.lang.Object")
+              // ONLY where the type-argument pin declined, so one seam has one mechanism: a bound
+              // with no named variable in it is G22's and is already answered there.
+              if bound.isEmpty || !bound.exists(mentionsNamedTypeVar) then app
+              else if m.getParameters.asScala.exists(p => mentionsTypeVar(p.getType, names)) then app
+              else if !isReceiverOfSelection(inv) then app
+              else
+                // a variable the DECLARING TYPE owns is resolved through the RECEIVER's own
+                // instantiation, exactly as G12 does at an argument: `IRichSequence<T>`'s `T`, read
+                // from a `this` of type `IRichSequenceBase<T>`, IS this scope's `T` — a different
+                // DECLARATION, so `sameVarInScope` alone answers no and would decline the whole
+                // rule on the shape it exists for.
+                val recvT  = try Option(inv.getTarget).map(castType).orNull catch { case _: Throwable => null }
+                val ownerQ = Option(m.getDeclaringType).map(_.getQualifiedName)
+                val viaRecv: String => Option[CtTypeReference[?]] = n =>
+                  ownerQ.flatMap(q => if recvT == null then scala.None else actualFor(recvT, q, n, 8))
+                wildcardOwnVars(bound.get, names, viaRecv) match
+                  case Some(t)    => Tree.Typed(app, tt(t, inv), t, o)
+                  case scala.None => app
+        catch { case _: Throwable => app }
+
+      /** the bound, with the METHOD's own variables rendered `?` and every other one required to be
+        * writable here. `None` where one is not — see [[ascribeUnconstrainedResult]].
+        *
+        * The WILDCARD arm comes first for G22's own reason: Spoon's `CtWildcardReference` EXTENDS
+        * `CtTypeParameterReference`, so a variable arm above it claims every `?`. */
+      private def wildcardOwnVars(r: CtTypeReference[?], own: Set[String],
+                                  viaRecv: String => Option[CtTypeReference[?]]): Option[TypeRepr] = r match
+        case null                   => scala.None
+        case w: CtWildcardReference => Some(tpe(w))
+        case tp: CtTypeParameterReference =>
+          if own(tp.getSimpleName) then Some(TypeBounds(NoType, NoType))
+          else if tpNameableHere(tp) then Some(tpe(tp))
+          else viaRecv(tp.getSimpleName).filter(tpNameableHere).map(tpe)
+        case other =>
+          val args = try other.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
+          if args.isEmpty then Some(tpe(other))
+          else
+            val mapped = args.map(a => wildcardOwnVars(a, own, viaRecv))
+            if mapped.exists(_.isEmpty) then scala.None
+            else Some(AppliedType(TypeRef(NoPrefix, typeSym(other)), mapped.flatten))
 
       /** does this type mention a NAMED type variable — one an F-bound or an enclosing class
         * declares — as opposed to a WILDCARD, which is writable anywhere?

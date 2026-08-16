@@ -328,7 +328,56 @@ This is an expressiveness limit, not a missing case. The honest output is "this 
 Scala image, here is what a hand-porter would write" — the strongest existing candidate for
 `DESIGN.md` §6's marker rather than another gate.
 
-*Fix kind: (a), and the (a) is "report it as unportable", not "translate it".*
+*Fix kind: (a), and the (a) is "report it as unportable", not "translate it" — for the FILL. See
+G8.7 for the position where the fill is not what the port needed.*
+
+**AND THE READING POSITION DOES NOT NEED A FILL, which is what six of ssg-md's errors turned out to
+be.** Everything above is about instantiating a formal, and every attempt failed for one reason: a
+type ARGUMENT has to satisfy the bound, and no denotable `X` satisfies `X <: ISequenceBuilder<X, T>`.
+The six ssg-md sites were not asking for that. They were asking to SELECT a member on the result, and
+scala's complaint is `Found: Nothing / Required: ?{ append: ? }` — the argument may stay `Nothing`
+(it is below every bound); what has no text is the type the SELECTION reads. See G8.7, which supplies
+exactly that and satisfies nothing: **ssg-md 26 → 20**.
+
+### G8.7 An unconstrained F-BOUNDED result is ASCRIBED, never instantiated — G22's pin at the shape its fourth condition declines. **ssg-md 26 → 20. CLOSED**
+
+G22 pins an unconstrained method type variable by writing java's answer as an explicit TYPE
+ARGUMENT, and declines on its fourth condition where the bound mentions a NAMED variable — an
+F-bound, or the enclosing class's parameter. That decline was read as G8's expressiveness limit, and
+it is not the same statement: G8 is about a FILL, and a fill is not what a selection needs.
+
+```java
+<B extends ISequenceBuilder<B, T>> B getBuilder();     // in IRichSequence<T>
+…
+getBuilder().append(padding).append(this).toSequence()
+```
+
+| | must satisfy the bound? | writable here? |
+|---|---|---|
+| a type ARGUMENT (`getBuilder[X]()`) | YES — `X <: ISequenceBuilder[X, T]` | no denotable `X`; four attempts priced (G8) |
+| an ASCRIPTION (`getBuilder().asInstanceOf[ISequenceBuilder[?, T]]`) | NO — the argument still infers `Nothing`, legally | **yes**, and `append` then returns the capture, which is itself an `ISequenceBuilder[capture, T]`, so the whole java chain re-types with nothing filled in |
+
+**Five conditions — G22's first three unchanged, plus two of its own:**
+
+- **the RESULT is one of the method's own variables**, which is what makes the ascription land on
+  the value the selection is about;
+- **every named variable in the bound has honest text here.** The METHOD's own become `?` — that is
+  what makes an F-bound expressible at all. One the DECLARING TYPE owns is resolved through the
+  RECEIVER's instantiation, which is G12's rule read at a bound: `IRichSequence<T>`'s `T`, seen from
+  a `this` of type `IRichSequenceBase<U>`, is `U` exactly — and *is this literally the variable in
+  scope?* answers NO there (two declarations), which would decline the rule on the shape it exists
+  for. Anything else — a RAW receiver above all — declines, and the call keeps its error rather than
+  gaining a type this scope cannot write (§4.6);
+- **and it fires only where the ARGUMENT pin did not**, so one seam keeps one mechanism: a bound
+  with no named variable in it is G22's and is already answered there.
+
+**Measured**: ssg-md **26 → 20**, six sites in one file, every check count flat, 7 member digests —
+the six methods and the file. Every other port byte-identical.
+
+*Fix kind: (a) engine. CLOSED — `SpoonTir.ascribeUnconstrainedResult` + `wildcardOwnVars`, reusing
+`actualFor` (the hierarchy-composing substitution G8.5 built). `UnconstrainedResultPinSpec` — two
+positives and four negatives, of which "a bound with no named variable stays G22's" is the one that
+keeps the two pins apart.*
 
 ### G8.5 A `null` takes its type FROM THE SLOT, and two slots have no formal to read — **ssg-md 28 → 26. CLOSED**
 

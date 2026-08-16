@@ -7294,7 +7294,7 @@ ssg.md.util.sequence.IRichSequence	ssg.md.util.sequence.IRichSequence#trimmedSta
 ssg.md.util.sequence.IRichSequence	ssg.md.util.sequence.IRichSequence#trimmedStart(CharPredicate)	def	9ac33f755b02aa89
 ssg.md.util.sequence.IRichSequence	ssg.md.util.sequence.IRichSequence#trimmedStart(int)	def	cd46b4efcafe4725
 ssg.md.util.sequence.IRichSequence	ssg.md.util.sequence.IRichSequence#trimmedStart(int,CharPredicate)	def	ffab818614a5ad3c
-ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase	class	b276fb33f5721d60
+ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase	class	502cc5210bd4a505
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#<stmt1>	stmt	efd5a8335d12d832
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#append(Array<CharSequence>)	def	ba89c1033f431453
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#append(JavaIterable<?>)	def	41bc8b7e26416404
@@ -7376,7 +7376,7 @@ ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#co
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#countTrailingWhitespace()	def	aa8c93c0d328846d
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#countTrailingWhitespace(int)	def	fe8309e82ae1602d
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#countTrailingWhitespace(int,int)	def	fbff0f8c49ac4f3b
-ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#delete(int,int)	def	972d7c90404b4ce8
+ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#delete(int,int)	def	76065d63af716e79
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#endCharAt(int)	def	7dd32b12ddbe5839
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#endOfDelimitedBy(CharSequence,int)	def	9bbe4e2754a666af
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#endOfDelimitedByAny(CharPredicate,int)	def	e01843b7166e5ad5
@@ -7426,7 +7426,7 @@ ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#in
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#indexOfNot(char)	def	fcbdd6184907b524
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#indexOfNot(char,int)	def	f2671ed536f23d32
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#indexOfNot(char,int,int)	def	146c7826b8b846c1
-ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#insert(int,CharSequence)	def	81855add8d96bc79
+ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#insert(int,CharSequence)	def	39933a499366e68e
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#isBlank()	def	6b89df6270b17f43
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#isCharAt(int,CharPredicate)	def	af97b2554277a366
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#isEmpty()	def	f2c5a0cc8e6af2d4
@@ -7513,15 +7513,15 @@ ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#nu
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#nullIfStartsWith(boolean,Array<CharSequence>)	def	83b6f4ce3c2484f8
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#nullIfStartsWithIgnoreCase(Array<CharSequence>)	def	8e438d941345ee2c
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#padEnd(int)	def	b5cc4ee3b5f98b98
-ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#padEnd(int,char)	def	4403f2c16462e6ea
+ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#padEnd(int,char)	def	c213ac4920e5dd68
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#padStart(int)	def	a486c37c26bc70a0
-ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#padStart(int,char)	def	2f3d5648de96ebe2
+ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#padStart(int,char)	def	3a481a7430559c43
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#padding(int)	def	458e55f33073b559
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#padding(int,char)	def	31387db352215c8a
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#prefixOnceWith(CharSequence)	def	c8ce2fb51a301129
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#prefixOnceWithEOL()	def	4569af36a89bff3f
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#prefixOnceWithSpace()	def	f6bd77931ded4cfd
-ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#prefixWith(CharSequence)	def	370e95c5eb25a0bc
+ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#prefixWith(CharSequence)	def	d57985953a4f06d7
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#prefixWithEOL()	def	8205ea4634f6dbae
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#prefixWithSpace()	def	826d41ec337751c5
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#prefixWithSpaces(int)	def	90d44ebef7f65ef3
@@ -7581,7 +7581,7 @@ ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#su
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#suffixOnceWith(CharSequence)	def	b2501bcd241161e7
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#suffixOnceWithEOL()	def	db1196cc338b22f7
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#suffixOnceWithSpace()	def	edfb87aedfc764d5
-ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#suffixWith(CharSequence)	def	b28b4844c886d95b
+ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#suffixWith(CharSequence)	def	f5dfb0046971d271
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#suffixWithEOL()	def	db0a13a6e19bd19d
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#suffixWithSpace()	def	15e8bd5c50f4fc5d
 ssg.md.util.sequence.IRichSequenceBase	ssg.md.util.sequence.IRichSequenceBase#suffixWithSpaces(int)	def	c5fbc3a14fad54a4
