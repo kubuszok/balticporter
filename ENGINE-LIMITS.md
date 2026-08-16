@@ -6795,6 +6795,58 @@ to clash with" and "a KEY TYPE that IS `Object`" are the two the wrong versions 
 
 ---
 
+### K28. A MINTED PARENT's members are a REFCHECKS question, and it has FIVE verdicts — **priced on the emitted shape at scalac 3.8.4: NINE errors per concrete class, SEVEN classes on ssg-md. DESIGNED, not built; two predictions in `PROGRESS.md` were WRONG and are corrected here**
+
+K27 is what a minted parent costs at a CALL. This is what it costs at the CLASS, and none of it is
+reachable while a typer error stands: `RefChecks` does not run before the port is at 0 (`CLAUDE.md`
+§3), so every one of these is unmeasured today and the count will RISE at the first zero. That rise
+is the gate beginning to tell the truth, and this entry exists so it is EXPECTED rather than
+discovered — with the numbers taken from scalac rather than by eye, because reading them by eye is
+exactly what produced the two wrong predictions below.
+
+**The probe is the emitted shape, reduced.** `class OrderedMap[K, V] extends
+scala.collection.mutable.Map[K, V]` with the members a java `implements java.util.Map` obliges the
+class to declare, put through `scala-cli compile --scala 3.8.4`. **Nine errors, in FIVE distinct
+verdicts** — and the verdict is a fact about a (java member, scala target) PAIR rather than about
+either alone, which is what makes it a table and not a rule:
+
+| verdict | which members | the answer |
+|---|---|---|
+| **compiles** | `size()`, `isEmpty()`, `clear()`, `keySet()`, `values()`, `contains(K)`, `equals`, `hashCode` — on a `Map` | nothing. Java's `()` arity DOES override scala's parameterless member here, and a covariant result is accepted |
+| **E037 `overrides nothing`** | `containsKey`, `containsValue`, `putAll`, `entrySet`, `forEach` | STRIP the `override`. Measured: the same class with those five un-`override`d compiles with no error at all |
+| **E038 `different signature`** | `get(Object): V`, `remove(Object): V` — scala declares the NAME at different PARAMETERS | STRIP the `override`. The pair becomes an OVERLOAD SET, which is exactly what K27's pin is written for. Measured clean |
+| **E164 `has incompatible type`** | `put(K, V): V` against `Option[V]`; `iterator(): java.util.Iterator` against `=> scala.Iterator` | the only arm needing a real translation: same parameters, different RESULT, so neither adding nor stripping `override` helps. Scala's must win — which is what the phase ALREADY does at every CALLER (`map.put(k, v).getOrElse(null)`), so the two halves agree by construction |
+| **E164 `cannot override final`** | `size()` on a **`Buffer`** — the same member that compiles on a `Map`, because `SeqOps.size` is FINAL | RENAME the java member (§4.55's machinery) or do not mint that parent. Nothing the class can write compiles |
+| **`needs to be abstract`** | `get(key: K): Option[V]`, `addOne`, `subtractOne` — scala's abstract members with no java counterpart | SYNTHESISE, delegating to the java member that IS the counterpart |
+
+**Two predictions `PROGRESS.md` §10.6.3 carried are WRONG, and both were made by eye.** It said
+`NodeRepository`'s `override def keySet(): mutable.Set[String]` fails "against scala's PARAMETERLESS
+`keySet` (§4.5's family)" — it compiles, and so does every other `()`-arity member on a `Map`. And it
+read the third shape's `override def remove(o: Object): V` as needing the member bridge — it needs
+one word removed. What is genuinely open is smaller and sharper than the wall the census described:
+the two E164 rows and the three synthesised members.
+
+**The population is SEVEN classes on ssg-md**, read off the emitted text rather than guessed:
+`OrderedMap`, `OrderedMultiMap`, `ItemFactoryMap`, `NodeRepository` and `IndexedItemSetMap` (Map),
+`OrderedSet` (Set), `TrackedOffsetList` (Buffer). Two of those are already `abstract`/a `trait`, so
+the abstract-member verdict does not fire for them and only the `override` ones do. At nine per
+concrete class the collection wall alone is **30–50 errors**, and it is not the whole rise — every
+missing `override` and every variance violation in 468 emitted files is unmeasured beside it.
+
+**Why it is DESIGNED and not built.** Four of the six verdicts are decidable from the phase's own
+re-parenting record plus a table of the target trait's members, and building them now would produce
+a mechanism whose only evidence is this probe: no port can run `RefChecks`, so `just measure-all`
+would read every count flat and every member digest moved, with nothing able to say whether the
+answer was right. The honest order is the port's own — reach 0 typer errors, take the census of the
+rise as its own commit, then build against a number. What this entry buys is that the census will
+already know which of five things each row is.
+
+*Fix kind: (a) throughout — every one of these is an obligation the ENGINE'S OWN translation created
+(`CLAUDE.md` §1), and no manifest key can discharge it. The `SurfacePolicy` question does not arise:
+a member plan derived from a table the engine holds is the same on every port that mints the parent.*
+
+---
+
 ## 6. Porting a test suite
 
 ### X1. Converting JUnit to MUnit is a STRUCTURAL transform, not an annotation rename

@@ -2977,23 +2977,33 @@ Two things this table is deliberately NOT:
   OPERANDS alone was built, measured at 2 rows of which 1 was false, and removed — K26 carries the
   number and the repair (mint the helpers with their signatures).
 
-**And the port has not yet met `RefChecks`** (§3): 38 typer errors means it has never run, so every
+**And the port has not yet met `RefChecks`** (§3): 35 typer errors means it has never run, so every
 missing `override`, unimplemented member and variance violation in 468 emitted files is unmeasured
-and the count will RISE at the first zero. THREE shapes are already known and are named here so the
-rise is expected rather than discovered. Two are visible by eye in the emitted output —
-`NodeRepository extends scala.collection.mutable.Map` emits `override def keySet():
-mutable.Set[String]` against scala's PARAMETERLESS `keySet` (§4.5's family), and the same class
-overrides `entrySet()`, which scala's `Map` does not declare at all.
+and the count will RISE at the first zero. Wave 10 put the whole emitted shape through
+`scala-cli compile --scala 3.8.4` rather than reading it by eye, and the wall is now PRICED and its
+verdicts enumerated — `ENGINE-LIMITS.md` K28. **Nine errors per concrete class, in five distinct
+verdicts, over SEVEN classes** (`OrderedMap`, `OrderedMultiMap`, `ItemFactoryMap`, `NodeRepository`,
+`IndexedItemSetMap`, `OrderedSet`, `TrackedOffsetList` — read off the emitted text, not guessed), so
+the collection wall alone is 30–50 errors and is not the whole rise.
 
-The third was MEASURED at wave 9, on a standalone scalac probe of the exact emitted shape rather than
-by eye, and it is the same §4.5 seam K27 answers at the CALL: `class OrderedMap[K, V] extends
-scala.collection.mutable.Map[K, V]` emits `override def remove(o: java.lang.Object): V`, and once no
-typer error stands in front of `RefChecks` that is `E038 method remove has a different signature than
-the overridden declaration`. It also gives the wall its shape — a class re-parented onto a scala
-collection trait must IMPLEMENT that trait's abstract members (`get(K): Option[V]`, `iterator`,
-`addOne`, `subtractOne`), and none of the library's own collections does. That is what §4.5's *a
-parent adds MEMBERS* costs on the emission side, and it is the reason the first zero on this port is
-a milestone and not an ending.
+**Two of the three shapes this section used to name were WRONG, and both were read by eye**, which is
+the caution worth keeping more than the numbers. `NodeRepository`'s `override def keySet():
+mutable.Set[String]` was called a §4.5 failure against scala's PARAMETERLESS `keySet` — it COMPILES,
+and so does every other `()`-arity member on a `Map` (`size()`, `isEmpty()`, `clear()`, `values()`).
+And `OrderedMap`'s `override def remove(o: java.lang.Object): V`, measured at wave 9 as a real `E038`,
+needs one WORD removed rather than a member bridge: stripped of `override` it is an overload beside
+scala's `remove(K): Option[V]`, which is exactly the pair K27's pin is written for. The same is true
+of `entrySet`, `containsKey`, `containsValue`, `putAll` and `forEach` — five `E037 overrides nothing`
+rows that a stripped modifier closes, measured.
+
+What is genuinely open is smaller and sharper than the wall this section described: **two `E164
+has incompatible type` rows** (`put(K,V): V` against `Option[V]`, and `iterator(): java.util.Iterator`
+against scala's parameterless `Iterator` — same parameters, different RESULT, so no modifier helps),
+**one `E164 cannot override final`** (`size()` on a `Buffer`, where `SeqOps.size` is final — the SAME
+member that compiles on a `Map`, which is why the answer has to be a table and not a rule), and
+**three abstract members to synthesise** (`get(K): Option[V]`, `addOne`, `subtractOne`). That is what
+§4.5's *a parent adds MEMBERS* costs on the emission side, and it is the reason the first zero on this
+port is a milestone and not an ending.
 
 ### 10.6.4 What the first run already taught, at 0 cost
 
