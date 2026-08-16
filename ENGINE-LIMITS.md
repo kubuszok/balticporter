@@ -330,6 +330,55 @@ Scala image, here is what a hand-porter would write" — the strongest existing 
 
 *Fix kind: (a), and the (a) is "report it as unportable", not "translate it".*
 
+### G8.5 A `null` takes its type FROM THE SLOT, and two slots have no formal to read — **ssg-md 28 → 26. CLOSED**
+
+G12's third source closed the `null`-at-a-type-parameter family *where an argument list exists*: the
+cast is driven by `declFormals(i)`, so every `m(null)` at a variable-typed slot is answered. JLS 5.2
+gives java's `null` the type of whatever slot it is written at, and TWO of those slots are not
+argument positions at all:
+
+| slot | what java says | what the port emitted |
+|---|---|---|
+| an EXPRESSION-bodied lambda — `options -> null` at `DataValueFactory<T>` | JLS 15.27.3: the body's type is the SAM's RESULT | `(o: DataHolder) => null`, `Found: Null / Required: T` |
+| an INLINED `this(null)` — the constructor funnel's own substitution | the parameter's declaration is where the type lives | `null.getAll()`, `Found: Null`, on a class whose java read `other.getAll()` |
+
+The second is the sharper one and it is the funnel's own doing: `CtorFunnel` substitutes the
+argument term at each of the parameter's uses, which is exact for a value whose type is a fact about
+the value — and scala's `null` is a value of `Null`, which has **no members**. `DataSet()` promoted
+over `DataSet(DataHolder other)` therefore emitted a RECEIVER of type `Null`, in a branch java never
+took, which scalac type-checks all the same.
+
+**Three things that decide the fix rather than decorate it:**
+
+- **the ascription is ALWAYS, at an inlined `null`, and NARROW at a lambda body.** Which use of an
+  inlined parameter would fail is a whole-body question (a selection, a variable slot, an overload)
+  and answering it partially is §4.6's fabricated fact in the direction that compiles. At a lambda
+  body there is one use and the condition is exactly scala's: `Null` conforms to every reference
+  type and to no ABSTRACT one, so `x -> null` at a `Function<A, String>` takes nothing. An
+  over-approximation there would be text on every such lambda in a corpus, which is the one shape no
+  count can see (`CLAUDE.md` §5);
+- **the variable is resolved from the TARGET's own instantiation, composed along the hierarchy.**
+  `Maker<V> extends Fn<String, V>` with the SAM at `Fn.apply(): R` needs `R := V := T`, one edge at
+  a time. Spoon's `TypeAdaptor` is what this replaces, measurably: under `noClasspath` it handed
+  back the interface's own variable un-adapted for BOTH a direct target and an inherited SAM;
+- **and `samAbstracts` was counting a RE-DECLARATION twice**, which is why the real site declined
+  while every fixture passed. JLS 9.8 counts abstract methods *modulo override-equivalence*, and
+  `interface F<T> extends Function<Holder, T> { @Override T apply(Holder h); }` is the ordinary way
+  an interface documents what it inherits. Those are ONE method to java and two to `getSignature`,
+  because the inherited one's erased parameter is the supertype's variable (`apply(T)`) and the
+  declared one's is the argument (`apply(Holder)`) — the shape a JVM BRIDGE exists for. Read as two,
+  a functional interface java accepts a lambda for answers *not a SAM* to every question the
+  frontend asks. The collapse is structural and conservative (same name, same arity, one declarer a
+  STRICT supertype of the other), so two abstract members from UNRELATED supertypes stay two.
+
+**Measured**: ssg-md **28 → 26**, every check count flat, 16 member digests over four declarations —
+each one holding an inlined `this(null)` or a `null` lambda body — and four `catalog(consulted)`
+totals moving inside their own text, being the extra `Tree.Typed` nodes.
+
+*Fix kind: (a) engine. CLOSED — `SpoonTir.nullToSamResult` + `actualFor` + `typeArgSubst` (one
+derivation, shared with `receiverTypeArgs`), `SpoonTir.samAbstracts`'s `redeclares` collapse, and
+`CtorFunnel.nullAtFormal`. `NullAtTypeParamSpec` grows eight cases, five of them negatives.*
+
 ### G9. Scala CHECKS an F-bound where javac does not
 
 `erasureOfFormal` erasing an F-bounded variable to `Object` is what javac does — and it produced 43

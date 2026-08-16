@@ -1062,11 +1062,27 @@ object SpoonTir:
         case Some(_)          => Sam.Answer.No("the target is a CLASS, not an interface")
 
     /** JLS 9.8's COUNT, as a list — the one place the rule is spelled, so [[samAnswerOf]] and
-      * [[samResultTpt]] cannot disagree about which method a functional interface has. */
+      * [[samResultTpt]] cannot disagree about which method a functional interface has.
+      *
+      * '''Counted MODULO OVERRIDING, which the signature key alone does not do.''' JLS 9.8 counts
+      * abstract methods *whose signatures are not override-equivalent*, and a re-declaration is the
+      * ordinary way an interface documents the one it inherits:
+      * `interface F<T> extends Function<Holder, T> { @Override T apply(Holder h); }`. Those two are
+      * ONE method to java, and two to `getSignature`, because the inherited one's erased parameter
+      * is the supertype's variable (`apply(T)`) and the declared one's is the argument
+      * (`apply(Holder)`) — the shape a JVM BRIDGE exists for. Read as two, a functional interface
+      * that java accepts a lambda for answers *not a SAM* to every question this frontend asks
+      * about it.
+      *
+      * The collapse is deliberately structural and conservative: same simple name, same arity, and
+      * the one being dropped is declared by a STRICT SUPERTYPE of the other's declarer. Two
+      * abstract members inherited from UNRELATED supertypes stay two — java would call them
+      * override-equivalent and this does not, which keeps the pre-existing answer for a shape no
+      * corpus library has and which errs toward *not a SAM*. */
     private def samAbstracts(r: CtTypeReference[?]): List[CtMethod[?]] =
       typeDeclarationOf(r) match
         case Some(d: CtInterface[?]) =>
-          d.getAllMethods.asScala.toList.filter { m =>
+          val all = d.getAllMethods.asScala.toList.filter { m =>
             m.hasModifier(ModifierKind.ABSTRACT) &&
               !m.hasModifier(ModifierKind.STATIC) &&
               // a `default` method is not abstract, so the modifier test above already declines it;
@@ -1075,7 +1091,18 @@ object SpoonTir:
               !m.isDefaultMethod &&
               !SpoonTir.ObjectPublicSignatures.contains(m.getSignature)
           }.map(m => m.getSignature -> m).toMap.values.toList
+          all.filterNot(m => all.exists(o => (o ne m) && redeclares(o, m)))
         case _ => Nil
+
+    /** does `sub` RE-DECLARE `sup` — the same member seen twice, once at each declarer? */
+    private def redeclares(sub: CtMethod[?], sup: CtMethod[?]): Boolean =
+      sub.getSimpleName == sup.getSimpleName &&
+        sub.getParameters.size == sup.getParameters.size &&
+        (for
+          a <- Option(sub.getDeclaringType).map(_.getReference)
+          b <- Option(sup.getDeclaringType).map(_.getReference)
+          if a.getQualifiedName != b.getQualifiedName
+        yield a.isSubtypeOf(b)).getOrElse(false)
 
     /** THE SAM METHOD'S RESULT TYPE, for a lambda the SOURCE wrote — the second supplier of
       * [[Tree.Lambda.resultTpt]] and the one `ENGINE-LIMITS.md` I9 left open.
@@ -3843,12 +3870,25 @@ object SpoonTir:
           case null => null
           case _: CtSuperAccess[?] | _: CtTypeAccess[?] => null
           case t    => castType(t)
+        typeArgSubst(rt)
+
+      /** what a REFERENCE's instantiation says the DECLARING type's formals are — `Bag<V>` says
+        * `E := V` for `class Bag<E>`, by position and by the declaration's own names.
+        *
+        * One derivation, read by [[receiverTypeArgs]] (a call's receiver) and by
+        * [[nullToSamResult]] (a lambda's target). Both ask the same question of a reference and
+        * both need the same two guards: a WILDCARD actual is a capture with no name, and an actual
+        * only the callee can write is §4.6's fabricated fact. Spoon's own `TypeAdaptor` answers
+        * this for a receiver and measurably does NOT for a lambda target — it handed back the
+        * interface's own `V` for a `Factory<T>` target — so the substitution is derived here rather
+        * than asked of it. */
+      private def typeArgSubst(rt: CtTypeReference[?]): Map[String, CtTypeReference[?]] =
         if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
            rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then Map.empty
         else
           val formals = try Option(rt.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
                         catch { case _: Throwable => Nil }
-          val actuals = rt.getActualTypeArguments.asScala.toList
+          val actuals = try rt.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
           if formals.nonEmpty && actuals.sizeIs == formals.size &&
              actuals.forall(a => !a.isInstanceOf[CtWildcardReference] && tpNameableHere(a))
           then formals.map(_.getSimpleName).zip(actuals).toMap
@@ -4741,7 +4781,7 @@ object SpoonTir:
           Tree.ValDef(defineLocal(p, pt), tt(pt, p), None, originOf(p))
         }
         val body =
-          if l.getExpression != null then expr(l.getExpression)
+          if l.getExpression != null then nullToSamResult(l, expr(l.getExpression))
           else if l.getBody != null then blockTerm(l.getBody)
           else unsupported(l, "lambda without body")
         // …and the SAM METHOD's result type where the class file states one (`ENGINE-LIMITS.md` I9).
@@ -4749,6 +4789,78 @@ object SpoonTir:
         // `return`-leaves-the-LAMBDA, and what it leaves instead is not a compile error but a scala
         // NON-LOCAL RETURN from the enclosing method — valid, green, and something else (M6).
         Tree.Lambda(pvs, body, ty(l), originOf(l), resultTpt = samResultTpt(l))
+
+      /** [[nullToTypeParam]]'s rule at the ONE expression position that has no formal to read.
+        *
+        * Every other `null` this frontend ascribes sits in an argument list, so the cast is driven
+        * by `declFormals(i)`. An EXPRESSION-bodied lambda has no such slot: java takes the body's
+        * type from the SAM's RESULT (JLS 15.27.3), and where that result is the target's type
+        * variable the emitted `(o: DataHolder) => null` is `Found: Null / Required: T`. `Null`
+        * conforms to every reference type and to no ABSTRACT one, which is why this fires for a
+        * variable and for nothing else — `x -> null` at a `Function<A, String>` needs no cast and
+        * must not get one.
+        *
+        * The variable is resolved through the TARGET's own instantiation ([[typeArgSubst]]), which
+        * is G12's rule at a lambda: `Factory<V>.make(): V` at a `Factory<T>` target says `V := T`
+        * exactly, keyed on the DECLARING interface's formals rather than on a name. Where the
+        * target says nothing — a raw target, an unreadable declaration, a wildcard actual — the
+        * body keeps its bare `null` and its error, because a guessed `T` is §4.6's fabricated
+        * fact.
+        *
+        * And the ACTUAL has to be abstract too, which is where this is narrower than the argument
+        * arm rather than a copy of it. `Null` conforms to every reference type, so `Factory<String>`
+        * needs nothing and a cast there would be text on every `x -> null` in a corpus for a
+        * failure that cannot happen — an over-approximation being the one shape no count can see
+        * (§5). The condition is exactly scala's: an ABSTRACT type is what `Null` does not
+        * conform to. */
+      private def nullToSamResult(l: CtLambda[?], t: Term): Term =
+        val isNull = l.getExpression match { case lit: CtLiteral[?] => lit.getValue == null; case _ => false }
+        if !isNull then t
+        else samAbstracts(l.getType) match
+          case one :: Nil =>
+            (Option(one.getType), Option(one.getDeclaringType).map(_.getQualifiedName)) match
+              case (Some(tp: CtTypeParameterReference), Some(owner)) =>
+                actualFor(l.getType, owner, tp.getSimpleName, 8) match
+                  case Some(tv: CtTypeParameterReference) if tpNameableHere(tv) =>
+                    Tree.Typed(t, tt(tpe(tv), l), tpe(tv), originOf(l))
+                  case _ => t
+              case _ => t
+          case _ => t
+
+      /** What does reference `at` say the variable `tv`, DECLARED BY `owner`, is?
+        *
+        * `Maker<T> extends Fn<String, V>` and the SAM is `Fn.apply(): R`, so the answer to *what is
+        * `R` here* is composed one edge at a time: `Maker`'s `V := T` from the reference, then
+        * `Fn`'s `R := V` from the `extends` clause, read through the first map. Spoon's own
+        * `TypeAdaptor` is what this replaces, measurably: under `noClasspath` it handed back the
+        * interface's own variable un-adapted for BOTH a direct target and an inherited SAM.
+        *
+        * Fuel-bounded like every other hierarchy walk in this frontend, and it answers `None`
+        * wherever a declaration cannot be read — a raw supertype, an arity mismatch, an absent
+        * class file. The caller's fallback is the bare `null` and its compile error, which is the
+        * honest residue (§4.6). */
+      private def actualFor(at: CtTypeReference[?], owner: String, tv: String,
+                            fuel: Int): Option[CtTypeReference[?]] =
+        def walk(here: CtTypeReference[?], subst: Map[String, CtTypeReference[?]], f: Int): Option[CtTypeReference[?]] =
+          if f <= 0 || here == null then scala.None
+          else if here.getQualifiedName == owner then subst.get(tv)
+          else
+            val decl = try Option(here.getTypeDeclaration) catch { case _: Throwable => scala.None }
+            val supers = decl.toList.flatMap { d =>
+              (try d.getSuperInterfaces.asScala.toList catch { case _: Throwable => Nil }) ++
+                (try Option(d.getSuperclass).toList catch { case _: Throwable => Nil })
+            }
+            supers.iterator.map { s =>
+              // `s`'s actuals are written in `here`'s scope, so they are read THROUGH `subst`
+              // before they become `s`'s own frame.
+              val formals = try Option(s.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList.map(_.getSimpleName)).getOrElse(Nil)
+                            catch { case _: Throwable => Nil }
+              val actuals = (try s.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil })
+                .map { case tp: CtTypeParameterReference => subst.getOrElse(tp.getSimpleName, tp); case o => o }
+              val frame = if formals.sizeIs == actuals.size then formals.zip(actuals).toMap else Map.empty
+              walk(s, frame, f - 1)
+            }.collectFirst { case Some(r) => r }
+        walk(at, typeArgSubst(at), fuel)
 
       private def methodRef(mr: CtExecutableReferenceExpression[?, ?])(using Obligations): Term =
         val mid = methodSym(mr.getExecutable)

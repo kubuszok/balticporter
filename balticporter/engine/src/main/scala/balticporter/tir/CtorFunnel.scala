@@ -1115,6 +1115,42 @@ object CtorFunnel:
           override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, m)
         stats.map(StandardTraversal.mapStat(ph, _))
 
+    /** An inlined `null` ARGUMENT keeps the FORMAL's type; every other argument carries its own.
+      *
+      * `substituted` puts the argument term at each of the parameter's uses, which is exact for a
+      * value whose type is a fact about the value. Java's `null` is not one: JLS 4.1 gives it the
+      * NULL TYPE and 5.2 assigns it the type of the slot it is written at, so the parameter's
+      * declaration is where `this(null)`'s type lives — and scala's `null` is a value of `Null`,
+      * which has no members. Inlined bare, `DataSet() { this(null); }` promoted over
+      * `DataSet(DataHolder other) { … other.getAll() … }` emits `null.getAll()`: `Found: Null`, in a
+      * branch java never took, which scalac type-checks all the same.
+      *
+      * Always, rather than only where a use would fail — which use fails is a whole-body question
+      * (a selection, a type-variable slot, an overload), and answering it partially is §4.6's
+      * fabricated fact in the direction that compiles. What IS narrowed is the one place the
+      * ascription could name something this scope cannot write: a type mentioning a variable the
+      * CONSTRUCTOR declares (java permits `<T> C(T x)`) is left alone, because the promoted body
+      * lands in the class body where the constructor's own frame is gone. */
+    private def nullAtFormal(ctor: SymId, p: Tree.ValDef, a: Term): Term = a match
+      case lit @ Tree.Literal(Constant.NullC, _, o) if p.tpt.tpe != TypeRepr.NoType && !ctorScoped(ctor, p.tpt.tpe) =>
+        Tree.Typed(lit, p.tpt, p.tpt.tpe, o)
+      case _ => a
+
+    /** does this type mention a symbol the CONSTRUCTOR owns — its own `<T>`? Walked with
+      * `StandardTraversal.mapType`, so it is total over `TypeRepr` by construction (§3). */
+    private def ctorScoped(ctor: SymId, t: TypeRepr): Boolean =
+      given Program = program
+      var hit = false
+      val ph = new Phase:
+        def name = "ctor-replay-null-scope"
+        override def transformType(x: TypeRepr)(using Program): TypeRepr =
+          x match
+            case TypeRepr.TypeRef(_, s) if program.symbolOf(s).exists(_.owner == ctor) => hit = true
+            case _                                                                     => ()
+          x
+      StandardTraversal.mapType(ph, t)
+      hit
+
     private def substituted(stats: List[Statement], m: Map[SymId, Term]): List[Statement] =
       if m.isEmpty then stats
       else
@@ -1153,7 +1189,7 @@ object CtorFunnel:
           def ok(p: Tree.ValDef, a: Term) = simple(a) || (loopFree && counts.getOrElse(p.symbol, 0) == 1)
           if ps.length != args.length || !ps.zip(args).forall(ok) then scala.None
           else
-            val body = substituted(stms, ps.map(_.symbol).zip(args).toMap)
+            val body = substituted(stms, ps.zip(args).map((p, a) => p.symbol -> nullAtFormal(ctor, p, a)).toMap)
             body match
               case Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _) :: tl if isInitName(program, m) =>
                 if as.isEmpty then Some(Effects(tl, program.symbolOf(m).map(_.owner)))
