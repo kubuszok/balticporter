@@ -7,8 +7,9 @@ import java.nio.file.{Files, Path}
 
 class PortMapSpec extends munit.FunSuite:
 
-  private def member(unit: String, m: String) =
-    SrcMap.Entry(unit, m, "def", 1, 2, s"${unit.replace('.', '/')}.java", 10, "d0")
+  private def member(unit: String, m: String, path: String = "") =
+    SrcMap.Entry(unit, m, "def", 1, 2,
+                 if path.isEmpty then s"${unit.replace('.', '/')}.java" else path, 10, "d0")
 
   private def build(
       emitted: List[String] = Nil,
@@ -380,6 +381,55 @@ class PortMapSpec extends munit.FunSuite:
     // …and a map with no fingerprint at all (an older engine's) is likewise unverified, not stale.
     val bare = build(emitted = List("p.C"))
     assert(clue(PortMap.freshness(bare, "eng", Nil)).isInstanceOf[PortMap.Freshness.Unverified])
+  }
+
+  /** a base whose source root is a multi-module CHECKOUT — the shape D11's second half is about. */
+  private def checkoutBase(body: String) =
+    val root = Files.createTempDirectory("portmap-checkout")
+    val java = root.resolve("mod/src/main/java/p/C.java")
+    Files.createDirectories(java.getParent)
+    Files.writeString(java, body)
+    val m = PortMap.of("base", "eng", List("p.C"),
+      SrcMap.Recording(List(member("p.C", "p.C#f()", "mod/src/main/java/p/C.java"))),
+      Set.empty, Set.empty, Set.empty, Set.empty, Map.empty, sourceRoot = Some(root))
+    (root, java, m)
+
+  test("a base whose root is a CHECKOUT is verifiable from a dependent's MODULE roots") {
+    // D11's second half: the publisher's `javaPath` is `mod/src/main/java/p/C.java` and a dependent
+    // resolves the same library through the module directory itself, so NOT ONE of the base's paths
+    // lies under its roots — 422 of 422 on the port that found this. The package-relative form is a
+    // SUFFIX of the published path by construction (the package is in the `upstream` column), so
+    // nothing is guessed and no schema column is added.
+    val (root, java, m) = checkoutBase("package p; class C { int f() { return 1; } }")
+    val moduleRoot = root.resolve("mod/src/main/java")
+    assertEquals(PortMap.freshness(m, "eng", List(moduleRoot)), PortMap.Freshness.Fresh)
+    // …and it is a real check rather than a shrug: the file still has to MATCH.
+    Files.writeString(java, "package p; class C { int f() { return 2; } }")
+    PortMap.freshness(m, "eng", List(moduleRoot)) match
+      case PortMap.Freshness.Stale(r) => assert(clue(r).contains("has changed"))
+      case other                      => fail(s"expected Stale, got $other")
+  }
+
+  test("NEGATIVE: two roots holding the same package-relative path DECLINE — one root or none") {
+    // A package-relative path is the same string in every module that declares that package, so two
+    // roots holding one could be two different files. Resolving either would digest a file the base
+    // never published, and answer `Fresh` or `Stale` about it — so ambiguity keeps `Unverified`,
+    // which is the value that means "I could not check".
+    val (root, _, m) = checkoutBase("package p; class C { int f() { return 1; } }")
+    val other = Files.createTempDirectory("portmap-decoy")
+    Files.createDirectories(other.resolve("p"))
+    Files.writeString(other.resolve("p/C.java"), "package p; class C { int f() { return 99; } }")
+    PortMap.freshness(m, "eng", List(root.resolve("mod/src/main/java"), other)) match
+      case PortMap.Freshness.Unverified(r) => assert(clue(r).contains("not under this run's resolution"))
+      case other                           => fail(s"expected Unverified, got $other")
+  }
+
+  test("NEGATIVE: a root-relative path that ALREADY resolves is never re-derived") {
+    // A port whose `sourceRoot` IS a package root has no second form at all, so this is a no-op by
+    // arithmetic and the pre-existing answer stands unchanged.
+    val (root, _, m) = basePort("package p; class C { int f() { return 1; } }")
+    assertEquals(m.packageRelative.size, 0)
+    assertEquals(PortMap.freshness(m, "eng", List(root)), PortMap.Freshness.Fresh)
   }
 
   test("a SYNTHETIC origin is not a file and is left out of the fingerprint") {

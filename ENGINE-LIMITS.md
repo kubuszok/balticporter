@@ -8100,20 +8100,36 @@ because its directories are not `src/main/java`. Neither port is exotic: the mom
 is anything but a package root, every row this artifact publishes is wrong. Note which instrument
 found it — `port_map_guard` on a corpus-wide run, on a port the change was not aimed at.
 
-**And a SECOND consequence of the same `sourceRoot` decision does not have a fix here.** The base's
-map records its source `javaPath`s relative to ITS root, so they read
+**And a SECOND consequence of the same `sourceRoot` decision — CLOSED at wave 8, `manifest` 1 → 0.**
+The base's map records its source `javaPath`s relative to ITS root, so they read
 `flexmark-util-ast/src/main/java/com/…`; a dependent's resolution roots are the module directories
-themselves, so **none of the base's 422 source paths lies under any of them** and `PortMap.freshness`
-cannot check the map at all. That is reported as `Unverified` — deliberately a THIRD value and never
-a `no` — and it is correct as far as it goes. What it costs is that every one of the 29 dependent
-ports a later milestone adds inherits it, so the freshness guarantee this artifact exists to give is
-switched off for the whole chain by one port's root. Two ports could disagree about the base's
-surface and the run would say only that it could not tell. The fix is to make a published path
-resolvable from a dependent's roots rather than only from the publisher's, and it is unbuilt.
+themselves, so **none of the base's 422 source paths lay under any of them** and `PortMap.freshness`
+could check the map at all. It was reported as `Unverified` — deliberately a THIRD value and never a
+`no` — and that was correct as far as it went, while costing every one of the 29 dependent ports a
+later milestone adds: the freshness guarantee this artifact exists to give was switched off for the
+whole chain by one port's root.
+
+**The fix is this entry's own insight read at a PATH instead of at a package name**, and it needs no
+third source of truth for the same reason the column did: the declared package is a SUFFIX of the
+path-derived one by construction, so the package-relative path is the tail of `javaPath` that begins
+where the package begins — and the package is in the map's `upstream` column, which is the UNRENAMED
+name (§4.56's both-namespaces rule read on the CONSUMER's side). So `Map0.packageRelative` is derived
+from rows a dependent already holds, no schema column is added, and a base whose root IS a package
+root produces an empty map and is untouched by arithmetic rather than by a branch.
+
+**AMBIGUITY DECLINES, and that guard is the whole of why the second candidate is safe.** A
+package-relative path is by construction the same string in every module that declares that package,
+so two roots holding one could be two different files; resolving either would digest a file the base
+never published and then answer `Fresh` or `Stale` about it. Exactly one root, or `Unverified`
+stands — which is the value that means *I could not check*, and the distinction this whole comparison
+is careful to keep.
 
 *Fix kind: (a) for the column, CLOSED in `PortMap.upstreamOf`, with `PortMapSpec` carrying the
 checkout-shaped positive and the non-invertible NEGATIVE that must not truncate. (a) for the
-freshness half, OPEN and measured at 422 of 422.*
+freshness half, CLOSED in `Map0.packageRelative` + `freshness`, measured at 422 of 422 → 0 and
+`manifest` 1 → 0 on the only dependent that had it, with three spec cases: the checkout-shaped
+positive that still reports `Stale` when the file really changes, the two-roots ambiguity that must
+decline, and the package-root port whose alternative set is EMPTY.*
 
 ## 9.5 Control flow — what a `break` really leaves, and the boundary that steals it
 

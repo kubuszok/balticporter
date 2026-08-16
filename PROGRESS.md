@@ -3023,9 +3023,39 @@ this lane counts a different tree. The two numbers are not each other's residue.
 |---|---|
 | files | **52 converted → 52 Scala test files** (0 dropped, 0 injected) |
 | `@Test` → emitted | **723 → 723 munit registrations, `expected-lost` = 0.** Not the raw grep's 730: `java_test_count` is comment-aware and seven are commented out upstream. The discovery guard holds it in BOTH directions from the first run |
-| scalac errors | **87 total on one compile of both source sets — 43 main, 44 test, 0 elsewhere.** Baselined at 87 against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 43 stays `md-measure`'s and is reproduced by that lane alone |
+| scalac errors | **84 total on one compile of both source sets after wave 8 — 40 main, 44 test, 0 elsewhere** (87 = 43 + 44 before it; the three that closed are the main set's, `ENGINE-LIMITS.md` G12). Baselined at 84 against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 40 stays `md-measure`'s and is reproduced by that lane alone |
+| the 44, ATTRIBUTED after wave 8 | by code: 18 `E007`, 12 `E134`, 10 `E051`, 3 `E008`, 1 `E006`. **Nine of them are now `collection-internal` rows** — the `OrderedSet` value handed to its own `addAll`/`retainAll`, whose formal is `Collection`'s standalone target; the lane counts **16 SITES** for those 9 errors, because scalac stops after a few per statement (`ENGINE-LIMITS.md` K26). The **10** `E051` are java's `remove(Object)`/`remove(int)` split seen from a caller (§4.4's row), 5 in each of `OrderedMapTest`/`OrderedMultiMapTest`. The rest are the same three main-set families read from their callers: `tagLine`'s overload row, `BitFieldSet`'s held-back `iterator()` (K25) and the `HtmlAppendable` builder chain |
 | the 44, by owner | `HtmlAppendableBaseTest` 9, `OrderedMultiMapTest` 8, `OrderedMapTest` 8, `PlaceholderReplacerTest` 6, `BitFieldSetTest` 6, `HtmlBuilderTest` 3, `OrderedSetTest` 3, `PlainSegmentBuilderTest` 1 — **eight files of fifty-two**, and every one of them is a caller of a residue §10.6.3 already names. `tagLine` (12) is the library's own overload row seen from a caller; the `OrderedSet`/`OrderedMultiMap` rows (13, including 10 `E051 Ambiguous overload` on `remove`) are the shim-against-a-scala-collection family and java's `remove(Object)`/`remove(int)` split (§4.4); `BitFieldSet` (6) is K25's held-back `iterator()` met by a `for` loop |
 | test-framework refusals | **26, every one reported by the phase with its §1 classification** — `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (`ExpectedException`; the field is emitted and NEVER APPLIED, so an expected throw propagates and MUnit records a FAILURE rather than a silent pass), and one hamcrest `Description`. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
+
+**And the two families that make up 24 of those 26 are each ONE GUARDED translation away, which is
+worth stating as a design rather than re-deriving.** Neither is built; both are engine (a) and
+neither needs a manifest entry.
+
+- **`@RunWith(Suite.class)` + `@Suite.SuiteClasses` (9 + 9).** The phase's advice — *a custom runner
+  changes how tests are ENUMERATED, so the converted suite runs a different SET* — is exactly right
+  for `Parameterized` and `Enclosed`, and it is the wrong sentence for an AGGREGATOR: `Suite` runs
+  the classes it lists and nothing else, and every one of those classes becomes an MUnit suite the
+  runner discovers on its own. So where **every FQN in `@Suite.SuiteClasses` is a class this run
+  converts AND declares at least one `@Test`**, the aggregation is redundant and the honest emission
+  is a DROP with a `Decision` saying so, not a class carrying an annotation nothing reads. That
+  conjunct is the whole safety argument and it has to be checked rather than assumed: a listed class
+  the port does NOT convert means the port runs FEWER tests than java, which is the one direction
+  §5's discovery guard exists to catch, and a listed class with no `@Test` of its own is a nested
+  aggregator whose own members have to be resolved first. Where either fails, the refusal stands
+  with its current text. Cost: it moves emitted FILES (nine of this port's fifty-two) on six test
+  lanes, and moves NEITHER side of the discovery count, which is what makes it measurable.
+- **`@Rule ExpectedException` (6).** The `@Test(expected = E.class)` row of `CLAUDE.md` §4.4, met at
+  JUnit's other spelling — and with the same failure, one step louder: the field is emitted, nothing
+  applies it, so the expected throw propagates and MUnit records a FAILURE where java recorded a
+  pass. The mechanical image exists: `thrown.expect(E.class)` at statement position means java wraps
+  the REST OF THE TEST, so the arm is `intercept[E] { <the remaining statements> }` — the shape the
+  phase already emits for `@Test(expected)`. Four deltas to enumerate before it ships, each of which
+  must be a guard or a counted refusal: `expectMessage`/`expectCause` (an added assertion, not a
+  different wrap), a `thrown` reference the arm does not understand (refuse), an `expect` call that
+  is CONDITIONAL rather than at statement position (refuse — java's rule is armed either way and
+  scala's `intercept` is not), and the `@Before` methods this phase inlines at the head of each test
+  body, which JUnit runs INSIDE the rule and which must therefore be inside the `intercept` too.
 | `omissions` / `portability(emitted)` / `collection-boundary` / `overload-risk` | 13 / 14 / 6 / 1,655 |
 | `collection-internal` | **16**, every one `DeclaredSubtype` and every one the SAME seam: `OrderedSet` — which `implements java.util.Set`, so the phase re-parented it onto `mutable.Set` — handed to its own `addAll`/`retainAll`, whose formal is the `Collection` target `JavaCollection`. scalac reports **9** of them, because it stops after a few per statement; the lane counts sites, which is what makes it the more complete instrument here (`ENGINE-LIMITS.md` K26) |
 | `manifest` | **1** — `BaseMapUnverified`, and see below |
@@ -3047,12 +3077,16 @@ only this port**: fixing it moved 1,792 rows of `gdx-vfx`'s map too, whose `sour
 library's `core/src` and `effects/src` — the same defect, equally invisible, and found by
 `port_map_guard` on the corpus-wide run rather than by anything here.
 
-**The residual 1 is the same decision's other half and has no fix yet.** `BaseMapUnverified`: the
-base's map records source paths relative to ITS root, so all **422 of 422** lie outside a dependent's
-resolution roots and `PortMap.freshness` cannot check the map at all. It is honest (`Unverified` is
-deliberately a third value and never a `no`) and it is inherited by every one of milestone 2's 29
-dependent ports, so the freshness guarantee is switched off for the whole chain by one port's root.
-Recorded with its number in D11 rather than worked around here.
+**The residual 1 CLOSED at wave 8 — `manifest` 1 → 0, and it was D11's own insight read at a
+PATH.** `BaseMapUnverified` said the base's map records source paths relative to ITS root, so all
+**422 of 422** lay outside this dependent's resolution roots and `PortMap.freshness` could check
+nothing — a gap every one of milestone 2's 29 dependents would have inherited. The fix adds no
+schema column and guesses nothing: the declared package is a SUFFIX of the path-derived one by
+construction (which is exactly what `upstreamOf` already exploits), and the package is in the map's
+own `upstream` column, so a consumer derives the package-relative form from rows it already holds and
+resolves it under the module roots it already has. Ambiguity DECLINES — two roots holding one
+package-relative path could be two different files — so `Unverified` still means *I could not
+check*.
 
 **What the census does NOT yet include, and why it is not a skip.** Nothing in this tree needs a
 `dropMethods` key, an `excludeGlobs` entry or a `public-field-accessors` scope, so `test.conf`

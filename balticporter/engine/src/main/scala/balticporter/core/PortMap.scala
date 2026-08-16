@@ -155,6 +155,46 @@ object PortMap:
     def javaPaths: List[String] =
       members.map(_.javaPath).filter(p => p.nonEmpty && !p.startsWith("<")).distinct.sorted
 
+    /** …and each of those paths ALSO as a PACKAGE-RELATIVE one, where the two differ.
+      *
+      * A published `javaPath` is relative to the PUBLISHER's source root, and nothing says a
+      * consumer has that root. It does not, in the one shape this matters for: a base whose
+      * `sourceRoot` is a multi-module CHECKOUT publishes
+      * `flexmark-util-ast/src/main/java/com/vladsch/…/Block.java`, while a dependent resolves the
+      * same library through the MODULE directories themselves — so **422 of 422** of that base's
+      * paths lay outside every one of its dependent's roots and `PortMap.freshness` could check
+      * nothing at all (`ENGINE-LIMITS.md` D11's second half). The map is still USED — `Unverified`
+      * is deliberately a third value and never a `no` — and the guarantee this artifact exists to
+      * give was switched off for the whole chain by one port's root.
+      *
+      * This is D11's OWN insight read at a PATH instead of at a package name: the declared package
+      * is a SUFFIX of the path-derived one by construction, so the package-relative path is the tail
+      * of `javaPath` that begins where the package begins — and the package is in the `upstream`
+      * column, which is the UNRENAMED name (§4.56: an artifact joining policy to observed code
+      * carries both namespaces, and this is the reading side of that). Nothing is guessed and no
+      * schema column is added: a consumer derives it from rows it already has.
+      *
+      * A path that is ALREADY package-relative contributes nothing — there is no second form — so a
+      * port whose `sourceRoot` is a package root is untouched by arithmetic rather than by a
+      * branch. */
+    def packageRelative: scala.collection.Map[String, String] =
+      members.iterator.flatMap { e =>
+        val norm = e.javaPath.replace('\\', '/')
+        val cut  = norm.lastIndexOf('/')
+        if norm.isEmpty || norm.startsWith("<") || cut <= 0 then scala.None
+        else
+          val dir  = norm.substring(0, cut)
+          val file = norm.substring(cut + 1)
+          val head = e.upstream.indexWhere(c => c == '$' || c == '#') match
+            case -1 => e.upstream
+            case i  => e.upstream.substring(0, i)
+          val pkg = head.lastIndexOf('.') match
+            case j if j > 0 => head.substring(0, j).replace('.', '/')
+            case _          => ""
+          if pkg.isEmpty || dir == pkg || !dir.endsWith("/" + pkg) then scala.None
+          else Some(e.javaPath -> s"$pkg/$file")
+      }.toMap
+
   object Map0:
     /** the empty map — what an unconfigured consumer holds, and a total no-op by arithmetic. */
     val empty: Map0 = Map0("", "", Nil)
@@ -505,8 +545,21 @@ object PortMap:
       Freshness.Unverified("the map carries no source fingerprint (published by an older engine)")
     else
       val paths = m.javaPaths
+      // …and the PACKAGE-RELATIVE form as the second candidate, for the reason
+      // [[Map0.packageRelative]] states: a publisher's root is not a consumer's, and a base whose
+      // root is a multi-module checkout is otherwise unverifiable in full.
+      //
+      // ONE ROOT OR NONE, and that guard is the whole of why this is safe: a package-relative path
+      // is by construction the same string in every module that declares that package, so two roots
+      // holding one could be two different files and the digest would then be computed over
+      // whichever the iterator reached first — a `Fresh` or `Stale` answer about a file the base
+      // never published. Ambiguity therefore declines, and `Unverified` stands, which is the same
+      // "I could not check" this whole comparison is careful to keep distinct from "it changed".
+      val alt = m.packageRelative
+      def under(q: String): List[Path] =
+        roots.iterator.map(_.resolve(q)).filter(Files.isRegularFile(_)).toList
       def resolve(p: String): Option[Path] =
-        roots.iterator.map(_.resolve(p)).find(Files.isRegularFile(_))
+        under(p).headOption.orElse(alt.get(p).map(under).filter(_.sizeIs == 1).map(_.head))
       val missing = paths.filterNot(p => resolve(p).isDefined)
       if missing.nonEmpty then
         Freshness.Unverified(
