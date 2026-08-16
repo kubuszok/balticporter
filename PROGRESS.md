@@ -2794,7 +2794,7 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7 and **40** after wave 8 (coded 40 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **21** now — 95 % of the port compiles clean |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9 and **37** after wave 10 (coded 37 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **21** now — 95 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
@@ -2818,7 +2818,7 @@ MUnit registrations with a lane, a discovery guard and an error baseline holding
 so the remaining distance is a number (44 test-set errors on top of the library's 40) rather than an
 absent source set.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 37 after wave 10**
 
 Every error is `EngineGap`. Eight waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2893,7 +2893,13 @@ above sums to more than the family sizes the first census printed.
 |---|---|---|
 | 40 → 38 | **`coerce` reads a source's kind out of `kindOf`, which knows only this phase's own SCALA TARGETS — so it says nothing about a type the PROGRAM declares, which is exactly K26's `DeclaredSubtype` blindness read at the FIX rather than at the count.** `OrderedMultiMap#keys`/`#values` return an `OrderedSet` — a class this phase re-parented onto `mutable.Set` — at a `Collection`-typed result whose target is the standalone shim. The class really IS a `mutable.Set` there BECAUSE THIS PHASE MADE IT ONE, so `JavaCollection.fromSet` conforms; the record is read TRANSITIVELY, because the `implements` clause may sit on an abstract base the library declares. `collection-internal` **7 → 5** here and **16 → 0** on the test set, the two lanes falling by exactly the errors that closed | K26 |
 
-**What is left, by mechanism** (the census re-read at 38, every row counted from `errors.tsv`):
+**Closed by wave 10**, engine (a) with no manifest entry anywhere:
+
+| before → after | family | where |
+|---|---|---|
+| 38 → 37, and the TEST set 25 → 12 | **a POLY EXPRESSION takes its type from the SLOT, and an OVERLOAD SET is not a slot.** `polyExpression`'s rule — a lambda has no type of its own and the slot gives it one, so never write a cast at one — is exact for a single formal and says nothing about a name standing for two alternatives of the same arity. Scalac types the literal BEFORE it can use an expected type, so all of them fail at once (`E134`, twelve of them on `tagLine(CharSequence, boolean)` beside `tagLine(CharSequence, Runnable)`) while `overload-risk` correctly reads ZERO: java's candidate set spans no resolution phase, so this is not T17's family. The fix is the ONE alternative javac picked, restated as an ASCRIPTION — `TirEmitter.polyOperand` already renders a `Tree.Typed` over a poly term as `(e: T)` rather than as a cast, which is why `polyExpression`'s refusal (the cast would assert a `Function0` IS a `Runnable`) still stands and why no emitter arm moved. Three conjuncts keep it off every other port: a LAMBDA only (a method reference is `TirEmitter.samAscribed`'s, and the STATIC form renders as a bare NAME where an ascription APPLIES a nilary method — `Found: Unit`, measured), the callee overloaded AT THIS INDEX (the unoverloaded `tagIndent` sits in the SAME java statement and takes the bare literal), and a nameable target with no cast java wrote. 10 member digests here and 12 on the test set, every one a declaration holding such a lambda | G28 |
+
+**What is left, by mechanism** (the census re-read at 37, every row counted from `errors.tsv`):
 
 | n | family | §1 |
 |---:|---|---|
@@ -2915,13 +2921,13 @@ to both ends of an edge `typeMap` has no image for. Closing those needs the coer
 INFERENCE site, because the formal has no head to coerce against, and that is the row a next wave is
 working against on the MAIN set.
 
-**On the TEST set the four remaining families are all main-set residues read from a caller**, and the
-largest of them is the one nobody has diagnosed yet: `tagLine` (12) is a java lambda at a `Runnable`
-SAM slot on an OVERLOADED callee, where scala types the literal as a `Function0` before the expected
-type can be used, so none of the three alternatives matches. `PlaceholderReplacer` (6) is K23's own
+**On the TEST set the remaining families are all main-set residues read from a caller.** `tagLine`
+(12) CLOSED at wave 10 — a java lambda at a `Runnable` SAM slot on an OVERLOADED callee, where scala
+types the literal as a `Function0` before the expected type can be used, so none of the three
+alternatives matched (`ENGINE-LIMITS.md` G28). What is left is `PlaceholderReplacer` (6), K23's own
 named row — a bound METHOD REFERENCE at a mapped member, `map::get` against `mutable.Map.get`, which
-returns an `Option` — and `BitFieldSet` (6) is K25's held-back `iterator()` met by a `for` loop over
-a class whose parent stayed `java.util.AbstractSet`.
+returns an `Option` — `BitFieldSet` (6), K25's held-back `iterator()` met by a `for` loop over a
+class whose parent stayed `java.util.AbstractSet`, and one `PlainSegmentBuilder` inference residue.
 
 Nothing left in this port needs a manifest entry, and no residue above is per-library policy.
 
@@ -3046,9 +3052,9 @@ this lane counts a different tree. The two numbers are not each other's residue.
 |---|---|
 | files | **52 converted → 52 Scala test files** (0 dropped, 0 injected) |
 | `@Test` → emitted | **723 → 723 munit registrations, `expected-lost` = 0.** Not the raw grep's 730: `java_test_count` is comment-aware and seven are commented out upstream. The discovery guard holds it in BOTH directions from the first run |
-| scalac errors | **63 total on one compile of both source sets after wave 9 — 38 main, 25 test, 0 elsewhere** (84 = 40 + 44 before it; nineteen closed, in two commits — `ENGINE-LIMITS.md` K27 took ten from the test set and K26's `DeclaredSubtype` half took nine more plus two of the main set's). Baselined at 63 against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 38 stays `md-measure`'s and is reproduced by that lane alone |
-| the 25, ATTRIBUTED after wave 9 | by code: 12 `E134`, 9 `E007`, 3 `E008`, 1 `E006` — **four families, every one of them a main-set residue read from a caller**: `tagLine`'s overload row (12, a lambda at a `Runnable` SAM slot on an overloaded callee, so scala types it as a `Function0` before it can use the expected type); `BitFieldSet` (6, K25's held-back `iterator()` met by a `for` loop over a class whose parent stayed `java.util.AbstractSet`); `PlaceholderReplacer` (6, a bound METHOD REFERENCE at a mapped member — `map::get` against `mutable.Map.get`, which is K23's own named row seen from a caller and returns an `Option`); and one `PlainSegmentBuilder` inference residue. **Nineteen closed at wave 9 and NEITHER family was what this table said it was**: the 10 `E051` were not §4.4's `remove(Object)`/`remove(int)` row (java's candidate set is ONE member and the second alternative is the one the engine's own minted parent contributed — K27), and the 9 `collection-internal` rows closed at the SLOT rather than being a standing refusal (K26's `DeclaredSubtype` half, 16 lane sites → 0) |
-| the 25, by owner | `HtmlAppendableBaseTest` 9, `PlaceholderReplacerTest` 6, `BitFieldSetTest` 6, `HtmlBuilderTest` 3, `PlainSegmentBuilderTest` 1 — **five files of fifty-two**, down from eight: the three `Ordered*Test` files are now clean. Every remaining one is a caller of a residue §10.6.3 already names |
+| scalac errors | **50 total on one compile of both source sets after wave 10 — 37 main, 13 test, 0 elsewhere** (63 = 38 + 25 after wave 9; 84 = 40 + 44 before that). Wave 10's thirteen are one family: the twelve `tagLine` rows and one of the main set's, all closed by G28's ascription. Baselined at 50 against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 37 stays `md-measure`'s and is reproduced by that lane alone |
+| the 13, ATTRIBUTED after wave 10 | by code: 6 `E007`, 6 `E008`, 1 `E006` — **three families, every one of them a main-set residue read from a caller**: `PlaceholderReplacer` (6, a bound METHOD REFERENCE at a mapped member — `map::get` against `mutable.Map.get`, which is K23's own named row seen from a caller and returns an `Option`); `BitFieldSet` (6, K25's held-back `iterator()` met by a `for` loop over a class whose parent stayed `java.util.AbstractSet`); and one `PlainSegmentBuilder` inference residue. **The twelve that closed were NOT what this table first said either**, which is now three waves running: `tagLine`'s rows read as an overload-resolution divergence and were an ordinary poly expression at a slot scala cannot use — `overload-risk` read ZERO at all twelve, correctly, because java's candidate set spans no resolution phase (`ENGINE-LIMITS.md` G28) |
+| the 13, by owner | `PlaceholderReplacerTest` 6, `BitFieldSetTest` 6, `PlainSegmentBuilderTest` 1 — **three files of fifty-two**, down from five: `HtmlAppendableBaseTest` and `HtmlBuilderTest` are now clean. Every remaining one is a caller of a residue §10.6.3 already names |
 | test-framework refusals | **26, every one reported by the phase with its §1 classification** — `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (`ExpectedException`; the field is emitted and NEVER APPLIED, so an expected throw propagates and MUnit records a FAILURE rather than a silent pass), and one hamcrest `Description`. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
 
 **And the two families that make up 24 of those 26 are each ONE GUARDED translation away, which is

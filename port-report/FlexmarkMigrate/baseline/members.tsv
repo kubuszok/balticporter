@@ -1333,7 +1333,7 @@ ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler	cl
 ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler#render(Node,NodeFormatterContext,MarkdownWriter)	def	8565dd3efe8379e9
 ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler$CustomNodeFormatter	class	1630f42eff765a09
 ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler$CustomNodeFormatter#render(N,NodeFormatterContext,MarkdownWriter)	def	c46de2397ab41201
-ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter	class	9eaf4e39bfbabeb9
+ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter	class	d4933ea02a2716ba
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt1>	stmt	566ab47f2333ab16
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt2>	stmt	2863fb8f05a8ad19
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt3>	stmt	b02efdf9a2c6e770
@@ -1365,7 +1365,7 @@ ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatte
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#renderDocument(NodeFormatterContext,MarkdownWriter,Document,FormattingPhase)	def	7cef6a7eb8fbcfd1
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#renderReference(B,NodeFormatterContext,MarkdownWriter)	def	e1f1e4071dde325e
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#renderReferenceBlock(B,NodeFormatterContext,MarkdownWriter)	def	f63623d1d348b505
-ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#renderReferenceBlockUnique(B,NodeFormatterContext,MarkdownWriter)	def	b92316b83fbdbb21
+ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#renderReferenceBlockUnique(B,NodeFormatterContext,MarkdownWriter)	def	839a67a34f6dc4a8
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#repositoryNodesDone	val	a1fb0c58b5b826a9
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#transformReferenceId(String,NodeFormatterContext)	def	38f190dd6a35f1bb
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#uniquifyIds(NodeFormatterContext,MarkdownWriter,Document)	def	b5d5a6c4c063802d
@@ -1402,7 +1402,7 @@ ssg.md.formatter.TranslationHandlerFactory	ssg.md.formatter.TranslationHandlerFa
 ssg.md.formatter.TranslationHandlerFactory	ssg.md.formatter.TranslationHandlerFactory#create(DataHolder,HtmlIdGeneratorFactory)	def	5cf4ca31a0ad9c5c
 ssg.md.formatter.TranslationPlaceholderGenerator	ssg.md.formatter.TranslationPlaceholderGenerator	class	253b3d287a2757ab
 ssg.md.formatter.TranslationPlaceholderGenerator	ssg.md.formatter.TranslationPlaceholderGenerator#getPlaceholder(int)	def	4406a15991c15606
-ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter	class	9bd92999596b3e51
+ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter	class	9f6920265e553ddc
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#<stmt1>	stmt	4b54335706eb399d
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#<stmt2>	stmt	b19a153c75be910e
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#<stmt3>	stmt	5f6e798a46f4fb48
@@ -1463,7 +1463,7 @@ ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFo
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#render(Text,NodeFormatterContext,MarkdownWriter)	def	d097998caca15a15
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#render(TextBase,NodeFormatterContext,MarkdownWriter)	def	f8225f5f38b00fe2
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#render(ThematicBreak,NodeFormatterContext,MarkdownWriter)	def	f145aeaf7b325261
-ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#renderAutoLink(DelimitedLinkNode,NodeFormatterContext,MarkdownWriter,String,String)	def	a36d890fe38e56fc
+ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#renderAutoLink(DelimitedLinkNode,NodeFormatterContext,MarkdownWriter,String,String)	def	0d17c0a2d5f0d9b3
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#renderDocument(NodeFormatterContext,MarkdownWriter,Document,FormattingPhase)	def	8e7f7167cd6c0558
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#renderReferenceBlock(Reference,NodeFormatterContext,MarkdownWriter)	def	c2a370d3da2a01ae
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter$Factory	class	1a3baa27df5589fa
@@ -1984,7 +1984,7 @@ ssg.md.html.renderer.AttributablePart	ssg.md.html.renderer.AttributablePart#equa
 ssg.md.html.renderer.AttributablePart	ssg.md.html.renderer.AttributablePart#getName()	def	d8a991ce1bd8e2e8
 ssg.md.html.renderer.AttributablePart	ssg.md.html.renderer.AttributablePart#hashCode()	def	7bb97f23f384f120
 ssg.md.html.renderer.AttributablePart	ssg.md.html.renderer.AttributablePart#myName	val	14423228fb637bf0
-ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer	class	f7bbce773881d2fc
+ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer	class	3594458ed3e2898d
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#<stmt10>	stmt	3a72d085dbbe19e7
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#<stmt11>	stmt	3791f14be485522a
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#<stmt1>	stmt	46a1885f401c3ae6
@@ -2025,7 +2025,7 @@ ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#rend
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#render(Emphasis,NodeRendererContext,HtmlWriter)	def	19c68945ddd6eb6b
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#render(FencedCodeBlock,NodeRendererContext,HtmlWriter)	def	ba54b297a560e6cb
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#render(HardLineBreak,NodeRendererContext,HtmlWriter)	def	b9972466c5ac750b
-ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#render(Heading,NodeRendererContext,HtmlWriter)	def	661804e6adf02d53
+ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#render(Heading,NodeRendererContext,HtmlWriter)	def	e6179e4ab712b275
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#render(HtmlBlock,NodeRendererContext,HtmlWriter)	def	6f03737e68c9f6c3
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#render(HtmlCommentBlock,NodeRendererContext,HtmlWriter)	def	45cb1a886669c4b8
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#render(HtmlEntity,NodeRendererContext,HtmlWriter)	def	34411104827c3f9a
@@ -2052,8 +2052,8 @@ ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#rend
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#renderHtmlBlock(HtmlBlockBase,NodeRendererContext,HtmlWriter,boolean,boolean,boolean)	def	c7231278cf813f76
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#renderInlineHtml(HtmlInlineBase,NodeRendererContext,HtmlWriter,boolean,boolean)	def	5759fde327519f51
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#renderLineBreak(String,String,Node,NodeRendererContext,HtmlWriter)	def	ed724ad2ece3939c
-ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#renderListItem(ListItem,NodeRendererContext,HtmlWriter)	def	d32f5d4b61755eec
-ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#renderLooseParagraph(Paragraph,NodeRendererContext,HtmlWriter)	def	b14b2e894b18c27e
+ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#renderListItem(ListItem,NodeRendererContext,HtmlWriter)	def	8c24e55bc6dadc5d
+ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#renderLooseParagraph(Paragraph,NodeRendererContext,HtmlWriter)	def	8c1f3796e1d83ab3
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer#renderTextBlockParagraphLines(Paragraph,NodeRendererContext,HtmlWriter,boolean)	def	1f3f6dc6eedfd252
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer$Factory	class	f2824ecab6678764
 ssg.md.html.renderer.CoreNodeRenderer	ssg.md.html.renderer.CoreNodeRenderer$Factory#apply(DataHolder)	def	49b9c1a981903f24
@@ -5480,7 +5480,7 @@ ssg.md.util.format.TableFormatOptions	ssg.md.util.format.TableFormatOptions#trim
 ssg.md.util.format.TableManipulator	ssg.md.util.format.TableManipulator	class	0662d8e12067ae97
 ssg.md.util.format.TableManipulator	ssg.md.util.format.TableManipulator#NULL	val	9df42a0c31f571f0
 ssg.md.util.format.TableManipulator	ssg.md.util.format.TableManipulator#apply(MarkdownTable,Node)	def	1622000e3307a4d9
-ssg.md.util.format.TableRow	ssg.md.util.format.TableRow	class	35e8d88a0124ddde
+ssg.md.util.format.TableRow	ssg.md.util.format.TableRow	class	7d1105ba3c360e79
 ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#<stmt1>	stmt	e84a6a5c342214ed
 ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#addColumn(int)	def	919eea2d73b4c0e5
 ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#afterOffset	val	886e660abbd4ad35
@@ -5500,7 +5500,7 @@ ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#forAllCells(TableCellCon
 ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#forAllCells(TableCellManipulator)	def	1e15595bc5f07037
 ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#forAllCells(int,TableCellConsumer)	def	aa3c6c940e628526
 ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#forAllCells(int,TableCellManipulator)	def	a5819395a1fa1fa4
-ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#forAllCells(int,int,TableCellConsumer)	def	a3b9126a709c58a8
+ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#forAllCells(int,int,TableCellConsumer)	def	446501c6c4279d88
 ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#forAllCells(int,int,TableCellManipulator)	def	8dbfe57895c81d33
 ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#getAfterOffset()	def	24ccc5744a94baab
 ssg.md.util.format.TableRow	ssg.md.util.format.TableRow#getBeforeOffset()	def	ea4a97aa8103743c

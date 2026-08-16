@@ -3020,6 +3020,100 @@ object SpoonTir:
           else packedUncast(argEs, args, poly)
         }.getOrElse(args)
 
+      /** …and the OTHER half of the same sentence: a poly expression takes its type from the SLOT,
+        * and where the slot is an OVERLOAD SET scala cannot use it to type the literal at all.
+        *
+        * [[polyArgsUncast]] removes the type an argument arm gave a lambda; this puts back the ONE
+        * type JAVA ITSELF resolved, at the single shape where leaving the literal bare is not the
+        * faithful emission. A class declaring `tagLine(CharSequence, boolean)` beside
+        * `tagLine(CharSequence, Runnable)` is resolved by javac from the argument's SHAPE; scalac
+        * types a function literal BEFORE it can use an expected type, so all three alternatives fail
+        * at once and the error names none of them as the intended one:
+        *
+        * {{{
+        * fa.tagLine("li", () => fa.text("x"))                          // E134 — none match
+        * fa.tagLine("li", (() => fa.text("x")): java.lang.Runnable)    // java's own resolution
+        * }}}
+        *
+        * PROBED against scala 3.8.4 before this was written, with the NEGATIVE in the same
+        * statement: an unoverloaded `tagIndent(CharSequence, Runnable)` takes the bare literal
+        * exactly as [[polyExpression]] says it does, so ascribing there would be emitted text for
+        * nothing.
+        *
+        * ==an ASCRIPTION, never a CAST — which is why [[polyExpression]]'s refusal still stands==
+        * That refusal is about `asInstanceOf`: written as a cast the literal elaborates to a
+        * `Function0` FIRST and the cast then asserts that a `Function0` is a `Runnable`, which
+        * throws. `TirEmitter.polyOperand` is the arm that renders a `Tree.Typed` over a poly term as
+        * `(e: T)` rather than as a cast, and it exists for precisely this node — so what is minted
+        * here is scala's own SAM conversion at an expected type, and not a conversion java performed
+        * and we are writing down.
+        *
+        * ==three conjuncts, each ruling out emitted text for nothing (`CLAUDE.md` §5)==
+        *   - '''the argument is a LAMBDA.''' A METHOD REFERENCE is a poly expression too and is
+        *     deliberately excluded. `TirEmitter.samAscribed` already answers this same question for
+        *     the two reference forms it renders as a function literal; the third — a STATIC
+        *     reference — renders as a bare qualified NAME, where an ascription APPLIES a nilary
+        *     method (`(r.run: Runnable)` is `Found: Unit`, measured on the same probe). Two
+        *     mechanisms for one question is F8's finding; the lambda is the node that has no other
+        *     answer, and it is the only one this adds;
+        *   - '''the callee is OVERLOADED AT THIS INDEX''' ([[overloadedSamSlot]]) — two alternatives
+        *     of this arity whose formals DIFFER where the lambda stands. With one alternative scala
+        *     already has the expected type; with two that agree here the lambda discriminates
+        *     nothing and the ascription would change no resolution;
+        *   - '''the target is NAMEABLE HERE''' ([[tpNameableHere]]) '''and java wrote no cast of its
+        *     own.''' `uncastAdded` keeps the casts the SOURCE wrote, so a term that is already a
+        *     `Tree.Typed` when this runs is java's own and is left alone.
+        *
+        * The target is the LAMBDA'S OWN type — the functional interface javac resolved, and the same
+        * reference [[samResultTpt]] reads its SAM out of. Not the formal re-derived from the callee,
+        * which would be a second spelling of one fact (F8) and would have to answer for a formal
+        * expressed in the callee's own variables, which this position cannot name (G12). */
+      private def polyArgsAscribed(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
+                                   args: List[Term]): List[Term] =
+        if args.sizeIs != argEs.size then args
+        else args.zipWithIndex.map { (t, i) =>
+          argEs(i) match
+            case l: CtLambda[?] if !t.isInstanceOf[Tree.Typed] && overloadedSamSlot(ex, argEs.size, i) =>
+              val lt = l.getType
+              if lt == null || !tpNameableHere(lt) then t
+              else
+                val r = tpe(lt)
+                if r == NoType then t else Tree.Typed(t, tt(r, l), r, originOf(l))
+            case _ => t
+        }
+
+      /** does the callee's NAME stand for more than one alternative of this arity that DISAGREE at
+        * argument `i`? — the whole of [[polyArgsAscribed]]'s decision, read off the declaring type's
+        * own members and never off a name.
+        *
+        * The alternatives are the ones SCALA will see, so they are the type's ALL methods rather
+        * than its declared ones: java's overload set spans the hierarchy and so does scala's, and a
+        * declared-only reading would decline exactly where a base class contributes the second
+        * alternative. Compared by the formal's QUALIFIED NAME at that index, because what has to
+        * differ is the SLOT — `boolean` against `Runnable` is the pair this is about — and not the
+        * instantiation, which a generic alternative would make differ for no reason.
+        *
+        * The `catch` is §4.6-shaped and its default is distinguishable from a real answer: an
+        * unreadable declaration yields NO alternatives, so nothing is ascribed and the emission is
+        * byte-for-byte what it was — at worst the loud `E134` this exists to remove, and never a
+        * type invented for a slot. `RuntimeException`, so a deep model's `StackOverflowError` is not
+        * swallowed by a helper (`uncastAdded`'s own rule, one function over). */
+      private def overloadedSamSlot(ex: CtExecutableReference[?], arity: Int, i: Int): Boolean =
+        val alts: List[List[CtTypeReference[?]]] =
+          try
+            Option(ex.getDeclaringType).flatMap(d => Option(d.getTypeDeclaration)).toList.flatMap { ct =>
+              val es: List[CtExecutable[?]] =
+                if ex.isConstructor then ct match
+                  case cl: CtClass[?] => cl.getConstructors.asScala.toList
+                  case _              => Nil
+                else ct.getAllMethods.asScala.toList.filter(_.getSimpleName == ex.getSimpleName)
+              es.map(_.getParameters.asScala.toList.map(_.getType))
+            }
+          catch { case _: RuntimeException => Nil }
+        val here = alts.filter(_.sizeIs == arity)
+        here.sizeIs > 1 &&
+          here.flatMap(ps => Option(ps(i)).map(_.getQualifiedName)).distinct.sizeIs > 1
+
       /** [[polyArgsUncast]] where a VARARG PACK has changed the arity: `args` is the fixed prefix
         * plus ONE term holding the variadic elements, built from the `argEs` tail in order. */
       private def packedUncast(argEs: List[CtExpression[?]], args: List[Term],
@@ -5168,7 +5262,8 @@ object SpoonTir:
         // JS-G31. Every arm above may cast an argument to the formal it read; a POLY EXPRESSION is
         // the one argument that has no type to cast FROM, so the call answers for it here, once,
         // after all of them have run. See `polyExpression` for the probe this rests on.
-        val args = polyArgsUncast(argEs, typeVarReceiverArgs(inv, argEs, knownReceiverArgs(inv, argEs, args0)), o)
+        val args = polyArgsAscribed(ex, argEs,
+          polyArgsUncast(argEs, typeVarReceiverArgs(inv, argEs, knownReceiverArgs(inv, argEs, args0)), o))
         val fun: Term =
           if ex.isConstructor then
             // super()/this() delegation — target class ≠ enclosing ⇒ super (Spoon often nulls the target).
@@ -5459,8 +5554,8 @@ object SpoonTir:
         // invocation dispatch and this consult is recorded without being owed, which is the honest
         // shape: `Attaches` holds one surface, and a row nothing attaches here would still be a row
         // this arm had considered.
-        val args = polyArgsUncast(
-          argEs, appliedCtorArgs(cc, argEs, rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs, originOf(cc)))), originOf(cc))
+        val args = polyArgsAscribed(cc.getExecutable, argEs, polyArgsUncast(
+          argEs, appliedCtorArgs(cc, argEs, rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs, originOf(cc)))), originOf(cc)))
         // `CtNewClass` IS a `CtConstructorCall` — the anonymous body hangs off the subtype, and
         // reading only the supertype is what silently dropped every one of them.
         val anon = cc match

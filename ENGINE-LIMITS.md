@@ -1060,6 +1060,57 @@ paramful one and the nilary one beside it.
 
 ---
 
+### G28. A POLY EXPRESSION takes its type from the SLOT, and an OVERLOAD SET is not a slot — **ssg-md test set 25 → 12, main 38 → 37. CLOSED**
+
+`SpoonTir.polyExpression` states the rule this frontend runs on: a lambda and a method reference have
+no type of their own in EITHER language, java gives each the type of the slot it fills and so does
+scala, so the engine never writes a cast at one. That is exact for as long as the slot is A SINGLE
+FORMAL. Where the callee's name stands for two alternatives of the same arity, scalac types the
+function literal BEFORE it can use an expected type, and every alternative fails at once:
+
+```
+T tagLine(CharSequence tag, boolean voidElement);     // java resolves from the ARGUMENT's shape
+T tagLine(CharSequence tag, Runnable body);
+fa.tagLine("li", () -> fa.text("x"));                 // E134 — none of the alternatives match
+```
+
+Twelve of them on one test set and one on its library, and NOTHING in the port is wrong: javac never
+hesitated, `overload-risk` reads ZERO at every site (java's candidate set spans no resolution phase,
+so this is not `T17`'s family at all), and the emitted lambda is the faithful translation. The fix is
+java's own answer written down — the ONE alternative javac picked, restated at the argument.
+
+**An ASCRIPTION, never a CAST, which is why `polyExpression`'s refusal still stands.** That refusal
+is about `asInstanceOf`, and its own doc carries the failure: written as a cast the literal
+elaborates to a `Function0` FIRST and the cast then asserts that a `Function0` is a `Supplier`, which
+throws at run time. `TirEmitter.polyOperand` is the arm that renders a `Tree.Typed` over a poly term
+as `(e: T)` rather than as a cast — it exists for precisely this node — so the mint is scala's own
+SAM conversion at an expected type. No emitter arm was added and no `catalog` obligation moved.
+
+**The whole difficulty is not over-approximating** (`CLAUDE.md` §5): ascribing every lambda is
+CORRECT, moves emitted text on every port that has one, and no count can see it. Three conjuncts:
+
+| conjunct | what it rules out |
+|---|---|
+| the argument is a LAMBDA | a METHOD REFERENCE is a poly expression too, and `TirEmitter.samAscribed` ALREADY answers this question for the two forms it renders as a function literal. The third — a STATIC reference — renders as a bare qualified NAME, where an ascription APPLIES a nilary method (`(r.run: Runnable)` is `Found: Unit`, measured on the same probe). Two mechanisms for one question is F8 |
+| the callee is OVERLOADED AT THIS INDEX | two alternatives of this arity whose formals DIFFER where the lambda stands. With one alternative scala already has the expected type — which the fixture pins in the SAME java statement, since `tagIndent(CharSequence, Runnable)` is not overloaded and takes the bare literal |
+| the target is NAMEABLE HERE, and java wrote no cast of its own | `polyArgsUncast` keeps the casts the SOURCE wrote, so a term already a `Tree.Typed` is java's and is left alone |
+
+The target is the LAMBDA'S OWN type — the functional interface javac resolved, and the same reference
+`samResultTpt` reads its SAM out of. Not a formal re-derived from the callee, which would be a second
+spelling of one fact and would have to answer for a formal expressed in the callee's own variables,
+which the call site cannot name (`G12`).
+
+**Measured**: ssg-md test set **25 → 12** (all twelve `tagLine` rows) and main **38 → 37**, with 10
+member digests on the library and 12 on its test set — every one a declaration holding a lambda at a
+genuinely overloaded callee, and the ascription visible at the call.
+
+*Fix kind: (a). `PolyArgOverloadAscriptionSpec` — one positive and four negatives, of which "the
+UNOVERLOADED callee in the same statement" and "alternatives that AGREE at the lambda's index" are
+the two an over-approximation would fail, and "a METHOD REFERENCE" is the one that keeps this from
+becoming F8.*
+
+---
+
 ## 2. Constructors
 
 ### C1. Never promote a paramful constructor to the primary without a WHOLE-PROGRAM check — +14
