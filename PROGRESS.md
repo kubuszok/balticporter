@@ -2818,7 +2818,7 @@ MUnit registrations with a lane, a discovery guard and an error baseline holding
 so the remaining distance is a number (44 test-set errors on top of the library's 40) rather than an
 absent source set.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0)**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 28 after wave 13**
 
 Every error is `EngineGap`. Eight waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2961,10 +2961,14 @@ thirty are attributed to a refusal or a limit this repository has already measur
 | 3 | **K5.7**'s `UninheritableTargets`, counted as `InexpressibleParent` | a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent, because the retyping's target is a `Tuple2` and no class can extend one |
 | **19** | | |
 
-The other **11** are open work with no entry behind them: **2** `null` at a position the wave-8 fix
+The other **9** are open work with no entry behind them: **2** `null` at a position the wave-8 fix
 does not reach (a LAMBDA body at a result type of `T`, and one `null` RECEIVER that was never this
-family), **2** raw-generic one-offs, and the **7**-row residue. So the honest reading of 30 is
-*19 refused, 11 open*. **Wave 10 moved BOTH columns, which no earlier wave had**: G28's ascription
+family), **2** raw-generic one-offs, and the residue. So the honest reading of 28 is
+*19 refused, 9 open* — wave 13's first commit took the `Segment$Base`/`Segment$Text` PAIR out of the
+residue (`ENGINE-LIMITS.md` C14: a reassigned constructor parameter read by the DELEGATION, which the
+funnel then hoists into the `extends` clause where no class member is in scope), which is the FIFTH
+residue row whose cause was a different defect from the one its error text named.
+**Wave 10 moved BOTH columns, which no earlier wave had**: G28's ascription
 took one out of the open residue and K23's built arm took one out of the refused column and one more
 out of the residue — the second being `Utils#withDefaults`, which the residue had filed under its
 error text with a diagnosis that was wrong (§10.6.3's wave-10 row). **Wave 11 took a third out of the

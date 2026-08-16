@@ -1965,6 +1965,44 @@ emits the same bytes with the bit set or clear (**0 member digests on all fiftee
 
 ---
 
+### C14. A REASSIGNED constructor parameter is read by the DELEGATION before its `var` exists — **ssg-md 30 → 28. CLOSED**
+
+`CLAUDE.md` §4.55's third axis (a java constructor parameter is a LOCAL and may be reassigned;
+a scala class parameter is a `val`) is discharged by `MutableParamsTransform`: the parameter symbol
+is repurposed as a `var` and a fresh `<name>$arg` takes the slot, so every body reference follows by
+identity. The transform already knew that a constructor's body must LEAD with its `super(…)`/`this(…)`
+delegation and inserted the `var` AFTER it — and then left the delegation itself naming the
+repurposed symbol, which is a local declared one line below.
+
+**Read as an ordering slip that is where it ENDS UP.** The constructor funnel hoists that statement
+into the emitted `extends` clause, whose arguments are evaluated before the class body exists at all:
+
+```scala
+class Base(byteOffset$arg$p: Int, …) extends Segment(…, byteOffset$p$, …) {  // Not found
+  var byteOffset$p$: Int = byteOffset$arg$p
+}
+```
+
+Two errors on ssg-md (`Segment$Base`, `Segment$Text`), and both had been in `PROGRESS.md` §10.6.3's
+undiagnosed residue under their error text — the fifth census row whose cause is a different defect
+from the one its text names.
+
+**The substitution is EXACT rather than a repair.** JLS 8.8.7 makes the delegation the constructor's
+first statement, so nothing can have run to reassign the parameter: the slot and the `var` hold the
+same value there, and naming the slot is what java's own `super(byteOffset)` means. Fixed in the
+TRANSFORM rather than at the funnel, because a secondary constructor that is never promoted emits
+the identical wrong order — one answer for both shapes.
+
+**Measured**: ssg-md **30 → 28** and the whole-compile figure with it, every check count flat, and
+3 member digests, all of them the declarations holding the fixed delegation. Every other port
+byte-identical.
+
+*Fix kind: (a) engine. CLOSED — `MutableParamsTransform.slotsInDelegation`;
+`MutableParamsScanSpec`'s two new cases are the gate, with the CONTROL constructor that reassigns
+nothing beside the one that does.*
+
+---
+
 ## 3. `this`, inner classes and anonymous classes
 
 ### T1. A `CtNewClass` is a SUBTYPE of `CtConstructorCall` — 156 silently dropped bodies

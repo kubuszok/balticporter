@@ -49,6 +49,32 @@ class MutableParamsScanSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
+  /** A reassigned CONSTRUCTOR parameter, which is the one position where the `var` cannot be read.
+    *
+    * The delegation is the constructor's first statement (JLS 8.8.7) and the `var` is prepended
+    * after it, so a delegation naming the repurposed parameter symbol names a local declared below
+    * it. The funnel then hoists that statement into the `extends` clause, where no class member is
+    * in scope at all.
+    */
+  private val ctorSrc =
+    """package demo;
+      |class Sup { Sup(int a, int b) { } }
+      |class Sub extends Sup {
+      |  int seen;
+      |  Sub(int off, int n) {
+      |    super(off, n);          // reads the SLOT — java has not run the ++ yet
+      |    seen = off++;           // …which is what makes `off` a var at all
+      |  }
+      |}
+      |class Plain extends Sup {
+      |  // CONTROL: nothing reassigned, so the delegation keeps java's own names
+      |  Plain(int off, int n) { super(off, n); }
+      |}
+      |""".stripMargin
+
+  private val ctorOut =
+    new TirEmitter(Pipeline.run(SpoonTir.fromSource(ctorSrc), List(new MutableParamsTransform))).emit
+
   private val raw     = SpoonTir.fromSource(src)
   private val program = Pipeline.run(raw, List(new MutableParamsTransform))
   private val out     = new TirEmitter(program).emit
@@ -79,4 +105,23 @@ class MutableParamsScanSpec extends munit.FunSuite:
     assert(clue(out).contains("def untouched(q: scala.Int)"))
     assert(!out.contains("q$arg"))
     assert(shadowed("p")) // …while the ones that are written all got theirs
+  }
+
+  private def superArgsOf(cls: String) =
+    ctorOut.linesIterator.filter(l => l.contains(s"class $cls ") && l.contains("extends demo.Sup("))
+      .map { l =>
+        val a = l.substring(l.indexOf("extends demo.Sup(") + "extends demo.Sup(".length)
+        a.substring(0, a.indexOf(')'))
+      }.toList
+
+  test("a constructor's delegation reads the PARAMETER SLOT, never the var declared below it") {
+    // the var really is there and really is declared BELOW the extends clause…
+    assert(clue(ctorOut).contains("var off$p: scala.Int = off$arg$p"))
+    // …so the delegation must name the slot. The untouched sibling in the same call does not move.
+    assertEquals(clue(superArgsOf("Sub")), List("off$arg$p, n$p"))
+  }
+
+  test("a constructor with NOTHING reassigned keeps java's own delegation, un-renamed") {
+    assertEquals(clue(superArgsOf("Plain")), List("off$p, n$p"))
+    assert(!ctorOut.linesIterator.filter(_.contains("class Plain")).exists(_.contains("$arg")), clue(ctorOut))
   }

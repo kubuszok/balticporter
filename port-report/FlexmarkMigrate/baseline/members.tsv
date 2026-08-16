@@ -9040,7 +9040,7 @@ ssg.md.util.sequence.builder.tree.Segment	@13718#<init>(int,byte[],int,int,com.v
 ssg.md.util.sequence.builder.tree.Segment	@13720#<init>(int,byte[],int,int)#byteOffset	val	cc7557aefffc0eb0
 ssg.md.util.sequence.builder.tree.Segment	length	val	da5683d059c548e3
 ssg.md.util.sequence.builder.tree.Segment	segTypeMask	val	39f4d84a93940ae1
-ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment	class	cb21d3b1514a062f
+ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment	class	c6e6e803c9e1a902
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#<stmt1>	stmt	2f0a8264aac829a8
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#<stmt2>	stmt	845babb2c8989686
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#<stmt3>	stmt	2e8c82c9b7500c7b
@@ -9105,7 +9105,7 @@ ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segm
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#pos	val	90a5ac1f0d5bcbb6
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#startIndex	val	37d4c530a468f665
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#toString()	def	7d331cc8a2c38223
-ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base	class	14dcf4a21bfb9011
+ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base	class	54826db2c1110427
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base#<stmt1>	stmt	fc427d631397bcf2
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base#<stmt2>	stmt	4d9cd03f5dccc083
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base#baseSeq	val	88b209c09bbcc67f
@@ -9131,7 +9131,7 @@ ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segm
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$SegType#hasChars()	def	ddd41460a8a43efc
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$SegType#hasLength()	def	90710081b802e138
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$SegType#hasOffset()	def	7c27490532e47dc1
-ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Text	class	fc31536296e78502
+ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Text	class	553c587e71bbe6be
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Text#<stmt1>	stmt	7ba7e8b7ef42017a
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Text#<stmt2>	stmt	6f84095627f00263
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Text#charAt(int)	def	c887696de9f5b829

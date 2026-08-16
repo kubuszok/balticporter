@@ -112,11 +112,33 @@ final class MutableParamsTransform extends Phase:
         stats match
           case (deleg @ Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _)) :: rest
               if isCtor && summon[Program].symbolOf(m).exists(_.name == "<init>") =>
-            b.copy(stats = deleg :: (prelude ++ rest))
+            b.copy(stats = slotsInDelegation(deleg) :: (prelude ++ rest))
           case _ => b.copy(stats = prelude ++ stats)
       case Some(other) => Tree.Block(prelude, other, other.tpe, o)
       case None        => Tree.Block(prelude, Tree.Literal(Constant.UnitC, TypeRepr.NoType, o), TypeRepr.NoType, o)
     d.copy(paramss = paramss2, rhs = Some(body))
+
+  /** A constructor's leading `super(…)`/`this(…)` reads the PARAMETER SLOTS, never the `var`s.
+    *
+    * The `var` is prepended AFTER the delegation (JLS 8.8.7 makes the delegation the constructor's
+    * first statement), so at that point it does not exist yet — and the value is the same either
+    * way, because nothing can have run to reassign it. Left naming the repurposed parameter symbol,
+    * the delegation names a local declared below it.
+    *
+    * That reads as a cosmetic ordering bug and is not, because of where the delegation ENDS UP: the
+    * constructor funnel hoists it into the emitted `extends` clause, whose arguments are evaluated
+    * before the class body exists at all. So a promoted constructor emitted
+    * `class Base(byteOffset$arg: Int, …) extends Segment(…, byteOffset, …)` with `var byteOffset =
+    * byteOffset$arg` in the body — `Not found: byteOffset`, on a class whose parameter is right
+    * there. Fixing it HERE rather than at the funnel keeps one answer for both shapes: a secondary
+    * constructor that is not promoted has the same statement in the same wrong order.
+    */
+  private def slotsInDelegation(deleg: Term)(using Program): Term =
+    val toSlot = new Phase:
+      def name = "reassigned-params->var/delegation"
+      override def transformIdent(t: Tree.Ident)(using Program): Term =
+        argOf.get(t.sym).map(a => t.copy(sym = a)).getOrElse(t)
+    StandardTraversal.mapTerm(toSlot, deleg)
 
   /** Parameters (from `params`) that are the target of an assignment anywhere in `t`.
     *
