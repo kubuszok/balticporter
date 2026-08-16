@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
-| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | **none in scope** — flexmark's suites live in modules milestone 1 does not parse (§10.6) | **69** (243 at first emit; §10.6.3, all classified) |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | **none in scope** — flexmark's suites live in modules milestone 1 does not parse (§10.6) | **67** (243 at first emit; §10.6.3, all classified) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2794,12 +2794,12 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3 and **69** after wave 4 (coded 69 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **27** now — 94 % of the port compiles clean |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4 and **67** after wave 5 (coded 67 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **27** now — 94 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
 | `jdk-surface` | **456 classified, 38 unresolved at first emit** (shimmed 7, mapped 44, kept 367) and **25 after wave 3** (27 after wave 2). The 38 were the retyped-owner members `CollectionsTransform`'s tables had no entry for, and they were the SAME 33 errors the compile reported — the two instruments agree exactly, and they moved together when the SE8 members were mapped (`ENGINE-LIMITS.md` K23) |
-| `collection-boundary` / `collection-closure` / `collection-retarget` | **28 / 3 / 0** at first emit, **27 / 3 / 0** after wave 2 and **26 / 3 / 0** after wave 4 — one seam left the lane when the call at it became a helper call rather than a member on a retyped receiver, and one more when the `keySet()` view gave `coerce` a factory for it (`ENGINE-LIMITS.md` K2.7). The 26 are `OpaqueEgress` 14, `ExternalCallee` 8, `InexpressibleParent` 2 and `ReifiedOccurrence` 2 — `ShimBoundary` is now **0**, here and on every other port |
+| `collection-boundary` / `collection-closure` / `collection-retarget` | **28 / 3 / 0** at first emit, **27 / 3 / 0** after wave 2, **26 / 3 / 0** after wave 4 and **22 / 3 / 0** after wave 5 — one seam left the lane when the call at it became a helper call rather than a member on a retyped receiver, one more when the `keySet()` view gave `coerce` a factory for it (`ENGINE-LIMITS.md` K2.7), and FOUR when K25 held `BitFieldSet`'s class-file overrides literally, so each `super.<same>(c)` stopped handing a shim to `java.util.AbstractSet` — those four fell together with the four errors they caused, which is the attribution §5 requires of a lane that falls. The 22 are `OpaqueEgress` 14, `ExternalCallee` 4, `InexpressibleParent` 2 and `ReifiedOccurrence` 2 — `ShimBoundary` is **0**, here and on every other port |
 | `overload-risk` | **563**, with its denominator recomputed beside it: 26,166 program-declared calls examined, 3,915 with more than one applicable candidate, 563 spanning a java resolution phase |
 | `heap-pollution` | **13**, every one `Acknowledged` — java warned and the author wrote `@SafeVarargs`, which scala has neither of |
 | `idiom(converted / refused / residue)` | **0 / 315 / 0** — `SamLambda` 28 considered and 28 refused, `NarrowedReturn` 287 and 287 refused. The refusal population is the lane; nothing was converted |
@@ -2814,7 +2814,7 @@ zero in the last row is a compile-time one. On liqp the compile said nothing abo
 first-run failures; this library is a parser, so the population §4.4 governs here is larger, not
 smaller.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 67 after wave 5**
 
 Every error is `EngineGap`. Four waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2856,12 +2856,19 @@ above sums to more than the family sizes the first census printed.
 |---|---|---|
 | 81 → 69 | **java's two `Set`-typed VIEWS of a map.** `m.keySet()` emitted a `scala.collection.Set` while its node claimed the retyped `mutable.Set`, and `m.entrySet()` handed back the MAP — so the phase carried ONE LOCAL PATCH PER POSITION it could reach (retype a `val`, refuse a coercion source) and answered at neither a method RESULT nor a branch of a conditional, where there is no slot to patch at all. Closed at the REWRITE with live write-through views in the runtime, whose two refusals are java's own; both patches deleted. `collection-boundary` 27 → 26, and `Issue.ShimBoundary` is now empty on all fifteen ports | K2.7 |
 
-**What is left, by mechanism** (the census re-read at 69, every row counted from `errors.tsv`):
+**Closed by wave 5**, engine (a) with no manifest entry anywhere:
+
+| before → after | family | where |
+|---|---|---|
+| 69 → 67 | **a member that OVERRIDES A CLASS FILE may not have its formals moved.** §4.56's sentence read at an override rather than at a call: `BitFieldSet extends java.util.AbstractSet` declares `containsAll(Collection<?>)` over a parent the mapping does not cover, so the class file's member still takes java's collection and the retyped one overrides nothing. The literal-reading machinery a `RuleScope` already has does the holding; what could not be reused is the CLASSIFICATION, since `ScopedOut` says *widen your scope* and there is no key. `collection-boundary` 26 → 22, the four `ExternalCallee` rows at those `super.<same>(c)` calls closing with the four errors | K25 |
+
+**What is left, by mechanism** (the census re-read at 67, every row counted from `errors.tsv`):
 
 | n | family | §1 |
 |---:|---|---|
 | 22 | **a RAW generic at an INHERITED formal, and TWO defects at one call.** `AstActionHandler<C,N,A,H>.addActionHandlers(H[]...)` reached from `AttributeProviderAdapter`, `LinkResolverAdapter` and `NodeVisitor`, whose own parameters are java's raw `…Handler[]`. Java PACKS an `H[]` into the `H[][]` slot (assignable to the component, not to the array) and the port forwards it, so the arity is wrong BEFORE the element type is; and the element is `[?]` against the parent's substituted `[Node]`, which java admitted by unchecked conversion at a raw type. **The packing half is BUILT, javac-verified and MEASURED WORSE** — `ENGINE-LIMITS.md` G26 carries the five cells and both numbers (81 → 81 at `markers` 0 → 1, and 81 → 83) — because with the arity right every site reads `Array[Array[H[?]]]` against `Array[Array[H[Node]]]`: a better residue worth zero errors. The raw-to-parameterised cast at an inherited formal is what the family needs first | **(a)** — `G1`/`G2`/`G8`/`G26` at an inherited formal |
-| 10 | **the SHIM against a scala collection, inside the program.** Four of them are a retyped formal at a method that OVERRIDES A CLASS FILE — `BitFieldSet<E> extends java.util.AbstractSet<E>` had `containsAll`/`addAll`/`removeAll`/`retainAll` moved to `JavaCollection[?]` while the parent's formal is `java.util.Collection[?]`, so `super.containsAll(c)` cannot compile and the member overrides nothing (§4.56's "an unowned symbol's SIGNATURE is a fact about a class file", read at an OVERRIDE). The rest are a `JavaCollection` formal or result meeting a `Buffer`/`Set`/own-`OrderedSet` value at a call the port declares (`ScopedDataSet#getKeys` 2, `OrderedMultiMap#keys`/`#values` 2, `Attributes#values`, `BuilderBase#extensions`). `collection-boundary` counts the external half and cannot see the internal one — it was 11 before wave 4 closed `DataSet#getKeys` | **(a)** |
+| 6 | **the SHIM against a scala collection, inside the program** — the RESIDUE of that row after wave 5 closed its rule half (K25). A `JavaCollection` formal or result meeting a `Buffer`/`Set`/own-`OrderedSet` value at a call the port declares (`ScopedDataSet#getKeys` 2, `OrderedMultiMap#keys`/`#values` 2, `Attributes#values`, `BuilderBase#extensions`). Wave 4 established these are NOT one shape: the first four are a value the PROGRAM produces at a shim-typed result and the last two are one-offs. `collection-boundary` counts the external half and cannot see the internal one | **(a)** |
+| 2 | **a held-back `iterator()` against the class's OWN shim-parented iterator** — `BitFieldSet#iterator()` overrides `java.util.AbstractSet.iterator()`, whose class file returns `java.util.Iterator<E>`, while the nested `EnumBitSetIterator`/`EnumBitFieldIterator` the body returns were given the `JavaIterator` SHIM as a parent by the same phase. NEW at wave 5 and not a regression: before K25 the member returned the shim and silently overrode nothing, which only `RefChecks` could have reported (§3). No `JavaCollections.toJava` exists for an iterator, so the seam is a compile error rather than a bridge; the member's own porter note classifies it at the line | **(a)**, `ENGINE-LIMITS.md` K25 |
 | 6 | **`Nothing` at a structural type** — `IRichSequenceBase`'s `?{ append: ? }` / `?{ add: ? }` slots, where a generic method's variable inferred `Nothing` (`G22`'s family at a structural expected type) | **(a)** |
 | 5 | **`MutableDataHolder.set` overload resolution** — `DataKey<Collection<Extension>>` retypes its type ARGUMENT to the SHIM while the value is an `ArrayBuffer`, so no `T` unifies. The same shim-against-`Buffer` seam one level in, at a TYPE ARGUMENT rather than a formal | **(a)** |
 | 5 | **`null` at a type PARAMETER** — java's `null` is assignable to every reference type and scala's `Null` is not a subtype of an unbounded `T`. Wave 4 read the emitted lines rather than the count and the row is **three shapes, not one**, which is what the next attempt has to start from: an ARGUMENT at a type-parameter formal (`valueList += null`, `keySet$field.add(null)` — 3), a LAMBDA whose body is a bare `null` at a result type of `T` (1), and one that is not this family at all — `HashMap.from(null.getAll())`, a `null` RECEIVER at a structural expected type (1). The ascription machinery EXISTS and is applied at some positions (`NullableDataKey` line 66 emits `null.asInstanceOf[T]` for its second argument and a bare `null` in the lambda beside it), so this is a POSITION gap and not a missing rule | **(a)** |
@@ -2869,42 +2876,20 @@ above sums to more than the family sizes the first census printed.
 | 3 | **`MapEntry` against `Tuple2`** — a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent (`K5.7`'s `UninheritableTargets` refusal, counted as `InexpressibleParent`), so its value does not conform where the retyping expects a pair | **(a)**, the counted half of K5.7 |
 | 14 | the residue, no family above 2: `Not found: byteOffset$p` (a promoted parameter's name, 2), the two `Object` results of an ERASED `Function` receiver (`G11` at a use — the widening is on the RESULT, so NOT K24's family), `Objects.isNull`, `Array[E]` against `Array[Enum[?]]`, a SAM whose result the frontend could not name, and one-off inference and arity mismatches | mixed |
 
-**Where the next wave starts:** the 10-row shim row, which is a RULE rather than a set of sites — a
-declaration that OVERRIDES a class file may not have its formals moved, which is §4.56's own sentence
-read one position over, and four of the ten fall out of it. Note what wave 4 taught about the OTHER
-six: they are not one shape. `ScopedDataSet#getKeys` and `OrderedMultiMap#keys`/`#values` are a value
-the PROGRAM produces at a shim-typed result, and `Attributes#values`/`BuilderBase#extensions` are two
-different one-offs — so the row is a rule plus a residue, and the rule is worth measuring alone
-before anything is written for the rest.
+**Where the next wave starts:** the RAW-GENERIC row, which is the deepest and is now
+HALF-MEASURED — the vararg packing is built, javac-verified and REFUSED at 81 -> 83
+(`ENGINE-LIMITS.md` G26), so what the family needs first is the raw-to-parameterised cast at an
+INHERITED formal. Wave 5 read all 22 sites and they are FOUR shapes, not one, which is what the next
+attempt has to start from: the cast at an inherited formal alone (9 -- `addActionHandler(handler)`,
+and the 2-dimensional `addActionHandlers` calls, whose arity is already right); the cast BEHIND the
+refused packing (6 -- the 1-dimensional calls, where the arity is wrong before the element type is);
+`handlers.toArray(EMPTY_HANDLERS)` handing back an `Array[Object]` at an overload set that has no
+such member (4); and `getAction`/`getHandler(Class<?>)` probing a `Map<Class<? extends N>, H>` (2),
+which is K24's shape at a MAP KEY the retyping typed at the element.
 
-**And wave 4 scouted that rule far enough to save the next one a session, so the findings are here
-rather than re-derived.** The four are `BitFieldSet extends java.util.AbstractSet<E>` declaring
-`containsAll`/`addAll`/`removeAll`/`retainAll`, whose formals moved to `JavaCollection[?]` while the
-parent's stayed `java.util.Collection[?]`; each body opens `if (!(c instanceof BitFieldSet)) return
-super.<same>(c);`, which is the error the compile reports. Three things established:
-
-- **the TEST is available and structural** — `Symbol.flags.isOverride` (the frontend already computes
-  it from Spoon's `getTopDefinitions`, which is why the emitted members carry `override`) AND
-  `OverrideGraph.overridden(sym).isEmpty` (the graph indexes only types the PROGRAM declares, so an
-  empty answer beside a true flag means the thing overridden is a class file), narrowed to a
-  signature that `mentionsMapped`. That last conjunct is not tidiness: without it the set takes
-  `toString`/`equals`/`hashCode`, whose BODIES do touch retyped collections;
-- **`Issue.ScopedOut` is the wrong classification and must not be reused.** The literal-reading
-  machinery this needs already exists — `excluded`, `restoreExcluded`, `mapSignatures`, `coerce`'s
-  `expectedScoped` — but `CollectionBoundaryCheck` reads the same set back to classify a seam as
-  **§1(b), change your port's `scope`**, and there is no port key to change here. It needs its own
-  `Issue` and its own sentence, which is the bulk of the work and the reason this is not a one-liner;
-- **`collection-closure` already names the cause** and has since the port's first run:
-  `java.util.AbstractSet` unmapped while `java.util.AbstractCollection` is mapped, so the JDK
-  relation is lost. Mapping `AbstractSet` is NOT the alternative fix — it is a `Set`, so its target
-  would be `scala.collection.mutable.Set` as a PARENT, which is §4.5's forbidden shape.
-
-The raw-generic row is the deepest and is now HALF-MEASURED: the vararg packing is built,
-javac-verified and REFUSED at 81 → 83 (`ENGINE-LIMITS.md` G26), so what the family needs first is the
-raw-to-parameterised cast at an inherited formal — after which the packing becomes worth shipping.
 Nothing left in this port needs a manifest entry, and no residue above is per-library policy.
 
-**And the port has not yet met `RefChecks`** (§3): 69 typer errors means it has never run, so every
+**And the port has not yet met `RefChecks`** (§3): 67 typer errors means it has never run, so every
 missing `override`, unimplemented member and variance violation in 468 emitted files is unmeasured
 and the count will RISE at the first zero. Two shapes are already visible by eye in the emitted
 output and are named here so the rise is expected rather than discovered — `NodeRepository extends

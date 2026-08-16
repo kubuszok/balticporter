@@ -6170,6 +6170,68 @@ probe. `CollectionsObjectProbeSpec` (three faces, three negatives) and four cell
 
 ---
 
+### K25. A member that OVERRIDES A CLASS FILE may not have its formals moved — **ssg-md 69 → 67, `collection-boundary` 26 → 22, every other port flat. CLOSED, with two errors it made LOUD**
+
+`CLAUDE.md` §4.56 says an unowned symbol's SIGNATURE is a fact about a class file and no phase may
+move it. That sentence was written about a CALL and it governs an OVERRIDE exactly as it does a call:
+`class BitFieldSet<E> extends java.util.AbstractSet<E>` declares `containsAll(Collection<?>)` over a
+parent the mapping does NOT cover, so the class file's member still takes a `java.util.Collection`
+however the port retypes its own. Retyped, the emitted member overrides nothing and its own
+`if (!(c instanceof BitFieldSet)) return super.containsAll(c);` cannot compile — four errors on
+ssg-md, each reading `Found: (c : balticporter.runtime.JavaCollection[?])`.
+
+**The mechanism was already there and only the SET was missing.** `excluded`, `restoreExcluded`,
+`mapSignatures`, `keepsJavaFormals` and `coerce`'s `expectedScoped` are the literal-reading machinery
+a `RuleScope` uses, and holding a member back is exactly what they do. What could NOT be reused is
+the CLASSIFICATION: `CollectionBoundaryCheck.Issue.ScopedOut` reads *§1(b), widen or narrow your
+port's `CollectionsTransform(scope)`*, and there is no key here — java wrote `extends
+AbstractSet` and the class file says what `containsAll` takes. Reported as `ScopedOut`, every row
+would send §4.45's agent after a manifest entry that cannot exist. Hence `Issue.ClassFileOverride`
+and `Decision.Kind.RetainedSignature`, whose porter note is the only evidence at the line — a
+signature that did NOT move shows nothing in a diff against the java.
+
+**THE FIRST TEST WAS THE CLOSURE'S OWN ANCHORS AND IT MEASURED 69 → 113.** `OverrideGraph.Closure.
+externalAnchors` looks like the exact instrument — it is the set of unparsed types that could declare
+the member — and it is built on `ExternalSurface.mayDeclare`, which answers YES for an unknown type
+ON PURPOSE, because for a RENAME an over-refusal is the safe direction. Here the direction is
+reversed: a false anchor HOLDS a signature that should move. So `java.util.function.Function` "might
+declare" `getAfterDependents`, and **104 members were held over an interface this program declares
+itself** — `Dependent`, `NodeFormatterFactory`, every `*ParserFactory` — at +44 errors.
+
+**The test that works asks two questions, and the second is the negative case:**
+
+| conjunct | what it rules out |
+|---|---|
+| `Symbol.flags.isOverride` | the frontend RESOLVED an override (`SpoonTir.overridesInherited`, Spoon's `getTopDefinitions`). Without it, `mayDeclare`'s permissiveness holds every member of every class with an unparsed parent — `BitFieldSet.noneOf`, a static this class invented |
+| `mentionsMapped(info)` | `toString`/`equals`/`hashCode`, whose BODIES touch retyped collections and whose signatures do not |
+| `OverrideGraph.overridden(m).isEmpty` | the program declares no ancestor with this signature, so what the frontend resolved against IS a class file. This is what the 69 → 113 attempt dropped |
+| **no external ancestor of the owner that MAY declare it is one the mapping COVERS** | the negative case, and the one that decides correctness on every OTHER port: `class Fast extends java.util.ArrayList<String>` emits the SHIM as its parent, so its `addAll` override belongs in shim shape and holding it would break it in the other direction. Read from `typeMap`/`retarget` — the phase's own record (§4.56) |
+
+…and it holds the member plus `overriders(m)`, the DOWNWARD walk only: a signature change applies to
+all of a component or none of it (`DESIGN.md` §8.5), and every member of that walk is a declaration
+this program owns, so no `mayDeclare` guess enters anywhere.
+
+**Measured**: ssg-md **69 → 67**, five members held (`BitFieldSet`'s `containsAll`/`addAll`/
+`removeAll`/`retainAll`/`iterator`), 10 member digests all inside them plus the file's own, and
+`collection-boundary` **26 → 22** — the four `ExternalCallee` rows at those `super.<same>(c)` calls
+CLOSED with the four errors, which is the attribution `CLAUDE.md` §5 requires of a lane that falls.
+Every other port: 0 errors moved, 0 members changed.
+
+**And it made TWO errors LOUD that were silent, which is the honest half of the number.**
+`BitFieldSet#iterator()` overrides `AbstractSet.iterator()`, whose class file returns
+`java.util.Iterator<E>`; held to that, the body's `new EnumBitSetIterator(…)` — a nested class the
+same phase gave the `JavaIterator` SHIM as its parent — no longer conforms. Before this fix the
+member returned the shim and simply did not override anything, which **`RefChecks` would have
+reported and the typer never does** (`CLAUDE.md` §3), so the port carried it invisibly. There is no
+`JavaCollections.toJava` for an iterator, so the seam is a compile error rather than a bridge; it is
+classified at the line by the member's own porter note.
+
+*Fix kind: (a). `CollectionsClassFileOverrideSpec` — one positive and four negatives, of which
+`class Fast extends java.util.ArrayList` and `Impl implements Ours` are the two the 69 → 113 attempt
+would fail.*
+
+---
+
 ## 6. Porting a test suite
 
 ### X1. Converting JUnit to MUnit is a STRUCTURAL transform, not an annotation rename

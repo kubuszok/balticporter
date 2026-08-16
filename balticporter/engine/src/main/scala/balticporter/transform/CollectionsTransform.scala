@@ -267,7 +267,8 @@ final class CollectionsTransform(
   /** …held to the units the run EMITS, for the reason [[closure]] gives. [[scopedOut]] goes with
     * the mapping, so a seam the SCOPE created is classified as such rather than as an engine bug. */
   def boundary(program: Program, units: List[Tree.ClassDef]): List[CollectionBoundaryCheck.Finding] =
-    CollectionBoundaryCheck.check(program, units, mappedTypes, retypedTargets, scopedOut) ++
+    CollectionBoundaryCheck.check(program, units, mappedTypes, retypedTargets, scopedOut,
+                                  classFileOverrides) ++
       // …plus the EXTERNAL seams, which the check cannot re-derive: by the time it runs, the
       // position-blind retyping has moved the node's type on BOTH sides of every one of them, so a
       // walk over the post-phase tree reports zero. They are recorded during the traversal, while
@@ -469,6 +470,26 @@ final class CollectionsTransform(
   /** …read back, so [[CollectionBoundaryCheck]] can classify a seam the scope created from the
     * phase's OWN record of what it held back rather than guessing from a type name (§4.56). */
   def scopedOut: Set[SymId] = excluded
+
+  /** every member this run held back because it OVERRIDES A CLASS FILE — see
+    * [[classFileOverridesIn]]. EMPTY for a program that extends no unconverted java type, which is
+    * what makes this a no-op by arithmetic exactly as an unrestricted scope is. */
+  private var retainedOverrides: Set[SymId] = Set.empty
+
+  /** …plus the PARAMETER symbols of those members, because a tree that says `java.util.Collection`
+    * over a symbol that says `JavaCollection` is the lie [[mapSignatures]] already refuses to
+    * write for the scope. Held apart from [[classFileOverrides]] so the boundary check keys on
+    * MEMBERS and nothing else. */
+  private var retainedOwners: Set[SymId] = Set.empty
+
+  /** …read back, for [[scopedOut]]'s reason and with a DIFFERENT classification: the scope's seam
+    * names a manifest key, and this one names nothing a port can edit (§4.56). */
+  def classFileOverrides: Set[SymId] = retainedOverrides
+
+  /** the union — every declaration whose type this run reads LITERALLY, whichever refusal held it.
+    * `isEmpty` is the pre-refusal code path by arithmetic, which both halves need. */
+  private def literal(s: SymId): Boolean = excluded(s) || retainedOverrides(s) || retainedOwners(s)
+  private def literalEmpty: Boolean      = excluded.isEmpty && retainedOverrides.isEmpty
 
   /** the declaration → the scope ENTRY that admitted it, for `Reason.Configured`'s key (§4.575:
     * the key is the manifest entry VERBATIM, because it is the string an agent edits). */
@@ -708,6 +729,7 @@ final class CollectionsTransform(
     val ownedNow = summon[Program].owned
     ownedSym = ownedNow
     applyScope(summon[Program]) // fills `excluded`, `admittedBy` and `report` — a no-op by default
+    applyClassFileOverrides(summon[Program]) // …and the refusal no policy asked for
     uninheritableSyms = program.symbols.all.collect {
       case s if typeMap.get(s.fullName).exists((tgt, _) => CollectionsTransform.UninheritableTargets(tgt)) => s.id
     }.toSet
@@ -716,6 +738,7 @@ final class CollectionsTransform(
     val symbols2 = mapSignatures(symbols) // retype signatures too
     recordRetypings(symbols, symbols2)
     recordScopedOut(symbols)
+    recordRetainedSignatures(symbols)
     recordReifiedTypeArgs(symbols2)
     recordEgressBridges()
     program.rebuilt(units, symbols2)
@@ -845,12 +868,12 @@ final class CollectionsTransform(
     * naming `Model#items` does not name `Model`, so the enclosing class is out of scope while one
     * of its members is in it, and bailing at the class threw the member's rewrite away. */
   private def restoreExcluded(orig: Tree.ClassDef, mapped: Tree.ClassDef): Tree.ClassDef =
-    if excluded.isEmpty then mapped
+    if literalEmpty then mapped
     else
       val body = CollectionsTransform.spine(orig.body, mapped.body, orig.symbol).map {
         case (o: Tree.ClassDef, m: Tree.ClassDef) => restoreExcluded(o, m)
-        case (o: Tree.DefDef, m: Tree.DefDef)     => if excluded(o.symbol) then o else m
-        case (o: Tree.ValDef, m: Tree.ValDef)     => if excluded(o.symbol) then o else m
+        case (o: Tree.DefDef, m: Tree.DefDef)     => if literal(o.symbol) then o else m
+        case (o: Tree.ValDef, m: Tree.ValDef)     => if literal(o.symbol) then o else m
         case (_, m)                               => m
       }
       val own =
@@ -1062,12 +1085,12 @@ final class CollectionsTransform(
     * above says it is. The two must agree: a tree that says `java.util.List` over a symbol that
     * says `Buffer` is a lie every later reader believes. */
   private def mapSignatures(tbl: SymbolTable)(using p: Program): SymbolTable =
-    if excluded.isEmpty then StandardTraversal.mapSymbols(this, tbl)
+    if literalEmpty then StandardTraversal.mapSymbols(this, tbl)
     // …and the same OWNERSHIP guard `mapSymbols` carries: an external member's signature is a fact
     // about a class file and this phase cannot move it. Without it the scoped path would retype
     // exactly the formals `coerce` and the boundary count now read (K15).
     else tbl.all.foldLeft(tbl) { (t, s) =>
-      if excluded(s.id) || !p.owns(s.id) then t
+      if literal(s.id) || !p.owns(s.id) then t
       else t.updated(s.copy(info = StandardTraversal.mapType(this, s.info)))
     }
 
@@ -1106,6 +1129,118 @@ final class CollectionsTransform(
             }
         }
       case RuleScope.Only(_) => () // the admitted half is recorded by `recordRetypings`
+
+  // -------------------------------------------------------------------------
+  // …and the refusal NO POLICY ASKED FOR — a member that overrides a CLASS FILE
+  // -------------------------------------------------------------------------
+
+  /** the anchor a held member is held BY — `<fqn>#<member>`, for the decision's own detail. */
+  private var retainedAnchors: Map[SymId, String] = Map.empty
+
+  /** Fill [[retainedOverrides]]: every member whose formals this phase MAY NOT MOVE, because the
+    * declaration it overrides lives in a compiled class file.
+    *
+    * ==The defect==
+    * `class BitFieldSet<E> extends java.util.AbstractSet<E>` declares `containsAll(Collection<?>)`
+    * and opens it `if (!(c instanceof BitFieldSet)) return super.containsAll(c);`. The mapping
+    * moves the formal to the shim; the PARENT is a java class the mapping does not cover, so its
+    * `containsAll` still takes a `java.util.Collection`. The emitted member then overrides NOTHING
+    * and its own `super` call cannot compile — which is `CLAUDE.md` §4.56's "an unowned symbol's
+    * SIGNATURE is a fact about a class file" read at an OVERRIDE rather than at a call.
+    *
+    * ==The test is STRUCTURAL, and every conjunct earns its place==
+    *   - `Flags.isOverride` — the frontend's own answer, computed from the parser's resolved
+    *     hierarchy (`SpoonTir.overridesInherited`), which is why the emitted members carry
+    *     `override` at all. Without it the anchor test below fires on EVERY member of every class
+    *     with an unparsed parent: `ExternalSurface.mayDeclare` answers YES for an unknown type, on
+    *     purpose, so `BitFieldSet.noneOf` — a static this class invented — would be held back too.
+    *   - `mentionsMapped` — the signature really moves. Without it the set takes
+    *     `toString`/`equals`/`hashCode`, whose bodies touch retyped collections and whose
+    *     signatures do not.
+    *   - `OverrideGraph.overridden` EMPTY — the program declares NO ancestor with this signature,
+    *     so whatever the frontend resolved the override against is a class file. This is the
+    *     conjunct that makes the answer exact rather than approximate, and dropping it in favour of
+    *     the closure's own `externalAnchors` was MEASURED at 69 → 113: `ExternalSurface.mayDeclare`
+    *     answers YES for an unparsed type on purpose (an over-refusal is the safe direction for a
+    *     RENAME), so `java.util.function.Function` "might declare" `getAfterDependents` and 104
+    *     members were held over an interface this program declares itself.
+    *   - an EXTERNAL ANCESTOR OF THE OWNER THAT THE MAPPING DOES NOT COVER, and that could declare
+    *     this signature. This is the negative case, and it is the one that decides correctness on
+    *     every OTHER port: a class extending a MAPPED collection (`extends java.util.ArrayList<X>`)
+    *     emits the SHIM as its parent, so the shim's own members are already in shim shape and
+    *     holding the override back would break it in the other direction. Read from
+    *     `typeMap`/`retarget` — the phase's own record (§4.56) — and never from a name.
+    *
+    * ==and what it holds is the member AND EVERY OVERRIDER BELOW IT==
+    * A signature change applies to all of a component or none of it (`DESIGN.md` §8.5), and the
+    * conjuncts above are asked of the TOP of the component by construction — `overridden` is empty
+    * exactly where nothing this program declares is above it. `overriders` is the rest, and it is
+    * the DOWNWARD walk only: every member of it is a declaration this program owns, so no
+    * `mayDeclare` guess enters anywhere.
+    *
+    * EMPTY for a program whose classes extend nothing unconverted, which is what makes this a
+    * no-op by arithmetic rather than by a branch. */
+  private def applyClassFileOverrides(p: Program): Unit =
+    retainedOverrides = Set.empty; retainedOwners = Set.empty; retainedAnchors = Map.empty
+    given Program = p
+    val owned = p.owned
+    val seeds = p.symbols.all.iterator.filter { s =>
+      s.flags.isOverride && owned(s.id) && isMethodLike(s.info) && mentionsMapped(s.info)
+    }.map(_.id).toList
+    if seeds.isEmpty then return
+    val graph  = OverrideGraph.build(p)
+    val held   = collection.mutable.Set.empty[SymId]
+    val anchor = collection.mutable.Map.empty[SymId, String]
+    seeds.foreach { m =>
+      if graph.overridden(m).isEmpty then
+        val sig       = graph.signatureOf(m)
+        val declarers = graph.externalAncestorsOf(graph.ownerOf(m))
+          .filter(fqn => sig.exists(ExternalSurface.default.mayDeclare(fqn, _)))
+        // …and the SHIM half of that list decides it. Where a candidate declarer is a type the
+        // mapping COVERS, the emitted parent is the shim, the shim's own member is already in shim
+        // shape, and holding the override back would break it in the other direction. Only when
+        // EVERY candidate stayed java is there a java signature to be held to.
+        val kept = if declarers.exists(coveredExternally) then Nil else declarers
+        if kept.nonEmpty then
+          val label = kept.sorted.map(fqn => MemberKey(fqn, sig.map(_.name).getOrElse("?")).render).mkString(", ")
+          (m :: graph.overriders(m)).filter(owned).foreach { x => held += x; anchor += (x -> label) }
+    }
+    retainedOverrides = held.toSet
+    retainedAnchors   = anchor.toMap
+    // a held member's PARAMETER symbols go with it: `restoreExcluded` splices the original
+    // `Tree.ValDef`s back, and a symbol table saying otherwise is the lie `mapSignatures` already
+    // refuses to write for the scope.
+    retainedOwners = p.symbols.all.collect { case s if retainedOverrides(s.owner) => s.id }.toSet
+
+  /** is this external type one the phase's OWN tables move — so that the emitted parent is a shim
+    * and an override of its members belongs in shim shape? Read from the tables, never from the
+    * name (§4.56). */
+  private def coveredExternally(fqn: String): Boolean =
+    typeMap.contains(fqn) || effectiveRetarget.contains(fqn)
+
+  /** DECISION PROVENANCE for [[applyClassFileOverrides]] — [[recordScopedOut]]'s row with the
+    * other §1 classification, and the reason the two are separate kinds: a reader told to widen a
+    * scope that does not exist has been sent after a key nothing in the port can supply (§4.45). */
+  private def recordRetainedSignatures(before: SymbolTable)(using p: Program): Unit =
+    if retainedOverrides.isEmpty then return
+    before.all.foreach { s =>
+      if retainedOverrides(s.id) && mentionsMapped(s.info) && Decision.isDeclaration(p, s) then
+        record(Decision(
+          kind       = Decision.Kind.RetainedSignature,
+          subject    = s.id,
+          subjectFqn = s.fullName,
+          detail = Map(
+            "kept"      -> TirPrinter.tpe(s.info, TirPrinter.Style.canonical),
+            "overrides" -> retainedAnchors.getOrElse(s.id, "?"),
+            "why" -> ("this member OVERRIDES a declaration in a compiled class file, whose " +
+              "signature no phase may move — retyped, it would override nothing and its own " +
+              "`super` call could not compile. Nothing in this port's configuration changes " +
+              "that; the seam moves to the callers, where it is counted"),
+          ),
+          reason = Reason.Universal("class-file-override(§4.56)"),
+          origin = Decision.originOf(p, s.id),
+        ))
+    }
 
   /** DECISION PROVENANCE: one row per DECLARATION whose emitted SIGNATURE moved.
     *
@@ -1389,7 +1524,7 @@ final class CollectionsTransform(
     // a DECLARED slot is an expected type exactly as a formal parameter is — see `coerce`.
     // `Collection<Object[]> parameters = new ArrayList<>()` is the shape, and it is the one that
     // regressed libGDX's test port when only arguments were bridged.
-    case Some(rhs) => t.copy(rhs = Some(coerce(t.tpt.tpe, rhs, excluded(t.symbol))))
+    case Some(rhs) => t.copy(rhs = Some(coerce(t.tpt.tpe, rhs, literal(t.symbol))))
     case _ => t
 
   /** an assignment's left-hand side declares the expected type just as a `val`'s `tpt` does; and a
@@ -2859,7 +2994,7 @@ final class CollectionsTransform(
     * own name. `externalCallee` already excludes a callee whose OWNER this phase maps, for exactly
     * that reason. */
   private def keepsJavaFormals(t: Tree.Apply)(using Program): Boolean =
-    excluded(t.method) || externalCallee(t.method) || (t.fun match
+    literal(t.method) || externalCallee(t.method) || (t.fun match
       case Tree.Select(recv, _, _, _) => actualOf(recv)._2
       case _                          => false)
 
@@ -3871,8 +4006,8 @@ final class CollectionsTransform(
     * back. `excluded.isEmpty` — the default scope, and any scope that matched nothing — always
     * answers `(t.tpe, false)`, which is the pre-scope code path by arithmetic. */
   private def actualOf(t: Term)(using Program): (TypeRepr, Boolean) =
-    if excluded.isEmpty then (t.tpe, false)
-    else CollectionsTransform.scopedType(t, excluded).map(_ -> true).getOrElse(t.tpe -> false)
+    if literalEmpty then (t.tpe, false)
+    else CollectionsTransform.scopedType(t, literal).map(_ -> true).getOrElse(t.tpe -> false)
 
   private def headSym(t: TypeRepr): Option[SymId] = t match
     case TypeRepr.TypeRef(_, s)      => Some(s)

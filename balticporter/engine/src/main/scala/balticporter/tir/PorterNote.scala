@@ -104,7 +104,8 @@ object PorterNote:
     import Decision.Kind.*
     Set(RenamedType, RenamedPackage, RenamedMember, DroppedType, DroppedMember,
         SubstitutedBody, SubstitutedCall, InjectedMember, DroppedSuperCall, WidenedVisibility,
-        Unrenderable, ScopedOut, DeferredInit, FunnelledCtor, RetainedParent, ReifiedTypeArg,
+        Unrenderable, ScopedOut, RetainedSignature, DeferredInit, FunnelledCtor, RetainedParent,
+        ReifiedTypeArg,
         BeanAccessor, ForcedClassInit, WidenedSeal, RecordMembers, SamLambda, CollapsedProperty,
         // …and a MENU CHOICE. It is here rather than beside `RetypedSignature` for the line this
         // list is drawn on: the emitted text is a translation the engine could have done another way

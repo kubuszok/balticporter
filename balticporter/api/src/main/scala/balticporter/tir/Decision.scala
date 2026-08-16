@@ -238,6 +238,24 @@ object Decision:
       * this one". The DETAIL carries the remedy's id, the residue lane it drained and which of §1's
       * three kinds owns the code that carried it out. */
     case SelectedRemedy
+    /** a declaration's type was NOT retyped, because the declaration OVERRIDES one whose signature
+      * lives in a COMPILED CLASS FILE (§4.56: an unowned symbol's signature is a fact about a class
+      * file, and no phase may move it).
+      *
+      * [[ScopedOut]]'s reasoning and emphatically not [[ScopedOut]] itself, because the two answer
+      * different questions and only one of them has an answer a port can act on. A scope is a
+      * POLICY: `Reason.Configured`, a manifest entry verbatim, and a reader told to widen or narrow
+      * it. This is a UNIVERSAL refusal with no key anywhere — the java said `extends
+      * java.util.AbstractSet` and the class file says what `containsAll` takes, so there is nothing
+      * for a port to change and telling its reader to edit a scope would cost them the session
+      * §4.45 is about. It is not [[RetainedParent]] either: that one keeps a PARENT the target
+      * cannot be, and this keeps a MEMBER's formals under a parent that was kept for its own
+      * reasons.
+      *
+      * Rendered as a note for [[ScopedOut]]'s reason read verbatim: a declaration that kept its
+      * upstream type looks like a translation nobody performed, and the diff against the java shows
+      * nothing at all, because nothing changed. */
+    case RetainedSignature
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

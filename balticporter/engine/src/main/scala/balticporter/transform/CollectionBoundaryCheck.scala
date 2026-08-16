@@ -157,6 +157,11 @@ object CollectionBoundaryCheck extends RemedySource:
     /** one side is a declaration the phase's [[balticporter.tir.RuleScope]] deliberately held back,
       * so it kept its JDK type while the code meeting it moved. */
     case ScopedOut
+    /** …and the same slot where NO POLICY held the declaration back: it OVERRIDES a member whose
+      * signature lives in a COMPILED CLASS FILE, so the phase could not move its formals however
+      * the mapping reads (§4.56). Kept apart from [[ScopedOut]] because that one's whole sentence
+      * is *change your port's `scope`*, and here there is no key anywhere to change. */
+    case ClassFileOverride
     /** one side is a method the PROGRAM DOES NOT DECLARE, whose signature is a fact about a
       * compiled class file and cannot be retyped — and whose seam nothing in this check can see,
       * because the position-blind retyping moved the node's type on both sides of it. Recorded BY
@@ -215,6 +220,20 @@ object CollectionBoundaryCheck extends RemedySource:
           "the port expects a scala collection. Widen the scope to cover this declaration, or " +
           "narrow it to exclude the other side of the slot too. The engine needs no change; a " +
           "scope that produced this seam SILENTLY would be worse than no scope."
+      case ClassFileOverride =>
+        "§1(a) engine, and REFUSED on purpose — WITH NO KEY TO CHANGE, which is the whole reason " +
+          "this is not a `ScopedOut` row. One side of this slot is a declaration that OVERRIDES a " +
+          "member declared in a COMPILED CLASS FILE (a java class the port extends but does not " +
+          "convert), so its formals are a fact about that class file and no phase may move them " +
+          "(§4.56): retyped, the member overrides NOTHING and its own `super.<same>(…)` call " +
+          "cannot compile. The phase therefore holds the whole declaration literally, exactly as a " +
+          "scope would — and the seam moves here, to the callers that hand it a value this phase " +
+          "DID retype. The direction that can be closed already is: a retyped value at the held " +
+          "java formal goes through `JavaCollections.toJava`, a live view. What is left is the " +
+          "other one — a value the held-back member PRODUCES, arriving where the port expects a " +
+          "scala collection. Nothing in this port's manifest widens or narrows this; it closes " +
+          "when the class file's own type is one the mapping covers, i.e. when the parent is a " +
+          "shim rather than a java class the mapping leaves alone (`collection-closure` names it)."
       case InexpressibleParent =>
         "§1(a) engine, and REFUSED on purpose: this class IMPLEMENTS a java type the mapping " +
           "covers, and the target cannot BE a parent — `scala.Tuple2` is final, has no `setValue` " +
@@ -293,6 +312,25 @@ object CollectionBoundaryCheck extends RemedySource:
     * lives in prose (CLAUDE.md §5.1's objection to a hand-maintained expected-failure list). */
   val untranslatedFamilies: List[String] = List("java.util.stream.")
 
+  /** WHY a declaration's type is read LITERALLY rather than through the mapping — the two answers
+    * the phase can give, plus "it is not".
+    *
+    * One flag would do for the arithmetic and would be wrong for the reader, which is the whole of
+    * why this is an enum: the two refusals have different §1 classifications and only one of them
+    * names something a port can edit. `Scoped` says *this port's `CollectionsTransform(scope)` held
+    * it back* and its remedy is one line in a manifest; `ClassFile` says *java put this signature
+    * in a compiled class file* and there is no line anywhere. Reported as one kind, half the rows
+    * would send their reader after a key that does not exist. */
+  enum Held:
+    case No, Scoped, ClassFile
+
+  object Held:
+    /** the SLOT name for the receiver arm — kept verbatim per case rather than generalised, because
+      * these strings are baselined (`findings.tsv`) and a rename is a diff nobody can read. */
+    def slotOf(h: Held): String = h match
+      case ClassFile => "argument (class-file-override receiver)"
+      case _         => "argument (scoped-out receiver)"
+
   private enum Side:
     case Jdk, Shim, Scala, Universal, Other
 
@@ -324,8 +362,8 @@ object CollectionBoundaryCheck extends RemedySource:
     * phase's own policy, read back, so the check concludes about a type only from what the phase
     * did to it (CLAUDE.md §4.56). */
   def check(program: Program, mapped: Set[String], targets: Set[String] = Set.empty,
-            scopedOut: Set[SymId] = Set.empty): List[Finding] =
-    check(program, program.units, mapped, targets, scopedOut)
+            scopedOut: Set[SymId] = Set.empty, classFileOverrides: Set[SymId] = Set.empty): List[Finding] =
+    check(program, program.units, mapped, targets, scopedOut, classFileOverrides)
 
   /** …restricted to the units the run actually EMITS — the same filter `OmissionCheck` and
     * `PortabilityCheck.inEmittedCode` carry, and for the same measured reason: a DEPENDENT port's
@@ -333,14 +371,14 @@ object CollectionBoundaryCheck extends RemedySource:
     * slot inside one of those is the BASE's finding, reported by a repository that cannot act on it
     * (ENGINE-LIMITS D2). A base port passes `program.units` and this is the identity. */
   def check(program: Program, units: List[Tree.ClassDef], mapped: Set[String], targets: Set[String],
-            scopedOut: Set[SymId]): List[Finding] =
+            scopedOut: Set[SymId], classFileOverrides: Set[SymId]): List[Finding] =
     val out   = collection.mutable.ListBuffer[Finding]()
     val shims = targets.filter(_.startsWith(RuntimeArtifact.Package + "."))
     given Program = program
 
     def fqn(t: TypeRepr): Option[String] = headSym(t).flatMap(program.symbolOf).map(_.fullName)
 
-    def issueFor(jdk: String, scoped: Boolean, external: Boolean = false): Issue =
+    def issueFor(jdk: String, held: Held, external: Boolean = false): Issue =
       // A MAPPED type reached this slot from a CLASS FILE's own signature, which is not the same
       // fact as one surviving `transformType` and must not be reported as one. `MappedTypeSurvived`
       // reads "§1(a) engine bug — no occurrence of this type should have survived", and sending a
@@ -348,7 +386,8 @@ object CollectionBoundaryCheck extends RemedySource:
       // §4.45 is about. It became reachable the day the frontend started interning external members
       // with their `MethodType`: before that this arm never saw an external formal at all.
       if external && mapped.contains(jdk) then Issue.ExternalCallee
-      else if scoped && mapped.contains(jdk) then Issue.ScopedOut
+      else if held == Held.Scoped && mapped.contains(jdk) then Issue.ScopedOut
+      else if held == Held.ClassFile && mapped.contains(jdk) then Issue.ClassFileOverride
       else if mapped.contains(jdk) then Issue.MappedTypeSurvived
       else if untranslatedFamilies.exists(jdk.startsWith) then Issue.UntranslatedFamily
       else if CollectionClosureCheck.supertypesOf(jdk).exists(mapped.contains) then Issue.UnmappedSubtype
@@ -356,12 +395,21 @@ object CollectionBoundaryCheck extends RemedySource:
       // relates to, so the slot is a gap in COVERAGE rather than a broken relation.
       else Issue.UnmappedSubtype
 
-    /** The type a term REALLY has, which for a reference to a SCOPED-OUT declaration is not the one
-      * the node carries — `CollectionsTransform.scopedType`, which the TRANSFORM reads through the
-      * same function so that what it refuses to rewrite and what this counts are drawn on one line.
-      * Read its doc before trusting a zero here. */
-    def actualOf(t: Term): (TypeRepr, Boolean) =
-      CollectionsTransform.scopedType(t, scopedOut).map(_ -> true).getOrElse(t.tpe -> false)
+    /** The type a term REALLY has, which for a reference to a declaration the phase read LITERALLY
+      * is not the one the node carries — `CollectionsTransform.scopedType`, which the TRANSFORM
+      * reads through the same function so that what it refuses to rewrite and what this counts are
+      * drawn on one line. Read its doc before trusting a zero here.
+      *
+      * WHICH of the two literal-reading sets answered comes back with it, because the two have
+      * different §1 classifications and only one of them names a key the port can edit. */
+    def actualOf(t: Term): (TypeRepr, Held) =
+      CollectionsTransform.scopedType(t, scopedOut).map(_ -> Held.Scoped)
+        .orElse(CollectionsTransform.scopedType(t, classFileOverrides).map(_ -> Held.ClassFile))
+        .getOrElse(t.tpe -> Held.No)
+
+    /** which set held THIS declaration back — the same question at a symbol rather than at a term. */
+    def heldOf(s: SymId): Held =
+      if scopedOut(s) then Held.Scoped else if classFileOverrides(s) then Held.ClassFile else Held.No
 
     /** is this callee a THIRD PARTY's, rather than one of the collection API's own members?
       *
@@ -388,17 +436,17 @@ object CollectionBoundaryCheck extends RemedySource:
       case _ => false
 
     def slot(kind: String, expected: TypeRepr, actual: Term, origin: Origin, enclosing: SymId,
-             expectedScoped: Boolean, expectedExternal: Boolean = false,
+             expectedHeld: Held, expectedExternal: Boolean = false,
              expectedForeign: Boolean = false): Unit =
-      val (actualT, actualScoped) = actualOf(actual)
-      val scoped = expectedScoped || actualScoped
+      val (actualT, actualHeld) = actualOf(actual)
+      val held = if expectedHeld != Held.No then expectedHeld else actualHeld
       (fqn(expected), fqn(actualT)) match
         case (Some(e), Some(a)) if e != a =>
           (sideOf(e, shims), sideOf(a, shims)) match
             // `expectedExternal` describes the EXPECTED side only, so it is passed on the arm where
             // the JDK type came from there and nowhere else.
-            case (Side.Jdk, Side.Scala | Side.Shim) => out += Finding(issueFor(e, scoped, expectedExternal), kind, e, a, origin, enclosing)
-            case (Side.Scala | Side.Shim, Side.Jdk) => out += Finding(issueFor(a, scoped), kind, e, a, origin, enclosing)
+            case (Side.Jdk, Side.Scala | Side.Shim) => out += Finding(issueFor(e, held, expectedExternal), kind, e, a, origin, enclosing)
+            case (Side.Scala | Side.Shim, Side.Jdk) => out += Finding(issueFor(a, held), kind, e, a, origin, enclosing)
             case (Side.Shim, Side.Scala) | (Side.Scala, Side.Shim) =>
               // …and the one shape whose `Found` side is not what the emitter printed. The phase's
               // own static table answers it — a call still standing at one of those names is a call
@@ -435,7 +483,7 @@ object CollectionBoundaryCheck extends RemedySource:
           val external = !program.owns(t.method)
           val third    = foreign(t.method)
           t.args.zip(formals).foreach((a, f) =>
-            slot("argument", f, a, a.origin, t.method, scopedOut(t.method), external, third))
+            slot("argument", f, a, a.origin, t.method, heldOf(t.method), external, third))
         else onScopedReceiver(t)
         t
 
@@ -452,16 +500,16 @@ object CollectionBoundaryCheck extends RemedySource:
         * the node's type, which the position-blind retyping already moved) to a type the mapping
         * covers. A `java.util.List` receiver takes java collections and nothing else, so an argument
         * on the scala or shim side of the line is stranded whatever the method's arity. Gated on
-        * `scopedOut`, so an empty scope cannot reach this at all. */
+        * `scopedOut`/`classFileOverrides`, so a run holding nothing back cannot reach this at all. */
       private def onScopedReceiver(t: Tree.Apply)(using Program): Unit = t.fun match
         case Tree.Select(recv, _, _, _) =>
-          val (recvT, recvScoped) = actualOf(recv)
-          if recvScoped then
+          val (recvT, recvHeld) = actualOf(recv)
+          if recvHeld != Held.No then
             fqn(recvT).filter(r => sideOf(r, shims) == Side.Jdk).foreach { r =>
               t.args.foreach { a =>
                 val (actualT, _) = actualOf(a)
                 fqn(actualT).filter(x => sideOf(x, shims) == Side.Scala || sideOf(x, shims) == Side.Shim)
-                  .foreach(x => out += Finding(issueFor(r, scoped = true), "argument (scoped-out receiver)",
+                  .foreach(x => out += Finding(issueFor(r, recvHeld), Held.slotOf(recvHeld),
                                               r, x, a.origin, t.method))
               }
             }
@@ -476,12 +524,12 @@ object CollectionBoundaryCheck extends RemedySource:
         t
 
       override def transformValDef(t: Tree.ValDef)(using Program): Tree.ValDef =
-        t.rhs.foreach(r => slot("declaration", t.tpt.tpe, r, t.origin, t.symbol, scopedOut(t.symbol)))
+        t.rhs.foreach(r => slot("declaration", t.tpt.tpe, r, t.origin, t.symbol, heldOf(t.symbol)))
         t
 
       override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
         t.rhs.foreach(b => returnsIn(b).foreach { r =>
-          r.expr.foreach(e => slot("return", t.returnTpt.tpe, e, r.origin, t.symbol, scopedOut(t.symbol)))
+          r.expr.foreach(e => slot("return", t.returnTpt.tpe, e, r.origin, t.symbol, heldOf(t.symbol)))
         })
         t
 
