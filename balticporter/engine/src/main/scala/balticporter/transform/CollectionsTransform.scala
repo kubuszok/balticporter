@@ -349,6 +349,24 @@ final class CollectionsTransform(
   // prepared in `run`, read by the hooks.
   private var remap: Map[SymId, SymId]    = Map.empty
   private var kindOf: Map[SymId, Kind]    = Map.empty // scala collection symbol → kind
+  /** a class the PROGRAM declares → what this phase's own MINTED PARENTS put beside its members.
+    *
+    * Filled in [[run]] from the ORIGINAL units, because that is the only place the java parent is
+    * still written down; read by [[pinnedByObject]]. Empty whenever the mapping covers no parent of
+    * any declared class, which makes that pin a no-op by arithmetic.
+    *
+    * `kinds` is a SET and not one kind, because java interfaces are small and orthogonal and a
+    * collection class routinely implements several — `OrderedMap implements Map<K,V>,
+    * Iterable<Map.Entry<K,V>>` is `CLAUDE.md` §4.5's own sentence about the library this was written
+    * from. Read as one kind the LAST parent silently won and the pin declined for the very class it
+    * was written for (measured: 0 of 10 sites).
+    *
+    * `probes` is each mapped parent's FIRST type argument — the key of a `Map`, the element of a
+    * `Set`/`Buffer` — as the `extends` clause WRITES it, which is where the one refusal is read
+    * from; `tparams` is the class's own parameters, so a probe that is one of them can be resolved
+    * against a receiver's instantiation. */
+  private final case class MintedParents(kinds: Set[Kind], probes: List[TypeRepr], tparams: List[SymId])
+  private var parentClash: Map[SymId, MintedParents] = Map.empty
   private var opPlusEq, opMinusEq, opPlusPlusEq: SymId = SymId.None
   private var updateSym, insertSym, getOrElseSym, containsSym: SymId = SymId.None
   /** scala `mutable.Map.put`/`remove` — they RETURN the previous value, which java's do too and
@@ -745,6 +763,7 @@ final class CollectionsTransform(
     uninheritableSyms = program.symbols.all.collect {
       case s if typeMap.get(s.fullName).exists((tgt, _) => CollectionsTransform.UninheritableTargets(tgt)) => s.id
     }.toSet
+    parentClash = declaredParentKinds(summon[Program])
     val units    = program.units.map(u =>
       restoreUninheritableParents(u, restoreExcluded(u, StandardTraversal.mapClassDef(this, u))))
     val symbols2 = mapSignatures(symbols) // retype signatures too
@@ -1954,7 +1973,9 @@ final class CollectionsTransform(
       t2.fun match
         case Tree.Select(recv, m, _, so) => kindAt(recv).orElse(inheritedKind(recv, m)) match
           case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
-          case None    => t2
+          // NEITHER answered, so java resolved a member the CLASS declares — and the class may be
+          // one this phase gave a scala parent, whose own members are now beside it.
+          case None    => pinnedByObject(recv, m, t2).getOrElse(t2)
         case _ => t2
     }
     // …and the seam arms see only what NOTHING ELSE REWROTE. Ordering them before the rewrites
@@ -4108,6 +4129,115 @@ final class CollectionsTransform(
     if literalEmpty then (t.tpe, false)
     else CollectionsTransform.scopedType(t, literal).map(_ -> true).getOrElse(t.tpe -> false)
 
+  // -------------------------------------------------------------------------------------------
+  // THE CLASH THIS PHASE'S OWN PARENT MADE — `CLAUDE.md` §4.5, met at a CALL
+  // -------------------------------------------------------------------------------------------
+  //
+  // §4.5 says a parent adds MEMBERS and an extension adds a view, and it says so about the SHIMS.
+  // The same sentence governs what this phase does to a class the PROGRAM declares: `OrderedMap
+  // implements java.util.Map` is emitted `extends scala.collection.mutable.Map`, so the class now
+  // inherits `remove(key: K): Option[V]` beside the `remove(o: Object): V` java made it declare —
+  // java's by-value lookup, which `ENGINE-LIMITS.md` K24 kept for exactly the reason java wrote it.
+  //
+  // Java's candidate set at `map.remove("0")` was ONE member. Scala's is TWO and a `String` matches
+  // both: `E051 Ambiguous overload`, on a call java resolved without hesitating. Nothing in the port
+  // is wrong — the member has to stay, the parent is what makes every retyped slot conform — so the
+  // obligation is the PHASE'S, exactly as `CLAUDE.md` §1 says of a residue a translation created.
+
+  /** every class the program declares whose emitted PARENT this phase minted, with the [[Kind]] of
+    * the java parent that produced it.
+    *
+    * Read off the ORIGINAL units, in [[run]], because after the traversal the parent is already the
+    * scala target and the java type it came from is gone. `StandardTraversal.allClassDefs` and not a
+    * `body.collect` (§3): a class nested inside a method body is a `Tree.ClassDef` in a
+    * `BlockStatement` and a members-only walk answers *there is no nested type here*.
+    *
+    * Four classes of parent are excluded and each for a reason this phase already states elsewhere:
+    * one the SCOPE held back keeps java's parent ([[restoreExcluded]]), one whose target cannot BE a
+    * parent keeps java's ([[restoreUninheritableParents]]), one whose parent the mapping does not
+    * cover was never re-parented at all, and a STANDALONE target
+    * ([[CollectionsTransform.standaloneTargets]]) contributes no member at a type parameter — a shim
+    * carries JAVA's own shape and arity by construction (§4.5), which is the whole reason it is
+    * standalone. In each case there is no minted member to clash with, so a pin would move emitted
+    * text for nothing. */
+  private def declaredParentKinds(p: Program): Map[SymId, MintedParents] =
+    given Program = p
+    def tpeOf(x: Term | TypeTree): TypeRepr = x match
+      case t: TypeTree => t.tpe
+      case t: Term     => t.tpe
+    p.units.flatMap(StandardTraversal.allClassDefs).flatMap { cd =>
+      if excluded.contains(cd.symbol) || uninheritableSyms.contains(cd.symbol) then Nil
+      else
+        val mapped = cd.parents.map(tpeOf).flatMap { tp =>
+          headSym(tp).flatMap(p.symbolOf).flatMap(s => typeMap.get(s.fullName))
+            .filterNot((tgt, _) => CollectionsTransform.UninheritableTargets(tgt))
+            .filterNot((tgt, _) => CollectionsTransform.standaloneTargets(tgt))
+            .map(_._2 -> firstTypeArg(tp))
+        }
+        if mapped.isEmpty then Nil
+        else List(cd.symbol -> MintedParents(mapped.map(_._1).toSet, mapped.flatMap(_._2),
+                                             cd.tparams.map(_.symbol)))
+    }.toMap
+
+  private def firstTypeArg(t: TypeRepr): Option[TypeRepr] = t match
+    case TypeRepr.AppliedType(_, a :: _) => Some(a)
+    case _                               => scala.None
+
+  /** PIN the call javac resolved, by ascribing the argument to the formal it resolved AT.
+    *
+    * `map.remove("0")` becomes `map.remove("0".asInstanceOf[java.lang.Object])` — java's own
+    * spelling of the same disambiguation, `(Object) "0"`, and the node kind the frontend already
+    * builds for one, so no emitter arm and no obligation row moves. The ascription makes java's
+    * member UNIQUELY applicable: `java.lang.Object` conforms to the minted parent's `K`/`A` only
+    * where that parameter IS `Object`, which is this function's one refusal.
+    *
+    * Every conjunct is the phase's own record (§4.56) and none is a name test:
+    *
+    *   - the callee's OWNER is a class [[declaredParentKinds]] says this phase re-parented;
+    *   - the callee is a member THIS PROGRAM DECLARES, taking exactly one `java.lang.Object`. An
+    *     inherited JDK member is [[inheritedKind]]'s business and has already declined by the time
+    *     this is asked;
+    *   - the minted parent declares that (name, arity) at its own type parameter
+    *     ([[CollectionsTransform.ShadowedByTarget]]);
+    *   - the ARGUMENT is not already an `Object`. Ascribing one to its own type changes nothing and
+    *     would move emitted text on every port with such a call, which is the over-approximation
+    *     `CLAUDE.md` §5 has no instrument for.
+    *
+    * REFUSED, and loudly rather than counted, where the minted parent's own KEY/ELEMENT type is
+    * `java.lang.Object`: both alternatives then take an `Object` and no ascription can separate
+    * them. That is read off the `extends` clause and NOT off the receiver — `class Any2Any
+    * implements Map<Object, Object>` has no type parameter at all, so a receiver-only test sees a
+    * bare `TypeRef`, finds no argument to look at and pins a call that is still ambiguous — and
+    * where the clause writes one of the class's OWN parameters the receiver's instantiation is what
+    * answers. The refusal leaves the `E051` exactly where it was, a compile error naming the two
+    * alternatives, so it is the one shape in this family whose residue cannot be silent and §3's
+    * count-the-refusal rule is met by the compiler rather than by a lane. */
+  private def pinnedByObject(recv: Term, m: SymId, t: Tree.Apply)(using p: Program): Option[Term] =
+    /** is this parent's probe position `java.lang.Object` HERE — written so, or instantiated so? */
+    def probeIsObject(probe: TypeRepr, mp: MintedParents, recvTpe: TypeRepr): Boolean =
+      headSym(probe).exists { h =>
+        h == objectSym || (mp.tparams.indexOf(h) match
+          case -1 => false
+          case i  => recvTpe match
+            case TypeRepr.AppliedType(_, as) if as.sizeIs > i => headSym(as(i)).contains(objectSym)
+            case _                                            => false)
+      }
+    for
+      _    <- Option.when(t.args.sizeIs == 1)(())
+      s    <- p.symbolOf(m)
+      mp   <- parentClash.get(s.owner)
+      sigs  = mp.kinds.flatMap(k => CollectionsTransform.ShadowedByTarget.getOrElse(k.toString, Set.empty))
+      if sigs.contains(CollectionsTransform.MemberSig(s.name, 1))
+      d    <- p.definitionOf(m).collect { case x: Tree.DefDef => x }
+      ps    = d.paramss.flatten
+      if ps.sizeIs == 1 && headSym(ps.head.tpt.tpe).contains(objectSym)
+      arg   = t.args.head
+      if !headSym(arg.tpe).contains(objectSym)
+      if !mp.probes.exists(probeIsObject(_, mp, actualOf(recv)._1))
+    yield
+      val tpe = TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
+      t.copy(args = List(Tree.Typed(arg, TypeTree(tpe, arg.origin), tpe, arg.origin)))
+
   private def headSym(t: TypeRepr): Option[SymId] = t match
     case TypeRepr.TypeRef(_, s)      => Some(s)
     case TypeRepr.AppliedType(tc, _) => headSym(tc)
@@ -4577,6 +4707,50 @@ object CollectionsTransform:
     * second, stronger gate — that the phase can point at what it broke — before anything is
     * substituted. */
   private[balticporter] final case class MemberSig(name: String, arity: Int)
+
+  /** …and the members a MINTED PARENT declares AT ITS OWN KEY/ELEMENT TYPE which java declares over
+    * `Object`, keyed by the [[Kind]] of the mapped java parent that produced it.
+    *
+    * ==What this table is FOR==
+    * Re-parenting a class the PROGRAM declares — `OrderedMap implements java.util.Map` emitted
+    * `extends scala.collection.mutable.Map` — adds MEMBERS, which is exactly what `CLAUDE.md` §4.5
+    * says a parent does and an extension does not. Java's candidate set for `map.remove("0")` was
+    * ONE member (the class's own `remove(Object)`, java's by-value lookup); scala's is TWO, because
+    * the minted parent contributes `remove(key: K): Option[V]` and a `String` argument matches both.
+    * `E051 Ambiguous overload` — a compile error the ENGINE'S OWN TRANSLATION created, at a call
+    * java resolved unambiguously and at a member the port must go on declaring.
+    *
+    * ==Why a TABLE and not a derivation==
+    * The far side of the clash is a scala TRAIT this run never parsed, so there is no `Definition`
+    * to read its members off and `OverrideGraph` has no node for it — the same reason
+    * [[UnsupportedOnTarget]] and `loadFactorSyms` are lists. What keeps it out of §4.56's
+    * name-hazard is that every key is a `Kind` of the phase's OWN [[typeMap]] and every value is a
+    * member of the target THAT ENTRY names: nothing is concluded from a receiver's spelling.
+    *
+    * ==Read it as "declared at the type parameter", which is what makes the pin work==
+    * Each member below takes the collection's `K`/`A`, so ascribing the argument to
+    * `java.lang.Object` makes java's overload the UNIQUELY applicable one — `Object` conforms to a
+    * type parameter only where that parameter IS `Object`, which is [[pinnedByObject]]'s one
+    * refusal. A member scala declares over something else (`Buffer.remove(Int, Int)`) is not a
+    * clash and is deliberately absent: the pin would move emitted text for nothing.
+    */
+  private[balticporter] val ShadowedByTarget: Map[String, Set[MemberSig]] = Map(
+    // `mutable.Map`: `get`/`remove`/`contains`/`apply` all take `K`.
+    Kind.Map.toString   -> Set(MemberSig("get", 1), MemberSig("remove", 1),
+                               MemberSig("contains", 1), MemberSig("apply", 1)),
+    // `mutable.Set`: `remove`/`contains`/`apply` all take `A`.
+    Kind.Set.toString   -> Set(MemberSig("remove", 1), MemberSig("contains", 1),
+                               MemberSig("apply", 1)),
+    // `mutable.Buffer`: `contains`/`indexOf`/`lastIndexOf` take `A`. `remove` is deliberately NOT
+    // here — scala's is `remove(Int)`, which java's `remove(Object)` does not clash with at a
+    // reference argument, and where the element IS an `Integer` the phase already answers through
+    // `removeValue` (§4.4's own row).
+    Kind.Seq.toString   -> Set(MemberSig("contains", 1), MemberSig("indexOf", 1),
+                               MemberSig("lastIndexOf", 1)),
+    // a `JavaStack` IS a `mutable.ArrayBuffer`, so it inherits exactly the Seq row's three.
+    Kind.Stack.toString -> Set(MemberSig("contains", 1), MemberSig("indexOf", 1),
+                               MemberSig("lastIndexOf", 1)),
+  )
 
   /** the exception java's own contract names for an optional operation a receiver cannot perform. */
   private[balticporter] val UnsupportedOperationFqn = "java.lang.UnsupportedOperationException"

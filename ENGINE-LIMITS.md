@@ -6591,6 +6591,74 @@ removed arm.*
 
 ---
 
+### K27. A MINTED PARENT puts its own members beside the class's, and java's one-candidate call becomes scala's ambiguous one — **ssg-md test set 44 → 34, main flat at 40, eleven other lanes byte-identical. CLOSED**
+
+`CLAUDE.md` §4.5 says a parent adds MEMBERS where an extension adds a view, and it says so about the
+runtime shims. The same sentence governs what `CollectionsTransform` does to a class the PROGRAM
+declares: `OrderedMap implements java.util.Map<K,V>` is emitted `extends
+scala.collection.mutable.Map[K,V]`, so the class inherits `remove(key: K): Option[V]` beside the
+`remove(o: Object): V` java obliged it to declare — and K24 above is why that member stays, since
+java's lookup is BY VALUE and a probe of an unrelated type is meant to MISS rather than fail to
+compile.
+
+Java's candidate set at `orderedMap.remove("0")` was ONE member. Scala's is TWO and a `String`
+matches both:
+
+```
+Ambiguous overload. The overloaded alternatives of method remove in class OrderedMap with types
+ (o: Object): Integer
+ (key: String): Option[Integer]
+both match arguments (("0" : String))
+```
+
+Ten of them on one test set, and NOTHING in the port is wrong — the member has to stay, the parent is
+what makes every retyped slot conform, and javac never hesitated. `CLAUDE.md` §1's *an obligation the
+engine's own translation created is not a port's to discharge* is the whole classification: this is
+emphatically not an `overload-risk` row (the lane read ZERO at all ten sites, correctly — java's
+candidate set spans no resolution phase) and so emphatically not an `ascribe-javac-choice` selection,
+which would make a port declare a key for a clash the engine made.
+
+**The pin is java's own spelling.** `orderedMap.remove("0".asInstanceOf[java.lang.Object])` is the
+translation of `orderedMap.remove((Object) "0")`, which is what a java programmer writes for the same
+disambiguation — so it is the node kind the frontend already builds for a cast, no emitter arm is
+added and no `catalog` obligation moves (`catalog(consulted)` for `JS-E06`/`JS-G34` rises by the five
+new `Typed` nodes and both go on firing 0, which is a fact rather than a default: an upcast to
+`Object` is neither an intersection nor an unboxing). It works because `java.lang.Object` conforms to
+the minted parent's `K`/`A` only where that parameter IS `Object`.
+
+**The whole difficulty is not over-approximating**, because `CLAUDE.md` §5's widening rule applies
+exactly: ascribing every `Object`-formal argument is CORRECT, moves emitted text on every port with
+such a call, and no count can see it. Four conjuncts, every one the phase's own record (§4.56):
+
+| conjunct | what it rules out |
+|---|---|
+| the callee's OWNER is a class this phase RE-PARENTED, read off the ORIGINAL units in `run` | a class with no minted parent has no second alternative — nothing to be ambiguous with |
+| that parent's target is not STANDALONE (`standaloneTargets`) | a shim carries JAVA's shape and arity by construction (§4.5), so it declares nothing at a type parameter. `Cursor implements java.util.Iterator` is no clash |
+| the minted parent declares that (name, arity) AT ITS TYPE PARAMETER (`ShadowedByTarget`) | `containsKey` is not a `mutable.Map` member and `remove(Int)` is not what a `Buffer` clashes at — both would be emitted text for nothing |
+| the ARGUMENT is not already an `Object` | an `Object` at an `Object` slot already selects java's alternative uniquely |
+
+**TWO THINGS GOT WRONG ON THE WAY, both invisible in the target port's own diff.** First, the
+re-parenting record was `Map[SymId, Kind]` and a collection class implements SEVERAL java interfaces
+— `OrderedMap implements Map<K,V>, Iterable<Map.Entry<K,V>>` — so `toMap` let the LAST parent win and
+the pin declined at 0 of 10 sites while firing at three unrelated `indexOf` calls it had no business
+at. A `Set[Kind]` per class is the fix and the shape is §4.5's own sentence about why a library's
+classes look like this. Second, the refusal was read off the RECEIVER's type arguments, which is
+right for `OrderedMap<K,V>` and answers nothing for `class Any2Any implements Map<Object,Object>` — a
+bare `TypeRef` with no argument to look at, pinned, and still ambiguous. Read it off the `extends`
+CLAUSE, resolving a clause that writes one of the class's own parameters against the receiver's
+instantiation.
+
+**The refusal is LOUD rather than counted**, which is the one case in this file where that is
+allowed: where the parent's probe position is `java.lang.Object` both alternatives take an `Object`
+and no ascription separates them, so scalac goes on reporting the same `E051` naming both. §3's
+*count the refusal* exists because a refusal's residue usually COMPILES; this one cannot.
+
+*Fix kind: (a). `CollectionsMintedParentClashSpec` — three positives (map, set, and the class's own
+body still taking K24's probe helpers) and four negatives, of which "a STANDALONE target is no parent
+to clash with" and "a KEY TYPE that IS `Object`" are the two the wrong versions above would fail.*
+
+---
+
 ## 6. Porting a test suite
 
 ### X1. Converting JUnit to MUnit is a STRUCTURAL transform, not an annotation rename

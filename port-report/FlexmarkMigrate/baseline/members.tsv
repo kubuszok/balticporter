@@ -374,7 +374,7 @@ ssg.md.ast.ParagraphItemContainer	ssg.md.ast.ParagraphItemContainer	class	644e73
 ssg.md.ast.ParagraphItemContainer	ssg.md.ast.ParagraphItemContainer#isItemParagraph(Paragraph)	def	62c87867cbf55b2c
 ssg.md.ast.ParagraphItemContainer	ssg.md.ast.ParagraphItemContainer#isParagraphInTightListItem(Paragraph)	def	daef0d0325efd745
 ssg.md.ast.ParagraphItemContainer	ssg.md.ast.ParagraphItemContainer#isParagraphWrappingDisabled(Paragraph,ListOptions,DataHolder)	def	6a2f6dd123ec14ee
-ssg.md.ast.RefNode	ssg.md.ast.RefNode	class	9fc840f357c40137
+ssg.md.ast.RefNode	ssg.md.ast.RefNode	class	478fe62be0663d67
 ssg.md.ast.RefNode	ssg.md.ast.RefNode#<init>(BasedSequence)	ctor	2f5cfc98896beb36
 ssg.md.ast.RefNode	ssg.md.ast.RefNode#<init>(BasedSequence,BasedSequence,BasedSequence)	ctor	6277a69f9e3d14ae
 ssg.md.ast.RefNode	ssg.md.ast.RefNode#<init>(BasedSequence,BasedSequence,BasedSequence,BasedSequence)	ctor	61fbcf3352d7a72a
@@ -387,7 +387,7 @@ ssg.md.ast.RefNode	ssg.md.ast.RefNode#getDummyReference()	def	a1680e71c3f20886
 ssg.md.ast.RefNode	ssg.md.ast.RefNode#getReference()	def	9112bfffb5374544
 ssg.md.ast.RefNode	ssg.md.ast.RefNode#getReferenceClosingMarker()	def	7b5fa8f14eb6530c
 ssg.md.ast.RefNode	ssg.md.ast.RefNode#getReferenceNode(Document)	def	7b03c4286dfc4513
-ssg.md.ast.RefNode	ssg.md.ast.RefNode#getReferenceNode(ReferenceRepository)	def	794c31cc5482bc0b
+ssg.md.ast.RefNode	ssg.md.ast.RefNode#getReferenceNode(ReferenceRepository)	def	f1ab0370a0324d76
 ssg.md.ast.RefNode	ssg.md.ast.RefNode#getReferenceOpeningMarker()	def	43fc03a325f8e7e6
 ssg.md.ast.RefNode	ssg.md.ast.RefNode#getSegments()	def	7a45c91a92db14b5
 ssg.md.ast.RefNode	ssg.md.ast.RefNode#getText()	def	3da0c428a2e750e8
@@ -4838,14 +4838,14 @@ ssg.md.util.data.SharedDataKeys	ssg.md.util.data.SharedDataKeys#TRANSLATION_AUTO
 ssg.md.util.data.SharedDataKeys	ssg.md.util.data.SharedDataKeys#TRANSLATION_HTML_BLOCK_TAG_PATTERN	val	06ace3212590891b
 ssg.md.util.data.SharedDataKeys	ssg.md.util.data.SharedDataKeys#TRANSLATION_HTML_INLINE_TAG_PATTERN	val	811bf9e66904503b
 ssg.md.util.data.SharedDataKeys	ssg.md.util.data.SharedDataKeys#UNESCAPE_SPECIAL_CHARS	val	60309aa8b3f14e56
-ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler	class	e3c087c8f14714d2
+ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler	class	73fe4125fc447c36
 ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler#createResolvedDependencies(Buffer<S>)	def	d90c9d392e1f0496
 ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler#createStage(Buffer<D>)	def	a7b505c104eaa20a
 ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler#getDependentClass(D)	def	a8fa8773ccd5fa8b
 ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler#prioritize(DependentItemMap<D>)	def	31c7512ef2c61538
-ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler#resolveDependencies(Buffer<D>)	def	af7865ea3174c381
-ssg.md.util.dependency.DependencyResolver	ssg.md.util.dependency.DependencyResolver	class	cd165ff23021b3ea
-ssg.md.util.dependency.DependencyResolver	ssg.md.util.dependency.DependencyResolver#resolveDependencies(Buffer<D>,Function<DependentItemMap<D>,DependentItemMap<D>>,Function<?,Class<?>>)	def	659ca7622100f11e
+ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler#resolveDependencies(Buffer<D>)	def	62c21d0eb6111dae
+ssg.md.util.dependency.DependencyResolver	ssg.md.util.dependency.DependencyResolver	class	916c293bde719d3e
+ssg.md.util.dependency.DependencyResolver	ssg.md.util.dependency.DependencyResolver#resolveDependencies(Buffer<D>,Function<DependentItemMap<D>,DependentItemMap<D>>,Function<?,Class<?>>)	def	4a925dc4c519d111
 ssg.md.util.dependency.DependencyResolver	ssg.md.util.dependency.DependencyResolver#resolveFlatDependencies(Buffer<D>,Function<DependentItemMap<D>,DependentItemMap<D>>,Function<?,Class<?>>)	def	5bc3ca97c5cf1033
 ssg.md.util.dependency.Dependent	ssg.md.util.dependency.Dependent	class	c887ab1827dc374d
 ssg.md.util.dependency.Dependent	ssg.md.util.dependency.Dependent#affectsGlobalScope()	def	e5655b68179cc6e7
