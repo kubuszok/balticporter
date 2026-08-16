@@ -67,7 +67,23 @@ write_run_props() {
 # token on its line. That makes `^\s*@Test\b` outside a block comment sufficient, and makes every
 # remaining imprecision (a `//` inside a string, an unbalanced marker) confined to one file and unable
 # to affect the line the count actually looks at.
+#
+# ZERO INPUT FILES IS AN EXACT ZERO, AND IT IS DECIDED BY LOOKING FOR A FILE — never by defaulting
+# an empty answer to a number (CLAUDE.md §4.6). BSD `xargs -0` does not run its utility AT ALL on
+# empty input, so the counter below prints NOTHING, and an empty string is not a `0`: the caller's
+# `[ "$JAVA_TESTS" = "0" ]` is false, so a lane's "a suite has appeared upstream" alarm fires over a
+# suite of zero, and `test_discovery_guard`'s `$((java - scala))` is a bash error rather than a
+# number. Every lane before flexmark happened to pass at least one directory holding java — noise4j
+# passes its `src`, jbump its whole checkout — so the counter always ran and the emptiness was
+# unreachable. The first port whose scope has no `src/test` directory at all met it on its first
+# run: the alarm printed, naming no count, over a zero the lane exists to assert.
+#
+# The `-z` test is not a fallback for an unknown value. It distinguishes "there is nothing to count"
+# — where 0 is the exact answer — from "the counter ran", which is the only case the perl below
+# speaks for; a `${n:-0}` after the pipe would have covered a crashed counter with the same digit.
 java_test_count() {
+  # nothing to count: an exact zero, and the one case an empty answer is honest about.
+  if [ -z "$(find "$@" -name '*.java' -print 2>/dev/null | head -1)" ]; then echo 0; return 0; fi
   find "$@" -name '*.java' -print0 2>/dev/null | xargs -0 perl -e '
     my $n = 0;
     for my $f (@ARGV) {
