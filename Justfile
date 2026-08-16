@@ -13,6 +13,7 @@
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
 #   just liqp-measure                liqp + its own 105-file suite (emitted and censused; RUN when it compiles)
+#   just md-measure                  flexmark-java core + the eleven util modules (no test set in scope)
 #   just measure-all                 every lane, SERIALLY, in dependency order
 #   just decision-counts             decisions.tsv row counts by kind, every port
 #   just catalog-coverage            catalog.tsv across every port — rows the corpus never reaches
@@ -83,6 +84,7 @@ gltf_module   := "ported/sge-gltf"
 screens_module := "ported/sge-screens"
 vfx_module    := "ported/sge-vfx"
 liqp_module   := "ported/ssg-liquid"
+md_module     := "ported/ssg-md"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
@@ -118,6 +120,16 @@ gltf_tests    := "../sge/original-src/gdx-gltf/gltf/test"
 # before javac reads them, so there is no seam left for a second directory to soften.
 liqp_src      := "../ssg/original-src/liqp"
 liqp_parser_classes := "out/liqp-parser-classes"
+# flexmark-java is the second corpus library vendored under **ssg** rather than under sge. Its
+# `sourceRoot` is the CHECKOUT (decision D-md-1, `balticporter/corpus/ports/ssg-md/main.conf`): 53 maven
+# modules, all declaring under one package root, so no single directory is both a package root and
+# a scope boundary. Milestone 1 converts the twelve below and nothing else.
+md_src        := "../ssg/original-src/flexmark-java"
+# THE SCOPE, restated. `main.conf`'s `includeGlobs` is the authority and nothing compares the two,
+# so a module added there is added here — which is what the lane's own file count is for: it
+# re-derives the denominator from THIS list on every run, and a divergence shows up as a scope
+# figure that no longer matches the port's `converted` line.
+md_modules    := "flexmark flexmark-util-ast flexmark-util-builder flexmark-util-collection flexmark-util-data flexmark-util-dependency flexmark-util-format flexmark-util-html flexmark-util-misc flexmark-util-options flexmark-util-sequence flexmark-util-visitor"
 
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
@@ -193,6 +205,23 @@ screens_deps  := "--dependency org.scalameta::munit:1.0.2"
 # base port emitted rather than as a coordinate. So the only coordinate here is the one its
 # HAND-WRITTEN suite is written in — the same shape, and for the same reason, as anim8's.
 vfx_deps      := "--dependency org.scalameta::munit:1.0.2"
+# flexmark's one compile-scope coordinate, `org.jetbrains:annotations:24.0.1`, is a FRONTEND input
+# AND a compile one — and this line was written empty on the reasoning that it could not be, which
+# the port's first run disproved in one number. The reasoning was: the annotations are markers,
+# milestone 1 declares no `preservedAnnotations`, and `AnnotationPolicy`'s default claims no family,
+# so nothing emitted could name them. What the run showed is that `claimed` gates an annotation WITH
+# ARGUMENTS and a MARKER is carried unconditionally (`SpoonTir.annotationsOf`), so
+# `@org.jetbrains.annotations.NotNull` is emitted on 237 of the 468 files this port writes — and
+# `value jetbrains is not a member of org` was **1976 of the first run's 2184 errors**.
+#
+# The coordinate goes on the compile line rather than the emission being changed, because those are
+# two different acts and only one of them belongs to this milestone: the emitted code NAMES that
+# type, so a compile without it reports unresolved references as this port's wall, which is the same
+# refusal `liqp-measure` makes about the generated parser. WHETHER a marker whose family the port
+# does not claim should be emitted at all is an engine question (`PROGRESS.md` §10.6 states it with
+# the number), and it has a portability half beside it — this module claims all three platforms and
+# that jar is JVM-only. Both are the next wave's, with a measurement each.
+md_deps       := "--dependency org.jetbrains:annotations:24.0.1"
 
 root          := justfile_directory()
 
@@ -1504,6 +1533,130 @@ liqp-measure:
     headline "$ERRORS" "$TREPORT" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
+# ssg-md — flexmark-java, MILESTONE 1: `flexmark` core plus the eleven `flexmark-util-*` modules.
+#
+# `noise4j-measure`'s shape — emit, checks, discovery, break residue, compile, correlate — because
+# this milestone has exactly one source set. Three things about it are worth reading before quoting
+# a number from it:
+#
+#   * THE SCOPE IS A SELECTION AND THE LANE RE-DERIVES IT. `md_src` is the whole 53-module
+#     checkout and `md_modules` is the twelve this port converts, so the lane counts the java files
+#     under those twelve on every run and prints them beside what the migration says it converted.
+#     A scope stated in two files with nothing comparing them is a scope that drifts, and this is
+#     the number that would show it: the port's `converted` line and this denominator move together
+#     or somebody edited one of them.
+#   * THE TEST DISCOVERY BLOCK ASSERTS A ZERO, and the zero is a fact about the SCOPE rather than
+#     about the library. flexmark ships 1,306 `@Test` methods, 730 of them in `flexmark-util`'s own
+#     module — but not one of the twelve modules here has a `src/test` directory at all, because
+#     the split util libraries are tested from that aggregator. So `java_test_count` over the
+#     scoped trees is 0 and this lane re-derives it, exactly as `noise4j-measure` and
+#     `jbump-measure` re-derive theirs: a lane that silently has no tests is indistinguishable from
+#     a lane whose tests all vanished. What that leaves UNMEASURED is everything CLAUDE.md §4.4
+#     lists, on a library that is a character-level parser — which is a larger gap here than on any
+#     port before it, and `PROGRESS.md` §10.6 says so in the same words.
+#   * THE COMPILE CARRIES THE ANNOTATION JAR, and it is not the frontend's copy of it. flexmark's
+#     one compile-scope coordinate is resolved by `FlexmarkClasspath` so SPOON can read
+#     `@NotNull`/`@Nullable`, and it turns out to be needed AGAIN by scalac, because a MARKER
+#     annotation is carried into the emitted Scala whatever the port claims — 237 of 468 emitted
+#     files name it. Without it the lane reports 1976 unresolved references as this port's wall.
+#     See `md_deps` for the number and for the engine question underneath it.
+#
+# The compile is EXPECTED to report errors at this milestone. That is the deliverable — a census,
+# classified per CLAUDE.md §1 — so `compile_guard` reporting a non-zero count is data, and the lane
+# runs `correlate` whether or not it compiled, because the compiler output is then the only
+# diagnostic this port has. A compile that ABORTED is not data and stops the lane there
+# (`compile_guard`'s third state): the census would be a floor, and this port's whole deliverable is
+# the number.
+# ---------------------------------------------------------------------------------------------
+[doc("flexmark-java core + the eleven util modules — emit, checks, break residue, compile, correlate")]
+md-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
+    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{md_src}}"
+    REPORT="$ROOT/port-report/FlexmarkMigrate"
+
+    # ABORT if the migration itself did not run, or the lane measures the PREVIOUS emit and reports a
+    # stale number as a result.
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.flexmark.FlexmarkMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
+      echo "!! FlexmarkMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[ssg-md\]" <<<"$OUT" | head -30
+      exit 1
+    fi
+    echo "-- FlexmarkMigrate (ALL checks, untruncated, as the migration printed them) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
+    echo
+
+    echo "-- scope: the twelve modules this milestone converts --"
+    # The denominator, from `md_modules` — see the lane header for why it is recomputed rather than
+    # quoted. `package-info.java` is counted here and NOT converted (the loader's default excludes
+    # it), so the two numbers differ by exactly the declaration-only files.
+    SCOPE_DIRS=""
+    for m in {{md_modules}}; do SCOPE_DIRS="$SCOPE_DIRS {{md_src}}/$m/src/main/java"; done
+    SCOPE_ALL=$(find $SCOPE_DIRS -name '*.java' 2>/dev/null | wc -l | tr -d ' ')
+    SCOPE_PKG=$(find $SCOPE_DIRS -name 'package-info.java' -o -name 'module-info.java' 2>/dev/null | wc -l | tr -d ' ')
+    echo "java files in scope: $SCOPE_ALL   declaration-only (package-info/module-info, not converted): $SCOPE_PKG   expected units: $((SCOPE_ALL - SCOPE_PKG))"
+
+    echo
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
+
+    echo
+    echo "-- test discovery --"
+    # ASSERTED, not omitted — see the lane header. The twelve scoped modules ship no `src/test` at
+    # all; flexmark's suites live in `flexmark-util`, `flexmark-core-test` and the extensions, none
+    # of which this milestone parses.
+    TEST_DIRS=""
+    for m in {{md_modules}}; do TEST_DIRS="$TEST_DIRS {{md_src}}/$m/src/test"; done
+    JAVA_TESTS=$(java_test_count $TEST_DIRS)
+    echo "@Test in the twelve scoped modules: $JAVA_TESTS   emitted test files: 0 (this milestone has no test source set)"
+    if [ "$JAVA_TESTS" = "0" ]; then
+      echo "   NO SUITE IN SCOPE — the split util libraries are tested from flexmark-util's own module,"
+      echo "   which milestone 1 does not parse. Every CLAUDE.md §4.4 form in this port is UNMEASURED,"
+      echo "   and this library is a character-level parser: see PROGRESS.md §10.6 for what that costs."
+    else
+      echo "!! A SUITE HAS APPEARED IN SCOPE — $JAVA_TESTS @Test method(s) under a module this port"
+      echo "   converts, and none of them runs. Add balticporter/corpus/ports/ssg-md/test.conf (\`base = \"main.conf\"\`)"
+      echo "   and a lane stage, or narrow the scope deliberately (CLAUDE.md §3)."
+    fi
+
+    echo
+    break_residue {{md_module}}/src_managed
+
+    echo "-- compile --"
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
+    # that does not compile — a false NEGATIVE on the headline number.
+    DEPS="{{md_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{md_module}}/src_managed/main/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/mdmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/mdmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/mdmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/mdmeasure.txt | sort | uniq -c | sort -rn | head -20
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/mdmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
+
+    echo
+    echo "-- correlation: every error located to its member and its Java origin --"
+    # Run WHETHER OR NOT it compiled. With no suite there is no second thing to correlate, so the
+    # compile output is the only diagnostic this port has and it is always worth attributing.
+    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/mdmeasure.txt \
+      --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
@@ -1516,7 +1669,11 @@ liqp-measure:
 measure-all:
     #!/usr/bin/env bash
     cd "{{root}}"
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure; do
+    # `md-measure` is LAST and is not a dependency of anything: ssg-md is a standalone base port at
+    # milestone 1, so nothing downstream compiles against what it wrote, and a lane that stops the
+    # sequence there costs no other lane its number. That is a property of THIS port's position and
+    # not a general licence — the ordering above is a dependency order and stays one.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
