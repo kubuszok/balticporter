@@ -1307,6 +1307,21 @@ emitted FQN are two namespaces on a renaming port), and let anything the parse c
 take the conservative arm. A count of the survivors answers a different question than the one the
 construct asked.
 
+**And a member SYNTHESISED INTO A SUBCLASS carries the PARENT'S SCOPE with it, which is the same
+rule read at a TYPE PARAMETER.** Three mechanisms materialise a member the subclass never wrote — a
+diamond-disambiguating forwarder, a synthesised primary whose slots are the parent constructor's
+formals, a replayed constructor body — and each copies a signature the PARENT declared, in the
+parent's scope. Every type parameter it mentions is an ancestor's, and the emitting class declares
+none of them: `override def split(c: Char): Array[T]` and `class C protected (sup$0: Node[N])` are
+valid-looking Scala naming a type that is not there. The `extends` clause says what the argument is,
+so the substitution is EXACT and this is emphatically not `ENGINE-LIMITS.md` G8's F-bound with no
+consistent FILL. Two halves neither of which is optional: **a forwarded member's OWN type parameters
+come too** (a generic method rendered without its `[V]` is the same error text and a different
+cause), and the substitution is ONE derivation — `ParentSubst`, complete over `TypeRepr` — because
+this arrived as four spellings of one function of which two callers had it and two did not, and
+because a partial recursion is this section's own fast-path guard read at a type walk. Measured at
+**41 of 42 `Not found: type` errors on one port, 243 → 201** (`ENGINE-LIMITS.md` G25).
+
 **And what makes it hard to see is a RESIDUE COUNT that cannot tell a refusal from a switched-off
 fix.** The boundary check reported all five seams, precisely, on every run since that port began —
 and a "no wrap was inserted" finding reads as *no wrap exists for this pair*, which is what the

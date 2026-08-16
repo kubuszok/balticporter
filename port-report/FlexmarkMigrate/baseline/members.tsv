@@ -496,7 +496,7 @@ ssg.md.ast.util.AnchorRefTargetBlockVisitor	ssg.md.ast.util.AnchorRefTargetBlock
 ssg.md.ast.util.AnchorRefTargetBlockVisitor	ssg.md.ast.util.AnchorRefTargetBlockVisitor#preVisit(Node)	def	1674a35bd66e058d
 ssg.md.ast.util.AnchorRefTargetBlockVisitor	ssg.md.ast.util.AnchorRefTargetBlockVisitor#visit(AnchorRefTarget)	def	113935fbde4764cc
 ssg.md.ast.util.AnchorRefTargetBlockVisitor	ssg.md.ast.util.AnchorRefTargetBlockVisitor#visit(Node)	def	00858db8c0b72edd
-ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter	class	1c139ff25854d29e
+ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter	class	b04f8ed9b3757cf5
 ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#<init>(Array<Array<AttributeProvidingHandler<?>>>)	ctor	e863f9b86a9f4f15
 ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#<init>(Array<AttributeProvidingHandler<?>>)	ctor	85a0a059dee4d12d
 ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#<init>(JavaCollection<AttributeProvidingHandler<?>>)	ctor	c86b047f042d3800
@@ -598,7 +598,7 @@ ssg.md.ast.util.LineCollectingVisitor	ssg.md.ast.util.LineCollectingVisitor#visi
 ssg.md.ast.util.LineCollectingVisitor	ssg.md.ast.util.LineCollectingVisitor#visit(SoftLineBreak)	def	ad160a72f7e8a750
 ssg.md.ast.util.LineCollectingVisitor	ssg.md.ast.util.LineCollectingVisitor#visit(Text)	def	cb02b218aec41771
 ssg.md.ast.util.LineCollectingVisitor	ssg.md.ast.util.LineCollectingVisitor#visit(TextBase)	def	729bc3743ce7f132
-ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter	class	747073473b4c9f6f
+ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter	class	1aec69e443f8bab1
 ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#<init>(Array<Array<LinkResolvingHandler<?>>>)	ctor	f9d25ff3a10f14ea
 ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#<init>(Array<LinkResolvingHandler<?>>)	ctor	1ccfb3a8c72ea560
 ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#<init>(JavaCollection<LinkResolvingHandler<?>>)	ctor	75eeee3e5c6f0453
@@ -1633,7 +1633,7 @@ ssg.md.html.EmbeddedAttributeProvider	ssg.md.html.EmbeddedAttributeProvider$Embe
 ssg.md.html.HtmlRenderer	addEmbedded	val	413833d84d8ddd5c
 ssg.md.html.HtmlRenderer	nodeRendererFactory	val	bfe542ab75275acf
 ssg.md.html.HtmlRenderer	nodeRenderers	val	d2b1d5b3c71a7eee
-ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer	class	dce37287a7da8ed9
+ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer	class	38ba1f047711f329
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#<stmt1>	stmt	00963f34c62fcd78
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#<stmt2>	stmt	4495c0bbd9024ad5
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#<stmt3>	stmt	e28fcbb014b56e56
@@ -1724,7 +1724,7 @@ ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#options	val	67e6d82eb6e1d173
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#render(Node)	def	ed28bd3eab4c7628
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#render(Node,Appendable)	def	f863c774ce45fa24
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#render(Node,Appendable,int)	def	a5348da088cf6dc7
-ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder	class	c872e6820dabbb64
+ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder	class	bd40fb94aa509970
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder#<init>(DataHolder)	ctor	9c33c19391f52850
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder#attributeProviderFactories	val	920de657eb584110
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder#attributeProviderFactory(AttributeProviderFactory)	def	c05e1d74f109fdb8
@@ -4013,7 +4013,7 @@ ssg.md.util.ast.NodeTracker	ssg.md.util.ast.NodeTracker#nodeRemovedWithDescendan
 ssg.md.util.ast.NodeVisitHandler	ssg.md.util.ast.NodeVisitHandler	class	b6700d40ee5c2211
 ssg.md.util.ast.NodeVisitHandler	ssg.md.util.ast.NodeVisitHandler#visitChildren(Node)	def	97d29bb0f52ee011
 ssg.md.util.ast.NodeVisitHandler	ssg.md.util.ast.NodeVisitHandler#visitNodeOnly(Node)	def	f9053348fe40471d
-ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor	class	7618fd6628a08cda
+ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor	class	3f217d9f1b5f5a3f
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#<init>()	ctor	4d1b37997a55e126
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#<init>(Array<Array<VisitHandler<?>>>)	ctor	376dff01fdabb2d9
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#<init>(Array<VisitHandler<?>>)	ctor	92a6b9b90fe51cda
@@ -4678,7 +4678,7 @@ ssg.md.util.data.DataHolder	ssg.md.util.data.DataHolder#setIn(MutableDataHolder)
 ssg.md.util.data.DataHolder	ssg.md.util.data.DataHolder#toDataSet()	def	20f2e29f53dde75f
 ssg.md.util.data.DataHolder	ssg.md.util.data.DataHolder#toImmutable()	def	6ab80a7220284135
 ssg.md.util.data.DataHolder	ssg.md.util.data.DataHolder#toMutable()	def	5fd641c10c109718
-ssg.md.util.data.DataKey	ssg.md.util.data.DataKey	class	e669829de80f0ea9
+ssg.md.util.data.DataKey	ssg.md.util.data.DataKey	class	8d2f6af0f2527de4
 ssg.md.util.data.DataKey	ssg.md.util.data.DataKey#<init>(String,DataKey<T>)	ctor	9068ffc0665b1fa6
 ssg.md.util.data.DataKey	ssg.md.util.data.DataKey#<init>(String,NotNullValueSupplier<T>)	ctor	9e42afd5178ef927
 ssg.md.util.data.DataKey	ssg.md.util.data.DataKey#<init>(String,T)	ctor	69928ba81f254497
@@ -4752,7 +4752,7 @@ ssg.md.util.data.MutableDataHolder	ssg.md.util.data.MutableDataHolder#set(Nullab
 ssg.md.util.data.MutableDataHolder	ssg.md.util.data.MutableDataHolder#setAll(DataHolder)	def	02a467dd33cc9310
 ssg.md.util.data.MutableDataHolder	ssg.md.util.data.MutableDataHolder#setFrom(MutableDataSetter)	def	6ddfbbebb5d78c14
 ssg.md.util.data.MutableDataHolder	ssg.md.util.data.MutableDataHolder#setIn(MutableDataHolder)	def	5e6b55eaae7a5fbd
-ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet	class	498e2fed5f654630
+ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet	class	6db6d02b995b2618
 ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet#<init>(DataHolder)	ctor	18d12e9ae050cb84
 ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet#clear()	def	ae4eff78fa1bf352
 ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet#getOrCompute(DataKeyBase<?>,DataValueFactory<?>)	def	272ffe5b612f4799
@@ -4782,13 +4782,12 @@ ssg.md.util.data.MutableScopedDataSet	ssg.md.util.data.MutableScopedDataSet#getP
 ssg.md.util.data.MutableScopedDataSet	ssg.md.util.data.MutableScopedDataSet#parent	val	b80591043eb7fe2e
 ssg.md.util.data.NotNullValueSupplier	ssg.md.util.data.NotNullValueSupplier	class	4c96f6b966f31478
 ssg.md.util.data.NotNullValueSupplier	ssg.md.util.data.NotNullValueSupplier#get()	def	2fdc1090fbe0092b
-ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey	class	4b10468614d827ba
+ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey	class	19e94195ec965fe1
 ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#<init>(String)	ctor	8fb8c3f7d7ca651a
 ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#<init>(String,DataKeyBase<T>)	ctor	9d8aa85fa80b73dd
-ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#<init>(String,DataValueNullableFactory<T>)	ctor	e609971ba47dbbb9
-ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#<init>(String,Supplier<T>)	ctor	8adc863c95ca3e5e
+ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#<init>(String,DataValueNullableFactory<T>)	ctor	d4577ae42581ee0d
+ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#<init>(String,Supplier<T>)	ctor	73da7aa716fdc408
 ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#<init>(String,T)	ctor	69928ba81f254497
-ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#<init>(String,T,DataValueFactory<T>)	ctor	40d142c0e79fb961
 ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#get(DataHolder)	def	5b13df7fd7966bed
 ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#getDefaultValue()	def	9104c6f66af040b4
 ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#getDefaultValue(DataHolder)	def	cef0ae37ef2be65a
@@ -6763,7 +6762,7 @@ ssg.md.util.sequence.BasedSequence	ssg.md.util.sequence.BasedSequence$EmptyBased
 ssg.md.util.sequence.BasedSequence	ssg.md.util.sequence.BasedSequence$EmptyBasedSequence#getStartOffset()	def	3c539f07a5e8d9a2
 ssg.md.util.sequence.BasedSequence	ssg.md.util.sequence.BasedSequence$EmptyBasedSequence#length()	def	c2678de174b0845b
 ssg.md.util.sequence.BasedSequence	ssg.md.util.sequence.BasedSequence$EmptyBasedSequence#subSequence(int,int)	def	b332d95870b44a09
-ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl	class	11e2d97b90e1a57e
+ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl	class	ffc2011648963026
 ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl#addSegments(IBasedSegmentBuilder<?>)	def	5840eca70871203a
 ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl#baseColumnAtEnd()	def	9bca2136f320e833
 ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl#baseColumnAtIndex(int)	def	a225cb6b0835fd52
@@ -8000,7 +7999,7 @@ ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted	class	d
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted#<stmt1>	stmt	4ff8eb4c89ae2f59
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted#get(int)	def	046201cb730c485a
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted#mask	val	fad486a72bdbdfec
-ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence	class	fabbbf4efd0136ce
+ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence	class	5658e1c0f2843c5a
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#<stmt1>	stmt	33b442c5ab277e95
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#<stmt2>	stmt	d75eb64fa866d20b
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#addSegments(IBasedSegmentBuilder<?>)	def	ef70cc235cd6b51e
@@ -8025,7 +8024,7 @@ ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequenc
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#sequenceOf(CharSequence,int,int)	def	52bf54a2c24d170c
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#subSequence(int,int)	def	5e6333981b9779b2
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#toMapped(CharMapper)	def	d968003778d3536d
-ssg.md.util.sequence.MappedRichSequence	ssg.md.util.sequence.MappedRichSequence	class	54b3b35806f90ee9
+ssg.md.util.sequence.MappedRichSequence	ssg.md.util.sequence.MappedRichSequence	class	e12dfe1db581b495
 ssg.md.util.sequence.MappedRichSequence	ssg.md.util.sequence.MappedRichSequence#<stmt1>	stmt	b2a35722382e423b
 ssg.md.util.sequence.MappedRichSequence	ssg.md.util.sequence.MappedRichSequence#<stmt2>	stmt	d75eb64fa866d20b
 ssg.md.util.sequence.MappedRichSequence	ssg.md.util.sequence.MappedRichSequence#base	val	2679d6b4112d75d2
@@ -8050,7 +8049,7 @@ ssg.md.util.sequence.MappedSequence	ssg.md.util.sequence.MappedSequence#getCharS
 ssg.md.util.sequence.PlaceholderReplacer	ssg.md.util.sequence.PlaceholderReplacer	class	6964bc24c3bb3250
 ssg.md.util.sequence.PlaceholderReplacer	ssg.md.util.sequence.PlaceholderReplacer#replaceAll(JavaCollection<T>,Function<String,String>,char,char,Function<T,String>,BiConsumer<T,String>)	def	537095275c119f9d
 ssg.md.util.sequence.PositionAnchor	ssg.md.util.sequence.PositionAnchor	class	8813f86ad53fe4a1
-ssg.md.util.sequence.PrefixedSubSequence	ssg.md.util.sequence.PrefixedSubSequence	class	c772f0747cb0d708
+ssg.md.util.sequence.PrefixedSubSequence	ssg.md.util.sequence.PrefixedSubSequence	class	80cb4c25b631e8fc
 ssg.md.util.sequence.PrefixedSubSequence	ssg.md.util.sequence.PrefixedSubSequence#<stmt1>	stmt	787ae7bdf8d5bf56
 ssg.md.util.sequence.PrefixedSubSequence	ssg.md.util.sequence.PrefixedSubSequence#<stmt2>	stmt	ba4b2d02518b47d9
 ssg.md.util.sequence.PrefixedSubSequence	ssg.md.util.sequence.PrefixedSubSequence#addSegments(IBasedSegmentBuilder<?>)	def	d1719f753456753c
@@ -8231,7 +8230,7 @@ ssg.md.util.sequence.RichSequence	ssg.md.util.sequence.RichSequence#ofSpaces(int
 ssg.md.util.sequence.RichSequence	ssg.md.util.sequence.RichSequence#repeatOf(CharSequence,int)	def	2c714e7a49eb9ee4
 ssg.md.util.sequence.RichSequence	ssg.md.util.sequence.RichSequence#repeatOf(CharSequence,int,int)	def	e6cda69c7819123e
 ssg.md.util.sequence.RichSequence	ssg.md.util.sequence.RichSequence#repeatOf(char,int)	def	081d3ba66d2df1e7
-ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl	class	815e929bab54dbef
+ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl	class	2d5540f60e993f90
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#<stmt1>	stmt	68adfd81ee0f698d
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#charAt(int)	def	40fe2ad0fdc37582
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#charSequence	val	8755232c53451e5d
@@ -8248,7 +8247,7 @@ ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#subS
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#toMapped(CharMapper)	def	6c184487c0450e81
 ssg.md.util.sequence.SegmentedSequence	?#endOffset	val	23b2738063589a02
 ssg.md.util.sequence.SegmentedSequence	?#startOffset	val	72f2250a04a0c5c2
-ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence	class	faa542d8a4d3b301
+ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence	class	7e28c002f17b551b
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<stmt1>	stmt	8215e5793f163488
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<stmt2>	stmt	aadf2a2e61a13218
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<stmt3>	stmt	fbd0f20f4f57f58d

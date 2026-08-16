@@ -1095,46 +1095,24 @@ object CtorFunnel:
       * are typed in the PARENT's scope: `class FlushablePoolClass extends FlushablePool[String]`
       * replayed `new Array[T](false, n)` verbatim, where `T` is `Pool`'s parameter and nothing in
       * the subclass can name it (`Not found: type T`). The instantiation is right there in the
-      * `extends` clause, so the substitution is exact rather than a guess. */
+      * `extends` clause, so the substitution is exact rather than a guess.
+      *
+      * THE DERIVATION ITSELF IS [[ParentSubst]] AND NOT THIS METHOD, because a replay was never the
+      * only synthesiser that copies a parent's spelling into a subclass: the diamond forwarder and
+      * [[syntheticPrimary]]'s own slot types do it too, and both were emitting the parent's `T`
+      * verbatim while this one substituted (§4.56 — one derivation, not one per caller). */
     private def parentTypeSubst(cd: Tree.ClassDef): Map[SymId, TypeRepr] =
-      def headArgs(t: TypeRepr): Option[(SymId, List[TypeRepr])] = t match
-        case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), as) => Some(s -> as)
-        case _                                                => scala.None
-      // TRANSITIVE: the statements may come from a GRANDparent. `FlushablePoolClass extends
-      // FlushablePool[String]`, `FlushablePool<T> extends Pool<T>`, and the replayed `new Array[T]`
-      // is `Pool`'s `T` — so the chain has to be walked, composing each level's instantiation
-      // through the one below it.
-      def sub(t: TypeRepr, m: Map[SymId, TypeRepr]): TypeRepr = t match
-        case TypeRepr.TypeRef(_, x) if m.contains(x) => m(x)
-        case TypeRepr.AppliedType(tc, as)            => TypeRepr.AppliedType(sub(tc, m), as.map(sub(_, m)))
-        case other                                   => other
-      def walk(c: Tree.ClassDef, acc: Map[SymId, TypeRepr], depth: Int): Map[SymId, TypeRepr] =
-        if depth > 8 then acc
-        else
-          c.parents.flatMap {
-            case tt: TypeTree => headArgs(tt.tpe)
-            case t: Term      => headArgs(t.tpe)
-          }.foldLeft(acc) { case (m, (psym, as)) =>
-            classOfSym(psym) match
-              case scala.None => m
-              case Some(pc)   =>
-                val here = pc.tparams.map(_.symbol).zip(as.map(sub(_, m))).toMap
-                walk(pc, m ++ here, depth + 1)
-          }
-      walk(cd, Map.empty, 0)
+      given Program = program
+      ParentSubst.of(cd)
 
     /** rewrite every TYPE in these statements through `m`. */
     private def retyped(stats: List[Statement], m: Map[SymId, TypeRepr]): List[Statement] =
       if m.isEmpty then stats
       else
         given Program = program
-        def sub(t: TypeRepr): TypeRepr = t match
-          case TypeRepr.TypeRef(_, s) if m.contains(s) => m(s)
-          case TypeRepr.AppliedType(tc, as)            => TypeRepr.AppliedType(sub(tc), as.map(sub))
-          case other                                   => other
         val ph = new Phase:
           def name = "ctor-replay-retype"
-          override def transformType(t: TypeRepr)(using Program): TypeRepr = sub(t)
+          override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, m)
         stats.map(StandardTraversal.mapStat(ph, _))
 
     private def substituted(stats: List[Statement], m: Map[SymId, Term]): List[Statement] =
@@ -1864,7 +1842,14 @@ object CtorFunnel:
         superArgsOf(program, c).map { case Tree.Ident(x, _, _) => x; case _ => SymId.None } == ps && ps.nonEmpty
       // parameter TYPES from the parent constructor's own signature, never from one call's
       // arguments: an argument is an expression whose type may be narrower than the formal.
-      val formals = formalsOf(program, target)
+      //
+      // …AND READ THROUGH THIS CLASS'S INSTANTIATION OF THE PARENT. The formals are written in the
+      // PARENT's scope, so a generic parent's constructor mentions type parameters the subclass
+      // declares none of: `class Adapter extends Handler<Adapter, Node, …>` emitted
+      // `protected (sup$0: AstNode[N])` for `Handler(AstNode<N> n)` — valid-looking Scala naming a
+      // type that is not in scope, and the same defect the replay above already substitutes away
+      // (§4.56, [[ParentSubst]]). The `extends` clause is right there, so this is exact.
+      val formals = formalsOf(program, target).map(ParentSubst.subst(_, ParentSubst.of(cd)(using program)))
       // a java constructor that ALREADY has the synthetic signature would collide with it — the
       // COLLAPSE test, kept as exact type equality on ROOTS because that is the shape a promotion
       // can actually take over (its parameters ARE the slots, passed straight through).

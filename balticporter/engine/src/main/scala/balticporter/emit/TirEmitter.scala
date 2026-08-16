@@ -2259,6 +2259,8 @@ final class TirEmitter(
       pcd   <- program.definitionOf(tycon).collect { case c: Tree.ClassDef => c }
       if pcd.tparams.sizeIs == actuals.size
       p     <- plans(pcd).primaryParams.lift(n)
+    // The map is built HERE rather than by `ParentSubst.of` because the question is about ONE named
+    // parent applied at a checked arity, not about everything above this class.
     yield substTp(p.tpt.tpe, pcd.tparams.map(_.symbol).zip(actuals).toMap)
 
   /** An argument lifted into the `extends` clause.
@@ -2318,10 +2320,13 @@ final class TirEmitter(
     case TypeRepr.OrType(l, r)              => mentionsSym(l, s) || mentionsSym(r, s)
     case _                                  => false
 
-  private def substTp(t: TypeRepr, m: Map[SymId, TypeRepr]): TypeRepr = t match
-    case TypeRepr.TypeRef(_, s) if m.contains(s) => m(s)
-    case TypeRepr.AppliedType(tc, as)            => TypeRepr.AppliedType(substTp(tc, m), as.map(substTp(_, m)))
-    case other                                   => other
+  /** ONE substitution function for the whole engine — [[ParentSubst.subst]], §4.56.
+    *
+    * This was a two-case copy here (`TypeRef`, `AppliedType`) while the constructor replay had a
+    * third and the diamond forwarder and the constructor funnel had none at all: four callers, three
+    * spellings, two of them silently answering "nothing to substitute". The name stays because five
+    * sites read better with it; the derivation does not. */
+  private def substTp(t: TypeRepr, m: Map[SymId, TypeRepr]): TypeRepr = ParentSubst.subst(t, m)
 
   /** Render a type with every WILDCARD argument eliminated — illegal in an `extends` clause, and
     * illegal as the target of a cast.
@@ -2963,12 +2968,33 @@ final class TirEmitter(
         case d: Tree.DefDef => (sym(d.symbol).name, d.paramss.map(_.size))
       }.toSet
       val supName = classOf_(parentTs.head).map(c => esc(sym(c.symbol).name))
+      // THE FORWARDED SIGNATURE IS THE PARENT'S, AND IT IS WRITTEN IN THE PARENT'S SCOPE. `d` is a
+      // `DefDef` this class does not declare, so every type parameter its parameters and result
+      // mention belongs to whichever ancestor declared it — and the class emitting the forwarder
+      // declares none of them. `class Impl extends Base[Leaf] with Leaf` emitted
+      // `override def split(c: Char): Array[T]` for `T[] split(char)`: valid-looking Scala naming a
+      // type that is not in scope. The instantiation is in the `extends` clause, so [[ParentSubst]]
+      // makes it exact — the SAME derivation the constructor funnel and the constructor replay run,
+      // never a third spelling of it (§4.56).
+      val psub = ParentSubst.of(cd)(using program)
       supName.toList.flatMap { sn =>
         sup.toList.filter((k, _) => mixins(k) && !ownKeys(k)).sortBy((k, _) => k._1).map { (_, d) =>
           val n   = esc(sym(d.symbol).name)
-          val pss = d.paramss.map(paramClause).mkString
+          // …AND THE MEMBER'S OWN TYPE PARAMETERS, which are not the class's and are not
+          // substituted away by anything. A java `<V> V get(DataKey<V>)` forwarded without its
+          // `[V]` is a method whose signature names a type nothing declares — the SAME error text
+          // as the class-parameter face and a different cause, so a fix for one leaves the other.
+          // The bounds go through `psub` too: a method parameter may be bounded by the CLASS's.
+          val tps = if d.tparams.isEmpty then ""
+                    else d.tparams.map(td => typeParam(td.copy(rhs = td.rhs.copy(
+                      tpe = ParentSubst.subst(td.rhs.tpe, psub))))).mkString("[", ", ", "]")
+          // substituted at the ValDef rather than rendered here, so `paramClause` still decides
+          // `using` clauses, override alignment and the un-annotated arms — a second rendering of a
+          // parameter list is the drift this whole change is about.
+          val pss = d.paramss.map(ps => paramClause(ps.map(v =>
+            v.copy(tpt = v.tpt.copy(tpe = ParentSubst.subst(v.tpt.tpe, psub)))))).mkString
           val as  = d.paramss.map(ps => ps.map(v => esc(sym(v.symbol).name)).mkString("(", ", ", ")")).mkString
-          s"${ind(i)}override def $n$pss: ${tpe(d.returnTpt.tpe)} = super[$sn].$n$as"
+          s"${ind(i)}override def $n$tps$pss: ${tpe(ParentSubst.subst(d.returnTpt.tpe, psub))} = super[$sn].$n$as"
         }
       }
 

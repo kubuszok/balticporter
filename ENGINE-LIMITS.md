@@ -736,6 +736,60 @@ six to fifty opened.**
 accepts elsewhere (`asList`'s fixed-size divergence); what defeats it here is not permissiveness but
 that two other universal rules — reference identity and wildcard capture — are reading the bound.*
 
+### G25. A member SYNTHESISED INTO A SUBCLASS carries the PARENT'S SCOPE with it — **41 of one port's 42 `Not found: type` errors, 243 → 201. CLOSED**
+
+Three mechanisms materialise a member the subclass did not write, and each copies a signature the
+PARENT declared: the diamond-disambiguating forwarder (`TirEmitter.diamondOverrides`), the
+synthesised primary constructor whose slots are the parent constructor's formals
+(`CtorFunnel.syntheticPrimary`), and the constructor REPLAY that lifts a parent's statements. Every
+type parameter such a signature mentions belongs to whichever ancestor declared it, and the subclass
+declares none of them:
+
+```scala
+abstract class Impl extends Base[Leaf] with Leaf {
+  override def split(c: Char): scala.Array[T] = super[Base].split(c)   // Not found: type T
+}
+class Adapter protected (sup$0: Adapter0[N]) extends Handler[Adapter, Node, …](sup$0)  // type N
+```
+
+The instantiation is written in the `extends` clause on the very same line, so the substitution is
+EXACT rather than an inference — this is not `G8`'s F-bound with no consistent FILL, and confusing
+the two is the reason it looked hard. **THREE FACES, and closing one leaves the other two**, all
+under the same error text:
+
+| face | what was emitted |
+|---|---|
+| the forwarder's result and parameter types | the parent's own `T` |
+| the synthesised primary's `sup$k` slots | the parent constructor's own formals, unsubstituted — and the slot is named TWICE (signature and `extends` argument), so one unresolved parameter is the root of a whole file's `Found: …` cascades |
+| a forwarded GENERIC METHOD's OWN type parameters | dropped entirely — `<V> V get(DataKey<V>)` rendered `override def get(key: DataKey[V]): V`, which is the same message and a different cause |
+
+**And the derivation was FOUR SPELLINGS OF ONE FUNCTION**, which is why two callers had it and two
+did not: `CtorFunnel.parentTypeSubst` walked the chain, `TirEmitter.substTp` was a two-case copy,
+`retyped` a third, and the forwarder and the funnel slots had none. Stated once as
+`balticporter.tir.ParentSubst` (§4.56 — one derivation, never per caller), and **completed over
+`TypeRepr`** rather than over the two shapes the first caller needed: a partial recursion here is
+§4.56's fast-path guard read at a type walk.
+
+Two things the first walk got wrong, both worth keeping:
+
+- **a NON-GENERIC parent is still a step in the chain.** Reading only APPLIED parents stops at the
+  first plain class in the middle, and `Mapped extends Impl`, `Impl extends Base[Leaf]` is the
+  majority shape — 18 of the 41 errors were behind exactly that;
+- **it is a SUBSTITUTION, never an erasure.** `class Mid[T] extends Base[T]` maps the parent's
+  parameter to `Mid`'s own, which the emitted class really declares. Erasing to the BOUND or to
+  `Any` passes the concrete case and fails this one.
+
+The residue is ONE error of a different mechanism — an emitter ASCRIPTION at a call
+(`(recv.m: (Char, Int) => S)(…)`) typed from the CALLEE's declaring class without substituting the
+RECEIVER's instantiation. Same shape, different map: it is read off the receiver's type arguments and
+not off an `extends` clause, so `ParentSubst.of` is not the function for it.
+
+Blast: 13 declarations on the port that had the defect; one port-map row moved from
+`synthesised-primary` to `widest-root`, because a real constructor whose parameters ARE the parent's
+formals only COLLIDES with them once the formals are read at the subclass's instantiation.
+
+*Fix kind: (a).*
+
 ---
 
 ## 2. Constructors
