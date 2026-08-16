@@ -2969,13 +2969,23 @@ Two things this table is deliberately NOT:
   OPERANDS alone was built, measured at 2 rows of which 1 was false, and removed — K26 carries the
   number and the repair (mint the helpers with their signatures).
 
-**And the port has not yet met `RefChecks`** (§3): 40 typer errors means it has never run, so every
+**And the port has not yet met `RefChecks`** (§3): 38 typer errors means it has never run, so every
 missing `override`, unimplemented member and variance violation in 468 emitted files is unmeasured
-and the count will RISE at the first zero. Two shapes are already visible by eye in the emitted
-output and are named here so the rise is expected rather than discovered — `NodeRepository extends
-scala.collection.mutable.Map` emits `override def keySet(): mutable.Set[String]` against scala's
-PARAMETERLESS `keySet` (§4.5's family), and the same class overrides `entrySet()`, which scala's
-`Map` does not declare at all.
+and the count will RISE at the first zero. THREE shapes are already known and are named here so the
+rise is expected rather than discovered. Two are visible by eye in the emitted output —
+`NodeRepository extends scala.collection.mutable.Map` emits `override def keySet():
+mutable.Set[String]` against scala's PARAMETERLESS `keySet` (§4.5's family), and the same class
+overrides `entrySet()`, which scala's `Map` does not declare at all.
+
+The third was MEASURED at wave 9, on a standalone scalac probe of the exact emitted shape rather than
+by eye, and it is the same §4.5 seam K27 answers at the CALL: `class OrderedMap[K, V] extends
+scala.collection.mutable.Map[K, V]` emits `override def remove(o: java.lang.Object): V`, and once no
+typer error stands in front of `RefChecks` that is `E038 method remove has a different signature than
+the overridden declaration`. It also gives the wall its shape — a class re-parented onto a scala
+collection trait must IMPLEMENT that trait's abstract members (`get(K): Option[V]`, `iterator`,
+`addOne`, `subtractOne`), and none of the library's own collections does. That is what §4.5's *a
+parent adds MEMBERS* costs on the emission side, and it is the reason the first zero on this port is
+a milestone and not an ending.
 
 ### 10.6.4 What the first run already taught, at 0 cost
 
