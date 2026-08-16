@@ -6525,7 +6525,7 @@ would fail and the anonymous `ThreadLocal` is the one liqp found.*
 
 ---
 
-### K26. The mapping BREAKS java's own subtyping edges, and the seam that leaves has the JDK on NEITHER side — **16 of one port's 24 attributed errors, counted by nothing. LANE BUILT (`collection-internal`, 7 + 16); the residue itself is OPEN**
+### K26. The mapping BREAKS java's own subtyping edges, and the seam that leaves has the JDK on NEITHER side — **16 of one port's 24 attributed errors, counted by nothing. LANE BUILT (`collection-internal`, 7 + 16); `DeclaredSubtype` then CLOSED at the slot (`16 -> 0` and `7 -> 5`, 11 errors); `SplitTypeVariable` still OPEN**
 
 `typeMap` sends `java.util.Collection` to a STANDALONE shim — `CLAUDE.md` §4.5 says it must, and the
 `Collection` entry's own comment says so at length — and sends every java SUBTYPE of `Collection`
@@ -6583,11 +6583,47 @@ Two things the lane is deliberately NOT:
   mutable.AbstractSet`, `JavaEnumMap extends mutable.AbstractMap`, each so java's relation survives).
   A package test would report every correct slot they reach — §4.56's name hazard met at a target.
 
-*Fix kind: (a) for the lane, BUILT. (a) for the seam itself, OPEN and measured at 7 + 16.
+**AND `DeclaredSubtype` IS NOW CLOSED, at the slot, by the phase's OWN RE-PARENTING RECORD.** The
+lane's second row says the value's head is a type the PROGRAM declares — and the reason `coerce`
+matched no factory there is one line: `from` is `kindOf.get(head)`, and `kindOf` is keyed on this
+phase's own SCALA TARGET symbols, so it answers `None` for every program type. That is §4.56 read at
+a source rather than at a name: the class really IS a `mutable.Set` at that slot BECAUSE THIS PHASE
+MADE IT ONE, so `JavaCollection.fromSet` conforms and the seam closes exactly where the lane names
+it. The record is the one K27 builds (`MintedParents`), read one hop up and TRANSITIVELY, because the
+`implements` clause may sit on an abstract base the library declares and a walk written for the shape
+in front of you is this file's own fast-path hazard.
+
+Two conjuncts keep it from wrapping correct code, and the first is not optional: a class that ALREADY
+carries the wanted shim among its parents conforms and gets nothing (`JavaCollection extends
+JavaIterable`, so a `Collection`-parented class satisfies the iterable slot too), and a class this
+phase never re-parented is not a party to the edge at all — its seam stays the honest compile error
+it was.
+
+**Measured: `collection-internal` 16 -> 0 on the test set and 7 -> 5 on the main set, with 9 + 2 = 11
+compile errors closing beside them** — which is the attribution `CLAUDE.md` §5 requires of a lane that
+falls, stated per row: the sixteen were `OrderedSet` handed to its own `addAll`/`retainAll`, and the
+two were `OrderedMultiMap#keys`/`#values` returning an `OrderedSet` at a `Collection`-typed result.
+What remains on the lane is the five `SplitTypeVariable` rows, which this does not touch and which
+still need the coercion to run at the INFERENCE site.
+
+**The `DeclaredSubtype` ARM STAYS, as a GUARD reading zero, and that is a statement rather than dead
+code left lying about.** `coerce` runs at every position the check asks about — argument, `val`,
+assignment, return — so the arm now fires only where the phase has no FACTORY for the pair, and the
+one such cell left is `Kind.Map` into `JavaCollection`, which java itself cannot write (a `Map` is not
+a `Collection`). It is therefore unreached across all sixteen port reports, which is exactly what
+`just catalog-coverage`'s own rule says to look at twice — and the reason it is not deletion is that
+a new standalone target, a new refusal cell, or a class whose parents the phase cannot derive
+re-opens it, and the row's value was never the count but the ATTRIBUTION it carries (`CLAUDE.md`
+§4.45). `Issue.ShimBoundary` going empty on all fifteen ports at K2.7 is the same shape.
+
+*Fix kind: (a) for the lane, BUILT. (a) for `DeclaredSubtype`, CLOSED and measured at 16 -> 0 / 7 -> 5.
+(a) for `SplitTypeVariable`, OPEN at 5.
 `CollectionInternalCheckSpec` — two positives and five negatives, of which "the same class at the
 same target's slot" is the one that decides `DeclaredSubtype` (a library's own collection carries
 BOTH ends as parents) and "a MINTED helper's operands span the edge and NOTHING is reported" pins the
-removed arm.*
+removed arm. `CollectionsDeclaredSubtypeSpec` — three positives (set, seq, and the TRANSITIVE hop)
+and two negatives, of which "a class that ALREADY carries the wanted shim" is the one that decides
+whether this wraps code that was already right.*
 
 ---
 

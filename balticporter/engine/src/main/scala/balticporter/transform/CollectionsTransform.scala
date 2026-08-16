@@ -364,8 +364,13 @@ final class CollectionsTransform(
     * `probes` is each mapped parent's FIRST type argument — the key of a `Map`, the element of a
     * `Set`/`Buffer` — as the `extends` clause WRITES it, which is where the one refusal is read
     * from; `tparams` is the class's own parameters, so a probe that is one of them can be resolved
-    * against a receiver's instantiation. */
-  private final case class MintedParents(kinds: Set[Kind], probes: List[TypeRepr], tparams: List[SymId])
+    * against a receiver's instantiation.
+    *
+    * `shims` is the STANDALONE targets among the same parents. Those contribute no clashing member
+    * (§4.5), so the pin ignores them — but they are exactly what says a value ALREADY CONFORMS at a
+    * shim-typed slot, which is what [[coerce]] must not wrap. */
+  private final case class MintedParents(kinds: Set[Kind], probes: List[TypeRepr],
+                                         tparams: List[SymId], shims: Set[String])
   private var parentClash: Map[SymId, MintedParents] = Map.empty
   private var opPlusEq, opMinusEq, opPlusPlusEq: SymId = SymId.None
   private var updateSym, insertSym, getOrElseSym, containsSym: SymId = SymId.None
@@ -3284,7 +3289,11 @@ final class CollectionsTransform(
     val (actualT, actualScoped) = actualOf(actual)
     val wants = headSym(expected).map(scalaSym(_, expectedScoped))
     val got   = headSym(actualT).map(scalaSym(_, actualScoped))
-    val from  = got.filterNot(shimSyms.contains).flatMap(kindOf.get)
+    // …and where the value is a type the PROGRAM declares, `kindOf` says nothing: it is keyed on
+    // this phase's own scala TARGETS. The class's minted ANCESTRY is the same record read one hop up
+    // ([[mintedSourceKind]]) and is what closes `ENGINE-LIMITS.md` K26's `DeclaredSubtype` half.
+    val from  = got.filterNot(shimSyms.contains)
+                   .flatMap(g => kindOf.get(g).orElse(mintedSourceKind(g, wants)))
     // …and the slot that is LITERALLY a java collection — the seam `ENGINE-LIMITS.md` K15's
     // consumer half is about. `expectedScoped` means the expected side is taken as it is written
     // rather than through `remap`, which is true of exactly two things: a declaration this run's
@@ -4152,36 +4161,91 @@ final class CollectionsTransform(
     * `body.collect` (§3): a class nested inside a method body is a `Tree.ClassDef` in a
     * `BlockStatement` and a members-only walk answers *there is no nested type here*.
     *
-    * Four classes of parent are excluded and each for a reason this phase already states elsewhere:
+    * Three kinds of parent are excluded and each for a reason this phase already states elsewhere:
     * one the SCOPE held back keeps java's parent ([[restoreExcluded]]), one whose target cannot BE a
-    * parent keeps java's ([[restoreUninheritableParents]]), one whose parent the mapping does not
-    * cover was never re-parented at all, and a STANDALONE target
-    * ([[CollectionsTransform.standaloneTargets]]) contributes no member at a type parameter — a shim
-    * carries JAVA's own shape and arity by construction (§4.5), which is the whole reason it is
-    * standalone. In each case there is no minted member to clash with, so a pin would move emitted
-    * text for nothing. */
+    * parent keeps java's ([[restoreUninheritableParents]]), and one the mapping does not cover was
+    * never re-parented at all. A STANDALONE target is not excluded but RECORDED APART, in `shims`:
+    * it contributes no member at a type parameter — a shim carries JAVA's own shape and arity by
+    * construction (§4.5), which is the whole reason it is standalone — and it is precisely what says
+    * a value of this class already CONFORMS at a shim-typed slot.
+    *
+    * ==TRANSITIVE over the program's own parents==
+    * A class two hops from the mapped interface is re-parented exactly as much as one hop is: the
+    * `extends` clause that names `java.util.Set` may sit on an abstract base this library declares,
+    * and `CLAUDE.md` §4.56's fast-path rule is that a test written for the shape in front of you
+    * silently answers for every shape added since. Fuel-bounded and cycle-safe; the `probes` and
+    * `tparams` an ancestor contributes come across UNSUBSTITUTED, which can only make the refusal
+    * decline (the loud residue) and never make it fire wrongly. */
   private def declaredParentKinds(p: Program): Map[SymId, MintedParents] =
     given Program = p
     def tpeOf(x: Term | TypeTree): TypeRepr = x match
       case t: TypeTree => t.tpe
       case t: Term     => t.tpe
-    p.units.flatMap(StandardTraversal.allClassDefs).flatMap { cd =>
-      if excluded.contains(cd.symbol) || uninheritableSyms.contains(cd.symbol) then Nil
-      else
-        val mapped = cd.parents.map(tpeOf).flatMap { tp =>
-          headSym(tp).flatMap(p.symbolOf).flatMap(s => typeMap.get(s.fullName))
-            .filterNot((tgt, _) => CollectionsTransform.UninheritableTargets(tgt))
-            .filterNot((tgt, _) => CollectionsTransform.standaloneTargets(tgt))
-            .map(_._2 -> firstTypeArg(tp))
-        }
-        if mapped.isEmpty then Nil
-        else List(cd.symbol -> MintedParents(mapped.map(_._1).toSet, mapped.flatMap(_._2),
-                                             cd.tparams.map(_.symbol)))
-    }.toMap
+    val classes = p.units.flatMap(StandardTraversal.allClassDefs)
+    val byId    = classes.map(cd => cd.symbol -> cd).toMap
+    val memo    = collection.mutable.Map.empty[SymId, MintedParents]
+
+    def resolve(id: SymId, seen: Set[SymId]): MintedParents =
+      memo.getOrElse(id, {
+        val out = byId.get(id) match
+          case _ if seen(id) || excluded.contains(id) || uninheritableSyms.contains(id) =>
+            MintedParents(Set.empty, Nil, Nil, Set.empty)
+          case scala.None => MintedParents(Set.empty, Nil, Nil, Set.empty)
+          case Some(cd) =>
+            val heads = cd.parents.map(tpeOf).flatMap(tp => headSym(tp).map(_ -> tp))
+            val targets = heads.flatMap { (h, tp) =>
+              p.symbolOf(h).flatMap(s => typeMap.get(s.fullName)).map(_ -> tp)
+            }.filterNot { case ((tgt, _), _) => CollectionsTransform.UninheritableTargets(tgt) }
+            val mapped = targets.collect {
+              case ((tgt, k), tp) if !CollectionsTransform.standaloneTargets(tgt) => k -> firstTypeArg(tp)
+            }
+            val shims  = targets.collect {
+              case ((tgt, _), _) if CollectionsTransform.standaloneTargets(tgt) => tgt
+            }.toSet
+            val above  = heads.map(_._1).filter(byId.contains).map(resolve(_, seen + id))
+            MintedParents(mapped.map(_._1).toSet ++ above.flatMap(_.kinds),
+                          mapped.flatMap(_._2) ++ above.flatMap(_.probes),
+                          cd.tparams.map(_.symbol),
+                          shims ++ above.flatMap(_.shims))
+        memo(id) = out
+        out
+      })
+
+    classes.map(cd => cd.symbol -> resolve(cd.symbol, Set.empty))
+      .filter((_, mp) => mp.kinds.nonEmpty || mp.shims.nonEmpty).toMap
 
   private def firstTypeArg(t: TypeRepr): Option[TypeRepr] = t match
     case TypeRepr.AppliedType(_, a :: _) => Some(a)
     case _                               => scala.None
+
+  /** THE VALUE'S OWN MINTED ANCESTRY, as a coercion source — K26's `DeclaredSubtype` half.
+    *
+    * `coerce` reads a source's kind out of `kindOf`, which is keyed on the phase's own SCALA TARGET
+    * symbols, so it answers `None` for every type the PROGRAM declares — and that is exactly the
+    * blindness `CollectionInternalCheck.Issue.DeclaredSubtype` was built to COUNT
+    * (`ENGINE-LIMITS.md` K26): `OrderedSet implements java.util.Set` is emitted `extends
+    * mutable.Set`, and handed to its own `retainAll(JavaCollection[?])` — java's own
+    * `Set <: Collection`, an edge the mapping has no image for — no factory matched and the seam was
+    * a bare `Found: … / Required: …`. The class really IS a `mutable.Set` here, because THIS PHASE
+    * made it one, so `JavaCollection.fromSet` conforms and the seam closes at the slot the lane
+    * already names.
+    *
+    * `None` where the value ALREADY CONFORMS, which is the conjunct that keeps this from wrapping
+    * correct code: a class carrying the wanted shim among its parents needs nothing (and
+    * `JavaCollection extends JavaIterable`, so it satisfies the iterable slot too). A class the
+    * phase never re-parented is `None` as well, and its seam stays the honest compile error it was.
+    *
+    * WHICH kind, where a class carries two, is stated rather than left to iteration order: the enum
+    * order, which is `Seq` before `Set` before `Map`. Java permits `implements List, Set` and no
+    * library in this corpus writes one; a wrong pick there is a compile error naming the factory,
+    * never a silent wrap. */
+  private def mintedSourceKind(head: SymId, wants: Option[SymId]): Option[Kind] =
+    parentClash.get(head).filterNot { mp =>
+      (wants.contains(javaIterableSym) &&
+        (mp.shims(CollectionsTransform.JavaIterableFqn) || mp.shims(CollectionsTransform.JavaCollectionFqn))) ||
+      (wants.contains(javaCollectionSym) && mp.shims(CollectionsTransform.JavaCollectionFqn)) ||
+      (wants.contains(javaIteratorSym)   && mp.shims(CollectionsTransform.JavaIteratorFqn))
+    }.flatMap(_.kinds.toList.sortBy(_.ordinal).headOption)
 
   /** PIN the call javac resolved, by ascribing the argument to the formal it resolved AT.
     *

@@ -43,30 +43,33 @@ class CollectionInternalCheckSpec extends PortSuite:
       |}
       |""".stripMargin
 
-  test("a class that IMPLEMENTS java's Set, returned at a Collection slot — the edge with no image") {
+  test("the DeclaredSubtype seam is BRIDGED at the slot, so the lane that named it now reads zero") {
     val (p, fs, _) = findings(ownSet)
     // the phase re-parented the class onto `Set`'s target and the slot onto `Collection`'s, and
     // those two have no relation: `JavaCollection` is standalone BECAUSE §4.5 says it must be.
     assertEmits(p, "extends scala.collection.mutable.Set[E]")
     assertEmits(p, "def all(): balticporter.runtime.JavaCollection[E]")
-    val ds = fs.filter(_.issue == Issue.DeclaredSubtype)
-    assertEquals(clue(ds).size, 1)
-    assertEquals(ds.head.slot, "return")
-    assertEquals(ds.head.edge, "java.util.Set <: java.util.Collection")
-    assert(clue(ds.head.targets).contains("balticporter.runtime.JavaCollection"))
-    assert(clue(ds.head.targets).contains("scala.collection.mutable.Set"))
-    assert(ds.head.origin.line > 0)
-    // …and the §1 classification, which is the whole reason a row beats a bare typer error (§4.45).
+    // …and THAT is what `coerce` now closes: the class really IS a `mutable.Set` here because this
+    // phase made it one, so `JavaCollection.fromSet` conforms and the value is wrapped at the slot
+    // rather than left to a java subtyping edge with no scala image (`ENGINE-LIMITS.md` K26).
+    assertEmits(p, "balticporter.runtime.JavaCollection.fromSet(this.own)")
+    assertEquals(clue(fs.filter(_.issue == Issue.DeclaredSubtype)), Nil)
+    // The ARM is kept as a GUARD rather than deleted: it fires wherever `coerce` has no factory for
+    // the pair, and the one such cell left (`Kind.Map` into `JavaCollection`) is one java itself
+    // cannot write — a `Map` is not a `Collection`. Its vocabulary is asserted here so a row that
+    // DOES appear arrives with the §1 classification a bare typer error cannot give (§4.45).
     assert(clue(Issue.classification(Issue.DeclaredSubtype)).contains("§1(a)"))
-    assert(clue(CollectionInternalCheck.summary(fs)).contains("DeclaredSubtype"))
+    assert(clue(CollectionInternalCheck.summary(Nil)).contains("none"))
   }
 
-  test("NEGATIVE: the SAME class at the SAME target's slot is not a seam — conformance is asked first") {
-    val (_, fs, _) = findings(ownSet)
+  test("NEGATIVE: the SAME class at the SAME target's slot was never a seam — and still is not") {
+    val (p, fs, _) = findings(ownSet)
     // `asSet()` returns the same value at `Set`'s own target. Nothing is wrong with it, and a rule
     // that looked only for "an ancestor on the far side" would report it, because `Own` really does
-    // inherit `JavaIterable` through `Set <: Collection <: Iterable`.
-    assertEquals(clue(fs.filter(f => f.issue == Issue.DeclaredSubtype && f.slot == "return")).size, 1)
+    // inherit `JavaIterable` through `Set <: Collection <: Iterable`. It must not be WRAPPED either:
+    // a factory call around a value that already conforms is emitted text for nothing.
+    assertEquals(clue(fs.filter(f => f.issue == Issue.DeclaredSubtype && f.slot == "return")), Nil)
+    assertEmits(p, "def asSet(): scala.collection.mutable.Set[E]")
   }
 
   test("NEGATIVE: the boundary lane reports NEITHER — which is why this lane exists") {

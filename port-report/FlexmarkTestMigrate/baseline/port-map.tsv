@@ -146,7 +146,7 @@ member	com.vladsch.flexmark.util.collection.OrderedMapTest#<stmt13>	ssg.md.util.
 member	com.vladsch.flexmark.util.collection.OrderedMapTest#<stmt14>	ssg.md.util.collection.OrderedMapTest#<stmt14>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMapTest.java	394	c75c17fe3c90cbee	
 member	com.vladsch.flexmark.util.collection.OrderedMapTest#<stmt1>	ssg.md.util.collection.OrderedMapTest#<stmt1>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMapTest.java	17	3a33338135a983d7	
 member	com.vladsch.flexmark.util.collection.OrderedMapTest#<stmt2>	ssg.md.util.collection.OrderedMapTest#<stmt2>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMapTest.java	50	3097fd027fb3f65e	
-member	com.vladsch.flexmark.util.collection.OrderedMapTest#<stmt3>	ssg.md.util.collection.OrderedMapTest#<stmt3>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMapTest.java	86	9411beb9f1e9d619	
+member	com.vladsch.flexmark.util.collection.OrderedMapTest#<stmt3>	ssg.md.util.collection.OrderedMapTest#<stmt3>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMapTest.java	86	2786e8ca2f9b6eb2	
 member	com.vladsch.flexmark.util.collection.OrderedMapTest#<stmt4>	ssg.md.util.collection.OrderedMapTest#<stmt4>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMapTest.java	130	88c9a5e59a7f7743	
 member	com.vladsch.flexmark.util.collection.OrderedMapTest#<stmt5>	ssg.md.util.collection.OrderedMapTest#<stmt5>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMapTest.java	170	54f20c9bce7df378	
 member	com.vladsch.flexmark.util.collection.OrderedMapTest#<stmt6>	ssg.md.util.collection.OrderedMapTest#<stmt6>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMapTest.java	210	e3177af900455245	
@@ -169,7 +169,7 @@ member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt20>	ssg.md.
 member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt21>	ssg.md.util.collection.OrderedMultiMapTest#<stmt21>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	776	fe1f5abb6fb9348f	
 member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt22>	ssg.md.util.collection.OrderedMultiMapTest#<stmt22>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	788	f954622fda4a54d6	
 member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt2>	ssg.md.util.collection.OrderedMultiMapTest#<stmt2>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	52	edb53d5a49adfc3f	
-member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt3>	ssg.md.util.collection.OrderedMultiMapTest#<stmt3>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	106	40f8f80a982fe692	
+member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt3>	ssg.md.util.collection.OrderedMultiMapTest#<stmt3>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	106	7a21fc748d198266	
 member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt4>	ssg.md.util.collection.OrderedMultiMapTest#<stmt4>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	150	5dfffad71fc49746	
 member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt5>	ssg.md.util.collection.OrderedMultiMapTest#<stmt5>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	190	2a200ede6292cfda	
 member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt6>	ssg.md.util.collection.OrderedMultiMapTest#<stmt6>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	230	fed2180a177362a3	
@@ -177,12 +177,12 @@ member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt7>	ssg.md.u
 member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt8>	ssg.md.util.collection.OrderedMultiMapTest#<stmt8>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	323	cf7e9c16d96b8c72	
 member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#<stmt9>	ssg.md.util.collection.OrderedMultiMapTest#<stmt9>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	356	ad29f62443c38c89	
 member	com.vladsch.flexmark.util.collection.OrderedMultiMapTest#thrown	ssg.md.util.collection.OrderedMultiMapTest#thrown	Renamed	-	com/vladsch/flexmark/util/collection/OrderedMultiMapTest.java	16	d2f4d5dfe925b571	
-member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt1>	ssg.md.util.collection.OrderedSetTest#<stmt1>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	17	adb5db981edbdeb9	
-member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt2>	ssg.md.util.collection.OrderedSetTest#<stmt2>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	47	c5ffad815f5eda89	
-member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt3>	ssg.md.util.collection.OrderedSetTest#<stmt3>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	78	f1e9a3c0e7408970	
-member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt4>	ssg.md.util.collection.OrderedSetTest#<stmt4>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	113	cfcb40807c22531e	
-member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt5>	ssg.md.util.collection.OrderedSetTest#<stmt5>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	150	d9c8eb6a90aeccb4	
-member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt6>	ssg.md.util.collection.OrderedSetTest#<stmt6>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	187	c02b7d36c8a9b702	
+member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt1>	ssg.md.util.collection.OrderedSetTest#<stmt1>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	17	02e44ff7cd57122b	
+member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt2>	ssg.md.util.collection.OrderedSetTest#<stmt2>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	47	bff01a9c6671fa50	
+member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt3>	ssg.md.util.collection.OrderedSetTest#<stmt3>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	78	82a7da0cebf2973a	
+member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt4>	ssg.md.util.collection.OrderedSetTest#<stmt4>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	113	4d406d58a3ff4c20	
+member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt5>	ssg.md.util.collection.OrderedSetTest#<stmt5>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	150	8d5a137cf8072be3	
+member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt6>	ssg.md.util.collection.OrderedSetTest#<stmt6>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	187	9f174119577250c7	
 member	com.vladsch.flexmark.util.collection.OrderedSetTest#<stmt7>	ssg.md.util.collection.OrderedSetTest#<stmt7>	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	208	1d512643cd4838b7	
 member	com.vladsch.flexmark.util.collection.OrderedSetTest#thrown	ssg.md.util.collection.OrderedSetTest#thrown	Renamed	-	com/vladsch/flexmark/util/collection/OrderedSetTest.java	14	d2f4d5dfe925b571	
 member	com.vladsch.flexmark.util.format.MarkdownParagraphTest#<stmt1>	ssg.md.util.format.MarkdownParagraphTest#<stmt1>	Renamed	-	com/vladsch/flexmark/util/format/MarkdownParagraphTest.java	16	8f2c3fffeb79ad66	

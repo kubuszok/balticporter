@@ -75,7 +75,7 @@ ssg.md.util.collection.MaxAggregatorTest	ssg.md.util.collection.MaxAggregatorTes
 ssg.md.util.collection.MinAggregatorTest	ssg.md.util.collection.MinAggregatorTest	class	40afaa80a21e0cbb
 ssg.md.util.collection.MinAggregatorTest	ssg.md.util.collection.MinAggregatorTest#<stmt1>	stmt	d22ab9d8571a9c63
 ssg.md.util.collection.MinAggregatorTest	ssg.md.util.collection.MinAggregatorTest#reduce(BiFunction<Integer,Integer,Integer>,Array<Integer>)	def	2f4724c185b3e536
-ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest	class	29bff4348c8ff255
+ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest	class	664bee0bf6fe1f1f
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt10>	stmt	82438c54d1237e41
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt11>	stmt	557c5f8aa3792018
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt12>	stmt	e5fbccd95b8fd41b
@@ -83,7 +83,7 @@ ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stm
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt14>	stmt	c75c17fe3c90cbee
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt1>	stmt	3a33338135a983d7
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt2>	stmt	3097fd027fb3f65e
-ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt3>	stmt	9411beb9f1e9d619
+ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt3>	stmt	2786e8ca2f9b6eb2
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt4>	stmt	88c9a5e59a7f7743
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt5>	stmt	54f20c9bce7df378
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt6>	stmt	e3177af900455245
@@ -91,7 +91,7 @@ ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stm
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt8>	stmt	3501da9d0fc185fd
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#<stmt9>	stmt	1cb503645cf49f94
 ssg.md.util.collection.OrderedMapTest	ssg.md.util.collection.OrderedMapTest#thrown	val	d2f4d5dfe925b571
-ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest	class	d4c04f7a1dff2062
+ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest	class	1c3ff7cec18d35c8
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt10>	stmt	180ea802f63cd9b5
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt11>	stmt	a73b1cdeab9b8084
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt12>	stmt	aa5ba31ef8ff692e
@@ -107,7 +107,7 @@ ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMa
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt21>	stmt	fe1f5abb6fb9348f
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt22>	stmt	f954622fda4a54d6
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt2>	stmt	edb53d5a49adfc3f
-ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt3>	stmt	40f8f80a982fe692
+ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt3>	stmt	7a21fc748d198266
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt4>	stmt	5dfffad71fc49746
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt5>	stmt	2a200ede6292cfda
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt6>	stmt	fed2180a177362a3
@@ -115,13 +115,13 @@ ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMa
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt8>	stmt	cf7e9c16d96b8c72
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#<stmt9>	stmt	ad29f62443c38c89
 ssg.md.util.collection.OrderedMultiMapTest	ssg.md.util.collection.OrderedMultiMapTest#thrown	val	d2f4d5dfe925b571
-ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest	class	3fc7ba55815cd59a
-ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt1>	stmt	adb5db981edbdeb9
-ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt2>	stmt	c5ffad815f5eda89
-ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt3>	stmt	f1e9a3c0e7408970
-ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt4>	stmt	cfcb40807c22531e
-ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt5>	stmt	d9c8eb6a90aeccb4
-ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt6>	stmt	c02b7d36c8a9b702
+ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest	class	4b1a1ade13f1d437
+ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt1>	stmt	02e44ff7cd57122b
+ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt2>	stmt	bff01a9c6671fa50
+ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt3>	stmt	82a7da0cebf2973a
+ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt4>	stmt	4d406d58a3ff4c20
+ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt5>	stmt	8d5a137cf8072be3
+ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt6>	stmt	9f174119577250c7
 ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#<stmt7>	stmt	1d512643cd4838b7
 ssg.md.util.collection.OrderedSetTest	ssg.md.util.collection.OrderedSetTest#thrown	val	d2f4d5dfe925b571
 ssg.md.util.format.FormatTestSuite	ssg.md.util.format.FormatTestSuite	class	b98493bb578125df
