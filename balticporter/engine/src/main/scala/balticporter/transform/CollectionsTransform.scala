@@ -372,6 +372,10 @@ final class CollectionsTransform(
   private final case class MintedParents(kinds: Set[Kind], probes: List[TypeRepr],
                                          tparams: List[SymId], shims: Set[String])
   private var parentClash: Map[SymId, MintedParents] = Map.empty
+  /** every `super.<JDK default>` this run stood on `this` instead — (enclosing class, callee, member
+    * name), drained into `decisions.tsv` by [[recordSuperDefaults]]. Collected AT the rewrite rather
+    * than re-derived afterwards, so the provenance and the licence are one answer and cannot drift. */
+  private val superDefaults = collection.mutable.ListBuffer.empty[(SymId, SymId, String)]
   private var opPlusEq, opMinusEq, opPlusPlusEq: SymId = SymId.None
   private var updateSym, insertSym, getOrElseSym, containsSym: SymId = SymId.None
   /** scala `mutable.Map.put`/`remove` — they RETURN the previous value, which java's do too and
@@ -791,12 +795,14 @@ final class CollectionsTransform(
       case s if typeMap.get(s.fullName).exists((tgt, _) => CollectionsTransform.UninheritableTargets(tgt)) => s.id
     }.toSet
     parentClash = declaredParentKinds(summon[Program])
+    superDefaults.clear()
     val units    = program.units.map(u =>
       restoreUninheritableParents(u, restoreExcluded(u, StandardTraversal.mapClassDef(this, u))))
     val symbols2 = mapSignatures(symbols) // retype signatures too
     recordRetypings(symbols, symbols2)
     recordScopedOut(symbols)
     recordRetainedSignatures(symbols)
+    recordSuperDefaults
     recordReifiedTypeArgs(symbols2)
     recordEgressBridges()
     program.rebuilt(units, symbols2)
@@ -1301,6 +1307,46 @@ final class CollectionsTransform(
   /** DECISION PROVENANCE for [[applyClassFileOverrides]] — [[recordScopedOut]]'s row with the
     * other §1 classification, and the reason the two are separate kinds: a reader told to widen a
     * scope that does not exist has been sent after a key nothing in the port can supply (§4.45). */
+  /** DECISION PROVENANCE for the `super` → `this` substitution (`ENGINE-LIMITS.md` K29).
+    *
+    * This one is recorded where the other `JavaCollections` rewrites are not, and the line between
+    * them is §5.1's: an ordinary rewrite is a mechanical API mapping that the diff against the java
+    * shows by itself (`xs.containsAll(c)` reads as `JavaCollections.containsAll(xs, c)` right
+    * there). This one changes WHICH MEMBER java named — `super` became `this` — and the licence for
+    * that is an argument about the JDK's own body, which no diff can carry.
+    *
+    * Per DECLARATION, and read out of the XREF rather than from a walk this phase would keep of its
+    * own (§5.1 again, and the reason `Decision.declarationsUsing` exists). The answer is filtered to
+    * the classes whose `super` this run actually substituted, which is exact rather than
+    * approximate: a class that OVERRIDES the member resolves every non-`super` mention of it to its
+    * own override, so a usage of the JDK SYMBOL inside one of those classes IS the `super` call. */
+  private def recordSuperDefaults(using p: Program): Unit =
+    if superDefaults.isEmpty then return
+    val classes = superDefaults.map(_._1).toSet
+    superDefaults.toList.groupBy(r => (r._2, r._3)).foreach { case ((callee, member), _) =>
+      Decision.declarationsUsing(p, callee)
+        .filter((encl, _) => p.symbolOf(encl).exists(s => classes.contains(s.owner)))
+        .foreach { (encl, o) =>
+          record(Decision(
+            kind       = Decision.Kind.SubstitutedCall,
+            subject    = encl,
+            subjectFqn = Decision.fqnOf(p, encl, member),
+            detail = Map(
+              "was"        -> s"super.$member",
+              "now"        -> s"balticporter.runtime.JavaCollections.$member(this, …)",
+              "jdkDefault" -> CollectionsTransform.VirtualJdkDefaultBodies(member),
+              "why" -> ("this class's emitted PARENT is a scala collection this phase minted, so " +
+                "the JDK default `super` named is gone and no configuration key can bring it back. " +
+                "The helper reproduces that default's own body, which dispatches VIRTUALLY through " +
+                "`this` — so standing it on `this` is what `super` meant, and is licensed for this " +
+                "member and not in general"),
+            ),
+            reason = Reason.Universal("jdk-default-at-this(§1)"),
+            origin = o,
+          ))
+        }
+    }
+
   private def recordRetainedSignatures(before: SymbolTable)(using p: Program): Unit =
     if retainedOverrides.isEmpty then return
     before.all.foreach { s =>
@@ -3546,6 +3592,47 @@ final class CollectionsTransform(
       // Left alone, this is a call to a member that does not exist.
       case ("forEach", List(f), _) => Some(call(recv, foreachSym, List(f), t, so))
       case _ if onShim             => None
+      // ---- java's BULK DEFAULTS, reached through `super` on a class THIS PHASE RE-PARENTED ----
+      //
+      // A class that DEFINES a collection inherits `containsAll`/`addAll`/`removeAll`/`retainAll`
+      // from `java.util.AbstractCollection` and calls them through `super`, to delegate the general
+      // case its own fast path does not cover. Re-parenting it onto a scala collection REMOVES the
+      // implementation java was calling — the target has three of the four not at all and the
+      // fourth at a different formal and a different result — so the phase owes one back
+      // (`CLAUDE.md` §1's *an obligation the engine's own translation created*, `ENGINE-LIMITS.md`
+      // K29). Nothing else can: no manifest key names a member the JDK declared.
+      //
+      // ==WHY IT IS THIS ARM AND NOT [[superIsThis]]==
+      // The generic path already tries `super` → `this` and DECLINES here, correctly: `super.m` and
+      // `this.m` name the same member only when nothing between them overrides `m`, and the class
+      // in front of us overrides `m` — that override is the body the `super` call sits in, so
+      // `this.m` would recurse into it. The licence for this arm is a DIFFERENT statement, and it is
+      // why the rewrite may stand where the retry may not: the emitted call does not select `m` on
+      // `this` at all. It calls a HELPER that REPRODUCES the JDK default's body, and the JDK's own
+      // body dispatches virtually — `AbstractCollection.containsAll` is `for (o : c) if
+      // (!contains(o))`, `addAll` is `for (E e : c) if (add(e))`, and the two mutators iterate
+      // `iterator()` and remove through it. Every member they reach is a PUBLIC VIRTUAL member of
+      // `this`, so a helper written over `this` computes exactly what `super` named.
+      //
+      // ==THE ARGUMENT IS MADE PER MEMBER, WHICH IS WHY THE SET IS A TABLE==
+      // [[CollectionsTransform.VirtualJdkDefaults]] is those four and nothing else, each with the
+      // JDK body it stands for written down beside it. This is emphatically not a general permission
+      // to turn a `super` call into a `this` call: a JDK member whose body reads the receiver's own
+      // FIELDS (`ArrayList.clone`, `AbstractList.subList`) is not reproducible from `this` at all,
+      // and `superPlaced`'s refusal is the right answer for every member not in the table.
+      //
+      // ==TWO STRUCTURAL CONJUNCTS, both the phase's OWN record (§4.56)==
+      // See [[superLostItsDefault]]. Neither is a name test, and the second is the one that keeps
+      // this off a `super` that still HAS a target: a program-declared ancestor between the class
+      // and the JDK type may declare `m` itself, in which case `super.m` names code this port still
+      // emits and substituting the helper would change what the program does, silently.
+      case (n, List(c), Kind.Seq | Kind.Set)
+        if onSuper && CollectionsTransform.VirtualJdkDefaults.contains(n)
+           && sym(CollectionsTransform.VirtualJdkDefaults(n)) != SymId.None
+           && superLostItsDefault(recv, n) =>
+        val f = sym(CollectionsTransform.VirtualJdkDefaults(n))
+        recv match { case Tree.Super(cls, _, _) => superDefaults += ((cls, m, n)); case _ => () }
+        Some(Tree.Apply(Tree.Ident(f, TypeRepr.NoType, so), List(thisOf(recv), c), f, t.tpe, t.origin))
       // ---- `java.util.Stack`, whose target DECLARES four of its five (see [[Kind.Stack]]) ----
       //
       // `push`/`pop`/`peek`/`search` are members of the shim with java's own names, arity and
@@ -3880,6 +3967,50 @@ final class CollectionsTransform(
       byId.get(cls).exists(!declares(_)) &&
         !all.exists(c => c.symbol != cls && declares(c) && below(c, 64))
     case _ => false
+
+  /** did the RE-PARENTING remove the implementation this `super.<member>` named — i.e. is the
+    * member's nearest implementation the JDK DEFAULT that the mapping's target does not have?
+    *
+    * Both conjuncts are the phase's own record rather than a name test (§4.56), and each answers a
+    * different half of the question:
+    *
+    *   - **this phase RE-PARENTED the class.** [[parentClash]] is the record of exactly that — every
+    *     class whose emitted parent this phase minted, transitively over the program's own parents —
+    *     and it already excludes the three shapes that KEPT java's parent (a declaration the scope
+    *     held back, a target that cannot BE a parent, a parent the mapping does not cover). Where it
+    *     has no entry the class still extends what java wrote, `super.m` still resolves, and there
+    *     is nothing to supply;
+    *   - **no program-declared ANCESTOR declares the member.** This is the conjunct with teeth. A
+    *     `super.removeAll(c)` two levels down names the SUPERCLASS's `removeAll` where the library
+    *     declares one, and that member is code this port still emits — the JDK default is not what
+    *     `super` meant at all, and substituting the helper would silently run a different program.
+    *     Asked UPWARD from the class's parents, transitively, and never of the class itself: the
+    *     class's own override IS the body this call sits in.
+    *
+    * Fuel exhaustion counts as DECLARED — the conservative arm, since the caller refuses on `true`
+    * — which is [[superIsThis]]'s own convention at its own walk, and for its own reason: a cycle in
+    * the parent edges is something java forbids and a corrupt tree could still hand over. The walks
+    * read the class DEFINITIONS rather than the symbol table because the question is "does a
+    * declaration exist", which is what a `ClassDef`'s body is. */
+  private def superLostItsDefault(recv: Term, member: String)(using p: Program): Boolean = recv match
+    case Tree.Super(cls, _, _) if cls != SymId.None =>
+      parentClash.get(cls).exists(_.kinds.nonEmpty) && !ancestorDeclares(cls, member)
+    case _ => false
+
+  /** does any class this PROGRAM declares, strictly ABOVE `cls`, declare `member`? */
+  private def ancestorDeclares(cls: SymId, member: String)(using p: Program): Boolean =
+    val byId = PackageRenameTransform.allClasses(p).map(c => c.symbol -> c).toMap
+    def declares(c: Tree.ClassDef): Boolean = c.body.exists {
+      case d: Tree.DefDef => methodName(d.symbol) == member
+      case _              => false
+    }
+    def parentsOf(c: Tree.ClassDef): List[SymId] = c.parents.flatMap {
+      case tt: TypeTree => headSym(tt.tpe)
+      case term: Term   => headSym(term.tpe)
+    }
+    def up(id: SymId, fuel: Int): Boolean =
+      fuel <= 0 || byId.get(id).exists(c => declares(c) || parentsOf(c).exists(up(_, fuel - 1)))
+    byId.get(cls).exists(c => parentsOf(c).exists(up(_, 64)))
 
   /** the `this` standing where `recv`'s `super` stood — same class, same origin. Its TYPE is the
     * class's own, which is what every rewrite here reads the receiver's kind from
@@ -4907,6 +5038,44 @@ object CollectionsTransform:
 
   /** the exception java's own contract names for an optional operation a receiver cannot perform. */
   private[balticporter] val UnsupportedOperationFqn = "java.lang.UnsupportedOperationException"
+
+  // -------------------------------------------------------------------------------------------
+  // THE JDK DEFAULTS A RE-PARENTING REMOVES — `ENGINE-LIMITS.md` K29
+  // -------------------------------------------------------------------------------------------
+  //
+  // A class that DEFINES a collection inherits these from `java.util.AbstractCollection` and calls
+  // them through `super`. Emitted `extends scala.collection.mutable.Set`, it has three of them not
+  // at all and the fourth at a different formal and a different result — so the phase supplies the
+  // body, standing on `this` where java stood on `super`.
+  //
+  // WHY THIS IS A TABLE AND NOT A RULE. The substitution is licensed by the JDK IMPLEMENTATION's own
+  // dispatch, which is a fact about each member separately: these four reach nothing but PUBLIC
+  // VIRTUAL members of the receiver, so a helper written over `this` computes what `super` named.
+  // `ArrayList.clone` and `AbstractList.subList` are the counter-examples that make the point —
+  // their bodies read the receiver's own FIELDS, which no helper standing on `this` can reach, and
+  // `superPlaced`'s refusal is the right answer for them. Adding a fifth entry means reading that
+  // member's JDK body and writing it down here; it is not a judgement about the member's NAME.
+
+  /** member NAME → the [[balticporter.runtime.JavaCollections]] helper that reproduces its
+    * `java.util.AbstractCollection` default. */
+  private[balticporter] val VirtualJdkDefaults: Map[String, String] = Map(
+    "containsAll" -> "containsAll",
+    "addAll"      -> "addAll",
+    "removeAll"   -> "removeAll",
+    "retainAll"   -> "retainAll",
+  )
+
+  /** …and the BODY each entry above stands for, from the JDK's own source, so the licence is
+    * READABLE at the emitted call rather than only in this file's comments. Rendered into the
+    * decision, which is what puts it beside the code an agent in another repository is reading
+    * (§4.575). Every member named in each of them is public and virtual on the receiver, which IS
+    * the argument. */
+  private[balticporter] val VirtualJdkDefaultBodies: Map[String, String] = Map(
+    "containsAll" -> "for (Object e : c) if (!contains(e)) return false; return true;",
+    "addAll"      -> "for (E e : c) if (add(e)) modified = true; return modified;",
+    "removeAll"   -> "while (it.hasNext()) if (c.contains(it.next())) { it.remove(); … }",
+    "retainAll"   -> "while (it.hasNext()) if (!c.contains(it.next())) { it.remove(); … }",
+  )
 
   val StaticHelpers: List[String] =
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView", "addAll", "noneMatch", "removeValue",
