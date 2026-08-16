@@ -1013,8 +1013,8 @@ defect is.
 Two things that make this a one-line follow-up rather than a second investigation: the fact was
 already ON the node (a constructor is never `static`, JLS 8.8.3, so `referentOf` answers
 `Instance(n)` for it), and the parameters go UN-ANNOTATED for the arm below's reason — which is also
-what makes the NILARY rendering byte-identical, so the 232 `::new` sites in the rest of the corpus
-do not move. Measured: **eleven lanes byte-identical again**, and the two spec cases are the
+what makes the NILARY rendering byte-identical, so the 232 `::new` sites in the sge upstreams do
+not move — measured, not assumed: 0 member digests on all eleven of their lanes. Measured: **eleven lanes byte-identical again**, and the two spec cases are the
 paramful one and the nilary one beside it.
 
 ---
