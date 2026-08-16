@@ -8,7 +8,7 @@ catalog(undischarged)	6
 catalog(unmechanised)	1
 catalog(unreached)	15
 class-init-trigger	0
-collection-boundary	27
+collection-boundary	26
 collection-closure	3
 collection-retarget	0
 dependency-coverage	10

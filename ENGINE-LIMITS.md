@@ -2851,6 +2851,68 @@ Blast: 6 declarations on the port that had the defect, every check count flat.
 
 ---
 
+### K2.7 A node whose TYPE overstates its EMISSION is patched ONCE PER POSITION until somebody fixes the emission — **ssg-md 81 → 69, `collection-boundary` 27 → 26. CLOSED**
+
+K6's first rule is that *a node describes the expression it emits*. This is what it costs to break
+it, and the shape of the bill is the point: **not one wrong answer, but one local answer per position
+the phase happened to reach, and silence at every position it did not.**
+
+Java's `Map` has two `Set`-typed VIEWS and the phase's rewrites emitted, for each of them, something
+that is not a `Set`:
+
+| java | what the node said | what the emitter printed |
+|---|---|---|
+| `m.keySet()` | the retyped `java.util.Set` — `mutable.Set[K]` | `m.keySet`, a `scala.collection.Set[K]` — no `add`, no `remove` |
+| `m.entrySet()` | `mutable.Set[(K, V)]` | `m` — the MAP, an `Iterable[(K, V)]` and no `Set` at all |
+
+Both emissions were defensible on their own (scala's `keySet` really is the same live view; a scala
+`Map` really is its own entry iterable), and both left the node lying. The phase then grew **two
+patches, each exact for one position**: `transformValDef` RETYPED a declaration initialised from
+`keySet` down to `scala.collection.Set`, and `coerce` REFUSED to wrap a `keySet` source, because a
+factory over a value of the wrong type names the WRAPPER instead of the boundary (K2.5's rule).
+
+Neither patch reaches a **method RESULT**, which is the position a library that implements
+`java.util.Map` is made of, and neither reaches **a branch of a conditional**, where there is no slot
+to patch at all — `coerce` sees the `if`, never its arms. Twelve errors on one port
+(`NodeRepository`, `IndexedItemSetMapBase`, `ItemFactoryMap`, `Attributes`, `DataSet`,
+`AstActionHandler`, and two argument slots), every one of them `Found: scala.collection.Set[X] /
+Required: scala.collection.mutable.Set[X]` or `Found: mutable.Map / Required: mutable.Set[(K, V)]`.
+
+**The fix is at the REWRITE, and it is a runtime type, because the capability is one scala does not
+have.** `JavaCollections.keySetView` / `entrySetView` are live, write-through `mutable.Set` views of
+the map — removal reaches the map, and `add` throws what java's own views throw ("does not support
+the `add` or `addAll` operations", `java.util.Map`'s javadoc), which is §1's *the java contract's own
+refusal*. With the record and the emission agreeing, every position follows for free: the return, the
+argument, the `val` (which now keeps the removal capability the retype had silently taken away), the
+conditional branch, and the `JavaCollection` slot, which composes as `fromSet(keySetView(m))` through
+the table's ordinary `Kind.Set` row. Both patches were then DELETED rather than left as dead policy.
+
+Two things not to repeat when doing this to another rewrite:
+
+- **a rewrite whose shape changes breaks whatever READ that shape.** `writeThroughEntries` — java's
+  one legal mutation during entry iteration, `e.setValue(v)` inside `for (e : m.entrySet())` — reads
+  the map off the LOOP by asking `kindAt(iterable) == Kind.Map`. With `entrySet()` emitting a view
+  that test answers `false`, the rewrite silently stops firing, and a `setValue` then writes to a
+  detached pair with a green compile and no moved count (`CLAUDE.md` §4.4 exactly). It asks the
+  phase's own record now (`entrySource`: an application of the `entrySetView` symbol THIS RUN minted,
+  or a `Kind.Map` for the runtime-absent case);
+- **`super` is not a term.** `entrySet()` used to rewrite to the receiver ALONE and now rewrites to a
+  view OF it, so a `super` receiver moves from one illegal position to another — `superPlaced` asks
+  the question of the RESULT, so the new arm was covered by construction and the `superIsThis` retry
+  answered it without an edit.
+
+Corpus blast: **ssg-md 81 → 69**; every other lane 0 errors moved, liqp **636 passing / 1 failing**
+unchanged (the port with a live suite and the heaviest map use, which is the behavioural evidence
+this is faithful and not merely compilable); 9 members on libGDX, 3 on gdx-vfx, 3 on jbump, 2 on
+simple-graphs, 15 on liqp, all attributable to a `keySet`/`entrySet` site. `collection-boundary`
+27 → 26 on ssg-md, and with it **`Issue.ShimBoundary` is now EMPTY on all fifteen ports** — the
+remaining cells of that table are ones valid java cannot reach (a `Map` is no `Collection`, a
+`Collection` is no `List`), so the row survives for a mapping target nobody has added yet.
+
+*Fix kind: (a).*
+
+---
+
 ### K3. Injected sources are for SEMANTICS the target lacks — never for adapting SHAPES
 
 Two rules, and a port violates them in different ways:

@@ -43,9 +43,10 @@ import balticporter.tir.*
   *   - **shim against scala** — both sides are things the phase produced, but on opposite sides of
   *     the `JavaCollection`/`mutable.Buffer` split the mapping is built on. This is K2's residue
   *     proper, and it is the one a reader would not think to look for, because both types look
-  *     "already ported". `m.keySet()` into a `Collection` slot is the standing example, refused on
-  *     purpose (`coerce.isKeySetView`) and therefore still counted here: a deliberate refusal is a
-  *     finding, not an absence.
+  *     "already ported". This is K2's residue proper and it is where a deliberate REFUSAL is
+  *     counted too — a refusal is a finding, not an absence. (`m.keySet()` into a `Collection` slot
+  *     was the standing example and is no longer one: the `keySet` rewrite emits a live
+  *     `mutable.Set` view, so the coercion has a factory and the seam closes rather than counting.)
   *   - **scoped-out against rewritten** — one side is a declaration the port's
   *     `CollectionsTransform(scope)` deliberately held back, so it kept the JDK type while the code
   *     meeting it moved. This line is the port's own and is the reason a scope is safe to offer at

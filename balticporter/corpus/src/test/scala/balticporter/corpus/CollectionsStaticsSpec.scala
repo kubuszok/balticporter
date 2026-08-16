@@ -299,12 +299,17 @@ class CollectionsStaticsSpec extends PortSuite:
     assertEmits(p, "balticporter.runtime.JavaCollection.unmodifiableFrom(m.values)")
   }
 
-  test("`parenless` strips `()` on a scala receiver — `size`, `keySet` and the rest") {
+  test("`parenless` strips `()` on a scala receiver — `size` and the rest") {
     val p = port(kinds, new CollectionsTransform)
-    assertEmits(p, "m.keySet")
-    assertNotEmits(p, "m.keySet()")
     assertEmits(p, "xs.size")
     assertNotEmits(p, "xs.size()")
+    // `keySet` is still in the `parenless` set and no longer reaches its arm at a MAP receiver: the
+    // dedicated arm above it emits java's live view instead, which is a stronger statement than a
+    // stripped paren — `m.keySet` is a `scala.collection.Set` and the declaration said otherwise.
+    // The name stays on the list because the arm that would answer for a receiver of some other
+    // kind is the one this test is about, and removing it would be a silent narrowing.
+    assertEmits(p, "balticporter.runtime.JavaCollections.keySetView(m)")
+    assertNotEmits(p, "m.keySet()")
   }
 
   test("`poll`/`peek` go through an Option — java returns NULL on empty where scala's THROW") {

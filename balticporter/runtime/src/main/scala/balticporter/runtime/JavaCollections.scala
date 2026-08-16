@@ -616,6 +616,71 @@ object JavaCollections:
   def setRemove[A](xs: scala.collection.mutable.Set[A], o: Any): Boolean =
     xs.asInstanceOf[scala.collection.mutable.Set[Any]].remove(o)
 
+  // -------------------------------------------------------------------------------------------
+  // java's two `Set`-typed VIEWS of a map — the semantic scala does not have
+  // -------------------------------------------------------------------------------------------
+  //
+  // `Map.keySet()` and `Map.entrySet()` are LIVE views: java's javadoc says "the set is backed by
+  // the map, so changes to the map are reflected in the set, and vice-versa", and it says of both
+  // that they support removal and "do not support the add or addAll operations".
+  //
+  // Scala has half of that. `m.keySet` is the same live view with the same write-through, typed
+  // `scala.collection.Set` — which is the honest type for what the view CAN do and the wrong type
+  // for the slot java DECLARED, because every `java.util.Set` in a ported program is a
+  // `scala.collection.mutable.Set`. And a map's entry view has no scala counterpart at all: the
+  // phase's rewrite hands back the MAP, which really is an `Iterable[(K, V)]` and really is not a
+  // `Set`.
+  //
+  // So the two positions the phase could reach — a `val` initialised from `keySet` (retyped to the
+  // read-only view) and a coercion SOURCE (refused) — each answered one slot, and a RETURN typed
+  // at the declared `java.util.Set` was answered by neither. These two views are that answer, and
+  // they belong to the runtime for §1's own reason: the capability is one scala's library does not
+  // express, not a shape the emitter could have chosen differently.
+  //
+  // Both REFUSALS are java's own, spelled the way `CLAUDE.md` §1 asks — the java contract's own
+  // refusal at an operation the interface itself declares unsupported, which is louder than java
+  // and never quieter.
+
+  /** java's `Map.keySet()` — the LIVE, WRITE-THROUGH view, at the type the retyping declares.
+    *
+    * Removal reaches the MAP, which is java's contract and is exactly the capability
+    * `scala.collection.Set` cannot express; `add` throws what java's own view throws. */
+  def keySetView[K, V](m: scala.collection.mutable.Map[K, V]): scala.collection.mutable.Set[K] =
+    new scala.collection.mutable.AbstractSet[K]:
+      def iterator: scala.collection.Iterator[K] = m.keysIterator
+      def contains(k: K): Boolean                = m.contains(k)
+      def addOne(k: K): this.type =
+        throw new UnsupportedOperationException("add on a keySet() view")
+      def subtractOne(k: K): this.type           = { m.remove(k); this }
+      override def size: Int                     = m.size
+      override def knownSize: Int                = m.knownSize
+      override def isEmpty: Boolean              = m.isEmpty
+      override def clear(): Unit                 = m.clear()
+
+  /** java's `Map.entrySet()` — the LIVE view of the map's mappings as a `Set` of pairs.
+    *
+    * The ELEMENT stays a `Tuple2`, which is the phase's existing decision and its existing refusal:
+    * java's `Entry.setValue` writes through and a tuple cannot, so it fails to COMPILE rather than
+    * writing to a copy (and the one shape where the map IS reachable — a `for` over `entrySet()` —
+    * is rewritten to the map's own `put`). What this view adds is only the SET, so a declaration
+    * java typed `Set<Map.Entry<K, V>>` has a value that conforms to it.
+    *
+    * `remove` is java's: an entry is removed only when the KEY AND THE VALUE both match, which is
+    * what makes it a view of the mappings rather than of the keys. */
+  def entrySetView[K, V](m: scala.collection.mutable.Map[K, V]): scala.collection.mutable.Set[(K, V)] =
+    new scala.collection.mutable.AbstractSet[(K, V)]:
+      def iterator: scala.collection.Iterator[(K, V)] = m.iterator
+      def contains(e: (K, V)): Boolean                = m.get(e._1).contains(e._2)
+      def addOne(e: (K, V)): this.type =
+        throw new UnsupportedOperationException("add on an entrySet() view")
+      def subtractOne(e: (K, V)): this.type =
+        if m.get(e._1).contains(e._2) then m.remove(e._1)
+        this
+      override def size: Int          = m.size
+      override def knownSize: Int     = m.knownSize
+      override def isEmpty: Boolean   = m.isEmpty
+      override def clear(): Unit      = m.clear()
+
   /** the CONSUMER direction: a `Buffer` the port holds, at a class file's `java.util.List` FORMAL.
     *
     * A live view, for the reason the whole family is: java's callee may KEEP the collection — an

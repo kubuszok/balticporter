@@ -2105,7 +2105,7 @@ member	com.badlogic.gdx.graphics.Cubemap#cubemapData()	sge.graphics.Cubemap#cube
 member	com.badlogic.gdx.graphics.Cubemap#data	sge.graphics.Cubemap#data	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	89	d577ec1230e14ced	
 member	com.badlogic.gdx.graphics.Cubemap#getDepth()	sge.graphics.Cubemap#getDepth()	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	183	efe337c872d1a2d9	
 member	com.badlogic.gdx.graphics.Cubemap#getHeight()	sge.graphics.Cubemap#getHeight()	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	178	0c235fdeb120cf52	
-member	com.badlogic.gdx.graphics.Cubemap#getManagedStatus()	sge.graphics.Cubemap#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	278	7b462fa99db857c0	placement=companion
+member	com.badlogic.gdx.graphics.Cubemap#getManagedStatus()	sge.graphics.Cubemap#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	278	07fc3d3978894a38	placement=companion
 member	com.badlogic.gdx.graphics.Cubemap#getNumManagedCubemaps(Sge)	sge.graphics.Cubemap#getNumManagedCubemaps(Sge)	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	290	56f76959c707496a	placement=companion
 member	com.badlogic.gdx.graphics.Cubemap#getWidth()	sge.graphics.Cubemap#getWidth()	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	173	3fdd41063f92a54d	
 member	com.badlogic.gdx.graphics.Cubemap#invalidateAllCubemaps(Application,Sge)	sge.graphics.Cubemap#invalidateAllCubemaps(Application,Sge)	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	212	90f902a4188e85ba	placement=companion
@@ -3571,7 +3571,7 @@ member	com.badlogic.gdx.graphics.Mesh#getIndices(int,int,Array,int)	sge.graphics
 member	com.badlogic.gdx.graphics.Mesh#getIndicesBuffer()	sge.graphics.Mesh#getIndicesBuffer()	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	970	cdf5c639c7ac74ca	
 member	com.badlogic.gdx.graphics.Mesh#getIndicesBuffer(boolean)	sge.graphics.Mesh#getIndicesBuffer(boolean)	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	974	26beeae27b89b8fc	
 member	com.badlogic.gdx.graphics.Mesh#getInstancedAttributes()	sge.graphics.Mesh#getInstancedAttributes()	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	691	9ad43042e8fc30a8	
-member	com.badlogic.gdx.graphics.Mesh#getManagedStatus()	sge.graphics.Mesh#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	1001	a05199e8600d4551	placement=companion
+member	com.badlogic.gdx.graphics.Mesh#getManagedStatus()	sge.graphics.Mesh#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	1001	b1c5e940bf0b1e39	placement=companion
 member	com.badlogic.gdx.graphics.Mesh#getMaxIndices()	sge.graphics.Mesh#getMaxIndices()	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	481	b0db3627d55af021	
 member	com.badlogic.gdx.graphics.Mesh#getMaxVertices()	sge.graphics.Mesh#getMaxVertices()	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	476	3bb2d8170e5befd6	
 member	com.badlogic.gdx.graphics.Mesh#getNumIndices()	sge.graphics.Mesh#getNumIndices()	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	466	23301a988feeaa61	
@@ -3746,7 +3746,7 @@ member	com.badlogic.gdx.graphics.Texture#data	sge.graphics.Texture#data	Renamed	
 member	com.badlogic.gdx.graphics.Texture#draw(Pixmap,int,int)	sge.graphics.Texture#draw(Pixmap,int,int)	Renamed	-	com/badlogic/gdx/graphics/Texture.java	186	c79e22efdf61887c	
 member	com.badlogic.gdx.graphics.Texture#getDepth()	sge.graphics.Texture#getDepth()	Renamed	-	com/badlogic/gdx/graphics/Texture.java	205	efe337c872d1a2d9	
 member	com.badlogic.gdx.graphics.Texture#getHeight()	sge.graphics.Texture#getHeight()	Renamed	-	com/badlogic/gdx/graphics/Texture.java	200	0c235fdeb120cf52	
-member	com.badlogic.gdx.graphics.Texture#getManagedStatus()	sge.graphics.Texture#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/Texture.java	314	b8f788efcd9c8e56	placement=companion
+member	com.badlogic.gdx.graphics.Texture#getManagedStatus()	sge.graphics.Texture#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/Texture.java	314	477bfe7ad36d4fc4	placement=companion
 member	com.badlogic.gdx.graphics.Texture#getNumManagedTextures(Sge)	sge.graphics.Texture#getNumManagedTextures(Sge)	Renamed	-	com/badlogic/gdx/graphics/Texture.java	326	cf3d1768b73f24a2	placement=companion
 member	com.badlogic.gdx.graphics.Texture#getWidth()	sge.graphics.Texture#getWidth()	Renamed	-	com/badlogic/gdx/graphics/Texture.java	195	3fdd41063f92a54d	
 member	com.badlogic.gdx.graphics.Texture#invalidateAllTextures(Application,Sge)	sge.graphics.Texture#invalidateAllTextures(Application,Sge)	Renamed	-	com/badlogic/gdx/graphics/Texture.java	247	60c4d5fb2676c504	placement=companion
@@ -3770,7 +3770,7 @@ member	com.badlogic.gdx.graphics.Texture3D#data	sge.graphics.Texture3D#data	Rena
 member	com.badlogic.gdx.graphics.Texture3D#getData()	sge.graphics.Texture3D#getData()	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	72	b0080dea689029e5	
 member	com.badlogic.gdx.graphics.Texture3D#getDepth()	sge.graphics.Texture3D#getDepth()	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	92	e8c0855f963c4f33	
 member	com.badlogic.gdx.graphics.Texture3D#getHeight()	sge.graphics.Texture3D#getHeight()	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	87	0c235fdeb120cf52	
-member	com.badlogic.gdx.graphics.Texture3D#getManagedStatus()	sge.graphics.Texture3D#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	131	d4e5e19be1cfafee	placement=companion
+member	com.badlogic.gdx.graphics.Texture3D#getManagedStatus()	sge.graphics.Texture3D#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	131	fe08bb6a4a3a0a34	placement=companion
 member	com.badlogic.gdx.graphics.Texture3D#getNumManagedTextures3D(Sge)	sge.graphics.Texture3D#getNumManagedTextures3D(Sge)	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	143	2d266c0ae8ae04b7	placement=companion
 member	com.badlogic.gdx.graphics.Texture3D#getWidth()	sge.graphics.Texture3D#getWidth()	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	82	3fdd41063f92a54d	
 member	com.badlogic.gdx.graphics.Texture3D#invalidateAllTextureArrays(Application)	sge.graphics.Texture3D#invalidateAllTextureArrays(Application)	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	121	a4ca5c5c0116b713	placement=companion
@@ -3806,7 +3806,7 @@ member	com.badlogic.gdx.graphics.TextureArray#data	sge.graphics.TextureArray#dat
 member	com.badlogic.gdx.graphics.TextureArray#getDepth()	sge.graphics.TextureArray#getDepth()	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	101	e8c0855f963c4f33	
 member	com.badlogic.gdx.graphics.TextureArray#getHeight()	sge.graphics.TextureArray#getHeight()	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	96	0c235fdeb120cf52	
 member	com.badlogic.gdx.graphics.TextureArray#getInternalHandles(Array,Sge)	sge.graphics.TextureArray#getInternalHandles(Array<String>,Sge)	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	64	1cb4165b41231f0e	placement=companion vis=private
-member	com.badlogic.gdx.graphics.TextureArray#getManagedStatus()	sge.graphics.TextureArray#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	140	3adf858ac924422c	placement=companion
+member	com.badlogic.gdx.graphics.TextureArray#getManagedStatus()	sge.graphics.TextureArray#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	140	7230d36f157f7f42	placement=companion
 member	com.badlogic.gdx.graphics.TextureArray#getNumManagedTextureArrays(Sge)	sge.graphics.TextureArray#getNumManagedTextureArrays(Sge)	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	152	735386f74a83b527	placement=companion
 member	com.badlogic.gdx.graphics.TextureArray#getWidth()	sge.graphics.TextureArray#getWidth()	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	91	3fdd41063f92a54d	
 member	com.badlogic.gdx.graphics.TextureArray#invalidateAllTextureArrays(Application)	sge.graphics.TextureArray#invalidateAllTextureArrays(Application)	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	130	9ce7e8159991d8f5	placement=companion
@@ -8595,7 +8595,7 @@ member	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getDepthStencilPackedBuff
 member	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getFramebufferHandle()	sge.graphics.glutils.GLFrameBuffer#getFramebufferHandle()	Renamed	-	com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java	507	58e32349532c8c81	
 member	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getHeight()	sge.graphics.glutils.GLFrameBuffer#getHeight()	Renamed	-	com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java	535	e759153c5ad9a7ab	
 member	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getManagedStatus()	sge.graphics.glutils.GLFrameBuffer#getManagedStatus()	Renamed	-	com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java	577	79e5697f5ec2607d	placement=companion
-member	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getManagedStatus(StringBuilder)	sge.graphics.glutils.GLFrameBuffer#getManagedStatus(StringBuilder)	Renamed	-	com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java	567	bd33cf69bde89a6f	placement=companion
+member	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getManagedStatus(StringBuilder)	sge.graphics.glutils.GLFrameBuffer#getManagedStatus(StringBuilder)	Renamed	-	com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java	567	ba1219359beab832	placement=companion
 member	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getStencilBufferHandle()	sge.graphics.glutils.GLFrameBuffer#getStencilBufferHandle()	Renamed	-	com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java	525	dc550706a5e05ae9	
 member	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getTextureAttachments()	sge.graphics.glutils.GLFrameBuffer#getTextureAttachments()	Renamed	-	com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java	105	9bf3b138f4037965	
 member	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getWidth()	sge.graphics.glutils.GLFrameBuffer#getWidth()	Renamed	-	com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java	540	66e9a7f154a95c5c	
@@ -12339,7 +12339,7 @@ member	com.badlogic.gdx.math.collision.Sphere#radius	sge.math.collision.Sphere#r
 member	com.badlogic.gdx.math.collision.Sphere#serialVersionUID	sge.math.collision.Sphere#serialVersionUID	Renamed	-	com/badlogic/gdx/math/collision/Sphere.java	29	fb4a5aec4f15b7dd	placement=companion vis=private
 member	com.badlogic.gdx.math.collision.Sphere#surfaceArea()	sge.math.collision.Sphere#surfaceArea()	Renamed	-	com/badlogic/gdx/math/collision/Sphere.java	72	b603b5efd9230366	
 member	com.badlogic.gdx.math.collision.Sphere#volume()	sge.math.collision.Sphere#volume()	Renamed	-	com/badlogic/gdx/math/collision/Sphere.java	68	ed04ec255fb93028	
-member	com.badlogic.gdx.net.HttpParametersUtils#convertHttpParameters(Map)	sge.net.HttpParametersUtils#convertHttpParameters(Map<String,String>)	Renamed	-	com/badlogic/gdx/net/HttpParametersUtils.java	39	9a94df85e41bd1c7	placement=companion
+member	com.badlogic.gdx.net.HttpParametersUtils#convertHttpParameters(Map)	sge.net.HttpParametersUtils#convertHttpParameters(Map<String,String>)	Renamed	-	com/badlogic/gdx/net/HttpParametersUtils.java	39	edcd381bc17af3e7	placement=companion
 member	com.badlogic.gdx.net.HttpParametersUtils#defaultEncoding	sge.net.HttpParametersUtils#defaultEncoding	Renamed	-	com/badlogic/gdx/net/HttpParametersUtils.java	32	419384c526e13056	placement=companion
 member	com.badlogic.gdx.net.HttpParametersUtils#encode(String,String)	sge.net.HttpParametersUtils#encode(String,String)	Renamed	-	com/badlogic/gdx/net/HttpParametersUtils.java	52	579d00aa4fa07b20	placement=companion vis=private
 member	com.badlogic.gdx.net.HttpParametersUtils#nameValueSeparator	sge.net.HttpParametersUtils#nameValueSeparator	Renamed	-	com/badlogic/gdx/net/HttpParametersUtils.java	33	c6e03b6264cbd26c	placement=companion
@@ -12497,7 +12497,7 @@ member	com.badlogic.gdx.net.NetJavaImpl#isHttpRequestPending(HttpRequest)	sge.ne
 member	com.badlogic.gdx.net.NetJavaImpl#listeners	sge.net.NetJavaImpl#listeners	Renamed	-	com/badlogic/gdx/net/NetJavaImpl.java	129	9af26c7e995cb8e7	
 member	com.badlogic.gdx.net.NetJavaImpl#putIntoConnectionsAndListeners(HttpRequest,HttpResponseListener,HttpURLConnection)	sge.net.NetJavaImpl#putIntoConnectionsAndListeners(HttpRequest,HttpResponseListener,HttpURLConnection)	Renamed	-	com/badlogic/gdx/net/NetJavaImpl.java	284	6c5f4d6473ead2cf	
 member	com.badlogic.gdx.net.NetJavaImpl#removeFromConnectionsAndListeners(HttpRequest)	sge.net.NetJavaImpl#removeFromConnectionsAndListeners(HttpRequest)	Renamed	-	com/badlogic/gdx/net/NetJavaImpl.java	278	e92706852ffb8bb1	
-member	com.badlogic.gdx.net.NetJavaImpl#sendHttpRequest(HttpRequest,HttpResponseListener)	sge.net.NetJavaImpl#sendHttpRequest(HttpRequest,HttpResponseListener)	Renamed	-	com/badlogic/gdx/net/NetJavaImpl.java	155	1d8b87ad28bf7a26	
+member	com.badlogic.gdx.net.NetJavaImpl#sendHttpRequest(HttpRequest,HttpResponseListener)	sge.net.NetJavaImpl#sendHttpRequest(HttpRequest,HttpResponseListener)	Renamed	-	com/badlogic/gdx/net/NetJavaImpl.java	155	0feb26e01d404031	
 member	com.badlogic.gdx.net.NetJavaImpl#tasks	sge.net.NetJavaImpl#tasks	Renamed	-	com/badlogic/gdx/net/NetJavaImpl.java	130	ec5239eb5719ae94	
 member	com.badlogic.gdx.net.NetJavaImpl$HttpClientResponse#<stmt1>	sge.net.NetJavaImpl$HttpClientResponse#<stmt1>	Renamed	-	com/badlogic/gdx/net/NetJavaImpl.java	54	b3af351247daf24b	
 member	com.badlogic.gdx.net.NetJavaImpl$HttpClientResponse#<stmt2>	sge.net.NetJavaImpl$HttpClientResponse#<stmt2>	Renamed	-	com/badlogic/gdx/net/NetJavaImpl.java	55	c8da6eba28a67749	
@@ -17116,7 +17116,7 @@ member	com.badlogic.gdx.utils.Json#writeObjectStart(String,Class,?)	sge.utils.Js
 member	com.badlogic.gdx.utils.Json#writeType(Class)	sge.utils.Json#writeType(Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	768	dd347912d201a4d1	
 member	com.badlogic.gdx.utils.Json#writeValue(?)	sge.utils.Json#writeValue(?)	Renamed	-	com/badlogic/gdx/utils/Json.java	473	eb78178549db47ab	
 member	com.badlogic.gdx.utils.Json#writeValue(?,?)	sge.utils.Json#writeValue(?,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	483	4294462207ebc782	
-member	com.badlogic.gdx.utils.Json#writeValue(?,?,?)	sge.utils.Json#writeValue(?,?,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	4a1863602fd4ab7f	
+member	com.badlogic.gdx.utils.Json#writeValue(?,?,?)	sge.utils.Json#writeValue(?,?,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	6f5301b56209daab	
 member	com.badlogic.gdx.utils.Json#writeValue(String,?)	sge.utils.Json#writeValue(String,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	431	b9a37363441884fe	
 member	com.badlogic.gdx.utils.Json#writeValue(String,?,?)	sge.utils.Json#writeValue(String,?,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	448	a7cc3d638cd6438d	
 member	com.badlogic.gdx.utils.Json#writeValue(String,?,?,?)	sge.utils.Json#writeValue(String,?,?,?)	Renamed	-	com/badlogic/gdx/utils/Json.java	462	9022871fdaf0bc3f	

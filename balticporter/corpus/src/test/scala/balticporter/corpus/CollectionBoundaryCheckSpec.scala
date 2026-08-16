@@ -68,40 +68,35 @@ class CollectionBoundaryCheckSpec extends PortSuite:
   // the second line: both sides are the phase's own output
   // -------------------------------------------------------------------------------------------
 
-  test("a shim slot fed a scala collection is counted — the refusals are findings, not absences") {
-    // `m.keySet()` is REFUSED by `coerce` on purpose (its node type overstates the scala the
-    // emitter prints), so the slot stays open and the port fails to compile there. A refusal that
-    // nothing counts is indistinguishable from a case nobody thought of, which is exactly the
-    // "we always ignore those four" rot CLAUDE.md §5.1 objects to.
-    val (_, fs) = findings(
-      """package demo;
-        |import java.util.*;
-        |class K {
-        |  void take(Collection<String> c) {}
-        |  void argMapKeys(Map<String,String> m) { take(m.keySet()); }
-        |}
-        |""".stripMargin
-    )
-    val shim = fs.filter(_.issue == Issue.ShimBoundary)
-    assertEquals(clue(shim).size, 1)
-    assertEquals(shim.head.slot, "argument")
-    assertEquals(shim.head.expected, "balticporter.runtime.JavaCollection")
-    assertEquals(shim.head.actual, "scala.collection.mutable.Set")
-  }
-
-  test("the Kind.Map -> JavaCollection cell — refused by `coerce`, counted here") {
+  test("the two MAP VIEWS are no longer counted — the seam CLOSED, so the count is zero") {
+    // This test used to be two, and each pinned a `ShimBoundary` row that was an honest refusal at
+    // the time: `m.keySet()` emitted a `scala.collection.Set` its node claimed was a `mutable.Set`,
+    // and `m.entrySet()` handed back the MAP, which is no `Collection` view of anything. The
+    // rewrites now emit live `mutable.Set` views, so both are ordinary `Kind.Set` sources with a
+    // factory on `coerce`'s first table.
+    //
+    // Asserted as a ZERO rather than deleted, and that is §4.56's rule read at a check: a residue
+    // count is only as good as the assumption that everything able to close it RAN, so the day a
+    // view stops being emitted this reads two findings instead of silence. They were also the only
+    // `ShimBoundary` pair VALID JAVA could reach — the remaining cells of that table are
+    // unreachable because java itself forbids the assignment (a `Map` is no `Collection`, a
+    // `Collection` is no `List`) — so the row is empty on all fifteen ports and its classification
+    // is what a consumer would meet if a new mapping target ever reopened it. That sentence is
+    // pinned here rather than left to the day it fires (§4.45).
     val (_, fs) = findings(
       """package demo;
         |import java.util.*;
         |class M {
+        |  void takeKeys(Collection<String> c) {}
         |  void takeColl(Collection<Map.Entry<String,String>> c) {}
+        |  void argKeys(Map<String,String> m) { takeKeys(m.keySet()); }
         |  void argColl(Map<String,String> m) { takeColl(m.entrySet()); }
         |}
         |""".stripMargin
     )
-    val shim = fs.filter(_.issue == Issue.ShimBoundary)
-    assertEquals(clue(shim).map(f => (f.slot, f.expected, f.actual)),
-      List(("argument", "balticporter.runtime.JavaCollection", "scala.collection.mutable.Map")))
+    assertEquals(clue(fs.filter(_.issue == Issue.ShimBoundary)), Nil)
+    assert(clue(Issue.classification(Issue.ShimBoundary)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.ShimBoundary)).contains("coerce"))
   }
 
   test("an UNMAPPED JDK subtype meeting a retyped slot is the closure hole, met as a SITE") {

@@ -317,23 +317,29 @@ class CollectionsTransformSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform,
     )
-    // a scala `Map[K, V]` IS an `Iterable[(K, V)]` — which is exactly what java's `entrySet()` view
-    // is, and the `entrySet` rewrite hands back the map itself.
-    assertEmits(p, "this.takeIt(balticporter.runtime.JavaIterable.from(m))")
-    // …but there is no `Collection` view of a map, and inventing one would have to reproduce
-    // `entrySet().remove(e)` removing a mapping only when KEY AND VALUE both match. Refused, so it
-    // fails to compile at the slot (ENGINE-LIMITS M6) rather than being guessed.
-    assertEmits(p, "this.takeColl(m)")
+    // `entrySet()` is now a LIVE `mutable.Set` view of the mappings, so BOTH slots take an ordinary
+    // `Kind.Set` source and the two arms that serve a set serve them. This test used to pin the
+    // opposite for the second one — "there is no `Collection` view of a map" — and that sentence was
+    // about the MAP, which really is not a collection; the VIEW is, and it reproduces java's own
+    // `entrySet().remove(e)` (remove only where the KEY AND THE VALUE both match) rather than
+    // guessing it. The refusal that stays is the one with no view behind it: a bare `Kind.Map` at a
+    // `JavaCollection` slot, which no valid java writes.
+    assertEmits(p,
+      "this.takeIt(balticporter.runtime.JavaIterable.from(balticporter.runtime.JavaCollections.entrySetView(m)))")
+    assertEmits(p,
+      "this.takeColl(balticporter.runtime.JavaCollection.fromSet(balticporter.runtime.JavaCollections.entrySetView(m)))")
     assertNotEmits(p, "JavaCollection.from(m)")
-    assertNotEmits(p, "JavaCollection.fromSet(m)")
+    assertNotEmits(p, "this.takeColl(m)")
   }
 
-  test("a `keySet()` source is REFUSED — its node type overstates the scala the emitter prints") {
-    // `m.keySet` is a `scala.collection.Set`, not the retyped `mutable.Set` the node claims — the
-    // same disagreement `transformValDef`'s keySet arm already encodes. Wrapping on a type the
-    // phase knows the value does not have would emit a call naming the WRAPPER instead of the
-    // boundary; measured, the unwrapped form says `Found: scala.collection.Set[String] / Required:
-    // JavaCollection[String]`, which is the error a reader needs.
+  test("a `keySet()` source BRIDGES — the node type and the emitted scala agree now") {
+    // This test used to pin the opposite, and its reason was exact at the time: `m.keySet` is a
+    // `scala.collection.Set`, not the retyped `mutable.Set` the node claimed, so a wrap would have
+    // named the WRAPPER instead of the boundary a reader has to act on. The DISAGREEMENT is what
+    // went away — the rewrite emits a live `mutable.Set` view — so the source is an ordinary
+    // `Kind.Set` and `fromSet` serves it like any other. Nothing about the refusal RULE changed;
+    // what changed is that the phase can now make its emission match its record, which is the one
+    // thing that rule was waiting on.
     val p = port(
       """package demo;
         |import java.util.*;
@@ -344,8 +350,9 @@ class CollectionsTransformSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform,
     )
-    assertEmits(p, "this.take(m.keySet)")
-    assertNotEmits(p, "fromSet(m.keySet)")
+    assertEmits(p,
+      "this.take(balticporter.runtime.JavaCollection.fromSet(balticporter.runtime.JavaCollections.keySetView(m)))")
+    assertNotEmits(p, "this.take(m.keySet)")
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -622,12 +629,15 @@ class CollectionsTransformSpec extends PortSuite:
   }
 
   test("…and a rewrite that cannot stand on `super` stands on `this`, where the two are one member") {
-    // `entrySet()` maps to the RECEIVER ALONE, because a scala `Map` already IS its entry view —
-    // which for a `super` receiver is `for (e <- super)`, a syntax error. `Sorted` declares no
-    // `entrySet` and nothing in this program extends it, so `super.entrySet()` and
-    // `this.entrySet()` name the same member and the rewrite may simply stand on `this`.
+    // `entrySet()` maps to a live view OF THE RECEIVER, so for a `super` receiver the rewrite is
+    // `entrySetView(super)` — an argument position, where scala has no place for `super` at all.
+    // `Sorted` declares no `entrySet` and nothing in this program extends it, so `super.entrySet()`
+    // and `this.entrySet()` name the same member and the rewrite may simply stand on `this`.
+    // (It used to be the receiver ALONE — `for (e <- super)` — and the placement question is the
+    // same one: `superPlaced` asks it of the RESULT, so a new arm is covered by construction.)
     val p = port(superReceiver, new CollectionsTransform)
-    assertEmits(p, "<- this)")
+    assertEmits(p, "<- balticporter.runtime.JavaCollections.entrySetView(this))")
+    assertNotEmits(p, "entrySetView(super)")
     assertNotEmits(p, "<- super)")
     assertNotEmits(p, "super.entrySet()")
     // …and the arms that ARE legal on `super` are untouched — the retry is a fallback reached only
@@ -848,12 +858,13 @@ class CollectionsTransformSpec extends PortSuite:
     // …and a Map `get` translates too, because `super.getOrElse(k, null)` is a selection as well.
     // Java's `Map.get` returns null for an absent key, which is what the default states.
     assertEmits(p, "super.getOrElse(k, null)")
-    // THIS one would move `super` out of a selection: a scala `Map` already IS its entry view, so
-    // the rewrite is the receiver alone and `for (e <- super)` is E040. `Rows` declares no
-    // `entrySet` and nothing extends it, so the rewrite stands on `this` instead — the fallback
-    // above. What must never appear is the syntax error.
+    // THIS one would move `super` out of a selection: `entrySet()` becomes a live view OF the
+    // receiver, so the rewrite puts `super` in an ARGUMENT, which scala has no position for. `Rows`
+    // declares no `entrySet` and nothing extends it, so the rewrite stands on `this` instead — the
+    // fallback above. What must never appear is `super` anywhere but a selection's qualifier.
     assertNotEmits(p, "<- super)")
-    assertEmits(p, "<- this)")
+    assertNotEmits(p, "entrySetView(super)")
+    assertEmits(p, "<- balticporter.runtime.JavaCollections.entrySetView(this))")
   }
 
   test("`subList` and `putIfAbsent` go to the helper — scala HAS both and both mean something else") {

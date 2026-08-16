@@ -1192,7 +1192,7 @@ sge.graphics.Colors	sge.graphics.Colors#getColors()	def	3d002aa7cea328af
 sge.graphics.Colors	sge.graphics.Colors#map	val	231982a6695acc33
 sge.graphics.Colors	sge.graphics.Colors#put(String,Color)	def	40683fca68777cb4
 sge.graphics.Colors	sge.graphics.Colors#reset()	def	c0415f4a9bcedb24
-sge.graphics.Cubemap	sge.graphics.Cubemap	class	c1ce4ffbcb630be5
+sge.graphics.Cubemap	sge.graphics.Cubemap	class	10a530cd329d44c0
 sge.graphics.Cubemap	sge.graphics.Cubemap#<init>(FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,Sge)	ctor	b9023e5ea04475c5
 sge.graphics.Cubemap	sge.graphics.Cubemap#<init>(FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,boolean,Sge)	ctor	f3c5f261c8ef1ec5
 sge.graphics.Cubemap	sge.graphics.Cubemap#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Sge)	ctor	d26e7edf12ad222b
@@ -1210,7 +1210,7 @@ sge.graphics.Cubemap	sge.graphics.Cubemap#cubemapData()	def	95a7c18bf4bd8969
 sge.graphics.Cubemap	sge.graphics.Cubemap#data	val	d577ec1230e14ced
 sge.graphics.Cubemap	sge.graphics.Cubemap#getDepth()	def	efe337c872d1a2d9
 sge.graphics.Cubemap	sge.graphics.Cubemap#getHeight()	def	0c235fdeb120cf52
-sge.graphics.Cubemap	sge.graphics.Cubemap#getManagedStatus()	def	7b462fa99db857c0
+sge.graphics.Cubemap	sge.graphics.Cubemap#getManagedStatus()	def	07fc3d3978894a38
 sge.graphics.Cubemap	sge.graphics.Cubemap#getNumManagedCubemaps(Sge)	def	56f76959c707496a
 sge.graphics.Cubemap	sge.graphics.Cubemap#getWidth()	def	3fdd41063f92a54d
 sge.graphics.Cubemap	sge.graphics.Cubemap#invalidateAllCubemaps(Application,Sge)	def	90f902a4188e85ba
@@ -2650,7 +2650,7 @@ sge.graphics.GLTexture	sge.graphics.GLTexture#unsafeSetWrap(TextureWrap,TextureW
 sge.graphics.GLTexture	sge.graphics.GLTexture#uploadImageData(int,TextureData,Sge)	def	2d666f6dd82f5108
 sge.graphics.GLTexture	sge.graphics.GLTexture#uploadImageData(int,TextureData,int,Sge)	def	ec89b5eae67a59a4
 sge.graphics.GLTexture	sge.graphics.GLTexture#vWrap	val	1cc62952515f285d
-sge.graphics.Mesh	sge.graphics.Mesh	class	732608fce4b68ca9
+sge.graphics.Mesh	sge.graphics.Mesh	class	3105a7add6eed905
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexData,IndexData,boolean,Sge)	ctor	5169f47d837e41b6
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexDataType,boolean,int,int,Array<VertexAttribute>,Sge)	ctor	0420de989ce19885
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexDataType,boolean,int,int,VertexAttributes,Sge)	ctor	807f5bd6aa210807
@@ -2688,7 +2688,7 @@ sge.graphics.Mesh	sge.graphics.Mesh#getIndices(int,int,Array<short>,int)	def	377
 sge.graphics.Mesh	sge.graphics.Mesh#getIndicesBuffer()	def	cdf5c639c7ac74ca
 sge.graphics.Mesh	sge.graphics.Mesh#getIndicesBuffer(boolean)	def	26beeae27b89b8fc
 sge.graphics.Mesh	sge.graphics.Mesh#getInstancedAttributes()	def	9ad43042e8fc30a8
-sge.graphics.Mesh	sge.graphics.Mesh#getManagedStatus()	def	a05199e8600d4551
+sge.graphics.Mesh	sge.graphics.Mesh#getManagedStatus()	def	b1c5e940bf0b1e39
 sge.graphics.Mesh	sge.graphics.Mesh#getMaxIndices()	def	b0db3627d55af021
 sge.graphics.Mesh	sge.graphics.Mesh#getMaxVertices()	def	3bb2d8170e5befd6
 sge.graphics.Mesh	sge.graphics.Mesh#getNumIndices()	def	23301a988feeaa61
@@ -2856,7 +2856,7 @@ sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#<stmt2>	stmt	9f7e8e2
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#buffer	val	bfe899b07ae9a424
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#crc	val	91233da7218735b4
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#endChunk(DataOutputStream)	def	b48044e43c3e303b
-sge.graphics.Texture	sge.graphics.Texture	class	7d19a1d8685ed7f8
+sge.graphics.Texture	sge.graphics.Texture	class	2cdec208fbd0bc65
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,Format,boolean,Sge)	ctor	7dbf1dc785070f27
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,Sge)	ctor	4b714eb826e8bb4f
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,boolean,Sge)	ctor	c5c4c29ac64a7eec
@@ -2876,7 +2876,7 @@ sge.graphics.Texture	sge.graphics.Texture#data	val	8f25d2f1d2e13eac
 sge.graphics.Texture	sge.graphics.Texture#draw(Pixmap,int,int)	def	c79e22efdf61887c
 sge.graphics.Texture	sge.graphics.Texture#getDepth()	def	efe337c872d1a2d9
 sge.graphics.Texture	sge.graphics.Texture#getHeight()	def	0c235fdeb120cf52
-sge.graphics.Texture	sge.graphics.Texture#getManagedStatus()	def	b8f788efcd9c8e56
+sge.graphics.Texture	sge.graphics.Texture#getManagedStatus()	def	477bfe7ad36d4fc4
 sge.graphics.Texture	sge.graphics.Texture#getNumManagedTextures(Sge)	def	cf3d1768b73f24a2
 sge.graphics.Texture	sge.graphics.Texture#getWidth()	def	3fdd41063f92a54d
 sge.graphics.Texture	sge.graphics.Texture#invalidateAllTextures(Application,Sge)	def	60c4d5fb2676c504
@@ -2892,7 +2892,7 @@ sge.graphics.Texture	sge.graphics.Texture$TextureFilter#getGLEnum()	def	b8e97915
 sge.graphics.Texture	sge.graphics.Texture$TextureFilter#isMipMap()	def	917c22ecd2effd07
 sge.graphics.Texture	sge.graphics.Texture$TextureWrap	class	0b4d03cfcf07fdfb
 sge.graphics.Texture	sge.graphics.Texture$TextureWrap#getGLEnum()	def	b8e97915d186d4dc
-sge.graphics.Texture3D	sge.graphics.Texture3D	class	b488438e1cfd326c
+sge.graphics.Texture3D	sge.graphics.Texture3D	class	9b0cdcef717604ac
 sge.graphics.Texture3D	sge.graphics.Texture3D#<init>(int,int,int,int,int,int,Sge)	ctor	bfb1ab93f6d933b2
 sge.graphics.Texture3D	sge.graphics.Texture3D#<stmt1>	stmt	863d721ff3986429
 sge.graphics.Texture3D	sge.graphics.Texture3D#<stmt2>	stmt	67dbf8cb46ece6cb
@@ -2903,7 +2903,7 @@ sge.graphics.Texture3D	sge.graphics.Texture3D#data	val	deb932f1c7516d50
 sge.graphics.Texture3D	sge.graphics.Texture3D#getData()	def	b0080dea689029e5
 sge.graphics.Texture3D	sge.graphics.Texture3D#getDepth()	def	e8c0855f963c4f33
 sge.graphics.Texture3D	sge.graphics.Texture3D#getHeight()	def	0c235fdeb120cf52
-sge.graphics.Texture3D	sge.graphics.Texture3D#getManagedStatus()	def	d4e5e19be1cfafee
+sge.graphics.Texture3D	sge.graphics.Texture3D#getManagedStatus()	def	fe08bb6a4a3a0a34
 sge.graphics.Texture3D	sge.graphics.Texture3D#getNumManagedTextures3D(Sge)	def	2d266c0ae8ae04b7
 sge.graphics.Texture3D	sge.graphics.Texture3D#getWidth()	def	3fdd41063f92a54d
 sge.graphics.Texture3D	sge.graphics.Texture3D#invalidateAllTextureArrays(Application)	def	a4ca5c5c0116b713
@@ -2927,7 +2927,7 @@ sge.graphics.Texture3DData	sge.graphics.Texture3DData#isManaged()	def	cb0ff9dc96
 sge.graphics.Texture3DData	sge.graphics.Texture3DData#isPrepared()	def	9e5c03a43dc33651
 sge.graphics.Texture3DData	sge.graphics.Texture3DData#prepare()	def	f1fe114e2f4dc0aa
 sge.graphics.Texture3DData	sge.graphics.Texture3DData#useMipMaps()	def	5abd5ca1fb27bbe0
-sge.graphics.TextureArray	sge.graphics.TextureArray	class	9e7d2ab6ebacb620
+sge.graphics.TextureArray	sge.graphics.TextureArray	class	75603c5f809e6282
 sge.graphics.TextureArray	sge.graphics.TextureArray#<init>(Array<FileHandle>,Sge)	ctor	648ba67bfeb344ac
 sge.graphics.TextureArray	sge.graphics.TextureArray#<init>(Array<String>,Sge)	ctor	e5b4a50788a7b511
 sge.graphics.TextureArray	sge.graphics.TextureArray#<init>(boolean,Array<FileHandle>,Sge)	ctor	10322a60645b591b
@@ -2941,7 +2941,7 @@ sge.graphics.TextureArray	sge.graphics.TextureArray#data	val	4a77cd9495a9b440
 sge.graphics.TextureArray	sge.graphics.TextureArray#getDepth()	def	e8c0855f963c4f33
 sge.graphics.TextureArray	sge.graphics.TextureArray#getHeight()	def	0c235fdeb120cf52
 sge.graphics.TextureArray	sge.graphics.TextureArray#getInternalHandles(Array<String>,Sge)	def	1cb4165b41231f0e
-sge.graphics.TextureArray	sge.graphics.TextureArray#getManagedStatus()	def	3adf858ac924422c
+sge.graphics.TextureArray	sge.graphics.TextureArray#getManagedStatus()	def	7230d36f157f7f42
 sge.graphics.TextureArray	sge.graphics.TextureArray#getNumManagedTextureArrays(Sge)	def	735386f74a83b527
 sge.graphics.TextureArray	sge.graphics.TextureArray#getWidth()	def	3fdd41063f92a54d
 sge.graphics.TextureArray	sge.graphics.TextureArray#invalidateAllTextureArrays(Application)	def	9ce7e8159991d8f5
@@ -8001,7 +8001,7 @@ sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#disposeColorTexture(Cubemap)	def	95672009abcc8afb
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#getSide()	def	693c340c85d230a3
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#nextSide()	def	3a92b485aef4bc24
-sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer	class	e176cf0d828a261b
+sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer	class	23e00bd047c66aeb
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#<init>(GLFrameBufferBuilder<?>,Sge)	ctor	93f6aa4b0c6e55e9
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#<init>(Sge)	ctor	110da11933fa8a41
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#GL_DEPTH24_STENCIL8_OES	val	9ee8b57c1e3dceea
@@ -8034,7 +8034,7 @@ sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#getDepthSt
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#getFramebufferHandle()	def	58e32349532c8c81
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#getHeight()	def	e759153c5ad9a7ab
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#getManagedStatus()	def	79e5697f5ec2607d
-sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#getManagedStatus(StringBuilder)	def	bd33cf69bde89a6f
+sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#getManagedStatus(StringBuilder)	def	ba1219359beab832
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#getStencilBufferHandle()	def	dc550706a5e05ae9
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#getTextureAttachments()	def	9bf3b138f4037965
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#getWidth()	def	66e9a7f154a95c5c
@@ -11949,8 +11949,8 @@ sge.math.collision.Sphere	sge.math.collision.Sphere#radius	val	230a983035f489d8
 sge.math.collision.Sphere	sge.math.collision.Sphere#serialVersionUID	val	fb4a5aec4f15b7dd
 sge.math.collision.Sphere	sge.math.collision.Sphere#surfaceArea()	def	b603b5efd9230366
 sge.math.collision.Sphere	sge.math.collision.Sphere#volume()	def	ed04ec255fb93028
-sge.net.HttpParametersUtils	sge.net.HttpParametersUtils	class	3813e750ca2ff6f9
-sge.net.HttpParametersUtils	sge.net.HttpParametersUtils#convertHttpParameters(Map<String,String>)	def	9a94df85e41bd1c7
+sge.net.HttpParametersUtils	sge.net.HttpParametersUtils	class	82e0943347a7bdeb
+sge.net.HttpParametersUtils	sge.net.HttpParametersUtils#convertHttpParameters(Map<String,String>)	def	edcd381bc17af3e7
 sge.net.HttpParametersUtils	sge.net.HttpParametersUtils#defaultEncoding	val	419384c526e13056
 sge.net.HttpParametersUtils	sge.net.HttpParametersUtils#encode(String,String)	def	579d00aa4fa07b20
 sge.net.HttpParametersUtils	sge.net.HttpParametersUtils#nameValueSeparator	val	c6e03b6264cbd26c

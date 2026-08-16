@@ -192,7 +192,7 @@ member	space.earlygrey.simplegraphs.Graph#removeVertices(JavaCollection)	sge.gra
 member	space.earlygrey.simplegraphs.Graph#setDefaultEdgeWeight(WeightFunction)	sge.graphs.Graph#setDefaultEdgeWeight(WeightFunction<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	461	78709cb7f7c8724c	
 member	space.earlygrey.simplegraphs.Graph#setDefaultEdgeWeight(float)	sge.graphs.Graph#setDefaultEdgeWeight(float)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	471	60c7ee033b6e6906	
 member	space.earlygrey.simplegraphs.Graph#size()	sge.graphs.Graph#size()	Renamed	-	space/earlygrey/simplegraphs/Graph.java	428	d69c18c6640f9216	
-member	space.earlygrey.simplegraphs.Graph#sortEdges(Comparator)	sge.graphs.Graph#sortEdges(Comparator<Connection<V>>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	289	8f07c38c505a3d0e	
+member	space.earlygrey.simplegraphs.Graph#sortEdges(Comparator)	sge.graphs.Graph#sortEdges(Comparator<Connection<V>>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	289	6a546b0c918ef0e4	
 member	space.earlygrey.simplegraphs.Graph#sortVertices(Comparator)	sge.graphs.Graph#sortVertices(Comparator<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	279	1ae0a813a7710d72	
 member	space.earlygrey.simplegraphs.Graph#toString()	sge.graphs.Graph#toString()	Renamed	-	space/earlygrey/simplegraphs/Graph.java	513	c9a17c3056160114	
 member	space.earlygrey.simplegraphs.GraphBuilder#buildCompleteGraph(G)	sge.graphs.GraphBuilder#buildCompleteGraph(G)	Renamed	-	space/earlygrey/simplegraphs/GraphBuilder.java	32	0c36e754dc13ef67	placement=companion

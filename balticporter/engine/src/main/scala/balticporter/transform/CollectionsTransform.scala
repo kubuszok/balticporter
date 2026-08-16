@@ -364,7 +364,7 @@ final class CollectionsTransform(
   /** java 8 `Collection.forEach(Consumer)` — scala's is `foreach`, differing only in case, which
     * makes the failure read like a typo rather than a missing mapping. */
   private var foreachSym: SymId = SymId.None
-  private var key1Sym, value2Sym, roSetSym, selfParamSym: SymId = SymId.None
+  private var key1Sym, value2Sym, selfParamSym: SymId = SymId.None
   /** `JavaIterable` + its `from` factory — see `coerce`. */
   private var javaIterableSym, iterableFromSym: SymId = SymId.None
   /** `JavaCollection` + its `from` factory — the same seam, one type up. `unmodifiableFromSym` is
@@ -586,7 +586,6 @@ final class CollectionsTransform(
     // reference and two of these lambdas can never nest. The name matches what `TirEmitter` already
     // spells for a method reference it expands itself, so the two paths read alike.
     selfParamSym = mint("self$", "self$")
-    roSetSym     = mint("Set", "scala.collection.Set") // see `transformValDef`
     javaIterableSym = byScala.getOrElse(JavaIterableFqn, SymId.None)
     iterableFromSym = mint("from", JavaIterableFqn + ".from")
     javaCollectionSym   = byScala.getOrElse(JavaCollectionFqn, SymId.None)
@@ -1372,27 +1371,21 @@ final class CollectionsTransform(
     StandardTraversal.mapType(scan, t)
     hit
 
-  /** `java.util.Set` has TWO faithful scala counterparts, and which one it is depends on where
-    * the set came from — a distinction java's type system does not draw and scala's does.
+  /** A `val`'s declared type is an expected type exactly as a formal parameter is, so it routes to
+    * the same [[coerce]] every other position does.
     *
-    *   - a set you OWN (`new HashSet<>()`, a field, a parameter) is `mutable.Set`;
-    *   - `map.keySet()` is a live, read-only VIEW of the map's keys. Scala models it as
-    *     `scala.collection.Set` — same view, same write-through on the map, but not typed as
-    *     something you may add to (java lets you `remove` through it but not `add`, so scala's
-    *     type is the closer of the two anyway).
-    *
-    * So a declaration INITIALISED from `keySet` gets the view type. The alternative —
-    * `.to(mutable.Set)` to satisfy the declared type — would COPY, and silently turn a view of
-    * the map into a detached snapshot. Provenance decides the type; the value is never touched.
+    * It used to carry ONE answer of its own — a declaration initialised from `map.keySet()` was
+    * RETYPED to `scala.collection.Set`, because that is what `m.keySet` emits while the node claimed
+    * the retyped `mutable.Set`. That is gone, and its absence is the point: the disagreement is now
+    * removed at the REWRITE (see the `keySet` arm), so the value really is a `mutable.Set` and the
+    * declaration keeps the type — and the removal capability — java gave it. A position-local answer
+    * to a phase-wide disagreement is what left a RETURN unanswered.
     */
   override def transformValDef(t: Tree.ValDef)(using Program): Tree.ValDef =
     citeIfReified(t.symbol)
     transformValDefRhs(t)
 
   private def transformValDefRhs(t: Tree.ValDef)(using Program): Tree.ValDef = t.rhs match
-    case Some(Tree.Select(recv, sym, _, _))
-        if methodName(sym) == "keySet" && kindAt(recv).contains(Kind.Map) && headSym(t.tpt.tpe).exists(kindOf.get(_).contains(Kind.Set)) =>
-      t.copy(tpt = TypeTree(withHead(t.tpt.tpe, roSetSym), t.tpt.origin))
     // a DECLARED slot is an expected type exactly as a formal parameter is — see `coerce`.
     // `Collection<Object[]> parameters = new ArrayList<>()` is the shape, and it is the one that
     // regressed libGDX's test port when only arguments were bridged.
@@ -1696,9 +1689,9 @@ final class CollectionsTransform(
     * FIELD, where the only way to make the body compile is to write to a copy. That is K2's refusal
     * and it keeps it, now with a reason that says which of the two cases it is. */
   private def writeThroughEntries(fe: Tree.ForEach)(using p: Program): Tree.ForEach =
-    val src = fe.iterable
-    if !kindAt(src).contains(Kind.Map) || !purePath(src) then fe
-    else
+    entrySource(fe.iterable).filter(purePath) match
+    case scala.None      => fe
+    case Some(src) =>
       val bound = fe.binding.symbol
       if bound == SymId.None || reassigned(bound, fe.body) then fe
       else
@@ -1712,6 +1705,22 @@ final class CollectionsTransform(
                    List(dflt(nullOf(so), src, so)), t, so)
             case _ => t
         fe.copy(body = StandardTraversal.mapTerm(rw, fe.body))
+
+  /** the MAP a `for` loop's entry source is a view OF — this phase's OWN `entrySet()` rewrite,
+    * whichever shape that rewrite took.
+    *
+    * The write-through above reads the map off the LOOP, so it has to keep answering when the
+    * rewrite's emitted shape changes; asked as `kindAt(iterable) == Kind.Map` alone it silently
+    * stopped answering the day `entrySet()` began emitting a live `Set` view instead of the
+    * receiver, and a `setValue` inside such a loop would have gone back to writing nowhere with a
+    * green compile. So the question is asked of the phase's own record (§4.56): an application of
+    * the `entrySetView` symbol THIS RUN minted, or — where the runtime helper is absent and the
+    * rewrite therefore handed back the receiver — a source this phase retyped to a `Kind.Map`.
+    * Nothing else is an entry source, and a name is never consulted. */
+  private def entrySource(src: Term)(using Program): Option[Term] = src match
+    case Tree.Apply(_, List(m), f, _, _) if f != SymId.None && f == sym("entrySetView") => Some(m)
+    case _ if kindAt(src).contains(Kind.Map)                                            => Some(src)
+    case _                                                                              => scala.None
 
   /** an expression java may evaluate a SECOND time without changing what the program does — an
     * identifier, `this`, or a selection chain over one. Deliberately narrow: the question is asked
@@ -2102,8 +2111,12 @@ final class CollectionsTransform(
     * names the WRAPPER instead of the boundary a reader has to act on, which is the shape
     * `CLAUDE.md` §1(b) warns about and `ENGINE-LIMITS.md` K2.5 left open.
     *
-    * This is exactly [[isKeySetView]]'s rule at a second site — "the recorded type is not a witness
-    * of what the emitter will print" — and it is answered from the phase's own tables rather than
+    * This is the rule the `keySet()` refusal used to carry at a second site — "the recorded type is
+    * not a witness of what the emitter will print". That one is GONE, because the `keySet` arm now
+    * emits a value that really has the type the node claims; this one stays, because K6.5's aliasing
+    * refusal means the emitted text really is a `java.util.List` and no rewrite can change it. The
+    * two are the same rule with opposite answers, and the difference is whether the phase can make
+    * the emission match the record. It is answered from the phase's own tables rather than
     * from an arm-by-arm list, so a refusal added later is covered by construction. */
   private def refusedRewriteSource(t: Term)(using Program): Boolean = t match
     case a: Tree.Apply => handledStatic(a.method)
@@ -3055,14 +3068,14 @@ final class CollectionsTransform(
     * and neither can be rebuilt from the other. `JavaIterator` is `Kind.Seq` and is NOT a
     * collection, so it is excluded too — by the same `shimSyms` test.
     *
-    * One SOURCE is refused whatever the target: `map.keySet()`. Its node claims the retyped
-    * `mutable.Set`, and the scala it emits is `m.keySet`, whose type is `scala.collection.Set` — the
-    * same disagreement `transformValDef` already encodes for a declaration initialised from it, and
-    * ENGINE-LIMITS §0's "the recorded type is not a witness of what the emitter will print". Wrapping
-    * on a type the phase knows the value does not have would emit a call that cannot compile while
-    * NAMING the wrapper instead of the boundary, so the unwrapped value is left to fail at the slot
-    * exactly as it did before this seam existed. `Map.values()` has no such problem: its rewrite
-    * already restores the invariant by wrapping at the call. */
+    * `map.keySet()` used to be refused here whatever the target, because its node claimed the
+    * retyped `mutable.Set` while the scala it emitted was `m.keySet` — a `scala.collection.Set`, and
+    * ENGINE-LIMITS §0's "the recorded type is not a witness of what the emitter will print". That
+    * refusal is gone, and not by relaxing it: the `keySet` arm now emits a LIVE `mutable.Set` view,
+    * so the record and the emission agree and every arm above serves it like any other `Kind.Set`.
+    * `Map.values()` and `entrySet()` reached the same invariant the same way. What is still refused
+    * on those grounds is [[refusedRewriteSource]], where the emitted text is a JDK call this phase
+    * deliberately did not move. */
   private def coerce(expected: TypeRepr, actual: Term, expectedScoped: Boolean = false,
                      expectedExternal: Boolean = false, expectedSink: Boolean = false)(using p: Program): Term =
     // the symbol table is retyped AFTER the trees (see `run`), so a formal read here is still the
@@ -3116,7 +3129,7 @@ final class CollectionsTransform(
     // front of, and it belongs here, per target, where it costs no OTHER target its bridge.
     def wantsIs(s: SymId) = s != SymId.None && wants.contains(s)
     val factory = from match
-      case _ if wants.isEmpty || isKeySetView(actual) || refusedRewriteSource(actual) => SymId.None
+      case _ if wants.isEmpty || refusedRewriteSource(actual) => SymId.None
       // …THE EGRESS BRIDGE (K21 face 1), ahead of every arm below because at a declared reflective
       // sink it SUBSUMES them. `toJava` is one level and is refused outright where the element type
       // is retyped; a sink walks the whole tree, so the one-level answer is wrong there in exactly
@@ -3161,12 +3174,6 @@ final class CollectionsTransform(
       val tpe = wants.map(withHead(expected, _)).getOrElse(expected)
       Tree.Apply(Tree.Ident(factory, TypeRepr.NoType, actual.origin), List(actual),
                  factory, tpe, actual.origin)
-
-  /** `m.keySet()` — see [[coerce]]. The same structural test [[transformValDef]] uses, so the two
-    * places that know this node's `tpe` overstates the emitted scala agree by construction. */
-  private def isKeySetView(t: Term)(using Program): Boolean = t match
-    case Tree.Select(recv, sym, _, _) => methodName(sym) == "keySet" && kindAt(recv).contains(Kind.Map)
-    case _                            => false
 
   /** the runtime shims, as scala symbols — a source already typed as one is never re-wrapped. */
   private def shimSyms: Set[SymId] = Set(javaIterableSym, javaIteratorSym, javaCollectionSym)
@@ -3341,6 +3348,27 @@ final class CollectionsTransform(
       case ("values", Nil, Kind.Map) if unmodifiableFromSym != SymId.None =>
         val sel = Tree.Select(recv, m, t.tpe, t.origin) // parenless, as the generic case below
         Some(Tree.Apply(Tree.Ident(unmodifiableFromSym, TypeRepr.NoType, so), List(sel), unmodifiableFromSym, t.tpe, so))
+      // `m.keySet()` and `m.entrySet()` are java's two LIVE, WRITE-THROUGH views of a map, and both
+      // are the provenance problem `values()` above states, met at the members where the gap is
+      // widest. The node's type is the RETYPED `java.util.Set` — `mutable.Set` — while the scala
+      // emitted for it was `m.keySet` (a `scala.collection.Set`, one capability short) and, for
+      // `entrySet`, the MAP itself (an `Iterable[(K, V)]`, not a `Set` at all).
+      //
+      // The phase carried two local answers for that disagreement, one per position it could reach
+      // — retype a `val` initialised from `keySet`, refuse to wrap a `keySet` coercion SOURCE — and
+      // a java method whose declared result is `Set<K>` is a THIRD position that neither reaches.
+      // So the disagreement is removed where it is MADE: the rewrite now emits a value that really
+      // has the type the node claims, and every position is answered at once — a return, an
+      // argument, a `val`, a branch of a conditional — for the reason the `values()` arm gives
+      // three lines up. Measured at 11 errors on one port.
+      //
+      // The VIEW and not a copy, and not `to(mutable.Set)`: java's is live in both directions, so a
+      // snapshot silently changes what a later `put` is observed to do — the same argument the
+      // `entrySet` rewrite has always made for handing back the map rather than `m.toSet`.
+      case ("keySet", Nil, Kind.Map) if sym("keySetView") != SymId.None =>
+        Some(staticCall(sym("keySetView"), List(recv), t, so))
+      case ("entrySet", Nil, Kind.Map) if sym("entrySetView") != SymId.None =>
+        Some(staticCall(sym("entrySetView"), List(recv), t, so))
       case ("entrySet", Nil, Kind.Map)          => Some(recv)
       case ("getKey", Nil, Kind.Entry)          => Some(Tree.Select(recv, key1Sym, t.tpe, t.origin))
       case ("getValue", Nil, Kind.Entry)        => Some(Tree.Select(recv, value2Sym, t.tpe, t.origin))
@@ -4308,7 +4336,7 @@ object CollectionsTransform:
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
          "toSet", "toMap", "fromJava", "toJava", "toStream", "mapGet", "mapContainsKey", "mapRemove",
-         "setContains", "setRemove",
+         "setContains", "setRemove", "keySetView", "entrySetView",
          "optionalOrElse")
 
   // -------------------------------------------------------------------------------------------

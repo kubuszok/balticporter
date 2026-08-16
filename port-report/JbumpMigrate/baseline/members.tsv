@@ -148,7 +148,7 @@ sge.jbump.Response	sge.jbump.Response$Result#goalX	val	829206762cc30df8
 sge.jbump.Response	sge.jbump.Response$Result#goalY	val	c0baed8121df15b3
 sge.jbump.Response	sge.jbump.Response$Result#projectedCollisions	val	81668b6114a1d7eb
 sge.jbump.Response	sge.jbump.Response$Result#set(float,float)	def	87bde75fa692e30a
-sge.jbump.World	sge.jbump.World	class	88c0b5f02a71837a
+sge.jbump.World	sge.jbump.World	class	94ccade78ccc3a97
 sge.jbump.World	sge.jbump.World#<init>()	ctor	4407a8f4d83d2d13
 sge.jbump.World	sge.jbump.World#<stmt1>	stmt	52a1c0f0b75c69f7
 sge.jbump.World	sge.jbump.World#add(Item<E>,float,float,float,float)	def	fc1c7f4f4e9b445d
@@ -166,7 +166,7 @@ sge.jbump.World	sge.jbump.World#check_projectedCols	val	78850c82d9a3d842
 sge.jbump.World	sge.jbump.World#check_result	val	03297dc90c8a930c
 sge.jbump.World	sge.jbump.World#check_visited	val	d4d5c3d85d05ff27
 sge.jbump.World	sge.jbump.World#countCells()	def	0a22f5f90176884f
-sge.jbump.World	sge.jbump.World#countItems()	def	40638ef3890ef6d1
+sge.jbump.World	sge.jbump.World#countItems()	def	b075f30c98734da5
 sge.jbump.World	sge.jbump.World#getCellSize()	def	e71640b5c1201e45
 sge.jbump.World	sge.jbump.World#getCells()	def	3274f640bca4b0e4
 sge.jbump.World	sge.jbump.World#getCellsTouchedByRay(float,float,float,float,ArrayBuffer<Cell>)	def	723b85978e76cd32
@@ -175,7 +175,7 @@ sge.jbump.World	sge.jbump.World#getCellsTouchedBySegment_visited	val	c6440da704e
 sge.jbump.World	sge.jbump.World#getDictItemsInCellRect(float,float,float,float,LinkedHashSet<Item<?>>)	def	890335f018d6f764
 sge.jbump.World	sge.jbump.World#getInfoAboutItemsTouchedByRay(float,float,float,float,CollisionFilter,ArrayBuffer<ItemInfo>)	def	c716af0e89432907
 sge.jbump.World	sge.jbump.World#getInfoAboutItemsTouchedBySegment(float,float,float,float,CollisionFilter,ArrayBuffer<ItemInfo>)	def	7de17dfcd1bb97e5
-sge.jbump.World	sge.jbump.World#getItems()	def	8d442c406e42b98b
+sge.jbump.World	sge.jbump.World#getItems()	def	0278157470fad3b8
 sge.jbump.World	sge.jbump.World#getRect(Item<?>)	def	a81261e962d6da72
 sge.jbump.World	sge.jbump.World#getRects()	def	5367f397c7b1c408
 sge.jbump.World	sge.jbump.World#grid	val	7c7a6c7219b3e268

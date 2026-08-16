@@ -105,7 +105,7 @@ sge.graphs.Errors	sge.graphs.Errors#throwNullItemException()	def	78a18a5fbf7bdac
 sge.graphs.Errors	sge.graphs.Errors#throwNullVertexException()	def	ddd8c0cdc8751ff4
 sge.graphs.Errors	sge.graphs.Errors#throwSameVertexException()	def	47065a31ad375fa8
 sge.graphs.Errors	sge.graphs.Errors#throwVertexNotInGraphVertexException(boolean)	def	4aaf3680dd9c0194
-sge.graphs.Graph	sge.graphs.Graph	class	e52194709f38bb4b
+sge.graphs.Graph	sge.graphs.Graph	class	5580da8b9406a3e0
 sge.graphs.Graph	sge.graphs.Graph#<init>()	ctor	43f091e9332a747c
 sge.graphs.Graph	sge.graphs.Graph#<init>(Graph<V>)	ctor	597a0ac94476d734
 sge.graphs.Graph	sge.graphs.Graph#<init>(JavaCollection<V>)	ctor	83079add4086211c
@@ -157,7 +157,7 @@ sge.graphs.Graph	sge.graphs.Graph#removeVertices(JavaCollection<V>)	def	36bbddd3
 sge.graphs.Graph	sge.graphs.Graph#setDefaultEdgeWeight(WeightFunction<V>)	def	78709cb7f7c8724c
 sge.graphs.Graph	sge.graphs.Graph#setDefaultEdgeWeight(float)	def	60c7ee033b6e6906
 sge.graphs.Graph	sge.graphs.Graph#size()	def	d69c18c6640f9216
-sge.graphs.Graph	sge.graphs.Graph#sortEdges(Comparator<Connection<V>>)	def	8f07c38c505a3d0e
+sge.graphs.Graph	sge.graphs.Graph#sortEdges(Comparator<Connection<V>>)	def	6a546b0c918ef0e4
 sge.graphs.Graph	sge.graphs.Graph#sortVertices(Comparator<V>)	def	1ae0a813a7710d72
 sge.graphs.Graph	sge.graphs.Graph#toString()	def	c9a17c3056160114
 sge.graphs.GraphBuilder	sge.graphs.GraphBuilder	class	919c5cc8d498f98a
