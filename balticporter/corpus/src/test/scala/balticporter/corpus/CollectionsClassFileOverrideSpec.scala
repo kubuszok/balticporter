@@ -10,10 +10,21 @@ import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
   * rather than at a call.
   *
   * ==What this pins, and why each half needs a fixture==
-  * `class Holder extends java.util.AbstractSet<String>` declares `containsAll(Collection<?>)` and
-  * opens it with `super.containsAll(c)`. `java.util.AbstractSet` is a JDK type the mapping does NOT
-  * cover, so its `containsAll` still takes a `java.util.Collection` however the port retypes its
-  * own; retyped, the emitted member overrides nothing and its own `super` call cannot compile.
+  * `class Holder extends java.util.AbstractMap<String, String>` declares
+  * `putAll(Map<? extends K, ? extends V>)` and opens it with `super.putAll(m)`. `java.util.AbstractMap`
+  * is a JDK type the mapping does NOT cover, so its `putAll` still takes a `java.util.Map` however the
+  * port retypes its own; retyped, the emitted member overrides nothing and its own `super` call cannot
+  * compile.
+  *
+  * ==THE FIXTURE'S PREMISE IS ASSERTED, because it went stale once and failed unreadably==
+  * This spec was written with `java.util.AbstractSet` in that role, and wave 12 MAPPED it
+  * (`ENGINE-LIMITS.md` K29) — at which point the positive stopped holding and said only
+  * `heldNames = Set()`, which reads as "the refusal broke" rather than as "your example moved". So
+  * the premise is a `test` of its own: the parent this fixture stands on must be ABSENT from
+  * `typeMap`, checked against the phase's own table. `AbstractMap`, `AbstractList` and
+  * `AbstractSequentialList` are all still absent, and each is the SAME latent shape K29 closed for
+  * `AbstractSet` — so the day one is mapped this fixture moves again, deliberately, with a failure
+  * message that says what to do.
   *
   * The NEGATIVES are the whole of the difficulty and each one is a measurement:
   *
@@ -39,12 +50,11 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
   private val src =
     """package demo;
       |import java.util.*;
-      |public class Holder extends java.util.AbstractSet<String> {
-      |  private final List<String> backing = new ArrayList<String>();
-      |  public boolean containsAll(Collection<?> c) { return super.containsAll(c); }
-      |  public Iterator<String> iterator() { return backing.iterator(); }
-      |  public int size() { return backing.size(); }
-      |  public void absorb(Collection<String> more) { backing.addAll(more); }
+      |public class Holder extends java.util.AbstractMap<String, String> {
+      |  private final Map<String, String> backing = new HashMap<String, String>();
+      |  public void putAll(Map<? extends String, ? extends String> m) { super.putAll(m); }
+      |  public Set<Map.Entry<String, String>> entrySet() { return backing.entrySet(); }
+      |  public void absorb(Collection<String> more) { }
       |}
       |class Fast extends java.util.ArrayList<String> {
       |  public boolean addAll(Collection<? extends String> c) { return super.addAll(c); }
@@ -52,9 +62,13 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
       |interface Ours { List<String> names(); }
       |class Impl implements Ours { public List<String> names() { return new ArrayList<String>(); } }
       |class Caller {
-      |  boolean ask(Holder h, List<String> mine) { return h.containsAll(mine); }
+      |  void ask(Holder h, Map<String, String> mine) { h.putAll(mine); }
       |}
       |""".stripMargin
+
+  /** the FQN this fixture's positive stands on. Named once so the premise test and the assertions
+    * cannot drift apart, which is exactly how the `AbstractSet` version went stale. */
+  private val UnmappedBase = "java.util.AbstractMap"
 
   private def ported: (CollectionsTransform, Program, String) =
     val ph    = new CollectionsTransform()
@@ -68,21 +82,32 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
   // the positive
   // -------------------------------------------------------------------------
 
+  test("THE PREMISE — this fixture's parent really is a type the mapping does not cover") {
+    // Asked of the phase's own table, not assumed. Wave 12 mapped the type this spec used to stand
+    // on, and every assertion below then failed saying `heldNames = Set()` — which reads as a broken
+    // refusal rather than as a moved example. This row is what turns that into a sentence.
+    assert(!clue(CollectionsTransform.typeMap).contains(UnmappedBase),
+           s"$UnmappedBase is now MAPPED, so it can no longer play the unmapped-parent role here. " +
+             "Move this fixture to a base that is still absent from `typeMap` (java.util.AbstractList, " +
+             "java.util.AbstractSequentialList) — and see ENGINE-LIMITS.md K29, because mapping an " +
+             "abstract base is exactly the step that owes the JDK defaults a definer calls through `super`.")
+  }
+
   test("a member overriding an UNMAPPED java parent keeps java's formal") {
     val (ph, p, out) = ported
-    assert(clue(heldNames(ph, p)).exists(_.endsWith("Holder#containsAll")),
-           "Holder#containsAll overrides java.util.AbstractSet's and must be held literally")
-    assert(out.contains("def containsAll(c: java.util.Collection[?])"),
+    assert(clue(heldNames(ph, p)).exists(_.endsWith("Holder#putAll")),
+           s"Holder#putAll overrides $UnmappedBase's and must be held literally")
+    assert(out.contains("def putAll(m: java.util.Map[? <: java.lang.String, ? <: java.lang.String])"),
            s"the emitted formal is not java's\n--- emitted ---\n$out")
   }
 
   test("…and the refusal is a RECORDED decision, universal, naming what it overrides") {
     val (ph, p, _) = ported
     val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(new CollectionsTransform()))._2
-    val ds  = log.of(Decision.Kind.RetainedSignature).filter(_.subjectFqn.endsWith("Holder#containsAll"))
+    val ds  = log.of(Decision.Kind.RetainedSignature).filter(_.subjectFqn.endsWith("Holder#putAll"))
     assertEquals(clue(ds).size, 1)
     assert(ds.head.reason.isInstanceOf[Reason.Universal], clue(ds.head.reason).toString)
-    assertEquals(PorterNote.pairs(ds.head).toMap.get("overrides"), Some("java.util.AbstractSet#containsAll"))
+    assertEquals(PorterNote.pairs(ds.head).toMap.get("overrides"), Some(s"$UnmappedBase#putAll"))
     // …and it is RENDERED at the declaration: a signature that did not move shows nothing in a diff
     // against the java, so the note is the only evidence at the line (§4.575).
     assert(PorterNote.Rendered.contains(Decision.Kind.RetainedSignature))

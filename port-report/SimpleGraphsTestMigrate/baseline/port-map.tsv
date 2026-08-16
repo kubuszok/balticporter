@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-graphs-test	engine=balticporter/0.1.0-SNAPSHOT	sources=5c8d26fe03d48b7d	files=7	policy=7b278be251a7c4e0
+# balticporter port map	schema=3	module=sge-graphs-test	engine=balticporter/0.1.0-SNAPSHOT	sources=5c8d26fe03d48b7d	files=7	policy=ae131d7f42747e29
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	space.earlygrey.simplegraphs.AlgorithmsTest	sge.graphs.AlgorithmsTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=pathIsConnected
 type	space.earlygrey.simplegraphs.ArrayTest	sge.graphs.ArrayTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public

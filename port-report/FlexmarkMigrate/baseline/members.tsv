@@ -6090,7 +6090,7 @@ ssg.md.util.misc.ArrayUtils	ssg.md.util.misc.ArrayUtils#lastOf(Array<T>,int,int,
 ssg.md.util.misc.ArrayUtils	ssg.md.util.misc.ArrayUtils#toArray(BitSet)	def	a973cc8ea356f9ad
 ssg.md.util.misc.BitField	ssg.md.util.misc.BitField	class	5ec9cb3003069735
 ssg.md.util.misc.BitField	ssg.md.util.misc.BitField#getBits()	def	e3f4e8e45ed084ce
-ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet	class	768e0aeedc37d7ac
+ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet	class	9bfde4fd43884059
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#<stmt1>	stmt	090d35d0fda4f78d
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#<stmt2>	stmt	8a7d7a9d7de719db
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#<stmt3>	stmt	6ed08047fac0289b
@@ -6103,7 +6103,7 @@ ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#add(E,E,E)	def	b1be81a
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#add(E,E,E,E)	def	ecdc53a737b5f522
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#add(E,E,E,E,E)	def	a3e36835cbb83a29
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#addAll()	def	ba51ec9e00f9cef6
-ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#addAll(Collection<?>)	def	250234a02ae0a849
+ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#addAll(JavaCollection<?>)	def	2e32810874d3b46b
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#addRange(E,E)	def	f71e9ab3843d5d46
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#all(Array<E>)	def	026aace7f65cf2c2
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#all(E)	def	9ce1b25742ab9ee0
@@ -6131,7 +6131,7 @@ ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#clone()	def	8479dce1be
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#complement()	def	f3249cf7c183d9b3
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#complementOf(BitFieldSet<E>)	def	a0ab71d8cb6c50ff
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#contains(Object)	def	e31142878a99c476
-ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#containsAll(Collection<?>)	def	98f38e1d9fdc0c33
+ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#containsAll(JavaCollection<?>)	def	1987c787b5c2c2d2
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#copyOf(BitFieldSet<E>)	def	b2643bce495e4ae7
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#copyOf(JavaCollection<E>)	def	924e8055d8e88951
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#elementType	val	867ebfa992f239f7
@@ -6158,7 +6158,7 @@ ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#getUnsigned(E,int,Stri
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#getUnsignedBitField(long,E,int,String)	def	668ba5cb0f346202
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#intMask(E)	def	9b15f4a92f47d4b9
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#isEmpty()	def	addb303fcee974c2
-ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#iterator()	def	256e42f39d18d66c
+ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#iterator()	def	c49ccf48514ce2c6
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#longMask(E)	def	29b7d639801e2b19
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#mask(Array<E>)	def	4feb44a4b69b598d
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#mask(E)	def	d169eee312879ba5
@@ -6194,9 +6194,9 @@ ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#remove(E,E,E)	def	a7f6
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#remove(E,E,E,E)	def	614c7da78c3f95ac
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#remove(E,E,E,E,E)	def	f431be643e98a09e
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#remove(Object)	def	ee3e365962c7207f
-ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#removeAll(Collection<?>)	def	d15bff3c4c7a357a
+ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#removeAll(JavaCollection<?>)	def	6599ae9a777126ec
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#replaceAll(long)	def	4d8e4fb74148c332
-ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#retainAll(Collection<?>)	def	98409c1f94014f67
+ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#retainAll(JavaCollection<?>)	def	a5f5025789fc3323
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#serialVersionUID	val	79a995d6406886cf
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#setAll(long)	def	25da349c464628b7
 ssg.md.util.misc.BitFieldSet	ssg.md.util.misc.BitFieldSet#setBitField(E,byte)	def	3ac5f370aee1adb5

@@ -4831,6 +4831,24 @@ object CollectionsTransform:
     "java.util.OptionalLong"   -> (JavaOptionalLongFqn, Kind.Opt),
     "java.util.OptionalDouble" -> (JavaOptionalDoubleFqn, Kind.Opt),
     "java.util.Set"           -> ("scala.collection.mutable.Set", Kind.Set),
+    // …and its ABSTRACT BASE, for the reason `Collection`/`AbstractCollection` above gives and as
+    // the FOURTH instance of one rule: A MAPPING MUST PRESERVE THE SOURCE LIBRARY'S OWN SUBTYPE
+    // RELATIONS. `java.util.AbstractSet implements java.util.Set`, so an entry for the interface and
+    // none for the base sends java's own pair to unrelated types. Unlike the other three this one
+    // was REPORTED rather than merely suffered — `collection-closure` filed it as a lost JDK
+    // relation for as long as it stood — and it is worth saying which instrument saw it, because
+    // the other three arrived as compile errors somebody had to diagnose.
+    //
+    // ==THE TARGET IS A TWO-WAY BIND, and this entry could not be written until the phase answered
+    // it (`ENGINE-LIMITS.md` K29)==
+    // `mutable.Set` keeps `AbstractSet <: Set` and DROPS the four JDK defaults a class that defines
+    // a set calls through `super`. The SHIM keeps those defaults — it carries java's own member
+    // names, which is exactly why `AbstractCollection` never had this problem — and BREAKS the
+    // subtype edge, which is the 13-error split the `Collection`/`AbstractCollection` block already
+    // measured from the other side. Neither target is right on its own, so there is no row anybody
+    // could have got right: the mapping is `mutable.Set` and the defaults are the PHASE's to supply.
+    // See [[CollectionsTransform.VirtualJdkDefaults]], which is what makes this line free.
+    "java.util.AbstractSet"   -> ("scala.collection.mutable.Set", Kind.Set),
     "java.util.HashSet"       -> ("scala.collection.mutable.HashSet", Kind.Set),
     "java.util.LinkedHashSet" -> ("scala.collection.mutable.LinkedHashSet", Kind.Set),
     "java.util.TreeSet"       -> ("scala.collection.mutable.TreeSet", Kind.Set),

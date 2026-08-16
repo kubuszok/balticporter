@@ -6951,7 +6951,7 @@ a member plan derived from a table the engine holds is the same on every port th
 
 ---
 
-### K29. A class that DEFINES a java collection calls the JDK's DEFAULT implementations through `super`, and a re-parenting removes them — **`java.util.AbstractSet` mapped: whole-compile 40 → 36 and ssg-md's TEST SET 6 → 0, at main 34 → 36. REVERTED, with the target choice shown to be a two-way bind and the real fix named**
+### K29. A class that DEFINES a java collection calls the JDK's DEFAULT implementations through `super`, and a re-parenting removes them — **BUILT. ssg-md whole-compile 40 → 30, its TEST SET 6 → 0 and main 34 → 30, with the four `super` rows the bare mapping opened never opening**
 
 `typeMap`'s `Collection`/`AbstractCollection` block states a rule three times over
 (`Queue`/`Deque`/`ArrayDeque`, `Collection`/`AbstractCollection`, `Map`/`ConcurrentHashMap`): **A
@@ -6960,8 +6960,9 @@ java.util.Set`, `Set` maps and `AbstractSet` does not — the fourth instance, a
 engine was already REPORTING rather than merely suffering: `collection-closure` files it as
 *`Tycon — unmapped, but java.util.AbstractCollection is mapped … so the JDK relation is lost`*.
 
-Adding `"java.util.AbstractSet" -> ("scala.collection.mutable.Set", Kind.Set)` does exactly what the
-rule predicts, on both sides:
+Adding `"java.util.AbstractSet" -> ("scala.collection.mutable.Set", Kind.Set)` ALONE — which is how
+this was first measured, and which is why the entry exists — does exactly what the rule predicts, on
+both sides:
 
 | | |
 |---|---|
@@ -7002,23 +7003,45 @@ translation created*. The recipe, which is what this entry is for:
    `super` named. That argument has to be made PER MEMBER — it holds for these four and is not a
    general permission to turn a `super` call into a `this` call.
 
-**STEP 1 IS BUILT, and the WIDENING alone was worth two errors before any mapping moved** —
-`md-measure` **34 → 32**, whole-compile **40 → 38**, every one of the twenty-eight check counts flat
-and **0 member digests** on either ssg-md lane. What closed is `ScopedDataSet#getKeys`, whose emitted
-body was already `JavaCollections.addAll(all, super.getKeys())` and whose BOTH parameters were on the
-wrong side of the old signature — a `mutable.HashSet` at a `mutable.Buffer` formal, and a
-`JavaCollection` at an `IterableOnce[?]` one. So the pair is two of the four rows `PROGRESS.md`
-§10.6.3 files as *the SHIM against a scala collection, inside the program*, and no lane falls with
-them, which is exactly what K26 already records about that pair: they sit at a callee THIS PHASE
-MINTED and `collection-internal` never counted them.
+---
 
-Three things the build fixed that the recipe above did not say, each of which is a fact about the
-member rather than about this port:
+**BUILT AT WAVE 12, IN THAT ORDER, AND THE ORDER IS THE RESULT.** Four commits, each measured alone;
+the first three are provably FLAT on all seventeen port reports and the fourth is the one that moves
+a number, which is what "the mapping is free once the phase answers" means as evidence rather than as
+a claim:
+
+| commit | ssg-md main | whole-compile | blast |
+|---|---|---|---|
+| the three helpers, at one receiver contract | **34 → 32** | 40 → 38 | 0 digests, every count flat |
+| `removeAll`/`retainAll` get an ARM | 32 | 38 | all 17 ports byte-identical |
+| the `super` → `this` substitution | 32 | 38 | all 17 ports byte-identical |
+| the MAPPING | **32 → 30**, **TEST SET 6 → 0** | 38 → 30 | 12 digests, all in `BitFieldSet`/`BitFieldSetTest` |
+
+**The widening alone was worth two errors before any mapping moved**, which nothing predicted:
+`ScopedDataSet#getKeys` already emitted `JavaCollections.addAll(all, super.getKeys())` with BOTH
+parameters on the wrong side of the old signature — a `mutable.HashSet` at a `mutable.Buffer` formal,
+and a `JavaCollection` at an `IterableOnce[?]` one. That pair is two of the four rows `PROGRESS.md`
+§10.6.3 files as *the SHIM against a scala collection, inside the program*, and no lane falls with
+them, which is exactly what K26 records: they sit at a callee THIS PHASE MINTED and
+`collection-internal` never counted them.
+
+**And the mapping's own lane arithmetic is ONE ROW MOVING SIDEWAYS plus one closing**, not the rise
+the first measurement predicted. `collection-closure` **3 → 2** is the row this entry opened with,
+gone. `collection-boundary` **22 → 21** on main and **6 → 4** on the test lane — the `OpaqueEgress`
+row at `super.equals(Object)` stopped being an external callee, and the two `ClassFileOverride` rows
+on `BitFieldSetTest#iterator` closed with the errors they named. `jdk-surface` **25 → 26** is that
+same `equals` arriving on the lane that is now the right one for it (*retyped to
+`scala.collection.mutable.Set`, no rewrite*), which is honest: `super.equals(o)` is a member the table
+deliberately does not carry. Net across the two lanes: −1 boundary, −1 closure, +1 surface, −10
+errors.
+
+Five things the build settled that the recipe above did not say, each a fact about the MEMBER rather
+than about this port:
 
 - **the receiver intersection is java's OWN CONTRACT**, not a lowest upper bound — "a mutable
   collection you can iterate, add to and remove from" is what `java.util.Collection` demands of every
   implementation, which is why one receiver type is right for all three. Whether it INFERS at the
-  emitted shape is a separate question and is spec'd rather than argued: an intersection is a place
+  emitted shape is a SEPARATE question and is spec'd rather than argued: an intersection is a place
   scala's inference can decline, and the emitted shape is a GENERIC class extending `mutable.Set`
   calling the helper on `this`;
 - **the equality DIRECTION is the OPPOSITE of `containsAll`'s.** `containsAll` asks
@@ -7027,11 +7050,41 @@ member rather than about this port:
   — and nothing about a green compile says which one ran;
 - **`removeAll` removes EVERY occurrence**, which is precisely what `removeValue` in the same object
   deliberately does not do, and the BUFFER arm removes POSITIONALLY for `removeIf`'s own stated
-  reason.
+  reason;
+- **the two bulk mutators needed an ARM BEFORE they could be a substitution**, and that arm is worth
+  having on its own: `xs.removeAll(c)` at an ORDINARY retyped receiver had none, and the nearest scala
+  members answer a different question — `--=` is `subtractAll`, ONE occurrence per element of the
+  argument where java removes every one. Without it `handledInstance` could not honestly claim the two
+  names, and `jdk-surface` would have reported a hole the phase now fills;
+- **the licence is a TABLE and the negative that proves it is `subList`.** `AbstractList.subList` has
+  the SAME rewrite shape as the four (a helper taking the receiver as an argument, so `superPlaced`
+  refuses) and its body reads the receiver's own FIELDS, so no helper standing on `this` computes what
+  `super` named. `super.clone()` is the second. Both are refused in the emitted `BitFieldSet` today,
+  beside four that are not — which is the spec's point and the emitted file's.
 
-*Fix kind: (a). Step 2 — the `super` → `this` substitution — still wants its per-member argument
-written down beside a spec, and the mapping still may not land ahead of it: alone it trades two
-classified errors for four on the census lane `PROGRESS.md` §10.6.3 quotes.*
+**AND THREE MORE ABSTRACT BASES ARE STILL UNMAPPED, which is worth writing down rather than
+re-deriving.** `java.util.AbstractList`, `java.util.AbstractMap` and `java.util.AbstractSequentialList`
+are absent from `typeMap` today and each is the SAME shape: an abstract base whose INTERFACE the
+mapping covers, so java's own subtype relation is split, and whose bulk defaults a definer calls
+through `super`. They are not closed here because there is **no evidence**: no corpus library extends
+one, `collection-closure` reports none of them on any port, and mapping a type nothing exercises is a
+shape change with nothing to measure it against. What the wave 12 build changes is the PRICE — the
+phase now answers the defaults, so each of the three is a one-line table entry plus a measurement,
+where `AbstractSet` was a one-line entry plus four commits.
+
+**And the first thing that broke when `AbstractSet` was mapped was a SPEC's premise, silently.**
+`CollectionsClassFileOverrideSpec` stood its positive on `class Holder extends java.util.AbstractSet`
+precisely BECAUSE the type was unmapped, and mapping it made the spec fail with `heldNames = Set()` —
+which reads as *the class-file-override refusal is broken* rather than as *your example moved*. The
+fixture now stands on `AbstractMap` and ASSERTS its own premise against `typeMap` in a test of its
+own, so the next base to be mapped fails that row with a sentence naming this entry. A fixture whose
+premise is an assumption is a fixture that will one day fail for the wrong reason (`CLAUDE.md` §4.56's
+own shape, read at a spec).
+
+*Fix kind: (a) throughout. What a consumer's agent needs from this entry now is not the recipe but the
+SHAPE: where a phase re-parents a class, ask what the JDK PARENT was implementing for it, and answer
+per member from the JDK's own body — never from the member's name, and never by turning `super` into
+`this` in general.*
 
 ---
 

@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-md-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b0a27a37b1f6d709	files=43	policy=4c89cd602fd91899
+# balticporter port map	schema=3	module=ssg-md-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b0a27a37b1f6d709	files=43	policy=80c2a414ecc01de2
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.vladsch.flexmark.util.ExceptionMatcher	ssg.md.util.ExceptionMatcher	Renamed	-		0		companion=yes form=class parents=org.hamcrest.BaseMatcher primary=(Class,Pattern,String) primaryKind=unique-root primaryVis=public statics=`match`,matchPrefix,matchRegEx
 type	com.vladsch.flexmark.util.UtilTestSuite	ssg.md.util.UtilTestSuite	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
@@ -223,11 +223,11 @@ member	com.vladsch.flexmark.util.misc.ArrayUtilsTest#<stmt5>	ssg.md.util.misc.Ar
 member	com.vladsch.flexmark.util.misc.ArrayUtilsTest#<stmt6>	ssg.md.util.misc.ArrayUtilsTest#<stmt6>	Renamed	-	com/vladsch/flexmark/util/misc/ArrayUtilsTest.java	160	fc95210fa3c5977b	
 member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt10>	ssg.md.util.misc.BitFieldSetTest#<stmt10>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	241	1dbd47b9ef7062a8	
 member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt11>	ssg.md.util.misc.BitFieldSetTest#<stmt11>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	248	9c01b9119089ebbe	
-member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt12>	ssg.md.util.misc.BitFieldSetTest#<stmt12>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	255	cbb7db36295d170a	
-member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt13>	ssg.md.util.misc.BitFieldSetTest#<stmt13>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	279	f04febc282312476	
-member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt14>	ssg.md.util.misc.BitFieldSetTest#<stmt14>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	303	a65828e5c940e418	
-member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt15>	ssg.md.util.misc.BitFieldSetTest#<stmt15>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	327	3fb77535493cdb41	
-member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt16>	ssg.md.util.misc.BitFieldSetTest#<stmt16>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	341	e60182574260188a	
+member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt12>	ssg.md.util.misc.BitFieldSetTest#<stmt12>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	255	6984341764ba268a	
+member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt13>	ssg.md.util.misc.BitFieldSetTest#<stmt13>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	279	285e1255ab603285	
+member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt14>	ssg.md.util.misc.BitFieldSetTest#<stmt14>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	303	3605d85105d83bf4	
+member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt15>	ssg.md.util.misc.BitFieldSetTest#<stmt15>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	327	927e523c54540bbc	
+member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt16>	ssg.md.util.misc.BitFieldSetTest#<stmt16>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	341	5b1039b546ac96d0	
 member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt17>	ssg.md.util.misc.BitFieldSetTest#<stmt17>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	377	28494f564765e7a5	
 member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt18>	ssg.md.util.misc.BitFieldSetTest#<stmt18>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	383	6f69945dece70355	
 member	com.vladsch.flexmark.util.misc.BitFieldSetTest#<stmt19>	ssg.md.util.misc.BitFieldSetTest#<stmt19>	Renamed	-	com/vladsch/flexmark/util/misc/BitFieldSetTest.java	389	fc2c041a149e397a	
