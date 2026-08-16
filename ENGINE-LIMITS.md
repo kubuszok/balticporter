@@ -4252,6 +4252,21 @@ Measured on liqp: **5 -> 4**, `collection-boundary` **13 -> 14** — the wrap be
 suppression in the unverified-pass-through lane, which is what the two numbers moving in opposite
 directions means here — and 4 member digests.
 
+**…and a `new` IS NOT A CALL, which is the one shape both of that seam's tests answer YES about and
+neither is asking.** `externalProducer` bridges a value a callee HANDS BACK. A constructor hands back
+nothing of java's — it hands back the object this program just built, whose type is already whatever
+this phase retyped it to. `new java.util.Iterator<E>(){ … }` names an EXTERNAL constructor
+(`externalCallee` → yes) and carries the retyped shim as its node type (`liveWrappable` → yes), so
+the port emitted `JavaCollections.fromJava(new JavaIterator[E]() { … })`: a converter FROM java
+wrapped round an anonymous class that already IMPLEMENTS the shim, whose error names the HELPER
+(`E134 None of the overloaded alternatives of method fromJava`) rather than any boundary — the shape
+this seam is explicitly built never to produce.
+
+No test on the node's TYPE can separate the two, because a constructed value and a returned one have
+the same type by construction; that is why nothing was looking. Asked STRUCTURALLY instead, in both
+spellings the IR admits (§4.56): the applied function is a `Tree.New`, or the resolved method is an
+initialiser. **1 error, 182 → 181, 2 member digests, every check count flat** — reproduced in a
+seven-line fixture, which is what says it is universal rather than a property of the one library.
 
 ### K16. A `CollectionsTransform` SCOPE is not a way to opt out of its residue — 27 → 47 narrow, 27 → 51 off. DO NOT RETRY
 

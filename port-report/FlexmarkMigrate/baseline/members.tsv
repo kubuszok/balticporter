@@ -883,7 +883,7 @@ ssg.md.formatter.Formatter	explicitAttributeIdProvider	val	01421869b20ebe4d
 ssg.md.formatter.Formatter	formatterFactories	val	ce2ee9f81e08940f
 ssg.md.formatter.Formatter	offsets	val	90974b4ec6f96baf
 ssg.md.formatter.Formatter	sequence	val	2d407b51ab38af3f
-ssg.md.formatter.Formatter	ssg.md.formatter.Formatter	class	9c695bcf33f84c64
+ssg.md.formatter.Formatter	ssg.md.formatter.Formatter	class	791d59956aec21e9
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#<stmt1>	stmt	00963f34c62fcd78
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#<stmt2>	stmt	8cc7c66f5bd9b073
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#<stmt3>	stmt	27a5a70610042670
@@ -942,7 +942,7 @@ ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#LIST_SPACING	val	84dea1d48
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#MAX_BLANK_LINES	val	580cea4c2534075a
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#MAX_TRAILING_BLANK_LINES	val	9765d31fcf65a45a
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#NULL_ITERABLE	val	4b292cc8010d193d
-ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#NULL_ITERATOR	val	e6ef6269ef524728
+ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#NULL_ITERATOR	val	7285aa0e797120a1
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#OPTIMIZED_INLINE_RENDERING	val	93ec610d9a65ee93
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#REFERENCE_PLACEMENT	val	49cfb492bdf5e5dc
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#REFERENCE_SORT	val	b1e167a7973ea6ec

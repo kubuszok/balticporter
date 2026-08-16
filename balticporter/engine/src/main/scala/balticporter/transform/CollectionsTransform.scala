@@ -1914,7 +1914,7 @@ final class CollectionsTransform(
     * that is not a claim being made about a value — after the wrap the value really is that type
     * (ENGINE-LIMITS K6's first rule). */
   private def externalProducer(t: Tree.Apply)(using p: Program): Term =
-    if fromJavaSym == SymId.None || !externalCallee(t.method) then t
+    if fromJavaSym == SymId.None || !externalCallee(t.method) || instantiation(t) then t
     else headSym(t.tpe).filter(s => kindOf.contains(s) || shimSyms.contains(s)) match
       case scala.None => t
       // …the pass-through arm is asked HERE and not at the top, so a call whose result is not a
@@ -1941,6 +1941,25 @@ final class CollectionsTransform(
         t
       case Some(_) =>
         Tree.Apply(Tree.Ident(fromJavaSym, TypeRepr.NoType, t.origin), List(t), fromJavaSym, t.tpe, t.origin)
+
+  /** Is this application a `new` rather than a CALL?
+    *
+    * [[externalProducer]] bridges a value an external callee HANDS BACK: the class file says
+    * `java.util.List` and the port wants the scala view, so `fromJava` is the faithful wrap. A
+    * CONSTRUCTOR hands back nothing of java's — it hands back the object this program just built,
+    * which is already whatever this phase retyped its type to. `new java.util.Iterator<E>(){ … }` is
+    * a `java.util.Iterator` CONSTRUCTOR reference, so `externalCallee` says yes and the node's `tpe`
+    * is the retyped shim, so `liveWrappable` says yes; the port then wrapped an anonymous class that
+    * IMPLEMENTS the shim in a converter FROM java, and the error names the helper
+    * (`E134 None of the overloaded alternatives of method fromJava`) rather than anything a reader
+    * can act on — which is the shape that seam is explicitly built never to produce.
+    *
+    * Asked STRUCTURALLY and in both spellings the IR admits (§4.56): the applied function is a
+    * `Tree.New`, or the resolved method is an initialiser. A test on the node's TYPE could not
+    * separate these at all — the constructed value and a returned one have the same type by
+    * construction, which is exactly why nothing here was looking. */
+  private def instantiation(t: Tree.Apply)(using p: Program): Boolean =
+    t.fun.isInstanceOf[Tree.New] || p.symbolOf(t.method).exists(_.name == "<init>")
 
   /** Does the PORT'S OWN VALUE simply pass through this external call?
     *
