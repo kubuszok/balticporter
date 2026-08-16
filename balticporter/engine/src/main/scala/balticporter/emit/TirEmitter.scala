@@ -1847,7 +1847,15 @@ final class TirEmitter(
     // would have to pass an argument for a clause the emitter has no way to supply. So it is
     // dropped from the parameter list and COUNTED as a lost clause instead (`ENGINE-LIMITS.md`
     // CT5); an enum whose body needs an ambient context is a port-level decision, not a rendering.
-    val ctorParams = ctors.headOption.map(CtorFunnel.valueParams(program, _)).getOrElse(Nil)
+    // THE ROOT, never `ctors.head`. For the single-constructor enum every corpus library had, the
+    // two are the same and nothing could tell them apart; for an overloaded one the head is
+    // whichever java wrote first, and taking ITS parameters gave a delegating `Flags()` beside
+    // `Flags(int)` an EMPTY primary — `case object X extends Flags(3)` is `too many arguments`, and
+    // every constant that named the nilary overload silently got the field's DEFAULT where java ran
+    // `this(1)`. `CtorFunnel.enumPrimaryCtor` is the shared derivation (§4.56) and
+    // `OmissionCheck.overloadedEnumCtors` counts what it refuses.
+    val primaryCtor = CtorFunnel.enumPrimaryCtor(program, cd)
+    val ctorParams = primaryCtor.map(CtorFunnel.valueParams(program, _)).getOrElse(Nil)
     checkClause(cd, rendered = false, form = "enum")
     val paramNames = ctorParams.map(v => sym(v.symbol).name).toSet
     val instance   = instance0.filterNot {
@@ -1866,14 +1874,12 @@ final class TirEmitter(
     // promote, delegate or synthesise, and an enum's shape is already fixed: the sealed class's
     // primary IS the java constructor, because every `case object` passes its arguments to it. (It
     // also plans nothing here — `Plan.primaryParams` came back empty and the parameter list
-    // vanished, which is how that was measured.) So the lowering is the direct one, and it applies
-    // only to a SINGLE constructor: an OVERLOADED enum constructor cannot be expressed by this
-    // shape at all, since a `case object` can reach only one primary. That is a pre-existing limit
-    // this does not widen, and attributing one overload's body to every constant would be worse
-    // than leaving it out.
+    // vanished, which is how that was measured.) So the lowering is the direct one, and it runs off
+    // the ROOT: an OVERLOADED enum has exactly one primary a `case object` can reach, and it is the
+    // constructor that does not delegate. What is still refused — and now COUNTED rather than
+    // silently half-applied — is an enum with several roots or none, where no single primary exists.
     val ctorStats =
-      if ctors.sizeIs != 1 then Nil
-      else CtorFunnel.stmtsOf(ctors.head).filterNot {
+      primaryCtor.toList.flatMap(CtorFunnel.stmtsOf).filterNot {
         // java's implicit `super()`, which reaches `java.lang.Enum` and has no expression here.
         case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) => sym(m).name == "<init>"
         // `this.glEnum = glEnum` is what most enum constructors ARE, and the promotion above
@@ -1930,7 +1936,13 @@ final class TirEmitter(
     val cls     = s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
     val cases = cd.enumCases.zipWithIndex.map { (ec, idx) =>
       val cn   = esc(sym(ec.symbol).name)
-      val args = if ec.ctorArgs.isEmpty then "" else s"(${ec.ctorArgs.map(term(_, i + 1)).mkString(", ")})"
+      // …AND THE ARGUMENTS ARE THE ROOT'S. A constant that named a DELEGATING overload passes what
+      // that overload's `this(...)` passes, because the emitted primary IS the root — `LOW` on an
+      // enum whose `Flags() { this(1); }` delegates becomes `extends Flags(1)`, which is what java
+      // ran. A refusal keeps java's own arguments, which is LOUD at a primary that does not take
+      // them, and is counted.
+      val cargs = CtorFunnel.enumConstantArgs(program, cd, ec.ctorArgs).getOrElse(ec.ctorArgs)
+      val args = if cargs.isEmpty then "" else s"(${cargs.map(term(_, i + 1)).mkString(", ")})"
       // the constant's own members first, then the `ordinal()` this lowering owes the base.
       val stats = ec.body.map(stat(_, i + 2)) ++
         (if hasOrdinal then Nil else List(s"${ind(i + 2)}override def ordinal(): scala.Int = $idx"))

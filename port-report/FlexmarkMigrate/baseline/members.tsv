@@ -4096,7 +4096,7 @@ ssg.md.util.ast.TextCollectingVisitor	ssg.md.util.ast.TextCollectingVisitor#getS
 ssg.md.util.ast.TextCollectingVisitor	ssg.md.util.ast.TextCollectingVisitor#getText()	def	8b5fc8659965dda2
 ssg.md.util.ast.TextCollectingVisitor	ssg.md.util.ast.TextCollectingVisitor#myVisitor	val	f55a1e243b1c63d4
 ssg.md.util.ast.TextCollectingVisitor	ssg.md.util.ast.TextCollectingVisitor#out	val	5056848b30b5e19a
-ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer	class	b0a3cb2587f25855
+ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer	class	820dcc49494a86d8
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#F_ADD_SPACES_BETWEEN_NODES	val	80af80c3a37c39a2
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#F_FOR_HEADING_ID	val	839bfffe7325646a
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#F_LINK_ANCHOR	val	3750cc1f09345ada
@@ -4110,8 +4110,7 @@ ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#F_NO_TRIM_REF_TEXT_E
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#F_NO_TRIM_REF_TEXT_START	val	01a3ebf9bd78e320
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#collectEndText(ISequenceBuilder<?,BasedSequence>,int,NodeVisitor)	def	d2d481fb5aae73ed
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#collectText(ISequenceBuilder<?,BasedSequence>,int,NodeVisitor)	def	2a0c164ee46745e8
-ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer$Flags	class	790c022702d4dae7
-ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer$Flags#bits	val	c5c3c6596177cc77
+ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer$Flags	class	99f880f8e39016c9
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer$Flags#getBits()	def	36576dad401c7e66
 ssg.md.util.ast.TypographicText	ssg.md.util.ast.TypographicText	class	cd9c607f2fee5924
 ssg.md.util.ast.VisitHandler	ssg.md.util.ast.VisitHandler	class	3d4622ccc44e6dd6
@@ -7944,7 +7943,7 @@ ssg.md.util.sequence.LineAppendableImpl	ssg.md.util.sequence.LineAppendableImpl$
 ssg.md.util.sequence.LineAppendableImpl	ssg.md.util.sequence.LineAppendableImpl$IndexedLineProxy#set(int,BasedSequence)	def	5666acb8ffe3e4e2
 ssg.md.util.sequence.LineAppendableImpl	ssg.md.util.sequence.LineAppendableImpl$IndexedLineProxy#size()	def	3a7ef80e80623127
 ssg.md.util.sequence.LineAppendableImpl	ssg.md.util.sequence.LineAppendableImpl$IndexedLineProxy#withPrefixes	val	eb1b4777cc6b7a36
-ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo	class	882cfd5bc5dfbb10
+ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo	class	1fa7b817673f7d85
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#<stmt10>	stmt	ead00ea987c2574e
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#<stmt11>	stmt	9a03816024bc1451
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#<stmt1>	stmt	d49a8255016f9174
@@ -7992,8 +7991,7 @@ ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#sumPrefixLength	val	
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#sumTextLength	val	c187b2ba785c3bb7
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#textLength	val	21fcbcf90124f1ba
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#toString()	def	066b2a79ab3ca65e
-ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Flags	class	4b556ef67b5667f7
-ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Flags#bits	val	0baef685c3f36cbc
+ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Flags	class	61715d69a341abc3
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Flags#getBits()	def	36576dad401c7e66
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted	class	db5c7cbc2730bccb
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted#<stmt1>	stmt	4ff8eb4c89ae2f59

@@ -1881,6 +1881,52 @@ and invisible to `porter-notes`, which does not resolve these subjects.
 
 *Fix kind: (a) engine. Built; `EnumCtorBodySpec`, both directions.*
 
+### T11.5 An OVERLOADED enum constructor: the primary is java's ROOT, and `ctors.head` was not a refusal but a WRONG ANSWER — **2 errors + a silent default, 177 → 175. CLOSED for the expressible shape, COUNTED for the rest**
+
+A java enum lowers to a sealed abstract class whose primary IS java's constructor, because every
+`case object` passes its arguments to it and a `case object` cannot delegate. `CtorFunnel` is
+deliberately not consulted (`T10`), so the emitter read the constructor list directly — and it read
+`ctors.head`, the first in TREE ORDER. For the single-constructor enum every corpus library had for
+five libraries, head IS the root and nothing could tell the two apart.
+
+```java
+enum Flags implements BitField { LINK_TEXT_TYPE(3), NODE_TEXT, … ;
+  final int bits;
+  Flags()          { this(1); }        // written FIRST
+  Flags(int bits)  { this.bits = bits; } }
+```
+
+Head is the DELEGATING overload, so the class took ITS parameter list — empty — and dropped both
+bodies. **Half of the result is loud and half is not**: `case object LINK_TEXT_TYPE extends Flags(3)`
+is `too many arguments for constructor Flags: ()`, while `NODE_TEXT` compiled perfectly and took the
+field's declared default `0` where java ran `this(1)`. The comment standing over that code called it
+a refusal — *"an OVERLOADED enum constructor cannot be expressed by this shape at all … a
+pre-existing limit this does not widen"* — and it was not one: a refusal leaves the construct alone
+(`M6`), and this took an arbitrary overload's parameters and emitted them.
+
+**The root is the primary, and a constant that named a delegating overload carries THAT DELEGATION's
+arguments** — `NODE_TEXT` becomes `extends Flags(1)`, which is what java ran. Which overload a
+constant named is read off the VALUE-parameter ARITY and refused where two share one: java's
+three-phase resolution has no scala counterpart and is not re-implemented here (`T17`). Two further
+refusals, both because inlining would LOSE something — a delegating constructor that does anything
+beside delegate, and a delegation argument closed over its own parameters
+(`Tag(String s) { this(s.length()); }`, whose inlining is a REWRITE and belongs to the funnel rather
+than to a rendering layer).
+
+**Every refusal is COUNTED now** (`OmissionCheck.overloadedEnumCtors`, one row per constant, reading
+the same function the emitter renders from) — which is the half that did not exist at all. `omissions`
+did not move on the port that closed this, because every one of its overloaded enums is the
+expressible shape; the lane is non-vacuous by fixture on both refusals.
+
+Blast: 2 declarations, and `trivia(recovered)` 4 → 5 — the trailing `//` comment on the LAST enum
+constant had been attaching to the `bits` FIELD (which it is not about), and with that field promoted
+into the primary it has no carrier and the backstop quotes it with its java coordinates. That is
+§4.58 working: the comment's home disappeared, and a recovery with coordinates is admissible where a
+silent re-attachment to a different member is not.
+
+*Fix kind: (a). `EnumOverloadedCtorSpec`, four cells: the fix, the single-constructor negative, and
+both refusals.*
+
 ### T12. Java `protected` is DROPPED, and accessibility is an input to OVERLOAD RESOLUTION — 1 error
 
 CLOSED by `DESIGN.md` §8.7. The entry stays because the two facts it MEASURED are the constraints

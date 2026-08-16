@@ -1445,6 +1445,81 @@ object CtorFunnel:
   def ctorsOf(program: Program, body: List[Statement]): List[Tree.DefDef] =
     body.collect { case d: Tree.DefDef if isCtor(program, d) => d }
 
+  // ---- AN ENUM's primary, which is java's ROOT constructor and not the first one written ----
+  //
+  // `Plans` is deliberately not consulted for an enum: its shape is fixed, because a `case object`
+  // reaches exactly one primary and cannot delegate. What was NOT fixed is WHICH constructor that
+  // primary is, and the emitter read `ctors.head` — the first in tree order. For the single-
+  // constructor enum every corpus library had, head IS the root and nothing could tell the
+  // difference. For an OVERLOADED one — `Flags() { this(1); }` beside `Flags(int bits)` — head is
+  // the DELEGATING overload, so the emitted class took ITS parameter list (empty) and dropped both
+  // bodies: `case object X extends Flags(3)` is `too many arguments`, and every constant that used
+  // the nilary overload silently got the field's DEFAULT where java ran `this(1)`.
+  //
+  // These two functions are the shared derivation (§4.56): the emitter renders from them and
+  // `OmissionCheck.overloadedEnumCtors` counts what they refuse, so a refusal can never be a
+  // silence and the check can never disagree with what was emitted.
+
+  /** THE constructor an enum's `case object`s all reach — java's ROOT, the one that does not
+    * delegate `this(...)`.
+    *
+    * `None` where the shape cannot be expressed: several roots (a `case object` can reach only one
+    * primary), or none at all. Both are refusals the caller must COUNT rather than approximate —
+    * attributing one overload's parameters to every constant is the defect this replaces. */
+  def enumPrimaryCtor(program: Program, cd: Tree.ClassDef): Option[Tree.DefDef] =
+    val ctors = ctorsOf(program, cd.body)
+    if ctors.sizeIs <= 1 then ctors.headOption
+    else ctors.filterNot(delegatesToThis(program, _)) match
+      case one :: Nil => Some(one)
+      case _          => scala.None
+
+  /** the arguments a CONSTANT passes to [[enumPrimaryCtor]] — java's own, where it named the root,
+    * and the delegation's where it named an overload that delegates to it.
+    *
+    * WHICH overload java resolved is read off the VALUE-parameter arity, uniquely: an enum constant
+    * writes its arguments and java resolved them, and where two overloads share an arity this
+    * cannot say which — so it refuses rather than picking, which is `ENGINE-LIMITS.md` T17's rule
+    * (java's three-phase resolution has no scala counterpart and is not re-implemented here).
+    *
+    * TWO further refusals, both because inlining the delegation would otherwise LOSE something:
+    *
+    *   - the delegating constructor does anything BESIDE delegate. Its extra statements belong to
+    *     every constant that names it and there is nowhere to put them;
+    *   - a delegation ARGUMENT mentions the delegating constructor's own parameters
+    *     (`Flags(String s) { this(s.length()); }`). Substituting the constant's argument terms for
+    *     them is a rewrite, and a rewrite performed in a RENDERING layer is a second mechanism for
+    *     what `Plans` already does one level up; the honest answer here is the counted refusal.
+    *
+    * `None` therefore means *emit java's own arguments and count the site* — which is LOUD (the
+    * constant passes arguments a nilary primary does not take), and loud is the right residue. */
+  def enumConstantArgs(program: Program, cd: Tree.ClassDef, args: List[Term],
+                       fuel: Int = 8): Option[List[Term]] =
+    val ctors = ctorsOf(program, cd.body)
+    if ctors.sizeIs <= 1 then Some(args)
+    else if fuel <= 0 then scala.None
+    else ctors.filter(c => valueParams(program, c).sizeIs == args.size) match
+      case c :: Nil if !delegatesToThis(program, c) => Some(args)
+      case c :: Nil =>
+        val ps = valueParams(program, c).map(_.symbol).toSet
+        stmtsOf(c) match
+          case (t: Term) :: Nil => Tree.uncomment(t) match
+            case Tree.Apply(Tree.Select(_, m, _, _), das, _, _, _)
+              if isInitName(program, m) && !das.exists(mentions(_, ps)) =>
+              enumConstantArgs(program, cd, das, fuel - 1)
+            case _ => scala.None
+          case _ => scala.None
+      case _ => scala.None
+
+  /** does this tree reference any of `ss`? A whole-`Product` walk, because a delegation argument is
+    * an arbitrary expression and the question is only ever "is it CLOSED over the constructor's
+    * parameters" — an over-approximation here costs a counted refusal, never a wrong emission. */
+  private def mentions(t: Any, ss: Set[SymId]): Boolean = t match
+    case Tree.Ident(s, _, _) => ss(s)
+    case xs: Iterable[?]     => xs.exists(mentions(_, ss))
+    case Some(x)             => mentions(x, ss)
+    case p: Product          => p.productIterator.exists(mentions(_, ss))
+    case _                   => false
+
   /** a leading `this(args)` delegation to a PEER constructor (never `super`, never nilary —
     * an explicit nilary call is the implicit primary and carries no information). */
   def delegatesToThis(program: Program, d: Tree.DefDef): Boolean = headStmt(d).exists {

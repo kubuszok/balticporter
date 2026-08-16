@@ -40,12 +40,14 @@ object OmissionCheck extends RemedySource:
     val DroppedAnonMember       = "anonymous-class member dropped"
     val UnnameableLambdaReturn  = "lambda `return` with an unnameable result type"
     val DroppedAnnotation       = "annotation dropped"
+    val OverloadedEnumCtor      = "enum constant reaching no expressible primary"
 
     /** every kind this lane files — `Issue.values`' role for a set of strings, and what a menu spec
       * checks a remedy's declared kind against. A kind absent here is a kind no such spec can see,
       * so it is added beside the `val` above and not remembered separately. */
     val all: List[String] = List(DroppedSuperArgs, DroppedCauseMessage, PromotedBodyEveryPath,
-      DroppedNilaryCtor, DroppedAnonMember, UnnameableLambdaReturn, DroppedAnnotation)
+      DroppedNilaryCtor, DroppedAnonMember, UnnameableLambdaReturn, DroppedAnnotation,
+      OverloadedEnumCtor)
 
   /** @param at the DECLARATION a per-location selection keys on ([[Resolution]]) — the constructor
     *   for a constructor-shaped row, the annotated symbol for an annotation one. `SymId.None` where
@@ -212,6 +214,7 @@ object OmissionCheck extends RemedySource:
       ++ droppedNilaryCtors(program, units, surface)
       ++ droppedAnonMembers(program, units)
       ++ unnameableLambdaReturn(program, units)
+      ++ overloadedEnumCtors(program, units)
       ++ droppedAnnotations(program, ownedBy(program, units))
 
   /** Every symbol whose top-level owner is one of `units` — the symbol-side counterpart of the unit
@@ -505,6 +508,52 @@ object OmissionCheck extends RemedySource:
                 d.origin, d.symbol)
       }
     }
+
+  /** An enum CONSTANT whose arguments cannot be routed to the one primary a `case object` reaches.
+    *
+    * A java enum lowers to a sealed abstract class whose primary IS java's constructor, because
+    * every `case object` passes its arguments to it and a `case object` cannot delegate. With ONE
+    * java constructor that is exact. With several it holds only where one of them is the ROOT and
+    * every other delegates to it with arguments that do not mention its own parameters — then the
+    * constant that named a delegating overload is emitted with the delegation's arguments, which is
+    * what java ran ([[CtorFunnel.enumConstantArgs]], the same function the emitter renders from, so
+    * this can neither report a site the emitter handled nor miss one it did not).
+    *
+    * Everything else is refused: several roots, two overloads at one arity (which java's own
+    * three-phase resolution decided and this engine does not re-implement — `ENGINE-LIMITS.md`
+    * T17), a delegating constructor that does anything besides delegate, a delegation argument
+    * closed over its own parameters.
+    *
+    * ==Why it needs a lane at all==
+    * The refusal used to be `ctors.head` — the FIRST constructor in tree order — whose parameters
+    * became the primary's and whose siblings' bodies were dropped. That is not a refusal, it is a
+    * wrong answer: `Flags() { this(1); }` written above `Flags(int bits)` gave the class an EMPTY
+    * primary, so every constant carrying an argument failed to compile AND every constant that
+    * named the nilary overload silently took the field's declared default where java ran `this(1)`.
+    * Half of that is loud and half is CLAUDE.md §4.4's shape exactly.
+    *
+    * Fix kind (a). */
+  def overloadedEnumCtors(program: Program): List[Finding] =
+    overloadedEnumCtors(program, program.units)
+
+  def overloadedEnumCtors(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+    def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
+      StandardTraversal.allClassDefs(cd)(using program)
+    units.flatMap(classes)
+      .filter(cd => program.symbolOf(cd.symbol).exists(_.flags.isEnum))
+      .flatMap { cd =>
+        val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
+        val n     = CtorFunnel.ctorsOf(program, cd.body).size
+        cd.enumCases.filter(ec => CtorFunnel.enumConstantArgs(program, cd, ec.ctorArgs).isEmpty)
+          .map { ec =>
+            Finding(Kind.OverloadedEnumCtor, owner,
+                    s"`${program.symbolOf(ec.symbol).map(_.name).getOrElse("?")}` passes " +
+                      s"${ec.ctorArgs.size} argument(s) and this enum declares $n constructors; a " +
+                      "`case object` reaches exactly one primary and cannot delegate, so java's own " +
+                      "arguments are emitted against the root's parameter list",
+                    ec.origin, ec.symbol)
+          }
+      }
 
   /** grouped one-line summary, most-affected owner first. Grouped by KIND as well as owner —
     * there is more than one kind of omission now, and a summary that words them all the same way
