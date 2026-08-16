@@ -2864,7 +2864,7 @@ above sums to more than the family sizes the first census printed.
 | 10 | **the SHIM against a scala collection, inside the program.** Four of them are a retyped formal at a method that OVERRIDES A CLASS FILE — `BitFieldSet<E> extends java.util.AbstractSet<E>` had `containsAll`/`addAll`/`removeAll`/`retainAll` moved to `JavaCollection[?]` while the parent's formal is `java.util.Collection[?]`, so `super.containsAll(c)` cannot compile and the member overrides nothing (§4.56's "an unowned symbol's SIGNATURE is a fact about a class file", read at an OVERRIDE). The rest are a `JavaCollection` formal or result meeting a `Buffer`/`Set`/own-`OrderedSet` value at a call the port declares (`ScopedDataSet#getKeys` 2, `OrderedMultiMap#keys`/`#values` 2, `Attributes#values`, `BuilderBase#extensions`). `collection-boundary` counts the external half and cannot see the internal one — it was 11 before wave 4 closed `DataSet#getKeys` | **(a)** |
 | 6 | **`Nothing` at a structural type** — `IRichSequenceBase`'s `?{ append: ? }` / `?{ add: ? }` slots, where a generic method's variable inferred `Nothing` (`G22`'s family at a structural expected type) | **(a)** |
 | 5 | **`MutableDataHolder.set` overload resolution** — `DataKey<Collection<Extension>>` retypes its type ARGUMENT to the SHIM while the value is an `ArrayBuffer`, so no `T` unifies. The same shim-against-`Buffer` seam one level in, at a TYPE ARGUMENT rather than a formal | **(a)** |
-| 5 | **`null` at a type PARAMETER** — `Found: Null / Required: V` at a `return null` in a generic member, where java's `null` is assignable to every reference type and scala's `Null` is not a subtype of an unbounded `T` | **(a)** |
+| 5 | **`null` at a type PARAMETER** — java's `null` is assignable to every reference type and scala's `Null` is not a subtype of an unbounded `T`. Wave 4 read the emitted lines rather than the count and the row is **three shapes, not one**, which is what the next attempt has to start from: an ARGUMENT at a type-parameter formal (`valueList += null`, `keySet$field.add(null)` — 3), a LAMBDA whose body is a bare `null` at a result type of `T` (1), and one that is not this family at all — `HashMap.from(null.getAll())`, a `null` RECEIVER at a structural expected type (1). The ascription machinery EXISTS and is applied at some positions (`NullableDataKey` line 66 emits `null.asInstanceOf[T]` for its second argument and a bare `null` in the lambda beside it), so this is a POSITION gap and not a missing rule | **(a)** |
 | 4 | the JDK members wave 2 did NOT map — `listIterator` 2 and `spliterator` 1, REFUSED with their citation because each hands back a JDK protocol rather than a value, and the ONE bound method reference (`this.headings::add`) at a mapped member, which emits as an eta-expanded `Select` no `Apply`-keyed arm sees | **(a)**, all four `ENGINE-LIMITS.md` K23 |
 | 3 | **`MapEntry` against `Tuple2`** — a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent (`K5.7`'s `UninheritableTargets` refusal, counted as `InexpressibleParent`), so its value does not conform where the retyping expects a pair | **(a)**, the counted half of K5.7 |
 | 14 | the residue, no family above 2: `Not found: byteOffset$p` (a promoted parameter's name, 2), the two `Object` results of an ERASED `Function` receiver (`G11` at a use — the widening is on the RESULT, so NOT K24's family), `Objects.isNull`, `Array[E]` against `Array[Enum[?]]`, a SAM whose result the frontend could not name, and one-off inference and arity mismatches | mixed |
@@ -2876,6 +2876,28 @@ six: they are not one shape. `ScopedDataSet#getKeys` and `OrderedMultiMap#keys`/
 the PROGRAM produces at a shim-typed result, and `Attributes#values`/`BuilderBase#extensions` are two
 different one-offs — so the row is a rule plus a residue, and the rule is worth measuring alone
 before anything is written for the rest.
+
+**And wave 4 scouted that rule far enough to save the next one a session, so the findings are here
+rather than re-derived.** The four are `BitFieldSet extends java.util.AbstractSet<E>` declaring
+`containsAll`/`addAll`/`removeAll`/`retainAll`, whose formals moved to `JavaCollection[?]` while the
+parent's stayed `java.util.Collection[?]`; each body opens `if (!(c instanceof BitFieldSet)) return
+super.<same>(c);`, which is the error the compile reports. Three things established:
+
+- **the TEST is available and structural** — `Symbol.flags.isOverride` (the frontend already computes
+  it from Spoon's `getTopDefinitions`, which is why the emitted members carry `override`) AND
+  `OverrideGraph.overridden(sym).isEmpty` (the graph indexes only types the PROGRAM declares, so an
+  empty answer beside a true flag means the thing overridden is a class file), narrowed to a
+  signature that `mentionsMapped`. That last conjunct is not tidiness: without it the set takes
+  `toString`/`equals`/`hashCode`, whose BODIES do touch retyped collections;
+- **`Issue.ScopedOut` is the wrong classification and must not be reused.** The literal-reading
+  machinery this needs already exists — `excluded`, `restoreExcluded`, `mapSignatures`, `coerce`'s
+  `expectedScoped` — but `CollectionBoundaryCheck` reads the same set back to classify a seam as
+  **§1(b), change your port's `scope`**, and there is no port key to change here. It needs its own
+  `Issue` and its own sentence, which is the bulk of the work and the reason this is not a one-liner;
+- **`collection-closure` already names the cause** and has since the port's first run:
+  `java.util.AbstractSet` unmapped while `java.util.AbstractCollection` is mapped, so the JDK
+  relation is lost. Mapping `AbstractSet` is NOT the alternative fix — it is a `Set`, so its target
+  would be `scala.collection.mutable.Set` as a PARENT, which is §4.5's forbidden shape.
 
 The raw-generic row is the deepest and is now HALF-MEASURED: the vararg packing is built,
 javac-verified and REFUSED at 81 → 83 (`ENGINE-LIMITS.md` G26), so what the family needs first is the
