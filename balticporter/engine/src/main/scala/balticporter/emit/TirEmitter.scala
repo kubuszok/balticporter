@@ -4158,7 +4158,20 @@ final class TirEmitter(
               case _: TypeRepr.TypeBounds => "java.lang.Object"
               case other                  => tpe(other)
             s"((size: scala.Int) => new scala.Array[$elem](size))"
-          case _ => samAscribed(s"(() => new ${ctorTpe(tt.tpe)}())", mrT, tt.tpe)
+          // …and an ordinary `T::new` takes THE CONSTRUCTOR'S OWN PARAMETERS. A nilary factory is
+          // the majority case and was the whole of this arm — exact for every `::new` in the corpus
+          // until one referenced a paramful constructor, where `() => new T()` is a no-argument
+          // function at a `Function<A,T>` slot AND a call javac never wrote. The arity is the same
+          // fact the unbound arm below reads and comes from the same place (`Tree.MethodRef.referent`);
+          // the parameters go UN-ANNOTATED because a constructor reference is a poly expression and
+          // `samAscribed`'s target is what types them, which is what makes the nilary rendering
+          // byte-identical.
+          case _ =>
+            val ps = referent match
+              case Tree.Referent.Instance(n) => (0 until n).map(k => s"a$k$$").toList
+              case Tree.Referent.Static      => Nil // a constructor is never static; JLS 8.8.3
+            samAscribed(s"((${ps.mkString(", ")}) => new ${ctorTpe(tt.tpe)}(${ps.mkString(", ")}))",
+                        mrT, tt.tpe)
         // `Type::method` is TWO different java forms sharing one syntax, and only one of them is a
         // qualified name. For a STATIC method it is `Type.method`. For an INSTANCE method it is an
         // UNBOUND reference — the receiver becomes the function's first parameter, so

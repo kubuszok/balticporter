@@ -2874,9 +2874,10 @@ above sums to more than the family sizes the first census printed.
 
 | before → after | family | where |
 |---|---|---|
+| 45 → 43 | **…and the CONSTRUCTOR form is the same sentence a third time.** `Type::new` was emitted `(() => new T())` with the referenced constructor's ARITY ignored, which is exact for as long as every `::new` in a corpus is nilary or an array — 232 of the 234 are. The two that are not are this port's, and both had been filed apart in the residue as `not enough arguments for constructor`, which is what the error TEXT says and not what the defect is: `Parser.REFERENCES` names `ReferenceRepository::new` and `DocumentParser.INLINE_PARSER_FACTORY` is `CommonmarkInlineParser::new`. A one-line follow-up rather than a second investigation, because the fact was already on the node (a constructor is never `static`, JLS 8.8.3) and the un-annotated parameters are what keep the nilary rendering byte-identical | G27 |
 | 47 → 45 | **an EXTERNAL member's SYMBOL answers a question it was never told the answer to.** `Type::method` is one java syntax naming two functions, and the emitter read the split off `flags.isStatic` and the arity off `methodParams` — neither of which an external member's symbol carries. `Minter.external` interns with `Flags()`, so every JDK static reads *not static*; `externalSignature` refuses a slot it cannot name scope-free, so `Comparable.compareTo(T)`'s one type-variable parameter makes the whole `MethodType` absent and reads *takes no arguments*. §4.6's fabricated fact with the default baked into the data structure instead of into a `catch`. The two facts move onto the NODE (`Tree.MethodRef.referent`), read off the parser's own executable, and `CollectionsTransform.lowerMethodRef`'s independent second derivation reads the same one (F8). Eleven other lanes BYTE-IDENTICAL, 4 member digests here, both inside the two types holding the two references | G27 |
 
-**What is left, by mechanism** (the census re-read at 45, every row counted from `errors.tsv`):
+**What is left, by mechanism** (the census re-read at 43, every row counted from `errors.tsv`):
 
 | n | family | §1 |
 |---:|---|---|
@@ -2888,7 +2889,7 @@ above sums to more than the family sizes the first census printed.
 | 5 | **`null` at a type PARAMETER** — java's `null` is assignable to every reference type and scala's `Null` is not a subtype of an unbounded `T`. Wave 4 read the emitted lines rather than the count and the row is **three shapes, not one**, which is what the next attempt has to start from: an ARGUMENT at a type-parameter formal (`valueList += null`, `keySet$field.add(null)` — 3), a LAMBDA whose body is a bare `null` at a result type of `T` (1), and one that is not this family at all — `HashMap.from(null.getAll())`, a `null` RECEIVER at a structural expected type (1). The ascription machinery EXISTS and is applied at some positions (`NullableDataKey` line 66 emits `null.asInstanceOf[T]` for its second argument and a bare `null` in the lambda beside it), so this is a POSITION gap and not a missing rule. **Wave 6 named the predicate**: `nullToTypeParam` casts only where `resolveTypeParam` answers — the callee's variable is literally the caller's own — and the two `add(null)` sites are a callee whose `E` the RECEIVER's type argument resolves (`OrderedSet[V]` inside `OrderedMultiMap<K,V>`), which is the substitution `varargPack` already takes as `recvSubst`. Two obstacles, both structural: `receiverTypeArgs` gates on `tpConcrete`, which answers `false` for a type PARAMETER and so discards `OrderedSet<V>` before anything can use it; and `coerceArgsFixed` never receives `recvSubst`, so it has to be threaded from `coerceArgs` rather than re-derived (F8) | **(a)** |
 | 4 | the JDK members wave 2 did NOT map — `listIterator` 2 and `spliterator` 1, REFUSED with their citation because each hands back a JDK protocol rather than a value, and the ONE bound method reference (`this.headings::add`) at a mapped member, which emits as an eta-expanded `Select` no `Apply`-keyed arm sees | **(a)**, all four `ENGINE-LIMITS.md` K23 |
 | 3 | **`MapEntry` against `Tuple2`** — a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent (`K5.7`'s `UninheritableTargets` refusal, counted as `InexpressibleParent`), so its value does not conform where the retyping expects a pair | **(a)**, the counted half of K5.7 |
-| 12 | the residue, no family above 2 — and wave 6 diagnosed the largest of them to the line. **`Not found: byteOffset$p$` (2, `Segment$Base` and `Segment$Text`) is a SUPER CALL naming a MEMBER**: the funnel promoted the constructor parameter, §4.55's promoted-ctor-scope rename then split it in two — a parameter `byteOffset$arg$p` and a member `var byteOffset$p$ = byteOffset$arg$p`, because the parent `Segment` already declares `byteOffset` — and the `extends Segment(pos$p$, bytes$p$, byteOffset$p$, indexOffset$p)` clause names the MEMBER. A scala superclass constructor argument is evaluated before the class body exists, so it may name a parameter and never a member; the three siblings beside it are plain parameters and compile. The rename is right and the POSITION it was substituted into is not, which is `CLAUDE.md` §4.55's *a promotion moves a NAME, never a POSITION* met from the other side. Two more are diagnosed and each is one line: **`Utils#withDefaults` rewrote HALF of one statement** — `putIfMissing(map, entry._1, entry.getValue)`, where the `getKey` → `_1` arm fired on one access of `entry` and the `getValue` → `_2` arm beside it did not, so the two readings of one entry sit in the same argument list (both arms exist and precede `parenless`, so the receiver's own `Kind` is what differs between two references to one local). The two `Type::method` eta-expansion rows this row used to carry CLOSED at wave 7 (G27). The rest: the two `Object` results of an ERASED `Function` receiver (`G11` at a use — the widening is on the RESULT, so NOT K24's family), `Array[E]` against `Array[Enum[?]]`, a SAM whose result the frontend could not name, and one-off inference and arity mismatches | mixed |
+| 10 | the residue, no family above 2 — and wave 6 diagnosed the largest of them to the line. **`Not found: byteOffset$p$` (2, `Segment$Base` and `Segment$Text`) is a SUPER CALL naming a MEMBER**: the funnel promoted the constructor parameter, §4.55's promoted-ctor-scope rename then split it in two — a parameter `byteOffset$arg$p` and a member `var byteOffset$p$ = byteOffset$arg$p`, because the parent `Segment` already declares `byteOffset` — and the `extends Segment(pos$p$, bytes$p$, byteOffset$p$, indexOffset$p)` clause names the MEMBER. A scala superclass constructor argument is evaluated before the class body exists, so it may name a parameter and never a member; the three siblings beside it are plain parameters and compile. The rename is right and the POSITION it was substituted into is not, which is `CLAUDE.md` §4.55's *a promotion moves a NAME, never a POSITION* met from the other side. Two more are diagnosed and each is one line: **`Utils#withDefaults` rewrote HALF of one statement** — `putIfMissing(map, entry._1, entry.getValue)`, where the `getKey` → `_1` arm fired on one access of `entry` and the `getValue` → `_2` arm beside it did not, so the two readings of one entry sit in the same argument list (both arms exist and precede `parenless`, so the receiver's own `Kind` is what differs between two references to one local). FOUR of the rows this entry used to carry CLOSED at wave 7 and all four were one defect (G27): the two `Type::method` eta-expansions, and the two `not enough arguments for constructor` rows — `Parser#REFERENCES` and `DocumentParser#INLINE_PARSER_FACTORY` — which read as an inference problem and were a `Type::new` emitted with no arguments. That is worth keeping as a caution about this table: a residue row is filed under the error TEXT, and two of these four were filed apart from the family they belong to for exactly that reason. The rest: the two `Object` results of an ERASED `Function` receiver (`G11` at a use — the widening is on the RESULT, so NOT K24's family), `Array[E]` against `Array[Enum[?]]`, a SAM whose result the frontend could not name, and one-off inference and arity mismatches | mixed |
 
 **Where the next wave starts: the `null`-at-a-type-PARAMETER row, whose position gap is now NAMED.**
 Wave 6 read the two `keySet$field.add(null)` / `valueSet$field.add(null)` sites rather than the
@@ -2911,6 +2912,42 @@ body at a result type of `T`; and one `null` RECEIVER that is not this family at
 two and re-census rather than predicting five.
 
 Nothing left in this port needs a manifest entry, and no residue above is per-library policy.
+
+#### The FLOOR the refusal ledger defines — 24 of the 43, and what the other 19 are
+
+Seven waves took 243 → 43 and every one of them closed a FAMILY. What is left divides into rows a
+named refusal already answers and rows nobody has diagnosed, and the two are worth separating,
+because a census that only counts is one an operator reads as *nineteen more waves*. **Twenty-four of
+the forty-three are attributed to a refusal or a limit this repository has already measured and
+written down** — closing any of them means re-opening that entry with a number, not finding a bug:
+
+| n | attributed to | what the refusal SAYS |
+|---:|---|---|
+| 6 | `ENGINE-LIMITS.md` **G8**, with **G22**'s pin declining correctly on its fourth condition | a partially-nameable F-BOUNDED class has no consistent fill: `<B extends ISequenceBuilder<B, T>> B getBuilder()` names the enclosing interface's `T` inside its own bound, so either every formal comes from the enclosing scope or none can. Four attempts priced |
+| 6 | **K25**'s residue — the in-program half of `collection-boundary` | a `JavaCollection` formal or result meeting a `Buffer`/`Set`/own-`OrderedSet` value at a call the PORT declares. K25 closed the rule half (an override of a class file keeps java's formals); this is the seam that leaves, and the lane counts the EXTERNAL half only |
+| 5 | the same seam one level in, at a TYPE ARGUMENT | `DataKey<Collection<Extension>>` retypes its argument to the shim while the value is an `ArrayBuffer`: one java subtyping edge that the mapping sends to two unrelated scala types. Wave 6 established this belongs WITH the six above rather than apart from them |
+| 4 | **K23**'s counted refusals | `listIterator` (2) and `spliterator` (1) hand back a JDK PROTOCOL rather than a value, and there is nothing to map them onto; plus the one bound method reference at a mapped member |
+| 3 | **K5.7**'s `UninheritableTargets`, counted as `InexpressibleParent` | a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent, because the retyping's target is a `Tuple2` and no class can extend one |
+| **24** | | |
+
+The other **19** are open work with no entry behind them: **5** `null` at a type PARAMETER (three
+distinct positions; the two `add(null)` sites have a NAMED fix, two paragraphs up), **2** the
+`BitFieldSet#iterator()` pair K25 made loud, **2** raw-generic one-offs, and the **10**-row residue.
+So the honest reading of 43 is *24 refused, 19 open*, and the 19 is the number a next wave is working
+against.
+
+Two things this table is deliberately NOT:
+
+- **it is not a claim that 24 is a floor forever.** G8 and K5.7 are expressiveness limits of the
+  IMAGE this engine emits, and a different image (a `Tuple2`-shaped `Map.Entry` shim, a filled
+  F-bound) would move them — each at the cost its entry already records. What the table says is that
+  no row in it is a defect somebody has not looked at;
+- **it is not a substitute for the counts.** Sixteen of the twenty-four are the collections family's
+  internal seam, and `collection-boundary` — the lane that exists to count exactly that residue —
+  reads **22** and sees NONE of them, because it counts the external half. That is the one thing on
+  this list that is wrong rather than merely refused: a residue with no lane is a residue that
+  becomes invisible the moment this section stops being maintained, which is precisely what
+  `CLAUDE.md` §5 says a count is for. Giving them a lane is worth more than closing any two of them.
 
 **And the port has not yet met `RefChecks`** (§3): 47 typer errors means it has never run, so every
 missing `override`, unimplemented member and variance violation in 468 emitted files is unmeasured

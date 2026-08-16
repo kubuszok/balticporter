@@ -2503,7 +2503,7 @@ ssg.md.parser.MutableListOptions	ssg.md.parser.MutableListOptions#setParserEmula
 ssg.md.parser.Parser	options	val	c19dc8c09a4547ee
 ssg.md.parser.Parser	optionsWithSpecialLeadInHandlers	val	44f8484fbdbe6bda
 ssg.md.parser.Parser	specialLeadInHandlers	val	18840c065a3fdba7
-ssg.md.parser.Parser	ssg.md.parser.Parser	class	7a97e0c68c18e73e
+ssg.md.parser.Parser	ssg.md.parser.Parser	class	e046c7222f667027
 ssg.md.parser.Parser	ssg.md.parser.Parser#<stmt10>	stmt	09ade0a46683c7cc
 ssg.md.parser.Parser	ssg.md.parser.Parser#<stmt11>	stmt	2ac94533859970f8
 ssg.md.parser.Parser	ssg.md.parser.Parser#<stmt12>	stmt	e9c9986165aed04a
@@ -2604,7 +2604,7 @@ ssg.md.parser.Parser	ssg.md.parser.Parser#PARSER_EMULATION_PROFILE	val	19feee65f
 ssg.md.parser.Parser	ssg.md.parser.Parser#PARSE_INNER_HTML_COMMENTS	val	f6934e19659cbd9d
 ssg.md.parser.Parser	ssg.md.parser.Parser#PARSE_JEKYLL_MACROS_IN_URLS	val	484c8c0d183fa825
 ssg.md.parser.Parser	ssg.md.parser.Parser#PARSE_MULTI_LINE_IMAGE_URLS	val	ecba78382a462cd2
-ssg.md.parser.Parser	ssg.md.parser.Parser#REFERENCES	val	098378f4c7983a5f
+ssg.md.parser.Parser	ssg.md.parser.Parser#REFERENCES	val	cd85f353c63c6da8
 ssg.md.parser.Parser	ssg.md.parser.Parser#REFERENCES_KEEP	val	15ecff5446f20851
 ssg.md.parser.Parser	ssg.md.parser.Parser#REFERENCE_PARAGRAPH_PRE_PROCESSOR	val	0d45aa5600beb540
 ssg.md.parser.Parser	ssg.md.parser.Parser#SPACE_IN_LINK_ELEMENTS	val	6a91828fcdeebda4
@@ -3314,7 +3314,7 @@ ssg.md.parser.internal.BlockStartImpl	ssg.md.parser.internal.BlockStartImpl#repl
 ssg.md.parser.internal.CommonmarkInlineParser	ssg.md.parser.internal.CommonmarkInlineParser	class	62d24d2f64c579b2
 ssg.md.parser.internal.CommonmarkInlineParser	ssg.md.parser.internal.CommonmarkInlineParser#initializeDocument(Document)	def	d87c5838193f5258
 ssg.md.parser.internal.DocumentParser	blockParserFactories	val	9cd219dc5c22fd4e
-ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser	class	f88edd883aaa000b
+ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser	class	236cdee19b740b67
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#<clinit>	init	9201171f0807f803
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#<clinit>	init	049d94e8abd50c4b
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#<stmt10>	stmt	0c9cba605509871d
@@ -3331,7 +3331,7 @@ ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#<stm
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#<stmt9>	stmt	a2ecef3ef61aa4e3
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#CORE_FACTORIES_DATA_KEYS	val	0539e65dfebc0bb7
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#CORE_PARAGRAPH_PRE_PROCESSORS	val	b4b80e3d3a78aa9c
-ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#INLINE_PARSER_FACTORY	val	c7564316764fcd77
+ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#INLINE_PARSER_FACTORY	val	cab990522df76c0a
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#activateBlockParser(BlockParser)	def	658fac4cc99b1671
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#activeBlockParsers	val	b50211fda1ef7288
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#addChild(T)	def	2b3d0faf022da6f0

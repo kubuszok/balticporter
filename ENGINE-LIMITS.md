@@ -1000,14 +1000,22 @@ as EXTERNAL references (the in-program ones beside them are what could not see i
 `EmissionFieldCoverageSpec` pins `referent` as a field that moves the emitted text — flipping it, or
 changing only its arity, changes what is written.*
 
-**What this does NOT reach, stated so the next reader does not have to re-derive it**: the
-CONSTRUCTOR form. `Type::new` is emitted `(() => new T())` with the referenced constructor's arity
-ignored, so a `Function<A,T>` target over a one-argument constructor is the same defect at the arm
-one line up. It is not a measured error anywhere in the corpus — every `::new` in fifteen ports is
-nilary or an array — and the fact it needs is now ON the node, so closing it is a read rather than
-an investigation. Left open deliberately rather than shipped unmeasured: it would move emitted text
-on ports this wave was not aimed at, which `CLAUDE.md` §5 says is exactly what a widened guard may
-not do quietly.
+**AND THE CONSTRUCTOR FORM IS THE SAME DEFECT AT THE ARM ONE LINE UP — ssg-md 45 → 43.** `Type::new`
+was emitted `(() => new T())` with the referenced constructor's ARITY ignored entirely, which is a
+no-argument function at a `Function<A,T>` slot and a call javac never wrote. It looks like a third
+one-off and is the same sentence a third time: the arm was written when every `::new` in the corpus
+was nilary or an array, and stayed exact for as long as that held. Two of ssg-md's residue rows are
+it — `Parser.REFERENCES` is `new DataKey<>("REFERENCES", …, ReferenceRepository::new)` and
+`DocumentParser.INLINE_PARSER_FACTORY` is `CommonmarkInlineParser::new` — and both had been filed
+apart as `not enough arguments for constructor`, which is what the error text says and not what the
+defect is.
+
+Two things that make this a one-line follow-up rather than a second investigation: the fact was
+already ON the node (a constructor is never `static`, JLS 8.8.3, so `referentOf` answers
+`Instance(n)` for it), and the parameters go UN-ANNOTATED for the arm below's reason — which is also
+what makes the NILARY rendering byte-identical, so the 232 `::new` sites in the rest of the corpus
+do not move. Measured: **eleven lanes byte-identical again**, and the two spec cases are the
+paramful one and the nilary one beside it.
 
 ---
 

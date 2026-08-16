@@ -377,6 +377,28 @@ class CatalogAreaGSpec extends PortSuite:
     assertEmitsMatch(p, """self\$[^)]*, a0\$[^)]*\) => self\$\.compareTo\(a0\$\)""")
   }
 
+  test("JS-G43 — `T::new` takes THE CONSTRUCTOR'S parameters, not none") {
+    val p = port(
+      """import java.util.function.Function;
+        |public class A {
+        |  static class Box { Box(String s) {} }
+        |  Function<String, Box> f() { return Box::new; }
+        |}""".stripMargin)
+    assertConsults(p, JS.G(43), fired = true)
+    assertEmitsMatch(p, """\(a0\$\) => new [^()]*Box\(a0\$\)""")
+  }
+
+  test("JS-G43 — a NILARY `T::new` is still the no-argument factory it always was") {
+    val p = port(
+      """import java.util.function.Supplier;
+        |public class A {
+        |  static class Box { Box() {} }
+        |  Supplier<Box> f() { return Box::new; }
+        |}""".stripMargin)
+    assertEmits(p, "() => new ")
+    assertNotEmits(p, "a0$")
+  }
+
   test("JS-G33 — a SAM conversion is ASCRIBED where the reference becomes a function literal") {
     val p = port(
       """import java.util.function.Supplier;
