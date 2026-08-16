@@ -6951,6 +6951,64 @@ a member plan derived from a table the engine holds is the same on every port th
 
 ---
 
+### K29. A class that DEFINES a java collection calls the JDK's DEFAULT implementations through `super`, and a re-parenting removes them — **`java.util.AbstractSet` mapped: whole-compile 40 → 36 and ssg-md's TEST SET 6 → 0, at main 34 → 36. REVERTED, with the target choice shown to be a two-way bind and the real fix named**
+
+`typeMap`'s `Collection`/`AbstractCollection` block states a rule three times over
+(`Queue`/`Deque`/`ArrayDeque`, `Collection`/`AbstractCollection`, `Map`/`ConcurrentHashMap`): **A
+MAPPING MUST PRESERVE THE SOURCE LIBRARY'S OWN SUBTYPE RELATIONS.** `java.util.AbstractSet implements
+java.util.Set`, `Set` maps and `AbstractSet` does not — the fourth instance, and the first one the
+engine was already REPORTING rather than merely suffering: `collection-closure` files it as
+*`Tycon — unmapped, but java.util.AbstractCollection is mapped … so the JDK relation is lost`*.
+
+Adding `"java.util.AbstractSet" -> ("scala.collection.mutable.Set", Kind.Set)` does exactly what the
+rule predicts, on both sides:
+
+| | |
+|---|---|
+| **closed** | ssg-md's whole TEST WALL. `BitFieldSet extends java.util.AbstractSet` had kept java's parent, so K25 held its `iterator()` to the class file's `java.util.Iterator<E>` while the nested `EnumBitSetIterator` the body returns carries the `JavaIterator` shim (2 main errors), and every caller's `for (x <- bitFields)` found no `foreach` (3 test errors) beside three more at the held result. Re-parented, all eight conform: **test source set 6 → 0**, `collection-closure` 3 → 2 |
+| **opened** | **4** — `super.containsAll(c)`, `super.addAll(c)`, `super.removeAll(c)`, `super.retainAll(c)`, all inside `BitFieldSet`'s own overrides of those members, which java wrote to delegate to the JDK's generic implementation when the argument is not a `BitFieldSet` |
+| **net** | `md-test-measure` **40 → 36** (main 36, test 0); `md-measure` **34 → 36**, `collection-boundary` 22 → 25, `jdk-surface` 25 → 27. Every other port: 0 errors and port-map ROWS unchanged — only the `policy=` digest moved, which is `mappingDigest` doing its job |
+
+**The four are one defect and it is not the mapping's**: `java.util.AbstractCollection`'s default
+`containsAll`/`addAll`/`removeAll`/`retainAll` are members a definer INHERITS and calls through
+`super`, and `scala.collection.mutable.Set` has three of the four not at all and the fourth
+(`addAll`, from `Growable`) at a different formal and a different result. `jdk-surface` names two of
+them exactly — *`java.util.AbstractSet#removeAll(Collection)` — retyped to
+`scala.collection.mutable.Set`, no rewrite* — so the residue is on a lane rather than silent.
+
+**AND THE TARGET CHOICE IS A TWO-WAY BIND, which is the transferable half.** `AbstractCollection`
+never had this problem and the reason is not that it is a better mapping: its target is the SHIM,
+which carries java's own member NAMES, so `super.containsAll(c)` still resolves there. `AbstractSet`
+has no target that satisfies both constraints at once —
+
+- `mutable.Set` preserves `AbstractSet <: Set` and drops the four defaults;
+- `JavaCollection` keeps the four defaults and breaks `AbstractSet <: Set`, which is the 13-error
+  split the `Collection`/`AbstractCollection` block already measured from the other side.
+
+So this is not a table row anybody can get right, and **the real fix is a phase obligation, not a
+mapping**: where the phase RE-PARENTED a class, a `super.<member>` naming a JDK default has no parent
+implementation left, and the phase owes one — `CLAUDE.md` §1's *an obligation the engine's own
+translation created*. The recipe, which is what this entry is for:
+
+1. **`JavaCollections` gains `removeAll`/`retainAll` and `addAll` widened off `mutable.Buffer`** —
+   receiver `mutable.Iterable[A] & mutable.Growable[A] & mutable.Shrinkable[A]`, argument the same
+   `IterableOnce[?] | JavaIterable[?]` union `containsAll` already carries (the two sides of such a
+   call really are on opposite sides of the retyping), and java's own `boolean` result;
+2. **`superPlaced` is what currently declines it, correctly.** The `containsAll` arm ALREADY exists
+   and already fires; the rewrite is dropped because it would put `super` in an ARGUMENT, which
+   scala's grammar admits nowhere. The substitution that licenses it is `super` → `this`, and the
+   licence is the JDK's own code: `AbstractCollection.containsAll` is `for (o : c) if
+   (!contains(o))`, dispatching VIRTUALLY through `this`, so a helper written over `this` is what
+   `super` named. That argument has to be made PER MEMBER — it holds for these four and is not a
+   general permission to turn a `super` call into a `this` call.
+
+*Fix kind: (a). Not built: two runtime helpers plus a widened one is shared-surface change on every
+port that carries the phase, and the `super` → `this` substitution needs the per-member argument
+above written down beside a spec. Measured and reverted rather than shipped half-built, because the
+mapping alone trades two classified errors for four on the census lane `PROGRESS.md` §10.6.3 quotes.*
+
+---
+
 ## 6. Porting a test suite
 
 ### X1. Converting JUnit to MUnit is a STRUCTURAL transform, not an annotation rename
