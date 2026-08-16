@@ -4173,9 +4173,16 @@ final class CollectionsTransform(
     * A class two hops from the mapped interface is re-parented exactly as much as one hop is: the
     * `extends` clause that names `java.util.Set` may sit on an abstract base this library declares,
     * and `CLAUDE.md` §4.56's fast-path rule is that a test written for the shape in front of you
-    * silently answers for every shape added since. Fuel-bounded and cycle-safe; the `probes` and
-    * `tparams` an ancestor contributes come across UNSUBSTITUTED, which can only make the refusal
-    * decline (the loud residue) and never make it fire wrongly. */
+    * silently answers for every shape added since.
+    *
+    * TWO APPROXIMATIONS, both stated rather than hidden, and both of which only ever DECLINE. A
+    * cycle in the parent edges — which java forbids for classes and which a corrupt tree could still
+    * hand over — takes the empty arm at the repeat, and a class memoised while one was open keeps
+    * that under-approximate answer: no pin fires and no wrap is inserted, which is the honest
+    * compile error rather than a wrong translation. And the `probes`/`tparams` an ancestor
+    * contributes come across UNSUBSTITUTED, so a probe that is the ANCESTOR's type parameter
+    * resolves against nothing and the refusal declines, leaving the loud residue rather than firing
+    * wrongly. */
   private def declaredParentKinds(p: Program): Map[SymId, MintedParents] =
     given Program = p
     def tpeOf(x: Term | TypeTree): TypeRepr = x match
@@ -4235,10 +4242,11 @@ final class CollectionsTransform(
     * `JavaCollection extends JavaIterable`, so it satisfies the iterable slot too). A class the
     * phase never re-parented is `None` as well, and its seam stays the honest compile error it was.
     *
-    * WHICH kind, where a class carries two, is stated rather than left to iteration order: the enum
-    * order, which is `Seq` before `Set` before `Map`. Java permits `implements List, Set` and no
-    * library in this corpus writes one; a wrong pick there is a compile error naming the factory,
-    * never a silent wrap. */
+    * WHICH kind, where a class carries two, is STATED rather than left to a `Set`'s iteration order
+    * — which would publish a different emission per run for one fact, the one thing a baseline
+    * cannot survive (`CLAUDE.md` §5). It is [[Kind]]'s own declaration order, `Seq` then `Map` then
+    * `Set`. Java permits `implements List, Set` and no library in this corpus writes one; a wrong
+    * pick there is a compile error naming the factory, never a silent wrap. */
   private def mintedSourceKind(head: SymId, wants: Option[SymId]): Option[Kind] =
     parentClash.get(head).filterNot { mp =>
       (wants.contains(javaIterableSym) &&
