@@ -3417,7 +3417,7 @@ ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#setN
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#setNewIndex(int)	def	15c13ceb39becc57
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#trackDocumentLines	val	39000b69392df7b5
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser$ParagraphPreProcessorCache	class	8490c762e5b14a35
-ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser	class	c4cbb30bbc1beeb9
+ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser	class	e79efd552e1a7abe
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#<clinit>	init	626747f47e40c6f8
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#<init>()	ctor	e0a5e9ac1f1b7bcf
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#<stmt1>	stmt	c6b337462048a1dc
@@ -3450,9 +3450,11 @@ ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#myHt
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#myOpenTags	val	0789b6beebabcf00
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#openTag(String)	def	5aee7340c5ad65a8
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#parseHtmlChunk(CharSequence,boolean,boolean,boolean)	def	78d4dc4b4f9ffe6b
-ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch	class	88b92e99bfed8fcf
-ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch#<stmt1>	stmt	46ba635e1bcd3201
-ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch#<stmt2>	stmt	dc20b476f25938b7
+ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch	class	777f78a3146e9dc7
+ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch#<stmt1>	stmt	9fa5ba74f9c1cef5
+ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch#<stmt2>	stmt	21667790909d2a35
+ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch#close	val	5b423cac50a277c8
+ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch#open	val	6a024061feaa47ab
 ssg.md.parser.internal.InlineParserImpl	ssg.md.parser.internal.InlineParserImpl	class	300dc09c9f53bb3a
 ssg.md.parser.internal.InlineParserImpl	ssg.md.parser.internal.InlineParserImpl#<stmt1>	stmt	ae07c559162a6faf
 ssg.md.parser.internal.InlineParserImpl	ssg.md.parser.internal.InlineParserImpl#<stmt2>	stmt	d86d3afed4fe0f58

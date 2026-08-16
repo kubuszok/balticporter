@@ -2794,7 +2794,7 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2 and **89** after wave 3 (coded 89 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **32** now — 93 % of the port compiles clean |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2 and **81** after wave 3 (coded 81 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **31** now — 93 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
@@ -2814,7 +2814,7 @@ zero in the last row is a compile-time one. On liqp the compile said nothing abo
 first-run failures; this library is a parser, so the population §4.4 governs here is larger, not
 smaller.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 89 after wave 3**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3**
 
 Every error is `EngineGap`. Three waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2848,13 +2848,13 @@ above sums to more than the family sizes the first census printed.
 | before → after | family | where |
 |---|---|---|
 | 106 → 89 | **java declares `get`, `contains` and `remove` over `Object` ON PURPOSE** — the lookup is BY VALUE, so a probe of an unrelated type is meant to MISS. The phase already routed those three MAP members through `Any`-keyed helpers when the RECEIVER was wildcard-applied; the other face of the same seam is the ARGUMENT — a class implementing `java.util.Map<String,T>` DECLARING `remove(Object)`, and the frontend's G14 coercion, which are one shape. NOT a cast to the element type: `asInstanceOf[String]` throws where java answers `null` | K24 |
+| 89 → 81 | **an enum's promoted constructor parameter SUPERSEDING a field it is not** — read off the NAME, so `HtmlMatch(String open)` dropped `public final Pattern open` and the enum shipped the PARAMETER's type under the FIELD's name. Java's two variable scopes make that shape ordinary: the constructor exists to COMPUTE the field from the parameter. Decided from the emitted TYPE, in ONE derivation the drop, the rename and the self-assignment elision all read | T11 |
 
-**What is left, by mechanism** (the census re-read at 89):
+**What is left, by mechanism** (the census re-read at 81):
 
 | n | family | §1 |
 |---:|---|---|
 | 19 | **a RAW generic at an INHERITED formal, and TWO defects at one call.** `AstActionHandler<C,N,A,H>.addActionHandlers(H[]...)` reached from `AttributeProviderAdapter`, whose own parameter is java's raw `AttributeProvidingHandler[]`. Java PACKS an `H[]` into the `H[][]` slot (it is assignable to the component and not to the array) and the port forwards it, so the arity is wrong BEFORE the element type is; and the element is `[?]` against the parent's substituted `[Node]`, which java admitted by unchecked conversion at a raw type. `ParentSubst` (G25) is doing its half correctly — the `Required:` side reads `[Node]` — so what is left is the vararg packing and the raw-to-parameterised cast | **(a)** — the G-family (`G1`/`G2`/`G11`) at an inherited formal, plus §4.4's vararg-packing row read at a callee the port DECLARES |
-| 8 | **an enum's PROMOTED CONSTRUCTOR PARAMETER superseding a FIELD it is not** — `HtmlMatch(String open, …)` beside `public final Pattern open`, whose constructor COMPUTES the field (`this.open = Pattern.compile(open, …)`). `enumParts` drops a same-named `ValDef` on the NAME alone, so the enum shipped `var open: String` where every reader wanted a `Pattern`. The first census read these as a `java.util.regex` question; they are §4.56's own failure at a rename, and `java.util.regex` is not involved in any of them | **(a)** |
 | 7 | **`map.keySet()` at a DECLARED `mutable.Set` return** — java's `keySet` is a write-through view and scala's `mutable.Map.keySet` is typed `scala.collection.Set`, which the phase already encodes for a `val` initialised from it (`transformValDef`) and for a coercion SOURCE (`isKeySetView` refuses to wrap). A `return` is the third position and nothing answers it; `collection-boundary` names one of them (`DataSet#getKeys`). Closing it wants a live write-through `mutable.Set` view in the runtime | **(a)** |
 | 5 | **a retyped formal at a method that OVERRIDES a class file** — `BitFieldSet<E> extends java.util.AbstractSet<E>` had `containsAll`/`addAll`/`removeAll`/`retainAll` retyped to `JavaCollection[?]` while the parent's formal is `java.util.Collection[?]`, so `super.containsAll(c)` cannot compile and the member overrides nothing. §4.56's "an unowned symbol's SIGNATURE is a fact about a class file" read at an OVERRIDE. `collection-boundary` counts all five | **(a)** |
 | 5 | `MutableDataHolder.set` overload resolution — `DataKey<Collection<Extension>>` retypes its type ARGUMENT to the SHIM while the value is an `ArrayBuffer`, so no `T` unifies. The `Collection`-shim-against-`Buffer` seam inside the program, where `collection-boundary` (which counts EXTERNAL callees) cannot see it | **(a)** |

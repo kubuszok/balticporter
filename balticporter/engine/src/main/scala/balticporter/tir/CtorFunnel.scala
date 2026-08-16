@@ -1473,6 +1473,46 @@ object CtorFunnel:
       case one :: Nil => Some(one)
       case _          => scala.None
 
+  /** the enum's own FIELDS that [[enumPrimaryCtor]]'s promoted parameters SUPERSEDE — matched on the
+    * name AND THE TYPE, because a name is not a structural fact about anything (`CLAUDE.md` §4.56).
+    *
+    * The emitter renders every primary parameter as a `var` member of the emitted enum, so a body
+    * `ValDef` of the same name would be a second member under one name and cannot be emitted. Where
+    * the parameter really IS the field — `TextureFilter(int glEnum)` beside `final int glEnum`, whose
+    * whole constructor is the self-assignment `this.glEnum = glEnum` — dropping the field is exact,
+    * and the `var` carries its value.
+    *
+    * Read on the NAME ALONE it is §4.55's rule failing in the other direction: java has TWO variable
+    * scopes, so a constructor parameter routinely names a field it is not, and the constructor's job
+    * is to COMPUTE one from the other. `HtmlMatch(String open, …)` beside `public final Pattern open`
+    * is the shape — `this.open = Pattern.compile(open, …)` is ordinary java, and java resolves `open`
+    * to the parameter and `this.open` to the field. Dropped, the enum shipped `var open: String`
+    * where every reader wanted a `Pattern`: `value pattern is not a member of String` at each read,
+    * and a `Pattern` assigned to a `String` var at the constructor. Eight errors on one enum, and no
+    * instrument but the compile could see it — the enum's members are all still there and all still
+    * named what java named them.
+    *
+    * THE TYPE is what tells the two apart and it is exact rather than heuristic: a parameter that IS
+    * the field is emitted AS that field, so any difference in the rendered type means the emitted
+    * `var` cannot stand for it. Where they differ the field is kept, the parameter is a collidee like
+    * any other and `TirEmitter.funnelParamRenames` moves it — which is why that pass and the emitter
+    * read THIS function rather than each computing a name test (§4.56 again, and it settles a second
+    * disagreement for free: the rename pass used to read `cd.body`'s FIRST constructor where the
+    * emitter reads the ROOT, which is `T11.5`'s divergence one level down).
+    *
+    * Answers a set of FIELD symbols, so a caller holding a `ValDef` asks about the declaration it
+    * has rather than about a string it would have to re-derive. */
+  def enumSupersededFields(program: Program, cd: Tree.ClassDef): Set[SymId] =
+    val params = enumPrimaryCtor(program, cd).map(valueParams(program, _)).getOrElse(Nil)
+    if params.isEmpty then Set.empty
+    else
+      def nameOf(id: SymId): Option[String] = program.symbolOf(id).map(_.name)
+      val byName: Map[String, TypeRepr] =
+        params.flatMap(v => nameOf(v.symbol).map(_ -> v.tpt.tpe)).toMap
+      cd.body.collect {
+        case v: Tree.ValDef if nameOf(v.symbol).flatMap(byName.get).contains(v.tpt.tpe) => v.symbol
+      }.toSet
+
   /** the arguments a CONSTANT passes to [[enumPrimaryCtor]] — java's own, where it named the root,
     * and the delegation's where it named an overload that delegates to it.
     *

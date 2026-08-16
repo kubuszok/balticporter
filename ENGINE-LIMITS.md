@@ -1832,7 +1832,7 @@ the whole parameter list.
 
 *Fix kind: (a) engine. Built; `EnumCtorBodySpec`.*
 
-### T11. A PROMOTED enum constructor parameter IS a member — `name` collides with `Enum.name()`
+### T11. A PROMOTED enum constructor parameter IS a member — `name` collides with `Enum.name()`, a DECLARED member collides with it, and "supersedes" was a NAME test — **ssg-md 89 → 81 for the third half**
 
 CLOSED. The synthesised `Enum.name()` was already skipped when the enum declared a `name` member,
 and the guard read only the BODY. `CLAUDE.md` §4.55's rule applies here exactly as it does to an
@@ -1879,7 +1879,48 @@ note in the emitted file, because a note is `AtDeclaration` and a constructor pa
 declaration line — true of the plan-based arm's parameters (`templateParser$p`) since they shipped,
 and invisible to `porter-notes`, which does not resolve these subjects.
 
-*Fix kind: (a) engine. Built; `EnumCtorBodySpec`, both directions.*
+**AND THE THIRD HALF — "SUPERSEDES" WAS A NAME TEST, and the field it dropped was a different member.
+ssg-md 89 → 81.** Both halves above rest on one exclusion: a body FIELD the parameter supersedes is
+neither a collidee nor emitted, because "the `var` parameter IS that field". That is true of
+`TextureFilter(int glEnum)` beside `public int glEnum`, whose whole constructor is `this.glEnum =
+glEnum` — and it was read off the NAME, which is `CLAUDE.md` §4.56's own failure at a rename. Java has
+TWO variable scopes, so a constructor parameter routinely names a field it is NOT, precisely so the
+constructor can COMPUTE one from the other:
+
+```java
+enum HtmlMatch {
+    SCRIPT("<(script)(?:\\s|>|$)", "</script>", true), …;
+    final public Pattern open;                       // the FIELD
+    HtmlMatch(String open, String close, boolean ci) // the PARAMETER — a different type
+    { this.open = open == null ? null : Pattern.compile(open, …); }
+}
+```
+
+Java resolves `open` to the parameter and `this.open` to the field; both members exist. Matched on the
+name, the field was dropped at BOTH readers and the enum shipped `var open: java.lang.String` under
+the field's name — `value pattern is not a member of String` at every read, and a `Pattern` assigned
+to a `String` var at the constructor. **Eight errors on one enum, and the first census mis-attributed
+every one of them to `java.util.regex`**, which is not involved in any of them.
+
+**The TYPE is what tells the two apart, and it is exact rather than heuristic**: a parameter that IS
+the field is emitted AS that field, so any difference in the rendered type means the emitted `var`
+cannot stand for it. The widening case is the one that shows it is not a tie-break — `long bits`
+assigned from an `int bits` parameter type-checks in java and is still two members, and dropping the
+field there would have carried an `Int` where every reader wanted a `Long`. Three things move
+together and are ONE derivation (`CtorFunnel.enumSupersededFields`, §4.56): the field survives, the
+parameter becomes an ordinary collidee that `funnelParamRenames` moves to `$p`, and the
+self-assignment drop follows the SAME set — keyed on the parameter names it would leave a surviving
+field at its default, silently, which is T10's defect back again.
+
+Two things that came free: the rename pass read `cd.body`'s FIRST constructor where the emitter reads
+the ROOT, which is T11.5's divergence one level down and is now one call; and `porter-notes` stays 0
+because the rename already had a `decisions.tsv` row.
+
+**ssg-md 89 → 81**, 6 member digests (one enum), 22 findings lines whose only movement is a catalog
+running total counting two more `ValDef`s, every count flat, 0 members moved on any other port.
+
+*Fix kind: (a) engine. `EnumCtorParamSupersedesSpec` — the different-type positive, the same-type
+negative that keeps every corpus enum byte-for-byte, and the widening negative.*
 
 ### T11.5 An OVERLOADED enum constructor: the primary is java's ROOT, and `ctors.head` was not a refusal but a WRONG ANSWER — **2 errors + a silent default, 177 → 175. CLOSED for the expressible shape, COUNTED for the rest**
 

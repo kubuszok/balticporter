@@ -1163,6 +1163,22 @@ cannot produce that shape at all because a java method always has a parameter cl
 form is §4.56's, read at a rename: *a pass may only conclude "these two are different members" from
 a structural fact, and two names being equal is not one.*
 
+**…and the SAME sentence governs the opposite conclusion, which is where a PROMOTION drops
+something.** A pass that promotes may also decide two declarations ARE one member and emit only the
+promoted one — an enum's constructor parameter SUPERSEDING a same-named field is the shape, and it is
+right exactly when the constructor is the self-assignment `this.f = f`. Read off the name it is the
+same non-fact in the other direction, and java's TWO variable scopes make the counter-example
+ordinary rather than exotic: a constructor parameter routinely names a field it is not, *precisely so
+that the constructor can compute one from the other* (`HtmlMatch(String open)` beside
+`final Pattern open`, whose body is `this.open = Pattern.compile(open, …)`). The dropped member's
+type is then emitted under the surviving name, so every reader of it fails at a type nobody wrote.
+Decide it from the emitted TYPE, which is exact rather than a tie-break — a parameter that IS the
+field is emitted AS that field — and note that a WIDENING (`long` field, `int` parameter) type-checks
+in java and is still two members. Whatever decides it, the SAME derivation must reach every pass that
+acts on it: the drop, the rename that keeps the survivor nameable, and the self-assignment elision
+are three consequences of one question, and asked separately two of them will answer it differently
+(`ENGINE-LIMITS.md` T11's third half).
+
 And count what the constructor funnel PROMOTES — the chosen constructor's parameters *and* its
 top-level locals. Neither is in the class body, both become members, and a Java constructor local
 becoming a Scala member is exactly what a subclass then collides with.

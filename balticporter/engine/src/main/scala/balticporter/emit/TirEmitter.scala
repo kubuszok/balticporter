@@ -1880,11 +1880,23 @@ final class TirEmitter(
     val ctorParams = primaryCtor.map(CtorFunnel.valueParams(program, _)).getOrElse(Nil)
     checkClause(cd, rendered = false, form = "enum")
     val paramNames = ctorParams.map(v => sym(v.symbol).name).toSet
+    // WHICH field a parameter supersedes is `CtorFunnel`'s to answer, matched on the name AND the
+    // TYPE: java's two variable scopes let a constructor parameter name a field it is not and then
+    // COMPUTE that field from it, and a name test drops the field and emits the parameter's type in
+    // its place. `funnelParamRenames` reads the same function, so the field that survives here is
+    // exactly the one the parameter was renamed out of the way of (§4.56).
+    val superseded = CtorFunnel.enumSupersededFields(program, cd)
     val instance   = instance0.filterNot {
       case d: Tree.DefDef => sym(d.symbol).name == "<init>"
-      case v: Tree.ValDef => paramNames(sym(v.symbol).name)
+      case v: Tree.ValDef => superseded(v.symbol)
       case _              => false
     }
+    // …and the self-assignment drop follows the SAME set, not `paramNames`. `this.f = f` is
+    // redundant only because the promotion performed it; where the field survives, the assignment is
+    // what fills it and dropping it would leave the field at its default, silently.
+    val supersededNames = instance0.collect {
+      case v: Tree.ValDef if superseded(v.symbol) => sym(v.symbol).name
+    }.toSet
     // …and it also has a BODY, which RUNS. Keeping only the parameters left every field the
     // constructor assigned at its declared default, silently: libGDX's `Cubemap.CubemapSide` builds
     // `up` and `direction` from six float parameters, so all six sides shipped with `up == null`
@@ -1908,7 +1920,7 @@ final class TirEmitter(
         // already performs it — `var glEnum` IS the parameter. Re-emitting it is a self-assignment:
         // correct, and pure churn in four of libGDX's five enums. Dropped only in that exact shape,
         // so an assignment that computes anything (`this.up = new Vector3(upX, upY, upZ)`) stays.
-        case a: Tree.Assign                                  => selfAssignedParam(a).exists(paramNames)
+        case a: Tree.Assign                                  => selfAssignedParam(a).exists(supersededNames)
         case _                                               => false
       }
     val eprimary = if ctorParams.isEmpty then "" else s"(${ctorParams.map(v => s"var ${esc(sym(v.symbol).name)}: ${tpe(v.tpt.tpe)}").mkString(", ")})"
@@ -5388,16 +5400,23 @@ object TirEmitter:
       // the corpus for nothing. Two names are therefore NOT collidees:
       //
       //   - the parameter's own name (it is what is being placed, not something already there);
-      //   - a body FIELD the parameter SUPERSEDES. `enumDef` drops a same-named `ValDef` precisely
+      //   - a body FIELD the parameter SUPERSEDES. `enumDef` drops a same-named ValDef precisely
       //     because the `var` parameter IS that field, so it is never emitted and cannot clash —
       //     and renaming the parameter would UN-supersede it, emitting both and breaking the
       //     self-assignment drop that goes with it (libGDX's `TextureFilter(glEnum)`).
+      //
+      // …AND "SUPERSEDES" IS A (name, TYPE) QUESTION, asked of `CtorFunnel` so this pass and the
+      // emitter cannot disagree about which field survives. Read on the name alone, a parameter java
+      // declared only to COMPUTE a same-named field of a DIFFERENT type — `HtmlMatch(String open)`
+      // against `final Pattern open` — reads as superseding it, so the field is dropped here AND at
+      // the emitter and the enum ships the parameter's type under the field's name. The route is
+      // `enumPrimaryCtor` for the same reason: reading `cd.body`'s FIRST constructor is `T11.5`'s
+      // wrong answer at an overloaded enum, and one derivation cannot hold two.
       val enumParams =
         if !p.symbolOf(cd.symbol).exists(_.flags.isEnum) then Nil
-        else cd.body.collectFirst { case d: Tree.DefDef if nm(d.symbol) == "<init>" => d }
-               .map(CtorFunnel.valueParams(p, _)).getOrElse(Nil)
+        else CtorFunnel.enumPrimaryCtor(p, cd).map(CtorFunnel.valueParams(p, _)).getOrElse(Nil)
       if enumParams.nonEmpty then
-        val own = enumParams.map(v => nm(v.symbol)).toSet
+        val superseded = CtorFunnel.enumSupersededFields(p, cd)
         // built from the PARTS rather than by subtracting from `visibleNames`, because the two
         // exclusions are not the same set: a name may be BOTH a superseded field and a declared
         // method (`isStyled` the parameter, `styled` the field, `isStyled()` the method), and
@@ -5406,7 +5425,7 @@ object TirEmitter:
           cd.body.collect {
             case d: Tree.DefDef if nm(d.symbol) != "<init>" => eff(d.symbol)
             case c: Tree.ClassDef                           => eff(c.symbol)
-            case v: Tree.ValDef if !own(nm(v.symbol))       => eff(v.symbol)
+            case v: Tree.ValDef if !superseded(v.symbol)    => eff(v.symbol)
           } ++ parentSyms(cd).flatMap(declOf.get).flatMap(visibleNames(_)))
         enumParams.foreach { v =>
           val n = nm(v.symbol)
