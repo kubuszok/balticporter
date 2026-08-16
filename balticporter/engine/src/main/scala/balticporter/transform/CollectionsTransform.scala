@@ -428,9 +428,10 @@ final class CollectionsTransform(
   /** `JavaCollections.fromJava` / `toJava` — the EXTERNAL seam's two directions. */
   private var fromJavaSym, toJavaSym, toStreamSym: SymId = SymId.None
 
-  /** java's three `Object`-keyed map members, for a receiver whose type arguments are WILDCARDS —
-    * see [[wildcardMapCall]]. */
+  /** java's three `Object`-keyed map members, and the two `Object`-keyed collection ones, for a
+    * receiver or an ARGUMENT at which the element type cannot be named — see [[objectProbe]]. */
   private var mapGetSym, mapContainsKeySym, mapRemoveSym: SymId = SymId.None
+  private var setContainsSym, setRemoveSym: SymId               = SymId.None
 
   /** the java symbols this run's mapping sends to a target that CANNOT BE A PARENT — see
     * [[restoreUninheritableParents]]. EMPTY unless the program actually names one, which makes the
@@ -442,6 +443,10 @@ final class CollectionsTransform(
   private var unsupportedOpTpe: TypeRepr = TypeRepr.NoType
   private var unsupportedOpSym: SymId    = SymId.None
   private var stringTpe: TypeRepr        = TypeRepr.NoType
+
+  /** `java.lang.Object` as THIS run's symbol — the top of java's reference hierarchy, and the one
+    * type an argument can carry that conforms to no scala element type at all ([[objectProbe]]). */
+  private var objectSym: SymId = SymId.None
 
   /** is this symbol one the PROGRAM declares? Structural (`Program.owned`), never a name test
     * (§4.56), and computed once per run because the external-seam arms ask it per call. */
@@ -680,6 +685,8 @@ final class CollectionsTransform(
     mapGetSym         = staticSyms.getOrElse("mapGet", SymId.None)
     mapContainsKeySym = staticSyms.getOrElse("mapContainsKey", SymId.None)
     mapRemoveSym      = staticSyms.getOrElse("mapRemove", SymId.None)
+    setContainsSym    = staticSyms.getOrElse("setContains", SymId.None)
+    setRemoveSym      = staticSyms.getOrElse("setRemove", SymId.None)
     // …the refusal a RETAINED PARENT's own contract prescribes (`UnsupportedOnTarget`). Resolved
     // from the program where it already holds the symbol and minted only where it does not: two
     // symbols for one FQN print the same text and compare unequal, which is how a later reader ends
@@ -689,6 +696,7 @@ final class CollectionsTransform(
     unsupportedOpSym = named(CollectionsTransform.UnsupportedOperationFqn, "UnsupportedOperationException")
     unsupportedOpTpe = TypeRepr.TypeRef(TypeRepr.NoPrefix, unsupportedOpSym)
     stringTpe        = TypeRepr.TypeRef(TypeRepr.NoPrefix, named("java.lang.String", "String"))
+    objectSym        = named("java.lang.Object", "Object")
     externalSeams.clear()
     implicitPending.clear()
     bridgedSinkCallees.clear()
@@ -3344,8 +3352,11 @@ final class CollectionsTransform(
       case (n, Nil, _) if parenless(n)          => Some(Tree.Select(recv, m, t.tpe, t.origin)) // drop `()`
       case ("get", List(i), Kind.Seq)           => Some(Tree.Apply(recv, List(i), m, t.tpe, t.origin)) // xs(i)
       // A WILDCARD-typed map is java's three `Object`-keyed members and nothing else — see
-      // [[wildcardMapCall]] for why the ordinary rewrite cannot be used there.
-      case (n, List(key), Kind.Map) if wildcardMapCall(n, recv) =>
+      // [[wildcardMapCall]] for why the ordinary rewrite cannot be used there; and the SAME three
+      // helpers answer the other half of that seam, an argument still carrying java's `Object`
+      // PROBE at a receiver whose key type this phase moved ([[objectProbe]]). `keyArg` runs FIRST,
+      // so a coercion it can strip is stripped and never reaches the helper.
+      case (n, List(key), Kind.Map) if wildcardMapCall(n, recv) || probeMapCall(n, keyArg(key, recv), recv) =>
         Some(staticCall(wildcardMapSym(n), List(recv, keyArg(key, recv)), t, so))
       case ("get", List(key), Kind.Map)         => Some(call(recv, getOrElseSym, List(keyArg(key, recv), dflt(nullOf(so), recv, so)), t, so))
       case ("getOrDefault", List(key, d), _)    => Some(call(recv, getOrElseSym, List(keyArg(key, recv), dflt(d, recv, so)), t, so))
@@ -3485,6 +3496,15 @@ final class CollectionsTransform(
         Some(Tree.Apply(Tree.Ident(sym("addAll"), TypeRepr.NoType, so), List(recv, c),
                         sym("addAll"), t.tpe, t.origin))
       case ("addAll" | "putAll", List(c), _)    => Some(infix(recv, opPlusPlusEq, List(c), t, so))// xs ++= c
+      // …the SET half of [[objectProbe]]'s seam. `Collection.contains` needs no rewrite at all at an
+      // ordinary argument — scala's `Set.contains` is java's own hash lookup, asking the PROBE's
+      // `equals` exactly as `HashMap.getNode` does — so this arm exists solely for the widened
+      // probe, and declines everywhere else. `Set.remove` takes the helper rather than `-=` for the
+      // same reason PLUS java's `boolean` result, which `-=` cannot answer.
+      case ("contains", List(x), Kind.Set) if setContainsSym != SymId.None && probeSetCall(x, recv) =>
+        Some(staticCall(setContainsSym, List(recv, x), t, so))
+      case ("remove", List(x), Kind.Set) if setRemoveSym != SymId.None && probeSetCall(x, recv) =>
+        Some(staticCall(setRemoveSym, List(recv, x), t, so))
       case ("remove", List(x), Kind.Set)        => Some(infix(recv, opMinusEq, List(x), t, so)) // xs -= x
       case ("containsKey", List(key), Kind.Map) => Some(call(recv, containsSym, List(keyArg(key, recv)), t, so))
       // …and a STACK is a `List` for everything the five LIFO arms above did not take, because java
@@ -3671,6 +3691,43 @@ final class CollectionsTransform(
         case TypeRepr.AppliedType(_, args) => args.exists(_.isInstanceOf[TypeRepr.TypeBounds])
         case _                             => false)
 
+  /** …and the SAME three members reached with java's UNTYPED PROBE still on the argument.
+    *
+    * [[wildcardMapCall]] is about the RECEIVER: the key type is a capture nobody can name. This is
+    * about the ARGUMENT, and it is the other half of one seam — java declares `get`, `containsKey`,
+    * `remove`, `Collection.contains` and `Set.remove` over `Object` ON PURPOSE, because the lookup
+    * is BY VALUE and a probe of an unrelated type is meant to miss rather than to fail to compile.
+    * The retyping moves the receiver to a scala collection whose members are typed at `K`/`A`, and
+    * the probe then does not fit the slot it fitted in java. Two ways it arrives, one shape:
+    *
+    *   - a class that IMPLEMENTS `java.util.Map<String, T>` must declare `remove(Object o)` and
+    *     delegate — the parameter is java's own and there is nothing to strip;
+    *   - the frontend's erasure coercion (`typeParamToObject`, ENGINE-LIMITS G14) widened a
+    *     type-parameter or wildcard-read key to `Object` because THAT is what java's formal said.
+    *     The mint is right for a call to a java `Map`; what invalidated it is this phase moving the
+    *     receiver, which is `keyArg`'s own argument at the coercion it cannot strip.
+    *
+    * The test is STRUCTURAL and asks only the one question a phase can answer with no conformance
+    * oracle (CLAUDE.md §4.56): `java.lang.Object` is the TOP of java's reference hierarchy, so an
+    * argument at that type conforms to a scala element type only when the element type is `Object`
+    * too. That is a fact about the two type systems, not a guess about this program — and it is
+    * asked of THIS RUN's interned symbol rather than of a name.
+    *
+    * NOT a cast to the element type, which is the translation that compiles and means something
+    * else: `o.asInstanceOf[String]` inserts a `checkcast` and throws where java's `map.get(o)`
+    * answers `null`. The helper widens the PROBE POSITION, which is erased, so java's own lookup
+    * runs (CLAUDE.md §4.4). */
+  private def objectProbe(arg: Term, want: Option[TypeRepr]): Boolean =
+    objectSym != SymId.None && headSym(arg.tpe).contains(objectSym) &&
+      want.exists(w => w != TypeRepr.NoType && !headSym(w).contains(objectSym))
+
+  private def probeMapCall(name: String, key: Term, recv: Term)(using Program): Boolean =
+    CollectionsTransform.WildcardMapMembers.contains(name) && wildcardMapSym(name) != SymId.None &&
+      objectProbe(key, keyType(actualOf(recv)._1))
+
+  private def probeSetCall(x: Term, recv: Term)(using Program): Boolean =
+    objectProbe(x, elemType(actualOf(recv)._1))
+
   private def wildcardMapSym(name: String): SymId = name match
     case "get"         => mapGetSym
     case "containsKey" => mapContainsKeySym
@@ -3696,6 +3753,11 @@ final class CollectionsTransform(
   private def keyType(t: TypeRepr): Option[TypeRepr] = t match
     case TypeRepr.AppliedType(_, List(k, _)) => Some(k)
     case _                                   => None
+
+  /** a one-argument collection's ELEMENT type — [[keyType]]'s counterpart at a `Set`/`Buffer`. */
+  private def elemType(t: TypeRepr): Option[TypeRepr] = t match
+    case TypeRepr.AppliedType(_, List(e)) => Some(e)
+    case _                                => None
 
   /** A key argument, with the coercion JAVA's formal required stripped when the SCALA member's
     * formal is exactly what lies beneath it.
@@ -4246,6 +4308,7 @@ object CollectionsTransform:
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
          "toSet", "toMap", "fromJava", "toJava", "toStream", "mapGet", "mapContainsKey", "mapRemove",
+         "setContains", "setRemove",
          "optionalOrElse")
 
   // -------------------------------------------------------------------------------------------
@@ -4345,7 +4408,12 @@ object CollectionsTransform:
                                "sort", "removeIf", "containsAll", "ensureCapacity"),
     Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values", "putIfAbsent",
                                "computeIfAbsent", "containsValue"),
-    Kind.Set.toString   -> Set("remove", "toArray", "removeIf", "containsAll"),
+    // …`contains` is here because the phase ANSWERS for it at a `Set`: at a widened `Object` probe
+    // it rewrites to `setContains`, and at every other argument scala's own `Set.contains` IS java's
+    // lookup, asking the PROBE's `equals` the way `HashMap.getNode` does. It is deliberately NOT on
+    // `Kind.Seq`, where `Buffer.contains` asks the STORED element's — a hole `jdk-surface` should go
+    // on reporting.
+    Kind.Set.toString   -> Set("remove", "contains", "toArray", "removeIf", "containsAll"),
     Kind.Entry.toString -> Set("getKey", "getValue"),
     // a Stack's own five, PLUS everything `Kind.Seq` covers — the re-entry arm at the foot of
     // `rewrite` really does answer those for a stack receiver, so listing them here is the table

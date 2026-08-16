@@ -598,7 +598,10 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // java's three `Object`-keyed map members — what a `Map<?, ?>` receiver needs
+  // java's UNTYPED PROBE — the members declared over `Object` rather than over the element type.
+  // Two receivers need them: a map whose type arguments are WILDCARDS (`K` is an unnameable
+  // capture), and any retyped collection reached with java's own `Object` still on the argument —
+  // an implementing class's `remove(Object o)`, or the frontend's G14 erasure coercion.
   // -------------------------------------------------------------------------------------------
 
   test("mapGet is java's `get(Object)`: the value, or NULL when absent") {
@@ -634,6 +637,35 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(JavaCollections.mapGet(m, "a"), null)
     m.put("a", "x")
     assertEquals(JavaCollections.mapGet(m, "a"), "x")
+  }
+
+  test("NO `checkcast` on the probe — the whole reason this is a helper and not a cast") {
+    // `o.asInstanceOf[String]` is the translation that COMPILES and means something else: it throws
+    // `ClassCastException` where java's `Map<String, ?>.get(anInteger)` answers `null`. The widening
+    // here is of the PROBE POSITION only and is erased, so java's own lookup runs and misses.
+    // CLAUDE.md §4.4 — a green compile says nothing about this cell.
+    val m = scala.collection.mutable.Map("a" -> "x")
+    assertEquals(JavaCollections.mapGet(m, new Object), null)
+    assertEquals(JavaCollections.mapRemove(m, new Object), null)
+    assertEquals(m.toMap, Map("a" -> "x"))
+  }
+
+  test("setContains is java's `Set.contains(Object)`, in java's own equality DIRECTION") {
+    val s = scala.collection.mutable.Set("a", "b")
+    assert(JavaCollections.setContains(s, "a"))
+    assert(!JavaCollections.setContains(s, "c"))
+    // a probe of an unrelated type MISSES rather than throwing — java's contract, and the cell a
+    // narrowing cast would have got wrong.
+    assert(!JavaCollections.setContains(s, java.lang.Integer.valueOf(1)))
+    assert(!JavaCollections.setContains(s, null))
+  }
+
+  test("setRemove answers java's BOOLEAN — which `-=`, answering the receiver, cannot") {
+    val s = scala.collection.mutable.Set("a", "b")
+    assert(JavaCollections.setRemove(s, "a"))
+    assert(!JavaCollections.setRemove(s, "a")) // …false the second time, as java's is
+    assert(!JavaCollections.setRemove(s, java.lang.Integer.valueOf(1)))
+    assertEquals(s.toSet, Set("b"))
   }
 
   test("into builds the FACTORY's collection and fills it — the target comes from the collector") {

@@ -553,22 +553,37 @@ object JavaCollections:
   def fromJava[A](i: java.lang.Iterable[A]): JavaIterable[A] = JavaIterable.from(i.asScala)
 
   // -------------------------------------------------------------------------------------------
-  // A map whose type arguments are WILDCARDS — java's three `Object`-keyed members
+  // An UNTYPED PROBE — the members java declares over `Object` rather than over the element type
   //
-  // Java declares `get`, `containsKey` and `remove` over `Object`, so `Map<?, ?>` supports all
-  // three: no capture is involved on either side. Scala's `Map[K, V]` declares the same three over
-  // `K`, and at a wildcard receiver `K` is an unnameable capture — `Found: String / Required:
-  // map.K` — while the `null` default `get` needs is at the equally unnameable `V`, which renders
-  // as a bare `?` in a TERM position and is not even syntax (`null.asInstanceOf[?]`).
+  // `Map.get`, `Map.containsKey`, `Map.remove`, `Collection.contains` and `Set.remove` all take an
+  // `Object`. That is not an accident of erasure, it is the contract: java looks the argument up BY
+  // VALUE, and a probe of an unrelated type simply misses. Scala's `Map[K, V]` and `Set[A]` declare
+  // the same members over `K`/`A`, so once a retyping has moved the receiver the probe no longer
+  // fits the slot, and there are TWO ways it arrives (see `CollectionsTransform.objectProbe`):
   //
-  // These three take the key as `Any` and never name `K`, which is java's own contract; and each
-  // supplies its own `null` INSIDE, where `V` is an ordinary type parameter. The cast is a widening
-  // of the KEY position only and is erased, so no value is reinterpreted: the lookup is the same
-  // `hashCode`/`equals` one java performs, and a key of the wrong type simply misses, which is
-  // exactly what java's `Object`-keyed lookup does.
+  //   - the receiver's type ARGUMENTS are wildcards, so `K` is an unnameable capture — `Found:
+  //     String / Required: map.K` — and for `get` the `null` default sits at the equally unnameable
+  //     `V`, which renders as a bare `?` in a TERM position and is not even syntax;
+  //   - the ARGUMENT is java's own `Object`: a class implementing `java.util.Map<String, T>` must
+  //     declare `remove(Object)` and delegate, and the frontend's erasure coercion (G14) widens a
+  //     type-parameter or wildcard-read key the same way at any call to one of these members.
   //
-  // Not `put` or `getOrDefault`: java REJECTS both on a `Map<?, ?>` too, because each needs a value
-  // at the capture. There is nothing to translate and nothing to bridge.
+  // Every member here takes the probe as `Any` and never names the element type, which is java's
+  // own contract; `get`/`remove` supply their own `null` INSIDE, where `V` is an ordinary type
+  // parameter. The cast is a widening of the PROBE POSITION only and is erased, so no value is
+  // reinterpreted and NO `checkcast` is inserted — which is the whole point: narrowing the probe to
+  // `K` instead would throw `ClassCastException` at `map.get(anInteger)` on a `Map<String, ?>`,
+  // where java answers `null` (CLAUDE.md §4.4's shape, valid scala meaning something else).
+  //
+  // The lookup is the same `hashCode`/`equals` one java performs, in java's own DIRECTION: scala's
+  // `HashMap.contains(key)` and `HashSet.contains(elem)` compare `probe == stored`, which is
+  // `probe.equals(stored)` — exactly what `HashMap.getNode` does. (`Buffer.contains` is the other
+  // direction, which is why there is no `Seq` member here and `containsAll` writes its scan out.)
+  //
+  // Not `put` or `getOrDefault`: java REJECTS both on a `Map<?, ?>`, because each needs a value at
+  // the capture, so for the wildcard face there is nothing to translate. For the `Object`-probe face
+  // they are reachable and have no arm — a gap NAMED in `ENGINE-LIMITS.md` K24 rather than filled,
+  // because java declares the VALUE of both at `V` and no site in the corpus reaches one.
   // -------------------------------------------------------------------------------------------
 
   /** java's `Map.get(Object)` — `null` when absent, and the key is `Object`. */
@@ -582,6 +597,24 @@ object JavaCollections:
   /** java's `Map.remove(Object)` — which RETURNS the value that was there, or `null`. */
   def mapRemove[K, V](m: scala.collection.mutable.Map[K, V], key: Any): V =
     m.asInstanceOf[scala.collection.mutable.Map[Any, V]].remove(key).getOrElse(null.asInstanceOf[V])
+
+  /** java's `Collection.contains(Object)` at a SET receiver.
+    *
+    * A `Set` and not an `Iterable`: `HashSet.contains` is a HASH lookup asking the PROBE's `equals`
+    * (`HashMap.getNode` reads `key.equals(k)`), and scala's `Set.contains` is the same lookup asking
+    * the same way, so the widening is the only difference between them. `ArrayList.contains` is a
+    * SCAN asking the probe's `equals` too, but scala's `Seq.contains` is `exists(_ == elem)` — the
+    * STORED element's — so a `Seq` member would have to be written out rather than delegated, and
+    * `containsAll` two members up is where that scan already lives. */
+  def setContains[A](xs: scala.collection.Set[A], o: Any): Boolean =
+    xs.asInstanceOf[scala.collection.Set[Any]].contains(o)
+
+  /** java's `Set.remove(Object)` — which RETURNS whether the set held it.
+    *
+    * `-=` is the rewrite everywhere else and answers the RECEIVER, so java's `boolean` is lost; this
+    * member is the probe seam and java's own result, in one. */
+  def setRemove[A](xs: scala.collection.mutable.Set[A], o: Any): Boolean =
+    xs.asInstanceOf[scala.collection.mutable.Set[Any]].remove(o)
 
   /** the CONSUMER direction: a `Buffer` the port holds, at a class file's `java.util.List` FORMAL.
     *

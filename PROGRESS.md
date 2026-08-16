@@ -2794,11 +2794,11 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1 and **106** after wave 2 (coded 106 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **47** now — 90 % of the port compiles clean |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2 and **89** after wave 3 (coded 89 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **32** now — 93 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
-| `jdk-surface` | **456 classified, 38 unresolved at first emit** (shimmed 7, mapped 44, kept 367) and **27 after wave 2**. The 38 were the retyped-owner members `CollectionsTransform`'s tables had no entry for, and they were the SAME 33 errors the compile reported — the two instruments agree exactly, and they moved together when the SE8 members were mapped (`ENGINE-LIMITS.md` K23) |
+| `jdk-surface` | **456 classified, 38 unresolved at first emit** (shimmed 7, mapped 44, kept 367) and **25 after wave 3** (27 after wave 2). The 38 were the retyped-owner members `CollectionsTransform`'s tables had no entry for, and they were the SAME 33 errors the compile reported — the two instruments agree exactly, and they moved together when the SE8 members were mapped (`ENGINE-LIMITS.md` K23) |
 | `collection-boundary` / `collection-closure` / `collection-retarget` | **28 / 3 / 0** at first emit, **27 / 3 / 0** after wave 2 — one seam left the lane when the call at it became a helper call rather than a member on a retyped receiver |
 | `overload-risk` | **563**, with its denominator recomputed beside it: 26,166 program-declared calls examined, 3,915 with more than one applicable candidate, 563 spanning a java resolution phase |
 | `heap-pollution` | **13**, every one `Acknowledged` — java warned and the author wrote `@SafeVarargs`, which scala has neither of |
@@ -2814,9 +2814,9 @@ zero in the last row is a compile-time one. On liqp the compile said nothing abo
 first-run failures; this library is a parser, so the population §4.4 governs here is larger, not
 smaller.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 89 after wave 3**
 
-Every error is `EngineGap`. Two waves have run. Each table below is the state AFTER its wave, with
+Every error is `EngineGap`. Three waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
 commits that moved it.
 
@@ -2843,24 +2843,29 @@ above sums to more than the family sizes the first census printed.
 | 171 → 137 | **a ported java ENUM is not a `java.lang.Enum`** — and no `sealed abstract class` may name that supertype at all (scalac: *"only enums defined with the enum syntax can"*), so the shape had to become the scala 3 `enum`. The refusals — a constant with a class BODY, a member colliding with one of java.lang.Enum's FINAL names — keep the sealed lowering byte-for-byte and are COUNTED | T21 |
 | 137 → 106 | **SE8's DEFAULT METHODS on `List`/`Map`/`Collection`** — `sort`, `computeIfAbsent`, `removeIf`, `containsValue`, `containsAll`, `ensureCapacity` mapped onto helpers (each because scala HAS the operation and it means something else); `listIterator`/`spliterator` REFUSED and cited; a bound method reference at a mapped member NAMED | K23 |
 
-**What is left, by mechanism:**
+**Closed by wave 3**, all engine (a) with no manifest entry anywhere:
+
+| before → after | family | where |
+|---|---|---|
+| 106 → 89 | **java declares `get`, `contains` and `remove` over `Object` ON PURPOSE** — the lookup is BY VALUE, so a probe of an unrelated type is meant to MISS. The phase already routed those three MAP members through `Any`-keyed helpers when the RECEIVER was wildcard-applied; the other face of the same seam is the ARGUMENT — a class implementing `java.util.Map<String,T>` DECLARING `remove(Object)`, and the frontend's G14 coercion, which are one shape. NOT a cast to the element type: `asInstanceOf[String]` throws where java answers `null` | K24 |
+
+**What is left, by mechanism** (the census re-read at 89):
 
 | n | family | §1 |
 |---:|---|---|
-| 16 | **a RAW generic at an INHERITED formal, and TWO defects at one call.** `AstActionHandler<C,N,A,H>.addActionHandlers(H[]...)` reached from `AttributeProviderAdapter`, whose own parameter is java's raw `AttributeProvidingHandler[]`. Java PACKS an `H[]` into the `H[][]` slot (it is assignable to the component and not to the array) and the port forwards it, so the arity is wrong BEFORE the element type is; and the element is `[?]` against the parent's substituted `[Node]`, which java admitted by unchecked conversion at a raw type. `ParentSubst` (G25) is doing its half correctly — the `Required:` side reads `[Node]` — so what is left is the vararg packing and the raw-to-parameterised cast | **(a)** — the G-family (`G1`/`G2`/`G11`) at an inherited formal, plus §4.4's vararg-packing row read at a callee the port DECLARES |
-| 19 | **an `Object`-widened key or element reaching a retyped collection**, and it is TWO sub-families the first census read as one. (i) the FRONTEND's own erasure coercion — `set -= x.asInstanceOf[java.lang.Object]`, `map.getOrElse(k.asInstanceOf[java.lang.Object], …)` — where `CollectionsTransform.keyArg` exists to strip exactly that and matches only a `Tree.Typed`, never an `asInstanceOf`, and is not consulted at the `Kind.Set` arms at all; (ii) a genuinely `Object`-typed parameter java's own interface declares — `NodeRepository<T> implements Map<String,T>` must accept `remove(Object)` and delegate to a `Map[String,T]`, which needs a cast the other way | (i) **(a)**, a contained fix to one helper; (ii) `ENGINE-LIMITS.md` K5/K10's family at the implementing side |
-| 9 | **a JDK formal that stayed JAVA under a shim receiver** — `super.addAll(c)` where `c` is a `JavaCollection[?]` and the class file wants `java.util.Collection[?]`. `CLAUDE.md` §1's "a formal that stays JAVA is read LITERALLY", at a `super` call into a shim parent | **(a)** |
-| 4 | `MutableDataHolder.set` overload resolution | **(a)** |
+| 19 | **a RAW generic at an INHERITED formal, and TWO defects at one call.** `AstActionHandler<C,N,A,H>.addActionHandlers(H[]...)` reached from `AttributeProviderAdapter`, whose own parameter is java's raw `AttributeProvidingHandler[]`. Java PACKS an `H[]` into the `H[][]` slot (it is assignable to the component and not to the array) and the port forwards it, so the arity is wrong BEFORE the element type is; and the element is `[?]` against the parent's substituted `[Node]`, which java admitted by unchecked conversion at a raw type. `ParentSubst` (G25) is doing its half correctly — the `Required:` side reads `[Node]` — so what is left is the vararg packing and the raw-to-parameterised cast | **(a)** — the G-family (`G1`/`G2`/`G11`) at an inherited formal, plus §4.4's vararg-packing row read at a callee the port DECLARES |
+| 8 | **an enum's PROMOTED CONSTRUCTOR PARAMETER superseding a FIELD it is not** — `HtmlMatch(String open, …)` beside `public final Pattern open`, whose constructor COMPUTES the field (`this.open = Pattern.compile(open, …)`). `enumParts` drops a same-named `ValDef` on the NAME alone, so the enum shipped `var open: String` where every reader wanted a `Pattern`. The first census read these as a `java.util.regex` question; they are §4.56's own failure at a rename, and `java.util.regex` is not involved in any of them | **(a)** |
+| 7 | **`map.keySet()` at a DECLARED `mutable.Set` return** — java's `keySet` is a write-through view and scala's `mutable.Map.keySet` is typed `scala.collection.Set`, which the phase already encodes for a `val` initialised from it (`transformValDef`) and for a coercion SOURCE (`isKeySetView` refuses to wrap). A `return` is the third position and nothing answers it; `collection-boundary` names one of them (`DataSet#getKeys`). Closing it wants a live write-through `mutable.Set` view in the runtime | **(a)** |
+| 5 | **a retyped formal at a method that OVERRIDES a class file** — `BitFieldSet<E> extends java.util.AbstractSet<E>` had `containsAll`/`addAll`/`removeAll`/`retainAll` retyped to `JavaCollection[?]` while the parent's formal is `java.util.Collection[?]`, so `super.containsAll(c)` cannot compile and the member overrides nothing. §4.56's "an unowned symbol's SIGNATURE is a fact about a class file" read at an OVERRIDE. `collection-boundary` counts all five | **(a)** |
+| 5 | `MutableDataHolder.set` overload resolution — `DataKey<Collection<Extension>>` retypes its type ARGUMENT to the SHIM while the value is an `ArrayBuffer`, so no `T` unifies. The `Collection`-shim-against-`Buffer` seam inside the program, where `collection-boundary` (which counts EXTERNAL callees) cannot see it | **(a)** |
 | 4 | the JDK members wave 2 did NOT map — `listIterator` 2 and `spliterator` 1, REFUSED with their citation because each hands back a JDK protocol rather than a value, and the ONE bound method reference (`this.headings::add`) at a mapped member, which emits as an eta-expanded `Select` no `Apply`-keyed arm sees | **(a)**, all four `ENGINE-LIMITS.md` K23 |
-| 6 | `java.util.regex.Pattern` at `HtmlDeepParser` — a `java.util.regex` member reached through a retyped receiver | **(b)** |
-| 49 | the residue, no family above 3: `Not found: byteOffset$p` (a promoted parameter's name), the one `Not found: type S` an emitter ASCRIPTION typed from the CALLEE's declaring class without substituting the RECEIVER's instantiation (`G25`'s stated residue), `Objects.isNull`, and a long tail of one-off inference and arity mismatches | mixed |
+| 41 | the residue, no family above 3: `Not found: byteOffset$p` (a promoted parameter's name), the one `Not found: type S` an emitter ASCRIPTION typed from the CALLEE's declaring class without substituting the RECEIVER's instantiation (`G25`'s stated residue), `Objects.isNull`, the two `Object` results of an ERASED `Function` receiver (G11 at a use, and NOT K24's family — the widening is on the RESULT), five `Null`-at-a-type-parameter and six `Nothing`-at-a-structural-type rows, and a long tail of one-off inference and arity mismatches | mixed |
 
-**Where the next wave starts:** the `Object`-widened row's FIRST half (i), which is the cheapest
-thing left in the port — one helper (`keyArg`) that strips a `Tree.Typed` and must also strip an
-`asInstanceOf`, consulted at the `Kind.Set` arms it is not asked at today. The raw-generic row is the
-deepest, and it is two fixes rather than one: java's vararg PACKING at a callee the port declares,
-and then the raw-to-parameterised cast the packing exposes. Neither needs a manifest entry; nothing
-left in this port does.
+**Where the next wave starts:** the `keySet` row, which is the cheapest thing left and wants one
+runtime type; then the override-formal row, which is a rule (§4.56 at an override) rather than a
+site. The raw-generic row is the deepest, and it is two fixes rather than one: java's vararg PACKING
+at a callee the port declares, and then the raw-to-parameterised cast the packing exposes. Nothing
+left in this port needs a manifest entry.
 
 ### 10.6.4 What the first run already taught, at 0 cost
 

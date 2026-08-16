@@ -243,7 +243,6 @@ e81d70943de3	catalog(unreached)	partial	JS-E07	-	0	never reached by this port �
 1dd81a9b15ef	jdk-surface	unhandled	java.util.Arrays#fill(Object[],Object)	space/earlygrey/simplegraphs/Array.java	136	java.util.Arrays#fill(Object[],Object) — retyped to java.util.Arrays, no rewrite (1 site(s))
 63848423ddbc	jdk-surface	unhandled	java.util.LinkedHashMap#clear()	space/earlygrey/simplegraphs/Graph.java	262	java.util.LinkedHashMap#clear() — retyped to scala.collection.mutable.LinkedHashMap, no rewrite (3 site(s))
 e07c890bc532	jdk-surface	unhandled	java.util.Map#clear()	space/earlygrey/simplegraphs/Node.java	87	java.util.Map#clear() — retyped to scala.collection.mutable.Map, no rewrite (1 site(s))
-0d6d86c9006f	jdk-surface	unhandled	java.util.Set#contains(Object)	space/earlygrey/simplegraphs/algorithms/CycleDetector.java	50	java.util.Set#contains(Object) — retyped to scala.collection.mutable.Set, no rewrite (1 site(s))
 81ad53826753	omissions	super(args) dropped	sge.graphs.DirectedGraph	space/earlygrey/simplegraphs/DirectedGraph.java	50	1 argument(s) discarded
 95dea40934a7	omissions	super(args) dropped	sge.graphs.UndirectedGraph	space/earlygrey/simplegraphs/UndirectedGraph.java	50	1 argument(s) discarded
 157530f9f810	overload-risk	BoxingPhaseSpan	sge.graphs.Array	space/earlygrey/simplegraphs/Path.java	79	call to `remove/1` has 2 applicable candidates spanning java's resolution phases (BoxingPhaseSpan): (java.lang.Object), (scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side

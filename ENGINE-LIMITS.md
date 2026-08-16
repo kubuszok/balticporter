@@ -5962,6 +5962,62 @@ asserted, plus the two refusals.*
 
 ---
 
+### K24. Java declares `get`, `contains` and `remove` over `Object` ON PURPOSE, and a retyping types them at the element — **ssg-md 106 → 89, `jdk-surface` 27 → 25, every other port's error count flat. CLOSED**
+
+`Map.get(Object)`, `Map.containsKey(Object)`, `Map.remove(Object)`, `Collection.contains(Object)` and
+`Set.remove(Object)` are not erasure accidents: java looks the argument up BY VALUE, so a probe of an
+unrelated type is meant to MISS rather than to fail to compile. Scala's `Map[K, V]` and `Set[A]`
+declare the same members at the element type, so once this phase has moved the receiver, java's probe
+no longer fits the slot it fitted in java.
+
+**The phase already had the answer and was asking the wrong question of it.** `wildcardMapCall` routes
+those three map members through `JavaCollections.mapGet`/`mapContainsKey`/`mapRemove` — helpers that
+take the key as `Any` — when the RECEIVER's type arguments are wildcards and `K` is an unnameable
+capture. That is one face of one seam. The other face is about the ARGUMENT, and it arrives two ways
+that look identical in the emitted text:
+
+| face | where the `Object` comes from |
+|---|---|
+| the IMPLEMENTING side | a class that implements `java.util.Map<String, T>` must DECLARE `remove(Object o)` and delegate to its retyped field. The parameter is java's own; there is nothing to strip |
+| the FRONTEND's coercion | `typeParamToObject` (G14) widened a type-parameter or wildcard-read key to `Object`, because that is what java's formal said. **The mint is right** — it is right for a call to a java `Map`, and G14 measured three ways of not making it at 13 → 28, 10 → 26 and +47 — and what invalidated it is this phase moving the RECEIVER. `keyArg`'s own doc already states the rule: a phase that retypes must ask what it has done to the casts around the types it moved |
+
+**NOT a cast to the element type**, which is the translation that compiles and means something else:
+`o.asInstanceOf[String]` inserts a `checkcast` and throws `ClassCastException` where java's
+`map.get(anInteger)` answers `null` (`CLAUDE.md` §4.4). The helpers widen the PROBE POSITION, which is
+erased, so java's own `hashCode`/`equals` lookup runs — in java's own DIRECTION, since scala's
+`HashMap.contains(key)` compares `probe == stored` exactly as `HashMap.getNode` does.
+
+**The guard is the one question a phase can answer with NO conformance oracle** (§4.56). The engine has
+no subtyping test, and it needs none: `java.lang.Object` is the TOP of java's reference hierarchy, so
+an argument at that type conforms to a scala element type only where the element type is `Object` too.
+That is a fact about the two type systems rather than a guess about a program, and it is asked of THIS
+RUN's interned symbol and not of a name. `keyArg` runs FIRST, so a coercion it can strip never reaches
+a helper and the emitted text of every port with no such seam is byte-for-byte what it was.
+
+**Two new runtime members, and the SET half is a `Set` and not an `Iterable`.** `setContains` delegates
+to scala's `Set.contains`, which is java's hash lookup asking the probe's `equals`; a `Seq` member would
+have to be WRITTEN OUT, because `Buffer.contains` is `exists(_ == elem)` — the stored element's — which
+is why `contains` joins `handledInstance` at `Kind.Set` only and `jdk-surface` goes on reporting
+`java.util.List#contains` as a hole. `setRemove` answers java's `boolean`, which `-=` cannot.
+
+**Measured**: ssg-md 106 → 89 (15 map sites, 2 set sites), `jdk-surface` 27 → 25 and one
+`java.util.Set#contains` row off simple-graphs' findings — both instruments moving with the fix, which
+is K23's own evidence shape. 27 member digests on ssg-md, every one inside a declaration the family
+names; 0 members changed and 0 errors moved on libGDX core, its test port, Ashley, anim8, gdx-gltf,
+gdx-vfx, screens, noise4j, jbump and liqp.
+
+**One gap NAMED rather than filled**: `getOrDefault` and `put` have no `Any`-keyed helper. For the
+WILDCARD face there is nothing to translate — javac rejects both on a `Map<?, ?>`, each needing a value
+at the capture — but at an `Object` PROBE the value type is perfectly nameable and the two are
+reachable. No site in the corpus reaches one, so the arm is not written and the seam would be a loud
+`Found: Object / Required: K` rather than anything silent.
+
+*Fix kind: (a) — the phase's own guard, widened from a fact about the receiver to a fact about the
+probe. `CollectionsObjectProbeSpec` (three faces, three negatives) and four cells in
+`JavaCollectionsSpec`, including the `checkcast` one that is the whole reason this is a helper.*
+
+---
+
 ## 6. Porting a test suite
 
 ### X1. Converting JUnit to MUnit is a STRUCTURAL transform, not an annotation rename
