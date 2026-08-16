@@ -1279,7 +1279,13 @@ starts answering for every target added since. `CollectionsTransform`'s argument
 it guards also serves `java.util.Collection`; so a library that uses `Collection` throughout and
 never names `Iterable` had the **whole pass inert**. So a guard is derived from ALL of the pass's
 own targets or it is not written — the work each target would do already declines cheaply on its
-own.
+own. **And where the fact the guard is about is INHERITED, the guard is asked of the ANCESTRY.** The
+same phase's blanket refusal of its scala-shaped rewrites on a SHIM receiver tested the receiver's
+HEAD SYMBOL against the three shims — exact for a receiver the phase retyped, and `false` for the one
+shape every collection library is made of, a library's own `Cursor extends java.util.Iterator`, whose
+emitted members carry java's arity while its head symbol is no shim at all. Two shapes sit above a
+receiver and only one is a parent: a TYPE PARAMETER's BOUND is the same question at the other kind of
+declaration, and the parent-only fix leaves it. 16 errors (`ENGINE-LIMITS.md` K2.6).
 
 **And the rule reaches an INSTRUMENT'S OWN FILTER, in whatever language it is written.** The second
 occurrence was not a phase at all: `just catalog-coverage`'s aggregation matched

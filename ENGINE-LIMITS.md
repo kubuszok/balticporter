@@ -2608,6 +2608,48 @@ other check count flat and every other port byte-for-byte unchanged.
 
 *Fix kind: (a) engine — the gate, DONE; the `asList`-refused source reaching the bridge, DONE.*
 
+### K2.6 A SHIM's arity is INHERITED, so the guard that protects it must be asked of the ANCESTRY — **16 errors, 201 → 182. CLOSED**
+
+K2.5's shape at the same phase's other guard, and worth reading beside it: that one was gated on ONE
+of the pass's targets, this one on THREE — the shim SYMBOLS — while the fact it is really about is
+inherited.
+
+The scala-shaped call rewrites (`parenless`: `size`, `iterator`, `hasNext`, `next`) are blanket-
+refused on a SHIM receiver, because the shims deliberately carry java's arity (§4.5: a class that is
+both java `Iterable` and java `Iterator` cannot be modelled on scala's collection traits at all). The
+refusal read `headSym(recv.tpe).exists(shimSyms.contains)` — exact for a receiver this phase retyped,
+and `false` for the one shape every collection library is made of:
+
+```java
+interface Cursor<E> extends java.util.Iterator<E> { … }      // →  trait Cursor[E] extends JavaIterator[E]
+while (c.hasNext()) …                                        // →  while (c.hasNext)
+```
+
+`Cursor` is no shim, so the guard declines; `inheritedKind` answers `Kind.Iterator` **correctly**,
+because `hasNext` really does resolve to `java.util.Iterator#hasNext`. Two right answers producing
+`method hasNext in trait JavaIterator must be called with () argument`, at every such receiver in the
+program.
+
+**TWO shapes sit above a receiver and only one is a parent.** A class's parents are the obvious
+half; the other is a TYPE PARAMETER's BOUND — a value typed `I` where `I extends Cursor<Integer>` has
+`Cursor`'s members and therefore java's arity. 2 of the 16 were only that, and the parent-only fix
+left them; the walk asks both, off the `ClassDef`'s parents and the `TypeDef`'s upper bound.
+
+**And a parent has TWO SPELLINGS during the pass**, both accepted: one this pass has already retyped
+names the shim symbol, one it has not yet reached still names the java original, whose `typeMap`
+TARGET is the shim. Either way the decision is a fact about what the PHASE ITSELF did to that type
+(§4.56) and never about a name.
+
+The guard only ever SUPPRESSES a rewrite, so the conservative arm is `false` — a chain that exhausts
+the fuel, or a parent this run did not parse, keeps the pre-guard behaviour rather than silencing a
+rewrite nobody asked to silence.
+
+Blast: 6 declarations on the port that had the defect, every check count flat.
+
+*Fix kind: (a).*
+
+---
+
 ### K3. Injected sources are for SEMANTICS the target lacks — never for adapting SHAPES
 
 Two rules, and a port violates them in different ways:

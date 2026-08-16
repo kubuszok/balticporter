@@ -3144,6 +3144,61 @@ final class CollectionsTransform(
   /** the runtime shims, as scala symbols — a source already typed as one is never re-wrapped. */
   private def shimSyms: Set[SymId] = Set(javaIterableSym, javaIteratorSym, javaCollectionSym)
 
+  /** the shims as FQNs, so a `typeMap` TARGET can be recognised as one.
+    *
+    * [[shimSyms]] answers only for a program that NAMES the shim's java original — the symbols are
+    * interned on first reference — while a subtype question has to be answerable about a parent this
+    * run resolved by any route. */
+  private def shimFqns: Set[String] =
+    Set(CollectionsTransform.JavaIterableFqn, CollectionsTransform.JavaIteratorFqn,
+        CollectionsTransform.JavaCollectionFqn)
+
+  /** Does a value of this type END UP shim-shaped — the shim itself, or a type THIS PROGRAM
+    * DECLARES that inherits from one?
+    *
+    * The blanket refusal below was asked of the receiver's HEAD SYMBOL against three shim symbols,
+    * which is exact for a receiver whose declared type this phase retyped and answers `false` for
+    * the one shape a library that defines its own iterator is made of: `interface Cursor<E> extends
+    * java.util.Iterator<E>` is retyped to `trait Cursor[E] extends JavaIterator[E]`, so the emitted
+    * receiver carries JAVA's arity — while `headSym` is `Cursor`, no shim, and
+    * [[inheritedKind]] correctly reports `Kind.Iterator` because `hasNext` really does resolve to
+    * `java.util.Iterator#hasNext`. The two together strip the `()` from a call to a member declared
+    * `def hasNext()`, at every such receiver in the program.
+    *
+    * That is `CLAUDE.md` §4.56's guard rule twice over: a test written against the three symbols the
+    * phase MINTS keeps answering for those three and silently answers for every SUBTYPE added by a
+    * library since, and the fact it is really about — *this receiver's members have java's arity and
+    * java's names* — is inherited, so it has to be asked of the ancestry.
+    *
+    * Both spellings of a parent are accepted because both are reachable: a parent this pass has
+    * already retyped names the shim symbol, and one it has not yet reached still names the java
+    * original, whose `typeMap` TARGET is the shim. Deciding from either is a fact about what the
+    * PHASE ITSELF did to that type, never about its name.
+    *
+    * Fuel-bounded, and a chain that exhausts the fuel answers `false` — the pre-guard behaviour,
+    * which is the conservative arm here because the guard only ever SUPPRESSES a rewrite. */
+  private def shimShaped(t: TypeRepr)(using p: Program): Boolean =
+    def isShim(s: SymId): Boolean =
+      shimSyms.contains(s) ||
+        p.symbolOf(s).map(_.fullName).exists(fq => typeMap.get(fq).exists((tgt, _) => shimFqns(tgt)))
+    // WHAT SITS ABOVE THIS SYMBOL — a class's parents, and a TYPE PARAMETER's upper BOUND. The
+    // second is not an extra case, it is the same question at the other kind of declaration: a
+    // receiver typed `I` where `I extends Cursor<Integer>` denotes a value whose members are
+    // `Cursor`'s, so java's arity reaches it exactly as it reaches a subclass. Read off the bound
+    // and never off `Object`: an unbounded parameter has nothing shim-shaped above it.
+    def above(s: SymId): List[SymId] = p.definitionOf(s) match
+      case Some(c: Tree.ClassDef) => c.parents.flatMap {
+        case tt: TypeTree => headSym(tt.tpe)
+        case x: Term      => headSym(x.tpe)
+      }
+      case Some(td: Tree.TypeDef) => td.rhs.tpe match
+        case TypeRepr.TypeBounds(_, hi) => headSym(hi).toList
+        case other                      => headSym(other).toList
+      case _ => Nil
+    def go(s: SymId, fuel: Int): Boolean =
+      s != SymId.None && fuel > 0 && (isShim(s) || above(s).exists(go(_, fuel - 1)))
+    headSym(t).exists(go(_, 16))
+
   /** kind-aware call rewrite; `None` = leave the call as-is (same-named method binds to
     * the scala API against the retyped receiver at compile time). */
   private def rewrite(k: Kind, recv: Term, m: SymId, so: Origin, t: Tree.Apply)(using Program): Option[Term] =
@@ -3158,8 +3213,14 @@ final class CollectionsTransform(
       * against a type that has neither. The rule is not "these few rewrites are unsafe on a shim";
       * it is "every rewrite here reshapes a call for SCALA's collection API, and a shim is
       * deliberately not one". Exceptions are listed ABOVE the guard, so a new rewrite is safe by
-      * default and an unsafe one cannot be added by omission. */
-    val onShim = headSym(recv.tpe).exists(shimSyms.contains)
+      * default and an unsafe one cannot be added by omission.
+      *
+      * …and it is asked of the ANCESTRY, not of the head symbol — see [[shimShaped]]. A library's
+      * own `Cursor extends java.util.Iterator` is emitted `extends JavaIterator`, so its members
+      * carry java's arity while its head symbol is no shim at all: 16 measured `must be called with
+      * () argument` errors on one port, every one of them a receiver typed at a program-declared
+      * subtype. */
+    val onShim = shimShaped(recv.tpe)
     /** is the receiver `super`? Scala admits `super` in exactly ONE position — as the qualifier of
       * a member selection — and three of the shapes below put it somewhere else: `entrySet` returns
       * the receiver ALONE (`for (e <- super)`), the `Seq` `get` makes it a function (`super(i)`),
