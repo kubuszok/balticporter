@@ -2454,8 +2454,10 @@ RENDERED header text at the one place that writes it, and after emission, becaus
 the plan would have passed on the day CT4 flattened the clause into a value parameter. Three shapes it
 covers by construction and no other check can see: a class the funnel gives no clause, a `trait` that
 Scala's trait parameters are not the answer for (the port's `promoteToClass` is), and a java ENUM,
-whose primary IS its java constructor and whose `case object`s would each have to pass an argument —
+whose primary IS its java constructor and whose CONSTANTS would each have to pass an argument —
 its clause is dropped from the parameter list rather than emitted as `var : T`, and counted here.
+(Both enum shapes, and for one reason: a `case object` and a scala 3 `enum` case reach the primary
+the same way and neither can supply a clause — `ENGINE-LIMITS.md` T21.)
 
 **Not changed, deliberately: the CONTRACT row.** `Descriptor` records the primary's VALUE slots, and a
 context clause is not one — two modules that disagree about the clause are caught by the phase's
@@ -2674,8 +2676,9 @@ dependent extends a base's nested class as readily as its top-level one, and a c
 units answers `Unknown` for precisely the constructor questions this section exists for.
 
 **An ENUM is excluded from the constructor cross-check**, structurally. `TirEmitter.enumDef` lowers a
-Java enum directly — its primary IS the Java constructor, because every `case object` passes its
-arguments to it — and consults the funnel for nothing, so the funnel's plan for an enum is
+Java enum directly — its primary IS the Java constructor, because every CONSTANT passes its
+arguments to it, in either shape (`ENGINE-LIMITS.md` T21) — and consults the funnel for nothing, so
+the funnel's plan for an enum is
 `Plan.none` while the contract row records the constructor's real slots. Comparing them compares two
 derivations. Measured before the exclusion: **5 FATAL cross-check failures on one dependent, every
 one an enum and every one a false alarm.**

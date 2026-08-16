@@ -9,8 +9,9 @@ import balticporter.tir.{OmissionCheck, Pipeline}
   * `super(args)` row read at an enum body).
   *
   * ==The shape and the defect==
-  * A java enum lowers to a sealed abstract class whose primary IS java's constructor, because every
-  * `case object` passes its arguments to it and a `case object` cannot delegate. The emitter took
+  * A java enum's primary IS java's constructor, because every CONSTANT passes its arguments to it
+  * and no constant can delegate — true of the `case object` this shipped as and of the scala 3
+  * `enum` case it became (`ENGINE-LIMITS.md` T21). The emitter took
   * `ctors.head` — the first in TREE ORDER — which is exact for the single-constructor enum every
   * corpus library had, and wrong the moment there are two:
   *
@@ -56,10 +57,10 @@ class EnumOverloadedCtorSpec extends PortSuite:
         |  public int getBits() { return bits; }
         |}
         |""".stripMargin)
-    assert(clue(out).contains("sealed abstract class Level(var bits: scala.Int)"))
-    assert(out.contains("case object HIGH extends Level(3)"))
+    assert(clue(out).contains("enum Level(var bits: scala.Int) extends java.lang.Enum[Level]"))
+    assert(out.contains("case HIGH extends Level(3)"))
     // the one that was silently 0 before: java ran `this(1)`
-    assert(out.contains("case object LOW extends Level(1)"))
+    assert(out.contains("case LOW extends Level(1)"))
     assertEquals(clue(fs), Nil)
   }
 
@@ -72,9 +73,9 @@ class EnumOverloadedCtorSpec extends PortSuite:
         |  Shade(int level) { this.level = level; }
         |}
         |""".stripMargin)
-    assert(clue(out).contains("sealed abstract class Shade(var level: scala.Int)"))
-    assert(out.contains("case object DARK extends Shade(1)"))
-    assert(out.contains("case object LIGHT extends Shade(2)"))
+    assert(clue(out).contains("enum Shade(var level: scala.Int) extends java.lang.Enum[Shade]"))
+    assert(out.contains("case DARK extends Shade(1)"))
+    assert(out.contains("case LIGHT extends Shade(2)"))
     assertEquals(clue(fs), Nil)
   }
 

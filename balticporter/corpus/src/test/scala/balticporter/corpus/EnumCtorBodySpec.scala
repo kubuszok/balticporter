@@ -42,8 +42,8 @@ class EnumCtorBodySpec extends PortSuite:
     assertEmits(p, "this.x = ax")
     // …and the parameters are still promoted, so `case object UP extends Side(0f, 1f)` has somewhere
     // to pass its arguments.
-    assertEmits(p, "sealed abstract class Side(var ax: scala.Float, var ay: scala.Float)")
-    assertEmits(p, "case object UP extends Side(")
+    assertEmits(p, "enum Side(var ax: scala.Float, var ay: scala.Float) extends java.lang.Enum[Side]")
+    assertEmits(p, "case UP extends Side(")
   }
 
   test("a PURE self-assignment is dropped — the promotion already performed it") {
@@ -60,7 +60,7 @@ class EnumCtorBodySpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    assertEmits(p, "sealed abstract class Filter(var glEnum: scala.Int)")
+    assertEmits(p, "enum Filter(var glEnum: scala.Int) extends java.lang.Enum[Filter]")
     assertNotEmits(p, "this.glEnum = glEnum")
   }
 
@@ -77,28 +77,44 @@ class EnumCtorBodySpec extends PortSuite:
         |}
         |""".stripMargin
     )
+    // …and it is now the SHAPE that the collision decides, not just the synthesis: a member named
+    // `name` cannot coexist with `java.lang.Enum`'s final `name()` at all, so this enum keeps the
+    // sealed lowering and is counted (`ENGINE-LIMITS.md` T21, `EnumShape.Reserved`).
     assertEmits(p, "sealed abstract class Algo(var name: java.lang.String)")
     assertNotEmits(p, "def name(): java.lang.String")
     assertEmits(p, "this.legibleName = name")
   }
 
-  test("an enum with NO `name` parameter still gets `Enum.name()` — the guard is not a removal") {
+  test("an enum with NO `name` parameter takes `name()` from the PARENT, not from a synthesis") {
+    // The guard is still not a removal — what changed is where the member comes from. An enum the
+    // scala 3 `enum` can express extends `java.lang.Enum[Plain]`, whose `name()` is FINAL and is
+    // java's own; emitting the synthesis beside it would be an error rather than a duplicate.
     val p = port(
       """package p;
         |enum Plain { A, B; }
         |""".stripMargin
     )
-    assertEmits(p, "def name(): java.lang.String = this.toString()")
+    assertEmits(p, "enum Plain extends java.lang.Enum[Plain]")
+    assertNotEmits(p, "def name(): java.lang.String = this.toString()")
   }
 
-  test("`Enum.ordinal()` is the constant's DECLARATION INDEX, one override per constant") {
+  test("`Enum.ordinal()` is the constant's DECLARATION INDEX — synthesised for the SEALED shape") {
     // Part of every java enum's surface whether the enum mentions it or not, and a library reaches
     // for it wherever the constants stand for consecutive integers somewhere else (gdx-vfx feeds
     // `lineStyle.ordinal()` into a shader `#define`). Absent, it is `value ordinal is not a member
     // of …` and there is no substitute a reader would reach for.
+    //
+    // The subject is an enum the `enum` syntax CANNOT express — a constant with a class body — so
+    // it is the sealed lowering that owes the member. Asked of an expressible enum the answer comes
+    // from `java.lang.Enum`, which the cell below pins.
     val p = port(
       """package p;
-        |enum Plain { A, B, C; }
+        |enum Plain {
+        |  A { public int n() { return 0; } },
+        |  B { public int n() { return 1; } },
+        |  C { public int n() { return 2; } };
+        |  public abstract int n();
+        |}
         |""".stripMargin
     )
     assertEmits(p, "def ordinal(): scala.Int")
@@ -106,6 +122,17 @@ class EnumCtorBodySpec extends PortSuite:
     assertEmits(p, "override def ordinal(): scala.Int = 0")
     assertEmits(p, "override def ordinal(): scala.Int = 1")
     assertEmits(p, "override def ordinal(): scala.Int = 2")
+  }
+
+  test("…and an EXPRESSIBLE enum synthesises neither — `java.lang.Enum` declares both, FINAL") {
+    val p = port(
+      """package p;
+        |enum Bare { A, B, C; }
+        |""".stripMargin
+    )
+    assertEmits(p, "enum Bare extends java.lang.Enum[Bare]")
+    assertNotEmits(p, "def ordinal()")
+    assertNotEmits(p, "def name()")
   }
 
   test("a constant's own BODY keeps its members, with the ordinal override beside them") {
@@ -170,7 +197,7 @@ class EnumCtorBodySpec extends PortSuite:
     assertEmits(p, "isStyled$p: scala.Boolean")
     assertEmits(p, "def isStyled(): scala.Boolean")
     // the constants pass positionally, so the rename is invisible where it matters
-    assertEmits(p, "case object LIQUID extends Flavour(")
+    assertEmits(p, "case LIQUID extends Flavour(")
     // and the body's reference followed the symbol
     assertEmits(p, "this.styled = isStyled$p")
   }
@@ -189,6 +216,6 @@ class EnumCtorBodySpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    assertEmits(p, "sealed abstract class Filter(var glEnum: scala.Int)")
+    assertEmits(p, "enum Filter(var glEnum: scala.Int) extends java.lang.Enum[Filter]")
     assertNotEmits(p, "glEnum$p")
   }

@@ -4,7 +4,7 @@ type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
 type	com.badlogic.gdx.math.BSplineTest	sge.math.BSplineTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.math.BezierTest	sge.math.BezierTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=ImportType,epsilon,epsilonApprimations,parameters
-type	com.badlogic.gdx.math.BezierTest$ImportType	sge.math.BezierTest$ImportType	Renamed	-		0		companion=yes flags=abstract,sealed form=enum-class parents=java.lang.Enum primary=() primaryKind=not-funnelled primaryVis=public
+type	com.badlogic.gdx.math.BezierTest$ImportType	sge.math.BezierTest$ImportType	Renamed	-		0		companion=yes flags=enum form=enum parents=java.lang.Enum primary=() primaryKind=not-funnelled primaryVis=public
 type	com.badlogic.gdx.math.ConvexHullTest	sge.math.ConvexHullTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.math.IntersectorTest	sge.math.IntersectorTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=triangleEquals
 type	com.badlogic.gdx.math.MathUtilsTest	sge.math.MathUtilsTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
@@ -84,7 +84,7 @@ member	com.badlogic.gdx.math.BezierTest#bezier	sge.math.BezierTest#bezier	Rename
 member	com.badlogic.gdx.math.BezierTest#create(Array)	sge.math.BezierTest#create(Array<Vector2>)	Renamed	-	com/badlogic/gdx/math/BezierTest.java	49	fdaab0f847bc53e2	
 member	com.badlogic.gdx.math.BezierTest#epsilon	sge.math.BezierTest#epsilon	Renamed	-	com/badlogic/gdx/math/BezierTest.java	20	be20f39c4a88d2d4	placement=companion vis=private
 member	com.badlogic.gdx.math.BezierTest#epsilonApprimations	sge.math.BezierTest#epsilonApprimations	Renamed	-	com/badlogic/gdx/math/BezierTest.java	21	7d6762ce45d899fd	placement=companion vis=private
-member	com.badlogic.gdx.math.BezierTest#parameters()	sge.math.BezierTest#parameters()	Renamed	-	com/badlogic/gdx/math/BezierTest.java	28	f125ff2d99a9632b	placement=companion
+member	com.badlogic.gdx.math.BezierTest#parameters()	sge.math.BezierTest#parameters()	Renamed	-	com/badlogic/gdx/math/BezierTest.java	28	edb36ff664696050	placement=companion
 member	com.badlogic.gdx.math.BezierTest#setup()	sge.math.BezierTest#setup()	Renamed	-	com/badlogic/gdx/math/BezierTest.java	45	120a62b16fdbd7b3	
 member	com.badlogic.gdx.math.BezierTest#type	sge.math.BezierTest#type	Renamed	-	com/badlogic/gdx/math/BezierTest.java	37	a4d8d9baf56ea868	
 member	com.badlogic.gdx.math.BezierTest#useSetter	sge.math.BezierTest#useSetter	Renamed	-	com/badlogic/gdx/math/BezierTest.java	40	1d5f5e30d70dc1ae	

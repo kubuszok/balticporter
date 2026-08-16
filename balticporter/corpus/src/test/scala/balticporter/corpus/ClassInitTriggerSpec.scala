@@ -103,7 +103,10 @@ class ClassInitTriggerSpec extends PortSuite:
       }""")
     p.out
     val shapes = p.emitter.emittedShapes.types
-    assertEquals(clue(shapes.get("demo.E")).map(_.form), Some("enum-class"))
+    // `enum` and not `enum-class`: this enum is expressible as a scala 3 `enum extends
+    // java.lang.Enum[E]` (`ENGINE-LIMITS.md` T21), and BOTH forms are in `notInstantiable` for the
+    // one reason this test is about — the constants are companion members either way.
+    assertEquals(clue(shapes.get("demo.E")).map(_.form), Some("enum"))
     assertEquals(
       ClassInitTriggerCheck.check(p.after, p.after.units, Set.empty, shapes.get),
       Nil)

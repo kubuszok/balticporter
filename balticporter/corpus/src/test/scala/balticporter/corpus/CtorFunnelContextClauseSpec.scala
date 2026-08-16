@@ -260,9 +260,11 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
         |""".stripMargin
     val (_, e, out) = run(enumSrc, List(CtorFunnelContextClauseSpec.Clause(Set("demo.Filter"))))
     // the parameter is ANONYMOUS, so carrying it into the enum's promoted parameter list renders
-    // `var : demo.Ctx`, which does not parse — and every `case object` would have to pass it.
+    // `var : demo.Ctx`, which does not parse — and every CONSTANT would have to pass it. True of
+    // both shapes: a `case object` and a scala 3 `enum` case reach the primary the same way
+    // (`ENGINE-LIMITS.md` T21), and this enum takes the `enum` one.
     assert(!clue(out).contains("var : demo.Ctx"), out)
-    assert(out.contains("class Filter(var glEnum: scala.Int)"), out)
+    assert(out.contains("enum Filter(var glEnum: scala.Int) extends java.lang.Enum[Filter]"), out)
     assertEquals(clue(e.contextClauseLosses).map(l => l.fqn -> l.form), List("demo.Filter" -> "enum"))
   }
 

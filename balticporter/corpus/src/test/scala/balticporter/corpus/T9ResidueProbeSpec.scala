@@ -74,10 +74,10 @@ class T9ResidueProbeSpec extends PortSuite:
   // `CtEnum <: CtClass`, so the statement dispatch's `case c: CtClass[?]` takes it with no arm
   // aware an enum was there — the same absorption `JS-C43` recorded for a record, one construct
   // over, until that row's own flag made the question askable.
-  // The DECLARATION survives that: the enum lowering runs and emits the sealed class plus its
-  // companion. The REFERENCE does not.
+  // The DECLARATION survives that: the enum lowering runs and emits the type. The REFERENCE does
+  // not.
 
-  test("a method-local enum LOWERS — the declaration is the ordinary sealed class and companion") {
+  test("a method-local enum LOWERS — the declaration is the ordinary scala 3 `enum`") {
     val out = port(
       """package demo;
         |class Holder {
@@ -87,9 +87,11 @@ class T9ResidueProbeSpec extends PortSuite:
         |  }
         |}
         |""".stripMargin).out
-    assert(clue(out).contains("sealed abstract class Level"))
-    assert(clue(out).contains("case object HIGH extends Level"))
-    assert(clue(out).contains("def values(): scala.Array[Level]"))
+    assert(clue(out).contains("enum Level extends java.lang.Enum[Level]"))
+    assert(clue(out).contains("case HIGH extends Level"))
+    // …and NOT the sealed shape's hand-written `values()`: the desugaring supplies a PARENLESS one
+    // (`ENGINE-LIMITS.md` T21).
+    assert(!out.contains("def values(): scala.Array[Level]"))
   }
 
   test("…and its REFERENCE is emitted as javac's BINARY NAME, projected through the enclosing type") {

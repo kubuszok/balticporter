@@ -41,13 +41,14 @@ object OmissionCheck extends RemedySource:
     val UnnameableLambdaReturn  = "lambda `return` with an unnameable result type"
     val DroppedAnnotation       = "annotation dropped"
     val OverloadedEnumCtor      = "enum constant reaching no expressible primary"
+    val EnumNotJavaLangEnum     = "enum emitted without its java.lang.Enum supertype"
 
     /** every kind this lane files — `Issue.values`' role for a set of strings, and what a menu spec
       * checks a remedy's declared kind against. A kind absent here is a kind no such spec can see,
       * so it is added beside the `val` above and not remembered separately. */
     val all: List[String] = List(DroppedSuperArgs, DroppedCauseMessage, PromotedBodyEveryPath,
       DroppedNilaryCtor, DroppedAnonMember, UnnameableLambdaReturn, DroppedAnnotation,
-      OverloadedEnumCtor)
+      OverloadedEnumCtor, EnumNotJavaLangEnum)
 
   /** @param at the DECLARATION a per-location selection keys on ([[Resolution]]) — the constructor
     *   for a constructor-shaped row, the annotated symbol for an annotation one. `SymId.None` where
@@ -215,6 +216,7 @@ object OmissionCheck extends RemedySource:
       ++ droppedAnonMembers(program, units)
       ++ unnameableLambdaReturn(program, units)
       ++ overloadedEnumCtors(program, units)
+      ++ enumShapeRefusals(program, units)
       ++ droppedAnnotations(program, ownedBy(program, units))
 
   /** Every symbol whose top-level owner is one of `units` — the symbol-side counterpart of the unit
@@ -553,6 +555,42 @@ object OmissionCheck extends RemedySource:
                       "arguments are emitted against the root's parameter list",
                     ec.origin, ec.symbol)
           }
+      }
+
+  /** A java enum emitted WITHOUT `java.lang.Enum[X]` — the shape refusal, one row per enum.
+    *
+    * A java enum IS a `java.lang.Enum`, and scala 3 offers that supertype to the `enum` syntax and
+    * to nothing else. Where java's declaration cannot be written as a scala 3 `enum` — a constant
+    * with a class body, or a member whose name java.lang.Enum has already made final — the port
+    * keeps the `sealed abstract class` shape, which compiles and behaves identically in every
+    * respect but this one: it is not a `java.lang.Enum`, so no `<E extends Enum<E>>` bound accepts
+    * it, `EnumSet`/`EnumMap` cannot hold it and `Comparable<E>` is absent.
+    *
+    * That is exactly the shape of omission this lane exists for. It is SILENT at the enum itself —
+    * the type compiles, every member is there and no digest says which shape was chosen — and loud
+    * only at some caller, possibly in another module, possibly in `CLAUDE.md` §4.45's other
+    * repository. `EnumShape.refusal` is the emitter's own function, so a row here can neither name
+    * an enum the emitter conformed nor miss one it refused.
+    *
+    * NO menu entry, deliberately: this is a LOSS (the port carries less than java did) and not a
+    * question the engine has declined to decide, which is the screen `CLAUDE.md` §5 puts on an
+    * `accept`. The way to drain a row is to make the enum expressible, not to agree with it.
+    *
+    * Fix kind (a). */
+  def enumShapeRefusals(program: Program): List[Finding] =
+    enumShapeRefusals(program, program.units)
+
+  def enumShapeRefusals(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+    units.flatMap(cd => StandardTraversal.allClassDefs(cd)(using program))
+      .filter(cd => program.symbolOf(cd.symbol).exists(_.flags.isEnum))
+      .flatMap { cd =>
+        EnumShape.refusal(program, cd).map { why =>
+          Finding(Kind.EnumNotJavaLangEnum,
+                  program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
+                  s"$why — emitted as a sealed abstract class, which is not a `java.lang.Enum`, so " +
+                    "no `<E extends Enum<E>>` bound, `EnumSet`, `EnumMap` or `Comparable<E>` accepts it",
+                  cd.origin, cd.symbol)
+        }
       }
 
   /** grouped one-line summary, most-affected owner first. Grouped by KIND as well as owner —

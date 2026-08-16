@@ -1830,16 +1830,38 @@ final class TirEmitter(
 
   /** Java enum → `sealed abstract class Name <parents-minus-Enum> { members }` plus a
     * companion `object` holding each constant as a `case object` and a `values` array. */
+  /** A java ENUM takes ONE of two shapes, and which one is a fact about java's own declaration —
+    * [[balticporter.tir.EnumShape]], read here, at every `values()` call site and by
+    * `OmissionCheck.enumShapeRefusals`, so the three can never disagree.
+    *
+    * The scala 3 `enum` is the shape that IS a `java.lang.Enum[X]`, which no `sealed abstract class`
+    * may claim ("only enums defined with the enum syntax can"). Everything a bound like
+    * `<E extends Enum<E> & BitField>` asks of a ported enum — and everything `EnumSet`, `EnumMap`
+    * and `Comparable<E>` ask — is answered by that supertype and by nothing else.
+    *
+    * Where a constant carries a class BODY, or an emitted member would collide with one of the
+    * members java made FINAL on `java.lang.Enum`, the `enum` form cannot express java's declaration
+    * at all and the pre-existing sealed shape is kept — a REFUSAL, counted at
+    * `OmissionCheck.enumShapeRefusals` rather than silently chosen. */
   private def enumDef(cd: Tree.ClassDef, i: Int): String =
-    val s       = sym(cd.symbol)
-    val name    = esc(s.name)
-    val parents = cd.parents.map(parent).filter(p => p.nonEmpty && !p.startsWith("java.lang.Enum"))
-    val ext     = if parents.isEmpty then "" else " extends " + parents.mkString(" with ")
+    if balticporter.tir.EnumShape.isScalaEnum(program, cd) then scalaEnumDef(cd, i) else sealedEnumDef(cd, i)
+
+  /** The parts BOTH enum shapes are made of, derived ONCE.
+    *
+    * The two arms differ in the header they write and in the members java.lang.Enum does or does not
+    * supply; they do not differ about which constructor is the primary, which parameters it
+    * promotes, which field a parameter supersedes or which of its statements survive. Read twice
+    * those would be two derivations free to drift — the failure `CtorFunnel.enumPrimaryCtor` exists
+    * to prevent one level down (§4.56). */
+  private final case class EnumParts(ctorParams: List[Tree.ValDef], paramNames: Set[String],
+                                     instance: List[Statement], ctorStats: List[Statement],
+                                     statics: List[Statement], eprimary: String)
+
+  private def enumParts(cd: Tree.ClassDef): EnumParts =
     val (statics, instance0) = cd.body.partition(isStatic)
-    // A Java enum constructor's PARAMS become the sealed class's primary constructor params (as `var`
-    // fields), so `case object Nearest extends TextureFilter(GL_NEAREST)` has somewhere to pass its
-    // arg. Drop the constructor itself and any field that a param supersedes (same name).
-    val ctors      = instance0.collect { case d: Tree.DefDef if sym(d.symbol).name == "<init>" => d }
+    // A Java enum constructor's PARAMS become the emitted type's primary constructor params (as
+    // `var` fields), so `Nearest extends TextureFilter(GL_NEAREST)` has somewhere to pass its arg.
+    // Drop the constructor itself and any field that a param supersedes (same name).
     // JAVA's parameters, never `paramss.flatten` (`CtorFunnel.valueParams`, and the same rule the
     // funnel applies one level up). A context clause a phase put on this constructor is not a java
     // parameter and cannot become a `var` field: the parameter is ANONYMOUS, so it would render as
@@ -1890,6 +1912,21 @@ final class TirEmitter(
         case _                                               => false
       }
     val eprimary = if ctorParams.isEmpty then "" else s"(${ctorParams.map(v => s"var ${esc(sym(v.symbol).name)}: ${tpe(v.tpt.tpe)}").mkString(", ")})"
+    EnumParts(ctorParams, paramNames, instance, ctorStats, statics, eprimary)
+
+  /** THE PRE-EXISTING SHAPE — a `sealed abstract class` plus one `case object` per constant.
+    *
+    * It is what a java enum the scala 3 `enum` cannot express is emitted as, and the ONE thing it
+    * does not do is extend `java.lang.Enum[X]` (scalac: "only enums defined with the enum syntax
+    * can"), which is why `name()`, `ordinal()`, `values()` and `valueOf` are all supplied by hand
+    * below. `EnumShape.refusal` decides which enums arrive here and `OmissionCheck` counts them. */
+  private def sealedEnumDef(cd: Tree.ClassDef, i: Int): String =
+    val s       = sym(cd.symbol)
+    val name    = esc(s.name)
+    val parents = cd.parents.map(parent).filter(p => p.nonEmpty && !p.startsWith("java.lang.Enum"))
+    val ext     = if parents.isEmpty then "" else " extends " + parents.mkString(" with ")
+    val parts   = enumParts(cd)
+    import parts.{ctorParams, paramNames, instance, ctorStats, statics, eprimary}
     // Java's final `Enum.name()` — a `case object`'s `toString` IS its declared name (= the Java
     // constant name), so `name()` returns it. Skip if the enum already declares a `name` member.
     //
@@ -1971,6 +2008,82 @@ final class TirEmitter(
       flags       = List("sealed", "abstract"),
     )
     s"$cls\n${ind(i)}object $name {\n${objBody.mkString("\n")}\n${ind(i)}}"
+
+  /** THE CONFORMING SHAPE — `enum X(…) extends java.lang.Enum[X] with …`.
+    *
+    * A java enum IS a `java.lang.Enum<X>` and every consequence of that is a fact a caller may
+    * depend on: a bound `<E extends Enum<E> & I>`, `EnumSet`/`EnumMap`, `Comparable<E>`,
+    * `Class.isEnum` and `getEnumConstants`. Scala 3 admits that supertype for the `enum` syntax and
+    * for nothing else, so this arm is not a nicer spelling of the sealed one — it is the only shape
+    * that answers those questions at all.
+    *
+    * FOUR members the sealed shape had to write are NOT written here, and each would be an error
+    * rather than a duplicate: `name()` and `ordinal()` are FINAL on `java.lang.Enum`, and `values`/
+    * `valueOf` are put in the companion by the `enum` desugaring itself. That is exactly why
+    * `EnumShape.Reserved` refuses an enum whose own declaration needs one of those names — java's
+    * two namespaces let a FIELD called `name` sit beside the final `name()`, and scala's one
+    * namespace cannot (`CLAUDE.md` §4.55, `ENGINE-LIMITS.md` T11).
+    *
+    * …and `values` is a PARENLESS `def` here where java writes `X.values()`, which is the one call
+    * shape this arm changes; `applyStr0` drops those parens by asking `EnumShape` the same question
+    * this method asked. */
+  private def scalaEnumDef(cd: Tree.ClassDef, i: Int): String =
+    val s     = sym(cd.symbol)
+    val name  = esc(s.name)
+    // `java.lang.Enum[X]` FIRST, then java's own. Every other parent of a java enum is an INTERFACE
+    // (JLS 8.9 — an enum may implement but never extend), so `with` joins all of them; and one the
+    // frontend already carried as `java.lang.Enum` is filtered out rather than written twice, which
+    // is the same filter the sealed arm applies to the same list.
+    val mixins = cd.parents.map(parent).filter(p => p.nonEmpty && !p.startsWith("java.lang.Enum"))
+    val ext    = s" extends java.lang.Enum[$name]" + mixins.map(p => s" with $p").mkString
+    val parts  = enumParts(cd)
+    import parts.{ctorParams, instance, ctorStats, statics, eprimary}
+    val cnote  = if cd.symbol == currentTopLevelSym then "" else declNotes(cd.symbol, i)
+    val bnote  = bodyNotes(cd.symbol, i + 1)
+    // The CASES go last, after the constructor's own statements, for the reason those statements go
+    // last: a scala template runs its statements in textual order, so an assignment placed above the
+    // `var` it targets would not compile. A case is not a statement of the template — the desugaring
+    // lifts it into the companion — so its position among them is free, and putting it after the
+    // members keeps this arm's body order identical to the sealed arm's.
+    val cases = cd.enumCases.map { ec =>
+      val cn = esc(sym(ec.symbol).name)
+      // the ROOT's arguments, exactly as the sealed arm passes them (`CtorFunnel.enumConstantArgs`).
+      val cargs = CtorFunnel.enumConstantArgs(program, cd, ec.ctorArgs).getOrElse(ec.ctorArgs)
+      val args  = if cargs.isEmpty then "" else s"(${cargs.map(term(_, i + 1)).mkString(", ")})"
+      // `case A extends X(…)` and never the bare `case A, B` list: the extends form is the one that
+      // takes arguments, it is what `EnumShape` has already established is expressible, and one
+      // spelling per constant keeps a constant's own comment attached to its own line.
+      s"${leading(ec.leading, i + 1)}${ind(i + 1)}case $cn extends $name$args"
+    }
+    val members = List(bnote).filter(_.nonEmpty) ++
+      orderBody(instance, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
+      ctorStats.map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ cases
+    val cbody = members.mkString("\n")
+    val cls   = s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}enum $name$eprimary$ext" +
+      (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
+    val objBody = statics.map(memberStat(_, i + 1)).filter(_.nonEmpty)
+    // `form = "enum"` and not `"enum-class"`: the two shapes publish DIFFERENT surfaces — this one's
+    // constants are the desugaring's, its `values` is parenless, and it IS a `java.lang.Enum` — so a
+    // dependent re-deriving the other shape for the same type is a disagreement `base-surface` must
+    // be able to see.
+    //
+    // `companion = true` UNCONDITIONALLY, which is not the same question as "did this arm write an
+    // `object`". The `enum` desugaring makes one whatever java's statics are, and it is where the
+    // constants live — so a dependent asking whether `X.CONSTANT` is nameable is answered `yes`
+    // either way, and answering from `objBody` would make a fact about the emitted TYPE follow a
+    // fact about the java class's statics.
+    recordedTypeShapes(s.fullName) = Surface.TypeShape(
+      form        = "enum",
+      companion   = true,
+      statics     = statics.collect { case d: Definition => esc(sym(d.symbol).name) }.distinct,
+      primary     = Some(Descriptor(ctorParams.map(v => descriptorParam(v.tpt.tpe)))),
+      primaryKind = "not-funnelled",
+      primaryVis  = "public",
+      parents     = parentSymsOf(cd).map(p => sym(p).fullName),
+      flags       = List("enum"),
+    )
+    if objBody.isEmpty then cls
+    else s"$cls\n${ind(i)}object $name {\n${objBody.mkString("\n")}\n${ind(i)}}"
 
   // a Java `static` nested class has no instance home in Scala → it moves to the companion
   // `object` alongside static vals/defs. A non-static inner class stays in the class body.
@@ -4319,6 +4432,19 @@ final class TirEmitter(
       if effectFree(recv) then call else s"{ ${term(recv, i)}; $call }"
     case Tree.Select(_, m, _, _) if numericOverloadAscription(m).isDefined =>
       s"(${term(fun, i)}: ${numericOverloadAscription(m).get})(${args.map(term(_, i)).mkString(", ")})"
+    // `X.values()` on an enum this emitter renders as a scala 3 `enum` — the desugaring's `values`
+    // is PARENLESS, so java's own call shape is `missing argument for parameter i of method apply in
+    // class Array` rather than a call. The parens come off here and only here.
+    //
+    // ASKED OF THE ENUM'S OWN DECLARATION (`EnumShape`, the same function `enumDef` forked on), not
+    // of the callee symbol and not of the name: the frontend interns an enum's SYNTHESISED `values`
+    // under an anonymous owner (`@0#values()`), so the callee cannot say which type it belongs to
+    // (§4.59 — a member the parser synthesises is second-class evidence), while the QUALIFIER is the
+    // enum's own class symbol and is exact. A `values()` on anything else — a `java.util.Map`, a
+    // library's own method, an enum kept in the sealed shape, which still emits `def values()` — is
+    // untouched, because its qualifier is not an emitted scala enum.
+    case Tree.Select(qual, m, _, _) if args.isEmpty && sym(m).name == "values" && scalaEnumQualifier(qual) =>
+      term(fun, i)
     case _ =>
       // …through an ASCRIPTION, which wraps the callee without changing which member it is: a
       // `resolutions` selection that pinned this call must not take the raw-parent alignment with
@@ -4330,6 +4456,21 @@ final class TirEmitter(
         case _                          => scala.None
       val as = callee(fun).flatMap(alignedArgs(_, args, i)).getOrElse(args.map(term(_, i)))
       s"${term(fun, i)}(${as.mkString(", ")})"
+
+  /** does this qualifier NAME a type this emitter renders as a scala 3 `enum`?
+    *
+    * A TYPE and never a value: `Level.values()` qualifies with the class symbol, and the question is
+    * whether that class is one `scalaEnumDef` wrote. A `Select` is admitted beside an `Ident` for a
+    * NESTED enum, whose qualifier is `Outer.Inner`; in both the symbol is resolved through the
+    * program and the answer comes from `EnumShape`, so a value of an enum TYPE (`l.values()`, java's
+    * static-through-instance) cannot be mistaken for one — its symbol is a local, not a class. */
+  private def scalaEnumQualifier(qual: Term): Boolean =
+    val s = qual match
+      case Tree.Ident(s, _, _)     => s
+      case Tree.Select(_, s, _, _) => s
+      case _                       => SymId.None
+    program.definitionOf(s).collect { case cd: Tree.ClassDef => cd }
+      .exists(balticporter.tir.EnumShape.isScalaEnum(program, _))
 
   /** widening rank — a value of rank r converts implicitly to any numeric type of higher rank.
     * `Char` and `Short` share a rank because neither widens to the other. */

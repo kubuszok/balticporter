@@ -164,7 +164,7 @@ class ScreenmanagerSuite extends munit.FunSuite:
   // ---------------------------------------------------------------------------------------
 
   test("SlidingDirection: four directions, with the factors upstream declares") {
-    assertEquals(SlidingDirection.values().length, 4)
+    assertEquals(SlidingDirection.values.length, 4)
     assertEquals(SlidingDirection.UP.xPosFactor, 0)
     assertEquals(SlidingDirection.UP.yPosFactor, 1)
     assertEquals(SlidingDirection.DOWN.xPosFactor, 0)
@@ -176,7 +176,7 @@ class ScreenmanagerSuite extends munit.FunSuite:
   }
 
   test("SlidingDirection: name() and valueOf round-trip, and an unknown name throws") {
-    SlidingDirection.values().foreach(d => assertEquals(SlidingDirection.valueOf(d.name()), d))
+    SlidingDirection.values.foreach(d => assertEquals(SlidingDirection.valueOf(d.name()), d))
     intercept[IllegalArgumentException](SlidingDirection.valueOf("SIDEWAYS"))
   }
 

@@ -28,11 +28,11 @@ class VfxEnumSuite extends munit.FunSuite:
   test("ordinal() agrees with the position in values(), for every enum in the library") {
     def check[A](vs: scala.Array[A], ordinalOf: A => Int): Unit =
       vs.zipWithIndex.foreach((v, i) => assertEquals(ordinalOf(v), i))
-    check(CrtEffect.LineStyle.values(), (x: CrtEffect.LineStyle) => x.ordinal())
-    check(CrtEffect.SizeSource.values(), (x: CrtEffect.SizeSource) => x.ordinal())
-    check(GaussianBlurEffect.BlurType.values(), (x: GaussianBlurEffect.BlurType) => x.ordinal())
-    check(MixEffect.Method.values(), (x: MixEffect.Method) => x.ordinal())
-    check(GammaThresholdEffect.Type.values(), (x: GammaThresholdEffect.Type) => x.ordinal())
+    check(CrtEffect.LineStyle.values, (x: CrtEffect.LineStyle) => x.ordinal())
+    check(CrtEffect.SizeSource.values, (x: CrtEffect.SizeSource) => x.ordinal())
+    check(GaussianBlurEffect.BlurType.values, (x: GaussianBlurEffect.BlurType) => x.ordinal())
+    check(MixEffect.Method.values, (x: MixEffect.Method) => x.ordinal())
+    check(GammaThresholdEffect.Type.values, (x: GammaThresholdEffect.Type) => x.ordinal())
   }
 
   test("name() is the java CONSTANT's name, which is what the shader defines are keyed on") {
@@ -51,10 +51,10 @@ class VfxEnumSuite extends munit.FunSuite:
   }
 
   test("values() lists every constant once, in declaration order") {
-    assertEquals(GammaThresholdEffect.Type.values().toList,
+    assertEquals(GammaThresholdEffect.Type.values.toList,
       List(GammaThresholdEffect.Type.RGBA, GammaThresholdEffect.Type.RGB,
            GammaThresholdEffect.Type.ALPHA_PREMULTIPLIED))
-    assertEquals(CrtEffect.SizeSource.values().toList,
+    assertEquals(CrtEffect.SizeSource.values.toList,
       List(CrtEffect.SizeSource.VIEWPORT, CrtEffect.SizeSource.SCREEN))
   }
 
@@ -63,13 +63,18 @@ class VfxEnumSuite extends munit.FunSuite:
     // `Tap(int radius) { this.radius = radius; }`. Dropped, both fields stay at their defaults —
     // `tap` null and `radius` 0 — the port compiles, every check count holds, and
     // `GaussianBlurEffect.setType` then builds a convolve filter of radius 0.
-    assertEquals(GaussianBlurEffect.BlurType.Gaussian3x3.tap, GaussianBlurEffect.Tap.Tap3x3)
-    assertEquals(GaussianBlurEffect.BlurType.Gaussian3x3b.tap, GaussianBlurEffect.Tap.Tap3x3)
-    assertEquals(GaussianBlurEffect.BlurType.Gaussian5x5.tap, GaussianBlurEffect.Tap.Tap5x5)
-    assertEquals(GaussianBlurEffect.BlurType.Gaussian5x5b.tap, GaussianBlurEffect.Tap.Tap5x5)
-    assertEquals(GaussianBlurEffect.Tap.Tap3x3.radius, 1)
-    assertEquals(GaussianBlurEffect.Tap.Tap5x5.radius, 2)
-    // …and the composition every caller actually reads.
+    // …asserted THROUGH the public `tap` field, because upstream writes `private enum Tap` and this
+    // port now says so. Naming `GaussianBlurEffect.Tap.Tap3x3` here used to compile, and only
+    // because the sealed lowering emitted an unqualified `object Tap` beside a
+    // `private[GaussianBlurEffect]` class — a private java type whose constants the port published.
+    // The scala 3 `enum` (`ENGINE-LIMITS.md` T21) gives the companion the enum's own visibility, so
+    // java's privacy is reproduced and this suite reaches the same two fields the library does.
+    assertEquals(GaussianBlurEffect.BlurType.Gaussian3x3.tap, GaussianBlurEffect.BlurType.Gaussian3x3b.tap)
+    assertEquals(GaussianBlurEffect.BlurType.Gaussian5x5.tap, GaussianBlurEffect.BlurType.Gaussian5x5b.tap)
+    assertNotEquals[Any, Any](GaussianBlurEffect.BlurType.Gaussian3x3.tap, GaussianBlurEffect.BlurType.Gaussian5x5.tap)
+    // the composition every caller actually reads — `setType` builds a convolve filter of this
+    // radius, and T10's defect leaves both of these 0.
+    assertEquals(GaussianBlurEffect.BlurType.Gaussian3x3.tap.radius, 1)
     assertEquals(GaussianBlurEffect.BlurType.Gaussian5x5.tap.radius, 2)
   }
 

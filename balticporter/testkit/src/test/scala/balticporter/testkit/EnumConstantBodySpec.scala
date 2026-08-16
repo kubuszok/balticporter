@@ -63,18 +63,19 @@ class EnumConstantBodySpec extends PortSuite:
   }
 
   test("NEGATIVE: an enum constant with no body at all contributes nothing of its OWN") {
-    // The braces are no longer the test. Every constant now carries the `ordinal()` override the
-    // lowering owes `java.lang.Enum` — which the enum ITSELF did not write — so what this asserts
-    // is that the harvest adds nothing BESIDES: the constant declares no method of the enum's, no
-    // field, and nothing from its sibling.
+    // The braces are not the test either. An enum with NO constant body is expressible as a scala 3
+    // `enum` (`ENGINE-LIMITS.md` T21), so its constants are cases with no template at all — and
+    // `ordinal()` comes from `java.lang.Enum` rather than from an override the lowering writes. What
+    // this asserts is that the harvest adds nothing: no method of the enum's, no field, and nothing
+    // from its sibling.
     val p = port("""
       package demo;
       public enum Bare {
         A, B;
         public int n() { return 1; }
       }""")
-    assertEmits(p, "case object A extends Bare")
-    val aBody = p.out.split("case object A extends Bare \\{")(1).split("case object B")(0)
-    assertEquals(aBody.linesIterator.map(_.trim).filter(_.nonEmpty).toList,
-      List("override def ordinal(): scala.Int = 0", "}"))
+    assertEmits(p, "case A extends Bare\n")
+    assertEmits(p, "case B extends Bare\n")
+    assertNotEmits(p, "case A extends Bare {")
+    assertNotEmits(p, "override def ordinal()")
   }

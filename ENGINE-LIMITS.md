@@ -2472,6 +2472,71 @@ and the difference there is a caught `MatchException` in java becoming an uncaug
 *Fix kind: (a) — and all three are REFUSALS, not gaps. Nothing in scala emits the attribute, and
 nothing in scala matches a product lazily by component.*
 
+### T21. A ported java enum IS a `java.lang.Enum`, and only the `enum` SYNTAX can say so — **ssg-md 171 → 137, and the shape had been un-askable for five libraries**
+
+A java enum is a `java.lang.Enum<E>` by JLS 8.9, and that is a TYPE fact callers depend on: any
+library may write `<E extends Enum<E> & I>` (flexmark's `BitFieldSet` does, over its whole API), and
+`EnumSet`, `EnumMap` and `Comparable<E>` bound on it too — the engine's own `JavaEnumSet[E <:
+java.lang.Enum[E]]` shim among them. The emitter shipped a `sealed abstract class` plus one
+`case object` per constant, which is not one, so **no such bound could be satisfied by any ported
+enum anywhere**: 36 errors on the first corpus library to write one, all of them at a call.
+
+**And the shape was not a choice between two spellings.** A `sealed abstract class Flags extends
+java.lang.Enum[Flags]` is refused by scalac outright —
+
+```
+class Flags cannot extend java.lang.Enum: only enums defined with the enum syntax can
+```
+
+— so the alternative to the scala 3 `enum` was not a worse conforming shape, it was no conforming
+shape. That is the whole reason this sat for five libraries: the sealed lowering answered every
+question anyone had ASKED (`name()`, `ordinal()`, `values()`, `valueOf` were all synthesised — T11,
+T13), and the one question it could not answer had no site in the corpus until flexmark.
+
+**What the `enum` form buys, measured rather than assumed** (probed at 3.8.4, `Reflect` in one run):
+
+| asked of an emitted enum | answers |
+|---|---|
+| `Class.isEnum()` | **true** — dotty emits `ACC_ENUM` for a java-compatible enum |
+| `Class.getEnumConstants()` | the constants, in declaration order |
+| `getDeclaringClass()`, `compareTo`, `name()`, `ordinal()` | java's own, from the parent |
+| an explicit companion beside it, nested in an `object`, per-constant arguments, `var` parameters, extra interfaces, an own `toString` | all accepted |
+
+**The one call shape that changes is `values()`.** The desugaring's `values` is PARENLESS, so java's
+own `X.values()` reads `missing argument for parameter i of method apply in class Array`, and a
+companion cannot alias it — `def values(): Array[X]` beside the generated `def values` is `E120
+Conflicting definitions: neither has parameters`. The emitter drops the parens at the call, asking
+`EnumShape` the same question `enumDef` forked on; a `values()` on a `java.util.Map`, on a library's
+own method or on an enum kept in the sealed shape is untouched, because the qualifier is not an
+emitted scala enum. Note WHY the question is asked of the qualifier: the frontend interns an enum's
+SYNTHESISED `values` under an anonymous owner (`@0#values()`), so the callee symbol cannot say which
+type it belongs to (§4.59), while the qualifier is the enum's own class symbol and is exact.
+
+**TWO shapes, because the `enum` syntax cannot express every java enum** — and the refusal is
+structural, derived from java's declaration, and counted (`OmissionCheck.enumShapeRefusals`,
+`EnumShape.refusal`):
+
+| java writes | why the `enum` form cannot | corpus |
+|---|---|---|
+| a constant with a CLASS BODY (JLS 8.9.1) | a scala 3 enum case has no template body at all — `case A extends E { … }` does not parse — and an enum with an abstract method needs one per constant | noise4j 3 |
+| a member or promoted parameter named `name`, `ordinal`, `compareTo`, `getDeclaringClass`, `values`, `valueOf`, … | java has TWO namespaces and a FIELD called `name` sits beside the final `name()`; scala has one, and `variable name … cannot override final member method name in class Enum` (T11's shape, arriving through the PARENT rather than through a synthesis) | anim8 `Dithered.DitherAlgorithm` |
+| an enum with NO constants | a scala 3 `enum` must declare at least one case | none yet |
+
+Each refusal keeps the sealed lowering BYTE-FOR-BYTE — anim8 read `omissions 0 → 1` at **0 member
+digests changed**, which is what a refusal that is exact looks like — and the row says which guard
+fired, because a shape decided per declaration and reported nowhere is the silent half of §3.
+
+**The blast, and what it is evidence for.** Every ported enum in every port changes shape, and the
+suites are the only instrument that can see a behavioural change: libGDX **0 → 0 errors with all
+44 check counts flat**, 72 member digests and 82 port-map rows moved, and the libGDX suite ran
+**217 passing / 4 failing — identical**, as did every other suite in the corpus. The port map now
+publishes `form=enum` beside `form=enum-class`, which is not decoration: the two publish different
+surfaces (a parenless `values`, the desugaring's constants, the supertype), so a dependent
+re-deriving the other one for the same type is a disagreement `base-surface` has to be able to see.
+
+*Fix kind: (a) engine. Built; `EnumJavaLangEnumSpec`, six cells — the conforming shape, the
+call-site paren strip with both negatives beside it, and one cell per refusal.*
+
 ---
 
 ## 4. Collections, shims and the JDK boundary
@@ -5838,6 +5903,59 @@ has, and whether the ports that would use it can DELIVER it.
 *Fix kind: (b) refused — the mechanism is real and its home is not the engine. What the engine already
 provides is the whole of the mechanised half: `MethodBodyTransform` for a body seam, `dropTypes` +
 `inject` for a whole type.*
+
+### K23. SE8 put DEFAULT METHODS on `List`, `Map` and `Collection`, and a library written since uses them like `get` — **ssg-md 137 → 108; six mapped, two REFUSED, one gap named**
+
+Every member the collections tables answered was a member java had in 1.2. A library written after
+2014 reaches for `list.sort(cmp)`, `map.computeIfAbsent(k, f)` and `collection.removeIf(p)` exactly as
+readily, and every one of them lands on a retyped owner with no arm — which `jdk-surface` had been
+reporting, precisely and unread, as `unhandled` for the life of the port (38 rows, of which these are
+33 errors' worth).
+
+**Each is a HELPER and not a rename, and the reason is the same one `removeValue` and `putIfAbsent`
+already carry: scala HAS the operation and it means something else.** Verified against both specs
+before mapping, one row at a time:
+
+| java | the scala member that looks right | what differs |
+|---|---|---|
+| `List.sort(c)` | `sorted` | java mutates IN PLACE and every caller reads the same reference afterwards. (`JavaCollections.sort` already existed for `Collections.sort` — SE8 made that static delegate to this member, so one helper is correct for both by java's own definition.) Stability holds on both sides: java's is specified stable and scala's `sortWith` is TimSort over an `Object[]` |
+| `Map.computeIfAbsent(k, f)` | `getOrElseUpdate` | TWO divergences, both silent. Java treats a key mapped to `null` as ABSENT ("if the specified key is not already associated with a value (or is mapped to null)"), and java RECORDS NOTHING when the factory answers `null` — `getOrElseUpdate` stores it and hands it back, so the next call re-runs the factory in java and does not in the port |
+| `Collection.removeIf(p)` | `filterInPlace` | `filterInPlace` KEEPS what the predicate accepts — the exact complement of what java removes — and returns the collection where java returns the `boolean` callers branch on |
+| `Map.containsValue(v)` | `exists(_._2 == v)` | the equality DIRECTION: `HashMap.containsValue` asks the PROBE's `equals` (`value.equals(v)` with `value` the argument), scala's `==` asks the stored value's. They agree for every symmetric `equals` and for nothing else |
+| `Collection.containsAll(c)` | `forall(contains)` | the same direction, one member out — java's default is `for (e : c) if (!contains(e))` and `ArrayList.contains` is `o.equals(element)` |
+| `ArrayList.ensureCapacity(n)` | — | the ONE member here whose java behaviour a caller cannot observe: a capacity hint. `ArrayBuffer.sizeHint` is the counterpart and a `ListBuffer` has no capacity at all, so its no-op arm is exact rather than approximate |
+
+**`removeIf` is TWO helpers, not an overload**, because `Buffer` and `Set` erase alike and scala cannot
+hold both under one name — and picking by the receiver's KIND at the phase puts the choice in the
+emitted call instead of in a run-time dispatch (`sort`/`sortNatural` are already split this way). The
+list form removes BY POSITION, which matters for exactly the shape flexmark has: a predicate
+`it.getOffset() == n` over a type whose `equals` ignores the offset removes the right element here and
+could remove the other through any by-value route.
+
+**TWO REFUSED, and they are the two whose RESULT is a JDK protocol rather than a value** — recorded in
+`JdkSurfaceCheck.Refusals` so a reader meets the reason and not a wall:
+
+- **`List.listIterator()`** is a bidirectional cursor that WRITES THROUGH to the list (`previous`,
+  `set`, `add`, `nextIndex` all act on the position it holds). Scala's `Iterator` is forward-only and
+  read-only, so every mapping is either a different protocol or a detached copy whose `set` updates
+  nothing — which is `Map.Entry#setValue`'s refusal read at a cursor;
+- **`Collection.spliterator()`** is a parallel-DECOMPOSITION protocol (`trySplit`, `estimateSize`,
+  `characteristics`) whose only consumer is `java.util.stream`, which this phase COLLAPSES rather than
+  models. A wrapper for it would be a stream implementation.
+
+**And one gap NAMED rather than closed: a BOUND method reference at a rewritten member.**
+`this.headings::add` emits as an eta-expanded `this.headings.add` — a `Tree.Select`, not the
+`Tree.Apply` every arm is keyed on — so the `add` arm never sees it. `lowerMethodRef` lowers the
+UNBOUND form (`Type::m`) for exactly this reason and its own comment says the bound one "is the
+`Apply` case one node out", which is true of a CALL and false of a reference. Closing it needs one
+minted parameter symbol per argument position and would move every bound method reference at a mapped
+member in every port; measured at **one** site in the corpus (ssg-md `HeadingCollectingVisitor`), so it
+is recorded here rather than built, and `jdk-surface` reads `mapped` over it — the one place in that
+report where a table entry is true of the member and not of the site.
+
+*Fix kind: (b) — the tables gain the entries and the runtime gains the members; the two refusals are
+(a) with citations. `CollectionsSe8MembersSpec`, one cell per member with its java-vs-scala divergence
+asserted, plus the two refusals.*
 
 ---
 

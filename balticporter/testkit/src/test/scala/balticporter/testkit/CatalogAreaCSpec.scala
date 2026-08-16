@@ -409,8 +409,30 @@ class CatalogAreaCSpec extends PortSuite:
 
   // -- JS-C37 / JS-C38 / JS-C39 / JS-C40: java enums ------------------------------------------------------------
 
-  test("JS-C37 / JS-C39 — `name()`, `values()`, `valueOf` and `ordinal()` are SYNTHESISED") {
+  test("JS-C37 / JS-C39 — an EXPRESSIBLE enum takes all four from `java.lang.Enum` and its desugaring") {
+    // The rows still FIRE — they are about java's four synthesised members being part of every
+    // enum's surface — and where the answer comes from moved: an enum the scala 3 `enum` can express
+    // extends `java.lang.Enum[A]`, whose `name()`/`ordinal()` are FINAL, and the desugaring puts
+    // `values`/`valueOf` in the companion (`ENGINE-LIMITS.md` T21). Emitting any of the four beside
+    // them would be an error rather than a duplicate.
     val p = port("public enum A { RED, GREEN }")
+    assertConsults(p, JS.C(37), fired = true)
+    assertConsults(p, JS.C(39), fired = true)
+    assertEmits(p, "enum A extends java.lang.Enum[A]")
+    assertNotEmits(p, "def values")
+    assertNotEmits(p, "def ordinal")
+  }
+
+  test("JS-C37 / JS-C39 — …and the SEALED shape, which is not a `java.lang.Enum`, writes all four") {
+    // A constant with a class body is inexpressible as a scala 3 enum case, so this enum keeps the
+    // pre-existing lowering — and that lowering owes java's four members itself, which is what the
+    // two rows were originally written about.
+    val p = port(
+      """public enum A {
+        |  RED { public int n() { return 0; } },
+        |  GREEN { public int n() { return 1; } };
+        |  public abstract int n();
+        |}""".stripMargin)
     assertConsults(p, JS.C(37), fired = true)
     assertConsults(p, JS.C(39), fired = true)
     assertEmits(p, "def values")

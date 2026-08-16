@@ -145,7 +145,7 @@ sge.vfx.effects.CompositeVfxEffect	sge.vfx.effects.CompositeVfxEffect#register(T
 sge.vfx.effects.CompositeVfxEffect	sge.vfx.effects.CompositeVfxEffect#resize(int,int)	def	38aea77ea2535500
 sge.vfx.effects.CompositeVfxEffect	sge.vfx.effects.CompositeVfxEffect#unregister(T)	def	6fbed057905dc54f
 sge.vfx.effects.CompositeVfxEffect	sge.vfx.effects.CompositeVfxEffect#update(float)	def	45b3cfb12733a027
-sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect	class	92499b0599e98938
+sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect	class	b334b70d78d4280c
 sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect#<init>(Sge)	ctor	6a98f253e98b7353
 sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect#<stmt1>	stmt	5e3db9e8fb1acb4f
 sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect#U_RESOLUTION	val	eb3ba9546b3ccb97
@@ -159,8 +159,8 @@ sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect#setSizeSource(SizeSource)	de
 sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect#sizeSource	val	0b491cc00fbb122d
 sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect#tmpVec	val	c9749fd589e3eb7d
 sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect#viewportSize	val	e28570e3eadc9bf5
-sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect$LineStyle	class	9e9963534090a5eb
-sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect$SizeSource	class	e1142b0fbd308b64
+sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect$LineStyle	class	bd383d115b382c98
+sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect$SizeSource	class	d6b48e3288e155e1
 sge.vfx.effects.FilmGrainEffect	sge.vfx.effects.FilmGrainEffect	class	56009000f026ac92
 sge.vfx.effects.FilmGrainEffect	sge.vfx.effects.FilmGrainEffect#<stmt1>	stmt	5e3db9e8fb1acb4f
 sge.vfx.effects.FilmGrainEffect	sge.vfx.effects.FilmGrainEffect#U_NOISE_AMOUNT	val	b9e8f843f575ba4c
@@ -204,7 +204,7 @@ sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#setReduceMin(float)	def	57
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#setReduceMul(float)	def	87ab2b6c74971db3
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#setSpanMax(float)	def	7693f9afa365f44b
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#viewportInverse	val	958d4eb8e6fd9e69
-sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect	class	200f28a9222d2dc3
+sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect	class	885aae91a82831e4
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#<init>(Sge)	ctor	ffa176e9587d0b4a
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#<stmt1>	stmt	c0fb3c209a67c1d5
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#amount	val	15684f28a4986c61
@@ -227,7 +227,7 @@ sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#setPasses(
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#setType(BlurType)	def	def7c087acbdd588
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#type	val	86ec3590e1aabae4
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#update(float)	def	2fa4f96e0c8e75be
-sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$BlurType	class	3ba8edf402ecbe0c
+sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$BlurType	class	e7283738bbb9709a
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect	class	a4ff5c1bfa7033d4
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect#<init>(int,Array<float>,Sge)	ctor	0e0b9af93dda5fe2
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect#<init>(int,Sge)	ctor	debc1a271744a839
@@ -264,7 +264,7 @@ sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve2D
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve2DEffect#render(VfxRenderContext,VfxPingPongWrapper)	def	3b8f7508d4146a5b
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve2DEffect#vert	val	ed40fd867c199941
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve2DEffect#weights	val	ee64b820cb0d5ec3
-sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Tap	class	eae18a7dc154eec2
+sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Tap	class	19a4eee5136d8008
 sge.vfx.effects.LensFlareEffect	sge.vfx.effects.LensFlareEffect	class	e0a08697a522033d
 sge.vfx.effects.LensFlareEffect	sge.vfx.effects.LensFlareEffect#<stmt1>	stmt	5e3db9e8fb1acb4f
 sge.vfx.effects.LensFlareEffect	sge.vfx.effects.LensFlareEffect#U_COLOR	val	1ff6e2955e4c2993
@@ -538,7 +538,7 @@ sge.vfx.effects.util.CopyEffect	sge.vfx.effects.util.CopyEffect#U_TEXTURE0	val	8
 sge.vfx.effects.util.CopyEffect	sge.vfx.effects.util.CopyEffect#rebind()	def	e1201886ada796ee
 sge.vfx.effects.util.CopyEffect	sge.vfx.effects.util.CopyEffect#render(VfxRenderContext,VfxFrameBuffer,VfxFrameBuffer)	def	d6046ab4939afdef
 sge.vfx.effects.util.CopyEffect	sge.vfx.effects.util.CopyEffect#render(VfxRenderContext,VfxPingPongWrapper)	def	34eb468b9ae4f864
-sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEffect	class	ba07a63bdfae57b7
+sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEffect	class	0e2fe42e4045f68b
 sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEffect#<stmt1>	stmt	5e3db9e8fb1acb4f
 sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEffect#U_TEXTURE0	val	84c2b4ea4638c1a2
 sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEffect#U_THRESHOLD	val	87a5094991776f36
@@ -549,8 +549,8 @@ sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEff
 sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEffect#render(VfxRenderContext,VfxFrameBuffer,VfxFrameBuffer)	def	8f0ecb54af55f12f
 sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEffect#render(VfxRenderContext,VfxPingPongWrapper)	def	34eb468b9ae4f864
 sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEffect#setGamma(float)	def	5add0121780d81de
-sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEffect$Type	class	1131e1f72a4b1a8c
-sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect	class	24147cff3dfaaefa
+sge.vfx.effects.util.GammaThresholdEffect	sge.vfx.effects.util.GammaThresholdEffect$Type	class	ea2e9194b1ce4ae7
+sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect	class	551000eb04887c4c
 sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect#<stmt1>	stmt	5e3db9e8fb1acb4f
 sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect#U_MIX	val	377735b6d24f4a3d
 sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect#U_TEXTURE0	val	84c2b4ea4638c1a2
@@ -560,7 +560,7 @@ sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect#mixFactor	val	cdac
 sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect#rebind()	def	04d7b606e1a5c1eb
 sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect#render(VfxRenderContext,VfxFrameBuffer,VfxFrameBuffer,VfxFrameBuffer)	def	aae2f9012744e203
 sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect#setMixFactor(float)	def	e7b31528762dc8cb
-sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect$Method	class	c516653e0a65a193
+sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect$Method	class	6c1e8eddc66f394c
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer	class	4e5a2a2852960e2f
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer#<stmt1>	stmt	c8179272566866ba
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer#addRenderer(Renderer)	def	faa257b76c679812

@@ -100,7 +100,7 @@ d0d12b068c78	catalog(uncited)	handled	JS-C19	-	0	UNCITED — only a primary cons
 00424df3de72	catalog(uncited)	handled	JS-C31	-	0	UNCITED — the same construct, with a synthesised name (JLS side: JLS 15.9.5): anonymous class construction and capture
 f546fdbb040c	catalog(uncited)	handled	JS-C34	-	0	UNCITED — a corollary of JS-C01 at the interface edge (JLS side: JLS 8.4.8, 9.3): interface statics are not inherited AT ALL, not even by an implementor
 ebfa8edb083a	catalog(uncited)	handled	JS-C36	-	0	UNCITED — a corollary of JS-C01, JS-C02 and JS-C08 (JLS side: JLS 9.3): an interface field is implicitly `public static final`
-2cf9a0f6a315	catalog(uncited)	handled	JS-C37	-	0	UNCITED — a Scala 3 `enum` has a different, non-identical surface (JLS side: JLS 8.9.3): `name()`, `values()` and `valueOf` are SYNTHESISED on every Java enum
+e29f2e7f69a9	catalog(uncited)	handled	JS-C37	-	0	UNCITED — a Scala 3 `enum` has a different, non-identical surface: it inherits `name()` from `java.lang.Enum` and its desugaring supplies `values`/`valueOf`, but `values` is PARENLESS where java writes `values()` (JLS side: JLS 8.9.3): `name()`, `values()` and `valueOf` are SYNTHESISED on every Java enum
 5669b52f1725	catalog(uncited)	handled	JS-C38	-	0	UNCITED — a constructor parameter becomes a class member (JLS side: JLS 8.9.2): a promoted enum constructor parameter IS a member, and `name` collides with `Enum.name()`
 8d3678233c95	catalog(uncited)	handled	JS-C39	-	0	UNCITED — nothing supplies it unless it is emitted (JLS side: JLS 8.9.3): `ordinal()` is part of every Java enum's surface, mentioned or not
 e5904b642252	catalog(uncited)	handled	JS-C45	-	0	UNCITED — a `val` carries the same guarantee (JLS side: JLS 17.5): a `final` field's JMM safe-publication guarantee

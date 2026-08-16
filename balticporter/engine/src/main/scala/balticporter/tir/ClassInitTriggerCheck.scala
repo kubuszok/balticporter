@@ -183,7 +183,12 @@ object ClassInitTriggerCheck:
     // item 7 does NOT reach a superinterface unless that interface declares a default method. Read
     // as a defect these were 4 findings on libGDX core (`GL30`, `GL31`, `GLErrorListener`,
     // `ArraySupplier`), every one of them a type nothing can `new`.
-    val notInstantiable = Set("object", "enum-class", "trait", "annotation")
+    // BOTH enum forms are here and for one reason: an enum's constants ARE companion members in
+    // either shape — `case object`s the emitter writes (`enum-class`), or the scala 3 desugaring's
+    // own (`enum`, `EnumShape`) — so any use of one initialises the companion. A set naming only the
+    // shape that existed when it was written would have started reporting every conforming enum as
+    // an unforced bearer the day the second shape shipped, which is §4.56's stale filter exactly.
+    val notInstantiable = Set("object", "enum-class", "enum", "trait", "annotation")
     val unforced = clinitBearers.toList.collect {
       case (s, cd) if mine(s) && !forced(s -> Instantiation) && !formOf(fqn(s)).exists(notInstantiable) =>
         val cyclic = reentrant.get(s)
