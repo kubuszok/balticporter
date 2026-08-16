@@ -2854,7 +2854,7 @@ above sums to more than the family sizes the first census printed.
 
 | n | family | §1 |
 |---:|---|---|
-| 19 | **a RAW generic at an INHERITED formal, and TWO defects at one call.** `AstActionHandler<C,N,A,H>.addActionHandlers(H[]...)` reached from `AttributeProviderAdapter`, whose own parameter is java's raw `AttributeProvidingHandler[]`. Java PACKS an `H[]` into the `H[][]` slot (it is assignable to the component and not to the array) and the port forwards it, so the arity is wrong BEFORE the element type is; and the element is `[?]` against the parent's substituted `[Node]`, which java admitted by unchecked conversion at a raw type. `ParentSubst` (G25) is doing its half correctly — the `Required:` side reads `[Node]` — so what is left is the vararg packing and the raw-to-parameterised cast | **(a)** — the G-family (`G1`/`G2`/`G11`) at an inherited formal, plus §4.4's vararg-packing row read at a callee the port DECLARES |
+| 19 | **a RAW generic at an INHERITED formal, and TWO defects at one call.** `AstActionHandler<C,N,A,H>.addActionHandlers(H[]...)` reached from `AttributeProviderAdapter`, whose own parameter is java's raw `AttributeProvidingHandler[]`. Java PACKS an `H[]` into the `H[][]` slot (it is assignable to the component and not to the array) and the port forwards it, so the arity is wrong BEFORE the element type is; and the element is `[?]` against the parent's substituted `[Node]`, which java admitted by unchecked conversion at a raw type. **The packing half was BUILT AND MEASURED WORSE** — `ENGINE-LIMITS.md` G26 carries javac's five cells and both attempts (81 → 81 at `markers` 0 → 1, and 81 → 83) — because with the arity corrected every site reads `Array[Array[H[?]]]` against `Array[Array[H[Node]]]`, which is a better residue worth zero errors. The raw-to-parameterised cast at an INHERITED formal is what the family actually needs | **(a)** — the G-family (`G1`/`G2`/`G8`/`G26`) at an inherited formal |
 | 7 | **`map.keySet()` at a DECLARED `mutable.Set` return** — java's `keySet` is a write-through view and scala's `mutable.Map.keySet` is typed `scala.collection.Set`, which the phase already encodes for a `val` initialised from it (`transformValDef`) and for a coercion SOURCE (`isKeySetView` refuses to wrap). A `return` is the third position and nothing answers it; `collection-boundary` names one of them (`DataSet#getKeys`). Closing it wants a live write-through `mutable.Set` view in the runtime | **(a)** |
 | 5 | **a retyped formal at a method that OVERRIDES a class file** — `BitFieldSet<E> extends java.util.AbstractSet<E>` had `containsAll`/`addAll`/`removeAll`/`retainAll` retyped to `JavaCollection[?]` while the parent's formal is `java.util.Collection[?]`, so `super.containsAll(c)` cannot compile and the member overrides nothing. §4.56's "an unowned symbol's SIGNATURE is a fact about a class file" read at an OVERRIDE. `collection-boundary` counts all five | **(a)** |
 | 5 | `MutableDataHolder.set` overload resolution — `DataKey<Collection<Extension>>` retypes its type ARGUMENT to the SHIM while the value is an `ArrayBuffer`, so no `T` unifies. The `Collection`-shim-against-`Buffer` seam inside the program, where `collection-boundary` (which counts EXTERNAL callees) cannot see it | **(a)** |
@@ -2863,9 +2863,10 @@ above sums to more than the family sizes the first census printed.
 
 **Where the next wave starts:** the `keySet` row, which is the cheapest thing left and wants one
 runtime type; then the override-formal row, which is a rule (§4.56 at an override) rather than a
-site. The raw-generic row is the deepest, and it is two fixes rather than one: java's vararg PACKING
-at a callee the port declares, and then the raw-to-parameterised cast the packing exposes. Nothing
-left in this port needs a manifest entry.
+site. The raw-generic row is the deepest and is now HALF-MEASURED: the vararg packing is built,
+javac-verified and REFUSED at 81 → 83 (`ENGINE-LIMITS.md` G26), so what the family needs first is the
+raw-to-parameterised cast at an inherited formal — after which the packing becomes worth shipping.
+Nothing left in this port needs a manifest entry.
 
 ### 10.6.4 What the first run already taught, at 0 cost
 
@@ -2890,6 +2891,12 @@ left in this port needs a manifest entry.
 
 ### 10.6.5 Do NOT retry
 
+- **The vararg PACKING half of the raw-generic family, on its own.** Built, verified against
+  javac's own five cells, and measured at **81 → 81 with `markers` 0 → 1** taking the declared
+  component (the `?H` sentinel, 18 references) and at **81 → 83** with either guard that sends an
+  unnameable component to argument inference. `ENGINE-LIMITS.md` G26 carries the table and both
+  numbers. The arity really is wrong and fixing it really does produce a better residue; it is
+  worth zero errors until the raw-to-parameterised cast at an inherited formal exists.
 - **Reading the hand port's deviations as milestone-1 policy.** Three of them are tempting and all
   three are deliberately absent from `main.conf` (D-md-5): `NullabilityTransform` at
   `Target.Wrapper("ssg.md.Nullable")` (300 hand-port files, 594 annotated upstream files — the

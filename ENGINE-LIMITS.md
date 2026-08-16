@@ -790,6 +790,55 @@ formals only COLLIDES with them once the formals are read at the subclass's inst
 
 *Fix kind: (a).*
 
+### G26. A `T[]...` slot's ARITY is decided by ASSIGNABILITY, and the port reads it as "both are arrays" — **the defect is real and javac-verified; both fixes measured WORSE (ssg-md 81 → 83, and 81 → 81 at `markers` 0 → 1). OPEN**
+
+Java's rule for a vararg slot is whether the argument is assignable to the PARAMETER'S ARRAY TYPE —
+if it is, the array goes through; if it is only assignable to the COMPONENT, java materialises a
+one-element array around it. `varargHoldsArray` reads that as *is the argument an array*, plus a
+primitive-component check. Exact while the vararg's component is not itself an array, which every
+corpus vararg was until one was `H[]...`: there the parameter type is `H[][]`, a plain `H[]` is
+assignable to the component and not to the array, and java packs. Read as a pass-through, the port
+forwards a one-dimensional array into a two-dimensional slot — **the ARITY of the emitted call is
+wrong before its element type is.**
+
+**Probed against javac, all five cells** (`static <H> String pack(H[]... xs)` beside
+`static String obj(Object... xs)`):
+
+| call | javac | why |
+|---|---|---|
+| `pack(String[])` | **PACKED** — `outer=1` | `String[]` is assignable to `H[]`, not to `H[][]` |
+| `pack(String[][])` | through — `outer=2` | assignable to the parameter's array type |
+| `obj(String[])` | through — `n=2` | any reference array is assignable to `Object[]` |
+| `obj(String[][])` | through — `n=2` | `String[]` is assignable to `Object`, so `String[][] <: Object[]` |
+| `obj(int[])` | **PACKED** — `n=1` | `int[]` is assignable to nothing but `int[]` (the check already here) |
+
+**One comparison answers all five with no subtyping oracle**: the argument goes THROUGH exactly when
+its array DIMENSION is at least the parameter's — `dims(arg) >= dims(comp) + 1` — with the primitive
+check on top. Every shape javac REJECTS (a `String[][]` at a `String...`) is outside it either way.
+That part is not in doubt and is not what this entry is about.
+
+**What is open is the ELEMENT TYPE the pack must then name, and both answers measured worse.** The
+sites this reaches in the corpus are all the same shape: a subclass calling an INHERITED `H[]...`
+where `H` is the PARENT's type variable, which the calling class does not declare.
+
+| attempt | measured |
+|---|---|
+| the dimension test alone, taking the DECLARED component `H[]` | ssg-md 81 → 81 and **`markers` 0 → 1** — `tpe` renders the unresolvable variable as the `?H` SENTINEL, 18 references in one module. The arity becomes right and the emitted element becomes a type nothing can be passed at |
+| …plus a guard sending an unnameable component to argument inference | ssg-md **81 → 83**. Two sites whose declared component really WAS nameable fell down the inference path, where Spoon types a class literal as RAW `Class` — the 94-error Ashley shape `varargPack`'s own comment exists to prevent (`addNodes(Class<? extends Node>...)`, `Array[Class[?]]` against `Array[Class[? <: Node]]`) |
+| …with the guard narrowed to *names a type VARIABLE this scope cannot name* (`mentionsUnresolvableVar`, strictly narrower than `tpResolvable`, which answers `false` wherever a bound cannot be READ) | **the same 81 → 83**, `markers` back to 0. The declared-component branch still declines at those two sites for a reason no reading of the type explains, so the narrowing is not the whole story |
+
+**So the arity fix is bounded by the RAW ELEMENT, which is the second defect at the same call.** With
+the arity corrected, all six sites read `Array[Array[H[?]]]` against `Array[Array[H[Node]]]` — one
+residue where there were two, and the same message the already-two-dimensional calls give. That is a
+better residue and it is worth ZERO errors, so it does not ship on its own: G2 is the shipped answer
+for the raw element (`[?]` everywhere) and G8 is why it is not filled, and until the raw-to-
+parameterised cast at an INHERITED formal exists there is nothing for the pack to be right about.
+
+Do not re-derive javac's table; do not re-try either guard without a plan for the element type.
+
+*Fix kind: (a), OPEN. Measured on ssg-md; nothing shipped, and the spec that pinned the packing was
+deleted with it — a spec for behaviour the engine does not have is worse than none.*
+
 ---
 
 ## 2. Constructors
