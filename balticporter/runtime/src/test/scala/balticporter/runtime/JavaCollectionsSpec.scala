@@ -260,6 +260,134 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // `java.util.Collection`'s BULK DEFAULTS at the SECOND target — the K29 receiver contract
+  // -------------------------------------------------------------------------------------------
+  //
+  // `addAll`/`removeAll`/`retainAll` are what a java class INHERITS from `AbstractCollection` and
+  // calls through `super`. The re-parenting removes them, so the phase supplies them — and the whole
+  // point of the receiver being an intersection rather than a `Buffer` is that a definer is
+  // re-parented onto EITHER `mutable.Buffer` or `mutable.Set`. Both are exercised below, and so is
+  // the shape the emitted call actually has: a GENERIC class extending `mutable.Set`, calling the
+  // helper on `this`. That third one is a TYPE-INFERENCE assertion as much as a behavioural one —
+  // an intersection is a place scala's inference can decline, and a helper that does not infer at
+  // the emitted shape is a helper the emitted call cannot use.
+
+  /** the emitted shape itself: a class that DEFINES a set, re-parented onto `mutable.Set`, whose
+    * `super.<default>` the phase rewrites to a helper standing on `this`. */
+  private class Definer[E] extends scala.collection.mutable.Set[E]:
+    private val items                            = ArrayBuffer.empty[E]
+    def iterator: Iterator[E]                    = items.iterator
+    def contains(e: E): Boolean                  = items.contains(e)
+    def addOne(e: E): this.type                  = { if !items.contains(e) then items += e; this }
+    def subtractOne(e: E): this.type             = { items -= e; this }
+    override def clear(): Unit                   = items.clear()
+    // …and these are what the phase emits in place of `super.<name>(c)`.
+    def addAllJ(c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean    = JavaCollections.addAll(this, c)
+    def removeAllJ(c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean = JavaCollections.removeAll(this, c)
+    def retainAllJ(c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean = JavaCollections.retainAll(this, c)
+
+  test("removeAll removes EVERY occurrence — which is what separates it from `removeValue`") {
+    // java's `remove(Object)` removes the first match; its `removeAll` removes all of them. A helper
+    // written over `-=` alone would answer the first question at a member that asks the second, and
+    // the port would silently keep the duplicates.
+    val xs: Buffer[String] = ArrayBuffer("a", "b", "a", "c", "a")
+    assert(JavaCollections.removeAll(xs, List("a")))
+    assertEquals(xs.toList, List("b", "c"))
+    assert(!JavaCollections.removeAll(xs, List("z")), "java returns whether anything went")
+    assert(!JavaCollections.removeAll(xs, Nil), "an empty argument removes nothing")
+    assertEquals(xs.toList, List("b", "c"))
+  }
+
+  test("retainAll is removeAll's complement, and an EMPTY argument EMPTIES the receiver") {
+    // read as "retain — so nothing to do", the empty case would be a no-op. Java's loop removes
+    // every element `c` does not contain, and an empty `c` contains none of them.
+    val xs: Buffer[String] = ArrayBuffer("a", "b", "a", "c")
+    assert(JavaCollections.retainAll(xs, List("a", "c")))
+    assertEquals(xs.toList, List("a", "a", "c"), "every retained occurrence stays")
+    assert(!JavaCollections.retainAll(xs, List("a", "c", "z")), "nothing to drop is java's `false`")
+    val ys: Buffer[String] = ArrayBuffer("a")
+    assert(JavaCollections.retainAll(ys, Nil))
+    assertEquals(ys.toList, Nil)
+  }
+
+  test("the equality DIRECTION is `c.contains(e)` — the OPPOSITE of containsAll's, and it is java's") {
+    // `containsAll` asks `this.contains(o)` for each `o` of the argument, so the probe is the
+    // ARGUMENT's element. These two ask `c.contains(e)` for each `e` of the receiver, so the probe
+    // is the RECEIVER's. The two directions differ for any asymmetric `equals`, and a helper that
+    // picked the wrong one compiles and moves no count.
+    class Elem  extends AnyRef { override def equals(o: Any): Boolean = true  }
+    class Probe extends AnyRef { override def equals(o: Any): Boolean = false }
+    val xs: Buffer[AnyRef] = ArrayBuffer(new Elem)
+    assert(JavaCollections.removeAll(xs, List(new Probe)), "elem.equals(probe) is what java asks here")
+    assertEquals(xs.size, 0)
+    // …and the other member really does read it the other way round, at the same pair.
+    val ys: Buffer[AnyRef] = ArrayBuffer(new Elem)
+    assertEquals(JavaCollections.containsAll(ys, List(new Probe)), false,
+                 "containsAll asks the ARGUMENT's equals — the opposite direction, same pair")
+  }
+
+  test("…and java's null arm on both: a null element is matched by a null probe") {
+    val xs: Buffer[String] = ArrayBuffer("a", null, "b")
+    assert(JavaCollections.removeAll(xs, List(null)))
+    assertEquals(xs.toList, List("a", "b"))
+    val ys: Buffer[String] = ArrayBuffer("a", null)
+    assert(JavaCollections.retainAll(ys, List(null)))
+    assertEquals(ys.toList, List(null))
+  }
+
+  test("the BUFFER arm removes POSITIONALLY, so a live alias sees java's own sequence") {
+    // `removeIf`'s doc states the rule these two inherit: an element is identified by its PLACE, not
+    // by an `equals` a second element might also satisfy — and the removal happens through the
+    // receiver the caller kept, never through a filtered copy.
+    val xs: Buffer[Int] = ListBuffer(1, 2, 3, 4)
+    val alias = xs
+    assert(JavaCollections.removeAll(xs, List(2, 4)))
+    assertEquals(alias.toList, List(1, 3))
+    assert(alias eq xs)
+  }
+
+  test("the SET arm: same three members, at the other target a definer is re-parented onto") {
+    val s = scala.collection.mutable.LinkedHashSet("a", "b", "c")
+    assert(JavaCollections.removeAll(s, List("b")))
+    assertEquals(s.toList, List("a", "c"))
+    assert(JavaCollections.retainAll(s, List("c", "z")))
+    assertEquals(s.toList, List("c"))
+    assert(JavaCollections.addAll(s, List("d")))
+    assertEquals(s.toList, List("c", "d"))
+    // java's `Set.addAll` returns FALSE when nothing was absent — which is exactly when the size
+    // does not move, so the one size test serves both targets.
+    assert(!JavaCollections.addAll(s, List("d")))
+    assertEquals(s.toList, List("c", "d"))
+  }
+
+  test("the EMITTED shape infers: a generic class extending mutable.Set, calling on `this`") {
+    // If the intersection did not infer here, the phase's rewrite would not compile — and nothing in
+    // an emission spec would say so, because the emitted TEXT would be exactly right.
+    val d = new Definer[String]
+    assert(d.addAllJ(List("a", "b", "c")))
+    assertEquals(d.toList, List("a", "b", "c"))
+    assert(d.removeAllJ(List("b")))
+    assertEquals(d.toList, List("a", "c"))
+    assert(d.retainAllJ(List("c")))
+    assertEquals(d.toList, List("c"))
+  }
+
+  test("…and all three take the JAVA-SHAPED side of the union, which is why it is a union") {
+    // The argument of an inherited bulk operation is the shim as often as it is a scala collection:
+    // the declaration's own parameter is emitted `JavaCollection[?]` while the receiver is the class
+    // this phase re-parented. A one-sided formal would reject exactly the site the helper is for.
+    val shim: JavaIterable[String] = JavaCollection.from(ArrayBuffer("b", "z"))
+    val xs: Buffer[String]         = ArrayBuffer("a", "b", "c")
+    assert(JavaCollections.removeAll(xs, shim))
+    assertEquals(xs.toList, List("a", "c"))
+    val d = new Definer[String]
+    assert(d.addAllJ(shim))
+    assertEquals(d.toList, List("b", "z"))
+    assert(d.retainAllJ(JavaCollection.from(ArrayBuffer("z"))))
+    assertEquals(d.toList, List("z"))
+  }
+
+  // -------------------------------------------------------------------------------------------
   // Arrays.asList(T[]) — the ALIASING form, which is a live fixed-size VIEW and not a copy
   // -------------------------------------------------------------------------------------------
 

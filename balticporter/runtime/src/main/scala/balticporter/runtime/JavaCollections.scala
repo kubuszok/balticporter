@@ -153,10 +153,24 @@ object JavaCollections:
     *
     * `IterableOnce[?]` rather than `Buffer[?]` on the source so the one signature serves every
     * java collection the retyping produces — a `Set`, a `Buffer` and a map's entry view are all
-    * `IterableOnce`, and java's `addAll` takes a `Collection` without caring which. */
-  def addAll[E](dst: scala.collection.mutable.Buffer[E], src: scala.collection.IterableOnce[?]): Boolean =
+    * `IterableOnce`, and java's `addAll` takes a `Collection` without caring which.
+    *
+    * ==WIDENED off `mutable.Buffer`, on both parameters, and see the cluster comment below==
+    * The DESTINATION takes the receiver contract `removeAll`/`retainAll` share, because a class that
+    * DEFINES a set inherits this same `addAll` and calls it through `super` — `mutable.Buffer` is
+    * one of the two targets such a class is re-parented onto, not the shape of the member. The
+    * SOURCE takes `containsAll`'s union for that call's own reason: the argument of an inherited
+    * bulk operation is the java-shaped shim as often as it is a scala collection.
+    *
+    * The size comparison stays java's answer at both targets. Java's default returns whether any
+    * `add` reported a change; on a `Buffer` every `add` does and the size always moves, and on a
+    * `Set` `add` reports exactly when the element was absent, which is exactly when the size moves.
+    * The two agree cell for cell, which is why one test serves both. */
+  def addAll[E](dst: scala.collection.mutable.Iterable[E] & scala.collection.mutable.Growable[E]
+                  & scala.collection.mutable.Shrinkable[E],
+                src: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean =
     val before = dst.size
-    dst ++= src.iterator.map(_.asInstanceOf[E])
+    dst ++= elementsOf(src).map(_.asInstanceOf[E])
     dst.size != before
 
   /** `java.util.Collection.remove(Object)` — removal BY VALUE, which scala's `Buffer` does not have.
@@ -460,14 +474,106 @@ object JavaCollections:
     * collection parent so one formal covers both). */
   def containsAll[A](xs: scala.collection.Iterable[A],
                      c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean =
-    val probes: scala.collection.Iterator[Any] = c match
+    elementsOf(c).forall(o => xs.exists(e => if o == null then e == null else o.equals(e)))
+
+  /** the ARGUMENT of one of java's four bulk `Collection` operations, read once, from whichever side
+    * of the retyping it arrived on.
+    *
+    * Stated ONCE rather than inlined per member, because the union is not a convenience: it is the
+    * seam [[containsAll]]'s own doc describes, and four members spelling it four times is four
+    * places for the two arms to drift. Nothing about the dispatch is per-member. */
+  private def elementsOf(c: scala.collection.IterableOnce[?] | JavaIterable[?]): scala.collection.Iterator[Any] =
+    c match
       case it: scala.collection.IterableOnce[?] => it.iterator
       case ji: JavaIterable[?]                  =>
         val jit = ji.iterator()
         new scala.collection.AbstractIterator[Any]:
           def hasNext: Boolean = jit.hasNext()
           def next(): Any      = jit.next()
-    probes.forall(o => xs.exists(e => if o == null then e == null else o.equals(e)))
+
+  // -------------------------------------------------------------------------------------------
+  // `java.util.Collection`'s BULK DEFAULTS, at ONE receiver contract
+  // -------------------------------------------------------------------------------------------
+  //
+  // `addAll`, `removeAll` and `retainAll` are three members a java class INHERITS from
+  // `java.util.AbstractCollection` and never writes — and a class that DEFINES a collection
+  // routinely calls them through `super`, to delegate the general case its own fast path does not
+  // cover. Re-parenting such a class onto a scala collection removes the implementation java was
+  // calling, and the phase owes one back: `CLAUDE.md` §1's *an obligation the engine's own
+  // translation created*, with the measurement in `ENGINE-LIMITS.md` K29.
+  //
+  // ==ONE receiver type across the three, and it is java's own contract rather than a bound
+  // somebody computed==
+  // `mutable.Iterable[A] & mutable.Growable[A] & mutable.Shrinkable[A]` is exactly "a mutable
+  // collection you can iterate, add to and remove from", which is what `java.util.Collection`
+  // demands of every implementation — so the intersection is the SIGNATURE of the thing whose
+  // defaults these are. Both targets a definer is re-parented onto satisfy it (`mutable.Buffer` and
+  // `mutable.Set`), and that is MEASURED rather than assumed: an intersection is a place scala's
+  // inference can decline, and a helper that does not INFER is a helper the emitted call cannot use.
+  // `JavaCollectionsSpec` pins all three shapes — a plain `Buffer`, a `mutable.Set`, and a GENERIC
+  // class extending `mutable.Set` calling the helper on `this`, which is the emitted shape itself.
+  //
+  // ==the equality DIRECTION is the OPPOSITE of `containsAll`'s, and that is java's==
+  // `containsAll` asks `this.contains(o)` for each `o` of the ARGUMENT, so the probe is the
+  // argument's element. These two ask `c.contains(e)` for each `e` of the RECEIVER, so the probe is
+  // the receiver's. Same member family, two directions, and they differ for any asymmetric `equals`
+  // — a subclass that narrows it, `java.sql.Timestamp` against `java.util.Date`. Pinned by spec in
+  // both directions, because nothing about a green compile says which one ran.
+  //
+  // ==the argument is read ONCE and materialised==
+  // Java takes a `Collection`, which is re-iterable, and probes it per element of the receiver. The
+  // formal here admits an `IterableOnce`, which is not — so the elements are drained into a `List`
+  // before the scan rather than re-`iterator`ed per element, which would silently answer `false` for
+  // every element after the first. A complexity difference against java's `HashSet` argument and no
+  // behavioural one, exactly as `containsAll`'s own linear scan is.
+
+  /** `java.util.Collection.removeAll(c)` — java's own default, `while (it.hasNext()) if (c.contains
+    * (it.next())) it.remove()`, answering whether anything went.
+    *
+    * EVERY occurrence goes, which is the one thing `removeValue` above deliberately does not do:
+    * java's `remove(Object)` removes the FIRST match and its `removeAll` removes all of them, and
+    * the two live apart in this object for exactly that reason.
+    *
+    * The BUFFER arm removes POSITIONALLY, as java's iterator does, for the reason [[removeIf]]'s own
+    * doc gives — an element is identified by its place and not by an `equals` a second element might
+    * also satisfy. A `Set` has no positions and `-=` IS the hash lookup java's `Iterator.remove`
+    * reaches, so the fallback is exact there rather than approximate. Neither arm removes DURING the
+    * iteration it decided from, which is what java's default is careful to do through
+    * `Iterator.remove` and what scala gives no equivalent of. */
+  def removeAll[A](xs: scala.collection.mutable.Iterable[A] & scala.collection.mutable.Growable[A]
+                     & scala.collection.mutable.Shrinkable[A],
+                   c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean =
+    val probes = elementsOf(c).toList
+    dropWhere(xs, e => probes.exists(o => if e == null then o == null else e.equals(o)))
+
+  /** `java.util.Collection.retainAll(c)` — the same loop with the test negated: every element of the
+    * receiver NOT in the argument goes.
+    *
+    * Java's default reads `if (!c.contains(it.next())) it.remove()`, so the probe is the receiver's
+    * element here too and this is [[removeAll]]'s complement member for member. An EMPTY argument
+    * therefore EMPTIES the receiver, which is java's answer and is worth pinning: read as "retain,
+    * so nothing to do", it would be a no-op. */
+  def retainAll[A](xs: scala.collection.mutable.Iterable[A] & scala.collection.mutable.Growable[A]
+                     & scala.collection.mutable.Shrinkable[A],
+                   c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean =
+    val probes = elementsOf(c).toList
+    dropWhere(xs, e => !probes.exists(o => if e == null then o == null else e.equals(o)))
+
+  /** remove every element the predicate dooms and say whether any did — the shared half of
+    * [[removeAll]] and [[retainAll]], which differ only in that predicate. */
+  private def dropWhere[A](xs: scala.collection.mutable.Iterable[A] & scala.collection.mutable.Growable[A]
+                             & scala.collection.mutable.Shrinkable[A],
+                           doomed: A => Boolean): Boolean = xs match
+    case b: scala.collection.mutable.Buffer[A @unchecked] =>
+      var i       = 0
+      var removed = false
+      while i < b.length do
+        if doomed(b(i)) then { b.remove(i); removed = true } else i += 1
+      removed
+    case _ =>
+      val gone = xs.iterator.filter(doomed).toList
+      gone.foreach(xs -= _)
+      gone.nonEmpty
 
   /** `java.util.ArrayList.ensureCapacity(n)` — a CAPACITY HINT, with no observable semantics.
     *

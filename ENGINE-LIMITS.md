@@ -7002,10 +7002,36 @@ translation created*. The recipe, which is what this entry is for:
    `super` named. That argument has to be made PER MEMBER — it holds for these four and is not a
    general permission to turn a `super` call into a `this` call.
 
-*Fix kind: (a). Not built: two runtime helpers plus a widened one is shared-surface change on every
-port that carries the phase, and the `super` → `this` substitution needs the per-member argument
-above written down beside a spec. Measured and reverted rather than shipped half-built, because the
-mapping alone trades two classified errors for four on the census lane `PROGRESS.md` §10.6.3 quotes.*
+**STEP 1 IS BUILT, and the WIDENING alone was worth two errors before any mapping moved** —
+`md-measure` **34 → 32**, whole-compile **40 → 38**, every one of the twenty-eight check counts flat
+and **0 member digests** on either ssg-md lane. What closed is `ScopedDataSet#getKeys`, whose emitted
+body was already `JavaCollections.addAll(all, super.getKeys())` and whose BOTH parameters were on the
+wrong side of the old signature — a `mutable.HashSet` at a `mutable.Buffer` formal, and a
+`JavaCollection` at an `IterableOnce[?]` one. So the pair is two of the four rows `PROGRESS.md`
+§10.6.3 files as *the SHIM against a scala collection, inside the program*, and no lane falls with
+them, which is exactly what K26 already records about that pair: they sit at a callee THIS PHASE
+MINTED and `collection-internal` never counted them.
+
+Three things the build fixed that the recipe above did not say, each of which is a fact about the
+member rather than about this port:
+
+- **the receiver intersection is java's OWN CONTRACT**, not a lowest upper bound — "a mutable
+  collection you can iterate, add to and remove from" is what `java.util.Collection` demands of every
+  implementation, which is why one receiver type is right for all three. Whether it INFERS at the
+  emitted shape is a separate question and is spec'd rather than argued: an intersection is a place
+  scala's inference can decline, and the emitted shape is a GENERIC class extending `mutable.Set`
+  calling the helper on `this`;
+- **the equality DIRECTION is the OPPOSITE of `containsAll`'s.** `containsAll` asks
+  `this.contains(o)` per element of the ARGUMENT; `removeAll`/`retainAll` ask `c.contains(e)` per
+  element of the RECEIVER. Same member family, two directions, differing for any asymmetric `equals`
+  — and nothing about a green compile says which one ran;
+- **`removeAll` removes EVERY occurrence**, which is precisely what `removeValue` in the same object
+  deliberately does not do, and the BUFFER arm removes POSITIONALLY for `removeIf`'s own stated
+  reason.
+
+*Fix kind: (a). Step 2 — the `super` → `this` substitution — still wants its per-member argument
+written down beside a spec, and the mapping still may not land ahead of it: alone it trades two
+classified errors for four on the census lane `PROGRESS.md` §10.6.3 quotes.*
 
 ---
 
