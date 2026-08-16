@@ -3058,6 +3058,12 @@ neither needs a manifest entry.
   aggregator whose own members have to be resolved first. Where either fails, the refusal stands
   with its current text. Cost: it moves emitted FILES (nine of this port's fifty-two) on six test
   lanes, and moves NEITHER side of the discovery count, which is what makes it measurable.
+
+  **AND THE NESTING IS REAL, which wave 9 confirmed by reading the nine.** `UtilTestSuite` lists the
+  eight OTHER aggregators and nothing else, so every FQN in it declares zero `@Test` and the guard's
+  second conjunct fails on the FIRST pass — the drop has to be a FIXPOINT (*converted, and either
+  declares a `@Test` or is itself droppable*), cycle-safe, or the one class at the root of the tree
+  stays refused while its whole subtree goes. The other eight list real suites and pass as written.
 - **`@Rule ExpectedException` (6).** The `@Test(expected = E.class)` row of `CLAUDE.md` §4.4, met at
   JUnit's other spelling — and with the same failure, one step louder: the field is emitted, nothing
   applies it, so the expected throw propagates and MUnit records a FAILURE where java recorded a
@@ -3069,6 +3075,21 @@ neither needs a manifest entry.
   is CONDITIONAL rather than at statement position (refuse — java's rule is armed either way and
   scala's `intercept` is not), and the `@Before` methods this phase inlines at the head of each test
   body, which JUnit runs INSIDE the rule and which must therefore be inside the `intercept` too.
+
+  **THE POPULATION WAS READ AT WAVE 9 AND MOST OF IT TAKES THE REFUSAL ARM, which changes what this
+  design is worth rather than whether it is right.** Of the sites in this suite, `UtilsTest`'s five
+  are the shape the design assumes — `thrown.expect(NullPointerException.class)` at the top level of
+  the test body; `BitFieldSetTest`'s twelve pass a HAMCREST MATCHER
+  (`ExceptionMatcher.match(IllegalArgumentException.class, "…")`), which is not a class literal and
+  is the fifth delta nobody had listed — and `OrderedMultiMapTest`'s eight sit INSIDE a `while` loop,
+  which is the conditional-position refusal exactly. So a shipped arm converts roughly one field's
+  worth of tests here and REFUSES the rest, and the refusal population is what has to be reported
+  (§3). Two more deltas the enumeration needs and did not have: JUnit's rules are the OUTERMOST
+  statement (`BlockJUnit4ClassRunner.methodBlock` wraps `withRules` around `withBefores`/`withAfters`),
+  so an `@After` that throws is compared against the expectation in java and sits in a `finally`
+  OUTSIDE the `intercept` in the port; and a SECOND `expect` call in one test accumulates matchers in
+  java, which one `intercept` cannot express. Both are refusals, and both are cheaper to state now
+  than to re-derive.
 | `omissions` / `portability(emitted)` / `collection-boundary` / `overload-risk` | 13 / 14 / 6 / 1,655 |
 | `collection-internal` | **0 after wave 9**, from 16 — every one of which was `DeclaredSubtype` and the SAME seam: `OrderedSet`, which `implements java.util.Set` and was therefore re-parented onto `mutable.Set`, handed to its own `addAll`/`retainAll` whose formal is the `Collection` target `JavaCollection`. scalac reported **9** of those 16 sites, because it stops after a few per statement, and all nine closed with the lane — the attribution `CLAUDE.md` §5 requires of a lane that falls (`ENGINE-LIMITS.md` K26) |
 | `manifest` | **1** — `BaseMapUnverified`, and see below |
