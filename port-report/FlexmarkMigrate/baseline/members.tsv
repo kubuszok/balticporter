@@ -613,14 +613,14 @@ ssg.md.ast.util.LinkResolvingHandler	ssg.md.ast.util.LinkResolvingHandler#resolv
 ssg.md.ast.util.LinkResolvingHandler	ssg.md.ast.util.LinkResolvingHandler$LinkResolvingVisitor	class	a640d053f92d1286
 ssg.md.ast.util.LinkResolvingHandler	ssg.md.ast.util.LinkResolvingHandler$LinkResolvingVisitor#resolveLink(N,LinkResolverBasicContext,ResolvedLink)	def	c27a5b750d1274ba
 ssg.md.ast.util.Parsing	patternTypeFlags	val	e025a8744afe87bd
-ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing	class	845bb010870b0387
+ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing	class	b41fb03eaf590b28
 ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt10>	stmt	a41756f144db09b5
 ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt11>	stmt	91316a753c9f8bb7
 ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt12>	stmt	14fae7db9e93aca6
 ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt13>	stmt	03210830dca3ef37
 ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt14>	stmt	0edef2e49ee09a48
 ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt15>	stmt	390089948ef1a4e5
-ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt16>	stmt	906b4b7f7fa4d9c2
+ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt16>	stmt	baf4367e1de3a8d1
 ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt17>	stmt	04dc3999f8a07a98
 ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt1>	stmt	e0f0dd727124de68
 ssg.md.ast.util.Parsing	ssg.md.ast.util.Parsing#<stmt2>	stmt	669a19b4c2b97f8b
@@ -1333,7 +1333,7 @@ ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler	cl
 ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler#render(Node,NodeFormatterContext,MarkdownWriter)	def	8565dd3efe8379e9
 ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler$CustomNodeFormatter	class	1630f42eff765a09
 ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler$CustomNodeFormatter#render(N,NodeFormatterContext,MarkdownWriter)	def	c46de2397ab41201
-ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter	class	f710ab69f58ecb2c
+ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter	class	c80bb91e69fd2e0a
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt1>	stmt	566ab47f2333ab16
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt2>	stmt	2863fb8f05a8ad19
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt3>	stmt	b02efdf9a2c6e770
@@ -1365,7 +1365,7 @@ ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatte
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#renderDocument(NodeFormatterContext,MarkdownWriter,Document,FormattingPhase)	def	40bcfada61416aa9
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#renderReference(B,NodeFormatterContext,MarkdownWriter)	def	e1f1e4071dde325e
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#renderReferenceBlock(B,NodeFormatterContext,MarkdownWriter)	def	f63623d1d348b505
-ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#renderReferenceBlockUnique(B,NodeFormatterContext,MarkdownWriter)	def	20a025eb183ab7d4
+ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#renderReferenceBlockUnique(B,NodeFormatterContext,MarkdownWriter)	def	b92316b83fbdbb21
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#repositoryNodesDone	val	a1fb0c58b5b826a9
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#transformReferenceId(String,NodeFormatterContext)	def	38f190dd6a35f1bb
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#uniquifyIds(NodeFormatterContext,MarkdownWriter,Document)	def	b5d5a6c4c063802d
@@ -1402,7 +1402,7 @@ ssg.md.formatter.TranslationHandlerFactory	ssg.md.formatter.TranslationHandlerFa
 ssg.md.formatter.TranslationHandlerFactory	ssg.md.formatter.TranslationHandlerFactory#create(DataHolder,HtmlIdGeneratorFactory)	def	5cf4ca31a0ad9c5c
 ssg.md.formatter.TranslationPlaceholderGenerator	ssg.md.formatter.TranslationPlaceholderGenerator	class	253b3d287a2757ab
 ssg.md.formatter.TranslationPlaceholderGenerator	ssg.md.formatter.TranslationPlaceholderGenerator#getPlaceholder(int)	def	4406a15991c15606
-ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter	class	dc2b71da666303fd
+ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter	class	cae5d2d938caa64e
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#<stmt1>	stmt	4b54335706eb399d
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#<stmt2>	stmt	b19a153c75be910e
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#<stmt3>	stmt	5f6e798a46f4fb48
@@ -1463,7 +1463,7 @@ ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFo
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#render(Text,NodeFormatterContext,MarkdownWriter)	def	d097998caca15a15
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#render(TextBase,NodeFormatterContext,MarkdownWriter)	def	f8225f5f38b00fe2
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#render(ThematicBreak,NodeFormatterContext,MarkdownWriter)	def	f145aeaf7b325261
-ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#renderAutoLink(DelimitedLinkNode,NodeFormatterContext,MarkdownWriter,String,String)	def	8df85e1a4622a388
+ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#renderAutoLink(DelimitedLinkNode,NodeFormatterContext,MarkdownWriter,String,String)	def	a36d890fe38e56fc
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#renderDocument(NodeFormatterContext,MarkdownWriter,Document,FormattingPhase)	def	f7e3afb3781b2e78
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter#renderReferenceBlock(Reference,NodeFormatterContext,MarkdownWriter)	def	c2a370d3da2a01ae
 ssg.md.formatter.internal.CoreNodeFormatter	ssg.md.formatter.internal.CoreNodeFormatter$Factory	class	1a3baa27df5589fa

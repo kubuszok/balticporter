@@ -111,16 +111,37 @@ class SamLambdaTransformSpec extends PortSuite:
     assertEquals(clue(balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)).map(_.owner), Nil)
   }
 
-  test("…and it FIRES where M6 still stands — a lambda the SOURCE wrote, whose method is a class file") {
-    // The other half of the narrowing, and what makes the zero above mean anything. javac inferred
-    // this lambda's type from `Supplier`'s class file; the program holds no `DefDef` for `get`, so
-    // nothing can name the `def`'s result type and the emitter refuses rather than guessing (M6).
-    // Non-vacuity by FIXTURE, since the corpus has no such site — which is exactly the state a
-    // residue count is worthless without (§3: a check reporting zero is only as good as its
-    // coverage).
+  test("a GENERIC SAM result is ADAPTED at the target — `Supplier<String>.get` is `String` here") {
+    // This tree used to be M6's standing residue: `Supplier.get` is declared `T get()`, `T` is not
+    // a name the emitted code can write, and the refusal's stated reason was that substituting the
+    // REFERENCE's actual arguments for the DECLARATION's formals is a different mechanism from
+    // reading a class file. That was a statement about a missing mechanism rather than about the
+    // language — the target reference says what `T` is, and Spoon's own `TypeAdaptor` performs the
+    // substitution, composed along the hierarchy.
+    //
+    // What makes the fix worth having is that the residue was never LOUD: a scala `return` inside a
+    // closure is a NON-LOCAL RETURN from the enclosing method, so this compiled green and unwound
+    // out of `s`'s caller (`ENGINE-LIMITS.md` I9).
     val p = port(
       """class C {
         |  java.util.function.Supplier<String> s() {
+        |    return () -> { return "x"; };
+        |  }
+        |}""".stripMargin)
+    assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
+    assertEquals(clue(balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)).map(_.owner), Nil)
+  }
+
+  test("…and it FIRES where the ADAPTATION cannot answer — a RAW target has nothing to substitute") {
+    // The other half of the narrowing, and what makes the zero above mean anything. A raw
+    // `Supplier` supplies no argument for `T`, so the adapted result still mentions a type variable
+    // and the emitter refuses rather than erasing to `Object` — which would compile and mean
+    // something else (§4.6's fabricated fact). Non-vacuity by FIXTURE, since the corpus has no such
+    // site, which is exactly the state a residue count is worthless without (§3).
+    val p = port(
+      """class C {
+        |  @SuppressWarnings("rawtypes")
+        |  java.util.function.Supplier s() {
         |    return () -> { return "x"; };
         |  }
         |}""".stripMargin)

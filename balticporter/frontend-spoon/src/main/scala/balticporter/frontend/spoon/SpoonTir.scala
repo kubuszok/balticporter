@@ -9,6 +9,7 @@ import spoon.Launcher
 import spoon.reflect.code.*
 import spoon.reflect.declaration.*
 import spoon.reflect.reference.*
+import spoon.support.adaption.TypeAdaptor
 import spoon.support.compiler.VirtualFile
 
 import scala.jdk.CollectionConverters.*
@@ -1063,19 +1064,49 @@ object SpoonTir:
       * on ~every lambda in the corpus that the emitted text never names — and `Xref` registers it
       * as a USAGE, so a portability or dependency count would move for a type nothing writes.
       *
-      * ==And a GENERIC result is REFUSED, which is M6 narrowed one more turn==
-      * `Supplier<String>.get` is declared `T get()`. The declaration's `T` is not a name the
-      * emitted code can write, and substituting the reference's actual arguments for it is a
-      * different mechanism from reading a class file — so a result type that mentions a type
-      * VARIABLE yields `None` and `OmissionCheck.unnameableLambdaReturn` counts the site. A
-      * guessed `T`, or an erased `Object`, is exactly §4.6's fabricated fact: it compiles. */
+      * ==And a GENERIC result is ADAPTED at the TARGET, which is M6 narrowed one more turn==
+      * `Supplier<String>.get` is declared `T get()`, and `T` is not a name the emitted code can
+      * write. That was left REFUSED on the grounds that substituting the reference's actual
+      * arguments for the declaration's formals is a different mechanism from reading a class file —
+      * true when it was written, and a mechanism-absence argument rather than a semantic one. The
+      * substitution is not a guess: `Function<PatternTypeFlags, Pattern>` says what `R` is, in the
+      * FORMAL of the call the lambda is an argument to, and it is SPOON'S OWN rule that performs it
+      * ([[TypeAdaptor]]), composed along the hierarchy so a `interface F extends Function<A,B>`
+      * target adapts as exactly as a direct one does.
+      *
+      * What stays refused is what the adaptation cannot ANSWER: a result still mentioning a type
+      * variable after it — a RAW target, an unreadable class file, a variable bound by the METHOD
+      * rather than by the type. Those yield `None` and `OmissionCheck.unnameableLambdaReturn` counts
+      * the site, because a guessed `T` or an erased `Object` is §4.6's fabricated fact: it compiles.
+      *
+      * The residue this closes was NOT loud. `ENGINE-LIMITS.md` I9 measured the same construct on
+      * another library at 0 compile errors — a scala `return` inside a closure is a NON-LOCAL RETURN
+      * from the enclosing method, legal and something else entirely — so the count is the only
+      * instrument this has ever had, and it is the count that has to move. */
     private def samResultTpt(l: CtLambda[?]): Option[TypeTree] =
       if !returnsAValue(l) then scala.None
       else samAbstracts(l.getType) match
         case one :: Nil =>
-          val rt = one.getType
-          Option.when(rt != null && !mentionsTypeVariable(rt, 8))(tt(tpe(rt), l))
+          val rt = Option(one.getType).map(adaptedToTarget(l.getType, _))
+          rt.filter(!mentionsTypeVariable(_, 8)).map(r => tt(tpe(r), l))
         case _ => scala.None
+
+    /** the SAM method's declared result, read IN THE TARGET REFERENCE'S CONTEXT.
+      *
+      * Asked only where the declared type mentions a variable — there is nothing to adapt otherwise,
+      * and an adaptation that rebuilt every SAM result would put a second spelling of the same type
+      * on a node the emitter compares nothing about.
+      *
+      * The `catch` is §4.6-shaped rather than defensive: this frontend runs `noClasspath`, so the
+      * hierarchy `TypeAdaptor` walks may simply not be there, and the default it falls back to is
+      * the UNADAPTED type — which still mentions the variable, so the caller REFUSES and the site
+      * keeps its counted `omissions` row. The default is therefore distinguishable from a real
+      * answer by construction, which is the one property §4.6 asks of a fallback. */
+    private def adaptedToTarget(target: CtTypeReference[?], t: CtTypeReference[?]): CtTypeReference[?] =
+      if target == null || !mentionsTypeVariable(t, 8) then t
+      else
+        try Option(new TypeAdaptor(target).adaptType(t)).getOrElse(t)
+        catch { case _: Throwable => t }
 
     /** does THIS lambda hold a `return` with a VALUE — stopping at a nested lambda or anonymous
       * method, whose `return`s are that construct's. The same question `TirEmitter.collectReturns`

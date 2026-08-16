@@ -9184,12 +9184,27 @@ rather than approximated:
   by JLS 15.27.2's binding rule read off Spoon's `CtExecutable` parent and not off a guess. The field
   means *the type this node's nested `def` must declare*, and filling it on every lambda in a corpus
   would register a `Xref` usage for a type the emitted text never names;
-- **a result type that mentions a TYPE VARIABLE is refused.** `Supplier<String>.get` is declared
-  `T get()`, and substituting the reference's actual arguments for the declaration's formals is a
-  different mechanism from reading a class file. `T` is not a name the emitted code can write and an
-  erased `Object` compiles, which is §4.6's fabricated fact — so the site keeps its `omissions` row.
-  That is the residue M6 now stands for, and it is **0 across the corpus**, non-vacuous by fixture
-  (`CatalogAreaSSpec`'s `JS-S21` type-variable cell).
+- **a result type that mentions a TYPE VARIABLE was refused — and is now ADAPTED AT THE TARGET.**
+  `Supplier<String>.get` is declared `T get()`, and the refusal's stated reason was that
+  substituting the reference's actual arguments for the declaration's formals is *a different
+  mechanism from reading a class file*. That is a MECHANISM-ABSENCE argument and not a semantic one,
+  and it read as settled for as long as the residue was **0 across the corpus** — which is exactly
+  how long nobody had to test it. The sixth library made it 3 rows / 7 returns, of which **4 were
+  loud** (a lambda inside a PROMOTED CONSTRUCTOR has no enclosing method for scala's non-local
+  return to leave, so `E091 return outside method definition`) and 3 were the silent kind this entry
+  is about. The substitution is not a guess — `Function<Flags, Pattern>` says what `R` is, in the
+  FORMAL of the call the lambda is an argument to — and it is SPOON'S OWN rule that performs it
+  (`TypeAdaptor`), composed along the hierarchy so an `interface F extends Function<A,B>` target
+  adapts as exactly as a direct one. **`omissions` 64 → 61 and 181 → 177 errors on that port; 0
+  moved digests and 0 moved counts on the other fourteen, which is what I9's own "0 across the
+  corpus" predicted and is the only evidence that the prediction was about the corpus and not about
+  the fixture.**
+
+  What stays refused is what the adaptation cannot ANSWER: a RAW target (nothing to substitute), an
+  unreadable class file, a variable bound by the METHOD rather than by the type. Those keep the
+  `omissions` row, because a guessed `T` or an erased `Object` is §4.6's fabricated fact — it
+  compiles. Non-vacuous by fixture on both sides now (`SamLambdaTransformSpec`'s adapted and raw
+  cells, plus `CatalogAreaSSpec`'s `JS-S21` cell).
 
 **One more finding rode in with it, and it is a `PorterNote` PLACEMENT question at a CONSTRUCTOR —
 FIXED.** `porter-notes` reported 0 → 1: a `SamLambda` decision subjected at `AsyncExecutor#<init>`,
