@@ -49,6 +49,22 @@ object SymId:
   def apply(i: Int): SymId          = i
   extension (s: SymId) def raw: Int = s
 
+/** what a java METHOD REFERENCE's referenced executable declares — see [[Tree.MethodRef.referent]].
+  *
+  * The two cases are JLS 15.13.1's split at `Type::name`, which is ONE java syntax naming two
+  * different functions: a `static` method is a qualified NAME, an instance method is an UNBOUND
+  * reference whose receiver becomes the SAM's FIRST parameter (JLS 15.13.3). The arity rides on the
+  * second case only because that is the only form whose emitted lambda has to state it — a qualified
+  * name is eta-expanded by scala against the target, exactly as javac did it.
+  *
+  * At PACKAGE level and not inside `object Tree`, beside `Flags` and `Descriptor`: it is a fact
+  * ABOUT a node and not a node, and `EmissionFieldCoverageSpec` scans `object Tree`'s case classes
+  * for exactly that distinction — its aggregate set is pinned, so a non-Tree declared in there fails
+  * the totality assertion rather than quietly joining the node census. */
+enum Referent:
+  case Static
+  case Instance(arity: Int)
+
 // ---------------------------------------------------------------------------
 // Flags — mirrors `reflect.Flags` (superset of what we currently populate).
 // ---------------------------------------------------------------------------
@@ -583,17 +599,6 @@ object Tree:
     * do not: `getParameters` erases what each slot says, never how many there are. */
   final case class MethodRef(qualifier: Either[TypeTree, Term], method: SymId, tpe: TypeRepr,
                              origin: Origin, referent: Referent) extends Term
-
-  /** the referenced executable's own modifiers — see [[MethodRef.referent]].
-    *
-    * The two cases are JLS 15.13.1's split at `Type::name`, which is ONE java syntax naming two
-    * different functions: a `static` method is a qualified NAME, an instance method is an UNBOUND
-    * reference whose receiver becomes the SAM's FIRST parameter (JLS 15.13.3). The arity rides on
-    * the second case only because that is the only form whose emitted lambda has to state it — a
-    * qualified name is eta-expanded by scala against the target, exactly as javac did it. */
-  enum Referent:
-    case Static
-    case Instance(arity: Int)
   /** `break` / `break label` — loop/switch exit. `tpe` is Nothing. */
   final case class Break(label: Option[String], tpe: TypeRepr, origin: Origin)          extends Term
   /** `continue` / `continue label`. `tpe` is Nothing. */

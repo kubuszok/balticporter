@@ -1797,7 +1797,7 @@ final class CollectionsTransform(
     // (`Tree.MethodRef.referent`, F8): an external member is interned with no `Flags`, so
     // `flags.isStatic` reads `false` for every JDK static and this phase would lower one.
     mr.qualifier match
-      case Left(tt) if mr.referent != Tree.Referent.Static =>
+      case Left(tt) if mr.referent != Referent.Static =>
         kindOf.get(headSym(tt.tpe).getOrElse(SymId.None)) match
           case None    => mr
           case Some(k) =>

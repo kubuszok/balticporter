@@ -4125,7 +4125,7 @@ final class TirEmitter(
     case m: Tree.Match                  => matchStr(m, i)
     case mr @ Tree.MethodRef(q, s, mrT, _, referent) =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
-      val isStaticRef = referent == Tree.Referent.Static
+      val isStaticRef = referent == Referent.Static
       // JS-G43, the EMITTER half — five java forms share one syntax and each becomes a DIFFERENT
       // scala lambda. The discrimination is right here (`isCtor`, `Flags.isStatic`, and the array
       // element test below), so the row attaches at both surfaces: the frontend carries the
@@ -4168,8 +4168,8 @@ final class TirEmitter(
           // byte-identical.
           case _ =>
             val ps = referent match
-              case Tree.Referent.Instance(n) => (0 until n).map(k => s"a$k$$").toList
-              case Tree.Referent.Static      => Nil // a constructor is never static; JLS 8.8.3
+              case Referent.Instance(n) => (0 until n).map(k => s"a$k$$").toList
+              case Referent.Static      => Nil // a constructor is never static; JLS 8.8.3
             samAscribed(s"((${ps.mkString(", ")}) => new ${ctorTpe(tt.tpe)}(${ps.mkString(", ")}))",
                         mrT, tt.tpe)
         // `Type::method` is TWO different java forms sharing one syntax, and only one of them is a
@@ -4190,8 +4190,8 @@ final class TirEmitter(
           // gives a wildcard qualifier one line down and for the same reason: a method reference is
           // a poly expression, so handing scala the job javac had is exact.
           val arity = referent match
-            case Tree.Referent.Instance(n) => n
-            case Tree.Referent.Static      => methodParams(s).size // unreachable: the arm above took it
+            case Referent.Instance(n) => n
+            case Referent.Static      => methodParams(s).size // unreachable: the arm above took it
           val formals = methodParams(s)
           val named   = formals.sizeIs == arity && !hasWildcardArg(tt.tpe)
           val as      = (0 until arity).map(k => s"a$k$$").mkString(", ")
