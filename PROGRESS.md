@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
-| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | **none in scope** — flexmark's suites live in modules milestone 1 does not parse (§10.6) | **67** (243 at first emit; §10.6.3, all classified) |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | **none in scope** — flexmark's suites live in modules milestone 1 does not parse (§10.6) | **58** (243 at first emit; §10.6.3, all classified) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2794,7 +2794,7 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4 and **67** after wave 5 (coded 67 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **27** now — 94 % of the port compiles clean |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4 and **58** after wave 5 (coded 58 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **27** now — 94 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
@@ -2814,7 +2814,7 @@ zero in the last row is a compile-time one. On liqp the compile said nothing abo
 first-run failures; this library is a parser, so the population §4.4 governs here is larger, not
 smaller.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 67 after wave 5**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5**
 
 Every error is `EngineGap`. Four waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2860,13 +2860,14 @@ above sums to more than the family sizes the first census printed.
 
 | before → after | family | where |
 |---|---|---|
+| 67 → 58 | **java's UNCHECKED CONVERSION at an *INHERITED* formal.** `AstActionHandler<C,N,A,H>.addActionHandler(H)` reached from a subclass whose `extends` clause says what `H` is, with the subclass's own RAW parameter: java admits it by JLS 5.1.9 and `uncheckedGeneric` declined at its first gate, because the formal is literally a type VARIABLE and `isGenericUse` answers false for one. G12's rule — *a callee's own type variables do not resolve at the call site* — has exactly one more exception than `appliedCtorArgs`, and the lookup is keyed by (declaring type, name) because a name key is what `inheritedTp` measured at 161/142/141. The ARRAY-DIMENSION guard is the half that decides it: cast at a `H[]...` slot the argument's arity is still wrong and the cast makes it COMPILE, throwing at run time (67 → 49 without the guard, 67 → 58 with it, `markers` 0 both ways) | G12 |
 | 69 → 67 | **a member that OVERRIDES A CLASS FILE may not have its formals moved.** §4.56's sentence read at an override rather than at a call: `BitFieldSet extends java.util.AbstractSet` declares `containsAll(Collection<?>)` over a parent the mapping does not cover, so the class file's member still takes java's collection and the retyped one overrides nothing. The literal-reading machinery a `RuleScope` already has does the holding; what could not be reused is the CLASSIFICATION, since `ScopedOut` says *widen your scope* and there is no key. `collection-boundary` 26 → 22, the four `ExternalCallee` rows at those `super.<same>(c)` calls closing with the four errors | K25 |
 
-**What is left, by mechanism** (the census re-read at 67, every row counted from `errors.tsv`):
+**What is left, by mechanism** (the census re-read at 58, every row counted from `errors.tsv`):
 
 | n | family | §1 |
 |---:|---|---|
-| 22 | **a RAW generic at an INHERITED formal, and TWO defects at one call.** `AstActionHandler<C,N,A,H>.addActionHandlers(H[]...)` reached from `AttributeProviderAdapter`, `LinkResolverAdapter` and `NodeVisitor`, whose own parameters are java's raw `…Handler[]`. Java PACKS an `H[]` into the `H[][]` slot (assignable to the component, not to the array) and the port forwards it, so the arity is wrong BEFORE the element type is; and the element is `[?]` against the parent's substituted `[Node]`, which java admitted by unchecked conversion at a raw type. **The packing half is BUILT, javac-verified and MEASURED WORSE** — `ENGINE-LIMITS.md` G26 carries the five cells and both numbers (81 → 81 at `markers` 0 → 1, and 81 → 83) — because with the arity right every site reads `Array[Array[H[?]]]` against `Array[Array[H[Node]]]`: a better residue worth zero errors. The raw-to-parameterised cast at an inherited formal is what the family needs first | **(a)** — `G1`/`G2`/`G8`/`G26` at an inherited formal |
+| 13 | **the raw-generic family, with its CAST half closed and THREE shapes left.** Wave 5 shipped the unchecked conversion at an inherited formal (G12), which took the 9 sites whose arity was already right. What remains, in the same three classes plus `AstActionHandler` itself: **6** where java PACKS a one-dimensional argument into an `H[]...` slot and the port forwards it — the cast is DECLINED there on purpose, because over a wrong arity it compiles and throws (`ENGINE-LIMITS.md` G26 still open, and its packing now closes these for free); **4** where `handlers.toArray(EMPTY_HANDLERS)` hands back an `Array[Object]` at an overload set that has no such member; **2** where `getAction`/`getHandler(Class<?>)` probes a `Map<Class<? extends N>, H>` — K24's shape at a MAP KEY the retyping typed at the element; and **1** cascade at `new NodeVisitor(…)` | **(a)** — `G12`/`G26`/`K24` |
 | 6 | **the SHIM against a scala collection, inside the program** — the RESIDUE of that row after wave 5 closed its rule half (K25). A `JavaCollection` formal or result meeting a `Buffer`/`Set`/own-`OrderedSet` value at a call the port declares (`ScopedDataSet#getKeys` 2, `OrderedMultiMap#keys`/`#values` 2, `Attributes#values`, `BuilderBase#extensions`). Wave 4 established these are NOT one shape: the first four are a value the PROGRAM produces at a shim-typed result and the last two are one-offs. `collection-boundary` counts the external half and cannot see the internal one | **(a)** |
 | 2 | **a held-back `iterator()` against the class's OWN shim-parented iterator** — `BitFieldSet#iterator()` overrides `java.util.AbstractSet.iterator()`, whose class file returns `java.util.Iterator<E>`, while the nested `EnumBitSetIterator`/`EnumBitFieldIterator` the body returns were given the `JavaIterator` SHIM as a parent by the same phase. NEW at wave 5 and not a regression: before K25 the member returned the shim and silently overrode nothing, which only `RefChecks` could have reported (§3). No `JavaCollections.toJava` exists for an iterator, so the seam is a compile error rather than a bridge; the member's own porter note classifies it at the line | **(a)**, `ENGINE-LIMITS.md` K25 |
 | 6 | **`Nothing` at a structural type** — `IRichSequenceBase`'s `?{ append: ? }` / `?{ add: ? }` slots, where a generic method's variable inferred `Nothing` (`G22`'s family at a structural expected type) | **(a)** |
@@ -2876,20 +2877,18 @@ above sums to more than the family sizes the first census printed.
 | 3 | **`MapEntry` against `Tuple2`** — a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent (`K5.7`'s `UninheritableTargets` refusal, counted as `InexpressibleParent`), so its value does not conform where the retyping expects a pair | **(a)**, the counted half of K5.7 |
 | 14 | the residue, no family above 2: `Not found: byteOffset$p` (a promoted parameter's name, 2), the two `Object` results of an ERASED `Function` receiver (`G11` at a use — the widening is on the RESULT, so NOT K24's family), `Objects.isNull`, `Array[E]` against `Array[Enum[?]]`, a SAM whose result the frontend could not name, and one-off inference and arity mismatches | mixed |
 
-**Where the next wave starts:** the RAW-GENERIC row, which is the deepest and is now
-HALF-MEASURED — the vararg packing is built, javac-verified and REFUSED at 81 -> 83
-(`ENGINE-LIMITS.md` G26), so what the family needs first is the raw-to-parameterised cast at an
-INHERITED formal. Wave 5 read all 22 sites and they are FOUR shapes, not one, which is what the next
-attempt has to start from: the cast at an inherited formal alone (9 -- `addActionHandler(handler)`,
-and the 2-dimensional `addActionHandlers` calls, whose arity is already right); the cast BEHIND the
-refused packing (6 -- the 1-dimensional calls, where the arity is wrong before the element type is);
-`handlers.toArray(EMPTY_HANDLERS)` handing back an `Array[Object]` at an overload set that has no
-such member (4); and `getAction`/`getHandler(Class<?>)` probing a `Map<Class<? extends N>, H>` (2),
-which is K24's shape at a MAP KEY the retyping typed at the element.
+**Where the next wave starts: G26's VARARG PACKING, which is now worth shipping and was not
+before.** `ENGINE-LIMITS.md` G26 refused it at 81 → 83 for one stated reason — with the arity right,
+every site read `Array[Array[H[?]]]` against `Array[Array[H[Node]]]`, "a better residue worth zero
+errors", because the raw ELEMENT had no answer. It has one now (G12's inherited-formal cast, wave 5),
+and the two halves meet exactly: the six sites the cast declines are declined ONLY on the dimension
+test, so a correct pack makes the dimensions agree and the cast then fires on its own. Re-read G26's
+own table before starting — the element-type guard is what measured 81 → 83, and the declared
+component is now nameable through the same `(declaring type, formal name)` lookup the cast uses.
 
 Nothing left in this port needs a manifest entry, and no residue above is per-library policy.
 
-**And the port has not yet met `RefChecks`** (§3): 67 typer errors means it has never run, so every
+**And the port has not yet met `RefChecks`** (§3): 58 typer errors means it has never run, so every
 missing `override`, unimplemented member and variance violation in 468 emitted files is unmeasured
 and the count will RISE at the first zero. Two shapes are already visible by eye in the emitted
 output and are named here so the rise is expected rather than discovered — `NodeRepository extends

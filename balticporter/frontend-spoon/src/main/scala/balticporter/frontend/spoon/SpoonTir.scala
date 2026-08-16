@@ -244,6 +244,9 @@ object SpoonTir:
       *
       * So a class must be able to see what it instantiated its parents' names AS. */
     private val inheritedInst = collection.mutable.ArrayDeque[Map[String, (TypeRepr, CtTypeReference[?])]]()
+    /** …the same instantiation keyed by DECLARATION — see [[instantiationByDecl]]. Read only by
+      * [[inheritedFormal]], at a call to a member an ANCESTOR declares. */
+    private val inheritedByDecl = collection.mutable.ArrayDeque[Map[(String, String), CtTypeReference[?]]]()
     /** FQNs of the enclosing class and its ancestors — a raw type NESTED in any of them is filled
       * from the names in scope, because those names are the ones it was declared against.
       * `Entries` lives in `ObjectMap[K,V]`; inside `OrderedMap[K,V] extends ObjectMap[K,V]` it is
@@ -735,8 +738,17 @@ object SpoonTir:
       // ancestor's variables either, so its formals must render outside the override gate too.
       acc.toSet - t.getQualifiedName
 
-    private def instantiationOfParents(t: CtType[?]): Map[String, (TypeRepr, CtTypeReference[?])] =
-      val out = collection.mutable.Map[String, (TypeRepr, CtTypeReference[?])]()
+    /** ONE walk over `t`'s ancestry, in breadth order, yielding every (DECLARING TYPE, formal name,
+      * argument) triple the `extends`/`implements` clauses instantiate.
+      *
+      * Two maps are folded from it and the reason they are one walk is `ENGINE-LIMITS.md` F8's shape
+      * (`CLAUDE.md` §4.56): a second copy of this traversal is a second answer to "what did this
+      * class instantiate its parents' names as", and the two would drift. The FILTER is here rather
+      * than in either consumer because it is about whether the argument can be NAMED at all — an
+      * unresolvable variable renders as the `?I` stub and a wildcard has no name — which is a
+      * precondition for every use, whether the answer fills a raw type or becomes a cast target. */
+    private def parentInstantiations(t: CtType[?]): List[(String, String, CtTypeReference[?])] =
+      val out = collection.mutable.ListBuffer[(String, String, CtTypeReference[?])]()
       def walk(r: CtTypeReference[?], fuel: Int): Unit =
         if r != null && fuel > 0 then
           val decl = try r.getTypeDeclaration catch { case _: Throwable => null }
@@ -751,8 +763,8 @@ object SpoonTir:
                 val nameable = a match
                   case tv: CtTypeParameterReference => resolveTypeParam(tv.getSimpleName).isDefined
                   case _                            => true
-                if !a.isInstanceOf[CtWildcardReference] && nameable && !out.contains(f.getSimpleName) then
-                  try out(f.getSimpleName) = (tpe(a), a) catch { case _: Throwable => () }
+                if !a.isInstanceOf[CtWildcardReference] && nameable then
+                  out += ((decl.getQualifiedName, f.getSimpleName, a))
               }
             val ups: List[CtTypeReference[?]] = decl match
               case c: CtClass[?] => Option(c.getSuperclass).toList
@@ -765,6 +777,23 @@ object SpoonTir:
           case _             => Nil
         (sup ++ t.getSuperInterfaces.asScala.toList).foreach(walk(_, 4))
       catch { case _: Throwable => () }
+      out.toList
+
+    private def instantiationOfParents(t: CtType[?]): Map[String, (TypeRepr, CtTypeReference[?])] =
+      val out = collection.mutable.Map[String, (TypeRepr, CtTypeReference[?])]()
+      parentInstantiations(t).foreach { (_, nm, a) =>
+        if !out.contains(nm) then try out(nm) = (tpe(a), a) catch { case _: Throwable => () }
+      }
+      out.toMap
+
+    /** …the same instantiations keyed by the DECLARATION rather than by the name — `(owner FQN,
+      * formal name)`, which is exactly `ParentSubst`'s identity in the TIR and is what makes a
+      * lookup evidence rather than a coincidence. [[instantiationOfParents]]'s name key is the one
+      * `inheritedTp` measured at 161/142/141 and is switched off for it; nothing keyed this way can
+      * collide, because two ancestors' `T`s are two different keys. */
+    private def instantiationByDecl(t: CtType[?]): Map[(String, String), CtTypeReference[?]] =
+      val out = collection.mutable.Map[(String, String), CtTypeReference[?]]()
+      parentInstantiations(t).foreach { (owner, nm, a) => if !out.contains(owner -> nm) then out(owner -> nm) = a }
       out.toMap
 
     /** is `r` declared INSIDE a class currently on the enclosing-class stack? */
@@ -1542,6 +1571,7 @@ object SpoonTir:
       tpScopes.prepend(frame); tpIsExec.prepend(false)
       selfRawStack.prepend(id -> t.getFormalCtTypeParameters.asScala.toList.map(tp => frame(tp.getSimpleName)))
       inheritedInst.prepend(instantiationOfParents(t))
+      inheritedByDecl.prepend(instantiationByDecl(t))
       enclosingFqns.prepend(enclosingFqns.headOption.getOrElse(Set.empty) ++ selfAndAncestors(t))
       ancestorFqns.prepend(ancestorsOf(t))
       val enclosingAcc = if capturesEnclosing(t) then tpAccessible.headOption.getOrElse(Map.empty) else Map.empty
@@ -1648,7 +1678,8 @@ object SpoonTir:
       val enumCases = t match
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
         case _            => Nil
-      tpScopes.remove(0); tpIsExec.remove(0); inheritedInst.remove(0); enclosingFqns.remove(0); ancestorFqns.remove(0)
+      tpScopes.remove(0); tpIsExec.remove(0); inheritedInst.remove(0); inheritedByDecl.remove(0)
+      enclosingFqns.remove(0); ancestorFqns.remove(0)
       selfRawStack.remove(0); tpAccessible.remove(0); tpExecNames.remove(0); inStatic = savedStatic
       // JLS 12.5 STEP 4 IS ONE SEQUENCE, IN TEXTUAL ORDER — field initialisers and instance
       // initialiser blocks together (12.4.2 step 9 says the same of the static pair). Grouped
@@ -3010,6 +3041,69 @@ object SpoonTir:
             case other                      => other
         own.fold(t)(n => strip(t, depth(t) - n))
 
+      /** THE FORMAL OF AN INHERITED CALLEE, with the ANCESTOR's type variables replaced by what THIS
+        * class instantiated them with — `None` where nothing substitutes.
+        *
+        * ==The gap this closes, and why `uncheckedGeneric` could not see it==
+        * `AstActionHandler<C, N, A, H>` declares `addActionHandler(H handler)`, and
+        * `AttributeProviderAdapter extends AstActionHandler<…, AttributeProvidingHandler<Node>>`
+        * calls it with its own RAW `AttributeProvidingHandler` parameter. Java admits that by
+        * UNCHECKED CONVERSION at a raw type (JLS 5.1.9) and scala has no such rule, so the faithful
+        * emission is the cast java performs implicitly — which is exactly what this function's
+        * caller is for. It declined at the first gate: the formal is literally `H`, a
+        * `CtTypeParameterReference`, and `isGenericUse` answers `false` for one.
+        *
+        * `ENGINE-LIMITS.md` G12 is why that gate is right in general — *a callee's own type
+        * variables do not resolve at the call site*, and a cast naming one renders a `?T` stub. An
+        * INHERITED formal is the one case where they DO: the variable belongs to an ancestor, and
+        * the `extends` clause says what this class instantiated it as. That is the same fact
+        * `ParentSubst` carries in the TIR (`CLAUDE.md` §4.56) and it is EXACT rather than a guess.
+        *
+        * ==Keyed by DECLARATION, never by name==
+        * `(owner FQN, formal name)`, which is `ParentSubst`'s own identity. The name-keyed map beside
+        * it ([[instantiationOfParents]]) is the one `inheritedTp` measured at 161/142/141 and is
+        * switched off for it — an unrelated ancestor's `T` colliding with the `T` being filled. Two
+        * ancestors' `T`s are two different keys here, so a hit is evidence.
+        *
+        * ==What it deliberately does NOT substitute==
+        * A WILDCARD formal (`? extends H`). The substitution would be right and the RENDERING is
+        * not — `tpe` has no shape for a bounded wildcard whose bound this function replaced — and
+        * the failure direction of declining is a MISSED cast, i.e. the loud compile error this
+        * function exists to remove and never a conversion it invented. Complete over the other
+        * three shapes (variable, array, applied) for §4.56's reason: a partial type walk is right
+        * for the target it was written against and silently answers "nothing here" for the next. */
+      /** how many `[]` a type reference carries — the ARITY half of `ENGINE-LIMITS.md` G26's
+        * comparison, which is the one thing that decides whether a cast at an inherited formal is a
+        * translation or a `ClassCastException`. */
+      private def arrayDims(tr: CtTypeReference[?]): Int = tr match
+        case a: CtArrayTypeReference[?] => 1 + arrayDims(a.getComponentType)
+        case _                          => 0
+
+      private def inheritedFormal(tr: CtTypeReference[?], fuel: Int = 6): Option[TypeRepr] =
+        if fuel <= 0 then scala.None
+        else tr match
+          case tv: CtTypeParameterReference =>
+            for
+              d     <- (try Option(tv.getDeclaration) catch { case _: Throwable => scala.None })
+              owner <- (d.getParent match { case ct: CtType[?] => Some(ct.getQualifiedName); case _ => scala.None })
+              if ancestorFqns.headOption.getOrElse(Set.empty).contains(owner)
+              arg   <- inheritedByDecl.headOption.flatMap(_.get(owner -> tv.getSimpleName))
+              r     <- (try Some(tpe(arg)) catch { case _: Throwable => scala.None })
+            yield r
+          case arr: CtArrayTypeReference[?] =>
+            inheritedFormal(arr.getComponentType, fuel - 1).map(c =>
+              AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(c)))
+          case _: CtWildcardReference => scala.None
+          case r if r != null && !r.isPrimitive =>
+            val as = try r.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
+            val subs = as.map(a => inheritedFormal(a, fuel - 1))
+            if as.isEmpty || subs.forall(_.isEmpty) then scala.None
+            else
+              try Some(AppliedType(TypeRef(NoPrefix, typeSym(r)),
+                                   as.zip(subs).map((a, s) => s.getOrElse(tpe(a)))))
+              catch { case _: Throwable => scala.None }
+          case _ => scala.None
+
       private def uncheckedGeneric(target: CtTypeReference[?], e: CtExpression[?], t: Term,
                                    rawTarget: Boolean = true, ownScope: Boolean = true): Term =
         // THE TYPE THE ARGUMENT HAS WHERE IT STANDS — [[castType]], not `e.getType`. Java decides
@@ -3032,7 +3126,31 @@ object SpoonTir:
         // resolves against nothing.
         val bad = classLit || polyExpression(e) || e.isInstanceOf[CtLiteral[?]] ||
           e.isInstanceOf[CtNewArray[?]] || e.isInstanceOf[CtConditional[?]]
+        // …the INHERITED formal, which the gates below cannot reach: a formal written as an
+        // ancestor's own type variable is not a `isGenericUse` at all, and `tpResolvable` answers
+        // `false` for it because the variable is not in THIS class's scope. See [[inheritedFormal]]
+        // — the `extends` clause resolves it, exactly and only for that case.
+        //
+        // A DIMENSION MISMATCH DECLINES, and that is not tidiness: at an `H[]...` slot java PACKS a
+        // one-dimensional argument into a fresh `H[][]` (`ENGINE-LIMITS.md` G26, javac-verified),
+        // and this port forwards it. A cast over that makes the arity defect COMPILE — the emitted
+        // `handlers.asInstanceOf[Array[Array[H[Node]]]]` is a `checkcast [[L…` against a value that
+        // is `[L…`, i.e. a `ClassCastException` at run time where a loud typer error stood. Measured
+        // at 6 sites on ssg-md; §3's rule is that a green compile says nothing, and trading an error
+        // for a run-time throw is the one direction this engine may not take. The arity fix is G26's
+        // and this stays declined until it ships.
+        //
+        // Computed ONCE and behind the two cheap tests: [[inheritedFormal]] calls `tpe`, so asking
+        // it twice charges the type-lowering obligation consults twice and moves their DENOMINATORS
+        // on every port for nothing (measured on libGDX core, whose emitted text is unchanged).
+        val inherited =
+          if target == null || et == null || bad then scala.None
+          else if !mentionsRawGeneric(et) || arrayDims(target) != arrayDims(et) then scala.None
+          else inheritedFormal(target)
         if target == null || et == null || bad then t
+        else if inherited.isDefined then
+          val ct = inherited.get
+          Tree.Typed(t, tt(ct, e), ct, originOf(e))
         else if !isGenericUse(target) then t
         else if !(if ownScope then tpResolvable(target) else tpConcrete(target) || calleeBounded(target)) then t
         else if !mentionsRawGeneric(et) && !(rawTarget && mentionsRawGeneric(target)) then t

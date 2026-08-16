@@ -380,7 +380,45 @@ The working shape is `appliedCtorArgs`: at a `new C<targs>(args)`, coerce each a
 formal **with C's own parameters replaced by the explicit type ARGUMENTS**. `rawCtorArgs` is the raw
 counterpart.
 
-*Fix kind: (a).*
+**…AND THE SECOND PLACE THEY DO RESOLVE IS AN *INHERITED* FORMAL — ssg-md 67 → 58.** `appliedCtorArgs`
+is the `new C<targs>` case; this is the same fact one declaration up. `AstActionHandler<C,N,A,H>`
+declares `addActionHandler(H handler)`, and a subclass whose `extends` clause reads
+`AstActionHandler<…, AttributeProvidingHandler<Node>>` calls it with its own RAW parameter. Java
+admits that by UNCHECKED CONVERSION (JLS 5.1.9); scala has no such rule, so the faithful emission is
+the cast java performs implicitly — and `uncheckedGeneric` declined at its FIRST gate, because the
+formal is literally `H`, a `CtTypeParameterReference`, for which `isGenericUse` answers false. The
+`extends` clause is what resolves it, exactly as it does for `ParentSubst` in the TIR
+(`CLAUDE.md` §4.56), so the lookup is keyed by `(declaring type FQN, formal name)` and never by name
+— the name-keyed map beside it is the one `inheritedTp` measured at 161/142/141 and is switched off
+for.
+
+**The gate that matters is the ARRAY DIMENSION, and it is G26's defect meeting this one.** At an
+`H[]...` slot java PACKS a one-dimensional argument into a fresh `H[][]`; this port forwards it
+(G26, still open). Cast, that arity defect COMPILES — the emitted
+`handlers.asInstanceOf[Array[Array[H[Node]]]]` is a `checkcast [[L…` against a value that is `[L…`,
+i.e. a `ClassCastException` at run time where a loud typer error stood. **Measured: 67 → 49 without
+the guard and 67 → 58 with it**, the nine-error difference being exactly the sites whose dimensions
+disagree. Trading a compile error for a run-time throw is the one direction §3 forbids, so the guard
+stays until G26's packing ships — at which point those nine close for free.
+
+**One thing this found and did NOT fix, because the obvious repair is worse than the gap**: the CALL
+dispatch's obligation consult reads a DIFFERENT FORMAL from the translation beside it. `argSlots`
+takes `ex.getParameters`, and under `noClasspath` an executable REFERENCE ERASES a generic formal to
+`Object`, while `coerceArgsFixed` casts against `getExecutableDeclaration`'s un-erased formals one
+function away — so `uncheckedSlot` cannot see an inherited formal at a call and JS-G09 reads
+`fired 144` before and after, over nine sites the arm does answer.
+
+Widening `uncheckedSlot` with the same predicate was written, measured and REVERTED. It is INERT for
+that reason (C1's shape), and it is not free: `inheritedFormal` calls `tpe`, so a PREDICATE inside a
+consult started minting types and moved three other `consulted` DENOMINATORS on libGDX core —
+JS-E06 and JS-G34 `6282 → 6284`, JS-G12 `82207 → 82211` — at 0 errors and 0 member digests. An
+instrument that perturbs its own counters to answer nothing is worse than the gap it was closing. The
+real repair is `argSlots` reading the declaration's formals, which moves JS-G09/G13/G14 on all
+fifteen ports and is its own step.
+
+*Fix kind: (a). `InheritedFormalCastSpec` — two positives and four negatives, of which the dimension
+mismatch and the two-ancestors-one-name pair are the ones a name-keyed or dimension-blind lookup
+fails.*
 
 ### G13. `rawCtorArgs` erased-formal fallback — THREE gates, all worse; and what each taught
 
