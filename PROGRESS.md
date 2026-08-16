@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
-| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | **none in scope** — flexmark's suites live in modules milestone 1 does not parse (§10.6) | **58** (243 at first emit; §10.6.3, all classified) |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is a THIRTEENTH module (`flexmark-util`) and a second lane — **723** emitted, **0 lost**, not yet run (§10.6.6) | **40** main + **44** test (243 at first emit; §10.6.3, all classified) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2815,7 +2815,7 @@ worth, and every number above except the last row is a compile-time one. On liqp
 nothing about **409 of 414** first-run failures; this library is a parser, so the population §4.4
 governs here is larger, not smaller. What wave 7 changed is that the 723 tests now EXIST as emitted
 MUnit registrations with a lane, a discovery guard and an error baseline holding them — §10.6.6 —
-so the remaining distance is a number (44 test-set errors on top of the library's 43) rather than an
+so the remaining distance is a number (44 test-set errors on top of the library's 40) rather than an
 absent source set.
 
 ### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8**
@@ -2956,7 +2956,7 @@ Two things this table is deliberately NOT:
   OPERANDS alone was built, measured at 2 rows of which 1 was false, and removed — K26 carries the
   number and the repair (mint the helpers with their signatures).
 
-**And the port has not yet met `RefChecks`** (§3): 47 typer errors means it has never run, so every
+**And the port has not yet met `RefChecks`** (§3): 40 typer errors means it has never run, so every
 missing `override`, unimplemented member and variance violation in 468 emitted files is unmeasured
 and the count will RISE at the first zero. Two shapes are already visible by eye in the emitted
 output and are named here so the rise is expected rather than discovered — `NodeRepository extends
