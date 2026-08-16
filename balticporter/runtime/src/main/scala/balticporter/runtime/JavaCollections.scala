@@ -360,6 +360,127 @@ object JavaCollections:
       case None    => null.asInstanceOf[V]
     if cur == null then { m.put(k, v); null.asInstanceOf[V] } else cur
 
+  /** `java.util.Map.computeIfAbsent(k, f)` — java's own default implementation, which is NOT
+    * `getOrElseUpdate`, and the two differ TWICE with no compile error either time.
+    *
+    *   - **a key mapped to `null` is ABSENT to java** and present to scala. Java's contract opens
+    *     "if the specified key is not already associated with a value (or is mapped to null)", and
+    *     a library that puts a `null` placeholder and later expects the factory to run gets the
+    *     placeholder back from `getOrElseUpdate`;
+    *   - **a factory that returns `null` records NOTHING in java** and stores the `null` in scala.
+    *     Java's own words: "If the mapping function returns null, no mapping is recorded." The next
+    *     call then re-runs the factory in java and does not in the port.
+    *
+    * The FUNCTION is java's own interface and its own wildcards — `Function<? super K, ? extends V>`
+    * — because a caller may hold one (flexmark's `Parsing.getCachedPattern` takes the factory as a
+    * parameter and forwards it), and a `K => V` formal would reject it while accepting every lambda.
+    * A scala lambda SAM-converts to the wildcard-applied form; measured on 3.8.4, both directions. */
+  def computeIfAbsent[K, V](m: scala.collection.mutable.Map[K, V], k: K,
+                            f: java.util.function.Function[? >: K, ? <: V]): V =
+    val cur = m.get(k) match
+      case Some(x) => x
+      case None    => null.asInstanceOf[V]
+    if cur != null then cur
+    else
+      val v = f.asInstanceOf[java.util.function.Function[K, V]].apply(k)
+      if v != null then { m.put(k, v); v } else null.asInstanceOf[V]
+
+  /** `java.util.Collection.removeIf(p)` on a LIST — removes every element the predicate accepts,
+    * and returns whether any went.
+    *
+    * Two things scala's nearest members are not. `filterInPlace` keeps what the predicate accepts,
+    * which is the COMPLEMENT of what java removes — a silent inversion at a green compile — and it
+    * returns the collection where java returns the `boolean` that callers branch on
+    * (`if (list.removeIf(...)) recompute()`).
+    *
+    * The loop is INDEXED rather than a filter over a copy, so an element is identified by its
+    * POSITION exactly as java's iterator identifies it. A predicate that answers differently for two
+    * equal elements — `it.getOffset() == n` on a type whose `equals` ignores the offset, which is
+    * flexmark's own shape — removes the right one here and could remove the other through any
+    * by-value route. */
+  def removeIf[A](xs: scala.collection.mutable.Buffer[A],
+                  p: java.util.function.Predicate[? >: A]): Boolean =
+    val q = p.asInstanceOf[java.util.function.Predicate[A]]
+    var i       = 0
+    var removed = false
+    while i < xs.length do
+      if q.test(xs(i)) then { xs.remove(i); removed = true } else i += 1
+    removed
+
+  /** `java.util.Collection.removeIf(p)` on a SET — the same member at the other kind.
+    *
+    * A SECOND NAME and not an overload, for two reasons that are both about being read: the two
+    * erase to the same signature so scala cannot overload them at all, and the phase picks by the
+    * receiver's KIND, so the emitted call names which one it meant rather than leaving it to a
+    * dispatch at run time. `sort`/`sortNatural` are already split this way.
+    *
+    * A set has no positions, so the doomed elements are collected first and removed after — never
+    * during the iteration, which is what java's own default implementation is careful to do through
+    * `Iterator.remove` and what a `mutable.Set` gives no equivalent of. */
+  def removeIfSet[A](xs: scala.collection.mutable.Set[A],
+                     p: java.util.function.Predicate[? >: A]): Boolean =
+    val q     = p.asInstanceOf[java.util.function.Predicate[A]]
+    val doomed = xs.iterator.filter(q.test).toList
+    doomed.foreach(xs -= _)
+    doomed.nonEmpty
+
+  /** `java.util.Map.containsValue(v)` — with java's own equality DIRECTION.
+    *
+    * `HashMap.containsValue` reads `v == value || (value != null && value.equals(v))`: identity
+    * first, then the PROBE's `equals` applied to the stored value. Scala's `exists(_._2 == v)` asks
+    * the STORED value's `equals`, which is the other way round and diverges for any asymmetric
+    * `equals` — a subclass that narrows it, `java.sql.Timestamp` against `java.util.Date`. Same
+    * argument, same shape, as `removeValue` two members up. */
+  def containsValue[K, V](m: scala.collection.mutable.Map[K, V], v: scala.Any): Boolean =
+    m.exists { case (_, stored) =>
+      (stored.asInstanceOf[AnyRef] eq v.asInstanceOf[AnyRef]) || (v != null && v.equals(stored))
+    }
+
+  /** `java.util.Collection.containsAll(c)` — java's own default, `for (Object e : c) if
+    * (!contains(e)) return false`.
+    *
+    * The equality direction is `contains`', which for `ArrayList` is `o.equals(element)` — the
+    * PROBE's — and scala's `Seq.contains(elem)` is `exists(_ == elem)`, the element's. Written out
+    * here for the reason `containsValue` above is: the two agree for every symmetric `equals` and
+    * for nothing else, and nothing about a green compile would say which one ran.
+    *
+    * A LINEAR scan even where the receiver is a `Set`, which is a complexity difference and not a
+    * behavioural one: java's `HashSet.contains` finds the element by hash, and this finds the same
+    * element by scanning. They can only disagree where `hashCode` and `equals` already disagree.
+    *
+    * ==The ARGUMENT is a union, because the two sides of this call are on OPPOSITE sides of the
+    * retyping==
+    * `java.util.Collection.containsAll(Collection<?>)` is a member a class IMPLEMENTING `java.util
+    * .List` also declares, and the port emits that declaration's parameter as the SHIM
+    * ([[JavaCollection]]) while the field it delegates to is a retyped `Buffer` — so the one call
+    * this arm rewrites routinely has a scala receiver and a java-shaped argument. A
+    * `IterableOnce[?]` formal would reject exactly that site, and a `JavaIterable[?]` formal would
+    * reject every ordinary one. The union states both and dispatches once, which is honest about a
+    * seam that really does have two shapes; §4.5 forbids the alternative (giving the shim a scala
+    * collection parent so one formal covers both). */
+  def containsAll[A](xs: scala.collection.Iterable[A],
+                     c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean =
+    val probes: scala.collection.Iterator[Any] = c match
+      case it: scala.collection.IterableOnce[?] => it.iterator
+      case ji: JavaIterable[?]                  =>
+        val jit = ji.iterator()
+        new scala.collection.AbstractIterator[Any]:
+          def hasNext: Boolean = jit.hasNext()
+          def next(): Any      = jit.next()
+    probes.forall(o => xs.exists(e => if o == null then e == null else o.equals(e)))
+
+  /** `java.util.ArrayList.ensureCapacity(n)` — a CAPACITY HINT, with no observable semantics.
+    *
+    * Java's own words are "increases the capacity of this ArrayList instance, if necessary": no
+    * element moves, `size()` does not change and nothing a program can read differs afterwards. So
+    * the faithful translation is the scala hint where one exists and NOTHING where one does not — a
+    * `ListBuffer` has no capacity to reserve, and a no-op there is exact rather than approximate.
+    * This is the one member in this file whose java behaviour a caller cannot observe, which is why
+    * it is the one whose "do nothing" arm is admissible. */
+  def ensureCapacity(xs: scala.collection.mutable.Buffer[?], n: scala.Int): Unit = xs match
+    case ab: scala.collection.mutable.ArrayBuffer[?] => ab.sizeHint(n)
+    case _                                           => ()
+
   /** `java.util.Optional.orElse(other)` — STRICT, which is the whole reason it needs a member here
     * rather than a rename.
     *

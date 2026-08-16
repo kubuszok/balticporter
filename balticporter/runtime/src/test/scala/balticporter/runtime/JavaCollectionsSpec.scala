@@ -921,3 +921,117 @@ class JavaCollectionsSpec extends munit.FunSuite:
     val jl = jv(scala.collection.mutable.Buffer[Any](1)).asInstanceOf[java.util.List[Any]]
     intercept[UnsupportedOperationException](jl.add(2))
   }
+
+  // -------------------------------------------------------------------------------------------
+  // SE8's default methods on List / Map / Collection (`ENGINE-LIMITS.md` K23)
+  //
+  // Each of these has a scala member that LOOKS right, and each test asserts the cell where the two
+  // answer differently — never the cell where they agree, which the wrong implementation would pass.
+  // -------------------------------------------------------------------------------------------
+
+  test("computeIfAbsent treats a key mapped to NULL as ABSENT, where getOrElseUpdate does not") {
+    // java's own words: "if the specified key is not already associated with a value (or is mapped
+    // to null)". `getOrElseUpdate` hands the `null` straight back and never runs the factory.
+    val m = scala.collection.mutable.HashMap[String, String]("k" -> null)
+    val f: java.util.function.Function[String, String] = (k: String) => "made:" + k
+    assertEquals(JavaCollections.computeIfAbsent(m, "k", f), "made:k")
+    assertEquals(m("k"), "made:k")
+  }
+
+  test("computeIfAbsent RECORDS NOTHING when the factory answers null — the next call re-runs it") {
+    // "If the mapping function returns null, no mapping is recorded." `getOrElseUpdate` stores it,
+    // so java re-runs the factory on the next call and the port would not.
+    val m     = scala.collection.mutable.HashMap[String, String]()
+    var calls = 0
+    val f: java.util.function.Function[String, String] = (_: String) => { calls += 1; null }
+    assertEquals(JavaCollections.computeIfAbsent(m, "k", f), null)
+    assert(!m.contains("k"), "java records no mapping for a null result")
+    JavaCollections.computeIfAbsent(m, "k", f)
+    assertEquals(calls, 2, "…so the factory runs again")
+  }
+
+  test("computeIfAbsent returns the EXISTING value and does not run the factory") {
+    val m     = scala.collection.mutable.HashMap("k" -> "old")
+    var calls = 0
+    val f: java.util.function.Function[String, String] = (_: String) => { calls += 1; "new" }
+    assertEquals(JavaCollections.computeIfAbsent(m, "k", f), "old")
+    assertEquals(calls, 0)
+    assertEquals(m("k"), "old")
+  }
+
+  test("removeIf removes what the predicate ACCEPTS — the complement of filterInPlace — and says whether it did") {
+    val xs: Buffer[String] = ArrayBuffer("a", "", "b", "")
+    val empty: java.util.function.Predicate[String] = (s: String) => s.isEmpty
+    assertEquals(JavaCollections.removeIf(xs, empty), true)
+    assertEquals(xs.toList, List("a", "b"))
+    // …and FALSE where nothing matched, which is what callers branch on (`-=` and `filterInPlace`
+    // both return the collection, so a mapping onto either loses this).
+    assertEquals(JavaCollections.removeIf(xs, empty), false)
+    assertEquals(xs.toList, List("a", "b"))
+  }
+
+  test("removeIf identifies an element by POSITION, so an equals that ignores the field still removes the right one") {
+    // flexmark's own shape: `trackedOffsets.removeIf(it -> it.getOffset() == n)` over a type whose
+    // `equals` is not the offset. A by-value route (`-=`) would remove the FIRST equal element.
+    final class Off(val n: Int) { override def equals(o: Any): Boolean = o.isInstanceOf[Off]
+                                  override def hashCode(): Int        = 1 }
+    val a, b = new Off(1)
+    val c    = new Off(2)
+    val xs: Buffer[Off] = ArrayBuffer(a, b, c)
+    val two: java.util.function.Predicate[Off] = (o: Off) => o.n == 2
+    assertEquals(JavaCollections.removeIf(xs, two), true)
+    assert(xs.toList.map(_.n) == List(1, 1))
+    assert((xs(0) eq a) && (xs(1) eq b), "the elements that stayed are the ones the predicate rejected")
+  }
+
+  test("removeIfSet is the SET spelling — a second name, because the two erase alike") {
+    val xs = scala.collection.mutable.HashSet("a", "", "b")
+    val empty: java.util.function.Predicate[String] = (s: String) => s.isEmpty
+    assertEquals(JavaCollections.removeIfSet(xs, empty), true)
+    assertEquals(xs.toList.sorted, List("a", "b"))
+    assertEquals(JavaCollections.removeIfSet(xs, empty), false)
+  }
+
+  test("containsValue asks the PROBE's equals, as HashMap.containsValue does") {
+    // The direction is the whole reason this is a helper: `exists(_._2 == v)` asks the STORED
+    // value's `equals`, and the two agree for every symmetric one and for nothing else.
+    class Probe extends AnyRef { override def equals(o: Any): Boolean = true }
+    class Stored extends AnyRef { override def equals(o: Any): Boolean = false }
+    val m = scala.collection.mutable.HashMap[String, AnyRef]("k" -> new Stored)
+    assertEquals(JavaCollections.containsValue(m, new Probe), true, "probe.equals(stored) is what java asks")
+    assertEquals(m.exists(_._2 == new Probe), false, "…and the stored value's equals answers the other way")
+    // …and java's null arm: identity first, so a stored null is found by a null probe.
+    val n = scala.collection.mutable.HashMap[String, AnyRef]("k" -> null)
+    assertEquals(JavaCollections.containsValue(n, null), true)
+    assertEquals(JavaCollections.containsValue(n, "x"), false)
+  }
+
+  test("containsAll is java's default — every element of the argument, and TRUE on an empty one") {
+    val xs: Buffer[String] = ArrayBuffer("a", "b", "c")
+    assertEquals(JavaCollections.containsAll(xs, List("a", "c")), true)
+    assertEquals(JavaCollections.containsAll(xs, List("a", "z")), false)
+    assertEquals(JavaCollections.containsAll(xs, Nil), true, "java's loop over an empty collection returns true")
+    // duplicates in the argument are not a multiset question in java either — `contains` per element.
+    assertEquals(JavaCollections.containsAll(xs, List("a", "a")), true)
+  }
+
+  test("ensureCapacity changes NOTHING a program can read, on either buffer kind") {
+    // The one member here whose java behaviour is unobservable: a capacity hint. What must hold is
+    // that it moves no element and changes no size — including on a buffer that has no capacity to
+    // reserve, where doing nothing is exact rather than approximate.
+    val ab = ArrayBuffer("a", "b")
+    JavaCollections.ensureCapacity(ab, 64)
+    assertEquals(ab.toList, List("a", "b"))
+    val lb: Buffer[String] = ListBuffer("a", "b")
+    JavaCollections.ensureCapacity(lb, 64)
+    assertEquals(lb.toList, List("a", "b"))
+  }
+
+  test("sort is what `List.sort(cmp)` needs too — in place, stable, and on a non-indexed Buffer") {
+    // SE8 made `Collections.sort(list, c)` delegate to `list.sort(c)`, so ONE helper is correct for
+    // both by java's own definition — which is why the member arm reaches this and not a second one.
+    val xs: Buffer[(Int, String)] = ListBuffer((2, "a"), (1, "b"), (2, "c"), (1, "d"))
+    val byFirst: java.util.Comparator[(Int, String)] = (a, b) => a._1 - b._1
+    JavaCollections.sort(xs, byFirst)
+    assertEquals(xs.toList, List((1, "b"), (1, "d"), (2, "a"), (2, "c")), "stable: ties keep their order")
+  }

@@ -3422,6 +3422,44 @@ final class CollectionsTransform(
       case ("putIfAbsent", List(key, v), Kind.Map) if sym("putIfAbsent") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("putIfAbsent"), TypeRepr.NoType, so),
                         List(recv, keyArg(key, recv), v), sym("putIfAbsent"), t.tpe, t.origin))
+      // ---- SE8's default methods on the interfaces, which the retyping moved the ground under ----
+      //
+      // Every one of these is a member java added to `List`/`Map`/`Collection` in 8, so a library
+      // written since uses them as readily as `get` — and each has a scala member that LOOKS like
+      // it and means something else, which is why each is a helper rather than a rename. The
+      // contracts are stated where the helpers are; the one-line reason per arm:
+      //
+      //   - `sort` mutates IN PLACE and scala's `sorted` is a copy (the same helper the
+      //     `Collections.sort` static already reaches, because SE8 made that static delegate here);
+      //   - `computeIfAbsent` treats a `null` VALUE as absent and records nothing when the factory
+      //     answers `null`; `getOrElseUpdate` does neither;
+      //   - `removeIf` keeps the COMPLEMENT of `filterInPlace` and returns java's `boolean`;
+      //   - `containsValue`/`containsAll` ask the PROBE's `equals` where scala asks the element's;
+      //   - `ensureCapacity` is a hint with no observable behaviour at all.
+      case ("sort", List(c), Kind.Seq) if sym("sort") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("sort"), TypeRepr.NoType, so), List(recv, c),
+                        sym("sort"), t.tpe, t.origin))
+      case ("computeIfAbsent", List(key, f), Kind.Map) if sym("computeIfAbsent") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("computeIfAbsent"), TypeRepr.NoType, so),
+                        List(recv, keyArg(key, recv), f), sym("computeIfAbsent"), t.tpe, t.origin))
+      // …and the SET spelling is a different helper rather than an overload: the two erase alike, so
+      // scala cannot hold both under one name, and picking by the receiver's KIND here puts the
+      // choice in the emitted call instead of in a run-time dispatch.
+      case ("removeIf", List(p), Kind.Seq) if sym("removeIf") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("removeIf"), TypeRepr.NoType, so), List(recv, p),
+                        sym("removeIf"), t.tpe, t.origin))
+      case ("removeIf", List(p), Kind.Set) if sym("removeIfSet") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("removeIfSet"), TypeRepr.NoType, so), List(recv, p),
+                        sym("removeIfSet"), t.tpe, t.origin))
+      case ("containsValue", List(v), Kind.Map) if sym("containsValue") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("containsValue"), TypeRepr.NoType, so), List(recv, v),
+                        sym("containsValue"), t.tpe, t.origin))
+      case ("containsAll", List(c), Kind.Seq | Kind.Set) if sym("containsAll") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("containsAll"), TypeRepr.NoType, so), List(recv, c),
+                        sym("containsAll"), t.tpe, t.origin))
+      case ("ensureCapacity", List(n), Kind.Seq) if sym("ensureCapacity") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("ensureCapacity"), TypeRepr.NoType, so), List(recv, n),
+                        sym("ensureCapacity"), t.tpe, t.origin))
       case ("add", List(i, x), Kind.Seq)        => Some(call(recv, insertSym, List(i, x), t, so)) // insert at index
       case ("add", List(x), _)                  => Some(infix(recv, opPlusEq, List(x), t, so))    // xs += x
       // ---- java Deque, as `LinkedList`/`ArrayDeque` are routinely used ----
@@ -4203,6 +4241,7 @@ object CollectionsTransform:
 
   val StaticHelpers: List[String] =
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView", "addAll", "noneMatch", "removeValue",
+         "computeIfAbsent", "removeIf", "removeIfSet", "containsValue", "containsAll", "ensureCapacity",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
@@ -4301,9 +4340,12 @@ object CollectionsTransform:
     ),
     Kind.Seq.toString   -> Set("get", "set", "remove", "addLast", "offer", "offerLast",
                                "addFirst", "offerFirst", "poll", "pollFirst", "peek", "peekFirst", "element",
-                               "toArray", "subList"),
-    Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values", "putIfAbsent"),
-    Kind.Set.toString   -> Set("remove", "toArray"),
+                               "toArray", "subList",
+                               // …and SE8's default methods on `List`/`Collection`
+                               "sort", "removeIf", "containsAll", "ensureCapacity"),
+    Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values", "putIfAbsent",
+                               "computeIfAbsent", "containsValue"),
+    Kind.Set.toString   -> Set("remove", "toArray", "removeIf", "containsAll"),
     Kind.Entry.toString -> Set("getKey", "getValue"),
     // a Stack's own five, PLUS everything `Kind.Seq` covers — the re-entry arm at the foot of
     // `rewrite` really does answer those for a stack receiver, so listing them here is the table

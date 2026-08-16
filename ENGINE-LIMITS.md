@@ -5904,13 +5904,16 @@ has, and whether the ports that would use it can DELIVER it.
 provides is the whole of the mechanised half: `MethodBodyTransform` for a body seam, `dropTypes` +
 `inject` for a whole type.*
 
-### K23. SE8 put DEFAULT METHODS on `List`, `Map` and `Collection`, and a library written since uses them like `get` — **ssg-md 137 → 108; six mapped, two REFUSED, one gap named**
+### K23. SE8 put DEFAULT METHODS on `List`, `Map` and `Collection`, and a library written since uses them like `get` — **ssg-md 137 → 106; six mapped, two REFUSED, one gap named**
 
 Every member the collections tables answered was a member java had in 1.2. A library written after
 2014 reaches for `list.sort(cmp)`, `map.computeIfAbsent(k, f)` and `collection.removeIf(p)` exactly as
 readily, and every one of them lands on a retyped owner with no arm — which `jdk-surface` had been
-reporting, precisely and unread, as `unhandled` for the life of the port (38 rows, of which these are
-33 errors' worth).
+reporting, precisely and unread, as `unhandled` for the life of the port (38 rows, of which these
+were 33 errors' worth). Mapping them moved BOTH instruments together, which is the check doing its
+job: `jdk-surface` 38 → 27 and `collection-boundary` 28 → 27, at 31 errors closed and every other
+port in the corpus reading ZERO members changed — libGDX, Ashley, gltf, vfx, screens, liqp, sg,
+noise4j, jbump and anim8 use none of these members on an owner this phase retypes.
 
 **Each is a HELPER and not a rename, and the reason is the same one `removeValue` and `putIfAbsent`
 already carry: scala HAS the operation and it means something else.** Verified against both specs

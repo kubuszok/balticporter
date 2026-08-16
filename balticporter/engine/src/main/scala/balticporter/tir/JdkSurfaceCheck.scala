@@ -158,6 +158,23 @@ object JdkSurfaceCheck extends RemedySource:
     Refusal("java.util.Map.Entry#setValue",
       "the dotted spelling of the same member, for a frontend that names nested types with `.`",
       "CollectionsTransform.rewrite, the `entrySet` arm"),
+    // The two SE8-era members of `List` whose RESULT is a JDK protocol rather than a value. Every
+    // other member the retyping answers hands back an element, a boolean or the collection; these
+    // two hand back an object whose whole contract is the thing scala has no counterpart for, so a
+    // mapping would have to invent one rather than translate it.
+    Refusal("java.util.List#listIterator",
+      "a `java.util.ListIterator` is a BIDIRECTIONAL CURSOR that writes THROUGH to the list — " +
+        "`previous`, `set`, `add` and `nextIndex` all act on the position it holds. Scala's " +
+        "`Iterator` is forward-only and read-only, so every mapping is either a different protocol " +
+        "or a detached copy whose `set` updates nothing — the `Map.Entry#setValue` refusal above, " +
+        "at a cursor. A call fails to COMPILE under the JDK's own name, which is the honest residue",
+      "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite has no arm"),
+    Refusal("java.util.Collection#spliterator",
+      "a `Spliterator` is a PARALLEL-DECOMPOSITION protocol (`trySplit`, `estimateSize`, " +
+        "`characteristics`) and not an iterator: its only purpose is to be consumed by " +
+        "`java.util.stream`, which this phase COLLAPSES rather than models. There is nothing to map " +
+        "it onto that keeps the contract, and a wrapper would be a stream implementation",
+      "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite has no arm"),
   )
 
   /** the instance-table key for an arm that matches every collection kind. */
