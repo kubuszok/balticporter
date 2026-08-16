@@ -4509,7 +4509,17 @@ final class TirEmitter(
     // extends `RuntimeException` and java's jump is not an exception at all. Read off the guard the
     // emitter just decided to emit, so the consult cannot drift from the decision.
     Obligations.consult(JS.S(11), t.origin)(Option.when(guard.nonEmpty)(()))
-    val cs = catches.map(c => s"${ind(i + 1)}case ${esc(sym(c.param.symbol).name)}: ${tpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}").mkString("\n")
+    // A MULTI-CATCH's union type must be PARENTHESISED in a typed pattern, and this is a fact about
+    // scala's GRAMMAR rather than about its types: `case e: A | B =>` parses the `|` as a PATTERN
+    // ALTERNATIVE, and a pattern alternative may not bind a variable — `E: Illegal variable e in
+    // pattern alternative`. The frontend has built the `OrType` since multi-catch was modelled
+    // (`JS-S14`), and the catalog has recorded the row as handled for as long, because nothing
+    // between the two rendered the parentheses. Narrowed to the union: parenthesising every catch
+    // type would move emitted text on every port for a construct that never needed it.
+    def catchTpe(t: TypeRepr): String = t match
+      case _: TypeRepr.OrType => s"(${tpe(t)})"
+      case _                  => tpe(t)
+    val cs = catches.map(c => s"${ind(i + 1)}case ${esc(sym(c.param.symbol).name)}: ${catchTpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}").mkString("\n")
     val cl = if catches.isEmpty then "" else s" catch {\n$guard$cs\n${ind(i)}}"
     val fl = fin.map(f => s" finally ${term(f, i)}").getOrElse("")
     // The RESOURCES wrap the BODY and nothing else — JLS 14.20.3.2 defines an extended

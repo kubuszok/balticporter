@@ -7842,6 +7842,31 @@ library with a `type`, `object`, `val` or `package` segment is not exotic — ja
 
 *Fix kind: (a) engine, universal.*
 
+### L5. A MULTI-CATCH's union type needs PARENTHESES, and a `catalog(consulted)` row cannot see that — **2 errors + 2 cascades, 175 → 171. CLOSED**
+
+`catch (A | B e)` has a scala image and the frontend has built it since multi-catch was modelled: an
+`OrType`, reduced from Spoon's `getMultiTypes`, with `JS-S14` consulted at the lowering. The catalog
+row has therefore read `Handled` and `NoImpact` for as long as the construct has existed — and the
+emitted text did not parse.
+
+`case e: A | B =>` is not a typed pattern at a union. Scala parses the `|` as a PATTERN ALTERNATIVE,
+and a pattern alternative may not bind a variable: `Illegal variable e in pattern alternative`. The
+parentheses are a fact about the GRAMMAR, not about the types — `case e: (A | B) =>` is the typed
+pattern java meant, and `e`'s type is then the union, which is at least as precise as java's LUB
+(both have exactly the members common to `A` and `B`).
+
+**The general shape is worth more than the fix.** A `catalog(consulted)` row says the LOWERING fired,
+which is a fact about the frontend; it says nothing about whether the emitter rendered what the
+lowering built. Two layers, one row, and the gap between them is invisible to every instrument the
+run has: the lowering is exercised, the difference row is reached, `catalog(unreached)` does not move,
+and the only witness is scalac at the first occurrence. Five corpus libraries wrote no multi-catch.
+
+Narrowed to the union — parenthesising every catch type would move emitted text on every port for a
+construct that never needed it, and the negative is pinned beside the positive
+(`MultiCatchUnionSpec`).
+
+*Fix kind: (a) engine, universal.*
+
 ---
 
 ## 12. Threading a CONTEXT through a program
