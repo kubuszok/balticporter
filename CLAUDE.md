@@ -107,6 +107,27 @@ the SPELLING, so `TransformFactory.scopeOf` takes the phase's own default rather
   `items ++= JavaCollection.from(other.items)`, and `++=` takes an `IterableOnce`. Measured at 4
   errors on a port that had 0, with every check count flat and only the member digests moving.
 
+**And the seam INSIDE the program is a THIRD population, which a lane counting the JDK's side reads
+as zero.** Every slot above has the JDK on one side — a type the mapping left alone, a class file's
+formal — and that is what a boundary count is written to compare. A mapping that sends ONE java
+family to TWO unrelated scala families breaks java's own subtyping edges, and both sides of every
+slot such an edge used to carry are then the phase's OWN OUTPUT: no JDK type is in the comparison,
+no arm of a JDK-shaped check fires, and the residue is invisible. Measured at **16 of one port's 24
+attributed compile errors while the boundary lane counted none of them** — and the reasons it
+counted none are THREE DIFFERENT BLINDNESSES, no one of which a wider guard closes: the
+disagreement is at no formal's HEAD (one type variable bound, inside a single argument list, to two
+types java related by subtyping); one side is a type the PROGRAM DECLARES (a head-FQN side test
+answers "not a party to this boundary" for every one of them, though the phase itself re-parented
+the class onto the far side of the edge); or the callee is a symbol the PHASE MINTED, which carries
+no signature at all, so the argument arm's *formals line up with arguments* is false for every call
+at one and the whole call is skipped. So a retyping phase owes a count where BOTH sides are its own,
+and each row states the java EDGE that was broken and the two targets it became — the pair of
+targets alone cannot say why the source compiled, and the edge alone cannot say why the port does
+not. **And the split that count rests on is a fact about the TARGETS, never about their package**:
+three of one mapping's own runtime targets DO extend a scala collection, deliberately and so that
+java's relation survives, and a package test would report every correct slot they reach as a seam —
+§4.56's name hazard met at a target instead of at a source.
+
 **And the obligation to COUNT is now asked of the pipeline, so a phase cannot simply not have it.**
 Everything above was per-phase discipline, arrived at four times the same way — a port shipped, a
 wall of `Found: … / Required: …` arrived, and somebody wrote the count afterwards. A phase that
@@ -787,13 +808,21 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   §4.6's fabricated fact;
   `porter-notes`, `break-catch`, `try-resource`, `switch-null`, `heap-pollution`,
   `cast-conversion`, `overload-risk` and `markers` record on every run,
-  `collection-closure`/`collection-boundary`/`collection-retarget` record when
+  `collection-closure`/`collection-boundary`/`collection-retarget`/`collection-internal` record when
   `CollectionsTransform` is in the pipeline, and `nullability-boundary` when
   `NullabilityTransform` is. **A retype has TWO directions and a subtyping argument
   licenses only one of them**: `collection-retarget` counts the other — every value the JDK
   PRODUCES at a type the port retargets, which the boundary check cannot see, because the
-  position-blind retyping moved the node type on both sides of that slot. `PortRun.RequiredChecks` is asserted against what
-  actually recorded, so a number that reaches stdout and not `findings.tsv` fails the run.
+  position-blind retyping moved the node type on both sides of that slot. **And a third population
+  has the JDK on NEITHER side**: `collection-internal` counts it, one row per site where java's own
+  subtyping carried a value across an edge the mapping has no image for (§1's third-population
+  paragraph, measured at 16 of one port's 24 attributed errors against a boundary lane reading 0).
+  Those four are required OF A RUN THAT CARRIES THE PHASE and derived from the pipeline rather
+  than listed, which is `serviceProviders`' conditional-lane pattern at the other declaration:
+  requiring them of every port would fail every phase-less one, and leaving them out entirely means
+  a run that stopped calling one reports success with the row gone. `PortRun.RequiredChecks` is
+  asserted against what actually recorded, so a number that reaches stdout and not `findings.tsv`
+  fails the run.
 
   **And a RESOLUTION DRAINS A LANE VISIBLY — both halves, or the improvement is unreadable.** Where
   the engine has no single right answer, a phase or check publishes a MENU of named remedies and a

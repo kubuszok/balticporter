@@ -6484,6 +6484,72 @@ would fail and the anonymous `ThreadLocal` is the one liqp found.*
 
 ---
 
+### K26. The mapping BREAKS java's own subtyping edges, and the seam that leaves has the JDK on NEITHER side — **16 of one port's 24 attributed errors, counted by nothing. LANE BUILT (`collection-internal`, 7 + 16); the residue itself is OPEN**
+
+`typeMap` sends `java.util.Collection` to a STANDALONE shim — `CLAUDE.md` §4.5 says it must, and the
+`Collection` entry's own comment says so at length — and sends every java SUBTYPE of `Collection`
+(`List`, `Set`, `ArrayList`, `HashSet`, …) to a `scala.collection.*` type. So **java's `List <:
+Collection` has no image on the scala side**, and the same for `Set`, `ArrayList`, `HashSet`. That
+is a KNOWN trade (the entry calls the residue "repairable, by `coerce`, at the slot") and what was
+never measured is the part `coerce` does not reach.
+
+**Nothing counted it, and the reason is that every instrument here compares against the JDK.**
+`collection-boundary` asks *is one side a JDK type the mapping left alone, or an external callee's
+class-file formal* — and at one of these slots BOTH sides are the phase's own output, so no arm
+fires. `collection-closure` asks a different question again (mapped supertype, UNMAPPED subtype) and
+correctly reads 3. `PROGRESS.md` §10.6.3 measured the gap from the other end: **16 of ssg-md's 24
+attributed compile errors are this seam and `collection-boundary` counts NONE of them**, which that
+section called "the one thing on this list that is wrong rather than merely refused".
+
+**Three different blindnesses, not one**, which is why a wider guard on the existing lane could not
+have worked:
+
+| the site | why the boundary lane reads zero |
+|---|---|
+| one type VARIABLE bound, in one argument list, to both sides — `set(DataKey<Collection<E>>, ArrayList<E>)` | the disagreement is at no formal's HEAD, and `slot` compares two head FQNs |
+| a class the PROGRAM declares — `OrderedSet implements java.util.Set`, returned at a `Collection` slot | `sideOf` reads a head FQN and answers `Other` for every program type, though the phase itself re-parented the class onto the far side |
+| a call at a symbol THIS PHASE MINTED | a minted symbol carries `NoType`, so `formals.sizeIs == t.args.size` is false and the whole call is skipped |
+
+The first two are the lane (`CollectionInternalCheck`, `collection-internal`): **7 on ssg-md and 16
+on its test set, at 0 errors moved and 0 member digests anywhere.** Each row names the java EDGE that
+was broken and the two targets it became, because neither half alone is actionable — the edge says
+why the source compiled, the pair says why the port does not. The five `SplitTypeVariable` rows are
+exactly the five `MutableDataHolder.set` errors the census had filed as a family; the two
+`DeclaredSubtype` rows are `OrderedMultiMap#keys`/`#values`. On the TEST set it counts **16 sites
+where scalac reports 9 errors**, all one seam — the lane being more complete than the instrument it
+explains, which is what a site count is for.
+
+**AND THE THIRD ARM WAS BUILT, MEASURED AND REMOVED, which is the dead end worth recording.** With no
+signature on the callee the only evidence left is the call's OPERANDS spanning a broken edge, and
+read that way it reported **2 rows on the one port that has any, of which 1 was FALSE**:
+`JavaCollections.containsAll` takes `scala.collection.IterableOnce[?] | JavaIterable[?]` — a union
+formal that exists PRECISELY for this shape and closes the seam — while `JavaCollections.addAll`
+takes `IterableOnce` alone and really is 2 compile errors. Nothing at the operands can tell the two
+apart, which is K2.5's defect exactly: *a residue count is only as good as the assumption that
+everything able to close it ran*. **The repair is not a wider guard but a signature**: mint those
+helpers with their `MethodType` and the ordinary arms see them, at which point no third kind is
+needed. Do not re-derive the operand form.
+
+Two things the lane is deliberately NOT:
+
+- **it is not a fix.** Every `SplitTypeVariable` row is a compile error today and closing it needs
+  the coercion to run at the INFERENCE site — the argument whose type fixes the variable — because
+  the formal has no head to coerce against. Neither row is a `typeMap` entry: both java types are
+  already mapped;
+- **it does not draw its line by PACKAGE.** `CollectionsTransform.standaloneTargets` is three names
+  and not "the runtime package", because three of that table's own runtime targets DO extend a scala
+  collection on purpose (`JavaStack extends mutable.ArrayBuffer`, `JavaEnumSet extends
+  mutable.AbstractSet`, `JavaEnumMap extends mutable.AbstractMap`, each so java's relation survives).
+  A package test would report every correct slot they reach — §4.56's name hazard met at a target.
+
+*Fix kind: (a) for the lane, BUILT. (a) for the seam itself, OPEN and measured at 7 + 16.
+`CollectionInternalCheckSpec` — two positives and five negatives, of which "the same class at the
+same target's slot" is the one that decides `DeclaredSubtype` (a library's own collection carries
+BOTH ends as parents) and "a MINTED helper's operands span the edge and NOTHING is reported" pins the
+removed arm.*
+
+---
+
 ## 6. Porting a test suite
 
 ### X1. Converting JUnit to MUnit is a STRUCTURAL transform, not an annotation rename

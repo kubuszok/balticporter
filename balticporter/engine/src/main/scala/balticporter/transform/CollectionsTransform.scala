@@ -319,6 +319,18 @@ final class CollectionsTransform(
   private def emittedPaths(units: List[Tree.ClassDef]): Set[String] =
     units.map(_.origin.javaPath).toSet
 
+  /** [[CollectionInternalCheck]] over this phase's own mapping — the IN-PROGRAM half of the same
+    * residue [[boundary]] counts, and the half that lane reads as zero by construction (both sides
+    * of every one of its slots are this phase's own output). Run on the program AFTER the phase,
+    * for [[boundary]]'s reason. */
+  def internal(program: Program): List[CollectionInternalCheck.Finding] =
+    internal(program, program.units)
+
+  /** …held to the units the run EMITS (`ENGINE-LIMITS.md` D2), exactly as its three siblings are. */
+  def internal(program: Program, units: List[Tree.ClassDef]): List[CollectionInternalCheck.Finding] =
+    CollectionInternalCheck.check(program, units, mappedTypes, targetOf,
+                                  CollectionsTransform.standaloneTargets)
+
   /** [[RetargetBoundaryCheck]] over this phase's own retarget table — the PRODUCER direction, which
     * [[boundary]] is blind to by construction (a retarget contributes nothing to `mappedTypes` or
     * `retypedTargets`, because its precondition says there is no seam). Run on the program AFTER
@@ -4206,6 +4218,24 @@ object CollectionsTransform:
   /** `java.util.Collections`' statics — a receiver-less utility class, which is why they need their
     * own home rather than a rewrite keyed on a receiver's collection kind. */
   val JavaCollectionsFqn = s"${RuntimeArtifact.Package}.JavaCollections"
+
+  /** the mapping targets that are STANDALONE — a `balticporter.runtime` type with java's own shape
+    * and NO `scala.collection.*` parent, so nothing on the scala side is a subtype of one and one
+    * is a subtype of nothing.
+    *
+    * This is the fact [[CollectionInternalCheck]] draws its whole line on, and it is emphatically
+    * NOT "in the runtime package": three of this table's own targets live there and DO extend a
+    * scala collection — `JavaStack extends mutable.ArrayBuffer`, `JavaEnumSet extends
+    * mutable.AbstractSet`, `JavaEnumMap extends mutable.AbstractMap`, each said in its own doc and
+    * each chosen precisely so java's subtype relation survives. A package test would call those
+    * three unrelated to the scala family and report every correct slot they reach as a seam, which
+    * is §4.56's name hazard met at a target rather than at a source.
+    *
+    * These three are standalone because `CLAUDE.md` §4.5 says they must be: java's `Iterable`,
+    * `Collection` and `Iterator` are small orthogonal interfaces a class implements SEVERAL of, and
+    * scala's collection traits are large and interlocking, so modelling them on one is illegal for
+    * the shape every collection library has. The price is exactly this lane. */
+  val standaloneTargets: Set[String] = Set(JavaIterableFqn, JavaCollectionFqn, JavaIteratorFqn)
 
   /** java's UNIVERSAL supertype — the one formal at which every value conforms, and therefore the
     * one at which conformance proves nothing.

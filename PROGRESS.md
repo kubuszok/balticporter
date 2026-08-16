@@ -2799,6 +2799,7 @@ not an engine change.
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
 | `jdk-surface` | **456 classified, 38 unresolved at first emit** (shimmed 7, mapped 44, kept 367) and **25 after wave 3** (27 after wave 2). The 38 were the retyped-owner members `CollectionsTransform`'s tables had no entry for, and they were the SAME 33 errors the compile reported — the two instruments agree exactly, and they moved together when the SE8 members were mapped (`ENGINE-LIMITS.md` K23) |
+| `collection-internal` | **7** — the IN-PROGRAM half of the same residue, new at wave 8 and counted by nothing before it (`ENGINE-LIMITS.md` K26). 5 `SplitTypeVariable` (exactly the five `MutableDataHolder.set` errors) + 2 `DeclaredSubtype` (`OrderedMultiMap#keys`/`#values`). Its arrival is provably flat: 0 errors moved, 0 member digests on any of the sixteen port reports, and every other port reads **0** |
 | `collection-boundary` / `collection-closure` / `collection-retarget` | **28 / 3 / 0** at first emit, **27 / 3 / 0** after wave 2, **26 / 3 / 0** after wave 4 and **22 / 3 / 0** after wave 5 — one seam left the lane when the call at it became a helper call rather than a member on a retyped receiver, one more when the `keySet()` view gave `coerce` a factory for it (`ENGINE-LIMITS.md` K2.7), and FOUR when K25 held `BitFieldSet`'s class-file overrides literally, so each `super.<same>(c)` stopped handing a shim to `java.util.AbstractSet` — those four fell together with the four errors they caused, which is the attribution §5 requires of a lane that falls. The 22 are `OpaqueEgress` 14, `ExternalCallee` 4, `InexpressibleParent` 2 and `ReifiedOccurrence` 2 — `ShimBoundary` is **0**, here and on every other port |
 | `overload-risk` | **563**, with its denominator recomputed beside it: 26,166 program-declared calls examined, 3,915 with more than one applicable candidate, 563 spanning a java resolution phase |
 | `heap-pollution` | **13**, every one `Acknowledged` — java warned and the author wrote `@SafeVarargs`, which scala has neither of |
@@ -2927,8 +2928,8 @@ written down** — closing any of them means re-opening that entry with a number
 | n | attributed to | what the refusal SAYS |
 |---:|---|---|
 | 6 | `ENGINE-LIMITS.md` **G8**, with **G22**'s pin declining correctly on its fourth condition | a partially-nameable F-BOUNDED class has no consistent fill: `<B extends ISequenceBuilder<B, T>> B getBuilder()` names the enclosing interface's `T` inside its own bound, so either every formal comes from the enclosing scope or none can. Four attempts priced |
-| 6 | **K25**'s residue — the in-program half of `collection-boundary` | a `JavaCollection` formal or result meeting a `Buffer`/`Set`/own-`OrderedSet` value at a call the PORT declares. K25 closed the rule half (an override of a class file keeps java's formals); this is the seam that leaves, and the lane counts the EXTERNAL half only |
-| 5 | the same seam one level in, at a TYPE ARGUMENT | `DataKey<Collection<Extension>>` retypes its argument to the shim while the value is an `ArrayBuffer`: one java subtyping edge that the mapping sends to two unrelated scala types. Wave 6 established this belongs WITH the six above rather than apart from them |
+| 6 | **K25**'s residue — the in-program half, **2 of them now on `collection-internal`** | a `JavaCollection` formal or result meeting a `Buffer`/`Set`/own-`OrderedSet` value at a call the PORT declares. K25 closed the rule half (an override of a class file keeps java's formals); this is the seam that leaves. Two are `DeclaredSubtype` rows since wave 8; the rest sit at a MINTED callee, which K26 records with its number |
+| 5 | the same seam one level in, at a TYPE ARGUMENT — **all five on `collection-internal`** | `DataKey<Collection<Extension>>` retypes its argument to the shim while the value is an `ArrayBuffer`: one java subtyping edge that the mapping sends to two unrelated scala types. Wave 6 established this belongs WITH the six above rather than apart from them, and wave 8's lane counts it as `SplitTypeVariable` — one type VARIABLE bound to both sides inside one argument list |
 | 4 | **K23**'s counted refusals | `listIterator` (2) and `spliterator` (1) hand back a JDK PROTOCOL rather than a value, and there is nothing to map them onto; plus the one bound method reference at a mapped member |
 | 3 | **K5.7**'s `UninheritableTargets`, counted as `InexpressibleParent` | a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent, because the retyping's target is a `Tuple2` and no class can extend one |
 | **24** | | |
@@ -2945,12 +2946,19 @@ Two things this table is deliberately NOT:
   IMAGE this engine emits, and a different image (a `Tuple2`-shaped `Map.Entry` shim, a filled
   F-bound) would move them — each at the cost its entry already records. What the table says is that
   no row in it is a defect somebody has not looked at;
-- **it is not a substitute for the counts.** Sixteen of the twenty-four are the collections family's
-  internal seam, and `collection-boundary` — the lane that exists to count exactly that residue —
-  reads **22** and sees NONE of them, because it counts the external half. That is the one thing on
-  this list that is wrong rather than merely refused: a residue with no lane is a residue that
-  becomes invisible the moment this section stops being maintained, which is precisely what
-  `CLAUDE.md` §5 says a count is for. Giving them a lane is worth more than closing any two of them.
+- **it is not a substitute for the counts — and that objection is now DISCHARGED.** Sixteen of the
+  twenty-four are the collections family's internal seam, and `collection-boundary` — the lane that
+  exists to count exactly that residue — reads **22** and sees NONE of them, because it counts the
+  external half. Wave 8 gave that half its own lane: `collection-internal` reads **7** here and
+  **16** on the test set, at 0 errors moved and 0 member digests on any of the sixteen port reports
+  (`ENGINE-LIMITS.md` K26). What it attributes is the five `MutableDataHolder.set` rows
+  (`SplitTypeVariable` — one type variable bound to both sides of a broken edge) and two of the six
+  shim-inside-the-program rows (`DeclaredSubtype` — `OrderedMultiMap#keys`/`#values`, a class that
+  IMPLEMENTS `java.util.Set` returned at a `Collection` slot). What it does NOT attribute is stated
+  rather than averaged over: the two `ScopedDataSet#getKeys` errors and `Attributes#values` sit at a
+  callee THIS PHASE MINTED, which carries no signature, and the arm that read such a call from its
+  OPERANDS alone was built, measured at 2 rows of which 1 was false, and removed — K26 carries the
+  number and the repair (mint the helpers with their signatures).
 
 **And the port has not yet met `RefChecks`** (§3): 47 typer errors means it has never run, so every
 missing `override`, unimplemented member and variance violation in 468 emitted files is unmeasured
@@ -3023,6 +3031,7 @@ this lane counts a different tree. The two numbers are not each other's residue.
 | the 44, by owner | `HtmlAppendableBaseTest` 9, `OrderedMultiMapTest` 8, `OrderedMapTest` 8, `PlaceholderReplacerTest` 6, `BitFieldSetTest` 6, `HtmlBuilderTest` 3, `OrderedSetTest` 3, `PlainSegmentBuilderTest` 1 — **eight files of fifty-two**, and every one of them is a caller of a residue §10.6.3 already names. `tagLine` (12) is the library's own overload row seen from a caller; the `OrderedSet`/`OrderedMultiMap` rows (13, including 10 `E051 Ambiguous overload` on `remove`) are the shim-against-a-scala-collection family and java's `remove(Object)`/`remove(int)` split (§4.4); `BitFieldSet` (6) is K25's held-back `iterator()` met by a `for` loop |
 | test-framework refusals | **26, every one reported by the phase with its §1 classification** — `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (`ExpectedException`; the field is emitted and NEVER APPLIED, so an expected throw propagates and MUnit records a FAILURE rather than a silent pass), and one hamcrest `Description`. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
 | `omissions` / `portability(emitted)` / `collection-boundary` / `overload-risk` | 13 / 14 / 6 / 1,655 |
+| `collection-internal` | **16**, every one `DeclaredSubtype` and every one the SAME seam: `OrderedSet` — which `implements java.util.Set`, so the phase re-parented it onto `mutable.Set` — handed to its own `addAll`/`retainAll`, whose formal is the `Collection` target `JavaCollection`. scalac reports **9** of them, because it stops after a few per statement; the lane counts sites, which is what makes it the more complete instrument here (`ENGINE-LIMITS.md` K26) |
 | `manifest` | **1** — `BaseMapUnverified`, and see below |
 
 **THE SUITE DOES NOT RUN, and the lane says so rather than skipping the stage.** The run is gated on

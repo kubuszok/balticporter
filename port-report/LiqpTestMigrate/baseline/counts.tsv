@@ -11,6 +11,7 @@ catalog(unreached)	18
 class-init-trigger	0
 collection-boundary	9
 collection-closure	0
+collection-internal	0
 collection-retarget	0
 dependency-coverage	0
 dependency-coverage(all)	235

@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
-import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
+import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -394,6 +394,12 @@ final case class PortRun(
       // Recorded even at zero, for the reason the other two are: a number nobody prints is a
       // sentence living in prose.
       val ret = c.retargetBoundary(program, checkedUnits)
+      // …and the IN-PROGRAM half of the boundary residue, which `boundary` above reads as zero by
+      // construction: both sides of every one of those slots are this phase's own output, so there
+      // is no JDK type anywhere in the comparison and no arm of it fires. Measured at 16 of one
+      // port's 24 attributed compile errors while `collection-boundary` counted none of them
+      // (`PROGRESS.md` §10.6.3). Recorded even at zero, for the reason the other three are.
+      val int = c.internal(program, checkedUnits)
       // …minus what the port SELECTED a remedy for. A resolution is a MOVE, so the drained rows
       // leave this lane and arrive in `remediation(resolved)` (CLAUDE.md §5), and every reader below
       // — the record, the count and the summary — sees the SAME list, which is what stops the three
@@ -404,6 +410,7 @@ final case class PortRun(
         CheckReport.record(CollectionClosureCheck.Name, clo.map(_.report))
         CheckReport.record(CollectionBoundaryCheck.Name, bndKept.map(_.report))
         CheckReport.record(RetargetBoundaryCheck.Name, ret.map(_.report))
+        CheckReport.record(CollectionInternalCheck.Name, int.map(_.report))
       }
       say(s"COLLECTION CLOSURE (mapped supertype, unmapped subtype): ${clo.size}")
       if clo.nonEmpty then say(CollectionClosureCheck.Classification)
@@ -412,6 +419,8 @@ final case class PortRun(
       println(CollectionBoundaryCheck.summary(bndKept))
       say(s"RETARGET BOUNDARY (values the JDK produces at a retargeted type): ${ret.size}")
       println(RetargetBoundaryCheck.summary(ret))
+      say(s"COLLECTION INTERNAL (java's own subtyping, with no image on the scala side): ${int.size}")
+      println(CollectionInternalCheck.summary(int))
     }
 
     // ---- what a reflective framework cannot see: java-public fields with no bean property ----
@@ -2302,7 +2311,17 @@ final case class PortRun(
     * requirement is DERIVED from the same declaration the work is. */
   private def requiredChecks: Set[String] =
     PortRun.RequiredChecks ++
-      (if manifest.exists(_.serviceProviders.nonEmpty) then Set(balticporter.tir.ServiceProviders.Name) else Set.empty)
+      (if manifest.exists(_.serviceProviders.nonEmpty) then Set(balticporter.tir.ServiceProviders.Name) else Set.empty) ++
+      // …and the four COLLECTION lanes, derived from the PIPELINE rather than from the manifest —
+      // the same rule at the other declaration. They were unskippable only by the wiring living
+      // beside the omission block, which is exactly the guarantee `RequiredChecks`' own doc says a
+      // list derived from what was invoked cannot give: a run that stopped calling one of them
+      // would report success with the row gone. Derived, so a port without the phase requires
+      // none of them and the arithmetic stays a no-op.
+      (if effectivePhases.exists(_.isInstanceOf[CollectionsTransform]) then
+         Set(CollectionClosureCheck.Name, CollectionBoundaryCheck.Name,
+             RetargetBoundaryCheck.Name, CollectionInternalCheck.Name)
+       else Set.empty)
 
   private def verifyRecorded(): Unit =
     if CheckReport.enabled then

@@ -10,6 +10,7 @@ catalog(unreached)	13
 class-init-trigger	1
 collection-boundary	0
 collection-closure	0
+collection-internal	0
 collection-retarget	0
 context-seam	7
 dependency-coverage	0
