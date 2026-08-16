@@ -835,7 +835,7 @@ formals only COLLIDES with them once the formals are read at the subclass's inst
 
 *Fix kind: (a).*
 
-### G26. A `T[]...` slot's ARITY is decided by ASSIGNABILITY, and the port reads it as "both are arrays" — **the defect is real and javac-verified; both fixes measured WORSE (ssg-md 81 → 83, and 81 → 81 at `markers` 0 → 1). OPEN**
+### G26. A `T[]...` slot's ARITY is decided by ASSIGNABILITY, and the port reads it as "both are arrays" — **two fixes measured WORSE with the element type unanswered (ssg-md 81 → 83, and 81 → 81 at `markers` 0 → 1); shipped once it had one, at ssg-md 58 → 49. CLOSED**
 
 Java's rule for a vararg slot is whether the argument is assignable to the PARAMETER'S ARRAY TYPE —
 if it is, the array goes through; if it is only assignable to the COMPONENT, java materialises a
@@ -892,8 +892,59 @@ sites the cast currently declines are declined ON THE DIMENSION TEST ALONE — s
 the dimensions agree and the cast fires on its own, with no further change. Expect those six and
 nothing else.
 
-*Fix kind: (a), OPEN. Measured on ssg-md; nothing shipped, and the spec that pinned the packing was
-deleted with it — a spec for behaviour the engine does not have is worse than none.*
+**HOW IT CLOSED — ssg-md 58 → 49, `markers` 0 → 0, and every other count on all fifteen ports flat**
+(wave 6). Exactly the shipped shape the paragraph above predicted, and the two halves are one edit
+each:
+
+- **the ARITY** is `dims(arg) >= dims(comp) + 1`, added to `varargHoldsArray`'s reference branch
+  beside the primitive one it belongs with. The two conjuncts are ONE rule read at its two kinds —
+  assignability where the component is primitive, assignability where it is an array — which is why
+  the dimension test lives in the predicate `varargPack` and `callConsults` SHARE (F8) rather than in
+  a second place;
+- **the ELEMENT** is `inheritedFormal(comp).getOrElse(tpe(comp))`, the same `(declaring type FQN,
+  formal name)` lookup the inherited-formal cast uses.
+
+**And a SECOND rendering of the same type was the half neither measurement had reached.** The pack
+builds `Array[ct](elem)`, and the ELEMENT goes through `coerce`, whose array-covariance arm renders
+its cast target with a bare `tpe` — so the first correct pack emitted
+`Array[Array[Box[String]]](hs.asInstanceOf[Array[?]])`: the array right, the element cast naming
+nothing, and the two halves of one call disagreeing about one type. That is `CLAUDE.md` §4.56's
+"a rule stated once per arm is a rule the next arm will not have" at the arm BESIDE the one wave 5
+fixed, and the repair is the same lookup in `coerce`'s cast branch — asked only where a cast is
+really emitted and only where the target mentions a variable at all, because `inheritedFormal` calls
+`tpe` and G12 already measured what a `tpe` inside a value the caller may not use does to the
+type-lowering denominators.
+
+**And the REFERENCE PORT reached the same two decisions by hand** (§3.5), which is the strongest
+evidence available that the shape is right rather than merely green. Its hand-written
+`AstActionHandler` declares `addActionHandlers(handlers: Array[H]*)` — a scala REPEATED parameter,
+so java's pack is implicit at the call — and every caller passes ONE array, cast at the ancestor's
+variable resolved through the `extends` clause:
+`super.addActionHandlers(handlers.asInstanceOf[Array[VisitHandler[Node]]])`. That is a one-element
+outer array holding an element cast at the resolved component: both halves of this fix, chosen
+independently by a human. The mechanical emission differs in exactly the way JS-G37 says it must —
+an in-program vararg is emitted `Array[T]` rather than `T*`, so the outer array is written out
+(`Array[Array[VisitHandler[Node]]](…)`) instead of being materialised by the compiler — and the
+element decision is character-for-character theirs. Note what §3.5 forbids reading into this: their
+`Array[H]*` DECLARATION is a hand port's freedom and is not evidence for changing JS-G37.
+
+**The blast is NINE errors and not six, and the extra three are the same defect the census had
+filed apart.** The six are the predicted `H[]...` forwards. The other three are the
+`handlers.toArray(EMPTY_HANDLERS)` rows at `super.addActionHandlers(…)` — a one-dimensional
+`Array[Object]` at the SAME `H[]...` slot, so the pack fixed the arity and the element cast fixed
+the `Array[Object]`, and what looked like a second family was one call shape reached from a
+different producer. The fourth `toArray` row is genuinely other: it is an OVERLOAD selection on the
+class's own `addHandlers`, where java's `Collection.toArray(T[])` returns `T[]` and the port erased
+the empty-array argument to `Array[Object]`.
+
+*Fix kind: (a), CLOSED — `SpoonTir.varargHoldsArray`, `SpoonTir.varargPack`, `SpoonTir.coerce`.
+`SpoonTirBodySpec` pins four of javac's five cells beside the primitive one that is the fifth (a
+one-dimensional array at a two-dimensional slot packs; a two-dimensional one does not; a
+one-dimensional one at a ONE-dimensional slot does not, which a `dims(arg) > dims(comp)` spelling
+would break; and a two-dimensional one at an external `Object...` spreads).
+`InheritedFormalCastSpec`'s dimension case is now a POSITIVE — the pack, with the cast on the
+ELEMENT at one dimension where the checkcast holds, and a negative on both the sentinel and the
+two-dimensional cast this entry spent a wave refusing.*
 
 ---
 
@@ -6889,7 +6940,7 @@ optional:
 
 *Fix kind: (a) engine — measurement machinery, no library involved.*
 
-### M10. An emitted IDENTIFIER keyed on a raw `SymId` turns a ONE-SYMBOL change into a 122-member blast — and `members.tsv` is exactly the instrument it defeats. **CLOSED**
+### M10. An identifier keyed on a raw `SymId` turns a ONE-SYMBOL change into a 122-member blast — and `members.tsv` is exactly the instrument it defeats. **The EMITTED half is CLOSED; the DIAGNOSTIC half is OPEN, measured at 263 `findings.tsv` rows on ssg-md**
 
 `PanamaFfiTransform.handleName` names a downcall handle `<method>$<SymId.raw>$handle`. `SymId.raw`
 is the frontend's MINT COUNTER, so the name is stable only for as long as nothing before that method
@@ -6960,7 +7011,42 @@ regression fixture is the entry itself: `PanamaFfiTransformSpec` emits one class
 time with an unrelated method declared ahead of the natives, and asserts the handle names are
 identical — which fails on the old key and is the only thing in this repository that can see it.
 
-*Fix kind: (a) engine — `PanamaFfiTransform.handleNames`.*
+**AND THE HALF THAT DID NOT CLOSE IS THE DIAGNOSTIC ONE, whose price this entry recorded as `2` and
+which reads `263` on a large library.** The rule above is about an identifier the engine EMITS, and
+that is fixed. `SpoonTir.unbox`'s own comment names the other face — interning a symbol earlier
+"re-keys every downstream finding whose owner is an external member" — and prices it at 2 findings,
+which is what a small port shows. On ssg-md (21,571 symbols) the G26 wave's four-line frontend change
+moved **276 id-stripped rows of `findings.tsv`, and 263 of them are a bare `@1702` that became
+`@1703`** in a symbol RENDERED INTO a finding's message — 253 `overload-risk`, 9
+`collection-boundary`, 1 `heap-pollution` — verified by masking the counter on both sides, after
+which those rows are IDENTICAL. Not one COUNT moved and not one member digest outside the twelve the
+change explains.
+
+The residue of that diff is what a reader actually wants and is 13 rows: 12 printed consult
+DENOMINATORS and the 1 row whose text this wave deliberately edited. Two of the twelve are worth
+quoting, because they corroborate the fix from an instrument that knows nothing about it —
+`JS-G16`'s `NewArray` lowerings go **323 → 332**, which is exactly the nine packs, and `JS-G02`'s
+wildcard lowerings go 3214 → 3213, which is the one `?` that stopped being rendered when the element
+type resolved. Thirteen rows a human can read; 263 that only a counter moved.
+
+Three things follow, and the middle one is why this is recorded rather than fixed here:
+
+- **`findings_baseline_guard` is now the instrument that sees it**, and it did not exist when this
+  entry was written. A wave that moves one frontend line fails a lane's findings guard with a
+  276-row diff of which 263 are a digit — so the acknowledgement is real work and the 13 rows a
+  reader wants (*did an ANSWER change?*) are buried in it;
+- **the honest fix is `TirPrinter`'s, not each finding's.** `@<raw>` is the fallback a member key
+  renders when a symbol has no nameable owner, so one renderer decides it for every lane at once; a
+  per-check mask would be the `sed -E 's/\$[0-9]+\$/$N$/g'` workaround this entry already refuses,
+  spelled eleven times. It is not free — the fallback has to name SOMETHING, and what a nameless
+  symbol should print is the open question;
+- **it reaches `members.tsv` too**, at the member KEY rather than the digest: four ssg-md rows moved
+  `@7880` → `@7881` with byte-identical digests, i.e. four rows of blast radius over emitted text
+  that did not change. `just members-unchanged` counts them.
+
+*Fix kind: (a) engine — the EMITTED half is CLOSED in `PanamaFfiTransform.handleNames`; the
+DIAGNOSTIC half is OPEN in `TirPrinter`'s nameless-owner fallback, measured at 263 findings rows and
+4 member keys on ssg-md.*
 
 ### M11. A commit that changes EMISSION and does not re-accept the baseline ships a digest ITS OWN CODE CANNOT REPRODUCE — and every lane still exits 0. **CLOSED, and the cost is that the next wave pays for it**
 

@@ -3318,7 +3318,22 @@ object SpoonTir:
         // slot AND a real `Integer`/`Number` one — where casting straight to `Object` fails an
         // `Integer` parameter that Spoon erased at the call reference.
         val ct = if boxing then boxedPrimitive(et.getSimpleName) else tpe(target)
-        if cast then Tree.Typed(t, tt(ct, e), ct, originOf(e))
+        if cast then
+          // …AND A TARGET NAMING AN ANCESTOR'S TYPE VARIABLE IS RENDERED THROUGH THE `extends`
+          // CLAUSE, which is [[uncheckedGeneric]]'s own fact read at the arm beside it. `tpe` has no
+          // meaning for a variable that is not in THIS class's scope and renders a sentinel, so an
+          // array-covariance cast at an inherited `H[]` slot emitted `Array[?]` — a cast whose
+          // target names nothing, which is worse than the mismatch it was inserted to remove. The
+          // substitution is EXACT (`ENGINE-LIMITS.md` G12) and it matters here because the vararg
+          // PACK builds its array at the resolved component: rendered two different ways, the
+          // element and the array around it disagree at every packed call.
+          //
+          // Asked ONLY where a cast is really being emitted and only where the target mentions a
+          // variable at all: [[inheritedFormal]] calls `tpe`, and a lookup inside a value the caller
+          // may not use moves the type-lowering denominators on every port for nothing (G12's own
+          // measurement, libGDX core 82207 -> 82211 against 82207 -> 82209).
+          val cct = if mentionsAnyTypeVar(target) then inheritedFormal(target).getOrElse(ct) else ct
+          Tree.Typed(t, tt(cct, e), cct, originOf(e))
         else if unchecked then
           // A CONDITIONAL's unchecked conversion belongs to its BRANCHES, not to the whole
           // expression. Java's rules for a reference conditional in an assignment context assign
@@ -3458,7 +3473,18 @@ object SpoonTir:
         *     `CLAUDE.md` §4.4's shape twice over. A REFERENCE component is left alone —
         *     `String[] <: Object[]` is java's own array covariance and the forward really is one;
         *   - a BARE `null` IS the array; `(String) null` is not. The cast names the COMPONENT type,
-        *     which is exactly how java disambiguates the two. */
+        *     which is exactly how java disambiguates the two;
+        *   - …and the ARRAY DIMENSION is what decides the REFERENCE case, which "is the argument an
+        *     array" silently did the work of for as long as no corpus vararg's component was ITSELF
+        *     an array. Java's rule for the slot is assignability to the PARAMETER's array type: at
+        *     an `H[]...` slot the parameter is `H[][]`, a plain `H[]` is assignable to the COMPONENT
+        *     and not to the parameter, so java PACKS. Read as a pass-through the port forwards a
+        *     one-dimensional array into a two-dimensional slot — the ARITY of the emitted call is
+        *     wrong before its element type is. `dims(arg) >= dims(comp) + 1` answers all five of
+        *     `ENGINE-LIMITS.md` G26's javac-probed cells with no subtyping oracle, and every shape
+        *     javac REJECTS (a `String[][]` at a `String...`) is outside it either way. Note the two
+        *     conjuncts are ONE rule read at its two kinds: the primitive test is assignability where
+        *     the component is primitive, this is assignability where it is an array. */
       /* …and every one of the three reads below is BARE, because `varargPack` — the TRANSLATION
          this predicate is about, which calls this very function — reads all three bare within ten
          lines: `arr.getComponentType` in its own `comp`, `e.getTypeCasts` in `expr`'s cast fold,
@@ -3474,7 +3500,7 @@ object SpoonTir:
           val ac = arr.getComponentType
           if ac == null || comp == null then true
           else if ac.isPrimitive || comp.isPrimitive then ac.getQualifiedName == comp.getQualifiedName
-          else true
+          else arrayDims(arr) >= arrayDims(comp) + 1
         val casts = e.getTypeCasts.asScala.toList
         val own   = e.getType
         (casts :+ own).collectFirst { case a: CtArrayTypeReference[?] => a }.exists(componentAgrees) ||
@@ -3609,7 +3635,19 @@ object SpoonTir:
             else
               val (head, rest) = argEs.splitAt(fixed)
               val fixedTerms = head.zipWithIndex.map { (e, i) => coerce(l(i).getType, e, expr(e)) }
-              val ct = tpe(elemRef.get)
+              // THE ELEMENT TYPE, with an ANCESTOR's type variables replaced by what THIS class
+              // instantiated them with — the half `ENGINE-LIMITS.md` G26 stated it had no answer for
+              // and wave 5 supplied. The array the pack materialises is the PARAMETER's own declared
+              // component, and where that component is written in the callee's own variables `tpe`
+              // renders the unresolvable one as a `?H` SENTINEL: a type nothing can be passed at,
+              // with the arity right and the element wrong (measured `markers` 0 -> 1, 18 references
+              // in one module). [[inheritedFormal]] is the SAME lookup the inherited-formal cast
+              // uses — keyed by `(declaring type FQN, formal name)`, resolved through the `extends`
+              // clause — so `H[]` renders as the instantiation this class wrote down, and the cast
+              // on the element below then agrees with the array being built around it. `scala.None`
+              // wherever nothing substitutes, which is every component that was already nameable:
+              // argument INFERENCE remains refused here (it is what measured 81 -> 83, twice).
+              val ct = inheritedFormal(elemRef.get).getOrElse(tpe(elemRef.get))
               val elems = rest.map(e => coerce(elemRef.get, e, expr(e)))
               val at = AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(ct))
               val o = argEs.headOption.map(originOf).getOrElse(Origin.synthetic)

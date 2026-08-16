@@ -12,12 +12,14 @@ import balticporter.frontend.spoon.SpoonTir
   * and the `extends` clause says what this class instantiated it as, which is `ParentSubst`'s own
   * fact in the TIR (`CLAUDE.md` §4.56) and is exact rather than a guess.
   *
-  * Four negatives, each of which the positive would swallow:
+  * The DIMENSION cell is where this rule meets `ENGINE-LIMITS.md` G26's, and it is a positive now
+  * rather than the refusal it was: at an `H[]...` slot java PACKS a one-dimensional argument into a
+  * fresh `H[][]`, so the cast belongs on the ELEMENT and never on the array — cast at the array it
+  * is a `checkcast [[L…` against a `[L…`, which COMPILES and throws, the one direction §3 forbids.
+  * The pack renders its component through this same lookup, so the two agree by construction.
   *
-  *   - a DIMENSION mismatch. At an `H[]...` slot java PACKS a one-dimensional argument into a fresh
-  *     `H[][]` (`ENGINE-LIMITS.md` G26, javac-verified) and this port forwards it; a cast over that
-  *     would make the arity defect COMPILE and throw `ClassCastException` at run time, which is the
-  *     one direction §3 forbids — an error traded for a silent-until-executed throw;
+  * Three negatives, each of which the positive would swallow:
+  *
   *   - a callee the class DECLARES ITSELF. Its type variables are its own and G12's refusal stands;
   *   - an argument that is not RAW. Java performs no unchecked conversion, so neither may the port;
   *   - TWO ancestors whose variables share a NAME. The lookup is keyed by (declaring type, name) —
@@ -65,18 +67,29 @@ class InheritedFormalCastSpec extends munit.FunSuite:
            s"the two-dimensional call did not take the cast\n--- emitted ---\n$out")
   }
 
+  test("a DIMENSION mismatch is PACKED, and the cast lands on the ELEMENT — never on the array") {
+    // The one cell where this rule and `ENGINE-LIMITS.md` G26's meet, and the reason the cast alone
+    // was refused for a wave: at an `H[]...` slot java PACKS a one-dimensional argument into a fresh
+    // `H[][]`, so a cast to the two-dimensional type is a `checkcast [[L…` against a value that is
+    // `[L…` — it COMPILES and throws at run time, which is the one direction §3 forbids. With the
+    // pack shipped, the arity is java's own and the unchecked conversion sits where java performs
+    // it: on the element, at ONE dimension, where the checkcast holds.
+    val out  = emitted(single)
+    val flat = out.linesIterator.filter(_.contains("super.takeAll")).toList
+      .filterNot(_.contains("hs.asInstanceOf[scala.Array[scala.Array"))
+    assertEquals(clue(flat).size, 1, s"--- emitted ---\n$out")
+    assert(flat.head.contains(
+             "scala.Array[scala.Array[demo.Box[java.lang.String]]](hs.asInstanceOf[scala.Array[demo.Box[java.lang.String]]])"),
+           s"the one-dimensional call is not java's pack over a one-dimensional cast\n${flat.head}")
+    assert(!flat.head.contains("hs.asInstanceOf[scala.Array[scala.Array"),
+           s"the argument itself was cast to a two-dimensional type; that compiles and throws (G26)\n${flat.head}")
+    assert(!flat.head.contains("?H") && !flat.head.contains("scala.Array[?]"),
+           s"the packed element rendered a sentinel rather than the `extends` clause's answer\n${flat.head}")
+  }
+
   // -------------------------------------------------------------------------
   // the negatives
   // -------------------------------------------------------------------------
-
-  test("NEGATIVE: a DIMENSION mismatch declines — java PACKS there and a cast would throw") {
-    val out = emitted(single)
-    val flat = out.linesIterator.filter(l => l.contains("super.takeAll") && !l.contains("scala.Array[scala.Array")).toList
-    assertEquals(clue(flat).size, 1, s"--- emitted ---\n$out")
-    assert(!flat.head.contains("asInstanceOf"),
-           s"a one-dimensional argument at an `H[]...` slot was cast to a two-dimensional type; " +
-             s"that compiles and throws at run time (G26)\n${flat.head}")
-  }
 
   test("NEGATIVE: an argument that is NOT raw takes no cast — java converts nothing") {
     val out = emitted(single)

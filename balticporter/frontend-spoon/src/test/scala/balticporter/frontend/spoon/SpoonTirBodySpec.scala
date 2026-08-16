@@ -318,6 +318,71 @@ class SpoonTirBodySpec extends munit.FunSuite:
       case None                   => fail("no argument at all")
   }
 
+  // -- …and the OTHER half of that same assignability rule is the ARRAY DIMENSION (G26) ----------
+  //
+  // The primitive cells above are assignability read at a PRIMITIVE component; these are the same
+  // question read at an ARRAY one, and "is the argument an array" was exact for as long as no corpus
+  // vararg's component was itself an array. At an `H[]...` slot the parameter is `H[][]`: a plain
+  // `H[]` is assignable to the COMPONENT and not to the parameter, so java materialises
+  // `new H[][]{ hs }` — and read as a pass-through the port forwards a one-dimensional array into a
+  // two-dimensional slot, which is the ARITY of the call being wrong before its element type is.
+  //
+  // `dims(arg) >= dims(comp) + 1` answers all five of `ENGINE-LIMITS.md` G26's javac-probed cells,
+  // and the four below are the four of them this program can express (the fifth, `obj(int[])`, is
+  // the primitive pack tested above). Every shape javac REJECTS — a `String[][]` at a `String...` —
+  // is outside the rule either way.
+  private val dimProgram = SpoonTir.fromSource(
+    """package demo;
+      |class Dim {
+      |  static int pack(String[]... xs) { return xs.length; }
+      |  static int flat(String... xs)   { return xs.length; }
+      |  void oneAtTwo(String[] xs)   { pack(xs); }
+      |  void twoAtTwo(String[][] xs) { pack(xs); }
+      |  void oneAtOne(String[] xs)   { flat(xs); }
+      |  void twoAtObject(String[][] xs) { java.util.Arrays.asList(xs); }
+      |}
+      |""".stripMargin)
+
+  private def dimLastArg(member: String): Option[Tree] =
+    callsIn(dimProgram, s"demo.Dim#$member").headOption.flatMap(_.args.lastOption)
+
+  test("a ONE-dimensional array at an `H[]...` slot is PACKED — javac's `outer=1`") {
+    // `pack(String[])` in javac reads `xs.length == 1`: `String[]` is assignable to the component
+    // `String[]` and not to the parameter `String[][]`. Forwarded, the emitted call hands a
+    // one-dimensional value to a two-dimensional formal.
+    dimLastArg("oneAtTwo") match
+      case Some(Tree.NewArray(_, _, Some(es), _, _)) => assertEquals(clue(es).size, 1)
+      case other => fail(s"expected a one-element NewArray, got $other")
+  }
+
+  test("…and a TWO-dimensional one passes through — javac's `outer=2`") {
+    // The negative that the dimension test must not swallow: `String[][]` IS assignable to the
+    // parameter's array type, so java forwards it and packing would build an array of one.
+    dimLastArg("twoAtTwo") match
+      case Some(_: Tree.NewArray) => fail("a two-dimensional argument is assignable to `String[][]`")
+      case Some(_: Tree.Repeated) => fail("the callee is ours — the array passes through as it stands")
+      case Some(_)                => ()
+      case None                   => fail("no argument at all")
+  }
+
+  test("…and a one-dimensional array at a ONE-dimensional slot still passes through") {
+    // The cell a dimension test written as `dims(arg) > dims(comp)` would break: at a `String...`
+    // slot the component is `String`, `dims(comp) + 1` is 1, and the forward is java's own.
+    dimLastArg("oneAtOne") match
+      case Some(_: Tree.NewArray) => fail("`String[]` at a `String...` slot is java's pass-through")
+      case Some(_)                => ()
+      case None                   => fail("no argument at all")
+  }
+
+  test("…and `String[][]` at an EXTERNAL `Object...` spreads — `String[] <: Object`") {
+    // javac's fourth cell, read at the program's edge: the component is `Object`, `dims(comp) + 1`
+    // is 1, and the two-dimensional argument clears it. `Arrays.asList` is a class file, so the
+    // faithful rendering of that forward is the spread (`ENGINE-LIMITS.md` K6.5).
+    dimLastArg("twoAtObject") match
+      case Some(_: Tree.Spread) => ()
+      case other                => fail(s"expected Spread, got $other")
+  }
+
   // -- T14: a java STATIC is INHERITED by every subclass; a scala companion inherits NOTHING ------
   //
   // `ZoneOffset.systemDefault()` is ordinary java: `systemDefault` is declared `static` on
