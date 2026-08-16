@@ -9285,8 +9285,12 @@ rather than approximated:
   What stays refused is what the adaptation cannot ANSWER: a RAW target (nothing to substitute), an
   unreadable class file, a variable bound by the METHOD rather than by the type. Those keep the
   `omissions` row, because a guessed `T` or an erased `Object` is §4.6's fabricated fact — it
-  compiles. Non-vacuous by fixture on both sides now (`SamLambdaTransformSpec`'s adapted and raw
-  cells, plus `CatalogAreaSSpec`'s `JS-S21` cell).
+  compiles. Non-vacuous by fixture on both sides now, in all three suites that pinned the old
+  boundary: `SamLambdaTransformSpec`, `EmitterBindingAndReturnSpec` and `CatalogAreaSSpec`'s
+  `JS-S21` cells each carry an ADAPTED case and a RAW-target refusal. **All three failed when the
+  adaptation landed, and that is what the suites are for** — `just measure-all` was green through
+  the change, because a spec that pins a REFUSAL is invisible to every port whose sites the refusal
+  no longer reaches (§5.1: run the suites after the lanes, and `testOnly *` rather than `testQuick`).
 
 **One more finding rode in with it, and it is a `PorterNote` PLACEMENT question at a CONSTRUCTOR —
 FIXED.** `porter-notes` reported 0 → 1: a `SamLambda` decision subjected at `AsyncExecutor#<init>`,

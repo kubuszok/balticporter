@@ -98,13 +98,29 @@ class EmitterBindingAndReturnSpec extends PortSuite:
     assertNotEmits(p, "def body$")
   }
 
-  test("a VALUE-returning lambda is REFUSED, not guessed — the SAM's result type is not in the TIR") {
-    // A `def` with a wrong result type would COMPILE. Left alone this is a loud compile error
-    // naming the exact line, which is ENGINE-LIMITS M6's outcome and strictly better.
+  test("a VALUE-returning lambda takes the SAM's result — ADAPTED at the target where it is generic") {
+    // `Supplier<String>.get` is declared `T get()`; the reference says what `T` is and Spoon's own
+    // `TypeAdaptor` substitutes it, so the nested `def` can be named. This used to be I9's standing
+    // refusal, whose stated reason was a missing mechanism rather than a property of the language.
     val p = port(
       """package demo;
         |import java.util.function.Supplier;
         |class L { void go() { Supplier<String> s = () -> { return "a"; }; s.get(); } }
+        |""".stripMargin
+    )
+    assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
+    assertEmits(p, "return \"a\"")
+  }
+
+  test("…and it is REFUSED, not guessed, where the adaptation cannot answer — a RAW target") {
+    // A `def` with a wrong result type would COMPILE. Left alone this is a bare `return` under a
+    // function literal — scala's NON-LOCAL RETURN — which is why `OmissionCheck` counts it
+    // (ENGINE-LIMITS M6/I9: "refuse loudly" is a claim about the emitted text, and here it is false).
+    val p = port(
+      """package demo;
+        |import java.util.function.Supplier;
+        |@SuppressWarnings("rawtypes")
+        |class L2 { void go() { Supplier s = () -> { return "a"; }; s.get(); } }
         |""".stripMargin
     )
     assertNotEmits(p, "def body$")

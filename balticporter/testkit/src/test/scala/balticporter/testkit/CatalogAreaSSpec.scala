@@ -273,16 +273,27 @@ class CatalogAreaSSpec extends PortSuite:
     assertEmits(p, "return \"x\"")
   }
 
-  test("JS-S21 — where the SAM's result type is a TYPE VARIABLE the branch fires and the engine REFUSES") {
-    // §2.3(a) in one test, and what I9 did NOT close. `Supplier<String>.get` is declared `T get()`,
-    // and `T` is not a name the emitted code can write: substituting the reference's actual
-    // arguments for the declaration's formals is a different mechanism from reading a class file,
-    // so the site is REFUSED and `OmissionCheck.unnameableLambdaReturn` counts it. A guessed `T`,
-    // or an erased `Object`, is §4.6's fabricated fact — it compiles.
+  test("JS-S21 — a GENERIC SAM result is ADAPTED at the target, so the branch fires and LOWERS") {
+    // `Supplier<String>.get` is declared `T get()`, and this used to be I9's standing refusal on the
+    // grounds that substituting the reference's actual arguments for the declaration's formals is a
+    // different mechanism from reading a class file. That was an argument about a MISSING MECHANISM
+    // rather than about the language: the target reference says what `T` is, and Spoon's own
+    // `TypeAdaptor` performs the substitution.
+    val p = port("public class R2 { java.util.function.Supplier<String> s = () -> { return \"x\"; }; }")
+    assertConsults(p, JS.S(21), fired = true)
+    assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
+    assertEquals(clue(balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)).size, 0)
+  }
+
+  test("JS-S21 — where the ADAPTATION cannot answer the branch fires and the engine REFUSES") {
+    // §2.3(a) in one test, and what I9 still does NOT close. A RAW target supplies no argument for
+    // `T`, so the adapted result still mentions a type variable and the site is REFUSED, with
+    // `OmissionCheck.unnameableLambdaReturn` counting it. A guessed `T`, or an erased `Object`, is
+    // §4.6's fabricated fact — it compiles.
     //
     // And the refusal is NOT loud, which is why the count exists: what is left is a bare `return`
     // under a function literal, and that is scala's NON-LOCAL RETURN from the enclosing method.
-    val p = port("public class R2 { java.util.function.Supplier<String> s = () -> { return \"x\"; }; }")
+    val p = port("public class R3 { @SuppressWarnings(\"rawtypes\") java.util.function.Supplier s = () -> { return \"x\"; }; }")
     assertConsults(p, JS.S(21), fired = true)
     assertNotEmits(p, "body$")
     assertEquals(clue(balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)).size, 1)
