@@ -4314,6 +4314,17 @@ spellings the IR admits (§4.56): the applied function is a `Tree.New`, or the r
 initialiser. **1 error, 182 → 181, 2 member digests, every check count flat** — reproduced in a
 seven-line fixture, which is what says it is universal rather than a property of the one library.
 
+**And the SAME node kind was filing FALSE REFUSALS on another port, which only `measure-all` could
+show.** The port that had the compile error is the one where the wrap fired; where the target is a
+CONCRETE mapping (`mutable.HashMap`), `liveWrappable` declines and the arm files a `seam` instead —
+so `new HashMap<String,String>() {{ … }}` was reported as *external result: Found
+`mutable.HashMap[String,String]` / Required a live scala view*, about the port's own freshly
+constructed object. **14 such rows across two lanes** (`collection-boundary` 18 → 17 and 22 → 9),
+every one at a `#<init>()` owner and none anywhere else, at 0 errors and 0 moved member digests.
+That is §4.56's residue rule read from the other side: a refusal lane is only as good as the
+assumption that everything IN it is a real boundary, and a count that includes constructions of the
+port's own values overstates the seam it exists to measure.
+
 ### K16. A `CollectionsTransform` SCOPE is not a way to opt out of its residue — 27 → 47 narrow, 27 → 51 off. DO NOT RETRY
 
 **The move that looks obviously right, measured in both directions, and worse in both.** A port

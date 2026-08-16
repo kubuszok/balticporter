@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
-| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | **none in scope** — flexmark's suites live in modules milestone 1 does not parse (§10.6) | **243** (§10.6.3, all classified) |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | **none in scope** — flexmark's suites live in modules milestone 1 does not parse (§10.6) | **171** (243 at first emit; §10.6.3, all classified) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2794,10 +2794,10 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** (coded 241 + bare 2), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** — 87 % of the port compiles clean on its first run |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after fix wave 1 (coded 171 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **47** now — 90 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
-| `omissions` | **64** — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
+| `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
 | `jdk-surface` | **456 classified, 38 unresolved** (shimmed 7, mapped 44, kept 367). The 38 are the retyped-owner members `CollectionsTransform`'s tables have no entry for, and they are the SAME 33 errors the compile reports — the two instruments agree exactly |
 | `collection-boundary` / `collection-closure` / `collection-retarget` | **28 / 3 / 0** |
 | `overload-risk` | **563**, with its denominator recomputed beside it: 26,166 program-declared calls examined, 3,915 with more than one applicable candidate, 563 spanning a java resolution phase |
@@ -2814,27 +2814,44 @@ zero in the last row is a compile-time one. On liqp the compile said nothing abo
 first-run failures; this library is a parser, so the population §4.4 governs here is larger, not
 smaller.
 
-### 10.6.3 The first census, classified per §1
+### 10.6.3 The census, classified per §1 — **243 → 171 after fix wave 1**
 
-Every error is `EngineGap`. The families, largest first:
+Every error is `EngineGap`. Wave 1 took the §1(a) engine families and closed six of them; the table
+below is the state AFTER it, with what each cost, because a census that only lists what is left
+cannot be checked against the commits that moved it.
+
+**Closed by wave 1** (each is an `ENGINE-LIMITS.md` entry with its number, and each ships fixture
+specs with the negative beside the positive):
+
+| before → after | family | where |
+|---|---|---|
+| 243 → 201 | **an inherited type PARAMETER carried into a subclass unsubstituted** — a diamond forwarder's result and parameters, a synthesised primary's `sup$k` slots, and a forwarded GENERIC METHOD's own `[V]`. Four spellings of one substitution, of which two callers had it and two did not | G25 |
+| 201 → 182 | **a SHIM's arity is INHERITED** — the `parenless` refusal was asked of the receiver's head symbol against three shim symbols, and a library's own `Cursor extends java.util.Iterator` is no shim by that test | K2.6 |
+| 182 → 181 | **a `new` is not a CALL** — the external-producer bridge wrapped an anonymous class that already implements the shim in a converter FROM java | K15 |
+| 181 → 177 | **a SAM's generic result is ADAPTED at the target** — `Function<Flags, Pattern>` says what `R` is; I9's refusal was a mechanism-absence argument. `omissions` 64 → 61, and 3 of the 7 sites were the SILENT non-local-return kind | I9 |
+| 177 → 175 | **an enum's primary is java's ROOT constructor** — `ctors.head` was not a refusal but a wrong answer: an empty primary, plus a constant that silently took the field's default where java ran `this(1)` | T11.5 |
+| 175 → 171 | **a multi-catch's union type needs PARENTHESES** — the frontend has built the `OrType` since the construct was modelled and the catalog has read `Handled` for as long | L5 |
+
+The `No given instance of … boundary.Label` row (3) and the `fromJava` overload rows (12 in the
+first census) were CASCADES and collapsed with their causes; that is why the per-family arithmetic
+above sums to more than the family sizes the first census printed.
+
+**What is left, by mechanism:**
 
 | n | family | §1 |
 |---:|---|---|
-| 44 | **an inherited type PARAMETER carried into a subclass unsubstituted.** flexmark's sequence hierarchy is F-bounded (`IRichSequence<T extends IRichSequence<T>>`, and `BasedSequence extends IRichSequence<BasedSequence>`), so a diamond-disambiguating forwarder emitted `override def split(…): scala.Array[T]` in a class that declares no `T`, and the constructor funnel emitted `protected (sup$0: AstNode[N])` for the same reason. Six sequence classes at 6 each, plus `AttributeProviderAdapter`/`LinkResolverAdapter`/`NodeVisitor` | **(a)** — substitute the parent's type arguments into a forwarded or promoted signature |
-| 114 | **`Found: …` cascades**, concentrated in the same 60 files and largely downstream of the row above: a class whose funnel parameter does not typecheck makes every `this(…)` delegation and every `super.` forward mismatch. Not independently classifiable until the row above closes | **(a)**, mostly derivative |
-| 33 | **a JDK member on a retyped owner with no rewrite** — `computeIfAbsent` 6, `sort` 8, `removeIf` 3, `listIterator`, `containsValue`, `ensureCapacity`, `containsAll`. Identical to `jdk-surface`'s 38 unresolved, which is the check doing its job: the residue was counted before the compiler saw it | **(b)** — `CollectionsTransform`'s tables gain the entries, or a cited refusal |
-| 16 | **`JavaIterator` arity** — `method hasNext in trait JavaIterator must be called with () argument`. The runtime shim keeps java's arity (§4.5) and a caller was emitted scala-style | **(a)** |
-| 12 | **overload resolution at a runtime helper** — `None of the overloaded alternatives of method fromJava in object JavaCollections` | **(a)** |
-| 4 | **`return outside method definition`** — `Parsing#<stmt16>`, a `return` under a construct the emitter rendered without a method to leave. §4.4's "refuse loudly is a claim about the emitted text" row, arriving as a compile error rather than silently, which is the good direction | **(a)** |
-| 3 | **`No given instance of type scala.util.boundary.Label`** — an interposed boundary that was not named. §4.4's own row | **(a)** |
-| 2 + 2 | **a java enum with OVERLOADED constructors.** `TextContainer.Flags` has `Flags()` delegating to `Flags(int)`; the funnel nominated the no-arg one as primary, so `case object LINK_TEXT_TYPE extends Flags(3)` is `too many arguments for constructor Flags: ()`. Two bare errors plus the E007s in the same file | **(a)** — the funnel must nominate the ROOT constructor for an enum, not the delegating one |
-| 2 | **multi-catch** — `Illegal variable e in pattern alternative`, java's `catch (A \| B e)` | **(a)** |
-| 2 | `value pattern is not a member of String` — a `java.util.regex` member reached through a retyped receiver | **(b)** |
-| 11 | the residue: `E119` (a java class named as a value, 2), `E171`/`E086`/`E081` arity and inference, `Not found: byteOffset$p` (a promoted parameter's name), and three one-off member lookups | mixed |
+| 37 | **a ported java ENUM is not a `java.lang.Enum`**, so nothing satisfies `E extends Enum<E> & BitField`. `BitFieldSet.of(O_CONVERT_TABS, …)` and every `intMask`/`setBitField` call around it. The hand port's answer was a `given` type class, which §10.6.5 already records as a redesign rather than a translation | **(a)**, and the largest one left |
+| 33 | **a JDK member on a retyped owner with no rewrite** — `sort` 11, `computeIfAbsent` 8, `removeIf` 4, `containsValue` 3, `listIterator` 2, `ensureCapacity` 2, `spliterator`, `containsAll`, `add`. Identical to `jdk-surface`'s 38 unresolved, which is the check doing its job | **(b)** — `CollectionsTransform`'s tables gain the entries, or a cited refusal |
+| 22 | **a RAW generic at an INHERITED formal, and scala's arrays are invariant.** `AstActionHandler<C,N,A,H>.addActionHandlers(H[]...)` reached from `AttributeProviderAdapter`, whose own parameter is java's raw `AttributeProvidingHandler[]` and renders `Array[…[?]]`. Java passed it unchecked under `@SuppressWarnings("rawtypes")`; scala has no unchecked conversion and `Array` is invariant | **(a)** — the G-family (`G1`/`G2`/`G11`), at an inherited formal rather than at a declaration |
+| ~12 | **an `Object`-keyed member on a class that IMPLEMENTS a JDK collection** — `NodeRepository<T> implements Map<String,T>` declares `remove(Object)`/`containsKey(Object)` and delegates to a retyped `mutable.Map` whose members take `String`. `ENGINE-LIMITS.md` K5/K10's family, at the implementing side | **(a)**/(b) boundary |
+| 4 | `MutableDataHolder.set` overload resolution | **(a)** |
+| 4 | `java.util.regex.Pattern` at `HtmlDeepParser` — a `java.util.regex` member reached through a retyped receiver | **(b)** |
+| ~59 | the residue, no family above 3: `Not found: byteOffset$p` (a promoted parameter's name), the one `Not found: type S` an emitter ASCRIPTION typed from the CALLEE's declaring class without substituting the RECEIVER's instantiation (`G25`'s stated residue), `Objects.isNull`, and a long tail of one-off inference and arity mismatches | mixed |
 
-**Where the next wave starts:** the first row. It is 44 direct errors, it is the root of most of the
-114 cascades, and its blast radius is `flexmark-util-sequence` (76 errors) plus `flexmark-util-ast`
-(29) — the two modules everything else in the library is built on.
+**Where the next wave starts:** the two rows the engine can close without policy — the ported-enum
+bound (37) and the raw-generic inherited formal (22). The 33 `(b)` rows are `CollectionsTransform`
+table work and are the wave after, because they are the one family whose fix is a MANIFEST or a table
+rather than a translation.
 
 ### 10.6.4 What the first run already taught, at 0 cost
 
