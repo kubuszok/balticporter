@@ -1601,12 +1601,13 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "new scala.collection.mutable.HashMap[java.lang.String, java.lang.Integer](64, 0.9f)")
   }
 
-  test("…but a key that is NOT the map's key type keeps whatever it had — the strip is structural") {
-    // Java's `Map.get(Object)` accepts anything, so a port CAN meet a key the scala member cannot
-    // take. Stripping unconditionally would emit a call that silently claims a type the value does
-    // not have; the strip is keyed on what lies UNDER the cast already being `K` (CLAUDE.md §4.56 —
-    // structural, naming no type), so an `Object` key is passed through as it arrived and the
-    // boundary stays where a reader can see it.
+  test("…but a key that is NOT the map's key type is java's UNTYPED PROBE, and takes the helper") {
+    // Java's `Map.get(Object)` accepts anything ON PURPOSE — the lookup is BY VALUE, so a probe of
+    // an unrelated type is meant to MISS. `keyArg`'s strip cannot help here: what lies under the
+    // cast is not `K`, and there is often no cast at all (this `o` is java's own parameter). What
+    // it must NOT do is narrow the probe — `o.asInstanceOf[String]` throws where java answers
+    // `null` — so the call goes to the `Any`-keyed helper the wildcard receiver already used, and
+    // the seam is CLOSED rather than reported (`ENGINE-LIMITS.md` K24).
     val p = port(
       """package demo;
         |import java.util.HashMap;
@@ -1618,7 +1619,8 @@ class CollectionsTransformSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform,
     )
-    assertEmits(p, "this.m.getOrElse(o,")
+    assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(this.m, o)")
+    assertNotEmits(p, "this.m.getOrElse(o,")
   }
 
   // ---------------------------------------------------------------------------------------------
