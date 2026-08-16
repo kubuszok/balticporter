@@ -4605,9 +4605,30 @@ object SpoonTir:
         // FRONTEND half of the row is exactly this: carry the reference as its own node rather than
         // guessing a shape here. Always fires, and that is the honest answer — every method
         // reference is one of the five and every one of them needs the discrimination the emitter
-        // then performs off `Flags.isStatic`.
+        // then performs, off the [[Tree.Referent]] this reads.
         Obligations.consult(JS.G(43), originOf(mr))(Some(()))
-        Tree.MethodRef(qual, mid, ty(mr), originOf(mr))
+        Tree.MethodRef(qual, mid, ty(mr), originOf(mr), referentOf(mr.getExecutable))
+
+      /** the referenced executable's `static` modifier and its declared ARITY — read HERE, from the
+        * parser, because neither survives to the symbol for an EXTERNAL member (see
+        * [[Tree.MethodRef.referent]]).
+        *
+        * The DECLARATION answers where the parse resolved one, which includes a shadow
+        * reconstructed from a class file — `java.util.Objects#isNull`'s `static` is a fact about
+        * that class file and `execFlags` reads exactly the modifier java wrote. The REFERENCE is
+        * the fallback, and its arity is still exact: a lenient parse erases what a slot SAYS, never
+        * how many slots there are. `isStatic` on a reference with no declaration is the one value
+        * here that can be a guess, which is why the declaration is asked first. */
+      private def referentOf(ex: CtExecutableReference[?]): Tree.Referent =
+        val decl = Option(ex.getExecutableDeclaration)
+        val stat = decl match
+          case Some(d) => execFlags(d).isStatic
+          case None    => try ex.isStatic catch { case _: Throwable => false }
+        if stat then Tree.Referent.Static
+        else
+          val n = decl.map(_.getParameters.asScala.size)
+            .getOrElse(try ex.getParameters.asScala.size catch { case _: Throwable => 0 })
+          Tree.Referent.Instance(n)
 
       private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?], at: CtExpression[?])
                              (using Obligations): Term =

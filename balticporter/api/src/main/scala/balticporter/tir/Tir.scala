@@ -569,8 +569,31 @@ object Tree:
     override def hashCode: Int = (scrutinee, cases, tpe, origin, isExpr).hashCode
   /** one case: `labels` are the constant patterns (empty ⇒ `default`/`case _`). */
   final case class CaseDef(labels: List[Term], guard: Option[Term], body: Term, isDefault: Boolean)
-  /** a method value `qualifier :: method` (`Foo::bar`, `x::baz`, `Foo::new`). */
-  final case class MethodRef(qualifier: Either[TypeTree, Term], method: SymId, tpe: TypeRepr, origin: Origin) extends Term
+  /** a method value `qualifier :: method` (`Foo::bar`, `x::baz`, `Foo::new`).
+    *
+    * [[referent]] is what the PARSER read off the referenced executable, and it is on the node
+    * because the two facts it carries are not reliably on the SYMBOL. An external member is
+    * interned with no `Flags` at all, so `flags.isStatic` answers `false` for `java.util.Objects`'s
+    * statics; and its `info` is `NoType` wherever one slot cannot be named scope-free, so
+    * `Comparable::compareTo`'s `MethodType` is absent because its one parameter is a type VARIABLE.
+    * Both then read as a positive statement about java — *not static*, *takes no arguments* — which
+    * is `CLAUDE.md` §4.6's fabricated fact at a method reference, and the two happen to fail in
+    * OPPOSITE directions (a static expanded as an unbound instance reference, an unbound instance
+    * reference expanded with no arguments). The arity survives a lenient parse even where the TYPES
+    * do not: `getParameters` erases what each slot says, never how many there are. */
+  final case class MethodRef(qualifier: Either[TypeTree, Term], method: SymId, tpe: TypeRepr,
+                             origin: Origin, referent: Referent) extends Term
+
+  /** the referenced executable's own modifiers — see [[MethodRef.referent]].
+    *
+    * The two cases are JLS 15.13.1's split at `Type::name`, which is ONE java syntax naming two
+    * different functions: a `static` method is a qualified NAME, an instance method is an UNBOUND
+    * reference whose receiver becomes the SAM's FIRST parameter (JLS 15.13.3). The arity rides on
+    * the second case only because that is the only form whose emitted lambda has to state it — a
+    * qualified name is eta-expanded by scala against the target, exactly as javac did it. */
+  enum Referent:
+    case Static
+    case Instance(arity: Int)
   /** `break` / `break label` — loop/switch exit. `tpe` is Nothing. */
   final case class Break(label: Option[String], tpe: TypeRepr, origin: Origin)          extends Term
   /** `continue` / `continue label`. `tpe` is Nothing. */

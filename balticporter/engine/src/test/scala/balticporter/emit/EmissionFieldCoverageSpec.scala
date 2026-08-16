@@ -685,9 +685,14 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
 
     // ---- MethodRef ----------------------------------------------------------------------------
-    probe(Tree.MethodRef(Left(tt(tOth)), M1, tOth, O), hostTerm)(
-      "qualifier" -> Tree.MethodRef(Right(Tree.Ident(OTHER, tOth, O)), M1, tOth, O),
-      "method"    -> Tree.MethodRef(Left(tt(tOth)), M2, tOth, O),
+    // `referent` is the JLS 15.13.1 split at `Type::name` and it is a FIELD precisely because it
+    // decides the emitted shape by itself: `Static` is a qualified NAME and `Instance(n)` is an
+    // (n+1)-parameter lambda. Perturbing the ARITY alone moves the text too, which is the half a
+    // symbol with no `MethodType` cannot supply (`Tree.MethodRef.referent`).
+    probe(Tree.MethodRef(Left(tt(tOth)), M1, tOth, O, Tree.Referent.Instance(0)), hostTerm)(
+      "qualifier" -> Tree.MethodRef(Right(Tree.Ident(OTHER, tOth, O)), M1, tOth, O, Tree.Referent.Instance(0)),
+      "method"    -> Tree.MethodRef(Left(tt(tOth)), M2, tOth, O, Tree.Referent.Instance(0)),
+      "referent"  -> Tree.MethodRef(Left(tt(tOth)), M1, tOth, O, Tree.Referent.Static),
     )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
 
     // ---- Break --------------------------------------------------------------------------------

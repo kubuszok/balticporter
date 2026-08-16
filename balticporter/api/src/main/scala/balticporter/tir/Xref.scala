@@ -164,7 +164,7 @@ object Xref:
       case Tree.Match(scrut, cases, _, _, _, _) =>
         walkTerm(scrut)
         cases.foreach { c => c.labels.foreach(walkTerm); c.guard.foreach(walkTerm); walkTerm(c.body) }
-      case mr @ Tree.MethodRef(qual, method, _, _) =>
+      case mr @ Tree.MethodRef(qual, method, _, _, _) =>
         rec(method, UsageKind.Call, mr)
         qual match
           case Left(tpt)   => walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)

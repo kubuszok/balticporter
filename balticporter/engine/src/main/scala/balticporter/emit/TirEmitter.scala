@@ -4123,8 +4123,9 @@ final class TirEmitter(
       loopWithJumps(body, lbl, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
     case t: Tree.Try                    => tryStr(t, i)
     case m: Tree.Match                  => matchStr(m, i)
-    case mr @ Tree.MethodRef(q, s, mrT, _) =>
+    case mr @ Tree.MethodRef(q, s, mrT, _, referent) =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
+      val isStaticRef = referent == Tree.Referent.Static
       // JS-G43, the EMITTER half — five java forms share one syntax and each becomes a DIFFERENT
       // scala lambda. The discrimination is right here (`isCtor`, `Flags.isStatic`, and the array
       // element test below), so the row attaches at both surfaces: the frontend carries the
@@ -4142,7 +4143,7 @@ final class TirEmitter(
       // reached from the constructor-reference and unbound-instance forms; the static form is a
       // qualified NAME and needs no conversion at all, which is what the negative half records.
       Obligations.consult(JS.G(33), mr.origin)(Option.when(q match
-        case Left(_) => isCtor || !sym(s).flags.isStatic
+        case Left(_) => isCtor || !isStaticRef
         case Right(_) => true)(()))
       q match
         // an ARRAY constructor reference `T[]::new` is an `IntFunction[T[]]` — `(size) => new T[size]`
@@ -4165,10 +4166,22 @@ final class TirEmitter(
         // `sge.graphs.Edge[V].getWeight`, which is not even a member access: measured as
         // `value Edge is not a member of sge.graphs` in simple-graphs' MinimumWeightSpanningTree,
         // where the reference is a `Comparator` key extractor.
-        case Left(tt) if sym(s).flags.isStatic => s"${tpe(tt.tpe)}.${local(s)}"
+        case Left(tt) if isStaticRef => s"${tpe(tt.tpe)}.${local(s)}"
         case Left(tt) =>
           val self  = "self$"
-          val as    = methodParams(s).indices.map(k => s"a$k$$").mkString(", ")
+          // the ARITY is java's, off the node (`Tree.MethodRef.referent`); the parameter TYPES are
+          // the SYMBOL's, and the two can disagree — an external member whose `info` could not be
+          // rendered has NO `MethodType` at all, and reading the arity off it says *this method
+          // takes no arguments* about `Comparable::compareTo`. Where they disagree the whole lambda
+          // goes un-annotated rather than half-annotated, which is the same answer this arm already
+          // gives a wildcard qualifier one line down and for the same reason: a method reference is
+          // a poly expression, so handing scala the job javac had is exact.
+          val arity = referent match
+            case Tree.Referent.Instance(n) => n
+            case Tree.Referent.Static      => methodParams(s).size // unreachable: the arm above took it
+          val formals = methodParams(s)
+          val named   = formals.sizeIs == arity && !hasWildcardArg(tt.tpe)
+          val as      = (0 until arity).map(k => s"a$k$$").mkString(", ")
           // The receiver parameter is ANNOTATED only when the qualifier names a real type. A RAW
           // qualifier renders `[?]`, and annotating with it is worse than saying nothing: java's
           // `Comparator.comparing(Edge::getA)` takes its meaning entirely from the TARGET
@@ -4179,9 +4192,9 @@ final class TirEmitter(
           // That is the poly-expression rule this frontend already follows elsewhere: a method
           // reference takes its type FROM the target, which is why `uncheckedGeneric` refuses to cast
           // one. Leaving the parameter un-annotated hands scala the same job javac had.
-          val recvT = if hasWildcardArg(tt.tpe) then "" else s": ${tpe(tt.tpe)}"
-          val extra = methodParams(s).zipWithIndex.map((pt, k) =>
-            if recvT.isEmpty then s"a$k$$" else s"a$k$$: ${tpe(pt)}")
+          val recvT = if named then s": ${tpe(tt.tpe)}" else ""
+          val extra = (0 until arity).toList.map(k =>
+            if named then s"a$k$$: ${tpe(formals(k))}" else s"a$k$$")
           val ps    = (s"$self$recvT" :: extra).mkString(", ")
           samAscribed(s"(($ps) => $self.${local(s)}($as))", mrT, tt.tpe)
         case Right(e)           => s"${term(e, i)}.${local(s)}"

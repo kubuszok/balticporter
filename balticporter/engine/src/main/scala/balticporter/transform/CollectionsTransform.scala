@@ -1793,9 +1793,11 @@ final class CollectionsTransform(
     * poly-expression rule does, and it is what the emitter's expansion already emits. */
   private def lowerMethodRef(mr: Tree.MethodRef)(using p: Program): Term =
     if selfParamSym == SymId.None then return mr
-    val isStatic = p.symbolOf(mr.method).exists(_.flags.isStatic)
+    // the NODE's answer and not the symbol's, which is the same one derivation the emitter reads
+    // (`Tree.MethodRef.referent`, F8): an external member is interned with no `Flags`, so
+    // `flags.isStatic` reads `false` for every JDK static and this phase would lower one.
     mr.qualifier match
-      case Left(tt) if !isStatic =>
+      case Left(tt) if mr.referent != Tree.Referent.Static =>
         kindOf.get(headSym(tt.tpe).getOrElse(SymId.None)) match
           case None    => mr
           case Some(k) =>

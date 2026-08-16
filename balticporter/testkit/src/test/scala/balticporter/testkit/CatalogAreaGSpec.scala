@@ -336,7 +336,7 @@ class CatalogAreaGSpec extends PortSuite:
 
   test("JS-G43 — the five method-reference forms share one java syntax and are five DIFFERENT lambdas") {
     // The UNBOUND-INSTANCE form makes the receiver the function's first parameter, which is what
-    // `self$` in the emitted text is; `Flags.isStatic` is the whole discriminator.
+    // `self$` in the emitted text is; `Tree.MethodRef.referent` is the whole discriminator.
     val p = port(
       """import java.util.List;
         |import java.util.Comparator;
@@ -345,6 +345,36 @@ class CatalogAreaGSpec extends PortSuite:
         |}""".stripMargin)
     assertConsults(p, JS.G(43), fired = true)
     assertEmits(p, "self$")
+  }
+
+  // The two halves of the SAME defect, and they fail in OPPOSITE directions — which is why both are
+  // here and why either one alone would have been fixed the wrong way round. Both referenced
+  // methods are EXTERNAL, and that is the whole of it: an external member is interned with no
+  // `Flags` (so `flags.isStatic` says *not static* about every JDK static) and with `NoType` for an
+  // `info` whose slots cannot be named scope-free (so `methodParams` says *takes no arguments*
+  // about a method whose one parameter is a type VARIABLE). An IN-PROGRAM reference has both facts
+  // on its symbol, which is exactly why the corpus's own fixtures above never saw either.
+
+  test("JS-G43 — a STATIC reference at an EXTERNAL method is a qualified NAME, not an unbound one") {
+    val p = port(
+      """import java.util.Objects;
+        |import java.util.function.Predicate;
+        |public class A { Predicate<Object> f() { return Objects::isNull; } }""".stripMargin)
+    assertConsults(p, JS.G(43), fired = true)
+    assertEmits(p, "java.util.Objects.isNull")
+    // the negative: no receiver parameter was invented for a method that has no receiver.
+    assertNotEmits(p, "self$: java.util.Objects")
+  }
+
+  test("JS-G43 — an UNBOUND reference keeps java's ARITY even where the formal is a type VARIABLE") {
+    val p = port(
+      """import java.util.Comparator;
+        |public class A { Comparator<String> f() { return Comparable::compareTo; } }""".stripMargin)
+    assertConsults(p, JS.G(43), fired = true)
+    // `compareTo(T)` is arity 1, so the lambda is arity 2 — the receiver plus java's one argument.
+    // Rendered off the symbol's `MethodType` it was `((self$) => self$.compareTo())`, which is a
+    // one-parameter function at a `Comparator`: E086, and nothing else could see it.
+    assertEmitsMatch(p, """self\$[^)]*, a0\$[^)]*\) => self\$\.compareTo\(a0\$\)""")
   }
 
   test("JS-G33 — a SAM conversion is ASCRIBED where the reference becomes a function literal") {

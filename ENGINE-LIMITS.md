@@ -946,6 +946,69 @@ would break; and a two-dimensional one at an external `Object...` spreads).
 ELEMENT at one dimension where the checkcast holds, and a negative on both the sentinel and the
 two-dimensional cast this entry spent a wave refusing.*
 
+### G27. An EXTERNAL member's SYMBOL answers a question it was never told the answer to — the `Type::method` split read off `Flags` and `MethodType` fails in OPPOSITE directions. **ssg-md 47 → 45. CLOSED**
+
+`Type::method` is ONE java syntax naming TWO different functions (JLS 15.13.1): for a `static`
+method it is a qualified NAME, and for an instance method it is an UNBOUND reference whose receiver
+becomes the SAM's FIRST parameter and whose remaining parameters are the method's own (15.13.3). The
+emitter had that discrimination and it was reading it off the SYMBOL —
+`sym(s).flags.isStatic` for the split and `methodParams(s)` for the arity.
+
+Both are facts an EXTERNAL member's symbol does not have, and each ABSENCE reads as a positive
+statement about java:
+
+| what the symbol says | why | what java said |
+|---|---|---|
+| `flags.isStatic` = `false` | `Minter.external` interns a member with `Flags()` — there is no flags parameter at all, and never was | `java.util.Objects.isNull` **is** static |
+| `methodParams` = `Nil` | `externalSignature` refuses a slot it cannot name scope-free, so ONE type-variable parameter makes the whole `MethodType` `NoType` | `Comparable.compareTo(T)` takes **one** argument |
+
+So the static reference was expanded as an unbound instance one, inventing a receiver parameter
+(`(self$: java.util.Objects, a0$: java.lang.Object) => self$.isNull(a0$)` — *value isNull is not a
+member of java.util.Objects*), and the unbound instance reference was expanded with no arguments
+(`((self$) => self$.compareTo())` — a ONE-parameter function at a `Comparator`, E086). **Two errors
+that look like two one-offs and are one defect**, which is why a fixture with both is the whole
+safety argument: an arm that reads one of them and not the other is wrong in whichever direction it
+guessed.
+
+This is `CLAUDE.md` §4.6's fabricated fact (`SpoonTir.formalArity`'s `catch { case _ => 0 }`, where
+arity ZERO is not *unknown* but *takes no arguments*) arriving without a `catch` — the default is
+baked into the data structure instead. And it is invisible to the corpus for a structural reason
+worth stating: an IN-PROGRAM reference has both facts on its symbol, because `execDef` writes
+`execFlags(m)` and a real `MethodType`. Every method-reference fixture the testkit had — `A::len`,
+`String::length`, `Box::new` — is in-program or has a nameable formal.
+
+**HOW IT CLOSED.** The two facts move onto the NODE — `Tree.MethodRef.referent`, a
+`Static | Instance(arity)` the frontend reads off the parser's own executable — because that is
+where the JLS split lives and because the symbol is the one place that provably cannot hold them.
+Three things worth keeping:
+
+- **the ARITY survives a lenient parse where the TYPES do not.** `getParameters` erases what each
+  slot SAYS, never how many slots there are, so the reference answers even where no declaration
+  resolved. The declaration is still asked FIRST, because `isStatic` on a bare reference is the one
+  value here that could be a guess;
+- **arity and parameter TYPES are now two questions, and they may disagree.** Where the symbol has
+  no `MethodType` the lambda is emitted with java's arity and NO annotations at all rather than
+  half-annotated — which is the same answer this arm already gave a wildcard qualifier, and for the
+  same reason: a method reference is a poly expression, so handing scala the job javac had is exact;
+- **ONE derivation, two readers.** `CollectionsTransform.lowerMethodRef` asked
+  `symbolOf(mr.method).flags.isStatic` independently and would have lowered a JDK static into a
+  `self$` lambda the day one of its member-table names was static. It reads the node now (F8).
+
+*Fix kind: (a), CLOSED — `Tree.MethodRef.referent`, `SpoonTir.referentOf`, `TirEmitter`'s
+`MethodRef` arm, `CollectionsTransform.lowerMethodRef`. `CatalogAreaGSpec` carries both directions
+as EXTERNAL references (the in-program ones beside them are what could not see it), and
+`EmissionFieldCoverageSpec` pins `referent` as a field that moves the emitted text — flipping it, or
+changing only its arity, changes what is written.*
+
+**What this does NOT reach, stated so the next reader does not have to re-derive it**: the
+CONSTRUCTOR form. `Type::new` is emitted `(() => new T())` with the referenced constructor's arity
+ignored, so a `Function<A,T>` target over a one-argument constructor is the same defect at the arm
+one line up. It is not a measured error anywhere in the corpus — every `::new` in fifteen ports is
+nilary or an array — and the fact it needs is now ON the node, so closing it is a read rather than
+an investigation. Left open deliberately rather than shipped unmeasured: it would move emitted text
+on ports this wave was not aimed at, which `CLAUDE.md` §5 says is exactly what a widened guard may
+not do quietly.
+
 ---
 
 ## 2. Constructors

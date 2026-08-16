@@ -1333,7 +1333,7 @@ ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler	cl
 ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler#render(Node,NodeFormatterContext,MarkdownWriter)	def	8565dd3efe8379e9
 ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler$CustomNodeFormatter	class	1630f42eff765a09
 ssg.md.formatter.NodeFormattingHandler	ssg.md.formatter.NodeFormattingHandler$CustomNodeFormatter#render(N,NodeFormatterContext,MarkdownWriter)	def	c46de2397ab41201
-ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter	class	ea58512f68b14c3f
+ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter	class	9eaf4e39bfbabeb9
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt1>	stmt	566ab47f2333ab16
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt2>	stmt	2863fb8f05a8ad19
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt3>	stmt	b02efdf9a2c6e770
@@ -1342,7 +1342,7 @@ ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatte
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt6>	stmt	1c4e3ef5997646d2
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt7>	stmt	bdf9fca336b4fb79
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt8>	stmt	f135c383ef5ce8b9
-ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt9>	stmt	fc66b58d6a19a2a5
+ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#<stmt9>	stmt	1e272959091a0c6b
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#FORMATTING_PHASES	val	d133e0e5d1cd1c14
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#formatReferences(NodeFormatterContext,MarkdownWriter)	def	1267db5c22e93159
 ssg.md.formatter.NodeRepositoryFormatter	ssg.md.formatter.NodeRepositoryFormatter#getFormattingPhases()	def	125b65fb84ed3539
@@ -8931,14 +8931,14 @@ ssg.md.util.sequence.builder.SegmentStats	ssg.md.util.sequence.builder.SegmentSt
 ssg.md.util.sequence.builder.SegmentStats	ssg.md.util.sequence.builder.SegmentStats#textSpaceSegments	val	c65a6a35fbdb68e8
 ssg.md.util.sequence.builder.SegmentStats	ssg.md.util.sequence.builder.SegmentStats#toString()	def	d7fd4b439293eb0f
 ssg.md.util.sequence.builder.SegmentStats	ssg.md.util.sequence.builder.SegmentStats#trackFirst256	val	3d5e3f1e74c4ab93
-ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats	class	3528e4a8761876ff
+ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats	class	f6a669bb14dac24a
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#<clinit>	init	79b96018d5927895
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#AGGR_STEPS	val	6dc07314726b3004
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#MAX_BUCKETS	val	4218bf98fb7af145
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#addStats(int,int,int)	def	b3f083abdda20329
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#aggregatedStats	val	b8a454deb6c958d4
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#clear()	def	0253aa85c66e509e
-ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#getAggregatedStats()	def	f55a8ac8a246387e
+ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#getAggregatedStats()	def	b16fb1af7059742e
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#getAggregatedStatsText()	def	d19759a0b44e8b1f
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#getCount(int)	def	41a327659843d9e6
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats#getInstance()	def	d605a2d13f88920f
