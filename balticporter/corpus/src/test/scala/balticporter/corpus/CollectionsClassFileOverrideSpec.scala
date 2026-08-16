@@ -114,6 +114,28 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
     assert(!clue(heldNames(ph, p)).exists(_.endsWith("Holder#absorb")))
   }
 
+  test("NEGATIVE: an ANONYMOUS class's member is out of the refusal's reach and is not held") {
+    // `restoreExcluded` splices along a `Tree.ClassDef`'s DECLARATION SPINE; an anonymous body hangs
+    // off a `Tree.New` inside a term and is not on it. Held there, the SYMBOL would go literal and
+    // the TREE would stay mapped — and the porter note would claim a signature the emitted `def`
+    // does not have, which is what shipped on liqp for one `new ThreadLocal<Map<K,V>>(){ … }`.
+    val anon =
+      """package demo;
+        |import java.util.*;
+        |class Holder2 {
+        |  static ThreadLocal<Map<String, Object>> local = new ThreadLocal<Map<String, Object>>() {
+        |    protected Map<String, Object> initialValue() { return new HashMap<String, Object>(); }
+        |  };
+        |}
+        |""".stripMargin
+    val ph  = new CollectionsTransform()
+    val p   = Pipeline.run(SpoonTir.fromSource(anon), List(ph))
+    val out = new TirEmitter(p).emit
+    assert(!heldNames(ph, p).exists(_.contains("initialValue")), clue(heldNames(ph, p)).toString)
+    assert(!out.contains("porter: retained-signature"),
+           s"a note was emitted for a member the restore cannot reach\n--- emitted ---\n$out")
+  }
+
   test("a program with no unconverted java parent holds NOTHING — the no-op, by arithmetic") {
     val plain =
       """package demo;

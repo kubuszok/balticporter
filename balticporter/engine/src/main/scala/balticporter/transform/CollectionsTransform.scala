@@ -1203,7 +1203,8 @@ final class CollectionsTransform(
         val kept = if declarers.exists(coveredExternally) then Nil else declarers
         if kept.nonEmpty then
           val label = kept.sorted.map(fqn => MemberKey(fqn, sig.map(_.name).getOrElse("?")).render).mkString(", ")
-          (m :: graph.overriders(m)).filter(owned).foreach { x => held += x; anchor += (x -> label) }
+          (m :: graph.overriders(m)).filter(owned).filter(spliceable(graph))
+            .foreach { x => held += x; anchor += (x -> label) }
     }
     retainedOverrides = held.toSet
     retainedAnchors   = anchor.toMap
@@ -1217,6 +1218,27 @@ final class CollectionsTransform(
     * name (§4.56). */
   private def coveredExternally(fqn: String): Boolean =
     typeMap.contains(fqn) || effectiveRetarget.contains(fqn)
+
+  /** CAN [[restoreExcluded]] ACTUALLY REACH THIS MEMBER? — the conjunct without which the refusal
+    * is a note that LIES.
+    *
+    * `restoreExcluded` splices held-back members back along the DECLARATION SPINE of a
+    * `Tree.ClassDef`, which is right for the scope and is deliberately not a second traversal
+    * (see its own doc). An ANONYMOUS class's body is not on that spine — it hangs off a
+    * `Tree.New` inside a TERM — so a member held there keeps its MAPPED tree while
+    * [[mapSignatures]] holds its SYMBOL literal: the two disagree, and the porter note claims a
+    * signature the emitted `def` does not have.
+    *
+    * Measured on liqp, which is at 0 errors: `new ThreadLocal<Map<String,Object>>(){ …
+    * initialValue() … }` recorded the decision and emitted `mutable.Map` under it. Holding it
+    * PROPERLY is not the fix available here either — the body returns a `TrieMap`, so a literal
+    * `java.util.Map` result would be a fresh error on a green port — so the honest answer is that
+    * this member is out of the refusal's reach and stays retyped, exactly as before.
+    *
+    * An anonymous-class symbol has no `Definition` (§4.56's own note is that ownership is stronger
+    * than "has a definition" for precisely this reason), so the test is structural. */
+  private def spliceable(graph: OverrideGraph)(m: SymId)(using p: Program): Boolean =
+    p.definitionOf(graph.ownerOf(m)).exists(_.isInstanceOf[Tree.ClassDef])
 
   /** DECISION PROVENANCE for [[applyClassFileOverrides]] — [[recordScopedOut]]'s row with the
     * other §1 classification, and the reason the two are separate kinds: a reader told to widen a

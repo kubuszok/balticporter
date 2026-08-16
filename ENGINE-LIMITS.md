@@ -410,11 +410,18 @@ function away — so `uncheckedSlot` cannot see an inherited formal at a call an
 
 Widening `uncheckedSlot` with the same predicate was written, measured and REVERTED. It is INERT for
 that reason (C1's shape), and it is not free: `inheritedFormal` calls `tpe`, so a PREDICATE inside a
-consult started minting types and moved three other `consulted` DENOMINATORS on libGDX core —
-JS-E06 and JS-G34 `6282 → 6284`, JS-G12 `82207 → 82211` — at 0 errors and 0 member digests. An
-instrument that perturbs its own counters to answer nothing is worse than the gap it was closing. The
-real repair is `argSlots` reading the declaration's formals, which moves JS-G09/G13/G14 on all
-fifteen ports and is its own step.
+consult mints types and charges the type-lowering rows. An instrument that perturbs its own
+denominators to answer nothing is worse than the gap it was closing. The real repair is `argSlots`
+reading the declaration's formals, which moves JS-G09/G13/G14 on all fifteen ports and is its own
+step.
+
+**And the same arithmetic is why the predicate is computed ONCE in `uncheckedGeneric` itself.** Asked
+twice — in the condition and again for the value — it charged JS-G12's `lowering-type
+CtTypeParameterReference` twice per site: libGDX core `82207 → 82211` against `82207 → 82209` once,
+and ssg-md's `146311 → 146329` in the other direction. Both runs emit BYTE-IDENTICAL Scala (0 member
+digests, 0 errors, every check count flat on both ports), so the only thing a `tpe` call inside a
+gate can move is a denominator — which is exactly the number a reader uses to judge whether a
+difference row is live.
 
 *Fix kind: (a). `InheritedFormalCastSpec` — two positives and four negatives, of which the dimension
 mismatch and the two-ancestors-one-name pair are the ones a name-keyed or dimension-blind lookup
@@ -873,6 +880,17 @@ for the raw element (`[?]` everywhere) and G8 is why it is not filled, and until
 parameterised cast at an INHERITED formal exists there is nothing for the pack to be right about.
 
 Do not re-derive javac's table; do not re-try either guard without a plan for the element type.
+
+**AND THE ELEMENT TYPE NOW HAS ONE — which is the single precondition this entry states, so the
+packing is worth re-trying and was not before** (wave 5, `ssg-md`). G12's inherited-formal cast
+resolves an ancestor's type variable through the `extends` clause, keyed by `(declaring type FQN,
+formal name)`; the declared component `H[]` is exactly such a type, so it renders
+`Array[AttributeProvidingHandler[Node]]` rather than the `?H` sentinel that measured `markers`
+0 → 1. Two things follow for whoever picks it up: the argument-inference guard stays REFUSED (it is
+what measured 81 → 83, twice, and the declared component no longer needs it), and the six ssg-md
+sites the cast currently declines are declined ON THE DIMENSION TEST ALONE — so a correct pack makes
+the dimensions agree and the cast fires on its own, with no further change. Expect those six and
+nothing else.
 
 *Fix kind: (a), OPEN. Measured on ssg-md; nothing shipped, and the spec that pinned the packing was
 deleted with it — a spec for behaviour the engine does not have is worse than none.*
@@ -6264,9 +6282,25 @@ reported and the typer never does** (`CLAUDE.md` §3), so the port carried it in
 `JavaCollections.toJava` for an iterator, so the seam is a compile error rather than a bridge; it is
 classified at the line by the member's own porter note.
 
-*Fix kind: (a). `CollectionsClassFileOverrideSpec` — one positive and four negatives, of which
+**AND A FIFTH CONJUNCT, found by the corpus and not by the port it was written for: CAN THE RESTORE
+REACH THIS MEMBER?** The holding is `restoreExcluded`, which splices along a `Tree.ClassDef`'s
+DECLARATION SPINE — deliberately, and see its own doc for why it is not a second traversal. An
+ANONYMOUS class's body is not on that spine: it hangs off a `Tree.New` inside a TERM. Held there,
+`mapSignatures` takes the SYMBOL literal and the TREE stays mapped, so the two disagree and **the
+porter note claims a signature the emitted `def` does not have**. Measured on liqp, a port at 0
+errors: `new ThreadLocal<Map<String,Object>>(){ … initialValue() … }` recorded the decision, emitted
+`mutable.Map` under a note reading `kept="(): java.util.Map[…]"`, and moved 2 member digests. Note
+what caught it — the FINDINGS and PORT-MAP baselines on a lane whose error count never moved.
+
+Holding it properly is not the available fix either: that anonymous body returns a `ConcurrentHashMap`
+the same mapping retyped, so a literal `java.util.Map` result would be a fresh error on a green port.
+The honest answer is that the member is out of this refusal's reach and stays retyped, exactly as
+before — which is what `spliceable` says, structurally, from the fact that an anonymous-class symbol
+has no `Definition` (§4.56's own note).
+
+*Fix kind: (a). `CollectionsClassFileOverrideSpec` — one positive and five negatives, of which
 `class Fast extends java.util.ArrayList` and `Impl implements Ours` are the two the 69 → 113 attempt
-would fail.*
+would fail and the anonymous `ThreadLocal` is the one liqp found.*
 
 ---
 

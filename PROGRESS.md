@@ -2919,12 +2919,14 @@ PARAMETERLESS `keySet` (§4.5's family), and the same class overrides `entrySet(
 
 ### 10.6.5 Do NOT retry
 
-- **The vararg PACKING half of the raw-generic family, on its own.** Built, verified against
-  javac's own five cells, and measured at **81 → 81 with `markers` 0 → 1** taking the declared
-  component (the `?H` sentinel, 18 references) and at **81 → 83** with either guard that sends an
-  unnameable component to argument inference. `ENGINE-LIMITS.md` G26 carries the table and both
-  numbers. The arity really is wrong and fixing it really does produce a better residue; it is
-  worth zero errors until the raw-to-parameterised cast at an inherited formal exists.
+- **The vararg PACKING half of the raw-generic family with the ELEMENT TYPE unanswered.** Built,
+  verified against javac's own five cells, and measured at **81 → 81 with `markers` 0 → 1** taking
+  the declared component (the `?H` sentinel, 18 references) and at **81 → 83** with either guard
+  that sends an unnameable component to argument inference. `ENGINE-LIMITS.md` G26 carries the
+  table and both numbers. That precondition is the one wave 5 removed: the component `H[]` is now
+  nameable through the same `(declaring type, formal name)` lookup the inherited-formal cast uses,
+  so a re-try starts from a component that renders and not from the `?H` sentinel. Do not re-derive
+  javac's table and do not re-try either of the two measured guards.
 - **Reading the hand port's deviations as milestone-1 policy.** Three of them are tempting and all
   three are deliberately absent from `main.conf` (D-md-5): `NullabilityTransform` at
   `Target.Wrapper("ssg.md.Nullable")` (300 hand-port files, 594 annotated upstream files — the
