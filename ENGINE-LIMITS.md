@@ -423,9 +423,50 @@ digests, 0 errors, every check count flat on both ports), so the only thing a `t
 gate can move is a denominator — which is exactly the number a reader uses to judge whether a
 difference row is live.
 
+**…AND THE THIRD PLACE IS THE RECEIVER'S OWN INSTANTIATION, at a `null` — ssg-md 43 → 40.** The two
+above resolve a callee's variable from a `new C<targs>` and from an `extends` clause; the third
+source is the RECEIVER, and `receiverTypeArgs` had been computing it for `varargPack` since G26
+without either of the other two readers seeing it. `OrderedSet<E>.add(E)` called on an
+`OrderedSet<V>` FIELD inside `OrderedMultiMap<K, V>` says `E := V` exactly, so java's `add(null)` is
+`add(null.asInstanceOf[V])` — and `nullToTypeParam` cast only where `resolveTypeParam` answered, i.e.
+where the callee's variable is LITERALLY the caller's own, which this is not.
+
+Two obstacles, both structural and both one line:
+
+- **`receiverTypeArgs` gated its actuals on `tpConcrete`, which answers `false` for a type
+  PARAMETER** — so the substitution `OrderedSet<V>` offers was discarded before anything could read
+  it. `tpConcrete`'s own neighbour already documented that as the case it "excludes wrongly", and the
+  repair is `tpNameableHere`: the same walk with the variable arm widened from `false` to
+  `sameVarInScope`, which is DECLARATION identity (the same minted symbol) and not a name. Written as
+  its own function because `tpConcrete`'s existing callers must keep the answer they have;
+- **`coerceArgsFixed` never received `recvSubst`**, so it was threaded from `coerceArgs` rather than
+  re-derived — F8's rule, and the same argument that put `passedThrough` on the threaded value
+  instead of a second `receiverTypeArgs` call.
+
+The receiver's answer is asked BEFORE `resolveTypeParam`'s, and only for a variable the CLASS
+declares: `resolveTypeParam` is a NAME lookup that a method's own `<E>` shadowing the class's would
+send to the wrong type, which is §4.56 at a type variable.
+
+**THREE errors closed where the census predicted TWO, and the third is the interesting one.**
+`PROGRESS.md` §10.6.3 had `OrderedMap#addNulls` filed apart as *a REWRITTEN call, where the coercion
+is discarded by the rewrite*. It is not: the cast is inserted by the FRONTEND at the argument, and
+`CollectionsTransform`'s `add` → `+=` rewrite runs over a tree that already carries it, so
+`this.valueList += null.asInstanceOf[V]` is what comes out. The two that remain are neither this
+family nor each other's — a `null` RECEIVER (`HashMap.from(null.getAll())`) and a LAMBDA BODY at a
+result type of `T`.
+
+**The blast is 16 member digests on ssg-md and all sixteen are attributable**, which is the half
+worth reading: 5 are the three closed sites and their two owning classes; 7 are `ClassifyingBlockTracker`
+and `SegmentedSequenceStats`, where the receiver now names a CONCRETE type (`OrderedMultiMap<Node,
+BlockParser>` fixes `V`) and the emitted `null` gains a cast it did not need — correct, unnecessary,
+and exactly the over-approximation `CLAUDE.md` §5 says only a member diff can see; and 4 are M10's
+`@<raw>` member KEYS moving by one with BYTE-IDENTICAL digests, because the fix interns one more
+type.
+
 *Fix kind: (a). `InheritedFormalCastSpec` — two positives and four negatives, of which the dimension
 mismatch and the two-ancestors-one-name pair are the ones a name-keyed or dimension-blind lookup
-fails.*
+fails. `NullAtTypeParamSpec` carries the receiver case with the two negatives that decide it — a
+METHOD's own variable of the same name, and a receiver whose argument is a WILDCARD.*
 
 ### G13. `rawCtorArgs` erased-formal fallback — THREE gates, all worse; and what each taught
 
@@ -7230,18 +7271,37 @@ Three things follow, and the middle one is why this is recorded rather than fixe
   entry was written. A wave that moves one frontend line fails a lane's findings guard with a
   276-row diff of which 263 are a digit — so the acknowledgement is real work and the 13 rows a
   reader wants (*did an ANSWER change?*) are buried in it;
-- **the honest fix is `TirPrinter`'s, not each finding's.** `@<raw>` is the fallback a member key
-  renders when a symbol has no nameable owner, so one renderer decides it for every lane at once; a
-  per-check mask would be the `sed -E 's/\$[0-9]+\$/$N$/g'` workaround this entry already refuses,
-  spelled eleven times. It is not free — the fallback has to name SOMETHING, and what a nameless
-  symbol should print is the open question;
+- **the fix is NOT `TirPrinter`'s, and this entry said it was** — see the correction below;
 - **it reaches `members.tsv` too**, at the member KEY rather than the digest: four ssg-md rows moved
   `@7880` → `@7881` with byte-identical digests, i.e. four rows of blast radius over emitted text
   that did not change. `just members-unchanged` counts them.
 
+**THE PRESCRIPTION WAS WRONG, AND THE PRICE IS FOUR TIMES WHAT THIS ENTRY RECORDED.** *"`@<raw>` is
+the fallback a member key renders when a symbol has no nameable owner, so one renderer decides it for
+every lane at once"* — that is not where the string comes from. `Minter.external` sets an external
+symbol's `fullName` TO ITS INTERNING KEY (`@<ownerId>#forName(java.lang.String)`, P4's own note says
+so), and every reader prints that value verbatim. `TirPrinter` is not choosing a fallback; it is
+faithfully rendering a field whose value is wrong at the SOURCE, so a repair there would MASK the
+data — the `sed` workaround this entry refuses, moved one layer in and made invisible.
+
+**The honest fix is `Minter.table`, which is the one moment interning has FINISHED and every owner is
+known**: re-derive an external MEMBER's `fullName` from `<owner.fullName>#<name>` there, leaving
+`byKey` — the actual interning map, and the thing P4's *"leave the `fullName` alone"* is about —
+untouched. What that must be measured against is P4's SECOND objection, which is still live and is
+the reason this is not a one-liner: with members named `java.lang.Class#forName`, `PortabilityCheck`'s
+PREFIX rules begin matching MEMBERS as well as the receiver types that already count them, so
+`portability(all|emitted)` may double-count. Price that before shipping it.
+
+**The number, re-measured on wave 8's `null`-at-a-type-parameter fix — a change of five frontend
+lines:** `findings.tsv` moves **538 id-stripped rows on ssg-md and 2,350 on its test set**, and
+masking the counter on both sides leaves **12 and 6**. So 526 of 538 and 2,344 of 2,350 are one
+integer, on a wave whose real answer moved twelve printed denominators and six rows. Four times this
+entry's recorded 263, on the port the engine will be pointed at next.
+
 *Fix kind: (a) engine — the EMITTED half is CLOSED in `PanamaFfiTransform.handleNames`; the
-DIAGNOSTIC half is OPEN in `TirPrinter`'s nameless-owner fallback, measured at 263 findings rows and
-4 member keys on ssg-md.*
+DIAGNOSTIC half is OPEN in `Minter.table` (NOT in `TirPrinter`, which was this entry's earlier and
+measured-wrong prescription), priced at 538 + 2,350 findings rows against 12 + 6 real ones, and 4
+member keys.*
 
 ### M11. A commit that changes EMISSION and does not re-accept the baseline ships a digest ITS OWN CODE CANNOT REPRODUCE — and every lane still exits 0. **CLOSED, and the cost is that the next wave pays for it**
 

@@ -161,7 +161,7 @@ member	com.badlogic.ashley.core.Entity#notifyComponentAdded()	sge.ecs.Entity#not
 member	com.badlogic.ashley.core.Entity#notifyComponentRemoved()	sge.ecs.Entity#notifyComponentRemoved()	Renamed	-	com/badlogic/ashley/core/Entity.java	219	0aa49ec6d07e9da7	
 member	com.badlogic.ashley.core.Entity#remove(Class)	sge.ecs.Entity#remove(Class<T>)	Renamed	-	com/badlogic/ashley/core/Entity.java	91	fd044248d2f13eef	
 member	com.badlogic.ashley.core.Entity#removeAll()	sge.ecs.Entity#removeAll()	Renamed	-	com/badlogic/ashley/core/Entity.java	114	1104d17d816e592a	
-member	com.badlogic.ashley.core.Entity#removeInternal(Class)	sge.ecs.Entity#removeInternal(Class<?>)	Renamed	-	com/badlogic/ashley/core/Entity.java	199	9beff4e888d27cd6	
+member	com.badlogic.ashley.core.Entity#removeInternal(Class)	sge.ecs.Entity#removeInternal(Class<?>)	Renamed	-	com/badlogic/ashley/core/Entity.java	199	4a9eeff5cdf92e80	
 member	com.badlogic.ashley.core.Entity#removing	sge.ecs.Entity#removing	Renamed	-	com/badlogic/ashley/core/Entity.java	38	86bd02068bb0cb4a	
 member	com.badlogic.ashley.core.Entity#scheduledForRemoval	sge.ecs.Entity#scheduledForRemoval	Renamed	-	com/badlogic/ashley/core/Entity.java	37	88f00f9628d2c3a3	
 member	com.badlogic.ashley.core.EntityListener#entityAdded(Entity)	sge.ecs.EntityListener#entityAdded(Entity)	Renamed	-	com/badlogic/ashley/core/EntityListener.java	29	932a0890204c65c6	
@@ -230,7 +230,7 @@ member	com.badlogic.ashley.core.Family$Builder#all	sge.ecs.Family$Builder#all	Re
 member	com.badlogic.ashley.core.Family$Builder#all(Array)	sge.ecs.Family$Builder#all(Array<Class<?>>)	Renamed	-	com/badlogic/ashley/core/Family.java	124	828ed4e12bb9e0fb	
 member	com.badlogic.ashley.core.Family$Builder#exclude	sge.ecs.Family$Builder#exclude	Renamed	-	com/badlogic/ashley/core/Family.java	102	df0ab3091f2bd2bb	name=exclude$field
 member	com.badlogic.ashley.core.Family$Builder#exclude(Array)	sge.ecs.Family$Builder#exclude(Array<Class<?>>)	Renamed	-	com/badlogic/ashley/core/Family.java	144	abb4cf4eba0f68a5	
-member	com.badlogic.ashley.core.Family$Builder#get()	sge.ecs.Family$Builder#get()	Renamed	-	com/badlogic/ashley/core/Family.java	150	3f07656ad70df423	
+member	com.badlogic.ashley.core.Family$Builder#get()	sge.ecs.Family$Builder#get()	Renamed	-	com/badlogic/ashley/core/Family.java	150	db7d1b7aecddf969	
 member	com.badlogic.ashley.core.Family$Builder#one	sge.ecs.Family$Builder#one	Renamed	-	com/badlogic/ashley/core/Family.java	101	9716b8ca4ceb1646	name=one$field
 member	com.badlogic.ashley.core.Family$Builder#one(Array)	sge.ecs.Family$Builder#one(Array<Class<?>>)	Renamed	-	com/badlogic/ashley/core/Family.java	134	a434aa06bfb2aee0	
 member	com.badlogic.ashley.core.Family$Builder#reset()	sge.ecs.Family$Builder#reset()	Renamed	-	com/badlogic/ashley/core/Family.java	112	63e57e0e272b9ccb	

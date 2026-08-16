@@ -1223,6 +1223,27 @@ object SpoonTir:
       case arr: CtArrayTypeReference[?] => tpConcrete(arr.getComponentType)
       case r => try r.getActualTypeArguments.asScala.forall(tpConcrete) catch { case _: Throwable => true }
 
+    /** [[tpConcrete]] with its one over-exclusion repaired: a type VARIABLE passes when it is
+      * LITERALLY the one in scope here ([[sameVarInScope]] — the same declaration, hence the same
+      * minted symbol, never merely the same name).
+      *
+      * `tpConcrete`'s own doc says what it is protecting against and its neighbour says what it
+      * excludes wrongly: a callee's `<T>` must not silently bind to an unrelated in-scope `T`, and
+      * the CALLER'S OWN variable is not that case — `OrderedMultiMap<K, V>` naming `V` at a call
+      * inside itself is exact, not a guess. Written as its own function rather than as a flag on
+      * `tpConcrete`, because the two answer different questions and every existing caller of that
+      * one must keep the answer it has (F8: one derivation per question, not one function per
+      * shape). */
+    private def tpNameableHere(tr: CtTypeReference[?]): Boolean = tr match
+      case null                         => true
+      case tv: CtTypeParameterReference => sameVarInScope(tv)
+      case w: CtWildcardReference       => Option(w.getBoundingType).forall(tpNameableHere)
+      case arr: CtArrayTypeReference[?] => tpNameableHere(arr.getComponentType)
+      case r => try r.getActualTypeArguments.asScala.forall(tpNameableHere) catch { case _: Throwable => true }
+    // …and note this is STRICTLY WEAKER than `tpConcrete`, not a different question: every arm but
+    // the variable one is that function's, so a concrete type passes here too and no caller needs
+    // the disjunction spelled out.
+
     /** Is this callee type VARIABLE literally the one in scope here — the same declaration, hence
       * the same minted symbol, not merely the same NAME? That is the case [[tpConcrete]]'s
       * name-based caution excludes wrongly: a SELF-CALL inside the declaring class
@@ -3630,7 +3651,7 @@ object SpoonTir:
             // ONE answer for both directions: which side of the program's edge the CALLEE is on.
             val external = isExternalCallee(ex)
             if comp == null || argEs.sizeIs < fixed then None
-            else if passesArray then passedThrough(ex, argEs, external)
+            else if passesArray then passedThrough(ex, argEs, external, recvSubst)
             else if elemRef.isEmpty then None
             else
               val (head, rest) = argEs.splitAt(fixed)
@@ -3684,13 +3705,14 @@ object SpoonTir:
         * java's null ARRAY, and `f(null*)` renders it as one: it compiles, and it throws where java
         * throws. */
       private def passedThrough(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
-                                external: Boolean): Option[List[Term]] =
+                                external: Boolean,
+                                recvSubst: Map[String, CtTypeReference[?]]): Option[List[Term]] =
         if !external then None
         else
           // through `coerceArgsFixed`, never around it: the erasure cast a java `Object...` formal
           // needs (`args.asInstanceOf[Array[Object]]`) is that function's answer, and a second
           // spelling of it here would be a second answer.
-          val terms = coerceArgsFixed(ex, argEs)
+          val terms = coerceArgsFixed(ex, argEs, recvSubst)
           if terms.sizeIs != argEs.size then None
           else Some(terms.init :+ Tree.Spread(terms.last, terms.last.tpe, originOf(argEs.last)))
 
@@ -3706,14 +3728,22 @@ object SpoonTir:
         // argument to point at and a finding owes a line somebody can open.
         callConsults(ex, argEs, at)
         slotConsults(argSlots(ex, argEs), at)
-        varargPack(ex, argEs, recvSubst).getOrElse(coerceArgsFixed(ex, argEs))
+        varargPack(ex, argEs, recvSubst).getOrElse(coerceArgsFixed(ex, argEs, recvSubst))
 
       /** the receiver's own type arguments, by the declaring class's parameter NAMES — `Graph<V>`
         * called on a `DirectedGraph<Integer>` gives `V -> Integer`.
         *
         * Only a fully known instantiation: same arity, every argument nameable here, no wildcards. A
         * wildcard would put a `?` where a real type has to go, which is the `?T` stub this frontend
-        * refuses to emit everywhere else. */
+        * refuses to emit everywhere else.
+        *
+        * '''NAMEABLE HERE, not CONCRETE.''' The gate was `tpConcrete`, which answers `false` for a
+        * type PARAMETER — so a field typed at the enclosing class's own variable
+        * (`OrderedSet<V> keySet` inside `OrderedMultiMap<K, V>`) offered the substitution
+        * `E := V` and it was discarded before anything could use it, which is why
+        * `keySet.add(null)` had no type to cast the `null` at. `tpConcrete`'s neighbour already
+        * documents that as the case it "excludes wrongly", and [[tpNameableHere]] is that repair:
+        * the caller's OWN variable is a type this scope can write down. */
       private def receiverTypeArgs(inv: CtInvocation[?]): Map[String, CtTypeReference[?]] =
         val rt = inv.getTarget match
           case null => null
@@ -3726,11 +3756,18 @@ object SpoonTir:
                         catch { case _: Throwable => Nil }
           val actuals = rt.getActualTypeArguments.asScala.toList
           if formals.nonEmpty && actuals.sizeIs == formals.size &&
-             actuals.forall(a => !a.isInstanceOf[CtWildcardReference] && tpConcrete(a))
+             actuals.forall(a => !a.isInstanceOf[CtWildcardReference] && tpNameableHere(a))
           then formals.map(_.getSimpleName).zip(actuals).toMap
           else Map.empty
 
-      private def coerceArgsFixed(ex: CtExecutableReference[?], argEs: List[CtExpression[?]]): List[Term] =
+      /** @param recvSubst
+        *   the RECEIVER's own type arguments, by the declaring class's parameter names
+        *   ([[receiverTypeArgs]]) — THREADED from [[coerceArgs]] rather than re-derived here,
+        *   because two derivations of one substitution is F8's finding with a longer fuse. Only
+        *   [[nullToTypeParam]] reads it today, and it reads it for G12's rule: a callee's own type
+        *   variables do not resolve at the call site, but the CLASS's do, through the receiver. */
+      private def coerceArgsFixed(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
+                                  recvSubst: Map[String, CtTypeReference[?]] = Map.empty): List[Term] =
         // Array covariance at call args is DISABLED for OUR OWN methods — Spoon erases a generic
         // array formal (`T[]`) to `Object[]`, and casting the arg to `Array[Object]` breaks the
         // (overloaded) Scala method that actually wants the invariant `Array[T]`. But for EXTERNAL
@@ -3752,7 +3789,7 @@ object SpoonTir:
         if formals.size == argEs.size then
           argEs.zipWithIndex.map { (e, i) =>
             val base = expr(e)
-            val c = nullToTypeParam(e, declFormals(i),
+            val c = nullToTypeParam(e, declFormals(i), recvSubst,
               coerce(formals(i), e, base, arrayCov = external, tpToObject = false, unchecked = false))
             val o = typeParamToObject(e, declFormals(i), c)
             // Java's unchecked conversion at an argument, off the DECLARATION's formal (the
@@ -3769,14 +3806,37 @@ object SpoonTir:
 
       /** `null` passed to a callee slot whose real (un-erased) formal is a type parameter — cast it,
         * so the ported call type-checks (`m(null)` → `m(null.asInstanceOf[T])`). The dominant case is
-        * a self-call inside the generic class, where `T` is in scope at the call site. */
-      private def nullToTypeParam(e: CtExpression[?], declFormal: Option[CtTypeReference[?]], t: Term): Term =
+        * a self-call inside the generic class, where `T` is in scope at the call site.
+        *
+        * '''And the second case is the RECEIVER's, which is G12's rule and not a widening of the
+        * first.''' A callee's own type variables do not resolve at the call site — that is why the
+        * `resolveTypeParam` arm exists and why it is name-based and therefore narrow — but the
+        * declaring CLASS's do, through the receiver's type arguments: `OrderedSet<E>.add(E)` called
+        * on an `OrderedSet<V>` field inside `OrderedMultiMap<K, V>` says `E := V` exactly, and `V`
+        * is a type this scope can write. Without it the emitted `add(null)` is `Found: Null /
+        * Required: E`, which is what two of ssg-md's five `null`-at-a-type-parameter errors were.
+        *
+        * The receiver's answer is asked FIRST because it is the exact one: `resolveTypeParam` is a
+        * NAME lookup, so a callee's `<E>` could silently find an unrelated in-scope `E`, while
+        * `recvSubst` is keyed on the DECLARING CLASS's own formals. For that same reason it is only
+        * consulted for a variable the class declares — a METHOD's own `<E>` shadowing the class's is
+        * ordinary java, and substituting the class's instantiation into it would be §4.56's name
+        * hazard at a type variable. */
+      private def nullToTypeParam(e: CtExpression[?], declFormal: Option[CtTypeReference[?]],
+                                  recvSubst: Map[String, CtTypeReference[?]], t: Term): Term =
         val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
+        def classOwned(tp: CtTypeParameterReference): Boolean =
+          try Option(tp.getDeclaration).map(_.getParent).exists(_.isInstanceOf[CtType[?]])
+          catch { case _: Throwable => false }
+        def cast(target: CtTypeReference[?]): Term = Tree.Typed(t, tt(tpe(target), e), tpe(target), originOf(e))
         declFormal match
+          case Some(tp: CtTypeParameterReference) if isNull &&
+            classOwned(tp) && recvSubst.get(tp.getSimpleName).exists(tpNameableHere) =>
+            cast(recvSubst(tp.getSimpleName))
           // only when the callee's type parameter actually RESOLVES in scope here (a self-call inside
           // the same generic class) — otherwise `tpe` yields the `?T` unresolved stub, invalid syntax.
           case Some(tp: CtTypeParameterReference) if isNull && resolveTypeParam(tp.getSimpleName).isDefined =>
-            Tree.Typed(t, tt(tpe(tp), e), tpe(tp), originOf(e))
+            cast(tp)
           case _ => t
 
       /** An ARRAY argument whose emitted element type is not the declared formal's.

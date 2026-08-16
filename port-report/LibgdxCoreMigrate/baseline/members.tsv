@@ -4211,7 +4211,7 @@ sge.graphics.g2d.PolygonSpriteBatch	sge.graphics.g2d.PolygonSpriteBatch#triangle
 sge.graphics.g2d.PolygonSpriteBatch	sge.graphics.g2d.PolygonSpriteBatch#vertexIndex	val	8f27a079cd676ecb
 sge.graphics.g2d.PolygonSpriteBatch	sge.graphics.g2d.PolygonSpriteBatch#vertices	val	439717ae71d2d4b9
 sge.graphics.g2d.PolygonSpriteBatch	vertexDataType	val	749f05f5f0e057af
-sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite	class	3501d74167af297f
+sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite	class	c9d22b697550edab
 sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#buildVertices()	def	5f2ef4add1a98a60
 sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#color	val	896428561d97c0a7
 sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#cols	val	ad1b6e3bc0b28658
@@ -4228,7 +4228,7 @@ sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprit
 sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#rows	val	d344285832e82d65
 sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#setColor(Color)	def	93d834070ce6800b
 sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#setPolygon(TextureRegion,Array<float>)	def	decdc0a629b26aad
-sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#setPolygon(TextureRegion,Array<float>,float)	def	71b3845024ae8669
+sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#setPolygon(TextureRegion,Array<float>,float)	def	cbae6407b65f0219
 sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#setPosition(float,float)	def	14b9a38d2461782c
 sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#snapToGrid(Array<float>)	def	810c4645fb607cfa
 sge.graphics.g2d.RepeatablePolygonSprite	sge.graphics.g2d.RepeatablePolygonSprite#vertices	val	4d52c59344251e1c
@@ -6717,7 +6717,7 @@ sge.graphics.g3d.particles.values.WeightMeshSpawnShapeValue	sge.graphics.g3d.par
 sge.graphics.g3d.particles.values.WeightMeshSpawnShapeValue	sge.graphics.g3d.particles.values.WeightMeshSpawnShapeValue#distribution	val	f749783055629da9
 sge.graphics.g3d.particles.values.WeightMeshSpawnShapeValue	sge.graphics.g3d.particles.values.WeightMeshSpawnShapeValue#init()	def	a797b27bb48a1d91
 sge.graphics.g3d.particles.values.WeightMeshSpawnShapeValue	sge.graphics.g3d.particles.values.WeightMeshSpawnShapeValue#spawnAux(Vector3,float)	def	963d84eeaf935665
-sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader	class	0f238f3b204e9b3b
+sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader	class	14afc9cf736f6251
 sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#attributes	val	0f49da73f5d79461
 sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#begin(Camera,RenderContext)	def	d694ad1f4efdf196
 sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#camera	val	c85dea1419d7ff43
@@ -6732,7 +6732,7 @@ sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#getUnifo
 sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#getUniformID(String)	def	298f4f90dccf8253
 sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#globalUniforms	val	eab464e3d04a0040
 sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#has(int)	def	bc8afef8a6449061
-sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#init(ShaderProgram,Renderable)	def	864a457449c24a5a
+sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#init(ShaderProgram,Renderable)	def	9cf83ce18b02a995
 sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#instancedAttributes	val	cd127505120a0139
 sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#loc(int)	def	8f0015af3cdc6032
 sge.graphics.g3d.shaders.BaseShader	sge.graphics.g3d.shaders.BaseShader#localUniforms	val	0b6ce7fc80479281
@@ -7137,13 +7137,13 @@ sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationContr
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationListener	class	d5d907e056339fdc
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationListener#onEnd(AnimationDesc)	def	5b31637be37683fc
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationListener#onLoop(AnimationDesc)	def	119f0658325f46b9
-sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController	class	c99d216382186094
+sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController	class	8b9f135c69ae8e3a
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#<stmt1>	stmt	80f9eb745c02feb8
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#apply(Animation,float,float)	def	9c822d48e3fbc195
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#applyAnimation(Animation,float)	def	174da982f05d4b5d
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#applyAnimation(ObjectMap<Node,Transform>,Pool<Transform>,float,Animation,float)	def	e778b6ed3df6fdff
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#applyAnimations(Animation,float,Animation,float,float)	def	d688bfa397956a77
-sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#applyNodeAnimationBlending(NodeAnimation,ObjectMap<Node,Transform>,Pool<Transform>,float,float)	def	040a67ff42464c3a
+sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#applyNodeAnimationBlending(NodeAnimation,ObjectMap<Node,Transform>,Pool<Transform>,float,float)	def	629541b62b84489c
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#applyNodeAnimationDirectly(NodeAnimation,float)	def	6aac4c3a4703521c
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#applying	val	dd169b5424b8625b
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#begin()	def	37d45cd4cc2f5937
