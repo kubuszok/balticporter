@@ -198,6 +198,10 @@ object SpoonTir:
     def defined(key: String): Option[(SymId, Symbol)] =
       byKey.get(key).flatMap(id => syms.get(id).map(id -> _))
     def fullNameOf(id: SymId): String = syms.get(id).map(_.fullName).getOrElse("?")
+    /** the DECLARED type this frontend interned for `id` — `NoType` where nothing was declared.
+      * Read to answer *did this frontend RETYPE this declaration?*, which is §4.56's rule at the
+      * one widening the frontend performs itself (`execDef.anyForEquals`). */
+    def infoOf(id: SymId): TypeRepr = syms.get(id).map(_.info).getOrElse(NoType)
     /** the interned OWNER of a member — the type that DECLARES it, which for a member reached
       * through a subclass name is NOT the type the source wrote (T14). `SymId.None` for a type,
       * and for a member whose declaration the parse could not resolve, which is what makes reading
@@ -4015,9 +4019,26 @@ object SpoonTir:
             val rt = try Option(inv.getTarget).map(_.getType).orNull catch { case _: Throwable => null }
             rt != null && !rt.isPrimitive && isGenericUse(rt) && hasWildcard(tpe(rt))
           case _ => false
+        // …and the THIRD value scala types as wider than `Object` is one THIS FRONTEND made.
+        // `execDef.anyForEquals` retypes a 1-argument `equals(Object)`'s parameter to `scala.Any`,
+        // which is what makes it override `Object.equals` instead of clashing with it — and every
+        // forwarding of that parameter (`SequenceUtils.equals(this, o)`, the ordinary shape for a
+        // library with a shared equality helper) then hands an `Any` to an `Object` slot.
+        //
+        // Read off THIS FRONTEND'S OWN RECORD and not off the java or off the reference's node type
+        // (§4.56): the java says `Object` at both ends and the reference's `ty(e)` says `Object`
+        // too, because the widening happened at the DECLARATION and nowhere else. So the question
+        // is *what did I intern for this symbol* — and a declaration interned at `scala.Any` NEVER
+        // conforms to `java.lang.Object`, which makes the cast exact wherever it fires. It also
+        // BOXES a primitive, which is what java's already-boxed `o` was.
+        val anyDeclared = t match
+          case Tree.Ident(s, _, _) => minter.infoOf(s) match
+            case TypeRef(_, a) => minter.fullNameOf(a) == "scala.Any"
+            case _             => false
+          case _ => false
         declFormal match
           case Some(f) if !f.isInstanceOf[CtTypeParameterReference] && f.getQualifiedName == "java.lang.Object"
-                       && ((et != null && et.isInstanceOf[CtTypeParameterReference]) || wildcardRead) =>
+                       && ((et != null && et.isInstanceOf[CtTypeParameterReference]) || wildcardRead || anyDeclared) =>
             val obj = TypeRef(NoPrefix, minter.external("java.lang.Object", "Object"))
             Tree.Typed(t, tt(obj, e), obj, originOf(e))
           case _ => t

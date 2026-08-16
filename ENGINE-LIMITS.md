@@ -379,6 +379,32 @@ the six methods and the file. Every other port byte-identical.
 positives and four negatives, of which "a bound with no named variable stays G22's" is the one that
 keeps the two pins apart.*
 
+### G8.9 A widened `equals` PARAMETER at an `Object` slot — the third value scala types wider than `Object`, and the port made it. **ssg-md 20 → 19. CLOSED**
+
+`SpoonTir.execDef` retypes a 1-argument `equals(Object)`'s parameter to `scala.Any`, which is what
+makes it OVERRIDE `Object.equals` rather than clash with it after erasure (52 classes in libGDX core
+alone). Every forwarding of that parameter to an `Object` slot then hands scala a strictly wider
+value: `return SequenceUtils.equals(this, o)` — the ordinary shape for a library with a shared
+equality helper — reads `Found: (o : Any) / Required: Object`.
+
+`typeParamToObject` already casts the two OTHER values scala types wider than `java.lang.Object` (a
+type-parameter-typed value, and a read through a wildcard-filled receiver). This is the third, and
+it is the only one the PORT made rather than found.
+
+**The signal is this frontend's own record and neither the java nor the reference's node type**
+(§4.56): the java says `Object` at both ends of the call and `ty(e)` says `Object` too, because the
+widening happened at the DECLARATION and nowhere else. So the question asked is *what did I intern
+for this symbol* — `Minter.infoOf` — and a declaration interned at `scala.Any` never conforms to
+`java.lang.Object`, which makes the cast exact wherever it fires. It also BOXES a primitive, which is
+what java's already-boxed `o` was.
+
+**Measured**: ssg-md **20 → 19**, 10 member digests over five `equals` bodies, every check count
+flat. Every other port byte-identical.
+
+*Fix kind: (a) engine. CLOSED — a third disjunct in `SpoonTir.typeParamToObject`, plus
+`Minter.infoOf`. `EqualsParamAtObjectSlotSpec` — one positive and two negatives (an ordinary `Object`
+parameter, and a two-argument `equals` that is not `Object.equals` at all).*
+
 ### G8.5 A `null` takes its type FROM THE SLOT, and two slots have no formal to read — **ssg-md 28 → 26. CLOSED**
 
 G12's third source closed the `null`-at-a-type-parameter family *where an argument list exists*: the

@@ -2794,7 +2794,7 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12 and **20** after wave 13 (coded 20 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **16** now, counted from `errors.tsv` rather than by eye — 96.6 % of the port compiles clean |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12 and **19** after wave 13 (coded 19 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **16** now, counted from `errors.tsv` rather than by eye — 96.6 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
@@ -2818,7 +2818,7 @@ MUnit registrations with a lane, a discovery guard and an error baseline holding
 so the remaining distance is a number (44 test-set errors on top of the library's 40) rather than an
 absent source set.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 20 after wave 13**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13**
 
 Every error is `EngineGap`. Eight waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2964,9 +2964,9 @@ table below now reads THIRTEEN refused:
 | 3 | **K5.7**'s `UninheritableTargets`, counted as `InexpressibleParent` | a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent, because the retyping's target is a `Tuple2` and no class can extend one |
 | **13** | | |
 
-The other **7** are open work with no entry behind them: **2** raw-generic one-offs and the residue.
-So the honest reading of 20 is *13 refused, 7 open*, and wave 13 has taken FOUR out of the open
-column and SIX out of the refused one, in three commits:
+The other **6** are open work with no entry behind them: **2** raw-generic one-offs and the residue.
+So the honest reading of 19 is *13 refused, 6 open*, and wave 13 has taken FIVE out of the open
+column and SIX out of the refused one, in four commits:
 
 - the `Segment$Base`/`Segment$Text` PAIR (`ENGINE-LIMITS.md` C14) — a reassigned constructor
   parameter read by the DELEGATION, which the funnel then hoists into the `extends` clause where no
@@ -2976,6 +2976,9 @@ column and SIX out of the refused one, in three commits:
   instantiated. A type argument must satisfy `X <: ISequenceBuilder[X, T]` and none is denotable;
   an ascription need not, because the argument still infers `Nothing` legally and what the
   ascription supplies is the type the SELECTION reads;
+- `IRichSequenceBase#equals` (`ENGINE-LIMITS.md` G8.9) — the frontend's OWN widening of a java
+  `equals(Object)` parameter to `scala.Any`, forwarded to an `Object` slot. The third value scala
+  types wider than `java.lang.Object` and the only one the port made rather than found;
 - the two `null`-at-a-type-parameter rows the wave-8 fix did not reach (`ENGINE-LIMITS.md` G8.5) —
   both are slots with NO FORMAL to read, a lambda BODY (`DataValueFactory<T>`'s SAM result) and an
   INLINED `this(null)` (the funnel's own substitution, which handed a `Null` RECEIVER to
