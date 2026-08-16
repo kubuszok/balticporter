@@ -220,7 +220,28 @@ object PortMap:
     * (CLAUDE.md §4.57 — take the path from `Origin`, never reconstruct it from the FQN).
     *
     * The trailing `$Inner` / `#member` of the emitted name is carried across, because the file names
-    * only the TOP-LEVEL type. */
+    * only the TOP-LEVEL type.
+    *
+    * ==A DIRECTORY IS NOT A PACKAGE, which is the half "the file gives the PACKAGE" assumed==
+    * That sentence is true only where the `javaPath` is relative to a PACKAGE ROOT, which every
+    * corpus port's `sourceRoot` was until one was a 53-module CHECKOUT: there
+    * `flexmark/src/main/java/com/vladsch/flexmark/ast/Heading.java` reads as the package
+    * `flexmark.src.main.java.com.vladsch.flexmark.ast`, and **9,261 of that port's 9,370 published
+    * rows carried it**. Nothing could see it — the port compiles, `port-map` is a diff against a
+    * baseline written the same way, and the column is READ only by a DEPENDENT — so the first
+    * dependent that module ever had reported **459 fatal `BaseSurfaceAbsent` findings** on its first
+    * run, about types its base emits perfectly well. `CLAUDE.md` §4.56 at a PATH: a package derived
+    * from a directory is not the package java declared.
+    *
+    * The two derivations DISAGREE only by leading directory segments, and that is what settles it
+    * without a third source of truth: the declared package is a SUFFIX of the path-derived one by
+    * construction, so where the path-derived name ends with the unrenamed one, everything before it
+    * is the source root's own directory structure. Note what this deliberately does NOT do — it
+    * never lets `unrename` OVERRIDE the path, only TRUNCATE it, so Ashley's non-invertible flatten
+    * (which `unrename` answers by declining, i.e. by returning the emitted name) fails the suffix
+    * test and keeps the origin exactly as this method's own note requires. A port with no renames at
+    * all is covered by the same line, because there `unrename` is the identity and the emitted name
+    * IS the declared FQN. */
   private def upstreamOf(emitted: String, javaPath: String, renames: scala.collection.Map[String, String]): String =
     if javaPath.isEmpty || javaPath.startsWith("<") then unrename(emitted, renames)
     else
@@ -240,7 +261,19 @@ object PortMap:
       val head = if cut < 0 then emitted else emitted.substring(0, cut)
       val tail = if cut < 0 then "" else emitted.substring(cut)
       val simple = head.substring(head.lastIndexOf('.') + 1)
-      (if pkg.isEmpty then simple else s"$pkg.$simple") + tail
+      val fromPath = (if pkg.isEmpty then simple else s"$pkg.$simple") + tail
+      val declared = unrename(emitted, renames)
+      // …and the truncation needs the unrenamed name to be QUALIFIED, which is the guard the first
+      // spelling of this did not have. 102 of libGDX core's member rows have an emitted key that is
+      // a BARE NAME — a promoted constructor parameter, whose `SrcMap` key carries no owner — and
+      // for those `declared` is that bare name, which every path-derived name trivially ends with.
+      // Truncating there throws the package away and publishes `list`, which is a different wrong
+      // answer from the `com.badlogic.gdx.graphics.list` it replaced and not a better one. A bare
+      // name says nothing about where the package starts, so the origin stands.
+      val qualifiedHead = declared.indexWhere(c => c == '$' || c == '#') match
+        case -1 => declared.contains('.')
+        case i  => declared.substring(0, i).contains('.')
+      if qualifiedHead && fromPath.endsWith("." + declared) then declared else fromPath
 
   /** Assemble the map. Pure: every argument is something the run already holds.
     *

@@ -175,6 +175,47 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(m.members.head.upstream, "up.stream.lib.ui.Widget#draw(Batch)")
   }
 
+  test("a source root that is a CHECKOUT — the leading directories are not package segments") {
+    // A `sourceRoot` that is a multi-module checkout makes `javaPath` begin with the module and its
+    // maven layout, and reading the whole of it as a package published
+    // `mod.src.main.java.up.stream.lib.ui.Widget` for 9,261 of one port's 9,370 rows. Nothing in
+    // that port could see it: the column is READ only by a dependent, and it had none.
+    //
+    // The declared package is a SUFFIX of the path-derived one by construction, so the rename's own
+    // inverse says where it starts. Note this TRUNCATES the path and never overrides it — the test
+    // below is the case where it must not fire.
+    val srcEntry = SrcMap.Entry("port.ui.Widget", "port.ui.Widget#draw(Batch)", "def", 1, 2,
+      "mod/src/main/java/up/stream/lib/ui/Widget.java", 10, "d0")
+    val m = PortMap.of("m", "eng", List("port.ui.Widget"), SrcMap.Recording(List(srcEntry)),
+      Set.empty, Set.empty, Set.empty, Set.empty, Map("up.stream.lib" -> "port"))
+    assertEquals(m.types.head.upstream, "up.stream.lib.ui.Widget")
+    assertEquals(m.members.head.upstream, "up.stream.lib.ui.Widget#draw(Batch)")
+  }
+
+  test("NEGATIVE: a BARE member key is not a package suffix — 102 libGDX rows say so") {
+    // A promoted constructor parameter's `SrcMap` key carries no owner, so the emitted name is a
+    // bare `list`. Every path-derived name ends with a bare name, so an unguarded suffix test
+    // truncates the package away and publishes `list` — a different wrong answer from the
+    // `com.badlogic.gdx.graphics.list` it replaced, and not a better one. The truncation needs the
+    // unrenamed name to be QUALIFIED; a bare one says nothing about where the package starts.
+    val srcEntry = SrcMap.Entry("port.ui.Widget", "list", "val", 1, 2, "up/stream/lib/ui/Widget.java", 10, "d0")
+    val m = PortMap.of("m", "eng", List("port.ui.Widget"), SrcMap.Recording(List(srcEntry)),
+      Set.empty, Set.empty, Set.empty, Set.empty, Map("up.stream.lib" -> "port"))
+    assertEquals(m.members.head.upstream, "up.stream.lib.ui.list")
+  }
+
+  test("NEGATIVE: an AMBIGUOUS reversal still takes the ORIGIN, checkout-shaped path and all") {
+    // The truncation may only fire where the rename inverts, and the whole point of reading the
+    // origin is the case where it does not. Two renames onto one target: `unrename` declines and
+    // answers the EMITTED name, which is not a suffix of the path-derived one, so the origin stands
+    // — including its leading directories, which is the honest answer when nothing can say where
+    // the package starts.
+    val srcEntry = SrcMap.Entry("out.T", "out.T#m()", "def", 1, 2, "mod/src/main/java/a/x/T.java", 10, "d0")
+    val m = PortMap.of("m", "eng", List("out.T"), SrcMap.Recording(List(srcEntry)),
+      Set.empty, Set.empty, Set.empty, Set.empty, Map("a.x" -> "out", "b.y" -> "out"))
+    assertEquals(m.types.head.upstream, "mod.src.main.java.a.x.T")
+  }
+
   test("an AMBIGUOUS reversal reports the emitted name rather than guessing") {
     // Two renames onto one target: the upstream name genuinely cannot be recovered. A wrong
     // upstream name in a PUBLISHED map is worse than an absent one, so it declines.

@@ -7922,6 +7922,73 @@ OPEN entry here (a bullet marked CLOSED graduated by acquiring one).
   it caught `getName` in the `ClassReflection` forwarder, a key dead since the first draft
   (`policy 1->0` when removed).
 
+### D11. A published map's `upstream` column was a DIRECTORY read as a PACKAGE — **9,261 of one base's 9,370 rows and 1,792 of another's, and the first dependent one of them ever had reported 459 fatal findings**
+
+`PortMap.upstreamOf` takes the upstream FQN from the java ORIGIN rather than by inverting the rename,
+which D1's own note argues for and which is right: a rename need not be injective. The half it
+assumed is *the file gives the PACKAGE*, and that holds only while the `javaPath` is relative to a
+PACKAGE ROOT — which every corpus `sourceRoot` was until one was a **53-module maven CHECKOUT**.
+There `flexmark/src/main/java/com/vladsch/flexmark/ast/Heading.java` reads as the package
+`flexmark.src.main.java.com.vladsch.flexmark.ast`, and the base published that for 9,261 of its 9,370
+rows. `CLAUDE.md` §4.56 read at a PATH: **a package derived from a directory is not the package java
+declared.**
+
+**NOTHING COULD SEE IT, and the shape of that is the entry.** The port compiles; the map is a diff
+against a baseline written the same way, so `port_map_guard` is green; `port-map` the CHECK reads 0;
+no member digest moves; every one of the twenty-eight lanes is flat. The column is READ by exactly
+one thing — a DEPENDENT looking its base up by upstream name — and that base had none for seven
+waves. The first dependent's first run reported **459 fatal `manifest`/`BaseSurfaceAbsent` findings**
+about types its base emits perfectly well, which is the only instrument that exists for this and is
+one a base port cannot run.
+
+**The fix needs no third source of truth**, because the two derivations disagree only by leading
+directory segments: the declared package is a SUFFIX of the path-derived one by construction, so
+where the path-derived name ends with the UNRENAMED one, everything before it is the source root's
+own layout. Note the direction — `unrename` may TRUNCATE the origin and never OVERRIDE it, so D1's
+non-invertible case (`unrename` declines and answers the emitted name, which is not a suffix) keeps
+the origin exactly as before, leading directories and all, which is the honest answer when nothing
+can say where the package starts. A port with no renames is the same line: `unrename` is the identity
+there and the emitted name IS the declared FQN.
+
+**AND THE SUFFIX TEST NEEDS ONE GUARD, which the first spelling did not have and libGDX caught.**
+102 of that port's member rows have an emitted key that is a BARE NAME — a promoted constructor
+parameter, whose `SrcMap` key carries no owner — and EVERY path-derived name trivially ends with a
+bare name, so the truncation fired and published `list` where the old code published
+`com.badlogic.gdx.graphics.list`. Both are wrong and neither is better: the first throws the package
+away, the second invents one. So the truncation is gated on the unrenamed name having a QUALIFIED
+head, and a bare key keeps the origin — because a bare name says nothing about where the package
+starts, which is the whole question. Worth noticing WHY that showed up at all: it is a THIRD defect
+one layer further out (a srcmap member key with no owner), and this fix neither causes nor fixes it.
+The corpus-wide `port_map_guard` is the only thing that saw it, on a port the change was not aimed
+at, which is `CLAUDE.md` §5's rule about widening a guard read at an artifact.
+
+Measured: ssg-md `manifest` **459 → 1** on its dependent, 43 errors and every other count on both
+lanes flat, 0 member digests anywhere, and the base's own `port-map.tsv` re-accepted as the one
+artifact that moved. The residual 1 is `BaseMapUnverified` and is a different fact — see below.
+
+**AND IT WAS TWO PORTS, WHICH IS WHY THIS IS NOT A NOTE ABOUT ONE CONF.** `gdx-vfx`'s `sourceRoot`
+spans that library's two modules (`core/src` and `effects/src`), so it had been publishing
+`core.src.com.crashinvaders.vfx.VfxManager` for **1,792 rows** — the identical defect, invisible for
+the identical reason (it has no dependents either), and missed by a first scan for the MAVEN layout
+because its directories are not `src/main/java`. Neither port is exotic: the moment a `sourceRoot`
+is anything but a package root, every row this artifact publishes is wrong. Note which instrument
+found it — `port_map_guard` on a corpus-wide run, on a port the change was not aimed at.
+
+**And a SECOND consequence of the same `sourceRoot` decision does not have a fix here.** The base's
+map records its source `javaPath`s relative to ITS root, so they read
+`flexmark-util-ast/src/main/java/com/…`; a dependent's resolution roots are the module directories
+themselves, so **none of the base's 422 source paths lies under any of them** and `PortMap.freshness`
+cannot check the map at all. That is reported as `Unverified` — deliberately a THIRD value and never
+a `no` — and it is correct as far as it goes. What it costs is that every one of the 29 dependent
+ports a later milestone adds inherits it, so the freshness guarantee this artifact exists to give is
+switched off for the whole chain by one port's root. Two ports could disagree about the base's
+surface and the run would say only that it could not tell. The fix is to make a published path
+resolvable from a dependent's roots rather than only from the publisher's, and it is unbuilt.
+
+*Fix kind: (a) for the column, CLOSED in `PortMap.upstreamOf`, with `PortMapSpec` carrying the
+checkout-shaped positive and the non-invertible NEGATIVE that must not truncate. (a) for the
+freshness half, OPEN and measured at 422 of 422.*
+
 ## 9.5 Control flow — what a `break` really leaves, and the boundary that steals it
 
 ### F1. A java LABEL sits on ANY statement, not only a loop. **55 → 10 residues**
