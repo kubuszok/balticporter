@@ -37,6 +37,10 @@ class CollectionsSe8MembersSpec extends PortSuite:
       |  boolean dropSet(Set<String> xs)            { return xs.removeIf((s) -> s.isEmpty()); }
       |  boolean hasVal(Map<String, String> m, Object o)   { return m.containsValue(o); }
       |  boolean hasAll(List<String> xs, Collection<String> c) { return xs.containsAll(c); }
+      |  boolean dropAll(List<String> xs, Collection<String> c)  { return xs.removeAll(c); }
+      |  boolean keepAll(List<String> xs, Collection<String> c)  { return xs.retainAll(c); }
+      |  boolean dropAllSet(Set<String> xs, Collection<String> c) { return xs.removeAll(c); }
+      |  boolean keepAllSet(Set<String> xs, Collection<String> c) { return xs.retainAll(c); }
       |  void reserve(ArrayList<String> xs, int n)  { xs.ensureCapacity(n); }
       |}
       |""".stripMargin
@@ -81,6 +85,21 @@ class CollectionsSe8MembersSpec extends PortSuite:
     assertNotEmits(p, "m.containsValue(")
   }
 
+  test("`removeAll`/`retainAll` map at BOTH kinds — the two bulk mutators that had no arm") {
+    val p = port(src, new CollectionsTransform)
+    // ONE helper per member across both kinds, unlike `removeIf`: the receiver contract these take
+    // is java's own `Collection` contract, which a `Buffer` and a `Set` both satisfy, so there is
+    // nothing for a second name to disambiguate. What they must NOT become is the nearest scala
+    // member: `--=` is `subtractAll`, ONE occurrence per element of the argument where java removes
+    // every occurrence, and `filterInPlace` keeps the complement and answers the collection.
+    assertEmits(p, "balticporter.runtime.JavaCollections.removeAll(xs, c)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.retainAll(xs, c)")
+    assertNotEmits(p, "xs --= c")
+    assertNotEmits(p, "xs.filterInPlace(")
+    assertNotEmits(p, "xs.removeAll(c)")
+    assertNotEmits(p, "xs.retainAll(c)")
+  }
+
   test("`ensureCapacity` maps — the one member here with NO observable java behaviour") {
     val p = port(src, new CollectionsTransform)
     assertEmits(p, "balticporter.runtime.JavaCollections.ensureCapacity(xs, n)")
@@ -93,13 +112,19 @@ class CollectionsSe8MembersSpec extends PortSuite:
     val p = port(
       """package demo2;
         |class Own {
-        |  static class Bag { void sort(Object c) {} boolean removeIf(Object p) { return false; } }
-        |  void use(Bag b) { b.sort(null); b.removeIf(null); }
+        |  static class Bag { void sort(Object c) {} boolean removeIf(Object p) { return false; }
+        |                     boolean removeAll(Object c) { return false; }
+        |                     boolean retainAll(Object c) { return false; } }
+        |  void use(Bag b) { b.sort(null); b.removeIf(null); b.removeAll(null); b.retainAll(null); }
         |}
         |""".stripMargin, new CollectionsTransform)
     assertEmits(p, "b.sort(")
     assertEmits(p, "b.removeIf(")
+    assertEmits(p, "b.removeAll(")
+    assertEmits(p, "b.retainAll(")
     assertNotEmits(p, "JavaCollections.sort(b")
+    assertNotEmits(p, "JavaCollections.removeAll(b")
+    assertNotEmits(p, "JavaCollections.retainAll(b")
   }
 
   test("REFUSED and CITED — `listIterator` and `spliterator` are protocols, not values") {

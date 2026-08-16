@@ -3763,6 +3763,21 @@ final class CollectionsTransform(
       case ("containsAll", List(c), Kind.Seq | Kind.Set) if sym("containsAll") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("containsAll"), TypeRepr.NoType, so), List(recv, c),
                         sym("containsAll"), t.tpe, t.origin))
+      // …and `containsAll`'s two MUTATING siblings, which had no arm at all. Neither is a
+      // near-miss the way the SE8 members above are: `mutable.Buffer` has no `removeAll` and no
+      // `retainAll`, so the untranslated call is a `Not Found` rather than a silent divergence —
+      // and the reason each needs a HELPER rather than a rename is that the nearest scala members
+      // answer a different question. `--=` is `subtractAll`, which removes ONE occurrence per
+      // element of the argument where java removes every occurrence (`[a,b,a] --= [a]` is `[b,a]`
+      // and java's `removeAll` gives `[b]`); `filterInPlace` keeps the complement and returns the
+      // collection where java returns the `boolean` callers branch on. The helpers state both,
+      // with java's own probe direction — see their docs, which is where the contract lives.
+      case ("removeAll", List(c), Kind.Seq | Kind.Set) if sym("removeAll") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("removeAll"), TypeRepr.NoType, so), List(recv, c),
+                        sym("removeAll"), t.tpe, t.origin))
+      case ("retainAll", List(c), Kind.Seq | Kind.Set) if sym("retainAll") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("retainAll"), TypeRepr.NoType, so), List(recv, c),
+                        sym("retainAll"), t.tpe, t.origin))
       case ("ensureCapacity", List(n), Kind.Seq) if sym("ensureCapacity") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("ensureCapacity"), TypeRepr.NoType, so), List(recv, n),
                         sym("ensureCapacity"), t.tpe, t.origin))
@@ -4895,7 +4910,8 @@ object CollectionsTransform:
 
   val StaticHelpers: List[String] =
     List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView", "addAll", "noneMatch", "removeValue",
-         "computeIfAbsent", "removeIf", "removeIfSet", "containsValue", "containsAll", "ensureCapacity",
+         "computeIfAbsent", "removeIf", "removeIfSet", "containsValue", "containsAll",
+         "removeAll", "retainAll", "ensureCapacity",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
@@ -4996,8 +5012,11 @@ object CollectionsTransform:
     Kind.Seq.toString   -> Set("get", "set", "remove", "addLast", "offer", "offerLast",
                                "addFirst", "offerFirst", "poll", "pollFirst", "peek", "peekFirst", "element",
                                "toArray", "subList",
-                               // …and SE8's default methods on `List`/`Collection`
-                               "sort", "removeIf", "containsAll", "ensureCapacity"),
+                               // …and SE8's default methods on `List`/`Collection`, plus
+                               // `AbstractCollection`'s two bulk MUTATORS, which scala's nearest
+                               // members answer a different question for.
+                               "sort", "removeIf", "containsAll", "removeAll", "retainAll",
+                               "ensureCapacity"),
     Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values", "putIfAbsent",
                                "computeIfAbsent", "containsValue"),
     // …`contains` is here because the phase ANSWERS for it at a `Set`: at a widened `Object` probe
@@ -5005,7 +5024,8 @@ object CollectionsTransform:
     // lookup, asking the PROBE's `equals` the way `HashMap.getNode` does. It is deliberately NOT on
     // `Kind.Seq`, where `Buffer.contains` asks the STORED element's — a hole `jdk-surface` should go
     // on reporting.
-    Kind.Set.toString   -> Set("remove", "contains", "toArray", "removeIf", "containsAll"),
+    Kind.Set.toString   -> Set("remove", "contains", "toArray", "removeIf", "containsAll",
+                               "removeAll", "retainAll"),
     Kind.Entry.toString -> Set("getKey", "getValue"),
     // a Stack's own five, PLUS everything `Kind.Seq` covers — the re-entry arm at the foot of
     // `rewrite` really does answer those for a stack receiver, so listing them here is the table
