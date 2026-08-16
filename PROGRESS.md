@@ -25,6 +25,8 @@ just vfx-measure          # gdx-vfx, compiled WITH libGDX core (a dependent port
 just sg-measure           # simple-graphs + its suite
 just noise4j-measure      # noise4j (no upstream test suite — the lane asserts that, see §5)
 just jbump-measure        # jbump — a library that ships NO suite; the lane re-derives that zero (§6)
+just liqp-measure         # liqp + its own 105-file suite (§10.5)
+just md-measure           # flexmark-java core + the eleven util modules — no test set IN SCOPE (§10.6)
 just measure-all          # every lane above, serially, stopping at the first failure
 
 just decision-counts      # decisions.tsv row counts by kind, every port
@@ -55,8 +57,8 @@ Measurements below are from one serial run of all lanes, 2026-07-31.
 
 ## 1. Corpus inventory
 
-Ten libraries are ported on the current (TIR) pipeline, across fifteen runs — a library and its own
-test suite are two ports, and the suite is a *dependent* of the library:
+Eleven libraries are ported on the current (TIR) pipeline, across sixteen runs — a library and its
+own test suite are two ports, and the suite is a *dependent* of the library:
 
 **A port's name is its DESTINATION module's** (`CLAUDE.md` §2.1) — the id of the module in the
 reference port (`../sge/build.sbt`, `../ssg/build.sbt`) that this output is going to become. The
@@ -78,6 +80,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | noise4j | `noise4j` | `sge-noise` |
 | simple-graphs / its suite | `simple-graphs` / `simple-graphs-test` | `sge-graphs` / `sge-graphs-test` |
 | liqp / its suite | `liqp` / `liqp-test` | `ssg-liquid` / `ssg-liquid-test` |
+| flexmark-java | — (added after the rename) | `ssg-md` |
 
 | port | upstream | files in / out | tests | compile |
 |---|---|---|---|---|
@@ -96,6 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | **none in scope** — flexmark's suites live in modules milestone 1 does not parse (§10.6) | **243** (§10.6.3, all classified) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -150,11 +154,15 @@ line but no port banner, covenant, migration row or upstream pin.
 
 | module | upstream | licence | Java files / LOC | Scala files / LOC | coverage | tests |
 |---|---|---|---|---|---|---|
-| `ssg-md` | flexmark-java 0.64.8 | BSD-2 | 912 / 83,680 | 773 / 77,468 | 792 mapped 1:1; **24 undocumented omissions** | 205 / 34,387 |
+| `ssg-md` | flexmark-java 0.64.8 | BSD-2 | 872 / 79,825 covered (1,091 / 106,170 on disk) | 767 / 77,291 | 761 mapped 1:1; **28 undocumented omissions** | 178 / 25,274 |
 | `ssg-liquid` | liqp 0.9.2.4-SNAPSHOT | MIT | 135 / 9,542 | 130 / 10,925 | 124 of 135; **11 absent** | 65 / 1,030 |
 
-Package renames the engine needs: `com.vladsch.flexmark.* → ssg.md.*` (43 Maven modules collapse into
-one; `util.builder → util.build`) and `liqp.* → ssg.liquid.*`.
+Package renames the engine needs: `com.vladsch.flexmark.* → ssg.md.*` (one uniform prefix replace
+with exactly one deviation, `util.builder → util.build`) and `liqp.* → ssg.liquid.*`. **The "43 Maven
+modules collapse into one namespace" framing this row used to carry overstates the risk to nothing**:
+every module already declares under the single root `com.vladsch.flexmark`, so the module split is a
+`pom.xml` fact and the map is injective by construction — verified collision-free over all 53
+modules, 116 distinct packages in, 116 out (§10.6.1).
 
 The other ssg modules (`ssg-js`, `ssg-katex`, `ssg-mermaid`, `ssg-sass`, `ssg-minify`,
 `ssg-graphs-commons`) *are* source-level ports — of JavaScript, TypeScript, Dart and Ruby, which the
@@ -162,9 +170,11 @@ Spoon frontend cannot read. `ssg-highlight` is an FFI/WASM binding. `ssg-graphvi
 `ssg-data-commons` and `ssg-site` are original Scala. Corroborated independently: not one of them
 contains a single `Ported from:` header.
 
-Size, stated correctly: flexmark is **1.5× libGDX core by file count but 0.57× by lines** (912 files /
-83,680 LOC against 605 / 147,163). Which is "bigger" depends on whether the engine's cost is per file
-or per construct.
+Size, stated correctly: flexmark is **1.4× libGDX core by file count but 0.54× by lines** (872 covered
+files / 79,825 LOC against 605 / 147,163; 1,091 / 106,170 counting every module on disk). Which is
+"bigger" depends on whether the engine's cost is per file or per construct. The `912 / 83,680` this
+paragraph used to quote reconciles with no on-disk total and came from a status doc — the tree is the
+oracle (§10.6.1).
 
 #### Three facts that will surprise whoever picks this up
 
@@ -211,7 +221,7 @@ or per construct.
 | `sge-colorful` | `colorful-pure` (40k LOC) unported with **no recorded rationale anywhere**. Confirm intent before treating it as scope. |
 | `sge-visui` vs core | VisUI keeps `AsyncTask` as a class while core maps it to `() => Unit`. **Two answers to one construct in one repo** — the manifest must decide which. |
 | `ssg-liquid` | **2,166 lines have no Java counterpart and never can.** liqp parses with two ANTLR `.g4` grammars; the port hand-wrote lexer/parser/token. The engine cannot read, regenerate or diff `.g4`. Decide up front: permanent handwritten overrides, or re-adopt ANTLR and lose JS/Native. |
-| `ssg-md` | **The green test numbers do not measure CommonMark conformance.** All 7 spec files in `src/test/resources` are loaded by no runner. The 24 undocumented omissions include the entire `util/html/ui` subpackage and a public type of the tables extension that is silently absent. |
+| `ssg-md` | **The green test numbers do not measure CommonMark conformance.** All 7 spec files in `src/test/resources` are loaded by no runner — and upstream ships four `FullOrigSpec*CoreTest` classes that drive them through PLAIN `@Test` methods, i.e. inside the engine's mechanical reach as they stand (§10.6.1). The **28** (not 24) undocumented omissions include the entire `util/html/ui` subpackage, eight `*JiraRenderer`, and `flexmark-util-dependency`'s `Flat*` extension-resolution algorithm, which is not dead code. |
 
 #### Attribution gaps to close before publishing anything
 
@@ -236,8 +246,11 @@ repository-level NOTICE / THIRD-PARTY files are still hand-maintained and are no
    files are the best available proving ground for test porting after libGDX.
 4. **`sge-ai`, `sge-visui`, `sge-textra`, `sge-colorful`** — large, each with a named redesign that must
    be scoped as its own decision.
-5. **`ssg-md` (flexmark)** — the largest Java surface; 43 collapsed Maven modules is the hardest package
-   rename on either list. Do it once manifest composition has been exercised on something smaller.
+5. **`ssg-md` (flexmark)** — the largest Java surface. Milestone 1 (core + the eleven `flexmark-util-*`
+   modules) is now ported by the engine and stands at a measured, classified wall: §10.6. The rename
+   turned out to be the easy half — one uniform prefix with one deviation, collision-free. What
+   remains is the 29 extension modules as DEPENDENT ports, and the tests, which milestone 1 has none
+   of.
 6. **`sge` core** — already ported by the engine. What remains is the 100 absent types and the backend
    question, which is a platform decision, not a port.
 7. **Deferred / not port work**: `sge-controllers`, `sge-tools`, `sge-physics*`, `sge-freetype`,
@@ -2721,6 +2734,144 @@ the census of what the 62 recovered tests revealed and where the four that remai
   fixed, and would have been the entire evidence that it was broken. This is the third time in this
   port's history that a defect was found by writing the test for the cell NEXT to the one being
   fixed, and the first where the corpus could never have found it at all.
+
+---
+
+## 10.6 ssg-md — flexmark-java, the largest Java surface either reference repo has
+
+**Milestone 1 measures a WALL, not a green port.** `just md-measure`. 486 java files in scope, 28 of
+them declaration-only, **458 units converted → 468 Scala files written** (0 dropped, 0 injected),
+21,571 symbols, 9,361 members in the source map.
+
+### 10.6.1 The scope, and the four milestones behind it
+
+flexmark-java 0.64.8, BSD-2-Clause, vendored under `ssg/original-src/flexmark-java` (the hand port
+pins `bcfe84a3ab6d23d04adce3e5a0bae45c6b791d14` in every file header). Fifty-three maven modules,
+**1,091 main java files**, all declaring under the single package root `com.vladsch.flexmark` — so
+the module split is a fact about `pom.xml` files and not about java, and the "43 modules collapse
+into one namespace" framing this document used to carry overstates the rename risk to nothing: the
+map is injective by construction and was verified collision-free over the whole tree.
+
+| | scope | main files |
+|---|---|---:|
+| **milestone 1 — this port** | `flexmark` core + the eleven `flexmark-util-*` libraries | **486** |
+| milestone 2a | 25 covered `flexmark-ext-*` with no intra-extension dependency, as DEPENDENT ports | 326 |
+| milestone 2b | `abbreviation`, `enumerated-reference`, `jekyll-front-matter`, `macros` — each after its own sibling | 60 |
+| deferred | 3 untouched extensions + 7 converter/tooling modules + `util-experimental` + `tree-iteration` | 219 |
+
+Milestone 1 first because everything else depends on it: it is the shared surface 29 dependent
+manifests will extend rather than restate (§1.5), and it exercises the package rename, the licence
+obligation and most of `CLAUDE.md` §4.4 before any manifest composition is attempted.
+
+**THE 28-OMISSION CORRECTION.** This document said the hand port had "24 undocumented omissions".
+The number is **28**, enumerated against the 761 `Ported from:` headers: the whole
+`util/html/ui/*` subpackage (10 files), eight `*JiraRenderer.java` (dead weight beside the two
+absent converter modules), `flexmark-util-dependency`'s `Flat*` family (5 — and NOT dead code: it is
+upstream's priority-ordered extension-resolution algorithm, so confirm during the port whether
+registration order depends on it), two `@Deprecated` forwarding classes, and
+`util-misc`'s `FileUtil`/`ImageUtils`. Note that the last two are exactly what `portability(emitted)`
+independently proposed dropping on this run's first pass — the hand port's silent skip and the
+engine's measured finding agree, which is the first time the two instruments have met on one file.
+
+**The consumer budget is TWO TYPES.** `ssg-site` is the only real consumer of `ssg.md.*`
+(`ssg-highlight` declares a `dependsOn` and references nothing), and it names exactly
+`ssg.md.parser.Parser` (builder + `parse(String)`) and `ssg.md.html.HtmlRenderer` (builder +
+`render(Node)`), with no extensions and no options configured. The `Node` flowing between them is
+never spelled at the call site. Everything else under `ssg.md.*` — 767 hand-port files — is internal
+as far as compile-time coupling goes.
+
+**And there is a conformance oracle nobody has ever run.** Upstream ships six versions of the
+CommonMark spec as classpath resources (618–652 examples each) and four `FullOrigSpec*CoreTest`
+classes drive them through PLAIN `@Test` methods — not `@RunWith(Parameterized.class)`, so they are
+inside `TestFrameworkTransform`'s mechanical reach as they stand. The hand port loads none of them
+(this document's own §1 "one surprise per module" says so). That is behavioural evidence this
+project has never had for any library, and it costs two ported classes plus
+`flexmark-test-util`'s non-reflective half. The 114 `ComboSpecTestCase` subclasses and the 59
+`@RunWith(Suite.class)` aggregators are the documented refusal and need a hand-written MUnit driver,
+not an engine change.
+
+### 10.6.2 First emit — measured state
+
+| | |
+|---|---|
+| scalac errors | **243** (coded 241 + bare 2), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** — 87 % of the port compiles clean on its first run |
+| `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
+| `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
+| `omissions` | **64** — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
+| `jdk-surface` | **456 classified, 38 unresolved** (shimmed 7, mapped 44, kept 367). The 38 are the retyped-owner members `CollectionsTransform`'s tables have no entry for, and they are the SAME 33 errors the compile reports — the two instruments agree exactly |
+| `collection-boundary` / `collection-closure` / `collection-retarget` | **28 / 3 / 0** |
+| `overload-risk` | **563**, with its denominator recomputed beside it: 26,166 program-declared calls examined, 3,915 with more than one applicable candidate, 563 spanning a java resolution phase |
+| `heap-pollution` | **13**, every one `Acknowledged` — java warned and the author wrote `@SafeVarargs`, which scala has neither of |
+| `idiom(converted / refused / residue)` | **0 / 315 / 0** — `SamLambda` 28 considered and 28 refused, `NarrowedReturn` 287 and 287 refused. The refusal population is the lane; nothing was converted |
+| `portability(emitted)` | **18** sites against 37 rules — `javax.imageio.ImageIO` 8, `java.lang.reflect.Array` 2, `java.nio.file.Files` 2, and one each of `javax.swing.*` (2), `java.net.URL*` (3), `java.text.MessageFormat`. Six `substitutions-drop` remedies published, four of them naming exactly the types the hand port silently omitted |
+| `dependency-coverage` | **10 of 10** — `java.util.Locale` 6 and `java.text.NumberFormat` 4, both answered by `scala-java-locales` on both non-JVM backends. Not a call to remove; a coordinate to declare |
+| `decisions.tsv` | **2,014 rows** — 715 `RetypedSignature`, 507 `RenamedMember`, 458 `RenamedPackage`, 146 `ForcedClassInit`, 107 `FunnelledCtor`, 57 `WidenedVisibility`, 12 `DroppedSuperCall`, 10 `InjectedMember`, 2 `RetainedParent` |
+| tests | **NONE.** The twelve scoped modules ship no `src/test` at all — flexmark's 1,306 `@Test` methods live in `flexmark-util` (723 by the comment-aware count), `flexmark-core-test` and the extensions, none of which this milestone parses. Every `CLAUDE.md` §4.4 form in this port is UNMEASURED, which matters more here than on any port before it |
+
+**The behavioural gate does not exist yet, and that is the largest single thing wrong with this
+port.** §3 is explicit about what a compile-error count is worth, and every number above except the
+zero in the last row is a compile-time one. On liqp the compile said nothing about **409 of 414**
+first-run failures; this library is a parser, so the population §4.4 governs here is larger, not
+smaller.
+
+### 10.6.3 The first census, classified per §1
+
+Every error is `EngineGap`. The families, largest first:
+
+| n | family | §1 |
+|---:|---|---|
+| 44 | **an inherited type PARAMETER carried into a subclass unsubstituted.** flexmark's sequence hierarchy is F-bounded (`IRichSequence<T extends IRichSequence<T>>`, and `BasedSequence extends IRichSequence<BasedSequence>`), so a diamond-disambiguating forwarder emitted `override def split(…): scala.Array[T]` in a class that declares no `T`, and the constructor funnel emitted `protected (sup$0: AstNode[N])` for the same reason. Six sequence classes at 6 each, plus `AttributeProviderAdapter`/`LinkResolverAdapter`/`NodeVisitor` | **(a)** — substitute the parent's type arguments into a forwarded or promoted signature |
+| 114 | **`Found: …` cascades**, concentrated in the same 60 files and largely downstream of the row above: a class whose funnel parameter does not typecheck makes every `this(…)` delegation and every `super.` forward mismatch. Not independently classifiable until the row above closes | **(a)**, mostly derivative |
+| 33 | **a JDK member on a retyped owner with no rewrite** — `computeIfAbsent` 6, `sort` 8, `removeIf` 3, `listIterator`, `containsValue`, `ensureCapacity`, `containsAll`. Identical to `jdk-surface`'s 38 unresolved, which is the check doing its job: the residue was counted before the compiler saw it | **(b)** — `CollectionsTransform`'s tables gain the entries, or a cited refusal |
+| 16 | **`JavaIterator` arity** — `method hasNext in trait JavaIterator must be called with () argument`. The runtime shim keeps java's arity (§4.5) and a caller was emitted scala-style | **(a)** |
+| 12 | **overload resolution at a runtime helper** — `None of the overloaded alternatives of method fromJava in object JavaCollections` | **(a)** |
+| 4 | **`return outside method definition`** — `Parsing#<stmt16>`, a `return` under a construct the emitter rendered without a method to leave. §4.4's "refuse loudly is a claim about the emitted text" row, arriving as a compile error rather than silently, which is the good direction | **(a)** |
+| 3 | **`No given instance of type scala.util.boundary.Label`** — an interposed boundary that was not named. §4.4's own row | **(a)** |
+| 2 + 2 | **a java enum with OVERLOADED constructors.** `TextContainer.Flags` has `Flags()` delegating to `Flags(int)`; the funnel nominated the no-arg one as primary, so `case object LINK_TEXT_TYPE extends Flags(3)` is `too many arguments for constructor Flags: ()`. Two bare errors plus the E007s in the same file | **(a)** — the funnel must nominate the ROOT constructor for an enum, not the delegating one |
+| 2 | **multi-catch** — `Illegal variable e in pattern alternative`, java's `catch (A \| B e)` | **(a)** |
+| 2 | `value pattern is not a member of String` — a `java.util.regex` member reached through a retyped receiver | **(b)** |
+| 11 | the residue: `E119` (a java class named as a value, 2), `E171`/`E086`/`E081` arity and inference, `Not found: byteOffset$p` (a promoted parameter's name), and three one-off member lookups | mixed |
+
+**Where the next wave starts:** the first row. It is 44 direct errors, it is the root of most of the
+114 cascades, and its blast radius is `flexmark-util-sequence` (76 errors) plus `flexmark-util-ast`
+(29) — the two modules everything else in the library is built on.
+
+### 10.6.4 What the first run already taught, at 0 cost
+
+- **A MARKER ANNOTATION IS CARRIED WHATEVER THE PORT CLAIMS, and it is 237 of 468 emitted files
+  here.** `AnnotationPolicy`'s default claims no family and `SpoonTir.annotationsOf` gates on
+  `claimed` only for an annotation WITH ARGUMENTS; a marker takes the unconditional arm. flexmark
+  annotates 594 files with `org.jetbrains.annotations.{NotNull, Nullable}`, so the first compile read
+  **1976 of 2184 errors** as `value jetbrains is not a member of org`. The lane now puts that jar on
+  the compile line, which is a statement about what the port EMITS and not a translation fix — and it
+  leaves two open questions with a measurement each: whether a marker whose family the port does not
+  claim should be emitted at all, and the portability half beside it (this module claims all three
+  platforms and `org.jetbrains:annotations` is a JVM-only jar).
+- **`java_test_count` RETURNED THE EMPTY STRING, not `0`, when its path set matched no java file.**
+  BSD `xargs -0` does not run its utility at all on empty input. Every lane before this one happened
+  to pass a directory holding java — noise4j its `src`, jbump its whole checkout — so the counter
+  always ran and the emptiness was unreachable; this is the first port whose scope has no `src/test`
+  directory at all, and on its first run the "a suite has appeared upstream" alarm fired, naming no
+  count, over a suite of zero. `test_discovery_guard`'s `$((java - scala))` would have been a bash
+  error rather than a number. Fixed in `scripts/_lib.sh` by LOOKING FOR A FILE rather than
+  defaulting the empty answer (§4.6): `${n:-0}` after the pipe would have covered a crashed counter
+  with the same digit.
+
+### 10.6.5 Do NOT retry
+
+- **Reading the hand port's deviations as milestone-1 policy.** Three of them are tempting and all
+  three are deliberately absent from `main.conf` (D-md-5): `NullabilityTransform` at
+  `Target.Wrapper("ssg.md.Nullable")` (300 hand-port files, 594 annotated upstream files — the
+  highest-leverage entry this port will ever have, and it moves every emitted signature at once), a
+  `scope { }` on `collections` (48 hand-port files keep `java.util` — the same shape that cost
+  ssg-liquid `27 → 47` and then `27 → 51`, `ENGINE-LIMITS.md` K16), and a `bean-properties` entry
+  (`Node.getParent()` → `def parent`). §3.5 is the rule: quote the reference port for the SHAPE, get
+  a number before it becomes a manifest entry.
+- **`BitField`/`EnumBitField`.** The hand port replaced java's enum reflection
+  (`getDeclaringClass`/`isEnum`/`getEnumConstants`) with a `given` type class. That is a redesign, not
+  a translation — §1(c) or a hand-written injection, never a rule to derive from one library.
+- **`SegmentedSequenceTree`'s `ThreadLocal<Cache>`.** The hand port dropped it to a plain `var`, so
+  thread confinement is simply gone. Correctness-relevant, and not a general "ThreadLocal → var" rule.
 
 ---
 
