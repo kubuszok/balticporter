@@ -463,10 +463,54 @@ and exactly the over-approximation `CLAUDE.md` §5 says only a member diff can s
 `@<raw>` member KEYS moving by one with BYTE-IDENTICAL digests, because the fix interns one more
 type.
 
+**…AND THE FOURTH PLACE IS THE EMITTER'S OWN NUMERIC-OVERLOAD PIN, which is not a frontend site at
+all — ssg-md 35 → 34 and its test set 42 → 40.** The three above are the FRONTEND resolving a
+callee's variable at a call it is translating; this is the EMITTER writing the callee's whole
+signature down at a call it is rendering, and it had never been asked the question.
+`TirEmitter.numericOverloadAscription` exists because java resolves an overload by exact match and
+scala widens numerics first, so it names the alternative javac chose —
+`(this.setRegion: (Int, Int, Int, Int) => Unit)(x, y, w, h)`, whose RESULT is `d.returnTpt.tpe`, the
+callee's DECLARED result. On the shape every fluent builder in java is made of that result is the
+declaring type's own parameter:
+
+```java
+class B<S extends B<S>> { S append(char c, int n); S append(int a, int b); }   // (int,int) absorbs (char,int)
+class Plain extends B<Plain> {}
+plain.append(' ', 2);        //  (segments.append: (Char, Int) => S)(' ', 2)  —  E006 Not found: type S
+```
+
+The `extends` clause says what `S` is, so this is `CLAUDE.md` §4.56's rule about a member synthesised
+into a subclass read at a CALL, and the substitution is `ParentSubst` — the receiver's own
+application composed onto `ParentSubst.of`, so `Foo[Int] <: Bar[X]` collapses `Bar.T` to `Int` in one
+map. **The PARAMETERS need no substitution and are deliberately offered none**: `numericParams` admits
+a signature only where every formal's head is one of the nine numeric primitives, so a formal cannot
+mention a variable and the result is the whole exposure.
+
+**TWO ways the position has no honest text, and a RAW receiver reaches both in turn** — which is what
+makes the decline an arm rather than an afterthought. Declining on the VARIABLE alone traded `=> S`
+for `=> ?`: the raw use's argument is a wildcard, the substitution binds `S` to it faithfully, and
+`(Char, Int) => ?` names nothing either. So the guard is the pair, spelled as
+`OverloadRiskCheck.ascription`'s already is (top-level wildcard only — `List[?]` is a perfectly
+nameable result), and a variable owned by the callee's own METHOD (`<T> T pick(int, int)`) takes the
+same arm: there is no `extends` clause for it, and recursion inside that method is the only place one
+is nameable at a call. **The decline costs the pin and nothing else** — the call renders as java wrote
+it, which is `T17`'s stated refusal with `overload-risk` counting the risk, not a new silence.
+
+**Measured**: ssg-md main **35 → 34** (`SequenceBuilder#append(char,int)`, an 8-row-residue member the
+census had not diagnosed) and its test set **42 → 40** (the second is `PlainSegmentBuilderTest`, which
+`PROGRESS.md` §10.6.6 had already re-diagnosed to here). **Exactly two member digests over the two
+lanes and all thirteen other lanes BYTE-IDENTICAL**, which is the §5 test for a guard that moved: the
+only other number that moves is `catalog(consulted)`'s `JS-C29 fired` total printed inside its own
+row's text, down 2 per lane, because two renderings of a bare type parameter stopped happening.
+
 *Fix kind: (a). `InheritedFormalCastSpec` — two positives and four negatives, of which the dimension
 mismatch and the two-ancestors-one-name pair are the ones a name-keyed or dimension-blind lookup
 fails. `NullAtTypeParamSpec` carries the receiver case with the two negatives that decide it — a
-METHOD's own variable of the same name, and a receiver whose argument is a WILDCARD.*
+METHOD's own variable of the same name, and a receiver whose argument is a WILDCARD.
+`NumericOverloadAscriptionSpec` carries the emitter site — three positives and three negatives, of
+which the RAW receiver decides whether this declines rather than approximates, and the call INSIDE
+the declaring class decides whether the nameability test reads the enclosing scope rather than
+"is it a type parameter at all".*
 
 ### G13. `rawCtorArgs` erased-formal fallback — THREE gates, all worse; and what each taught
 

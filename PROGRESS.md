@@ -2818,7 +2818,7 @@ MUnit registrations with a lane, a discovery guard and an error baseline holding
 so the remaining distance is a number (44 test-set errors on top of the library's 40) rather than an
 absent source set.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11**
 
 Every error is `EngineGap`. Eight waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2901,7 +2901,9 @@ above sums to more than the family sizes the first census printed.
 
 | 37 → 35, and the TEST set 13 → 7 | **a BOUND METHOD REFERENCE at a rewritten member — K23's own named row, BUILT because the count it was refused on was wrong.** K23 recorded it at *one site in the corpus*, and one site is what a search for the SHAPE finds: the other two on this port had been filed in the table below under their error TEXT, and the larger carried a diagnosis this fix disproves. `Utils#withDefaults` is `putIfMissing(map, entry.getKey(), entry::getValue)` — the census called it *"the `getKey` → `_1` arm fired on one access of `entry` and the `getValue` → `_2` arm beside it did not"*, which reads the emitted text exactly and explains it wrongly: nothing differs between the two receivers, what differs is the NODE. `lowerMethodRef` lowered the UNBOUND form only and its own comment said the bound one *"is the `Apply` case one node out"* — true of a CALL, false of a REFERENCE. The built arm takes java's ARITY off the node (`referent`, G27's field), BINDS THE RECEIVER ONCE (`{ val recv$ = expr; (a0$) => … }`, because JLS 15.13.3 evaluates the qualifier at reference CREATION and a lambda would re-read it per invocation — a §4.4-shaped difference with no compile error to report it), and skips the binding for `this`, which is not a variable. 4 member digests here, 7 on the test set; every `collection-*` lane, `jdk-surface` and `remediation` flat, which is honest — this closes SITES and no lane was counting them | K23 |
 
-**What is left, by mechanism** (the census re-read at 35, every row counted from `errors.tsv`):
+| 35 → 34, and the TEST set 42 → 40 | **a callee's own TYPE VARIABLE written down by the EMITTER — G12's rule at a fourth minting site, and the first one that is not in the frontend.** `TirEmitter.numericOverloadAscription` pins the alternative javac chose (java resolves an overload by exact match, scala widens numerics first) by ascribing the callee's function type, whose RESULT is the callee's DECLARED result — and on the shape every fluent java builder is made of that result is the declaring type's own parameter: `class B<S extends B<S>> { S append(char,int); S append(int,int); }` rendered `(segments.append: (Char, Int) => S)`, `Not found: type S`. The `extends` clause says what `S` is, so this is `CLAUDE.md` §4.56's synthesised-into-a-subclass rule read at a CALL and the substitution is `ParentSubst` — the receiver's own application composed onto `ParentSubst.of`, one map rather than a hop to chase. The PARAMETERS are deliberately offered no substitution: the pin only fires where every formal's head is one of the nine numeric primitives, so a formal cannot mention a variable. **Two ways the position has no honest text and a RAW receiver reaches both**: declining on the variable alone traded `=> S` for `=> ?`, because the raw use's argument IS a wildcard and the substitution binds it faithfully, so the guard is the pair — spelled as `OverloadRiskCheck.ascription`'s already is, top-level wildcard only. Where it declines the call renders as java wrote it, which is T17's stated refusal with `overload-risk` counting the risk. **Exactly two member digests over the two lanes and all thirteen other lanes byte-identical**; the only other number that moved is `catalog(consulted)`'s `JS-C29 fired` total inside its own row's text, −2 per lane, being the two renderings of a bare type parameter that stopped happening. The main-set site (`SequenceBuilder#append(char,int)`) was in the undiagnosed 8-row residue below; the test-set site is the one §10.6.6 had already re-diagnosed to here | G12 |
+
+**What is left, by mechanism** (the census re-read at 34, every row counted from `errors.tsv`):
 
 | n | family | §1 |
 |---:|---|---|
@@ -2913,13 +2915,14 @@ above sums to more than the family sizes the first census printed.
 | 2 | **`null` at a type PARAMETER — the ARGUMENT shape is CLOSED (wave 8, G12) and the two that remain are neither this family nor each other's.** What closed was the three ARGUMENT sites, through the receiver's own instantiation. What is left is a LAMBDA whose body is a bare `null` at a result type of `T` (`NullableDataKey`'s `(options: DataHolder) => null`, where the expected type is the SAM's result and no formal exists to read), and one that was never this family — `HashMap.from(null.getAll())`, a `null` RECEIVER at a structural expected type | **(a)**, two different positions |
 | 3 | the JDK members wave 2 did NOT map — `listIterator` 2 and `spliterator` 1, REFUSED with their citation because each hands back a JDK protocol rather than a value. The fourth row here was the ONE bound method reference (`this.headings::add`), and it CLOSED at wave 10 with the two the census had filed elsewhere | **(a)**, all three `ENGINE-LIMITS.md` K23 |
 | 3 | **`MapEntry` against `Tuple2`** — a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent (`K5.7`'s `UninheritableTargets` refusal, counted as `InexpressibleParent`), so its value does not conform where the retyping expects a pair | **(a)**, the counted half of K5.7 |
-| 8 | the residue, no family above 2 — and wave 6 diagnosed the largest of them to the line. **`Not found: byteOffset$p$` (2, `Segment$Base` and `Segment$Text`) is a SUPER CALL naming a MEMBER**: the funnel promoted the constructor parameter, §4.55's promoted-ctor-scope rename then split it in two — a parameter `byteOffset$arg$p` and a member `var byteOffset$p$ = byteOffset$arg$p`, because the parent `Segment` already declares `byteOffset` — and the `extends Segment(pos$p$, bytes$p$, byteOffset$p$, indexOffset$p)` clause names the MEMBER. A scala superclass constructor argument is evaluated before the class body exists, so it may name a parameter and never a member; the three siblings beside it are plain parameters and compile. The rename is right and the POSITION it was substituted into is not, which is `CLAUDE.md` §4.55's *a promotion moves a NAME, never a POSITION* met from the other side. **`Utils#withDefaults` CLOSED at wave 10 and its diagnosis here was wrong** — this table said the `getKey` → `_1` arm fired on one access of `entry` while the `getValue` → `_2` arm beside it did not, and blamed the receiver's own `Kind`; the java is `putIfMissing(map, entry.getKey(), entry::getValue)` and the second reading is a METHOD REFERENCE, which no `Apply`-keyed arm sees (K23). FOUR of the rows this entry used to carry CLOSED at wave 7 and all four were one defect (G27): the two `Type::method` eta-expansions, and the two `not enough arguments for constructor` rows — `Parser#REFERENCES` and `DocumentParser#INLINE_PARSER_FACTORY` — which read as an inference problem and were a `Type::new` emitted with no arguments. That is worth keeping as a caution about this table: a residue row is filed under the error TEXT, and two of these four were filed apart from the family they belong to for exactly that reason. The rest: the two `Object` results of an ERASED `Function` receiver (`G11` at a use — the widening is on the RESULT, so NOT K24's family), `Array[E]` against `Array[Enum[?]]`, a SAM whose result the frontend could not name, and one-off inference and arity mismatches | mixed |
+| 7 | the residue, no family above 2 — and wave 6 diagnosed the largest of them to the line. **`Not found: byteOffset$p$` (2, `Segment$Base` and `Segment$Text`) is a SUPER CALL naming a MEMBER**: the funnel promoted the constructor parameter, §4.55's promoted-ctor-scope rename then split it in two — a parameter `byteOffset$arg$p` and a member `var byteOffset$p$ = byteOffset$arg$p`, because the parent `Segment` already declares `byteOffset` — and the `extends Segment(pos$p$, bytes$p$, byteOffset$p$, indexOffset$p)` clause names the MEMBER. A scala superclass constructor argument is evaluated before the class body exists, so it may name a parameter and never a member; the three siblings beside it are plain parameters and compile. The rename is right and the POSITION it was substituted into is not, which is `CLAUDE.md` §4.55's *a promotion moves a NAME, never a POSITION* met from the other side. **`Utils#withDefaults` CLOSED at wave 10 and its diagnosis here was wrong** — this table said the `getKey` → `_1` arm fired on one access of `entry` while the `getValue` → `_2` arm beside it did not, and blamed the receiver's own `Kind`; the java is `putIfMissing(map, entry.getKey(), entry::getValue)` and the second reading is a METHOD REFERENCE, which no `Apply`-keyed arm sees (K23). FOUR of the rows this entry used to carry CLOSED at wave 7 and all four were one defect (G27): the two `Type::method` eta-expansions, and the two `not enough arguments for constructor` rows — `Parser#REFERENCES` and `DocumentParser#INLINE_PARSER_FACTORY` — which read as an inference problem and were a `Type::new` emitted with no arguments. That is worth keeping as a caution about this table: a residue row is filed under the error TEXT, and two of these four were filed apart from the family they belong to for exactly that reason. The rest: the two `Object` results of an ERASED `Function` receiver (`G11` at a use — the widening is on the RESULT, so NOT K24's family), `Array[E]` against `Array[Enum[?]]`, a SAM whose result the frontend could not name, and one-off inference and arity mismatches. **`SequenceBuilder#append(char,int)` CLOSED at wave 11 and was the THIRD residue row whose cause was a different defect from the one its text named**: an `E006 Not found: type S`, filed here as a one-off, was the emitter's own numeric-overload pin writing the callee's F-bounded result down at a call site that cannot name it (G12). Same caution as `Utils#withDefaults`: read a residue row before counting it | mixed |
 
-**Where the next wave starts.** Wave 10 closed the last two families the TEST set had that the main
-set did not answer for (G28's poly-expression ascription, K23's built bound-reference arm), leaving
-**7** there — six `BitFieldSet` and one `PlainSegmentBuilder`, both main-set residues read from a
-caller. The `BitFieldSet` six are K25's own held-back `iterator()` met from outside, so the next test
-lane wave is the same work as the main set's, and the wall past the first zero is now priced rather
+**Where the next wave starts.** Wave 11 closed the `PlainSegmentBuilder` row on the test set and the
+`SequenceBuilder` row on the main set with ONE fix (G12 at the emitter), leaving **6** on the test
+set — every one of them `BitFieldSet`, which is K25's own held-back `iterator()` met from outside, so
+the test lane's whole remaining wall is now the main set's. Wave 10 had closed the last two families
+the TEST set had that the main set did not answer for (G28's poly-expression ascription, K23's built
+bound-reference arm). The wall past the first zero is priced rather
 than predicted (`ENGINE-LIMITS.md` K28). On the MAIN set the position is unchanged: wave 9 took the
 `collection-internal` lane's `DeclaredSubtype` half at the SLOT — `coerce` now reads a program-declared value's kind out of the phase's own re-parenting
 record, transitively (K26) — so the lane reads **5** here and **0** on the test set, and what it
@@ -2932,15 +2935,16 @@ working against on the MAIN set.
 and `PlaceholderReplacer` (6) both CLOSED at wave 10 — the first a java lambda at a `Runnable` SAM
 slot on an OVERLOADED callee, where scala types the literal as a `Function0` before the expected type
 can be used (`ENGINE-LIMITS.md` G28), the second K23's own named bound METHOD REFERENCE at a mapped
-member (`map::get` against `mutable.Map.get`, which returns an `Option`). What is left is
-`BitFieldSet` (6), K25's held-back `iterator()` met by a `for` loop over a class whose parent stayed
-`java.util.AbstractSet`, and one `PlainSegmentBuilder` residue.
+member (`map::get` against `mutable.Map.get`, which returns an `Option`). The one
+`PlainSegmentBuilder` residue closed at wave 11 (G12 at the emitter). What is left is
+`BitFieldSet` (6) and nothing else — K25's held-back `iterator()` met by a `for` loop over a class
+whose parent stayed `java.util.AbstractSet`.
 
 Nothing left in this port needs a manifest entry, and no residue above is per-library policy.
 
-#### The FLOOR the refusal ledger defines — 21 of the 35, and what the other 14 are
+#### The FLOOR the refusal ledger defines — 21 of the 34, and what the other 13 are
 
-Ten waves took 243 → 35 and every one of them closed a FAMILY. What is left divides into rows a
+Eleven waves took 243 → 34 and every one of them closed a FAMILY. What is left divides into rows a
 named refusal already answers and rows nobody has diagnosed, and the two are worth separating,
 because a census that only counts is one an operator reads as *seventeen more waves*. **Twenty-one of
 the thirty-five are attributed to a refusal or a limit this repository has already measured and
@@ -2955,16 +2959,18 @@ written down** — closing any of them means re-opening that entry with a number
 | 3 | **K5.7**'s `UninheritableTargets`, counted as `InexpressibleParent` | a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent, because the retyping's target is a `Tuple2` and no class can extend one |
 | **21** | | |
 
-The other **14** are open work with no entry behind them: **2** `null` at a position the wave-8 fix
+The other **13** are open work with no entry behind them: **2** `null` at a position the wave-8 fix
 does not reach (a LAMBDA body at a result type of `T`, and one `null` RECEIVER that was never this
 family), **2** the `BitFieldSet#iterator()` pair K25 made loud, **2** raw-generic one-offs, and the
-**8**-row residue. So the honest reading of 35 is *21 refused, 14 open*. **Wave 10 moved BOTH
+**7**-row residue. So the honest reading of 34 is *21 refused, 13 open*. **Wave 10 moved BOTH
 columns, which no earlier wave had**: G28's ascription took one out of the open residue and K23's
 built arm took one out of the refused column and one more out of the residue — the second being
 `Utils#withDefaults`, which the residue had filed under its error text with a diagnosis that was
-wrong (§10.6.3's wave-10 row). That is now the third census row whose cause turned out to be a
-different defect from the one its text names, and it is the argument for reading a residue row before
-counting it.
+wrong (§10.6.3's wave-10 row). **Wave 11 took a third out of the residue the same way** — an
+`E006 Not found: type S` on `SequenceBuilder#append(char,int)` whose cause was the EMITTER's own
+numeric-overload pin naming the callee's F-bounded result (G12), not the one-off its text suggested.
+That is now the fourth census row whose cause turned out to be a different defect from the one its
+text names, and it is the argument for reading a residue row before counting it.
 
 Two things this table is deliberately NOT:
 
@@ -3073,9 +3079,9 @@ this lane counts a different tree. The two numbers are not each other's residue.
 |---|---|
 | files | **52 converted → 52 Scala test files** (0 dropped, 0 injected) |
 | `@Test` → emitted | **723 → 723 munit registrations, `expected-lost` = 0.** Not the raw grep's 730: `java_test_count` is comment-aware and seven are commented out upstream. The discovery guard holds it in BOTH directions from the first run |
-| scalac errors | **42 total on one compile of both source sets after wave 10 — 35 main, 7 test, 0 elsewhere** (63 = 38 + 25 after wave 9; 84 = 40 + 44 before that). Wave 10 closed twenty-one in two commits: G28's ascription took the twelve `tagLine` rows and one of the main set's, and K23's built bound-method-reference arm took six `PlaceholderReplacer` rows and two more of the main set's. Baselined at 42 against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 37 stays `md-measure`'s and is reproduced by that lane alone |
-| the 7, ATTRIBUTED after wave 10 | by code: 3 `E007`, 3 `E008`, 1 `E006` — **two families, both main-set residues read from a caller**: `BitFieldSet` (6, K25's held-back `iterator()` met by a `for` loop over a class whose parent stayed `java.util.AbstractSet` — three `foreach is not a member` and three `Found: java.util.Iterator`); and one `PlainSegmentBuilder` residue, which is NOT an inference one as this table used to say: the emitted `(segments.append: (Char, Int) => S)(' ', 2)` is a `MethodType` ascription naming `S`, the CALLEE's own type variable, which G12's rule says the call site cannot name. `PlaceholderReplacer`'s six CLOSED at wave 10 (K23). **The twelve that closed were NOT what this table first said either**, which is now three waves running: `tagLine`'s rows read as an overload-resolution divergence and were an ordinary poly expression at a slot scala cannot use — `overload-risk` read ZERO at all twelve, correctly, because java's candidate set spans no resolution phase (`ENGINE-LIMITS.md` G28) |
-| the 7, by owner | `BitFieldSetTest` 6, `PlainSegmentBuilderTest` 1 — **two files of fifty-two**, down from five: `HtmlAppendableBaseTest`, `HtmlBuilderTest` and `PlaceholderReplacerTest` are now clean. Every remaining one is a caller of a residue §10.6.3 already names |
+| scalac errors | **40 total on one compile of both source sets after wave 11 — 34 main, 6 test, 0 elsewhere** (42 = 35 + 7 after wave 10; 63 = 38 + 25 after wave 9; 84 = 40 + 44 before that). Wave 10 closed twenty-one in two commits: G28's ascription took the twelve `tagLine` rows and one of the main set's, and K23's built bound-method-reference arm took six `PlaceholderReplacer` rows and two more of the main set's. Wave 11 closed two more with ONE fix, one on each side. Baselined at 40 against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 34 stays `md-measure`'s and is reproduced by that lane alone |
+| the 6, ATTRIBUTED after wave 11 | by code: 3 `E007`, 3 `E008` — **ONE family, and it is a main-set residue read from a caller**: `BitFieldSet`, K25's held-back `iterator()` met by a `for` loop over a class whose parent stayed `java.util.AbstractSet` — three `foreach is not a member` and three `Found: java.util.Iterator`. The `PlainSegmentBuilder` row CLOSED at wave 11 and this table's re-diagnosis of it was right: the emitted `(segments.append: (Char, Int) => S)(' ', 2)` was a `MethodType` ascription naming `S`, the CALLEE's own type variable, which G12's rule says the call site cannot name — and it was the EMITTER's numeric-overload pin that wrote it, not an inference failure as the table said before that. `PlaceholderReplacer`'s six CLOSED at wave 10 (K23). **The twelve that closed were NOT what this table first said either**, which is now four waves running: `tagLine`'s rows read as an overload-resolution divergence and were an ordinary poly expression at a slot scala cannot use — `overload-risk` read ZERO at all twelve, correctly, because java's candidate set spans no resolution phase (`ENGINE-LIMITS.md` G28) |
+| the 6, by owner | `BitFieldSetTest` 6 — **ONE file of fifty-two**, down from two and from five before that: `HtmlAppendableBaseTest`, `HtmlBuilderTest`, `PlaceholderReplacerTest` and now `PlainSegmentBuilderTest` are clean. The one remaining owner is a caller of a residue §10.6.3 already names |
 | test-framework refusals | **26, every one reported by the phase with its §1 classification** — `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (`ExpectedException`; the field is emitted and NEVER APPLIED, so an expected throw propagates and MUnit records a FAILURE rather than a silent pass), and one hamcrest `Description`. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
 
 **And the two families that make up 24 of those 26 are each ONE GUARDED translation away, which is
@@ -3143,7 +3149,7 @@ become five tests that stop FAILING, which is a number, rather than five stateme
 | `manifest` | **1** — `BaseMapUnverified`, and see below |
 
 **THE SUITE DOES NOT RUN, and the lane says so rather than skipping the stage.** The run is gated on
-0 errors exactly as `liqp-measure` and `sg-measure` gate theirs; at 87 it prints that 723 tests are
+0 errors exactly as `liqp-measure` and `sg-measure` gate theirs; at 40 it prints that 723 tests are
 emitted and none of them runs. A lane that silently skipped that stage would read as a lane whose
 tests passed.
 

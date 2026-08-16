@@ -8959,7 +8959,7 @@ ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats$StatsEntry#overhead	val	e38a5e38524b55c0
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats$StatsEntry#segStats	val	1ab7b5c6166e71ad
 ssg.md.util.sequence.builder.SegmentedSequenceStats	ssg.md.util.sequence.builder.SegmentedSequenceStats$StatsEntry#segments	val	e9c6a9d62877ffb1
-ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder	class	a2c83ad2b2b09e56
+ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder	class	750ef880d19db764
 ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#<init>(BasedSequence,SegmentOptimizer)	ctor	66a2ae558bafb284
 ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#<init>(BasedSequence,SegmentOptimizer,HashMap<BasedSequence,Boolean>)	ctor	533d6a6ff196d408
 ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#<init>(BasedSequence,int,SegmentOptimizer,HashMap<BasedSequence,Boolean>)	ctor	5238a8c04cc53bb6
@@ -8970,7 +8970,7 @@ ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.Sequen
 ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#append(CharSequence,int,int)	def	c3692f31cc9890e1
 ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#append(Range)	def	b50c6c145ded54d5
 ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#append(char)	def	fbe7e0d7460241b6
-ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#append(char,int)	def	58875a8d82397715
+ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#append(char,int)	def	3417be8022e6d9ba
 ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#append(int,int)	def	a2702fbe9b3854d3
 ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#baseSeq	val	72f1c9c399298578
 ssg.md.util.sequence.builder.SequenceBuilder	ssg.md.util.sequence.builder.SequenceBuilder#charAt(int)	def	d8e35db77761a92e

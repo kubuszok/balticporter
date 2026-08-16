@@ -4468,8 +4468,8 @@ final class TirEmitter(
     case Tree.Select(recv, m, _, _) if staticThroughInstance(recv, m) =>
       val call = s"${typeValue(sym(m).owner)}.${local(m)}(${args.map(term(_, i)).mkString(", ")})"
       if effectFree(recv) then call else s"{ ${term(recv, i)}; $call }"
-    case Tree.Select(_, m, _, _) if numericOverloadAscription(m).isDefined =>
-      s"(${term(fun, i)}: ${numericOverloadAscription(m).get})(${args.map(term(_, i)).mkString(", ")})"
+    case Tree.Select(recv, m, _, _) if numericOverloadAscription(recv, m).isDefined =>
+      s"(${term(fun, i)}: ${numericOverloadAscription(recv, m).get})(${args.map(term(_, i)).mkString(", ")})"
     // `X.values()` on an enum this emitter renders as a scala 3 `enum` — the desugaring's `values`
     // is PARENLESS, so java's own call shape is `missing argument for parameter i of method apply in
     // class Array` rather than a call. The parens come off here and only here.
@@ -4528,8 +4528,31 @@ final class TirEmitter(
     * WIDER at every position and strictly wider at one, so the very same arguments reach it by
     * widening. `append(int)` beside `append(char)` is not that shape — `char` does not absorb an
     * `int` — and needs no help. Checking the direction is what keeps this from ascribing every
-    * numeric call in the program (measured: 175 sites where 1 was ambiguous). */
-  private def numericOverloadAscription(m: SymId): Option[String] =
+    * numeric call in the program (measured: 175 sites where 1 was ambiguous).
+    *
+    * ==THE RESULT IS THE CALLEE'S OWN SCOPE, so it goes through [[ParentSubst]]==
+    * §4.56's rule about a member SYNTHESISED INTO A SUBCLASS, read at a CALL: this writes the
+    * callee's DECLARED signature down at the call site, and a declared result may name the
+    * DECLARING type's own type parameter, which the call site does not have. `class B<S extends
+    * B<S>> { S append(char c, int n); S append(int a, int b); }` with a receiver typed `Plain
+    * extends B<Plain>` rendered `(segments.append: (Char, Int) => S)` — `Not found: type S`, which
+    * is `G12`'s rule (a callee's own type variables do not resolve at the call site) met at a fourth
+    * minting site. The `extends` clause says what `S` is, so the substitution is EXACT and the ONE
+    * derivation is `ParentSubst` — a private walk here would be the fourth spelling of it.
+    *
+    * The parameters need no substitution and are not offered any: [[numericParams]] admits a
+    * signature only where every formal's head is one of the nine numeric primitives, so a formal
+    * can never mention a variable. The RESULT is the whole exposure.
+    *
+    * ==…and a variable the substitution cannot reach DECLINES the ascription==
+    * A receiver whose head this program does not declare, a RAW receiver, and a variable owned by
+    * the callee's own method (`<T> T pick(int, int)`) all leave the result naming something no scope
+    * here has. There is no honest text for that position, so the pin is not written and the call
+    * renders as java wrote it — which is `T17`'s stated refusal (java resolves in three phases and
+    * scala in one; the RISK is counted by `overload-risk` rather than translated) rather than a new
+    * silence. Measured on the corpus at ONE site, all of it inside the shape above, which is why the
+    * decline is a guard reading zero and not a lane. */
+  private def numericOverloadAscription(recv: Term, m: SymId): Option[String] =
     def numericParams(d: Tree.DefDef): Option[List[TypeRepr]] =
       val ps = d.paramss.flatten.map(_.tpt.tpe)
       Option.when(ps.nonEmpty && ps.forall(p => headSymOf(p).exists(s => numericRank.contains(sym(s).fullName))))(ps)
@@ -4548,7 +4571,58 @@ final class TirEmitter(
             numericParams(o).exists(absorbs(_, ps))
         case _ => false
       }
-    yield s"(${ps.map(tpe).mkString(", ")}) => ${tpe(d.returnTpt.tpe)}"
+      res     = ParentSubst.subst(d.returnTpt.tpe, receiverSubst(recv))
+      // TWO ways the result has no honest text here, and a RAW receiver reaches both in turn: the
+      // substitution binds the variable to the wildcard the emitter renders `?`, so a decline on
+      // the variable alone would trade `=> S` for `=> ?`, which names nothing either.
+      // `OverloadRiskCheck.ascription` refuses on the same pair for the same reason — one rule, and
+      // its own `bareWildcard` is the top level only, because `List[?]` is a perfectly nameable
+      // result.
+      if !res.isInstanceOf[TypeRepr.TypeBounds] && !namesForeignTypeParam(res)
+    yield s"(${ps.map(tpe).mkString(", ")}) => ${tpe(res)}"
+
+  /** what the RECEIVER's static type says an ancestor's type parameters are — [[ParentSubst.of]]
+    * composed with the receiver's OWN application, so `Foo[Int] <: Bar[X]` collapses `Bar.T` to
+    * `Int` in one map rather than leaving a hop to chase.
+    *
+    * Empty for a receiver whose head this program does not declare (an external class file's type
+    * parameters are a fact about that file, §4.56) and for a RAW one (no arguments to bind) — in
+    * both, the caller's own nameability test is what then declines. */
+  private def receiverSubst(recv: Term): Map[SymId, TypeRepr] =
+    def headArgs(t: TypeRepr): Option[(SymId, List[TypeRepr])] = t match
+      case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), as) => Some(s -> as)
+      case TypeRepr.TypeRef(_, s)                           => Some(s -> Nil)
+      case TypeRepr.ThisType(s)                             => Some(s -> Nil)
+      case _                                                => scala.None
+    headArgs(recv.tpe).flatMap { (s, as) =>
+      program.definitionOf(s).collect { case c: Tree.ClassDef => c }.map { cd =>
+        val own = cd.tparams.map(_.symbol).zip(as).toMap
+        ParentSubst.of(cd)(using program).view.mapValues(ParentSubst.subst(_, own)).toMap ++ own
+      }
+    }.getOrElse(Map.empty)
+
+  /** does this type mention a type PARAMETER no enclosing declaration here binds?
+    *
+    * Structural rather than a name test (§4.56): the frontend flags a type parameter's symbol
+    * `isParam` and OWNS it by the declaration that wrote it, so the question is whether that owner
+    * is one of the classes this emitter is currently inside. A parameter owned by an EXECUTABLE
+    * takes the conservative arm — recursion inside a generic method is the only way one is nameable
+    * at a call, and losing a pin there costs the rendering java's own call shape. */
+  private def namesForeignTypeParam(t: TypeRepr): Boolean =
+    def foreign(s: SymId): Boolean =
+      val sm = sym(s)
+      sm.flags.isParam && !classStack.contains(sm.owner)
+    def go(x: TypeRepr): Boolean = x match
+      case TypeRepr.TypeRef(_, s)        => foreign(s)
+      case TypeRepr.AppliedType(tc, as)  => go(tc) || as.exists(go)
+      case TypeRepr.AndType(l, r)        => go(l) || go(r)
+      case TypeRepr.OrType(l, r)         => go(l) || go(r)
+      case TypeRepr.ByNameType(u)        => go(u)
+      case TypeRepr.TypeBounds(lo, hi)   => go(lo) || go(hi)
+      case TypeRepr.Refinement(p, _, in) => go(p) || go(in)
+      case TypeRepr.MethodType(pss, r, _) => pss.exists((_, pt) => go(pt)) || go(r)
+      case _                             => false
+    go(t)
 
   /** A Java anonymous class's body → Scala's anonymous-class expression `new Base(args) { … }`.
     *
