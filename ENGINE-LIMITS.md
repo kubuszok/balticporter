@@ -1104,6 +1104,66 @@ which the call site cannot name (`G12`).
 member digests on the library and 12 on its test set — every one a declaration holding a lambda at a
 genuinely overloaded callee, and the ascription visible at the call.
 
+**AND IT OVER-APPROXIMATES ON TWO OTHER PORTS, which is stated rather than narrowed away.**
+`CLAUDE.md` §5's rule — a widened guard is done when every other port is BYTE-IDENTICAL *or the
+difference is stated* — and this is the second half. Two ports carry the same shape and scalac
+resolves both **without help**, at 0 errors before this change and 0 after:
+
+```java
+// simple-graphs — 2 member digests. Competing alternative is a PRIMITIVE; the lambda takes two
+public void setWeight(float weight) { setWeight((a, b) -> weight); }  // beside setWeight(WeightFunction<V>)
+// libgdx-screenmanager — 1 member digest. Competing alternative is a TYPE VARIABLE; the lambda is NILARY
+public void pushScreen(S screen, T transition) { pushScreen(() -> screen, () -> transition); }
+```
+
+so the ascription at those three sites is CORRECT and UNNECESSARY, and the whole trace is 3 member
+digests plus the `catalog(consulted)` totals printed inside `JS-E06`/`JS-G34`'s own text, which rise
+by the new `Typed` nodes and go on firing 0 — K27's pin has exactly that footprint, for exactly that
+reason.
+
+**WHAT SEPARATES THE SITE THAT FAILS FROM THE ONES THAT RESOLVE IS NOT KNOWN, and saying so is the
+point.** The first reading of simple-graphs was *a fact about scalac's overload/SAM interaction at a
+NILARY literal* — and `pushScreen(() -> screen, …)` is nilary and resolves, so that explanation is
+disproved by the very next lane. Nor is it the competing alternative's kind: `tagLine`'s is a
+primitive `boolean` and so is `setWeight`'s `float`, while `pushScreen`'s is a type variable. Every
+candidate narrowing found so far would decline `tagLine` or admit the other two for a reason neither
+java nor scala states, which is precisely how a rule comes to pass a corpus without being right (§3).
+So the guard stays at *java resolved an alternative here and the slot is an overload set*, emitting
+java's own resolved target — which cannot be wrong at any site, and makes the emitted call
+independent of whatever that scalac interaction turns out to be. A narrowing is available the day
+somebody can state the rule; until then the over-approximation is the honest position and its cost is
+these three digests.
+
+**AND THE THIRD PORT MOVED A CHECK COUNT, which is the one consequence that is not cosmetic: an
+ASCRIPTION NAMES A TYPE, and a named type is a USAGE.** liqp's `portability(all)` and
+`portability(emitted)` both read **54 → 55**, attributed to exactly one new row —
+`java.util.concurrent.Callable` at `Template.java:290`:
+
+```java
+Future<Object> future = executorService.submit(() -> renderToObjectUnguarded(variables));
+```
+
+`ExecutorService.submit` is overloaded three ways and javac picked `submit(Callable<T>)` because the
+body has a value. The port used to emit the bare literal and now emits it ascribed, so
+`java.util.concurrent.Callable` appears in the emitted text for the first time and `Xref` registers
+the usage. The finding is HONEST — the port really does name a JVM-only type there, on a module
+claiming three platforms — and it lands inside `Template`, the declaration liqp's own remediation menu
+already proposes dropping, whose text updated from *6 sites of 5 JVM-only APIs* to *7 of 6* in the
+same run. This is the counterpart of I9's own caution about `samResultTpt` (filling a field on every
+lambda "would register a `Xref` usage for a type the emitted text never names") read at the case where
+the emitted text DOES name it, so the usage is real and the count is right to move.
+
+**And that site is the argument for the over-approximation rather than against it.** `submit(Runnable)`
+returns a `Future<?>` and DISCARDS the value where `submit(Callable<T>)` returns a `Future<T>`; both
+accept a scala function literal by SAM conversion, and the only thing pinning java's choice before was
+the `val`'s expected type. At a call whose result is discarded there would be nothing to pin it, and
+the divergence would be a `CLAUDE.md` §4.4 one — valid scala, no error, a silently dropped result. The
+ascription makes java's answer explicit at every such site instead of at the ones that happen to have
+an expected type.
+
+Note what found all three: the ports the author was not thinking about, through `findings.tsv` and
+`port-map.tsv` on lanes whose error counts never moved.
+
 *Fix kind: (a). `PolyArgOverloadAscriptionSpec` — one positive and four negatives, of which "the
 UNOVERLOADED callee in the same statement" and "alternatives that AGREE at the lambda's index" are
 the two an over-approximation would fail, and "a METHOD REFERENCE" is the one that keeps this from

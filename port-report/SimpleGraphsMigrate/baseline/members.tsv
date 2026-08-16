@@ -47,7 +47,7 @@ sge.graphs.BinaryHeap	sge.graphs.BinaryHeap#setValue(Node<?>,float)	def	fbb60e5d
 sge.graphs.BinaryHeap	sge.graphs.BinaryHeap#size	val	184a3d5c6ff54828
 sge.graphs.BinaryHeap	sge.graphs.BinaryHeap#toString()	def	d248b8dea86a56bd
 sge.graphs.BinaryHeap	sge.graphs.BinaryHeap#up(int)	def	e8b776470396d599
-sge.graphs.Connection	sge.graphs.Connection	class	f8a9b54c5b79f1fb
+sge.graphs.Connection	sge.graphs.Connection	class	eed7e6d4e51f7480
 sge.graphs.Connection	sge.graphs.Connection#a	val	3891226ce4966ec7
 sge.graphs.Connection	sge.graphs.Connection#b	val	8204894c69d87ace
 sge.graphs.Connection	sge.graphs.Connection#getA()	def	99dbac4c6bded030
@@ -60,7 +60,7 @@ sge.graphs.Connection	sge.graphs.Connection#getWeight()	def	aede3b6546a7a71c
 sge.graphs.Connection	sge.graphs.Connection#getWeightFunction()	def	f1ec5dbbbf372182
 sge.graphs.Connection	sge.graphs.Connection#set(Node<V>,Node<V>,WeightFunction<V>)	def	722fc8523de9f21b
 sge.graphs.Connection	sge.graphs.Connection#setWeight(WeightFunction<V>)	def	b15d779bab69bb67
-sge.graphs.Connection	sge.graphs.Connection#setWeight(float)	def	e985424833f9ed92
+sge.graphs.Connection	sge.graphs.Connection#setWeight(float)	def	fbc818d09d3adb42
 sge.graphs.Connection	sge.graphs.Connection#weight	val	5d07a6ff5643ef78
 sge.graphs.Connection	sge.graphs.Connection$DirectedConnection	class	f215678ff8b3ec8e
 sge.graphs.Connection	sge.graphs.Connection$DirectedConnection#equals(Any)	def	98639fbfd3dbde11
@@ -105,7 +105,7 @@ sge.graphs.Errors	sge.graphs.Errors#throwNullItemException()	def	78a18a5fbf7bdac
 sge.graphs.Errors	sge.graphs.Errors#throwNullVertexException()	def	ddd8c0cdc8751ff4
 sge.graphs.Errors	sge.graphs.Errors#throwSameVertexException()	def	47065a31ad375fa8
 sge.graphs.Errors	sge.graphs.Errors#throwVertexNotInGraphVertexException(boolean)	def	4aaf3680dd9c0194
-sge.graphs.Graph	sge.graphs.Graph	class	5580da8b9406a3e0
+sge.graphs.Graph	sge.graphs.Graph	class	60cff0ea13f3bfc9
 sge.graphs.Graph	sge.graphs.Graph#<init>()	ctor	43f091e9332a747c
 sge.graphs.Graph	sge.graphs.Graph#<init>(Graph<V>)	ctor	597a0ac94476d734
 sge.graphs.Graph	sge.graphs.Graph#<init>(JavaCollection<V>)	ctor	83079add4086211c
@@ -114,7 +114,7 @@ sge.graphs.Graph	sge.graphs.Graph#addConnection(Node<V>,Node<V>,WeightFunction<V
 sge.graphs.Graph	sge.graphs.Graph#addEdge(Edge<V>)	def	f6a0194f613b5eca
 sge.graphs.Graph	sge.graphs.Graph#addEdge(V,V)	def	713f88de48d8ae37
 sge.graphs.Graph	sge.graphs.Graph#addEdge(V,V,WeightFunction<V>)	def	f684b5d7b10d6f6d
-sge.graphs.Graph	sge.graphs.Graph#addEdge(V,V,float)	def	a7a27d0aa2e09fa2
+sge.graphs.Graph	sge.graphs.Graph#addEdge(V,V,float)	def	5f669e4f509d2a1d
 sge.graphs.Graph	sge.graphs.Graph#addVertex(V)	def	5d89eba702a3292b
 sge.graphs.Graph	sge.graphs.Graph#addVertices(Array<V>)	def	553462abc9ad9637
 sge.graphs.Graph	sge.graphs.Graph#addVertices(JavaCollection<V>)	def	66d017acc39925ea

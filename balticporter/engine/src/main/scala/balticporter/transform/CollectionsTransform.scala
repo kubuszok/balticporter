@@ -409,7 +409,16 @@ final class CollectionsTransform(
     * cannot reach a rewrite at all, so the ceiling is unreachable by construction and declining
     * above it leaves the reference exactly as it was. Fixed names rather than a per-site counter,
     * which is `ENGINE-LIMITS.md` M10's rule: an emitted name keyed on anything wider than the
-    * declaration that holds it turns `members.tsv` into churn. */
+    * declaration that holds it turns `members.tsv` into churn.
+    *
+    * ==and ONE symbol per position survives NESTING, which [[selfParamSym]] does not have to argue==
+    * That one is safe because two unbound lowerings can never nest. These CAN — a bound reference's
+    * qualifier is an arbitrary expression and may hold another — and sharing the symbols is still
+    * exact, because of WHERE each binding sits. The inner lowering lands inside the OUTER's
+    * initialiser (`val recv$ = <… { val recv$ = y; … } …>`), where scala's own scoping makes it a
+    * fresh binding: a `val` is not in scope in its own right-hand side. And nothing nests in the
+    * other direction — the lambda's body is `recv$.m(a0$, …)`, whose arguments are bare `Ident`s, so
+    * no second lowering can appear under an `a0$` that is already bound. */
   private var recvBindSym: SymId = SymId.None
   private var argParamSyms: Vector[SymId] = Vector.empty
   /** `JavaIterable` + its `from` factory — see `coerce`. */

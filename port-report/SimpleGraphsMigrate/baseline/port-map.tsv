@@ -101,7 +101,7 @@ member	space.earlygrey.simplegraphs.Connection#getWeight()	sge.graphs.Connection
 member	space.earlygrey.simplegraphs.Connection#getWeightFunction()	sge.graphs.Connection#getWeightFunction()	Renamed	-	space/earlygrey/simplegraphs/Connection.java	97	f1ec5dbbbf372182	
 member	space.earlygrey.simplegraphs.Connection#set(Node,Node,WeightFunction)	sge.graphs.Connection#set(Node<V>,Node<V>,WeightFunction<V>)	Renamed	-	space/earlygrey/simplegraphs/Connection.java	51	722fc8523de9f21b	
 member	space.earlygrey.simplegraphs.Connection#setWeight(WeightFunction)	sge.graphs.Connection#setWeight(WeightFunction<V>)	Renamed	-	space/earlygrey/simplegraphs/Connection.java	92	b15d779bab69bb67	
-member	space.earlygrey.simplegraphs.Connection#setWeight(float)	sge.graphs.Connection#setWeight(float)	Renamed	-	space/earlygrey/simplegraphs/Connection.java	87	e985424833f9ed92	
+member	space.earlygrey.simplegraphs.Connection#setWeight(float)	sge.graphs.Connection#setWeight(float)	Renamed	-	space/earlygrey/simplegraphs/Connection.java	87	fbc818d09d3adb42	
 member	space.earlygrey.simplegraphs.Connection#weight	sge.graphs.Connection#weight	Renamed	-	space/earlygrey/simplegraphs/Connection.java	36	5d07a6ff5643ef78	
 member	space.earlygrey.simplegraphs.Connection$DirectedConnection#equals(Any)	sge.graphs.Connection$DirectedConnection#equals(Any)	Renamed	-	space/earlygrey/simplegraphs/Connection.java	121	98639fbfd3dbde11	
 member	space.earlygrey.simplegraphs.Connection$DirectedConnection#hasEndpoints(V,V)	sge.graphs.Connection$DirectedConnection#hasEndpoints(V,V)	Renamed	-	space/earlygrey/simplegraphs/Connection.java	116	07d68c3e136c50b6	
@@ -149,7 +149,7 @@ member	space.earlygrey.simplegraphs.Graph#addConnection(Node,Node,WeightFunction
 member	space.earlygrey.simplegraphs.Graph#addEdge(Edge)	sge.graphs.Graph#addEdge(Edge<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	193	f6a0194f613b5eca	
 member	space.earlygrey.simplegraphs.Graph#addEdge(V,V)	sge.graphs.Graph#addEdge(V,V)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	181	713f88de48d8ae37	
 member	space.earlygrey.simplegraphs.Graph#addEdge(V,V,WeightFunction)	sge.graphs.Graph#addEdge(V,V,WeightFunction<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	221	f684b5d7b10d6f6d	
-member	space.earlygrey.simplegraphs.Graph#addEdge(V,V,float)	sge.graphs.Graph#addEdge(V,V,float)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	208	a7a27d0aa2e09fa2	
+member	space.earlygrey.simplegraphs.Graph#addEdge(V,V,float)	sge.graphs.Graph#addEdge(V,V,float)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	208	5f669e4f509d2a1d	
 member	space.earlygrey.simplegraphs.Graph#addVertex(V)	sge.graphs.Graph#addVertex(V)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	106	5d89eba702a3292b	
 member	space.earlygrey.simplegraphs.Graph#addVertices(Array)	sge.graphs.Graph#addVertices(Array<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	121	553462abc9ad9637	
 member	space.earlygrey.simplegraphs.Graph#addVertices(JavaCollection)	sge.graphs.Graph#addVertices(JavaCollection<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	115	66d017acc39925ea	
