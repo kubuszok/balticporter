@@ -6375,8 +6375,57 @@ UNBOUND form (`Type::m`) for exactly this reason and its own comment says the bo
 `Apply` case one node out", which is true of a CALL and false of a reference. Closing it needs one
 minted parameter symbol per argument position and would move every bound method reference at a mapped
 member in every port; measured at **one** site in the corpus (ssg-md `HeadingCollectingVisitor`), so it
-is recorded here rather than built, and `jdk-surface` reads `mapped` over it — the one place in that
+was recorded here rather than built, and `jdk-surface` reads `mapped` over it — the one place in that
 report where a table entry is true of the member and not of the site.
+
+**…and it is BUILT at wave 10, because the count was wrong — ssg-md test set 13 → 7, main 37 → 35.**
+The refusal above rested on *one site in the corpus*, and one site is what a search for the SHAPE
+found. The sites are seven, because a bound reference at a rewritten member does not always announce
+itself as one: two of them had been filed in `PROGRESS.md`'s census under the error TEXT, and the
+larger of the two carried a DIAGNOSIS that this fix disproves. `Utils#withDefaults` reads
+
+```java
+putIfMissing(map, entry.getKey(), entry::getValue);   // ONE argument list, TWO readings of `entry`
+```
+
+and the census called it *"the `getKey` → `_1` arm fired on one access of `entry` and the `getValue`
+→ `_2` arm beside it did not… the receiver's own `Kind` is what differs between two references to one
+local"*. The observation of the emitted text was exact and the explanation was wrong: nothing
+differed between the two receivers, and what differed was the NODE — the first is a call and the
+second is a `Tree.MethodRef`, so no `Apply`-keyed arm was ever going to see it. **A residue filed by
+its error text is a residue whose cause has not been read**, and that is now three of ssg-md's census
+rows (`G27` took two the same way).
+
+Three things the built arm gets right, of which the middle one is not tidiness:
+
+- **the ARITY is java's, off the node** — `Tree.MethodRef.referent`, `G27`'s field, and the same one
+  the emitter's own expansion reads. Never off the symbol: an external member is interned with no
+  `MethodType` at all and would answer *takes no arguments* (§4.6's fabricated fact, baked into the
+  data structure rather than into a `catch`);
+- **THE RECEIVER IS BOUND ONCE.** Java evaluates the qualifier when the reference is CREATED and
+  never again (JLS 15.13.3); a lambda `(a0$) => expr.m(a0$)` evaluates it per INVOCATION, and for a
+  field read or a call that is a different program — `CLAUDE.md` §4.4's shape exactly, valid scala
+  meaning something else, with no compile error and no moved count to report it. So the lowering is
+  `{ val recv$ = expr; (a0$, …) => … }`, java's own evaluation order written down. `Tree.This` skips
+  the binding, and that is a fact rather than an optimisation: `this` is not a variable, so no
+  assignment can move it and a `val` for it would be emitted text for nothing;
+- **fixed parameter names, four of them.** `M10`'s rule — an emitted name keyed on anything wider
+  than the declaration that holds it turns `members.tsv` into churn — so `a0$`…`a3$` are minted once
+  and not per site. Four because the members `rewrite` answers for are JDK COLLECTION members and the
+  widest takes two (`put(K, V)`, `add(int, E)`), so a wider arity cannot reach a rewrite at all and
+  the ceiling is unreachable by construction.
+
+**Measured**: ssg-md main **37 → 35** (`HeadingCollectingVisitor#<stmt1>` and
+`Utils#withDefaults`) and its test set **13 → 7** (all six `PlaceholderReplacer` rows, `map::get`
+against `mutable.Map.get`), at **4 member digests** on the library and **7** on the test set — the
+declarations holding the seven references and their files. Every `collection-*` lane, `jdk-surface`
+and `remediation` flat, which is the honest reading: this closes SITES and no lane was counting them.
+
+*Fix kind: (a). `CollectionsBoundMethodRefSpec` — three positives (the one-argument lowering with its
+binding, the two-argument arity, and `this` taking no binding) and two negatives, of which "a
+receiver this phase did NOT retype" is the phase's own record (§4.56) and "a retyped receiver at a
+member with NO rewrite" is what keeps every bound reference on every retyped receiver from becoming a
+lambda for no difference at all.*
 
 *Fix kind: (b) — the tables gain the entries and the runtime gains the members; the two refusals are
 (a) with citations. `CollectionsSe8MembersSpec`, one cell per member with its java-vs-scala divergence

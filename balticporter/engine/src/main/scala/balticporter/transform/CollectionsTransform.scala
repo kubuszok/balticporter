@@ -401,6 +401,17 @@ final class CollectionsTransform(
     * makes the failure read like a typo rather than a missing mapping. */
   private var foreachSym: SymId = SymId.None
   private var key1Sym, value2Sym, selfParamSym: SymId = SymId.None
+  /** the BOUND method reference's two mints — the receiver's one-shot binding, and the lowered
+    * lambda's argument parameters by INDEX. See [[lowerMethodRef]]'s `Right` arm.
+    *
+    * Four parameters and not a growing list: the members [[rewrite]] answers for are JDK COLLECTION
+    * members, and the widest of them takes two (`put(K, V)`, `add(int, E)`). A wider arity therefore
+    * cannot reach a rewrite at all, so the ceiling is unreachable by construction and declining
+    * above it leaves the reference exactly as it was. Fixed names rather than a per-site counter,
+    * which is `ENGINE-LIMITS.md` M10's rule: an emitted name keyed on anything wider than the
+    * declaration that holds it turns `members.tsv` into churn. */
+  private var recvBindSym: SymId = SymId.None
+  private var argParamSyms: Vector[SymId] = Vector.empty
   /** `JavaIterable` + its `from` factory — see `coerce`. */
   private var javaIterableSym, iterableFromSym: SymId = SymId.None
   /** `JavaCollection` + its `from` factory — the same seam, one type up. `unmodifiableFromSym` is
@@ -642,6 +653,8 @@ final class CollectionsTransform(
     // reference and two of these lambdas can never nest. The name matches what `TirEmitter` already
     // spells for a method reference it expands itself, so the two paths read alike.
     selfParamSym = mint("self$", "self$")
+    recvBindSym  = mint("recv$", "recv$")
+    argParamSyms = (0 until 4).toVector.map(k => mint(s"a$k$$", s"a$k$$"))
     javaIterableSym = byScala.getOrElse(JavaIterableFqn, SymId.None)
     iterableFromSym = mint("from", JavaIterableFqn + ".from")
     javaCollectionSym   = byScala.getOrElse(JavaCollectionFqn, SymId.None)
@@ -1818,9 +1831,21 @@ final class CollectionsTransform(
     * is parenless. The phase therefore LOWERS the reference itself, into the lambda the emitter
     * would have built, with the rewritten term as its body.
     *
-    * Only an UNBOUND instance reference (`Type::instanceMethod`) is lowered. A static one is
-    * `Type.member` and has no receiver to rewrite; a bound one (`expr::m`) already carries its
-    * receiver as a term and is the `Apply` case one node out.
+    * A STATIC reference is `Type.member` and has no receiver to rewrite. The other two forms are
+    * both lowered, and the BOUND one (`expr::m`) is the arm `ENGINE-LIMITS.md` K23 named and did not
+    * build — its comment then read *"the `Apply` case one node out"*, which is true of a CALL and
+    * false of a REFERENCE: `map::get` emits as an eta-expanded `map.get`, a `Tree.Select` that no
+    * `Apply`-keyed arm ever sees, so `Map.get`'s `getOrElse(null)` rewrite simply did not happen and
+    * the reference handed a `String => Option[V]` to a slot wanting java's `V`.
+    *
+    * ==the BOUND arm binds its receiver ONCE, which is not tidiness==
+    * Java evaluates `expr` at the moment the reference is CREATED and never again (JLS 15.13.3);
+    * a lambda `(a0$) => expr.m(a0$)` evaluates it per INVOCATION. For a field read or a call that is
+    * a different program — and it is a `CLAUDE.md` §4.4-shaped difference, valid scala meaning
+    * something else, with no compile error to report it. So the lowering is
+    * `{ val recv$ = expr; (a0$, …) => <rewritten recv$.m(a0$, …)> }`, which is java's own
+    * evaluation order written down. `Tree.This` is the one form that skips the binding: it is not a
+    * variable, so no assignment can move it, and a `val` for it would be emitted text for nothing.
     *
     * **The parameter is emitted UNANNOTATED, deliberately.** Java writes this qualifier RAW
     * (`Map.Entry::getKey`), so the retyped type renders `Tuple2[?, ?]` and annotating with it makes
@@ -1850,6 +1875,38 @@ final class CollectionsTransform(
               case Some(body) =>
                 val param = Tree.ValDef(selfParamSym, TypeTree(TypeRepr.NoType, o), scala.None, o)
                 Tree.Lambda(List(param), body, mr.tpe, o)
+      // …and the BOUND form, whose receiver is a TERM. The arity is java's, off the node
+      // (`Tree.MethodRef.referent` — `G27`'s field, and the same one the emitter's own expansion
+      // reads), never off the symbol: an external member is interned with no `MethodType` and would
+      // read as taking no arguments.
+      case Right(recv) if recvBindSym != SymId.None =>
+        kindOf.get(headSym(recv.tpe).getOrElse(SymId.None)) match
+          case None    => mr
+          case Some(k) =>
+            val arity = mr.referent match
+              case Referent.Instance(n) => n
+              case Referent.Static      => -1 // a bound reference is never static; decline rather than guess
+            if arity < 0 || arity > argParamSyms.size then mr
+            else
+              val o = mr.origin
+              // java evaluated the qualifier ONCE, at reference creation — see the doc above.
+              val (self, stats) = recv match
+                case _: Tree.This => (recv, Nil)
+                case _            =>
+                  (Tree.Ident(recvBindSym, recv.tpe, o),
+                   List(Tree.ValDef(recvBindSym, TypeTree(recv.tpe, o), Some(recv), o)))
+              val ps   = argParamSyms.take(arity).toList
+              val args = ps.map(s => Tree.Ident(s, TypeRepr.NoType, o))
+              val callT = Tree.Apply(Tree.Select(self, mr.method, TypeRepr.NoType, o), args,
+                                     mr.method, TypeRepr.NoType, o)
+              rewrite(k, self, mr.method, o, callT) match
+                case None       => mr
+                case Some(body) =>
+                  // UNANNOTATED for the arm above's reason: a reference is a poly expression and the
+                  // target types its parameters, which is the job javac had.
+                  val params = ps.map(s => Tree.ValDef(s, TypeTree(TypeRepr.NoType, o), scala.None, o))
+                  val lam    = Tree.Lambda(params, body, mr.tpe, o)
+                  if stats.isEmpty then lam else Tree.Block(stats, lam, mr.tpe, o)
       case _ => mr
 
   /** `Map.Entry.setValue` — WHERE THE MAP IS REACHABLE FROM THE CALL.

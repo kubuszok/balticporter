@@ -549,8 +549,8 @@ ssg.md.ast.util.ClassifyingBlockTracker	ssg.md.ast.util.ClassifyingBlockTracker#
 ssg.md.ast.util.ClassifyingBlockTracker	ssg.md.ast.util.ClassifyingBlockTracker#removeBlocks(ReversiblePeekingIterable<Node>)	def	01be27f370bbc948
 ssg.md.ast.util.ClassifyingBlockTracker	ssg.md.ast.util.ClassifyingBlockTracker#validateLinked(Node)	def	c34cde5a48d40afb
 ssg.md.ast.util.ClassifyingBlockTracker	ssg.md.ast.util.ClassifyingBlockTracker#validateUnlinked(Node)	def	74df681f1b60b332
-ssg.md.ast.util.HeadingCollectingVisitor	ssg.md.ast.util.HeadingCollectingVisitor	class	32cc2fa2bcdd9197
-ssg.md.ast.util.HeadingCollectingVisitor	ssg.md.ast.util.HeadingCollectingVisitor#<stmt1>	stmt	9fbbc7ced94e2b59
+ssg.md.ast.util.HeadingCollectingVisitor	ssg.md.ast.util.HeadingCollectingVisitor	class	ff448014d8f043f1
+ssg.md.ast.util.HeadingCollectingVisitor	ssg.md.ast.util.HeadingCollectingVisitor#<stmt1>	stmt	d22ee72fb7100b48
 ssg.md.ast.util.HeadingCollectingVisitor	ssg.md.ast.util.HeadingCollectingVisitor#collect(Node)	def	5399f9a501192fd1
 ssg.md.ast.util.HeadingCollectingVisitor	ssg.md.ast.util.HeadingCollectingVisitor#collectAndGetHeadings(Node)	def	af529f1ad2291d5f
 ssg.md.ast.util.HeadingCollectingVisitor	ssg.md.ast.util.HeadingCollectingVisitor#getHeadings()	def	beba106c7255b701
@@ -6468,7 +6468,7 @@ ssg.md.util.misc.TemplateUtil	ssg.md.util.misc.TemplateUtil$MappedResolver#resol
 ssg.md.util.misc.TemplateUtil	ssg.md.util.misc.TemplateUtil$MappedResolver#set(String,String)	def	aacbda88e5f4aa96
 ssg.md.util.misc.TemplateUtil	ssg.md.util.misc.TemplateUtil$Resolver	class	3541ea316b32a3a9
 ssg.md.util.misc.TemplateUtil	ssg.md.util.misc.TemplateUtil$Resolver#resolve(Array<String>)	def	0dd34881c2f44440
-ssg.md.util.misc.Utils	ssg.md.util.misc.Utils	class	7e8032f67e705b88
+ssg.md.util.misc.Utils	ssg.md.util.misc.Utils	class	886bbdea1ca0ec63
 ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#compare(Number,Number)	def	de97eaf7f3e73189
 ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#compareNullable(T,T)	def	b11d185cf9321b10
 ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#count(String,String,int,int)	def	1233df496f87b527
@@ -6544,7 +6544,7 @@ ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#suffixWith(String,char,boolean)	de
 ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#suffixWithEol(String)	def	502c74154fc87719
 ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#urlDecode(String,String)	def	423ea94f2a3f4e8e
 ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#urlEncode(String,String)	def	78ed6f51eff46cf8
-ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#withDefaults(Map<K,V>,Map<K,V>)	def	b0fb9c1dead6c342
+ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#withDefaults(Map<K,V>,Map<K,V>)	def	7974bfd4f41e99fb
 ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#wrapWith(String,String)	def	62d068e090869a37
 ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#wrapWith(String,String,String)	def	3300e74cea1ea197
 ssg.md.util.misc.Utils	ssg.md.util.misc.Utils#wrapWith(String,char)	def	15b078c68a5838c4
