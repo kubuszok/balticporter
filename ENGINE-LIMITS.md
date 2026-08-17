@@ -7955,7 +7955,7 @@ only reach zero once the first two have moved `iterator` and `put`. Nothing here
 and nothing here is a port's to discharge — it is `CLAUDE.md` §1's *an obligation the ENGINE'S OWN
 TRANSLATION created*, three times over.
 
-#### K28.2 A java FIELD named like an INHERITED JDK METHOD — one row is a missing question, the other is a surface the engine refuses to state
+#### K28.2 A java FIELD named like an INHERITED JDK METHOD — **CLOSED at wave 21: ssg-md 34 -> 32.** One row was a missing question, the other a surface the engine had refused to state — and the refusal turned out to conflate two different reasons
 
 The two `private variable X cannot override method X` rows are §4.55's implementation-pair rule met
 from the other side, and they are NOT one family — which is only visible once you ask WHERE each far
@@ -7979,6 +7979,31 @@ compliance level the frontend actually pins (`SpoonTir.buildModel` sets 21, so t
 enumerable) — which is a real argument the doc comment does not consider, and whose blast is every
 `CharSequence` implementor in the corpus — or to leave the one row. Do not add a PARTIAL entry: the
 contract the other readers rest on is that an absence from a present set is proof.
+
+**BOTH BUILT AT WAVE 21, and the `CharSequence` decision was TAKEN rather than deferred: state it.**
+The doc comment's exclusion rule read *large or version-dependent*, and those are two different
+arguments wearing one sentence. **VERSION-DEPENDENT IS NOT UNENUMERABLE.** The frontend pins a
+compliance level, so "which members does `java.lang.CharSequence` declare" has exactly one answer for
+every tree this engine will ever see — seven instance members, written down — and `Comparator` stays
+out for the OTHER reason, that its surface is large enough for the transcription itself to be the
+liability. The set is INSTANCE members only: `CharSequence.compare(CharSequence, CharSequence)` (11)
+is `static` and a java interface's statics are not inherited at all (JLS 8.4.8), so including it would
+anchor a field named `compare` on evidence that does not exist.
+
+The conjunct went in as `isKnown(fqn) && mayDeclare(fqn, sig)` over `OverrideGraph.externalAncestorsOf`
+— the walk already published, rather than a second recursion beside `inherited`'s — plus
+`javaLangObjectDeclares` asked separately, since that is the one external ancestor no graph edge
+carries. It is asked of the FRESH name too: `x$shadow` being free of `java.lang.Object` is a fact to
+check, not to assume.
+
+**The blast the entry predicted did not arrive, and that is the measurement rather than a relief.**
+`just measure-all`: **0 moved member digests and identical error counts on all twelve other lanes**,
+with the whole of the change landing on the two ssg-md owners (10 digests, both classes). `JS-C04`
+moved from `catalog(unreached)` to `catalog(consulted)` on both ssg-md lanes, which is the one count
+that says the pass now decides about a declaration it previously could not see. So the honest reading
+of "whose blast is every `CharSequence` implementor in the corpus" is that the corpus has exactly one
+whose field COLLIDES, and an enumerable surface costs nothing anywhere else — the argument for
+stating it was never about the size of the blast.
 
 **AND THE 22 THAT WERE `NOT PREDICTED` ARE NOW DIAGNOSED, into two sub-families that share nothing
 but their error code.** Both were read off the EMITTED text, which is the only place either is

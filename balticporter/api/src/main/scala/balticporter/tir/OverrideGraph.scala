@@ -435,6 +435,23 @@ object ExternalSurface:
     * the interface declares in the Java it is written for. A type whose surface is large or version-
     * dependent (`java.util.Comparator`, whose default methods grew across releases) is deliberately
     * ABSENT — unknown anchors, and an incomplete entry is worse than no entry.
+    *
+    * ==VERSION-DEPENDENT IS NOT UNENUMERABLE, and `java.lang.CharSequence` is the difference==
+    * The paragraph above collapses two reasons into one, and `CharSequence` is the type that pulls
+    * them apart. It was left out because its surface GREW (`chars()` in 8, `isEmpty()` in 15) — a
+    * true observation and not, on its own, an argument: the frontend PINS a compliance level
+    * (`SpoonTir.buildModel` sets 21), so "which members does this interface declare" has exactly one
+    * answer for every tree this engine ever sees, and it is enumerable. `Comparator` stays out for
+    * the OTHER reason — its surface is large enough that writing it down is a transcription somebody
+    * would have to keep true — and the two are different failures. State it, and the anchor for a
+    * java FIELD named `chars` on a `CharSequence` implementor lifts; leave it out, and the field
+    * cannot be renamed, which `RefChecks` reports as `private variable chars cannot override method
+    * chars` on the day the port reaches zero (`ENGINE-LIMITS.md` K28.2).
+    *
+    * The set is the INSTANCE members only. `CharSequence.compare(CharSequence, CharSequence)` (11)
+    * is `static`, and a java interface's statics are not inherited at all (JLS 8.4.8), so it is not
+    * a member any implementor could be answering for — including it would anchor a field named
+    * `compare` on evidence that does not exist.
     */
   val jdkPlatform: Map[String, Set[Member]] = Map(
     "java.io.Serializable"     -> Set.empty,
@@ -444,6 +461,9 @@ object ExternalSurface:
     "java.lang.Runnable"       -> Set(Member("run", 0)),
     "java.lang.AutoCloseable"  -> Set(Member("close", 0)),
     "java.io.Closeable"        -> Set(Member("close", 0)),
+    "java.lang.CharSequence"   -> Set(Member("length", 0), Member("charAt", 1), Member("isEmpty", 0),
+                                      Member("subSequence", 2), Member("toString", 0),
+                                      Member("chars", 0), Member("codePoints", 0)),
     "java.util.Iterator"       -> Set(Member("hasNext", 0), Member("next", 0), Member("remove", 0),
                                       Member("forEachRemaining", 1)),
   )

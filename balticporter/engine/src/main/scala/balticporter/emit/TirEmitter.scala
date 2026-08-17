@@ -5620,7 +5620,23 @@ object TirEmitter:
     *
     * Fields shadowing an inherited METHOD (`TextField`'s `layout` field under `Widget.layout()`)
     * are the same defect through Java's separate namespaces for the two, and are renamed here too.
-    * Statics are exempt: they land in the companion, which inherits nothing. */
+    * Statics are exempt: they land in the companion, which inherits nothing.
+    *
+    * ==THE INHERITED MEMBER MAY BE ONE THIS PROGRAM NEVER PARSED==
+    * `inherited` walks `declOf`, so it sees the library's own hierarchy and nothing else — and the
+    * defect this pass exists to remove does not care where the far side is declared. A java field
+    * named `finalize` sits under `java.lang.Object.finalize()`, which is above every java type
+    * whether or not any parent list says so; one named `chars` on a `CharSequence` implementor sits
+    * under an interface's method. Both emit as `private var X` under a method scala says they cannot
+    * override, and neither is visible until the port reaches 0 typer errors (§3).
+    *
+    * ==…and `mayDeclare`'s UNKNOWN arm points the OTHER way for this reader==
+    * [[ExternalSurface.mayDeclare]] answers YES for a type it has no row for, which is right for its
+    * existing readers — they ask *may I RENAME this*, and an over-refusal costs nothing. This pass
+    * asks the reverse, *must I rename this*, so unknown-is-yes would move a field on every class with
+    * an unparsed parent: emitted surface changing on every port, for no evidence at all. The conjunct
+    * is therefore `isKnown(fqn) && mayDeclare(fqn, sig)` — a type whose surface is stated answers
+    * exactly, and everything else is left alone and stays loud (`ENGINE-LIMITS.md` K28.2). */
   def resolveFieldShadowing(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
                             surface: Surface = null,
                             /** JS-C04's citation surface. A whole-program pass does not walk one node
@@ -5652,6 +5668,24 @@ object TirEmitter:
         .flatMap(declOf.get)
         .flatMap(pcd => instanceMembers(pcd) ++ inherited(pcd, seen + cd.symbol))
         .toSet
+    /** …and the same question asked of the ancestors this program did NOT parse. `OverrideGraph` is
+      * where that walk lives (§4.56's *state the walk once*): this pass's own `inherited` recursion
+      * stops at `declOf`, and re-deriving the external half beside it would be a second answer to one
+      * question. LAZY — building it walks the whole program, and `java.lang.Object`'s own members are
+      * answered without it. */
+    lazy val graph = OverrideGraph.build(p)
+    /** does an UNPARSED ancestor declare a member this field's name would collide with?
+      *
+      * A field is arity 0 and carries no parameter clause, so the far side it can collide with is a
+      * PARAMETERLESS method — `Descriptor.empty`, which is what `Member.matches` compares against
+      * where a row states one. `javaLangObjectDeclares` is asked first and separately: that type is
+      * above every java type whether or not the parent list shows it, and it is the one external
+      * ancestor no graph edge can carry. */
+    def externallyShadowed(cd: Tree.ClassDef, name: String): Boolean =
+      val sig = OverrideGraph.Signature(name, Some(Descriptor.empty), 0, approximate = false)
+      ExternalSurface.javaLangObjectDeclares(sig) ||
+        graph.externalAncestorsOf(cd.symbol)
+          .exists(fqn => ExternalSurface.default.isKnown(fqn) && ExternalSurface.default.mayDeclare(fqn, sig))
     /** the inherited DECLARATIONS behind those names — a name is not enough to answer
       * [[implementsInherited]], and a shadowing decision taken from a name alone is §4.56's rule
       * read at the emitter. */
@@ -5720,14 +5754,17 @@ object TirEmitter:
           case _                    => false)
 
       cd.body.foreach {
-        case v: Tree.ValDef if shadowed(nm(v.symbol)) && !p.symbolOf(v.symbol).exists(_.flags.isStatic) &&
+        case v: Tree.ValDef if (shadowed(nm(v.symbol)) || externallyShadowed(cd, nm(v.symbol))) &&
+                               !p.symbolOf(v.symbol).exists(_.flags.isStatic) &&
                                !implementsInherited(v) && !settledByBase(v) =>
           // The fresh name must not ITSELF be inherited. `CheckBox.style` shadows
           // `TextButton.style`, which shadows `Button.style` — renaming both to `style$shadow`
           // just relocated the collision one level up. Keep appending until the name is free
-          // (the same idiom `funnelParamRenames` uses).
+          // (the same idiom `funnelParamRenames` uses), and the external half is asked at the fresh
+          // name too — `hashCode$shadow` is free of `java.lang.Object` only because nothing there
+          // is spelled that way, which is a fact to check rather than to assume.
           var fresh = nm(v.symbol) + "$shadow"
-          while shadowed(fresh) do fresh += "$"
+          while shadowed(fresh) || externallyShadowed(cd, fresh) do fresh += "$"
           renames(v.symbol) = fresh
           note(out, Decision.Kind.RenamedMember, p, v.symbol,
             Map(
