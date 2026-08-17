@@ -90,6 +90,44 @@ class PolyArgOverloadAscriptionSpec extends PortSuite:
     assertNotEmits(p, "): java.lang.Runnable))")
   }
 
+  test("a slot that is a TYPE VARIABLE the call has yet to infer is ascribed too") {
+    val p = port(
+      """package demo;
+        |interface Key<T> { }
+        |interface NullableKey<T> { }
+        |interface Xform { String apply(String s); }
+        |class Store {
+        |  <T> Store set(Key<T> key, T value)         { return this; }
+        |  <T> Store set(NullableKey<T> key, T value) { return this; }
+        |}
+        |class Uses {
+        |  static final Key<Xform> K = null;
+        |  void go(Store st) { st.set(K, s -> s); }
+        |}
+        |""".stripMargin)
+    // the alternatives AGREE at index 1 — both formals spell `T` — so the index-local comparison
+    // declines, and scala still has no expected type there: it must resolve the overload before it
+    // can solve `T`, and it resolves by typing the arguments. Java solved `T` from the KEY first.
+    assertEmits(p, "): demo.Xform))")
+  }
+
+  test("NEGATIVE — a type-variable slot at an UNOVERLOADED callee gets nothing") {
+    val p = port(
+      """package demo;
+        |interface Key<T> { }
+        |interface Xform { String apply(String s); }
+        |class Store { <T> Store set(Key<T> key, T value) { return this; } }
+        |class Uses {
+        |  static final Key<Xform> K = null;
+        |  void go(Store st) { st.set(K, s -> s); }
+        |}
+        |""".stripMargin)
+    // one alternative, so scala solves `T` from the sibling exactly as java does and SAM-converts
+    // the bare literal. The overload conjunct is what keeps this case out, which is why the slot's
+    // shape is a DISJUNCT under it rather than a rule of its own.
+    assertNotEmits(p, "): demo.Xform))")
+  }
+
   test("NEGATIVE — a METHOD REFERENCE at an overloaded slot is left to the emitter") {
     val p = port(
       """package demo;

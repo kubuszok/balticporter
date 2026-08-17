@@ -3087,10 +3087,11 @@ object SpoonTir:
         *     method (`(r.run: Runnable)` is `Found: Unit`, measured on the same probe). Two
         *     mechanisms for one question is F8's finding; the lambda is the node that has no other
         *     answer, and it is the only one this adds;
-        *   - '''the callee is OVERLOADED AT THIS INDEX''' ([[overloadedSamSlot]]) — two alternatives
-        *     of this arity whose formals DIFFER where the lambda stands. With one alternative scala
-        *     already has the expected type; with two that agree here the lambda discriminates
-        *     nothing and the ascription would change no resolution;
+        *   - '''the callee is OVERLOADED AT THIS ARITY, and the SLOT names no expected type'''
+        *     ([[overloadedSamSlot]]) — the alternatives either DISAGREE where the lambda stands, or
+        *     agree on a TYPE VARIABLE the call has yet to infer. With one alternative scala already
+        *     has the expected type; with two that agree on a CONCRETE interface the lambda
+        *     discriminates nothing and the ascription would change no resolution;
         *   - '''the target is NAMEABLE HERE''' ([[tpNameableHere]]) '''and java wrote no cast of its
         *     own.''' `uncastAdded` keeps the casts the SOURCE wrote, so a term that is already a
         *     `Tree.Typed` when this runs is java's own and is left alone.
@@ -3113,15 +3114,39 @@ object SpoonTir:
             case _ => t
         }
 
-      /** does the callee's NAME stand for more than one alternative of this arity that DISAGREE at
-        * argument `i`? — the whole of [[polyArgsAscribed]]'s decision, read off the declaring type's
-        * own members and never off a name.
+      /** is the callee overloaded at this arity, AND does the slot at argument `i` fail to give
+        * scala an expected type for the literal? — the whole of [[polyArgsAscribed]]'s decision,
+        * read off the declaring type's own members and never off a name.
+        *
+        * ==the slot fails in TWO ways, and this asked only about the first==
+        * The original reading was *do the alternatives DISAGREE at `i`* — `boolean` against
+        * `Runnable`, where no single expected type exists — with the negative beside it: two
+        * alternatives that both take a `Runnable` there give the lambda the same expected type
+        * whichever wins, so ascribing would be emitted text for nothing. That negative is real and
+        * stands. What it does not cover is a slot that is a TYPE VARIABLE THIS CALL HAS YET TO
+        * INFER, where the alternatives agree perfectly and still name no type:
+        *
+        * {{{
+        * <T> MutableDataHolder set(DataKey<T> key, T value);           // both read `T` at index 1
+        * <T> MutableDataHolder set(NullableDataKey<T> key, T value);   // they disagree at index 0
+        * }}}
+        *
+        * Java solves `T` from the KEY and then types the lambda against it; scala must resolve the
+        * overload before it can use either slot, and it resolves by typing the arguments — so a
+        * literal with written parameter types elaborates to a `scala.Function1` first and matches
+        * no alternative. Measured as `Found: CharSequence => Pair[Integer, Integer]`, at a call the
+        * index-local test declined because both formals spell `T`.
+        *
+        * So the second disjunct is the SLOT'S OWN SHAPE rather than a comparison: a formal that is
+        * a type variable is one scala cannot read an expected type out of, and with one alternative
+        * it would have solved it from the sibling anyway — which is why the overload conjunct stays
+        * and this is a disjunct under it rather than a rule of its own.
         *
         * The alternatives are the ones SCALA will see, so they are the type's ALL methods rather
         * than its declared ones: java's overload set spans the hierarchy and so does scala's, and a
         * declared-only reading would decline exactly where a base class contributes the second
         * alternative. Compared by the formal's QUALIFIED NAME at that index, because what has to
-        * differ is the SLOT — `boolean` against `Runnable` is the pair this is about — and not the
+        * differ is the SLOT — `boolean` against `Runnable` is the pair this began with — and not the
         * instantiation, which a generic alternative would make differ for no reason.
         *
         * The `catch` is §4.6-shaped and its default is distinguishable from a real answer: an
@@ -3142,8 +3167,16 @@ object SpoonTir:
             }
           catch { case _: RuntimeException => Nil }
         val here = alts.filter(_.sizeIs == arity)
+        val slots = here.flatMap(ps => Option(ps(i)))
         here.sizeIs > 1 &&
-          here.flatMap(ps => Option(ps(i)).map(_.getQualifiedName)).distinct.sizeIs > 1
+          (slots.map(_.getQualifiedName).distinct.sizeIs > 1 ||
+           // …and spelled with the wildcard excluded because Spoon's `CtWildcardReference` EXTENDS
+           // `CtTypeParameterReference`, so a bare `isInstanceOf` claims every `?` as a variable
+           // (`mentionsNamedTypeVar` carries the same note). A java FORMAL cannot be a bare
+           // wildcard, so this excludes nothing that exists — it keeps the test from reading as the
+           // one that is wrong everywhere else in this file.
+           slots.exists(s => s.isInstanceOf[CtTypeParameterReference] &&
+                             !s.isInstanceOf[CtWildcardReference]))
 
       /** [[polyArgsUncast]] where a VARARG PACK has changed the arity: `args` is the fixed prefix
         * plus ONE term holding the variadic elements, built from the `argEs` tail in order. */
