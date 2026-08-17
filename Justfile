@@ -15,6 +15,7 @@
 #   just liqp-measure                liqp + its own 105-file suite (emitted and censused; RUN when it compiles)
 #   just md-measure                  flexmark-java core + the eleven util modules (no test set in scope)
 #   just md-test-measure             flexmark-util's own 730-@Test suite (emitted and censused; RUN when it compiles)
+#   just md-ext-measure              flexmark's extension modules as ONE dependent port, compiled WITH the base
 #   just measure-all                 every lane, SERIALLY, in dependency order
 #   just decision-counts             decisions.tsv row counts by kind, every port
 #   just catalog-coverage            catalog.tsv across every port — rows the corpus never reaches
@@ -86,6 +87,13 @@ screens_module := "ported/sge-screens"
 vfx_module    := "ported/sge-vfx"
 liqp_module   := "ported/ssg-liquid"
 md_module     := "ported/ssg-md"
+# ssg-md's EXTENSION half, at its OWN port root (`corpus/ports/ssg-md/ext.conf` D-mde-1/2). A run's
+# emission identity is the pair (`portRoot`, `sourceSet`), `SourceSet` is `main | test` and
+# `PortRun` opens its emission with an unconditional `wipe(emitDir)` — so `ported/ssg-md`'s two
+# slots are `main.conf`'s and `test.conf`'s, and a third run there would DELETE one of them. The two
+# trees are disjoint by package (`ssg.md.*` against `ssg.md.ext.*`) and are compiled together on
+# every lane below, which is what makes them one module in the consumer's build.
+md_ext_module := "ported/ssg-md-ext"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
@@ -131,6 +139,12 @@ md_src        := "../ssg/original-src/flexmark-java"
 # re-derives the denominator from THIS list on every run, and a divergence shows up as a scope
 # figure that no longer matches the port's `converted` line.
 md_modules    := "flexmark flexmark-util-ast flexmark-util-builder flexmark-util-collection flexmark-util-data flexmark-util-dependency flexmark-util-format flexmark-util-html flexmark-util-misc flexmark-util-options flexmark-util-sequence flexmark-util-visitor"
+# MILESTONE 2's scope, restated for the same reason and read the same way: `ext.conf`'s
+# `includeGlobs` is the authority, nothing compares the two, and `md-ext-measure` re-derives its
+# denominator from THIS list on every run — so a module added to one and not the other shows up as a
+# scope figure that no longer matches the port's `converted` line. A BATCH WAVE IS ONE MODULE NAME
+# ADDED HERE AND ONE GLOB ADDED THERE (`PROGRESS.md` §10.6.8); 28 of the 29 are still to come.
+md_ext_modules := "flexmark-ext-aside"
 
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
@@ -1855,6 +1869,145 @@ md-test-measure:
     headline "$ERRORS" "$TREPORT"
 
 # ---------------------------------------------------------------------------------------------
+# ssg-md's EXTENSION half — MILESTONE 2, as ONE dependent port of the base (`ext.conf`).
+#
+# `ashley-measure`'s shape: a DEPENDENT port compiled WITH the base it resolved against, never
+# alone. What is new here is what it is a dependent OF — a twelve-module base with a single package
+# root — and what it converts: library code that implements the base's OWN extension points
+# (`Parser.ParserExtension`, `HtmlRenderer.HtmlRendererExtension`, `Formatter.FormatterExtension`,
+# `BlockParserFactory`, `NodeRendererFactory`, `NodeFormatterFactory`). So the question this lane
+# asks and no earlier one could is whether the shared surface the base EMITTED is one a third party
+# can implement against, which is exactly what `base-surface` and `manifest` exist to answer and the
+# first place on this corpus where they have real content: 458 shared types compared on every run.
+#
+# Four things about it worth reading before quoting a number:
+#
+#   * IT RUNS AFTER `md-measure`, and the ordering is a dependency order. This port resolves against
+#     the twelve modules' JAVA and inherits their manifest, and its compile links against the Scala
+#     `md-measure` just wrote — run first it would measure the previous engine's emit of the library
+#     it extends. `PortMap.discoverIn` makes the same point one artifact over: with no fresh
+#     `run-latest`, the base's COMMITTED baseline map answers instead, and the run says which it
+#     read.
+#   * THE COMPILE CARRIES BOTH SOURCE SETS ON ONE INVOCATION, for `md-test-measure`'s reason. The
+#     base is `RuntimeMode.Vendored` and this port is `dependency`, so the support types live in
+#     `ported/ssg-md/src_managed/main` and this tree links against them there. Compiling either
+#     alone measures nothing — and the split by the path scalac printed is what keeps a base error
+#     from being counted as this port's wall.
+#   * THE SCOPE IS A SELECTION AND THE LANE RE-DERIVES IT, exactly as `md-measure` does — see
+#     `md_ext_modules`. This is the number a batch wave moves, and it is the number that catches a
+#     wave that edited the Justfile and not the conf.
+#   * THE TEST DISCOVERY BLOCK IS ABOUT THE MAIN SCOPE and states a fact rather than a zero. The
+#     extension modules DO ship `src/test`, unlike the twelve — mostly `@RunWith(Parameterized.class)`
+#     `ComboSpecTestCase` subclasses, which are `PROGRESS.md` §10.6.1's documented refusal. What is
+#     inside the engine's mechanical reach is the plain `@Test` population, and it belongs to a
+#     second source set (`ext-test.conf`), not to this one.
+# ---------------------------------------------------------------------------------------------
+[doc("flexmark's extension modules as ONE dependent port of ssg-md — emit, checks, compile WITH the base")]
+md-ext-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
+    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
+    # The SAME root as `md-measure`'s — one upstream checkout, one namespace for both halves of it.
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{md_src}}"
+    REPORT="$ROOT/port-report/FlexmarkMigrate"
+    EREPORT="$ROOT/port-report/FlexmarkExtMigrate"
+
+    # ABORT if the migration itself did not run, or the lane measures the PREVIOUS emit and reports a
+    # stale number as a result.
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.flexmark.FlexmarkExtMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
+      echo "!! FlexmarkExtMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[ssg-md-ext\]" <<<"$OUT" | head -30
+      exit 1
+    fi
+    echo "-- FlexmarkExtMigrate (ALL checks, untruncated, as the migration printed them) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
+    echo
+
+    # WHICH base map answered. `manifest` and `base-surface` are the two checks this port exists to
+    # give content to, and both read the base's published map — `run-latest` when `md-measure` has
+    # run in this checkout, the COMMITTED baseline when it has not. Two different artifacts can give
+    # two different answers with every count identical, so the lane prints which one it was rather
+    # than leaving it in the scrollback.
+    grep -E "MANIFEST agreement|BASE SURFACE" <<<"$OUT"
+
+    echo
+    echo "-- scope: the extension modules this port converts --"
+    # The denominator, from `md_ext_modules` — see the lane header for why it is recomputed rather
+    # than quoted. `package-info.java` is counted here and NOT converted (the loader's default
+    # excludes it), so the two numbers differ by exactly the declaration-only files.
+    SCOPE_DIRS=""
+    for m in {{md_ext_modules}}; do SCOPE_DIRS="$SCOPE_DIRS {{md_src}}/$m/src/main/java"; done
+    SCOPE_ALL=$(find $SCOPE_DIRS -name '*.java' 2>/dev/null | wc -l | tr -d ' ')
+    SCOPE_PKG=$(find $SCOPE_DIRS -name 'package-info.java' -o -name 'module-info.java' 2>/dev/null | wc -l | tr -d ' ')
+    MODCOUNT=$(echo {{md_ext_modules}} | wc -w | tr -d ' ')
+    echo "modules in scope: $MODCOUNT of 29 covered   java files: $SCOPE_ALL   declaration-only (not converted): $SCOPE_PKG   expected units: $((SCOPE_ALL - SCOPE_PKG))"
+
+    echo
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$EREPORT"
+    findings_baseline_guard "$EREPORT"
+    port_map_guard "$EREPORT"
+
+    echo
+    echo "-- test discovery --"
+    # A FACT ABOUT THE SCOPE, not a zero (see the lane header). The extension modules ship their own
+    # `src/test`, which this MAIN source set does not convert; `ext-test.conf` is where the plain
+    # `@Test` population goes, and the `ComboSpecTestCase` subclasses beside it are the documented
+    # `@RunWith(Parameterized.class)` refusal.
+    TEST_DIRS=""
+    for m in {{md_ext_modules}}; do TEST_DIRS="$TEST_DIRS {{md_src}}/$m/src/test"; done
+    JAVA_TESTS=$(java_test_count $TEST_DIRS)
+    echo "@Test in the scoped extension modules: $JAVA_TESTS   emitted by THIS source set: 0 (main only — the suite is ext-test.conf's)"
+
+    echo
+    break_residue {{md_ext_module}}/src_managed
+
+    echo "-- compile --"
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
+    # port that does not compile — a false NEGATIVE on the headline number.
+    # BOTH TREES on one invocation: the base is RuntimeMode.Vendored, so the shims live in its
+    # `src_managed/main` and this dependent links against them there. Compiling either alone measures
+    # nothing — and this is also the only thing that can catch the §1.5 failure the whole milestone is
+    # about, two ports that each compile alone and cannot compile together.
+    DEPS="{{md_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdextmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdextmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/mdextmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/mdextmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/mdextmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$EREPORT"
+    # …and the SPLIT, from the path scalac printed in each error header. `md-measure`'s figure is what
+    # `PROGRESS.md` §10.6.3 quotes and it must not absorb an extension's error, nor the reverse: an
+    # extension error is THIS port's wall and a base error is a regression `md-measure` already failed
+    # on.
+    E_BASE=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdextmeasure.txt | grep -c "/ssg-md/src_managed/")
+    E_EXT=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdextmeasure.txt | grep -c "/ssg-md-ext/src_managed/")
+    echo "  base tree: $E_BASE   extension tree: $E_EXT   elsewhere: $((ERRORS - E_BASE - E_EXT))"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/mdextmeasure.txt | sort | uniq -c | sort -rn | head -20
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/mdextmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
+
+    echo
+    echo "-- correlation: every error located to its member and its Java origin --"
+    # BOTH maps, scoped: an error in an extension resolves through this port's map and one in the
+    # library through the base's, so the two walls stay distinguishable after the join. The OUTPUT
+    # goes to THIS report — writing it into `FlexmarkMigrate/run-latest` would overwrite the artifact
+    # `md-measure` had just written, which is `PROGRESS.md` §10.6.3's census.
+    correlate "$EREPORT/run-latest" --scalac "$MEASURE_TMP"/mdextmeasure.txt \
+      --srcmap "$REPORT/run-latest/srcmap.tsv" \
+      --srcmap "$EREPORT/run-latest/srcmap.tsv"
+
+    headline "$ERRORS" "$EREPORT"
+
+# ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
@@ -1873,8 +2026,9 @@ measure-all:
     # the ordering is a dependency order and stays one, which is exactly why `md-test-measure`
     # follows `md-measure` and not the other way round. The test port is a DEPENDENT (`test.conf`
     # has `base = "main.conf"`) and its compile links against the main source set's `src_managed/`,
-    # so run first it would measure the PREVIOUS engine's emit of the library it tests.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure; do
+    # so run first it would measure the PREVIOUS engine's emit of the library it tests. `md-ext-measure`
+    # is a dependent of the same base for the same reason and follows both.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then

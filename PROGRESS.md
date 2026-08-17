@@ -250,8 +250,10 @@ repository-level NOTICE / THIRD-PARTY files are still hand-maintained and are no
    modules) is ported by the engine, compiles at 0 errors on both source sets, and is the only port
    in the corpus with SPEC-LEVEL evidence: **100 % of CommonMark, 1,870 of 1,870 examples, against a
    java control measured green** (§10.6.7). The rename turned out to be the easy half — one uniform
-   prefix with one deviation, collision-free. What remains is the 29 extension modules as DEPENDENT
-   ports, and two suite failures that are one engine family this port shares with liqp.
+   prefix with one deviation, collision-free. What remains is 28 of the 29 extension modules — the
+   first, `flexmark-ext-aside`, is ported as ONE dependent port at 0 errors and the pattern and its
+   per-extension checklist are §10.6.8 — and two suite failures that are one engine family this port
+   shares with liqp.
 6. **`sge` core** — already ported by the engine. What remains is the 100 absent types and the backend
    question, which is a platform decision, not a port.
 7. **Deferred / not port work**: `sge-controllers`, `sge-tools`, `sge-physics*`, `sge-freetype`,
@@ -2756,8 +2758,8 @@ map is injective by construction and was verified collision-free over the whole 
 | | scope | main files |
 |---|---|---:|
 | **milestone 1 — this port** | `flexmark` core + the eleven `flexmark-util-*` libraries | **486** |
-| milestone 2a | 25 covered `flexmark-ext-*` with no intra-extension dependency, as DEPENDENT ports | 326 |
-| milestone 2b | `abbreviation`, `enumerated-reference`, `jekyll-front-matter`, `macros` — each after its own sibling | 60 |
+| milestone 2a | 25 covered `flexmark-ext-*` with no intra-extension dependency, as ONE DEPENDENT port (§10.6.8) | 326 |
+| milestone 2b | `abbreviation`, `enumerated-reference`, `jekyll-front-matter`, `macros` — a batching hint, not a sequencing requirement (§10.6.8) | 60 |
 | deferred | 3 untouched extensions + 7 converter/tooling modules + `util-experimental` + `tree-iteration` | 219 |
 
 Milestone 1 first because everything else depends on it: it is the shared surface 29 dependent
@@ -3941,6 +3943,82 @@ passing / 2 failing of 727 outcomes**, and the 2 are the `Pair.equals` rows §10
 parent the phase left as java's (`ENGINE-LIMITS.md` K18.1/K5.7). Nothing about markdown is failing
 any more; the residue is one engine family this port shares with liqp.
 
+### 10.6.8 MILESTONE 2 — the extensions, as ONE dependent port, and the recipe for the other 28
+
+`just md-ext-measure`, `balticporter/corpus/ports/ssg-md/ext.conf`,
+`port-report/FlexmarkExtMigrate`.
+
+**THE LAYOUT, AND WHY IT IS ONE PORT AND NOT TWENTY-NINE.** A run's emission identity is the PAIR
+(`portRoot`, `sourceSet`); `SourceSet` is `main | test` and nothing else; and `PortRun` opens its
+emission with an unconditional `wipe(emitDir)` — a second run at the same pair does not merge with
+the first, it DELETES it. So `ported/ssg-md` has exactly two emission slots and `main.conf` and
+`test.conf` hold both. The reference hand port puts all twenty-five of its extension packages inside
+the ONE `ssg-md` module (`../ssg/ssg-md/src/main/scala/ssg/md/ext/`), so twenty-nine port roots would
+be twenty-nine names for modules `../ssg/build.sbt` does not have — which is the "two different
+answers to one question" `CLAUDE.md` §2.1 exists to refuse. And widening `main.conf`'s scope to 872
+files is not a dependent port at all: it abolishes the §1.5 relationship this milestone exists to
+exercise and moves the census §10.6.3 quotes.
+
+What shipped is therefore ONE dependent port at ONE port root of its own, `ported/ssg-md-ext`, whose
+tree is disjoint by package from the base's (`ssg.md.ext.*` against `ssg.md.{ast,parser,html,
+formatter,util}`) and is compiled beside it on every run — which is what makes the two one module in
+the consumer's build, exactly as `src_managed/main/scala` and `src/` already are. A BATCH WAVE IS TWO
+LINES: one glob in `ext.conf`'s `includeGlobs` and one module name in the `Justfile`'s
+`md_ext_modules`, which is the denominator the lane re-derives so a wave that edits one and not the
+other is visible.
+
+**THE FIRST EXTENSION IS `flexmark-ext-aside`, chosen for what it PROVES.** 10 java files (8 units,
+two `package-info.java`), milestone 2a, and the canonical extension shape entire — the
+`Parser.ParserExtension` + `HtmlRenderer.HtmlRendererExtension` + `Formatter.FormatterExtension`
+registration triple, a `BlockParserFactory`, a `NodeRendererFactory`, a `NodeFormatterFactory`, an
+options holder, an AST node and a `Visitor`/`VisitorExt` pair. Every other extension is a permutation
+of those seven. It has no `*JiraRenderer` (eight extensions do, and `flexmark-jira-converter` is both
+out of scope and one of the hand port's 28 undocumented omissions — a scope question the batch waves
+answer and the first extension should not), and its `AsideParserTest` is a plain `@Test` importing
+`Parser`, `BasedSequence` and `SpecialLeadInHandler` and nothing else, so the suite can run against
+the BASE's main source set without a third base chain.
+
+| | |
+|---|---|
+| units | **8 emitted Scala files** from 10 java (0 dropped, 0 injected) |
+| compile | **0 errors**, base tree and extension tree compiled TOGETHER on one invocation |
+| shared surface | `manifest` **0** over **458 shared types**, `base-surface` **0**, `port-map` 0 — the first port on this corpus with real content for either |
+| residues | `overload-risk` **1** (`BasedSequence#subSequence/2`, `GenericTieBreak`, catalog `JS-C23`), of 163 program-declared calls and 39 with more than one applicable candidate |
+| everything else | 0 on every other lane; `portability(all)` **18** is the BASE's — `portability(emitted)` is 0, which is `ENGINE-LIMITS.md` D2's ownership filter answering correctly |
+| decisions | 23 (`RenamedPackage` 8, `RenamedMember` 6, `RetypedSignature` 6, `ForcedClassInit` 2, `FunnelledCtor` 1); 1,905 withheld as the base's |
+
+**WHAT THE EMITTED TEXT SETTLES, and no count could.** `AsideExtension`'s companion carries three
+`export` clauses re-exporting the constants of the base's emitted `ParserExtension`,
+`HtmlRendererExtension` and `FormatterExtension`. That is the java-interface-constants rule (§1(a):
+java's are `static` and inherited, scala companions do not inherit) firing ACROSS the base/dependent
+boundary, against a parent the dependent never parsed as scala and only ever resolved as java. It is
+the §1.5 claim in the one place it can be read: the shared surface the base EMITTED is one a third
+party can implement against, and the extension implements six of its extension points.
+
+**WHAT THIS MILESTONE DISSOLVES.** §10.6.1 splits the 29 into 25 "with no intra-extension
+dependency" (2a) and 4 "each after its own sibling" (2b). Under one port that ordering is not a
+constraint at all — an intra-extension dependency is a reference inside one run's own scope, exactly
+as `flexmark` core's reference to `flexmark-util-sequence` is inside `main.conf`'s. The 2a/2b split
+survives only as a batching HINT (put a sibling in the same wave or an earlier one), never as a
+sequencing requirement.
+
+**THE PER-EXTENSION CHECKLIST**, for the waves that follow:
+
+1. **read the module's imports** — `grep -rh '^import ' <mod>/src/main/java | sort -u`. Everything
+   outside `com.vladsch.flexmark`, `java.*` and `org.jetbrains.annotations` is a NEW frontend
+   coordinate (`org.nibor.autolink` for `ext-autolink` is the only one in the covered 29) and goes in
+   `FlexmarkClasspath.Coordinates` with the pom line that declares it. A `com.vladsch.flexmark.jira`
+   import means the module ships a `*JiraRenderer` and the wave has to say what happens to it;
+2. **add the glob** to `ext.conf`'s `includeGlobs`, enumerated per module, never a `flexmark-ext-*`
+   pattern (D-mde-4: a glob admits the three uncovered modules silently);
+3. **add the module name** to the `Justfile`'s `md_ext_modules`, which is the lane's own denominator;
+4. **`just md-measure && just md-ext-measure`** — in that order, always. The lane compiles the base
+   tree beside this one and reads the base's published map, so a stale base is a stale answer with
+   every count identical;
+5. **read the split**: `base tree: N   extension tree: M`. A base error is `md-measure`'s regression
+   and not this port's wall; an extension error is this wave's;
+6. **classify every finding per §1** before accepting anything, then `just baseline-accept
+   FlexmarkExtMigrate` and commit the baseline with the change that produced it.
 
 ---
 
