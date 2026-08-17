@@ -147,7 +147,7 @@ md_modules    := "flexmark flexmark-util-ast flexmark-util-builder flexmark-util
 # the lane PRINTS (`modules in scope: N of 29 covered`) rather than one this comment carries: a count
 # written here is one a wave has to remember to edit, and a stale one reads exactly like a scope that
 # drifted.
-md_ext_modules := "flexmark-ext-aside flexmark-ext-resizable-image"
+md_ext_modules := "flexmark-ext-aside flexmark-ext-resizable-image flexmark-ext-youtube-embedded"
 
 # …and the extension suite's java-side denominator, `ext-test.conf`'s `includeGlobs` restated.
 #

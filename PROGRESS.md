@@ -3998,6 +3998,29 @@ it ADDED to a lane, never the lane's total.
 |---|---|---:|---:|---:|---:|---|
 | 1 | `ext-aside` | 10 | 8 | 0 | 1/1 | `overload-risk` 1 (`GenericTieBreak`) |
 | 2 | `ext-resizable-image` | 6 | 6 | 0 | — | `overload-risk` +4 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
+| 3 | `ext-youtube-embedded` | 8 | 6 | 0 | — | `overload-risk` +20, `portability(emitted)` +3, `remediation` +1, and `catalog(unreached)` **25 → 22** |
+
+**THE FIRST THING THE BATCH BOUGHT IS A CATALOG ROW NOBODY HAD REACHED HERE.**
+`ext-youtube-embedded` is the first module in this port to write a `try`/`catch` at all — one
+`new URL(…)` under a `catch (MalformedURLException e) {}` — and `catalog(unreached)` fell **25 → 22**
+on its arrival, `JS-S11`/`JS-S12`/`JS-S13` (the `Try` family) moving from *never reached* to
+*consulted 1, fired 0*. `fired 0` is the right answer for all three and is a MEASURED one now rather
+than an unexamined one: the catch is NARROW, so `JS-S11`'s broad-catch rethrow correctly declines,
+and there is no `finally` and no resource. That is `CLAUDE.md` §2's claim about what a corpus
+addition is FOR, arriving on the third-smallest module in the milestone.
+
+**AND IT IS THE FIRST `portability(emitted)` ROW THIS PORT OWNS — DECLINED, WITH THE REASON.**
+The same three lines are three JVM-only sites (`java.net.URL` ×2, `java.net.MalformedURLException`),
+which is `portability(emitted)` **0 → 3** against `portability(all)` 18 → 21 — the base's 18 plus
+these — and `ENGINE-LIMITS.md` D2's ownership filter putting this module's own rows on this module's
+report for the first time. The engine published one remediation candidate with it
+(`substitutions-drop` at `YouTubeLinkNodeRenderer`, `high`: all 3 sites of 2 APIs are inside that one
+type and nothing else in the port references it). **It is not taken.** Dropping the type would delete
+the extension's whole HTML rendering, which is the port running LESS than java — `CLAUDE.md` §5's
+accept rule says a LOSS takes no entry however cleanly it drains a lane — and it would be a different
+answer from the one the BASE gives its own 18 rows, which are carried as a counted residue. The
+honest state is 3 counted rows and a menu entry nobody selected, which is exactly what the two lanes
+now say.
 
 **AND `tests —` IS A TRIAGE RESULT, NOT AN OMISSION — but the triage cannot be read off the FILE.**
 The checklist's step 4 opened `grep -rl '@RunWith(Parameterized' <mod>/src/test`, and that answers NO
