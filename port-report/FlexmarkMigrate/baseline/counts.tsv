@@ -10,7 +10,7 @@ catalog(unreached)	15
 class-init-trigger	0
 collection-boundary	21
 collection-closure	2
-collection-internal	5
+collection-internal	0
 collection-retarget	0
 dependency-coverage	10
 dependency-coverage(all)	10

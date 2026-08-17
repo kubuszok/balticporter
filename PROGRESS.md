@@ -2794,12 +2794,12 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13 and **18** after wave 14 (coded 18 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **15** now, counted from `errors.tsv` rather than by eye — 96.8 % of the port compiles clean |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13 and **13** after wave 14 (coded 13 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **10** now, counted from `errors.tsv` rather than by eye — 97.6 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
 | `jdk-surface` | **456 classified, 38 unresolved at first emit** (shimmed 7, mapped 44, kept 367) and **25 after wave 3** (27 after wave 2). The 38 were the retyped-owner members `CollectionsTransform`'s tables had no entry for, and they were the SAME 33 errors the compile reported — the two instruments agree exactly, and they moved together when the SE8 members were mapped (`ENGINE-LIMITS.md` K23). **26 after wave 12**, and the +1 is a row that MOVED LANES rather than appeared: mapping `java.util.AbstractSet` took `BitFieldSet`'s `super.equals(Object)` off `collection-boundary`'s `OpaqueEgress` (it is no longer an external callee) and onto this one, where *retyped to `mutable.Set`, no rewrite* is the honest sentence for a member K29's table deliberately does not carry |
-| `collection-internal` | **5 after wave 9**, from the 7 the lane arrived at (`ENGINE-LIMITS.md` K26). What is left is the five `SplitTypeVariable` rows — exactly the five `MutableDataHolder.set` errors — and closing those needs the coercion to run at the INFERENCE site, because the formal has no head to coerce against. The two `DeclaredSubtype` rows (`OrderedMultiMap#keys`/`#values`) CLOSED at wave 9 with their two compile errors. The lane's own arrival was provably flat: 0 errors moved, 0 member digests on any of the sixteen port reports, and every other port still reads **0** |
+| `collection-internal` | **0 after wave 14**, from the 7 the lane arrived at (`ENGINE-LIMITS.md` K26). The two `DeclaredSubtype` rows (`OrderedMultiMap#keys`/`#values`) closed at wave 9 with their two compile errors, and the five `SplitTypeVariable` rows — exactly the five `MutableDataHolder.set`/`BuilderBase.set` errors — closed at wave 14, with theirs. Both falls carry the attribution §5 requires of a lane that falls. The lane's own arrival was provably flat: 0 errors moved, 0 member digests on any of the sixteen port reports, and every other port still reads **0** |
 | `collection-boundary` / `collection-closure` / `collection-retarget` | **28 / 3 / 0** at first emit, **27 / 3 / 0** after wave 2, **26 / 3 / 0** after wave 4 and **22 / 3 / 0** after wave 5 — one seam left the lane when the call at it became a helper call rather than a member on a retyped receiver, one more when the `keySet()` view gave `coerce` a factory for it (`ENGINE-LIMITS.md` K2.7), and FOUR when K25 held `BitFieldSet`'s class-file overrides literally, so each `super.<same>(c)` stopped handing a shim to `java.util.AbstractSet` — those four fell together with the four errors they caused, which is the attribution §5 requires of a lane that falls. **21 / 2 / 0 after wave 12** — the `collection-closure` row that fell is the one `ENGINE-LIMITS.md` K29 opens with (*`java.util.AbstractSet` unmapped while `AbstractCollection` is mapped, so the JDK relation is lost*), closed by mapping it, and the boundary row is `super.equals(Object)` moving to `jdk-surface` above. The 21 are `OpaqueEgress` 13, `ExternalCallee` 4, `InexpressibleParent` 2 and `ReifiedOccurrence` 2 — `ShimBoundary` is **0**, here and on every other port |
 | `overload-risk` | **563**, with its denominator recomputed beside it: 26,166 program-declared calls examined, 3,915 with more than one applicable candidate, 563 spanning a java resolution phase |
 | `heap-pollution` | **13**, every one `Acknowledged` — java warned and the author wrote `@SafeVarargs`, which scala has neither of |
@@ -2818,7 +2818,7 @@ MUnit registrations with a lane, a discovery guard and an error baseline holding
 so the remaining distance is a number (44 test-set errors on top of the library's 40) rather than an
 absent source set.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 18 after wave 14**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14**
 
 Every error is `EngineGap`. Eight waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2959,36 +2959,46 @@ whose parent stayed `java.util.AbstractSet`.
 
 Nothing left in this port needs a manifest entry, and no residue above is per-library policy.
 
-#### The FLOOR the refusal ledger defines — 13 of the 18 after wave 14, and what the other 5 are
+#### The FLOOR the refusal ledger defines — 8 of the 13 after wave 14, and what the other 5 are
 
-Twelve waves took 243 → 30 and every one of them closed a FAMILY. What is left divides into rows a
+Thirteen waves took 243 → 13 and every one of them closed a FAMILY. What is left divides into rows a
 named refusal already answers and rows nobody has diagnosed, and the two are worth separating,
 because a census that only counts is one an operator reads as *fifteen more waves*. **Nineteen of the
 thirty were attributed to a refusal or a limit this repository has already measured and written down**
-— closing any of them means re-opening that entry with a number, not finding a bug. **Wave 13 did
-exactly that to SIX of them, and the lesson is the classification rather than the count**: G8's six
-were refused against the wrong question (a FILL, where every site wanted a SELECTION's type), so the
-table below now reads THIRTEEN refused:
+— closing any of them means re-opening that entry with a number, not finding a bug. **Waves 13 and 14
+did exactly that to ELEVEN of them, and the lesson is the classification rather than the count**: G8's
+six were refused against the wrong question (a FILL, where every site wanted a SELECTION's type), and
+K26's five said *the formal has no HEAD to coerce against*, which is true of the formal as WRITTEN and
+false of the one java RESOLVED. **A refused row is a census row and is re-read like one** — that is
+now the table's own standing lesson, arrived at twice:
 
 | n | attributed to | what the refusal SAYS |
 |---:|---|---|
 | ~~6~~ | **LEFT THIS TABLE AT WAVE 13** — `ENGINE-LIMITS.md` **G8.7** | the row said *a partially-nameable F-BOUNDED class has no consistent fill*, which is true and was not the question these six sites asked. Every one is a SELECTION on `getBuilder()`'s result, so the argument may stay `Nothing` and what needs text is the type the selection reads — an ASCRIPTION, which satisfies no bound. This is the entry to re-read before treating a refusal row as a floor |
 | 2 | **K25**'s residue — the in-program half, its two `collection-internal` rows CLOSED at wave 9 and the `ScopedDataSet#getKeys` PAIR at wave 12 | a `JavaCollection` formal or result meeting a `Buffer`/`Set`/own-`OrderedSet` value at a call the PORT declares. K25 closed the rule half (an override of a class file keeps java's formals), K26 closed `DeclaredSubtype`, and K29's widened `addAll` closed the pair whose BOTH parameters sat on the wrong side of a signature written for `mutable.Buffer` alone; what is left sits at a callee THIS PHASE MINTED, which carries no signature at all, and K26 records both the removed operand-only arm and its repair (mint the helpers with their signatures) |
-| 5 | the same seam one level in, at a TYPE ARGUMENT — **all five on `collection-internal`** | `DataKey<Collection<Extension>>` retypes its argument to the shim while the value is an `ArrayBuffer`: one java subtyping edge that the mapping sends to two unrelated scala types. Wave 6 established this belongs WITH the six above rather than apart from them, and wave 8's lane counts it as `SplitTypeVariable` — one type VARIABLE bound to both sides inside one argument list |
+| ~~5~~ | **LEFT THIS TABLE AT WAVE 14** — `ENGINE-LIMITS.md` **K26** | `DataKey<Collection<Extension>>` retypes its argument to the shim while the value is an `ArrayBuffer`: one java subtyping edge that the mapping sends to two unrelated scala types. The refusal said the formal has no HEAD to coerce against, which is true of the formal as WRITTEN and not of the one java RESOLVED — `DataKey<T>` is invariant, so the key argument fixes `T` exactly and the value is converted to it. `collection-internal` **5 → 0** with the five errors, which is the attribution §5 requires of a lane that falls |
 | 3 | **K23**'s counted refusals | `listIterator` (2) and `spliterator` (1) hand back a JDK PROTOCOL rather than a value, and there is nothing to map them onto. The fourth row was the one bound method reference, and wave 10 BUILT it — the refusal had been priced at one site and there were seven (`ENGINE-LIMITS.md` K23) |
 | 3 | **K5.7**'s `UninheritableTargets`, counted as `InexpressibleParent` | a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent, because the retyping's target is a `Tuple2` and no class can extend one |
-| **13** | | |
+| **8** | | |
 
 The other **5** are open work with no entry behind them: **1** raw-generic one-off and the residue.
-So the honest reading of 18 is *13 refused, 5 open*. Wave 13 took FIVE out of the open
-column and SIX out of the refused one, in four commits; **wave 14's first commit took a sixth out of
-the open column, and its diagnosis is this table's own standing lesson read once more.**
+So the honest reading of 13 is *8 refused, 5 open*. Wave 13 took FIVE out of the open
+column and SIX out of the refused one, in four commits; **wave 14 took a sixth out of the open column
+and five more out of the refused one, and the first of those is this table's own standing lesson read
+once more.**
 `TextCollectingVisitor` had been filed under its error text (`None of the overloaded alternatives of
 constructor NodeVisitor`) as a raw-generic one-off, and the cause is neither raw nor generic: the
 same `new NodeVisitor(h1…h6)` PACKS its vararg array one file away in `LineCollectingVisitor` and
 does not here, because this one carries an ANONYMOUS BODY and the parser hands a synthesised
 constructor to every rule keyed on the callee's declaration (`ENGINE-LIMITS.md` G29). That is the
 SIXTH census row whose cause turned out to be a different defect from the one its text names.
+
+**And wave 14's second commit is the stronger half, because it drained a LANE.** `collection-internal`
+existed precisely to count the seam no other instrument could see, and it read **5** here for six
+waves. The five went to **0** with the five errors they named — which is the arithmetic §5 asks of a
+lane that falls, and it is the first time this port has had it on the internal lane. Nothing about the
+refusal's SENTENCE was wrong; what was wrong was reading a fact about the formal java WROTE as a fact
+about the formal java RESOLVED.
 
 Wave 13's four commits:
 
@@ -3034,21 +3044,24 @@ Two things this table is deliberately NOT:
   leave it**: `AbstractSet` was in nobody's table at all, and closing it moved this column by two.
   **Wave 13 is the stronger proof and a different one**: G8's six left because the REFUSAL was
   answering a question those sites never asked, so a row can leave this table without its entry
-  being wrong about anything it actually says (`ENGINE-LIMITS.md` G8.7);
-- **it is not a substitute for the counts — and that objection is now DISCHARGED.** Seven of the
-  thirteen remaining are the collections family's INTERNAL seam, and `collection-boundary` — the lane that
-  exists to count that residue — reads **21** and sees NONE of them, because it counts the external
-  half. Wave 8 gave the internal half its own lane: `collection-internal` reads **5** here and **0**
-  on the test set, at 0 errors moved and 0 member digests on any port report when it arrived
-  (`ENGINE-LIMITS.md` K26). What it attributes is the five `MutableDataHolder.set` rows
-  (`SplitTypeVariable` — one type variable bound to both sides of a broken edge); its two
-  `DeclaredSubtype` rows (`OrderedMultiMap#keys`/`#values`) closed at wave 9. What it does NOT
-  attribute is stated rather than averaged over: `Attributes#values` and `BuilderBase#extensions` sit
-  at a callee THIS PHASE MINTED, which carries no signature, and the arm that read such a call from
-  its OPERANDS alone was built, measured at 2 rows of which 1 was false, and removed — K26 carries
-  the number and the repair (mint the helpers with their signatures). The `ScopedDataSet#getKeys`
-  pair that used to sit beside them closed at wave 12 and, exactly as this bullet predicts, **no lane
-  fell with it**.
+  being wrong about anything it actually says (`ENGINE-LIMITS.md` G8.7). **Wave 14 made that a rule
+  rather than an anecdote**: K26's five left the same way, and their entry had NAMED the fix in its
+  own text ("the coercion has to run at the INFERENCE site") for six waves while the row it wrote
+  read as a floor;
+- **it is not a substitute for the counts — and that objection is now DISCHARGED, TWICE OVER.** Two of
+  the remaining rows are the collections family's INTERNAL seam, and `collection-boundary` — the lane
+  that exists to count that residue — reads **21** and sees NEITHER of them, because it counts the
+  external half. Wave 8 gave the internal half its own lane: `collection-internal` arrived at **7**
+  here and **16** on the test set, at 0 errors moved and 0 member digests on any port report
+  (`ENGINE-LIMITS.md` K26), and it now reads **0** on both. Its two `DeclaredSubtype` rows
+  (`OrderedMultiMap#keys`/`#values`) closed at wave 9 and its five `SplitTypeVariable` rows — one type
+  variable bound to both sides of a broken edge — at wave 14, each fall carrying exactly the errors it
+  named. What it does NOT attribute is stated rather than averaged over: `Attributes#values` and
+  `BuilderBase#extensions` sit at a callee THIS PHASE MINTED, which carries no signature, and the arm
+  that read such a call from its OPERANDS alone was built, measured at 2 rows of which 1 was false,
+  and removed — K26 carries the number and the repair (mint the helpers with their signatures). The
+  `ScopedDataSet#getKeys` pair that used to sit beside them closed at wave 12 and, exactly as this
+  bullet predicts, **no lane fell with it**.
 
 **AND A DECISION PASS CANNOT TAKE THIS PORT TO ZERO — refused at wave 12, with the reason, because
 it is the obvious next move and it is the wrong one.** Reaching 0 by declaring the residue is

@@ -3145,11 +3145,72 @@ final class CollectionsTransform(
     // like it was protecting is now protected where it belongs, at the target comparisons.
     if !ownedSym(t.method) || keepsJavaFormals(t) then t
     else
-      val formals = formalsOf(t)
+      val formals = instantiatedFormals(t, formalsOf(t))
       if formals.sizeIs != t.args.size then t
       else
         val as = t.args.zip(formals).map((a, f) => coerce(f, a))
         if as == t.args then t else t.copy(args = as)
+
+  /** …the formals this call's OWN ARGUMENTS INSTANTIATE — the slot with NO HEAD to coerce against.
+    *
+    * `ENGINE-LIMITS.md` K26's first blindness, met at the FIX rather than at the count.
+    * `set(DataKey<T> key, T value)` called as `set(EXTENSIONS, list)` binds ONE type variable to
+    * both sides of a java subtyping edge this mapping has no image for: the KEY says
+    * `T = Collection<E>`, which is the standalone shim (§4.5 says it must be), and the VALUE is an
+    * `ArrayList<E>`, which is a `scala.collection.*`. Java compiled it because `ArrayList <:
+    * Collection`; the port does not. And [[coerce]] cannot repair it as written, because the formal
+    * at the value slot is a BARE type variable and every arm of the factory table asks for a HEAD —
+    * which is exactly why `collection-boundary` reads zero here and why the internal lane had to
+    * exist.
+    *
+    * ==Java's own resolution is what supplies the head, and its ASYMMETRY is the whole rule==
+    * `DataKey<T>` is INVARIANT, so the key argument fixes `T` exactly (JLS 18.2.1) and the value is
+    * then converted TO it; the bare occurrence only bounds `T` from below and decides nothing.
+    * Reproduce that and nothing else: a PARAMETERISED formal binds, a bare one is the slot being
+    * answered. Read the other way round the substitution would say `T = ArrayBuffer[E]` and defeat
+    * its own purpose.
+    *
+    * ==WHICH variables this call may bind is OWNERSHIP, never a name==
+    * §4.56, whose hazard is at its sharpest here: a class's `<V>` and a method's `<V>` are one
+    * string. The frontend mints a method's type parameter with `owner = <that method>`, so the test
+    * is a symbol comparison — and a CLASS's parameter, which the RECEIVER fixes and which this call
+    * cannot bind, is skipped. `CollectionInternalCheck.typeVariableSplit` reads the same fact the
+    * same way and by the same test, which is what keeps the lane that COUNTS this residue and the
+    * pass that DRAINS it from disagreeing about which slot is which. The class-parameter shape is
+    * therefore still a counted refusal rather than a wrap: closing it needs the receiver's
+    * instantiation, which is a different derivation.
+    *
+    * Nothing here decides to wrap. The substituted formal goes to [[coerce]] exactly as a written
+    * one does, so every guard, every refusal and every absent factory still answers — and a call
+    * whose variable nothing binds comes back with the formals it arrived with. */
+  private def instantiatedFormals(t: Tree.Apply, formals: List[TypeRepr])(using p: Program): List[TypeRepr] =
+    if formals.sizeIs != t.args.size then formals
+    else
+      val bound = collection.mutable.HashMap.empty[SymId, TypeRepr]
+      def bindable(s: SymId): Boolean = p.symbolOf(s).exists(_.owner == t.method)
+      // …the recursion is through MATCHING HEADS only. An `AppliedType` whose heads differ is a slot
+      // the ordinary boundary lane already reports, and unifying across it would invent a binding
+      // java never made. FIRST WINS: a variable a well-typed java call bound twice at two
+      // parameterised formals bound it to one type, and where it did not, this phase has no standing
+      // to pick — the residue stays the counted one.
+      def bind(f: TypeRepr, a: TypeRepr): Unit = (f, a) match
+        case (TypeRepr.TypeRef(_, s), _) if bindable(s) && a != TypeRepr.NoType =>
+          if !bound.contains(s) then bound(s) = a
+        case (TypeRepr.AppliedType(ftc, fs), TypeRepr.AppliedType(atc, as))
+          if headSym(ftc) == headSym(atc) && headSym(ftc).isDefined && fs.sizeIs == as.size =>
+          fs.lazyZip(as).foreach(bind)
+        case _ => ()
+      formals.lazyZip(t.args).foreach {
+        // a formal that IS a bare reference is the slot being answered, never the binder — see the
+        // asymmetry above. (A non-variable `TypeRef` binds nothing either way, so one arm serves.)
+        case (_: TypeRepr.TypeRef, _) => ()
+        case (f, a)                   => bind(f, a.tpe)
+      }
+      if bound.isEmpty then formals
+      else formals.map {
+        case f @ TypeRepr.TypeRef(_, s) if bindable(s) => bound.getOrElse(s, f)
+        case other                                     => other
+      }
 
   /** Does this call's callee keep JAVA formals — i.e. is its signature one this phase did not and
     * cannot move? Three cases, and the third is the one that decides the shape.

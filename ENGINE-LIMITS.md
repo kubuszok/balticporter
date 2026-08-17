@@ -6950,7 +6950,7 @@ would fail and the anonymous `ThreadLocal` is the one liqp found.*
 
 ---
 
-### K26. The mapping BREAKS java's own subtyping edges, and the seam that leaves has the JDK on NEITHER side — **16 of one port's 24 attributed errors, counted by nothing. LANE BUILT (`collection-internal`, 7 + 16); `DeclaredSubtype` then CLOSED at the slot (`16 -> 0` and `7 -> 5`, 11 errors); `SplitTypeVariable` still OPEN**
+### K26. The mapping BREAKS java's own subtyping edges, and the seam that leaves has the JDK on NEITHER side — **16 of one port's 24 attributed errors, counted by nothing. LANE BUILT (`collection-internal`, 7 + 16); `DeclaredSubtype` CLOSED at the slot (`16 -> 0` and `7 -> 5`, 11 errors); `SplitTypeVariable` CLOSED at the INFERENCE site (`5 -> 0`, ssg-md 18 -> 13). CLOSED**
 
 `typeMap` sends `java.util.Collection` to a STANDALONE shim — `CLAUDE.md` §4.5 says it must, and the
 `Collection` entry's own comment says so at length — and sends every java SUBTYPE of `Collection`
@@ -7041,14 +7041,49 @@ a new standalone target, a new refusal cell, or a class whose parents the phase 
 re-opens it, and the row's value was never the count but the ATTRIBUTION it carries (`CLAUDE.md`
 §4.45). `Issue.ShimBoundary` going empty on all fifteen ports at K2.7 is the same shape.
 
+**AND `SplitTypeVariable` IS NOW CLOSED TOO, at the INFERENCE SITE, which is where this entry always
+said the answer had to run.** The line above — *closing it needs the coercion to run at the INFERENCE
+site, the argument whose type fixes the variable, because the formal has no head to coerce against* —
+is exactly the fix, and what it needed was JAVA'S OWN ASYMMETRY written down rather than a new
+mechanism. `set(DataKey<T> key, T value)` is resolved by javac from the KEY: `DataKey<T>` is
+INVARIANT, so that argument fixes `T` exactly (JLS 18.2.1) and the value is then converted TO it,
+while the bare occurrence only bounds `T` from below and decides nothing. So a PARAMETERISED formal
+BINDS and a bare one is the slot being ANSWERED — read the other way round the substitution says
+`T = ArrayBuffer[E]` and defeats its own purpose. `wrapIterableArgs` substitutes what the arguments
+instantiate before it zips, and `coerce` then meets a formal with a head and picks the factory it
+always had: `JavaCollection.from` for a `Kind.Seq`, `fromSet` for a `Kind.Set`.
+
+Three things that keep it exact rather than wide:
+
+- **the recursion is through MATCHING HEADS only.** An `AppliedType` whose heads differ is a slot the
+  ordinary boundary lane already reports, and unifying across it would invent a binding java never
+  made;
+- **WHICH variables the call may bind is OWNERSHIP, never a name** — §4.56 at its sharpest, since a
+  class's `<V>` and a method's `<V>` are one string. It is the SAME test `typeVariableSplit` uses to
+  COUNT this residue, which is what keeps the lane and the pass that drains it from disagreeing about
+  which slot is which. A CLASS's parameter is therefore still a counted refusal: the receiver fixes
+  it, closing that shape needs the receiver's instantiation, and that is a different derivation;
+- **nothing here decides to wrap.** The substituted formal goes through `coerce` exactly as a written
+  one does, so every guard, every refusal and every absent factory still answers — which is why the
+  "already a shim" negative emits nothing at all.
+
+**Measured**: ssg-md **18 → 13** with `collection-internal` **5 → 0**, and the five rows that left the
+lane are the five errors that closed — the attribution `CLAUDE.md` §5 requires of a lane that falls,
+stated per row (`Parser#addExtensions`, `Parser#removeExtensions`, `BuilderBase#extensions`,
+`BuilderBase#removeExtensions` ×2). Every other check count flat; 4 member digests, one per declaration
+holding a site. Every other port in the corpus byte-identical.
+
 *Fix kind: (a) for the lane, BUILT. (a) for `DeclaredSubtype`, CLOSED and measured at 16 -> 0 / 7 -> 5.
-(a) for `SplitTypeVariable`, OPEN at 5.
+(a) for `SplitTypeVariable`, CLOSED and measured at 5 -> 0 / 18 -> 13.
 `CollectionInternalCheckSpec` — two positives and five negatives, of which "the same class at the
 same target's slot" is the one that decides `DeclaredSubtype` (a library's own collection carries
 BOTH ends as parents) and "a MINTED helper's operands span the edge and NOTHING is reported" pins the
 removed arm. `CollectionsDeclaredSubtypeSpec` — three positives (set, seq, and the TRANSITIVE hop)
 and two negatives, of which "a class that ALREADY carries the wanted shim" is the one that decides
-whether this wraps code that was already right.*
+whether this wraps code that was already right. `CollectionsInferenceSiteSpec` — two positives (seq
+and set) and three negatives, of which "a BARE formal binds NOTHING" is the asymmetry and "a CLASS's
+type parameter" is the ownership test; both positives were verified to FAIL with the substitution
+switched off.*
 
 ---
 

@@ -82,14 +82,23 @@ class CollectionInternalCheckSpec extends PortSuite:
   // SplitTypeVariable — the disagreement is at no formal's head
   // -------------------------------------------------------------------------------------------
 
+  // THE SHAPE IS NOW THE RESIDUE, not the population — and that is the pass draining the lane.
+  // `set(Key<V> k, V v)` used to be this fixture, and `CollectionsTransform` now answers it: `Key<V>`
+  // is INVARIANT, so the key argument fixes `V` and the value is coerced TO it (`ENGINE-LIMITS.md`
+  // K26, measured `collection-internal` 5 -> 0 with its five errors). What no substitution can answer
+  // is the shape with NO parameterised formal to read the variable off — TWO BARE occurrences, where
+  // java infers the lub and the phase has no standing to pick one side — so that is what this lane
+  // counts now, and the drained shape is the case below it.
   private val splitVar =
     """package demo;
       |import java.util.*;
       |class Key<T> { }
       |class Store {
-      |  <V> void put(Key<V> k, V v) { }
-      |  void crossing(Key<Collection<String>> k, ArrayList<String> xs) { put(k, xs); }
-      |  void same(Key<ArrayList<String>> k, ArrayList<String> xs) { put(k, xs); }
+      |  <V> void put(V a, V b) { }
+      |  <V> void keyed(Key<V> k, V v) { }
+      |  void crossing(Collection<String> c, ArrayList<String> xs) { put(c, xs); }
+      |  void same(ArrayList<String> a, ArrayList<String> b) { put(a, b); }
+      |  void drained(Key<Collection<String>> k, ArrayList<String> xs) { keyed(k, xs); }
       |}
       |""".stripMargin
 
@@ -107,6 +116,16 @@ class CollectionInternalCheckSpec extends PortSuite:
     val (_, fs, _) = findings(splitVar)
     // `same(…)` binds `V` to `ArrayBuffer` from both arguments. One finding, from `crossing` only.
     assertEquals(clue(fs.count(_.issue == Issue.SplitTypeVariable)), 1)
+  }
+
+  test("NEGATIVE: a SIBLING PARAMETERISED formal fixes the variable, so the pass drains it here") {
+    val (p, fs, _) = findings(splitVar)
+    // `keyed(k, xs)` is the very shape this lane used to be written on, and it reports nothing now
+    // because the coercion runs at the inference site and the seam is CLOSED rather than merely
+    // uncounted — which is the distinction `CLAUDE.md` §5 asks a falling lane to make. The emitted
+    // wrap is the evidence: a lane reading zero because a check stopped asking looks identical.
+    assertEmits(p, "balticporter.runtime.JavaCollection.from(xs)")
+    assertEquals(clue(fs.filter(f => f.issue == Issue.SplitTypeVariable && f.slot.contains("keyed"))), Nil)
   }
 
   test("NEGATIVE: a CLASS's type parameter is not this call's to bind") {
