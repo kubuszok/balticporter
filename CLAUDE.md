@@ -666,6 +666,23 @@ So:
   them a validator that unwinds out of the method that installed it. So a refusal is COUNTED at the
   moment it is written, and the count is not the weaker half of "refuse and count": where the
   residue compiles, it is the only instrument there is.
+- **A REPAIR AT THE USE CANNOT DISCHARGE THE SAME CONSTRUCT'S OBLIGATION AT THE DECLARATION — and
+  the two are invisible to each other until `RefChecks` runs.** One java construct is met in two
+  positions, and a fix written for the first reads as the whole answer because it makes every error
+  the port can currently SEE go away. An unwritable F-bounded result was pinned at the CALL, where
+  an ascription supplies what the selection reads and no fill is needed — measured, correct, and
+  sufficient for every use; the same declaration is also an OVERRIDE EDGE, where java's own
+  erasure rule (JLS 8.4.2 lets a signature override the generic one it is the erasure of) has no
+  scala counterpart at all, and that half stayed unmeasured for six waves because a missing override
+  is not a typer error (§3). So when a repair is placed at a USE, ask what the DECLARATION owes —
+  and prefer the declaration where BOTH work, because it is the position every use already reads
+  from and it repairs the edges as a side effect. Measured at 8 of one port's 42 `RefChecks` rows,
+  closed by stating at the DECLARATION the same type the use-site pin had been supplying — and
+  `overload-risk` fell 6 with them, because the generic member and the narrowing one had been two
+  candidates spanning java's resolution phases and the erasure leaves one (`ENGINE-LIMITS.md`
+  G8.7 → G8.10). The use-site pin is deliberately left firing: its ascription is now an identity
+  cast, and removing it would leave the call node carrying a marker for a variable that no longer
+  exists.
 - **A NEW ARM FOR AN EXISTING NODE KIND INHERITS THAT NODE'S OBLIGATIONS — discharge them
   NOT-FIRED.** The catalog's discharge surface is owed per NODE, not per arm, so adding a `case` to
   a dispatch that already answers a difference row silently stops answering it for whatever the new

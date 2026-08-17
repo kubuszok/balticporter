@@ -379,6 +379,89 @@ the six methods and the file. Every other port byte-identical.
 positives and four negatives, of which "a bound with no named variable stays G22's" is the one that
 keeps the two pins apart.*
 
+### G8.10 Java's UNCHECKED OVERRIDE — an F-bounded, RESULT-ONLY type parameter is erased at the DECLARATION, which is the position G8.7 could not reach. **ssg-md 42 -> 34, `overload-risk` 563 -> 557. CLOSED**
+
+G8.7 supplies at a USE the type an unwritable F-bound has no fill for, and that is exactly enough for
+a use. It is not enough for an OVERRIDE EDGE, and the edge is where the same construct actually
+breaks a port:
+
+```java
+@NotNull <B extends ISequenceBuilder<B, T>> B getBuilder();   // IRichSequence<T>
+@Override @SuppressWarnings("unchecked") SequenceBuilder getBuilder();   // BasedSequence
+```
+
+**JLS 8.4.2 lets the second override the first**: a signature is a SUBSIGNATURE of one whose ERASURE
+it is, so an implementor may drop the type parameter entirely and javac issues an unchecked warning
+— the library writes the `@SuppressWarnings` itself. Scala has no subsignature rule, so what arrives
+is `E038 has a different signature` at the narrowing declaration and `needs to be abstract` at every
+concrete class below it. That is `CLAUDE.md` §1(a)'s *java allows unchecked conversion at a raw type;
+scala does not*, read at an override edge instead of at an assignment, and it is invisible until a
+port reaches 0 typer errors because `RefChecks` does not run before then (§3) — which is why it
+arrived as **8 of ssg-md's 42** `RefChecks` rows and not on any of the seventeen runs before.
+
+**THE ERASURE IS THE ONLY DENOTABLE ANSWER, and G8 is what proves it.** G8 priced four ways of
+INSTANTIATING such a parameter and every one measured worse, for a reason it measured rather than
+assumed: no denotable `X` satisfies `X <: ISequenceBuilder<X, T>`. So the parameter is not merely
+unsound — it is UNWRITABLE. No caller can supply an argument for it and no implementation can produce
+one without a cast, which is why java's own implementors here all write `return (B) …;`. A parameter
+nobody can instantiate and nobody can honour carries exactly as much information as its bound, and
+that bound with the self-reference wildcarded is an ordinary type both languages write. G8.7 already
+found it sufficient AT A USE; this states it at the DECLARATION, where it also repairs the edges a
+use-site ascription cannot reach.
+
+**Three conjuncts, and the middle one is the load-bearing one:**
+
+| conjunct | what it rules out | negative |
+|---|---|---|
+| the variable occurs in NO PARAMETER type | one an argument constrains — both languages infer it the same way. `pinUnconstrainedTypeArgs`' first condition verbatim | `<B extends Builder<B,T>> B reuse(B b)` |
+| **the bound MENTIONS THE VARIABLE ITSELF** | an ORDINARY bound has denotable instantiations that callers really write — erasing `<N extends Node> N first()` to `Node` throws away the caller's own answer. Verified by widening the guard: the negative fails | `<N extends Node> N first()`, and `<T> List<T>` at a vacuous bound |
+| the RESULT mentions the variable | an unused parameter, whose erasure changes no emitted type | `<B extends Builder<B,T>> int count()` |
+
+**Measured**: ssg-md **42 -> 34** on both lanes (`md-measure`'s main-set figure and
+`md-test-measure`'s whole-compile figure, equal because the test set is empty) — all seven
+`needs to be abstract` for `getBuilder` and the one `E038`, exactly the population `PROGRESS.md`
+§10.6.3 had diagnosed. Two other numbers moved and both are attributable: `overload-risk`
+**563 -> 557** on `md-measure` (**1655 -> 1638** on the test lane, whose denominator is both source
+sets), because `BasedSequence#getBuilder()` beside the generic `IRichSequence#getBuilder[B]()` was a
+`GenericTieBreak` row at every call — two applicable candidates spanning java's resolution phases
+(T17) — and the erasure leaves ONE candidate, so the risk is not suppressed but GONE; and
+`catalog(consulted)` **95 -> 96** for the new `JS-G49`.
+
+**And every other port is BYTE-IDENTICAL**, which is §5's widened-guard rule met on the ports the
+change was not aimed at: all twelve other lanes read `errors vs baseline … (unchanged)` and
+`members whose EMITTED TEXT changed since the baseline: 0`, and gain only the two `JS-G49` catalog
+rows at `fired 0, declarations 0` — the rule finds no F-bounded result-only parameter anywhere else
+in the corpus, which is what the three conjuncts are for. liqp's running suite is flat at
+636 passing / 1 failing.
+
+**ssg-md's own blast is 10 rows and the residue is EMPTY** (§3's classification gate): six are the
+three `getBuilder` declarations and their three whole-file digests, and the other four are TWO
+`Segment#byteOffset` rows counted twice, whose **digests are byte-identical** and whose member KEY
+moved `@13718 -> @13715` / `@13720 -> @13717`. That is M10's shape exactly — a key derived from a
+program-global minter counter renumbering itself — and here it is attributable to the digit: three
+type-parameter symbols (`B` in `IRichSequence`, `RichSequenceImpl`, `MappedRichSequence`) are no
+longer minted, so everything after them shifts by three. Nothing in the emitted text moved for those
+two, which is what the equal digest proves.
+
+**AND THE NEW ARM COST TWO `undischarged` ROWS BEFORE IT COST ANYTHING ELSE**, which is `CLAUDE.md`
+§3's new-arm rule arriving on schedule and in both directions at once: the erased arm stopped
+answering `JS-G12` for the 10 sites it now catches, and the original arm never answered `JS-G49` for
+its 9130. `catalog(undischarged)` read `6 -> 8` with the rows saying `ENGINE GAP`, which reads as a
+defect in the ROW rather than as a `match` somebody split. Both are discharged NOT-FIRED, and `None`
+is a fact at each: a name this frontend ERASED is the opposite of one that has no nameable type.
+
+**One thing this deliberately does NOT do**: `ascribeUnconstrainedResult` is left firing. Its
+ascription at a call whose callee was erased is now an IDENTITY cast — the declaration already says
+what the ascription supplies — and removing it would leave the call node carrying the erased
+variable's unresolved marker, which is a fabricated fact one level down (§4.6). One seam still has
+one mechanism, because the two answer at different positions and agree on the type.
+
+*Fix kind: (a) engine. CLOSED — `SpoonTir.unwritableResultVars` + the `tpErased` frame consulted
+ahead of `resolveTypeParam` in `tpeArm`, so the DECLARATION, the RESULT and the body's own `(B)`
+cast are one erasure and cannot disagree. Catalog `JS-G49`. `UncheckedErasureOverrideSpec` — three
+positives (the declaration, the body's cast, the narrowing override that becomes covariant) and four
+negatives, of which the ordinary bound is the one verified failing under a widened guard.*
+
 ### G8.9 A widened `equals` PARAMETER at an `Object` slot — the third value scala types wider than `Object`, and the port made it. **ssg-md 20 → 19. CLOSED**
 
 `SpoonTir.execDef` retypes a 1-argument `equals(Object)`'s parameter to `scala.Any`, which is what
@@ -7828,6 +7911,75 @@ one), 17 `needs to be abstract` (10 collection, 7 `getBuilder`), 2 `private vari
 override`, and the 2 rows named above. (It was **60** after the modifier strip and before the
 forwarder decline below took the 18.)
 
+**AND WAVE 20 TOOK THE `getBuilder` FAMILY, 42 -> 34** — the 7 `needs to be abstract` and the 1
+`E038` together, which is the whole of the third `NOT PREDICTED` family and the one row this entry
+had already handed off ("not a collection row at all"). It was never a minted-parent question: java's
+own JLS 8.4.2 subsignature rule lets a method's ERASURE override a generic one and scala has no such
+rule (G8.10). What remains of this entry's own population is the 17 `E164` at a collection parent and
+the 10 collection `needs to be abstract` — the two verdicts a modifier cannot repair.
+
+#### K28.1 The two remaining verdicts, PROBED WHOLE — and the blocker is a THIRD thing neither of them is
+
+Wave 20 put the full target shape for `class OrderedMap<K,V> implements java.util.Map<K,V>,
+Iterable<Map.Entry<K,V>>` through `scala-cli compile --scala 3.8.4` — every E164 repaired the way
+this entry's table says, plus the synthesised quartet — and got **exactly one error**, which is not
+either verdict:
+
+| what the probe settles | |
+|---|---|
+| **`E164` — SCALA'S MEMBER WINS, and it compiles at all four positions.** `put(K,V): Option[V]` with the body's `return old` becoming `Option(old)`; `values`/`keys` losing java's `()` to scala's PARAMETERLESS member; `size`/`isEmpty` already so | the table's own answer, confirmed rather than assumed |
+| **the SYNTHESISED QUARTET delegates cleanly** — `get(key: K): Option[V]` = `Option(get(key.asInstanceOf[Object]))`, `addOne(kv)` = `{ put(kv._1, kv._2); this }`, `subtractOne(k)` = `{ remove(…); this }` | **and `get(key: K): Option[V]` does NOT clash with java's own `get(Object): V` after erasure**, which was the obvious objection to the whole design and is simply false: scalac accepts the pair. That is the one fact that had to be measured before any of this could be built |
+| **THE BLOCKER: `iterator`** | `error overriding method iterator in trait JavaIterable of type (): JavaIterator[(K,V)]; method iterator of type => Iterator[(K,V)] has incompatible type` |
+
+**The blocker is a DUPLICATE RELATION, not a member.** The class gets TWO minted parents —
+`mutable.Map[K,V]` for `java.util.Map` and the `JavaIterable` shim for `java.lang.Iterable` — and
+java related those two interfaces at one member spelled two ways. Scala has ONE namespace, so
+`iterator(): JavaIterator[…]` and `iterator: Iterator[…]` cannot coexist, and no repair at the member
+can help: the conflict is in the parents, which is `CLAUDE.md` §4.5's sentence arriving at a MINTING
+rather than at a shim's design. **Deleting the redundant shim parent compiles the whole shape** —
+measured, the same file with `with JavaIterable[Tuple2[K,V]]` removed has zero errors.
+
+So the answer is K29's own rule read at a duplicate rather than at a missing edge — *a mapping must
+preserve the source library's own subtype relations*, and `mutable.Map <: Iterable` already carries
+`java.util.Map`'s relation to `java.lang.Iterable`. Minting both states one relation at two arities.
+The engine's record for it exists: `MintedParents` holds `kinds` and `shims` side by side, so the
+question *does a kind I am minting already subsume a shim I am minting* is a lookup in the same
+value, and it is a table for `OverridesTarget`'s reason (both errors loud — dropping a shim the kind
+does NOT subsume is an immediate `Not Found` at the shim's own members).
+
+**The build is therefore THREE commits and not one**, and the order is forced by what each can
+measure: the duplicate-parent drop FIRST (it is the only one whose residue is another commit's
+input), then the E164 retyping WITH its caller adaptation (`map.values()` → `map.values` is emitted
+text at every call site, so `members.tsv` is the instrument), then the quartet synthesis, whose rows
+only reach zero once the first two have moved `iterator` and `put`. Nothing here is a manifest key
+and nothing here is a port's to discharge — it is `CLAUDE.md` §1's *an obligation the ENGINE'S OWN
+TRANSLATION created*, three times over.
+
+#### K28.2 A java FIELD named like an INHERITED JDK METHOD — one row is a missing question, the other is a surface the engine refuses to state
+
+The two `private variable X cannot override method X` rows are §4.55's implementation-pair rule met
+from the other side, and they are NOT one family — which is only visible once you ask WHERE each far
+side lives:
+
+| row | the far side | |
+|---|---|---|
+| `BlockContinueImpl#finalize` | `java.lang.Object.finalize()` | **`ExternalSurface.javaLangObjectMembers` already declares it.** `TirEmitter.resolveFieldShadowing` simply never asks: its `inherited(cd)` walks `declOf.get`, the PROGRAM-declared parents, so a field is compared against the library's own hierarchy and against nothing else — while `strippedOverrides`, written later for the same hazard, asks `javaLangObjectDeclares` separately and by name. One missing conjunct |
+| `RepeatedSequence#chars` | `java.lang.CharSequence.chars()` | `CharSequence` is DELIBERATELY absent from `ExternalSurface.jdkPlatform`, and the doc comment says why: an entry there is answered EXACTLY, so an absence from its member set is proof, and `CharSequence`'s surface is version-dependent (`chars()` arrived in 8, `isEmpty()` in 15). An incomplete entry is worse than no entry |
+
+**And the two directions of `mayDeclare` are OPPOSITE for this reader, which is the part to get right
+before building either.** `ExternalSurface`'s unknown side answers YES on purpose, because its
+existing readers ask *may I rename this* and an over-refusal is safe there. A field-shadow pass asks
+the reverse — *must I rename this* — so `mayDeclare`'s unknown-is-yes would rename every field on
+every class with an unparsed parent, which is emitted surface moving on every port. The conjunct this
+pass needs is therefore `isKnown(fqn) && mayDeclare(fqn, sig)`, and stating it that way is what makes
+the `finalize` row closeable without touching the table at all.
+
+That leaves `chars` open on purpose. The honest options are to state `CharSequence` COMPLETE at the
+compliance level the frontend actually pins (`SpoonTir.buildModel` sets 21, so the set is
+enumerable) — which is a real argument the doc comment does not consider, and whose blast is every
+`CharSequence` implementor in the corpus — or to leave the one row. Do not add a PARTIAL entry: the
+contract the other readers rest on is that an absence from a present set is proof.
+
 **AND THE 22 THAT WERE `NOT PREDICTED` ARE NOW DIAGNOSED, into two sub-families that share nothing
 but their error code.** Both were read off the EMITTED text, which is the only place either is
 visible:
@@ -7851,6 +8003,21 @@ visible:
   bodies are in `…util.ast`, and their `def processNode(…)` is the same member from another package.
   One `visit` in `HeaderIdGenerator` is the same shape. This is a `Visibility` question and not a
   collection one.
+
+  **CORRECTED AT WAVE 20, and the correction is the caution below doing its job: THE FOUR ARE TWO
+  FAMILIES AND ONLY ONE IS A VISIBILITY QUESTION.** Read from the full compiler output rather than
+  from `errors.tsv`'s first line, three of the four say **`needs \`override\` modifier`** — the
+  emitted `BlockNodeVisitor#processNode` carries NO modifier at all, and java's
+  `public void processNode(Node, boolean, BiConsumer<Node, Visitor<Node>>)` really does override
+  `AstActionHandler<C,N,A,H>`'s `protected` one; the java calls `super.processNode(…)` on the next
+  line. The java writes no `@Override` annotation, so the frontend's `isOverride` rests entirely on
+  Spoon's `getTopDefinitions`, and that resolution does not survive the substitution
+  `N := Node, A := Visitor<Node>` through an F-BOUNDED four-parameter superclass. Nothing about
+  visibility is involved and no `Visibility` change can close them. Only the FOURTH row is the
+  family this bullet named: `HeaderIdGenerator#visit` reads *`has weaker access privileges; it
+  should be at least protected`* at an emitted `protected[renderer] override def visit(…)` whose
+  parent is in another package — an override's qualifier must be at least as wide as the parent's,
+  and a qualifier derived from the OVERRIDING member's own package cannot be.
 
 **A caution the diagnosis itself produced: `errors.tsv` carries the FIRST LINE of a scalac message.**
 Both sub-families read `error overriding method … in class … of type (…)` and stop, so the half of

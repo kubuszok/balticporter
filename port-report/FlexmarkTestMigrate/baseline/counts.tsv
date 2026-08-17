@@ -2,8 +2,8 @@
 base-surface	0
 break-catch	0
 cast-conversion	0
-catalog(consulted)	91
-catalog(uncited)	120
+catalog(consulted)	92
+catalog(uncited)	121
 catalog(undischarged)	6
 catalog(unmechanised)	1
 catalog(unreached)	19
@@ -23,7 +23,7 @@ jdk-surface	5
 manifest	0
 markers	0
 omissions	13
-overload-risk	1655
+overload-risk	1638
 policy	0
 port-map	0
 portability(all)	32

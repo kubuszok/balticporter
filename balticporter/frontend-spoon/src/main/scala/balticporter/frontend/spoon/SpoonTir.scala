@@ -289,6 +289,13 @@ object SpoonTir:
     private given CatalogLog = catalog
     private val minter   = new Minter
     private val tpScopes = collection.mutable.ArrayDeque[Map[String, SymId]]()
+    /** an executable's own type parameters that are ERASED rather than declared — name → the type
+      * every occurrence of the variable renders as. Parallel to `tpScopes` and consulted AHEAD of
+      * it, because such a name has no binder to resolve to: it was never minted.
+      *
+      * One frame per executable, pushed and popped with that executable's `tpScopes` frame. See
+      * [[unwritableResultVars]] for which parameters land here and why. */
+    private val tpErased = collection.mutable.ArrayDeque[Map[String, TypeRepr]]()
     private val selfRawStack = collection.mutable.ArrayDeque[(SymId, List[SymId])]()
     /** Type params LEGALLY in scope at the current point, respecting static-nested boundaries: a
       * static nested class / interface / enum cannot see its enclosing type's params, unlike a
@@ -771,6 +778,80 @@ object SpoonTir:
 
     private def resolveTypeParam(name: String): Option[SymId] =
       tpFrameOf(name).map(i => tpScopes(i)(name))
+
+    /** the type an ERASED type-parameter name renders as, or `None` if the name is an ordinary one.
+      *
+      * Consulted ahead of [[resolveTypeParam]] at every variable occurrence, because an erased
+      * parameter was never minted and has no id to resolve to — reaching `resolveTypeParam` it
+      * would take the unresolved-marker arm and report `JS-G12` about a variable the frontend
+      * itself decided not to declare. */
+    private def erasedTypeParam(name: String): Option[TypeRepr] =
+      tpErased.iterator.collectFirst { case m if m.contains(name) => m(name) }
+
+    /** an executable's own type parameters that have NO WRITABLE INSTANTIATION ANYWHERE and carry no
+      * information — java's UNCHECKED generic method, erased at the declaration to its own bound.
+      *
+      * ==The construct==
+      * {{{
+      * <B extends ISequenceBuilder<B, T>> B getBuilder();          // in IRichSequence<T>
+      * public SequenceBuilder getBuilder();                        // @Override, in BasedSequence
+      * }}}
+      * Java permits the second to override the first: JLS 8.4.2 makes a signature a SUBSIGNATURE of
+      * one whose ERASURE it is, so an implementor may drop the type parameter entirely and javac
+      * issues an unchecked warning. Scala has no such rule — a method with no type parameters
+      * cannot override one with them — so the emitted pair is `E038 has a different signature` at
+      * the narrowing declaration and `needs to be abstract` at every concrete class below it, which
+      * is `CLAUDE.md` §1(a)'s *java allows unchecked conversion at a raw type; scala does not*, read
+      * at an override edge instead of at an assignment.
+      *
+      * ==Why the ERASURE is the honest image, and not a loss==
+      * `ENGINE-LIMITS.md` G8 priced four ways of INSTANTIATING such a parameter and every one was
+      * worse, for one reason it measured rather than assumed: **no denotable `X` satisfies
+      * `X <: ISequenceBuilder<X, T>`**. So the parameter is not merely unsound, it is UNWRITABLE —
+      * no caller can supply an argument for it and no implementation can produce one without a cast,
+      * which is why java's own implementors here all write `return (B) …;` under a
+      * `//noinspection unchecked`. A parameter nobody can instantiate and nobody can honour carries
+      * exactly as much information as its bound, and its bound — with the self-reference wildcarded
+      * — is an ordinary type both languages can write. That is the same type `ENGINE-LIMITS.md` G8.7
+      * already ascribes at the USE and found sufficient there; this states it at the DECLARATION,
+      * where it also repairs the override edges a use-site ascription cannot reach.
+      *
+      * ==Three conjuncts, and each one is a way the rule would be wrong without it==
+      *   - **the variable occurs in NO PARAMETER type.** One that does is constrained by its
+      *     argument and both languages infer it the same way — `<E extends Enum<E>> E[]
+      *     getUniverse(Class<E> t)` is ordinary generic java and erasing it would throw away the
+      *     caller's own answer. This is `pinUnconstrainedTypeArgs`' first condition verbatim;
+      *   - **the bound MENTIONS THE VARIABLE ITSELF** — an F-bound. This is the load-bearing
+      *     conjunct and the one G8 measured: an ordinary bound (`<T extends Node> T first()`) has
+      *     denotable instantiations, callers DO write them, and erasing it to `Node` would lose a
+      *     type the port's own code uses. `<T> List<T> emptyList()` is the same case at a vacuous
+      *     bound and declines here twice over;
+      *   - **the RESULT mentions the variable.** Otherwise the parameter is unused and erasing it
+      *     changes no emitted type, so there is nothing to record and nothing to gain.
+      *
+      * Note what this deliberately does NOT do: it does not touch a variable the DECLARING TYPE
+      * owns. `IRichSequence<T>`'s `T` is written at every use and instantiated by every implementor;
+      * only the METHOD's own parameters are candidates. */
+    private def unwritableResultVars(m: CtExecutable[?]): List[CtTypeParameter] = m match
+      case ftd: CtFormalTypeDeclarer =>
+        try
+          val tps    = ftd.getFormalCtTypeParameters.asScala.toList
+          val result = m match
+            case _: CtConstructor[?]      => null
+            case named: CtTypedElement[?] => named.getType
+            case _                        => null
+          if tps.isEmpty || result == null then Nil
+          else
+            val ps = m.getParameters.asScala.toList
+            tps.filter { tp =>
+              val n     = tp.getSimpleName
+              val bound = Option(tp.getSuperclass).filter(_.getQualifiedName != "java.lang.Object")
+              bound.exists(mentionsTypeVarBounded(_, Set(n))) &&
+                !ps.exists(p => mentionsTypeVarBounded(p.getType, Set(n))) &&
+                mentionsTypeVarBounded(result, Set(n))
+            }
+        catch { case _: Throwable => Nil }
+      case _ => Nil
 
     /** the SPOON DECLARATION behind [[resolveTypeParam]]'s id — its bound is what a raw fill's
       * licence is read from, and no `Symbol` carries java's own spelling of it. */
@@ -1740,7 +1821,21 @@ object SpoonTir:
         else
           val b = written.map(tpe)
           if w.isUpper then TypeBounds(NoType, b.getOrElse(NoType)) else TypeBounds(b.getOrElse(NoType), NoType)
+      // An ERASED parameter ([[unwritableResultVars]]) resolves to its own bound and not to a
+      // binder, so it is answered AHEAD of the marker arm below: it was deliberately never minted,
+      // and reporting `JS-G12` about it would say the frontend could not name a variable it chose
+      // not to declare. JS-G49 is the row that IS about it.
+      case tv: CtTypeParameterReference if erasedTypeParam(tv.getSimpleName).isDefined =>
+        Obligations.consult(JS.G(49), at)(erasedTypeParam(tv.getSimpleName))
+        // …and JS-G12 NOT-FIRED, because this arm inherits the node's obligations (`CLAUDE.md` §3).
+        // `None` is a FACT here rather than a default: a name this frontend ERASED is one it chose
+        // not to declare, which is the opposite of a variable that has no nameable type.
+        Obligations.consult(JS.G(12), at)(scala.None)
+        erasedTypeParam(tv.getSimpleName).get
       case tv: CtTypeParameterReference =>
+        // …and JS-G49 NOT-FIRED for the same reason, from the other side: a name that resolves to a
+        // binder here is not one `unwritableResultVars` erased.
+        Obligations.consult(JS.G(49), at)(scala.None)
         val here = resolveTypeParam(tv.getSimpleName)
         // JS-G12 — this is where the frontend finds out that a type variable has NO NAMEABLE type:
         // the name resolves to no binder in this scope, so what is minted is a MARKER rather than a
@@ -2418,13 +2513,26 @@ object SpoonTir:
       // own subtree, which is what puts an expression comment above the statement it was written
       // in rather than above the whole method.
       val mlead = leadingOf(m)
-      val mtps = m match
+      val allTps = m match
         case ftd: CtFormalTypeDeclarer => ftd.getFormalCtTypeParameters.asScala.toList
         case _                         => Nil
+      // …minus the ones java itself cannot instantiate. See [[unwritableResultVars]]: these are
+      // ERASED to their own bound rather than declared, so they never reach `mintTypeParams` and no
+      // `[B <: …]` clause is emitted for them.
+      val erasedTps = unwritableResultVars(m)
+      val mtps      = allTps.filterNot(tp => erasedTps.exists(_.getSimpleName == tp.getSimpleName))
       val (frame, tpDefs) = mintTypeParams(mkey, id, mtps)
       val savedOverriding = inOverridingMember
       inOverridingMember = overrides
       tpScopes.prepend(frame); tpIsExec.prepend(true); tpDecls.prepend(declFrame(mtps))
+      // TWO passes, because an F-bound mentions ITSELF: seed every erased name at `?` so that
+      // translating the bound renders the self-reference as a wildcard, then replace the frame with
+      // the bound that produced. One mechanism for both halves — the `?` an F-bound's self-reference
+      // becomes is the same `?` the whole erasure is built out of.
+      tpErased.prepend(erasedTps.map(_.getSimpleName -> (TypeBounds(NoType, NoType): TypeRepr)).toMap)
+      if erasedTps.nonEmpty then
+        val bounds = erasedTps.map(tp => tp.getSimpleName -> tpe(tp.getSuperclass)).toMap
+        tpErased.remove(0); tpErased.prepend(bounds)
       // a method sees its class's accessible params plus its own — and a STATIC one sees ONLY its
       // own, because java's static context has no access to the class's parameters and scala's
       // companion object cannot name them either. Carried in the FRAME rather than left to the
@@ -2490,6 +2598,7 @@ object SpoonTir:
       // Call / field-ref usages and `callersOf` real. Abstract/interface methods have none.
       val body = Option(m.getBody).map(b => bt.methodBody(b))
       tpScopes.remove(0); tpIsExec.remove(0); tpDecls.remove(0); tpAccessible.remove(0); tpExecNames.remove(0)
+      tpErased.remove(0)
       inOverridingMember = savedOverriding
       Tree.DefDef(id, paramss = List(pvs), returnTpt = tt(ret, m), rhs = body, origin = originOf(m),
                   tparams = tpDefs, leading = mlead)

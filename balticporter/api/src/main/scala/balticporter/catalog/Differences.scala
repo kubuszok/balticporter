@@ -962,6 +962,19 @@ object Differences:
       "CollectionsTransform.reifiedTest/reifiedCast -> JavaCollections.Reified; the concrete-target " +
         "refusal is CollectionBoundaryCheck.Issue.ReifiedOccurrence",
       Cited("collections")),
+    // A SUBSIGNATURE is java's licence to override a generic method with its own ERASURE, and it is
+    // the same permission JS-G07 and JS-G14 are about, read at an OVERRIDE EDGE rather than at a use
+    // or an assignment: `<B extends ISequenceBuilder<B,T>> B getBuilder()` is overridden by
+    // `SequenceBuilder getBuilder()`, javac warns `unchecked` and compiles, and scala has no rule
+    // that lets a method with no type parameters override one with them. `Loud` at both ends —
+    // `E038 has a different signature` at the narrowing declaration and `needs to be abstract` at
+    // every concrete class below it.
+    Difference(gId(49), "an UNCHECKED override: java lets a method's ERASURE be a SUBSIGNATURE of a generic one",
+      "JLS 8.4.2, 8.4.8.1", "UNCITED — scala has no subsignature rule; a method with no type parameters cannot override one with them",
+      Loud, Handled, el("G8.10"), Universal,
+      "SpoonTir.unwritableResultVars erasing an F-BOUNDED, RESULT-ONLY method type parameter to its own " +
+        "bound at the DECLARATION, which is the only instantiation ENGINE-LIMITS G8 could not refute",
+      LoweredType("CtTypeParameterReference")),
   )
 
   /** every language row. THE COUNT IS DERIVED — it is not written down anywhere, here or in any
