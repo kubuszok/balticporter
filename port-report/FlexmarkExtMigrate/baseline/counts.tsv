@@ -17,13 +17,13 @@ dependency-coverage(all)	12
 dependency-coverage(declared)	1
 heap-pollution	0
 idiom(converted)	0
-idiom(refused)	1
+idiom(refused)	3
 idiom(residue)	0
-jdk-surface	1
+jdk-surface	3
 manifest	0
 markers	0
-omissions	9
-overload-risk	194
+omissions	10
+overload-risk	209
 policy	0
 port-map	0
 portability(all)	21
