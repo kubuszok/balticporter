@@ -4156,6 +4156,7 @@ they are where the 2b siblings become admissible because their dependency is alr
 |---|---|---:|---:|---:|---:|---|
 | 10 | `ext-gfm-users` | 10 | 8 | 0 | — | `overload-risk` +1 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
 | 11 | `ext-admonition` | 11 | 9 | **3 → 0** | 18/18 | `overload-risk` +20 (13 `VarargPhaseSpan`, 7 `GenericTieBreak`), `omissions` **0 → 1** |
+| 12 | `ext-yaml-front-matter` | 11 | 9 | 0 | — | `overload-risk` +7 (5 `GenericTieBreak`, 2 `VarargPhaseSpan`) |
 
 **AND THE FIRST BATCH-2 EXTENSION FOUND AN ENGINE GAP, at eleven java files.** `ext-admonition`
 states three of its `DataKey` defaults as `new DataKey<>("…", AdmonitionExtension::getQualifierTypeMap)`
