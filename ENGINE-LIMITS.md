@@ -1640,13 +1640,25 @@ one row, and it is neither a missing `override` nor a variance violation, which 
 expected the first riser to be (K28 is later still, behind `RefChecks`, and this error keeps that gate
 shut).
 
-The obvious fix — erase a raw bound to `Foo[?, ?, ?]` — is the one `fbound`'s own doc records as worse
-for the F-bound case and must not be applied blanket; the narrowing is the declaring-type test above,
-and it has not been measured. Note also G8: where a fill has no consistent instantiation at all, the
-image is the limit rather than the rule.
+**AND THE DECLARING-TYPE TEST IS NOT THE DISCRIMINATOR — DO NOT SHIP IT.** It is the obvious
+narrowing and libGDX refutes it in one line: `public class Tree<N extends Node, V>` is a RAW bound at
+a type that is not the declaring one, filled `Node[N, V, ?]`, and that port compiles at **0 errors**.
+Scoped to the declaring type, that fill would go and libGDX's whole `Tree`/`Node` family would lose
+the self-reference `nameFilledArgs` exists to preserve. What actually separates the two cases is
+whether the FILLED ARGUMENTS DISCHARGE the raw type's own formal bounds: libGDX's `N` is declared
+`N <: Node[N, V, ?]`, which is exactly what `Node`'s slot 0 asks for, and flexmark's `B` is declared
+`B <: ReferenceNode[…]`, while `ReferenceNode`'s slot 1 asks for `Node`. That is a CONFORMANCE
+question, and asking it of Spoon under `noClasspath` is a lookup that can answer `false` for a
+readable hierarchy — which would drop the fill libGDX needs, i.e. the same regression by another
+route (`CLAUDE.md` §4.6: the default has to mean something to the caller). Erasing every raw bound to
+`Foo[?, ?, ?]` is the other blanket move and is what `fbound`'s own doc already records as worse.
+Note also G8: where a fill has no consistent instantiation at all, the image is the limit rather than
+the rule.
 
 *Fix kind: (a) engine — frontend, `SpoonTir.fbound`. OPEN, 1 error, and it is the only thing between
-ssg-md and running its 723 emitted tests.*
+ssg-md and running its 723 emitted tests. Both blanket answers are refuted above with their
+counter-examples; what has NOT been tried is the conformance test with an honest three-valued lookup
+(discharges / does not / unreadable), where only the middle value declines the fill.*
 
 ---
 
