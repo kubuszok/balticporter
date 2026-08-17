@@ -4217,8 +4217,22 @@ The instruments were right and were not sufficient: `base-surface` **0 → 1** c
 classification (the corpus's first `base-surface` row with real content), `omissions` **0 → 1**
 (`super(args) dropped … 1 argument(s) discarded`), a `dropped-super-call` porter note on the emitted
 constructor — and no compile error, no moved test, no other count. The module ships nothing
-runnable, so it is out of `includeGlobs` and out of `md_ext_modules` until C15 closes; a port that
+runnable, so it was out of `includeGlobs` and out of `md_ext_modules` until C15 closed; a port that
 runs LESS than java takes no entry however cleanly it drains a lane (§5).
+
+**C15 IS CLOSED AND THE MODULE IS IN — batch 3's first commit, and it is a BASE-EMISSION change.**
+The widening set the funnel computes was derived from the subclasses each run happened to CONTAIN,
+so the base widened for the replays inside it and not for the identical one a module out; it is
+derived from the class's OWN constructors now (`CtorFunnel.Plans.externalReplayWidenings`). That
+moves EMITTED TEXT on every port and is measured as such: **535 members widened on libGDX core, 437
+on ssg-md (264 `private`, 155 package-private, 18 `protected`), 92 on liqp, 36/30/20 on
+gdx-gltf/jbump/ashley**, 771 / 580 / 133 member digests on the first three, every one carrying a
+`WidenedVisibility` decision and a porter note. **No lane's error count moved in either direction and
+no suite outcome moved**; the only check counts that moved are the three VISIBILITY rows of the
+difference catalog counting their own firings over a program with fewer non-public members, and
+`base-surface` on ashley **6 → 0** — a lane draining on a port nobody was aiming at. The cost is
+speculative surface and is stated rather than minimised in `ENGINE-LIMITS.md` C15, together with the
+two alternatives measured worse and the one narrowing not taken.
 
 **AND `ext-jekyll-tag`, ONE WAVE LATER, IS WHY THAT SKIP IS A JUDGEMENT AND NOT A RULE.** It carries
 the SAME two rows — `base-surface` +1 and a `super(args) dropped` — from a different cause (`ssg-md`

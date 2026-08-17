@@ -63,36 +63,36 @@ member	com.dongbat.jbump.Collisions#clear()	sge.jbump.Collisions#clear()	Renamed
 member	com.dongbat.jbump.Collisions#collision	sge.jbump.Collisions#collision	Renamed	-	com/dongbat/jbump/Collisions.java	112	0ec3d66b1c7fdc50	vis=private
 member	com.dongbat.jbump.Collisions#compare(Integer,Integer)	sge.jbump.Collisions#compare(Integer,Integer)	Renamed	-	com/dongbat/jbump/Collisions.java	280	fb3b47dd79bd449c	
 member	com.dongbat.jbump.Collisions#get(int)	sge.jbump.Collisions#get(int)	Renamed	-	com/dongbat/jbump/Collisions.java	114	92c6e32cea1ca341	
-member	com.dongbat.jbump.Collisions#h1s	sge.jbump.Collisions#h1s	Renamed	-	com/dongbat/jbump/Collisions.java	45	8fe51d3ac253dae3	vis=private
-member	com.dongbat.jbump.Collisions#h2s	sge.jbump.Collisions#h2s	Renamed	-	com/dongbat/jbump/Collisions.java	49	8eb2901f42d6b9d0	vis=private
+member	com.dongbat.jbump.Collisions#h1s	sge.jbump.Collisions#h1s	Renamed	-	com/dongbat/jbump/Collisions.java	45	bf8c20f0a397d1e0	
+member	com.dongbat.jbump.Collisions#h2s	sge.jbump.Collisions#h2s	Renamed	-	com/dongbat/jbump/Collisions.java	49	46786ec912792609	
 member	com.dongbat.jbump.Collisions#isEmpty()	sge.jbump.Collisions#isEmpty()	Renamed	-	com/dongbat/jbump/Collisions.java	154	807246b9e46248e0	
 member	com.dongbat.jbump.Collisions#items	sge.jbump.Collisions#items	Renamed	-	com/dongbat/jbump/Collisions.java	50	017fde693f63e726	
 member	com.dongbat.jbump.Collisions#keySort(Buffer,BooleanArray)	sge.jbump.Collisions#keySort(Buffer<Integer>,BooleanArray)	Renamed	-	com/dongbat/jbump/Collisions.java	235	80cda84a5b182a38	
 member	com.dongbat.jbump.Collisions#keySort(Buffer,Buffer)	sge.jbump.Collisions#keySort(Buffer<Integer>,Buffer<?>)	Renamed	-	com/dongbat/jbump/Collisions.java	184	9d558edc34b16317	
 member	com.dongbat.jbump.Collisions#keySort(Buffer,FloatArray)	sge.jbump.Collisions#keySort(Buffer<Integer>,FloatArray)	Renamed	-	com/dongbat/jbump/Collisions.java	201	3d1d4b0ea1677511	
 member	com.dongbat.jbump.Collisions#keySort(Buffer,IntArray)	sge.jbump.Collisions#keySort(Buffer<Integer>,IntArray)	Renamed	-	com/dongbat/jbump/Collisions.java	218	17f2a7bcfda52a5e	
-member	com.dongbat.jbump.Collisions#moveXs	sge.jbump.Collisions#moveXs	Renamed	-	com/dongbat/jbump/Collisions.java	36	555686735ea504db	vis=private
-member	com.dongbat.jbump.Collisions#moveYs	sge.jbump.Collisions#moveYs	Renamed	-	com/dongbat/jbump/Collisions.java	37	a4a0ee99a86f49b5	vis=private
-member	com.dongbat.jbump.Collisions#normalXs	sge.jbump.Collisions#normalXs	Renamed	-	com/dongbat/jbump/Collisions.java	38	22837852865cd171	vis=private
-member	com.dongbat.jbump.Collisions#normalYs	sge.jbump.Collisions#normalYs	Renamed	-	com/dongbat/jbump/Collisions.java	39	f0ae5857d7143019	vis=private
+member	com.dongbat.jbump.Collisions#moveXs	sge.jbump.Collisions#moveXs	Renamed	-	com/dongbat/jbump/Collisions.java	36	63e6d627f61174ce	
+member	com.dongbat.jbump.Collisions#moveYs	sge.jbump.Collisions#moveYs	Renamed	-	com/dongbat/jbump/Collisions.java	37	c59dc837c49b5cc0	
+member	com.dongbat.jbump.Collisions#normalXs	sge.jbump.Collisions#normalXs	Renamed	-	com/dongbat/jbump/Collisions.java	38	7580aeff8ab84aca	
+member	com.dongbat.jbump.Collisions#normalYs	sge.jbump.Collisions#normalYs	Renamed	-	com/dongbat/jbump/Collisions.java	39	ec921b2919a8cf3a	
 member	com.dongbat.jbump.Collisions#order	sge.jbump.Collisions#order	Renamed	-	com/dongbat/jbump/Collisions.java	181	55059e7d38734637	vis=private
 member	com.dongbat.jbump.Collisions#others	sge.jbump.Collisions#others	Renamed	-	com/dongbat/jbump/Collisions.java	51	805359e3c4b3fd77	
-member	com.dongbat.jbump.Collisions#overlaps	sge.jbump.Collisions#overlaps	Renamed	-	com/dongbat/jbump/Collisions.java	34	e6cc71ee04787d92	vis=private
+member	com.dongbat.jbump.Collisions#overlaps	sge.jbump.Collisions#overlaps	Renamed	-	com/dongbat/jbump/Collisions.java	34	95cdc3da7c152d53	
 member	com.dongbat.jbump.Collisions#remove(int)	sge.jbump.Collisions#remove(int)	Renamed	-	com/dongbat/jbump/Collisions.java	125	d953a7687f8bb008	
 member	com.dongbat.jbump.Collisions#size	sge.jbump.Collisions#size	Renamed	-	com/dongbat/jbump/Collisions.java	53	03eb95b31c6936e1	name=size$field
 member	com.dongbat.jbump.Collisions#size()	sge.jbump.Collisions#size()	Renamed	-	com/dongbat/jbump/Collisions.java	150	2512040e1ef84730	
 member	com.dongbat.jbump.Collisions#sort()	sge.jbump.Collisions#sort()	Renamed	-	com/dongbat/jbump/Collisions.java	252	2ed17991043586a9	
 member	com.dongbat.jbump.Collisions#swapMap	sge.jbump.Collisions#swapMap	Renamed	-	com/dongbat/jbump/Collisions.java	182	ff03ae65a3942653	vis=private
-member	com.dongbat.jbump.Collisions#tis	sge.jbump.Collisions#tis	Renamed	-	com/dongbat/jbump/Collisions.java	35	6db521c93c6c07c7	vis=private
-member	com.dongbat.jbump.Collisions#touchXs	sge.jbump.Collisions#touchXs	Renamed	-	com/dongbat/jbump/Collisions.java	40	108ea2facb6b8ec1	vis=private
-member	com.dongbat.jbump.Collisions#touchYs	sge.jbump.Collisions#touchYs	Renamed	-	com/dongbat/jbump/Collisions.java	41	7ee986fdf361a074	vis=private
+member	com.dongbat.jbump.Collisions#tis	sge.jbump.Collisions#tis	Renamed	-	com/dongbat/jbump/Collisions.java	35	39ae5aaa47be5d4b	
+member	com.dongbat.jbump.Collisions#touchXs	sge.jbump.Collisions#touchXs	Renamed	-	com/dongbat/jbump/Collisions.java	40	9a46a5f13653e073	
+member	com.dongbat.jbump.Collisions#touchYs	sge.jbump.Collisions#touchYs	Renamed	-	com/dongbat/jbump/Collisions.java	41	3051010f62d47ace	
 member	com.dongbat.jbump.Collisions#types	sge.jbump.Collisions#types	Renamed	-	com/dongbat/jbump/Collisions.java	52	8bf4b2fa2f4fc62d	
-member	com.dongbat.jbump.Collisions#w1s	sge.jbump.Collisions#w1s	Renamed	-	com/dongbat/jbump/Collisions.java	44	703c08bfbe549409	vis=private
-member	com.dongbat.jbump.Collisions#w2s	sge.jbump.Collisions#w2s	Renamed	-	com/dongbat/jbump/Collisions.java	48	087d809786a9379f	vis=private
-member	com.dongbat.jbump.Collisions#x1s	sge.jbump.Collisions#x1s	Renamed	-	com/dongbat/jbump/Collisions.java	42	d1016e8ab7ade615	vis=private
-member	com.dongbat.jbump.Collisions#x2s	sge.jbump.Collisions#x2s	Renamed	-	com/dongbat/jbump/Collisions.java	46	55b84869b3732f69	vis=private
-member	com.dongbat.jbump.Collisions#y1s	sge.jbump.Collisions#y1s	Renamed	-	com/dongbat/jbump/Collisions.java	43	8ffb3806ec1fc99f	vis=private
-member	com.dongbat.jbump.Collisions#y2s	sge.jbump.Collisions#y2s	Renamed	-	com/dongbat/jbump/Collisions.java	47	62b97bf8b85d8af0	vis=private
+member	com.dongbat.jbump.Collisions#w1s	sge.jbump.Collisions#w1s	Renamed	-	com/dongbat/jbump/Collisions.java	44	5d685fccac8342c3	
+member	com.dongbat.jbump.Collisions#w2s	sge.jbump.Collisions#w2s	Renamed	-	com/dongbat/jbump/Collisions.java	48	56cef3dd44c49605	
+member	com.dongbat.jbump.Collisions#x1s	sge.jbump.Collisions#x1s	Renamed	-	com/dongbat/jbump/Collisions.java	42	c9797ff5851508b3	
+member	com.dongbat.jbump.Collisions#x2s	sge.jbump.Collisions#x2s	Renamed	-	com/dongbat/jbump/Collisions.java	46	c45e3bf3ae4c4251	
+member	com.dongbat.jbump.Collisions#y1s	sge.jbump.Collisions#y1s	Renamed	-	com/dongbat/jbump/Collisions.java	43	b1e6a309df8790c0	
+member	com.dongbat.jbump.Collisions#y2s	sge.jbump.Collisions#y2s	Renamed	-	com/dongbat/jbump/Collisions.java	47	2ad0f3943588aae2	
 member	com.dongbat.jbump.Extra#DELTA	sge.jbump.Extra#DELTA	Renamed	-	com/dongbat/jbump/Extra.java	24	6860f9e8c09390e9	placement=companion
 member	com.dongbat.jbump.Extra#nearest(float,float,float)	sge.jbump.Extra#nearest(float,float,float)	Renamed	-	com/dongbat/jbump/Extra.java	35	6eae8b97c0fbb0e1	placement=companion
 member	com.dongbat.jbump.Extra#sign(float)	sge.jbump.Extra#sign(float)	Renamed	-	com/dongbat/jbump/Extra.java	26	265937126255f29e	placement=companion
@@ -182,7 +182,7 @@ member	com.dongbat.jbump.World#cellMaxX	sge.jbump.World#cellMaxX	Renamed	-	com/d
 member	com.dongbat.jbump.World#cellMaxY	sge.jbump.World#cellMaxY	Renamed	-	com/dongbat/jbump/World.java	35	02ee6f9fba03e2cf	vis=private
 member	com.dongbat.jbump.World#cellMinX	sge.jbump.World#cellMinX	Renamed	-	com/dongbat/jbump/World.java	35	d81a788e2c7f50c6	vis=private
 member	com.dongbat.jbump.World#cellMinY	sge.jbump.World#cellMinY	Renamed	-	com/dongbat/jbump/World.java	35	c4c0433153217171	vis=private
-member	com.dongbat.jbump.World#cellSize	sge.jbump.World#cellSize	Renamed	-	com/dongbat/jbump/World.java	39	bcf2d7703eba9a3d	vis=private
+member	com.dongbat.jbump.World#cellSize	sge.jbump.World#cellSize	Renamed	-	com/dongbat/jbump/World.java	39	f2297a8a40486931	
 member	com.dongbat.jbump.World#check(Item,float,float,CollisionFilter)	sge.jbump.World#check(Item<?>,float,float,CollisionFilter)	Renamed	-	com/dongbat/jbump/World.java	414	46f3bc8b594a135e	
 member	com.dongbat.jbump.World#check_cols	sge.jbump.World#check_cols	Renamed	-	com/dongbat/jbump/World.java	410	8ccebfe36f4e5ede	vis=private
 member	com.dongbat.jbump.World#check_projectedCols	sge.jbump.World#check_projectedCols	Renamed	-	com/dongbat/jbump/World.java	411	78850c82d9a3d842	vis=private
@@ -393,7 +393,7 @@ member	com.dongbat.jbump.util.IntIntMap#EMPTY	sge.jbump.util.IntIntMap#EMPTY	Ren
 member	com.dongbat.jbump.util.IntIntMap#PRIME1	sge.jbump.util.IntIntMap#PRIME1	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	25	17df3bd7f714e172	placement=companion vis=private
 member	com.dongbat.jbump.util.IntIntMap#PRIME2	sge.jbump.util.IntIntMap#PRIME2	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	26	2ce3df5601822253	placement=companion vis=private
 member	com.dongbat.jbump.util.IntIntMap#PRIME3	sge.jbump.util.IntIntMap#PRIME3	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	27	cfdac1fbe8de96db	placement=companion vis=private
-member	com.dongbat.jbump.util.IntIntMap#capacity	sge.jbump.util.IntIntMap#capacity	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	33	5fbd4627a99d5238	
+member	com.dongbat.jbump.util.IntIntMap#capacity	sge.jbump.util.IntIntMap#capacity	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	33	6fe5ed31b0b3fc19	
 member	com.dongbat.jbump.util.IntIntMap#clear()	sge.jbump.util.IntIntMap#clear()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	428	0a4b0325b7b8d819	
 member	com.dongbat.jbump.util.IntIntMap#clear(int)	sge.jbump.util.IntIntMap#clear(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	418	ae56f3b39bff3f6b	
 member	com.dongbat.jbump.util.IntIntMap#containsKey(int)	sge.jbump.util.IntIntMap#containsKey(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	448	b50c4e75299ce163	
@@ -409,20 +409,20 @@ member	com.dongbat.jbump.util.IntIntMap#get(int,int)	sge.jbump.util.IntIntMap#ge
 member	com.dongbat.jbump.util.IntIntMap#getAndIncrement(int,int,int)	sge.jbump.util.IntIntMap#getAndIncrement(int,int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	311	e3a23b7b0da461c7	
 member	com.dongbat.jbump.util.IntIntMap#getAndIncrementStash(int,int,int)	sge.jbump.util.IntIntMap#getAndIncrementStash(int,int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	337	e081a4e50c9777ec	vis=private
 member	com.dongbat.jbump.util.IntIntMap#getStash(int,int)	sge.jbump.util.IntIntMap#getStash(int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	302	0e93d9699f3bbc39	vis=private
-member	com.dongbat.jbump.util.IntIntMap#hasZeroValue	sge.jbump.util.IntIntMap#hasZeroValue	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	35	b49f5d6464a5a3e2	
+member	com.dongbat.jbump.util.IntIntMap#hasZeroValue	sge.jbump.util.IntIntMap#hasZeroValue	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	35	55b19ed0c1396a7f	
 member	com.dongbat.jbump.util.IntIntMap#hash2(int)	sge.jbump.util.IntIntMap#hash2(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	512	c54fc4e7c31c2705	vis=private
 member	com.dongbat.jbump.util.IntIntMap#hash3(int)	sge.jbump.util.IntIntMap#hash3(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	517	0a8e54a7b63badb2	vis=private
 member	com.dongbat.jbump.util.IntIntMap#hashCode()	sge.jbump.util.IntIntMap#hashCode()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	522	af7be42b79d4a762	
-member	com.dongbat.jbump.util.IntIntMap#hashShift	sge.jbump.util.IntIntMap#hashShift	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	38	e2897c09dd7475d6	vis=private
+member	com.dongbat.jbump.util.IntIntMap#hashShift	sge.jbump.util.IntIntMap#hashShift	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	38	a7d2c334951c79de	
 member	com.dongbat.jbump.util.IntIntMap#iterator()	sge.jbump.util.IntIntMap#iterator()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	596	050e6fe864125e8b	
-member	com.dongbat.jbump.util.IntIntMap#keyTable	sge.jbump.util.IntIntMap#keyTable	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	32	da600ea81983f2c3	
+member	com.dongbat.jbump.util.IntIntMap#keyTable	sge.jbump.util.IntIntMap#keyTable	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	32	be4a37ea909400a3	
 member	com.dongbat.jbump.util.IntIntMap#keys()	sge.jbump.util.IntIntMap#keys()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	640	9fa0cd0f3d8ea52b	
 member	com.dongbat.jbump.util.IntIntMap#keys1	sge.jbump.util.IntIntMap#keys1	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	44	4faa6a38fcc103ba	vis=private
 member	com.dongbat.jbump.util.IntIntMap#keys2	sge.jbump.util.IntIntMap#keys2	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	44	4fbbb9f19f8e4c0d	vis=private
-member	com.dongbat.jbump.util.IntIntMap#loadFactor	sge.jbump.util.IntIntMap#loadFactor	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	37	903229e8a1ba8afa	vis=private
-member	com.dongbat.jbump.util.IntIntMap#mask	sge.jbump.util.IntIntMap#mask	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	38	c132bc00141865a9	vis=private
+member	com.dongbat.jbump.util.IntIntMap#loadFactor	sge.jbump.util.IntIntMap#loadFactor	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	37	63075193562ff5d7	
+member	com.dongbat.jbump.util.IntIntMap#mask	sge.jbump.util.IntIntMap#mask	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	38	de983dd8cfef342a	
 member	com.dongbat.jbump.util.IntIntMap#push(int,int,int,int,int,int,int,int)	sge.jbump.util.IntIntMap#push(int,int,int,int,int,int,int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	201	7655f3208bcb5b2e	vis=private
-member	com.dongbat.jbump.util.IntIntMap#pushIterations	sge.jbump.util.IntIntMap#pushIterations	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	40	1c0313906a96e1f2	vis=private
+member	com.dongbat.jbump.util.IntIntMap#pushIterations	sge.jbump.util.IntIntMap#pushIterations	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	40	0e7ab258945d4a50	
 member	com.dongbat.jbump.util.IntIntMap#put(int,int)	sge.jbump.util.IntIntMap#put(int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	90	74d974ef1961ed11	
 member	com.dongbat.jbump.util.IntIntMap#putAll(IntIntMap)	sge.jbump.util.IntIntMap#putAll(IntIntMap)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	157	66469e3885bd1e68	
 member	com.dongbat.jbump.util.IntIntMap#putResize(int,int)	sge.jbump.util.IntIntMap#putResize(int,int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	163	3abbae07fe256352	vis=private
@@ -433,15 +433,15 @@ member	com.dongbat.jbump.util.IntIntMap#removeStashIndex(int)	sge.jbump.util.Int
 member	com.dongbat.jbump.util.IntIntMap#resize(int)	sge.jbump.util.IntIntMap#resize(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	485	2b505f3473348bc0	vis=private
 member	com.dongbat.jbump.util.IntIntMap#shrink(int)	sge.jbump.util.IntIntMap#shrink(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	409	f82f3340d91cc790	
 member	com.dongbat.jbump.util.IntIntMap#size	sge.jbump.util.IntIntMap#size	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	30	184a3d5c6ff54828	
-member	com.dongbat.jbump.util.IntIntMap#stashCapacity	sge.jbump.util.IntIntMap#stashCapacity	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	39	6a1de49dbced6982	vis=private
-member	com.dongbat.jbump.util.IntIntMap#stashSize	sge.jbump.util.IntIntMap#stashSize	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	33	999b80e3ddc0347d	
-member	com.dongbat.jbump.util.IntIntMap#threshold	sge.jbump.util.IntIntMap#threshold	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	38	add7f6019a9783cb	vis=private
+member	com.dongbat.jbump.util.IntIntMap#stashCapacity	sge.jbump.util.IntIntMap#stashCapacity	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	39	fba7ba0c62fc957b	
+member	com.dongbat.jbump.util.IntIntMap#stashSize	sge.jbump.util.IntIntMap#stashSize	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	33	145782ce90cdbdbc	
+member	com.dongbat.jbump.util.IntIntMap#threshold	sge.jbump.util.IntIntMap#threshold	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	38	1f97240a7de097e0	
 member	com.dongbat.jbump.util.IntIntMap#toString()	sge.jbump.util.IntIntMap#toString()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	564	13e2bff7af84b965	
-member	com.dongbat.jbump.util.IntIntMap#valueTable	sge.jbump.util.IntIntMap#valueTable	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	32	9a7ec56bb93bac95	
+member	com.dongbat.jbump.util.IntIntMap#valueTable	sge.jbump.util.IntIntMap#valueTable	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	32	aeb4567c38bb77a9	
 member	com.dongbat.jbump.util.IntIntMap#values()	sge.jbump.util.IntIntMap#values()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	621	0aed041efcd48154	
 member	com.dongbat.jbump.util.IntIntMap#values1	sge.jbump.util.IntIntMap#values1	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	43	6575bc25fa62ccf0	vis=private
 member	com.dongbat.jbump.util.IntIntMap#values2	sge.jbump.util.IntIntMap#values2	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	43	228e93ba7ad05cae	vis=private
-member	com.dongbat.jbump.util.IntIntMap#zeroValue	sge.jbump.util.IntIntMap#zeroValue	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	34	212e60bc8f7802fe	
+member	com.dongbat.jbump.util.IntIntMap#zeroValue	sge.jbump.util.IntIntMap#zeroValue	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	34	e3648fc15a6a806a	
 member	com.dongbat.jbump.util.IntIntMap$Entries#entry	sge.jbump.util.IntIntMap$Entries#entry	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	719	8b4070ae45538138	vis=private[IntIntMap]
 member	com.dongbat.jbump.util.IntIntMap$Entries#hasNext()	sge.jbump.util.IntIntMap$Entries#hasNext()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	740	4b673c2e24486dbd	
 member	com.dongbat.jbump.util.IntIntMap$Entries#iterator()	sge.jbump.util.IntIntMap$Entries#iterator()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	744	44d967c09773114f	
@@ -460,7 +460,7 @@ member	com.dongbat.jbump.util.IntIntMap$MapIterator#INDEX_ZERO	sge.jbump.util.In
 member	com.dongbat.jbump.util.IntIntMap$MapIterator#currentIndex	sge.jbump.util.IntIntMap$MapIterator#currentIndex	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	673	23ce969cae78d525	
 member	com.dongbat.jbump.util.IntIntMap$MapIterator#findNextIndex()	sge.jbump.util.IntIntMap$MapIterator#findNextIndex()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	690	c509a25ea942af53	
 member	com.dongbat.jbump.util.IntIntMap$MapIterator#hasNext	sge.jbump.util.IntIntMap$MapIterator#hasNext	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	670	f37042bfbe55e187	name=hasNext$field
-member	com.dongbat.jbump.util.IntIntMap$MapIterator#map	sge.jbump.util.IntIntMap$MapIterator#map	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	672	c6aa21896138cc6a	
+member	com.dongbat.jbump.util.IntIntMap$MapIterator#map	sge.jbump.util.IntIntMap$MapIterator#map	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	672	51194df853060aca	
 member	com.dongbat.jbump.util.IntIntMap$MapIterator#nextIndex	sge.jbump.util.IntIntMap$MapIterator#nextIndex	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	673	2ce34c89019e8250	
 member	com.dongbat.jbump.util.IntIntMap$MapIterator#remove()	sge.jbump.util.IntIntMap$MapIterator#remove()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	701	068db6580be9d90d	
 member	com.dongbat.jbump.util.IntIntMap$MapIterator#reset()	sge.jbump.util.IntIntMap$MapIterator#reset()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	681	72fb9b08feeb506d	

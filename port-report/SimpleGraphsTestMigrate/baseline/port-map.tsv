@@ -44,11 +44,11 @@ member	space.earlygrey.simplegraphs.TestUtils$Vector2#dst(Vector2)	sge.graphs.Te
 member	space.earlygrey.simplegraphs.TestUtils$Vector2#equals(Any)	sge.graphs.TestUtils$Vector2#equals(Any)	Renamed	-	space/earlygrey/simplegraphs/TestUtils.java	44	25a6a60a1a7be47f	
 member	space.earlygrey.simplegraphs.TestUtils$Vector2#hashCode()	sge.graphs.TestUtils$Vector2#hashCode()	Renamed	-	space/earlygrey/simplegraphs/TestUtils.java	53	24f14fe3b4d19c05	
 member	space.earlygrey.simplegraphs.TestUtils$Vector2#toString()	sge.graphs.TestUtils$Vector2#toString()	Renamed	-	space/earlygrey/simplegraphs/TestUtils.java	59	badaac906c81bf53	
-member	space.earlygrey.simplegraphs.TestUtils$Vector2#x	sge.graphs.TestUtils$Vector2#x	Renamed	-	space/earlygrey/simplegraphs/TestUtils.java	30	ec407947b6bf3fa5	
-member	space.earlygrey.simplegraphs.TestUtils$Vector2#y	sge.graphs.TestUtils$Vector2#y	Renamed	-	space/earlygrey/simplegraphs/TestUtils.java	30	1228a26cae453f36	
+member	space.earlygrey.simplegraphs.TestUtils$Vector2#x	sge.graphs.TestUtils$Vector2#x	Renamed	-	space/earlygrey/simplegraphs/TestUtils.java	30	d6ecb3d8369502bb	
+member	space.earlygrey.simplegraphs.TestUtils$Vector2#y	sge.graphs.TestUtils$Vector2#y	Renamed	-	space/earlygrey/simplegraphs/TestUtils.java	30	ff1a9279a28386b4	
 member	space.earlygrey.simplegraphs.utils.BadHashInteger#<stmt1>	sge.graphs.utils.BadHashInteger#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/utils/BadHashInteger.java	8	92ae4670a3b8e413	
 member	space.earlygrey.simplegraphs.utils.BadHashInteger#equals(Any)	sge.graphs.utils.BadHashInteger#equals(Any)	Renamed	-	space/earlygrey/simplegraphs/utils/BadHashInteger.java	12	3fa02f83f0c43c80	
 member	space.earlygrey.simplegraphs.utils.BadHashInteger#hashCode()	sge.graphs.utils.BadHashInteger#hashCode()	Renamed	-	space/earlygrey/simplegraphs/utils/BadHashInteger.java	24	6b087eae3c60c8ce	
-member	space.earlygrey.simplegraphs.utils.BadHashInteger#i	sge.graphs.utils.BadHashInteger#i	Renamed	-	space/earlygrey/simplegraphs/utils/BadHashInteger.java	5	89cee5294b817baf	
+member	space.earlygrey.simplegraphs.utils.BadHashInteger#i	sge.graphs.utils.BadHashInteger#i	Renamed	-	space/earlygrey/simplegraphs/utils/BadHashInteger.java	5	f27ed3554f38c017	
 member	space.earlygrey.simplegraphs.utils.BadHashInteger#toString()	sge.graphs.utils.BadHashInteger#toString()	Renamed	-	space/earlygrey/simplegraphs/utils/BadHashInteger.java	29	b11987ac439553fb	
 member	space.earlygrey.simplegraphs.utils.BadHashInteger#value()	sge.graphs.utils.BadHashInteger#value()	Renamed	-	space/earlygrey/simplegraphs/utils/BadHashInteger.java	19	5e5618948bac078a	

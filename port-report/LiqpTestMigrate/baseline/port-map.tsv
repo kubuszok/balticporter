@@ -536,12 +536,12 @@ member	liqp.filters.SortTest#<stmt4>	ssg.liquid.filters.SortTest#<stmt4>	Renamed
 member	liqp.filters.SortTest#<stmt5>	ssg.liquid.filters.SortTest#<stmt5>	Renamed	-	liqp/filters/SortTest.java	151	79fa7448fd245879	
 member	liqp.filters.SortTest#context	ssg.liquid.filters.SortTest#context	Renamed	-	liqp/filters/SortTest.java	23	c7f854f199dc3e17	placement=companion
 member	liqp.filters.SortTest$Pojo#<stmt1>	ssg.liquid.filters.SortTest$Pojo#<stmt1>	Renamed	-	liqp/filters/SortTest.java	85	24c0a043b85d437e	
-member	liqp.filters.SortTest$Pojo#a	ssg.liquid.filters.SortTest$Pojo#a	Renamed	-	liqp/filters/SortTest.java	88	e084db005e9a6f8d	vis=private[SortTest]
+member	liqp.filters.SortTest$Pojo#a	ssg.liquid.filters.SortTest$Pojo#a	Renamed	-	liqp/filters/SortTest.java	88	b8bffabb9bfa4645	
 member	liqp.filters.SortTest$Pojo#getA()	ssg.liquid.filters.SortTest$Pojo#getA()	Renamed	-	liqp/filters/SortTest.java	90	52a8868d47ec5a7a	
 member	liqp.filters.SortTest$Pojo#setA(int)	ssg.liquid.filters.SortTest$Pojo#setA(int)	Renamed	-	liqp/filters/SortTest.java	94	c8bad2c90d481cef	
 member	liqp.filters.SortTest$PojoWithSupport#<stmt1>	ssg.liquid.filters.SortTest$PojoWithSupport#<stmt1>	Renamed	-	liqp/filters/SortTest.java	120	34c744f9fee031d1	
 member	liqp.filters.SortTest$PojoWithSupport#<stmt2>	ssg.liquid.filters.SortTest$PojoWithSupport#<stmt2>	Renamed	-	liqp/filters/SortTest.java	121	46c224d64accb5b8	
-member	liqp.filters.SortTest$PojoWithSupport#map	ssg.liquid.filters.SortTest$PojoWithSupport#map	Renamed	-	liqp/filters/SortTest.java	123	7f8ee184c7dd51b3	vis=private[SortTest]
+member	liqp.filters.SortTest$PojoWithSupport#map	ssg.liquid.filters.SortTest$PojoWithSupport#map	Renamed	-	liqp/filters/SortTest.java	123	718f86d0800fe876	
 member	liqp.filters.SortTest$PojoWithSupport#toLiquid()	ssg.liquid.filters.SortTest$PojoWithSupport#toLiquid()	Renamed	-	liqp/filters/SortTest.java	126	00d2b157dc75e467	
 member	liqp.filters.Sort_NaturalTest#<stmt1>	ssg.liquid.filters.Sort_NaturalTest#<stmt1>	Renamed	-	liqp/filters/Sort_NaturalTest.java	20	d9f41fb324d5166d	
 member	liqp.filters.SplitTest#<stmt1>	ssg.liquid.filters.SplitTest#<stmt1>	Renamed	-	liqp/filters/SplitTest.java	18	ca2b67b41931d85f	
@@ -643,7 +643,7 @@ member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#<stmt1>	ssg.liquid.filt
 member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	201	7815c25f07260d1a	
 member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#getMarker()	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#getMarker()	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	204	89e868bec0ad99f3	
 member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#getTags()	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#getTags()	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	196	e891904117969c5f	
-member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#marker	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#marker	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	197	9efabea33b72a00a	vis=private[JekyllWhereImplTest]
+member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#marker	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#marker	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	197	b4bf5d40db2915d0	
 member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#setTags(Object)	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#setTags(Object)	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	196	9dde8258f0fa8ea4	
 member	liqp.filters.where.JekyllWhereImplTest$TagsHolder#tags	ssg.liquid.filters.where.JekyllWhereImplTest$TagsHolder#tags	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	196	f02a3d8ff54a6dc8	
 member	liqp.filters.where.LiquidWhereImplTest#<stmt10>	ssg.liquid.filters.where.LiquidWhereImplTest#<stmt10>	Renamed	-	liqp/filters/where/LiquidWhereImplTest.java	301	0161666127579774	

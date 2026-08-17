@@ -191,7 +191,13 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     // …and the field keeps a placeholder, which for a PRIMITIVE is the literal java put there.
     // `scala.compiletime.uninitialized` replaces the `null.asInstanceOf[T]` CAST and nothing else,
     // so a type that states its own default keeps stating it.
-    assert(fout.contains("private var hashed: scala.Int = 0"))
+    //
+    // NO `private`: a java-`private` field a PARAMFUL constructor writes is widened for a replay in
+    // a module this run cannot see (`ENGINE-LIMITS.md` C15). It is a `var`, so the widening is the
+    // whole of what a cross-module replay needs — and `n`/`tag` above keep theirs precisely because
+    // they are NOT, an immutable slot being one no replay could assign whatever it can see.
+    assert(fout.contains("var hashed: scala.Int = 0"))
+    assert(!fout.contains("private var hashed:"))
   }
 
   test("NEGATIVE — a field a SIBLING INITIALISER reads is refused, because the slot moves the write") {

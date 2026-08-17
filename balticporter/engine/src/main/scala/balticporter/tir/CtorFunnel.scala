@@ -928,10 +928,214 @@ object CtorFunnel:
 
     /** members a replay reaches that are `private` where they are declared. The replay executes
       * one level down, in the subclass, so they must be widened — which is compile-safe and
-      * cannot change behaviour (the hand-ported corpus widens the same way). */
+      * cannot change behaviour (the hand-ported corpus widens the same way).
+      *
+      * This is the population this run OBSERVED. The other one — the replays a subclass in a LATER
+      * run will make of a constructor this run is emitting — is `externalReplayWidenings`, kept
+      * apart because only the first can name the subclass it is about (`ENGINE-LIMITS.md` C15). */
     def widenedMembers: Set[SymId] = widened.toSet
 
     private val widened = collection.mutable.Set[SymId]()
+
+    /** THE SAME WIDENING, FOR A SUBCLASS THIS RUN CANNOT SEE — `ENGINE-LIMITS.md` C15.
+      *
+      * `widened` above is derived from `replays`, which is derived from the SUBCLASSES IN THIS
+      * PROGRAM. That makes the answer depend on which run you are in, and §1.5 is explicit that this
+      * is the failure mode: a subclass in a dependent module replays the very same parent
+      * constructor, `reachablePrivate` reads the base's PUBLISHED `vis=private`, and the replay is
+      * refused — so the two modules disagree about a constructor neither of them wrote. Measured on
+      * `flexmark-ext-gfm-tasklist`: every super call to a copy constructor dropped WHOLE (the refusal
+      * is at the constructor, not at the statement), at 0 compile errors and no moved test.
+      *
+      * The set is a fact about THIS class's own declarations and involves no guess about who will
+      * subclass it: a paramful constructor a subclass may reach is one whose statements a subclass's
+      * SECONDARY constructor can only express as a replay (scala lets only the primary reach super),
+      * and every `private` those statements touch is a member that replay must reach. So the base
+      * widens what its own constructors ask for, exactly as it already does for the subclasses it
+      * happens to contain, and a dependent's `reachablePrivate` then finds the member `public` in
+      * the published surface with nothing new to ask.
+      *
+      * SEVEN narrowings, each a fact rather than a budget — a widening nobody needs is emitted
+      * surface this port did not have to move (`CLAUDE.md` §5's over-approximation rule):
+      *
+      *   - only classes THIS RUN EMITS. Widening a base's symbol in a dependent's own table is
+      *     `ENGINE-LIMITS.md` D5 exactly — the declaration is in a file this run does not write, so
+      *     the emitted call names a member that is still `private` where it lives;
+      *   - only a class a subclass can reach at all: not `final`, not an `enum`, not an annotation,
+      *     and a TYPE MEMBER or top-level rather than a method-local class (JLS 14.3 — nothing
+      *     outside the block can name it, so nothing outside can extend it) — `extensibleFromOutside`;
+      *   - only a NON-PRIVATE constructor: java forbids `super(...)` to a private one, so no
+      *     subclass anywhere can reach it;
+      *   - only a PARAMFUL constructor. `replays` fires on `superApply`, which requires
+      *     `args.nonEmpty`; a nilary `super()` is what the emitted `extends P` (or a secondary's
+      *     `this()`) already runs, and needs no replay and no access;
+      *   - only where a replay of those statements could be `usable` AT ALL. A body holding a
+      *     `super.m()` or a `return` is refused one level down whatever it can see, so widening for
+      *     it buys nothing;
+      *   - only a member SCALA would refuse one level down, which is not `isPrivate` —
+      *     `unreachableFromASubclass`;
+      *   - only a FIELD (`isField`) and only a MUTABLE one (`immutableSlotFields`): the first
+      *     because a method's visibility is half of an override contract, the second because a slot
+      *     bound as a `val` is one no replay could assign whatever it can see. Each of those two
+      *     cost a measured compile error before it was written down.
+      *
+      * What it deliberately does NOT ask is who the subclass is, and that is the whole point: the
+      * base cannot know, and an answer that waits to find out is the answer that was wrong. */
+    def externalReplayWidenings: Set[SymId] = externalReplay
+
+    // LAZY, and it is an initialisation-order fact rather than a preference: this val stands
+    // ahead of `replays` in the file and reads `decided`, which reads `replays`. Strict, it
+    // forces that chain during construction and the answer is a `NullPointerException`.
+    private lazy val externalReplay: Set[SymId] =
+      val out = collection.mutable.Set[SymId]()
+      ownedClasses.foreach { cd =>
+        if extensibleFromOutside(cd) then
+          ctorsOf(program, cd.body).foreach { d =>
+            val paramful = valueParams(program, d).nonEmpty
+            val callable = !program.symbolOf(d.symbol).exists(_.flags.isPrivate)
+            if paramful && callable then
+              val (conceivable, touched) = replayReach(d.symbol, 0, Set.empty)
+              if conceivable then
+                // …AND THE MEMBER ITSELF IS ONE THIS RUN WRITES, which the class gate does not
+                // imply: the chain climbs into ANCESTOR constructors, and a dependent's own class
+                // may inherit from a base's. Widening one of those edits this run's symbol table
+                // and NOT the file that declares it — `ENGINE-LIMITS.md` D5, in its own words. A
+                // base's private stays refused here and is answered where it can be, in the base's
+                // own run of this same pass.
+                out ++= touched.collect {
+                  case (s, viaPrefix)
+                    if isField(s) && !immutableSlotFields(s) && program.symbolOf(s)
+                      .exists(sy => surface.owns(sy.owner) && unreachableFromASubclass(sy, viaPrefix)) => s
+                }
+          }
+      }
+      out.toSet
+
+    /** Can a replay landing in a SUBCLASS THE RUN CANNOT SEE reach this member under SCALA's access
+      * rules? The question is emphatically NOT `isPrivate`, and each of the other two answers cost a
+      * measured error before it was written down:
+      *
+      *   - `private` — never reachable from a subclass, however it is accessed;
+      *   - PACKAGE-PRIVATE — java's fourth level, emitted `private[pkg]`. An unknown subclass is in
+      *     an unknown package, so neither `this.f` nor `other.f` reaches it;
+      *   - `protected` — reachable as `this.f`, and NOT reachable through a prefix whose type is the
+      *     DECLARING class. Scala requires such a prefix to conform to the ACCESSING class, and java
+      *     agrees for its own code (JLS 6.6.2.1) — which is exactly why this only ever bites a
+      *     REPLAY: java wrote `other.f` inside the declaring class, where the rule does not apply,
+      *     and the replay moved that statement into a subclass, where it does. Measured as 2 ×
+      *     `variable openingMarker cannot be accessed as a member of (block : ListItem)` on the
+      *     first module the widening let through (`ENGINE-LIMITS.md` C15).
+      *
+      * `viaPrefix` is therefore a fact about the STATEMENTS and not about the symbol, which is why
+      * `replayReach` carries it per member rather than returning a bare set. */
+    private def unreachableFromASubclass(sy: Symbol, viaPrefix: Boolean): Boolean =
+      sy.flags.isPrivate || sy.flags.isPackagePrivate || (sy.flags.isProtected && viaPrefix)
+
+    /** …AND A WIDENING IS ADMISSIBLE ONLY WHERE IT CANNOT PARTICIPATE IN AN OVERRIDE, which is the
+      * line between a FIELD and a METHOD and not a matter of degree.
+      *
+      * A field is overridden by nothing, so widening one is a closed act: no other declaration in
+      * this module, and none in any other, has to move with it. A method's visibility is half of an
+      * override CONTRACT — scala refuses an override that is narrower than what it overrides — so
+      * widening one obliges every override BELOW it to widen too, and the overrides below it in a
+      * DEPENDENT are declarations this run cannot reach at all. Measured as 2 × `E164 error
+      * overriding method setStage in class Group` on libGDX the first time methods were included:
+      * a `protected` method a constructor calls through a prefix, widened in the parent and left
+      * alone in two subclasses that override it (`ENGINE-LIMITS.md` C15).
+      *
+      * So a replay that touches a `private` or prefix-selected `protected` METHOD stays REFUSED and
+      * stays counted by `OmissionCheck`, which is the answer C3 already gives for everything this
+      * mechanism cannot express. */
+    private def isField(s: SymId): Boolean =
+      program.definitionOf(s).exists(_.isInstanceOf[Tree.ValDef])
+
+    /** …AND NOT A FIELD THIS CLASS BINDS AS AN IMMUTABLE SLOT, which is the same rule read on the
+      * MUTABILITY axis instead of the visibility one.
+      *
+      * `decided`'s A1 gate binds a field slot as a `val` when the field is java-`final` or
+      * java-`private` AND the program writes it no more often than the slot does — and the
+      * `private` half of that is exactly the argument *nothing outside this compilation can write
+      * it*. A widening falsifies the argument it rests on: the field becomes public, a dependent's
+      * replay is then admitted by `reachablePrivate`, and the emitted `this.f = …` one level down
+      * is `E052 Reassignment to val`. The `final` half is worse only in that java agrees — a
+      * subclass cannot assign a `final` field of its parent in either language, so a replay that
+      * writes one is inexpressible whatever it can see.
+      *
+      * Either way the widening BUYS NOTHING and removes an honest refusal, so the field is left
+      * alone and the replay stays counted by `OmissionCheck`. Note the direction of the dependency:
+      * A1 already counts the replays THIS RUN makes (`byReplay`, `ENGINE-LIMITS.md` C1.6's
+      * `0 -> 4 E052`), and this is the same question about a run that has not happened yet. */
+    private lazy val immutableSlotFields: Set[SymId] =
+      decided.values.flatMap(_.fieldSlots).filterNot(_.mutable).map(_.field).toSet
+
+    /** Can anything OUTSIDE this run extend `cd` and therefore replay one of its constructors?
+      *
+      * Structural throughout (§4.56): a `final` class has no subclass, an `enum` and an `@interface`
+      * cannot be extended by a declaration, and a class that is neither top-level nor a member of a
+      * type this program declares is standing in a BLOCK — a method-local or anonymous class, which
+      * nothing outside that block can name. Read through `classDecls` rather than a name test for
+      * the same reason `Visibility.decide` does. */
+    private def extensibleFromOutside(cd: Tree.ClassDef): Boolean =
+      program.symbolOf(cd.symbol).exists { s =>
+        !s.flags.isFinal && !s.flags.isEnum && !s.flags.isAnnotation && !s.flags.isModule &&
+          (unitSymbols(cd.symbol) || classSymbols(s.owner))
+      }
+
+    private lazy val classSymbols: Set[SymId] = classes.map(_.symbol).toSet
+    private lazy val unitSymbols: Set[SymId]  = program.units.map(_.symbol).toSet
+
+    /** The statements an external subclass's replay of `<ctor>` would run, as (is a replay even
+      * CONCEIVABLE here, every symbol they touch).
+      *
+      * The chain is inlined exactly as `effects` inlines it — head delegation dropped, an
+      * ARGUMENT-FREE head not recursed into (the emitted `this()` already ran it, which is
+      * `Effects.deferredTo`) — because the two must not disagree about what a replay IS. What it
+      * does NOT do is substitute: the arguments belong to a caller this run does not have, and no
+      * substitution changes WHICH of the class's own members the body touches. The first component
+      * is `usable`'s two structural refusals asked ahead of time: a `super.m()` dispatches one
+      * level too high once replayed and a `return` leaves the wrong frame, so such a constructor is
+      * refused wherever it lands and widening for it would be a modifier nobody can use. */
+    private def replayReach(ctor: SymId, depth: Int, seen: Set[SymId]): (Boolean, Map[SymId, Boolean]) =
+      if depth > 6 || seen(ctor) then (false, Map.empty)
+      else
+        defOf(ctor) match
+          case scala.None => (false, Map.empty)
+          case Some(d) =>
+            given Program = program
+            val here = collection.mutable.Map[SymId, Boolean]()
+            var ok   = true
+            def saw(s: SymId, seenViaPrefix: Boolean): Unit =
+              here(s) = here.getOrElse(s, false) || seenViaPrefix
+            /** a qualifier that is NOT this class's own instance — the shape scala refuses for a
+              * `protected` member one level down. */
+            def viaPrefix(q: Term): Boolean =
+              !(q.isInstanceOf[Tree.This] || q.isInstanceOf[Tree.Super])
+            val ph = new Phase:
+              def name = "ctor-replay-reach"
+              override def transformTerm(t: Term)(using Program): Term =
+                t match
+                  case _: Tree.Super  => ok = false
+                  case _: Tree.Return => ok = false
+                  case _              => ()
+                t match
+                  // a SELECTION carries the one fact `unreachableFromASubclass` cannot read off the
+                  // symbol: `this.f` is a subclass's own access and `other.f` is a prefix whose type
+                  // is the declaring class, which scala refuses one level down.
+                  case Tree.Apply(Tree.Select(q, _, _, _), _, m, _, _) => saw(m, viaPrefix(q))
+                  case Tree.Select(q, s, _, _)                        => saw(s, viaPrefix(q))
+                  case other => program.symbolIn(other).foreach(saw(_, false))
+                t
+            val (body, chain) = headStmt(d) match
+              case Some(Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _)) if isInitName(program, m) =>
+                (stmtsOf(d).tail, if as.nonEmpty then Some(m) else scala.None)
+              case _ => (stmtsOf(d), scala.None)
+            body.foreach(StandardTraversal.mapStat(ph, _))
+            val (chainOk, chainTouched) =
+              chain.map(replayReach(_, depth + 1, seen + ctor)).getOrElse((true, Map.empty[SymId, Boolean]))
+            val merged = chainTouched.foldLeft(here.toMap) { case (acc, (s, v)) =>
+              acc.updated(s, acc.getOrElse(s, false) || v)
+            }
+            (ok && chainOk, merged)
 
     private val replays: Map[(SymId, SymId), List[Statement]] =
       val out = collection.mutable.Map[(SymId, SymId), List[Statement]]()
@@ -1003,7 +1207,7 @@ object CtorFunnel:
             // A SYNTHESISED primary is paramful, and `extends P` with no arguments therefore reaches
             // P's NILARY SECONDARY — which is java's own `P()`, unchanged. So what the emitted
             // `class C extends P` runs on the way in is exactly what java's `new P()` ran, and
-            // [[effects]] already computes that for any constructor, its `super(...)` chain inlined.
+            // `effects` already computes that for any constructor, its `super(...)` chain inlined.
             //
             // Getting this wrong is not a missed optimisation. `prologueOf` is what `replayFor`
             // stands on, replay expresses 73 of the 82 WALL classes, and the widened synthesis makes

@@ -135,10 +135,10 @@ member	com.github.tommyettinger.anim8.AnimatedPNG#IHDR	sge.anim8.AnimatedPNG#IHD
 member	com.github.tommyettinger.anim8.AnimatedPNG#INTERLACE_NONE	sge.anim8.AnimatedPNG#INTERLACE_NONE	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	87	4a6352b7fd983aac	placement=companion vis=private
 member	com.github.tommyettinger.anim8.AnimatedPNG#SIGNATURE	sge.anim8.AnimatedPNG#SIGNATURE	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	80	3f9a8ce21da39b90	placement=companion vis=private
 member	com.github.tommyettinger.anim8.AnimatedPNG#acTL	sge.anim8.AnimatedPNG#acTL	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	81	0b669a60cdbe9ffd	placement=companion vis=private
-member	com.github.tommyettinger.anim8.AnimatedPNG#buffer	sge.anim8.AnimatedPNG#buffer	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	91	b66cc2056bdaf596	vis=private
+member	com.github.tommyettinger.anim8.AnimatedPNG#buffer	sge.anim8.AnimatedPNG#buffer	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	91	6d73b9f8b7fc4a77	
 member	com.github.tommyettinger.anim8.AnimatedPNG#close()	sge.anim8.AnimatedPNG#close()	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	304	667d8134a880a0d5	
 member	com.github.tommyettinger.anim8.AnimatedPNG#curLineBytes	sge.anim8.AnimatedPNG#curLineBytes	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	93	af3065e7af29e049	vis=private
-member	com.github.tommyettinger.anim8.AnimatedPNG#deflater	sge.anim8.AnimatedPNG#deflater	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	92	85ad53afba5533b6	vis=private
+member	com.github.tommyettinger.anim8.AnimatedPNG#deflater	sge.anim8.AnimatedPNG#deflater	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	92	c30e9487ce36783f	
 member	com.github.tommyettinger.anim8.AnimatedPNG#fcTL	sge.anim8.AnimatedPNG#fcTL	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	82	b18bb9c3c27a0b14	placement=companion vis=private
 member	com.github.tommyettinger.anim8.AnimatedPNG#fdAT	sge.anim8.AnimatedPNG#fdAT	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	83	b6c76c06dfcf54fc	placement=companion vis=private
 member	com.github.tommyettinger.anim8.AnimatedPNG#flipY	sge.anim8.AnimatedPNG#flipY	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	94	c35d6d0a77ec23d4	vis=private
@@ -187,10 +187,10 @@ member	com.github.tommyettinger.anim8.FastPNG#IEND	sge.anim8.FastPNG#IEND	Rename
 member	com.github.tommyettinger.anim8.FastPNG#IHDR	sge.anim8.FastPNG#IHDR	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	86	69c0c3bc0303a7cd	placement=companion vis=private
 member	com.github.tommyettinger.anim8.FastPNG#INTERLACE_NONE	sge.anim8.FastPNG#INTERLACE_NONE	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	92	4a6352b7fd983aac	placement=companion vis=private
 member	com.github.tommyettinger.anim8.FastPNG#SIGNATURE	sge.anim8.FastPNG#SIGNATURE	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	85	3f9a8ce21da39b90	placement=companion vis=private
-member	com.github.tommyettinger.anim8.FastPNG#buffer	sge.anim8.FastPNG#buffer	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	94	5f61ae987cac3337	vis=private
+member	com.github.tommyettinger.anim8.FastPNG#buffer	sge.anim8.FastPNG#buffer	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	94	8ad23d26b5a4bc33	
 member	com.github.tommyettinger.anim8.FastPNG#close()	sge.anim8.FastPNG#close()	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	229	4efe672f66858c81	
 member	com.github.tommyettinger.anim8.FastPNG#curLineBytes	sge.anim8.FastPNG#curLineBytes	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	96	af3065e7af29e049	vis=private
-member	com.github.tommyettinger.anim8.FastPNG#deflater	sge.anim8.FastPNG#deflater	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	95	85ad53afba5533b6	vis=private
+member	com.github.tommyettinger.anim8.FastPNG#deflater	sge.anim8.FastPNG#deflater	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	95	c30e9487ce36783f	
 member	com.github.tommyettinger.anim8.FastPNG#flipY	sge.anim8.FastPNG#flipY	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	97	c35d6d0a77ec23d4	vis=private
 member	com.github.tommyettinger.anim8.FastPNG#setCompression(int)	sge.anim8.FastPNG#setCompression(int)	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	130	af192376b3ea60ae	
 member	com.github.tommyettinger.anim8.FastPNG#setFlipY(boolean)	sge.anim8.FastPNG#setFlipY(boolean)	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	120	8f0d564fa8e04b14	
@@ -248,9 +248,9 @@ member	com.github.tommyettinger.anim8.LZWEncoder#free_ent	sge.anim8.LZWEncoder#f
 member	com.github.tommyettinger.anim8.LZWEncoder#g_init_bits	sge.anim8.LZWEncoder#g_init_bits	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	99	df578521bba29177	
 member	com.github.tommyettinger.anim8.LZWEncoder#hsize	sge.anim8.LZWEncoder#hsize	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	79	d98129d3f263edee	
 member	com.github.tommyettinger.anim8.LZWEncoder#htab	sge.anim8.LZWEncoder#htab	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	75	72e7877b627c7757	
-member	com.github.tommyettinger.anim8.LZWEncoder#imgH	sge.anim8.LZWEncoder#imgH	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	35	19bdb91009922f48	vis=private
-member	com.github.tommyettinger.anim8.LZWEncoder#imgW	sge.anim8.LZWEncoder#imgW	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	34	fdc54d4faf799893	vis=private
-member	com.github.tommyettinger.anim8.LZWEncoder#initCodeSize	sge.anim8.LZWEncoder#initCodeSize	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	39	8952a917cc004293	vis=private
+member	com.github.tommyettinger.anim8.LZWEncoder#imgH	sge.anim8.LZWEncoder#imgH	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	35	15bac1f89182f01e	
+member	com.github.tommyettinger.anim8.LZWEncoder#imgW	sge.anim8.LZWEncoder#imgW	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	34	3dde51b9a5663e01	
+member	com.github.tommyettinger.anim8.LZWEncoder#initCodeSize	sge.anim8.LZWEncoder#initCodeSize	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	39	706e80fa9c43abd3	
 member	com.github.tommyettinger.anim8.LZWEncoder#masks	sge.anim8.LZWEncoder#masks	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	124	571dea80e8787539	
 member	com.github.tommyettinger.anim8.LZWEncoder#maxbits	sge.anim8.LZWEncoder#maxbits	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	69	2b00bfc7e9eb94cc	
 member	com.github.tommyettinger.anim8.LZWEncoder#maxcode	sge.anim8.LZWEncoder#maxcode	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	71	2d8e45de292f1f72	
@@ -258,7 +258,7 @@ member	com.github.tommyettinger.anim8.LZWEncoder#maxmaxcode	sge.anim8.LZWEncoder
 member	com.github.tommyettinger.anim8.LZWEncoder#n_bits	sge.anim8.LZWEncoder#n_bits	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	67	5729eb256b0367d0	
 member	com.github.tommyettinger.anim8.LZWEncoder#nextPixel()	sge.anim8.LZWEncoder#nextPixel()	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	265	ffa02f1d45013b5a	vis=private
 member	com.github.tommyettinger.anim8.LZWEncoder#output(int,OutputStream)	sge.anim8.LZWEncoder#output(int,OutputStream)	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	276	45486b74f94f5046	
-member	com.github.tommyettinger.anim8.LZWEncoder#pixArray	sge.anim8.LZWEncoder#pixArray	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	37	2bddc56476c9f6cc	vis=private
+member	com.github.tommyettinger.anim8.LZWEncoder#pixArray	sge.anim8.LZWEncoder#pixArray	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	37	bfbfa7d4f4512f67	
 member	com.github.tommyettinger.anim8.LZWEncoder#remaining	sge.anim8.LZWEncoder#remaining	Renamed	-	com/github/tommyettinger/anim8/LZWEncoder.java	41	24792cf10c99dce9	vis=private
 member	com.github.tommyettinger.anim8.OtherMath#a0	sge.anim8.OtherMath#a0	Renamed	-	com/github/tommyettinger/anim8/OtherMath.java	74	59f2a2235e39ef4b	placement=companion vis=private
 member	com.github.tommyettinger.anim8.OtherMath#a0f	sge.anim8.OtherMath#a0f	Renamed	-	com/github/tommyettinger/anim8/OtherMath.java	59	1061515a44cfb910	placement=companion vis=private
@@ -315,12 +315,12 @@ member	com.github.tommyettinger.anim8.PNG8#PLTE	sge.anim8.PNG8#PLTE	Renamed	-	co
 member	com.github.tommyettinger.anim8.PNG8#SIGNATURE	sge.anim8.PNG8#SIGNATURE	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	105	3f9a8ce21da39b90	placement=companion vis=private
 member	com.github.tommyettinger.anim8.PNG8#TRNS	sge.anim8.PNG8#TRNS	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	107	a4db4ddb99d0afc5	placement=companion vis=private
 member	com.github.tommyettinger.anim8.PNG8#acTL	sge.anim8.PNG8#acTL	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	108	0b669a60cdbe9ffd	placement=companion vis=private
-member	com.github.tommyettinger.anim8.PNG8#buffer	sge.anim8.PNG8#buffer	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	115	dcdbefe437c2ce3a	vis=private
+member	com.github.tommyettinger.anim8.PNG8#buffer	sge.anim8.PNG8#buffer	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	115	7e8018c830a98739	
 member	com.github.tommyettinger.anim8.PNG8#centralizePalette(FileHandle,FileHandle)	sge.anim8.PNG8#centralizePalette(FileHandle,FileHandle)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	8315	c8c0e5d3fe3db6e4	placement=companion
 member	com.github.tommyettinger.anim8.PNG8#centralizePalette(FileHandle,FileHandle,float)	sge.anim8.PNG8#centralizePalette(FileHandle,FileHandle,float)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	8331	65d5c417e3d16b4a	placement=companion
 member	com.github.tommyettinger.anim8.PNG8#close()	sge.anim8.PNG8#close()	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	7964	39f49101952b8542	
 member	com.github.tommyettinger.anim8.PNG8#curLineBytes	sge.anim8.PNG8#curLineBytes	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	117	af3065e7af29e049	vis=private
-member	com.github.tommyettinger.anim8.PNG8#deflater	sge.anim8.PNG8#deflater	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	116	85ad53afba5533b6	vis=private
+member	com.github.tommyettinger.anim8.PNG8#deflater	sge.anim8.PNG8#deflater	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	116	c30e9487ce36783f	
 member	com.github.tommyettinger.anim8.PNG8#ditherAlgorithm	sge.anim8.PNG8#ditherAlgorithm	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	122	d3d7c2579c78e717	
 member	com.github.tommyettinger.anim8.PNG8#ditherStrength	sge.anim8.PNG8#ditherStrength	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	155	f31fa51c596810c5	
 member	com.github.tommyettinger.anim8.PNG8#editPalette(FileHandle,FileHandle,Interpolation)	sge.anim8.PNG8#editPalette(FileHandle,FileHandle,Interpolation)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	8076	571c48bffc01e1a2	placement=companion

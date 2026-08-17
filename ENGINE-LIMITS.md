@@ -2710,63 +2710,143 @@ nothing beside the one that does.*
 
 ---
 
-### C15. A CONSTRUCTOR REPLAY ACROSS A MODULE BOUNDARY DIES ON THE BASE'S `private`, and what it drops is the WHOLE super call rather than the one statement — **one module SKIPPED, at 0 compile errors and 0 tests. OPEN**
+### C15. A CONSTRUCTOR REPLAY ACROSS A MODULE BOUNDARY DIED ON THE BASE'S `private`, and what it dropped was the WHOLE super call rather than the one statement — **one module measured and SKIPPED at 0 compile errors and 0 tests, then admitted. CLOSED**
 
 C3's replay is what makes a java `super(args)` expressible at all: scala lets only the primary reach
 super, so a secondary's super call is re-expressed as the parent constructor's own body, replayed in
-the child. Within ONE module that is exact — every field the parent's body writes is a field this
+the child. Within ONE module that was exact — every field the parent's body writes is a field this
 run emits, and the visibility plan can widen whatever the replay needs.
 
-**Across a module boundary it cannot be, and `flexmark-ext-gfm-tasklist` is the corpus's first
+**Across a module boundary it was not, and `flexmark-ext-gfm-tasklist` is the corpus's first
 instance.** `TaskListItem extends ListItem` and its copy constructor is `super(block)`; the base's
 `ListItem(ListItem other)` writes SEVEN things —
 
 ```java
-this.openingMarker = other.openingMarker;  this.markerSuffix = other.markerSuffix;
+this.openingMarker = other.openingMarker;  this.markerSuffix = other.markerSuffix;   // protected
 this.tight = other.tight;                  this.hadBlankAfterItemParagraph = other.hadBlankAfterItemParagraph;
 this.containsBlankLine = other.containsBlankLine;
-this.priority = other.priority;            // ← `private int priority` in the BASE
+this.priority = other.priority;            // ← FOUR `private` fields in the BASE, not one
 takeChildren(other);  setCharsFromContent();
 ```
 
-— and exactly ONE of them touches a member `ssg-md` emitted `private`. §1.5 says only the base can
-widen a member it emits, and the base cannot know that a future dependent will replay a constructor
-that reaches it, so the replay is refused. **What it costs is not the one statement, it is all
-seven**: the refusal is at the CONSTRUCTOR, so `super(block)` is dropped whole and the emitted
-`def this(block: ListItem)` keeps only the child's own line.
+— and the refusal was at the CONSTRUCTOR, so `super(block)` was dropped whole and the emitted
+`def this(block: ListItem)` kept only the child's own line. Every `TaskListItem` therefore arrived
+with no children (`takeChildren`), no `markerSuffix` and no chars, from the one call site
+(`TaskListItemBlockPreProcessor.preProcess`) that ever builds one — and `isItemDoneMarker()` reads
+`markerSuffix.matches("[ ]")`.
 
 The instruments were right and were not enough. `base-surface` **0 → 1** with the §1 classification
-in its own text (the corpus's first `base-surface` row with real content), `omissions` **0 → 1**
-`super(args) dropped … 1 argument(s) discarded`, a `dropped-super-call` porter note ON the emitted
-constructor — and **0 compile errors, every other count flat**. The module has no admissible plain
-`@Test`, so nothing in the corpus could fail.
+in its own text, `omissions` **0 → 1** `super(args) dropped … 1 argument(s) discarded`, a
+`dropped-super-call` porter note ON the emitted constructor — and **0 compile errors, every other
+count flat**. The module has no admissible plain `@Test`, so nothing in the corpus could fail. It was
+measured, reverted, and left out of `ext.conf` until the fix.
 
-**Why the module is SKIPPED rather than shipped with the residue counted.** The lost constructor is
-not a corner of this extension, it is the extension: `TaskListItemBlockPreProcessor.preProcess` is
-the only place a `TaskListItem` is ever built, so every task-list item in the port would arrive with
-no children (`takeChildren`), no `markerSuffix` and no chars — and `isItemDoneMarker()` reads
-`markerSuffix.matches("[ ]")`. That is a port that RUNS LESS THAN JAVA while every artifact reads
-green, which is `CLAUDE.md` §5's own rule about a loss (it takes no entry however cleanly it drains a
-lane) read at a scope decision.
+**WHAT WAS ACTUALLY WRONG: THE WIDENING SET WAS DERIVED FROM THE SUBCLASSES THE RUN HAPPENED TO
+CONTAIN.** `CtorFunnel.Plans` collected the members its OBSERVED replays touch and `TirEmitter.widen`
+dropped `private` from them. That makes the answer a fact about *which run you are in*: the base
+widens for the subclasses inside it and not for the identical subclass one module out, so two ports
+disagree about a constructor neither of them wrote — §1.5's own failure mode, arriving through the
+one pass that had no way to state it.
 
-Three things for whoever closes it, and the first is the one that decides the shape:
+The fix is to derive the set from **the class's OWN declarations**, which is a question the base can
+answer completely and with no guess about who will subclass it: a paramful, non-private constructor
+of an extensible class is one whose statements a subclass's SECONDARY can only express as a replay
+(scala lets only the primary reach super), and every member that replay touches and cannot reach must
+be widened. `CtorFunnel.Plans.externalReplayWidenings`, recorded as `WidenedVisibility` with
+`scope=dependent-modules` so a reader is never told about a subclass this run does not have.
 
-- **the refusal is ALL-OR-NOTHING at the constructor and need not be.** Six of the seven statements
-  are writable from the dependent today. A partial replay is NOT obviously right either — a
-  half-initialised object is a worse failure than an uninitialised one — but the choice is currently
-  made by nobody, and a replay that could state *which* statement it could not express would let the
-  port decide;
-- **the base's own surface is the other end.** `ListItem` declares `public int getPriority()` and
-  `public void setPriority(int)`, so an accessor-mediated replay is expressible for this instance —
-  and is a new mechanism (a setter may do more than assign), needing its own spec, its own negatives
-  and a corpus measurement. It is not a batch wave's work;
-- **widening in the BASE is the third option and the most expensive.** *Any `private` field written
-  by a non-primary constructor of a non-final class* is replay-reachable, so the base could widen
-  them all — a shared-surface change that moves ssg-md's emitted text and every dependent's baseline
-  at once, for a defect that has fired on one module.
+**AND THE SECOND FACE COST TWO COMPILE ERRORS BEFORE IT WAS WRITTEN DOWN.** "Can a replay reach this
+member" is emphatically not `isPrivate`:
 
-*Fix kind: (a) engine, and the visibility half lives in the BASE. OPEN. Recorded rather than fixed:
-`PROGRESS.md` §10.6.8 carries the skip, and the module is NOT in `ext.conf`'s `includeGlobs`.*
+- `private` — never reachable from a subclass, however it is accessed;
+- PACKAGE-PRIVATE — emitted `private[pkg]`, and an unknown subclass is in an unknown package;
+- `protected` — reachable as `this.f`, and NOT through a prefix whose type is the DECLARING class.
+  Scala requires such a prefix to conform to the ACCESSING class and java agrees for its own code
+  (JLS 6.6.2.1), which is exactly why this only ever bites a REPLAY: java wrote `other.f` INSIDE the
+  declaring class, where the rule does not apply, and the replay moved that statement into a
+  subclass, where it does. Measured as 2 × `variable openingMarker cannot be accessed as a member of
+  (block : ListItem)` the first time the widening let the module through.
+
+So the reach test carries, per member, whether the statements ever select it through a non-`this`
+prefix — a fact about the STATEMENTS and not about the symbol — and `TirEmitter.widen` clears all
+three of java's non-public levels rather than one. Clearing `isPrivate` alone is exact for the
+population the pass started with and a silent no-op for the other two, and a widening that does
+nothing is indistinguishable from one nobody asked for.
+
+**AND THE THIRD FACE IS THE LINE BETWEEN A FIELD AND A METHOD, which is not a matter of degree.** A
+field is overridden by nothing, so widening one is a CLOSED act: no other declaration in this module,
+and none in any other, has to move with it. A method's visibility is half of an override CONTRACT —
+scala refuses an override narrower than what it overrides — so widening one obliges every override
+BELOW it to widen too, and the overrides below it in a DEPENDENT are declarations this run cannot
+reach at all. Measured as 2 × `E164 error overriding method setStage in class Group` on libGDX the
+first time methods were included: a `protected` method a constructor calls through a prefix, widened
+in `Group` and left alone in `Dialog` and `SelectBox$SelectBoxScrollPane`, which override it. So a
+replay touching a `private` or prefix-selected `protected` METHOD stays REFUSED and stays counted,
+which is C3's own answer for everything this mechanism cannot express.
+
+**AND THE FOURTH FACE IS THE MUTABILITY AXIS, which the engine's own `val` gate reads the other way
+round.** `CtorFunnel`'s A1 gate binds a field slot as an immutable `val` when the field is
+java-`final` or java-`private` and the program writes it no more often than the slot does — and the
+`private` half of that is precisely the argument *nothing outside this compilation can write it*. A
+widening falsifies the argument it rests on: the field becomes public, a dependent's replay is then
+ADMITTED, and the emitted `this.f = …` one level down is `E052 Reassignment to val`. The `final` half
+is worse only in that java agrees — a subclass may not assign its parent's `final` field in either
+language. Either way the widening BUYS NOTHING and removes an honest refusal, so a field the class
+binds as an immutable slot is left alone and its replay stays counted. Note the direction: A1 already
+counts the replays THIS RUN makes (C1.6's `0 -> 4 E052`), and this is the same question about a run
+that has not happened yet — which is C15's own sentence, met a third time on a third axis.
+
+**SEVEN NARROWINGS, each a fact rather than a budget**, because a widening nobody needs is emitted
+surface the port did not have to move (`CLAUDE.md` §5): only classes THIS RUN EMITS (widening a
+base's symbol in a dependent's own table is D5 exactly); only a class a subclass can reach (not
+`final`, not an `enum`, not an annotation, not a method-local class — JLS 14.3); only a NON-PRIVATE
+constructor (java forbids `super(...)` to a private one); only a PARAMFUL one (a nilary `super()` is
+what `extends P` already runs); only where the replay could be `usable` at all (a body holding a
+`super.m()` or a `return` is refused one level down whatever it can see); only a FIELD, for the
+third face; and only a MUTABLE one, for the fourth.
+
+**MEASURED, ON ALL FOURTEEN LANES.** Every port compiles at its own baseline — **no lane's error
+count moved in either direction** — and no suite outcome moved: libGDX 217 passing / 4 expected
+failures, liqp 636 / 1, ssg-md's util suite 725 / 2, ashley 108 / 2, ssg-md-ext 34 / 34. What moved
+is emitted TEXT and the `vis=` column of every published port map, and only that:
+
+| port | members widened | of which | member digests |
+|---|---:|---|---:|
+| libGDX core | **535** | | 771 |
+| ssg-md | **437** | 264 `private`, 155 package-private, 18 `protected` | 580 |
+| liqp | **92** | | 133 |
+| gdx-gltf | 36 | | — |
+| jbump | 30 | | — |
+| ashley | 20 | | — |
+
+Every one of those digests carries a `WidenedVisibility` decision and a porter note, so the blast is
+attributable row by row (`CLAUDE.md` §3). The only check counts that moved are the three VISIBILITY
+rows of the difference catalog, counting their own firings over a program with fewer non-public
+members — libGDX `JS-C47`/`JS-C50` *fired* **1251 → 993** and `JS-C49` **170 → 127**, ssg-md
+**397 → 242** and **67 → 25** — and `base-surface` on ashley **6 → 0**, which is the lane this entry
+is about, draining on a port nobody was aiming at.
+
+On the dependent, `flexmark-ext-gfm-tasklist` REJOINS at 0 errors with its `def this(block: ListItem)`
+carrying all eight statements — read in the emitted file, which is the only place the fix is visible.
+
+**THE COST, STATED RATHER THAN MINIMISED.** This is speculative surface: the base widens for replays
+that may never be written, because the alternative is an answer that waits to find out and that
+answer is the defect. Two alternatives were considered and are recorded here so nobody re-derives
+them — an ACCESSOR-MEDIATED replay (`this.setPriority(other.getPriority())`) needs no base change at
+all and introduces a VIRTUAL DISPATCH java did not have, which the same library disproves in one
+line (`TaskListItem.setOpeningMarker` throws `IllegalStateException`); and a synthesised
+`protected` initialiser method carrying the constructor's body is exact but ADDS a name to the
+surface for every such constructor, which is a larger speculation than a modifier. A THIRD narrowing
+is available and not taken: widening to `protected` where the replay only needs `this`-access would
+keep three quarters of these members off the public surface, at the cost of two widening levels for
+one act (`CLAUDE.md` §5's ONE POLICY, ONE SPELLING).
+
+*Fix kind: (a) engine, and the visibility half lives in the BASE, which is where it was put.
+CLOSED — `CtorFunnel.Plans.externalReplayWidenings` + `TirEmitter.widen`;
+`CtorFunnelExternalReplaySpec` is the gate, with the narrowings and the `protected` face as
+negatives, four of its six cases failing without the change, and `SyntheticPrimarySlotsSpec` pins the
+mutability half. `PROGRESS.md` §10.6.8 carries the
+module's own row.*
 
 ---
 

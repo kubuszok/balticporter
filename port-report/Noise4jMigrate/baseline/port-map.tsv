@@ -57,7 +57,7 @@ member	com.github.czyzby.noise4j.map.Grid#forEach(CellConsumer,int,int)	sge.nois
 member	com.github.czyzby.noise4j.map.Grid#forEach(CellConsumer,int,int,int,int)	sge.noise.Grid#forEach(CellConsumer,int,int,int,int)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	127	89ff3ebe66b5f5dc	
 member	com.github.czyzby.noise4j.map.Grid#get(int,int)	sge.noise.Grid#get(int,int)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	52	b84f1aa01426b64d	
 member	com.github.czyzby.noise4j.map.Grid#getArray()	sge.noise.Grid#getArray()	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	45	c26ea0e9d4210512	
-member	com.github.czyzby.noise4j.map.Grid#grid	sge.noise.Grid#grid	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	11	6270fde14e0ea227	vis=private
+member	com.github.czyzby.noise4j.map.Grid#grid	sge.noise.Grid#grid	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	11	a424e6d0c814fdfe	
 member	com.github.czyzby.noise4j.map.Grid#hashCode()	sge.noise.Grid#hashCode()	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	348	db97bfd75c1b0d58	
 member	com.github.czyzby.noise4j.map.Grid#increment()	sge.noise.Grid#increment()	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	324	300fa78c9e784d41	
 member	com.github.czyzby.noise4j.map.Grid#iterate(CellConsumer,int,int)	sge.noise.Grid#iterate(CellConsumer,int,int)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	135	7188be257b5c067c	
@@ -81,7 +81,7 @@ member	com.github.czyzby.noise4j.map.Grid$CellConsumer#CONTINUE	sge.noise.Grid$C
 member	com.github.czyzby.noise4j.map.Grid$CellConsumer#consume(Grid,int,int,float)	sge.noise.Grid$CellConsumer#consume(Grid,int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	395	acd23a5cb17c9ee8	
 member	com.github.czyzby.noise4j.array.Int2dArray#<init>(int)	sge.noise.Int2dArray#<init>(int)	Renamed	-	com/github/czyzby/noise4j/array/Int2dArray.java	9	9745a4f59463e7eb	
 member	com.github.czyzby.noise4j.array.Int2dArray#<stmt1>	sge.noise.Int2dArray#<stmt1>	Renamed	-	com/github/czyzby/noise4j/array/Int2dArray.java	15	14305bea04836a23	
-member	com.github.czyzby.noise4j.array.Int2dArray#array	sge.noise.Int2dArray#array	Renamed	-	com/github/czyzby/noise4j/array/Int2dArray.java	7	bc5e6f6d4528fef8	vis=private
+member	com.github.czyzby.noise4j.array.Int2dArray#array	sge.noise.Int2dArray#array	Renamed	-	com/github/czyzby/noise4j/array/Int2dArray.java	7	4c4db6ae6f8d16ed	
 member	com.github.czyzby.noise4j.array.Int2dArray#get(int,int)	sge.noise.Int2dArray#get(int,int)	Renamed	-	com/github/czyzby/noise4j/array/Int2dArray.java	21	e3a88a925bee507d	
 member	com.github.czyzby.noise4j.array.Int2dArray#set(int)	sge.noise.Int2dArray#set(int)	Renamed	-	com/github/czyzby/noise4j/array/Int2dArray.java	34	26fefbfd1c5a2144	
 member	com.github.czyzby.noise4j.array.Int2dArray#set(int,int,int)	sge.noise.Int2dArray#set(int,int,int)	Renamed	-	com/github/czyzby/noise4j/array/Int2dArray.java	28	6ebcdc07dfdef7ed	
@@ -89,7 +89,7 @@ member	com.github.czyzby.noise4j.array.Object2dArray#<init>(Array,int)	sge.noise
 member	com.github.czyzby.noise4j.array.Object2dArray#<init>(Array,int,int)	sge.noise.Object2dArray#<init>(Array<Type>,int,int)	Renamed	-	com/github/czyzby/noise4j/array/Object2dArray.java	35	aafb3d8444eadc03	
 member	com.github.czyzby.noise4j.array.Object2dArray#<init>(int)	sge.noise.Object2dArray#<init>(int)	Renamed	-	com/github/czyzby/noise4j/array/Object2dArray.java	14	8b33d8b35daac89c	
 member	com.github.czyzby.noise4j.array.Object2dArray#<init>(int,int)	sge.noise.Object2dArray#<init>(int,int)	Renamed	-	com/github/czyzby/noise4j/array/Object2dArray.java	21	c1be45440ae389e6	
-member	com.github.czyzby.noise4j.array.Object2dArray#array	sge.noise.Object2dArray#array	Renamed	-	com/github/czyzby/noise4j/array/Object2dArray.java	11	b1854b9fe96738e5	vis=private
+member	com.github.czyzby.noise4j.array.Object2dArray#array	sge.noise.Object2dArray#array	Renamed	-	com/github/czyzby/noise4j/array/Object2dArray.java	11	c7bd9ccfe5c5bf38	
 member	com.github.czyzby.noise4j.array.Object2dArray#fill(Type)	sge.noise.Object2dArray#fill(Type)	Renamed	-	com/github/czyzby/noise4j/array/Object2dArray.java	125	8d90449d24580c43	
 member	com.github.czyzby.noise4j.array.Object2dArray#get(int,int)	sge.noise.Object2dArray#get(int,int)	Renamed	-	com/github/czyzby/noise4j/array/Object2dArray.java	82	07162578ac16b1af	
 member	com.github.czyzby.noise4j.array.Object2dArray#getArray()	sge.noise.Object2dArray#getArray()	Renamed	-	com/github/czyzby/noise4j/array/Object2dArray.java	67	c764f4985e350595	
@@ -210,13 +210,13 @@ member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#g
 member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#getWidth()	sge.noise.generator.room.AbstractRoomGenerator$Room#getWidth()	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	226	c17c8f21f113971b	
 member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#getX()	sge.noise.generator.room.AbstractRoomGenerator$Room#getX()	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	216	bea08cd9714eec0b	
 member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#getY()	sge.noise.generator.room.AbstractRoomGenerator$Room#getY()	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	221	7573b05132dd7af1	
-member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#height	sge.noise.generator.room.AbstractRoomGenerator$Room#height	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	173	12ad057960285964	vis=private[AbstractRoomGenerator]
+member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#height	sge.noise.generator.room.AbstractRoomGenerator$Room#height	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	173	5f269af90e11702a	
 member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#isBorder(int,int)	sge.noise.generator.room.AbstractRoomGenerator$Room#isBorder(int,int)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	211	41ae7795ae7fe6c9	
 member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#overlaps(Room)	sge.noise.generator.room.AbstractRoomGenerator$Room#overlaps(Room)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	184	0db007ee48c51fa3	
 member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#toString()	sge.noise.generator.room.AbstractRoomGenerator$Room#toString()	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	236	a7f519bee87854f1	
-member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#width	sge.noise.generator.room.AbstractRoomGenerator$Room#width	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	173	4cc85fda9d9ff74a	vis=private[AbstractRoomGenerator]
-member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#x	sge.noise.generator.room.AbstractRoomGenerator$Room#x	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	172	fc55beeb934e4e5e	vis=private[AbstractRoomGenerator]
-member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#y	sge.noise.generator.room.AbstractRoomGenerator$Room#y	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	172	e3cf280d9618f0eb	vis=private[AbstractRoomGenerator]
+member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#width	sge.noise.generator.room.AbstractRoomGenerator$Room#width	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	173	12db5102ff648320	
+member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#x	sge.noise.generator.room.AbstractRoomGenerator$Room#x	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	172	ec288e09c075be2c	
+member	com.github.czyzby.noise4j.map.generator.room.AbstractRoomGenerator$Room#y	sge.noise.generator.room.AbstractRoomGenerator$Room#y	Renamed	-	com/github/czyzby/noise4j/map/generator/room/AbstractRoomGenerator.java	172	34890d2c45697aec	
 member	com.github.czyzby.noise4j.map.generator.room.RoomType#carve(Room,Grid,float)	sge.noise.generator.room.RoomType#carve(Room,Grid,float)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/RoomType.java	21	39e5be00260d940e	
 member	com.github.czyzby.noise4j.map.generator.room.RoomType#isValid(Room)	sge.noise.generator.room.RoomType#isValid(Room)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/RoomType.java	26	d5151fa0f61087fc	
 member	com.github.czyzby.noise4j.map.generator.room.RoomType$DefaultRoomType#isValid(Room)	sge.noise.generator.room.RoomType$DefaultRoomType#isValid(Room)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/RoomType.java	177	4bbd6b129a1f2434	

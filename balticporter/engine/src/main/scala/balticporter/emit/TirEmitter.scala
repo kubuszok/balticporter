@@ -116,7 +116,8 @@ final class TirEmitter(
   // a replayed parent constructor's statements execute one level down, so the private members
   // they reach must be visible there. Widening only rewrites symbol FLAGS — the trees `plans`
   // was computed over are untouched, so it still applies.
-  private val program = TirEmitter.widen(prepared, plans.widenedMembers, own)
+  private val program =
+    TirEmitter.widen(prepared, plans.widenedMembers, own, plans.externalReplayWidenings)
 
   /** every same-named candidate a program-declared type and its program-declared ancestors declare
     * — the index `JS-C22`/`JS-C23`'s consults read at each rendered call, and the one the RUN's
@@ -5449,30 +5450,60 @@ object TirEmitter:
   /** Drop `private` from the given members. Java lets a parent constructor write its own private
     * fields; when those statements are REPLAYED one level down (see `CtorFunnel.replayFor`) they
     * execute in the subclass, where `private` no longer reaches. Widening visibility can only
-    * remove access errors, never introduce one, and never changes behaviour. */
+    * remove access errors, never introduce one, and never changes behaviour.
+    *
+    * `forDependents` is the same widening asked by a subclass THIS RUN CANNOT SEE
+    * (`CtorFunnel.externalReplayWidenings`, `ENGINE-LIMITS.md` C15). It is a separate parameter for
+    * the note's sake and for nothing else: both populations widen identically, and a reader of
+    * `decisions.tsv` who is told "REPLAYED in this subclass" about a class with no subclass in this
+    * program has been handed a fact that is not true of this run (§4.575). */
   def widen(p: Program, members: Set[SymId],
-            out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
-    if members.isEmpty then p
+            out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
+            forDependents: Set[SymId] = Set.empty): Program =
+    val all = members ++ forDependents
+    if all.isEmpty then p
     else
       val src = p
-      val syms = p.symbols.all.map(s =>
-        if members(s.id) then s.copy(flags = s.flags.copy(isPrivate = false)) else s
-      )
+      // ALL THREE of java's non-public levels, not `isPrivate` alone. Clearing one flag is exact
+      // for the population this started with and silently a no-op for the other two, and a widening
+      // that does nothing is indistinguishable from one that was not asked for: the replay is
+      // emitted, the modifier stays, and scalac reports it one level down
+      // (`ENGINE-LIMITS.md` C15's second face — `protected[ast] var openingMarker` read through a
+      // `ListItem` prefix from a subclass in another package).
+      def level(f: Flags): String =
+        if f.isPrivate then "private" else if f.isProtected then "protected" else "package-private"
+      def widened(f: Flags): Flags =
+        f.copy(isPrivate = false, isProtected = false, isPackagePrivate = false)
+      def narrower(f: Flags): Boolean = f.isPrivate || f.isProtected || f.isPackagePrivate
+      val syms = p.symbols.all.map(s => if all(s.id) then s.copy(flags = widened(s.flags)) else s)
       // one row per member that ACTUALLY LOST a modifier — a member already public is in
       // `widenedMembers` because the planner could not know, and a decision about a change that
       // did not happen is a row an agent has to disprove.
       p.symbols.all.foreach { s =>
-        if members(s.id) && s.flags.isPrivate then
+        if all(s.id) && narrower(s.flags) then
+          // an OBSERVED replay wins the sentence where a member is in both sets: it is the stronger
+          // claim (a replay in this program really does reach it) and it is the one a reader can
+          // point at a subclass for.
+          val observed = members(s.id)
           note(out, Decision.Kind.WidenedVisibility, src, s.id,
             Map(
               // the same `cause=` pair every §8.7 residue carries, so "what widened, and why" is
               // ONE grep over `decisions.tsv` rather than a join across two grammars.
               "cause" -> "ctor-replay-widening",
-              "from" -> "private",
+              "from" -> level(s.flags),
               "to"   -> "public",
-              "why"  -> ("a parent constructor's statements are REPLAYED in this subclass " +
-                "(CtorFunnel.replayFor), and java let them touch a private member that scala's " +
-                "replay cannot reach one level down; widening can only remove access errors"),
+              "scope" -> (if observed then "this-run" else "dependent-modules"),
+              "why"  ->
+                (if observed then
+                   "a parent constructor's statements are REPLAYED in this subclass " +
+                     "(CtorFunnel.replayFor), and java let them touch a private member that scala's " +
+                     "replay cannot reach one level down; widening can only remove access errors"
+                 else
+                   "a paramful constructor of this class writes this member, and a SUBCLASS IN " +
+                     "ANOTHER MODULE can only express its `super(args)` as a replay one level down " +
+                     "(scala lets only the primary reach super) — where `private` does not reach " +
+                     "and where nothing but this run can widen it (ENGINE-LIMITS.md C15); widening " +
+                     "can only remove access errors"),
             ),
             "ctor-replay-widening")
       }
