@@ -3999,6 +3999,7 @@ it ADDED to a lane, never the lane's total.
 | 1 | `ext-aside` | 10 | 8 | 0 | 1/1 | `overload-risk` 1 (`GenericTieBreak`) |
 | 2 | `ext-resizable-image` | 6 | 6 | 0 | — | `overload-risk` +4 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
 | 3 | `ext-youtube-embedded` | 8 | 6 | 0 | — | `overload-risk` +20, `portability(emitted)` +3, `remediation` +1, and `catalog(unreached)` **25 → 22** |
+| 4 | `ext-anchorlink` | 9 | 7 | 0 | — | `overload-risk` +6 (4 `VarargPhaseSpan`, 2 `GenericTieBreak`) |
 
 **THE FIRST THING THE BATCH BOUGHT IS A CATALOG ROW NOBODY HAD REACHED HERE.**
 `ext-youtube-embedded` is the first module in this port to write a `try`/`catch` at all — one
