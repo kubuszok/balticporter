@@ -740,6 +740,9 @@ object SpoonTir:
     // ---- type parameter resolution ----
     /** parallel to `tpScopes`: is this frame an EXECUTABLE's own type parameters? */
     private val tpIsExec = collection.mutable.ArrayDeque[Boolean]()
+    /** parallel to `tpScopes`: the SPOON declarations behind the ids, read by
+      * [[resolveTypeParamDecl]]. Pushed and popped with `tpScopes` — the two are indexed together. */
+    private val tpDecls = collection.mutable.ArrayDeque[Map[String, CtTypeParameter]]()
 
     /** Render a type as its DECLARATION site would have, not as the current scope would.
       *
@@ -758,24 +761,41 @@ object SpoonTir:
       try f finally declScopeOnly = saved
     private var declScopeOnly = false
 
-    private def resolveTypeParam(name: String): Option[SymId] =
-      tpScopes.iterator.zipAll(tpIsExec.iterator, Map.empty, false).collectFirst {
-        case (m, isExec) if m.contains(name) && !(declScopeOnly && isExec) => m(name)
+    /** WHICH frame a name resolves in — stated once, because [[resolveTypeParam]] and
+      * [[resolveTypeParamDecl]] must answer about the SAME declaration or the raw fill's licence
+      * (`licensedFills`) is read off one variable and applied to another. */
+    private def tpFrameOf(name: String): Option[Int] =
+      tpScopes.iterator.zipAll(tpIsExec.iterator, Map.empty[String, SymId], false).zipWithIndex.collectFirst {
+        case ((m, isExec), i) if m.contains(name) && !(declScopeOnly && isExec) => i
       }
+
+    private def resolveTypeParam(name: String): Option[SymId] =
+      tpFrameOf(name).map(i => tpScopes(i)(name))
+
+    /** the SPOON DECLARATION behind [[resolveTypeParam]]'s id — its bound is what a raw fill's
+      * licence is read from, and no `Symbol` carries java's own spelling of it. */
+    private def resolveTypeParamDecl(name: String): Option[CtTypeParameter] =
+      tpFrameOf(name).flatMap(i => if i < tpDecls.size then tpDecls(i).get(name) else None)
 
     /** Mint ids for all formals FIRST (so bounds can self-reference — F-bounds), then
       * translate each bound with the frame in scope. Returns the frame and the TypeDefs. */
     private def mintTypeParams(declKey: String, owner: SymId, tps: List[CtTypeParameter]): (Map[String, SymId], List[Tree.TypeDef]) =
       val frame = tps.map(tp => tp.getSimpleName -> minter.resolve(declKey + "$$" + tp.getSimpleName)).toMap
       tpScopes.prepend(frame); tpIsExec.prepend(false) // a bound resolves in its own declarer's scope
+      tpDecls.prepend(declFrame(tps))
       val defs = tps.map { tp =>
         val id     = frame(tp.getSimpleName)
         val bounds = boundsOf(tp)
         minter.set(id, Symbol(id, tp.getSimpleName, declKey + "$$" + tp.getSimpleName, Flags(isParam = true), owner, bounds))
         Tree.TypeDef(id, tt(bounds, tp), originOf(tp))
       }
-      tpScopes.remove(0); tpIsExec.remove(0)
+      tpScopes.remove(0); tpIsExec.remove(0); tpDecls.remove(0)
       (frame, defs)
+
+    /** the `tpDecls` frame for a declaration's formals — one derivation, so the three sites that
+      * push a `tpScopes` frame cannot disagree about which declaration a name stands for. */
+    private def declFrame(tps: List[CtTypeParameter]): Map[String, CtTypeParameter] =
+      tps.map(tp => tp.getSimpleName -> tp).toMap
 
     /** Java's type parameters are ALWAYS reference types: `<T>` means `<T extends Object>`, since
       * Java has no primitive type arguments. Scala's `[T]` means `T <: Any`, which is STRICTLY
@@ -908,14 +928,105 @@ object SpoonTir:
       * libgdx `Array` param → `[T]`. This preserves the self-reference / enclosing
       * instantiation that a plain wildcard fill erases — the erasure is what turns
       * `node.parent`, `this.entries1`, `array.items` into path-dependent captures that unify
-      * with nothing. Returns None for a non-generic (arity-0) type. */
-    private def nameFilledArgs(r: CtTypeReference[?], resolve: String => Option[SymId]): Option[List[TypeRepr]] =
+      * with nothing. Returns None for a non-generic (arity-0) type.
+      *
+      * Every filled slot is LICENSED first (see [[licensedFills]]) — java stops checking at a raw
+      * use and scala does not, so a name that matches by coincidence re-imposes a bound java never
+      * checked (`ENGINE-LIMITS.md` G30). */
+    private def nameFilledArgs(r: CtTypeReference[?], resolve: String => Option[SymId],
+                               resolveDecl: String => Option[CtTypeParameter]): Option[List[TypeRepr]] =
       val formals = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
                     catch { case _: Throwable => Nil }
       if formals.isEmpty then None
-      else Some(formals.map { f =>
-        resolve(f.getSimpleName).map(pid => TypeRef(NoPrefix, pid)).getOrElse(TypeBounds(NoType, NoType))
-      })
+      else
+        val ok = licensedFills(formals, resolveDecl)
+        Some(formals.map { f =>
+          val nm = f.getSimpleName
+          if ok(nm) then resolve(nm).map(pid => TypeRef(NoPrefix, pid)).getOrElse(TypeBounds(NoType, NoType))
+          else TypeBounds(NoType, NoType)
+        })
+
+    /** WHICH of a raw type's formals may take the in-scope variable of the same name — `CLAUDE.md`
+      * §4.56 read at a BOUND, and `ENGINE-LIMITS.md` G30's discriminator.
+      *
+      * The fill is a SUBSTITUTION of the raw type's formals by the names in scope, and java licenses
+      * NOTHING about it: JLS 4.8 stops checking at a raw use, so `B extends ReferenceNode` is legal
+      * java however `ReferenceNode`'s own parameters are bounded. Scala checks the applied type, so a
+      * fill has to carry its own evidence that each variable really can stand in the slot it is put
+      * in. Three structural facts do, and no conformance lookup is asked of a `noClasspath` model —
+      * one that answered `false` for a readable hierarchy would drop the fill libGDX's `Tree`/`Node`
+      * family needs, which is the same regression by another route:
+      *
+      *  - the in-scope variable IS the formal — java's F-BOUND idiom, `N extends Node` written
+      *    inside `Node`, where the substitution is the identity;
+      *  - the formal is UNBOUNDED (`extends Object`), which every reference type discharges, and
+      *    java has no primitive type arguments;
+      *  - the two are declared with the SAME bound, spelled the same
+      *    ([[boundSpelling]]) — java's own statement that they range over the same types. libGDX's
+      *    `Tree<N extends Node, V>` passes here (`Node`'s slot 0 asks for `Node` and `Tree`'s `N` is
+      *    declared `Node`); flexmark's `ReferencingNode<…, B extends ReferenceNode>` does not
+      *    (`ReferenceNode`'s slot 1 asks for `Node`, and `B` is declared `ReferenceNode`).
+      *
+      * …and the third fact only holds if the FREE NAMES in that bound mean the same thing on both
+      * sides, so a slot whose formal bound MENTIONS another formal is licensed only where that one
+      * is too — a greatest fixpoint, not a per-slot test. The propagation is not tidiness: scalac
+      * substitutes a declined slot as a PROJECTION rather than as a wildcard, so keeping `R` beside a
+      * declined `B` reads `Type argument R does not conform to upper bound
+      * NodeRepository[ReferenceNode[R, ?, ?]#B]` — measured, at scalac 3.8.4.
+      *
+      * An UNREADABLE bound licenses the fill, which is the third value rather than a `catch` with a
+      * fabricated answer (§4.6): declining there is the `false`-for-a-readable-hierarchy regression
+      * above, arriving through the failure path instead. */
+    private def licensedFills(formals: List[CtTypeParameter],
+                              resolveDecl: String => Option[CtTypeParameter]): Set[String] =
+      val names = formals.map(_.getSimpleName).toSet
+      def spelled(tp: CtTypeParameter): Option[Option[String]] =
+        try Some(Option(tp.getSuperclass).filter(_.getQualifiedName != "java.lang.Object").map(boundSpelling))
+        catch { case _: Throwable => None }   // unreadable — see the doc's third value
+      var ok = formals.filter { f =>
+        resolveDecl(f.getSimpleName) match
+          case None    => false                     // nothing in scope: the slot is a wildcard anyway
+          case Some(p) => (p eq f) || ((spelled(f), spelled(p)) match
+            case (Some(None), _)              => true                 // the formal is unbounded
+            case (Some(Some(a)), Some(Some(b))) => a == b             // java declared both the same
+            case (None, _) | (_, None)        => true                 // unreadable
+            case _                            => false)
+      }.map(_.getSimpleName).toSet
+      var changed = true
+      while changed do
+        val next = ok.filter { nm =>
+          formals.find(_.getSimpleName == nm).forall { f =>
+            val free = try Option(f.getSuperclass).map(mentionedTypeVarNames).getOrElse(Set.empty)
+                       catch { case _: Throwable => Set.empty[String] }
+            free.forall(v => !names(v) || ok(v))
+          }
+        }
+        changed = next.size != ok.size
+        ok = next
+      ok
+
+    /** A bound as JAVA WROTE IT, with type variables by their own name — the comparison
+      * [[licensedFills]] makes. Not a rendering: it is only ever compared to another one of these. */
+    private def boundSpelling(r: CtTypeReference[?]): String = TypeShape.of(r) match
+      case TypeShape.Absent             => "?"
+      case TypeShape.Wildcard(_, b, up) => b.map(x => (if up then "? extends " else "? super ") + boundSpelling(x)).getOrElse("?")
+      case TypeShape.Variable(tv)       => "$" + tv.getSimpleName
+      case TypeShape.Arr(_, c)          => boundSpelling(c) + "[]"
+      case TypeShape.Intersection(_, bs) => bs.map(boundSpelling).mkString(" & ")
+      case TypeShape.Prim(p)            => p.getQualifiedName
+      case TypeShape.Named(n, as)       =>
+        n.getQualifiedName + (if as.isEmpty then "" else as.map(boundSpelling).mkString("<", ",", ">"))
+
+    /** the NAMED type variables a bound mentions — [[mentionsTypeVar]]'s question asked the other way
+      * round, and with the wildcard arm ahead of the variable one (§4.56's dead-arm rule). */
+    private def mentionedTypeVarNames(r: CtTypeReference[?]): Set[String] = TypeShape.of(r) match
+      case TypeShape.Absent              => Set.empty
+      case TypeShape.Wildcard(_, b, _)   => b.map(mentionedTypeVarNames).getOrElse(Set.empty)
+      case TypeShape.Variable(tv)        => Set(tv.getSimpleName)
+      case TypeShape.Arr(_, c)           => mentionedTypeVarNames(c)
+      case TypeShape.Intersection(_, bs) => bs.flatMap(mentionedTypeVarNames).toSet
+      case TypeShape.Prim(_)             => Set.empty
+      case TypeShape.Named(_, as)        => as.flatMap(mentionedTypeVarNames).toSet
 
     private def objectT: TypeRepr = TypeRef(NoPrefix, minter.external("java.lang.Object", "Object"))
 
@@ -1557,7 +1668,7 @@ object SpoonTir:
         !tr.isInstanceOf[CtWildcardReference] && !tr.isPrimitive && tr.getActualTypeArguments.isEmpty
       // bounds are translated inside `mintTypeParams` with the decl's own frame freshly in scope
       // (no static-nested boundary crossed), so `resolveTypeParam` is the right, complete source.
-      (if isRawGeneric then nameFilledArgs(tr, resolveTypeParam) else None) match
+      (if isRawGeneric then nameFilledArgs(tr, resolveTypeParam, resolveTypeParamDecl) else None) match
         case Some(args) => AppliedType(TypeRef(NoPrefix, typeSym(tr)), args)
         case None       => tpe(tr)
 
@@ -1715,6 +1826,7 @@ object SpoonTir:
       val lead = leadingOf(t)
       val (frame, tpDefs) = mintTypeParams(typeKey(t.getReference), id, t.getFormalCtTypeParameters.asScala.toList)
       tpScopes.prepend(frame); tpIsExec.prepend(false)
+      tpDecls.prepend(declFrame(t.getFormalCtTypeParameters.asScala.toList))
       selfRawStack.prepend(id -> t.getFormalCtTypeParameters.asScala.toList.map(tp => frame(tp.getSimpleName)))
       inheritedInst.prepend(instantiationOfParents(t))
       inheritedByDecl.prepend(instantiationByDecl(t))
@@ -1824,7 +1936,7 @@ object SpoonTir:
       val enumCases = t match
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
         case _            => Nil
-      tpScopes.remove(0); tpIsExec.remove(0); inheritedInst.remove(0); inheritedByDecl.remove(0)
+      tpScopes.remove(0); tpIsExec.remove(0); tpDecls.remove(0); inheritedInst.remove(0); inheritedByDecl.remove(0)
       enclosingFqns.remove(0); ancestorFqns.remove(0)
       selfRawStack.remove(0); tpAccessible.remove(0); tpExecNames.remove(0); inStatic = savedStatic
       // JLS 12.5 STEP 4 IS ONE SEQUENCE, IN TEXTUAL ORDER — field initialisers and instance
@@ -2312,7 +2424,7 @@ object SpoonTir:
       val (frame, tpDefs) = mintTypeParams(mkey, id, mtps)
       val savedOverriding = inOverridingMember
       inOverridingMember = overrides
-      tpScopes.prepend(frame); tpIsExec.prepend(true)
+      tpScopes.prepend(frame); tpIsExec.prepend(true); tpDecls.prepend(declFrame(mtps))
       // a method sees its class's accessible params plus its own — and a STATIC one sees ONLY its
       // own, because java's static context has no access to the class's parameters and scala's
       // companion object cannot name them either. Carried in the FRAME rather than left to the
@@ -2377,7 +2489,7 @@ object SpoonTir:
       // translate the body (with param + type-param scope in place) — this is what makes
       // Call / field-ref usages and `callersOf` real. Abstract/interface methods have none.
       val body = Option(m.getBody).map(b => bt.methodBody(b))
-      tpScopes.remove(0); tpIsExec.remove(0); tpAccessible.remove(0); tpExecNames.remove(0)
+      tpScopes.remove(0); tpIsExec.remove(0); tpDecls.remove(0); tpAccessible.remove(0); tpExecNames.remove(0)
       inOverridingMember = savedOverriding
       Tree.DefDef(id, paramss = List(pvs), returnTpt = tt(ret, m), rhs = body, origin = originOf(m),
                   tparams = tpDefs, leading = mlead)

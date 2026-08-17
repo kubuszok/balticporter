@@ -1608,7 +1608,7 @@ lookup walks. Every other port in the corpus: 0 errors moved, `findings.tsv` con
 `new` WITHOUT a body, because the pair is the whole evidence: neither half alone says the two
 dispatches were reading different declarations.*
 
-### G30. A RAW BOUND is name-FILLED from the ENCLOSING declaration, and at a type that is not the declaring one the names are a COINCIDENCE — **the FIRST post-typer error the corpus has ever produced. 1 error on ssg-md, OPEN**
+### G30. A RAW BOUND is name-FILLED from the ENCLOSING declaration, and at a type that is not the declaring one the names are a COINCIDENCE — **the FIRST post-typer error the corpus has ever produced. CLOSED per SLOT, ssg-md 1 -> 1 and the 1 is a DIFFERENT error**
 
 ```java
 public interface ReferenceNode  <R extends NodeRepository<B>, B extends Node, N extends Node> { … }
@@ -1655,10 +1655,42 @@ route (`CLAUDE.md` §4.6: the default has to mean something to the caller). Eras
 Note also G8: where a fill has no consistent instantiation at all, the image is the limit rather than
 the rule.
 
-*Fix kind: (a) engine — frontend, `SpoonTir.fbound`. OPEN, 1 error, and it is the only thing between
-ssg-md and running its 723 emitted tests. Both blanket answers are refuted above with their
-counter-examples; what has NOT been tried is the conformance test with an honest three-valued lookup
-(discharges / does not / unreadable), where only the middle value declines the fill.*
+**CLOSED by LICENSING EACH SLOT from what java WROTE — no conformance lookup anywhere**
+(`SpoonTir.licensedFills`). The fill is a SUBSTITUTION of the raw type's formals by the names in
+scope, so what each slot owes is evidence that its variable can stand there, and three structural
+facts supply it: the in-scope variable IS the formal (the F-bound idiom, an identity substitution);
+the formal is UNBOUNDED, which every reference type discharges and java has no primitive type
+arguments; or the two are DECLARED WITH THE SAME BOUND, spelled the same (`boundSpelling`), which is
+java's own statement that they range over the same types. libGDX's `Tree`/`Node` passes on the third
+(`Node`'s slot 0 asks for `Node`, `Tree`'s `N` is declared `Node`) and flexmark's `ReferencingNode`
+fails it (`ReferenceNode`'s slot 1 asks for `Node`, `B` is declared `ReferenceNode`) — so both refuted
+blankets keep their counter-examples and neither answer is given blanket. An UNREADABLE bound
+LICENSES the fill: that is the third value this entry asked for, placed where the paragraph above says
+it has to be, since declining on a failed lookup is the `false`-for-a-readable-hierarchy regression
+arriving through the failure path.
+
+**And the licence is a FIXPOINT, not a per-slot test, because scalac substitutes a DECLINED slot as a
+PROJECTION.** The obvious shape — decline slot 1, keep slot 0 — emits `ReferenceNode[R, ?, ?]` and
+reads `Type argument R does not conform to upper bound NodeRepository[ReferenceNode[R, ?, ?]#B]`
+(measured at scalac 3.8.4). The wildcard is not a wildcard to the substitution; it is a slot the other
+bound can still NAME. So a slot whose formal bound MENTIONS another formal is licensed only where that
+one is, and the flexmark fill collapses to `ReferenceNode[?, ?, ?]` — which is the erased claim java
+made, at exactly the site java made it, and nowhere else. `RawBoundNameFillSpec` carries all four:
+the site, a mixed fill where the decline does NOT propagate (`Holder[X, ?]` — the negative that says
+this is not a blanket erasure), and the two refuted blankets' counter-examples as positives.
+
+**…and what it uncovered is the shape of every post-typer census from here: THE RISERS ARE
+SERIALISED.** ssg-md read `1 -> 1` across this fix and the 1 is not the same error — `E057` moved from
+`ReferencingNode`'s declaration to an INFERRED type in `SegmentedSequenceFull#create`. Both shapes in
+ONE compilation unit report ONE error (measured), so the two checks are in different post-typer
+phases and each is gated on the previous having none, exactly as §3's typer gate is. Two consequences:
+`baseline/expected-errors` cannot see a riser being traded for another one — only `errors.tsv`'s member
+column can — and a port at zero does not learn its true count in one run, it learns it one error at a
+time.
+
+*Fix kind: (a) engine — frontend, `SpoonTir.licensedFills` + `nameFilledArgs`. CLOSED. ssg-md
+`1 -> 1` with one member digest moved (`ReferencingNode`, whose published `tparams=` row moved with
+it) and every check count flat but the three catalog consult totals; every other port byte-identical.*
 
 ---
 

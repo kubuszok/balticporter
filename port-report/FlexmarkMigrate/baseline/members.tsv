@@ -4036,7 +4036,7 @@ ssg.md.util.ast.NodeVisitorBase	ssg.md.util.ast.NodeVisitorBase#visitChildren(No
 ssg.md.util.ast.NonRenderingInline	ssg.md.util.ast.NonRenderingInline	class	b4b4cb1e80f58c72
 ssg.md.util.ast.ReferenceNode	ssg.md.util.ast.ReferenceNode	class	d375ba1a26ae08a7
 ssg.md.util.ast.ReferenceNode	ssg.md.util.ast.ReferenceNode#getReferencingNode(Node)	def	6fa7b13314d67d9d
-ssg.md.util.ast.ReferencingNode	ssg.md.util.ast.ReferencingNode	class	17b9c9c2245e4089
+ssg.md.util.ast.ReferencingNode	ssg.md.util.ast.ReferencingNode	class	7dee4a63ceb20853
 ssg.md.util.ast.ReferencingNode	ssg.md.util.ast.ReferencingNode#getReference()	def	8d1f15b8ff75024d
 ssg.md.util.ast.ReferencingNode	ssg.md.util.ast.ReferencingNode#getReferenceNode(Document)	def	2a92d957d77a362b
 ssg.md.util.ast.ReferencingNode	ssg.md.util.ast.ReferencingNode#getReferenceNode(R)	def	d3f3cec68d8d1abd

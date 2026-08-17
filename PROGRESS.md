@@ -2794,7 +2794,7 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13, **13** after wave 14, **5** after wave 15, **2** after wave 16 and **1** after wave 17 (coded 1 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **ONE** now, counted from `errors.tsv` rather than by eye. **THE TYPER COUNT IS ZERO**: the one remaining row is reported by a phase that runs only at zero typer errors, which is `CLAUDE.md` §3's gate opening for the first time in this corpus — §10.6.3's wave-17 row carries the proof and `ENGINE-LIMITS.md` G30 the defect |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13, **13** after wave 14, **5** after wave 15, **2** after wave 16, **1** after wave 17 and **1** after wave 18 — *a DIFFERENT 1* (coded 1 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **ONE** now, counted from `errors.tsv` rather than by eye. **THE TYPER COUNT IS ZERO**: the one remaining row is reported by a phase that runs only at zero typer errors, which is `CLAUDE.md` §3's gate opening for the first time in this corpus — §10.6.3's wave-17 row carries the proof and `ENGINE-LIMITS.md` G30 the defect. **And the post-typer phases gate on EACH OTHER**, so wave 18 closed G30 at an unmoved headline and the row is now `SegmentedSequenceFull#create`: read the MEMBER column across a commit here, never the count (§10.6.3's wave-18 row) |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
@@ -2821,11 +2821,17 @@ typer** — G21's two closed and the typer count reached ZERO, which let a phase
 `!ctx.reporter.hasErrors` report `ENGINE-LIMITS.md` G30's raw-bound fill. The test set
 itself has been at ZERO since wave 12, and `md-test-measure` runs the suite only at a WHOLE-compile
 of zero — main and test are compiled together, because the suite links against `src_managed/main` —
-so two main-set errors are what stands between this port and its first behavioural census. Discovery
+so one main-set error is what stands between this port and its first behavioural census. Discovery
 holds at **723 of 723 with 0 lost** on every run, which is the guard that says the suite would
 actually execute something once it runs at all.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15, → 2 after wave 16, → 1 after wave 17 — and the 1 is NOT A TYPER ERROR**
+**And that number is not a countdown, because the risers are SERIALISED.** Wave 18 closed G30 and the
+figure stayed at ONE — the post-typer phases gate on each other exactly as they gate on the typer, so
+each closed row can reveal the next and the headline says nothing about how many are left. Only
+`errors.tsv`'s MEMBER column can, and it moved from `ReferencingNode` to `SegmentedSequenceFull`.
+There is no way to price the remaining distance from here; there is only the next row.
+
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15, → 2 after wave 16, → 1 after wave 17 — and the 1 is NOT A TYPER ERROR — → 1 after wave 18, a DIFFERENT one, because the post-typer risers are SERIALISED**
 
 Every error is `EngineGap`. Seventeen waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -3177,6 +3183,35 @@ Three things follow, and none of them is the one this section predicted:
   this single row goes;
 - **the suite still does not run**, and it is now one error away rather than two. Discovery holds at
   723 of 723 with 0 lost.
+
+**WAVE 18 — 1 → 1, AND THE 1 IS A DIFFERENT ERROR. The post-typer risers are SERIALISED.** G30
+closed and the headline did not move, which is the single most important fact this port has produced
+since it reached zero: `errors.tsv`'s member column went from `ReferencingNode`'s declaration to an
+INFERRED type in `SegmentedSequenceFull#create`, and every other artifact — the error count, the
+check counts, `members.tsv` outside the one member — says nothing happened.
+
+| closed | entry | measured |
+|---|---|---|
+| `ReferencingNode` | **G30** — a raw bound's name-fill is LICENSED PER SLOT, from what java WROTE. The fill is a substitution and each slot owes evidence that its variable can stand there: the variable IS the formal (the F-bound idiom), the formal is UNBOUNDED, or the two are declared with the SAME bound spelled the same way. No conformance lookup anywhere, because one that answered `false` for a readable hierarchy under `noClasspath` is the libGDX regression by another route; an UNREADABLE bound therefore LICENSES. And the licence is a FIXPOINT — scalac substitutes a declined slot as a PROJECTION, so `ReferenceNode[R, ?, ?]` reads *`R` does not conform to `NodeRepository[ReferenceNode[R, ?, ?]#B]`*, and a slot whose formal bound MENTIONS a declined one goes with it | **1 → 1**, one member digest (`ReferencingNode`, and the `tparams=` row it publishes), three `catalog(consulted)` totals inside their own text, **every other port byte-identical** |
+
+**The serialisation is MEASURED, not inferred.** Both shapes in ONE compilation unit — a bad bound at
+a DECLARATION and a bad bound at an INFERRED type — report **one** error at scalac 3.8.4. `isRunnable`
+is a fact about every phase and not about the typer, so the post-typer checks gate on each other
+exactly as they gate on the typer. Two consequences for every census from here, and both are now
+`CLAUDE.md` §3 and `ENGINE-LIMITS.md` G30: **`baseline/expected-errors` cannot see a riser traded for
+another one**, and **a port at zero learns its true count one error at a time** — so each riser is its
+own commit with its own census and the reading is the member column, never the headline.
+
+**And the second riser is not K28's family either.** `SegmentedSequenceFull#create(BasedSequence,
+ISegmentBuilder<?>)` emits java's own `ISegmentBuilder[?]` at a parameter whose declaration is a true
+F-bound (`ISegmentBuilder<S extends ISegmentBuilder<S>>`), and the `for (Object part : builder)` over
+it needs CAPTURE CONVERSION to apply `JavaIterable`'s `foreach` extension. Dotty approximates the
+F-bound by substituting `Any` for `S`, so the capture's upper bound is `ISegmentBuilder[Any]` while
+the slot asks for `ISegmentBuilder[CAP]` — `E057`, at an inferred type. The DECLARATION alone is
+fine; three shapes compile at scalac 3.8.4 and were probed rather than reasoned about — spelling the
+iterator out, ascribing the receiver to the `JavaIterable` parent it inherits, and a plain member
+select. Java's enhanced `for` reads the ITERABLE SUPERTYPE and not the receiver's own type, so the
+ascription is what java itself did, and `inheritedInst` already holds the instantiation.
 
 So the honest reading of 13 is *9 refused, 4 open*. Wave 13 took FIVE out of the open
 column and SIX out of the refused one, in four commits; **wave 14 took a sixth out of the open column

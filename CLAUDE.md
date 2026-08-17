@@ -547,6 +547,17 @@ The compile-error count is a **typer-only** measurement: dotty's `Phase.isRunnab
 `override`, unimplemented members and variance violations are unmeasured until the count reaches 0 —
 and then the number will RISE. That is the gate beginning to tell the truth, not a regression.
 
+**…and PAST the typer the SAME gate applies again, one phase at a time, so the rise arrives
+SERIALLY and a flat count can hide a completely different error.** `isRunnable` is not a fact about
+the typer; it is a fact about every phase, and the post-typer checks are several. Two `E057`s in ONE
+compilation unit — a bad bound at a DECLARATION and a bad bound at an INFERRED type — report as
+**one** error (measured, scalac 3.8.4), because the second check's phase never runs while the first
+has reported. So a port at zero does not learn its true count in one run; it learns it one error at a
+time, and `1 -> 1` across a commit is exactly what a fix that closed one riser and unlocked the next
+looks like. `baseline/expected-errors` cannot see that — it is the same number — and neither can any
+check count or member digest. **Read `errors.tsv`'s MEMBER column across the change, never the
+headline**, and give each riser its own commit and its own census (`ENGINE-LIMITS.md` G30).
+
 Worse, a green compile says nothing about behaviour. Four silent correctness defects were found in
 libGDX core that all compiled cleanly — dropped `static { }` blocks, dropped `super(args)`, dropped
 anonymous-class bodies (156 sites, every button silently doing nothing), and the typer blind spot
