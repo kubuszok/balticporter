@@ -2794,7 +2794,7 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13, **13** after wave 14, **5** after wave 15, **2** after wave 16, **1** after wave 17, — `RefChecks` HAVING RUN FOR THE FIRST TIME — **131** after wave 18, **42** after wave 19, **34** after wave 20 and **27** after wave 21 (coded 17 + bare 10), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **26 owners** now, counted from `errors.tsv` rather than by eye. **THE TYPER COUNT IS ZERO AND `RefChecks` HAS RUN**: wave 17 emptied the typer, wave 18 closed the two post-typer risers that gated everything after them, and the number then went **1 -> 131**, which is `CLAUDE.md` §3's gate finishing the sentence it started — the rise is the truth arriving, not a regression. **The post-typer phases gate on EACH OTHER**, so wave 18's first commit read `1 -> 1` over a DIFFERENT error: read the MEMBER column across a commit here, never the count. §10.6.3's wave-18 row carries the whole census, classified against `ENGINE-LIMITS.md` K28's five verdicts (100 of the 131) plus three families nobody had looked at (31); wave 19 closed BOTH of K28's *strip the `override`* verdicts together — 47 `E037` and 24 `E038`, **131 -> 60**, the largest single fall this port has had — and then the emitter's own `final`-parent diamond forwarder, **60 -> 42**; wave 20 took the whole `getBuilder` family, **42 -> 34**, which was never a minted-parent question at all but java's own JLS 8.4.2 SUBSIGNATURE rule — an ERASURE may override a generic method and scala has no such rule (`ENGINE-LIMITS.md` G8.10); wave 21 opened with K28.2's two java FIELDS named like inherited JDK METHODS, **34 -> 32**, took the anonymous-body `E037` beside them, **32 -> 31**, the one real visibility row, **31 -> 30**, and the three substituted-override rows, **30 -> 27** |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13, **13** after wave 14, **5** after wave 15, **2** after wave 16, **1** after wave 17, — `RefChecks` HAVING RUN FOR THE FIRST TIME — **131** after wave 18, **42** after wave 19, **34** after wave 20 **27** after wave 21 and **27** after wave 22 (coded 17 + bare 10), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **26 owners** now, counted from `errors.tsv` rather than by eye. **THE TYPER COUNT IS ZERO AND `RefChecks` HAS RUN**: wave 17 emptied the typer, wave 18 closed the two post-typer risers that gated everything after them, and the number then went **1 -> 131**, which is `CLAUDE.md` §3's gate finishing the sentence it started — the rise is the truth arriving, not a regression. **The post-typer phases gate on EACH OTHER**, so wave 18's first commit read `1 -> 1` over a DIFFERENT error: read the MEMBER column across a commit here, never the count. §10.6.3's wave-18 row carries the whole census, classified against `ENGINE-LIMITS.md` K28's five verdicts (100 of the 131) plus three families nobody had looked at (31); wave 19 closed BOTH of K28's *strip the `override`* verdicts together — 47 `E037` and 24 `E038`, **131 -> 60**, the largest single fall this port has had — and then the emitter's own `final`-parent diamond forwarder, **60 -> 42**; wave 20 took the whole `getBuilder` family, **42 -> 34**, which was never a minted-parent question at all but java's own JLS 8.4.2 SUBSIGNATURE rule — an ERASURE may override a generic method and scala has no such rule (`ENGINE-LIMITS.md` G8.10); wave 21 opened with K28.2's two java FIELDS named like inherited JDK METHODS, **34 -> 32**, took the anonymous-body `E037` beside them, **32 -> 31**, the one real visibility row, **31 -> 30**, and the three substituted-override rows, **30 -> 27**; wave 22 took K28.1's FIRST commit — the DUPLICATE minted parent — at **27 -> 27**, which is that commit's own claim rather than a disappointment: the blocker is in the parents and the five `iterator` rows it unblocks are `E164` against the parent that SURVIVES (§10.6.3, `ENGINE-LIMITS.md` K28.1) |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
@@ -2832,7 +2832,8 @@ how many are left. Only `errors.tsv`'s MEMBER column can, and it moved from `Ref
 `SegmentedSequenceFull`. Its second commit closed that one and the gate opened all the way: **131**,
 which is `RefChecks` and every check behind it, over 36 owners.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15, → 2 after wave 16, → 1 after wave 17 — and the 1 is NOT A TYPER ERROR — → 1 after wave 18 (a DIFFERENT one, because the post-typer risers are SERIALISED) and then → **131**, `RefChecks` HAVING RUN, → **60** and then → **42** after wave 19, → **34** after wave 20, → **27** after wave 21**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15, → 2 after wave 16, → 1 after wave 17 — and the 1 is NOT A TYPER ERROR — → 1 after wave 18 (a DIFFERENT one, because the post-typer risers are SERIALISED) and then → **131**, `RefChecks` HAVING RUN, → **60** and then → **42** after wave 19, → **34** after wave 20, → **27** after wave 21, → **27** after wave 22 (K28.1's FIRST commit, whose
+flatness is its result — see below)**
 
 Every error is `EngineGap`. Eighteen waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -3456,6 +3457,49 @@ the 4 rows this census called `protected[visitor]`, which turn out to be **two**
 one of them a visibility question; 2 java fields named like JDK methods, of which `finalize` needs
 one missing conjunct and `chars` needs a surface the engine deliberately does not state; and 1
 `E037` inside an anonymous class body.
+
+**WAVE 22 TOOK K28.1'S FIRST COMMIT AND THE COUNT DID NOT MOVE, which is the commit's own claim
+rather than a disappointment.** The blocker the probe found is a DUPLICATE RELATION and not a member:
+`OrderedMap`, `OrderedMultiMap` and `OrderedSet` each declared two java clauses java related at one
+member spelled two ways, and the mapping minted a `scala.collection` parent for one and the
+`JavaIterable` shim for the other. Dropping the subsumed clause leaves all five `iterator` rows
+exactly where they were — they are `E164` against the SURVIVING parent — and what it buys is that the
+member commit's retyping cannot open a sixth family, since a class whose `iterator` becomes scala's
+under a still-minted `JavaIterable` is a fresh `needs to be abstract`. 25 member digests, all
+attributable; every other port byte-identical; `md-test-measure` 27 = 27 at 0 digests
+(`ENGINE-LIMITS.md` K28.1).
+
+**AND THE ITERATOR FORK IS DECIDED — RENAME AND SYNTHESISE, for all five rows.** It was framed as a
+surface trade and the port answers it as a CASCADE count: retyping `OrderedSet#iterator()` to scala's
+breaks THREE declarations inside the library (`OrderedMap#keyIterator`,
+`OrderedMultiMap#keyIterator`/`#valueIterator`, each declaring `ReversibleIndexedIterator<X>` with
+`return <anOrderedSet>.iterator()` as its whole body) plus `OrderedMap#forEach`'s local — five rows
+closing and at least four opening. §4.55's rename re-points all four unchanged. Reading it per class
+is not available: on `OrderedMap` the retyping loses nothing (`entryIterator()` is public beside it)
+and on `OrderedSet` it deletes the only forward reversible iterator the class has, and choosing from
+*does this type survive under another name in this program* is §4.56's forbidden inference.
+
+**WHAT REMAINS IS THE SAME 27 AND IT IS NOW A WORK LIST WITH A MECHANISM ATTACHED**: 17 `E164` at a
+collection parent (`put` 5, `iterator` 5, `values` 4, `keys` 2, `size` 1 — read from the FULL
+compiler output, which splits them into 14 *has incompatible type*, 2 *needs `override` modifier*
+(both `keys`) and 1 *cannot override final* (`SeqOps.size`)) and 10 `needs to be abstract`. Two
+corrections to the pricing, both read off the port rather than off the probe: the abstract family is
+NOT a quartet everywhere — a `Map` class owes `get`/`addOne`/`subtractOne` (plus `iterator` where it
+declares none), a `Set` class owes `contains`/`addOne`/`subtractOne`, and `TrackedOffsetList` owes
+**nine** `mutable.Buffer` members (`apply`, `length`, `update`, `insert`, `insertAll`, `patchInPlace`,
+`prepend`, `remove(Int,Int)`, `addOne`), several of which java declares no counterpart for at all;
+and `DependentItemMap`/`ReferenceRepository`/`ParagraphPreProcessorCache`/`IndexedItemBitSetMap` are
+SUBCLASSES that inherit the obligation, so the synthesis has to land on the base or on each of them.
+
+**AND THE MEMBER COMMIT IS ONE MECHANISM AND NOT THREE, which wave 22 designed and did not build.**
+Rename java's member and synthesise scala's over it, for every one of the seventeen: the java BODY is
+then untouched (no `return old` rewritten into `Option(old)`, which is a §4.4 hazard for nothing),
+every in-program caller is re-pointed by the rename rather than adapted, and the emitted surface at
+the java NAME is exactly what *scala's member wins* would have produced — the difference is that
+java's member survives beside it instead of being deleted. Where scala's member is `final`
+(`SeqOps.size`) the synthesis is DECLINED and counted; the rename alone is what K28's own table
+already prescribed there. The bridge body is `coerce(scalaResult, this.<name>$java(args))`, the
+phase's own factory table, because a second conversion mechanism at one seam is K2.5's defect.
 
 **AND THE 4-ROW FAMILY WAS MISCLASSIFIED, which is §3's first-line caution paying for itself.**
 `errors.tsv` carries only scalac's FIRST LINE, and all four rows open identically with
