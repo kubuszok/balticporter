@@ -917,9 +917,63 @@ same table. Measured: ssg-md **13 → 11**, libGDX **0 → 1**, one member diges
 the only instrument that saw the regression was the corpus-wide compile, which is `CLAUDE.md` §5's
 widening rule doing precisely what it says.
 
+**AND WAVE 16 FOUND WHY THE PER-POSITION RULE LOOKED INERT, WHICH IS A DEFECT ONE LAYER DOWN AND NOT
+THIS ONE: SPOON'S `CtWildcardReference` EXTENDS `CtTypeParameterReference`, so six `match`es in
+`SpoonTir` have a WILDCARD ARM THE ARM ABOVE IT MAKES UNREACHABLE — THIRTEEN, DERIVED RATHER THAN
+COUNTED BY EYE, of which TEN would answer differently.** Written per position exactly as
+this entry prescribes, the rule moved **0 members on ssg-md and 0 on libGDX** — it fired nowhere at
+all. The reason is not the rule: it is that the rule has to ask *can this port write the argument the
+source WROTE*, and every predicate that answers that question answers `false` for anything containing
+a `?`:
+
+```scala
+private def tpNameableHere(tr: CtTypeReference[?]): Boolean = tr match
+  case tv: CtTypeParameterReference => sameVarInScope(tv)          // catches every wildcard
+  case w:  CtWildcardReference      => …                           // DEAD
+```
+
+`Function<? super D, Class<?>>` position 1 is `Class<?>`, whose argument is a wildcard, so
+`tpNameableHere` and `tpResolvable` both say *not nameable* and the position falls back to the
+erasure — the answer this entry is trying to change. The hazard was already NAMED once, at
+`mentionsNamedTypeVar`, whose doc says it in as many words; the fix taken there was to write a SECOND
+function rather than repair the others, so nothing propagated. The census is
+`case .*CtTypeParameterReference` preceding `case .*CtWildcardReference` in one match — thirteen
+sites, ten of which change the answer (`externalSlot`, `mentionsRawGeneric`, `tpResolvable`,
+`tpConcrete`, `tpNameableHere`, `calleeBounded`, `tpAccessibleHere`, `typeVarsOf`,
+`mentionsAnyTypeVar`, `formalNameableHere`) and three of which are answer-preserving no-ops
+(`erasedType`, `isGenericUse`, `inheritedFormal`). Two more matches — `mentionsTypeVarBounded` and
+`mentionsNamedTypeVar` — already order the wildcard FIRST and are the shape the other thirteen want.
+
+**Repairing the arm ORDER is a WIDENING and is MEASURED WORSE. Do not retry it blanket.**
+
+| what was reordered | ssg-md | members moved |
+|---|---|---|
+| all seven predicates with a dead arm | **5 → 8** | 56 |
+| only `tpResolvable` + `tpNameableHere`, the two the view consults | **5 → 8** | 39 |
+
+Both produce the SAME three regressions, so the two the per-position rule needs are exactly the two
+that break things: `Utils#stringSorted` takes `E035 Unbound wildcard type` — a bare `?` reaching a
+position that needs a real type, which is what `eraseDependentArgs` already guards against with
+`if et.isInstanceOf[TypeBounds] then t` — and `CoreNodeFormatter#renderDocument` takes `E081 Missing
+parameter type` plus `E008 value getName is not a member of Object`. **And the two
+`resolveDependencies` errors do not close either way**, because the per-position rule was never
+applied in that measurement: the reorder alone is the enabler, not the fix.
+
+What the numbers say is that "is this type nameable here" is not ONE question. A wildcard is
+writable INSIDE an argument (`Class[?]` is a type this port can name) and is not writable ON ITS OWN
+as a cast target (`asInstanceOf[?]` is a syntax error), and the six predicates conflate them —
+which is why reordering makes them right for the first reading and wrong for the second. **So G21's
+precondition is now TWO refactors and not one**: the argument erasure has to be one derivation (the
+condition this entry already states), and nameability has to distinguish the position a wildcard
+stands at. Neither is a widening of the receiver side, and shipping the per-position rule without
+both is what the table above prices.
+
 *Fix kind: (a) engine. The first half BUILT (above). The second half OPEN and REVERTED at
-13 → 11 / 0 → 1; the entry-point is `SpoonTir.erasedReceiverView`'s `args`, and the blocker is
-`eraseDependentArgs` / `knownReceiverArgs` / `coerceArgsFixed` being three readings of one erasure.*
+13 → 11 / 0 → 1; the entry-point is `SpoonTir.erasedReceiverView`'s `args`, and the blockers are now
+TWO — `eraseDependentArgs` / `knownReceiverArgs` / `coerceArgsFixed` being three readings of one
+erasure, and THIRTEEN wildcard-arm-below-type-parameter-arm matches (ten of them answer-changing)
+conflating "a wildcard inside an argument" with "a wildcard as
+a type of its own", which the blanket arm reorder prices at ssg-md 5 → 8.*
 
 ### G22. A method TYPE PARAMETER constrained only by its BOUND infers `Nothing` in Scala and its BOUND in java — CLOSED
 

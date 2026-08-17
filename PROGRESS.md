@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
-| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is a THIRTEENTH module (`flexmark-util`) and a second lane — **723** emitted, **0 lost**, not yet run (§10.6.6) | **19** main + **0** test (243 at first emit; §10.6.3, all classified) |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is a THIRTEENTH module (`flexmark-util`) and a second lane — **723** emitted, **0 lost**, not yet run (§10.6.6) | **2** main + **0** test (243 at first emit; §10.6.3, all classified — the 2 that remain are ONE entry, G21) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2794,7 +2794,7 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13 and **13** after wave 14 (coded 13 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **10** now, counted from `errors.tsv` rather than by eye — 97.9 % of the port compiles clean |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13, **13** after wave 14, **5** after wave 15 and **2** after wave 16 (coded 2 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **10** now, counted from `errors.tsv` rather than by eye — 97.9 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
@@ -2818,7 +2818,7 @@ MUnit registrations with a lane, a discovery guard and an error baseline holding
 so the remaining distance is a number (44 test-set errors on top of the library's 40) rather than an
 absent source set.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15, → 2 after wave 16**
 
 Every error is `EngineGap`. Eight waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2959,7 +2959,7 @@ whose parent stayed `java.util.AbstractSet`.
 
 Nothing left in this port needs a manifest entry, and no residue above is per-library policy.
 
-#### The FLOOR the refusal ledger defines — 9 of the 13 after wave 14, **2 of the 5 after wave 15**, and what the rest are
+#### The FLOOR the refusal ledger defines — 9 of the 13 after wave 14, 2 of the 5 after wave 15, **2 of the 2 after wave 16**, and what the rest are
 
 **WAVE 15 TOOK 13 → 5 IN SEVEN COMMITS, and what it is evidence for is the same thing wave 14's was,
 one step sharper.** Three of the eight closed rows left the REFUSED column (K5.7's `Tuple2` at a slot,
@@ -2991,7 +2991,7 @@ now the table's own standing lesson, arrived at twice:
 | ~~5~~ | **LEFT THIS TABLE AT WAVE 14** — `ENGINE-LIMITS.md` **K26** | `DataKey<Collection<Extension>>` retypes its argument to the shim while the value is an `ArrayBuffer`: one java subtyping edge that the mapping sends to two unrelated scala types. The refusal said the formal has no HEAD to coerce against, which is true of the formal as WRITTEN and not of the one java RESOLVED — `DataKey<T>` is invariant, so the key argument fixes `T` exactly and the value is converted to it. `collection-internal` **5 → 0** with the five errors, which is the attribution §5 requires of a lane that falls |
 | ~~2~~ + ~~1~~ | **K23**'s counted refusals — `listIterator` LEFT AT WAVE 15, `spliterator` **LEFT AT WAVE 16** | the refusal read *scala's `Iterator` is forward-only and read-only*, which is a statement about `scala.Iterator` and not about the RECEIVER — a `mutable.Buffer`, which has indexed read, indexed update, insert and remove, i.e. `ListIterator`'s contract cursor and all. §4.5's standalone shim answers it and the mapping had to move the TYPE too, because `java.util.ListIterator extends java.util.Iterator` and the unmapped edge was what `collection-closure` had been reporting: **11 → 9** with `collection-closure` **2 → 0** and `jdk-surface` **26 → 25**. **And the NEAR MISS that kept `spliterator` refused is what closed it at wave 16.** That text — `buf.asJava.spliterator()` reports NEITHER `ORDERED` nor `SIZED` where java's `ArrayList` reports both — is a statement about `asJava`, not about the receiver; java's own answer is a DEFAULT METHOD re-declared at three owners with three characteristic sets (`Collection` passes `0`, `List` `ORDERED`, `Set` `DISTINCT`, and `Spliterators.spliterator` ORs in `SIZED | SUBSIZED` for all three). The owner a call resolved at is the receiver's KIND, which `rewrite` already keys on — so reproducing java's declaration at that owner models nothing about streams and closes the cell. **4 → 3**, 2 member digests, `findings.tsv` BYTE-IDENTICAL and every check count flat. `java.util.Collection#spliterator` is the one row that stays, and its reason is now about the SHIM rather than the protocol: a receiver this phase left as `JavaCollection` carries java's own names and arity and is skipped before any arm, so there is no mapped kind to reproduce a default at (`ENGINE-LIMITS.md` K23) |
 | ~~2~~ | **LEFT THIS TABLE AT WAVE 15** — `ENGINE-LIMITS.md` **K5.7** | a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent, because the retyping's target is a `Tuple2` and no class can extend one — which is a statement about a PARENT and says nothing about the SLOT. `MapEntry` is `final` with `setValue` = `throw new UnsupportedOperationException()`, java's own optional-operation refusal written by the library, so there is no write-through to lose and the projection is EXACT. `JavaCollections.entryToPair`, guarded on the class's own body read BEFORE this phase substitutes any; **13 → 11**, at every check count flat, which is honest rather than an omission — the two `InexpressibleParent` rows are about the parent, which is still retained and still counted |
-| 2 | **G21**'s second half, MEASURED AND REVERTED | the erased-receiver view erases the positions the source WROTE, so `Function<? super D, Class<?>>` loses its nameable `Class<?>` and `apply`'s result arrives as `Object` (`DependencyResolver#resolveDependencies`, twice). The per-position rule closes both and regresses **libGDX 0 → 1**, because G11's argument erasure is three readings of one table and only the receiver's moved. Right rule, wrong order — `ENGINE-LIMITS.md` G21 |
+| 2 | **G21**'s second half, MEASURED AND REVERTED | the erased-receiver view erases the positions the source WROTE, so `Function<? super D, Class<?>>` loses its nameable `Class<?>` and `apply`'s result arrives as `Object` (`DependencyResolver#resolveDependencies`, twice). The per-position rule closes both and regresses **libGDX 0 → 1**, because G11's argument erasure is three readings of one table and only the receiver's moved. Right rule, wrong order — `ENGINE-LIMITS.md` G21. **WAVE 16 RE-MEASURED IT AND FOUND A SECOND BLOCKER ONE LAYER DOWN**: written per position the rule moved **0 members on either port**, because Spoon's `CtWildcardReference` EXTENDS `CtTypeParameterReference`, so the wildcard arm in `tpNameableHere`, `tpResolvable` and five neighbours is DEAD and every type containing a `?` — `Class<?>` above — reads as *not nameable here*. Repairing the arm ORDER is a widening and is measured worse: **5 → 8** blanket (56 members) and **5 → 8** for the two the view consults (39 members), the same three regressions both times, and the two `resolveDependencies` rows closing NEITHER way. So the precondition is now two refactors, not one |
 | **9** | | |
 
 The other **4** are open work with no entry behind them, and **wave 14's third result is that every
@@ -3107,6 +3107,40 @@ approximations**: thirteen lanes, every error count unchanged at its own baselin
 `members whose EMITTED TEXT changed: 0` on every port but ssg-md. The one shared-surface change is
 uniform and acknowledged on all fourteen published maps — `type balticporter.runtime.JavaListIterator
 Added` and a moved `policy=` digest, which is what a `typeMap` entry IS.
+
+**WAVE 16 — 5 → 2 in four commits, and the two that are left are ONE entry.** What it closed:
+
+| closed | entry | measured |
+|---|---|---|
+| — | a SAM slot fails to name an expected type in TWO ways and `overloadedSamSlot` asked about one: the alternatives DISAGREE at the lambda's index, or they AGREE on a type variable the call has yet to infer | 5 = 5, corpus BYTE-IDENTICAL — an enabler whose evidence is its spec |
+| `FormatterUtils#renderList` | JLS 15.25 — `c ? lambda : lambda` is a poly expression in its own right, so the ascription goes on the whole `if`. K30 face 3's sentence met at a poly operand instead of at a collection | 5 → 4, 2 member digests |
+| `TrackedOffsetList#spliterator` | **K23**'s SECOND refusal, closed by the NEAR MISS its own text named — `spliterator()` is a DEFAULT METHOD re-declared at three owners with three characteristic sets, so reproducing java's at the owner the receiver was typed by models nothing about streams | 4 → 3, 2 member digests, `findings.tsv` byte-identical |
+| `AttributeProviderAdapter#addHandlers` | a COERCION built for the callee this phase REPLACED — an exception ABOVE the shim guard that strips the argument's cast and reshapes nothing, as a SECOND CALLER of `arrayArg` | 3 → 2, 7 digests = 4 declarations + 3 classes |
+
+**And the honest reading of 2 is *both refused, both G21*, which is the first wave that cannot claim
+a floor it has not measured.** G21's own entry names the condition for shipping — three readings of
+one erasure must become one — and wave 16 went to build it and found a SECOND blocker underneath, in
+a place nothing was looking: Spoon's `CtWildcardReference` extends `CtTypeParameterReference`, so
+THIRTEEN `match`es carry a wildcard arm the arm above makes unreachable — ten of them
+answer-changing, derived rather than counted by eye, and every predicate that could
+answer *is this argument nameable here* says `false` for anything holding a `?`. The per-position
+rule written exactly as G21 prescribes therefore fires NOWHERE — 0 members on ssg-md and 0 on libGDX
+— and repairing the arm order is a widening measured at **5 → 8** twice over. Three things follow,
+and the third is the one to carry forward:
+
+- **the reorder is not a fix and is recorded as a dead end**, with its numbers, in `ENGINE-LIMITS.md`
+  G21 — 56 members blanket, 39 for the two predicates the view consults, the same three regressions
+  both times (`Utils#stringSorted` `E035 Unbound wildcard type`; `CoreNodeFormatter#renderDocument`
+  `E081` + `E008`);
+- **what those regressions say is that nameability is TWO questions.** A wildcard is writable INSIDE
+  an argument (`Class[?]` is a type this port can name) and is not writable ON ITS OWN as a cast
+  target (`asInstanceOf[?]` is a syntax error), and the predicates conflate them. That is why the
+  reorder is right for the first reading and wrong for the second, and it is a defect independent of
+  G21;
+- **the hazard was already NAMED once and did not propagate.** `mentionsNamedTypeVar` carries a doc
+  comment saying exactly this about `mentionsAnyTypeVar`, and the fix taken there was to write a
+  SECOND function rather than repair the others — which is the shape §4.56 and F8 are both about,
+  found here at a `match` arm rather than at a derivation.
 
 So the honest reading of 13 is *9 refused, 4 open*. Wave 13 took FIVE out of the open
 column and SIX out of the refused one, in four commits; **wave 14 took a sixth out of the open column

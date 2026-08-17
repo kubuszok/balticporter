@@ -1187,6 +1187,48 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(lb.toList, List("a", "b"))
   }
 
+  test("spliterator reports JAVA'S OWN characteristics — the cell K23's refusal was about") {
+    // The whole content of that fix, and the one thing no compile can check.
+    // `buf.asJava.spliterator()` — the near miss the refusal rested on — reports NEITHER `ORDERED`
+    // nor `SIZED` where the `ArrayList` java held reports both, so a consumer reading
+    // `characteristics()` gets a different answer silently (CLAUDE.md §4.4). These assert the answer
+    // java's OWN defaults give, which is what the two helpers reproduce.
+    val ordered = JavaCollections.orderedSpliterator(ArrayBuffer("a", "b", "c"))
+    assert(ordered.hasCharacteristics(java.util.Spliterator.ORDERED), "List.spliterator() passes ORDERED")
+    assert(ordered.hasCharacteristics(java.util.Spliterator.SIZED),
+           "…and `Spliterators.spliterator(Collection, int)` ORs in SIZED — the half `asJava` loses")
+    assert(ordered.hasCharacteristics(java.util.Spliterator.SUBSIZED))
+    assertEquals(ordered.estimateSize(), 3L)
+
+    val distinct = JavaCollections.distinctSpliterator(scala.collection.mutable.Set("a", "b"))
+    assert(distinct.hasCharacteristics(java.util.Spliterator.DISTINCT), "Set.spliterator() passes DISTINCT")
+    assert(distinct.hasCharacteristics(java.util.Spliterator.SIZED))
+    // …and NOT ORDERED, which is the difference between the two helpers and the reason there are two
+    // names rather than one taking a characteristics constant.
+    assert(!distinct.hasCharacteristics(java.util.Spliterator.ORDERED))
+  }
+
+  test("…and it TRAVERSES the collection, in the collection's own order") {
+    // characteristics are a CLAIM about the traversal; this is the traversal. A spliterator that
+    // reported ORDERED and handed back nothing would pass the test above.
+    val seen = ArrayBuffer.empty[String]
+    JavaCollections.orderedSpliterator(ArrayBuffer("a", "b", "c"))
+      .forEachRemaining((s: String) => { seen += s; () })
+    assertEquals(seen.toList, List("a", "b", "c"))
+  }
+
+  test("NEGATIVE — `asJava.spliterator()` is what this does NOT do, pinned so the near miss stays visible") {
+    // The measurement K23 recorded, kept EXECUTABLE rather than left in prose: if a future JDK or
+    // scala release made the wrapper report java's own characteristics, this test says so and the
+    // two helpers become removable. Until then it is the evidence that delegating would be wrong —
+    // and a dead end whose number nothing re-derives is an opinion (CLAUDE.md §3.6).
+    import scala.jdk.CollectionConverters.*
+    val viaAsJava = ArrayBuffer("a", "b", "c").asJava.spliterator()
+    assert(!viaAsJava.hasCharacteristics(java.util.Spliterator.ORDERED) ||
+           !viaAsJava.hasCharacteristics(java.util.Spliterator.SIZED),
+           "asJava's wrapper still loses at least one of java's own characteristics")
+  }
+
   test("sort is what `List.sort(cmp)` needs too — in place, stable, and on a non-indexed Buffer") {
     // SE8 made `Collections.sort(list, c)` delegate to `list.sort(c)`, so ONE helper is correct for
     // both by java's own definition — which is why the member arm reaches this and not a second one.

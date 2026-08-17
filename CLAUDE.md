@@ -1356,6 +1356,29 @@ emitted members carry java's arity while its head symbol is no shim at all. Two 
 receiver and only one is a parent: a TYPE PARAMETER's BOUND is the same question at the other kind of
 declaration, and the parent-only fix leaves it. 16 errors (`ENGINE-LIMITS.md` K2.6).
 
+**And a `match` ARM is a guard too, whose reachability is a fact about the PARSER'S CLASS HIERARCHY
+and not about what the arm says.** A dispatch written subtype-arm-below-supertype-arm reads exactly
+like one that works: the arm is there, it names the case, its comment explains it, and it never runs.
+Spoon's `CtWildcardReference` EXTENDS `CtTypeParameterReference`, so
+`case tv: CtTypeParameterReference` catches every `?` and the wildcard arm under it is dead in
+THIRTEEN `SpoonTir` matches at once — ten of them answer-changing, a census DERIVED by grepping for
+the arm order rather than counted by eye, which is the only way to get it right. After that no type
+containing a wildcard is "nameable here", and a rule that has to ask *can this port write what the
+source WROTE* fires nowhere (`ENGINE-LIMITS.md` G21: 0 members on two ports, a fix that looked inert
+and was never reached). **Nothing can measure
+this**, which is what makes it a rule rather than a bug: the wrong answer is the CONSERVATIVE one, so
+no port emits anything wrong, no count moves, and the only symptom is a feature that does not happen.
+Three things follow — order arms most-specific-first whenever a parser's types are involved and
+verify the hierarchy rather than assuming it (`javap` the interface); a dead arm found in ONE `match`
+is a question to ask of every sibling `match`, because the hierarchy is the same everywhere; and when
+the ordering cannot simply be repaired, say why AT the arm — the second occurrence here was already
+NAMED, in a doc comment on `mentionsNamedTypeVar`, and the fix taken was to write a SECOND function
+rather than repair the others, which is exactly why nothing propagated to the twelve. And note
+what the measured repair says about the question itself: reordering them cost **5 → 8** on the
+port it was aimed at, because "is this type nameable" is TWO questions — a wildcard is writable
+INSIDE an argument (`Class[?]`) and is not writable ON ITS OWN as a cast target (`asInstanceOf[?]` is
+a syntax error). A dead arm is evidence the distinction was never made, not just that the order slipped.
+
 **And the rule reaches an INSTRUMENT'S OWN FILTER, in whatever language it is written.** The second
 occurrence was not a phase at all: `just catalog-coverage`'s aggregation matched
 `^(lowering|phase):` — the two obligation discharge surfaces that existed the day it was written —
