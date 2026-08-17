@@ -829,9 +829,9 @@ ssg.md.ast.util.ReferenceRepository	ssg.md.ast.util.ReferenceRepository#getDataK
 ssg.md.ast.util.ReferenceRepository	ssg.md.ast.util.ReferenceRepository#getKeepDataKey()	def	1fc9cc1c5d52a1be
 ssg.md.ast.util.ReferenceRepository	ssg.md.ast.util.ReferenceRepository#getReferencedElements(Node)	def	0f4d69b572fa9285
 ssg.md.ast.util.ReferenceRepository	ssg.md.ast.util.ReferenceRepository#normalizeKey(CharSequence)	def	f6574f79eb14ecdc
-ssg.md.ast.util.TextCollectingVisitor	ssg.md.ast.util.TextCollectingVisitor	class	c539aa4bd4ec7cf4
+ssg.md.ast.util.TextCollectingVisitor	ssg.md.ast.util.TextCollectingVisitor	class	48adb15c533ebbdb
 ssg.md.ast.util.TextCollectingVisitor	ssg.md.ast.util.TextCollectingVisitor#<stmt1>	stmt	32a7f1267556365d
-ssg.md.ast.util.TextCollectingVisitor	ssg.md.ast.util.TextCollectingVisitor#<stmt2>	stmt	55cac7edfaf429bf
+ssg.md.ast.util.TextCollectingVisitor	ssg.md.ast.util.TextCollectingVisitor#<stmt2>	stmt	5be1e57f7b4931f4
 ssg.md.ast.util.TextCollectingVisitor	ssg.md.ast.util.TextCollectingVisitor#collect(Node)	def	480acd2d5f541a7a
 ssg.md.ast.util.TextCollectingVisitor	ssg.md.ast.util.TextCollectingVisitor#collectAndGetSequence(Node)	def	023d0c9d51d55690
 ssg.md.ast.util.TextCollectingVisitor	ssg.md.ast.util.TextCollectingVisitor#collectAndGetText(Node)	def	3a1eb6a465ed74a2

@@ -459,3 +459,44 @@ class SpoonTirBodySpec extends munit.FunSuite:
     assertEquals(staticReceiverIn("fieldViaOwnClass"), "demo.Base")
     assertEquals(staticReceiverIn("jdkViaOwnClass"), "java.time.ZoneId")
   }
+
+  // -- …and the vararg PACK is owed at an ANONYMOUS-CLASS construction too ----------------------
+  //
+  // `new P(a, b) { … }` is a `CtNewClass`, whose executable REFERENCE names the anonymous subtype's
+  // (nonexistent) constructor rather than `P`'s — so `declParams` answers `None`, the variadic test
+  // is false, and the pack that fires for the very same `new P(a, b)` without a body does not. The
+  // residue is loud here (`None of the overloaded alternatives …`) and only because the parent is
+  // overloaded; a parent with ONE vararg constructor would emit a call scala auto-tuples, which is
+  // `CLAUDE.md` §4.4's shape.
+
+  private val anonVarargProgram = SpoonTir.fromSources(List(
+    "P.java"   -> """package demo;
+                    |public class P {
+                    |  public P() { }
+                    |  public P(String... xs) { }
+                    |  public int run() { return 0; }
+                    |}
+                    |""".stripMargin,
+    "Use.java" -> """package demo;
+                    |public class Use {
+                    |  P plain()  { return new P("a", "b"); }
+                    |  P anon()   { return new P("a", "b") { public int run() { return 1; } }; }
+                    |}
+                    |""".stripMargin))
+
+  private def anonVarargLastArg(member: String): Option[Tree] =
+    callsIn(anonVarargProgram, s"demo.Use#$member").headOption.flatMap(_.args.lastOption)
+
+  test("a vararg call at an ANONYMOUS-CLASS construction packs the array java built") {
+    // Without the fix the six-argument `new NodeVisitor(h1…h6) { … }` in a real port emits the
+    // arguments loose against an `Array[VisitHandler[?]]` formal.
+    anonVarargLastArg("anon") match
+      case Some(_: Tree.NewArray) => ()
+      case other                  => fail(s"expected a packed NewArray, got $other")
+  }
+
+  test("…and the same `new` WITHOUT a body already did — the pair is the whole evidence") {
+    anonVarargLastArg("plain") match
+      case Some(_: Tree.NewArray) => ()
+      case other                  => fail(s"expected a packed NewArray, got $other")
+  }

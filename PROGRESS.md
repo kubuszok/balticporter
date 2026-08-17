@@ -2794,7 +2794,7 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12 and **19** after wave 13 (coded 19 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **16** now, counted from `errors.tsv` rather than by eye — 96.6 % of the port compiles clean |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13 and **18** after wave 14 (coded 18 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **15** now, counted from `errors.tsv` rather than by eye — 96.8 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
@@ -2818,7 +2818,7 @@ MUnit registrations with a lane, a discovery guard and an error baseline holding
 so the remaining distance is a number (44 test-set errors on top of the library's 40) rather than an
 absent source set.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 18 after wave 14**
 
 Every error is `EngineGap`. Eight waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2959,7 +2959,7 @@ whose parent stayed `java.util.AbstractSet`.
 
 Nothing left in this port needs a manifest entry, and no residue above is per-library policy.
 
-#### The FLOOR the refusal ledger defines — 13 of the 19 after wave 13, and what the other 6 are
+#### The FLOOR the refusal ledger defines — 13 of the 18 after wave 14, and what the other 5 are
 
 Twelve waves took 243 → 30 and every one of them closed a FAMILY. What is left divides into rows a
 named refusal already answers and rows nobody has diagnosed, and the two are worth separating,
@@ -2979,9 +2979,18 @@ table below now reads THIRTEEN refused:
 | 3 | **K5.7**'s `UninheritableTargets`, counted as `InexpressibleParent` | a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent, because the retyping's target is a `Tuple2` and no class can extend one |
 | **13** | | |
 
-The other **6** are open work with no entry behind them: **2** raw-generic one-offs and the residue.
-So the honest reading of 19 is *13 refused, 6 open*, and wave 13 has taken FIVE out of the open
-column and SIX out of the refused one, in four commits:
+The other **5** are open work with no entry behind them: **1** raw-generic one-off and the residue.
+So the honest reading of 18 is *13 refused, 5 open*. Wave 13 took FIVE out of the open
+column and SIX out of the refused one, in four commits; **wave 14's first commit took a sixth out of
+the open column, and its diagnosis is this table's own standing lesson read once more.**
+`TextCollectingVisitor` had been filed under its error text (`None of the overloaded alternatives of
+constructor NodeVisitor`) as a raw-generic one-off, and the cause is neither raw nor generic: the
+same `new NodeVisitor(h1…h6)` PACKS its vararg array one file away in `LineCollectingVisitor` and
+does not here, because this one carries an ANONYMOUS BODY and the parser hands a synthesised
+constructor to every rule keyed on the callee's declaration (`ENGINE-LIMITS.md` G29). That is the
+SIXTH census row whose cause turned out to be a different defect from the one its text names.
+
+Wave 13's four commits:
 
 - the `Segment$Base`/`Segment$Text` PAIR (`ENGINE-LIMITS.md` C14) — a reassigned constructor
   parameter read by the DELEGATION, which the funnel then hoists into the `extends` clause where no

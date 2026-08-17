@@ -1590,7 +1590,21 @@ Measured on ONE construct, with THREE different wrong answers out of ONE parser:
 
 None of the three moves a compile-error count and two are silent at run time as well. So **derive
 what java DERIVES, from the declaration java WROTE**, and read the parser's synthesis only where a
-fixture has shown the two agree. Note what this is NOT: it is not "distrust the parser" — the same
+fixture has shown the two agree.
+
+**And the SECOND construct is an ANONYMOUS CLASS's constructor, which is what makes this a rule about
+IMPLICIT MEMBERS rather than a note about records.** `new P(a, b)` and `new P(a, b) { … }` are one
+call to one constructor, and the second's executable reference names the anonymous SUBTYPE's — which
+the parser materialises with one parameter of NO type and `isVarArgs = false`. Every call-site rule
+keyed on the callee's declaration then answers about a member java never wrote: the vararg pack fired
+at the plain `new` and not at the anonymous one, so `T...`'s emitted `Array[T]` formal met N loose
+arguments. Loud where the parent is OVERLOADED and SILENT where it is not — two arguments at one
+formal is a call scala AUTO-TUPLES, passing a `Tuple2` where java passed an array. JLS 15.9.5.1 says
+what java derives (the anonymous constructor takes the SUPERCLASS constructor's parameters and passes
+them through), and the reference's ERASED signature is the one part of it that is not synthesised, so
+that is what selects the declaration to read. Fix it at the SHARED LOOKUP and not at the rule that
+noticed: it is one question, the anonymous subtype is not the callee, and every reader was being
+given the same wrong answer (`ENGINE-LIMITS.md` G29). Note what this is NOT: it is not "distrust the parser" — the same
 parser's model of written java is what this whole frontend rests on. It is that an IMPLICIT member is
 a second-class fact, and a fixture is the only thing that can promote it.
 

@@ -1345,6 +1345,57 @@ UNOVERLOADED callee in the same statement" and "alternatives that AGREE at the l
 the two an over-approximation would fail, and "a METHOD REFERENCE" is the one that keeps this from
 becoming F8.*
 
+### G29. An ANONYMOUS CLASS's constructor is one the PARSER SYNTHESISES, so every call-site rule keyed on the callee's DECLARATION answers about a member java never wrote — **ssg-md 19 → 18. CLOSED**
+
+`CLAUDE.md` §4.59 met at a constructor, and the second construct to show it. `new P(a, b)` and
+`new P(a, b) { … }` are the same call to the same constructor, and Spoon models them differently: the
+first's executable reference resolves to `P`'s own `CtConstructor`, the second's to the ANONYMOUS
+SUBTYPE's — which Spoon materialises with **one parameter of NO type and `isVarArgs = false`**.
+
+That is not "unknown". Read by `SpoonTir.declParams` — the ONE lookup `varargPack` and `callConsults`
+share so the two can never disagree about whether a callee is variadic — it is the sentence *this
+callee is not variadic*, which is §4.6's fabricated fact baked into the parser's model rather than
+into a `catch`. So the pack that `T...` needs (K6.5's whole convention: a java vararg is emitted
+`Array[T]` and the call site materialises what javac would have built) fires at the plain `new` and
+not at the anonymous one:
+
+| | emitted |
+|---|---|
+| `new NodeVisitor(h1, …, h6)` | `new NodeVisitor(scala.Array[VisitHandler[?]](h1, …, h6))` |
+| `new NodeVisitor(h1, …, h6) { … }` | `new NodeVisitor(h1, …, h6) { … }` — six arguments at a one-parameter formal |
+
+**The residue is loud here only because the parent is OVERLOADED.** `NodeVisitor` declares four
+constructors, so scalac reports `E134 None of the overloaded alternatives`. A parent with ONE vararg
+constructor is the quiet face: six arguments at one `Array[T]` formal is an arity error, but TWO
+arguments at one is a call scala AUTO-TUPLES — `f((a, b))` — which compiles and passes a `Tuple2`
+where java passed an array. §4.4's shape, with nothing to see it.
+
+**The fix reads the declaration java DERIVES.** JLS 15.9.5.1: an anonymous class's constructor takes
+the SUPERCLASS constructor's parameters and passes them straight through. So where the executable's
+declaring type is anonymous, `declParams` resolves against the superclass, selected by the ERASED
+parameter types the REFERENCE carries — the one part of the reference that is not synthesised. Two
+selectors in that order and not the other way round: the erased signature FIRST, because a parent with
+three one-argument constructors (`T...`, `T[]...`, `Collection<T>`) is a shape any collection library
+has and only the names tell them apart; the ARITY as the fallback, because `noClasspath` erases a
+reference's generic formals and not a declaration's (JS-G18) so a generic constructor's names do not
+meet. Neither answering leaves the lookup declining exactly as it did before. An anonymous class over
+an INTERFACE invokes `Object()`, has no parameter to match, and falls out — the right answer rather
+than a decline.
+
+Fixing `declParams` rather than `varargPack` is the granularity the shared-lookup comment already
+argues for: it is ONE question ("what are the callee's declared parameters?"), the anonymous subtype
+is not the callee, and both readers were being given the same wrong answer.
+
+**Measured**: ssg-md **19 → 18**, ONE member digest (`TextCollectingVisitor#<stmt2>`), every check
+count flat, `catalog(consulted)` JS-G37 `fired 135 → 136` — the pack that had been missing — and the
+remaining consult totals moving inside their own text, being the extra type resolutions the superclass
+lookup walks. Every other port in the corpus: 0 errors moved, `findings.tsv` content unchanged and
+`port-map.tsv` rows unchanged.
+
+*Fix kind: (a). `SpoonTirBodySpec` gains two cases — the anonymous-class pack and, beside it, the same
+`new` WITHOUT a body, because the pair is the whole evidence: neither half alone says the two
+dispatches were reading different declarations.*
+
 ---
 
 ## 2. Constructors

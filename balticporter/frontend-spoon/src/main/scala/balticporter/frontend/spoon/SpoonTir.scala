@@ -3654,10 +3654,59 @@ object SpoonTir:
 
       /** the callee's declared parameters, or `scala.None` where the declaration cannot be read —
         * the ONE lookup where an absent value is normal (`CLAUDE.md` §4.6), shared by [[varargPack]]
-        * and [[callConsults]] so the two never disagree about whether a callee is variadic. */
+        * and [[callConsults]] so the two never disagree about whether a callee is variadic.
+        *
+        * ==And at a `CtNewClass` the parser SYNTHESISES the declaration this reads==
+        * `CLAUDE.md` §4.59 exactly, met at a constructor. The executable reference of
+        * `new P(a, b) { … }` names the ANONYMOUS SUBTYPE's constructor, and Spoon materialises that
+        * one with a single parameter of NO type and `isVarArgs = false` — which is not "unknown", it
+        * is *this callee is not variadic*, the §4.6 fabricated fact baked into the model rather than
+        * into a `catch`. Every reader here then answers about a constructor java never wrote:
+        * [[varargPack]] leaves N arguments loose against the one `Array[T]` formal the parent's
+        * `T...` emitted, which scala AUTO-TUPLES where the parent declares one constructor (a green
+        * compile, an argument of the wrong shape) and reports an overload failure where it declares
+        * several. The very same `new P(a, b)` WITHOUT a body packs correctly, so nothing about the
+        * translation is inconsistent — only the two `new`s are read from different declarations.
+        *
+        * JLS 15.9.5.1 says what java derives: the anonymous class's constructor takes the SUPERCLASS
+        * constructor's parameters and passes them straight through. So the declaration to read is the
+        * SUPERCLASS's, chosen by the ERASED parameter types the REFERENCE carries — the one part of
+        * `ex` that is not synthesised. An anonymous class over an INTERFACE invokes `Object()`, has
+        * no parameter to match and falls out here, which is the right answer and not a decline. */
       private def declParams(ex: CtExecutableReference[?]): Option[List[CtParameter[?]]] =
-        try Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList)
+        try anonSuperCtor(ex).orElse(Option(ex.getExecutableDeclaration))
+              .map(_.getParameters.asScala.toList)
         catch { case _: Throwable => scala.None }
+
+      /** the SUPERCLASS constructor an anonymous-class construction really invokes — see
+        * [[declParams]]. `scala.None` for every executable that is not one, which is every call in a
+        * program with no anonymous class in it.
+        *
+        * The erased signature the reference carries is matched FIRST and the arity only where it is
+        * unambiguous, in that order and not the other way round: `noClasspath` erases a REFERENCE's
+        * generic formals and not a DECLARATION's (JS-G18), so a generic constructor's names do not
+        * meet and the arity is the honest fallback — while a parent with three one-argument
+        * constructors (`T...`, `T[]...`, `Collection<T>`) is a shape any collection library has, and
+        * there the names are the only thing that tells them apart. Neither answering leaves the
+        * lookup declining exactly as it did before this existed. */
+      private def anonSuperCtor(ex: CtExecutableReference[?]): Option[CtExecutable[?]] =
+        val cands =
+          for
+            dt   <- Option(ex.getDeclaringType).toList
+            decl <- Option(dt.getDeclaration).toList.collect { case c: CtType[?] if c.isAnonymous => c }
+            sup  <- Option(decl.getSuperclass).toList
+            supD <- Option(sup.getDeclaration).toList.collect { case c: CtClass[?] => c }
+            ctor <- supD.getConstructors.asScala.toList
+          yield ctor
+        val want = ex.getParameters.asScala.toList.map(t => Option(t).map(_.getQualifiedName))
+        def named = cands.filter(_.getParameters.asScala.toList
+          .map(p => Option(p.getType).map(_.getQualifiedName)) == want)
+        def arity = cands.filter(_.getParameters.size == want.size)
+        named match
+          case one :: Nil => Some(one)
+          case _          => arity match
+            case one :: Nil => Some(one)
+            case _          => scala.None
 
       /** THE CALL ROWS, consulted at every call dispatch — JS-G18, JS-G32, JS-G37…G40, JS-G42.
         *
