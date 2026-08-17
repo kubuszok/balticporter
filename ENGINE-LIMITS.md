@@ -9498,10 +9498,25 @@ masking the counter on both sides leaves **12 and 6**. So 526 of 538 and 2,344 o
 integer, on a wave whose real answer moved twelve printed denominators and six rows. Four times this
 entry's recorded 263, on the port the engine will be pointed at next.
 
+**AND IT FIRES ON A PURE SCOPE EDIT, WHICH IS THE SHAPE EVERY EXAMPLE ABOVE MISSES.** Each number
+this entry carries came from an ENGINE change — a converted conditional, four frontend lines, five
+frontend lines — so the entry reads as a tax on touching the frontend, and an operator adding a
+module to a port's `includeGlobs` has no reason to expect it. That is wrong, and milestone 2's batch
+waves pay it once per wave. Measured on `ssg-md-ext`'s sixth extension (`flexmark-ext-ins`, a
+one-glob one-module-name edit and no engine change at all): **every check COUNT identical, 52 new
+member rows and 0 changed** — and **12 `overload-risk` rows re-written, all twelve at sites in
+modules the wave did not touch, differing in nothing but `@3639` → `@3651`**. The added module
+contributes ZERO `overload-risk` rows of its own, so the whole of that diff is the counter. The
+reason is the same `Minter.external` one: `BasedSequence#subSequence`'s TYPE PARAMETER renders
+through its owner's interning key, and admitting six units ahead of it in the model shifts that key.
+What makes this the worst instance rather than the smallest is what a scope edit is SUPPOSED to be —
+purely additive, so `findings_baseline_guard`'s whole value on such a wave is *did anything about
+the existing scope move*, and the answer arrives buried in twelve rows that say it did.
+
 *Fix kind: (a) engine — the EMITTED half is CLOSED in `PanamaFfiTransform.handleNames`; the
 DIAGNOSTIC half is OPEN in `Minter.table` (NOT in `TirPrinter`, which was this entry's earlier and
-measured-wrong prescription), priced at 538 + 2,350 findings rows against 12 + 6 real ones, and 4
-member keys.*
+measured-wrong prescription), priced at 538 + 2,350 findings rows against 12 + 6 real ones, 4 member
+keys, and 12 rows per scope-only batch wave.*
 
 ### M11. A commit that changes EMISSION and does not re-accept the baseline ships a digest ITS OWN CODE CANNOT REPRODUCE — and every lane still exits 0. **CLOSED, and the cost is that the next wave pays for it**
 

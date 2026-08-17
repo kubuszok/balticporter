@@ -4001,6 +4001,7 @@ it ADDED to a lane, never the lane's total.
 | 3 | `ext-youtube-embedded` | 8 | 6 | 0 | — | `overload-risk` +20, `portability(emitted)` +3, `remediation` +1, and `catalog(unreached)` **25 → 22** |
 | 4 | `ext-anchorlink` | 9 | 7 | 0 | — | `overload-risk` +6 (4 `VarargPhaseSpan`, 2 `GenericTieBreak`) |
 | 5 | `ext-escaped-character` | 9 | 7 | 0 | — | `overload-risk` +4, `trivia(recovered)` +3, and `catalog(unreached)` **22 → 17** |
+| 6 | `ext-ins` | 9 | 7 | 0 | — | **NONE — every check count identical.** First `*JiraRenderer` in the port; it PORTS |
 
 **THE FIRST THING THE BATCH BOUGHT IS A CATALOG ROW NOBODY HAD REACHED HERE.**
 `ext-youtube-embedded` is the first module in this port to write a `try`/`catch` at all — one
@@ -4030,6 +4031,16 @@ accept rule says a LOSS takes no entry however cleanly it drains a lane — and 
 answer from the one the BASE gives its own 18 rows, which are carried as a counted residue. The
 honest state is 3 counted rows and a menu entry nobody selected, which is exactly what the two lanes
 now say.
+
+**THE `*JiraRenderer` QUESTION IS ANSWERED, AND THE ANSWER IS *IT PORTS*.** Eight of the 29 covered
+extensions ship one, and `flexmark-jira-converter` is out of scope AND one of the hand port's 28
+undocumented omissions, so the checklist makes each wave say what happens to it. Read off the
+IMPORTS rather than the file name, `InsJiraRenderer` imports `com.vladsch.flexmark.{html,util.data}`
+and nothing else — it is an ordinary `NodeRenderer` that happens to emit `+…+` instead of `<ins>` —
+so it converts with the rest of the module and raises no scope question at all. The emitted class
+was read: a `HashSet` retyped by `CollectionsTransform`, a `NodeRenderingHandler` SAM from
+`this::render`, and the nested `Factory` in the companion. `ext-ins` is also the **first extension
+in the batch to move NO check count at all**, which is what an established shape is supposed to cost.
 
 **AND `tests —` IS A TRIAGE RESULT, NOT AN OMISSION — but the triage cannot be read off the FILE.**
 The checklist's step 4 opened `grep -rl '@RunWith(Parameterized' <mod>/src/test`, and that answers NO
