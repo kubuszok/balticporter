@@ -883,7 +883,7 @@ ssg.md.formatter.Formatter	explicitAttributeIdProvider	val	01421869b20ebe4d
 ssg.md.formatter.Formatter	formatterFactories	val	ce2ee9f81e08940f
 ssg.md.formatter.Formatter	offsets	val	90974b4ec6f96baf
 ssg.md.formatter.Formatter	sequence	val	2d407b51ab38af3f
-ssg.md.formatter.Formatter	ssg.md.formatter.Formatter	class	7d371b329f1ef79c
+ssg.md.formatter.Formatter	ssg.md.formatter.Formatter	class	01cf6efa962f5c37
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#<stmt1>	stmt	00963f34c62fcd78
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#<stmt2>	stmt	8cc7c66f5bd9b073
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#<stmt3>	stmt	27a5a70610042670
@@ -986,8 +986,8 @@ ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#render(Node,Appendable,int
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#translationRender(Node,Appendable,TranslationHandler,RenderPurpose)	def	4b0ddd25a9aeb6af
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#translationRender(Node,Appendable,int,TranslationHandler,RenderPurpose)	def	d3dab3f5e6ca1916
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter#translationRender(Node,TranslationHandler,RenderPurpose)	def	ccdd2d1b648d3c10
-ssg.md.formatter.Formatter	ssg.md.formatter.Formatter$Builder	class	f29a569c009b6bb6
-ssg.md.formatter.Formatter	ssg.md.formatter.Formatter$Builder#<init>(DataHolder)	ctor	997284517d4059ad
+ssg.md.formatter.Formatter	ssg.md.formatter.Formatter$Builder	class	474fe4d4f8141451
+ssg.md.formatter.Formatter	ssg.md.formatter.Formatter$Builder#<init>(DataHolder)	ctor	cd881537c040cc9d
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter$Builder#attributeProviderFactories	val	bd532fd5d94d86aa
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter$Builder#build()	def	a35dcaa1bc5cce7c
 ssg.md.formatter.Formatter	ssg.md.formatter.Formatter$Builder#htmlIdGeneratorFactory	val	a676ae5bf272a6f1
@@ -1633,7 +1633,7 @@ ssg.md.html.EmbeddedAttributeProvider	ssg.md.html.EmbeddedAttributeProvider$Embe
 ssg.md.html.HtmlRenderer	addEmbedded	val	baa2291343282aaa
 ssg.md.html.HtmlRenderer	nodeRendererFactory	val	bfe542ab75275acf
 ssg.md.html.HtmlRenderer	nodeRenderers	val	d2b1d5b3c71a7eee
-ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer	class	6d4c08d46a03c8e2
+ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer	class	b4ea9a343ad31446
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#<stmt1>	stmt	00963f34c62fcd78
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#<stmt2>	stmt	4495c0bbd9024ad5
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#<stmt3>	stmt	e28fcbb014b56e56
@@ -1724,8 +1724,8 @@ ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#options	val	67e6d82eb6e1d173
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#render(Node)	def	ed28bd3eab4c7628
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#render(Node,Appendable)	def	f863c774ce45fa24
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer#render(Node,Appendable,int)	def	a5348da088cf6dc7
-ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder	class	bd40fb94aa509970
-ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder#<init>(DataHolder)	ctor	9c33c19391f52850
+ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder	class	883a4ad7e95de23b
+ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder#<init>(DataHolder)	ctor	cd881537c040cc9d
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder#attributeProviderFactories	val	920de657eb584110
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder#attributeProviderFactory(AttributeProviderFactory)	def	c05e1d74f109fdb8
 ssg.md.html.HtmlRenderer	ssg.md.html.HtmlRenderer$Builder#build()	def	39db2b0130eb41a3
@@ -2503,7 +2503,7 @@ ssg.md.parser.MutableListOptions	ssg.md.parser.MutableListOptions#setParserEmula
 ssg.md.parser.Parser	options	val	c19dc8c09a4547ee
 ssg.md.parser.Parser	optionsWithSpecialLeadInHandlers	val	44f8484fbdbe6bda
 ssg.md.parser.Parser	specialLeadInHandlers	val	18840c065a3fdba7
-ssg.md.parser.Parser	ssg.md.parser.Parser	class	dfc2add3cfd4465a
+ssg.md.parser.Parser	ssg.md.parser.Parser	class	c867e3f54d3e9895
 ssg.md.parser.Parser	ssg.md.parser.Parser#<stmt10>	stmt	09ade0a46683c7cc
 ssg.md.parser.Parser	ssg.md.parser.Parser#<stmt11>	stmt	2ac94533859970f8
 ssg.md.parser.Parser	ssg.md.parser.Parser#<stmt12>	stmt	e9c9986165aed04a
@@ -2642,8 +2642,8 @@ ssg.md.parser.Parser	ssg.md.parser.Parser#removeExtensions(MutableDataHolder,Arr
 ssg.md.parser.Parser	ssg.md.parser.Parser#specialCharacters	val	90284650eda64f76
 ssg.md.parser.Parser	ssg.md.parser.Parser#transferReferences(Document,Document,Boolean)	def	0b9380afa59a1670
 ssg.md.parser.Parser	ssg.md.parser.Parser#transferReferences(NodeRepository<T>,NodeRepository<T>,boolean)	def	ae7d37fb21a9a817
-ssg.md.parser.Parser	ssg.md.parser.Parser$Builder	class	374406596a4c1401
-ssg.md.parser.Parser	ssg.md.parser.Parser$Builder#<init>(DataHolder)	ctor	9e6bb9cb2569335f
+ssg.md.parser.Parser	ssg.md.parser.Parser$Builder	class	841f11d2aa72c6e7
+ssg.md.parser.Parser	ssg.md.parser.Parser$Builder#<init>(DataHolder)	ctor	cd881537c040cc9d
 ssg.md.parser.Parser	ssg.md.parser.Parser$Builder#blockParserFactories	val	22bddbc90aa09e78
 ssg.md.parser.Parser	ssg.md.parser.Parser$Builder#blockPreProcessorFactories	val	e39e6aacc6974af5
 ssg.md.parser.Parser	ssg.md.parser.Parser$Builder#blockPreProcessorFactory(BlockPreProcessorFactory)	def	1064f2fba9577bc6
@@ -4125,8 +4125,8 @@ ssg.md.util.ast.VisitHandler	ssg.md.util.ast.VisitHandler	class	4b39bc83891bf94d
 ssg.md.util.ast.VisitHandler	ssg.md.util.ast.VisitHandler#visit(Node)	def	5a41cce4a63862f2
 ssg.md.util.ast.Visitor	ssg.md.util.ast.Visitor	class	2339d7e3167b0d04
 ssg.md.util.ast.Visitor	ssg.md.util.ast.Visitor#visit(N)	def	c228cff3376abdbc
-ssg.md.util.build.BuilderBase	ssg.md.util.build.BuilderBase	class	72cada11fe0f720b
-ssg.md.util.build.BuilderBase	ssg.md.util.build.BuilderBase#<init>(DataHolder)	ctor	aeb4afc4ca1eb169
+ssg.md.util.build.BuilderBase	ssg.md.util.build.BuilderBase	class	dd243f53a4c28bfc
+ssg.md.util.build.BuilderBase	ssg.md.util.build.BuilderBase#<init>(DataHolder)	ctor	337b1e9c0173cb59
 ssg.md.util.build.BuilderBase	ssg.md.util.build.BuilderBase#addExtensionApiPoint(Object)	def	3f37182af00956d0
 ssg.md.util.build.BuilderBase	ssg.md.util.build.BuilderBase#build()	def	c7666a45fa6f3092
 ssg.md.util.build.BuilderBase	ssg.md.util.build.BuilderBase#currentExtension	val	3cd35755839ebc41
@@ -4789,8 +4789,8 @@ ssg.md.util.data.MutableDataHolder	ssg.md.util.data.MutableDataHolder#set(Nullab
 ssg.md.util.data.MutableDataHolder	ssg.md.util.data.MutableDataHolder#setAll(DataHolder)	def	02a467dd33cc9310
 ssg.md.util.data.MutableDataHolder	ssg.md.util.data.MutableDataHolder#setFrom(MutableDataSetter)	def	6ddfbbebb5d78c14
 ssg.md.util.data.MutableDataHolder	ssg.md.util.data.MutableDataHolder#setIn(MutableDataHolder)	def	5e6b55eaae7a5fbd
-ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet	class	6db6d02b995b2618
-ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet#<init>(DataHolder)	ctor	18d12e9ae050cb84
+ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet	class	9bb544e5d03e0492
+ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet#<init>(DataHolder)	ctor	ef23f208a307ea6a
 ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet#clear()	def	ae4eff78fa1bf352
 ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet#getOrCompute(DataKeyBase<?>,DataValueFactory<?>)	def	272ffe5b612f4799
 ssg.md.util.data.MutableDataSet	ssg.md.util.data.MutableDataSet#merge(Array<DataHolder>)	def	333381b48831e047
@@ -4808,9 +4808,9 @@ ssg.md.util.data.MutableDataSetter	ssg.md.util.data.MutableDataSetter	class	e3ac
 ssg.md.util.data.MutableDataSetter	ssg.md.util.data.MutableDataSetter#setIn(MutableDataHolder)	def	0fe8594103cf2779
 ssg.md.util.data.MutableDataValueSetter	ssg.md.util.data.MutableDataValueSetter	class	c83177b94f48e199
 ssg.md.util.data.MutableDataValueSetter	ssg.md.util.data.MutableDataValueSetter#set(MutableDataHolder,T)	def	321e302f2c304b17
-ssg.md.util.data.MutableScopedDataSet	ssg.md.util.data.MutableScopedDataSet	class	d678fbaabf6f098d
+ssg.md.util.data.MutableScopedDataSet	ssg.md.util.data.MutableScopedDataSet	class	e31458ff388e5544
 ssg.md.util.data.MutableScopedDataSet	ssg.md.util.data.MutableScopedDataSet#<init>(DataHolder)	ctor	b853a80fbf3722d6
-ssg.md.util.data.MutableScopedDataSet	ssg.md.util.data.MutableScopedDataSet#<init>(DataHolder,MutableDataHolder)	ctor	847a7efc3c04ce69
+ssg.md.util.data.MutableScopedDataSet	ssg.md.util.data.MutableScopedDataSet#<init>(DataHolder,MutableDataHolder)	ctor	50583011dd1abe12
 ssg.md.util.data.MutableScopedDataSet	ssg.md.util.data.MutableScopedDataSet#contains(DataKeyBase<?>)	def	39dc7313c237dd12
 ssg.md.util.data.MutableScopedDataSet	ssg.md.util.data.MutableScopedDataSet#getAll()	def	61d1d3caec515a09
 ssg.md.util.data.MutableScopedDataSet	ssg.md.util.data.MutableScopedDataSet#getKeys()	def	28e85483b1f00dc7
@@ -4830,9 +4830,9 @@ ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#getDefaultValu
 ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#getDefaultValue(DataHolder)	def	cef0ae37ef2be65a
 ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#set(MutableDataHolder,T)	def	65f47a12a1c354fc
 ssg.md.util.data.NullableDataKey	ssg.md.util.data.NullableDataKey#toString()	def	7fbef3b4c0fd6339
-ssg.md.util.data.ScopedDataSet	ssg.md.util.data.ScopedDataSet	class	684c0c69a7ecc38f
+ssg.md.util.data.ScopedDataSet	ssg.md.util.data.ScopedDataSet	class	513d11a31322f5af
 ssg.md.util.data.ScopedDataSet	ssg.md.util.data.ScopedDataSet#<init>(DataHolder)	ctor	b853a80fbf3722d6
-ssg.md.util.data.ScopedDataSet	ssg.md.util.data.ScopedDataSet#<init>(DataHolder,DataHolder)	ctor	92c35a5fdf447040
+ssg.md.util.data.ScopedDataSet	ssg.md.util.data.ScopedDataSet#<init>(DataHolder,DataHolder)	ctor	66aec812f11b455a
 ssg.md.util.data.ScopedDataSet	ssg.md.util.data.ScopedDataSet#contains(DataKeyBase<?>)	def	39dc7313c237dd12
 ssg.md.util.data.ScopedDataSet	ssg.md.util.data.ScopedDataSet#getAll()	def	9ee4e13302251324
 ssg.md.util.data.ScopedDataSet	ssg.md.util.data.ScopedDataSet#getKeys()	def	4170acc0c21e924e

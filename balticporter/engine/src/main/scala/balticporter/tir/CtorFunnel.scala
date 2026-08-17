@@ -1033,13 +1033,65 @@ object CtorFunnel:
       case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), _, _, _) => Some(f)
       case _                                                    => scala.None
 
+    /** Every field this statement CAN write — and `None` the moment it does anything ELSE.
+      *
+      * [[supersedes]] asks two questions of two different statement lists and they are not the same
+      * question, which is what a single [[assignedField]] could not say. On the PROLOGUE side the
+      * question is *what did `this()` put into the object*, so the answer must be an over-estimate:
+      * every field any path through the statement may have written. On the REPLAY side it is *what
+      * does the replay definitely overwrite*, which is [[mustAssign]] and an under-estimate. Both
+      * directions are conservative and the pair is what makes the widening below sound.
+      *
+      * The BRANCH is the shape this exists for, and it is ordinary rather than exotic: a java
+      * constructor that normalises one argument — `if (other == null) f = new HashMap<>(); else f =
+      * new HashMap<>(other.getAll());` — is ONE `Tree.If` statement, so [[assignedField]] answers
+      * `None`, `None.exists` is false, and the replay is refused for a parent whose whole body is
+      * that one `if`. Nothing reports it: the emitted secondary is `this()` and its `super(args)`
+      * is dropped, `OmissionCheck.droppedSuperArgs` counts it honestly as a refusal, the port
+      * compiles, and the constructed object is simply empty. Measured on flexmark's
+      * `MutableDataSet(DataHolder)` — three classes deep, so `HtmlRenderer.builder(options)` built
+      * a renderer with NO options at all and every non-default one the caller set was silently the
+      * default (`PROGRESS.md` §10.6.7).
+      *
+      * A statement that is not a field write, a branch, a block or a no-op answers `None` — the
+      * refusal, unchanged. This is deliberately NOT "does the statement look pure": the right-hand
+      * sides are not read here for the reason [[supersedes]] states at length, and a condition is
+      * not read for the same reason. */
+    private def mayAssign(st: Statement): Option[Set[SymId]] = st match
+      case Tree.Commented(_, s)          => mayAssign(s)
+      case Tree.If(_, t, e, _, _)        => mayAssign(t).zip(mayAssign(e)).map(_ ++ _)
+      case Tree.Block(stats, expr, _, _, _) =>
+        (stats :+ expr).foldLeft(Option(Set.empty[SymId]))((acc, s) => acc.zip(mayAssign(s)).map(_ ++ _))
+      case Tree.Literal(Constant.UnitC, _, _) => Some(Set.empty)
+      case _                             => assignedField(st).map(Set(_))
+
+    /** Every field this statement writes on EVERY path through it — the MUST half of [[mayAssign]].
+      *
+      * An `if` contributes the INTERSECTION of its branches and never their union: a field written
+      * in one arm only is not one the replay is guaranteed to overwrite, so counting it would let
+      * [[supersedes]] answer true about a path on which the prologue's value survives. A sequence
+      * contributes the union, which is exact. Anything unrecognised contributes nothing, which is
+      * the conservative direction here. */
+    private def mustAssign(st: Statement): Set[SymId] = st match
+      case Tree.Commented(_, s)          => mustAssign(s)
+      case Tree.If(_, t, e, _, _)        => mustAssign(t).intersect(mustAssign(e))
+      case Tree.Block(stats, expr, _, _, _) => (stats :+ expr).flatMap(mustAssign).toSet
+      case _                             => assignedField(st).toSet
+
     /** Does replaying `stats` after `prologue` leave the same STATE Java's `super(args)` left?
       *
       * State, and only state. `prologue` is what the secondary's own `this()` already ran, and this
       * asks whether the replay overwrites every field it assigned — then each of those fields ends
       * up holding what Java put there, and the prologue's contribution to the OBJECT is dead. A
-      * prologue statement that is not a plain field assignment already fails it, because
-      * [[assignedField]] answers `None` and `None.exists` is false.
+      * prologue statement that is not a field write, a branch over field writes, a block of them or
+      * a no-op already fails it, because [[mayAssign]] answers `None` and `None.exists` is false.
+      *
+      * The two sides are read through DIFFERENT functions and that is the whole of its soundness:
+      * the prologue through [[mayAssign]], which over-estimates, and the replay through
+      * [[mustAssign]], which under-estimates. Read through one function they would agree by
+      * construction and the answer would be wrong on exactly the branching shape the pair was built
+      * for — a field an `if` writes in one arm only is MAY on the prologue side and is not MUST on
+      * the replay side.
       *
       * It compares assignment TARGETS and does not look at the right-hand sides. Read as "the
       * prologue is invisible" that is too strong — an RHS with an escaping effect (`this.n =
@@ -1061,9 +1113,8 @@ object CtorFunnel:
     private def supersedes(stats: List[Statement], prologue: List[Statement]): Boolean =
       if prologue.isEmpty then true
       else
-        val pre = prologue.map(assignedField)
-        val set = stats.flatMap(assignedField).toSet
-        pre.forall(f => f.exists(set.contains))
+        val set = stats.flatMap(mustAssign).toSet
+        prologue.forall(st => mayAssign(st).exists(fs => fs.nonEmpty && fs.forall(set.contains)))
 
     /** how many times each symbol is referenced by these statements. */
     private def useCounts(stats: List[Statement]): Map[SymId, Int] =

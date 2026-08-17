@@ -2010,6 +2010,51 @@ fact.
 `Universal("ctor-funnel/super-args-dropped(C3)")`, and a porter note sits on every affected
 constructor in the emitted file — verified on liqp.*
 
+**AND PART OF THAT COUNT WAS NEVER A WALL — the REPLAY could express it and its own predicate did
+not recognise the SHAPE.** Everything above is about what the funnel cannot NOMINATE. `replayFor`
+is the other answer, and it is admissible exactly when the replay overwrites every field the
+emitted `this()` already put into the object — a question `supersedes` asked through ONE function
+that recognised a plain `this.f = <e>` and nothing else. A java constructor that normalises one
+argument is a BRANCH:
+
+```java
+public DataSet(DataHolder other) {
+  if (other == null) dataSet = new HashMap<>();
+  else               dataSet = new HashMap<>(other.getAll());
+}
+```
+
+One `Tree.If`, so `assignedField` answered `None`, `None.exists` is false, and the replay was
+refused for a parent whose whole body it could have replayed verbatim. **Nothing distinguishes that
+from a real wall**: the emitted secondary is `this()`, `OmissionCheck.droppedSuperArgs` counts it —
+through the *same* predicate, so check and emitter agree perfectly about the wrong answer — a porter
+note explains the loss in C3's own words, and the port compiles.
+
+What it cost is the whole of one library's remaining conformance residue. flexmark's
+`MutableDataSet(DataHolder)` is that constructor's subclass, `BuilderBase` is its subclass, and
+`HtmlRenderer.Builder` is its subclass, so **`HtmlRenderer.builder(options).build()` built a renderer
+holding NO options at all** — every non-default option the caller set was silently the default. 39
+CommonMark examples rendered an unencoded `href` under `PERCENT_ENCODE_URLS = true` and 3 more
+applied the 0.28 emulation profile where the caller asked for 0.27, at **0 compile errors, every
+check count flat, and no member digest** — §4.4's defect class arriving through a refusal nobody had
+reason to doubt (`PROGRESS.md` §10.6.7).
+
+The fix is TWO functions where there was one, and the pair is the whole of its soundness: the
+PROLOGUE is read as MAY-assign (the union over a branch's arms — what `this()` may have left in the
+object) and the REPLAY as MUST-assign (the INTERSECTION — what it definitely overwrites). Read
+through one function they agree by construction and are wrong on exactly the branching shape: a
+field an `if` writes in ONE arm only is MAY on the prologue side and must not be MUST on the replay
+side. `CtorFunnelBranchReplaySpec` pins both directions and both fail without the change.
+
+**Measured: ssg-md `omissions` 61 → 54** (the seven are `MutableDataSet`, `MutableScopedDataSet`,
+`ScopedDataSet`, `BuilderBase` and the three `Builder`s), **17 member digests, 0 → 0 errors, and
+CommonMark conformance 1,828 → 1,870 of 1,870.** Every other port in `just measure-all` is
+**byte-for-byte unchanged** — eleven lanes at 0 moved digests — which is what a widened guard owes
+the ports it was not aimed at (`CLAUDE.md` §5).
+
+*Fix kind: (a). C3's refusal above still stands for every parent this cannot reach; what changed is
+that the refusal is no longer claimed about a shape the mechanism can express.*
+
 ### C4. Several roots, none nilary, plus an explicit nilary constructor = a clash with no plan
 
 `plan0`'s search for a nilary ROOT finds none when the nilary constructor *delegates* (`this(1)`), so

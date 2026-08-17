@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
-| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is THREE upstream modules and a second lane emitting **88** files — **725** registrations from 726 `@Test` (the 1 an OVERRIDE the ancestor's registration dispatches to), **722 passing / 5 failing**, every failure attributed. **CommonMark conformance: 1,828 of 1,870 spec examples on the three versions java runs (97.75%), against a MEASURED green java control** — 39 of the 42 one un-applied percent-encode (§10.6.7) | **0** main + **0** test after wave 23 (243 at first emit, 131 at the first `RefChecks` run, 42 after wave 19, 34 after wave 20, 27 after wave 21-22; §10.6.3, every one of them classified — the typer reached zero at wave 17 and `RefChecks` has run) |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is THREE upstream modules and a second lane emitting **88** files — **725** registrations from 726 `@Test` (the 1 an OVERRIDE the ancestor's registration dispatches to), **725 passing / 2 failing**, every failure attributed. **CommonMark conformance: 1,870 of 1,870 spec examples on the three versions java runs (100 %), against a MEASURED green java control** — the 42 were ONE refused `super(args)` three classes above the builder (§10.6.7) | **0** main + **0** test after wave 23 (243 at first emit, 131 at the first `RefChecks` run, 42 after wave 19, 34 after wave 20, 27 after wave 21-22; §10.6.3, every one of them classified — the typer reached zero at wave 17 and `RefChecks` has run) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -221,7 +221,7 @@ oracle (§10.6.1).
 | `sge-colorful` | `colorful-pure` (40k LOC) unported with **no recorded rationale anywhere**. Confirm intent before treating it as scope. |
 | `sge-visui` vs core | VisUI keeps `AsyncTask` as a class while core maps it to `() => Unit`. **Two answers to one construct in one repo** — the manifest must decide which. |
 | `ssg-liquid` | **2,166 lines have no Java counterpart and never can.** liqp parses with two ANTLR `.g4` grammars; the port hand-wrote lexer/parser/token. The engine cannot read, regenerate or diff `.g4`. Decide up front: permanent handwritten overrides, or re-adopt ANTLR and lose JS/Native. |
-| `ssg-md` | **CommonMark conformance is MEASURED now and it is 97.75%.** The four `FullOrigSpec*CoreTest` suites RUN (§10.6.7): 1,828 of 1,870 examples on the three spec versions upstream enables, with java compiled and run as the control and green on all 1,870 — so all 42 are the port's, and 39 of them are one option that does not reach one call. `spec.0.29.txt` is disabled UPSTREAM (`return ResourceLocation.NULL`) and 0.26/0.30 have no test class at all. The **28** (not 24) undocumented omissions include the entire `util/html/ui` subpackage, eight `*JiraRenderer`, and `flexmark-util-dependency`'s `Flat*` extension-resolution algorithm, which is not dead code. |
+| `ssg-md` | **CommonMark conformance is MEASURED and it is 100 %.** The four `FullOrigSpec*CoreTest` suites RUN (§10.6.7): 1,870 of 1,870 examples on the three spec versions upstream enables, with java compiled and run as the control and green on all 1,870 — a mechanical port matching a hand-written java library on a published specification, example for example. The 42 it started at were ONE defect: three constructors in the builder chain whose `super(options)` the ctor funnel refused, so every renderer was built with NO options at all. `spec.0.29.txt` is disabled UPSTREAM (`return ResourceLocation.NULL`) and 0.26/0.30 have no test class at all. The **28** (not 24) undocumented omissions include the entire `util/html/ui` subpackage, eight `*JiraRenderer`, and `flexmark-util-dependency`'s `Flat*` extension-resolution algorithm, which is not dead code. |
 
 #### Attribution gaps to close before publishing anything
 
@@ -248,10 +248,10 @@ repository-level NOTICE / THIRD-PARTY files are still hand-maintained and are no
    be scoped as its own decision.
 5. **`ssg-md` (flexmark)** — the largest Java surface. Milestone 1 (core + the eleven `flexmark-util-*`
    modules) is ported by the engine, compiles at 0 errors on both source sets, and is the only port
-   in the corpus with SPEC-LEVEL evidence: **97.75% of CommonMark, 1,828 of 1,870 examples, against a
+   in the corpus with SPEC-LEVEL evidence: **100 % of CommonMark, 1,870 of 1,870 examples, against a
    java control measured green** (§10.6.7). The rename turned out to be the easy half — one uniform
-   prefix with one deviation, collision-free. What remains is the 42 failing examples (39 of them one
-   option that does not reach one call) and the 29 extension modules as DEPENDENT ports.
+   prefix with one deviation, collision-free. What remains is the 29 extension modules as DEPENDENT
+   ports, and two suite failures that are one engine family this port shares with liqp.
 6. **`sge` core** — already ported by the engine. What remains is the 100 absent types and the backend
    question, which is a platform decision, not a port.
 7. **Deferred / not port work**: `sge-controllers`, `sge-tools`, `sge-physics*`, `sge-freetype`,
@@ -2788,8 +2788,9 @@ four `FullOrigSpec*CoreTest` classes drive them through PLAIN `@Test` methods �
 they stand. The hand port loads none of them (this document's own §1 "one surprise per module" says
 so). It cost the four classes plus `flexmark-test-util`'s non-reflective half — which is all of it,
 verified: `Class.getResourceAsStream` is the only reflective thing in the module — and it bought
-**1,828 of 1,870 spec examples on the three versions upstream enables, against a java control
-compiled and run green on all 1,870**. The 114 `ComboSpecTestCase` subclasses and the 59
+**1,870 of 1,870 spec examples on the three versions upstream enables, against a java control
+compiled and run green on all 1,870** (1,828 at the census, and the 42 it left were one defect —
+§10.6.7). The 114 `ComboSpecTestCase` subclasses and the 59
 `@RunWith(Suite.class)` aggregators remain the documented refusal and need a hand-written MUnit
 driver, not an engine change.
 
@@ -2810,7 +2811,7 @@ driver, not an engine change.
 | `portability(emitted)` | **18** sites against 37 rules — `javax.imageio.ImageIO` 8, `java.lang.reflect.Array` 2, `java.nio.file.Files` 2, and one each of `javax.swing.*` (2), `java.net.URL*` (3), `java.text.MessageFormat`. Six `substitutions-drop` remedies published, four of them naming exactly the types the hand port silently omitted |
 | `dependency-coverage` | **10 of 10** — `java.util.Locale` 6 and `java.text.NumberFormat` 4, both answered by `scala-java-locales` on both non-JVM backends. Not a call to remove; a coordinate to declare |
 | `decisions.tsv` | **2,014 rows** — 715 `RetypedSignature`, 507 `RenamedMember`, 458 `RenamedPackage`, 146 `ForcedClassInit`, 107 `FunnelledCtor`, 57 `WidenedVisibility`, 12 `DroppedSuperCall`, 10 `InjectedMember`, 2 `RetainedParent` |
-| tests | **723 emitted, 0 lost, RUN FOR THE FIRST TIME AT WAVE 23 (683 passing, 40 failing) 704 passing / 19 failing after wave 24 and 721 passing / 2 failing after wave 25, with EVERY failure attributed.** All 40 of wave 23's were classified and wave 24 answered each family: 37 were JUnit's `ExpectedException` `@Rule`, which the port's own refusal lane had predicted since wave 7 and which the run confirmed 1:1 — **20 translated** by wave 24's `intercept` and the other **17 refused at ONE guard**, then **all 37 modelled at wave 25**, which flipped the 17 (`ENGINE-LIMITS.md` X5); 2 were §4.4's two-representations family, re-diagnosed to a library-wide `Pair.equals` defect and **DECLARED** with anchors (K18.1); and the 1 uncensused residue was an ENGINE defect in `JavaCollections.toArray`, **CLOSED** (K31). Blocked until wave 23 on the `RefChecks` census, since the lane runs the suite only at a WHOLE-compile of zero — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
+| tests | **725 registrations from 726 `@Test` over THREE upstream modules, and 727 outcomes: 725 passing / 2 failing, with EVERY failure attributed** (§10.6.7 — the two are `Pair.equals`, K18.1). The 52-file util suite alone reads 723 emitted, 0 lost, RUN FOR THE FIRST TIME AT WAVE 23 (683 passing, 40 failing) 704 passing / 19 failing after wave 24 and 721 passing / 2 failing after wave 25. All 40 of wave 23's were classified and wave 24 answered each family: 37 were JUnit's `ExpectedException` `@Rule`, which the port's own refusal lane had predicted since wave 7 and which the run confirmed 1:1 — **20 translated** by wave 24's `intercept` and the other **17 refused at ONE guard**, then **all 37 modelled at wave 25**, which flipped the 17 (`ENGINE-LIMITS.md` X5); 2 were §4.4's two-representations family, re-diagnosed to a library-wide `Pair.equals` defect and **DECLARED** with anchors (K18.1); and the 1 uncensused residue was an ENGINE defect in `JavaCollections.toArray`, **CLOSED** (K31). Blocked until wave 23 on the `RefChecks` census, since the lane runs the suite only at a WHOLE-compile of zero — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
 
 **The behavioural gate is now BUILT and does not yet RUN, which is a smaller gap than the one this
 paragraph used to describe and is not zero.** §3 is explicit about what a compile-error count is
@@ -3863,35 +3864,62 @@ of CommonMark this port implements.
 
 | spec resource | examples | port passes | port fails | JAVA (the control) |
 |---|---:|---:|---:|---|
-| `spec.txt` | 624 | **611** | 13 | 624 / 624 — green |
-| `spec.0.27.txt` | 622 | **606** | 16 | 622 / 622 — green |
-| `spec.0.28.txt` | 624 | **611** | 13 | 624 / 624 — green |
-| **the three java RUNS** | **1,870** | **1,828 (97.75%)** | **42** | **1,870 / 1,870** |
-| `spec.0.29.txt` | 649 | 616 | 33 | **NOT RUN — disabled upstream** |
+| `spec.txt` | 624 | **624** | 0 | 624 / 624 — green |
+| `spec.0.27.txt` | 622 | **622** | 0 | 622 / 622 — green |
+| `spec.0.28.txt` | 624 | **624** | 0 | 624 / 624 — green |
+| **the three java RUNS** | **1,870** | **1,870 (100 %)** | **0** | **1,870 / 1,870** |
+| `spec.0.29.txt` | 649 | 629 | 20 | **NOT RUN — disabled upstream** |
 
-**THE CONTROL IS MEASURED, not assumed, and it is what makes the 42 readable.** 524 upstream java
-files compiled with `javac` against the same three jars and the four suites run under
-`org.junit.runner.JUnitCore`: `OK (4 tests)`. So java's dump equals the spec text EXACTLY on all
-three live versions, and **every one of the 42 is a defect of the PORT** rather than flexmark
-disagreeing with CommonMark. The green is not vacuous either — hiding `spec.0.28.txt` from the
-control's classpath makes it fail loudly, which is the negative this reading needs.
+**THE CONTROL IS MEASURED, not assumed.** 524 upstream java files compiled with `javac` against the
+same three jars and the four suites run under `org.junit.runner.JUnitCore`: `OK (4 tests)`. So java's
+dump equals the spec text EXACTLY on all three live versions — and the port's now does too, which is
+what makes the three suites' green a CONFORMANCE claim rather than a suite result: the assertion is
+one `assertEquals` over the whole rendered spec, so equality is per-example equality on all 1,870 by
+construction. The control's green is not vacuous either — hiding `spec.0.28.txt` from its classpath
+makes it fail loudly, which is the negative this reading needs.
 
 **0.29 IS NOT A CONFORMANCE CLAIM ANYBODY MAKES.** `FullOrigSpec029CoreTest.getSpecResourceLocation`
 returns `ResourceLocation.NULL` under the comment `// FIX: implement 0.29 spec and enable test`, so
 java runs zero of its 649 examples and so does the port — its `@Test` is a vacuous pass on both
-sides. The 33 above come from driving that spec anyway, and 18 of them are 0.29 rules flexmark never
-implemented; they measure the SPEC GAP and not the port. `spec.0.26.txt` and `spec.0.30.txt` ship as
-resources with no test class at all (618 and 652 examples nothing drives, upstream or here).
+sides. The 20 above come from driving that spec anyway (`616 → 629` under the fix below), and they
+measure the SPEC GAP rather than the port: the earlier census attributed 18 of its then-33 to 0.29
+rules flexmark never implemented, and that attribution is not re-derived here. `spec.0.26.txt` and
+`spec.0.30.txt` ship as resources with no test class at all (618 and 652 examples nothing drives,
+upstream or here).
 
-**THE 42 ARE TWO FAMILIES, and one of them is 39.**
+**THE 42 WERE TWO FAMILIES AND ONE DEFECT — A `super(args)` THE FUNNEL REFUSED THREE CLASSES UP.**
+The census left them as two work items and the second one is what identified the first. The probe of
+the day had bracketed the percent-encode family to "between the option and the escape, in the resolve
+path": `HtmlRenderer.PERCENT_ENCODE_URLS` round-trips `true` through `MutableDataSet.set` →
+`toImmutable` → `DataSet.aggregate`, `new HtmlRendererOptions(agg).percentEncodeUrls` reads `true`,
+and `Escaping.percentEncodeUrl("/föö")` answers `/f%C3%B6%C3%B6` — so the option was right, the
+helper was right, and the call between them did not happen. What that bracketing could not see is
+that the OPTIONS NEVER ARRIVED: `HtmlRenderer.builder(options)` is `Builder(DataHolder)`, whose
+`super(options)` reaches `BuilderBase(DataHolder)`, whose `super(options)` reaches
+`MutableDataSet(DataHolder)`, whose `super(other)` reaches `DataSet(DataHolder)` — and all three
+intermediate calls were emitted as a bare `this()`. Every renderer and every parser this suite built
+therefore held an EMPTY `DataSet`, and every non-default option the caller set was silently the
+default:
 
-| what | how many | how far it is narrowed |
-|---|---:|---|
-| **link URLs are not percent-encoded** | **39** (13 + 13 + 13, every live version) | The suite sets `HtmlRenderer.PERCENT_ENCODE_URLS = true` and the emitted `href` is the raw destination — `/f&ouml;&ouml;` renders `/föö` where java renders `/f%C3%B6%C3%B6`. Probed and NARROWED to the renderer's own resolve path: the key round-trips `true` through `MutableDataSet.set` → `toImmutable` → `DataSet.aggregate`, `new HtmlRendererOptions(agg).percentEncodeUrls` reads `true`, and `Escaping.percentEncodeUrl("/föö")` answers `/f%C3%B6%C3%B6`. So the option is right, the helper is right, and the call between them does not happen. A §4.4-class defect exactly: green compile, every check count flat, no member digest, and only a running suite can see it |
-| **the 0.27 PROFILE's own rules** | **3** (0.27 only) | `***foo***` renders `<em><strong>` where 0.27 says `<strong><em>` (×2), and a link destination with nested parens is accepted where 0.27 rejects it (×1). `ParserEmulationProfile.COMMONMARK_0_27.getProfileOptions()` is what distinguishes 0.27 from 0.28 for exactly these rules, and the port applies 0.28's — the same shape as the row above, one option table over, which is why the OTHER 606 examples of 0.27 agree |
+| the family the census listed | what it really was |
+|---|---|
+| **link URLs are not percent-encoded** — 39 (13 + 13 + 13, every live version), `/f&ouml;&ouml;` rendering `/föö` where java renders `/f%C3%B6%C3%B6` | `PERCENT_ENCODE_URLS = true` is the ONLY non-default option `OrigSpecCoreTest` sets, so it is the only one whose loss the base spec can see |
+| **the 0.27 PROFILE's own rules** — 3 (0.27 only): `***foo***` as `<em><strong>` where 0.27 says `<strong><em>` (×2), and a link destination with nested parens accepted where 0.27 rejects it (×1) | the SAME loss one constructor over — `FullOrigSpec027CoreTest` passes `COMMONMARK_0_27.getProfileOptions()` into the same builder, so the port applied flexmark's DEFAULT profile, which is 0.28. That is exactly why 0.28's own suite showed no third family and why the other 606 of 0.27 agreed |
 
-Neither is chased here: the census is the deliverable, and a defect narrowed to one option and one
-call is a work item somebody can pick up without re-deriving anything.
+`CtorFunnel.Plans.supersedes` is the mechanism and `ENGINE-LIMITS.md` C3's correction is the
+write-up: the replay that expresses a secondary's `super(args)` is admissible when it overwrites what
+`this()` already wrote, and that question was asked through one predicate recognising a plain
+`this.f = <e>`. `DataSet(DataHolder)`'s whole body is `if (other == null) … else …` — one `Tree.If`
+— so the predicate answered *assigns no field*, the replay was refused, and
+`OmissionCheck.droppedSuperArgs` counted the loss honestly through the very same predicate. Reading
+MAY-assign on the prologue side and MUST-assign on the replay side closes it. **ssg-md `omissions`
+61 → 54, 17 member digests, 0 → 0 compile errors, conformance 1,828 → 1,870 of 1,870**, and every
+other port in `just measure-all` byte-for-byte unchanged.
+
+**Nothing else in the suite moved, which is the shape of the evidence.** Zero check counts changed on
+either ssg-md lane apart from `omissions`; no compile error appeared or disappeared; the only
+instruments that saw any of this were `members.tsv` and the three conformance suites. That is §4.4's
+own signature and it is why the census had to exist before the fix could.
 
 **AND THE RUN FOUND A CLASS OF THING NO PORT HAD MET: THE LIBRARY'S OWN CLASSPATH RESOURCES.**
 `Html5Entities` reads `/com/vladsch/flexmark/util/sequence/entities.properties` in a static
@@ -3904,12 +3932,14 @@ asks for the UPSTREAM path.** That is the right answer and it is a statement a c
 on: a build that consumes this port must ship the upstream resource tree unchanged, at the upstream
 paths, beside the renamed Scala. The lane says so at `md_spec_res`.
 
-**THE FLOOR THIS WAVE LEAVES.** 726 java `@Test` → **725 munit registrations**, and the 1 is not a
+**THE FLOOR THIS LEAVES.** 726 java `@Test` → **725 munit registrations**, and the 1 is not a
 loss: `ComboSpecTestCase.testSpecExample` OVERRIDES `FullSpecTestCase`'s, so the port emits one
 registration for the pair and dispatches virtually — which is what java's own runner does too, one
-test per concrete class. `expected-lost` is **1** for that reason and for no other. Suite **722
-passing / 5 failing of 727 outcomes**: the two `Pair.equals` rows §10.6.6 declares, plus the three
-live conformance suites, whose per-example residue is the 42 above.
+test per concrete class. `expected-lost` is **1** for that reason and for no other. Suite **725
+passing / 2 failing of 727 outcomes**, and the 2 are the `Pair.equals` rows §10.6.6 declares —
+`java.util.Map.Entry` retyped to `scala.Tuple2` at a REIFIED occurrence over a value whose emitted
+parent the phase left as java's (`ENGINE-LIMITS.md` K18.1/K5.7). Nothing about markdown is failing
+any more; the residue is one engine family this port shares with liqp.
 
 
 ---

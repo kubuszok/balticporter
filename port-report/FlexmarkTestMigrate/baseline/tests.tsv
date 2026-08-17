@@ -1,8 +1,8 @@
 #suite	test	status
-ssg.md.core.test.util.renderer.FullOrigSpec027CoreTest	testSpecExample	fail
-ssg.md.core.test.util.renderer.FullOrigSpec028CoreTest	testSpecExample	fail
+ssg.md.core.test.util.renderer.FullOrigSpec027CoreTest	testSpecExample	pass
+ssg.md.core.test.util.renderer.FullOrigSpec028CoreTest	testSpecExample	pass
 ssg.md.core.test.util.renderer.FullOrigSpec029CoreTest	testSpecExample	pass
-ssg.md.core.test.util.renderer.FullOrigSpecCoreTest	testSpecExample	fail
+ssg.md.core.test.util.renderer.FullOrigSpecCoreTest	testSpecExample	pass
 ssg.md.util.ast.DocumentTest	testLineNumberWithOldMacEol	pass
 ssg.md.util.ast.DocumentTest	testLineNumberWithOldMacEol2	pass
 ssg.md.util.ast.DocumentTest	testLineNumberWithUnixEol	pass

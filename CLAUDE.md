@@ -1580,6 +1580,33 @@ moment it files the finding. `members.tsv` cannot help either — the output has
 the port began. (`ENGINE-LIMITS.md` K2.5: 3 errors, and 5 findings that had been misreading
 themselves for the life of the port.)
 
+**…and the SAME misreading survives a check that is perfectly honest, because a REFUSAL PREDICATE
+READS A SHAPE and the shape it does not recognise is counted as a WALL.** K2.5's residue was wrong
+about itself; this one is right about itself and about the wrong question. A mechanism that can
+express a construct only under a condition — `CtorFunnel`'s replay of a `super(args)` a scala
+secondary cannot make, admissible when it overwrites what the emitted `this()` already wrote —
+decides that condition by matching statement shapes, and every shape it does not match answers *no*.
+The count then says REFUSED, the note explains the refusal in the engine's own words, the check reads
+the very same predicate so the two can never disagree, and the emitted code compiles: a gap that is
+indistinguishable, from every artifact this project has, from a limit somebody proved. `supersedes`
+recognised a plain `this.f = <e>` and nothing else, so a parent constructor whose whole body is
+`if (other == null) f = new HashMap<>(); else f = new HashMap<>(other.getAll());` — ONE `Tree.If`,
+and the ordinary way java normalises an argument — was refused for three classes in a row, and the
+library's builder therefore constructed **every renderer with no options at all**: 42 CommonMark
+examples wrong at 0 compile errors and every check count flat (`ENGINE-LIMITS.md` C3's correction).
+
+Two things to do with it, neither of which is "widen the predicate until the port is green":
+
+- **read a refusal LANE as a population, not as a verdict.** Where one construct's count is large or
+  concentrated, sample the actual sites and ask whether the mechanism could have expressed them —
+  the citation beside the count is an argument about the shapes somebody thought of, and it is
+  evidence about the others only if it enumerates them;
+- **a predicate asked in TWO DIRECTIONS needs TWO functions.** `supersedes` asks *what may the
+  prologue have written* and *what does the replay definitely overwrite*, and one function answered
+  both — so widening it correctly is not one edit but a split: MAY-assign (a branch's UNION) on the
+  prologue side, MUST-assign (a branch's INTERSECTION) on the replay side. Read through one function
+  the two agree by construction and are wrong on exactly the shape the widening was for.
+
 ## 4.57 Every emission backend carries PROVENANCE — it is a licence obligation
 
 Each library in reach of this engine is licensed (Apache-2.0 so far) and every port is a derived
