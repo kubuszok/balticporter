@@ -573,6 +573,213 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     intercept[munit.ComparisonFailException](munit.Assertions.assertEqualsFloat(1.0f, 1.4f, 0.1f))
   }
 
+  // ------------------------------------------- @Rule ExpectedException -> intercept --
+  //
+  // JUnit's other spelling of `@Test(expected = …)`, and the one with a state machine behind it.
+  // Every case below is a CLAUDE.md §4.4 defect: the untranslated form COMPILES and the test simply
+  // fails at run time, so the only evidence is the emitted shape and, for the refusals, the guard
+  // that declined it — `refused = 0` is a bar met by converting nothing (§3).
+  //
+  // The junit and hamcrest declarations are supplied as SOURCES because `fromSource` builds with
+  // `noClasspath`: which of `expect`'s two overloads java resolved is read from the CALLEE'S OWN
+  // FORMAL, and an external member with no class file behind it carries no signature at all — that
+  // is exactly the state the phase DECLINES on, so a snippet without them would assert the refusal
+  // path while claiming to test the conversion.
+
+  private val junitRuleStubs: List[(String, String)] = List(
+    "ExpectedException.java" ->
+      """package org.junit.rules;
+        |public class ExpectedException {
+        |  public static ExpectedException none() { return new ExpectedException(); }
+        |  public void expect(Class<? extends Throwable> type) { }
+        |  public void expect(org.hamcrest.Matcher<?> matcher) { }
+        |  public void expectMessage(String substring) { }
+        |  public void expectMessage(org.hamcrest.Matcher<String> matcher) { }
+        |  public void expectCause(org.hamcrest.Matcher<?> matcher) { }
+        |}
+        |""".stripMargin,
+    "Matcher.java" ->
+      """package org.hamcrest;
+        |public interface Matcher<T> {
+        |  boolean matches(Object item);
+        |}
+        |""".stripMargin,
+    "IsAnything.java" ->
+      """package org.hamcrest;
+        |public class IsAnything implements Matcher<Object> {
+        |  public boolean matches(Object item) { return true; }
+        |  public static IsAnything anything() { return new IsAnything(); }
+        |}
+        |""".stripMargin)
+
+  private def emitWithRules(java: String): (String, TestFrameworkTransform) =
+    val ph    = new TestFrameworkTransform
+    val after = Pipeline.run(SpoonTir.fromSources(("Snippet.java" -> java) :: junitRuleStubs), List(ph))
+    (new TirEmitter(after).emit, ph)
+
+  private def ruleSuite(body: String): String =
+    s"""package demo;
+       |import org.junit.After;
+       |import org.junit.Rule;
+       |import org.junit.Test;
+       |import org.junit.rules.ExpectedException;
+       |public class RuleSuite {
+       |  @Rule public ExpectedException thrown = ExpectedException.none();
+       |$body
+       |}
+       |""".stripMargin
+
+  private def guards(ph: TestFrameworkTransform): List[String] =
+    ph.findings.map(_.construct).collect {
+      case c if c.startsWith("org.junit.rules.ExpectedException#") =>
+        c.stripPrefix("org.junit.rules.ExpectedException#")
+    }
+
+  test("thrown.expect(E.class) at statement position wraps THE REST OF THE TEST in intercept") {
+    val (out, ph) = emitWithRules(ruleSuite(
+      """  @Test public void a() {
+        |    int x = 1;
+        |    thrown.expect(IllegalStateException.class);
+        |    boom(x);
+        |  }
+        |  static void boom(int x) { throw new IllegalStateException(); }""".stripMargin))
+    val t = out.substring(out.indexOf("test(\"a\")"))
+    // the rule call is GONE — an emitted `thrown.expect(…)` is the defect this closes.
+    assert(!clue(t).contains("thrown.expect"))
+    assert(t.contains("intercept[java.lang.IllegalStateException]"), t)
+    // …and the split is exactly java's: what stood BEFORE the arming call is outside the wrap,
+    // what stood after it is inside. Java armed the rule at the call and not before it.
+    assert(t.indexOf("var x") < t.indexOf("intercept["), t)
+    assert(t.indexOf("intercept[") < t.indexOf("boom(x)"), t)
+    assertEquals(guards(ph), Nil)
+  }
+
+  test("…and the SITE IN A LOOP is REFUSED, naming its guard — java's arming crosses iterations") {
+    // The one delta no lexical wrap can express: java's rule stays armed for the REST OF THE TEST,
+    // so a body that completes normally simply runs the next iteration, where an `intercept` around
+    // the rest of the enclosing block would fail with *expected exception*. 17 of ssg-md's 37 sites.
+    val (out, ph) = emitWithRules(ruleSuite(
+      """  @Test public void a() {
+        |    for (int i = 0; i < 3; i++) {
+        |      thrown.expect(IllegalStateException.class);
+        |      boom(i);
+        |    }
+        |  }
+        |  static void boom(int x) { throw new IllegalStateException(); }""".stripMargin))
+    assertEquals(clue(guards(ph)), List("non-statement-position"))
+    // REFUSED LOUDLY means the construct is LEFT, not silently dropped (`ENGINE-LIMITS.md` M6).
+    assert(clue(out).contains("thrown.expect"))
+    assert(!out.contains("intercept["), out)
+  }
+
+  test("the MATCHER overload intercepts at Throwable and asserts the matcher — hamcrest's contract") {
+    val (out, ph) = emitWithRules(ruleSuite(
+      """  @Test public void a() {
+        |    thrown.expect(org.hamcrest.IsAnything.anything());
+        |    boom();
+        |  }
+        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    val t = out.substring(out.indexOf("test(\"a\")"))
+    assertEquals(clue(guards(ph)), Nil)
+    assert(clue(t).contains("intercept[java.lang.Throwable]"), t)
+    assert(t.contains(".matches(bpThrown)"), t)
+    // the matcher is EVALUATED WHERE JAVA EVALUATED IT — at the `expect` call, before the body.
+    assert(t.indexOf("val bpMatcher") < t.indexOf("intercept["), t)
+  }
+
+  test("expectMessage(String) becomes an assertion on getMessage — junit's containsString") {
+    val (out, ph) = emitWithRules(ruleSuite(
+      """  @Test public void a() {
+        |    thrown.expect(IllegalStateException.class);
+        |    thrown.expectMessage("boom");
+        |    boom();
+        |  }
+        |  static void boom() { throw new IllegalStateException("boom"); }""".stripMargin))
+    val t = out.substring(out.indexOf("test(\"a\")"))
+    assertEquals(clue(guards(ph)), Nil)
+    assert(clue(t).contains("intercept[java.lang.IllegalStateException]"), t)
+    assert(t.contains("bpThrown.getMessage().contains(\"boom\")"), t)
+    assert(!t.contains("thrown.expect"), t)
+  }
+
+  test("TWO expect calls are REFUSED — java accumulates matchers and intercept has one argument") {
+    val (out, ph) = emitWithRules(ruleSuite(
+      """  @Test public void a() {
+        |    thrown.expect(IllegalStateException.class);
+        |    thrown.expect(RuntimeException.class);
+        |    boom();
+        |  }
+        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    assertEquals(clue(guards(ph)), List("double-expect"))
+    assert(clue(out).contains("thrown.expect"))
+  }
+
+  test("any OTHER member of the rule is REFUSED — a state this translation does not model") {
+    val (_, ph) = emitWithRules(ruleSuite(
+      """  @Test public void a() {
+        |    thrown.expect(IllegalStateException.class);
+        |    thrown.expectCause(org.hamcrest.IsAnything.anything());
+        |    boom();
+        |  }
+        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    assertEquals(clue(guards(ph)), List("unsupported-member"))
+  }
+
+  test("a suite declaring @After is REFUSED — JUnit's rules are OUTSIDE its afters") {
+    // `BlockJUnit4ClassRunner.methodBlock` wraps `withRules` around `withAfters`, so a teardown that
+    // throws is compared against the expectation in java; an `intercept` emitted in the body sits
+    // INSIDE the `try … finally` this phase emits for `@After`, which is a different program
+    // wherever the teardown can throw. Nothing else could see this: both shapes compile.
+    val (out, ph) = emitWithRules(ruleSuite(
+      """  @After public void tearDown() { }
+        |  @Test public void a() {
+        |    thrown.expect(IllegalStateException.class);
+        |    boom();
+        |  }
+        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    assertEquals(clue(guards(ph)), List("after-ordering"))
+    assert(clue(out).contains("finally tearDown()"))
+  }
+
+  test("a @Rule of ANOTHER class is untouched — the translation is keyed on the field's TYPE") {
+    val (out, ph) = emitWithRules(
+      """package demo;
+        |import org.junit.Rule;
+        |import org.junit.Test;
+        |import org.junit.rules.TemporaryFolder;
+        |public class OtherRuleTest {
+        |  @Rule public TemporaryFolder folder = new TemporaryFolder();
+        |  @Test public void a() { folder.toString(); }
+        |}
+        |""".stripMargin)
+    assertEquals(clue(guards(ph)), Nil)
+    assert(clue(ph.findings.map(_.construct)).contains("org.junit.Rule"))
+    assert(clue(out).contains("folder.toString()"))
+  }
+
+  test("a suite with NO rule produces no ExpectedException row — the refusal lane is not noise") {
+    val (_, ph) = emitWithRules(ruleSuite(
+      """  @Test public void a() { }"""))
+    assertEquals(clue(guards(ph)), Nil)
+  }
+
+  test("a CONVERTED site is recorded on the test's own Decision — §5.1's other artifact") {
+    // The emitted `intercept[E]` plainly asserts a throw; what it cannot say is that java said so
+    // through a `@Rule` FIELD three screens up, which is the fact an agent reading one emitted file
+    // has no way to recover (CLAUDE.md §4.575).
+    val log = Pipeline.runTraced(
+      SpoonTir.fromSources(("Snippet.java" -> ruleSuite(
+        """  @Test public void a() {
+          |    thrown.expect(IllegalStateException.class);
+          |    boom();
+          |  }
+          |  static void boom() { throw new IllegalStateException(); }""".stripMargin)) :: junitRuleStubs),
+      List(new TestFrameworkTransform))._2
+    val d = log.all.find(_.subjectFqn.endsWith("#a"))
+    assert(clue(log.all.map(_.subjectFqn)).nonEmpty)
+    assert(clue(d.map(_.detail.getOrElse("rule", ""))).exists(_.contains("intercept[")))
+  }
+
   // ---------------------------------------------------- untranslated: LOUD --
 
   test("@Rule is reported, classified (a), with its source position") {

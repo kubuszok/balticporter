@@ -8748,6 +8748,70 @@ translate is only defensible if what it leaves behind is a NUMBER (`CLAUDE.md` �
 an assertion-carrying helper, so all lanes are 0 members changed with every check count identical —
 which is the point: none of these was measurable until a library that used them was pointed at.*
 
+### X5. A `@Rule` is not ONE construct — `ExpectedException` WRITES ITS CONTRACT DOWN, and the half no lexical wrap can express is the ARMING. **ssg-md's suite 683 → 703 passing, 40 → 20 failing, 0 errors, every check count flat**
+
+X1's table says a custom `@Rule` has no image, and that is right for `TemporaryFolder` and `Timeout`
+— a rule wraps every test in an ARBITRARY `Statement` and there is no shape to derive one from. It
+is wrong for exactly one rule class, and the difference is not effort: junit WRITES
+`ExpectedException`'s contract down (`ExpectedExceptionStatement.evaluate` — run the base statement,
+catch `Throwable`, apply the accumulated matcher, fail if nothing was thrown while a matcher is set),
+so it is a §1(a) fact about JUnit and MUnit exactly as `@Test(expected = …)` is. It is also the
+FIRST of the two the corpus met at scale: **37 of one suite's 40 failing tests**, every one of them
+the port being RIGHT about the library and wrong about the harness — the exception that escaped is
+precisely the one the java test declared it expected.
+
+`thrown.expect(E.class); rest` → `intercept[E] { rest }`, and the whole of what is hard is that
+**java's rule is armed to the END OF THE TEST while `intercept` wraps a LEXICAL REGION.** The seven
+differences are enumerated in `TestFrameworkTransform.expectedException` (`CLAUDE.md` §3 — each one a
+guard, a shape or a count); what belongs here is the one that was PRICED and the two approximations
+that were refused.
+
+**The measured split is 20 converted / 17 refused, and the 17 are all POSITION.** Every one of them is
+a `thrown.expect` inside a `while` or `for` body — java arms the rule on the first iteration and the
+throw leaves the method, so the region java wrapped is *the rest of this iteration, plus every later
+iteration, plus everything after the loop*. Two ways to write that were rejected:
+
+- **wrap the rest of the ENCLOSING BLOCK.** Cheap, and it is a DIFFERENT PROGRAM wherever the body
+  can complete normally: java runs the next iteration, the port fails with *expected exception*. Not
+  a counted delta but a wrong answer, so the guard refuses instead;
+- **wrap the LOOP and hoist the arming.** Also a different program in the other direction — the
+  statements standing BEFORE the `expect` in the first iteration were not armed in java, so a throw
+  there passes in the port and failed in java. That direction is the false green this engine exists
+  to prevent, which is why over-approximating here is worse than refusing.
+
+What WOULD reach all 37 is not an `intercept` at all: it is MODELLING THE RULE — a flag per test, the
+`expect` calls lowered to assignments, and one `try`/`catch` around the whole converted body. That is
+exact at every position, at every arity of `expect`, and for the `@After` ordering as well. It was
+not built, and the reason is a cost this entry should state rather than leave to be re-derived: it
+puts a `var`, a broad `catch` (which then owes §4.4's `boundary.Break` re-throw arm, because a
+translated java `break` under it is an exception) and a trailing `fail` into every test that touches
+the rule, where `intercept` puts one call. **If a library arrives whose sites are mostly in loops,
+that is the design to build; on this corpus it would buy 17 tests at the cost of a second lowering
+for a construct the first one already covers 20 of.**
+
+Two smaller things measured on the way:
+
+- **which OVERLOAD java resolved is read from the CALLEE'S OWN FORMAL, never from the argument.**
+  `expect` has two — `expect(Class<? extends Throwable>)` and `expect(Matcher<?>)` — and the second is
+  11 of ssg-md's sites. Guessing from the argument's shape would be §4.6's fabricated fact; an
+  external member with no readable class file answers `None` and the site declines. Note this is the
+  one place the whole translation depends on the frontend's external `MethodType` (K15's fix)
+  existing at all.
+- **the matcher form needs NO per-matcher table.** `matches(Object)` is the `org.hamcrest.Matcher`
+  CONTRACT, so `intercept[java.lang.Throwable]` + `assert(m.matches(e))` is one translation for every
+  matcher class — including a library's OWN `BaseMatcher` subclass, which is what ssg-md's eleven
+  sites pass. The matcher expression is bound to a local BEFORE the intercept, which is where java
+  evaluated it.
+
+Blast: 25 member digests over five suites — 20 converted statements plus their five owning units, and
+NOTHING else (§3's attribution gate). `catalog(consulted)`'s denominators moved by exactly the
+emission: `+22` Applies (20 `intercept` + 11 `matches` + 11 `assert`, less the 20 `thrown.expect`
+calls removed) and `+22` ValDefs (11 `bpMatcher`/`bpThrown` pairs).
+
+*Fix kind: (a) engine. The `@Rule` finding stays at 6 — the FIELD is still emitted and still never
+applied — and its advice now says which rule class is the exception, because a refusal that has
+stopped being total is a refusal whose text has stopped being true.*
+
 ---
 
 ## 7. Measurement discipline — the ones that will mislead you

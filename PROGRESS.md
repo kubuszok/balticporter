@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
-| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is a THIRTEENTH module (`flexmark-util`) and a second lane — **723** emitted, **0 lost**, not yet run (§10.6.6) | **27** main + **0** test (243 at first emit, 131 at the first `RefChecks` run, 42 after wave 19, 34 after wave 20; §10.6.3, all classified — the typer count is ZERO and these 32 are `RefChecks` and the checks behind it) |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is a THIRTEENTH module (`flexmark-util`) and a second lane — **723** emitted, **0 lost**, **703 passing / 20 failing** (§10.6.6) | **0** main + **0** test after wave 23 (243 at first emit, 131 at the first `RefChecks` run, 42 after wave 19, 34 after wave 20, 27 after wave 21-22; §10.6.3, every one of them classified — the typer reached zero at wave 17 and `RefChecks` has run) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2807,7 +2807,7 @@ not an engine change.
 | `portability(emitted)` | **18** sites against 37 rules — `javax.imageio.ImageIO` 8, `java.lang.reflect.Array` 2, `java.nio.file.Files` 2, and one each of `javax.swing.*` (2), `java.net.URL*` (3), `java.text.MessageFormat`. Six `substitutions-drop` remedies published, four of them naming exactly the types the hand port silently omitted |
 | `dependency-coverage` | **10 of 10** — `java.util.Locale` 6 and `java.text.NumberFormat` 4, both answered by `scala-java-locales` on both non-JVM backends. Not a call to remove; a coordinate to declare |
 | `decisions.tsv` | **2,014 rows** — 715 `RetypedSignature`, 507 `RenamedMember`, 458 `RenamedPackage`, 146 `ForcedClassInit`, 107 `FunnelledCtor`, 57 `WidenedVisibility`, 12 `DroppedSuperCall`, 10 `InjectedMember`, 2 `RetainedParent` |
-| tests | **723 emitted, 0 lost, and RUN FOR THE FIRST TIME AT WAVE 23: 683 passing, 40 failing.** 37 of the 40 are JUnit's `ExpectedException` `@Rule`, which the port's own refusal lane has predicted since wave 7 and which the run confirms 1:1; 2 are §4.4's two-representations family met at an `assertEquals`; **1 is the port's own uncensused residue** (§10.6.6). Blocked until wave 23 on the `RefChecks` census, since the lane runs the suite only at a WHOLE-compile of zero** — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
+| tests | **723 emitted, 0 lost, RUN FOR THE FIRST TIME AT WAVE 23 (683 passing, 40 failing) and 703 passing / 20 failing after wave 24.** 37 of the original 40 were JUnit's `ExpectedException` `@Rule`, which the port's own refusal lane had predicted since wave 7 and which the run confirmed 1:1; wave 24 translated 20 of those and refuses the other 17 at ONE guard (`ENGINE-LIMITS.md` X5); 2 are §4.4's two-representations family met at an `assertEquals`; **1 is the port's own uncensused residue** (§10.6.6). Blocked until wave 23 on the `RefChecks` census, since the lane runs the suite only at a WHOLE-compile of zero** — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
 
 **The behavioural gate is now BUILT and does not yet RUN, which is a smaller gap than the one this
 paragraph used to describe and is not zero.** §3 is explicit about what a compile-error count is
@@ -3621,7 +3621,7 @@ this lane counts a different tree. The two numbers are not each other's residue.
 | scalac errors | **ZERO on one compile of both source sets after wave 23 — 0 main, 0 test, 0 elsewhere, which is what let the suite run** (27 = 27 + 0 after wave 21, every one a `RefChecks`-era row) (34 = 34 + 0 after wave 20; 42 = 42 + 0 after wave 19; 131 = 131 + 0 after wave 18) (1 = 1 + 0 after wave 17, and that 1 was POST-TYPER too; 2 = 2 + 0 after wave 16; 19 = 19 + 0 after wave 13; 30 = 30 + 0 after wave 12; 40 = 34 + 6 after wave 11; 42 = 35 + 7 after wave 10; 63 = 38 + 25 after wave 9; 84 = 40 + 44 before that). Wave 10 closed twenty-one in two commits: G28's ascription took the twelve `tagLine` rows and one of the main set's, and K23's built bound-method-reference arm took six `PlaceholderReplacer` rows and two more of the main set's. Wave 11 closed two more with ONE fix, one on each side. Wave 13 closed eleven in five commits, every one of them main-set. Wave 20 closed the eight-row `getBuilder` family, main-set; wave 21 closed K28.2's two field-shadow rows, the anonymous-body `E037`, the visibility row and the three substituted-override rows, main-set; wave 23 closed the whole remaining 27 with K28.1's bridge, main-set. Baselined at **0** against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 27 stays `md-measure`'s and is reproduced by that lane alone — **the two figures are equal now precisely because the test set is empty, and they are still two measurements** |
 | **THE TEST SOURCE SET IS AT ZERO — wave 12** | The last six were ONE family and it was a MAIN-set residue read from a caller: `BitFieldSet`, K25's held-back `iterator()` met by a `for` loop over a class whose parent stayed `java.util.AbstractSet` (three `foreach is not a member`, three `Found: java.util.Iterator`). Wave 11 had measured the mapping that closes it and REVERTED it, because alone it opens four `super.<JDK default>` rows `mutable.Set` cannot answer; wave 12 built that obligation into the phase and the mapping landed free (`ENGINE-LIMITS.md` K29). `collection-boundary` on this lane 6 → 4, the two `ClassFileOverride` rows on `BitFieldSetTest#iterator` falling with the errors they named — the attribution §5 requires of a lane that falls. 6 member digests moved, all in `BitFieldSetTest`. **What this does NOT mean is that the suite runs**: the lane compiles BOTH source sets and gates the run on the whole figure, which is 30 |
 | by owner | **0 of fifty-two files.** `HtmlAppendableBaseTest`, `HtmlBuilderTest`, `PlaceholderReplacerTest`, `PlainSegmentBuilderTest` and now `BitFieldSetTest` are all clean. Every wave from 9 onwards closed a test-set family by closing a MAIN-set one, which is the shape this table has been recording since it was written: no error in this suite was ever the suite's own |
-| test-framework refusals | **26, every one reported by the phase with its §1 classification** — `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (`ExpectedException`; the field is emitted and NEVER APPLIED, so an expected throw propagates and MUnit records a FAILURE rather than a silent pass), and one hamcrest `Description`. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
+| test-framework refusals | **43 after wave 24, from 26, and the rise is the refusal lane arriving rather than a regression** — `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (the FIELDS, still emitted and still never applied), one hamcrest `Description`, and **`ExpectedException#non-statement-position` × 17** — the sites wave 24's translation DECLINED, one row per site naming its guard, where before there was one row per FIELD and no site-level population at all. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
 
 **THE SUITE RAN FOR THE FIRST TIME AT WAVE 23 — 683 PASSING, 40 FAILING OF 723, AT 0 COMPILE ERRORS
 ON BOTH SOURCE SETS AND 0 TESTS LOST.** K28.1's bridge took the main set 27 -> 0, which is what the
@@ -3630,7 +3630,7 @@ The census, every row classified and every count DERIVED rather than eyeballed:
 
 | what | how many | how it is derived |
 |---|---|---|
-| **JUnit's `ExpectedException` `@Rule`, unported** | **37** | `grep -c "thrown.expect"` over the six suites — `OrderedMultiMapTest` 12, `BitFieldSetTest` 11, `OrderedMapTest` 6, `UtilsTest` 5, `OrderedSetTest` 2, `LineAppendableImplTest` 1 — matches the failure list **1:1**. Every one is `anchor=main-frame`, and the exception that escaped is EXACTLY the one the java test declared it expected (`ConcurrentModificationException`, `IllegalStateException: keySet[1]=1 and valueSet[0]=0 are out of sync`, `NullPointerException: … because "prefix" is null`). **These are the port being RIGHT**: java threw there too, and the harness has no way to say so |
+| **JUnit's `ExpectedException` `@Rule`, unported** | **37 at wave 23, `20 → 0` at wave 24 and the remaining 17 are ONE guard** | `grep -c "thrown.expect"` over the six suites — `OrderedMultiMapTest` 12, `BitFieldSetTest` 11, `OrderedMapTest` 6, `UtilsTest` 5, `OrderedSetTest` 2, `LineAppendableImplTest` 1 — matches the failure list **1:1**. Every one is `anchor=main-frame`, and the exception that escaped is EXACTLY the one the java test declared it expected (`ConcurrentModificationException`, `IllegalStateException: keySet[1]=1 and valueSet[0]=0 are out of sync`, `NullPointerException: … because "prefix" is null`). **These are the port being RIGHT**: java threw there too, and the harness has no way to say so |
 | **§4.4 family — an assertion over a value whose `toString` matches and whose CLASS does not** | **2** | both `test_getLineColumnAtIndex`, `anchor=assert-site`, both reading *values are not equal even if they have the same `toString()`: (0, 0)*. A `Pair` the mapping retyped to `scala.Tuple2` meeting java's own at an `assertEquals` — `ENGINE-LIMITS.md` K18's two-representations family read at an ASSERTION rather than at an `instanceof`, which is the one position K18 does not reach |
 | **genuine, uncensused** | **1** | `BitFieldSetTest.test_BitSetIteratorRemove`, `anchor=assert-site`. Not diagnosed here and deliberately not chased |
 
@@ -3641,6 +3641,34 @@ rather than a silent pass* — six `@Rule` FIELDS across six suites, thirty-seve
 them, and the run confirms the prediction exactly. That is a refusal enumeration doing the job §3
 says it is for, measured a wave and a half after it was written. And **the residue that is really the
 PORT's is three tests out of 723**, which is the number to quote — not `40`, and not the suite delta.
+
+**WAVE 24 BUILT THE MAPPING THE ROW ABOVE HAD BEEN WAITING FOR — 683 → 703 passing, 40 → 20 failing,
+at 0 errors and every check count flat.** The design was recorded at waves 8-10 and deferred three
+times for want of a running suite to validate it against (`CLAUDE.md` §3: an idiom-shaped transform
+may not ship on "the emitted text changed shape"), and the wave-23 run removed that reason. What
+shipped is `thrown.expect(E.class); rest` → `intercept[E] { rest }` with its seven deltas enumerated
+IN CODE (`TestFrameworkTransform.expectedException`), and the split is **20 converted / 17 refused**:
+
+- **20 convert** — the sites at STATEMENT POSITION in the test body. Eleven of them pass a hamcrest
+  MATCHER rather than a class literal (`ExceptionMatcher.match(…)`, a `BaseMatcher` subclass THIS
+  SUITE declares), and they need no per-matcher table: `matches(Object)` is the `Matcher` contract,
+  so `intercept[java.lang.Throwable]` plus `assert(m.matches(e))` is one translation for all of them,
+  with the matcher bound to a local BEFORE the intercept where java evaluated it. Which of `expect`'s
+  two overloads java resolved is read from the CALLEE's own formal and never guessed (§4.6);
+- **17 refuse**, every one of them `non-statement-position`: a `thrown.expect` inside a `while` or
+  `for` body, where java's arming reaches the rest of the iteration, every later iteration and
+  everything after the loop. `ENGINE-LIMITS.md` X5 carries both approximations that were rejected and
+  the lowering that WOULD reach all 37 — modelling the rule with a flag and a `try` — with the price
+  of building it. The refusal is now the largest population on this port's refusal lane and is
+  reported one row per SITE naming its guard, where before it was one row per FIELD.
+
+The residual delta no guard removes is the catch policy: junit's rule catches `Throwable` and MUnit's
+`intercept` catches `NonFatal`, so a fatal throwable the java test ACCEPTED fails here — never the
+reverse. It is counted on every converted test's `Decision` and stated in the phase's own report.
+
+Blast: **25 member digests over five suites** — the 20 converted statements plus their five owning
+units, and nothing else; `catalog(consulted)`'s two denominators moved by exactly `+22` Applies and
+`+22` ValDefs, which is the emission arithmetic and not a coincidence.
 
 **Do NOT read the 40 as a regression risk of the bridge.** The suite had never run before this wave,
 so there is no before to compare against and no honest attribution in either direction; what CAN be
@@ -3671,61 +3699,40 @@ neither needs a manifest entry.
   second conjunct fails on the FIRST pass — the drop has to be a FIXPOINT (*converted, and either
   declares a `@Test` or is itself droppable*), cycle-safe, or the one class at the root of the tree
   stays refused while its whole subtree goes. The other eight list real suites and pass as written.
-- **`@Rule ExpectedException` (6).** The `@Test(expected = E.class)` row of `CLAUDE.md` §4.4, met at
-  JUnit's other spelling — and with the same failure, one step louder: the field is emitted, nothing
-  applies it, so the expected throw propagates and MUnit records a FAILURE where java recorded a
-  pass. The mechanical image exists: `thrown.expect(E.class)` at statement position means java wraps
-  the REST OF THE TEST, so the arm is `intercept[E] { <the remaining statements> }` — the shape the
-  phase already emits for `@Test(expected)`. Four deltas to enumerate before it ships, each of which
-  must be a guard or a counted refusal: `expectMessage`/`expectCause` (an added assertion, not a
-  different wrap), a `thrown` reference the arm does not understand (refuse), an `expect` call that
-  is CONDITIONAL rather than at statement position (refuse — java's rule is armed either way and
-  scala's `intercept` is not), and the `@Before` methods this phase inlines at the head of each test
-  body, which JUnit runs INSIDE the rule and which must therefore be inside the `intercept` too.
+- **`@Rule ExpectedException` (6) — BUILT AT WAVE 24, and what the design got wrong is worth one
+  sentence.** The `@Test(expected = E.class)` row of `CLAUDE.md` §4.4 at JUnit's other spelling; the
+  mapping, its seven deltas and the 20/17 split are above and in `ENGINE-LIMITS.md` X5. Two things
+  the wave-9 population read got wrong, both by reading `grep` output rather than the sites: the
+  hamcrest-matcher sites are eleven and not twelve (the twelfth is inside a `for` loop, so it takes
+  the position guard and not the matcher path), and the loop-position sites are seventeen and not
+  eight — `OrderedMapTest`'s six and `OrderedSetTest`'s one sit in `while` loops too. **The count
+  that mattered was right and the classification was not**, which is the shape of a census taken from
+  a line count rather than from a parse.
 
-  **THE POPULATION WAS READ AT WAVE 9 AND MOST OF IT TAKES THE REFUSAL ARM, which changes what this
-  design is worth rather than whether it is right.** Of the sites in this suite, `UtilsTest`'s five
-  are the shape the design assumes — `thrown.expect(NullPointerException.class)` at the top level of
-  the test body; `BitFieldSetTest`'s twelve pass a HAMCREST MATCHER
-  (`ExceptionMatcher.match(IllegalArgumentException.class, "…")`), which is not a class literal and
-  is the fifth delta nobody had listed — and `OrderedMultiMapTest`'s eight sit INSIDE a `while` loop,
-  which is the conditional-position refusal exactly. So a shipped arm converts roughly one field's
-  worth of tests here and REFUSES the rest, and the refusal population is what has to be reported
-  (§3). Two more deltas the enumeration needs and did not have: JUnit's rules are the OUTERMOST
-  statement (`BlockJUnit4ClassRunner.methodBlock` wraps `withRules` around `withBefores`/`withAfters`),
-  so an `@After` that throws is compared against the expectation in java and sits in a `finally`
-  OUTSIDE the `intercept` in the port; and a SECOND `expect` call in one test accumulates matchers in
-  java, which one `intercept` cannot express. Both are refusals, and both are cheaper to state now
-  than to re-derive.
-
-**BOTH ARE STILL DEFERRED AT WAVE 12, and the reason is unchanged even though the number that used to
-carry it has gone.** The TEST SET is now at **0** — wave 12 closed its last six with K29 — and the
-suite still does not run, because the lane gates on the WHOLE compile and the MAIN set is at 30. So a
-conversion's only evidence would still be that the emitted text changed shape, which is precisely the
-evidence `CLAUDE.md` §3 says a transform of this kind may not ship on. Both also move emitted FILES on
-six test lanes (nine of this port's fifty-two for the `Suite` drop, six fields for the rule), which is
-a blast worth spending once a suite can validate it and not before. The order is therefore unchanged
-and only its first step has moved: close the MAIN set, run the suite, then convert — at which point
-`ExpectedException`'s five convertible sites become five tests that stop FAILING, which is a number,
-rather than five statements that changed.
+**THE `Suite` DROP IS THE ONE STILL DEFERRED, and wave 24 removed the reason it shared with the
+rule.** The suite RUNS now, so a conversion's evidence is a number rather than a changed shape — the
+rule's 20 tests are that number. What is left is the aggregator drop's own blast: nine of this port's
+fifty-two emitted FILES, moving neither side of the discovery count, with a FIXPOINT guard nobody has
+written yet.
 
 | `omissions` / `portability(emitted)` / `collection-boundary` / `overload-risk` | 13 / 14 / **4** / 1,655 — the boundary lane fell by two at wave 12, and both were the `ClassFileOverride` rows on `BitFieldSetTest#iterator` that the K29 mapping closed together with the errors they named |
 | `collection-internal` | **0 after wave 9**, from 16 — every one of which was `DeclaredSubtype` and the SAME seam: `OrderedSet`, which `implements java.util.Set` and was therefore re-parented onto `mutable.Set`, handed to its own `addAll`/`retainAll` whose formal is the `Collection` target `JavaCollection`. scalac reported **9** of those 16 sites, because it stops after a few per statement, and all nine closed with the lane — the attribution `CLAUDE.md` §5 requires of a lane that falls (`ENGINE-LIMITS.md` K26) |
 | `manifest` | **1** — `BaseMapUnverified`, and see below |
 
-**THE SUITE DOES NOT RUN, and the lane says so rather than skipping the stage.** The run is gated on
-0 errors exactly as `liqp-measure` and `sg-measure` gate theirs; at **5** after wave 15 it prints that
-723 tests are emitted and none of them runs. A lane that silently skipped that stage would read as a
-lane whose tests passed. **And the gate is on the WHOLE compile, which is the right gate and is worth
-saying now that this source set is clean**: the suite links against the emitted library, so a
-main-set error is a declaration whose emitted form nothing has compiled — a suite run over them would
-be running against a library that does not exist. A gate on this source set alone would have gone
-green at wave 12 and told nobody anything.
+**THE RUN IS GATED ON THE WHOLE COMPILE, and until wave 23 the lane said the suite did not run
+rather than skipping the stage.** The gate is 0 errors, exactly as `liqp-measure` and `sg-measure`
+gate theirs; while the main set stood at 5, 13, 30 the lane printed that 723 tests were emitted and
+none of them ran, and a lane that silently skipped that stage would have read as a lane whose tests
+passed. **The gate being on the WHOLE compile is the right gate and is worth saying now that both
+sets are clean**: the suite links against the emitted library, so a main-set error is a declaration
+whose emitted form nothing has compiled — a suite run over them would be running against a library
+that does not exist. A gate on this source set alone would have gone green at wave 12 and told
+nobody anything.
 
-**And the figure to hold this lane to is the WHOLE-COMPILE one, re-baselined at 5** (`13 → 5` across
-wave 15, every error of it main-set). `expected-lost` stays **0** and the discovery figure stays
-**723 → 723** in both directions, which is the statement that matters while the suite is still
-gated: nothing this wave did to the shared surface moved one test out of the emission.
+**And the figures to hold this lane to are the WHOLE-COMPILE error count, now 0, and the two the
+suite added at wave 23.** `expected-lost` stays **0** and the discovery figure stays **723 → 723**
+in both directions — nothing any wave did to the shared surface has moved one test out of the
+emission — and `tests.tsv` is the pass/fail baseline beside them.
 
 **What building it found in the BASE, which is the part worth carrying forward.** The first run
 reported **459 fatal `manifest` findings** — one per type — saying the base's published map had no

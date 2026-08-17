@@ -80,7 +80,7 @@ final class TestFrameworkTransform(
     testMember: String = "test",
 ) extends Phase, balticporter.core.SurfacePolicy:
 
-  import TestFrameworkTransform.{Finding, Fix, MinArity, NumericRank, Roots}
+  import TestFrameworkTransform.{Expect, ExpectMsg, Finding, Fix, MinArity, NumericRank, Roots}
 
   def name: String = "junit->portable-suite"
 
@@ -127,6 +127,22 @@ final class TestFrameworkTransform(
     * is reported, never guessed at. */
   private val MunitMembers = Set("assertEquals", "assertNotEquals", "assert", "fail",
     "assertEqualsFloat", "assertEqualsDouble", "intercept")
+  /** JUnit's OTHER spelling of `@Test(expected = …)`, and the one with a state machine behind it.
+    *
+    * `@Rule public ExpectedException thrown = ExpectedException.none()` arms a matcher at the
+    * `thrown.expect(…)` CALL and applies it to whatever the test throws from there on. There is no
+    * shape to derive a general `@Rule` from — see [[adviceFor]] — but THIS rule's contract is
+    * JUnit's own and is written down (`ExpectedExceptionStatement.evaluate`), so it is a §1(a) fact
+    * about JUnit and MUnit and not policy. [[expectedException]] translates it; the seven
+    * behavioural differences between java's shape and the emitted one are enumerated there, each
+    * one a guard, a shape or a counted refusal (`CLAUDE.md` §3). */
+  private val ExpectedExceptionCls = "org.junit.rules.ExpectedException"
+  private val RuleAnn        = "org.junit.Rule"
+  private val ClassRuleAnn   = "org.junit.ClassRule"
+  /** the ONE hamcrest member this phase names, and it names it because `expect(Matcher)` is one of
+    * junit's two overloads: `matches(Object)` is the `Matcher` CONTRACT, so asserting it over the
+    * intercepted value is universal rather than one translation per matcher class. */
+  private val HamcrestMatcher = "org.hamcrest.Matcher"
   private val TestAnn        = "org.junit.Test"
   private val BeforeAnn      = "org.junit.Before"
   private val AfterAnn       = "org.junit.After"
@@ -163,6 +179,12 @@ final class TestFrameworkTransform(
   private var indicesSym: SymId = SymId.None
   private var eqSym: SymId      = SymId.None
   private var neSym: SymId      = SymId.None
+  /** members the `ExpectedException` translation emits: hamcrest's own `matches`, and the two
+    * `java.lang.Throwable`/`java.lang.String` members junit's `expectMessage(String)` means. */
+  private var matchesSym: SymId    = SymId.None
+  private var getMessageSym: SymId = SymId.None
+  private var containsSym: SymId   = SymId.None
+  private var throwableType: TypeRepr = TypeRepr.NoType
   /** distinguishes the locals of one emitted array-with-delta loop from the next. */
   private var nextTmp: Int = 0
 
@@ -175,6 +197,10 @@ final class TestFrameworkTransform(
   private val found = collection.mutable.ListBuffer[Finding]()
   private var suitesConverted = 0
   private var testsConverted  = 0
+  /** `thrown.expect(…)` sites this run turned into an `intercept`; the DECLINED ones are one
+    * [[Finding]] each, naming the guard (`CLAUDE.md` §3 — a count of conversions says nothing about
+    * what was refused, and `refused = 0` is a bar met by converting nothing). */
+  private var rulesConverted  = 0
 
   /** JS-E07's citation state — set when [[promote]] actually widened an operand, read by
     * [[transformDefDef]], which the bottom-up traversal reaches AFTER the body it belongs to.
@@ -194,7 +220,7 @@ final class TestFrameworkTransform(
   override def run(program: Program): Program =
     nextId = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
     added.clear(); consumed.clear(); found.clear()
-    suitesConverted = 0; testsConverted = 0
+    suitesConverted = 0; testsConverted = 0; rulesConverted = 0
     suiteSym = mint(suite.substring(suite.lastIndexOf('.') + 1), suite)
     testSym  = mint(testMember, testMember)  // MUnit's own `test`, applied CURRIED
     interceptSym = mint("intercept", "intercept") // MUnit's own, inherited from the suite
@@ -213,6 +239,13 @@ final class TestFrameworkTransform(
     // marker for an operator, which renders infix instead of `.eq(x)`.
     eqSym = mint("eq", "scala.<op>#eq")
     neSym = mint("ne", "scala.<op>#ne")
+    // …and the three members the ExpectedException translation selects. Minted unqualified for the
+    // reason the widening members above are: a `Select`'s member renders by SIMPLE name against
+    // whatever the receiver's own type declares — `org.hamcrest.Matcher#matches`,
+    // `java.lang.Throwable#getMessage`, `java.lang.String#contains`.
+    matchesSym    = mint("matches", "matches")
+    getMessageSym = mint("getMessage", "getMessage")
+    containsSym   = mint("contains", "contains")
     nextTmp = 0
     val byName = program.symbols.all.groupBy(_.fullName)
     def prim(fqn: String): TypeRepr =
@@ -221,6 +254,7 @@ final class TestFrameworkTransform(
           .getOrElse(mint(fqn.substring(fqn.lastIndexOf('.') + 1), fqn)))
     primTypes = (NumericRank.keySet + "scala.Unit" + "scala.Boolean").map(t => t -> prim(t)).toMap
     objType = prim("java.lang.Object")
+    throwableType = prim("java.lang.Throwable")
     unitSym = headSymOf(primTypes("scala.Unit"))
 
     val symbols0 = SymbolTable(program.symbols.all ++ added)
@@ -273,6 +307,16 @@ final class TestFrameworkTransform(
   private def report(): Unit =
     println(s"[$name] converted $suitesConverted suite(s), $testsConverted test(s); " +
             s"UNTRANSLATED test-framework constructs: ${found.size}")
+    if rulesConverted > 0 then
+      // THE ONE DELTA NEITHER A GUARD NOR A SHAPE REMOVES, stated where the conversions are counted
+      // (`CLAUDE.md` §3(iii)). Its DIRECTION is the whole of why it is admissible: junit's rule
+      // catches `Throwable` and MUnit's `intercept` catches `NonFatal`, so a body throwing an
+      // `InterruptedException`, a `LinkageError`, a `VirtualMachineError` or a `ControlThrowable`
+      // passed in java and FAILS here. It never passes where java failed.
+      println(s"  ExpectedException @Rule: $rulesConverted `thrown.expect(…)` site(s) -> `intercept`; " +
+              "each carries ONE residual difference — junit's rule catches Throwable, MUnit's " +
+              "`intercept` catches NonFatal, so a fatal throwable the java test ACCEPTED fails here " +
+              "(never the reverse)")
     if found.nonEmpty then
       // grouped, because one unhandled annotation is typically on every method of a suite.
       found.groupBy(_.construct).toList.sortBy(-_._2.size).foreach { (c, fs) =>
@@ -341,10 +385,13 @@ final class TestFrameworkTransform(
 
   private def adviceFor(fqn: String): (Fix, String) = fqn match
     case "org.junit.Rule" | "org.junit.ClassRule" => (Fix.EngineRule,
-      "a JUnit @Rule wraps every test in an arbitrary Statement (TemporaryFolder, ExpectedException, " +
-      "Timeout, …); there is no shape to derive it from. Replace it with an explicit fixture in the " +
-      "port's hand-written `src/`, or keep this suite on the JVM/JUnit path. The rule field is " +
-      "emitted as an ordinary field and NEVER APPLIED.")
+      "a JUnit @Rule wraps every test in an arbitrary Statement (TemporaryFolder, Timeout, …); " +
+      "there is no shape to derive it from. Replace it with an explicit fixture in the port's " +
+      "hand-written `src/`, or keep this suite on the JVM/JUnit path. The rule FIELD is emitted as " +
+      "an ordinary field and NEVER APPLIED. ONE rule class is the exception: an " +
+      "`org.junit.rules.ExpectedException`'s `expect`/`expectMessage` calls ARE translated to " +
+      "`intercept` where they stand at STATEMENT POSITION in the test body — every site this phase " +
+      "declined is reported separately, one row per site naming its guard.")
     case "org.junit.runner.RunWith" => (Fix.EngineRule,
       "a custom runner (Parameterized, Suite, Enclosed) changes how tests are ENUMERATED, so the " +
       "converted suite runs a different SET of tests from java's — it converts as though the runner " +
@@ -767,11 +814,20 @@ final class TestFrameworkTransform(
         case d: Tree.DefDef if isAnnotated(d, AfterClassAnn) => d.symbol
       }
       consumed ++= setups ++ teardowns ++ classSetups ++ classTeardowns
+      // …and the `ExpectedException` @Rule FIELDS this class declares. Matched on the field's own
+      // TYPE and not on the annotation alone: `@Rule` is every rule class junit has, and this phase
+      // translates exactly one of them.
+      val ruleFields = cd2.body.collect {
+        case v: Tree.ValDef
+            if (hasAnn(v.symbol, RuleAnn) || hasAnn(v.symbol, ClassRuleAnn)) &&
+               nameOf(v.tpt.tpe) == ExpectedExceptionCls => v.symbol
+      }.toSet
       // `@Ignore` on the CLASS disables every test it declares.
       val allIgnored = hasAnn(cd.symbol, IgnoreAnn)
       if allIgnored then consumed += cd.symbol
       val body = cd2.body.flatMap {
-        case d: Tree.DefDef if isAnnotated(d, TestAnn) => List(testCase(d, setups, teardowns, allIgnored))
+        case d: Tree.DefDef if isAnnotated(d, TestAnn) =>
+          List(testCase(d, setups, teardowns, allIgnored, ruleFields))
         case other                                     => List(other)
       }
       suitesConverted += 1
@@ -811,6 +867,246 @@ final class TestFrameworkTransform(
     case TypeRepr.AppliedType(tc, _) => nameOf(tc)
     case _                           => ""
 
+  // -------------------------------------------------------------------------
+  // JUnit's ExpectedException @Rule -> MUnit's `intercept`
+  // -------------------------------------------------------------------------
+
+  /** `thrown.expect(E.class); rest` → `intercept[E] { rest }` — the `@Test(expected = …)` row of
+    * `CLAUDE.md` §4.4 met at JUnit's other spelling, and with the same failure one step louder: the
+    * rule field is emitted, nothing applies it, so the expected throw propagates and MUnit records a
+    * FAILURE where java recorded a pass. Measured at **37 of one suite's 40 failing tests**, every
+    * one of them the port being RIGHT about the library and wrong about the harness.
+    *
+    * The mechanical image exists because `ExpectedException` is not an arbitrary `@Rule`: junit
+    * WRITES ITS CONTRACT DOWN (`ExpectedExceptionStatement.evaluate` — run the base statement,
+    * catch `Throwable`, apply the accumulated matcher, and fail if nothing was thrown while a
+    * matcher is set), so `thrown.expect(…)` at statement position means java wraps THE REST OF THE
+    * TEST, which is the shape [[testCase]] already emits for `@Test(expected)`.
+    *
+    * ==THE SEVEN DIFFERENCES BETWEEN JAVA'S SHAPE AND THIS ONE==
+    *
+    * `CLAUDE.md` §3: every member of this set is (i) a structural GUARD, (ii) impossible in the
+    * SHAPE emitted, or (iii) COUNTED. A count of conversions says nothing about what was declined,
+    * so each guard below files ONE [[Finding]] PER SITE naming itself.
+    *
+    *  1. **POSITION.** Java's rule is armed from the `expect` CALL to the end of the test — across
+    *     the remaining iterations of an enclosing loop, out of every enclosing block, past the
+    *     statements after it. `intercept` wraps a LEXICAL region and cannot say that. GUARD: convert
+    *     only where the call stands at STATEMENT POSITION in the test method's own body block. A
+    *     call inside a loop, an `if`, a lambda or a nested block is declined
+    *     (`non-statement-position`) — measured at 17 of ssg-md's 37 sites, and note what an
+    *     unguarded wrap of "the rest of the enclosing block" would do to them: a body that completes
+    *     normally would fail with *expected exception* where java simply ran the next iteration.
+    *  2. **THE MATCHER OVERLOAD.** `expect(Matcher)` is not a class literal, so there is no type
+    *     argument to give `intercept`. SHAPE: intercept at `java.lang.Throwable` and assert the
+    *     matcher over the intercepted value — `matches(Object)` is the `org.hamcrest.Matcher`
+    *     CONTRACT, so this is one translation for every matcher class rather than a table of them.
+    *     The matcher expression is bound to a local BEFORE the intercept, which is where java
+    *     evaluated it. Which overload java resolved is read from the CALLEE'S OWN FORMAL and never
+    *     guessed from the argument (§4.6): an unreadable signature declines (`expect-overload`).
+    *  3. **`expectMessage`.** An added matcher, not a different wrap — junit's `expectMessage(String)`
+    *     is `containsString`, so it is `assert(e.getMessage().contains(s))` after the intercept, and
+    *     `expectMessage(Matcher)` is that matcher over `getMessage()`. Bound to locals in call
+    *     order for the same reason as 2.
+    *  4. **TWO `expect` CALLS IN ONE TEST.** Java ACCUMULATES matchers and requires all of them; one
+    *     `intercept` has one type argument. GUARD, declined as `double-expect`.
+    *  5. **ANY OTHER USE OF THE FIELD.** `expectCause`, `handleAssertionErrors`, a `thrown` passed
+    *     as an argument or assigned — each is a rule state this translation does not model. GUARD:
+    *     the number of references to the field must equal the number of `expect`/`expectMessage`
+    *     calls this pass matched at statement position, so anything else declines
+    *     (`unsupported-member` / `non-statement-position`).
+    *  6. **`@After` ORDERING.** JUnit's rules are the OUTERMOST statement
+    *     (`BlockJUnit4ClassRunner.methodBlock` wraps `withRules` around `withAfters`), so a teardown
+    *     that throws is compared against the expectation in java, while an inline `intercept` sits
+    *     INSIDE the `try … finally` this phase emits for `@After`. GUARD: a class declaring both is
+    *     declined (`after-ordering`). `@Test(expected = …)` on the same method declines beside it,
+    *     because java nests the two checks and one `intercept` cannot.
+    *  7. **THE CATCH POLICY.** Junit's rule catches `Throwable`; MUnit's `intercept` catches
+    *     `NonFatal`. So a body throwing an `InterruptedException`, a `LinkageError`, a
+    *     `VirtualMachineError` or a `ControlThrowable` PASSED in java and fails here. COUNTED — one
+    *     line in [[report]] over the conversions, and a `rule=` pair on each converted test's
+    *     `Decision`. It is the one delta no guard removes, and its DIRECTION is why it is
+    *     admissible: the port fails where java passed, never the reverse.
+    *
+    * @return the body to emit, and the sentence the test's `Decision` carries (empty where nothing
+    *         was translated — a declined site records its own [[Finding]] instead). */
+  private def expectedException(d: Tree.DefDef, body: Term, rules: Set[SymId],
+                                hasAfter: Boolean, hasExpectedAnn: Boolean)
+                               (using p: Program): (Term, String) =
+    val refs =
+      if rules.isEmpty then 0
+      else StandardTraversal.scanTerm(body, 0)((n, t) => if isRuleRef(t, rules) then n + 1 else n)
+    if refs == 0 then (body, "")
+    else
+      def refuse(guard: String, why: String): (Term, String) =
+        found += Finding(s"$ExpectedExceptionCls#$guard", d.origin, Fix.EngineRule, why)
+        (body, "")
+      body match
+        case b: Tree.Block =>
+          val calls = b.stats.zipWithIndex.flatMap { (s, i) => ruleCallAt(s, rules).map((i, _)) }
+          val expects = calls.filter(_._2._1 == "expect")
+          val known   = calls.forall((_, c) => c._1 == "expect" || c._1 == "expectMessage")
+          val span    = if calls.isEmpty then Nil else (calls.head._1 to calls.last._1).toList
+          if calls.sizeIs != refs then refuse("non-statement-position",
+            s"$refs reference(s) to the ExpectedException rule field in this test and only " +
+            s"${calls.size} of them stand at STATEMENT POSITION in the test body. Java's rule is " +
+            "armed from the `expect` CALL to the end of the test — across the rest of an enclosing " +
+            "loop and out of every enclosing block — and `intercept` wraps a LEXICAL region, so a " +
+            "call under a loop, an `if` or a lambda has no faithful image. Hoist the call to the " +
+            "top level of the test body, or keep this suite on the JVM/JUnit path.")
+          else if !known then refuse("unsupported-member",
+            "this test reaches the ExpectedException rule through a member other than `expect` / " +
+            s"`expectMessage` (${calls.map(_._2._1).distinct.sorted.mkString(", ")}). Each is a " +
+            "rule state this translation does not model, so the whole method is left alone rather " +
+            "than half-converted.")
+          else if expects.sizeIs > 1 then refuse("double-expect",
+            s"${expects.size} `expect` calls in one test. Java ACCUMULATES matchers and requires " +
+            "ALL of them; `intercept` takes ONE type argument, so the conjunction has no image.")
+          else if expects.isEmpty then refuse("expect-message-only",
+            "this test calls `expectMessage` without an `expect`, so junit's expectation is a " +
+            "matcher over the message alone and there is no exception type for `intercept`.")
+          else if calls.map(_._1) != span then refuse("non-contiguous",
+            "the ExpectedException calls are separated by other statements. Java arms them all " +
+            "before the throwing statement whatever stands between; hoisting them together here " +
+            "would move whatever those statements do, so the site is declined rather than " +
+            "reordered.")
+          else if hasAfter then refuse("after-ordering",
+            "this suite declares `@After`. JUnit's rules are the OUTERMOST statement, so a " +
+            "teardown that throws is compared against the expectation; an `intercept` emitted in " +
+            "the body sits INSIDE the `try … finally` this phase emits for `@After`, which is a " +
+            "different program wherever the teardown can throw.")
+          else if hasExpectedAnn then refuse("expected-annotation",
+            "this method carries `@Test(expected = …)` beside the rule. Java nests the two checks " +
+            "and one `intercept` expresses one of them.")
+          else expectKind(expects.head._2._2) match
+            case Left(guard) => refuse(guard,
+              "junit's `expect` has two overloads — `expect(Class<? extends Throwable>)` and " +
+              "`expect(Matcher<?>)`. Which one java resolved is read from the CALLEE's own formal, " +
+              "and this call's is neither a `java.lang.Class` at a literal `classOf` nor an " +
+              s"`$HamcrestMatcher`. A guess here would be a fabricated fact (CLAUDE.md §4.6).")
+            case Right(ex) =>
+              val msgs = calls.filter(_._2._1 == "expectMessage").map((_, c) => expectMsgKind(c._2))
+              if msgs.exists(_.isLeft) then refuse("expect-message-overload",
+                "junit's `expectMessage` has two overloads — `expectMessage(String)` (which means " +
+                "`containsString`) and `expectMessage(Matcher<String>)`. This call's formal is " +
+                "neither, so which one java resolved cannot be read.")
+              else
+                rulesConverted += 1
+                (interceptRule(b, calls.head._1, calls.last._1, ex, msgs.flatMap(_.toOption)),
+                 ex match
+                   case Expect.OfClass(t)  => s"thrown.expect(${nameOf(t)}) -> intercept[${nameOf(t)}]"
+                   case Expect.OfMatcher(_) =>
+                     "thrown.expect(<matcher>) -> intercept[java.lang.Throwable] + matches(…)")
+        case _ => refuse("non-block-body",
+          "this test's body is not a statement block, so the `expect` call cannot be at statement " +
+          "position in it.")
+
+  /** the rewritten body — `before`, the eagerly-bound matcher locals, the `intercept`, the
+    * assertions the matchers mean.
+    *
+    * `lo`/`hi` bound the CONTIGUOUS run of rule calls the guards above verified; everything after
+    * `hi` (the block's own `expr` and its trailing trivia included) is what java's rule wrapped, so
+    * that is exactly the intercepted body. The consumed statements' comments move onto the
+    * `intercept` that replaces them — a `@Rule` call's javadoc is about the expectation and the
+    * expectation is still there. */
+  private def interceptRule(b: Tree.Block, lo: Int, hi: Int, ex: Expect, msgs: List[ExpectMsg]): Term =
+    val o     = b.stats(lo) match { case t: Term => t.origin; case _ => b.origin }
+    val inner = Tree.Block(b.stats.drop(hi + 1), b.expr, b.tpe, o, b.trailing)
+    val exT   = ex match
+      case Expect.OfClass(t)   => t
+      case Expect.OfMatcher(_) => throwableType
+    // the matcher operands, bound WHERE JAVA EVALUATED THEM — at the `expect` call, before the body
+    // runs. A literal needs no binding and gets none; anything else does, or the rewrite would move
+    // an arbitrary expression across the code it is about to assert on.
+    val pre  = List.newBuilder[Statement]
+    val post = List.newBuilder[Statement]
+    def bound(nm: String, t: Term): Term = t match
+      case _: Tree.Literal => t
+      case _ =>
+        val s = mint(nm, nm, Flags(), t.tpe)
+        pre += Tree.ValDef(s, TypeTree(t.tpe, o), Some(t), o)
+        Tree.Ident(s, t.tpe, o)
+    val matcher = ex match
+      case Expect.OfClass(_)   => scala.None
+      case Expect.OfMatcher(m) => Some(bound("bpMatcher", m))
+    val msgOperands = msgs.zipWithIndex.map {
+      case (ExpectMsg.Contains(t), i) => Left(bound(s"bpMessage$i", t))
+      case (ExpectMsg.ByMatcher(m), i) => Right(bound(s"bpMessage$i", m))
+    }
+    // …and the intercepted value, named only where something has to be asserted ABOUT it.
+    val call0 = intercept(interceptSym, exT, inner, o)
+    val stat  =
+      if matcher.isEmpty && msgOperands.isEmpty then call0
+      else
+        val s = mint("bpThrown", "bpThrown", Flags(), exT)
+        val ref = Tree.Ident(s, exT, o)
+        matcher.foreach(m => post += assertThat(invoke(m, matchesSym, List(ref), o),
+          "the exception did not satisfy the matcher the java test expected", o))
+        msgOperands.foreach {
+          case Left(txt) => post += assertThat(
+            invoke(message(ref, o), containsSym, List(txt), o),
+            "the exception message did not contain the text the java test expected", o)
+          case Right(m) => post += assertThat(invoke(m, matchesSym, List(message(ref, o)), o),
+            "the exception message did not satisfy the matcher the java test expected", o)
+        }
+        Tree.ValDef(s, TypeTree(exT, o), Some(call0), o)
+    val trivia = b.stats.slice(lo, hi + 1).collect { case t: Term => Tree.triviaOn(t) }.flatten
+    val head: Statement = stat match
+      case t: Term if trivia.nonEmpty => Tree.Commented(trivia, t)
+      case other                      => other
+    Tree.Block(b.stats.take(lo) ++ pre.result() ++ List(head) ++ post.result(),
+               Tree.Literal(Constant.UnitC, primTypes("scala.Unit"), o), b.tpe, b.origin)
+
+  private def message(e: Term, o: Origin): Term = invoke(e, getMessageSym, Nil, o)
+
+  private def invoke(recv: Term, m: SymId, args: List[Term], o: Origin): Term =
+    Tree.Apply(Tree.Select(recv, m, TypeRepr.NoType, o), args, m, TypeRepr.NoType, o)
+
+  private def assertThat(cond: Term, why: String, o: Origin): Term =
+    call("assert", List(cond, constTerm(Constant.StringC(why), "java.lang.String", o)), o)
+
+  /** a REFERENCE to one of this class's `ExpectedException` rule fields — `thrown` or
+    * `this.thrown`, and never the `expect` selection ON one, whose member symbol is junit's. */
+  private def isRuleRef(t: Term, rules: Set[SymId]): Boolean = t match
+    case Tree.Ident(s, _, _)     => rules(s)
+    case Tree.Select(_, s, _, _) => rules(s)
+    case _                       => false
+
+  /** a top-level statement that is a call ON a rule field: its member's simple name and the call. */
+  private def ruleCallAt(s: Statement, rules: Set[SymId])
+                        (using p: Program): Option[(String, Tree.Apply)] = s match
+    case t: Term => Tree.uncomment(t) match
+      case a @ Tree.Apply(Tree.Select(rcv, m, _, _), _, _, _, _) if isRuleRef(rcv, rules) =>
+        Some(p.symbolOf(m).map(_.name).getOrElse("") -> a)
+      case _ => scala.None
+    case _ => scala.None
+
+  /** WHICH `expect` overload java resolved, read from the CALLEE's own formal.
+    *
+    * The class form additionally needs a LITERAL `classOf`, because what `intercept` takes is a
+    * type ARGUMENT and a `Class` value is not one. A `Class`-typed variable is therefore declined
+    * rather than approximated. */
+  private def expectKind(a: Tree.Apply)(using p: Program): Either[String, Expect] = a.args match
+    case List(Tree.Literal(Constant.ClassOfC(t), _, _)) => Right(Expect.OfClass(t))
+    case List(arg) => formalOf(a) match
+      case Some(f) if nameOf(f) == HamcrestMatcher => Right(Expect.OfMatcher(arg))
+      case _                                       => Left("expect-overload")
+    case _ => Left("expect-overload")
+
+  private def expectMsgKind(a: Tree.Apply)(using p: Program): Either[String, ExpectMsg] = a.args match
+    case List(arg) => formalOf(a) match
+      case Some(f) if nameOf(f) == "java.lang.String"  => Right(ExpectMsg.Contains(arg))
+      case Some(f) if nameOf(f) == HamcrestMatcher     => Right(ExpectMsg.ByMatcher(arg))
+      case _                                           => Left("expect-message-overload")
+    case _ => Left("expect-message-overload")
+
+  /** the callee's ONE declared parameter type, where the frontend could read the class file. An
+    * external member with no signature answers `None`, which every caller here declines on. */
+  private def formalOf(a: Tree.Apply)(using p: Program): Option[TypeRepr] =
+    p.symbolOf(a.method).map(_.info).collect {
+      case TypeRepr.MethodType(List((_, f)), _, _) => f
+    }
+
   /** `@Test def m(): Unit = { … }` → `test("m") { … }`, a statement in the class body.
     *
     * An `expected = classOf[E]` argument becomes `intercept[E] { … }` — NOT dropped. A test that
@@ -824,7 +1120,7 @@ final class TestFrameworkTransform(
     * green one that means nothing. MUnit does not evaluate an ignored body, so the by-name
     * argument keeps the code compiling without running it. */
   private def testCase(d: Tree.DefDef, setups: List[SymId], teardowns: List[SymId],
-                       allIgnored: Boolean)(using p: Program): Statement =
+                       allIgnored: Boolean, ruleFields: Set[SymId])(using p: Program): Statement =
     val nm = p.symbolOf(d.symbol).map(_.name).getOrElse("test")
     val expectsThrow: Option[TypeRepr] = p.symbolOf(d.symbol).flatMap(_.annotations
       .filter(a => nameOf(a.tpe) == TestAnn)
@@ -851,9 +1147,14 @@ final class TestFrameworkTransform(
       // `@Test(expected = classOf[E])` asserts that the body THROWS. Run bare it would pass while
       // checking nothing — the silent-omission shape this engine exists to prevent — so it becomes
       // MUnit's `intercept[E] { … }`, which asserts exactly what java asserted.
+      // …and JUnit's OTHER spelling of the same assertion — the `ExpectedException` @Rule, whose
+      // arming call stands INSIDE the body. `ruleNote` is empty where the class declares no such
+      // rule, where this test never touches it, and where a guard declined the site.
+      val (ruleBody, ruleNote) =
+        expectedException(d, d.rhs.get, ruleFields, teardowns.nonEmpty, expectsThrow.isDefined)
       val body0 = expectsThrow match
-        case Some(exTpe) => intercept(interceptSym, exTpe, d.rhs.get, d.origin)
-        case scala.None  => d.rhs.get
+        case Some(exTpe) => intercept(interceptSym, exTpe, ruleBody, d.origin)
+        case scala.None  => ruleBody
       // JUnit's own nesting: afters(befores(expectException(invoke))). So the `@Before` calls go
       // INSIDE the try — a setup that throws still runs teardown, as in java — and the
       // expected-exception check goes inside them both.
@@ -887,6 +1188,7 @@ final class TestFrameworkTransform(
           "to"        -> s"""$testMember("$nm") { … } registered on $suite""",
           "ignored"   -> (if ignored then "yes" else "no"),
           "intercept" -> expectsThrow.map(nameOf).getOrElse(""),
+          "rule"      -> ruleNote,
           "inlined"   -> (setups ++ teardowns).flatMap(s => p.symbolOf(s).map(_.name)).mkString(", "),
           "why"       -> ("a JUnit suite runs on the JVM alone; and MUnit has neither @Before " +
             "(which JUnit runs before EVERY test, on a fresh instance) nor @After (which it runs " +
@@ -918,6 +1220,17 @@ object TestFrameworkTransform:
     case EngineRule  extends Fix("a") // a Java/Scala fact — fix the engine, unparameterised
     case PhasePolicy extends Fix("b") // configure an existing phase for this library
     case LibraryRule extends Fix("c") // write a rule only this library could ever need
+
+  /** WHICH of junit's two `ExpectedException.expect` overloads a call resolved to — the answer read
+    * from the callee's own formal, never from the argument's shape. */
+  enum Expect:
+    case OfClass(tpe: TypeRepr)
+    case OfMatcher(matcher: Term)
+
+  /** …and the same for `expectMessage`, whose `String` overload MEANS `containsString`. */
+  enum ExpectMsg:
+    case Contains(text: Term)
+    case ByMatcher(matcher: Term)
 
   /** One test-framework construct this phase did not translate. */
   final case class Finding(construct: String, where: Origin, fix: Fix, advice: String):
