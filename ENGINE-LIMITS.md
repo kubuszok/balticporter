@@ -8873,7 +8873,13 @@ Two smaller things measured on the way:
   CONTRACT, so `intercept[java.lang.Throwable]` + `assert(m.matches(e))` is one translation for every
   matcher class — including a library's OWN `BaseMatcher` subclass, which is what ssg-md's eleven
   sites pass. The matcher expression is bound to a local BEFORE the intercept, which is where java
-  evaluated it.
+  evaluated it, and where several operands are bound they go IN CALL ORDER: grouping them by KIND
+  reintroduces exactly the reordering the binding exists to prevent, and both orders compile.
+- **`@Rule` and `@ClassRule` are TWO constructs and the lookup must say so.** A method rule wraps
+  each test; a class rule wraps the whole class run, so the region an `expect` arms is not the one an
+  `intercept` in a test body wraps. NO corpus source declares the shape, which is precisely why the
+  exclusion is a COUNTED row naming its guard rather than an absence — nothing would ever have found
+  it.
 
 Blast: 25 member digests over five suites — 20 converted statements plus their five owning units, and
 NOTHING else (§3's attribution gate). `catalog(consulted)`'s denominators moved by exactly the
