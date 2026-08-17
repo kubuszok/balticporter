@@ -4271,6 +4271,23 @@ one bears none — the honest state is one counted row. `AdmonitionParserTest` i
 admitted suite and it asserts the registration exactly as `AsideParserTest` does, through the base's
 `Parser.Builder` and out again through `Parser.SPECIAL_LEAD_IN_HANDLERS`.
 
+**BATCH 3 — THE LARGE END, and it opens with the module batch 2 took back out.** These are the
+fourteen-to-twenty-eight-file modules plus `ext-gfm-tasklist`, which rejoins at the position size
+gives it now that `ENGINE-LIMITS.md` C15 is closed. `units`/`errors` are the extension's own
+contribution and `residue` is what it ADDED to a lane.
+
+| # | extension | java | units | errors | tests | residue it added |
+|---|---|---:|---:|---:|---:|---|
+| 20 | `ext-gfm-tasklist` | 12 | 10 | 0 | — | `omissions` +2 (two dropped annotations), `overload-risk` +5 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
+
+**AND THE ORDER FOR THE REMAINING NINE IS ASCENDING SIZE WITH ONE BEND, read off the IMPORTS rather
+than off the poms.** Only two of the nine reference another extension at all —
+`ext-macros` imports `com.vladsch.flexmark.ext.gitlab` and `ext-enumerated-reference` imports
+`com.vladsch.flexmark.ext.attributes` — so `gitlab` (16) precedes `macros` (14), which is the one
+place ascending size bends, and `attributes` (20) precedes `enumerated-reference` (23), which
+ascending size already gives. None of the nine imports anything outside `com.vladsch.flexmark`,
+`java.*` and the annotations jar, so `FlexmarkClasspath.Coordinates` does not move again.
+
 **THE PER-EXTENSION CHECKLIST**, for the waves that follow:
 
 1. **read the module's imports** — `grep -rh '^import ' <mod>/src/main/java | sort -u`. Everything
