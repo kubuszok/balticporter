@@ -3042,7 +3042,7 @@ object SpoonTir:
           val v  = f.getVariable
           val vt = tpe(v.getType)
           val id = defineLocal(v, vt)
-          Tree.ForEach(Tree.ValDef(id, tt(vt, v), None, originOf(v)), expr(f.getExpression), blockTerm(f.getBody), unitT, originOf(f), labelOf(f))
+          Tree.ForEach(Tree.ValDef(id, tt(vt, v), None, originOf(v)), iterableOperand(f.getExpression), blockTerm(f.getBody), unitT, originOf(f), labelOf(f))
         case f: CtFor =>
           val init = f.getForInit.asScala.toList.map(stmt)
           val cond = Option(f.getExpression).map(expr)
@@ -3131,6 +3131,63 @@ object SpoonTir:
         // size of the construct rather than the size of the file, and the gate still refuses to
         // ship the port (§6.4). `unitT` because a statement produces no value.
         case other => unlowered(other, s"statement ${SpoonKinds.nameOf(other.getClass)}", unitT)
+
+      /** THE ENHANCED-FOR'S ITERABLE, at the type JAVA READ IT AT — `ENGINE-LIMITS.md` G31.
+        *
+        * JLS 14.14.2 does not iterate the expression's own type: it looks `Iterable<T>` up among that
+        * type's supertypes and iterates at `T`. Scala's `for` is a `foreach` CALL on the expression
+        * as written, the java-shaped iterable's `foreach` is an EXTENSION, and applying an extension
+        * to a WILDCARD application means CAPTURE CONVERSION. Dotty performs that by substituting
+        * `Any` for the parameter, which is exact for an ordinary bound and cannot work for an
+        * F-BOUNDED one: the capture's upper bound comes out `Seq[Any]` while its own slot asks for
+        * `Seq[CAP]`, so the application is rejected at an INFERRED type (`E057`). No spelling of the
+        * wildcard repairs it — java's own `Seq<? extends Seq<?>>` fails identically, measured at
+        * scalac 3.8.4 — because the F-bound has no finite unrolling.
+        *
+        * So exactly there, and nowhere else, the operand is put at the supertype java read. The
+        * guard is the F-BOUND and not the wildcard: an ordinary bounded wildcard capture-converts
+        * unaided, and ascribing those would be a correct-but-unnecessary rewrite on every port that
+        * has one (§5's widening rule). Declines where the found `Iterable` argument mentions a type
+        * VARIABLE — that element has no text this scope can write, and inventing one is §4.6's
+        * fabricated fact. */
+      private def iterableOperand(e: CtExpression[?]): Term =
+        val t  = expr(e)
+        val et = try Option(e.getType) catch { case _: Throwable => scala.None }
+        et.filter(fboundWildcardUse).flatMap(javaIterableSuper) match
+          case Some(iter) => val ty = tpe(iter); Tree.Typed(t, tt(ty, e), ty, originOf(e))
+          case scala.None => t
+
+      /** is this an application with a WILDCARD at a SELF-REFERENTIALLY bounded slot — the one shape
+        * scala's capture conversion cannot answer? Read off the DECLARATION's own bounds, and the
+        * unreadable answer is `false`, which is the pre-rule emission: the failure path leaves the
+        * port exactly where it was rather than interposing a view on evidence nobody has (§4.6). */
+      private def fboundWildcardUse(r: CtTypeReference[?]): Boolean = TypeShape.of(r) match
+        case TypeShape.Named(_, as) if as.nonEmpty =>
+          val formals = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
+                        catch { case _: Throwable => Nil }
+          formals.zip(as).exists { (f, a) =>
+            TypeShape.of(a).isInstanceOf[TypeShape.Wildcard] &&
+              (try Option(f.getSuperclass).exists(b => mentionedTypeVarNames(b)(f.getSimpleName))
+               catch { case _: Throwable => false })
+          }
+        case _ => false
+
+      /** `java.lang.Iterable<E>` as reached from `r`'s supertypes, and only where `E` is a type this
+        * scope can WRITE — java's own enhanced-for lookup, with §4.6's honest decline. */
+      private def javaIterableSuper(r: CtTypeReference[?]): Option[CtTypeReference[?]] =
+        def walk(ref: CtTypeReference[?], fuel: Int): Option[CtTypeReference[?]] =
+          if ref == null || fuel <= 0 then scala.None
+          else if ref.getQualifiedName == "java.lang.Iterable" then Some(ref)
+          else
+            val d = try ref.getTypeDeclaration catch { case _: Throwable => null }
+            if d == null then scala.None
+            else
+              val ups = (d match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
+                        (try d.getSuperInterfaces.asScala.toList catch { case _: Throwable => Nil })
+              ups.iterator.map(walk(_, fuel - 1)).collectFirst { case Some(x) => x }
+        walk(r, 6).filter(i => TypeShape.of(i).args match
+          case List(el) => mentionedTypeVarNames(el).isEmpty
+          case _        => false)
 
       private def defineLocal(v: CtVariable[?], vt: TypeRepr): SymId =
         val key = "@" + methodId.raw + "$L$" + v.getSimpleName + "#" + posKey(v)

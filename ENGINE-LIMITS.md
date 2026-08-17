@@ -1694,6 +1694,53 @@ it) and every check count flat but the three catalog consult totals; every other
 
 ---
 
+### G31. An F-BOUNDED type applied to a WILDCARD cannot CAPTURE-CONVERT, so no extension method reaches it — **CLOSED; the riser that unlocked `RefChecks`, ssg-md 1 -> 131**
+
+```java
+public interface ISegmentBuilder<S extends ISegmentBuilder<S>> extends Iterable<Object> { … }
+public static SegmentedSequenceFull create(BasedSequence baseSequence, ISegmentBuilder<?> builder) {
+    for (Object part : builder) { … }
+}
+```
+
+Ordinary java. JLS 14.14.2 does not iterate the expression's own type: it looks `Iterable<T>` up among
+that type's SUPERTYPES and iterates at `T`, so `builder`'s F-bound never enters the question. Scala's
+`for` is a `foreach` CALL on the expression as written; the java-shaped iterable's `foreach` is an
+EXTENSION; and applying an extension to a WILDCARD application means CAPTURE CONVERSION. Dotty
+performs that by substituting `Any` for the parameter, which is exact for an ordinary bound and
+cannot work for a self-referential one — the capture's upper bound comes out `ISegmentBuilder[Any]`
+while its own slot asks for `ISegmentBuilder[CAP]`:
+
+```
+E057 Type argument ?1.CAP does not conform to upper bound ISegmentBuilder[?1.CAP] in inferred type
+where: ?1 is an unknown value of type scala.runtime.TypeBox[Nothing, ISegmentBuilder[Any]]
+```
+
+**Three things measured at scalac 3.8.4 before anything was written**, because the shape is a language
+limit and not a rendering choice: the DECLARATION alone is fine (`def f(b: ISegmentBuilder[?])` and a
+member SELECT on it both compile); **no spelling of the wildcard repairs it** — java's own
+`ISegmentBuilder<? extends ISegmentBuilder<?>>` fails identically, since the F-bound has no finite
+unrolling; and an ORDINARY bounded wildcard (`Plain<X extends Thing>` at `Plain<?>`) capture-converts
+unaided, which is the guard's negative.
+
+**CLOSED by putting the operand at the supertype JAVA READ** (`SpoonTir.iterableOperand`), through the
+same `Tree.Typed` view every other receiver view in this frontend uses — an UPCAST, so K18's reified
+exclusion applies and nothing is asserted the program does not already know. The guard is the F-BOUND
+and not the wildcard (§5's widening rule: an unnecessary view on every ordinary wildcard is invisible
+to every count but `members.tsv`), and it DECLINES where the found `Iterable` argument mentions a type
+variable — that element has no text this scope can write, and inventing one is §4.6's fabricated fact.
+The `java.lang.Iterable` the frontend writes is retyped to the shim by `CollectionsTransform` like any
+other, so the two halves need no agreement written down.
+
+**What it cost is the point: ssg-md 1 -> 131, on 4 changed member rows (one member and its file
+digest).** That is `RefChecks` running for the first time in this corpus — K28's wall, arriving
+exactly as §3 said it would, and the census is in `PROGRESS.md` §10.6.3.
+
+*Fix kind: (a) engine — frontend, `SpoonTir.iterableOperand`. CLOSED. `ForEachFBoundReceiverSpec`
+carries the site and both negatives.*
+
+---
+
 ## 2. Constructors
 
 ### C1. Never promote a paramful constructor to the primary without a WHOLE-PROGRAM check — +14
@@ -7640,7 +7687,7 @@ to clash with" and "a KEY TYPE that IS `Object`" are the two the wrong versions 
 
 ---
 
-### K28. A MINTED PARENT's members are a REFCHECKS question, and it has FIVE verdicts — **priced on the emitted shape at scalac 3.8.4: NINE errors per concrete class, SEVEN classes on ssg-md. DESIGNED, not built; two predictions in `PROGRESS.md` were WRONG and are corrected here**
+### K28. A MINTED PARENT's members are a REFCHECKS question, and it has FIVE verdicts — **REACHED at wave 18: ssg-md 1 -> 131. The five verdicts are all present and they are 79 of the 131; the pricing was RIGHT about the shape and LOW about the size, for a reason the probe could not see**
 
 K27 is what a minted parent costs at a CALL. This is what it costs at the CLASS, and none of it is
 reachable while a typer error stands: `RefChecks` does not run before the port is at 0 (`CLAUDE.md`
@@ -7685,6 +7732,39 @@ would read every count flat and every member digest moved, with nothing able to 
 answer was right. The honest order is the port's own — reach 0 typer errors, take the census of the
 rise as its own commit, then build against a number. What this entry buys is that the census will
 already know which of five things each row is.
+
+**SCORED AT WAVE 18, when `RefChecks` finally ran: 1 -> 131 on ssg-md** (whole compile 131 = 131 main
++ 0 test). Every verdict this entry names is present and none of the six is absent, which is what the
+probe was FOR; what it got wrong is the size, and it got it wrong in a way the probe could not have
+seen:
+
+| K28's verdict | predicted | actual | |
+|---|---|---|---|
+| `E037 overrides nothing` — STRIP the `override` | 5 per Map class | **48** | the largest family, over 14 owners |
+| `E038 different signature` — STRIP the `override` | 2 per Map class | **25** | |
+| `E164 incompatible type` — a real translation | 2 per Map class | **17** at a collection parent | `MapOps.put` 5, `IterableOnce.iterator` 5, `MapOps.values` 4, `MapOps.keys` 2, `SeqOps.size` 1 |
+| `needs to be abstract` — SYNTHESISE | 3 per concrete class | **17**, of which **10** are collection classes | the other 7 are not this entry's at all (below) |
+| `E164 cannot override final` | `size()` on a `Buffer` | **1** (`SeqOps.size` on `TrackedOffsetList`) | the one row the pricing named by hand, exactly where it said |
+| **NOT PREDICTED** | — | **22** `E164` at a PROGRAM-DECLARED parent | `split`/`countLeading` in `IRichSequenceBase` (18), `processNode` in `AstActionHandler` (3), one `visit` |
+| **NOT PREDICTED** | — | **7** `needs to be abstract` for `getBuilder` | an F-BOUNDED GENERIC METHOD no implementor defines — `IRichSequence`, not a minted parent |
+| **NOT PREDICTED** | — | **2** `private variable X cannot override` | a java FIELD whose name is a JDK method (`finalize`, `chars`) — §4.55's implementation-pair rule met from the other side |
+
+**Two things the pricing could not see, and both are about the DENOMINATOR rather than the rule.**
+The probe was one reduced class put through `scala-cli`, so it priced a class and multiplied; the
+population is not seven classes but **36 owners**, because a member the port emits with `override` is
+a row wherever its parent is, and the collection-parent classes are only 8 of them
+(`TrackedOffsetList` 24, `OrderedMap`/`OrderedMultiMap` 12 each, `ItemFactoryMap` 9, `BitFieldSet`,
+`OrderedSet`, `IndexedItemSetMapBase` 8 each, `NodeRepository` 7). And the three families it did not
+predict are not minted-parent questions at all — they are the port's OWN hierarchy, unmeasured for
+exactly as long as everything else was.
+
+**So the entry's claim stands and its number does not: 100 of the 131 are the five verdicts
+(48 + 25 + 17 + 10), 31 are three families nobody had looked at.** Every one of the 48 `E037`s is a
+JDK collection member name (`putAll`, `entrySet`, `containsKey`, `forEachRemaining`, `containsAll`,
+`listIterator`, …), which is the verdict table read straight off the run. The pricing bought what it
+said it would — the census knew which of five things each collection row was, on the day the gate
+opened — and the honest correction is that a reduced probe prices a SHAPE and cannot price a
+population.
 
 *Fix kind: (a) throughout — every one of these is an obligation the ENGINE'S OWN translation created
 (`CLAUDE.md` §1), and no manifest key can discharge it. The `SurfacePolicy` question does not arise:

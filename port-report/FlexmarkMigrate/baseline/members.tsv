@@ -8277,7 +8277,7 @@ ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#le
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#of(Array<BasedSequence>)	def	06aa7adcac02d1c8
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#of(BasedSequence,JavaIterable<?>)	def	600360aa77376884
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#startOffset	val	e70f9ec8b67fdfda
-ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull	class	fae8df793753b068
+ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull	class	2eb4741437d2c6ac
 ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#<stmt1>	stmt	191dd3d7721f706d
 ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#<stmt2>	stmt	64a9af14a6c8b88f
 ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#<stmt3>	stmt	67efba1dae1ae3c8
@@ -8285,7 +8285,7 @@ ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenc
 ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#baseOffsets	val	0d556d1ae0b73f3a
 ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#baseStartOffset	val	c01de1ef62fab5af
 ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#charAt(int)	def	e5f772d699e2639c
-ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#create(BasedSequence,ISegmentBuilder<?>)	def	2149d90fa2db2753
+ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#create(BasedSequence,ISegmentBuilder<?>)	def	c0f0f48077e6a7de
 ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#getIndexOffset(int)	def	a47b25e628c5e3ce
 ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#nonBaseChars	val	11930733c6285fe8
 ssg.md.util.sequence.SegmentedSequenceFull	ssg.md.util.sequence.SegmentedSequenceFull#of(Array<BasedSequence>)	def	c92a54912054b22d
