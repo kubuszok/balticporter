@@ -54,6 +54,12 @@ ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#test
 ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#testMailLink1()	def	4a8b072b85ad4b90
 ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#testMailLink2()	def	1fdd9434e9fdb9de
 ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#testMailLink3()	def	55a1f223ed7c8344
+ssg.md.ext.definition.DefinitionParserTest	ssg.md.ext.definition.DefinitionParserTest	class	440020c4e665dccb
+ssg.md.ext.definition.DefinitionParserTest	ssg.md.ext.definition.DefinitionParserTest#<stmt1>	stmt	0d4753d5f387dca0
+ssg.md.ext.definition.DefinitionParserTest	ssg.md.ext.definition.DefinitionParserTest#<stmt2>	stmt	d76a809086b424d6
+ssg.md.ext.definition.DefinitionParserTest	ssg.md.ext.definition.DefinitionParserTest#<stmt3>	stmt	dc035cd57bb68a59
+ssg.md.ext.definition.DefinitionParserTest	ssg.md.ext.definition.DefinitionParserTest#escape(String,Parser)	def	3a257de8f36d0606
+ssg.md.ext.definition.DefinitionParserTest	ssg.md.ext.definition.DefinitionParserTest#unEscape(String,Parser)	def	6cdd6ea6467bdbc8
 ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest	class	40a4f9e66c1387c6
 ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#<stmt1>	stmt	136a1205eb3850da
 ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#<stmt2>	stmt	c8adc398a56a27e2

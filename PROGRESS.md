@@ -4162,6 +4162,7 @@ they are where the 2b siblings become admissible because their dependency is alr
 | 14 | `ext-jekyll-tag` | 13 | 11 | **1 → 0** | 21/21 | `overload-risk` +10, `base-surface` +1, `omissions` +1, `idiom(refused)` +1 |
 | 15 | `ext-abbreviation` | 14 | 12 | 0 | 27/27 | `overload-risk` +9, `omissions` +2 (two `@SuppressWarnings`) — **the second 2b module, on a REAL source dependency** |
 | 16 | `ext-footnotes` | 14 | 12 | 0 | 31/31 | `overload-risk` +16, `dependency-coverage` **0 → 2** (`java.util.Locale`), `dependency-coverage(all)` 10 → 12, `catalog(undischarged)` 5 → 6 (`JS-S23`), `omissions` +1 |
+| 17 | `ext-definition` | 15 | 13 | 0 | 34/34 | `overload-risk` +5, `omissions` +1, and `catalog(unreached)` **16 → 14** — the port's FIRST `switch` |
 
 **AND `ext-footnotes` IS THE FIRST EXTENSION TO OWN A `dependency-coverage` ROW, WHICH IS *NOT*
 CLOSED BY DECLARING THE ARTIFACT HERE.** `FootnoteNodeRenderer` calls `String.format(Locale…, …)`
@@ -4179,6 +4180,17 @@ module, and `dependencies` is not inherited (§1.5), so it would not reach the b
 close is one line in `main.conf` covering both halves at once, priced against every ssg-md baseline;
 until then the two rows here and the ten there say the same thing, which is what the pair of lanes is
 for. `catalog(undischarged)` **5 → 6** is `JS-S23` arriving with the module's first java `assert`.
+
+**AND `ext-definition` BOUGHT TWO CATALOG ROWS ON THIRTEEN UNITS — the extension half's FIRST
+`switch`.** `catalog(unreached)` **16 → 14**: `DefinitionNodeFormatter` switches on a
+`DefinitionMarker` enum, and `JS-S06` (an unlabelled `break` in the MIDDLE of a case ends the CASE)
+and `JS-S08` (a `null` selector NPEs IMPLICITLY — a classic switch has no `case null` to opt out
+with) go from *never reached* to *consulted 1*. `JS-S08` **FIRED**, and the emitted `match` was read:
+a `case null => throw new NullPointerException(…)` ahead of java's arms, the three enum arms with no
+fallthrough duplication, and a `case _ => ()` fall-out arm — §4.4's three switch rows, in one member,
+on a port that had reached none of them in seventeen modules. That is §2's claim about what a corpus
+addition is FOR, arriving for the third time in this milestone and for the first time on a
+CONTROL-FLOW row rather than a `Try` or `ForEach` one.
 
 **AND THE BATCH SKIPPED ONE, WHICH IS THE FIRST TIME A MODULE HAS BEEN MEASURED AND TAKEN BACK OUT.**
 `ext-gfm-tasklist` emits at **0 compile errors with every instrument reading green**, and it is the

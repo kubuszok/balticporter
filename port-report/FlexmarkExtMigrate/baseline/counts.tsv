@@ -2,11 +2,11 @@
 base-surface	1
 break-catch	0
 cast-conversion	0
-catalog(consulted)	95
+catalog(consulted)	97
 catalog(uncited)	121
 catalog(undischarged)	6
 catalog(unmechanised)	1
-catalog(unreached)	16
+catalog(unreached)	14
 class-init-trigger	0
 collection-boundary	0
 collection-closure	0
@@ -22,8 +22,8 @@ idiom(residue)	0
 jdk-surface	0
 manifest	0
 markers	0
-omissions	5
-overload-risk	106
+omissions	6
+overload-risk	111
 policy	0
 port-map	0
 portability(all)	21
