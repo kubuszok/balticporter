@@ -1479,10 +1479,13 @@ object SpoonTir:
     private def mentionsAnyTypeVar(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
       case TypeShape.Absent      => false
       case TypeShape.Variable(_) => true
-      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21): the variable arm claimed every `?` and answered
-      // `true` — a wildcard counted AS a type variable, which is the conflation this taxonomy is
-      // about. The bound walk below it never ran.
-      case TypeShape.Wildcard(_, _, _) => true
+      // THE FIRST PRESERVED SHADOW FLIPPED (`ENGINE-LIMITS.md` G21). A `?` is NOT a type variable —
+      // it is an existential the source wrote down, and `Class<?>` mentions none. The arm below the
+      // variable one always said so and never ran; while it did not, no rule could ask *did the
+      // source WRITE this argument out of types this port can name*, which is the question G21's
+      // per-position erasure is made of. The BOUND is walked, because `List<? extends T>` really
+      // does mention `T`.
+      case TypeShape.Wildcard(_, b, _) => b.exists(mentionsAnyTypeVar)
       case TypeShape.Arr(_, c)         => mentionsAnyTypeVar(c)
       case s                           => s.args.exists(mentionsAnyTypeVar)
 

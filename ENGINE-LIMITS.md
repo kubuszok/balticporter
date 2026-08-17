@@ -1000,14 +1000,28 @@ two arms in `of` (2 of 7 fail), and `ref`/`args` pinned against Spoon's own
 `getActualTypeArguments`, which is what lets a migrated caller treat several kinds alike and still
 reproduce the `case r =>` it used to fall into.
 
+**AND THE FIRST PRESERVED SHADOW WAS THEN FLIPPED, WHICH IS WHAT THE UNIFICATION IS FOR AND WHAT ITS
+COST LOOKS LIKE.** `mentionsAnyTypeVar` answered `true` for a bare `?`, so nothing in the frontend
+could ask *does this written argument mention a type variable* — the question the per-position rule
+is made of. Corrected to the bound walk its dead arm always carried (`List<? extends T>` really does
+mention `T`; `Class<?>` mentions nothing), it is **INERT on emitted text and NOT flat on the
+artifacts**: 0 errors and 0 member digests on all seventeen port reports, `port-map.tsv` unchanged
+everywhere, and exactly ONE line of `findings.tsv` moved on each — the `fired` total inside
+`catalog(consulted)`'s JS-G32 row, DOWN on every port (libGDX core 1328 → 1262, ssg-md 1494 → 1334,
+ashley-test 1796 → 1563, jbump 17 → 13). Those are false firings leaving: JS-G32 asks *is this formal
+written in the CALLEE's own type variables*, and a `Foo<?>` formal is written in none — it fired only
+because `mentionsAnyTypeVar` said `true` and `tpResolvable` said the type does not resolve here, and
+both of those were the same shadow read twice. **A count that only ever appears inside another
+finding's TEXT is exactly what `findings_baseline_guard` exists for**: every check COUNT was
+identical, and without that guard this change would have been invisible on all seventeen ports.
+
 *Fix kind: (a) engine. The first half BUILT (above). The SECOND BLOCKER — thirteen (fourteen)
 wildcard-arm-below-type-parameter-arm matches — **CLOSED at wave 17**, flat on all seventeen port
-reports. The second half of the ENTRY is still OPEN and REVERTED at 13 → 11 / 0 → 1; the entry-point
-is `SpoonTir.erasedReceiverView`'s `args`, and ONE blocker remains — `eraseDependentArgs` /
-`knownReceiverArgs` / `coerceArgsFixed` being three readings of one erasure. The per-position rule
-also needs at least one preserved shadow FLIPPED (`mentionsAnyTypeVar` answers `true` for a bare `?`,
-so nothing can ask *does this written argument mention a type variable*), and that flip is its own
-measurement at its own four callers.*
+reports, with `mentionsAnyTypeVar`'s shadow flipped after it. The second half of the ENTRY is still
+OPEN and REVERTED at 13 → 11 / 0 → 1; the entry-point is `SpoonTir.erasedReceiverView`'s `args`, and
+ONE blocker remains — `eraseDependentArgs` / `knownReceiverArgs` / `coerceArgsFixed` being three
+readings of one erasure, which is why the per-position rule may carry only the positions those three
+provably AGREE about.*
 
 ### G22. A method TYPE PARAMETER constrained only by its BOUND infers `Nothing` in Scala and its BOUND in java — CLOSED
 

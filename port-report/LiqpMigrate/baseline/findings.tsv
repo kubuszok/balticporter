@@ -62,7 +62,7 @@ f4488425a489	catalog(consulted)	reached	JS-G18	liqp/Examples.java	29	lowering Ct
 cfd7e0d696ad	catalog(consulted)	reached	JS-G29	liqp/Insertions.java	109	lowering CtInvocation/Expression — consulted 2260, fired 67, declarations 0: diamond inference in the ordinary case
 fa58e8aead3d	catalog(consulted)	reached	JS-G30	liqp/Insertions.java	39	lowering CtInvocation/Expression — consulted 2260, fired 27, declarations 0: an UNCONSTRAINED method type parameter: Java infers its BOUND and Scala infers `Nothing`
 f4a21d5b587a	catalog(consulted)	reached	JS-G31	liqp/Insertions.java	113	lowering CtInvocation/Expression — consulted 2671, fired 11, declarations 0: a POLY EXPRESSION must never be cast as a whole
-88b1cba62d1f	catalog(consulted)	reached	JS-G32	liqp/Examples.java	40	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 2671, fired 367, declarations 0: a callee's OWN type variables never resolve at the caller
+386f22e0e283	catalog(consulted)	reached	JS-G32	liqp/Examples.java	40	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 2671, fired 354, declarations 0: a callee's OWN type variables never resolve at the caller
 e61465f407b4	catalog(consulted)	reached	JS-G33	liqp/Insertions.java	80	rendering MethodRef — consulted 4, fired 4, declarations 0: SAM conversion eligibility
 04d043e9aae4	catalog(consulted)	reached	JS-G34	-	0	rendering Typed — consulted 381, fired 0, declarations 0: a Java INTERSECTION in a cast becomes Scala's `&`
 4a9f7c32a7a2	catalog(consulted)	reached	JS-G35	-	0	rendering ClassDef + rendering DefDef — consulted 683, fired 0, declarations 0: Scala CHECKS an F-bound where javac does not
