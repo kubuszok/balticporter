@@ -423,10 +423,10 @@ sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedD
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#load(GLTFImage)	def	1a2f5ea942c36fdb
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#loadBuffers(FileHandle)	def	9e3cb890c25c6333
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#path	val	b06a990a301e98e7
-sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase	class	5d2526977e5e6f27
+sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase	class	9813052a53270f4d
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<clinit>	init	e65c5d88612fb8cb
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver,Sge)	ctor	e417fe40a16e9e7f
-sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<stmt1>	stmt	40a160e5684e8c6c
+sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<stmt1>	stmt	9d63776a685bb583
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<stmt2>	stmt	dbfbcf99bc34e215
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<stmt3>	stmt	aa1c4efba3f8aae7
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<stmt4>	stmt	9dddeb44f1525dc9
