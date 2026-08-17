@@ -2807,7 +2807,7 @@ not an engine change.
 | `portability(emitted)` | **18** sites against 37 rules — `javax.imageio.ImageIO` 8, `java.lang.reflect.Array` 2, `java.nio.file.Files` 2, and one each of `javax.swing.*` (2), `java.net.URL*` (3), `java.text.MessageFormat`. Six `substitutions-drop` remedies published, four of them naming exactly the types the hand port silently omitted |
 | `dependency-coverage` | **10 of 10** — `java.util.Locale` 6 and `java.text.NumberFormat` 4, both answered by `scala-java-locales` on both non-JVM backends. Not a call to remove; a coordinate to declare |
 | `decisions.tsv` | **2,014 rows** — 715 `RetypedSignature`, 507 `RenamedMember`, 458 `RenamedPackage`, 146 `ForcedClassInit`, 107 `FunnelledCtor`, 57 `WidenedVisibility`, 12 `DroppedSuperCall`, 10 `InjectedMember`, 2 `RetainedParent` |
-| tests | **723, EMITTED AS OF WAVE 7 and not yet run** — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
+| tests | **723, EMITTED AS OF WAVE 7 and not yet run — blocked after wave 16 on TWO main-set errors, since the lane runs the suite only at a WHOLE-compile of zero and the test set has been at zero since wave 12** — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
 
 **The behavioural gate is now BUILT and does not yet RUN, which is a smaller gap than the one this
 paragraph used to describe and is not zero.** §3 is explicit about what a compile-error count is
@@ -2815,12 +2815,17 @@ worth, and every number above except the last row is a compile-time one. On liqp
 nothing about **409 of 414** first-run failures; this library is a parser, so the population §4.4
 governs here is larger, not smaller. What wave 7 changed is that the 723 tests now EXIST as emitted
 MUnit registrations with a lane, a discovery guard and an error baseline holding them — §10.6.6 —
-so the remaining distance is a number (44 test-set errors on top of the library's 40) rather than an
-absent source set.
+so the remaining distance is a number rather than an absent source set. **After wave 16 that number
+is TWO, both in the library's main set and both one `ENGINE-LIMITS.md` entry (G21).** The test set
+itself has been at ZERO since wave 12, and `md-test-measure` runs the suite only at a WHOLE-compile
+of zero — main and test are compiled together, because the suite links against `src_managed/main` —
+so two main-set errors are what stands between this port and its first behavioural census. Discovery
+holds at **723 of 723 with 0 lost** on every run, which is the guard that says the suite would
+actually execute something once it runs at all.
 
 ### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15, → 2 after wave 16**
 
-Every error is `EngineGap`. Eight waves have run. Each table below is the state AFTER its wave, with
+Every error is `EngineGap`. Sixteen waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
 commits that moved it.
 
