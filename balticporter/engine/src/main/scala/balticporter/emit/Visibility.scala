@@ -229,15 +229,33 @@ object Visibility:
         cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case t: Term => headSym(t.tpe) }
       ).toMap ++ anonParents
 
-    /** a class's own INSTANCE methods, keyed by name and arity. A static never overrides — it
-      * hides — and a private one is not inherited at all, so neither can constrain a child. */
-    def methodsIn(body: List[Statement]): Map[(String, Int), SymId] = body.collect {
+    /** a class's own INSTANCE methods, keyed by name and arity — EVERY member at a key, never one.
+      *
+      * The key is D1's identity, which OVER-approximates: java overloads freely, so one key names
+      * several members. Held as a `Map[key, SymId]` the index silently kept whichever came LAST in
+      * the body, and the fold below then read the visibility of a member the child does not
+      * override. Measured on the shape java writes for a typed visitor —
+      * `visit(Node)` public beside `protected visit(AnchorRefTarget)` in one class — where the
+      * public one constrained nothing and the `protected` one the child DOES override was not in
+      * the list at all: the child shipped its own package's qualifier over a parent qualified with
+      * the parent's, `has weaker access privileges`, on a port at 0 typer errors, with the
+      * correctly-widened `preVisit` two lines away as the control (`ENGINE-LIMITS.md` K28).
+      *
+      * Holding all of them is the SAFE direction rather than a compromise, and that is a property of
+      * the fold: it takes the COMMON package of every candidate, and an override may be WIDER than
+      * what it overrides and never narrower — so an extra candidate can only widen, while a missing
+      * one is the error above. A NARROWER key would be exact and is not available here; a wider
+      * answer is.
+      *
+      * A static never overrides — it hides — and a private one is not inherited at all, so neither
+      * can constrain a child. */
+    def methodsIn(body: List[Statement]): Map[(String, Int), List[SymId]] = body.collect {
       case d: Tree.DefDef
         if !symOf(d.symbol).exists(s => s.flags.isStatic || s.flags.isPrivate) =>
         (symOf(d.symbol).map(_.name).getOrElse(""), d.paramss.map(_.size).sum) -> d.symbol
-    }.toMap
+    }.groupMap(_._1)(_._2)
 
-    val methodsOf: Map[SymId, Map[(String, Int), SymId]] =
+    val methodsOf: Map[SymId, Map[(String, Int), List[SymId]]] =
       classDefs.view.mapValues(cd => methodsIn(cd.body)).toMap ++ anonBody.view.mapValues(methodsIn).toMap
 
     /** the NEAREST ancestors declaring a member this one overrides — breadth-first, so a
@@ -246,7 +264,7 @@ object Visibility:
       def bfs(front: List[SymId], seen: Set[SymId], fuel: Int): List[SymId] =
         if front.isEmpty || fuel <= 0 then Nil
         else
-          val hits = front.flatMap(c => methodsOf.getOrElse(c, Map.empty).get(key))
+          val hits = front.flatMap(c => methodsOf.getOrElse(c, Map.empty).getOrElse(key, Nil))
           if hits.nonEmpty then hits
           else
             val next = front.flatMap(c => parentsOf.getOrElse(c, Nil)).filterNot(seen).distinct

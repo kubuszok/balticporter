@@ -8054,6 +8054,24 @@ visible:
   parent is in another package — an override's qualifier must be at least as wide as the parent's,
   and a qualifier derived from the OVERRIDING member's own package cannot be.
 
+  **CLOSED at wave 21: ssg-md 31 -> 30 — and the mechanism was ALREADY THERE, which is what makes
+  this row worth its own paragraph.** `Visibility`'s cross-package widening is built, tested and
+  correct: the SAME anonymous body's `preVisit` renders `protected[md]` with an
+  `x-pkg-protected-override` decision beside it, two lines above the failing `visit`. The difference
+  between them is that the parent OVERLOADS `visit` at arity 1 — `protected visit(AnchorRefTarget)`,
+  which the child really overrides, beside a public `visit(Node)` — and `Visibility.methodsIn`
+  indexed a class's members as `Map[(name, arity), SymId]`. One key, one value: java's own body
+  order decided which, the public overload won, and the fold then read the visibility of a member the
+  child does not override and concluded that nothing constrained it.
+  **A MAP FROM AN OVER-APPROXIMATE KEY TO A SINGLE VALUE IS A CHOICE NOBODY MADE** — D1's (name,
+  arity) identity is deliberately loose, so the index that reads it must be a `Map[key, List[SymId]]`
+  and let the CALLER decide. Holding all of them is the safe direction rather than a compromise, and
+  that is a property of this fold specifically: it takes the COMMON package of every candidate, an
+  override may be wider than what it overrides and never narrower, so an extra candidate can only
+  widen while a missing one is the error above. **2 member digests, both in the one owner.** Note
+  what could not have found this: the emitted qualifier was a plausible one, the port compiled until
+  `RefChecks` ran, and the control was sitting in the same file the whole time.
+
 **A caution the diagnosis itself produced: `errors.tsv` carries the FIRST LINE of a scalac message.**
 Both sub-families read `error overriding method … in class … of type (…)` and stop, so the half of
 scalac's sentence that says WHY (`… is final`, `… has weaker access privileges`) is not in the

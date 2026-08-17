@@ -238,6 +238,43 @@ class VisibilitySpec extends PortSuite:
     assertEquals(causes(p), List("x-pkg-protected-override"))
   }
 
+  test("…and an OVERLOADED name at that arity does not hide the member actually overridden") {
+    // The override graph here is keyed on (name, TOTAL ARITY) — D1's identity — and a java class
+    // overloads freely, so one key can name SEVERAL parent members. Held one-per-key, the index kept
+    // whichever came last in the parent's body: `hook(Object)` is public, so it constrains nothing,
+    // and the `protected` `hook(String)` the child really overrides was simply not in the list. The
+    // child then shipped its OWN package's qualifier over a parent qualified with the parent's —
+    // "has weaker access privileges", an ERROR, and one `RefChecks` does not report until the port
+    // is already at zero (`ENGINE-LIMITS.md` K28).
+    //
+    // Every member at the key is held instead, which is the SAFE direction and not a compromise: the
+    // fold takes the common package of all of them, and an override may be WIDER than what it
+    // overrides and never narrower.
+    //
+    // The parent's two members are in the order the library wrote them, and the ORDER is what made
+    // this silent: the index kept the LAST at each key, so the public overload won and the widening
+    // simply did not happen. Swapped, the same defect answers correctly by luck — which is why the
+    // fixture states java's order rather than a convenient one.
+    val p = portAll(List(
+      "Parent.java" ->
+        """package demo.a.q;
+          |public class Parent {
+          |  protected void hook(String s) {}
+          |  public void hook(Object o) { hook(String.valueOf(o)); }
+          |}
+          |""".stripMargin,
+      "Child.java" ->
+        """package demo.a.r;
+          |public class Child extends demo.a.q.Parent {
+          |  protected void hook(String s) {}
+          |}
+          |""".stripMargin,
+    ))
+    assertEmits(p, "protected[q] def hook(s: java.lang.String)")
+    assertEmits(p, "protected[a] override def hook(s: java.lang.String)")
+    assertEquals(causes(p), List("x-pkg-protected-override"))
+  }
+
   test("a child NESTED under the parent's package keeps the PARENT's qualifier") {
     val p = portAll(List(
       "Parent.java" ->

@@ -2066,7 +2066,7 @@ ssg.md.html.renderer.FileUriContentResolver	ssg.md.html.renderer.FileUriContentR
 ssg.md.html.renderer.FileUriContentResolver	ssg.md.html.renderer.FileUriContentResolver$Factory#apply(LinkResolverBasicContext)	def	be7363289b66767b
 ssg.md.html.renderer.FileUriContentResolver	ssg.md.html.renderer.FileUriContentResolver$Factory#getAfterDependents()	def	bab15a2873ab8e2f
 ssg.md.html.renderer.FileUriContentResolver	ssg.md.html.renderer.FileUriContentResolver$Factory#getBeforeDependents()	def	5c7dbfddf1d4d275
-ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator	class	7e1c88d6dce68f80
+ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator	class	2c489143ac75f68a
 ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#<init>()	ctor	021b8da99d03c72a
 ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#<stmt1>	stmt	aefeae7dbb54d372
 ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#<stmt2>	stmt	5d1413ee63916b69
@@ -2078,7 +2078,7 @@ ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#ge
 ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#generateId(CharSequence,String,boolean,boolean)	def	56e8d28311b7779e
 ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#generateId(String)	def	c45e38c9d138d8a9
 ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#generateIds(Document)	def	932196b97c266e0d
-ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#generateIds(Document,AnchorRefTargetBlockPreVisitor)	def	cb240fb621189a5e
+ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#generateIds(Document,AnchorRefTargetBlockPreVisitor)	def	f708dddbb9b3b128
 ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#getId(CharSequence)	def	b30e80e67be72c47
 ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#getId(Node)	def	46dceaf39af477ce
 ssg.md.html.renderer.HeaderIdGenerator	ssg.md.html.renderer.HeaderIdGenerator#getNonDashChars()	def	0c28ac481507c519

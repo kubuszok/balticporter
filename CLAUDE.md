@@ -1291,6 +1291,21 @@ cannot produce that shape at all because a java method always has a parameter cl
 form is §4.56's, read at a rename: *a pass may only conclude "these two are different members" from
 a structural fact, and two names being equal is not one.*
 
+**…and the same sentence read at an INDEX: A MAP FROM AN OVER-APPROXIMATE KEY TO A SINGLE VALUE IS A
+CHOICE NOBODY MADE.** Every member index in this engine is keyed on (name, arity) — the identity the
+IR actually has, deliberately looser than a descriptor — and java OVERLOADS freely, so one key names
+several members. Written `Map[key, Sym]` the index silently keeps whichever the builder saw LAST,
+which makes java's own declaration order decide the answer: the visibility plan read a public
+`visit(Node)` where the child overrode a `protected visit(AnchorRefTarget)` declared one line above
+it, concluded that nothing constrained the override, and emitted a qualifier narrower than the
+parent's. `has weaker access privileges` — and the CONTROL was in the same file, a `preVisit` at a
+unique key that widened correctly. So a loose key indexes to a `List` and the CALLER decides; and
+where the caller cannot distinguish them either, the reading that is safe is the one whose error
+direction is known — this fold takes the COMMON package of every candidate, and an override may be
+wider than what it overrides and never narrower, so an extra candidate can only widen. Note the
+shape: nothing is wrong with the loose key, and everything is wrong with resolving it in the index
+rather than at the question.
+
 **…and the SAME sentence governs the opposite conclusion, which is where a PROMOTION drops
 something.** A pass that promotes may also decide two declarations ARE one member and emit only the
 promoted one — an enum's constructor parameter SUPERSEDING a same-named field is the shape, and it is
