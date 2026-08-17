@@ -377,7 +377,8 @@ final class CollectionsTransform(
     * target of that kind and not the one this class extends. */
   private final case class MintedParents(kinds: Set[Kind], probes: List[TypeRepr],
                                          tparams: List[SymId], shims: Set[String],
-                                         targets: Set[String] = Set.empty)
+                                         targets: Set[String] = Set.empty,
+                                         subsumed: Map[String, String] = Map.empty)
   private var parentClash: Map[SymId, MintedParents] = Map.empty
   /** every `super.<JDK default>` this run stood on `this` instead — (enclosing class, callee, member
     * name), drained into `decisions.tsv` by [[recordSuperDefaults]]. Collected AT the rewrite rather
@@ -831,7 +832,8 @@ final class CollectionsTransform(
     parentClash = declaredParentKinds(summon[Program])
     superDefaults.clear()
     val units    = program.units.map(u =>
-      restoreUninheritableParents(u, restoreExcluded(u, StandardTraversal.mapClassDef(this, u))))
+      dropSubsumedParents(
+        restoreUninheritableParents(u, restoreExcluded(u, StandardTraversal.mapClassDef(this, u)))))
     val symbols2 = mapSignatures(symbols) // retype signatures too
     // …and the MODIFIER the re-parenting invalidated (K28). Decided over `symbols2` because
     // `graph.signatureOf` reads a symbol's `descriptor` — the frontend's, taken from the parser
@@ -1074,6 +1076,79 @@ final class CollectionsTransform(
         case (_, m)                               => m
       }
       mapped.copy(parents = parents, body = body)
+
+  /** A PARENT this phase minted that another parent this phase minted already SUBSUMES is DROPPED —
+    * `ENGINE-LIMITS.md` K28.1.
+    *
+    * [[restoreUninheritableParents]]'s mirror: that one keeps JAVA's clause because the target
+    * cannot BE a parent, this one removes the phase's OWN clause because a second target of its own
+    * carries the relation java wrote it for. `class OrderedMap<K,V> implements Map<K,V>,
+    * Iterable<Map.Entry<K,V>>` is emitted `extends mutable.Map[K,V] with JavaIterable[(K,V)]`, and
+    * that class can never compile: `iterator(): JavaIterator[…]` and `iterator: Iterator[…]` are one
+    * name at two arities and scala has ONE namespace, so `CLAUDE.md` §4.5's sentence — *the conflict
+    * is in the parents* — arrives at a MINTING rather than at a shim's design.
+    *
+    * WHICH pairs subsume is [[CollectionsTransform.SubsumesShim]] and WHETHER this class's two
+    * clauses agree on the element is [[carriesElement]]; both are decided in
+    * [[declaredParentKinds]], where the java types are still in hand, and carried on
+    * [[MintedParents.subsumed]] so that the emitted `extends` clause and the record every other
+    * reader of this phase consults cannot disagree. That is not bookkeeping: `mintedSourceKind`
+    * reads `shims` to answer *does a value of this class already conform at a shim-typed slot*, and
+    * after the drop it does not — so removing the entry there is exactly what makes [[coerce]] wrap
+    * the seams this drop opens, at the slot, where a reader can act on them.
+    *
+    * A `StandardTraversal` walk rather than a `body` recursion (§3): a method-LOCAL class is a
+    * `Tree.ClassDef` in a `BlockStatement`, and [[declaredParentKinds]] reaches one, so anything
+    * acting on its answer must too. An ANONYMOUS body needs nothing here — java writes its ONE
+    * supertype at the `new`, so it can never hold both clauses and `subsumed` is empty for it by
+    * arithmetic.
+    *
+    * A no-op wherever nothing is subsumed, which is every port in the corpus but one. */
+  private def dropSubsumedParents(u: Tree.ClassDef)(using p: Program): Tree.ClassDef =
+    if parentClash.forall((_, mp) => mp.subsumed.isEmpty) then u
+    else
+      def tpeOf(x: Term | TypeTree): TypeRepr = x match
+        case tt: TypeTree => tt.tpe
+        case t: Term      => t.tpe
+      val ph = new Phase:
+        def name: String = "collections/drop-subsumed-parents"
+        override def transformClassDef(cd: Tree.ClassDef)(using Program): Tree.ClassDef =
+          val drop = parentClash.get(cd.symbol).map(_.subsumed).getOrElse(Map.empty)
+          if drop.isEmpty then cd
+          else
+            val kept = cd.parents.filter { pt =>
+              headSym(tpeOf(pt)).flatMap(p.symbolOf).map(_.fullName).forall(!drop.contains(_))
+            }
+            if kept.sizeIs == cd.parents.size then cd
+            else
+              cd.parents.filterNot(kept.contains).foreach { pt =>
+                val gone = TirPrinter.tpe(tpeOf(pt), TirPrinter.Style.canonical)
+                val by   = headSym(tpeOf(pt)).flatMap(p.symbolOf).map(_.fullName).flatMap(drop.get)
+                // …on THIS phase's buffer, not on the walk's throwaway one. `Phase.record` is an
+                // instance method, so a bare `record` inside `new Phase` files the decision against
+                // a phase nobody drains — the parent really is dropped and `decisions.tsv` says
+                // nothing, which `NoteCoverageCheck` cannot report either because it compares the
+                // notes it CAN see against the decisions it CAN see.
+                CollectionsTransform.this.record(Decision(
+                  kind       = Decision.Kind.SubsumedParent,
+                  subject    = cd.symbol,
+                  subjectFqn = p.symbolOf(cd.symbol).map(_.fullName).getOrElse(gone),
+                  detail = Map(
+                    "dropped"     -> gone,
+                    "subsumed-by" -> by.getOrElse("?"),
+                    "why" -> ("java related this class's two `implements` clauses at ONE MEMBER " +
+                      "spelled two ways, and the parent this mapping minted for the other clause " +
+                      "already carries that relation. Minting both would declare one name at two " +
+                      "arities, which scala's single namespace cannot hold and which no repair at " +
+                      "the member can fix (CLAUDE.md §4.5). A value of this class meeting a slot " +
+                      "typed at the dropped shim is coerced there instead"),
+                  ),
+                  reason = Reason.Universal("subsumed-minted-parent(§4.5, K28.1)"),
+                  origin = cd.origin,
+                ))
+              }
+              cd.copy(parents = kept)
+      StandardTraversal.mapClassDef(ph, u)
 
   /** IS THIS THE INTERFACE'S MEMBER, or a method that merely shares its name?
     *
@@ -4832,28 +4907,80 @@ final class CollectionsTransform(
             val mapped = targets.collect {
               case ((tgt, k), tp) if !CollectionsTransform.standaloneTargets(tgt) => k -> firstTypeArg(tp)
             }
-            val shims  = targets.collect {
-              case ((tgt, _), _) if CollectionsTransform.standaloneTargets(tgt) => tgt
-            }.toSet
+            val shimParents = targets.collect {
+              case ((tgt, _), tp) if CollectionsTransform.standaloneTargets(tgt) => tgt -> tp
+            }
+            val kindParents = targets.collect {
+              case ((tgt, k), tp) if !CollectionsTransform.standaloneTargets(tgt) => (tgt, k, tp)
+            }
             val above  = heads.map(_._1).filter(shapeOf.contains).map(resolve(_, seen + id))
             val scalas = targets.collect {
               case ((tgt, _), _) if !CollectionsTransform.standaloneTargets(tgt) => tgt
             }.toSet
+            // …and the DUPLICATE RELATION among this class's OWN clauses (K28.1). Both halves are
+            // in hand exactly here — the kind parents with the java types they came from, and the
+            // shim parents beside them — which is what holding the two side by side is FOR. The
+            // question is asked of the DIRECT clauses only: an inherited kind's element type is the
+            // ancestor's, unsubstituted (`probes` carries the same approximation for the same
+            // reason), and reading it here would be a guess where declining leaves the `E164` the
+            // compiler already states.
+            val subsumed = shimParents.flatMap { (sh, shTpe) =>
+              kindParents.collectFirst {
+                case (tgt, k, kTpe) if CollectionsTransform.SubsumesShim.get(k.toString).exists(_(sh)) &&
+                                       carriesElement(k, kTpe, shTpe) => sh -> tgt
+              }
+            }.toMap
+            val shims = shimParents.map(_._1).toSet -- subsumed.keySet
             MintedParents(mapped.map(_._1).toSet ++ above.flatMap(_.kinds),
                           mapped.flatMap(_._2) ++ above.flatMap(_.probes),
                           tparams,
                           shims ++ above.flatMap(_.shims),
-                          scalas ++ above.flatMap(_.targets))
+                          scalas ++ above.flatMap(_.targets),
+                          subsumed)
         memo(id) = out
         out
       })
 
     shapeOf.keys.map(id => id -> resolve(id, Set.empty))
-      .filter((_, mp) => mp.kinds.nonEmpty || mp.shims.nonEmpty).toMap
+      .filter((_, mp) => mp.kinds.nonEmpty || mp.shims.nonEmpty || mp.subsumed.nonEmpty).toMap
 
   private def firstTypeArg(t: TypeRepr): Option[TypeRepr] = t match
     case TypeRepr.AppliedType(_, a :: _) => Some(a)
     case _                               => scala.None
+
+  /** does the KIND parent really iterate what the SHIM parent says this class iterates?
+    *
+    * [[CollectionsTransform.SubsumesShim]] says a `scala.collection` target is a supertype
+    * answering for `JavaIterable`'s one member; that is a claim about the TRAIT, and it is only a
+    * claim about THIS CLASS where the two clauses agree on the element. `implements Map<K,V>,
+    * Iterable<Map.Entry<K,V>>` is the shape java writes and the two DO agree — `mutable.Map[K,V]`
+    * iterates `(K, V)`, which is what `Map.Entry<K,V>` is retyped to. `implements Map<K,V>,
+    * Iterable<String>` is ordinary java too (java's `Map` declares no `iterator()` at all, so
+    * nothing forces the element), and there the relation is NOT carried: dropping the clause would
+    * silently change what `for (x <- xs)` yields, with a green compile and no count moving.
+    *
+    * Asked in JAVA's own types, because [[declaredParentKinds]] reads the ORIGINAL units — which is
+    * also why the `Map` arm compares against `java.util.Map.Entry` rather than against `Tuple2`:
+    * the mapping's own [[Kind.Entry]] row is what relates the two, so this is the phase reading its
+    * own record (§4.56) and not a second opinion about java.
+    *
+    * DECLINES on anything it cannot decide — a RAW clause carries no argument at all, and a kind
+    * whose arity does not match the shape below is one this table has no row for. Declining leaves
+    * the duplicate parent and therefore the `E164` scalac already reports, which is the loud
+    * direction. */
+  private def carriesElement(k: Kind, kindParent: TypeRepr, shimParent: TypeRepr)(using p: Program): Boolean =
+    def entryOf(t: TypeRepr): Option[(TypeRepr, TypeRepr)] = t match
+      case TypeRepr.AppliedType(_, a :: b :: Nil) =>
+        headSym(t).flatMap(p.symbolOf).map(_.fullName)
+          .filter(fqn => typeMap.get(fqn).exists((_, ek) => ek == Kind.Entry))
+          .map(_ => (a, b))
+      case _ => scala.None
+    (k, kindParent, firstTypeArg(shimParent)) match
+      case (Kind.Map, TypeRepr.AppliedType(_, kk :: vv :: Nil), Some(el)) =>
+        entryOf(el).contains((kk, vv))
+      case (Kind.Seq | Kind.Set | Kind.Stack, TypeRepr.AppliedType(_, e :: Nil), Some(el)) =>
+        el == e
+      case _ => false
 
   /** WHICH classes with a RETAINED parent hold a value the target can be at a SLOT — K5.7's other
     * half, and the one that is not a refusal.
@@ -5691,6 +5818,44 @@ object CollectionsTransform:
     * A table rather than a `dependsOn(runtime)`: `build.sbt` keeps the engine off the runtime on
     * purpose, so that two ports of two modules of one library share ONE `JavaIterator` rather than
     * each vendoring a copy at the same FQN. `RuntimeSurfaceSpec` is what holds the two in step. */
+  /** WHICH standalone shim a minted KIND target already SUBSUMES — `ENGINE-LIMITS.md` K28.1.
+    *
+    * Java's `Map` and `Iterable` are independent interfaces and a class implements both; java
+    * relates them at ONE MEMBER spelled two ways (`Map` has `entrySet().iterator()`, `Iterable` has
+    * `iterator()`, and the class writes the second). Minted onto `scala.collection.mutable.Map` AND
+    * onto [[JavaIterableFqn]] the emitted class declares `iterator(): JavaIterator[…]` under a
+    * parent that declares `iterator: Iterator[…]`, which is `CLAUDE.md` §4.5's sentence arriving at
+    * a MINTING rather than at a shim's design: no repair at the member can help, because the
+    * conflict is in the parents.
+    *
+    * The answer is K29's rule read at a DUPLICATE rather than at a missing edge — *a mapping must
+    * preserve the source library's own subtype relations* — and `mutable.Map <: Iterable` already
+    * carries the relation the second `implements` clause was there for. Minting both states one
+    * relation at two arities.
+    *
+    * ==Why exactly one shim is on the right-hand side==
+    * A row here is a claim that the KIND's target is a supertype answering for the shim's WHOLE
+    * surface, and [[OverridesShim]] is the surface: `JavaIterable` declares `iterator()` and
+    * nothing else, so an `Iterable`-derived target answers all of it. `JavaCollection` declares
+    * fourteen members and NO scala collection is a subtype of it (that is what
+    * [[standaloneTargets]] means), so dropping it would be an immediate `Not Found` at every one of
+    * them; `JavaIterator`/`JavaListIterator` are not supertypes of any of these targets either.
+    * Both errors are loud in the [[OverridesTarget]] sense — too few rows leaves the `E164` this
+    * closes, too many leaves a `Not Found` naming the member — which is what licenses a table.
+    *
+    * Keyed by [[Kind]] for [[OverridesTarget]]'s reason: every target of one kind inherits the same
+    * `scala.collection` trait, and it is that trait — not the concrete target — that carries the
+    * relation. `Kind.Entry`/`Kind.Opt` have no row because no class is emitted under either
+    * ([[UninheritableTargets]], and an `Option` alias cannot be a parent). */
+  private[balticporter] val SubsumesShim: Map[String, Set[String]] = Map(
+    // every one of these targets is a `scala.collection.Iterable`, which declares `iterator` — the
+    // one member `JavaIterable` has.
+    Kind.Map.toString   -> Set(JavaIterableFqn),
+    Kind.Set.toString   -> Set(JavaIterableFqn),
+    Kind.Seq.toString   -> Set(JavaIterableFqn),
+    Kind.Stack.toString -> Set(JavaIterableFqn),
+  )
+
   private[balticporter] val OverridesShim: Map[String, Set[ExternalSurface.Member]] = Map(
     JavaIterableFqn     -> Set(ExternalSurface.Member("iterator", 0)),
     JavaIteratorFqn     -> Set(ExternalSurface.Member("hasNext", 0), ExternalSurface.Member("next", 0),

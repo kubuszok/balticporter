@@ -117,7 +117,13 @@ object PorterNote:
         // member differs from the mechanical translation by exactly one word, and that word is the
         // one a reader diffing against the java reads as a lost `@Override`. The note is the only
         // place the parent that justified it — a type the java file never names — can be said.
-        StrippedOverride)
+        StrippedOverride,
+        // …and a PARENT the phase dropped. `RetainedParent` is here for the mirror reason and the
+        // argument is stronger in this direction: a retained parent still appears in the emitted
+        // `extends` clause, so a reader can at least SEE it; a subsumed one is text that is simply
+        // absent, and the java `implements` clause it came from is one line the diff shows as
+        // untranslated.
+        SubsumedParent)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.

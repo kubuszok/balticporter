@@ -128,3 +128,46 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
     assert(!OverridesTarget.contains(CollectionsTransform.Kind.Entry.toString))
     assert(!OverridesTarget.contains(CollectionsTransform.Kind.Opt.toString))
   }
+
+  // -------------------------------------------------------------------------------------------
+  // THE SUBSUMPTION TABLE — `ENGINE-LIMITS.md` K28.1.
+  //
+  // A row says a KIND's target is a supertype answering for the shim's WHOLE surface, so the shim
+  // clause may be dropped. Both errors are loud in `OverridesTarget`'s sense (too few rows leaves
+  // the `E164` this closes; too many leaves a `Not Found` naming the member) — but only the second
+  // is loud on the port that motivated it, and the derivation the rows rest on is `OverridesShim`,
+  // which lives two hundred lines away. So the ROWS are asserted against it here rather than read
+  // beside it: a member added to `JavaIterable` tomorrow makes the one row a claim nobody checked.
+  // -------------------------------------------------------------------------------------------
+
+  import CollectionsTransform.SubsumesShim
+
+  test("every subsumed shim is one whose ENTIRE surface the scala side answers") {
+    // `JavaIterable` declares `iterator()` and nothing else, and every target on the left is a
+    // `scala.collection.Iterable`, which declares `iterator`. That is the whole argument, and it is
+    // exactly the size of `OverridesShim`'s row.
+    SubsumesShim.values.flatten.toSet.foreach { sh =>
+      assertEquals(clue(OverridesShim(sh)).map(_.name), Set("iterator"),
+                   s"$sh declares more than the one member a scala Iterable answers for — " +
+                     "dropping that clause is a `Not Found` at whatever else it has")
+    }
+  }
+
+  test("NEGATIVE — JavaCollection is never subsumed: no scala collection is a subtype of it") {
+    SubsumesShim.foreach { (k, shims) =>
+      assert(!shims(CollectionsTransform.JavaCollectionFqn), s"$k claims to subsume JavaCollection")
+      assert(!shims(CollectionsTransform.JavaIteratorFqn), s"$k claims to subsume JavaIterator")
+      assert(!shims(CollectionsTransform.JavaListIteratorFqn), s"$k claims to subsume JavaListIterator")
+    }
+  }
+
+  test("every subsumption row is keyed on a kind that can BE a parent, and names a real shim") {
+    SubsumesShim.foreach { (k, shims) =>
+      assert(OverridesTarget.contains(k),
+             s"$k has no overridable surface here, so it cannot be claimed to subsume anything")
+      shims.foreach(sh => assert(CollectionsTransform.standaloneTargets(sh),
+                                 s"$sh is not a standalone target — nothing is minting it as a shim"))
+    }
+    assert(!SubsumesShim.contains(CollectionsTransform.Kind.Entry.toString))
+    assert(!SubsumesShim.contains(CollectionsTransform.Kind.Opt.toString))
+  }

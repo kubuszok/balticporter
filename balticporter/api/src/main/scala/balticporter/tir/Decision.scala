@@ -277,6 +277,22 @@ object Decision:
       * an unmoved class file declares them, this one drops a MODIFIER because a moved parent does
       * not. Both are §1(a) refusals with no key anywhere. */
     case StrippedOverride
+    /** a PARENT the mapping minted was DROPPED, because another parent the same mapping minted
+      * already carries the relation java wrote it for (`ENGINE-LIMITS.md` K28.1).
+      *
+      * [[RetainedParent]]'s mirror image and deliberately not the same kind: that one keeps JAVA's
+      * parent because the target cannot BE one, and this one removes the phase's OWN parent because
+      * a second parent of its own subsumes it. Java relates two interfaces at one member spelled two
+      * ways — `Map`'s `entrySet().iterator()` beside `Iterable`'s `iterator()` — and scala has ONE
+      * namespace, so a class minted onto both a `scala.collection` trait and a standalone shim
+      * declares one member at two arities and can never compile. No repair at the member helps: the
+      * conflict is in the parents (`CLAUDE.md` §4.5), which is why this is a decision about the
+      * `extends` clause rather than about anything inside the class.
+      *
+      * What the DETAIL has to carry is the parent that SUBSUMES it, because a reader diffing the
+      * emitted class against the java sees one `implements` clause simply gone and nothing local
+      * says which of the remaining parents took over its relation. */
+    case SubsumedParent
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

@@ -8000,6 +8000,71 @@ four families closed. Three things the reduced probe could not have said:
   is free and the choice is a surface decision: retyping keeps java's NAME and loses the type, the
   rename keeps the TYPE and moves the name. Decide it before the middle commit, not inside it.
 
+**COMMIT 1 BUILT AT WAVE 22 — the duplicate-parent drop. ssg-md 27 -> 27, and the flatness is the
+result.** The blocker really is a parent and not a member, so closing it moves no error on its own:
+the five `iterator` rows are `E164` against `IterableOnce`, which the SURVIVING parent declares, and
+they stay exactly where they were. What it buys is that the middle commit's retyping does not open a
+sixth family — a class whose `iterator` becomes scala's while `JavaIterable`'s abstract
+`iterator(): JavaIterator[A]` is still a parent is a fresh `needs to be abstract`.
+
+`MintedParents.subsumed` is the record and `CollectionsTransform.SubsumesShim` is the table — keyed
+by `Kind`, with **exactly one shim on any right-hand side** and that is derived rather than chosen:
+a row claims the scala target answers for the shim's WHOLE surface, `OverridesShim` is that surface,
+and `JavaIterable` declares `iterator()` and nothing else. `JavaCollection`'s fourteen members have
+no scala supertype at all (that is what `standaloneTargets` MEANS), so a row for it would be an
+immediate `Not Found` — which is why `MintedParentSurfaceSpec` asserts the rows against
+`OverridesShim` rather than beside it.
+
+**And the conjunct that is not in the entry's sentence is the ELEMENT, whose failure has no
+instrument.** *A mapping must preserve the source library's own subtype relations* licenses the drop
+only where the two clauses agree on what is iterated. `implements Map<K,V>, Iterable<String>` is
+ordinary java — java's `Map` declares no `iterator()`, so nothing forces the element — and dropping
+that clause would silently change what `for (x <- xs)` yields at a green compile with every count
+flat. So `carriesElement` compares the shim's argument against the kind parent's, in JAVA's own types
+(the `Map` arm reads `java.util.Map.Entry` through the mapping's own `Kind.Entry` row, §4.56), and
+DECLINES on a raw clause or an arity it has no row for — leaving the `E164` the compiler already
+states. Verified failing without the conjunct.
+
+Three things measured: **25 member digests**, all attributable — 3 class declarations (the dropped
+clause plus its note) and 22 members whose `StrippedOverride` note lost `balticporter.runtime.JavaIterable`
+from its `parent=` list, which is that note catching up with the same fact; **3
+`catalog(consulted)` totals** moved by ten renderings and five diamond checks, the parent nodes that
+no longer exist; and **every other port byte-identical**, `md-test-measure` 27 = 27 at 0 moved
+digests.
+
+Two things the build settled that the design did not say:
+
+- **removing the entry from `shims` is what CLOSES the seams the drop opens**, and is therefore not
+  bookkeeping. `mintedSourceKind` reads `shims` to answer *does a value of this class already conform
+  at a shim-typed slot*; after the drop it does not, so `coerce` wraps at the slot — which is the
+  position §1 requires the residue to be reported at. Deciding the drop in `declaredParentKinds`,
+  where the java types are still in hand, is what makes the emitted `extends` clause and the record
+  every other reader consults incapable of disagreeing;
+- **`Phase.record` is an INSTANCE method, so a bare `record` inside a `new Phase` walk files against a
+  phase nobody drains.** The parent was dropped and `decisions.tsv` said nothing — and
+  `NoteCoverageCheck` cannot report that either, because it compares the notes it can see against the
+  decisions it can see, so both sides were empty and every count was flat. Only reading the emitted
+  file found it.
+
+**AND THE ITERATOR FORK IS DECIDED: RENAME THE JAVA MEMBER AND SYNTHESISE SCALA'S — for all five
+rows, not only the two the fork was noticed at.** The entry framed it as a surface trade (java's NAME
+against the library's TYPE) and the port answers it as a CASCADE count, which is the harder fact:
+
+| | |
+|---|---|
+| *scala's member wins* | `OrderedSet#iterator()` retyped to `Iterator[E]` breaks **three declarations inside the library** — `OrderedMap#keyIterator`, `OrderedMultiMap#keyIterator` and `#valueIterator` each declare `ReversibleIndexedIterator<X>` and their whole body is `return <anOrderedSet>.iterator()` — plus `OrderedMap#forEach`, whose local is declared `JavaIterator`. Five rows close and at least four open, each needing a further translation of its own |
+| *rename + synthesise* | §4.55's machinery re-points every reference exactly, so all four sites keep compiling unchanged, and the synthesised `override def iterator: Iterator[T]` closes the `E164`. The `ReversibleIndexedIterator` capability stays on the emitted surface |
+
+Two things that make this a rule rather than this port's luck. **The per-class reading is not
+available**: on `OrderedMap` the retyping loses nothing (`iterator()`'s entire body is
+`return entryIterator()`, and `entryIterator(): ReversibleIndexedIterator<Map.Entry<K,V>>` is public
+beside it), on `OrderedSet` it loses the only forward reversible iterator the class has — and
+choosing per class from *does the result type survive under another name* is deciding a translation
+from what this program happens to declare, which §4.56 refuses. **And one mechanism answers the
+`SeqOps.size` row too**: `size()` on a `Buffer` is `cannot override final`, where the entry's own
+table already said rename-or-do-not-mint, so a per-row choice between two mechanisms answers neither
+uniformly while rename+synthesise answers both.
+
 #### K28.2 A java FIELD named like an INHERITED JDK METHOD — **CLOSED at wave 21: ssg-md 34 -> 32.** One row was a missing question, the other a surface the engine had refused to state — and the refusal turned out to conflate two different reasons
 
 The two `private variable X cannot override method X` rows are §4.55's implementation-pair rule met
