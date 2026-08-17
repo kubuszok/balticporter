@@ -139,6 +139,19 @@ object JdkSurfaceCheck extends RemedySource:
     /** matches a member key (`owner#name`) exactly. */
     def matches(member: String): Boolean = member == api
 
+  /** one sentence, three owners — java re-declares `spliterator()` down its own hierarchy and a
+    * refusal keyed on `owner#name` has to be spelled at each, so the REASON is stated once. */
+  private val SpliteratorWhy =
+    "a `Spliterator` is a PARALLEL-DECOMPOSITION protocol (`trySplit`, `estimateSize`, " +
+      "`characteristics`) and not an iterator: its only purpose is to be consumed by " +
+      "`java.util.stream`, which this phase COLLAPSES rather than models. Unlike `listIterator`, " +
+      "the receiver has no capability to build one out of — and the near miss is worth naming, " +
+      "because it is the reason this stayed refused when its sibling did not: `buf.asJava` yields " +
+      "a `java.util.List` whose `spliterator()` is `AbstractCollection`'s DEFAULT, reporting " +
+      "NEITHER `ORDERED` nor `SIZED` where the `ArrayList` java had reports both. A consumer that " +
+      "reads `characteristics()` would get a different answer silently, which is CLAUDE.md §4.4's " +
+      "defect class bought for a member nothing calls"
+
   /** The engine's own refusals — each one previously living in a doc comment or a `case _ => None`
     * arm, where nothing could read it and no run could report it.
     *
@@ -158,22 +171,24 @@ object JdkSurfaceCheck extends RemedySource:
     Refusal("java.util.Map.Entry#setValue",
       "the dotted spelling of the same member, for a frontend that names nested types with `.`",
       "CollectionsTransform.rewrite, the `entrySet` arm"),
-    // The two SE8-era members of `List` whose RESULT is a JDK protocol rather than a value. Every
-    // other member the retyping answers hands back an element, a boolean or the collection; these
-    // two hand back an object whose whole contract is the thing scala has no counterpart for, so a
-    // mapping would have to invent one rather than translate it.
-    Refusal("java.util.List#listIterator",
-      "a `java.util.ListIterator` is a BIDIRECTIONAL CURSOR that writes THROUGH to the list — " +
-        "`previous`, `set`, `add` and `nextIndex` all act on the position it holds. Scala's " +
-        "`Iterator` is forward-only and read-only, so every mapping is either a different protocol " +
-        "or a detached copy whose `set` updates nothing — the `Map.Entry#setValue` refusal above, " +
-        "at a cursor. A call fails to COMPILE under the JDK's own name, which is the honest residue",
+    // `java.util.List#listIterator` STOOD HERE and is GONE, removed by the STALE-REFUSAL guard for
+    // the reason the five above it went: its text was a claim about `scala.collection.Iterator`
+    // ("forward-only and read-only") and never about the RECEIVER, which is a `mutable.Buffer` with
+    // indexed read, indexed update, insert and remove — `ListIterator`'s whole contract. §4.5's own
+    // answer applies (`JavaListIterator`, a standalone shim writing THROUGH the buffer), so this is
+    // now a `mapped` row. `ENGINE-LIMITS.md` K23.
+    //
+    // Its SIBLING is not, and the asymmetry is the point: a `Spliterator` cannot be built out of the
+    // receiver at all. Keyed at BOTH owners, exactly as `Map$Entry#setValue` is spelled twice: java
+    // declares `spliterator()` on `Collection` and RE-DECLARES it on `List` with its own default, so
+    // the owner a call resolves at is whichever the receiver was typed by — and keyed at `Collection`
+    // alone, every `List`-typed receiver in the corpus read as `unhandled` and met a wall instead of
+    // this sentence (measured: one row on ssg-md, which is the port the refusal was written for).
+    Refusal("java.util.Collection#spliterator", SpliteratorWhy,
       "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite has no arm"),
-    Refusal("java.util.Collection#spliterator",
-      "a `Spliterator` is a PARALLEL-DECOMPOSITION protocol (`trySplit`, `estimateSize`, " +
-        "`characteristics`) and not an iterator: its only purpose is to be consumed by " +
-        "`java.util.stream`, which this phase COLLAPSES rather than models. There is nothing to map " +
-        "it onto that keeps the contract, and a wrapper would be a stream implementation",
+    Refusal("java.util.List#spliterator", SpliteratorWhy,
+      "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite has no arm"),
+    Refusal("java.util.Set#spliterator", SpliteratorWhy,
       "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite has no arm"),
   )
 

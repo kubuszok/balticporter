@@ -127,16 +127,27 @@ class CollectionsSe8MembersSpec extends PortSuite:
     assertNotEmits(p, "JavaCollections.retainAll(b")
   }
 
-  test("REFUSED and CITED — `listIterator` and `spliterator` are protocols, not values") {
+  test("REFUSED and CITED — `spliterator` is a protocol, and `listIterator` turned out not to be") {
     // The refusal is DATA (`JdkSurfaceCheck.Refusals`) rather than an absent arm, so a reader who
     // meets the compile error finds the reason and its citation instead of a wall. A refusal that
     // exists only as a missing `case` is indistinguishable from a mapping nobody has written yet.
+    //
+    // The PAIR became a single, and that is this entry's own lesson rather than a detail: the
+    // `listIterator` refusal read *scala's `Iterator` is forward-only and read-only*, which is a
+    // statement about `scala.collection.Iterator` and never about the RECEIVER — a `mutable.Buffer`,
+    // whose indexed read, indexed update, insert and remove ARE `ListIterator`'s contract. §4.5's
+    // standalone shim answers it (`CollectionsListIteratorSpec`), so the row is now `mapped` and the
+    // refusal is gone. `spliterator` stays, because there is no receiver capability to build a
+    // parallel decomposition out of.
     val refused = balticporter.tir.JdkSurfaceCheck.Refusals.map(_.api).toSet
-    assert(clue(refused).contains("java.util.List#listIterator"))
+    assert(!clue(refused).contains("java.util.List#listIterator"),
+           "the `listIterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)")
     assert(clue(refused).contains("java.util.Collection#spliterator"))
-    val why = balticporter.tir.JdkSurfaceCheck.Refusals
-      .filter(r => r.api.endsWith("#listIterator") || r.api.endsWith("#spliterator"))
+    // …and at the owner a CALL resolves at. Java re-declares `spliterator()` down its own hierarchy,
+    // and keyed at `Collection` alone the refusal matched no `List`-typed receiver at all: the site
+    // read as `unhandled` and its reader met a wall rather than this sentence.
+    assert(clue(refused).contains("java.util.List#spliterator"))
+    val why = balticporter.tir.JdkSurfaceCheck.Refusals.filter(_.api.endsWith("#spliterator"))
     assert(why.forall(_.cite.contains("K23")))
-    assert(why.exists(_.why.contains("BIDIRECTIONAL")))
-    assert(why.exists(_.why.contains("PARALLEL-DECOMPOSITION")))
+    assert(why.forall(_.why.contains("PARALLEL-DECOMPOSITION")))
   }

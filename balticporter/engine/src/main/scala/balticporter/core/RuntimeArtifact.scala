@@ -128,6 +128,11 @@ object RuntimeArtifact:
     * `remove()` from a parameterless `remove`, and `List(0)` vs `Nil` is the whole content here. */
   val concreteMembers: Map[String, Set[(String, List[Int])]] = Map(
     s"$Package.JavaIterator" -> Set(("remove", List(0))),
+    // `JavaListIterator` brings NOTHING concrete of its own, and that is java's shape rather than an
+    // omission: `Iterator.remove` became a DEFAULT method in SE8 (hence the row above) and
+    // `ListIterator`'s `set`/`add` never did, so both stay abstract here. It still needs its key —
+    // the derivation collects every top-level trait in the published module.
+    s"$Package.JavaListIterator" -> Set.empty,
     s"$Package.JavaIterable" -> Set.empty,
     // `Wrapping` is a MARKER the delegating shim factories carry so a reified question can be asked
     // of the value underneath (`ENGINE-LIMITS.md` K19). Its one member is ABSTRACT, so it brings

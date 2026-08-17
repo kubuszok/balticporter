@@ -5601,7 +5601,7 @@ ssg.md.util.format.TrackedOffset	ssg.md.util.format.TrackedOffset#withOffset(int
 ssg.md.util.format.TrackedOffset	ssg.md.util.format.TrackedOffset$Flags	class	5ce608bc6c5fad2e
 ssg.md.util.format.TrackedOffsetList	segmentOffsetTree	val	7f5c1e4d15d96cd2
 ssg.md.util.format.TrackedOffsetList	segments	val	83a89f497c057f35
-ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList	class	88bd09773358c3da
+ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList	class	ab329599ecf79d48
 ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#<stmt1>	stmt	470f47f62e4c245e
 ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#<stmt2>	stmt	178865c5ee85f824
 ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#<stmt3>	stmt	a3c6914559752071
@@ -5631,8 +5631,8 @@ ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#indexO
 ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#isEmpty()	def	8c378067ed080a22
 ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#iterator()	def	6c44383224843dcc
 ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#lastIndexOf(Object)	def	b3525a8422fa8543
-ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#listIterator()	def	2af2ffe5f2658d2f
-ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#listIterator(int)	def	6962d17cd125e5c9
+ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#listIterator()	def	973d9b58b1ffba9a
+ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#listIterator(int)	def	4a059e021b9ba71a
 ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#myBaseSeq	val	65418bd284ddfeaa
 ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#myBasedOffsetTracker	val	dd3ce41de5dd4f5d
 ssg.md.util.format.TrackedOffsetList	ssg.md.util.format.TrackedOffsetList#myTrackedOffsets	val	b158ead9f122241b

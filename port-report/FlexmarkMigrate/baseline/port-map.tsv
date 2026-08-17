@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-md	engine=balticporter/0.1.0-SNAPSHOT	sources=168378b1b0affffa	files=422	policy=ec0c45e14b1613e3
+# balticporter port map	schema=3	module=ssg-md	engine=balticporter/0.1.0-SNAPSHOT	sources=168378b1b0affffa	files=422	policy=935a52aab7bc20cd
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.vladsch.flexmark.ast.AnchorRefTarget	ssg.md.ast.AnchorRefTarget	Renamed	-		0		form=trait
 type	com.vladsch.flexmark.ast.AutoLink	ssg.md.ast.AutoLink	Renamed	-		0		companion=yes form=class parents=ssg.md.ast.DelimitedLinkNode primary=() primaryKind=no-arg-root primaryVis=public secondaries=(BasedSequence);(BasedSequence,BasedSequence,BasedSequence)
@@ -563,6 +563,7 @@ type		balticporter.runtime.JavaEnumMap	Added	-		0
 type		balticporter.runtime.JavaEnumSet	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaListIterator	Added	-		0		
 type		balticporter.runtime.JavaOptionalDouble	Added	-		0		
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
@@ -5803,8 +5804,8 @@ member	com.vladsch.flexmark.util.format.TrackedOffsetList#indexOf(Object)	ssg.md
 member	com.vladsch.flexmark.util.format.TrackedOffsetList#isEmpty()	ssg.md.util.format.TrackedOffsetList#isEmpty()	Renamed	-	flexmark-util-format/src/main/java/com/vladsch/flexmark/util/format/TrackedOffsetList.java	132	8c378067ed080a22	
 member	com.vladsch.flexmark.util.format.TrackedOffsetList#iterator()	ssg.md.util.format.TrackedOffsetList#iterator()	Renamed	-	flexmark-util-format/src/main/java/com/vladsch/flexmark/util/format/TrackedOffsetList.java	139	6c44383224843dcc	
 member	com.vladsch.flexmark.util.format.TrackedOffsetList#lastIndexOf(Object)	ssg.md.util.format.TrackedOffsetList#lastIndexOf(Object)	Renamed	-	flexmark-util-format/src/main/java/com/vladsch/flexmark/util/format/TrackedOffsetList.java	165	b3525a8422fa8543	
-member	com.vladsch.flexmark.util.format.TrackedOffsetList#listIterator()	ssg.md.util.format.TrackedOffsetList#listIterator()	Renamed	-	flexmark-util-format/src/main/java/com/vladsch/flexmark/util/format/TrackedOffsetList.java	169	2af2ffe5f2658d2f	
-member	com.vladsch.flexmark.util.format.TrackedOffsetList#listIterator(int)	ssg.md.util.format.TrackedOffsetList#listIterator(int)	Renamed	-	flexmark-util-format/src/main/java/com/vladsch/flexmark/util/format/TrackedOffsetList.java	173	6962d17cd125e5c9	
+member	com.vladsch.flexmark.util.format.TrackedOffsetList#listIterator()	ssg.md.util.format.TrackedOffsetList#listIterator()	Renamed	-	flexmark-util-format/src/main/java/com/vladsch/flexmark/util/format/TrackedOffsetList.java	169	973d9b58b1ffba9a	
+member	com.vladsch.flexmark.util.format.TrackedOffsetList#listIterator(int)	ssg.md.util.format.TrackedOffsetList#listIterator(int)	Renamed	-	flexmark-util-format/src/main/java/com/vladsch/flexmark/util/format/TrackedOffsetList.java	173	4a059e021b9ba71a	
 member	com.vladsch.flexmark.util.format.TrackedOffsetList#myBaseSeq	ssg.md.util.format.TrackedOffsetList#myBaseSeq	Renamed	-	flexmark-util-format/src/main/java/com/vladsch/flexmark/util/format/TrackedOffsetList.java	30	65418bd284ddfeaa	vis=private
 member	com.vladsch.flexmark.util.format.TrackedOffsetList#myBasedOffsetTracker	ssg.md.util.format.TrackedOffsetList#myBasedOffsetTracker	Renamed	-	flexmark-util-format/src/main/java/com/vladsch/flexmark/util/format/TrackedOffsetList.java	32	dd3ce41de5dd4f5d	vis=private
 member	com.vladsch.flexmark.util.format.TrackedOffsetList#myTrackedOffsets	ssg.md.util.format.TrackedOffsetList#myTrackedOffsets	Renamed	-	flexmark-util-format/src/main/java/com/vladsch/flexmark/util/format/TrackedOffsetList.java	31	b158ead9f122241b	vis=private

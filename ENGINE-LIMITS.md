@@ -6864,7 +6864,7 @@ member with NO rewrite" is what keeps every bound reference on every retyped rec
 lambda for no difference at all.*
 
 **…AND ONE OF THE TWO REFUSALS DOES NOT SURVIVE BEING RE-READ — `listIterator` IS BUILDABLE, EXACTLY.
-DESIGNED at wave 14, not built; worth 2 errors on ssg-md and NO behaviour.**
+BUILT at wave 15: ssg-md 11 → 9, `collection-closure` 2 → 0, `jdk-surface` 26 → 25.**
 
 The refusal reads *scala's `Iterator` is forward-only and read-only, so every mapping is either a
 different protocol or a detached copy whose `set` updates nothing*. Every word of that is a statement
@@ -6889,11 +6889,59 @@ calls any of them** — they exist because `implements List<TrackedOffset>` obli
 buys **2 compile errors and no behavioural difference**, which is why it is recorded here with its
 population rather than built inside a wave aimed at a census.
 
-*Fix kind: (b) — the tables gain the entries and the runtime gains the members; `spliterator`'s
-refusal is (a) with citations and STANDS. `listIterator`'s is (a), REOPENED and designed:
-`JavaListIterator` over `mutable.Iterable[A] & mutable.Seq[A] & mutable.Growable[A] &
-mutable.Shrinkable[A]`, java's arity throughout. `CollectionsSe8MembersSpec`, one cell per member with
-its java-vs-scala divergence asserted, plus the refusals.*
+**BUILT, and the design's own type was not the shape it takes.** The design said "`JavaListIterator`
+over `mutable.Iterable[A] & mutable.Seq[A] & mutable.Growable[A] & mutable.Shrinkable[A]`", which is
+the RECEIVER's capability written as an intersection — and the shim is not parameterised by a
+receiver at all: it is a `trait JavaListIterator[A] extends JavaIterator[A]` plus a factory
+`JavaListIterator.over(buf, from)` that closes over one `mutable.Buffer`. Three things follow, and
+the first two were not in the design:
+
+- **it is a TYPEMAP ENTRY and not only a rewrite.** `java.util.ListIterator extends
+  java.util.Iterator`, `Iterator` maps and this one did not, so the edge had no image — which was not
+  a prediction: `collection-closure` had been reporting exactly that, twice, for the life of the port
+  (*"Tycon — unmapped, but java.util.Iterator is mapped … so the JDK relation is lost"*). Adding
+  `java.util.ListIterator -> JavaListIterator` and making the shim EXTEND `JavaIterator` closes the
+  errors and drains that lane in the same commit. `standaloneTargets` and `shimSyms` gain it too, or
+  `kindOf` would offer a cursor to `JavaIterable.from` at an iterable slot;
+- **`set` and `add` are ABSTRACT, and `remove` is not** — java's own split, not a choice. SE8 gave
+  `Iterator.remove` a default body (which is why [[JavaIterator]]'s is concrete) and never gave these
+  two one, so a default here would be the shim inventing a contract java does not have and a ported
+  class that forgot the member would throw at run time instead of failing to compile;
+- **the cursor was verified against `javac`, cell by cell**, not against the javadoc: `add` inserts
+  BEFORE the cursor (so `nextIndex()` grows, a following `next()` is unaffected and a following
+  `previous()` returns the new element), `remove()` after `previous()` leaves the cursor where it is
+  while after `next()` it moves back, and the three exception classes are
+  `IllegalStateException`/`NoSuchElementException`/`IndexOutOfBoundsException` at java's own
+  boundaries. ONE delta, stated: no `ConcurrentModificationException`, because a `mutable.Buffer`
+  publishes no `modCount` to snapshot — java THROWS where this reads on.
+
+**And `spliterator`'s refusal was keyed where nothing could match it.** Java declares `spliterator()`
+on `Collection` and RE-DECLARES it on `List` and `Set` with their own defaults, so the owner a call
+resolves at is whichever type the receiver was declared as — and keyed at `Collection` alone, the one
+site in the corpus (a `List`-typed field) read as `unhandled` and sent its reader to a wall instead of
+to the reason. Spelled at all three, exactly as `Map$Entry#setValue` is spelled twice, `jdk-surface`
+26 → 25 with that row becoming the `Refused` it always was.
+
+**The refusal itself STANDS, and the near miss is now written into it, because it is the reason.**
+`buf.asJava.spliterator()` compiles and looks like a closure of this gap: it reaches the JDK's own
+implementation over a live view, so "a wrapper would be a stream implementation" is not the objection.
+The real one is quieter — `asJava` on a `Buffer` yields a wrapper whose `spliterator()` is
+`AbstractCollection`'s DEFAULT, reporting NEITHER `ORDERED` nor `SIZED` where the `ArrayList` java had
+reports both, so a consumer that reads `characteristics()` gets a different answer with a green
+compile and nothing to see it (`CLAUDE.md` §4.4). That is a defect class bought for a member nothing
+calls.
+
+*Fix kind: (a) for `listIterator`, BUILT — the runtime gains a type, `typeMap`/`standaloneTargets`/
+`shimSyms`/`runtimeTypes` gain it, `rewrite` gains one arm and `Refusals` LOSES a row (the
+stale-refusal guard would have reported it otherwise, which is the guard doing its job). (a) for
+`spliterator`, STANDING, re-keyed at three owners. **ssg-md 11 → 9**, `collection-closure` **2 → 0**
+and `jdk-surface` **26 → 25**, each falling with exactly the rows it named; 3 member digests, the two
+`listIterator` overloads and their file. `JavaListIteratorSpec` — eleven cells, every one verified
+against `java.util.ArrayList().listIterator()` by running it. `CollectionsListIteratorSpec` — four
+positives (both overloads, the retyped RESULT, and a class that IMPLEMENTS the interface at java's
+arity) and one negative (a `Set`/`Map` receiver, which java never gave the member), plus the two
+table-agreement assertions that keep a future `spliterator` arm from landing without removing its
+refusal.*
 
 ---
 

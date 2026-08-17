@@ -458,6 +458,10 @@ final class CollectionsTransform(
   private var existsSym, forallSym: SymId = SymId.None
   /** `JavaIterator.from` — the `iterator` counterpart of `wrapIterableArgs`. */
   private var iteratorFromSym, javaIteratorSym: SymId = SymId.None
+  /** `JavaListIterator` and its write-through cursor `JavaListIterator.over` — the `listIterator`
+    * rewrite's target (`ENGINE-LIMITS.md` K23). `SymId.None` unless the program names
+    * `java.util.ListIterator`, so the arm declines by arithmetic everywhere else. */
+  private var javaListIteratorSym, listIteratorOverSym: SymId = SymId.None
   /** the mapping targets `JavaCollections.fromJava` can actually PRODUCE — see
     * [[CollectionsTransform.liveWrappable]], read as symbols so [[externalProducer]] asks a
     * membership question about what this run minted rather than a question about a name. EMPTY when
@@ -719,6 +723,8 @@ final class CollectionsTransform(
     ).flatMap(fqn => byScala.get(fqn).map(_ -> mint("defaultLoadFactor", s"$fqn.defaultLoadFactor"))).toMap
     iteratorFromSym = mint("from", JavaIteratorFqn + ".from")
     javaIteratorSym = byScala.getOrElse(JavaIteratorFqn, SymId.None)
+    javaListIteratorSym = byScala.getOrElse(CollectionsTransform.JavaListIteratorFqn, SymId.None)
+    listIteratorOverSym = mint("over", CollectionsTransform.JavaListIteratorFqn + ".over")
     // …the five targets a LIVE view exists for, as this run's own symbols. Keyed on `byScala`, so a
     // target the program never names is simply absent and the wrap declines by arithmetic.
     liveWrappableSyms = byScala.collect {
@@ -3572,7 +3578,8 @@ final class CollectionsTransform(
                  factory, tpe, actual.origin)
 
   /** the runtime shims, as scala symbols — a source already typed as one is never re-wrapped. */
-  private def shimSyms: Set[SymId] = Set(javaIterableSym, javaIteratorSym, javaCollectionSym)
+  private def shimSyms: Set[SymId] =
+    Set(javaIterableSym, javaIteratorSym, javaListIteratorSym, javaCollectionSym)
 
   /** the shims as FQNs, so a `typeMap` TARGET can be recognised as one.
     *
@@ -3581,7 +3588,7 @@ final class CollectionsTransform(
     * run resolved by any route. */
   private def shimFqns: Set[String] =
     Set(CollectionsTransform.JavaIterableFqn, CollectionsTransform.JavaIteratorFqn,
-        CollectionsTransform.JavaCollectionFqn)
+        CollectionsTransform.JavaListIteratorFqn, CollectionsTransform.JavaCollectionFqn)
 
   /** Does a value of this type END UP shim-shaped — the shim itself, or a type THIS PROGRAM
     * DECLARES that inherits from one?
@@ -3773,6 +3780,20 @@ final class CollectionsTransform(
       case ("iterator", Nil, _) if iteratorFromSym != SymId.None =>
         val sel = Tree.Select(recv, m, t.tpe, t.origin) // parenless, as the generic case below
         Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so), List(sel), iteratorFromSym, t.tpe, so))
+      // `list.listIterator()` / `listIterator(i)` — java's BIDIRECTIONAL cursor, which K23 refused
+      // and which does not survive being re-read (`ENGINE-LIMITS.md` K23). The refusal is a
+      // statement about `scala.collection.Iterator`; the RECEIVER here is a `mutable.Buffer`, whose
+      // indexed read, indexed update, insert and remove ARE `ListIterator`'s contract. So this is
+      // not a member with nothing to map onto, it is a member with nothing to map onto IN SCALA'S
+      // ITERATOR — and §4.5's answer to exactly that is a standalone shim carrying java's shape.
+      //
+      // `over` writes THROUGH to the same buffer the caller holds, which is the capability a
+      // detached copy loses and the whole reason java's interface exists. `Kind.Seq` only: java
+      // declares `listIterator` on `List` and nowhere else, so a `Set`/`Map` receiver never had it.
+      case ("listIterator", args @ (Nil | List(_)), Kind.Seq | Kind.Stack)
+        if listIteratorOverSym != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(listIteratorOverSym, TypeRepr.NoType, so), recv :: args,
+                        listIteratorOverSym, t.tpe, so))
       // `m.values()` is the same provenance problem as `iterator()` above, and the same fix.
       // Java's `Map.values()` is declared `Collection<V>`, so every slot the port derived from that
       // asks for the SHIM — while the emitted `m.values` is a `scala.collection.Iterable`. The TIR
@@ -4796,6 +4817,7 @@ object CollectionsTransform:
     case Opt
 
   val JavaIteratorFqn = s"${RuntimeArtifact.Package}.JavaIterator"
+  val JavaListIteratorFqn = s"${RuntimeArtifact.Package}.JavaListIterator"
   val JavaIterableFqn = s"${RuntimeArtifact.Package}.JavaIterable"
   val JavaCollectionFqn = s"${RuntimeArtifact.Package}.JavaCollection"
   /** `java.util.Stack`'s target — a `mutable.ArrayBuffer` carrying java's own LIFO five. See the
@@ -4826,11 +4848,12 @@ object CollectionsTransform:
     * three unrelated to the scala family and report every correct slot they reach as a seam, which
     * is §4.56's name hazard met at a target rather than at a source.
     *
-    * These three are standalone because `CLAUDE.md` §4.5 says they must be: java's `Iterable`,
-    * `Collection` and `Iterator` are small orthogonal interfaces a class implements SEVERAL of, and
-    * scala's collection traits are large and interlocking, so modelling them on one is illegal for
-    * the shape every collection library has. The price is exactly this lane. */
-  val standaloneTargets: Set[String] = Set(JavaIterableFqn, JavaCollectionFqn, JavaIteratorFqn)
+    * These are standalone because `CLAUDE.md` §4.5 says they must be: java's `Iterable`,
+    * `Collection`, `Iterator` and `ListIterator` are small orthogonal interfaces a class implements
+    * SEVERAL of, and scala's collection traits are large and interlocking, so modelling them on one
+    * is illegal for the shape every collection library has. The price is exactly this lane. */
+  val standaloneTargets: Set[String] =
+    Set(JavaIterableFqn, JavaCollectionFqn, JavaIteratorFqn, JavaListIteratorFqn)
 
   /** java's UNIVERSAL supertype — the one formal at which every value conforms, and therefore the
     * one at which conformance proves nothing.
@@ -4965,6 +4988,18 @@ object CollectionsTransform:
     // target is the shim in [[CollectionsTransform.runtimeSources]], which is scala's `Iterator`
     // PLUS java's `remove`, defaulted to java's own default (throw UnsupportedOperationException).
     "java.util.Iterator"      -> (JavaIteratorFqn, Kind.Seq),
+    // …and its BIDIRECTIONAL sibling, for the rule the `Queue`/`Deque` and `ConcurrentHashMap`
+    // blocks state three times over: A MAPPING MUST PRESERVE THE SOURCE LIBRARY'S OWN SUBTYPE
+    // RELATIONS. `java.util.ListIterator extends java.util.Iterator`, so mapping the parent and not
+    // this one splits an edge every `Iterator`-typed slot depends on — which is not a hypothesis:
+    // `collection-closure` was already reporting exactly that, twice, on the one corpus port that
+    // names the type. `JavaListIterator extends JavaIterator`, so the edge survives.
+    //
+    // NOT refused with `spliterator` beside it, though K23 counted the two together. That refusal
+    // is about `scala.collection.Iterator` and the RECEIVER here is a `mutable.Buffer`, which has
+    // indexed read, indexed update, insert and remove — `ListIterator`'s whole contract, written
+    // THROUGH to the caller's own list (§4.5's standalone shim, `JavaListIterator.over`).
+    "java.util.ListIterator"  -> (JavaListIteratorFqn, Kind.Seq),
     "java.util.Map"           -> ("scala.collection.mutable.Map", Kind.Map),
     "java.util.HashMap"       -> ("scala.collection.mutable.HashMap", Kind.Map),
     "java.util.LinkedHashMap" -> ("scala.collection.mutable.LinkedHashMap", Kind.Map),
@@ -5385,7 +5420,12 @@ object CollectionsTransform:
                                // `AbstractCollection`'s two bulk MUTATORS, which scala's nearest
                                // members answer a different question for.
                                "sort", "removeIf", "containsAll", "removeAll", "retainAll",
-                               "ensureCapacity"),
+                               "ensureCapacity",
+                               // …and java's BIDIRECTIONAL cursor, which `JavaListIterator.over`
+                               // writes through to this very buffer (`ENGINE-LIMITS.md` K23). It is
+                               // on `Kind.Seq` alone because java declares `listIterator` on `List`
+                               // and nowhere else.
+                               "listIterator"),
     Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values", "putIfAbsent",
                                "computeIfAbsent", "containsValue"),
     // …`contains` is here because the phase ANSWERS for it at a `Set`: at a widened `Object` probe
@@ -5465,8 +5505,8 @@ object CollectionsTransform:
     * would stop type-checking. Two types, one decision.
     */
   val runtimeTypes: Set[String] =
-    Set(JavaIteratorFqn, JavaIterableFqn, JavaCollectionFqn, JavaCollectionsFqn, JavaStackFqn,
-        JavaEnumMapFqn, JavaEnumSetFqn,
+    Set(JavaIteratorFqn, JavaListIteratorFqn, JavaIterableFqn, JavaCollectionFqn, JavaCollectionsFqn,
+        JavaStackFqn, JavaEnumMapFqn, JavaEnumSetFqn,
         JavaOptionalIntFqn, JavaOptionalLongFqn, JavaOptionalDoubleFqn)
 
   /** What [[runtimeSources]] BRINGS, for a consumer that must reason about the injected

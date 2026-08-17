@@ -52,8 +52,8 @@ class SbtGenRuntimeSpec extends munit.FunSuite:
       val plan = SbtGen.emitPort(root, spec, List(new CollectionsTransform), RuntimeMode.Vendored)
       val build = Files.readString(root.resolve("build.sbt"))
       assert(!build.contains(RuntimeArtifact.artifact), clue(build))
-      // ten — the phase's whole `runtimeTypes`; `RuntimePlanSpec` enumerates them and says why.
-      assertEquals(plan.sources.size, 10)
+      // eleven — the phase's whole `runtimeTypes`; `RuntimePlanSpec` enumerates them and says why.
+      assertEquals(plan.sources.size, 11)
       assertEquals(plan.sources.get(s"${RuntimeArtifact.Package}.JavaIterator"),
                    Some(RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator")))
       // …and this did NOT write them. The build generator cannot know which source set the run is
