@@ -2807,7 +2807,7 @@ not an engine change.
 | `portability(emitted)` | **18** sites against 37 rules — `javax.imageio.ImageIO` 8, `java.lang.reflect.Array` 2, `java.nio.file.Files` 2, and one each of `javax.swing.*` (2), `java.net.URL*` (3), `java.text.MessageFormat`. Six `substitutions-drop` remedies published, four of them naming exactly the types the hand port silently omitted |
 | `dependency-coverage` | **10 of 10** — `java.util.Locale` 6 and `java.text.NumberFormat` 4, both answered by `scala-java-locales` on both non-JVM backends. Not a call to remove; a coordinate to declare |
 | `decisions.tsv` | **2,014 rows** — 715 `RetypedSignature`, 507 `RenamedMember`, 458 `RenamedPackage`, 146 `ForcedClassInit`, 107 `FunnelledCtor`, 57 `WidenedVisibility`, 12 `DroppedSuperCall`, 10 `InjectedMember`, 2 `RetainedParent` |
-| tests | **723 emitted, 0 lost, RUN FOR THE FIRST TIME AT WAVE 23 (683 passing, 40 failing) and 703 passing / 20 failing after wave 24.** 37 of the original 40 were JUnit's `ExpectedException` `@Rule`, which the port's own refusal lane had predicted since wave 7 and which the run confirmed 1:1; wave 24 translated 20 of those, refuses the other 17 at ONE guard (`ENGINE-LIMITS.md` X5), DECLARED the 2 (a library-wide `Pair.equals` defect, K18.1) and CLOSED the 1 (`JavaCollections.toArray` trusting `size()`, K31); 2 are §4.4's two-representations family met at an `assertEquals`; **1 is the port's own uncensused residue** (§10.6.6). Blocked until wave 23 on the `RefChecks` census, since the lane runs the suite only at a WHOLE-compile of zero** — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
+| tests | **723 emitted, 0 lost, RUN FOR THE FIRST TIME AT WAVE 23 (683 passing, 40 failing) and 704 passing / 19 failing after wave 24, with EVERY failure attributed.** All 40 of wave 23's were classified and wave 24 answered each family: 37 were JUnit's `ExpectedException` `@Rule`, which the port's own refusal lane had predicted since wave 7 and which the run confirmed 1:1 — **20 translated**, the other **17 refused at ONE guard** and left OPEN as a work item (`ENGINE-LIMITS.md` X5); 2 were §4.4's two-representations family, re-diagnosed to a library-wide `Pair.equals` defect and **DECLARED** with anchors (K18.1); and the 1 uncensused residue was an ENGINE defect in `JavaCollections.toArray`, **CLOSED** (K31). Blocked until wave 23 on the `RefChecks` census, since the lane runs the suite only at a WHOLE-compile of zero — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
 
 **The behavioural gate is now BUILT and does not yet RUN, which is a smaller gap than the one this
 paragraph used to describe and is not zero.** §3 is explicit about what a compile-error count is
@@ -2821,9 +2821,9 @@ typer** — G21's two closed and the typer count reached ZERO, which let a phase
 `!ctx.reporter.hasErrors` report `ENGINE-LIMITS.md` G30's raw-bound fill. The test set
 itself has been at ZERO since wave 12, and `md-test-measure` runs the suite only at a WHOLE-compile
 of zero — main and test are compiled together, because the suite links against `src_managed/main` —
-so the whole compiler's own verdict is what stands between this port and its first behavioural
-census. Discovery holds at **723 of 723 with 0 lost** on every run, which is the guard that says the
-suite would actually execute something once it runs at all.
+so the whole compiler's own verdict is what stood between this port and its first behavioural
+census until wave 23 opened it. Discovery holds at **723 of 723 with 0 lost** on every run, which is
+the guard that said the suite would actually execute something once it ran at all — and it did.
 
 **And a post-typer number is not a countdown, because the risers are SERIALISED.** Wave 18's first
 commit closed G30 and the figure stayed at ONE — the post-typer phases gate on each other exactly as
@@ -3639,8 +3639,10 @@ whole of the first row**: `@Rule × 6` has been in the table above since wave 7,
 field is emitted and NEVER APPLIED, so an expected throw propagates and MUnit records a FAILURE
 rather than a silent pass* — six `@Rule` FIELDS across six suites, thirty-seven test methods using
 them, and the run confirms the prediction exactly. That is a refusal enumeration doing the job §3
-says it is for, measured a wave and a half after it was written. And **the residue that is really the
-PORT's is three tests out of 723**, which is the number to quote — not `40`, and not the suite delta.
+says it is for, measured a wave and a half after it was written. And **the residue that was really the
+PORT's was three tests out of 723** — the number to quote at wave 23, not `40` and not the suite
+delta. Wave 24 closed one of the three, declared the other two and took 20 of the first row; the
+floor below is where that number lives now.
 
 **WAVE 24 BUILT THE MAPPING THE ROW ABOVE HAD BEEN WAITING FOR — 683 → 703 passing, 40 → 20 failing,
 at 0 errors and every check count flat.** The design was recorded at waves 8-10 and deferred three
@@ -3675,6 +3677,22 @@ so there is no before to compare against and no honest attribution in either dir
 said is that all twenty `util.collection` failures are `thrown.expect` rows whose exception is java's
 own, and that the eight classes the bridge re-parented carry 683 passing assertions between them and
 the rest of the suite.
+
+### THE FLOOR AFTER WAVE 24 — **704 passing / 19 failing of 723, 0 lost, 0 compile errors on both source sets, and EVERY failure attributed**
+
+Three commits, each measured on its own: the `ExpectedException` mapping (`683 → 703`), the two
+`test_getLineColumnAtIndex` rows declared where the engine already counts them (`703 → 703`, and the
+lane now reads `expected 2 / unexpected 18`), and `JavaCollections.toArray` (`703 → 704`). What is
+left divides in TWO, and the line between them is the one thing this section has to be read for:
+
+| what | how many | why it is not a regression, and why it is NOT declared either |
+|---|---|---|
+| **`ExpectedException` at a NON-STATEMENT position** | **17** | a counted refusal, one row per SITE naming its guard, and the lowering that would close all of them is designed and priced in `ENGINE-LIMITS.md` X5. **Deliberately NOT in `expected-failures.tsv`**: these are a WORK ITEM, not a decision the port stands behind, and §5's own rule about accepts says a fix somebody has not built takes no entry however honestly the site has been read. Declaring them would retire the only instrument pointing at them |
+| **`Pair.equals` over a reified `Map.Entry`** | **2** | DECLARED, with anchors. The difference from the row above is not size: the fix is *weighed and refused on a number* (`ENGINE-LIMITS.md` K18.1 — 2 sites in the whole corpus), the mechanism is counted twice where it happens, and the identical shape is already declared on liqp. That is a stated answer rather than an unbuilt lowering |
+
+So the number to quote for this port is **17 open, all one family, all one guard** — not 19, and not
+the suite delta. There is no third category: nothing in this suite fails for a reason nobody has
+looked at, which is what the census of wave 23 could not yet say.
 
 **And the two families that make up 24 of those 26 are each ONE GUARDED translation away, which is
 worth stating as a design rather than re-deriving.** Neither is built; both are engine (a) and

@@ -702,6 +702,24 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(!t.contains("thrown.expect"), t)
   }
 
+  test("…and the operands are bound IN CALL ORDER, whichever of the two java wrote first") {
+    // The eager bindings exist to keep java's evaluation order, so ordering them by KIND would
+    // reintroduce exactly what they were written to preserve. Nothing else can see this: both
+    // orders compile, and both differ only when an operand has a side effect.
+    val (out, ph) = emitWithRules(ruleSuite(
+      """  @Test public void a() {
+        |    thrown.expectMessage(msg());
+        |    thrown.expect(org.hamcrest.IsAnything.anything());
+        |    boom();
+        |  }
+        |  static String msg() { return "boom"; }
+        |  static void boom() { throw new IllegalStateException("boom"); }""".stripMargin))
+    val t = out.substring(out.indexOf("test(\"a\")"))
+    assertEquals(clue(guards(ph)), Nil)
+    assert(clue(t).indexOf("val bpMessage0") < t.indexOf("val bpMatcher"), t)
+    assert(t.indexOf("val bpMatcher") < t.indexOf("intercept["), t)
+  }
+
   test("TWO expect calls are REFUSED — java accumulates matchers and intercept has one argument") {
     val (out, ph) = emitWithRules(ruleSuite(
       """  @Test public void a() {

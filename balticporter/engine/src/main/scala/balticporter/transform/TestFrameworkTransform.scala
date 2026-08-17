@@ -985,14 +985,18 @@ final class TestFrameworkTransform(
               "and this call's is neither a `java.lang.Class` at a literal `classOf` nor an " +
               s"`$HamcrestMatcher`. A guess here would be a fabricated fact (CLAUDE.md §4.6).")
             case Right(ex) =>
-              val msgs = calls.filter(_._2._1 == "expectMessage").map((_, c) => expectMsgKind(c._2))
-              if msgs.exists(_.isLeft) then refuse("expect-message-overload",
+              // the whole run, IN CALL ORDER — java evaluated each argument where it wrote it, and
+              // `expectMessage` may stand before `expect`.
+              val ordered = calls.map { (_, c) =>
+                if c._1 == "expect" then Right(Left(ex)) else expectMsgKind(c._2).map(Right(_))
+              }
+              if ordered.exists(_.isLeft) then refuse("expect-message-overload",
                 "junit's `expectMessage` has two overloads — `expectMessage(String)` (which means " +
                 "`containsString`) and `expectMessage(Matcher<String>)`. This call's formal is " +
                 "neither, so which one java resolved cannot be read.")
               else
                 rulesConverted += 1
-                (interceptRule(b, calls.head._1, calls.last._1, ex, msgs.flatMap(_.toOption)),
+                (interceptRule(b, calls.head._1, calls.last._1, ordered.flatMap(_.toOption)),
                  ex match
                    case Expect.OfClass(t)  => s"thrown.expect(${nameOf(t)}) -> intercept[${nameOf(t)}]"
                    case Expect.OfMatcher(_) =>
@@ -1009,44 +1013,51 @@ final class TestFrameworkTransform(
     * that is exactly the intercepted body. The consumed statements' comments move onto the
     * `intercept` that replaces them — a `@Rule` call's javadoc is about the expectation and the
     * expectation is still there. */
-  private def interceptRule(b: Tree.Block, lo: Int, hi: Int, ex: Expect, msgs: List[ExpectMsg]): Term =
+  private def interceptRule(b: Tree.Block, lo: Int, hi: Int,
+                            calls: List[Either[Expect, ExpectMsg]]): Term =
     val o     = b.stats(lo) match { case t: Term => t.origin; case _ => b.origin }
     val inner = Tree.Block(b.stats.drop(hi + 1), b.expr, b.tpe, o, b.trailing)
-    val exT   = ex match
-      case Expect.OfClass(t)   => t
-      case Expect.OfMatcher(_) => throwableType
+    val exT   = calls.collectFirst {
+      case Left(Expect.OfClass(t)) => t
+    }.getOrElse(throwableType)
     // the matcher operands, bound WHERE JAVA EVALUATED THEM — at the `expect` call, before the body
     // runs. A literal needs no binding and gets none; anything else does, or the rewrite would move
-    // an arbitrary expression across the code it is about to assert on.
+    // an arbitrary expression across the code it is about to assert on. Bound in CALL ORDER, which
+    // is why the calls arrive as one list rather than as an `expect` and its messages: java ran
+    // them in the order it wrote them, and `expectMessage` may stand first.
     val pre  = List.newBuilder[Statement]
     val post = List.newBuilder[Statement]
+    var msg  = 0
     def bound(nm: String, t: Term): Term = t match
       case _: Tree.Literal => t
       case _ =>
         val s = mint(nm, nm, Flags(), t.tpe)
         pre += Tree.ValDef(s, TypeTree(t.tpe, o), Some(t), o)
         Tree.Ident(s, t.tpe, o)
-    val matcher = ex match
-      case Expect.OfClass(_)   => scala.None
-      case Expect.OfMatcher(m) => Some(bound("bpMatcher", m))
-    val msgOperands = msgs.zipWithIndex.map {
-      case (ExpectMsg.Contains(t), i) => Left(bound(s"bpMessage$i", t))
-      case (ExpectMsg.ByMatcher(m), i) => Right(bound(s"bpMessage$i", m))
+    val operands = calls.map {
+      case Left(Expect.OfClass(t))       => Left(Expect.OfClass(t))
+      case Left(Expect.OfMatcher(m))     => Left(Expect.OfMatcher(bound("bpMatcher", m)))
+      case Right(ExpectMsg.Contains(t))  =>
+        val r = Right(ExpectMsg.Contains(bound(s"bpMessage$msg", t))); msg += 1; r
+      case Right(ExpectMsg.ByMatcher(m)) =>
+        val r = Right(ExpectMsg.ByMatcher(bound(s"bpMessage$msg", m))); msg += 1; r
     }
     // …and the intercepted value, named only where something has to be asserted ABOUT it.
     val call0 = intercept(interceptSym, exT, inner, o)
     val stat  =
-      if matcher.isEmpty && msgOperands.isEmpty then call0
+      if operands.forall { case Left(Expect.OfClass(_)) => true; case _ => false } then call0
       else
         val s = mint("bpThrown", "bpThrown", Flags(), exT)
         val ref = Tree.Ident(s, exT, o)
-        matcher.foreach(m => post += assertThat(invoke(m, matchesSym, List(ref), o),
-          "the exception did not satisfy the matcher the java test expected", o))
-        msgOperands.foreach {
-          case Left(txt) => post += assertThat(
-            invoke(message(ref, o), containsSym, List(txt), o),
+        operands.foreach {
+          case Left(Expect.OfClass(_))     => ()
+          case Left(Expect.OfMatcher(m))   => post += assertThat(invoke(m, matchesSym, List(ref), o),
+            "the exception did not satisfy the matcher the java test expected", o)
+          case Right(ExpectMsg.Contains(t)) => post += assertThat(
+            invoke(message(ref, o), containsSym, List(t), o),
             "the exception message did not contain the text the java test expected", o)
-          case Right(m) => post += assertThat(invoke(m, matchesSym, List(message(ref, o)), o),
+          case Right(ExpectMsg.ByMatcher(m)) => post += assertThat(
+            invoke(m, matchesSym, List(message(ref, o)), o),
             "the exception message did not satisfy the matcher the java test expected", o)
         }
         Tree.ValDef(s, TypeTree(exT, o), Some(call0), o)
