@@ -3876,12 +3876,14 @@ final class CollectionsTransform(
       // `c.spliterator()` — K23's OTHER refusal, and the one that stayed refused when
       // `listIterator` did not. That refusal is exact about the protocol (a `Spliterator` is a
       // parallel DECOMPOSITION whose only consumer is `java.util.stream`, which this phase
-      // collapses) and what it actually rested on is a NEAR MISS: `buf.asJava.spliterator()`
-      // compiles and reports NEITHER `ORDERED` nor `SIZED` where the `ArrayList` java held reports
-      // both, so a consumer reading `characteristics()` gets a different answer silently.
+      // collapses) and its stated evidence — `buf.asJava.spliterator()` reports NEITHER `ORDERED`
+      // nor `SIZED` — does NOT reproduce: the converter's wrapper reports the same characteristics
+      // these helpers do (`JavaCollectionsSpec`). So delegating would have worked too, and the
+      // reason to state java's answer rather than inherit it is that the characteristics then
+      // follow JAVA'S DECLARATION and not scala's converter.
       //
-      // The near miss is closable without modelling one thing about streams, because java's own
-      // answer is a DEFAULT METHOD whose characteristics are written down: `Collection` passes `0`,
+      // Either way nothing about streams is modelled, because java's own answer is a DEFAULT
+      // METHOD whose characteristics are written down: `Collection` passes `0`,
       // `List` passes `ORDERED`, `Set` passes `DISTINCT`, and `Spliterators.spliterator` ORs in
       // `SIZED | SUBSIZED` for all three. The owner a call resolved at is the receiver's KIND, which
       // this arm is already keyed on — so the emission is java's declaration at that owner and not

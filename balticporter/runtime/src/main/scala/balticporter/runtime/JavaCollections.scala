@@ -463,14 +463,17 @@ object JavaCollections:
     *
     * A `Spliterator` is a parallel-DECOMPOSITION protocol and its only consumer is
     * `java.util.stream`, which the collections phase collapses rather than models — which is why
-    * this stayed refused when `listIterator` did not (`ENGINE-LIMITS.md` K23). What that refusal
-    * actually rested on is a NEAR MISS, and the near miss is what these three close:
-    * `buf.asJava.spliterator()` compiles and reports NEITHER `ORDERED` nor `SIZED`, where the
-    * `ArrayList` java held reports both, so a consumer reading `characteristics()` gets a different
-    * answer silently — `CLAUDE.md` §4.4's defect class, bought for a member nothing calls.
+    * this stayed refused when `listIterator` did not (`ENGINE-LIMITS.md` K23). That refusal's
+    * stated evidence was a NEAR MISS — `buf.asJava.spliterator()` reports NEITHER `ORDERED` nor
+    * `SIZED` where the `ArrayList` java held reports both — and it DOES NOT REPRODUCE: measured on
+    * scala 3.8.4, the converter's wrapper reports `ORDERED | SIZED | SUBSIZED`, the same `16464`
+    * these produce (`JavaCollectionsSpec` pins it).
     *
-    * The answer is not to delegate to whatever `asJava`'s wrapper inherits, but to reproduce
-    * JAVA'S OWN DEFAULT at the owner the receiver was typed by. Java re-declares `spliterator()`
+    * So delegating would have worked, and these exist for a different reason: they make the
+    * characteristics follow JAVA'S OWN DECLARATION at the owner the receiver was typed by — a fact
+    * a reader can check against the JDK source — instead of following whatever scala's converter
+    * happens to wrap the collection in. §4.5's argument for a standalone shim over an inherited
+    * one, and NOT the argument the refusal made. Java re-declares `spliterator()`
     * three times with three different characteristic sets, and `Spliterators.spliterator(Collection,
     * int)` ORs in `SIZED | SUBSIZED` on top of whatever each passes:
     *

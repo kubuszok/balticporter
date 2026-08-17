@@ -6888,13 +6888,25 @@ could remove the other through any by-value route.
   `characteristics`) whose only consumer is `java.util.stream`, which this phase COLLAPSES rather than
   models. A wrapper for it would be a stream implementation.
 
-**…and the SECOND refusal went the same way at wave 16, closed by the NEAR MISS its own text named —
-ssg-md 4 → 3, `findings.tsv` byte-identical, every check count flat.** The refusal above is exact
-about the protocol and that is not what the SITE asked. What it rested on in practice is the sentence
-this entry already carried: *`buf.asJava.spliterator()` compiles and reports NEITHER `ORDERED` nor
-`SIZED` where the `ArrayList` java had reports both*. That is a statement about `asJava`'s wrapper,
-not about the receiver — and java's own answer is WRITTEN DOWN, because `spliterator()` is a DEFAULT
-METHOD re-declared at three owners with three characteristic sets:
+**…and the SECOND refusal went the same way at wave 16 — ssg-md 4 → 3, `findings.tsv`
+byte-identical, every check count flat. AND THE NEAR MISS THIS ENTRY RECORDED AS ITS EVIDENCE DOES
+NOT REPRODUCE, which is the more important half.** The refusal above is exact about the protocol and
+that is not what the SITE asked; what it rested on in practice was the sentence this entry carried —
+*`buf.asJava.spliterator()` compiles and reports NEITHER `ORDERED` nor `SIZED` where the `ArrayList`
+java had reports both*. **Measured on scala 3.8.4 and this JDK, that is FALSE.** The converter hands
+back a `java.util.List` wrapper whose `spliterator()` is `List`'s OWN default, so it reports
+`ORDERED`, `SIZED` and `SUBSIZED` — characteristics `16464`, which is exactly what the helpers below
+produce. `JavaCollectionsSpec` pins it as an assertion, in the opposite direction from the test it
+replaces, because a dead end whose number nothing re-derives is an opinion (`CLAUDE.md` §3.6) and
+this one had been an opinion for two waves.
+
+So the refusal's own evidence was wrong and delegating would have worked. The helpers stay for a
+DIFFERENT reason, which is the one to keep: they make the characteristics follow JAVA'S DECLARATION
+at the owner the receiver was typed by — a fact a reader can check against the JDK source — instead
+of following whatever scala's converter happens to wrap the collection in. That is §4.5's argument
+for a standalone shim over an inherited one, and it is emphatically not the argument the refusal
+made. `spliterator()` is a DEFAULT METHOD re-declared at three owners with three characteristic
+sets:
 
 | owner | passes | `Spliterators.spliterator(Collection, int)` ORs in | net |
 |---|---|---|---|
@@ -6902,8 +6914,7 @@ METHOD re-declared at three owners with three characteristic sets:
 | `List` | `ORDERED` | ″ | `ORDERED \| SIZED \| SUBSIZED` |
 | `Set` | `DISTINCT` | ″ | `DISTINCT \| SIZED \| SUBSIZED` |
 
-so a `List`-typed receiver answers exactly what java's `ArrayList` answered — the cell the refusal
-named. The owner a call resolved at is the receiver's KIND, which `rewrite` is already keyed on, so
+so a `List`-typed receiver answers exactly what java's `ArrayList` answered. The owner a call resolved at is the receiver's KIND, which `rewrite` is already keyed on, so
 NOTHING about streams is modelled: `JavaCollections.orderedSpliterator` / `distinctSpliterator` hand
 the collection to java's own factory. Three things that are not incidental:
 

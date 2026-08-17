@@ -1217,16 +1217,33 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(seen.toList, List("a", "b", "c"))
   }
 
-  test("NEGATIVE — `asJava.spliterator()` is what this does NOT do, pinned so the near miss stays visible") {
-    // The measurement K23 recorded, kept EXECUTABLE rather than left in prose: if a future JDK or
-    // scala release made the wrapper report java's own characteristics, this test says so and the
-    // two helpers become removable. Until then it is the evidence that delegating would be wrong —
-    // and a dead end whose number nothing re-derives is an opinion (CLAUDE.md §3.6).
+  test("MEASURED: `asJava.spliterator()` agrees today — K23's recorded NEAR MISS does not reproduce") {
+    // K23 refused `spliterator` and its stated evidence was that `buf.asJava.spliterator()` reports
+    // NEITHER `ORDERED` nor `SIZED` where the `ArrayList` java held reports both. On scala 3.8.4 and
+    // this JDK that is FALSE: the converter hands back a `java.util.List` wrapper whose
+    // `spliterator()` is `List`'s own default, so it reports ORDERED, SIZED and SUBSIZED — exactly
+    // what the two helpers above produce, characteristics `16464` either way.
+    //
+    // So the refusal rested on a measurement that no longer holds, and the honest record is this
+    // assertion rather than the prose. It is pinned in the OTHER direction from the test it
+    // replaces: if a future converter stopped agreeing, this says so, and the reason to state
+    // java's answer rather than inherit it becomes the loud one instead of the quiet one.
+    //
+    // Why the helpers stay anyway: they make the characteristics follow JAVA'S DECLARATION at the
+    // owner the receiver was typed by, which is a fact a reader can check against the JDK source,
+    // instead of following what scala's converter happens to wrap the collection in. That is the
+    // same argument §4.5 makes for a standalone shim over an inherited one, and it is deliberately
+    // NOT the argument the refusal made.
     import scala.jdk.CollectionConverters.*
     val viaAsJava = ArrayBuffer("a", "b", "c").asJava.spliterator()
-    assert(!viaAsJava.hasCharacteristics(java.util.Spliterator.ORDERED) ||
-           !viaAsJava.hasCharacteristics(java.util.Spliterator.SIZED),
-           "asJava's wrapper still loses at least one of java's own characteristics")
+    assert(viaAsJava.hasCharacteristics(java.util.Spliterator.ORDERED),
+           "the converter's wrapper DOES report ORDERED — K23's near miss is not reproducible")
+    assert(viaAsJava.hasCharacteristics(java.util.Spliterator.SIZED),
+           "…and SIZED")
+    assertEquals(viaAsJava.characteristics(),
+                 JavaCollections.orderedSpliterator(ArrayBuffer("a", "b", "c")).characteristics(),
+                 "and it agrees with the helper exactly, which is what makes this a measurement " +
+                 "about the REASON rather than about the answer")
   }
 
   test("sort is what `List.sort(cmp)` needs too — in place, stable, and on a non-indexed Buffer") {
