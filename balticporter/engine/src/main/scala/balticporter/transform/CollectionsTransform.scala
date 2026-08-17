@@ -462,6 +462,11 @@ final class CollectionsTransform(
     * rewrite's target (`ENGINE-LIMITS.md` K23). `SymId.None` unless the program names
     * `java.util.ListIterator`, so the arm declines by arithmetic everywhere else. */
   private var javaListIteratorSym, listIteratorOverSym: SymId = SymId.None
+  /** `JavaCollections.{spliterator, orderedSpliterator, distinctSpliterator}` — java's THREE own
+    * defaults for `spliterator()`, one per owner it re-declares the member at
+    * (`ENGINE-LIMITS.md` K23). Three symbols and not one, because the emitted call has to NAME which
+    * java declaration it reproduces rather than carry a characteristics constant. */
+  private var orderedSpliteratorSym, distinctSpliteratorSym: SymId = SymId.None
   /** the mapping targets `JavaCollections.fromJava` can actually PRODUCE — see
     * [[CollectionsTransform.liveWrappable]], read as symbols so [[externalProducer]] asks a
     * membership question about what this run minted rather than a question about a name. EMPTY when
@@ -725,6 +730,8 @@ final class CollectionsTransform(
     javaIteratorSym = byScala.getOrElse(JavaIteratorFqn, SymId.None)
     javaListIteratorSym = byScala.getOrElse(CollectionsTransform.JavaListIteratorFqn, SymId.None)
     listIteratorOverSym = mint("over", CollectionsTransform.JavaListIteratorFqn + ".over")
+    orderedSpliteratorSym  = mint("orderedSpliterator", JavaCollectionsFqn + ".orderedSpliterator")
+    distinctSpliteratorSym = mint("distinctSpliterator", JavaCollectionsFqn + ".distinctSpliterator")
     // …the five targets a LIVE view exists for, as this run's own symbols. Keyed on `byScala`, so a
     // target the program never names is simply absent and the wrap declines by arithmetic.
     liveWrappableSyms = byScala.collect {
@@ -3637,9 +3644,7 @@ final class CollectionsTransform(
     * [[shimSyms]] answers only for a program that NAMES the shim's java original — the symbols are
     * interned on first reference — while a subtype question has to be answerable about a parent this
     * run resolved by any route. */
-  private def shimFqns: Set[String] =
-    Set(CollectionsTransform.JavaIterableFqn, CollectionsTransform.JavaIteratorFqn,
-        CollectionsTransform.JavaListIteratorFqn, CollectionsTransform.JavaCollectionFqn)
+  private def shimFqns: Set[String] = CollectionsTransform.ShimFqns
 
   /** Does a value of this type END UP shim-shaped — the shim itself, or a type THIS PROGRAM
     * DECLARES that inherits from one?
@@ -3845,6 +3850,23 @@ final class CollectionsTransform(
         if listIteratorOverSym != SymId.None =>
         Some(Tree.Apply(Tree.Ident(listIteratorOverSym, TypeRepr.NoType, so), recv :: args,
                         listIteratorOverSym, t.tpe, so))
+      // `c.spliterator()` — K23's OTHER refusal, and the one that stayed refused when
+      // `listIterator` did not. That refusal is exact about the protocol (a `Spliterator` is a
+      // parallel DECOMPOSITION whose only consumer is `java.util.stream`, which this phase
+      // collapses) and what it actually rested on is a NEAR MISS: `buf.asJava.spliterator()`
+      // compiles and reports NEITHER `ORDERED` nor `SIZED` where the `ArrayList` java held reports
+      // both, so a consumer reading `characteristics()` gets a different answer silently.
+      //
+      // The near miss is closable without modelling one thing about streams, because java's own
+      // answer is a DEFAULT METHOD whose characteristics are written down: `Collection` passes `0`,
+      // `List` passes `ORDERED`, `Set` passes `DISTINCT`, and `Spliterators.spliterator` ORs in
+      // `SIZED | SUBSIZED` for all three. The owner a call resolved at is the receiver's KIND, which
+      // this arm is already keyed on — so the emission is java's declaration at that owner and not
+      // a wrapper's accident. `Kind.Entry`/`Kind.Opt` never had the member and fall through.
+      case ("spliterator", Nil, k @ (Kind.Seq | Kind.Stack | Kind.Set))
+        if orderedSpliteratorSym != SymId.None =>
+        val f = if k == Kind.Set then distinctSpliteratorSym else orderedSpliteratorSym
+        Some(Tree.Apply(Tree.Ident(f, TypeRepr.NoType, so), List(recv), f, t.tpe, so))
       // `m.values()` is the same provenance problem as `iterator()` above, and the same fix.
       // Java's `Map.values()` is declared `Collection<V>`, so every slot the port derived from that
       // asks for the SHIM — while the emitted `m.values` is a `scala.collection.Iterable`. The TIR
@@ -4957,6 +4979,16 @@ object CollectionsTransform:
     * tests, and DESIGN.md §8.10's class-initialisation watch note in its smallest possible form.
     * `CollectionsHandledDerivationSpec` asserts no target is null for exactly that reason.
     */
+  /** the shims as FQNs — one derivation, read by the instance's own `shimFqns` and by the specs
+    * that ask whether a `typeMap` TARGET is one. A shim carries java's own names and arity and is
+    * skipped by `rewrite`'s blanket guard before any arm, so a member "handled at its kind" is NOT
+    * handled at a shim receiver — which is the difference a refusal keyed at such an owner is
+    * about, and which a second copy of this set could silently stop agreeing with (F8).
+    *
+    * It must stay BELOW the `*Fqn` vals, for the reason `typeMap` states at length. */
+  private[balticporter] val ShimFqns: Set[String] =
+    Set(JavaIterableFqn, JavaIteratorFqn, JavaListIteratorFqn, JavaCollectionFqn)
+
   private[balticporter] val typeMap: Map[String, (String, Kind)] = Map(
     "java.util.List"          -> ("scala.collection.mutable.Buffer", Kind.Seq),
     "java.util.ArrayList"     -> ("scala.collection.mutable.ArrayBuffer", Kind.Seq),
@@ -5503,7 +5535,13 @@ object CollectionsTransform:
                                // writes through to this very buffer (`ENGINE-LIMITS.md` K23). It is
                                // on `Kind.Seq` alone because java declares `listIterator` on `List`
                                // and nowhere else.
-                               "listIterator"),
+                               "listIterator",
+                               // …and its SIBLING, which K23 refused and wave 16 answered: java's
+                               // `spliterator()` is a DEFAULT METHOD re-declared per owner with its
+                               // own characteristics, so `orderedSpliterator` reproduces `List`'s
+                               // (`ORDERED`, plus the `SIZED | SUBSIZED` java's own factory ORs in)
+                               // rather than inheriting whatever an `asJava` wrapper reports.
+                               "spliterator"),
     Kind.Map.toString   -> Set("get", "put", "remove", "containsKey", "entrySet", "values", "putIfAbsent",
                                "computeIfAbsent", "containsValue"),
     // …`contains` is here because the phase ANSWERS for it at a `Set`: at a widened `Object` probe
@@ -5512,7 +5550,11 @@ object CollectionsTransform:
     // `Kind.Seq`, where `Buffer.contains` asks the STORED element's — a hole `jdk-surface` should go
     // on reporting.
     Kind.Set.toString   -> Set("remove", "contains", "toArray", "removeIf", "containsAll",
-                               "removeAll", "retainAll"),
+                               "removeAll", "retainAll",
+                               // …`Set.spliterator()`'s own default, which passes `DISTINCT` where
+                               // `List`'s passes `ORDERED` — the reason the two kinds name two
+                               // helpers rather than sharing one that takes a constant.
+                               "spliterator"),
     Kind.Entry.toString -> Set("getKey", "getValue"),
     // a Stack's own five, PLUS everything `Kind.Seq` covers — the re-entry arm at the foot of
     // `rewrite` really does answer those for a stack receiver, so listing them here is the table

@@ -459,6 +459,56 @@ object JavaCollections:
     doomed.foreach(xs -= _)
     doomed.nonEmpty
 
+  /** `java.util.List.spliterator()` — java's own DEFAULT, at java's own CHARACTERISTICS.
+    *
+    * A `Spliterator` is a parallel-DECOMPOSITION protocol and its only consumer is
+    * `java.util.stream`, which the collections phase collapses rather than models — which is why
+    * this stayed refused when `listIterator` did not (`ENGINE-LIMITS.md` K23). What that refusal
+    * actually rested on is a NEAR MISS, and the near miss is what these three close:
+    * `buf.asJava.spliterator()` compiles and reports NEITHER `ORDERED` nor `SIZED`, where the
+    * `ArrayList` java held reports both, so a consumer reading `characteristics()` gets a different
+    * answer silently — `CLAUDE.md` §4.4's defect class, bought for a member nothing calls.
+    *
+    * The answer is not to delegate to whatever `asJava`'s wrapper inherits, but to reproduce
+    * JAVA'S OWN DEFAULT at the owner the receiver was typed by. Java re-declares `spliterator()`
+    * three times with three different characteristic sets, and `Spliterators.spliterator(Collection,
+    * int)` ORs in `SIZED | SUBSIZED` on top of whatever each passes:
+    *
+    *   - `Collection.spliterator()` passes `0`         → `SIZED | SUBSIZED`
+    *   - `List.spliterator()`       passes `ORDERED`   → `ORDERED | SIZED | SUBSIZED`
+    *   - `Set.spliterator()`        passes `DISTINCT`  → `DISTINCT | SIZED | SUBSIZED`
+    *
+    * so a `List`-typed receiver answers exactly what java's `ArrayList` answered, which is the cell
+    * the refusal named. THREE NAMES rather than one helper taking an `Int`, for `removeIf`'s own
+    * two reasons one member up: the phase already picks by the receiver's KIND, so the emitted call
+    * should NAME which of java's three declarations it is reproducing rather than carry a magic
+    * constant, and a reader of the port can then check it against the JDK source.
+    *
+    * The traversal goes through java's own `Spliterators.spliterator(Collection, int)`, which is
+    * what each of the three defaults calls — so `SIZED | SUBSIZED` arrives from java's code and is
+    * not OR-ed here, where it would be this file restating a JDK constant it does not own. What
+    * does NOT carry across is the fail-fast `modCount` check, for the reason
+    * `JavaListIterator.over` states at length: a `mutable.Buffer` publishes no such counter, so java
+    * THROWS a `ConcurrentModificationException` where this reads on. */
+  def orderedSpliterator[A](xs: scala.collection.Iterable[A]): java.util.Spliterator[A] =
+    spliteratorWith(xs, java.util.Spliterator.ORDERED)
+
+  /** `java.util.Set.spliterator()` — the same, `DISTINCT`. */
+  def distinctSpliterator[A](xs: scala.collection.Iterable[A]): java.util.Spliterator[A] =
+    spliteratorWith(xs, java.util.Spliterator.DISTINCT)
+
+  private def spliteratorWith[A](xs: scala.collection.Iterable[A], extra: Int): java.util.Spliterator[A] =
+    java.util.Spliterators.spliterator(
+      new java.util.AbstractCollection[A]:
+        def iterator(): java.util.Iterator[A] =
+          val it = xs.iterator
+          new java.util.Iterator[A]:
+            def hasNext(): Boolean = it.hasNext
+            def next(): A          = it.next()
+        def size(): Int = xs.size
+      ,
+      extra)
+
   /** `java.util.Map.containsValue(v)` — with java's own equality DIRECTION.
     *
     * `HashMap.containsValue` reads `v == value || (value != null && value.equals(v))`: identity

@@ -178,18 +178,28 @@ object JdkSurfaceCheck extends RemedySource:
     // answer applies (`JavaListIterator`, a standalone shim writing THROUGH the buffer), so this is
     // now a `mapped` row. `ENGINE-LIMITS.md` K23.
     //
-    // Its SIBLING is not, and the asymmetry is the point: a `Spliterator` cannot be built out of the
-    // receiver at all. Keyed at BOTH owners, exactly as `Map$Entry#setValue` is spelled twice: java
-    // declares `spliterator()` on `Collection` and RE-DECLARES it on `List` with its own default, so
-    // the owner a call resolves at is whichever the receiver was typed by — and keyed at `Collection`
-    // alone, every `List`-typed receiver in the corpus read as `unhandled` and met a wall instead of
-    // this sentence (measured: one row on ssg-md, which is the port the refusal was written for).
+    // …and its SIBLING went the SAME WAY at wave 16, for the third time the same reading did it:
+    // `java.util.List#spliterator` and `java.util.Set#spliterator` STOOD HERE and are GONE. The
+    // refusal was exact about the PROTOCOL — a `Spliterator` is a parallel decomposition whose only
+    // consumer is `java.util.stream`, which this phase collapses — and that is not what the SITE
+    // asked. What it rested on in practice was the NEAR MISS its own text names: `buf.asJava`
+    // yields a wrapper whose `spliterator()` reports NEITHER `ORDERED` nor `SIZED`. That is a
+    // statement about `asJava`, not about the receiver, and java's own answer is written down: the
+    // member is a DEFAULT METHOD re-declared at three owners with three characteristic sets
+    // (`Collection` passes `0`, `List` `ORDERED`, `Set` `DISTINCT`, and
+    // `Spliterators.spliterator` ORs in `SIZED | SUBSIZED` for all three). The owner a call
+    // resolved at is the receiver's KIND, which `rewrite` is already keyed on — so the emission
+    // reproduces java's declaration at that owner and nothing about streams is modelled.
+    // `ENGINE-LIMITS.md` K23.
+    //
+    // `Collection` STAYS, and the asymmetry is now the other way round from what it was: a receiver
+    // this phase left as the `JavaCollection` SHIM carries java's own names and arity and is skipped
+    // by `rewrite`'s blanket shim guard before any arm, so there is no mapped kind to reproduce a
+    // default at. Keyed here for `Map$Entry#setValue`'s reason — a refusal is spelled at the owner
+    // the call resolves at, and keyed at `Collection` alone every `List`-typed receiver in the
+    // corpus once read as `unhandled` and met a wall instead of this sentence.
     Refusal("java.util.Collection#spliterator", SpliteratorWhy,
-      "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite has no arm"),
-    Refusal("java.util.List#spliterator", SpliteratorWhy,
-      "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite has no arm"),
-    Refusal("java.util.Set#spliterator", SpliteratorWhy,
-      "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite has no arm"),
+      "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite skips a shim receiver before any arm"),
   )
 
   /** the instance-table key for an arm that matches every collection kind. */

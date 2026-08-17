@@ -6834,6 +6834,48 @@ could remove the other through any by-value route.
   `characteristics`) whose only consumer is `java.util.stream`, which this phase COLLAPSES rather than
   models. A wrapper for it would be a stream implementation.
 
+**…and the SECOND refusal went the same way at wave 16, closed by the NEAR MISS its own text named —
+ssg-md 4 → 3, `findings.tsv` byte-identical, every check count flat.** The refusal above is exact
+about the protocol and that is not what the SITE asked. What it rested on in practice is the sentence
+this entry already carried: *`buf.asJava.spliterator()` compiles and reports NEITHER `ORDERED` nor
+`SIZED` where the `ArrayList` java had reports both*. That is a statement about `asJava`'s wrapper,
+not about the receiver — and java's own answer is WRITTEN DOWN, because `spliterator()` is a DEFAULT
+METHOD re-declared at three owners with three characteristic sets:
+
+| owner | passes | `Spliterators.spliterator(Collection, int)` ORs in | net |
+|---|---|---|---|
+| `Collection` | `0` | `SIZED \| SUBSIZED` | `SIZED \| SUBSIZED` |
+| `List` | `ORDERED` | ″ | `ORDERED \| SIZED \| SUBSIZED` |
+| `Set` | `DISTINCT` | ″ | `DISTINCT \| SIZED \| SUBSIZED` |
+
+so a `List`-typed receiver answers exactly what java's `ArrayList` answered — the cell the refusal
+named. The owner a call resolved at is the receiver's KIND, which `rewrite` is already keyed on, so
+NOTHING about streams is modelled: `JavaCollections.orderedSpliterator` / `distinctSpliterator` hand
+the collection to java's own factory. Three things that are not incidental:
+
+- **two NAMES rather than one helper taking an `Int`** — `removeIf`/`removeIfSet`'s own argument. The
+  phase picks by kind, so the emitted call should NAME which java declaration it reproduces and a
+  reader can check it against the JDK source; a magic constant in emitted text can be neither;
+- **`java.util.Collection#spliterator` STAYS refused, and its reason is now about the SHIM rather
+  than the protocol.** A receiver this phase left as `JavaCollection` carries java's own names and
+  arity and is skipped by `rewrite`'s blanket guard before any arm, so there is no mapped kind to
+  reproduce a default at. That asymmetry is what the stale-refusal guard had to be taught: it asked
+  *is this member refused AND handled*, which is now TRUE and not a contradiction, so it asks it of
+  the owners whose target this phase actually REWRITES — read through the phase's own `ShimFqns`,
+  lifted to the companion so the guard and the phase cannot stop agreeing (F8), and never off a
+  package prefix (§4.56);
+- **what does NOT carry across is the fail-fast `modCount` check**, for the reason
+  `JavaListIterator.over` already states: a `mutable.Buffer` publishes no such counter, so java
+  THROWS a `ConcurrentModificationException` where this reads on. Stated, not hidden.
+
+**And one observation the fall did not produce and should have**: `jdk-surface` did not move, and
+`findings.tsv` is byte-identical — the site this refusal was WRITTEN FOR has no row in that lane, in
+either direction. The compile error was the only instrument that saw it. Wave 15's note claims one
+`List#spliterator` row on ssg-md; whatever that row was, it is not in the committed baseline, so the
+refusal keyed at `List` was carrying a reason nothing was reading. A refusal whose lane never counts
+it is `CLAUDE.md` §4.56's residue-count rule met at the other end, and it is recorded here rather
+than chased.
+
 **And one gap NAMED rather than closed: a BOUND method reference at a rewritten member.**
 `this.headings::add` emits as an eta-expanded `this.headings.add` — a `Tree.Select`, not the
 `Tree.Apply` every arm is keyed on — so the `add` arm never sees it. `lowerMethodRef` lowers the
