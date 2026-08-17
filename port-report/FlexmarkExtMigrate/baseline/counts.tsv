@@ -23,7 +23,7 @@ jdk-surface	0
 manifest	0
 markers	0
 omissions	0
-overload-risk	1
+overload-risk	5
 policy	0
 port-map	0
 portability(all)	18

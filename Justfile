@@ -143,8 +143,11 @@ md_modules    := "flexmark flexmark-util-ast flexmark-util-builder flexmark-util
 # `includeGlobs` is the authority, nothing compares the two, and `md-ext-measure` re-derives its
 # denominator from THIS list on every run — so a module added to one and not the other shows up as a
 # scope figure that no longer matches the port's `converted` line. A BATCH WAVE IS ONE MODULE NAME
-# ADDED HERE AND ONE GLOB ADDED THERE (`PROGRESS.md` §10.6.8); 28 of the 29 are still to come.
-md_ext_modules := "flexmark-ext-aside"
+# ADDED HERE AND ONE GLOB ADDED THERE (`PROGRESS.md` §10.6.8). How many of the 29 are IN is a number
+# the lane PRINTS (`modules in scope: N of 29 covered`) rather than one this comment carries: a count
+# written here is one a wave has to remember to edit, and a stale one reads exactly like a scope that
+# drifted.
+md_ext_modules := "flexmark-ext-aside flexmark-ext-resizable-image"
 
 # …and the extension suite's java-side denominator, `ext-test.conf`'s `includeGlobs` restated.
 #

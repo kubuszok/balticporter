@@ -3988,6 +3988,31 @@ the BASE's main source set without a third base chain.
 | decisions | 23 (`RenamedPackage` 8, `RenamedMember` 6, `RetypedSignature` 6, `ForcedClassInit` 2, `FunnelledCtor` 1); 1,905 withheld as the base's |
 | **suite** | **1 of 1 passing** — `AsideParserTest`, emitted and RUN, at `expected-lost` 0 |
 
+**THE BATCH, ONE ROW PER EXTENSION.** Each is one commit and one `md-measure` + `md-ext-measure`
+pair, admitted in ASCENDING SIZE ORDER — the smallest module that still has the canonical shape
+surfaces an engine gap at the lowest cost per gap, and a wave that stalls stalls on six files rather
+than on twenty-eight. `units` and `errors` are this extension's own contribution; `residue` is what
+it ADDED to a lane, never the lane's total.
+
+| # | extension | java | units | errors | tests | residue it added |
+|---|---|---:|---:|---:|---:|---|
+| 1 | `ext-aside` | 10 | 8 | 0 | 1/1 | `overload-risk` 1 (`GenericTieBreak`) |
+| 2 | `ext-resizable-image` | 6 | 6 | 0 | — | `overload-risk` +4 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
+
+**AND `tests —` IS A TRIAGE RESULT, NOT AN OMISSION — but the triage cannot be read off the FILE.**
+The checklist's step 4 opened `grep -rl '@RunWith(Parameterized' <mod>/src/test`, and that answers NO
+for `ComboResizableImageSpecTest`, which carries no `@RunWith` of its own at all: it extends
+`RendererSpecTest`, and the `@RunWith(Parameterized.class)` is the ANCESTOR's. Read the file, the
+suite looks admissible; it declares `@Parameterized.Parameters` and ZERO `@Test`, so admitting it
+would have emitted a class with no registration in it — which is `CLAUDE.md` §4.56's own sentence at
+a test triage (*a rule may not conclude something from a string when the fact is structural*). The
+predicate that IS structural, and the one this batch used, is the pair: **a test file is admissible
+iff it declares a plain `@Test` AND imports nothing from `com.vladsch.flexmark.{test,core.test}`** —
+the second half being `flexmark-test-util`/`flexmark-core-test`, which are `test.conf`'s source set
+and are NOT on this lane's compile (`ext-test.conf` D-mdet-1). Both halves are needed: the first
+excludes the `@RunWith(Suite.class)` aggregator every extension ships (0 `@Test`), the second the
+`ComboSpecTestCase` family whatever it inherits its runner from.
+
 **AND THE SUITE IS THE POINT OF THE MILESTONE, not a second deliverable.** An extension is a
 REGISTRATION mechanism — a `ParserExtension` handed to a builder, a factory appended to a list, a
 handler consulted in a loop — and every failure mode of one is SILENT: a parser built with an
@@ -4039,12 +4064,16 @@ sequencing requirement.
 2. **add the glob** to `ext.conf`'s `includeGlobs`, enumerated per module, never a `flexmark-ext-*`
    pattern (D-mde-4: a glob admits the three uncovered modules silently);
 3. **add the module name** to the `Justfile`'s `md_ext_modules`, which is the lane's own denominator;
-4. **triage the module's `src/test`** — `grep -rl '@RunWith(Parameterized' <mod>/src/test`. What is
-   left is the plain-`@Test` population and it goes in `ext-test.conf`, FILE BY FILE, with the
-   module's `src/main/java` added to that conf's `resolutionRoots` and the file added to the
-   `Justfile`'s `md_ext_test_src`. A `RenderingTestCase`/`ComboSpecTestCase` import means the file
-   needs `flexmark-test-util`, which is `test.conf`'s source set and is NOT on this lane's compile —
-   admitting one is its own decision with its own measurement, not a glob widening;
+4. **triage the module's `src/test`**, by the pair predicate and NOT by `@RunWith`: a file is
+   admissible iff it declares a plain `@Test` **and** imports nothing from
+   `com.vladsch.flexmark.{test,core.test}`. `grep -rl '@RunWith(Parameterized' <mod>/src/test` is
+   the reading that fails — a `ComboSpecTestCase`/`RendererSpecTest` subclass inherits its runner
+   from the ANCESTOR and carries no annotation of its own, so the grep says *admissible* about a
+   class with zero `@Test` in it. The second conjunct is what keeps `flexmark-test-util` (=
+   `test.conf`'s source set, NOT on this lane's compile) off the line; admitting one is its own
+   decision with its own measurement, not a glob widening. What survives goes in `ext-test.conf`,
+   FILE BY FILE, with the module's `src/main/java` added to that conf's `resolutionRoots` and the
+   file added to the `Justfile`'s `md_ext_test_src`;
 5. **`just md-measure && just md-ext-measure`** — in that order, always. The lane compiles the base
    tree beside this one and reads the base's published map, so a stale base is a stale answer with
    every count identical;
