@@ -147,7 +147,7 @@ md_modules    := "flexmark flexmark-util-ast flexmark-util-builder flexmark-util
 # the lane PRINTS (`modules in scope: N of 29 covered`) rather than one this comment carries: a count
 # written here is one a wave has to remember to edit, and a stale one reads exactly like a scope that
 # drifted.
-md_ext_modules := "flexmark-ext-aside flexmark-ext-resizable-image flexmark-ext-youtube-embedded flexmark-ext-anchorlink flexmark-ext-escaped-character flexmark-ext-ins flexmark-ext-superscript flexmark-ext-gfm-issues flexmark-ext-autolink flexmark-ext-gfm-users flexmark-ext-admonition flexmark-ext-yaml-front-matter flexmark-ext-jekyll-front-matter"
+md_ext_modules := "flexmark-ext-aside flexmark-ext-resizable-image flexmark-ext-youtube-embedded flexmark-ext-anchorlink flexmark-ext-escaped-character flexmark-ext-ins flexmark-ext-superscript flexmark-ext-gfm-issues flexmark-ext-autolink flexmark-ext-gfm-users flexmark-ext-admonition flexmark-ext-yaml-front-matter flexmark-ext-jekyll-front-matter flexmark-ext-jekyll-tag"
 
 # …and the ONE third-party compile coordinate any of the 29 extension modules declares.
 # `flexmark-ext-autolink/pom.xml` pins `org.nibor.autolink:autolink:0.6.0` in its own `<properties>`
@@ -172,7 +172,7 @@ md_ext_deps   := "--dependency org.nibor.autolink:autolink:0.6.0"
 # a directory here would put their `@Test`s in `test_discovery_guard`'s denominator and report a
 # SCOPE DECISION as tests the port LOST — the one failure that check must not have
 # (`ENGINE-LIMITS.md` M5). `java_test_count` takes `find` starting points, and a file is one.
-md_ext_test_src := "../ssg/original-src/flexmark-java/flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java ../ssg/original-src/flexmark-java/flexmark-ext-autolink/src/test/java/com/vladsch/flexmark/ext/autolink/MergeAutoLinkTest.java ../ssg/original-src/flexmark-java/flexmark-ext-admonition/src/test/java/com/vladsch/flexmark/ext/admonition/AdmonitionParserTest.java"
+md_ext_test_src := "../ssg/original-src/flexmark-java/flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java ../ssg/original-src/flexmark-java/flexmark-ext-autolink/src/test/java/com/vladsch/flexmark/ext/autolink/MergeAutoLinkTest.java ../ssg/original-src/flexmark-java/flexmark-ext-admonition/src/test/java/com/vladsch/flexmark/ext/admonition/AdmonitionParserTest.java ../ssg/original-src/flexmark-java/flexmark-ext-jekyll-tag/src/test/java/com/vladsch/flexmark/ext/jekyll/tag/MergeJekyllTagTest.java"
 
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"

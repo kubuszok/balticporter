@@ -17,3 +17,6 @@ ssg.md.ext.autolink.MergeAutoLinkTest	test_Mail_Link21	pass
 ssg.md.ext.autolink.MergeAutoLinkTest	test_Mail_Link22	pass
 ssg.md.ext.autolink.MergeAutoLinkTest	test_Mail_Link31	pass
 ssg.md.ext.autolink.MergeAutoLinkTest	test_Mail_Link32	pass
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	testIdAttributeConflict	pass
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	testIdAttributeConflictEmbed	pass
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	testIdAttributeConflictEmbedInline	pass

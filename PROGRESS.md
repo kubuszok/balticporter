@@ -4159,6 +4159,7 @@ they are where the 2b siblings become admissible because their dependency is alr
 | 12 | `ext-yaml-front-matter` | 11 | 9 | 0 | — | `overload-risk` +7 (5 `GenericTieBreak`, 2 `VarargPhaseSpan`) |
 | 13 | `ext-jekyll-front-matter` | 9 | 7 | 0 | — | `overload-risk` +2 (`GenericTieBreak`) — **the first 2b module IN** |
 | — | `ext-gfm-tasklist` | 12 | — | — | — | **SKIPPED — `ENGINE-LIMITS.md` C15**, measured and reverted |
+| 14 | `ext-jekyll-tag` | 13 | 11 | **1 → 0** | 21/21 | `overload-risk` +10, `base-surface` +1, `omissions` +1, `idiom(refused)` +1 |
 
 **AND THE BATCH SKIPPED ONE, WHICH IS THE FIRST TIME A MODULE HAS BEEN MEASURED AND TAKEN BACK OUT.**
 `ext-gfm-tasklist` emits at **0 compile errors with every instrument reading green**, and it is the
@@ -4176,6 +4177,24 @@ classification (the corpus's first `base-surface` row with real content), `omiss
 constructor — and no compile error, no moved test, no other count. The module ships nothing
 runnable, so it is out of `includeGlobs` and out of `md_ext_modules` until C15 closes; a port that
 runs LESS than java takes no entry however cleanly it drains a lane (§5).
+
+**AND `ext-jekyll-tag`, ONE WAVE LATER, IS WHY THAT SKIP IS A JUDGEMENT AND NOT A RULE.** It carries
+the SAME two rows — `base-surface` +1 and a `super(args) dropped` — from a different cause (`ssg-md`
+publishes two `getSpanningChars` overloads that do not agree on placement, so the replay cannot
+resolve the name) and it SHIPS, because the constructor the refusal costs is
+`JekyllTagBlock(List<BasedSequence>)` and **no call site in the entire flexmark checkout builds one**
+— the parser writes `new JekyllTagBlock()`. C15's constructor was the extension's only entry point;
+this one is dead upstream. The rows are the same, the residue is not, and only reading the CALL
+SITES tells the two apart.
+
+It also cost the batch its second engine gap, `ENGINE-LIMITS.md` **K24's fourth face**:
+`includedDocuments.containsKey(node)` on a `Map<JekyllTag, String>` at a `Node`. Java's `Object`
+formal admits any probe — the lookup is by value and a wrong-typed probe is meant to MISS — and
+scala's `Map[K, V]` is invariant in `K`. Both of K24's existing guards decline correctly (the probe
+is not at `Object`, and nothing is a wildcard), so it is a fourth condition rather than a widening;
+it still needs no conformance oracle, because walking the run's own `extends` edges up from the KEY
+and reaching the probe's head PROVES the probe is not a subtype. Fixed in its own commit, flat on all
+fourteen lanes.
 
 **AND THE FIRST BATCH-2 EXTENSION FOUND AN ENGINE GAP, at eleven java files.** `ext-admonition`
 states three of its `DataKey` defaults as `new DataKey<>("…", AdmonitionExtension::getQualifierTypeMap)`

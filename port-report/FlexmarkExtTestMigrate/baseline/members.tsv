@@ -37,3 +37,16 @@ ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#test
 ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#testMailLink1()	def	4a8b072b85ad4b90
 ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#testMailLink2()	def	1fdd9434e9fdb9de
 ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#testMailLink3()	def	55a1f223ed7c8344
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest	class	d78914f6ee2b58de
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#<clinit>	init	e4ed86be74a3ee47
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#<stmt1>	stmt	2779daa0a095d934
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#<stmt2>	stmt	3ea4f3359a8b4a08
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#<stmt3>	stmt	8475ac2c938d4599
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#EMBEDDING_FORMATTER	val	7ac3d50500055c4f
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#EMBEDDING_PARSER	val	3eb7cd8516d4c50b
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#NON_EMBEDDING_FORMATTER	val	68631b44c082eba4
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#NON_EMBEDDING_OPTIONS	val	8aa01b7967d6584f
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#NON_EMBEDDING_PARSER	val	15141a59840de5a6
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#OPTIONS	val	24d0227525e908a8
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#assertMerged(boolean,String,Array<String>)	def	8f22491ab4f87d64
+ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#content	val	f2229d70e18abdb7
