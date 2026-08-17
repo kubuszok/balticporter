@@ -211,6 +211,8 @@ final class TestFrameworkTransform(
   private val added = collection.mutable.ListBuffer[Symbol]()
   /** declarations whose consumed annotation must be stripped from the emitted output. */
   private val consumed = collection.mutable.Set.empty[SymId]
+  /** the `@Test` methods that SURVIVE as `def`s ([[virtualTests]]) and must lose that annotation. */
+  private val consumedTests = collection.mutable.Set.empty[SymId]
   private val found = collection.mutable.ListBuffer[Finding]()
   private var suitesConverted = 0
   private var testsConverted  = 0
@@ -228,15 +230,114 @@ final class TestFrameworkTransform(
     * Cleared at each declaration, so a widening in one method cannot be attributed to the next. */
   private var promotedHere = false
 
+  /** ==A TEST-CLASS HIERARCHY, which java has and this conversion had never met==
+    *
+    * Every suite this phase had converted before was a ROOT: a class declaring its own `@Test`s and
+    * extending nothing the program declares. Java does not require that, and the first library to
+    * write the ordinary shape — an abstract `RenderingTestCase`, an abstract `FullSpecTestCase`
+    * declaring the one `@Test`, and four concrete subclasses that inherit it — breaks the
+    * conversion in two independent ways, neither of which any per-class rule can see.
+    *
+    * '''THE PARENT.''' `munit.FunSuite` is a CLASS, and so is the java superclass. Prepended at the
+    * class that declares the `@Test`, the emitted clause reads
+    * `extends munit.FunSuite with RenderingTestCase` and scalac answers *class RenderingTestCase is
+    * not a trait*. Scala has ONE superclass, so there is exactly one place the suite can go: the
+    * ROOT of the chain of program-declared classes the `@Test` declarer belongs to. [[suiteAnchors]]
+    * is that set, and for a class with no program-declared superclass it is the class itself —
+    * which is every suite in the corpus before this one, so the rule is flat by construction.
+    *
+    * '''THE METHOD.''' A `@Test` becomes a `test("m") { … }` STATEMENT, and a statement does not
+    * override anything: a subclass that overrides its parent's test method would emit a SECOND
+    * registration under the same name (MUnit rejects a duplicate at run time — after the compile,
+    * after every count) and a `super.m()` inside it names a member that no longer exists. Java runs
+    * ONE test per concrete class and it is the override.
+    *
+    * So a `@Test` that participates in an override relation among program-declared classes stays a
+    * `def` — [[virtualTests]] — and the registration is emitted ONCE, at the TOP declarer, as a CALL
+    * to it. Virtual dispatch then reproduces java exactly: each concrete subclass registers the one
+    * inherited test and runs its own override. The guard is structural (does an ancestor or a
+    * descendant this program declares also declare a `@Test` at this name and arity), so a suite
+    * with no test-class ancestry takes the statement form it always did.
+    *
+    * Both sets are computed ONCE per [[run]], over the whole program, because neither is a fact
+    * about the class being converted — `convert` is handed one `ClassDef` and the answer is in its
+    * ancestors and its descendants. */
+  private var classDefs: Map[SymId, Tree.ClassDef] = Map.empty
+  private var suiteAnchors: Set[SymId]             = Set.empty
+  /** `@Test` methods that stay `def`s because java's own override relation reaches them. */
+  private var virtualTests: Set[SymId]             = Set.empty
+  /** of those, the ones whose class is the TOP declarer — the single registration site. */
+  private var virtualRoots: Set[SymId]             = Set.empty
+
   /** Constructs this phase could not translate, with their CLAUDE.md §1 classification. Empty
     * until [[run]] has executed. A migrator that wants the number on every run can read it; `run`
     * already prints a one-line summary plus the details, so no wiring is required for it to be
     * LOUD. */
   def findings: List[Finding] = found.toList
 
+  /** the program-declared SUPERCLASS of `cd`, if the program declares one.
+    *
+    * A parent this program does not declare is not a candidate — its `extends` clause is a fact
+    * about a class file (§4.56) — and neither is a TRAIT, which is what java's `implements` becomes
+    * and which scala is happy to mix in beside the suite. */
+  private def classParentOf(cd: Tree.ClassDef)(using p: Program): Option[Tree.ClassDef] =
+    cd.parents.iterator
+      .map { case tt: TypeTree => headSymOf(tt.tpe); case t: Term => headSymOf(t.tpe) }
+      .flatMap(classDefs.get)
+      .find(c => !p.symbolOf(c.symbol).exists(_.flags.isTrait))
+
+  /** every program-declared class STRICTLY above `cd`, nearest first. `seen` is a cycle guard: a
+    * malformed hierarchy must not hang the pipeline, and answering the prefix it did see is the
+    * conservative arm. */
+  private def classAncestry(cd: Tree.ClassDef)(using p: Program): List[Tree.ClassDef] =
+    def go(c: Tree.ClassDef, seen: Set[SymId]): List[Tree.ClassDef] =
+      classParentOf(c) match
+        case Some(pc) if !seen(pc.symbol) => pc :: go(pc, seen + pc.symbol)
+        case _                            => Nil
+    go(cd, Set(cd.symbol))
+
+  /** the `@Test` methods a class DECLARES, keyed the way an override is decided here: by NAME and
+    * ARITY. Deliberately looser than a descriptor and exact for this question — java cannot
+    * overload a zero-argument test method, and every JUnit 4 `@Test` is zero-argument. */
+  private def testKeys(cd: Tree.ClassDef)(using p: Program): Map[(String, Int), SymId] =
+    cd.body.collect {
+      case d: Tree.DefDef if isAnnotated(d, TestAnn) && d.rhs.nonEmpty =>
+        (p.symbolOf(d.symbol).map(_.name).getOrElse(""), d.paramss.map(_.size).sum) -> d.symbol
+    }.toMap
+
+  /** Fill [[classDefs]], [[suiteAnchors]], [[virtualTests]] and [[virtualRoots]] for this run. */
+  private def planHierarchy(program: Program)(using p: Program): Unit =
+    classDefs = program.units.flatMap(StandardTraversal.allClassDefs).map(c => c.symbol -> c).toMap
+    val keysOf  = classDefs.view.mapValues(testKeys).toMap
+    val declares = keysOf.filter(_._2.nonEmpty).keySet
+    // THE ANCHOR: the topmost program-declared class above each `@Test` declarer, or itself.
+    suiteAnchors = declares.map { s =>
+      classAncestry(classDefs(s)).lastOption.map(_.symbol).getOrElse(s)
+    }
+    // THE VIRTUALS: a `@Test` whose (name, arity) another program-declared class in its own chain
+    // also declares as a `@Test`. Computed from the ANCESTRY alone and then closed downwards, so
+    // both sides of an override edge are in the set with one walk per class.
+    val above = collection.mutable.Map.empty[SymId, Set[(String, Int)]]
+    classDefs.keys.foreach { s =>
+      above(s) = classAncestry(classDefs(s)).flatMap(a => keysOf(a.symbol).keys).toSet
+    }
+    val overridden = // keys an ANCESTOR declares and this class re-declares
+      classDefs.keys.flatMap(s => keysOf(s).keySet.intersect(above(s)).map(k => s -> k)).toList
+    val virtualKeys = overridden.map(_._2).toSet
+    val vs = for
+      (s, keys) <- keysOf.toList
+      (k, sym)  <- keys
+      // a key is virtual for THIS class only where the class shares a chain with the override —
+      // two unrelated suites that happen to name a test the same way are not an override relation.
+      if virtualKeys(k) && (above(s).contains(k) || classDefs.keys.exists(d =>
+           keysOf(d).contains(k) && above(d).contains(k) && classAncestry(classDefs(d)).exists(_.symbol == s)))
+    yield (s, k, sym)
+    virtualTests = vs.map(_._3).toSet
+    virtualRoots = vs.collect { case (s, k, sym) if !above(s).contains(k) => sym }.toSet
+
   override def run(program: Program): Program =
     nextId = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
-    added.clear(); consumed.clear(); found.clear()
+    added.clear(); consumed.clear(); consumedTests.clear(); found.clear()
     suitesConverted = 0; testsConverted = 0; rulesConverted = 0
     suiteSym = mint(suite.substring(suite.lastIndexOf('.') + 1), suite)
     testSym  = mint(testMember, testMember)  // MUnit's own `test`, applied CURRIED
@@ -291,6 +392,10 @@ final class TestFrameworkTransform(
 
     val symbols0 = SymbolTable(program.symbols.all ++ added)
     given Program = program.rebuilt(symbols = symbols0)
+    // WHERE THE SUITE PARENT GOES and WHICH `@Test`s stay `def`s — both facts about the whole
+    // program's class graph rather than about the class `convert` is handed, so both are settled
+    // before either walk starts (see the fields' doc).
+    planHierarchy(program)
     survey(program)
     // TWO WALKS, and the split is the whole of what is gated on `@Test`.
     //
@@ -318,11 +423,12 @@ final class TestFrameworkTransform(
     // register zero tests and claim to be one.
     val units = rewritten.map(convert)
     // `convert` mints more (the lifecycle overrides), so the table is rebuilt AFTER the walk.
-    val symbols = consumed.foldLeft(SymbolTable(program.symbols.all ++ added)) { (t, id) =>
+    val symbols = (consumed ++ consumedTests).foldLeft(SymbolTable(program.symbols.all ++ added)) { (t, id) =>
+      val gone = if consumedTests(id) then ConsumedAnns + TestAnn else ConsumedAnns
       t.get(id) match
         case scala.None => t
         case Some(s)    => t.updated(s.copy(
-          annotations        = s.annotations.filterNot(a => ConsumedAnns(nameOf(a.tpe))),
+          annotations        = s.annotations.filterNot(a => gone(nameOf(a.tpe))),
           // a consumed annotation the FRONTEND could not carry (`@Ignore("why")` on a class, whose
           // arguments need an expression translator) was handled all the same, so it must stop
           // being reported as an omission.
@@ -807,7 +913,14 @@ final class TestFrameworkTransform(
       case other            => other
     }
     val cd2 = cd.copy(body = nested)
-    if !nested.exists(isAnnotated(_, TestAnn)) then cd2
+    // THE SUITE PARENT IS THE ANCHOR'S, NOT THE DECLARER'S (see [[suiteAnchors]]). A class that
+    // anchors a hierarchy but declares no `@Test` of its own gets the parent and nothing else —
+    // there is no registration to make and no lifecycle to inline, and every member it declares is
+    // already whatever java wrote.
+    def withSuite(c: Tree.ClassDef): Tree.ClassDef =
+      if !suiteAnchors(cd.symbol) then c
+      else c.copy(parents = TypeTree(TypeRepr.TypeRef(TypeRepr.NoPrefix, suiteSym), cd.origin) :: c.parents)
+    if !nested.exists(isAnnotated(_, TestAnn)) then withSuite(cd2)
     else
       // NOTE there is no assertion walk here: it has already run over this whole unit (see `run`).
       // What is left is the SUITE conversion, which is what `@Test` gates.
@@ -903,13 +1016,26 @@ final class TestFrameworkTransform(
       // `@Ignore` on the CLASS disables every test it declares.
       val allIgnored = hasAnn(cd.symbol, IgnoreAnn)
       if allIgnored then consumed += cd.symbol
+      // A VIRTUAL `@Test` keeps its `def` — java's own override relation reaches it, and a statement
+      // overrides nothing (see [[virtualTests]]). The TOP declarer additionally emits the one
+      // registration, whose body CALLS the method, so every concrete subclass runs its own override
+      // exactly as JUnit does. Everything else takes the statement form this phase has always used.
       val body = cd2.body.flatMap {
+        case d: Tree.DefDef if isAnnotated(d, TestAnn) && virtualTests(d.symbol) =>
+          // …and its `@Test` goes, which no other converted test needs: everywhere else the METHOD
+          // disappears and takes the annotation with it, so `ConsumedAnns` never had to name it.
+          // Here the `def` survives, and a junit annotation left on an emitted scala method is both
+          // meaningless and COUNTED — `junit_residue` reads it as a suite that did not convert.
+          consumedTests += d.symbol
+          if virtualRoots(d.symbol)
+          then List(d, testCase(d, setups, teardowns, allIgnored, ruleFields, viaCall = true))
+          else List(d)
         case d: Tree.DefDef if isAnnotated(d, TestAnn) =>
           List(testCase(d, setups, teardowns, allIgnored, ruleFields))
         case other                                     => List(other)
       }
       suitesConverted += 1
-      cd2.copy(parents = TypeTree(TypeRepr.TypeRef(TypeRepr.NoPrefix, suiteSym), cd.origin) :: cd2.parents,
+      withSuite(cd2).copy(
                body = body ++ lifecycle(TestFrameworkTransform.BeforeAllMember, classSetups, cd.origin)
                            ++ lifecycle(TestFrameworkTransform.AfterAllMember, classTeardowns, cd.origin))
 
@@ -1278,7 +1404,8 @@ final class TestFrameworkTransform(
     * green one that means nothing. MUnit does not evaluate an ignored body, so the by-name
     * argument keeps the code compiling without running it. */
   private def testCase(d: Tree.DefDef, setups: List[SymId], teardowns: List[SymId],
-                       allIgnored: Boolean, ruleFields: Set[SymId])(using p: Program): Statement =
+                       allIgnored: Boolean, ruleFields: Set[SymId],
+                       viaCall: Boolean = false)(using p: Program): Statement =
     val nm = p.symbolOf(d.symbol).map(_.name).getOrElse("test")
     val expectsThrow: Option[TypeRepr] = p.symbolOf(d.symbol).flatMap(_.annotations
       .filter(a => nameOf(a.tpe) == TestAnn)
@@ -1308,7 +1435,28 @@ final class TestFrameworkTransform(
       // …and JUnit's OTHER spelling of the same assertion — the `ExpectedException` @Rule, whose
       // arming call stands INSIDE the body. `ruleNote` is empty where the class declares no such
       // rule, where this test never touches it, and where a guard declined the site.
-      val (ruleBody, ruleWrap, ruleNote) = expectedException(d, d.rhs.get, ruleFields)
+      // THE REGISTRATION'S CORE. Normally the method's own body, inlined; for a VIRTUAL test it is
+      // a CALL to the method that stayed a `def`, because the whole point of keeping it is that a
+      // subclass may replace it and the registration must dispatch rather than inline one version.
+      //
+      // The `ExpectedException` model is REFUSED there and counted, rather than approximated: it
+      // arms a list that is a LOCAL of the frame it governs (see [[expectedException]]), and the
+      // arming now sits inside a method the registration merely calls — so the matcher list the
+      // wrap would build is not the one the body appends to. One row per site naming the guard, and
+      // zero rows on this corpus, which is exactly why an unstated exclusion would never be found.
+      val (ruleBody, ruleWrap, ruleNote) =
+        if !viaCall then expectedException(d, d.rhs.get, ruleFields)
+        else
+          if ruleFields.nonEmpty && StandardTraversal.scanTerm(d.rhs.get, 0)((n, t) =>
+               if isRuleRef(t, ruleFields) then n + 1 else n) > 0 then
+            found += Finding(s"$ExpectedExceptionCls(rule-in-overridden-test)", d.origin, Fix.EngineRule,
+              "this `@Test` arms an `ExpectedException` rule AND takes part in java's own override " +
+              "relation, so it stays a `def` and the MUnit registration calls it. The rule's matcher " +
+              "list is modelled as a local of the frame the registration builds, and the arming is " +
+              "one frame further in — so the wrap would test an expectation the body never appended " +
+              "to. The rule is left unapplied here; inline the test into each concrete subclass, or " +
+              "keep this suite on the JVM/JUnit path.")
+          (call(d.symbol, d.origin), identity[Term], "")
       val body0 = expectsThrow match
         case Some(exTpe) => intercept(interceptSym, exTpe, ruleBody, d.origin)
         case scala.None  => ruleBody
