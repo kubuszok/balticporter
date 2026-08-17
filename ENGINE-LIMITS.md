@@ -7823,21 +7823,28 @@ one class and not the other; a strip that treated the absence of a row as eviden
 the port inconsistent with itself. That is §3's serialised-riser rule read at a modifier: the count is
 not the census, and the census is not the population.
 
-The census after wave 19 is **60** — 39 `E164` (17 at a collection parent, 22 at a program-declared
+The census after wave 19 is **42** — 21 `E164` (17 at a collection parent, 4 at a program-declared
 one), 17 `needs to be abstract` (10 collection, 7 `getBuilder`), 2 `private variable … cannot
-override`, and the 2 rows named above.
+override`, and the 2 rows named above. (It was **60** after the modifier strip and before the
+forwarder decline below took the 18.)
 
 **AND THE 22 THAT WERE `NOT PREDICTED` ARE NOW DIAGNOSED, into two sub-families that share nothing
 but their error code.** Both were read off the EMITTED text, which is the only place either is
 visible:
 
-- **18 rows — a DIAMOND FORWARDER over a `final` parent member.** `IRichSequenceBase` declares
-  `countLeading(CharPredicate)` and `split(…)` `final` (java's own modifier, faithfully carried), and
-  `BasedSequenceImpl extends IRichSequenceBase[BasedSequence] with BasedSequence` gets the emitter's
-  disambiguating `override def split(…) = super[IRichSequenceBase].split(…)`. Scala forbids
-  overriding a `final` member, so the forwarder that exists to REMOVE an ambiguity is itself the
-  error — six owners × three members. The shape of the fix is `TirEmitter`'s: a forwarder may not be
-  minted where the winning parent's member is `final`, which is a fact the emitter holds;
+- **18 rows — a DIAMOND FORWARDER over a `final` parent member. CLOSED at wave 19: 60 -> 42.**
+  `IRichSequenceBase` declares `countLeading(CharPredicate)` and `split(…)` `final` (java's own
+  modifier, faithfully carried), and `BasedSequenceImpl extends IRichSequenceBase[BasedSequence] with
+  BasedSequence` got the emitter's disambiguating
+  `override def split(…) = super[IRichSequenceBase].split(…)`. Scala forbids overriding a `final`
+  member, so the forwarder that exists to REMOVE an ambiguity was itself the error — six owners ×
+  three members. **`diamondOverrides`' whole argument is that SCALA REFUSES WHERE JAVA DID NOT, and
+  at a `final` member it does not refuse**: the inherited concrete member implements the mixin's
+  declaration exactly as java's does, so there is nothing to disambiguate. Where the mixin's member
+  is CONCRETE too, scala cannot express java's answer at a `final` member at all, and what is left is
+  scalac's own conflict message naming both parents — strictly better than an override it will
+  reject. One conjunct on the superclass member's own flag; `JS-C33` gains the negative beside the
+  positive, and every other port is BYTE-IDENTICAL;
 - **4 rows — an override edge across a PACKAGE BOUNDARY at a java `protected`.** `AstActionHandler`
   is in `…util.visitor` and its java `protected void processNode(N, boolean, BiConsumer<N, A>)` is
   emitted `protected[visitor]`; `BlockNodeVisitor` and the two `TextCollectingVisitor` anonymous

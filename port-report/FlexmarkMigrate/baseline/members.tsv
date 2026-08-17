@@ -6763,7 +6763,7 @@ ssg.md.util.sequence.BasedSequence	ssg.md.util.sequence.BasedSequence$EmptyBased
 ssg.md.util.sequence.BasedSequence	ssg.md.util.sequence.BasedSequence$EmptyBasedSequence#getStartOffset()	def	3c539f07a5e8d9a2
 ssg.md.util.sequence.BasedSequence	ssg.md.util.sequence.BasedSequence$EmptyBasedSequence#length()	def	c2678de174b0845b
 ssg.md.util.sequence.BasedSequence	ssg.md.util.sequence.BasedSequence$EmptyBasedSequence#subSequence(int,int)	def	b332d95870b44a09
-ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl	class	ffc2011648963026
+ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl	class	c5fc2d165e2c66a6
 ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl#addSegments(IBasedSegmentBuilder<?>)	def	5840eca70871203a
 ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl#baseColumnAtEnd()	def	9bca2136f320e833
 ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl#baseColumnAtIndex(int)	def	a225cb6b0835fd52
@@ -7999,7 +7999,7 @@ ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted	class	9
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted#<stmt1>	stmt	4ff8eb4c89ae2f59
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted#get(int)	def	046201cb730c485a
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted#mask	val	fad486a72bdbdfec
-ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence	class	5658e1c0f2843c5a
+ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence	class	787b74e4d5b3e96e
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#<stmt1>	stmt	33b442c5ab277e95
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#<stmt2>	stmt	d75eb64fa866d20b
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#addSegments(IBasedSegmentBuilder<?>)	def	ef70cc235cd6b51e
@@ -8024,7 +8024,7 @@ ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequenc
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#sequenceOf(CharSequence,int,int)	def	52bf54a2c24d170c
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#subSequence(int,int)	def	5e6333981b9779b2
 ssg.md.util.sequence.MappedBasedSequence	ssg.md.util.sequence.MappedBasedSequence#toMapped(CharMapper)	def	d968003778d3536d
-ssg.md.util.sequence.MappedRichSequence	ssg.md.util.sequence.MappedRichSequence	class	e12dfe1db581b495
+ssg.md.util.sequence.MappedRichSequence	ssg.md.util.sequence.MappedRichSequence	class	376b92ed7b35854b
 ssg.md.util.sequence.MappedRichSequence	ssg.md.util.sequence.MappedRichSequence#<stmt1>	stmt	b2a35722382e423b
 ssg.md.util.sequence.MappedRichSequence	ssg.md.util.sequence.MappedRichSequence#<stmt2>	stmt	d75eb64fa866d20b
 ssg.md.util.sequence.MappedRichSequence	ssg.md.util.sequence.MappedRichSequence#base	val	2679d6b4112d75d2
@@ -8049,7 +8049,7 @@ ssg.md.util.sequence.MappedSequence	ssg.md.util.sequence.MappedSequence#getCharS
 ssg.md.util.sequence.PlaceholderReplacer	ssg.md.util.sequence.PlaceholderReplacer	class	6964bc24c3bb3250
 ssg.md.util.sequence.PlaceholderReplacer	ssg.md.util.sequence.PlaceholderReplacer#replaceAll(JavaCollection<T>,Function<String,String>,char,char,Function<T,String>,BiConsumer<T,String>)	def	537095275c119f9d
 ssg.md.util.sequence.PositionAnchor	ssg.md.util.sequence.PositionAnchor	class	b7a88d98aaa580db
-ssg.md.util.sequence.PrefixedSubSequence	ssg.md.util.sequence.PrefixedSubSequence	class	80cb4c25b631e8fc
+ssg.md.util.sequence.PrefixedSubSequence	ssg.md.util.sequence.PrefixedSubSequence	class	b328f5ab69f3b1d0
 ssg.md.util.sequence.PrefixedSubSequence	ssg.md.util.sequence.PrefixedSubSequence#<stmt1>	stmt	787ae7bdf8d5bf56
 ssg.md.util.sequence.PrefixedSubSequence	ssg.md.util.sequence.PrefixedSubSequence#<stmt2>	stmt	ba4b2d02518b47d9
 ssg.md.util.sequence.PrefixedSubSequence	ssg.md.util.sequence.PrefixedSubSequence#addSegments(IBasedSegmentBuilder<?>)	def	d1719f753456753c
@@ -8230,7 +8230,7 @@ ssg.md.util.sequence.RichSequence	ssg.md.util.sequence.RichSequence#ofSpaces(int
 ssg.md.util.sequence.RichSequence	ssg.md.util.sequence.RichSequence#repeatOf(CharSequence,int)	def	2c714e7a49eb9ee4
 ssg.md.util.sequence.RichSequence	ssg.md.util.sequence.RichSequence#repeatOf(CharSequence,int,int)	def	e6cda69c7819123e
 ssg.md.util.sequence.RichSequence	ssg.md.util.sequence.RichSequence#repeatOf(char,int)	def	081d3ba66d2df1e7
-ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl	class	2d5540f60e993f90
+ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl	class	8aafdf420d4056a6
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#<stmt1>	stmt	68adfd81ee0f698d
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#charAt(int)	def	40fe2ad0fdc37582
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#charSequence	val	8755232c53451e5d
@@ -8247,7 +8247,7 @@ ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#subS
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#toMapped(CharMapper)	def	6c184487c0450e81
 ssg.md.util.sequence.SegmentedSequence	?#endOffset	val	23b2738063589a02
 ssg.md.util.sequence.SegmentedSequence	?#startOffset	val	72f2250a04a0c5c2
-ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence	class	7e28c002f17b551b
+ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence	class	cfbe5a16af2e0dbd
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<stmt1>	stmt	8215e5793f163488
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<stmt2>	stmt	aadf2a2e61a13218
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<stmt3>	stmt	fbd0f20f4f57f58d

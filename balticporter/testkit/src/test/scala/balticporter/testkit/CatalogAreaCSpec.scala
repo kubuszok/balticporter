@@ -370,6 +370,20 @@ class CatalogAreaCSpec extends PortSuite:
     assertNotEmits(p, "super[")
   }
 
+  // …and the one shape where SCALA DOES NOT DISAGREE, so the repair is the defect. A `final`
+  // superclass member implements the mixin's declaration exactly as java's does — there is nothing
+  // to disambiguate — and an override of a `final` member is `E164`, which scalac rejects outright.
+  // 18 rows on one port before the emitter declined (`ENGINE-LIMITS.md` K28).
+  test("JS-C33 — a FINAL superclass member takes no forwarder: scala already agrees with java") {
+    val p = port(
+      """public class A {
+        |  interface I { default int m() { return 1; } }
+        |  static class Base { public final int m() { return 2; } }
+        |  static class C extends Base implements I { }
+        |}""".stripMargin)
+    assertNotEmits(p, "super[Base].m")
+  }
+
   // -- JS-C36 / JS-C45: what a FIELD declaration decides ----------------------------------------------------
 
   test("JS-C36 — an interface field is implicitly `public static final`, so it is a companion member") {

@@ -3084,7 +3084,23 @@ final class TirEmitter(
     * the class already had.
     *
     * `Tree.Super`'s `cls` is always the enclosing class ([[SpoonTir.superTerm]]), so a qualified
-    * `super[X]` has no TIR form; the text is emitted directly. */
+    * `super[X]` has no TIR form; the text is emitted directly.
+    *
+    * ==…AND A `final` SUPERCLASS MEMBER TAKES NO FORWARDER, because scala already agrees==
+    * The whole argument above is that scala REFUSES where java did not. It does not refuse here: a
+    * `final` concrete member inherited from the superclass IMPLEMENTS an abstract mixin declaration
+    * exactly as java's does, so there is nothing to disambiguate — and the forwarder minted for it
+    * is an override of a `final` member, which scala forbids outright. `E164` at a member whose body,
+    * name and formals are all correct, and the emitter's own doing. Measured at **18 rows on one
+    * port** — `IRichSequenceBase` declares `split`/`countLeading` java-`final` (faithfully carried)
+    * and six subclasses mix in an interface redeclaring them (`ENGINE-LIMITS.md` K28).
+    *
+    * Where the MIXIN's member is concrete too, java's own resolution still picks the superclass and
+    * scala cannot express that at a `final` member at all — so declining is not merely right for the
+    * abstract case, it is the only available answer: what is left is scalac's own conflict message,
+    * which names both parents and is strictly better than an override it will reject. Read off the
+    * SUPERCLASS member's own flag, which is java's modifier as the frontend recorded it; nothing here
+    * is concluded from a name (§4.56). */
   private def diamondOverrides(cd: Tree.ClassDef, i: Int): List[String] =
     def headOf(t: TypeRepr): Option[SymId] = headSymOf(t)
     val parentTs = cd.parents.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }
@@ -3122,7 +3138,9 @@ final class TirEmitter(
       // never a third spelling of it (§4.56).
       val psub = ParentSubst.of(cd)(using program)
       supName.toList.flatMap { sn =>
-        sup.toList.filter((k, _) => mixins(k) && !ownKeys(k)).sortBy((k, _) => k._1).map { (_, d) =>
+        sup.toList
+          .filter((k, d) => mixins(k) && !ownKeys(k) && !sym(d.symbol).flags.isFinal)
+          .sortBy((k, _) => k._1).map { (_, d) =>
           val n   = esc(sym(d.symbol).name)
           // …AND THE MEMBER'S OWN TYPE PARAMETERS, which are not the class's and are not
           // substituted away by anything. A java `<V> V get(DataKey<V>)` forwarded without its

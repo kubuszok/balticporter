@@ -292,6 +292,19 @@ declare it* on no evidence at all: one member on a port at 0 errors, every count
 digest. Ask the POSITIVE question — is the RESULT one this code holds a surface for — so a table
 added tomorrow widens the answer and a table that does not exist cannot.
 
+**…and a REPAIR FOR A DISAGREEMENT MUST ASK WHETHER THE TWO LANGUAGES DISAGREE *HERE*, or the repair
+IS the defect.** Every mechanism in this engine is licensed by a difference, and the licence is
+checked once when the mechanism is written and then carried to every site the shape matches. A
+diamond forwarder exists because java lets a concrete superclass method implement an interface's and
+scala linearises and reports a conflict — true, and NOT true at a `final` superclass member, where
+scala accepts exactly what java did. Minted there, the forwarder overrides a `final` member: a
+compile error at a member whose name, formals and body are all correct, caused by the repair and by
+nothing else, and invisible until the port reaches 0 typer errors because `RefChecks` does not run
+before then (§3). 18 rows on one port. So carry the difference's own PRECONDITION into the guard —
+here one flag the emitter already holds — and where the repair genuinely cannot apply, leave the
+TARGET LANGUAGE'S own message: scalac naming both parents is strictly better than an override it
+will reject.
+
 **…and a refusal SUBSTITUTED FOR A BODY is licensed by the DEFECT THE PHASE CAUSED, never by the
 member it sits on.** The contract makes the throw conforming for a receiver that cannot perform the
 operation; it says nothing about one that can, and both are spelled the same. So a body substitution
