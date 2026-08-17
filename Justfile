@@ -146,6 +146,16 @@ md_modules    := "flexmark flexmark-util-ast flexmark-util-builder flexmark-util
 # ADDED HERE AND ONE GLOB ADDED THERE (`PROGRESS.md` §10.6.8); 28 of the 29 are still to come.
 md_ext_modules := "flexmark-ext-aside"
 
+# …and the extension suite's java-side denominator, `ext-test.conf`'s `includeGlobs` restated.
+#
+# FILES AND NOT DIRECTORIES, which is `md_test_src`'s third entry for `md_test_src`'s reason. An
+# extension's `src/test` is overwhelmingly `@RunWith(Parameterized.class)` `ComboSpecTestCase`
+# subclasses (`PROGRESS.md` §10.6.1's documented refusal) and a `@RunWith(Suite.class)` aggregator, so
+# a directory here would put their `@Test`s in `test_discovery_guard`'s denominator and report a
+# SCOPE DECISION as tests the port LOST — the one failure that check must not have
+# (`ENGINE-LIMITS.md` M5). `java_test_count` takes `find` starting points, and a file is one.
+md_ext_test_src := "../ssg/original-src/flexmark-java/flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java"
+
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
 
@@ -1896,13 +1906,15 @@ md-test-measure:
 #   * THE SCOPE IS A SELECTION AND THE LANE RE-DERIVES IT, exactly as `md-measure` does — see
 #     `md_ext_modules`. This is the number a batch wave moves, and it is the number that catches a
 #     wave that edited the Justfile and not the conf.
-#   * THE TEST DISCOVERY BLOCK IS ABOUT THE MAIN SCOPE and states a fact rather than a zero. The
-#     extension modules DO ship `src/test`, unlike the twelve — mostly `@RunWith(Parameterized.class)`
-#     `ComboSpecTestCase` subclasses, which are `PROGRESS.md` §10.6.1's documented refusal. What is
-#     inside the engine's mechanical reach is the plain `@Test` population, and it belongs to a
-#     second source set (`ext-test.conf`), not to this one.
+#   * IT DRIVES TWO PORTS, `liqp-measure`'s shape rather than the two-lane split `md-measure` and
+#     `md-test-measure` use. That split exists because ssg-md MAIN's census is a number this
+#     repository quotes and needs a lane that reproduces it alone; milestone 2 has no such number, and
+#     the extension's suite is the whole point of the milestone rather than a second deliverable.
+#     `ext-test.conf` is a dependent of `ext.conf`, so the order inside the lane is a dependency order
+#     too. The TEST discovery figure is baselined (`expected-lost`), because a suite with no
+#     discoverable tests runs ZERO and reports SUCCESS.
 # ---------------------------------------------------------------------------------------------
-[doc("flexmark's extension modules as ONE dependent port of ssg-md — emit, checks, compile WITH the base")]
+[doc("flexmark's extension modules as ONE dependent port of ssg-md — emit, checks, compile WITH the base, RUN")]
 md-ext-measure:
     #!/usr/bin/env bash
     cd "{{root}}"
@@ -1916,25 +1928,29 @@ md-ext-measure:
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{md_src}}"
     REPORT="$ROOT/port-report/FlexmarkMigrate"
     EREPORT="$ROOT/port-report/FlexmarkExtMigrate"
+    ETREPORT="$ROOT/port-report/FlexmarkExtTestMigrate"
 
-    # ABORT if the migration itself did not run, or the lane measures the PREVIOUS emit and reports a
-    # stale number as a result.
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.flexmark.FlexmarkExtMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
-    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
-      echo "!! FlexmarkExtMigrate DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[ssg-md-ext\]" <<<"$OUT" | head -30
-      exit 1
-    fi
-    echo "-- FlexmarkExtMigrate (ALL checks, untruncated, as the migration printed them) --"
-    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
-    echo
-
-    # WHICH base map answered. `manifest` and `base-surface` are the two checks this port exists to
-    # give content to, and both read the base's published map — `run-latest` when `md-measure` has
-    # run in this checkout, the COMMITTED baseline when it has not. Two different artifacts can give
-    # two different answers with every count identical, so the lane prints which one it was rather
-    # than leaving it in the scrollback.
-    grep -E "MANIFEST agreement|BASE SURFACE" <<<"$OUT"
+    # ABORT if either migration did not run, or the lane measures the PREVIOUS emit and reports a
+    # stale number as a result. The order is a dependency order: `ext-test.conf` declares
+    # `base = "ext.conf"`, which declares `base = "main.conf"` — the corpus's first three-link chain.
+    for M in FlexmarkExtMigrate FlexmarkExtTestMigrate; do
+      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.flexmark.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
+        echo "!! $M DID NOT RUN — refusing to measure stale output"
+        grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[ssg-md-ext" <<<"$OUT" | head -30
+        exit 1
+      fi
+      echo "-- $M (ALL checks, untruncated, as the migration printed them) --"
+      sed -n '/building model over/,/wrote [0-9]* Scala\( test\)\? files/p' <<<"$OUT"
+      echo
+      # WHICH base map answered. `manifest` and `base-surface` are the two checks this port exists to
+      # give content to, and both read the base's published map — `run-latest` when `md-measure` has
+      # run in this checkout, the COMMITTED baseline when it has not. Two different artifacts can give
+      # two different answers with every count identical, so the lane prints which one it was rather
+      # than leaving it in the scrollback.
+      grep -E "MANIFEST agreement|BASE SURFACE" <<<"$OUT"
+      echo
+    done
 
     echo
     echo "-- scope: the extension modules this port converts --"
@@ -1950,20 +1966,29 @@ md-ext-measure:
 
     echo
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
-    show_check_report "$EREPORT"
-    findings_baseline_guard "$EREPORT"
-    port_map_guard "$EREPORT"
+    for R in "$EREPORT" "$ETREPORT"; do
+      show_check_report "$R"
+      findings_baseline_guard "$R"
+      port_map_guard "$R"
+      echo
+    done
 
-    echo
     echo "-- test discovery --"
-    # A FACT ABOUT THE SCOPE, not a zero (see the lane header). The extension modules ship their own
-    # `src/test`, which this MAIN source set does not convert; `ext-test.conf` is where the plain
-    # `@Test` population goes, and the `ComboSpecTestCase` subclasses beside it are the documented
-    # `@RunWith(Parameterized.class)` refusal.
-    TEST_DIRS=""
-    for m in {{md_ext_modules}}; do TEST_DIRS="$TEST_DIRS {{md_src}}/$m/src/test"; done
-    JAVA_TESTS=$(java_test_count $TEST_DIRS)
-    echo "@Test in the scoped extension modules: $JAVA_TESTS   emitted by THIS source set: 0 (main only — the suite is ext-test.conf's)"
+    # Both frameworks summed: a ported suite is MUnit and any residue is still JUnit, so counting one
+    # under-reports by every converted suite — in the safe-looking direction.
+    #
+    # THE DENOMINATOR IS `md_ext_test_src` AND NOT THE MODULES' `src/test`, and that is a scope
+    # decision rather than an omission: the extension suites are overwhelmingly
+    # `@RunWith(Parameterized.class)` `ComboSpecTestCase` subclasses (`PROGRESS.md` §10.6.1's
+    # documented refusal), and counting their `@Test`s here would report a decision as tests the port
+    # LOST — the one failure this guard must not have (ENGINE-LIMITS M5). `java_test_count` takes
+    # `find` starting points and a file is one, which is why the variable names files.
+    JAVA_TESTS=$(java_test_count {{md_ext_test_src}})
+    JUNIT_LEFT=$(junit_residue {{md_ext_module}}/src_managed/test/scala)
+    MUNIT_TESTS=$(munit_emitted {{md_ext_module}}/src_managed/test/scala)
+    SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
+    echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
+    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$ETREPORT"
 
     echo
     break_residue {{md_ext_module}}/src_managed
@@ -1975,9 +2000,18 @@ md-ext-measure:
     # `src_managed/main` and this dependent links against them there. Compiling either alone measures
     # nothing — and this is also the only thing that can catch the §1.5 failure the whole milestone is
     # about, two ports that each compile alone and cannot compile together.
-    DEPS="{{md_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
-      {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala \
+    #
+    # `--test` is not optional: without it scala-cli reports on the MAIN scope whatever directories it
+    # is handed, so the test tree's WARNINGS print and its ERRORS do not, and the split below would
+    # read a structural 0 for the suite (CLAUDE.md §4.56's third occurrence).
+    #
+    # `ported/ssg-md/src_managed/test/scala` is deliberately NOT here: `ext-test.conf` D-mdet-1 chose
+    # an extension whose one plain `@Test` needs no `flexmark-test-util`, and adding that tree would
+    # put ssg-md-test's own 725 registrations on this lane's run.
+    DEPS="{{md_deps}} {{md_test_deps}}"
+    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+      {{md_module}}/src_managed/main/scala \
+      {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdextmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdextmeasure.txt)
@@ -1989,21 +2023,51 @@ md-ext-measure:
     # extension error is THIS port's wall and a base error is a regression `md-measure` already failed
     # on.
     E_BASE=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdextmeasure.txt | grep -c "/ssg-md/src_managed/")
-    E_EXT=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdextmeasure.txt | grep -c "/ssg-md-ext/src_managed/")
-    echo "  base tree: $E_BASE   extension tree: $E_EXT   elsewhere: $((ERRORS - E_BASE - E_EXT))"
+    E_EXT=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdextmeasure.txt | grep -c "/ssg-md-ext/src_managed/main/")
+    E_ETST=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdextmeasure.txt | grep -c "/ssg-md-ext/src_managed/test/")
+    echo "  base tree: $E_BASE   extension main: $E_EXT   extension test: $E_ETST   elsewhere: $((ERRORS - E_BASE - E_EXT - E_ETST))"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/mdextmeasure.txt | sort | uniq -c | sort -rn | head -20
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdextmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
-    echo
-    echo "-- correlation: every error located to its member and its Java origin --"
-    # BOTH maps, scoped: an error in an extension resolves through this port's map and one in the
-    # library through the base's, so the two walls stay distinguishable after the join. The OUTPUT
-    # goes to THIS report — writing it into `FlexmarkMigrate/run-latest` would overwrite the artifact
-    # `md-measure` had just written, which is `PROGRESS.md` §10.6.3's census.
-    correlate "$EREPORT/run-latest" --scalac "$MEASURE_TMP"/mdextmeasure.txt \
-      --srcmap "$REPORT/run-latest/srcmap.tsv" \
-      --srcmap "$EREPORT/run-latest/srcmap.tsv"
+    if [ "$ERRORS" = "0" ]; then
+      echo
+      echo "-- run --"
+      # `--resource-dir` puts the LIBRARY'S OWN `entities.properties` on the test JVM's classpath —
+      # `md_lib_res`, not the harness's: `Html5Entities` reads it in a static initialiser to build the
+      # HTML5 entity table, so every `&nbsp;` in every document needs it and its absence is an
+      # `ExceptionInInitializerError` that no compile, check or count can see. The spec files and the
+      # harness marker are `md-test-measure`'s and are not on this lane's path.
+      scala-cli test --scala {{scala_version}} --server=false $DEPS \
+        --resource-dir "$ROOT/{{md_lib_res}}" \
+        {{md_module}}/src_managed/main/scala \
+        {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala \
+        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdextrun.txt
+      reconcile_outcomes "$MEASURE_TMP"/mdextrun.txt "$MUNIT_TESTS"; RECONCILED=$?
+      echo
+      echo "-- correlation: test failures located to members and Java origins --"
+      correlate "$ETREPORT/run-latest" --tests "$MEASURE_TMP"/mdextrun.txt \
+        --srcmap "$REPORT/run-latest/srcmap.tsv" \
+        --srcmap "$EREPORT/run-latest/srcmap.tsv" \
+        --srcmap "test=$ETREPORT/run-latest/srcmap.tsv"
+      test_outcome_guard "$ETREPORT/run-latest" "$RECONCILED" || exit 1
+    else
+      echo
+      echo "-- correlation: every error located to its member and its Java origin --"
+      # ALL THREE maps, scoped: an error in the emitted suite resolves through the test port's map, one
+      # in an extension through this port's and one in the library through the base's, so the three
+      # walls stay distinguishable after the join. The OUTPUT goes to the TEST report and not the
+      # main one — writing it into `FlexmarkMigrate/run-latest` would overwrite the artifact
+      # `md-measure` had just written, which is `PROGRESS.md` §10.6.3's census.
+      correlate "$ETREPORT/run-latest" --scalac "$MEASURE_TMP"/mdextmeasure.txt \
+        --srcmap "$REPORT/run-latest/srcmap.tsv" \
+        --srcmap "$EREPORT/run-latest/srcmap.tsv" \
+        --srcmap "test=$ETREPORT/run-latest/srcmap.tsv"
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+      echo "   $JAVA_TESTS java @Test are emitted as $MUNIT_TESTS munit registrations and NONE OF THEM RUNS."
+      echo "   An extension is a REGISTRATION mechanism and every failure mode of one is silent; until"
+      echo "   that line stops printing this milestone has a compile and no evidence (CLAUDE.md §3)."
+    fi
 
     headline "$ERRORS" "$EREPORT"
 

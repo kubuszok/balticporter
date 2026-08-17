@@ -1,0 +1,17 @@
+# balticporter port map	schema=3	module=ssg-md-ext-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b3c7d63f99894d6b	files=1	policy=a9366a29e9f1e4ab
+#kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
+type	com.vladsch.flexmark.ext.aside.AsideParserTest	ssg.md.ext.aside.AsideParserTest	Renamed	-		0		flags=final form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type		balticporter.runtime.JavaCollection	Added	-		0		
+type		balticporter.runtime.JavaCollections	Added	-		0		
+type		balticporter.runtime.JavaEnumMap	Added	-		0		
+type		balticporter.runtime.JavaEnumSet	Added	-		0		
+type		balticporter.runtime.JavaIterable	Added	-		0		
+type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaListIterator	Added	-		0		
+type		balticporter.runtime.JavaOptionalDouble	Added	-		0		
+type		balticporter.runtime.JavaOptionalInt	Added	-		0		
+type		balticporter.runtime.JavaOptionalLong	Added	-		0		
+type		balticporter.runtime.JavaStack	Added	-		0		
+member	com.vladsch.flexmark.ext.aside.AsideParserTest#<stmt1>	ssg.md.ext.aside.AsideParserTest#<stmt1>	Renamed	-	flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java	37	ece0bc41a74572f0	
+member	com.vladsch.flexmark.ext.aside.AsideParserTest#escape(String,Parser)	ssg.md.ext.aside.AsideParserTest#escape(String,Parser)	Renamed	-	flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java	14	9459eb10ad60af31	
+member	com.vladsch.flexmark.ext.aside.AsideParserTest#unEscape(String,Parser)	ssg.md.ext.aside.AsideParserTest#unEscape(String,Parser)	Renamed	-	flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java	25	71e43dfd15b69ea3	

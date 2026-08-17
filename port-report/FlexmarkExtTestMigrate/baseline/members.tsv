@@ -1,0 +1,5 @@
+#unit	member	kind	digest
+ssg.md.ext.aside.AsideParserTest	ssg.md.ext.aside.AsideParserTest	class	c79ec402049e662e
+ssg.md.ext.aside.AsideParserTest	ssg.md.ext.aside.AsideParserTest#<stmt1>	stmt	ece0bc41a74572f0
+ssg.md.ext.aside.AsideParserTest	ssg.md.ext.aside.AsideParserTest#escape(String,Parser)	def	9459eb10ad60af31
+ssg.md.ext.aside.AsideParserTest	ssg.md.ext.aside.AsideParserTest#unEscape(String,Parser)	def	71e43dfd15b69ea3

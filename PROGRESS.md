@@ -3945,8 +3945,8 @@ any more; the residue is one engine family this port shares with liqp.
 
 ### 10.6.8 MILESTONE 2 — the extensions, as ONE dependent port, and the recipe for the other 28
 
-`just md-ext-measure`, `balticporter/corpus/ports/ssg-md/ext.conf`,
-`port-report/FlexmarkExtMigrate`.
+`just md-ext-measure`, `balticporter/corpus/ports/ssg-md/{ext,ext-test}.conf`,
+`port-report/{FlexmarkExtMigrate,FlexmarkExtTestMigrate}`.
 
 **THE LAYOUT, AND WHY IT IS ONE PORT AND NOT TWENTY-NINE.** A run's emission identity is the PAIR
 (`portRoot`, `sourceSet`); `SourceSet` is `main | test` and nothing else; and `PortRun` opens its
@@ -3986,6 +3986,33 @@ the BASE's main source set without a third base chain.
 | residues | `overload-risk` **1** (`BasedSequence#subSequence/2`, `GenericTieBreak`, catalog `JS-C23`), of 163 program-declared calls and 39 with more than one applicable candidate |
 | everything else | 0 on every other lane; `portability(all)` **18** is the BASE's — `portability(emitted)` is 0, which is `ENGINE-LIMITS.md` D2's ownership filter answering correctly |
 | decisions | 23 (`RenamedPackage` 8, `RenamedMember` 6, `RetypedSignature` 6, `ForcedClassInit` 2, `FunnelledCtor` 1); 1,905 withheld as the base's |
+| **suite** | **1 of 1 passing** — `AsideParserTest`, emitted and RUN, at `expected-lost` 0 |
+
+**AND THE SUITE IS THE POINT OF THE MILESTONE, not a second deliverable.** An extension is a
+REGISTRATION mechanism — a `ParserExtension` handed to a builder, a factory appended to a list, a
+handler consulted in a loop — and every failure mode of one is SILENT: a parser built with an
+extension that registered nothing renders the ninety-nine documents that do not use it perfectly.
+That is `ENGINE-LIMITS.md` K22's shape read at a library's own extension point, and no compile-error
+count, member digest or check can see it. `AsideParserTest` closes exactly that hole: it BUILDS a
+`Parser` with `AsideExtension.create()` registered, reads `Parser.SPECIAL_LEAD_IN_HANDLERS` back out
+of the BUILT options, and round-trips `escape`/`unEscape` through the handlers it finds there — so a
+registration that did not take fails it. It passes.
+
+The emitted test also shows the collection boundary bridging across the base boundary in the one
+place a reader can point at: `Collections.singleton(AsideExtension.create())` becomes
+`JavaCollection.fromSet(JavaCollections.singleton(…))`, because the base's emitted
+`Parser.Builder#extensions` takes the shim and the argument is a JDK set.
+
+**THE SUITE PORT IS THE CORPUS'S FIRST THREE-LINK BASE CHAIN.** `ext-test.conf` declares
+`base = "ext.conf"`, which declares `base = "main.conf"`; every earlier dependent in this repository
+is one hop. `extendedBy` composes twice (`governs`, `packageRenames` and the base's two surface
+phases arrive through two hops, and this port appends `test-framework`), `ManifestAgreement` reads a
+chain rather than a pair, and both report 0. It resolves against the base's MAIN and not against
+`test.conf`'s set, which is why the extension whose test it is was chosen (D-mdet-1): three of
+`ext-aside`'s four test files are `ComboSpecTestCase` subclasses and the fourth needs no
+`flexmark-test-util` at all. The waves that admit an extension whose plain `@Test`s DO extend that
+harness have to add `ported/ssg-md/src_managed/test/scala` to the lane's compile, and that is a
+decision with a measurement rather than a line to add quietly.
 
 **WHAT THE EMITTED TEXT SETTLES, and no count could.** `AsideExtension`'s companion carries three
 `export` clauses re-exporting the constants of the base's emitted `ParserExtension`,
@@ -4012,13 +4039,21 @@ sequencing requirement.
 2. **add the glob** to `ext.conf`'s `includeGlobs`, enumerated per module, never a `flexmark-ext-*`
    pattern (D-mde-4: a glob admits the three uncovered modules silently);
 3. **add the module name** to the `Justfile`'s `md_ext_modules`, which is the lane's own denominator;
-4. **`just md-measure && just md-ext-measure`** — in that order, always. The lane compiles the base
+4. **triage the module's `src/test`** — `grep -rl '@RunWith(Parameterized' <mod>/src/test`. What is
+   left is the plain-`@Test` population and it goes in `ext-test.conf`, FILE BY FILE, with the
+   module's `src/main/java` added to that conf's `resolutionRoots` and the file added to the
+   `Justfile`'s `md_ext_test_src`. A `RenderingTestCase`/`ComboSpecTestCase` import means the file
+   needs `flexmark-test-util`, which is `test.conf`'s source set and is NOT on this lane's compile —
+   admitting one is its own decision with its own measurement, not a glob widening;
+5. **`just md-measure && just md-ext-measure`** — in that order, always. The lane compiles the base
    tree beside this one and reads the base's published map, so a stale base is a stale answer with
    every count identical;
-5. **read the split**: `base tree: N   extension tree: M`. A base error is `md-measure`'s regression
-   and not this port's wall; an extension error is this wave's;
-6. **classify every finding per §1** before accepting anything, then `just baseline-accept
-   FlexmarkExtMigrate` and commit the baseline with the change that produced it.
+6. **read the split**: `base tree: N   extension main: M   extension test: K`. A base error is
+   `md-measure`'s regression and not this port's wall; the other two are this wave's, and an
+   extension-test error is frequently a cascade of an extension-main one;
+7. **classify every finding per §1** before accepting anything, then `just baseline-accept
+   FlexmarkExtMigrate` and `just baseline-accept FlexmarkExtTestMigrate`, and commit both baselines
+   with the change that produced them.
 
 ---
 
