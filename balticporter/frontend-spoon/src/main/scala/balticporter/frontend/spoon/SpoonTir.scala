@@ -3104,15 +3104,40 @@ object SpoonTir:
                                    args: List[Term]): List[Term] =
         if args.sizeIs != argEs.size then args
         else args.zipWithIndex.map { (t, i) =>
-          argEs(i) match
-            case l: CtLambda[?] if !t.isInstanceOf[Tree.Typed] && overloadedSamSlot(ex, argEs.size, i) =>
+          samLambdaOf(argEs(i)) match
+            case Some(l) if !t.isInstanceOf[Tree.Typed] && overloadedSamSlot(ex, argEs.size, i) =>
               val lt = l.getType
               if lt == null || !tpNameableHere(lt) then t
               else
                 val r = tpe(lt)
-                if r == NoType then t else Tree.Typed(t, tt(r, l), r, originOf(l))
+                if r == NoType then t else Tree.Typed(t, tt(r, l), r, originOf(argEs(i)))
             case _ => t
         }
+
+      /** the LAMBDA whose own type is the target this argument has to be ascribed to — the argument
+        * itself, or a BRANCH of a poly CONDITIONAL.
+        *
+        * JLS 15.25 makes `c ? lambda : lambda` a poly expression in its own right: java pushes the
+        * target type THROUGH the conditional and types each branch against it, which is exactly
+        * what a scala ascription on the whole `if` does. Read off the argument's shape rather than
+        * off the emitted term, because that is where java's own rule is stated — and it is the same
+        * sentence `coerce` already answers one artifact over (a conditional's conversion belongs to
+        * its BRANCHES, `ENGINE-LIMITS.md` K30 face 3), met here at a poly operand instead of a
+        * collection.
+        *
+        * The target comes from a branch and the ascription goes on the WHOLE conditional: java
+        * required both branches to be compatible with one target, so one branch names it for both,
+        * and ascribing the branches separately would write the same type twice for a conditional
+        * whose own type is then still inferred.
+        *
+        * `polyExpression` is deliberately NOT widened to match. That predicate is JS-G31's
+        * population — what [[polyArgsUncast]] strips a cast off — and a conditional is not a term
+        * an argument arm wrapped; widening it would move a catalog count for a different question. */
+      private def samLambdaOf(e: CtExpression[?]): Option[CtLambda[?]] = e match
+        case l: CtLambda[?]      => Some(l)
+        case c: CtConditional[?] =>
+          List(c.getThenExpression, c.getElseExpression).collectFirst { case l: CtLambda[?] => l }
+        case _                   => scala.None
 
       /** is the callee overloaded at this arity, AND does the slot at argument `i` fail to give
         * scala an expected type for the literal? — the whole of [[polyArgsAscribed]]'s decision,

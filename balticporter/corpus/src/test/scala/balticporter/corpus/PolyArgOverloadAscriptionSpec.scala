@@ -111,6 +111,32 @@ class PolyArgOverloadAscriptionSpec extends PortSuite:
     assertEmits(p, "): demo.Xform))")
   }
 
+  test("a poly CONDITIONAL carries the lambda, and the ascription goes on the whole `if`") {
+    val p = port(
+      """package demo;
+        |interface Key<T> { }
+        |interface NullableKey<T> { }
+        |interface Xform { String apply(String s); }
+        |class Store {
+        |  <T> Store set(Key<T> key, T value)         { return this; }
+        |  <T> Store set(NullableKey<T> key, T value) { return this; }
+        |}
+        |class Uses {
+        |  static final Key<Xform> K = null;
+        |  void go(Store st, boolean flag) { st.set(K, flag ? s -> s : s -> s + "!"); }
+        |}
+        |""".stripMargin)
+    // JLS 15.25 — java pushes the target THROUGH the conditional and types each branch against it,
+    // so one branch names the target for both and the ascription goes on the `if`. Two ascriptions,
+    // one per branch, would write the same type twice and leave the conditional's own type inferred.
+    assertEmits(p, "): demo.Xform))")
+    assertNotEmits(p, "s): demo.Xform) else")
+    // …and it must render as an ASCRIPTION and never a cast: `asInstanceOf` would elaborate both
+    // branches to `Function1`s first and then assert that a `Function1` is a `demo.Xform`, which
+    // throws. `TirEmitter.polyOperand` answers for the conditional for exactly this reason.
+    assertNotEmits(p, ".asInstanceOf[demo.Xform]")
+  }
+
   test("NEGATIVE — a type-variable slot at an UNOVERLOADED callee gets nothing") {
     val p = port(
       """package demo;

@@ -1247,7 +1247,7 @@ ssg.md.formatter.FormatterOptions	ssg.md.formatter.FormatterOptions#translationH
 ssg.md.formatter.FormatterOptions	ssg.md.formatter.FormatterOptions#translationHtmlInlineTagPattern	val	8ca9326ace25f507
 ssg.md.formatter.FormatterOptions	ssg.md.formatter.FormatterOptions#translationIdFormat	val	154eff4982a6f26b
 ssg.md.formatter.FormatterOptions	ssg.md.formatter.FormatterOptions#unescapeSpecialCharsOnWrap	val	f1832568df33dfcd
-ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils	class	da0880ddd95727f5
+ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils	class	832f4348e3cfc9c6
 ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#FIRST_LIST_ITEM_CHILD	val	77d8f7e5c0b30339
 ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#LIST_ALIGN_NUMERIC	val	77dc33a019e75c53
 ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#LIST_ITEM_NUMBER	val	7629daa0a925de1d
@@ -1265,7 +1265,7 @@ ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#isLastOfItem(Nod
 ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#isNotLastItem(Node)	def	35e8ad0e7334dcae
 ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#renderBlockQuoteLike(BlockQuoteLike,NodeFormatterContext,MarkdownWriter)	def	33d62926ed624c40
 ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#renderList(ListBlock,NodeFormatterContext,MarkdownWriter)	def	1df256946dc7364b
-ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#renderList(ListBlock,NodeFormatterContext,MarkdownWriter,Buffer<Node>)	def	9d26d4e6e49bc9c1
+ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#renderList(ListBlock,NodeFormatterContext,MarkdownWriter,Buffer<Node>)	def	440ddb41ed626baa
 ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#renderListItem(ListItem,NodeFormatterContext,MarkdownWriter,ListOptions,BasedSequence,boolean)	def	b6ce424037cb14a6
 ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#renderLooseItemParagraph(Paragraph,NodeFormatterContext,MarkdownWriter)	def	4206eeb0443c14af
 ssg.md.formatter.FormatterUtils	ssg.md.formatter.FormatterUtils#renderLooseParagraph(Paragraph,NodeFormatterContext,MarkdownWriter)	def	a1be0045bdae8c89

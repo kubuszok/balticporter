@@ -1457,6 +1457,13 @@ final class TirEmitter(
     * because trivia wraps a term without changing what it is. */
   private def polyOperand(t: Term): Boolean = Tree.uncomment(t) match
     case _: Tree.Lambda | _: Tree.MethodRef => true
+    // …and a CONDITIONAL over them, which JLS 15.25 makes a poly expression in its own right: java
+    // pushes the target type through the `?:` and types each branch against it. Rendered as a CAST
+    // this is the failure `polyExpression`'s refusal is about, one node out — the branches
+    // elaborate to `Function1`s first and the cast then asserts that a `Function1` is the
+    // functional interface, which throws. As an ASCRIPTION scala propagates the expected type into
+    // both arms exactly as java did.
+    case Tree.If(_, th, el, _, _)           => polyOperand(th) && polyOperand(el)
     case _                                  => false
 
   private def castTarget(e: Term, target: TypeRepr): TypeRepr =

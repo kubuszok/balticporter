@@ -3026,10 +3026,24 @@ readable as a floor rather than as *four more waves*:
   differed from the one its text named: `addAll(int, Collection)` is java's POSITIONAL overload, the
   table had an arm for the one-argument form alone, and scala accepted the untranslated call by
   AUTO-TUPLING java's two arguments into a pair (K30 face 2, `collection-boundary` 21 → 20);
-- **`FormatterUtils#renderList`** — a LAMBDA at exactly the slot wave 14's second commit answers for
-  a collection: the sibling `DataKey<T>` fixes `T` to a `java.util.function.Function`, and what that
-  slot needs is an ASCRIPTION (which SAM-converts) rather than a collection factory. Same derivation,
-  different remedy, and it belongs in the FRONTEND rather than in `CollectionsTransform`;
+- ~~**`FormatterUtils#renderList`**~~ — **CLOSED AT WAVE 16**, and the diagnosis was right about the
+  REMEDY (an ASCRIPTION, which SAM-converts) and wrong about where the derivation had to come from.
+  Nothing needed to re-read the sibling `DataKey<T>`: `polyArgsAscribed` already ascribes a lambda at
+  an overloaded call, and it declined here for two independent reasons, each of which is a general
+  rule rather than this site's. **(i) A SAM slot fails to name an expected type in TWO ways** and the
+  guard asked about one — *do the alternatives DISAGREE at the lambda's index* is exact for `boolean`
+  beside `Runnable` and blind to `set(DataKey<T>, T)` beside `set(NullableDataKey<T>, T)`, which
+  agree perfectly at index 1 on a TYPE VARIABLE THE CALL HAS YET TO INFER. Java solves `T` from the
+  key and types the literal against it; scala must resolve the overload before it can use either
+  slot, and it resolves by typing the arguments. **(ii) The lambda was inside a CONDITIONAL**, which
+  JLS 15.25 makes a poly expression in its own right — the same sentence K30 face 3 already reached
+  for `coerce` one artifact over, met at a poly operand instead of a collection. The ascription goes
+  on the whole `if`, because java required both branches to be compatible with ONE target.
+  **5 → 4**, 2 member digests (the declaration and its class), every check count flat.
+  The wide reading of (i) — *more than one distinct SIGNATURE of this arity* — was measured FIRST and
+  is not what shipped: it moved 4 ssg-md members at exactly the sites this mechanism's own spec
+  already declares must not move, so the existing negative was right and the wide form is the
+  over-approximation §5 has no instrument for;
 - **`AttributeProviderAdapter#addHandlers`** — `handlers.toArray(EMPTY_HANDLERS)`, where the
   frontend's erasure cast to `Array[Object]` survives onto the argument and `toArray[A]` therefore
   infers `A = Object`. **WAVE 15 CORRECTED THIS DIAGNOSIS BY BUILDING THE FIX IT NAMED AND MEASURING
