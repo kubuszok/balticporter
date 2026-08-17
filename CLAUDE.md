@@ -1379,6 +1379,21 @@ port it was aimed at, because "is this type nameable" is TWO questions — a wil
 INSIDE an argument (`Class[?]`) and is not writable ON ITS OWN as a cast target (`asInstanceOf[?]` is
 a syntax error). A dead arm is evidence the distinction was never made, not just that the order slipped.
 
+**And the repair is ONE DERIVATION with the answers moved OUT to the callers — never the reorder.**
+Reordering thirteen arms changes thirteen ANSWERS at once, on behalf of thirteen callers none of
+which was asked, which is why it prices at 5 → 8 and why it reads as unarguably safe before it is
+measured. What each site is entitled to is its own answer, so the taxonomy becomes a VALUE that one
+function derives (`SpoonTir.TypeShape` / `TypeShape.of`, the shadowing subtype first), every site
+matches on it, and each **states the answer it was already giving to the shadowed kind, marked as
+the preserved shadow it is**. That migration is flat BY CONSTRUCTION — the arm is the expression the
+claiming arm was already computing — and the measurement then confirms rather than discovers: 0
+member digests on all seventeen port reports, every count at its baseline. What it buys is that a
+wrong answer is afterwards ONE line a reader can point at and change with its own number, instead of
+a property of the file's `match` order. Two things fall out of doing it: the census by grep MISSES
+the sites whose exclusion rides on a guard rather than an arm (a `case r if !r.isInstanceOf[Sub]`
+below the claiming arm is dead the same way and greps as neither), and a site the census called
+answer-changing may turn out to be DEAD CODE, which only the compiler says.
+
 **And the rule reaches an INSTRUMENT'S OWN FILTER, in whatever language it is written.** The second
 occurrence was not a phase at all: `just catalog-coverage`'s aggregation matched
 `^(lowering|phase):` — the two obligation discharge surfaces that existed the day it was written —

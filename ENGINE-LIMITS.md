@@ -968,12 +968,46 @@ condition this entry already states), and nameability has to distinguish the pos
 stands at. Neither is a widening of the receiver side, and shipping the per-position rule without
 both is what the table above prices.
 
-*Fix kind: (a) engine. The first half BUILT (above). The second half OPEN and REVERTED at
-13 → 11 / 0 → 1; the entry-point is `SpoonTir.erasedReceiverView`'s `args`, and the blockers are now
-TWO — `eraseDependentArgs` / `knownReceiverArgs` / `coerceArgsFixed` being three readings of one
-erasure, and THIRTEEN wildcard-arm-below-type-parameter-arm matches (ten of them answer-changing)
-conflating "a wildcard inside an argument" with "a wildcard as
-a type of its own", which the blanket arm reorder prices at ssg-md 5 → 8.*
+**AND WAVE 17 CLOSED THE SECOND BLOCKER WITHOUT REORDERING A SINGLE ARM — 0 MEMBER DIGESTS ON ALL
+SEVENTEEN PORT REPORTS, EVERY ERROR COUNT AND EVERY CHECK COUNT AT ITS BASELINE.** The reorder is
+measured worse and stays a dead end; what was wrong was not the direction but that it changed
+THIRTEEN answers at once, on behalf of thirteen callers none of which had been asked. So the
+taxonomy became a VALUE — `SpoonTir.TypeShape` and its one `TypeShape.of`, wildcard arm above
+variable arm, the only place in the frontend that decides what kind of reference it is holding — and
+every one of the matches now reads it and **states its own per-kind answer, including the wildcard
+one it had been giving without saying so**. Fourteen sites, not thirteen: `tpBoundErased` has the
+same defect with no wildcard ARM to be shadowed (its exclusion rides on the APPLIED arm, which a `?`
+never reaches), so the grep-derived census could not see it and reading the cluster could.
+
+Two properties make that shippable in one commit, and both are the point:
+
+- **flat BY CONSTRUCTION, then measured.** Each site's wildcard arm is the answer the variable arm
+  was already computing for a `?` — `false` at ten of them, `objectT` at `erasedType` and
+  `tpBoundErased`, `NoType` at `externalSlot`, `true` at `mentionsAnyTypeVar`, `None` at
+  `inheritedFormal`, and the literal `Set("?")` at `typeVarsOf`, whose simple name Spoon's
+  `CtWildcardReferenceImpl` constructor sets. Nothing was left to be inferred from a run;
+- **a PRESERVED SHADOW is now one line a reader can point at**, marked as such at each site. The
+  answers that are wrong are still wrong — that is what "flat" means — but changing one is now an
+  edit at ONE arm with its own measurement, instead of a reorder that moves all thirteen and prices
+  at 5 → 8.
+
+Two facts the migration turned up that the census could not: `typeVarsOf` is DEAD CODE (nothing but
+itself calls it), so at most nine of the ten can change an answer; and the `!r.isInstanceOf[
+CtWildcardReference]` guard `tpBoundErased` carried was already unreachable, which is the same defect
+wearing a guard instead of an arm. Spec: `TypeShapeSpec` — the class hierarchy asserted rather than
+assumed (§4.56's *`javap` the interface*, as a test), the arm order negative-tested by swapping the
+two arms in `of` (2 of 7 fail), and `ref`/`args` pinned against Spoon's own
+`getActualTypeArguments`, which is what lets a migrated caller treat several kinds alike and still
+reproduce the `case r =>` it used to fall into.
+
+*Fix kind: (a) engine. The first half BUILT (above). The SECOND BLOCKER — thirteen (fourteen)
+wildcard-arm-below-type-parameter-arm matches — **CLOSED at wave 17**, flat on all seventeen port
+reports. The second half of the ENTRY is still OPEN and REVERTED at 13 → 11 / 0 → 1; the entry-point
+is `SpoonTir.erasedReceiverView`'s `args`, and ONE blocker remains — `eraseDependentArgs` /
+`knownReceiverArgs` / `coerceArgsFixed` being three readings of one erasure. The per-position rule
+also needs at least one preserved shadow FLIPPED (`mentionsAnyTypeVar` answers `true` for a bare `?`,
+so nothing can ask *does this written argument mention a type variable*), and that flip is its own
+measurement at its own four callers.*
 
 ### G22. A method TYPE PARAMETER constrained only by its BOUND infers `Nothing` in Scala and its BOUND in java — CLOSED
 

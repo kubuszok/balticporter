@@ -138,6 +138,70 @@ object SpoonTir:
     new Builder(subs, sources.toMap, catalog, annotations).build(tops)
 
   // -------------------------------------------------------------------------
+  /** ==THE ONE CLASSIFICATION OF A SPOON TYPE REFERENCE==
+    *
+    * Spoon's `CtWildcardReference` EXTENDS `CtTypeParameterReference`, so `case tv:
+    * CtTypeParameterReference` claims every `?` and a wildcard arm written BELOW it is unreachable.
+    * Thirteen `match`es in this file had exactly that shape, each one deciding, on its own, that a
+    * `?` is a type VARIABLE — which is the reading that makes `Class<?>` "not nameable here" and is
+    * `ENGINE-LIMITS.md` G21's second blocker.
+    *
+    * `CLAUDE.md` §4.56 is the rule this discharges: a phase may only conclude something about a
+    * type from a STRUCTURAL fact, and the structural fact here is the KIND of reference. It is
+    * derived ONCE, in [[TypeShape.of]], with the wildcard arm ABOVE the variable arm — so growing a
+    * kind is one edit, and no caller re-derives the taxonomy by `isInstanceOf`. What each caller
+    * then does per kind is the CALLER's answer and is written out at the caller, including the
+    * kinds it does not distinguish: `ref` and `args` are the two projections a caller needs to
+    * treat `Prim`/`Intersection`/`Named` alike, which is what most of them did before by falling
+    * into a `case r =>`.
+    *
+    * The migration itself changed NO answer (§5: the unification measured flat on all fifteen
+    * ports). Where a wildcard's answer was the variable arm's, that answer is written out AS the
+    * wildcard arm and marked — a preserved shadow, now visible and changeable one site at a time
+    * with a measurement, rather than a dead arm nobody could see. */
+  private[spoon] enum TypeShape:
+    case Absent
+    case Wildcard(w: CtWildcardReference, bound: Option[CtTypeReference[?]], upper: Boolean)
+    case Variable(tv: CtTypeParameterReference)
+    case Arr(a: CtArrayTypeReference[?], component: CtTypeReference[?])
+    case Intersection(i: CtIntersectionTypeReference[?], bounds: List[CtTypeReference[?]])
+    case Prim(p: CtTypeReference[?])
+    case Named(r: CtTypeReference[?], as: List[CtTypeReference[?]])
+
+    /** the reference this shape classifies — `null` only for [[Absent]]. */
+    def ref: CtTypeReference[?] = this match
+      case Absent             => null
+      case Wildcard(w, _, _)  => w
+      case Variable(tv)       => tv
+      case Arr(a, _)          => a
+      case Intersection(i, _) => i
+      case Prim(p)            => p
+      case Named(r, _)        => r
+
+    /** the reference's own type ARGUMENTS exactly as `getActualTypeArguments` reports them, so a
+      * caller that treats several kinds alike reproduces the `case r =>` it used to fall into. */
+    def args: List[CtTypeReference[?]] = this match
+      case Absent       => Nil
+      case Named(_, as) => as
+      case s            => TypeShape.actualArgs(s.ref)
+
+  private[spoon] object TypeShape:
+    private def actualArgs(r: CtTypeReference[?]): List[CtTypeReference[?]] =
+      try r.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
+
+    /** THE derivation. The WILDCARD arm is first, and that order is the whole point (see the enum's
+      * doc): `CtWildcardReference <: CtTypeParameterReference`, so any other order silently answers
+      * "type variable" for every `?` in the program. */
+    def of(tr: CtTypeReference[?]): TypeShape = tr match
+      case null                              => Absent
+      case w: CtWildcardReference            => Wildcard(w, Option(w.getBoundingType), w.isUpper)
+      case tv: CtTypeParameterReference      => Variable(tv)
+      case a: CtArrayTypeReference[?]        => Arr(a, a.getComponentType)
+      case i: CtIntersectionTypeReference[?] =>
+        Intersection(i, try i.getBounds.asScala.toList catch { case _: Throwable => Nil })
+      case p if (try p.isPrimitive catch { case _: Throwable => false }) => Prim(p)
+      case r                                 => Named(r, actualArgs(r))
+
   /** Interns symbols by a stable string key (qualified names for types, `owner#member`
     * for members, `decl$$Name` for type params). One id per key, monotonic. */
   private final class Minter:
@@ -638,29 +702,27 @@ object SpoonTir:
       * `Iterable<? extends CharSequence>` arrives as `Iterable<T>`, echoing the interface's own
       * formal. `Iterable[?]` records exactly what was read: the head is exact, and the head is the
       * whole of the question a boundary asks. */
-    private def externalSlot(tr: CtTypeReference[?]): TypeRepr = tr match
-      case null                                 => NoType
-      case p if (try p.isPrimitive catch { case _: Throwable => false }) => tpe(p)
-      case arr: CtArrayTypeReference[?] =>
-        externalSlot(arr.getComponentType) match
+    private def externalSlot(tr: CtTypeReference[?]): TypeRepr = TypeShape.of(tr) match
+      case TypeShape.Absent      => NoType
+      case TypeShape.Prim(p)     => tpe(p)
+      case TypeShape.Arr(_, c) =>
+        externalSlot(c) match
           case NoType => NoType
-          case c      => AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(c))
+          case e      => AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(e))
       // a type VARIABLE at the slot itself names something only the CALLEE's scope has, and an
       // intersection would be filled from names this scope supplies. Neither is a fact about the
       // class file, so neither is recorded.
-      case _: CtTypeParameterReference          => NoType
-      case _: CtIntersectionTypeReference[?]    => NoType
-      // a wildcard is scope-free — `?` is a fresh existential — and its BOUND goes through the
-      // ARGUMENT rendering, since an unrenderable bound is `?` and not a refusal.
-      case w: CtWildcardReference =>
-        Option(w.getBoundingType).filter(_.getQualifiedName != "java.lang.Object") match
-          case None    => TypeBounds(NoType, NoType)
-          case Some(b) => externalArg(b) match
-            case TypeBounds(NoType, NoType) => TypeBounds(NoType, NoType)
-            case u => if w.isUpper then TypeBounds(NoType, u) else TypeBounds(u, NoType)
-      case r =>
+      case TypeShape.Variable(_)       => NoType
+      case TypeShape.Intersection(_, _) => NoType
+      // A wildcard is scope-free — `?` is a fresh existential — and its BOUND would go through the
+      // ARGUMENT rendering, since an unrenderable bound is `?` and not a refusal. That is what the
+      // arm below the variable one said, and it never ran: `NoType` is what this slot has answered
+      // for every `?` since it was written (see `TypeShape`'s doc, `ENGINE-LIMITS.md` G21).
+      // PRESERVED SHADOW — a change here is its own measurement.
+      case TypeShape.Wildcard(_, _, _) => NoType
+      case s @ TypeShape.Named(r, _) =>
         val head  = TypeRef(NoPrefix, typeSym(r))
-        val args  = try r.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
+        val args  = s.args
         val arity = formalArity(r)
         // `tpe` would fill a bare generic from the names accessible at the READING point — the one
         // scope this rendering may not consult — so the fill here is the WILDCARD one, which is
@@ -870,7 +932,7 @@ object SpoonTir:
 
     private def erasedType(b: CtTypeReference[?], seen: Set[String], depth: Int): TypeRepr =
       if depth <= 0 then objectT
-      else b match
+      else TypeShape.of(b) match
         // a NESTED type variable erases through its own declaration, exactly as a bare one does (see
         // `erasedFormal`) — collapsing it straight to `Object` made the two sides of the same erased
         // call disagree: the RECEIVER cast said `Node[Node[Object,Object,Actor], Object, Actor]`
@@ -881,21 +943,28 @@ object SpoonTir:
         // invariant in `N`. Java carries the same bound and does not check it at an erased use;
         // Scala checks. A WILDCARD asserts only that SOME type satisfies the bound, which is
         // exactly the erased claim, and is the one form scalac accepts here.
-        case tv: CtTypeParameterReference =>
+        // …and the WILDCARD arm now stands where its own answer already was: a `?` has no
+        // declaration, so the variable arm below used to reach `getOrElse(objectT)` for it and
+        // answer exactly this. Answer-preserving by derivation, not by measurement.
+        case TypeShape.Wildcard(_, _, _) => objectT
+        case TypeShape.Variable(tv) =>
           if seen(tv.getSimpleName) then TypeBounds(NoType, NoType)
           else
             val d = try Option(tv.getDeclaration) catch { case _: Throwable => None }
             d.map(erasureOfFormal(_, seen + tv.getSimpleName, 2)).getOrElse(objectT)
-        case arr: CtArrayTypeReference[?] =>
+        case TypeShape.Arr(_, c) =>
           AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")),
-                      List(erasedType(arr.getComponentType, seen, depth)))
-        case inter: CtIntersectionTypeReference[?] =>
-          inter.getBounds.asScala.toList.headOption.map(erasedType(_, seen, depth)).getOrElse(objectT)
-        case _: CtWildcardReference => objectT
-        case p if p.isPrimitive     => tpe(p)
-        case r =>
+                      List(erasedType(c, seen, depth)))
+        case TypeShape.Intersection(_, bounds) =>
+          bounds.headOption.map(erasedType(_, seen, depth)).getOrElse(objectT)
+        case TypeShape.Prim(p)      => tpe(p)
+        // no caller passes a null reference here (every one hands over a bound, a component, an
+        // argument or a formal's superclass); `tpe` is the one place that answers for one, so defer
+        // to it rather than inventing a second answer.
+        case TypeShape.Absent       => tpe(b)
+        case s @ TypeShape.Named(r, _) =>
           val head = TypeRef(NoPrefix, typeSym(r))
-          r.getActualTypeArguments.asScala.toList match
+          s.args match
             case Nil =>
               val formals = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
                             catch { case _: Throwable => Nil }
@@ -977,16 +1046,18 @@ object SpoonTir:
       * (`Class`, `ObjectMap<String, AssetLoader>`)? A raw use is exactly where Java stops checking
       * and where our rendering is CONTEXT-dependent (wildcards, or name-directed fill), so the two
       * ends of an assignment need not agree even when Java's do. */
-    private def mentionsRawGeneric(tr: CtTypeReference[?]): Boolean = tr match
-      case null                         => false
-      case _: CtTypeParameterReference  => false
-      case w: CtWildcardReference       => Option(w.getBoundingType).exists(mentionsRawGeneric)
-      case arr: CtArrayTypeReference[?] => mentionsRawGeneric(arr.getComponentType)
-      case r if r.isPrimitive           => false
-      case r =>
-        val args = try r.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
-        if args.nonEmpty then args.exists(mentionsRawGeneric)
-        else formalArity(r) > 0
+    private def mentionsRawGeneric(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
+      case TypeShape.Absent      => false
+      case TypeShape.Variable(_) => false
+      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21): the arm written here descended into the BOUND,
+      // and the variable arm above it answered `false` for every `?` instead. `false` is what this
+      // predicate has said since it was written; changing it is its own measurement.
+      case TypeShape.Wildcard(_, _, _)  => false
+      case TypeShape.Arr(_, c)          => mentionsRawGeneric(c)
+      case TypeShape.Prim(_)            => false
+      case s =>
+        if s.args.nonEmpty then s.args.exists(mentionsRawGeneric)
+        else formalArity(s.ref) > 0
 
     /** the DECLARED type-parameter arity of a type reference — `Map` → 2, `String` → 0.
       *
@@ -1223,13 +1294,13 @@ object SpoonTir:
       walk(r)
 
     /** a use of a GENERIC class — an instantiation (`Class<T>`) or a raw one (`Class`). */
-    private def isGenericUse(tr: CtTypeReference[?]): Boolean = tr match
-      case null                         => false
-      case _: CtTypeParameterReference  => false
-      case _: CtWildcardReference       => false
-      case _: CtArrayTypeReference[?]   => false
-      case r if r.isPrimitive           => false
-      case r => (try r.getActualTypeArguments.size catch { case _: Throwable => 0 }) > 0 || formalArity(r) > 0
+    private def isGenericUse(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
+      case TypeShape.Absent            => false
+      case TypeShape.Variable(_)       => false
+      case TypeShape.Wildcard(_, _, _) => false   // the arm the variable one shadowed said the same
+      case TypeShape.Arr(_, _)         => false
+      case TypeShape.Prim(_)           => false
+      case s                           => s.args.nonEmpty || formalArity(s.ref) > 0
 
     /** a RAW use of a generic class — `Cell`, not `Cell<T>`. Exactly where Java stops checking. */
     private def isRawGenericUse(tr: CtTypeReference[?]): Boolean =
@@ -1237,22 +1308,25 @@ object SpoonTir:
 
     /** does every type variable this type mentions resolve HERE? `tpe` renders an unresolved one as
       * a `?T` stub, which is not valid Scala — so a synthesized cast must never target such a type. */
-    private def tpResolvable(tr: CtTypeReference[?]): Boolean = tr match
-      case null                         => true
-      case tv: CtTypeParameterReference => resolveTypeParam(tv.getSimpleName).isDefined
-      case w: CtWildcardReference       => Option(w.getBoundingType).forall(tpResolvable)
-      case arr: CtArrayTypeReference[?] => tpResolvable(arr.getComponentType)
-      case r => try r.getActualTypeArguments.asScala.forall(tpResolvable) catch { case _: Throwable => true }
+    private def tpResolvable(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
+      case TypeShape.Absent       => true
+      case TypeShape.Variable(tv) => resolveTypeParam(tv.getSimpleName).isDefined
+      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21). The variable arm above used to claim every `?`
+      // and answer `resolveTypeParam("?")`, which no scope can define — so `false` is what this has
+      // said for every wildcard since it was written, and the bound-descending arm never ran.
+      case TypeShape.Wildcard(_, _, _) => false
+      case TypeShape.Arr(_, c)         => tpResolvable(c)
+      case s                           => s.args.forall(tpResolvable)
 
     /** free of type VARIABLES entirely. A callee's formal must satisfy this before we may render it
       * at a CALL SITE: `resolveTypeParam` is name-based, so a callee's `<T>` would silently bind to
       * an unrelated in-scope `T` (`ResourceData<T>` vs `Json.readValue<T>`) and emit a wrong cast. */
-    private def tpConcrete(tr: CtTypeReference[?]): Boolean = tr match
-      case null                         => true
-      case _: CtTypeParameterReference  => false
-      case w: CtWildcardReference       => Option(w.getBoundingType).forall(tpConcrete)
-      case arr: CtArrayTypeReference[?] => tpConcrete(arr.getComponentType)
-      case r => try r.getActualTypeArguments.asScala.forall(tpConcrete) catch { case _: Throwable => true }
+    private def tpConcrete(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
+      case TypeShape.Absent            => true
+      case TypeShape.Variable(_)       => false
+      case TypeShape.Wildcard(_, _, _) => false   // PRESERVED SHADOW — `ENGINE-LIMITS.md` G21
+      case TypeShape.Arr(_, c)         => tpConcrete(c)
+      case s                           => s.args.forall(tpConcrete)
 
     /** [[tpConcrete]] with its one over-exclusion repaired: a type VARIABLE passes when it is
       * LITERALLY the one in scope here ([[sameVarInScope]] — the same declaration, hence the same
@@ -1265,12 +1339,17 @@ object SpoonTir:
       * `tpConcrete`, because the two answer different questions and every existing caller of that
       * one must keep the answer it has (F8: one derivation per question, not one function per
       * shape). */
-    private def tpNameableHere(tr: CtTypeReference[?]): Boolean = tr match
-      case null                         => true
-      case tv: CtTypeParameterReference => sameVarInScope(tv)
-      case w: CtWildcardReference       => Option(w.getBoundingType).forall(tpNameableHere)
-      case arr: CtArrayTypeReference[?] => tpNameableHere(arr.getComponentType)
-      case r => try r.getActualTypeArguments.asScala.forall(tpNameableHere) catch { case _: Throwable => true }
+    private def tpNameableHere(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
+      case TypeShape.Absent       => true
+      case TypeShape.Variable(tv) => sameVarInScope(tv)
+      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21) — and the one this entry is ABOUT: a `?` fell
+      // into the variable arm, `sameVarInScope` found no declaration for it, and `Class<?>` was
+      // therefore "not nameable here". `false` is the answer that has been given; the question of
+      // whether a `?` is writable is a question about the POSITION it stands at and is answered
+      // where that position is known.
+      case TypeShape.Wildcard(_, _, _) => false
+      case TypeShape.Arr(_, c)         => tpNameableHere(c)
+      case s                           => s.args.forall(tpNameableHere)
     // …and note this is STRICTLY WEAKER than `tpConcrete`, not a different question: every arm but
     // the variable one is that function's, so a concrete type passes here too and no caller needs
     // the disjunction spelled out.
@@ -1303,31 +1382,38 @@ object SpoonTir:
       * excluded at source in [[uncheckedGeneric]]'s `bad` list where it belongs. sge writes the
       * same two casts by hand (`desc.type.asInstanceOf[Class[Any]]`, `desc.params.asInstanceOf[…
       * AssetLoaderParameters[Any]]`), which is the shape this produces. */
-    private def calleeBounded(tr: CtTypeReference[?]): Boolean = tr match
-      case null => true
-      case tv: CtTypeParameterReference if sameVarInScope(tv) => true
-      case tv: CtTypeParameterReference =>
+    private def calleeBounded(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
+      case TypeShape.Absent => true
+      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21): a `?` has no declaration, so both variable arms
+      // below declined it and the answer was `false` — never the bound walk written under them.
+      case TypeShape.Wildcard(_, _, _) => false
+      case TypeShape.Variable(tv) if sameVarInScope(tv) => true
+      case TypeShape.Variable(tv) =>
         (try Option(tv.getDeclaration) catch { case _: Throwable => None }).exists { d =>
           d.getParent.isInstanceOf[CtExecutable[?]]
         }
-      case w: CtWildcardReference       => Option(w.getBoundingType).forall(calleeBounded)
-      case arr: CtArrayTypeReference[?] => calleeBounded(arr.getComponentType)
-      case r => try r.getActualTypeArguments.asScala.forall(calleeBounded) catch { case _: Throwable => true }
+      case TypeShape.Arr(_, c) => calleeBounded(c)
+      case s                   => s.args.forall(calleeBounded)
 
     /** `tpe`, but every type variable replaced by the erasure of its bound (see [[calleeBounded]]);
       * identical to `tpe` on a variable-free type. */
-    private def tpBoundErased(tr: CtTypeReference[?]): TypeRepr = tr match
-      case tv: CtTypeParameterReference if sameVarInScope(tv) => tpe(tv)
-      case tv: CtTypeParameterReference =>
+    private def tpBoundErased(tr: CtTypeReference[?]): TypeRepr = TypeShape.of(tr) match
+      // PRESERVED SHADOW, and the FOURTEENTH site — one G21's census could not see, because it has
+      // no wildcard ARM to be shadowed. It carried the exclusion on the APPLIED arm instead
+      // (`!r.isInstanceOf[CtWildcardReference]`), which never ran: the variable arm above claimed
+      // every `?` first, found no declaration and answered `objectT`. That is the answer preserved
+      // here, and the dead guard is gone rather than left reading as live.
+      case TypeShape.Wildcard(_, _, _) => objectT
+      case TypeShape.Variable(tv) if sameVarInScope(tv) => tpe(tv)
+      case TypeShape.Variable(tv) =>
         (try Option(tv.getDeclaration) catch { case _: Throwable => None })
           .map(erasureOfFormal(_, Set.empty, 2)).getOrElse(objectT)
-      case arr: CtArrayTypeReference[?] =>
+      case TypeShape.Arr(_, c) =>
         AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")),
-                    List(tpBoundErased(arr.getComponentType)))
-      case r if r != null && !r.isPrimitive && !r.isInstanceOf[CtWildcardReference] &&
-                (try r.getActualTypeArguments.size catch { case _: Throwable => 0 }) > 0 =>
-        AppliedType(TypeRef(NoPrefix, typeSym(r)), r.getActualTypeArguments.asScala.toList.map(tpBoundErased))
-      case other => tpe(other)
+                    List(tpBoundErased(c)))
+      case TypeShape.Named(r, as) if as.nonEmpty =>
+        AppliedType(TypeRef(NoPrefix, typeSym(r)), as.map(tpBoundErased))
+      case s => tpe(s.ref)
 
     /** `tpe` of a callee's DECLARED formal with the receiver's type variables replaced by the
       * receiver's own (known) type ARGUMENTS. `None` whenever any part cannot be named here — a raw
@@ -1369,30 +1455,36 @@ object SpoonTir:
     /** [[tpResolvable]], but through the BARRIER-aware frame: `resolveTypeParam` sees every enclosing
       * scope's parameters by name, while a `static` nested class cannot actually name the outer
       * class's — emitting one there is `Not found: type T`. */
-    private def tpAccessibleHere(tr: CtTypeReference[?]): Boolean = tr match
-      case null                         => true
-      case tv: CtTypeParameterReference => accessibleTp(tv.getSimpleName).isDefined
-      case w: CtWildcardReference       => Option(w.getBoundingType).forall(tpAccessibleHere)
-      case arr: CtArrayTypeReference[?] => tpAccessibleHere(arr.getComponentType)
-      case r => try r.getActualTypeArguments.asScala.forall(tpAccessibleHere) catch { case _: Throwable => true }
+    private def tpAccessibleHere(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
+      case TypeShape.Absent            => true
+      case TypeShape.Variable(tv)      => accessibleTp(tv.getSimpleName).isDefined
+      case TypeShape.Wildcard(_, _, _) => false   // PRESERVED SHADOW — `accessibleTp("?")` is empty
+      case TypeShape.Arr(_, c)         => tpAccessibleHere(c)
+      case s                           => s.args.forall(tpAccessibleHere)
 
     /** the NAMES of every type variable a type mentions. */
-    private def typeVarsOf(tr: CtTypeReference[?]): Set[String] = tr match
-      case null                         => Set.empty
-      case tv: CtTypeParameterReference => Set(tv.getSimpleName)
-      case w: CtWildcardReference       => Option(w.getBoundingType).map(typeVarsOf).getOrElse(Set.empty)
-      case arr: CtArrayTypeReference[?] => typeVarsOf(arr.getComponentType)
-      case r if r.isPrimitive           => Set.empty
-      case r => try r.getActualTypeArguments.asScala.toSet.flatMap(typeVarsOf)
-                catch { case _: Throwable => Set.empty }
+    private def typeVarsOf(tr: CtTypeReference[?]): Set[String] = TypeShape.of(tr) match
+      case TypeShape.Absent       => Set.empty
+      case TypeShape.Variable(tv) => Set(tv.getSimpleName)
+      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21) — and the one whose preserved answer is not a
+      // constant: a wildcard reached the variable arm, whose `getSimpleName` for one is the literal
+      // `"?"` (`CtWildcardReferenceImpl`'s constructor sets it), so that is the name this has been
+      // reporting. Never the bound's variables, which is what the arm below it said.
+      case TypeShape.Wildcard(w, _, _) => Set(w.getSimpleName)
+      case TypeShape.Arr(_, c)         => typeVarsOf(c)
+      case TypeShape.Prim(_)           => Set.empty
+      case s                           => s.args.toSet.flatMap(typeVarsOf)
 
     /** does this type mention ANY type variable (directly, in an array element, or in an argument)? */
-    private def mentionsAnyTypeVar(tr: CtTypeReference[?]): Boolean = tr match
-      case null                         => false
-      case _: CtTypeParameterReference  => true
-      case w: CtWildcardReference       => Option(w.getBoundingType).exists(mentionsAnyTypeVar)
-      case arr: CtArrayTypeReference[?] => mentionsAnyTypeVar(arr.getComponentType)
-      case r => try r.getActualTypeArguments.asScala.exists(mentionsAnyTypeVar) catch { case _: Throwable => false }
+    private def mentionsAnyTypeVar(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
+      case TypeShape.Absent      => false
+      case TypeShape.Variable(_) => true
+      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21): the variable arm claimed every `?` and answered
+      // `true` — a wildcard counted AS a type variable, which is the conflation this taxonomy is
+      // about. The bound walk below it never ran.
+      case TypeShape.Wildcard(_, _, _) => true
+      case TypeShape.Arr(_, c)         => mentionsAnyTypeVar(c)
+      case s                           => s.args.exists(mentionsAnyTypeVar)
 
     /** Is `actual` the same type as `want` with some type ARGUMENTS collapsed — to `Object` (read
       * through an erased view) or to a wildcard (our raw fill)? That is precisely the shape of an
@@ -1428,16 +1520,15 @@ object SpoonTir:
 
     /** Can this DECLARED formal be named verbatim at the current call site? Concrete parts always;
       * a type variable only when it is literally the same parameter ([[sameTypeParamHere]]). */
-    private def formalNameableHere(tr: CtTypeReference[?]): Boolean = tr match
-      case null                         => false
-      case tv: CtTypeParameterReference => sameTypeParamHere(tv)
-      case arr: CtArrayTypeReference[?] => formalNameableHere(arr.getComponentType)
-      case w: CtWildcardReference       => false
-      case _: CtIntersectionTypeReference[?] => false
-      case r if r.isPrimitive           => true
-      case r =>
-        val as = try r.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
-        if as.nonEmpty then as.forall(formalNameableHere) else formalArity(r) == 0
+    private def formalNameableHere(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
+      case TypeShape.Absent             => false
+      case TypeShape.Variable(tv)       => sameTypeParamHere(tv)
+      case TypeShape.Arr(_, c)          => formalNameableHere(c)
+      case TypeShape.Wildcard(_, _, _)  => false   // the arm the variable one shadowed said the same
+      case TypeShape.Intersection(_, _) => false
+      case TypeShape.Prim(_)            => true
+      case s =>
+        if s.args.nonEmpty then s.args.forall(formalNameableHere) else formalArity(s.ref) == 0
 
     /** does this rendered type name `scala.Array`? */
     private def isScalaArrayType(t: TypeRepr): Boolean = t match
@@ -3285,8 +3376,12 @@ object SpoonTir:
 
       private def inheritedFormal(tr: CtTypeReference[?], fuel: Int = 6): Option[TypeRepr] =
         if fuel <= 0 then scala.None
-        else tr match
-          case tv: CtTypeParameterReference =>
+        else TypeShape.of(tr) match
+          // the WILDCARD arm now stands above the variable one, which claimed every `?` and
+          // declined it anyway (no declaration to look up) — the doc above says the decline is
+          // deliberate, and it is the answer either way.
+          case TypeShape.Wildcard(_, _, _) => scala.None
+          case TypeShape.Variable(tv) =>
             for
               d     <- (try Option(tv.getDeclaration) catch { case _: Throwable => scala.None })
               owner <- (d.getParent match { case ct: CtType[?] => Some(ct.getQualifiedName); case _ => scala.None })
@@ -3294,19 +3389,18 @@ object SpoonTir:
               arg   <- inheritedByDecl.headOption.flatMap(_.get(owner -> tv.getSimpleName))
               r     <- (try Some(tpe(arg)) catch { case _: Throwable => scala.None })
             yield r
-          case arr: CtArrayTypeReference[?] =>
-            inheritedFormal(arr.getComponentType, fuel - 1).map(c =>
-              AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(c)))
-          case _: CtWildcardReference => scala.None
-          case r if r != null && !r.isPrimitive =>
-            val as = try r.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
+          case TypeShape.Arr(_, c) =>
+            inheritedFormal(c, fuel - 1).map(e =>
+              AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(e)))
+          case TypeShape.Absent | TypeShape.Prim(_) => scala.None
+          case s =>
+            val as   = s.args
             val subs = as.map(a => inheritedFormal(a, fuel - 1))
             if as.isEmpty || subs.forall(_.isEmpty) then scala.None
             else
-              try Some(AppliedType(TypeRef(NoPrefix, typeSym(r)),
-                                   as.zip(subs).map((a, s) => s.getOrElse(tpe(a)))))
+              try Some(AppliedType(TypeRef(NoPrefix, typeSym(s.ref)),
+                                   as.zip(subs).map((a, x) => x.getOrElse(tpe(a)))))
               catch { case _: Throwable => scala.None }
-          case _ => scala.None
 
       private def uncheckedGeneric(target: CtTypeReference[?], e: CtExpression[?], t: Term,
                                    rawTarget: Boolean = true, ownScope: Boolean = true): Term =
