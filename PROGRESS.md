@@ -4163,6 +4163,7 @@ they are where the 2b siblings become admissible because their dependency is alr
 | 15 | `ext-abbreviation` | 14 | 12 | 0 | 27/27 | `overload-risk` +9, `omissions` +2 (two `@SuppressWarnings`) — **the second 2b module, on a REAL source dependency** |
 | 16 | `ext-footnotes` | 14 | 12 | 0 | 31/31 | `overload-risk` +16, `dependency-coverage` **0 → 2** (`java.util.Locale`), `dependency-coverage(all)` 10 → 12, `catalog(undischarged)` 5 → 6 (`JS-S23`), `omissions` +1 |
 | 17 | `ext-definition` | 15 | 13 | 0 | 34/34 | `overload-risk` +5, `omissions` +1, and `catalog(unreached)` **16 → 14** — the port's FIRST `switch` |
+| 18 | `ext-typographic` | 15 | 13 | 0 | — | `overload-risk` +5 (4 `GenericTieBreak`, 1 `VarargPhaseSpan`) |
 
 **AND `ext-footnotes` IS THE FIRST EXTENSION TO OWN A `dependency-coverage` ROW, WHICH IS *NOT*
 CLOSED BY DECLARING THE ARTIFACT HERE.** `FootnoteNodeRenderer` calls `String.format(Locale…, …)`
