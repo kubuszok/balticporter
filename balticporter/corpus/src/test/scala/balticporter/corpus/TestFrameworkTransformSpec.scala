@@ -178,6 +178,69 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(!out.contains("afterAll"))
   }
 
+  // ------------------------------------------------------ a test HIERARCHY --
+
+  /** Java's ordinary inherited-suite shape: an abstract root with no `@Test`, an abstract middle
+    * that declares the one `@Test`, a subclass that OVERRIDES it, and a concrete leaf that inherits
+    * it. Both halves of the structural transform break on this and neither is visible from the
+    * class being converted (`DESIGN.md` §3.6). */
+  private val hierarchySrc =
+    """package demo;
+      |import org.junit.Test;
+      |abstract class Root { protected int seed() { return 1; } }
+      |abstract class Middle extends Root {
+      |  @Test public void spec() { check(seed()); }
+      |  void check(int n) { }
+      |}
+      |abstract class Override1 extends Middle {
+      |  @Test public void spec() { super.spec(); }
+      |}
+      |class Leaf extends Middle { }
+      |""".stripMargin
+
+  test("the suite parent anchors at the ROOT of the class chain, never at the @Test declarer") {
+    val (out, _) = emit(hierarchySrc)
+    // scala has ONE superclass: put `munit.FunSuite` on `Middle` and the emitted clause reads
+    // `extends munit.FunSuite with Root`, which is `class Root is not a trait`.
+    // matched on the class NAME and the parent rather than on a whole header line: a
+    // package-private java class renders `private abstract class Root private[demo] ()`, and the
+    // access modifiers are the visibility plan's business and not this rule's.
+    def anchored(nm: String) = out.linesIterator.exists(l =>
+      l.contains(s"class $nm ") && l.contains("extends munit.FunSuite"))
+    assert(clue(anchored("Root")))
+    assert(!clue(anchored("Middle")))
+    assert(!clue(anchored("Override1")))
+    assert(!clue(anchored("Leaf")))
+  }
+
+  test("an OVERRIDDEN @Test stays a `def`, and the registration is emitted ONCE at the top declarer") {
+    val (out, _) = emit(hierarchySrc)
+    // a `test("…"){…}` STATEMENT overrides nothing, so two registrations would be an MUnit
+    // duplicate-name failure at RUN time — after the compile and after every count.
+    assertEquals(clue(out).sliding("test(\"spec\")".length).count(_ == "test(\"spec\")"), 1)
+    // …and the one registration CALLS the method, so each concrete subclass runs its own override.
+    assert(out.contains("test(\"spec\")(spec())"))
+    // both halves of the override edge survive as methods, including the `super` call.
+    assert(out.contains("def spec()"))
+    assert(out.contains("super.spec()"))
+  }
+
+  test("a surviving @Test method loses its junit annotation — `junit_residue` counts one otherwise") {
+    val (out, _) = emit(hierarchySrc)
+    assert(!clue(out).contains("@org.junit.Test"))
+  }
+
+  // …AND THE NEGATIVE, which is what says the hierarchy rule costs the ordinary case nothing.
+  test("NEGATIVE: a suite that extends nothing this program declares is untouched by both rules") {
+    val (out, _) = emit(lifecycleSrc)
+    // the anchor IS the declarer, so the parent lands exactly where it always did …
+    assert(clue(out).contains("class LifecycleTest extends munit.FunSuite"))
+    // … and no `@Test` is in an override relation, so every one is a STATEMENT and no `def` for it
+    // survives — which is the shape every port in the corpus emits.
+    assert(out.contains("test(\"one\")"))
+    assert(!out.contains("def one()"))
+  }
+
   // ------------------------------------------------------------ assertions --
 
   /** One suite exercising every `org.junit.Assert` shape the corpus resolves, plus the two the

@@ -90,6 +90,28 @@ class PortRunSpec extends munit.FunSuite:
     assert(r.program.units.size > 1, "the model must still SPAN the resolution root")
   }
 
+  test("…AND WHEN THE SOURCE ROOT CONTAINS THE RESOLUTION ROOT, which the prefix test got wrong") {
+    // The case above has two SIBLING roots, which is every port that had ever run here and which a
+    // pair of path prefixes answers exactly. A port whose scope is several trees in several modules
+    // has no source root short of their common ancestor, and that ancestor contains the resolution
+    // roots — so "under `sourceRoot`" alone answered YES for every unit in the model and the whole
+    // resolved library was re-emitted (546 files against 90 in scope, `CLAUDE.md` §4.56).
+    //
+    // `FrontendConfig.files` is the list this run was TOLD to convert, and it is the answer.
+    val (root, src) = fixture()
+    val nested = root.resolve("java2")
+    java(nested, "com/demo2/Uses.java",
+      """package com.demo2;
+        |import com.demo.Widget;
+        |public class Uses { public Widget w = new Widget(); }""".stripMargin)
+    val r = PortRun("demo", root.resolve("port"), SourceSet.Main,
+      // the source root is the ANCESTOR of both, and `src` is a resolution root UNDER it
+      FrontendConfig(root, List("java2/com/demo2/Uses.java"), Nil, resolutionRoots = List(src)), Nil,
+      manifest = Some(PortManifest("base").extendedBy(PortManifest("dependent")))).execute()
+    assertEquals(clue(emitted(r.outDir)), List("com/demo2/Uses.scala"))
+    assert(r.program.units.size > 1, "the model must still SPAN the resolution root")
+  }
+
   test("a dropped type is parsed but not emitted, and an injected replacement takes its place") {
     val (root, src) = fixture()
     val inject = root.resolve("overrides")

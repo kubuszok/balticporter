@@ -2690,8 +2690,12 @@ final case class PortRun(
       // `resolve` carries an absolute entry through unchanged.
       val mine = frontend.files.map(f => PortRun.real(frontend.sourceRoot.resolve(f))).toSet
       program.units.partition { u =>
-        val p = u.origin.javaPath
-        if p.isEmpty then true else mine.contains(PortRun.real(java.nio.file.Path.of(p)))
+        // a unit no java file produced is CONVERTED — refusing to emit on a missing origin would be
+        // the silent omission this rule exists to prevent, and `isSynthesised` is the one derivation
+        // for it (`Origin.synthetic`'s path is the placeholder `<synthetic>`, so an emptiness test
+        // alone classifies every minted unit as a file this run was not asked to convert).
+        if PortRun.isSynthesised(u.origin) then true
+        else mine.contains(PortRun.real(java.nio.file.Path.of(u.origin.javaPath)))
       }
 
   private def wipe(dir: Path): Unit =
