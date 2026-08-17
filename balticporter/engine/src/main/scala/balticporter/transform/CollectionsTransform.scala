@@ -348,6 +348,9 @@ final class CollectionsTransform(
 
   // prepared in `run`, read by the hooks.
   private var remap: Map[SymId, SymId]    = Map.empty
+  /** every class this program declares, by symbol — the one thing [[classTparams]] needs and the
+    * only place the IR keeps a class's own type parameters. */
+  private var classDefsBySym: Map[SymId, Tree.ClassDef] = Map.empty
   private var kindOf: Map[SymId, Kind]    = Map.empty // scala collection symbol → kind
   /** a class the PROGRAM declares → what this phase's own MINTED PARENTS put beside its members.
     *
@@ -679,6 +682,10 @@ final class CollectionsTransform(
       })
 
   override def run(program: Program): Program =
+    // the class index [[classTparams]] reads — built once, from the program as PARSED, because a
+    // type parameter's symbol is one thing this phase never moves.
+    classDefsBySym = program.units.flatMap(StandardTraversal.allClassDefs(_)(using program))
+                            .map(cd => cd.symbol -> cd).toMap
     val added = collection.mutable.ListBuffer[Symbol]()
     var next  = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
     def mint(name: String, full: String): SymId =
@@ -3941,6 +3948,28 @@ final class CollectionsTransform(
     if formals.sizeIs != t.args.size then formals
     else
       val bound = collection.mutable.HashMap.empty[SymId, TypeRepr]
+      // …AND AT A CONSTRUCTOR THE CLASS'S OWN PARAMETERS ARE BOUND TOO, which is the "different
+      // derivation" the paragraph above names and defers. It defers it because a class parameter is
+      // fixed by the RECEIVER, and an ordinary call's receiver is an arbitrary term this phase would
+      // have to re-derive an instantiation for. A `new` has no receiver: the instantiation IS the
+      // node's own type, `DataKey[JavaCollection[X]]`, which the frontend recorded from java's own
+      // inference of the diamond. So the binding is READ rather than reconstructed, and it is exact.
+      //
+      // Without it a `new C<Collection<X>>(…, aList)` is the identical blindness one declaration
+      // over: the formal is the bare `T`, no arm of the factory table has a head to compare, and the
+      // seam java's `List <: Collection` edge carried reaches scalac as `E134 None of the overloaded
+      // alternatives`. The value slot is the one being ANSWERED here exactly as it is above — a
+      // class parameter never binds FROM an argument — so the asymmetry that makes the method case
+      // sound is preserved verbatim.
+      val ctorBound: Map[SymId, TypeRepr] =
+        if !instantiation(t) then Map.empty
+        else
+          val owner = p.symbolOf(t.method).map(_.owner).getOrElse(SymId.None)
+          (classTparams(owner), t.tpe) match
+            case (ps, TypeRepr.AppliedType(tc, as))
+              if ps.nonEmpty && ps.sizeIs == as.size && headSym(tc).contains(owner) =>
+              ps.zip(as).toMap
+            case _ => Map.empty
       def bindable(s: SymId): Boolean = p.symbolOf(s).exists(_.owner == t.method)
       // …the recursion is through MATCHING HEADS only. An `AppliedType` whose heads differ is a slot
       // the ordinary boundary lane already reports, and unifying across it would invent a binding
@@ -3960,11 +3989,18 @@ final class CollectionsTransform(
         case (_: TypeRepr.TypeRef, _) => ()
         case (f, a)                   => bind(f, a.tpe)
       }
-      if bound.isEmpty then formals
+      if bound.isEmpty && ctorBound.isEmpty then formals
       else formals.map {
-        case f @ TypeRepr.TypeRef(_, s) if bindable(s) => bound.getOrElse(s, f)
-        case other                                     => other
+        case f @ TypeRepr.TypeRef(_, s) if bindable(s)    => bound.getOrElse(s, f)
+        case f @ TypeRepr.TypeRef(_, s)                   => ctorBound.getOrElse(s, f)
+        case other                                        => other
       }
+
+  /** the TYPE PARAMETERS a class declares, in declaration order, or `Nil` for one this program does
+    * not declare — whose parameters are a fact about a class file (§4.56) and are not bindable here
+    * either way. Read off the `ClassDef`, which is where the IR keeps them. */
+  private def classTparams(owner: SymId)(using p: Program): List[SymId] =
+    classDefsBySym.get(owner).map(_.tparams.map(_.symbol)).getOrElse(Nil)
 
   /** Does this call's callee keep JAVA formals — i.e. is its signature one this phase did not and
     * cannot move? Three cases, and the third is the one that decides the shape.
@@ -4785,7 +4821,8 @@ final class CollectionsTransform(
       // `IterableOnce[Any]` and `++=` on a `Buffer[Object]` reads
       // `Required: IterableOnce[Object]`. The helper states java's read explicitly and returns
       // java's own `boolean` besides.
-      case ("addAll", List(c), _) if wildcardElement(c.tpe) && sym("addAll") != SymId.None =>
+      case ("addAll", List(c), _) if (wildcardElement(c.tpe) || standaloneSource(c.tpe)) &&
+                                     sym("addAll") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("addAll"), TypeRepr.NoType, so), List(recv, c),
                         sym("addAll"), t.tpe, t.origin))
       // …and java's POSITIONAL `addAll(int, Collection)`, which is `insert`'s bulk sibling and NOT
@@ -4992,6 +5029,25 @@ final class CollectionsTransform(
   private def wildcardElement(t: TypeRepr): Boolean = t match
     case TypeRepr.AppliedType(_, List(_: TypeRepr.TypeBounds)) => true
     case _                                                     => false
+
+  /** …and the OTHER reason `++=` cannot serve java's `addAll`: the SOURCE is one of this phase's
+    * STANDALONE targets, which is not a `scala.collection` type at all.
+    *
+    * [[wildcardElement]] above is about the ELEMENT and was, for as long as this arm had one guard,
+    * the only thing deciding a question about the CONTAINER — §4.56's fast-path guard read at a
+    * rewrite. `++=` is right whenever the argument is a scala-collection target, and it is wrong for
+    * EVERY element type when the argument is a `balticporter.runtime` shim: `JavaCollection` extends
+    * `JavaIterable` and nothing else (§4.5 is why), so it is not an `IterableOnce` and never will be.
+    *
+    * The shape reaches the corpus wherever java's own `List <: Collection` edge carried the value —
+    * a `DataKey<Collection<X>>` read back and appended to an `ArrayList<X>` — which is the same
+    * broken edge `CollectionInternalCheck` counts and is exactly the population `++=` cannot serve.
+    * The union-typed helper this routes to already takes `IterableOnce[?] | JavaIterable[?]`, so
+    * there is nothing to build: the arm simply has to be reachable.
+    *
+    * Read from the phase's OWN record of the types it minted (`shimSyms`), never from a package
+    * name (§4.56). */
+  private def standaloneSource(t: TypeRepr): Boolean = headSym(t).exists(shimSyms.contains)
 
   /** did java resolve `Collection.remove(Object)` (by VALUE, returning `boolean`) rather than
     * `List.remove(int)` (by INDEX, returning the element)? See the `remove` arm in [[rewrite]] for
