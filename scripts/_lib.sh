@@ -536,9 +536,11 @@ test_discovery_guard() {
     if [ "$lost" = "0" ]; then
       echo "  tests lost vs baseline: 0 = 0  (every @Test in the upstream java is emitted)"
     else
-      echo "  tests lost vs baseline: $lost = $expected  (unchanged) — $lost of $java NEVER RUN."
-      echo "     Each one is named by this port's own excludeGlobs/dropMethods; a suite that runs a"
-      echo "     smaller number of tests than the library has is not a suite that passed."
+      echo "  tests lost vs baseline: $lost = $expected  (unchanged) — $lost of $java unaccounted for."
+      echo "     WHY is this port's to state and this guard cannot know it: an excludeGlobs or a"
+      echo "     dropMethods really does lose the test, and a \`@Test\` that OVERRIDES another emits"
+      echo "     one registration for the pair and loses nothing (java's runner also runs one test"
+      echo "     per concrete class). Read the port's own section before treating this as a loss."
     fi
     return 0
   fi

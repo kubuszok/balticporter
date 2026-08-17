@@ -8587,6 +8587,67 @@ value, and there was no other in fifteen.
 *Fix kind: (a) engine, BUILT. Seven `JavaCollectionsSpec` tests — both directions of the bare form,
 the terminator-at-the-count, the trim, the copy-back, the grow, and the honest-collection negative.*
 
+### K32. K26's lane has a THIRD blindness — a broken edge with NO PROGRAM-DECLARED side and NO shared type variable, which is 2 errors it reports as **0**. **PARTLY CLOSED at the two slots; the LANE still reads 0**
+
+K26 built `collection-internal` for the population `CollectionBoundaryCheck` cannot see — a java
+subtyping edge (`List <: Collection`) whose two ends this mapping sends to a `scala.collection` type
+and to a standalone `balticporter.runtime` shim, so no JDK type is in the comparison. It has two
+`Issue` kinds and its own doc enumerates the three blindnesses each is for. **Neither reaches a slot
+where BOTH sides are external targets.**
+
+The two sites, in one upstream file:
+
+```java
+final public static DataKey<Collection<Class<? extends Extension>>> UNLOAD_EXTENSIONS =
+        new DataKey<>("UNLOAD_EXTENSIONS", Collections.emptyList());   // E134
+ArrayList<Class<? extends Extension>> xs = new ArrayList<>(UNLOAD_EXTENSIONS.get(other));
+xs.addAll(UNLOAD_EXTENSIONS.get(overrides));                          // E007
+```
+
+`DeclaredSubtype` declines because it asks `program.owns(h)` of the VALUE's head and the value is a
+`mutable.Buffer` — an external target, not a class this program declares. `SplitTypeVariable`
+declines because no type variable is bound from two arguments: the `new`'s variable is fixed by its
+OWN type argument and the `addAll` has one parameter. So the check answers 0 while the port does not
+compile, which is `CLAUDE.md` §4.56's *a residue count is only as good as the assumption that
+everything able to close it RAN*, read at a count that never asked.
+
+**Both slots are CLOSED at the fix** (see the commit): the `addAll` rewrite now routes a SHIM source
+to the union-typed helper — its guard was about the ELEMENT type and was deciding a question about
+the CONTAINER — and `instantiatedFormals` binds a CONSTRUCTOR's class type parameters from the
+`new`'s own type, which K26's own doc had named as *a different derivation* and deferred because an
+ordinary call's receiver is a term. A `new` has no receiver, so the instantiation is READ.
+
+**The LANE is still 0 and that is the open half.** A third `Issue` — both sides this phase's own
+targets, neither program-declared — is what would have reported these two before scalac did, and the
+work is a guard plus a sentence rather than a mechanism. Recorded here because the next port with
+the shape will meet the same silence.
+
+*Fix kind: (a) engine. The two slots BUILT; the third `Issue` kind NOT built. Measured on ssg-md's
+test scope: 2 errors -> 0, `collection-internal` 0 -> 0 throughout.*
+
+### K33. A `return` in a `@Test` body has no method to leave once the body becomes a REGISTRATION — **LATENT, and currently masked**
+
+`TestFrameworkTransform` turns `@Test void m() { … }` into `test("m") { … }`, a STATEMENT in the
+class body. A java `return` inside that body is then a `return` under a function literal with no
+enclosing method at all, which scalac rejects outright: `E091 return outside method definition`.
+
+Note this is NOT `CLAUDE.md` §3's silent non-local-return case, which is about a lambda INSIDE a
+method — there the untranslated form is valid Scala meaning something else. Here it is loud, which
+is why it is recorded rather than fixed.
+
+Measured on ssg-md: `FullSpecTestCase.testSpecExample` opens `if (location.isNull()) return;` and
+produced exactly that error — and the test-class hierarchy work then MASKED it, because that method
+takes part in java's own override relation and therefore stays a `def`, where a `return` is legal.
+So the corpus now has zero instances and a fix would be an untested rule (`CLAUDE.md` §5 on
+`catalog-coverage`: a row unreached on all fifteen is dead code).
+
+The shape when somebody meets it: interpose the method java had — `test("m") { def bp$body(): Unit
+= { … }; bp$body() }` — guarded on the body actually CONTAINING a `Tree.Return`, so the blast is
+exactly the bodies that have one and every other registration is byte-identical. Every `@Test` is
+void, so there is no value-carrying case and no `boundary` is needed.
+
+*Fix kind: (a) engine, NOT built — deliberately. 1 error when it fired, 0 in the corpus now.*
+
 ---
 
 ## 6. Porting a test suite

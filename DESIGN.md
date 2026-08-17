@@ -1051,6 +1051,16 @@ Two structural obligations:
 
 - **Data-driven spec fixtures are not translated** — they are copied as test resources with a generic
   runner emitted once per suite family.
+- **A TEST-CLASS HIERARCHY is answered at TWO places, and neither is the class the `@Test` is in.**
+  Java lets a suite inherit — an abstract base declaring the `@Test`, concrete subclasses supplying
+  the data — and both halves of the structural transform above break on it. The suite PARENT is a
+  class and so is java's superclass, and scala has one: it therefore anchors at the ROOT of the chain
+  of program-declared classes the declarer belongs to, which is the declarer itself for every suite
+  that extends nothing (i.e. every suite in the corpus before flexmark). And a `test("m"){…}`
+  STATEMENT overrides nothing, so a `@Test` that takes part in java's own override relation stays a
+  `def` and the registration is emitted ONCE, at the top declarer, as a CALL to it — virtual dispatch
+  then runs one test per concrete class, which is what JUnit does. Emitted as two registrations it
+  would be an MUnit duplicate-name failure at RUN time, after the compile and after every count.
 - **A skip/expected-fail ledger is DERIVED, never listed.** A test whose failure stack reaches a type
   in the port's `dropTypes` fails because the port deliberately does not have that type; the run
   writes those FQNs (in *both* namespaces) and the correlator classifies from them. A hand-maintained

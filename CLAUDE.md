@@ -1416,6 +1416,20 @@ Two corollaries for any prefix rule:
   type the port does not emit, so it has no `srcmap` entry at all — its replacement is injected
   Scala the emitter never saw. The class name in the frame is the only place it appears.
 
+**And OWNERSHIP is read off the run's own INPUT LIST, never off a path prefix that approximates it.**
+The rule above is about a symbol; this is the same sentence about a UNIT, and it is the one place
+the engine had written the approximation down as the answer. `PortRun.converted` asked *under
+`sourceRoot`, or under no resolution root* — exact for as long as the two roots do not nest, which
+is every port that had ever run, and wrong the first time they do: a port whose scope is three trees
+in three maven modules has no source root short of the CHECKOUT, the checkout contains every
+resolution root, and the first disjunct then answers YES for every unit in the model. **546 emitted
+files against 90 in scope**, which is §5.4's own 635-instead-of-30 arriving through the other
+operand. `FrontendConfig.files` is the list itself and its doc always said so; for every port whose
+globs cover its root the two answers are the SAME SET, so the correction is flat by construction and
+the measurement confirms rather than discovers. The general form: *a run may conclude that a unit is
+its own from what it was ASKED to convert, and a prefix over the filesystem is not a structural fact
+about anything.*
+
 **And it is not only renames.** A second phase has now been bitten by the same string test, which is
 what makes this a rule about DECIDING FROM A NAME rather than a rule about renaming.
 `CollectionsTransform` decided "this cast can never succeed" from the cast's SOURCE type having a
@@ -1495,6 +1509,21 @@ phase: a phase's silence is a missing fix, an instrument's silence is a wrong an
 "is this branch dead". State such a test as the COMPLEMENT — everything that is not one of the
 honest negatives is a surface — so a kind added tomorrow is included by construction rather than by
 somebody remembering a list.
+
+**…and the THIRD occurrence is an instrument's own INVOCATION, which is the half no filter is
+written for at all.** `scala-cli compile <main> <test>` reports on the MAIN scope whatever
+directories it is handed: the test sources are read, their WARNINGS are printed, and their ERRORS
+are not, unless `--test` is passed. So nine measure lanes had been printing a main-only figure under
+a headline that splits `main source set: N   test source set: M`, with M structurally 0 — and the
+number a commit subject quotes, the number `error_baseline_guard` compares and the gate that decides
+whether the suite runs at all were all that figure. Measured on the one port whose test scope had
+just stopped compiling: 0 errors without the flag and 6 with it, on identical inputs. What kept the
+other eight honest is a property of those ports and not luck — a suite that RUNS has a test scope
+that provably compiles — so the flag's arrival is flat everywhere and the defect had no way to
+surface until a suite stopped. The rule: **an instrument's silence is a wrong answer, and a
+measurement lane's own command line is part of the measurement** — so when a lane reports a
+BREAKDOWN, check that the tool was asked for every part of it, and make each part fail on its own
+negative before trusting the total.
 
 **And the SURVIVORS are not the DECLARATION, which is the same mistake read off the parse instead of
 off a string.** A rule may conclude something from what the program DECLARES; it may not conclude it

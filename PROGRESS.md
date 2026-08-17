@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
-| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is a THIRTEENTH module (`flexmark-util`) and a second lane — **723** emitted, **0 lost**, **721 passing / 2 failing**, every failure attributed and the 2 DECLARED (§10.6.6) | **0** main + **0** test after wave 23 (243 at first emit, 131 at the first `RefChecks` run, 42 after wave 19, 34 after wave 20, 27 after wave 21-22; §10.6.3, every one of them classified — the typer reached zero at wave 17 and `RefChecks` has run) |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is THREE upstream modules and a second lane emitting **88** files — **725** registrations from 726 `@Test` (the 1 an OVERRIDE the ancestor's registration dispatches to), **722 passing / 5 failing**, every failure attributed. **CommonMark conformance: 1,828 of 1,870 spec examples on the three versions java runs (97.75%), against a MEASURED green java control** — 39 of the 42 one un-applied percent-encode (§10.6.7) | **0** main + **0** test after wave 23 (243 at first emit, 131 at the first `RefChecks` run, 42 after wave 19, 34 after wave 20, 27 after wave 21-22; §10.6.3, every one of them classified — the typer reached zero at wave 17 and `RefChecks` has run) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -221,7 +221,7 @@ oracle (§10.6.1).
 | `sge-colorful` | `colorful-pure` (40k LOC) unported with **no recorded rationale anywhere**. Confirm intent before treating it as scope. |
 | `sge-visui` vs core | VisUI keeps `AsyncTask` as a class while core maps it to `() => Unit`. **Two answers to one construct in one repo** — the manifest must decide which. |
 | `ssg-liquid` | **2,166 lines have no Java counterpart and never can.** liqp parses with two ANTLR `.g4` grammars; the port hand-wrote lexer/parser/token. The engine cannot read, regenerate or diff `.g4`. Decide up front: permanent handwritten overrides, or re-adopt ANTLR and lose JS/Native. |
-| `ssg-md` | **The green test numbers do not measure CommonMark conformance.** All 7 spec files in `src/test/resources` are loaded by no runner — and upstream ships four `FullOrigSpec*CoreTest` classes that drive them through PLAIN `@Test` methods, i.e. inside the engine's mechanical reach as they stand (§10.6.1). The **28** (not 24) undocumented omissions include the entire `util/html/ui` subpackage, eight `*JiraRenderer`, and `flexmark-util-dependency`'s `Flat*` extension-resolution algorithm, which is not dead code. |
+| `ssg-md` | **CommonMark conformance is MEASURED now and it is 97.75%.** The four `FullOrigSpec*CoreTest` suites RUN (§10.6.7): 1,828 of 1,870 examples on the three spec versions upstream enables, with java compiled and run as the control and green on all 1,870 — so all 42 are the port's, and 39 of them are one option that does not reach one call. `spec.0.29.txt` is disabled UPSTREAM (`return ResourceLocation.NULL`) and 0.26/0.30 have no test class at all. The **28** (not 24) undocumented omissions include the entire `util/html/ui` subpackage, eight `*JiraRenderer`, and `flexmark-util-dependency`'s `Flat*` extension-resolution algorithm, which is not dead code. |
 
 #### Attribution gaps to close before publishing anything
 
@@ -247,10 +247,11 @@ repository-level NOTICE / THIRD-PARTY files are still hand-maintained and are no
 4. **`sge-ai`, `sge-visui`, `sge-textra`, `sge-colorful`** — large, each with a named redesign that must
    be scoped as its own decision.
 5. **`ssg-md` (flexmark)** — the largest Java surface. Milestone 1 (core + the eleven `flexmark-util-*`
-   modules) is now ported by the engine and stands at a measured, classified wall: §10.6. The rename
-   turned out to be the easy half — one uniform prefix with one deviation, collision-free. What
-   remains is the 29 extension modules as DEPENDENT ports, and the tests, which milestone 1 has none
-   of.
+   modules) is ported by the engine, compiles at 0 errors on both source sets, and is the only port
+   in the corpus with SPEC-LEVEL evidence: **97.75% of CommonMark, 1,828 of 1,870 examples, against a
+   java control measured green** (§10.6.7). The rename turned out to be the easy half — one uniform
+   prefix with one deviation, collision-free. What remains is the 42 failing examples (39 of them one
+   option that does not reach one call) and the 29 extension modules as DEPENDENT ports.
 6. **`sge` core** — already ported by the engine. What remains is the 100 absent types and the backend
    question, which is a platform decision, not a port.
 7. **Deferred / not port work**: `sge-controllers`, `sge-tools`, `sge-physics*`, `sge-freetype`,
@@ -2780,15 +2781,17 @@ engine's measured finding agree, which is the first time the two instruments hav
 never spelled at the call site. Everything else under `ssg.md.*` — 767 hand-port files — is internal
 as far as compile-time coupling goes.
 
-**And there is a conformance oracle nobody has ever run.** Upstream ships six versions of the
-CommonMark spec as classpath resources (618–652 examples each) and four `FullOrigSpec*CoreTest`
-classes drive them through PLAIN `@Test` methods — not `@RunWith(Parameterized.class)`, so they are
-inside `TestFrameworkTransform`'s mechanical reach as they stand. The hand port loads none of them
-(this document's own §1 "one surprise per module" says so). That is behavioural evidence this
-project has never had for any library, and it costs two ported classes plus
-`flexmark-test-util`'s non-reflective half. The 114 `ComboSpecTestCase` subclasses and the 59
-`@RunWith(Suite.class)` aggregators are the documented refusal and need a hand-written MUnit driver,
-not an engine change.
+**And there is a conformance oracle nobody had ever run — IT RUNS NOW, and the census is §10.6.7.**
+Upstream ships six versions of the CommonMark spec as classpath resources (618–652 examples each) and
+four `FullOrigSpec*CoreTest` classes drive them through PLAIN `@Test` methods — not
+`@RunWith(Parameterized.class)`, so they were inside `TestFrameworkTransform`'s mechanical reach as
+they stand. The hand port loads none of them (this document's own §1 "one surprise per module" says
+so). It cost the four classes plus `flexmark-test-util`'s non-reflective half — which is all of it,
+verified: `Class.getResourceAsStream` is the only reflective thing in the module — and it bought
+**1,828 of 1,870 spec examples on the three versions upstream enables, against a java control
+compiled and run green on all 1,870**. The 114 `ComboSpecTestCase` subclasses and the 59
+`@RunWith(Suite.class)` aggregators remain the documented refusal and need a hand-written MUnit
+driver, not an engine change.
 
 ### 10.6.2 First emit — measured state
 
@@ -3839,9 +3842,74 @@ check*.
 **What the census does NOT yet include, and why it is not a skip.** Nothing in this tree needs a
 `dropMethods` key, an `excludeGlobs` entry or a `public-field-accessors` scope, so `test.conf`
 carries none — the residues above are the engine's, they are counted, and every one of the 723 tests
-is emitted. The 114 `ComboSpecTestCase` subclasses, the CommonMark conformance oracle and
-`flexmark-core-test` remain out of scope for milestone 1 and want `flexmark-test-util`, which is the
-documented refusal §10.6.1 already states.
+is emitted. The 114 `ComboSpecTestCase` subclasses stay out of scope and are the documented refusal
+§10.6.1 states; the CommonMark conformance oracle is §10.6.7's, and it is IN now.
+
+### 10.6.7 THE COMMONMARK CONFORMANCE CENSUS — the first spec-level behavioural evidence this project has ever had
+
+§10.6.1 recorded an oracle nobody had run: six CommonMark spec files shipped as classpath resources
+and four `FullOrigSpec*CoreTest` classes that drive them through the ONE plain `@Test` that
+`FullSpecTestCase` declares. This wave ported the infrastructure and ran it. **The test port's scope
+is now THREE upstream trees and one emitted source set** — `flexmark-util/src/test/java` (the 52-file
+unit suite), `flexmark-test-util/src/main/java` (31 files of harness, entirely non-reflective) and
+five files of `flexmark-core-test/src/test/java` — **88 emitted Scala files, 0 dropped, 0 injected,
+0 compile errors on both source sets.** `test.conf` D-mdt-4/5 carry the scope decision and what it
+deliberately leaves out.
+
+**THE CENSUS, PER SPEC VERSION AND PER EXAMPLE.** The suite's own assertion is one `assertEquals`
+over the whole rendered spec, so it answers pass/fail per spec FILE; the table below splits the same
+comparison at the spec format's own example delimiter, which is the only reading that says how much
+of CommonMark this port implements.
+
+| spec resource | examples | port passes | port fails | JAVA (the control) |
+|---|---:|---:|---:|---|
+| `spec.txt` | 624 | **611** | 13 | 624 / 624 — green |
+| `spec.0.27.txt` | 622 | **606** | 16 | 622 / 622 — green |
+| `spec.0.28.txt` | 624 | **611** | 13 | 624 / 624 — green |
+| **the three java RUNS** | **1,870** | **1,828 (97.75%)** | **42** | **1,870 / 1,870** |
+| `spec.0.29.txt` | 649 | 616 | 33 | **NOT RUN — disabled upstream** |
+
+**THE CONTROL IS MEASURED, not assumed, and it is what makes the 42 readable.** 524 upstream java
+files compiled with `javac` against the same three jars and the four suites run under
+`org.junit.runner.JUnitCore`: `OK (4 tests)`. So java's dump equals the spec text EXACTLY on all
+three live versions, and **every one of the 42 is a defect of the PORT** rather than flexmark
+disagreeing with CommonMark. The green is not vacuous either — hiding `spec.0.28.txt` from the
+control's classpath makes it fail loudly, which is the negative this reading needs.
+
+**0.29 IS NOT A CONFORMANCE CLAIM ANYBODY MAKES.** `FullOrigSpec029CoreTest.getSpecResourceLocation`
+returns `ResourceLocation.NULL` under the comment `// FIX: implement 0.29 spec and enable test`, so
+java runs zero of its 649 examples and so does the port — its `@Test` is a vacuous pass on both
+sides. The 33 above come from driving that spec anyway, and 18 of them are 0.29 rules flexmark never
+implemented; they measure the SPEC GAP and not the port. `spec.0.26.txt` and `spec.0.30.txt` ship as
+resources with no test class at all (618 and 652 examples nothing drives, upstream or here).
+
+**THE 42 ARE TWO FAMILIES, and one of them is 39.**
+
+| what | how many | how far it is narrowed |
+|---|---:|---|
+| **link URLs are not percent-encoded** | **39** (13 + 13 + 13, every live version) | The suite sets `HtmlRenderer.PERCENT_ENCODE_URLS = true` and the emitted `href` is the raw destination — `/f&ouml;&ouml;` renders `/föö` where java renders `/f%C3%B6%C3%B6`. Probed and NARROWED to the renderer's own resolve path: the key round-trips `true` through `MutableDataSet.set` → `toImmutable` → `DataSet.aggregate`, `new HtmlRendererOptions(agg).percentEncodeUrls` reads `true`, and `Escaping.percentEncodeUrl("/föö")` answers `/f%C3%B6%C3%B6`. So the option is right, the helper is right, and the call between them does not happen. A §4.4-class defect exactly: green compile, every check count flat, no member digest, and only a running suite can see it |
+| **the 0.27 PROFILE's own rules** | **3** (0.27 only) | `***foo***` renders `<em><strong>` where 0.27 says `<strong><em>` (×2), and a link destination with nested parens is accepted where 0.27 rejects it (×1). `ParserEmulationProfile.COMMONMARK_0_27.getProfileOptions()` is what distinguishes 0.27 from 0.28 for exactly these rules, and the port applies 0.28's — the same shape as the row above, one option table over, which is why the OTHER 606 examples of 0.27 agree |
+
+Neither is chased here: the census is the deliverable, and a defect narrowed to one option and one
+call is a work item somebody can pick up without re-deriving anything.
+
+**AND THE RUN FOUND A CLASS OF THING NO PORT HAD MET: THE LIBRARY'S OWN CLASSPATH RESOURCES.**
+`Html5Entities` reads `/com/vladsch/flexmark/util/sequence/entities.properties` in a static
+initialiser to build the HTML5 entity table, so every `&nbsp;` in every document needs it. Three of
+the four conformance suites died on it — `ExceptionInInitializerError`, then `NoClassDefFoundError`
+at the second use — and nothing before this wave could see it, because the unit suite never
+unescapes an entity. **The lookup is a STRING LITERAL, which no rename touches (§4.56 — a rename
+decides ownership structurally and never from a string), so the emitted `ssg.md.util.sequence.Html5Entities`
+asks for the UPSTREAM path.** That is the right answer and it is a statement a consumer has to act
+on: a build that consumes this port must ship the upstream resource tree unchanged, at the upstream
+paths, beside the renamed Scala. The lane says so at `md_spec_res`.
+
+**THE FLOOR THIS WAVE LEAVES.** 726 java `@Test` → **725 munit registrations**, and the 1 is not a
+loss: `ComboSpecTestCase.testSpecExample` OVERRIDES `FullSpecTestCase`'s, so the port emits one
+registration for the pair and dispatches virtually — which is what java's own runner does too, one
+test per concrete class. `expected-lost` is **1** for that reason and for no other. Suite **722
+passing / 5 failing of 727 outcomes**: the two `Pair.equals` rows §10.6.6 declares, plus the three
+live conformance suites, whose per-example residue is the 42 above.
 
 
 ---
@@ -3889,6 +3957,17 @@ with each item's state re-verified against the working tree.
    composition is untested.
 6. **Nothing verifies two ports were built by the same ENGINE at the manifest level.** `EnginePin` is
    wired into the port map's freshness answer, not into `ManifestAgreement`.
+7. **THE PORT'S OWN CLASSPATH RESOURCES ARE NOT PART OF ITS OUTPUT, AND NOTHING SAYS SO.** A ported
+   library that reads a resource — `Class.getResourceAsStream("/com/vladsch/…/entities.properties")`
+   — keeps the UPSTREAM path, because the lookup is a STRING LITERAL and a rename decides ownership
+   structurally and never from a string (`CLAUDE.md` §4.56, and rewriting it would be that rule
+   broken). That is the right emission and it leaves the consumer an obligation nobody states: ship
+   the upstream resource tree, unchanged, at the upstream paths, beside the renamed Scala. Absent,
+   the failure is a static-initialiser exception at first use — no compile error, no check count, no
+   member digest, and on the first port to reach one it took out three of four conformance suites
+   (`§10.6.7`). What is owed is at minimum a REPORT — the resource lookups an emitted port makes,
+   with the paths a build has to supply — and arguably an `SbtGen` `unmanagedResourceDirectories`
+   line derived from the port's own upstream roots.
 
 ### 6.2 What the audit found SOUND — clean verdicts, not courtesy
 

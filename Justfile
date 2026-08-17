@@ -224,11 +224,54 @@ vfx_deps      := "--dependency org.scalameta::munit:1.0.2"
 # that jar is JVM-only. Both are the next wave's, with a measurement each.
 md_deps       := "--dependency org.jetbrains:annotations:24.0.1"
 
-# ssg-md's SUITE lives in a THIRTEENTH module the port does not convert — the `flexmark-util`
-# aggregator, whose own `src/main/java` is empty and whose pom depends on all eleven split libraries
-# (`corpus/ports/ssg-md/test.conf` D-mdt-1). So this is not one of `md_modules` and `md-measure`'s
-# discovery zero stays a true statement about ITS scope: the two lanes count different trees.
-md_test_src   := "../ssg/original-src/flexmark-java/flexmark-util/src/test"
+# ssg-md's SUITE lives in THREE modules the port's MAIN scope does not convert, and this variable is
+# the java-side denominator over exactly those (`corpus/ports/ssg-md/test.conf` D-mdt-1/4/5). None of
+# them is one of `md_modules`, so `md-measure`'s discovery zero stays a true statement about ITS
+# scope: the two lanes count different trees.
+#
+# THE THIRD ENTRY IS FIVE FILES AND NOT A DIRECTORY, and that is the whole point of writing it out.
+# `flexmark-core-test/src/test/java` holds 40 files of which 35 are `@RunWith(Parameterized)` combo
+# suites this milestone does not carry, so a directory here would put their `@Test`s in the
+# denominator and report them as tests the port LOST — a discovery guard crying wolf about a scope
+# decision, which is the one failure that check must not have (ENGINE-LIMITS M5). `java_test_count`
+# takes `find` starting points, and a file is one.
+#
+# The five contribute ZERO to it: `FullOrigSpec*CoreTest` declare no `@Test` of their own, they
+# INHERIT the one `FullSpecTestCase` declares. That is a fact about java's own runner too — javac
+# and JUnit run an inherited `@Test` once per concrete subclass — so both sides of this subtraction
+# count DECLARATIONS and the guard stays exact.
+md_test_src   := "../ssg/original-src/flexmark-java/flexmark-util/src/test ../ssg/original-src/flexmark-java/flexmark-test-util/src/main/java ../ssg/original-src/flexmark-java/flexmark-core-test/src/test/java/com/vladsch/flexmark/core/test/util/renderer/OrigSpecCoreTest.java ../ssg/original-src/flexmark-java/flexmark-core-test/src/test/java/com/vladsch/flexmark/core/test/util/renderer/FullOrigSpecCoreTest.java ../ssg/original-src/flexmark-java/flexmark-core-test/src/test/java/com/vladsch/flexmark/core/test/util/renderer/FullOrigSpec027CoreTest.java ../ssg/original-src/flexmark-java/flexmark-core-test/src/test/java/com/vladsch/flexmark/core/test/util/renderer/FullOrigSpec028CoreTest.java ../ssg/original-src/flexmark-java/flexmark-core-test/src/test/java/com/vladsch/flexmark/core/test/util/renderer/FullOrigSpec029CoreTest.java"
+
+# THE CLASSPATH RESOURCES THE RUN NEEDS, at their UPSTREAM paths, and there are three kinds.
+#
+# `--resource-dir` is repeatable and is the shape `liqp-measure` uses for the emitted
+# `META-INF/services` descriptors. UPSTREAM bytes rather than copies: a spec file is the INPUT the
+# port is measured against, and rewriting one would be measuring the port against something this
+# repository wrote.
+#
+#   1. `flexmark-test-specs` — six versions of the CommonMark spec (0.26-0.30 plus the unversioned
+#      `spec.txt`), 618-652 examples each. The four conformance suites reach them through
+#      `Class.getResourceAsStream("/spec.0.29.txt")`, and a missing one is loud:
+#      `ResourceLocation` throws `IllegalStateException("Could not load …")`.
+#   2. `flexmark-util-sequence` — `entities.properties`, and THIS ONE IS THE LIBRARY'S OWN, not the
+#      harness's. `Html5Entities` reads it in a static initialiser to build the HTML5 entity table,
+#      so every `&nbsp;` in every document needs it; absent, the port throws
+#      `ExceptionInInitializerError` and then `NoClassDefFoundError` at the SECOND use, which is
+#      what three of the four conformance suites did on their first run. Nothing before this wave
+#      could see it — the unit suite never unescapes an entity — and no compile, no check and no
+#      count moves when it is missing.
+#   3. `flexmark-test-util` — one `com.vladsch.flexmark.test.util.txt` marker the module-root
+#      helpers locate a source tree by.
+#
+# ==THE PATHS ARE THE UPSTREAM ONES, AND THAT IS NOT AN OVERSIGHT== The lookup is a STRING LITERAL
+# (`"/com/vladsch/flexmark/util/sequence/entities.properties"`), and a rename decides ownership
+# structurally and never from a string (`CLAUDE.md` §4.56) — so `packageRenames` does not touch it
+# and must not. The emitted `ssg.md.util.sequence.Html5Entities` therefore asks for the upstream
+# path, and a consumer of this port has to ship the upstream resource tree unchanged. Stated here
+# because it is the first thing in the corpus that makes it visible (`PROGRESS.md` §10.6.7).
+md_spec_res   := "../ssg/original-src/flexmark-java/flexmark-test-specs/src/main/resources"
+md_lib_res    := "../ssg/original-src/flexmark-java/flexmark-util-sequence/src/main/resources"
+md_tutil_res  := "../ssg/original-src/flexmark-java/flexmark-test-util/src/main/resources"
 
 # junit is a RUN dependency and not only a frontend one: six files declare
 # `@Rule ExpectedException` fields the phase emits as ordinary values and reports as unconvertible
@@ -1775,7 +1818,13 @@ md-test-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
+      # `--resource-dir` is what puts the spec files, the library's OWN `entities.properties` and the
+      # harness marker on the test JVM's classpath; see `md_spec_res` for all three and for why they
+      # are the upstream's own bytes at the upstream's own paths.
       scala-cli test --scala {{scala_version}} --server=false $DEPS \
+        --resource-dir "$ROOT/{{md_spec_res}}" \
+        --resource-dir "$ROOT/{{md_lib_res}}" \
+        --resource-dir "$ROOT/{{md_tutil_res}}" \
         {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdtestrun.txt
       reconcile_outcomes "$MEASURE_TMP"/mdtestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
