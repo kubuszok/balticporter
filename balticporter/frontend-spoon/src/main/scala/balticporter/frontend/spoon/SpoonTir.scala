@@ -3338,6 +3338,28 @@ object SpoonTir:
         target != null && target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&
           et.isInstanceOf[CtArrayTypeReference[?]] && target.getQualifiedName != et.getQualifiedName
 
+      /** …AND THE SAME QUESTION ASKED AT THE RENDERING, which is the half a java-name test cannot
+        * see.
+        *
+        * [[arrayCovSlot]] compares the two JAVA array types, and that is exact wherever java wrote
+        * two different ones. It answers NO where JAVA'S OWN ERASURE collapses them into one:
+        * `Enum<?>[] universe = getUniverse(elementType)` with `<E extends Enum<E>> E[] getUniverse`
+        * reads `java.lang.Enum[]` on BOTH sides, so there is nothing to compare — while the emitted
+        * term is an `Array[E]` at an `Array[Enum[?]]` slot, and scala's arrays are INVARIANT.
+        *
+        * `ENGINE-LIMITS.md` §0's rule read at a slot: the recorded java type is not a witness of
+        * what the emitter will print. Where the two readings disagree the comparison has to be at
+        * the RENDERING, and the TERM is the only side that has one — which is why this takes the
+        * term rather than `castType(e)`.
+        *
+        * It can only ever ADD a cast where scala would have rejected the slot outright, because two
+        * DIFFERENT `Array[…]` renderings never conform in either direction; where they are equal it
+        * declines by arithmetic. That is the whole of its safety argument, and it is why it rides on
+        * the same `arrayCov` gate rather than on one of its own. */
+      private def arrayCovRendered(target: CtTypeReference[?], t: Term): Boolean =
+        target != null && target.isInstanceOf[CtArrayTypeReference[?]] && isScalaArrayType(t.tpe) &&
+          { val want = tpe(target); isScalaArrayType(want) && want != t.tpe }
+
       /** JS-G14's clause — a primitive at a reference slot is java autoboxing, and the boxing's
         * target is the WRAPPER rather than the (often erased) formal. See [[arrayCovSlot]] for why
         * this is a named predicate rather than an inline condition. */
@@ -3455,7 +3477,8 @@ object SpoonTir:
         val cast =
           tpObj ||                                                                // T → Object (non-arg)
           (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
-          (arrayCov && arrayCovSlot(target, et)) ||                               // array covariance
+          (arrayCov && (arrayCovSlot(target, et) ||                               // array covariance
+                        arrayCovRendered(target, t))) ||                          // …at the RENDERING
           narrowing ||                                                            // int → short/byte/char
           boxing ||                                                               // int → Object/Number
           downcast                                                                // Object → specific

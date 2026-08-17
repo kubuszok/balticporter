@@ -672,6 +672,36 @@ What each gate taught, so the next attempt starts further along:
 
 *Fix kind: (a).*
 
+### G13.5 A SLOT TEST THAT READS THE RECORDED JAVA TYPES IS BLIND WHERE JAVA'S OWN ERASURE COLLAPSES THEM — **ssg-md 7 → 6. CLOSED**
+
+§0's rule — *the recorded java type is not a witness of what the emitted Scala will infer* — read at a
+slot rather than at a cast, and it is G13's third bullet with a number.
+
+`arrayCovSlot` decides java's array covariance (JLS 10.10) by comparing the two java array types, and
+that is exact wherever java WROTE two different ones. It is blind where java's own erasure writes one:
+
+```java
+static <E extends Enum<E>> E[] getUniverse(Class<E> elementType);
+…
+Enum<?>[] universe = getUniverse(elementType);   // both sides read `java.lang.Enum[]`
+```
+
+Nothing to compare, so no cast — while the emitted term is an `Array[E]` at an `Array[Enum[?]]` slot,
+and scala's arrays are INVARIANT. The fix is the same question asked of the RENDERED types
+(`arrayCovRendered`), on the same `arrayCov` gate, because the TERM is the only side that has a
+rendering to read.
+
+**Its whole safety argument is arithmetic and worth stating, since this is a WIDENED guard and §5 has
+no instrument pointed at those.** Two DIFFERENT `Array[…]` renderings conform in NEITHER direction, so
+the predicate can only add a cast at a slot scala would have rejected outright; where the two
+renderings are equal it declines by construction. Measured accordingly: ssg-md **7 → 6** with **2**
+member digests (the declaration and its class) and every check count flat, and the corpus-wide run
+flat besides.
+
+*Fix kind: (a), BUILT. The transferable shape is not about arrays: a difference decided from two
+RECORDED java types is decided from a projection that java's erasure may have already collapsed, and
+where the emitter's rendering is what the compiler will actually see, the comparison belongs there.*
+
 ### G14. Under `noClasspath`, a REFERENCE erases and a DECLARATION does not
 
 Three separate measured failures, one cause:

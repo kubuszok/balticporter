@@ -2986,12 +2986,15 @@ The other **4** are open work with no entry behind them, and **wave 14's third r
 one of them now has a DIAGNOSIS** even though none has a fix — which is what makes the count above
 readable as a floor rather than as *four more waves*:
 
-- **`BitFieldSet#noneOf`** — java's ARRAY COVARIANCE at a LOCAL INITIALISER (`Enum<?>[] universe =
-  getUniverse(elementType)` where `getUniverse` returns `E[]`). `arrayCovSlot` answers *nothing to
-  convert* because java's two array types ERASE TO ONE (`java.lang.Enum[]`), while the emitted term
-  is an `Array[E]` at an `Array[Enum[?]]` slot and scala's arrays are INVARIANT. `ENGINE-LIMITS.md`
-  §0's rule read at a slot: the recorded java type is not a witness of what the emitter will print,
-  so the comparison has to be at the RENDERING and the term is the only side that has one;
+- ~~**`BitFieldSet#noneOf`**~~ — **CLOSED AT WAVE 15**, and wave 14's diagnosis of it was exactly
+  right and complete: java's ARRAY COVARIANCE at a LOCAL INITIALISER (`Enum<?>[] universe =
+  getUniverse(elementType)` where `getUniverse` returns `E[]`), where `arrayCovSlot` answers *nothing
+  to convert* because java's two array types ERASE TO ONE. The fix is that sentence written down —
+  `arrayCovRendered` asks the same question of the RENDERED types, on the same `arrayCov` gate — and
+  it can only ever ADD a cast where scala would reject the slot outright, since two different
+  `Array[…]` renderings conform in neither direction. **7 → 6**, 2 member digests (the declaration and
+  its class), every check count flat. The route from a diagnosis to a fix was one predicate, which is
+  the argument for this list existing at all;
 - ~~**`NodePostProcessorFactory#addNodes`** and **`Attributes#values`**~~ — **CLOSED AT WAVE 15**, and
   the diagnosis was right about the CONVERSION and wrong about needing one. Both are reads of the RAW
   static `Collections.EMPTY_SET`/`EMPTY_LIST`, whose unchecked conversion (JLS 5.1.9) scala has no
