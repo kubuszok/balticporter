@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
-| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is a THIRTEENTH module (`flexmark-util`) and a second lane — **723** emitted, **0 lost**, **704 passing / 19 failing**, every failure attributed (§10.6.6) | **0** main + **0** test after wave 23 (243 at first emit, 131 at the first `RefChecks` run, 42 after wave 19, 34 after wave 20, 27 after wave 21-22; §10.6.3, every one of them classified — the typer reached zero at wave 17 and `RefChecks` has run) |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is a THIRTEENTH module (`flexmark-util`) and a second lane — **723** emitted, **0 lost**, **721 passing / 2 failing**, every failure attributed and the 2 DECLARED (§10.6.6) | **0** main + **0** test after wave 23 (243 at first emit, 131 at the first `RefChecks` run, 42 after wave 19, 34 after wave 20, 27 after wave 21-22; §10.6.3, every one of them classified — the typer reached zero at wave 17 and `RefChecks` has run) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2807,7 +2807,7 @@ not an engine change.
 | `portability(emitted)` | **18** sites against 37 rules — `javax.imageio.ImageIO` 8, `java.lang.reflect.Array` 2, `java.nio.file.Files` 2, and one each of `javax.swing.*` (2), `java.net.URL*` (3), `java.text.MessageFormat`. Six `substitutions-drop` remedies published, four of them naming exactly the types the hand port silently omitted |
 | `dependency-coverage` | **10 of 10** — `java.util.Locale` 6 and `java.text.NumberFormat` 4, both answered by `scala-java-locales` on both non-JVM backends. Not a call to remove; a coordinate to declare |
 | `decisions.tsv` | **2,014 rows** — 715 `RetypedSignature`, 507 `RenamedMember`, 458 `RenamedPackage`, 146 `ForcedClassInit`, 107 `FunnelledCtor`, 57 `WidenedVisibility`, 12 `DroppedSuperCall`, 10 `InjectedMember`, 2 `RetainedParent` |
-| tests | **723 emitted, 0 lost, RUN FOR THE FIRST TIME AT WAVE 23 (683 passing, 40 failing) and 704 passing / 19 failing after wave 24, with EVERY failure attributed.** All 40 of wave 23's were classified and wave 24 answered each family: 37 were JUnit's `ExpectedException` `@Rule`, which the port's own refusal lane had predicted since wave 7 and which the run confirmed 1:1 — **20 translated**, the other **17 refused at ONE guard** and left OPEN as a work item (`ENGINE-LIMITS.md` X5); 2 were §4.4's two-representations family, re-diagnosed to a library-wide `Pair.equals` defect and **DECLARED** with anchors (K18.1); and the 1 uncensused residue was an ENGINE defect in `JavaCollections.toArray`, **CLOSED** (K31). Blocked until wave 23 on the `RefChecks` census, since the lane runs the suite only at a WHOLE-compile of zero — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
+| tests | **723 emitted, 0 lost, RUN FOR THE FIRST TIME AT WAVE 23 (683 passing, 40 failing) 704 passing / 19 failing after wave 24 and 721 passing / 2 failing after wave 25, with EVERY failure attributed.** All 40 of wave 23's were classified and wave 24 answered each family: 37 were JUnit's `ExpectedException` `@Rule`, which the port's own refusal lane had predicted since wave 7 and which the run confirmed 1:1 — **20 translated** by wave 24's `intercept` and the other **17 refused at ONE guard**, then **all 37 modelled at wave 25**, which flipped the 17 (`ENGINE-LIMITS.md` X5); 2 were §4.4's two-representations family, re-diagnosed to a library-wide `Pair.equals` defect and **DECLARED** with anchors (K18.1); and the 1 uncensused residue was an ENGINE defect in `JavaCollections.toArray`, **CLOSED** (K31). Blocked until wave 23 on the `RefChecks` census, since the lane runs the suite only at a WHOLE-compile of zero — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
 
 **The behavioural gate is now BUILT and does not yet RUN, which is a smaller gap than the one this
 paragraph used to describe and is not zero.** §3 is explicit about what a compile-error count is
@@ -3621,7 +3621,7 @@ this lane counts a different tree. The two numbers are not each other's residue.
 | scalac errors | **ZERO on one compile of both source sets after wave 23 — 0 main, 0 test, 0 elsewhere, which is what let the suite run** (27 = 27 + 0 after wave 21, every one a `RefChecks`-era row) (34 = 34 + 0 after wave 20; 42 = 42 + 0 after wave 19; 131 = 131 + 0 after wave 18) (1 = 1 + 0 after wave 17, and that 1 was POST-TYPER too; 2 = 2 + 0 after wave 16; 19 = 19 + 0 after wave 13; 30 = 30 + 0 after wave 12; 40 = 34 + 6 after wave 11; 42 = 35 + 7 after wave 10; 63 = 38 + 25 after wave 9; 84 = 40 + 44 before that). Wave 10 closed twenty-one in two commits: G28's ascription took the twelve `tagLine` rows and one of the main set's, and K23's built bound-method-reference arm took six `PlaceholderReplacer` rows and two more of the main set's. Wave 11 closed two more with ONE fix, one on each side. Wave 13 closed eleven in five commits, every one of them main-set. Wave 20 closed the eight-row `getBuilder` family, main-set; wave 21 closed K28.2's two field-shadow rows, the anonymous-body `E037`, the visibility row and the three substituted-override rows, main-set; wave 23 closed the whole remaining 27 with K28.1's bridge, main-set. Baselined at **0** against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 27 stays `md-measure`'s and is reproduced by that lane alone — **the two figures are equal now precisely because the test set is empty, and they are still two measurements** |
 | **THE TEST SOURCE SET IS AT ZERO — wave 12** | The last six were ONE family and it was a MAIN-set residue read from a caller: `BitFieldSet`, K25's held-back `iterator()` met by a `for` loop over a class whose parent stayed `java.util.AbstractSet` (three `foreach is not a member`, three `Found: java.util.Iterator`). Wave 11 had measured the mapping that closes it and REVERTED it, because alone it opens four `super.<JDK default>` rows `mutable.Set` cannot answer; wave 12 built that obligation into the phase and the mapping landed free (`ENGINE-LIMITS.md` K29). `collection-boundary` on this lane 6 → 4, the two `ClassFileOverride` rows on `BitFieldSetTest#iterator` falling with the errors they named — the attribution §5 requires of a lane that falls. 6 member digests moved, all in `BitFieldSetTest`. **What this does NOT mean is that the suite runs**: the lane compiles BOTH source sets and gates the run on the whole figure, which is 30 |
 | by owner | **0 of fifty-two files.** `HtmlAppendableBaseTest`, `HtmlBuilderTest`, `PlaceholderReplacerTest`, `PlainSegmentBuilderTest` and now `BitFieldSetTest` are all clean. Every wave from 9 onwards closed a test-set family by closing a MAIN-set one, which is the shape this table has been recording since it was written: no error in this suite was ever the suite's own |
-| test-framework refusals | **43 after wave 24, from 26, and the rise is the refusal lane arriving rather than a regression** — `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (the FIELDS, still emitted and still never applied), one hamcrest `Description` and one `BaseMatcher`, and **`ExpectedException(non-statement-position)` × 17** — the sites wave 24's translation DECLINED, one row per site naming its guard, where before there was one row per FIELD and no site-level population at all. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
+| test-framework refusals | **26 after wave 25, from 43 after wave 24 and 26 before it — and the round trip is the whole story of the two waves.** Wave 24's `intercept` shape converted 20 sites and DECLINED 17 with one row each (`ExpectedException(non-statement-position)`), which is what took the lane to 43; wave 25 models the rule instead and converts all 37, so that population is empty and the lane is back at its pre-conversion members: `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (the FIELDS, still emitted and still never applied), one hamcrest `Description` and one `BaseMatcher`. **Same number, different meaning** — a lane that returns to its old value because the population it counted was CLOSED is exactly the reading §5 asks a fall to be attributable for, and the attribution is the 17 newly-passing tests. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
 
 **THE SUITE RAN FOR THE FIRST TIME AT WAVE 23 — 683 PASSING, 40 FAILING OF 723, AT 0 COMPILE ERRORS
 ON BOTH SOURCE SETS AND 0 TESTS LOST.** K28.1's bridge took the main set 27 -> 0, which is what the
@@ -3660,9 +3660,14 @@ IN CODE (`TestFrameworkTransform.expectedException`), and the split is **20 conv
 - **17 refuse**, every one of them `non-statement-position`: a `thrown.expect` inside a `while` or
   `for` body, where java's arming reaches the rest of the iteration, every later iteration and
   everything after the loop. `ENGINE-LIMITS.md` X5 carries both approximations that were rejected and
-  the lowering that WOULD reach all 37 — modelling the rule with a flag and a `try` — with the price
-  of building it. The refusal is now the largest population on this port's refusal lane and is
-  reported one row per SITE naming its guard, where before it was one row per FIELD.
+  the lowering that WOULD reach all 37 — modelling the rule — with the price of building it. The
+  refusal was then the largest population on this port's refusal lane, reported one row per SITE
+  naming its guard where before it was one row per FIELD.
+
+**WAVE 25 BUILT THAT LOWERING AND THE `intercept` SHAPE IS GONE** — see the next section for the
+numbers. Everything in this block is the state wave 24 left, kept because it is the measured
+half-step the design argument rests on: the split it produced is what priced the model, and the
+`intercept` shape is not what the phase emits now.
 
 The residual delta no guard removes is the catch policy: junit's rule catches `Throwable` and MUnit's
 `intercept` catches `NonFatal`, so a fatal throwable the java test ACCEPTED fails here — never the
@@ -3678,21 +3683,59 @@ said is that all twenty `util.collection` failures are `thrown.expect` rows whos
 own, and that the eight classes the bridge re-parented carry 683 passing assertions between them and
 the rest of the suite.
 
-### THE FLOOR AFTER WAVE 24 — **704 passing / 19 failing of 723, 0 lost, 0 compile errors on both source sets, and EVERY failure attributed**
+### WAVE 25 BUILT THE LOWERING X5 HAD PRICED — **704 → 721 passing, 19 → 2 failing, at 0 errors and 43 member digests**
 
-Three commits, each measured on its own: the `ExpectedException` mapping (`683 → 703`), the two
-`test_getLineColumnAtIndex` rows declared where the engine already counts them (`703 → 703`, and the
-lane now reads `expected 2 / unexpected 18`), and `JavaCollections.toArray` (`703 → 704`). What is
-left divides in TWO, and the line between them is the one thing this section has to be read for:
+The 17 were one family behind one guard, and the guard was POSITION: an `intercept` wraps a LEXICAL
+region and java's rule is armed from the `expect` CALL to the end of the test. So the `intercept`
+shape is GONE, replaced by junit's own state machine — the matcher list `ExpectedException`
+accumulates (`var bpExpected`), one `var bpCaught`, each `expect`/`expectMessage` lowered to an
+APPEND where java wrote it, and one `try`/`catch` over the whole converted body, which is
+`ExpectedExceptionStatement.evaluate` plus `failDueToMissingException` transcribed. **All 17 flipped;
+the 20 wave 24 had already converted stayed passing.**
 
-| what | how many | why it is not a regression, and why it is NOT declared either |
+Three things this is worth reading for, none of them the 17:
+
+- **it is ONE lowering, not two.** The alternative — keep `intercept` for the statement-position
+  sites and model the rule only where it refused — is the shape X5 priced as *a second lowering for a
+  construct the first one already covers 20 of*, and it is two spellings of one translation
+  (`CLAUDE.md` §5's one-policy-one-spelling, read at a phase). The model replaces it;
+- **FIVE of the seven enumerated deltas stopped being GUARDS**, which is the real yield.
+  `double-expect` is junit's own accumulation and is now a `forall`; `non-contiguous` and
+  `expect-message-only` are positions and mean nothing against an in-place arming; `after-ordering`
+  and `expected-annotation` are junit's own nesting, reproduced by applying the wrap OUTSIDE the
+  teardown `try … finally` and the annotation's `intercept`. The one delta that was COUNTED — junit
+  catches `Throwable`, MUnit's `intercept` catches `NonFatal` — is gone with the `intercept`. What
+  remains is three guards (`unsupported-member`, `unsupported-reference`, `expect-overload` /
+  `expect-message-overload`) and the `@ClassRule` exclusion, each still one row per site naming
+  itself;
+- **the state is a LIST because the cheap version is wrong in the DANGEROUS direction.** An arming
+  that executes twice appends twice and java then requires BOTH matchers; a single `var` holding the
+  last would PASS where java FAILED. No site on this corpus arms twice — the throw is what ends the
+  loop — so this is a shape argument and not a measurement, and the shape is junit's.
+
+Blast: **43 member digests over six suites** — the 37 converted statements plus their six owning
+units, and nothing else (§3's attribution gate). The only check counts that moved are
+`catalog(unreached) 18 → 15` and `catalog(consulted) 93 → 96`, all three of them the `try` rows
+(`JS-S11`, `JS-S12`, `JS-S13`): before this wave the emitted TEST set contained no `try` at all.
+`JS-S11` — a translated `catch` swallowing a translated JUMP — is consulted 37 times and **fires 0**,
+so no jump crosses one of these catches and `break-catch` stays 0.
+
+### THE FLOOR AFTER WAVE 25 — **721 passing / 2 failing of 723, 0 lost, 0 compile errors on both source sets, and EVERY failure attributed**
+
+Wave 24 was three commits, each measured on its own: the `ExpectedException` mapping (`683 → 703`),
+the two `test_getLineColumnAtIndex` rows declared where the engine already counts them
+(`703 → 703`, and the lane then read `expected 2 / unexpected 18`), and `JavaCollections.toArray`
+(`703 → 704`). Wave 25 is one more (`704 → 721`), and what is left is ONE row:
+
+| what | how many | why it is not a regression, and why it IS declared |
 |---|---|---|
-| **`ExpectedException` at a NON-STATEMENT position** | **17** | a counted refusal, one row per SITE naming its guard, and the lowering that would close all of them is designed and priced in `ENGINE-LIMITS.md` X5. **Deliberately NOT in `expected-failures.tsv`**: these are a WORK ITEM, not a decision the port stands behind, and §5's own rule about accepts says a fix somebody has not built takes no entry however honestly the site has been read. Declaring them would retire the only instrument pointing at them |
-| **`Pair.equals` over a reified `Map.Entry`** | **2** | DECLARED, with anchors. The difference from the row above is not size: the fix is *weighed and refused on a number* (`ENGINE-LIMITS.md` K18.1 — 2 sites in the whole corpus), the mechanism is counted twice where it happens, and the identical shape is already declared on liqp. That is a stated answer rather than an unbuilt lowering |
+| **`Pair.equals` over a reified `Map.Entry`** | **2** | DECLARED, with anchors. The fix is *weighed and refused on a number* (`ENGINE-LIMITS.md` K18.1 — 2 sites in the whole corpus), the mechanism is counted twice where it happens (`collection-boundary/ReifiedOccurrence`, `Pair.java:65` and `:67`), and the identical shape is already declared on liqp. That is a stated answer rather than an unbuilt lowering — which is exactly what the 17 were NOT, and why they took a work item and never an `expected-failures.tsv` entry |
 
-So the number to quote for this port is **17 open, all one family, all one guard** — not 19, and not
-the suite delta. There is no third category: nothing in this suite fails for a reason nobody has
-looked at, which is what the census of wave 23 could not yet say.
+So the number to quote for this port is **0 open** — every deviation from java's own suite is
+attributed, and the one that remains is a decision the port stands behind rather than a fix nobody
+has built. There is no second category and there is no third: nothing in this suite fails for a
+reason nobody has looked at, which is what the census of wave 23 could not yet say, and nothing
+fails for a reason somebody has looked at and deferred, which is what wave 24 still had to say.
 
 **And the two families that made up 24 of the ORIGINAL 26 refusals were each ONE GUARDED translation
 away, which was worth stating as a design rather than re-deriving.** Both are engine (a) and neither

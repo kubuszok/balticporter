@@ -8820,7 +8820,7 @@ translate is only defensible if what it leaves behind is a NUMBER (`CLAUDE.md` �
 an assertion-carrying helper, so all lanes are 0 members changed with every check count identical —
 which is the point: none of these was measurable until a library that used them was pointed at.*
 
-### X5. A `@Rule` is not ONE construct — `ExpectedException` WRITES ITS CONTRACT DOWN, and the half no lexical wrap can express is the ARMING. **ssg-md's suite 683 → 703 passing, 40 → 20 failing, 0 errors, every check count flat**
+### X5. A `@Rule` is not ONE construct — `ExpectedException` WRITES ITS CONTRACT DOWN, and the half no lexical wrap can express is the ARMING. **ssg-md's suite 683 → 703 passing at wave 24's `intercept`, and 704 → 721 at wave 25's MODEL of the rule — 0 errors throughout**
 
 X1's table says a custom `@Rule` has no image, and that is right for `TemporaryFolder` and `Timeout`
 — a rule wraps every test in an ARBITRARY `Statement` and there is no shape to derive one from. It
@@ -8838,7 +8838,7 @@ differences are enumerated in `TestFrameworkTransform.expectedException` (`CLAUD
 guard, a shape or a count); what belongs here is the one that was PRICED and the two approximations
 that were refused.
 
-**The measured split is 20 converted / 17 refused, and the 17 are all POSITION.** Every one of them is
+**WAVE 24's measured split was 20 converted / 17 refused, and the 17 are all POSITION.** Every one of them is
 a `thrown.expect` inside a `while` or `for` body — java arms the rule on the first iteration and the
 throw leaves the method, so the region java wrapped is *the rest of this iteration, plus every later
 iteration, plus everything after the loop*. Two ways to write that were rejected:
@@ -8851,15 +8851,39 @@ iteration, plus everything after the loop*. Two ways to write that were rejected
   there passes in the port and failed in java. That direction is the false green this engine exists
   to prevent, which is why over-approximating here is worse than refusing.
 
-What WOULD reach all 37 is not an `intercept` at all: it is MODELLING THE RULE — a flag per test, the
-`expect` calls lowered to assignments, and one `try`/`catch` around the whole converted body. That is
-exact at every position, at every arity of `expect`, and for the `@After` ordering as well. It was
-not built, and the reason is a cost this entry should state rather than leave to be re-derived: it
-puts a `var`, a broad `catch` (which then owes §4.4's `boundary.Break` re-throw arm, because a
-translated java `break` under it is an exception) and a trailing `fail` into every test that touches
-the rule, where `intercept` puts one call. **If a library arrives whose sites are mostly in loops,
-that is the design to build; on this corpus it would buy 17 tests at the cost of a second lowering
-for a construct the first one already covers 20 of.**
+**AND THAT DESIGN WAS BUILT AT WAVE 25 — `704 → 721` passing, all 17 flipped, at 0 errors, 43 member
+digests and every check count flat but three (see below).** What reaches all 37 is not an `intercept`
+at all: it is MODELLING THE RULE — junit accumulates matchers in a list and asserts their conjunction
+over whatever the statement threw, so the emitted shape is that list (`var bpExpected`), one
+`Throwable` (`var bpCaught`), the `expect` calls lowered to APPENDS where java wrote them, and one
+`try`/`catch` around the whole converted body. Exact at every position, at every arity of `expect`,
+and for the `@After` and `@Test(expected)` orderings as well.
+
+**What the switch cost is the paragraph this entry used to spend refusing it, and it is worth
+keeping**: the lowering puts a `var`, a broad `catch` (which owes §4.4's `boundary.Break` re-throw
+arm, because a translated java `break` under it is an exception — discharged by
+`TirEmitter.tryStr`'s own guard, which fired 0 times here) and a trailing `fail` into every test that
+touches the rule, where `intercept` puts one call. What made that price worth paying was not the 17:
+it is that **five of the seven enumerated deltas STOPPED BEING GUARDS**. `double-expect` is junit's
+own accumulation and is now a `forall`; `non-contiguous` and `expect-message-only` are positions and
+have no meaning against an in-place arming; `after-ordering` and `expected-annotation` are junit's
+nesting, reproduced by applying the wrap OUTSIDE the teardown `try … finally` and the annotation's
+`intercept`. And the one delta the `intercept` shape had to COUNT — junit catches `Throwable`, MUnit's
+`intercept` catches `NonFatal` — is gone, because the emitted `catch` is junit's own. So the earlier
+reading (*a second lowering for a construct the first one already covers 20 of*) was the right worry
+about the wrong shape: this is not a second lowering beside `intercept`, it REPLACES it, and the
+refusal surface it leaves is three guards where there were eight.
+
+**The state is a LIST and not a flag, which is the one place the cheap version is wrong in the
+DANGEROUS direction.** An arming that executes twice appends twice, and java then requires BOTH
+matchers (`allOf`); a single `var` holding the last matcher would PASS where java FAILED. Nothing on
+this corpus would have shown it — every site arms once, because the throw is what ends the loop — so
+it is a shape argument rather than a measurement, and the shape is junit's own.
+
+**Three `catalog(unreached)` rows became `catalog(consulted)` ones** — `JS-S11`, `JS-S12`, `JS-S13`,
+all three the `try` rows, `18 → 15` and `93 → 96` — because before this wave the emitted test set
+contained no `try` at all. That is the whole of the check movement, and it is the shape §5 asks a
+lane's diff to have: a count that moved with something to attribute it to.
 
 Two smaller things measured on the way:
 
@@ -8870,21 +8894,23 @@ Two smaller things measured on the way:
   one place the whole translation depends on the frontend's external `MethodType` (K15's fix)
   existing at all.
 - **the matcher form needs NO per-matcher table.** `matches(Object)` is the `org.hamcrest.Matcher`
-  CONTRACT, so `intercept[java.lang.Throwable]` + `assert(m.matches(e))` is one translation for every
-  matcher class — including a library's OWN `BaseMatcher` subclass, which is what ssg-md's eleven
-  sites pass. The matcher expression is bound to a local BEFORE the intercept, which is where java
-  evaluated it, and where several operands are bound they go IN CALL ORDER: grouping them by KIND
-  reintroduces exactly the reordering the binding exists to prevent, and both orders compile.
+  CONTRACT, so one predicate — `(bpEx: Throwable) => m.matches(bpEx)` — is one translation for every
+  matcher class, including a library's OWN `BaseMatcher` subclass, which is what ssg-md's eleven
+  sites pass. The matcher expression is bound to a local AT THE ARMING, which is where java evaluated
+  it, and the closure captures the binding: inside a loop body the binding is re-made each iteration,
+  so the second iteration's closure holds the second iteration's matcher. Where several operands are
+  bound they go IN CALL ORDER — grouping them by KIND reintroduces exactly the reordering the binding
+  exists to prevent, and both orders compile.
 - **`@Rule` and `@ClassRule` are TWO constructs and the lookup must say so.** A method rule wraps
-  each test; a class rule wraps the whole class run, so the region an `expect` arms is not the one an
-  `intercept` in a test body wraps. NO corpus source declares the shape, which is precisely why the
+  each test; a class rule wraps the whole class run, so the region an `expect` arms is not the one a
+  per-test accumulator covers. NO corpus source declares the shape, which is precisely why the
   exclusion is a COUNTED row naming its guard rather than an absence — nothing would ever have found
   it.
 
-Blast: 25 member digests over five suites — 20 converted statements plus their five owning units, and
-NOTHING else (§3's attribution gate). `catalog(consulted)`'s denominators moved by exactly the
-emission: `+22` Applies (20 `intercept` + 11 `matches` + 11 `assert`, less the 20 `thrown.expect`
-calls removed) and `+22` ValDefs (11 `bpMatcher`/`bpThrown` pairs).
+Blast, wave 24 (`intercept`): 25 member digests over five suites — 20 converted statements plus their
+five owning units, and NOTHING else (§3's attribution gate). Blast, wave 25 (the model): **43 over
+six** — 37 converted statements plus their six owning units, and nothing else. Both are the whole of
+the emission and neither has a residue.
 
 *Fix kind: (a) engine. The `@Rule` finding stays at 6 — the FIELD is still emitted and still never
 applied — and its advice now says which rule class is the exception, because a refusal that has

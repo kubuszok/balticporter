@@ -573,12 +573,13 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     intercept[munit.ComparisonFailException](munit.Assertions.assertEqualsFloat(1.0f, 1.4f, 0.1f))
   }
 
-  // ------------------------------------------- @Rule ExpectedException -> intercept --
+  // -------------------------------------- @Rule ExpectedException -> the RULE, MODELLED --
   //
   // JUnit's other spelling of `@Test(expected = …)`, and the one with a state machine behind it.
   // Every case below is a CLAUDE.md §4.4 defect: the untranslated form COMPILES and the test simply
-  // fails at run time, so the only evidence is the emitted shape and, for the refusals, the guard
-  // that declined it — `refused = 0` is a bar met by converting nothing (§3).
+  // fails at run time, so the only evidence is the emitted shape, the BEHAVIOUR specs at the end of
+  // this block, and — for the refusals — the guard that declined it (`refused = 0` is a bar met by
+  // converting nothing, §3).
   //
   // The junit and hamcrest declarations are supplied as SOURCES because `fromSource` builds with
   // `noClasspath`: which of `expect`'s two overloads java resolved is read from the CALLEE'S OWN
@@ -638,7 +639,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         c.stripPrefix("org.junit.rules.ExpectedException(").stripSuffix(")")
     }
 
-  test("thrown.expect(E.class) at statement position wraps THE REST OF THE TEST in intercept") {
+  test("thrown.expect(E.class) ARMS junit's own matcher list, in place") {
     val (out, ph) = emitWithRules(ruleSuite(
       """  @Test public void a() {
         |    int x = 1;
@@ -649,18 +650,29 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     val t = out.substring(out.indexOf("test(\"a\")"))
     // the rule call is GONE — an emitted `thrown.expect(…)` is the defect this closes.
     assert(!clue(t).contains("thrown.expect"))
-    assert(t.contains("intercept[java.lang.IllegalStateException]"), t)
-    // …and the split is exactly java's: what stood BEFORE the arming call is outside the wrap,
-    // what stood after it is inside. Java armed the rule at the call and not before it.
-    assert(t.indexOf("var x") < t.indexOf("intercept["), t)
-    assert(t.indexOf("intercept[") < t.indexOf("boom(x)"), t)
+    assert(t.contains("bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => " +
+                      "bpEx.isInstanceOf[java.lang.IllegalStateException])"), t)
+    // …and the arming stands WHERE JAVA WROTE IT: after `x`, before the throwing call. Java armed
+    // the rule at the call and not before it, and this is that fact in the emitted order.
+    assert(t.indexOf("var x") < t.indexOf("bpExpected = bpExpected"), t)
+    assert(t.indexOf("bpExpected = bpExpected") < t.indexOf("boom(x)"), t)
+    // junit's own statement around the whole body — run, catch Throwable, apply the accumulation.
+    assert(t.contains("catch {"), t)
+    assert(t.contains("case bpThrown: java.lang.Throwable => bpCaught = bpThrown"), t)
+    assert(t.contains("if (bpCaught ne null)"), t)
+    assert(t.contains("if (bpExpected.isEmpty) throw bpCaught"), t)
+    assert(t.contains("bpExpected.forall((bpP: (java.lang.Throwable) => scala.Boolean) => " +
+                      "bpP.apply(bpCaught))"), t)
+    assert(t.contains("else if (bpExpected.nonEmpty)"), t)
     assertEquals(guards(ph), Nil)
   }
 
-  test("…and the SITE IN A LOOP is REFUSED, naming its guard — java's arming crosses iterations") {
-    // The one delta no lexical wrap can express: java's rule stays armed for the REST OF THE TEST,
-    // so a body that completes normally simply runs the next iteration, where an `intercept` around
-    // the rest of the enclosing block would fail with *expected exception*. 17 of ssg-md's 37 sites.
+  test("…and a site IN A LOOP BODY converts too — the position no lexical wrap could express") {
+    // The 17 sites `ENGINE-LIMITS.md` X5 records as refused under the `intercept` shape, and the
+    // whole reason this lowering exists: java's rule is armed from the CALL to the end of the test,
+    // so an `intercept` around "the rest of the enclosing block" fails a body that completes
+    // normally where java simply ran the next iteration. An arming is a statement and has no such
+    // problem — it goes where java wrote it.
     val (out, ph) = emitWithRules(ruleSuite(
       """  @Test public void a() {
         |    for (int i = 0; i < 3; i++) {
@@ -669,13 +681,16 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |    }
         |  }
         |  static void boom(int x) { throw new IllegalStateException(); }""".stripMargin))
-    assertEquals(clue(guards(ph)), List("non-statement-position"))
-    // REFUSED LOUDLY means the construct is LEFT, not silently dropped (`ENGINE-LIMITS.md` M6).
-    assert(clue(out).contains("thrown.expect"))
-    assert(!out.contains("intercept["), out)
+    assertEquals(clue(guards(ph)), Nil)
+    val t = out.substring(out.indexOf("test(\"a\")"))
+    assert(!clue(t).contains("thrown.expect"))
+    // the arming is INSIDE the loop, and the rule's statement is OUTSIDE it.
+    assert(t.indexOf("while") < t.indexOf("bpExpected = bpExpected"), t)
+    assert(t.indexOf("var bpExpected") < t.indexOf("while"), t)
+    assert(t.indexOf("bpExpected = bpExpected") < t.indexOf("if (bpCaught ne null)"), t)
   }
 
-  test("the MATCHER overload intercepts at Throwable and asserts the matcher — hamcrest's contract") {
+  test("the MATCHER overload becomes hamcrest's own contract — `matches(Object)`, no table") {
     val (out, ph) = emitWithRules(ruleSuite(
       """  @Test public void a() {
         |    thrown.expect(org.hamcrest.IsAnything.anything());
@@ -684,13 +699,13 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
     val t = out.substring(out.indexOf("test(\"a\")"))
     assertEquals(clue(guards(ph)), Nil)
-    assert(clue(t).contains("intercept[java.lang.Throwable]"), t)
-    assert(t.contains(".matches(bpThrown)"), t)
-    // the matcher is EVALUATED WHERE JAVA EVALUATED IT — at the `expect` call, before the body.
-    assert(t.indexOf("val bpMatcher") < t.indexOf("intercept["), t)
+    assert(clue(t).contains(".matches(bpEx)"), t)
+    // the matcher is EVALUATED WHERE JAVA EVALUATED IT — at the `expect` call — and the closure
+    // captures the binding, so an arming inside a loop captures THAT iteration's matcher.
+    assert(t.indexOf("val bpMatcher") < t.indexOf("bpExpected = bpExpected"), t)
   }
 
-  test("expectMessage(String) becomes an assertion on getMessage — junit's containsString") {
+  test("expectMessage(String) is junit's containsString, and does not NPE on a null message") {
     val (out, ph) = emitWithRules(ruleSuite(
       """  @Test public void a() {
         |    thrown.expect(IllegalStateException.class);
@@ -700,9 +715,28 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  static void boom() { throw new IllegalStateException("boom"); }""".stripMargin))
     val t = out.substring(out.indexOf("test(\"a\")"))
     assertEquals(clue(guards(ph)), Nil)
-    assert(clue(t).contains("intercept[java.lang.IllegalStateException]"), t)
-    assert(t.contains("bpThrown.getMessage().contains(\"boom\")"), t)
+    assert(clue(t).contains("bpEx.isInstanceOf[java.lang.IllegalStateException]"), t)
+    // hamcrest's `TypeSafeMatcher` answers FALSE for a null item rather than throwing, which is a
+    // guard in the predicate and not an accident of the corpus.
+    assert(t.contains("(bpEx.getMessage() ne null) && bpEx.getMessage().contains(\"boom\")"), t)
     assert(!t.contains("thrown.expect"), t)
+  }
+
+  test("TWO expect calls ACCUMULATE — java requires all of them, and so does the emitted list") {
+    // Under the `intercept` shape this was a REFUSAL (`double-expect`): one `intercept` takes one
+    // type argument and java's conjunction had no image. The accumulator is junit's own, so the
+    // conjunction is `forall` and there is nothing left to decline.
+    val (out, ph) = emitWithRules(ruleSuite(
+      """  @Test public void a() {
+        |    thrown.expect(IllegalStateException.class);
+        |    thrown.expect(org.hamcrest.IsAnything.anything());
+        |    boom();
+        |  }
+        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    assertEquals(clue(guards(ph)), Nil)
+    val t = out.substring(out.indexOf("test(\"a\")"))
+    assertEquals(clue(t.sliding("bpExpected = bpExpected".length)
+                       .count(_ == "bpExpected = bpExpected")), 2)
   }
 
   test("…and the operands are bound IN CALL ORDER, whichever of the two java wrote first") {
@@ -720,19 +754,6 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     val t = out.substring(out.indexOf("test(\"a\")"))
     assertEquals(clue(guards(ph)), Nil)
     assert(clue(t).indexOf("val bpMessage0") < t.indexOf("val bpMatcher"), t)
-    assert(t.indexOf("val bpMatcher") < t.indexOf("intercept["), t)
-  }
-
-  test("TWO expect calls are REFUSED — java accumulates matchers and intercept has one argument") {
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  @Test public void a() {
-        |    thrown.expect(IllegalStateException.class);
-        |    thrown.expect(RuntimeException.class);
-        |    boom();
-        |  }
-        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
-    assertEquals(clue(guards(ph)), List("double-expect"))
-    assert(clue(out).contains("thrown.expect"))
   }
 
   test("any OTHER member of the rule is REFUSED — a state this translation does not model") {
@@ -746,11 +767,28 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assertEquals(clue(guards(ph)), List("unsupported-member"))
   }
 
-  test("a suite declaring @After is REFUSED — JUnit's rules are OUTSIDE its afters") {
+  test("…and the FIELD reached anywhere but as a call receiver is REFUSED, naming its own guard") {
+    // The accumulator this lowering arms is a LOCAL of the test it was armed in, so a `thrown`
+    // handed to something else is a rule state it cannot model. Two guards rather than one: a
+    // wrong MEMBER and a reference that is not a call at all are different sentences, and an agent
+    // reading the row has to be told which.
+    val (out, ph) = emitWithRules(ruleSuite(
+      """  @Test public void a() {
+        |    thrown.expect(IllegalStateException.class);
+        |    use(thrown);
+        |    boom();
+        |  }
+        |  static void use(Object o) { }
+        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    assertEquals(clue(guards(ph)), List("unsupported-reference"))
+    assert(clue(out).contains("thrown.expect"))
+  }
+
+  test("a suite declaring @After CONVERTS, with the rule OUTSIDE the teardown — JUnit's nesting") {
     // `BlockJUnit4ClassRunner.methodBlock` wraps `withRules` around `withAfters`, so a teardown that
-    // throws is compared against the expectation in java; an `intercept` emitted in the body sits
-    // INSIDE the `try … finally` this phase emits for `@After`, which is a different program
-    // wherever the teardown can throw. Nothing else could see this: both shapes compile.
+    // throws is compared against the expectation in java. That was a REFUSAL under the `intercept`
+    // shape, which had to sit inside the `try … finally`; the wrap is applied outside it now, so
+    // the nesting is java's own. Nothing else could see this: both shapes compile.
     val (out, ph) = emitWithRules(ruleSuite(
       """  @After public void tearDown() { }
         |  @Test public void a() {
@@ -758,14 +796,18 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |    boom();
         |  }
         |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
-    assertEquals(clue(guards(ph)), List("after-ordering"))
-    assert(clue(out).contains("finally tearDown()"))
+    assertEquals(clue(guards(ph)), Nil)
+    val t = out.substring(out.indexOf("test(\"a\")"))
+    assert(clue(t).contains("finally tearDown()"), t)
+    // the rule's own catch is OUTSIDE the teardown's finally, exactly as java nests them.
+    assert(t.indexOf("var bpExpected") < t.indexOf("finally tearDown()"), t)
+    assert(t.indexOf("finally tearDown()") < t.indexOf("case bpThrown"), t)
   }
 
   test("a @ClassRule ExpectedException is REPORTED, not quietly taken for a @Rule") {
     // A method rule wraps each test; a CLASS rule wraps the whole class run, so the region an
-    // `expect` arms is a different one and `intercept` in a test body is not its image. Nothing in
-    // the corpus writes the shape, which is exactly why an unstated exclusion would never be found.
+    // `expect` arms is a different one and a per-test accumulator is not its image. Nothing in the
+    // corpus writes the shape, which is exactly why an unstated exclusion would never be found.
     val (out, ph) = emitWithRules(
       """package demo;
         |import org.junit.ClassRule;
@@ -782,7 +824,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |""".stripMargin)
     assertEquals(clue(guards(ph)), List("class-rule"))
     assert(clue(out).contains("thrown.expect"))
-    assert(!out.contains("intercept["), out)
+    assert(!out.contains("bpExpected"), out)
   }
 
   test("a @Rule of ANOTHER class is untouched — the translation is keyed on the field's TYPE") {
@@ -802,13 +844,15 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   }
 
   test("a suite with NO rule produces no ExpectedException row — the refusal lane is not noise") {
-    val (_, ph) = emitWithRules(ruleSuite(
+    val (out, ph) = emitWithRules(ruleSuite(
       """  @Test public void a() { }"""))
     assertEquals(clue(guards(ph)), Nil)
+    // …and no test that never touches the rule pays for it: no accumulator, no catch, no check.
+    assert(!clue(out).contains("bpExpected"))
   }
 
   test("a CONVERTED site is recorded on the test's own Decision — §5.1's other artifact") {
-    // The emitted `intercept[E]` plainly asserts a throw; what it cannot say is that java said so
+    // The emitted accumulator plainly asserts a throw; what it cannot say is that java said so
     // through a `@Rule` FIELD three screens up, which is the fact an agent reading one emitted file
     // has no way to recover (CLAUDE.md §4.575).
     val log = Pipeline.runTraced(
@@ -821,9 +865,108 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
       List(new TestFrameworkTransform))._2
     val d = log.all.find(_.subjectFqn.endsWith("#a"))
     assert(clue(log.all.map(_.subjectFqn)).nonEmpty)
-    assert(clue(d.map(_.detail.getOrElse("rule", ""))).exists(_.contains("intercept[")))
+    assert(clue(d.map(_.detail.getOrElse("rule", ""))).exists(_.contains("modelled")))
   }
 
+  // ---- the lowering's SEMANTIC CELLS, run rather than read ----
+  //
+  // Everything above asserts the emitted SHAPE. These run it: each is the shape the phase emits,
+  // written out, over a body that behaves the way the java did. A shape assertion cannot tell an
+  // exact model from a plausible one, and junit's contract is what this has to reproduce —
+  // `ExpectedExceptionStatement.evaluate` plus `failDueToMissingException`.
+
+  private def ruleCheck(caught: java.lang.Throwable,
+                        expected: List[java.lang.Throwable => Boolean]): Unit =
+    if caught ne null then
+      if expected.isEmpty then throw caught
+      else munit.Assertions.assert(expected.forall(p => p.apply(caught)), "did not satisfy")
+    else if expected.nonEmpty then munit.Assertions.fail("nothing threw")
+
+  test("BEHAVIOUR: ARMED and MATCHED passes — junit's rule applied to what the test threw") {
+    var bpExpected: List[java.lang.Throwable => Boolean] = Nil
+    var bpCaught: java.lang.Throwable = null
+    try {
+      bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
+      throw new IllegalStateException("boom")
+    } catch { case bpThrown: java.lang.Throwable => bpCaught = bpThrown }
+    ruleCheck(bpCaught, bpExpected) // passes: this test's own success IS the assertion
+  }
+
+  test("BEHAVIOUR: ARMED and NOT matched FAILS — and it is the expectation that reports it") {
+    var bpExpected: List[java.lang.Throwable => Boolean] = Nil
+    var bpCaught: java.lang.Throwable = null
+    try {
+      bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
+      throw new java.io.IOException("other")
+    } catch { case bpThrown: java.lang.Throwable => bpCaught = bpThrown }
+    intercept[munit.FailException](ruleCheck(bpCaught, bpExpected))
+  }
+
+  test("BEHAVIOUR: ARMED and NOTHING THROWN fails — junit's failDueToMissingException") {
+    var bpExpected: List[java.lang.Throwable => Boolean] = Nil
+    val bpCaught: java.lang.Throwable = null
+    bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
+    intercept[munit.FailException](ruleCheck(bpCaught, bpExpected))
+  }
+
+  test("BEHAVIOUR: UNARMED and thrown RETHROWS — a test that fails for its own reason still does") {
+    var bpCaught: java.lang.Throwable = null
+    try throw new IllegalStateException("mine")
+    catch { case bpThrown: java.lang.Throwable => bpCaught = bpThrown }
+    intercept[IllegalStateException](ruleCheck(bpCaught, Nil))
+  }
+
+  test("BEHAVIOUR: UNARMED and nothing thrown passes — the rule is not an assertion by itself") {
+    ruleCheck(null, Nil)
+  }
+
+  test("BEHAVIOUR: an arming MID-LOOP governs the rest of the test, as java's does") {
+    // The 17 refused sites, exactly: java arms on the first iteration and the throw leaves the
+    // METHOD, so the region armed is the rest of this iteration plus every later one plus
+    // everything after the loop. An `intercept` around the rest of the enclosing block would fail
+    // a body that completed normally; this simply does what java did.
+    var iterations = 0
+    var bpExpected: List[java.lang.Throwable => Boolean] = Nil
+    var bpCaught: java.lang.Throwable = null
+    try {
+      var i = 0
+      while (i < 3) {
+        iterations += 1
+        if i == 0 then
+          bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
+        if i == 1 then throw new IllegalStateException("second iteration")
+        i += 1
+      }
+    } catch { case bpThrown: java.lang.Throwable => bpCaught = bpThrown }
+    ruleCheck(bpCaught, bpExpected)
+    // the arming did NOT end the first iteration — java's rule is not a `try` around the body.
+    assertEquals(iterations, 2)
+  }
+
+  test("BEHAVIOUR: TWO armings are a CONJUNCTION — junit requires every matcher, not the last") {
+    // The reason the accumulator is a LIST: keeping only the last matcher would PASS where java
+    // FAILED, which is the false-green direction this engine exists to prevent.
+    var bpExpected: List[java.lang.Throwable => Boolean] = Nil
+    var bpCaught: java.lang.Throwable = null
+    try {
+      bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
+      bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) =>
+        (bpEx.getMessage ne null) && bpEx.getMessage.contains("wanted"))
+      throw new IllegalStateException("other")
+    } catch { case bpThrown: java.lang.Throwable => bpCaught = bpThrown }
+    intercept[munit.FailException](ruleCheck(bpCaught, bpExpected))
+  }
+
+  test("BEHAVIOUR: expectMessage over a NULL message does not throw — hamcrest answers false") {
+    var bpExpected: List[java.lang.Throwable => Boolean] = Nil
+    var bpCaught: java.lang.Throwable = null
+    try {
+      bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) =>
+        (bpEx.getMessage ne null) && bpEx.getMessage.contains("boom"))
+      throw new IllegalStateException()
+    } catch { case bpThrown: java.lang.Throwable => bpCaught = bpThrown }
+    intercept[munit.FailException](ruleCheck(bpCaught, bpExpected))
+  }
   // ---------------------------------------------------- untranslated: LOUD --
 
   test("@Rule is reported, classified (a), with its source position") {
