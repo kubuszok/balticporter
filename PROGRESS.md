@@ -4164,6 +4164,16 @@ they are where the 2b siblings become admissible because their dependency is alr
 | 16 | `ext-footnotes` | 14 | 12 | 0 | 31/31 | `overload-risk` +16, `dependency-coverage` **0 → 2** (`java.util.Locale`), `dependency-coverage(all)` 10 → 12, `catalog(undischarged)` 5 → 6 (`JS-S23`), `omissions` +1 |
 | 17 | `ext-definition` | 15 | 13 | 0 | 34/34 | `overload-risk` +5, `omissions` +1, and `catalog(unreached)` **16 → 14** — the port's FIRST `switch` |
 | 18 | `ext-typographic` | 15 | 13 | 0 | — | `overload-risk` +5 (4 `GenericTieBreak`, 1 `VarargPhaseSpan`) |
+| 19 | `ext-emoji` | 16 | 14 | 0 | — | `overload-risk` +8 (7 `VarargPhaseSpan`, 1 `GenericTieBreak`) |
+
+Batch 2 totals: **10 modules admitted (10 → 19 of 29), 58 → 166 units, 0 errors, 17 → 34 of 34 tests
+passing**, `manifest` / `port-map` 0 throughout and `expected-lost` 0 on every wave. One module —
+`ext-gfm-tasklist` — was measured and SKIPPED (`ENGINE-LIMITS.md` C15). Two engine gaps were found
+and both are CLOSED: `G32` (scala will not eta-expand a nullary method, so `Type::nilaryStatic` is a
+lambda) and `K24`'s **fourth face** (a probe at a proper ancestor of the key), each measured flat on
+all fourteen `measure-all` lanes with the site out of scope. The counted residue the batch ADDED is
+`overload-risk` +83, `omissions` +5, `base-surface` +1, `idiom(refused)` +1 and
+`dependency-coverage` +2 — every one of them a lane a run prints, and every one classified above.
 
 **AND `ext-footnotes` IS THE FIRST EXTENSION TO OWN A `dependency-coverage` ROW, WHICH IS *NOT*
 CLOSED BY DECLARING THE ARTIFACT HERE.** `FootnoteNodeRenderer` calls `String.format(Locale…, …)`
