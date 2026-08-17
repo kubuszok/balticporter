@@ -2992,13 +2992,18 @@ readable as a floor rather than as *four more waves*:
   is an `Array[E]` at an `Array[Enum[?]]` slot and scala's arrays are INVARIANT. `ENGINE-LIMITS.md`
   §0's rule read at a slot: the recorded java type is not a witness of what the emitter will print,
   so the comparison has to be at the RENDERING and the term is the only side that has one;
-- **`NodePostProcessorFactory#addNodes`** and **`Attributes#values`** — java's UNCHECKED CONVERSION
-  (JLS 5.1.9) at a read of the RAW static `Collections.EMPTY_SET`/`EMPTY_LIST`, which the author
-  annotated `@SuppressWarnings("unchecked")` in both places. The declared formal at the first is
-  `Map#put`'s bare `V`, so `uncheckedGeneric` reads a type variable and declines: java resolved `V`
-  from the RECEIVER's instantiation, which is G12's own fact met at a raw ARGUMENT rather than a raw
-  result. The second is the same conversion in a CONDITIONAL BRANCH, where java applies it per branch
-  (JLS 15.25) and the port coerces the whole conditional, whose type is already the lub;
+- ~~**`NodePostProcessorFactory#addNodes`** and **`Attributes#values`**~~ — **CLOSED AT WAVE 15**, and
+  the diagnosis was right about the CONVERSION and wrong about needing one. Both are reads of the RAW
+  static `Collections.EMPTY_SET`/`EMPTY_LIST`, whose unchecked conversion (JLS 5.1.9) scala has no
+  counterpart for — and java ALREADY HAS THE TYPED FORM and documents these as it, so the FIELD
+  rewrites to the same helper the CALL does and the raw type is gone rather than worked around
+  (`ENGINE-LIMITS.md` K30 face 1). No unchecked-conversion machinery, and reference identity survives
+  because the runtime's `emptyList` is one shared instance exactly as java's constant is. `jdk-surface`
+  25 → 23 with the two rows and their seven sites. **`BuilderBase#extensions` closed in the same
+  commit and was NOT this family at all** — the SEVENTH census row whose cause differed from the one
+  its text named: `addAll(int, Collection)` is java's POSITIONAL overload, the table had an arm for
+  the one-argument form alone, and scala accepted the untranslated call by AUTO-TUPLING java's two
+  arguments into a pair (K30 face 2, `collection-boundary` 21 → 20);
 - **`FormatterUtils#renderList`** — a LAMBDA at exactly the slot wave 14's second commit answers for
   a collection: the sibling `DataKey<T>` fixes `T` to a `java.util.function.Function`, and what that
   slot needs is an ASCRIPTION (which SAM-converts) rather than a collection factory. Same derivation,

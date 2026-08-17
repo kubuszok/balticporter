@@ -7531,6 +7531,65 @@ per member from the JDK's own body — never from the member's name, and never b
 
 ---
 
+### K30. A JDK member the phase answers can arrive at a NODE KIND or an ARITY the table does not have, and scala accepts BOTH silently — **ssg-md 9 → 7, `jdk-surface` 25 → 23, `collection-boundary` 21 → 20. CLOSED**
+
+Every entry above is about a member the mapping has NO answer for. These two are about members it
+answers perfectly and does not RECOGNISE, which fails differently: a missing mapping is a compile
+error naming the member, and an unrecognised SHAPE of a mapped member is whatever scala makes of the
+untranslated call. Both were found at the same census and neither is a collections fact — the shape
+is *what else can this member look like in the tree*.
+
+**Face 1 — the member is a FIELD, so no `Tree.Apply` arm can see it.** `java.util.Collections` has
+three members that are not methods: `EMPTY_LIST`, `EMPTY_SET` and `EMPTY_MAP`, declared RAW. Reading
+one at a parameterised slot is an UNCHECKED CONVERSION (JLS 5.1.9) — legal with a warning, which is
+why the library writes `@SuppressWarnings("unchecked")` over both of its sites — and scala has no
+unchecked conversion. `externalFieldProducer`'s otherwise-correct wrap then produced
+`Buffer[java.util.Collections.EMPTY_LIST.E]`, an element type naming the RAW FIELD'S OWN variable,
+which conforms to nothing.
+
+**No unchecked-conversion machinery was needed, and that is the transferable part**: JAVA ALREADY HAS
+THE TYPED FORM and its javadoc says these ARE it. So the FIELD rewrites to the same helper the CALL
+already rewrites to — one table over, `Tree.Select` instead of `Tree.Apply` — and the raw type is
+GONE rather than worked around, because `emptyList()` takes its argument from the SLOT exactly as
+java's does. Reference IDENTITY survives too, which a copy would lose: java's `EMPTY_LIST` IS the
+object `emptyList()` returns, and the runtime hands back one shared instance for that reason, so
+`xs == Collections.EMPTY_LIST` — emitted as `eq` (§4.4) — goes on answering what java answers.
+
+**Face 2 — the member is the OTHER ARITY, and scala AUTO-TUPLES.** `java.util.List` declares
+`addAll(Collection)` and `addAll(int, Collection)`; the table had an arm for the first and none for
+the second, so `dst.addAll(0, src)` fell through untranslated onto `Growable.addAll(IterableOnce)` —
+which scala accepts by TUPLING java's two arguments into one `(Int, Collection)` pair. Here that is a
+compile error, and only because the element type happens to reject a pair: **at an element type of
+`Any` or a tuple it is a program that APPENDS A PAIR where java INSERTED A COLLECTION, with a green
+compile and no count moving** — `CLAUDE.md` §4.4's defect class met at an arity rather than at a
+statement form. The answer is java's own positional semantics (`insertAll`, plus java's `boolean`
+result, which `Buffer.insertAll` does not return), and the arm is `Kind.Seq`/`Kind.Stack` because
+java declares the positional form on `List` alone.
+
+**What generalises, and it is not about collections.** A rewrite table keyed on `owner#name` is
+implicitly also keyed on a NODE KIND and an ARITY that nobody wrote down, and both of the failure
+modes are quiet: the field one produced a type no reader could parse, and the arity one produced a
+legal scala call to a DIFFERENT member. So when a JDK member is mapped, ask *what else can this
+member be in a tree* — a field read, a second arity, a method reference (K23's own gap), a `super`
+receiver (K5.8) — and note that `handledStatics` stays ONE table across all of them, because
+`jdk-surface` asks one question and a table split by node kind reports a member the phase rewrites as
+the port's JDK wall. `CollectionsHandledDerivationSpec` had to learn the same thing in the same
+commit: its source scan read the `staticRewrite` arms alone and therefore called every FIELD entry
+stale — an instrument reporting a correct table as broken, which is §4.56 read at a filter.
+
+*Fix kind: (a) both, BUILT. **ssg-md 9 → 7** with `jdk-surface` **25 → 23** (the `EMPTY_LIST` and
+`EMPTY_SET` rows, 7 sites, leaving `unhandled`) and `collection-boundary` **21 → 20** (the
+`ExternalCallee` row at the untranslated `addAll(int, java.util.Collection)`), each falling with
+exactly what it named; 14 member digests, 8 declarations and their 6 files. **Two independent fixes
+measured in ONE run, which `CLAUDE.md` §5 asks you not to do** — recorded rather than glossed: what
+the rule buys is attribution, and here the two are separable by construction (different lanes,
+different files, different java sites, disjoint digests), so nothing had to be untangled.
+`CollectionsRawConstantSpec` — five positives (the three constants, the shared-identity `eq`, and the
+positional `addAll`) and two negatives (an ordinary external field is still WRAPPED, and the
+one-argument `addAll` is untouched), plus the table-agreement assertion.*
+
+---
+
 ## 6. Porting a test suite
 
 ### X1. Converting JUnit to MUnit is a STRUCTURAL transform, not an annotation rename

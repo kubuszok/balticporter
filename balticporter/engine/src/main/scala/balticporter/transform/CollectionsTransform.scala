@@ -1699,7 +1699,7 @@ final class CollectionsTransform(
     case io: Tree.InstanceOf => reifiedTest(io)
     case fe: Tree.ForEach => writeThroughEntries(fe)
     case mr: Tree.MethodRef => lowerMethodRef(mr)
-    case sel: Tree.Select => externalFieldProducer(sel)
+    case sel: Tree.Select => staticFieldRewrite(sel).getOrElse(externalFieldProducer(sel))
     case other          => other
 
   // -------------------------------------------------------------------------------------------
@@ -1840,6 +1840,39 @@ final class CollectionsTransform(
       seam(slot, "no coercion exists: the target is OUTSIDE the mapping, and a retyped value is not one",
            TirPrinter.tpe(target, TirPrinter.Style.canonical), origin, SymId.None,
            CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+
+  /** A JDK STATIC FIELD that is java's own RAW alias for a factory this phase already rewrites —
+    * `Collections.EMPTY_LIST`, `EMPTY_SET`, `EMPTY_MAP`.
+    *
+    * These three are declared RAW (`public static final List EMPTY_LIST`), which is not an accident
+    * of age but the reason java's own javadoc points readers at `emptyList()` instead: reading one at
+    * a parameterised slot is an UNCHECKED CONVERSION (JLS 5.1.9), legal with a warning, and flexmark
+    * writes `@SuppressWarnings("unchecked")` over both of its sites. Scala has no unchecked
+    * conversion, so [[externalFieldProducer]]'s otherwise-correct wrap produced
+    * `Buffer[java.util.Collections.EMPTY_LIST.E]` — an element type naming the RAW field's own
+    * variable, which conforms to nothing.
+    *
+    * The translation needs no unchecked-conversion machinery, because JAVA ALREADY HAS THE TYPED
+    * FORM and says these are it: `EMPTY_LIST` is documented as the field form of `emptyList()`, and
+    * `emptyList()` is where the type argument comes from the SLOT rather than from the receiver.
+    * So the field rewrites to exactly the helper the CALL already rewrites to, one table over, and
+    * the raw type is gone rather than worked around.
+    *
+    * Reference IDENTITY survives, which is the part a copy would lose: java's `EMPTY_LIST` IS the
+    * object `emptyList()` returns, and `JavaCollections.emptyList` hands back one shared instance for
+    * exactly that reason (see its own doc) — so `xs == Collections.EMPTY_LIST`, which this engine
+    * emits as `eq` (§4.4), keeps answering what java answers.
+    *
+    * Consulted AHEAD of [[externalFieldProducer]]: both would fire on the same node and the wrap is
+    * the weaker answer — it preserves a raw type this one removes. */
+  private def staticFieldRewrite(sel: Tree.Select)(using p: Program): Option[Term] =
+    for
+      m   <- p.symbolOf(sel.sym)
+      o   <- p.symbolOf(m.owner)
+      nm  <- CollectionsTransform.StaticFieldFactories.get(MemberKey(o.fullName, m.name).render)
+      f    = sym(nm)
+      if f != SymId.None
+    yield Tree.Apply(Tree.Ident(f, TypeRepr.NoType, sel.origin), Nil, f, sel.tpe, sel.origin)
 
   /** A FIELD the program does not declare, whose CLASS FILE types it as a collection this phase
     * retypes — [[externalProducer]]'s fact for the one member kind that has no call node.
@@ -3996,6 +4029,16 @@ final class CollectionsTransform(
       case ("addAll", List(c), _) if wildcardElement(c.tpe) && sym("addAll") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("addAll"), TypeRepr.NoType, so), List(recv, c),
                         sym("addAll"), t.tpe, t.origin))
+      // …and java's POSITIONAL `addAll(int, Collection)`, which is `insert`'s bulk sibling and NOT
+      // this table's one-argument `addAll` at all. Left to fall through, the call reached scalac as
+      // `buf.addAll(0, c)` against `Growable.addAll(IterableOnce)` — which scala ACCEPTS by
+      // AUTO-TUPLING, so java's two arguments become one `(Int, Collection)` pair. It happens to be
+      // a compile error at this element type; at an element type of `Any` it is a program that
+      // appends a pair where java inserted a collection, with nothing to report it (§4.4 at an
+      // arity). `Kind.Seq`/`Kind.Stack` only: java declares the positional form on `List`.
+      case ("addAll", List(i, c), Kind.Seq | Kind.Stack) if sym("insertAll") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("insertAll"), TypeRepr.NoType, so), List(recv, i, c),
+                        sym("insertAll"), t.tpe, t.origin))
       case ("addAll" | "putAll", List(c), _)    => Some(infix(recv, opPlusPlusEq, List(c), t, so))// xs ++= c
       // …the SET half of [[objectProbe]]'s seam. `Collection.contains` needs no rewrite at all at an
       // ordinary argument — scala's `Set.contains` is java's own hash lookup, asking the PROBE's
@@ -5312,7 +5355,8 @@ object CollectionsTransform:
   )
 
   val StaticHelpers: List[String] =
-    List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView", "addAll", "noneMatch", "removeValue",
+    List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "asListView",
+         "addAll", "insertAll", "noneMatch", "removeValue",
          "computeIfAbsent", "removeIf", "removeIfSet", "containsValue", "containsAll",
          "removeAll", "retainAll", "ensureCapacity",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
@@ -5344,6 +5388,13 @@ object CollectionsTransform:
   val handledStatics: Set[String] = Set(
     "java.util.Arrays#asList",
     "java.util.Collection#stream",
+    // …and java's three RAW constants, which are FIELDS and not calls — see [[StaticFieldFactories]]
+    // and `staticFieldRewrite`. They belong in THIS table and not in a second one: `jdk-surface` asks
+    // one question of an external member, and a table split by node kind would report a member the
+    // phase answers as the port's JDK wall.
+    "java.util.Collections#EMPTY_LIST",
+    "java.util.Collections#EMPTY_MAP",
+    "java.util.Collections#EMPTY_SET",
     "java.util.Collections#emptyList",
     "java.util.Collections#emptyMap",
     "java.util.Collections#emptySet",
@@ -5396,6 +5447,15 @@ object CollectionsTransform:
     "java.util.stream.Stream#mapToDouble",
     "java.util.stream.Stream#noneMatch",
     "java.util.stream.Stream#sorted",
+  )
+
+  /** java's RAW static CONSTANTS → the typed factory java itself says they are, read by
+    * `staticFieldRewrite`. Three entries, and the list is closed by JAVA rather than by this table:
+    * these are the only members of `java.util.Collections` that are fields at all. */
+  private[balticporter] val StaticFieldFactories: Map[String, String] = Map(
+    "java.util.Collections#EMPTY_LIST" -> "emptyList",
+    "java.util.Collections#EMPTY_SET"  -> "emptySet",
+    "java.util.Collections#EMPTY_MAP"  -> "emptyMap",
   )
 
   /** collection KIND → the instance member names [[rewrite]] handles for it, with

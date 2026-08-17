@@ -173,6 +173,27 @@ object JavaCollections:
     dst ++= elementsOf(src).map(_.asInstanceOf[E])
     dst.size != before
 
+  /** `java.util.List.addAll(int index, Collection c)` — the POSITIONAL sibling of [[addAll]], which
+    * inserts rather than appends and which scala spells `insertAll`.
+    *
+    * It is a helper and not a bare `dst.insertAll(i, src)` for the two reasons the one-argument form
+    * is one: java returns a `boolean` callers branch on, where `insertAll` returns `Unit`; and the
+    * SOURCE is `containsAll`'s union, because the argument of an inherited bulk operation is the
+    * java-shaped shim as often as it is a scala collection.
+    *
+    * ==Why the ARITY is worth an arm of its own==
+    * Left to the one-argument `addAll` arm, `list.addAll(0, c)` matched no rewrite and reached
+    * scalac as `buf.addAll(0, c)` against `Growable.addAll(IterableOnce)` — which scala ACCEPTS by
+    * auto-tupling, so the two java arguments became one `(Int, Collection)` pair. At this port's
+    * element type that is a compile error; at an element type of `Any` or a tuple it is a program
+    * that appends a pair where java inserted a collection, with a green compile and no count moving
+    * (`CLAUDE.md` §4.4's defect class, met at an arity). */
+  def insertAll[E](dst: scala.collection.mutable.Buffer[E], index: Int,
+                   src: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean =
+    val before = dst.size
+    dst.insertAll(index, elementsOf(src).map(_.asInstanceOf[E]))
+    dst.size != before
+
   /** `java.util.Collection.remove(Object)` — removal BY VALUE, which scala's `Buffer` does not have.
     *
     * Not `Collections`', and deliberately here anyway: like every other member of this object it

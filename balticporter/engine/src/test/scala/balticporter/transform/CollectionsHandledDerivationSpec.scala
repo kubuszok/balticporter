@@ -63,9 +63,18 @@ class CollectionsHandledDerivationSpec extends munit.FunSuite:
   private val instanceArms = region("private def rewrite(k: Kind")
 
   /** every `"owner#name"` STRING LITERAL in the static arms — which is exactly how `staticRewrite`
-    * identifies a receiver-less JDK member, and the only way it identifies one. */
+    * identifies a receiver-less JDK member — PLUS the static-FIELD table, which is the same question
+    * asked of the other node kind.
+    *
+    * The second half is not a convenience. A receiver-less JDK member arrives as a `Tree.Apply` for a
+    * CALL and as a `Tree.Select` for a FIELD (`Collections.EMPTY_LIST`), so the phase answers it in
+    * two places — and `handledStatics` is ONE table, because `jdk-surface` asks one question and a
+    * table split by node kind would report a member the phase rewrites as the port's JDK wall. A
+    * derivation that read only the `match` would then call every field entry STALE, which is this
+    * spec reporting a correct table as broken (§4.56, read at an instrument's own filter). */
   private def staticLiterals: Set[String] =
-    """"(java\.[A-Za-z0-9_.$]+#[A-Za-z0-9_]+)"""".r.findAllMatchIn(staticArms).map(_.group(1)).toSet
+    """"(java\.[A-Za-z0-9_.$]+#[A-Za-z0-9_]+)"""".r.findAllMatchIn(staticArms).map(_.group(1)).toSet ++
+      CollectionsTransform.StaticFieldFactories.keySet
 
   /** every member NAME an instance arm is keyed on: the string literals in the first element of a
     * `case ("name" | "other", …)` head. */
