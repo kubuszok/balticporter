@@ -4158,6 +4158,24 @@ they are where the 2b siblings become admissible because their dependency is alr
 | 11 | `ext-admonition` | 11 | 9 | **3 → 0** | 18/18 | `overload-risk` +20 (13 `VarargPhaseSpan`, 7 `GenericTieBreak`), `omissions` **0 → 1** |
 | 12 | `ext-yaml-front-matter` | 11 | 9 | 0 | — | `overload-risk` +7 (5 `GenericTieBreak`, 2 `VarargPhaseSpan`) |
 | 13 | `ext-jekyll-front-matter` | 9 | 7 | 0 | — | `overload-risk` +2 (`GenericTieBreak`) — **the first 2b module IN** |
+| — | `ext-gfm-tasklist` | 12 | — | — | — | **SKIPPED — `ENGINE-LIMITS.md` C15**, measured and reverted |
+
+**AND THE BATCH SKIPPED ONE, WHICH IS THE FIRST TIME A MODULE HAS BEEN MEASURED AND TAKEN BACK OUT.**
+`ext-gfm-tasklist` emits at **0 compile errors with every instrument reading green**, and it is the
+extension whose entry point is silently broken: `TaskListItem extends` the base's `ListItem`, its
+copy constructor is `super(block)`, and the base's `ListItem(ListItem other)` writes seven things of
+which ONE — `priority` — is `private` in what ssg-md emitted. §1.5 says only the base can widen a
+member it emits, so C3's constructor replay is refused; and because the refusal is at the
+CONSTRUCTOR, what is dropped is not that statement but the whole super call. `TaskListItem` then
+arrives with no children, no `markerSuffix` and no chars, from the one call site
+(`TaskListItemBlockPreProcessor.preProcess`) that ever builds one.
+
+The instruments were right and were not sufficient: `base-surface` **0 → 1** carrying its own §1
+classification (the corpus's first `base-surface` row with real content), `omissions` **0 → 1**
+(`super(args) dropped … 1 argument(s) discarded`), a `dropped-super-call` porter note on the emitted
+constructor — and no compile error, no moved test, no other count. The module ships nothing
+runnable, so it is out of `includeGlobs` and out of `md_ext_modules` until C15 closes; a port that
+runs LESS than java takes no entry however cleanly it drains a lane (§5).
 
 **AND THE FIRST BATCH-2 EXTENSION FOUND AN ENGINE GAP, at eleven java files.** `ext-admonition`
 states three of its `DataKey` defaults as `new DataKey<>("…", AdmonitionExtension::getQualifierTypeMap)`

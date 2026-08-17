@@ -2710,6 +2710,66 @@ nothing beside the one that does.*
 
 ---
 
+### C15. A CONSTRUCTOR REPLAY ACROSS A MODULE BOUNDARY DIES ON THE BASE'S `private`, and what it drops is the WHOLE super call rather than the one statement — **one module SKIPPED, at 0 compile errors and 0 tests. OPEN**
+
+C3's replay is what makes a java `super(args)` expressible at all: scala lets only the primary reach
+super, so a secondary's super call is re-expressed as the parent constructor's own body, replayed in
+the child. Within ONE module that is exact — every field the parent's body writes is a field this
+run emits, and the visibility plan can widen whatever the replay needs.
+
+**Across a module boundary it cannot be, and `flexmark-ext-gfm-tasklist` is the corpus's first
+instance.** `TaskListItem extends ListItem` and its copy constructor is `super(block)`; the base's
+`ListItem(ListItem other)` writes SEVEN things —
+
+```java
+this.openingMarker = other.openingMarker;  this.markerSuffix = other.markerSuffix;
+this.tight = other.tight;                  this.hadBlankAfterItemParagraph = other.hadBlankAfterItemParagraph;
+this.containsBlankLine = other.containsBlankLine;
+this.priority = other.priority;            // ← `private int priority` in the BASE
+takeChildren(other);  setCharsFromContent();
+```
+
+— and exactly ONE of them touches a member `ssg-md` emitted `private`. §1.5 says only the base can
+widen a member it emits, and the base cannot know that a future dependent will replay a constructor
+that reaches it, so the replay is refused. **What it costs is not the one statement, it is all
+seven**: the refusal is at the CONSTRUCTOR, so `super(block)` is dropped whole and the emitted
+`def this(block: ListItem)` keeps only the child's own line.
+
+The instruments were right and were not enough. `base-surface` **0 → 1** with the §1 classification
+in its own text (the corpus's first `base-surface` row with real content), `omissions` **0 → 1**
+`super(args) dropped … 1 argument(s) discarded`, a `dropped-super-call` porter note ON the emitted
+constructor — and **0 compile errors, every other count flat**. The module has no admissible plain
+`@Test`, so nothing in the corpus could fail.
+
+**Why the module is SKIPPED rather than shipped with the residue counted.** The lost constructor is
+not a corner of this extension, it is the extension: `TaskListItemBlockPreProcessor.preProcess` is
+the only place a `TaskListItem` is ever built, so every task-list item in the port would arrive with
+no children (`takeChildren`), no `markerSuffix` and no chars — and `isItemDoneMarker()` reads
+`markerSuffix.matches("[ ]")`. That is a port that RUNS LESS THAN JAVA while every artifact reads
+green, which is `CLAUDE.md` §5's own rule about a loss (it takes no entry however cleanly it drains a
+lane) read at a scope decision.
+
+Three things for whoever closes it, and the first is the one that decides the shape:
+
+- **the refusal is ALL-OR-NOTHING at the constructor and need not be.** Six of the seven statements
+  are writable from the dependent today. A partial replay is NOT obviously right either — a
+  half-initialised object is a worse failure than an uninitialised one — but the choice is currently
+  made by nobody, and a replay that could state *which* statement it could not express would let the
+  port decide;
+- **the base's own surface is the other end.** `ListItem` declares `public int getPriority()` and
+  `public void setPriority(int)`, so an accessor-mediated replay is expressible for this instance —
+  and is a new mechanism (a setter may do more than assign), needing its own spec, its own negatives
+  and a corpus measurement. It is not a batch wave's work;
+- **widening in the BASE is the third option and the most expensive.** *Any `private` field written
+  by a non-primary constructor of a non-final class* is replay-reachable, so the base could widen
+  them all — a shared-surface change that moves ssg-md's emitted text and every dependent's baseline
+  at once, for a defect that has fired on one module.
+
+*Fix kind: (a) engine, and the visibility half lives in the BASE. OPEN. Recorded rather than fixed:
+`PROGRESS.md` §10.6.8 carries the skip, and the module is NOT in `ext.conf`'s `includeGlobs`.*
+
+---
+
 ## 3. `this`, inner classes and anonymous classes
 
 ### T1. A `CtNewClass` is a SUBTYPE of `CtConstructorCall` — 156 silently dropped bodies
