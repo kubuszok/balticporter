@@ -1655,11 +1655,6 @@ final class CollectionsTransform(
 
   private var bridges: List[Bridge] = Nil
 
-  /** the members this run SYNTHESISED, so [[strippedOverrides]] cannot take the modifier off one.
-    * Empty on every port that re-parents nothing, which makes the whole mechanism a no-op by
-    * arithmetic rather than by a branch. */
-  private var synthesisedSyms: Set[SymId] = Set.empty
-
   /** the JAVA types the mapping sends to a given target — the inverse of `typeMap`.
     *
     * `subsumed` is keyed on the TARGET (`balticporter.runtime.JavaIterable`), and an override
@@ -1832,9 +1827,10 @@ final class CollectionsTransform(
           case Some(myRows)   =>
             val built = myRows.flatMap(b => buildBridge(b, cd, symbols, mint))
             if built.isEmpty then cd else cd.copy(body = cd.body ++ built)
-    val out = units.map(u => StandardTraversal.mapClassDef(ph, u))
-    synthesisedSyms = added.map(_.id).toSet
-    (out, added.toList)
+    // …and the synthesised symbols are handed BACK rather than kept in a field: they are added to
+    // the table AFTER `strippedOverrides` has run, so nothing in this phase ever has to ask "is this
+    // one of mine" — the ordering answers it, and a field would be a second, staler way to say so.
+    (units.map(u => StandardTraversal.mapClassDef(ph, u)), added.toList)
 
   /** ONE bridged member, as a tree.
     *
