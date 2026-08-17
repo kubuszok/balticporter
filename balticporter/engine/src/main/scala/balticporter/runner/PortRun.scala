@@ -2633,15 +2633,31 @@ final case class PortRun(
     * without re-emitting it, and the model spans both — so "which units are mine" is a question
     * every port asks and the engine should answer once. Decided from the unit's `Origin`, which is
     * the only thing that survives a package rename: after one, a unit's FQN has nothing to do with
-    * the file it came from. A unit under `sourceRoot` is always converted (even if a resolution
-    * root happens to contain it); anything else under a resolution root is not; a unit with no
-    * usable origin is converted, because refusing to emit on a missing origin would be a silent
-    * omission — exactly the failure class this engine keeps finding.
+    * the file it came from; a unit with no usable origin is converted, because refusing to emit on
+    * a missing origin would be a silent omission — exactly the failure class this engine keeps
+    * finding.
     *
-    * Compared through `toRealPath`, on BOTH sides. A source root reached across a symlink — which
-    * is the normal case in a git worktree, and was the case that made this return every unit in
-    * the model on its first run — is lexically unrelated to the path the parser recorded, and a
-    * prefix test then matches nothing while looking correct. */
+    * ==THE ANSWER IS `files`, AND IT USED TO BE A PREFIX==
+    * This asked *under `sourceRoot`, or under no resolution root* — two path prefixes standing in
+    * for the list of files the run was told to convert. That is exact for as long as the two roots
+    * do not nest, which is every port that has ever run here, and it fails completely the first
+    * time they do: a port whose scope is three trees in three maven modules has no source root
+    * short of the CHECKOUT, the checkout contains every resolution root, and the first disjunct
+    * then answers YES for every unit in the model. Measured on the first such port at **546 emitted
+    * files against 90 in scope** — the whole resolved library re-emitted into a test source set,
+    * which is `CLAUDE.md` §5.4's own 635-instead-of-30 arriving through the other operand.
+    *
+    * [[FrontendConfig.files]] is the list itself, and its own doc has always said so: *files to
+    * CONVERT, relative to sourceRoot*. `PortConfig.selectFiles` derives it by walking the source
+    * root through `includeGlobs`/`excludeGlobs`, so for every port whose globs cover its root the
+    * new answer and the prefix's are the SAME SET — the migration is flat by construction, and the
+    * measurement then confirms rather than discovers. §4.56's shape at an ownership test: a run may
+    * conclude that a unit is its own from what it was ASKED to convert, and a path prefix that
+    * approximates that list is not a structural fact about anything.
+    *
+    * Compared through `toRealPath`, on BOTH sides. A path an operator or a config WROTE and one the
+    * parser RECORDED differ whenever a symlink is in play — the normal case in a git worktree, and
+    * the case that made this return every unit in the model on its first run (§5.4). */
   /** What a PHASE may conclude about ITSELF, built before the pipeline runs (`RunScope`).
     *
     * Two facts, and neither is derivable from the `Program` a phase is handed. The first is
@@ -2670,14 +2686,12 @@ final case class PortRun(
   private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
     if frontend.resolutionRoots.isEmpty then (program.units, Nil)
     else
-      val src   = PortRun.real(frontend.sourceRoot)
-      val other = frontend.resolutionRoots.map(PortRun.real)
+      // the run's own input list, realpathed once — `files` is relative to `sourceRoot`, and
+      // `resolve` carries an absolute entry through unchanged.
+      val mine = frontend.files.map(f => PortRun.real(frontend.sourceRoot.resolve(f))).toSet
       program.units.partition { u =>
         val p = u.origin.javaPath
-        if p.isEmpty then true
-        else
-          val real = PortRun.real(java.nio.file.Path.of(p))
-          real.startsWith(src) || !other.exists(real.startsWith)
+        if p.isEmpty then true else mine.contains(PortRun.real(java.nio.file.Path.of(p)))
       }
 
   private def wipe(dir: Path): Unit =
