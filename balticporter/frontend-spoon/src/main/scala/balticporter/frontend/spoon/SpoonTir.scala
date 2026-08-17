@@ -3355,10 +3355,15 @@ object SpoonTir:
         * It can only ever ADD a cast where scala would have rejected the slot outright, because two
         * DIFFERENT `Array[…]` renderings never conform in either direction; where they are equal it
         * declines by arithmetic. That is the whole of its safety argument, and it is why it rides on
-        * the same `arrayCov` gate rather than on one of its own. */
-      private def arrayCovRendered(target: CtTypeReference[?], t: Term): Boolean =
-        target != null && target.isInstanceOf[CtArrayTypeReference[?]] && isScalaArrayType(t.tpe) &&
-          { val want = tpe(target); isScalaArrayType(want) && want != t.tpe }
+        * the same `arrayCov` gate rather than on one of its own.
+        *
+        * `want` is HANDED IN rather than looked up, and that is measured rather than stylistic: a
+        * second `tpe(target)` is a second type LOWERING, and the lowering counters are the
+        * denominators every `catalog(consulted)` row prints inside its own text — 1,675 extra
+        * consults on a port whose emission did not move by one byte. */
+      private def arrayCovRendered(target: CtTypeReference[?], want: TypeRepr, t: Term): Boolean =
+        target != null && target.isInstanceOf[CtArrayTypeReference[?]] &&
+          isScalaArrayType(t.tpe) && isScalaArrayType(want) && want != t.tpe
 
       /** JS-G14's clause — a primitive at a reference slot is java autoboxing, and the boxing's
         * target is the WRAPPER rather than the (often erased) formal. See [[arrayCovSlot]] for why
@@ -3474,19 +3479,25 @@ object SpoonTir:
         // Java erases `T` to `Object`; Scala's unbounded `T <: Any` does not conform. Cast it.
         val tpObj = tpToObject && et != null && et.isInstanceOf[CtTypeParameterReference] &&
           target.getQualifiedName == "java.lang.Object"
-        val cast =
-          tpObj ||                                                                // T → Object (non-arg)
-          (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
-          (arrayCov && (arrayCovSlot(target, et) ||                               // array covariance
-                        arrayCovRendered(target, t))) ||                          // …at the RENDERING
-          narrowing ||                                                            // int → short/byte/char
-          boxing ||                                                               // int → Object/Number
-          downcast                                                                // Object → specific
         // Box to the primitive's WRAPPER (`int` → `java.lang.Integer`), not the (often Object-erased)
         // formal: the wrapper is what Java autoboxing yields and it satisfies both the erased `Object`
         // slot AND a real `Integer`/`Number` one — where casting straight to `Object` fails an
         // `Integer` parameter that Spoon erased at the call reference.
+        //
+        // Hoisted ABOVE `cast` so `arrayCovRendered` can read the rendering this line already
+        // computes. That is not tidiness: a SECOND `tpe(target)` is a second type LOWERING, and the
+        // lowering counters are the denominators every `catalog(consulted)` row prints inside its own
+        // text — measured at 1,675 extra consults on libGDX for an emission that was byte-identical
+        // (G12's own caution, met one predicate over).
         val ct = if boxing then boxedPrimitive(et.getSimpleName) else tpe(target)
+        val cast =
+          tpObj ||                                                                // T → Object (non-arg)
+          (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
+          (arrayCov && (arrayCovSlot(target, et) ||                               // array covariance
+                        arrayCovRendered(target, ct, t))) ||                      // …at the RENDERING
+          narrowing ||                                                            // int → short/byte/char
+          boxing ||                                                               // int → Object/Number
+          downcast                                                                // Object → specific
         if cast then
           // …AND A TARGET NAMING AN ANCESTOR'S TYPE VARIABLE IS RENDERED THROUGH THE `extends`
           // CLAUSE, which is [[uncheckedGeneric]]'s own fact read at the arm beside it. `tpe` has no
