@@ -147,7 +147,22 @@ md_modules    := "flexmark flexmark-util-ast flexmark-util-builder flexmark-util
 # the lane PRINTS (`modules in scope: N of 29 covered`) rather than one this comment carries: a count
 # written here is one a wave has to remember to edit, and a stale one reads exactly like a scope that
 # drifted.
-md_ext_modules := "flexmark-ext-aside flexmark-ext-resizable-image flexmark-ext-youtube-embedded flexmark-ext-anchorlink flexmark-ext-escaped-character flexmark-ext-ins flexmark-ext-superscript flexmark-ext-gfm-issues"
+md_ext_modules := "flexmark-ext-aside flexmark-ext-resizable-image flexmark-ext-youtube-embedded flexmark-ext-anchorlink flexmark-ext-escaped-character flexmark-ext-ins flexmark-ext-superscript flexmark-ext-gfm-issues flexmark-ext-autolink"
+
+# …and the ONE third-party compile coordinate any of the 29 extension modules declares.
+# `flexmark-ext-autolink/pom.xml` pins `org.nibor.autolink:autolink:0.6.0` in its own `<properties>`
+# and three of its four main files import `LinkExtractor`/`LinkSpan`/`LinkType`, so the emitted Scala
+# NAMES that package and a compile without it reports unresolved references as this port's wall.
+#
+# It is a SEPARATE variable from `md_deps` on purpose: `md_deps` is the base's compile line and the
+# base names nothing from this jar, so putting it there would add a coordinate to `md-measure`'s and
+# `md-test-measure`'s measurements for a module neither of them converts. The FRONTEND classpath is
+# shared (`FlexmarkClasspath.Coordinates`, whose own doc says why); the COMPILE lines are per lane.
+#
+# `ext.conf` D-mde-6 is the decision behind it — declared rather than routed around — and the
+# residue it leaves: this is a JVM-only artifact on a module claiming three platforms, which nothing
+# in the engine reports.
+md_ext_deps   := "--dependency org.nibor.autolink:autolink:0.6.0"
 
 # …and the extension suite's java-side denominator, `ext-test.conf`'s `includeGlobs` restated.
 #
@@ -157,7 +172,7 @@ md_ext_modules := "flexmark-ext-aside flexmark-ext-resizable-image flexmark-ext-
 # a directory here would put their `@Test`s in `test_discovery_guard`'s denominator and report a
 # SCOPE DECISION as tests the port LOST — the one failure that check must not have
 # (`ENGINE-LIMITS.md` M5). `java_test_count` takes `find` starting points, and a file is one.
-md_ext_test_src := "../ssg/original-src/flexmark-java/flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java"
+md_ext_test_src := "../ssg/original-src/flexmark-java/flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java ../ssg/original-src/flexmark-java/flexmark-ext-autolink/src/test/java/com/vladsch/flexmark/ext/autolink/MergeAutoLinkTest.java"
 
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
@@ -2009,9 +2024,12 @@ md-ext-measure:
     # read a structural 0 for the suite (CLAUDE.md §4.56's third occurrence).
     #
     # `ported/ssg-md/src_managed/test/scala` is deliberately NOT here: `ext-test.conf` D-mdet-1 chose
-    # an extension whose one plain `@Test` needs no `flexmark-test-util`, and adding that tree would
-    # put ssg-md-test's own 725 registrations on this lane's run.
-    DEPS="{{md_deps}} {{md_test_deps}}"
+    # extensions whose plain `@Test`s need no `flexmark-test-util`, and adding that tree would put
+    # ssg-md-test's own 725 registrations on this lane's run.
+    #
+    # `md_ext_deps` is this lane's and not the base's — see its own comment: the emitted extension
+    # code NAMES `org.nibor.autolink`, and the base names nothing from it.
+    DEPS="{{md_deps}} {{md_test_deps}} {{md_ext_deps}}"
     scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
       {{md_module}}/src_managed/main/scala \
       {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala \

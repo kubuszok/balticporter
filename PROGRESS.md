@@ -4004,7 +4004,10 @@ it ADDED to a lane, never the lane's total.
 | 6 | `ext-ins` | 9 | 7 | 0 | — | **NONE — every check count identical.** First `*JiraRenderer` in the port; it PORTS |
 | 7 | `ext-superscript` | 9 | 7 | 0 | — | **NONE — every check count identical** (second `*JiraRenderer`) |
 | 8 | `ext-gfm-issues` | 10 | 8 | 0 | — | `overload-risk` +1 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
+| 9 | `ext-autolink` | 4 | 2 | 0 | **16/16** | `dependency-coverage(declared)` **0 → 1** (`covered`), `overload-risk` +5, `catalog(unreached)` **17 → 16** ext / **24 → 21** test |
 
+Batch 1 totals: **9 modules of 29, 58 units, 0 errors, 17 of 17 tests passing**, `manifest` /
+`base-surface` / `port-map` 0 throughout, and `expected-lost` 0 on every wave.
 **THE FIRST THING THE BATCH BOUGHT IS A CATALOG ROW NOBODY HAD REACHED HERE.**
 `ext-youtube-embedded` is the first module in this port to write a `try`/`catch` at all — one
 `new URL(…)` under a `catch (MalformedURLException e) {}` — and `catalog(unreached)` fell **25 → 22**
@@ -4033,6 +4036,48 @@ accept rule says a LOSS takes no entry however cleanly it drains a lane — and 
 answer from the one the BASE gives its own 18 rows, which are carried as a counted residue. The
 honest state is 3 counted rows and a menu entry nobody selected, which is exactly what the two lanes
 now say.
+
+**THE THIRD-PARTY DEPENDENCY IS *DECLARED*, THE 2×2 ANSWERED `covered`, AND THE HAND PORT'S REGEX IS
+NOT COPIED.** `flexmark-ext-autolink` is the only module in the covered 29 importing anything outside
+`com.vladsch.flexmark`, `java.*` and the annotations jar — `org.nibor.autolink.{LinkExtractor,
+LinkSpan, LinkType}` at `0.6.0`, pinned in that module's own pom `<properties>`. The reference hand
+port dropped the module and substituted a regex; this port declares the artifact
+(`ext.conf` D-mde-6), for §1.5's reason (*a `Verdict.Depend` is answered by DECLARING the artifact,
+never by rewriting a call the dependency makes correct*) and §3.5's (*a hand port adjusts every
+caller by hand and may substitute; a mechanical port may not read that freedom as its own option* —
+already measured wrong once on this corpus, `ENGINE-LIMITS.md` K16, 27 → 47 errors). A regex is a
+DIFFERENT PROGRAM here: autolink implements URL/WWW/EMAIL scanners with bracket balancing and
+trailing-punctuation rules, and no instrument in this repository would have reported the divergence.
+
+`DependencyCheck`'s 2×2 is what makes that legible rather than an assertion —
+`dependency-coverage(declared)` **0 → 1**, cell **`covered`**, with **38 references in the ORIGINAL
+program and 38 in the EMITTED one, matched against the artifact's OWN CLASS LIST** and not derived
+from the coordinate string (§4.56 at a build coordinate). The frontend coordinate went into the ONE
+shared `FlexmarkClasspath.Coordinates` rather than a derived ext-only list, and the claim that costs
+the base nothing is measured rather than argued: `md-measure` and `md-test-measure` both read **0
+moved member digests, 0 errors, every count and every finding unchanged** across the change.
+
+**AND IT IS THE BATCH'S BEHAVIOURAL RESULT: `MergeAutoLinkTest`, 16 plain `@Test`, 16 of 16
+PASSING.** The milestone's whole argument at sixteen times the volume it had — these tests register
+an `AutolinkExtension` through the base's `Parser.Builder`, parse several documents, MERGE them
+through a `Formatter` and assert the markdown that comes out, so a registration that did not take or
+a `DataHolder` key the port renamed fails them. The lane now reads **17 of 17** at `expected-lost` 0.
+
+**THE RESIDUE IT LEAVES IS A PLATFORM CLAIM NOTHING CHECKS.** `autolink` is published for the JVM
+only — one jar, no Scala.js or Native cross-build — and this module inherits the all-platform default
+(§1.5: sge and ssg target every platform wherever possible). So the port DECLARES a JVM-only artifact
+while claiming three platforms, and **no instrument reports it**: `ArtifactDep` carries a `CrossKind`
+(which decides `%` against `%%`) and no per-platform availability at all, `PortabilityCheck`'s rules
+are about JDK families rather than third-party coordinates, and `dependency-coverage`'s three lanes
+ask whether a coordinate is USED rather than whether it EXISTS where the port says it runs. This is
+the SECOND instance on ssg-md and the first that cannot be answered by changing the emission: the
+first is `org.jetbrains:annotations` (the `Justfile`'s `md_deps` states it), which is a MARKER the
+port arguably should not emit at all, while this is library code the port genuinely calls.
+**Narrowing `targets` is not the answer** — it is a whole-PORT key covering every extension, and
+`[jvm]` would empty the rule list for all nine and collapse `portability(emitted)` 3 → 0 in one
+commit, which is §1(b)'s "fifteen baselines improving to zero" at this port's scale. What is owed is
+a per-platform availability on `ArtifactDep` and a check that compares it to `targets`; until then
+the claim is stated here and in D-mde-6 and is carried by nothing else.
 
 **THE `*JiraRenderer` QUESTION IS ANSWERED, AND THE ANSWER IS *IT PORTS*.** Eight of the 29 covered
 extensions ship one, and `flexmark-jira-converter` is out of scope AND one of the hand port's 28

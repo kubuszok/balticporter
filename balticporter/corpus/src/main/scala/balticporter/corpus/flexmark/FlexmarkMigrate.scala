@@ -89,10 +89,26 @@ object FlexmarkPort:
   * could report its absence.
   *
   * ==What is deliberately NOT here==
-  * `org.nibor.autolink`, which `flexmark-ext-autolink` needs — that module is milestone 2, and a
-  * coordinate resolved for a scope this port does not parse is a coordinate nothing can contradict.
   * `com.ibm.icu`, `commons-io` and `org.jsoup` reach only the converter modules, which are out of
   * scope entirely.
+  *
+  * `org.nibor.autolink` USED to be on that list, and its exclusion carried its own expiry date: *a
+  * coordinate resolved for a scope this port does not parse is a coordinate nothing can contradict*.
+  * Milestone 2 parses it — `flexmark-ext-autolink` is in `ext.conf`'s `includeGlobs` — so the
+  * condition has run out and the coordinate is here, at the version `flexmark-ext-autolink/pom.xml`
+  * declares in its own `<properties>` (`autolink.version` = 0.6.0; the parent pom manages nothing
+  * for it).
+  *
+  * ==Why ONE list and not one per source set==
+  * The alternative was a derived `FlexmarkExtClasspath` (main + autolink), on the model of
+  * [[FlexmarkTestClasspath]] (main + junit). It is rejected because the two cases are not alike: a
+  * TEST-scope coordinate must not be visible while modelling MAIN, which is a statement about
+  * scopes; a COMPILE-scope coordinate of one module in a port is visible to every source set that
+  * resolves against that module, which is what `ext-test.conf` does. Adding it here is therefore
+  * the same principle this file already states — *the three source sets of this library cannot be
+  * modelled against three different jars* — and it is one edit rather than two new objects. The
+  * base port gains a jar it never names, and that is a MEASURED claim rather than an argument:
+  * `md-measure` reads 0 moved member digests and every count flat across the change.
   *
   * The mechanism — the `cs` invocation, the stream merge, the jar-line filter and the COORDINATE
   * FINGERPRINT that makes a version bump refetch rather than silently reuse — is
@@ -100,9 +116,13 @@ object FlexmarkPort:
   */
 object FlexmarkClasspath:
 
-  /** exactly what the `flexmark-util-*` poms declare at compile scope. */
+  /** exactly what the poms of the modules IN SCOPE declare at compile scope — which is the twelve
+    * of `main.conf` and, since milestone 2's batch waves, the extension modules of `ext.conf` too.
+    * A module joining a scope is a coordinate list that may grow; a module NOT in any scope is a
+    * coordinate this list may not carry. */
   val Coordinates: List[String] = List(
     "org.jetbrains:annotations:24.0.1",
+    "org.nibor.autolink:autolink:0.6.0",
   )
 
   def cache(repoRoot: Path): Path = repoRoot.resolve("out/flexmark-classpath.txt")
