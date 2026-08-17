@@ -3978,7 +3978,10 @@ answer and the first extension should not), and its `AsideParserTest` is a plain
 `Parser`, `BasedSequence` and `SpecialLeadInHandler` and nothing else, so the suite can run against
 the BASE's main source set without a third base chain.
 
-| | |
+**The table below is the port AT THAT FIRST WAVE and is kept as the pattern's own measurement — the
+CURRENT port is the batch table under it.**
+
+| ext-aside, as the wave that established the pattern measured it | |
 |---|---|
 | units | **8 emitted Scala files** from 10 java (0 dropped, 0 injected) |
 | compile | **0 errors**, base tree and extension tree compiled TOGETHER on one invocation |
