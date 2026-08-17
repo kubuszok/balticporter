@@ -3705,9 +3705,14 @@ Three things this is worth reading for, none of them the 17:
   and `expected-annotation` are junit's own nesting, reproduced by applying the wrap OUTSIDE the
   teardown `try … finally` and the annotation's `intercept`. The one delta that was COUNTED — junit
   catches `Throwable`, MUnit's `intercept` catches `NonFatal` — is gone with the `intercept`. What
-  remains is three guards (`unsupported-member`, `unsupported-reference`, `expect-overload` /
-  `expect-message-overload`) and the `@ClassRule` exclusion, each still one row per site naming
-  itself;
+  remains is four guards (`unsupported-member`, `unsupported-reference`, `arming-outside-test`,
+  `expect-overload` / `expect-message-overload`) and the `@ClassRule` exclusion, each still one row
+  naming itself. The third is NEW and is the one the per-test guards could not ask: the accumulator
+  is a local of the test it governs, so an arming in a HELPER, a field initialiser or a nested class
+  is in no test body at all — every test in the suite then reads as *never touches the rule* and is
+  left alone silently. It refuses the CLASS, because a test that arms the rule itself AND calls such
+  a helper would be modelled with FEWER matchers than java accumulated. 0 rows on this corpus, which
+  is exactly why an unstated exclusion would never have been found;
 - **the state is a LIST because the cheap version is wrong in the DANGEROUS direction.** An arming
   that executes twice appends twice and java then requires BOTH matchers; a single `var` holding the
   last would PASS where java FAILED. No site on this corpus arms twice — the throw is what ends the

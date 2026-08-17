@@ -784,6 +784,30 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(clue(out).contains("thrown.expect"))
   }
 
+  test("an arming in a HELPER refuses the WHOLE SUITE — no test body holds that reference") {
+    // The per-test guards are asked of a BODY and cannot see this: the arming is in no test body, so
+    // every test reads as *never touches the rule* and is left alone silently, with the
+    // `thrown.expect` still standing in emitted code that compiles and does nothing. The refusal is
+    // class-wide rather than per-site because a test that arms the rule ITSELF and also calls the
+    // helper would be modelled with FEWER matchers than java accumulated — the direction that PASSES
+    // where java FAILED.
+    val (out, ph) = emitWithRules(ruleSuite(
+      """  private void arm() { thrown.expect(IllegalStateException.class); }
+        |  @Test public void a() {
+        |    arm();
+        |    boom();
+        |  }
+        |  @Test public void b() {
+        |    thrown.expect(IllegalStateException.class);
+        |    boom();
+        |  }
+        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    assertEquals(clue(guards(ph)), List("arming-outside-test"))
+    // …and BOTH tests are left alone, `b` included: the refusal is the suite's.
+    assert(!clue(out).contains("bpExpected"), out)
+    assert(out.contains("thrown.expect"), out)
+  }
+
   test("a suite declaring @After CONVERTS, with the rule OUTSIDE the teardown — JUnit's nesting") {
     // `BlockJUnit4ClassRunner.methodBlock` wraps `withRules` around `withAfters`, so a teardown that
     // throws is compared against the expectation in java. That was a REFUSAL under the `intercept`

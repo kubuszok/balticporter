@@ -849,10 +849,43 @@ final class TestFrameworkTransform(
       // …and the `ExpectedException` @Rule FIELDS this class declares. Matched on the field's own
       // TYPE and not on the annotation alone: `@Rule` is every rule class junit has, and this phase
       // translates exactly one of them.
-      val ruleFields = cd2.body.collect {
+      val ruleFields0 = cd2.body.collect {
         case v: Tree.ValDef
             if hasAnn(v.symbol, RuleAnn) && nameOf(v.tpt.tpe) == ExpectedExceptionCls => v.symbol
       }.toSet
+      // …and the rule is only MODELLABLE where every arming is inside the test it governs, because
+      // the accumulator [[expectedException]] arms is a LOCAL of that test's own frame.
+      //
+      // The per-test guards ask that of the body they are handed and CANNOT ask it here: a helper
+      // method, a field initialiser or a nested class arming the rule is a reference no test body
+      // contains, so every test in the class reads as *never touches the rule* and is left alone —
+      // silently, and with the arming still standing in emitted code that compiles and does nothing.
+      // Refusing the CLASS rather than the sites is the conservative arm and is not tidiness: a
+      // test that arms the rule ITSELF and also calls such a helper would be modelled with FEWER
+      // matchers than java accumulated, which is the direction that PASSES where java FAILED.
+      //
+      // Counted as a DIFFERENCE of two standard walks — every reference the class holds, less every
+      // reference its own `@Test` bodies hold — so growing a node kind cannot open a hole here
+      // (`CLAUDE.md` §3). No corpus source declares the shape, which is exactly why an unstated
+      // exclusion would never be found.
+      val ruleFields =
+        if ruleFields0.isEmpty then ruleFields0
+        else
+          def refs(n: Int, t: Term) = if isRuleRef(t, ruleFields0) then n + 1 else n
+          val all   = StandardTraversal.scanClassDef(cd2, 0)(refs)
+          val mine  = cd2.body.collect { case d: Tree.DefDef if isAnnotated(d, TestAnn) => d.rhs }
+                        .flatten.map(b => StandardTraversal.scanTerm(b, 0)(refs)).sum
+          if all <= mine then ruleFields0
+          else
+            found += Finding(s"$ExpectedExceptionCls(arming-outside-test)", cd.origin, Fix.EngineRule,
+              s"${all - mine} reference(s) to this suite's `ExpectedException` rule field stand " +
+              "OUTSIDE its own `@Test` methods — in a helper, a field initialiser or a nested " +
+              "class. The rule's matcher list is modelled as a local of the test it governs, so an " +
+              "arming made anywhere else is not in that frame and would leave the test requiring " +
+              "FEWER matchers than java accumulated. Every test in this suite is left alone rather " +
+              "than modelled from an incomplete expectation; inline the arming into each test, or " +
+              "keep this suite on the JVM/JUnit path.")
+            Set.empty[SymId]
       // …and `@ClassRule` is REPORTED, never quietly taken for `@Rule`. A method rule wraps each
       // test and a CLASS rule wraps the whole class run, so the region an `expect` arms is a
       // different one and `intercept` in a test body is not its image. Nothing in the corpus writes
@@ -994,7 +1027,10 @@ final class TestFrameworkTransform(
     *  8. **ANY OTHER USE OF THE FIELD.** `expectCause`, `handleAssertionErrors`, a `thrown` passed as
     *     an argument or assigned — each is a rule state this lowering does not model. GUARD: every
     *     reference to the field must be the receiver of an `expect`/`expectMessage` call
-    *     (`unsupported-member` / `unsupported-reference`).
+    *     (`unsupported-member` / `unsupported-reference`). **And that question is asked of the CLASS
+    *     as well as of each body**, because a reference in a helper, a field initialiser or a nested
+    *     class is in NO test body and would otherwise leave every test reading as *never touches the
+    *     rule* — see `arming-outside-test`, filed where the rule FIELDS are found.
     *  9. **`@After` AND `@Test(expected = …)` ORDERING.** JUnit's rules are the OUTERMOST statement
     *     (`BlockJUnit4ClassRunner.methodBlock` wraps `withRules` around `withAfters` around
     *     `withBefores` around `possiblyExpectingExceptions`). SHAPE: this wrap is applied to the
