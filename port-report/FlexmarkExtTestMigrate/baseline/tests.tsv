@@ -1,4 +1,5 @@
 #suite	test	status
+ssg.md.ext.admonition.AdmonitionParserTest	test_escape	pass
 ssg.md.ext.aside.AsideParserTest	test_escape	pass
 ssg.md.ext.autolink.MergeAutoLinkTest	test_HtmlPreservationAutoLink01	pass
 ssg.md.ext.autolink.MergeAutoLinkTest	test_HtmlPreservationAutoLink02	pass

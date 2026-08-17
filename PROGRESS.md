@@ -4155,6 +4155,26 @@ they are where the 2b siblings become admissible because their dependency is alr
 | # | extension | java | units | errors | tests | residue it added |
 |---|---|---:|---:|---:|---:|---|
 | 10 | `ext-gfm-users` | 10 | 8 | 0 | — | `overload-risk` +1 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
+| 11 | `ext-admonition` | 11 | 9 | **3 → 0** | 18/18 | `overload-risk` +20 (13 `VarargPhaseSpan`, 7 `GenericTieBreak`), `omissions` **0 → 1** |
+
+**AND THE FIRST BATCH-2 EXTENSION FOUND AN ENGINE GAP, at eleven java files.** `ext-admonition`
+states three of its `DataKey` defaults as `new DataKey<>("…", AdmonitionExtension::getQualifierTypeMap)`
+— a `Supplier`-shaped SAM filled by a static factory, which is the ordinary way a library says
+*compute this default on demand* — and the port emitted the qualified NAME for it, because
+`Referent`'s own doc asserted that *"a qualified name is eta-expanded by scala against the target,
+exactly as javac did it"*. True of every arity but ZERO: Scala 3 refuses to eta-expand a nullary
+method, so `Type.m` is a call with its argument list left off. Three `must be called with ()
+argument` errors, closed as `ENGINE-LIMITS.md` **G32** in its own commit, and that fix is FLAT on all
+fourteen `measure-all` lanes — 0 changed member digests, every error baseline unchanged — so the
+whole of its effect is these three sites. It is also the one place a `Type::name` reference can be
+nilary at all: an unbound instance reference to a nilary method has arity ONE at the function, the
+receiver being the SAM's first parameter (JLS 15.13.3).
+
+`omissions` **0 → 1** is a dropped `@SuppressWarnings` on `AdmonitionCollectingVisitor`, and it takes
+no entry: which annotations bear behaviour is per-library policy (`preservedAnnotations`), and this
+one bears none — the honest state is one counted row. `AdmonitionParserTest` is the batch's first
+admitted suite and it asserts the registration exactly as `AsideParserTest` does, through the base's
+`Parser.Builder` and out again through `Parser.SPECIAL_LEAD_IN_HANDLERS`.
 
 **THE PER-EXTENSION CHECKLIST**, for the waves that follow:
 

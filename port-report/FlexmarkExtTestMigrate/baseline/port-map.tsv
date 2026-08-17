@@ -1,5 +1,6 @@
-# balticporter port map	schema=3	module=ssg-md-ext-test	engine=balticporter/0.1.0-SNAPSHOT	sources=5438dbc4ca6efced	files=2	policy=a9366a29e9f1e4ab
+# balticporter port map	schema=3	module=ssg-md-ext-test	engine=balticporter/0.1.0-SNAPSHOT	sources=1b082f301419ae22	files=3	policy=a9366a29e9f1e4ab
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
+type	com.vladsch.flexmark.ext.admonition.AdmonitionParserTest	ssg.md.ext.admonition.AdmonitionParserTest	Renamed	-		0		flags=final form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.vladsch.flexmark.ext.aside.AsideParserTest	ssg.md.ext.aside.AsideParserTest	Renamed	-		0		flags=final form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.vladsch.flexmark.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=FORMATTER,OPTIONS,PARSER,assertMerged
 type		balticporter.runtime.JavaCollection	Added	-		0		
@@ -13,6 +14,9 @@ type		balticporter.runtime.JavaOptionalDouble	Added	-		0
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
+member	com.vladsch.flexmark.ext.admonition.AdmonitionParserTest#<stmt1>	ssg.md.ext.admonition.AdmonitionParserTest#<stmt1>	Renamed	-	flexmark-ext-admonition/src/test/java/com/vladsch/flexmark/ext/admonition/AdmonitionParserTest.java	37	88743a7dfbc93b78	
+member	com.vladsch.flexmark.ext.admonition.AdmonitionParserTest#escape(String,Parser)	ssg.md.ext.admonition.AdmonitionParserTest#escape(String,Parser)	Renamed	-	flexmark-ext-admonition/src/test/java/com/vladsch/flexmark/ext/admonition/AdmonitionParserTest.java	14	a5312ac2a790b2cc	
+member	com.vladsch.flexmark.ext.admonition.AdmonitionParserTest#unEscape(String,Parser)	ssg.md.ext.admonition.AdmonitionParserTest#unEscape(String,Parser)	Renamed	-	flexmark-ext-admonition/src/test/java/com/vladsch/flexmark/ext/admonition/AdmonitionParserTest.java	25	4321ab1990556943	
 member	com.vladsch.flexmark.ext.aside.AsideParserTest#<stmt1>	ssg.md.ext.aside.AsideParserTest#<stmt1>	Renamed	-	flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java	37	ece0bc41a74572f0	
 member	com.vladsch.flexmark.ext.aside.AsideParserTest#escape(String,Parser)	ssg.md.ext.aside.AsideParserTest#escape(String,Parser)	Renamed	-	flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java	14	9459eb10ad60af31	
 member	com.vladsch.flexmark.ext.aside.AsideParserTest#unEscape(String,Parser)	ssg.md.ext.aside.AsideParserTest#unEscape(String,Parser)	Renamed	-	flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java	25	71e43dfd15b69ea3	
