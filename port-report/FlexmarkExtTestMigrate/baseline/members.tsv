@@ -84,3 +84,14 @@ ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTes
 ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#OPTIONS	val	24d0227525e908a8
 ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#assertMerged(boolean,String,Array<String>)	def	8f22491ab4f87d64
 ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#content	val	f2229d70e18abdb7
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest	class	b4431fda300b9d4d
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest#<stmt1>	stmt	136a1205eb3850da
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest#<stmt2>	stmt	c8adc398a56a27e2
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest#<stmt3>	stmt	494db965d5291d17
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest#<stmt4>	stmt	b77b3fe53b48ea08
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest#FORMATTER	val	83ed05afa78f3bb1
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest#OPTIONS	val	cb58780eb440198d
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest#PARSER	val	c9d590f633d7c390
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest#assertMerged(String,Array<String>)	def	31dc202e3dd69678
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest#testIdAttributeConflict()	def	6e4851e3a29f9658
+ssg.md.ext.macros.MergeMacrosTest	ssg.md.ext.macros.MergeMacrosTest#testUndefinedIdConflict()	def	cdd24f0a4c551a25
