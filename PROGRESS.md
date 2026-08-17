@@ -4160,6 +4160,7 @@ they are where the 2b siblings become admissible because their dependency is alr
 | 13 | `ext-jekyll-front-matter` | 9 | 7 | 0 | — | `overload-risk` +2 (`GenericTieBreak`) — **the first 2b module IN** |
 | — | `ext-gfm-tasklist` | 12 | — | — | — | **SKIPPED — `ENGINE-LIMITS.md` C15**, measured and reverted |
 | 14 | `ext-jekyll-tag` | 13 | 11 | **1 → 0** | 21/21 | `overload-risk` +10, `base-surface` +1, `omissions` +1, `idiom(refused)` +1 |
+| 15 | `ext-abbreviation` | 14 | 12 | 0 | 27/27 | `overload-risk` +9, `omissions` +2 (two `@SuppressWarnings`) — **the second 2b module, on a REAL source dependency** |
 
 **AND THE BATCH SKIPPED ONE, WHICH IS THE FIRST TIME A MODULE HAS BEEN MEASURED AND TAKEN BACK OUT.**
 `ext-gfm-tasklist` emits at **0 compile errors with every instrument reading green**, and it is the
