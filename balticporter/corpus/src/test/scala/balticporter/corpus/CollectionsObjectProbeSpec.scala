@@ -157,3 +157,51 @@ class CollectionsObjectProbeSpec extends PortSuite:
     assertNotEmits(p, "JavaCollections.setContains(")
     assertNotEmits(p, "JavaCollections.mapGet(")
   }
+
+  /** face 4 — the PROBE AT A PROPER ANCESTOR, `ENGINE-LIMITS.md` K24's third face.
+    *
+    * `objectProbe` above is exact BECAUSE `java.lang.Object` is the top of java's reference
+    * hierarchy — which is precisely why it is silent about every OTHER supertype, and java's
+    * `Object` formal admits all of them. `Map<Tag, String>.containsKey(node)` at an `Nd` is ordinary
+    * java: the lookup is by VALUE and a probe of an unrelated type is meant to MISS. Scala's
+    * `Map[K, V]` is INVARIANT in `K`, so the retyped receiver's member no longer takes it and only
+    * scalac ever sees it — the probe is not at `Object`, so `objectProbe` declines correctly, and
+    * nothing here is a wildcard, so `wildcardMapCall` declines correctly too.
+    *
+    * Answered by walking THIS RUN's own `extends` edges up from the ELEMENT type: reaching the
+    * probe's head proves the probe is NOT a subtype of the element, so the ordinary rewrite could
+    * never have been right. The two negatives are what pin it — the SAME hierarchy read at equal
+    * types, and read the other way round. */
+  private val ancestry =
+    """package demo;
+      |import java.util.*;
+      |class Nd { }
+      |class Tag extends Nd { }
+      |class Probes {
+      |  boolean seen(HashMap<Tag, String> m, Nd node)   { return m.containsKey(node); }
+      |  String  find(HashMap<Tag, String> m, Nd node)   { return m.get(node); }
+      |  boolean held(HashSet<Tag> s, Nd node)           { return s.contains(node); }
+      |  boolean exact(HashMap<Tag, String> m, Tag tag)  { return m.containsKey(tag); }
+      |  boolean narrow(HashMap<Nd, String> m, Tag tag)  { return m.containsKey(tag); }
+      |}
+      |""".stripMargin
+
+  test("face 4 — a probe at a PROPER ANCESTOR of the key takes the `Any`-keyed helper") {
+    val p = port(ancestry, new CollectionsTransform)
+    assertEmits(p, "balticporter.runtime.JavaCollections.mapContainsKey(m, node)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(m, node)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.setContains(s, node)")
+    // NOT a cast to the key type, which compiles and means something else: java's probe MISSES
+    // where `asInstanceOf` throws.
+    assertNotEmits(p, "node.asInstanceOf[demo.Tag]")
+  }
+
+  test("face 4's negatives — an EQUAL probe and a NARROWER one both keep the ordinary rewrite") {
+    val p = port(ancestry, new CollectionsTransform)
+    // equal: scala's own member takes it, and routing through the helper would be emitted text for
+    // nothing on every port in the corpus (§5's widening rule).
+    assertEmits(p, "m.contains(tag)")
+    // narrower: the walk runs from the ELEMENT up, so a key that does not descend from the probe
+    // never reaches it — `Map[Nd, String].contains(aTag)` is exactly what scala accepts.
+    assertNotEmits(p, "JavaCollections.mapContainsKey(m, tag)")
+  }

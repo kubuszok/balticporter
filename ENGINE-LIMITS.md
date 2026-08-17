@@ -7680,6 +7680,40 @@ positive, a negative where the probe SPELLS a wildcard-bearing key (jbump's shap
 wildcard deep in the VALUE (libGDX's shape), and a negative on `Map<Class<String>, String>`, whose key
 is a nested APPLIED type and no wildcard.*
 
+**AND A FOURTH FACE, WHICH THE GUARD'S OWN EXACTNESS IS WHY IT MISSED: a probe at a PROPER
+ANCESTOR — ssg-md-ext 1 → 0, and BYTE-IDENTICAL on all fourteen lanes.** `objectProbe` is exact
+BECAUSE `java.lang.Object` is the top of java's reference hierarchy; that is what makes it need no
+conformance oracle, and it is also precisely why it says nothing about every OTHER supertype. Java's
+`Object` formal admits all of them, and `Map<JekyllTag, String>.containsKey(node)` at a `Node` is
+ordinary java — the lookup is BY VALUE and a probe of an unrelated type is meant to MISS. Scala's
+`Map[K, V]` is INVARIANT in `K`, so the retyped receiver's member no longer takes it:
+
+```
+Found: (node : ssg.md.util.ast.Node)   Required: ssg.md.ext.jekyll.tag.JekyllTag
+```
+
+Both existing guards decline CORRECTLY — the probe is not at `Object`, and nothing here is a
+wildcard — which is what makes this a fourth condition and not a widening of either.
+
+**It still needs no subtype oracle, and it is not an over-approximation.** `ancestorProbe` walks THIS
+RUN's own `extends` edges UP FROM THE ELEMENT TYPE and answers true only where it reaches the probe's
+head. Reaching it PROVES the probe is not a subtype of the element (the two are distinct by the
+guard's own first test), so the ordinary rewrite could never have been right there; and a hierarchy
+the walk cannot account for — an external parent, a chain past the fuel — takes the ordinary rewrite
+exactly as before, which is §4.56's conservative arm. That is the difference from the third
+condition, whose equality test admits a documented 2 members it did not need.
+
+**Measured**: the one `IncludeNodePostProcessor#process` site, `ssg-md-ext` **1 → 0** with the module
+that carries it in scope; and with it OUT of scope, `just measure-all` reads **0 changed member
+digests on all fourteen lanes, every error baseline unchanged and every finding identical** — so the
+guard's whole effect in this corpus is the site it was written for. That is the shape §5 asks a
+widened guard for, and here the read is stronger than usual: a probe at a proper ancestor is idiomatic
+java that no port had happened to write until the fourteenth module of one milestone.
+
+*Fix kind: (a) — `CollectionsTransform.ancestorProbe`, OR-ed into `probeMapCall` and `probeSetCall`
+beside `objectProbe`. Two cells in `CollectionsObjectProbeSpec` (face 4 and its two negatives — the
+SAME hierarchy read at equal types, and read the other way round).*
+
 ---
 
 ### K25. A member that OVERRIDES A CLASS FILE may not have its formals moved — **ssg-md 69 → 67, `collection-boundary` 26 → 22, every other port flat. CLOSED, with two errors it made LOUD**

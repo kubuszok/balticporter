@@ -5187,12 +5187,50 @@ final class CollectionsTransform(
     objectSym != SymId.None && headSym(arg.tpe).contains(objectSym) &&
       want.exists(w => w != TypeRepr.NoType && !headSym(w).contains(objectSym))
 
+  /** …and the THIRD face of the SAME seam: a probe at a PROPER ANCESTOR of the element type.
+    *
+    * [[objectProbe]] asks its question with no conformance oracle because `java.lang.Object` is the
+    * TOP of java's reference hierarchy — that is what makes it exact. It is therefore silent about
+    * every OTHER supertype, and java's `Object` formal admits all of them:
+    * `Map<JekyllTag, String>.containsKey(node)` at a `Node` is ordinary java (the lookup is BY VALUE
+    * and a probe of an unrelated type is meant to MISS), and scala's `Map[K, V]` is INVARIANT in `K`,
+    * so the retyped receiver's member no longer takes it. `Found: Node / Required: JekyllTag`, which
+    * only scalac ever sees — the probe is not at `Object`, so `objectProbe` correctly declines, and
+    * `wildcardMapCall` correctly declines too because nothing here is a wildcard.
+    *
+    * The question is answered STRUCTURALLY and needs no subtype test (CLAUDE.md §4.56): it walks
+    * THIS RUN's own `extends` edges from the ELEMENT type up, and answers true only where it reaches
+    * the PROBE's head. That is not an over-approximation in either direction — if the element type
+    * descends from the probe's type then the probe is provably not a subtype of the element (they
+    * are distinct here), so the ordinary rewrite could never have been right; and a probe the walk
+    * cannot account for takes the ordinary rewrite exactly as before, which is the conservative arm
+    * §4.56 asks for when a parse cannot answer.
+    *
+    * NOT a cast to the element type, for [[objectProbe]]'s reason and with its measurement:
+    * `node.asInstanceOf[JekyllTag]` inserts a `checkcast` and THROWS where java's probe answers
+    * `false`. The helper widens the PROBE POSITION, which is erased. `ENGINE-LIMITS.md` K24's third
+    * face. */
+  private def ancestorProbe(arg: Term, want: Option[TypeRepr]): Boolean =
+    (headSym(arg.tpe), want.flatMap(headSym)) match
+      case (Some(a), Some(e)) if a != SymId.None && e != SymId.None && a != e =>
+        def parentsOf(c: Tree.ClassDef): List[SymId] = c.parents.flatMap {
+          case tt: TypeTree => headSym(tt.tpe)
+          case term: Term   => headSym(term.tpe)
+        }
+        // fuel-bounded, and an EXHAUSTED walk answers FALSE — the conservative arm here, since a
+        // `true` routes the call to the helper and the caller's default is the ordinary rewrite.
+        def reaches(id: SymId, fuel: Int): Boolean =
+          fuel > 0 && classDefsBySym.get(id).exists(c =>
+            parentsOf(c).exists(s => s == a || reaches(s, fuel - 1)))
+        reaches(e, 64)
+      case _ => false
+
   private def probeMapCall(name: String, key: Term, recv: Term)(using Program): Boolean =
     CollectionsTransform.WildcardMapMembers.contains(name) && wildcardMapSym(name) != SymId.None &&
-      objectProbe(key, keyType(actualOf(recv)._1))
+      (objectProbe(key, keyType(actualOf(recv)._1)) || ancestorProbe(key, keyType(actualOf(recv)._1)))
 
   private def probeSetCall(x: Term, recv: Term)(using Program): Boolean =
-    objectProbe(x, elemType(actualOf(recv)._1))
+    objectProbe(x, elemType(actualOf(recv)._1)) || ancestorProbe(x, elemType(actualOf(recv)._1))
 
   private def wildcardMapSym(name: String): SymId = name match
     case "get"         => mapGetSym
