@@ -787,6 +787,26 @@ object JavaCollections:
       override def isEmpty: Boolean   = m.isEmpty
       override def clear(): Unit      = m.clear()
 
+  /** a class the port DECLARES that kept java's `Map.Entry` as its parent, at the `Tuple2` slot the
+    * mapping gave every USE of that interface — `ENGINE-LIMITS.md` K5.7's other half.
+    *
+    * The two halves of that entry are about different things and only one of them is a refusal.
+    * `Tuple2` cannot BE a parent (it is final, takes its components in its constructor, and has no
+    * write-through member), so a class implementing `Map.Entry` keeps java's interface — and its
+    * VALUE then meets a slot the mapping already retyped to a pair. A projection is a COPY, and a
+    * copy of an entry whose `setValue` writes through is exactly what K2 refuses: the write would
+    * succeed and change nothing.
+    *
+    * What licenses it here is a CAPABILITY the caller has already checked, never this helper's own
+    * opinion: `CollectionsTransform.detachedEntries` inserts this call only where the class's own
+    * `setValue` — the library's, read before any substitution of this phase's — unconditionally
+    * throws. There is then no write-through to lose, and the value really IS a detached pair.
+    *
+    * ONE evaluation of the argument, which is why this is a helper and not `(e.getKey, e.getValue)`
+    * spelled at the site: the term at such a slot is routinely a `new` or a call, and duplicating it
+    * is `CLAUDE.md` §4.4's compound-assignment shape one position over. */
+  def entryToPair[K, V](e: java.util.Map.Entry[K, V]): (K, V) = (e.getKey, e.getValue)
+
   /** the CONSUMER direction: a `Buffer` the port holds, at a class file's `java.util.List` FORMAL.
     *
     * A live view, for the reason the whole family is: java's callee may KEEP the collection — an

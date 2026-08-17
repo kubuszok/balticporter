@@ -3884,7 +3884,7 @@ keeps the refusal, which is what makes the regression invisible to this corpus a
 the two shapes are spec'd rather than measured. *Fix kind: (a) engine.*
 
 **…AND `Tuple2` IS EXACT AT THE SLOT FOR AN ENTRY THAT HAS NO WRITE-THROUGH — the refusal is about a
-CAPABILITY and two of the corpus's rows have none. DESIGNED at wave 14, not built; 2 errors.**
+CAPABILITY and two of the corpus's rows have none. BUILT at wave 15: ssg-md 13 → 11.**
 
 The entry above is about `Tuple2` AS A PARENT, and every word of it holds. It is silent about a
 `Tuple2` AT A SLOT, which is where ssg-md's two remaining `InexpressibleParent` errors are:
@@ -3912,9 +3912,36 @@ refusal it already is. The guard is the same SIGNATURE test the correction above
 decide whether to SUBSTITUTE a throw, here to decide whether one is already there — which is what
 makes it one derivation rather than a second opinion about the same member.
 
-*Fix kind: (a) engine, DESIGNED and not built: 2 errors on ssg-md (`OrderedMap#getEntry`,
-`OrderedMultiMap#getEntry`) and 0 elsewhere in the corpus, so it wants a spec pair (throws → coerce,
-delegates → refuse and count) more than it wants a measurement.*
+**BUILT, and THREE things the build had to decide that the design did not say.** The projection is
+`JavaCollections.entryToPair`, a runtime helper rather than `(v.getKey, v.getValue)` written at the
+site: the term at such a slot is routinely a `new` or a call, and spelling the projection inline
+evaluates it TWICE — `CLAUDE.md` §4.4's compound-assignment row one position over, and a defect
+neither the compile nor any count would show. The ancestry walk is TRANSITIVE, because flexmark's own
+second implementor reaches the interface through one it declares (`Pair implements Paired`,
+`Paired extends Map.Entry`) and §4.56's fast-path rule says a test written for the shape in front of
+you answers for that shape alone. And the EXCEPTION CLASS is deliberately NOT pinned: what licenses
+the projection is that no write can happen, which a body whose first act is a throw cannot do
+whatever it throws — the same `Pair` throws an `IllegalStateException` where `MapEntry` throws
+`UnsupportedOperationException`, for one contract.
+
+**And the capability is read off the ORIGINAL units, which is the one way this could have been
+self-confirming.** `refuseOnTarget` substitutes java's optional-operation throw at exactly this
+member for an entry the mapping BROKE — liqp's `Sort$ComparableMapEntry`, which DELEGATES. Read off
+the mapped tree, that throw is indistinguishable from the library's own, and the phase's own refusal
+would license the phase's own projection: an entry whose java writes through, detached, with a green
+compile, no count moving and no test in the corpus to see it. So the derivation runs in `run` before
+any tree is mapped, and the spec pins the shape rather than the ordering, since the ordering has no
+observable of its own.
+
+*Fix kind: (a) engine, BUILT. **ssg-md 13 → 11** (`OrderedMap#getEntry`, `OrderedMultiMap#getEntry`),
+4 member digests — the two members and their two enclosing classes — and every check count FLAT,
+which is the honest reading and not an omission: `collection-boundary`'s two `InexpressibleParent`
+rows are about the PARENT, which is still retained and still counted, and no lane was ever counting
+the SLOT. `CollectionsDetachedEntrySpec` — three positives (the projection, the parent that stays,
+and the transitive hop with the other exception class) and four negatives, of which "an entry that
+WRITES THROUGH", "a CONDITIONAL refusal" and "a class that declares NO `setValue`" are the capability
+and "the phase's OWN substituted throw" is the self-confirmation above. Both positives verified
+FAILING with the derivation gated off.*
 
 **The transferable half is the middle row of that table.** A `dropMethods` key that removes a member
 an emitted parent DECLARES leaves the class abstract, and nothing in the engine reports it: it is

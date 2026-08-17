@@ -498,6 +498,15 @@ final class CollectionsTransform(
     * pass a no-op by arithmetic on every port that does not. */
   private var uninheritableSyms: Set[SymId] = Set.empty
 
+  /** …and the classes among them whose value at the TARGET's own slot really is a detached one,
+    * with the target FQN it may be projected to — see [[detachedEntriesIn]]. EMPTY unless the
+    * program declares such a class AND the class already refuses the write, so the projection
+    * declines by arithmetic on every port that does neither. */
+  private var detachedEntries: Map[SymId, String] = Map.empty
+
+  /** `JavaCollections.entryToPair` — the projection [[detachedEntries]] licenses. */
+  private var entryToPairSym: SymId = SymId.None
+
   /** `java.lang.UnsupportedOperationException`, as this run's own type — see
     * [[CollectionsTransform.UnsupportedOnTarget]]. */
   private var unsupportedOpTpe: TypeRepr = TypeRepr.NoType
@@ -760,6 +769,7 @@ final class CollectionsTransform(
       .map(n => n -> mint(n, s"${CollectionsTransform.JavaEnumSetFqn}.$n")).toMap
     putSym       = mint("put", "put")     // scala `mutable.Map.put`: returns the PREVIOUS value
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
+    entryToPairSym = staticSyms.getOrElse("entryToPair", SymId.None)
     fromJavaSym  = staticSyms.getOrElse("fromJava", SymId.None)
     toJavaSym    = staticSyms.getOrElse("toJava", SymId.None)
     toStreamSym  = staticSyms.getOrElse("toStream", SymId.None)
@@ -794,6 +804,10 @@ final class CollectionsTransform(
     uninheritableSyms = program.symbols.all.collect {
       case s if typeMap.get(s.fullName).exists((tgt, _) => CollectionsTransform.UninheritableTargets(tgt)) => s.id
     }.toSet
+    // …and the half of that refusal that is not one. Read off the ORIGINAL units, before
+    // `restoreUninheritableParents` retains a parent and before this phase substitutes any body:
+    // the licence is the LIBRARY's own refusal to write, and a throw this phase wrote is not it.
+    detachedEntries = detachedEntriesIn(summon[Program])
     parentClash = declaredParentKinds(summon[Program])
     superDefaults.clear()
     val units    = program.units.map(u =>
@@ -3533,6 +3547,14 @@ final class CollectionsTransform(
       // java's `Map` has no `stream()`, so no valid java sends one to such a slot — the same
       // asymmetry the `JavaCollection` row above records.
       case Some(Kind.Seq | Kind.Stack | Kind.Set) if wantsStream && toStreamSym != SymId.None => toStreamSym
+      // …and the RETAINED PARENT's own slot (K5.7's other half). The value is a class this program
+      // declares that kept java's `Map.Entry`, and the slot is the `Tuple2` the mapping gave every
+      // USE of that interface. `from` is `None` here by construction — `declaredParentKinds` drops
+      // an uninheritable target — so this arm cannot shadow one above it. The capability is decided
+      // in [[detachedEntriesIn]], off the LIBRARY's own body, never here.
+      case _ if entryToPairSym != SymId.None &&
+                got.flatMap(detachedEntries.get).exists(tgt =>
+                  wants.flatMap(p.symbolOf).exists(_.fullName == tgt))            => entryToPairSym
       case _                                                                          => SymId.None
     if factory == SymId.None then actual
     else
@@ -4498,6 +4520,104 @@ final class CollectionsTransform(
     case TypeRepr.AppliedType(_, a :: _) => Some(a)
     case _                               => scala.None
 
+  /** WHICH classes with a RETAINED parent hold a value the target can be at a SLOT — K5.7's other
+    * half, and the one that is not a refusal.
+    *
+    * [[restoreUninheritableParents]] keeps java's `Map.Entry` on a class implementing it, because
+    * `Tuple2` cannot BE a parent. That says nothing about the class's VALUE meeting the `Tuple2`
+    * slot every USE of the interface was retyped to (`Map.Entry<K,V> getEntry(int)`), and the
+    * projection `(getKey, getValue)` there is a COPY — precisely what K2 refuses, because a later
+    * `setValue` on the copy would succeed and write nothing.
+    *
+    * The refusal is about a CAPABILITY, and a class may have none. `MapEntry.setValue` is
+    * `throw new UnsupportedOperationException()` in the library's own source, `Pair.setValue` throws
+    * an `IllegalStateException`: java's own optional-operation refusal, written at the very member
+    * the copy would detach. There is then no write-through to lose and the copy is EXACT — nothing
+    * approximated, nothing guessed. Where the member really does write, the projection is
+    * `CLAUDE.md` §4.4's silent defect and the seam stays the counted refusal it already is.
+    *
+    * Three things this asks, and each rules out a class that would be wrong to project:
+    *
+    *   - the class reaches a target in [[CollectionsTransform.UninheritableTargets]] through its
+    *     parents, TRANSITIVELY, because the `implements` clause may sit on an interface the library
+    *     declares — flexmark's `Pair implements Paired`, `Paired extends Map.Entry` — and a walk
+    *     written for the shape in front of you is this file's own fast-path hazard (§4.56);
+    *   - EVERY member the target cannot carry ([[CollectionsTransform.UnsupportedOnTarget]], by
+    *     SIGNATURE — the same `MemberSig` test [[declaresUnimplementable]] reads for the opposite
+    *     purpose) is answered by a body that throws before it does anything else. A class that
+    *     declares NONE of them is abstract at that member and DECLINES, which is the conservative
+    *     arm: an implementor could still write through;
+    *   - the answering declaration is the NEAREST one, self then parents, so a subclass that
+    *     RESTORES the write is not read through its refusing base.
+    *
+    * The EXCEPTION CLASS is deliberately not pinned. What licenses the projection is that no write
+    * can happen, and a body whose first act is to throw cannot perform one whatever it throws —
+    * `Pair` is the corpus's own evidence that a library picks a different exception for the same
+    * contract.
+    *
+    * Read in [[run]] over the ORIGINAL units, which is not a convenience: this phase's own
+    * [[refuseOnTarget]] substitutes a throw at exactly this member, so reading the mapped tree would
+    * let the phase's refusal license its own projection — the port would then detach an entry whose
+    * java writes through, and the only evidence would be a test. */
+  private def detachedEntriesIn(p: Program): Map[SymId, String] =
+    if uninheritableSyms.isEmpty then Map.empty
+    else
+      given Program = p
+      def tpeOf(x: Term | TypeTree): TypeRepr = x match
+        case t: TypeTree => t.tpe
+        case t: Term     => t.tpe
+      val classes = p.units.flatMap(StandardTraversal.allClassDefs)
+      val byId    = classes.map(cd => cd.symbol -> cd).toMap
+      def parentsOf(cd: Tree.ClassDef): List[SymId] = cd.parents.flatMap(x => headSym(tpeOf(x)))
+
+      // the uninheritable TARGET this class's ancestry reaches, if any. A cycle takes the empty arm
+      // at the repeat — the conservative direction here, since it only ever declines a projection.
+      def targetOf(id: SymId, seen: Set[SymId]): Option[String] =
+        if seen(id) then scala.None
+        else byId.get(id).flatMap { cd =>
+          parentsOf(cd).iterator.flatMap { h =>
+            p.symbolOf(h).flatMap(s => typeMap.get(s.fullName)).map(_._1)
+              .filter(CollectionsTransform.UninheritableTargets)
+              .orElse(targetOf(h, seen + id))
+          }.nextOption()
+        }
+
+      // the NEAREST declaration of one signature, self before parents, and only one with a body:
+      // an abstract re-declaration says nothing about what an implementor does.
+      def nearest(id: SymId, sig: CollectionsTransform.MemberSig, seen: Set[SymId]): Option[Tree.DefDef] =
+        if seen(id) then scala.None
+        else byId.get(id).flatMap { cd =>
+          cd.body.collectFirst {
+            case d: Tree.DefDef
+              if d.rhs.nonEmpty && d.paramss.map(_.size).sum == sig.arity &&
+                 p.symbolOf(d.symbol).exists(_.name == sig.name) => d
+          }.orElse(parentsOf(cd).iterator.flatMap(nearest(_, sig, seen + id)).nextOption())
+        }
+
+      classes.flatMap { cd =>
+        targetOf(cd.symbol, Set.empty).filter { tgt =>
+          val sigs = CollectionsTransform.UnsupportedOnTarget.getOrElse(tgt, Set.empty)
+          sigs.nonEmpty && sigs.forall(sig =>
+            nearest(cd.symbol, sig, Set.empty).flatMap(_.rhs).exists(throwsFirst))
+        }.map(cd.symbol -> _)
+      }.toMap
+
+  /** does this body THROW before it does anything else? The capability test [[detachedEntriesIn]]
+    * rests on, and it is asked of the first statement rather than of the whole body, because that is
+    * exactly the property that makes a write impossible — anything after an unconditional throw is
+    * unreachable. A conditional throw answers `false`: java's own `setValue` may refuse for one
+    * receiver state and write for another, and that class writes through. */
+  private def throwsFirst(t: Term): Boolean = t match
+    case _: Tree.Throw     => true
+    case b: Tree.Block     => b.stats.headOption match
+      case Some(s: Term) => throwsFirst(s)
+      case Some(_)       => false
+      case scala.None    => throwsFirst(b.expr)
+    case c: Tree.Commented => c.stmt match
+      case s: Term => throwsFirst(s)
+      case _       => false
+    case _ => false
+
   /** THE VALUE'S OWN MINTED ANCESTRY, as a coercion source — K26's `DeclaredSubtype` half.
     *
     * `coerce` reads a source's kind out of `kindOf`, which is keyed on the phase's own SCALA TARGET
@@ -5163,7 +5283,8 @@ object CollectionsTransform:
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange",
          "toArray", "emptyList", "emptyMap", "emptySet", "singletonList", "singleton", "singletonMap",
          "unmodifiableList", "unmodifiableSet", "unmodifiableMap", "subList", "putIfAbsent",
-         "toSet", "toMap", "fromJava", "toJava", "toStream", "mapGet", "mapContainsKey", "mapRemove",
+         "toSet", "toMap", "fromJava", "toJava", "toStream", "entryToPair",
+         "mapGet", "mapContainsKey", "mapRemove",
          "setContains", "setRemove", "keySetView", "entrySetView",
          "optionalOrElse")
 
