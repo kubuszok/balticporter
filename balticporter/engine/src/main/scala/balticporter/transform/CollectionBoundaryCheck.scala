@@ -172,6 +172,10 @@ object CollectionBoundaryCheck extends RemedySource:
       * BE A PARENT. The parent is left as java's rather than emitted at a type that cannot carry
       * it — see the classification for why that is the honest answer and not a gap. */
     case InexpressibleParent
+    /** a class the phase RE-PARENTED onto a `scala.collection` target owes a member that target
+      * declares, and the bridge for it could not be built (`ENGINE-LIMITS.md` K28.1). Not a slot at
+      * all: the class is simply missing a member scalac will demand the moment `RefChecks` runs. */
+    case UnbridgedMember
     /** an `instanceof` or a downcast at a type this phase retyped, whose TARGET no live view can
       * be. The occurrence is REIFIED — it asks about a runtime object, and the retyping moved
       * neither the objects nor their classes — so it is the one seam with no slot to look at and
@@ -245,6 +249,15 @@ object CollectionBoundaryCheck extends RemedySource:
           "A second target for the implements-case is NOT the fix: `entrySet()` yields a `Tuple2` " +
           "everywhere in every port, so a shim-typed class would need a coercion at every crossing " +
           "in both directions, which is a second truth about one java type (ENGINE-LIMITS K5.7)."
+      case UnbridgedMember =>
+        "§1(a) engine: this class IMPLEMENTS a java collection interface, so the mapping emitted a " +
+          "`scala.collection` parent for it — and that parent declares a member the class has no " +
+          "java member to build from, or whose java member could not be renamed out of the way. " +
+          "The bridge (`ENGINE-LIMITS.md` K28.1) renames java's member and synthesises scala's " +
+          "over it, delegating; the guard that declined is named in the slot. Nothing is wrong with " +
+          "any SLOT here — the class is simply missing a member scalac demands, which `RefChecks` " +
+          "does not report until the port reaches 0 typer errors (CLAUDE.md §3), so this count is " +
+          "the only instrument that sees it before then."
       case ReifiedOccurrence =>
         "§1(a) engine, and REFUSED on purpose: this is an `instanceof` or a downcast at a type the " +
           "mapping covers — a REIFIED occurrence, which asks about a RUNTIME OBJECT while the " +

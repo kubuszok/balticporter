@@ -123,7 +123,13 @@ object PorterNote:
         // `extends` clause, so a reader can at least SEE it; a subsumed one is text that is simply
         // absent, and the java `implements` clause it came from is one line the diff shows as
         // untranslated.
-        SubsumedParent)
+        SubsumedParent,
+        // …and the member synthesised over it. Here for `StrippedOverride`'s reason read one step
+        // further: that one is a word a reader can miss, this one is a whole `def` that is in NO
+        // java file, calling a member whose name is in no java file either. Without the note the
+        // only honest reading of `override def get(k: K): Option[V] = scala.Option(this.get$java(k))`
+        // is that somebody hand-edited a generated tree.
+        BridgedMember)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.

@@ -917,6 +917,61 @@ object JavaCollections:
   def toStream[A](xs: scala.collection.Iterable[A]): java.util.stream.Stream[A] =
     xs.toBuffer.asJava.stream()
 
+  // -------------------------------------------------------------------------------------------
+  // THREE `mutable.Buffer` MEMBERS JAVA'S `List` HAS NO COUNTERPART FOR — `ENGINE-LIMITS.md` K28.1
+  // -------------------------------------------------------------------------------------------
+  //
+  // A class the engine re-parented from `java.util.List` onto `scala.collection.mutable.Buffer` owes
+  // that trait's whole abstract surface, and the engine's bridge for each member is a delegation to
+  // the java member that answers it. Three of the nine have NO java member to delegate to:
+  // `removeRange`, `insertAll` and `patchInPlace` are operations java's `List` simply does not
+  // declare (its nearest spelling of the first is `subList(a, b).clear()`, which is a different
+  // member on a different object). There is therefore no java behaviour to reproduce and the answer
+  // owed is SCALA's, expressed over the primitives the bridge already supplies.
+  //
+  // They live here rather than as emitted trees for the reason `containsAll` and its three siblings
+  // do: the body is a loop over `Buffer`'s own members, identical for every class the engine will
+  // ever re-parent, and an emitted loop would be one `while` per owner per port with nothing
+  // per-owner in it. Every call below dispatches VIRTUALLY through `self`, so on a re-parented class
+  // it lands on that class's own bridge and therefore on java's own member — which is the same
+  // argument the `super` → `this` substitution rests on (`ENGINE-LIMITS.md` K29), read at a
+  // synthesised member rather than at a JDK default.
+
+  /** `mutable.Buffer.remove(idx, count)` — java's `List` has no such member.
+    *
+    * `AbstractList.removeRange`'s own body: remove at the SAME index `count` times, which is what
+    * makes it correct on a list that shifts left after each removal. */
+  def bufferRemoveRange[A](self: scala.collection.mutable.Buffer[A], idx: Int, count: Int): Unit =
+    var n = count
+    while n > 0 do
+      self.remove(idx)
+      n -= 1
+
+  /** `mutable.Buffer.insertAll(idx, elems)` — java's nearest is `addAll(int, Collection)`, whose
+    * argument is a `java.util.Collection` and not an `IterableOnce`.
+    *
+    * Written over `insert` rather than bridged to `addAll` through a copy: a copy at the argument is
+    * exactly the detachment K2 refuses, and `elems` may be a one-shot `Iterator`, which no
+    * `java.util.Collection` view can be. Insertion order is preserved by advancing the index. */
+  def bufferInsertAll[A](self: scala.collection.mutable.Buffer[A], idx: Int,
+                        elems: scala.collection.IterableOnce[A]): Unit =
+    var at = idx
+    val it = elems.iterator
+    while it.hasNext do
+      self.insert(at, it.next())
+      at += 1
+
+  /** `mutable.Buffer.patchInPlace(from, patch, replaced)` — java has no counterpart at all.
+    *
+    * Scala's own contract, over the two above: `replaced` is CLAMPED to what is actually there,
+    * which is what `Buffer`'s own implementations do and what keeps a `replaced` past the end from
+    * throwing where scala's does not. */
+  def bufferPatchInPlace[A](self: scala.collection.mutable.Buffer[A], from: Int,
+                      patch: scala.collection.IterableOnce[A], replaced: Int): Unit =
+    val start = math.max(0, math.min(from, self.length))
+    bufferRemoveRange(self, start, math.max(0, math.min(replaced, self.length - start)))
+    bufferInsertAll(self, start, patch)
+
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)
 

@@ -293,8 +293,27 @@ object Decision:
       * emitted class against the java sees one `implements` clause simply gone and nothing local
       * says which of the remaining parents took over its relation. */
     case SubsumedParent
+    /** a member the minted parent DECLARES, synthesised over the java member it renamed out of the
+      * way (`ENGINE-LIMITS.md` K28.1).
+      *
+      * [[StrippedOverride]]'s other half, and the family no modifier repairs: a class re-parented
+      * onto `scala.collection.mutable.{Map, Set, Buffer}` owes that trait's abstract surface, and
+      * java's own members are the wrong SHAPE for it — `put(K,V): V` against `Option[V]`,
+      * `iterator(): JavaIterator[A]` against a parameterless `Iterator[A]`, `size(): Int` against a
+      * member that is `final`. Retyping java's member closes the row and DELETES whatever its result
+      * type was carrying; renaming it moves a name and nothing else, and the synthesised member over
+      * it is what the parent asked for.
+      *
+      * Two things the detail must carry, neither recoverable from the emitted text: the java member
+      * this delegates to under its NEW name (a reader diffing against the java sees a member that is
+      * not in the java file at all, calling one whose name is not in it either), and — where the
+      * bridge is `refused` — the guard, since a refusal that reaches the emitted file as a throw is
+      * indistinguishable from a member the library itself declined to implement. The RENAME beside
+      * it is a [[RenamedMember]] row of its own, filed by the renamer, so the pair is two decisions
+      * about two declarations rather than one row claiming both. */
+    case BridgedMember
 
-  val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
+  val Header ="#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
   /** The DECLARATIONS a per-SITE rewrite reached, each with the earliest origin inside it.
     *

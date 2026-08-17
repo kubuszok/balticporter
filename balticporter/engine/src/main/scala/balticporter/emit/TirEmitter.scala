@@ -266,6 +266,16 @@ final class TirEmitter(
     * `Surface` already holds), so a run has ONE list. */
   def surfaceGaps: List[Surface.Gap] = collapsedBaseTypesNamed
 
+  /** …and the renames a PHASE made, which reach here through the pipeline's log rather than through
+    * `own` — `collapsedForms` below takes the same route for the same reason.
+    *
+    * They were not read at all until a phase first renamed a METHOD (`ENGINE-LIMITS.md` K28.1's
+    * bridge), and the omission had no instrument: `name=` is a SPARSE key, so a member whose
+    * emitted name a consumer cannot derive simply had no row, which reads exactly like a member
+    * that was not renamed. */
+  private def phaseRenamedMembers: Iterator[Decision] =
+    notes.all.iterator.filter(_.kind == Decision.Kind.RenamedMember)
+
   /** every member this emitter's §4.55 passes RENAMED, by symbol → the name Java gave it.
     *
     * Read off the emitter's own decisions rather than recomputed: the passes rewrite the symbol
@@ -273,7 +283,7 @@ final class TirEmitter(
     * decisions whose `to` is the symbol's CURRENT name, which is what makes the join exact when a
     * name was appended to twice (§4.55's "keep appending until the name is free"). */
   private lazy val renamedMembers: Map[SymId, String] =
-    own.iterator.collect {
+    (own.iterator ++ phaseRenamedMembers).collect {
       case d if d.kind == Decision.Kind.RenamedMember && d.subject != SymId.None &&
                 d.detail.get("to").contains(program.symbolOf(d.subject).map(_.name).getOrElse("")) &&
                 d.detail.get("from").exists(_.nonEmpty) =>

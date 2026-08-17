@@ -8065,6 +8065,81 @@ from what this program happens to declare, which §4.56 refuses. **And one mecha
 table already said rename-or-do-not-mint, so a per-row choice between two mechanisms answers neither
 uniformly while rename+synthesise answers both.
 
+**BUILT AT WAVE 23 AS ONE MECHANISM, AND THE PORT IS AT ZERO: ssg-md 27 -> 0.** The seventeen `E164`
+rows and the ten `needs to be abstract` ones are not two families and were never going to be two
+commits — they are ONE table read twice. A class the mapping re-parented owes its new parent's
+surface; where java declares a member at one of those names in the wrong SHAPE that is an `E164`, and
+where java declares none at all that is an unimplemented member, and the answer to both is the same
+row: rename java's member out of the way (§4.55's `MemberRenamer`, which expands the override
+closure, screens the world, reads effective names parents-first and files the `RenamedMember`
+decision every downstream reader already knows) and synthesise scala's over it, delegating.
+`BridgedTarget` is the table, `CapturedByTarget` decides the rename, and the emitted member is
+`override def get(key: K): Option[V] = scala.Option(this.get$java(key))`.
+
+Four things the build settled that the design did not say, each measured:
+
+- **THE RENAME IS ABOUT THE BODY, NOT ABOUT THE ERROR — which is why more members move than the
+  `E164` list names.** The design read the rename as the repair for a clash. It is also the only way
+  the BRIDGE CAN NAME ITS DELEGATE: scala resolves `this.get(k)` at `k: K` to the inherited
+  `MapOps.get(K): Option[V]` — the bridge itself — so an unrenamed delegate is an infinite recursion
+  that compiles, moves no count and overflows the stack at the first call, which is §4.4's defect
+  class reached through a delegation. `CapturedByTarget` is that question (*does the emitted parent
+  declare this name at this arity*) and it is deliberately not `BridgedTarget`'s key: `entrySet()` is
+  a delegate the target does not declare and is left exactly as java wrote it, while `remove(Object)`
+  is not an `E164` on a `Map` and must move anyway.
+- **`MemberRenamer`'s WORLD SCREEN was refusing every request, and the fix is §4.56 read at the
+  renamer.** A closure that reaches an unparsed declaration is frozen — exact for a class that keeps
+  java's parent, and WRONG for one this phase re-parented: `class C implements java.util.Map` emitted
+  as `extends scala.collection.mutable.Map` no longer overrides `java.util.Map#put` at all. First
+  run: **40 refusals, 0 errors closed**, every one reading *the component reaches
+  `java.util.Map#put`*. `Request.detachedParents` is the repair and it is PER REQUEST rather than per
+  call, because whether a parent was removed is a fact about ONE class — `java.lang.Iterable` is
+  detached only on the three classes wave 22's subsumption dropped it from, and a call-wide set would
+  rename `iterator()` on every other class in the program. Read off `typeMap` and off
+  `MintedParents.subsumed`, joined through the phase's own table because an anchor is spelled with
+  the JAVA type (`java.lang.Iterable`) and `subsumed` is keyed on the TARGET
+  (`balticporter.runtime.JavaIterable`).
+- **A (name, arity) DELEGATE KEY NAMES TWO MEMBERS, and java's own resolution order picks.**
+  `BitFieldSet` declares `add(E)` beside `final add(E... rest)` and both have arity 1 — §4.55's
+  over-approximate-key rule met at a delegate — so the bridge bound to the pack and emitted
+  `this.add$java(elem)` against an `Array[E]` formal. One error, and the fix is JLS 15.12.2: a
+  fixed-arity candidate is admitted in phase 1 or 2 and a vararg one only in phase 3, so a
+  last-parameter `Param.Arr` candidate is taken only when it is the ONLY one — which keeps a genuine
+  `List<byte[]>`'s `add(byte[])` reachable.
+- **THE RISERS ARE SERIALISED AND THEY ARE NOT THE FAMILY THE ENTRY PREDICTED** (§3). Closing the
+  abstract members let `RefChecks` reach the next question and it was `E120 Name clash`, twice:
+  `TrackedOffsetList#contains(Object)` and `#indexOf(Object)` have the SAME ERASURE as
+  `SeqOps.contains[A1 >: A]`/`indexOf[B >: A]`, which is neither an override nor an `E164` and which
+  no row in the original census names. They are the only GENERIC bridges — a bridge declared at `A`
+  would erase to `(Object)Boolean` and reproduce the clash it exists to close — so the synthesis
+  carries `[A1 >: A]` and casts at java's `Object` formal, which is what java's own member already
+  asks of every caller.
+
+Three `mutable.Buffer` members have NO java counterpart at all (`remove(idx, count)`,
+`insertAll(idx, elems)`, `patchInPlace`), so there is no java behaviour to reproduce and what is owed
+is SCALA's contract over the bridges beside them: `JavaCollections.buffer{RemoveRange,InsertAll,
+PatchInPlace}`, whose every call dispatches virtually through `self` and therefore lands on java's own
+member — K29's `super` → `this` argument read at a synthesised member rather than at a JDK default.
+
+**Measured**: ssg-md **27 -> 0**, `collection-boundary` **20 = 20** (every bridge built; the
+`UnbridgedMember` lane exists and reads zero), `overload-risk` **557 -> 538** — nineteen calls whose
+candidate set spanned a java resolution phase now have one candidate, because java's `put`/`get`/
+`remove` and scala's no longer share a name — **53 `BridgedMember` decisions**, and **167 member
+digests, residue EMPTY**: 8 bridge owners, and 7 further files every one of which holds at least one
+re-pointed `$java` call site.
+
+**AND ONE ARTIFACT IS NOW WRONG IN A WAY NOTHING GATES, WHICH IS THIS ENTRY'S OPEN HALF.** The port
+map's `upstream` column is the JOIN KEY a dependent holds and is supposed to spell JAVA's name —
+which it does for the emitter's own §4.55 passes, because those rename `Symbol.name` and leave
+`Symbol.fullName` alone (`name=finalize$shadow` beside `#finalize`). `MemberRenamer` moves BOTH, so a
+bridged delegate publishes `#get$java(Object)` on both sides and the sparse `name=` key restates it.
+The `name=` half is closed here — `TirEmitter.renamedMembers` had never read the PIPELINE's log at
+all, so a phase rename published no shape row, which reads exactly like a member that was not renamed
+— and the column is not, because reversing it is a parameter threaded from the emitter through
+`PortRun` into `PortMap.of` and a port-map baseline move on every port that uses the renamer. Nothing
+measures the gap today: both ssg-md ports re-derive the same names from the same java, so
+`base-surface` reads 0 on each and the two compile together. **(a) engine, open.**
+
 #### K28.2 A java FIELD named like an INHERITED JDK METHOD — **CLOSED at wave 21: ssg-md 34 -> 32.** One row was a missing question, the other a surface the engine had refused to state — and the refusal turned out to conflate two different reasons
 
 The two `private variable X cannot override method X` rows are §4.55's implementation-pair rule met

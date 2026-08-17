@@ -60,8 +60,22 @@ object MemberRenamer:
     * @param group
     *   requests that stand or fall together. Defaults to [[key]], which is what a per-entry policy
     *   wants; a caller with two entries that must agree names one group for both.
+    * @param detachedParents
+    *   external types the CALLER has already removed from THIS member's emitted hierarchy, by FQN.
+    *   The world screen below refuses a component that reaches a declaration this program cannot
+    *   move, which is exact for a class that keeps java's parent and WRONG for one a phase has
+    *   re-parented: a `class C implements java.util.Map` emitted as
+    *   `extends scala.collection.mutable.Map` no longer overrides `java.util.Map#put` at all, so
+    *   anchoring the rename on that class file freezes a component against a type the emitted code
+    *   does not mention. That is §4.56's rule read at the renamer — the only party entitled to say
+    *   an anchor is gone is the phase that removed it — so this is a set the caller states and
+    *   nothing the graph could derive. PER REQUEST rather than per call, because whether a parent
+    *   was removed is a fact about ONE class: the same phase that drops a subsumed shim from three
+    *   classes leaves it on every other class in the same program, and a call-wide set would rename
+    *   their members too. Empty by default, which is every caller that moves no parent.
     */
-  final case class Request(member: SymId, newName: String, reason: Reason, key: String, group: String)
+  final case class Request(member: SymId, newName: String, reason: Reason, key: String, group: String,
+                           detachedParents: Set[String] = Set.empty)
 
   object Request:
     def apply(member: SymId, newName: String, reason: Reason, key: String): Request =
@@ -94,7 +108,10 @@ object MemberRenamer:
         refuse(r, "the request names a symbol this program REFERENCES and does not DECLARE, so " +
           "there is no declaration to rename")
       else
-        val c = graph.closureOf(r.member)
+        val c0 = graph.closureOf(r.member)
+        val c  = if r.detachedParents.isEmpty then c0
+                 else c0.copy(externalAnchors =
+                   c0.externalAnchors.filterNot((t, _) => r.detachedParents(t)))
         c.anchorReason(p) match
           case Some(why) => refuse(r, why, c.externalAnchors)
           case scala.None => closures(r) = c

@@ -374,11 +374,20 @@ final class CollectionsTransform(
     * actually says. `kinds` cannot answer that (one kind covers `mutable.Map`, `HashMap`, `TreeMap`
     * and `TrieMap`) and no reader of a refusal can be told to look at a `Kind`, so it is carried
     * rather than reverse-derived: recomputing it from `typeMap` by matching kinds would name every
-    * target of that kind and not the one this class extends. */
+    * target of that kind and not the one this class extends.
+    *
+    * `declared` is this class's OWN mapped clauses — the kind plus the java type ARGUMENTS the
+    * clause writes — and it is deliberately not transitive where `kinds` is. The surface synthesis
+    * (K28.1) reads it for two different facts at once: WHERE the obligation lands (a subclass
+    * inherits its base's minted parent and must not write a second copy of every bridge) and WHAT
+    * the key, value or element type is. An inherited clause answers neither — the ancestor's
+    * arguments arrive unsubstituted, which is the same approximation `probes` states — so a class
+    * with an empty `declared` is one the synthesis does not act on at all. */
   private final case class MintedParents(kinds: Set[Kind], probes: List[TypeRepr],
                                          tparams: List[SymId], shims: Set[String],
                                          targets: Set[String] = Set.empty,
-                                         subsumed: Map[String, String] = Map.empty)
+                                         subsumed: Map[String, String] = Map.empty,
+                                         declared: List[(Kind, List[TypeRepr])] = Nil)
   private var parentClash: Map[SymId, MintedParents] = Map.empty
   /** every `super.<JDK default>` this run stood on `this` instead — (enclosing class, callee, member
     * name), drained into `decisions.tsv` by [[recordSuperDefaults]]. Collected AT the rewrite rather
@@ -433,6 +442,18 @@ final class CollectionsTransform(
     * no second lowering can appear under an `a0$` that is already bound. */
   private var recvBindSym: SymId = SymId.None
   private var argParamSyms: Vector[SymId] = Vector.empty
+  /** the scala side of a BRIDGED member (`ENGINE-LIMITS.md` K28.1) — the types its signature is
+    * written in, and the two `asScala` views its body reaches java's answer through.
+    *
+    * Resolved-or-minted exactly as `unsupportedOpSym` is, and for the same reason: two symbols for
+    * one FQN print the same text and compare unequal. `iteratorMemberSym` is scala's own
+    * parameterless `iterator` on a collection, which is how a `Map` with no java `iterator()` of its
+    * own reaches java's `entrySet().iterator()` idiom. */
+  private var optionSym, scalaIteratorSym, scalaIterableSym, iterableOnceSym: SymId = SymId.None
+  private var tuple2Sym, boolSym, intSym, unitSym: SymId = SymId.None
+  private var asScalaIteratorSym, asScalaIterableSym, iteratorMemberSym: SymId = SymId.None
+  private var unitTpe: TypeRepr = TypeRepr.NoType
+
   /** `JavaIterable` + its `from` factory — see `coerce`. */
   private var javaIterableSym, iterableFromSym: SymId = SymId.None
   /** `JavaCollection` + its `from` factory — the same seam, one type up. `unmodifiableFromSym` is
@@ -805,6 +826,20 @@ final class CollectionsTransform(
     // up asking about a type this run has twice.
     def named(fqn: String, nm: String): SymId =
       program.symbols.all.find(_.fullName == fqn).map(_.id).getOrElse(mint(nm, fqn))
+    // …the BRIDGED members' own vocabulary (K28.1). `named` for every type, minted for the two
+    // `asScala` views and for scala's `iterator`, which nothing in a java program declares.
+    optionSym          = named("scala.Option", "Option")
+    scalaIteratorSym   = named("scala.collection.Iterator", "Iterator")
+    scalaIterableSym   = named("scala.collection.Iterable", "Iterable")
+    iterableOnceSym    = named("scala.collection.IterableOnce", "IterableOnce")
+    tuple2Sym          = named("scala.Tuple2", "Tuple2")
+    boolSym            = named("scala.Boolean", "Boolean")
+    intSym             = named("scala.Int", "Int")
+    unitSym            = named("scala.Unit", "Unit")
+    unitTpe            = TypeRepr.TypeRef(TypeRepr.NoPrefix, unitSym)
+    asScalaIteratorSym = mint("asScala", JavaIteratorFqn + ".asScala")
+    asScalaIterableSym = mint("asScala", JavaIterableFqn + ".asScala")
+    iteratorMemberSym  = mint("iterator", "iterator")
     unsupportedOpSym = named(CollectionsTransform.UnsupportedOperationFqn, "UnsupportedOperationException")
     unsupportedOpTpe = TypeRepr.TypeRef(TypeRepr.NoPrefix, unsupportedOpSym)
     stringTpe        = TypeRepr.TypeRef(TypeRepr.NoPrefix, named("java.lang.String", "String"))
@@ -831,6 +866,21 @@ final class CollectionsTransform(
     detachedEntries = detachedEntriesIn(summon[Program])
     parentClash = declaredParentKinds(summon[Program])
     superDefaults.clear()
+    // …and the SURFACE the minted parent declares (K28.1). Planned here, where the java members
+    // still carry java's names, and APPLIED as a rename before anything else reads the table: every
+    // later step — the traversal, `mapSignatures`, `strippedOverrides` — must see the name the
+    // emitted member will actually have, or two of them disagree about one declaration.
+    bridges = planBridges(summon[Program])
+    finishRun(program, renameBridgeDelegates(summon[Program]))
+
+  /** the rest of [[run]], over the symbol table the bridge renames produced.
+    *
+    * A separate method for one reason and not for tidiness: `given Program` is established from the
+    * symbol table, the rename REPLACES that table, and a second `given` in one scope is an
+    * ambiguity rather than a shadow. Everything below reads the renamed program. */
+  private def finishRun(program: Program, symbols: SymbolTable): Program =
+    given Program = program.rebuilt(symbols = symbols)
+    ownedSym = summon[Program].owned
     val units    = program.units.map(u =>
       dropSubsumedParents(
         restoreUninheritableParents(u, restoreExcluded(u, StandardTraversal.mapClassDef(this, u)))))
@@ -853,7 +903,11 @@ final class CollectionsTransform(
     recordSuperDefaults
     recordReifiedTypeArgs(symbols3)
     recordEgressBridges()
-    program.rebuilt(units, symbols3)
+    // …and the members the minted parent declares, LAST: they are already scala-shaped, so
+    // `mapSignatures` has nothing to do to them and `strippedOverrides` must not be given the
+    // chance to take a modifier every one of them requires.
+    val (units2, synthesised) = synthesiseBridges(units, symbols3)
+    program.rebuilt(units2, SymbolTable(symbols3.all ++ synthesised))
 
   // -------------------------------------------------------------------------
   // RuleScope — WHICH declarations this run rewrites (CLAUDE.md §1(b))
@@ -1586,6 +1640,390 @@ final class CollectionsTransform(
         origin = Decision.originOf(p, s.id),
       ))
     }
+
+  // -------------------------------------------------------------------------
+  // …and the SURFACE the re-parenting OWES — `ENGINE-LIMITS.md` K28.1
+  // -------------------------------------------------------------------------
+
+  /** one bridge this run will build: the class, the kind it was minted at, the mapped parent's java
+    * type ARGUMENTS, the row, and the java member the body delegates to (`SymId.None` for a row
+    * that has none — see [[CollectionsTransform.Bridged]]). `rename` is [[CollectionsTransform.CapturedByTarget]]'s
+    * answer, carried rather than re-derived so the rename pass and the body builder cannot
+    * disagree about which member the body is allowed to name. */
+  private final case class Bridge(cls: SymId, kind: Kind, args: List[TypeRepr],
+                                  row: CollectionsTransform.Bridged, java: SymId, rename: Boolean)
+
+  private var bridges: List[Bridge] = Nil
+
+  /** the members this run SYNTHESISED, so [[strippedOverrides]] cannot take the modifier off one.
+    * Empty on every port that re-parents nothing, which makes the whole mechanism a no-op by
+    * arithmetic rather than by a branch. */
+  private var synthesisedSyms: Set[SymId] = Set.empty
+
+  /** the JAVA types the mapping sends to a given target — the inverse of `typeMap`.
+    *
+    * `subsumed` is keyed on the TARGET (`balticporter.runtime.JavaIterable`), and an override
+    * anchor is spelled with the JAVA type the class file declares (`java.lang.Iterable`), so the
+    * two have to be joined through the phase's own table rather than by a name that looks alike. */
+  private def shimSource(target: String): Set[String] =
+    typeMap.collect { case (fqn, (tgt, _)) if tgt == target => fqn }.toSet
+
+  /** how many type arguments a kind's target needs before a bridge can name its key, value or
+    * element type. A RAW clause supplies none, and inventing `java.lang.Object` for them would be
+    * §4.6's fabricated fact at the emitted signature — so the whole class declines, counted. */
+  private def kindArity(k: Kind): Int = if k == Kind.Map then 2 else 1
+
+  /** WHICH bridges this run owes — one row per (class, row) the table names and the class can
+    * answer.
+    *
+    * Asked of `declared` and never of `kinds`, which is what puts the synthesis on the BASE and not
+    * on each subclass. A dependent class inherits its ancestor's minted parent AND the bridges over
+    * it, so a second copy on the subclass would be an override of a member the subclass has no java
+    * member of its own to delegate to — one FQN, two definitions of one surface, which is §1.5's
+    * shape read inside a single module. The four subclass owners in the corpus reach zero this way
+    * with nothing emitted on any of them. */
+  private def planBridges(p: Program): List[Bridge] =
+    if parentClash.isEmpty then return Nil
+    given Program = p
+    val graph = OverrideGraph.build(p)
+    def sigOf(m: SymId): Option[OverrideGraph.Signature] = graph.signatureOf(m)
+    /** the delegate, on THIS class and on no ancestor of it.
+      *
+      * The second half is what puts one bridge on the component rather than one per subclass: a
+      * class that inherits `put` from a program ancestor inherits the bridge over it too, and a
+      * second `override def put` on the subclass would be one surface with two definitions. It also
+      * settles the interface case structurally — a java interface `extends Map<K,S>` declares none
+      * of these, so every row declines and the type is not the implementor. */
+    def ownMember(cls: SymId, want: ExternalSurface.Member): Option[SymId] =
+      if graph.ancestorsOf(cls).exists(a => graph.membersOf(a).exists(m => sigOf(m).exists(want.matches)))
+      then scala.None
+      else
+        // …and where the key names SEVERAL, java's own resolution order picks. `add(E)` sits beside
+        // `add(E...)` and both have arity 1, so a (name, arity) key names two members — §4.55's
+        // over-approximate key, met at a delegate — and java admits the fixed-arity candidate in
+        // phase 1 or 2 and the pack only in phase 3 (JLS 15.12.2), so java never binds `add(e)` to
+        // the pack while the scalar exists. It also could not compile if it did: the port emits a
+        // `T...` formal it DECLARES as `Array[T]` (§4.4), so a bridge passing one element reads
+        // `Found: E / Required: Array[E]` — measured, exactly once, on the one corpus class that
+        // declares both. A LAST-ARRAY candidate is still taken when it is the only one, because at
+        // an element type that really is an array it is the fixed-arity member.
+        val cands = graph.membersOf(cls).filter(m => sigOf(m).exists(want.matches) && !literal(m))
+        def packs(m: SymId): Boolean = sigOf(m).flatMap(_.descriptor).exists(_.params.lastOption match
+          case Some(Param.Arr(_)) => true
+          case _                  => false)
+        cands.find(m => !packs(m)).orElse(cands.headOption)
+    parentClash.toList.sortBy((c, _) => p.symbolOf(c).map(_.fullName).getOrElse("")).flatMap { (cls, mp) =>
+      mp.declared.distinct.flatMap { (k, args) =>
+        val rows = CollectionsTransform.BridgedTarget.getOrElse(k.toString, Nil)
+        // …a type that declares NONE of the delegates is not the one implementing the interface —
+        // an interface that merely widens it, or a subclass whose ancestor holds every member. It
+        // owes nothing and is not reported as owing anything, which is the difference between a
+        // refusal population and noise (§3).
+        val found = rows.filter(_.from.nonEmpty).flatMap(r => r.from.iterator.flatMap(ownMember(cls, _)).nextOption())
+        if rows.isEmpty || found.isEmpty then Nil
+        else if args.sizeIs != kindArity(k) then
+          // a RAW `implements Map` names no key and no value. Leaving the `E164` the compiler
+          // already states is the honest arm; guessing the arguments is not.
+          refuseBridge(p, cls, k, "raw-parent",
+            s"the mapped `implements` clause is RAW, so the ${kindArity(k)} type argument(s) the " +
+              "bridged signatures need are not written anywhere")
+          Nil
+        else rows.flatMap { row =>
+          if row.from.isEmpty then Some(Bridge(cls, k, args, row, SymId.None, false))
+          else row.from.iterator.flatMap(ownMember(cls, _)).nextOption() match
+            case Some(j) =>
+              val captured = CollectionsTransform.CapturedByTarget.getOrElse(k.toString, Set.empty)
+                .exists(m => sigOf(j).exists(m.matches))
+              Some(Bridge(cls, k, args, row, j, captured))
+            case scala.None if !row.required => scala.None
+            case scala.None =>
+              refuseBridge(p, cls, k, "no-java-member",
+                s"`${row.scalaName}/${row.arity}` is declared by the emitted parent and this class " +
+                  s"declares none of ${row.from.map(m => s"${m.name}/${m.arity}").mkString(", ")} " +
+                  "to build it from")
+              scala.None
+        }
+      }
+    }
+
+  /** the refusal LANE — one row per bridge this run could not build, naming the guard (§3).
+    *
+    * On `collection-boundary`, where the other residues of this phase's own re-parenting already
+    * are, and as its own `Issue` because the classification is a different one: the reader is not
+    * being told about a slot whose two sides disagree, they are being told that the emitted class
+    * is missing a member scalac will demand. */
+  private def refuseBridge(p: Program, cls: SymId, k: Kind, guard: String, why: String): Unit =
+    seam(s"minted-parent surface [$guard]", k.toString, why,
+         Decision.originOf(p, cls), cls, CollectionBoundaryCheck.Issue.UnbridgedMember)
+
+  /** RENAME every captured delegate out of the way, through §4.55's own machinery.
+    *
+    * `MemberRenamer` is the whole of the rename: it expands each request through its OVERRIDE
+    * CLOSURE (so a subclass's `put` moves with its base's — a signature change applies to all of a
+    * component or none of it), screens the closure for an external anchor (a member that also
+    * overrides a class file may not be renamed at all, and the refusal says which type), reads
+    * EFFECTIVE names PARENTS-FIRST, and files the `RenamedMember` decision every downstream reader
+    * — the porter note, the port map's `name=`, the emitter's own clash passes — already knows how
+    * to read. Writing a second renamer here would be two spellings of one act.
+    *
+    * `SuffixUntilFree` rather than `Refuse`: the body reads the delegate's name back OUT of the
+    * symbol table, so a `$java$` that had to move once is still exactly nameable, while a refusal
+    * would leave the `E164` this exists to close for the sake of a name nobody reads. The GROUP is
+    * the owning class, so a class whose delegates cannot all move keeps every one of them — half a
+    * bridged surface is a class that compiles less well than the one this started from. */
+  private def renameBridgeDelegates(p: Program): SymbolTable =
+    val wanted = bridges.filter(b => b.rename && b.java != SymId.None).map(_.java).distinct
+    if wanted.isEmpty then return p.symbols
+    val graph = OverrideGraph.build(p)
+    val owners = bridges.filter(b => b.java != SymId.None).map(b => b.java -> b.cls).toMap
+    // …the parents THIS PHASE removed from THIS class. Two sources, both the phase's own record
+    // (§4.56): every java type the mapping RE-PARENTED the class away from, and every shim clause
+    // `dropSubsumedParents` deleted because a minted kind already carried the relation (K28.1's
+    // first commit). `java.lang.Iterable` is only ever in the second set, and only for the classes
+    // whose clause was really dropped — which is why this is per REQUEST and not per call.
+    val reParented: Set[String] = typeMap.collect {
+      case (fqn, (tgt, _)) if !CollectionsTransform.standaloneTargets(tgt) &&
+                              !CollectionsTransform.UninheritableTargets(tgt) => fqn
+    }.toSet
+    def detachedFor(cls: SymId): Set[String] =
+      reParented ++ parentClash.get(cls).toList.flatMap(_.subsumed.keySet).flatMap(shimSource)
+    val requests = wanted.flatMap { j =>
+      p.symbolOf(j).map { s =>
+        val cls      = owners.getOrElse(j, SymId.None)
+        val ownerFqn = p.symbolOf(cls).map(_.fullName).getOrElse("")
+        MemberRenamer.Request(j, s.name + CollectionsTransform.BridgeSuffix,
+                              Reason.Universal("minted-parent-surface(§1, K28.1)"),
+                              MemberKey(ownerFqn, s.name).render, ownerFqn, detachedFor(cls))
+      }
+    }
+    val (renamed, refusals) = MemberRenamer.rename(
+      p, graph, requests, MemberRenamer.OnCollision.SuffixUntilFree, decisions)
+    if refusals.nonEmpty then
+      val lost = refusals.flatMap(r => owners.get(r.request.member)).toSet
+      refusals.foreach { r =>
+        refuseBridge(p, owners.getOrElse(r.request.member, SymId.None),
+                     Kind.Map, "rename-refused", r.why)
+      }
+      // …the whole class, not the one member: see the group note above.
+      bridges = bridges.filterNot(b => lost.contains(b.cls))
+    renamed.symbols
+
+  /** …and the SYNTHESIS, appended to each owning class's body.
+    *
+    * Appended rather than spliced at a position, because these members have no java counterpart to
+    * sit beside — every one of them is a member the emitted PARENT declares and the java file does
+    * not, so there is no source order to honour and JLS 12.5's ordering rule (§4.55) has nothing to
+    * say about a `def`. */
+  private def synthesiseBridges(units: List[Tree.ClassDef], symbols: SymbolTable)
+                               (using p: Program): (List[Tree.ClassDef], List[Symbol]) =
+    if bridges.isEmpty then return (units, Nil)
+    val added = collection.mutable.ListBuffer[Symbol]()
+    var next  = symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
+    def mint(nm: String, full: String, owner: SymId, info: TypeRepr, isOverride: Boolean): SymId =
+      val id = SymId(next); next += 1
+      added += Symbol(id, nm, full, Flags(isOverride = isOverride), owner, info)
+      id
+    val byClass = bridges.groupBy(_.cls)
+    val ph = new Phase:
+      def name: String = "collections/minted-parent-surface"
+      override def transformClassDef(cd: Tree.ClassDef)(using Program): Tree.ClassDef =
+        byClass.get(cd.symbol) match
+          case scala.None     => cd
+          case Some(myRows)   =>
+            val built = myRows.flatMap(b => buildBridge(b, cd, symbols, mint))
+            if built.isEmpty then cd else cd.copy(body = cd.body ++ built)
+    val out = units.map(u => StandardTraversal.mapClassDef(ph, u))
+    synthesisedSyms = added.map(_.id).toSet
+    (out, added.toList)
+
+  /** ONE bridged member, as a tree.
+    *
+    * Every body here is a DELEGATION and that is the whole safety argument: the port's behaviour at
+    * the member is java's own body, unchanged, reached under a new name. What the bridge adds is
+    * the SHAPE conversion the parent asked for, and there are exactly four of them — `Option(x)` for
+    * java's null-or-value (which is what `MapOps` means by `Option`, and java's own `get`/`put`
+    * document the null), `{ x; this }` for a `Growable`/`Shrinkable` member whose java counterpart
+    * answers a `boolean` nobody reads, `.asScala` for a shim result at a `scala.collection` slot,
+    * and `{ x; () }` for a result the parent discards.
+    *
+    * The three `Kind.Seq` rows with no delegate are the exception and are documented where their
+    * bodies live (`JavaCollections.buffer*`): java's `List` declares no counterpart, so there is no
+    * java behaviour to reproduce and what is owed is scala's contract over the bridges beside them.
+    *
+    * `None` where the table names a row this builder has no arm for, which cannot happen for a row
+    * in [[CollectionsTransform.BridgedTarget]] and is the honest arm rather than a crash if one is
+    * ever added without its body. */
+  private def buildBridge(b: Bridge, cd: Tree.ClassDef, symbols: SymbolTable,
+                          mint: (String, String, SymId, TypeRepr, Boolean) => SymId)
+                         (using p: Program): Option[Tree.DefDef] =
+    val o        = cd.origin
+    val cls      = cd.symbol
+    val selfT    = TypeRepr.ThisType(cls)
+    def self     = Tree.This(cls, selfT, o)
+    val args     = b.args.map(t => StandardTraversal.mapType(this, t))
+    val ownerFqn = p.symbolOf(cls).map(_.fullName).getOrElse("")
+    def tpe(s: SymId, as: TypeRepr*): TypeRepr =
+      if as.isEmpty then TypeRepr.TypeRef(TypeRepr.NoPrefix, s)
+      else TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, s), as.toList)
+    val javaInfo = symbols.all.find(_.id == b.java).map(_.info)
+    val javaRes  = javaInfo.collect { case TypeRepr.MethodType(_, r, _) => r }
+      .getOrElse(TypeRepr.NoType)
+    val javaName = p.symbolOf(b.java).map(_.name).getOrElse("")
+    def callJ(as: List[Term], res: TypeRepr): Term =
+      Tree.Apply(Tree.Select(self, b.java, TypeRepr.NoType, o), as, b.java, res, o)
+    def stat(as: List[Term], res: TypeRepr, tail: Term, t: TypeRepr): Term =
+      Tree.Block(List(callJ(as, res)), tail, t, o)
+    def unit: Term = Tree.Literal(Constant.UnitC, unitTpe, o)
+    def param(nm: String, t: TypeRepr): Tree.ValDef =
+      Tree.ValDef(mint(nm, nm, SymId.None, t, false), TypeTree(t, o), scala.None, o)
+    def ref(v: Tree.ValDef): Term = Tree.Ident(v.symbol, v.tpt.tpe, o)
+    def opt(x: Term, of: TypeRepr): Term =
+      Tree.Apply(Tree.Ident(optionSym, TypeRepr.NoType, o), List(x), optionSym, tpe(optionSym, of), o)
+    /** the shim result at a `scala.collection` slot. Asked of the phase's OWN record — is the head
+      * one of the shims this mapping produces — and never of the name (§4.56); a java member the
+      * mapping already retyped to a `scala.collection` type conforms as it stands. */
+    def asIterable(x: Term, elem: TypeRepr): Term =
+      if headSym(javaRes).exists(shimSyms.contains)
+      then Tree.Select(x, asScalaIterableSym, tpe(scalaIterableSym, elem), o)
+      else x
+    /** …and the ITERATOR half, whose discriminator is the RENAME rather than a type. A delegate this
+      * pass renamed is the one java's `Iterable` declares, so its result is a `JavaIterator`-shaped
+      * value and needs the view; a delegate it did NOT rename is `entrySet()`, whose result the
+      * mapping already retyped to a `scala.collection` and whose `.iterator` is java's own idiom for
+      * the same traversal. */
+    def asIterator(elem: TypeRepr): Term =
+      val call = callJ(Nil, javaRes)
+      val want = tpe(scalaIteratorSym, elem)
+      if b.rename then Tree.Select(call, asScalaIteratorSym, want, o)
+      else Tree.Select(call, iteratorMemberSym, want, o)
+    def defd(nm: String, ps: List[Tree.ValDef], res: TypeRepr, body: Term,
+             tps: List[Tree.TypeDef] = Nil): Option[Tree.DefDef] =
+      val info = TypeRepr.MethodType(
+        ps.map(v => p.symbolOf(v.symbol).map(_.name).getOrElse("x") -> v.tpt.tpe), res)
+      val sym = mint(nm, MemberKey(ownerFqn, nm).render, cls, info, true)
+      recordBridge(b, sym, MemberKey(ownerFqn, nm).render,
+                   if b.java == SymId.None then "-" else MemberKey(ownerFqn, javaName).render, o)
+      Some(Tree.DefDef(sym, if ps.isEmpty then Nil else List(ps), TypeTree(res, o), Some(body), o,
+                       tparams = tps))
+
+    (b.kind, b.row.scalaName, b.row.arity) match
+      case (Kind.Map, nm, ar) =>
+        val k = args.head; val v = args(1); val pair = tpe(tuple2Sym, k, v)
+        (nm, ar) match
+          case ("put", 2) =>
+            val pk = param("key", k); val pv = param("value", v)
+            defd("put", List(pk, pv), tpe(optionSym, v), opt(callJ(List(ref(pk), ref(pv)), v), v))
+          case ("get", 1) =>
+            val pk = param("key", k)
+            defd("get", List(pk), tpe(optionSym, v), opt(callJ(List(ref(pk)), v), v))
+          case ("addOne", 1) =>
+            val pe = param("elem", pair)
+            defd("addOne", List(pe), selfT,
+                 stat(List(Tree.Select(ref(pe), key1Sym, k, o), Tree.Select(ref(pe), value2Sym, v, o)),
+                      v, self, selfT))
+          case ("subtractOne", 1) =>
+            val pk = param("key", k)
+            defd("subtractOne", List(pk), selfT, stat(List(ref(pk)), v, self, selfT))
+          case ("iterator", 0) => defd("iterator", Nil, tpe(scalaIteratorSym, pair), asIterator(pair))
+          case ("values", 0)   =>
+            defd("values", Nil, tpe(scalaIterableSym, v), asIterable(callJ(Nil, javaRes), v))
+          case ("keys", 0)     =>
+            defd("keys", Nil, tpe(scalaIterableSym, k), asIterable(callJ(Nil, javaRes), k))
+          case _ => scala.None
+      case (Kind.Set, nm, ar) =>
+        val e = args.head
+        (nm, ar) match
+          case ("contains", 1) | ("indexOf", 1) =>
+            val pe = param("elem", e)
+            defd("contains", List(pe), tpe(boolSym), callJ(List(ref(pe)), tpe(boolSym)))
+          case ("addOne", 1) =>
+            val pe = param("elem", e)
+            defd("addOne", List(pe), selfT, stat(List(ref(pe)), tpe(boolSym), self, selfT))
+          case ("subtractOne", 1) =>
+            val pe = param("elem", e)
+            defd("subtractOne", List(pe), selfT, stat(List(ref(pe)), tpe(boolSym), self, selfT))
+          case ("iterator", 0) => defd("iterator", Nil, tpe(scalaIteratorSym, e), asIterator(e))
+          case _ => scala.None
+      case (Kind.Seq, nm, ar) =>
+        val a = args.head
+        def helper(n: String, as: List[Term], res: TypeRepr): Term =
+          val s = sym(n)
+          Tree.Apply(Tree.Ident(s, TypeRepr.NoType, o), self :: as, s, res, o)
+        (nm, ar) match
+          case ("apply", 1) =>
+            val pi = param("i", tpe(intSym))
+            defd("apply", List(pi), a, callJ(List(ref(pi)), a))
+          case ("length", 0) => defd("length", Nil, tpe(intSym), callJ(Nil, tpe(intSym)))
+          case ("update", 2) =>
+            val pi = param("idx", tpe(intSym)); val pe = param("elem", a)
+            defd("update", List(pi, pe), unitTpe, stat(List(ref(pi), ref(pe)), a, unit, unitTpe))
+          case ("insert", 2) =>
+            val pi = param("idx", tpe(intSym)); val pe = param("elem", a)
+            defd("insert", List(pi, pe), unitTpe, stat(List(ref(pi), ref(pe)), unitTpe, unit, unitTpe))
+          case ("prepend", 1) =>
+            val pe = param("elem", a)
+            defd("prepend", List(pe), selfT,
+                 stat(List(Tree.Literal(Constant.IntC(0), tpe(intSym), o), ref(pe)), unitTpe, self, selfT))
+          case ("addOne", 1) =>
+            val pe = param("elem", a)
+            defd("addOne", List(pe), selfT, stat(List(ref(pe)), tpe(boolSym), self, selfT))
+          case ("remove", 1) =>
+            val pi = param("idx", tpe(intSym))
+            defd("remove", List(pi), a, callJ(List(ref(pi)), a))
+          case ("iterator", 0) => defd("iterator", Nil, tpe(scalaIteratorSym, a), asIterator(a))
+          case ("contains", 1) | ("indexOf", 1) =>
+            // the two GENERIC bridges. `SeqOps.contains`/`indexOf` take `A1 >: A` — scala's own widening, so
+            // that `xs.contains(anAny)` type-checks — and a bridge declared at `A` would erase to
+            // the same `(Object)Boolean` as java's own member and reproduce the clash it is here to
+            // close. The cast is what java's `contains(Object)` formal already asks of every
+            // caller: `A1` may be `Any`, which is not a `java.lang.Object`.
+            val a1  = mint("A1", "A1", cls, TypeRepr.NoType, false)
+            val a1t = TypeRepr.TypeRef(TypeRepr.NoPrefix, a1)
+            val objT = TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
+            val pe  = param("elem", a1t)
+            val res = if b.row.scalaName == "contains" then tpe(boolSym) else tpe(intSym)
+            defd(b.row.scalaName, List(pe), res,
+                 callJ(List(Tree.Typed(ref(pe), TypeTree(objT, o), objT, o)), res),
+                 List(Tree.TypeDef(a1, TypeTree(TypeRepr.TypeBounds(a, TypeRepr.NoType), o), o)))
+          case ("remove", 2) =>
+            val pi = param("idx", tpe(intSym)); val pc = param("count", tpe(intSym))
+            defd("remove", List(pi, pc), unitTpe,
+                 helper("bufferRemoveRange", List(ref(pi), ref(pc)), unitTpe))
+          case ("insertAll", 2) =>
+            val pi = param("idx", tpe(intSym)); val pe = param("elems", tpe(iterableOnceSym, a))
+            defd("insertAll", List(pi, pe), unitTpe,
+                 helper("bufferInsertAll", List(ref(pi), ref(pe)), unitTpe))
+          case ("patchInPlace", 3) =>
+            val pf = param("from", tpe(intSym)); val pp = param("patch", tpe(iterableOnceSym, a))
+            val pr = param("replaced", tpe(intSym))
+            defd("patchInPlace", List(pf, pp, pr), selfT,
+                 Tree.Block(List(helper("bufferPatchInPlace", List(ref(pf), ref(pp), ref(pr)), unitTpe)),
+                            self, selfT, o))
+          case _ => scala.None
+      case _ => scala.None
+
+  /** DECISION PROVENANCE for one bridge — see [[Decision.Kind.BridgedMember]] for what the detail
+    * has to carry and why. `Reason.Universal`, because there is no key: java said
+    * `implements java.util.Map`, this phase chose the target, and telling the reader to edit a
+    * scope would cost them the session §4.45 is about. */
+  private def recordBridge(b: Bridge, sym: SymId, fqn: String, delegate: String, o: Origin): Unit =
+    record(Decision(
+      kind       = Decision.Kind.BridgedMember,
+      subject    = sym,
+      subjectFqn = fqn,
+      detail = Map(
+        "member"   -> s"${b.row.scalaName}/${b.row.arity}",
+        "parent"   -> b.kind.toString,
+        "delegate" -> delegate,
+        "why" -> ("the parent this phase minted declares this member and java's own is the wrong " +
+          "SHAPE for it, so java's member was RENAMED and scala's is synthesised over it. " +
+          "Retyping java's member instead would close the same error and delete whatever its " +
+          "result type was carrying; a rename moves a name and nothing else, and §4.55's machinery " +
+          "re-points every reference exactly"),
+      ),
+      reason = Reason.Universal("minted-parent-surface(§1, K28.1)"),
+      origin = o,
+    ))
 
   /** DECISION PROVENANCE for the `super` → `this` substitution (`ENGINE-LIMITS.md` K29).
     *
@@ -4907,6 +5345,24 @@ final class CollectionsTransform(
             val mapped = targets.collect {
               case ((tgt, k), tp) if !CollectionsTransform.standaloneTargets(tgt) => k -> firstTypeArg(tp)
             }
+            // …this class's OWN mapped clauses, and its ANCESTORS' read THROUGH the clause that
+            // names them. An inherited clause with the ancestor's own variables in it is the
+            // approximation `probes` states and is useless to a bridge — `IndexedItemSetMapBase[K,
+            // S, M] implements IndexedItemSetMap[K, S, M]`, whose interface extends `Map<K, S>`, has
+            // to arrive here as `Map[K, S]` in the SUBCLASS's variables or the emitted signature
+            // names types that are not in scope (§4.56). `ParentSubst` is the one substitution in
+            // the engine and is what the emitter already writes forwarded members with.
+            val declared = targets.collect {
+              case ((tgt, k), tp) if !CollectionsTransform.standaloneTargets(tgt) => k -> typeArgs(tp)
+            } ++ heads.flatMap { (h, tp) =>
+              if !shapeOf.contains(h) then Nil
+              else
+                val formals = shapeOf.get(h).map(_._2).getOrElse(Nil)
+                val actuals = typeArgs(tp)
+                val sub = if formals.sizeIs == actuals.size then formals.zip(actuals).toMap
+                          else Map.empty[SymId, TypeRepr]
+                resolve(h, seen + id).declared.map((k, as) => k -> as.map(ParentSubst.subst(_, sub)))
+            }
             val shimParents = targets.collect {
               case ((tgt, _), tp) if CollectionsTransform.standaloneTargets(tgt) => tgt -> tp
             }
@@ -4936,7 +5392,8 @@ final class CollectionsTransform(
                           tparams,
                           shims ++ above.flatMap(_.shims),
                           scalas ++ above.flatMap(_.targets),
-                          subsumed)
+                          subsumed,
+                          declared)
         memo(id) = out
         out
       })
@@ -4947,6 +5404,13 @@ final class CollectionsTransform(
   private def firstTypeArg(t: TypeRepr): Option[TypeRepr] = t match
     case TypeRepr.AppliedType(_, a :: _) => Some(a)
     case _                               => scala.None
+
+  /** every type argument the clause writes — `Nil` for a RAW one, which is exactly the arm the
+    * synthesis declines on: a raw `implements Map` names no key and no value, and inventing
+    * `java.lang.Object` for them would be §4.6's fabricated fact at the emitted signature. */
+  private def typeArgs(t: TypeRepr): List[TypeRepr] = t match
+    case TypeRepr.AppliedType(_, as) => as
+    case _                           => Nil
 
   /** does the KIND parent really iterate what the SHIM parent says this class iterates?
     *
@@ -5878,6 +6342,166 @@ object CollectionsTransform:
   private[balticporter] val UnsupportedOperationFqn = "java.lang.UnsupportedOperationException"
 
   // -------------------------------------------------------------------------------------------
+  // …and the SURFACE the minted parent DECLARES that java's own member cannot be — K28.1
+  // -------------------------------------------------------------------------------------------
+  //
+  // [[OverridesTarget]] above answers *is this modifier still true*; this table answers the family
+  // that no modifier repairs. A class re-parented onto `scala.collection.mutable.{Map, Set, Buffer}`
+  // owes that trait's abstract surface, and the java members it declares are the wrong SHAPE for it
+  // twice over: `put(K,V): V` against `Option[V]`, `iterator(): JavaIterator[A]` against a
+  // parameterless `Iterator[A]`, and `size(): Int` against a member that is `final` on a `SeqOps`.
+  //
+  // ==Why RENAME + SYNTHESISE rather than retype java's member==
+  // *Scala's member wins* — retype `iterator()` to `Iterator[A]` and be done — closes the row and
+  // opens the ones its RESULT TYPE was carrying: three declarations in one corpus library return
+  // `ReversibleIndexedIterator<X>` with `return anOrderedSet.iterator()` as their whole body, and
+  // that capability leaves the emitted surface with the retyping. Renaming java's member to
+  // `<name>$java` moves a NAME and nothing else — §4.55's machinery re-points every reference
+  // exactly, because java resolved all of them statically — and the synthesised scala member over it
+  // is what the parent asked for. The emitted surface at the java name is then what the retyping
+  // would have produced, with java's own member surviving beside it rather than deleted.
+  //
+  // ==Why the delegate is RENAMED even where scalac would accept the pair==
+  // The synthesised body has to NAME the java member, and scala resolves `this.get(k)` at `k: K`
+  // to the inherited `MapOps.get(K): Option[V]` — which calls nothing but itself. A bridge that
+  // recursed would compile, move no count and stack-overflow at the first call: `CLAUDE.md` §4.4's
+  // defect class reached through a delegation. So the delegate is renamed whenever it is a
+  // delegate, and the body then names a member nothing else declares.
+  //
+  // ==Both error directions are LOUD, which is what licenses a table here==
+  // Exactly [[OverridesTarget]]'s argument: a row too few leaves the `E164`/`needs to be abstract`
+  // the compiler already states, a row too many renames a java member and synthesises a scala one
+  // that overrides nothing — `E037`. Neither is silent. What is NOT in the table is any member a
+  // java class could implement AS WRITTEN (`size()` on a `Map`, `isEmpty()`, `clear()`, `add(E)` on
+  // a `Set`), because a bridge there would move emitted surface for nothing.
+
+  /** ONE member of that surface: what SCALA declares, and the JAVA member the bridge delegates to.
+    *
+    * `from` is a preference list and not one entry, because java relates its own members and a class
+    * need not declare the nearest: a `Map` implementor has no `iterator()` at all unless it also
+    * implements `Iterable`, and java's own spelling for the same traversal is
+    * `entrySet().iterator()`. The FIRST entry the class declares wins; where none is declared the
+    * row does not fire.
+    *
+    * `from = Nil` is the third case and means the row fires unconditionally with NO delegate — the
+    * three `mutable.Buffer` members java's `List` has no counterpart for at all, whose bodies are
+    * `JavaCollections`' own (see there). A row with a delegate is a translation of java; a row
+    * without one is scala's contract met over the bridges beside it, and the two are kept apart
+    * here rather than in the builder so a reader can see which is which. */
+  private[balticporter] final case class Bridged(scalaName: String, arity: Int,
+                                                 from: List[ExternalSurface.Member],
+                                                 required: Boolean = true)
+
+  private val ObjectArg = Some(Descriptor(List(Param.Named("Object"))))
+  private val IntArg    = Some(Descriptor(List(Param.Prim("int"))))
+
+  /** keyed by [[Kind]] for [[OverridesTarget]]'s reason: `mutable.HashMap`, `LinkedHashMap`,
+    * `TreeMap` and `TrieMap` all inherit one `MapOps`, and it is that trait's surface this is.
+    *
+    * `Kind.Stack`'s target is a CONCRETE runtime class with nothing abstract on it, and
+    * `Kind.Entry`/`Kind.Opt` are never a parent ([[UninheritableTargets]]) — so all three have no
+    * row and the mechanism is a no-op for them by arithmetic. */
+  private[balticporter] val BridgedTarget: Map[String, List[Bridged]] = Map(
+    Kind.Map.toString -> List(
+      // `MapOps.put` is CONCRETE and returns `Option[V]`; java's returns the value or null.
+      Bridged("put",         2, List(ExternalSurface.Member("put", 2)), required = false),
+      // `MapOps.get` is ABSTRACT and takes `K`; java's takes `Object` ON PURPOSE (K24), so the two
+      // are a legal overload pair — measured — and the recursion above is the reason for the rename.
+      Bridged("get",         1, List(ExternalSurface.Member("get", 1, ObjectArg))),
+      // `Growable.addOne` / `Shrinkable.subtractOne`, both abstract, both spelled over java's own
+      // `put`/`remove`. No java member is named either of these, so nothing is renamed FOR them —
+      // they ride on the two rows above.
+      Bridged("addOne",      1, List(ExternalSurface.Member("put", 2))),
+      Bridged("subtractOne", 1, List(ExternalSurface.Member("remove", 1, ObjectArg))),
+      Bridged("iterator",    0, List(ExternalSurface.Member("iterator", 0),
+                                  ExternalSurface.Member("entrySet", 0))),
+      // …and the two `MapOps` declares CONCRETELY, so a class that declares neither owes nothing
+      // and is not reported as owing anything. Only a java member of the SAME NAME is a problem,
+      // which is exactly when the row fires.
+      Bridged("values",      0, List(ExternalSurface.Member("values", 0)), required = false),
+      Bridged("keys",        0, List(ExternalSurface.Member("keys", 0)),   required = false),
+    ),
+    Kind.Set.toString -> List(
+      Bridged("contains",    1, List(ExternalSurface.Member("contains", 1, ObjectArg))),
+      Bridged("addOne",      1, List(ExternalSurface.Member("add", 1))),
+      Bridged("subtractOne", 1, List(ExternalSurface.Member("remove", 1, ObjectArg))),
+      Bridged("iterator",    0, List(ExternalSurface.Member("iterator", 0))),
+    ),
+    Kind.Seq.toString -> List(
+      Bridged("apply",       1, List(ExternalSurface.Member("get", 1, IntArg))),
+      Bridged("length",      0, List(ExternalSurface.Member("size", 0))),
+      Bridged("update",      2, List(ExternalSurface.Member("set", 2))),
+      Bridged("insert",      2, List(ExternalSurface.Member("add", 2))),
+      Bridged("prepend",     1, List(ExternalSurface.Member("add", 2))),
+      Bridged("addOne",      1, List(ExternalSurface.Member("add", 1))),
+      // java declares BOTH `remove(int)` and `remove(Object)` on a `List` and scala's `Buffer` has
+      // only the first — the descriptor is what keeps the by-value overload out of this row, which
+      // is the same distinction `OverridesTarget`'s `Seq` row carries for the same pair.
+      Bridged("remove",      1, List(ExternalSurface.Member("remove", 1, IntArg))),
+      Bridged("iterator",    0, List(ExternalSurface.Member("iterator", 0))),
+      // `SeqOps.contains[A1 >: A](elem: A1)` is CONCRETE, so a class that declares no `contains` of
+      // its own owes nothing — and one that does declare java's `contains(Object)` has a member
+      // with the SAME ERASURE as scala's, which is `E120 Name clash` rather than an override. It is
+      // the `Kind.Map` `values`/`keys` shape at a different trait, and the only row whose scala
+      // side is GENERIC: the bridge has to carry `[A1 >: A]` or it is a second overload at the same
+      // erasure and the clash is exactly where it was.
+      Bridged("contains",    1, List(ExternalSurface.Member("contains", 1, ObjectArg)), required = false),
+      Bridged("indexOf",     1, List(ExternalSurface.Member("indexOf", 1, ObjectArg)),  required = false),
+      // …and the three with no java counterpart at all. See `JavaCollections`' own note.
+      Bridged("remove",       2, Nil),
+      Bridged("insertAll",    2, Nil),
+      Bridged("patchInPlace", 3, Nil),
+    ),
+  )
+
+  /** WHICH delegates the emitted parent would CAPTURE — the set that decides the rename, and the
+    * only reason [[BridgedTarget]] is not the whole mechanism.
+    *
+    * A bridge body names its delegate, and scala resolves that name against the class AND its new
+    * parent. Where the parent declares the same (name, arity), the call binds to the PARENT's member
+    * — `this.get(k)` at `k: K` is `MapOps.get(K): Option[V]`, which is the bridge itself — and the
+    * emitted body is an infinite recursion that compiles, moves no count and overflows the stack at
+    * the first call. So a captured delegate is renamed out of the way and an uncaptured one is left
+    * exactly as java wrote it.
+    *
+    * Both directions are loud, again: a missing entry is that recursion, and a spurious one renames
+    * a java member the parent never declared and synthesises a scala member over it that overrides
+    * nothing (`E037`). What is deliberately ABSENT is every delegate the target does not declare —
+    * `entrySet()`, and a `Buffer`'s `get(int)`/`set(int,E)`/`add(int,E)`/`add(E)`, none of which is
+    * a `scala.collection` member name — because renaming those would move emitted surface for a
+    * hazard that does not exist. */
+  private[balticporter] val CapturedByTarget: Map[String, Set[ExternalSurface.Member]] = Map(
+    // `MapOps` declares all six, three of them concretely (`put`, `values`, `keys`) and `get`
+    // abstractly; `iterator` arrives from `IterableOnce` and `remove` from `mutable.MapOps`.
+    Kind.Map.toString -> Set(
+      ExternalSurface.Member("put", 2), ExternalSurface.Member("get", 1, ObjectArg),
+      ExternalSurface.Member("remove", 1, ObjectArg), ExternalSurface.Member("iterator", 0),
+      ExternalSurface.Member("values", 0), ExternalSurface.Member("keys", 0),
+    ),
+    // `mutable.SetOps` declares `add`/`remove` CONCRETELY over `addOne`/`subtractOne`, which is
+    // exactly the recursion this set exists to break; `contains` is `SetOps`', `iterator` is
+    // `IterableOnce`'s.
+    Kind.Set.toString -> Set(
+      ExternalSurface.Member("contains", 1, ObjectArg), ExternalSurface.Member("add", 1),
+      ExternalSurface.Member("remove", 1, ObjectArg), ExternalSurface.Member("iterator", 0),
+    ),
+    // `SeqOps.size` is FINAL — the one row where the rename is not merely how the bridge names its
+    // delegate but the only repair there is, which is what `ENGINE-LIMITS.md` K28's own table
+    // already prescribed. `remove(int)` is `Buffer`'s abstract by-INDEX member (the by-value
+    // overload java also declares is not one, hence the descriptor).
+    Kind.Seq.toString -> Set(
+      ExternalSurface.Member("size", 0), ExternalSurface.Member("remove", 1, IntArg),
+      ExternalSurface.Member("iterator", 0), ExternalSurface.Member("contains", 1, ObjectArg),
+      ExternalSurface.Member("indexOf", 1, ObjectArg),
+    ),
+  )
+
+  /** the SUFFIX a captured java member is renamed with. `$java` and not `$1` or a counter: an
+    * emitted name keyed on anything wider than the declaration that holds it turns `members.tsv`
+    * into churn (`ENGINE-LIMITS.md` M10). */
+  private[balticporter] val BridgeSuffix = "$java"
+
+  // -------------------------------------------------------------------------------------------
   // THE JDK DEFAULTS A RE-PARENTING REMOVES — `ENGINE-LIMITS.md` K29
   // -------------------------------------------------------------------------------------------
   //
@@ -5926,7 +6550,13 @@ object CollectionsTransform:
          "toSet", "toMap", "fromJava", "toJava", "toStream", "entryToPair",
          "mapGet", "mapContainsKey", "mapRemove",
          "setContains", "setRemove", "keySetView", "entrySetView",
-         "optionalOrElse")
+         "optionalOrElse",
+         // …and the three `mutable.Buffer` members a re-parented `java.util.List` owes and java
+         // declares no counterpart for at all (K28.1). Named `buffer*` rather than after the scala
+         // member, because `insertAll` above is java's `addAll(int, Collection)` and two overloads
+         // of one name at one receiver would be an ambiguity between a helper and the very member
+         // that calls it.
+         "bufferRemoveRange", "bufferInsertAll", "bufferPatchInPlace")
 
   // -------------------------------------------------------------------------------------------
   // WHAT THIS PHASE HANDLES, as data — the answer `JdkSurfaceCheck` needs and the arms cannot give
