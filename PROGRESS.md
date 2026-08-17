@@ -4278,9 +4278,56 @@ contribution and `residue` is what it ADDED to a lane.
 
 | # | extension | java | units | errors | tests | residue it added |
 |---|---|---:|---:|---:|---:|---|
-| 20 | `ext-gfm-tasklist` | 12 | 10 | 0 | — | `omissions` +2 (two dropped annotations), `overload-risk` +5 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
+| 20 | `ext-gfm-tasklist` | 12 | 10 | 0 | — | `omissions` +2 (two dropped annotations), `overload-risk` +5 |
+| 21 | `ext-gitlab` | 16 | 14 | 0 | — | `overload-risk` +22, `jdk-surface` **0 → 1** (`List#clear()`, 3 sites) |
+| 22 | `ext-macros` | 14 | 12 | 0 | **38/38** | `overload-risk` +9, `omissions` +1 — the FOURTH 2b module, on `ext-gitlab` |
+| 23 | `ext-wikilink` | 16 | 14 | 0 | — | `overload-risk` +16, `collection-boundary` **0 → 1** (`StringBuilder#append(Object)`, an EXTERNAL callee) |
+| 24 | `ext-gfm-strikethrough` | 17 | 15 | 0 | — | **NONE — every check count identical.** Two extensions in one module, and the port's first `*YouTrackRenderer` |
+| 25 | `ext-media-tags` | 18 | 17 | 0 | — | `overload-risk` +18 |
+| 26 | `ext-attributes` | 20 | 18 | 0 | **54/54** | `jdk-surface` +2, `idiom(refused)` +2, `omissions` +1, `overload-risk` +15 |
+| 27 | `ext-tables` | 20 | 18 | 0 | **180/180** | `base-surface` +1, `omissions` +2, `dependency-coverage` +2, `idiom(refused)` +3, `overload-risk` +16 |
+| — | `ext-enumerated-reference` | 23 | — | **2** | — | **SKIPPED — `ENGINE-LIMITS.md` C16**, `E049 Reference to html is ambiguous` ×2 |
+| — | `ext-toc` | 28 | — | **2** | — | **SKIPPED — `ENGINE-LIMITS.md` C16**, `E007 Type Mismatch` on `Pair[TocOptions, …]` ×2 |
 
-**AND THE ORDER FOR THE REMAINING NINE IS ASCENDING SIZE WITH ONE BEND, read off the IMPORTS rather
+Batch 3 totals: **8 modules admitted (19 → 27 of 29), 166 → 284 units, 0 errors, 34 → 180 of 180
+tests passing**, `manifest` / `port-map` / `policy` 0 throughout and `expected-lost` 0 on every wave.
+TWO modules were measured and SKIPPED, each at exactly two compile errors and each on a different
+engine gap (`ENGINE-LIMITS.md` C16) — which is the batching rule paying for itself rather than
+failing: they are the two LARGEST remaining modules, they were reached last by ascending size, and
+each surfaced its gap in one lane run with every other module already green.
+
+**THE TEST TRIAGE GAINED A THIRD CONJUNCT, AND IT WAS MEASURED RATHER THAN REASONED.** The pair
+predicate names the files that DECLARE a plain `@Test`; four of `ext-tables`' five extend
+`MarkdownTableTestBase`, a class in the SAME test source set with ZERO `@Test` of its own. Admitting
+only the five put a supertype in the emitted suites that is not there: **283 ×
+`E008 type MarkdownTableTestBase is not a member of ssg.md.ext.tables`**, every one in the extension
+TEST scope and none in main. So the rule is: *a file the admitted files EXTEND, from the same test
+source set, comes with them* — it adds nothing to `test_discovery_guard`'s denominator, and it still
+has to pass the predicate's SECOND conjunct on its own.
+
+**AND `ext-tables` IS THE SECOND MODULE TO CARRY A `base-surface` ROW AND SHIP, which is a judgement
+and not a rule.** Its `TableBlock(List<BasedSequence>)` loses `super(lineSegments)` to the same cause
+`ext-jekyll-tag` did — `ssg-md` publishes two `ContentNode#getSpanningChars` overloads that do not
+agree on placement, and a member key with no parameter spelling cannot resolve the name — and unlike
+jekyll-tag's, this constructor is LIVE (`TableParagraphPreProcessor` builds every table with it).
+What settles it is again reading the CALL SITE: java itself calls `tableBlock.setCharsFromContent()`
+twenty-five lines later, so `chars` is restored on the emitted path exactly as on java's, and the one
+field left behind is `lineSegments`, which nothing in the module reads. A counted residue, not
+`ENGINE-LIMITS.md` C15's entry point.
+
+**MILESTONE 2 — THE CLOSING STATE.**
+
+| | |
+|---|---|
+| modules | **27 of the 29 covered `flexmark-ext-*`**, as ONE dependent port at ONE port root |
+| units | **284 emitted Scala files**, 0 dropped, 0 injected |
+| compile | **0 errors**, base tree and extension tree compiled TOGETHER on one invocation |
+| suite | **180 of 180 passing**, from 12 admitted plain-`@Test` files across 8 modules, `expected-lost` 0 |
+| shared surface | `manifest` 0 over 458 shared types, `port-map` 0, `policy` 0 |
+| counted residue | `overload-risk` 225, `omissions` 12, `jdk-surface` 3, `idiom(refused)` 6, `dependency-coverage` 4, `portability(emitted)` 3, `base-surface` 2, `collection-boundary` 1, `trivia(recovered)` 4 |
+| EXCLUDED, with reasons | `ext-enumerated-reference` and `ext-toc` (`ENGINE-LIMITS.md` C16, 2 errors each); the three modules with no coverage in the reference hand port (`spec-example`, `xwiki-macros`, `zzzzzz`), which were never in scope (§10.6.1); the 114 `ComboSpecTestCase` subclasses and 59 `@RunWith(Suite.class)` aggregators, which are the documented refusal and need a hand-written MUnit driver |
+
+**THE ORDER FOR THE REMAINING NINE WAS ASCENDING SIZE WITH ONE BEND, read off the IMPORTS rather
 than off the poms.** Only two of the nine reference another extension at all —
 `ext-macros` imports `com.vladsch.flexmark.ext.gitlab` and `ext-enumerated-reference` imports
 `com.vladsch.flexmark.ext.attributes` — so `gitlab` (16) precedes `macros` (14), which is the one

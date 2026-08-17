@@ -2850,6 +2850,39 @@ module's own row.*
 
 ---
 
+### C16. TWO EXTENSIONS MEASURED AND SKIPPED AT **2 COMPILE ERRORS EACH**, and neither is a constructor question — **OPEN**
+
+Batch 3 of milestone 2 admitted seven of its nine remaining modules at 0 errors and stalled on two,
+each on a DIFFERENT engine gap and each at exactly two errors. Both are recorded rather than fixed
+because a batch wave's job is to surface a gap at the lowest cost per gap, not to close it; both
+modules are out of `ext.conf`'s `includeGlobs` and out of the `Justfile`'s `md_ext_modules`.
+
+**`flexmark-ext-enumerated-reference` — 2 × `E049 Reference to html is ambiguous`.**
+`EnumeratedReferenceNodeRenderer#render(link, context, html)` builds
+`new OrdinalRenderer(this, context, html) { … }` and the anonymous body reads a bare `html`. That is
+`CLAUDE.md` §4.55's FOURTH face — a CAPTURE, not a member, is the thing that has to move — and
+`resolveCapturedLocalClashes` is the pass for it. Its guard is *referenced inside the nested body AND
+the body declares or inherits the name*, which is the right shape and does not fire here: scala 3's
+ambiguity rule is not shadowing at all, it is *this name is BOTH defined in an enclosing scope AND
+inherited*, and the two are different questions with the same symptom. Whoever closes it should
+start by asking whether the rename guard's second conjunct sees an inherited name reached through a
+PARENT'S CONSTRUCTOR PARAMETER, which is what `OrdinalRenderer(…, html)` promotes.
+
+**`flexmark-ext-toc` — 2 × `E007 Type Mismatch` on `Pair[TocOptions, …]`.**
+`TocOptionTypes#parseOption` and `SimTocOptionTypes#parseOption` build a `util.misc.Pair` whose first
+component is a `TocOptions`, and the emitted type does not conform where java's did. It is a
+GENERICS gap on a program-declared generic pair, not a JDK-collection one, so nothing in the
+collections family is party to it.
+
+Note what both cost, because it is the argument for the batching rule rather than against it: the
+two are the LARGEST remaining modules (23 and 28 java files), they were reached last by ascending
+size, and each surfaced its gap in one lane run with every other module already green.
+
+*Fix kind: (a) engine, both. OPEN. `PROGRESS.md` §10.6.8 carries the two rows and the M2 closing
+state.*
+
+---
+
 ## 3. `this`, inner classes and anonymous classes
 
 ### T1. A `CtNewClass` is a SUBTYPE of `CtConstructorCall` — 156 silently dropped bodies
