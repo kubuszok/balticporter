@@ -7895,7 +7895,17 @@ everything else anchors, which also takes `Kind.Entry`/`Kind.Opt` correctly for 
   from `StandardTraversal.allClassDefs`, and an anonymous body is a `Tree.AnonClass` hanging off a
   `Tree.New`, not a `ClassDef`. Widening `parentClash` to reach it is a WIDENING of a record four
   other seams read (`pinnedByObject`, `superLostItsDefault`, `mintedSourceKind`, `coerce`), so it is
-  §5's measure-it-on-the-ports-it-was-not-aimed-at case and belongs in its own commit;
+  §5's measure-it-on-the-ports-it-was-not-aimed-at case and belongs in its own commit.
+  **CLOSED at wave 21: ssg-md 32 -> 31.** The widening is `StandardTraversal.allAnonClasses` beside
+  `allClassDefs` — the two together are the complete population of type-like BODIES a unit declares,
+  and neither alone is, because an anonymous class has NO `parents` list at any node kind: java writes
+  its one supertype at the `new`. `declaredParentKinds` therefore reads a
+  `(parents, own type parameters)` view keyed by symbol rather than a `ClassDef`, and an anonymous
+  class's `Nil` type parameters are EXACT — java's grammar has nowhere to declare one. The
+  measured blast is what the entry asked for and what it did not predict: **2 member digests, both in
+  the one owner, and 0 on every other lane** — so the four other readers had been told the same
+  non-fact about every anonymous collection body in the corpus and had nothing to show for it, which
+  is precisely why the widening had to be measured rather than reasoned about;
 - **`BasedSequence#getBuilder()`** — not a collection row at all. It is the `getBuilder` family below.
 
 **And a MEMBER WITH NO ERROR ROW IS NOT A MEMBER THAT WAS RIGHT.** 73 members were stripped and 71

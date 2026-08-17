@@ -461,6 +461,26 @@ object StandardTraversal:
     mapClassDef(ph, t)
     acc.result()
 
+  /** …and every ANONYMOUS class body a unit contains, paired with the `new` that names its parent.
+    *
+    * A `Tree.AnonClass` is not a `Tree.ClassDef` and never will be: it has no `parents` list of its
+    * own, because java writes the supertype at the `new` and the body carries only members. So a
+    * reader that needs *this type and what it extends* cannot get an anonymous body out of
+    * [[allClassDefs]] at any node kind, and the two together are the complete population of
+    * type-like bodies a unit declares. `OverrideGraph.Collector` already treats the pair as one node
+    * for exactly this reason; this is the same derivation exposed where a scan can reach it, so the
+    * next reader does not write a third recursion (CLAUDE.md §3).
+    *
+    * The `TypeTree` handed back is the `new`'s own — the named supertype WITH its arguments — and not
+    * the anonymous symbol's, which has none. */
+  def allAnonClasses(t: Tree.ClassDef)(using Program): List[(Tree.AnonClass, TypeTree)] =
+    val acc = List.newBuilder[(Tree.AnonClass, TypeTree)]
+    val ph = new Phase:
+      def name: String = "standard-traversal/scan-anon-classes"
+      override def transformNew(x: Tree.New)(using Program): Term = { x.anon.foreach(a => acc += (a -> x.tpt)); x }
+    mapClassDef(ph, t)
+    acc.result()
+
   private def scanner[A](init: A)(f: (A, Term) => A): (Phase, () => A) =
     var acc = init
     val ph = new Phase:

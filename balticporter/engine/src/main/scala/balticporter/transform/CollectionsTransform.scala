@@ -4770,6 +4770,16 @@ final class CollectionsTransform(
     * `body.collect` (§3): a class nested inside a method body is a `Tree.ClassDef` in a
     * `BlockStatement` and a members-only walk answers *there is no nested type here*.
     *
+    * ==AND `allAnonClasses` BESIDE IT, because an anonymous body is not a `ClassDef` at all==
+    * `new ReversiblePeekingIterable<Node>() { … }` is a `Tree.AnonClass` hanging off a `Tree.New`,
+    * with its parent written at the `new` and no `parents` list of its own — so no node kind gets it
+    * out of `allClassDefs`, and every reader of this record answered *this type extends nothing this
+    * phase touched* about a body whose one supertype the phase had just re-parented. The member half
+    * showed as an `E037` on a `forEach` the shim does not declare (`ENGINE-LIMITS.md` K28); the four
+    * OTHER readers of this record — `pinnedByObject`, `superLostItsDefault`, `mintedSourceKind`,
+    * `coerce` — were being told the same non-fact and had no error to show for it, which is §5's
+    * *widen a guard and measure it on the ports it was not aimed at* exactly.
+    *
     * Three kinds of parent are excluded and each for a reason this phase already states elsewhere:
     * one the SCOPE held back keeps java's parent ([[restoreExcluded]]), one whose target cannot BE a
     * parent keeps java's ([[restoreUninheritableParents]]), and one the mapping does not cover was
@@ -4798,17 +4808,24 @@ final class CollectionsTransform(
       case t: TypeTree => t.tpe
       case t: Term     => t.tpe
     val classes = p.units.flatMap(StandardTraversal.allClassDefs)
-    val byId    = classes.map(cd => cd.symbol -> cd).toMap
+    val anons   = p.units.flatMap(StandardTraversal.allAnonClasses)
+    /** (what this type extends, what type parameters it declares) — the two things `resolve` reads,
+      * for BOTH kinds of type-like body. An anonymous class has exactly one parent, written at the
+      * `new` rather than in its own node, and NO type parameters: java's grammar has no place to
+      * declare one on an anonymous class, so `Nil` here is exact and not an approximation. */
+    val shapeOf: Map[SymId, (List[TypeRepr], List[SymId])] =
+      classes.map(cd => cd.symbol -> (cd.parents.map(tpeOf), cd.tparams.map(_.symbol))).toMap ++
+        anons.map((a, tpt) => a.symbol -> (List(tpt.tpe), Nil))
     val memo    = collection.mutable.Map.empty[SymId, MintedParents]
 
     def resolve(id: SymId, seen: Set[SymId]): MintedParents =
       memo.getOrElse(id, {
-        val out = byId.get(id) match
+        val out = shapeOf.get(id) match
           case _ if seen(id) || excluded.contains(id) || uninheritableSyms.contains(id) =>
             MintedParents(Set.empty, Nil, Nil, Set.empty)
           case scala.None => MintedParents(Set.empty, Nil, Nil, Set.empty)
-          case Some(cd) =>
-            val heads = cd.parents.map(tpeOf).flatMap(tp => headSym(tp).map(_ -> tp))
+          case Some((parents, tparams)) =>
+            val heads = parents.flatMap(tp => headSym(tp).map(_ -> tp))
             val targets = heads.flatMap { (h, tp) =>
               p.symbolOf(h).flatMap(s => typeMap.get(s.fullName)).map(_ -> tp)
             }.filterNot { case ((tgt, _), _) => CollectionsTransform.UninheritableTargets(tgt) }
@@ -4818,20 +4835,20 @@ final class CollectionsTransform(
             val shims  = targets.collect {
               case ((tgt, _), _) if CollectionsTransform.standaloneTargets(tgt) => tgt
             }.toSet
-            val above  = heads.map(_._1).filter(byId.contains).map(resolve(_, seen + id))
+            val above  = heads.map(_._1).filter(shapeOf.contains).map(resolve(_, seen + id))
             val scalas = targets.collect {
               case ((tgt, _), _) if !CollectionsTransform.standaloneTargets(tgt) => tgt
             }.toSet
             MintedParents(mapped.map(_._1).toSet ++ above.flatMap(_.kinds),
                           mapped.flatMap(_._2) ++ above.flatMap(_.probes),
-                          cd.tparams.map(_.symbol),
+                          tparams,
                           shims ++ above.flatMap(_.shims),
                           scalas ++ above.flatMap(_.targets))
         memo(id) = out
         out
       })
 
-    classes.map(cd => cd.symbol -> resolve(cd.symbol, Set.empty))
+    shapeOf.keys.map(id => id -> resolve(id, Set.empty))
       .filter((_, mp) => mp.kinds.nonEmpty || mp.shims.nonEmpty).toMap
 
   private def firstTypeArg(t: TypeRepr): Option[TypeRepr] = t match
