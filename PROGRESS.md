@@ -2832,8 +2832,9 @@ how many are left. Only `errors.tsv`'s MEMBER column can, and it moved from `Ref
 `SegmentedSequenceFull`. Its second commit closed that one and the gate opened all the way: **131**,
 which is `RefChecks` and every check behind it, over 36 owners.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15, → 2 after wave 16, → 1 after wave 17 — and the 1 is NOT A TYPER ERROR — → 1 after wave 18 (a DIFFERENT one, because the post-typer risers are SERIALISED) and then → **131**, `RefChecks` HAVING RUN, → **60** and then → **42** after wave 19, → **34** after wave 20, → **27** after wave 21, → **27** after wave 22 and → **0** after wave 23 (K28.1's FIRST commit, whose
-flatness is its result — see below)**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15, → 2 after wave 16, → 1 after wave 17 — and the 1 is NOT A TYPER ERROR — → 1 after wave 18 (a DIFFERENT one, because the post-typer risers are SERIALISED) and then → **131**, `RefChecks` HAVING RUN, → **60** and then → **42** after wave 19, → **34** after wave 20, → **27** after wave 21, → **27** after wave 22 (K28.1's FIRST commit, whose
+flatness is its result) and → **0** after wave 23 (its member commit, which is one table and not
+three — see below). THE PORT IS GREEN AND ITS SUITE RUNS (§10.6.6)**
 
 Every error is `EngineGap`. Eighteen waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -3017,7 +3018,20 @@ commit — and one `E038` at `getBuilder`, which is the F-bound family and not a
 | 32 → 31 | **an `E037` inside an ANONYMOUS class body** — `NodeIterable#EMPTY`'s `forEach` under a `JavaIterable` that declares only `iterator()`. `CollectionsTransform.parentClash` is built from `allClassDefs`, and an anonymous body is a `Tree.AnonClass` hanging off a `Tree.New` with NO `parents` list at any node kind — java writes its one supertype at the `new` — so no widening of that walk reaches it and `StandardTraversal.allAnonClasses` had to exist beside it. The record now keys a `(parents, own type parameters)` view by symbol; an anonymous class's `Nil` type parameters are exact, java's grammar having nowhere to declare one. **2 member digests in the one owner, 0 on every other lane** — which is the whole point of measuring it: the four OTHER readers of that record (`pinnedByObject`, `superLostItsDefault`, `mintedSourceKind`, `coerce`) had been told the same non-fact about every anonymous collection body in the corpus with nothing to show for it | K28 |
 | 34 → 32 | **a java FIELD named like a method an UNPARSED ancestor declares** — `BlockContinueImpl#finalize` under `java.lang.Object.finalize()` and `RepeatedSequence#chars` under `java.lang.CharSequence.chars()`, both emitted `private var X` under a method scala says they cannot override. `TirEmitter.resolveFieldShadowing`'s `inherited(cd)` walked `declOf` and therefore compared a field against the library's own hierarchy and against nothing else; the conjunct is `isKnown(fqn) && mayDeclare(fqn, sig)` over `OverrideGraph.externalAncestorsOf` plus `javaLangObjectDeclares` asked separately — and `mayDeclare`'s unknown-is-YES arm is exactly what this reader must NOT take, since *must I rename this* answered from no evidence moves emitted surface on every port. The second row needed `java.lang.CharSequence` STATED in `ExternalSurface.jdkPlatform`, which the doc comment had refused: *large* and *version-dependent* are two arguments in one sentence, and only the first survives a frontend that PINS a compliance level. **0 moved digests and identical error counts on all twelve other lanes**; `JS-C04` moved `unreached → consulted` on both ssg-md lanes, which is the one count that says the pass now decides about a declaration it could not previously see | K28.2 |
 
-**WHERE WAVE 22 STARTS: the 27 that remain are `ENGINE-LIMITS.md` K28.1's and NOTHING ELSE'S.** Wave
+**AND WAVE 23 CLOSED ALL 27 WITH ONE MECHANISM — 27 -> 0, the port is GREEN and its suite runs.**
+The seventeen `E164` rows and the ten `needs to be abstract` ones were never two families: a class the
+mapping re-parented owes its new parent's surface, and whether java declares a member at one of those
+names in the WRONG SHAPE (`E164`) or declares none at all (unimplemented), the answer is the same row
+— rename java's member out of the way through §4.55's `MemberRenamer`, synthesise scala's over it,
+delegate. Four things the build settled that the pricing below did not, each with its number in
+`ENGINE-LIMITS.md` K28.1: the rename is about the BODY and not only about the error (an unrenamed
+delegate is an infinite recursion that compiles); `MemberRenamer`'s world screen refused all 40
+requests until it was told which parents THIS PHASE had removed; a (name, arity) delegate key names
+two members and java's own resolution phases pick; and the risers are SERIALISED, the next two being
+`E120 Name clash` rows no census had named. `collection-boundary` 20 = 20, `overload-risk` 557 -> 538,
+53 `BridgedMember` decisions, 167 member digests with an EMPTY residue.
+
+**WHERE WAVE 22 STARTED: the 27 that remained were `ENGINE-LIMITS.md` K28.1's and NOTHING ELSE'S.** Wave
 21 took the four families that were not the minted-parent question — the two java fields named like
 inherited JDK methods, the anonymous-body `E037`, the one real visibility row and the three
 substituted-override rows — and what is left is exactly 17 `E164` at a collection parent and 10
@@ -3479,7 +3493,8 @@ is not available: on `OrderedMap` the retyping loses nothing (`entryIterator()` 
 and on `OrderedSet` it deletes the only forward reversible iterator the class has, and choosing from
 *does this type survive under another name in this program* is §4.56's forbidden inference.
 
-**WHAT REMAINS IS THE SAME 27 AND IT IS NOW A WORK LIST WITH A MECHANISM ATTACHED**: 17 `E164` at a
+**WHAT REMAINED AT WAVE 22 WAS THE SAME 27, AS A WORK LIST WITH A MECHANISM ATTACHED — and wave 23
+built that mechanism and closed every one of them**: 17 `E164` at a
 collection parent (`put` 5, `iterator` 5, `values` 4, `keys` 2, `size` 1 — read from the FULL
 compiler output, which splits them into 14 *has incompatible type*, 2 *needs `override` modifier*
 (both `keys`) and 1 *cannot override final* (`SeqOps.size`)) and 10 `needs to be abstract`. Two
