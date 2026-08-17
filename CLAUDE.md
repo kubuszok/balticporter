@@ -448,6 +448,29 @@ the INJECTION is a build artefact, and exactly one module must ship each replace
 dependent that copied it would emit a second definition of the same FQN. Every check that asks "is
 this replaced?" follows the same line and holds a module to its OWN drops only.
 
+**And HOW MANY PORTS a library needs is decided by the DESTINATION, never by the upstream's module
+count — because a run's EMISSION IDENTITY is the pair (`portRoot`, `sourceSet`).** `SourceSet` is
+`main | test` and nothing else, and `PortRun` opens its emission with an unconditional
+`wipe(emitDir)`: a second run at the same pair does not merge with the first, it DELETES it. So one
+destination module has exactly TWO emission slots, and an upstream that splits one library across N
+maven modules — which is ordinary, and says nothing about java, since all N may declare under one
+package root — cannot be N ports. It is ONE port whose scope is a list of globs, exactly as a base
+whose scope is twelve modules is one port. The upstream's `pom.xml` count is not a fact about the
+port; §2.1's rule (a port is named for its DESTINATION) is the same sentence read at the name.
+
+Two consequences worth stating because each looks like the opposite decision. **A batch is a SCOPE
+edit, not a new port**: admitting the next upstream module is one glob in the conf and one name in
+the lane's denominator, the report identity never moves (§2.1's third exemption — a baseline whose
+directory changes with the scope cannot be diffed across one), and the baseline is one baseline that
+grows. **And where the destination module genuinely needs a THIRD tree** — a base already spending
+both slots on `main` and `test`, and a family of dependents that must land in that same module — the
+answer is a port root of its own whose emitted packages are DISJOINT from the base's, compiled beside
+it on every lane; the consumer's build overlays the two exactly as it already overlays `src_managed/`
+and `src/`. What that must not become is a port root per upstream module, which is N names for a
+module the reference build does not have. Measured on the first library to need it: 29 upstream
+extension modules landing in one hand-ported module, opened as ONE dependent port at 0 errors with
+`manifest` and `base-surface` 0 over 458 shared types.
+
 **And a phase that SYNTHESISES a declaration owes the same answer, which is the half the table
 cannot state.** An inherited phase is one instance and it RUNS in every module — those are different
 questions, and asking only the first ("does any dependent CONSTRUCT this phase?", the instance count

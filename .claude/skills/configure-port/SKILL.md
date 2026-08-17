@@ -256,6 +256,26 @@ about the BASE's build and is ignored here.
 What it cannot see, so do not trust it further: a parameterised phase's CONFIGURATION unless that
 phase implements `SurfacePolicy`; nested-type drops; anything about the base's emitted output.
 
+### 6.1 How MANY confs? — count DESTINATIONS, never upstream modules
+
+A run's emission identity is the pair (`portRoot`, `sourceSet`); `sourceSet` is `main | test` and
+nothing else; and the run opens its emission with an unconditional wipe. **A second run at the same
+pair deletes the first's output** — no error, no finding, just a smaller tree. So:
+
+- an upstream that splits ONE library across N maven modules that all declare under one package root
+  is **one conf**, whose scope is a list of globs. Adding the next module is one glob, and the report
+  identity must NOT move with it (`CLAUDE.md` §2.1) or the baseline cannot be diffed across a wave;
+- a **second SOURCE SET** of the same destination (`main` + `test`) is a second conf at the SAME
+  `portRoot`, with `base = "main.conf"`;
+- a destination that needs a **THIRD** tree — a base already spending both slots, plus a family of
+  dependents landing in that same consumer module — takes a `portRoot` of its own whose emitted
+  packages are DISJOINT from the base's, compiled beside it on every lane. Name it for the
+  destination and which half of it, and never one port root per upstream module: that is N names for
+  a module the consumer's build does not have.
+
+Signs you got this wrong: a lane whose emitted file count fell with no scope change; two ports that
+each compile alone and cannot compile together; a `port-report/` directory per upstream module.
+
 ## 7. Any key nobody reads FAILS the run
 
 HOCON accepts any document it can parse, so a misspelt key is a policy entry that silently does
