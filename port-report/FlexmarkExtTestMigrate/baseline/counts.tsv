@@ -13,11 +13,11 @@ collection-closure	0
 collection-internal	0
 collection-retarget	0
 dependency-coverage	0
-dependency-coverage(all)	12
+dependency-coverage(all)	14
 dependency-coverage(declared)	0
 heap-pollution	0
 idiom(converted)	0
-idiom(refused)	0
+idiom(refused)	2
 idiom(residue)	0
 jdk-surface	0
 manifest	0

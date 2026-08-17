@@ -1,5 +1,5 @@
 #check	count
-base-surface	1
+base-surface	2
 break-catch	0
 cast-conversion	0
 catalog(consulted)	97
@@ -12,18 +12,18 @@ collection-boundary	1
 collection-closure	0
 collection-internal	0
 collection-retarget	0
-dependency-coverage	2
-dependency-coverage(all)	12
+dependency-coverage	4
+dependency-coverage(all)	14
 dependency-coverage(declared)	1
 heap-pollution	0
 idiom(converted)	0
-idiom(refused)	3
+idiom(refused)	6
 idiom(residue)	0
 jdk-surface	3
 manifest	0
 markers	0
-omissions	10
-overload-risk	209
+omissions	12
+overload-risk	225
 policy	0
 port-map	0
 portability(all)	21
@@ -38,5 +38,5 @@ substitution(emitted)	0
 switch-null	0
 trivia	0
 trivia(deliberate)	0
-trivia(recovered)	3
+trivia(recovered)	4
 try-resource	0
