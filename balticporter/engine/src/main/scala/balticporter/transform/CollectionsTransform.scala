@@ -3512,6 +3512,24 @@ final class CollectionsTransform(
     // taken LITERALLY, no factory matches it, and the seam is left for `CollectionBoundaryCheck`
     // to count as `Issue.ScopedOut` — which is the honest answer, since no wrap can close it.
     def scalaSym(x: SymId, scoped: Boolean): SymId = if scoped then x else remap.getOrElse(x, x)
+    // …AND A CONDITIONAL'S CONVERSION BELONGS TO ITS BRANCHES, which is java's own rule and not a
+    // convenience. JLS 15.25 assigns each operand of a reference conditional to the target type
+    // SEPARATELY, so java converted the two arms independently; this phase saw one `Tree.If` whose
+    // own type is already the LUB of two arms it has moved, matched no factory against it, and left
+    // both. The frontend's `coerce` learned this at an unchecked conversion and states the same
+    // reason; here it is the arm that produces a value the retyping has to bridge — a `Map.values`
+    // view in one branch and a `Collections.emptyList()` in the other, where the lub is neither.
+    //
+    // Recursing through THIS function and not around it, so a branch gets whatever wrap IT needs,
+    // every guard and every refusal still answers, and a nested conditional resolves one level down.
+    // Identity-preserving where nothing moved, so no digest shifts for a conditional this phase has
+    // no opinion about.
+    actual match
+      case i: Tree.If =>
+        val th = coerce(expected, i.thenp, expectedScoped, expectedExternal, expectedSink)
+        val el = coerce(expected, i.elsep, expectedScoped, expectedExternal, expectedSink)
+        return if (th ne i.thenp) || (el ne i.elsep) then i.copy(thenp = th, elsep = el) else i
+      case _ => ()
     val (actualT, actualScoped) = actualOf(actual)
     val wants = headSym(expected).map(scalaSym(_, expectedScoped))
     val got   = headSym(actualT).map(scalaSym(_, actualScoped))

@@ -7607,7 +7607,25 @@ the port's JDK wall. `CollectionsHandledDerivationSpec` had to learn the same th
 commit: its source scan read the `staticRewrite` arms alone and therefore called every FIELD entry
 stale — an instrument reporting a correct table as broken, which is §4.56 read at a filter.
 
-*Fix kind: (a) both, BUILT. **ssg-md 9 → 7** with `jdk-surface` **25 → 23** (the `EMPTY_LIST` and
+**FACE 3, found by the run that measured face 1 and misread by the commit that shipped it: a
+CONDITIONAL's conversion belongs to its BRANCHES.** Rewriting the constant closed one of its two
+sites and MOVED the other — the raw element type went and an UNINFERRED one arrived — because
+`Attributes#values` returns `attributes != null ? attributes.values() : Collections.EMPTY_LIST` and
+JLS 15.25 assigns each operand of a reference conditional to the target type SEPARATELY. This phase
+saw ONE `Tree.If` whose own type was already the LUB of two arms it had just moved, matched no
+factory against that lub, and left both. It is not a refusal; it is a slot the walk never reached,
+and the frontend's own `coerce` had learned the same thing at java's unchecked conversion and states
+the same reason. `coerce` now recurses through ITSELF into the arms, so every guard and every refusal
+still answers, a nested conditional resolves one level down, and a conditional the phase has no
+opinion about is returned identical. **ssg-md 6 → 5**, 2 member digests, every check count flat.
+
+**And the reading error is worth more than the fix.** The commit that shipped face 1 quoted
+`jdk-surface 25 → 23` and `9 → 7` and called both census rows closed. Both numbers were right; one of
+the rows was not closed but RE-DIAGNOSED, at a different error text on the same line. *A count that
+fell is not the same as the row you were aiming at* — read the per-site list, not the headline, which
+is `PROGRESS.md` §10.6.3's own standing lesson met from the other direction.
+
+*Fix kind: (a) all three, BUILT. **ssg-md 9 → 7** with `jdk-surface` **25 → 23** (the `EMPTY_LIST` and
 `EMPTY_SET` rows, 7 sites, leaving `unhandled`) and `collection-boundary` **21 → 20** (the
 `ExternalCallee` row at the untranslated `addAll(int, java.util.Collection)`), each falling with
 exactly what it named; 14 member digests, 8 declarations and their 6 files. **Two independent fixes
@@ -7616,7 +7634,10 @@ the rule buys is attribution, and here the two are separable by construction (di
 different files, different java sites, disjoint digests), so nothing had to be untangled.
 `CollectionsRawConstantSpec` — five positives (the three constants, the shared-identity `eq`, and the
 positional `addAll`) and two negatives (an ordinary external field is still WRAPPED, and the
-one-argument `addAll` is untouched), plus the table-agreement assertion.*
+one-argument `addAll` is untouched), plus the table-agreement assertion.
+`CollectionsConditionalSlotSpec` — two positives (each arm bridged, and a nested conditional) and one
+negative (a conditional neither arm of which moves is returned IDENTICAL, which is what keeps the
+descent from shifting a digest for a conditional that was already right).*
 
 ---
 
