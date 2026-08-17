@@ -357,6 +357,21 @@ declared_dep_flags() {
 # FLOOR and nothing distinguishes it from a finished compile's total. Measured on liqp's first run:
 # 25 errors and an abort, quoted as "25 errors" until the capture was read by hand.
 #
+# AND A FOURTH, which is about the compiler's INPUTS and not about its exit: `scala-cli compile`
+# WITHOUT `--test` DOES NOT COMPILE A TEST SCOPE, whatever directories it is handed. Every lane that
+# passes a `…/test/scala` alongside a `…/main/scala` was therefore reporting a MAIN-ONLY figure,
+# under a headline that splits `main source set: N   test source set: M` and had been printing M=0
+# because nothing had looked. Measured on ssg-md: `scala-cli compile main test` answers 185 warnings
+# and NO errors on a tree where `scala-cli compile --test main test` answers 6, and where the test
+# scope alone does not compile at all. Nothing else could see it — the errors surface at the RUN,
+# where they read as "0 outcomes" rather than as a compile figure, and a port whose suite happens to
+# run has a test scope that provably compiles, which is why the six lanes with live suites are flat
+# and only the one whose suite had stopped moved.
+#
+# The flag is on the nine lanes whose inputs include a test directory and on no others; it is not a
+# shared mechanism because the inputs are per-lane policy. Read this note before "simplifying" a
+# lane's compile line.
+#
 # All three states FAIL THE LANE, and the third one did not until it was audited: it printed the
 # warning and RETURNED, so the lane ran on to `headline`, the run looked like every other run, and
 # `just baseline-accept` would happily bake a floor in as this port's number. A warning nobody is

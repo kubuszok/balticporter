@@ -383,7 +383,7 @@ gdx-test-measure:
     # sge.SgeTestFixture.testSge()`, and the fixture is a `src/` file a human may write where the
     # generated one is not (CLAUDE.md §5.5, `ENGINE-LIMITS.md` CT7). Leaving it off compiles the
     # emitted suite against a fixture that is not there — one error, and it is the port's own.
-    scala-cli compile --scala {{scala_version}} --server=false {{gdx_deps}} \
+    scala-cli compile --test --scala {{scala_version}} --server=false {{gdx_deps}} \
       {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
       {{gdx_module}}/src/test/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -488,7 +488,7 @@ ashley-measure:
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
       {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/ashleymeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -585,7 +585,7 @@ anim8-measure:
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
     DEPS="{{anim8_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
       {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala {{anim8_module}}/src/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/anim8measure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -705,7 +705,7 @@ gltf-measure:
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
       {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala \
       {{gltf_module}}/src_managed/test/scala {{gltf_module}}/src/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gltfmeasure.txt
@@ -827,7 +827,7 @@ screens-measure:
     # hand-written suite has to construct one — the same fixture the base's own `selfSupplied` suite
     # is given, rather than a third copy of it in every dependent (CLAUDE.md §1.5's spirit, one
     # artifact down: a value the dependent imports, never policy it repeats).
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
       {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala \
       {{screens_module}}/src/main/scala {{screens_module}}/src/test/scala \
       {{gdx_module}}/src/test/scala \
@@ -932,7 +932,7 @@ vfx-measure:
     # `{{gdx_module}}/src/test/scala` is the BASE port's hand-written test fixture
     # (`sge.SgeTestFixture`), on this line for the reason `screens-measure` states: the base retires
     # `Gdx` into a threaded context and this port's hand-written suite has to construct one.
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
       {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala {{vfx_module}}/src/test/scala \
       {{gdx_module}}/src/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/vfxmeasure.txt
@@ -1041,7 +1041,7 @@ sg-measure:
     # BOTH source sets on one invocation: the main port is RuntimeMode.Vendored, so the shims live in
     # `src_managed/main` and the suite links against them there. Compiling either alone measures nothing.
     DEPS="{{sg_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
       {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/sgmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -1473,7 +1473,7 @@ liqp-measure:
     echo "-- declared coordinates, from the run's own dependencies.tsv --"
     echo "   $DECLARED"
     DEPS="{{liqp_deps}} {{liqp_test_deps}} $DECLARED"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
       --jar "{{liqp_parser_classes}}" \
       {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/liqpmeasure.txt
@@ -1755,7 +1755,7 @@ md-test-measure:
     # `src_managed/main` and the suite links against them there. Compiling either alone measures
     # nothing.
     DEPS="{{md_deps}} {{md_test_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
       {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdtestmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
