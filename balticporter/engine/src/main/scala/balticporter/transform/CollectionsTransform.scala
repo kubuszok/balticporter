@@ -3737,6 +3737,29 @@ final class CollectionsTransform(
       // is the whole point of the family (§4.5: an extension adds a view and cannot conflict).
       // Left alone, this is a call to a member that does not exist.
       case ("forEach", List(f), _) => Some(call(recv, foreachSym, List(f), t, so))
+      // …and the SECOND exception, which is one for the OPPOSITE reason: it does not reshape the
+      // call at all. The guard below is exactly right that no SCALA-SHAPED rewrite may touch a
+      // shim — and what has to happen at `toArray` is not a rewrite of the call but the removal of
+      // a COERCION built for the callee this phase has already replaced.
+      //
+      // Java declares `<T> T[] toArray(T[] a)` and its erased formal is `Object[]`, so the frontend
+      // synthesises `EMPTY.asInstanceOf[Array[Object]]` (G14, correct against a CLASS FILE). The
+      // shim's `toArray[A](Array[A]): Array[A]` infers `A` FROM the argument exactly as java's own
+      // inference did — so with the cast left on it infers `Object` and hands back an
+      // `Array[Object]` where java's call produced the element type it read off the UNERASED
+      // argument. On this port that `Array[Object]` then matched none of the three `addHandlers`
+      // overloads java resolved among.
+      //
+      // `arrayArg` IS that derivation and is not re-stated here (F8): it strips the cast exactly
+      // where what lies beneath already has the call's own recorded result type, which is precisely
+      // "java inferred `T` from the unerased argument". This arm is a SECOND CALLER of it and
+      // nothing more — the call keeps java's name, its arity and its receiver, so the blanket
+      // guard's rule is not weakened by it. `CLAUDE.md` §1's *a COERCION may not precede a REWRITE
+      // of the same call*, met where the rewrite in question is the RETYPING of the receiver rather
+      // than a new callee.
+      case ("toArray", List(a), _) if onShim =>
+        val stripped = arrayArg(a, t)
+        Option.when(stripped ne a)(t.copy(args = List(stripped)))
       case _ if onShim             => None
       // ---- java's BULK DEFAULTS, reached through `super` on a class THIS PHASE RE-PARENTED ----
       //

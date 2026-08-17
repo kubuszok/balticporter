@@ -3063,7 +3063,22 @@ readable as a floor rather than as *four more waves*:
   variable java infers FROM the argument (JLS 18.2.1) — and the second is `ENGINE-LIMITS.md` G14 at an
   argument, where the erased formal and a genuinely-`Object[]` one read alike. Neither is built; a
   corpus-wide grep confirms **zero** java sites write `toArray((Object[]) …)`, so nothing distinguishes
-  them from the TIR and the choice is which side owns the cast;
+  them from the TIR and the choice is which side owns the cast. **CLOSED AT WAVE 16 by the FIRST of
+  those two, and wave 15's diagnosis of the cause was exactly right** — which is what makes this row
+  the useful one in the table: the census text had named the wrong DEFECT (wave 14), then the wrong
+  REMEDY (wave 15), and once the cause was read off the guard rather than off the error the fix was
+  four lines. It is an exception listed ABOVE the shim guard and it is one for the OPPOSITE reason
+  `forEach` is: it does not reshape the call at all. The call keeps java's name, its arity and its
+  receiver, and only the COERCION built for the callee this phase replaced comes off — `CLAUDE.md`
+  §1's *a COERCION may not precede a REWRITE of the same call*, met where the "rewrite" is the
+  RETYPING of the receiver rather than a new callee. `arrayArg` IS that derivation and the arm is a
+  SECOND CALLER of it, never a copy (F8), so its guard — strip only where what the cast wraps already
+  has the call's own recorded result type, i.e. java inferred `T` from the unerased argument — is
+  inherited rather than restated, and the `(Object[])` a java source really wrote is still kept.
+  **3 → 2**, and the blast is 7 member digests that are 4 declarations plus their 3 classes:
+  `AttributeProviderAdapter#addHandlers`, `LinkResolverAdapter#addHandlers`,
+  `NodeVisitor#addHandlers` and `NodeVisitor#addTypedHandlers` are one java shape written four times,
+  which is the attribution §3 asks of a wave that moves emitted text;
 
 **WAVE 15 — 13 → 5 in seven commits, and the honest reading of 5 is *4 refused, 1 open*.** What it
 closed, with the lane each fall carried:

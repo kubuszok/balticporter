@@ -805,6 +805,51 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "asInstanceOf[scala.Array[java.lang.Object]]")
   }
 
+  test("…and the SAME strip happens on a SHIM receiver, where no rewrite may fire at all") {
+    // The receiver is a `java.util.Collection`, which this phase maps to the `JavaCollection` SHIM
+    // rather than to a scala collection — and `rewrite`'s blanket guard returns before any arm,
+    // correctly, because the shim carries java's own names and arity. So the erasure cast survived
+    // onto the argument and the shim's `toArray[A](Array[A])` inferred `A = Object`, handing back
+    // an `Array[Object]` that matched none of the overloads java resolved among.
+    //
+    // The guard is not weakened: this is not a scala-shaped rewrite. The call keeps java's name,
+    // its arity and its receiver, and only the COERCION built for the callee this phase replaced
+    // comes off — one more caller of `arrayArg`, never a second copy of its rule (F8).
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Adapter {
+        |  static final String[] EMPTY = new String[0];
+        |  Adapter take(String[] xs)          { return this; }
+        |  Adapter take(Collection<String> c) { return take(c.toArray(EMPTY)); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    // the call is UNCHANGED apart from its argument — still java's `toArray` on the shim…
+    assertEmits(p, "c.toArray(Adapter.EMPTY)")
+    // …and the frontend's erasure cast is gone, so `A` is inferred as java inferred `T`.
+    assertNotEmits(p, "EMPTY.asInstanceOf[scala.Array[java.lang.Object]]")
+  }
+
+  test("NEGATIVE — a cast the JAVA wrote at `toArray` is NOT stripped on a shim receiver") {
+    // `arrayArg`'s own guard, reached through the new caller: it strips only where what the cast
+    // wraps ALREADY has the call's recorded result type, which is precisely "java inferred `T` from
+    // the unerased argument". A source that really wrote `(Object[])` inferred `T = Object`, so the
+    // result type is the CAST's and the cast stays. Nothing here restates that rule; this test is
+    // here to prove the second caller inherited it.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Adapter {
+        |  Object[] take(Collection<String> c) { return c.toArray((Object[]) new String[0]); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "asInstanceOf[scala.Array[java.lang.Object]]")
+  }
+
   // ---------------------------------------------------------------------------------------------
   // A class that EXTENDS a mapped JDK collection. K5 closed this family for the SHIM targets; it
   // stayed open wherever the parent becomes a REAL scala collection, because the receiver's type is

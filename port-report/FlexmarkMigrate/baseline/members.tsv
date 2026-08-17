@@ -496,7 +496,7 @@ ssg.md.ast.util.AnchorRefTargetBlockVisitor	ssg.md.ast.util.AnchorRefTargetBlock
 ssg.md.ast.util.AnchorRefTargetBlockVisitor	ssg.md.ast.util.AnchorRefTargetBlockVisitor#preVisit(Node)	def	1674a35bd66e058d
 ssg.md.ast.util.AnchorRefTargetBlockVisitor	ssg.md.ast.util.AnchorRefTargetBlockVisitor#visit(AnchorRefTarget)	def	113935fbde4764cc
 ssg.md.ast.util.AnchorRefTargetBlockVisitor	ssg.md.ast.util.AnchorRefTargetBlockVisitor#visit(Node)	def	00858db8c0b72edd
-ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter	class	93262bc447008e93
+ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter	class	eb490b1bb56d8a8b
 ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#<init>(Array<Array<AttributeProvidingHandler<?>>>)	ctor	b8226857927016b6
 ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#<init>(Array<AttributeProvidingHandler<?>>)	ctor	a2629cbed98f4450
 ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#<init>(JavaCollection<AttributeProvidingHandler<?>>)	ctor	c86b047f042d3800
@@ -504,7 +504,7 @@ ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapte
 ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#addHandler(AttributeProvidingHandler<?>)	def	b2636e0ac8063aa5
 ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#addHandlers(Array<Array<AttributeProvidingHandler<?>>>)	def	62a10cec1edd3679
 ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#addHandlers(Array<AttributeProvidingHandler<?>>)	def	560a1f061a5e6bed
-ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#addHandlers(JavaCollection<AttributeProvidingHandler<?>>)	def	d9be6edc835c83b3
+ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#addHandlers(JavaCollection<AttributeProvidingHandler<?>>)	def	600562b95595bdd6
 ssg.md.ast.util.AttributeProviderAdapter	ssg.md.ast.util.AttributeProviderAdapter#setAttributes(Node,AttributablePart,MutableAttributes)	def	6020005c8da0491e
 ssg.md.ast.util.AttributeProvidingHandler	ssg.md.ast.util.AttributeProvidingHandler	class	46a6190158c7cc62
 ssg.md.ast.util.AttributeProvidingHandler	ssg.md.ast.util.AttributeProvidingHandler#setAttributes(Node,AttributablePart,MutableAttributes)	def	8dbaae17cdb259ba
@@ -598,7 +598,7 @@ ssg.md.ast.util.LineCollectingVisitor	ssg.md.ast.util.LineCollectingVisitor#visi
 ssg.md.ast.util.LineCollectingVisitor	ssg.md.ast.util.LineCollectingVisitor#visit(SoftLineBreak)	def	ad160a72f7e8a750
 ssg.md.ast.util.LineCollectingVisitor	ssg.md.ast.util.LineCollectingVisitor#visit(Text)	def	cb02b218aec41771
 ssg.md.ast.util.LineCollectingVisitor	ssg.md.ast.util.LineCollectingVisitor#visit(TextBase)	def	729bc3743ce7f132
-ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter	class	17812a3d9b22eb27
+ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter	class	d35130ba7a293481
 ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#<init>(Array<Array<LinkResolvingHandler<?>>>)	ctor	cb355c2a00d62cc2
 ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#<init>(Array<LinkResolvingHandler<?>>)	ctor	d2399fc3294337fa
 ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#<init>(JavaCollection<LinkResolvingHandler<?>>)	ctor	75eeee3e5c6f0453
@@ -606,7 +606,7 @@ ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#EMPTY_HA
 ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#addHandler(LinkResolvingHandler<?>)	def	f8b9c37d8f7acb98
 ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#addHandlers(Array<Array<LinkResolvingHandler<?>>>)	def	52d782f404b55a7b
 ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#addHandlers(Array<LinkResolvingHandler<?>>)	def	a4ef3905d0aeeec5
-ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#addHandlers(JavaCollection<LinkResolvingHandler<?>>)	def	cde15fd273e63f1c
+ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#addHandlers(JavaCollection<LinkResolvingHandler<?>>)	def	b5cadaed922d4ab3
 ssg.md.ast.util.LinkResolverAdapter	ssg.md.ast.util.LinkResolverAdapter#resolveLink(Node,LinkResolverBasicContext,ResolvedLink)	def	5e122fe47457b73b
 ssg.md.ast.util.LinkResolvingHandler	ssg.md.ast.util.LinkResolvingHandler	class	4d0ad06827f4a977
 ssg.md.ast.util.LinkResolvingHandler	ssg.md.ast.util.LinkResolvingHandler#resolveLink(Node,LinkResolverBasicContext,ResolvedLink)	def	1fb61b64be6024cc
@@ -4015,7 +4015,7 @@ ssg.md.util.ast.NodeTracker	ssg.md.util.ast.NodeTracker#nodeRemovedWithDescendan
 ssg.md.util.ast.NodeVisitHandler	ssg.md.util.ast.NodeVisitHandler	class	b6700d40ee5c2211
 ssg.md.util.ast.NodeVisitHandler	ssg.md.util.ast.NodeVisitHandler#visitChildren(Node)	def	97d29bb0f52ee011
 ssg.md.util.ast.NodeVisitHandler	ssg.md.util.ast.NodeVisitHandler#visitNodeOnly(Node)	def	f9053348fe40471d
-ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor	class	85418bb442d13bdd
+ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor	class	588592fd9e8cd885
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#<init>()	ctor	4d1b37997a55e126
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#<init>(Array<Array<VisitHandler<?>>>)	ctor	6229828d5a9eb73e
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#<init>(Array<VisitHandler<?>>)	ctor	949ad9703e365c86
@@ -4024,8 +4024,8 @@ ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#EMPTY_HANDLERS	val	8ca31
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#addHandler(VisitHandler<?>)	def	63792bba754ca7a6
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#addHandlers(Array<Array<VisitHandler<?>>>)	def	ae15c58519832d66
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#addHandlers(Array<VisitHandler<?>>)	def	df5f84371d14eb61
-ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#addHandlers(JavaCollection<VisitHandler<?>>)	def	e0838b19ff84a828
-ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#addTypedHandlers(JavaCollection<VisitHandler<?>>)	def	266020f636a35083
+ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#addHandlers(JavaCollection<VisitHandler<?>>)	def	3c585a9020a0ab1c
+ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#addTypedHandlers(JavaCollection<VisitHandler<?>>)	def	1166bba3a5759755
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#visit(Node)	def	d658bcc362a8e60e
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#visit(Node,Visitor<Node>)	def	d3f5a82f44a1b0e6
 ssg.md.util.ast.NodeVisitor	ssg.md.util.ast.NodeVisitor#visitChildren(Node)	def	e4ed01d6e87d5656
