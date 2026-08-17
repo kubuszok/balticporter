@@ -3664,11 +3664,6 @@ IN CODE (`TestFrameworkTransform.expectedException`), and the split is **20 conv
   refusal was then the largest population on this port's refusal lane, reported one row per SITE
   naming its guard where before it was one row per FIELD.
 
-**WAVE 25 BUILT THAT LOWERING AND THE `intercept` SHAPE IS GONE** — see the next section for the
-numbers. Everything in this block is the state wave 24 left, kept because it is the measured
-half-step the design argument rests on: the split it produced is what priced the model, and the
-`intercept` shape is not what the phase emits now.
-
 The residual delta no guard removes is the catch policy: junit's rule catches `Throwable` and MUnit's
 `intercept` catches `NonFatal`, so a fatal throwable the java test ACCEPTED fails here — never the
 reverse. It is counted on every converted test's `Decision` and stated in the phase's own report.
@@ -3682,6 +3677,12 @@ so there is no before to compare against and no honest attribution in either dir
 said is that all twenty `util.collection` failures are `thrown.expect` rows whose exception is java's
 own, and that the eight classes the bridge re-parented carry 683 passing assertions between them and
 the rest of the suite.
+
+**EVERYTHING IN THE BLOCK ABOVE IS THE STATE WAVE 24 LEFT, AND THE `intercept` SHAPE IT DESCRIBES IS
+NOT WHAT THE PHASE EMITS.** It is kept because it is the measured half-step the next section's design
+rests on: the 20/17 split is what priced the model, and the residual catch-policy delta — junit
+catches `Throwable`, MUnit's `intercept` catches `NonFatal` — went with the `intercept` it was a
+property of.
 
 ### WAVE 25 BUILT THE LOWERING X5 HAD PRICED — **704 → 721 passing, 19 → 2 failing, at 0 errors and 43 member digests**
 
@@ -3730,7 +3731,8 @@ so no jump crosses one of these catches and `break-catch` stays 0.
 Wave 24 was three commits, each measured on its own: the `ExpectedException` mapping (`683 → 703`),
 the two `test_getLineColumnAtIndex` rows declared where the engine already counts them
 (`703 → 703`, and the lane then read `expected 2 / unexpected 18`), and `JavaCollections.toArray`
-(`703 → 704`). Wave 25 is one more (`704 → 721`), and what is left is ONE row:
+(`703 → 704`). Wave 25 is two more — the model itself (`704 → 721`) and the `arming-outside-test`
+guard, which is flat by construction and whose 0 rows are the point. What is left is ONE row:
 
 | what | how many | why it is not a regression, and why it IS declared |
 |---|---|---|
@@ -3741,6 +3743,17 @@ attributed, and the one that remains is a decision the port stands behind rather
 has built. There is no second category and there is no third: nothing in this suite fails for a
 reason nobody has looked at, which is what the census of wave 23 could not yet say, and nothing
 fails for a reason somebody has looked at and deferred, which is what wave 24 still had to say.
+
+**THE CAMPAIGN, IN THE FOUR NUMBERS THAT ARE ITS WHOLE STATE.** 486 java files in scope → **468
+emitted**, 0 dropped and 0 injected. Compile errors **243 → 0** over twenty-three waves, the typer
+reaching zero at wave 17 and `RefChecks` then taking the count `1 → 131 → 0` — which is §3's gate
+finishing its sentence and not a regression (§10.6.3 classifies every one of the 243). Tests **723
+emitted of 723 discovered, 0 lost**, in both directions, on every run since wave 7. Suite **683 → 721
+passing** over waves 23-25, with the residue **3 → 2 → 0** as the census resolved: one engine defect
+CLOSED (`JavaCollections.toArray`, K31), two `Pair.equals` rows DECLARED under an engine family that
+is counted where it happens and refused on a number (K18.1), and 37 `ExpectedException` sites
+translated. That is the same shape liqp's floor has and it is reached the same way — a refusal
+ledger, read until it is empty.
 
 **And the two families that made up 24 of the ORIGINAL 26 refusals were each ONE GUARDED translation
 away, which was worth stating as a design rather than re-deriving.** Both are engine (a) and neither
