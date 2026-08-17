@@ -6118,6 +6118,43 @@ on identity of a collection reference, this mapping is the wrong policy for it**
 `JavaCollectionsSpec`'s wrap-then-retest tests). (b) per-library policy for the identity half —
 OPEN by construction, scoped out rather than solved.*
 
+#### K18.1 The CONCRETE-target refusal is exact for a MUTABLE target and merely UNMEASURED for `Tuple2` — **2 sites in the whole corpus, and the library-wide defect they stand for. OPEN, weighed, not taken**
+
+`reifiedHelper` deliberately omits `mutable.HashMap`, `ArrayBuffer`, `ArrayDeque`, `TrieMap` and
+`Tuple2`, on one sentence: *no live view can BE one of these*. That is exact for the first four — a
+view over a java collection cannot be a `HashMap`, and a copy would detach both directions, which is
+K15's own refusal. **`Tuple2` is on that list for the same reason and does not share it**, and the
+difference is worth writing down because the refusal costs a real defect.
+
+The shape, met on ssg-md: `Paired extends Map.Entry` and `Pair implements Paired`, so the phase kept
+java's parent (the counted `InexpressibleParent`, visible as a porter note on the emitted trait) —
+and then retyped the REIFIED `o instanceof Map.Entry` and the downcast under it, inside `Pair.equals`,
+to `scala.Tuple2`, which no `Pair` is at run time. So **`Pair.equals` answers `false` for two equal
+`Pair`s, library-wide**, and the two `test_getLineColumnAtIndex` failures are only where a test
+happens to look. Both halves are counted where they happen (`collection-boundary/ReifiedOccurrence`,
+`Pair.java:65` and `:67`), which is the refusal working; they are declared in
+`port-report/FlexmarkTestMigrate/baseline/expected-failures.tsv` under the same engine family liqp's
+`SortTest#testSortMap` was declared under.
+
+**Why a fix is admissible here and is not elsewhere on that list.** The population at the `Object`
+slot is genuinely both representations — the port's own `entrySet()` yields `Tuple2`s and its own
+`Pair`s are `java.util.Map.Entry`s — so K18's disjunction is the honest test, and the blocker is only
+the CAST half. `Reified.asEntry` would have to build `Tuple2(e.getKey, e.getValue)`, a copy; and a
+copy is refused everywhere else because it DETACHES. **A `Tuple2` cannot detach**: it is immutable, so
+there is no operation on the result that could write back, and the write-through a `Map.Entry` has
+(`setValue`) is a member the target does not declare at all — which is why the phase already refuses
+`setValue` on this mapping rather than relying on the view.
+
+**Not taken, and the number is why.** Two sites in the entire corpus, both in one class of one
+library. Against that: a new `JavaCollections.Reified` pair reaches every port that vendors the
+runtime, `reifiedHelper` gaining a concrete target weakens a sentence four other entries rely on, and
+the fix must land with the `is`/`as` halves TOGETHER — closing the test alone turns a silent `false`
+into a `ClassCastException`, which is louder and still wrong. **If a second library produces the
+shape, build it; the argument above is the safety argument and it is complete.** Do not build it for
+these two.
+
+*Fix kind: (a) engine. OPEN.*
+
 ---
 
 ### K20. A REIFIED TYPE ARGUMENT is read out of the CLASS FILE by someone else — **10 test failures on liqp, 0 compile errors, every check count flat. CLOSED**

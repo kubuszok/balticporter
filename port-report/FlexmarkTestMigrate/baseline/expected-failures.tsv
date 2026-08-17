@@ -1,0 +1,18 @@
+# The ESCAPE HATCH, and nothing else. Empty is the normal state.
+#
+# Failures explained by a SUBSTITUTION are not listed here and must not be: they are DERIVED from
+# `run-latest/dropped-types.tsv`, which `PortRun` writes from the manifest on every run. This port
+# drops nothing, so that set is empty and every row here is a CLAIM someone has to defend.
+#
+# A row carries `frame=<ported class>` as a trailing TAB-separated field — the `unit` the correlator
+# anchors the failure at, copied from `run-latest/test-failures.tsv`. Keyed on (suite, test) alone a
+# row absorbs a NEW failure with a DIFFERENT cause in the same test, silently, and the sentence
+# would then be about something that is not happening; anchored, the claim stops holding the moment
+# the failure moves and the failure counts UNEXPECTED. `test-failures.tsv` records
+# `expected#declared` against `expected#derived` so the two can never be confused, and a declared
+# entry whose test starts PASSING is reported so this line can be deleted.
+#
+# `test` may be `*` to declare a whole suite.
+#suite	test	reason	[frame=<ported class>]
+ssg.md.util.sequence.BasedSequenceFullImplTest	test_getLineColumnAtIndex	the mapping sends java.util.Map.Entry to scala.Tuple2, and Paired/Pair IMPLEMENT that interface — so the phase kept java's parent (the counted InexpressibleParent refusal, visible as a porter note on Paired) while retyping the REIFIED `o instanceof Map.Entry` and the downcast under it in Pair.equals to Tuple2, which no Pair is at run time. Pair.equals therefore answers false for two equal Pairs and this assertion reads "values are not equal even if they have the same toString(): (0, 0)". Counted where it happens, twice, as collection-boundary/ReifiedOccurrence on Pair.java:65 and :67 — the same engine family liqp's SortTest#testSortMap is declared under, and NOT a fact about this test (ENGINE-LIMITS K18.1, K5.7)	frame=ssg.md.util.sequence.BasedSequenceFullImplTest
+ssg.md.util.sequence.SegmentedSequenceTreeTest	test_getLineColumnAtIndex	the same two ReifiedOccurrence rows on Pair.java, reached from the other BasedSequence implementation: Pair.equals tests `isInstanceOf[scala.Tuple2]` over a value whose emitted parent the phase left as java.util.Map.Entry, so it answers false for two equal Pairs (ENGINE-LIMITS K18.1, K5.7)	frame=ssg.md.util.sequence.SegmentedSequenceTreeTest
