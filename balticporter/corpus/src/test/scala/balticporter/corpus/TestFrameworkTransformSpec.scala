@@ -629,10 +629,13 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
        |}
        |""".stripMargin
 
+  /** The guard each declined site named. NOT spelled with a `#`: that separator is `MemberKey`'s
+    * grammar and `PolicyKeyLintSpec` enforces that no phase rebuilds it from a string — a refusal
+    * KIND is not a member reference, however much it looks like one. */
   private def guards(ph: TestFrameworkTransform): List[String] =
     ph.findings.map(_.construct).collect {
-      case c if c.startsWith("org.junit.rules.ExpectedException#") =>
-        c.stripPrefix("org.junit.rules.ExpectedException#")
+      case c if c.startsWith("org.junit.rules.ExpectedException(") =>
+        c.stripPrefix("org.junit.rules.ExpectedException(").stripSuffix(")")
     }
 
   test("thrown.expect(E.class) at statement position wraps THE REST OF THE TEST in intercept") {

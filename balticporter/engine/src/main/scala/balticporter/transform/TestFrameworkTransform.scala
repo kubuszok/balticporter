@@ -828,7 +828,7 @@ final class TestFrameworkTransform(
       cd2.body.foreach {
         case v: Tree.ValDef
             if hasAnn(v.symbol, ClassRuleAnn) && nameOf(v.tpt.tpe) == ExpectedExceptionCls =>
-          found += Finding(s"$ExpectedExceptionCls#class-rule", v.origin, Fix.EngineRule,
+          found += Finding(s"$ExpectedExceptionCls(class-rule)", v.origin, Fix.EngineRule,
             "an `ExpectedException` declared as a `@ClassRule` wraps the WHOLE CLASS RUN, not each " +
             "test, so the region an `expect` call arms is not the one an `intercept` in a test body " +
             "wraps. The `@Rule` form IS translated; this one is left alone and the field is never " +
@@ -952,7 +952,7 @@ final class TestFrameworkTransform(
     if refs == 0 then (body, "")
     else
       def refuse(guard: String, why: String): (Term, String) =
-        found += Finding(s"$ExpectedExceptionCls#$guard", d.origin, Fix.EngineRule, why)
+        found += Finding(s"$ExpectedExceptionCls($guard)", d.origin, Fix.EngineRule, why)
         (body, "")
       body match
         case b: Tree.Block =>
