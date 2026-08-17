@@ -13,7 +13,7 @@ collection-closure	0
 collection-internal	0
 collection-retarget	0
 dependency-coverage	0
-dependency-coverage(all)	10
+dependency-coverage(all)	12
 dependency-coverage(declared)	0
 heap-pollution	0
 idiom(converted)	0

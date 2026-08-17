@@ -4161,6 +4161,24 @@ they are where the 2b siblings become admissible because their dependency is alr
 | — | `ext-gfm-tasklist` | 12 | — | — | — | **SKIPPED — `ENGINE-LIMITS.md` C15**, measured and reverted |
 | 14 | `ext-jekyll-tag` | 13 | 11 | **1 → 0** | 21/21 | `overload-risk` +10, `base-surface` +1, `omissions` +1, `idiom(refused)` +1 |
 | 15 | `ext-abbreviation` | 14 | 12 | 0 | 27/27 | `overload-risk` +9, `omissions` +2 (two `@SuppressWarnings`) — **the second 2b module, on a REAL source dependency** |
+| 16 | `ext-footnotes` | 14 | 12 | 0 | 31/31 | `overload-risk` +16, `dependency-coverage` **0 → 2** (`java.util.Locale`), `dependency-coverage(all)` 10 → 12, `catalog(undischarged)` 5 → 6 (`JS-S23`), `omissions` +1 |
+
+**AND `ext-footnotes` IS THE FIRST EXTENSION TO OWN A `dependency-coverage` ROW, WHICH IS *NOT*
+CLOSED BY DECLARING THE ARTIFACT HERE.** `FootnoteNodeRenderer` calls `String.format(Locale…, …)`
+twice, and `java.util.Locale` is one of the families the platform matrix answers with *the API EXISTS
+off the JVM, in an artifact the build does not name* — `io.github.cquiroz::scala-java-locales`. So
+the finding is actionable in exactly the way `DependencyCheck` was built to make it: a
+`libraryDependencies` line, not a call to remove.
+
+It is deliberately NOT taken, and the reason is the BASE's answer rather than this module's
+convenience. `dependency-coverage(all)` **10 → 12** shows the other ten rows: `Locale` in
+`FormatterUtils` and `CoreNodeFormatter`, `java.text.NumberFormat` in `SequenceUtils` — all
+`ssg-md`'s own, all carried by the base as a counted residue and covered by no declaration. Declaring
+the artifact on the DEPENDENT would give one JDK family two different answers inside one destination
+module, and `dependencies` is not inherited (§1.5), so it would not reach the base either. The honest
+close is one line in `main.conf` covering both halves at once, priced against every ssg-md baseline;
+until then the two rows here and the ten there say the same thing, which is what the pair of lanes is
+for. `catalog(undischarged)` **5 → 6** is `JS-S23` arriving with the module's first java `assert`.
 
 **AND THE BATCH SKIPPED ONE, WHICH IS THE FIRST TIME A MODULE HAS BEEN MEASURED AND TAKEN BACK OUT.**
 `ext-gfm-tasklist` emits at **0 compile errors with every instrument reading green**, and it is the

@@ -4,7 +4,7 @@ break-catch	0
 cast-conversion	0
 catalog(consulted)	95
 catalog(uncited)	121
-catalog(undischarged)	5
+catalog(undischarged)	6
 catalog(unmechanised)	1
 catalog(unreached)	16
 class-init-trigger	0
@@ -12,8 +12,8 @@ collection-boundary	0
 collection-closure	0
 collection-internal	0
 collection-retarget	0
-dependency-coverage	0
-dependency-coverage(all)	10
+dependency-coverage	2
+dependency-coverage(all)	12
 dependency-coverage(declared)	1
 heap-pollution	0
 idiom(converted)	0
@@ -22,8 +22,8 @@ idiom(residue)	0
 jdk-surface	0
 manifest	0
 markers	0
-omissions	4
-overload-risk	90
+omissions	5
+overload-risk	106
 policy	0
 port-map	0
 portability(all)	21

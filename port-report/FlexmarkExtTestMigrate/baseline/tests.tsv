@@ -23,6 +23,10 @@ ssg.md.ext.autolink.MergeAutoLinkTest	test_Mail_Link21	pass
 ssg.md.ext.autolink.MergeAutoLinkTest	test_Mail_Link22	pass
 ssg.md.ext.autolink.MergeAutoLinkTest	test_Mail_Link31	pass
 ssg.md.ext.autolink.MergeAutoLinkTest	test_Mail_Link32	pass
+ssg.md.ext.footnotes.MergeFootnotesTest	test_IdAttributeConflict1	pass
+ssg.md.ext.footnotes.MergeFootnotesTest	test_IdAttributeConflict2	pass
+ssg.md.ext.footnotes.MergeFootnotesTest	test_UndefinedIdConflict1	pass
+ssg.md.ext.footnotes.MergeFootnotesTest	test_UndefinedIdConflict2	pass
 ssg.md.ext.jekyll.tag.MergeJekyllTagTest	testIdAttributeConflict	pass
 ssg.md.ext.jekyll.tag.MergeJekyllTagTest	testIdAttributeConflictEmbed	pass
 ssg.md.ext.jekyll.tag.MergeJekyllTagTest	testIdAttributeConflictEmbedInline	pass

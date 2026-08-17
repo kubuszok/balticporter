@@ -54,6 +54,17 @@ ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#test
 ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#testMailLink1()	def	4a8b072b85ad4b90
 ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#testMailLink2()	def	1fdd9434e9fdb9de
 ssg.md.ext.autolink.MergeAutoLinkTest	ssg.md.ext.autolink.MergeAutoLinkTest#testMailLink3()	def	55a1f223ed7c8344
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest	class	40a4f9e66c1387c6
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#<stmt1>	stmt	136a1205eb3850da
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#<stmt2>	stmt	c8adc398a56a27e2
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#<stmt3>	stmt	494db965d5291d17
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#<stmt4>	stmt	b77b3fe53b48ea08
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#FORMATTER	val	4c96c1fb01dc309a
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#OPTIONS	val	5f67ad2307afb18b
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#PARSER	val	73acdf8300d66482
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#assertMerged(String,Array<String>)	def	857bb0372da12e97
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#testIdAttributeConflict()	def	49c89990f882414e
+ssg.md.ext.footnotes.MergeFootnotesTest	ssg.md.ext.footnotes.MergeFootnotesTest#testUndefinedIdConflict()	def	465ddf201be595f1
 ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest	class	d78914f6ee2b58de
 ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#<clinit>	init	e4ed86be74a3ee47
 ssg.md.ext.jekyll.tag.MergeJekyllTagTest	ssg.md.ext.jekyll.tag.MergeJekyllTagTest#<stmt1>	stmt	2779daa0a095d934
