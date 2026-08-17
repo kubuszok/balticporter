@@ -8128,17 +8128,34 @@ candidate set spanned a java resolution phase now have one candidate, because ja
 digests, residue EMPTY**: 8 bridge owners, and 7 further files every one of which holds at least one
 re-pointed `$java` call site.
 
+**AND THE BRIDGE SUBSUMED AN EXISTING MECHANISM, which only the engine's own specs could say.** The
+`Object`-formal CALL PIN — `l.remove(k.asInstanceOf[java.lang.Object])`, built to disambiguate a call
+java resolved without hesitating — answers the same ambiguity from the other end: it leaves java's
+member where it is and ascribes each call, where the bridge RENAMES the member so that no second
+alternative is left. Every member the pin was written about (`get`, `remove`, `contains`) is one
+`CapturedByTarget` renames, so **five assertions across two specs changed from the ascription to
+`l.remove$java(k)`**, and the emitted result is strictly better: no cast, and the call NAMES the java
+member java resolved. Nothing on a port could have shown this — `overload-risk` fell 19 and no other
+count moved, which reads as a fix rather than as a mechanism going quiet. The pin is not dead code
+and the population that keeps it live is now STATED rather than assumed: a class whose rename the
+renamer REFUSES keeps java's member under java's name and the ambiguity is exactly as it was. Note
+the shape — §4.56's *a residue count cannot tell a refusal from a switched-off fix*, read at a
+REWRITE instead of at a count.
+
 **AND ONE ARTIFACT IS NOW WRONG IN A WAY NOTHING GATES, WHICH IS THIS ENTRY'S OPEN HALF.** The port
 map's `upstream` column is the JOIN KEY a dependent holds and is supposed to spell JAVA's name —
 which it does for the emitter's own §4.55 passes, because those rename `Symbol.name` and leave
 `Symbol.fullName` alone (`name=finalize$shadow` beside `#finalize`). `MemberRenamer` moves BOTH, so a
-bridged delegate publishes `#get$java(Object)` on both sides and the sparse `name=` key restates it.
-The `name=` half is closed here — `TirEmitter.renamedMembers` had never read the PIPELINE's log at
-all, so a phase rename published no shape row, which reads exactly like a member that was not renamed
-— and the column is not, because reversing it is a parameter threaded from the emitter through
-`PortRun` into `PortMap.of` and a port-map baseline move on every port that uses the renamer. Nothing
-measures the gap today: both ssg-md ports re-derive the same names from the same java, so
-`base-surface` reads 0 on each and the two compile together. **(a) engine, open.**
+bridged delegate publishes `#get$java(Object)` on both sides, and the sparse `name=` key cannot repair
+it: **making `TirEmitter.renamedMembers` read the PIPELINE's log — the obvious half-fix, and the one
+`collapsedForms` beside it already does — published 550 REDUNDANT ROWS ON LIBGDX ALONE**, at 0 errors
+and 0 moved member digests, every one restating what that row's own `upstream` column already said.
+So it is reverted with its number at the accessor, and what is actually owed is the COLUMN: reverse
+the member segment through the `RenamedMember` decisions exactly as `unrename` reverses a package
+rename, which is a parameter threaded from the emitter through `PortRun` into `PortMap.of` and a
+port-map baseline move on every port that uses the renamer. Nothing measures the gap today — both
+ssg-md ports re-derive the same names from the same java, so `base-surface` reads 0 on each and the
+two compile together — and that is exactly why it is written down. **(a) engine, open.**
 
 #### K28.2 A java FIELD named like an INHERITED JDK METHOD — **CLOSED at wave 21: ssg-md 34 -> 32.** One row was a missing question, the other a surface the engine had refused to state — and the refusal turned out to conflate two different reasons
 

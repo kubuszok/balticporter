@@ -681,8 +681,11 @@ class CollectionsTransformSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform,
     )
-    assertEmits(p, "super.entrySet()")
-    assertNotEmits(p, "this.entrySet()")
+    assertEmits(p, "return super.entrySet()")
+    // …the RETURN, not the bare call: K28.1's bridge synthesises `iterator` over `entrySet()` on
+    // every re-parented `Map`, so `this.entrySet()` now appears in this port for a reason that has
+    // nothing to do with the substitution this test is about.
+    assertNotEmits(p, "return this.entrySet()")
   }
 
   test("an IN-PROGRAM vararg method still receives the materialised array — the convention holds") {

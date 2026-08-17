@@ -80,9 +80,12 @@ class CollectionsMintedParentClashSpec extends PortSuite:
   test("a MAP class's own `Object`-formal members are PINNED at every caller") {
     val p = port(src, new CollectionsTransform)
     // the minted parent is `mutable.Map[String, Integer]`, whose `get`/`remove`/`contains` all take
-    // the KEY — so an unpinned `l.remove(k)` is ambiguous and an `Object`-ascribed one is not.
-    assertEmits(p, "l.remove(k.asInstanceOf[java.lang.Object])")
-    assertEmits(p, "l.get(k.asInstanceOf[java.lang.Object])")
+    // the KEY — so an unpinned `l.remove(k)` WOULD be ambiguous. K28.1's bridge removes the second
+    // alternative instead of disambiguating it, so the call is re-pointed and no ascription is
+    // emitted at all (see the header).
+    assertEmits(p, "l.remove$java(k)")
+    assertEmits(p, "l.get$java(k)")
+    assertNotEmits(p, "l.remove(k.asInstanceOf[java.lang.Object])")
     // …`containsKey` is NOT in the table: scala's `mutable.Map` has no member of that name, so
     // there is nothing to be ambiguous with and the pin would move emitted text for nothing.
     assertEmits(p, "l.containsKey(k)")
@@ -90,8 +93,9 @@ class CollectionsMintedParentClashSpec extends PortSuite:
 
   test("a SET class's own `remove`/`contains` are pinned too, at the ELEMENT type") {
     val p = port(src, new CollectionsTransform)
-    assertEmits(p, "b.remove(e.asInstanceOf[java.lang.Object])")
-    assertEmits(p, "b.contains(e.asInstanceOf[java.lang.Object])")
+    assertEmits(p, "b.remove$java(e)")
+    assertEmits(p, "b.contains$java(e)")
+    assertNotEmits(p, "b.remove(e.asInstanceOf[java.lang.Object])")
   }
 
   test("the class's OWN body still delegates through the probe helpers — the pin is at the CALLER") {
@@ -158,9 +162,11 @@ class CollectionsMintedParentClashSpec extends PortSuite:
         |class Uses { void go(Store<Integer> s, Object probe) { s.remove(probe); } }
         |""".stripMargin, new CollectionsTransform)
     // an `Object` at an `Object` slot already selects java's alternative uniquely; ascribing it to
-    // its own type is emitted text for nothing, which is the over-approximation §5 cannot see.
-    assertEmits(p, "s.remove(probe)")
-    assertNotEmits(p, "s.remove(probe.asInstanceOf[java.lang.Object])")
+    // its own type is emitted text for nothing, which is the over-approximation §5 cannot see. The
+    // bridge renames the member either way, so what this negative still pins is the ABSENCE of the
+    // ascription — which is what it was always about.
+    assertEmits(p, "s.remove$java(probe)")
+    assertNotEmits(p, "asInstanceOf[java.lang.Object])")
   }
 
   test("NEGATIVE — a KEY TYPE that IS `Object` is the one shape no ascription separates: REFUSED") {
@@ -184,9 +190,11 @@ class CollectionsMintedParentClashSpec extends PortSuite:
         |}
         |class Uses { void go(Any2Any m, String s) { m.remove(s); } }
         |""".stripMargin, new CollectionsTransform)
-    // both alternatives then take an `Object` and the pin cannot make either unique. The refusal is
-    // LOUD rather than counted: scalac goes on reporting `E051` naming the two alternatives, which
-    // is the one residue in this family a compile cannot miss.
-    assertEmits(p, "m.remove(s)")
+    // both alternatives WOULD take an `Object` and the pin could make neither unique — which is why
+    // it refuses. The bridge answers this shape too, and by construction rather than by refusing:
+    // renaming java's member leaves one alternative, so the `E051` this test was written to leave
+    // LOUD is now closed rather than reported. The refusal path itself is unchanged and is what a
+    // class whose rename is refused still takes.
+    assertEmits(p, "m.remove$java(s)")
     assertNotEmits(p, "m.remove(s.asInstanceOf[java.lang.Object])")
   }
