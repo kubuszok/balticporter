@@ -258,6 +258,40 @@ stand-in that compiles and silently does nothing. Measured on the first port to 
 one `Not Found` traded for one `needs to be abstract`, at 0 net errors moved
 (`ENGINE-LIMITS.md` K5.7).
 
+**…and a MODIFIER is part of what a re-parenting moved, which is the half that reads as the
+frontend's business.** Every rule above is about a member's TYPE, its BODY or its EXISTENCE. A java
+`@Override` is none of those: the frontend puts `override` on a member because JAVA's resolved
+hierarchy justified it, and that is an honest statement about a type the emitted class may no longer
+extend. Nothing retypes, nothing is dropped, the name and the formals are correct, and scalac reads
+`overrides nothing` or `has a different signature` at a member that is otherwise a perfect
+translation — 73 of one port's 131 `RefChecks` rows, and the whole of two of the five verdicts a
+probe had enumerated for it (`ENGINE-LIMITS.md` K28). So the phase that moved the parent owes the
+modifier, and the far side of the question is a type it never parsed: state the target's overridable
+surface as a TABLE, which is admissible HERE and not in general because **both of its errors are
+loud** — too small and scalac demands the modifier back, too large and the original error stays.
+Contrast a rename's external surface, whose unknown side no compiler can see and which therefore has
+to anchor on absence.
+
+**And the guard for *does the port emit the far side itself* is the LOOSER key, not the exact one.**
+A member-override graph keyed on the source-level parameter spelling is the right identity for
+*may I rename this component* and the wrong one for *is this modifier still true*, because java lets
+an interface declare a member at one type-parameter NAME and its implementor declare the same member
+at another — permuting the clause is ordinary java. Two spellings, one member, and the exact answer
+is EMPTY. Six members then lost a modifier they were entitled to keep, at 0 errors and 0 moved
+counts, because the parent's declaration was abstract and scala's modifier is optional there; the
+only instrument that saw it was `members.tsv`, at 77 strips against 71 errors closed. Ask it at name
+and arity, where the error direction is refusal — and read the two numbers against each other, since
+a strip with no error row behind it is exactly what an over-approximation looks like.
+
+**And *did the phase MOVE this* is not *can the phase ANSWER for what it became*.** The same guard's
+other conjunct excluded every parent the phase re-parented, which is the phase's own record and is
+§4.56's rule exactly — and it is one notch too wide the moment a phase has TWO tables, because a
+per-library retarget's targets are types the engine tabulates nothing about. Excluded from the
+anchors on the strength of having been moved, such a parent says *nothing above this member could
+declare it* on no evidence at all: one member on a port at 0 errors, every count flat, one moved
+digest. Ask the POSITIVE question — is the RESULT one this code holds a surface for — so a table
+added tomorrow widens the answer and a table that does not exist cannot.
+
 **…and a refusal SUBSTITUTED FOR A BODY is licensed by the DEFECT THE PHASE CAUSED, never by the
 member it sits on.** The contract makes the throw conforming for a receiver that cannot perform the
 operation; it says nothing about one that can, and both are spelled the same. So a body substitution

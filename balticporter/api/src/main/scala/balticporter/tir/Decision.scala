@@ -256,6 +256,27 @@ object Decision:
       * upstream type looks like a translation nobody performed, and the diff against the java shows
       * nothing at all, because nothing changed. */
     case RetainedSignature
+    /** the `override` modifier java's own hierarchy justified was REMOVED, because the parent that
+      * justified it is not the parent the port emits (`ENGINE-LIMITS.md` K28).
+      *
+      * A phase that RE-PARENTS a class onto a target of its own choosing has moved the far side of
+      * every override in it. The modifier is the frontend's honest answer about JAVA — the member
+      * really did override `java.util.Map#containsKey` — and it is a statement about a type the
+      * emitted class no longer extends, so scalac reads `E037 overrides nothing` or `E038 different
+      * signature` at a member whose body, name and formals are all correct. Stripping it is not a
+      * repair of the member; it is the modifier catching up with the parent.
+      *
+      * A kind of its own rather than [[RetypedSignature]]'s, and the line is the one §4.575 draws:
+      * nothing about the member's TYPE moved, so `decisions.tsv`'s retyping rows say nothing about
+      * it, and the emitted text differs from the mechanical translation by one word that a reader
+      * diffing against the java would otherwise read as the port having lost java's `@Override`.
+      * What the DETAIL has to carry is the PARENT — the reader's next question is *overrides
+      * nothing in WHAT*, and the answer is a type the java file does not name.
+      *
+      * Note the pair it makes with [[RetainedSignature]]: that one keeps a member's FORMALS because
+      * an unmoved class file declares them, this one drops a MODIFIER because a moved parent does
+      * not. Both are §1(a) refusals with no key anywhere. */
+    case StrippedOverride
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

@@ -112,7 +112,12 @@ object PorterNote:
         // and did not, so a reader diffing against the java sees a shape with no local evidence of
         // WHY it is that shape rather than the other one. The alternatives existed; one word in this
         // port's manifest chose between them, and nothing but a note can say so at the line.
-        SelectedRemedy)
+        SelectedRemedy,
+        // …and a MODIFIER the port removed. Here for the reason `RetainedSignature` is: the emitted
+        // member differs from the mechanical translation by exactly one word, and that word is the
+        // one a reader diffing against the java reads as a lost `@Override`. The note is the only
+        // place the parent that justified it — a type the java file never names — can be said.
+        StrippedOverride)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.

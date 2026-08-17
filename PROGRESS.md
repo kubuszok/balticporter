@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 | `ssg-liquid` | liqp `src/main/java` | 135 → **139** (0 dropped, 4 injected) | — | **0** |
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
-| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is a THIRTEENTH module (`flexmark-util`) and a second lane — **723** emitted, **0 lost**, not yet run (§10.6.6) | **131** main + **0** test (243 at first emit; §10.6.3, all classified — the typer count is ZERO and these 131 are `RefChecks` and the checks behind it, running for the first time in this corpus) |
+| `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is a THIRTEENTH module (`flexmark-util`) and a second lane — **723** emitted, **0 lost**, not yet run (§10.6.6) | **60** main + **0** test (243 at first emit, 131 at the first `RefChecks` run; §10.6.3, all classified — the typer count is ZERO and these 60 are `RefChecks` and the checks behind it) |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -2794,7 +2794,7 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13, **13** after wave 14, **5** after wave 15, **2** after wave 16, **1** after wave 17 and — `RefChecks` HAVING RUN FOR THE FIRST TIME — **131** after wave 18 (coded 112 + bare 19), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **36 owners** now, counted from `errors.tsv` rather than by eye. **THE TYPER COUNT IS ZERO AND `RefChecks` HAS RUN**: wave 17 emptied the typer, wave 18 closed the two post-typer risers that gated everything after them, and the number then went **1 -> 131**, which is `CLAUDE.md` §3's gate finishing the sentence it started — the rise is the truth arriving, not a regression. **The post-typer phases gate on EACH OTHER**, so wave 18's first commit read `1 -> 1` over a DIFFERENT error: read the MEMBER column across a commit here, never the count. §10.6.3's wave-18 row carries the whole census, classified against `ENGINE-LIMITS.md` K28's five verdicts (100 of the 131) plus three families nobody had looked at (31) |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13, **13** after wave 14, **5** after wave 15, **2** after wave 16, **1** after wave 17, — `RefChecks` HAVING RUN FOR THE FIRST TIME — **131** after wave 18 and **60** after wave 19 (coded 41 + bare 19), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **26 owners** now, counted from `errors.tsv` rather than by eye. **THE TYPER COUNT IS ZERO AND `RefChecks` HAS RUN**: wave 17 emptied the typer, wave 18 closed the two post-typer risers that gated everything after them, and the number then went **1 -> 131**, which is `CLAUDE.md` §3's gate finishing the sentence it started — the rise is the truth arriving, not a regression. **The post-typer phases gate on EACH OTHER**, so wave 18's first commit read `1 -> 1` over a DIFFERENT error: read the MEMBER column across a commit here, never the count. §10.6.3's wave-18 row carries the whole census, classified against `ENGINE-LIMITS.md` K28's five verdicts (100 of the 131) plus three families nobody had looked at (31); wave 19 closed BOTH of K28's *strip the `override`* verdicts together — 47 `E037` and 24 `E038`, **131 -> 60**, the largest single fall this port has had |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
@@ -2807,7 +2807,7 @@ not an engine change.
 | `portability(emitted)` | **18** sites against 37 rules — `javax.imageio.ImageIO` 8, `java.lang.reflect.Array` 2, `java.nio.file.Files` 2, and one each of `javax.swing.*` (2), `java.net.URL*` (3), `java.text.MessageFormat`. Six `substitutions-drop` remedies published, four of them naming exactly the types the hand port silently omitted |
 | `dependency-coverage` | **10 of 10** — `java.util.Locale` 6 and `java.text.NumberFormat` 4, both answered by `scala-java-locales` on both non-JVM backends. Not a call to remove; a coordinate to declare |
 | `decisions.tsv` | **2,014 rows** — 715 `RetypedSignature`, 507 `RenamedMember`, 458 `RenamedPackage`, 146 `ForcedClassInit`, 107 `FunnelledCtor`, 57 `WidenedVisibility`, 12 `DroppedSuperCall`, 10 `InjectedMember`, 2 `RetainedParent` |
-| tests | **723, EMITTED AS OF WAVE 7 and not yet run — blocked after wave 18 on the 131-row `RefChecks` census, which is the first time the whole compiler has looked at this port, since the lane runs the suite only at a WHOLE-compile of zero and the test set has been at zero since wave 12** — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
+| tests | **723, EMITTED AS OF WAVE 7 and not yet run — blocked after wave 19 on the 60-row `RefChecks` census, which is the first time the whole compiler has looked at this port, since the lane runs the suite only at a WHOLE-compile of zero and the test set has been at zero since wave 12** — see §10.6.6. The twelve scoped modules still ship no `src/test` at all, which is what `md-measure`'s own discovery block asserts; the suite for the code they emit lives in the `flexmark-util` AGGREGATOR and is now a second lane (`just md-test-measure`, `port-report/FlexmarkTestMigrate`) |
 
 **The behavioural gate is now BUILT and does not yet RUN, which is a smaller gap than the one this
 paragraph used to describe and is not zero.** §3 is explicit about what a compile-error count is
@@ -2832,9 +2832,9 @@ how many are left. Only `errors.tsv`'s MEMBER column can, and it moved from `Ref
 `SegmentedSequenceFull`. Its second commit closed that one and the gate opened all the way: **131**,
 which is `RefChecks` and every check behind it, over 36 owners.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15, → 2 after wave 16, → 1 after wave 17 — and the 1 is NOT A TYPER ERROR — → 1 after wave 18 (a DIFFERENT one, because the post-typer risers are SERIALISED) and then → **131**, `RefChecks` HAVING RUN**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15, → 2 after wave 16, → 1 after wave 17 — and the 1 is NOT A TYPER ERROR — → 1 after wave 18 (a DIFFERENT one, because the post-typer risers are SERIALISED) and then → **131**, `RefChecks` HAVING RUN, → **60** after wave 19**
 
-Every error is `EngineGap`. Seventeen waves have run. Each table below is the state AFTER its wave, with
+Every error is `EngineGap`. Eighteen waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
 commits that moved it.
 
@@ -2981,6 +2981,32 @@ built now against a NUMBER rather than a probe, which is the order that entry as
 are three families nobody has diagnosed**: 22 `E164`s at a program-declared parent, 7 undefined
 `getBuilder`s at an F-bounded generic method, and 2 java FIELDS whose names are JDK methods. None of
 them needs a manifest entry either, on the evidence so far.
+
+**Closed by wave 19**, engine (a) with no manifest entry anywhere:
+
+| before → after | family | where |
+|---|---|---|
+| 131 → 60 | **BOTH of K28's *STRIP the `override`* verdicts, together** — 47 `E037 overrides nothing` and 24 `E038 different signature`, which is the largest single fall this port has had. A java `@Override` is an honest statement about JAVA's hierarchy and a re-parenting moves the type it is about; nothing retypes, nothing drops, and the member is otherwise a perfect translation. `CollectionsTransform.strippedOverrides` drops the flag where the only anchor was a parent the phase MOVED and the emitted parent does not declare the member, with the far side stated as a TABLE — admissible here and not in general because both of its errors are LOUD. **The two over-approximations it took to get right are the durable part**: `OverrideGraph.overridden` is the exact answer to the wrong question (its edges are keyed on the source-level parameter spelling, and a java interface may declare a member at one type-parameter NAME while its implementor declares it at another — 6 members lost a modifier they were entitled to keep, at 0 errors and 0 moved counts, seen only as 77 strips against 71 errors closed); and *did the phase MOVE this parent* is not *can the phase ANSWER for what it became* — a parent moved by the per-library `retarget` table has a target this file tabulates nothing about, which cost `Attributes#compare` on libGDX one moved digest at 0 errors | K28 |
+
+**What wave 19 did NOT close, and why each is a different family:** 39 `E164` — 17 at a collection
+parent (a member whose parameters MATCH the target's and whose RESULT does not: `MapOps.put` 5,
+`IterableOnce.iterator` 5, `values` 4, `keys` 2, `SeqOps.size` 1) and **22 at a program-declared one,
+now DIAGNOSED into two sub-families that share nothing but their error code** — 18 are a DIAMOND
+FORWARDER minted over a `final` parent member (`IRichSequenceBase` declares `split`/`countLeading`
+java-`final`, and the emitter's disambiguating `override def split(…) = super[IRichSequenceBase]
+.split(…)` cannot override it; six owners × three members, and the fix is the emitter declining to
+mint a forwarder where the winning parent's member is final), and 4 are an override edge across a
+PACKAGE BOUNDARY at a java `protected` emitted `protected[visitor]` (`AstActionHandler#processNode`
+read from `…util.ast`, plus one `visit`) — a `Visibility` question. **Both were read off the EMITTED
+text and neither could have been diagnosed from `errors.tsv`**, which carries the FIRST LINE of a
+scalac message: the half of the sentence that says WHY (`… is final`, `… has weaker access
+privileges`) is not in the artifact, which is fine for counting and attribution and is not enough to
+classify a family. 17 `needs to be abstract` (10 collection classes owing the abstract quartet,
+7 the `getBuilder` F-bound), 2 `private variable … cannot override` at a java FIELD named like a JDK
+method (§4.55's implementation-pair rule met from the other side), one `E037` inside an ANONYMOUS
+class body — `parentClash` is built from `allClassDefs` and an anonymous body is a `Tree.AnonClass`
+hanging off a `Tree.New`, so widening it is a change four other seams read and belongs in its own
+commit — and one `E038` at `getBuilder`, which is the F-bound family and not a collection row.
 
 #### The FLOOR the refusal ledger defines — 9 of the 13 after wave 14, 2 of the 5 after wave 15, **2 of the 2 after wave 16**, and what the rest are
 
@@ -3373,6 +3399,19 @@ what it bought is stated in `ENGINE-LIMITS.md` K28's own scoring row: **100 of t
 verdicts and every one of the six is present; the size was low because a reduced class prices a SHAPE
 and cannot price a population** (36 owners, not 7).
 
+**AND WAVE 19 CLOSED BOTH *STRIP THE `override`* VERDICTS TOGETHER — 131 -> 60**, which is 47 `E037`
+and 24 `E038` and the largest single fall this port has had. `CollectionsTransform` drops the modifier
+where the parent that justified it is one the phase MOVED and the emitted parent does not declare the
+member; the far side is a table, admissible because both of its errors are loud
+(`ENGINE-LIMITS.md` K28 carries the build and the two over-approximations measuring it found). **What
+is left is 60 and it is no longer this section's prediction to score**: 39 `E164` (17 at a collection
+parent — `MapOps.put` 5, `IterableOnce.iterator` 5, `values` 4, `keys` 2, `SeqOps.size` 1 — and 22 at
+a PROGRAM-DECLARED one, `split`/`countLeading` in `IRichSequenceBase` 18, `processNode` 3, one
+`visit`), 17 `needs to be abstract` (10 collection classes, 7 the `getBuilder` F-bound), 2
+`private variable … cannot override` at a java FIELD named like a JDK method, one `E037` inside an
+ANONYMOUS class body and one `E038` at `getBuilder`. Every one of those is a family the strip
+deliberately does not touch: a modifier repairs none of them.
+
 **Wave 15 added a SIXTH class to K28's population without
 looking for one**: `TrackedOffsetList#listIterator` now compiles and still carries `override`, and a
 `mutable.Buffer` declares neither `listIterator` nor `spliterator` — probed directly at scalac 3.8.4,
@@ -3396,14 +3435,13 @@ scala's `remove(K): Option[V]`, which is exactly the pair K27's pin is written f
 of `entrySet`, `containsKey`, `containsValue`, `putAll` and `forEach` — five `E037 overrides nothing`
 rows that a stripped modifier closes, measured.
 
-What is genuinely open is smaller and sharper than the wall this section described: **two `E164
-has incompatible type` rows** (`put(K,V): V` against `Option[V]`, and `iterator(): java.util.Iterator`
-against scala's parameterless `Iterator` — same parameters, different RESULT, so no modifier helps),
-**one `E164 cannot override final`** (`size()` on a `Buffer`, where `SeqOps.size` is final — the SAME
-member that compiles on a `Map`, which is why the answer has to be a table and not a rule), and
-**three abstract members to synthesise** (`get(K): Option[V]`, `addOne`, `subtractOne`). That is what
-§4.5's *a parent adds MEMBERS* costs on the emission side, and it is the reason the first zero on this
-port is a milestone and not an ending.
+What the pricing called genuinely open is what wave 19 left standing, and the shape it named was
+right: a member whose parameters MATCH the target's and whose RESULT does not (`put(K,V): V` against
+`Option[V]`, `iterator()` against a parameterless `Iterator`, `values`/`keys` against an `Iterable`),
+the one `SeqOps.size` that is FINAL on a `Buffer` and not on a `Map`, and the abstract members a
+`mutable.Map`/`Set`/`Buffer` declares that no java member answers. No modifier helps with any of
+them, which is exactly why the strip and these are two families and not one — and it is the reason
+the first zero on this port is a milestone and not an ending.
 
 ### 10.6.4 What the first run already taught, at 0 cost
 
@@ -3464,7 +3502,7 @@ this lane counts a different tree. The two numbers are not each other's residue.
 |---|---|
 | files | **52 converted → 52 Scala test files** (0 dropped, 0 injected) |
 | `@Test` → emitted | **723 → 723 munit registrations, `expected-lost` = 0.** Not the raw grep's 730: `java_test_count` is comment-aware and seven are commented out upstream. The discovery guard holds it in BOTH directions from the first run |
-| scalac errors | **131 total on one compile of both source sets after wave 18 — 131 main, ZERO test, 0 elsewhere, and every one is a `RefChecks`-era row** (1 = 1 + 0 after wave 17, and that 1 was POST-TYPER too; 2 = 2 + 0 after wave 16; 19 = 19 + 0 after wave 13; 30 = 30 + 0 after wave 12; 40 = 34 + 6 after wave 11; 42 = 35 + 7 after wave 10; 63 = 38 + 25 after wave 9; 84 = 40 + 44 before that). Wave 10 closed twenty-one in two commits: G28's ascription took the twelve `tagLine` rows and one of the main set's, and K23's built bound-method-reference arm took six `PlaceholderReplacer` rows and two more of the main set's. Wave 11 closed two more with ONE fix, one on each side. Wave 13 closed eleven in five commits, every one of them main-set. Baselined at **131** against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 1 stays `md-measure`'s and is reproduced by that lane alone — **the two figures are equal now precisely because the test set is empty, and they are still two measurements** |
+| scalac errors | **60 total on one compile of both source sets after wave 19 — 60 main, ZERO test, 0 elsewhere, and every one is a `RefChecks`-era row** (131 = 131 + 0 after wave 18) (1 = 1 + 0 after wave 17, and that 1 was POST-TYPER too; 2 = 2 + 0 after wave 16; 19 = 19 + 0 after wave 13; 30 = 30 + 0 after wave 12; 40 = 34 + 6 after wave 11; 42 = 35 + 7 after wave 10; 63 = 38 + 25 after wave 9; 84 = 40 + 44 before that). Wave 10 closed twenty-one in two commits: G28's ascription took the twelve `tagLine` rows and one of the main set's, and K23's built bound-method-reference arm took six `PlaceholderReplacer` rows and two more of the main set's. Wave 11 closed two more with ONE fix, one on each side. Wave 13 closed eleven in five commits, every one of them main-set. Baselined at **60** against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 60 stays `md-measure`'s and is reproduced by that lane alone — **the two figures are equal now precisely because the test set is empty, and they are still two measurements** |
 | **THE TEST SOURCE SET IS AT ZERO — wave 12** | The last six were ONE family and it was a MAIN-set residue read from a caller: `BitFieldSet`, K25's held-back `iterator()` met by a `for` loop over a class whose parent stayed `java.util.AbstractSet` (three `foreach is not a member`, three `Found: java.util.Iterator`). Wave 11 had measured the mapping that closes it and REVERTED it, because alone it opens four `super.<JDK default>` rows `mutable.Set` cannot answer; wave 12 built that obligation into the phase and the mapping landed free (`ENGINE-LIMITS.md` K29). `collection-boundary` on this lane 6 → 4, the two `ClassFileOverride` rows on `BitFieldSetTest#iterator` falling with the errors they named — the attribution §5 requires of a lane that falls. 6 member digests moved, all in `BitFieldSetTest`. **What this does NOT mean is that the suite runs**: the lane compiles BOTH source sets and gates the run on the whole figure, which is 30 |
 | by owner | **0 of fifty-two files.** `HtmlAppendableBaseTest`, `HtmlBuilderTest`, `PlaceholderReplacerTest`, `PlainSegmentBuilderTest` and now `BitFieldSetTest` are all clean. Every wave from 9 onwards closed a test-set family by closing a MAIN-set one, which is the shape this table has been recording since it was written: no error in this suite was ever the suite's own |
 | test-framework refusals | **26, every one reported by the phase with its §1 classification** — `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (`ExpectedException`; the field is emitted and NEVER APPLIED, so an expected throw propagates and MUnit records a FAILURE rather than a silent pass), and one hamcrest `Description`. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |

@@ -7766,6 +7766,92 @@ said it would — the census knew which of five things each collection row was, 
 opened — and the honest correction is that a reduced probe prices a SHAPE and cannot price a
 population.
 
+**THE MODIFIER STRIP IS BUILT, AT WAVE 19: ssg-md 131 -> 60**, which is both `STRIP the override`
+verdicts closing together (47 `E037` and 24 `E038`) and is the largest single fall this port has had.
+`CollectionsTransform.strippedOverrides` drops `Flags.isOverride` from a member whose only anchor was
+a parent this phase MOVED and whose emitted parent does not declare it;
+`Decision.Kind.StrippedOverride` is the row and the note. What the census cannot say and the build
+must:
+
+| | |
+|---|---|
+| the far side is a TABLE | `OverridesTarget` (per `Kind`) and `OverridesShim` (per standalone target), for `ShadowedByTarget`'s reason verbatim — the far side is a scala trait this run never parsed. **Reflection over `scala-library` is not the missing derivation**: a JVM method list answers NAME AND ERASED PARAMETERS, and every `E038` row here is a member whose erasure MATCHES scala's (`contains(Object)` against `contains(A)`, `addAll(Collection)` against `addAll(IterableOnce)`) and whose SOURCE-level signature does not. An erasure-keyed answer keeps the modifier on all 24 |
+| …and a table is admissible here because BOTH errors are LOUD | too small a keep-list and scalac says `needs "override" modifier`; too large and the `E037` stays. Contrast `ExternalSurface`, whose unknown side is a RENAME no compiler can see and which therefore has to anchor on absence |
+| ONE row needs a DESCRIPTOR | a java `List` declares `remove` TWICE — `remove(int)` by index, `remove(Object)` by value — and only the first survives onto a `mutable.Buffer`. Keyed on `(name, arity)` the table keeps both modifiers and leaves an `E038`; the entry carries `Descriptor(int)`, in java's own spelling on both sides, because `Symbol.descriptor` is the parser's and is taken before any retyping |
+| the shim rows quote the ENGINE'S OWN artifact, and nothing compiles against it | `build.sbt` keeps the engine off `balticporter-runtime` on purpose, so a member added to `JavaIterator` tomorrow leaves the table describing last year's surface with no compiler edge to catch it. `MintedShimSurfaceDerivationSpec` derives the four surfaces from `RuntimeArtifact.vendored` — declarations AND definitions, closed over the shim's own parents — and asserts equality |
+
+**AND THE CONJUNCT THAT LOOKED EXACT WAS THE WRONG QUESTION, measured at 6 members.** The obvious
+guard for *does the port emit the far side itself* is `OverrideGraph.overridden`, and it is the exact
+answer to a different question. Its edges are keyed on `Descriptor`, the SOURCE-LEVEL parameter
+spelling (D1's identity), and a java interface may declare a member at one type-parameter NAME while
+its implementor declares the same member at another — permuting the clause is ordinary java, and one
+library does it (`IndexedItemSetMap<M, S, K>` declaring `addItem(K, int)`, implemented by
+`IndexedItemSetMapBase<K, S, M> implements IndexedItemSetMap<K, S, M>` declaring `addItem(M, int)`).
+Two spellings, one member, `overridden` EMPTY. Harmless where the question is *may I rename this* and
+wrong where it is *is this modifier still true*: **six members lost an `override` they were entitled
+to keep, at 0 errors and 0 moved counts**, because the parent's declaration is ABSTRACT and scala's
+modifier is optional at an implementation. The only instrument that saw it was `members.tsv`
+(77 stripped against 71 errors closed), which is §5's over-approximation rule doing exactly its job.
+So the question is asked at the LOOSER key — name and arity over `ancestorsOf` — whose error
+direction is refusal.
+
+**AND THE SECOND OVER-APPROXIMATION WAS FOUND ON A PORT AT ZERO, by one member.** The anchor filter
+was first written as *did this phase move this parent at all* (`coveredExternally`, the phase's own
+record and the right question for four other seams). Its second disjunct is `retarget`, a PER-LIBRARY
+table whose targets this file holds no surface for — so a parent moved into `scala.math.Ordering` was
+filtered OUT of the anchors, and `Attributes implements Comparator<Attribute>` lost the `override` on
+a `compare` that `Ordering` really does declare. **0 errors before and after** (that declaration is
+abstract, so scala's modifier is optional there), every check count flat, ONE moved member digest on
+libGDX — §5's *a widened guard is done when every other port is byte-identical* finding its own case.
+The test is now the POSITIVE one: *did the phase move this to a target THIS FILE TABULATES*, and
+everything else anchors, which also takes `Kind.Entry`/`Kind.Opt` correctly for free.
+
+**Two rows the strip does NOT close, and both are honest residues rather than misses:**
+
+- **an ANONYMOUS class's member** — `NodeIterable#EMPTY`'s `forEach`, 1 row. `parentClash` is built
+  from `StandardTraversal.allClassDefs`, and an anonymous body is a `Tree.AnonClass` hanging off a
+  `Tree.New`, not a `ClassDef`. Widening `parentClash` to reach it is a WIDENING of a record four
+  other seams read (`pinnedByObject`, `superLostItsDefault`, `mintedSourceKind`, `coerce`), so it is
+  §5's measure-it-on-the-ports-it-was-not-aimed-at case and belongs in its own commit;
+- **`BasedSequence#getBuilder()`** — not a collection row at all. It is the `getBuilder` family below.
+
+**And a MEMBER WITH NO ERROR ROW IS NOT A MEMBER THAT WAS RIGHT.** 73 members were stripped and 71
+error rows closed, and the 2 that remain are `OrderedSet#contains(Object)` and
+`OrderedSet#remove(Object)` — the same shape as `BitFieldSet`'s, which scalac DID report as `E038`.
+Both spellings are accepted at that pair because the parent's member is abstract, so scalac reported
+one class and not the other; a strip that treated the absence of a row as evidence would have left
+the port inconsistent with itself. That is §3's serialised-riser rule read at a modifier: the count is
+not the census, and the census is not the population.
+
+The census after wave 19 is **60** — 39 `E164` (17 at a collection parent, 22 at a program-declared
+one), 17 `needs to be abstract` (10 collection, 7 `getBuilder`), 2 `private variable … cannot
+override`, and the 2 rows named above.
+
+**AND THE 22 THAT WERE `NOT PREDICTED` ARE NOW DIAGNOSED, into two sub-families that share nothing
+but their error code.** Both were read off the EMITTED text, which is the only place either is
+visible:
+
+- **18 rows — a DIAMOND FORWARDER over a `final` parent member.** `IRichSequenceBase` declares
+  `countLeading(CharPredicate)` and `split(…)` `final` (java's own modifier, faithfully carried), and
+  `BasedSequenceImpl extends IRichSequenceBase[BasedSequence] with BasedSequence` gets the emitter's
+  disambiguating `override def split(…) = super[IRichSequenceBase].split(…)`. Scala forbids
+  overriding a `final` member, so the forwarder that exists to REMOVE an ambiguity is itself the
+  error — six owners × three members. The shape of the fix is `TirEmitter`'s: a forwarder may not be
+  minted where the winning parent's member is `final`, which is a fact the emitter holds;
+- **4 rows — an override edge across a PACKAGE BOUNDARY at a java `protected`.** `AstActionHandler`
+  is in `…util.visitor` and its java `protected void processNode(N, boolean, BiConsumer<N, A>)` is
+  emitted `protected[visitor]`; `BlockNodeVisitor` and the two `TextCollectingVisitor` anonymous
+  bodies are in `…util.ast`, and their `def processNode(…)` is the same member from another package.
+  One `visit` in `HeaderIdGenerator` is the same shape. This is a `Visibility` question and not a
+  collection one.
+
+**A caution the diagnosis itself produced: `errors.tsv` carries the FIRST LINE of a scalac message.**
+Both sub-families read `error overriding method … in class … of type (…)` and stop, so the half of
+scalac's sentence that says WHY (`… is final`, `… has weaker access privileges`) is not in the
+artifact. That is fine for counting and attribution — the member column is exact, which is what the
+file is for — and it means a family cannot be diagnosed from the census alone; read the emitted text
+or re-run the compile.
+
 *Fix kind: (a) throughout — every one of these is an obligation the ENGINE'S OWN translation created
 (`CLAUDE.md` §1), and no manifest key can discharge it. The `SurfacePolicy` question does not arise:
 a member plan derived from a table the engine holds is the same on every port that mints the parent.*

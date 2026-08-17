@@ -368,9 +368,16 @@ final class CollectionsTransform(
     *
     * `shims` is the STANDALONE targets among the same parents. Those contribute no clashing member
     * (§4.5), so the pin ignores them — but they are exactly what says a value ALREADY CONFORMS at a
-    * shim-typed slot, which is what [[coerce]] must not wrap. */
+    * shim-typed slot, which is what [[coerce]] must not wrap.
+    *
+    * `targets` is the SCALA FQN each mapped parent became — what the emitted `extends` clause
+    * actually says. `kinds` cannot answer that (one kind covers `mutable.Map`, `HashMap`, `TreeMap`
+    * and `TrieMap`) and no reader of a refusal can be told to look at a `Kind`, so it is carried
+    * rather than reverse-derived: recomputing it from `typeMap` by matching kinds would name every
+    * target of that kind and not the one this class extends. */
   private final case class MintedParents(kinds: Set[Kind], probes: List[TypeRepr],
-                                         tparams: List[SymId], shims: Set[String])
+                                         tparams: List[SymId], shims: Set[String],
+                                         targets: Set[String] = Set.empty)
   private var parentClash: Map[SymId, MintedParents] = Map.empty
   /** every `super.<JDK default>` this run stood on `this` instead — (enclosing class, callee, member
     * name), drained into `decisions.tsv` by [[recordSuperDefaults]]. Collected AT the rewrite rather
@@ -826,13 +833,25 @@ final class CollectionsTransform(
     val units    = program.units.map(u =>
       restoreUninheritableParents(u, restoreExcluded(u, StandardTraversal.mapClassDef(this, u))))
     val symbols2 = mapSignatures(symbols) // retype signatures too
-    recordRetypings(symbols, symbols2)
+    // …and the MODIFIER the re-parenting invalidated (K28). Decided over `symbols2` because
+    // `graph.signatureOf` reads a symbol's `descriptor` — the frontend's, taken from the parser
+    // before any retyping — so the two tables are asked in java's own spelling either way; applied
+    // here rather than inside `mapSignatures` because that function's contract is about TYPES and
+    // this moves a flag, and folding them would make one function answer two questions.
+    val stripped = strippedOverrides(symbols2)
+    val symbols3 =
+      if stripped.isEmpty then symbols2
+      else symbols2.all.foldLeft(symbols2) { (t, s) =>
+        if stripped(s.id) then t.updated(s.copy(flags = s.flags.copy(isOverride = false))) else t
+      }
+    recordRetypings(symbols, symbols3)
     recordScopedOut(symbols)
     recordRetainedSignatures(symbols)
+    recordStrippedOverrides(stripped, symbols2)
     recordSuperDefaults
-    recordReifiedTypeArgs(symbols2)
+    recordReifiedTypeArgs(symbols3)
     recordEgressBridges()
-    program.rebuilt(units, symbols2)
+    program.rebuilt(units, symbols3)
 
   // -------------------------------------------------------------------------
   // RuleScope — WHICH declarations this run rewrites (CLAUDE.md §1(b))
@@ -1331,9 +1350,168 @@ final class CollectionsTransform(
   private def spliceable(graph: OverrideGraph)(m: SymId)(using p: Program): Boolean =
     p.definitionOf(graph.ownerOf(m)).exists(_.isInstanceOf[Tree.ClassDef])
 
-  /** DECISION PROVENANCE for [[applyClassFileOverrides]] — [[recordScopedOut]]'s row with the
-    * other §1 classification, and the reason the two are separate kinds: a reader told to widen a
-    * scope that does not exist has been sent after a key nothing in the port can supply (§4.45). */
+  // -------------------------------------------------------------------------
+  // …and the MODIFIER a re-parenting invalidated — `ENGINE-LIMITS.md` K28
+  // -------------------------------------------------------------------------
+
+  /** Drop `Flags.isOverride` from every member whose only anchor was a parent THIS PHASE MOVED and
+    * whose emitted parent does not declare it.
+    *
+    * ==The defect==
+    * The frontend's `override` is an honest statement about JAVA — `OrderedMap#containsKey` really
+    * does override `java.util.Map#containsKey`. Re-parenting the class onto
+    * `scala.collection.mutable.Map` moves the far side of that statement without touching the
+    * modifier, and `E037 overrides nothing` / `E038 has a different signature` is what scalac says
+    * about a member whose name, formals and body are all correct. It is `CLAUDE.md` §1's *an
+    * obligation the ENGINE'S OWN TRANSLATION created*: no manifest key produced it and none can
+    * discharge it. And it is UNMEASURABLE until a port reaches zero typer errors, because
+    * `RefChecks` does not run before then (§3) — which is why this arrives one wave after the port
+    * went green and not at any point in the twelve before it.
+    *
+    * ==Four conjuncts, each closing a different way to be wrong==
+    *   - `Flags.isOverride` AND OWNED. Nothing to strip otherwise, and an unowned symbol's flags are
+    *     a fact about a class file (§4.56).
+    *   - **this phase RE-PARENTED the owner.** [[parentClash]] is the record of exactly that, and it
+    *     already excludes the three shapes that KEPT java's parent (a declaration the scope held
+    *     back, a target that cannot BE a parent, a parent the mapping does not cover). Where it has
+    *     no entry the class still extends what java wrote and every modifier on it is still true.
+    *   - **no PROGRAM-DECLARED ancestor declares the member** ([[programAncestorDeclares]]). The
+    *     port emits the far side itself, so the modifier is required whatever the minted parent
+    *     does — this is the conjunct that keeps an ordinary override inside the library's own
+    *     hierarchy from being stripped because its owner happens to implement a JDK collection. It
+    *     is deliberately NOT `OverrideGraph.overridden`, and the difference is measured: see that
+    *     function's own note.
+    *   - **no ancestor whose emitted surface this phase cannot ANSWER FOR could declare it.** Two
+    *     halves, because two kinds of ancestor are invisible in different ways. An unparsed PARENT
+    *     is `externalAncestorsOf` filtered by [[tabulatedTarget]] — read through
+    *     `ExternalSurface.default`, whose unknown side answers YES on purpose. And `java.lang.Object`
+    *     is above every java type whether or not the tree says so (the frontend filters it out of
+    *     every parent list), so `equals`/`hashCode`/`toString`/`clone` have to be asked of it
+    *     separately or all four lose a modifier scala requires.
+    *
+    * The fifth test is [[CollectionsTransform.OverridesTarget]] / [[CollectionsTransform.OverridesShim]]
+    * — does the emitted parent declare this member at all — and its two error directions are BOTH
+    * LOUD, which is what licenses a table for it. See that table's own note.
+    *
+    * ==What it deliberately does NOT touch==
+    * The `E164` family. A member that reaches its target's own declaration and disagrees about the
+    * RESULT (`put(K,V): V` against `Option[V]`, `iterator(): JavaIterator` against `=> Iterator`) is
+    * listed in the table, keeps its modifier, and goes on reporting — no modifier repairs it and
+    * silencing the report would hide a real translation this phase still owes.
+    *
+    * EMPTY for a program whose classes extend nothing this phase maps, so it is a no-op by
+    * arithmetic rather than by a branch. */
+  private def strippedOverrides(before: SymbolTable)(using p: Program): Set[SymId] =
+    if parentClash.isEmpty then return Set.empty
+    val graph = OverrideGraph.build(p)
+    val owned = p.owned
+    before.all.iterator.filter { s =>
+      s.flags.isOverride && owned(s.id) && isMethodLike(s.info) &&
+        parentClash.get(s.owner).exists(mp => mp.kinds.nonEmpty || mp.shims.nonEmpty) &&
+        graph.signatureOf(s.id).exists { sig =>
+          !ExternalSurface.javaLangObjectDeclares(sig) &&
+            !programAncestorDeclares(graph, s.owner, sig) &&
+            !graph.externalAncestorsOf(s.owner).filterNot(tabulatedTarget)
+              .exists(ExternalSurface.default.mayDeclare(_, sig)) &&
+            !mintedParentDeclares(s.owner, sig)
+        }
+    }.map(_.id).toSet
+
+  /** did this phase move `fqn` to a target THIS FILE TABULATES the surface of?
+    *
+    * Deliberately NOT [[coveredExternally]], which is the same question one notch wider and which
+    * was measured wrong here. That one answers *did the phase move this type at all*, and its second
+    * disjunct is `retarget` — a per-library table whose targets (`scala.math.Ordering`,
+    * `scala.concurrent.duration.Duration`, whatever a port names) this file holds no surface for. A
+    * parent moved into one is a parent whose members are as unknown as any unparsed type's, so
+    * filtering it OUT of the anchors says *nothing above this member could declare it* on no
+    * evidence at all: `Attributes implements Comparator<Attribute>` lost the `override` on its
+    * `compare`, which `scala.math.Ordering` really does declare (0 errors, because that declaration
+    * is ABSTRACT and scala's modifier is optional there — one moved digest on a port at zero, and
+    * the only instrument that saw it).
+    *
+    * So the test is the POSITIVE one §4.56 asks for — *what did the phase itself do, and can it
+    * answer for the result* — and everything else anchors. A `Kind` with no row (`Entry`, `Opt`) is
+    * unanswerable for the same reason and takes the same arm, which is why this reads the two
+    * surface tables rather than `typeMap`'s membership. */
+  private def tabulatedTarget(fqn: String): Boolean =
+    typeMap.get(fqn).exists { (tgt, k) =>
+      if CollectionsTransform.standaloneTargets(tgt) then CollectionsTransform.OverridesShim.contains(tgt)
+      else CollectionsTransform.OverridesTarget.contains(k.toString)
+    }
+
+  /** does an ancestor THIS PROGRAM DECLARES declare `sig` — by NAME AND ARITY, deliberately looser
+    * than the override edge?
+    *
+    * `OverrideGraph.overridden` is the exact answer and it is the WRONG one here, which is the sort
+    * of thing only a run says. Its edges are keyed on `Descriptor`, the SOURCE-LEVEL parameter
+    * spelling (`ENGINE-LIMITS.md` D1's identity), and a java interface may declare a member at one
+    * type-parameter NAME while its implementor declares the same member at another — permuting the
+    * clause is ordinary java and one library does it (`I<M, S, K>` declaring `addItem(K, int)`,
+    * implemented by `B<K, S, M> implements I<K, S, M>` declaring `addItem(M, int)`). Two spellings,
+    * one member, and `overridden` answers EMPTY.
+    *
+    * That answer is harmless where it is asked as *may I rename this* and wrong where it is asked as
+    * *is this modifier still true*: **6 members lost an `override` they were entitled to keep**, and
+    * nothing reported it, because the parent's declaration is ABSTRACT and scala's modifier is
+    * optional at an implementation. No error, no moved count, six moved digests — §5's
+    * over-approximation with the one instrument that can see it.
+    *
+    * So the question is asked at the LOOSER key, and the direction of its error is refusal: a member
+    * that shares a name and an arity with an ancestor's keeps its modifier, which is at worst the
+    * `E037` this pass was written to remove and at best the truth. That is `OverrideGraph`'s own
+    * convention for a missing descriptor, read at a descriptor that is present and disagrees. */
+  private def programAncestorDeclares(graph: OverrideGraph, owner: SymId,
+                                      sig: OverrideGraph.Signature)(using Program): Boolean =
+    graph.ancestorsOf(owner).exists { a =>
+      graph.membersOf(a).exists(m =>
+        graph.signatureOf(m).exists(o => o.name == sig.name && o.arity == sig.arity))
+    }
+
+  /** does ANY parent this phase minted for `cls` declare `sig`? — the far side of the override, read
+    * off the two tables the phase holds for its own targets.
+    *
+    * OR across the parents and not AND, because a class routinely has several — java's interfaces
+    * are small and orthogonal (§4.5) and `class OrderedMap implements Map<K,V>, Iterable<Entry<K,V>>`
+    * is the shape this phase was written from — and ONE parent declaring the member is enough to
+    * make the modifier true. Asked as AND, a member the shim declares would lose its `override`
+    * because the scala collection beside it does not, and the strip would be deciding from the last
+    * parent it happened to look at. */
+  private def mintedParentDeclares(cls: SymId, sig: OverrideGraph.Signature): Boolean =
+    parentClash.get(cls).exists { mp =>
+      mp.kinds.exists(k => CollectionsTransform.OverridesTarget.get(k.toString).exists(_.exists(_.matches(sig)))) ||
+        mp.shims.exists(s => CollectionsTransform.OverridesShim.get(s).exists(_.exists(_.matches(sig))))
+    }
+
+  /** DECISION PROVENANCE for [[strippedOverrides]].
+    *
+    * One row per member, which is one row per DECLARATION — this decision is about a declaration and
+    * not about a site, so §5.1's per-declaration rule is met by construction. `Reason.Universal`,
+    * because there is no key: the java said `implements java.util.Map`, the engine chose the target,
+    * and telling the reader to edit a scope would cost them the session §4.45 is about.
+    *
+    * `parent=` is the reader's actual next question. `overrides nothing` is a sentence about a type,
+    * and the type is one the java file never names. */
+  private def recordStrippedOverrides(stripped: Set[SymId], before: SymbolTable)(using p: Program): Unit =
+    stripped.toList.flatMap(id => before.all.find(_.id == id)).sortBy(_.fullName).foreach { s =>
+      val parents = parentClash.get(s.owner).toList
+        .flatMap(mp => mp.targets.toList ++ mp.shims.toList).distinct.sorted
+      record(Decision(
+        kind       = Decision.Kind.StrippedOverride,
+        subject    = s.id,
+        subjectFqn = s.fullName,
+        detail = Map(
+          "member" -> s.name,
+          "parent" -> (if parents.isEmpty then "?" else parents.mkString(", ")),
+          "why" -> ("java's own hierarchy justified this `override` and this phase moved the parent " +
+            "that justified it, so the modifier was a statement about a type the emitted class no " +
+            "longer extends. The member itself is unchanged"),
+        ),
+        reason = Reason.Universal("minted-parent-override(§1, K28)"),
+        origin = Decision.originOf(p, s.id),
+      ))
+    }
+
   /** DECISION PROVENANCE for the `super` → `this` substitution (`ENGINE-LIMITS.md` K29).
     *
     * This one is recorded where the other `JavaCollections` rewrites are not, and the line between
@@ -1374,6 +1552,13 @@ final class CollectionsTransform(
         }
     }
 
+  /** DECISION PROVENANCE for [[applyClassFileOverrides]] — [[recordScopedOut]]'s row with the
+    * other §1 classification, and the reason the two are separate kinds: a reader told to widen a
+    * scope that does not exist has been sent after a key nothing in the port can supply (§4.45).
+    *
+    * (It sat above `recordSuperDefaults` as an ORPHAN doc block for as long as that function had
+    * one of its own, so scaladoc attached neither to this — moved here, which is where it was
+    * always about.) */
   private def recordRetainedSignatures(before: SymbolTable)(using p: Program): Unit =
     if retainedOverrides.isEmpty then return
     before.all.foreach { s =>
@@ -4634,10 +4819,14 @@ final class CollectionsTransform(
               case ((tgt, _), _) if CollectionsTransform.standaloneTargets(tgt) => tgt
             }.toSet
             val above  = heads.map(_._1).filter(byId.contains).map(resolve(_, seen + id))
+            val scalas = targets.collect {
+              case ((tgt, _), _) if !CollectionsTransform.standaloneTargets(tgt) => tgt
+            }.toSet
             MintedParents(mapped.map(_._1).toSet ++ above.flatMap(_.kinds),
                           mapped.flatMap(_._2) ++ above.flatMap(_.probes),
                           cd.tparams.map(_.symbol),
-                          shims ++ above.flatMap(_.shims))
+                          shims ++ above.flatMap(_.shims),
+                          scalas ++ above.flatMap(_.targets))
         memo(id) = out
         out
       })
@@ -5386,6 +5575,121 @@ object CollectionsTransform:
     // a `JavaStack` IS a `mutable.ArrayBuffer`, so it inherits exactly the Seq row's three.
     Kind.Stack.toString -> Set(MemberSig("contains", 1), MemberSig("indexOf", 1),
                                MemberSig("lastIndexOf", 1)),
+  )
+
+  // -------------------------------------------------------------------------------------------
+  // WHAT A MINTED PARENT ACTUALLY OVERRIDES — `ENGINE-LIMITS.md` K28
+  // -------------------------------------------------------------------------------------------
+  //
+  // The frontend puts `override` on a member because JAVA's hierarchy justified it
+  // (`SpoonTir.overridesInherited`). Re-parenting the class moves the far side of that statement,
+  // and the modifier is then a claim about a type the emitted class does not extend: scalac reads
+  // `E037 overrides nothing` or `E038 different signature` at a member whose name, formals and body
+  // are all correct. 73 of ssg-md's 131 `RefChecks` rows are exactly this.
+  //
+  // WHY A TABLE AND NOT A DERIVATION — `ShadowedByTarget`'s argument, verbatim and for the same
+  // reason: the far side is a scala TRAIT this run never parsed, so there is no `Definition` to read
+  // its members off and `OverrideGraph` has no node for it. Reflection over `scala-library` is not
+  // the missing derivation either, and the reason is measured rather than aesthetic: a JVM method
+  // list answers NAME AND ERASED PARAMETERS, and every `E038` row in that census is a member whose
+  // erasure MATCHES scala's (`contains(Object)` against `contains(A)`, `addAll(Collection)` against
+  // `addAll(IterableOnce)`) and whose SOURCE-level signature does not. An erasure-keyed answer would
+  // keep the modifier on all 24 of them.
+  //
+  // ==Read it as the KEEP list, and note that BOTH of its errors are LOUD==
+  // A member listed here keeps `override`; everything else on a re-parented class loses it. Too
+  // SMALL a list strips a modifier scala requires and scalac says `needs "override" modifier`; too
+  // LARGE a list leaves the `E037` exactly where it was. Neither direction is silent, which is what
+  // licenses a table here at all — contrast `ExternalSurface`, whose unknown side is a rename that
+  // no compiler can see, and which therefore has to anchor on absence.
+  //
+  // A target with NO entry keeps every modifier: unknown is the conservative arm, exactly as
+  // `ExternalSurface.mayDeclare` reads it.
+  //
+  // Three families of member are deliberately ABSENT from every row and none of them is an
+  // oversight: `equals`/`hashCode`/`toString`/`clone` are `java.lang.Object`'s, which is above every
+  // java type whether or not the tree says so and which `strippedOverrides` asks separately
+  // (`ExternalSurface.javaLangObjectDeclares`); a member the PROGRAM's own hierarchy declares is
+  // `OverrideGraph.overridden`, asked separately again; and a member that is here and STILL wrong is
+  // an `E164`, which no modifier fixes and which is the family's other half.
+
+  /** WHICH (name, arity) a java member emitted at this KIND's target really overrides.
+    *
+    * Keyed by [[Kind]] rather than by target FQN because the answer is the same for every target of
+    * one kind: `mutable.HashMap`, `LinkedHashMap`, `TreeMap` and `concurrent.TrieMap` all inherit
+    * `MapOps`, and the members below are `MapOps`'s. That is the same key `ShadowedByTarget` uses,
+    * and for the same reason.
+    *
+    * `Kind.Entry` and `Kind.Opt` have no row: `Tuple2` is in [[UninheritableTargets]] so no class is
+    * ever emitted under it, and an `Option` alias cannot be a parent either. */
+  private[balticporter] val OverridesTarget: Map[String, Set[ExternalSurface.Member]] = Map(
+    // `mutable.Map` — the four that simply agree, the two views, and the three that reach scala's
+    // member and DISAGREE about the result (`E164`, which keeping the modifier is what reports).
+    // `get`/`remove`/`containsKey`/`containsValue`/`entrySet`/`putAll`/`forEach` are all absent:
+    // the first two take `K` where java takes `Object` (`ShadowedByTarget`'s own row, read here for
+    // the opposite purpose) and the last five have no scala counterpart at any arity.
+    Kind.Map.toString -> Set(
+      ExternalSurface.Member("size", 0), ExternalSurface.Member("isEmpty", 0),
+      ExternalSurface.Member("clear", 0), ExternalSurface.Member("keySet", 0),
+      ExternalSurface.Member("keys", 0), ExternalSurface.Member("values", 0),
+      ExternalSurface.Member("iterator", 0), ExternalSurface.Member("put", 2),
+    ),
+    // `mutable.Set` — `add(A)` is the one java member whose scala counterpart takes the ELEMENT and
+    // therefore matches java's own `add(E)`. `remove`/`contains` take `A` against java's `Object`;
+    // `addAll` takes an `IterableOnce` against java's `Collection`; `containsAll`/`removeAll`/
+    // `retainAll`/`toArray` have no counterpart at all.
+    Kind.Set.toString -> Set(
+      ExternalSurface.Member("size", 0), ExternalSurface.Member("isEmpty", 0),
+      ExternalSurface.Member("clear", 0), ExternalSurface.Member("add", 1),
+      ExternalSurface.Member("iterator", 0),
+    ),
+    // `mutable.Buffer` — and the one row in this table that needs a DESCRIPTOR rather than an arity,
+    // which is the reason `ExternalSurface.Member` is the entry type here. `remove` is declared
+    // TWICE on a java `List` (`remove(int)` by index, `remove(Object)` by value) and scala's
+    // `Buffer` has only the first; keyed on `("remove", 1)` alone the table would keep the modifier
+    // on both and leave java's by-value overload reading `E038`. Java's own spelling on both sides —
+    // `Symbol.descriptor` is the parser's, taken before any retyping (`Descriptor`'s own note).
+    Kind.Seq.toString -> Set(
+      ExternalSurface.Member("size", 0), ExternalSurface.Member("isEmpty", 0),
+      ExternalSurface.Member("clear", 0), ExternalSurface.Member("iterator", 0),
+      ExternalSurface.Member("remove", 1, Some(Descriptor(List(Param.Prim("int"))))),
+    ),
+    // a `JavaStack` IS a `mutable.ArrayBuffer`, so it inherits exactly the Seq row — the same
+    // sentence `ShadowedByTarget` carries for the same pair.
+    Kind.Stack.toString -> Set(
+      ExternalSurface.Member("size", 0), ExternalSurface.Member("isEmpty", 0),
+      ExternalSurface.Member("clear", 0), ExternalSurface.Member("iterator", 0),
+      ExternalSurface.Member("remove", 1, Some(Descriptor(List(Param.Prim("int"))))),
+    ),
+  )
+
+  /** …and the same question at a STANDALONE target, where the answer is EXACT BY CONSTRUCTION.
+    *
+    * These four traits are the ENGINE'S OWN (`balticporter/runtime`), written to java's shape and
+    * java's arity precisely so that a ported `override def iterator()` keeps meaning what it meant
+    * (§4.5). So this is not a claim about a library the engine cannot see: it is the engine quoting
+    * itself, and an absence here really is proof — `JavaIterable` declares `iterator()` and NOTHING
+    * ELSE, which is why every `forEach`/`spliterator`/`forEachRemaining` in the census is an `E037`.
+    *
+    * A table rather than a `dependsOn(runtime)`: `build.sbt` keeps the engine off the runtime on
+    * purpose, so that two ports of two modules of one library share ONE `JavaIterator` rather than
+    * each vendoring a copy at the same FQN. `RuntimeSurfaceSpec` is what holds the two in step. */
+  private[balticporter] val OverridesShim: Map[String, Set[ExternalSurface.Member]] = Map(
+    JavaIterableFqn     -> Set(ExternalSurface.Member("iterator", 0)),
+    JavaIteratorFqn     -> Set(ExternalSurface.Member("hasNext", 0), ExternalSurface.Member("next", 0),
+                               ExternalSurface.Member("remove", 0)),
+    JavaListIteratorFqn -> Set(ExternalSurface.Member("hasNext", 0), ExternalSurface.Member("next", 0),
+                               ExternalSurface.Member("remove", 0), ExternalSurface.Member("hasPrevious", 0),
+                               ExternalSurface.Member("previous", 0), ExternalSurface.Member("nextIndex", 0),
+                               ExternalSurface.Member("previousIndex", 0), ExternalSurface.Member("set", 1),
+                               ExternalSurface.Member("add", 1)),
+    JavaCollectionFqn   -> Set(ExternalSurface.Member("iterator", 0), ExternalSurface.Member("size", 0),
+                               ExternalSurface.Member("isEmpty", 0), ExternalSurface.Member("contains", 1),
+                               ExternalSurface.Member("add", 1), ExternalSurface.Member("remove", 1),
+                               ExternalSurface.Member("clear", 0), ExternalSurface.Member("containsAll", 1),
+                               ExternalSurface.Member("addAll", 1), ExternalSurface.Member("removeAll", 1),
+                               ExternalSurface.Member("retainAll", 1), ExternalSurface.Member("removeIf", 1),
+                               ExternalSurface.Member("toArray", 0), ExternalSurface.Member("toArray", 1)),
   )
 
   /** the exception java's own contract names for an optional operation a receiver cannot perform. */
