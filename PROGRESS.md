@@ -4000,6 +4000,7 @@ it ADDED to a lane, never the lane's total.
 | 2 | `ext-resizable-image` | 6 | 6 | 0 | — | `overload-risk` +4 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
 | 3 | `ext-youtube-embedded` | 8 | 6 | 0 | — | `overload-risk` +20, `portability(emitted)` +3, `remediation` +1, and `catalog(unreached)` **25 → 22** |
 | 4 | `ext-anchorlink` | 9 | 7 | 0 | — | `overload-risk` +6 (4 `VarargPhaseSpan`, 2 `GenericTieBreak`) |
+| 5 | `ext-escaped-character` | 9 | 7 | 0 | — | `overload-risk` +4, `trivia(recovered)` +3, and `catalog(unreached)` **22 → 17** |
 
 **THE FIRST THING THE BATCH BOUGHT IS A CATALOG ROW NOBODY HAD REACHED HERE.**
 `ext-youtube-embedded` is the first module in this port to write a `try`/`catch` at all — one
@@ -4009,6 +4010,13 @@ on its arrival, `JS-S11`/`JS-S12`/`JS-S13` (the `Try` family) moving from *never
 than an unexamined one: the catch is NARROW, so `JS-S11`'s broad-catch rethrow correctly declines,
 and there is no `finally` and no resource. That is `CLAUDE.md` §2's claim about what a corpus
 addition is FOR, arriving on the third-smallest module in the milestone.
+
+`ext-escaped-character` took it a second time — **22 → 17**, `JS-G04`/`JS-S01`/`JS-S03`/`JS-S15`/
+`JS-S16`, the `ForEach` and unlabelled-jump family, on the port's first enhanced `for` — with
+`JS-S15` (the enhanced-for expression is evaluated ONCE) the one of the five that FIRED. **Eight of
+the twenty-five rows this port had never reached were answered by two modules of six and seven
+units**, which is the argument for ascending size order stated as a number rather than as a
+preference.
 
 **AND IT IS THE FIRST `portability(emitted)` ROW THIS PORT OWNS — DECLINED, WITH THE REASON.**
 The same three lines are three JVM-only sites (`java.net.URL` ×2, `java.net.MalformedURLException`),
