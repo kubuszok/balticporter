@@ -4147,6 +4147,15 @@ as `flexmark` core's reference to `flexmark-util-sequence` is inside `main.conf`
 survives only as a batching HINT (put a sibling in the same wave or an earlier one), never as a
 sequencing requirement.
 
+**BATCH 2 — THE MIDDLES, one row per extension, same rules and the same two-line wave.** Batch 1
+was the four-to-ten-file end of the distribution; these are the nine-to-fifteen-file modules, and
+they are where the 2b siblings become admissible because their dependency is already in scope.
+`units`/`errors` are the extension's own contribution and `residue` is what it ADDED to a lane.
+
+| # | extension | java | units | errors | tests | residue it added |
+|---|---|---:|---:|---:|---:|---|
+| 10 | `ext-gfm-users` | 10 | 8 | 0 | — | `overload-risk` +1 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
+
 **THE PER-EXTENSION CHECKLIST**, for the waves that follow:
 
 1. **read the module's imports** — `grep -rh '^import ' <mod>/src/main/java | sort -u`. Everything

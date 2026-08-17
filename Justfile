@@ -147,7 +147,7 @@ md_modules    := "flexmark flexmark-util-ast flexmark-util-builder flexmark-util
 # the lane PRINTS (`modules in scope: N of 29 covered`) rather than one this comment carries: a count
 # written here is one a wave has to remember to edit, and a stale one reads exactly like a scope that
 # drifted.
-md_ext_modules := "flexmark-ext-aside flexmark-ext-resizable-image flexmark-ext-youtube-embedded flexmark-ext-anchorlink flexmark-ext-escaped-character flexmark-ext-ins flexmark-ext-superscript flexmark-ext-gfm-issues flexmark-ext-autolink"
+md_ext_modules := "flexmark-ext-aside flexmark-ext-resizable-image flexmark-ext-youtube-embedded flexmark-ext-anchorlink flexmark-ext-escaped-character flexmark-ext-ins flexmark-ext-superscript flexmark-ext-gfm-issues flexmark-ext-autolink flexmark-ext-gfm-users"
 
 # …and the ONE third-party compile coordinate any of the 29 extension modules declares.
 # `flexmark-ext-autolink/pom.xml` pins `org.nibor.autolink:autolink:0.6.0` in its own `<properties>`
