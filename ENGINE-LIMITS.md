@@ -1015,13 +1015,42 @@ both of those were the same shadow read twice. **A count that only ever appears 
 finding's TEXT is exactly what `findings_baseline_guard` exists for**: every check COUNT was
 identical, and without that guard this change would have been invisible on all seventeen ports.
 
-*Fix kind: (a) engine. The first half BUILT (above). The SECOND BLOCKER — thirteen (fourteen)
-wildcard-arm-below-type-parameter-arm matches — **CLOSED at wave 17**, flat on all seventeen port
-reports, with `mentionsAnyTypeVar`'s shadow flipped after it. The second half of the ENTRY is still
-OPEN and REVERTED at 13 → 11 / 0 → 1; the entry-point is `SpoonTir.erasedReceiverView`'s `args`, and
-ONE blocker remains — `eraseDependentArgs` / `knownReceiverArgs` / `coerceArgsFixed` being three
-readings of one erasure, which is why the per-position rule may carry only the positions those three
-provably AGREE about.*
+**AND THE PER-POSITION RULE THEN SHIPPED, NARROWED TO WHAT THE THREE READINGS CANNOT DISAGREE ABOUT —
+ssg-md 2 → 1, EVERY OTHER PORT BYTE-IDENTICAL.** The remaining blocker is real and is not gone: the
+argument side is still three readings of one erasure. What changed is that the rule no longer has to
+step around it, because there is a class of position all three provably agree about. A position is
+CARRIED iff the source wrote an actual there AND that actual mentions NO TYPE VARIABLE; every other
+position erases exactly as before. A variable-free written argument is one no substitution can move,
+so `eraseDependentArgs`' `subst`, `knownReceiverArgs`' own substitution and the reference-level
+erasure `coerceArgsFixed` synthesises all render it identically; a written argument that MENTIONS a
+variable is precisely where they came apart, which is `OrderedMap#putAll` at 0 → 1 above. An
+F-bounded class is still excluded whole.
+
+| | |
+|---|---|
+| ssg-md | **2 → 1**, 2 member digests (`DependencyResolver` and its `resolveDependencies`), 2 port-map rows, 10 findings lines — every one of the ten a type-lowering DENOMINATOR moving by 2 or 4, which is the two `Class<?>` actuals now being rendered |
+| the other fifteen lanes | 0 errors moved, **0 member digests**, findings and port maps unchanged |
+
+Spec: `ErasedReceiverPositionSpec` — the mixed instantiation carried, the variable-mentioning
+position still erased (the co-reader guard, standing in for the port that measured it), and a RAW
+receiver unchanged. Negative-tested by gating `writtenAt` off, which fails the positive and leaves
+the two guards passing.
+
+**AND THE 1 IT LEFT IS NOT A TYPER ERROR — ssg-md's TYPER COUNT IS ZERO, WHICH IS `CLAUDE.md` §3's
+GATE OPENING FOR THE FIRST TIME IN THIS CORPUS.** The remaining row is an `E057 Type argument B does
+not conform to upper bound Node` in a file whose emitted text did not move, and it appeared only when
+the two `E007`s went away. That is dotty's `Phase.isRunnable = !ctx.reporter.hasErrors` doing exactly
+what §3 describes, and it was verified rather than inferred: injecting ONE deliberate typer error
+into the emitted tree makes the `E057` vanish again, so the phase that reports it runs only at zero
+typer errors. The count did not fall from 2 to 1 — it fell from 2 to 0 and a post-typer phase then
+reported its first row. `RefChecks` is later still and remains unreached (K28's wall is behind this
+one error, not beside it).
+
+*Fix kind: (a) engine. BOTH HALVES BUILT — the retype and the guard extension earlier, the
+per-position view at wave 17, on top of a unified reference taxonomy and one flipped shadow. What
+this entry no longer blocks is what it used to: the three readings of one erasure remain three, and
+the OPEN work is that refactor, whose value is now measurable — it is exactly the set of positions
+`writtenAt` declines because a type variable is written at them.*
 
 ### G22. A method TYPE PARAMETER constrained only by its BOUND infers `Nothing` in Scala and its BOUND in java — CLOSED
 
@@ -1578,6 +1607,46 @@ lookup walks. Every other port in the corpus: 0 errors moved, `findings.tsv` con
 *Fix kind: (a). `SpoonTirBodySpec` gains two cases — the anonymous-class pack and, beside it, the same
 `new` WITHOUT a body, because the pair is the whole evidence: neither half alone says the two
 dispatches were reading different declarations.*
+
+### G30. A RAW BOUND is name-FILLED from the ENCLOSING declaration, and at a type that is not the declaring one the names are a COINCIDENCE — **the FIRST post-typer error the corpus has ever produced. 1 error on ssg-md, OPEN**
+
+```java
+public interface ReferenceNode  <R extends NodeRepository<B>, B extends Node, N extends Node> { … }
+public interface ReferencingNode<R extends NodeRepository<B>, B extends ReferenceNode>        { … }
+```
+
+`B extends ReferenceNode` is a RAW use of a generic type AS A BOUND, and java stops checking there.
+`SpoonTir.fbound` fills a raw bound from the names in scope (`nameFilledArgs`) rather than erasing it,
+and that policy is right for the case it was written for — java's F-BOUND idiom, `N extends Node<N,V,A>`
+INSIDE `Node`, where the raw type IS the declaring type and the names really are the same variables.
+Here the raw type is a DIFFERENT interface that happens to spell its first two parameters `R` and `B`,
+so the fill emits
+
+```scala
+trait ReferencingNode[R <: NodeRepository[B], B <: ReferenceNode[R, B, ?]]
+```
+
+and re-imposes bounds java never checked: `ReferenceNode`'s own second parameter is `B <: Node`, which
+`ReferencingNode`'s `B` cannot discharge. `E057 Type argument B does not conform to upper bound Node`.
+This is `CLAUDE.md` §4.56 met at a BOUND — *two names being equal is not a structural fact* — and the
+structural test that separates the two cases is already available: is the raw type the DECLARING type?
+
+**What makes it worth its own entry is WHEN it surfaced.** It is invisible at any non-zero typer count,
+because the phase that checks an applied type's bounds runs only when `ctx.reporter.hasErrors` is
+false (`CLAUDE.md` §3). ssg-md reached 0 TYPER errors at wave 17 and this appeared in a file whose
+emitted text had not moved for waves — verified by injecting one deliberate typer error into the
+emitted tree, which makes it vanish again. So the corpus's first look past the typer produced exactly
+one row, and it is neither a missing `override` nor a variance violation, which is what everyone
+expected the first riser to be (K28 is later still, behind `RefChecks`, and this error keeps that gate
+shut).
+
+The obvious fix — erase a raw bound to `Foo[?, ?, ?]` — is the one `fbound`'s own doc records as worse
+for the F-bound case and must not be applied blanket; the narrowing is the declaring-type test above,
+and it has not been measured. Note also G8: where a fill has no consistent instantiation at all, the
+image is the limit rather than the rule.
+
+*Fix kind: (a) engine — frontend, `SpoonTir.fbound`. OPEN, 1 error, and it is the only thing between
+ssg-md and running its 723 emitted tests.*
 
 ---
 

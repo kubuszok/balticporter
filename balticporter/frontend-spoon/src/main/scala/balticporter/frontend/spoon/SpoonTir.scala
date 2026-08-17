@@ -5393,13 +5393,44 @@ object SpoonTir:
                 try Option(f.getSuperclass).exists(b => mentionsTypeVarFilled(b, Set(f.getSimpleName)))
                 catch { case _: Throwable => false }
               val anyFBounded = formals.exists(isFBounded)
+              // THE VIEW IS DECIDED PER POSITION, because `unknown` is ONE question asked of the
+              // WHOLE argument list and then applied at every position. That is exact for a RAW use
+              // — nothing is written anywhere — and wrong for the ordinary MIXED one:
+              // `Function<? super D, Class<?>>` leaves position 0 unknown and WRITES position 1, and
+              // java's own view of `apply` there returns `Class<?>`, not `Object`. Erased at both, a
+              // value java handed straight to a `Class<?>` slot arrives needing a conversion java
+              // never performed (`Found: Object / Required: Class[?]`).
+              //
+              // A position is CARRIED only where the source wrote an argument that mentions NO TYPE
+              // VARIABLE, and that second conjunct is the blocker rather than a tuning. This call's
+              // argument side is THREE readings of one erasure — `eraseDependentArgs` off `subst`,
+              // `knownReceiverArgs` off its own substitution, and the erasure `coerceArgsFixed`
+              // synthesises at the executable REFERENCE's already-erased formal — and the receiver's
+              // view has to AGREE with all three or the two halves of one call disagree. They agree
+              // about a variable-free argument, which no substitution can move; they provably do not
+              // about one that mentions a variable, which is libGDX `OrderedMap#putAll` measured at
+              // 0 -> 1 (`ENGINE-LIMITS.md` G21). Until those three are one derivation, this rule
+              // carries only what they cannot disagree about.
+              //
+              // An F-BOUNDED class is excluded whole: there the arguments discharge EACH OTHER's
+              // bounds, and a mixture of written and filled ones discharges nothing.
+              def writtenAt(i: Int): Option[TypeRepr] =
+                if anyFBounded then scala.None
+                else actuals.lift(i).flatMap { a =>
+                  TypeShape.of(a) match
+                    // exactly what the source left UNKNOWN — this is `unknown`'s own criterion, asked
+                    // where java asks it.
+                    case TypeShape.Wildcard(_, _, _) => scala.None
+                    case _ if mentionsAnyTypeVar(a)  => scala.None
+                    case _                           => Some(tpe(a))
+                }
               if unknown && depends then
                 // An F-bounded formal erases to a WILDCARD here too, for the same reason it does
                 // inside `erasedType`: `Node[Node[?, Object, Actor], Object, Actor]` still fails
                 // `N <: Node[N,V,A]`, because `Node` is invariant and the argument would have to be
                 // the very type being written. Only `?` discharges the bound.
                 val namedOf = collection.mutable.Map[String, TypeRepr]()
-                val args  = formals.map { f =>
+                val args  = formals.zipWithIndex.map { (f, i) => writtenAt(i).getOrElse {
                   // Prefer the NAME-DIRECTED fill over the erasure. `Tree tree = getTree();
                   // tree.remove(this)` inside `Node<N,V,A>` is raw in Java's own source, and the
                   // erasure has no Scala image at all: `Tree<N extends Node<N,V,?>, V>` admits no
@@ -5415,7 +5446,7 @@ object SpoonTir:
                     if anyFBounded || isFBounded(f) then TypeBounds(NoType, NoType)
                     else erasureOfFormal(f, Set.empty, 2)
                   }
-                }
+                } }
                 val subst = formals.map(_.getSimpleName).zip(args).toMap
                 Some((AppliedType(TypeRef(NoPrefix, typeSym(rt)), args), subst, namedOf.toMap))
               else None

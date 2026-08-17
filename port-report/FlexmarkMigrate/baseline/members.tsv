@@ -4844,8 +4844,8 @@ ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandle
 ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler#getDependentClass(D)	def	a8fa8773ccd5fa8b
 ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler#prioritize(DependentItemMap<D>)	def	31c7512ef2c61538
 ssg.md.util.dependency.DependencyHandler	ssg.md.util.dependency.DependencyHandler#resolveDependencies(Buffer<D>)	def	5e5269bf73484702
-ssg.md.util.dependency.DependencyResolver	ssg.md.util.dependency.DependencyResolver	class	916c293bde719d3e
-ssg.md.util.dependency.DependencyResolver	ssg.md.util.dependency.DependencyResolver#resolveDependencies(Buffer<D>,Function<DependentItemMap<D>,DependentItemMap<D>>,Function<?,Class<?>>)	def	4a925dc4c519d111
+ssg.md.util.dependency.DependencyResolver	ssg.md.util.dependency.DependencyResolver	class	8c144ba3a7f105ad
+ssg.md.util.dependency.DependencyResolver	ssg.md.util.dependency.DependencyResolver#resolveDependencies(Buffer<D>,Function<DependentItemMap<D>,DependentItemMap<D>>,Function<?,Class<?>>)	def	6514b07f7546fca6
 ssg.md.util.dependency.DependencyResolver	ssg.md.util.dependency.DependencyResolver#resolveFlatDependencies(Buffer<D>,Function<DependentItemMap<D>,DependentItemMap<D>>,Function<?,Class<?>>)	def	5bc3ca97c5cf1033
 ssg.md.util.dependency.Dependent	ssg.md.util.dependency.Dependent	class	c887ab1827dc374d
 ssg.md.util.dependency.Dependent	ssg.md.util.dependency.Dependent#affectsGlobalScope()	def	e5655b68179cc6e7
