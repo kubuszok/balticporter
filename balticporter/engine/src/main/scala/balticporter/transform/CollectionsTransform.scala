@@ -2674,7 +2674,7 @@ final class CollectionsTransform(
     // (`Tree.MethodRef.referent`, F8): an external member is interned with no `Flags`, so
     // `flags.isStatic` reads `false` for every JDK static and this phase would lower one.
     mr.qualifier match
-      case Left(tt) if mr.referent != Referent.Static =>
+      case Left(tt) if !mr.referent.isInstanceOf[Referent.Static] =>
         kindOf.get(headSym(tt.tpe).getOrElse(SymId.None)) match
           case None    => mr
           case Some(k) =>
@@ -2701,7 +2701,7 @@ final class CollectionsTransform(
           case Some(k) =>
             val arity = mr.referent match
               case Referent.Instance(n) => n
-              case Referent.Static      => -1 // a bound reference is never static; decline rather than guess
+              case Referent.Static(_)   => -1 // a bound reference is never static; decline rather than guess
             if arity < 0 || arity > argParamSyms.size then mr
             else
               val o = mr.origin

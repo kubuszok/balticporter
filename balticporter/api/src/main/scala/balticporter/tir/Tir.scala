@@ -53,16 +53,28 @@ object SymId:
   *
   * The two cases are JLS 15.13.1's split at `Type::name`, which is ONE java syntax naming two
   * different functions: a `static` method is a qualified NAME, an instance method is an UNBOUND
-  * reference whose receiver becomes the SAM's FIRST parameter (JLS 15.13.3). The arity rides on the
-  * second case only because that is the only form whose emitted lambda has to state it — a qualified
-  * name is eta-expanded by scala against the target, exactly as javac did it.
+  * reference whose receiver becomes the SAM's FIRST parameter (JLS 15.13.3).
+  *
+  * ==BOTH cases carry the ARITY, and the static one earns it at ZERO==
+  * This enum used to say *"the arity rides on the second case only … a qualified name is eta-expanded
+  * by scala against the target, exactly as javac did it"*. That is true of every arity but one.
+  * Scala 3 does NOT eta-expand a NULLARY method from a bare name — `Type.m` where `m` is `def m(): T`
+  * is a call missing its argument list (`method m must be called with () argument`), not a `() => T` —
+  * so `Type::nilaryStatic` at a supplier-shaped SAM is the one static reference whose emitted form
+  * has to be a lambda after all. Measured at 3 errors on the first library to write one
+  * (`ENGINE-LIMITS.md` G32).
+  *
+  * The arity is therefore read for both, from the same place and for the reason stated at
+  * [[Tree.MethodRef]]: `getParameters` on the REFERENCE survives a lenient parse — it erases what
+  * each slot says, never how many there are — so this is a fact about java and never a default
+  * standing in for one.
   *
   * At PACKAGE level and not inside `object Tree`, beside `Flags` and `Descriptor`: it is a fact
   * ABOUT a node and not a node, and `EmissionFieldCoverageSpec` scans `object Tree`'s case classes
   * for exactly that distinction — its aggregate set is pinned, so a non-Tree declared in there fails
   * the totality assertion rather than quietly joining the node census. */
 enum Referent:
-  case Static
+  case Static(arity: Int)
   case Instance(arity: Int)
 
 // ---------------------------------------------------------------------------

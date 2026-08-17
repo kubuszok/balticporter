@@ -1824,6 +1824,59 @@ carries the site and both negatives.*
 
 ---
 
+### G32. Scala 3 will NOT eta-expand a NULLARY method from a bare name, so `Type::nilaryStatic` is the one static method reference that has to be a LAMBDA — **ssg-md-ext 3 -> 0, and BYTE-IDENTICAL on all fourteen lanes. CLOSED**
+
+```java
+// flexmark-ext-admonition, the ordinary way a library states a lazily-computed default
+final public static DataKey<Map<String, String>> QUALIFIER_TYPE_MAP =
+    new DataKey<>("ADMONITION.QUALIFIER_TYPE_MAP", AdmonitionExtension::getQualifierTypeMap);
+//                                                 ^ static Map<String,String> getQualifierTypeMap()
+```
+
+`Referent`'s own doc carried the premise: *"the arity rides on the second case only because that is
+the only form whose emitted lambda has to state it — a qualified name is eta-expanded by scala
+against the target, exactly as javac did it."* That is true of every arity but ONE. Scala 3 eta-expands
+a method WITH parameters against an expected function or SAM type and refuses to do it for a NULLARY
+one: `Type.m` where java declared `T m()` is a call with its argument list left off, and scalac says
+so — `method getQualifierTypeMap in object AdmonitionExtension must be called with () argument`.
+
+So the emitted `new DataKey[…]("…", AdmonitionExtension.getQualifierTypeMap)` is not a supplier at
+all, and the shape is the ordinary one rather than an exotic one: a `Supplier<T>`-shaped SAM filled
+by a static factory is how a library says *compute this default on demand*. Three of them in one
+extension, and **it is the ONE place a `Type::name` reference can be nilary** — an unbound instance
+reference to a nilary method has arity ONE at the function (the receiver becomes the SAM's first
+parameter, JLS 15.13.3), so that form is untouched and must stay untouched.
+
+**The fix is `Referent.Static(arity)`, and the arity comes from where G27 already put it.** The
+emitter cannot read the arity off the SYMBOL — an external member is interned with no `MethodType`
+and would read as *takes no arguments*, which is `CLAUDE.md` §4.6's fabricated fact with the default
+baked into the data, and here it would turn every un-renderable static reference into a lambda that
+does not typecheck. It comes off the NODE, from `SpoonTir.referentOf`, whose existing derivation was
+already exact for the unbound case and is now simply read for both: `getParameters` on the REFERENCE
+survives a lenient parse, because it erases what each slot SAYS and never how many there are.
+
+Three things worth keeping:
+
+- **the split is by ARITY and not by SAM shape.** Asking what the target functional interface's
+  abstract method looks like is the natural key and needs a type the emitter may not have; java's own
+  rule makes it unnecessary, since a static reference's arity IS the SAM's arity (JLS 15.13.1);
+- **the other arities keep the NAME.** A lambda everywhere would be a rewrite with no defect behind
+  it on every port in the corpus, which is §5's widening rule — invisible to every count but
+  `members.tsv`. The negative is in the spec;
+- **nothing but a compile could see it.** No check fired, no member digest outside the module moved,
+  no finding was filed. `Referent` carried a doc comment asserting the premise, and the premise was
+  wrong for exactly one arity — which is why the corpus went nine ports and two milestones without
+  producing one.
+
+*Fix kind: (a) engine — `Referent.Static` gains the arity, `SpoonTir.referentOf` reads it for both
+cases, `TirEmitter`'s `Tree.MethodRef` arm splits at zero. CLOSED. `StaticMethodRefAritySpec` carries
+the site and both negatives (a paramful static reference keeps the name; an unbound nilary instance
+reference keeps the receiver lambda). Measured FLAT on all fourteen `measure-all` lanes — 0 changed
+member digests, every error baseline unchanged, every check count and every finding identical — so
+the whole of its effect is the three sites that motivated it.*
+
+---
+
 ## 2. Constructors
 
 ### C1. Never promote a paramful constructor to the primary without a WHOLE-PROGRAM check — +14

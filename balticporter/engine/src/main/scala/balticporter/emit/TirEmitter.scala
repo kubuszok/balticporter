@@ -4162,7 +4162,7 @@ final class TirEmitter(
     case m: Tree.Match                  => matchStr(m, i)
     case mr @ Tree.MethodRef(q, s, mrT, _, referent) =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
-      val isStaticRef = referent == Referent.Static
+      val isStaticRef = referent.isInstanceOf[Referent.Static]
       // JS-G43, the EMITTER half — five java forms share one syntax and each becomes a DIFFERENT
       // scala lambda. The discrimination is right here (`isCtor`, `Flags.isStatic`, and the array
       // element test below), so the row attaches at both surfaces: the frontend carries the
@@ -4206,7 +4206,7 @@ final class TirEmitter(
           case _ =>
             val ps = referent match
               case Referent.Instance(n) => (0 until n).map(k => s"a$k$$").toList
-              case Referent.Static      => Nil // a constructor is never static; JLS 8.8.3
+              case Referent.Static(_)   => Nil // a constructor is never static; JLS 8.8.3
             samAscribed(s"((${ps.mkString(", ")}) => new ${ctorTpe(tt.tpe)}(${ps.mkString(", ")}))",
                         mrT, tt.tpe)
         // `Type::method` is TWO different java forms sharing one syntax, and only one of them is a
@@ -4216,6 +4216,16 @@ final class TirEmitter(
         // `sge.graphs.Edge[V].getWeight`, which is not even a member access: measured as
         // `value Edge is not a member of sge.graphs` in simple-graphs' MinimumWeightSpanningTree,
         // where the reference is a `Comparator` key extractor.
+        // …and at arity ZERO the qualified name is not a function at all. Scala 3 eta-expands a
+        // method WITH parameters against the target exactly as javac did, and refuses to do it for a
+        // NULLARY one: `Type.m` where java declared `T m()` is a call missing its argument list
+        // (`method m must be called with () argument`), never a `() => T`. So the supplier-shaped
+        // static reference — `Type::nilaryStatic` at a `Supplier<T>`, which is how a library states
+        // a lazily-computed default — takes the lambda the other arms already take, and every other
+        // arity keeps the name it had. `ENGINE-LIMITS.md` G32; measured at 3 errors, and flat on the
+        // fourteen ports whose static references all carry parameters.
+        case Left(tt) if isStaticRef && referent == Referent.Static(0) =>
+          samAscribed(s"(() => ${tpe(tt.tpe)}.${local(s)}())", mrT, tt.tpe)
         case Left(tt) if isStaticRef => s"${tpe(tt.tpe)}.${local(s)}"
         case Left(tt) =>
           val self  = "self$"
@@ -4228,7 +4238,7 @@ final class TirEmitter(
           // a poly expression, so handing scala the job javac had is exact.
           val arity = referent match
             case Referent.Instance(n) => n
-            case Referent.Static      => methodParams(s).size // unreachable: the arm above took it
+            case Referent.Static(n)   => n // unreachable: the arm above took it
           val formals = methodParams(s)
           val named   = formals.sizeIs == arity && !hasWildcardArg(tt.tpe)
           val as      = (0 until arity).map(k => s"a$k$$").mkString(", ")

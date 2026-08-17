@@ -5458,11 +5458,12 @@ object SpoonTir:
         val stat = decl match
           case Some(d) => execFlags(d).isStatic
           case None    => try ex.isStatic catch { case _: Throwable => false }
-        if stat then Referent.Static
-        else
-          val n = decl.map(_.getParameters.asScala.size)
-            .getOrElse(try ex.getParameters.asScala.size catch { case _: Throwable => 0 })
-          Referent.Instance(n)
+        // the ARITY is read for BOTH cases, not only the unbound one: a NILARY static reference is
+        // the one qualified name scala will not eta-expand, so the emitter needs the number there
+        // too (see [[Referent]], `ENGINE-LIMITS.md` G32).
+        val n = decl.map(_.getParameters.asScala.size)
+          .getOrElse(try ex.getParameters.asScala.size catch { case _: Throwable => 0 })
+        if stat then Referent.Static(n) else Referent.Instance(n)
 
       private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?], at: CtExpression[?])
                              (using Obligations): Term =
