@@ -1525,6 +1525,20 @@ this arrived as four spellings of one function of which two callers had it and t
 because a partial recursion is this section's own fast-path guard read at a type walk. Measured at
 **41 of 42 `Not found: type` errors on one port, 243 → 201** (`ENGINE-LIMITS.md` G25).
 
+**…and the same substitution is owed by a QUESTION, not only by an EMISSION.** Everything above is
+about writing a member down. *Does this method override that one* is asked of the SAME pair of
+scopes, and a comparison over the two SPELLINGS answers no for every member reached through a
+generic superclass — `handle(N, …)` above and `handle(Item, …)` below are one member to java (JLS
+8.4.2) and two strings to a string test. A frontend usually has its parser's own resolution as the
+first answer, which is exactly what makes this hard to see: the fallback declines only where the
+parser already did, so no fixture small enough to write reproduces it and the residue is a member
+emitted with NO modifier under a parent that declares it — invisible until `RefChecks` runs (§3).
+Compose the frame one `extends` edge at a time, reading each clause's ACTUALS through the frame in
+force where they are written, and let a RAW supertype contribute an empty one so the match declines.
+Measured at 3 errors and **48 moved member digests** — a correct answer to a question the engine had
+been declining is wide by nature, so the gate is the corpus and not the port that motivated it
+(`ENGINE-LIMITS.md` K28.2).
+
 **And what makes it hard to see is a RESIDUE COUNT that cannot tell a refusal from a switched-off
 fix.** The boundary check reported all five seams, precisely, on every run since that port began —
 and a "no wrap was inserted" finding reads as *no wrap exists for this pair*, which is what the

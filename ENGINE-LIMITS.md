@@ -7965,6 +7965,41 @@ only reach zero once the first two have moved `iterator` and `put`. Nothing here
 and nothing here is a port's to discharge — it is `CLAUDE.md` §1's *an obligation the ENGINE'S OWN
 TRANSLATION created*, three times over.
 
+**NOT BUILT AT WAVE 21. What that wave DID buy is the population, read off the port rather than off
+the probe, and it corrects the entry in three places.** ssg-md stands at **27** and every one of them
+is this entry's — 17 `E164` at a collection parent and 10 `needs to be abstract` — with the other
+four families closed. Three things the reduced probe could not have said:
+
+- **the 17 are THREE different scalac sentences, and `errors.tsv`'s first line says none of them.**
+  Read from the full output at wave 21's end: **14** *has incompatible type* (the real retyping),
+  **2** *needs `override` modifier* and **1** *cannot override final* (`TrackedOffsetList#size`,
+  exactly where the pricing put it). The first two are not one family and no count can tell them
+  apart — measured inside this wave: the split was **12 / 4 / 1** at wave 20, and closing the
+  frontend's substituted-`override` question moved `NodeRepository#put` and `ItemFactoryMap#put` from
+  the second sentence to the first **at an unchanged total of 17**. That is §3's serialised-riser
+  rule met inside a single row rather than across a commit. What is left at the second sentence is
+  both `keys()` — `OrderedMap`'s returning a `mutable.Buffer[K]` and `OrderedMultiMap`'s a
+  `JavaCollection[K]` — and they are there because java's `Map` has no `keys` at all, so no
+  substitution can find them a parent and only the minted one declares it;
+- **the CALLER adaptation this entry priced as the middle commit's cost is almost nothing, and that
+  is a fact about a DEFINER.** Counted in the emitted tree: `.keys()` has **0** call sites in the
+  whole port; `.values()` has 4 and **none** of them is on one of the four classes whose `values()`
+  errors; `.put(` has 115, of which **7** are on the five program-declared Map classes and exactly
+  **ONE** uses the result (`NodeRepository#normalizeKey`'s `return this.put(…)`). The reason is
+  structural rather than lucky — a class that DEFINES a java collection is called through java's own
+  interface by everyone else, and the phase already rewrote those sites at the interface. What the
+  entry read as "emitted text at every call site" is emitted text at one;
+- **and `iterator()` is a FORK the probe's reduced class could not show.** Of the five rows, three
+  return a shim (`JavaIterator[…]`) and **two return a type the LIBRARY declares** —
+  `ReversibleIndexedIterator`, which itself extends `ReversibleIterator extends JavaIterator` and
+  carries `peek`/`reverse`/index members the port's own callers use. *Scala's member wins* deletes
+  that type from the emitted surface, which is a different act from retyping a result nobody named.
+  The alternative is the answer this entry's own table already gives for `size()` on a `Buffer` —
+  RENAME the java member (§4.55's machinery, which re-points every reference exactly) and SYNTHESISE
+  scala's `iterator: Iterator[T]` over it, which is the quartet's own shape one member wider. Neither
+  is free and the choice is a surface decision: retyping keeps java's NAME and loses the type, the
+  rename keeps the TYPE and moves the name. Decide it before the middle commit, not inside it.
+
 #### K28.2 A java FIELD named like an INHERITED JDK METHOD — **CLOSED at wave 21: ssg-md 34 -> 32.** One row was a missing question, the other a surface the engine had refused to state — and the refusal turned out to conflate two different reasons
 
 The two `private variable X cannot override method X` rows are §4.55's implementation-pair rule met
@@ -8048,7 +8083,30 @@ visible:
   line. The java writes no `@Override` annotation, so the frontend's `isOverride` rests entirely on
   Spoon's `getTopDefinitions`, and that resolution does not survive the substitution
   `N := Node, A := Visitor<Node>` through an F-BOUNDED four-parameter superclass. Nothing about
-  visibility is involved and no `Visibility` change can close them. Only the FOURTH row is the
+  visibility is involved and no `Visibility` change can close them.
+
+  **CLOSED at wave 21: ssg-md 30 -> 27 — and the parser's resolution was only HALF the answer.**
+  `SpoonTir.overridesInherited` already had a fallback for exactly this — a signature comparison over
+  the ancestors that DO resolve — and it compared `getQualifiedName` strings, so a generic superclass
+  makes one java member two strings (`handle(N, …)` above, `handle(Item, …)` below) and the fallback
+  declined wherever the parser had. The frame is composed one `extends` edge at a time, each clause's
+  ACTUALS read through the frame in force where they are written; that is the same composition
+  `SpoonTir.actualFor` makes for the SAM question, deliberately at a different value type — this
+  comparison is over an already-ERASED name, so a frame of NAMES is exactly as precise as the
+  question and a frame of references would be a second, finer answer nothing here reads. A RAW
+  supertype contributes an EMPTY frame and the match declines, which is the direction whose error is
+  a missing `override` scalac names rather than a spurious one it rejects.
+  **The blast is 16× the rows: 48 member digests for 3 errors**, every one a member that GAINED the
+  modifier through a substituted parent (`Comparable<CharSequence>`'s `compareTo`,
+  `BiFunction<Integer,Integer,Integer>`'s `apply`, `Map<String,T>`'s `put`, four visitor `visit`s) —
+  which is what a correct answer to a question the engine had been declining looks like, and why the
+  corpus measurement is the gate rather than the port's own count.
+  **And the fixture CANNOT reproduce it**, which is worth stating rather than hiding: the two answers
+  are OR-ed and Spoon's own resolution succeeds on anything small enough to write into a spec, so
+  `SubstitutedOverrideSpec` pins the emitted modifier and the two NEGATIVES (a same-name overload at
+  another arity, and a same-arity one whose substituted parameter differs) and says so in its own
+  header. §4.59's caution read from the other side: a fixture only promotes a fact it can actually
+  distinguish, and the fallback's reach is measured where it declines — on a port. Only the FOURTH row is the
   family this bullet named: `HeaderIdGenerator#visit` reads *`has weaker access privileges; it
   should be at least protected`* at an emitted `protected[renderer] override def visit(…)` whose
   parent is in another package — an override's qualifier must be at least as wide as the parent's,

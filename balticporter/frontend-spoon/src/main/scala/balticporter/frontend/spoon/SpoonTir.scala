@@ -2372,23 +2372,54 @@ object SpoonTir:
         def sig(x: CtMethod[?]): List[String] =
           x.getParameters.asScala.toList.map(p => try p.getType.getQualifiedName catch { case _: Throwable => "?" })
         val mine = sig(m)
-        def declares(t: CtTypeReference[?], fuel: Int): Boolean =
+        // …AND THE ANCESTOR'S SIGNATURE IS READ UNDER THE `extends` CLAUSE'S SUBSTITUTION, which is
+        // what an exact-string comparison silently omits. `AstActionHandler<C, N, A, H>` declares
+        // `processNode(N, boolean, BiConsumer<N, A>)`, and a subclass reached through
+        // `extends NodeVisitor extends AstActionHandler<NodeVisitor, Node, Visitor<Node>, …>`
+        // declares `processNode(Node, boolean, BiConsumer<Node, Visitor<Node>>)`. Those are ONE
+        // member to java (JLS 8.4.2, after the substitution) and two strings here, so the fallback
+        // answered `false` for every override through a generic superclass whose parameter the
+        // method actually mentions — 3 rows on one port, each an emitted member with NO modifier
+        // under a parent that declares it, which `RefChecks` reports as ``needs `override` modifier``
+        // and nothing else can see (`ENGINE-LIMITS.md` K28.2).
+        //
+        // The frame is composed one edge at a time and the actuals of each `extends` clause are read
+        // THROUGH the frame in force where they are WRITTEN — the same composition `actualFor` makes
+        // for the SAM question, at a different value type on purpose: this comparison is over
+        // `getQualifiedName`, which is already erased, so a frame of NAMES is exactly as precise as
+        // the question and a frame of references would be a second, finer answer nothing here reads.
+        //
+        // A RAW supertype contributes an EMPTY frame, so the ancestor's variable stays unsubstituted
+        // and the match declines — java would erase it to its bound, and declining is the direction
+        // whose error is a missing `override` scalac names rather than a spurious one it rejects.
+        def declares(t: CtTypeReference[?], subst: Map[String, String], fuel: Int): Boolean =
           if t == null || fuel <= 0 then false
           else
             val decl = try t.getTypeDeclaration catch { case _: Throwable => null }
             if decl == null then false
             else
+              // this declaration's own frame: its formal parameters bound to the arguments the
+              // `extends` clause wrote, each first read through the frame of the scope it is in.
+              val formals = try decl.getFormalCtTypeParameters.asScala.toList.map(_.getSimpleName)
+                            catch { case _: Throwable => Nil }
+              val actuals = (try t.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil })
+                .map { a =>
+                  val q = try a.getQualifiedName catch { case _: Throwable => "?" }
+                  subst.getOrElse(q, q)
+                }
+              val here = if formals.sizeIs == actuals.size then formals.zip(actuals).toMap else Map.empty[String, String]
               // a PRIVATE ancestor method is not inherited at all, so it cannot be overridden:
               // `GL30Interceptor.check()` is private and `GL31Interceptor.check()` is protected —
               // two unrelated methods to java, and `override` on the second is an error.
-              decl.getMethods.asScala.exists(x => x.getSimpleName == n && (x ne m) && sig(x) == mine &&
+              decl.getMethods.asScala.exists(x => x.getSimpleName == n && (x ne m) &&
+                                                  sig(x).map(s => here.getOrElse(s, s)) == mine &&
                                                   !(try x.isPrivate catch { case _: Throwable => false })) ||
-                (decl match { case c: CtClass[?] => declares(c.getSuperclass, fuel - 1); case _ => false }) ||
-                (try decl.getSuperInterfaces.asScala.exists(declares(_, fuel - 1)) catch { case _: Throwable => false })
+                (decl match { case c: CtClass[?] => declares(c.getSuperclass, here, fuel - 1); case _ => false }) ||
+                (try decl.getSuperInterfaces.asScala.exists(declares(_, here, fuel - 1)) catch { case _: Throwable => false })
         m.getDeclaringType match
           case c: CtClass[?] =>
-            declares(c.getSuperclass, 8) ||
-              (try c.getSuperInterfaces.asScala.exists(declares(_, 8)) catch { case _: Throwable => false })
+            declares(c.getSuperclass, Map.empty, 8) ||
+              (try c.getSuperInterfaces.asScala.exists(declares(_, Map.empty, 8)) catch { case _: Throwable => false })
           case _ => false
 
     private def defineType(t: CtType[?], owner: Option[SymId] = scala.None,
