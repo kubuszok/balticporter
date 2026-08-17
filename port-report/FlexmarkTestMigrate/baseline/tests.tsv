@@ -94,7 +94,7 @@ ssg.md.util.misc.BitFieldSetTest	test_BitFieldIterator	pass
 ssg.md.util.misc.BitFieldSetTest	test_BitFieldIteratorRemove	pass
 ssg.md.util.misc.BitFieldSetTest	test_BitFieldToString	pass
 ssg.md.util.misc.BitFieldSetTest	test_BitSetIterator	pass
-ssg.md.util.misc.BitFieldSetTest	test_BitSetIteratorRemove	fail
+ssg.md.util.misc.BitFieldSetTest	test_BitSetIteratorRemove	pass
 ssg.md.util.misc.BitFieldSetTest	test_ToEnumSet	pass
 ssg.md.util.misc.BitFieldSetTest	test_bitField	pass
 ssg.md.util.misc.BitFieldSetTest	test_bitSetGet	pass

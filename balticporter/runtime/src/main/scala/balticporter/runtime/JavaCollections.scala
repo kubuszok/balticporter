@@ -230,15 +230,48 @@ object JavaCollections:
     * invariant), so it fails at the SLOT and reads as a missing mapping; and where the result flows
     * into an `Object` it type-checks and diverges only at `arr[0] = someNonString`, which java
     * permits and an `Object[]`-declared-`String[]` rejects with `ArrayStoreException`. Allocating
-    * `Object[]` is java's own contract, stated on `Collection.toArray()`. */
+    * `Object[]` is java's own contract, stated on `Collection.toArray()`.
+    *
+    * ==`size()` IS A HINT, NOT A LENGTH — and both directions are java's own code path==
+    *
+    * `AbstractCollection.toArray` does not trust `size()`. It allocates on it and then reconciles:
+    * an iterator that runs out EARLY returns `Arrays.copyOf(r, i)`, and one that runs on returns
+    * `finishToArray(r, it)`, which GROWS. Both arms are written out in the JDK with the comment
+    * *fewer elements than expected*, so tolerating the disagreement is the specified behaviour and
+    * not a defensive accident.
+    *
+    * That is not a corner: a collection whose `size()` is a CONSTANT of its shape rather than a
+    * count of its live elements is an ordinary design — a bit-set over a fixed universe reports the
+    * universe and iterates only the non-zero fields, and java's own test asserts the TRIMMED array.
+    * Filling `new Array[Object](xs.size)` by iteration and returning it leaves the tail `null` and
+    * compiles perfectly: `ArraySeq(a, b, c, d, null, null, …)` against `[a, b, c, d]`, no error
+    * moved and no check able to see it (`ENGINE-LIMITS.md` K31). The other direction is worse only
+    * in being loud — an `ArrayIndexOutOfBoundsException` where java grew the array. */
   def toArray(xs: scala.collection.Iterable[?]): Array[Object] =
-    val out = new Array[Object](xs.size)
-    var i   = 0
-    val it  = xs.iterator
-    while it.hasNext do
-      out(i) = it.next().asInstanceOf[Object]
+    val r  = new Array[Object](xs.size)
+    val it = xs.iterator
+    var i  = 0
+    while i < r.length && it.hasNext do
+      r(i) = it.next().asInstanceOf[Object]
       i += 1
-    out
+    if i < r.length then java.util.Arrays.copyOf(r, i)  // fewer elements than `size()` said
+    else if !it.hasNext then r
+    else grownFrom(r, i, it)                            // …and more
+
+  /** `AbstractCollection.finishToArray` — the arm for an iterator that outlives `size()`.
+    *
+    * The GROWTH policy is not observable (the result is trimmed to the count either way), so this
+    * is java's shape and not its arithmetic; what IS observable is the component type, which is why
+    * every reallocation goes through `java.util.Arrays.copyOf` rather than a fresh `Array[A]` — the
+    * same reason the three-part `toArray(a)` contract below gives. */
+  private def grownFrom[A <: AnyRef](r0: Array[A], from: Int, it: Iterator[?]): Array[A] =
+    var r = r0
+    var i = from
+    while it.hasNext do
+      if i == r.length then r = java.util.Arrays.copyOf(r, (r.length >> 1) + r.length + 1)
+      r(i) = it.next().asInstanceOf[A]
+      i += 1
+    if i == r.length then r else java.util.Arrays.copyOf(r, i)
 
   /** `java.util.Collection.toArray(T[] a)` — java's THREE-part contract, reproduced exactly.
     *
@@ -267,15 +300,24 @@ object JavaCollections:
     * same thing here, and only the first survives `PortabilityCheck` (reflection does not exist on
     * Scala.js or Native). */
   def toArray[A <: AnyRef](xs: scala.collection.Iterable[?], a: Array[A]): Array[A] =
-    val n   = xs.size
-    val out = if a.length >= n then a else java.util.Arrays.copyOf(a, n)
-    var i   = 0
-    val it  = xs.iterator
-    while it.hasNext do
-      out(i) = it.next().asInstanceOf[A]
+    val n  = xs.size
+    val r  = if a.length >= n then a else java.util.Arrays.copyOf(a, n)
+    val it = xs.iterator
+    var i  = 0
+    while i < r.length && it.hasNext do
+      r(i) = it.next().asInstanceOf[A]
       i += 1
-    if out.length > n then out(n) = null.asInstanceOf[A]
-    out
+    // …and java's FOURTH part, which is the one the row above states: `size()` is a hint. The
+    // terminator goes at the element COUNT and never at what `size()` claimed, and each of java's
+    // three early-exit shapes is preserved — write into the caller's own array, trim, or copy back.
+    if it.hasNext then grownFrom(r, i, it)
+    else if i == r.length then r
+    else if a eq r then { r(i) = null.asInstanceOf[A]; r }
+    else if a.length < i then java.util.Arrays.copyOf(r, i)
+    else
+      System.arraycopy(r, 0, a, 0, i)
+      if a.length > i then a(i) = null.asInstanceOf[A]
+      a
 
   // -------------------------------------------------------------------------------------------
   // The IMMUTABLE producers — `emptyList`, `emptyMap`, `emptySet`, `singletonList`,

@@ -8552,6 +8552,41 @@ one-argument `addAll` is untouched), plus the table-agreement assertion.
 negative (a conditional neither arm of which moves is returned IDENTICAL, which is what keeps the
 descent from shifting a digest for a conditional that was already right).*
 
+### K31. `size()` IS A HINT — `AbstractCollection.toArray` reconciles it against the ITERATOR, in both directions, and the runtime helper trusted it. **ssg-md's suite 703 → 704 passing, 0 errors, every check count flat, 0 member digests**
+
+`JavaCollections.toArray` allocated `new Array[Object](xs.size)` and filled it by iterating, which is
+the shape everybody writes and is not what java does. `AbstractCollection.toArray` allocates on
+`size()` and then RECONCILES: an iterator that runs out early returns `Arrays.copyOf(r, i)` — the JDK
+writes the comment *fewer elements than expected* over it — and one that runs on returns
+`finishToArray(r, it)`, which GROWS. Tolerating the disagreement is the SPECIFIED behaviour, so a
+helper that reproduces the happy path alone has reproduced java's arithmetic and not java's contract.
+
+**And a collection whose `size()` disagrees is an ordinary design, not a broken one.** A bit-set over
+a FIXED UNIVERSE reports the universe and iterates only the non-zero fields — flexmark's
+`BitFieldSet.size()` returns `totalBits` — so java's own test asserts the TRIMMED array and the port
+answered `ArraySeq(VALUE_2, VALUE_4, VALUE_12, VALUE_21, null, null, … 28 nulls)`. §4.4 exactly: valid
+scala, right elements, wrong value, no compile error, no lane that could see it. It was the ONE
+uncensused failure in ssg-md's first suite run and it stayed uncensused for a wave because the message
+(*values are not the same*) reads as an ordering or an `equals` problem and the null tail is below the
+fold.
+
+The other direction is louder and equally wrong — `ArrayIndexOutOfBoundsException` where java grew the
+array — and `toArray(a)` had a third face of the same defect: it wrote java's null TERMINATOR at what
+`size()` claimed rather than at the element COUNT, so a caller walking to the first `null` walked past
+real elements. Java's three early-exit shapes (null-terminate the caller's own array, trim, or
+`arraycopy` back) are now each written out.
+
+**Behaviour-preserving by construction for an HONEST collection**, which is why fifteen ports are
+byte-identical and every count is flat: where the iterator yields exactly `size` elements, both arms
+are `i == r.length && !it.hasNext` and the array is returned unchanged. The generalisation is the one
+worth carrying: **a JDK helper reproduced from its SIGNATURE and its happy path is not reproduced —
+read the JDK's own body for the arms it has that yours does not**, and note which corpus library
+would expose each. Here it took a library whose `size()` is a property of the type rather than of the
+value, and there was no other in fifteen.
+
+*Fix kind: (a) engine, BUILT. Seven `JavaCollectionsSpec` tests — both directions of the bare form,
+the terminator-at-the-count, the trim, the copy-back, the grow, and the honest-collection negative.*
+
 ---
 
 ## 6. Porting a test suite

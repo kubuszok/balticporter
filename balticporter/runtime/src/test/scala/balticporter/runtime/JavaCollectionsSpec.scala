@@ -517,6 +517,78 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(out.toList, List("x", "y"))
   }
 
+  // ---- …and java's FOURTH part: `size()` is a HINT, and both directions are its own code path --
+  //
+  // `AbstractCollection.toArray` allocates on `size()` and then RECONCILES — `Arrays.copyOf(r, i)`
+  // where the iterator ran out early, `finishToArray` where it ran on. A collection whose `size()`
+  // is a constant of its SHAPE rather than a count of its live elements is an ordinary design (a
+  // bit-set over a fixed universe reports the universe and iterates the non-zero fields), so this
+  // is not a defensive corner: filling `new Array[Object](size)` and returning it leaves the tail
+  // `null`, compiles perfectly, moves no count, and answers `[a, b, c, d, null, …]` where java
+  // answers `[a, b, c, d]`.
+
+  /** a collection whose `size` disagrees with its iterator, as a fixed-universe bit set's does. */
+  private final class Lying(elems: List[String], claimed: Int) extends Iterable[String]:
+    def iterator: Iterator[String] = elems.iterator
+    override def size: Int         = claimed
+
+  test("toArray() TRIMS when the iterator yields FEWER than `size` claimed") {
+    val out = JavaCollections.toArray(new Lying(List("a", "b", "c", "d"), 32))
+    assertEquals(out.length, 4)
+    assertEquals(out.toList, List[Object]("a", "b", "c", "d"))
+    // the negative: the naive fill returns 32 with 28 trailing nulls and no error anywhere.
+    assert(!out.contains(null))
+  }
+
+  test("toArray() GROWS when the iterator yields MORE than `size` claimed") {
+    // the other direction is an ArrayIndexOutOfBoundsException rather than a wrong value, which is
+    // louder and still not java: `finishToArray` grows and trims.
+    val out = JavaCollections.toArray(new Lying(List("a", "b", "c"), 1))
+    assertEquals(out.length, 3)
+    assertEquals(out.toList, List[Object]("a", "b", "c"))
+  }
+
+  test("toArray() on an HONEST collection is unchanged by all of that") {
+    assertEquals(JavaCollections.toArray(ArrayBuffer.empty[String]).length, 0)
+    assertEquals(JavaCollections.toArray(ListBuffer("a", "b")).toList, List[Object]("a", "b"))
+  }
+
+  test("toArray(a) puts the terminator at the COUNT, never at what `size` claimed") {
+    val a = new Array[String](8)
+    java.util.Arrays.fill(a.asInstanceOf[Array[Object]], "old")
+    val out = JavaCollections.toArray(new Lying(List("a", "b"), 6), a)
+    assert(out eq a)            // it fits, so the caller's own array comes back
+    assertEquals(out(2), null)  // …terminated at 2, which is the COUNT
+    assertEquals(out(3), "old") // …and java leaves the rest of the tail alone
+  }
+
+  test("toArray(a) TRIMS to the count when the over-claim forced a fresh array") {
+    val a   = new Array[String](0)
+    val out = JavaCollections.toArray(new Lying(List("a", "b"), 32), a)
+    assert(!(out eq a))
+    assertEquals(out.length, 2)
+    assertEquals(out.getClass.getComponentType, classOf[String])
+    assertEquals(out.toList, List("a", "b"))
+  }
+
+  test("toArray(a) COPIES BACK into the caller's array when it fits after the trim") {
+    // java's third early-exit shape: `r` was freshly allocated on the over-claim, the real count
+    // fits in `a` after all, so java `System.arraycopy`s back and returns the CALLER's array.
+    val a   = new Array[String](4)
+    val out = JavaCollections.toArray(new Lying(List("a", "b"), 9), a)
+    assert(out eq a)
+    assertEquals(out.toList, List("a", "b", null, null))
+  }
+
+  test("toArray(a) GROWS past the caller's array when the iterator outlives `size`") {
+    val a   = new Array[String](2)
+    val out = JavaCollections.toArray(new Lying(List("a", "b", "c", "d"), 2), a)
+    assert(!(out eq a))
+    assertEquals(out.length, 4)
+    assertEquals(out.getClass.getComponentType, classOf[String])
+    assertEquals(out.toList, List("a", "b", "c", "d"))
+  }
+
   // -------------------------------------------------------------------------------------------
   // the IMMUTABLE producers — the half of the divergence a compile cannot see
   // -------------------------------------------------------------------------------------------
