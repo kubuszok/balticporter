@@ -3051,6 +3051,34 @@ readable as a floor rather than as *four more waves*:
   corpus-wide grep confirms **zero** java sites write `toArray((Object[]) …)`, so nothing distinguishes
   them from the TIR and the choice is which side owns the cast;
 
+**WAVE 15 — 13 → 5 in seven commits, and the honest reading of 5 is *4 refused, 1 open*.** What it
+closed, with the lane each fall carried:
+
+| closed | entry | measured |
+|---|---|---|
+| `OrderedMap#getEntry`, `OrderedMultiMap#getEntry` | **K5.7**'s other half — a `Tuple2` is impossible as a PARENT and EXACT at a SLOT, guarded on the class's own `setValue` unconditionally throwing, read off the ORIGINAL units so the phase's own substituted throw cannot license its own projection | 13 → 11, every count flat |
+| `TrackedOffsetList#listIterator` ×2 | **K23**'s refusal RE-READ — it is a statement about `scala.collection.Iterator` and the receiver is a `mutable.Buffer`. A standalone shim (§4.5) plus the `typeMap` entry java's own `ListIterator <: Iterator` requires | 11 → 9, `collection-closure` **2 → 0**, `jdk-surface` 26 → 25 |
+| `NodePostProcessorFactory#addNodes`, `BuilderBase#extensions` | **K30** — a mapped JDK member arriving at a NODE KIND (a raw static FIELD) and at an ARITY (java's positional `addAll`, which scala took by AUTO-TUPLING) the table did not have | 9 → 7, `jdk-surface` 25 → 23, `collection-boundary` 21 → 20 |
+| `BitFieldSet#noneOf` | **G13.5** — a slot test reading the two RECORDED java types is blind where java's own erasure collapsed them into one | 7 → 6, 2 member digests |
+| `Attributes#values` | **K30 face 3** — a conditional's conversion belongs to its BRANCHES (JLS 15.25), which the raw-constant commit had walked past and MISREAD as a closure | 6 → 5, 2 member digests |
+
+**Three things this wave is evidence for, and the third is the uncomfortable one.** Three of the five
+closures left the REFUSED column, every one for the reason this table has now recorded four waves
+running — *the refusal was answering a question the site never asked*. Two more rows carried a
+DIAGNOSIS that was wrong, and the second of those is new in kind: `addHandlers` named a remedy
+(`arrayArg`'s missing case) that was BUILT, MEASURED AT ZERO on the site it was for, and reverted —
+the first census row where the proposed FIX rather than the cause was the wrong part. **And the wave
+made the same class of error itself**: the commit that rewrote the raw constants quoted `9 → 7` and
+`jdk-surface 25 → 23` and called two rows closed, when one of them had moved to a different error on
+the same line. A count that fell is not the same as the row you were aiming at; read the per-site
+list, never the headline.
+
+**The corpus-wide check is CLEAN and is what says these were translations rather than
+approximations**: thirteen lanes, every error count unchanged at its own baseline, and
+`members whose EMITTED TEXT changed: 0` on every port but ssg-md. The one shared-surface change is
+uniform and acknowledged on all fourteen published maps — `type balticporter.runtime.JavaListIterator
+Added` and a moved `policy=` digest, which is what a `typeMap` entry IS.
+
 So the honest reading of 13 is *9 refused, 4 open*. Wave 13 took FIVE out of the open
 column and SIX out of the refused one, in four commits; **wave 14 took a sixth out of the open column
 and five more out of the refused one, and the first of those is this table's own standing lesson read
@@ -3116,7 +3144,11 @@ Two things this table is deliberately NOT:
   being wrong about anything it actually says (`ENGINE-LIMITS.md` G8.7). **Wave 14 made that a rule
   rather than an anecdote**: K26's five left the same way, and their entry had NAMED the fix in its
   own text ("the coercion has to run at the INFERENCE site") for six waves while the row it wrote
-  read as a floor;
+  read as a floor. **Wave 15 took THREE the same way in one wave** — K5.7's `Tuple2` at a slot, K23's
+  `listIterator`, and (in the open column) a diagnosis whose named remedy was BUILT and measured at
+  ZERO. What survives four waves of this is not "the refusals are wrong" but a test: *what question
+  was this refusal answering, and is it the one this site asks?* Every one of the fourteen that have
+  left answered NO;
 - **it is not a substitute for the counts — and that objection is now DISCHARGED, TWICE OVER.** Two of
   the remaining rows are the collections family's INTERNAL seam, and `collection-boundary` — the lane
   that exists to count that residue — reads **21** and sees NEITHER of them, because it counts the
@@ -3160,9 +3192,16 @@ What the port may honestly declare is what it already does: nothing here needs a
 six diagnoses, and it is a route the engine walks — not one this manifest can shortcut. **Wave 13 walked
 eleven of them without a single manifest key**, which is the strongest evidence this argument has.
 
-**And the port has not yet met `RefChecks`** (§3): 30 typer errors means it has never run, so every
+**And the port has not yet met `RefChecks`** (§3): **5** typer errors after wave 15 still means it has
+never run, so every
 missing `override`, unimplemented member and variance violation in 468 emitted files is unmeasured
-and the count will RISE at the first zero. Wave 10 put the whole emitted shape through
+and the count will RISE at the first zero. **Wave 15 added a SIXTH class to K28's population without
+looking for one**: `TrackedOffsetList#listIterator` now compiles and still carries `override`, and a
+`mutable.Buffer` declares neither `listIterator` nor `spliterator` — probed directly at scalac 3.8.4,
+where both read `E037 overrides nothing`. That is K28's *STRIP the `override`* verdict arriving on
+members this wave itself made compile, and it is worth stating because it is the shape the first zero
+will meet: a member whose BODY was fixed keeps a modifier nothing checks until then. Wave 10 put the
+whole emitted shape through
 `scala-cli compile --scala 3.8.4` rather than reading it by eye, and the wall is now PRICED and its
 verdicts enumerated — `ENGINE-LIMITS.md` K28. **Nine errors per concrete class, in five distinct
 verdicts, over SEVEN classes** (`OrderedMap`, `OrderedMultiMap`, `ItemFactoryMap`, `NodeRepository`,
