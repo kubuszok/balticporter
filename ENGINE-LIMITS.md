@@ -838,7 +838,58 @@ is the informative half (M4): the plausible fix was the guard, and the guard was
 **0 members moved** on every other corpus port. Spec: `ErasedReceiverResultSpec`, negative-tested by
 gating the retype off.
 
-*Fix kind: (a) engine. Built.*
+**AND THE ERASED VIEW ERASES THE POSITIONS THE SOURCE WROTE DOWN, WHICH IS A REAL DEFECT — BUT THE
+OBVIOUS FIX WAS MEASURED AT ssg-md 13 → 11 AND libGDX 0 → 1, AND IS REVERTED. DO NOT RETRY WITHOUT
+READING THE SECOND HALF.**
+
+The defect is exactly as it sounds. The view is decided by ONE question asked of the WHOLE argument
+list (*are the receiver's arguments unknown — raw, or does any of them hold a wildcard?*) and the
+answer is then applied at EVERY position. That is exact for a RAW use, where nothing is written
+anywhere, and wrong for the ordinary mixed one:
+
+```java
+static <D extends Dependent> … resolveDependencies(…, Function<? super D, Class<?>> classExtractor)
+…  Class<?> dependentClass = classExtractor.apply(dependent);
+```
+
+`? super D` is a capture and `Class<?>` is not — java's own view of `apply` returns `Class<?>`, and
+the port erases it to `Object`, so a value java handed straight to a `Class<?>` slot arrives needing
+a conversion java never performed: `Found: Object / Required: Class[?]`, twice, in one method
+(ssg-md's two `DependencyResolver` rows).
+
+**The fix that looks right is `unknown`'s own criterion read per POSITION rather than once for the
+list** — erase what the source LEFT unknown, carry what it WROTE, with a RAW use falling through
+(nothing written at any position) and an F-BOUNDED class excluded (there the arguments have to
+discharge EACH OTHER's bounds, and a mixture of written and filled ones discharges nothing). It
+NARROWS the erasure, so it can only make the view more precise, and on the port it was aimed at it
+does exactly that: **ssg-md 13 → 11**, one member digest, every check count flat.
+
+**It regresses libGDX 0 → 1, and the reason is the sentence this entry already carries.** G11's
+design is that the receiver cast and the ARGUMENT casts *use the same erasure rules, so they agree* —
+and the argument side is not one path but three (`eraseDependentArgs` off `subst`,
+`knownReceiverArgs` off its own substitution, and the erasure `coerceArgsFixed` synthesises at the
+executable REFERENCE's already-erased formal). Moving the receiver's view alone leaves the third
+disagreeing:
+
+```
+def putAll[T <: K](map: OrderedMap[T, ? <: V])            // libGDX OrderedMap.java:87
+map.asInstanceOf[OrderedMap[T, Object]].get(key.asInstanceOf[T].asInstanceOf[Object])
+                                            Found: Object / Required: T
+```
+
+The receiver kept `T` at position 0 (correct, and what the fix is for) while the argument still
+carries the `Object` the erased reference asked for. **So the precondition is not the per-position
+rule — it is that the argument erasure be DERIVED FROM THE SAME VIEW**, at one place rather than
+three, and that is a refactor of G11's argument side and not a widening of its receiver side. The
+per-position rule is right and is worth having; it may not ship until the argument side reads the
+same table. Measured: ssg-md **13 → 11**, libGDX **0 → 1**, one member digest on each
+(`DependencyResolver#resolveDependencies`, `OrderedMap#putAll`), every check count flat on both — so
+the only instrument that saw the regression was the corpus-wide compile, which is `CLAUDE.md` §5's
+widening rule doing precisely what it says.
+
+*Fix kind: (a) engine. The first half BUILT (above). The second half OPEN and REVERTED at
+13 → 11 / 0 → 1; the entry-point is `SpoonTir.erasedReceiverView`'s `args`, and the blocker is
+`eraseDependentArgs` / `knownReceiverArgs` / `coerceArgsFixed` being three readings of one erasure.*
 
 ### G22. A method TYPE PARAMETER constrained only by its BOUND infers `Nothing` in Scala and its BOUND in java — CLOSED
 
@@ -3832,6 +3883,39 @@ moved is the new `broke=` pair. liqp's own entry DELEGATES (`return entry.setVal
 keeps the refusal, which is what makes the regression invisible to this corpus and is exactly why
 the two shapes are spec'd rather than measured. *Fix kind: (a) engine.*
 
+**…AND `Tuple2` IS EXACT AT THE SLOT FOR AN ENTRY THAT HAS NO WRITE-THROUGH — the refusal is about a
+CAPABILITY and two of the corpus's rows have none. DESIGNED at wave 14, not built; 2 errors.**
+
+The entry above is about `Tuple2` AS A PARENT, and every word of it holds. It is silent about a
+`Tuple2` AT A SLOT, which is where ssg-md's two remaining `InexpressibleParent` errors are:
+
+```java
+@NotNull Map.Entry<K, V> getEntry(int index) { return new MapEntry<K, V>(…, …); }
+```
+
+The result type is `Map.Entry<K,V>`, which the mapping retyped to `(K, V)`; the value is a
+`MapEntry`, which keeps java's parent by this entry's own rule and is therefore not a `Tuple2`. The
+obvious coercion — `(v.getKey, v.getValue)` — is a COPY, and a copy is precisely what K2 refuses,
+because a later `setValue` on it writes nothing.
+
+**Except that `MapEntry` is `final` and its `setValue` is `throw new UnsupportedOperationException()`,
+written by the library.** That is java's own optional-operation refusal at the very member the copy
+would detach, so there is no write-through to lose: the value REALLY IS a detached pair, and the
+`Tuple2` this entry calls impossible as a parent is exact as a slot conversion. Nothing is
+approximated and nothing is guessed.
+
+So the rule is the coercion GUARDED on the source class's own capability: where the class implementing
+`Map.Entry` has a `setValue` that unconditionally throws, `(v.getKey, v.getValue)` at a `Tuple2` slot
+loses nothing; where it does not, the copy is §4.4's silent defect and the seam stays the counted
+refusal it already is. The guard is the same SIGNATURE test the correction above installed
+(`MemberSig(name, arity)` against `Map.Entry#setValue(V)`) read for the opposite purpose — there to
+decide whether to SUBSTITUTE a throw, here to decide whether one is already there — which is what
+makes it one derivation rather than a second opinion about the same member.
+
+*Fix kind: (a) engine, DESIGNED and not built: 2 errors on ssg-md (`OrderedMap#getEntry`,
+`OrderedMultiMap#getEntry`) and 0 elsewhere in the corpus, so it wants a spec pair (throws → coerce,
+delegates → refuse and count) more than it wants a measurement.*
+
 **The transferable half is the middle row of that table.** A `dropMethods` key that removes a member
 an emitted parent DECLARES leaves the class abstract, and nothing in the engine reports it: it is
 not a check, not a finding, not a member digest, and not a typer error until the port is already
@@ -6752,9 +6836,37 @@ receiver this phase did NOT retype" is the phase's own record (§4.56) and "a re
 member with NO rewrite" is what keeps every bound reference on every retyped receiver from becoming a
 lambda for no difference at all.*
 
-*Fix kind: (b) — the tables gain the entries and the runtime gains the members; the two refusals are
-(a) with citations. `CollectionsSe8MembersSpec`, one cell per member with its java-vs-scala divergence
-asserted, plus the two refusals.*
+**…AND ONE OF THE TWO REFUSALS DOES NOT SURVIVE BEING RE-READ — `listIterator` IS BUILDABLE, EXACTLY.
+DESIGNED at wave 14, not built; worth 2 errors on ssg-md and NO behaviour.**
+
+The refusal reads *scala's `Iterator` is forward-only and read-only, so every mapping is either a
+different protocol or a detached copy whose `set` updates nothing*. Every word of that is a statement
+about `scala.Iterator`, and it is not a statement about the RECEIVER. A `java.util.List` retypes to a
+`mutable.Buffer`, and a `Buffer` supports indexed READ, indexed UPDATE, INSERT and REMOVE — which is
+`ListIterator`'s whole contract, cursor and all: `next`/`previous` move an index, `set(e)` is
+`buf(i) = e`, `add(e)` is `buf.insert(i, e)`, `remove()` is `buf.remove(i)`, and every one of them
+writes THROUGH to the same buffer the caller holds. So `CLAUDE.md` §4.5's own answer applies without
+compromise — a standalone shim carrying java's shape and arity — and the entry's "there is nothing to
+map them onto" turns out to be true of a MAPPING and false of a SHIM, which is the distinction K5.7
+draws between a target and a parent read one family over.
+
+`spliterator` is NOT reopened and the asymmetry is the point: it is a parallel-DECOMPOSITION protocol
+(`trySplit`, `estimateSize`, `characteristics`) whose only consumer is `java.util.stream`, which this
+phase COLLAPSES rather than models — a wrapper for it would be a stream implementation, and there is
+no receiver capability to build one out of.
+
+**What it is worth, measured before building rather than after**: all three ssg-md sites are
+`TrackedOffsetList`'s own delegating overrides of `java.util.List` members
+(`{return myTrackedOffsets.listIterator();}` and its two siblings), and **nothing in the library
+calls any of them** — they exist because `implements List<TrackedOffset>` obliges them. So the shim
+buys **2 compile errors and no behavioural difference**, which is why it is recorded here with its
+population rather than built inside a wave aimed at a census.
+
+*Fix kind: (b) — the tables gain the entries and the runtime gains the members; `spliterator`'s
+refusal is (a) with citations and STANDS. `listIterator`'s is (a), REOPENED and designed:
+`JavaListIterator` over `mutable.Iterable[A] & mutable.Seq[A] & mutable.Growable[A] &
+mutable.Shrinkable[A]`, java's arity throughout. `CollectionsSe8MembersSpec`, one cell per member with
+its java-vs-scala divergence asserted, plus the refusals.*
 
 ---
 

@@ -2794,7 +2794,7 @@ not an engine change.
 
 | | |
 |---|---|
-| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13 and **13** after wave 14 (coded 13 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **10** now, counted from `errors.tsv` rather than by eye — 97.6 % of the port compiles clean |
+| scalac errors | **243** at first emit (coded 241 + bare 2), **171** after wave 1, **106** after wave 2, **81** after wave 3, **69** after wave 4, **58** after wave 5, **47** after wave 6, **43** after wave 7, **40** after wave 8, **38** after wave 9, **35** after wave 10, **34** after wave 11, **30** after wave 12, **19** after wave 13 and **13** after wave 14 (coded 13 + bare 0), all `EngineGap`, 0 `Approx`, 0 `Unmapped`. Concentrated in **60 of the 468 emitted files** at first emit and **10** now, counted from `errors.tsv` rather than by eye — 97.9 % of the port compiles clean |
 | `break_residue` | **0** — on a character-level markdown parser, which is the densest control flow any corpus library has had. §4.4's whole jump table cost this port nothing |
 | `signature` / `trivia` (all three lanes) / `manifest` / `policy` / `port-map` / `substitution(*)` / `porter-notes` / `markers` / `switch-null` / `break-catch` / `try-resource` / `cast-conversion` / `class-init-trigger` / `rewrite-callsites` / `base-surface` | **0** on the first run of a 486-file library nothing in the engine was tuned against. `trivia(recovered)` is **4** — four comments the attachment channel could not place, quoted back with their java coordinates |
 | `omissions` | **61** (64 at first emit; wave 1's SAM adaptation closed three `lambda return with an unnameable result type` rows) — 44 `annotation dropped` (`@SuppressWarnings`, the family no port claims), 12 `super(args) dropped`, 3 `promoted constructor body runs on every path`, and the residue |
@@ -2959,7 +2959,7 @@ whose parent stayed `java.util.AbstractSet`.
 
 Nothing left in this port needs a manifest entry, and no residue above is per-library policy.
 
-#### The FLOOR the refusal ledger defines — 8 of the 13 after wave 14, and what the other 5 are
+#### The FLOOR the refusal ledger defines — 9 of the 13 after wave 14, and what the other 4 are
 
 Thirteen waves took 243 → 13 and every one of them closed a FAMILY. What is left divides into rows a
 named refusal already answers and rows nobody has diagnosed, and the two are worth separating,
@@ -2977,12 +2977,39 @@ now the table's own standing lesson, arrived at twice:
 | ~~6~~ | **LEFT THIS TABLE AT WAVE 13** — `ENGINE-LIMITS.md` **G8.7** | the row said *a partially-nameable F-BOUNDED class has no consistent fill*, which is true and was not the question these six sites asked. Every one is a SELECTION on `getBuilder()`'s result, so the argument may stay `Nothing` and what needs text is the type the selection reads — an ASCRIPTION, which satisfies no bound. This is the entry to re-read before treating a refusal row as a floor |
 | 2 | **K25**'s residue — the in-program half, its two `collection-internal` rows CLOSED at wave 9 and the `ScopedDataSet#getKeys` PAIR at wave 12 | a `JavaCollection` formal or result meeting a `Buffer`/`Set`/own-`OrderedSet` value at a call the PORT declares. K25 closed the rule half (an override of a class file keeps java's formals), K26 closed `DeclaredSubtype`, and K29's widened `addAll` closed the pair whose BOTH parameters sat on the wrong side of a signature written for `mutable.Buffer` alone; what is left sits at a callee THIS PHASE MINTED, which carries no signature at all, and K26 records both the removed operand-only arm and its repair (mint the helpers with their signatures) |
 | ~~5~~ | **LEFT THIS TABLE AT WAVE 14** — `ENGINE-LIMITS.md` **K26** | `DataKey<Collection<Extension>>` retypes its argument to the shim while the value is an `ArrayBuffer`: one java subtyping edge that the mapping sends to two unrelated scala types. The refusal said the formal has no HEAD to coerce against, which is true of the formal as WRITTEN and not of the one java RESOLVED — `DataKey<T>` is invariant, so the key argument fixes `T` exactly and the value is converted to it. `collection-internal` **5 → 0** with the five errors, which is the attribution §5 requires of a lane that falls |
-| 3 | **K23**'s counted refusals | `listIterator` (2) and `spliterator` (1) hand back a JDK PROTOCOL rather than a value, and there is nothing to map them onto. The fourth row was the one bound method reference, and wave 10 BUILT it — the refusal had been priced at one site and there were seven (`ENGINE-LIMITS.md` K23) |
-| 3 | **K5.7**'s `UninheritableTargets`, counted as `InexpressibleParent` | a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent, because the retyping's target is a `Tuple2` and no class can extend one |
-| **8** | | |
+| 3 | **K23**'s counted refusals — **RE-READ AT WAVE 14, and `listIterator`'s reason does not survive it** | `listIterator` (2) and `spliterator` (1) hand back a JDK PROTOCOL rather than a value. That is exact for `spliterator`, whose only consumer is `java.util.stream` (which this phase COLLAPSES rather than models). It is NOT what the two `listIterator` rows are: the refusal reads *scala's `Iterator` is forward-only and read-only*, which is a statement about `scala.Iterator` and not about the RECEIVER — a `mutable.Buffer`, which supports indexed read, indexed update, insert and remove, i.e. `ListIterator`'s contract cursor and all. §4.5's own answer applies (a standalone shim with java's shape, writing THROUGH the buffer) and "nothing to map them onto" is true of a MAPPING and false of a SHIM. All three sites are `TrackedOffsetList`'s own delegating overrides and **nothing in the library calls them**, so the shipped fix is worth 2 errors and no behaviour (`ENGINE-LIMITS.md` K23) |
+| 2 | **K5.7**'s `UninheritableTargets`, counted as `InexpressibleParent` — **RE-READ AT WAVE 14, and the refusal is about WRITE-THROUGH, which this class has none of** | a class that IMPLEMENTS `java.util.Map.Entry` keeps java's parent, because the retyping's target is a `Tuple2` and no class can extend one. Both remaining rows are `OrderedMap#getEntry`/`OrderedMultiMap#getEntry` returning a `MapEntry<K,V>` where the slot wants the retyped `(K, V)` — and `MapEntry` is `final` with `setValue` = `throw new UnsupportedOperationException()`, java's own optional-operation refusal written by the library. So the value really IS a detached pair and the `Tuple2` this entry calls impossible AS A PARENT is EXACT AT THE SLOT. What that licenses is a coercion `(v.getKey, v.getValue)` guarded on the source class's own `setValue` unconditionally throwing; where it does not throw the copy is §4.4's silent defect and the seam stays the counted refusal it is (`ENGINE-LIMITS.md` K5.7) |
+| 2 | **G21**'s second half, MEASURED AND REVERTED | the erased-receiver view erases the positions the source WROTE, so `Function<? super D, Class<?>>` loses its nameable `Class<?>` and `apply`'s result arrives as `Object` (`DependencyResolver#resolveDependencies`, twice). The per-position rule closes both and regresses **libGDX 0 → 1**, because G11's argument erasure is three readings of one table and only the receiver's moved. Right rule, wrong order — `ENGINE-LIMITS.md` G21 |
+| **9** | | |
 
-The other **5** are open work with no entry behind them: **1** raw-generic one-off and the residue.
-So the honest reading of 13 is *8 refused, 5 open*. Wave 13 took FIVE out of the open
+The other **4** are open work with no entry behind them, and **wave 14's third result is that every
+one of them now has a DIAGNOSIS** even though none has a fix — which is what makes the count above
+readable as a floor rather than as *four more waves*:
+
+- **`BitFieldSet#noneOf`** — java's ARRAY COVARIANCE at a LOCAL INITIALISER (`Enum<?>[] universe =
+  getUniverse(elementType)` where `getUniverse` returns `E[]`). `arrayCovSlot` answers *nothing to
+  convert* because java's two array types ERASE TO ONE (`java.lang.Enum[]`), while the emitted term
+  is an `Array[E]` at an `Array[Enum[?]]` slot and scala's arrays are INVARIANT. `ENGINE-LIMITS.md`
+  §0's rule read at a slot: the recorded java type is not a witness of what the emitter will print,
+  so the comparison has to be at the RENDERING and the term is the only side that has one;
+- **`NodePostProcessorFactory#addNodes`** and **`Attributes#values`** — java's UNCHECKED CONVERSION
+  (JLS 5.1.9) at a read of the RAW static `Collections.EMPTY_SET`/`EMPTY_LIST`, which the author
+  annotated `@SuppressWarnings("unchecked")` in both places. The declared formal at the first is
+  `Map#put`'s bare `V`, so `uncheckedGeneric` reads a type variable and declines: java resolved `V`
+  from the RECEIVER's instantiation, which is G12's own fact met at a raw ARGUMENT rather than a raw
+  result. The second is the same conversion in a CONDITIONAL BRANCH, where java applies it per branch
+  (JLS 15.25) and the port coerces the whole conditional, whose type is already the lub;
+- **`FormatterUtils#renderList`** — a LAMBDA at exactly the slot wave 14's second commit answers for
+  a collection: the sibling `DataKey<T>` fixes `T` to a `java.util.function.Function`, and what that
+  slot needs is an ASCRIPTION (which SAM-converts) rather than a collection factory. Same derivation,
+  different remedy, and it belongs in the FRONTEND rather than in `CollectionsTransform`;
+- **`AttributeProviderAdapter#addHandlers`** — `handlers.toArray(EMPTY_HANDLERS)`, where the
+  frontend's erasure cast to `Array[Object]` survives onto the argument and `toArray[A]` therefore
+  infers `A = Object`. `arrayArg` strips exactly this cast when the inner term already has the CALL's
+  result type, and the strip does not fire here because the result is a RAW `AttributeProvidingHandler[]`
+  — the same two-renderings-of-one-java-type problem as the first bullet.
+
+So the honest reading of 13 is *9 refused, 4 open*. Wave 13 took FIVE out of the open
 column and SIX out of the refused one, in four commits; **wave 14 took a sixth out of the open column
 and five more out of the refused one, and the first of those is this table's own standing lesson read
 once more.**

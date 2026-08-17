@@ -955,6 +955,16 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   had been fixed under. So a widened guard is not done when the target port improves; it is done
   when every other port is BYTE-IDENTICAL or the difference is stated. `just measure-all`, and read
   the member diffs rather than the headline.
+  **…and a NARROWING is not exempt, because the hazard is a SECOND DERIVATION rather than a wider
+  net.** The rule above is about a predicate that starts matching more; the mirror is a predicate
+  that starts matching less, which reads as unarguably safe — a more precise answer cannot break
+  anything — and is not, wherever some OTHER code derives the same fact independently. Making the
+  erased-receiver view keep the type arguments the source actually wrote is strictly more precise and
+  regressed libGDX **0 → 1**, because the ARGUMENT erasure that has to agree with it is three
+  readings of one table and only one of them moved (`ENGINE-LIMITS.md` G21). Every count was flat on
+  both ports; the only instrument that saw it was the corpus-wide compile. So before changing what a
+  derivation ANSWERS, find its co-readers — and if there is more than one, the fix is to make them
+  one, in its own commit, first.
 - **Change one thing, then measure.** Two changes measured together cost a full cycle to untangle
   and tell you nothing about either.
 - **A DRY RUN of one phase is not a measurement of the pipeline.** Running a single phase over a
