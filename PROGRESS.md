@@ -3318,13 +3318,18 @@ rather than five statements that changed.
 | `manifest` | **1** — `BaseMapUnverified`, and see below |
 
 **THE SUITE DOES NOT RUN, and the lane says so rather than skipping the stage.** The run is gated on
-0 errors exactly as `liqp-measure` and `sg-measure` gate theirs; at 30 it prints that 723 tests are
-emitted and none of them runs. A lane that silently skipped that stage would read as a lane whose
-tests passed. **And the gate is on the WHOLE compile, which is the right gate and is worth saying now
-that this source set is clean**: the suite links against the emitted library, so 30 main-set errors
-mean 30 declarations whose emitted form nothing has compiled — a suite run over them would be running
-against a library that does not exist. A gate on this source set alone would have gone green at wave
-12 and told nobody anything.
+0 errors exactly as `liqp-measure` and `sg-measure` gate theirs; at **5** after wave 15 it prints that
+723 tests are emitted and none of them runs. A lane that silently skipped that stage would read as a
+lane whose tests passed. **And the gate is on the WHOLE compile, which is the right gate and is worth
+saying now that this source set is clean**: the suite links against the emitted library, so a
+main-set error is a declaration whose emitted form nothing has compiled — a suite run over them would
+be running against a library that does not exist. A gate on this source set alone would have gone
+green at wave 12 and told nobody anything.
+
+**And the figure to hold this lane to is the WHOLE-COMPILE one, re-baselined at 5** (`13 → 5` across
+wave 15, every error of it main-set). `expected-lost` stays **0** and the discovery figure stays
+**723 → 723** in both directions, which is the statement that matters while the suite is still
+gated: nothing this wave did to the shared surface moved one test out of the emission.
 
 **What building it found in the BASE, which is the part worth carrying forward.** The first run
 reported **459 fatal `manifest` findings** — one per type — saying the base's published map had no

@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-liquid-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b3fd549b8bf92693	files=105	policy=634c566b630ebe00
+# balticporter port map	schema=3	module=ssg-liquid-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b3fd549b8bf92693	files=105	policy=a78d7533cd8dd7fb
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	liqp.ConditionTest	ssg.liquid.ConditionTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	liqp.InsertionTest	ssg.liquid.InsertionTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
@@ -136,6 +136,7 @@ type		balticporter.runtime.JavaEnumMap	Added	-		0
 type		balticporter.runtime.JavaEnumSet	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaListIterator	Added	-		0		
 type		balticporter.runtime.JavaOptionalDouble	Added	-		0		
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		

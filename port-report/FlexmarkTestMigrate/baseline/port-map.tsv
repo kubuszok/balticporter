@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-md-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b0a27a37b1f6d709	files=43	policy=80c2a414ecc01de2
+# balticporter port map	schema=3	module=ssg-md-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b0a27a37b1f6d709	files=43	policy=a9366a29e9f1e4ab
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.vladsch.flexmark.util.ExceptionMatcher	ssg.md.util.ExceptionMatcher	Renamed	-		0		companion=yes form=class parents=org.hamcrest.BaseMatcher primary=(Class,Pattern,String) primaryKind=unique-root primaryVis=public statics=`match`,matchPrefix,matchRegEx
 type	com.vladsch.flexmark.util.UtilTestSuite	ssg.md.util.UtilTestSuite	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
@@ -70,6 +70,7 @@ type		balticporter.runtime.JavaEnumMap	Added	-		0
 type		balticporter.runtime.JavaEnumSet	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaListIterator	Added	-		0		
 type		balticporter.runtime.JavaOptionalDouble	Added	-		0		
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		

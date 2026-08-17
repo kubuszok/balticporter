@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-jbump	engine=balticporter/0.1.0-SNAPSHOT	sources=be818d0761d560e5	files=19	policy=ec0c45e14b1613e3
+# balticporter port map	schema=3	module=sge-jbump	engine=balticporter/0.1.0-SNAPSHOT	sources=be818d0761d560e5	files=19	policy=935a52aab7bc20cd
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.dongbat.jbump.Cell	sge.jbump.Cell	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
 type	com.dongbat.jbump.Collision	sge.jbump.Collision	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
@@ -33,6 +33,7 @@ type		balticporter.runtime.JavaEnumMap	Added	-		0
 type		balticporter.runtime.JavaEnumSet	Added	-		0		
 type		balticporter.runtime.JavaIterable	Added	-		0		
 type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaListIterator	Added	-		0		
 type		balticporter.runtime.JavaOptionalDouble	Added	-		0		
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
