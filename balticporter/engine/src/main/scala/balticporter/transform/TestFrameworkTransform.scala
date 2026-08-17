@@ -819,9 +819,22 @@ final class TestFrameworkTransform(
       // translates exactly one of them.
       val ruleFields = cd2.body.collect {
         case v: Tree.ValDef
-            if (hasAnn(v.symbol, RuleAnn) || hasAnn(v.symbol, ClassRuleAnn)) &&
-               nameOf(v.tpt.tpe) == ExpectedExceptionCls => v.symbol
+            if hasAnn(v.symbol, RuleAnn) && nameOf(v.tpt.tpe) == ExpectedExceptionCls => v.symbol
       }.toSet
+      // …and `@ClassRule` is REPORTED, never quietly taken for `@Rule`. A method rule wraps each
+      // test and a CLASS rule wraps the whole class run, so the region an `expect` arms is a
+      // different one and `intercept` in a test body is not its image. Nothing in the corpus writes
+      // the shape, which is exactly why an unstated exclusion here would never be found.
+      cd2.body.foreach {
+        case v: Tree.ValDef
+            if hasAnn(v.symbol, ClassRuleAnn) && nameOf(v.tpt.tpe) == ExpectedExceptionCls =>
+          found += Finding(s"$ExpectedExceptionCls#class-rule", v.origin, Fix.EngineRule,
+            "an `ExpectedException` declared as a `@ClassRule` wraps the WHOLE CLASS RUN, not each " +
+            "test, so the region an `expect` call arms is not the one an `intercept` in a test body " +
+            "wraps. The `@Rule` form IS translated; this one is left alone and the field is never " +
+            "applied.")
+        case _ => ()
+      }
       // `@Ignore` on the CLASS disables every test it declares.
       val allIgnored = hasAnn(cd.symbol, IgnoreAnn)
       if allIgnored then consumed += cd.symbol

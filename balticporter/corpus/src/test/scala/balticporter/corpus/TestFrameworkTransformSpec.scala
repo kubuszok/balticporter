@@ -759,6 +759,29 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(clue(out).contains("finally tearDown()"))
   }
 
+  test("a @ClassRule ExpectedException is REPORTED, not quietly taken for a @Rule") {
+    // A method rule wraps each test; a CLASS rule wraps the whole class run, so the region an
+    // `expect` arms is a different one and `intercept` in a test body is not its image. Nothing in
+    // the corpus writes the shape, which is exactly why an unstated exclusion would never be found.
+    val (out, ph) = emitWithRules(
+      """package demo;
+        |import org.junit.ClassRule;
+        |import org.junit.Test;
+        |import org.junit.rules.ExpectedException;
+        |public class ClassRuleTest {
+        |  @ClassRule public static ExpectedException thrown = ExpectedException.none();
+        |  @Test public void a() {
+        |    thrown.expect(IllegalStateException.class);
+        |    boom();
+        |  }
+        |  static void boom() { throw new IllegalStateException(); }
+        |}
+        |""".stripMargin)
+    assertEquals(clue(guards(ph)), List("class-rule"))
+    assert(clue(out).contains("thrown.expect"))
+    assert(!out.contains("intercept["), out)
+  }
+
   test("a @Rule of ANOTHER class is untouched — the translation is keyed on the field's TYPE") {
     val (out, ph) = emitWithRules(
       """package demo;

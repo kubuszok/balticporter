@@ -3694,9 +3694,9 @@ So the number to quote for this port is **17 open, all one family, all one guard
 the suite delta. There is no third category: nothing in this suite fails for a reason nobody has
 looked at, which is what the census of wave 23 could not yet say.
 
-**And the two families that make up 24 of those 26 are each ONE GUARDED translation away, which is
-worth stating as a design rather than re-deriving.** Neither is built; both are engine (a) and
-neither needs a manifest entry.
+**And the two families that made up 24 of the ORIGINAL 26 refusals were each ONE GUARDED translation
+away, which was worth stating as a design rather than re-deriving.** Both are engine (a) and neither
+needs a manifest entry; the second is BUILT as of wave 24 and the first is not.
 
 - **`@RunWith(Suite.class)` + `@Suite.SuiteClasses` (9 + 9).** The phase's advice — *a custom runner
   changes how tests are ENUMERATED, so the converted suite runs a different SET* — is exactly right
