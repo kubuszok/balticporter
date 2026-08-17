@@ -4003,6 +4003,7 @@ it ADDED to a lane, never the lane's total.
 | 5 | `ext-escaped-character` | 9 | 7 | 0 | — | `overload-risk` +4, `trivia(recovered)` +3, and `catalog(unreached)` **22 → 17** |
 | 6 | `ext-ins` | 9 | 7 | 0 | — | **NONE — every check count identical.** First `*JiraRenderer` in the port; it PORTS |
 | 7 | `ext-superscript` | 9 | 7 | 0 | — | **NONE — every check count identical** (second `*JiraRenderer`) |
+| 8 | `ext-gfm-issues` | 10 | 8 | 0 | — | `overload-risk` +1 (`HtmlWriter#attr/2`, `VarargPhaseSpan`) |
 
 **THE FIRST THING THE BATCH BOUGHT IS A CATALOG ROW NOBODY HAD REACHED HERE.**
 `ext-youtube-embedded` is the first module in this port to write a `try`/`catch` at all — one
