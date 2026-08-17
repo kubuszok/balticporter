@@ -2818,7 +2818,7 @@ MUnit registrations with a lane, a discovery guard and an error baseline holding
 so the remaining distance is a number (44 test-set errors on top of the library's 40) rather than an
 absent source set.
 
-### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14**
+### 10.6.3 The census, classified per §1 — **243 → 171 after wave 1, → 106 after wave 2, → 81 after wave 3, → 69 after wave 4, → 58 after wave 5, → 47 after wave 6, → 43 after wave 7, → 40 after wave 8, → 38 after wave 9, → 35 after wave 10, → 34 after wave 11, → 30 after wave 12 (and the TEST SET to 0), → 19 after wave 13, → 13 after wave 14, → 5 after wave 15**
 
 Every error is `EngineGap`. Eight waves have run. Each table below is the state AFTER its wave, with
 what each family cost, because a census that only lists what is left cannot be checked against the
@@ -2959,7 +2959,19 @@ whose parent stayed `java.util.AbstractSet`.
 
 Nothing left in this port needs a manifest entry, and no residue above is per-library policy.
 
-#### The FLOOR the refusal ledger defines — 9 of the 13 after wave 14, and what the other 4 are
+#### The FLOOR the refusal ledger defines — 9 of the 13 after wave 14, **2 of the 5 after wave 15**, and what the rest are
+
+**WAVE 15 TOOK 13 → 5 IN SEVEN COMMITS, and what it is evidence for is the same thing wave 14's was,
+one step sharper.** Three of the eight closed rows left the REFUSED column (K5.7's `Tuple2` at a slot,
+K23's `listIterator`, and the raw-constant pair) and every one of them left for the reason this table
+keeps recording: *the refusal was answering a question the site never asked*. K5.7's is about a
+PARENT and the site is a SLOT; K23's is about `scala.collection.Iterator` and the receiver is a
+`mutable.Buffer`. **Two rows this wave also carried a diagnosis that was wrong**, which is the other
+half: `BuilderBase#extensions` was filed with the raw-constant family and is java's POSITIONAL
+`addAll` overload (the seventh such row), and `AttributeProviderAdapter#addHandlers` named a remedy
+that was BUILT, MEASURED AT ZERO and reverted — the eighth, and the first where the *proposed fix*
+rather than the diagnosis was the wrong part. What is left is FOUR refused rows and one open one:
+G21's two `resolveDependencies`, K23's `spliterator`, `renderList`'s SAM slot, and `addHandlers`.
 
 Thirteen waves took 243 → 13 and every one of them closed a FAMILY. What is left divides into rows a
 named refusal already answers and rows nobody has diagnosed, and the two are worth separating,
@@ -3020,9 +3032,24 @@ readable as a floor rather than as *four more waves*:
   different remedy, and it belongs in the FRONTEND rather than in `CollectionsTransform`;
 - **`AttributeProviderAdapter#addHandlers`** — `handlers.toArray(EMPTY_HANDLERS)`, where the
   frontend's erasure cast to `Array[Object]` survives onto the argument and `toArray[A]` therefore
-  infers `A = Object`. `arrayArg` strips exactly this cast when the inner term already has the CALL's
-  result type, and the strip does not fire here because the result is a RAW `AttributeProvidingHandler[]`
-  — the same two-renderings-of-one-java-type problem as the first bullet.
+  infers `A = Object`. **WAVE 15 CORRECTED THIS DIAGNOSIS BY BUILDING THE FIX IT NAMED AND MEASURING
+  IT AT 0** — the EIGHTH census row whose cause is a different defect from the one its text names,
+  and the first whose *proposed remedy* was the thing that was wrong. The text said `arrayArg`'s strip
+  "does not fire here because the result is a RAW `AttributeProvidingHandler[]`"; extending `arrayArg`
+  with exactly that missing case left this site BYTE-IDENTICAL and moved two unrelated members
+  (`TrackedOffsetList#toArray`, `SequenceUtils#split`) — because **`arrayArg` is never called here at
+  all.** The receiver is a `JavaCollection`, and `rewrite`'s blanket `onShim` guard returns `None`
+  before any arm: the shims carry java's own names and arity, so no scala-shaped rewrite may touch
+  them, and `arrayArg` lives inside the `toArray` rewrite that guard skips. The emitted call is a
+  plain `handlers.toArray(…)` against `JavaCollection.toArray[T <: Object](Array[T]): Array[T]`, which
+  infers `T = Object` from the cast and returns an `Array[Object]` matching none of the three
+  overloads java resolved among. So the fix is not in `arrayArg`: it is either an exception listed
+  ABOVE the shim guard (the shape `forEach` already takes) that strips the argument's cast without
+  reshaping the call, or the frontend not synthesising an `Object[]` cast at a formal whose type
+  variable java infers FROM the argument (JLS 18.2.1) — and the second is `ENGINE-LIMITS.md` G14 at an
+  argument, where the erased formal and a genuinely-`Object[]` one read alike. Neither is built; a
+  corpus-wide grep confirms **zero** java sites write `toArray((Object[]) …)`, so nothing distinguishes
+  them from the TIR and the choice is which side owns the cast;
 
 So the honest reading of 13 is *9 refused, 4 open*. Wave 13 took FIVE out of the open
 column and SIX out of the refused one, in four commits; **wave 14 took a sixth out of the open column
