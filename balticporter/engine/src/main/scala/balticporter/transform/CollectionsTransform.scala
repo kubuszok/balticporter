@@ -6294,12 +6294,28 @@ object CollectionsTransform:
   // `addAll(IterableOnce)`) and whose SOURCE-level signature does not. An erasure-keyed answer would
   // keep the modifier on all 24 of them.
   //
-  // ==Read it as the KEEP list, and note that BOTH of its errors are LOUD==
+  // ==Read it as the KEEP list, and note that BOTH of its errors are LOUD — WITH ONE EXCEPTION==
   // A member listed here keeps `override`; everything else on a re-parented class loses it. Too
   // SMALL a list strips a modifier scala requires and scalac says `needs "override" modifier`; too
-  // LARGE a list leaves the `E037` exactly where it was. Neither direction is silent, which is what
-  // licenses a table here at all — contrast `ExternalSurface`, whose unknown side is a rename that
-  // no compiler can see, and which therefore has to anchor on absence.
+  // LARGE a list leaves the `E037` exactly where it was. That is what licenses a table here at all —
+  // contrast `ExternalSurface`, whose unknown side is a rename that no compiler can see, and which
+  // therefore has to anchor on absence.
+  //
+  // ==THE EXCEPTION IS AN ABSTRACT PARENT DECLARATION, AND IT IS SILENT IN THE `TOO SMALL`
+  // DIRECTION== Scala makes `override` OPTIONAL on the implementation of an abstract member, so a
+  // strip whose parent declaration is abstract produces no error at all: the member is entitled to
+  // the modifier, loses it, and nothing anywhere says so. Six members did exactly that, at 0 errors
+  // and 0 moved check counts, and the only instrument that saw them was `members.tsv` (`CLAUDE.md`
+  // §4.55's minted-member paragraph). **The arity reading is the instrument, and it is a HAND
+  // reading**: strips performed against error rows closed was **77 against 71**, and the residue is
+  // the population to explain — six abstract-parent strips, and nothing else. Read the two numbers
+  // against each other whenever this table moves; a strip with no error row behind it is what an
+  // over-approximation looks like from here.
+  //
+  // It is NOT a gate, and the reason is where the second number lives. `strips performed` is a fact
+  // this run holds; `error rows closed` is a DELTA between two compiles of two commits, joined
+  // through `errors.tsv` by the correlator, and no run can assert on a number it cannot see. An
+  // assertion written from one side alone would be an assertion about nothing.
   //
   // A target with NO entry keeps every modifier: unknown is the conservative arm, exactly as
   // `ExternalSurface.mayDeclare` reads it.
