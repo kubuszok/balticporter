@@ -186,6 +186,8 @@ final class ClassTableFactory extends TransformFactory:
   *     "a.B" = "c.D"                                                  # the flat form
   *     "a.Disposable" = { to = "java.lang.AutoCloseable"               # …and the same entry with
   *                        memberRenames { dispose = "close" } }        #    the target's names
+  *     "x.reflect.Field" = { to = "com.foo.ai.TaskField"               # …and a DEPENDENT's own
+  *                           scope { only = ["com.foo.ai"] } }         #    slice of the program
   *   } }
   * ```
   *
@@ -204,14 +206,20 @@ final class TypeRedirectFactory extends TransformFactory:
   def name = "type-redirect"
   def fromConfig(config: ConfigView): Phase =
     val entries = config.child("redirects").toList.flatMap(rs => rs.keys.map { k =>
-      if !rs.isObject(k) then (k, rs.requireString(k), Map.empty[String, String])
+      if !rs.isObject(k) then (k, rs.requireString(k), Map.empty[String, String], RuleScope.everywhere)
       else
         val e = rs.requireChild(k)
-        (k, e.requireString("to"), e.stringMap("memberRenames").getOrElse(Map.empty))
+        // `Everywhere(Set.empty)` — this phase's own default and its pre-scope code path, which is
+        // what `scopeOf` takes rather than assuming one (CLAUDE.md §1). PER ENTRY, because the merge
+        // is: a base's whole-program redirect and a dependent's package-scoped one live in one
+        // folded instance.
+        (k, e.requireString("to"), e.stringMap("memberRenames").getOrElse(Map.empty),
+         TransformFactory.scopeOf(e))
     })
     new TypeRedirectTransform(
-      redirects     = entries.map((k, to, _) => k -> to).toMap,
-      memberRenames = entries.collect { case (k, _, rn) if rn.nonEmpty => k -> rn }.toMap)
+      redirects     = entries.map((k, to, _, _) => k -> to).toMap,
+      memberRenames = entries.collect { case (k, _, rn, _) if rn.nonEmpty => k -> rn }.toMap,
+      scopes        = entries.collect { case (k, _, _, sc) if !sc.isUnrestricted => k -> sc }.toMap)
 
 /** ```
   * { transform = "bean-properties"

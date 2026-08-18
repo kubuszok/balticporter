@@ -549,8 +549,17 @@ object StandardTraversal:
     * nothing was being mapped here anyway. It is written down because the day that changed is the
     * day the omission would have started costing something, silently. */
   def mapSymbols(ph: Phase, tbl: SymbolTable)(using p: Program): SymbolTable =
+    mapSymbols(ph, tbl, _ => true)
+
+  /** …restricted to the symbols a phase is SCOPED to.
+    *
+    * An overload rather than a second fold, so a phase that takes a `RuleScope` (CLAUDE.md §1) can
+    * hold back a declaration's `info` exactly as it holds back its tree — and so the ownership skip
+    * above, which is a fact about class files and not about policy (§4.56), stays stated once. The
+    * default predicate is the pre-scope behaviour and every existing caller keeps it. */
+  def mapSymbols(ph: Phase, tbl: SymbolTable, keep: Symbol => Boolean)(using p: Program): SymbolTable =
     tbl.all.foldLeft(tbl)((t, s) =>
-      if !p.owns(s.id) then t
+      if !p.owns(s.id) || !keep(s) then t
       else
         t.updated(s.copy(
           info        = mapType(ph, s.info),

@@ -71,12 +71,43 @@ import balticporter.tir.*
   * JDK itself closes) the rename is checked against it and refused, counted, with why. Where it is
   * not known — the ordinary case, a shape-compatible type the port ships itself — the check cannot
   * run and the target compiler stays the gate, exactly as it is for the redirect's shape.
+  *
+  * ==`scopes` — WHICH DECLARATIONS each redirect re-points, and why a dependent needs to say==
+  * This phase RETYPES declarations, so CLAUDE.md §1 owes it a [[RuleScope]], with
+  * `Everywhere(Set.empty)` both the no-op and the pre-scope code path. What made the omission
+  * invisible for two ports is that a dependent's `Program` CONTAINS its base
+  * (`ENGINE-LIMITS.md` D2): the redirect therefore re-points the type inside the BASE's
+  * declarations as well, which emits nothing — a dependent does not write its base's files — and
+  * silently changes what this run DERIVES for them. Measured on the first port whose redirected
+  * type appears in a base signature: libGDX's `Json$FieldMetadata` takes a `reflect.Field`, its
+  * published contract row says `primary=(Field)`, and the dependent re-derived `primary=(TaskField)`
+  * — one FATAL `base-surface` finding, which is §1.5's two-ports-that-cannot-compile-together
+  * caught by exactly the artifact built to catch it, and NOT by a compile (the base's own file is
+  * never emitted here).
+  *
+  * '''PER ENTRY, and that is not a generalisation for its own sake.''' A base and a dependent both
+  * redirecting is the ORDINARY case here — a base states a whole-program fact about its own surface
+  * (`Disposable -> AutoCloseable`, everywhere, or its dependents inherit two spellings of one
+  * member) while a dependent states one about its own package alone. `surfaceFold` merges the two
+  * instances into ONE phase, so a single scope on that phase cannot serve both and the merge would
+  * have to refuse a pair that is not in conflict at all. Keyed by the redirect SOURCE the two
+  * tables compose exactly as `redirects` and `memberRenames` do: independent keys union, and the
+  * same key with two scopes is the refusal.
+  *
+  * `Only(Set("<this module's package>"))` is what a dependent writes; an entry's scope is part of
+  * [[surfaceFingerprint]], because two modules re-pointing different declarations emit different
+  * signatures.
   */
 final class TypeRedirectTransform(
     val redirects: Map[String, String] = Map.empty,
     val memberRenames: Map[String, Map[String, String]] = Map.empty,
     val external: ExternalSurface = ExternalSurface.default,
+    val scopes: Map[String, RuleScope] = Map.empty,
 ) extends Phase, PolicySource, MergeablePolicy, PolicyBound:
+
+  /** the scope of ONE redirect entry — absent means [[RuleScope.everywhere]], which is the phase's
+    * pre-scope behaviour and the reason no existing port had to say anything. */
+  def scopeOf(from: String): RuleScope = scopes.getOrElse(from, RuleScope.everywhere)
   def name: String = "type-redirect"
 
   /** What the RUN resolved each declared SOURCE type to, before the pipeline started (§8.1).
@@ -158,9 +189,14 @@ final class TypeRedirectTransform(
     * renames spells exactly what it always did, so two modules that predate this feature still
     * compare equal. */
   def surfaceFingerprint: String = redirects.toList.sorted.map { (f, t) =>
+    // the scope decides WHICH declarations carry the redirected type in their signatures, so it is
+    // surface. Rendered only where it says something, or every port that predates the parameter
+    // compares unequal to itself for a change that moved no signature.
+    val sc = scopeOf(f)
+    val at = if sc.isUnrestricted then "" else s"@${sc.fingerprint}"
     memberRenames.getOrElse(f, Map.empty).toList.sorted match
-      case Nil => s"$f->$t"
-      case rs  => s"$f->$t[" + rs.map((m, n) => s"$m=$n").mkString(",") + "]"
+      case Nil => s"$f->$t$at"
+      case rs  => s"$f->$t$at[" + rs.map((m, n) => s"$m=$n").mkString(",") + "]"
   }.mkString(",")
 
   /** THE MERGE CONTRACT (DESIGN.md §8.13). Both tables are keyed by INDEPENDENT upstream FQNs, so a
@@ -207,9 +243,23 @@ final class TypeRedirectTransform(
         (m2, to2) <- mine.toList
         if named(t, m2) == named(t, mem) && to2 != to
       yield (t, mem, to, m2, to2)
-      if typeClash.nonEmpty || memberClash.nonEmpty then
+      // A SCOPE IS NOT A TABLE OF INDEPENDENT KEYS and does not compose — `Only(a)` beside
+      // `Only(b)` is not `Only(a, b)`, which would ADMIT declarations each module deliberately held
+      // back, and `Everywhere(x)` beside `Everywhere(y)` composes the opposite way again. So two
+      // scopes for ONE redirect source is the refusal. Two scopes for two DIFFERENT sources is not
+      // a conflict at all and is why this map is keyed at all (see the class note).
+      // The INTERSECTION, exactly like `typeClash` above and for its reason: a key only one module
+      // redirects has one answer, and reading the OTHER module's absent entry as "everywhere" would
+      // report a disagreement between a scope and a redirect that does not exist.
+      val scopeClash = (redirects.keySet & o.redirects.keySet).toList.sorted
+        .filter(k => scopeOf(k) != o.scopeOf(k))
+      if typeClash.nonEmpty || memberClash.nonEmpty || scopeClash.nonEmpty then
         Left(
-          (typeClash.toList.sorted.map(k =>
+          (scopeClash.map(k =>
+             s"""both modules scope the redirect of "$k" and disagree — """ +
+               s""""${scopeOf(k).fingerprint}" and "${o.scopeOf(k).fingerprint}"; a scope decides """ +
+               "which declarations carry the redirected type in their signatures") ++
+            typeClash.toList.sorted.map(k =>
              s"""both modules redirect "$k", to "${redirects(k)}" and "${o.redirects(k)}"""") ++
             memberClash.sorted.distinct.map { (t, mem, to, m2, to2) =>
               val how =
@@ -230,7 +280,10 @@ final class TypeRedirectTransform(
           new TypeRedirectTransform(
             redirects     = redirects ++ o.redirects,
             memberRenames = renames,
-            external      = ExternalSurface(external.known ++ o.external.known)),
+            external      = ExternalSurface(external.known ++ o.external.known),
+            // independent keys, exactly like `redirects` — a key both sides scope is equal by the
+            // refusal above, and a key only one side scopes is that side's answer.
+            scopes        = scopes ++ o.scopes),
           (o.redirects.keySet -- redirects.keySet) ++ addedRenameOwners))
     case other =>
       Left(s"`${other.name}` is not a `TypeRedirectTransform`, so there is no table to compose")
@@ -249,10 +302,37 @@ final class TypeRedirectTransform(
     * before the pipeline runs and says the same thing whether or not this phase ran — plus this
     * phase's own malformed entries and counted rename refusals, which the binding cannot see. */
   def policyReport: PolicyReport =
-    PolicyReport.fromBindings(records) ++ PolicyReport(ownFindings ++ runFindings)
+    PolicyReport.fromBindings(records) ++ PolicyReport(ownFindings ++ runFindings) ++
+      PolicyReport(scopes.toList.sortBy(_._1).flatMap { (from, sc) =>
+        sc.neverFired(scopeFired.getOrElse(from, Set.empty)).toList.sorted.map(k =>
+          PolicyFinding(name, s"""TypeRedirectTransform(scope) of "$from", ${sc.productPrefix} entry""",
+            k, PolicyIssue.NeverMatched,
+            "no top-level type with this fully-qualified name occurs in this program, so the scope " +
+              "neither held a declaration back nor admitted one — this redirect ran as if the entry " +
+              "were absent"))
+      })
+
+  /** per redirect source, the scope entries that placed at least one UNIT this run — the complement
+    * of what [[RuleScope.neverFired]] reports. A `var` for `runFindings`' reason: a phase instance
+    * is reused across two translations and the first run's answer is not the second's. */
+  private var scopeFired: Map[String, Set[String]] = Map.empty
+
+  /** is this declaration one the given scope admits? Asked through the OWNER CHAIN, so a nested
+    * type, a member and a local are placed by the declaration that contains them ([[RuleScope]]); a
+    * symbol this program cannot resolve takes each direction's own conservative arm — IN for
+    * `Everywhere`, which is the pre-scope behaviour, and OUT for `Only`, which rewrites nothing
+    * unasked. */
+  private def inScope(sc: RuleScope, program: Program, id: SymId): Boolean =
+    if sc.isUnrestricted then true
+    else program.symbolOf(id) match
+      case Some(s)    => sc.includes(program, s)
+      case scala.None => sc match
+        case RuleScope.Everywhere(_) => true
+        case RuleScope.Only(_)       => false
 
   override def run(program0: Program): Program =
     runFindings = Nil
+    scopeFired  = Map.empty
     if redirects.isEmpty then
       mapping = Map.empty; memberTwins = Map.empty
       return program0
@@ -283,6 +363,15 @@ final class TypeRedirectTransform(
     // it is a type this program may not mention at all, which is why `targetOf` mints one.
     mapping = redirects.toList.sortBy(_._1).flatMap { (from, to) =>
       bound.get(from).flatMap(_.toOption).map(_ -> targetOf(to))
+    }.toMap
+
+    /** the SCOPE governing each mapped source symbol — the entry's own, so a base's whole-program
+      * redirect and a dependent's package-scoped one can sit in the merged instance together. */
+    val scopeBySource: Map[SymId, RuleScope] = redirects.toList.flatMap { (from, _) =>
+      bound.get(from).flatMap(_.toOption).map(_ -> scopeOf(from))
+    }.toMap
+    val entryBySource: Map[SymId, String] = redirects.toList.flatMap { (from, _) =>
+      bound.get(from).flatMap(_.toOption).map(_ -> from)
     }.toMap
 
     // THE MEMBERS MOVE WITH THE TYPE, and there are TWO ways a member reference is rendered.
@@ -344,6 +433,10 @@ final class TypeRedirectTransform(
     redirects.toList.sorted.foreach { (from, to) =>
       bound.get(from).flatMap(_.toOption).foreach { fromId =>
         val sites = (fromId :: membersOf.getOrElse(fromId, Nil)).flatMap(Decision.declarationsUsing(program, _))
+          // …SCOPED, exactly as the rewrite is. A row for a declaration the scope held back would
+          // claim a signature change that did not happen, and a porter note claiming one is worse
+          // than none (`NoteCoverageCheck` fails a run either way).
+          .filter((encl, _) => inScope(scopeOf(from), program, encl))
           .groupBy(_._1).toList
           .flatMap((encl, os) => os.map(_._2).minByOption(o => (o.javaPath, o.line)).map(encl -> _))
           .sortBy((encl, o) => (o.javaPath, o.line, encl.raw))
@@ -375,8 +468,43 @@ final class TypeRedirectTransform(
       // type arguments, `new`, ascriptions — and every symbol `info` is routed through
       // `transformType`. A private walk here would reach the ones it remembered and miss whichever
       // node kind is added next (CLAUDE.md §3).
-      val units   = program.units.map(u => StandardTraversal.mapClassDef(this, u))
-      val symbols = StandardTraversal.mapSymbols(this, table)
+      //
+      // …SCOPED, and at BOTH halves or at neither: a declaration whose tree keeps the old type
+      // while its symbol's `info` says the new one is a program the emitter and every check read
+      // differently. The scope is asked of the SYMBOL through its owner chain (`RuleScope`'s own
+      // rule), so a nested type, a member and a local are all placed by the declaration that
+      // contains them and never by their own name (§4.56).
+      //
+      // ONE PASS PER DISTINCT SCOPE, and the `mapping` the hooks read is narrowed to the entries
+      // that scope governs. A traversal hook has no idea which declaration it is under, so the
+      // narrowing has to happen outside it; passes compose because each rewrites only its own
+      // source symbols. With every entry unrestricted — which is every port that predates this
+      // parameter — there is exactly ONE pass over the full mapping, which is the pre-scope code
+      // path unchanged rather than a special case of it.
+      val scoped     = summon[Program]
+      val fullMap    = mapping
+      val fullTwins  = memberTwins
+      val twinScope  = fullTwins.keys.flatMap(m =>
+        scoped.symbolOf(m).flatMap(s => scopeBySource.get(s.owner)).map(m -> _)).toMap
+      var units      = program.units
+      var symbols    = table
+      var fired      = Map.empty[String, Set[String]]
+      scopeBySource.values.toList.distinct.foreach { sc =>
+        val sources = scopeBySource.collect { case (k, v) if v == sc => k }.toSet
+        mapping     = fullMap.view.filterKeys(sources).toMap
+        memberTwins = fullTwins.view.filterKeys(m => twinScope.get(m).contains(sc)).toMap
+        units   = units.map(u =>
+          if inScope(sc, scoped, u.symbol) then StandardTraversal.mapClassDef(this, u) else u)
+        symbols = StandardTraversal.mapSymbols(this, symbols, s => inScope(sc, scoped, s.id))
+        if !sc.isUnrestricted then
+          sources.flatMap(entryBySource.get).foreach { entry =>
+            val hits = program.units.flatMap(u => scoped.symbolOf(u.symbol).flatMap(sc.entryFor(scoped, _))).toSet
+            fired = fired.updated(entry, fired.getOrElse(entry, Set.empty) ++ hits)
+          }
+      }
+      mapping     = fullMap
+      memberTwins = fullTwins
+      scopeFired  = fired
       program.rebuilt(units, symbols) // xref rebuilt by the Pipeline
 
   // -------------------------------------------------------------------------------------------
