@@ -9,6 +9,7 @@
 #   just gltf-measure                gdx-gltf + its suite, compiled WITH libGDX core (a dependent port)
 #   just screens-measure             libgdx-screenmanager, compiled WITH libGDX core (a dependent port)
 #   just vfx-measure                 gdx-vfx, compiled WITH libGDX core (a dependent port)
+#   just ai-measure                  gdx-ai, compiled WITH libGDX core (a dependent port)
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
@@ -85,6 +86,7 @@ jbump_module  := "ported/sge-jbump"
 gltf_module   := "ported/sge-gltf"
 screens_module := "ported/sge-screens"
 vfx_module    := "ported/sge-vfx"
+ai_module     := "ported/sge-ai"
 liqp_module   := "ported/ssg-liquid"
 md_module     := "ported/ssg-md"
 # ssg-md's EXTENSION half, at its OWN port root (`corpus/ports/ssg-md/ext.conf` D-mde-1/2). A run's
@@ -110,6 +112,15 @@ jbump_upstream := "../sge/original-src/jbump"
 gltf_src      := "../sge/original-src/gdx-gltf/gltf/src"
 screens_src   := "../sge/original-src/libgdx-screenmanager"
 vfx_src       := "../sge/original-src/gdx-vfx"
+# gdx-ai's WHOLE upstream checkout, and the census below reads TWO trees out of it separately for a
+# reason: `gdx-ai/gdx-ai/tests` is a real JUnit 4 source set (2 files, 10 `@Test`) and the top-level
+# `gdx-ai/tests` is a 111-file LWJGL DEMO APPLICATION declaring zero `@Test` — 54 of whose files are
+# named `*Test*.java`. A filename census over this checkout reproduces "54" and a directory-name one
+# reproduces "111"; only `java_test_count` reproduces 10, which is why the lane runs it on each tree
+# and prints both.
+ai_src        := "../sge/original-src/gdx-ai"
+ai_tests      := "../sge/original-src/gdx-ai/gdx-ai/tests"
+ai_demos      := "../sge/original-src/gdx-ai/tests"
 # gdx-gltf's WHOLE test tree, not the one file the port migrates: SEVEN java files sit there and
 # only ONE is a suite (`AttributesCompareTest`, 8 `@Test`). The other six are `extends Game` demos
 # with a `main` that opens an lwjgl window. `java_test_count` over the tree is what re-derives the
@@ -248,6 +259,13 @@ screens_deps  := "--dependency org.scalameta::munit:1.0.2"
 # base port emitted rather than as a coordinate. So the only coordinate here is the one its
 # HAND-WRITTEN suite is written in — the same shape, and for the same reason, as anim8's.
 vfx_deps      := "--dependency org.scalameta::munit:1.0.2"
+# gdx-ai's only compile dependency is libGDX itself (`gdx-ai/build.gradle`: one `api
+# "com.badlogicgames.gdx:gdx"` and JUnit for tests), which this lane supplies as the SOURCE the base
+# port emitted rather than as a coordinate. Milestone 1 compiles ONE source set and has no
+# hand-written suite, so there is no test coordinate to add either — and this line stays empty
+# rather than carrying munit speculatively: a dependency on the compile line that nothing needs is a
+# dependency nobody can later prove was required.
+ai_deps       := ""
 # flexmark's one compile-scope coordinate, `org.jetbrains:annotations:24.0.1`, is a FRONTEND input
 # AND a compile one — and this line was written empty on the reasoning that it could not be, which
 # the port's first run disproved in one number. The reasoning was: the annotations are markers,
@@ -1058,6 +1076,119 @@ vfx-measure:
         --srcmap "$REPORT/run-latest/srcmap.tsv"
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
+# gdx-ai, compiled TOGETHER with the ported libGDX core.
+#
+# A DEPENDENT port of the same shape as anim8's and vfx's — `gdx-ai/build.gradle` declares ONE
+# compile dependency (`com.badlogicgames.gdx:gdx`), the collection shims are vendored by sge, so both
+# source sets go on the same scala-cli invocation and this lane must run AFTER `gdx-measure` has
+# re-emitted the base. At 166 files it is the largest dependent port in the corpus.
+#
+# THE TEST STORY, and it is the one number a reader of this port is most likely to get wrong.
+# PROGRESS.md's own hand-port table records "24 / 196" against `sge-ai`; that figure describes the
+# REFERENCE HAND PORT's MUnit suite (`../sge/sge-extension/ai/src/test/scala`, 24 files), not
+# anything upstream gdx-ai ships. Upstream's real JUnit surface is TWO files and TEN `@Test`
+# methods, in `gdx-ai/gdx-ai/tests` — `IndexedAStarPathFinderTest` (5) and `ParallelTest` (5, with a
+# `@Before`) — and the separate top-level `gdx-ai/tests` gradle project is an LWJGL DEMO
+# APPLICATION: 111 files, 54 of them named `*Test*.java`, and ZERO `@Test` anywhere in it. So this
+# lane censuses the two trees APART and gates each on its own expected number, because a single
+# figure over the checkout cannot tell a suite from a demo and every wrong answer this library has
+# produced came from exactly that conflation.
+#
+# Milestone 1 ports the MAIN source set only. The 10 upstream tests are a `GdxAiTestMigrate` of
+# their own and are not lost silently: the guard below fails the lane the day that number moves in
+# either direction, which is the only thing standing between "10 tests we have not ported yet" and
+# "10 tests nobody remembers".
+# ---------------------------------------------------------------------------------------------
+[doc("gdx-ai, compiled WITH libGDX core (a dependent port)")]
+ai-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{ai_src}}"
+    REPORT="$ROOT/port-report/GdxAiMigrate"
+
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.gdxai.GdxAiMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
+      echo "!! GdxAiMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
+      exit 1
+    fi
+    echo "-- GdxAiMigrate (every line it printed) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
+    echo
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
+
+    echo
+    echo "-- scope --"
+    # RE-DERIVED, not asserted in a comment. `gdx-ai/src` holds 167 `.java` files and javac compiles
+    # 166: `com/badlogic/gdx/emu/` is GWT super-source, excluded by upstream's own build
+    # (`[compileJava, compileTestJava, javadoc]*.exclude("com/badlogic/gdx/emu")`), and it declares a
+    # SECOND `com.badlogic.gdx.ai.StandaloneFileSystem`. Included, the emitter would write one
+    # `StandaloneFileSystem.scala` from whichever unit sorted last and no check would report it.
+    ALL_JAVA=$(find {{ai_src}}/gdx-ai/src -name '*.java' | wc -l | tr -d ' ')
+    EMU_JAVA=$(find {{ai_src}}/gdx-ai/src/com/badlogic/gdx/emu -name '*.java' 2>/dev/null | wc -l | tr -d ' ')
+    echo "upstream .java: $ALL_JAVA   GWT super-source excluded: $EMU_JAVA   in scope: $((ALL_JAVA - EMU_JAVA))"
+    [ "$EMU_JAVA" = "0" ] && echo "!! THE emu/ TREE IS GONE — the scope filter in GdxAiMigrate now excludes nothing; re-read it"
+
+    echo
+    echo "-- test discovery --"
+    # TWO trees, censused apart — see the header. Both numbers are printed and both are gated: a
+    # suite with no discoverable tests runs ZERO and reports SUCCESS, and a demo project counted as a
+    # suite is the same lie with the sign flipped.
+    JAVA_TESTS=$(java_test_count {{ai_tests}})
+    DEMO_TESTS=$(java_test_count {{ai_demos}})
+    echo "@Test in the upstream JUnit source set ({{ai_tests}}): $JAVA_TESTS   (expected 10 — not ported at milestone 1)"
+    echo "@Test in the upstream DEMO project ({{ai_demos}}): $DEMO_TESTS   (expected 0 — 111 files, 54 named *Test*.java, an LWJGL application)"
+    echo "emitted test files: 0 (this port has no test source set yet — a GdxAiTestMigrate is the next milestone)"
+    [ "$JAVA_TESTS" != "10" ] && echo "!! UPSTREAM SUITE MOVED — $JAVA_TESTS @Test, not 10. Milestone 1 ports NONE of them, so nothing else would notice; re-read gdx-ai/gdx-ai/tests before touching this number"
+    [ "$DEMO_TESTS" != "0" ] && echo "!! THE DEMO PROJECT NOW DECLARES $DEMO_TESTS @Test — it was an application; it may now be a suite, and this lane must say which"
+    echo "   (no run phase: every CLAUDE.md §4.4 form is UNMEASURED for this port — see PROGRESS.md §sge-ai)"
+
+    echo
+    break_residue {{ai_module}}/src_managed
+
+    echo "-- compile --"
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
+    # port that does not compile — a false NEGATIVE on the headline number.
+    #
+    # No `--test` and no test directory: milestone 1 has ONE source set. When `GdxAiTestMigrate`
+    # arrives the flag comes with it — `scala-cli compile` reports on the MAIN scope whatever
+    # directories it is handed, so a test tree added here without `--test` would have its errors read
+    # and not reported (CLAUDE.md §4.56).
+    DEPS="{{ai_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aimeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/aimeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/aimeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/aimeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/aimeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aimeasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/aimeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    echo
+    echo "-- correlation: every error located to its member and its Java origin --"
+    # Run WHETHER OR NOT it compiled, for `noise4j-measure`'s reason: with no suite there is no
+    # second thing to correlate, so the compile output is the only diagnostic this port has and it is
+    # always worth attributing. BOTH ports' maps — an error inside gdx-ai resolves through its own,
+    # and one that reaches the base resolves through libGDX's, which is what a dependent's wall
+    # looks like.
+    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/aimeasure.txt \
+      --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+      --srcmap "$REPORT/run-latest/srcmap.tsv"
 
     headline "$ERRORS" "$REPORT"
 
@@ -2164,7 +2295,11 @@ measure-all:
     # has `base = "main.conf"`) and its compile links against the main source set's `src_managed/`,
     # so run first it would measure the PREVIOUS engine's emit of the library it tests. `md-ext-measure`
     # is a dependent of the same base for the same reason and follows both.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure; do
+    # `ai-measure` is APPENDED rather than slotted in beside the other libGDX dependents. Its only
+    # ordering constraint is `gdx-measure`, which is first, so any position after that one is
+    # correct — and last is the position that leaves the fourteen established lanes' order, and
+    # therefore their numbers, untouched by this port's arrival.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
