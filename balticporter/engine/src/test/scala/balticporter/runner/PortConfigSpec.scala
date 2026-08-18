@@ -56,6 +56,7 @@ class PortConfigSpec extends munit.FunSuite:
         |input {
         |  sourceRoot = "java"
         |  resolutionRoots = ["java"]
+        |  resolutionExcludes = ["com/demo/emu"]
         |}
         |output { portRoot = "out", sourceSet = "test" }
         |manifest {
@@ -86,9 +87,13 @@ class PortConfigSpec extends munit.FunSuite:
       label     = "demo",
       portRoot  = dir.resolve("out"),
       sourceSet = SourceSet.Test,
+      // `resolutionExcludes` is RELATIVE to whichever root contains it and is NOT resolved against
+      // the config's directory — the same string has to answer for every root, exactly as
+      // `includeGlobs`/`excludeGlobs` are relative to `sourceRoot`. Spelled here so the round trip
+      // fails if the loader ever starts resolving it as a path.
       frontend  = FrontendConfig(dir.resolve("java"),
                     List("com/demo/Gadget.java", "com/demo/Widget.java"),
-                    Nil, List(dir.resolve("java"))),
+                    Nil, List(dir.resolve("java")), List("com/demo/emu")),
       phases    = Nil,
       manifest  = Some(PortManifest(
         name           = "demo",

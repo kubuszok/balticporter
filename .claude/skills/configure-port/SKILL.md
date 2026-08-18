@@ -61,6 +61,7 @@ input {
   classpathFile   = "../../../out/mylib-test-classpath.txt"
   # classpath     = ["…jar"]
   resolutionRoots = ["../../../../sge/original-src/simple-graphs/src/main/java"]
+  # resolutionExcludes = ["com/example/emu"]         # paths under a root NOT to parse
 }
 ```
 
@@ -72,6 +73,15 @@ input {
 - **`resolutionRoots` are parsed and NOT emitted.** This is how a second module sees its base's
   types: it resolves against the base's *Java*, never against the Scala the base port emitted. A run
   whose resolution roots lie outside its own source root is structurally a dependent — see §6.
+- **…and a root is a DIRECTORY, so it has no file list — which is what `resolutionExcludes` is
+  for.** `files`/`excludeGlobs` let a port leave one of its OWN sources out; a resolution root is
+  walked whole. Where the upstream's build does not compile all of that tree — a GWT `super-source`
+  directory is the shape that reaches this engine first, and such a tree exists precisely to
+  REDECLARE classes — parsing it hands the frontend two declarations of one FQN and Spoon refuses
+  the model outright (`The type X is already defined`). Exclude the path, relative to the root.
+  **Do not narrow the ROOT instead**: a base's published port map is joined to a run THROUGH the
+  resolution roots, so a root one level down costs a `SurfaceNameDivergence` per shared package (25
+  of them, measured, where the key costs 0).
 
 ### The frontend classpath, and why a missing one is fatal
 

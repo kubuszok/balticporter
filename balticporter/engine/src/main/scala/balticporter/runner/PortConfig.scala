@@ -51,6 +51,10 @@ import scala.jdk.CollectionConverters.*
   *   classpath       = ["…jar"]
   *   classpathFile   = "out/test-classpath.txt"   # one path-separator-joined line, as `cs` writes
   *   resolutionRoots = ["…/src/main/java"]
+  *   resolutionExcludes = ["com/example/emu"]  # paths under a resolution root NOT to parse,
+  *                                             # relative to the root — a super-source tree that
+  *                                             # REDECLARES classes is otherwise two declarations
+  *                                             # of one FQN and the model is refused outright
   *   preservedAnnotations = ["com.fasterxml.jackson."]  # which ARGUMENT-BEARING annotation
   *                                             # families this port claims ON A TYPE. Absent =
   *                                             # none, which is what every port did before the
@@ -200,6 +204,11 @@ object PortConfig:
       files           = selectFiles(input, srcRoot),
       classpath       = classpath(input, dir),
       resolutionRoots = input.strings("resolutionRoots").getOrElse(Nil).map(resolvePath(dir, _)),
+      // …and what to leave OUT of them. RELATIVE to whichever root contains it, and NOT resolved
+      // against the config's directory: the same string has to answer for every root, exactly as
+      // `includeGlobs`/`excludeGlobs` are relative to `sourceRoot`. Absent is `Nil`, which is the
+      // behaviour every port had before the key existed — the root is added whole.
+      resolutionExcludes = input.strings("resolutionExcludes").getOrElse(Nil),
       // FQN prefixes, upstream namespace, and NOT paths — a family is a name, so nothing here is
       // resolved against the config's directory. Absent is `AnnotationPolicy.none`, which is the
       // behaviour every port had before the key existed (`ENGINE-LIMITS.md` T16).
