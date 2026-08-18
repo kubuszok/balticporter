@@ -517,7 +517,11 @@ final class TestFrameworkTransform(
     }.toMap
     val unitT = primTypes("scala.Unit")
     freshSym = inSet.iterator.map { s =>
-      val fqn = p.symbolOf(s).map(_.fullName + "#" + FreshStateMember).getOrElse(FreshStateMember)
+      // `MemberKey`, never `owner + "#" + name`: the separator grammar is one derivation
+      // (`PolicyKeyLintSpec` is the rule), and this member's `fullName` is a member key like any
+      // other — a bare one, since a nilary synthesised member has no overload to distinguish.
+      val fqn = p.symbolOf(s).map(o => MemberKey(o.fullName, FreshStateMember).render)
+                  .getOrElse(FreshStateMember)
       s -> mint(FreshStateMember, fqn, Flags(isOverride = supers.contains(s)),
                 TypeRepr.MethodType(Nil, unitT), owner = s)
     }.toMap
