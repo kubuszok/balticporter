@@ -3800,7 +3800,7 @@ rule's 20 tests are that number. What is left is the aggregator drop's own blast
 fifty-two emitted FILES, moving neither side of the discovery count, with a FIXPOINT guard nobody has
 written yet.
 
-| `omissions` / `portability(emitted)` / `collection-boundary` / `overload-risk` | 13 / 14 / **4** / 1,655 — the boundary lane fell by two at wave 12, and both were the `ClassFileOverride` rows on `BitFieldSetTest#iterator` that the K29 mapping closed together with the errors they named |
+| `omissions` / `portability(emitted)` / `collection-boundary` / `overload-risk` | **15 / 26 / 5 / 1,654**, which is `port-report/FlexmarkTestMigrate/baseline/counts.tsv` — the boundary lane had fallen by two at wave 12 (the `ClassFileOverride` rows on `BitFieldSetTest#iterator` that the K29 mapping closed together with the errors they named, `13 / 14 / 4 / 1,655`), and all four moved again at §10.6.7, which WIDENED THIS LANE'S SCOPE from the 52-file unit suite to three upstream trees and 88 emitted files. A residue row quoted from a wave is stale the moment the scope under it moves; the baseline is the number |
 | `collection-internal` | **0 after wave 9**, from 16 — every one of which was `DeclaredSubtype` and the SAME seam: `OrderedSet`, which `implements java.util.Set` and was therefore re-parented onto `mutable.Set`, handed to its own `addAll`/`retainAll` whose formal is the `Collection` target `JavaCollection`. scalac reported **9** of those 16 sites, because it stops after a few per statement, and all nine closed with the lane — the attribution `CLAUDE.md` §5 requires of a lane that falls (`ENGINE-LIMITS.md` K26) |
 | `manifest` | **1** — `BaseMapUnverified`, and see below |
 
