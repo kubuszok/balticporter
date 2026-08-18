@@ -6493,6 +6493,18 @@ into a `ClassCastException`, which is louder and still wrong. **If a second libr
 shape, build it; the argument above is the safety argument and it is complete.** Do not build it for
 these two.
 
+**AND THE TRIGGER HAS A SECOND HALF, because `2 sites` COUNTS REIFIED SITES AND NOT CONSUMERS.** The
+two are `Pair.java:65` and `:67` — the `instanceof` and the downcast inside ONE `equals` — and that
+is the population the CHECK can count, because a reified occurrence is a NODE and the check walks
+nodes. What the defect IS is *`Pair.equals` answers `false` for two equal `Pair`s, library-wide*, and
+every consumer of that answer is a site no lane here counts: a `contains`, a `distinct`, a `Set`
+membership, a `Map` key, an `assertEquals`. Inside this corpus that population happens to be two test
+failures, which is the whole reason the number reads small; outside it, it is whatever §4.45's
+consumer writes, and the two-site count will not move when they write it. So the second trigger is a
+CONSUMER one and it is not about a second library at all: **re-weigh the moment ssg's own code
+compares, dedups or keys on `Pair`** — one such call turns a declared expected-failure into a wrong
+answer in production code.
+
 *Fix kind: (a) engine. OPEN.*
 
 ---
