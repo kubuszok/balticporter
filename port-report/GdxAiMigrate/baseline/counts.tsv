@@ -28,7 +28,7 @@ nullability-boundary	0
 omissions	24
 overload-risk	23
 policy	0
-port-map	12
+port-map	0
 portability(all)	154
 portability(emitted)	1
 portability(injected)	0
@@ -41,5 +41,5 @@ substitution(emitted)	0
 switch-null	0
 trivia	0
 trivia(deliberate)	0
-trivia(recovered)	1
+trivia(recovered)	2
 try-resource	0

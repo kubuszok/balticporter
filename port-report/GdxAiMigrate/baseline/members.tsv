@@ -392,7 +392,7 @@ sge.ai.btree.utils.BehaviorTreeLoader	sge.ai.btree.utils.BehaviorTreeLoader$Beha
 sge.ai.btree.utils.BehaviorTreeLoader	sge.ai.btree.utils.BehaviorTreeLoader$BehaviorTreeParameter#<stmt2>	stmt	9457d57e60ca7c32
 sge.ai.btree.utils.BehaviorTreeLoader	sge.ai.btree.utils.BehaviorTreeLoader$BehaviorTreeParameter#blackboard	val	f8d3e5a53ebb9840
 sge.ai.btree.utils.BehaviorTreeLoader	sge.ai.btree.utils.BehaviorTreeLoader$BehaviorTreeParameter#parser	val	7ffeba0fb2f437d6
-sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser	class	8fcae47e982f8143
+sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser	class	83a0fab2f5c636c3
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser#<init>()	ctor	049f4c34d052c8b7
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser#<init>(DistributionAdapters)	ctor	9373f4d42936373a
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser#<init>(DistributionAdapters,int)	ctor	43cc2f24bda38f4e
@@ -414,14 +414,14 @@ sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser#pars
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser#parse(Reader,E)	def	bc1d47f8509e0485
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser#parse(String,E)	def	bde9424d2764fa62
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser#printTree(Task<E>,int)	def	bb39c1b6a00b6626
-sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader	class	98c27750d1248a71
+sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader	class	a542d35beee5aade
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#<clinit>	init	f1e1eca501d04ffe
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#<init>()	ctor	487985229d53d695
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#DEFAULT_IMPORTS	val	fe2eee31f859a7d0
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#addImport(String,String)	def	99cbe83d02d543f3
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#attribute(String,Object)	def	a998dad47773a510
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#btParser	val	495eb5218abc194c
-sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#castValue(Field,Object)	def	760f5ed71575c1ca
+sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#castValue(TaskField,Object)	def	b5953d1b12a5f2ae
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#checkMinChildren(StackedTask<E>)	def	4b7e5de9bc52f9c6
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#checkRequiredAttributes(StackedTask<E>)	def	8480ec133429813e
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#checkStatement(String)	def	cbd249e553173ea5
@@ -433,9 +433,9 @@ sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$Defa
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#encounteredAttributes	val	9ad9328b5d8c1ea3
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#endLine()	def	265573727139afdc
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#endStatement()	def	10e62db0a14899dc
-sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#findMetadata(Class<?>)	def	7a905f791f4ebfbd
+sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#findMetadata(Class<?>)	def	ea8cac6f5637c1f9
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#getCurrentTask()	def	6732af9ab92c9a72
-sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#getField(Class<?>,String)	def	900f352cc9385285
+sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#getField(Class<?>,String)	def	28b500f5851a1399
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#getImport(String)	def	82e9ff9c2cb3b5a3
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#getLastStackedTask()	def	860fabcba4cddd13
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#getParser()	def	21e4c88199d5d454
@@ -446,12 +446,12 @@ sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$Defa
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#isGuard	val	84de8687a4dbdb72
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#isSubtreeRef	val	7cb8bf3baa67f57a
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#metadataCache	val	56118934a7e65b0b
-sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#openTask(String,boolean)	def	a2a723f5774cdf78
+sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#openTask(String,boolean)	def	0e36e0f753970cb2
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#parse(Array<char>,int,int)	def	25c921537d5a3e25
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#popAndCheckMinChildren(int)	def	53a2fbe80b3a3a82
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#prevTask	val	ad67a93bd077b936
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#root	val	f2b5eef8602bda16
-sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#setField(Field,Task<E>,Object)	def	99670cb5a7678cd6
+sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#setField(TaskField,Task<E>,Object)	def	98cec777a19224c7
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#setParser(BehaviorTreeParser<E>)	def	9aaff8daf8266e81
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#stack	val	49fd20903e70340c
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#stackedTaskException(StackedTask<E>,String)	def	479a5e0c338c7871
@@ -491,7 +491,7 @@ sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$Defa
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$StackedTask#metadata	val	3e4c59ec15db35d2
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$StackedTask#name	val	1515a25ce2568b92
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$StackedTask#task	val	2e43b949c818859d
-sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$Statement	class	dec57f44f221066b
+sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$Statement	class	d25a633900ab3b98
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$Statement#attribute(DefaultBehaviorTreeReader<E>,String,Object)	def	e224b01215a9eac6
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$Statement#enter(DefaultBehaviorTreeReader<E>,String,boolean)	def	9a288c6794b02112
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$Statement#exit(DefaultBehaviorTreeReader<E>)	def	c7e7e76f31f634c8
@@ -507,7 +507,7 @@ sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$Defa
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$Subtree#referenceCount	val	fbe06476d1c4ae88
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$Subtree#rootTask	val	be619cc718006078
 sge.ai.btree.utils.BehaviorTreeParser	sge.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader$Subtree#rootTaskInstance()	def	9d1539dd86078641
-sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader	class	b9acaa4cb50b9f9c
+sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader	class	72d65b3f8ede3560
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#<init>()	ctor	54fd6174aa1574d1
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#<stmt1>	stmt	bb9cf23dfad411b1
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#LOG_TAG	val	80205841e6ad6424
@@ -542,7 +542,7 @@ sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#init
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#init__btree_trans_keys_0()	def	6f399268a7d2d042
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#init__btree_trans_targs_0()	def	0bfec0eeeb225844
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#lineNumber	val	74c6f655de5fcf2e
-sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#parse(Array<char>,int,int)	def	858a756af6157e82
+sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#parse(Array<char>,int,int)	def	3efb3cc7c7f1a955
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#parse(FileHandle)	def	89f2ec4eafb98f9e
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#parse(InputStream)	def	2413eeb0cde2d507
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#parse(Reader)	def	9c2c19db483dd683
@@ -550,7 +550,7 @@ sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#pars
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#reportsComments	val	1d6df28ee7453b48
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#startLine(int)	def	005f16cfafaaf136
 sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#startStatement(String,boolean,boolean)	def	3e865c75dbf0276a
-sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#unescape(String)	def	089352037b562e00
+sge.ai.btree.utils.BehaviorTreeReader	sge.ai.btree.utils.BehaviorTreeReader#unescape(String)	def	97170e3b27bd76e6
 sge.ai.btree.utils.DistributionAdapters	sge.ai.btree.utils.DistributionAdapters	class	fe57b872f50d7858
 sge.ai.btree.utils.DistributionAdapters	sge.ai.btree.utils.DistributionAdapters#<clinit>	init	3dba73bfa5432a8c
 sge.ai.btree.utils.DistributionAdapters	sge.ai.btree.utils.DistributionAdapters#<stmt1>	stmt	8d119fc97bd956dd
@@ -653,7 +653,7 @@ sge.ai.fma.SlotAssignmentStrategy	sge.ai.fma.SlotAssignmentStrategy	class	742dc4
 sge.ai.fma.SlotAssignmentStrategy	sge.ai.fma.SlotAssignmentStrategy#calculateNumberOfSlots(Array<SlotAssignment<T>>)	def	3daf78eed562a0f6
 sge.ai.fma.SlotAssignmentStrategy	sge.ai.fma.SlotAssignmentStrategy#removeSlotAssignment(Array<SlotAssignment<T>>,int)	def	707c8ec785585066
 sge.ai.fma.SlotAssignmentStrategy	sge.ai.fma.SlotAssignmentStrategy#updateSlotAssignments(Array<SlotAssignment<T>>)	def	686ab47150d3826b
-sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy	class	352d9df61dbd081b
+sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy	class	be7f59ae5d5a4de3
 sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy#<init>(SlotCostProvider<T>)	ctor	147b2e6fd59d5de6
 sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy#<stmt1>	stmt	56c2aeabaae892de
 sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy#<stmt2>	stmt	da55fc6aba900ef9
@@ -661,7 +661,7 @@ sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrat
 sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy#costThreshold	val	2b4d7e4ede886caf
 sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy#filledSlots	val	cb19826d38531cd3
 sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy#slotCostProvider	val	8a8075ddf92621f6
-sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy#updateSlotAssignments(Array<SlotAssignment<T>>)	def	a0137650fd6b2546
+sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy#updateSlotAssignments(Array<SlotAssignment<T>>)	def	cc4bf3ecf5c9def3
 sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy$CostAndSlot	class	801c826fa7d61d3f
 sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy$CostAndSlot#<stmt1>	stmt	6413dc53d8ebcdb3
 sge.ai.fma.SoftRoleSlotAssignmentStrategy	sge.ai.fma.SoftRoleSlotAssignmentStrategy$CostAndSlot#<stmt2>	stmt	b36b777459c89d4d

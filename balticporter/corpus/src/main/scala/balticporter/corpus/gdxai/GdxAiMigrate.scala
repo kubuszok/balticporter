@@ -172,6 +172,47 @@ object GdxAiPolicy:
       // base's namespace this module's declarations occupy, and it is what would catch a future
       // dependent renaming part of it.
       surface = List(
+        // THE BEHAVIOUR-TREE PARSER'S REFLECTIVE HALF, and the ONE seam that makes the rest of it
+        // keepable. `DefaultBehaviorTreeReader` names the base's dropped `reflect.Field` in THREE
+        // SIGNATURES — `getField`'s return type, `setField`'s and `castValue`'s first parameter —
+        // and a body substitution can never reach a signature. `dropMethods` was the obvious cut
+        // and is measurably the wrong one, for two reasons that are facts about this file:
+        //
+        //   - `castValue` is `protected` and its javadoc says "Subclasses may override this method
+        //     to parse unsupported types". Dropping it removes a documented extension point to fix
+        //     a type the port never wanted;
+        //   - the three CALL SITES are inside `Statement.TreeTask`, an ENUM CONSTANT WITH A BODY,
+        //     and no policy key can name a member there: the constant's symbol is
+        //     `…$Statement#TreeTask`, so its members spell `…$Statement#TreeTask#attribute(…)` and
+        //     `MemberKey.parse` refuses a second `#` (`ENGINE-LIMITS.md` T23). Drop the three and
+        //     that arm is a `substitution(dangling)` this port caused, with nothing able to repair
+        //     it.
+        //
+        // Re-pointing the TYPE fixes all three signatures at once and leaves every call site
+        // mechanically translated — the seam `TypeRedirectTransform` exists for, and the same shape
+        // Ashley uses for `ReflectionPool`. The base drops `Field` and injects nothing, so nothing
+        // stands at that name and a dependent may claim it (CLAUDE.md §1.5).
+        //
+        // The TARGET is written in the UPSTREAM namespace so the base's inherited
+        // `com.badlogic.gdx -> sge` carries it, exactly as it carries every emitted unit.
+        //
+        // SCOPED, and the scope is not tidiness. A dependent's `Program` CONTAINS its base
+        // (`ENGINE-LIMITS.md` D2), so an unscoped redirect re-points `Field` inside libGDX's own
+        // declarations too — which this module never emits, and which therefore changes only what
+        // it DERIVES for them. Measured: libGDX's `Json$FieldMetadata` takes a `reflect.Field` and
+        // its published contract row says `primary=(Field)`; unscoped, this run re-derived
+        // `primary=(TaskField)` and `base-surface` went 0 -> 1 FATAL. No compile could have said
+        // so — the base's file is not emitted here — which is precisely what the published map is
+        // for (§1.5).
+        new balticporter.transform.TypeRedirectTransform(
+          redirects = Map(
+            "com.badlogic.gdx.utils.reflect.Field" -> "com.badlogic.gdx.ai.btree.utils.TaskField",
+          ),
+          scopes = Map(
+            "com.badlogic.gdx.utils.reflect.Field" ->
+              balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx.ai")),
+          ),
+        ),
         // THE TWO SINGLE-SITE REFLECTIVE MEMBERS — Ashley's `Engine#createComponent` shape, twice.
         //
         // Both classes are ordinary algorithmic code with exactly one member the base's dropped
@@ -232,6 +273,155 @@ object GdxAiPolicy:
               |      "this port does not have (com.badlogic.gdx.utils.reflect is dropped: Scala.js " +
               |      "and Scala Native cannot do it). Set Task.TASK_CLONER, which is the same escape " +
               |      "hatch upstream documents for GWT.")
+              |  }""".stripMargin,
+
+          // ---------------------------------------------------------------------------------
+          // THE BEHAVIOUR-TREE PARSER — FIVE BODIES, and nothing else in the file moves.
+          //
+          // `DefaultBehaviorTreeReader` asked the JVM three questions at run time: *build me the
+          // class with this name*, *what does `@TaskConstraint`/`@TaskAttribute` say about this
+          // class*, and *give me this field so I can coerce a value into it*. Each becomes a lookup
+          // in `sge.ai.btree.utils.TaskRegistry` — a hand-written table this port injects, adapted
+          // from the reference hand port's own `TaskRegistry`/`TaskMeta`/`AttrInfo` trio
+          // (`../sge/sge-extension/ai/src/main/scala/sge/ai/btree/utils/BehaviorTreeParser.scala`),
+          // which answers the same wall the same way and for the same reason: a SETTER CLOSURE
+          // knows the field's type where it is written, which is exactly what `castValue` had to
+          // ask the JVM for.
+          //
+          // The other 770 lines of the file — the four `Statement` constants, the stack discipline,
+          // the subtree table, the integrity checks — stay mechanically translated, which is the
+          // whole point of choosing five body seams over a `dropTypes` of the parser. The parser's
+          // PUBLIC surface is untouched: `DEBUG_NONE`, four `parse` overloads, `printTree`, the
+          // nested reader and every member the seven consumer types reach.
+          //
+          // WHAT THE PORT LOSES, stated rather than discovered later: java's mechanism is OPEN (any
+          // classpath type carrying the two annotations works with no registration), and a table is
+          // CLOSED. An unregistered task name is a `ReflectionException` — the SAME exception java's
+          // `forName` threw for a class that is not on the classpath, so `openTask`'s own `catch`
+          // still produces java's `"Cannot parse behavior tree!!!"`. `@Inherited` IS reproduced:
+          // `metaOf` walks the superclass chain, so a consumer's `class X extends LeafTask` gets
+          // `(0, 0)` without registering a constraint, exactly as java's annotation gave it one.
+
+          // `ClassReflection.newInstance(ClassReflection.forName(className))`. Everything else in
+          // this body is the emitted translation verbatim, INCLUDING the `catch` — which is what
+          // makes the registry's refusal arrive at the caller in java's own words.
+          "com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#openTask(String,boolean)" ->
+            """{
+              |    try {
+              |      var task: sge.ai.btree.Task[E] = null.asInstanceOf[sge.ai.btree.Task[E]]
+              |      if (this.isSubtreeRef) {
+              |        task = this.subtreeRootTaskInstance(name)
+              |      } else {
+              |        var className: java.lang.String = this.getImport(name)
+              |        if (className == null) {
+              |          className = name
+              |        } else ()
+              |        task = sge.ai.btree.utils.TaskRegistry.newTask(className).asInstanceOf[sge.ai.btree.Task[E]]
+              |      }
+              |      if (!this.currentTree.inited()) {
+              |        this.initCurrentTree(task, this.indent)
+              |        this.indent = 0
+              |      } else {
+              |        if (!isGuard) {
+              |          val stackedTask: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.StackedTask[E] = this.getPrevTask()
+              |          this.indent = this.indent - this.currentTreeStartIndent
+              |          if (stackedTask.task eq this.currentTree.rootTask) {
+              |            this.step = this.indent
+              |          } else ()
+              |          if (this.indent > this.currentDepth) {
+              |            // push
+              |            this.stack.add(stackedTask)
+              |          } else {
+              |            if (this.indent <= this.currentDepth) {
+              |              // Pop tasks from the stack based on indentation
+              |              // and check their minimum number of children
+              |              val i: scala.Int = (this.currentDepth - this.indent) / this.step
+              |              this.popAndCheckMinChildren(this.stack.size - i)
+              |            } else ()
+              |          }
+              |          // Check the max number of children of the parent
+              |          val stackedParent: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.StackedTask[E] = this.stack.peek()
+              |          val maxChildren: scala.Int = stackedParent.metadata.maxChildren
+              |          if (stackedParent.task.getChildCount() >= maxChildren) {
+              |            throw this.stackedTaskException(stackedParent, ((("max number of children exceeded (" + (stackedParent.task.getChildCount() + 1)) + " > ") + maxChildren) + ")")
+              |          } else ()
+              |          // Add child task to the parent
+              |          stackedParent.task.addChild(task)
+              |        } else ()
+              |      }
+              |      this.updateCurrentTask(this.createStackedTask(name, task), this.indent, isGuard)
+              |    } catch {
+              |      case e: sge.utils.reflect.ReflectionException => {
+              |        throw new sge.utils.GdxRuntimeException("Cannot parse behavior tree!!!", e)
+              |      }
+              |    }
+              |  }""".stripMargin,
+
+          // `getAnnotation(clazz, TaskConstraint.class)` + `getFields` + each field's
+          // `getDeclaredAnnotation(TaskAttribute.class)`. The CACHE and the `null` protocol are
+          // java's own and are kept: `null` means *no `@TaskConstraint` in this hierarchy*, which
+          // `createStackedTask` turns into upstream's "annotation not found" message. `Metadata` and
+          // `AttrInfo` are the port's own emitted nested classes, built here from the registry's
+          // rows exactly as java built them from the annotations.
+          "com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#findMetadata(Class)" ->
+            """{
+              |    var metadata: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.Metadata = this.metadataCache.get(clazz)
+              |    if (metadata == null) {
+              |      val meta: sge.ai.btree.utils.TaskRegistry.Meta = sge.ai.btree.utils.TaskRegistry.metaOf(clazz)
+              |      if (meta != null) {
+              |        val taskAttributes: sge.utils.ObjectMap[java.lang.String, sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo] =
+              |          new sge.utils.ObjectMap[java.lang.String, sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo]()
+              |        val attrs: scala.Array[sge.ai.btree.utils.TaskRegistry.Attr] = meta.attributes
+              |        var i: scala.Int = 0
+              |        while (i < attrs.length) {
+              |          val a: sge.ai.btree.utils.TaskRegistry.Attr = attrs(i)
+              |          val ai: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo =
+              |            new sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo(a.name, a.fieldName, a.required)
+              |          taskAttributes.put(ai.name, ai)
+              |          i = i + 1
+              |        }
+              |        metadata = new sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.Metadata(meta.minChildren, meta.maxChildren, taskAttributes)
+              |        this.metadataCache.put(clazz, metadata)
+              |      } else ()
+              |    } else ()
+              |    metadata
+              |  }""".stripMargin,
+
+          // `ClassReflection.getField(clazz, name)`. Java raised a `GdxRuntimeException` wrapping the
+          // `ReflectionException` for a field that is not there; so does this, with the one sentence
+          // that says where the answer now comes from.
+          "com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#getField(Class,String)" ->
+            """{
+              |    val f: sge.ai.btree.utils.TaskField = sge.ai.btree.utils.TaskRegistry.fieldOf(clazz, name)
+              |    if (f == null) {
+              |      throw new sge.utils.GdxRuntimeException(new sge.utils.reflect.ReflectionException(
+              |        ("no @TaskAttribute field '" + name + "' is registered for " + clazz.getName()) +
+              |        "; this port resolves task attributes through sge.ai.btree.utils.TaskRegistry " +
+              |        "rather than through runtime reflection, which the libGDX base drops"))
+              |    } else ()
+              |    f
+              |  }""".stripMargin,
+
+          // `field.setAccessible(true)` has no counterpart and needs none; EVERYTHING ELSE is java's
+          // own control flow, `castValue`'s `null` protocol and its error message included — which
+          // is what keeps `castValue` below a real override point rather than a member the port
+          // happens still to declare.
+          "com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#setField(Field,Task,Object)" ->
+            """{
+              |    val valueObject: java.lang.Object = this.castValue(field, value)
+              |    if (valueObject == null) {
+              |      this.throwAttributeTypeException(this.getCurrentTask().name, field.getName(), field.getTypeName())
+              |    } else ()
+              |    field.set(task, valueObject)
+              |  }""".stripMargin,
+
+          // THE OVERRIDE POINT UPSTREAM DOCUMENTS, kept. Java's body was a `switch` over
+          // `field.getType()` because the type was only knowable at run time; the redirected
+          // `TaskField` carries the coercion for its own declared type, so the body is the one
+          // delegation and a subclass overriding this still decides what a value becomes.
+          "com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#castValue(Field,Object)" ->
+            """{
+              |    field.cast(value, this.btParser.distributionAdapters)
               |  }""".stripMargin,
         )),
         // LAST, deliberately, for the reason `AshleyPolicy` states: this reads what the BASE
