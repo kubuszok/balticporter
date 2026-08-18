@@ -172,6 +172,68 @@ object GdxAiPolicy:
       // base's namespace this module's declarations occupy, and it is what would catch a future
       // dependent renaming part of it.
       surface = List(
+        // THE TWO SINGLE-SITE REFLECTIVE MEMBERS — Ashley's `Engine#createComponent` shape, twice.
+        //
+        // Both classes are ordinary algorithmic code with exactly one member the base's dropped
+        // `com.badlogic.gdx.utils.reflect` reaches, so dropping either TYPE to fix one method would
+        // fork it from upstream permanently and dropping the METHOD leaves its callers with
+        // nothing. The signature — and therefore every call site — is untouched.
+        //
+        // NB the two namespaces, exactly as `AshleyPolicy` states: the KEY names the member in the
+        // UPSTREAM namespace, because the phase matches it against the model BEFORE the rename
+        // runs; the BODY is spliced verbatim into emitted code, so it is written in the port's
+        // FINAL namespace — including the EMITTED SPELLING of any member a §4.55 rename moved
+        // (`CircularBuffer.size` collides with `size()` and emits as `size$field`, which is why
+        // the body below reads it through the accessor `this.size()` rather than through the
+        // field: the accessor's name is java's own and cannot move under it).
+        new balticporter.transform.MethodBodyTransform(Map(
+          // `ArrayReflection.newInstance(items.getClass().getComponentType(), n)` — the generic
+          // array allocation java has no other spelling for. It is NOT an approximation here, it
+          // is the SAME ARRAY: this class's own constructor writes `(T[]) new Object[capacity]`,
+          // so `items.getClass().getComponentType()` IS `java.lang.Object` at every call and
+          // java's reflective allocation returns an `Object[]` too. The port already emits
+          // `new scala.Array[java.lang.Object](…).asInstanceOf[scala.Array[T]]` for the
+          // constructor's half of the same fact.
+          "com.badlogic.gdx.ai.utils.CircularBuffer#resize(int)" ->
+            """{
+              |    val newItems: scala.Array[T] =
+              |      new scala.Array[java.lang.Object](newCapacity).asInstanceOf[scala.Array[T]]
+              |    if (this.tail > this.head) {
+              |      java.lang.System.arraycopy(this.items, this.head, newItems, 0, this.size())
+              |    } else if (this.size() > 0) {
+              |      // NOTE: when head == tail the buffer can be empty or full
+              |      java.lang.System.arraycopy(this.items, this.head, newItems, 0, this.items.length - this.head)
+              |      java.lang.System.arraycopy(this.items, 0, newItems, this.items.length - this.head, this.tail)
+              |    }
+              |    this.head = 0
+              |    this.tail = this.size()
+              |    this.items = newItems
+              |  }""".stripMargin,
+
+          // `ClassReflection.newInstance(this.getClass())` — a reflective SELF-CLONE, and the one
+          // site in this library with no mechanical image at all. There is no portable way to
+          // instantiate a class known only at run time, and the alternative the reference hand port
+          // took (an abstract `newInstance()` every one of the 30-odd task classes implements) is a
+          // SIGNATURE change this phase deliberately does not make.
+          //
+          // So this is the JAVA CONTRACT'S OWN REFUSAL (CLAUDE.md §1): `cloneTask` declares
+          // `@throws TaskCloneException if the task cannot be successfully cloned`, and a
+          // `TaskCloneException` is therefore a conforming outcome — LOUDER than java, never
+          // quieter, and never a stand-in that compiles and silently clones the wrong thing. The
+          // `TASK_CLONER` branch is java's own escape hatch and is kept verbatim: a port that needs
+          // cloning sets one, which is exactly what upstream tells a GWT user to do.
+          "com.badlogic.gdx.ai.btree.Task#cloneTask()" ->
+            """{
+              |    if (sge.ai.btree.Task.TASK_CLONER != null) {
+              |      try sge.ai.btree.Task.TASK_CLONER.cloneTask(this)
+              |      catch { case t: java.lang.Throwable => throw new sge.ai.btree.TaskCloneException(t) }
+              |    } else throw new sge.ai.btree.TaskCloneException(
+              |      "cloneTask() without a Task.TASK_CLONER needs reflective instantiation, which " +
+              |      "this port does not have (com.badlogic.gdx.utils.reflect is dropped: Scala.js " +
+              |      "and Scala Native cannot do it). Set Task.TASK_CLONER, which is the same escape " +
+              |      "hatch upstream documents for GWT.")
+              |  }""".stripMargin,
+        )),
         // LAST, deliberately, for the reason `AshleyPolicy` states: this reads what the BASE
         // actually emitted and reports a reference the base does not ship, so it must run after any
         // seam that re-points such a reference, or it reports the very sites the next phase repairs.

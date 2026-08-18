@@ -28,7 +28,7 @@ nullability-boundary	0
 omissions	24
 overload-risk	23
 policy	0
-port-map	14
+port-map	12
 portability(all)	154
 portability(emitted)	1
 portability(injected)	0

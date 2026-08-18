@@ -177,7 +177,7 @@ sge.ai.btree.SingleRunningChildBranch	sge.ai.btree.SingleRunningChildBranch#rese
 sge.ai.btree.SingleRunningChildBranch	sge.ai.btree.SingleRunningChildBranch#run()	def	fa1f262eec7ae442
 sge.ai.btree.SingleRunningChildBranch	sge.ai.btree.SingleRunningChildBranch#runningChild	val	3cb86e5f457c5e75
 sge.ai.btree.SingleRunningChildBranch	sge.ai.btree.SingleRunningChildBranch#start()	def	1a790c69918186c2
-sge.ai.btree.Task	sge.ai.btree.Task	class	aee93f9584799a6d
+sge.ai.btree.Task	sge.ai.btree.Task	class	e47c98e58b86af4e
 sge.ai.btree.Task	sge.ai.btree.Task#TASK_CLONER	val	af63aa87244759b7
 sge.ai.btree.Task	sge.ai.btree.Task#addChild(Task<E>)	def	9ba8a3ac652e2801
 sge.ai.btree.Task	sge.ai.btree.Task#addChildToTask(Task<E>)	def	291d34a918bdf422
@@ -187,7 +187,7 @@ sge.ai.btree.Task	sge.ai.btree.Task#checkGuard(Task<E>)	def	29eb2a887aac4ab0
 sge.ai.btree.Task	sge.ai.btree.Task#childFail(Task<E>)	def	e4cd1e977c8ae05c
 sge.ai.btree.Task	sge.ai.btree.Task#childRunning(Task<E>,Task<E>)	def	c3cf24bfda848a11
 sge.ai.btree.Task	sge.ai.btree.Task#childSuccess(Task<E>)	def	f9330f52205cee5b
-sge.ai.btree.Task	sge.ai.btree.Task#cloneTask()	def	17bc0b215cc13a45
+sge.ai.btree.Task	sge.ai.btree.Task#cloneTask()	def	8513bc3f9f08e835
 sge.ai.btree.Task	sge.ai.btree.Task#control	val	08e072f65d8bedf7
 sge.ai.btree.Task	sge.ai.btree.Task#copyTo(Task<E>)	def	ad4aab6de825f330
 sge.ai.btree.Task	sge.ai.btree.Task#end()	def	7396dc2bc1d7344d
@@ -1773,7 +1773,7 @@ sge.ai.utils.ArithmeticUtils	sge.ai.utils.ArithmeticUtils#lcmPositive(Array<int>
 sge.ai.utils.ArithmeticUtils	sge.ai.utils.ArithmeticUtils#lcmPositive(int,int)	def	ab18f3fde09858eb
 sge.ai.utils.ArithmeticUtils	sge.ai.utils.ArithmeticUtils#mulAndCheck(int,int)	def	757949e70f02ecaa
 sge.ai.utils.ArithmeticUtils	sge.ai.utils.ArithmeticUtils#wrapAngleAroundZero(float)	def	f1aa4501992fc5af
-sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer	class	2aa522788bd50a3d
+sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer	class	0a6bdea2ac5db6c0
 sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#<init>()	ctor	55b6a6c472b4cdfd
 sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#<init>(int)	ctor	5ec92483c6d27c3e
 sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#<stmt1>	stmt	a6b0bd27f3aed6ef
@@ -1790,7 +1790,7 @@ sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#isResizable()	def	75aaea
 sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#items	val	e5216310ab498ff2
 sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#read()	def	1719adfc89107a64
 sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#resizable	val	9f0d8fc3eb1f596e
-sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#resize(int)	def	a297fc2b59bf5776
+sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#resize(int)	def	bcfbd40d6a513ae8
 sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#setResizable(boolean)	def	5f93fde60ff355ce
 sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#size	val	851dc275bf24d2db
 sge.ai.utils.CircularBuffer	sge.ai.utils.CircularBuffer#size()	def	49e7dfc665bb8f0c

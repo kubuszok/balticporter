@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-ai	engine=balticporter/0.1.0-SNAPSHOT	sources=9c2fec9564d77ee6	files=164	policy=82dbd28c1b33731b
+# balticporter port map	schema=3	module=sge-ai	engine=balticporter/0.1.0-SNAPSHOT	sources=9c2fec9564d77ee6	files=164	policy=d81f81b47ba525e9
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.ai.DefaultTimepiece	sge.ai.DefaultTimepiece	Renamed	-		0		form=class parents=sge.ai.Timepiece primary=(float) primaryKind=unique-root primaryVis=public secondaries=()
 type	com.badlogic.gdx.ai.FileSystem	sge.ai.FileSystem	Renamed	-		0		form=trait
@@ -400,7 +400,7 @@ member	com.badlogic.gdx.ai.btree.Task#checkGuard(Task)	sge.ai.btree.Task#checkGu
 member	com.badlogic.gdx.ai.btree.Task#childFail(Task)	sge.ai.btree.Task#childFail(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	216	e4cd1e977c8ae05c	
 member	com.badlogic.gdx.ai.btree.Task#childRunning(Task,Task)	sge.ai.btree.Task#childRunning(Task<E>,Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	222	c3cf24bfda848a11	
 member	com.badlogic.gdx.ai.btree.Task#childSuccess(Task)	sge.ai.btree.Task#childSuccess(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	211	f9330f52205cee5b	
-member	com.badlogic.gdx.ai.btree.Task#cloneTask()	sge.ai.btree.Task#cloneTask()	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	258	17bc0b215cc13a45	
+member	com.badlogic.gdx.ai.btree.Task#cloneTask()	sge.ai.btree.Task#cloneTask()	Renamed	body	com/badlogic/gdx/ai/btree/Task.java	258	8513bc3f9f08e835	
 member	com.badlogic.gdx.ai.btree.Task#control	sge.ai.btree.Task#control	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	78	08e072f65d8bedf7	
 member	com.badlogic.gdx.ai.btree.Task#copyTo(Task)	sge.ai.btree.Task#copyTo(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	280	ad4aab6de825f330	
 member	com.badlogic.gdx.ai.btree.Task#end()	sge.ai.btree.Task#end()	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	175	7396dc2bc1d7344d	
@@ -1842,7 +1842,7 @@ member	com.badlogic.gdx.ai.utils.CircularBuffer#isResizable()	sge.ai.utils.Circu
 member	com.badlogic.gdx.ai.utils.CircularBuffer#items	sge.ai.utils.CircularBuffer#items	Renamed	-	com/badlogic/gdx/ai/utils/CircularBuffer.java	25	e5216310ab498ff2	
 member	com.badlogic.gdx.ai.utils.CircularBuffer#read()	sge.ai.utils.CircularBuffer#read()	Renamed	-	com/badlogic/gdx/ai/utils/CircularBuffer.java	72	1719adfc89107a64	
 member	com.badlogic.gdx.ai.utils.CircularBuffer#resizable	sge.ai.utils.CircularBuffer#resizable	Renamed	-	com/badlogic/gdx/ai/utils/CircularBuffer.java	26	9f0d8fc3eb1f596e	
-member	com.badlogic.gdx.ai.utils.CircularBuffer#resize(int)	sge.ai.utils.CircularBuffer#resize(int)	Renamed	-	com/badlogic/gdx/ai/utils/CircularBuffer.java	139	a297fc2b59bf5776	
+member	com.badlogic.gdx.ai.utils.CircularBuffer#resize(int)	sge.ai.utils.CircularBuffer#resize(int)	Renamed	body	com/badlogic/gdx/ai/utils/CircularBuffer.java	139	bcfbd40d6a513ae8	
 member	com.badlogic.gdx.ai.utils.CircularBuffer#setResizable(boolean)	sge.ai.utils.CircularBuffer#setResizable(boolean)	Renamed	-	com/badlogic/gdx/ai/utils/CircularBuffer.java	125	5f93fde60ff355ce	
 member	com.badlogic.gdx.ai.utils.CircularBuffer#size	sge.ai.utils.CircularBuffer#size	Renamed	-	com/badlogic/gdx/ai/utils/CircularBuffer.java	29	851dc275bf24d2db	name=size$field
 member	com.badlogic.gdx.ai.utils.CircularBuffer#size()	sge.ai.utils.CircularBuffer#size()	Renamed	-	com/badlogic/gdx/ai/utils/CircularBuffer.java	114	49e7dfc665bb8f0c	
