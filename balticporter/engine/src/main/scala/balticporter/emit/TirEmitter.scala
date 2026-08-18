@@ -1680,7 +1680,21 @@ final class TirEmitter(
       checkClause(cd, rendered = false, form = "object")
       return s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
-    val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
+    val (statics, instance0) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
+    // T22 — an `@interface`'s ELEMENTS (JLS 9.6.1), which are the whole of its instance side. They
+    // become the emitted class's CONSTRUCTOR PARAMETERS, so they are taken out of the body here,
+    // BEFORE `memberStat` runs: rendered as members they were emitted into a `body` the annotation
+    // arm below then discards, which left four planned-and-never-written slots per port — one
+    // `!! UNLOCATABLE` row each, under a key whose owner had been composed twice, and a javadoc the
+    // trivia backstop then relocated because its declaration was not there (§4.58's recovery lane
+    // reading high for a category that still wants a home). Both are that discarded rendering, not
+    // two defects.
+    val (annotElems, instance) =
+      if !s.flags.isAnnotation then (Nil, instance0)
+      else instance0.partition {
+        case d: Tree.DefDef => sym(d.symbol).name != "<init>" && d.paramss.forall(_.isEmpty)
+        case _              => false
+      }
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
     val body1   = joinStats(orderBody(instance, cd.symbol, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty))
     // K22 — the CLASS-INITIALISATION trigger, ahead of every other class-body statement because
@@ -1738,9 +1752,40 @@ final class TirEmitter(
     // not. The note goes AFTER `cnote` for §4.575's order: the upstream's own trivia first, the
     // port's note last, the member next.
     val (seal, sealNote) = sealOf(cd, s, i)
+    // T22 — the `@interface`'s elements, as the class's parameter list.
+    //
+    // JAVA GIVES ONE NAME TWO ROLES and scala has one namespace for both. `String name() default ""`
+    // is the name a USE writes (`@TaskAttribute(name = "x")`) and the accessor a READ calls
+    // (`a.name()`); a scala class parameter `name` beside a `def name()` is `E120 Conflicting
+    // definitions` (measured, scalac 3.8.4), so the two spellings cannot both be java's. The
+    // PARAMETER is what keeps java's own name, because it is the half a consumer of the port
+    // WRITES and the half `annots` renders for a claimed family — and the read is then the field
+    // selection it has become, which `applyStr0` renders by taking the parens off exactly the
+    // calls whose callee is an element of an annotation THIS PROGRAM DECLARES (§4.56).
+    //
+    // `val`, so the name is a member and an ordinary scala annotation reads as one; and the
+    // element's DEFAULT (JLS 9.6.2, carried on the `DefDef`'s `rhs` by the frontend, which is the
+    // one shape a body can have inside an `@interface`) becomes the parameter's default, so a use
+    // that omits it gets java's own value rather than none.
+    //
+    // WHAT THIS DOES NOT BUY, and it is the reason T22 stops here: a scala `StaticAnnotation` is
+    // not a JVM annotation with RUNTIME retention, so `getAnnotation` still cannot hand one back
+    // reflectively. That is a second question about RETENTION, not about the elements, and no
+    // accessor set answers it.
+    val annotElemParams = annotElems.collect { case d: Tree.DefDef =>
+      val nm  = esc(sym(d.symbol).name)
+      val df  = d.rhs.map(r => s" = ${term(r, i)}").getOrElse("")
+      s"val $nm: ${tpe(d.returnTpt.tpe)}$df"
+    }
+    val annotPrim = if annotElemParams.isEmpty then prim else s"(${annotElemParams.mkString(", ")})$prim"
+    // …and each element's own Javadoc joins the CLASS's, for the promoted constructor's reason one
+    // declaration over: the `def` it was written above is gone, and scala documents a primary
+    // constructor's parameters on the class. Left where they were, all four of gdx-ai's arrived
+    // through the trivia BACKSTOP instead — placed is exact, recovered is a counted residue.
+    val annotLead = annotElems.flatMap { case d: Tree.DefDef => d.leading; case _ => Nil }
     val cls     =
       if s.flags.isAnnotation then
-        s"${leading(cd.leading, i)}$cnote${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$prim extends scala.annotation.StaticAnnotation"
+        s"${leading(cd.leading ++ annotLead, i)}$cnote${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$annotPrim extends scala.annotation.StaticAnnotation"
       else s"${leading(cd.leading ++ ctorLead, i)}$cnote$ctorNote$sealNote$recNote${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${esc(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
@@ -4598,6 +4643,18 @@ final class TirEmitter(
     // untouched, because its qualifier is not an emitted scala enum.
     case Tree.Select(qual, m, _, _) if args.isEmpty && sym(m).name == "values" && scalaEnumQualifier(qual) =>
       term(fun, i)
+    // T22 — `a.name()` on an ANNOTATION THIS PROGRAM DECLARES. Java's element is both the name a
+    // use writes and the accessor a read calls; the emitted class keeps java's name at the
+    // CONSTRUCTOR PARAMETER (`classDef1`'s annotation arm — scala cannot spell both), so the read
+    // is a field selection and the parens come off. The `values()` arm above is the same shape and
+    // the same reason: an emitted declaration whose arity java's call site does not match.
+    //
+    // Asked of the CALLEE's OWNER and of PROGRAM OWNERSHIP, never of the name and never of a
+    // package prefix (§4.56). An EXTERNAL annotation is a class file scalac reads as java wrote it,
+    // where `r.value()` is a method call and must stay one — which is every annotation read in the
+    // corpus but these.
+    case Tree.Select(_, m, _, _) if args.isEmpty && emittedAnnotationElement(m) =>
+      term(fun, i)
     case _ =>
       // …through an ASCRIPTION, which wraps the callee without changing which member it is: a
       // `resolutions` selection that pinned this call must not take the raw-parent alignment with
@@ -4624,6 +4681,21 @@ final class TirEmitter(
       case _                       => SymId.None
     program.definitionOf(s).collect { case cd: Tree.ClassDef => cd }
       .exists(balticporter.tir.EnumShape.isScalaEnum(program, _))
+
+  /** is this callee an ELEMENT of an `@interface` THIS PROGRAM DECLARES — i.e. one of the
+    * constructor parameters `classDef1`'s annotation arm emitted?
+    *
+    * Three conjuncts and none of them is a name: the owner is a symbol the program OWNS
+    * (`Program.owns`, the `owner`-chain test §4.56 states, so an external annotation read out of a
+    * class file is never this), the owner's own flag says java wrote `@interface`, and the callee
+    * takes no parameters — which every annotation element does and nothing else in such a type can
+    * (JLS 9.6 admits only elements, constants and member types, and a constant is a `ValDef`). */
+  private def emittedAnnotationElement(m: SymId): Boolean =
+    val o = sym(m).owner
+    o != SymId.None && program.owns(o) && sym(o).flags.isAnnotation &&
+      (sym(m).info match
+        case TypeRepr.MethodType(ps, _, _) => ps.isEmpty
+        case _                             => false)
 
   /** widening rank — a value of rank r converts implicitly to any numeric type of higher rank.
     * `Char` and `Short` share a rank because neither widens to the other. */

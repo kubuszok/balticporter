@@ -4012,7 +4012,7 @@ call-site paren strip with both negatives beside it, and one cell per refusal.*
 
 ---
 
-### T22. An `@interface`'s own ELEMENTS are dropped, and only a library that READS one back can see it — **4 of sge-ai's 20 first-emit errors. OPEN**
+### T22. An `@interface`'s own ELEMENTS are dropped, and only a library that READS one back can see it — **sge-ai 20 → 16, `trivia(recovered)` 5 → 1. CLOSED**
 
 T16 is about an annotation's USE on a declaration. This is the annotation's own DECLARATION, and the
 two are independent: a java `@interface` is emitted as
@@ -4051,13 +4051,47 @@ anchor an error on.
 
 **The far side is not the accessor, it is what java GUARANTEES about it.** A scala
 `StaticAnnotation` is not a JVM annotation with `RUNTIME` retention, so even a faithful accessor set
-does not make `getAnnotation` work reflectively — which is a SECOND question and the reason this
-entry stops at the compile error rather than claiming a design. Both gdx-ai sites read their
-elements through `com.badlogic.gdx.utils.reflect`, which the libGDX base drops outright, so on that
-port the two questions arrive together and neither is answered by the other.
+does not make `getAnnotation` work reflectively — which is a SECOND question, and it is the part
+that is still OPEN. Both gdx-ai sites read their elements through
+`com.badlogic.gdx.utils.reflect`, which the libGDX base drops outright, so on that port the two
+questions arrive together and neither is answered by the other; a port whose consumer really needs a
+runtime-visible annotation has no answer here, because scala 3 removed `ClassfileAnnotation` and
+cannot declare a JVM annotation at all.
 
-*Fix kind: (a) engine. NOT ATTEMPTED — this entry records the gap and its cost, not a measured dead
-end. `PROGRESS.md` §10.7.5 family 3 has the per-site diagnosis.*
+**HOW IT CLOSED — and the part that is a JAVA-vs-SCALA DIFFERENCE rather than an omission.** JAVA
+GIVES ONE NAME TWO ROLES. `String name() default ""` is the name a USE writes
+(`@TaskAttribute(name = "x")`) and the accessor a READ calls (`a.name()`); scala has ONE namespace,
+and a class parameter `name` beside a parameterless `def name()` is `E120 Conflicting definitions`
+(measured, scalac 3.8.4). So the two spellings cannot both be java's and the fix is a CHOICE, not a
+transcription:
+
+- the **PARAMETER keeps java's name** — `class TaskAttribute(val name: String = "", val required:
+  Boolean = false) extends scala.annotation.StaticAnnotation` — because that is the half a consumer
+  of the port WRITES and the half `TirEmitter.annots` renders for a family a port claims
+  (`AnnotationPolicy`). `val`, so the element is a member; the default is JLS 9.6.2's own, which
+  `SpoonTir.execDef` now reads off `CtAnnotationMethod.getDefaultExpression` through the same
+  `coercedExprOf` a field initialiser takes (it had been reading `getBody`, which is null for every
+  element — the kind `AbsorbedSilently` under `CtMethod`, exactly as `SpoonKinds` suspected);
+- the **READ loses its parens**, in `TirEmitter.applyStr0`, at the arm beside the scala-`enum`
+  `values()` one — same shape, same reason: an emitted declaration whose arity java's call site does
+  not match. Guarded on PROGRAM OWNERSHIP and the owner's `isAnnotation` flag (§4.56), never on a
+  name, so an external annotation read out of a class file keeps `r.value()`.
+
+**And the two "other artifacts" above were ONE defect, not two.** The elements were rendered by
+`memberStat` into a `body` the annotation arm then discarded, so each left a slot the source map
+could not locate (`!! UNLOCATABLE`, under the doubled owner key) AND a javadoc with no declaration
+under it for the trivia backstop to relocate. Taking the elements out of the body BEFORE `memberStat`
+runs closes both, and each element's javadoc joins the CLASS's — the promoted constructor's own rule
+one declaration over. Measured: **sge-ai 20 → 16 errors, `trivia(recovered)` 5 → 1**, 7 member
+digests, every one attributable (the two annotation classes, the two members that lost parens, and
+the three types that enclose them), **and every other port byte-identical** — libGDX's `Null`,
+`NonNull` and `NonNullByDefault` are markers, so the parameter list is empty and the emitted text
+does not move.
+
+*Fix kind: (a) engine. CLOSED for the ELEMENTS — `SpoonTir.annotationDefault`,
+`TirEmitter.classDef1`'s annotation arm, `TirEmitter.emittedAnnotationElement`; `AnnotationTypeSpec`
+(which replaced `AbsorbedProbeSpec`, the probe written to fail when this was fixed). OPEN for
+RETENTION, above. `PROGRESS.md` §10.7.5 family 3 has the per-site diagnosis.*
 
 ---
 

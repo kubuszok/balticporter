@@ -102,13 +102,16 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // kind costs whatever was written in a file the walk does not enter. A single number would let
     // one shrink while another grew.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.AbsorbedSilently),
-      // TWO, and the two kinds that left went the two DIFFERENT ways this classification exists to
-      // tell apart. `CtTextBlock` left when `TextBlockSpec` established that the absorption is
+      // ONE, and the three kinds that left went the two DIFFERENT ways this classification exists
+      // to tell apart. `CtTextBlock` left when `TextBlockSpec` established that the absorption is
       // FAITHFUL — `CtLiteral.getValue` is JLS 3.10.6's denoted string, so the arm that takes it is
       // the right arm — and `CtRecord` left when the absorption turned out to be four defects at
-      // once (`JS-C43`) and each was fixed. "Absorbed silently" is a SUSPICION; a probe either
-      // retires it or turns it into work, and both outcomes have now happened.
-      List("CtAnnotationFieldAccess", "CtAnnotationMethod"))
+      // once (`JS-C43`) and each was fixed. `CtAnnotationMethod` left the second way: the probe
+      // that pinned it (`AbsorbedProbeSpec`) said an emitted `@interface` had NO elements at all,
+      // and the elements are now the emitted class's parameters (`ENGINE-LIMITS.md` T22,
+      // `AnnotationTypeSpec`). "Absorbed silently" is a SUSPICION; a probe either retires it or
+      // turns it into work, and both outcomes have now happened.
+      List("CtAnnotationFieldAccess"))
     // …and a FOURTH, added when `DESIGN.md` §6.2's marker took over the first two of
     // `SpoonTir.unsupported`'s six sites. A marked kind still blocks the port — the emission gate
     // refuses on any open marker — but the failure is now the size of the CONSTRUCT rather than the

@@ -4613,22 +4613,34 @@ are the nine "dead-weight" `GdxAI`-facade files speaking, exactly as milestone 1
 deliberately NOT pre-dropped so that the instruments would say what they cost, and 4 errors + 1
 portability row + 5 context seams is what they cost.
 
-**Family 3 — a java annotation's ELEMENTS are lost, 4 errors, §1(a) ENGINE.** A java `@interface` is
+**Family 3 — a java annotation's ELEMENTS are lost, 4 errors, §1(a) ENGINE. CLOSED, wave 1: 20 → 16,
+`trivia(recovered)` 5 → 1.** A java `@interface` was
 emitted as `class TaskAttribute extends scala.annotation.StaticAnnotation` **with its element
-accessors dropped**: `name()`, `required()`, `minChildren()` and `maxChildren()` are simply not in
-the emitted file, so `BehaviorTreeParser`'s reads of them do not resolve. The tell that this is a
-gap rather than a decision is in two other artifacts — the accessors' javadoc arrives as
-`trivia(recovered)` (4 of the 5 recovered comments are these), and `srcmap` records all four as
+accessors dropped**: `name()`, `required()`, `minChildren()` and `maxChildren()` were simply not in
+the emitted file, so `BehaviorTreeParser`'s reads of them did not resolve. The tell that this was a
+gap rather than a decision was in two other artifacts — the accessors' javadoc arrived as
+`trivia(recovered)` (4 of the 5 recovered comments were these), and `srcmap` recorded all four as
 **UNLOCATABLE** under a doubled owner key
 (`sge.ai.btree.annotation.TaskAttribute#sge.ai.btree.annotation.TaskAttribute#name()`), i.e. they
-were planned and never written. Nothing counts them: `omissions` counts the annotation USAGES that
+were planned and never written. Nothing counted them: `omissions` counts the annotation USAGES that
 were dropped and has no row for an annotation type's own members.
 
 The corpus HAD declared `@interface`s before — libGDX's `Null`, `NonNull`, `NonNullByDefault` — and
 every one is a MARKER with no elements, for which an emitted empty class is the right answer. gdx-ai
-is the first to declare one **with elements** and then **read them back**, so the emitter has been
-losing this since it was written and nothing could tell. `ENGINE-LIMITS.md` T22 carries the rule;
-the `srcmap` doubled owner key is a second defect in the same place and is recorded there too.
+is the first to declare one **with elements** and then **read them back**, so the emitter had been
+losing this since it was written and nothing could tell.
+
+The fix and its measurement are `ENGINE-LIMITS.md` T22: the elements become the emitted class's
+`val` CONSTRUCTOR PARAMETERS (java's name at the half a use writes, since scala's one namespace
+cannot give a class parameter and a same-named parameterless `def` one spelling) with JLS 9.6.2's
+default carried across, and the READ loses its parens at a call whose callee is an element of an
+annotation this program declares. The two "other artifacts" were ONE defect — a body the annotation
+arm rendered and discarded — and closed together. gdx-ai's emitted `TaskConstraint` is now
+`class TaskConstraint(val minChildren: scala.Int = 0, val maxChildren: scala.Int =
+java.lang.Integer.MAX_VALUE) extends scala.annotation.StaticAnnotation`. Blast: 7 member digests on
+this port, all attributed, and every other port byte-identical. What is NOT closed is RETENTION — a
+scala `StaticAnnotation` is not a JVM annotation, so `getAnnotation` still cannot hand one back
+reflectively, which on this port is moot because family 1 removes the reflective reads entirely.
 
 ### 10.7.6 Do NOT retry
 

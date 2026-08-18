@@ -2627,13 +2627,34 @@ object SpoonTir:
                             annotations = anns, droppedAnnotations = annDropped, descriptor = descriptorOf(m)))
       // translate the body (with param + type-param scope in place) — this is what makes
       // Call / field-ref usages and `callersOf` real. Abstract/interface methods have none.
-      val body = Option(m.getBody).map(b => bt.methodBody(b))
+      //
+      // …and an ANNOTATION TYPE ELEMENT has no body EITHER, which is why this arm read it as an
+      // ordinary abstract method and lost the one thing it does carry. `CtAnnotationMethod`
+      // EXTENDS `CtMethod`, so this arm takes it (§4.56's parser-hierarchy hazard, arrived at
+      // through the dispatch rather than through an arm order), `getBody` is null for every one,
+      // and JLS 9.6.2's DEFAULT hangs off `getDefaultExpression` — a slot nothing here read. It
+      // is the same JLS 5.2 assignment slot a field initialiser is, so it goes through the same
+      // `coercedExprOf` call `fieldDef1` makes.
+      val body = Option(m.getBody).map(b => bt.methodBody(b)).orElse(annotationDefault(m, bt))
       tpScopes.remove(0); tpIsExec.remove(0); tpDecls.remove(0); tpAccessible.remove(0); tpExecNames.remove(0)
       tpErased.remove(0)
       inOverridingMember = savedOverriding
       Tree.DefDef(id, paramss = List(pvs), returnTpt = tt(ret, m), rhs = body, origin = originOf(m),
                   tparams = tpDefs, leading = mlead)
     }
+
+    /** JLS 9.6.2's DEFAULT VALUE, for the one executable that has one and no body.
+      *
+      * `None` for every other executable, which is what makes the `orElse` above exact rather than
+      * a fallback: a java method either HAS a body or is abstract, and only an annotation type
+      * element can be neither and still carry an expression. The emitter reads this `rhs` as the
+      * default of the constructor parameter the element becomes — see `TirEmitter.classDef1`'s
+      * annotation arm, which is the one place a `Tree.DefDef` with a body can be an `@interface`
+      * member at all (JLS 9.6 admits only elements, constants and member types in one). */
+    private def annotationDefault(m: CtExecutable[?], bt: BodyTranslator): Option[Term] = m match
+      case am: CtAnnotationMethod[?] =>
+        Option(am.getDefaultExpression).map(e => bt.coercedExprOf(am.getType, e))
+      case _ => scala.None
 
     /** Java annotations on a declaration, plus the names of any this could not carry.
       *

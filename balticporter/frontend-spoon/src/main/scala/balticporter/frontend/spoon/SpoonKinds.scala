@@ -221,6 +221,15 @@ object SpoonKinds:
     "CtConstructor" -> "SpoonTir.execDef",
     "CtEnum" -> "SpoonTir.classDef / enumCase", "CtField" -> "SpoonTir.classDef / fieldFlags",
     "CtInterface" -> "SpoonTir.typeFlags", "CtMethod" -> "SpoonTir.execDef",
+    // An ANNOTATION TYPE ELEMENT, and `Lowered` on the stricter reading `CtRecord` below is held
+    // to. `CtAnnotationMethod` extends `CtMethod`, so `execDef` always took it — and produced an
+    // abstract method with the element's DEFAULT (JLS 9.6.2) unread, which the emitter's annotation
+    // arm then discarded along with the whole body: an emitted `@interface` had no elements at all.
+    // `execDef` reads the default now, and `TirEmitter.classDef1` renders each element as the
+    // class's constructor parameter, which is the one spelling scala has for a name java gives two
+    // roles (`ENGINE-LIMITS.md` T22, `AnnotationTypeSpec`).
+    "CtAnnotationMethod" -> ("SpoonTir.execDef, with annotationDefault for JLS 9.6.2's `default` " +
+                             "clause -> TirEmitter.classDef1's annotation arm, as a class parameter"),
   ).map((n, by) => Kind(n, Lowered(by), scala.None)) ++ List(
     // A RECORD, and it is `Lowered` on a stricter reading than "the class arm takes it". `CtRecord`
     // extends `CtClass`, so that arm always did; what it produced was a class extending
@@ -257,7 +266,6 @@ object SpoonKinds:
     * holds raw newlines, and correctness then rests entirely on the emitter's re-escaping. */
   val absent: List[Kind] = List(
     Kind("CtAnnotationFieldAccess", Absent(AbsorbedSilently, "extends CtVariableRead, not CtFieldAccess, so the variable arm takes it and the TARGET is dropped"), scala.None),
-    Kind("CtAnnotationMethod", Absent(AbsorbedSilently, "extends CtMethod — and PROBED (AbsorbedProbeSpec) the ELEMENT ITSELF is dropped, not merely its `default` clause: an emitted @interface has no members at all, so a ported annotation cannot take the argument T16 now lets a type carry"), scala.None),
 
     // The THREE PATTERN NODES, and what changed about all three: the marker for an `instanceof`
     // pattern is minted at the WHOLE `instanceof`, which is a boolean expression, rather than at
