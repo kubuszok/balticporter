@@ -62,15 +62,16 @@ member	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest#<stmt3>	sge.g
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest#<stmt4>	sge.graphics.g3d.utils.AnimationControllerTest#<stmt4>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	62	1781c85284d57019	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest#<stmt5>	sge.graphics.g3d.utils.AnimationControllerTest#<stmt5>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	95	4e653c44fdc111a1	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest#assertSameAnimation(Animation,AnimationDesc)	sge.graphics.g3d.utils.AnimationControllerTest#assertSameAnimation(Animation,AnimationDesc)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	55	214883d68d2647c1	placement=companion vis=private
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt1>	sge.graphics.g3d.utils.AnimationDescTest#<stmt1>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	28	debca4e7993dbf48	
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt2>	sge.graphics.g3d.utils.AnimationDescTest#<stmt2>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	35	b108665f718dd1f7	
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt3>	sge.graphics.g3d.utils.AnimationDescTest#<stmt3>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	42	878fe27ac95354e6	
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt4>	sge.graphics.g3d.utils.AnimationDescTest#<stmt4>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	48	35900f0d77ee17c2	
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt5>	sge.graphics.g3d.utils.AnimationDescTest#<stmt5>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	54	00f4cffc3d809af8	
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt6>	sge.graphics.g3d.utils.AnimationDescTest#<stmt6>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	64	098b75a16c16af0a	
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt7>	sge.graphics.g3d.utils.AnimationDescTest#<stmt7>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	74	980ec36e708d9eb2	
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt8>	sge.graphics.g3d.utils.AnimationDescTest#<stmt8>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	83	3685518ae03f21c2	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt1>	sge.graphics.g3d.utils.AnimationDescTest#<stmt1>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	28	8128c439c8e76286	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt2>	sge.graphics.g3d.utils.AnimationDescTest#<stmt2>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	35	5df2beabacb4e615	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt3>	sge.graphics.g3d.utils.AnimationDescTest#<stmt3>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	42	6c942cd54425ece0	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt4>	sge.graphics.g3d.utils.AnimationDescTest#<stmt4>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	48	9f55e038cb3b7f1b	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt5>	sge.graphics.g3d.utils.AnimationDescTest#<stmt5>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	54	9c88c3143c4a9a8c	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt6>	sge.graphics.g3d.utils.AnimationDescTest#<stmt6>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	64	d8cb4b8878345b15	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt7>	sge.graphics.g3d.utils.AnimationDescTest#<stmt7>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	74	6c83e7a1d7fbb649	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#<stmt8>	sge.graphics.g3d.utils.AnimationDescTest#<stmt8>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	83	8b419510d37ab6a6	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#anim	sge.graphics.g3d.utils.AnimationDescTest#anim	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	13	f40a35cd0c0d2eb4	vis=private
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#bpFreshState()	sge.graphics.g3d.utils.AnimationDescTest#bpFreshState()	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	11	2c153ac8a569e409	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#epsilon	sge.graphics.g3d.utils.AnimationDescTest#epsilon	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	12	4efab539e8a00d34	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest#setup()	sge.graphics.g3d.utils.AnimationDescTest#setup()	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationDescTest.java	16	2aee45ead31299d9	
 member	com.badlogic.gdx.math.BSplineTest#<stmt1>	sge.math.BSplineTest#<stmt1>	Renamed	-	com/badlogic/gdx/math/BSplineTest.java	10	c6fb31563f0b9f85	
@@ -80,8 +81,9 @@ member	com.badlogic.gdx.math.BSplineTest#<stmt4>	sge.math.BSplineTest#<stmt4>	Re
 member	com.badlogic.gdx.math.BSplineTest#<stmt5>	sge.math.BSplineTest#<stmt5>	Renamed	-	com/badlogic/gdx/math/BSplineTest.java	67	ef3f98f5ac875ad6	
 member	com.badlogic.gdx.math.BSplineTest#<stmt6>	sge.math.BSplineTest#<stmt6>	Renamed	-	com/badlogic/gdx/math/BSplineTest.java	86	c8f35999412fa650	
 member	com.badlogic.gdx.math.BSplineTest#<stmt7>	sge.math.BSplineTest#<stmt7>	Renamed	-	com/badlogic/gdx/math/BSplineTest.java	103	567bf2e33bf091a5	
-member	com.badlogic.gdx.math.BezierTest#<stmt1>	sge.math.BezierTest#<stmt1>	Renamed	-	com/badlogic/gdx/math/BezierTest.java	73	2516e73bd636486b	
+member	com.badlogic.gdx.math.BezierTest#<stmt1>	sge.math.BezierTest#<stmt1>	Renamed	-	com/badlogic/gdx/math/BezierTest.java	73	0b4eec0900d8e428	
 member	com.badlogic.gdx.math.BezierTest#bezier	sge.math.BezierTest#bezier	Renamed	-	com/badlogic/gdx/math/BezierTest.java	42	13fb74ab25b4b836	vis=private
+member	com.badlogic.gdx.math.BezierTest#bpFreshState()	sge.math.BezierTest#bpFreshState()	Renamed	-	com/badlogic/gdx/math/BezierTest.java	18	0e55b7a9fe28795a	
 member	com.badlogic.gdx.math.BezierTest#create(Array)	sge.math.BezierTest#create(Array<Vector2>)	Renamed	-	com/badlogic/gdx/math/BezierTest.java	49	fdaab0f847bc53e2	
 member	com.badlogic.gdx.math.BezierTest#epsilon	sge.math.BezierTest#epsilon	Renamed	-	com/badlogic/gdx/math/BezierTest.java	20	be20f39c4a88d2d4	placement=companion vis=private
 member	com.badlogic.gdx.math.BezierTest#epsilonApprimations	sge.math.BezierTest#epsilonApprimations	Renamed	-	com/badlogic/gdx/math/BezierTest.java	21	7d6762ce45d899fd	placement=companion vis=private
@@ -183,35 +185,36 @@ member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt7>	sge.utils.FlushablePoolT
 member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	105	3e437bdeab4a2dc2	
 member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#<init>(int,int)	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>(int,int)	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	109	0e5b812651189b73	
 member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#newObject()	sge.utils.FlushablePoolTest$FlushablePoolClass#newObject()	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	114	35b1f977de13a936	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt10>	sge.utils.JsonMatcherTests#<stmt10>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1193	018d77992ea6201a	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt11>	sge.utils.JsonMatcherTests#<stmt11>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1209	c70b5a8e8e694340	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt12>	sge.utils.JsonMatcherTests#<stmt12>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1262	83455d3dd5085eab	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt13>	sge.utils.JsonMatcherTests#<stmt13>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1283	1bb849fe9c124ce9	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt14>	sge.utils.JsonMatcherTests#<stmt14>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1347	2e7a9e7272a80e4a	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt15>	sge.utils.JsonMatcherTests#<stmt15>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1353	8dda59d92e6ee932	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt16>	sge.utils.JsonMatcherTests#<stmt16>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1359	27ba1595ab405d39	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt17>	sge.utils.JsonMatcherTests#<stmt17>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1365	2e2cc8ef56bbe5aa	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt18>	sge.utils.JsonMatcherTests#<stmt18>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1371	230350f6bce43ba0	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt19>	sge.utils.JsonMatcherTests#<stmt19>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1377	6a12878d3b411474	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt1>	sge.utils.JsonMatcherTests#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	21	a6f4cb94b4381255	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt20>	sge.utils.JsonMatcherTests#<stmt20>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1383	138e7ff985a3c58b	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt21>	sge.utils.JsonMatcherTests#<stmt21>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1389	015e96c7b7ea0931	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt22>	sge.utils.JsonMatcherTests#<stmt22>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1395	a4a1bcee68932380	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt23>	sge.utils.JsonMatcherTests#<stmt23>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1401	ed0e55353b59f9ad	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt24>	sge.utils.JsonMatcherTests#<stmt24>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1407	1a259286d7cfda8f	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt25>	sge.utils.JsonMatcherTests#<stmt25>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1413	349a17f4f66dd418	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt26>	sge.utils.JsonMatcherTests#<stmt26>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1419	9650460bac92209d	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt27>	sge.utils.JsonMatcherTests#<stmt27>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1425	720390381a9fa029	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt28>	sge.utils.JsonMatcherTests#<stmt28>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1431	868958e0b3cc156a	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt2>	sge.utils.JsonMatcherTests#<stmt2>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	775	87c6c61c04b12d4e	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt3>	sge.utils.JsonMatcherTests#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	818	bb864ae9e12840ab	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt4>	sge.utils.JsonMatcherTests#<stmt4>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	966	a26012d7bfb4f4e6	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt5>	sge.utils.JsonMatcherTests#<stmt5>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1000	acd8e6e17db2eca7	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt6>	sge.utils.JsonMatcherTests#<stmt6>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1047	df161fb200adb504	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt7>	sge.utils.JsonMatcherTests#<stmt7>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1083	f3b8598b7267b486	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt8>	sge.utils.JsonMatcherTests#<stmt8>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1167	9cb0a4def3dee261	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt9>	sge.utils.JsonMatcherTests#<stmt9>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1180	a92da8db13650ab0	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt10>	sge.utils.JsonMatcherTests#<stmt10>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1193	e883b0795f7e565e	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt11>	sge.utils.JsonMatcherTests#<stmt11>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1209	69af7d8129808aea	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt12>	sge.utils.JsonMatcherTests#<stmt12>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1262	2f320f54f800f938	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt13>	sge.utils.JsonMatcherTests#<stmt13>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1283	8425e127d1165d41	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt14>	sge.utils.JsonMatcherTests#<stmt14>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1347	26c50f8eb5952787	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt15>	sge.utils.JsonMatcherTests#<stmt15>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1353	1da585c2f4dfbeb6	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt16>	sge.utils.JsonMatcherTests#<stmt16>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1359	f197c8e1f09707a6	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt17>	sge.utils.JsonMatcherTests#<stmt17>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1365	f2fde3dff1e503f4	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt18>	sge.utils.JsonMatcherTests#<stmt18>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1371	41950a552c96a46f	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt19>	sge.utils.JsonMatcherTests#<stmt19>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1377	37b74e1ed1d78683	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt1>	sge.utils.JsonMatcherTests#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	21	bc686f968b153362	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt20>	sge.utils.JsonMatcherTests#<stmt20>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1383	62704f27fb86d813	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt21>	sge.utils.JsonMatcherTests#<stmt21>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1389	3b9c5dca6b699a3a	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt22>	sge.utils.JsonMatcherTests#<stmt22>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1395	6136d4891dcfdc99	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt23>	sge.utils.JsonMatcherTests#<stmt23>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1401	7b8d1c4714bef812	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt24>	sge.utils.JsonMatcherTests#<stmt24>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1407	29d3ef1ebfaf0c59	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt25>	sge.utils.JsonMatcherTests#<stmt25>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1413	086f10b2c6e56273	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt26>	sge.utils.JsonMatcherTests#<stmt26>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1419	fa02c54fb265ec2e	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt27>	sge.utils.JsonMatcherTests#<stmt27>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1425	c667ee332d9ad690	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt28>	sge.utils.JsonMatcherTests#<stmt28>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1431	648d0c26cdbdba12	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt2>	sge.utils.JsonMatcherTests#<stmt2>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	775	ff5e0d429e53b3e6	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt3>	sge.utils.JsonMatcherTests#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	818	c88b4e46c2dee955	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt4>	sge.utils.JsonMatcherTests#<stmt4>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	966	bcb6df157f19e461	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt5>	sge.utils.JsonMatcherTests#<stmt5>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1000	6c93c6421767f956	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt6>	sge.utils.JsonMatcherTests#<stmt6>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1047	ba19c9f14b577180	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt7>	sge.utils.JsonMatcherTests#<stmt7>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1083	53e81a93c5654b97	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt8>	sge.utils.JsonMatcherTests#<stmt8>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1167	c04f34e436823c77	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt9>	sge.utils.JsonMatcherTests#<stmt9>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1180	5fe02a539c034974	
 member	com.badlogic.gdx.utils.JsonMatcherTests#assertValueCount(int,Array)	sge.utils.JsonMatcherTests#assertValueCount(int,Array<JsonValue>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1489	0c02a5638926326e	placement=companion
+member	com.badlogic.gdx.utils.JsonMatcherTests#bpFreshState()	sge.utils.JsonMatcherTests#bpFreshState()	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	19	61b5e1ff892caf95	
 member	com.badlogic.gdx.utils.JsonMatcherTests#copy(JsonValue,Array)	sge.utils.JsonMatcherTests#copy(JsonValue,Array<JsonValue>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1512	e139c9d23ca11ed8	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#json	sge.utils.JsonMatcherTests#json	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1516	db8e49d79003bd09	placement=companion vis=private
 member	com.badlogic.gdx.utils.JsonMatcherTests#printResults(JsonMatcher,Array,String,Array,Array)	sge.utils.JsonMatcherTests#printResults(JsonMatcher,Array<JsonValue>,String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1477	5a2ddf83e34dbd67	placement=companion
@@ -221,7 +224,7 @@ member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,Array,Array)	sge.util
 member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,String,Array)	sge.utils.JsonMatcherTests#test(String,String,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1435	3c3e8ad79e3459ea	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(Array)	sge.utils.JsonMatcherTests#toString(Array<JsonValue>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1505	d7e5a497c8e2bf6c	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(JsonMatcher,Array)	sge.utils.JsonMatcherTests#toString(JsonMatcher,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1494	5df07723d5b7f6d3	placement=companion
-member	com.badlogic.gdx.utils.JsonMatcherTests#watcher	sge.utils.JsonMatcherTests#watcher	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1570	068f55377982e83a	
+member	com.badlogic.gdx.utils.JsonMatcherTests#watcher	sge.utils.JsonMatcherTests#watcher	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1570	deb0d326431c128f	
 member	com.badlogic.gdx.utils.JsonTest#<stmt1>	sge.utils.JsonTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	11	2e1cbbff80a35641	
 member	com.badlogic.gdx.utils.JsonTest#<stmt2>	sge.utils.JsonTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	18	1b9adb317945b7dc	
 member	com.badlogic.gdx.utils.JsonTest#<stmt3>	sge.utils.JsonTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	26	e61adcbd3afbc46a	
@@ -268,12 +271,13 @@ member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt5>	sge.utils.MixedPutRemov
 member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt6>	sge.utils.MixedPutRemoveTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	136	40b2b6cbebd37455	
 member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt7>	sge.utils.MixedPutRemoveTest#<stmt7>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	171	24d95753b98cc116	
 member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt8>	sge.utils.MixedPutRemoveTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	191	8409a3c7b46d49f4	
-member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt1>	sge.utils.PooledLinkedListTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	22	34eb3c8dbf7f265c	
-member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt2>	sge.utils.PooledLinkedListTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	31	1a5934c5d23d7ad2	
-member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt3>	sge.utils.PooledLinkedListTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	40	043ef7a1730dffe7	
-member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt4>	sge.utils.PooledLinkedListTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	49	a0f3112afb8ab187	
-member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt5>	sge.utils.PooledLinkedListTest#<stmt5>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	62	8a0713e8f1830a48	
-member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt6>	sge.utils.PooledLinkedListTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	71	4496f383f052dd08	
+member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt1>	sge.utils.PooledLinkedListTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	22	d34c543f3386f233	
+member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt2>	sge.utils.PooledLinkedListTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	31	df9f43e5d2c7957f	
+member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt3>	sge.utils.PooledLinkedListTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	40	ad9bf5cfee84da1e	
+member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt4>	sge.utils.PooledLinkedListTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	49	fea914469a4a3695	
+member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt5>	sge.utils.PooledLinkedListTest#<stmt5>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	62	e123da7b53d999bd	
+member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt6>	sge.utils.PooledLinkedListTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	71	09724ea6ec1656c2	
+member	com.badlogic.gdx.utils.PooledLinkedListTest#bpFreshState()	sge.utils.PooledLinkedListTest#bpFreshState()	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	9	5964ad54d97b1532	
 member	com.badlogic.gdx.utils.PooledLinkedListTest#list	sge.utils.PooledLinkedListTest#list	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	11	36725dfc4815b98e	vis=private
 member	com.badlogic.gdx.utils.PooledLinkedListTest#setUp()	sge.utils.PooledLinkedListTest#setUp()	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	14	b37f1eca4629a958	
 member	com.badlogic.gdx.utils.QueueTest#<stmt10>	sge.utils.QueueTest#<stmt10>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	311	987be742f193690b	
@@ -290,26 +294,27 @@ member	com.badlogic.gdx.utils.QueueTest#<stmt8>	sge.utils.QueueTest#<stmt8>	Rena
 member	com.badlogic.gdx.utils.QueueTest#<stmt9>	sge.utils.QueueTest#<stmt9>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	257	8c23a35fa0f95332	
 member	com.badlogic.gdx.utils.QueueTest#assertEqualsAndHash(Queue,Queue)	sge.utils.QueueTest#assertEqualsAndHash(Queue<?>,Queue<?>)	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	376	bbc51a605ccf502b	vis=private
 member	com.badlogic.gdx.utils.QueueTest#assertValues(Queue,Array)	sge.utils.QueueTest#assertValues(Queue<Integer>,Array<Integer>)	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	381	df103f27899ef836	vis=private
-member	com.badlogic.gdx.utils.SortTest#<stmt10>	sge.utils.SortTest#<stmt10>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	153	9519dc0d6bceac91	
-member	com.badlogic.gdx.utils.SortTest#<stmt11>	sge.utils.SortTest#<stmt11>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	169	7278b9d713e3a7c1	
-member	com.badlogic.gdx.utils.SortTest#<stmt12>	sge.utils.SortTest#<stmt12>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	185	5d85dd260b59f7d1	
-member	com.badlogic.gdx.utils.SortTest#<stmt13>	sge.utils.SortTest#<stmt13>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	198	19fd5d097cbb25d1	
-member	com.badlogic.gdx.utils.SortTest#<stmt14>	sge.utils.SortTest#<stmt14>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	205	79c1d57bd635f390	
-member	com.badlogic.gdx.utils.SortTest#<stmt15>	sge.utils.SortTest#<stmt15>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	212	ee62b6a6cfa09c68	
-member	com.badlogic.gdx.utils.SortTest#<stmt16>	sge.utils.SortTest#<stmt16>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	220	aa9ddee645fc0b79	
-member	com.badlogic.gdx.utils.SortTest#<stmt17>	sge.utils.SortTest#<stmt17>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	226	daff3a3975dca099	
-member	com.badlogic.gdx.utils.SortTest#<stmt18>	sge.utils.SortTest#<stmt18>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	233	6131bd0267ac580c	
-member	com.badlogic.gdx.utils.SortTest#<stmt19>	sge.utils.SortTest#<stmt19>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	240	0fc03e0de13674a0	
-member	com.badlogic.gdx.utils.SortTest#<stmt1>	sge.utils.SortTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	59	9873a0de04fe2822	
-member	com.badlogic.gdx.utils.SortTest#<stmt20>	sge.utils.SortTest#<stmt20>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	247	5969aca2b5849d86	
-member	com.badlogic.gdx.utils.SortTest#<stmt2>	sge.utils.SortTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	66	9a29274900685886	
-member	com.badlogic.gdx.utils.SortTest#<stmt3>	sge.utils.SortTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	79	84d94eba74619d91	
-member	com.badlogic.gdx.utils.SortTest#<stmt4>	sge.utils.SortTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	92	8a51c7289627073c	
-member	com.badlogic.gdx.utils.SortTest#<stmt5>	sge.utils.SortTest#<stmt5>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	99	8be453236a25d3c4	
-member	com.badlogic.gdx.utils.SortTest#<stmt6>	sge.utils.SortTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	106	7f2eb04e7eda4c35	
-member	com.badlogic.gdx.utils.SortTest#<stmt7>	sge.utils.SortTest#<stmt7>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	117	e74dc3783f55085c	
-member	com.badlogic.gdx.utils.SortTest#<stmt8>	sge.utils.SortTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	127	dbf1e5b26a9cc2d3	
-member	com.badlogic.gdx.utils.SortTest#<stmt9>	sge.utils.SortTest#<stmt9>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	137	20886bc2f06abd34	
+member	com.badlogic.gdx.utils.SortTest#<stmt10>	sge.utils.SortTest#<stmt10>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	153	16292c6c0b51563a	
+member	com.badlogic.gdx.utils.SortTest#<stmt11>	sge.utils.SortTest#<stmt11>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	169	50c3f9f56e46970d	
+member	com.badlogic.gdx.utils.SortTest#<stmt12>	sge.utils.SortTest#<stmt12>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	185	622d5e44f99ec151	
+member	com.badlogic.gdx.utils.SortTest#<stmt13>	sge.utils.SortTest#<stmt13>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	198	c312c5e53b6c4960	
+member	com.badlogic.gdx.utils.SortTest#<stmt14>	sge.utils.SortTest#<stmt14>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	205	debe9dff07148852	
+member	com.badlogic.gdx.utils.SortTest#<stmt15>	sge.utils.SortTest#<stmt15>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	212	963220bbc70b828d	
+member	com.badlogic.gdx.utils.SortTest#<stmt16>	sge.utils.SortTest#<stmt16>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	220	1da711a1c6cb905a	
+member	com.badlogic.gdx.utils.SortTest#<stmt17>	sge.utils.SortTest#<stmt17>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	226	6336539fb52d8ed4	
+member	com.badlogic.gdx.utils.SortTest#<stmt18>	sge.utils.SortTest#<stmt18>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	233	c3e72c95a69574e2	
+member	com.badlogic.gdx.utils.SortTest#<stmt19>	sge.utils.SortTest#<stmt19>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	240	416885fc6456ec0e	
+member	com.badlogic.gdx.utils.SortTest#<stmt1>	sge.utils.SortTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	59	0c239578749340d0	
+member	com.badlogic.gdx.utils.SortTest#<stmt20>	sge.utils.SortTest#<stmt20>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	247	3add5b9b14aa5c54	
+member	com.badlogic.gdx.utils.SortTest#<stmt2>	sge.utils.SortTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	66	8e974a99e6e3498d	
+member	com.badlogic.gdx.utils.SortTest#<stmt3>	sge.utils.SortTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	79	9e01831fcb7afb7d	
+member	com.badlogic.gdx.utils.SortTest#<stmt4>	sge.utils.SortTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	92	05ba58e955e70375	
+member	com.badlogic.gdx.utils.SortTest#<stmt5>	sge.utils.SortTest#<stmt5>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	99	3d30205fbb8beb0c	
+member	com.badlogic.gdx.utils.SortTest#<stmt6>	sge.utils.SortTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	106	603c3c73e92fa980	
+member	com.badlogic.gdx.utils.SortTest#<stmt7>	sge.utils.SortTest#<stmt7>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	117	c432066422ae9a8d	
+member	com.badlogic.gdx.utils.SortTest#<stmt8>	sge.utils.SortTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	127	49914131653b1f50	
+member	com.badlogic.gdx.utils.SortTest#<stmt9>	sge.utils.SortTest#<stmt9>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	137	3e2df3aa37add27a	
+member	com.badlogic.gdx.utils.SortTest#bpFreshState()	sge.utils.SortTest#bpFreshState()	Renamed	-	com/badlogic/gdx/utils/SortTest.java	34	7a45776bbd77d1a6	
 member	com.badlogic.gdx.utils.SortTest#setUp()	sge.utils.SortTest#setUp()	Renamed	-	com/badlogic/gdx/utils/SortTest.java	39	9734a5af068960db	
 member	com.badlogic.gdx.utils.SortTest#sortInstance	sge.utils.SortTest#sortInstance	Renamed	-	com/badlogic/gdx/utils/SortTest.java	36	9155b1f3f6e33571	vis=private
 member	com.badlogic.gdx.utils.SortTest$NullsFirstComparator#compare(Integer,Integer)	sge.utils.SortTest$NullsFirstComparator#compare(Integer,Integer)	Renamed	-	com/badlogic/gdx/utils/SortTest.java	45	e48107ddfc834ce4	

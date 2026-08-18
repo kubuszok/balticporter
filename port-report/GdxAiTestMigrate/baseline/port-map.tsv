@@ -33,16 +33,17 @@ type		balticporter.runtime.JavaOptionalDouble	Added	-		0
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt1>	sge.ai.btree.branch.ParallelTest#<stmt1>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	47	107f7afed9ba6e58	
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt2>	sge.ai.btree.branch.ParallelTest#<stmt2>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	82	bb0d9d09e66c3890	
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt3>	sge.ai.btree.branch.ParallelTest#<stmt3>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	118	6c544dffca5fc539	
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt4>	sge.ai.btree.branch.ParallelTest#<stmt4>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	164	988ad2fff84614a3	
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt5>	sge.ai.btree.branch.ParallelTest#<stmt5>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	210	06dfa0f262e33b3f	
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#behaviorTree	sge.ai.btree.branch.ParallelTest#behaviorTree	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	31	c91c6db251ab3860	vis=private
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt1>	sge.ai.btree.branch.ParallelTest#<stmt1>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	47	b397921c4d46491f	
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt2>	sge.ai.btree.branch.ParallelTest#<stmt2>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	82	173ada734da8d3e4	
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt3>	sge.ai.btree.branch.ParallelTest#<stmt3>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	118	fb69415de302c418	
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt4>	sge.ai.btree.branch.ParallelTest#<stmt4>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	164	fcba552183bc9274	
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt5>	sge.ai.btree.branch.ParallelTest#<stmt5>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	210	4b268f6a753babf1	
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#behaviorTree	sge.ai.btree.branch.ParallelTest#behaviorTree	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	31	7ecdc85456bddd21	vis=private
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#bpFreshState()	sge.ai.btree.branch.ParallelTest#bpFreshState()	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	30	feff75e017bc46ee	
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest#setUp()	sge.ai.btree.branch.ParallelTest#setUp()	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	37	55eebdb35cfff70e	
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#task1	sge.ai.btree.branch.ParallelTest#task1	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	32	e6f94479e430e075	vis=private
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#task2	sge.ai.btree.branch.ParallelTest#task2	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	33	0ad885a8bc775ffb	vis=private
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#tasks	sge.ai.btree.branch.ParallelTest#tasks	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	34	ba8bff921e2e89be	vis=private
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#task1	sge.ai.btree.branch.ParallelTest#task1	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	32	964256166ccf7c24	vis=private
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#task2	sge.ai.btree.branch.ParallelTest#task2	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	33	960886e106fb5d88	vis=private
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#tasks	sge.ai.btree.branch.ParallelTest#tasks	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	34	4f69748248d29606	vis=private
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest$TestTask#copyTo(Task)	sge.ai.btree.branch.ParallelTest$TestTask#copyTo(Task<String>)	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	253	3b7d8c42e9b50237	
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest$TestTask#execute()	sge.ai.btree.branch.ParallelTest$TestTask#execute()	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	247	9c2e13f114f12afd	
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest$TestTask#executions	sge.ai.btree.branch.ParallelTest$TestTask#executions	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	244	e4dc4049e766bd1b	

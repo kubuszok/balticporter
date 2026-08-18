@@ -78,11 +78,25 @@ import balticporter.tir.*
 final class TestFrameworkTransform(
     suite: String = TestFrameworkTransform.DefaultSuite,
     testMember: String = "test",
-) extends Phase, balticporter.core.SurfacePolicy:
+) extends Phase, balticporter.core.SurfacePolicy, PolicyBound:
 
-  import TestFrameworkTransform.{Expect, ExpectMsg, Finding, Fix, MinArity, NumericRank, Roots}
+  import TestFrameworkTransform.{Expect, ExpectMsg, Finding, Fix, FreshStateMember, InitBlockName,
+                                 MinArity, NumericRank, Roots}
 
   def name: String = "junit->portable-suite"
+
+  /** WHICH DECLARATIONS THIS RUN EMITS — the one question the per-test reconstruction cannot answer
+    * from its `Program` (see [[planFreshState]]).
+    *
+    * A dependent's model CONTAINS its base's units (`ENGINE-LIMITS.md` D2), so a suite whose java
+    * superclass is a BASE module's test class is a chain this run can see and cannot write: the
+    * `override def bpFreshState` it would emit names a member only the base's own run could have
+    * put on that parent, and whether the base put one there is not derivable here. That chain is
+    * REFUSED and counted rather than guessed at (`CLAUDE.md` §1.5). [[RunScope.whole]] is the
+    * default and is exactly the truth for a base port, a single-module port and every spec. */
+  private var scope: RunScope = RunScope.whole
+
+  def bindPolicy(binder: PolicyBinder): Unit = scope = binder.run
 
   /** This phase SHAPES SIGNATURES — CLAUDE.md §1's obligation on a (b), which it owed and did not
     * pay. A converted suite gains [[suite]] as a PARENT and every `@Test` method becomes a
@@ -268,6 +282,27 @@ final class TestFrameworkTransform(
   private var virtualTests: Set[SymId]             = Set.empty
   /** of those, the ones whose class is the TOP declarer — the single registration site. */
   private var virtualRoots: Set[SymId]             = Set.empty
+  /** the classes that declare at least one `@Test` — a suite, in this phase's sense. */
+  private var testDeclarers: Set[SymId]            = Set.empty
+
+  // ---- the per-test RECONSTRUCTION (`ENGINE-LIMITS.md` X4) — see [[planFreshState]] ------------
+
+  /** class → the `bpFreshState` member IT declares. */
+  private var freshSym: Map[SymId, SymId]   = Map.empty
+  /** class → the NEAREST ANCESTOR that also declares one, which is `super.bpFreshState()`'s target
+    * and the reason the member carries `override`. Not necessarily the direct parent: a class the
+    * lowering could not reach is skipped, and the chain closes over it. */
+  private var freshSuper: Map[SymId, SymId] = Map.empty
+  /** class → the member a `test(…)` registration EMITTED IN IT may call: its own, or the nearest
+    * one it inherits. Distinct from [[freshSym]] because a virtual test registers at the TOP
+    * declarer, which may hold no state of its own while its subclasses do. */
+  private var freshCall: Map[SymId, SymId]  = Map.empty
+  /** the java `final` instance fields the reconstruction ASSIGNS, which is what makes them `var`s.
+    * Java rebuilt the object, so its `final` was per-construction; scala has one object, so the
+    * same per-test value needs a mutable slot. Narrowed to the fields the lowering really writes —
+    * every other field is emitted exactly as it was. */
+  private val madeMutable = collection.mutable.Set.empty[SymId]
+  private var suitesRebuilt = 0
 
   /** Constructs this phase could not translate, with their CLAUDE.md §1 classification. Empty
     * until [[run]] has executed. A migrator that wants the number on every run can read it; `run`
@@ -310,6 +345,7 @@ final class TestFrameworkTransform(
     classDefs = program.units.flatMap(StandardTraversal.allClassDefs).map(c => c.symbol -> c).toMap
     val keysOf  = classDefs.view.mapValues(testKeys).toMap
     val declares = keysOf.filter(_._2.nonEmpty).keySet
+    testDeclarers = declares
     // THE ANCHOR: the topmost program-declared class above each `@Test` declarer, or itself.
     suiteAnchors = declares.map { s =>
       classAncestry(classDefs(s)).lastOption.map(_.symbol).getOrElse(s)
@@ -335,10 +371,364 @@ final class TestFrameworkTransform(
     virtualTests = vs.map(_._3).toSet
     virtualRoots = vs.collect { case (s, k, sym) if !above(s).contains(k) => sym }.toSet
 
+  // -------------------------------------------------------------------------
+  // JUnit constructs a FRESH INSTANCE per @Test — the per-test RECONSTRUCTION
+  // -------------------------------------------------------------------------
+
+  /** ==JUNIT REBUILDS THE TEST OBJECT; MUNIT HAS ONE SUITE INSTANCE==
+    *
+    * `BlockJUnit4ClassRunner.methodBlock` opens with `createTest()` — a `newInstance` on the class's
+    * ONE public constructor — for every `@Test`, so java runs the whole of JLS 12.5 once per test:
+    * the object's fields are ZEROED by the allocation, the field initialisers and instance
+    * initialiser blocks run as one sequence in TEXTUAL ORDER (step 4), then the constructor body
+    * (step 5), then `@Before`. MUnit registers `test(name)(body)` on ONE instance, so a converted
+    * suite's fields are built ONCE and every test after the first inherits the last one's state.
+    *
+    * Measured, before this lowering existed, at **4 of one suite's 10** — four instance fields with
+    * their own initialisers, and the second test met a `BehaviorTree` that already had a root
+    * (`ENGINE-LIMITS.md` X4). Discharging `@Before` correctly is what makes the gap VISIBLE and not
+    * what causes it: the state java rebuilt is the CONSTRUCTOR's, and no `@Before` translation
+    * reaches it. Nothing else can see it — 0 compile errors, 0 skipped, every check count flat,
+    * `outcomes N of N emitted` — which is §3's whole argument for running the suite.
+    *
+    * ==THE LOWERING: java's own initialisation sequence, HOISTED OUT OF THE CLASS BODY==
+    *
+    * Each class in the closure below declares
+    * {{{
+    * override def bpFreshState(): Unit = { <zero MY fields>; super.bpFreshState(); <MY step 4>; <MY ctor body> }
+    * }}}
+    * and every converted test body opens with `bpFreshState()`, AHEAD of the `@Before` calls. The
+    * class body no longer initialises anything: a field's initialiser MOVES into the member, its
+    * declaration keeps only the JVM default the emitter already writes for an uninitialised java
+    * field, and an instance initialiser block's statements move with them, in java's textual order.
+    *
+    * Three properties that are the reason for this exact shape, each verified against a real JUnit 4
+    * run rather than reasoned about:
+    *
+    *  - '''zeroing precedes ALL initialisation, and that is what the chain order buys.''' Each class
+    *    zeroes its own fields BEFORE delegating upward, so the sequence is
+    *    `zero(C), zero(B), zero(A), init(A), init(B), init(C)` — exactly java's, where the
+    *    allocation zeroes every field of every class in the hierarchy before the superclass
+    *    constructor runs. It is not decoration: a superclass constructor that calls an overridden
+    *    method reading a SUBCLASS field sees the DEFAULT in java (probed: `Base.ctor sees sub=null`
+    *    on the second test, after the first had assigned it), and a chain that zeroed on the way
+    *    down would show it the previous test's value — X4 itself, one level in.
+    *  - '''the initialisation is HOISTED, never duplicated.''' Left in the class body it would run
+    *    once at suite construction AND once per test, so a field initialiser with an effect outside
+    *    the object would run N+1 times where java ran it N. Hoisting also puts it on java's side of
+    *    `@BeforeClass`: junit runs the static hook BEFORE the first construction, and MUnit
+    *    constructs the suite before `beforeAll()`, so an un-hoisted initialiser runs on the wrong
+    *    side of it.
+    *  - '''a `private` field is reset BY ITS OWN CLASS.''' That is why the member chains rather than
+    *    being inlined at the concrete suite: a base test case's `private` field is not nameable from
+    *    its subclass, and java's constructor chain is what runs each class's own step 4.
+    *
+    * ==WHAT THE LOWERING DOES NOT REPRODUCE==
+    *
+    * `CLAUDE.md` §3: each is (i) a structural GUARD, (ii) impossible by the SHAPE emitted, or (iii)
+    * COUNTED — one [[Finding]] per site naming the guard.
+    *
+    *  1. '''OBJECT IDENTITY.''' SHAPE-LIMITED and the one irreducible difference: java allocated a
+    *     new object per test and this resets one object's fields. Anything that OUTLIVES a test
+    *     holding the instance — a listener the test registered, a static map it put `this` in —
+    *     observes the reset where java left the old object alone. Counted where the instance is used
+    *     as a VALUE at all (`fresh-state(instance-escape)`, one row per suite): a `this` in
+    *     RECEIVER position is not an escape and is most of them, so the count is the population that
+    *     could escape rather than a proof that one did.
+    *  2. '''`static` FIELDS.''' GUARD — only non-static fields are zeroed and re-initialised. Java
+    *     shares a static across every construction (probed: a static counter reads 1 in the second
+    *     test after the first incremented it), so resetting one would be this defect inverted.
+    *  3. '''A CONSTRUCTOR THIS CANNOT REPLAY.''' GUARD + COUNT (`fresh-state(constructor)`): the
+    *     lowering fires only for a class with at most ONE constructor, nilary, with no `this(…)`
+    *     delegation and no ARGUMENTS passed to `super(…)` — which is every JUnit 4 test class, since
+    *     `validateOnlyOneConstructor`/`validateZeroArgConstructor` is junit's own precondition
+    *     (probed: junit refuses the class outright otherwise). Anything else keeps its constructor
+    *     AND its field initialisers exactly as they were: hoisting the fields out from under a
+    *     constructor body this cannot move would leave that body reading defaults, which is a defect
+    *     the lowering would have CAUSED.
+    *  4. '''A FIELD WITH NO WRITABLE DEFAULT.''' GUARD + COUNT (`fresh-state(no-default)`): a field
+    *     at a class TYPE PARAMETER or an opaque type has no default this can write, so the field is
+    *     left out of the ZERO step and named. Writing `null` at such a type is a compile error and
+    *     inventing a value is §4.6's fabricated fact.
+    *  5. '''A BASE MODULE'S TEST CLASS IN THE CHAIN.''' GUARD + COUNT (`fresh-state(base-ancestor)`)
+    *     — see [[scope]].
+    *  6. '''AN EXTERNAL SUPERCLASS.''' SHAPE — a class file's fields are not this program's to
+    *     rebuild, and such a suite never reaches this question: the anchor is the TOPMOST
+    *     program-declared class, so an external class parent stands on the one class that gains
+    *     `munit.FunSuite`, and `extends munit.FunSuite with X` where `X` is a class is *class X is
+    *     not a trait* — loud, at the compiler, before any of this runs.
+    *  7. '''`@Ignore`.''' SHAPE — MUnit does not evaluate an ignored body, so the prologue does not
+    *     run; junit likewise fires `testIgnored` without ever calling `createTest`.
+    *  8. '''A VIRTUAL `@Test`.''' SHAPE — the registration stands at the top declarer and calls the
+    *     member, so `bpFreshState()` dispatches to the RUNTIME class's override, which is the
+    *     concrete class junit would have constructed.
+    */
+  private def planFreshState(program: Program)(using p: Program): Unit =
+    freshSym = Map.empty; freshSuper = Map.empty; freshCall = Map.empty
+    // the classes java rebuilt for one suite: the declarer and every program-declared class above
+    // it, because JLS 12.5 runs each of their step 4s on every construction.
+    def chainOf(s: SymId): List[Tree.ClassDef] = classDefs(s) :: classAncestry(classDefs(s))
+    val declarers = testDeclarers.toList.filter(classDefs.contains).sortBy(_.raw)
+    // …and the ones this run may WRITE. A chain that leaves the run's own emission is refused whole:
+    // the `override` the subclass needs names a member only the base's run could have emitted.
+    val (mine, borrowed) = declarers.partition(s => chainOf(s).forall(c => scope.emitsSymbol(program, c.symbol)))
+    borrowed.filter(s => scope.emitsSymbol(program, s)).foreach { s =>
+      val cd = classDefs(s)
+      found += Finding("fresh-state(base-ancestor)", cd.origin, Fix.EngineRule, at = s, advice =
+        "this suite's java superclass is a test class ANOTHER MODULE emits, so the per-test " +
+        "reconstruction JUnit performs by constructing a fresh instance cannot be written here: " +
+        "the `override def " + FreshStateMember + "` this module would emit names a member only the " +
+        "base's own run could have put on that parent, and nothing in this model says whether it " +
+        "did (`CLAUDE.md` §1.5). Every field of this suite therefore keeps the previous test's " +
+        "value, exactly as it did before the lowering existed (`ENGINE-LIMITS.md` X4). Move the " +
+        "base test class into this module's source set, or keep this suite on the JVM/JUnit path.")
+    }
+    val chains = mine.map(chainOf)
+    // WHICH classes the lowering can express, and which of them hold state java rebuilt.
+    val reachable = chains.flatten.map(_.symbol).distinct
+    val blocked   = collection.mutable.Set.empty[SymId]
+    reachable.foreach { s =>
+      ctorToReplay(classDefs(s)) match
+        case Left(why) =>
+          blocked += s
+          val cd = classDefs(s)
+          found += Finding("fresh-state(constructor)", cd.origin, Fix.EngineRule, at = s, advice =
+            s"JUnit constructs a fresh instance before every `@Test`, so this class's field " +
+            s"initialisers and constructor body run once per test; the lowering that reproduces " +
+            s"that has to REPLAY the constructor, and this one $why. Its fields and its " +
+            "constructor are therefore emitted exactly as they were and keep the previous test's " +
+            "state (`ENGINE-LIMITS.md` X4); subclasses of it still rebuild their OWN state. " +
+            "Note junit itself refuses a test class with more than one public constructor or with " +
+            "a constructor taking arguments unless a `@RunWith` runner supplies them.")
+        case Right(_) => ()
+    }
+    // A CHAIN IS EITHER ACTIVE OR ABSENT. A suite with no instance state at all needs no member and
+    // gets none — otherwise every stateless suite in the corpus would grow an empty `def` and a
+    // call in every test body. Where any class in the chain does hold state, EVERY class the
+    // lowering can express gets the member, including the stateless ones: the registration for a
+    // virtual test stands at the top declarer, and a member it cannot name is a call that does not
+    // compile.
+    val inSet = chains.filter(c => c.exists(cd => !blocked(cd.symbol) && holdsState(cd)))
+                      .flatten.map(_.symbol).distinct.filterNot(blocked).toSet
+    // …the chain's own edges, settled BEFORE the symbols are minted, because whether a member
+    // carries `override` is exactly whether it has one.
+    val supers = inSet.iterator.flatMap { s =>
+      classAncestry(classDefs(s)).map(_.symbol).find(inSet).map(s -> _)
+    }.toMap
+    val unitT = primTypes("scala.Unit")
+    freshSym = inSet.iterator.map { s =>
+      val fqn = p.symbolOf(s).map(_.fullName + "#" + FreshStateMember).getOrElse(FreshStateMember)
+      s -> mint(FreshStateMember, fqn, Flags(isOverride = supers.contains(s)),
+                TypeRepr.MethodType(Nil, unitT), owner = s)
+    }.toMap
+    freshSuper = supers.map((s, a) => s -> freshSym(a))
+    // …and WHICH member a registration emitted in a class may call: its own, or the nearest it
+    // inherits. Computed for every class in a chain, because a `@Test` may stand in one the
+    // lowering skipped.
+    freshCall = reachable.iterator.flatMap { s =>
+      (s :: classAncestry(classDefs(s)).map(_.symbol)).find(inSet).map(m => s -> freshSym(m))
+    }.toMap
+
+  /** does java rebuild anything here — an instance field, an instance initialiser block, or a
+    * constructor body with a statement in it? */
+  private def holdsState(cd: Tree.ClassDef)(using p: Program): Boolean =
+    cd.body.exists {
+      case v: Tree.ValDef  => instanceField(v)
+      case d: Tree.DefDef  => isInitBlock(d) && d.rhs.nonEmpty
+      case _               => false
+    } || ctorToReplay(cd).toOption.flatten.exists(d => replayedStatements(d).nonEmpty)
+
+  /** a field the ALLOCATION zeroes and step 4 initialises — never a `static`, which java shares
+    * across every construction, and never a member ANOTHER PHASE MINTED.
+    *
+    * The second half is `CLAUDE.md` §4.56 read at a rewrite: this lowering may reason about what
+    * JAVA DECLARED, and a `ValDef` in an emitted class body is not evidence of that — a phase that
+    * threads a context injects `private given sge.Sge` as one, with a symbol the frontend never
+    * interned and, in that case, no NAME to assign through. Zeroed and hoisted it emitted ` = null`
+    * and a `given` with no right-hand side: two syntax errors on the first port that carried both
+    * phases. `Program.owns` is the structural answer — an interned java field hangs off a unit
+    * through its owner chain and a minted one does not — and the flag test beside it is the same
+    * question asked of a phase that mints an OWNED member, which nothing does today. */
+  private def instanceField(v: Tree.ValDef)(using p: Program): Boolean =
+    p.owns(v.symbol) && p.symbolOf(v.symbol).exists { s =>
+      !s.flags.isStatic && !s.flags.isGiven && !s.flags.isImplicit && !s.flags.isModule &&
+        s.name.nonEmpty
+    }
+
+  private def isInitBlock(d: Tree.DefDef)(using p: Program): Boolean =
+    p.symbolOf(d.symbol).exists(_.name == InitBlockName)
+
+  /** THE ONE CONSTRUCTOR THIS LOWERING MAY REPLAY, or the sentence the refusal reports.
+    *
+    * Junit's own precondition is exactly this shape (`validateOnlyOneConstructor` +
+    * `validateZeroArgConstructor`), so the guard costs nothing on a class junit would run. What it
+    * refuses is a base test case a `@RunWith` runner constructs with arguments — where replaying is
+    * impossible, since the arguments are the runner's — and a `super(…)` with arguments, whose
+    * parent construction the emitter carries in the `extends` clause and which a replay must not
+    * duplicate. */
+  private def ctorToReplay(cd: Tree.ClassDef)(using p: Program): Either[String, Option[Tree.DefDef]] =
+    cd.body.collect { case d: Tree.DefDef if p.symbolOf(d.symbol).exists(_.name == "<init>") => d } match
+      case Nil          => Right(scala.None)
+      case one :: Nil   =>
+        if one.paramss.flatten.nonEmpty then Left("takes constructor parameters")
+        else
+          val stats = ctorStatements(one)
+          if stats.exists(isThisDelegation) then Left("delegates to another constructor with `this(…)`")
+          else if stats.exists(isSuperWithArgs) then Left("passes arguments to its superclass constructor")
+          else Right(Some(one))
+      case many         => Left(s"declares ${many.size} constructors")
+
+  private def ctorStatements(d: Tree.DefDef): List[Statement] = d.rhs match
+    case scala.None                             => Nil
+    case Some(Tree.Block(stats, expr, _, _, _)) => stats ++ (expr match
+      case Tree.Literal(Constant.UnitC, _, _) => Nil
+      case t                                  => List(t))
+    case Some(t)                                => List(t)
+
+  /** the constructor body MINUS the delegation java writes at its head — the parent's construction
+    * is carried by the emitted `extends` clause and by the chain, never by a replayed statement. */
+  private def replayedStatements(d: Tree.DefDef)(using p: Program): List[Statement] =
+    ctorStatements(d).filterNot(s => isSuperCall(s) || isThisDelegation(s))
+
+  private def isSuperCall(s: Statement): Boolean = s match
+    case Tree.Apply(Tree.Select(_: Tree.Super, _, _, _), _, _, _, _) => true
+    case _                                                          => false
+
+  private def isSuperWithArgs(s: Statement): Boolean = s match
+    case Tree.Apply(Tree.Select(_: Tree.Super, _, _, _), args, _, _, _) => args.nonEmpty
+    case _                                                              => false
+
+  private def isThisDelegation(s: Statement)(using p: Program): Boolean = s match
+    case Tree.Apply(Tree.Select(_: Tree.This, m, _, _), _, _, _, _) =>
+      p.symbolOf(m).exists(_.name == "<init>")
+    case _ => false
+
+  /** THE VALUE THE ALLOCATION LEAVES, as a term.
+    *
+    * The same answer `TirEmitter.defaultFor` writes for an uninitialised java field, in the IR
+    * rather than in text — the two are the same fact and this one has to be a `Term` because it
+    * stands on the right of an assignment. `None` where the type STATES no default this can write:
+    * a class TYPE PARAMETER (`null` does not conform) or an opaque type (`null` is not its shape).
+    * Refused and counted, never guessed (`CLAUDE.md` §4.6). */
+  private def defaultTerm(t: TypeRepr, o: Origin)(using p: Program): Option[Term] =
+    def lit(c: Constant) = Some(Tree.Literal(c, t, o))
+    nameOf(t) match
+      case "scala.Int"     => lit(Constant.IntC(0))
+      case "scala.Short"   => lit(Constant.ShortC(0))
+      case "scala.Byte"    => lit(Constant.ByteC(0))
+      case "scala.Long"    => lit(Constant.LongC(0L))
+      case "scala.Float"   => lit(Constant.FloatC(0f))
+      case "scala.Double"  => lit(Constant.DoubleC(0d))
+      case "scala.Boolean" => lit(Constant.BoolC(false))
+      case "scala.Char"    => lit(Constant.CharC(' '))
+      case ""              => scala.None
+      case _               =>
+        val head = headSymOf(t match { case TypeRepr.AppliedType(tc, _) => tc; case x => x })
+        val bad  = p.symbolOf(head).exists(_.flags.isOpaque) ||
+                   p.definitionOf(head).exists(_.isInstanceOf[Tree.TypeDef])
+        if bad then scala.None else Some(Tree.Literal(Constant.NullC, t, o))
+
+  /** `f = <v>` — the field named bare, as every other member reference in a body of this class is. */
+  private def assignField(f: SymId, tpe: TypeRepr, v: Term, o: Origin): Term =
+    Tree.Assign(Tree.Ident(f, tpe, o), v, primTypes("scala.Unit"), o)
+
+  /** THE REWRITE: the class's own initialisation moved out of its body and into [[freshSym]]'s
+    * member. Returns the class unchanged where the lowering does not reach it. */
+  private def freshState(cd: Tree.ClassDef)(using p: Program): Tree.ClassDef =
+    freshSym.get(cd.symbol) match
+      case scala.None  => cd
+      case Some(member) =>
+        val o     = cd.origin
+        val unitT = primTypes("scala.Unit")
+        val ctor  = ctorToReplay(cd).toOption.flatten
+        val zeroes = List.newBuilder[Statement]
+        val inits  = List.newBuilder[Statement]
+        val kept   = List.newBuilder[Statement]
+        var fields = 0
+        cd.body.foreach {
+          case v: Tree.ValDef if instanceField(v) =>
+            fields += 1
+            defaultTerm(v.tpt.tpe, v.origin) match
+              case Some(d)    =>
+                zeroes += assignField(v.symbol, v.tpt.tpe, d, v.origin)
+                madeMutable += v.symbol
+              case scala.None =>
+                found += Finding("fresh-state(no-default)", v.origin, Fix.EngineRule, at = v.symbol, advice =
+                  "JUnit's fresh instance leaves this field at the JVM default before every test, " +
+                  "and this field's type states no default that can be WRITTEN — a class type " +
+                  "parameter takes no `null` and an opaque type is not a reference. The field is " +
+                  "left out of the reset and keeps the previous test's value where a test assigns " +
+                  "it (`ENGINE-LIMITS.md` X4); its own initialiser, if it has one, still re-runs.")
+            v.rhs.foreach { r => inits += assignField(v.symbol, v.tpt.tpe, r, v.origin); madeMutable += v.symbol }
+            kept += (if v.rhs.isEmpty then v else v.copy(rhs = scala.None))
+          case d: Tree.DefDef if isInitBlock(d) =>
+            // JLS 12.5 step 4 is ONE sequence in TEXTUAL ORDER, and the frontend has already sorted
+            // the fields and the blocks into it (`CLAUDE.md` §4.55) — so this walk preserves it by
+            // walking the body, and the member itself is CONSUMED rather than left for the emitter
+            // to inline a second time.
+            d.rhs.foreach(inits += _)
+          case d: Tree.DefDef if ctor.exists(_.symbol == d.symbol) && replayedStatements(d).nonEmpty =>
+            inits ++= replayedStatements(d)
+            kept += d.copy(rhs = Some(Tree.Block(
+              ctorStatements(d).filter(isSuperCall), unitLit(o), unitT, o)))
+          case other => kept += other
+        }
+        val sup = freshSuper.get(cd.symbol).map { a =>
+          Tree.Apply(Tree.Select(Tree.Super(cd.symbol, TypeRepr.NoType, o), a, TypeRepr.NoType, o),
+                     Nil, a, unitT, o)
+        }
+        val stats = zeroes.result() ++ sup.toList ++ inits.result()
+        val rhs   = Tree.Block(stats, unitLit(o), unitT, o)
+        suitesRebuilt += 1
+        // difference 1 — the one thing a reset cannot be: a NEW OBJECT.
+        val escapes = instanceEscapes(cd)
+        if escapes > 0 then
+          found += Finding("fresh-state(instance-escape)", cd.origin, Fix.EngineRule, at = cd.symbol, advice =
+            s"$escapes use(s) of this suite's own instance AS A VALUE (a `this` that is not the " +
+            "receiver of a selection). JUnit allocated a NEW test object for every `@Test` and " +
+            "this lowering resets ONE object's fields, so anything that outlives a test holding " +
+            "this instance — a listener it registered, a static collection it was put in — sees " +
+            "the reset where java saw the old object untouched. The field state itself is " +
+            "reproduced exactly; object identity is not (`ENGINE-LIMITS.md` X4).")
+        val above = classAncestry(cd).find(a => freshSym.contains(a.symbol))
+        record(Decision(
+          kind       = Decision.Kind.RebuiltPerTest,
+          subject    = cd.symbol,
+          subjectFqn = p.symbolOf(cd.symbol).map(_.fullName).getOrElse(""),
+          detail = Map(
+            "member" -> FreshStateMember,
+            "fields" -> fields.toString,
+            "ctor"   -> (if ctor.exists(d => replayedStatements(d).nonEmpty) then "replayed" else "empty"),
+            "chains" -> above.flatMap(a => p.symbolOf(a.symbol).map(_.fullName)).getOrElse(""),
+            "why"    -> ("JUnit constructs a FRESH instance of the test class before every @Test " +
+              "(BlockJUnit4ClassRunner.createTest), so java ran this class's field initialisers, " +
+              "its instance initialiser blocks and its constructor body once per test; MUnit has " +
+              "ONE suite instance and would run them once. They are hoisted here and every test " +
+              "body calls this member first"),
+          ),
+          reason = Reason.Universal("test-framework/fresh-instance"),
+          origin = cd.origin,
+        ))
+        cd.copy(body = kept.result() :+
+          Tree.DefDef(member, List(Nil), TypeTree(unitT, o), Some(rhs), o))
+
+  private def unitLit(o: Origin): Term = Tree.Literal(Constant.UnitC, primTypes("scala.Unit"), o)
+
+  /** the instance used as a VALUE, which is the only part of difference 1 anything can see. A `this`
+    * that is the QUALIFIER of a selection is a field or a method access and is not an escape — it is
+    * also most of them, so the two are counted as a difference of two standard walks rather than by
+    * a predicate that would have to know every shape a receiver can take. */
+  private def instanceEscapes(cd: Tree.ClassDef)(using p: Program): Int =
+    def all(n: Int, t: Term)   = t match { case _: Tree.This => n + 1; case _ => n }
+    def recvs(n: Int, t: Term) = t match
+      case Tree.Select(_: Tree.This, _, _, _) => n + 1
+      case _                                  => n
+    StandardTraversal.scanClassDef(cd, 0)(all) - StandardTraversal.scanClassDef(cd, 0)(recvs)
+
   override def run(program: Program): Program =
     nextId = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
-    added.clear(); consumed.clear(); consumedTests.clear(); found.clear()
-    suitesConverted = 0; testsConverted = 0; rulesConverted = 0
+    added.clear(); consumed.clear(); consumedTests.clear(); found.clear(); madeMutable.clear()
+    suitesConverted = 0; testsConverted = 0; rulesConverted = 0; suitesRebuilt = 0
     suiteSym = mint(suite.substring(suite.lastIndexOf('.') + 1), suite)
     testSym  = mint(testMember, testMember)  // MUnit's own `test`, applied CURRIED
     interceptSym = mint("intercept", "intercept") // MUnit's own, inherited from the suite
@@ -396,6 +786,9 @@ final class TestFrameworkTransform(
     // program's class graph rather than about the class `convert` is handed, so both are settled
     // before either walk starts (see the fields' doc).
     planHierarchy(program)
+    // …and WHOSE INSTANCE STATE JUNIT REBUILT PER TEST, which is a fact about the same class graph
+    // and is settled here for the same reason (see [[planFreshState]]).
+    planFreshState(program)
     survey(program)
     // TWO WALKS, and the split is the whole of what is gated on `@Test`.
     //
@@ -423,7 +816,15 @@ final class TestFrameworkTransform(
     // register zero tests and claim to be one.
     val units = rewritten.map(convert)
     // `convert` mints more (the lifecycle overrides), so the table is rebuilt AFTER the walk.
-    val symbols = (consumed ++ consumedTests).foldLeft(SymbolTable(program.symbols.all ++ added)) { (t, id) =>
+    // …and a java `final` instance field the per-test reconstruction ASSIGNS has to be a `var`:
+    // java's `final` was per-CONSTRUCTION and this suite is constructed once. Narrowed to the
+    // fields really written (`CLAUDE.md` §4.55's own rule for a promotion's mutability).
+    val symbols0m = madeMutable.foldLeft(SymbolTable(program.symbols.all ++ added)) { (t, id) =>
+      t.get(id) match
+        case scala.None => t
+        case Some(s)    => t.updated(s.copy(flags = s.flags.copy(isMutable = true, isFinal = false)))
+    }
+    val symbols = (consumed ++ consumedTests).foldLeft(symbols0m) { (t, id) =>
       val gone = if consumedTests(id) then ConsumedAnns + TestAnn else ConsumedAnns
       t.get(id) match
         case scala.None => t
@@ -437,14 +838,27 @@ final class TestFrameworkTransform(
     report()
     program.rebuilt(units, symbols)
 
-  private def mint(nm: String, full: String, flags: Flags = Flags(), info: TypeRepr = TypeRepr.NoType): SymId =
+  /** …`owner` is `SymId.None` for every name this phase mints EXCEPT the per-test reconstruction's,
+    * and that exception is the point: `Program.owns` is what decides whether a member is this
+    * program's, so an unowned one is published by `PortMap` at the PACKAGE — the first run emitted a
+    * `com.badlogic.gdx…utils.bpFreshState()` row, a top-level name no file declares. A member added
+    * to an emitted class is emitted surface and belongs to that class. */
+  private def mint(nm: String, full: String, flags: Flags = Flags(), info: TypeRepr = TypeRepr.NoType,
+                   owner: SymId = SymId.None): SymId =
     val id = SymId(nextId); nextId += 1
-    added += Symbol(id, nm, full, flags, SymId.None, info)
+    added += Symbol(id, nm, full, flags, owner, info)
     id
 
   private def report(): Unit =
     println(s"[$name] converted $suitesConverted suite(s), $testsConverted test(s); " +
             s"UNTRANSLATED test-framework constructs: ${found.size}")
+    if suitesRebuilt > 0 then
+      // WHAT THE RECONSTRUCTION IS, stated where it is counted. A conversion count says nothing
+      // about the one difference between the two frameworks that RUNS the tests differently.
+      println(s"  fresh instance: $suitesRebuilt class(es) rebuild their instance state before " +
+              "every test — JUnit constructs the test object per @Test and MUnit has ONE suite " +
+              s"instance, so each class's field initialisers, instance initialiser blocks and " +
+              s"constructor body are hoisted into `$FreshStateMember`")
     if rulesConverted > 0 then
       // WHAT THE CONVERSIONS ARE, stated where they are counted (`CLAUDE.md` §3). The residual
       // difference the `intercept` shape had to declare here — junit catches `Throwable`, MUnit's
@@ -915,7 +1329,19 @@ final class TestFrameworkTransform(
       case c: Tree.ClassDef => convert(c)
       case other            => other
     }
-    val cd2 = cd.copy(body = nested)
+    // THE PER-TEST RECONSTRUCTION, which MOVES this class's own initialisation into a member of its
+    // own. It touches only the classes [[planFreshState]] admitted — which includes ancestors that
+    // declare no `@Test` of their own, since java rebuilt their state too — and returns the class
+    // untouched everywhere else.
+    //
+    // TWO CLASSES, AND THAT IS NOT A CONVENIENCE. `cd1` is what every ANALYSIS below reads and `cd2`
+    // is what is emitted: the reconstruction writes ASSIGNMENTS to this class's fields, and a scan
+    // that counts REFERENCES to a field would count them. `ExpectedException`'s `arming-outside-test`
+    // guard is exactly such a scan — every reference to the rule field, less the ones inside `@Test`
+    // bodies — so read through `cd2` it saw the synthesised `thrown = null` as an arming made in a
+    // helper and refused the whole class, silently, on eleven of this phase's own fixtures.
+    val cd1 = cd.copy(body = nested)
+    val cd2 = freshState(cd1)
     // THE SUITE PARENT IS THE ANCHOR'S, NOT THE DECLARER'S (see [[suiteAnchors]]). A class that
     // anchors a hierarchy but declares no `@Test` of its own gets the parent and nothing else —
     // there is no registration to make and no lifecycle to inline, and every member it declares is
@@ -988,8 +1414,9 @@ final class TestFrameworkTransform(
         if ruleFields0.isEmpty then ruleFields0
         else
           def refs(n: Int, t: Term) = if isRuleRef(t, ruleFields0) then n + 1 else n
-          val all   = StandardTraversal.scanClassDef(cd2, 0)(refs)
-          val mine  = cd2.body.collect { case d: Tree.DefDef if isAnnotated(d, TestAnn) => d.rhs }
+          // `cd1`: the class BEFORE the per-test reconstruction, see the comment at its binding.
+          val all   = StandardTraversal.scanClassDef(cd1, 0)(refs)
+          val mine  = cd1.body.collect { case d: Tree.DefDef if isAnnotated(d, TestAnn) => d.rhs }
                         .flatten.map(b => StandardTraversal.scanTerm(b, 0)(refs)).sum
           if all <= mine then ruleFields0
           else
@@ -1031,10 +1458,10 @@ final class TestFrameworkTransform(
           // meaningless and COUNTED — `junit_residue` reads it as a suite that did not convert.
           consumedTests += d.symbol
           if virtualRoots(d.symbol)
-          then List(d, testCase(d, setups, teardowns, allIgnored, ruleFields, viaCall = true))
+          then List(d, testCase(d, cd.symbol, setups, teardowns, allIgnored, ruleFields, viaCall = true))
           else List(d)
         case d: Tree.DefDef if isAnnotated(d, TestAnn) =>
-          List(testCase(d, setups, teardowns, allIgnored, ruleFields))
+          List(testCase(d, cd.symbol, setups, teardowns, allIgnored, ruleFields))
         case other                                     => List(other)
       }
       suitesConverted += 1
@@ -1406,7 +1833,7 @@ final class TestFrameworkTransform(
     * know this one is broken" turns into either a red gate for a defect nobody introduced, or a
     * green one that means nothing. MUnit does not evaluate an ignored body, so the by-name
     * argument keeps the code compiling without running it. */
-  private def testCase(d: Tree.DefDef, setups: List[SymId], teardowns: List[SymId],
+  private def testCase(d: Tree.DefDef, owner: SymId, setups: List[SymId], teardowns: List[SymId],
                        allIgnored: Boolean, ruleFields: Set[SymId],
                        viaCall: Boolean = false)(using p: Program): Statement =
     val nm = p.symbolOf(d.symbol).map(_.name).getOrElse("test")
@@ -1466,9 +1893,15 @@ final class TestFrameworkTransform(
       // JUnit's own nesting: afters(befores(expectException(invoke))). So the `@Before` calls go
       // INSIDE the try — a setup that throws still runs teardown, as in java — and the
       // expected-exception check goes inside them both.
+      // …and AHEAD of `@Before`, JUnit's `createTest()`: the fresh instance it builds for every test
+      // is what runs the class's field initialisers and constructor body, and it runs before the
+      // setup hooks (probed against junit 4.13, `ENGINE-LIMITS.md` X4). Absent where the suite holds
+      // no instance state at all, and where a guard in [[planFreshState]] declined the class.
+      val rebuild = freshCall.get(owner).toList.map(call(_, d.origin))
+      val prologue = rebuild ++ setups.map(call(_, d.origin))
       val setUp =
-        if setups.isEmpty then body0
-        else Tree.Block(setups.map(call(_, d.origin)), body0, body0.tpe, d.origin)
+        if prologue.isEmpty then body0
+        else Tree.Block(prologue, body0, body0.tpe, d.origin)
       val rhs0 =
         if teardowns.isEmpty then setUp
         else Tree.Try(Nil, setUp, Nil,
@@ -1503,9 +1936,12 @@ final class TestFrameworkTransform(
           "intercept" -> expectsThrow.map(nameOf).getOrElse(""),
           "rule"      -> ruleNote,
           "inlined"   -> (setups ++ teardowns).flatMap(s => p.symbolOf(s).map(_.name)).mkString(", "),
+          "rebuilt"   -> (if rebuild.isEmpty then "no" else FreshStateMember),
           "why"       -> ("a JUnit suite runs on the JVM alone; and MUnit has neither @Before " +
             "(which JUnit runs before EVERY test, on a fresh instance) nor @After (which it runs " +
-            "whether or not the test threw), so both are inlined here and nothing else says so"),
+            "whether or not the test threw), so both are inlined here and nothing else says so — " +
+            "and the FRESH INSTANCE itself has no MUnit counterpart either, so this body opens by " +
+            "rebuilding the suite's own state"),
         ),
         reason = Reason.Universal("test-framework"),
         origin = d.origin,
@@ -1521,6 +1957,14 @@ final class TestFrameworkTransform(
 
 object TestFrameworkTransform:
   val DefaultSuite = "munit.FunSuite"
+  /** the member each converted class declares to rebuild its own instance state before every test —
+    * JUnit's `createTest()`, which MUnit has no counterpart for. `bp`-prefixed like every other name
+    * this phase mints, so it cannot collide with a java member a suite declares. */
+  val FreshStateMember = "bpFreshState"
+  /** the frontend's name for a java INSTANCE INITIALISER BLOCK (`SpoonTir.classDef`) — a synthetic
+    * executable member, and half of JLS 12.5 step 4. Named here because this phase MOVES one, and
+    * a phase that matched the string inline would be the second spelling of one fact. */
+  val InitBlockName = "<initblock>"
   /** MUnit's one-time hooks — see the class doc on why these are a fixed contract and not a
     * parameter. */
   val BeforeAllMember = "beforeAll"

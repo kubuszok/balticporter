@@ -9312,7 +9312,7 @@ two that a translated scope can fail to reach.
 
 *Fix kind: (a). Closed in `TestFrameworkTransform`.*
 
-### X4. Calling `@Before` at the head of each test does not reproduce JUnit's FRESH INSTANCE — **PREDICTED, then MEASURED at 4 of one suite's 10**
+### X4. Calling `@Before` at the head of each test does not reproduce JUnit's FRESH INSTANCE — **PREDICTED, MEASURED at 4 of one suite's 10, then CLOSED: sge-ai `6 / 4` → `10 / 0`, every other suite in the corpus byte-for-byte identical in outcome**
 
 `CLAUDE.md` §4.4 gives the translation. Its declared limit: it is exact wherever setup **assigns**
 the fields it needs; a field carrying state through its own **INITIALISER** would still leak between
@@ -9353,7 +9353,71 @@ The repair is per-test CONSTRUCTION — a converted suite's instance state rebui
 and its blast is every converted suite in the corpus, so it is a wave of its own and not a fix to
 fold into a port's.
 
-*Fix kind: (a), unbuilt — now with its number.*
+**And the wave that built it is JAVA'S OWN INITIALISATION SEQUENCE, HOISTED OUT OF THE CLASS BODY.**
+Each class in a suite's chain declares
+
+```scala
+override def bpFreshState(): Unit = { <zero MY fields>; super.bpFreshState(); <MY step 4>; <MY ctor body> }
+```
+
+and every converted test body opens with `bpFreshState()`, ahead of the `@Before` calls. The class
+body no longer initialises anything: a field's initialiser MOVES into the member, its declaration
+keeps only the JVM default the emitter already writes for an uninitialised java field, and an
+instance initialiser block's statements move with them in java's textual order. `TestFrameworkTransform`
+carries the full delta enumeration; four things about the shape are the reason it is this one and
+not another, and all four were PROBED against a real `junit 4.13` run rather than read off the JLS:
+
+- **the order is `@BeforeClass` → step 4 (fields and instance initialiser blocks INTERLEAVED, in
+  textual order) → the constructor body → `@Before` → the test**, and every one of those repeats per
+  test. An un-initialised field reads its DEFAULT in the second test though the first assigned it; a
+  `static` field does NOT (`t2 sharedStatic-was=1`), which is why the reset is scoped to instance
+  fields;
+- **zeroing precedes ALL initialisation, which is what the chain ORDER buys.** Each class zeroes its
+  own fields BEFORE delegating upward, so the sequence is `zero(C), zero(B), zero(A), init(A),
+  init(B), init(C)` — java's, where the allocation zeroes the whole object before the superclass
+  constructor runs. Probed: a superclass constructor calling an overridden method that reads a
+  SUBCLASS field prints `Base.ctor sees sub=null` on the SECOND test too, after the first assigned
+  it. A chain that zeroed on the way down would show it the previous test's value — this defect, one
+  level in;
+- **the initialisation is HOISTED, never duplicated.** Left in the class body it would run once at
+  suite construction AND once per test (N+1 against java's N), and on the wrong side of
+  `@BeforeClass`: junit runs the static hook before the FIRST construction and MUnit constructs the
+  suite before `beforeAll()`;
+- **a `private` field is reset BY ITS OWN CLASS**, which is why the member chains rather than being
+  inlined at the concrete suite — a base test case's `private` field is not nameable from its
+  subclass, and java's constructor chain is what runs each class's own step 4.
+
+**The one thing it does not reproduce is OBJECT IDENTITY**, and that is shape-limited rather than
+fixable here: java allocated a new object per test, this resets one object's fields. Anything that
+OUTLIVES a test holding the instance sees the reset. It is counted where the instance is used as a
+VALUE at all (`fresh-state(instance-escape)`, 4 rows on the corpus). Three more residues are guards
+with a row each: a constructor the lowering cannot replay (`fresh-state(constructor)` — more than
+one, or taking parameters, or delegating with `this(…)`, or passing arguments to `super(…)`; junit's
+own `validateOnlyOneConstructor`/`validateZeroArgConstructor` refuses all but the last of those, so
+the shape it really meets is a `@RunWith(Parameterized)` base); a field whose type states no writable
+default (`fresh-state(no-default)`); and a chain that leaves this run's own emission
+(`fresh-state(base-ancestor)`, §1.5). **A class the lowering refuses keeps BOTH its constructor and
+its field initialisers** — hoisting fields out from under a constructor body it cannot move would
+leave that body reading defaults, a defect the lowering itself would have caused.
+
+**THE NUMBERS.** `errors 0 → 0` on all sixteen lanes; every check count flat except the refusal
+population, `test-framework(refused)` (liqp `2417 → 2418`, ssg-md `30 → 34`, five new rows in all).
+
+| lane | member digests moved | suite outcome |
+|---|---|---|
+| `sge-ai` test | 11 (one suite: the class's note, 5 registrations, 4 fields, the new member) | **6 passing / 4 failing → 10 / 0**, and the family that went to zero is `IllegalStateException: A behavior tree cannot have more than one root task`, `4 → 0` |
+| `sge` test | 74 | 217 / 4 — IDENTICAL, the 4 still the derived `dropTypes` failures |
+| `sge-ecs` test | 55 | 108 / 2 (+2 pre-existing skips) — IDENTICAL |
+| `ssg-liquid` test | 52 | 636 / 1 — IDENTICAL, the 1 still `SortTest#testSortMap` |
+| `ssg-md` test | 179 | 725 / 2 — IDENTICAL, the 2 still the `Pair.equals` rows |
+| `ssg-md-ext` test, anim8, vfx, sg, screens, jbump, noise4j, gltf | **0** | IDENTICAL |
+
+Twenty-three emitted suites over five ports carry the member; every other converted suite in the
+corpus holds no instance state at all and is **byte-identical** — which is the property the lowering
+was shaped for, since an empty `def` plus a call in every test body on 200 stateless suites is a tax
+with no defect behind it.
+
+*Fix kind: (a). CLOSED in `TestFrameworkTransform`, except object identity, which is counted.*
 
 ### X5. JUnit lifecycle and enablement — CLOSED, except what has no translation
 

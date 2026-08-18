@@ -129,7 +129,12 @@ object PorterNote:
         // java file, calling a member whose name is in no java file either. Without the note the
         // only honest reading of `override def get(k: K): Option[V] = scala.Option(this.get$java(k))`
         // is that somebody hand-edited a generated tree.
-        BridgedMember)
+        BridgedMember,
+        // …and the class whose state is rebuilt per test. Here for `ForcedClassInit`'s reason: the
+        // emitted text is a field initialiser that has apparently been DELETED, a java `final` that
+        // has become a `var`, and a `def` in no java file — three edits with one cause, which is a
+        // difference between two test frameworks and is written down in neither file.
+        RebuiltPerTest)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.

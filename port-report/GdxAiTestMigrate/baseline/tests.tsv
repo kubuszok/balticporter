@@ -1,8 +1,8 @@
 #suite	test	status
-sge.ai.btree.branch.ParallelTest	testJoinOrchestratorSelectorPolicy	fail
-sge.ai.btree.branch.ParallelTest	testJoinOrchestratorSequencePolicyInverseOrder	fail
-sge.ai.btree.branch.ParallelTest	testJoinOrchestratorSequencePolicySequentialOrder	fail
-sge.ai.btree.branch.ParallelTest	testResumeOrchestratorSelectorPolicy	fail
+sge.ai.btree.branch.ParallelTest	testJoinOrchestratorSelectorPolicy	pass
+sge.ai.btree.branch.ParallelTest	testJoinOrchestratorSequencePolicyInverseOrder	pass
+sge.ai.btree.branch.ParallelTest	testJoinOrchestratorSequencePolicySequentialOrder	pass
+sge.ai.btree.branch.ParallelTest	testResumeOrchestratorSelectorPolicy	pass
 sge.ai.btree.branch.ParallelTest	testResumeOrchestratorSequencePolicy	pass
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	searchNodePath_WhenDestinationUnreachable_ExpectedNoOutputPathFound	pass
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	searchNodePath_WhenGraphIsUpdatedOnTheFly_ExpectedSucceedToFindEndByEquals	pass

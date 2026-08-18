@@ -394,12 +394,13 @@ member	liqp.filters.Absolute_UrlTest#<stmt7>	ssg.liquid.filters.Absolute_UrlTest
 member	liqp.filters.Absolute_UrlTest#<stmt8>	ssg.liquid.filters.Absolute_UrlTest#<stmt8>	Renamed	-	liqp/filters/Absolute_UrlTest.java	192	692fcbb81298eb1b	
 member	liqp.filters.Absolute_UrlTest#<stmt9>	ssg.liquid.filters.Absolute_UrlTest#<stmt9>	Renamed	-	liqp/filters/Absolute_UrlTest.java	215	9a186735f7b07ef2	
 member	liqp.filters.Absolute_UrlTest#getData(Object,String)	ssg.liquid.filters.Absolute_UrlTest#getData(Object,String)	Renamed	-	liqp/filters/Absolute_UrlTest.java	18	f1dd09a7a7545291	vis=private
-member	liqp.filters.AppendTest#<stmt1>	ssg.liquid.filters.AppendTest#<stmt1>	Renamed	-	liqp/filters/AppendTest.java	22	f6c39844c76da807	
-member	liqp.filters.AppendTest#<stmt2>	ssg.liquid.filters.AppendTest#<stmt2>	Renamed	-	liqp/filters/AppendTest.java	49	ffac138dc6aeb702	
-member	liqp.filters.AppendTest#<stmt3>	ssg.liquid.filters.AppendTest#<stmt3>	Renamed	-	liqp/filters/AppendTest.java	64	d6c9fb44ca98892b	
-member	liqp.filters.AppendTest#<stmt4>	ssg.liquid.filters.AppendTest#<stmt4>	Renamed	-	liqp/filters/AppendTest.java	78	6187e403cb1eeb40	
-member	liqp.filters.AppendTest#<stmt5>	ssg.liquid.filters.AppendTest#<stmt5>	Renamed	-	liqp/filters/AppendTest.java	92	a3882d657c14dbf7	
-member	liqp.filters.AppendTest#t	ssg.liquid.filters.AppendTest#t	Renamed	-	liqp/filters/AppendTest.java	59	af9e731d560405d0	vis=private
+member	liqp.filters.AppendTest#<stmt1>	ssg.liquid.filters.AppendTest#<stmt1>	Renamed	-	liqp/filters/AppendTest.java	22	5c74b6be4d1c36f7	
+member	liqp.filters.AppendTest#<stmt2>	ssg.liquid.filters.AppendTest#<stmt2>	Renamed	-	liqp/filters/AppendTest.java	49	74a9d205c220d6b8	
+member	liqp.filters.AppendTest#<stmt3>	ssg.liquid.filters.AppendTest#<stmt3>	Renamed	-	liqp/filters/AppendTest.java	64	9f8f5b22c51deb1b	
+member	liqp.filters.AppendTest#<stmt4>	ssg.liquid.filters.AppendTest#<stmt4>	Renamed	-	liqp/filters/AppendTest.java	78	be137902d2406dfe	
+member	liqp.filters.AppendTest#<stmt5>	ssg.liquid.filters.AppendTest#<stmt5>	Renamed	-	liqp/filters/AppendTest.java	92	7db5520634deb151	
+member	liqp.filters.AppendTest#bpFreshState()	ssg.liquid.filters.AppendTest#bpFreshState()	Renamed	-	liqp/filters/AppendTest.java	19	1ea135862818c9a1	
+member	liqp.filters.AppendTest#t	ssg.liquid.filters.AppendTest#t	Renamed	-	liqp/filters/AppendTest.java	59	66b3047d5e251c85	vis=private
 member	liqp.filters.At_LeastTest#<stmt1>	ssg.liquid.filters.At_LeastTest#<stmt1>	Renamed	-	liqp/filters/At_LeastTest.java	27	03343ef60fa5a9f3	
 member	liqp.filters.At_MostTest#<stmt1>	ssg.liquid.filters.At_MostTest#<stmt1>	Renamed	-	liqp/filters/At_MostTest.java	27	235f507c3127ca9c	
 member	liqp.filters.CapitalizeTest#<stmt1>	ssg.liquid.filters.CapitalizeTest#<stmt1>	Renamed	-	liqp/filters/CapitalizeTest.java	16	9791b6ae7d376337	
@@ -409,14 +410,15 @@ member	liqp.filters.CompactTest#<stmt1>	ssg.liquid.filters.CompactTest#<stmt1>	R
 member	liqp.filters.ConcatTest#<stmt1>	ssg.liquid.filters.ConcatTest#<stmt1>	Renamed	-	liqp/filters/ConcatTest.java	21	8eb0bf9bdb5fea91	
 member	liqp.filters.ConcatTest#<stmt2>	ssg.liquid.filters.ConcatTest#<stmt2>	Renamed	-	liqp/filters/ConcatTest.java	40	27c685b6b2926cce	
 member	liqp.filters.ConcatTest#<stmt3>	ssg.liquid.filters.ConcatTest#<stmt3>	Renamed	-	liqp/filters/ConcatTest.java	46	cfa1998d85c8e569	
-member	liqp.filters.DateTest#<stmt1>	ssg.liquid.filters.DateTest#<stmt1>	Renamed	-	liqp/filters/DateTest.java	40	999aa2cb570709b8	
-member	liqp.filters.DateTest#<stmt2>	ssg.liquid.filters.DateTest#<stmt2>	Renamed	-	liqp/filters/DateTest.java	116	1a53db6e4a9bbea2	
-member	liqp.filters.DateTest#<stmt3>	ssg.liquid.filters.DateTest#<stmt3>	Renamed	-	liqp/filters/DateTest.java	164	e24da43d40c70c0a	
-member	liqp.filters.DateTest#<stmt4>	ssg.liquid.filters.DateTest#<stmt4>	Renamed	-	liqp/filters/DateTest.java	198	1917b61f9fc555ca	
-member	liqp.filters.DateTest#<stmt5>	ssg.liquid.filters.DateTest#<stmt5>	Renamed	-	liqp/filters/DateTest.java	213	a97388be1fe1890b	
-member	liqp.filters.DateTest#<stmt6>	ssg.liquid.filters.DateTest#<stmt6>	Renamed	-	liqp/filters/DateTest.java	225	ceba28ca07b55f82	
-member	liqp.filters.DateTest#<stmt7>	ssg.liquid.filters.DateTest#<stmt7>	Renamed	-	liqp/filters/DateTest.java	232	52be978ba03975b9	
-member	liqp.filters.DateTest#<stmt8>	ssg.liquid.filters.DateTest#<stmt8>	Renamed	-	liqp/filters/DateTest.java	241	a929d9172015ef3b	
+member	liqp.filters.DateTest#<stmt1>	ssg.liquid.filters.DateTest#<stmt1>	Renamed	-	liqp/filters/DateTest.java	40	9c9e0d9a49f11a0e	
+member	liqp.filters.DateTest#<stmt2>	ssg.liquid.filters.DateTest#<stmt2>	Renamed	-	liqp/filters/DateTest.java	116	a7dc12268ed26ab2	
+member	liqp.filters.DateTest#<stmt3>	ssg.liquid.filters.DateTest#<stmt3>	Renamed	-	liqp/filters/DateTest.java	164	021c863d28930744	
+member	liqp.filters.DateTest#<stmt4>	ssg.liquid.filters.DateTest#<stmt4>	Renamed	-	liqp/filters/DateTest.java	198	3b431d373b8905a0	
+member	liqp.filters.DateTest#<stmt5>	ssg.liquid.filters.DateTest#<stmt5>	Renamed	-	liqp/filters/DateTest.java	213	8f8b0acb17e674f1	
+member	liqp.filters.DateTest#<stmt6>	ssg.liquid.filters.DateTest#<stmt6>	Renamed	-	liqp/filters/DateTest.java	225	2fc6bd84c1b03309	
+member	liqp.filters.DateTest#<stmt7>	ssg.liquid.filters.DateTest#<stmt7>	Renamed	-	liqp/filters/DateTest.java	232	fa8450042c8b64cb	
+member	liqp.filters.DateTest#<stmt8>	ssg.liquid.filters.DateTest#<stmt8>	Renamed	-	liqp/filters/DateTest.java	241	f618b0d24b4e541e	
+member	liqp.filters.DateTest#bpFreshState()	ssg.liquid.filters.DateTest#bpFreshState()	Renamed	-	liqp/filters/DateTest.java	27	c163c0c999739919	
 member	liqp.filters.DateTest#dateFilterSetting	ssg.liquid.filters.DateTest#dateFilterSetting	Renamed	-	liqp/filters/DateTest.java	29	5717a85fe6444305	vis=private
 member	liqp.filters.DateTest#formatter	ssg.liquid.filters.DateTest#formatter	Renamed	-	liqp/filters/DateTest.java	152	23109608a7643763	placement=companion vis=private
 member	liqp.filters.DateTest#init()	ssg.liquid.filters.DateTest#init()	Renamed	-	liqp/filters/DateTest.java	32	a329667e6459fa87	
@@ -567,38 +569,40 @@ member	liqp.filters.UpcaseTest#<stmt1>	ssg.liquid.filters.UpcaseTest#<stmt1>	Ren
 member	liqp.filters.UpcaseTest#<stmt2>	ssg.liquid.filters.UpcaseTest#<stmt2>	Renamed	-	liqp/filters/UpcaseTest.java	41	be68d3cbd00873cf	
 member	liqp.filters.Url_DecodeTest#<stmt1>	ssg.liquid.filters.Url_DecodeTest#<stmt1>	Renamed	-	liqp/filters/Url_DecodeTest.java	25	5c021a0f23e40403	
 member	liqp.filters.Url_EncodeTest#<stmt1>	ssg.liquid.filters.Url_EncodeTest#<stmt1>	Renamed	-	liqp/filters/Url_EncodeTest.java	23	4442348ed3ef9fed	
-member	liqp.filters.Where_ExpTest#<stmt10>	ssg.liquid.filters.Where_ExpTest#<stmt10>	Renamed	-	liqp/filters/Where_ExpTest.java	271	2a3dbedd5e2f69bd	
-member	liqp.filters.Where_ExpTest#<stmt11>	ssg.liquid.filters.Where_ExpTest#<stmt11>	Renamed	-	liqp/filters/Where_ExpTest.java	289	1a621eaa43c0c38e	
-member	liqp.filters.Where_ExpTest#<stmt12>	ssg.liquid.filters.Where_ExpTest#<stmt12>	Renamed	-	liqp/filters/Where_ExpTest.java	308	dca7be3ee7d8c5b2	
-member	liqp.filters.Where_ExpTest#<stmt1>	ssg.liquid.filters.Where_ExpTest#<stmt1>	Renamed	-	liqp/filters/Where_ExpTest.java	27	4894bcd32d19ef44	
-member	liqp.filters.Where_ExpTest#<stmt2>	ssg.liquid.filters.Where_ExpTest#<stmt2>	Renamed	-	liqp/filters/Where_ExpTest.java	50	598c6d300c7647fe	
-member	liqp.filters.Where_ExpTest#<stmt3>	ssg.liquid.filters.Where_ExpTest#<stmt3>	Renamed	-	liqp/filters/Where_ExpTest.java	71	87201b6fd07e92b0	
-member	liqp.filters.Where_ExpTest#<stmt4>	ssg.liquid.filters.Where_ExpTest#<stmt4>	Renamed	-	liqp/filters/Where_ExpTest.java	107	c2805d890bf78c4e	
-member	liqp.filters.Where_ExpTest#<stmt5>	ssg.liquid.filters.Where_ExpTest#<stmt5>	Renamed	-	liqp/filters/Where_ExpTest.java	141	55c16ac3dc3fdcee	
-member	liqp.filters.Where_ExpTest#<stmt6>	ssg.liquid.filters.Where_ExpTest#<stmt6>	Renamed	-	liqp/filters/Where_ExpTest.java	177	58c15303aef8adb5	
-member	liqp.filters.Where_ExpTest#<stmt7>	ssg.liquid.filters.Where_ExpTest#<stmt7>	Renamed	-	liqp/filters/Where_ExpTest.java	201	fb8103cf88f5afb4	
-member	liqp.filters.Where_ExpTest#<stmt8>	ssg.liquid.filters.Where_ExpTest#<stmt8>	Renamed	-	liqp/filters/Where_ExpTest.java	238	c6f96924fb2c1eb0	
-member	liqp.filters.Where_ExpTest#<stmt9>	ssg.liquid.filters.Where_ExpTest#<stmt9>	Renamed	-	liqp/filters/Where_ExpTest.java	259	bac4edf2d7115eac	
-member	liqp.filters.Where_ExpTest#array_of_objects	ssg.liquid.filters.Where_ExpTest#array_of_objects	Renamed	-	liqp/filters/Where_ExpTest.java	15	0ddaabdaaec9671e	vis=private
-member	liqp.filters.Where_ExpTest#objectWithGroups	ssg.liquid.filters.Where_ExpTest#objectWithGroups	Renamed	-	liqp/filters/Where_ExpTest.java	221	c64c76a03356aeae	vis=private
+member	liqp.filters.Where_ExpTest#<stmt10>	ssg.liquid.filters.Where_ExpTest#<stmt10>	Renamed	-	liqp/filters/Where_ExpTest.java	271	07d317060afbb719	
+member	liqp.filters.Where_ExpTest#<stmt11>	ssg.liquid.filters.Where_ExpTest#<stmt11>	Renamed	-	liqp/filters/Where_ExpTest.java	289	4ad3e46bdbf9352e	
+member	liqp.filters.Where_ExpTest#<stmt12>	ssg.liquid.filters.Where_ExpTest#<stmt12>	Renamed	-	liqp/filters/Where_ExpTest.java	308	ae6e34939c5552de	
+member	liqp.filters.Where_ExpTest#<stmt1>	ssg.liquid.filters.Where_ExpTest#<stmt1>	Renamed	-	liqp/filters/Where_ExpTest.java	27	83c5f9c68c61bedf	
+member	liqp.filters.Where_ExpTest#<stmt2>	ssg.liquid.filters.Where_ExpTest#<stmt2>	Renamed	-	liqp/filters/Where_ExpTest.java	50	7beba1749c289c46	
+member	liqp.filters.Where_ExpTest#<stmt3>	ssg.liquid.filters.Where_ExpTest#<stmt3>	Renamed	-	liqp/filters/Where_ExpTest.java	71	bde53fd78171bfcd	
+member	liqp.filters.Where_ExpTest#<stmt4>	ssg.liquid.filters.Where_ExpTest#<stmt4>	Renamed	-	liqp/filters/Where_ExpTest.java	107	ea868d1f1395fa44	
+member	liqp.filters.Where_ExpTest#<stmt5>	ssg.liquid.filters.Where_ExpTest#<stmt5>	Renamed	-	liqp/filters/Where_ExpTest.java	141	3f7a7849b5cfb805	
+member	liqp.filters.Where_ExpTest#<stmt6>	ssg.liquid.filters.Where_ExpTest#<stmt6>	Renamed	-	liqp/filters/Where_ExpTest.java	177	84fbc8ea70b9600e	
+member	liqp.filters.Where_ExpTest#<stmt7>	ssg.liquid.filters.Where_ExpTest#<stmt7>	Renamed	-	liqp/filters/Where_ExpTest.java	201	ec0af8805dda76d2	
+member	liqp.filters.Where_ExpTest#<stmt8>	ssg.liquid.filters.Where_ExpTest#<stmt8>	Renamed	-	liqp/filters/Where_ExpTest.java	238	46654df03ec0c239	
+member	liqp.filters.Where_ExpTest#<stmt9>	ssg.liquid.filters.Where_ExpTest#<stmt9>	Renamed	-	liqp/filters/Where_ExpTest.java	259	ef75cf7859e7f40d	
+member	liqp.filters.Where_ExpTest#array_of_objects	ssg.liquid.filters.Where_ExpTest#array_of_objects	Renamed	-	liqp/filters/Where_ExpTest.java	15	7dddd15bc73ffa95	vis=private
+member	liqp.filters.Where_ExpTest#bpFreshState()	ssg.liquid.filters.Where_ExpTest#bpFreshState()	Renamed	-	liqp/filters/Where_ExpTest.java	13	fa85b01e6d01f32e	
+member	liqp.filters.Where_ExpTest#objectWithGroups	ssg.liquid.filters.Where_ExpTest#objectWithGroups	Renamed	-	liqp/filters/Where_ExpTest.java	221	565be4172b9f9fd0	vis=private
 member	liqp.filters.Where_ExpTest#parse(String)	ssg.liquid.filters.Where_ExpTest#parse(String)	Renamed	-	liqp/filters/Where_ExpTest.java	325	48f7b99a3cb9a055	
 member	liqp.filters.date.FuzzyDateDateParserTest#parser	ssg.liquid.filters.date.FuzzyDateDateParserTest#parser	Renamed	-	liqp/filters/date/FuzzyDateDateParserTest.java	13	52aad5a118f1da30	vis=private
-member	liqp.filters.where.JekyllWhereImplTest#<stmt10>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt10>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	451	60dff3928749dd65	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt11>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt11>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	470	b3b3ff79629a6443	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt12>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt12>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	510	b6adf3cf67cd8755	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt13>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt13>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	525	5a8f2f650893915d	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	96	0d8265c4e40c388e	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	116	a1c3fadb8bc86c91	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt3>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt3>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	142	bea8a47cc8d45e56	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt4>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt4>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	159	5edb2ecdc2a49bcc	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt5>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt5>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	220	04763a83a7e31c45	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt6>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt6>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	254	f8eb1da94e252459	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt7>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt7>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	280	313d1c25b86fc339	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt8>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt8>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	375	616d9650a13ac04c	
-member	liqp.filters.where.JekyllWhereImplTest#<stmt9>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt9>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	407	67f4384e46e8cfba	
-member	liqp.filters.where.JekyllWhereImplTest#array_of_objects1	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects1	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	49	b702c19b8927ea27	vis=private
-member	liqp.filters.where.JekyllWhereImplTest#array_of_objects2	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects2	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	71	a292a67ae460c049	vis=private
-member	liqp.filters.where.JekyllWhereImplTest#array_of_objects3	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects3	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	79	1ff04b70a340e9c1	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#<stmt10>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt10>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	451	5b34e6998926732f	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt11>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt11>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	470	96a8c128c2c174c1	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt12>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt12>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	510	e2957072a48c5424	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt13>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt13>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	525	ff058f21b16d699c	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	96	315889b5b8591bce	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	116	b3e5d4dfed6edadf	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt3>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt3>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	142	3697b9667d56cb02	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt4>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt4>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	159	0ddf5246fadc8e98	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt5>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt5>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	220	ba1732e31f22f952	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt6>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt6>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	254	83c9d92fad181444	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt7>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt7>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	280	2b1e5270c79b5d95	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt8>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt8>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	375	d15f2b6baf20e121	
+member	liqp.filters.where.JekyllWhereImplTest#<stmt9>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt9>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	407	a2f41431625f7ec9	
+member	liqp.filters.where.JekyllWhereImplTest#array_of_objects1	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects1	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	49	785e709bb652210c	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#array_of_objects2	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects2	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	71	89d9da63e72d39cd	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#array_of_objects3	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects3	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	79	c7d3c89cd04a7f83	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#bpFreshState()	ssg.liquid.filters.where.JekyllWhereImplTest#bpFreshState()	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	24	3369352ccf5ea100	
 member	liqp.filters.where.JekyllWhereImplTest#parse(String)	ssg.liquid.filters.where.JekyllWhereImplTest#parse(String)	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	25	9fda53205910682e	vis=private
 member	liqp.filters.where.JekyllWhereImplTest$Child#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest$Child#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	41	1589f61a20dca30b	
 member	liqp.filters.where.JekyllWhereImplTest$Child#<stmt2>	ssg.liquid.filters.where.JekyllWhereImplTest$Child#<stmt2>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	42	b1094de479f8809f	

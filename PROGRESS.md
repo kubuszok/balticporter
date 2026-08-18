@@ -96,7 +96,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-screens` | libgdx-screenmanager `src/main/java` | 22 → **22** (0 dropped, 0 injected) | **16** hand-written, all passing — upstream's 12 need an unported BACKEND (§9 libgdx-screenmanager) | **0** |
 | `sge-vfx` | gdx-vfx `core/src` + `effects/src` | 44 → **44** (0 dropped, 0 injected) | **64** hand-written, all passing — upstream has NO test SOURCE SET (§10.1) | **0** |
 | `sge-ai` | gdx-ai `gdx-ai/src` | 166 of 167 → **166** (1 dropped, 3 injected; the 167th is GWT super-source upstream's own build excludes, §10.7.1) | — | **0** after wave 2 (20 at first emit, 10 after wave 1; §10.7.5/§10.7.8, every one classified) |
-| `sge-ai-test` | gdx-ai `gdx-ai/tests` | 2 → **2** | **10 of 10 emitted and RUN — 6 passing, 4 failing**, all four one MUnit-instance fact in `ParallelTest` (§10.7.9, `ENGINE-LIMITS.md` X4). The "24 / 196" in the hand-port table below is the REFERENCE PORT's own MUnit suite, not upstream's | **0** |
+| `sge-ai-test` | gdx-ai `gdx-ai/tests` | 2 → **2** | **10 of 10 emitted and RUN — 10 passing, 0 failing.** 6 / 4 at wave 2, all four one MUnit-instance fact in `ParallelTest`, closed by the per-test reconstruction (§10.7.9/§10.7.10, `ENGINE-LIMITS.md` X4). The "24 / 196" in the hand-port table below is the REFERENCE PORT's own MUnit suite, not upstream's | **0** |
 | `sge-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `sge-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -3635,7 +3635,7 @@ this lane counts a different tree. The two numbers are not each other's residue.
 | scalac errors | **ZERO on one compile of both source sets after wave 23 — 0 main, 0 test, 0 elsewhere, which is what let the suite run** (27 = 27 + 0 after wave 21, every one a `RefChecks`-era row) (34 = 34 + 0 after wave 20; 42 = 42 + 0 after wave 19; 131 = 131 + 0 after wave 18) (1 = 1 + 0 after wave 17, and that 1 was POST-TYPER too; 2 = 2 + 0 after wave 16; 19 = 19 + 0 after wave 13; 30 = 30 + 0 after wave 12; 40 = 34 + 6 after wave 11; 42 = 35 + 7 after wave 10; 63 = 38 + 25 after wave 9; 84 = 40 + 44 before that). Wave 10 closed twenty-one in two commits: G28's ascription took the twelve `tagLine` rows and one of the main set's, and K23's built bound-method-reference arm took six `PlaceholderReplacer` rows and two more of the main set's. Wave 11 closed two more with ONE fix, one on each side. Wave 13 closed eleven in five commits, every one of them main-set. Wave 20 closed the eight-row `getBuilder` family, main-set; wave 21 closed K28.2's two field-shadow rows, the anonymous-body `E037`, the visibility row and the three substituted-override rows, main-set; wave 23 closed the whole remaining 27 with K28.1's bridge, main-set. Baselined at **0** against `FlexmarkTestMigrate`, which is the whole-compile figure; §10.6.3's 27 stays `md-measure`'s and is reproduced by that lane alone — **the two figures are equal now precisely because the test set is empty, and they are still two measurements** |
 | **THE TEST SOURCE SET IS AT ZERO — wave 12** | The last six were ONE family and it was a MAIN-set residue read from a caller: `BitFieldSet`, K25's held-back `iterator()` met by a `for` loop over a class whose parent stayed `java.util.AbstractSet` (three `foreach is not a member`, three `Found: java.util.Iterator`). Wave 11 had measured the mapping that closes it and REVERTED it, because alone it opens four `super.<JDK default>` rows `mutable.Set` cannot answer; wave 12 built that obligation into the phase and the mapping landed free (`ENGINE-LIMITS.md` K29). `collection-boundary` on this lane 6 → 4, the two `ClassFileOverride` rows on `BitFieldSetTest#iterator` falling with the errors they named — the attribution §5 requires of a lane that falls. 6 member digests moved, all in `BitFieldSetTest`. **What this does NOT mean is that the suite runs**: the lane compiles BOTH source sets and gates the run on the whole figure, which is 30 |
 | by owner | **0 of fifty-two files.** `HtmlAppendableBaseTest`, `HtmlBuilderTest`, `PlaceholderReplacerTest`, `PlainSegmentBuilderTest` and now `BitFieldSetTest` are all clean. Every wave from 9 onwards closed a test-set family by closing a MAIN-set one, which is the shape this table has been recording since it was written: no error in this suite was ever the suite's own |
-| test-framework refusals | **30, and it is `test-framework(refused)` in `baseline/counts.tsv` — a LANE, not this row.** One row per declined site naming its guard: `@RunWith` × 10, `@Suite.SuiteClasses` × 9, `@Rule` × 7 (the FIELDS, emitted and never applied), `org.hamcrest.Description` × 2 and `org.hamcrest.BaseMatcher` × 2. **The number this row carried was 26 and the population was 30**, which is the whole argument for making it a lane: a `println` and a prose row cannot diff, so four rows arrived with nothing to say so, and the D2-scoped artifact is now what a reader diffs. The wave history is unchanged and is below, restated against the artifact. **26 after wave 25, from 43 after wave 24 and 26 before it — and the round trip is the whole story of the two waves.** Wave 24's `intercept` shape converted 20 sites and DECLINED 17 with one row each (`ExpectedException(non-statement-position)`), which is what took the lane to 43; wave 25 models the rule instead and converts all 37, so that population is empty and the lane is back at its pre-conversion members: `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (the FIELDS, still emitted and still never applied), one hamcrest `Description` and one `BaseMatcher`. **Same number, different meaning** — a lane that returns to its old value because the population it counted was CLOSED is exactly the reading §5 asks a fall to be attributable for, and the attribution is the 17 newly-passing tests. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
+| test-framework refusals | **34, and it is `test-framework(refused)` in `baseline/counts.tsv` — a LANE, not this row.** One row per declined site naming its guard: `@RunWith` × 10, `@Suite.SuiteClasses` × 9, `@Rule` × 7 (the FIELDS, emitted and never applied), `org.hamcrest.Description` × 2, `org.hamcrest.BaseMatcher` × 2 — and, since the per-test reconstruction (`ENGINE-LIMITS.md` X4), `fresh-state(instance-escape)` × 3 (`RenderingTestCase`, `FullSpecTestCase`, `TemplateTestCase`) and `fresh-state(constructor)` × 1 (`ComboSpecTestCase`, whose constructor takes the `@RunWith(Parameterized)` arguments, so its own state is left exactly as it was while its subclasses rebuild theirs). `30 → 34`, with the 725 / 2 outcome unmoved. **The number this row carried was 26 and the population was 30**, which is the whole argument for making it a lane: a `println` and a prose row cannot diff, so four rows arrived with nothing to say so, and the D2-scoped artifact is now what a reader diffs. The wave history is unchanged and is below, restated against the artifact. **26 after wave 25, from 43 after wave 24 and 26 before it — and the round trip is the whole story of the two waves.** Wave 24's `intercept` shape converted 20 sites and DECLINED 17 with one row each (`ExpectedException(non-statement-position)`), which is what took the lane to 43; wave 25 models the rule instead and converts all 37, so that population is empty and the lane is back at its pre-conversion members: `@RunWith(Suite.class)` × 9 and its `@Suite.SuiteClasses` × 9 (aggregators that declare no `@Test`, so they move neither side of the discovery count), `@Rule` × 6 (the FIELDS, still emitted and still never applied), one hamcrest `Description` and one `BaseMatcher`. **Same number, different meaning** — a lane that returns to its old value because the population it counted was CLOSED is exactly the reading §5 asks a fall to be attributable for, and the attribution is the 17 newly-passing tests. `junit.framework.TestCase`'s static import is NOT among them: the phase's `AssertClasses` already names JUnit 3's assertion class |
 
 **THE SUITE RAN FOR THE FIRST TIME AT WAVE 23 — 683 PASSING, 40 FAILING OF 723, AT 0 COMPILE ERRORS
 ON BOTH SOURCE SETS AND 0 TESTS LOST.** K28.1's bridge took the main set 27 -> 0, which is what the
@@ -4831,9 +4831,9 @@ were never this source set's, and the lane compiles all three emitted source set
 | files emitted · test discovery | **2** of 2 · **10 → 10**, `expected-lost` 0 |
 | outcomes reconciled | **10 of 10 emitted** — 0 skipped, 0 ignored, 0 disappeared |
 | compile errors | **0** |
-| **passing / failing** | **6 / 4** |
+| **passing / failing** | **6 / 4** at wave 2 · **10 / 0** after the per-test reconstruction (§10.7.10) |
 | `IndexedAStarPathFinderTest` | **5 / 5 PASSING** |
-| `ParallelTest` | **1 / 5** — the first test in declaration order, and only it |
+| `ParallelTest` | **1 / 5** at wave 2 — the first test in declaration order, and only it · **5 / 5** after |
 
 **All four failures are one fact about MUnit**, anchored `main-frame` at the library member that
 threw:
@@ -4865,12 +4865,33 @@ It is an ENGINE gap in `TestFrameworkTransform` and not a gdx-ai one. The repair
 CONSTRUCTION of a converted suite's instance state, whose blast is every converted suite in the
 corpus — a wave of its own, recorded at `ENGINE-LIMITS.md` X4 with this number.
 
-### 10.7.10 Next
+### 10.7.10 The suite at 10 of 10 — the engine wave that closed X4
 
-1. **The four `ParallelTest` failures** — one engine gap, `ENGINE-LIMITS.md` X4, and NOT this port's
-   to fix: per-test CONSTRUCTION of a converted suite's instance state changes every converted suite
-   in the corpus. §10.7.9 has the diagnosis and the number.
-2. **The differential gate** — the reference hand port's **24 files / 194 `test(…)` calls** over
+**`6 / 4` → `10 / 0`, at 0 compile errors, with every other suite in the corpus reporting the same
+outcome it did before.** The wave is `TestFrameworkTransform`'s and not this port's: java's own
+initialisation sequence — the allocation's zeroing, JLS 12.5 step 4's field initialisers and instance
+initialiser blocks in textual order, and step 5's constructor body — is hoisted out of each converted
+class's body into a chained `bpFreshState()` that every test body calls ahead of its `@Before` calls.
+`ENGINE-LIMITS.md` X4 carries the shape, the four probed ordering facts behind it, the delta
+enumeration and the corpus-wide table.
+
+What this port contributes to that record is the census on the other side of the fix:
+
+- **the family that went to zero is the EXCEPTION's, not the suite's delta.** §10.7.9 predicted
+  exactly that, and it is what happened —
+  `IllegalStateException: A behavior tree cannot have more than one root task` reads **4 → 0**, and
+  the suite delta happens to be the same number only because nothing else was failing;
+- **11 member digests moved, all in `ParallelTest`**: the class (its `rebuilt-per-test` note), its
+  five `test(…)` registrations (each gained the prologue), its four fields (each lost its initialiser
+  to the member) and the minted `bpFreshState()`. Residue EMPTY, which is the gate `CLAUDE.md` §3
+  asks of a wave that moves emitted text by design;
+- **`IndexedAStarPathFinderTest` is byte-identical.** It declares no instance state, so the lowering
+  emits no member and no prologue for it — the property that keeps every stateless suite in the
+  corpus at 0 moved digests.
+
+### 10.7.11 Next
+
+1. **The differential gate** — the reference hand port's **24 files / 194 `test(…)` calls** over
    `sge.ai.*` (`../sge/sge-extension/ai/src/test/scala`), which is the only instrument that reaches
    the six packages upstream's own 10 tests do not (§10.7.1). It is a differential suite in the exact
    sense: hand-WRITTEN Scala over `sge.ai.*`, so a compiled port can be run against it with nothing

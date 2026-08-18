@@ -312,6 +312,22 @@ object Decision:
       * it is a [[RenamedMember]] row of its own, filed by the renamer, so the pair is two decisions
       * about two declarations rather than one row claiming both. */
     case BridgedMember
+    /** a converted TEST CLASS rebuilds its own instance state before every test, because JUnit 4
+      * CONSTRUCTS A FRESH INSTANCE per `@Test` and MUnit runs one suite instance
+      * (`ENGINE-LIMITS.md` X4).
+      *
+      * [[ForcedClassInit]]'s case one construct over, and the same shape of invisibility: the
+      * declaration java wrote is a field with an initialiser, the emitted one is a `var` at the JVM
+      * default with its initialiser MOVED into a member no java file declares, and every test body
+      * opens with a call to it. Nothing in that text says why — a reader diffing against the java
+      * sees an initialiser that has apparently been deleted, a `final` that has become mutable, and
+      * a `def` nobody wrote — and the fact that explains all three is a difference between two test
+      * FRAMEWORKS, which is nowhere in either file.
+      *
+      * The DETAIL says how many fields were hoisted, whether the constructor body was replayed, and
+      * which ancestor the member chains to, because "this class rebuilds its state" and "this class
+      * rebuilds its state AND its base's" are different claims with the same emitted shape. */
+    case RebuiltPerTest
 
   val Header ="#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
