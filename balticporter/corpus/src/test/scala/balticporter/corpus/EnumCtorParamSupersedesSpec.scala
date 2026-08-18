@@ -40,7 +40,10 @@ class EnumCtorParamSupersedesSpec extends PortSuite:
     )
     // the PARAMETER is a `String` and moves aside; `strict` is the same member at the same type and
     // stays superseded, which is what keeps `TextureFilter(glEnum)`-shaped enums byte-for-byte.
-    assertEmits(p, "enum Marker(var open$p: java.lang.String, var strict: scala.Boolean)")
+    // …and `strict` carries its FIELD's modifiers, because the parameter IS that field: `public
+    // final boolean strict` is a public `val`. The un-superseded `open$p` stands for no java
+    // declaration and therefore has none to carry (`EnumPromotedParamFlagsSpec`).
+    assertEmits(p, "enum Marker(var open$p: java.lang.String, val strict: scala.Boolean)")
     // …the FIELD is emitted, at java's own type …
     assertEmits(p, "var open: java.util.regex.Pattern")
     // …the constructor fills it, reading the renamed parameter …

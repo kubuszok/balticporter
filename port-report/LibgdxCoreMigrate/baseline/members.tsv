@@ -1192,7 +1192,7 @@ sge.graphics.Colors	sge.graphics.Colors#getColors()	def	3d002aa7cea328af
 sge.graphics.Colors	sge.graphics.Colors#map	val	231982a6695acc33
 sge.graphics.Colors	sge.graphics.Colors#put(String,Color)	def	40683fca68777cb4
 sge.graphics.Colors	sge.graphics.Colors#reset()	def	c0415f4a9bcedb24
-sge.graphics.Cubemap	sge.graphics.Cubemap	class	10a530cd329d44c0
+sge.graphics.Cubemap	sge.graphics.Cubemap	class	ddd4c49b54be3632
 sge.graphics.Cubemap	sge.graphics.Cubemap#<init>(FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,Sge)	ctor	b9023e5ea04475c5
 sge.graphics.Cubemap	sge.graphics.Cubemap#<init>(FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,boolean,Sge)	ctor	f3c5f261c8ef1ec5
 sge.graphics.Cubemap	sge.graphics.Cubemap#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Sge)	ctor	d26e7edf12ad222b
@@ -1219,7 +1219,7 @@ sge.graphics.Cubemap	sge.graphics.Cubemap#managed()	def	e5d2dba75d918912
 sge.graphics.Cubemap	sge.graphics.Cubemap#managedCubemaps	val	bd57ec042283971e
 sge.graphics.Cubemap	sge.graphics.Cubemap#reload()	def	48e23e7504ce3ac3
 sge.graphics.Cubemap	sge.graphics.Cubemap#setAssetManager(AssetManager)	def	bad4bfe28eadae8e
-sge.graphics.Cubemap	sge.graphics.Cubemap$CubemapSide	class	98eb21b4cabea341
+sge.graphics.Cubemap	sge.graphics.Cubemap$CubemapSide	class	9f8a1abdfcddd854
 sge.graphics.Cubemap	sge.graphics.Cubemap$CubemapSide#<stmt1>	stmt	d714ba66dc3dcbcd
 sge.graphics.Cubemap	sge.graphics.Cubemap$CubemapSide#<stmt2>	stmt	2f413f68d04a6e5d
 sge.graphics.Cubemap	sge.graphics.Cubemap$CubemapSide#direction	val	a5bb1be0dc80f75e
@@ -2856,7 +2856,7 @@ sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#<stmt2>	stmt	9f7e8e2
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#buffer	val	bfe899b07ae9a424
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#crc	val	91233da7218735b4
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#endChunk(DataOutputStream)	def	b48044e43c3e303b
-sge.graphics.Texture	sge.graphics.Texture	class	2cdec208fbd0bc65
+sge.graphics.Texture	sge.graphics.Texture	class	070bff8b76318bfa
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,Format,boolean,Sge)	ctor	7dbf1dc785070f27
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,Sge)	ctor	4b714eb826e8bb4f
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,boolean,Sge)	ctor	c5c4c29ac64a7eec
@@ -2887,10 +2887,10 @@ sge.graphics.Texture	sge.graphics.Texture#reload()	def	995ca42982c48987
 sge.graphics.Texture	sge.graphics.Texture#setAssetManager(AssetManager)	def	232c1fcb82c5151d
 sge.graphics.Texture	sge.graphics.Texture#textureData()	def	f8752f38949f043b
 sge.graphics.Texture	sge.graphics.Texture#toString()	def	5edb5888b2f2bf5c
-sge.graphics.Texture	sge.graphics.Texture$TextureFilter	class	bc157a34073e7b39
+sge.graphics.Texture	sge.graphics.Texture$TextureFilter	class	22ee8d53d3dfdb0c
 sge.graphics.Texture	sge.graphics.Texture$TextureFilter#getGLEnum()	def	b8e97915d186d4dc
 sge.graphics.Texture	sge.graphics.Texture$TextureFilter#isMipMap()	def	917c22ecd2effd07
-sge.graphics.Texture	sge.graphics.Texture$TextureWrap	class	0b4d03cfcf07fdfb
+sge.graphics.Texture	sge.graphics.Texture$TextureWrap	class	3b758a8efa37ea7b
 sge.graphics.Texture	sge.graphics.Texture$TextureWrap#getGLEnum()	def	b8e97915d186d4dc
 sge.graphics.Texture3D	sge.graphics.Texture3D	class	9b0cdcef717604ac
 sge.graphics.Texture3D	sge.graphics.Texture3D#<init>(int,int,int,int,int,int,Sge)	ctor	bfb1ab93f6d933b2
@@ -4034,10 +4034,10 @@ sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$SkylineStrategy$Skyl
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$SkylineStrategy$SkylinePage$Row#height	val	56799550495c68ab
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$SkylineStrategy$SkylinePage$Row#x	val	0402215aa404d156
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$SkylineStrategy$SkylinePage$Row#y	val	d74bad2e2dbf42b5
-sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO	class	105f6210c83c3753
+sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO	class	b724f01b49ec2917
 sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO#save(FileHandle,PixmapPacker)	def	0e05d3be871b3e4c
 sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO#save(FileHandle,PixmapPacker,SaveParameters)	def	4177c17bf0ace2c6
-sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO$ImageFormat	class	828a3d9309dd6638
+sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO$ImageFormat	class	4fb4ecd8e9f5bff0
 sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO$ImageFormat#getExtension()	def	9c29108ba3c3c678
 sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO$SaveParameters	class	f23d184ad86ea63c
 sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO$SaveParameters#format	val	e71c77dfa7ec01af
@@ -8620,7 +8620,7 @@ sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#uniformTyp
 sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#uniforms	val	64fb605c162640bd
 sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#vertexShaderHandle	val	eee59f07663bd1d2
 sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#vertexShaderSource	val	5145eaab7a5d605a
-sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer	class	9827756b4bd0fd73
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer	class	ec7a9fdee61992e6
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<init>(Sge)	ctor	09a86830c229493f
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<init>(int,Sge)	ctor	e573e5d66d49639b
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<stmt1>	stmt	7628d60038080b30
@@ -8693,7 +8693,7 @@ sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#triangle(f
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#updateMatrices()	def	b8be95fccde1998a
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#x(Vector2,float)	def	fc5cd9f53a17495c
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#x(float,float,float)	def	0f6dc95a9689cc3f
-sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer$ShapeType	class	70b2941acbee1176
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer$ShapeType	class	6a61976310209cf6
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer$ShapeType#getGlType()	def	35814eef89cf0a2f
 sge.graphics.glutils.VertexArray	sge.graphics.glutils.VertexArray	class	3dcd8c36ce4ad378
 sge.graphics.glutils.VertexArray	sge.graphics.glutils.VertexArray#<init>(int,Array<VertexAttribute>)	ctor	3c694a146f08c0e5

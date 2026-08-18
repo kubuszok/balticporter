@@ -3417,7 +3417,7 @@ ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#setN
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#setNewIndex(int)	def	15c13ceb39becc57
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser#trackDocumentLines	val	7b47c0151c347c60
 ssg.md.parser.internal.DocumentParser	ssg.md.parser.internal.DocumentParser$ParagraphPreProcessorCache	class	8490c762e5b14a35
-ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser	class	3f2cefe9201af933
+ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser	class	23a6f9291fa75ba1
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#<clinit>	init	626747f47e40c6f8
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#<init>()	ctor	e0a5e9ac1f1b7bcf
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#<stmt1>	stmt	c6b337462048a1dc
@@ -3450,7 +3450,7 @@ ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#myHt
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#myOpenTags	val	f7c922252861975a
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#openTag(String)	def	5aee7340c5ad65a8
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser#parseHtmlChunk(CharSequence,boolean,boolean,boolean)	def	78d4dc4b4f9ffe6b
-ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch	class	777f78a3146e9dc7
+ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch	class	d6970387dad5b05e
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch#<stmt1>	stmt	9fa5ba74f9c1cef5
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch#<stmt2>	stmt	21667790909d2a35
 ssg.md.parser.internal.HtmlDeepParser	ssg.md.parser.internal.HtmlDeepParser$HtmlMatch#close	val	5b423cac50a277c8
@@ -4104,7 +4104,7 @@ ssg.md.util.ast.TextCollectingVisitor	ssg.md.util.ast.TextCollectingVisitor#getS
 ssg.md.util.ast.TextCollectingVisitor	ssg.md.util.ast.TextCollectingVisitor#getText()	def	8b5fc8659965dda2
 ssg.md.util.ast.TextCollectingVisitor	ssg.md.util.ast.TextCollectingVisitor#myVisitor	val	f55a1e243b1c63d4
 ssg.md.util.ast.TextCollectingVisitor	ssg.md.util.ast.TextCollectingVisitor#out	val	5056848b30b5e19a
-ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer	class	7b1f8576cb5c4b9d
+ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer	class	7d0b67cd8940c8fc
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#F_ADD_SPACES_BETWEEN_NODES	val	80af80c3a37c39a2
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#F_FOR_HEADING_ID	val	839bfffe7325646a
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#F_LINK_ANCHOR	val	3750cc1f09345ada
@@ -4118,7 +4118,7 @@ ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#F_NO_TRIM_REF_TEXT_E
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#F_NO_TRIM_REF_TEXT_START	val	01a3ebf9bd78e320
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#collectEndText(ISequenceBuilder<?,BasedSequence>,int,NodeVisitor)	def	d2d481fb5aae73ed
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer#collectText(ISequenceBuilder<?,BasedSequence>,int,NodeVisitor)	def	2a0c164ee46745e8
-ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer$Flags	class	ff637d9b9ee61c4a
+ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer$Flags	class	ca70e922df9d2b14
 ssg.md.util.ast.TextContainer	ssg.md.util.ast.TextContainer$Flags#getBits()	def	36576dad401c7e66
 ssg.md.util.ast.TypographicText	ssg.md.util.ast.TypographicText	class	cd9c607f2fee5924
 ssg.md.util.ast.VisitHandler	ssg.md.util.ast.VisitHandler	class	4b39bc83891bf94d
@@ -6655,7 +6655,7 @@ ssg.md.util.options.ParsedOption	ssg.md.util.options.ParsedOption#messages	val	e
 ssg.md.util.options.ParsedOption	ssg.md.util.options.ParsedOption#optionParser	val	03778c8f38c9e0e1
 ssg.md.util.options.ParsedOption	ssg.md.util.options.ParsedOption#optionResult	val	9778595063afb834
 ssg.md.util.options.ParsedOption	ssg.md.util.options.ParsedOption#source	val	2b05236bde86c045
-ssg.md.util.options.ParsedOptionStatus	ssg.md.util.options.ParsedOptionStatus	class	7c16c9c8737a21d0
+ssg.md.util.options.ParsedOptionStatus	ssg.md.util.options.ParsedOptionStatus	class	735d0ae960b3bad4
 ssg.md.util.options.ParsedOptionStatus	ssg.md.util.options.ParsedOptionStatus#escalate(ParsedOptionStatus)	def	fccfcdf4b95419ad
 ssg.md.util.options.ParserMessage	ssg.md.util.options.ParserMessage	class	b0bc6e920eec1f36
 ssg.md.util.options.ParserMessage	ssg.md.util.options.ParserMessage#<stmt1>	stmt	add0aec2d3033159
@@ -7998,7 +7998,7 @@ ssg.md.util.sequence.LineAppendableImpl	ssg.md.util.sequence.LineAppendableImpl$
 ssg.md.util.sequence.LineAppendableImpl	ssg.md.util.sequence.LineAppendableImpl$IndexedLineProxy#set(int,BasedSequence)	def	5666acb8ffe3e4e2
 ssg.md.util.sequence.LineAppendableImpl	ssg.md.util.sequence.LineAppendableImpl$IndexedLineProxy#size()	def	3a7ef80e80623127
 ssg.md.util.sequence.LineAppendableImpl	ssg.md.util.sequence.LineAppendableImpl$IndexedLineProxy#withPrefixes	val	3290e89e76844b17
-ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo	class	f5d062ea3d33ac6b
+ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo	class	9df2b14efb445000
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#<stmt10>	stmt	ead00ea987c2574e
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#<stmt11>	stmt	9a03816024bc1451
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#<stmt1>	stmt	d49a8255016f9174
@@ -8046,7 +8046,7 @@ ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#sumPrefixLength	val	
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#sumTextLength	val	c187b2ba785c3bb7
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#textLength	val	21fcbcf90124f1ba
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo#toString()	def	066b2a79ab3ca65e
-ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Flags	class	4b37ecb162996720
+ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Flags	class	5618a8f79866a082
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Flags#getBits()	def	36576dad401c7e66
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted	class	9a5c3c3dfca79881
 ssg.md.util.sequence.LineInfo	ssg.md.util.sequence.LineInfo$Preformatted#<stmt1>	stmt	4ff8eb4c89ae2f59
@@ -9093,7 +9093,7 @@ ssg.md.util.sequence.builder.tree.Segment	@13715#<init>(int,byte[],int,int,com.v
 ssg.md.util.sequence.builder.tree.Segment	@13717#<init>(int,byte[],int,int)#byteOffset	val	cc7557aefffc0eb0
 ssg.md.util.sequence.builder.tree.Segment	length	val	da5683d059c548e3
 ssg.md.util.sequence.builder.tree.Segment	segTypeMask	val	39f4d84a93940ae1
-ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment	class	0f8a04edd5fac6a0
+ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment	class	1ddd531dc9d46b79
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#<stmt1>	stmt	2f0a8264aac829a8
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#<stmt2>	stmt	845babb2c8989686
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#<stmt3>	stmt	2e8c82c9b7500c7b
@@ -9174,7 +9174,7 @@ ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segm
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base#isText()	def	be024bbda2a5aff4
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base#length()	def	74d9cac04790ef53
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base#startOffset	val	df38ba44c5266a11
-ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$SegType	class	e765f7383a7cb8c8
+ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$SegType	class	413a01881b4b2048
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$SegType#fromTypeMask(int)	def	be49f02814c361ef
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$SegType#hasAll(int)	def	b5eb0c6961ed25a8
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$SegType#hasBoth()	def	b14c3b1bde2d4e0a

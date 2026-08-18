@@ -1943,7 +1943,74 @@ final class TirEmitter(
         case a: Tree.Assign                                  => selfAssignedParam(a).exists(supersededNames)
         case _                                               => false
       }
-    val eprimary = if ctorParams.isEmpty then "" else s"(${ctorParams.map(v => s"var ${esc(sym(v.symbol).name)}: ${tpe(v.tpt.tpe)}").mkString(", ")})"
+    // …AND A SUPERSEDED FIELD'S MODIFIERS COME WITH ITS VALUE. The parameter is emitted AS that
+    // field — that is the whole content of `enumSupersededFields`'s (name, TYPE) test — so rendering
+    // it `var` and public says something about java's declaration that java did not:
+    // `final private int level` shipped as `enum X(var level: scala.Int)`, whose value any caller
+    // could read and ASSIGN, on a shared singleton. No instrument here can see that: the port
+    // compiles, every check count is flat, and a write nobody performs is a widening nobody notices.
+    //
+    // THREE modifiers, each read off the FIELD and not off the parameter (java's parameter has
+    // none of them — it is an ordinary local, JLS 8.8.1):
+    //
+    //   * the ACCESS LEVEL is `Visibility`'s answer for the field symbol, so §8.7's mapping and its
+    //     `WidenedVisibility` residue govern this parameter exactly as they govern the field it
+    //     stands for. Nothing new is recorded here, and nothing may be: a widening this rendering
+    //     invented would be a second visibility decision beside the one the plan already made.
+    //   * `private` QUALIFIED WITH THE ENUM'S OWN NAME where the emitter would otherwise write it
+    //     bare. Java's `private` reaches the whole top-level enclosure (JLS 6.6.1), and an enum
+    //     CONSTANT's body is inside it — while scala's bare `private` on a class parameter is not
+    //     visible from a `case object` extending that class, nor from a nested type in its
+    //     companion. Probed both ways: `private val` is `value glEnum is not a member of object
+    //     F.LINEAR` at a constant body, and `private[F]` compiles there, in the companion's nested
+    //     types and in the class, while still refusing `F.NEAREST.glEnum` from outside. That is
+    //     java's own boundary, spelled the one way scala can spell it, so it is exactness rather
+    //     than a widening and records nothing.
+    //   * `val` where java wrote `final` AND nothing the promotion left behind writes it. Java's
+    //     `final` field is assignable in the constructor, and a constructor statement that is not
+    //     the dropped self-assignment SURVIVES into the class body (`this.x = x * 2`) — where a
+    //     scala `val` cannot be its target. So the write decides, by SYMBOL over the body as it
+    //     will be emitted (§4.55's `mutatedParams` rule at the other promotion), and `final var` is
+    //     contradictory in scala exactly as it is at the uninitialised-field arm below.
+    //
+    // A parameter that supersedes NOTHING keeps `var`: it stands for no java declaration, so there
+    // are no modifiers to carry, and its emitted name is already the `$p` one `funnelParamRenames`
+    // moved it to (`ENGINE-LIMITS.md` T11's third half).
+    val standsFor: Map[SymId, SymId] =
+      val dropped = instance0.collect { case v: Tree.ValDef if superseded(v.symbol) => v.symbol }.toSet
+      CtorFunnel.enumSupersededBy(program, cd).filter((_, f) => dropped(f))
+    // every write the EMITTED body still performs, to the field or to the parameter that replaced
+    // it — the dropped self-assignment is already gone from `ctorStats`, so it cannot vote here.
+    val writtenAfterPromotion: Set[SymId] =
+      if standsFor.isEmpty then Set.empty
+      else
+        val watched = standsFor.keySet ++ standsFor.values
+        val acc     = collection.mutable.Set.empty[SymId]
+        val scan = new Phase:
+          def name: String = "emit/written-enum-params"
+          override def transformTerm(t: Term)(using Program): Term =
+            t match
+              case Tree.Assign(Tree.Ident(sy, _, _), _, _, _) if watched(sy)                 => acc += sy
+              case Tree.Assign(Tree.Select(_: Tree.This, sy, _, _), _, _, _) if watched(sy)  => acc += sy
+              case _                                                                          => ()
+            t
+        StandardTraversal.mapClassDef(scan, cd.copy(body = instance ++ ctorStats))(using source)
+        acc.toSet
+    // the qualifier a bare `private` takes here — the enclosing top-level type where there is one
+    // (`privateQualifier`'s own answer for a NESTED enum), and otherwise the enum itself.
+    val es           = sym(cd.symbol)
+    val enumPrivateIn = privateQualifier(es.owner).orElse(Some(esc(es.name)))
+    def enumParam(v: Tree.ValDef): String =
+      val nm = esc(sym(v.symbol).name)
+      val ty = tpe(v.tpt.tpe)
+      standsFor.get(v.symbol) match
+        case Some(f) =>
+          val fs = sym(f)
+          val kw = if fs.flags.isMutable || writtenAfterPromotion(f) || writtenAfterPromotion(v.symbol)
+                   then "var" else "val"
+          s"${vis(fs, enumPrivateIn)}$kw $nm: $ty"
+        case None => s"var $nm: $ty"
+    val eprimary = if ctorParams.isEmpty then "" else s"(${ctorParams.map(enumParam).mkString(", ")})"
     EnumParts(ctorParams, paramNames, instance, ctorStats, statics, eprimary)
 
   /** THE PRE-EXISTING SHAPE — a `sealed abstract class` plus one `case object` per constant.

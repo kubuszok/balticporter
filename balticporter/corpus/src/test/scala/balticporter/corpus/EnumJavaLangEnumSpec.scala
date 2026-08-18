@@ -41,7 +41,9 @@ class EnumJavaLangEnumSpec extends PortSuite:
         |  public int getBits() { return bits; }
         |}
         |""".stripMargin)
-    assert(clue(out).contains("enum Flags(var bits: scala.Int) extends java.lang.Enum[Flags] with en1.Bits"))
+    // the promoted parameter carries the modifiers of the field it SUPERSEDES — `final int bits` is
+    // package-private and final in java (`EnumPromotedParamFlagsSpec`).
+    assert(clue(out).contains("enum Flags(private[en1] val bits: scala.Int) extends java.lang.Enum[Flags] with en1.Bits"))
     // the constants, with the ROOT constructor's arguments — `NODE_TEXT` named the delegating
     // overload and java ran `this(1)`, which is the T11.5 derivation this arm shares.
     assert(out.contains("case LINK_TEXT extends Flags(3)"))
@@ -112,7 +114,7 @@ class EnumJavaLangEnumSpec extends PortSuite:
         |  Dither(String name) { this.name = name; }
         |}
         |""".stripMargin)
-    assert(clue(out).contains("sealed abstract class Dither(var name: java.lang.String)"))
+    assert(clue(out).contains("sealed abstract class Dither(private[en4] val name: java.lang.String)"))
     assertEquals(clue(fs).map(_.owner), List("en4.Dither"))
     assert(fs.head.detail.contains("`name`"))
   }

@@ -204,7 +204,7 @@ sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#setReduceMin(float)	def	57
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#setReduceMul(float)	def	87ab2b6c74971db3
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#setSpanMax(float)	def	7693f9afa365f44b
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#viewportInverse	val	958d4eb8e6fd9e69
-sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect	class	885aae91a82831e4
+sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect	class	8935e0a672ecb642
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#<init>(Sge)	ctor	ffa176e9587d0b4a
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#<stmt1>	stmt	c0fb3c209a67c1d5
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#amount	val	15684f28a4986c61
@@ -227,7 +227,7 @@ sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#setPasses(
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#setType(BlurType)	def	def7c087acbdd588
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#type	val	86ec3590e1aabae4
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#update(float)	def	2fa4f96e0c8e75be
-sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$BlurType	class	e7283738bbb9709a
+sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$BlurType	class	0e64cf3e51a3d953
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect	class	a4ff5c1bfa7033d4
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect#<init>(int,Array<float>,Sge)	ctor	0e0b9af93dda5fe2
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect#<init>(int,Sge)	ctor	debc1a271744a839
@@ -264,7 +264,7 @@ sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve2D
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve2DEffect#render(VfxRenderContext,VfxPingPongWrapper)	def	3b8f7508d4146a5b
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve2DEffect#vert	val	ed40fd867c199941
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve2DEffect#weights	val	ee64b820cb0d5ec3
-sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Tap	class	19a4eee5136d8008
+sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Tap	class	1a275ccaeda11934
 sge.vfx.effects.LensFlareEffect	sge.vfx.effects.LensFlareEffect	class	e0a08697a522033d
 sge.vfx.effects.LensFlareEffect	sge.vfx.effects.LensFlareEffect#<stmt1>	stmt	5e3db9e8fb1acb4f
 sge.vfx.effects.LensFlareEffect	sge.vfx.effects.LensFlareEffect#U_COLOR	val	1ff6e2955e4c2993

@@ -3263,6 +3263,75 @@ running total counting two more `ValDef`s, every count flat, 0 members moved on 
 *Fix kind: (a) engine. `EnumCtorParamSupersedesSpec` — the different-type positive, the same-type
 negative that keeps every corpus enum byte-for-byte, and the widening negative.*
 
+**AND THE FOURTH HALF — "THE PARAMETER IS THAT FIELD" WAS TRUE OF THE VALUE AND OF NOTHING ELSE.**
+The three halves above all rest on one sentence: where the (name, TYPE) test holds, the promoted
+parameter IS the body field, so the field is dropped and the parameter carries it. That is exactly
+right about the VALUE and was silently false about every MODIFIER java wrote on the declaration —
+the rendering was `var <name>: <T>`, unqualified, for every parameter of every enum in the corpus:
+
+```java
+public enum ParsedOptionStatus {          // upstream
+    VALID(0), WEAK_WARNING(1), WARNING(2), ERROR(3);
+    final private int level;              // ← PRIVATE and FINAL
+    ParsedOptionStatus(int level) { this.level = level; }
+}
+```
+
+```scala
+enum ParsedOptionStatus(var level: scala.Int) extends java.lang.Enum[ParsedOptionStatus]   // before
+```
+
+`ParsedOptionStatus.ERROR.level = 0` therefore COMPILED, from anywhere, and mutated a shared
+singleton — probed against scalac 3.8.4. **Nothing here could see it.** It is not a type error, so no
+count moved; it is not a rename or a drop, so no `Decision` and no porter note exist; the emitted
+text has been that way since the first enum shipped, so `members.tsv` had nothing to diff. §3's
+"a green compile says nothing" at a DECLARATION rather than at a statement.
+
+**THREE MODIFIERS, EACH READ OFF THE FIELD, and each with its own reason:**
+
+- **the ACCESS LEVEL is `Visibility`'s answer for the FIELD symbol.** §8.7's mapping already decides
+  it and already records its own residue, so the parameter inherits both and this rendering invents
+  no widening of its own. A widening recorded here would be a SECOND visibility decision beside the
+  plan's, about one declaration;
+- **a bare `private` is QUALIFIED WITH THE ENUM.** Java's `private` reaches the whole top-level
+  enclosure (JLS 6.6.1) and an enum CONSTANT's body is inside it; scala's bare `private` on a class
+  parameter is NOT visible from a `case object` extending that class, nor from a nested type in the
+  companion. Probed both ways: `private val glEnum` is `value glEnum is not a member of object
+  F.LINEAR` at a constant body, `private[F] val glEnum` compiles there, in `object F`'s nested types
+  and in the class, and still refuses `F.NEAREST.glEnum` from outside. So the qualified form is java's
+  own boundary spelled the one way scala can spell it — exactness, not a widening, and it records
+  nothing. A NESTED enum takes `privateQualifier`'s existing answer (`private[TopLevel]`), which is
+  the same fact one level out;
+- **`val` where java wrote `final` AND nothing the promotion left behind WRITES it.** A java `final`
+  field is assignable in the constructor, and a constructor statement that is not the dropped
+  self-assignment survives into the class body — `this.x = x * 2` is ordinary java and a scala `val`
+  cannot be its target. The write decides, by SYMBOL over the body as it will be emitted, which is
+  §4.55's `mutatedParams` rule at the other promotion. `final var` is contradictory in scala exactly
+  as it is at the uninitialised-field arm.
+
+**THE RESIDUE THIS LEAVES, stated rather than left to be found.** A promoted parameter that
+supersedes NOTHING still renders `var`: it stands for no java declaration, so there are no modifiers
+to carry — and it is therefore a public mutable member java never had, at the same singleton. Two
+shapes reach it: a parameter whose same-named field is at a DIFFERENT type (the third half's `$p`
+rename) and a parameter with no field at all (anim8's `DitherAlgorithm(String name)`, which fills
+`legibleName`). The faithful rendering is a BARE class parameter — java's parameter is not a member,
+and a bare scala parameter is not one either — and it is not taken here because it collides with the
+`hasName`/`hasOrdinal` suppression the sealed arm needs (a bare parameter `name` beside the
+hand-written `def name()` is `E120` rather than the suppression T11's first half exists for). It is
+one commit's worth of work and its own question.
+
+**MEASURED, blast attributed per port.** Every changed digest is an enum whose promoted parameter
+supersedes a field, or the type that ENCLOSES one — libGDX core's four nested enums plus their four
+enclosing classes is the shape. No lane's error count moved in either direction and **no suite
+outcome moved on any lane**, which is the gate: the surface is tighter and the behaviour is
+identical. A port whose own emitted code WROTE such a field would now fail to compile, and that would
+be a real finding to census rather than a reason to widen — none did.
+
+*Fix kind: (a) engine. `EnumPromotedParamFlagsSpec` — the private-final positive, the
+package-private positive, the two `var` negatives (a java-mutable field and a java-final one the
+constructor computes), the nested-enum qualifier and the sealed shape whose constant bodies read it.
+The write-compiles probe is the negative: four of its six tests fail against the old rendering.*
+
 ### T11.5 An OVERLOADED enum constructor: the primary is java's ROOT, and `ctors.head` was not a refusal but a WRONG ANSWER — **2 errors + a silent default, 177 → 175. CLOSED for the expressible shape, COUNTED for the rest**
 
 A java enum lowers to a sealed abstract class whose primary IS java's constructor, because every

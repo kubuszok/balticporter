@@ -57,13 +57,18 @@ class EnumOverloadedCtorSpec extends PortSuite:
         |  public int getBits() { return bits; }
         |}
         |""".stripMargin)
-    assert(clue(out).contains("enum Level(var bits: scala.Int) extends java.lang.Enum[Level]"))
+    assert(clue(out).contains("enum Level(private[enums] val bits: scala.Int) extends java.lang.Enum[Level]"))
     assert(out.contains("case HIGH extends Level(3)"))
     // the one that was silently 0 before: java ran `this(1)`
     assert(out.contains("case LOW extends Level(1)"))
     assertEquals(clue(fs), Nil)
   }
 
+  // NOTE the header below moved once since this spec was written, and for a reason that is not
+  // about overloading at all: a promoted parameter now carries the modifiers of the field it
+  // SUPERSEDES, so `final int level` renders `private[enums1] val` (`EnumPromotedParamFlagsSpec`).
+  // What this test is the negative for — the ROOT's parameter list and the constants' arguments —
+  // is unchanged.
   test("NEGATIVE — a SINGLE-constructor enum is byte-identical to what the port shipped before") {
     val (out, fs) = emit(
       """package enums1;
@@ -73,7 +78,7 @@ class EnumOverloadedCtorSpec extends PortSuite:
         |  Shade(int level) { this.level = level; }
         |}
         |""".stripMargin)
-    assert(clue(out).contains("enum Shade(var level: scala.Int) extends java.lang.Enum[Shade]"))
+    assert(clue(out).contains("enum Shade(private[enums1] val level: scala.Int) extends java.lang.Enum[Shade]"))
     assert(out.contains("case DARK extends Shade(1)"))
     assert(out.contains("case LIGHT extends Shade(2)"))
     assertEquals(clue(fs), Nil)

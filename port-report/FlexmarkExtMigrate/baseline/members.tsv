@@ -471,7 +471,7 @@ ssg.md.ext.attributes.AttributesVisitor	ssg.md.ext.attributes.AttributesVisitor#
 ssg.md.ext.attributes.AttributesVisitor	ssg.md.ext.attributes.AttributesVisitor#visit(AttributesNode)	def	3c222f8cd33f090a
 ssg.md.ext.attributes.AttributesVisitorExt	ssg.md.ext.attributes.AttributesVisitorExt	class	628e337e61e5b328
 ssg.md.ext.attributes.AttributesVisitorExt	ssg.md.ext.attributes.AttributesVisitorExt#VISIT_HANDLERS(V)	def	d2be432618d15ea5
-ssg.md.ext.attributes.FencedCodeAddType	ssg.md.ext.attributes.FencedCodeAddType	class	c0010291c3091742
+ssg.md.ext.attributes.FencedCodeAddType	ssg.md.ext.attributes.FencedCodeAddType	class	55fafb225c23291e
 ssg.md.ext.attributes.FencedCodeAddType	ssg.md.ext.attributes.FencedCodeAddType#<stmt1>	stmt	be83ddd74cf117b6
 ssg.md.ext.attributes.FencedCodeAddType	ssg.md.ext.attributes.FencedCodeAddType#addToPre	val	4ce99e6e9c764f60
 ssg.md.ext.attributes.internal.AttributeParsing	ssg.md.ext.attributes.internal.AttributeParsing	class	1b5bc1c52c9b3d83
@@ -815,8 +815,8 @@ ssg.md.ext.emoji.EmojiExtension	ssg.md.ext.emoji.EmojiExtension#extend(Builder)	
 ssg.md.ext.emoji.EmojiExtension	ssg.md.ext.emoji.EmojiExtension#extend(Builder,String)	def	10febb910f5415ad
 ssg.md.ext.emoji.EmojiExtension	ssg.md.ext.emoji.EmojiExtension#parserOptions(MutableDataHolder)	def	55bdf57bb16d44c0
 ssg.md.ext.emoji.EmojiExtension	ssg.md.ext.emoji.EmojiExtension#rendererOptions(MutableDataHolder)	def	e3e165e739f41514
-ssg.md.ext.emoji.EmojiImageType	ssg.md.ext.emoji.EmojiImageType	class	9a4b0d3004befab7
-ssg.md.ext.emoji.EmojiShortcutType	ssg.md.ext.emoji.EmojiShortcutType	class	655c6fdc1deb4a4a
+ssg.md.ext.emoji.EmojiImageType	ssg.md.ext.emoji.EmojiImageType	class	4d81ea080bd3db4a
+ssg.md.ext.emoji.EmojiShortcutType	ssg.md.ext.emoji.EmojiShortcutType	class	725d38dd21980ed7
 ssg.md.ext.emoji.EmojiShortcutType	ssg.md.ext.emoji.EmojiShortcutType#getPreferred(String,String)	def	408e56cfec5988c7
 ssg.md.ext.emoji.EmojiVisitor	ssg.md.ext.emoji.EmojiVisitor	class	0a782b29d1dad5d5
 ssg.md.ext.emoji.EmojiVisitor	ssg.md.ext.emoji.EmojiVisitor#visit(Emoji)	def	679d7c3428d00f63
@@ -867,7 +867,7 @@ ssg.md.ext.emoji.internal.EmojiOptions	ssg.md.ext.emoji.internal.EmojiOptions#ro
 ssg.md.ext.emoji.internal.EmojiOptions	ssg.md.ext.emoji.internal.EmojiOptions#useImageType	val	dc0f58e41637143c
 ssg.md.ext.emoji.internal.EmojiOptions	ssg.md.ext.emoji.internal.EmojiOptions#useShortcutType	val	3471ff921e7fb6af
 ssg.md.ext.emoji.internal.EmojiOptions	ssg.md.ext.emoji.internal.EmojiOptions#useUnicodeFileNames	val	8b6244d08b0da92c
-ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReference	class	b77f61dce2240cec
+ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReference	class	73bc12a5c0f44bd6
 ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReference#EMOJI_REFERENCE_TXT	val	2aabc678b8366a16
 ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReference#EMPTY_ARRAY	val	617ebfcd501c7080
 ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReference#emojiList	val	543f72777f138b71
@@ -894,7 +894,7 @@ ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReferenc
 ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReference$Emoji#unicodeChars	val	7e7b9f83e0a27503
 ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReference$Emoji#unicodeCldr	val	af9e29d1f7461034
 ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReference$Emoji#unicodeSampleFile	val	253b0c374a764b02
-ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReference$EmojiBrowserType	class	d1c34479e21984ca
+ssg.md.ext.emoji.internal.EmojiReference	ssg.md.ext.emoji.internal.EmojiReference$EmojiBrowserType	class	c67a0c630e4c37a0
 ssg.md.ext.emoji.internal.EmojiResolvedShortcut	ssg.md.ext.emoji.internal.EmojiResolvedShortcut	class	324f4a6cb01b62a0
 ssg.md.ext.emoji.internal.EmojiResolvedShortcut	ssg.md.ext.emoji.internal.EmojiResolvedShortcut#<stmt1>	stmt	477c60b40146ad5f
 ssg.md.ext.emoji.internal.EmojiResolvedShortcut	ssg.md.ext.emoji.internal.EmojiResolvedShortcut#<stmt2>	stmt	cfd9d5537716d6b7

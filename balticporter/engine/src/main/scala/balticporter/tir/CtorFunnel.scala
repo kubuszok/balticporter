@@ -1803,15 +1803,29 @@ object CtorFunnel:
     * Answers a set of FIELD symbols, so a caller holding a `ValDef` asks about the declaration it
     * has rather than about a string it would have to re-derive. */
   def enumSupersededFields(program: Program, cd: Tree.ClassDef): Set[SymId] =
+    enumSupersededBy(program, cd).values.toSet
+
+  /** the PAIRING behind [[enumSupersededFields]] — promoted PARAMETER symbol to the FIELD symbol it
+    * stands for.
+    *
+    * The set above is what the drop and the rename need; the pair is what the RENDERING needs,
+    * because the emitted parameter IS that field and therefore ships at the field's own access level
+    * and the field's own mutability. Read as two derivations those two would be free to disagree
+    * about which field a parameter is (§4.56), which is the disagreement `enumSupersededFields`
+    * itself exists to prevent one question earlier — so the set is derived FROM the pairing and
+    * never beside it. */
+  def enumSupersededBy(program: Program, cd: Tree.ClassDef): Map[SymId, SymId] =
     val params = enumPrimaryCtor(program, cd).map(valueParams(program, _)).getOrElse(Nil)
-    if params.isEmpty then Set.empty
+    if params.isEmpty then Map.empty
     else
       def nameOf(id: SymId): Option[String] = program.symbolOf(id).map(_.name)
-      val byName: Map[String, TypeRepr] =
-        params.flatMap(v => nameOf(v.symbol).map(_ -> v.tpt.tpe)).toMap
+      val byName: Map[String, (SymId, TypeRepr)] =
+        params.flatMap(v => nameOf(v.symbol).map(_ -> (v.symbol, v.tpt.tpe))).toMap
       cd.body.collect {
-        case v: Tree.ValDef if nameOf(v.symbol).flatMap(byName.get).contains(v.tpt.tpe) => v.symbol
-      }.toSet
+        case v: Tree.ValDef
+          if nameOf(v.symbol).flatMap(byName.get).exists((_, t) => t == v.tpt.tpe) =>
+          nameOf(v.symbol).flatMap(byName.get).get._1 -> v.symbol
+      }.toMap
 
   /** the arguments a CONSTANT passes to [[enumPrimaryCtor]] — java's own, where it named the root,
     * and the delegation's where it named an overload that delegates to it.

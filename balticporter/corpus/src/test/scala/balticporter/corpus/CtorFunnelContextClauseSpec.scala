@@ -264,7 +264,9 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
     // both shapes: a `case object` and a scala 3 `enum` case reach the primary the same way
     // (`ENGINE-LIMITS.md` T21), and this enum takes the `enum` one.
     assert(!clue(out).contains("var : demo.Ctx"), out)
-    assert(out.contains("enum Filter(var glEnum: scala.Int) extends java.lang.Enum[Filter]"), out)
+    // `val` and public: the parameter supersedes `public final int glEnum` and therefore ships at
+    // that field's own modifiers (`EnumPromotedParamFlagsSpec`).
+    assert(out.contains("enum Filter(val glEnum: scala.Int) extends java.lang.Enum[Filter]"), out)
     assertEquals(clue(e.contextClauseLosses).map(l => l.fqn -> l.form), List("demo.Filter" -> "enum"))
   }
 

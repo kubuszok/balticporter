@@ -216,6 +216,6 @@ class EnumCtorBodySpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    assertEmits(p, "enum Filter(var glEnum: scala.Int) extends java.lang.Enum[Filter]")
+    assertEmits(p, "enum Filter(val glEnum: scala.Int) extends java.lang.Enum[Filter]")
     assertNotEmits(p, "glEnum$p")
   }
