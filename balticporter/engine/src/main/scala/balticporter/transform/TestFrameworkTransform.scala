@@ -481,7 +481,10 @@ final class TestFrameworkTransform(
       names.foreach { (fqn, o) =>
         if roots.exists(fqn.startsWith) && !HandledAnns(fqn) then
           val (fix, advice) = adviceFor(fqn)
-          found += Finding(fqn, o, fix, advice)
+          // `s.id` and not `o`: a DROPPED annotation is reported from the SYMBOL, whose `origin`
+          // defaults to `Origin.synthetic`, so the path locates nothing and the D2 filter has to
+          // ask the owner chain instead (see `Finding.at`).
+          found += Finding(fqn, o, fix, advice, s.id)
       }
     }
     // JUnit 3 has no annotations at all: a suite is a `junit.framework.TestCase` subclass whose
@@ -489,7 +492,7 @@ final class TestFrameworkTransform(
     def scanParents(cd: Tree.ClassDef): Unit =
       cd.parents.foreach {
         case tt: TypeTree if nameOf(tt.tpe) == "junit.framework.TestCase" =>
-          found += Finding("junit.framework.TestCase", cd.origin, Fix.EngineRule,
+          found += Finding("junit.framework.TestCase", cd.origin, Fix.EngineRule, at = cd.symbol, advice =
             "a JUnit 3 suite declares its tests by NAMING them `testXxx` on a `TestCase` subclass; " +
             "this phase keys off `@Test` and converts nothing, so the class emits as a plain class " +
             "and registers zero tests.")
@@ -511,7 +514,7 @@ final class TestFrameworkTransform(
         val isAssertThat = s.name == "assertThat"
         if isHamcrest || isAssertThat then
           val what = if isAssertThat then "assertThat" else s.fullName
-          program.usages(id).foreach(u => found += Finding(what, u.site.origin, Fix.EngineRule,
+          program.usages(id).foreach(u => found += Finding(what, u.site.origin, Fix.EngineRule, at = u.enclosing, advice =
             "Hamcrest is a second assertion vocabulary (`assertThat(x, is(equalTo(y)))`); this " +
             "phase maps JUnit's `Assert` members only, and MUnit has no matcher algebra to map a " +
             "matcher ONTO. OUT OF SCOPE by decision, reported so it is not mistaken for coverage: " +
@@ -990,7 +993,7 @@ final class TestFrameworkTransform(
                         .flatten.map(b => StandardTraversal.scanTerm(b, 0)(refs)).sum
           if all <= mine then ruleFields0
           else
-            found += Finding(s"$ExpectedExceptionCls(arming-outside-test)", cd.origin, Fix.EngineRule,
+            found += Finding(s"$ExpectedExceptionCls(arming-outside-test)", cd.origin, Fix.EngineRule, at = cd.symbol, advice =
               s"${all - mine} reference(s) to this suite's `ExpectedException` rule field stand " +
               "OUTSIDE its own `@Test` methods — in a helper, a field initialiser or a nested " +
               "class. The rule's matcher list is modelled as a local of the test it governs, so an " +
@@ -1006,7 +1009,7 @@ final class TestFrameworkTransform(
       cd2.body.foreach {
         case v: Tree.ValDef
             if hasAnn(v.symbol, ClassRuleAnn) && nameOf(v.tpt.tpe) == ExpectedExceptionCls =>
-          found += Finding(s"$ExpectedExceptionCls(class-rule)", v.origin, Fix.EngineRule,
+          found += Finding(s"$ExpectedExceptionCls(class-rule)", v.origin, Fix.EngineRule, at = v.symbol, advice =
             "an `ExpectedException` declared as a `@ClassRule` wraps the WHOLE CLASS RUN, not each " +
             "test, so the region an `expect` call arms is not the one an `intercept` in a test body " +
             "wraps. The `@Rule` form IS translated; this one is left alone and the field is never " +
@@ -1178,7 +1181,7 @@ final class TestFrameworkTransform(
     if refs == 0 then (body, identity, "")
     else
       def refuse(guard: String, why: String): (Term, Term => Term, String) =
-        found += Finding(s"$ExpectedExceptionCls($guard)", d.origin, Fix.EngineRule, why)
+        found += Finding(s"$ExpectedExceptionCls($guard)", d.origin, Fix.EngineRule, why, d.symbol)
         (body, identity, "")
       // every call ON the rule field, WHEREVER it stands — `StandardTraversal` and not a scan of the
       // body's own statements, because reaching a site in a loop body is what this lowering is for
@@ -1449,7 +1452,7 @@ final class TestFrameworkTransform(
         else
           if ruleFields.nonEmpty && StandardTraversal.scanTerm(d.rhs.get, 0)((n, t) =>
                if isRuleRef(t, ruleFields) then n + 1 else n) > 0 then
-            found += Finding(s"$ExpectedExceptionCls(rule-in-overridden-test)", d.origin, Fix.EngineRule,
+            found += Finding(s"$ExpectedExceptionCls(rule-in-overridden-test)", d.origin, Fix.EngineRule, at = d.symbol, advice =
               "this `@Test` arms an `ExpectedException` rule AND takes part in java's own override " +
               "relation, so it stays a `def` and the MUnit registration calls it. The rule's matcher " +
               "list is modelled as a local of the frame the registration builds, and the arming is " +
@@ -1542,9 +1545,61 @@ object TestFrameworkTransform:
     case Contains(text: Term)
     case ByMatcher(matcher: Term)
 
-  /** One test-framework construct this phase did not translate. */
-  final case class Finding(construct: String, where: Origin, fix: Fix, advice: String):
+  /** One test-framework construct this phase did not translate.
+    *
+    * `at` is the DECLARATION the construct sits on, and it is a `SymId` rather than a path because
+    * that is what the D2 filter has to be asked (`CLAUDE.md` §4.56 — ownership is decided
+    * STRUCTURALLY, never from a string). It is not decoration: `Origin` is the only other locator
+    * here and a `Symbol`'s origin DEFAULTS TO `Origin.synthetic`, so a construct reported from a
+    * symbol rather than from a tree node carries `<synthetic>` as its path. Filtered on the path,
+    * exactly those rows vanish — measured at 11 of 30 surviving on one port, with the 19 missing
+    * being every CLASS-LEVEL annotation (`@RunWith`, `@Suite.SuiteClasses`), which is the largest
+    * standing refusal in the corpus and the one this lane exists to make visible. */
+  final case class Finding(construct: String, where: Origin, fix: Fix, advice: String,
+                           at: SymId = SymId.None):
     def render: String = s"$construct — (${fix.label}) $advice  (${where.javaPath}:${where.line})"
+
+    /** …as a row of the [[Refused]] lane. The KIND is the construct, which is the GUARD this site
+      * was declined at — `CLAUDE.md` §3's refusal-enumeration rule wants the guard named and not a
+      * total, because a count of conversions says nothing about what was left alone.
+      *
+      * The OWNER is the caller's, because the caller is the one that climbed [[at]]'s owner chain
+      * to the top-level unit and therefore already holds the emitted name. */
+    def report(owner: String): CheckReport.Finding =
+      CheckReport.Finding(Refused, construct, owner, where.javaPath, where.line,
+                          s"(${fix.label}) $advice")
+
+  /** THE REFUSAL POPULATION, as a lane — `CLAUDE.md` §3 and §5, at the phase that has the largest
+    * standing one in this corpus.
+    *
+    * `run` has printed these to stdout since the phase was written, grouped by construct, and stdout
+    * is not an artifact: no baseline diffs it, so a refusal that appeared, moved owner or changed its
+    * advice reached nobody, and the only place the population was written down was a PROSE row in
+    * `PROGRESS.md` that somebody had to keep in step by hand. That is the arrangement §5's
+    * `findings.tsv` paragraph exists to refuse — every number that reaches stdout must reach the
+    * artifact — and it is worse here than for most, because this phase's failure mode is SILENT: an
+    * unrecognised annotation means the class is not converted at all, so it registers ZERO tests,
+    * compiles, and reports success.
+    *
+    * `(refused)` and not a bare name, deliberately: the spelling says it is a RESIDUE lane in the
+    * `idiom(refused)` family and not a defect count, and it is required only OF A RUN THAT CARRIES
+    * THE PHASE (`PortRun.requiredChecks`) — a port with no test source set records nothing here, and
+    * requiring it of every port would fail every one of them. */
+  val Refused: String = "test-framework(refused)"
+
+  /** the one-line classification every lane with a §1 answer prints beside its count. */
+  val Classification: String =
+    "  [§1(a) engine: every row is a fact about JUnit/TestNG and scala, identical for every library " +
+      "— none of them is fixed by configuring this phase or by a library-specific rule. A refused " +
+      "construct is NOT a compile error: the class converts to ZERO tests, compiles, and reports " +
+      "success, so this lane is the only instrument there is.]"
+
+  /** one line per construct, with the count and one example site — the shape a reader scans. */
+  def summary(fs: Seq[Finding]): String =
+    if fs.isEmpty then "  (none)"
+    else fs.groupBy(_.construct).toList.sortBy(g => (-g._2.size, g._1)).map { (c, gs) =>
+      s"  $c × ${gs.size} — (${gs.head.fix.label}) ${gs.head.where.javaPath}:${gs.head.where.line}"
+    }.mkString("\n")
 
   /** Widening rank for java's BINARY NUMERIC PROMOTION: a value of rank r converts, without loss,
     * to any numeric type of higher rank. `Char` and `Short` share a rank because neither widens to

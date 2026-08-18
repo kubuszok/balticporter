@@ -1188,6 +1188,64 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assertEquals(ph.findings.map(_.render), Nil)
   }
 
+  // ---- the refusal POPULATION as a lane, not as a println (`CLAUDE.md` §3, §5) --------------
+
+  test("every refusal renders a `test-framework(refused)` row NAMING ITS GUARD") {
+    // Until this lane existed the population was a grouped `println` and a PROSE row in
+    // `PROGRESS.md` somebody kept in step by hand: no baseline diffed it, so a refusal that
+    // appeared, changed owner or changed its advice reached nobody. That matters more here than
+    // almost anywhere, because the failure mode is SILENT — an unrecognised annotation means the
+    // class is not converted at all, so it registers ZERO tests, compiles and reports success.
+    val (_, ph) = emit(
+      """package demo;
+        |import org.junit.Rule;
+        |import org.junit.Test;
+        |import org.junit.runner.RunWith;
+        |import org.junit.runners.Suite;
+        |@RunWith(Suite.class)
+        |@Suite.SuiteClasses({ demo.RefusedTest.class })
+        |public class RefusedTest {
+        |  @Rule public org.junit.rules.TemporaryFolder tmp = new org.junit.rules.TemporaryFolder();
+        |  @Test public void a() { }
+        |}
+        |""".stripMargin)
+    val rows = ph.findings.map(_.report("demo.RefusedTest"))
+    // ONE lane name, spelled as the residue it is — the `idiom(refused)` family.
+    assertEquals(rows.map(_.check).distinct, List("test-framework(refused)"))
+    assertEquals(TestFrameworkTransform.Refused, "test-framework(refused)")
+    // the KIND is the GUARD: the construct this site was declined at, never a total.
+    assert(clue(rows.map(_.kind)).contains("org.junit.runner.RunWith"))
+    assert(clue(rows.map(_.kind)).contains("org.junit.Rule"))
+    // §4.45 — the §1 classification rides in the row, so an agent holding only `findings.tsv` has it
+    assert(clue(rows.head.detail).startsWith("("), rows.head.detail)
+    assert(rows.forall(_.detail.startsWith("(a)")), clue(rows.map(_.detail.take(4))))
+    // …and the owner is the caller's, which is the D2 filter doing double duty.
+    assertEquals(rows.map(_.owner).distinct, List("demo.RefusedTest"))
+    // EVERY finding LOCATES ITSELF STRUCTURALLY, and this is the assertion that keeps the lane
+    // whole. A `Symbol`'s `origin` defaults to `Origin.synthetic`, so a construct reported from a
+    // SYMBOL — which is every DROPPED annotation, and `@RunWith(Suite.class)` is one because it
+    // has arguments — carries `<synthetic>` as its path. A D2 filter written on the path alone
+    // therefore drops exactly the class-level rows: measured at 11 of 30 surviving on ssg-md's
+    // test port, with `@RunWith` ×10 and `@Suite.SuiteClasses` ×9 among the missing.
+    val classLevel = ph.findings.filter(f => f.construct.startsWith("org.junit.runner") ||
+                                             f.construct.contains("SuiteClasses"))
+    assert(clue(classLevel).nonEmpty)
+    assert(classLevel.forall(_.at != balticporter.tir.SymId.None),
+           clue(classLevel.map(f => f.construct -> f.where.javaPath)))
+    // the summary groups by construct and names one site each — the shape a reader scans.
+    val sum = TestFrameworkTransform.summary(ph.findings)
+    assert(clue(sum).contains("org.junit.Rule × 1"), sum)
+  }
+
+  test("NEGATIVE — a converted suite records an EMPTY lane, which is a fact and not a silence") {
+    val (_, ph) = emit(lifecycleSrc)
+    assertEquals(ph.findings.map(_.report("demo.LifecycleTest")), Nil)
+    // `0` still has to be a ROW: a port that converts everything and a run whose check never ran
+    // are one line otherwise, which is why the requirement is DERIVED from the pipeline
+    // (`PortRun.requiredChecks`) rather than left out.
+    assertEquals(TestFrameworkTransform.summary(Nil), "  (none)")
+  }
+
   test("a @Test method's JAVADOC lands above the `test(...)` that replaces it") {
     // the method stops being a method, so the `leading` field it carried has no `def` left to sit
     // on. Rendered nowhere, this is the biggest single category the recovery backstop has to put

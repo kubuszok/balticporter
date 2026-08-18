@@ -907,15 +907,22 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   `porter-notes`, `break-catch`, `try-resource`, `switch-null`, `heap-pollution`,
   `cast-conversion`, `overload-risk` and `markers` record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget`/`collection-internal` record when
-  `CollectionsTransform` is in the pipeline, and `nullability-boundary` when
-  `NullabilityTransform` is. **A retype has TWO directions and a subtyping argument
+  `CollectionsTransform` is in the pipeline, `nullability-boundary` when
+  `NullabilityTransform` is, and `test-framework(refused)` when `TestFrameworkTransform` is.
+  **A retype has TWO directions and a subtyping argument
   licenses only one of them**: `collection-retarget` counts the other — every value the JDK
   PRODUCES at a type the port retargets, which the boundary check cannot see, because the
   position-blind retyping moved the node type on both sides of that slot. **And a third population
   has the JDK on NEITHER side**: `collection-internal` counts it, one row per site where java's own
   subtyping carried a value across an edge the mapping has no image for (§1's third-population
   paragraph, measured at 16 of one port's 24 attributed errors against a boundary lane reading 0).
-  Those four are required OF A RUN THAT CARRIES THE PHASE and derived from the pipeline rather
+  **And `test-framework(refused)` is the refusal POPULATION of the one phase whose failure mode is
+  entirely silent**: an unrecognised annotation means the class is not converted, so it registers
+  ZERO tests, compiles and reports success. That population was a grouped `println` and a PROSE row
+  somebody kept in step by hand — no baseline diffed it, so a refusal that appeared, changed owner or
+  changed its advice reached nobody, which is §5's own rule (every number reaching stdout must reach
+  `findings.tsv`) failing at the phase that could least afford it.
+  Those five are required OF A RUN THAT CARRIES THE PHASE and derived from the pipeline rather
   than listed, which is `serviceProviders`' conditional-lane pattern at the other declaration:
   requiring them of every port would fail every phase-less one, and leaving them out entirely means
   a run that stopped calling one reports success with the row gone. `PortRun.RequiredChecks` is

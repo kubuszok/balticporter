@@ -447,6 +447,45 @@ final case class PortRun(
       println(NullabilityBoundaryCheck.summary(bnd))
     }
 
+    // ---- the TEST-FRAMEWORK constructs the conversion left alone ----
+    // Recorded only when the phase RAN, for the reason the four collection lanes and the two above
+    // are: a port with no test source set has no conversion for this to be the residue of.
+    //
+    // It has been a `println` since the phase was written, and stdout is not an artifact: no
+    // baseline diffs it, so a refusal that appeared, changed owner or changed its advice reached
+    // nobody, and the population lived in a PROSE row somebody kept in step by hand. That is
+    // §5's own rule (every number reaching stdout must reach `findings.tsv`), and it matters more
+    // here than almost anywhere else, because the failure mode is SILENT — an unrecognised
+    // annotation means the class is not converted, so it registers ZERO tests, compiles, and
+    // reports success.
+    //
+    // THE D2 FILTER IS THE OWNER CHAIN, and the PATH is only the fallback — §4.56's rule, and the
+    // one place it was got wrong first. A `Finding` locates itself two ways depending on where it
+    // was minted: from a TREE NODE, which has a real `Origin`, and from a SYMBOL, whose `origin`
+    // DEFAULTS to `Origin.synthetic`. Filtered on the path alone, every finding of the second kind
+    // is dropped — measured at 11 of 30 surviving on ssg-md's test port, the missing 19 being every
+    // CLASS-LEVEL annotation (`@RunWith(Suite.class)` ×10, `@Suite.SuiteClasses` ×9), which is the
+    // largest standing refusal in the corpus and precisely what this lane exists to make visible.
+    // So the finding carries the DECLARATION it sits on and ownership is a climb to a unit this run
+    // emitted; the path answers for the node-minted rows, whose symbol is not in hand.
+    effectivePhases.collect { case t: balticporter.transform.TestFrameworkTransform => t }.foreach { t =>
+      val unitOf: Map[SymId, String] = checkedUnits
+        .flatMap(u => program.symbolOf(u.symbol).map(s => u.symbol -> s.fullName)).toMap
+      val byPath: Map[String, String] = checkedUnits
+        .flatMap(u => program.symbolOf(u.symbol).map(s => u.origin.javaPath -> s.fullName)).toMap
+      def climb(x: SymId, fuel: Int): Option[String] =
+        if fuel <= 0 || x == SymId.None then scala.None
+        else unitOf.get(x).orElse(program.symbolOf(x).flatMap(s => climb(s.owner, fuel - 1)))
+      def ownerOf(f: balticporter.transform.TestFrameworkTransform.Finding): Option[String] =
+        climb(f.at, 64).orElse(byPath.get(f.where.javaPath))
+      val owned = t.findings.flatMap(f => ownerOf(f).map(f -> _))
+      CheckReport.record(balticporter.transform.TestFrameworkTransform.Refused,
+                         owned.map((f, o) => f.report(o)))
+      say(s"TEST-FRAMEWORK REFUSED (constructs the conversion left alone): ${owned.size}")
+      if owned.nonEmpty then say(balticporter.transform.TestFrameworkTransform.Classification)
+      println(balticporter.transform.TestFrameworkTransform.summary(owned.map(_._1)))
+    }
+
     // ---- the CONTEXT boundary the globals phase drew: every place the threading stopped ----
     // Only when the phase RAN, and only over `checkedUnits`, for the two reasons above. A port that
     // declared no holder records nothing here at all — the phase returns its input before building
@@ -2321,7 +2360,12 @@ final case class PortRun(
       (if effectivePhases.exists(_.isInstanceOf[CollectionsTransform]) then
          Set(CollectionClosureCheck.Name, CollectionBoundaryCheck.Name,
              RetargetBoundaryCheck.Name, CollectionInternalCheck.Name)
-       else Set.empty)
+       else Set.empty) ++
+      // …and the test-framework refusal population, on the same rule at the same declaration. A
+      // port that carries the phase and converts EVERY construct records 0, which is a fact about
+      // that port; a run that stopped asking would otherwise report success with the row gone.
+      (if effectivePhases.exists(_.isInstanceOf[balticporter.transform.TestFrameworkTransform])
+       then Set(balticporter.transform.TestFrameworkTransform.Refused) else Set.empty)
 
   private def verifyRecorded(): Unit =
     if CheckReport.enabled then
