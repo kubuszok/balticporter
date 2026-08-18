@@ -4093,6 +4093,46 @@ does not move.
 (which replaced `AbsorbedProbeSpec`, the probe written to fail when this was fixed). OPEN for
 RETENTION, above. `PROGRESS.md` §10.7.5 family 3 has the per-site diagnosis.*
 
+### T23. NO POLICY KEY CAN NAME A MEMBER INSIDE AN ENUM CONSTANT'S BODY — the seam is unreachable twice over, and the wall is silent
+
+A java enum constant may carry a class body (`TreeTask(null) { … }`, JLS 8.9.1), and every method in
+it is an ordinary member the emitter renders. **No `Substitutions.dropMethods`, `MethodBodyTransform`
+or `PortMapTransform` key can name one**, for two independent reasons that must both be closed:
+
+- **the KEY GRAMMAR.** The constant's symbol is `qualified(enumId, name)` = `Owner$Enum#TreeTask`, so
+  its members spell `Owner$Enum#TreeTask#attribute(…)` — and `MemberKey.parse` refuses a second `#`
+  outright ("more than one `#`: `owner#name` has exactly one"). That refusal is right for what it is
+  about; the key simply has no spelling for a member two levels of `#` down;
+- **the TRAVERSAL.** `MethodBodyTransform.rewrite` maps `cd.body` and recurses into a nested
+  `Tree.ClassDef`. `Tree.ClassDef.enumCases` is a SEPARATE FIELD (`Tree.EnumCase`, holding its own
+  `body`), so a constant's members are never visited even if a key could name them — the hand-rolled
+  recursion CLAUDE.md §3 warns about, one node kind short. `StandardTraversal.mapClassDef` walks
+  `enumCases` and would have reached them.
+
+**Nothing reports it.** A key that names nothing is a `PolicyReport.NeverMatched`, which reads as a
+typo; a key that is malformed is a `PolicyIssue.Malformed`, which reads as a mistake in the key. Both
+are honest about the KEY and neither says *this position is unaddressable*, so an agent reads the
+finding, re-spells the key, and gets the same answer.
+
+**Where it was met and what it decided.** gdx-ai's `DefaultBehaviorTreeReader` names the base's
+dropped `reflect.Field` in three signatures, and `PROGRESS.md` §10.7.8's member table concluded those
+three needed `dropMethods` — which would have left the three CALL SITES, all inside the enum constant
+`Statement.TreeTask`, as a `substitution(dangling)` the port itself caused, with no seam able to
+repair it. The cut taken instead is a `TypeRedirectTransform` on the TYPE, which fixes all three
+signatures at once and leaves the constant's body mechanically translated: `errors 10 → 0`,
+`port-map 12 → 0`, `substitution(dangling) 0`.
+
+**Do not close half of it.** Widening the traversal alone gives the phase a member it still cannot be
+handed a key for; widening the grammar alone gives it a key it cannot reach. And widening
+`MemberKey`'s grammar is not a local change — `Symbol.fullName` is what a finding's stable id, a
+`decisions.tsv` subject and every cache key hash, so giving an enum constant a `$` separator instead
+moves every row of every promoted artifact on every lane (`MemberKey`'s own note on why the
+descriptor is a separate field).
+
+*Fix kind: (a), UNBUILT and not needed by any port today — the redirect is the better cut wherever
+the wall is a TYPE. It becomes real the first time a port must replace a BODY that only an enum
+constant declares.*
+
 ---
 
 ## 4. Collections, shims and the JDK boundary
@@ -9272,14 +9312,48 @@ two that a translated scope can fail to reach.
 
 *Fix kind: (a). Closed in `TestFrameworkTransform`.*
 
-### X4. Calling `@Before` at the head of each test does not reproduce JUnit's FRESH INSTANCE
+### X4. Calling `@Before` at the head of each test does not reproduce JUnit's FRESH INSTANCE — **PREDICTED, then MEASURED at 4 of one suite's 10**
 
 `CLAUDE.md` §4.4 gives the translation. Its declared limit: it is exact wherever setup **assigns**
 the fields it needs; a field carrying state through its own **INITIALISER** would still leak between
 tests. No libGDX test depends on it, and all 217 passing tests are unaffected — but it is a known
 approximation, not an equivalence.
 
-*Fix kind: (a), unbuilt.*
+**And the first suite that does depend on it prices the approximation.** gdx-ai's `ParallelTest`
+declares four instance fields and initialises all four in place:
+
+```java
+private final BehaviorTree<String> behaviorTree = new BehaviorTree<String>();
+private final TestTask task1 = new TestTask();
+private final TestTask task2 = new TestTask();
+private final Array<Task<String>> tasks = new Array<Task<String>>();
+```
+
+JUnit 4 constructs a fresh `ParallelTest` before every `@Test`, so all four are rebuilt five times.
+MUnit has ONE instance per suite. The first test in declaration order passes; the next four meet a
+`BehaviorTree` that already has a root task, a `tasks` array that has grown to ten entries and two
+`TestTask`s whose `executions` counter never reset — **4 failures out of 10, every one
+`IllegalStateException: A behavior tree cannot have more than one root task`, anchored `main-frame`
+at `BehaviorTree#addChildToTask`.**
+
+Three things the measurement adds to the prediction:
+
+- **discharging `@Before` is what makes the gap VISIBLE, not what causes it.** `setUp()` heads all
+  five bodies and does exactly what java did; the state java rebuilt is the CONSTRUCTOR's, and no
+  `@Before` translation reaches it. A suite whose fixture lives entirely in `@Before` is unaffected,
+  which is why five libraries' suites never showed it;
+- **it is invisible to every other instrument.** 0 compile errors, 0 skipped, 0 `test-framework
+  (refused)`, every check count flat, `outcomes 10 of 10 emitted`. Only §3's gate — running the
+  tests — can see it, which is the whole argument for that gate;
+- **the four are what the exception is FIRST on, never what it is the cause of.** Two of the three
+  leaked fields would each fail these tests on their own, so the family to re-census after a fix is
+  the exception's, not the suite's delta.
+
+The repair is per-test CONSTRUCTION — a converted suite's instance state rebuilt for every test —
+and its blast is every converted suite in the corpus, so it is a wave of its own and not a fix to
+fold into a port's.
+
+*Fix kind: (a), unbuilt — now with its number.*
 
 ### X5. JUnit lifecycle and enablement — CLOSED, except what has no translation
 
@@ -10675,6 +10749,41 @@ the base really does emit is still fatal, which is the case the mechanism was bu
 *Fix kind: (a) engine — the screen read a claim where the rule said EMITS. Measured on liqp's test
 port: `manifest` 3 -> 0, with `manifest` 0 unchanged on every other port and no member digest moved
 by the change.*
+
+### D12. A DEPENDENT'S RETYPING PHASE REACHES ITS BASE'S DECLARATIONS, where it emits nothing and moves only what the run DERIVES — **1 FATAL `base-surface`, at 0 compile errors either side. CLOSED**
+
+`TypeRedirectTransform` was the one retyping phase in the engine with no `RuleScope`, and CLAUDE.md
+§1 owes every one of them one. It survived two ports because **its failure produces no emitted text
+at all.**
+
+A dependent's `Program` CONTAINS its base (D2). A dependent does not EMIT its base, so a phase that
+re-points a type inside a base declaration changes no file this run writes — it changes what this run
+DERIVES about that declaration, and the only artifact that compares a derivation against the base's
+own is the published port map. gdx-ai redirected `com.badlogic.gdx.utils.reflect.Field` at its own
+`TaskField`; libGDX's `Json$FieldMetadata` takes a `reflect.Field` and its published row says
+`primary=(Field)`; the dependent re-derived `primary=(TaskField)` and the run stopped with
+
+```
+FATAL: sge.utils.Json$FieldMetadata — sge emitted the primary `(Field)` … (locally derived: `(TaskField)`)
+```
+
+**Both ports were at 0 compile errors, before and after.** Nothing else could have said it: the file
+is not this module's to write, no member digest of this port moves, and every check count was flat.
+
+**The scope is PER ENTRY, and that is forced by the merge rather than chosen.** A base states a
+whole-program redirect about its own surface (`Disposable -> AutoCloseable`) while a dependent states
+one about its own package; `surfaceFold` merges the two instances into ONE phase, so a single scope
+on the phase cannot serve both and the merge refuses a pair that is not in conflict — which is
+exactly what a first attempt with one scope measured (`SurfaceDivergence`, fatal, on a pair that
+disagrees about nothing). Keyed by the redirect SOURCE the tables compose like `redirects` itself:
+independent keys union, the same key with two scopes is the refusal, and the comparison is over the
+INTERSECTION (reading an absent entry as "everywhere" reported a disagreement between a scope and a
+redirect that does not exist — the second measured wrong turn).
+
+*Fix kind: (a) engine, CLOSED — `TypeRedirectTransform(scopes)`, `StandardTraversal.mapSymbols`'s
+`keep` predicate, one traversal pass per distinct scope, `TypeRedirectScopeSpec`. Default
+`Everywhere(Set.empty)` is the pre-scope code path, so every port that states no scope is
+byte-identical and fingerprints exactly as before.*
 
 ---
 

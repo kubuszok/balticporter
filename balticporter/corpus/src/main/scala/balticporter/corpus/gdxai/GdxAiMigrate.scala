@@ -47,7 +47,7 @@ import scala.jdk.CollectionConverters.*
   * Box2D/Bullet. `just ai-measure` re-derives both numbers on every run rather than trusting this
   * comment.
   *
-  * ==What this port has NOT decided, and why the first emit says nothing about it==
+  * ==The reflective parser, and why it is FIVE BODIES rather than a dropped subtree==
   * The scoping work recommended dropping a four-file "reflective parser subtree"
   * (`BehaviorTreeParser`, `BehaviorTreeLoader` and the two `btree.annotation` types) on the ground
   * that the parser is a self-contained leaf. It is not a leaf, and the drop as scoped is not
@@ -61,11 +61,10 @@ import scala.jdk.CollectionConverters.*
   * A `dropTypes` entry whose references survive is not a smaller port, it is a
   * `substitution(dangling)` finding classified §1(b)/(c) — a defect the PORT caused, which is
   * exactly what CLAUDE.md §1 refuses ("an obligation the engine's own translation created is not a
-  * port's to discharge", read one step out). So milestone 1 drops NOTHING and converts every file
-  * upstream compiles. The reflective sites are reported by the checks, classified, and answered in a
-  * later, separately-measured wave — the hand port's own `TaskRegistry`/`AttrInfo` trio is
-  * reflection-free Scala at these FQNs and is what `inject` exists for. PROGRESS.md §sge-ai holds
-  * the reasoning and the numbers.
+  * port's to discharge", read one step out). So this port drops nothing there and converts every
+  * file upstream compiles; what it replaces is one TYPE OCCURRENCE and five method BODIES, over an
+  * injected `TaskRegistry` adapted from the reference hand port's. PROGRESS.md §10.7.8 holds the
+  * reasoning, the numbers and what the table costs the port.
   *
   * The two `btree.annotation` types stay for a smaller reason of the same shape: they are
   * self-contained `@interface` declarations that name nothing outside `java.lang.annotation`, and
@@ -465,6 +464,12 @@ object GdxAiPolicy:
       // `object` declares at the same FQN — so `substitution(dangling)` stays 0, which is the gate
       // §10.7.3 refused the parser drop on.
       dropTypes = Set("com.badlogic.gdx.ai.GdxAI"),
+      // THREE injected files, and only ONE of them replaces a drop. `sge/ai/GdxAI.scala` stands at
+      // the FQN above; `sge/ai/btree/utils/TaskField.scala` and `TaskRegistry.scala` stand at names
+      // nothing dropped and nothing emits — the redirect TARGET and the reflection-free table the
+      // five substituted bodies read. `inject` is a directory copy, so all three ride the same key,
+      // and it is deliberately NOT inherited by `test` below: exactly one module ships each file or
+      // the FQN is defined twice.
       inject    = List(repoRoot.resolve("balticporter/corpus/gdxai-overrides")),
     ))
 

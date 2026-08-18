@@ -95,8 +95,8 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-gltf-test` | gdx-gltf `gltf/test` | 1 of 7 → **1** (§8.1) | **8** ported + **22** hand-written, **none run** — the port does not compile | — |
 | `sge-screens` | libgdx-screenmanager `src/main/java` | 22 → **22** (0 dropped, 0 injected) | **16** hand-written, all passing — upstream's 12 need an unported BACKEND (§9 libgdx-screenmanager) | **0** |
 | `sge-vfx` | gdx-vfx `core/src` + `effects/src` | 44 → **44** (0 dropped, 0 injected) | **64** hand-written, all passing — upstream has NO test SOURCE SET (§10.1) | **0** |
-| `sge-ai` | gdx-ai `gdx-ai/src` | 166 of 167 → **166** (1 dropped, 1 injected; the 167th is GWT super-source upstream's own build excludes, §10.7.1) | — | **10** after wave 1 (20 at first emit; §10.7.5/§10.7.8, all classified) |
-| `sge-ai-test` | gdx-ai `gdx-ai/tests` | 2 → **2** | **10** emitted from 10 upstream `@Test` — **none run yet**, the library it tests does not compile (§10.7.7). The "24 / 196" in the hand-port table below is the REFERENCE PORT's own MUnit suite, not upstream's | — |
+| `sge-ai` | gdx-ai `gdx-ai/src` | 166 of 167 → **166** (1 dropped, 3 injected; the 167th is GWT super-source upstream's own build excludes, §10.7.1) | — | **0** after wave 2 (20 at first emit, 10 after wave 1; §10.7.5/§10.7.8, every one classified) |
+| `sge-ai-test` | gdx-ai `gdx-ai/tests` | 2 → **2** | **10 of 10 emitted and RUN — 6 passing, 4 failing**, all four one MUnit-instance fact in `ParallelTest` (§10.7.9, `ENGINE-LIMITS.md` X4). The "24 / 196" in the hand-port table below is the REFERENCE PORT's own MUnit suite, not upstream's | **0** |
 | `sge-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `sge-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -4540,33 +4540,35 @@ mechanical engine port this library" with "did we paste in someone else's hand-w
 
 ### 10.7.4 First emit — measured state
 
-The `sge-ai` column is the FIRST EMIT, kept as taken; `after wave 1` is the current baseline, and a
+The `sge-ai` column is the FIRST EMIT, kept as taken; the last column is the current baseline, and a
 cell is repeated only where it MOVED. Wave 1 is four commits — `ENGINE-LIMITS.md` T22 (engine), the
 two single-site reflective members, the service-locator facade, and the test lane — each measured on
-its own and each with its blast attributed.
+its own and each with its blast attributed. **Wave 2 is three** — `ENGINE-LIMITS.md` D12 (engine: a
+retyping phase a DEPENDENT declares owes a per-entry `RuleScope`), the parser's reflective half, and
+the suite's first run.
 
-| gate | `sge-ai` | after wave 1 |
-|---|---|---|
-| files emitted | **166** (0 dropped, 0 injected) of 166 in scope | **166** (1 dropped, 1 injected) |
-| compile errors (with libGDX core, Scala 3.8.4) | **20** (coded 20 + bare 0) — every one located, `Approx=0 EngineGap=20 Unmapped=0` | **10**, all in ONE emitted file (§10.7.8) |
-| model | 771 units / 57,214 symbols | — |
-| determinism | 166 units emitted twice, **byte-identical** | — |
-| signature consistency · omissions | 0 · **24** | — |
-| portability (all / emitted / injected) | 154 / **1** / 0 | — |
-| dependency-coverage ( / all / declared) | 0 / 37 / 0 | — |
-| substitutions (emitted / dangling) · manifest · policy · remediation | 0 · **0** · **0** · 0 · 1 | — |
-| port map | 14 | **12** |
-| base surface · collapse agreement | 0 · 137 verdicts compared, **0 disagreeing** | — |
-| collection closure / boundary / retarget / internal | 0 / 2 / 0 / 0 | — |
-| context seams | **5**, every one a `residual-global-read` (§10.7.5) | **0** |
-| overload risk | **23** of 263 multi-candidate calls, over 3,671 program-declared calls | — |
-| heap pollution · break residue · markers · switch-null · try-resource · break-catch | 8 · **0** · 0 · 0 · 0 · 0 | — |
-| idiom (converted / refused / residue) | 1 / 164 / 0 — `NarrowedReturn SelfTyped` 147, `SamLambda NotSam` 17 | — |
-| trivia lost / recovered / deliberate | **0** / 5 / 0 | **0** / **1** / 0 |
-| porter notes uncovered | **0** — 432 notes emitted, every one from a recorded decision | **0** |
-| source map · port map | 2,011 members over 166 units · 232 types / 1,819 members | — |
-| decisions recorded | **1,020** rows (`RetypedSignature` 334, `RenamedMember` 224, `RenamedPackage` 166, `WidenedVisibility` 142, `FunnelledCtor` 67, `ForcedClassInit` 51, `DroppedMember` 17, `DroppedType` 12, `RedirectedCall` 4, `ScopedOut` 2, `SamLambda` 1); 2,651 withheld as the base's (`ENGINE-LIMITS` D2) | + `SubstitutedBody` 2, `InjectedMember` 1 |
-| **tests** | **none** — milestone 1 emits no test source set | **10 of 10 emitted**, not yet runnable (§10.7.7) |
+| gate | `sge-ai` | after wave 1 | after wave 2 |
+|---|---|---|---|
+| files emitted | **166** (0 dropped, 0 injected) of 166 in scope | **166** (1 dropped, 1 injected) | **166** (1 dropped, **3** injected) |
+| compile errors (with libGDX core, Scala 3.8.4) | **20** (coded 20 + bare 0) — every one located, `Approx=0 EngineGap=20 Unmapped=0` | **10**, all in ONE emitted file (§10.7.8) | **0** — `Approx=0 EngineGap=0 Unmapped=0`, so `RefChecks` RAN (§3) |
+| model | 771 units / 57,214 symbols | — | — |
+| determinism | 166 units emitted twice, **byte-identical** | — | — |
+| signature consistency · omissions | 0 · **24** | — | — |
+| portability (all / emitted / injected) | 154 / **1** / 0 | — | — |
+| dependency-coverage ( / all / declared) | 0 / 37 / 0 | — | — |
+| substitutions (emitted / dangling) · manifest · policy · remediation | 0 · **0** · **0** · 0 · 1 | — | — |
+| port map | 14 | **12** | **0** |
+| base surface · collapse agreement | 0 · 137 verdicts compared, **0 disagreeing** | — | — |
+| collection closure / boundary / retarget / internal | 0 / 2 / 0 / 0 | — | — |
+| context seams | **5**, every one a `residual-global-read` (§10.7.5) | **0** | — |
+| overload risk | **23** of 263 multi-candidate calls, over 3,671 program-declared calls | — | — |
+| heap pollution · break residue · markers · switch-null · try-resource · break-catch | 8 · **0** · 0 · 0 · 0 · 0 | — | — |
+| idiom (converted / refused / residue) | 1 / 164 / 0 — `NarrowedReturn SelfTyped` 147, `SamLambda NotSam` 17 | — | — |
+| trivia lost / recovered / deliberate | **0** / 5 / 0 | **0** / **1** / 0 | **0** / **2** / 0 |
+| porter notes uncovered | **0** — 432 notes emitted, every one from a recorded decision | **0** | **0** |
+| source map · port map | 2,011 members over 166 units · 232 types / 1,819 members | — | — |
+| decisions recorded | **1,020** rows (`RetypedSignature` 334, `RenamedMember` 224, `RenamedPackage` 166, `WidenedVisibility` 142, `FunnelledCtor` 67, `ForcedClassInit` 51, `DroppedMember` 17, `DroppedType` 12, `RedirectedCall` 4, `ScopedOut` 2, `SamLambda` 1); 2,651 withheld as the base's (`ENGINE-LIMITS` D2) | + `SubstitutedBody` 2, `InjectedMember` 1 | **1,036** — `RetypedSignature` 339 (+5, the redirect), `SubstitutedBody` 7 (+5, the parser bodies), `InjectedMember` 3 (+2, `TaskField` and `TaskRegistry`) |
+| **tests** | **none** — milestone 1 emits no test source set | **10 of 10 emitted**, not yet runnable (§10.7.7) | **10 of 10 RUN — 6 passing, 4 failing**, one cause (§10.7.9) |
 
 **20 errors on 166 files — 0.12 per file**, against the two first-emit figures this document records
 elsewhere: ssg-md opened at 243 over 458 (0.53) and screenmanager at 5 over 22 (0.23). No claim is
@@ -4730,39 +4732,173 @@ Two things the lane establishes that no earlier artifact could:
   five bodies. Whether MUNIT'S ONE INSTANCE then leaks state where JUnit's fresh one did not is
   exactly what running it will say, and is why the census above stops at "emitted".
 
-### 10.7.8 Next
+### 10.7.8 The parser's reflective half — the cut, and why §10.7.8's own member table was wrong about it
 
-1. **The `BehaviorTreeParser` reflective family** — 10 errors, and now also what stands between the
-   suite and its first run. Wave 1 narrowed it from 12 sites in three files to 10 in ONE, and the
-   shape is now exact rather than a survey. Every remaining error is inside
-   `BehaviorTreeParser$DefaultBehaviorTreeReader`, and the members split in two, which is what
-   decides the tool:
+**`errors 10 -> 0`, `port-map 12 -> 0`, `substitution(dangling) 0`.** The wall was one file and three
+questions the reader asked the JVM at run time:
 
-   | member | what is wrong | reachable by |
-   |---|---|---|
-   | `openTask(String, boolean)` | BODY only — `ClassReflection.newInstance(ClassReflection.forName(className))`, the string-alias → instance half | a body substitution over a factory table |
-   | `findMetadata(Class<?>)` | BODY only — `getAnnotation`/`getFields` over `@TaskConstraint`/`@TaskAttribute` | a body substitution over a metadata table |
-   | `Statement.TreeTask#attribute` | BODY only — calls the three below | a body substitution |
-   | `getField(Class<?>, String)` | `sge.utils.reflect.Field` in its RETURN type | **nothing** — `MethodBodyTransform` never changes a signature, and the type is dropped |
-   | `setField(Field, Task<E>, Object)` | `Field` in a PARAMETER | **nothing**, same |
-   | `castValue(Field, Object)` | `Field` in a PARAMETER, and it is `protected` — upstream documents overriding it | **nothing**, same |
+| java | this port |
+|---|---|
+| `ClassReflection.newInstance(ClassReflection.forName(s))` | `TaskRegistry.newTask(s)` |
+| `getAnnotation(c, TaskConstraint.class)` + `getFields` + each field's `getDeclaredAnnotation` | `TaskRegistry.metaOf(c)` |
+| `ClassReflection.getField(c, name)` | `TaskRegistry.fieldOf(c, name)` |
 
-   So the three signature-bearing members need `dropMethods`, their three callers need bodies that
-   do not name them, and the values those bodies read have to come from somewhere: a per-task
-   `alias → () => Task[?]` factory table and a per-attribute SETTER CLOSURE, which is exactly the
-   `TaskRegistry`/`TaskMeta`/`AttrInfo` trio the reference hand port wrote
-   (`../sge/sge-extension/ai/src/main/scala/sge/ai/btree/utils/BehaviorTreeParser.scala`, 859 lines).
-   That is a REDESIGN with a support file, not a scope cut — §10.7.3's conclusion, now with the
-   member list that proves it — and it is one wave's work on its own.
+**The cut is a TYPE REDIRECT plus five body substitutions, and NOT the `dropMethods` this section
+previously concluded.** That conclusion read the three signature-bearing members and stopped; two
+facts about the file make it the wrong tool:
 
-   **T22 does NOT close it and it was never going to.** The annotation TYPES now carry their
-   elements and `taskConstraint.minChildren` resolves; what does not is `ClassReflection.getAnnotation`
-   READING one back, because a scala `StaticAnnotation` is not a JVM annotation with `RUNTIME`
-   retention (`ENGINE-LIMITS.md` T22's open half). A registry sidesteps the question rather than
-   answering it, which is why the hand port has no annotations in it at all.
-2. **The differential gate** — the reference hand port's 24 files / 194 `test(…)` calls over
-   `sge.ai.*`, which is the only instrument that reaches the six packages upstream's own suite does
-   not (§10.7.1).
+- **`castValue` is a documented OVERRIDE POINT** — "Subclasses may override this method to parse
+  unsupported types". Dropping it removes library surface to fix a type the port never wanted;
+- **its three call sites are unaddressable.** They sit in the enum constant `Statement.TreeTask`, and
+  no policy key can name a member there: the constant's symbol is `…$Statement#TreeTask`, so its
+  members spell `…#TreeTask#attribute(…)` and `MemberKey.parse` refuses a second `#` — and
+  `MethodBodyTransform` would not reach them anyway, because it walks `cd.body` and `enumCases` is a
+  separate field (`ENGINE-LIMITS.md` T23). Dropping the three would have left that arm a
+  `substitution(dangling)` the PORT caused, which is exactly the gate §10.7.3 refused the original
+  four-file drop on.
+
+Re-pointing `com.badlogic.gdx.utils.reflect.Field` at `sge.ai.btree.utils.TaskField` fixes all three
+signatures at once, keeps `castValue`, and leaves `Statement.TreeTask` mechanically translated. The
+base drops `Field` and injects nothing, so nothing stands at that name and a dependent may claim it
+(§1.5). **The redirect is SCOPED** — `Only("com.badlogic.gdx.ai")` — and that is not tidiness:
+unscoped it re-points `Field` inside libGDX's own `Json$FieldMetadata`, whose published contract row
+says `primary=(Field)`, and the run re-derives `primary=(TaskField)`. One FATAL `base-surface`
+finding at 0 compile errors either side, which is what closed `ENGINE-LIMITS.md` D12 and made the
+phase take a per-entry `RuleScope`.
+
+**The injected table is the reference hand port's design at this port's names.** `TaskRegistry` +
+`TaskField` (`balticporter/corpus/gdxai-overrides/sge/ai/btree/utils/`) carry the same
+factory-plus-setter-closure shape as
+`../sge/sge-extension/ai/src/main/scala/sge/ai/btree/utils/BehaviorTreeParser.scala`'s nested
+`TaskRegistry`/`TaskMeta`/`AttrInfo`, and for the same reason: a closure knows the field's type where
+it is written, which is precisely what `castValue` had to ask the JVM for. What differs is what the
+two ports ARE — the hand port REPLACES the parser and keys on aliases, this one keeps the translated
+parser and must key on what that parser passes (the FQCN `DEFAULT_IMPORTS` resolved, and the runtime
+`Class` of the task).
+
+Four things the injection states rather than leaves to be found later:
+
+- **java's mechanism is OPEN and a table is CLOSED.** An unregistered task name raises a
+  `ReflectionException` — the same exception `forName` threw for a class off the classpath — so
+  `openTask`'s own `catch` still produces java's `"Cannot parse behavior tree!!!"`. Louder than java
+  and never quieter; `TaskRegistry.register`/`constrain`/`attribute` is what a consumer's own task
+  class uses;
+- **`@Inherited` IS reproduced.** `metaOf` walks the superclass chain — nearest `@TaskConstraint`
+  wins, attributes accumulate — which is java's annotation and java's `getFields` in one pass, so a
+  consumer's `class X extends LeafTask` inherits `(0, 0)` with no registration. The six registered
+  constraints are exactly java's six `@TaskConstraint` sites;
+- **two emitted field names are not java's, and only a hand-written table can know it.**
+  `Include.lazy` is a scala keyword (emitted back-quoted) and `Random.success` SHADOWS an inherited
+  field, so §4.55 renamed it `success$shadow`. The ATTRIBUTE name and `AttrInfo.fieldName` stay
+  java's, which is what the `.btree` text and `getField` both carry;
+- **`Random()` has no emitted nilary constructor to carry its delegation.** `ENGINE-LIMITS.md` C11
+  refuses to emit one and its porter note says a port needing the behaviour writes it by hand; the
+  factory is that constructor, at the one place in the port that calls it. Without it every `random`
+  task parses with `success` unset where java set `ZERO_POINT_FIVE`.
+
+**What the port loses, and it is one thing.** A task type nobody registers cannot be instantiated
+from a `.btree` file, where java would have found it on the classpath. The built-ins are
+pre-registered under BOTH the emitted and the upstream FQCN, so an existing upstream `.btree` asset
+still resolves; anything else is a `register` call. Registered as a decision, not discovered:
+`decisions.tsv` carries five `SubstitutedBody`, five `RetypedSignature` and two `InjectedMember` rows
+for it, and `grep -rn '/\* porter:' src_managed` finds every one from the emitted file.
+
+**BLAST, classified.** 13 member rows in 4 units. Seven are `BehaviorTreeParser`'s own and each has a
+decision behind it (the unit, the reader class, the five bodies — two of which changed key,
+`castValue(Field,…)` → `castValue(TaskField,…)` — and `$Statement`, whose local's type the redirect
+moved). The other six are `BehaviorTreeReader` and `SoftRoleSlotAssignmentStrategy`, and
+`just debug-set balticporter.skipPhases type-redirect,method-body-substitution` shows the whole diff
+is `brk$N`/`cnt$N` shifting by ONE: the substituted `castValue` no longer emits a boundary, so a
+program-global counter renumbers everything after it. Residue EMPTY.
+
+**`trivia(recovered)` 1 → 2**, and that is the substitution's own residue: `findMetadata`'s replaced
+body consumes java's `// TODO: We may want to check private fields too.`, which the backstop puts
+back after the member with its java coordinates. A counted relocation, not a loss (`trivia` stays 0).
+
+**T22 did not close this and was never going to.** The annotation TYPES carry their elements and
+`taskConstraint.minChildren` resolves; what does not is `ClassReflection.getAnnotation` READING one
+back, because a scala `StaticAnnotation` is not a JVM annotation with `RUNTIME` retention
+(`ENGINE-LIMITS.md` T22's open half). The registry sidesteps that question rather than answering it,
+which is why the hand port has no annotations in it at all either.
+
+### 10.7.9 The suite's FIRST CENSUS — 10 of 10 run, 6 passing, 4 failing, one cause
+
+The library compiles, so the suite compiles, so it RUNS. `errors 10 → 0` on this lane too — the ten
+were never this source set's, and the lane compiles all three emitted source sets on one invocation.
+
+| gate | `sge-ai-test`, wave 2 |
+|---|---|
+| files emitted · test discovery | **2** of 2 · **10 → 10**, `expected-lost` 0 |
+| outcomes reconciled | **10 of 10 emitted** — 0 skipped, 0 ignored, 0 disappeared |
+| compile errors | **0** |
+| **passing / failing** | **6 / 4** |
+| `IndexedAStarPathFinderTest` | **5 / 5 PASSING** |
+| `ParallelTest` | **1 / 5** — the first test in declaration order, and only it |
+
+**All four failures are one fact about MUnit**, anchored `main-frame` at the library member that
+threw:
+
+```
+java.lang.IllegalStateException: A behavior tree cannot have more than one root task
+  · main sge.ai.btree.BehaviorTree#addChildToTask  [BehaviorTree.java:83]
+```
+
+`ParallelTest` declares four instance fields with their own initialisers — `behaviorTree`, `task1`,
+`task2`, `tasks`. JUnit 4 constructs a FRESH test object before every `@Test`, so all four are
+rebuilt five times; MUnit has ONE instance per suite, so they are built once. The first test passes;
+the next four meet a `BehaviorTree` that already has a root, a `tasks` array grown to ten entries and
+two `TestTask`s whose `executions` never reset.
+
+Three things to keep from it:
+
+- **`@Before` is discharged correctly and that is what made this VISIBLE.** `setUp()` heads all five
+  bodies and does exactly what java did. The state java rebuilt is the CONSTRUCTOR's, and no
+  `@Before` translation reaches it — which is why five libraries' suites never showed the gap and why
+  `ENGINE-LIMITS.md` X4 had predicted it in prose since libGDX without a number;
+- **nothing but §3's gate can see it.** 0 compile errors, 0 skipped, `test-framework(refused)` 0,
+  every check count flat, `outcomes 10 of 10 emitted`;
+- **the four are what the exception is FIRST on, never what it is the cause of.** Two of the three
+  leaked fields would fail these tests on their own, so the family to re-census after a fix is the
+  exception's and not the suite's delta.
+
+It is an ENGINE gap in `TestFrameworkTransform` and not a gdx-ai one. The repair is per-test
+CONSTRUCTION of a converted suite's instance state, whose blast is every converted suite in the
+corpus — a wave of its own, recorded at `ENGINE-LIMITS.md` X4 with this number.
+
+### 10.7.10 Next
+
+1. **The four `ParallelTest` failures** — one engine gap, `ENGINE-LIMITS.md` X4, and NOT this port's
+   to fix: per-test CONSTRUCTION of a converted suite's instance state changes every converted suite
+   in the corpus. §10.7.9 has the diagnosis and the number.
+2. **The differential gate** — the reference hand port's **24 files / 194 `test(…)` calls** over
+   `sge.ai.*` (`../sge/sge-extension/ai/src/test/scala`), which is the only instrument that reaches
+   the six packages upstream's own 10 tests do not (§10.7.1). It is a differential suite in the exact
+   sense: hand-WRITTEN Scala over `sge.ai.*`, so a compiled port can be run against it with nothing
+   translated at all.
+
+   **Its PRECONDITION is a surface question, and it is stated here rather than assumed.** The suite
+   compiles against the HAND PORT's `sge.ai.*`, and this port emits a DIFFERENT `sge.ai.*`. What has
+   to be reconciled, in the order a wave would meet it:
+
+   - **the shim types.** The hand port's signatures are `Nullable[T]`, `DynamicArray[T]`,
+     `mutable.HashMap` and `SgeError.InvalidInput`; this port emits libGDX's own `sge.utils.Array`,
+     `sge.utils.ObjectMap`, java `null` and `sge.utils.GdxRuntimeException`. Every assertion that
+     names one of those names a type this port does not have;
+   - **the members the hand port RENAMED or dropped** — `BehaviorTreeParser.DebugNone` against this
+     port's `DEBUG_NONE`, `task.guard` against `getGuard()`, and the whole `TaskRegistry`/`TaskMeta`
+     API, which is nested in the hand port's parser and top-level here;
+   - **the members §4.55 renamed in THIS port** — `Random.success$shadow`, `Task.status$shadow`,
+     `CircularBuffer.size$field` — each of which the hand port spells as java did;
+   - **what neither port has.** The hand port SKIPPED several classes (§3.5: a skip is not a model),
+     so part of its suite may reach nothing at all here, and part of this port's 166 files is reached
+     by no test in either suite.
+
+   So the honest first step is a CENSUS, not a run: which `sge.ai.*` members the 194 assertions
+   touch, against `port-report/GdxAiMigrate/run-latest/port-map.tsv` — the list of what this port
+   actually emits, with its shapes. The three buckets that census produces (identical, renamed,
+   absent) are what decides whether the gate is an adapter layer, a `MethodBodyTransform`-sized
+   reconciliation, or a wave that translates nothing and only reports coverage. **No number is
+   claimed for it until that census exists.**
 
 ---
 
