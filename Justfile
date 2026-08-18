@@ -1897,6 +1897,57 @@ md-test-measure:
     headline "$ERRORS" "$TREPORT"
 
 # ---------------------------------------------------------------------------------------------
+# ssg-md's COMMONMARK CONFORMANCE CONTROL — the upstream JAVA, measured.
+#
+# THE ONE LANE HERE THAT DOES NOT MEASURE A PORT. `PROGRESS.md` §10.6.7 quotes "1,870 of 1,870 spec
+# examples (100 %), against a MEASURED green java control" and a per-example table beside it; the
+# port's half of that is `md-test-measure`'s, and the CONTROL's half was produced by hand. §5's rule
+# is that a number is reproduced by a lane or it is not quoted, and a control is exactly the number
+# an agent cannot re-derive from anything else in this repository: `md-test-measure` reporting green
+# says the port agrees with the java library, and says nothing about whether that library agrees with
+# CommonMark.
+#
+# Three things about it worth reading before quoting a number:
+#
+#   * IT IS NOT IN `measure-all`, deliberately. Its inputs are the upstream java tree and six spec
+#     resources, and neither moves between corpus waves — a lane whose inputs are constant does not
+#     belong in the serial gate every commit runs. It is run when the conformance claim is quoted,
+#     changed or doubted.
+#   * THE PER-EXAMPLE SPLIT NEEDS A DRIVER, and the driver is `scripts/md-conformance/`. The suite's
+#     own `@Test` is ONE `assertEquals` over the whole rendered spec, so `OK (4 tests)` answers
+#     pass/fail per spec FILE and says nothing about how much of CommonMark either side implements.
+#     Both drivers call the suite's OWN `create`/`readExamples`/`getFullSpec`/`getExpectedFullSpec`
+#     and add only the split at `SpecReader.EXAMPLE_BREAK` — a driver that built its own parser and
+#     renderer would agree with the suite by luck.
+#   * `spec.0.29.txt` IS DRIVEN AND IS NEVER ADDED IN. Upstream disables it
+#     (`FullOrigSpec029CoreTest.getSpecResourceLocation` returns `ResourceLocation.NULL` under
+#     `// FIX: implement 0.29 spec and enable test`), so java runs zero of its 649 examples and so
+#     does the port. The lane drives it through the class's public `RESOURCE_LOCATION` because the
+#     port's own 0.29 residue is unreadable without a control — a failure java's own renderer shares
+#     is a rule flexmark never implemented, not a port defect — and it is reported apart from the
+#     three-spec total, which is the only conformance claim anybody makes.
+#
+# `--with-port` adds the same census over the emitted Scala and classifies 0.29 example by example.
+# It is off by default because it compiles both emitted source sets; it needs `md-test-measure` to
+# have emitted them, and it does not re-emit.
+# ---------------------------------------------------------------------------------------------
+[doc("the CommonMark conformance CONTROL: compile the upstream java, run the four spec suites, split per example (--with-port also drives the port and classifies 0.29)")]
+md-conformance *ARGS:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    export MD_SRC="{{md_src}}"
+    export MD_MODULES="{{md_modules}}"
+    export MD_TEST_SRC="{{md_test_src}}"
+    export MD_SPEC_RES="{{md_spec_res}}"
+    export MD_LIB_RES="{{md_lib_res}}"
+    export MD_TUTIL_RES="{{md_tutil_res}}"
+    export MD_DEPS="{{md_deps}}"
+    export MD_TEST_DEPS="{{md_test_deps}}"
+    export MD_MODULE="{{md_module}}"
+    export SCALA_VERSION="{{scala_version}}"
+    . scripts/md-conformance.sh {{ARGS}}
+
+# ---------------------------------------------------------------------------------------------
 # ssg-md's EXTENSION half — MILESTONE 2, as ONE dependent port of the base (`ext.conf`).
 #
 # `ashley-measure`'s shape: a DEPENDENT port compiled WITH the base it resolved against, never

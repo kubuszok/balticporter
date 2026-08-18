@@ -3859,10 +3859,17 @@ five files of `flexmark-core-test/src/test/java` — **88 emitted Scala files, 0
 0 compile errors on both source sets.** `test.conf` D-mdt-4/5 carry the scope decision and what it
 deliberately leaves out.
 
-**THE CENSUS, PER SPEC VERSION AND PER EXAMPLE.** The suite's own assertion is one `assertEquals`
-over the whole rendered spec, so it answers pass/fail per spec FILE; the table below splits the same
-comparison at the spec format's own example delimiter, which is the only reading that says how much
-of CommonMark this port implements.
+**THE CENSUS, PER SPEC VERSION AND PER EXAMPLE — AND IT IS A LANE.** The suite's own assertion is one
+`assertEquals` over the whole rendered spec, so it answers pass/fail per spec FILE; the table below
+splits the same comparison at the spec format's own example delimiter, which is the only reading that
+says how much of CommonMark this port implements. **`just md-conformance` is what reproduces every
+number in it**, and `just md-conformance --with-port` adds the port's own column and the 0.29
+classification below. The lane compiles the upstream java, runs the four suites under `JUnitCore`,
+and drives `DumpSpecReader` per spec through the suite's OWN `create` / `readExamples` /
+`getFullSpec` / `getExpectedFullSpec` — the four calls that assertion is made of — adding only the
+split at `SpecReader.EXAMPLE_BREAK` (`scripts/md-conformance.sh`, `scripts/md-conformance/`). It is
+deliberately NOT in `measure-all`: its inputs are the upstream tree and six spec resources, and a
+lane whose inputs are constant does not belong in the serial gate every commit runs.
 
 | spec resource | examples | port passes | port fails | JAVA (the control) |
 |---|---:|---:|---:|---|
@@ -3870,24 +3877,42 @@ of CommonMark this port implements.
 | `spec.0.27.txt` | 622 | **622** | 0 | 622 / 622 — green |
 | `spec.0.28.txt` | 624 | **624** | 0 | 624 / 624 — green |
 | **the three java RUNS** | **1,870** | **1,870 (100 %)** | **0** | **1,870 / 1,870** |
-| `spec.0.29.txt` | 649 | 629 | 20 | **NOT RUN — disabled upstream** |
+| `spec.0.29.txt` | 649 | 629 | 20 | **NOT RUN — 629 / 649 when driven anyway** |
 
 **THE CONTROL IS MEASURED, not assumed.** 524 upstream java files compiled with `javac` against the
-same three jars and the four suites run under `org.junit.runner.JUnitCore`: `OK (4 tests)`. So java's
-dump equals the spec text EXACTLY on all three live versions — and the port's now does too, which is
-what makes the three suites' green a CONFORMANCE claim rather than a suite result: the assertion is
-one `assertEquals` over the whole rendered spec, so equality is per-example equality on all 1,870 by
-construction. The control's green is not vacuous either — hiding `spec.0.28.txt` from its classpath
-makes it fail loudly, which is the negative this reading needs.
+same three jars the port lane uses, and the four suites run under `org.junit.runner.JUnitCore`:
+`OK (4 tests)`. So java's dump equals the spec text EXACTLY on all three live versions — and the
+port's now does too, which is what makes the three suites' green a CONFORMANCE claim rather than a
+suite result: the assertion is one `assertEquals` over the whole rendered spec, so equality is
+per-example equality on all 1,870 by construction. The control's green is not vacuous either —
+hiding `spec.0.28.txt` from its classpath makes it fail loudly, which is the negative this reading
+needs. The lane FAILS on a control that is not green on the three, because a port measured against a
+broken oracle is measured against nothing.
 
-**0.29 IS NOT A CONFORMANCE CLAIM ANYBODY MAKES.** `FullOrigSpec029CoreTest.getSpecResourceLocation`
-returns `ResourceLocation.NULL` under the comment `// FIX: implement 0.29 spec and enable test`, so
-java runs zero of its 649 examples and so does the port — its `@Test` is a vacuous pass on both
-sides. The 20 above come from driving that spec anyway (`616 → 629` under the fix below), and they
-measure the SPEC GAP rather than the port: the earlier census attributed 18 of its then-33 to 0.29
-rules flexmark never implemented, and that attribution is not re-derived here. `spec.0.26.txt` and
-`spec.0.30.txt` ship as resources with no test class at all (618 and 652 examples nothing drives,
-upstream or here).
+**AND THE TWO RENDERINGS ARE BYTE-IDENTICAL, WHOLE FILE, ON ALL FOUR SPECS** — which is a stronger
+statement than either census and is the one the lane prints last. Both sides passing 1,870 of 1,870
+says each equals the SPEC on the three live versions; it says nothing about 0.29's 649, where both
+sides are wrong about the spec and the only question is whether they are wrong the SAME WAY. `cmp`
+over `getFullSpec()` answers both at once: **2,519 examples rendered identically by the java library
+and by the mechanical port, the ones neither gets right included.**
+
+**0.29 IS NOT A CONFORMANCE CLAIM ANYBODY MAKES — AND ITS 20 ARE NOW CLASSIFIED, NOT ATTRIBUTED.**
+`FullOrigSpec029CoreTest.getSpecResourceLocation` returns `ResourceLocation.NULL` under the comment
+`// FIX: implement 0.29 spec and enable test`, so java runs zero of its 649 examples and so does the
+port — its `@Test` is a vacuous pass on both sides. The lane drives it anyway, from the class's own
+public `RESOURCE_LOCATION` (the location that method would return if it were enabled), and puts the
+control's rendering beside the port's example by example:
+
+**649 examples — BOTH-PASS 629, SPEC-GAP 20, PORT-DEFECT 0, PORT-ONLY-PASS 0.** Every one of the 20
+is a rule flexmark never implemented: java's own control fails the same example and renders it the
+same bytes. They are `Fenced code blocks` 20/28, `Link reference definitions` 4/10/24/25, `Lists`
+12/13, `Code spans` 4/5/7/8/9/10, `Emphasis and strong emphasis` 66/67, `Links` 6/10/11 and
+`Hard line breaks` 8 — global indices 108, 116, 164, 170, 184, 185, 282, 283, 331, 332, 334, 335,
+336, 337, 415, 416, 486, 490, 491, 637 (`spec.0.29.txt.classification.tsv`, written by the lane).
+The earlier reading of this residue — "18 of the then-33 are 0.29 rules flexmark never implemented" —
+was an attribution somebody made by hand; this is the same claim DERIVED, and it covers all 20 rather
+than 18. `spec.0.26.txt` and `spec.0.30.txt` ship as resources with no test class at all (618 and 652
+examples nothing drives, upstream or here).
 
 **THE 42 WERE TWO FAMILIES AND ONE DEFECT — A `super(args)` THE FUNNEL REFUSED THREE CLASSES UP.**
 The census left them as two work items and the second one is what identified the first. The probe of
