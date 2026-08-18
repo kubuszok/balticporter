@@ -2805,6 +2805,28 @@ what `extends P` already runs); only where the replay could be `usable` at all (
 `super.m()` or a `return` is refused one level down whatever it can see); only a FIELD, for the
 third face; and only a MUTABLE one, for the fourth.
 
+**AND NARROWING 3 STOPS ONE ACCESS LEVEL SHORT OF ITS OWN ARGUMENT — deliberately, and here is what
+that costs.** It excludes a `private` constructor because java forbids `super(...)` to one, and the
+same sentence is true one level up: a PACKAGE-PRIVATE constructor is reachable only from a subclass
+in the DECLARING package (JLS 6.6.1; 6.6.2.1 is the adjacent rule that makes the `protected` case of
+the second face bite). A dependent module in another package cannot write `super(...)` to it at all
+— so every widening this narrowing lets through on a package-private constructor serves exactly one
+consumer: a dependent that declares classes INSIDE the base's package. That is a PACKAGE SPLIT, which
+`PortManifest.allowPackageSplit` is the key for and which no port in this corpus declares.
+
+**THE COST is emitted surface, and it is the largest single share of what this entry measures**: of
+ssg-md's 437 widened members **155 are package-private**, and libGDX core's 535 and liqp's 92 carry
+the same shape. Every one is a field that ships wider than java wrote it for a subclass that, in
+every port that exists today, could not have reached the constructor.
+
+It is not tightened because the two errors are NOT symmetric — the same test the `CollectionsTransform`
+tables are licensed by. Too WIDE is speculative surface: measurable, stated here, and harmless to
+every compile. Too NARROW is `E052`/`cannot be accessed` in a dependent that legally package-splits,
+which is a port that CANNOT BE BUILT and which no instrument in the base can see (D2's ownership
+filter again). A port that states it will never package-split could take the narrowing; that is a
+manifest key's decision and not the engine's, and until one exists the number above is the honest
+reading rather than a budget.
+
 **MEASURED, ON ALL FOURTEEN LANES.** Every port compiles at its own baseline — **no lane's error
 count moved in either direction** — and no suite outcome moved: libGDX 217 passing / 4 expected
 failures, liqp 636 / 1, ssg-md's util suite 725 / 2, ashley 108 / 2, ssg-md-ext 34 / 34. What moved

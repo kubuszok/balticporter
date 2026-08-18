@@ -4361,7 +4361,24 @@ ascending size already gives. None of the nine imports anything outside `com.vla
 6. **read the split**: `base tree: N   extension main: M   extension test: K`. A base error is
    `md-measure`'s regression and not this port's wall; the other two are this wave's, and an
    extension-test error is frequently a cascade of an extension-main one;
-7. **classify every finding per §1** before accepting anything, then `just baseline-accept
+7. **TRIAGE A `base-surface` / `super(args) dropped` PAIR AT THE CALL SITES, never at the rows.**
+   Three modules have now produced the SAME two rows from the same cause — `ssg-md` publishes two
+   `ContentNode#getSpanningChars` overloads that do not agree on placement, and a member key with no
+   parameter spelling cannot resolve the name — and the three verdicts are DIFFERENT, so the rows
+   cannot be the reading. `grep -rn 'new <Ctor>(' {{md_src}}` is the question and it has three
+   answers: **NO call site** (`ext-jekyll-tag`'s `JekyllTagBlock(List<BasedSequence>)` — the parser
+   writes `new JekyllTagBlock()`, so the constructor is dead upstream: SHIP with the counted row);
+   **a LIVE call site whose loss java itself repairs** (`ext-tables`' `TableBlock(List<BasedSequence>)`,
+   built by `TableParagraphPreProcessor` — java calls `setCharsFromContent()` twenty-five lines
+   later, so `chars` is restored on the emitted path and the one field left behind is `lineSegments`,
+   which nothing in the module reads: SHIP with the counted row); and **the module's ONLY entry
+   point** (`ext-gfm-tasklist`'s `TaskListItem(ListItem)` from
+   `TaskListItemBlockPreProcessor.preProcess` — every instance arrived with no children, no
+   `markerSuffix` and no chars, at 0 compile errors and with no admissible `@Test` in the module to
+   fail: MEASURE, REVERT, fix the engine — `ENGINE-LIMITS.md` C15). What makes this a step rather
+   than a note is that the module with the WORST verdict is the one whose instruments were quietest:
+   the two rows are a prompt to go and read java, never a severity;
+8. **classify every finding per §1** before accepting anything, then `just baseline-accept
    FlexmarkExtMigrate` and `just baseline-accept FlexmarkExtTestMigrate`, and commit both baselines
    with the change that produced them.
 
