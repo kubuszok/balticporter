@@ -4601,7 +4601,8 @@ is what a dependent's `PortMapTransform` is for. Where they are:
   between a reflective API and a reflective MECHANISM, and it is why this family lands in three
   files rather than the four the scoping expected.
 
-**Family 2 — the `(using sge.Sge)` context seam, 4 errors, §1(b) PER-LIBRARY.** `GdxAI` is a
+**Family 2 — the `(using sge.Sge)` context seam, 4 errors, §1(b) PER-LIBRARY. CLOSED, wave 1:
+14 → 10, `context-seam` 5 → 0, at `substitution(dangling) 0`.** `GdxAI` is a
 service-locator facade whose static fields initialise from `Gdx.app`/`Gdx.files`, and the base
 retired libGDX's global `Gdx.*` into a context threaded explicitly through `(using sge.Sge)`
 (§11.12 M1 + P5). A static field's initialiser runs at class initialisation, before anything could pass it a
@@ -4612,6 +4613,26 @@ the remedy named at the row (`boundary = "residual-global"`, or a `sites` policy
 are the nine "dead-weight" `GdxAI`-facade files speaking, exactly as milestone 1 wanted** — they were
 deliberately NOT pre-dropped so that the instruments would say what they cost, and 4 errors + 1
 portability row + 5 context seams is what they cost.
+
+**How it closed, and what the shape really is.** Not "a context seam the port never configured": the
+facade asks *is a libGDX application running?*, and the global whose presence answers it is the one
+the base REMOVED. No `sites` policy can answer a question that no longer has a subject, and the two
+the diagnostic offers were measured and are both worse (§10.7.6). `MethodBodyTransform` cannot reach
+it either — these are FIELD initialisers, not method bodies.
+
+So `GdxAI` is this port's ONE `dropTypes` and ONE `inject`: an `object` at the same FQN with the same
+six accessors, installing JAVA'S OWN NEGATIVE BRANCH unconditionally. That is exact for the logger —
+`NullLogger` is precisely what java installs when no libGDX environment is running, and running
+gdx-ai out of a libGDX application is upstream's own headline use case. It is a REFUSAL for the
+filesystem, and the asymmetry is forced rather than chosen: `StandaloneFileSystem` hands out
+`DesktopFileHandle`s, `FileHandle` is one of the 188 base classes the globals policy threads, and its
+emitted constructor is therefore `class StandaloneFileSystem(using sge.Sge)` — which an `object`
+initialiser with no clause cannot call, exactly as java's `<clinit>` could not ask `Gdx.files == null`.
+`getFileSystem()` throws naming the one line that fixes it (`GdxAI.setFileSystem(new
+sge.ai.StandaloneFileSystem())`), which is louder than java and never quieter: java's own class
+javadoc already tells an Android user to set proper providers, and both implementations are emitted
+and installable. Blast: 11 member digests, all of them `sge.ai.GdxAI`'s own; `substitution(dangling)`
+0, so nothing the drop was supposed to keep resolving stopped.
 
 **Family 3 — a java annotation's ELEMENTS are lost, 4 errors, §1(a) ENGINE. CLOSED, wave 1: 20 → 16,
 `trivia(recovered)` 5 → 1.** A java `@interface` was
@@ -4652,7 +4673,24 @@ reflectively, which on this port is moot because family 1 removes the reflective
 - **Pre-dropping the nine `GdxAI`-facade files.** They were kept for the first emit on purpose and
   their cost is now measured (4 errors, 1 `portability(emitted)`, 5 context seams). Dropping them
   before the number existed would have made this port look cleaner than it is and left no evidence
-  for what a service-locator facade costs a context-threading base.
+  for what a service-locator facade costs a context-threading base. **And what wave 1 dropped is ONE
+  of them, not nine**: only `GdxAI` itself asks the impossible question; `Logger`, `NullLogger`,
+  `GdxLogger`, `StdoutLogger`, `FileSystem`, `GdxFileSystem` and `StandaloneFileSystem` all port
+  mechanically and are what a consumer installs.
+- **`sites = { GdxAI#logger -> lazy-init, GdxAI#fileSystem -> lazy-init }`** — the exit the
+  context-seam diagnostic names, measured at **14 = 14 errors, four of them NEW**, `context-seam`
+  5 → 4 and **53 member digests**. `DeferredInit` really does move a static's initialisation to the
+  first READ and thread it, and it has NO SHAPE FOR A MUTABLE STATIC: `GdxAI.logger` is assignable
+  through java's own `setLogger`, so the field became a `def` over a cache and both setters became
+  `E052 Reassignment to val`. The threading then cascaded out of the file, turning
+  `BehaviorTreeLibraryManager#instance` and `MessageManager#INSTANCE` into two more
+  `No given sge.Sge`. A count that stands still while its four rows are replaced is exactly why
+  `findings.tsv` is baselined (§5) — the headline alone would have called this flat.
+- **`boundary = "residual-global"`** for the same two sites: it answers only the SPELLING of the
+  read, and the two `unsuppliable use` seams — `GdxAI#logger` constructs `GdxLogger`, `#fileSystem`
+  constructs `GdxFileSystem`/`StandaloneFileSystem`, all of which now take a context — have no read
+  to spell and stay exactly where they were. `sge.Sge` has no `global` member either, so the rewrite
+  would name something the injected context type does not declare.
 
 ### 10.7.7 Next
 

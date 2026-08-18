@@ -246,4 +246,34 @@ object GdxAiPolicy:
         // reflective MECHANISM.
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
+      // THE SERVICE-LOCATOR FACADE, replaced whole — this port's ONE drop, and its ONE injection.
+      //
+      // `GdxAI` chooses two of its three services by SNIFFING THE AMBIENT ENVIRONMENT at class
+      // initialisation (`logger = Gdx.app == null ? new NullLogger() : new GdxLogger()`, and the
+      // same for `fileSystem`), and the base retired `Gdx.*` into a context threaded through
+      // `(using sge.Sge)`. A static field's initialiser runs before anything could pass it one, so
+      // this is not a mechanism that is missing — it is a QUESTION THE PORT CANNOT ASK, because the
+      // global whose presence answers it is the one the base removed. That is the whole of this
+      // port's `context-seam 5` and of four of its first-emit errors.
+      //
+      // The replacement installs JAVA'S OWN NEGATIVE BRANCH unconditionally — `NullLogger` and
+      // `StandaloneFileSystem` — which is what java installs when no libGDX environment is running,
+      // and running gdx-ai out of a libGDX application is upstream's own headline use case. The
+      // libGDX-backed pair is still emitted and is installed through `setLogger`/`setFileSystem`,
+      // which is the sentence java's own class javadoc already writes for every platform its sniff
+      // cannot serve. Everything else in the injected file is the emitted translation verbatim.
+      //
+      // WHY NOT A CONTEXT-SEAM POLICY: both exits were measured and both are worse; the numbers and
+      // the shapes are `PROGRESS.md` §10.7.6. Briefly — `residual-global` answers only the SPELLING
+      // of the read and leaves the two `unsuppliable use` seams, and `lazy-init` cannot express a
+      // MUTABLE static, so java's own setters became `E052 Reassignment to val` while the threading
+      // cascaded into two singletons in other files (14 = 14 errors, four of them NEW, 53 member
+      // digests). `MethodBodyTransform` cannot reach it either: these are FIELD initialisers.
+      //
+      // THE CLOSURE IS ONE TYPE, verified rather than assumed: every reference to `GdxAI` anywhere
+      // in these 166 files is a call to one of its six static accessors, all of which the injected
+      // `object` declares at the same FQN — so `substitution(dangling)` stays 0, which is the gate
+      // §10.7.3 refused the parser drop on.
+      dropTypes = Set("com.badlogic.gdx.ai.GdxAI"),
+      inject    = List(repoRoot.resolve("balticporter/corpus/gdxai-overrides")),
     ))

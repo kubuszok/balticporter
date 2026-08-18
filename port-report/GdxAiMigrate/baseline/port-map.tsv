@@ -209,6 +209,7 @@ type	com.badlogic.gdx.ai.utils.random.UniformDoubleDistribution	sge.ai.utils.ran
 type	com.badlogic.gdx.ai.utils.random.UniformFloatDistribution	sge.ai.utils.random.UniformFloatDistribution	Renamed	-		0		flags=final form=class parents=sge.ai.utils.random.FloatDistribution primary=(float,float) primaryKind=unique-root primaryVis=public secondaries=(float)
 type	com.badlogic.gdx.ai.utils.random.UniformIntegerDistribution	sge.ai.utils.random.UniformIntegerDistribution	Renamed	-		0		flags=final form=class parents=sge.ai.utils.random.IntegerDistribution primary=(int,int) primaryKind=unique-root primaryVis=public secondaries=(int)
 type	com.badlogic.gdx.ai.utils.random.UniformLongDistribution	sge.ai.utils.random.UniformLongDistribution	Renamed	-		0		flags=final form=class parents=sge.ai.utils.random.LongDistribution primary=(long,long) primaryKind=unique-root primaryVis=public secondaries=(long)
+type	com.badlogic.gdx.ai.GdxAI	sge.ai.GdxAI	Substituted	-		0		
 type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
 type	com.badlogic.gdx.utils.Disposable		Dropped	-		0		
 type	com.badlogic.gdx.utils.Json		Dropped	-		0		

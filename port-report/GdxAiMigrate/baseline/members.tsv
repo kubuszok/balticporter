@@ -16,16 +16,6 @@ sge.ai.FileSystem	sge.ai.FileSystem#newFileHandle(File,FileType)	def	55a8e9a4834
 sge.ai.FileSystem	sge.ai.FileSystem#newFileHandle(String)	def	e24b3b131b509e3d
 sge.ai.FileSystem	sge.ai.FileSystem#newFileHandle(String,FileType)	def	64093f39a2c56447
 sge.ai.FileSystem	sge.ai.FileSystem#newResolver(FileType)	def	2a252e2af5812943
-sge.ai.GdxAI	sge.ai.GdxAI	class	4765cf7029d84bed
-sge.ai.GdxAI	sge.ai.GdxAI#fileSystem	val	2f9c0db05f59769b
-sge.ai.GdxAI	sge.ai.GdxAI#getFileSystem()	def	bfe500bb2f3dcfa7
-sge.ai.GdxAI	sge.ai.GdxAI#getLogger()	def	e2cd835816ac3521
-sge.ai.GdxAI	sge.ai.GdxAI#getTimepiece()	def	5d340bfed88b8e05
-sge.ai.GdxAI	sge.ai.GdxAI#logger	val	7914ae6ba5931cb5
-sge.ai.GdxAI	sge.ai.GdxAI#setFileSystem(FileSystem)	def	9cef510464a78fab
-sge.ai.GdxAI	sge.ai.GdxAI#setLogger(Logger)	def	1b0f40b91050660d
-sge.ai.GdxAI	sge.ai.GdxAI#setTimepiece(Timepiece)	def	7f5e53c56f7e3466
-sge.ai.GdxAI	sge.ai.GdxAI#timepiece	val	a5dd5200694c1821
 sge.ai.GdxFileSystem	sge.ai.GdxFileSystem	class	f731863d3c45bedc
 sge.ai.GdxFileSystem	sge.ai.GdxFileSystem#newFileHandle(File)	def	7818c7eb4e1621cf
 sge.ai.GdxFileSystem	sge.ai.GdxFileSystem#newFileHandle(File,FileType)	def	38b66c075a0ce9ae
