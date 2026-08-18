@@ -12,6 +12,8 @@ import spoon.reflect.reference.*
 import spoon.support.adaption.TypeAdaptor
 import spoon.support.compiler.VirtualFile
 
+import java.nio.file.{Files, Path}
+
 import scala.jdk.CollectionConverters.*
 
 /** Populates the typed IR ([[balticporter.tir]]) DIRECTLY from Spoon's resolved model —
@@ -82,7 +84,7 @@ object SpoonTir:
     env.setNoClasspath(lenient)
     env.setSourceClasspath(cfg.classpath.map(_.toString).toArray)
     if cfg.resolutionRoots.nonEmpty then
-      cfg.resolutionRoots.foreach(r => launcher.addInputResource(r.toString))
+      cfg.resolutionRoots.foreach(r => addResolutionRoot(launcher, r, cfg.resolutionExcludes))
       // §5.4 on both operands, and STRICT on both: these are DECLARED inputs, so an absent one is
       // fatal with a diagnostic naming it (§5.1's missing-input rule) rather than a bare
       // `NoSuchFileException` from deep inside a `map`. `RealPath.of` would be worse than either —
@@ -94,6 +96,31 @@ object SpoonTir:
         .foreach(abs => launcher.addInputResource(abs.toString))
     else cfg.files.foreach(f => launcher.addInputResource(cfg.sourceRoot.resolve(f).toString))
     launcher.buildModel().getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
+
+  /** Add one resolution root, MINUS whatever the port excluded from it
+    * ([[balticporter.core.FrontendConfig.resolutionExcludes]]).
+    *
+    * With no exclusions this is the one line it always was — the DIRECTORY, so Spoon walks it —
+    * which is what keeps the key's arrival flat for every port that states none. With one, the walk
+    * is done here and each surviving `.java` is added individually; the ROOT itself is unchanged in
+    * `cfg.resolutionRoots`, because that list is also what a base's published map is joined
+    * through, and narrowing it to dodge a file is the measured-worse workaround the key's own doc
+    * records.
+    *
+    * Matched at a path SEPARATOR and never as a substring (§4.56): `com/badlogic/gdx/emu` is a
+    * DIRECTORY, and a `contains` would also name a package called `emulation`. */
+  private def addResolutionRoot(launcher: Launcher, root: Path, excludes: List[String]): Unit =
+    if excludes.isEmpty then launcher.addInputResource(root.toString)
+    else
+      val rr   = RealPath.ofExisting(root, "resolution root")
+      val cuts = excludes.map(_.stripSuffix("/"))
+      Files.walk(rr).iterator.asScala
+        .filter(p => p.toString.endsWith(".java"))
+        .filterNot { p =>
+          val rel = rr.relativize(p).toString
+          cuts.exists(c => rel == c || rel.startsWith(c + "/"))
+        }
+        .foreach(p => launcher.addInputResource(p.toString))
 
   /** Translate each top-level type in ISOLATION (fresh symbol space), returning per-type
     * success (symbol count) or the failure. Used to MEASURE corpus coverage — which

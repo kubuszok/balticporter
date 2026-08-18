@@ -277,3 +277,19 @@ object GdxAiPolicy:
       dropTypes = Set("com.badlogic.gdx.ai.GdxAI"),
       inject    = List(repoRoot.resolve("balticporter/corpus/gdxai-overrides")),
     ))
+
+  /** …and the TEST source set's, which is `core` EXTENDED and adds exactly one phase.
+    *
+    * `TestFrameworkTransform` is the only difference there can be: everything else about the surface
+    * — the drops, the substituted bodies, the inherited rename, the base-map residue check — is a
+    * fact about the API this suite compiles against, and a test manifest that restated any of it
+    * would be free to drift from the main one (§1.5).
+    *
+    * `inject` is NOT restated, and that is the field where restating it would be a REAL defect
+    * rather than a stylistic one: the main source set ships `sge/ai/GdxAI.scala`, and a second
+    * manifest naming the same directory would emit a second definition of that FQN into the test
+    * source set. `PortManifest` makes `inject` per-manifest for exactly this. */
+  def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
+    name    = "sge-ai-test",
+    surface = List(new balticporter.transform.TestFrameworkTransform()),
+  ))

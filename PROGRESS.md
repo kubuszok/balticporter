@@ -4692,16 +4692,45 @@ reflectively, which on this port is moot because family 1 removes the reflective
   to spell and stay exactly where they were. `sge.Sge` has no `global` member either, so the rewrite
   would name something the injected context type does not declare.
 
-### 10.7.7 Next
+### 10.7.7 `sge-ai-test` — the suite, emitted 10 of 10 and not yet runnable
 
-1. **`GdxAiTestMigrate`** — upstream's 2 files / 10 `@Test`, plain JUnit 4 with `org.junit.Assert`,
-   no `@RunWith`, no `@Rule`, no `Parameterized`, no backend. The proven shape, at libGDX-core scale
-   already. It validates two of gdx-ai's eight packages (`pfa.indexed`, `btree.branch`) and says
-   nothing about `msg`, `fsm`, `sched`, `fma`, `steer` or the rest of `btree`/`pfa` — which is the
-   whole argument for §10.7.1's differential gate afterwards.
-2. **Family 1 and 2**, in that order and one at a time, each with its own number.
-3. **Family 3 is an ENGINE fix**, not this port's configuration, and it is the one item on this list
-   that every future port with an `@interface` inherits.
+`GdxAiTestMigrate` + `just ai-test-measure` (`measure-all`'s sixteenth lane, after `ai-measure` for
+`md-test-measure`'s reason: it is a dependent of that source set and its compile links against what
+`ai-measure` just wrote). Upstream's 2 files / 10 `@Test` — plain JUnit 4 with `org.junit.Assert`,
+no `@RunWith`, no `@Rule`, no `Parameterized`, no backend.
+
+| gate | `sge-ai-test` |
+|---|---|
+| files emitted | **2** of 2 |
+| test discovery | **10 `@Test` in java → 10 discoverable in emitted Scala** (munit 10 + junit 0), `expected-lost` 0 |
+| `test-framework(refused)` | **0** — every conversion the phase attempted, it made |
+| manifest · policy · base surface · substitution(dangling) | 0 · 0 · 0 · 0 |
+| trivia lost / recovered · break residue | 0 / 0 · 0 |
+| compile errors | **10 — none of them this source set's.** They are `ai-measure`'s remaining `BehaviorTreeParser` family, and the lane compiles all three emitted source sets on one invocation |
+| **tests run** | **none yet.** A test that cannot run is not a test that passed, and the suite cannot compile while the library it tests does not |
+
+Two things the lane establishes that no earlier artifact could:
+
+- **the ENGINE grew one §1(b) key to make this port possible at all**,
+  `FrontendConfig.resolutionExcludes`. `GdxAiMigrate` converts an explicit FILE LIST and filters
+  `com/badlogic/gdx/emu/` out of it; a RESOLUTION ROOT is a directory with no list, so handing the
+  test port `gdx-ai/src` hands the frontend the GWT super-source tree — which exists to REDECLARE
+  classes — and Spoon refuses the model outright (`The type StandaloneFileSystem is already
+  defined`). The obvious workaround, pointing the root at the PACKAGE directory, is measured worse
+  and is a different bug: a base's published map is joined to a run through the resolution ROOTS, so
+  a root one level down cost **25 `SurfaceNameDivergence` findings** where the key costs 0;
+- **`@Before` is discharged the way §4.4 says**, `setUp()` at the head of each of `ParallelTest`'s
+  five bodies. Whether MUNIT'S ONE INSTANCE then leaks state where JUnit's fresh one did not is
+  exactly what running it will say, and is why the census above stops at "emitted".
+
+### 10.7.8 Next
+
+1. **The `BehaviorTreeParser` reflective family** — 10 errors, and now also what stands between the
+   suite and its first run. §10.7.5 family 1 has the per-site diagnosis; §10.7.3 has why the
+   four-file drop the scoping recommended is not implementable and what the honest injection is.
+2. **The differential gate** — the reference hand port's 24 files / 194 `test(…)` calls over
+   `sge.ai.*`, which is the only instrument that reaches the six packages upstream's own suite does
+   not (§10.7.1).
 
 ---
 

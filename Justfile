@@ -10,6 +10,7 @@
 #   just screens-measure             libgdx-screenmanager, compiled WITH libGDX core (a dependent port)
 #   just vfx-measure                 gdx-vfx, compiled WITH libGDX core (a dependent port)
 #   just ai-measure                  gdx-ai, compiled WITH libGDX core (a dependent port)
+#   just ai-test-measure             gdx-ai's own 10-@Test JUnit suite — emitted, compiled and RUN
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
@@ -266,6 +267,14 @@ vfx_deps      := "--dependency org.scalameta::munit:1.0.2"
 # rather than carrying munit speculatively: a dependency on the compile line that nothing needs is a
 # dependency nobody can later prove was required.
 ai_deps       := ""
+# …and the TEST lane's, which is not empty: the emitted suite is MUnit and any UNCONVERTED residue
+# is still JUnit, so both runners have to be resolvable or a refused conversion is a compile error
+# instead of a counted refusal. JUnit 4.12 is gdx-ai's OWN declared version
+# (`gdx-ai/build.gradle`), read off the build rather than aligned with Ashley's 4.13.2 — see
+# `ashley_deps` for what guessing a version costs. MUnit FIRST, for `gdx_run_deps`' reason: with
+# two runners present, which one claims a suite is decided by scanning it, and the flag order is an
+# input to that classpath.
+ai_test_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:junit:4.12"
 # flexmark's one compile-scope coordinate, `org.jetbrains:annotations:24.0.1`, is a FRONTEND input
 # AND a compile one — and this line was written empty on the reasoning that it could not be, which
 # the port's first run disproved in one number. The reasoning was: the annotations are markers,
@@ -1189,6 +1198,113 @@ ai-measure:
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/aimeasure.txt \
       --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
+# gdx-ai's OWN JUnit suite — the first evidence of BEHAVIOUR this port has.
+#
+# TWO upstream files and TEN `@Test`, and the number is the whole point. `PROGRESS.md` §1.1's
+# hand-port column reads `24 / 196` against `sge-ai`; that is the REFERENCE HAND PORT's own MUnit
+# suite, hand-WRITTEN for the port, and it is not what upstream ships. Upstream ships
+# `IndexedAStarPathFinderTest` (5) and `ParallelTest` (5, with a `@Before`) in `gdx-ai/gdx-ai/tests`
+# — while the separate top-level `gdx-ai/tests` gradle project, 111 files with 54 named
+# `*Test*.java`, declares ZERO `@Test` and is an LWJGL demo application. `ai-measure` already
+# censuses both trees apart and gates each; this lane re-derives the same two numbers rather than
+# trusting that one ran first.
+#
+# A DEPENDENT OF A DEPENDENT: three emitted source sets on one `scala-cli` invocation — libGDX
+# core's, gdx-ai's and this suite's — so the lane must run AFTER `just gdx-measure` and
+# `just ai-measure`, which is where `measure-all` puts it.
+#
+# WHAT TEN PASSING TESTS WOULD AND WOULD NOT SAY: the suite validates two of gdx-ai's eight
+# packages (`pfa.indexed`, `btree.branch`) and nothing about `msg`, `fsm`, `sched`, `fma`, `steer`
+# or the rest of `btree`/`pfa`. It is still the only instrument this port has for CLAUDE.md §4.4 —
+# ten Java forms that translate to valid Scala meaning something else, none of which moves a
+# compile-error count.
+# ---------------------------------------------------------------------------------------------
+[doc("gdx-ai's own JUnit suite, compiled WITH libGDX core and gdx-ai")]
+ai-test-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{ai_src}}"
+    REPORT="$ROOT/port-report/GdxAiTestMigrate"
+
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.gdxai.GdxAiTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$OUT"; then
+      echo "!! GdxAiTestMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
+      exit 1
+    fi
+    echo "-- GdxAiTestMigrate (every line it printed) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala test files/p' <<<"$OUT"
+    echo
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
+
+    echo
+    echo "-- test discovery --"
+    # The same both-frameworks sum every other test lane uses: a CONVERTED suite is MUnit and a
+    # REFUSED one is still JUnit, so counting only one under-reports by exactly the conversions —
+    # in the safe-looking direction, which is the dangerous one. The DEMO project is censused
+    # beside it and held to zero, because a single figure over this checkout cannot tell a suite
+    # from a demo and every wrong answer this library has produced came from that conflation.
+    JAVA_TESTS=$(java_test_count {{ai_tests}})
+    DEMO_TESTS=$(java_test_count {{ai_demos}})
+    JUNIT_LEFT=$(junit_residue {{ai_module}}/src_managed/test/scala)
+    MUNIT_TESTS=$(munit_emitted {{ai_module}}/src_managed/test/scala)
+    SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
+    echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
+    echo "@Test in the upstream DEMO project ({{ai_demos}}): $DEMO_TESTS   (expected 0 — 111 files, 54 named *Test*.java, an LWJGL application)"
+    [ "$DEMO_TESTS" != "0" ] && echo "!! THE DEMO PROJECT NOW DECLARES $DEMO_TESTS @Test — it was an application; it may now be a suite, and this lane must say which"
+    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$REPORT"
+
+    echo
+    break_residue {{ai_module}}/src_managed/test/scala
+
+    echo "-- compile --"
+    # `--test`: without it `scala-cli` READS the test directories and reports only the MAIN scope,
+    # so a suite that does not compile measures 0 (§4.56's instrument-invocation rule — measured at
+    # 0 against 6 on the one port whose test scope had stopped compiling).
+    scala-cli compile --test --scala {{scala_version}} --server=false {{ai_test_deps}} \
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala \
+      {{ai_module}}/src_managed/test/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aitestmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/aitestmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/aitestmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/aitestmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/aitestmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aitestmeasure.txt | sort | uniq -c | sort -rn | head
+
+    if [ "$ERRORS" = "0" ]; then
+      echo
+      echo "-- run --"
+      scala-cli test --scala {{scala_version}} --server=false {{ai_test_deps}} \
+        -Duser.language=en -Duser.country=US \
+        {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala \
+        {{ai_module}}/src_managed/test/scala \
+        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aitestrun.txt
+      reconcile_outcomes "$MEASURE_TMP"/aitestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
+      echo
+      echo "-- correlation: test failures located to members and Java origins --"
+      # THREE maps: only gdx-ai's own can anchor a failure on the member that threw, only the
+      # suite's can name the test, and libGDX's is what a stack reaching the base resolves through.
+      correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/aitestrun.txt \
+        --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+        --srcmap "$ROOT/port-report/GdxAiMigrate/run-latest/srcmap.tsv" \
+        --srcmap "test=$REPORT/run-latest/srcmap.tsv"
+      test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
+    else
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -2299,7 +2415,10 @@ measure-all:
     # ordering constraint is `gdx-measure`, which is first, so any position after that one is
     # correct — and last is the position that leaves the fourteen established lanes' order, and
     # therefore their numbers, untouched by this port's arrival.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure; do
+    # `ai-test-measure` follows `ai-measure` for `md-test-measure`'s reason: it is a DEPENDENT of
+    # that source set and its compile links against what `ai-measure` just wrote, so run first it
+    # would measure the previous engine's emit of the library it tests.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then

@@ -18,6 +18,28 @@ final case class FrontendConfig(
     /** additional source roots that participate in RESOLUTION but are not converted
       * (typically the whole vendored tree — source-over-jar avoids version skew). */
     resolutionRoots: List[Path] = Nil,
+    /** paths under a resolution root that must NOT BE PARSED — relative to the root, matched at a
+      * path SEPARATOR (§4.56) and never as a substring. Empty is the default and the no-op.
+      *
+      * ==Why a resolution root needs one at all==
+      * [[files]] is an explicit list, so a port already states which of its own sources it converts
+      * and can leave one out. A resolution root has no list: it is a DIRECTORY and the whole tree
+      * is parsed. That is right for a vendored dependency and wrong wherever the tree holds files
+      * the upstream's OWN BUILD does not compile — GWT super-source (`<super-source path="emu"/>`,
+      * plus a `compileJava` exclusion) is the shape that reaches this engine first, and such a tree
+      * exists precisely to REDECLARE classes, so parsing it hands the frontend two declarations of
+      * one FQN. Spoon refuses the model outright (`The type X is already defined`), which is loud
+      * and correct and leaves the port with nothing to do about it.
+      *
+      * The obvious workaround — point the root at the PACKAGE directory instead — is measured worse
+      * and is a different bug: a base's published map is joined to this run through the resolution
+      * ROOTS, so a root one level down makes every shared type's expected name lose its package and
+      * the run reports `SurfaceNameDivergence` for the whole library (25 findings on the first port
+      * that tried it, against 0 with this key). The root has to stay the root.
+      *
+      * §1(b): the MECHANISM — omit part of a resolution tree — is a fact about java builds and is
+      * the same everywhere; WHICH paths is a fact about one library and arrives here. */
+    resolutionExcludes: List[String] = Nil,
     /** WHICH ARGUMENT-BEARING ANNOTATION FAMILIES THIS PORT CLAIMS ON A TYPE — FQN prefixes,
       * §1(b) policy, and EMPTY IS THE DEFAULT AND THE NO-OP.
       *
