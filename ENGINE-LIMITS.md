@@ -4012,6 +4012,55 @@ call-site paren strip with both negatives beside it, and one cell per refusal.*
 
 ---
 
+### T22. An `@interface`'s own ELEMENTS are dropped, and only a library that READS one back can see it — **4 of sge-ai's 20 first-emit errors. OPEN**
+
+T16 is about an annotation's USE on a declaration. This is the annotation's own DECLARATION, and the
+two are independent: a java `@interface` is emitted as
+
+```scala
+class TaskAttribute extends scala.annotation.StaticAnnotation
+```
+
+with **every element accessor gone**. `String name() default ""` and `boolean required() default
+false` are simply not in the emitted file, so `field.getAnnotation(TaskAttribute.class).name()` does
+not resolve. Four errors on gdx-ai (`TaskAttribute#name`/`#required`,
+`TaskConstraint#minChildren`/`#maxChildren`), all `E008 Not Found`.
+
+**Why no earlier port saw it, and why that is the whole point.** The corpus HAD declared
+`@interface`s — libGDX's `Null`, `NonNull` and `NonNullByDefault` — and every one of them is a
+MARKER with no elements at all, so there was nothing to lose and an emitted empty class is the right
+answer for them. gdx-ai is the corpus's first library that declares an annotation **with elements**
+and then **reads them back**, which is what a metadata-driven parser does. So the residue's
+visibility is a property of the CORPUS's shapes, not of the emitter: an annotation carrying elements
+has never been emitted correctly, and until a library asked for one back, nothing could tell.
+
+**Nothing counts them, and two other artifacts are where the tell is.** `omissions` has a row for a
+dropped annotation USAGE and none for an annotation type's own members, so this family reaches
+`findings.tsv` nowhere. What does move is:
+
+- **`trivia(recovered)`** — the accessors' javadoc has no declaration left to sit on, so the backstop
+  relocates it. 4 of gdx-ai's 5 recovered comments are exactly these four accessors, which is a
+  recovery lane reading high for a category that still wants a home (`CLAUDE.md` §4.58);
+- **`srcmap`** — all four are written as `!! UNLOCATABLE`, under a DOUBLED owner key
+  (`sge.ai.btree.annotation.TaskAttribute#sge.ai.btree.annotation.TaskAttribute#name()`). They were
+  planned and never written, and the doubled key says the member's owner was composed twice.
+
+Read those two together before writing the fix: the doubled key is a second defect in the same
+place, and a fix that emits the accessors without answering it produces a member no `srcmap` row can
+anchor an error on.
+
+**The far side is not the accessor, it is what java GUARANTEES about it.** A scala
+`StaticAnnotation` is not a JVM annotation with `RUNTIME` retention, so even a faithful accessor set
+does not make `getAnnotation` work reflectively — which is a SECOND question and the reason this
+entry stops at the compile error rather than claiming a design. Both gdx-ai sites read their
+elements through `com.badlogic.gdx.utils.reflect`, which the libGDX base drops outright, so on that
+port the two questions arrive together and neither is answered by the other.
+
+*Fix kind: (a) engine. NOT ATTEMPTED — this entry records the gap and its cost, not a measured dead
+end. `PROGRESS.md` §10.7.5 family 3 has the per-site diagnosis.*
+
+---
+
 ## 4. Collections, shims and the JDK boundary
 
 ### K1. Never model a Java interface on a Scala COLLECTION trait — the governing rule is `CLAUDE.md` §4.5

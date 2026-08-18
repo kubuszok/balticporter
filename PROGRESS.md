@@ -27,6 +27,7 @@ just noise4j-measure      # noise4j (no upstream test suite — the lane asserts
 just jbump-measure        # jbump — a library that ships NO suite; the lane re-derives that zero (§6)
 just liqp-measure         # liqp + its own 105-file suite (§10.5)
 just md-measure           # flexmark-java core + the eleven util modules — no test set IN SCOPE (§10.6)
+just ai-measure           # gdx-ai, compiled WITH libGDX core (a dependent port; no suite YET, §10.7)
 just measure-all          # every lane above, serially, stopping at the first failure
 
 just decision-counts      # decisions.tsv row counts by kind, every port
@@ -57,7 +58,7 @@ Measurements below are from one serial run of all lanes, 2026-07-31.
 
 ## 1. Corpus inventory
 
-Eleven libraries are ported on the current (TIR) pipeline, across sixteen runs — a library and its
+Twelve libraries are ported on the current (TIR) pipeline, across seventeen runs — a library and its
 own test suite are two ports, and the suite is a *dependent* of the library:
 
 **A port's name is its DESTINATION module's** (`CLAUDE.md` §2.1) — the id of the module in the
@@ -81,6 +82,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | simple-graphs / its suite | `simple-graphs` / `simple-graphs-test` | `sge-graphs` / `sge-graphs-test` |
 | liqp / its suite | `liqp` / `liqp-test` | `ssg-liquid` / `ssg-liquid-test` |
 | flexmark-java | — (added after the rename) | `ssg-md` |
+| gdx-ai | — (added after the rename) | `sge-ai` |
 
 | port | upstream | files in / out | tests | compile |
 |---|---|---|---|---|
@@ -93,6 +95,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-gltf-test` | gdx-gltf `gltf/test` | 1 of 7 → **1** (§8.1) | **8** ported + **22** hand-written, **none run** — the port does not compile | — |
 | `sge-screens` | libgdx-screenmanager `src/main/java` | 22 → **22** (0 dropped, 0 injected) | **16** hand-written, all passing — upstream's 12 need an unported BACKEND (§9 libgdx-screenmanager) | **0** |
 | `sge-vfx` | gdx-vfx `core/src` + `effects/src` | 44 → **44** (0 dropped, 0 injected) | **64** hand-written, all passing — upstream has NO test SOURCE SET (§10.1) | **0** |
+| `sge-ai` | gdx-ai `gdx-ai/src` | 166 of 167 → **166** (0 dropped, 0 injected; the 167th is GWT super-source upstream's own build excludes, §10.7.1) | **none yet** — upstream ships **10** `@Test` in 2 files, milestone 2 (§10.7.1); the "24 / 196" in the table below is the HAND PORT's suite, not upstream's | **20** (§10.7.5, all classified) |
 | `sge-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `sge-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -130,7 +133,7 @@ Where a doc disagreed with the tree, the tree won.
 | `sge-textra` | TextraTypist | 95 / 38,607 | 92 / 28,054 | **100 %** | 32 / 239 | Apache-2.0 + **MIT** |
 | `sge-visui` | VisUI `ui/` + `usl/` | 182 / 27,236 | 156 / 20,639 | **88 %** — USL 0 of 18 | 12 / 72 | Apache-2.0 |
 | `sge-anim8` | anim8-gdx | 16 / 19,594 | 16 / 9,747 | **93 %** | 4 / 21 | Apache-2.0 |
-| `sge-ai` | gdx-ai | 167 / 18,086 | 134 / 14,039 | **93 %** | 24 / 196 | Apache-2.0 |
+| `sge-ai` | gdx-ai | 167 / 18,086 | 134 / 14,039 | **93 %** | 24 / 196 — **the HAND PORT's own suite, not upstream's** (§10.7.1: upstream ships 2 files / 10 `@Test`; this column reads the reference tree for every row and is the one library where the two are far apart) | Apache-2.0 |
 | `sge-tools` | libGDX `gdx-tools` | 80 / 17,773 (8 ported) | 8 / 3,857 | **10 %** — deliberate | 2 / 10 | Apache-2.0 |
 | `sge-gltf` | gdx-gltf | 135 / 11,307 | 141 / 17,615 | **100 %** | 40 / 150 | Apache-2.0 |
 | `sge-vfx` | gdx-vfx | 45 / 5,732 | 41 / 3,881 | **91 %** — upstream now ported by the engine, §8 | 6 / 29 | Apache-2.0 |
@@ -244,8 +247,12 @@ repository-level NOTICE / THIRD-PARTY files are still hand-maintained and are no
 2. **`sge-gltf`, `sge-vfx`** — mid-size, high coverage, few surprises. (`sge-anim8`'s and
 3. **`ssg-liquid`** — small Java surface, but resolve the ANTLR decision first. Its 105 upstream test
    files are the best available proving ground for test porting after libGDX.
-4. **`sge-ai`, `sge-visui`, `sge-textra`, `sge-colorful`** — large, each with a named redesign that must
-   be scoped as its own decision.
+4. **`sge-visui`, `sge-textra`, `sge-colorful`** — large, each with a named redesign that must
+   be scoped as its own decision. (`sge-ai` was the first of this tier and its milestone 1 is ported
+   by the engine: 166 files at 20 errors, all classified, with the named redesign — the reflective
+   behaviour-tree parser — scoped as its own decision and deliberately NOT taken in the first emit,
+   §10.7. What that tier's other three should copy is §10.7.3: read the dependency direction before
+   believing a drop is a leaf.)
 5. **`ssg-md` (flexmark)** — the largest Java surface. Milestone 1 (core + the eleven `flexmark-util-*`
    modules) is ported by the engine, compiles at 0 errors on both source sets, and is the only port
    in the corpus with SPEC-LEVEL evidence: **100 % of CommonMark, 1,870 of 1,870 examples, against a
@@ -4409,6 +4416,245 @@ ascending size already gives. None of the nine imports anything outside `com.vla
 
 ---
 
+## 10.7 gdx-ai — the dependent that lives INSIDE its base's namespace
+
+`com.badlogic.gdx.ai.* → sge.ai.*`, Apache-2.0. **A dependent port of libGDX core**, the same shape
+as Ashley's, anim8's and gdx-vfx's: `just ai-measure` compiles libGDX core's emitted Scala and
+gdx-ai's emitted Scala on **one** `scala-cli` invocation and must run after `just gdx-measure`. At
+166 files it is the largest of libGDX's dependent ports (gdx-gltf, 135, was), and
+`gdx-ai/build.gradle` declares exactly one compile dependency — `com.badlogicgames.gdx:gdx` — so the
+base is the whole of its external surface.
+
+**Why it is in the corpus.** Two things no earlier port had:
+
+- it declares INSIDE its base's namespace, which turns out to decide the manifest (§10.7.2);
+- its reference hand port replaced a reflective mechanism **the engine has no mechanism for**.
+  Ashley's `PooledEngine` did the same thing (§3) and the engine matched it, because
+  `ClassReflection.newInstance` is a class-by-NAME lookup and `ClassTableTransform` is exactly that.
+  gdx-ai's parser also does field-by-NAME injection — `getFields` + `getAnnotation` + `Field.set`
+  with a coercion — and nothing in the engine re-points that. §1.1's surprise row
+  (`@TaskConstraint`/`@TaskAttribute` and the behaviour-tree parser becoming a `TaskRegistry` of
+  factory closures) is that half. It is the port's second milestone and is deliberately not
+  milestone 1's business (§10.7.3).
+
+### 10.7.1 Scope, named rather than silently dropped — and the one exclusion is UPSTREAM'S
+
+`gdx-ai/gdx-ai/src`, **166 of 167 `.java` files**. The lane re-derives all three numbers on every
+run rather than trusting this paragraph.
+
+The excluded file is `com/badlogic/gdx/emu/com/badlogic/gdx/ai/StandaloneFileSystem.java`, and it is
+excluded because **upstream excludes it**: `gdx-ai/gdx-ai/build.gradle` ends with
+`[compileJava, compileTestJava, javadoc]*.exclude("com/badlogic/gdx/emu")`, and the GWT module
+descriptor beside it declares `<super-source path="emu"/>` — that tree REPLACES classes for the GWT
+compile and is on no JVM classpath. It is not a taste question here, it is a **name collision**: the
+file declares `package com.badlogic.gdx.ai`, and so does
+`com/badlogic/gdx/ai/StandaloneFileSystem.java`. Handed both, the frontend puts two declarations of
+one FQN in one model and the emitter writes one `sge/ai/StandaloneFileSystem.scala` from whichever
+unit sorted last — the JVM class silently replaced by the GWT one, at a green compile, with no check
+able to report it. `GdxAiMigrate` filters on the path SEGMENT `com/badlogic/gdx/emu/` and not on a
+substring, for §4.56's reason.
+
+Out of scope and named:
+
+- **`gdx-ai/gdx-ai/tests`** (2 files, **10 `@Test`**) — a real JUnit 4.12 suite, and milestone 2's
+  `GdxAiTestMigrate`. Not lost silently: `ai-measure` gates on the number in BOTH directions;
+- **the top-level `gdx-ai/tests` gradle project** (111 files, 54 of them named `*Test*.java`) — NOT
+  a suite. It declares **zero** `@Test`, imports no JUnit, and every file is an
+  `ApplicationAdapter`/`Game` demo launched through `GdxAiTestUtils.launch(new LwjglApplication(…))`;
+  the `steer.box2d`/`steer.bullet` subpackages additionally want native Box2D/Bullet and
+  `btree.tests.ParseAndCloneTreeTest` wants Kryo. It is `sourceSets.main`, not a test source set.
+
+**THE TEST CORRECTION, because a wrong number is already in this document.** §1.1's hand-port table
+records **24 / 196** against `sge-ai`. That figure is the REFERENCE HAND PORT's own MUnit suite
+(`../sge/sge-extension/ai/src/test/scala`, 24 files / 194 `test(…)` calls), not anything upstream
+ships — it is hand-WRITTEN for the port, filling a gap upstream leaves almost entirely open, and a
+mechanical port should expect to GENERATE ten tests where a reviewer comparing against sge would
+expect two hundred. It is also the corpus's best available DIFFERENTIAL gate for this library, and
+that is what it is recorded as: 194 assertions over `sge.ai.*` that a compiled port could be run
+against without translating anything. Neither milestone claims it yet. The lane censuses the two
+upstream trees APART and prints both, because a single figure over the checkout cannot tell a suite
+from a demo and every wrong answer this library has produced came from exactly that conflation.
+
+### 10.7.2 The manifest — and gdx-ai is the first dependent that must declare NO rename
+
+Ashley declares `com.badlogic.ashley`, anim8 `com.github.tommyettinger.anim8`, gdx-gltf
+`net.mgsx.gltf`, screenmanager `de.eskalon.commons` — every one a namespace OUTSIDE the base's, so
+every one has to state its own destination. gdx-ai declares `com.badlogic.gdx.ai`, which is INSIDE
+`com.badlogic.gdx`, so the base's INHERITED `com.badlogic.gdx -> sge` already carries all 166 units
+to `sge.ai.*` — the exact tree the reference hand port uses, package for package.
+
+Writing `com.badlogic.gdx.ai -> sge.ai` computes the same strings and is still **wrong**, and this is
+not a style point. `ManifestAgreement` reports it as a fatal `RenameOverride` — *"renamed to sge.ai
+here; the base claims this namespace and leaves it in place"* — because a dependent holding its own
+rule for a prefix inside its base's namespace is a rule free to drift the day the base's changes,
+which is §1.5's two-ports-that-cannot-compile-together arriving through the rename map. It was
+declared on the first emit and the check is what found it.
+
+**Measured: `manifest 1 -> 0`, errors flat at 20, 166 member digests moved** — one per unit, every
+one this port's own `RenamedPackage` decision changing its porter note's `key=` from
+`"com.badlogic.gdx.ai -> sge.ai"` to the base's `"com.badlogic.gdx -> sge"`. A fully attributed
+blast (§3's classification gate), with `decisions.tsv`'s `RenamedPackage=166` as the denominator.
+
+What the manifest DOES declare is a `governs` sub-claim (`com.badlogic.gdx.ai`), which is what the
+drift check needs to know which slice of the base's namespace this module occupies, and
+`PortMapTransform.forBases("sge")` LAST — the residue check that reports a reference the base does
+not ship. Everything else — `dropTypes`, `dropMethods`, the collections and mutable-parameter phases
+— is INHERITED as the base's ONE instance and deliberately not restated. A libGDX dependent does not
+*start* the collections phase; a second instance would be a `SurfaceDivergence` for a composition
+nobody designed.
+
+### 10.7.3 Why milestone 1 drops NOTHING — the parser is not a leaf
+
+The scoping work recommended dropping a four-file "reflective parser subtree"
+(`BehaviorTreeParser`, `BehaviorTreeLoader`, `btree/annotation/TaskAttribute`, `TaskConstraint`) on
+the ground that the parser is a self-contained leaf. **It is not a leaf, and the drop as scoped is
+not implementable.** Reading the dependency direction:
+
+- `BehaviorTreeLibrary` holds a `BehaviorTreeParser<?>` FIELD, constructs one, and reads its
+  `DEBUG_NONE` constant — three references no body seam can reach;
+- `BehaviorTreeLibraryManager` and `PooledBehaviorTreeLibrary` are built on the library;
+- and `Include` — an ordinary `btree.decorator` task in the class hierarchy every behaviour tree
+  uses — reaches `BehaviorTreeLibraryManager.getInstance().createRootTask(subtree)` from
+  `createSubtreeRootTask()`.
+
+So the closure of that drop is **seven types plus a `dropMethods` cut into a task class**, which is a
+REDESIGN and not a scope cut. A `dropTypes` entry whose references survive is not a smaller port: it
+is a `substitution(dangling)` finding classified §1(b)/(c), a defect the PORT caused, which is
+CLAUDE.md §1's "an obligation the engine's own translation created is not a port's to discharge"
+read one step out. Milestone 1 therefore converts everything upstream compiles and reports
+`substitution(dangling) 0`.
+
+The two `btree.annotation` types stay for a smaller reason of the same shape: they are self-contained
+`@interface` declarations naming nothing outside `java.lang.annotation`, and every USE of them is an
+annotation the default `AnnotationPolicy` already declines to carry (12 of the 24 `omissions` rows).
+Dropping them would remove library surface to fix nothing.
+
+**The follow-up is stated, not implied.** The hand port's `BehaviorTreeParser.scala` (859 lines,
+holding a nested `TaskRegistry` of `alias -> () => Task[?]` factories and `TaskMeta` in place of
+`@TaskConstraint`), `BehaviorTreeReader.scala` (544) and `DistributionAdapters.scala` (291) are
+reflection-free Scala at these FQNs, Apache-2.0 like the original, and are exactly what `inject`
+exists for — the same shape as ssg-liquid's hand-written ANTLR replacements. That is a separate,
+separately-measured wave: adopting it in the same commit as the first emit would conflate "did the
+mechanical engine port this library" with "did we paste in someone else's hand-written parser".
+
+### 10.7.4 First emit — measured state
+
+| gate | `sge-ai` |
+|---|---|
+| files emitted | **166** (0 dropped, 0 injected) of 166 in scope |
+| compile errors (with libGDX core, Scala 3.8.4) | **20** (coded 20 + bare 0) — every one located, `Approx=0 EngineGap=20 Unmapped=0` |
+| model | 771 units / 57,214 symbols |
+| determinism | 166 units emitted twice, **byte-identical** |
+| signature consistency · omissions | 0 · **24** |
+| portability (all / emitted / injected) | 154 / **1** / 0 |
+| dependency-coverage ( / all / declared) | 0 / 37 / 0 |
+| substitutions (emitted / dangling) · manifest · port map · policy · remediation | 0 · **0** · **0** · 14 · 0 · 1 |
+| base surface · collapse agreement | 0 · 137 verdicts compared, **0 disagreeing** |
+| collection closure / boundary / retarget / internal | 0 / 2 / 0 / 0 |
+| context seams | **5**, every one a `residual-global-read` (§10.7.5) |
+| overload risk | **23** of 263 multi-candidate calls, over 3,671 program-declared calls |
+| heap pollution · break residue · markers · switch-null · try-resource · break-catch | 8 · **0** · 0 · 0 · 0 · 0 |
+| idiom (converted / refused / residue) | 1 / 164 / 0 — `NarrowedReturn SelfTyped` 147, `SamLambda NotSam` 17 |
+| trivia lost / recovered / deliberate | **0** / 5 / 0 |
+| porter notes uncovered | **0** — 432 notes emitted, every one from a recorded decision |
+| source map · port map | 2,011 members over 166 units · 232 types / 1,819 members |
+| decisions recorded | **1,020** rows (`RetypedSignature` 334, `RenamedMember` 224, `RenamedPackage` 166, `WidenedVisibility` 142, `FunnelledCtor` 67, `ForcedClassInit` 51, `DroppedMember` 17, `DroppedType` 12, `RedirectedCall` 4, `ScopedOut` 2, `SamLambda` 1); 2,651 withheld as the base's (`ENGINE-LIMITS` D2) |
+| **tests** | **none** — milestone 1 emits no test source set; upstream's 10 are §10.7.1, and CLAUDE.md §3 is explicit that a green compile says nothing about behaviour |
+
+**20 errors on 166 files — 0.12 per file**, against the two first-emit figures this document records
+elsewhere: ssg-md opened at 243 over 458 (0.53) and screenmanager at 5 over 22 (0.23). No claim is
+made about the ports whose first emit was never written down. The reason is not that the engine got
+better between them: gdx-ai is algorithmic code over its base's collections — no GL, no backend, no
+asset pipeline, no third-party dependency — so almost every file is arithmetic, state machines and
+`Array`/`ObjectMap` traffic the base already answers for. It is also why the residue is
+CONCENTRATED rather than spread: all 20 sit in three families and in **four** emitted files —
+`BehaviorTreeParser.scala` 14, `GdxAI.scala` 4, `Task.scala` 1, `CircularBuffer.scala` 1 — so **162
+of the 166 emitted files hold no error at all**.
+
+### 10.7.5 The 20 errors, classified per §1
+
+By java file the 20 are: `BehaviorTreeParser` 14, `GdxAI` 4, `Task` 1, `CircularBuffer` 1. By family:
+
+**Family 1 — `com.badlogic.gdx.utils.reflect.*`, 12 errors, §1(b) PER-LIBRARY.** The base
+deliberately does not translate `ClassReflection`, `Field`, `Annotation` or `ArrayReflection`
+(reflection is the one thing Scala.js and Scala Native cannot do), and `port-map` reports **14**
+reference sites as `DroppedType` before the compiler ever runs — 12 in `BehaviorTreeParser`, one in
+`Task`, one in `CircularBuffer`, which is the same three files scalac then reports 12 errors in. A
+check reading the base's published map answering ahead of the compiler, on exactly the right files,
+is what a dependent's `PortMapTransform` is for. Where they are:
+
+- **`BehaviorTreeParser` — 10** of its 14; the other 4 are family 3.
+  `ClassReflection.forName`/`.newInstance` (the string task-name →
+  instance half) and `getField`/`getFields`/`getAnnotation`/`Field.set` (the `@TaskAttribute`
+  injection half). The first half is *exactly* `ClassTableTransform`'s worked example; the second
+  has **no existing engine mechanism** — nothing in the engine re-points a field-by-name `Field.set`
+  — so a mechanical answer here means designing a §1(b) sibling of `ClassTableTransform` keyed on
+  field name. §10.7.3's injection is the cheaper answer and is why it is the recorded follow-up;
+- **`Task.cloneTask()` — 1.** `ClassReflection.newInstance(this.getClass())`, a reflective
+  self-clone. The hand port answers it with its own `TaskCloner.scala`; the engine's shape for it is
+  Ashley's `MethodBodyTransform` on one member, which leaves the signature and every call site
+  untouched (§3.3's table row for `Engine#createComponent`);
+- **`CircularBuffer.resize(int)` — 1.** `ArrayReflection.newInstance`, the generic-array-allocation
+  workaround. Ordinary and unrelated to the parser;
+- **`MessageDispatcher`** uses `ClassReflection.isInstance` and produces **no error and no
+  `port-map` row at all** — the engine already rewrites it to `isInstanceOf`. That is the difference
+  between a reflective API and a reflective MECHANISM, and it is why this family lands in three
+  files rather than the four the scoping expected.
+
+**Family 2 — the `(using sge.Sge)` context seam, 4 errors, §1(b) PER-LIBRARY.** `GdxAI` is a
+service-locator facade whose static fields initialise from `Gdx.app`/`Gdx.files`, and the base
+retired libGDX's global `Gdx.*` into a context threaded explicitly through `(using sge.Sge)`
+(§11.12 M1 + P5). A static field's initialiser runs at class initialisation, before anything could pass it a
+context — which is precisely what the `context-seam 5` lane reports as `residual-global-read`, with
+the remedy named at the row (`boundary = "residual-global"`, or a `sites` policy). The one
+`portability(emitted)` finding is the same corner: `StandaloneFileSystem` calls
+`System.getProperty`, and the `remediation` menu offers `substitutions-drop` at that type. **Both
+are the nine "dead-weight" `GdxAI`-facade files speaking, exactly as milestone 1 wanted** — they were
+deliberately NOT pre-dropped so that the instruments would say what they cost, and 4 errors + 1
+portability row + 5 context seams is what they cost.
+
+**Family 3 — a java annotation's ELEMENTS are lost, 4 errors, §1(a) ENGINE.** A java `@interface` is
+emitted as `class TaskAttribute extends scala.annotation.StaticAnnotation` **with its element
+accessors dropped**: `name()`, `required()`, `minChildren()` and `maxChildren()` are simply not in
+the emitted file, so `BehaviorTreeParser`'s reads of them do not resolve. The tell that this is a
+gap rather than a decision is in two other artifacts — the accessors' javadoc arrives as
+`trivia(recovered)` (4 of the 5 recovered comments are these), and `srcmap` records all four as
+**UNLOCATABLE** under a doubled owner key
+(`sge.ai.btree.annotation.TaskAttribute#sge.ai.btree.annotation.TaskAttribute#name()`), i.e. they
+were planned and never written. Nothing counts them: `omissions` counts the annotation USAGES that
+were dropped and has no row for an annotation type's own members.
+
+The corpus HAD declared `@interface`s before — libGDX's `Null`, `NonNull`, `NonNullByDefault` — and
+every one is a MARKER with no elements, for which an emitted empty class is the right answer. gdx-ai
+is the first to declare one **with elements** and then **read them back**, so the emitter has been
+losing this since it was written and nothing could tell. `ENGINE-LIMITS.md` T22 carries the rule;
+the `srcmap` doubled owner key is a second defect in the same place and is recorded there too.
+
+### 10.7.6 Do NOT retry
+
+- **`packageRenames { "com.badlogic.gdx.ai" -> "sge.ai" }`.** It is what the scoping recommended and
+  it is a fatal `RenameOverride`; the base's inherited rename already produces `sge.ai.*`. §10.7.2.
+- **`dropTypes` for the reflective parser subtree as four files.** The closure is seven types plus a
+  cut into `Include`, and the four-file form leaves dangling references the port itself caused.
+  §10.7.3.
+- **Pre-dropping the nine `GdxAI`-facade files.** They were kept for the first emit on purpose and
+  their cost is now measured (4 errors, 1 `portability(emitted)`, 5 context seams). Dropping them
+  before the number existed would have made this port look cleaner than it is and left no evidence
+  for what a service-locator facade costs a context-threading base.
+
+### 10.7.7 Next
+
+1. **`GdxAiTestMigrate`** — upstream's 2 files / 10 `@Test`, plain JUnit 4 with `org.junit.Assert`,
+   no `@RunWith`, no `@Rule`, no `Parameterized`, no backend. The proven shape, at libGDX-core scale
+   already. It validates two of gdx-ai's eight packages (`pfa.indexed`, `btree.branch`) and says
+   nothing about `msg`, `fsm`, `sched`, `fma`, `steer` or the rest of `btree`/`pfa` — which is the
+   whole argument for §10.7.1's differential gate afterwards.
+2. **Family 1 and 2**, in that order and one at a time, each with its own number.
+3. **Family 3 is an ENGINE fix**, not this port's configuration, and it is the one item on this list
+   that every future port with an `@interface` inherits.
+
+---
+
 ## 11. Publishability — what sge and ssg need before they can depend on this
 
 **The goal being evaluated.** sge and ssg stop hand-maintaining their ports and instead depend on
@@ -4447,9 +4693,11 @@ with each item's state re-verified against the working tree.
 4. **`ManifestAgreement` cannot see a parameterised phase's CONFIGURATION** unless it declares a
    fingerprint. `ClassTableTransform`, `StaticForwarderTransform` and `PortMapTransform` opt in;
    `CollectionsTransform` cannot until its `typeMap` becomes a parameter.
-5. **No second libGDX MODULE.** Ashley is a genuine dependent (§3), but no *extension of libGDX itself*
-   — gdx-ai, vis-ui — has been ported, and no diamond (two bases sharing a third) has been built, so map
-   composition is untested.
+5. **No diamond (two bases sharing a third) has been built, so map composition is untested.** The
+   first half of this item is CLOSED: `sge-ai` is an *extension of libGDX itself* and is ported
+   (§10.7) — and it is the one that shows why the distinction mattered, since a module declaring
+   INSIDE its base's namespace inherits the rename instead of stating one, which no
+   outside-the-namespace dependent could have exercised. vis-ui is still open.
 6. **Nothing verifies two ports were built by the same ENGINE at the manifest level.** `EnginePin` is
    wired into the port map's freshness answer, not into `ManifestAgreement`.
 7. **THE PORT'S OWN CLASSPATH RESOURCES ARE NOT PART OF ITS OUTPUT, AND NOTHING SAYS SO.** A ported
