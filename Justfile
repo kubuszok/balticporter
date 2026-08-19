@@ -2747,8 +2747,12 @@ textra-diff-measure:
     ADAPTED_FILES=$(find "$TREE" -name '*Suite.scala' | wc -l | tr -d ' ')
     ADAPTED_TESTS=$(munit_emitted "$TREE")
     echo "reference hand port ({{textra_ref_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
-    echo "adapted here (class (a) of §10.8.15): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
-    echo "class (c), left out and counted: $((REF_FILES - ADAPTED_FILES)) file(s), $((REF_TESTS - ADAPTED_TESTS)) test(…)"
+    echo "adapted here (class (a) of §10.8.17): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
+    # NOT "class (c)": §10.8.17 re-classified the residue after MEASURING what blocks it. 18 files /
+    # 69 tests are class (b) — they construct the hand port's own nilary `Font()`, which java does
+    # not have — one file / 5 tests is a byte-identical `scalanative` duplicate of a file that IS
+    # adapted, and one declares no test at all (the reference fixture, rewritten rather than copied).
+    echo "not copied, and counted: $((REF_FILES - ADAPTED_FILES)) file(s), $((REF_TESTS - ADAPTED_TESTS)) test(…)"
     if [ "$REF_FILES" != "32" ] || [ "$REF_TESTS" != "239" ]; then
       echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 32 / 239."
       echo "   PROGRESS.md §10.8.15's census was taken against 32 / 239 and is now STALE: a file"

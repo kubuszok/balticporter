@@ -37,6 +37,11 @@ sge.textra.LayoutLineSuite	setTargetWidth returns this for chaining	pass
 sge.textra.LayoutLineSuite	truncateExtra trims auxiliary arrays	pass
 sge.textra.LayoutLineSuite	truncateExtra with larger limit is a no-op	pass
 sge.textra.TextraLayoutMaxLinesIss778RedSuite	ISS-778: Layout.add returns null when a newline is added at the maxLines cap (Layout.java:144); the port returns `this`	pass
+sge.textra.TextraLzmaFontRedSuite	ISS-514 control (green at red commit): LzmaUtils compress/decompress round-trips the fixture	pass
+sge.textra.TextraLzmaFontRedSuite	ISS-514 control (green at red commit): the same fixture loads as plain .json	pass
+sge.textra.TextraLzmaFontRedSuite	ISS-514: BitmapFontSupport.JsonFontData loads a .json.lzma file (upstream BitmapFontSupport.java lines 150-168)	pass
+sge.textra.TextraLzmaFontRedSuite	ISS-514: Font.loadJSON loads a .json.lzma FileHandle (upstream Font.java lines 3218-3236)	pass
+sge.textra.TextraLzmaFontRedSuite	ISS-514: getJsonExtension prefers .json.lzma over .json AND the resolved file must then load (upstream order)	pass
 sge.textra.TypingConfigSuite	40 effect start tokens are registered	pass
 sge.textra.TypingConfigSuite	DEFAULT_CLEAR_COLOR is white	pass
 sge.textra.TypingConfigSuite	DEFAULT_SPEED_PER_CHAR has expected default value	pass
