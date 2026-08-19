@@ -1696,6 +1696,21 @@ classify a call and says nothing is the silence this whole section is about. Mea
 tree the corpus counts: **every emitted suite flat** — 221, 112, 8, 16, 637, 725, 10, 188 — every
 hand-written suite flat, and the two REFERENCE suites `194 -> 196` and `202 -> 239`.
 
+**And the same rule reaches a TEXT EDIT over hand-written code, which is where it is loudest and
+least visible.** A DIFFERENTIAL suite — the reference hand port's own tests, run against the
+mechanically emitted surface — is adapted by an enumerated table of NAME and SHIM substitutions, and
+each row is a claim about what a name MEANS on both sides. `.isEmpty` means a null-shim's emptiness on
+one side and a libGDX `FloatArray`'s on the other; applied by SPELLING, one row turned
+`assert(layout.offsets.isEmpty)` into `assert(layout.offsets == null)` — eight assertions quietly
+inverted about a field that is never null, at a green compile, in a wave whose entire subject is
+behavioural evidence. The structural evidence that separates them exists and is free: the COMPILER's
+own message names the receiver's class (*method isEmpty in class FloatArray must be called with ()
+argument* against *value isEmpty is not a member of sge.textra.Line*), so the row is applied per
+RECEIVER. That is the second time this hazard has been met inside such a table — the first rewrote a
+name inside a COMMENT, which is why every row is applied to comment-masked code — and two occurrences
+is what makes it a rule: **a substitution keyed on a NAME needs the same structural warrant a phase
+would need, and the run that fails is where to get it.**
+
 **…and the THIRD MEMBER that was said to be already printing it is a DIFFERENT FACT, which is why a
 witness is MEASURED before it is counted as one.** One ported suite reconciles `727 outcomes against
 725 emitted` on every run, non-fatally and correctly, and that figure was written into this rule as a
