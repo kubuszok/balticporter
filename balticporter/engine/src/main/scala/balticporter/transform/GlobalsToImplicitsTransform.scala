@@ -242,9 +242,11 @@ final class GlobalsToImplicitsTransform(
     * The key is kept beside the symbol because it is the string an agent edits (§4.575) and it is
     * what the decision's `Reason.Configured` carries. */
   private var boundSelf: Map[String, Map[SymId, String]]          = Map.empty
-  /** the `retain` entries the binder RESOLVED, per holder: the TYPE symbol → the MEMBER NAME the port
-    * asked for. Keyed by symbol for the emission and reported back through [[ContextHolder.retain]]
-    * for the dead-key report, exactly as [[boundSelf]] is. */
+  /** the `retain` entries the binder RESOLVED, per holder: the TYPE symbol → the POLICY KEY that
+    * named it — the KEY and not the member name, for [[boundSelf]]'s reason: the key is the string an
+    * agent edits (§4.575), it is what a `Reason.Configured` carries, and it is what the dead-binding
+    * report has to name. The member name is one lookup away through [[ContextHolder.retain]], and
+    * going the other way is a match on a VALUE two entries could share. */
   private var boundRetain: Map[String, Map[SymId, String]]        = Map.empty
 
   def bindPolicy(binder: PolicyBinder): Unit =
@@ -328,7 +330,7 @@ final class GlobalsToImplicitsTransform(
       }
       boundRetain = boundRetain.updated(h.holder, h.retain.toList.sorted.flatMap((t, nm) =>
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.retain", t)
-          .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> nm)).toMap)
+          .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap)
 
       boundPromote = boundPromote.updated(h.holder, h.promoteToClass.flatMap(t =>
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.promoteToClass", t)
@@ -451,7 +453,8 @@ final class GlobalsToImplicitsTransform(
     /** the type → the MEMBER NAME its retained context is readable under. Bound entries only; a
       * malformed name is already reported and must not also emit a member, for the same reason a
       * `selfSupplied` entry with an empty expression must not also leave its type unthreaded. */
-    val retainOf: Map[SymId, String] = boundRetain.getOrElse(h.holder, Map.empty)
+    val retainOf: Map[SymId, String] =
+      boundRetain.getOrElse(h.holder, Map.empty).flatMap((s, k) => h.retain.get(k).map(s -> _))
     val need  = new ContextNeed(program0, graph, h, statics, boundPromote.getOrElse(h.holder, Set.empty),
                                 (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
                                 (s, why) => refuse(h, why),
@@ -744,6 +747,7 @@ final class GlobalsToImplicitsTransform(
     * note above the `class` is the only place that can say who asked for it and what reads it. */
   private def recordRetained(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String,
                              retained: Map[SymId, String]): Unit =
+    val keyOf = boundRetain.getOrElse(h.holder, Map.empty)
     retained.toList.filter((c, _) => need.threadedClasses(c)).sortBy(_._1.raw).foreach { (c, nm) =>
       p.symbolOf(c).foreach(sym => record(Decision(
         kind = Decision.Kind.InjectedMember, subject = c, subjectFqn = sym.fullName,
@@ -758,7 +762,7 @@ final class GlobalsToImplicitsTransform(
             "asked for it to be kept under a name, which is what a `selfSupplied` expression on " +
             "such a holder then reads"),
         ),
-        reason = Reason.Configured(name, sym.fullName),
+        reason = Reason.Configured(name, keyOf.getOrElse(c, sym.fullName)),
         origin = Decision.originOf(p, c),
       )))
     }
@@ -769,10 +773,8 @@ final class GlobalsToImplicitsTransform(
     * leaves that expression naming something that is not there — a compile error in a DIFFERENT file
     * from the key that caused it. */
   private def recordDeadRetain(h: ContextHolder, need: ContextNeed): Unit =
-    boundRetain.getOrElse(h.holder, Map.empty).toList.filterNot((c, _) => need.threadedClasses(c))
-      .flatMap((c, _) => h.retain.keys.toList.sorted.filter(k =>
-        boundRetain.getOrElse(h.holder, Map.empty).get(c).contains(h.retain(k))))
-      .distinct.sorted.foreach { k =>
+    boundRetain.getOrElse(h.holder, Map.empty).toList
+      .filterNot((c, _) => need.threadedClasses(c)).map((_, k) => k).distinct.sorted.foreach { k =>
         deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.retain",
           k, PolicyIssue.NeverMatched, "the entry names a type of this program that took NO " +
             "constructor clause — either the closure never reached it, or it is `selfSupplied`, or " +
