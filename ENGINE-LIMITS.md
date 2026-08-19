@@ -2872,35 +2872,84 @@ module's own row.*
 
 ---
 
-### C16. TWO EXTENSIONS MEASURED AND SKIPPED AT **2 COMPILE ERRORS EACH**, and neither is a constructor question — **OPEN**
+### C16. TWO EXTENSIONS MEASURED AND SKIPPED AT **2 COMPILE ERRORS EACH** — **CLOSED: both gaps fixed, both modules IN at 0 errors, milestone 2 at 29 of 29.** Neither was the family its error code named
 
 Batch 3 of milestone 2 admitted seven of its nine remaining modules at 0 errors and stalled on two,
-each on a DIFFERENT engine gap and each at exactly two errors. Both are recorded rather than fixed
-because a batch wave's job is to surface a gap at the lowest cost per gap, not to close it; both
-modules are out of `ext.conf`'s `includeGlobs` and out of the `Justfile`'s `md_ext_modules`.
+each on a DIFFERENT engine gap and each at exactly two errors. Both are closed. **The diagnosis this
+entry originally carried was wrong for both**, in the same way and for the same reason, which is the
+lesson worth more than either fix: an error's CODE names the shape scalac saw, and *which mechanism
+owes the answer* is a different question that only reading the emitted text settles.
 
-**`flexmark-ext-enumerated-reference` — 2 × `E049 Reference to html is ambiguous`.**
+**`flexmark-ext-enumerated-reference` — 2 × `E049 Reference to html is ambiguous`. The SHAPE was
+right and the FIRING CONDITION was the other conjunct.**
 `EnumeratedReferenceNodeRenderer#render(link, context, html)` builds
-`new OrdinalRenderer(this, context, html) { … }` and the anonymous body reads a bare `html`. That is
-`CLAUDE.md` §4.55's FOURTH face — a CAPTURE, not a member, is the thing that has to move — and
-`resolveCapturedLocalClashes` is the pass for it. Its guard is *referenced inside the nested body AND
-the body declares or inherits the name*, which is the right shape and does not fire here: scala 3's
-ambiguity rule is not shadowing at all, it is *this name is BOTH defined in an enclosing scope AND
-inherited*, and the two are different questions with the same symptom. Whoever closes it should
-start by asking whether the rename guard's second conjunct sees an inherited name reached through a
-PARENT'S CONSTRUCTOR PARAMETER, which is what `OrdinalRenderer(…, html)` promotes.
+`new OrdinalRenderer(this, context, html) { … }`, and the anonymous body reads a bare `html` that the
+parent declares as a FIELD. It is `CLAUDE.md` §4.55's fourth face and
+`resolveCapturedLocalClashes` is the pass — this entry said so and said the guard was
+*referenced inside the nested body AND the body declares or inherits the name*. It then guessed that
+the SECOND conjunct was failing, on a parent's promoted constructor parameter. It is not: the second
+conjunct sees `html` perfectly well, because `OrdinalRenderer` declares a real field of that name.
 
-**`flexmark-ext-toc` — 2 × `E007 Type Mismatch` on `Pair[TocOptions, …]`.**
-`TocOptionTypes#parseOption` and `SimTocOptionTypes#parseOption` build a `util.misc.Pair` whose first
-component is a `TocOptions`, and the emitted type does not conform where java's did. It is a
-GENERICS gap on a program-declared generic pair, not a JDK-collection one, so nothing in the
-collections family is party to it.
+**PROBE THE TWO LANGUAGES BEFORE READING THE GUARD.** Both answers are cells nothing else produces:
+
+| | |
+|---|---|
+| `javac` 22 | an INHERITED FIELD SHADOWS an enclosing method's local or parameter and the member WINS — through an anonymous body, a named local class and a grandparent alike. An inherited METHOD does not, java's two namespaces keeping a variable read away from it |
+| `scalac` 3.8.4 | BOTH are `E049 … is ambiguous. It is both defined in <outer> and inherited subsequently in <class>` — an inherited `val` and an inherited `def` alike. A member the body DECLARES ITSELF is not ambiguous with anything |
+
+So the reference the frontend records already points at the MEMBER — there is no capture reference in
+the tree at all, and the FIRST conjunct honestly found nothing to move. The pass now reads the
+enclosing SCOPE beside it (`enclosedBy` + `scopeOf`, ownership being structural per §4.56), fires
+only where the body really names an INHERITED member, and subtracts what the body declares itself.
+The rename PRESERVES java's binding rather than repairing a broken one: with the enclosing
+declaration moved, the bare name binds the inherited member, which is what javac bound. Read in the
+emitted file, `render` takes `html$local`, passes `html$local` to the constructor and leaves both
+reads inside the anon body as bare `html` — while the OTHER `render` overload, which has no anon
+body, keeps its parameter named `html`.
+
+Not reached, and stated rather than left silent: an outer definition that is a FIELD OF AN ENCLOSING
+CLASS is ambiguous on the same scala rule (probed), where a rename is the wrong remedy — the field is
+a real member and moving it moves surface — and a qualification at the reference is the right one.
+
+**`flexmark-ext-toc` — 2 × `E007 Type Mismatch` on `Pair[TocOptions, …]`. NOT a generics gap, and not
+about `Pair` at all.** This entry called it "a GENERICS gap on a program-declared generic pair, not a
+JDK-collection one, so nothing in the collections family is party to it". Every clause of that is
+wrong, and **the emitted file said so on its own line**:
+
+```
+/* porter: retained-signature reason=universal rule=class-file-override(§4.56)
+   overrides=java.lang.Enum#parseOption — this member OVERRIDES a declaration in a compiled
+   class file, whose signature no phase may move … */
+```
+
+`java.lang.Enum` does not declare `parseOption`. `TocOptionTypes` is an enum implementing
+`OptionParser<TocOptions>`, and `OverrideGraph` compared the two DESCRIPTORS as strings:
+`parseOption(BasedSequence, T, MessageProvider)` above and
+`parseOption(BasedSequence, TocOptions, MessageProvider)` below are one member to java (JLS 8.4.2)
+and two `Param.Named`s here, so there was NO EDGE. `overridden` then answered the empty list — a
+LEGITIMATE answer meaning *this overrides nothing this program declares* — and
+`CollectionsTransform.applyClassFileOverrides` reasoned onward: it must be a class-file override, the
+only external ancestor an enum has is `java.lang.Enum`, and `ExternalSurface.mayDeclare` answers YES
+for an unknown surface ON PURPOSE. Java's `java.util.List` was held under a parent the port had
+already retyped to `mutable.Buffer`. `ENGINE-LIMITS.md` K28.2 is the same rule at the FRONTEND; this
+is its third site, and the one every other seam reads rather than re-deriving.
+
+**A WRONG ANSWER THAT IS ALSO A LEGITIMATE ONE IS THE HARD SHAPE HERE.** Nothing could report it: the
+empty list is what the API returns for the ordinary case, the phase's own refusal was recorded
+honestly under a real guard, and the only artifact naming the impossible member was a porter note
+nobody was reading. §4.575's whole argument, arriving at the engine's own expense.
+
+Both fixes are FLAT: `just measure-all`, 16 lanes, **0 moved member digests and every error baseline
+unchanged**, for each of them separately — the E049 rule fires nowhere else in the corpus, and the
+widened override edge changes emitted text only where a phase was already reasoning from the missing
+one. Bringing both modules in then cost **0 compile errors** on the first run, which is what says the
+two gaps were the whole of it: `284 → 331` units, `180 → 188` tests passing at `expected-lost` 0.
 
 Note what both cost, because it is the argument for the batching rule rather than against it: the
 two are the LARGEST remaining modules (23 and 28 java files), they were reached last by ascending
 size, and each surfaced its gap in one lane run with every other module already green.
 
-*Fix kind: (a) engine, both. OPEN. `PROGRESS.md` §10.6.8 carries the two rows and the M2 closing
+*Fix kind: (a) engine, both. CLOSED. `PROGRESS.md` §10.6.8 carries the two rows and the M2 closing
 state.*
 
 ---

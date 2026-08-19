@@ -261,10 +261,11 @@ repository-level NOTICE / THIRD-PARTY files are still hand-maintained and are no
    modules) is ported by the engine, compiles at 0 errors on both source sets, and is the only port
    in the corpus with SPEC-LEVEL evidence: **100 % of CommonMark, 1,870 of 1,870 examples, against a
    java control measured green** (§10.6.7). The rename turned out to be the easy half — one uniform
-   prefix with one deviation, collision-free. What remains is 28 of the 29 extension modules — the
-   first, `flexmark-ext-aside`, is ported as ONE dependent port at 0 errors and the pattern and its
-   per-extension checklist are §10.6.8 — and two suite failures that are one engine family this port
-   shares with liqp.
+   prefix with one deviation, collision-free. **Milestone 2 is CLOSED at 29 of the 29 covered
+   extension modules**, as ONE dependent port at 0 errors — 331 emitted files, 188 of 188 tests
+   passing, and five engine gaps bought and closed along the way (§10.6.8). What remains is two suite
+   failures that are one engine family this port shares with liqp, and the deferred tier (3 untouched
+   extensions, 7 converter/tooling modules, `util-experimental`, `tree-iteration`).
 6. **`sge` core** — already ported by the engine. What remains is the 100 absent types and the backend
    question, which is a platform decision, not a port.
 7. **Deferred / not port work**: `sge-controllers`, `sge-tools`, `sge-physics*`, `sge-freetype`,
@@ -3979,7 +3980,7 @@ passing / 2 failing of 727 outcomes**, and the 2 are the `Pair.equals` rows §10
 parent the phase left as java's (`ENGINE-LIMITS.md` K18.1/K5.7). Nothing about markdown is failing
 any more; the residue is one engine family this port shares with liqp.
 
-### 10.6.8 MILESTONE 2 — the extensions, as ONE dependent port, and the recipe for the other 28
+### 10.6.8 MILESTONE 2 — the extensions, as ONE dependent port. **CLOSED at 29 of 29**
 
 `just md-ext-measure`, `balticporter/corpus/ports/ssg-md/{ext,ext-test}.conf`,
 `port-report/{FlexmarkExtMigrate,FlexmarkExtTestMigrate}`.
@@ -4322,15 +4323,36 @@ contribution and `residue` is what it ADDED to a lane.
 | 25 | `ext-media-tags` | 18 | 17 | 0 | — | `overload-risk` +18 |
 | 26 | `ext-attributes` | 20 | 18 | 0 | **54/54** | `jdk-surface` +2, `idiom(refused)` +2, `omissions` +1, `overload-risk` +15 |
 | 27 | `ext-tables` | 20 | 18 | 0 | **180/180** | `base-surface` +1, `omissions` +2, `dependency-coverage` +2, `idiom(refused)` +3, `overload-risk` +16 |
-| — | `ext-enumerated-reference` | 23 | — | **2** | — | **SKIPPED — `ENGINE-LIMITS.md` C16**, `E049 Reference to html is ambiguous` ×2 |
-| — | `ext-toc` | 28 | — | **2** | — | **SKIPPED — `ENGINE-LIMITS.md` C16**, `E007 Type Mismatch` on `Pair[TocOptions, …]` ×2 |
+| 28 | `ext-enumerated-reference` | 23 | 21 | **2 → 0** | **8/8** | `overload-risk` +9, `omissions` +3, `idiom(refused)` +2, `trivia(recovered)` +1 |
+| 29 | `ext-toc` | 28 | 26 | **2 → 0** | — | `overload-risk` +54, `omissions` +3, `idiom(refused)` +2, `base-surface` +1 |
 
-Batch 3 totals: **8 modules admitted (19 → 27 of 29), 166 → 284 units, 0 errors, 34 → 180 of 180
+Batch 3 totals: **10 modules admitted (19 → 29 of 29), 166 → 331 units, 0 errors, 34 → 188 of 188
 tests passing**, `manifest` / `port-map` / `policy` 0 throughout and `expected-lost` 0 on every wave.
-TWO modules were measured and SKIPPED, each at exactly two compile errors and each on a different
-engine gap (`ENGINE-LIMITS.md` C16) — which is the batching rule paying for itself rather than
-failing: they are the two LARGEST remaining modules, they were reached last by ascending size, and
-each surfaced its gap in one lane run with every other module already green.
+Two modules were measured and SKIPPED first, each at exactly two compile errors and each on a
+different engine gap (`ENGINE-LIMITS.md` C16) — which is the batching rule paying for itself rather
+than failing: they are the two LARGEST remaining modules, they were reached last by ascending size,
+and each surfaced its gap in one lane run with every other module already green. **Both gaps are now
+CLOSED and both modules are IN at 0 errors on the first run after the fixes**, which is the evidence
+that the two gaps were the whole of it rather than the first two of several.
+
+**AND NEITHER GAP WAS THE FAMILY ITS ERROR CODE NAMED — the batch's most expensive lesson, and it is
+about DIAGNOSIS rather than about either fix.** `E049 Reference to html is ambiguous` really was
+§4.55's fourth face, and the skip note guessed the wrong CONJUNCT: the pass's *body declares or
+inherits the name* test sees the parent's field perfectly well, and it is *referenced inside the
+nested body* that finds nothing, because **java binds the inherited member there** (probed — an
+inherited field shadows an enclosing method's parameter) so no capture reference exists in the tree
+at all. And `E007 Type Mismatch on Pair[TocOptions, …]` was recorded as "a GENERICS gap on a
+program-declared generic pair, not a JDK-collection one, so nothing in the collections family is
+party to it" — every clause of which is wrong. It is `CollectionsTransform` holding a java signature
+because `OverrideGraph` had no edge from `TocOptionTypes#parseOption` to the `OptionParser<T>` it
+implements, the two descriptors being one member to java and two strings here.
+
+**What would have caught both in the first place is READING THE EMITTED FILE, which the skip did not
+do.** The toc module's own porter note said `overrides=java.lang.Enum#parseOption`, and
+`java.lang.Enum` has no such member — the wrong answer was written down, in the port, in a grammar
+§4.575 built for exactly this reader. So a SKIP note carries the diagnosis it can defend and says
+which part is a hypothesis; a wave that stalls should spend one more minute in `src_managed/` than
+one in the error log.
 
 **THE TEST TRIAGE GAINED A THIRD CONJUNCT, AND IT WAS MEASURED RATHER THAN REASONED.** The pair
 predicate names the files that DECLARE a plain `@Test`; four of `ext-tables`' five extend
@@ -4355,13 +4377,23 @@ field left behind is `lineSegments`, which nothing in the module reads. A counte
 
 | | |
 |---|---|
-| modules | **27 of the 29 covered `flexmark-ext-*`**, as ONE dependent port at ONE port root |
-| units | **284 emitted Scala files**, 0 dropped, 0 injected |
+| modules | **29 of the 29 covered `flexmark-ext-*` — ALL OF THEM**, as ONE dependent port at ONE port root |
+| units | **331 emitted Scala files**, 0 dropped, 0 injected |
 | compile | **0 errors**, base tree and extension tree compiled TOGETHER on one invocation |
-| suite | **180 of 180 passing**, from 12 admitted plain-`@Test` files across 8 modules, `expected-lost` 0 |
+| suite | **188 of 188 passing**, from 13 admitted plain-`@Test` files across 9 modules, `expected-lost` 0 |
 | shared surface | `manifest` 0 over 458 shared types, `port-map` 0, `policy` 0 |
-| counted residue | `overload-risk` 225, `omissions` 12, `jdk-surface` 3, `idiom(refused)` 6, `dependency-coverage` 4, `portability(emitted)` 3, `base-surface` 2, `collection-boundary` 1, `trivia(recovered)` 4 |
-| EXCLUDED, with reasons | `ext-enumerated-reference` and `ext-toc` (`ENGINE-LIMITS.md` C16, 2 errors each); the three modules with no coverage in the reference hand port (`spec-example`, `xwiki-macros`, `zzzzzz`), which were never in scope (§10.6.1); the 114 `ComboSpecTestCase` subclasses and 59 `@RunWith(Suite.class)` aggregators, which are the documented refusal and need a hand-written MUnit driver |
+| counted residue | `overload-risk` 288, `omissions` 18, `idiom(refused)` 10, `dependency-coverage` 4, `base-surface` 3, `jdk-surface` 3, `portability(emitted)` 3, `trivia(recovered)` 5, `collection-boundary` 1 |
+| engine gaps it bought | **five, all CLOSED**: `G32` (scala will not eta-expand a nullary method), `K24`'s fourth face (a probe at a proper ancestor of the key), `C15` (a cross-module constructor replay's widening set), and `C16`'s two — the §4.55 capture rename firing on the SCOPE rather than the reference, and an override edge across a generic parent read through `ParentSubst` |
+| EXCLUDED, with reasons | the three modules with no coverage in the reference hand port (`spec-example`, `xwiki-macros`, `zzzzzz`), which were never in scope (§10.6.1); the 114 `ComboSpecTestCase` subclasses and 59 `@RunWith(Suite.class)` aggregators, which are the documented refusal and need a hand-written MUnit driver |
+
+**AND THE LAST WAVE'S `base-surface` ROW IS THE FOURTH OF ITS FAMILY AND THE THIRD *SHIP*.**
+`ext-toc`'s `SimTocContent(List<BasedSequence>)` loses `super(lineSegments)` to the cause
+`ext-gfm-tasklist`, `ext-jekyll-tag` and `ext-tables` all met — `ssg-md` publishes two
+`ContentNode#getSpanningChars` overloads that do not agree on placement, so a member key with no
+parameter spelling cannot resolve the name. Step 7's question is asked at the CALL SITES and has one
+answer here: `grep -rn 'new SimTocContent('` over the whole flexmark checkout finds exactly ONE, and
+it is `new SimTocContent()` in `SimTocBlockParser` — the no-argument constructor. The one the refusal
+costs is **dead upstream**, which is `ext-jekyll-tag`'s verdict exactly. SHIP with the counted row.
 
 **THE ORDER FOR THE REMAINING NINE WAS ASCENDING SIZE WITH ONE BEND, read off the IMPORTS rather
 than off the poms.** Only two of the nine reference another extension at all —
