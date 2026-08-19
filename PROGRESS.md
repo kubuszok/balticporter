@@ -30,6 +30,8 @@ just md-measure           # flexmark-java core + the eleven util modules — no 
 just ai-measure           # gdx-ai, compiled WITH libGDX core (a dependent port; no suite YET, §10.7)
 just ai-diff-measure      # gdx-ai's DIFFERENTIAL gate — the REFERENCE HAND PORT's own MUnit suite,
                           # run against the emitted port with nothing translated (§10.7.12)
+just visui-measure        # VisUI's ui/ module, compiled WITH libGDX core (a dependent port; no suite
+                          # YET, and usl/ is a NAMED follow-up rather than a silent drop, §10.9)
 just measure-all          # every lane above, serially, stopping at the first failure
 
 just decision-counts      # decisions.tsv row counts by kind, every port
@@ -218,7 +220,7 @@ oracle (§10.6.1).
 | `sge` core | The whole **LZMA `utils/compression` stack (13 files) vanished** → `.ubj.lzma` fonts unsupported. Also gone with no replacement: all 7 `assets/loaders/resolvers/*`, all `Json*`/`UBJson*`/`XmlWriter` (11), the HTTP stack (reimplemented on sttp-client4). |
 | `sge` core | `(using Sge)` appears **1,402 times across 363 files** — the port's most pervasive shape change, with no mechanical Java analogue. |
 | `sge-controllers` | 27 % is **not a gap** — Jamepad and GWT were replaced by GLFW and the browser Gamepad API. Porting the missing 21 types produces dead code. |
-| `sge-visui` | The **USL skin-DSL compiler is 100 % absent** (18 files: lexer, parser, style merger, JSON writer) and undocumented. Self-contained real work, zero reference implementation. |
+| `sge-visui` | The **USL skin-DSL compiler is 100 % absent** (18 files: lexer, parser, style merger, JSON writer) and undocumented. Self-contained real work, zero reference implementation — and §10.9.1 has since priced it: the independence is one-directional and greps to 0 in BOTH directions, it is ordinary imperative java rather than liqp's ANTLR wall, and it comes with a zero-authoring oracle (the 19 `.usl` fixtures against the two `uiskin.json` files upstream already ships). Deferred, not dropped. |
 | `sge-textra` | Upstream ships a **second licence** — `typing-label.LICENSE`, MIT — covering exactly the `TypingLabel` + 40 `effects/*` files sge ported. **No MIT attribution appears anywhere in sge.** |
 | `sge-ai` | `@TaskConstraint`/`@TaskAttribute` + the reflective behaviour-tree parser were replaced by a hand-written `TaskRegistry` of factory closures. **Pure redesign — no mechanical rule produces it.** |
 | `sge-tools` | 90 % deliberately dropped (all Swing/AWT editors). Not an incomplete port. |
@@ -228,7 +230,7 @@ oracle (§10.6.1).
 | `sge-noise` | The 17 % gap is `Array2D` and `Object2dArray` — the whole `array` package bar `Int2dArray`, absent with no note. And every one of the three **enum constant bodies** was REDESIGNED into a flat `enum` plus a `this match`, which no mechanical rule produces; the engine emits `sealed abstract class` + `case object` instead (§5). |
 | `sge-screens` | `NestableFrameBuffer` missing → screens binding their own FBO rebind incorrectly. |
 | `sge-colorful` | `colorful-pure` (40k LOC) unported with **no recorded rationale anywhere**. Confirm intent before treating it as scope. |
-| `sge-visui` vs core | VisUI keeps `AsyncTask` as a class while core maps it to `() => Unit`. **Two answers to one construct in one repo** — the manifest must decide which. |
+| `sge-visui` vs core | `AsyncTask` is **NOT one construct with two answers** — measured, §10.9.4. libGDX's is a SAM interface and VisUI's a stateful abstract class with a latch and a listener list; grepped both ways, neither tree ever names the other's package. §4.56's trap at a shared simple name, so the manifest's obligation is NEGATIVE — no name-keyed rule may reach across — and both types translate mechanically. The `() => Unit` spelling is the HAND port's idiom choice; the engine's own base port renames libGDX's straight and keeps the trait. |
 | `ssg-liquid` | **2,166 lines have no Java counterpart and never can.** liqp parses with two ANTLR `.g4` grammars; the port hand-wrote lexer/parser/token. The engine cannot read, regenerate or diff `.g4`. Decide up front: permanent handwritten overrides, or re-adopt ANTLR and lose JS/Native. |
 | `ssg-md` | **CommonMark conformance is MEASURED and it is 100 %.** The four `FullOrigSpec*CoreTest` suites RUN (§10.6.7): 1,870 of 1,870 examples on the three spec versions upstream enables, with java compiled and run as the control and green on all 1,870 — a mechanical port matching a hand-written java library on a published specification, example for example. The 42 it started at were ONE defect: three constructors in the builder chain whose `super(options)` the ctor funnel refused, so every renderer was built with NO options at all. `spec.0.29.txt` is disabled UPSTREAM (`return ResourceLocation.NULL`) and 0.26/0.30 have no test class at all. The **28** (not 24) undocumented omissions include the entire `util/html/ui` subpackage, eight `*JiraRenderer`, and `flexmark-util-dependency`'s `Flat*` extension-resolution algorithm, which is not dead code. |
 
@@ -253,12 +255,14 @@ repository-level NOTICE / THIRD-PARTY files are still hand-maintained and are no
 2. **`sge-gltf`, `sge-vfx`** — mid-size, high coverage, few surprises. (`sge-anim8`'s and
 3. **`ssg-liquid`** — small Java surface, but resolve the ANTLR decision first. Its 105 upstream test
    files are the best available proving ground for test porting after libGDX.
-4. **`sge-visui`, `sge-textra`, `sge-colorful`** — large, each with a named redesign that must
-   be scoped as its own decision. (`sge-ai` was the first of this tier and its milestone 1 is ported
-   by the engine: 166 files at 20 errors, all classified, with the named redesign — the reflective
-   behaviour-tree parser — scoped as its own decision and deliberately NOT taken in the first emit,
-   §10.7. What that tier's other three should copy is §10.7.3: read the dependency direction before
-   believing a drop is a leaf.)
+4. **`sge-colorful`** — large, with a named redesign that must be scoped as its own decision. Three
+   of this tier's four are now ported by the engine and each closed its named redesign differently:
+   `sge-ai` was the first (166 files at 20 errors, the reflective behaviour-tree parser scoped as its
+   own decision and deliberately NOT taken in the first emit, §10.7); `sge-textra` is at ZERO with a
+   differential gate at 160 passing (§10.8); and `sge-visui`'s milestone 1 is 162 files at 32 errors
+   with the USL redesign PRICED and deferred rather than assumed (§10.9). What `sge-colorful` should
+   copy is §10.7.3 — read the dependency direction before believing a drop is a leaf — and §10.9.4:
+   check whether the "one construct, two answers" row in §1.1 is actually one construct.
 5. **`ssg-md` (flexmark)** — the largest Java surface. Milestone 1 (core + the eleven `flexmark-util-*`
    modules) is ported by the engine, compiles at 0 errors on both source sets, and is the only port
    in the corpus with SPEC-LEVEL evidence: **100 % of CommonMark, 1,870 of 1,870 examples, against a
@@ -5923,6 +5927,426 @@ GlyphRegion ones are refused by java's own constructor body.
 
 ---
 
+## 10.9 sge-visui — VisUI, the port whose licence obligation is not about CODE
+
+`com.kotcrab.vis.ui.* → sge.visui.*`, Apache-2.0 **and** a CC BY-ND 3.0 asset notice. **A dependent
+port of libGDX core**, the same shape as Ashley's, anim8's, gdx-vfx's, gdx-ai's and TextraTypist's:
+`just visui-measure` compiles libGDX core's emitted Scala and VisUI's emitted Scala on **one**
+`scala-cli` invocation and must run after `just gdx-measure`. At **162 files / 25,588 LOC** in 22
+packages it is SECOND by file count among libGDX's dependent ports (gdx-ai is 166) and it is the
+most scene2d-saturated library in the corpus: **111** distinct `com.badlogic.gdx.*` imports over
+**637** import lines, of which **354 — 56 % — are `scenes.scene2d.*`**. It is a widget toolkit and
+almost nothing else.
+
+**Why it is in the corpus.** Three things no earlier port had:
+
+- **a licence obligation that is not about the source at all.** Every previous regime in this corpus
+  lived in a comment or in a repo-root text file covering CODE. `ui/NOTICE` says VisUI's shipped
+  ICONS are CC BY-ND 3.0 — a different licence, a NO-DERIVATIVES one, on a PNG (§10.9.2);
+- **a library that names RESOURCES it does not own the naming of.** VisUI loads its skin through a
+  hardcoded classpath string, so a package rename must NOT reach it, and the port therefore emits
+  code naming files at an upstream path this engine has no mechanism to ship (§10.9.3);
+- **the ENUM as the unit of policy.** Seven of this library's types put behaviour on a java `enum`
+  that reads a libGDX global, and that is the one shape the base's context threading structurally
+  cannot serve — 10 of this port's 32 errors, one cause (§10.9.7 family 1).
+
+### 10.9.1 Scope — `ui/` ONLY, and `usl/` is a NAMED follow-up rather than a silent drop
+
+`ui/src/main/java`, **162 of 164 `.java` files**, in 22 packages (heaviest: `ui/widget` 37,
+`ui/widget/file/internal` 14, `ui/util` 12, `ui/widget/color/internal` 11, `ui/widget/file` 8). The
+two excluded are `package-info.java` — javadoc-only placeholders that declare no type, one in each
+of the two `internal` packages — and the lane re-derives both numbers on every run rather than
+trusting this paragraph.
+
+**`usl/` — 18 files / 1,604 LOC — is OUT OF SCOPE and is the recorded follow-up.** It is a skin-DSL
+compiler (lexer, parser, style merger, JSON writer) and it is the item §1.1 has carried as *"100 %
+absent and undocumented, zero reference implementation"* since the corpus was censused. Three facts
+decide that it can be deferred without the deferral being a drop, and the lane re-derives the first
+two on every run so the price cannot silently change:
+
+- **`ui/` references no `com.kotcrab.vis.usl` type, and `usl/` references no `com.badlogic.gdx`
+  type.** Both greps read 0. `usl/build.gradle` declares `junit` and nothing else, confirming the
+  import-level finding from the build side;
+- **the coupling is BUILD-TIME and one-directional.** The root `build.gradle` runs an
+  ALREADY-PUBLISHED USL (`com.kotcrab.vis:vis-usl:0.2.1`, a previous version of itself) over the
+  `usl/styles` fixtures and checks the compiled `uiskin.json` into `ui/src/main/resources`. So `ui/`
+  ships USL's OUTPUT and never calls its CODE;
+- **it is NOT the liqp/ANTLR situation.** liqp's grammar is two `.g4` files generating java the
+  frontend cannot read, which is why `ssg-liquid` hand-wrote a permanent parser replacement the
+  engine can neither regenerate nor diff (§10.5). USL's lexer and parser are ordinary hand-written,
+  char-index-driven imperative java — no generator, no grammar file, no reflection, no libGDX. The
+  risk is BEHAVIOURAL fidelity of a state-machine scan, which is exactly what §4.4's char/switch/
+  post-increment rows exist to catch, and it comes with a **zero-authoring oracle**: run every
+  `.usl` fixture through the emitted Scala and diff against the two `uiskin.json` files upstream has
+  already checked in — **19 fixtures under `usl/styles`**, counted. Nobody has to write a test for it.
+
+**THE TEST PLAN, and the two numbers it is easy to get wrong.** Upstream's `ui/src/test` is **30
+files** declaring **2** real `@Test` (`GreaterThanValidatorTest`, `LesserThanValidatorTest`). **27**
+of the rest are `extends VisWindow` demos under `com.kotcrab.vis.ui.test.manual`, which
+`ui/build.gradle` excludes by name (`include "**/*Test.**"` then
+`exclude 'com.kotcrab.vis.ui.test.manual.**'`); the 30th — `TestImageTextButtonOrientation` — sits
+OUTSIDE that excluded package, matches the include glob by name, `extends VisWindow` and declares
+zero `@Test`: the demo-app trap with the exclusion missing it, and JUnit reporting it as
+contributing nothing. A further **7** real `@Test` are in `usl/` and are out of scope with it. So a
+filename census over that tree reports 30, a `*Test.java` one reports 3, and only `java_test_count`
+reports 2 — which is why the lane runs it. Two later waves follow, neither taken
+here:
+
+1. **the 2 upstream tests**, as a `VisUiTestMigrate` and a lane stage — small, and worth having
+   because it is the port's first behavioural evidence of any kind;
+2. **the DIFFERENTIAL probe**, which is where the evidence actually is: the reference hand port
+   (`../sge/sge-extension/visui/src/test`) wrote **72** MUnit cases over the same library across 12
+   files, an 8× richer suite than upstream's 9. That 72 is `munit_emitted`'s number — the shared
+   counter that reads the CURRIED APPLICATION rather than the name's spelling — and it agrees
+   exactly with the naive grep, so this suite has none of the shapes §4.56's fourth-occurrence
+   paragraph is about; the argument is re-derived here rather than inherited, which is that
+   paragraph's own rule. Several of the 72 (`Iss787FidelitySuite`,
+   `VisImageTextButtonGetTextIss798RedSuite`, `TooltipMouseMovedFadeOutRedSuite`) are regression
+   probes pinned to upstream GitHub issue numbers that have no upstream equivalent at all.
+   §10.7.12's and §10.8.15's two traps apply unchanged: take the census TWICE (a per-file typer-error
+   attribution is a FLOOR, since `RefChecks` does not run while any typer error stands), and split a
+   compatible file's FIXTURES out of an incompatible one rather than dropping both.
+
+Until one of those lands this port has **no behavioural evidence at all** and every §4.4 form in it
+is UNMEASURED (`CLAUDE.md` §3).
+
+### 10.9.2 The licence is DOUBLE, and the second one is on a PNG
+
+Upstream ships three relevant files: the repo-root `LICENSE` (Apache-2.0), `ui/NOTICE`, and
+`ui/icons-license`. Two regimes follow, and BOTH need the manifest key:
+
+| | regime | where it lives | how the port meets it |
+|---|---|---|---|
+| (a) | Apache-2.0 | the per-file header of **163 of the 164** sources — **161 of the 162 in scope** | the §4.58 harvest plus the emitted banner — verified 161 of 162 emitted files reproduce it |
+| (b) | CC BY-ND 3.0, on the shipped ICONS | `ui/NOTICE`, pointing at `ui/icons-license` | `Provenance.notices`, which copies all three files into `src_managed/` |
+
+**(a) is `GdxAiPolicy`'s one-file case reproduced exactly.** `layout/FlowGroup.java` — a later
+contribution — opens with a bare `package` and a javadoc and carries no header, so for that ONE
+emitted file the banner NAMES Apache-2.0 and reproduces no notice, which is §4.57's
+pointer-instead-of-inclusion gap. The lane derives BOTH sides and gates on their agreement, with the
+denominator taken from the scope this run CONVERTS rather than from the tree — §4.56's rule read at
+a denominator, which `textra-measure` was the first to be caught by: both `package-info.java` DO
+carry the header and neither is emitted, so a tree-wide count would report a two-file loss with no
+emitted file those notices could head.
+
+**(b) IS THE NEW ONE, AND IT IS THE STRONGEST FORM OF §4.57'S ARGUMENT SO FAR.** Every licence
+regime this corpus had met before was about SOURCE: Apache-2.0's per-file header (met by the harvest
+by construction), MIT's inclusion condition on a headerless library (met by `notices`), TextraTypist's
+inline emoji-regex MIT text (met by the harvest again). `ui/NOTICE` is a different kind of statement
+entirely — *"VisUI uses icons licensed under CC BY-ND 3.0"* — about artefacts that are not code at
+all: the icons are rasterised into the `uiskin.atlas`/`uiskin.png` pairs the emitted Scala loads by
+classpath string. **No harvest can find a licence on a PNG, no banner can carry it, and no check in
+this engine could ever report its absence** — the port compiles, every count is flat, and it ships
+nothing. That is exactly the failure §4.57 was written about, met at an artefact class the section's
+own examples do not cover.
+
+Two consequences worth stating rather than discovering:
+
+- **the obligation is UNCONDITIONAL, not contingent on whether this module ends up shipping the
+  atlas.** Apache-2.0 §4(d) requires a derivative of a Work that includes a NOTICE file to carry
+  that file's attribution notices, and `ui/NOTICE` is one. It is therefore declared today, while
+  §10.9.3's resource residue is still open, and it stays declared when that residue closes;
+- **the reference hand port ships NEITHER notice file** — grepped the whole module: nothing under
+  `../sge/sge-extension/visui` names `icons-license`, `CC BY-ND` or Templarian anywhere, although it
+  DOES copy the atlas the notice is about. This is the second port in a row where the mechanical
+  port is measurably the more compliant one, and it costs three lines of manifest.
+
+### 10.9.3 The resource residue — 9 classpath paths NAMED, 0 shipped, and it is (b)
+
+VisUI loads its own skin, its i18n bundles and the colour picker's shaders through **hardcoded
+classpath string literals** — `Gdx.files.classpath("com/kotcrab/vis/ui/skin/x1/uiskin.json")` in
+`VisUI.java`, and the same shape throughout. A rename moves SYMBOLS and must not touch a string
+literal (§4.56), so those 24 upstream resources belong at their **UPSTREAM classpath path**,
+unrenamed, whatever this port's types are called. That is verified to be exactly what the reference
+hand port does: its `src/main/resources/com/kotcrab/vis/ui/…` tree is byte-for-byte the same relative
+layout as upstream's, 22 files — 6 `.properties` bundles, 4 `.fnt`, the x1/x2 `.atlas`/`.png`/`.json`
+skin triples and 6 shaders.
+
+The engine has no mechanism for that. `PortManifest.serviceProviders` copies ONE well-known family
+and **rewrites both namespaces through the port's own rename rules**, which is precisely the wrong
+act here — these paths must NOT be rewritten. So the port emits code naming resources the run does
+not ship, and the lane re-derives the gap on every run rather than leaving it in prose: **24
+upstream resources, 9 distinct upstream classpath paths NAMED in the emitted Scala, 0 shipped.**
+
+**§1 classification: (b), and this is the SECOND occurrence of an item §11's own audit already
+carries** (§6.1 item 7, raised on flexmark's one `entities.properties`). Two libraries in two
+different families is what promotes it from a per-port workaround to policy. The mechanism is
+`serviceProviders`' generalised — copy a DECLARED upstream resource tree into
+`SbtGen.managedResources(root, config)` VERBATIM, with no rewrite — and the file list is the port's,
+empty by default and a no-op. What makes it (b) rather than an engine
+default is exactly what makes `serviceProviders` one: which of a library's resources are part of the
+derived work is a fact about that library, and a scan that swept a resource root would ship whatever
+happened to be there. It is emphatically **not a drop**: the paths the emitted code names are
+correct, and the only thing missing is the copy. Note the two halves are independent — the verbatim
+copy and §10.9.2's notice files are different acts with different destinations (`managedResources`
+against `managedRoot`), and the notice half is already discharged.
+
+### 10.9.4 `AsyncTask` was never a decision — two FQNs sharing a simple name
+
+§1.1's hand-off table has carried, since the corpus was censused, the row *"VisUI keeps `AsyncTask`
+as a class while core maps it to `() => Unit` — two answers to one construct in one repo, the
+manifest must decide which."* **Measured, that is not one construct and there is nothing to decide.**
+
+- **libGDX core's** `com.badlogic.gdx.utils.async.AsyncTask<T>` is a single-abstract-method
+  interface (`T call()`). The engine's OWN base port does not collapse it —
+  `port-report/LibgdxCoreMigrate/baseline/port-map.tsv` renames it straight to
+  `sge.utils.async.AsyncTask`, still a `trait` — because there is no SAM-to-function-type collapse
+  transform in this engine at all. The `() => Unit` spelling is the HAND port's idiom choice,
+  recorded in `AssetLoadingTask.scala`'s own header, and `CLAUDE.md` §3.5 quotes it as a hand-port
+  fact and not as a rule;
+- **VisUI's** `com.kotcrab.vis.ui.util.async.AsyncTask` is a stateful abstract CLASS — a `Status`
+  enum, a `CountDownLatch`, an `AsyncTaskListener` list, `addListener`/`removeListener` — across four
+  files. Grepped both ways: `ui/` never imports `com.badlogic.gdx.utils.async` anywhere, and the
+  reference hand port's `sge.visui` never names `sge.utils.async`. Total isolation on both sides.
+
+So this is §4.56's own trap — *a rename decides ownership structurally, never by name* — met at a
+simple name shared by two unrelated types. The manifest's obligation is **negative**: no rename, no
+substitution and no redirect keyed on that name may reach across, and the way to discharge it is to
+write none, which is what `VisUiPolicy` does. Both types translate mechanically and neither
+contributes an error. The §1.1 row is corrected in place.
+
+### 10.9.5 The manifest — three keys, and the reference port makes no deviation to price
+
+One `governs` claim, one `packageRenames` pair, and `PortMapTransform.forBases("sge")` LAST.
+Nothing else: no drop, no substitution, no redirect, no scope, no context extension, no
+`dependencies` (`ui/build.gradle` declares `com.badlogicgames.gdx:gdx` and nothing else — the whole
+external surface of this library is its base's, which is `sge-textra`'s lesson with the sign
+flipped). Everything else — `dropTypes`, `dropMethods`, `com.badlogic.gdx -> sge`, the collections
+and mutable-parameter phases — is INHERITED as the base's ONE instance (§1.5), and a second instance
+would be a `SurfaceDivergence` for a composition nobody designed.
+
+Two things about those three keys are deliberate:
+
+- **`governs = com.kotcrab.vis.ui`, not `com.kotcrab.vis`.** The wider claim would cover
+  `com.kotcrab.vis.usl`, which this port emits none of — and §10.9.1's follow-up is precisely the
+  sibling module that would then be screened against a claim covering declarations it owns. §1.5's
+  own rule (ask what the base EMITS, never what its claim says) read forwards: a claim wider than
+  what the module emits is a problem the day the sibling arrives, and it costs nothing to be exact
+  now;
+- **the rename is verified 1:1 against the reference port's own tree**, and unlike `sge-textra` there
+  is nothing to price. `sge-extension/visui` mirrors upstream's 22 sub-packages name for name, so one
+  prefix pair moves the whole library and longest-prefix-wins does the rest. The hand port makes NO
+  per-type hoist a `typeRenames` entry would have to justify — §3.5's 27 → 47 lesson has no
+  candidate here.
+
+### 10.9.6 First emit — measured state
+
+`just visui-measure`, after `just gdx-measure`. **162 Scala files, 3,532 emitted members, 32 scalac
+errors**, out of a model of 767 TIR units / 61,218 symbols (which counts the resolution root — the
+base's 605 units are parsed and emitted nowhere here). Emission determinism verified (162 units emitted twice,
+byte-identical). `manifest 0` over 605 shared base types on the first run — the dependent agreed
+with its base with nothing to correct — and `COLLAPSE AGREEMENT` compared 137 derived verdicts
+against the base's published ones with 0 disagreeing.
+
+```
+errors=32 | base-surface 2, break-catch 0, cast-conversion 0, catalog(consulted) 101,
+catalog(uncited) 122, catalog(undischarged) 5, catalog(unmechanised) 1, catalog(unreached) 11,
+class-init-trigger 0, collection-boundary 2, collection-closure 0, collection-internal 0,
+collection-retarget 0, context-seam 42, dependency-coverage 10, dependency-coverage(all) 47,
+dependency-coverage(declared) 0, gdx-shared-iterator 0, heap-pollution 1, idiom(converted) 23,
+idiom(refused) 160, idiom(residue) 0, jdk-surface 3, manifest 0, markers 0, nullability-boundary 0,
+omissions 64, overload-risk 291, policy 0, port-map 0, portability(all) 200, portability(emitted) 47,
+portability(injected) 0, porter-notes 0, remediation 13, rewrite-callsites 2, signature 0,
+substitution(dangling) 0, substitution(emitted) 0, switch-null 0, trivia 0, trivia(deliberate) 0,
+trivia(recovered) 0, try-resource 0
+```
+
+`decisions.tsv`: 3,048 rows (`RetypedSignature` 2,122, `RenamedMember` 243, `WidenedVisibility` 234,
+`RenamedPackage` 162, `ForcedClassInit` 101, `FunnelledCtor` 89, `DroppedSuperCall` 45, `SamLambda`
+20, `DroppedMember` 17, `DroppedType` 12, `ScopedOut` 3), with 2,634 withheld as belonging to the
+module this port only resolves against (D2). 714 porter notes emitted, every one derived from a
+recorded decision (`porter-notes 0`).
+
+Three first-run readings worth keeping:
+
+- **`trivia` 0 lost, 0 recovered, 0 deliberate** — every comment in all 162 source files reached the
+  emitted Scala with nothing needing the relocation backstop. Nine ports read 0 on all three lanes
+  and this is comfortably the LARGEST of them (3,532 members against liqp's 986, the next biggest),
+  which makes it a fact about the library — uniform javadoc, no `<pre>` blocks, no nested block
+  comments — rather than about a small denominator. A `recovered` lane that reads high is a category
+  still wanting a home (§4.58); this one has nothing in it;
+- **`class-init-trigger` 0 against 101 `ForcedClassInit` decisions.** The K22 risk was priced and
+  attached rather than lost: 101 emitted `val _ = <Type>` triggers, and no site the emitter could
+  not answer for;
+- **`idiom` 23 converted / 160 refused / 0 residue**, and the refusal population is where the reading
+  is: `SamLambda` considered 147 and converted 23 (118 `NotSam`, 4 `NonCapturing`, 1 `BodyNotSingle`,
+  1 `SelfReference`) while `NarrowedReturn` considered 36 and converted **none** (31 `SelfTyped`, 4
+  `NotAlwaysThis`, 1 `AncestorTyped`). A widget library whose builders return `this` is exactly the
+  shape that produces a `SelfTyped` population, and `refused = 0` is the number a port meeting the
+  bar by converting nothing would print.
+
+### 10.9.7 The 32 errors, classified per §1
+
+All 32 are `EngineGap` — none `Approx`, none `Unmapped`, none `Declared`. Five families, and the
+first two are 19 of the 32:
+
+| n | code | family | §1 |
+|---|---|---|---|
+| 11 | `E172` | `No given sge.Sge` — the context threading, and 10 of the 11 are on a java `enum` | **(b)/(c) PER-LIBRARY** |
+| 8 | `E008` | `value dispose is not a member of` a BASE type — the base's `Disposable → AutoCloseable` retarget not reaching a DEPENDENT | **(a) ENGINE** |
+| 8 | `E007` | three sub-families: 3 boxed `java.lang.Boolean` at a primitive formal, 3 a raw nested type through a generic outer, 1 K13's `Null` at an abstract `T`, 1 an override's parameter | **(a) ENGINE**, one **(b)** |
+| 3 | `E134` | `None of the overloaded alternatives of constructor <Base>` — the dropped `super(args)`, arriving as a compile error | **(a) ENGINE** |
+| 2 | `E006`+`E120` | a static method naming its own class's TYPE PARAMETER, in the companion | **(a) ENGINE** |
+
+**FAMILY 1 — THE ENUM IS THIS LIBRARY'S UNIT OF POLICY, AND IT IS THE ONE SHAPE THE THREADING
+CANNOT SERVE.** VisUI puts its i18n lookups on java enums: `Locales$CommonText#getBundle`,
+`Dialogs$Text#getBundle`, `ColorPickerText#getBundle`, `FileChooserText#getBundle`,
+`TabbedPane$Text#getBundle`, `ButtonBar$ButtonType#getText`, plus `VisUI$SkinScale#getSkinFile` and
+`TableLayout` (3 sites). Every one reads a libGDX global, so the base's inherited
+`GlobalsToImplicitsTransform` threads it — and the `context-seam` lane names the two halves of why
+that cannot land, ahead of scalac, which is §4.45's property working:
+
+- **6 × `frozen-component`** at `java.lang.Enum#getBundle` — the override component reaches a
+  declaration this program does not parse, so the signature is not this module's to change;
+- **3 × `lost-clause`** — `TableLayout`, `VisUI$SkinScale`, `ButtonBar$ButtonType`: the threading put
+  a `using` clause on the constructors and the emitted `enum` does not carry one. The diagnostic's
+  own words are the classification — *an enum's primary IS its java constructor, which every case
+  object reaches with its own argument list* — so the engine is refusing rather than guessing;
+- **4 × `unconstructed-thread`** on the same types, which is the same fact seen from outside: nothing
+  in this program constructs them and their ancestry leaves the program.
+
+`omissions` carries the third face: **7 × `enum emitted without its java.lang.Enum supertype`**. The
+11th error is different and is the lane's `1 × unsuppliable-use` — `Draggable#BLOCKER`, a static
+field initialiser that CONSTRUCTS a threaded `Actor`, so it runs at class initialisation before
+anything could pass it a context.
+
+**THE REFERENCE HAND PORT SOLVED THIS, IN TWO PIECES, AND §3.5 SAYS TO READ IT BEFORE DESIGNING
+ANYTHING.** `../sge/sge-extension/visui` ships every one of these seven enums, and the mechanical
+port already agrees with it everywhere except the seam: both emit `VisUI` as an `object` with
+`load()(using Sge)` threaded, both emit `SkinScale` as an `enum` carrying the same two classpath
+strings. What the hand port adds is exactly two members:
+
+- **a `using` clause on the enum's METHOD rather than on its constructor** —
+  `def getSkinFile(using Sge): FileHandle = Sge().files.classpath(classpath)`, where java wrote
+  `getSkinFile()`. That is a shape the `lost-clause` refusal does not consider: the engine put the
+  clause on the constructor, found the emitted `enum` cannot carry one, and refused — while the
+  member the read is IN could have taken it;
+- **a cached context on the module that already owns the lifecycle** —
+  `private[visui] var _sgeInstance: Nullable[Sge]`, assigned `summon[Sge]` inside each `load(…)`,
+  cleared in `dispose`, and read through a `VisUI.sgeInstance` accessor that throws
+  *"VisUI is not loaded!"* when empty. Every enum that cannot take a clause then reads it as an
+  EXPRESSION: `ColorPickerText#getBundle` is literally
+  `Locales.getColorPickerBundle(using VisUI.sgeInstance)`.
+
+That second one is `selfSupplied`'s exact shape with an expression the mechanical port cannot
+currently write, because the member it names is HAND-WRITTEN glue that lives in the hand port's
+`src/` and is outside the closure (§1's hand-written-half paragraph). `retain` does not reach it
+either: `retain` gives a THREADED type a name for what it was handed, and `VisUI` is an all-static
+`object` with no constructor to have been handed anything. So the family is priceable against
+§10.8.9's three exits and §10.8.11's fourth, and the honest reading today is that none of the four
+fits unaided — which is a statement about the escape hatches, not about the library.
+
+**AND SIX OF THE ELEVEN MAY BE AN OVER-REFUSAL WORTH PROBING FIRST.** The `frozen-component` rows
+say the component reaches `java.lang.Enum#getBundle` and `java.lang.Enum#grid` — *a declaration this
+program does not parse and cannot move*. `java.lang.Enum` declares neither, and declares nothing
+else on those names: its surface is `name`, `ordinal`, `toString`, `equals`, `hashCode`, `clone`,
+`compareTo`, `getDeclaringClass`, `valueOf`, `finalize` and `describeConstable`. This is the
+conservatism `CLAUDE.md`'s `OverrideGraph` paragraph names in its own worked example — *unknown
+surface, so `mayDeclare` says yes ON PURPOSE* — landing on a class whose surface is not unknown at
+all. If a knowable-surface table answers it (the same admissibility argument the `@Override`
+modifier table makes: both of its errors are loud), six of the eleven stop being seams and the
+family reduces to `SkinScale`, `Draggable#BLOCKER` and the two `TableLayout` sites. **That is a
+hypothesis and not a count** (§1: N failures gated behind one is never a number) — it is the first
+thing the next wave should measure.
+
+**FAMILY 2 — `disposableRedirect` DID HALF ITS JOB HERE AND ALL OF IT ELSEWHERE, WHICH IS THE
+WAVE'S ENGINE FINDING.** The base's P1 step (§11.15) retargets `com.badlogic.gdx.utils.Disposable`
+onto `java.lang.AutoCloseable` and renames `dispose` → `close` across the override component —
+verified in the published map (`sge.graphics.Pixmap#close()`). VisUI declares **five** `Disposable`
+implementors (`Tab`, `BasicColorPicker`, `ColorPicker`, `ExtendedColorPicker`, `PickerCommons`), and
+in this run:
+
+- the re-PARENTING reached all five — every one emits `extends java.lang.AutoCloseable`;
+- the member RENAME reached **none**. `grep 'phase=type-redirect'` over this port's emitted tree
+  returns **0 files**; `PickerCommons` still emits `override def dispose()`, and its body's seven
+  calls at base receivers (`whitePixmap.dispose()`, five `ShaderProgram`s, one `Texture`) plus
+  `VisUI#dispose(boolean)`'s `skin.dispose()` are all `value dispose is not a member of …`.
+
+So the port emits five classes that claim `AutoCloseable` and implement none of it, at eight call
+sites naming a member the base no longer has. **And this is NOT "the redirect does not reach
+dependents"** — the same grep returns **12 files on `sge-gltf` and 11 on `sge-vfx`**, both at 0
+errors, both with the porter note spelled
+`renamed-member reason=configured phase=type-redirect key="…Disposable#dispose -> close" component=…`.
+Two dependents get it and a third does not, so the diagnosis is about the OVERRIDE COMPONENT this
+port's five land in rather than about D2 or about a scope, and it is exactly the shape §4.56's
+`OverrideGraph` paragraph is about: a wrong answer there is a LEGITIMATE one — *this overrides
+nothing the program declares* — with nothing reporting it. §1(a) ENGINE, diagnosis open, and it is
+the wave's most valuable finding because two green sibling ports had made it invisible.
+
+**FAMILY 3 — three unrelated things sharing a code.** `VisTextField` ×3 is a boxed
+`asInstanceOf[java.lang.Boolean]` handed to `keyboard.show(Boolean)`, whose formal is primitive.
+`AbstractListAdapter` ×2 and `ListAdapter` ×1 are a RAW nested type reference through a generic
+outer — java's `ListAdapterListener` (nested in `ListView<ItemT>`) emitted as
+`sge.visui.widget.ListView#ListAdapterListener`, which scala cannot project without applying the
+outer. `DragPane#findActor` is K13 at a DEPENDENT's override: the base's `Group#findActor` returns
+`T | Null` at an abstract `T` and this port's override declares `T`, so the body is `Found: Null /
+Required: T` — the exit is a `NullabilityTransform` question and `nullability-boundary` reads 0 here
+because that instance is the base's and D2 scopes its reporting to the base's declarations.
+
+**FAMILY 4 — the dropped `super(args)`, arriving as an error rather than as a silent loss.**
+`VisScrollPane`, `VisSlider` and `VisWindow` emit `class X(using Sge) extends <Base>` where java's
+constructors all called `super(actor, style)`, so scalac reads *match arguments ()*. This is the
+loud tip of `omissions 64`, whose largest entry is **45 × `super(args) dropped`** across 14 widget
+classes, and it is directly joined to the run's **2 `base-surface` gaps**: `sge.scenes.scene2d.ui.
+Tree#initialize` and `…ui.Table#obtainCell` are `private` in what the base emitted, so the
+constructor replay that reaches them cannot be widened and is refused — the check's own text says
+only the base can widen a member it emits, and it cannot know a future dependent will replay one.
+
+**FAMILY 5 — a static method naming its class's type parameter.** `CellWidget<Widget extends Actor>`
+declares a STATIC `builder()`, which in java does not see `Widget` at all; the emitted companion's
+`def builder()` renders `CellWidget.of(null.asInstanceOf[Widget])` and the companion has no such
+type in scope (`E006`), with the sibling `E120` a conflicting definition on `GridTableLayout#
+convertToActor`. §4.56's *a member synthesised into a subclass carries the PARENT's scope* read at
+the other end: a static member must NOT carry the class's scope, and the substitution that is exact
+in one direction is wrong in the other.
+
+### 10.9.8 Residues, named and classified
+
+- **the resource copy** — §10.9.3, §1(b), 9 named paths against 0 shipped. The largest one, and the
+  only one that makes the emitted port incomplete rather than merely unfinished;
+- **`portability(emitted)` 47 against 37 rules**, dominated by `java.lang.Thread` (9),
+  `java.util.concurrent.Executors` (5), `java.lang.Class#getMethod` (5) and the
+  `ExecutorService`/`Atomic*` family. The file chooser's directory scanning and VisUI's own
+  `AsyncTask` are where they live, and it is the shape §1.5's all-platform default is meant to
+  surface rather than hide. `dependency-coverage 10` is the subset a declared artifact could answer;
+- **`collection-boundary` 2 `OpaqueEgress`** — `java.lang.reflect.Method#invoke` and
+  `java.lang.Object#equals`, both `java.lang.Object` formals. A review list, not a defect (§1's
+  reflective-sink paragraph);
+- **`rewrite-callsites` 2 `Unaccounted`** — `primitive->opaque:TextureHandle` (7 owned declarations)
+  and `type-redirect` (15). Both are the BASE's phases seen through this dependent, and both are the
+  engine-wide item §12 already carries;
+- **`heap-pollution` 1 `Unacknowledged`**, deliberately not fixed for the reason the lane prints.
+
+### 10.9.9 The arrival is provably flat
+
+`just measure-all` with this lane appended: **20 of 20 lanes, exit 0**, all twenty reporting
+`members whose EMITTED TEXT changed since the baseline: 0` and all twenty at their committed error
+baseline (`0` on seventeen, `3` on liqp, `2` on ssg-md, `32` here). Suite totals across the eleven
+lanes that run one: **2,068 passing / 11 failing / 2 not run**, unchanged. A new port that touched an
+existing one would show up in exactly those two artifacts and in nothing else, which is why the wave
+is measured with `measure-all` rather than with its own lane (§1.5: a base port's green numbers are
+not evidence about its dependents, read here as *a new dependent's green numbers are not evidence
+about its siblings*).
+
+### 10.9.10 Next
+
+1. **The context-seam family**, which is 10 of the 32 errors and one shape. Probe the
+   `frozen-component` over-refusal FIRST (§10.9.7 family 1: `java.lang.Enum` declares neither
+   `getBundle` nor `grid`, and its surface is knowable) — it is the cheapest of the five and may
+   take six of the eleven. Then price §10.8.9's three exits and §10.8.11's fourth against what is
+   left, against the reference hand port's own two-member answer (§3.5).
+2. **`disposableRedirect`'s missing member rename** (§10.9.7 family 2) — 8 errors, §1(a), and the
+   control is free: `sge-gltf` and `sge-vfx` get it on 12 and 11 files, so the question is what is
+   different about these five override components rather than whether the phase runs. A fix there
+   changes a BASE phase, so it is measured on `measure-all` and not on this lane.
+3. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
+   error count reads.
+4. **The two upstream tests, then the 72-case differential probe** (§10.9.1). Until one lands this
+   port has no behavioural evidence at all.
+5. **USL**, with its zero-authoring oracle (§10.9.1).
+
+---
+
 ## 11. Publishability — what sge and ssg need before they can depend on this
 
 **The goal being evaluated.** sge and ssg stop hand-maintaining their ports and instead depend on
@@ -5979,6 +6403,14 @@ with each item's state re-verified against the working tree.
    (`§10.6.7`). What is owed is at minimum a REPORT — the resource lookups an emitted port makes,
    with the paths a build has to supply — and arguably an `SbtGen` `unmanagedResourceDirectories`
    line derived from the port's own upstream roots.
+   **SECOND OCCURRENCE, and it is worse than the first: `sge-visui` (§10.9.3).** flexmark reads ONE
+   properties file; VisUI reads its whole SKIN — 24 resources, 9 distinct classpath paths named in
+   the emitted Scala, and the library refuses to start without them (`VisUI.load()` is the first
+   call every consumer makes). `visui-measure` derives the REPORT this item asks for as a lane stage
+   (named against shipped), which is a stopgap and not the mechanism: the mechanism is
+   `serviceProviders`' generalised to a DECLARED verbatim tree with NO rewrite, copied into
+   `SbtGen.managedResources`. Two libraries in two different families is what makes it §1(b) policy
+   rather than a per-port workaround.
 
 ### 6.2 What the audit found SOUND — clean verdicts, not courtesy
 

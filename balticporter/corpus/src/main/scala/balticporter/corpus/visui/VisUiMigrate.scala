@@ -7,7 +7,7 @@ import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **VisUI**'s `ui/` module (162 types — a scene2d widget toolkit: dialogs, a file chooser,
+/** Migrate **VisUI**'s `ui/` module (162 files — a scene2d widget toolkit: dialogs, a file chooser,
   * a colour picker, a tabbed pane, spinners, validators and a form/layout framework) through the
   * TIR.
   *
@@ -36,8 +36,9 @@ import scala.jdk.CollectionConverters.*
   *
   * ==NO TEST SOURCE SET IN THIS WAVE, and upstream's own number is small rather than zero==
   * Upstream's `ui/src/test` declares **2** real `@Test` (`GreaterThanValidatorTest`,
-  * `LesserThanValidatorTest`); the other 29 files there are `extends VisWindow` demos that
-  * `ui/build.gradle` excludes by name, and 7 of the checkout's 9 real `@Test` are in `usl/`. That
+  * `LesserThanValidatorTest`); the other 28 files there are `extends VisWindow` demos, 27 of them
+  * under the `test.manual` package `ui/build.gradle` excludes by name and one OUTSIDE it that the
+  * build's own include glob still matches, and 7 of the checkout's 9 real `@Test` are in `usl/`. That
   * is `sge-gltf`'s shape rather than `sge-jbump`'s — a suite exists and is nearly empty — so the
   * lane re-derives BOTH numbers on every run rather than trusting this comment, and says so the day
   * either moves. What behavioural evidence this port can have at any scale is DIFFERENTIAL, against

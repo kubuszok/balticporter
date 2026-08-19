@@ -2819,6 +2819,7 @@ textra-diff-measure:
 # The compile line carries NO coordinate of its own (`visui_deps` is empty and says why): libGDX
 # arrives as the base's emitted SOURCE, and there is no third-party jar in this library at all.
 # ---------------------------------------------------------------------------------------------
+[doc("VisUI's ui/ module, compiled WITH libGDX core (a dependent port)")]
 visui-measure:
     #!/usr/bin/env bash
     cd "{{root}}"
@@ -2928,13 +2929,15 @@ visui-measure:
     # reports 30 files and a test census reports 2, and only the second is a fact about behaviour.
     UI_TESTS=$(java_test_count {{visui_src}}/ui/src/test)
     UI_TEST_FILES=$(find {{visui_src}}/ui/src/test -name '*.java' | wc -l | tr -d ' ')
+    MANUAL=$(find {{visui_src}}/ui/src/test -name '*.java' -path '*/test/manual/*' | wc -l | tr -d ' ')
     USL_TESTS=$(java_test_count {{visui_src}}/usl/src/test)
     echo "@Test in ui/src/test ($UI_TEST_FILES files): $UI_TESTS"
     echo "@Test in usl/src/test (OUT OF SCOPE): $USL_TESTS"
     if [ "$UI_TESTS" = "2" ]; then
-      echo "   TWO real tests upstream, both validator unit tests; the other $((UI_TEST_FILES - 2)) files are"
-      echo "   \"extends VisWindow\" demos needing a GL context, and ui/build.gradle excludes the"
-      echo "   test.manual package by name. This port has NO test source set yet, so it has NO"
+      echo "   TWO real tests upstream, both validator unit tests. The other $((UI_TEST_FILES - 2)) files are"
+      echo "   \"extends VisWindow\" demos needing a GL context: $MANUAL under test.manual, which"
+      echo "   ui/build.gradle excludes by name, and $((UI_TEST_FILES - 2 - MANUAL)) OUTSIDE it that the include glob"
+      echo "   \"**/*Test.**\" still matches and that declares zero @Test. This port has NO test source set yet, so it has NO"
       echo "   behavioural evidence at all (CLAUDE.md §3) and every §4.4 form in it is UNMEASURED."
       echo "   PROGRESS.md §10.9 scopes both waves that would change that."
     else
