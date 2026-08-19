@@ -1673,21 +1673,41 @@ BREAKDOWN, check that the tool was asked for every part of it, and make each par
 negative before trusting the total.
 
 **…and the FOURTH is a blind spot somebody MEASURED and argued harmless — on one library.** The three
-above are gaps nobody had noticed. This one is written down, in a comment, with its number: the shared
-test-discovery counter anchors on `test("` on ONE LINE, a lane's own recipe records that the reference
-suite it counts reads 194 that way against 196 under a looser reading, and states — correctly — that
-the two calls it misses both sit in files that lane excludes, so the population is the same number
-either way. That argument is a fact about THAT SUITE. Asked of the next library's hand-written suite
-the same counter misses **37 calls across 18 files, 21 of them in files the census keeps**, and a lane
-that passed the number on would hand its reconciler a denominator below the real outcome count. **A
-third member is already printing it**: one ported suite reconciles `727 outcomes against 725 emitted`
-on every run, non-fatally and correctly ("no test is lost; the EMITTED figure this lane passed is what
-does not describe the suite") — the same counter, the same cause, reported by the one lane whose
-reconciler happens to compare the two. So a documented blind spot is not a closed question: **the
-argument that it does not matter is re-derived per corpus member, in the lane that is about to rely on
-it**, and where it stops holding the choice is to fix the counter (measured corpus-wide, because every
-lane's discovery figure moves) or to carry a second one and print both — never to inherit the earlier
-library's sentence.
+above are gaps nobody had noticed. This one was written down, in a comment, with its number: the
+shared test-discovery counter anchored on `test("` on ONE LINE, a lane's own recipe recorded that the
+reference suite it counts reads 194 that way against 196 under a looser reading, and stated —
+correctly — that the two calls it missed both sit in files that lane excludes, so the population was
+the same number either way. That argument is a fact about THAT SUITE. Asked of the next library's
+hand-written suite the same counter missed **37 calls across 18 files, 21 of them in files the census
+keeps**, and a lane that passed the number on would have handed its reconciler a denominator below the
+real outcome count. So a documented blind spot is not a closed question: **the argument that it does
+not matter is re-derived per corpus member, in the lane that is about to rely on it** — and where it
+stops holding, the counter is fixed rather than annotated.
+
+**And the fix is to read the CALL, never the NAME — which is this section's own complement rule at the
+one instrument every test lane's denominator comes from.** An anchor on the name's spelling enumerates
+the ACCEPTED shapes, so each new one (a name that wraps to the next line, an interpolated `test(s"…")`,
+a computed `test(n)`, a `TestOptions`) is a silent subtraction until somebody adds an arm. MUnit's
+registration is a CURRIED APPLICATION, so counting THAT counts every naming shape by construction, and
+what gets enumerated instead is the honest negatives — a SELECTION (`x.test(…)`), a DECLARATION
+(`def test(…)`), and a call applied to NO BODY, which is what liqp's emitted suite's **181** `test(0)`
+ARRAY READS are. What fits neither is REPORTED with its file and line, because a counter that cannot
+classify a call and says nothing is the silence this whole section is about. Measured across every
+tree the corpus counts: **every emitted suite flat** — 221, 112, 8, 16, 637, 725, 10, 188 — every
+hand-written suite flat, and the two REFERENCE suites `194 -> 196` and `202 -> 239`.
+
+**…and the THIRD MEMBER that was said to be already printing it is a DIFFERENT FACT, which is why a
+witness is MEASURED before it is counted as one.** One ported suite reconciles `727 outcomes against
+725 emitted` on every run, non-fatally and correctly, and that figure was written into this rule as a
+third witness for the anchor above on the strength of the symptom matching. It is not the same cause:
+those 725 registrations are exact under BOTH counters, and the extra two outcomes are an ABSTRACT
+SUITE's registration, which MUnit runs once per CONCRETE SUBCLASS — one `test("testSpecExample")` in
+`FullSpecTestCase` against four subclasses that declare none. No counter of registration SITES can see
+that, because it is not about the sites: it is `reconcile_outcomes`' own assumption that outcomes and
+registrations are one population, which INHERITANCE breaks in the direction that is honest to report
+and wrong to gate. Two members were the case for fixing the counter; the third was a coincidence of
+shape. **A witness list is a measurement, never a pattern match on the symptom** — and the cost of
+getting that wrong is a rule that would have been "fixed" by making a correct number wrong.
 
 **And the SURVIVORS are not the DECLARATION, which is the same mistake read off the parse instead of
 off a string.** A rule may conclude something from what the program DECLARES; it may not conclude it

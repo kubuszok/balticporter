@@ -99,7 +99,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-vfx` | gdx-vfx `core/src` + `effects/src` | 44 → **44** (0 dropped, 0 injected) | **64** hand-written, all passing — upstream has NO test SOURCE SET (§10.1) | **0** |
 | `sge-ai` | gdx-ai `gdx-ai/src` | 166 of 167 → **166** (1 dropped, 3 injected; the 167th is GWT super-source upstream's own build excludes, §10.7.1) | — | **0** after wave 2 (20 at first emit, 10 after wave 1; §10.7.5/§10.7.8, every one classified) |
 | `sge-ai-test` | gdx-ai `gdx-ai/tests` | 2 → **2** | **10 of 10 emitted and RUN — 10 passing, 0 failing.** 6 / 4 at wave 2, all four one MUnit-instance fact in `ParallelTest`, closed by the per-test reconstruction (§10.7.9/§10.7.10, `ENGINE-LIMITS.md` X4). The "24 / 196" in the hand-port table below is the REFERENCE PORT's own MUnit suite, not upstream's — censused and half of it now RUNNING as `sge-ai-diff` (§10.7.12) | **0** |
-| `sge-ai-diff` | **nothing — this is HAND-WRITTEN Scala, never a ported suite** (`CLAUDE.md` §3) | — | **95 of the reference hand port's 194 RUN — 93 passing, 2 declared** (10 of its 24 files; the other 14 / 99 are class (c), §10.7.12) | **0** |
+| `sge-ai-diff` | **nothing — this is HAND-WRITTEN Scala, never a ported suite** (`CLAUDE.md` §3) | — | **95 of the reference hand port's 196 RUN — 93 passing, 2 declared** (10 of its 24 files; the other 14 / 101 are class (c), §10.7.12) | **0** |
 | `sge-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `sge-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -3975,7 +3975,12 @@ paths, beside the renamed Scala. The lane says so at `md_spec_res`.
 loss: `ComboSpecTestCase.testSpecExample` OVERRIDES `FullSpecTestCase`'s, so the port emits one
 registration for the pair and dispatches virtually — which is what java's own runner does too, one
 test per concrete class. `expected-lost` is **1** for that reason and for no other. Suite **725
-passing / 2 failing of 727 outcomes**, and the 2 are the `Pair.equals` rows §10.6.6 declares —
+passing / 2 failing of 727 outcomes** — and the +2 there is now MEASURED rather than assumed to be
+the discovery counter's blind spot: `FullSpecTestCase` is an ABSTRACT suite declaring one
+`test("testSpecExample")`, four concrete subclasses declare none, and MUnit runs that ONE
+registration four times. Both counters read this tree at exactly 725, so no counter of registration
+SITES could ever close that gap; `reconcile_outcomes` reports it and does not gate, which is the
+right answer (`CLAUDE.md` §4.56). The 2 failures are the `Pair.equals` rows §10.6.6 declares —
 `java.util.Map.Entry` retyped to `scala.Tuple2` at a REIFIED occurrence over a value whose emitted
 parent the phase left as java's (`ENGINE-LIMITS.md` K18.1/K5.7). Nothing about markdown is failing
 any more; the residue is one engine family this port shares with liqp.
@@ -4502,7 +4507,9 @@ Out of scope and named:
 
 **THE TEST CORRECTION, because a wrong number is already in this document.** §1.1's hand-port table
 records **24 / 196** against `sge-ai`. That figure is the REFERENCE HAND PORT's own MUnit suite
-(`../sge/sge-extension/ai/src/test/scala`, 24 files / 194 `test(…)` calls), not anything upstream
+(`../sge/sge-extension/ai/src/test/scala`, 24 files / 196 `test(…)` calls — the lane read **194**
+until the shared counter learned MUnit's registration SHAPE, and the two figures agree now), not
+anything upstream
 ships — it is hand-WRITTEN for the port, filling a gap upstream leaves almost entirely open, and a
 mechanical port should expect to GENERATE ten tests where a reviewer comparing against sge would
 expect two hundred. It is also the corpus's best available DIFFERENTIAL gate for this library, and
@@ -4960,9 +4967,9 @@ What this port contributes to that record is the census on the other side of the
    turned out to be real:** all four families were met, in the order predicted, and two of them are
    what class (c) is made of.
 
-### 10.7.12 The DIFFERENTIAL census — 10 of 24 files, 95 of 194 tests, 93 passing
+### 10.7.12 The DIFFERENTIAL census — 10 of 24 files, 95 of 196 tests, 93 passing
 
-The reference hand port's own MUnit suite over `sge.ai.*` is 24 files and 194 `test(…)`. This port
+The reference hand port's own MUnit suite over `sge.ai.*` is 24 files and 196 `test(…)`. This port
 emits a DIFFERENT `sge.ai.*`, so the question §10.7.11 refused to guess at is *how much of that suite
 can be run against it without editing an assertion*. The answer is **10 files / 95 tests**, they
 compile at **0 errors**, and they run **93 passing / 2 declared**.
@@ -4982,7 +4989,7 @@ errors, moved **four files and 16 tests** out of (a)+(b):
 |---|---|---|
 | (a) compatible as-is | 4 files / 16 tests | **1 file / 14 tests** |
 | (b) compatible after the mapping | 10 files / 95 tests | **9 files / 81 tests** |
-| (c) incompatible | 10 files / 83 tests | **14 files / 99 tests** |
+| (c) incompatible | 10 files / 83 tests | **14 files / 101 tests** |
 
 `SimpleSteerable` is the one to keep: it TYPED clean and then reported *18 unimplemented members*
 plus 22 *overrides nothing*, because the hand port reshaped `Steerable`/`Location` from java's
@@ -4990,8 +4997,13 @@ accessors (`getPosition()`, `setOrientation(float)`, `isTagged()`) to Scala prop
 (`position`, `orientation_=`, `tagged`). A census read off the typer alone would have shipped it.
 
 **THE CENSUS, per file** (test counts are `munit_emitted`'s — the shared mechanism every lane's
-discovery figure uses; a looser `^\s*test\(` reads 196, the difference being two `test(s"…")` calls
-in class (c) files):
+discovery figure uses. They read **194** in total when this census was taken, and **196** now: that
+counter anchored on `test("` on ONE LINE and missed two registrations whose name is on the next line,
+both in class (c) files — `fma/FormationPatternAdditiveGetterIss730RedSuite` (0 -> **1**) and
+`pfa/PathFinderBroadcastDispatchRedSuite` (2 -> **3**). The adapted population is unmoved at 95, and
+the two rows below carry the corrected figures. The comment that used to state the discrepancy also
+guessed its SHAPE wrong — `test(s"…")`, which nobody had looked at — which is the argument for
+`CLAUDE.md` §4.56's rule that a documented blind spot is re-derived and not inherited):
 
 | class | tests | file | why |
 |---|---|---|---|
@@ -5014,11 +5026,11 @@ in class (c) files):
 | **c** | 7 | `msg/MessageDispatcherSuite.scala` | a `dispatchMessage` overload the hand port collapsed |
 | **c** | 4 | `msg/AiPriorityQueueRedSuite.scala` | reads `PriorityQueue.uniqueness`, which java declares `private` |
 | **c** | 3 | `pfa/PathFinderQueueSchedulableRedSuite.scala` | the `Timepiece` constructor parameter |
-| **c** | 2 | `pfa/PathFinderBroadcastDispatchRedSuite.scala` | the same, plus `Telegram.extraInfo` typed `Any` against java's `Object` |
+| **c** | 3 | `pfa/PathFinderBroadcastDispatchRedSuite.scala` | the same, plus `Telegram.extraInfo` typed `Any` against java's `Object` |
 | **c** | 2 | `pfa/PathFinderQueueExtraInfoIss730RedSuite.scala` | the same pair |
 | **c** | 1 | `steer/behaviors/BlendedSteeringRemoveByRefIss842RedSuite.scala` | needs `SimpleSteerable` |
 | **c** | 1 | `msg/MessageDispatcherRemoveByRefIss730RedSuite.scala` | the hand port's `Pool` takes constructor properties; java's takes `(initialCapacity, max)` and declares `newObject()` `protected`. `RefChecks`-only |
-| **c** | 0 | `fma/FormationPatternAdditiveGetterIss730RedSuite.scala` | `FormationPattern.numberOfSlots_=` against java's `setNumberOfSlots`. `RefChecks`-only |
+| **c** | 1 | `fma/FormationPatternAdditiveGetterIss730RedSuite.scala` | `FormationPattern.numberOfSlots_=` against java's `setNumberOfSlots`. `RefChecks`-only |
 
 **THE MAPPING — seven rows, and NO ASSERTION IS EDITED.** Each is a NAME or SHIM substitution between
 the two surfaces, applied to CODE only. A file these rows could not make compile is class (c) and was
@@ -5075,26 +5087,26 @@ Note what the 93 are evidence FOR. They are the first behavioural evidence this 
 `sched`, `fsm`, `pfa`, `utils` and most of `btree` — six packages upstream's own 10 `@Test` do not
 reach (§10.7.1) — and they found no `CLAUDE.md` §4.4 defect and no port bug at all.
 
-**WHAT CLASS (c) MEANS FOR COVERAGE — 14 files / 99 tests, and it is NOT 99 questions unanswered.**
+**WHAT CLASS (c) MEANS FOR COVERAGE — 14 files / 101 tests, and it is NOT 101 questions unanswered.**
 Every one of the fourteen is blocked by a fact about the HAND PORT rather than about this port, and
 they fall into four families:
 
-- **an API SHAPE the hand port CHANGED — 51 tests**, the largest family by far: a `Timepiece`
-  parameter added to `PathFinderQueue` (16), a two-argument `Parallel(policy, orchestrator)` (28),
+- **an API SHAPE the hand port CHANGED — 52 tests**, the largest family by far: a `Timepiece`
+  parameter added to `PathFinderQueue` (17), a two-argument `Parallel(policy, orchestrator)` (28),
   a `dispatchMessage` overload collapsed (7). Supplying or dropping a constructor argument is not a
   name substitution — it changes what the fixture DOES — so these are refused on the rule, not on
   difficulty;
 - **a REDESIGN — 20 tests**: the registry-based `BehaviorTreeParser`, whose whole point is to avoid
   reflection. This port's answer to the same problem is a different injected type (§10.7.8), so the
   two are answering one question in two shapes and neither suite can test the other's;
-- **a PROPERTY RESHAPE — 16 tests**: `Steerable`, `Location`, `FormationPattern` and `Pool` turned
+- **a PROPERTY RESHAPE — 17 tests**: `Steerable`, `Location`, `FormationPattern` and `Pool` turned
   from java accessors into Scala properties. The most structural of the four, and the one that only
   `RefChecks` could see;
 - **an ACCESS WIDENING — 12 tests**: reads of `protected` and `private` java fields
   (`Arrive.arrivalTolerance`, `PriorityQueue.uniqueness`). Java's own test could not have written
   these either — the hand port made them public.
 
-(51 + 20 + 16 + 12 = 99.) So the residue is a measure of **how far the hand port moved from java**,
+(52 + 20 + 17 + 12 = 101.) So the residue is a measure of **how far the hand port moved from java**,
 and the mechanical port cannot close it without becoming the hand port. Two things follow for the
 next wave: `steer` is the package with real coverage still available — 23 tests across three files,
 all behind one reshape — and it is available only by writing NEW fixtures against this port's
@@ -5743,17 +5755,21 @@ The eleven candidates, with what each costs: `utils/BlockUtilsSuite` 7 and
    are also PUBLIC in the emitted core against the fixture's `private[sge]`, which is *weaker access
    privileges* — a `RefChecks`-only error, invisible until the tree types clean. The port's own
    `SgeTestFixture` is not a drop-in either: it hands out null services BY DESIGN;
-4. **`munit_emitted` MISCOUNTS THIS TREE, and it is an instrument-silence finding rather than a
-   detail.** The shared discovery counter every lane uses is anchored on `test("` **on one line**, and
-   37 calls across 18 of these files put the name on the next line. On gdx-ai the same blind spot was
-   2 calls and BOTH sat in class (c), so the adapted population read the same number either way and
-   the `ai-diff-measure` comment says exactly that. Here **21 of the 37 are in CANDIDATE files**, so
-   the gdx-ai argument does not carry: a `textra-diff-measure` that passed `munit_emitted` to
-   `reconcile_outcomes` would hand it a denominator BELOW the real outcome count. Two honest answers —
-   teach `munit_emitted` the multi-line form (which moves gdx-ai's 194 and every other lane's
-   discovery figure, so it is measured corpus-wide first, §5) or carry a second counter and state both
-   readings in the recipe — and the one thing that must not happen is the number being passed on
-   unstated (`CLAUDE.md` §4.56: an instrument's silence is a wrong answer).
+4. **`munit_emitted` MISCOUNTED THIS TREE, and it was an instrument-silence finding rather than a
+   detail — CLOSED before the lane was written.** The shared discovery counter every lane uses was
+   anchored on `test("` **on one line**, and 37 calls across 18 of these files put the name on the
+   next line. On gdx-ai the same blind spot was 2 calls and both sat in class (c), so the adapted
+   population read the same number either way and the `ai-diff-measure` comment said exactly that.
+   Here **21 of the 37 are in CANDIDATE files**, so the gdx-ai argument did not carry: a
+   `textra-diff-measure` that passed the old figure to `reconcile_outcomes` would have handed it a
+   denominator BELOW the real outcome count. The counter reads MUnit's registration SHAPE now — a
+   curried application, so every naming shape is counted by construction and the three honest
+   negatives are what is enumerated (`CLAUDE.md` §4.56, `scripts/_lib.sh`). **Measured corpus-wide
+   before it landed**: all eight EMITTED test trees flat (221, 112, 8, 16, 637, 725, 10, 188), all
+   five hand-written suites flat (23, 22, 16, 64, 95), and exactly two trees move — this one
+   `202 -> 239` and gdx-ai's reference `194 -> 196`, whose per-file rows §10.7.12 now carries. The
+   four inline copies of the old anchor that three other lanes carried are gone with it: one value,
+   one spelling.
 
 **AND THE FIRST 30 ARE MEASURED, UNEDITED — 30 of 30 PASSING.** The census above is a reading; this is
 a run. Compiling all eleven candidates against the emitted port with **not one character changed**

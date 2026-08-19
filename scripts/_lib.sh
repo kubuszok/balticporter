@@ -109,7 +109,7 @@ java_test_count() {
 
 # scala_code <emitted-scala-dir>...
 # The emitted Scala with its COMMENTS REMOVED, on stdout — what the discovery counters below must
-# count over.
+# count over — each file's code preceded by a `\x01<path>` MARKER LINE, and LINE-ALIGNED with it.
 #
 # Same reason `java_test_count` exists, one side further along, and it fired the moment the port
 # started preserving comments properly: simple-graphs' `GraphBuilderTest` holds an entire
@@ -122,13 +122,23 @@ java_test_count() {
 # lets one unbalanced `/*` swallow across file boundaries, which is the direction that HIDES a lost
 # test. String literals are blanked first (a path glob `"a/*"` is not a comment opener) — which
 # cannot affect any count here, since neither `@Test` nor a `test(` call is inside a literal.
+#
+# THE MARKER IS WHAT LETS A COUNTER NAME A LOCATION. `munit_emitted` below reports the calls it
+# cannot classify, and a residue with no file and no line is a residue nobody can act on
+# (CLAUDE.md §4.45). `\x01` followed by a path can never match what a consumer of this stream greps
+# for — `@Test` does not occur in a path, and neither does `test(` — and `just lane-selfcheck` holds
+# both halves of that. LINES ARE PRESERVED for the same reason: a line INSIDE a block comment prints
+# as an EMPTY line rather than being dropped, so the Nth line of a file's chunk is that file's Nth
+# line. Nothing else about the output changes: the two consumers count `@Test` occurrences and
+# `test(` calls, neither of which a blank line can be.
 scala_code() {
   find "$@" -name '*.scala' -print0 2>/dev/null | xargs -0 perl -e '
     for my $f (@ARGV) {
       open(my $h, "<", $f) or next;
+      print "\x01$f\n";                 # which file the lines below came from
       my $in = 0;                       # inside a /* … */ block, reset per FILE
       while (my $l = <$h>) {
-        if ($in) { if ($l =~ s{^.*?\*/}{}) { $in = 0 } else { next } }
+        if ($in) { if ($l =~ s{^.*?\*/}{}) { $in = 0 } else { print "\n"; next } }
         $l =~ s{"(?:\\.|[^"\\])*"}{""}g;
         $l =~ s{/\*.*?\*/}{}g;          # whole blocks opened and closed on this line
         if ($l =~ s{/\*.*$}{}) { $in = 1 }
@@ -143,8 +153,85 @@ scala_code() {
 # junit_residue <emitted-scala-dir>...   — `@Test` annotations the conversion did NOT translate
 junit_residue() { scala_code "$@" | grep -c "@org.junit.Test\|@Test" | tr -d ' '; }
 
-# munit_emitted <emitted-scala-dir>...   — `test("…")` registrations the emitted suite declares
-munit_emitted() { scala_code "$@" | grep -oE '(^|[^a-zA-Z0-9_.])test\("' | wc -l | tr -d ' '; }
+# munit_emitted <scala-dir>...   — the MUnit test REGISTRATIONS the suite declares
+#
+# THE DENOMINATOR OF EVERY TEST LANE. `reconcile_outcomes` reconciles the runner's outcome lines
+# against this number and `test_discovery_guard` subtracts it from the upstream `@Test` count, so
+# both readings are only as good as it is.
+#
+# IT READS THE CALL SHAPE, NEVER THE NAME'S SPELLING, and that is the whole lesson of it. Anchored
+# on `test("` — a string literal on the SAME LINE — it is exact for every EMITTED suite, because the
+# conversion writes the name on the call's own line, and silently wrong about HAND-WRITTEN ones:
+# gdx-ai's reference suite reads 194 that way against 196, and the lane that counts it argued —
+# correctly, for that suite — that the two it missed sat in files the census excluded. Asked of the
+# next library's reference suite the same anchor missed 37 calls across 18 files, **21 of them in
+# files the census KEEPS**, which would have handed `reconcile_outcomes` a denominator BELOW the real
+# outcome count (CLAUDE.md §4.56's instrument-silence rule; PROGRESS.md §10.8.13).
+#
+# So what is counted is MUnit's registration SHAPE — a CURRIED application, `test(<name>) { … }` or
+# `test(<name>)(…)`. A name that wraps onto the next line, an interpolated `test(s"…")`, a computed
+# `test(n)` and a `test(TestOptions(…))` are then counted BY CONSTRUCTION rather than by somebody
+# adding an arm for each, which is the COMPLEMENT rule §4.56 states for an instrument's filter. The
+# honest negatives are what gets enumerated, and there are three — each one measured, not imagined:
+#
+#   - a SELECTION (`validator.test(…)`) or a longer identifier ending in `test` — a different method;
+#   - a DECLARATION (`def test(…)`) — flexmark's emitted suites declare three of them;
+#   - a call applied to NO BODY — `test(0) + test(1)` is an ARRAY READ in liqp's emitted suite, **181
+#     occurrences**, every one of which a counter that took each `test(` call would have counted.
+#
+# WHAT IT CANNOT DECIDE IT SAYS, on stderr, with the file and the line: a `test("…")` whose argument
+# IS a name and which is applied to no body is none of the three negatives and is not a shape this
+# counter has seen. It is 0 on every tree the corpus counts today; the point is that the day it is
+# not, the number stops being silently smaller than the suite.
+#
+# WHY THE FIGURE IS NOT ASKED OF THE RUNNER. munit knows exactly how many tests it has — and taking
+# the denominator from the run would make `reconcile_outcomes` compare the run with itself, when the
+# question it exists to ask is whether an EMITTED test produced an outcome line at all.
+#
+# AND OUTCOMES ARE NOT REGISTRATIONS, which no counter of registration SITES can fix. One
+# registration in an ABSTRACT suite runs once per CONCRETE SUBCLASS: flexmark's `FullSpecTestCase`
+# declares one `test("testSpecExample")` and four concrete subclasses declare none, so 725
+# registrations produce 727 outcomes. That is the over-count `reconcile_outcomes` reports
+# non-fatally — a fact about INHERITANCE, measured here after the same figure had been written down
+# as a third witness for the anchor above (CLAUDE.md §4.56).
+munit_emitted() {
+  scala_code "$@" | perl -0777 -e '
+    my $t = do { local $/; <STDIN> };
+    my @parts = split /\x01([^\n]*)\n/, $t, -1;
+    shift @parts;                                            # text before the first marker: empty
+    my $n = 0; my @open;
+    while (@parts) {
+      my $file = shift @parts;
+      my $code = shift @parts; $code = "" unless defined $code;
+      # CHAR LITERALS FIRST: `replace(CH, CH)` — a paren inside one is not a paren for the scan
+      # below, and string literals are already blanked by `scala_code`.
+      $code =~ s/\x27(?:\\.|[^\x27\\])\x27/CH/g;
+      $code =~ s/\b(?:def|val|var)\s+test\s*\(/DECLARATION(/g;
+      while ($code =~ /(?:\A|[^A-Za-z0-9_.\$])test\(/gs) {
+        my $at = pos($code);
+        my $depth = 1; my $i = $at; my $len = length($code);  # walk to the matching close paren
+        while ($i < $len && $depth > 0) {
+          my $c = substr($code, $i, 1);
+          $depth++ if $c eq "(";
+          $depth-- if $c eq ")";
+          $i++;
+        }
+        next if $depth != 0;                                  # unbalanced: not a call this can read
+        if (substr($code, $i, 40) =~ /\A\s*[\{\(]/) { $n++; next }   # applied to a BODY: a registration
+        next unless substr($code, $at, 40) =~ /\A\s*[A-Za-z_]*"/;    # not name-shaped: not one either
+        my $line = 1 + (() = substr($code, 0, $at) =~ /\n/g);
+        my $snip = substr($code, $at, 48); $snip =~ s/\s+/ /g;
+        push @open, "$file:$line: test($snip";
+      }
+    }
+    print $n;
+    if (@open) {
+      print STDERR "!! NAMED test( CALL APPLIED TO NO BODY — " . scalar(@open) . ", so this count is a FLOOR.\n";
+      print STDERR "   Neither a registration this counter knows nor one of its three honest negatives:\n";
+      print STDERR "     $_\n" for @open;
+    }
+  '
+}
 
 # reconcile_outcomes <run-output-file> <emitted-test-count>
 # Every emitted test must produce an OUTCOME LINE, and the two markers a measure script naturally
@@ -193,12 +280,17 @@ reconcile_outcomes() {
   # so it has no row in `tests.tsv` either, and the suite reports success while it disappears. That
   # is the failure this function exists for.
   #
-  # MORE outcomes than emitted means the EMITTED COUNT is the thing that is wrong — `munit_emitted`
-  # greps `test("` out of the source, and a lane whose suite is HAND-WRITTEN passes a count derived
-  # the same way over code no migration produced. Printed as a subtraction that reads
-  # `-3 of 5 produced no outcome line`, which is nonsense, and failed as a lost test, which is a
-  # green lane stopped for a counting artefact. It is still reported — a reconciliation that cannot
+  # MORE outcomes than emitted means the two figures are not the same population, and the EMITTED
+  # one is the figure that does not describe the suite. Printed as a subtraction it reads
+  # `-3 of 5 produced no outcome line`, which is nonsense, and failed as a lost test it is a green
+  # lane stopped for a counting artefact. It is still reported — a reconciliation that cannot
   # reconcile is worth saying — and it is not the gate.
+  #
+  # THE ONE LANE THAT PRINTS IT WAS MEASURED, and the cause is INHERITANCE rather than the counter:
+  # flexmark's `FullSpecTestCase` is an ABSTRACT suite declaring one `test("testSpecExample")`, and
+  # four concrete subclasses declare none, so MUnit runs that ONE registration four times — 725
+  # registrations, 727 outcomes. No counter of registration SITES can see that, which is exactly why
+  # this branch reports rather than gates (CLAUDE.md §4.56, and `munit_emitted`'s own comment).
   if [ "$total" -lt "$emitted" ]; then
     echo "!! OUTCOMES LOST — $((emitted - total)) of $emitted emitted test(s) produced no outcome line;" \
          "the suite would report success while they vanish (CLAUDE.md §3)"

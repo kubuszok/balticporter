@@ -708,8 +708,12 @@ anim8-measure:
     # The java count is computed and printed even though it is expected to be 0: an upstream that
     # gains a suite must show up here rather than being assumed away by a comment.
     JAVA_TESTS=$(java_test_count {{anim8_src}}/src/test)
-    HAND_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{anim8_module}}/src/test/scala 2>/dev/null | wc -l | tr -d ' ')
-    EMITTED_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{anim8_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    # `munit_emitted`, not a grep written out here — the four hand-written-suite lanes each carried
+    # their OWN copy of the shared counter's anchor, so the day the shared one learned MUnit's
+    # multi-line and interpolated registrations they would have gone on reading the old number, at
+    # no diff and no finding. One value, one spelling (CLAUDE.md §1.5, read at an instrument).
+    HAND_TESTS=$(munit_emitted {{anim8_module}}/src/test/scala)
+    EMITTED_TESTS=$(munit_emitted {{anim8_module}}/src_managed/test/scala)
     echo "@Test in upstream java: $JAVA_TESTS (upstream ships DEMOS, not a suite — nothing to port)"
     echo "hand-written munit in {{anim8_module}}/src/test/scala: $HAND_TESTS   emitted: $EMITTED_TESTS"
     [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS A SUITE — $JAVA_TESTS @Test method(s) that this port does not migrate; add an Anim8TestMigrate"
@@ -829,7 +833,7 @@ gltf-measure:
     # glTF reader that is most of the library; `ported/sge-gltf/src/test/scala` is what covers the §4.4
     # hazards in `GLTFTypes` (CLAUDE.md §5.5 — `src/` is the hand-written half of a port). Keeping
     # the two numbers apart is the point: a ported test and a written one are different evidence.
-    HAND_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{gltf_module}}/src/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    HAND_TESTS=$(munit_emitted {{gltf_module}}/src/test/scala)
     echo "hand-written munit in {{gltf_module}}/src/test/scala: $HAND_TESTS"
     [ "$HAND_TESTS" = "0" ] && echo "!! the hand-written suite is GONE — the port's only cover for the loader would be missing"
     ALL_TESTS=$((MUNIT_TESTS + HAND_TESTS))
@@ -940,8 +944,8 @@ screens-measure:
     echo
     echo "-- test discovery --"
     JAVA_TESTS=$(java_test_count {{screens_src}}/src/test)
-    HAND_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{screens_module}}/src/test/scala 2>/dev/null | wc -l | tr -d ' ')
-    EMITTED_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{screens_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    HAND_TESTS=$(munit_emitted {{screens_module}}/src/test/scala)
+    EMITTED_TESTS=$(munit_emitted {{screens_module}}/src_managed/test/scala)
     echo "@Test in upstream java: $JAVA_TESTS   emitted by this port: $EMITTED_TESTS"
     echo "  (10 of the 12 need gdx-backend-headless — NO libGDX backend is ported — or Mockito"
     echo "   mockStatic/spy over the type under test, which is JVM bytecode instrumentation and"
@@ -1054,8 +1058,8 @@ vfx-measure:
     echo
     echo "-- test discovery --"
     JAVA_TESTS=$(java_test_count {{vfx_src}})
-    HAND_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{vfx_module}}/src/test/scala 2>/dev/null | wc -l | tr -d ' ')
-    EMITTED_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{vfx_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    HAND_TESTS=$(munit_emitted {{vfx_module}}/src/test/scala)
+    EMITTED_TESTS=$(munit_emitted {{vfx_module}}/src_managed/test/scala)
     echo "@Test in upstream java (WHOLE checkout): $JAVA_TESTS (gdx-vfx ships no test source set — nothing to port)"
     echo "hand-written munit in {{vfx_module}}/src/test/scala: $HAND_TESTS   emitted: $EMITTED_TESTS"
     [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS A SUITE — $JAVA_TESTS @Test method(s) that this port does not migrate; add a VfxTestMigrate"
@@ -1379,15 +1383,18 @@ ai-diff-measure:
     echo "reference hand port ({{ai_ref_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
     echo "adapted here (class (a)+(b) of §10.7.12): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
     echo "class (c), left out and counted: $((REF_FILES - ADAPTED_FILES)) file(s), $((REF_TESTS - ADAPTED_TESTS)) test(…)"
-    # 194 is `munit_emitted`'s count — the SHARED mechanism every other lane's discovery figure uses
-    # — and not a looser `^\s*test\(`, which reads 196 here. The difference is two `test(` calls
-    # whose name is not a literal (`test(s"…")`), and both sit in class (c) files, so the adapted
-    # population is the same number under either reading. The shared one is used because a census
-    # denominator that disagrees with every other lane's discovery figure is a number nobody can
-    # compare — and its own blind spot is stated here rather than left to be rediscovered.
-    if [ "$REF_FILES" != "24" ] || [ "$REF_TESTS" != "194" ]; then
-      echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 24 / 194."
-      echo "   PROGRESS.md §10.7.12's census was taken against 24 / 194 and is now STALE: a file"
+    # 196 is `munit_emitted`'s count — the SHARED mechanism every other lane's discovery figure uses.
+    # It read 194 here until that counter learned MUnit's registration SHAPE: the two it missed put
+    # the NAME ON THE NEXT LINE (`fma/FormationPatternAdditiveGetterIss730RedSuite:41`,
+    # `pfa/PathFinderBroadcastDispatchRedSuite:146`) — not the `test(s"…")` this comment used to
+    # claim, which nobody had looked at — and both are in class (c) files, so the ADAPTED population
+    # (95) is unmoved and only this reference denominator is. That blind spot was stated
+    # here, with its number and with the argument that it did not matter FOR THIS SUITE — an argument
+    # that stopped holding one library later, which is why the counter reads the call and not the
+    # name now (CLAUDE.md §4.56; `scripts/_lib.sh`).
+    if [ "$REF_FILES" != "24" ] || [ "$REF_TESTS" != "196" ]; then
+      echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 24 / 196."
+      echo "   PROGRESS.md §10.7.12's census was taken against 24 / 196 and is now STALE: a file"
       echo "   added there is a file nobody has classified, and one removed may be one of the ten"
       echo "   this lane copied. Re-run the census before trusting the outcomes below."
       exit 1
@@ -3212,6 +3219,41 @@ lane-selfcheck:
     case "$(reconcile_outcomes "$T/run.txt" 2)" in
       *"DID NOT RUN"*) ok "…but is still REPORTED, loudly" ;;
       *) bad "a skip must still print DID NOT RUN" ;;
+    esac
+
+    echo "-- munit_emitted (and the stream it reads) --"
+    # THE DENOMINATOR every test lane hands `reconcile_outcomes` and `test_discovery_guard`. Anchored
+    # on `test("` on ONE LINE it missed 37 registrations in one reference suite, 21 of them in files
+    # a census keeps (CLAUDE.md §4.56). Every case below is a shape MEASURED in the corpus: the
+    # multi-line and interpolated forms the anchor missed, and the array read / declaration /
+    # selection a looser `test(` would have counted (181 of the first in liqp's emitted suite alone).
+    MU="$T/munit"; mkdir -p "$MU"
+    {
+      printf 'package p\n'
+      printf 'class S extends munit.FunSuite {\n'
+      printf '  /* a block comment holding test("commented out") { } */\n'
+      printf '  test("plain") { }\n'
+      printf '  test(\n    "wrapped onto the next line"\n  ) { }\n'
+      printf '  test(s"interpolated") { }\n'
+      printf '  val n = "computed"\n'
+      printf '  test(n) { }\n'
+      printf '  other.test("a selection, not a registration") { }\n'
+      printf '  def test(i: Int): Int = i\n'
+      printf '  val k = arr(test(0) + test(1))\n'
+      printf '  @Test def notTranslated(): Unit = ()\n'
+      printf '}\n'
+    } > "$MU/S.scala"
+    want "the four registration shapes are counted and the four negatives are not" "$(munit_emitted "$MU" 2>/dev/null)" "4"
+    want "…and junit_residue reads the SAME stream unaffected by the file markers" "$(junit_residue "$MU")" "1"
+    want "a directory with no Scala at all is an exact 0, never an empty string" "$(munit_emitted "$T/nothing-here" 2>/dev/null)" "0"
+
+    # …and the shape it CANNOT classify is reported rather than silently dropped: a named call
+    # applied to no body is neither a registration this counter knows nor one of its three negatives.
+    printf 'package p\nclass U extends munit.FunSuite {\n  test("named but never applied")\n}\n' > "$MU/U.scala"
+    want "an unclassifiable call does not change the count" "$(munit_emitted "$MU" 2>/dev/null)" "4"
+    case "$(munit_emitted "$MU" 2>&1 >/dev/null)" in
+      *"APPLIED TO NO BODY"*"U.scala:3"*) ok "…and is reported on stderr with its file and LINE" ;;
+      *) bad "…and is reported on stderr with its file and line: $(munit_emitted "$MU" 2>&1 >/dev/null)" ;;
     esac
 
     echo "-- error_baseline_guard --"
