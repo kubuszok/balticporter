@@ -2507,6 +2507,25 @@ check count flat. It is pinned by `CtorFunnelBodyShapeSpec`, which builds both s
 parsed constructor's `rhs`, because no Java text can produce them at today's frontend — and that is
 the point, since the next lowering or frontend can.
 
+**…and the ONE site has a BEHAVIOURAL witness now, three modules out, which is what "1 site" does not
+convey.** Everything above prices the drop at one constructor in one class. What a DEPENDENT's
+dependent does with it was unmeasured until a differential suite ran: TextraTypist's `Font()`
+delegates `this(new BitmapFont(), 0f, 2f, 0f, 0f)`, and `TextraLabel()` — the nilary constructor every
+widget in that library defaults through — delegates to `Font()`. So the port's `new BitmapFont()`
+hands back an object with `data` null and the NEXT constructor dereferences it:
+`NullPointerException: Cannot invoke "BitmapFont$BitmapFontData.scaleX()" because "data" is null`, one
+frame inside `Font.<init>`, identically for `new Font()`, `new TextraLabel()` and `new TypingLabel()`.
+Measured as **18 of the reference hand port's 32 suite files / 69 of its 239 tests** — the whole of
+that port's remaining differential residue (`PROGRESS.md` §10.8.17).
+
+Two things that follow and neither of them changes the verdict. The drop is still right: each of the
+three remedies above emits a WRONG answer where this emits a missing one, and the NPE names the field
+and the line. And the residue is NOT a port's to close by shipping the asset java would have read —
+java's own `BitmapFont()` finishes at `new Texture(imageFile)`, which needs GL, so the java this is
+faithful to cannot run headless either. What made those 69 tests runnable at all is the hand port
+having DIVERGED (its `Font()` is an empty font that constructs no `BitmapFont`), which is `CLAUDE.md`
+§3.5's rule arriving at a constructor.
+
 ### C12. A PROMOTED CONSTRUCTOR LOCAL keeps its NAME and loses its POSITION — **liqp 161/414 -> 357/218 passing, 0 compile errors either side. CLOSED**
 
 C2 says a promoted constructor's parameters and top-level locals become MEMBERS, and `CLAUDE.md`

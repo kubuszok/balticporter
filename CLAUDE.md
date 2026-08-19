@@ -794,6 +794,23 @@ file whose helper classes were declared inside an incompatible one is carried by
 declarations out — the classification is not closed under dependency, and neither dropping the
 dependents nor keeping them is right until you have tried to compile the fixtures on their own.
 
+**…and a census's BLOCKER is measured at the EMITTED SITE, never read off the JAVA — because the
+reading is about a program neither port is.** The classification above says which suites CANNOT run;
+what the next wave costs is decided by WHY, and that answer arrives as a sentence somebody derived
+from the upstream source with the emitted code never consulted. One census scoped **75 of 79**
+remaining tests behind a headless FIXTURE, on the reading that the constructor they all reach loads a
+font ASSET from the classpath — true of the java, and false of the port twice over: the delegation
+that reads the asset is the one site `ENGINE-LIMITS.md` C11 drops, so the port performs no lookup at
+all and dies one frame later on the field that delegation would have set; and the java's own path
+ends at a GL call, so it could not have run headless either. Built, the fixture unlocked **5**. The
+other 69 were the HAND PORT's own divergence — a nilary constructor java does not have — which is
+this section's next paragraph read at a CENSUS rather than at a policy. Three questions, all cheap,
+and each of which alone would have caught it: *does the EMITTED code still make the call the reading
+blames?* — one probe; *would the JAVA have run under this harness?*; and *does an
+`ENGINE-LIMITS.md` entry already own this site?* A blocker attributed to the environment is the
+comfortable answer, because the environment is somebody else's; it is also the one shape a census can
+be wrong about with every number in it correct.
+
 **But what the reference port EMITTED is evidence; what it implies for a MECHANICAL port is a
 hypothesis, and it is measured before it is policy.** The two are not doing the same thing. A hand
 port adjusts every caller by hand, so it can keep a JDK type in one file and stay consistent

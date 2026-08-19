@@ -103,7 +103,7 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-ai-test` | gdx-ai `gdx-ai/tests` | 2 → **2** | **10 of 10 emitted and RUN — 10 passing, 0 failing.** 6 / 4 at wave 2, all four one MUnit-instance fact in `ParallelTest`, closed by the per-test reconstruction (§10.7.9/§10.7.10, `ENGINE-LIMITS.md` X4). The "24 / 196" in the hand-port table below is the REFERENCE PORT's own MUnit suite, not upstream's — censused and half of it now RUNNING as `sge-ai-diff` (§10.7.12) | **0** |
 | `sge-ai-diff` | **nothing — this is HAND-WRITTEN Scala, never a ported suite** (`CLAUDE.md` §3) | — | **95 of the reference hand port's 196 RUN — 93 passing, 2 declared** (10 of its 24 files; the other 14 / 101 are class (c), §10.7.12) | **0** |
 | `sge-textra` | TextraTypist `src/main/java` | 92 → **92** (0 dropped, 0 injected) | **none upstream** — `src/test/java` is 128 manual LWJGL3 demos declaring zero `@Test`; gated by a differential probe instead, §10.8.15 | **0** after wave 2 (8 at first emit; §10.8.6/§10.8.12, every one classified) |
-| `sge-textra-diff` | **nothing — this is HAND-WRITTEN Scala, never a ported suite** (`CLAUDE.md` §3) | — | **160 of the reference hand port's 239 RUN — 160 passing, 0 declared** (11 of its 32 files; the other 21 / 79 are class (c), §10.8.15) | **0** |
+| `sge-textra-diff` | **nothing — this is HAND-WRITTEN Scala, never a ported suite** (`CLAUDE.md` §3) | — | **165 of the reference hand port's 239 RUN — 165 passing, 0 declared** (12 of its 32 files; of the rest, 18 / 69 are class (b), 1 / 5 is a byte-identical duplicate and 1 is the fixture, §10.8.17) | **0** |
 | `sge-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `sge-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -5716,8 +5716,8 @@ opened and there was nothing behind it.
 What remains is what §10.8.7 already classified — `omissions 52` (41 of them one `super(args)`
 family), `base-surface 2` and `port-map 1`, all three §1(a) and two of them in the BASE — plus the
 behavioural gate, which this library had none of at this commit. §10.8.13 is its census and §10.8.15
-is the gate: **160 of the reference hand port's 239 tests now run against this port, and all 160
-pass.**
+is the gate: **165 of the reference hand port's 239 tests now run against this port, and all 165
+pass** (§10.8.17 is the fixture that took it from 160, and the re-census that came with it).
 
 ### 10.8.13 The DIFFERENTIAL PROBE — the FIRST CENSUS, four corrections, and 30 of 30 passing
 
@@ -5732,9 +5732,10 @@ each suite selects in the 92 emitted files, not by compiling: the RefChecks-hone
 any of this is acted on, and on gdx-ai that pass moved four files and 16 tests in the dangerous
 direction.
 
-(**Superseded by §10.8.15's `RefChecks`-honest census, which is the one to quote**: class (b) is
-empty — `FontSuite` is class (c) on both of its halves, measured — so the final split is 11 / 160,
-0 / 0 and 21 / 79. The table below is the typer-only reading and is kept for what it got wrong.)
+(**Superseded TWICE, and §10.8.17 is the one to quote**: §10.8.15's `RefChecks`-honest pass emptied
+class (b), and §10.8.17 built the fixture and emptied class (c) instead — the final split is 12 / 165
+running, 18 / 69 blocked by the hand port, and nothing blocked by the environment. The table below is
+the typer-only reading and is kept for what it got wrong.)
 
 | class | files | tests | what it means |
 |---|---|---|---|
@@ -5811,7 +5812,7 @@ port is the faithful one. That is the first behavioural evidence this library ha
 **NOT CLAIMED BY THIS WAVE**, and stated as scope rather than left implied: the adapted copies for the
 five files the mapping table is FOR, the `textra-diff-measure` lane and its census gate, and the
 fixture rewrite that unlocks the other 65. (The first two are §10.8.15 and are done; the third is
-§10.8.16, re-scoped by what §10.8.15 measured.) The six above are measured and reproducible and are
+§10.8.17, which built the fixture and measured "the other 65" to be 5.) The six above are measured and reproducible and are
 deliberately NOT committed yet — a `src/test` tree with no lane running it is a suite nobody runs
 (§5.1), so they land WITH the lane or not at all. The wave order is the one gdx-ai used: copy under an
 enumerated NAME/SHIM table applied to comment-masked CODE and never to an assertion, compile ALONE at
@@ -5896,34 +5897,94 @@ are different bodies and not a defaulted overload. The other 10 build `new Font(
 blocker the other 20 files have. Probed with an absent-service `Sge` and every mapping row applied:
 **2 of 14 passing, 12 failing**, 4 with the NPE and 8 with the `IllegalStateException`.
 
-**WHAT CLASS (c) MEANS FOR COVERAGE — 21 files / 79 tests, and the split is 75/4.** Seventy-five need
-a headless FIXTURE (the 65 of §10.8.13's environment class plus `FontSuite`'s 10) and four need a
-constructor java does not have. So the residue is one wave, not four families as it was on gdx-ai —
-and this port's blocker is its ENVIRONMENT rather than its surface, which is the opposite of what the
-reference-hand-port comparison usually finds.
+**WHAT CLASS (c) MEANT FOR COVERAGE — 21 files / 79 tests, read as 75 behind one fixture.**
+(**Superseded by §10.8.17, which BUILT that fixture and measured the 75 to be 5**: the blocker is
+neither the environment nor a resource, it is a nilary `Font()` the HAND PORT has and java does not.
+The paragraph below is kept for what it got wrong and how.) Seventy-five were read as needing a
+headless FIXTURE (the 65 of §10.8.13's environment class plus `FontSuite`'s 10) and four a
+constructor java does not have.
 
 **AND THE FIXTURE IS MORE THAN A REWRITE OF `HeadlessTextraSge` — measured, before it is attempted.**
 §10.8.13 scoped it as six invented types to replace. The probe above adds two facts that scope could
 not have: an ABSENT-service `Sge` — the design this repository's own `sge.SgeTestFixture` argues for,
 and the one that keeps a fixture from answering questions it should not — unlocks **0** of the 14,
 because `Font()` fails on the SERVICE and not on a member; and `new BitmapFont()` wants libGDX's
-default font ASSET, which is a classpath RESOURCE the port does not ship (§6.1 item 7 in the flesh:
-the emitted lookup keeps the upstream path because a rename decides ownership structurally and never
-from a string, `CLAUDE.md` §4.56). So the fixture wave owes real service implementations AND a
-resource answer, and `ENGINE-LIMITS.md` C11 sits under it — `new BitmapFont()` builds an object java
-could not build, because the nilary constructor's delegation has nowhere to live.
+default font ASSET, which is a classpath RESOURCE the port does not ship. (**The second half of that
+sentence is the one §10.8.17 disproved**, and it is worth keeping as written because it is what a
+reading of the JAVA produces: java's `BitmapFont()` really does load that asset, and the PORT's does
+not load anything, because C11 dropped the delegation. Nothing about the emitted code was consulted.)
 
 **Do NOT retry.** Applying a `.isEmpty` row by spelling rather than by receiver — it compiles, it
 inverts assertions, and no instrument in this repository can see it. And do not read §10.8.13's class
 (b) as a wave-sized workload: it is 14 tests behind two independent refusals, and the four
 GlyphRegion ones are refused by java's own constructor body.
 
-### 10.8.16 Next
+### 10.8.17 The FIXTURE — and the 75 measured at the SITE, where it is 5
 
-1. **The fixture**, which is now the gate on **75** of the 79 remaining tests and is scoped by
-   §10.8.15's probe rather than by a reading: real service implementations against the MECHANICAL
-   core, plus the classpath-resource answer `new BitmapFont()` needs.
-2. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
+`ported/sge-textra/src/test/scala/sge/textra/HeadlessSge.scala`, and
+`TextraLzmaFontRedSuite` beside it. **`textra-diff-measure` 160 -> 165 tests, 165 passing, 0 failing,
+0 errors**, every other lane byte-identical.
+
+**THE FIXTURE, and the one service that is not absent.** `HeadlessSge` is the REWRITE §10.8.13
+correction 3 said was owed — the reference `HeadlessTextraSge` rests on six types this port does not
+emit and never will. Five of its six services are ABSENT (`null`), which is `sge.SgeTestFixture`'s
+argument unchanged: an absent service fails at the exact field the moment a test reaches it, while a
+noop ANSWERS and lets a test pass while asserting nothing about what it asked. The sixth is
+`application`, and the LIBRARY names the reason rather than the fixture inventing one —
+`KnownFonts.java:104` refuses a null `Gdx.app` and `:121` returns from `initialize()` early for
+`ApplicationType.HeadlessDesktop`, compiling no shader and touching no GL. So the stub answers
+exactly those two questions (`getType()` and the lifecycle registration the constructor performs) and
+throws `UnsupportedOperationException` naming the member for everything else.
+
+**THE FIVE IT UNLOCKS ARE RED AGAINST THE HAND PORT AND PASS HERE.** `TextraLzmaFontRedSuite` is a
+reproducer the hand porter wrote about the hand port's own `BitmapFontSupport.JsonFontData`, which
+throws for `lzma` behind a stale "not yet ported" comment while `LzmaUtils` sits unused in the same
+package. The mechanical port emits java's own dispatch, so all five pass — the second time this
+library's reference suite has reported the MECHANICAL port the faithful one (ISS-778 was the first,
+§10.8.15).
+
+**AND THE 75 IS 5, MEASURED AT THE SITE.** §10.8.15 scoped the residue as one fixture wave on a
+reading of the java. Probed against the EMITTED code with the fixture in scope, all three entry
+points die on the same line:
+
+```
+new Font()          NullPointerException: Cannot invoke "BitmapFont$BitmapFontData.scaleX()" because "data" is null
+new TextraLabel()      at sge.textra.Font.<init>(Font.scala:708)   <- the same frame for all three
+new TypingLabel()      at sge.textra.TextraLabel.<init>(TextraLabel.scala:75)
+```
+
+`Font()` delegates to `new BitmapFont()`, whose OWN delegation is the one site `ENGINE-LIMITS.md` C11
+drops — so the port's `new BitmapFont()` reads no file, loads no asset and leaves `data` null. **No
+fixture reaches that**, and no classpath resource would either: the port never performs the lookup.
+Nor is it a gap this port could close by shipping the asset, because java's `BitmapFont()` finishes
+with `new Texture(imageFile)`, which needs GL — **java's own `new Font()` cannot run headless
+either**. The reference suites can only construct one because the HAND PORT diverged and made
+`Font()` an empty font with no `BitmapFont` at all (`../sge/.../textra/Font.scala:58` is a nilary
+primary with no `def this()` anywhere in the file). That is a divergence, not an environment.
+
+**THE FINAL CENSUS.** The residue moves out of (c) almost entirely, which is the OPPOSITE direction
+to §10.8.15's own correction and the reason the number had to be measured rather than re-read:
+
+| | §10.8.15, read | §10.8.17, measured and RUN |
+|---|---|---|
+| (a) runs against this port | 11 files / 160 tests | **12 files / 165 tests — 165 passing** |
+| (b) blocked by the HAND PORT | EMPTY | **18 files / 69 tests** — every one constructs a nilary `Font()`/`TextraLabel()`/`TypingLabel()`, plus `FontSuite`'s 4 `GlyphRegion(Float, Float, Float)` |
+| (c) blocked by the environment | 21 files / 79 tests | **EMPTY** |
+| not a candidate either way | — | 1 file / 5 tests (the byte-identical `scalanative` duplicate of the suite now adapted — one tree, one FQN) + 1 file / 0 tests (the reference fixture, rewritten) |
+
+**Do NOT retry.** Building service implementations for the other 18 files: they do not fail on a
+service, they fail on `data` being null one frame inside `Font`. And do not try to close it by
+shipping `lsans-15.fnt`/`.png` beside the port — the port makes no lookup to satisfy, and the java
+path that would use them ends at a GL call. What is left is C11's own escape hatch (a hand-written
+constructor, `CLAUDE.md` §1.5's `inject`), and that buys a `BitmapFont` with no texture, which is not
+what those suites assert about.
+
+### 10.8.18 Next
+
+1. **`omissions 52`** is the burn-down: 41 of them are one construct in one family.
+2. **The 69 class-(b) tests are not work on this port**, and are recorded so that nobody re-scopes
+   them as such. If the hand port ever adopts java's own `Font()`, its suites lose the ability to
+   construct one headlessly too.
 
 ---
 

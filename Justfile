@@ -2712,14 +2712,14 @@ textra-measure:
 # (CLAUDE.md §3), and `textra-measure`'s own comment said so. The reference hand port
 # (`../sge/sge-extension/textra`) wrote its own suite over the same library — 32 files, 239
 # `test(…)` — and that suite is hand-written Scala, so a compiled port can be run against it with
-# nothing translated. `ai-diff-measure` is the precedent and `PROGRESS.md` §10.8.15 is the census.
+# nothing translated. `ai-diff-measure` is the precedent and `PROGRESS.md` §10.8.17 is the census.
 #
 # WHAT IT IS NOT. These are NOT ported tests and are never counted as any (CLAUDE.md §3). Upstream
 # ships no suite for this library, so there is no emitted-test figure to add them to — which makes
 # the confusion cheaper to make here, not harder.
 #
 # THE CENSUS IS RE-DERIVED HERE, NOT ASSERTED, for `ai-diff-measure`'s reason: a hand port that
-# gains a file, loses one or gains a `test(…)` makes §10.8.15 stale, and nothing else in this
+# gains a file, loses one or gains a `test(…)` makes §10.8.17 stale, and nothing else in this
 # repository could say so — the adapted copies would keep passing at their own smaller number for as
 # long as nobody looked (CLAUDE.md §4.56's instrument-silence rule). The 239 INCLUDES the five tests
 # of `scalanative/TextraLzmaFontRedSuite.scala`, which is a byte-identical duplicate of the
@@ -2755,7 +2755,7 @@ textra-diff-measure:
     echo "not copied, and counted: $((REF_FILES - ADAPTED_FILES)) file(s), $((REF_TESTS - ADAPTED_TESTS)) test(…)"
     if [ "$REF_FILES" != "32" ] || [ "$REF_TESTS" != "239" ]; then
       echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 32 / 239."
-      echo "   PROGRESS.md §10.8.15's census was taken against 32 / 239 and is now STALE: a file"
+      echo "   PROGRESS.md §10.8.17's census was taken against 32 / 239 and is now STALE: a file"
       echo "   added there is a file nobody has classified, and one removed may be one of the eleven"
       echo "   this lane copied. Re-run the census before trusting the outcomes below."
       exit 1
@@ -2766,7 +2766,8 @@ textra-diff-measure:
     # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so a
     # differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
     # rule). This lane is also where `RefChecks` actually runs for the hand-written half, which is
-    # why §10.8.15's census had to be re-taken at a zero-error compile: a per-file typer count is a
+    # why §10.8.15's census had to be re-taken at a zero-error compile (and §10.8.17 a third time,
+    # against the RUN): a per-file typer count is a
     # FLOOR (CLAUDE.md §3), and on gdx-ai that difference moved four files and 16 tests.
     #
     # The regexodus coordinate is DERIVED from what `textra-measure`'s run published, never restated
