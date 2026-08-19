@@ -1613,6 +1613,23 @@ the sites whose exclusion rides on a guard rather than an arm (a `case r if !r.i
 below the claiming arm is dead the same way and greps as neither), and a site the census called
 answer-changing may turn out to be DEAD CODE, which only the compiler says.
 
+**…and a question answered by READING A NODE owes every node kind JAVA can write the fact at.** The
+paragraph above says read the node rather than a recorded label, and that is exactly right and half a
+rule: the node test is then a LIST of node kinds, and a list is complete only against the syntax
+somebody enumerated. Java grew a second spelling for *construct a `C`* in 2014 — `C::new` — and a
+closure whose instantiate edge tested `case n: Tree.New` answered NO for every factory reference in
+every corpus library, which is 232 sites. And it cannot be repaired by widening the same usage,
+because the SHARED INDEX records that reference's type with the qualifier's `TypeTree` as the site,
+and a `TypeTree` is the site of every type mention there is — so the fact lives at a DIFFERENT
+SYMBOL's usage (the constructor's, recorded at the `MethodRef` node) and the question has to be asked
+there. The measured cost of the gap is the shape this whole file is about: the emitted lambda needs a
+given, there was none, the port did not compile, and **not one instrument in the run named the site**
+— no seam, no decision, no moved count, a bare typer error at a construct nothing had walked to. So
+when a rule keys on a node kind, ask what OTHER syntax java has for the same fact, and where the
+index's site vocabulary cannot tell two of them apart, ask a different symbol rather than widening a
+test that structurally cannot answer (`ENGINE-LIMITS.md` CT6 face C; the fix moved 0 emitted bytes on
+every port).
+
 **And the rule reaches an INSTRUMENT'S OWN FILTER, in whatever language it is written.** The second
 occurrence was not a phase at all: `just catalog-coverage`'s aggregation matched
 `^(lowering|phase):` — the two obligation discharge surfaces that existed the day it was written —

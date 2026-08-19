@@ -11875,10 +11875,10 @@ reproduced: 275 threaded declarations, 177 files, 17 seams, 0 refusals, 0 `froze
 
 *Fix kind: (a) engine — `CtorFunnel`, the `Plan.none` outcome. Not reachable from any manifest key.*
 
-### CT6. The INSTANTIATE edge does not exist for a GENERIC class, and the `sites` exit the seam NAMES does not exist either — **CLOSED; 3 errors → 1, and both faces are read off the NODE**
+### CT6. The INSTANTIATE edge does not exist for a GENERIC class, nor for a `C::new`, and the `sites` exit the seam NAMES does not exist either — **CLOSED; 3 errors → 1, and all three faces are read off the NODE**
 
-**Title, for renumbering: "a generic `new` is not an instantiate, and `sites` cannot reach an
-unsuppliable use".** CLOSED. (a) engine, both faces — `ContextNeed`. Measured on the P5 replay after
+**Title, for renumbering: "a generic `new` is not an instantiate, a `C::new` is not one either, and
+`sites` cannot reach an unsuppliable use".** CLOSED. (a) engine, all three faces — `ContextNeed`. Measured on the P5 replay after
 CT5 closed: the enablement landed at **3 scalac errors**, and neither of the two that are the port's
 own boundary had the policy exit the engine's own diagnostic tells its reader to use.
 
@@ -12026,10 +12026,42 @@ and a `def cellPool(using sge.Sge)` over a cache, with the porter note beside it
 `from=` — it says *the field's own initialiser*, because a note that named a `<clinit>` that never
 existed would say something false about the code its reader is holding.
 
-*Fix kind: (a) engine, both faces — `ContextNeed` (`instantiates`, `anonHome`, the deferral's
-trigger, and `climb`'s view of a deferred field), plus the dead-binding report in
-`GlobalsToImplicitsTransform`. None of it is reachable from any manifest key; the mechanism stays
-DEFAULT-OFF, so all 13 ports are 0 members changed with every check count identical.*
+#### Face C — `C::new` is a construction the shared INDEX cannot be asked about — **CLOSED, textra `context-seam` 44 → 45 at 0 moved members on every lane**
+
+Face A fixed *which usages of a class are constructions*. It is complete for the syntax java had in
+2004 and misses the one java added in 2014: **a constructor METHOD REFERENCE constructs**, and
+`registerEffect("LINK", LinkEffect::new)` is what a registry is made of. Every reason a written `new
+C()` imposes the need holds verbatim — the reference lowers to `(a0$, a1$) => new C(a0$, a1$)` and
+that lambda needs a given wherever it is elaborated — and the shape is *more* likely to sit at a
+boundary than a `new` is, because a registry lives in a class initialiser.
+
+**Face A's own fix cannot reach it, and the reason is a fact about `Xref` rather than a gap in the
+predicate.** The reference's TYPE is recorded with the qualifier's `TypeTree` as the site
+(`walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)`), and a `TypeTree` is the site of every type mention
+in the program — so nothing about that usage distinguishes a factory reference from a field's
+declared type, and no widening of the class-usage arm could. What IS recorded at the `MethodRef` node
+is the CONSTRUCTOR's own symbol (`rec(method, UsageKind.Call, mr)`), so the question becomes *is this
+program's `C` constructor referenced from a method-reference node* — which is Face A's own rule (read
+the NODE, never the recorded kind) asked at the one node kind Face A does not name.
+`ContextNeed.ctorRefUses` is that reading, consulted by BOTH callers because they are two halves of
+one fact: `expandClass` must impose the need at the referencing declaration, and
+`constructedByProgram` must stop warning that nothing constructs a class whose factory the program
+hands to a registry.
+
+**What it cost, and what it did not.** Corpus population: **232 `::new` sites** (libgdx 40 files,
+textratypist 9, anim8 7, simple-graphs 1). Measured: `sge` **byte-identical** — 0 members, findings
+content unchanged, port map unchanged, 0 errors — and `sge-anim8` the same, so every one of those
+references either names a class the closure never threaded or already sits inside a threaded
+declaration. `sge-textra` moved `context-seam` **44 → 45**, at 0 moved members and its error count
+unchanged at 1: the row is `TypingConfig.java:224`, `unsuppliable-use`, naming `LinkEffect`. That is
+the whole value of the face — **the error was already there and was a BARE TYPER ERROR with nothing
+in the run pointing at it** (§4.45), and the fix moved no emitted byte at all.
+
+*Fix kind: (a) engine, all three faces — `ContextNeed` (`instantiates`, `ctorRefUses`/`ctorsOf`,
+`anonHome`, the deferral's trigger, and `climb`'s view of a deferred field), plus the dead-binding
+report in `GlobalsToImplicitsTransform`. None of it is reachable from any manifest key; the mechanism
+stays DEFAULT-OFF, so every port with no holder is 0 members changed with every check count
+identical.*
 
 ### CT7. A class a FRAMEWORK instantiates cannot host the clause, and nothing can put a `given` in generated code — **CLOSED; the numbers below are what it cost, and the fix is a THIRD ANSWER plus the warning that finds it**
 

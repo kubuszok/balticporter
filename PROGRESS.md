@@ -5555,6 +5555,37 @@ baselining that file, met by the artifact it was written for.
 **What that does NOT do is make `LinkEffect` visible**, and the reason is the second engine fact
 §10.8.9 did not reach: see §10.8.10.
 
+### 10.8.10 `C::new` IS a construction, and nothing in the run had ever walked to it
+
+The kind existed and the row did not, because **the closure never saw the construction**.
+`ContextNeed.instantiates` answers *is this usage of `c` a construction of `c`* by reading the NODE
+(CT6 face A), and its node list is `Tree.New` — complete for the syntax java had in 2004 and blind to
+the one it grew in 2014. `LinkEffect::new` is a `Tree.MethodRef`, so `expandClass(LinkEffect)` walked
+its usages, found no instantiation, imposed nothing, and drew no seam: the emitted
+`(a0$, a1$) => new sge.textra.effects.LinkEffect(a0$, a1$)` needed a given, had none, and **not one
+instrument in the run named the site** — which is §4.45's bare typer error arriving at the one
+construct nothing had walked to.
+
+It cannot be fixed by widening the class's own usage, and that is the transferable half:
+`Xref` records the reference's TYPE with the qualifier's `TypeTree` as the site, and a `TypeTree` is
+the site of every type mention in the program, so no arm of the class-usage walk can tell a factory
+reference from a field's declared type. What IS recorded at the `MethodRef` node is the
+CONSTRUCTOR's symbol, so the question moves to a different symbol's usages — `ContextNeed.ctorRefUses`
+— read by BOTH callers, because *the growth must impose the need here* and *this class IS constructed,
+so stop warning that nothing constructs it* are two halves of one fact. `CLAUDE.md` §4.56 carries the
+rule; `ENGINE-LIMITS.md` CT6 face C carries the numbers.
+
+| | before | after |
+|---|---|---|
+| `sge-textra` `context-seam` | 44 | **45** — one `unsuppliable-use` at `TypingConfig.java:224` naming `LinkEffect`, with its §1 sentence |
+| `sge-textra` errors | 1 | 1 — the fix moves no emitted byte; it makes the error ATTRIBUTABLE |
+| `sge`, `sge-anim8` | — | **byte-identical**: 0 members, findings content unchanged, port map unchanged, 0 errors |
+
+Corpus population of the construct: **232 `::new` sites** — libgdx 40 files, textratypist 9, anim8 7,
+simple-graphs 1 — and every one of them outside textra either names a class the closure never threaded
+or already sits inside a threaded declaration, which is why the arrival is flat and why nothing had
+ever noticed.
+
 ### 10.8.10 Next
 
 1. **The `E172`**, which needs a decision this wave deliberately does not take: either the engine

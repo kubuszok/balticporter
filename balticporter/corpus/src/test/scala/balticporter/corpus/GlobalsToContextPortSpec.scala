@@ -111,6 +111,32 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
+  /** THE REGISTRY, which is what a constructor method reference is FOR — and the shape that made
+    * the closure blind to a construction it could see everywhere else.
+    *
+    * `Config`'s class initialiser registers two factories, one of them `Link::new`. Java's `::new`
+    * IS a construction of `Link` and lowers to `(a) => new Link(a)`, so the emitted lambda needs a
+    * given exactly where a written `new Link(x)` would — and the enclosing declaration is a
+    * `<clinit>`, which has none. `Plain::new` is the CONTROL: `Plain` reads nothing, is never
+    * threaded, and its reference must impose nothing at all.
+    *
+    * It is the corpus shape reduced, not an invention: TextraTypist's `TypingConfig` registers forty
+    * effects this way and exactly one of them — `LinkEffect`, whose `onApply` calls `Gdx.net.openURI`
+    * — reads the holder (`PROGRESS.md` §10.8.9). */
+  private val ctorRefSrc =
+    """package demo;
+      |public class Gdx { public static Graphics graphics; }
+      |public class Graphics { public int getWidth() { return 0; } }
+      |public interface Builder { Object make(String p); }
+      |public class Link  { int w; public Link(String p)  { w = Gdx.graphics.getWidth(); } }
+      |public class Plain { int w; public Plain(String p) { w = p.length(); } }
+      |public class Config {
+      |  static Builder link;
+      |  static Builder plain;
+      |  static { link = Link::new; plain = Plain::new; }
+      |}
+      |""".stripMargin
+
   private def ported(h: ContextHolder): (GlobalsToImplicitsTransform, Program, DecisionLog, String) =
     portedFrom(src, h)
 
@@ -232,6 +258,75 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     // would drain the row and leave the `No given` failing the build, with the arithmetic balanced.
     assert(!clue(ContextSeamCheck.remedies.map(_.kind).toSet)
       .contains(ContextSeamCheck.Kind.UnsuppliableUse.label))
+  }
+
+  // -------------------------------------------------------------------------
+  // …and `C::new`, the construction the shared index cannot report
+  // -------------------------------------------------------------------------
+
+  private lazy val ctorRef = portedFrom(ctorRefSrc, base.copy(attach = ContextAttach.Class))
+
+  test("`C::new` in a `<clinit>` is a COUNTED unsuppliable use — a factory reference constructs") {
+    // The whole of PROGRESS.md §10.8.9, in miniature. `Link::new` lowers to `(a) => new demo.Link(a)`
+    // and `Link` took the clause, so the emitted lambda needs a given and a class initialiser has
+    // none — a hard `No given` that arrived as a BARE TYPER ERROR with nothing in the run pointing
+    // at it, because the closure never saw the construction at all.
+    // NEGATIVE: delete the `ctorRefUses(c).foreach` block in `expandClass` and this is Nil while the
+    // emitted text is unchanged and still uncompilable — no finding, no decision, no moved count.
+    val (p, a, _, o) = ctorRef
+    val use = p.seams(a).filter(_.kind == ContextSeamCheck.Kind.UnsuppliableUse)
+    assertEquals(clue(use).map(_.subject), List("demo.Config#<clinit>"),
+      p.seams(a).map(_.render).mkString("\n"))
+    assert(clue(use.head.detail).contains("CONSTRUCTS `demo.Link`"), use.head.render)
+    // …and the emitted text really is the uncompilable shape the seam is about: the reference
+    // lowered to a lambda that runs the constructor, inside a `locally` with no given in it.
+    assert(clue(code(o)).contains("class Link(p$p: java.lang.String)(using demo.Ctx)"), code(o))
+    assert(clue(code(o)).contains("(((a0$) => new demo.Link(a0$)): demo.Builder)"), code(o))
+    val lo = code(o).linesIterator.dropWhile(!_.contains("locally {")).take(4).mkString("\n")
+    assert(!clue(lo).contains("using"), lo)
+  }
+
+  test("…and a reference to a class the closure never threaded imposes NOTHING") {
+    // The control that makes the assertion above a finding rather than a net. `Plain::new` is the
+    // same java syntax at a class that reads nothing, and a rule that answered "a method reference
+    // is a construction" without asking WHICH class would report it too.
+    // NEGATIVE: drop the `ctorsOf(c)` restriction and impose on every `MethodRef` site — `Plain`
+    // joins the list and every factory reference in a port becomes a seam.
+    val (p, a, _, o) = ctorRef
+    assertEquals(clue(p.seams(a).filter(_.detail.contains("demo.Plain"))), Nil,
+      p.seams(a).map(_.render).mkString("\n"))
+    assert(!clue(code(o)).contains("class Plain(using"), code(o))
+  }
+
+  test("a `C::new` the CLOSURE CAN REACH threads its enclosing declaration instead of counting it") {
+    // The other half of the same edge, and the reason it is an EDGE and not a check: where the
+    // reference sits in a declaration that CAN take a clause, the answer is to thread that
+    // declaration, and there is no seam at all. A rule that only counted would leave every
+    // reachable factory reference uncompilable.
+    val (p, a, l, o) = portedFrom(
+      """package demo;
+        |public class Gdx { public static Graphics graphics; }
+        |public class Graphics { public int getWidth() { return 0; } }
+        |public interface Builder { Object make(String p); }
+        |public class Link { int w; public Link(String p) { w = Gdx.graphics.getWidth(); } }
+        |public class Wiring { Builder install() { return Link::new; } }
+        |""".stripMargin, base.copy(attach = ContextAttach.Class))
+    assert(clue(code(o)).contains("class Wiring(using demo.Ctx)"), code(o))
+    assertEquals(clue(p.seams(a).filter(_.kind == ContextSeamCheck.Kind.UnsuppliableUse)), Nil,
+      p.seams(a).map(_.render).mkString("\n"))
+    // …and the decision says WHY `Wiring` grew a clause it never reads through
+    assertEquals(clue(l.of(Decision.Kind.RetypedSignature)
+      .filter(_.subjectFqn == "demo.Wiring").flatMap(_.detail.get("via"))), List("instantiates-threaded"))
+  }
+
+  test("…and `C::new` STOPS the unconstructed-thread warning, because a factory really does build one") {
+    // `Link` is constructed nowhere a `new` appears, so before this edge the warning fired: *nothing
+    // in this program constructs it*, about a class whose factory the program hands to a registry.
+    // Both halves of one fact, which is why one function answers both callers.
+    // NEGATIVE: drop the `ctorRefUses` disjunct in `constructedByProgram` and this gains a row.
+    val (p, a, _, _) = ctorRef
+    assertEquals(clue(p.seams(a).filter(_.kind == ContextSeamCheck.Kind.UnconstructedThread))
+      .map(_.subject), Nil, p.seams(a).map(_.render).mkString("\n"))
   }
 
   test("a FIELD INITIALIZER's read is seeded, resolved and COUNTED — never dropped and left broken") {

@@ -191,6 +191,37 @@ final class ContextNeed(
     case n: Tree.New => constructedBy(n) == c
     case _           => u.kind == UsageKind.Instantiate
 
+  /** `C::new` IS a construction of `C`, and it is the one the index cannot be asked about.
+    *
+    * A constructor method reference is java's own way of writing a FACTORY — `registerEffect("LINK",
+    * LinkEffect::new)` — and it lowers to a lambda that runs `new C(…)`, so every reason a `new C()`
+    * imposes the need holds here verbatim: the emitted `(a0, a1) => new C(a0, a1)` needs a given
+    * wherever it is elaborated. It is also the shape most likely to sit at a BOUNDARY, because a
+    * registry is a class initialiser and that is what registries are for.
+    *
+    * [[instantiates]] cannot answer it, and the reason is a fact about the shared index rather than
+    * a gap here: [[Xref]] records the reference's TYPE with the qualifier's `TypeTree` as the site
+    * (`UsageKind.TypeRefPos`), so nothing about that usage says a construction is what it is — and a
+    * `TypeTree` is the site for every type mention in the program, so no widening of the class-usage
+    * arm could tell them apart. The CONSTRUCTOR's own symbol is recorded at the `MethodRef` node
+    * itself, which is the structural question this asks: *is this program's `C` constructor
+    * REFERENCED from a node that is a method reference*. Reading the node and not a recorded kind is
+    * [[instantiates]]'s own rule (`ENGINE-LIMITS.md` CT6) at the one node kind it does not cover.
+    *
+    * Consulted by BOTH callers, because they are two halves of one fact: the growth must impose the
+    * need at the referencing declaration, and [[constructedByProgram]] must stop warning that
+    * nothing constructs a class a factory reference builds on every use. */
+  private def ctorRefUses(c: SymId): List[Usage] =
+    ctorsOf(c).flatMap(program.usages).filter(_.site.isInstanceOf[Tree.MethodRef])
+
+  /** the constructors THIS PROGRAM declares for `c`. Read off the `ClassDef` and the frontend's own
+    * `<init>` name, which is engine-minted and therefore a structural fact rather than a §4.56 string
+    * test — the same reading [[climb]] makes one line above its own boundary test. */
+  private def ctorsOf(c: SymId): List[SymId] =
+    program.definitionOf(c).toList.collect { case cd: Tree.ClassDef => cd }.flatMap(_.body.collect {
+      case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == CtorName) => d.symbol
+    })
+
   /** the class a `new` constructs: the head of the type it was WRITTEN at, with any application
     * stripped. `SymId.None` where there is no head to read. */
   private def constructedBy(n: Tree.New): SymId = headOf(n.tpt.tpe)
@@ -482,7 +513,9 @@ final class ContextNeed(
   private def constructedByProgram(c: SymId): Boolean =
     (c :: graph.descendantsOf(c)).exists(t =>
       program.usages(t).exists(u =>
-        instantiates(u, t) && !u.site.isInstanceOf[Tree.NewArray] && u.enclosing != SymId.None))
+        instantiates(u, t) && !u.site.isInstanceOf[Tree.NewArray] && u.enclosing != SymId.None) ||
+      // …and `T::new` builds one on every call of the factory it becomes (see [[ctorRefUses]]).
+      ctorRefUses(t).exists(_.enclosing != SymId.None))
 
   private def expandMethod(m: SymId): Unit =
     if methods(m) || frozen(m) then return
@@ -557,6 +590,11 @@ final class ContextNeed(
     // `Tycon` by the shared index (`ENGINE-LIMITS.md` CT6).
     program.usages(c).foreach { u =>
       if instantiates(u, c) && u.enclosing != SymId.None && u.enclosing != c then
+        impose(u.enclosing, c, u.site.origin, Edge.Kind.Instantiate)
+    }
+    // …and `C::new`, which the class's own usages cannot report (see [[ctorRefUses]]).
+    ctorRefUses(c).foreach { u =>
+      if u.enclosing != SymId.None && u.enclosing != c then
         impose(u.enclosing, c, u.site.origin, Edge.Kind.Instantiate)
     }
 
