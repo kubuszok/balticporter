@@ -12,6 +12,7 @@
 #   just ai-measure                  gdx-ai, compiled WITH libGDX core (a dependent port)
 #   just ai-test-measure             gdx-ai's own 10-@Test JUnit suite — emitted, compiled and RUN
 #   just textra-measure              TextraTypist, compiled WITH libGDX core (a dependent port)
+#   just textra-diff-measure         the REFERENCE hand port's own suite over the emitted sge.textra
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
@@ -300,6 +301,14 @@ ai_test_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:jun
 # against a DIFFERENT JAR with every check count, every member digest and every outcome flat. There
 # is no hand-written suite either, so this stays empty rather than carrying munit speculatively.
 textra_deps   := ""
+# …and the DIFFERENTIAL lane's two. `textra_ref_tests` is the reference hand port's own MUnit tree —
+# THREE platform source directories (`scala`, `scalajvm`, `scalanative`), which is why the census
+# reads the parent and not `…/scala`: two of the three hold suites the census classifies, and a lane
+# that counted one directory would report a population smaller than the one it is classifying.
+# `textra_test_deps` carries munit for the hand-written half; regexodus is DERIVED from what the
+# port published, exactly as `textra-measure` derives it (`declared_dep_flags`).
+textra_ref_tests := "../sge/sge-extension/textra/src/test"
+textra_test_deps := "--dependency org.scalameta::munit:1.0.2"
 # flexmark's one compile-scope coordinate, `org.jetbrains:annotations:24.0.1`, is a FRONTEND input
 # AND a compile one — and this line was written empty on the reasoning that it could not be, which
 # the port's first run disproved in one number. The reasoning was: the annotations are markers,
@@ -2677,6 +2686,110 @@ textra-measure:
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
+# TextraTypist's DIFFERENTIAL gate — the REFERENCE HAND PORT's own MUnit suite, run against the
+# mechanically emitted `sge.textra.*`.
+#
+# WHY THIS LANE EXISTS, and it is a stronger reason than gdx-ai's. Upstream TextraTypist declares
+# ZERO `@Test`: its `src/test/java` is 128 manual LWJGL3 demos, which `textra-measure` re-derives on
+# every run. So before this lane the port had a compile and NO behavioural evidence at all
+# (CLAUDE.md §3), and `textra-measure`'s own comment said so. The reference hand port
+# (`../sge/sge-extension/textra`) wrote its own suite over the same library — 32 files, 239
+# `test(…)` — and that suite is hand-written Scala, so a compiled port can be run against it with
+# nothing translated. `ai-diff-measure` is the precedent and `PROGRESS.md` §10.8.15 is the census.
+#
+# WHAT IT IS NOT. These are NOT ported tests and are never counted as any (CLAUDE.md §3). Upstream
+# ships no suite for this library, so there is no emitted-test figure to add them to — which makes
+# the confusion cheaper to make here, not harder.
+#
+# THE CENSUS IS RE-DERIVED HERE, NOT ASSERTED, for `ai-diff-measure`'s reason: a hand port that
+# gains a file, loses one or gains a `test(…)` makes §10.8.15 stale, and nothing else in this
+# repository could say so — the adapted copies would keep passing at their own smaller number for as
+# long as nobody looked (CLAUDE.md §4.56's instrument-silence rule). The 239 INCLUDES the five tests
+# of `scalanative/TextraLzmaFontRedSuite.scala`, which is a byte-identical duplicate of the
+# `scalajvm` file: the reference port compiles it twice for two platforms and the census counts what
+# is there, since a population that quietly de-duplicates is one nobody can reproduce by counting.
+# ---------------------------------------------------------------------------------------------
+[doc("TextraTypist's DIFFERENTIAL gate — the hand port's own suite, run against the emitted port")]
+textra-diff-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    REPORT="$ROOT/port-report/TextraTypistDifferential"
+    TREE="{{textra_module}}/src/test/scala"
+
+    # NO MIGRATION RUNS HERE, so there is no check report and no `show_check_report` — this lane's
+    # subject is emitted code `textra-measure` produced and already checked, and re-printing its
+    # counts here would be two readings of one artifact that can disagree. What this lane owns is the
+    # compile of the hand-written half and the OUTCOMES.
+    echo "-- census population: RE-DERIVED from the reference hand port, never asserted --"
+    REF_FILES=$(find {{textra_ref_tests}} -name '*.scala' | wc -l | tr -d ' ')
+    REF_TESTS=$(munit_emitted {{textra_ref_tests}})
+    ADAPTED_FILES=$(find "$TREE" -name '*Suite.scala' | wc -l | tr -d ' ')
+    ADAPTED_TESTS=$(munit_emitted "$TREE")
+    echo "reference hand port ({{textra_ref_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
+    echo "adapted here (class (a) of §10.8.15): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
+    echo "class (c), left out and counted: $((REF_FILES - ADAPTED_FILES)) file(s), $((REF_TESTS - ADAPTED_TESTS)) test(…)"
+    if [ "$REF_FILES" != "32" ] || [ "$REF_TESTS" != "239" ]; then
+      echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 32 / 239."
+      echo "   PROGRESS.md §10.8.15's census was taken against 32 / 239 and is now STALE: a file"
+      echo "   added there is a file nobody has classified, and one removed may be one of the eleven"
+      echo "   this lane copied. Re-run the census before trusting the outcomes below."
+      exit 1
+    fi
+
+    echo
+    echo "-- compile --"
+    # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so a
+    # differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
+    # rule). This lane is also where `RefChecks` actually runs for the hand-written half, which is
+    # why §10.8.15's census had to be re-taken at a zero-error compile: a per-file typer count is a
+    # FLOOR (CLAUDE.md §3), and on gdx-ai that difference moved four files and 16 tests.
+    #
+    # The regexodus coordinate is DERIVED from what `textra-measure`'s run published, never restated
+    # here — a revision bumped in the manifest and not in the lane compiles against a DIFFERENT JAR
+    # with every count flat.
+    DECLARED=$(declared_dep_flags "$ROOT/port-report/TextraTypistMigrate" | tr '\n' ' ')
+    echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
+    scala-cli compile --test --scala {{scala_version}} --server=false {{textra_test_deps}} $DECLARED \
+      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala "$TREE" \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/textradiffmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/textradiffmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/textradiffmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/textradiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/textradiffmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/textradiffmeasure.txt | sort | uniq -c | sort -rn | head
+
+    if [ "$ERRORS" != "0" ]; then
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+      headline "$ERRORS" "$REPORT"
+      exit 0
+    fi
+
+    echo
+    echo "-- run --"
+    scala-cli test --scala {{scala_version}} --server=false {{textra_test_deps}} $DECLARED \
+      -Duser.language=en -Duser.country=US \
+      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala "$TREE" \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/textradiffrun.txt
+    reconcile_outcomes "$MEASURE_TMP"/textradiffrun.txt "$ADAPTED_TESTS"; RECONCILED=$?
+
+    echo
+    echo "-- correlation: test failures located to members and Java origins --"
+    # TWO maps and no `test=` one: the suite is HAND-WRITTEN, so it has no source map and cannot have
+    # one. That is the property this lane wants rather than a gap — a failure here anchors
+    # `main-frame`, on the LIBRARY member that threw, which is the question a differential suite asks.
+    correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/textradiffrun.txt \
+      --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+      --srcmap "$ROOT/port-report/TextraTypistMigrate/run-latest/srcmap.tsv"
+    test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
@@ -2710,12 +2823,16 @@ measure-all:
     # `ai-test-measure` rather than preceding it because the ported suite is the port's own gate and
     # this one is a gate on top of it — a differential failure is only worth reading once the
     # library's own ten tests have been run.
-    # `textra-measure` is LAST, for the reason `ai-measure` was APPENDED rather than slotted in: its
-    # only ordering constraint is `gdx-measure`, which is first, so any position after that one is
-    # correct — and last is the position that leaves the seventeen established lanes' order, and
-    # therefore their numbers, untouched by this port's arrival. Nothing follows it, because nothing
-    # compiles against what it wrote: it has no test source set and no dependent.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure; do
+    # `textra-measure` is next-to-LAST, for the reason `ai-measure` was APPENDED rather than slotted
+    # in: its only ordering constraint is `gdx-measure`, which is first, so any position after that
+    # one is correct — and the end is the position that leaves the seventeen established lanes'
+    # order, and therefore their numbers, untouched by this port's arrival.
+    # `textra-diff-measure` is LAST and follows `textra-measure` for `ai-diff-measure`'s reason: it
+    # compiles the hand-written differential suite against what `textra-measure` just wrote, so run
+    # earlier it would measure the previous engine's emit of the library it probes. Upstream ships no
+    # suite for this library, so unlike gdx-ai there is no ported gate for it to sit on top of — this
+    # IS the port's behavioural gate, and it is the only one it has.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then

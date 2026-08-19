@@ -100,6 +100,8 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-ai` | gdx-ai `gdx-ai/src` | 166 of 167 → **166** (1 dropped, 3 injected; the 167th is GWT super-source upstream's own build excludes, §10.7.1) | — | **0** after wave 2 (20 at first emit, 10 after wave 1; §10.7.5/§10.7.8, every one classified) |
 | `sge-ai-test` | gdx-ai `gdx-ai/tests` | 2 → **2** | **10 of 10 emitted and RUN — 10 passing, 0 failing.** 6 / 4 at wave 2, all four one MUnit-instance fact in `ParallelTest`, closed by the per-test reconstruction (§10.7.9/§10.7.10, `ENGINE-LIMITS.md` X4). The "24 / 196" in the hand-port table below is the REFERENCE PORT's own MUnit suite, not upstream's — censused and half of it now RUNNING as `sge-ai-diff` (§10.7.12) | **0** |
 | `sge-ai-diff` | **nothing — this is HAND-WRITTEN Scala, never a ported suite** (`CLAUDE.md` §3) | — | **95 of the reference hand port's 196 RUN — 93 passing, 2 declared** (10 of its 24 files; the other 14 / 101 are class (c), §10.7.12) | **0** |
+| `sge-textra` | TextraTypist `src/main/java` | 92 → **92** (0 dropped, 0 injected) | **none upstream** — `src/test/java` is 128 manual LWJGL3 demos declaring zero `@Test`; gated by a differential probe instead, §10.8.15 | **0** after wave 2 (8 at first emit; §10.8.6/§10.8.12, every one classified) |
+| `sge-textra-diff` | **nothing — this is HAND-WRITTEN Scala, never a ported suite** (`CLAUDE.md` §3) | — | **160 of the reference hand port's 239 RUN — 160 passing, 0 declared** (11 of its 32 files; the other 21 / 79 are class (c), §10.8.15) | **0** |
 | `sge-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `sge-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -5798,23 +5800,107 @@ port is the faithful one. That is the first behavioural evidence this library ha
 
 **NOT CLAIMED BY THIS WAVE**, and stated as scope rather than left implied: the adapted copies for the
 five files the mapping table is FOR, the `textra-diff-measure` lane and its census gate, and the
-fixture rewrite that unlocks the other 65. The six above are measured and reproducible and are
+fixture rewrite that unlocks the other 65. (The first two are §10.8.15 and are done; the third is
+§10.8.16, re-scoped by what §10.8.15 measured.) The six above are measured and reproducible and are
 deliberately NOT committed yet — a `src/test` tree with no lane running it is a suite nobody runs
 (§5.1), so they land WITH the lane or not at all. The wave order is the one gdx-ai used: copy under an
 enumerated NAME/SHIM table applied to comment-masked CODE and never to an assertion, compile ALONE at
 0 typer errors, re-take the census, then build the lane with its population re-derived and gated.
 
-### 10.8.14 Next
+### 10.8.15 The DIFFERENTIAL gate — 11 of 32 files, 160 of 239 tests, **160 passing at 0 errors**
 
-1. **The differential probe**, whose FIRST CENSUS is §10.8.13 and whose four corrections to the
-   original scoping are there. The next wave is the adaptation: the eleven candidates under an
-   enumerated mapping table, compiled ALONE, re-censused with `RefChecks` running, then the
-   `textra-diff-measure` lane. `munit_emitted`'s multi-line blind spot is decided BEFORE the lane, not
-   inside it.
-2. **The fixture**, which is the gate on the other 65 tests and is a REWRITE rather than an
-   adaptation — six types the hand port invented, one nested-vs-hoisted enum and one access-modifier
-   difference that only `RefChecks` reports.
-3. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
+`just textra-diff-measure`, `port-report/TextraTypistDifferential`,
+`ported/sge-textra/src/test/scala`. This is the port's ONLY behavioural evidence and the first it has
+ever had: upstream TextraTypist declares zero `@Test` (§10.8.5's `src/test/java` is 128 manual LWJGL3
+demos), so before this lane the library had a green compile and nothing else — which is exactly the
+state `CLAUDE.md` §3 says proves nothing.
+
+**THE ANSWER.** Of the reference hand port's **32 files / 239 `test(…)`**, **11 files / 160 tests**
+run against the mechanically emitted `sge.textra.*`: they compile at **0 errors** — so `RefChecks`
+runs, which is §10.7.12's rule ② and the reason its census had to be taken twice — and they are
+**160 passing, 0 failing, 0 skipped**, with `expected-failures.tsv` EMPTY. The adapted copies are the
+port's HAND-WRITTEN half (`CLAUDE.md` §5.5) and are never counted as ported tests.
+
+| tests | file | mapping rows |
+|---|---|---|
+| 54 | `utils/CaseInsensitiveIntMapSuite` | T1, T7 |
+| 33 | `utils/StringUtilsSuite` | T4, T8 |
+| 33 | `LayoutLineSuite` | T1, T3, T4, T5, T6, T7 |
+| 13 | `utils/LZBCompressionSuite` | none |
+| 7 | `utils/BlockUtilsSuite` | none |
+| 5 | `utils/ColorUtilsSuite` | none |
+| 5 | `utils/PaletteSuite` | T2, T7 |
+| 5 | `TypingConfigSuite` | T2 |
+| 3 | `FontScaleStaticsIss816RedSuite` | none |
+| 1 | `FontDeprecatedScaleStaticsIss837RedSuite` | none |
+| 1 | `TextraLayoutMaxLinesIss778RedSuite` | none |
+
+**THE MAPPING — eight rows, and NO ASSERTION IS EDITED.** Each is a NAME or SHIM substitution between
+the two surfaces, applied to COMMENT-MASKED code (§10.7.12's "a comment is not code"), and a file the
+rows could not carry is class (c) and was left out rather than repaired.
+
+| row | from (hand port) | to (this port) | why |
+|---|---|---|---|
+| **T1** | `x.isEmpty`, `x.notEmpty`, `x.hasNext`, `x.getWidth`, `x.peekLine`, `x.countGlyphs` | `x.isEmpty()`, … | a java parameterless method is emitted `def f()` and Scala 3 requires the parens — gdx-ai's M1, and again the largest row |
+| **T2** | `map.contains(k)` | `map.containsKey(k)` | the hand port's scala `Map` against libGDX's own `ObjectMap`/`ObjectIntMap`/`OrderedMap`, which this port emits |
+| **T3** | `arr += v`, `arr += a += b` | `arr.add(v)`, `arr.add(a, b)` | libGDX's `FloatArray`/`LongArray` are not scala `Buffer`s; `add(v1, v2)` is java's own two-value overload, so the chained form needs no second statement |
+| **T4** | `new StringBuilder` | `new java.lang.StringBuilder` | `Line.appendTo` is emitted with java's own parameter type; scala's `StringBuilder` is a different class |
+| **T5** | `layout.lines`, `layout.lineCount` | `layout.lines$field`, `layout.lines()` | java declares BOTH a `lines` field and a `lines()` method, so §4.55 renamed the field — and the hand port renamed the METHOD instead. One java pair, two ports, two names |
+| **T6** | `Nullable[T]`, `Nullable(x)`, `.isDefined`, `.isEmpty`, the `lowlevel.Nullable` import | `T`, `x`, `!= null`, `== null`, nothing | the hand port's option-shaped shim over a java reference; this port emits java's own nullable reference, so the shim is the identity and its observers are null tests — gdx-ai's M2 |
+| **T7** | `arr(i)`, `arr.toSeq`, `arr.last` | `arr.get(i)`, `arr.toArray().toSeq`, `arr.peek()` | libGDX's `Array` is not a scala collection; `peek()` is java's own name for the last element |
+| **T8** | `join(", ", "a", "b")`, `join(", ")` | `join(", ", scala.Array[CharSequence]("a", "b"))`, `… Array[CharSequence]()` | a java VARARG parameter is emitted as the `Array[T]` it is (`CLAUDE.md` §4.4), and the values passed are unchanged |
+
+**T6 IS THE ROW THAT MISFIRED, and the correction is the rule.** `.isEmpty` means two different
+things on the two sides — a `Nullable`'s emptiness (T6, `== null`) and a `FloatArray`'s (T1,
+`isEmpty()`) — and a regex cannot tell them apart. Applied blind it turned
+`assert(layout.offsets.isEmpty)` into `assert(layout.offsets == null)`, which COMPILES and asserts
+something false about a field that is never null: eight assertions quietly inverted, in a wave whose
+whole subject is behavioural evidence. What separated them was the COMPILER's own message
+(*method isEmpty in class FloatArray must be called with () argument* against *value isEmpty is not a
+member of sge.textra.Line*), so the row is applied per RECEIVER and not per spelling. **A mapping row
+keyed on a member NAME is `CLAUDE.md` §4.56's hazard arriving in a text edit** — the same one that
+row's gdx-ai ancestor met inside a comment.
+
+**CLASS (b) IS NOW EMPTY — `FontSuite` is class (c) on BOTH of its halves, measured.** §10.8.13
+classified it (b) "blocked by the hand port", 4 of 14 tests on `Font.GlyphRegion(Float, Float, Float)`
+— a PRIMARY constructor the hand port added, where java's takes a `TextureRegion` first. Supplying
+the argument java asks for is the one thing a mapping row may not do, and here java's own source says
+why rather than a rule: `new Font.GlyphRegion(null, 1.5f, 2.5f, 10f)` compiles and throws
+`NullPointerException: Cannot invoke "TextureRegion.getTexture()" because "textureRegion" is null` —
+the parameter the hand port removed is one java's constructor DEREFERENCES, so the two constructors
+are different bodies and not a defaulted overload. The other 10 build `new Font()`, which reaches
+`new BitmapFont()` and throws `IllegalStateException: Gdx.app cannot be null` — the environment
+blocker the other 20 files have. Probed with an absent-service `Sge` and every mapping row applied:
+**2 of 14 passing, 12 failing**, 4 with the NPE and 8 with the `IllegalStateException`.
+
+**WHAT CLASS (c) MEANS FOR COVERAGE — 21 files / 79 tests, and the split is 75/4.** Seventy-five need
+a headless FIXTURE (the 65 of §10.8.13's environment class plus `FontSuite`'s 10) and four need a
+constructor java does not have. So the residue is one wave, not four families as it was on gdx-ai —
+and this port's blocker is its ENVIRONMENT rather than its surface, which is the opposite of what the
+reference-hand-port comparison usually finds.
+
+**AND THE FIXTURE IS MORE THAN A REWRITE OF `HeadlessTextraSge` — measured, before it is attempted.**
+§10.8.13 scoped it as six invented types to replace. The probe above adds two facts that scope could
+not have: an ABSENT-service `Sge` — the design this repository's own `sge.SgeTestFixture` argues for,
+and the one that keeps a fixture from answering questions it should not — unlocks **0** of the 14,
+because `Font()` fails on the SERVICE and not on a member; and `new BitmapFont()` wants libGDX's
+default font ASSET, which is a classpath RESOURCE the port does not ship (§6.1 item 7 in the flesh:
+the emitted lookup keeps the upstream path because a rename decides ownership structurally and never
+from a string, `CLAUDE.md` §4.56). So the fixture wave owes real service implementations AND a
+resource answer, and `ENGINE-LIMITS.md` C11 sits under it — `new BitmapFont()` builds an object java
+could not build, because the nilary constructor's delegation has nowhere to live.
+
+**Do NOT retry.** Applying a `.isEmpty` row by spelling rather than by receiver — it compiles, it
+inverts assertions, and no instrument in this repository can see it. And do not read §10.8.13's class
+(b) as a wave-sized workload: it is 14 tests behind two independent refusals, and the four
+GlyphRegion ones are refused by java's own constructor body.
+
+### 10.8.16 Next
+
+1. **The fixture**, which is now the gate on **75** of the 79 remaining tests and is scoped by
+   §10.8.15's probe rather than by a reading: real service implementations against the MECHANICAL
+   core, plus the classpath-resource answer `new BitmapFont()` needs.
+2. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
 
 ---
 

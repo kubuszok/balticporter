@@ -1,0 +1,161 @@
+#suite	test	status
+sge.textra.FontDeprecatedScaleStaticsIss837RedSuite	ISS-837: Font.extractScale/extractIntScale/applyScale carry the @deprecated annotation (upstream @Deprecated Font.java:8184/8200/8216)	pass
+sge.textra.FontScaleStaticsIss816RedSuite	ISS-816: Font.applyScale(glyph, scale) exists and returns glyph unchanged (upstream Font.java:8217-8219)	pass
+sge.textra.FontScaleStaticsIss816RedSuite	ISS-816: Font.extractIntScale(glyph) exists and always returns 4 (upstream Font.java:8201-8203)	pass
+sge.textra.FontScaleStaticsIss816RedSuite	ISS-816: Font.extractScale(glyph) exists and always returns 1f (upstream Font.java:8185-8187)	pass
+sge.textra.LayoutLineSuite	Layout auxiliary fields start empty	pass
+sge.textra.LayoutLineSuite	Layout defaults	pass
+sge.textra.LayoutLineSuite	Line appendTo produces expected format	pass
+sge.textra.LayoutLineSuite	Line reset clears glyphs and sizes	pass
+sge.textra.LayoutLineSuite	Line size sets width and height	pass
+sge.textra.LayoutLineSuite	Line toString matches appendTo	pass
+sge.textra.LayoutLineSuite	Line with custom capacity	pass
+sge.textra.LayoutLineSuite	clear resets to single empty line	pass
+sge.textra.LayoutLineSuite	copy constructor reproduces layout	pass
+sge.textra.LayoutLineSuite	countGlyphs counts across all lines	pass
+sge.textra.LayoutLineSuite	countGlyphsBeforeLine counts glyphs in lines before index	pass
+sge.textra.LayoutLineSuite	getHeight sums all line heights	pass
+sge.textra.LayoutLineSuite	getLine returns empty for out-of-bounds index	pass
+sge.textra.LayoutLineSuite	getLine returns line for valid index	pass
+sge.textra.LayoutLineSuite	getWidth returns max line width when no justification	pass
+sge.textra.LayoutLineSuite	insertLine adds a new line after the given index	pass
+sge.textra.LayoutLineSuite	insertLine appends newline glyph to the line at the given index	pass
+sge.textra.LayoutLineSuite	insertLine respects maxLines limit	pass
+sge.textra.LayoutLineSuite	insertLine with index >= maxLines returns empty	pass
+sge.textra.LayoutLineSuite	insertLine with negative index returns empty	pass
+sge.textra.LayoutLineSuite	lineCount reflects number of lines	pass
+sge.textra.LayoutLineSuite	multiple insertLine calls build multi-line layout	pass
+sge.textra.LayoutLineSuite	new Layout has one empty line	pass
+sge.textra.LayoutLineSuite	peekLine returns the last line	pass
+sge.textra.LayoutLineSuite	pushLineBare adds a line without newline glyph	pass
+sge.textra.LayoutLineSuite	pushLineBare respects maxLines	pass
+sge.textra.LayoutLineSuite	reset clears everything including config	pass
+sge.textra.LayoutLineSuite	setEllipsis stores the value	pass
+sge.textra.LayoutLineSuite	setJustification stores the value	pass
+sge.textra.LayoutLineSuite	setMaxLines enforces minimum of 1	pass
+sge.textra.LayoutLineSuite	setTargetWidth returns this for chaining	pass
+sge.textra.LayoutLineSuite	truncateExtra trims auxiliary arrays	pass
+sge.textra.LayoutLineSuite	truncateExtra with larger limit is a no-op	pass
+sge.textra.TextraLayoutMaxLinesIss778RedSuite	ISS-778: Layout.add returns null when a newline is added at the maxLines cap (Layout.java:144); the port returns `this`	pass
+sge.textra.TypingConfigSuite	40 effect start tokens are registered	pass
+sge.textra.TypingConfigSuite	DEFAULT_CLEAR_COLOR is white	pass
+sge.textra.TypingConfigSuite	DEFAULT_SPEED_PER_CHAR has expected default value	pass
+sge.textra.TypingConfigSuite	DEFAULT_WAIT_VALUE has expected default value	pass
+sge.textra.TypingConfigSuite	known effects are registered	pass
+sge.textra.utils.BlockUtilsSuite	ALL_BLOCK_CHARS contains only renderable block chars	pass
+sge.textra.utils.BlockUtilsSuite	BOX_DRAWING full block is unit square	pass
+sge.textra.utils.BlockUtilsSuite	BOX_DRAWING has correct number of entries	pass
+sge.textra.utils.BlockUtilsSuite	BOX_DRAWING thin horizontal line is 4 floats	pass
+sge.textra.utils.BlockUtilsSuite	BOX_DRAWING unused entries are empty	pass
+sge.textra.utils.BlockUtilsSuite	BlockUtils constants are consistent	pass
+sge.textra.utils.BlockUtilsSuite	isBlockGlyph recognizes box-drawing range	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	clear empties the map	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	clear on empty map is a no-op	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	clear with capacity	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	constructor from arrays	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	constructor from arrays with mismatched lengths uses shorter	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	constructor rejects invalid load factors	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	constructor with capacity and load factor	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	constructor with initial capacity creates empty map	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	containsKey is case-insensitive	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	containsValue finds present values	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	copy constructor creates identical map	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	copy constructor is independent of original	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	default constructor creates empty map	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	ensureCapacity allows many puts without issue	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	entries iterator visits all entries	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	equals: case-insensitive keys match	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	equals: different sizes are not equal	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	equals: different values are not equal	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	equals: identical maps are equal	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	equals: map does not equal non-map	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	equals: map equals itself	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	findKey returns key for value	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	findKey returns null for missing value	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	get is case-insensitive	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	get returns default for missing key	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	get with -1 default can be ambiguous without containsKey	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	getAndIncrement on existing key returns old and increments	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	getAndIncrement on missing key inserts default+increment	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	hashCode is consistent for equal maps	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	hashCodeIgnoreCase different for different strings	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	hashCodeIgnoreCase same for different cases	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	keys iterator visits all keys	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	keys toArray returns all keys	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	notEmpty and isEmpty reflect state	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	put and get basic	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	put overwrites existing key	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	put with default returns old value on overwrite	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	put with different case overwrites	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	putAll from another map	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	putAll from arrays	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	remove is case-insensitive	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	remove returns default for missing key	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	remove returns value for existing key	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	shrink reduces table if larger than needed	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	shrink rejects negative capacity	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	tableSize rejects negative capacity	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	tableSize returns power of two	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	toString of empty map is {}	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	toString of single-entry map contains key=value	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	toString without braces	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	value -1 is stored and retrieved correctly	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	value 0 is stored and retrieved correctly	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	values iterator visits all values	pass
+sge.textra.utils.CaseInsensitiveIntMapSuite	values toArray returns all values	pass
+sge.textra.utils.ColorUtilsSuite	hsl2rgb roundtrip via rgb2hsl	pass
+sge.textra.utils.ColorUtilsSuite	lerpColors(Float) interpolates packed float colors	pass
+sge.textra.utils.ColorUtilsSuite	lerpColorsMultiplyAlpha blends and scales alpha	pass
+sge.textra.utils.ColorUtilsSuite	multiplyAlpha(Float) scales packed float alpha	pass
+sge.textra.utils.ColorUtilsSuite	multiplyAlpha(Int) scales alpha channel	pass
+sge.textra.utils.LZBCompressionSuite	all printable ASCII characters roundtrip	pass
+sge.textra.utils.LZBCompressionSuite	binary-like content roundtrip	pass
+sge.textra.utils.LZBCompressionSuite	compress then decompress roundtrip equals original	pass
+sge.textra.utils.LZBCompressionSuite	decompressFromBytes on empty array returns empty string	pass
+sge.textra.utils.LZBCompressionSuite	decompressFromBytes with offset and length	pass
+sge.textra.utils.LZBCompressionSuite	empty string roundtrip	pass
+sge.textra.utils.LZBCompressionSuite	highly compressible text roundtrip	pass
+sge.textra.utils.LZBCompressionSuite	long text roundtrip	pass
+sge.textra.utils.LZBCompressionSuite	newlines and whitespace roundtrip	pass
+sge.textra.utils.LZBCompressionSuite	repeated text compresses smaller than original	pass
+sge.textra.utils.LZBCompressionSuite	single character string roundtrip	pass
+sge.textra.utils.LZBCompressionSuite	two-character string roundtrip	pass
+sge.textra.utils.LZBCompressionSuite	unicode text roundtrip	pass
+sge.textra.utils.PaletteSuite	LIST is populated with expected count	pass
+sge.textra.utils.PaletteSuite	NAMES is sorted alphabetically	pass
+sge.textra.utils.PaletteSuite	color values match expected RGBA8888	pass
+sge.textra.utils.PaletteSuite	lowercase color names exist	pass
+sge.textra.utils.PaletteSuite	named colors RED, GREEN, BLUE, WHITE, BLACK exist	pass
+sge.textra.utils.StringUtilsSuite	appendUnsignedHex for Int appends 8 hex chars	pass
+sge.textra.utils.StringUtilsSuite	appendUnsignedHex for Long appends 16 hex chars	pass
+sge.textra.utils.StringUtilsSuite	floatFromDec parses float values	pass
+sge.textra.utils.StringUtilsSuite	floatFromDec returns 0 for invalid input	pass
+sge.textra.utils.StringUtilsSuite	hexCode converts hex digit chars correctly	pass
+sge.textra.utils.StringUtilsSuite	indexAfter finds position after search string	pass
+sge.textra.utils.StringUtilsSuite	indexAfter returns text length when not found	pass
+sge.textra.utils.StringUtilsSuite	intFromDec parses decimal strings	pass
+sge.textra.utils.StringUtilsSuite	intFromDec with non-digit returns 0	pass
+sge.textra.utils.StringUtilsSuite	intFromDec with partial range	pass
+sge.textra.utils.StringUtilsSuite	intFromDec with plus sign	pass
+sge.textra.utils.StringUtilsSuite	intFromHex parses hexadecimal strings	pass
+sge.textra.utils.StringUtilsSuite	intFromHex with lowercase	pass
+sge.textra.utils.StringUtilsSuite	intFromHex with negative sign	pass
+sge.textra.utils.StringUtilsSuite	isLowerCase and isUpperCase	pass
+sge.textra.utils.StringUtilsSuite	join with comma delimiter	pass
+sge.textra.utils.StringUtilsSuite	join with empty items returns empty string	pass
+sge.textra.utils.StringUtilsSuite	join with single item returns that item	pass
+sge.textra.utils.StringUtilsSuite	longFromDec parses long values	pass
+sge.textra.utils.StringUtilsSuite	longFromHex parses long hex values	pass
+sge.textra.utils.StringUtilsSuite	safeSubstring clamps indices	pass
+sge.textra.utils.StringUtilsSuite	safeSubstring returns empty for null-like cases	pass
+sge.textra.utils.StringUtilsSuite	safeSubstring returns empty when begin >= end	pass
+sge.textra.utils.StringUtilsSuite	shuffleWords with empty string returns empty	pass
+sge.textra.utils.StringUtilsSuite	shuffleWords with same seed produces same result	pass
+sge.textra.utils.StringUtilsSuite	shuffleWords with seeded random produces deterministic result	pass
+sge.textra.utils.StringUtilsSuite	shuffleWords with single word returns that word	pass
+sge.textra.utils.StringUtilsSuite	unsignedHex produces 16-char hex string for Long	pass
+sge.textra.utils.StringUtilsSuite	unsignedHex produces 8-char hex string for Int	pass
+sge.textra.utils.StringUtilsSuite	unsignedHexArray for Int matches unsignedHex string	pass
+sge.textra.utils.StringUtilsSuite	unsignedHexArray for Int returns 8-char array	pass
+sge.textra.utils.StringUtilsSuite	unsignedHexArray for Long matches unsignedHex string	pass
+sge.textra.utils.StringUtilsSuite	unsignedHexArray for Long returns 16-char array	pass

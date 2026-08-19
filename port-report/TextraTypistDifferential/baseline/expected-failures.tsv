@@ -1,0 +1,23 @@
+# The ESCAPE HATCH, and nothing else. EMPTY is the normal state, and it is the state today.
+#
+# This lane's subject is the REFERENCE HAND PORT's own MUnit suite run against the mechanically
+# emitted `sge.textra.*` (`PROGRESS.md` §10.8.15). It runs NO migration, so it has no
+# `run-latest/dropped-types.tsv` and nothing here can be DERIVED — which is exactly why any row
+# added here has to be stated rather than left to a mechanism, and why each one is a claim someone
+# has to defend.
+#
+# WHY IT IS EMPTY. All 160 adapted tests pass. gdx-ai's lane carries two declared rows because the
+# hand port REDESIGNED `Task` (a `newInstance()` member java never had) and its suite asserts that
+# redesign; this suite's eleven class (a) files assert java's own behaviour, so where the two ports
+# disagree the disagreement ran in the OTHER direction and the mechanical port won it:
+# `TextraLayoutMaxLinesIss778RedSuite` is a RED suite the hand porter wrote about the HAND PORT's
+# own divergence from java (`Layout.add` returns `this` where java returns `null` at the maxLines
+# cap), and this port passes it because it emits java's `return null`. That is evidence rather than
+# an exception, so it gets no row here — a passing test needs none.
+#
+# WHAT WOULD PUT A ROW HERE. A test that fails because this port DELIBERATELY does something java
+# does not — a dropped type, a counted refusal — with the failing frame named, so that a DIFFERENT
+# failure in the same test still counts unexpected.
+#
+# `test` may be `*` to declare a whole suite.
+#suite	test	reason	[frame=<ported class>]
