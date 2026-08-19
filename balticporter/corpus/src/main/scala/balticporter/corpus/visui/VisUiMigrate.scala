@@ -27,7 +27,9 @@ import scala.jdk.CollectionConverters.*
   * files / 1,604 LOC implementing a skin-DSL compiler. `usl/` is genuinely self-contained in ONE
   * direction — it imports nothing from libGDX and `ui/` references none of its types — and the
   * coupling is BUILD-TIME only: the root `build.gradle` runs an already-published USL over
-  * `usl/styles/*.usl` and checks the compiled `uiskin.json` into `ui/src/main/resources`. So `ui/`
+  * the `usl/styles` fixtures and checks the compiled `uiskin.json` into `ui/src/main/resources`.
+  * (The doc text deliberately does not spell that glob: scala block comments NEST, §4.58, and the
+  * slash-star inside it opens one.) So `ui/`
   * ships USL's OUTPUT and never calls its CODE, and porting `ui/` first costs the follow-up
   * nothing. `PROGRESS.md` §10.9 holds that follow-up with the zero-authoring oracle it already
   * has; this milestone does not touch it and does not pretend it is not there.
