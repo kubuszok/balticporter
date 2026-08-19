@@ -5158,15 +5158,13 @@ block is what says so the day upstream gains a real one.
 `*RedSuite.scala` pinned to upstream GitHub issue numbers: behavioural probes the hand-porter wrote
 while porting, not translations of anything upstream ships. It is not a ported suite and no lane may
 count it as one — but it IS the corpus's best available DIFFERENTIAL gate for this library, exactly
-as gdx-ai's 194 were (§10.7.12). The plan, scoped and deliberately NOT claimed by this wave: adapt a
-hand-curated subset against the emitted port, starting with the pure-unit files (`Palette`,
-`StringUtils`, `BlockUtils`, `CaseInsensitiveIntMap`, `LZBCompression`, `ColorUtils`, `LayoutLine`,
-`Font`, `TypingConfig` and the regression probes) and excluding the five that build real
-`Stage`/`Actor` graphs (`TextraButtonScene2dRedSuite`, `TextraWindowScene2dRedSuite`,
-`TextraTooltipScene2dRedSuite`, `TextraFieldWiringRedSuite`, `TextraWiringRedSuite`) until the
-headless-context seam the hand port needed a `HeadlessTextraSge` fixture for is reproduced. §10.7.12's
-two traps apply unchanged: take the census TWICE (a typer-only per-file attribution is a FLOOR), and
-split a compatible file's FIXTURES out of an incompatible one rather than dropping both.
+as gdx-ai's 194 were (§10.7.12). **The census has since been taken and it is §10.8.13** — 11
+candidate files / 160 tests, 1 blocked by the hand port, 20 blocked by the environment — and it
+corrects the plan this paragraph originally sketched in four places, the sharpest being that TWENTY
+files need the headless fixture rather than the five named here and that `Font` is not a candidate at
+all. §10.7.12's two traps apply unchanged and are why §10.8.13's numbers are a FLOOR: take the census
+TWICE (a typer-only per-file attribution does not see `RefChecks`), and split a compatible file's
+FIXTURES out of an incompatible one rather than dropping both.
 
 ### 10.8.2 The licence is TRIPLE, and 10 files carry no notice at all
 
