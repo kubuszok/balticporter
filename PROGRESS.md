@@ -5112,9 +5112,12 @@ dangerous direction. Compile the candidate set ALONE and let `RefChecks` run.
 `com.github.tommyettinger.textra.* → sge.textra.*`, Apache-2.0 **and** two MIT notices. **A dependent
 port of libGDX core**, the same shape as Ashley's, anim8's, gdx-vfx's and gdx-ai's: `just
 textra-measure` compiles libGDX core's emitted Scala and TextraTypist's emitted Scala on **one**
-`scala-cli` invocation and must run after `just gdx-measure`. At **92 files / 38,607 LOC** it is the
-second-largest of libGDX's dependent ports (gdx-ai, 166 files, is first by file count and this one is
-larger by line count), and its scene2d surface is the heaviest in the corpus — 103 distinct
+`scala-cli` invocation and must run after `just gdx-measure`. At **92 files / 38,607 LOC** it is
+THIRD by file count among libGDX's dependent ports and **FIRST by line count, by more than double**
+(gdx-ai is 166 files / 18,086 LOC, gdx-gltf 135 / 11,307) — a small number of very large files:
+`Font.java` is **8,421 lines** and `KnownFonts.java` 6,870, so two files are 40% of the library. Its
+scene2d surface is the heaviest in the corpus —
+103 distinct
 `com.badlogic.gdx.*` imports spanning eighteen widget classes, the whole `utils` collection family,
 `Json`/`JsonReader`/`UBJsonReader` and `utils.compression.Lzma`.
 
