@@ -1200,7 +1200,7 @@ sge.textra.TextraField	sge.textra.TextraField$TextFieldFilter$WordOnlyFilter	cla
 sge.textra.TextraField	sge.textra.TextraField$TextFieldFilter$WordOnlyFilter#acceptChar(TextraField,char)	def	6107106040874840
 sge.textra.TextraField	sge.textra.TextraField$TextFieldListener	class	18e9b8170c2571de
 sge.textra.TextraField	sge.textra.TextraField$TextFieldListener#keyTyped(TextraField,char)	def	afae99ed858fa866
-sge.textra.TextraLabel	sge.textra.TextraLabel	class	6516e7fbed67d27e
+sge.textra.TextraLabel	sge.textra.TextraLabel	class	9ad62d244a6af525
 sge.textra.TextraLabel	sge.textra.TextraLabel#<init>(Sge)	ctor	e23829dfb253c3c6
 sge.textra.TextraLabel	sge.textra.TextraLabel#<init>(String,Font,Color,Justify,Sge)	ctor	06a085ef02e32005
 sge.textra.TextraLabel	sge.textra.TextraLabel#<init>(String,Font,Color,Sge)	ctor	25fc0f6a7f97f978
@@ -1255,6 +1255,7 @@ sge.textra.TextraLabel	sge.textra.TextraLabel#setSuperWidth(float)	def	9e377db51
 sge.textra.TextraLabel	sge.textra.TextraLabel#setText(String)	def	30291b08e20a4262
 sge.textra.TextraLabel	sge.textra.TextraLabel#setWidth(float)	def	87ac6eb2b6c336be
 sge.textra.TextraLabel	sge.textra.TextraLabel#setWrap(boolean)	def	92ead9de11dccd4d
+sge.textra.TextraLabel	sge.textra.TextraLabel#sgeContext	val	22818904fdf0f191
 sge.textra.TextraLabel	sge.textra.TextraLabel#skipToTheEnd()	def	620f9938ed8d3834
 sge.textra.TextraLabel	sge.textra.TextraLabel#storedText	val	f2217d9561df7852
 sge.textra.TextraLabel	sge.textra.TextraLabel#style	val	3bf9808d9d695b59
@@ -2101,7 +2102,8 @@ sge.textra.effects.JumpEffect	sge.textra.effects.JumpEffect#frequency	val	80cf10
 sge.textra.effects.JumpEffect	sge.textra.effects.JumpEffect#jumpHeight	val	b709fce26b5c0a7b
 sge.textra.effects.JumpEffect	sge.textra.effects.JumpEffect#onApply(long,int,int,float)	def	dec58e7d8f2e2266
 sge.textra.effects.JumpEffect	sge.textra.effects.JumpEffect#speed	val	4483693ce320f556
-sge.textra.effects.LinkEffect	sge.textra.effects.LinkEffect	class	78c5a8fcf5860a9d
+sge.textra.effects.LinkEffect	sge.Sge#<given>	val	f5c80f700cc7d4ba
+sge.textra.effects.LinkEffect	sge.textra.effects.LinkEffect	class	3ccabae83a411618
 sge.textra.effects.LinkEffect	sge.textra.effects.LinkEffect#<stmt1>	stmt	83d15e883aaa3ecd
 sge.textra.effects.LinkEffect	sge.textra.effects.LinkEffect#<stmt2>	stmt	20c1bf4a1f4d5eaa
 sge.textra.effects.LinkEffect	sge.textra.effects.LinkEffect#link	val	aa7f905deb5ba2de

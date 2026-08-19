@@ -222,6 +222,7 @@ object TextraTypistPolicy:
                                          balticporter.catalog.CrossKind.Java)),
       surface = List(
         nullability,
+        globals,
         // LAST, deliberately, for the reason `AshleyPolicy` and `GdxAiPolicy` state: this reads what
         // the BASE actually emitted and reports a reference the base does not ship, so it must run
         // after any seam that re-points such a reference, or it reports the very sites the next
@@ -229,6 +230,65 @@ object TextraTypistPolicy:
         // seam, which is the point — the rows it files ARE the wave's finding.
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
+    ))
+
+  /** WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER — `ENGINE-LIMITS.md` CT8, and this port's
+    * one context seam, closed the way the REFERENCE HAND PORT closed it.
+    *
+    * The holder is SHARED SURFACE and inherited from `LibgdxPolicy.core` (§1.5) — the context type,
+    * the member map, the attachment mode, the read shape and the boundary default are facts about
+    * signatures this port compiles against, and a `ContextHolderExtension` has no field in which any
+    * of them could be restated. What it carries is the PER-DECLARATION half, and both entries here
+    * name TEXTRA's own types, which is what makes them admissible at all (`SurfaceIntrusion`).
+    *
+    * ==The seam, and why the three offered exits do not reach it==
+    * `LinkEffect#onApply` calls `Gdx.net.openURI(link)` — one method in one of forty effect classes,
+    * and the ONLY one in this library that reads a mapped global. The base threads it, `attach =
+    * "class"` puts the clause on its constructor, and `TypingConfig`'s class initialiser registers
+    * `LinkEffect::new` in a forty-entry effect registry: a lambda elaborated inside a companion
+    * `locally` with no given in scope. `PROGRESS.md` §10.8.9 prices the three exits the diagnostic
+    * names and refuses each — `lazy-init` defers a static's initialisation and the need is inside a
+    * stored LAMBDA; `residual-global` answers the SPELLING of a READ and this site has none; and
+    * `selfSupplied` fits but wants an EXPRESSION yielding an `sge.Sge`, which nothing in scope could
+    * write.
+    *
+    * ==The fourth exit is the hand port's, and it is two keys==
+    * §3.5, and it settles the design rather than decorating it. The reference port ships this class —
+    * it did not skip it — with java's constructor arity intact, because `Effect.EffectBuilder`
+    * declares `produce(label, params)` and a registry factory has no context slot. It gets the
+    * context from the LABEL, which is threaded and which the effect is handed anyway, through a
+    * member it wrote by hand:
+    *
+    * {{{
+    * class TextraLabel(using Sge) … { private[textra] val sgeContext: Sge = summon[Sge] }
+    * class LinkEffect(label: TypingLabel, params: Array[String]) extends Effect(label) {
+    *   override protected def onApply(…) = … label.sgeContext.net.openURI(link)
+    * }
+    * }}}
+    *
+    * So: `retain` on `TextraLabel` (the BASE of the label family — `TypingLabel extends TextraLabel`,
+    * and `Effect.label` is typed `TypingLabel`, so one entry serves both), and `selfSupplied` on
+    * `LinkEffect` reading it off the value it holds. The effect's constructors then keep java's
+    * signature, `LinkEffect::new` conforms to `EffectBuilder` again, and `onApply`'s read resolves
+    * through the `given` — the same behaviour java has, which is the point: a body substitution
+    * dropping the URI open would be QUIETER than java, and the hand port's own tracker records
+    * exactly that stub being caught in review as a major fidelity defect.
+    *
+    * ==Two namespaces, as always==
+    * The KEYS are UPSTREAM (the rename runs last, §4.56); the retained NAME and the `selfSupplied`
+    * EXPRESSION are EMITTED — `this.label` is `Effect`'s own field, whose name java chose and no
+    * §4.55 rename moved. `sgeContext` is the hand port's spelling, taken deliberately so a consumer
+    * reading both files sees one name. The engine emits it PUBLIC where the hand port wrote
+    * `private[textra]`; that is a difference worth stating rather than hiding, and narrowing it would
+    * be a visibility knob no other port has asked for. */
+  def globals: balticporter.transform.GlobalsToImplicitsTransform =
+    new balticporter.transform.GlobalsToImplicitsTransform(extensions = List(
+      balticporter.transform.ContextHolderExtension(
+        holder = "com.badlogic.gdx.Gdx",
+        retain = Map("com.github.tommyettinger.textra.TextraLabel" -> "sgeContext"),
+        selfSupplied = Map(
+          "com.github.tommyettinger.textra.effects.LinkEffect" -> "this.label.sgeContext"),
+      )
     ))
 
   /** THIS module's half of the K13 exit — a `nullability` scope and NOTHING ELSE.

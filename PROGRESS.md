@@ -5654,6 +5654,53 @@ errors, findings content unchanged, every check count identical**, `policy= cb54
 That is the whole of a §1(b) parameter's arrival being provably flat, and it is the same shape the
 base's `CollectionsTransform(retarget)` arrival had.
 
+### 10.8.12 sge-textra is at ZERO — `1 -> 0`, and every changed digest is attributable
+
+Two keys in a `ContextHolderExtension`, both naming this module's own types:
+
+```scala
+retain       = Map("com.github.tommyettinger.textra.TextraLabel" -> "sgeContext")
+selfSupplied = Map("com.github.tommyettinger.textra.effects.LinkEffect" -> "this.label.sgeContext")
+```
+
+One `retain` entry serves the whole label family — `TypingLabel extends TextraLabel` and
+`Effect.label` is typed `TypingLabel`, so the member is inherited — and the emitted result is the
+reference hand port's file, reached mechanically:
+
+```scala
+class TextraLabel protected (ctor$: TextraLabel.Funnel)(using sge.Sge) … {
+  final val sgeContext: sge.Sge = scala.Predef.summon[sge.Sge]
+}
+class LinkEffect(label$p$: sge.textra.TypingLabel, params$p: scala.Array[java.lang.String])
+    extends sge.textra.Effect(label$p$) {                       // ← java's arity, no clause
+  private given sge.Sge = this.label.sgeContext
+  … scala.Predef.summon[sge.Sge].net.openURI(this.link)          // ← java's behaviour, unchanged
+}
+TypingConfig.registerEffect("LINK", (((a0$, a1$) => new …LinkEffect(a0$, a1$)): …EffectBuilder))
+```
+
+| | before | after |
+|---|---|---|
+| scalac errors (both scopes) | **1** (`E172 No given sge.Sge`) | **0** |
+| `context-seam` | 45 — 42 captured, 2 unconstructed, **1 unsuppliable-use** | 45 — 42 captured, 2 unconstructed, **1 self-supplied** |
+| `members.tsv` | — | **4**, and the residue is EMPTY: `TextraLabel`'s class row and its new `sgeContext` val; `LinkEffect`'s class row and its new `given`. Two `InjectedMember` decisions, two porter notes, nothing else |
+| every other check | — | identical, `port-map 1` and `base-surface 2` still the two residues §10.8.7 named |
+
+**The lane fell and the fall is attributable both ways**, which is §5's rule at a policy key rather
+than at a remedy: the seam count did not drop, it MOVED — a row left `unsuppliable-use` and a row
+arrived at `self-supplied`, which is what a port that ANSWERED a boundary gets rather than one that
+stopped being asked.
+
+**And §3's rise did not come.** This port reached 0 typer errors for the first time, so `RefChecks`
+ran over it for the first time, and it reports **0** — no missing `override`, no unimplemented member,
+no variance violation across 92 files and 2,729 members. That is a fact this port could not have had
+on any earlier commit and is the honest reading of "compiling is not the gate": the gate has now been
+opened and there was nothing behind it.
+
+What remains is what §10.8.7 already classified — `omissions 52` (41 of them one `super(args)`
+family), `base-surface 2` and `port-map 1`, all three §1(a) and two of them in the BASE — plus the
+behavioural gate, which this library still has none of. §10.8.13.
+
 ### 10.8.10 Next
 
 1. **The `E172`**, which needs a decision this wave deliberately does not take: either the engine
