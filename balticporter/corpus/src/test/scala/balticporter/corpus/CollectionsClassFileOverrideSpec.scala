@@ -139,6 +139,35 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
     assert(!clue(heldNames(ph, p)).exists(_.endsWith("Holder#absorb")))
   }
 
+  test("…nor is one overriding a program-declared GENERIC interface INSTANTIATED at an argument") {
+    // The negative above stands on a NON-generic interface, where the two descriptors are the same
+    // string. Instantiate the interface and they are not: `names(T)` above, `names(String)` below.
+    // `OverrideGraph.matchingUp` reads that edge through `ParentSubst` now; before it did not, so
+    // `overridden` answered EMPTY, this phase concluded the member must override a CLASS FILE, and
+    // the only external ancestor an enum has is `java.lang.Enum` — whose surface is unknown, so
+    // `mayDeclare` says yes on purpose. Java's formal was then held on a member whose parent the
+    // port had already retyped: `E007`, `Found` and `Required` differing by one type argument, with
+    // every check count flat. `ENGINE-LIMITS.md` C16.
+    val generic =
+      """package demo;
+        |import java.util.*;
+        |interface Keyed<T> { List<T> keys(T seed); }
+        |enum Kinds implements Keyed<String> {
+        |  ONE;
+        |  public List<String> keys(String seed) { return new ArrayList<String>(); }
+        |}
+        |class Plain implements Keyed<String> {
+        |  public List<String> keys(String seed) { return new ArrayList<String>(); }
+        |}
+        |""".stripMargin
+    val ph  = new CollectionsTransform()
+    val out = new TirEmitter(Pipeline.run(SpoonTir.fromSource(generic), List(ph))).emit
+    val held = ph.classFileOverrides.flatMap(SpoonTir.fromSource(generic).symbolOf).map(_.fullName)
+    assert(clue(held).isEmpty, "an override of a program-declared interface must MOVE, generic or not")
+    assert(!clue(out).contains("java.util.List[java.lang.String]"),
+           s"a java formal was held under a program-declared parent\n--- emitted ---\n$out")
+  }
+
   test("NEGATIVE: an ANONYMOUS class's member is out of the refusal's reach and is not held") {
     // `restoreExcluded` splices along a `Tree.ClassDef`'s DECLARATION SPINE; an anonymous body hangs
     // off a `Tree.New` inside a term and is not on it. Held there, the SYMBOL would go literal and

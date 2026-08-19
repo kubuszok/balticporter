@@ -1665,6 +1665,30 @@ Measured at 3 errors and **48 moved member digests** — a correct answer to a q
 been declining is wide by nature, so the gate is the corpus and not the port that motivated it
 (`ENGINE-LIMITS.md` K28.2).
 
+**…and the THIRD site is the engine's PUBLISHED answer to that question, which every other seam
+reads rather than re-deriving.** The paragraph above fixed a FRONTEND, where the parser's own
+resolution is the first answer and the composed frame is a fallback — so the residue is narrow and
+the fix reads as local. `OverrideGraph` is the one place the engine states *which declarations must
+change together*, and it was comparing the two DESCRIPTORS as strings: a member declared
+`go(T)` in `P<T>` and its override `go(String)` in a class that `implements P<String>` were two
+members with no edge between them. **Nothing reports that, because the wrong answer is a LEGITIMATE
+one** — `overridden` returns the empty list, which honestly means *this overrides nothing the program
+declares* — so the consumer that asked reasons about a different question entirely, and the further it
+reasons the less the error resembles its cause. The one that did: a retyping phase concluded the
+member must be overriding a CLASS FILE, went looking for an external ancestor that might declare it,
+found `java.lang.Enum` (unknown surface, so `mayDeclare` says yes ON PURPOSE), and held java's
+signature on a member whose parent the port had already retyped — two `E007`s whose `Found` and
+`Required` differ by one type argument, with every check count flat and a porter note naming
+`java.lang.Enum#parseOption`, a member `java.lang.Enum` does not have.
+
+Two things that generalise past this fix. **A substituted edge may only ADD**: the unsubstituted
+comparison is tried FIRST and the substituted one second, because a LOST edge shrinks a closure and a
+closure that lost its anchor is the under-refusal `DESIGN.md` §8.5 refuses to trade for — a widened
+one is a counted over-refusal. And **the spelling both sides are read in has to be ONE derivation**,
+so the parameter-to-`Param` walk moved out of `Descriptor.ofInfo` rather than being copied: a second
+walk that rendered `scala.Array[X]` as `Array` instead of `X[]` would make the two ends of an edge
+incomparable in exactly the family the edge is hardest to see.
+
 **And what makes it hard to see is a RESIDUE COUNT that cannot tell a refusal from a switched-off
 fix.** The boundary check reported all five seams, precisely, on every run since that port began —
 and a "no wrap was inserted" finding reads as *no wrap exists for this pair*, which is what the

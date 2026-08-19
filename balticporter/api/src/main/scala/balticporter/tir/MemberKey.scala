@@ -329,19 +329,28 @@ object Descriptor:
       case TypeRepr.MethodType(ps, _, _) => Some(ps.map(_._2))
       case TypeRepr.PolyType(_, r)       => params(r)
       case _                             => scala.None
+    params(info).flatMap(ps => total(ps.map(paramOfType(program, _))))
+
+  /** ONE parameter position's spelling, from its type.
+    *
+    * Extracted from [[ofInfo]] rather than copied, for `ParentSubst`'s own reason (§4.56: one
+    * derivation, not one per caller). [[OverrideGraph]] needs it to read a PARENT's descriptor
+    * through the arguments a subclass instantiates it with, and a second walk that spelled
+    * `scala.Array[X]` as `Array` rather than `X[]` would make the two sides of one override edge
+    * incomparable in exactly the family the edge is hardest to see. */
+  def paramOfType(program: Program, t: TypeRepr): Param =
     def nameOf(s: SymId): Param = program.symbolOf(s).map(_.name).fold(Param.Unresolved)(paramOf)
-    def of(t: TypeRepr): Param = t match
+    t match
       // the array un-map: `scala.Array[X]` is written `X[]`, which is what the frontend's own
       // parser spells and what a manifest already contains.
       case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), List(arg))
           if program.symbolOf(s).exists(_.fullName == "scala.Array") =>
-        of(arg) match
+        paramOfType(program, arg) match
           case Param.Unresolved => Param.Unresolved
           case inner            => Param.Arr(inner)
       case TypeRepr.TypeRef(_, s)                          => nameOf(s)
       case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), _) => nameOf(s)
       case _                                               => Param.Unresolved
-    params(info).flatMap(ps => total(ps.map(of)))
 
   /** …for a symbol. `None` for anything that is not an executable — which for a FIELD is the
     * COMPLETE answer and not a gap: `owner#name` is the total identity of a field, and a binder that

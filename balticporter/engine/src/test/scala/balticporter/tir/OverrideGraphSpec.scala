@@ -206,6 +206,95 @@ class OverrideGraphSpec extends munit.FunSuite:
     assertEquals(g.ancestorsOf(a), Nil)
   }
 
+  // -------------------------------------------------------------------------
+  // A GENERIC PARENT, INSTANTIATED — the edge a descriptor comparison cannot see
+  // (ENGINE-LIMITS.md C16)
+  // -------------------------------------------------------------------------
+
+  test("an override across a GENERIC parent instantiated at a concrete argument IS an edge") {
+    // `go(T)` above and `go(String)` below are one member to java (JLS 8.4.2) and two descriptors
+    // here. Compared as strings the component is HALF of itself, and `overridden` answers the empty
+    // list — which reads as "this overrides nothing this program declares" and is a different claim.
+    val (p, g) = graphOf(
+      """
+      interface P<T> { String go(T t); }
+      class C implements P<String> { public String go(String t) { return t; } }
+      """)
+    assertEquals(fqns(p, g.closureOf(sym(p, "P#go")).members), Set("P#go", "C#go"))
+    assertEquals(fqns(p, g.overridden(sym(p, "C#go")).toSet), Set("P#go"))
+    assertEquals(fqns(p, g.overriders(sym(p, "P#go")).toSet), Set("C#go"))
+  }
+
+  test("…TRANSITIVELY, composing each level's instantiation as `ParentSubst` does") {
+    val (p, g) = graphOf(
+      """
+      interface P<T> { String go(T t); }
+      abstract class Mid<X> implements P<X> { }
+      class C extends Mid<String> { public String go(String t) { return t; } }
+      """)
+    assertEquals(fqns(p, g.closureOf(sym(p, "P#go")).members), Set("P#go", "C#go"))
+  }
+
+  test("…and through an ENUM, which is the shape that surfaced it") {
+    val (p, g) = graphOf(
+      """
+      interface P<T> { String go(T t); }
+      enum E implements P<String> {
+        A;
+        public String go(String t) { return t; }
+      }
+      """)
+    assertEquals(fqns(p, g.closureOf(sym(p, "P#go")).members), Set("P#go", "E#go"))
+  }
+
+  test("…and an ARRAY parameter substitutes through, in java's own spelling") {
+    // `T[]` becomes `String[]`, not `Array` — `Descriptor.paramOfType` is the SAME derivation both
+    // sides read, which is why the two are comparable at all.
+    val (p, g) = graphOf(
+      """
+      interface P<T> { void all(T[] xs); }
+      class C implements P<String> { public void all(String[] xs) { } }
+      """)
+    assertEquals(fqns(p, g.closureOf(sym(p, "P#all")).members), Set("P#all", "C#all"))
+  }
+
+  test("…and an ANONYMOUS BODY instantiates its parent too, though it has no `extends` clause") {
+    val (p, g) = graphOf(
+      """
+      interface P<T> { String go(T t); }
+      class Use { P<String> make() { return new P<String>() { public String go(String t) { return t; } }; } }
+      """)
+    assertEquals(clue(g.closureOf(sym(p, "P#go")).members).size, 2)
+  }
+
+  test("NEGATIVE: the substitution does not make two DIFFERENT members one") {
+    // `P<String>` says `T = String`; a `go(Integer)` beside it is a different member and java would
+    // leave `go(String)` unimplemented. An edge here would put an unrelated declaration in the
+    // component, which is the direction that breaks a contract silently.
+    val (p, g) = graphOf(
+      """
+      interface P<T> { String go(T t); }
+      abstract class C implements P<String> { public String go(Integer t) { return ""; } }
+      """)
+    assertEquals(fqns(p, g.closureOf(sym(p, "P#go")).members), Set("P#go"))
+    assertEquals(g.overridden(sym(p, "C#go")), Nil)
+  }
+
+  test("NEGATIVE: an EXTERNAL generic parent supplies no instantiation and the edge stays absent") {
+    // `ParentSubst` maps only ancestors this program DECLARES — an unparsed parent's type parameters
+    // are a fact about a class file. The member anchors on that parent instead, which is the
+    // conservative answer and the one this graph is built to give.
+    val (p, g) = graphOf(
+      """
+      class C implements java.util.function.Function<String, String> {
+        public String apply(String t) { return t; }
+      }
+      """)
+    val c = g.closureOf(sym(p, "C#apply"))
+    assertEquals(fqns(p, c.members), Set("C#apply"))
+    assert(clue(c).isAnchored)
+  }
+
   test("`build` is a `StandardTraversal` walk, so every declared type is a node") {
     val (p, g) = graphOf(
       """

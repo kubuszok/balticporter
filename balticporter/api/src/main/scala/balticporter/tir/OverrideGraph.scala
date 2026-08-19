@@ -107,14 +107,14 @@ final class OverrideGraph private (
   def overridden(m: SymId): List[SymId] =
     val owner = ownerOf(m)
     if owner == SymId.None then Nil
-    else signatureOf(m).toList.flatMap(sig => ancestorsOf(owner).flatMap(a => matching(a, sig))).distinct
+    else signatureOf(m).toList.flatMap(sig => ancestorsOf(owner).flatMap(a => matchingUp(a, sig, owner))).distinct
 
   /** the declarations BELOW `m` that override or implement it — every subclass, every anonymous
     * body, transitively. */
   def overriders(m: SymId): List[SymId] =
     val owner = ownerOf(m)
     if owner == SymId.None then Nil
-    else signatureOf(m).toList.flatMap(sig => descendantsOf(owner).flatMap(d => matching(d, sig))).distinct
+    else signatureOf(m).toList.flatMap(sig => descendantsOf(owner).flatMap(d => matchingDown(d, sig, owner))).distinct
 
   /** THE CLOSURE — every declaration that must change together with `m`, plus the reasons this
     * program may not be allowed to change them.
@@ -144,7 +144,7 @@ final class OverrideGraph private (
               // UP — every ancestor, owned or not. An owned ancestor contributes its matching
               // declaration; one this program never parsed contributes an ANCHOR unless the
               // supplied surface can prove the member is not there.
-              ancestorsOf(owner).foreach(a => matching(a, sig).foreach(work.enqueue))
+              ancestorsOf(owner).foreach(a => matchingUp(a, sig, owner).foreach(work.enqueue))
               externalAncestorsOf(owner).foreach { fqn =>
                 if external.mayDeclare(fqn, sig) then anchors += (fqn -> sig.name)
               }
@@ -154,7 +154,7 @@ final class OverrideGraph private (
               if ExternalSurface.javaLangObjectDeclares(sig) then
                 anchors += (ExternalSurface.JavaLangObject -> sig.name)
               // DOWN — every override below, anonymous and enum-constant bodies included.
-              descendantsOf(owner).foreach(d => matching(d, sig).foreach(work.enqueue))
+              descendantsOf(owner).foreach(d => matchingDown(d, sig, owner).foreach(work.enqueue))
             }
         Closure(seen.toSet, anchors.toSet, baseAnchorsIn(seen.toSet), approximate.toSet)
 
@@ -186,9 +186,72 @@ final class OverrideGraph private (
     case TypeRepr.PolyType(_, r)       => arityOf(r)
     case _                             => 0
 
-  /** the members of `t` that `sig` names. */
-  private def matching(t: SymId, sig: Signature): List[SymId] =
-    membersOf(t).filter(x => signatureOf(x).exists(_.matches(sig)))
+  /** the members of ANCESTOR `a` that `sig` names, `sig` being declared in `from`.
+    *
+    * Read through the arguments `from` instantiates `a` with — see [[asSeenFrom]]. */
+  private def matchingUp(a: SymId, sig: Signature, from: SymId): List[SymId] =
+    membersOf(a).filter(x => signatureOf(x).exists(s => s.matches(sig) || asSeenFrom(s, a, from).matches(sig)))
+
+  /** the members of DESCENDANT `d` that `sig` names, `sig` being declared in ancestor `a`. The
+    * mirror of [[matchingUp]]: it is the ANCESTOR's signature that carries the type parameters, so
+    * this substitutes `sig` rather than the candidate. */
+  private def matchingDown(d: SymId, sig: Signature, a: SymId): List[SymId] =
+    val seen = asSeenFrom(sig, a, d)
+    membersOf(d).filter(x => signatureOf(x).exists(s => s.matches(sig) || s.matches(seen)))
+
+  /** `sig`, declared in `ancestor`, spelled as the descendant `from` sees it.
+    *
+    * ==Why an edge needs this at all==
+    * A descriptor spells a parameter by its written SIMPLE NAME (`Param.Named`), so a member
+    * declared `Pair<T,…> parseOption(BasedSequence, T, MessageProvider)` in `OptionParser<T>` and
+    * the override `parseOption(BasedSequence, TocOptions, MessageProvider)` in a class that
+    * `implements OptionParser<TocOptions>` are the same member to java (JLS 8.4.2) and two
+    * different strings here. Compared as strings the edge is simply ABSENT — the parent's
+    * declaration is not in the child's closure, the child reads as overriding nothing this program
+    * declares, and every consumer of the graph then answers a question about half a component.
+    *
+    * The `extends` clause says what the argument is, so the substitution is EXACT rather than a
+    * guess — `ParentSubst`'s own claim, and this is that one derivation asked at a DESCRIPTOR
+    * instead of at a `TypeRepr`. Only the ancestor's OWN parameters are resolved, by their symbols
+    * rather than by name, so two unrelated ancestors that both call a parameter `T` cannot collide.
+    *
+    * ==It only ever ADDS edges==
+    * The callers try the unsubstituted comparison first and this one second. An edge that exists
+    * today therefore cannot disappear, which matters because a lost edge SHRINKS a closure — and a
+    * closure that lost its anchor is an under-refusal, the one direction DESIGN.md §8.5 refuses to
+    * trade for. */
+  private def asSeenFrom(sig: Signature, ancestor: SymId, from: SymId): Signature =
+    val byName = tparamSpelling(ancestor, from)
+    if byName.isEmpty then sig
+    else sig.copy(descriptor = sig.descriptor.map(d => Descriptor(d.params.map(substParam(_, byName)))))
+
+  private def substParam(p: Param, m: Map[String, Param]): Param = p match
+    case Param.Named(n) => m.getOrElse(n, p)
+    case Param.Arr(of)  => substParam(of, m) match
+      case Param.Unresolved => Param.Unresolved
+      case inner            => Param.Arr(inner)
+    case other => other
+
+  private val spellingCache = collection.mutable.Map.empty[(SymId, SymId), Map[String, Param]]
+
+  /** `ancestor`'s own type parameters, by written name, as `from` instantiates them. */
+  private def tparamSpelling(ancestor: SymId, from: SymId): Map[String, Param] =
+    spellingCache.getOrElseUpdate((ancestor, from), {
+      val tps = program.definitionOf(ancestor).collect { case c: Tree.ClassDef => c.tparams.map(_.symbol) }
+        .getOrElse(Nil)
+      if tps.isEmpty then Map.empty
+      else
+        val subst = substOf(from)
+        tps.flatMap(tp => (subst.get(tp), program.symbolOf(tp).map(_.name)) match
+          case (Some(arg), Some(n)) if n.nonEmpty => Some(n -> Descriptor.paramOfType(program, arg))
+          case _                                  => scala.None).toMap
+    })
+
+  private val substCache = collection.mutable.Map.empty[SymId, Map[SymId, TypeRepr]]
+
+  private def substOf(t: SymId): Map[SymId, TypeRepr] =
+    substCache.getOrElseUpdate(t,
+      ParentSubst.ofParents(nodes.get(t).map(_.parentTypes).getOrElse(Nil))(using program))
 
   private val ancestryCache = collection.mutable.Map.empty[SymId, (List[SymId], List[String])]
 
@@ -225,8 +288,14 @@ final class OverrideGraph private (
 
 object OverrideGraph:
 
-  /** one declared TYPE: classes, anonymous bodies and enum-constant bodies alike. */
-  private[tir] final case class Node(sym: SymId, parents: List[SymId], members: List[SymId])
+  /** one declared TYPE: classes, anonymous bodies and enum-constant bodies alike.
+    *
+    * `parentTypes` carries the same edges as `parents` WITH their type arguments, which is what an
+    * override edge across a generic parent has to be read through — see [[OverrideGraph.asSeenFrom]].
+    * Two lists rather than one because every other consumer wants the head symbol and would
+    * otherwise re-derive it per question. */
+  private[tir] final case class Node(sym: SymId, parents: List[SymId], members: List[SymId],
+                                     parentTypes: List[TypeRepr] = Nil)
 
   /** A member's identity as an EDGE is keyed on: its name and its parameter spelling.
     *
@@ -316,20 +385,25 @@ object OverrideGraph:
     val nodes = collection.mutable.ListBuffer.empty[Node]
 
     override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef =
-      nodes += Node(t.symbol, t.parents.flatMap(headSym), membersIn(t.body))
+      nodes += Node(t.symbol, t.parents.flatMap(headSym), membersIn(t.body), t.parents.map(typeOf))
       // a Java enum CONSTANT may override the enum's own methods in its body, and that body is not
       // a `ClassDef` — so it is a node here or its overrides are invisible.
-      t.enumCases.foreach(ec => nodes += Node(ec.symbol, List(t.symbol), membersIn(ec.body)))
+      t.enumCases.foreach(ec =>
+        nodes += Node(ec.symbol, List(t.symbol), membersIn(ec.body), List(TypeRepr.TypeRef(TypeRepr.NoPrefix, t.symbol))))
       t
 
     override def transformNew(t: Tree.New)(using Program): Term =
-      t.anon.foreach(a => nodes += Node(a.symbol, headSym(t.tpt).toList, membersIn(a.body)))
+      t.anon.foreach(a => nodes += Node(a.symbol, headSym(t.tpt).toList, membersIn(a.body), List(t.tpt.tpe)))
       t
 
     private def membersIn(body: List[Statement]): List[SymId] = body.collect {
       case d: Tree.DefDef => d.symbol
       case v: Tree.ValDef => v.symbol
     }
+
+  private def typeOf(t: Term | TypeTree): TypeRepr = t match
+    case tt: TypeTree => tt.tpe
+    case x: Term      => x.tpe
 
   private def headSym(t: Term | TypeTree): Option[SymId] = t match
     case tt: TypeTree => headOf(tt.tpe)

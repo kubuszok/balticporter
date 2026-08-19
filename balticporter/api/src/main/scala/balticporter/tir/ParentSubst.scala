@@ -47,7 +47,16 @@ object ParentSubst:
 
   /** the ancestors' type parameters, mapped to what `cd` instantiates them with. Empty for a class
     * whose parents are non-generic, external, or not applied. */
-  def of(cd: Tree.ClassDef)(using program: Program): Map[SymId, TypeRepr] =
+  def of(cd: Tree.ClassDef)(using Program): Map[SymId, TypeRepr] =
+    ofParents(cd.parents.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe })
+
+  /** …from the PARENT TYPES alone, for a declaration that is not a [[Tree.ClassDef]].
+    *
+    * An ANONYMOUS CLASS is the one that needs it: `new Base<Leaf>() { … }` instantiates its parent
+    * exactly as an `extends` clause does, and it has no `ClassDef` to read the clause off — the
+    * instantiation lives in the `Tree.New`'s `tpt`. [[of]] is this function against a class's own
+    * clause, so the two can never derive different maps for one hierarchy. */
+  def ofParents(parents: List[TypeRepr])(using program: Program): Map[SymId, TypeRepr] =
     def classOfSym(s: SymId): Option[Tree.ClassDef] =
       program.definitionOf(s).collect { case c: Tree.ClassDef => c }
     // A NON-GENERIC PARENT IS STILL A STEP IN THE CHAIN, and reading only the applied ones is how
@@ -62,22 +71,20 @@ object ParentSubst:
       case _                                                => None
     // FUEL, not a `seen` set: a hierarchy the frontend built from a cyclic class file must not hang
     // a phase, and eight levels is deeper than any corpus library's parent chain.
-    def walk(c: Tree.ClassDef, acc: Map[SymId, TypeRepr], depth: Int): Map[SymId, TypeRepr] =
+    def walk(ps: List[TypeRepr], acc: Map[SymId, TypeRepr], depth: Int): Map[SymId, TypeRepr] =
       if depth > 8 then acc
       else
-        c.parents.flatMap {
-          case tt: TypeTree => headArgs(tt.tpe)
-          case t: Term      => headArgs(t.tpe)
-        }.foldLeft(acc) { case (m, (psym, as)) =>
+        ps.flatMap(headArgs).foldLeft(acc) { case (m, (psym, as)) =>
           classOfSym(psym) match
             case None     => m
             case Some(pc) =>
               // each argument is itself read THROUGH the map built so far, which is what makes the
               // composition collapse `T -> X -> Leaf` rather than leaving two hops to chase.
               val here = pc.tparams.map(_.symbol).zip(as.map(subst(_, m))).toMap
-              walk(pc, m ++ here, depth + 1)
+              walk(pc.parents.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe },
+                   m ++ here, depth + 1)
         }
-    walk(cd, Map.empty, 0)
+    walk(parents, Map.empty, 0)
 
   /** rewrite every occurrence of a mapped type parameter in `t`.
     *
