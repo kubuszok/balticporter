@@ -21,6 +21,7 @@ import balticporter.tir.RuleScope
   *     sites    = { "com.foo.Utils#<clinit>" = "lazy-init" }
   *     # KEY upstream (a type this run parses); VALUE in the EMITTED namespace — see `selfSupplied`
   *     selfSupplied = { "com.foo.FooTest" = "sge.FooTestFixture.ctx()" }
+  *     retain       = { "com.foo.Widget" = "fooContext" }   # a MEMBER NAME, emitted namespace
   *     promoteToClass = [ "com.foo.Viewport" ]
   *     scope    = { except = [ … ] }
   *   }]
@@ -76,6 +77,39 @@ import balticporter.tir.RuleScope
   *   the program — so it is declared here. What IS derivable is the SHAPE, and the phase warns on
   *   it: a threaded class this program never constructs whose ancestry leaves it
   *   ([[ContextSeamCheck.Kind.UnconstructedThread]]).
+  * @param retain
+  *   WHAT `selfSupplied` DRAWS ON, keyed by TYPE FQN → the member NAME to emit: *this threaded type
+  *   keeps its context as a readable member*. The clause the threading attaches is a CONSTRUCTOR
+  *   PARAMETER, which is in scope throughout the class's own body and nameable from nowhere else —
+  *   so a declaration the closure could not reach, holding an instance of a threaded type, has the
+  *   context in its hand and no way to spell it. That is the gap `selfSupplied` runs into wherever
+  *   the framework-instantiated type is handed a threaded object rather than built by a fixture: the
+  *   third answer wants an expression and the phase's own output offers none.
+  *
+  *   One `retain` entry gives it one. `val <name>: <context> = summon[<context>]` at the head of the
+  *   threaded type's body (at the head for [[selfSupplied]]'s reason — a class body is a constructor,
+  *   and a statement that read it earlier would read `null`), and a `selfSupplied` expression on the
+  *   holder of such a value then reads `<that value>.<name>`.
+  *
+  *   It is the REFERENCE HAND PORT'S OWN SHAPE, which is what makes it a mechanism rather than a
+  *   workaround: that port writes `private[textra] val sgeContext: Sge = summon[Sge]` on its label
+  *   type by hand and its link effect reads `label.sgeContext.net.openURI(link)` — keeping java's
+  *   constructor arity, because the effect is built by a registry whose factory interface has no
+  *   context parameter (`PROGRESS.md` §10.8.11).
+  *
+  *   ==Empty is the no-op, and that is CLAUDE.md §1's rule for a phase that ADDS declarations==
+  *   Unrestricted, this would put a new NAME on every threaded class in every port to serve the one
+  *   declaration that is handed a threaded object — the exact over-approximation §1 refuses. So the
+  *   default is the empty map, which is `Only(Set.empty)` written in this key's own shape rather
+  *   than as a `RuleScope`: `scope` is [[sharedSurface]] and must AGREE between two modules, and
+  *   this must UNION, because a dependent's retained types are the DEPENDENT's (`ENGINE-LIMITS.md`
+  *   CT8, the same argument that gave `sites` and `selfSupplied` a [[ContextHolderExtension]]).
+  *
+  *   The NAME is the port's, not the engine's, for the reason every other emitted name here is
+  *   anonymous and this one cannot be: something outside the type has to write it. A name is emitted
+  *   SURFACE, so it is a fact about the library's own conventions exactly as the context type's own
+  *   name is. An entry naming a type the closure did not thread emits nothing and is a counted
+  *   `NeverMatched` — there would be no clause for the member to read.
   * @param promoteToClass
   *   traits this port allows to become `abstract class`es so they can carry a constructor clause.
   *   EXPLICIT rather than derived from "the trait's body needs the context": a predicate that
@@ -95,12 +129,13 @@ final case class ContextHolder(
     boundary: ContextBoundary = ContextBoundary.Refuse,
     sites: Map[String, ContextSite] = Map.empty,
     selfSupplied: Map[String, String] = Map.empty,
+    retain: Map[String, String] = Map.empty,
     promoteToClass: Set[String] = Set.empty,
     scope: RuleScope = RuleScope.everywhere,
 ):
   /** a stable, order-independent rendering — two modules that agree must compare equal (§1.5). */
   def fingerprint: String =
-    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied)}"
+    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied, retain)}"
 
   /** THE HALF A DEPENDENT MAY NOT RESTATE — `ENGINE-LIMITS.md` CT8.
     *
@@ -121,7 +156,8 @@ final case class ContextHolder(
   /** this holder with a dependent's per-declaration entries folded in. Every clashing key has
     * already been refused by the caller — this composes, it does not decide. */
   def extendedBy(e: ContextHolderExtension): ContextHolder =
-    copy(sites = sites ++ e.sites, selfSupplied = selfSupplied ++ e.selfSupplied)
+    copy(sites = sites ++ e.sites, selfSupplied = selfSupplied ++ e.selfSupplied,
+         retain = retain ++ e.retain)
 
 object ContextHolder:
 
@@ -132,10 +168,15 @@ object ContextHolder:
     * separator this rendering uses, and two modules that supply different context sources for one
     * declaration have certainly made a mistake whether or not the strings are readable here. */
   private[transform] def perDeclaration(sites: Map[String, ContextSite],
-                                        selfSupplied: Map[String, String]): String =
+                                        selfSupplied: Map[String, String],
+                                        retain: Map[String, String]): String =
     val ss = sites.toList.map((k, v) => s"$k->${v.token}").sorted.mkString(",")
     val fs = selfSupplied.toList.map((k, v) => s"$k=>${v.hashCode.toHexString}").sorted.mkString(",")
-    s"$ss|$fs"
+    // …and the RETAINED member is spelled OUT rather than digested, unlike a `selfSupplied` source:
+    // it is one identifier, it is emitted SURFACE, and two modules disagreeing about it is exactly
+    // the divergence a reader of two fingerprints has to be able to see.
+    val rs = retain.toList.map((k, v) => s"$k~$v").sorted.mkString(",")
+    s"$ss|$fs|$rs"
 
 /** WHAT A DEPENDENT MAY ADD to a base's holder — `ENGINE-LIMITS.md` CT8.
   *
@@ -169,13 +210,14 @@ final case class ContextHolderExtension(
     holder: String,
     sites: Map[String, ContextSite] = Map.empty,
     selfSupplied: Map[String, String] = Map.empty,
+    retain: Map[String, String] = Map.empty,
 ):
   /** `+` marks it as an EXTENSION, so a dangling one can never fingerprint-collide with the holder
     * it names. */
-  def fingerprint: String = s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied)}"
+  def fingerprint: String = s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied, retain)}"
 
   /** every per-declaration key, for the never-fired report and for the `governs` screen. */
-  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet
+  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet ++ retain.keySet
 
 /** WHERE the context type comes from.
   *

@@ -244,6 +244,22 @@ Corollary for a body substitution: it may change what a member DOES and never wh
 replacement body needing the new value has to be placed at a member the closure already reached —
 one member further out than the one you were looking at.
 
+**…and AN ESCAPE HATCH THAT TAKES AN EXPRESSION OWES THE PROGRAM A WAY TO WRITE ONE.** The third
+answer above is *this declaration takes the value WITHOUT taking a parameter*, from an expression the
+port supplies — which is complete for a type a FIXTURE builds and empty for the shape that is
+commoner: a type a framework builds and HANDS a threaded object. The value is right there, in a
+parameter the declaration already has, and it cannot be named, because what the threading attached is
+a CONSTRUCTOR PARAMETER — in scope throughout its own class's body and nameable from nowhere else. So
+the port is asked for an expression the phase's own output makes unwritable, and the honest-looking
+conclusion (*there is no such expression; this type is not portable*) is a fact about the ENGINE
+wearing a fact about the library. Ask the second question every time an escape hatch refuses: *is
+there no value, or no NAME?* Where the value exists, the fix is one member — let the threaded type
+KEEP what it was given, under a name the port chooses — and it is scoped `Only(Set.empty)` by §1's own
+ADD rule, because unrestricted it would put that name on 275 declarations to serve one. The reference
+hand port had written exactly that member by hand, which is §3.5 answering a design question the
+engine had been reasoning about from first principles (`PROGRESS.md` §10.8.11; and the arrival is
+provably flat — one fingerprint field, 0 members on every port).
+
 **And an obligation THE ENGINE'S OWN TRANSLATION created is not a port's to discharge.** A drop key
 is a statement about the LIBRARY's surface — "this port ships without that member". Where the member
 is one an emitted PARENT declares, dropping it does not remove an obligation, it breaks one: the

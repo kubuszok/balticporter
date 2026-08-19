@@ -1,5 +1,6 @@
 package balticporter.corpus
 
+import balticporter.core.PolicyIssue
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Decision, DecisionLog, PorterNote, Pipeline, Program}
@@ -327,6 +328,109 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     val (p, a, _, _) = ctorRef
     assertEquals(clue(p.seams(a).filter(_.kind == ContextSeamCheck.Kind.UnconstructedThread))
       .map(_.subject), Nil, p.seams(a).map(_.render).mkString("\n"))
+  }
+
+  // -------------------------------------------------------------------------
+  // …and the FOURTH exit: the context is IN SCOPE and has no name
+  // -------------------------------------------------------------------------
+
+  /** THE SHAPE THE THIRD ANSWER RUNS OUT ON, and the reference hand port's own answer to it.
+    *
+    * `Link` is built by a REGISTRY, so its constructor may not grow a clause — and it is handed a
+    * `Label` that HAS the context, because `Label` is threaded. The clause on `Label` is a
+    * constructor PARAMETER: in scope in `Label`'s body and nameable from nowhere else, so
+    * `selfSupplied` has no expression to be given. `retain` is what gives it one.
+    *
+    * The hand port for the library this came from writes exactly this by hand —
+    * `private[textra] val sgeContext: Sge = summon[Sge]` on its label type, read as
+    * `label.sgeContext.net.openURI(link)` from an effect whose constructor keeps java's arity
+    * (`PROGRESS.md` §10.8.11). */
+  private val retainSrc =
+    """package demo;
+      |public class Gdx { public static Graphics graphics; }
+      |public class Graphics { public int getWidth() { return 0; } }
+      |public interface Builder { Object make(demo.Label l); }
+      |public class Label { int w; public Label() { w = Gdx.graphics.getWidth(); } }
+      |public class Link {
+      |  Label label;
+      |  public Link(Label label) { this.label = label; }
+      |  public int reach() { return Gdx.graphics.getWidth(); }
+      |}
+      |public class Config { static Builder link; static { link = Link::new; } }
+      |""".stripMargin
+
+  private def retainHolder = base.copy(attach = ContextAttach.Class)
+
+  test("`retain` puts the context on a threaded type under the PORT's own name, at the head") {
+    // NEGATIVE: drop the `retained ++` from `edit.transformClassDef`'s threaded arms and the member
+    // is gone, at which point the `selfSupplied` expression below names nothing — a compile error in
+    // a DIFFERENT FILE from the key that caused it, which is why the dead-key report exists.
+    val (_, _, _, o) = portedFrom(retainSrc, retainHolder.copy(retain = Map("demo.Label" -> "demoCtx")))
+    val c = code(o)
+    assert(clue(c).contains("class Label(using demo.Ctx)"), c)
+    assert(c.contains("val demoCtx: demo.Ctx = scala.Predef.summon[demo.Ctx]"), c)
+    // at the HEAD, for the `given` member's reason: a class body is a constructor.
+    val body = c.split("class Label\\(using demo.Ctx\\)").last
+    assert(clue(body).indexOf("val demoCtx") < body.indexOf("var w"), body)
+    // …and it is a plain `val`, NOT a `given`: the clause is already in scope inside this body, and
+    // a second candidate of the same type makes every `summon` in it ambiguous.
+    assert(!clue(body.take(200)).contains("given demo.Ctx"), body.take(200))
+  }
+
+  test("…and `retain` + `selfSupplied` together are the FOURTH EXIT: the registry lambda compiles") {
+    // The whole point, end to end. `Link` keeps java's constructor arity — so `Link::new` still
+    // conforms to `Builder` — and its body reads the context off the value it was handed.
+    val (p, a, _, o) = portedFrom(retainSrc, retainHolder.copy(
+      retain       = Map("demo.Label" -> "demoCtx"),
+      selfSupplied = Map("demo.Link"  -> "this.label.demoCtx")))
+    val c = code(o)
+    assert(clue(c).contains("class Link(label$p: demo.Label)"), c)
+    assert(!c.contains("class Link(label$p: demo.Label)(using"), c)
+    // …and the given reads the value it was HANDED. That it sits above `this.label = label$p` is
+    // safe and MEASURED rather than assumed: a class-level anonymous `given T = e` is initialised
+    // lazily in Scala 3, so `e` runs at the first `summon` and not during the prologue (probed
+    // against scalac 3.8.4, both for a field this class assigns and for one a parent does). What is
+    // still unsafe is a class body that USES the context during construction, which is the sentence
+    // `Minter.givenMember` already carries.
+    assert(c.contains("private given demo.Ctx = this.label.demoCtx"), c)
+    assert(c.contains("scala.Predef.summon[demo.Ctx].graphics.getWidth()"), c)
+    // and the seam the second commit made visible is GONE — the registry has nothing to supply.
+    assertEquals(clue(p.seams(a).filter(_.kind == ContextSeamCheck.Kind.UnsuppliableUse)), Nil,
+      p.seams(a).map(_.render).mkString("\n"))
+    // it MOVED rather than vanished: a self-supplied row is what a port that answered gets.
+    assertEquals(clue(p.seams(a).filter(_.kind == ContextSeamCheck.Kind.SelfSupplied)).map(_.subject),
+      List("demo.Link"), p.seams(a).map(_.render).mkString("\n"))
+  }
+
+  test("an empty `retain` is a structural no-op — the default, and CLAUDE.md §1's rule for an ADD") {
+    // A phase that MINTS members has no pre-scope behaviour to preserve and its unrestricted form is
+    // not a safe default: it would put a new NAME on every threaded class in every port to serve the
+    // one declaration that is handed a threaded object.
+    val (_, _, _, with0) = portedFrom(retainSrc, retainHolder)
+    assert(!clue(code(with0)).contains("demoCtx"), code(with0))
+  }
+
+  test("a `retain` on a type the closure never threaded emits NOTHING and is REPORTED") {
+    // The dead-binding report at the fourth key, and it is the one where silence would be worst: the
+    // entry exists because some OTHER declaration's expression names the member.
+    // NEGATIVE: delete `recordDeadRetain` and the key binds, emits nothing, and the only evidence is
+    // a `Not found` in a file the key does not name.
+    val (p, _, _, o) = portedFrom(retainSrc, retainHolder.copy(retain = Map("demo.Graphics" -> "demoCtx")))
+    assert(!clue(code(o)).contains("demoCtx"), code(o))
+    val f = p.policyReport.findings.find(_.key == "demo.Graphics")
+    assert(clue(f).isDefined, p.policyReport.render)
+    assertEquals(f.get.issue, PolicyIssue.NeverMatched)
+    assert(clue(f.get.detail).contains("NO constructor clause"), f.get.render)
+  }
+
+  test("a `retain` NAME that is not an identifier is MALFORMED, not spliced into a header") {
+    // The value is emitted into `val <nm>:`, so anything else is a SYNTAX error at a line the port
+    // never wrote — §4.45's bar, and a malformed entry must not also emit.
+    val (p, _, _, o) = portedFrom(retainSrc, retainHolder.copy(retain = Map("demo.Label" -> "demo ctx")))
+    val f = p.policyReport.findings.find(_.key == "demo.Label")
+    assert(clue(f).isDefined, p.policyReport.render)
+    assertEquals(f.get.issue, PolicyIssue.Malformed)
+    assert(!clue(code(o)).contains("demo ctx"), code(o))
   }
 
   test("a FIELD INITIALIZER's read is seeded, resolved and COUNTED — never dropped and left broken") {

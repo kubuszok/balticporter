@@ -146,7 +146,8 @@ final class GlobalsToImplicitsTransform(
     * ADDED and an extension of an inherited holder is admitted for the honest reason. */
   def subjects: Set[String] =
     val fromHolders = holders.flatMap(h =>
-      (Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.promoteToClass ++ h.scope.entries))
+      (Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.retain.keySet ++
+       h.promoteToClass ++ h.scope.entries))
     val fromExts = extensions.flatMap(e => Set(e.holder) ++ e.keys)
     (fromHolders ++ fromExts).map(MergeablePolicy.subjectOf).toSet
 
@@ -198,12 +199,22 @@ final class GlobalsToImplicitsTransform(
         v2       <- mine(k).selfSupplied.get(key)
         if v2 != v
       yield s"""both modules make "$key" self-supplied, from "$v2" and from "$v""""
-      (surfaceClash ++ siteClash ++ selfClash) match
+      // …and a RETAINED member's NAME, which is emitted surface: two modules that retain one type's
+      // context under two names emit two members, and whichever `selfSupplied` expression names one
+      // of them compiles against exactly one of the two ports.
+      val retainClash = for
+        k        <- (mine.keySet & theirs.keySet).toList.sorted
+        (key, v) <- theirs(k).retain.toList.sorted
+        v2       <- mine(k).retain.get(key)
+        if v2 != v
+      yield s"""both modules RETAIN the context on "$key", as "$v2" and as "$v""""
+      (surfaceClash ++ siteClash ++ selfClash ++ retainClash) match
         case Nil =>
           val merged = (mine.keySet ++ theirs.keySet).toList.sorted.map { k =>
             (mine.get(k), theirs.get(k)) match
               case (Some(a), Some(b)) => a.copy(sites = a.sites ++ b.sites,
-                                                selfSupplied = a.selfSupplied ++ b.selfSupplied)
+                                                selfSupplied = a.selfSupplied ++ b.selfSupplied,
+                                                retain = a.retain ++ b.retain)
               case (Some(a), None)    => a
               case (None, Some(b))    => b
               case (None, None)       => sys.error("unreachable: a key from the union of two maps")
@@ -231,6 +242,10 @@ final class GlobalsToImplicitsTransform(
     * The key is kept beside the symbol because it is the string an agent edits (§4.575) and it is
     * what the decision's `Reason.Configured` carries. */
   private var boundSelf: Map[String, Map[SymId, String]]          = Map.empty
+  /** the `retain` entries the binder RESOLVED, per holder: the TYPE symbol → the MEMBER NAME the port
+    * asked for. Keyed by symbol for the emission and reported back through [[ContextHolder.retain]]
+    * for the dead-key report, exactly as [[boundSelf]] is. */
+  private var boundRetain: Map[String, Map[SymId, String]]        = Map.empty
 
   def bindPolicy(binder: PolicyBinder): Unit =
     val bad = collection.mutable.ListBuffer.empty[PolicyFinding]
@@ -300,6 +315,21 @@ final class GlobalsToImplicitsTransform(
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.selfSupplied", t)
           .toOption.map(_ -> t)).toMap)
 
+      // …and `retain`'s keys are TYPE keys for the same reason, with the VALUE screened here rather
+      // than at emission: it is spliced into a `val <name>:` header, so anything that is not a plain
+      // identifier is a SYNTAX error in the emitted file — an error scalac reports at a line the port
+      // never wrote, which is the one shape §4.45 says a policy must not produce.
+      h.retain.toList.sorted.foreach { (t, nm) =>
+        if !isPlainIdentifier(nm) then
+          malformedEntry(h, "retain", t, s"`$nm` is not a plain identifier, and this value is spliced " +
+            "into the header of the `val` this type will carry — anything else is a SYNTAX error in " +
+            "the emitted file, at a line the port never wrote. Give the MEMBER NAME the retained " +
+            "context should be readable under (the reference hand port spells its own like a field)")
+      }
+      boundRetain = boundRetain.updated(h.holder, h.retain.toList.sorted.flatMap((t, nm) =>
+        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.retain", t)
+          .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> nm)).toMap)
+
       boundPromote = boundPromote.updated(h.holder, h.promoteToClass.flatMap(t =>
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.promoteToClass", t)
           .toOption))
@@ -330,6 +360,12 @@ final class GlobalsToImplicitsTransform(
         "the PER-DECLARATION half of a holder the shared surface already states (§1.5); declare " +
         "the holder in the base manifest, or fix the FQN if it was meant to name a different one")
   }
+
+  /** a name the emitter may splice into a `val <nm>:` header. Deliberately NOT scala's full
+    * identifier grammar — a backquoted or operator name would be legal scala and an awful member to
+    * put on a ported surface, and a port that wants one can say so when the case exists. */
+  private def isPlainIdentifier(nm: String): Boolean =
+    nm.nonEmpty && (nm.head.isLetter || nm.head == '_') && nm.forall(c => c.isLetterOrDigit || c == '_')
 
   private val refusals = collection.mutable.ListBuffer.empty[PolicyFinding]
 
@@ -412,6 +448,10 @@ final class GlobalsToImplicitsTransform(
       .filter((_, k) => h.selfSupplied.get(k).exists(_.trim.nonEmpty))
     /** the type → the Scala the port wrote for it, which the emitter splices verbatim. */
     val selfSource: Map[SymId, String] = selfSupplied.map((s, k) => s -> h.selfSupplied(k))
+    /** the type → the MEMBER NAME its retained context is readable under. Bound entries only; a
+      * malformed name is already reported and must not also emit a member, for the same reason a
+      * `selfSupplied` entry with an empty expression must not also leave its type unthreaded. */
+    val retainOf: Map[SymId, String] = boundRetain.getOrElse(h.holder, Map.empty)
     val need  = new ContextNeed(program0, graph, h, statics, boundPromote.getOrElse(h.holder, Set.empty),
                                 (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
                                 (s, why) => refuse(h, why),
@@ -507,6 +547,12 @@ final class GlobalsToImplicitsTransform(
           t.copy(body = mint.givenMember(t.symbol, ctxFqn, ctxRef, selfSource(t.symbol), t.origin) :: t.body)
         else if !need.threadedClasses(t.symbol) then t
         else
+          // THE RETAINED MEMBER, at the HEAD for the reason the `given` above is: a class body is a
+          // constructor, and a statement reading it earlier would read `null`. It rides on the
+          // threaded arm and nowhere else — a type with no clause has no context to keep, and the
+          // policy entry that named one is a counted `NeverMatched` instead.
+          val retained = retainOf.get(t.symbol)
+            .map(nm => mint.retainedMember(t.symbol, nm, ctxRef, contextExpr, t.origin)).toList
           val ctors = t.body.collect { case d: Tree.DefDef if isCtor(summon[Program], d.symbol) => d.symbol }
           if ctors.isEmpty then
             // A java INTERFACE has no constructor, so a trait the manifest promoted to an abstract
@@ -517,14 +563,14 @@ final class GlobalsToImplicitsTransform(
               MemberKey(summon[Program].symbolOf(t.symbol).map(_.fullName).getOrElse("?"),
                         ContextNeed.CtorName).render,
               t.symbol, TypeRepr.MethodType(Nil, TypeRepr.NoType), Flags())
-            t.copy(body = Tree.DefDef(ctor, List(List(mint.usingParam(ctor, ctxFqn, ctxRef, at))),
+            t.copy(body = retained ++ (Tree.DefDef(ctor, List(List(mint.usingParam(ctor, ctxFqn, ctxRef, at))),
               TypeTree(TypeRepr.NoType, at), Some(Tree.Block(Nil, Tree.Literal(Constant.UnitC, TypeRepr.NoType, at),
-                TypeRepr.NoType, at)), at) :: t.body)
+                TypeRepr.NoType, at)), at) :: t.body))
           else
             // The clause lands on EVERY constructor. A Scala class parameter is in scope throughout
             // the body, so instance methods summon it with no signature change — but a SECONDARY
             // constructor is a method, and one that did not take the clause could not delegate.
-            t.copy(body = t.body.map {
+            t.copy(body = retained ++ t.body.map {
               case d: Tree.DefDef if ctors.contains(d.symbol) =>
                 d.copy(paramss = d.paramss :+ List(mint.usingParam(d.symbol, ctxFqn, ctxRef, d.origin)))
               case s => s
@@ -549,7 +595,9 @@ final class GlobalsToImplicitsTransform(
     val out = residualHolder(withMint, h, statics)
     recordDecisions(out, h, need, ctxFqn)
     recordSelfSupplied(out, h, need, ctxFqn, selfSupplied, selfSource)
+    recordRetained(out, h, need, ctxFqn, retainOf)
     recordDeadSelf(h, need)
+    recordDeadRetain(h, need)
     // LAST: `readPlan` above is what consults a residual-global/refuse `sites` entry, so anything
     // read before it would report an entry that had not been asked yet.
     recordDeadSites(h, need.firedSites)
@@ -687,6 +735,53 @@ final class GlobalsToImplicitsTransform(
       )))
     }
 
+  /** ONE ROW PER TYPE THAT KEPT ITS CONTEXT — `ContextHolder.retain`.
+    *
+    * An `InjectedMember` for `recordSelfSupplied`'s reason and with the opposite emphasis: the
+    * signature DID move (the clause is on the constructors either way) and what this decision is
+    * about is the MEMBER, which is emitted SURFACE a consumer can see and which java never declared.
+    * A reader of the generated file finds a public `val` with no upstream line behind it, and the
+    * note above the `class` is the only place that can say who asked for it and what reads it. */
+  private def recordRetained(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String,
+                             retained: Map[SymId, String]): Unit =
+    retained.toList.filter((c, _) => need.threadedClasses(c)).sortBy(_._1.raw).foreach { (c, nm) =>
+      p.symbolOf(c).foreach(sym => record(Decision(
+        kind = Decision.Kind.InjectedMember, subject = c, subjectFqn = sym.fullName,
+        detail = Map(
+          "member" -> nm,
+          "type"   -> ctxFqn,
+          "from"   -> "a constructor clause nothing outside this type can name",
+          "to"     -> s"a `val $nm: $ctxFqn` this type keeps, readable from anything holding one",
+          "why"    -> ("the clause the threading attaches is a CONSTRUCTOR PARAMETER, in scope in " +
+            "this body and nameable nowhere else — so a declaration the closure could not reach, " +
+            "holding one of these, has the context in its hand and no way to spell it. This port " +
+            "asked for it to be kept under a name, which is what a `selfSupplied` expression on " +
+            "such a holder then reads"),
+        ),
+        reason = Reason.Configured(name, sym.fullName),
+        origin = Decision.originOf(p, c),
+      )))
+    }
+
+  /** A BOUND `retain` ENTRY ON A TYPE THE CLOSURE NEVER THREADED — [[recordDeadSelf]]'s shape at the
+    * fourth key, and it is the one where silence would be worst: the entry exists BECAUSE some other
+    * declaration's `selfSupplied` expression names the member, so an entry that emitted nothing
+    * leaves that expression naming something that is not there — a compile error in a DIFFERENT file
+    * from the key that caused it. */
+  private def recordDeadRetain(h: ContextHolder, need: ContextNeed): Unit =
+    boundRetain.getOrElse(h.holder, Map.empty).toList.filterNot((c, _) => need.threadedClasses(c))
+      .flatMap((c, _) => h.retain.keys.toList.sorted.filter(k =>
+        boundRetain.getOrElse(h.holder, Map.empty).get(c).contains(h.retain(k))))
+      .distinct.sorted.foreach { k =>
+        deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.retain",
+          k, PolicyIssue.NeverMatched, "the entry names a type of this program that took NO " +
+            "constructor clause — either the closure never reached it, or it is `selfSupplied`, or " +
+            "it was scoped out. There is no context for the member to keep, so none was emitted, and " +
+            "any `selfSupplied` expression written to read it names something that is not there — a " +
+            "compile error in a different file from this key. Fix the key, or find out why the type " +
+            "is not threaded")
+      }
+
   /** A BOUND `selfSupplied` ENTRY THE CLOSURE NEVER REACHED — the third answer's own dead binding.
     *
     * `PolicyBinder.bindType` asks *does this program declare this type*, which a real class answers
@@ -733,8 +828,9 @@ object GlobalsToImplicitsTransform:
   final class Minter(program: Program):
     private var next = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
     private val buf  = collection.mutable.ListBuffer.empty[Symbol]
-    private val usings = collection.mutable.Map.empty[SymId, SymId]
-    private val givens = collection.mutable.Map.empty[SymId, SymId]
+    private val usings  = collection.mutable.Map.empty[SymId, SymId]
+    private val givens  = collection.mutable.Map.empty[SymId, SymId]
+    private val retains = collection.mutable.Map.empty[SymId, SymId]
 
     def minted: List[Symbol] = buf.toList
 
@@ -783,3 +879,23 @@ object GlobalsToImplicitsTransform:
         member("", MemberKey(ctxFqn, "<given>").render, owner, ctxRef,
                Flags(isGiven = true, isPrivate = true)))
       Tree.ValDef(id, TypeTree(ctxRef, at), Some(Tree.Opaque(src, ctxRef, at)), at)
+
+    /** THE RETAINED CONTEXT: `val <nm>: <ctx> = <the context expression>`, at the head of a threaded
+      * type's body ([[ContextHolder.retain]]).
+      *
+      * NAMED and PUBLIC, which is the opposite of the two members above and is the whole point:
+      * those two are machinery nothing outside the type reads, and this one exists precisely so that
+      * something outside the type CAN. Its name is emitted surface and comes from the policy for
+      * that reason. It is NOT `given` — the clause is already in scope inside this body, and a second
+      * candidate of the same type would make every `summon` in it ambiguous.
+      *
+      * The RHS is the phase's own context expression (`summon[T]`, or `T.apply()`), built
+      * STRUCTURALLY by the caller: a minted context's FQN is upstream and the package rename runs
+      * last, so a name spliced as text here would be the one reference the rename cannot see.
+      *
+      * One per owner, so a class visited twice does not grow two members. */
+    def retainedMember(owner: SymId, nm: String, ctxRef: TypeRepr, rhs: Term, at: Origin): Tree.ValDef =
+      val id = retains.getOrElseUpdate(owner,
+        member(nm, MemberKey(program.symbolOf(owner).map(_.fullName).getOrElse("?"), nm).render,
+               owner, ctxRef, Flags(isFinal = true)))
+      Tree.ValDef(id, TypeTree(ctxRef, at), Some(rhs), at)

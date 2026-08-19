@@ -5586,6 +5586,74 @@ simple-graphs 1 — and every one of them outside textra either names a class th
 or already sits inside a threaded declaration, which is why the arrival is flat and why nothing had
 ever noticed.
 
+### 10.8.11 The FOURTH EXIT — `retain`, and it is the REFERENCE HAND PORT's own answer
+
+**§3.5 first, because it settles the design.** The hand port ships `LinkEffect` — it did not skip it,
+and its own issue tracker records the intermediate no-op stub (`// Open URI would use Sge.net.openURI`)
+being caught in review as a **major fidelity defect** and fixed, which is exactly the verdict §1 gives
+a substitution that is quieter than java. What it emits is:
+
+```scala
+class TextraLabel(using Sge) extends Widget {
+  private[textra] val sgeContext: Sge = summon[Sge]      // ← the context, kept under a NAME
+}
+class LinkEffect(label: TypingLabel, params: Array[String]) extends Effect(label) {   // ← java's arity
+  override protected def onApply(…): Unit = … label.sgeContext.net.openURI(link)
+}
+```
+
+The effect's constructor keeps java's two parameters **because it has to** — `Effect.EffectBuilder`
+is the registry's factory interface and declares `produce(label, params)`, with no context slot — and
+the context arrives through the LABEL, which is threaded and which the effect is handed anyway.
+
+**§10.8.9's refusal of `selfSupplied` was true and incomplete.** It said the mechanism fits and there
+is no expression yielding an `sge.Sge` in scope. There is one — it is inside the `TypingLabel` the
+effect holds — and the reason it cannot be written is an ENGINE fact, not a library one: **the clause
+the threading attaches is a CONSTRUCTOR PARAMETER**, in scope throughout the class's own body and
+nameable from nowhere else. So a declaration the closure could not reach, holding a threaded object,
+has the context in its hand and no way to spell it, and the third answer's *the port supplies an
+expression* has nothing to draw on. The phase's own output offered none.
+
+`ContextHolder.retain` — `Map[type FQN, member name]` — is that one member:
+`val <name>: <context> = summon[<context>]` at the head of a threaded type's body, and a
+`selfSupplied` expression on a holder of one then reads `<value>.<name>`. Five things about it that
+are not incidental:
+
+- **the empty map is the no-op and the DEFAULT**, which is `CLAUDE.md` §1's rule for a phase that ADDS
+  declarations, met in this key's own shape rather than as a `RuleScope`. Unrestricted it would put a
+  new NAME on every threaded class in every port — 275 declarations on libGDX core alone — to serve
+  one declaration;
+- **it is per-DECLARATION and therefore UNIONS**, in `ContextHolder.perDeclaration` and in
+  `ContextHolderExtension`, not in `sharedSurface`. A `RuleScope` would have landed beside `scope`,
+  which two modules must AGREE on — and textra's retained type is TEXTRA's, which is `ENGINE-LIMITS.md`
+  CT8 exactly. The merge refuses same-key-different-NAME, because two names are two emitted members
+  and whichever expression names one compiles against exactly one of the two ports;
+- **the NAME is the port's**, unlike every other member this phase mints. `usingParam` and
+  `givenMember` are anonymous precisely because nothing reads their names; this one exists so that
+  something outside the type CAN, so the name is emitted SURFACE and a fact about the library's
+  conventions. It is screened at bind time (a plain identifier, or a counted `Malformed`) because it
+  is spliced into a `val <name>:` header, where anything else is a SYNTAX error at a line the port
+  never wrote;
+- **it is a `val` and not a `given`.** The clause is already in scope inside that body, and a second
+  candidate of the same type makes every `summon` in it ambiguous;
+- **the ordering is MEASURED, not argued.** The `given` the third answer emits sits at the head of the
+  body, above the constructor prologue that assigns the field such an expression reads — and a
+  class-level anonymous `given T = e` is initialised LAZILY in Scala 3, so `e` runs at the first
+  `summon`. Probed against scalac 3.8.4 both ways (a field this class assigns, and one a parent
+  assigns): **7 and 7**. What is still unsafe is a class body that USES the context during
+  construction, which is the sentence `Minter.givenMember` already carried.
+
+A `retain` key on a type that took NO clause emits nothing and is a counted `NeverMatched`, and that
+report is the one this key could least do without: the entry exists BECAUSE some other declaration's
+`selfSupplied` expression names the member, so silence there is a `Not found` **in a different file
+from the key that caused it**.
+
+**Arrival, measured:** every port carrying the phase moves ONE thing — the `policy=` fingerprint in
+its published port map, because the per-declaration rendering grew a field. `sge`: **0 members, 0
+errors, findings content unchanged, every check count identical**, `policy= cb54d567 -> df2baa43`.
+That is the whole of a §1(b) parameter's arrival being provably flat, and it is the same shape the
+base's `CollectionsTransform(retarget)` arrival had.
+
 ### 10.8.10 Next
 
 1. **The `E172`**, which needs a decision this wave deliberately does not take: either the engine
