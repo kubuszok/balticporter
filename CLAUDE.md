@@ -1679,11 +1679,15 @@ suite it counts reads 194 that way against 196 under a looser reading, and state
 the two calls it misses both sit in files that lane excludes, so the population is the same number
 either way. That argument is a fact about THAT SUITE. Asked of the next library's hand-written suite
 the same counter misses **37 calls across 18 files, 21 of them in files the census keeps**, and a lane
-that passed the number on would hand its reconciler a denominator below the real outcome count. So a
-documented blind spot is not a closed question: **the argument that it does not matter is re-derived
-per corpus member, in the lane that is about to rely on it**, and where it stops holding the choice is
-to fix the counter (measured corpus-wide, because every lane's discovery figure moves) or to carry a
-second one and print both — never to inherit the earlier library's sentence.
+that passed the number on would hand its reconciler a denominator below the real outcome count. **A
+third member is already printing it**: one ported suite reconciles `727 outcomes against 725 emitted`
+on every run, non-fatally and correctly ("no test is lost; the EMITTED figure this lane passed is what
+does not describe the suite") — the same counter, the same cause, reported by the one lane whose
+reconciler happens to compare the two. So a documented blind spot is not a closed question: **the
+argument that it does not matter is re-derived per corpus member, in the lane that is about to rely on
+it**, and where it stops holding the choice is to fix the counter (measured corpus-wide, because every
+lane's discovery figure moves) or to carry a second one and print both — never to inherit the earlier
+library's sentence.
 
 **And the SURVIVORS are not the DECLARATION, which is the same mistake read off the parse instead of
 off a string.** A rule may conclude something from what the program DECLARES; it may not conclude it
