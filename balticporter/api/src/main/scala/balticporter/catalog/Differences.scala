@@ -698,6 +698,22 @@ object Differences:
     Difference(cId(50), "Java's default access is package-private and Scala's is public — INVERTED",
       "JLS 6.6.1", "UNCITED — emitting nothing means public, which is the wrong default",
       Silent, Handled, el("T12"), Universal, "Visibility.decide — the same branch as JS-C47", everyDeclaration),
+    // A `return` with no value is legal in a java constructor (JLS 14.17) and completes it
+    // normally — an ordinary early exit from a parameter parser, and upstream libraries write it.
+    // The promotion that makes `super(args)` expressible at all (JS-C19) moves that body into the
+    // CLASS BODY, where scala has no method to return from: `E091 return outside method
+    // definition`, and the faithful translation is the one that does not compile.
+    //
+    // A local `def` is the image, for JS-S21's own reason at the other java construct — a `def` is
+    // the one thing a local `return` belongs to, so nothing has to be NAMED and no interposed
+    // construct can capture the jump — and for one more that is specific to a CONSTRUCTOR body:
+    // `scala.util.boundary.Break` extends `RuntimeException`, and a constructor body routinely
+    // holds a broad `catch` (JS-S12), which would then swallow a jump java's `return` can never be
+    // caught by.
+    Difference(cId(51), "a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body",
+      "JLS 14.17, 8.8.7", "UNCITED — a scala class body is not a method, so `return` is rejected outright",
+      Loud, Handled, NoTwin, Universal,
+      "TirEmitter.classBodyStats + returnsIn -> a local `def` around plan.primaryBody", Rendered("ClassDef")),
   )
 
   // -------------------------------------------------------------------------------------------

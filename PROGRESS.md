@@ -5431,13 +5431,44 @@ Every other lane is byte-identical, which is what D2 predicts rather than luck: 
 the base's ONE scope instance and its phases DO scope out the base's declarations, but both the
 findings and the decisions about them are withheld as belonging to a module it only resolves against.
 
+**Family 2, the two `E091`, is a §4.4 row this corpus had never met — a `return` in a CONSTRUCTOR.**
+A `return` with no value is legal in a java constructor (JLS 14.17) and completes it normally;
+`StylistEffect(TypingLabel, String[])` is a 100-line parameter parser that uses two of them, which is
+ordinary java and not a curiosity. `CtorFunnel` promotes that body into the CLASS BODY (the UNIQUE
+ROOT shape — one constructor, so `super(label)` has nowhere else to go), and a scala class body is
+not a method: `E091 return outside method definition`, at a translation that is otherwise exact.
+
+The image is a LOCAL `def`, `{ def ctorBody$(): Unit = { … }; ctorBody$() }`, and it is JS-S21's own
+answer at java's other `return`-bearing construct: a `def` is the one thing a local `return` belongs
+to, so nothing has to be NAMED and no interposed construct can capture the jump. `scala.util.boundary`
+is the alternative and is worse HERE for a second reason it is not worse for a lambda — `boundary.Break`
+extends `RuntimeException`, and a constructor body routinely holds a broad `catch` (§4.4's own row),
+which would then swallow a jump java's `return` can never be caught by. A BLOCK rather than a class
+member, so nothing java never declared reaches the emitted surface or `members.tsv`.
+
+`catalog(consulted)` **101 -> 102** on every port — the row (`JS-C51`) is CONSULTED at every class with
+a promoted body and FIRES where one really holds a `return` of its own, which is one class in eighteen
+lanes. Measured:
+
+| | errors | member digests |
+|---|---|---|
+| `sge-textra` | **8 -> 6** | **8**, all attributed: `StylistEffect`'s seven promoted statements, re-indented into the wrapper, and its own `class` row |
+| every other lane | at its committed floor, unchanged | **0** |
+
+That zero is not luck and it is the useful reading: a `return` left in a class body is ALWAYS `E091`,
+so every port already at its error floor is a port with no such shape — the fix cannot be silent, and
+its blast is exactly the classes that could not compile.
+
 ### 10.8.9 Next
 
-1. **The `E051` and the two `E091`** are engine gaps in the constructor funnel, one small and one that
-   needs a decision about a promoted body's early exit.
-2. **The differential probe** (§10.8.1) — the only route to behavioural evidence this library has, and
-   the reason a green compile here would prove nothing (§3).
-3. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
+1. **The `E051`** is an engine gap in the constructor funnel — a synthesised delegation's `null`.
+2. **The `E172`** is the context seam, and §10.8.10 records why none of the three offered exits reaches
+   it.
+3. **The differential probe** (§10.8.1) — the only route to behavioural evidence this library has, and
+   the reason a green compile here would prove nothing (§3). **It is GATED on the error count reaching
+   zero**: the lane's own shape (`ai-diff-measure`) refuses to run a suite that does not compile, and
+   this port's emitted Scala is one of that compile's inputs.
+4. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
 
 ---
 

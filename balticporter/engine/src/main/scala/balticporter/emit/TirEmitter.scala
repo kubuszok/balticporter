@@ -1667,7 +1667,7 @@ final class TirEmitter(
     if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && pparams.isEmpty &&
        !extendedTypes(cd.symbol) && !instantiatedTypes(cd.symbol) && !typeNamedElsewhere(cd.symbol) then
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
-      val ob0 = orderBody(members, cd.symbol, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+      val ob0 = classBodyStats(orderBody(members, cd.symbol, paramfulPrimary), plan, i + 1).filter(_.nonEmpty).mkString("\n")
       val ob  = if bnote.isEmpty then ob0 else s"$bnote\n$ob0"
       // the VISIBILITY only — an `object` takes no `abstract`, and `final object` is redundant.
       // THE COLLAPSE, recorded where it is TAKEN. A consumer that names this type in a type
@@ -1696,7 +1696,7 @@ final class TirEmitter(
         case _              => false
       }
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
-    val body1   = joinStats(orderBody(instance, cd.symbol, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty))
+    val body1   = joinStats(classBodyStats(orderBody(instance, cd.symbol, paramfulPrimary), plan, i + 1).filter(_.nonEmpty))
     // K22 — the CLASS-INITIALISATION trigger, ahead of every other class-body statement because
     // that is where java ran it. See [[forceCompanion]]; `statics` is where BOTH halves of java's
     // class initialiser lower to — the `static { }` blocks and the static field initialisers — so
@@ -2239,6 +2239,65 @@ final class TirEmitter(
     plan.primary match
       case None    => body
       case Some(c) => body.flatMap { case d: Tree.DefDef if d.symbol == c.symbol => plan.primaryBody; case s => List(s) }
+
+  /** the local `def` a PROMOTED constructor body carrying a `return` is wrapped in. Per class and
+    * not per program: a name keyed on a global counter renumbers itself the day an unrelated class
+    * grows one, which is `ENGINE-LIMITS.md` M10's shape and would move member digests for nothing. */
+  private val CtorBodyName = "ctorBody$"
+
+  /** JS-C51 — a java `return` in a CONSTRUCTOR body leaves the CONSTRUCTOR (JLS 14.17: a `return`
+    * with no value is legal in a constructor and completes it normally). [[lowerCtors]] promotes
+    * that body into the CLASS BODY, where a scala `return` is `E091 return outside method
+    * definition` — so the faithful translation compiles in java and does not compile here.
+    *
+    * ==A nested `def`, for JS-S21's own reason and one more==
+    * The lambda arm answers the same java construct in the same way and its argument carries across
+    * unchanged: a `def` is the one construct a local `return` belongs to, so nothing has to be
+    * NAMED and no other construct can capture the jump. `scala.util.boundary` is the alternative
+    * and is worse HERE for a second reason it is not worse for a lambda — `boundary.Break` extends
+    * `RuntimeException`, and a promoted constructor body routinely holds a `try`/`catch (Exception)`
+    * (§4.4's broad-catch row), which would then EAT a jump java's `return` could never be caught by.
+    * A `def`'s return is a real return and no handler sees it.
+    *
+    * ==A BLOCK around the `def`, so nothing reaches the emitted surface==
+    * `{ def ctorBody$(): Unit = { … }; ctorBody$() }` is one class-body statement. Declared as a
+    * class MEMBER instead, the `def` would be a name a consumer can see and a row in `members.tsv`
+    * for a member java never had; inside a block it is local to the construction sequence, which is
+    * exactly what java's constructor body was. `joinStats` puts the `;` in front of it, because a
+    * statement opening with `{` after an expression is the anonymous-class misparse §4.58 records.
+    *
+    * ==What moves INTO the block, and what does not==
+    * Only `plan.primaryBody` — the promoted statements, which `lowerCtors` splices CONTIGUOUSLY at
+    * the constructor's own position, so the wrapper stands where java's constructor stood. Fields
+    * and instance initialiser blocks are JLS 12.5 step 4 and `orderBody` has already hoisted them
+    * ABOVE this point, where java ran them (§4.55); they are untouched. The promoted body's own
+    * top-level LOCALS come inside, which is where java scoped them — no other member of a java
+    * class can see a constructor local.
+    *
+    * ==And it fires on the exact shape, never on a `return` that is somebody else's==
+    * [[returnsIn]] stops at a `Tree.Lambda`, `Tree.DefDef` and `Tree.AnonClass`, so a `return` in an
+    * anonymous listener installed by the constructor binds to ITS method and is not a reason to
+    * wrap. A VALUE-carrying `return` is refused and left exactly as it was (M6): javac rejects one
+    * in a constructor, so a node carrying it is not the construct this is about, and wrapping it in
+    * a `Unit` `def` would be a guess that compiles. */
+  private def classBodyStats(ordered: List[Statement], plan: CtorFunnel.Plan, i: Int): List[String] =
+    val promoted = plan.primaryBody
+    def inBody(s: Statement) = promoted.exists(_ eq s)
+    if promoted.isEmpty || !returnsIn(promoted) || collectReturns(promoted).exists(_.expr.isDefined)
+    then ordered.map(memberStat(_, i))
+    else
+      val first = ordered.indexWhere(inBody)
+      ordered.zipWithIndex.flatMap { (s, k) =>
+        if !inBody(s) then List(memberStat(s, i))
+        else if k != first then Nil // rendered inside the wrapper, at the FIRST promoted statement
+        else
+          // …at the deeper indent, and recorded there: `memberStat` remembers the text it produced
+          // and `srcMapOf` finds each member by that very string, so rendering at one indent and
+          // writing another is a member the map cannot locate.
+          val stats = ordered.filter(inBody).map(memberStat(_, i + 2))
+          List(s"${ind(i)}{\n${ind(i + 1)}def $CtorBodyName(): scala.Unit = {\n" +
+               s"${stats.mkString("\n")}\n${ind(i + 1)}}\n${ind(i + 1)}$CtorBodyName()\n${ind(i)}}")
+      }
 
   /** a Java `static { … }` / instance `{ … }` initializer block, carried as a synthetic member. */
   private def isInitBlock(d: Tree.DefDef): Boolean =
@@ -3081,6 +3140,11 @@ final class TirEmitter(
     Obligations.consult(JS.C(19), at)(Option.when(ctors.sizeIs > 1)(()))
     Obligations.consult(JS.C(20), at)(Option.when(plan.isSynthesised)(()))
     Obligations.consult(JS.C(21), at)(Option.when(ctors.sizeIs > 1)(()))
+    // JS-C51 — a `return` in the PROMOTED constructor body, which the class body has no method to
+    // return from. Consulted at every class with a promoted body and fires where one really holds
+    // a `return` of its own — `returnsIn` stops at a lambda, a nested `def` and an anonymous class,
+    // so a listener the constructor installs is not this row's construct. See `classBodyStats`.
+    Obligations.consult(JS.C(51), at)(Option.when(returnsIn(plan.primaryBody))(()))
 
     // -- inheritance ------------------------------------------------------------------------------
     // JS-C33's shape and not its repair: `diamondOverrides` declines on `parents.sizeIs < 2` in its
