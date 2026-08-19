@@ -68,10 +68,17 @@ object TextraTypistMigrate:
         sourceRoot       = base.toString,
         // THREE LICENCE REGIMES, and only ONE of them needs a key (CLAUDE.md §4.57).
         //
-        //   (a) Apache-2.0, the uniform per-file header every one of the 95 sources carries. The
-        //       per-file harvest (§4.58) plus the emitted banner meets that obligation by
-        //       construction, which is why no Apache-2.0 port in this corpus has ever needed a
-        //       `notices` entry;
+        //   (a) Apache-2.0, the per-file header — carried by **82 of the 95** sources, not by all
+        //       of them. The per-file harvest (§4.58) plus the emitted banner meets that obligation
+        //       by construction for those 82, which is why no Apache-2.0 port in this corpus has
+        //       ever needed a `notices` entry. THE OTHER TEN CARRY NOTHING — `Justify`, `TextraArea`,
+        //       `TextraSelectBox`, `TypingSelectBox`, the four `TextureArray*` files, `LzmaUtils`
+        //       and `EmojiProcessor` (which carries (b) instead) open with a bare `package` and a
+        //       javadoc. That is `GdxAiPolicy`'s one-file case at ten times the scale, and it is a
+        //       SECOND reason this port needs the key below rather than a refinement of the first:
+        //       for those ten the emitted banner NAMES Apache-2.0 and reproduces no notice, which is
+        //       exactly §4.57's pointer-instead-of-inclusion gap. The lane derives both counts and
+        //       gates on their agreement, because a bare "82 of 92" reads as a ten-file loss;
         //   (b) the emoji-regex MIT notice, which is INLINE in `EmojiProcessor.java`'s own leading
         //       comment — full MIT text, Copyright Mathias Bynens, self-contained. It is ordinary
         //       file trivia and rides the same harvest as (a). The lane greps the emitted file for

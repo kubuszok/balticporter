@@ -2578,10 +2578,19 @@ textra-measure:
     # mechanism that can fail silently. The `notices` half needs no grep — a declared file that is
     # not there is fatal at the run — but the COPY is asserted, because §4.57's whole point is that
     # naming a licence is not including it.
+    # THE DENOMINATOR IS UPSTREAM'S, NOT THE EMITTED COUNT, and that is the whole point of the line.
+    # 10 of the 95 upstream files carry NO licence header at all — a bare `package` and a javadoc —
+    # so "82 of 92" against the emitted total reads as a ten-file LOSS and is a faithful
+    # reproduction. Both sides are re-derived and the gate is that they AGREE; the headerless ten
+    # are the SECOND thing (c) answers, and are `GdxAiPolicy`'s one-file case at ten times the scale.
+    UP_APACHE=$(grep -rl "Licensed under the Apache License" {{textra_src}}/src/main/java | wc -l | tr -d ' ')
     APACHE=$(grep -rl "Licensed under the Apache License" {{textra_module}}/src_managed/main/scala | wc -l | tr -d ' ')
     EMITTED=$(find {{textra_module}}/src_managed/main/scala -name '*.scala' | wc -l | tr -d ' ')
-    echo "(a) Apache-2.0 per-file notice, reproduced in $APACHE of $EMITTED emitted files"
+    echo "(a) Apache-2.0 per-file notice: $UP_APACHE upstream file(s) carry it, $APACHE of $EMITTED emitted file(s) reproduce it"
+    echo "    the other $((EMITTED - APACHE)) emitted file(s) come from upstream files that carry NO per-file notice —"
+    echo "    which is the second obligation (c) discharges, and why 'reproduced by construction' is not enough here"
     [ "$APACHE" = "0" ] && echo "!! THE PER-FILE HARVEST IS PRODUCING NOTHING — every emitted file is an unattributed derived work"
+    [ "$APACHE" != "$UP_APACHE" ] && echo "!! THE TWO SIDES DISAGREE — $UP_APACHE upstream against $APACHE emitted. Either the harvest lost a notice or upstream's headers moved; §4.58 says only a text-to-text comparison can see this."
     if grep -rqs "Mathias Bynens" {{textra_module}}/src_managed/main/scala; then
       echo "(b) the emoji-regex MIT notice, reproduced inline (EmojiProcessor)"
     else
