@@ -647,9 +647,25 @@ final class NullabilityTransform(
     * the declaration kept its upstream type while the code around it moved, so the row that would
     * have explained it is the one that is NOT there. Always `Reason.Configured` — an exclusion is a
     * policy entry by construction — and `ScopedOut` is one of the kinds a porter note is rendered
-    * for, so the answer sits at the line as well as in the artifact. */
+    * for, so the answer sits at the line as well as in the artifact.
+    *
+    * ==A PARAMETER is counted here and its decision is recorded ONE LEVEL OUT==
+    * The two halves are asked of different things and used to be refused together, which left the
+    * commonest scoped-out site with NO record anywhere. A parameter is not a subject a note can sit
+    * above — `PorterNote.AtDeclaration` renders over a `def`/`val`/`class` — but the exclusion still
+    * changes an emitted SIGNATURE, and it changes the enclosing method's. So the FINDING is filed at
+    * the parameter (that is what makes the lane's arithmetic close) and the DECISION is recorded at
+    * [[declarationOf]], naming the parameter in its own detail.
+    *
+    * Refusing both is not a smaller answer, it is an invisible one, and the shape is exactly what §5
+    * refuses: a scope entry that holds back a PARAMETER removes that site's `AbstractTypeParameter`
+    * row and adds nothing, so `nullability-boundary` FALLS with nothing to attribute the fall to —
+    * indistinguishable, from every artifact a run publishes, from a check that stopped asking. And
+    * the emitted text cannot stand in for it: the reason stated three lines below is that a
+    * PARAMETER's surviving marker is one of the two the emitter does not render at all. */
   private def scopedOut(p: Program, s: Symbol, entry: String): Unit =
-    if !s.flags.isParam && Decision.isDeclaration(p, s) then
+    val at = if s.flags.isParam then declarationOf(p, s) else s.id
+    if s.flags.isParam || Decision.isDeclaration(p, s) then
       // …and COUNTED, beside the decision, for the reason every other lane of this check exists: a
       // residue nobody counts is a residue that grows. The only other evidence a scoped-out
       // declaration leaves is its surviving upstream MARKER in the emitted text, and the emitter
@@ -659,21 +675,29 @@ final class NullabilityTransform(
       // dependent does not report its base's exclusions (D2).
       issues += Finding(Issue.ScopedOut, s.fullName, s"`$entry` on ${describe(p, s)}",
                         Decision.originOf(p, s.id), unitOf(p, s.id), declarationOf(p, s))
-      record(Decision(
-        kind       = Decision.Kind.ScopedOut,
-        subject    = s.id,
-        subjectFqn = s.fullName,
-        // NO `key` in `detail`: `Reason.Configured` already carries it, and a decider that spells
-        // it a second time renders `key=… key=…` in the porter note and repeats itself in
-        // `decisions.tsv`'s `detail` column beside a `reason` column that already says `phase:key`.
-        detail = Map(
-          "why" -> ("this declaration carries a configured nullability annotation, and this port's " +
-            "`nullability` scope deliberately holds it back — so it keeps its upstream type while " +
-            "the annotated declarations around it moved"),
-        ),
-        reason = Reason.Configured(name, entry),
-        origin = Decision.originOf(p, s.id),
-      ))
+      // …and no decision where the site is UNSELECTABLE: `declarationOf` answers `SymId.None` for a
+      // parameter with no enclosing declaration, and a decision at a subject the run cannot emit is
+      // a row `NoteCoverageCheck` is right to have no note for. The finding above still counts it.
+      if at != SymId.None then p.symbolOf(at).foreach { d =>
+        record(Decision(
+          kind       = Decision.Kind.ScopedOut,
+          subject    = at,
+          subjectFqn = d.fullName,
+          // NO `key` in `detail`: `Reason.Configured` already carries it, and a decider that spells
+          // it a second time renders `key=… key=…` in the porter note and repeats itself in
+          // `decisions.tsv`'s `detail` column beside a `reason` column that already says `phase:key`.
+          // `param` ONLY where the subject is not the annotated symbol itself, so a scoped-out
+          // DECLARATION's note is byte-identical to what it was before parameters were counted —
+          // the pair would otherwise restate `subjectFqn` on every port that already has one.
+          detail = Map(
+            "why" -> ("this declaration carries a configured nullability annotation, and this port's " +
+              "`nullability` scope deliberately holds it back — so it keeps its upstream type while " +
+              "the annotated declarations around it moved"),
+          ) ++ Option.when(at != s.id)("param" -> s.name),
+          reason = Reason.Configured(name, entry),
+          origin = Decision.originOf(p, s.id),
+        ))
+      }
 
   // -------------------------------------------------------------------------
   // decisions — one row per DECLARATION whose emitted form changed, per policy key (§5.1)

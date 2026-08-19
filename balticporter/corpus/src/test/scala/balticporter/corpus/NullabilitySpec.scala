@@ -279,6 +279,33 @@ class NullabilitySpec extends PortSuite:
     assertEquals(open.boundary(a2.units).count(_.issue == Issue.ScopedOut), 0)
   }
 
+  test("a scoped-out PARAMETER is counted too — the fall the lane could not otherwise attribute") {
+    // The negative this is written for: with parameters refused, a scope entry that holds one back
+    // REMOVED that site's `AbstractTypeParameter`/refusal row and added nothing, so
+    // `nullability-boundary` fell with nothing to attribute the fall to — indistinguishable from a
+    // check that stopped asking (CLAUDE.md §5). And the emitted text cannot stand in for it: a
+    // PARAMETER's surviving marker is one of the two the emitter does not render (see the
+    // stripped-annotation test above), so the number is the ONLY evidence there is.
+    val only = phase(scope = RuleScope.Only(Set("demo.Group#parent")))
+    val (after, log) = Pipeline.runTraced(PortFixture.parse(java), List(only))
+    val out = only.boundary(after.units).filter(_.issue == Issue.ScopedOut).map(_.subject)
+    // `name` is `find`'s annotated parameter and `rest` is `spread`'s annotated VARARG — the scope
+    // is asked BEFORE the vararg refusal, so a held-back vararg is a `ScopedOut` and not a
+    // `VarargParameter`, and both are here rather than only the four declarations.
+    assert(clue(out).exists(_.endsWith("#name")), "an annotated PARAMETER was held back and not counted")
+    assert(clue(out).exists(_.endsWith("#rest")), "an annotated VARARG was held back and not counted")
+
+    // …and the DECISION for it sits ONE LEVEL OUT, at the enclosing method. A parameter is not a
+    // subject `PorterNote.AtDeclaration` can render over, and the exclusion changes the enclosing
+    // method's emitted SIGNATURE — so that is where an agent reading the code asks the question.
+    val decided = log.of(Decision.Kind.ScopedOut)
+    assertEquals(decided.map(_.subjectFqn).filter(_.contains("spread")), List("demo.Group#spread"))
+    assert(decided.exists(d => d.subjectFqn == "demo.Group#spread" && d.detail.get("param").contains("rest")))
+    // the enclosing method is named ONCE per held-back site, so `find`'s own return and `find`'s
+    // parameter are two rows at one subject rather than one row standing for both
+    assertEquals(decided.count(_.subjectFqn == "demo.Group#find"), 2)
+  }
+
   test("a SCOPED-OUT ancestor beside a RETYPED override is reported — K13's closure, at plan time") {
     // `Box` is scoped out and annotates `find`; `SubBox` re-states the annotation on its own
     // override, so the parent keeps `Actor` while the child moves to `Actor | Null`. That is half an

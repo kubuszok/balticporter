@@ -5404,15 +5404,40 @@ this wave deliberately does not answer.
 - **the JVM-only `regexodus` under three-platform `targets`** — §10.8.3, and the reason narrowing
   `targets` is not the answer.
 
-### 10.8.8 Next
+### 10.8.8 Wave 1 — the four families, and what each one found in the ENGINE
 
-1. **The four `E007`** are the cheapest and are a policy choice, not a fix: read `nullability`'s three
-   named exits and take one with a number.
-2. **The `E051` and the two `E091`** are engine gaps in the constructor funnel, one small and one that
+**Family 1, the four `E007`, needed an ENGINE fix before its policy key could honestly land.** Taking
+K13's scope exit at `TextraListBox#getSelected` and `#setSelected` removes two
+`AbstractTypeParameter` rows and — before this — added ONE `ScopedOut` row, because
+`NullabilityTransform.scopedOut` opened `if !s.flags.isParam`. So `nullability-boundary` fell
+`9 -> 8` with one row leaving the lane and **nothing anywhere to attribute the fall to**: no finding,
+no `decisions.tsv` row, no porter note, and — the reason it could not be read off the emitted text
+either — a PARAMETER's surviving `@Null` marker is one of the two the emitter does not render at all.
+That is §5's own shape, indistinguishable from a check that stopped asking, and the guard's own
+comment three lines below it already made the argument the guard refused.
+
+The two halves are asked of different things and were refused together: the FINDING belongs at the
+parameter (that is what closes the arithmetic) and the DECISION one level out at the enclosing
+method, whose emitted SIGNATURE the exclusion actually changes and where `PorterNote.AtDeclaration`
+has a `def` to sit above. Measured on the two ports that carry a `nullability` scope, both at **0
+errors before and after**:
+
+| | `nullability-boundary` | `ScopedOut` decisions | member digests |
+|---|---|---|---|
+| `sge` (libGDX core) | **98 -> 146** | 53 -> 101 | **61**, every one attributed: 45 declarations that gained a `param=…` note and the 16 enclosing `class` digests |
+| `sge-screens` | **3 -> 5** | 3 -> 5 | 3 — `ScreenManager` and its two `pushScreen` overloads, the members its own member-level exit names |
+
+Every other lane is byte-identical, which is what D2 predicts rather than luck: a dependent inherits
+the base's ONE scope instance and its phases DO scope out the base's declarations, but both the
+findings and the decisions about them are withheld as belonging to a module it only resolves against.
+
+### 10.8.9 Next
+
+1. **The `E051` and the two `E091`** are engine gaps in the constructor funnel, one small and one that
    needs a decision about a promoted body's early exit.
-3. **The differential probe** (§10.8.1) — the only route to behavioural evidence this library has, and
+2. **The differential probe** (§10.8.1) — the only route to behavioural evidence this library has, and
    the reason a green compile here would prove nothing (§3).
-4. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
+3. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
 
 ---
 
