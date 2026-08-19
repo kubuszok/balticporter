@@ -117,8 +117,135 @@ class CapturedLocalClashSpec extends munit.FunSuite:
   // one traversal — so it will cover local classes on the day the frontend produces them.
 
   // -------------------------------------------------------------------------------------------
+  // THE SECOND RULE — AMBIGUITY, which is not shadowing (ENGINE-LIMITS.md C16)
+  //
+  // Every test above has the body referencing the CAPTURE. Where the parent declares the name as a
+  // FIELD, java binds the INHERITED MEMBER instead — probed against javac 22, and the same answer
+  // through an anonymous body, a named local class and a grandparent — so no capture reference
+  // exists and the first rule sees nothing. Scala 3 then calls the bare name AMBIGUOUS rather than
+  // choosing either, and the outer declaration is what has to move.
+  // -------------------------------------------------------------------------------------------
+
+  private val ambiguous =
+    """package demo;
+      |class Base {
+      |  final String html;
+      |  Base(String html) { this.html = html; }
+      |  void run() { }
+      |}
+      |class W {
+      |  void go(final String html) {
+      |    new Base(html) { public void run() { System.out.println(html); } };
+      |  }
+      |}
+      |""".stripMargin
+
+  test("a capture and an INHERITED FIELD of the same name — the capture moves") {
+    val out = emit(ambiguous)
+    assert(clue(out).contains("def go(html$local: java.lang.String)"))
+  }
+
+  test("…and the reference inside the body keeps naming the INHERITED member, as java bound it") {
+    val out = emit(ambiguous)
+    // the body's `html` is java's `this.html`; renaming the capture is what makes the bare name
+    // resolve to it rather than to neither.
+    assert(clue(out).contains("println(html)"))
+    assert(!out.contains("println(html$local)"))
+    // …while the constructor argument, which really IS the capture, follows the rename — the two
+    // spellings sit four lines apart in one emitted method, which is the whole of the difference
+    // between the outer declaration and the inherited member
+    assert(clue(out).contains("html$local)"))
+  }
+
+  test("an inherited METHOD is ambiguous with an outer value too, though java's namespaces are not") {
+    val out = emit(
+      """package demo;
+        |class Base { String tag() { return "b"; } void run() { } }
+        |class W {
+        |  void go(final String tag) {
+        |    new Base() { public void run() { System.out.println(tag()); } };
+        |  }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("def go(tag$local: java.lang.String)"))
+  }
+
+  test("the rename carries its OWN clash reason, so a reader can tell the two rules apart") {
+    val out = emitWithNotes(ambiguous)
+    assert(clue(out).contains("clash=captured-local-vs-inherited-member"))
+    assert(out.contains("from=html to=html$local"))
+  }
+
+  test("a LOCAL is reached as well as a parameter — the capture need not be referenced at all") {
+    val out = emit(
+      """package demo;
+        |class Base {
+        |  final String html;
+        |  Base(String html) { this.html = html; }
+        |  void run() { }
+        |}
+        |class W {
+        |  void go() {
+        |    final String html = "x";
+        |    new Base(html) { public void run() { System.out.println(html); } };
+        |  }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("html$local"))
+  }
+
+  // -------------------------------------------------------------------------------------------
   // NEGATIVES — a check that has never declined is not known to decide anything
   // -------------------------------------------------------------------------------------------
+
+  test("NEGATIVE: MERE OUTER — the parent declares no such name, so nothing is ambiguous") {
+    // The name is in an enclosing method's scope and NOWHERE ELSE. Probed: javac binds the capture
+    // and scalac compiles it without complaint. Renaming here would move a parameter for nothing.
+    val out = emit(
+      """package demo;
+        |class Base { void run() { } }
+        |class W {
+        |  void go(final String html) {
+        |    new Base() { public void run() { System.out.println(html); } };
+        |  }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("def go(html: java.lang.String)"))
+    assert(!out.contains("html$local"))
+  }
+
+  test("NEGATIVE: the body DECLARES the name itself — scala's rule says INHERITED, and this is not") {
+    // Probed: `new Bare { val html = …; … html … }` under an outer `html` compiles — the class's
+    // own declaration wins, exactly as java's does. Only the first rule may fire here, and it
+    // cannot, because nothing references the capture.
+    val out = emit(
+      """package demo;
+        |class Base { void run() { } }
+        |class W {
+        |  void go(final String html) {
+        |    new Base() {
+        |      String html = "declared";
+        |      public void run() { System.out.println(html); }
+        |    };
+        |  }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("def go(html: java.lang.String)"))
+    assert(!out.contains("html$local"))
+  }
+
+  test("NEGATIVE: a method that encloses NO nested body moves nothing, whatever it inherits") {
+    val out = emit(
+      """package demo;
+        |class Base { final String html; Base(String html) { this.html = html; } }
+        |class W extends Base {
+        |  W() { super("x"); }
+        |  void go(final String html) { System.out.println(html); }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("def go(html: java.lang.String)"))
+    assert(!out.contains("$local"))
+  }
 
   test("NEGATIVE: a capture the nested class does not shadow is untouched") {
     val out = emit(

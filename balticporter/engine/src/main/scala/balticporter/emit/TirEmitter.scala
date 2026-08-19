@@ -6119,13 +6119,54 @@ object TirEmitter:
     * approximate for §4.55's reason: Java resolved it statically, so the reference in the TIR
     * already points at the symbol Java chose, and renaming the symbol re-points exactly those.
     *
-    * Two things this deliberately does NOT do:
+    * ==TWO RULES, because SCALA HAS TWO ANSWERS and java has one==
+    *
+    * The paragraph above is one of them and was for a long time read as the whole question, because
+    * both faces present as *the port cannot name what java named*. They are different rules, and
+    * only one of them is shadowing:
+    *
+    *   - '''UNNAMEABLE''' — the body references the CAPTURE and the class declares or inherits the
+    *     name. Scala resolves innermost-first, the member wins, and the capture cannot be written at
+    *     all. That is the `filter` case above;
+    *   - '''AMBIGUOUS''' — the body references the INHERITED MEMBER and an enclosing method's scope
+    *     defines that name too. Scala 3 refuses to choose: `E049 Reference to html is ambiguous. It
+    *     is both defined in method render and inherited subsequently in anonymous class …`. Java has
+    *     no such rule — probed against `javac` 22, an INHERITED FIELD SHADOWS an enclosing method's
+    *     local or parameter and the member simply wins, through an anonymous body, a named local
+    *     class or a grandparent alike — so the reference in the TIR already points at the MEMBER,
+    *     there is no capture reference for the first rule to find, and the pass saw nothing to do.
+    *     `ENGINE-LIMITS.md` C16.
+    *
+    * The REMEDY is the same in both, which is what makes them one pass: move the outer declaration.
+    * In the second case that also PRESERVES java's binding rather than repairing a broken one — with
+    * the enclosing name gone, the bare reference binds the inherited member, which is what javac
+    * bound.
+    *
+    * Two facts the second rule's guard rests on, both probed rather than reasoned:
+    *
+    *   - a member the body DECLARES ITSELF is not ambiguous with an enclosing scope (scala's own
+    *     sentence says *inherited*), so `declared` is subtracted;
+    *   - an inherited METHOD is ambiguous with an outer VALUE exactly as an inherited field is,
+    *     although java's two namespaces keep those apart — which is why `inherited` is not narrowed
+    *     to fields.
+    *
+    * Three things this deliberately does NOT do:
     *
     *   - it renames only where the capture is REALLY shadowed — the local must be referenced inside
     *     the nested body AND the body must declare or inherit its name. A local rename is invisible,
     *     so over-approximating would be safe; a PARAMETER rename is not quite, because the emitted
     *     signature's parameter name is part of the surface, so precision is worth the two extra
     *     sets;
+    *   - the second rule pays that precision differently, because it has no reference to read the
+    *     capture off. It ranges over the enclosing method's WHOLE scope — a parameter's scope is the
+    *     whole body, and a local's textual extent is not a fact the TIR carries — and fires only
+    *     where the body really names an inherited member. So the over-approximation available to it
+    *     is a LOCAL, out of scope at the body, whose name happens to match one: that costs a name
+    *     nothing outside the method can see, which is the direction §4.55 permits;
+    *   - it does not reach an outer definition that is a FIELD OF AN ENCLOSING CLASS, which scala 3
+    *     calls ambiguous on the same rule (probed). The remedy there cannot be a rename — the field
+    *     is a real member and moving it moves surface — but a QUALIFICATION at the reference, which
+    *     is a different pass's business. Nothing in the corpus reaches it;
     *   - it reads `declared` through program-declared parents only. A member inherited from a type
     *     the frontend never parsed (a JDK supertype) is invisible here, as it is to every other
     *     pass that walks `declOf`. Nothing in the corpus reaches it, and a case that did would show
@@ -6137,24 +6178,47 @@ object TirEmitter:
     def headSym(t: TypeRepr): Option[SymId] = t match
       case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(tc, _) => headSym(tc); case _ => None
 
-    /** every nested BODY, its owning type symbol and its parents. An anonymous class's body lives
+    /** every nested BODY, its own type symbol and its parents. An anonymous class's body lives
       * inside a TERM, which is why this is a `StandardTraversal` and not a walk over `cd.body`:
       * a hand-rolled recursion over class bodies alone would miss every `new X() { … }`, which is
       * the only shape this defect has been seen in. */
-    val bodies  = collection.mutable.ListBuffer[(List[Statement], List[SymId])]()
+    val bodies  = collection.mutable.ListBuffer[(SymId, List[Statement], List[SymId])]()
     val methods = collection.mutable.Set[SymId]()
     val declOf  = collection.mutable.Map[SymId, Tree.ClassDef]()
+    /** body symbol -> the METHODS it is lexically inside. [[Ambiguity]]'s half of the question needs
+      * the enclosing SCOPE and not merely what the body referenced, and the traversal is post-order
+      * — a `Tree.New` is transformed before the `Tree.DefDef` holding it — so a push/pop stack over
+      * the hooks cannot see it. Each method instead re-walks its OWN body once and claims what it
+      * finds, which reads the same edge from the other end and needs no ordering at all. */
+    val enclosedBy = collection.mutable.Map[SymId, Set[SymId]]()
     val collector = new Phase:
       def name: String = "tir-emitter/captured-local-scan"
       override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef =
         declOf(t.symbol) = t
-        bodies += ((t.body, t.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case tm: Term => headSym(tm.tpe) }))
+        bodies += ((t.symbol, t.body,
+                    t.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case tm: Term => headSym(tm.tpe) }))
         t
       override def transformNew(t: Tree.New)(using Program): Term =
-        t.anon.foreach(a => bodies += ((a.body, headSym(t.tpt.tpe).toList)))
+        t.anon.foreach(a => bodies += ((a.symbol, a.body, headSym(t.tpt.tpe).toList)))
         t
-      override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef = { methods += t.symbol; t }
+      override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
+        methods += t.symbol
+        val inner = collection.mutable.Set[SymId]()
+        val scan = new Phase:
+          def name: String = "tir-emitter/captured-local-enclosing"
+          override def transformClassDef(c: Tree.ClassDef)(using Program): Tree.ClassDef = { inner += c.symbol; c }
+          override def transformNew(n: Tree.New)(using Program): Term = { n.anon.foreach(a => inner += a.symbol); n }
+        t.rhs.foreach(r => StandardTraversal.mapTerm(scan, r))
+        inner.foreach(b => enclosedBy(b) = enclosedBy.getOrElse(b, Set.empty) + t.symbol)
+        t
     p.units.foreach(StandardTraversal.mapClassDef(collector, _))
+
+    /** the parameters and locals each method owns — the enclosing SCOPE a nested body sits in.
+      * Ownership is the structural fact (§4.56): the frontend interns a field under the CLASS and a
+      * local or parameter under the enclosing EXECUTABLE, so this partition is a symbol lookup and
+      * never a name or an origin test. */
+    val scopeOf: Map[SymId, List[Symbol]] =
+      p.symbols.all.filter(s => methods(s.owner)).groupBy(_.owner).view.mapValues(_.toList).toMap
 
     /** the definitions and the references a body holds, at any depth. Both come from one walk of the
       * SAME traversal, so "declared inside" and "referenced inside" can never disagree about what
@@ -6177,39 +6241,70 @@ object TirEmitter:
       case v: Tree.ValDef                             => nm(v.symbol)
       case c: Tree.ClassDef                           => nm(c.symbol)
     }.toSet
-    def visibleNames(parents: List[SymId], seen: Set[SymId]): Set[String] =
+    /** the member SYMBOLS a body INHERITS. Names alone answer the shadowing question; the ambiguity
+      * question needs the symbols, because it has to ask whether the body referenced the INHERITED
+      * member — a member the body DECLARES ITSELF is not ambiguous with anything (probed against
+      * scalac 3.8.4: the class's own declaration simply wins). */
+    def visibleMembers(parents: List[SymId], seen: Set[SymId]): Set[SymId] =
       parents.filterNot(seen).flatMap(declOf.get).flatMap(cd =>
-        memberNames(cd.body) ++ visibleNames(
+        cd.body.collect {
+          case d: Tree.DefDef if nm(d.symbol) != "<init>" => d.symbol
+          case v: Tree.ValDef                             => v.symbol
+          case c: Tree.ClassDef                           => c.symbol
+        } ++ visibleMembers(
           cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case tm: Term => headSym(tm.tpe) },
           seen + cd.symbol)).toSet
 
     val renames = collection.mutable.Map[SymId, String]()
-    bodies.foreach { (stats, parents) =>
-      val shadowing = memberNames(stats) ++ visibleNames(parents, Set.empty)
+    bodies.foreach { (bodySym, stats, parents) =>
+      val declared  = memberNames(stats)
+      val inherited = visibleMembers(parents, Set.empty)
+      val shadowing = declared ++ inherited.map(nm)
       if shadowing.nonEmpty then
         val (defs, refs) = survey(stats)
-        // a capture: referenced here, declared elsewhere, and OWNED BY A METHOD — which is what
-        // makes it a local or a parameter rather than a field. A field of the enclosing class is
-        // not this pass's business: java shadows it the same way scala does.
-        (refs -- defs).toList.sortBy(_.raw).foreach { s =>
+
+        /** rename `s` out of the way, and say under which of the two rules. */
+        def move(s: SymId, clash: String, why: String): Unit =
           val n = renames.getOrElse(s, nm(s))
-          if shadowing(n) && p.symbolOf(s).exists(sy => methods(sy.owner)) then
-            var fresh = n + "$local"
-            while shadowing(fresh) do fresh += "$"
-            renames(s) = fresh
-            val owner = p.symbolOf(s).map(_.owner).getOrElse(SymId.None)
-            note(out, Decision.Kind.RenamedMember, p, owner,
-              Map(
-                "from"  -> n,
-                "to"    -> fresh,
-                "clash" -> "captured-local-vs-nested-member",
-                "why"   -> ("java keeps methods and variables in SEPARATE namespaces, so a class " +
-                  "nested in this method may declare a member with the same name as one of its " +
-                  "locals and both stay reachable; scala has one namespace and the member wins, " +
-                  "leaving the capture unnameable"),
-              ),
-              MemberRenameRule)
+          var fresh = n + "$local"
+          while shadowing(fresh) do fresh += "$"
+          renames(s) = fresh
+          val owner = p.symbolOf(s).map(_.owner).getOrElse(SymId.None)
+          note(out, Decision.Kind.RenamedMember, p, owner,
+            Map("from" -> n, "to" -> fresh, "clash" -> clash, "why" -> why),
+            MemberRenameRule)
+
+        // (1) UNNAMEABLE — a capture referenced here, declared elsewhere, and OWNED BY A METHOD,
+        // which is what makes it a local or a parameter rather than a field. A field of the
+        // enclosing class is not this pass's business: java shadows it the same way scala does.
+        (refs -- defs).toList.sortBy(_.raw).foreach { s =>
+          if shadowing(renames.getOrElse(s, nm(s))) && p.symbolOf(s).exists(sy => methods(sy.owner)) then
+            move(s, "captured-local-vs-nested-member",
+              "java keeps methods and variables in SEPARATE namespaces, so a class " +
+              "nested in this method may declare a member with the same name as one of its " +
+              "locals and both stay reachable; scala has one namespace and the member wins, " +
+              "leaving the capture unnameable")
         }
+
+        // (2) AMBIGUOUS — the body names an INHERITED member and an enclosing method's scope
+        // defines that name too. Nothing here is a capture: java bound the inherited member (probed
+        // — an inherited FIELD shadows an enclosing method's local or parameter, through an
+        // anonymous body, a named local class or a grandparent alike), so the reference in the TIR
+        // already points at the member and rule (1) can see nothing to move. Scala 3 does not
+        // shadow at all in this configuration — `E049 Reference to x is ambiguous. It is both
+        // defined in <outer> and inherited subsequently in <class>` — so what has to move is the
+        // OUTER definition, and renaming it leaves the bare name binding exactly what java bound.
+        val ambiguous = refs.intersect(inherited).map(nm).filterNot(declared)
+        if ambiguous.nonEmpty then
+          enclosedBy.getOrElse(bodySym, Set.empty).toList.sortBy(_.raw)
+            .flatMap(m => scopeOf.getOrElse(m, Nil)).sortBy(_.id.raw).foreach { s =>
+              if ambiguous(renames.getOrElse(s.id, s.name)) && !defs(s.id) then
+                move(s.id, "captured-local-vs-inherited-member",
+                  "this name is declared in this method AND inherited by a class nested inside " +
+                  "it; java resolves that to the INHERITED member, and scala 3 resolves it to " +
+                  "neither — the reference is ambiguous. Moving the enclosing declaration is what " +
+                  "leaves the bare name binding what java bound")
+            }
     }
     if renames.isEmpty then p
     else p.rebuilt(symbols = SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))))

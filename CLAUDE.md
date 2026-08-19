@@ -1345,6 +1345,35 @@ Two things every such pass must do, learned by getting both wrong:
   Note the nested class is usually ANONYMOUS, so it lives inside a TERM — a walk over class bodies
   finds none of them (§3).
 
+**…and the fourth face has TWO RULES, because scala answers this configuration in two ways and java
+in one.** The bullet above is one of them — *the capture is UNNAMEABLE*, the body writes the capture,
+the class declares or inherits the name, and scala's innermost-first resolution hands over the
+member. Scala 3 has a second answer that is not shadowing at all: a name **defined in an enclosing
+scope AND inherited from a parent** is AMBIGUOUS, and neither wins —
+`E049 Reference to html is ambiguous. It is both defined in method render and inherited subsequently
+in anonymous class …`. Java has no such rule. Probed against `javac` before anything was written: an
+INHERITED FIELD SHADOWS an enclosing method's local or parameter and the member simply wins, through
+an anonymous body, a named local class and a grandparent alike. So the reference the frontend records
+already points at the MEMBER, there is no capture reference anywhere, and a guard written as
+*referenced inside the nested body* honestly finds nothing to move. The guard's SECOND conjunct was
+right and its first one was doing the whole job: such a pass has to read the enclosing SCOPE, not
+only what the body named.
+
+The remedy is the same rename, and in this face it PRESERVES java's binding rather than repairing a
+broken one — with the enclosing declaration moved, the bare name binds the inherited member, which is
+what javac bound. **PROBE THE TARGET LANGUAGE'S RULE, then probe java's, before writing the guard**:
+three of this one's conjuncts are cells of that probe and no amount of reasoning produces them —
+the ambiguity fires for an inherited METHOD exactly as for an inherited field, although java's two
+namespaces keep those apart, so the inherited set may not be narrowed to fields; a member the body
+DECLARES ITSELF is not ambiguous with anything and is subtracted, because scala's own sentence says
+*inherited*; and the same ambiguity fires where the outer definition is a FIELD OF AN ENCLOSING
+CLASS, which the bullet above correctly refuses to rename and where the right remedy is therefore a
+QUALIFICATION at the reference rather than a move. Precision is paid differently in the second rule,
+since it has no reference to read the capture off: it ranges over the enclosing method's whole scope
+and fires only where the body really names an inherited member, so the over-approximation available
+to it is a LOCAL whose name happens to match one — a name nothing outside the method can see, which
+is the direction this section already permits. `ENGINE-LIMITS.md` C16.
+
 **…and a NAME CLASH and an IMPLEMENTATION PAIR look identical, so a renaming pass must ask which it
 is.** Every pass above renames because two declarations cannot share a name; none of them asks
 whether the two are the SAME MEMBER. That question does not arise while the emitted forms are java's
