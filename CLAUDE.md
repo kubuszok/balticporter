@@ -392,7 +392,7 @@ code** — test sources included, because a fixture that hard-codes one library'
 mistake one layer down:
 
 ```
-grep -rn --include='*.scala' -E "badlogic|libgdx|liqp|liquid\.parser|earlygrey|simplegraphs|dongbat|jbump|czyzby|noise4j|tommyettinger|anim8|textratypist|regexodus|crashinvaders|eskalon|mgsx|vladsch|flexmark|nibor|fasterxml|antlr|strftime" balticporter/api balticporter/engine balticporter/frontend-spoon balticporter/runtime | grep -vE ":\s*(\*|//|/\*)"
+grep -rn --include='*.scala' -E "badlogic|libgdx|liqp|liquid\.parser|earlygrey|simplegraphs|dongbat|jbump|czyzby|noise4j|tommyettinger|anim8|textratypist|regexodus|kotcrab|visui|crashinvaders|eskalon|mgsx|vladsch|flexmark|nibor|fasterxml|antlr|strftime" balticporter/api balticporter/engine balticporter/frontend-spoon balticporter/runtime | grep -vE ":\s*(\*|//|/\*)"
 ```
 
 **Every corpus library's identifying string is in that pattern, and so are its DEPENDENCIES'.** One

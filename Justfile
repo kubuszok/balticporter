@@ -13,6 +13,7 @@
 #   just ai-test-measure             gdx-ai's own 10-@Test JUnit suite — emitted, compiled and RUN
 #   just textra-measure              TextraTypist, compiled WITH libGDX core (a dependent port)
 #   just textra-diff-measure         the REFERENCE hand port's own suite over the emitted sge.textra
+#   just visui-measure               VisUI's ui/ module, compiled WITH libGDX core (a dependent port)
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
@@ -91,6 +92,7 @@ screens_module := "ported/sge-screens"
 vfx_module    := "ported/sge-vfx"
 ai_module     := "ported/sge-ai"
 textra_module := "ported/sge-textra"
+visui_module  := "ported/sge-visui"
 liqp_module   := "ported/ssg-liquid"
 md_module     := "ported/ssg-md"
 # ssg-md's EXTENSION half, at its OWN port root (`corpus/ports/ssg-md/ext.conf` D-mde-1/2). A run's
@@ -139,6 +141,15 @@ ai_ref_tests  := "../sge/sge-extension/ai/src/test/scala"
 # which is why the lane runs it on the tree rather than omitting the block — and it is what says so
 # the day upstream gains a real suite.
 textra_src    := "../sge/original-src/textratypist"
+# VisUI's WHOLE upstream checkout — the port converts `ui/src/main/java` and the lane censuses THREE
+# other trees out of it separately, because every one of them is a number a document would get
+# wrong. `ui/src/test` is 30 files declaring **2** real `@Test` (28 of the rest are
+# `extends VisWindow` demos that `ui/build.gradle` excludes by NAME, and one more is a demo sitting
+# OUTSIDE that excluded directory that matches the `**/*Test.**` include and contributes zero); the
+# out-of-scope `usl/` module is 18 files holding 7 of the checkout's 9 real `@Test`; and the
+# RESOURCES the emitted code names by hardcoded classpath string are a fourth. A filename census
+# over any of them reproduces a wrong number and only `java_test_count` reproduces the 2.
+visui_src     := "../sge/original-src/vis-ui"
 # gdx-gltf's WHOLE test tree, not the one file the port migrates: SEVEN java files sit there and
 # only ONE is a suite (`AttributesCompareTest`, 8 `@Test`). The other six are `extends Game` demos
 # with a `main` that opens an lwjgl window. `java_test_count` over the tree is what re-derives the
@@ -309,6 +320,12 @@ textra_deps   := ""
 # port published, exactly as `textra-measure` derives it (`declared_dep_flags`).
 textra_ref_tests := "../sge/sge-extension/textra/src/test"
 textra_test_deps := "--dependency org.scalameta::munit:1.0.2"
+# VisUI's `ui/build.gradle` declares ONE compile coordinate — `com.badlogicgames.gdx:gdx` — which
+# arrives as the SOURCE the base port emitted rather than as a jar, exactly as it does for every
+# other libGDX dependent. So this is empty and stays empty, and the lane still derives whatever the
+# RUN published (`declared_dep_flags`) rather than assuming the port declares nothing: an empty
+# variable is this port's fact today and a derived flag is what says so the day it stops being one.
+visui_deps    := ""
 # flexmark's one compile-scope coordinate, `org.jetbrains:annotations:24.0.1`, is a FRONTEND input
 # AND a compile one — and this line was written empty on the reasoning that it could not be, which
 # the port's first run disproved in one number. The reasoning was: the annotations are markers,
@@ -2790,6 +2807,180 @@ textra-diff-measure:
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
+# VisUI's `ui/` module — a libGDX dependent, and the first port whose licence obligation is about
+# something that is NOT CODE.
+#
+# ONE source set and no suite stage. Upstream's `ui/src/test` declares TWO real `@Test`, which is
+# `gltf-measure`'s shape rather than `jbump-measure`'s — a suite exists and is nearly empty — so the
+# lane re-derives that 2 and refuses to let it drift, while the port itself has no test source set
+# yet. `PROGRESS.md` §10.9 holds both later waves (the two-test port, and the differential probe
+# against the reference hand port's 72-case MUnit suite).
+#
+# The compile line carries NO coordinate of its own (`visui_deps` is empty and says why): libGDX
+# arrives as the base's emitted SOURCE, and there is no third-party jar in this library at all.
+# ---------------------------------------------------------------------------------------------
+visui-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
+    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{visui_src}}"
+    REPORT="$ROOT/port-report/VisUiMigrate"
+
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.visui.VisUiMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
+      echo "!! VisUiMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
+      exit 1
+    fi
+    echo "-- VisUiMigrate (every line it printed) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
+    echo
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
+
+    echo
+    echo "-- scope: ui/ ONLY, and usl/ is a NAMED follow-up rather than a silent drop --"
+    # RE-DERIVED, not asserted in a comment. `ui/src/main/java` holds 164 `.java` files and two are
+    # `package-info.java` — javadoc-only placeholders declaring no type — so 162 are in scope.
+    ALL_JAVA=$(find {{visui_src}}/ui/src/main/java -name '*.java' | wc -l | tr -d ' ')
+    PKG_INFO=$(find {{visui_src}}/ui/src/main/java -name 'package-info.java' | wc -l | tr -d ' ')
+    USL_JAVA=$(find {{visui_src}}/usl/src/main/java -name '*.java' | wc -l | tr -d ' ')
+    echo "ui/ .java: $ALL_JAVA   package-info: $PKG_INFO   in scope: $((ALL_JAVA - PKG_INFO))"
+    echo "usl/ .java: $USL_JAVA  — OUT OF SCOPE for this port and stated as such (PROGRESS.md §10.9)"
+    # The one-directional independence is what makes the deferral cost nothing, and it is a GREP
+    # rather than a claim: `usl/` names no libGDX type, and `ui/` names no `com.kotcrab.vis.usl`
+    # type. The coupling is build-time only — the root `build.gradle` runs an already-published USL
+    # over `usl/styles/*.usl` and checks the compiled `uiskin.json` into `ui/`'s resources — so `ui/`
+    # ships USL's OUTPUT and never calls its CODE. The day either direction gains a reference, this
+    # is what says the deferral has stopped being free.
+    UI_USES_USL=$(grep -rl "com\.kotcrab\.vis\.usl" {{visui_src}}/ui/src/main/java | wc -l | tr -d ' ')
+    USL_USES_GDX=$(grep -rl "com\.badlogic\.gdx" {{visui_src}}/usl/src/main/java | wc -l | tr -d ' ')
+    echo "ui/ files referencing usl: $UI_USES_USL   usl/ files referencing libGDX: $USL_USES_GDX"
+    if [ "$UI_USES_USL" != "0" ] || [ "$USL_USES_GDX" != "0" ]; then
+      echo "!! THE TWO MODULES ARE NO LONGER INDEPENDENT — the USL deferral was priced on that"
+      echo "   independence (PROGRESS.md §10.9) and the price has changed."
+    fi
+
+    echo
+    echo "-- licence obligations: TWO regimes, and the second is not about CODE --"
+    # (a) is reproduced BY THE COMMENT HARVEST and (b) by `Provenance.notices`. §4.58's own argument
+    # is why (a) is grepped on both sides rather than assumed: the harvest regressed to `Nil` once
+    # and the emitted Scala was still valid. The `notices` half needs no grep to prove it was
+    # DECLARED — a declared file that is not there is fatal at the run — but the COPY is asserted,
+    # because §4.57's whole point is that naming a licence is not including it.
+    #
+    # THE DENOMINATOR IS THE SCOPE THIS RUN CONVERTS, NOT THE TREE — §4.56's rule read at a
+    # denominator, and `textra-measure` is where it fired first. Both `package-info.java` DO carry
+    # the Apache header and neither is EMITTED, so a count over the tree reports a two-file loss with
+    # nothing to attribute it to: there is no emitted file those notices could head.
+    UP_APACHE=$(grep -rl --exclude=package-info.java "Licensed under the Apache License" {{visui_src}}/ui/src/main/java | wc -l | tr -d ' ')
+    APACHE=$(grep -rl "Licensed under the Apache License" {{visui_module}}/src_managed/main/scala | wc -l | tr -d ' ')
+    EMITTED=$(find {{visui_module}}/src_managed/main/scala -name '*.scala' | wc -l | tr -d ' ')
+    echo "(a) Apache-2.0 per-file notice: $UP_APACHE upstream file(s) in scope carry it, $APACHE of $EMITTED emitted file(s) reproduce it"
+    echo "    the other $((EMITTED - APACHE)) emitted file(s) come from upstream files that carry NO per-file"
+    echo "    notice — GdxAiPolicy's one-file case exactly, and the first reason (b)'s key exists"
+    [ "$APACHE" = "0" ] && echo "!! THE PER-FILE HARVEST IS PRODUCING NOTHING — every emitted file is an unattributed derived work"
+    [ "$APACHE" != "$UP_APACHE" ] && echo "!! THE TWO SIDES DISAGREE — $UP_APACHE upstream against $APACHE emitted. Either the harvest lost a notice or upstream's headers moved; §4.58 says only a text-to-text comparison can see this."
+    for n in LICENSE NOTICE icons-license; do
+      if [ -f "{{visui_module}}/src_managed/main/$n" ] || [ -f "{{visui_module}}/src_managed/$n" ]; then
+        echo "(b) $n copied beside the emitted code"
+      else
+        echo "!! (b) $n WAS NOT COPIED — declared in Provenance.notices. ui/NOTICE states that the"
+        echo "   shipped ICONS are CC BY-ND 3.0 and points at icons-license; Apache-2.0 §4(d) makes"
+        echo "   carrying that NOTICE unconditional for a derivative, and no harvest can reach a"
+        echo "   licence that lives on a PNG (§4.57)"
+      fi
+    done
+
+    echo
+    echo "-- the resource residue: what the emitted code NAMES and what this run SHIPS --"
+    # A STATED RESIDUE, RE-DERIVED. VisUI loads its skin, its i18n bundles and the colour picker's
+    # shaders through HARDCODED CLASSPATH STRINGS (`Gdx.files.classpath("com/kotcrab/vis/ui/…")`).
+    # A rename moves SYMBOLS and must not touch a string literal (§4.56), so those paths stay
+    # UPSTREAM whatever this port's types are called — which is exactly what the reference hand port
+    # does. This engine has no general verbatim resource-copy mechanism (`serviceProviders` copies
+    # ONE well-known family and REWRITES both namespaces, which is the wrong act here), so the port
+    # emits code naming resources the run does not ship. The gap is (b) — a mechanism the engine
+    # does not have yet, with the file list belonging to the port — and it is printed rather than
+    # asserted because a residue nobody re-derives is a residue that silently changes size.
+    UP_RES=$(find {{visui_src}}/ui/src/main/resources -type f | wc -l | tr -d ' ')
+    NAMED=$(grep -rhoE '"com/kotcrab/vis/[^"]*"' {{visui_module}}/src_managed/main/scala | sort -u | wc -l | tr -d ' ')
+    SHIPPED=$(find {{visui_module}}/src_managed -path '*resources*' -type f 2>/dev/null | wc -l | tr -d ' ')
+    echo "upstream resources: $UP_RES   distinct upstream classpath paths NAMED in emitted Scala: $NAMED   shipped by this run: $SHIPPED"
+    if [ "$NAMED" != "0" ] && [ "$SHIPPED" = "0" ]; then
+      echo "   RESIDUE (b): the emitted code names $NAMED classpath resource path(s) this run does not"
+      echo "   ship. Not a drop — the paths are correct and must stay UNRENAMED; what is missing is a"
+      echo "   verbatim resource-copy mechanism. PROGRESS.md §10.9 holds it."
+    fi
+
+    echo
+    echo "-- test discovery --"
+    # UPSTREAM'S OWN SMALL NUMBER, re-derived rather than quoted — `gltf-measure`'s stage. A suite
+    # that exists and is nearly empty is worse than none, because a filename census over that tree
+    # reports 30 files and a test census reports 2, and only the second is a fact about behaviour.
+    UI_TESTS=$(java_test_count {{visui_src}}/ui/src/test)
+    UI_TEST_FILES=$(find {{visui_src}}/ui/src/test -name '*.java' | wc -l | tr -d ' ')
+    USL_TESTS=$(java_test_count {{visui_src}}/usl/src/test)
+    echo "@Test in ui/src/test ($UI_TEST_FILES files): $UI_TESTS"
+    echo "@Test in usl/src/test (OUT OF SCOPE): $USL_TESTS"
+    if [ "$UI_TESTS" = "2" ]; then
+      echo "   TWO real tests upstream, both validator unit tests; the other $((UI_TEST_FILES - 2)) files are"
+      echo "   \"extends VisWindow\" demos needing a GL context, and ui/build.gradle excludes the"
+      echo "   test.manual package by name. This port has NO test source set yet, so it has NO"
+      echo "   behavioural evidence at all (CLAUDE.md §3) and every §4.4 form in it is UNMEASURED."
+      echo "   PROGRESS.md §10.9 scopes both waves that would change that."
+    else
+      echo "!! THE UPSTREAM TEST COUNT HAS MOVED — was 2. Re-read PROGRESS.md §10.9's test plan."
+    fi
+    echo "emitted test files: 0 (this port has no test source set)"
+
+    echo
+    break_residue {{visui_module}}/src_managed
+
+    echo "-- compile --"
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
+    # port that does not compile — a false NEGATIVE on the headline number.
+    #
+    # No `--test` and no test directory: this port has ONE source set. `scala-cli compile` reports on
+    # the MAIN scope whatever directories it is handed, so a test tree added here without `--test`
+    # would have its errors read and not reported (CLAUDE.md §4.56).
+    DECLARED=$(declared_dep_flags "$REPORT" | tr '\n' ' ')
+    echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
+    DEPS="{{visui_deps}} $DECLARED"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/visuimeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/visuimeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/visuimeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/visuimeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/visuimeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/visuimeasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/visuimeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    echo
+    echo "-- correlation: every error located to its member and its Java origin --"
+    # Run WHETHER OR NOT it compiled, for `noise4j-measure`'s reason: with no suite there is no
+    # second thing to correlate, so the compile output is the only diagnostic this port has and it is
+    # always worth attributing. BOTH ports' maps — an error inside VisUI resolves through its own,
+    # and one that reaches the base resolves through libGDX's, which is what a dependent's wall
+    # looks like.
+    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/visuimeasure.txt \
+      --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+      --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
@@ -2832,7 +3023,12 @@ measure-all:
     # earlier it would measure the previous engine's emit of the library it probes. Upstream ships no
     # suite for this library, so unlike gdx-ai there is no ported gate for it to sit on top of — this
     # IS the port's behavioural gate, and it is the only one it has.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure; do
+    # `visui-measure` is LAST, for the reason `textra-measure` was appended next-to-last: its only
+    # ordering constraint is `gdx-measure`, which is first, so any position after that one is
+    # correct — and the end is the position that leaves the nineteen established lanes' order, and
+    # therefore their numbers, untouched by this port's arrival. It carries no differential lane
+    # yet, so nothing follows it.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure visui-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
