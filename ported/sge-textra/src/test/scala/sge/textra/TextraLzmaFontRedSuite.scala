@@ -13,7 +13,10 @@
 // mapping rows applied here: T1, T2, T6, T7, and one this file adds —
 //   T9  `LzmaUtils`, `FileType` -> `sge.textra.utils.LzmaUtils`, `sge.Files.FileType`: the hand
 //       port hoisted both to the enclosing package; this port emits them where java declared them
-//       (`textra/utils/LzmaUtils.java`, and `FileType` NESTED inside `Files`).
+//       (`textra/utils/LzmaUtils.java`, and `FileType` NESTED inside `Files`). `PROGRESS.md` §10.8.4
+//       is the manifest key that decided the first of those and named this very file as one of the
+//       three that would have to spell it — a fully-qualified name here, since this port emits no
+//       imports at all (`CLAUDE.md` §6).
 //
 // The reference file's THREE inline stubs — `StubApplication`, `StubNet`, `MapFiles` — are gone,
 // replaced by `HeadlessSge` (a REWRITE, `PROGRESS.md` §10.8.13 correction 3), and the `NoopGraphics`
