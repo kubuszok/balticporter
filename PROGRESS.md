@@ -5160,8 +5160,8 @@ declaring **zero** `@Test`: `build.gradle` names no JUnit coordinate at all, 113
 `public static void main`, and 107 extend `ApplicationAdapter`/`Game`/`InputAdapter`. It is a
 directory of manual LWJGL3 demos — the demo-app trap taken to its limit, `sge-jbump`'s precedent
 rather than `sge-ai`'s (which had two real test files with 10 `@Test`). There is nothing for the
-engine to port, so this port has **no behavioural evidence at all** and every `CLAUDE.md` §4.4 form
-in it is UNMEASURED. `textra-measure` re-derives that zero on every run rather than omitting the
+engine to port, so this port's behavioural evidence can only be DIFFERENTIAL: §10.8.15's lane is all
+of it, and until that lane existed every `CLAUDE.md` §4.4 form in this library was UNMEASURED. `textra-measure` re-derives that zero on every run rather than omitting the
 stage, because a suite with no discoverable tests runs zero and reports success, and because the
 block is what says so the day upstream gains a real one.
 
@@ -5711,7 +5711,9 @@ opened and there was nothing behind it.
 
 What remains is what §10.8.7 already classified — `omissions 52` (41 of them one `super(args)`
 family), `base-surface 2` and `port-map 1`, all three §1(a) and two of them in the BASE — plus the
-behavioural gate, which this library still has none of. §10.8.13.
+behavioural gate, which this library had none of at this commit. §10.8.13 is its census and §10.8.15
+is the gate: **160 of the reference hand port's 239 tests now run against this port, and all 160
+pass.**
 
 ### 10.8.13 The DIFFERENTIAL PROBE — the FIRST CENSUS, four corrections, and 30 of 30 passing
 
@@ -5725,6 +5727,10 @@ One file declares no test (`HeadlessTextraSge`, the fixture), so the suite popul
 each suite selects in the 92 emitted files, not by compiling: the RefChecks-honest pass is owed before
 any of this is acted on, and on gdx-ai that pass moved four files and 16 tests in the dangerous
 direction.
+
+(**Superseded by §10.8.15's `RefChecks`-honest census, which is the one to quote**: class (b) is
+empty — `FontSuite` is class (c) on both of its halves, measured — so the final split is 11 / 160,
+0 / 0 and 21 / 79. The table below is the typer-only reading and is kept for what it got wrong.)
 
 | class | files | tests | what it means |
 |---|---|---|---|
@@ -5818,7 +5824,20 @@ state `CLAUDE.md` §3 says proves nothing.
 **THE ANSWER.** Of the reference hand port's **32 files / 239 `test(…)`**, **11 files / 160 tests**
 run against the mechanically emitted `sge.textra.*`: they compile at **0 errors** — so `RefChecks`
 runs, which is §10.7.12's rule ② and the reason its census had to be taken twice — and they are
-**160 passing, 0 failing, 0 skipped**, with `expected-failures.tsv` EMPTY. The adapted copies are the
+**160 passing, 0 failing, 0 skipped**, with `expected-failures.tsv` EMPTY.
+
+**THE FINAL CENSUS, against §10.8.13's typer-only reading.** The `RefChecks`-honest pass moved ONE
+file and 14 tests, and it moved them out of (b) rather than out of (a) — the opposite direction to
+gdx-ai's, where four files and 16 tests fell out of the candidate set:
+
+| | §10.8.13, typer-only | this pass, `RefChecks`-honest and RUN |
+|---|---|---|
+| (a) runs against this port | 11 files / 160 tests | **11 files / 160 tests — 160 passing** |
+| (b) blocked by the hand port | 1 file / 14 tests | **EMPTY** |
+| (c) blocked by the environment or by a constructor java lacks | 20 files / 65 tests | **21 files / 79 tests** |
+
+Every one of the 160 candidates survived the mapping, which is why (a) did not move: this library's
+divergence between the two ports is concentrated in the FIXTURE and not in the surface. The adapted copies are the
 port's HAND-WRITTEN half (`CLAUDE.md` §5.5) and are never counted as ported tests.
 
 | tests | file | mapping rows |
