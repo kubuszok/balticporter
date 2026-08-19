@@ -5701,20 +5701,85 @@ What remains is what §10.8.7 already classified — `omissions 52` (41 of them 
 family), `base-surface 2` and `port-map 1`, all three §1(a) and two of them in the BASE — plus the
 behavioural gate, which this library still has none of. §10.8.13.
 
-### 10.8.10 Next
+### 10.8.13 The DIFFERENTIAL PROBE — the FIRST CENSUS, and it corrects §10.8.1 in four ways
 
-1. **The `E172`**, which needs a decision this wave deliberately does not take: either the engine
-   COUNTS the unsuppliable-construction seam (§1(a), and the port still does not compile), or the base
-   grows a way for a framework-instantiated type to obtain a context (§1(b), an `sge` API decision), or
-   this port substitutes `LinkEffect#onApply`'s body so the class is never threaded — which is
-   `MethodBodyTransform`'s shape, costs one behaviour, and additionally needs an ordering edge the
-   phase does not declare (a body substitution has to land BEFORE `globals->implicits` reads it).
-2. **The differential probe** (§10.8.1) — the only route to behavioural evidence this library has, and
-   the reason a green compile here would prove nothing (§3). **It is GATED on item 1**: the lane's own
-   shape (`ai-diff-measure`) refuses to run a suite that does not compile, and this port's emitted
-   Scala is one of that compile's inputs. The census population is re-derived and unchanged — 32 files
-   in `../sge/sge-extension/textra/src/test` (20 `scala`, 11 `scalajvm`, 1 `scalanative`), one of which
-   is the `HeadlessTextraSge` FIXTURE rather than a suite.
+The population is re-derived and §10.8.1's headline figures hold exactly: **32 files — 20 `scala`, 11
+`scalajvm`, 1 `scalanative` — 5,819 lines, 239 anchored `test(` calls, 19 of them `*RedSuite.scala`.**
+One file declares no test (`HeadlessTextraSge`, the fixture), so the suite population is **31 suites /
+239 tests**, and the `scalanative` file is a BYTE-IDENTICAL duplicate of the `scalajvm`
+`TextraLzmaFontRedSuite` — 5 of the 239 are the same five tests compiled twice.
+
+**THE CENSUS (typer-only, and therefore a FLOOR — §10.7.12 rule ②).** Taken by looking up every member
+each suite selects in the 92 emitted files, not by compiling: the RefChecks-honest pass is owed before
+any of this is acted on, and on gdx-ai that pass moved four files and 16 tests in the dangerous
+direction.
+
+| class | files | tests | what it means |
+|---|---|---|---|
+| **(a)** CANDIDATE | **11** | **160** | references only what the port emits; needs a NAME/SHIM row or nothing |
+| **(b)** BLOCKED BY THE HAND PORT | **1** | **14** | `FontSuite` — the hand port made `Font.GlyphRegion(Float, Float, Float)` its PRIMARY constructor and java has no such form (the port emits java's five). 4 of the 14 build one; the other 10 additionally need (c) |
+| **(c)** BLOCKED BY ENVIRONMENT | **20** | **65** | every one declares or consumes a `given Sge` and needs a headless fixture built against the MECHANICAL core |
+
+The eleven candidates, with what each costs: `utils/BlockUtilsSuite` 7 and
+`utils/LZBCompressionSuite` 13 and `utils/ColorUtilsSuite` 5 (**no mapping at all**, byte-copyable);
+`FontScaleStaticsIss816RedSuite` 3, `FontDeprecatedScaleStaticsIss837RedSuite` 1 and
+`TextraLayoutMaxLinesIss778RedSuite` 1 (none); `utils/CaseInsensitiveIntMapSuite` 54 and
+`utils/StringUtilsSuite` 33 and `utils/PaletteSuite` 5 and `TypingConfigSuite` 5 and
+`LayoutLineSuite` 33 (one to five rows each).
+
+**Four corrections to §10.8.1**, and each is a fact the scoping could not have had:
+
+1. **it is 20 environment-blocked files, not five.** §10.8.1 names five that "build real
+   `Stage`/`Actor` graphs"; fifteen more need the same fixture, and following the scoping would have
+   put fifteen uncompilable files in the candidate set. Only **three** of the 32 build a real `Stage`
+   at all, and one of those three (`TextraLabelWidgetRedSuite`) is not on §10.8.1's list while three
+   that are on it build none — they are blocked by the `Sge` context and by `sge.noop.*`, which is a
+   different and much cheaper fact;
+2. **`Font` comes OFF the candidate list.** §10.8.1 names it; it is class (b), and the blocker is a
+   constructor the hand port added, which no name substitution reaches;
+3. **the fixture cannot be adapted, only rewritten.** `HeadlessTextraSge` rests on six things the
+   mechanical port does not emit and never will, because the hand port invented them:
+   `sge.noop.{NoopGraphics, NoopAudio, NoopInput}`, `lowlevel.Nullable`, `sge.net.SgeHttpClient`,
+   `sge.graphics.TextureTarget`, `sge.utils.Seconds`/`sge.WorldUnits`, and a hoisted top-level
+   `sge.files.FileType` (the port emits it NESTED, as `sge.Files.FileType`). `Batch.begin()`/`end()`
+   are also PUBLIC in the emitted core against the fixture's `private[sge]`, which is *weaker access
+   privileges* — a `RefChecks`-only error, invisible until the tree types clean. The port's own
+   `SgeTestFixture` is not a drop-in either: it hands out null services BY DESIGN;
+4. **`munit_emitted` MISCOUNTS THIS TREE, and it is an instrument-silence finding rather than a
+   detail.** The shared discovery counter every lane uses is anchored on `test("` **on one line**, and
+   37 calls across 18 of these files put the name on the next line. On gdx-ai the same blind spot was
+   2 calls and BOTH sat in class (c), so the adapted population read the same number either way and
+   the `ai-diff-measure` comment says exactly that. Here **21 of the 37 are in CANDIDATE files**, so
+   the gdx-ai argument does not carry: a `textra-diff-measure` that passed `munit_emitted` to
+   `reconcile_outcomes` would hand it a denominator BELOW the real outcome count. Two honest answers —
+   teach `munit_emitted` the multi-line form (which moves gdx-ai's 194 and every other lane's
+   discovery figure, so it is measured corpus-wide first, §5) or carry a second counter and state both
+   readings in the recipe — and the one thing that must not happen is the number being passed on
+   unstated (`CLAUDE.md` §4.56: an instrument's silence is a wrong answer).
+
+**A DIFFERENTIAL RESULT WORTH NAMING BEFORE IT IS RUN.** `TextraLayoutMaxLinesIss778RedSuite` asserts
+that `Layout.add` answers `null` once the line cap is reached. The hand port returns `this` there; the
+mechanical port emits java's own `return null` (`Layout.scala:160-161`). The hand port wrote that RED
+suite about its OWN library and the mechanical port satisfies it — which is the shape §3.5 warns about
+in reverse, and the single clearest reason to run this probe rather than reason about it.
+
+**NOT CLAIMED BY THIS WAVE**, and stated as scope rather than left implied: the adapted copies, the
+`textra-diff-measure` lane, the RefChecks-honest re-census and the fixture rewrite. What is claimed is
+the census above and the corrections it makes to the plan §10.8.1 wrote. The wave order is the one
+gdx-ai used — copy the eleven under an enumerated NAME/SHIM table applied to comment-masked CODE and
+never to an assertion, compile them ALONE at 0 typer errors, re-take the census, then build the lane
+with its population re-derived and gated.
+
+### 10.8.14 Next
+
+1. **The differential probe**, whose FIRST CENSUS is §10.8.13 and whose four corrections to the
+   original scoping are there. The next wave is the adaptation: the eleven candidates under an
+   enumerated mapping table, compiled ALONE, re-censused with `RefChecks` running, then the
+   `textra-diff-measure` lane. `munit_emitted`'s multi-line blind spot is decided BEFORE the lane, not
+   inside it.
+2. **The fixture**, which is the gate on the other 65 tests and is a REWRITE rather than an
+   adaptation — six types the hand port invented, one nested-vs-hoisted enum and one access-modifier
+   difference that only `RefChecks` reports.
 3. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
 
 ---

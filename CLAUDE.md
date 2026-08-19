@@ -1672,6 +1672,19 @@ measurement lane's own command line is part of the measurement** — so when a l
 BREAKDOWN, check that the tool was asked for every part of it, and make each part fail on its own
 negative before trusting the total.
 
+**…and the FOURTH is a blind spot somebody MEASURED and argued harmless — on one library.** The three
+above are gaps nobody had noticed. This one is written down, in a comment, with its number: the shared
+test-discovery counter anchors on `test("` on ONE LINE, a lane's own recipe records that the reference
+suite it counts reads 194 that way against 196 under a looser reading, and states — correctly — that
+the two calls it misses both sit in files that lane excludes, so the population is the same number
+either way. That argument is a fact about THAT SUITE. Asked of the next library's hand-written suite
+the same counter misses **37 calls across 18 files, 21 of them in files the census keeps**, and a lane
+that passed the number on would hand its reconciler a denominator below the real outcome count. So a
+documented blind spot is not a closed question: **the argument that it does not matter is re-derived
+per corpus member, in the lane that is about to rely on it**, and where it stops holding the choice is
+to fix the counter (measured corpus-wide, because every lane's discovery figure moves) or to carry a
+second one and print both — never to inherit the earlier library's sentence.
+
 **And the SURVIVORS are not the DECLARATION, which is the same mistake read off the parse instead of
 off a string.** A rule may conclude something from what the program DECLARES; it may not conclude it
 from what this run happened to PARSE, and the two look identical whenever the port converts a whole
