@@ -5308,6 +5308,15 @@ across the eighteen widget classes and `Font`/`KnownFonts`/`FWSkin`. The lesson 
 was imaginary: it is that a `static { }` CENSUS is not a risk census, because the emitted FORM decides
 whether java had a trigger to lose at all.
 
+**THE ARRIVAL IS PROVABLY FLAT.** `just measure-all` with this lane appended: **18 of 18 lanes, exit
+0**, every one reporting `members whose EMITTED TEXT changed since the baseline: 0` and every error
+count at its committed baseline (`0` on fifteen lanes, `3` on liqp, `2` on ssg-md, `8` here). Suite
+totals unchanged at **1,908 passing / 11 failing / 2 not run** across the ten lanes that run one.
+`corpus/testOnly *` afterwards: 1,360 passed, 0 failed. A new port that touched an existing one would
+show up in exactly those two artifacts and in nothing else, which is why the wave is measured with
+`measure-all` rather than with its own lane (§1.5: a base port's green numbers are not evidence about
+its dependents, read here as *a new dependent's green numbers are not evidence about its siblings*).
+
 Two other first-run readings worth keeping:
 
 - **`trivia` 0 lost, 7 recovered** — three in `Font`, two in `KnownFonts`, one each in
