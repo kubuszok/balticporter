@@ -28,6 +28,8 @@ just jbump-measure        # jbump — a library that ships NO suite; the lane re
 just liqp-measure         # liqp + its own 105-file suite (§10.5)
 just md-measure           # flexmark-java core + the eleven util modules — no test set IN SCOPE (§10.6)
 just ai-measure           # gdx-ai, compiled WITH libGDX core (a dependent port; no suite YET, §10.7)
+just ai-diff-measure      # gdx-ai's DIFFERENTIAL gate — the REFERENCE HAND PORT's own MUnit suite,
+                          # run against the emitted port with nothing translated (§10.7.12)
 just measure-all          # every lane above, serially, stopping at the first failure
 
 just decision-counts      # decisions.tsv row counts by kind, every port
@@ -96,7 +98,8 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `sge-screens` | libgdx-screenmanager `src/main/java` | 22 → **22** (0 dropped, 0 injected) | **16** hand-written, all passing — upstream's 12 need an unported BACKEND (§9 libgdx-screenmanager) | **0** |
 | `sge-vfx` | gdx-vfx `core/src` + `effects/src` | 44 → **44** (0 dropped, 0 injected) | **64** hand-written, all passing — upstream has NO test SOURCE SET (§10.1) | **0** |
 | `sge-ai` | gdx-ai `gdx-ai/src` | 166 of 167 → **166** (1 dropped, 3 injected; the 167th is GWT super-source upstream's own build excludes, §10.7.1) | — | **0** after wave 2 (20 at first emit, 10 after wave 1; §10.7.5/§10.7.8, every one classified) |
-| `sge-ai-test` | gdx-ai `gdx-ai/tests` | 2 → **2** | **10 of 10 emitted and RUN — 10 passing, 0 failing.** 6 / 4 at wave 2, all four one MUnit-instance fact in `ParallelTest`, closed by the per-test reconstruction (§10.7.9/§10.7.10, `ENGINE-LIMITS.md` X4). The "24 / 196" in the hand-port table below is the REFERENCE PORT's own MUnit suite, not upstream's | **0** |
+| `sge-ai-test` | gdx-ai `gdx-ai/tests` | 2 → **2** | **10 of 10 emitted and RUN — 10 passing, 0 failing.** 6 / 4 at wave 2, all four one MUnit-instance fact in `ParallelTest`, closed by the per-test reconstruction (§10.7.9/§10.7.10, `ENGINE-LIMITS.md` X4). The "24 / 196" in the hand-port table below is the REFERENCE PORT's own MUnit suite, not upstream's — censused and half of it now RUNNING as `sge-ai-diff` (§10.7.12) | **0** |
+| `sge-ai-diff` | **nothing — this is HAND-WRITTEN Scala, never a ported suite** (`CLAUDE.md` §3) | — | **95 of the reference hand port's 194 RUN — 93 passing, 2 declared** (10 of its 24 files; the other 14 / 99 are class (c), §10.7.12) | **0** |
 | `sge-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `sge-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `sge-noise` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -4920,6 +4923,155 @@ What this port contributes to that record is the census on the other side of the
    absent) are what decides whether the gate is an adapter layer, a `MethodBodyTransform`-sized
    reconciliation, or a wave that translates nothing and only reports coverage. **No number is
    claimed for it until that census exists.**
+
+   **The census exists — §10.7.12. `just ai-diff-measure` is the lane, and every precondition above
+   turned out to be real:** all four families were met, in the order predicted, and two of them are
+   what class (c) is made of.
+
+### 10.7.12 The DIFFERENTIAL census — 10 of 24 files, 95 of 194 tests, 93 passing
+
+The reference hand port's own MUnit suite over `sge.ai.*` is 24 files and 194 `test(…)`. This port
+emits a DIFFERENT `sge.ai.*`, so the question §10.7.11 refused to guess at is *how much of that suite
+can be run against it without editing an assertion*. The answer is **10 files / 95 tests**, they
+compile at **0 errors**, and they run **93 passing / 2 declared**.
+
+The adapted copies live in `ported/sge-ai/src/test/scala` — the port's HAND-WRITTEN half, which
+`CLAUDE.md` §5.5 reserves for exactly this and where naming gdx-ai and sge is free. They are not
+ported tests and no lane counts them as any.
+
+**HOW THE CENSUS WAS TAKEN — and why it had to be taken TWICE.** The first pass compiled all 24
+reference files against the emitted port and attributed each error to its file: 194 errors, four
+files clean. That number is a **FLOOR**, because `CLAUDE.md` §3 is about this exact situation — with
+any typer error outstanding `RefChecks` never runs, so *needs to be abstract*, *overrides nothing*
+and *weaker access privileges* are all unmeasured. Compiling only the candidate set, at 0 typer
+errors, moved **four files and 16 tests** out of (a)+(b):
+
+| | typer-only pass | `RefChecks`-honest pass |
+|---|---|---|
+| (a) compatible as-is | 4 files / 16 tests | **1 file / 14 tests** |
+| (b) compatible after the mapping | 10 files / 95 tests | **9 files / 81 tests** |
+| (c) incompatible | 10 files / 83 tests | **14 files / 99 tests** |
+
+`SimpleSteerable` is the one to keep: it TYPED clean and then reported *18 unimplemented members*
+plus 22 *overrides nothing*, because the hand port reshaped `Steerable`/`Location` from java's
+accessors (`getPosition()`, `setOrientation(float)`, `isTagged()`) to Scala properties
+(`position`, `orientation_=`, `tagged`). A census read off the typer alone would have shipped it.
+
+**THE CENSUS, per file** (test counts are `munit_emitted`'s — the shared mechanism every lane's
+discovery figure uses; a looser `^\s*test\(` reads 196, the difference being two `test(s"…")` calls
+in class (c) files):
+
+| class | tests | file | why |
+|---|---|---|---|
+| **a** | 14 | `sched/SchedulerSuite.scala` | java's own API throughout; no imports at all |
+| **b** | 26 | `btree/TaskSuite.scala` | M1, M2, M6, M7 |
+| **b** | 17 | `utils/ArithmeticUtilsSuite.scala` | M2 |
+| **b** | 9 | `fsm/StateMachineSuite.scala` | M2, M3 |
+| **b** | 8 | `DefaultTimepieceSuite.scala` | M3 |
+| **b** | 7 | `pfa/AStarSuite.scala` | M1, M2 |
+| **b** | 7 | `utils/CircularBufferSuite.scala` | M1, M2, M3 |
+| **b** | 5 | `fsm/StateMachineEmptyProbeIss730RedSuite.scala` | M1, M2 |
+| **b** | 1 | `fsm/StateMachineStateAccessorsIss843CoverageSuite.scala` | M1, M2 |
+| **b** | 1 | `btree/BehaviorTreeRemoveByRefIss842RedSuite.scala` | M2 |
+| **c** | 28 | `btree/BehaviorTreeSuite.scala` | the hand port added a two-argument `Parallel(policy, orchestrator)`; java's is `(policy, orchestrator, tasks)`. Also the FIXTURE donor — see below |
+| **c** | 14 | `steer/behaviors/SteeringBehaviorsSuite.scala` | needs `SimpleSteerable`, which cannot conform (the property reshape above) |
+| **c** | 13 | `btree/utils/BehaviorTreeParserSuite.scala` | `BehaviorTreeParser.TaskRegistry` / `TaskMeta` / `AttrInfo` — the hand port's registry REDESIGN of the reflective parser. This port's answer is an injected top-level `TaskRegistry` (§10.7.8) |
+| **c** | 9 | `pfa/PathFinderQueueSuite.scala` | the hand port ADDED a `Timepiece` constructor parameter to `PathFinderQueue`; java's takes the pathfinder alone and reads `GdxAI.getTimepiece()` |
+| **c** | 8 | `steer/SteeringSuite.scala` | reads `Arrive.arrivalTolerance` / `decelerationRadius`, which java declares `protected`. Also the `SimpleSteerable` donor |
+| **c** | 7 | `btree/utils/BtreeParserOutOfBoxRedSuite.scala` | the registry redesign, plus `ConstantIntegerDistribution.value` and `TriangularFloatDistribution.low/high/mode`, which java declares `private` |
+| **c** | 7 | `msg/MessageDispatcherSuite.scala` | a `dispatchMessage` overload the hand port collapsed |
+| **c** | 4 | `msg/AiPriorityQueueRedSuite.scala` | reads `PriorityQueue.uniqueness`, which java declares `private` |
+| **c** | 3 | `pfa/PathFinderQueueSchedulableRedSuite.scala` | the `Timepiece` constructor parameter |
+| **c** | 2 | `pfa/PathFinderBroadcastDispatchRedSuite.scala` | the same, plus `Telegram.extraInfo` typed `Any` against java's `Object` |
+| **c** | 2 | `pfa/PathFinderQueueExtraInfoIss730RedSuite.scala` | the same pair |
+| **c** | 1 | `steer/behaviors/BlendedSteeringRemoveByRefIss842RedSuite.scala` | needs `SimpleSteerable` |
+| **c** | 1 | `msg/MessageDispatcherRemoveByRefIss730RedSuite.scala` | the hand port's `Pool` takes constructor properties; java's takes `(initialCapacity, max)` and declares `newObject()` `protected`. `RefChecks`-only |
+| **c** | 0 | `fma/FormationPatternAdditiveGetterIss730RedSuite.scala` | `FormationPattern.numberOfSlots_=` against java's `setNumberOfSlots`. `RefChecks`-only |
+
+**THE MAPPING — seven rows, and NO ASSERTION IS EDITED.** Each is a NAME or SHIM substitution between
+the two surfaces, applied to CODE only. A file these rows could not make compile is class (c) and was
+left out rather than repaired, because an assertion changed is evidence destroyed.
+
+| row | from (hand port) | to (this port) | why |
+|---|---|---|---|
+| **M1** | `x.getStatus`, `x.size`, `x.isZero` | `x.getStatus()`, `x.size()`, `x.isZero()` | a java parameterless method is emitted `def f()` and Scala 3 requires the parens. **113 of the first pass's 194 errors** — the single largest row |
+| **M1c** | `override def getNodeCount: Int` | `override def getNodeCount(): Int` | the same at a DEFINITION; a `=> Int` does not override a `(): Int`. `RefChecks`-only |
+| **M2** | `Nullable[T]`, `Nullable(x)`, `Nullable.empty[T]`, `.get`, `.isEmpty`, `.isDefined`; `DynamicArray`; `lowlevel.math.MathUtils` | `T`, `x`, `null`, the value itself, `== null`, `!= null`; `sge.utils.Array` (with `arr(i)` → `arr.get(i)`); `sge.math.MathUtils` | the hand port's option-shaped shim over a java reference; this port emits java's own nullable reference, so the shim is the identity and its three observers are null tests |
+| **M3** | `new DefaultTimepiece(maxDeltaTime = 0.25f)` | `new DefaultTimepiece(maxDeltaTime$p = 0.25f)` | the constructor funnel promotes a java ctor parameter as `name$p` (`CLAUDE.md` §4.55) |
+| **M4** | `steering.linear.length` | `steering.linear.len()` | the hand port renamed libGDX's `Vector.len()` |
+| **M5** | `class SuccessTask[E]` | `class SuccessTask[E <: java.lang.Object]` | java's own erasure bound, which this port emits on every generic |
+| **M6** | `override protected def copyTo` | `override def copyTo` | this port WIDENED `Task.copyTo` (its own porter note records the ctor-replay widening); an override may not narrow it back |
+| **M7** | `override def newInstance()` | `def newInstance()` | a member the HAND PORT ADDED and java never had. The declaration stays — it is the fixture's own method — and only the keyword claiming a parent goes |
+
+**A comment is not code.** The first cut of M2 rewrote `DynamicArray` inside a comment *about*
+`DynamicArray`, producing sentences naming `lowlevel.util.sge.utils.Array.removeValue` and citing
+`sge.utils.Array.scala:186-197`. Those are statements about files that exist, they are false, and no
+compile can see them — `CLAUDE.md` §4.56's name hazard arriving at a text edit. Every row is applied
+to comment-masked text now, and the class (a) file is copied byte-for-byte, because an edit a file
+does not need is an edit nobody can justify from the census.
+
+**A FIXTURE IS A DECLARATION, NEVER A TEST.** `TaskSuite` (26 tests, class (b)) constructs five leaf
+tasks — `SuccessTask`, `FailTask`, `RunningTask`, `CountingTask`, `MutableStatusTask` — that the hand
+port declares as TOP-LEVEL classes inside `BehaviorTreeSuite.scala`, which is class (c). So the
+classification is not closed under dependency, and the two honest ways out are opposite: drop the
+dependents, or carry the declarations. `btree/Fixtures.scala` carries them, and not one assertion
+came with them. Where the same move was tried for steering it FAILED on its merits — `SimpleSteerable`
+cannot conform to this port's `Steerable` at all — so `SteeringBehaviorsSuite` and
+`BlendedSteeringRemoveByRefIss842RedSuite` are class (c) by that failure and not by fiat.
+
+**THE FIRST RUN — 93 passing, 2 failing, 0 skipped, `outcomes 95 of 95`.** Both failures are ONE
+cause and it is **the port being right**:
+
+```
+sge.ai.btree.TaskCloneException: cloneTask() without a Task.TASK_CLONER needs reflective
+instantiation, which this port does not have (com.badlogic.gdx.utils.reflect is dropped:
+Scala.js and Scala Native cannot do it). Set Task.TASK_CLONER, which is the same escape
+hatch upstream documents for GWT.
+  · main sge.ai.btree.Task#cloneTask()  [com/badlogic/gdx/ai/btree/Task.java:258]
+```
+
+Java's `Task.cloneTask()` instantiates reflectively; this port drops that package and emits java's
+own documented escape hatch, which is louder than java and never quieter. The hand port answered the
+same question by ADDING a `newInstance()` member to `Task` — a redesign of the library's surface, not
+a translation of it — so these two tests assert its answer against the mechanical port's, and java's
+source is the oracle where the two disagree. They are DECLARED in
+`port-report/GdxAiDifferential/baseline/expected-failures.tsv` with `frame=sge.ai.btree.Task`, so a
+DIFFERENT failure in either test counts unexpected. Nothing is derived: this lane runs no migration,
+so it has no `dropped-types.tsv`, which is exactly why the rows had to be written and defended.
+
+Note what the 93 are evidence FOR. They are the first behavioural evidence this port has for
+`sched`, `fsm`, `pfa`, `utils` and most of `btree` — six packages upstream's own 10 `@Test` do not
+reach (§10.7.1) — and they found no `CLAUDE.md` §4.4 defect and no port bug at all.
+
+**WHAT CLASS (c) MEANS FOR COVERAGE — 14 files / 99 tests, and it is NOT 99 questions unanswered.**
+Every one of the fourteen is blocked by a fact about the HAND PORT rather than about this port, and
+they fall into four families:
+
+- **an API SHAPE the hand port CHANGED — 51 tests**, the largest family by far: a `Timepiece`
+  parameter added to `PathFinderQueue` (16), a two-argument `Parallel(policy, orchestrator)` (28),
+  a `dispatchMessage` overload collapsed (7). Supplying or dropping a constructor argument is not a
+  name substitution — it changes what the fixture DOES — so these are refused on the rule, not on
+  difficulty;
+- **a REDESIGN — 20 tests**: the registry-based `BehaviorTreeParser`, whose whole point is to avoid
+  reflection. This port's answer to the same problem is a different injected type (§10.7.8), so the
+  two are answering one question in two shapes and neither suite can test the other's;
+- **a PROPERTY RESHAPE — 16 tests**: `Steerable`, `Location`, `FormationPattern` and `Pool` turned
+  from java accessors into Scala properties. The most structural of the four, and the one that only
+  `RefChecks` could see;
+- **an ACCESS WIDENING — 12 tests**: reads of `protected` and `private` java fields
+  (`Arrive.arrivalTolerance`, `PriorityQueue.uniqueness`). Java's own test could not have written
+  these either — the hand port made them public.
+
+(51 + 20 + 16 + 12 = 99.) So the residue is a measure of **how far the hand port moved from java**,
+and the mechanical port cannot close it without becoming the hand port. Two things follow for the
+next wave: `steer` is the package with real coverage still available — 23 tests across three files,
+all behind one reshape — and it is available only by writing NEW fixtures against this port's
+`Steerable`, which would be hand-written tests rather than a differential gate; and nothing here is
+an engine defect, so none of it is an `ENGINE-LIMITS.md` entry.
+
+**Do NOT retry.** Compiling the reference files together and reading the per-file error counts as the
+census — that is the typer-only pass above, and it is wrong by four files and 16 tests in the
+dangerous direction. Compile the candidate set ALONE and let `RefChecks` run.
 
 ---
 
