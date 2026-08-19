@@ -122,6 +122,12 @@ vfx_src       := "../sge/original-src/gdx-vfx"
 ai_src        := "../sge/original-src/gdx-ai"
 ai_tests      := "../sge/original-src/gdx-ai/gdx-ai/tests"
 ai_demos      := "../sge/original-src/gdx-ai/tests"
+# The REFERENCE HAND PORT's own MUnit suite over `sge.ai.*` — the DIFFERENTIAL lane's denominator.
+# It is not an input to any migration and never becomes one: `ai-diff-measure` reads it to
+# re-derive the census population (24 files / 196 `test(`) rather than assert it, so the day the
+# hand port gains or loses a file the lane says the §10.7.12 census is stale instead of quietly
+# measuring a smaller reference.
+ai_ref_tests  := "../sge/sge-extension/ai/src/test/scala"
 # gdx-gltf's WHOLE test tree, not the one file the port migrates: SEVEN java files sit there and
 # only ONE is a suite (`AttributesCompareTest`, 8 `@Test`). The other six are `extends Game` demos
 # with a `main` that opens an lwjgl window. `java_test_count` over the tree is what re-derives the
@@ -1309,6 +1315,114 @@ ai-test-measure:
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
+# gdx-ai's DIFFERENTIAL gate — the REFERENCE HAND PORT's own MUnit suite, run against the
+# mechanically emitted `sge.ai.*`.
+#
+# WHY THIS LANE EXISTS. Upstream gdx-ai ships 2 test files / 10 `@Test`, and `ai-test-measure`
+# ports and runs all ten. Six of the library's packages are reached by none of them. The reference
+# hand port (`../sge/sge-extension/ai`) wrote its OWN suite over the same library — 24 files, 196
+# `test(…)` — and that suite is hand-written Scala, so a compiled port can be run against it with
+# nothing translated at all. That is the jbump precedent (`jbump-measure`'s probe: a port with no
+# upstream suite gated by hand-written code) at suite scale.
+#
+# WHAT IT IS NOT. These are NOT ported tests and are never counted as any (CLAUDE.md §3). The
+# emitted-test figures belong to `ai-test-measure`; this lane's population is a number about the
+# CENSUS, and the two must not be added.
+#
+# THE CENSUS IS RE-DERIVED HERE, NOT ASSERTED. `PROGRESS.md` §10.7.12 classifies each of the 24
+# reference files (a) compatible as-is / (b) compatible after the mapping / (c) incompatible, and
+# the population that classification was made against is READ OFF THE REFERENCE TREE on every run.
+# A hand port that gains a file, loses one, or gains a `test(…)` makes the census stale, and
+# nothing else in this repository could say so — the adapted copies would keep passing at their own
+# smaller number for as long as nobody looked (CLAUDE.md §4.56's instrument-silence rule).
+# ---------------------------------------------------------------------------------------------
+[doc("gdx-ai's DIFFERENTIAL gate — the hand port's own suite, run against the emitted port")]
+ai-diff-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    REPORT="$ROOT/port-report/GdxAiDifferential"
+    TREE="{{ai_module}}/src/test/scala"
+
+    # NO MIGRATION RUNS HERE, so there is no check report and no `show_check_report`. That is not a
+    # lane with fewer gates: this lane's whole subject is emitted code ANOTHER lane produced and
+    # already checked, and re-printing its counts here would be two readings of one artifact that
+    # can disagree (CLAUDE.md §4.6's `PortMap.searchPath` argument, at a report). What this lane
+    # owns is the compile of the hand-written half and the OUTCOMES.
+    echo "-- census population: RE-DERIVED from the reference hand port, never asserted --"
+    REF_FILES=$(find {{ai_ref_tests}} -name '*.scala' | wc -l | tr -d ' ')
+    REF_TESTS=$(munit_emitted {{ai_ref_tests}})
+    ADAPTED_FILES=$(find "$TREE" -name '*Suite.scala' | wc -l | tr -d ' ')
+    ADAPTED_TESTS=$(munit_emitted "$TREE")
+    echo "reference hand port ({{ai_ref_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
+    echo "adapted here (class (a)+(b) of §10.7.12): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
+    echo "class (c), left out and counted: $((REF_FILES - ADAPTED_FILES)) file(s), $((REF_TESTS - ADAPTED_TESTS)) test(…)"
+    # 194 is `munit_emitted`'s count — the SHARED mechanism every other lane's discovery figure uses
+    # — and not a looser `^\s*test\(`, which reads 196 here. The difference is two `test(` calls
+    # whose name is not a literal (`test(s"…")`), and both sit in class (c) files, so the adapted
+    # population is the same number under either reading. The shared one is used because a census
+    # denominator that disagrees with every other lane's discovery figure is a number nobody can
+    # compare — and its own blind spot is stated here rather than left to be rediscovered.
+    if [ "$REF_FILES" != "24" ] || [ "$REF_TESTS" != "194" ]; then
+      echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 24 / 194."
+      echo "   PROGRESS.md §10.7.12's census was taken against 24 / 194 and is now STALE: a file"
+      echo "   added there is a file nobody has classified, and one removed may be one of the ten"
+      echo "   this lane copied. Re-run the census before trusting the outcomes below."
+      exit 1
+    fi
+
+    echo
+    echo "-- compile --"
+    # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so
+    # a differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
+    # rule — measured at 0 against 6 on the one port whose test scope had stopped compiling).
+    #
+    # This lane is where `RefChecks` actually runs for the hand-written half, and that is the whole
+    # reason the §10.7.12 census had to be taken TWICE: a per-file typer-error count is a FLOOR
+    # (CLAUDE.md §3), and two files that typed clean turned out to declare 18 unimplemented members
+    # and an override of nothing between them. A census read off the typer alone would have shipped
+    # both.
+    scala-cli compile --test --scala {{scala_version}} --server=false {{ai_test_deps}} \
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala "$TREE" \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aidiffmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/aidiffmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/aidiffmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/aidiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/aidiffmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aidiffmeasure.txt | sort | uniq -c | sort -rn | head
+
+    if [ "$ERRORS" != "0" ]; then
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+      headline "$ERRORS" "$REPORT"
+      exit 0
+    fi
+
+    echo
+    echo "-- run --"
+    scala-cli test --scala {{scala_version}} --server=false {{ai_test_deps}} \
+      -Duser.language=en -Duser.country=US \
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala "$TREE" \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aidiffrun.txt
+    reconcile_outcomes "$MEASURE_TMP"/aidiffrun.txt "$ADAPTED_TESTS"; RECONCILED=$?
+
+    echo
+    echo "-- correlation: test failures located to members and Java origins --"
+    # TWO maps and no `test=` one: the suite is HAND-WRITTEN, so it has no source map and cannot
+    # have one. That is the property this lane wants rather than a gap — a failure here anchors
+    # `main-frame`, on the LIBRARY member that threw, which is exactly the question a differential
+    # suite is asking.
+    correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/aidiffrun.txt \
+      --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+      --srcmap "$ROOT/port-report/GdxAiMigrate/run-latest/srcmap.tsv"
+    test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
 # simple-graphs + its suite — the same gate as `gdx-measure`.
 #
 # simple-graphs is a VENDORED-runtime port (RuntimeMode.Vendored): the shim family it retypes onto
@@ -2418,7 +2532,13 @@ measure-all:
     # `ai-test-measure` follows `ai-measure` for `md-test-measure`'s reason: it is a DEPENDENT of
     # that source set and its compile links against what `ai-measure` just wrote, so run first it
     # would measure the previous engine's emit of the library it tests.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure; do
+    # `ai-diff-measure` is LAST and follows `ai-measure` for `ai-test-measure`'s reason: it compiles
+    # the hand-written differential suite against what `ai-measure` just wrote, so run earlier it
+    # would measure the previous engine's emit of the library it probes. It follows
+    # `ai-test-measure` rather than preceding it because the ported suite is the port's own gate and
+    # this one is a gate on top of it — a differential failure is only worth reading once the
+    # library's own ten tests have been run.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
@@ -3159,7 +3279,14 @@ baseline-accept PORT:
     set -e
     cd "{{root}}"
     DIR="$(pwd)/port-report/{{PORT}}"
-    [ -f "$DIR/run-latest/findings.tsv" ] || { echo "no run-latest for {{PORT}} — run the migration first"; exit 1; }
+    # EVIDENCE THAT A RUN HAPPENED, and it is not always a check report. A migration lane produces
+    # `findings.tsv`; a DIFFERENTIAL lane runs no migration at all — its subject is emitted code
+    # another lane already checked — and its evidence is `tests.tsv`. Gated on `findings.tsv` alone
+    # this recipe refuses to promote a baseline the lane genuinely produced, which pushes an
+    # operator towards hand-writing `expected-errors` — the one baseline CLAUDE.md §5 says must
+    # never be typed, because a hand-edited floor can disagree with the run that produced it.
+    [ -f "$DIR/run-latest/findings.tsv" ] || [ -f "$DIR/run-latest/tests.tsv" ] || \
+      { echo "no run-latest for {{PORT}} — run its lane first (a migration writes findings.tsv; a differential lane writes tests.tsv)"; exit 1; }
     mkdir -p "$DIR/baseline"
     # Only DETERMINISTIC, position-free files are promoted:
     #   findings.tsv / counts.tsv  — every check. `counts.tsv` is gated by `show_check_report` and
@@ -3204,7 +3331,15 @@ baseline-accept PORT:
       echo "expected-lost:   $(cat "$DIR/baseline/expected-lost")"
     fi
     echo "baseline accepted for {{PORT}}:"
-    cat "$DIR/baseline/counts.tsv"
+    # Guarded for the same reason as the run-evidence test above: a DIFFERENTIAL lane runs no
+    # migration, so it has no check report to print. `set -e` is in force here, so an unguarded
+    # `cat` does not merely print an error — it ABORTS the promotion after the files are already
+    # copied, leaving a baseline half-accepted and an operator staring at a `cat: No such file`.
+    if [ -f "$DIR/baseline/counts.tsv" ]; then
+      cat "$DIR/baseline/counts.tsv"
+    else
+      echo "  (no check report — this lane runs no migration; its baselines are the compile-error count and the outcomes)"
+    fi
     if [ -f "$DIR/baseline/members.tsv" ]; then
       echo "members: $(grep -vc '^#' "$DIR/baseline/members.tsv" || true)"
     fi
