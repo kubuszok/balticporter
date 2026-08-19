@@ -89,6 +89,28 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
       |public class Deck extends Panel { }
       |""".stripMargin
 
+  /** A CLASS INITIALISER THAT DOES BOTH THINGS — the shape that made the two kinds one, and the
+    * only fixture in this file where they can be told apart.
+    *
+    * `Utils.<clinit>` READS a mapped static (`Gdx.files`) and CONSTRUCTS a class the closure threads
+    * (`Ext`, whose constructor reads `Gdx.graphics`). One initialiser, one boundary, two seams — and
+    * before they had two kinds the second one was filed as a residual READ whose classification told
+    * its reader to re-spell a read that is not there. It is a real corpus shape, not a constructed
+    * one: `com.crashinvaders.vfx.gl.VfxGLUtils`'s `<clinit>` is exactly this, two reads and one
+    * `new DefaultVfxGlExtension()`. */
+  private val bothSrc =
+    """package demo;
+      |public class Gdx { public static Graphics graphics; public static Files files; }
+      |public class Graphics { public int getWidth() { return 0; } }
+      |public class Files { public String read(String n) { return n; } }
+      |public class Ext { int w; public Ext() { w = Gdx.graphics.getWidth(); } }
+      |public class Utils {
+      |  static String banner;
+      |  static Ext ext;
+      |  static { banner = Gdx.files.read("banner"); ext = new Ext(); }
+      |}
+      |""".stripMargin
+
   private def ported(h: ContextHolder): (GlobalsToImplicitsTransform, Program, DecisionLog, String) =
     portedFrom(src, h)
 
@@ -156,6 +178,60 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     assertEquals(clinit.head.kind, ContextSeamCheck.Kind.ResidualGlobalRead)
     assert(clinit.head.detail.contains("class initialiser"), clinit.head.render)
     assert(ContextSeamCheck.Kind.classification(clinit.head.kind).contains("§1(b)"))
+  }
+
+  // -------------------------------------------------------------------------
+  // …and the OTHER thing a boundary does: it USES something threaded
+  // -------------------------------------------------------------------------
+
+  private lazy val both = portedFrom(bothSrc, base.copy(attach = ContextAttach.Class))
+
+  test("a boundary that CONSTRUCTS a threaded class is `unsuppliable-use`, not a residual READ") {
+    // One `<clinit>`, two seams, two kinds — and the difference is whether the emitted file
+    // compiles. The read half leaves a coherent program that kept a global; the construction half
+    // leaves `new demo.Ext()` with no given anywhere in its scope, which is `No given` every time.
+    // NEGATIVE: file `impose`'s `Site.Boundary` arm as `ResidualGlobalRead` again and both rows land
+    // in one kind, whose classification opens *this read still reaches a global* about a site with
+    // no read in it and offers `boundary = "residual-global"`, which re-spells reads and cannot
+    // touch a construction (PROGRESS.md §10.8.9, and the shape ENGINE-LIMITS CT-era vfx carried).
+    val (p, a, _, o) = both
+    val clinit = p.seams(a).filter(_.subject.contains("<clinit>"))
+    assertEquals(clue(clinit).map(_.kind).toSet,
+                 Set(ContextSeamCheck.Kind.ResidualGlobalRead, ContextSeamCheck.Kind.UnsuppliableUse),
+                 clinit.map(_.render).mkString("\n"))
+    val use = clinit.filter(_.kind == ContextSeamCheck.Kind.UnsuppliableUse)
+    assertEquals(clue(use).size, 1, clinit.map(_.render).mkString("\n"))
+    // the EDGE is in the sentence: *constructs* and *calls* are two different things to go and look
+    // at, and the edge kind is already in hand where the seam is filed.
+    assert(clue(use.head.detail).contains("CONSTRUCTS `demo.Ext`"), use.head.render)
+    assert(use.head.detail.contains("class initialiser"), use.head.render)
+    // …and the emitted text really is the uncompilable half, or the assertion above is a string test
+    // about a string.
+    assert(clue(code(o)).contains("new demo.Ext()"), code(o))
+    assert(clue(code(o)).contains("class Ext(using demo.Ctx)"), code(o))
+  }
+
+  test("its classification says IT DOES NOT COMPILE, and offers no re-spelling") {
+    // §4.45: an error an agent cannot classify costs it a full investigation, and the wrong
+    // classification costs it the investigation plus a wrong fix. The two sentences must not be
+    // interchangeable.
+    val c = ContextSeamCheck.Kind.classification(ContextSeamCheck.Kind.UnsuppliableUse)
+    assert(clue(c).contains("§1(b)"), c)
+    assert(c.contains("DOES NOT COMPILE"), c)
+    assert(c.contains("`sites`"), c)
+    assert(c.contains("selfSupplied"), c)
+    // the one act that CANNOT help, named as such rather than left off the list
+    assert(c.contains("answers a question this site never asked"), c)
+    assert(ContextSeamCheck.Kind.classification(ContextSeamCheck.Kind.ResidualGlobalRead) != c)
+  }
+
+  test("NOTHING accepts an `unsuppliable-use` — an accept answers a question, not a build failure") {
+    // CLAUDE.md §5's second screen, at the one kind where it decides. Every accept on every menu is
+    // a port saying *I have read this site and the residue is right here*, which is a statement only
+    // where the ENGINE declined to decide. Here the target compiler has already decided: an accept
+    // would drain the row and leave the `No given` failing the build, with the arithmetic balanced.
+    assert(!clue(ContextSeamCheck.remedies.map(_.kind).toSet)
+      .contains(ContextSeamCheck.Kind.UnsuppliableUse.label))
   }
 
   test("a FIELD INITIALIZER's read is seeded, resolved and COUNTED — never dropped and left broken") {

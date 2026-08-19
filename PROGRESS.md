@@ -5533,6 +5533,28 @@ says a new library's first wall is made of, and the opposite of how family 1's f
 **Do NOT retry**: reading this as `TypingConfig`'s seam. It is `LinkEffect`'s, and a drop-and-inject
 of `TypingConfig` would replace a forty-entry registry to work around one method in another file.
 
+**THE KIND EXISTS NOW — `ContextSeamCheck.Kind.UnsuppliableUse`, and the split is provably flat.**
+The diagnosis above was right that the concept was already in the phase's own prose and wrong about
+where the gap was: `ContextNeed.impose`'s `Site.Boundary` arm HAS been filing these since the phase
+shipped, under `ResidualGlobalRead` with the words "unsuppliable use" in front of the detail. So the
+count was there and the CLASSIFICATION was the thing that was not — a reader was handed *this read
+still reaches a global* about a site with no read in it, and offered `boundary = "residual-global"`,
+which re-spells reads and cannot touch a construction. The two are one lane and two instructions, and
+the difference is the largest one a residue can carry: a residual read leaves a program that COMPILES
+and kept a global, an unsuppliable use is `No given` at that line every time. `CLAUDE.md` §4.45 now
+carries the rule.
+
+The corpus had exactly ONE witness and it is not this port: `com.crashinvaders.vfx.gl.VfxGLUtils`'s
+`<clinit>`, which reads `Gdx` twice and constructs a `DefaultVfxGlExtension` once, had been counting
+its construction as a read for the life of that port. `context-seam` **20 -> 20** on vfx with one
+id-stripped `findings.tsv` row differing, **0 errors, 0 member digests, `port-map` unchanged, 64/0
+tests**; `sge` (the base) reported `findings` content unchanged, so the arrival is flat by
+construction rather than by luck. Only `findings.tsv` could see it — which is §5's own argument for
+baselining that file, met by the artifact it was written for.
+
+**What that does NOT do is make `LinkEffect` visible**, and the reason is the second engine fact
+§10.8.9 did not reach: see §10.8.10.
+
 ### 10.8.10 Next
 
 1. **The `E172`**, which needs a decision this wave deliberately does not take: either the engine

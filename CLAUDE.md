@@ -1249,6 +1249,24 @@ without this session's context. Two standing consequences:
   and they are the bulk of a new library's first wall. Every `ENGINE-LIMITS.md` entry carries this
   classification for the same reason.
 
+  **…and a lane's KINDS are that same sentence read one level down, so a kind that mixes a residue
+  which COMPILES with one that cannot is a classification the reader has to distrust.** The §1 answer
+  is per-KIND — one classification string, printed once per kind by the grouped summary — so two
+  populations sharing a kind get one instruction, and the instruction is written for whichever of
+  them the author had in mind. `ResidualGlobalRead` carried both: a read the port kept global, which
+  is a coherent program every other instrument reads clean on, and a declaration with no signature
+  that CONSTRUCTS something the closure threaded, which is `No given` at that line every time. Its
+  sentence opens *this read still reaches a global* and offers `boundary = "residual-global"` — true
+  of the first, and about a site the second does not have, whose act cannot touch it. The phase's own
+  prose had already named the second one ("an UNSUPPLIABLE USE", in the dead-binding report), which is
+  the tell: **where a mechanism has a word for a population its lane does not, the lane is one kind
+  short.** Splitting them is provably flat by construction — the rows and the count do not move, only
+  the kind and its sentence — and the instrument that says so is `findings.tsv`, not `counts.tsv`
+  (measured: `context-seam` 20 -> 20 on the one port with a witness, one id-stripped row differing, 0
+  errors and 0 member digests). The screen for whether a split is owed is not "are these two things
+  different" but *would a reader act differently* — and "the build fails" against "the build passes
+  and a global survived" is the largest such difference there is.
+
 `PROGRESS.md` §Publishability holds the full audit of what is missing before that consumption is
 possible.
 

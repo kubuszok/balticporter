@@ -116,8 +116,13 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     // threaded class, and before CT6 only the non-generic one was a counted boundary.
     // NEGATIVE: make `ContextNeed.instantiates` read `u.kind == UsageKind.Instantiate` only, and the
     // `demo.Tbl#cellPool` row disappears while `demo.Named#p` stays.
+    //
+    // Both rows are `unsuppliable-use` and NOT `residual-global-read`: neither initialiser reads a
+    // mapped static at all, they CONSTRUCT threaded classes, and that is the whole of the split
+    // (PROGRESS.md §10.8.9). This fixture is CT6's, so it is also the corpus's oldest witness that
+    // the two were being counted as one.
     val subjects = seams(phase, after)
-      .filter(_.kind == ContextSeamCheck.Kind.ResidualGlobalRead).map(_.subject).toSet
+      .filter(_.kind == ContextSeamCheck.Kind.UnsuppliableUse).map(_.subject).toSet
     assert(clue(subjects).contains("demo.Named#p"), render(phase, after))
     assert(clue(subjects).contains("demo.Tbl#cellPool"), render(phase, after))
   }
@@ -125,7 +130,10 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
   test("…and the seam says the boundary is a STATIC INITIALISER, with the `sites` exit named") {
     val f = seams(phase, after).find(_.subject == "demo.Tbl#cellPool").get
     assert(clue(f.detail).contains("class initialisation"), f.render)
-    assert(f.detail.contains("`sites` policy"), f.render)
+    // the DETAIL is about this site; the EXITS are in the classification, which the grouped summary
+    // prints once per kind rather than once per row — a per-row copy of the same advice is what the
+    // reader skips.
+    assert(clue(ContextSeamCheck.Kind.classification(f.kind)).contains("`sites` policy"), f.render)
     assert(ContextSeamCheck.Kind.classification(f.kind).contains("§1(b)"))
   }
 
@@ -184,14 +192,14 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     assert(clue(o).contains("/* porter: deferred-init"), o)
   }
 
-  test("…and the boundary it was the exit FOR is gone: no residual-global row for that field") {
+  test("…and the boundary it was the exit FOR is gone: no unsuppliable-use row for that field") {
     val (p, a, _, _) = ported(base.copy(sites = Map("demo.Tbl#cellPool" -> ContextSite.LazyInit)))
     assertEquals(clue(p.seams(a).count(f =>
-      f.kind == ContextSeamCheck.Kind.ResidualGlobalRead && f.subject == "demo.Tbl#cellPool")), 0,
+      f.kind == ContextSeamCheck.Kind.UnsuppliableUse && f.subject == "demo.Tbl#cellPool")), 0,
       render(p, a))
     // the OTHER boundary is untouched — a per-site policy decides one site
     assert(p.seams(a).exists(f =>
-      f.kind == ContextSeamCheck.Kind.ResidualGlobalRead && f.subject == "demo.Named#p"), render(p, a))
+      f.kind == ContextSeamCheck.Kind.UnsuppliableUse && f.subject == "demo.Named#p"), render(p, a))
   }
 
   test("the read-derived trigger still fires: a class initialiser that READS the holder") {

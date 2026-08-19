@@ -576,10 +576,26 @@ final class ContextNeed(
         // A declaration that CANNOT take a clause uses one that requires it. This is the seam the
         // deleted ambient `given` used to hide: with `given T = new T()` in scope it compiled
         // silently and the global was back. It is loud here, and attributable.
-        seam(ContextSeamCheck.Kind.ResidualGlobalRead, fqn(sub), holder.holder,
-          s"unsuppliable use: this declaration uses `${fqn(from)}`, which now takes a context, and " +
-            s"$why — give the site a `sites` policy, or move the use into a declaration the closure " +
-            "can reach", at, sub)
+        //
+        // ITS OWN KIND, and the split is about what the emitted file DOES. This used to file as
+        // `ResidualGlobalRead` with the words "unsuppliable use" in front of the detail — so the
+        // §1 classification a reader was handed opened by saying *this read still reaches a global*
+        // at a site that holds no read at all, and offered `boundary = "residual-global"`, which
+        // re-spells reads and cannot touch this. The two are one lane and two instructions: a
+        // residual read compiles and keeps a global, an unsuppliable use is `No given` at that line
+        // every time (`PROGRESS.md` §10.8.9).
+        seam(ContextSeamCheck.Kind.UnsuppliableUse, fqn(sub), holder.holder,
+          s"this declaration ${useVerb(kind)} `${fqn(from)}`, which now takes a context, and $why — " +
+            "so the emitted code has no given in scope at this line", at, sub)
+
+  /** what the boundary DID with the threaded declaration, in the finding's own sentence. The edge
+    * kind is already in hand at [[impose]] and it is the difference between *this initialiser builds
+    * a threaded object* and *this initialiser calls into one* — two different things to go and look
+    * at, and a reader who has to open the file to find out which is a reader the classification
+    * failed (§4.45). */
+  private def useVerb(k: Edge.Kind): String = k match
+    case Edge.Kind.Instantiate => "CONSTRUCTS"
+    case _                     => "uses"
 
   private def kindVia(k: Edge.Kind): String = k match
     case Edge.Kind.Use         => "calls-threaded"

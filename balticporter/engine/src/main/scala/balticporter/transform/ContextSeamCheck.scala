@@ -22,7 +22,7 @@ import balticporter.tir.*
   * So: a number with an origin and a CLAUDE.md §1 classification, available before any compiler
   * runs. A port that enables the phase sees the size of its boundary immediately.
   *
-  * ==The seven kinds, and why they are seven==
+  * ==The eight kinds, and why they are eight==
   * Each one is a different instruction to its reader, which is the same argument
   * [[balticporter.tir.NotBound]] makes for refusing to collapse its cases:
   *
@@ -30,6 +30,15 @@ import balticporter.tir.*
   *     context companion's `global` (`boundary = "residual-global"`) or it was left naming the
   *     upstream holder (`boundary = "refuse"`). This is the count that says how much of the global
   *     survived, and it is the one a port drives to zero.
+  *   - [[Kind.UnsuppliableUse]] — the MIRROR of that one, and the difference between them is whether
+  *     the emitted file COMPILES. A residual read is a coherent program: the port kept a global it
+  *     meant to retire, and every instrument except this one reads clean. An unsuppliable use is a
+  *     declaration with no signature — a class initialiser, a static field's initialiser — that
+  *     CONSTRUCTS or CALLS something the closure threaded, and there is no given anywhere in its
+  *     scope: the emitted Scala is `No given … is in scope`, always, at a line the source map
+  *     attributes. Merging the two costs a reader the one fact they most need, because a
+  *     `residual-global-read` classification opens by saying *this read still reaches a global* about
+  *     a site that holds no read at all (`PROGRESS.md` §10.8.9).
   *   - [[Kind.DeferredInit]] — a static initialiser was rewritten to initialise on first READ
   *     instead of at class initialisation. That is an EAGER→LAZY semantic change, never a default,
   *     and it is counted here as well as recorded as a `Decision` because the two answer different
@@ -46,7 +55,7 @@ import balticporter.tir.*
   *   - [[Kind.SelfSupplied]] — THE THIRD ANSWER. The port declared this type framework-instantiated,
   *     so it takes the context WITHOUT taking a parameter: no clause on its constructors and a
   *     `given` member the port's own expression fills. Counted because it is a place the threading
-  *     stopped exactly like the other five, and because the value now comes from a port's hand-
+  *     stopped exactly like the other six, and because the value now comes from a port's hand-
   *     written fixture rather than from the caller — which is a fact about the port a reader should
   *     be able to size without reading every generated file.
   *   - [[Kind.UnconstructedThread]] — the WARNING, and the only kind that is not a place the
@@ -55,12 +64,12 @@ import balticporter.tir.*
   *     shape a framework instantiates; a clause on its constructor compiles perfectly and cannot be
   *     supplied at run time. This is the check `ENGINE-LIMITS.md` CT7 lacked.
   *   - [[Kind.LostClause]] — a clause the phase DID attach that the emitted type does not carry.
-  *     The other four are refusals the phase records as it makes them; this one is a disagreement
+  *     The other six are refusals the phase records as it makes them; this one is a disagreement
   *     between the tree and the emitted text, and it is the only kind that is invisible to every
   *     other number in the run — the file compiles, and the run's own decision row and porter note
   *     claim the clause. Recorded from the emitter's reading of the header it wrote
   *     (`ENGINE-LIMITS.md` CT5), which is why this one arrives after emission rather than with the
-  *     other four.
+  *     others.
   *
   * ==Its gate is the BASELINE, not a constant==
   * Deliberately no hard-coded fatality on any kind. The count is a finding and the committed
@@ -108,12 +117,20 @@ object ContextSeamCheck extends RemedySource:
     *     is not the same statement as `boundary = "residual-global"`, which is a whole-phase setting
     *     about how EVERY residual read is spelled.
     *
-    * The other five kinds take no entry, and each is absent for its own reason:
+    * The other six kinds take no entry, and each is absent for its own reason:
     * `captured-context` and `self-supplied` are OUTCOME rows — the first is correct by construction
     * and the second is a `selfSupplied` entry's own result, so "accepting" either would drain a
     * report of something that already worked; `deferred-init` is what a `sites` entry ASKED for;
     * `frozen-component`'s two acts are spelled above and its own residue is counted as
-    * `residual-global-read`, where the accept is; and `lost-clause` is an ENGINE BUG in the
+    * `residual-global-read`, where the accept is; **`unsuppliable-use` is not a QUESTION at all** —
+    * §5's second screen, and the one kind where it decides rather than confirms. Every other accept
+    * on every menu answers a site the engine DECLINED to decide, and a port reading such a site and
+    * saying *this is fine* is stating something the engine could not. Here the target compiler has
+    * already answered: the emitted file does not compile, so an accept would drain a row while the
+    * defect it names goes on failing the build — an accept that balances the arithmetic over a
+    * `No given` nobody will look at again. Its exits are acts with spellings (`sites`,
+    * `selfSupplied`, moving the use into a declaration the closure can reach), which is the FIRST
+    * screen refusing it too; and `lost-clause` is an ENGINE BUG in the
     * constructor region (`DESIGN.md` §8.2, `ENGINE-LIMITS.md` CT5) that is "reachable from no
     * manifest key" — a remedy for it would let a port silence a defect the engine caused, which
     * `CLAUDE.md` §1's rule about engine-created obligations forbids outright.
@@ -141,6 +158,10 @@ object ContextSeamCheck extends RemedySource:
   /** what kind of seam this is, which is what decides who fixes it (CLAUDE.md §1). */
   enum Kind(val label: String):
     case ResidualGlobalRead extends Kind("residual-global-read")
+    /** …and its MIRROR: a declaration with no signature that USES something threaded. The read half
+      * above leaves a coherent program behind; this one leaves a `No given` at every site, so the
+      * two are one lane and two instructions (`PROGRESS.md` §10.8.9). */
+    case UnsuppliableUse    extends Kind("unsuppliable-use")
     case DeferredInit       extends Kind("deferred-init")
     case CapturedContext    extends Kind("captured-context")
     case FrozenComponent    extends Kind("frozen-component")
@@ -149,13 +170,13 @@ object ContextSeamCheck extends RemedySource:
     case SelfSupplied       extends Kind("self-supplied")
     /** …and the WARNING, which is the CT7 shape observed rather than declared. */
     case UnconstructedThread extends Kind("unconstructed-thread")
-    /** …and the seventh, which is the only one the PHASE cannot see: a clause it put on a class's
+    /** …and the eighth, which is the only one the PHASE cannot see: a clause it put on a class's
       * constructors that the emitted header does not carry (`ENGINE-LIMITS.md` CT5).
       *
-      * It is a seam by the same definition as the other four — a place the threading stopped — and
+      * It is a seam by the same definition as the other seven — a place the threading stopped — and
       * it is here rather than in a check of its own because a reader asking "how much of this
-      * library is still global" must see all five in one number. What makes it different is WHERE it
-      * is observed: the four above are refusals the phase RECORDS as it makes them, and this one is
+      * library is still global" must see all eight in one number. What makes it different is WHERE it
+      * is observed: the seven above are refusals the phase RECORDS as it makes them, and this one is
       * a disagreement between the tree and the text, so it comes from the emitter's own recording of
       * the header it wrote, after emission. A lost clause compiles perfectly wherever the class's
       * body happens not to summon anything, moves no other count, and leaves the decision row and
@@ -172,6 +193,18 @@ object ContextSeamCheck extends RemedySource:
           "can reach, give the site a `sites` policy (`lazy-init`), or accept it and set " +
           "`boundary = \"residual-global\"` so the read at least names the context rather than the " +
           "upstream holder. The engine needs no change."
+      case UnsuppliableUse =>
+        "§1(b) PER-LIBRARY, and IT DOES NOT COMPILE: this declaration constructs or calls something " +
+          "the threading reached, and it has no signature to take a context through — a class " +
+          "initialiser, a static field's initialiser, or a declaration inside a refused override " +
+          "component. Unlike a residual READ, there is nothing here to re-spell: the emitted Scala " +
+          "is `No given` at this line, so `boundary = \"residual-global\"` answers a question this " +
+          "site never asked and no accept exists for it. What DOES reach it, and which one is right " +
+          "is a fact about the library: give the site a `sites` policy (`lazy-init`) so the " +
+          "initialisation moves to a first READ the closure can thread; move the use into a " +
+          "declaration the closure can reach; give the USED type a `selfSupplied` entry, so it stops " +
+          "taking a clause and there is nothing for this site to supply; or, where none of those " +
+          "fits, `scope` the declaration out and keep the global it reads."
       case DeferredInit =>
         "§1(b) PER-LIBRARY and DELIBERATE: a `sites` entry asked for `lazy-init`, so this static is " +
           "now initialised at first READ instead of at class initialisation. Java runs a class " +
