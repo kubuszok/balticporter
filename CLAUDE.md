@@ -755,6 +755,29 @@ Two things to record when you find one:
 
 Reasoning from first principles when a worked answer exists nearby wastes whole sessions. It has.
 
+**And the reference port's SUITE is an instrument, not just its source — but what its residue
+measures is the HAND PORT, never this one.** A hand port over the same library writes tests in the
+TARGET language, so a compiled mechanical port can be run against them with nothing translated at
+all: a differential gate in the exact sense, and the only one that reaches the packages an upstream
+suite does not. Where upstream ships 10 `@Test` and the hand port wrote 194, that is the difference
+between two packages covered and eight. **Take a CENSUS before claiming a number** — which of those
+assertions the emitted surface can answer at all — and hold two rules while adapting: every edit is a
+NAME or SHIM substitution from an enumerated table, applied to CODE and never to a comment; and a
+file whose assertions cannot survive that table is counted as incompatible rather than repaired,
+because an assertion changed is evidence destroyed. Then read the residue correctly. On the first
+library to try it, 95 of 194 ran at 93 passing, and every one of the 99 left out was blocked by
+something the HAND PORT did — an API it added, an interface it reshaped from java accessors into
+scala properties, a `private` field it made public, a subsystem it redesigned to avoid reflection.
+None of that is a gap in the mechanical port, and reading it as one would put four
+`ENGINE-LIMITS.md` entries in the file that do not belong there. **Two further traps, both measured**:
+the census is taken TWICE, because a per-file typer-error attribution is a FLOOR (§3 — `RefChecks`
+does not run while any typer error stands, and compiling the candidate set ALONE moved four files
+and 16 tests back out of it, one of them a fixture that typed clean and then reported 18
+unimplemented members); and a suite's FIXTURES are declarations rather than tests, so a compatible
+file whose helper classes were declared inside an incompatible one is carried by splitting the
+declarations out — the classification is not closed under dependency, and neither dropping the
+dependents nor keeping them is right until you have tried to compile the fixtures on their own.
+
 **But what the reference port EMITTED is evidence; what it implies for a MECHANICAL port is a
 hypothesis, and it is measured before it is policy.** The two are not doing the same thing. A hand
 port adjusts every caller by hand, so it can keep a JDK type in one file and stay consistent
