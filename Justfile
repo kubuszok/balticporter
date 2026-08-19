@@ -2583,7 +2583,13 @@ textra-measure:
     # so "82 of 92" against the emitted total reads as a ten-file LOSS and is a faithful
     # reproduction. Both sides are re-derived and the gate is that they AGREE; the headerless ten
     # are the SECOND thing (c) answers, and are `GdxAiPolicy`'s one-file case at ten times the scale.
-    UP_APACHE=$(grep -rl "Licensed under the Apache License" {{textra_src}}/src/main/java | wc -l | tr -d ' ')
+    #
+    # …AND THE UPSTREAM SIDE IS THE SCOPE THIS RUN CONVERTS, not the tree — which is §4.56's own rule
+    # read at a denominator, and it fired here on the first run. All three `package-info.java` DO
+    # carry the Apache header and none of them is EMITTED (they declare no type), so a count over the
+    # tree reads 85 against 82 and reports a three-file loss where there is nothing to attribute: the
+    # port emits no file those notices could head. Excluded, the two sides agree exactly.
+    UP_APACHE=$(grep -rl --exclude=package-info.java "Licensed under the Apache License" {{textra_src}}/src/main/java | wc -l | tr -d ' ')
     APACHE=$(grep -rl "Licensed under the Apache License" {{textra_module}}/src_managed/main/scala | wc -l | tr -d ' ')
     EMITTED=$(find {{textra_module}}/src_managed/main/scala -name '*.scala' | wc -l | tr -d ' ')
     echo "(a) Apache-2.0 per-file notice: $UP_APACHE upstream file(s) carry it, $APACHE of $EMITTED emitted file(s) reproduce it"

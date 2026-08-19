@@ -68,8 +68,10 @@ object TextraTypistMigrate:
         sourceRoot       = base.toString,
         // THREE LICENCE REGIMES, and only ONE of them needs a key (CLAUDE.md §4.57).
         //
-        //   (a) Apache-2.0, the per-file header — carried by **82 of the 95** sources, not by all
-        //       of them. The per-file harvest (§4.58) plus the emitted banner meets that obligation
+        //   (a) Apache-2.0, the per-file header — carried by **85 of the 95** sources and by **82 of
+        //       the 92 IN SCOPE** (the three `package-info.java` carry it too and are emitted
+        //       nowhere, which is why the lane's denominator is the converted set and not the tree).
+        //       The per-file harvest (§4.58) plus the emitted banner meets that obligation
         //       by construction for those 82, which is why no Apache-2.0 port in this corpus has
         //       ever needed a `notices` entry. THE OTHER TEN CARRY NOTHING — `Justify`, `TextraArea`,
         //       `TextraSelectBox`, `TypingSelectBox`, the four `TextureArray*` files, `LzmaUtils`

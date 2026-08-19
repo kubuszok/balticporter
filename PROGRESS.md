@@ -5107,6 +5107,303 @@ dangerous direction. Compile the candidate set ALONE and let `RefChecks` run.
 
 ---
 
+## 10.8 sge-textra — TextraTypist, the dependent with a THIRD-PARTY jar and a TRIPLE licence
+
+`com.github.tommyettinger.textra.* → sge.textra.*`, Apache-2.0 **and** two MIT notices. **A dependent
+port of libGDX core**, the same shape as Ashley's, anim8's, gdx-vfx's and gdx-ai's: `just
+textra-measure` compiles libGDX core's emitted Scala and TextraTypist's emitted Scala on **one**
+`scala-cli` invocation and must run after `just gdx-measure`. At **92 files / 38,607 LOC** it is the
+second-largest of libGDX's dependent ports (gdx-ai, 166 files, is first by file count and this one is
+larger by line count), and its scene2d surface is the heaviest in the corpus — 103 distinct
+`com.badlogic.gdx.*` imports spanning eighteen widget classes, the whole `utils` collection family,
+`Json`/`JsonReader`/`UBJsonReader` and `utils.compression.Lzma`.
+
+**Why it is in the corpus.** Three things no earlier port had:
+
+- **a compile dependency that is neither the JDK nor its base.** Every libGDX dependent so far
+  declares `com.badlogicgames.gdx:gdx` and nothing else; `build.gradle` here declares
+  `com.github.tommyettinger:regexodus` beside it, and the emitted Scala names six of its classes
+  outright. That exercises the classpath half and the `PortManifest.dependencies` half of the same
+  fact at once (§10.8.3);
+- **a licence obligation no header-driven mechanism can meet** — and one the reference hand port does
+  not meet at all (§10.8.2);
+- **the largest population of java class initialisers in the corpus**, which was scoped as this
+  module's headline K22 risk and turns out to cost nothing, for a reason worth writing down
+  (§10.8.5).
+
+### 10.8.1 Scope, named rather than silently dropped
+
+`src/main/java`, **92 of 95 `.java` files**, in three packages (`textra` 43, `textra.effects` 40,
+`textra.utils` 9). The three excluded are `package-info.java` — javadoc-only placeholders that
+declare no type — and the lane re-derives both numbers on every run rather than trusting this
+paragraph.
+
+**THERE IS NO TEST SOURCE SET, AND IT IS UPSTREAM'S OWN ZERO.** `src/test/java` is **128 files**
+declaring **zero** `@Test`: `build.gradle` names no JUnit coordinate at all, 113 of the 128 declare
+`public static void main`, and 107 extend `ApplicationAdapter`/`Game`/`InputAdapter`. It is a
+directory of manual LWJGL3 demos — the demo-app trap taken to its limit, `sge-jbump`'s precedent
+rather than `sge-ai`'s (which had two real test files with 10 `@Test`). There is nothing for the
+engine to port, so this port has **no behavioural evidence at all** and every `CLAUDE.md` §4.4 form
+in it is UNMEASURED. `textra-measure` re-derives that zero on every run rather than omitting the
+stage, because a suite with no discoverable tests runs zero and reports success, and because the
+block is what says so the day upstream gains a real one.
+
+**THE TEST CORRECTION, and it is the `sge-ai` correction again.** Any figure resembling "32 files /
+239 tests" for this module is the **reference HAND PORT's own MUnit suite**
+(`../sge/sge-extension/textra/src/test`, verified: 32 files — 20 `scala`, 11 `scalajvm`, 1
+`scalanative` — and 239 anchored `test(…)` calls), hand-WRITTEN for the port. Nineteen of the 32 are
+`*RedSuite.scala` pinned to upstream GitHub issue numbers: behavioural probes the hand-porter wrote
+while porting, not translations of anything upstream ships. It is not a ported suite and no lane may
+count it as one — but it IS the corpus's best available DIFFERENTIAL gate for this library, exactly
+as gdx-ai's 194 were (§10.7.12). The plan, scoped and deliberately NOT claimed by this wave: adapt a
+hand-curated subset against the emitted port, starting with the pure-unit files (`Palette`,
+`StringUtils`, `BlockUtils`, `CaseInsensitiveIntMap`, `LZBCompression`, `ColorUtils`, `LayoutLine`,
+`Font`, `TypingConfig` and the regression probes) and excluding the five that build real
+`Stage`/`Actor` graphs (`TextraButtonScene2dRedSuite`, `TextraWindowScene2dRedSuite`,
+`TextraTooltipScene2dRedSuite`, `TextraFieldWiringRedSuite`, `TextraWiringRedSuite`) until the
+headless-context seam the hand port needed a `HeadlessTextraSge` fixture for is reproduced. §10.7.12's
+two traps apply unchanged: take the census TWICE (a typer-only per-file attribution is a FLOOR), and
+split a compatible file's FIXTURES out of an incompatible one rather than dropping both.
+
+### 10.8.2 The licence is TRIPLE, and 10 files carry no notice at all
+
+Upstream ships two root files — `LICENSE` (Apache-2.0) and `typing-label.LICENSE` (MIT, "Copyright
+(c) 2017 Rafael Skoberg"). Three regimes follow, and only one of them needs a manifest key:
+
+| | regime | where it lives | how the port meets it |
+|---|---|---|---|
+| (a) | Apache-2.0 | the per-file header of **85 of the 95** sources — **82 of the 92 in scope** | the §4.58 harvest plus the emitted banner — verified 82 emitted files reproduce it |
+| (b) | emoji-regex MIT (Copyright Mathias Bynens) | INLINE in `EmojiProcessor.java`'s own leading comment, full text | the same harvest — verified present verbatim in the emitted file |
+| (c) | typing-label MIT | NO file's comment anywhere; a repo-root file plus a README paragraph | `Provenance.notices`, which copies **both** root files into `src_managed/` |
+
+**THE SCOPING SURVEY WAS WRONG ABOUT (a), AND THE LANE FOUND IT ON THE FIRST RUN.** The claim was
+that every one of the 95 sources carries the identical Apache boilerplate — a generalisation from a
+four-file sample. **Ten do not carry any licence header at all**: `Justify`, `TextraArea`,
+`TextraSelectBox`, `TypingSelectBox`, the four `TextureArray*` files, `utils/LzmaUtils`, and
+`EmojiProcessor` (which carries (b) instead). They open with a bare `package` and a javadoc. So the
+`notices` key is not only (c)'s repo-level obligation — it is also `GdxAiPolicy`'s ONE-FILE case at
+ten times the scale, where for those ten the emitted banner NAMES Apache-2.0 and reproduces no
+notice, which is precisely §4.57's pointer-instead-of-inclusion gap.
+
+The lane derives BOTH sides of (a) and gates on their agreement, which is not decoration: read
+against the emitted total, "82 of 92" looks like a ten-file loss and is a faithful reproduction. All
+three regimes are asserted rather than assumed, for §4.58's own reason — the harvest regressed to
+`Nil` once and the emitted Scala was still valid.
+
+**AND THE UPSTREAM SIDE OF THAT GATE IS THE SCOPE THE RUN CONVERTS, NOT THE TREE**, which is §4.56's
+rule read at a denominator and which the gate caught on its own first run. All three
+`package-info.java` DO carry the Apache header — the survey's second wrong claim about this
+file set — and none of them is EMITTED, because they declare no type. Counted over the tree the gate
+reads **85 against 82** and reports a three-file loss with nothing to attribute it to: there is no
+emitted file those three notices could head. Excluding them, the two sides agree exactly. A
+denominator taken from the filesystem rather than from `FrontendConfig.files` is the same
+approximation `PortRun.converted` was corrected for, one artifact over.
+
+**The reference hand port ships NEITHER MIT notice.** Grepped the whole module: no scala, build or
+doc file names `typing-label`, `rafaskb`, `Rafael Skoberg` or MIT outside the (b) text
+`EmojiProcessor.scala` inherited. This is a place the mechanical port is measurably the more
+compliant one, and it costs two lines of manifest.
+
+### 10.8.3 RegExodus — declared, not routed around, and the residue is stated
+
+`build.gradle` declares `com.github.tommyettinger:regexodus:$regexodusVersion` (0.1.21, read off
+`gradle.properties`), and six of its classes are imported across the sources — `Category`,
+`Compatibility`, `Matcher`, `Pattern`, `REFlags`, `Replacer`. Upstream uses it instead of
+`java.util.regex` because the latter does not exist on GWT.
+
+It arrives **twice, as two different facts**, and that is `ssg-md-ext`'s D-mde-6 shape:
+
+- the FRONTEND parses against the jar, through `ClasspathCache` — the mechanism whose stale-cache
+  refetch exists because an import the frontend cannot resolve does not fail, it resolves WRONGLY;
+- the BUILD declares it, through `PortManifest.dependencies` with `cross = Java`. The lane takes its
+  `--dependency` from what the RUN published (`declared_dep_flags`) rather than restating the
+  coordinate in the `Justfile`, which is `liqp_deps`' own lesson: a revision bumped in the manifest
+  and not in the lane compiles the port against a DIFFERENT JAR with every check count, every member
+  digest and every outcome flat.
+
+The first run verified it rather than asserting it: `dependency-coverage(declared) 1 of 1 still
+needed`, **269 references in the original program and 269 in the emitted one**, matched against the
+artifact's own class list (§4.56 at a build coordinate — never derived from the coordinate string).
+
+**THE RESIDUE, stated rather than discovered later.** RegExodus is published for the JVM ONLY:
+`com.github.tommyettinger:regexodus:0.1.21` resolves from Maven Central and `regexodus_sjs1_3` /
+`regexodus_native0.5_3` do not exist at that version (both probed). This module inherits the
+all-platform default, so the port DECLARES a JVM-only artifact while claiming three platforms — and
+nothing in the engine reports it, because `ArtifactDep` carries a `CrossKind` and no per-platform
+availability at all. It is the corpus's second instance of exactly this (`org.nibor.autolink` on
+`ssg-md-ext` is the first) and, like that one, it is library code the port genuinely calls rather
+than a marker it could stop emitting. Narrowing `targets` is not the answer: it is a whole-PORT key
+and `[jvm]` would empty the rule list for all 92 declarations at once. The irony is worth one
+sentence, because it says what the residue really is: upstream depends on RegExodus PRECISELY because
+`java.util.regex` is missing on a non-JVM backend, and the dependency that buys upstream its
+portability is the one that costs this port its own.
+
+### 10.8.4 The manifest — and why the hand port's `LzmaUtils` hoist is NOT reproduced
+
+One `packageRenames` pair (`com.github.tommyettinger.textra -> sge.textra`), one `governs` claim, one
+`dependencies` entry, and `PortMapTransform.forBases("sge")` LAST. Nothing else: no drop, no
+substitution, no redirect. Everything else — `dropTypes`, `dropMethods`, `com.badlogic.gdx -> sge`,
+the collections and mutable-parameter phases — is INHERITED as the base's ONE instance (§1.5), and a
+second instance would be a `SurfaceDivergence` for a composition nobody designed.
+
+**The one deviation the reference port makes, and this port does not.** The hand port emits upstream's
+`.textra.utils.LzmaUtils` as top-level `sge.textra.LzmaUtils`, and its own migration note says why —
+*"SGE core does not port the compression sub-package"*, so it inlined a self-contained LZMA codec
+rather than delegate to `com.badlogic.gdx.utils.compression.Lzma`. Both halves of that reason were
+measured and neither holds here:
+
+- **the base DOES port the sub-package.** `port-report/LibgdxCoreMigrate/baseline/port-map.tsv`
+  carries **392 rows** under `com.badlogic.gdx.utils.compression` — `Lzma`, `CRC`, `ICodeProgress`
+  and the `lz`/`lzma` trees — every one `Renamed` to `sge.utils.compression.*`. The inherited rename
+  resolves the import the hand port inlined around, and it did: `LzmaUtils` translated mechanically
+  and contributes none of this port's eight errors;
+- **nothing outside the destination package consumes the hoisted spelling.** Grepped `../sge`:
+  `LzmaUtils` is named in three files (`Font.scala`, `BitmapFontSupport.scala` and the module's own
+  red suite) and all three declare `package sge.textra` themselves, so there is no import to break —
+  and this port emits fully qualified names with no imports at all (§6), so the placement moves no
+  call site either way.
+
+§2.1 is what the hoist would have been claimed under and it says outright that it does not reach
+`packageRenames`. §3.5 prices an unmeasured deviation at 27 → 47 errors. So the mechanical rename
+stands, uniform over all three packages, and the reasoning is recorded at the key. If a consumer is
+ever found that needs the hand spelling it is one `typeRenames` entry away, and it arrives with that
+consumer named.
+
+### 10.8.5 First emit — measured state
+
+`just textra-measure`, after `just gdx-measure`. **92 Scala files, 2,729 members, 61,776 symbols, 8
+scalac errors.** Determinism verified (92 units emitted twice, byte-identical). `manifest 0` over
+605 shared base types on the first run — the dependent agreed with its base with nothing to correct.
+
+```
+errors=8 | base-surface 2, break-catch 0, cast-conversion 0, catalog(consulted) 101,
+catalog(uncited) 121, catalog(undischarged) 5, catalog(unmechanised) 1, catalog(unreached) 10,
+class-init-trigger 0, collection-boundary 0, collection-closure 0, collection-internal 0,
+collection-retarget 0, context-seam 44, dependency-coverage 0, dependency-coverage(all) 37,
+dependency-coverage(declared) 1, gdx-shared-iterator 0, heap-pollution 1, idiom(converted) 15,
+idiom(refused) 98, idiom(residue) 0, jdk-surface 5, manifest 0, markers 0, nullability-boundary 9,
+omissions 52, overload-risk 62, policy 0, port-map 1, portability(all) 153, portability(emitted) 0,
+portability(injected) 0, porter-notes 0, remediation 0, rewrite-callsites 2, signature 0,
+substitution(dangling) 0, substitution(emitted) 0, switch-null 0, trivia 0, trivia(deliberate) 0,
+trivia(recovered) 7, try-resource 0
+```
+
+`decisions.tsv`: 2,620 rows (`RetypedSignature` 1,987, `WidenedVisibility` 238, `RenamedMember` 168,
+`RenamedPackage` 92, `DroppedSuperCall` 41, `ForcedClassInit` 33, `FunnelledCtor` 28, `DroppedMember`
+16, `DroppedType` 12, `SamLambda` 3, `ScopedOut` 2), with 2,652 withheld as belonging to the module
+this port only resolves against (D2). 484 porter notes emitted, every one derived from a recorded
+decision (`porter-notes 0`).
+
+**THE PREDICTED K22 RISK COSTS NOTHING, AND THE REASON IS STRUCTURAL.** `utils/Palette.java`'s **85
+`static { }` blocks** — a per-colour `NAMED.put(…)` / `LIST.add(…)` registry, and the single largest
+class-initialiser population in the corpus — were scoped as this module's highest-value §4.4 risk.
+`class-init-trigger` reads **0**. `Palette` is all-static, so the emitter collapses it to an
+`object`: there is no class to instantiate and therefore no java instantiation trigger to lose, which
+is the check's own stated exemption, and a static ACCESS (`Palette.NAMED`) already touches the
+object. Where the trigger WAS at risk the emitter attached one — **33 `ForcedClassInit`** decisions,
+across the eighteen widget classes and `Font`/`KnownFonts`/`FWSkin`. The lesson is not that the risk
+was imaginary: it is that a `static { }` CENSUS is not a risk census, because the emitted FORM decides
+whether java had a trigger to lose at all.
+
+Two other first-run readings worth keeping:
+
+- **`trivia` 0 lost, 7 recovered** — three in `Font`, two in `KnownFonts`, one each in
+  `BitmapFontSupport` and `Palette`. A counted residue, not a success (§4.58);
+- **`idiom` 15 converted / 98 refused / 0 residue**, and the refusal population is where the reading
+  is: `NarrowedReturn` considered 67 and converted **none** — 63 `SelfTyped` and 4 `NotAlwaysThis` —
+  while `SamLambda` converted 15 of 46 with 30 `NotSam` and 1 `NonCapturing`. A builder-style library
+  is exactly the shape that produces a 67-site `SelfTyped` population, and `refused = 0` would have
+  been the number a port meeting the bar by converting nothing would print.
+
+### 10.8.6 The 8 errors, classified per §1
+
+All eight are `EngineGap` — none `Approx`, none `Unmapped`, none `Declared`. Four families:
+
+| n | code | site | §1 |
+|---|---|---|---|
+| 4 | `E007` | `TextraListBox#<stmt5>` ×2, `#setSelected` ×2 — `Found: T \| Null` | **(b) CONFIGURE** |
+| 2 | `E091` | `StylistEffect#<stmt2>` — `return outside method definition` | **(a) ENGINE** |
+| 1 | `E172` | `TypingConfig#<clinit>` — `No given sge.Sge is in scope` | **(b)/(c) PER-LIBRARY** |
+| 1 | `E051` | `BitmapFontSupport$JsonFontData#<init>()` — `Ambiguous overload` | **(a) ENGINE** |
+
+**The four `E007` were PREDICTED by a check, which is the useful thing about them.**
+`nullability-boundary` filed 3 `AbstractTypeParameter` rows on `TextraListBox` — `getSelected`,
+`setSelected`'s parameter and `getItemAt` — with its own §1(b) classification and the three exits
+named: `Null` is a subtype of every CONCRETE reference type so `String | Null` simplifies at every
+use, and is NOT a subtype of an abstract `T`, so `T | Null` does not conform to `T` and the cost
+lands on the USES. The three ways out are all policy: scope this port's generic types out of
+`nullability`, accept the errors, or stage to `-Yexplicit-nulls -language:unsafeNulls`. That the
+check names the errors before the compiler does is the §4.45 property working.
+
+**The two `E091` are the constructor funnel meeting a java constructor that RETURNS EARLY.**
+`StylistEffect(TypingLabel, String[])` is a 100-line parameter parser with two `return;` statements;
+the funnel promotes the chosen constructor's body into the class body, where a scala `return` is
+`return outside method definition`. A scala class body IS its constructor and has no early exit —
+so this is §1(a) and its shape is §4.55's promotion rules meeting a control-flow construct those
+rules do not mention. It is LOUD, which is the right failure: the alternative shape (dropping the
+`return`) would run the rest of the parser on every path, at a green compile.
+
+**The `E051` is a synthesised primary meeting `null`.** The funnel gave `JsonFontData` a
+`protected (f$path: String)` primary and rendered java's no-arg constructor as `def this() =
+this(null)`; the class also declares `def this(jsonFont: FileHandle)`, so `null` is applicable to
+both and scalac reports the ambiguity java never had. §1(a): the synthesised delegation needs its
+argument ASCRIBED at the primary's own parameter type wherever the class has another arity-1
+constructor at a different reference type.
+
+**The `E172` is the context seam at a static field initialiser, and it is gdx-ai's `GdxAI` shape.**
+`TypingConfig`'s class initialiser reads the ambient environment that the base retired into a
+`(using sge.Sge)` clause; a static initialiser runs before any caller exists to pass one. §10.7.6
+records both context-seam exits measured and worse on that port, so this one is a policy question
+this wave deliberately does not answer.
+
+### 10.8.7 Residues, named and classified
+
+- **`base-surface 2`** — `sge.scenes.scene2d.ui.Button#initialize`, replayed into `ImageTextraButton`
+  and `ImageTypingButton`. The base emits it `private` and this run does not write its declaration,
+  so the constructor replay cannot be widened; the replay is refused and the `super(args)` it
+  expressed is counted as an omission instead. **§1(a) IN THE BASE**: only `sge` can widen a member
+  it emits, and it cannot know a future dependent will replay one.
+- **`omissions 52`** — 41 × `super(args)` dropped (concentrated in the widget family: `TypingWindow`
+  12, `ImageTypingButton` 6, `TextraDialog` 6, `TypingDialog` 6), 8 × *promoted constructor body runs
+  on every path* (`TypingLabel`), 2 × annotation dropped, 1 × enum emitted without its
+  `java.lang.Enum` supertype. §1(a), and the largest single lane this port has.
+- **`port-map 1`** — `com.badlogic.gdx.graphics.g2d.BitmapFont#<init>()` at `Font.java:1859`. The
+  base's map records it `Dropped` and **not by policy**: the base's own engine could not render it
+  (`ctor-funnel/nilary-dropped(C11)`), so no manifest key on either side brings it back. §1(a) in the
+  base.
+- **`jdk-surface 5`** — `java.util.Arrays#binarySearch(char[],int,int,char)` (10 sites),
+  `#fill(int[],int)`, `#fill(Object[],Object)`, `#fill(long[],int,int,long)`, and
+  `java.util.ArrayList#clear()` retyped to `ArrayBuffer` with no rewrite. §1(b) CONFIGURE: add the
+  mapping to the retyping phase's tables or record a cited refusal.
+- **`context-seam 44`** — 42 `captured-context` (correct and counted, mostly `FWSkin`'s anonymous
+  `read` bodies) and **2 `unconstructed-thread`**: `TextureArrayPolygonSpriteBatch` and
+  `TextureArrayCpuPolygonSpriteBatch` are threaded, nothing in this program constructs them, and
+  their ancestry leaves the program through `java.lang.AutoCloseable`. That is the shape §1 describes
+  — a class a consumer constructs — and the honest reading here is libGDX core's own `Stage` row: if
+  the port's USERS build it, the clause is part of the ported API.
+- **`overload-risk 62`** of 17,661 program-declared calls, 1,105 of them with more than one
+  applicable candidate — 44 `VarargPhaseSpan` (`LongArray.addAll`, `OrderedSet.addAll`, `Table.add`)
+  and 18 `GenericTieBreak` (`Table.add` across the widget family). §1(a), COUNTED and deliberately not
+  resolved (`JS-C22`/`JS-C23`).
+- **`rewrite-callsites 2`** — `primitive->opaque:com.badlogic.gdx.graphics.TextureHandle` (8 owned
+  declarations) and `type-redirect` (15) retype and name no check lane. Both are the BASE's phases
+  reaching this module's declarations through inheritance, so the fix is `Rewrite.accountedBy` in the
+  engine, not a key here.
+- **the JVM-only `regexodus` under three-platform `targets`** — §10.8.3, and the reason narrowing
+  `targets` is not the answer.
+
+### 10.8.8 Next
+
+1. **The four `E007`** are the cheapest and are a policy choice, not a fix: read `nullability`'s three
+   named exits and take one with a number.
+2. **The `E051` and the two `E091`** are engine gaps in the constructor funnel, one small and one that
+   needs a decision about a promoted body's early exit.
+3. **The differential probe** (§10.8.1) — the only route to behavioural evidence this library has, and
+   the reason a green compile here would prove nothing (§3).
+4. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
+
+---
+
 ## 11. Publishability — what sge and ssg need before they can depend on this
 
 **The goal being evaluated.** sge and ssg stop hand-maintaining their ports and instead depend on
