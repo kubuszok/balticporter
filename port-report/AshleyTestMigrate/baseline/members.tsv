@@ -18,7 +18,7 @@ sge.ecs.ComponentTypeTests	sge.ecs.ComponentTypeTests#<stmt2>	stmt	5ec7948e0e0c0
 sge.ecs.ComponentTypeTests	sge.ecs.ComponentTypeTests#<stmt3>	stmt	ec5b695333a74927
 sge.ecs.ComponentTypeTests	sge.ecs.ComponentTypeTests$ComponentA	class	843fc6d4aaf9653e
 sge.ecs.ComponentTypeTests	sge.ecs.ComponentTypeTests$ComponentB	class	e7e5c42c9d7c0981
-sge.ecs.EngineTests	sge.ecs.EngineTests	class	db9682a2dd3bfddc
+sge.ecs.EngineTests	sge.ecs.EngineTests	class	b7869354b7b6c61d
 sge.ecs.EngineTests	sge.ecs.EngineTests#<stmt10>	stmt	aa733003223b012c
 sge.ecs.EngineTests	sge.ecs.EngineTests#<stmt11>	stmt	732d9042ea0078af
 sge.ecs.EngineTests	sge.ecs.EngineTests#<stmt12>	stmt	5023f70ca77be53e
@@ -89,8 +89,8 @@ sge.ecs.EngineTests	sge.ecs.EngineTests$EntityListenerMock#addedCount	val	ee5884
 sge.ecs.EngineTests	sge.ecs.EngineTests$EntityListenerMock#entityAdded(Entity)	def	13081dfe40a8e00b
 sge.ecs.EngineTests	sge.ecs.EngineTests$EntityListenerMock#entityRemoved(Entity)	def	1a299647fc4a6254
 sge.ecs.EngineTests	sge.ecs.EngineTests$EntityListenerMock#removedCount	val	e89ea56a812caddd
-sge.ecs.EngineTests	sge.ecs.EngineTests$EntitySystemMock	class	d3a73fbb169ec6ac
-sge.ecs.EngineTests	sge.ecs.EngineTests$EntitySystemMock#<init>()	ctor	1ddc878c1e82cac0
+sge.ecs.EngineTests	sge.ecs.EngineTests$EntitySystemMock	class	21ea91b4b62980d2
+sge.ecs.EngineTests	sge.ecs.EngineTests$EntitySystemMock#<init>()	ctor	0c3a414e40fd09b5
 sge.ecs.EngineTests	sge.ecs.EngineTests$EntitySystemMock#<init>(Array<Integer>)	ctor	29aaba18f1909384
 sge.ecs.EngineTests	sge.ecs.EngineTests$EntitySystemMock#addedCalls	val	836b68c625d80acc
 sge.ecs.EngineTests	sge.ecs.EngineTests$EntitySystemMock#addedToEngine(Engine)	def	6564a8dbbaa79aac
@@ -223,13 +223,13 @@ sge.ecs.PooledEngineTests	sge.ecs.PooledEngineTests$PooledComponentSpy#reset()	d
 sge.ecs.PooledEngineTests	sge.ecs.PooledEngineTests$PositionComponent	class	0744195118990006
 sge.ecs.PooledEngineTests	sge.ecs.PooledEngineTests$PositionComponent#x	val	5f063df6c94ef3d6
 sge.ecs.PooledEngineTests	sge.ecs.PooledEngineTests$PositionComponent#y	val	d36e02ff357f2115
-sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests	class	68b2ac137bbd62cd
+sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests	class	dd7b0c19b66c9260
 sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests#<stmt1>	stmt	768b8569de7874fb
 sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests#<stmt2>	stmt	a07e7c944475171b
 sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests#<stmt3>	stmt	128a22014c9219c4
 sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests#<stmt4>	stmt	004a67869dc1cbad
-sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests$EntitySystemMock	class	b0aab0dcd9b053e8
-sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests$EntitySystemMock#<init>()	ctor	3f145016004f2a0f
+sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests$EntitySystemMock	class	25ed8272c27a19f3
+sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests$EntitySystemMock#<init>()	ctor	9790e5e07b139f19
 sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests$EntitySystemMock#<init>(Array<Integer>)	ctor	3e326015a157f490
 sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests$EntitySystemMock#addedCalls	val	836b68c625d80acc
 sge.ecs.SystemManagerTests	sge.ecs.SystemManagerTests$EntitySystemMock#addedToEngine(Engine)	def	774d1bbbf41526a4

@@ -3701,7 +3701,8 @@ final class TirEmitter(
     val (deleg, rest) = plan.delegations.get(cdef.symbol) match
       case Some(args) =>
         val extra = currentClass.zip(plan.marker).map(markerArg(_, _)).toList
-        (s"this(${(args.map(term(_, i + 1)) ++ extra).mkString(", ")})", after.drop(eaten))
+        val as    = args.zipWithIndex.map((a, k) => slotArg(a, plan.synthetic.lift(k).map(_._2), i + 1))
+        (s"this(${(as ++ extra).mkString(", ")})", after.drop(eaten))
       case None => CtorFunnel.headStmt(cdef) match
         case Some(Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) if sym(m).name == "<init>" =>
           val d = r match
@@ -3750,6 +3751,39 @@ final class TirEmitter(
     * `Object` is applicable too and always LOSES most-specific to the marker's own type. */
   private def markerArg(cd: Tree.ClassDef, name: String): String =
     s"(null: ${typeValue(cd.symbol)}.${esc(name)})"
+
+  /** …and the SAME sentence at the slot arguments beside it, which is where it was missing.
+    *
+    * A SYNTHESISED primary's delegation is an argument list JAVA NEVER WROTE — the parent
+    * constructor's formals followed by the fields the funnel hoisted — so javac never resolved it and
+    * scalac is answering a question for the first time. A root that does not assign a hoisted field
+    * contributes that field's own java initialiser, routinely `null`, and `null` inhabits every
+    * reference type: `this(null)` is then applicable to the primary AND to any real one-argument
+    * constructor at a reference type, which is `E051 Ambiguous overload` at a class the port
+    * otherwise translates perfectly.
+    *
+    * The ascription is what [[markerArg]] already writes for the disambiguator, one argument to the
+    * left, and it is the ONLY thing that moves: `CtorFunnel.Plans`'s `shadowed` predicate still sees
+    * the unascribed terms, so which classes get a marker is byte-identical. That split is deliberate.
+    * `shadowed` records that treating a bare `null` as applicable to everything refused the synthesis
+    * for every class with a one-argument constructor (`ENGINE-LIMITS.md` C8), so making the DECISION
+    * read the ascribed type would trade one wrong answer for a wider one; the ascription removes the
+    * ambiguity at the CALL without changing the primary's signature at all.
+    *
+    * Two things it does NOT do. It never touches a delegation JAVA WROTE — `this(h, null)` is a call
+    * javac already resolved, and re-deciding it is exactly the standing §4.56 forbids. And it declines
+    * at an ABSTRACT type slot, on `CtorFunnel.javaDefault`'s own rule: `Null` does not conform to a
+    * type parameter, so `(null: T)` is a compile error where the bare `null` the frontend put there
+    * is not this arm's business. */
+  private def slotArg(a: Term, slot: Option[TypeRepr], i: Int): String = (a, slot) match
+    case (Tree.Literal(Constant.NullC, _, _), Some(t)) if !abstractSlot(t) => s"(null: ${tpe(t)})"
+    case _                                                                => term(a, i)
+
+  /** does this slot's type name a TYPE PARAMETER this program declares? `Null` does not conform to
+    * one, which is the same fact `CtorFunnel.javaDefault` refuses to mint a `null` for. */
+  private def abstractSlot(t: TypeRepr): Boolean = t match
+    case TypeRepr.TypeRef(_, s) => program.definitionOf(s).exists(_.isInstanceOf[Tree.TypeDef])
+    case _                      => false
 
   private def superDelegation(args: List[Term], i: Int): String =
     currentClass.map(plans.superCall(_, args)).getOrElse(CtorFunnel.SuperCall.Dropped) match

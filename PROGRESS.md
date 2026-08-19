@@ -5459,10 +5459,37 @@ That zero is not luck and it is the useful reading: a `return` left in a class b
 so every port already at its error floor is a port with no such shape — the fix cannot be silent, and
 its blast is exactly the classes that could not compile.
 
+**Family 3, the one `E051`, is `ENGINE-LIMITS.md` C8's own sentence one argument to the left.** A
+SYNTHESISED primary's delegation is an argument list JAVA NEVER WROTE — the parent constructor's
+formals followed by the fields the funnel hoisted — so javac never resolved it and scalac is answering
+that question for the first time. `JsonFontData`'s nilary root does not assign `path`, so it
+contributes the field's OWN java initialiser, which is `null`; `null` inhabits every reference type,
+so `this(null)` is applicable to the primary AND to `def this(jsonFont: FileHandle)` beside it.
+
+The engine already knew this and already wrote the fix: `TirEmitter.markerArg` ascribes the
+DISAMBIGUATOR's `null` for exactly this reason, and `CtorFunnel`'s own `shadowed` predicate records
+that treating a bare `null` as applicable to everything refused the synthesis for every class with a
+one-argument constructor. So the SLOT arguments are ascribed too and `shadowed` is left reading the
+unascribed terms — which classes get a marker is byte-identical, and the ambiguity goes without the
+marker's extra parameter. Two things it does not touch: a delegation JAVA WROTE (`this(h, null)` is a
+call javac already resolved), and an ABSTRACT type slot (`Null` does not conform to a type parameter,
+which is `CtorFunnel.javaDefault`'s own refusal).
+
+| | errors | member digests |
+|---|---|---|
+| `sge-textra` | **6 -> 5** | **3** — `JsonFontData`'s nilary constructor, its class row and the enclosing `BitmapFontSupport` |
+| `sge` | 0, unchanged | **38** — nineteen secondary constructors whose minted delegation carried a `null` (`JsonWriter()`, `TimSort()`, `ParticleShader$Config`'s four, `ETC1TextureData`'s two, …) and their nineteen `class` rows |
+| `sge-ecs` / `sge-ai` / `sge-textra` own | 0, unchanged | 6 / 4 / 3 — the same shape in each |
+| every other lane | at its floor, unchanged | **0** |
+
+`findings.tsv` moves by three lines on the base and none of them is a count: the ascription renders a
+TYPE, so `JS-C29`/`JS-G01`/`JS-G12`'s consult totals — which those rows print inside their own text —
+go up by 35, 4 and 35. That is the artifact doing its job (§5: a running total inside a finding's text
+is not a count, and `counts.tsv` cannot see it).
+
 ### 10.8.9 Next
 
-1. **The `E051`** is an engine gap in the constructor funnel — a synthesised delegation's `null`.
-2. **The `E172`** is the context seam, and §10.8.10 records why none of the three offered exits reaches
+1. **The `E172`** is the context seam, and §10.8.10 records why none of the three offered exits reaches
    it.
 3. **The differential probe** (§10.8.1) — the only route to behavioural evidence this library has, and
    the reason a green compile here would prove nothing (§3). **It is GATED on the error count reaching

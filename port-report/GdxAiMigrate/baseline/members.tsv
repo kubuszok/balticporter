@@ -123,8 +123,8 @@ sge.ai.btree.BranchTask	sge.ai.btree.BranchTask#copyTo(Task<E>)	def	5d436bd9802b
 sge.ai.btree.BranchTask	sge.ai.btree.BranchTask#getChild(int)	def	ad300d4a601640f9
 sge.ai.btree.BranchTask	sge.ai.btree.BranchTask#getChildCount()	def	1f157e57a9ba4ed6
 sge.ai.btree.BranchTask	sge.ai.btree.BranchTask#reset()	def	a78dffcc570291fc
-sge.ai.btree.Decorator	sge.ai.btree.Decorator	class	e307ee03af6d65c2
-sge.ai.btree.Decorator	sge.ai.btree.Decorator#<init>()	ctor	a22fb8daaf065ea3
+sge.ai.btree.Decorator	sge.ai.btree.Decorator	class	3b5be8d17de967dd
+sge.ai.btree.Decorator	sge.ai.btree.Decorator#<init>()	ctor	5313d97d7d38a6b4
 sge.ai.btree.Decorator	sge.ai.btree.Decorator#<init>(Task<E>)	ctor	423b37ae3a5a2e2e
 sge.ai.btree.Decorator	sge.ai.btree.Decorator#addChildToTask(Task<E>)	def	6d5b5370b2d0e8d8
 sge.ai.btree.Decorator	sge.ai.btree.Decorator#child	val	47bcf8aac30d28b6
@@ -273,8 +273,8 @@ sge.ai.btree.decorator.AlwaysFail	sge.ai.btree.decorator.AlwaysFail#childSuccess
 sge.ai.btree.decorator.AlwaysSucceed	sge.ai.btree.decorator.AlwaysSucceed	class	cdf6972a245b3bb3
 sge.ai.btree.decorator.AlwaysSucceed	sge.ai.btree.decorator.AlwaysSucceed#<init>(Task<E>)	ctor	7b7e67caea228c7e
 sge.ai.btree.decorator.AlwaysSucceed	sge.ai.btree.decorator.AlwaysSucceed#childFail(Task<E>)	def	f5533e890d4e7eea
-sge.ai.btree.decorator.Include	sge.ai.btree.decorator.Include	class	c1959bde545e92b8
-sge.ai.btree.decorator.Include	sge.ai.btree.decorator.Include#<init>()	ctor	0ffeeb11076609e0
+sge.ai.btree.decorator.Include	sge.ai.btree.decorator.Include	class	64840e61b775b36b
+sge.ai.btree.decorator.Include	sge.ai.btree.decorator.Include#<init>()	ctor	e81ce36ccf2cf64b
 sge.ai.btree.decorator.Include	sge.ai.btree.decorator.Include#<init>(String)	ctor	1897e2ccedda2b2f
 sge.ai.btree.decorator.Include	sge.ai.btree.decorator.Include#<init>(String,boolean)	ctor	096b6664df59571d
 sge.ai.btree.decorator.Include	sge.ai.btree.decorator.Include#cloneTask()	def	576de6c5292c2f59

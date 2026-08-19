@@ -354,7 +354,7 @@ member	com.badlogic.gdx.ai.btree.BranchTask#copyTo(Task)	sge.ai.btree.BranchTask
 member	com.badlogic.gdx.ai.btree.BranchTask#getChild(int)	sge.ai.btree.BranchTask#getChild(int)	Renamed	-	com/badlogic/gdx/ai/btree/BranchTask.java	58	ad300d4a601640f9	
 member	com.badlogic.gdx.ai.btree.BranchTask#getChildCount()	sge.ai.btree.BranchTask#getChildCount()	Renamed	-	com/badlogic/gdx/ai/btree/BranchTask.java	53	1f157e57a9ba4ed6	
 member	com.badlogic.gdx.ai.btree.BranchTask#reset()	sge.ai.btree.BranchTask#reset()	Renamed	-	com/badlogic/gdx/ai/btree/BranchTask.java	75	a78dffcc570291fc	
-member	com.badlogic.gdx.ai.btree.Decorator#<init>()	sge.ai.btree.Decorator#<init>()	Renamed	-	com/badlogic/gdx/ai/btree/Decorator.java	35	a22fb8daaf065ea3	
+member	com.badlogic.gdx.ai.btree.Decorator#<init>()	sge.ai.btree.Decorator#<init>()	Renamed	-	com/badlogic/gdx/ai/btree/Decorator.java	35	5313d97d7d38a6b4	
 member	com.badlogic.gdx.ai.btree.Decorator#<init>(Task)	sge.ai.btree.Decorator#<init>(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/Decorator.java	41	423b37ae3a5a2e2e	
 member	com.badlogic.gdx.ai.btree.Decorator#addChildToTask(Task)	sge.ai.btree.Decorator#addChildToTask(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/Decorator.java	46	6d5b5370b2d0e8d8	
 member	com.badlogic.gdx.ai.btree.Decorator#child	sge.ai.btree.Decorator#child	Renamed	-	com/badlogic/gdx/ai/btree/Decorator.java	32	47bcf8aac30d28b6	
@@ -484,7 +484,7 @@ member	com.badlogic.gdx.ai.btree.decorator.AlwaysFail#<init>(Task)	sge.ai.btree.
 member	com.badlogic.gdx.ai.btree.decorator.AlwaysFail#childSuccess(Task)	sge.ai.btree.decorator.AlwaysFail#childSuccess(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/decorator/AlwaysFail.java	41	4c24d04d9636b5e8	
 member	com.badlogic.gdx.ai.btree.decorator.AlwaysSucceed#<init>(Task)	sge.ai.btree.decorator.AlwaysSucceed#<init>(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/decorator/AlwaysSucceed.java	36	7b7e67caea228c7e	
 member	com.badlogic.gdx.ai.btree.decorator.AlwaysSucceed#childFail(Task)	sge.ai.btree.decorator.AlwaysSucceed#childFail(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/decorator/AlwaysSucceed.java	41	f5533e890d4e7eea	
-member	com.badlogic.gdx.ai.btree.decorator.Include#<init>()	sge.ai.btree.decorator.Include#<init>()	Renamed	-	com/badlogic/gdx/ai/btree/decorator/Include.java	44	0ffeeb11076609e0	
+member	com.badlogic.gdx.ai.btree.decorator.Include#<init>()	sge.ai.btree.decorator.Include#<init>()	Renamed	-	com/badlogic/gdx/ai/btree/decorator/Include.java	44	e81ce36ccf2cf64b	
 member	com.badlogic.gdx.ai.btree.decorator.Include#<init>(String)	sge.ai.btree.decorator.Include#<init>(String)	Renamed	-	com/badlogic/gdx/ai/btree/decorator/Include.java	49	1897e2ccedda2b2f	
 member	com.badlogic.gdx.ai.btree.decorator.Include#<init>(String,boolean)	sge.ai.btree.decorator.Include#<init>(String,boolean)	Renamed	-	com/badlogic/gdx/ai/btree/decorator/Include.java	56	096b6664df59571d	
 member	com.badlogic.gdx.ai.btree.decorator.Include#cloneTask()	sge.ai.btree.decorator.Include#cloneTask()	Renamed	-	com/badlogic/gdx/ai/btree/decorator/Include.java	79	576de6c5292c2f59	
