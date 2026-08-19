@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-textra	engine=balticporter/0.1.0-SNAPSHOT	sources=9ebd6e69043d4bb1	files=92	policy=82dbd28c1b33731b
+# balticporter port map	schema=3	module=sge-textra	engine=balticporter/0.1.0-SNAPSHOT	sources=9ebd6e69043d4bb1	files=92	policy=acfe757adf53e8e0
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.github.tommyettinger.textra.BitmapFontSupport	sge.textra.BitmapFontSupport	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.github.tommyettinger.textra.BitmapFontSupport$JsonFontData	sge.textra.BitmapFontSupport$JsonFontData	Renamed	-		0		form=class parents=sge.graphics.g2d.BitmapFont$BitmapFontData primary=(String) primaryKind=synthesised-primary primaryVis=protected secondaries=();(FileHandle);(FileHandle,String);(FileHandle,String,boolean)
@@ -1390,7 +1390,7 @@ member	com.github.tommyettinger.textra.TextraListBox#getOverItem()	sge.textra.Te
 member	com.github.tommyettinger.textra.TextraListBox#getPrefHeight()	sge.textra.TextraListBox#getPrefHeight()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	457	1224b260e8036d28	
 member	com.github.tommyettinger.textra.TextraListBox#getPrefWidth()	sge.textra.TextraListBox#getPrefWidth()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	452	6e2c73276590e150	
 member	com.github.tommyettinger.textra.TextraListBox#getPressedItem()	sge.textra.TextraListBox#getPressedItem()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	349	63d07c650d945573	
-member	com.github.tommyettinger.textra.TextraListBox#getSelected()	sge.textra.TextraListBox#getSelected()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	310	8d009a00280a05ea	
+member	com.github.tommyettinger.textra.TextraListBox#getSelected()	sge.textra.TextraListBox#getSelected()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	310	3cccf6804a1cb78c	
 member	com.github.tommyettinger.textra.TextraListBox#getSelectedIndex()	sge.textra.TextraListBox#getSelectedIndex()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	326	cbb9fdac33046205	
 member	com.github.tommyettinger.textra.TextraListBox#getSelection()	sge.textra.TextraListBox#getSelection()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	301	3e3de41ff7e7fcdc	
 member	com.github.tommyettinger.textra.TextraListBox#getStyle()	sge.textra.TextraListBox#getStyle()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	203	d2beb6c76d48df37	
@@ -1407,7 +1407,7 @@ member	com.github.tommyettinger.textra.TextraListBox#setAlignment(int)	sge.textr
 member	com.github.tommyettinger.textra.TextraListBox#setCullingArea(?)	sge.textra.TextraListBox#setCullingArea(?)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	462	e4256ce0752e29ce	
 member	com.github.tommyettinger.textra.TextraListBox#setItems(Array)	sge.textra.TextraListBox#setItems(Array<?>)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	422	edd142a85aa4d768	
 member	com.github.tommyettinger.textra.TextraListBox#setItems(Array)	sge.textra.TextraListBox#setItems(Array<T>)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	405	d5d5bd43f6bad7d5	
-member	com.github.tommyettinger.textra.TextraListBox#setSelected(?)	sge.textra.TextraListBox#setSelected(?)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	316	025c6c1ab0dc100a	
+member	com.github.tommyettinger.textra.TextraListBox#setSelected(T)	sge.textra.TextraListBox#setSelected(T)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	316	64f6933e8105c701	
 member	com.github.tommyettinger.textra.TextraListBox#setSelectedIndex(int)	sge.textra.TextraListBox#setSelectedIndex(int)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	333	62513202cb5689ef	
 member	com.github.tommyettinger.textra.TextraListBox#setSelection(ArraySelection)	sge.textra.TextraListBox#setSelection(ArraySelection<T>)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	305	b4368c4c436ccfb6	
 member	com.github.tommyettinger.textra.TextraListBox#setStyle(ListStyle)	sge.textra.TextraListBox#setStyle(ListStyle)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	195	73af86c0dcb04b59	

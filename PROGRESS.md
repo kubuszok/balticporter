@@ -5487,15 +5487,67 @@ TYPE, so `JS-C29`/`JS-G01`/`JS-G12`'s consult totals — which those rows print 
 go up by 35, 4 and 35. That is the artifact doing its job (§5: a running total inside a finding's text
 is not a count, and `counts.tsv` cannot see it).
 
-### 10.8.9 Next
+**And the four families take the port `8 -> 1`**, three of them closed and each with its own commit:
+family 2 `8 -> 6`, family 3 `6 -> 5`, family 1's policy key `5 -> 1` (after the engine fix its
+arithmetic needed — `nullability-boundary` reads `9 -> 9`, two `AbstractTypeParameter` rows out and
+two `ScopedOut` rows in, with every row attributable). What is left is family 4.
 
-1. **The `E172`** is the context seam, and §10.8.10 records why none of the three offered exits reaches
-   it.
-3. **The differential probe** (§10.8.1) — the only route to behavioural evidence this library has, and
-   the reason a green compile here would prove nothing (§3). **It is GATED on the error count reaching
-   zero**: the lane's own shape (`ai-diff-measure`) refuses to run a suite that does not compile, and
-   this port's emitted Scala is one of that compile's inputs.
-4. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
+### 10.8.9 Family 4 — the `E172` is NOT `TypingConfig`'s, and no offered exit reaches it
+
+**The diagnosis first, because the scoping's was wrong.** §10.8.6 read this as `TypingConfig`'s class
+initialiser reading the ambient environment — gdx-ai's `GdxAI` shape, answerable by dropping the
+facade and injecting java's own negative branch. It is not. `TypingConfig`'s static initialiser reads
+NO mapped global: it puts eight chars in an `IntFloatMap` and calls `registerEffect` forty times with
+a method reference each. The one class that reads a global is **`LinkEffect`**, whose `onApply` calls
+`Gdx.net.openURI(link)` — so the globals policy threaded `LinkEffect`, `attach = "class"` put the
+clause on its CONSTRUCTOR, and the registry's lambda `(a0$, a1$) => new LinkEffect(a0$, a1$)` is
+elaborated inside the companion's `locally { … }`, where no given exists. One error, one class, and
+`TypingConfig` is a bystander.
+
+**None of the three exits the diagnostic names reaches it**, and each fails for its own reason:
+
+- **`sites = { … -> lazy-init }`** moves a STATIC's initialisation to its first read. There is no
+  static here whose initialiser needs a context — the need is inside a LAMBDA the initialiser stores,
+  and deferring the store defers nothing;
+- **`boundary = "residual-global"`** answers only the SPELLING of a READ, and this site has no read
+  to spell. §10.7.6 already records that refusal on gdx-ai, with the same second half: `sge.Sge`
+  declares no `global` member for such a rewrite to name;
+- **`selfSupplied`** is the mechanism that fits — *this type takes the context WITHOUT taking a
+  parameter* — and it needs an EXPRESSION yielding an `sge.Sge`. There is none in scope.
+  `TypingLabel`'s own clause is a constructor parameter and not a member, so `LinkEffect` cannot read
+  one off the label it is handed, and `sge.Sge` has no ambient instance by design (its own doc: it is
+  what every consumer writes `(using Sge)` against). The reference hand port does not need one either
+  — `HeadlessTextraSge` BUILDS an `Sge` and hand-wires it, which is a luxury a registry lambda typed
+  by java's own two-parameter `Effect.EffectBuilder` does not have.
+
+**AND THE SEAM IS NOT COUNTED, which is the engine finding this family produced.** `context-seam`
+reads 44 on this port and names neither `LinkEffect` nor `TypingConfig`: `ContextSeamCheck`'s kinds
+cover a residual READ, a deferred init, a captured context, a frozen override component, a
+self-supplied type, a LOST clause and an UNCONSTRUCTED threaded class — and not the mirror image of
+that last one, *a threaded class CONSTRUCTED from a site that cannot supply*. The phase's own prose
+already has the concept (`recordDeadSites` calls it "an UNSUPPLIABLE USE — a declaration that
+constructs or calls something threaded"), so what is missing is the count, not the understanding.
+Until it exists this arrives as a bare typer error with no §1 classification — exactly what §4.45
+says a new library's first wall is made of, and the opposite of how family 1's four errors arrived.
+
+**Do NOT retry**: reading this as `TypingConfig`'s seam. It is `LinkEffect`'s, and a drop-and-inject
+of `TypingConfig` would replace a forty-entry registry to work around one method in another file.
+
+### 10.8.10 Next
+
+1. **The `E172`**, which needs a decision this wave deliberately does not take: either the engine
+   COUNTS the unsuppliable-construction seam (§1(a), and the port still does not compile), or the base
+   grows a way for a framework-instantiated type to obtain a context (§1(b), an `sge` API decision), or
+   this port substitutes `LinkEffect#onApply`'s body so the class is never threaded — which is
+   `MethodBodyTransform`'s shape, costs one behaviour, and additionally needs an ordering edge the
+   phase does not declare (a body substitution has to land BEFORE `globals->implicits` reads it).
+2. **The differential probe** (§10.8.1) — the only route to behavioural evidence this library has, and
+   the reason a green compile here would prove nothing (§3). **It is GATED on item 1**: the lane's own
+   shape (`ai-diff-measure`) refuses to run a suite that does not compile, and this port's emitted
+   Scala is one of that compile's inputs. The census population is re-derived and unchanged — 32 files
+   in `../sge/sge-extension/textra/src/test` (20 `scala`, 11 `scalajvm`, 1 `scalanative`), one of which
+   is the `HeadlessTextraSge` FIXTURE rather than a suite.
+3. **`omissions 52`** is the burn-down after that: 41 of them are one construct in one family.
 
 ---
 

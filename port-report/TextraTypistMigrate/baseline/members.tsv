@@ -1263,7 +1263,7 @@ sge.textra.TextraLabel	sge.textra.TextraLabel#toString()	def	0e83ae8faae388b2
 sge.textra.TextraLabel	sge.textra.TextraLabel#useIntegerPositions(boolean)	def	fc850eab2ca65b69
 sge.textra.TextraLabel	sge.textra.TextraLabel#validate()	def	b27cb3a3666b2e82
 sge.textra.TextraLabel	sge.textra.TextraLabel#wrap	val	c8d68924b245732b
-sge.textra.TextraListBox	sge.textra.TextraListBox	class	432dc86e5cf14d4d
+sge.textra.TextraListBox	sge.textra.TextraListBox	class	c4b88c5d285e59ed
 sge.textra.TextraListBox	sge.textra.TextraListBox#<init>(Skin,Sge)	ctor	f97810ba3d07bbfd
 sge.textra.TextraListBox	sge.textra.TextraListBox#<init>(Skin,String,Sge)	ctor	91b6f3b4e05326d4
 sge.textra.TextraListBox	sge.textra.TextraListBox#<stmt1>	stmt	aea37593ced4d85d
@@ -1290,7 +1290,7 @@ sge.textra.TextraListBox	sge.textra.TextraListBox#getOverItem()	def	5f466573b821
 sge.textra.TextraListBox	sge.textra.TextraListBox#getPrefHeight()	def	1224b260e8036d28
 sge.textra.TextraListBox	sge.textra.TextraListBox#getPrefWidth()	def	6e2c73276590e150
 sge.textra.TextraListBox	sge.textra.TextraListBox#getPressedItem()	def	63d07c650d945573
-sge.textra.TextraListBox	sge.textra.TextraListBox#getSelected()	def	8d009a00280a05ea
+sge.textra.TextraListBox	sge.textra.TextraListBox#getSelected()	def	3cccf6804a1cb78c
 sge.textra.TextraListBox	sge.textra.TextraListBox#getSelectedIndex()	def	cbb9fdac33046205
 sge.textra.TextraListBox	sge.textra.TextraListBox#getSelection()	def	3e3de41ff7e7fcdc
 sge.textra.TextraListBox	sge.textra.TextraListBox#getStyle()	def	d2beb6c76d48df37
@@ -1307,7 +1307,7 @@ sge.textra.TextraListBox	sge.textra.TextraListBox#setAlignment(int)	def	5d7d7ec4
 sge.textra.TextraListBox	sge.textra.TextraListBox#setCullingArea(?)	def	e4256ce0752e29ce
 sge.textra.TextraListBox	sge.textra.TextraListBox#setItems(Array<?>)	def	edd142a85aa4d768
 sge.textra.TextraListBox	sge.textra.TextraListBox#setItems(Array<T>)	def	d5d5bd43f6bad7d5
-sge.textra.TextraListBox	sge.textra.TextraListBox#setSelected(?)	def	025c6c1ab0dc100a
+sge.textra.TextraListBox	sge.textra.TextraListBox#setSelected(T)	def	64f6933e8105c701
 sge.textra.TextraListBox	sge.textra.TextraListBox#setSelectedIndex(int)	def	62513202cb5689ef
 sge.textra.TextraListBox	sge.textra.TextraListBox#setSelection(ArraySelection<T>)	def	b4368c4c436ccfb6
 sge.textra.TextraListBox	sge.textra.TextraListBox#setStyle(ListStyle)	def	73af86c0dcb04b59
