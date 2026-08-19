@@ -11,6 +11,7 @@
 #   just vfx-measure                 gdx-vfx, compiled WITH libGDX core (a dependent port)
 #   just ai-measure                  gdx-ai, compiled WITH libGDX core (a dependent port)
 #   just ai-test-measure             gdx-ai's own 10-@Test JUnit suite — emitted, compiled and RUN
+#   just textra-measure              TextraTypist, compiled WITH libGDX core (a dependent port)
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
@@ -88,6 +89,7 @@ gltf_module   := "ported/sge-gltf"
 screens_module := "ported/sge-screens"
 vfx_module    := "ported/sge-vfx"
 ai_module     := "ported/sge-ai"
+textra_module := "ported/sge-textra"
 liqp_module   := "ported/ssg-liquid"
 md_module     := "ported/ssg-md"
 # ssg-md's EXTENSION half, at its OWN port root (`corpus/ports/ssg-md/ext.conf` D-mde-1/2). A run's
@@ -128,6 +130,14 @@ ai_demos      := "../sge/original-src/gdx-ai/tests"
 # hand port gains or loses a file the lane says the §10.7.12 census is stale instead of quietly
 # measuring a smaller reference.
 ai_ref_tests  := "../sge/sge-extension/ai/src/test/scala"
+# TextraTypist's WHOLE upstream checkout — the port converts `src/main/java` and the lane censuses
+# `src/test/java` separately, for `ai_src`'s reason with the sign flipped. That test tree is 128
+# files and declares ZERO `@Test`: `build.gradle` names no JUnit coordinate at all, 113 of the 128
+# declare `public static void main`, and 107 extend `ApplicationAdapter`/`Game`/`InputAdapter`. A
+# filename census over it reproduces a large number and only `java_test_count` reproduces the 0,
+# which is why the lane runs it on the tree rather than omitting the block — and it is what says so
+# the day upstream gains a real suite.
+textra_src    := "../sge/original-src/textratypist"
 # gdx-gltf's WHOLE test tree, not the one file the port migrates: SEVEN java files sit there and
 # only ONE is a suite (`AttributesCompareTest`, 8 `@Test`). The other six are `extends Game` demos
 # with a `main` that opens an lwjgl window. `java_test_count` over the tree is what re-derives the
@@ -281,6 +291,15 @@ ai_deps       := ""
 # two runners present, which one claims a suite is decided by scanning it, and the flag order is an
 # input to that classpath.
 ai_test_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:junit:4.12"
+# TextraTypist declares TWO `api` coordinates and this lane names NEITHER. libGDX arrives as the
+# SOURCE the base port emitted rather than as a jar, exactly as it does for every other dependent;
+# and `com.github.tommyettinger:regexodus` — which the emitted Scala names outright, six classes of
+# it — is DECLARED BY THE PORT (`TextraTypistPolicy.dependencies`), so the lane derives its
+# `--dependency` from what the run published rather than restating the coordinate here. That is
+# `liqp_deps`' own lesson: a revision bumped in the manifest and not in the lane compiles the port
+# against a DIFFERENT JAR with every check count, every member digest and every outcome flat. There
+# is no hand-written suite either, so this stays empty rather than carrying munit speculatively.
+textra_deps   := ""
 # flexmark's one compile-scope coordinate, `org.jetbrains:annotations:24.0.1`, is a FRONTEND input
 # AND a compile one — and this line was written empty on the reasoning that it could not be, which
 # the port's first run disproved in one number. The reasoning was: the annotations are markers,
@@ -2505,6 +2524,137 @@ md-ext-measure:
     headline "$ERRORS" "$EREPORT"
 
 # ---------------------------------------------------------------------------------------------
+# TextraTypist — a libGDX dependent, and the first port whose own build names a THIRD-PARTY jar.
+#
+# ONE source set and no suite stage, for the two reasons the lane prints rather than asserts:
+# upstream's `src/test/java` declares zero `@Test` (it is 128 manual LWJGL3 demos), and this port
+# has no hand-written suite yet. That makes it `jbump-measure`'s shape without the differential
+# probe — the probe against the reference hand port's own 32-file MUnit suite is a later wave, and
+# PROGRESS.md §10.8 holds its scope.
+#
+# The compile line carries NO coordinate of its own (`textra_deps` is empty and says why): libGDX
+# arrives as the base's emitted SOURCE, and regexodus is derived from what the run published.
+# ---------------------------------------------------------------------------------------------
+textra-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
+    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{textra_src}}"
+    REPORT="$ROOT/port-report/TextraTypistMigrate"
+
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.textra.TextraTypistMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
+      echo "!! TextraTypistMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
+      exit 1
+    fi
+    echo "-- TextraTypistMigrate (every line it printed) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
+    echo
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
+
+    echo
+    echo "-- scope --"
+    # RE-DERIVED, not asserted in a comment. `src/main/java` holds 95 `.java` files and three of them
+    # are `package-info.java` — javadoc-only placeholders declaring no type — so 92 are in scope.
+    ALL_JAVA=$(find {{textra_src}}/src/main/java -name '*.java' | wc -l | tr -d ' ')
+    PKG_INFO=$(find {{textra_src}}/src/main/java -name 'package-info.java' | wc -l | tr -d ' ')
+    echo "upstream .java: $ALL_JAVA   package-info: $PKG_INFO   in scope: $((ALL_JAVA - PKG_INFO))"
+
+    echo
+    echo "-- licence obligations: THREE regimes, and only one of them is a manifest key --"
+    # (a) and (b) are reproduced BY THE COMMENT HARVEST and (c) by `Provenance.notices`. §4.58's own
+    # argument is why (b) is grepped rather than assumed: the harvest regressed to `Nil` once and the
+    # emitted Scala was still valid, so a notice reproduced "by construction" is reproduced by a
+    # mechanism that can fail silently. The `notices` half needs no grep — a declared file that is
+    # not there is fatal at the run — but the COPY is asserted, because §4.57's whole point is that
+    # naming a licence is not including it.
+    APACHE=$(grep -rl "Licensed under the Apache License" {{textra_module}}/src_managed/main/scala | wc -l | tr -d ' ')
+    EMITTED=$(find {{textra_module}}/src_managed/main/scala -name '*.scala' | wc -l | tr -d ' ')
+    echo "(a) Apache-2.0 per-file notice, reproduced in $APACHE of $EMITTED emitted files"
+    [ "$APACHE" = "0" ] && echo "!! THE PER-FILE HARVEST IS PRODUCING NOTHING — every emitted file is an unattributed derived work"
+    if grep -rqs "Mathias Bynens" {{textra_module}}/src_managed/main/scala; then
+      echo "(b) the emoji-regex MIT notice, reproduced inline (EmojiProcessor)"
+    else
+      echo "!! (b) THE EMOJI-REGEX MIT NOTICE IS GONE — it is a self-contained MIT text in one upstream"
+      echo "   file's leading comment, so losing it is a licence failure the compile cannot see (§4.58)"
+    fi
+    for n in LICENSE typing-label.LICENSE; do
+      if [ -f "{{textra_module}}/src_managed/main/$n" ] || [ -f "{{textra_module}}/src_managed/$n" ]; then
+        echo "(c) $n copied beside the emitted code"
+      else
+        echo "!! (c) $n WAS NOT COPIED — declared in Provenance.notices; MIT's one condition is that"
+        echo "   the notice be INCLUDED in copies, and the port names it without shipping it (§4.57)"
+      fi
+    done
+
+    echo
+    echo "-- test discovery --"
+    # UPSTREAM'S OWN ZERO, re-derived rather than quoted — `jbump-measure`'s stage, and the reason it
+    # is a stage and not an omission: a suite with no discoverable tests runs ZERO and reports
+    # SUCCESS, and omitting the block is how the day upstream gains a real suite goes unnoticed.
+    JAVA_TESTS=$(java_test_count {{textra_src}}/src/test/java)
+    DEMO_FILES=$(find {{textra_src}}/src/test/java -name '*.java' | wc -l | tr -d ' ')
+    echo "@Test in the upstream test tree ({{textra_src}}/src/test/java, $DEMO_FILES files): $JAVA_TESTS"
+    if [ "$JAVA_TESTS" = "0" ]; then
+      echo "   NO SUITE UPSTREAM — build.gradle names no JUnit coordinate and every file there is a"
+      echo "   manual LWJGL3 demo with a main(). There is nothing for the engine to port, so this port"
+      echo "   has NO behavioural evidence at all yet (CLAUDE.md §3) and every §4.4 form in it is"
+      echo "   UNMEASURED. PROGRESS.md §10.8 scopes the differential probe that would change that."
+    else
+      echo "!! A SUITE HAS APPEARED UPSTREAM — $JAVA_TESTS @Test method(s). This port has no test"
+      echo "   source set; add a TextraTypistTestMigrate and a lane stage."
+    fi
+    echo "emitted test files: 0 (this port has no test source set)"
+
+    echo
+    break_residue {{textra_module}}/src_managed
+
+    echo "-- compile --"
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
+    # port that does not compile — a false NEGATIVE on the headline number.
+    #
+    # No `--test` and no test directory: this port has ONE source set. `scala-cli compile` reports on
+    # the MAIN scope whatever directories it is handed, so a test tree added here without `--test`
+    # would have its errors read and not reported (CLAUDE.md §4.56).
+    DECLARED=$(declared_dep_flags "$REPORT" | tr '\n' ' ')
+    echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
+    DEPS="{{textra_deps}} $DECLARED"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/textrameasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/textrameasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/textrameasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/textrameasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/textrameasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/textrameasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/textrameasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    echo
+    echo "-- correlation: every error located to its member and its Java origin --"
+    # Run WHETHER OR NOT it compiled, for `noise4j-measure`'s reason: with no suite there is no
+    # second thing to correlate, so the compile output is the only diagnostic this port has and it is
+    # always worth attributing. BOTH ports' maps — an error inside TextraTypist resolves through its
+    # own, and one that reaches the base resolves through libGDX's, which is what a dependent's wall
+    # looks like.
+    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/textrameasure.txt \
+      --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+      --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
@@ -2538,7 +2688,12 @@ measure-all:
     # `ai-test-measure` rather than preceding it because the ported suite is the port's own gate and
     # this one is a gate on top of it — a differential failure is only worth reading once the
     # library's own ten tests have been run.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure; do
+    # `textra-measure` is LAST, for the reason `ai-measure` was APPENDED rather than slotted in: its
+    # only ordering constraint is `gdx-measure`, which is first, so any position after that one is
+    # correct — and last is the position that leaves the seventeen established lanes' order, and
+    # therefore their numbers, untouched by this port's arrival. Nothing follows it, because nothing
+    # compiles against what it wrote: it has no test source set and no dependent.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
