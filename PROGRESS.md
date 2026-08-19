@@ -5699,7 +5699,7 @@ What remains is what §10.8.7 already classified — `omissions 52` (41 of them 
 family), `base-surface 2` and `port-map 1`, all three §1(a) and two of them in the BASE — plus the
 behavioural gate, which this library still has none of. §10.8.13.
 
-### 10.8.13 The DIFFERENTIAL PROBE — the FIRST CENSUS, and it corrects §10.8.1 in four ways
+### 10.8.13 The DIFFERENTIAL PROBE — the FIRST CENSUS, four corrections, and 30 of 30 passing
 
 The population is re-derived and §10.8.1's headline figures hold exactly: **32 files — 20 `scala`, 11
 `scalajvm`, 1 `scalanative` — 5,819 lines, 239 anchored `test(` calls, 19 of them `*RedSuite.scala`.**
@@ -5755,18 +5755,38 @@ The eleven candidates, with what each costs: `utils/BlockUtilsSuite` 7 and
    readings in the recipe — and the one thing that must not happen is the number being passed on
    unstated (`CLAUDE.md` §4.56: an instrument's silence is a wrong answer).
 
-**A DIFFERENTIAL RESULT WORTH NAMING BEFORE IT IS RUN.** `TextraLayoutMaxLinesIss778RedSuite` asserts
-that `Layout.add` answers `null` once the line cap is reached. The hand port returns `this` there; the
-mechanical port emits java's own `return null` (`Layout.scala:160-161`). The hand port wrote that RED
-suite about its OWN library and the mechanical port satisfies it — which is the shape §3.5 warns about
-in reverse, and the single clearest reason to run this probe rather than reason about it.
+**AND THE FIRST 30 ARE MEASURED, UNEDITED — 30 of 30 PASSING.** The census above is a reading; this is
+a run. Compiling all eleven candidates against the emitted port with **not one character changed**
+gives **110 errors in five files** (`LayoutLineSuite` 73, `CaseInsensitiveIntMapSuite` 18,
+`PaletteSuite` 11, `StringUtilsSuite` 6, `TypingConfigSuite` 2 — 43 `E008`, 34 `E100`, and the rest a
+long tail), which is the mapping table's own workload measured rather than estimated. **The other SIX
+compile at zero and need no mapping row at all**, and compiled ALONE — so `RefChecks` runs, which is
+the whole of §10.7.12 rule ② — they are **0 errors and 30 of 30 passing**:
 
-**NOT CLAIMED BY THIS WAVE**, and stated as scope rather than left implied: the adapted copies, the
-`textra-diff-measure` lane, the RefChecks-honest re-census and the fixture rewrite. What is claimed is
-the census above and the corrections it makes to the plan §10.8.1 wrote. The wave order is the one
-gdx-ai used — copy the eleven under an enumerated NAME/SHIM table applied to comment-masked CODE and
-never to an assertion, compile them ALONE at 0 typer errors, re-take the census, then build the lane
-with its population re-derived and gated.
+| file | tests | |
+|---|---|---|
+| `utils/LZBCompressionSuite` | 13 | the LZB codec round-trips |
+| `utils/BlockUtilsSuite` | 7 | box-drawing classification |
+| `utils/ColorUtilsSuite` | 5 | HSL/RGB and the two alpha lerps |
+| `FontScaleStaticsIss816RedSuite` | 3 | `Font.extractScale`/`extractIntScale`/`applyScale` |
+| `FontDeprecatedScaleStaticsIss837RedSuite` | 1 | …and that all three carry `@deprecated` |
+| `TextraLayoutMaxLinesIss778RedSuite` | 1 | **see below** |
+
+That last one is the reading worth keeping. Its own name is
+*"ISS-778: Layout.add returns null when a newline is added at the maxLines cap (Layout.java:144); the
+port returns `this`"* — a RED suite the hand porter wrote **about the hand port's own divergence from
+java**, and the mechanical port passes it, because it emits java's `return null`
+(`Layout.scala:160-161`). §3.5 says to consult the reference port and that what it EMITTED is evidence
+while what it implies is a hypothesis; here the reference port's own instrument says the mechanical
+port is the faithful one. That is the first behavioural evidence this library has had at all.
+
+**NOT CLAIMED BY THIS WAVE**, and stated as scope rather than left implied: the adapted copies for the
+five files the mapping table is FOR, the `textra-diff-measure` lane and its census gate, and the
+fixture rewrite that unlocks the other 65. The six above are measured and reproducible and are
+deliberately NOT committed yet — a `src/test` tree with no lane running it is a suite nobody runs
+(§5.1), so they land WITH the lane or not at all. The wave order is the one gdx-ai used: copy under an
+enumerated NAME/SHIM table applied to comment-masked CODE and never to an assertion, compile ALONE at
+0 typer errors, re-take the census, then build the lane with its population re-derived and gated.
 
 ### 10.8.14 Next
 
