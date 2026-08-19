@@ -163,7 +163,12 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
   }
 
   test("a root that does not assign a slot supplies the java DEFAULT at that slot") {
-    assert(clue(fout).contains("this(null, k, k, \"x\", 0)"))
+    // ASCRIBED at the slot's type, and that is this argument list's own property rather than a
+    // decoration: java never wrote this delegation, so `null` here is applicable to the primary AND
+    // to any real one-argument constructor at a reference type — `TirEmitter.slotArg`, which is
+    // `markerArg`'s ascription one argument to the left (`ENGINE-LIMITS.md` C8). The int and String
+    // defaults beside it are unchanged, because only `null` inhabits more than its own type.
+    assert(clue(fout).contains("this((null: java.lang.Object), k, k, \"x\", 0)"))
   }
 
   test("A1 NEGATIVE — a package-private, non-final slot stays a `var` whatever the count says") {
