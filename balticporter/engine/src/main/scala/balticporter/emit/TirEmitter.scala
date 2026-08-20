@@ -1270,7 +1270,8 @@ final class TirEmitter(
       val sx = sym(x)
       if !sx.fullName.contains('$') then Some(escPath(sx.fullName))
       else if sx.owner == SymId.None || program.symbolOf(sx.owner).isEmpty then None
-      else go(sx.owner).map(p => p + (if sx.flags.isStatic then "." else "#") + esc(sx.name))
+      else go(sx.owner).map(p =>
+        if sx.flags.isStatic then s"$p.${esc(sx.name)}" else s"$p${outerFill(sx.owner)}#${esc(sx.name)}")
     // The fallback fires exactly when an owner is UNKNOWN, which for a type we do not define means
     // an external/JDK one. Name those with `.`: a Java nested type is reached as `Outer.Inner` in
     // Scala, and a `#` projection is not even available — it needs the prefix to be an immutable
@@ -1278,6 +1279,27 @@ final class TirEmitter(
     go(id).getOrElse:
       val sep = if program.definitionOf(id).isEmpty then '.' else '#'
       escPath(sym(id).fullName).replace('$', sep)
+
+  /** THE `[?, …]` A PROJECTION'S PREFIX NEEDS when the enclosing class is GENERIC.
+    *
+    * `Outer#Inner` is not a legal projection where `Outer` takes type parameters: the prefix has to
+    * be a TYPE, and an unapplied type constructor is not one — scalac reads it as
+    * `Found: Outer / Required: ?{ Inner: ? }`, which names neither the missing arguments nor the
+    * construct. Java writes exactly this: an inner class of a generic outer, referred to RAW from
+    * another file (`import …ListView.ListAdapterListener; … ListAdapterListener viewListener;`) is
+    * ordinary java and carries no arguments for the port to render.
+    *
+    * `?` per parameter is the reference hand port's own rendering of every raw generic (§3.5), and
+    * it is the only answer available here: the TIR's reference is to the NESTED symbol and the
+    * outer's arguments are nowhere on it, so filling from the enclosing scope would be inventing an
+    * instantiation java did not write. PROBED against scalac 3.8.4 before it was written —
+    * `ListView[?]#ListAdapterListener` type-checks as a field type, as a formal, across an override
+    * edge, and at a call passing `new lv.ListAdapterListener`.
+    *
+    * Empty for a non-generic owner, which is every other projection this emitter writes. */
+  private def outerFill(owner: SymId): String =
+    program.definitionOf(owner).collect { case c: Tree.ClassDef => c.tparams.size }
+      .filter(_ > 0).map(n => List.fill(n)("?").mkString("[", ", ", "]")).getOrElse("")
 
   /** a NON-static nested class of one of our own NON-GENERIC classes (not of a companion `object`).
     * A generic enclosing class is excluded: `Octree#OctreeNode` is not a legal projection — the

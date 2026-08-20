@@ -707,6 +707,25 @@ class CatalogAreaCSpec extends PortSuite:
     assertEmits(p, "A#Inner")
   }
 
+  test("…and a GENERIC outer's projection carries `[?]`, because a prefix must be a TYPE") {
+    // `A#Inner` names nothing when `A` takes parameters: scalac reads it as
+    // `Found: A / Required: ?{ Inner: ? }`, which names neither the missing arguments nor the
+    // construct. Java's reference is RAW — an inner class of a generic outer imported by simple
+    // name from another file is ordinary java — so `?` per parameter is what the source wrote, and
+    // it is the reference hand port's rendering of every raw generic (§3.5).
+    // NEGATIVE: drop `outerFill` and this emits `A#Inner`, at three errors on sge-visui.
+    val p = port(
+      """public class A<T> {
+        |  class Inner { }
+        |}
+        |class B {
+        |  A.Inner held;
+        |  void take(A.Inner i) { this.held = i; }
+        |}""".stripMargin)
+    assertEmits(p, "A[?]#Inner")
+    assertNotEmits(p, "A#Inner")
+  }
+
   test("JS-C29 — a STATIC nested class is the other answer: a VALUE path, not a projection") {
     // It is lowered into the enclosing type's companion `object`, so it is reached through the value
     // path `Outer.Inner` — NOT by simple name (a companion's members are not in the class's scope)
