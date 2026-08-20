@@ -740,6 +740,42 @@ class CatalogAreaGSpec extends PortSuite:
     assertCites(p, JS.G(6), "save")
   }
 
+  test("JS-G06 — a class declaring BOTH of an inherited overload set aligns each on ITS OWN parent") {
+    // §4.55's *a `find` IS that map*, at the derivation JS-G06 names. The parent member used to be
+    // picked by `(name, param counts)` taking the FIRST hit up the chain, so a class declaring both
+    // of an interface's overloads — ordinary java — had the SECOND one aligned onto the FIRST one's
+    // formal, and an `asInstanceOf` the source never wrote inserted at every call to make it fit.
+    //
+    // The head-constructor guard cannot separate this pair, which is what says the KEY was wrong
+    // rather than the guard one case short: BOTH formals are `scala.Array`, and they differ only
+    // INSIDE the type argument. `OverrideGraph.overridden` is keyed by name and DESCRIPTOR, so the
+    // wildcarded overload aligns onto the wildcarded parent, the `!hasWildcardArg` arm declines, and
+    // the port emits what java wrote.
+    val p = port(
+      """public class A {
+        |  static class Cell<T> { }
+        |  interface Layout {
+        |    void conv(String... a);
+        |    void conv(Cell<?>... c);
+        |  }
+        |  static class Impl implements Layout {
+        |    public void conv(String... a) { }
+        |    public void conv(Cell<?>... c) { }
+        |    void go(Cell<?>[] cs) { conv(cs); }
+        |  }
+        |}""".stripMargin)
+    // THE OVERRIDE, not the interface's own member. The interface's rendering is the CONTROL that
+    // identified the defect (`PROGRESS.md` §10.9.7 family 5) and it was always right, so an
+    // assertion that only asks whether the wildcard is writable here proves nothing at all —
+    // mis-aligned, this emitted `override def conv(c: scala.Array[java.lang.String])` beside a
+    // trait that still read `A.Cell[?]`. The parameter NAME is what separates the pair.
+    assertEmits(p, "override def conv(c: scala.Array[A.Cell[?]])")
+    // …and the OTHER reader of the same map. `alignedArgs` casts every argument reaching a
+    // re-rendered parameter, so the mis-alignment put an `asInstanceOf` the java never wrote at the
+    // call in `go` — which is how the defect reached emitted code that could not compile.
+    assertNotEmits(p, "asInstanceOf[scala.Array[")
+  }
+
   test("JS-G12 — every type VARIABLE is asked whether it has a binder here, and this one does") {
     val p = port("public class A<T> { java.util.List<T> xs; }")
     assertConsults(p, JS.G(12))

@@ -1489,6 +1489,22 @@ evidence that the KEY is wrong rather than that the guard is one case short — 
 SIBLING walks, because a derivation re-implemented once is usually re-implemented twice (this one has
 a second `(name, arity)` walk in the same file, keying a diamond forwarder, with no guard at all).
 
+**…and THE REPAIR IS A DELETION, because the engine already PUBLISHES the answer.** Re-keying the
+local walk on name-and-descriptor is the obvious fix and it is a SECOND DERIVATION of a question
+`OverrideGraph.overridden` answers — on that identity, with the parent's type variables already
+substituted through the `extends` clause, which a two-spelling comparison written at the walk would
+not have and without which the comparison LOSES edges (`ENGINE-LIMITS.md` K28.2 paid 48 moved digests
+for that substitution once, and §4.56's own third-site paragraph is the same sentence at the
+frontend). What the local walk IS entitled to keep is the SCOPE of its question — the graph answers
+about the whole ancestry and a per-parent-EDGE pass needs the chain under that edge — so the
+published answer is FILTERED, never re-derived. And the guard stays, with its job narrowed to the one
+it can do: the published edge falls back to name-and-arity wherever a DESCRIPTOR is missing (a symbol
+a phase minted has none), which is exactly the loose key the guard was written against. Measured on
+the corpus and not on the port it was aimed at: nineteen of twenty lanes byte-identical with every
+baseline held, and **one declaration** moved anywhere — three member digests, two port-map rows, two
+errors closed, every check COUNT flat, and the citation total `27 -> 26` visible in `findings.tsv`
+alone.
+
 **…and the SAME sentence governs the opposite conclusion, which is where a PROMOTION drops
 something.** A pass that promotes may also decide two declarations ARE one member and emit only the
 promoted one — an enum's constructor parameter SUPERSEDING a same-named field is the shape, and it is

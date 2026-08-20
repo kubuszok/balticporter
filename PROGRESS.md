@@ -6009,7 +6009,7 @@ almost nothing else.
   code naming files at an upstream path this engine has no mechanism to ship (§10.9.3);
 - **the ENUM as the unit of policy.** Seven of this library's types put behaviour on a java `enum`
   that reads a libGDX global, and that is the one shape the base's context threading structurally
-  cannot serve — 10 of this port's 32 errors, one cause (§10.9.7 family 1).
+  cannot serve — 11 of this port's 22 errors, one cause (§10.9.7 family 1).
 
 ### 10.9.1 Scope — `ui/` ONLY, and `usl/` is a NAMED follow-up rather than a silent drop
 
@@ -6236,7 +6236,7 @@ Three first-run readings worth keeping:
   shape that produces a `SelfTyped` population, and `refused = 0` is the number a port meeting the
   bar by converting nothing would print.
 
-### 10.9.7 The 32 errors, classified per §1 — **24 after wave 2**
+### 10.9.7 The 32 errors, classified per §1 — **24 after wave 2, 22 after wave 3**
 
 All 32 are `EngineGap` — none `Approx`, none `Unmapped`, none `Declared`. Five families, and the
 first two are 19 of the 32:
@@ -6245,9 +6245,9 @@ first two are 19 of the 32:
 |---|---|---|---|---|
 | 11 | `E172` | `No given sge.Sge` — the context threading, and 10 of the 11 are on a java `enum` | **(b)/(c) PER-LIBRARY** | OPEN |
 | 8 | `E008` | `value dispose is not a member of` a BASE type — the base's `Disposable → AutoCloseable` retarget not reaching a DEPENDENT | **(a) ENGINE**, then **(b)** | **CLOSED, wave 2** |
-| 8 | `E007` | three sub-families: 3 boxed `java.lang.Boolean` at a primitive formal, 3 a raw nested type through a generic outer, 1 K13's `Null` at an abstract `T`, 1 an override's parameter | **(a) ENGINE**, one **(b)** | OPEN |
+| 8 | `E007` | three sub-families: 3 boxed `java.lang.Boolean` at a primitive formal, 3 a raw nested type through a generic outer, 1 K13's `Null` at an abstract `T`, 1 an override's parameter | **(a) ENGINE**, one **(b)** | **7 open** — one closed with the `E120` in wave 3 |
 | 3 | `E134` | `None of the overloaded alternatives of constructor <Base>` — the dropped `super(args)`, arriving as a compile error | **(a) ENGINE** | REFUSED, `ENGINE-LIMITS.md` C3 |
-| 2 | `E006`+`E120` | a static method naming its own class's TYPE PARAMETER, in the companion | **(a) ENGINE** | OPEN, re-diagnosed |
+| 2 | `E006`+`E120` | a static method naming its own class's TYPE PARAMETER, in the companion | **(a) ENGINE** | **`E120` CLOSED, wave 3**; the `E006` is a different cause and OPEN |
 
 **FAMILY 1 — THE ENUM IS THIS LIBRARY'S UNIT OF POLICY, AND IT IS THE ONE SHAPE THE THREADING
 CANNOT SERVE.** VisUI puts its i18n lookups on java enums: `Locales$CommonText#getBundle`,
@@ -6533,9 +6533,35 @@ in one direction is wrong in the other.
 > keyed by name and descriptor with the parent's type variables already substituted through the
 > `extends` clause — and a two-spelling comparison without that substitution would LOSE edges, which
 > is the direction §5 warns about (`ENGINE-LIMITS.md` K28.2 cost 48 moved digests getting it right
-> once). **NOT attempted in this wave**: the change moves an emitter derivation with 27 cited
-> declarations across the corpus, so its gate is `measure-all` and its evidence is the member diffs on
-> the ports it was not aimed at — a full cycle of its own, and it is the next wave's first item.
+> once).
+>
+> **DONE, wave 3, and it IS the deletion.** `findUp` is gone. `inheritedThrough` asks
+> `OverrideGraph.overridden` and filters the answer to the chain under the parent edge whose
+> substitution is about to be applied — the graph answers about the whole ancestry and this pass asks
+> per EDGE, so the scope of the question is the one thing the local walk was entitled to keep. The
+> head-constructor guard STAYS and its job is now the one it can actually do:
+> `OverrideGraph.Signature.matches` falls back to name-and-arity wherever a descriptor is missing (a
+> symbol a phase MINTED has none), so it is what stands where the edge itself is approximate — which
+> is the D1 key it was written against in the first place.
+>
+> **The blast is ONE DECLARATION in the whole corpus, and that is the measurement rather than the
+> hope.** `just measure-all`, twenty lanes: nineteen at `members … : 0` with every error baseline,
+> findings baseline and port map unchanged, and this one at **24 -> 22 errors** with **3 moved member
+> digests** — `GridTableLayout` itself and its two `convertToActor` overloads — every check COUNT
+> flat. The emitted pair now reads `Array[sge.scenes.scene2d.Actor]` and
+> `Array[sge.visui.building.utilities.CellWidget[?]]`, which is what java wrote, and the
+> `asInstanceOf` at the call is gone with it. What moved besides the digests is exactly what a
+> one-declaration change should move and nothing else: `port-map.tsv`'s two member rows, and four
+> `findings.tsv` rows whose COUNTS are identical — `JS-G06`'s own citation total
+> **`declarations 27 -> 26`**, plus three program-wide `catalog(consulted)` tallies shifting by one or
+> two because one type renders differently. §5's *a widened guard is done when every other port is
+> BYTE-IDENTICAL* is met by construction here, and only `findings.tsv` could have seen the citation
+> row move.
+>
+> The two errors it closed are family 5's `E120` half — one class can now declare both overloads,
+> because they no longer emit the same formal — and the `E007` the `alignedArgs` cast produced at the
+> call. The `E006` half stays: it is the `null.asInstanceOf[Widget]` ascription at a CALL SITE, which
+> wave 2 already separated from this one.
 
 ### 10.9.8 Residues, named and classified
 
@@ -6593,9 +6619,22 @@ passing, 0 failing, 1 ignored**.
 gone stale against lanes added since it was written, which is exactly the drift §5's
 "a number that reaches stdout and not `findings.tsv`" rule is about, met in a status document.)*
 
+**WAVE 3's arrival is the flattest of the three, and the number that says so is a CORPUS one.** The
+change is an EMITTER derivation, so the gate is what it did to the nineteen ports it was not aimed
+at. Two full `just measure-all` passes: the first read **24 -> 22** here and stopped on this lane's
+own error baseline — the acknowledgement working, since a fall fails as loudly as a rise — and the
+second, after `just baseline-accept VisUiMigrate`, is **20 of 20 lanes, exit 0**, all twenty at
+`members … : 0`, all **23** published port maps `header and rows unchanged`, all 23 findings
+baselines `content unchanged`, and every error baseline held (`0` on eighteen, `2` on ssg-md,
+**`22`** here). Suite totals across the eleven lanes that run one: **2,073 passing / 11 failing**,
+unchanged. And the engine's own specs, run AFTER the lanes and as `testOnly *`: **api 65, engine 850,
+frontend-spoon 121, testkit 337, corpus 1,382 — 2,755 passing, 0 failing, 1 ignored** (testkit
+`336 -> 337` is this wave's own spec, whose negative was verified by running it against the
+pre-fix emitter and reading the emitted text it produced).
+
 ### 10.9.10 Next
 
-1. **The context-seam family**, which is 10 of the 32 errors and one shape. **The `frozen-component`
+1. **The context-seam family**, which is 11 of the 22 errors and one shape. **The `frozen-component`
    probe is DONE and is a dead end — do not retry it** (`ENGINE-LIMITS.md` CT10, `32 -> 41`): the
    anchor is a genuine over-refusal and lifting it converts six refusals into ten of two other kinds
    without threading one member, because the blocker it was masking is that an emitted `enum` cannot
@@ -6604,13 +6643,10 @@ gone stale against lanes added since it was written, which is exactly the drift 
    which is `selfSupplied`'s shape with an expression the mechanical port cannot currently write —
    and price §10.8.9's three exits and §10.8.11's fourth against it. The anchor becomes admissible
    once that lands, and not before.
-2. **`rawParentAlignment`'s (name, arity) pick** (§10.9.7 family 5's sibling) — 2 errors here and a
-   §4.55 defect class met a second time, LOCATED: `TirEmitter.rawParentAlignment`'s `findUp` takes the
-   FIRST parent member at (name, arity), its head-constructor guard cannot separate two array formals,
-   and `diamondOverrides` in the same file has the same key with no guard. The fix is to consult
-   `OverrideGraph.overridden` rather than re-key the local walk. It is an EMITTER derivation with 27
-   cited declarations across the corpus, so it is a `measure-all` change with its own cycle and it is
-   the FIRST item rather than a cheap one.
+2. **The remaining `E007`s and the `E006`** — 3 boxed `java.lang.Boolean` at a primitive formal, 3 a
+   raw nested type through a generic outer, 1 K13's `Null` at an abstract `T`, 1 an override's
+   parameter, and family 5's surviving half (an ascription naming a type the CALL SITE cannot see).
+   §10.9.7 has each one's diagnosis; none of them is the same shape as another.
 3. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
    error count reads.
 4. **The two upstream tests, then the 72-case differential probe** (§10.9.1). Until one lands this
@@ -9491,6 +9527,26 @@ emits — which is exactly the split `Remedy.Subject` exists to state.
   mechanism would be one somebody leaves on). The fallback the design priced — compile-time-only enforcement, which keeps the
   guarantee for every difference that has a test and loses it for every one that does not — is
   therefore not taken, and it was not taken on a number rather than on a preference.
+
+### 12.3.5 THREE MORE LOOSE-KEY MEMBER INDEXES, none with a measured site yet
+
+`TirEmitter.rawParentAlignment` was one of four spellings of one over-approximate key and is now
+`OverrideGraph.overridden`'s (§10.9.7 family 5, `CLAUDE.md` §4.55). The other three are still there,
+and each resolves `(name, arity)` — or `owner#name`, which is looser still — to a SINGLE value:
+
+- **`TirEmitter.diamondOverrides`** keys `concrete`, `mixins` and `ownKeys` on
+  `(name, paramss.map(_.size))` with no guard at all, and emits or SUPPRESSES a `super[X]` forwarder
+  from the answer. It needs a type with TWO parents to fire, which is the only reason the corpus has
+  not met it: `GridTableLayout` escaped it by having one;
+- **`TypeRedirectTransform`** and **`PortMapTransform`** each build
+  `program.symbols.all.map(s => s.fullName -> s).toMap`, and `Symbol.fullName` is `owner#name` with
+  no parameter list at all, so one overload's symbol is silently the map's and the other's is
+  dropped.
+
+They are listed here rather than fixed because §4.55's rule is *when you find one, look for the
+SIBLING walks* and a residue with no number is still a residue — but note what the same section says
+about the number: the wrong answer here is emitted text that compiles, so a corpus that has not met
+it is evidence about the corpus and not about the key.
 
 ### 12.4 Cosmetic
 

@@ -1390,6 +1390,39 @@ final class TirEmitter(
     def methodsOf(cd: Tree.ClassDef) = cd.body.collect {
       case d: Tree.DefDef if sym(d.symbol).name != "<init>" => d
     }
+    // LAZY, for the reason the two graphs in the companion's rename passes are: building it walks
+    // the whole program, and a program with no wildcard-carrying override asks it nothing.
+    lazy val graph = OverrideGraph.build(program)
+    val chainOf = collection.mutable.Map[SymId, Set[SymId]]()
+    /** THE DECLARATION `od` OVERRIDES, reached through THIS parent edge — [[OverrideGraph]]'s
+      * answer, never a local walk.
+      *
+      * What stood here was a `find` up the parent chain on `(name, param counts)` taking the FIRST
+      * hit, which is §4.55's *a map from an over-approximate key to a single value is a choice
+      * nobody made* wearing a lookup rather than an index: java overloads freely, so one key names
+      * several members and SOURCE ORDER decided which. A class declaring BOTH of an interface's
+      * overloads — `convertToActor(Actor…)` beside `convertToActor(CellWidget<?>…)`, ordinary java
+      * — had both emitted at the FIRST one's formal, with an `asInstanceOf` the source never wrote
+      * inserted at the call to make it fit. The control is that the same two overloads declared in
+      * the INTERFACE emit correctly, so the wildcard was never the problem.
+      *
+      * `OverrideGraph.overridden` is keyed by NAME AND DESCRIPTOR (§8.1's identity) with the
+      * parent's type variables already substituted through the `extends` clause, which is why this
+      * is a DELETION and not a re-key: a two-spelling comparison written here would LOSE edges
+      * across a generic parent, and a lost edge is the direction `DESIGN.md` §8.5 refuses
+      * (`ENGINE-LIMITS.md` K28.2 cost 48 moved digests getting that right once).
+      *
+      * The graph answers about the WHOLE ancestry and this pass asks per parent EDGE, because the
+      * substitution it is about to apply is that edge's own `deWildcardedArgs`. So the answer is
+      * filtered to the chain under `pcd` — which is the set the local walk ranged over, stated once
+      * (§4.56) instead of re-recursed here. */
+    def inheritedThrough(od: Tree.DefDef, pcd: Tree.ClassDef): Option[Tree.DefDef] =
+      val chain = chainOf.getOrElseUpdate(pcd.symbol,
+        (pcd.symbol :: graph.ancestorsOf(pcd.symbol)).toSet)
+      graph.overridden(od.symbol).iterator
+        .filter(m => chain(graph.ownerOf(m)))
+        .flatMap(m => program.definitionOf(m).collect { case d: Tree.DefDef => d })
+        .nextOption()
     /** parents first, so a grandchild aligns against its parent's ALREADY-aligned view. */
     def visit(cd: Tree.ClassDef, seen: Set[SymId]): Unit =
       if !done(cd.symbol) && !seen(cd.symbol) then
@@ -1409,28 +1442,21 @@ final class TirEmitter(
               pcd.tparams.map(_.symbol).zip(deWildcardedArgs(tc, args))
                 .collect { case (s, Some(t)) => s -> t }.toMap
             case _ => Map.empty[SymId, TypeRepr]
-          // Search the parent CHAIN, not just the direct parent's own body: `RegionInfluencer
-          // extends Influencer extends ParticleControllerComponent implements Configurable` — only
-          // the last declares `load`, and `Influencer` in between declares nothing at all.
-          def findUp(c: Tree.ClassDef, name: String, ar: List[Int], seen: Set[SymId]): Option[Tree.DefDef] =
-            if seen(c.symbol) then scala.None
-            else methodsOf(c).find(d => sym(d.symbol).name == name && d.paramss.map(_.size) == ar)
-              .orElse(c.parents.iterator.map { case tt: TypeTree => tt.tpe; case x: Term => x.tpe }
-                .flatMap(t => headSymOf(t).flatMap(declOf.get))
-                .flatMap(pp => findUp(pp, name, ar, seen + c.symbol)).nextOption())
           for
             od <- ours
-            pd <- findUp(pcd, sym(od.symbol).name, od.paramss.map(_.size), Set.empty)
+            pd <- inheritedThrough(od, pcd)
             (ops, pps) <- od.paramss.zip(pd.paramss)
             (op, pp)   <- ops.zip(pps)
             if hasWildcardArg(op.tpt.tpe) && !out.contains(op.symbol)
           do
             val aligned = substTp(out.getOrElse(pp.symbol, pp.tpt.tpe), subst)
-            // The parent member is matched by NAME AND ARITY, which is all java overriding needs
-            // — and far too little on its own. `Environment extends Attributes` inherits
-            // `remove(long mask)`, which matches `Environment.remove(BaseLight)` on both counts;
-            // aligning to it rendered three overloads as `remove(Long)`. An alignment is only ever
-            // the SAME type at different arguments, so require the head constructor to agree.
+            // An alignment is only ever the SAME type at different arguments, so require the head
+            // constructor to agree. This is NOT the key — `inheritedThrough` is, and the note there
+            // says why a guard is not one (§4.55). It stays because it is a statement about what an
+            // alignment IS, and it is the only thing standing where the edge itself is APPROXIMATE:
+            // `OverrideGraph.Signature.matches` falls back to name-and-arity wherever a descriptor
+            // is missing (a symbol a PHASE minted has none), which is exactly the D1 key this guard
+            // was written against.
             if !hasWildcardArg(aligned) && headSymOf(aligned) == headSymOf(op.tpt.tpe) then
               out(op.symbol) = aligned
               // JS-G06 — the CITATION surface, and deliberately not an obligation: this is a
