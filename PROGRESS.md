@@ -6050,7 +6050,8 @@ of the rest are `extends VisWindow` demos under `com.kotcrab.vis.ui.test.manual`
 `exclude 'com.kotcrab.vis.ui.test.manual.**'`); the 30th — `TestImageTextButtonOrientation` — sits
 OUTSIDE that excluded package, matches the include glob by name, `extends VisWindow` and declares
 zero `@Test`: the demo-app trap with the exclusion missing it, and JUnit reporting it as
-contributing nothing. A further **7** real `@Test` are in `usl/` and are out of scope with it. So a
+contributing nothing. A further **7** real `@Test` are in `usl/`, out of scope for THIS port and
+ported by its sibling (§10.9.13). So a
 filename census over that tree reports 30, a `*Test.java` one reports 3, and only `java_test_count`
 reports 2 — which is why the lane runs it. Two later waves follow; **the second is taken in
 §10.9.12 and the first is still open**:
@@ -6901,6 +6902,71 @@ narrowing `targets` on a library whose upstream ships an `@Ignore`d `RemoteTest`
 code path would be a decision priced by nothing, and §1.5 is explicit that narrowing is the exception
 that carries its reason. Stated residue, not a drop.
 
+#### 10.9.13.1 Wave 2 — the two phases, and G23's fact met at a READ. **30 -> 0**
+
+Both families closed, each by the phase its own error named. What was left after them was **2**, and
+they are the entry the wave is worth reading for: `CollectionUtils` is vendored pre-generics Apache
+Commons code full of RAW `Iterator`/`Map`, and a raw `Object obj = it.next()` stops conforming the
+moment the receiver is retyped onto a shim whose type parameter is UNBOUNDED. `ENGINE-LIMITS.md`
+**G33** carries it with the two guards that fired NOWHERE before the third one worked — the one-line
+version being *state the REFUTATION, not the confirmation, whenever the confirming artifact may
+simply be absent*, since `java.util.Iterator#next()` interns with no signature at all here.
+
+**The corpus blast is ONE declaration** — libGDX's `CharArray#appendAll(JavaIterable)`, the same raw-
+`Iterator` shape — at 0 errors before and after, 2 member digests, and every check COUNT flat, which
+is exactly the shape §5's widening rule says only `findings.tsv` can catch. G33 also states the one
+residue the fix LEAVES: at that site the frontend had already coerced the argument, so the emitted
+read carries a double ascription. Correct, cosmetic, one site, and its fix is in another layer.
+
+#### 10.9.13.2 THE ORACLE — **19 fixtures, 0 divergence, and 7 that reproduce a RELEASED ARTIFACT**
+
+This is the item §10.9.1 has carried since the corpus was censused, and it is the corpus's first
+gate where **upstream wrote both sides and nobody here authored an expected value.**
+
+| | |
+|---|---|
+| fixtures compiled | **19** (`usl/styles/*.usl`) |
+| differential vs upstream JAVA | **IDENTICAL** — 3,654 transcript lines, `diff` empty |
+| reproduce the checked-in `uiskin.json` | **7**, on BOTH sides |
+| threw | **0**, on both sides |
+
+The absolute tier is what makes this different from jbump's differential probe: `usl/styles` are the
+templates the root `build.gradle`'s `compileUsl` task compiles the shipped skin FROM, and
+`ui/src/main/resources/…/x1/uiskin.json` is the artifact it wrote. So seven of those nineteen are
+the ported compiler **reproducing a released artifact of the library it was made from, byte for
+byte.**
+
+**THREE THINGS A READING OF `build.gradle` GETS WRONG, all established by running the JAVA first —
+which is the only honest way to fix an authority (§3.5's *measure at the site*).**
+
+- **there is ONE known-good output, not two.** `x1/uiskin.json` and `x2/uiskin.json` are
+  BYTE-IDENTICAL: `compileUsl` assigns one string to both, the x1/x2 split being about the texture
+  ATLAS resolution and not about the JSON. The scoping note's "2 already-shipped known-good outputs"
+  was counting one piece of evidence twice;
+- **SEVEN fixtures reproduce it, not one.** The templates from `visui-1.4.5` onward are
+  output-identical (200 lines / 15,340 bytes); the twelve older ones legitimately produce OLDER
+  SKINS and are not failures. WHICH seven is DERIVED on both sides on every run and listed nowhere,
+  so a template edit moves the number instead of invalidating a hard-coded list silently;
+- **the gate is offline only because no fixture uses an `include <…>` DIRECTIVE.** `gdx.usl`
+  mentions the word in a COMMENT, which is why the lane greps for the directive. Upstream's own
+  `RemoteTest` is `@Ignore`d precisely because that path downloads over HTTP, so this is a
+  precondition to re-derive rather than assume — and the lane fails if it changes.
+
+**WHY BOTH TIERS AND NOT JUST THE ABSOLUTE ONE.** The absolute tier is the stronger claim and covers
+seven fixtures; the differential tier covers all nineteen, including twelve older templates whose
+(different, older) output nothing has ever checked in. Neither subsumes the other, and a gate
+reporting only the first would call twelve fixtures "not applicable" when they are in fact the widest
+input this port has.
+
+**AND FIVE NON-LOCAL RETURNS, checked rather than assumed.** The port compiles with 5 deprecation
+warnings: `for (block <- target) { … return block }` over a retyped `ArrayBuffer` desugars to
+`foreach`, so java's ordinary return becomes scala's non-local one. That is §14's already-recorded
+forward-compatibility item rather than a new defect — and the question §4.4 makes it worth asking is
+whether any of them crosses a BROAD `catch`, since `NonLocalReturnControl` is an exception where
+java's return was a jump. Checked: the only two `catch`es in these files are `java.io.IOException`
+and `java.io.FileNotFoundException`, both narrow, and §4.4's row leaves a narrow catch alone. The
+oracle's 3,654 identical lines are the behavioural half of the same answer.
+
 ### 10.9.11 Next
 
 1. **The FIXTURE**, and a re-census behind it — the rewrite `VisUITestFixture` needs (its six
@@ -6925,7 +6991,12 @@ that carries its reason. Stated residue, not a drop.
    path — `TestFrameworkTransform`, `java_test_count`, `test_discovery_guard`, `expected-lost` —
    which no differential lane can, since a hand-written suite is never converted. Price it as that,
    not as coverage.
-5. **USL**, with its zero-authoring oracle (§10.9.1).
+5. **The DOUBLE ASCRIPTION G33 leaves** — one site in the corpus, cosmetic, and its fix is in
+   `TirEmitter`'s general `Tree.Typed` arm rather than in the phase that caused it: collapse a
+   `Typed` whose operand is a `Typed` to the same target. It is a §3 *new arm inherits the node's
+   obligations* job (`JS-G34`, `JS-E06`) and a §5 widening, so it wants its own commit and its own
+   corpus sweep — the emitted text it would move is every double ascription the corpus already has,
+   not only the one G33 added.
 
 ---
 

@@ -1875,6 +1875,59 @@ reference keeps the receiver lambda). Measured FLAT on all fourteen `measure-all
 member digests, every error baseline unchanged, every check count and every finding identical — so
 the whole of its effect is the three sites that motivated it.*
 
+### G33. G23's gap read at a READ, and the DOUBLE ASCRIPTION the fix leaves — **USL 2 -> 0, libGDX 0 -> 0 at one declaration. CLOSED, with a cosmetic residue OPEN**
+
+G23 states the fact at `addAll`; this is the same fact at the other operation. Java's unbounded
+wildcard carries an implicit `java.lang.Object` upper bound (JLS 4.4), so on a RAW `Iterator`
+
+```java
+Object obj = it.next();          // type-checks in java with no cast anywhere
+```
+
+and `CollectionsTransform` retypes that receiver onto `balticporter.runtime.JavaIterator[?]`, whose
+type parameter is **unbounded** — so scala's capture is bounded by `Any`, strictly wider, and the
+same read is `Found: it.A / Required: Object`.
+
+**Two fixes NOT taken, both already measured elsewhere in this file.** Bounding the shims
+(`trait JavaIterator[A <: AnyRef]`) is G24's minefield entered from the other end — in Scala 3
+`java.io.Serializable` is rooted at `Any`, so `Serializable </: java.lang.Object` and the bound
+rejects a type java admits. Widening what `?` renders as is G2's settled design space, and G23
+already says "do not fix this by changing what `?` renders as". So the difference is stated at the
+one operation it blocks, and the coercion is java's own erasure: a no-op at run time that throws
+nothing java's own raw read would not.
+
+**THE TWO WRONG GUARDS ARE THE ENTRY, because both read as obviously right and both fired NOWHERE.**
+
+| guard | fired | why |
+|---|---|---|
+| the RESULT is the capture (a bare `TypeBounds`) | 0 sites | the frontend records JAVA's answer, so the node reads `java.lang.Object` on BOTH sides. `CLAUDE.md` §1's position-blind sentence exactly — and the reason `collection-boundary` reads 0 on this seam too |
+| the DECLARED result is *not* `Object` | 0 sites | `java.util.Iterator#next()` interns with **no signature at all** in this corpus, so `declaredResult` is `None` and an `exists(…)` polarity is dead code that reads as live |
+
+The general lesson is the second row's: **state the REFUTATION, not the confirmation, whenever the
+confirming artifact may simply be absent.** The class file is a refuter here, not the evidence —
+which is the OPPOSITE polarity to `declaredResultIsMapped` three lines above it in the same file,
+and the difference is worth stating at both.
+
+What the evidence actually is is structural and is a fact about the four types the phase owns
+(§4.56's licensed form): on a `standaloneTargets` receiver whose SOLE type argument is a wildcard, a
+recorded `Object` result can only be java substituting the capture's bound, because **not one of the
+76 members those four shims declare returns a bare `Object`** — `toArray` returns an `Array`, `size`
+an `Int`, `iterator()` another shim.
+
+**THE RESIDUE, OPEN and cosmetic.** Where the FRONTEND has already coerced the ARGUMENT — G14's
+erased-formal synthesis at a call like `append(Object)` — the emitted read is
+`iter.next().asInstanceOf[Object].asInstanceOf[Object]`. The two coercions cannot see each other:
+the phase is handed the `Apply` and the frontend's cast wraps it from outside. It is correct (an
+identity cast over an identity cast) and it is one site in the corpus. Collapsing a `Typed` whose
+operand is a `Typed` to the same target belongs in `TirEmitter`'s general `Tree.Typed` arm — a
+different layer, which owes `JS-G34` and `JS-E06` — so it is stated here rather than ridden along.
+
+*Fix kind: (a) engine — `CollectionsTransform.capturedObjectRead` plus one arm above the `onShim`
+blanket refusal, where the file's own convention puts its exceptions. Measured: USL 2 -> 0, and
+corpus-wide exactly ONE other declaration (libGDX `CharArray#appendAll(JavaIterable)`, the same raw-
+`Iterator` shape) at 0 -> 0 errors, 2 member digests, and every check COUNT flat — so `findings.tsv`
+is the artifact that saw it.*
+
 ---
 
 ## 2. Constructors
