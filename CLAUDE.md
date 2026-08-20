@@ -260,6 +260,36 @@ hand port had written exactly that member by hand, which is §3.5 answering a de
 engine had been reasoning about from first principles (`PROGRESS.md` §10.8.11; and the arrival is
 provably flat — one fingerprint field, 0 members on every port).
 
+**…and asking *is there no value, or no NAME?* A SECOND TIME gives a DIFFERENT ANSWER, because WHERE
+THE CLAUSE ATTACHED decides what a name can even mean.** The member above names what a CONSTRUCTOR
+CLAUSE was handed, so it rides on the threaded-class set and nowhere else — and the commonest holder
+in a library is not in that set at all: an all-`static` lifecycle class (`load`, `init`, `dispose`)
+takes its clause on its METHODS, is constructed by nobody, and a key written in the constructor's
+spelling binds to a real class, emits nothing, and is a counted never-matched. The same three words
+are true and the same fix is not: a constructor parameter lives as long as the object, a method's
+lives for one call, so the answer is not a `val` on the instance but a HOLDER the method assigns and
+an accessor that publishes it — with the accessor THROWING when nothing has captured one yet, which
+is the paragraph below's rule (an obligation the engine's translation created takes the java
+contract's own refusal, never a `null` that reaches its caller as a plausible wrong answer). Two
+keys, not one key deriving two shapes: the emitted SURFACES differ (an instance `val` against a
+companion `def` over a `var`) and the EXPRESSIONS that read them differ (`<value>.<name>` against
+`<Type>.<name>`), so one key would leave the port unable to say which it meant and the phase deciding
+from the program — §1.5's derived-surface failure with a name, where two modules fingerprint EQUAL
+and emit differently. The general form, and it is what to carry to the next escape hatch: **a
+mechanism's ANSWER is indexed by where the mechanism ATTACHED, and a second population reached at a
+different attachment point is a second answer even when the question reads identically.**
+
+**…and §1(b)'s no-op rule is owed at the FINGERPRINT as well as at the emission, or every new key
+taxes twenty baselines.** An empty parameter emits nothing — that is the rule as written, and it is
+half of it. A phase's policy is also RENDERED, into the `policy=` field every published port map
+carries, so a key that contributes an empty SEGMENT unconditionally moves that field on every port
+the phase runs in, on the day the key is added: twenty baselines to acknowledge for a key not one
+port uses, and the same tax again for the key after it. Omit the segment where the key is empty and
+both halves of the fingerprint's contract still hold — an unstated key and an empty one are the same
+policy and render the same string, while a non-empty one always contributes — so the mechanism's
+arrival is flat BY CONSTRUCTION rather than by acknowledgement, and the corpus run that follows
+confirms rather than absorbs.
+
 **And an obligation THE ENGINE'S OWN TRANSLATION created is not a port's to discharge.** A drop key
 is a statement about the LIBRARY's surface — "this port ships without that member". Where the member
 is one an emitted PARENT declares, dropping it does not remove an obligation, it breaks one: the

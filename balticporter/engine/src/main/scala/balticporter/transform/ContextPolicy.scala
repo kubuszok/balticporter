@@ -22,6 +22,7 @@ import balticporter.tir.RuleScope
   *     # KEY upstream (a type this run parses); VALUE in the EMITTED namespace — see `selfSupplied`
   *     selfSupplied = { "com.foo.FooTest" = "sge.FooTestFixture.ctx()" }
   *     retain       = { "com.foo.Widget" = "fooContext" }   # a MEMBER NAME, emitted namespace
+  *     cache        = { "com.foo.Boot" = "fooContext" }     # …the STATIC-METHOD half of `retain`
   *     promoteToClass = [ "com.foo.Viewport" ]
   *     scope    = { except = [ … ] }
   *   }]
@@ -110,6 +111,37 @@ import balticporter.tir.RuleScope
   *   SURFACE, so it is a fact about the library's own conventions exactly as the context type's own
   *   name is. An entry naming a type the closure did not thread emits nothing and is a counted
   *   `NeverMatched` — there would be no clause for the member to read.
+  * @param cache
+  *   THE FIFTH ANSWER, and it is [[retain]]'s question asked WHERE THE THREADING ATTACHED TO A
+  *   STATIC METHOD (`PROGRESS.md` §10.9.10). Same key shape — TYPE FQN → the member NAME — and a
+  *   different emission, because the two are not one mechanism with two spellings.
+  *
+  *   [[retain]] gives a name to what a CONSTRUCTOR CLAUSE was handed, so it rides on
+  *   `threadedClasses` and nowhere else. An all-`static` java holder — the shape a library uses for
+  *   its own lifecycle (`load(…)`, `init(…)`, `dispose()`) — takes its clause on its METHODS and is
+  *   in no `threadedClasses` at all: a `retain` key on it emits nothing and is a counted
+  *   `NeverMatched`, which is the correct answer to the wrong question. The value EXISTS; it is in a
+  *   method's clause, live only for the duration of that call, and nothing outside can name it.
+  *
+  *   One `cache` entry publishes it. On the type's emitted companion the phase mints a PRIVATE
+  *   mutable holder and a PUBLIC accessor, and it prepends `<held> = summon[<context>]` to the body
+  *   of every threaded method the type declares — so the value is captured by whichever of them the
+  *   consumer calls first, and a [[selfSupplied]] expression anywhere else then reads
+  *   `<Type>.<name>`.
+  *
+  *   ==The accessor THROWS when unset, and the throw is JAVA'S OWN==
+  *   A `null` here reaches its caller as a plausible wrong answer at some later line; the java these
+  *   holders come from already answers this precondition with `IllegalStateException`, and the rule
+  *   for a residue the engine's own translation created is the contract's own refusal — louder than
+  *   java, never quieter (CLAUDE.md §1). So the accessor is a `def` over the holder, not the holder
+  *   itself, and nothing outside can write it either.
+  *
+  *   ==Empty is the no-op and the default, and the dead entry is COUNTED==
+  *   [[retain]]'s paragraph above, verbatim: this ADDS declarations, so §1's rule for such a phase
+  *   makes `Map.empty` both the no-op and the default. An entry naming a type that declares NO
+  *   threaded method is a counted `NeverMatched` — there is no clause anywhere on it for a captured
+  *   value to come from, and a `selfSupplied` expression written to read the accessor would name
+  *   something that is not there, in a different file from the key that caused it.
   * @param promoteToClass
   *   traits this port allows to become `abstract class`es so they can carry a constructor clause.
   *   EXPLICIT rather than derived from "the trait's body needs the context": a predicate that
@@ -130,12 +162,13 @@ final case class ContextHolder(
     sites: Map[String, ContextSite] = Map.empty,
     selfSupplied: Map[String, String] = Map.empty,
     retain: Map[String, String] = Map.empty,
+    cache: Map[String, String] = Map.empty,
     promoteToClass: Set[String] = Set.empty,
     scope: RuleScope = RuleScope.everywhere,
 ):
   /** a stable, order-independent rendering — two modules that agree must compare equal (§1.5). */
   def fingerprint: String =
-    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied, retain)}"
+    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache)}"
 
   /** THE HALF A DEPENDENT MAY NOT RESTATE — `ENGINE-LIMITS.md` CT8.
     *
@@ -157,7 +190,7 @@ final case class ContextHolder(
     * already been refused by the caller — this composes, it does not decide. */
   def extendedBy(e: ContextHolderExtension): ContextHolder =
     copy(sites = sites ++ e.sites, selfSupplied = selfSupplied ++ e.selfSupplied,
-         retain = retain ++ e.retain)
+         retain = retain ++ e.retain, cache = cache ++ e.cache)
 
 object ContextHolder:
 
@@ -169,14 +202,27 @@ object ContextHolder:
     * declaration have certainly made a mistake whether or not the strings are readable here. */
   private[transform] def perDeclaration(sites: Map[String, ContextSite],
                                         selfSupplied: Map[String, String],
-                                        retain: Map[String, String]): String =
+                                        retain: Map[String, String],
+                                        cache: Map[String, String]): String =
     val ss = sites.toList.map((k, v) => s"$k->${v.token}").sorted.mkString(",")
     val fs = selfSupplied.toList.map((k, v) => s"$k=>${v.hashCode.toHexString}").sorted.mkString(",")
     // …and the RETAINED member is spelled OUT rather than digested, unlike a `selfSupplied` source:
     // it is one identifier, it is emitted SURFACE, and two modules disagreeing about it is exactly
     // the divergence a reader of two fingerprints has to be able to see.
     val rs = retain.toList.map((k, v) => s"$k~$v").sorted.mkString(",")
-    s"$ss|$fs|$rs"
+    // …and the CACHED accessor for the same reason and in its own segment: `retain` and `cache` are
+    // two different emissions, so one type keyed in both is two members and not a contradiction,
+    // and a fingerprint that folded them together could not say which a module meant.
+    //
+    // THE SEGMENT IS OMITTED WHEN THE KEY IS EMPTY, which is CLAUDE.md §1(b)'s no-op rule read at
+    // the FINGERPRINT rather than at the emission. A per-declaration key that renders an empty
+    // segment unconditionally moves `policy=` in every published port map on the day it is ADDED —
+    // twenty baselines to acknowledge for a key not one port uses, and the same tax again for the
+    // key after it. Both halves of the contract survive omission: two modules that agree render
+    // the same string (an unstated key and an empty one are the same policy), and two that differ
+    // render different ones, because a non-empty map always contributes its segment.
+    val cs = cache.toList.map((k, v) => s"$k^$v").sorted.mkString(",")
+    s"$ss|$fs|$rs" + (if cs.isEmpty then "" else s"|$cs")
 
 /** WHAT A DEPENDENT MAY ADD to a base's holder — `ENGINE-LIMITS.md` CT8.
   *
@@ -211,13 +257,15 @@ final case class ContextHolderExtension(
     sites: Map[String, ContextSite] = Map.empty,
     selfSupplied: Map[String, String] = Map.empty,
     retain: Map[String, String] = Map.empty,
+    cache: Map[String, String] = Map.empty,
 ):
   /** `+` marks it as an EXTENSION, so a dangling one can never fingerprint-collide with the holder
     * it names. */
-  def fingerprint: String = s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied, retain)}"
+  def fingerprint: String =
+    s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache)}"
 
   /** every per-declaration key, for the never-fired report and for the `governs` screen. */
-  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet ++ retain.keySet
+  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet ++ retain.keySet ++ cache.keySet
 
 /** WHERE the context type comes from.
   *

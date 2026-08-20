@@ -170,6 +170,45 @@ class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
     assert(clue(f.head.detail).contains("com.dep.B.ctx()"))
   }
 
+  test("REFUSED: two CACHED ACCESSOR NAMES for one type") {
+    // The accessor name is emitted SURFACE and it is what a `selfSupplied` expression READS, so two
+    // answers is two ports of which one compiles against whatever expression the other wrote.
+    // NEGATIVE: drop `cacheClash` from `mergedWith` and the two entries UNION — the later map wins,
+    // silently, and which one that is depends on which manifest was read first.
+    val b = base(List(globals(List(holder(_.copy(cache = Map("com.dep.Boot" -> "aCtx")))))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(globals(List(holder(_.copy(
+      cache = Map("com.dep.Boot" -> "bCtx"))))))))
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
+    assert(clue(f.head.detail).contains("CACHE"))
+    assert(clue(f.head.detail).contains("bCtx"))
+  }
+
+  test("a dependent's `cache` entry for its OWN type merges, and the fingerprint says so") {
+    // CT8's own shape at the fifth key: the holder is the base's and the TYPE is the dependent's, so
+    // there is no manifest but the dependent's in which the entry could be written.
+    val b   = base(List(globals(List(holder()))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(globals(es = List(
+      ContextHolderExtension("com.demo.Gdx", cache = Map("com.dep.Boot" -> "depCtx")))))))
+    assertEquals(dep.surfaceFold.refusals, Nil)
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
+    assert(clue(merged(dep).surfaceFingerprint).contains("com.dep.Boot^depCtx"))
+    // …and it is NOT the base's answer: the base still fingerprints without it (§1.5's D1).
+    assert(!clue(merged(b).surfaceFingerprint).contains("depCtx"))
+  }
+
+  test("a holder with NO `cache` fingerprints exactly as it did before the key existed") {
+    // §1(b)'s no-op rule read at the FINGERPRINT: an unused per-declaration key must not move
+    // `policy=` in twenty published port maps on the day it is added. The literal is the shape this
+    // renderer had before `cache`, so the assertion cannot drift with the code it guards.
+    // NEGATIVE: render the segment unconditionally and this reads `…|com.dep.S=>…||`.
+    val h = holder(_.copy(selfSupplied = Map("com.dep.S" -> "com.dep.A.ctx()")))
+    assertEquals(h.fingerprint,
+      s"${h.sharedSurface}||com.dep.S=>${"com.dep.A.ctx()".hashCode.toHexString}|")
+    assertEquals(ContextHolderExtension("com.demo.Gdx").fingerprint, "com.demo.Gdx|+||")
+  }
+
   test("…and the SAME entry spelled twice is agreement, not drift") {
     val b = base(List(globals(List(holder(_.copy(
       sites = Map("com.dep.U#<clinit>" -> ContextSite.LazyInit)))))))

@@ -399,6 +399,7 @@ final class NullabilityFactory extends TransformFactory:
   *     sites  = { "com.foo.Utils#<clinit>" = "lazy-init" }
   *     selfSupplied = { "com.foo.FooTest" = "com.foo.TestFixture.ctx()" }
   *     retain       = { "com.foo.Widget" = "fooContext" }
+  *     cache        = { "com.foo.Boot" = "fooContext" }
   *     promoteToClass = [ "com.foo.Viewport" ]
   *     scope { except = [ … ] } }] }
   *
@@ -436,6 +437,7 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       sites        = sites(c),
       selfSupplied = c.stringMap("selfSupplied").getOrElse(Map.empty),
       retain       = c.stringMap("retain").getOrElse(Map.empty),
+      cache        = c.stringMap("cache").getOrElse(Map.empty),
     )
 
   private def sites(c: ConfigView): Map[String, ContextSite] =
@@ -467,6 +469,7 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       sites = sites(c),
       selfSupplied = c.stringMap("selfSupplied").getOrElse(Map.empty),
       retain = c.stringMap("retain").getOrElse(Map.empty),
+      cache = c.stringMap("cache").getOrElse(Map.empty),
       promoteToClass = c.strings("promoteToClass").getOrElse(Nil).toSet,
       scope = TransformFactory.scopeOf(c),
     )

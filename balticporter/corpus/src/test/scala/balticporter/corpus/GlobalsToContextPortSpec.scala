@@ -433,6 +433,109 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     assert(!clue(code(o)).contains("demo ctx"), code(o))
   }
 
+  // -------------------------------------------------------------------------
+  // THE FIFTH EXIT — `cache`, which is `retain`'s question where the clause is on a STATIC METHOD
+  // -------------------------------------------------------------------------
+
+  /** THE SHAPE `retain` CANNOT SERVE, and it is the commonest one a library has.
+    *
+    * `Boot` is an all-`static` lifecycle holder: nothing constructs it, so it is in no
+    * `threadedClasses` and a `retain` key on it emits nothing and is a counted `NeverMatched`. The
+    * clause it DOES take is on `load()`, live only for that call — so the value exists and nothing
+    * outside can name it, which is the second question CLAUDE.md §1 says to ask of every refusing
+    * escape hatch (*is there no value, or no NAME?*).
+    *
+    * `Panel` is the reader: a type whose own body needs the context and which is not built by this
+    * program at all. `selfSupplied` is its answer and it wants an EXPRESSION — which is exactly what
+    * `Boot`'s accessor becomes. */
+  private val cacheSrc =
+    """package demo;
+      |public class Gdx { public static Graphics graphics; }
+      |public class Graphics { public int getWidth() { return 0; } }
+      |public class Widget { int w; public Widget() { w = Gdx.graphics.getWidth(); } }
+      |public class Panel { public int reach() { return Gdx.graphics.getWidth(); } }
+      |public class Boot {
+      |  static Widget widget;
+      |  public static void load() { widget = new Widget(); }
+      |  public static Widget get() { return widget; }
+      |}
+      |""".stripMargin
+
+  private def cacheHolder = base.copy(attach = ContextAttach.Class)
+
+  test("`cache` mints a private holder and a PUBLIC accessor, and captures at the head of each threaded method") {
+    // NEGATIVE: delete the `cached` arm from `edit.transformClassDef` and both members are gone —
+    // and `Boot` is in no threaded arm at all, so the class the key names emits exactly as before.
+    val (_, _, _, o) = portedFrom(cacheSrc, cacheHolder.copy(cache = Map("demo.Boot" -> "demoCtx")))
+    val c = code(o)
+    assert(clue(c).contains("private var demoCtx$cache: demo.Ctx"), c)
+    assert(c.contains("def demoCtx: demo.Ctx"), c)
+    // the capture, at the head of the ONE method the closure threaded.
+    assert(c.contains("def load()(using demo.Ctx)"), c)
+    val load = c.split("def load\\(\\)\\(using demo.Ctx\\)").last
+    assert(clue(load).indexOf("demoCtx$cache = scala.Predef.summon[demo.Ctx]") <
+           load.indexOf("demo.Widget"), load)
+    // …and NOT on the method that takes no clause: there is no context there to capture.
+    val get = c.split("def get\\(\\)").last.take(120)
+    assert(!clue(get).contains("demoCtx$cache ="), get)
+  }
+
+  test("…and the accessor THROWS rather than answering `null` — java's own contract, not a stand-in") {
+    // CLAUDE.md §1: where the engine's own translation creates the obligation, the honest emission
+    // is the contract's own refusal, which is louder than java and never quieter. A public `var`
+    // would answer `null` before anything had captured one and let anything write it.
+    // NEGATIVE: emit the holder public and the accessor disappears with the `throw`.
+    val (_, _, _, o) = portedFrom(cacheSrc, cacheHolder.copy(cache = Map("demo.Boot" -> "demoCtx")))
+    val c = code(o)
+    assert(clue(c).contains("throw new java.lang.IllegalStateException("), c)
+    assert(c.contains("demoCtx$cache eq null"), c)
+    // the message names the SIMPLE name, which a package rename does not move (§4.56).
+    assert(c.contains("Boot has captured no Ctx yet"), c)
+  }
+
+  test("`cache` + `selfSupplied` are the FIFTH EXIT: a type outside the closure reads `<Type>.<name>`") {
+    val (p, a, _, o) = portedFrom(cacheSrc, cacheHolder.copy(
+      cache        = Map("demo.Boot"  -> "demoCtx"),
+      selfSupplied = Map("demo.Panel" -> "demo.Boot.demoCtx")))
+    val c = code(o)
+    assert(clue(c).contains("private given demo.Ctx = demo.Boot.demoCtx"), c)
+    // …and the thing that expression NAMES is emitted, in the file the key names. Asserting the
+    // given alone would pass with the accessor gone — a `Not found` in a DIFFERENT file, which is
+    // exactly the failure the dead-key report below exists for.
+    assert(c.contains("def demoCtx: demo.Ctx"), c)
+    // …and `Panel` keeps java's constructor: nothing about it changed except that its body resolves.
+    assert(!c.contains("class Panel(using"), c)
+    assertEquals(clue(p.seams(a).filter(_.kind == ContextSeamCheck.Kind.SelfSupplied)).map(_.subject),
+      List("demo.Panel"), p.seams(a).map(_.render).mkString("\n"))
+  }
+
+  test("an empty `cache` is a structural no-op — the default, and CLAUDE.md §1's rule for an ADD") {
+    val (_, _, _, with0) = portedFrom(cacheSrc, cacheHolder)
+    assert(!clue(code(with0)).contains("demoCtx"), code(with0))
+  }
+
+  test("a `cache` on a type that declares NO THREADED METHOD emits nothing and is REPORTED") {
+    // `retain`'s dead-binding shape at the fifth key, and the recorded control for this mechanism.
+    // `PolicyBinder.bindType` asks whether the program DECLARES the type, which `Graphics` does —
+    // and the closure threads not one method of it.
+    // NEGATIVE: delete `recordDeadCache` and the key binds, emits nothing, and the only evidence is
+    // a `Not found` in whatever file wrote the `selfSupplied` expression that reads the accessor.
+    val (p, _, _, o) = portedFrom(cacheSrc, cacheHolder.copy(cache = Map("demo.Graphics" -> "demoCtx")))
+    assert(!clue(code(o)).contains("demoCtx"), code(o))
+    val f = p.policyReport.findings.find(_.key == "demo.Graphics")
+    assert(clue(f).isDefined, p.policyReport.render)
+    assertEquals(f.get.issue, PolicyIssue.NeverMatched)
+    assert(clue(f.get.detail).contains("NO method the closure threaded"), f.get.render)
+  }
+
+  test("a `cache` NAME that is not an identifier is MALFORMED, not spliced into a header") {
+    val (p, _, _, o) = portedFrom(cacheSrc, cacheHolder.copy(cache = Map("demo.Boot" -> "demo ctx")))
+    val f = p.policyReport.findings.find(_.key == "demo.Boot")
+    assert(clue(f).isDefined, p.policyReport.render)
+    assertEquals(f.get.issue, PolicyIssue.Malformed)
+    assert(!clue(code(o)).contains("demo ctx"), code(o))
+  }
+
   test("a FIELD INITIALIZER's read is seeded, resolved and COUNTED — never dropped and left broken") {
     // the predecessor's seed test was `isMethod(usage.enclosing)`, and a field initialiser's
     // enclosing IS THE FIELD — so the read was dropped from the seeds, and `rewriteClass` visited

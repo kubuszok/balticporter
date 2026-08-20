@@ -147,7 +147,7 @@ final class GlobalsToImplicitsTransform(
   def subjects: Set[String] =
     val fromHolders = holders.flatMap(h =>
       (Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.retain.keySet ++
-       h.promoteToClass ++ h.scope.entries))
+       h.cache.keySet ++ h.promoteToClass ++ h.scope.entries))
     val fromExts = extensions.flatMap(e => Set(e.holder) ++ e.keys)
     (fromHolders ++ fromExts).map(MergeablePolicy.subjectOf).toSet
 
@@ -208,13 +208,23 @@ final class GlobalsToImplicitsTransform(
         v2       <- mine(k).retain.get(key)
         if v2 != v
       yield s"""both modules RETAIN the context on "$key", as "$v2" and as "$v""""
-      (surfaceClash ++ siteClash ++ selfClash ++ retainClash) match
+      // …and a CACHED accessor's name, for the retained member's reason exactly: it is emitted
+      // surface, and whichever `selfSupplied` expression reads `<Type>.<name>` compiles against one
+      // of the two ports and not the other.
+      val cacheClash = for
+        k        <- (mine.keySet & theirs.keySet).toList.sorted
+        (key, v) <- theirs(k).cache.toList.sorted
+        v2       <- mine(k).cache.get(key)
+        if v2 != v
+      yield s"""both modules CACHE the context on "$key", as "$v2" and as "$v""""
+      (surfaceClash ++ siteClash ++ selfClash ++ retainClash ++ cacheClash) match
         case Nil =>
           val merged = (mine.keySet ++ theirs.keySet).toList.sorted.map { k =>
             (mine.get(k), theirs.get(k)) match
               case (Some(a), Some(b)) => a.copy(sites = a.sites ++ b.sites,
                                                 selfSupplied = a.selfSupplied ++ b.selfSupplied,
-                                                retain = a.retain ++ b.retain)
+                                                retain = a.retain ++ b.retain,
+                                                cache = a.cache ++ b.cache)
               case (Some(a), None)    => a
               case (None, Some(b))    => b
               case (None, None)       => sys.error("unreachable: a key from the union of two maps")
@@ -248,6 +258,10 @@ final class GlobalsToImplicitsTransform(
     * report has to name. The member name is one lookup away through [[ContextHolder.retain]], and
     * going the other way is a match on a VALUE two entries could share. */
   private var boundRetain: Map[String, Map[SymId, String]]        = Map.empty
+  /** the `cache` entries the binder RESOLVED, per holder: the TYPE symbol → the POLICY KEY that
+    * named it. [[boundRetain]]'s shape and [[boundRetain]]'s reasons — the key is what an agent
+    * edits, what a `Reason.Configured` carries and what the dead-binding report names. */
+  private var boundCache: Map[String, Map[SymId, String]]         = Map.empty
 
   def bindPolicy(binder: PolicyBinder): Unit =
     val bad = collection.mutable.ListBuffer.empty[PolicyFinding]
@@ -330,6 +344,20 @@ final class GlobalsToImplicitsTransform(
       }
       boundRetain = boundRetain.updated(h.holder, h.retain.toList.sorted.flatMap((t, nm) =>
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.retain", t)
+          .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap)
+
+      // …and `cache`'s, screened the same way and for the same reason one key over: the name is
+      // spliced into a `def <name>:` header AND into the private holder's, so anything that is not
+      // a plain identifier is a SYNTAX error in the emitted file at a line the port never wrote.
+      h.cache.toList.sorted.foreach { (t, nm) =>
+        if !isPlainIdentifier(nm) then
+          malformedEntry(h, "cache", t, s"`$nm` is not a plain identifier, and this value is spliced " +
+            "into the headers of the accessor and of the private holder this type will carry — " +
+            "anything else is a SYNTAX error in the emitted file, at a line the port never wrote. " +
+            "Give the MEMBER NAME the cached context should be readable under")
+      }
+      boundCache = boundCache.updated(h.holder, h.cache.toList.sorted.flatMap((t, nm) =>
+        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.cache", t)
           .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap)
 
       boundPromote = boundPromote.updated(h.holder, h.promoteToClass.flatMap(t =>
@@ -455,6 +483,15 @@ final class GlobalsToImplicitsTransform(
       * `selfSupplied` entry with an empty expression must not also leave its type unthreaded. */
     val retainOf: Map[SymId, String] =
       boundRetain.getOrElse(h.holder, Map.empty).flatMap((s, k) => h.retain.get(k).map(s -> _))
+    /** the type → the MEMBER NAME its CACHED context is readable under — [[retainOf]]'s shape at
+      * the fifth key, bound entries only for the same reason. */
+    val cacheOf: Map[SymId, String] =
+      boundCache.getOrElse(h.holder, Map.empty).flatMap((s, k) => h.cache.get(k).map(s -> _))
+    /** the types a `cache` entry ACTUALLY minted on — the run's own record, and the complement of
+      * the dead-binding report. A `cache` key binds against a real class whether or not the closure
+      * threaded a single method of it, which is exactly the blindness `ENGINE-LIMITS.md` CT6
+      * measured for `sites` and `retain`. */
+    val cacheFired = collection.mutable.Set.empty[SymId]
     val need  = new ContextNeed(program0, graph, h, statics, boundPromote.getOrElse(h.holder, Set.empty),
                                 (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
                                 (s, why) => refuse(h, why),
@@ -541,7 +578,39 @@ final class GlobalsToImplicitsTransform(
           t.copy(paramss = t.paramss :+ List(mint.usingParam(t.symbol, ctxFqn, ctxRef, t.origin)))
         else t
 
-      override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef =
+      /** THE FIFTH ANSWER (`ContextHolder.cache`): the private holder, the throwing accessor, and
+        * `<held> = summon[T]` at the head of every threaded METHOD this type declares.
+        *
+        * It runs AHEAD of the three arms below and independently of all of them, because the shape
+        * it serves is in none of their populations: an all-`static` holder takes its clause on its
+        * methods, so it is in no `threadedClasses`, and the arm that would have seen it is the
+        * `t` that returns its input unchanged.
+        *
+        * A CONSTRUCTOR is excluded even where the closure threaded one. Its body is the constructor
+        * region's (`DESIGN.md` §8.2) and a statement prepended there is a statement the funnel may
+        * promote, replay or re-order — and a cache written from a constructor is [[ContextHolder.retain]]'s
+        * question, which has its own answer one key up. */
+      private def cached(t: Tree.ClassDef)(using Program): Tree.ClassDef =
+        cacheOf.get(t.symbol).fold(t) { nm =>
+          val p = summon[Program]
+          val mine = t.body.collect {
+            case d: Tree.DefDef
+              if need.threadedMethods(d.symbol) && !deferredFields(d.symbol) && !isCtor(p, d.symbol) =>
+              d.symbol
+          }.toSet
+          if mine.isEmpty then t
+          else
+            cacheFired += t.symbol
+            val (hold, acc) = mint.cachedContext(t.symbol, nm, ctxFqn, ctxRef, t.origin)
+            t.copy(body = hold :: acc :: t.body.map {
+              case d: Tree.DefDef if mine(d.symbol) =>
+                d.copy(rhs = d.rhs.map(r => mint.prependStore(hold.symbol, ctxRef, contextExpr, r)))
+              case s => s
+            })
+        }
+
+      override def transformClassDef(t0: Tree.ClassDef)(using Program): Tree.ClassDef =
+        val t = cached(t0)
         // THE THIRD ANSWER (`ENGINE-LIMITS.md` CT7): no clause anywhere, and a `given` member at the
         // HEAD of the body instead. At the head because a class body is a constructor: a statement
         // that uses the context before the given is initialised would read `null`, and the reference
@@ -599,8 +668,10 @@ final class GlobalsToImplicitsTransform(
     recordDecisions(out, h, need, ctxFqn)
     recordSelfSupplied(out, h, need, ctxFqn, selfSupplied, selfSource)
     recordRetained(out, h, need, ctxFqn, retainOf)
+    recordCached(out, h, ctxFqn, cacheOf, cacheFired.toSet)
     recordDeadSelf(h, need)
     recordDeadRetain(h, need)
+    recordDeadCache(h, cacheFired.toSet)
     // LAST: `readPlan` above is what consults a residual-global/refuse `sites` entry, so anything
     // read before it would report an entry that had not been asked yet.
     recordDeadSites(h, need.firedSites)
@@ -767,6 +838,54 @@ final class GlobalsToImplicitsTransform(
       )))
     }
 
+  /** ONE ROW PER TYPE THAT CACHED ITS CONTEXT — `ContextHolder.cache`.
+    *
+    * An `InjectedMember` for [[recordRetained]]'s reason: no signature moved (the clauses were
+    * already on the methods) and what the port gained is two members the engine put on the emitted
+    * companion — one of them PUBLIC, so it is surface a consumer can see and java never declared.
+    * The subject is the TYPE, so the note sits above the emitted `object`/`class` line, where a
+    * reader of the generated file finds an accessor with no upstream line behind it. */
+  private def recordCached(p: Program, h: ContextHolder, ctxFqn: String,
+                           cached: Map[SymId, String], fired: Set[SymId]): Unit =
+    val keyOf = boundCache.getOrElse(h.holder, Map.empty)
+    cached.toList.filter((c, _) => fired(c)).sortBy(_._1.raw).foreach { (c, nm) =>
+      p.symbolOf(c).foreach(sym => record(Decision(
+        kind = Decision.Kind.InjectedMember, subject = c, subjectFqn = sym.fullName,
+        detail = Map(
+          "member" -> nm,
+          "type"   -> ctxFqn,
+          "from"   -> "a `using` clause on this type's own methods, live only for one call",
+          "to"     -> s"a private holder assigned at the head of each of them and a `def $nm: $ctxFqn` over it",
+          "why"    -> ("this type takes the context on its STATIC METHODS, so it is in no threaded " +
+            "class and there is no constructor parameter to keep — the value exists and nothing " +
+            "outside can name it. This port asked for it to be captured under a name, which is " +
+            "what a `selfSupplied` expression elsewhere then reads as `<Type>." + nm + "`. The " +
+            "accessor THROWS when nothing has captured one yet, which is the java contract's own " +
+            "refusal rather than a `null` that reaches its caller as a plausible wrong answer"),
+        ),
+        reason = Reason.Configured(name, keyOf.getOrElse(c, sym.fullName)),
+        origin = Decision.originOf(p, c),
+      )))
+    }
+
+  /** A BOUND `cache` ENTRY ON A TYPE THAT DECLARES NO THREADED METHOD — [[recordDeadRetain]]'s shape
+    * at the fifth key, and it fails in exactly the same place: the entry exists BECAUSE some other
+    * declaration's `selfSupplied` expression reads the accessor, so an entry that emitted nothing
+    * leaves that expression naming something that is not there, in a DIFFERENT file from the key. */
+  private def recordDeadCache(h: ContextHolder, fired: Set[SymId]): Unit =
+    boundCache.getOrElse(h.holder, Map.empty).toList
+      .filterNot((c, _) => fired(c)).map((_, k) => k).distinct.sorted.foreach { k =>
+        deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.cache",
+          k, PolicyIssue.NeverMatched, "the entry names a type of this program that declares NO " +
+            "method the closure threaded — nothing in it reads the holder, nothing it uses is " +
+            "threaded, or its attachment landed on the CONSTRUCTORS instead, which is `retain`'s " +
+            "question and not this one. There is no clause for a captured value to come from, so " +
+            "no holder and no accessor were emitted, and any `selfSupplied` expression written to " +
+            "read the accessor names something that is not there — a compile error in a different " +
+            "file from this key. Fix the key, use `retain` if the type is threaded at its " +
+            "constructors, or find out why nothing in it is threaded")
+      }
+
   /** A BOUND `retain` ENTRY ON A TYPE THE CLOSURE NEVER THREADED — [[recordDeadSelf]]'s shape at the
     * fourth key, and it is the one where silence would be worst: the entry exists BECAUSE some other
     * declaration's `selfSupplied` expression names the member, so an entry that emitted nothing
@@ -901,3 +1020,69 @@ object GlobalsToImplicitsTransform:
         member(nm, MemberKey(program.symbolOf(owner).map(_.fullName).getOrElse("?"), nm).render,
                owner, ctxRef, Flags(isFinal = true)))
       Tree.ValDef(id, TypeTree(ctxRef, at), Some(rhs), at)
+
+    // ---- THE CACHED CONTEXT (`ContextHolder.cache`) ------------------------------------------
+
+    private val caches = collection.mutable.Map.empty[SymId, (SymId, SymId)]
+
+    /** THE CACHED CONTEXT: a PRIVATE `var` holder and a PUBLIC accessor over it, both `static`, so
+      * the emitter puts them on the type's companion — which is where an all-`static` java holder's
+      * threaded methods already are.
+      *
+      * TWO members and not one, and that is the whole design rather than a detail. A public `var`
+      * would let anything write it and would answer `null` before anything had; the accessor is a
+      * `def` that THROWS, which is the same contract java's own `getSkin()`-shaped preconditions
+      * state (`IllegalStateException`) and is louder than java rather than quieter (CLAUDE.md §1's
+      * rule for an obligation the engine's own translation created).
+      *
+      * The holder carries NO initialiser: the emitter renders a `var` with no rhs as
+      * `scala.compiletime.uninitialized`, which is what every other field this engine emits without
+      * one already reads, and `eq null` is exactly the test that answers it.
+      *
+      * The message names the type's SIMPLE name, which is stable under a package rename — the FQN
+      * is not, and a message naming the upstream one would say something false about the file the
+      * reader is holding (§4.56). One pair per owner, so a class visited twice does not grow two. */
+    def cachedContext(owner: SymId, nm: String, ctxFqn: String, ctxRef: TypeRepr,
+                      at: Origin): (Tree.ValDef, Tree.DefDef) =
+      val ownerFqn = program.symbolOf(owner).map(_.fullName).getOrElse("?")
+      val (hold, acc) = caches.getOrElseUpdate(owner, (
+        member(s"$nm$$cache", MemberKey(ownerFqn, s"$nm$$cache").render, owner, ctxRef,
+               Flags(isStatic = true, isMutable = true, isPrivate = true)),
+        member(nm, MemberKey(ownerFqn, nm).render, owner, TypeRepr.MethodType(Nil, ctxRef),
+               Flags(isStatic = true)),
+      ))
+      val simple = ownerFqn.split('.').last.split('$').last
+      val ctxSimple = ctxFqn.split('.').last
+      val read = Tree.Ident(hold, ctxRef, at)
+      val cond = Tree.Apply(Tree.Select(read, eqOp, TypeRepr.NoType, at),
+                            List(Tree.Literal(Constant.NullC, TypeRepr.NoType, at)),
+                            eqOp, TypeRepr.NoType, at)
+      val boom = Tree.Throw(Tree.Apply(
+        Tree.New(TypeTree(illegalStateRef, at), illegalStateRef, at),
+        List(Tree.Literal(Constant.StringC(
+          s"$simple has captured no $ctxSimple yet — call one of its context-taking members first"),
+          TypeRepr.NoType, at)),
+        illegalStateCtor, illegalStateRef, at), TypeRepr.NoType, at)
+      (Tree.ValDef(hold, TypeTree(ctxRef, at), scala.None, at),
+       Tree.DefDef(acc, Nil, TypeTree(ctxRef, at),
+                   Some(Tree.If(cond, boom, Tree.Ident(hold, ctxRef, at), ctxRef, at)), at))
+
+    /** `<held> = <the context expression>` at the HEAD of a threaded method's body — the capture.
+      *
+      * At the head for [[givenMember]]'s reason read at a method: anything in the body that reaches
+      * the accessor (directly, or through a callee this method invokes) must find the value already
+      * there, and java's own lifecycle methods do exactly that. */
+    def prependStore(hold: SymId, ctxRef: TypeRepr, rhs: Term, body: Term): Term =
+      val store = Tree.Assign(Tree.Ident(hold, ctxRef, body.origin), rhs, TypeRepr.NoType, body.origin)
+      body match
+        case b: Tree.Block => b.copy(stats = store :: b.stats)
+        case other         => Tree.Block(List(store), other, other.tpe, other.origin)
+
+    /** `eq` — reference identity, the faithful spelling of java's `== null` (CLAUDE.md §4.4). The
+      * `scala.<op>#` prefix is what the emitter reads to render an operator infix. */
+    private lazy val eqOp: SymId = member("eq", "scala.<op>#eq", SymId.None, TypeRepr.NoType, Flags())
+    private lazy val illegalStateSym: SymId = tpe("IllegalStateException", "java.lang.IllegalStateException")
+    private lazy val illegalStateRef: TypeRepr = TypeRepr.TypeRef(TypeRepr.NoPrefix, illegalStateSym)
+    private lazy val illegalStateCtor: SymId =
+      member("<init>", MemberKey("java.lang.IllegalStateException", "<init>").render,
+             illegalStateSym, TypeRepr.NoType, Flags())
