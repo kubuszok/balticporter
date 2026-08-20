@@ -4566,9 +4566,20 @@ object SpoonTir:
           case Some(tp: CtTypeParameterReference) if isNull &&
             classOwned(tp) && recvSubst.get(tp.getSimpleName).exists(tpNameableHere) =>
             cast(recvSubst(tp.getSimpleName))
-          // only when the callee's type parameter actually RESOLVES in scope here (a self-call inside
-          // the same generic class) — otherwise `tpe` yields the `?T` unresolved stub, invalid syntax.
-          case Some(tp: CtTypeParameterReference) if isNull && resolveTypeParam(tp.getSimpleName).isDefined =>
+          // …and the SAME DECLARATION, never merely the same NAME. The guard here used to be
+          // `resolveTypeParam(name).isDefined`, which was written to keep the `?T` unresolved stub
+          // out of the emitted text — a hazard, not a key (`CLAUDE.md` §4.55) — and it answers YES
+          // for any in-scope parameter that happens to be spelled the same. A generic METHOD
+          // shadowing its class's parameter is ordinary java, and its own `<Widget>` is nameable
+          // nowhere outside itself: `public static CellWidgetBuilder<Actor> builder() { return
+          // of(null); }` inside `class CellWidget<Widget extends Actor>` ascribed the `null` to the
+          // CALLEE's `Widget` and emitted `Not found: type Widget` from a `static` member, where the
+          // class's parameter is not in scope either (JLS 8.4.4). `sameVarInScope` is the engine's
+          // own answer to that question, keyed on the minted ID — so this is the FIRST arm's rule
+          // read at the second: a cast may only name a type the CALL SITE can see. Note the
+          // emission COMPILES with no ascription at all wherever scala can infer the callee's
+          // parameter from the expected type, which is why the narrowing costs nothing there.
+          case Some(tp: CtTypeParameterReference) if isNull && sameVarInScope(tp) =>
             cast(tp)
           case _ => t
 

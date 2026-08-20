@@ -73,6 +73,37 @@ class NullAtTypeParamSpec extends PortSuite:
     assertNotEmits(p, "add(null.asInstanceOf[?")
   }
 
+  test("NEGATIVE: a callee's OWN variable is nameable nowhere outside it, same NAME or not") {
+    val p = port(
+      """package demo;
+        |class Actor { }
+        |class Cell<Widget extends Actor> {
+        |  static <Widget extends Actor> Cell<Widget> of(Widget w) { return new Cell<Widget>(); }
+        |  static Cell<Actor> builder() { return of(null); }
+        |}
+        |""".stripMargin)
+    // `of`'s `<Widget>` SHADOWS the class's, which is ordinary java, and java infers it as `Actor`
+    // from the target type. The old guard asked whether the NAME resolved in scope — it does, to
+    // the CLASS's `Widget` — and emitted `of(null.asInstanceOf[Widget])` from a `static` member,
+    // where the class's parameter is not in scope at all (JLS 8.4.4): `Not found: type Widget`.
+    // NEGATIVE for the fix: restore `resolveTypeParam(...).isDefined` and the ascription returns.
+    assertEmits(p, "Cell.of(null)")
+    assertNotEmits(p, "asInstanceOf[Widget]")
+  }
+
+  test("…and the SELF-CALL the arm exists for still casts — the same DECLARATION, not the same name") {
+    val p = port(
+      """package demo;
+        |class Node<N> {
+        |  void put(N n) { }
+        |  void clear() { this.put(null); }
+        |}
+        |""".stripMargin)
+    // `put`'s formal IS this class's `N`, minted at one id, and `N` is in scope in `clear`. Without
+    // the cast the emitted `put(null)` is `Found: Null / Required: N`.
+    assertEmits(p, "this.put(null.asInstanceOf[N])")
+  }
+
   test("NEGATIVE: a null at an ORDINARY reference formal takes no cast at all") {
     val p = port(
       """package demo;
