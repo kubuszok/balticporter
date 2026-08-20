@@ -1489,10 +1489,32 @@ final case class PortRun(
     // the four above: `dependencies` is NOT inherited (§1.5), so every entry a run reads is one this
     // module's own manifest wrote and one this module's own build ships.
     val dependencyFindings = PolicyReport.fromDependencies(unneededDeps)
-    val policy = dropFindings ++ renameFindings ++ resolutionFindings ++ dependencyFindings ++ PolicyReport(
-      PolicyReport.from(ownPhases.collect { case p: PolicySource if ownPhaseNames(p.name) => p })
-        .findings.filter(f =>
-          ownSurfaceKeys.get(f.phase).forall(_.contains(balticporter.core.MergeablePolicy.subjectOf(f.key)))))
+    // …and the SURFACE phases, which are TWO populations answering two questions
+    // (`PolicyFinding.About`, `ENGINE-LIMITS.md` D13).
+    //
+    // A finding about a KEY belongs to the module that DECLARED the key, so it is collected from
+    // this module's OWN surface — each entry resolved above to the instance that actually ran — and
+    // screened by the subjects the fold recorded this manifest as contributing.
+    //
+    // A finding about THIS RUN belongs to the module whose PROGRAM produced it, and for an INHERITED
+    // phase that is this module and never the base. Both gates were wrong for it and each alone was
+    // enough to hide it: a dependent that declares no instance of the phase has it in neither
+    // `ownPhases` nor `ownSurfaceKeys`, so a `MemberRenamer` collision against two of the
+    // DEPENDENT's own declarations refused a whole component and the lane printed `policy 0` beside
+    // eight compile errors. So this half reads the EFFECTIVE pipeline — every phase that ran — and
+    // is screened by nothing, because there is no module for it to belong to other than this one.
+    val runPhases: List[Phase] = manifest.map(_.effectiveSurface).getOrElse(phases)
+    def sourcesIn(ps: List[Phase]) = ps.collect { case p: PolicySource => p }
+    val keyFindings = PolicyReport.from(sourcesIn(ownPhases)).findings.filter(f =>
+      f.about == balticporter.core.PolicyFinding.About.TheKey && ownPhaseNames(f.phase) &&
+        ownSurfaceKeys.get(f.phase).forall(_.contains(balticporter.core.MergeablePolicy.subjectOf(f.key))))
+    val runRefusals = PolicyReport.from(sourcesIn(runPhases)).findings.filter(
+      _.about == balticporter.core.PolicyFinding.About.ThisRun)
+    // DISTINCT: an own-declared phase appears in both lists (`ownPhases` resolves to its effective
+    // instance), and one refusal must not be counted twice.
+    val surfacePolicyFindings = PolicyReport((keyFindings ++ runRefusals).distinct)
+    val policy = dropFindings ++ renameFindings ++ resolutionFindings ++ dependencyFindings ++
+      surfacePolicyFindings
     CheckReport.record(PortRun.Policy, policy.findings.map { f =>
       CheckReport.Finding(PortRun.Policy, f.issue.label, f.phase, f.setting, 0, s"${f.key} — ${f.detail}")
     })

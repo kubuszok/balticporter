@@ -6350,6 +6350,48 @@ port's five land in rather than about D2 or about a scope, and it is exactly the
 nothing the program declares* — with nothing reporting it. §1(a) ENGINE, diagnosis open, and it is
 the wave's most valuable finding because two green sibling ports had made it invisible.
 
+> **DIAGNOSED, wave 1 — it is NOT `OverrideGraph`, and the answer was in `decisions.tsv` all along
+> (`ENGINE-LIMITS.md` D13, `policy 0 -> 1`).** The graph is right, the component is right, and the
+> rename refused for a reason this port could have read on the first run:
+>
+> ```
+> ScopedOut  com.badlogic.gdx.utils.Disposable#dispose  configured  type-redirect:…#dispose -> close
+>   refused=member-rename; why=`close` is already taken in the component's classes by
+>   com.kotcrab.vis.ui.widget.VisWindow#close, com.kotcrab.vis.ui.widget.color.ColorPicker#close
+> ```
+>
+> VisUI is a widget toolkit whose own `VisWindow` has a `close()` button handler (`addCloseButton`,
+> `closeOnEscape`) that `ColorPicker` overrides — so the rename `dispose -> close` collides with two
+> of this module's OWN declarations, one emitted class cannot declare `close()` twice, and
+> `MemberRenamer.OnCollision.Refuse` refuses the component WHOLE. That is the mode's stated contract
+> and the correct answer. The two green siblings simply have no collider, which is why they were
+> evidence that the mechanism works and silence about what happens when it does not — the shape §5's
+> free-control reading is most exposed to.
+>
+> **The engine defect is that the refusal was INVISIBLE**: `policy` read **0**. Every key on this
+> phase is the BASE's (one instance, inherited through `surfaceFold`), and `PortRun` holds a merged
+> phase's findings to the subjects the fold recorded THIS manifest as contributing — right for a KEY,
+> wrong for a refusal THIS RUN made on evidence only this module's program has. `PolicyFinding.About`
+> now carries that distinction and the screen is asked only of the `TheKey` arm. Fixed; the lane says
+> so, ahead of scalac, which is §4.45's property working.
+>
+> **The eight errors are NOT closed and the residue is POLICY, not engine.** The redirect is
+> deliberately not un-done with its rename (`TypeRedirectMemberRenameSpec`: *a rename that could not
+> run does not un-redirect a type*), and that default is right — un-redirecting emits five references
+> to a type the base DROPPED, which is more errors. What remains is a question the engine may not
+> decide: which of the two members keeps the name `close`. `AutoCloseable#close` is not negotiable, so
+> VisUI's own `close()` is the one that would have to move — a `protected`, documented member of this
+> library's surface, and there is **no manifest spelling for a member rename today**. That is the
+> next wave's item and it is (b)/(c), not (a).
+>
+> **BOTH gates were wrong and each alone was enough to hide it**, which is part of why the free
+> control misled: `PortRun` collected surface policy reports from `manifest.surface` — the module's
+> OWN declared phases — and this manifest declares no `TypeRedirectTransform` at all, so the phase's
+> report was never read; and the subject screen would have dropped the row even if it had been. The
+> run half now reads the EFFECTIVE pipeline and is screened by nothing. Arrival: `just measure-all`
+> **20 of 20 lanes, exit 0**, all twenty at `members whose EMITTED TEXT changed since the baseline:
+> 0`, every error baseline held, and `policy` moving on exactly one lane — `0 -> 1`, here.
+
 **FAMILY 3 — three unrelated things sharing a code.** `VisTextField` ×3 is a boxed
 `asInstanceOf[java.lang.Boolean]` handed to `keyboard.show(Boolean)`, whose formal is primitive.
 `AbstractListAdapter` ×2 and `ListAdapter` ×1 are a RAW nested type reference through a generic
@@ -6407,15 +6449,22 @@ about its siblings*).
 
 ### 10.9.10 Next
 
-1. **The context-seam family**, which is 10 of the 32 errors and one shape. Probe the
-   `frozen-component` over-refusal FIRST (§10.9.7 family 1: `java.lang.Enum` declares neither
-   `getBundle` nor `grid`, and its surface is knowable) — it is the cheapest of the five and may
-   take six of the eleven. Then price §10.8.9's three exits and §10.8.11's fourth against what is
-   left, against the reference hand port's own two-member answer (§3.5).
-2. **`disposableRedirect`'s missing member rename** (§10.9.7 family 2) — 8 errors, §1(a), and the
-   control is free: `sge-gltf` and `sge-vfx` get it on 12 and 11 files, so the question is what is
-   different about these five override components rather than whether the phase runs. A fix there
-   changes a BASE phase, so it is measured on `measure-all` and not on this lane.
+1. **The context-seam family**, which is 10 of the 32 errors and one shape. **The `frozen-component`
+   probe is DONE and is a dead end — do not retry it** (`ENGINE-LIMITS.md` CT10, `32 -> 41`): the
+   anchor is a genuine over-refusal and lifting it converts six refusals into ten of two other kinds
+   without threading one member, because the blocker it was masking is that an emitted `enum` cannot
+   carry a constructor clause and its `toString()` override can never take one. Start instead at the
+   reference hand port's SECOND member (§10.9.7 family 1) — the cached context read as an EXPRESSION,
+   which is `selfSupplied`'s shape with an expression the mechanical port cannot currently write —
+   and price §10.8.9's three exits and §10.8.11's fourth against it. The anchor becomes admissible
+   once that lands, and not before.
+2. **`disposableRedirect`'s missing member rename** (§10.9.7 family 2) — 8 errors. **DIAGNOSED, and
+   it is not what it looked like**: `OverrideGraph` is correct and the rename refuses on a REAL
+   collision with VisUI's own `VisWindow#close`/`ColorPicker#close`. The (a) half — the refusal
+   reading `policy 0` because the merged phase's key is the base's — is CLOSED (`ENGINE-LIMITS.md`
+   D13). What is left is (b)/(c): `AutoCloseable#close` is not negotiable, so VisUI's own `close()`
+   is the member that must move, and **no manifest spelling for a member rename exists**. Designing
+   one is the item — and it is a BASE-visible mechanism, so it is measured on `measure-all`.
 3. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
    error count reads.
 4. **The two upstream tests, then the 72-case differential probe** (§10.9.1). Until one lands this

@@ -35,12 +35,66 @@ final case class PolicyFinding(
     key: String,
     issue: PolicyIssue,
     detail: String,
+    /** WHOSE question this answers — see [[PolicyFinding.About]]. Defaults to the pre-existing
+      * behaviour, so every construction that predates the field says exactly what it always did. */
+    about: PolicyFinding.About = PolicyFinding.About.TheKey,
 ):
   /** One grep-able line that ENDS in the §1 classification, because that is what the reader has to
-    * act on: no engine change is ever the right response to any of these. */
+    * act on: no engine change is ever the right response to any of these.
+    *
+    * The classification differs by [[about]], and that is not decoration. For a finding about the
+    * KEY the fix really is the manifest entry the key is quoted from. For one about THIS RUN the key
+    * may be a BASE's — inherited through `surfaceFold`, correct there, and not a string this module
+    * can edit — while what produced the finding is this module's own declarations. Sending that
+    * reader to a manifest they do not own is the §4.45 failure the classification exists to prevent. */
   def render: String =
-    s"""$phase — $setting: "$key" ${issue.label}: $detail""" +
-      "  [§1(b) per-library policy: fix this key in the library's manifest; the engine needs no change]"
+    s"""$phase — $setting: "$key" ${issue.label}: $detail""" + (about match
+      case PolicyFinding.About.TheKey =>
+        "  [§1(b) per-library policy: fix this key in the library's manifest; the engine needs no change]"
+      case PolicyFinding.About.ThisRun =>
+        "  [§1(b) per-library policy, in THIS module: the key may be a base's and correct there — " +
+          "what refused is this run, over declarations only this module has]")
+
+object PolicyFinding:
+
+  /** WHICH QUESTION a finding answers, which decides whether a module that did not DECLARE the key
+    * may still be told about it.
+    *
+    * ==Why this is not the same question as `issue`==
+    * [[PolicyIssue]] says what the engine could PROVE about a key. This says whose fact the finding
+    * is, and the two are independent: the same `Unverifiable` can be *your entry names a member
+    * whose shape I cannot check* (about the key) and *your program's own declarations made me refuse
+    * a rewrite this run* (about the run).
+    *
+    * ==What it is FOR, measured==
+    * `PortRun` holds a MERGED phase's findings to the subjects the fold recorded THIS manifest as
+    * contributing — right for a key, because an inherited entry that matched nothing here belongs to
+    * whichever module declared it and `ManifestAgreement` says which. Applied to a REFUSAL the run
+    * made, it drops the only report of a decision this module's own code caused. Measured on
+    * `sge-visui`: the base's `Disposable#dispose -> close` rename refused, whole and correctly,
+    * because two of the DEPENDENT's own declarations are already called `close`
+    * (`MemberRenamer.OnCollision.Refuse`) — and the port then emitted five classes claiming
+    * `java.lang.AutoCloseable` and implementing none of it, with eight `value dispose is not a
+    * member of` errors and **`policy` reading 0**. Nothing else could see it: the base's own run does
+    * not refuse (its program has no `VisWindow`), the fingerprints are EQUAL because there is one
+    * instance, every other count is flat, and the sole trace was a `ScopedOut` row in
+    * `decisions.tsv` — the artifact §4.575 writes for an agent holding the run directory, not the one
+    * an operator reads.
+    *
+    * The split is structural rather than a per-phase opinion: a finding derived from a BINDING is
+    * about the key by construction ([[PolicyReport.fromBindings]] — the key named nothing), and a
+    * finding a phase files while RUNNING is about this run. A phase that says nothing keeps the old
+    * answer.
+    */
+  enum About:
+    /** the declared entry is at fault — a typo, a stale name, a malformed shape. Filterable to the
+      * module that declared it, and the default. */
+    case TheKey
+
+    /** the entry is fine and THIS RUN refused what it authorised, on evidence from this run's own
+      * program. Never filtered by key ownership: the module whose declarations caused it is the only
+      * module that can act, and it is usually not the module that wrote the key. */
+    case ThisRun
 
 /** Why a declared key is a finding. All three are §1(b); they differ in what the engine could
   * prove. */

@@ -579,10 +579,20 @@ final class TypeRedirectTransform(
   /** one counted refusal: a `PolicyReport` row for the never-fired half, and a `ScopedOut` decision
     * for the provenance half. `ScopedOut` and not a new enum case, for DESIGN.md §8.5's reason — a
     * declaration that kept its upstream form while the code around it moved IS a scope-out, and the
-    * enum is closed on purpose. */
+    * enum is closed on purpose.
+    *
+    * `About.ThisRun`, and that is what makes the row reach anybody. This phase is the ordinary
+    * MERGED one (a base states a whole-program redirect, dependents inherit the single instance), so
+    * every key here is the BASE's — and `PortRun` holds a merged phase's findings to the subjects the
+    * fold recorded the running manifest as contributing. A refusal is not about the key: the base's
+    * own run does not make it, because the collision, the anchor or the missing target is evidence
+    * from the DEPENDENT's program. Filed as `TheKey` it was dropped, and a dependent whose whole
+    * `dispose -> close` component refused read `policy 0` beside eight compile errors
+    * (`ENGINE-LIMITS.md` D13). */
   private def refuseRename(r: TypeRedirectTransform.Rename, why: String): Unit =
     runFindings = runFindings :+ PolicyFinding(
-      name, s"TypeRedirectTransform(memberRenames) of `${r.source}`", r.key, PolicyIssue.Unverifiable, why)
+      name, s"TypeRedirectTransform(memberRenames) of `${r.source}`", r.key, PolicyIssue.Unverifiable, why,
+      about = balticporter.core.PolicyFinding.About.ThisRun)
     record(Decision(
       kind       = Decision.Kind.ScopedOut,
       subject    = SymId.None,

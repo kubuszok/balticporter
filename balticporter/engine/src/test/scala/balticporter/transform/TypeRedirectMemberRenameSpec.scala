@@ -207,6 +207,44 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     assert(clue(r.out).contains("java.lang.AutoCloseable"), r.out)
   }
 
+  test("a COLLIDER already called `close` refuses the component — and the finding is About.ThisRun") {
+    // The shape sge-visui actually has: a widget library whose own `Window` has a `close()` button
+    // handler, under a redirect that wants `dispose` renamed to `close`. `OnCollision.Refuse` is
+    // right — one class cannot declare `close()` twice — but the KEY is the BASE's, inherited
+    // through `surfaceFold`, so `PortRun`'s subject filter dropped the row and the port read
+    // `policy 0` beside eight compile errors. The refusal is about THIS RUN: only the dependent's
+    // program contains the collider, and the base's own run cannot reproduce it.
+    val colliding = clean.replace(
+      "class Pooled implements Disposable {",
+      "class Pooled implements Disposable {\n  protected void close() {}")
+    val ph = phase(Map("dispose" -> "close"))
+    val r  = run(colliding, ph)
+
+    List("com.demo.Disposable#dispose", "com.demo.Buffer#dispose", "com.demo.Sub#dispose")
+      .foreach(f => assertEquals(r.nameOf(f), Some("dispose"), s"$f moved past a collision"))
+
+    val fs = ph.policyReport.of(PolicyIssue.Unverifiable)
+    assertEquals(clue(fs).size, 1, ph.policyReport.render)
+    assert(fs.head.detail.contains("com.demo.Pooled#close"), fs.head.render)
+    assertEquals(fs.head.about, balticporter.core.PolicyFinding.About.ThisRun)
+    // …and the classification the row ENDS in is the one this reader can act on (§4.45): not
+    // "fix this key in the manifest", which names a string this module may not own.
+    assert(fs.head.render.contains("in THIS module"), fs.head.render)
+  }
+
+  test("a finding about the KEY keeps the pre-existing classification — the default is unchanged") {
+    // The negative half of the pair above: a MALFORMED entry really is the key's fault, so it stays
+    // filterable to the module that declared it and keeps the sentence it always had.
+    val ph = new TypeRedirectTransform(
+      redirects     = Map("com.demo.Disposable" -> "java.lang.AutoCloseable"),
+      memberRenames = Map("com.demo.Buffer" -> Map("dispose" -> "close")))
+    run(clean, ph)
+    val fs = ph.policyReport.of(PolicyIssue.Malformed)
+    assertEquals(clue(fs).size, 1, ph.policyReport.render)
+    assertEquals(fs.head.about, balticporter.core.PolicyFinding.About.TheKey)
+    assert(fs.head.render.contains("fix this key in the library's manifest"), fs.head.render)
+  }
+
   // ---- 3. the TARGET has to declare the new name ---------------------------------------------
 
   test("a rename to a name the target does NOT declare is refused, with what the target has") {

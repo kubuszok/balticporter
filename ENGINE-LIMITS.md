@@ -10950,6 +10950,71 @@ OPEN entry here (a bullet marked CLOSED graduated by acquiring one).
   it caught `getName` in the `ClassReflection` forwarder, a key dead since the first draft
   (`policy 1->0` when removed).
 
+### D13. A MERGED phase's REFUSAL is filtered out by the subject screen written for its KEYS — **`policy 0` beside eight compile errors, and the diagnosis a green sibling port had made unreachable**
+
+**Title, for renumbering: "a run refusal is not about the key, and the key filter drops it".**
+CLOSED. (a) engine.
+
+`sge-visui` arrived with 8 of its 32 errors reading `value dispose is not a member of …`, and five
+classes emitting `extends java.lang.AutoCloseable` while implementing none of it. The base's
+`disposableRedirect` retargets `com.badlogic.gdx.utils.Disposable` onto `java.lang.AutoCloseable` and
+renames `dispose -> close` across the override component; on this dependent the RE-PARENTING reached
+all five implementors and the member RENAME reached none, while `grep phase=type-redirect` over two
+green sibling dependents returns 12 files and 11. Two ports doing it and a third not doing it reads
+as an `OverrideGraph` question — the C16 shape, where a wrong answer is a LEGITIMATE one — and
+`PROGRESS.md` §10.9.7 filed it that way, as the wave's most valuable finding.
+
+**It is not `OverrideGraph`, and the answer was in `decisions.tsv` the whole time.**
+
+```
+ScopedOut  com.badlogic.gdx.utils.Disposable#dispose   configured  type-redirect:…#dispose -> close
+  refused=member-rename; to=close; why=`close` is already taken in the component's classes by
+  com.kotcrab.vis.ui.widget.VisWindow#close, com.kotcrab.vis.ui.widget.color.ColorPicker#close
+```
+
+The graph is right, the component is right, and the collision is REAL: this is a widget toolkit whose
+own `Window` has a `close()` button handler that a `ColorPicker` overrides, so one emitted class
+cannot declare `close()` twice. `MemberRenamer.OnCollision.Refuse` refuses the component WHOLE, which
+is that mode's stated contract and the correct answer — the requested name is the TARGET's name for
+the member, so landing one `$` along would not be a name `AutoCloseable` declares.
+
+**The defect is that nobody was told.** `PortRun` holds a MERGED phase's findings to the subjects the
+fold recorded THIS manifest as contributing, which is right for a KEY: an inherited entry that
+matched nothing here belongs to whichever module declared it, and `ManifestAgreement` says which.
+Every key on this phase is the BASE's — one instance, inherited, `surfaceFold` — so the refusal was
+dropped and the lane read **`policy 0`**. Nothing else could see it: the base's own run does not
+refuse (its program has no `VisWindow`), the fingerprints are EQUAL because there is one instance,
+`members.tsv` has been that way since the port began, and the sole surviving trace was the
+`ScopedOut` row above — the artifact `CLAUDE.md` §4.575 writes for an agent holding the run directory,
+not the one an operator reads. The two GREEN sibling ports are what made it unreachable: they have no
+collider, so they were evidence that the mechanism works and silence about what happens when it does
+not.
+
+**The fix is a distinction the report did not have.** `PolicyIssue` says what the engine could PROVE
+about a key; it does not say WHOSE fact the finding is, and the two are independent — the same
+`Unverifiable` can be *your entry names a member whose shape I cannot check* and *your program's own
+declarations made me refuse a rewrite this run*. `PolicyFinding.About` carries it, defaulting to
+`TheKey` so every existing construction says what it always did, and the subject screen is asked only
+of that arm. The split is structural rather than a per-phase opinion: a finding derived from a
+BINDING is about the key by construction (the key named nothing), and one a phase files while RUNNING
+is about this run. The finding's §1 sentence moves with it, because "fix this key in the library's
+manifest" names a string this module may not own (`CLAUDE.md` §4.45).
+
+`policy 0 -> 1` on sge-visui, `0 member digests`, every other count flat, and gdx-measure unmoved
+(a base's fold contributes no `ownKeys`, so it was never filtered).
+
+**What this entry does NOT close, stated so it is not re-derived.** The REDIRECT is not refused with
+its rename, and that is deliberate and spec'd (`TypeRedirectMemberRenameSpec`: *a rename that could
+not run does not un-redirect a type*). It is the right default — un-redirecting emits five references
+to a type the base DROPPED, which is more errors, not fewer — and on this port it means the honest
+refusal still leaves an uncompilable seam. The residue is a POLICY question the engine cannot decide:
+which of the two members keeps the name `close`. `sge-visui`'s own `close()` is `protected` and part
+of the library's documented surface, so renaming it is a per-library act, and there is no manifest
+spelling for a member rename today. `PROGRESS.md` §10.9.7 family 2 carries it.
+
+*Fix kind: (a) engine for the visibility; the remaining seam is (b)/(c) per-library and has no
+spelling yet.*
+
 ### D11. A published map's `upstream` column was a DIRECTORY read as a PACKAGE — **9,261 of one base's 9,370 rows and 1,792 of another's, and the first dependent one of them ever had reported 459 fatal findings**
 
 `PortMap.upstreamOf` takes the upstream FQN from the java ORIGIN rather than by inverting the rename,
