@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge	engine=balticporter/0.1.0-SNAPSHOT	sources=d4e1a1128812d482	files=597	policy=fbf782edceb21a8c
+# balticporter port map	schema=3	module=sge	engine=balticporter/0.1.0-SNAPSHOT	sources=d4e1a1128812d482	files=597	policy=bbe28df0228642b7
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -12743,7 +12743,7 @@ member	com.badlogic.gdx.scenes.scene2d.Group#draw(Batch,float)	sge.scenes.scene2
 member	com.badlogic.gdx.scenes.scene2d.Group#drawChildren(Batch,float)	sge.scenes.scene2d.Group#drawChildren(Batch,float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	66	5bd541216de2e83a	
 member	com.badlogic.gdx.scenes.scene2d.Group#drawDebug(ShapeRenderer)	sge.scenes.scene2d.Group#drawDebug(ShapeRenderer)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	137	94058b82b1e30059	
 member	com.badlogic.gdx.scenes.scene2d.Group#drawDebugChildren(ShapeRenderer)	sge.scenes.scene2d.Group#drawDebugChildren(ShapeRenderer)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	148	6b884d0c0baadb52	
-member	com.badlogic.gdx.scenes.scene2d.Group#findActor(String)	sge.scenes.scene2d.Group#findActor(String)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	389	bc80ef6d1e0a5b73	
+member	com.badlogic.gdx.scenes.scene2d.Group#findActor(String)	sge.scenes.scene2d.Group#findActor(String)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	389	538ac5772078b5b2	
 member	com.badlogic.gdx.scenes.scene2d.Group#getChild(int)	sge.scenes.scene2d.Group#getChild(int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	429	68739283ec3edf04	
 member	com.badlogic.gdx.scenes.scene2d.Group#getChildren()	sge.scenes.scene2d.Group#getChildren()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	434	b5c8d3057438bf19	
 member	com.badlogic.gdx.scenes.scene2d.Group#getCullingArea()	sge.scenes.scene2d.Group#getCullingArea()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	238	a8c9b8db4084982c	

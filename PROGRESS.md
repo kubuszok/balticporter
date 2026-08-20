@@ -6714,20 +6714,49 @@ frontend-spoon 121, testkit 337, corpus 1,382 — 2,755 passing, 0 failing, 1 ig
 `336 -> 337` is this wave's own spec, whose negative was verified by running it against the
 pre-fix emitter and reading the emitted text it produced).
 
-### 10.9.10 The floor after wave 4 — **8 errors**, every one attributed
+### 10.9.10 The floor after wave 7 — **7 errors**, every one attributed
 
-`22 -> 8`, and what is left is four families of which none is a translation the engine is refusing
-to write. Stated per row, because a residue nobody re-derives is a residue that silently changes
-size:
+`22 -> 8` in wave 4 and `8 -> 7` in wave 7, and what is left is three families of which none is a
+translation the engine is refusing to write. Stated per row, because a residue nobody re-derives is
+a residue that silently changes size:
 
 | n | code | what it is | §1 | why it stands |
 |---|---|---|---|---|
 | 3 | `E134` | `VisScrollPane`, `VisSlider`, `VisWindow` — the dropped `super(args)` | **(a) ENGINE, REFUSED** | `ENGINE-LIMITS.md` C3 exactly: all three constructors are ROOTS and each calls a DIFFERENT `super`, scala lets only the PRIMARY reach one, and there is nothing to replay the other two through. §10.9.7 family 4 says why the LOUD form is strictly the better one |
 | 3 | `E007` | `VisTextField` ×3 — `keyboard.show(true)` at an `OnscreenKeyboard` whose only `show` takes a `TextField` | **NEITHER — an UPSTREAM VERSION SKEW** | new this wave, and it is not the engine's: `vis-ui/build.gradle` declares `gdxVersion = '1.14.0'` and the vendored gdx tree is **1.14.1**, which replaced that member's parameter. javac would reject VisUI's own source against this tree. `CLAUDE.md` §3.5 carries the rule (ask whether the JAVA compiles against the dependency the run supplies) |
-| 1 | `E007` | `DragPane#findActor` — the base's `Group#findActor` returns `T \| Null` at an abstract `T` and this override declares `T` | **(b) on the BASE** | K13's row. The exit is a `NullabilityTransform` question about libGDX core's instance, and `nullability-boundary` reads 0 here because D2 scopes its reporting to the base's declarations |
 | 1 | `E172` | `Draggable#BLOCKER` — the port's one `unsuppliable-use` | **(a) ENGINE, exit UNBUILT** | a `private static final Actor` whose `static { }` block installs a listener on it. **Corrected, and MEASURED — `ENGINE-LIMITS.md` CT11.** The reason recorded here in wave 4 (*"`lazy-init` does not reach it: a deferral is planned from ASSIGNMENTS"*) is wrong: `ContextNeed.fromField` exists for exactly this shape, the key FIRES, and the `E172` merely MOVES to the `<clinit>` that reads the now-deferred field — `8 -> 8`, `context-seam` `39 -> 40`, 9 member digests, reverted. Java runs the field initialiser and the block as ONE step-9 sequence and `lazy-init` can only defer the `ValDef` half, so this is an engine mechanism nobody has built rather than a policy nobody has written |
 
-**The two engine gaps this wave closed on the way are worth naming apart from the context family,**
+**AND THE ONE WAVE 7 CLOSED IS THE ONLY ROW THAT WAS EVER A POLICY QUESTION — one MEMBER key, on
+the BASE.** `DragPane#findActor` overrides `Group#findActor`, which the base emitted `T | Null` at an
+abstract `T`; `T | Null` does not conform to `T` (`ENGINE-LIMITS.md` K13), so the override was this
+port's last `E007` of that family. Four things about the fix are worth keeping:
+
+- **the exit is spelled at the MEMBER, not at the type.** K13's own rule — a `RuleScope` entry may
+  name `owner#member` as readily as a type, and a bare member name is every overload of it. `Group`
+  is not a generic container: four of its five `@Null` sites are a CONCRETE `Rectangle`/`Actor`
+  where the union floor is transparent and costs nothing, and only `findActor` is annotated at an
+  abstract `T`. The type-level entry would have held back those four for no gain;
+- **and it belongs to the BASE, which is why the dependent could not take it.** The declaration is
+  libGDX core's, so a key in `VisUiPolicy` would be the §1.5 intrusion the phase refuses. This is
+  also why `nullability-boundary` reads **0** on this port and always did: D2 scopes a dependent's
+  reporting to its own declarations, so the one instrument that could name the cost is on the other
+  side of the module boundary. The measurement that closes it is a DEPENDENT's error count;
+- **no subclass closure is owed.** K13's other half — a scope exit on a generic type names the type
+  AND every owned subtype that RE-STATES the annotation — stops here: grepped across every vendored
+  upstream, `findActor` has exactly two declarations, this one and the override, and the override
+  carries no `@Null`. An entry for it would be the dead policy `OrderedMap` documents;
+- **the count stayed FLAT and the finding MOVED**, which is the whole argument for the third
+  baseline. `nullability-boundary` reads `146 -> 146` on the base, because the row left
+  `AbstractTypeParameter` and arrived in `ScopedOut` — invisible to `counts.tsv`, visible only in
+  `findings.tsv`.
+
+Base: **errors 0 = 0**, `nullability-boundary 146 -> 146`, `policy 2 -> 2`, **2 member digests**
+(`Group#findActor` and `Group`'s own class digest, which contains it), four `catalog(consulted)`
+counters up by one each — the restored `null.asInstanceOf[T]` placeholder is one more `Tree.Typed`
+for those rows to consult — and one port-map row. Dependent: **8 -> 7**, `0` member digests, since
+visui's own emitted text never mentioned the union.
+
+**The two engine gaps wave 4 closed on the way are worth naming apart from the context family,**
 because neither is about threading and both are general:
 
 - **an ASCRIPTION may only name a type the CALL SITE can see.** `nullToTypeParam`'s second arm asked

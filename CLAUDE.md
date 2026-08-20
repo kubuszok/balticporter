@@ -1089,7 +1089,10 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   changed its advice reached nobody, which is §5's own rule (every number reaching stdout must reach
   `findings.tsv`) failing at the phase that could least afford it.
   Those five are required OF A RUN THAT CARRIES THE PHASE and derived from the pipeline rather
-  than listed, which is `serviceProviders`' conditional-lane pattern at the other declaration:
+  than listed, which is the conditional-lane pattern the two MANIFEST-derived lanes take at the
+  other declaration — `service-providers` when a port declares a descriptor, and `resources` when it
+  declares a classpath resource tree (`DESIGN.md` §8.17 and §8.22, the deliverables that are not
+  `.scala`):
   requiring them of every port would fail every phase-less one, and leaving them out entirely means
   a run that stopped calling one reports success with the row gone. `PortRun.RequiredChecks` is
   asserted against what actually recorded, so a number that reaches stdout and not `findings.tsv`

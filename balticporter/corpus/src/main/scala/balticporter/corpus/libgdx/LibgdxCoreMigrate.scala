@@ -1040,4 +1040,24 @@ object LibgdxPolicy:
     "com.badlogic.gdx.scenes.scene2d.ui.SelectBox",
     "com.badlogic.gdx.scenes.scene2d.ui.Tree",
     "com.badlogic.gdx.scenes.scene2d.utils.Selection",
+    // …and ONE MEMBER, which is where this list stops being about TYPES — K13's own rule: spell the
+    // exit at the member when the failing set is not the container's whole API, and a bare member
+    // name is every overload of it (here, one).
+    //
+    // `Group` is not a generic container. Four of its five `@Null` sites are a CONCRETE
+    // `Rectangle`/`Actor`, where the union floor is transparent and costs nothing; only
+    // `@Null <T extends Actor> T findActor(String)` is annotated at an ABSTRACT `T`. Scoping the
+    // TYPE out would hold back those four for nothing and add four `ScopedOut` rows saying so.
+    //
+    // MEASURED ON A DEPENDENT, which is the only place the cost was visible: `sge-visui`'s
+    // `DragPane#findActor` overrides this member declaring plain `T`, and the base's `T | Null` was
+    // that port's last `E007` of this family (`PROGRESS.md` §10.9.10 row 3) — reported NOWHERE,
+    // because `ENGINE-LIMITS.md` D2 scopes a dependent's own `nullability-boundary` to its own
+    // declarations and this declaration is the base's. The exit is therefore the BASE's to take:
+    // the same key written in the dependent's manifest is a §1.5 intrusion the phase refuses.
+    //
+    // No subclass closure is owed. Grepped every vendored upstream: `findActor` has exactly two
+    // declarations, this one and the override, and the override re-states no annotation — so an
+    // entry for it would be the dead policy `OrderedMap` documents above.
+    "com.badlogic.gdx.scenes.scene2d.Group#findActor",
   )
