@@ -6643,6 +6643,51 @@ pre-fix emitter and reading the emitted text it produced).
    which is `selfSupplied`'s shape with an expression the mechanical port cannot currently write —
    and price §10.8.9's three exits and §10.8.11's fourth against it. The anchor becomes admissible
    once that lands, and not before.
+
+   **The mechanism is DESIGNED and it is a FIFTH exit, not a fourth one re-used.** §1's own question
+   — *is there no value, or no NAME?* — has a different answer here from `sge-textra`'s, and the
+   difference is WHERE the threading attached. `retain` gives a name to what a CONSTRUCTOR CLAUSE was
+   handed, so it rides on `threadedClasses` and nowhere else; `VisUI` is an all-static holder whose
+   threading is on STATIC METHODS (`load(String)` reads `Gdx.files`, `checkBeforeLoad()` reads
+   `Gdx.app` — read off the upstream, not inferred), so it is in no `threadedClasses` at all and a
+   `retain` key on it emits nothing and is a counted `NeverMatched`. The value exists and it is in a
+   METHOD's clause, live only for that call.
+
+   So: **`ContextHolder.cache: Map[type FQN, member name]`**, per-declaration exactly as `retain` is
+   — it UNIONS, it is contributable from a `ContextHolderExtension`, and the empty map is both the
+   no-op and the default, which is §1's rule for a phase that ADDS declarations. On a type the
+   closure threaded at the METHOD it mints, on that type's emitted companion, a private mutable
+   holder and a PUBLIC accessor, and it prepends `<held> = summon[<ctx>]` to the body of every
+   threaded method the type declares. A `selfSupplied` expression on anything else then reads
+   `<Type>.<name>` — which is the hand port's `VisUI.sgeInstance` exactly, assigned inside each
+   `load(…)` and read by `ColorPickerText#getBundle` as
+   `Locales.getColorPickerBundle(using VisUI.sgeInstance)`.
+
+   Four things that are decisions rather than detail:
+
+   - **it is a SEPARATE key and not `retain` deriving a second shape.** The two emit different
+     SURFACES — an instance `val` against a companion `def` over a `var` — and are read by different
+     EXPRESSIONS (`<value>.<name>` against `<Type>.<name>`), so one key would leave the port unable to
+     say which it meant and the phase deciding from the program. §1.5's derived-surface paragraph is
+     that failure with a name: two modules would fingerprint EQUAL and emit differently;
+   - **the accessor THROWS when unset, and the throw is JAVA'S OWN.** `VisUI.getSkin()` already
+     answers this precondition with `IllegalStateException("VisUI is not loaded!")`, so the emission
+     is the contract's own refusal (§1's rule: louder than java, never quieter) rather than a `null`
+     that reaches a caller as a plausible wrong answer;
+   - **the ordering is already measured and does not need re-deriving.** §10.8.11 probed a class-level
+     `given` both ways against scalac 3.8.4: it is initialised LAZILY, so an enum CONSTANT built at
+     module initialisation does not read the cache, and the assignment at the head of `load` runs
+     before `scale.getSkinFile()` — which is the one ordering this library actually exercises;
+   - **CT10's `toString` blocker does not come back**, and that is the point of starting here.
+     `selfSupplied` takes the seven enums OUT of `threadedClasses`, so their constructors keep java's
+     signature (no `lost-clause`), nothing reports `unconstructed-thread` about them, and
+     `override def toString()` needs no clause because the summon inside it resolves from the enum's
+     own body.
+
+   What it does NOT reach is the 11th error, and that is stated rather than absorbed:
+   `Draggable#BLOCKER` is a static field initialiser CONSTRUCTING a threaded `Actor` at class
+   initialisation, before any `load` could have assigned the cache — the `unsuppliable-use` row, whose
+   own exit is a `sites = lazy-init` entry the lane already names.
 2. **The remaining `E007`s and the `E006`** — 3 boxed `java.lang.Boolean` at a primitive formal, 3 a
    raw nested type through a generic outer, 1 K13's `Null` at an abstract `T`, 1 an override's
    parameter, and family 5's surviving half (an ascription naming a type the CALL SITE cannot see).
