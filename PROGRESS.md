@@ -6843,7 +6843,16 @@ widening).
    it gates 3 differential tests.
 3. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
    error count reads. It is now also a MEASURED test blocker rather than only a completeness gap.
-4. **The two upstream `@Test`** (§10.9.1) — a test source set this port does not have yet.
+4. **The two upstream `@Test`** (§10.9.1) — a test source set this port does not have yet. **Wave 5
+   scoped it and deliberately did not take it, and the reason is a measurement rather than a
+   budget.** Both are `GreaterThanValidatorTest` and `LesserThanValidatorTest`, pure JUnit 4 unit
+   tests over `Validators` with no libGDX and no scene2d — and §10.9.12's `ValidatorsSuite` now
+   asserts the SAME two classes over 30 cases, including both boundary behaviours and the
+   non-numeric rejection those two check. So the marginal BEHAVIOURAL evidence is close to nil.
+   What is still worth having is different evidence: a `visui-test` port exercises the CONVERSION
+   path — `TestFrameworkTransform`, `java_test_count`, `test_discovery_guard`, `expected-lost` —
+   which no differential lane can, since a hand-written suite is never converted. Price it as that,
+   not as coverage.
 5. **USL**, with its zero-authoring oracle (§10.9.1).
 
 ---
