@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-visui	engine=balticporter/0.1.0-SNAPSHOT	sources=7a29c946918c2898	files=162	policy=12b8d6ea07ee80b1
+# balticporter port map	schema=3	module=sge-visui	engine=balticporter/0.1.0-SNAPSHOT	sources=7a29c946918c2898	files=162	policy=d69f3712da64e5a3
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.kotcrab.vis.ui.FocusManager	sge.visui.FocusManager	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.kotcrab.vis.ui.Focusable	sge.visui.Focusable	Renamed	-		0		form=trait
@@ -354,8 +354,9 @@ member	com.kotcrab.vis.ui.Sizes#spacingRight	sge.visui.Sizes#spacingRight	Rename
 member	com.kotcrab.vis.ui.Sizes#spacingTop	sge.visui.Sizes#spacingTop	Renamed	-	com/kotcrab/vis/ui/Sizes.java	28	223de08f0ed75041	
 member	com.kotcrab.vis.ui.Sizes#spinnerButtonHeight	sge.visui.Sizes#spinnerButtonHeight	Renamed	-	com/kotcrab/vis/ui/Sizes.java	43	2fe0ff470d26e045	
 member	com.kotcrab.vis.ui.Sizes#spinnerFieldSize	sge.visui.Sizes#spinnerFieldSize	Renamed	-	com/kotcrab/vis/ui/Sizes.java	44	0883a3b3d01aa678	
+member	com.kotcrab.vis.ui.Sge#<given>	sge.Sge#<given>	Renamed	-	com/kotcrab/vis/ui/VisUI.java	42	6d9f199847054ad2	vis=private[ButtonBar]
 member	com.kotcrab.vis.ui.VisUI#TARGET_GDX_VERSION	sge.visui.VisUI#TARGET_GDX_VERSION	Renamed	-	com/kotcrab/vis/ui/VisUI.java	33	905a6a553c096d4f	placement=companion vis=private
-member	com.kotcrab.vis.ui.VisUI#checkBeforeLoad(Sge)	sge.visui.VisUI#checkBeforeLoad(Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	96	9f4ebd9066b0f82f	placement=companion vis=private
+member	com.kotcrab.vis.ui.VisUI#checkBeforeLoad(Sge)	sge.visui.VisUI#checkBeforeLoad(Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	96	2fb53284cc199673	placement=companion vis=private
 member	com.kotcrab.vis.ui.VisUI#defaultTitleAlign	sge.visui.VisUI#defaultTitleAlign	Renamed	-	com/kotcrab/vis/ui/VisUI.java	36	aaa9b0d7261c157c	placement=companion vis=private
 member	com.kotcrab.vis.ui.VisUI#dispose()	sge.visui.VisUI#dispose()	Renamed	-	com/kotcrab/vis/ui/VisUI.java	106	4f857d9f19598170	placement=companion
 member	com.kotcrab.vis.ui.VisUI#dispose(boolean)	sge.visui.VisUI#dispose(boolean)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	114	8403d4fcb2f32ce9	placement=companion
@@ -363,14 +364,16 @@ member	com.kotcrab.vis.ui.VisUI#getDefaultTitleAlign()	sge.visui.VisUI#getDefaul
 member	com.kotcrab.vis.ui.VisUI#getSizes()	sge.visui.VisUI#getSizes()	Renamed	-	com/kotcrab/vis/ui/VisUI.java	130	944aacdb97380532	placement=companion
 member	com.kotcrab.vis.ui.VisUI#getSkin()	sge.visui.VisUI#getSkin()	Renamed	-	com/kotcrab/vis/ui/VisUI.java	121	eab602abf389bb22	placement=companion
 member	com.kotcrab.vis.ui.VisUI#isLoaded()	sge.visui.VisUI#isLoaded()	Renamed	-	com/kotcrab/vis/ui/VisUI.java	126	e7ef66f5a85993f1	placement=companion
-member	com.kotcrab.vis.ui.VisUI#load(FileHandle,Sge)	sge.visui.VisUI#load(FileHandle,Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	82	480cbba7f8c83cd8	placement=companion
-member	com.kotcrab.vis.ui.VisUI#load(Sge)	sge.visui.VisUI#load(Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	66	7da42798bda074fa	placement=companion
-member	com.kotcrab.vis.ui.VisUI#load(Skin,Sge)	sge.visui.VisUI#load(Skin,Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	91	e42e9c290a624ba0	placement=companion
-member	com.kotcrab.vis.ui.VisUI#load(SkinScale,Sge)	sge.visui.VisUI#load(SkinScale,Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	71	6f9c404eb5e7291c	placement=companion
-member	com.kotcrab.vis.ui.VisUI#load(String,Sge)	sge.visui.VisUI#load(String,Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	77	340e6573d760e50c	placement=companion
+member	com.kotcrab.vis.ui.VisUI#load(FileHandle,Sge)	sge.visui.VisUI#load(FileHandle,Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	82	020efef0d0724654	placement=companion
+member	com.kotcrab.vis.ui.VisUI#load(Sge)	sge.visui.VisUI#load(Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	66	cf3fd66168e65fdb	placement=companion
+member	com.kotcrab.vis.ui.VisUI#load(Skin,Sge)	sge.visui.VisUI#load(Skin,Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	91	ebe8d7ea9ae07a2f	placement=companion
+member	com.kotcrab.vis.ui.VisUI#load(SkinScale,Sge)	sge.visui.VisUI#load(SkinScale,Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	71	89c41e2658218963	placement=companion
+member	com.kotcrab.vis.ui.VisUI#load(String,Sge)	sge.visui.VisUI#load(String,Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	77	e21296407eb76518	placement=companion
 member	com.kotcrab.vis.ui.VisUI#scale	sge.visui.VisUI#scale	Renamed	-	com/kotcrab/vis/ui/VisUI.java	38	2b6c16b3f7019ee0	placement=companion vis=private
 member	com.kotcrab.vis.ui.VisUI#setDefaultTitleAlign(int)	sge.visui.VisUI#setDefaultTitleAlign(int)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	146	fd10fdfdb59fc78e	placement=companion
 member	com.kotcrab.vis.ui.VisUI#setSkipGdxVersionCheck(boolean)	sge.visui.VisUI#setSkipGdxVersionCheck(boolean)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	156	7012c921472d110f	placement=companion
+member	com.kotcrab.vis.ui.VisUI#sgeInstance$cache	sge.visui.VisUI#sgeInstance$cache	Renamed	-	com/kotcrab/vis/ui/VisUI.java	32	429601e805235fc2	placement=companion vis=private
+member	com.kotcrab.vis.ui.VisUI#sgeInstance()	sge.visui.VisUI#sgeInstance()	Renamed	-	com/kotcrab/vis/ui/VisUI.java	32	45da18325dd15587	placement=companion
 member	com.kotcrab.vis.ui.VisUI#skin	sge.visui.VisUI#skin	Renamed	-	com/kotcrab/vis/ui/VisUI.java	39	e47f7639f84b51da	placement=companion vis=private
 member	com.kotcrab.vis.ui.VisUI#skipGdxVersionCheck	sge.visui.VisUI#skipGdxVersionCheck	Renamed	-	com/kotcrab/vis/ui/VisUI.java	34	e83d3ff314a892e7	placement=companion vis=private
 member	com.kotcrab.vis.ui.VisUI$SkinScale#getSizesName()	sge.visui.VisUI$SkinScale#getSizesName()	Renamed	-	com/kotcrab/vis/ui/VisUI.java	60	3777a94b03db416f	
@@ -560,6 +563,7 @@ member	com.kotcrab.vis.ui.building.utilities.layouts.GridTableLayout#convertToAc
 member	com.kotcrab.vis.ui.building.utilities.layouts.GridTableLayout#convertToActor(Array)	sge.visui.building.utilities.layouts.GridTableLayout#convertToActor(Array<CellWidget<?>>)	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/GridTableLayout.java	49	9884bbe0ffbb5912	
 member	com.kotcrab.vis.ui.building.utilities.layouts.GridTableLayout#rowSize	sge.visui.building.utilities.layouts.GridTableLayout#rowSize	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/GridTableLayout.java	29	c84d0a25f67fe1d9	
 member	com.kotcrab.vis.ui.building.utilities.layouts.GridTableLayout#withRowSize(int,Sge)	sge.visui.building.utilities.layouts.GridTableLayout#withRowSize(int,Sge)	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/GridTableLayout.java	39	51b72c7a25743dd7	placement=companion
+member	com.kotcrab.vis.ui.building.utilities.layouts.Sge#<given>	sge.Sge#<given>	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/TableLayout.java	33	92d5b1cd759201d5	vis=private[ButtonBar]
 member	com.kotcrab.vis.ui.building.utilities.layouts.TableLayout#convertToActor(Array)	sge.visui.building.utilities.layouts.TableLayout#convertToActor(Array<Actor>)	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/TableLayout.java	50	8298c99e7200d0eb	
 member	com.kotcrab.vis.ui.building.utilities.layouts.TableLayout#convertToTable(TableBuilder,Array)	sge.visui.building.utilities.layouts.TableLayout#convertToTable(TableBuilder,Array<CellWidget<?>>)	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/TableLayout.java	58	2c8c28832ffe2fc5	placement=companion
 member	com.kotcrab.vis.ui.building.utilities.layouts.TableLayout#grid(int)	sge.visui.building.utilities.layouts.TableLayout#grid(int)	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/TableLayout.java	66	758f7c159272f6fa	placement=companion
@@ -1258,6 +1262,7 @@ member	com.kotcrab.vis.ui.widget.BusyBar$BusyBarStyle#height	sge.visui.widget.Bu
 member	com.kotcrab.vis.ui.widget.BusyBar$BusyBarStyle#segment	sge.visui.widget.BusyBar$BusyBarStyle#segment	Renamed	-	com/kotcrab/vis/ui/widget/BusyBar.java	91	8cc2e6d9bb8cf4bc	
 member	com.kotcrab.vis.ui.widget.BusyBar$BusyBarStyle#segmentOverflow	sge.visui.widget.BusyBar$BusyBarStyle#segmentOverflow	Renamed	-	com/kotcrab/vis/ui/widget/BusyBar.java	92	99d4858fe48f12f5	
 member	com.kotcrab.vis.ui.widget.BusyBar$BusyBarStyle#segmentWidth	sge.visui.widget.BusyBar$BusyBarStyle#segmentWidth	Renamed	-	com/kotcrab/vis/ui/widget/BusyBar.java	93	4d0a0109069672cc	
+member	com.kotcrab.vis.ui.widget.Sge#<given>	sge.Sge#<given>	Renamed	-	com/kotcrab/vis/ui/widget/ButtonBar.java	154	6d9f199847054ad2	vis=private[ButtonBar]
 member	com.kotcrab.vis.ui.widget.ButtonBar#<init>(Sge)	sge.visui.widget.ButtonBar#<init>(Sge)	Renamed	-	com/kotcrab/vis/ui/widget/ButtonBar.java	47	e009ca6e07c696c0	
 member	com.kotcrab.vis.ui.widget.ButtonBar#<init>(Sizes,Sge)	sge.visui.widget.ButtonBar#<init>(Sizes,Sge)	Renamed	-	com/kotcrab/vis/ui/widget/ButtonBar.java	55	dd3606802fd9b0c5	
 member	com.kotcrab.vis.ui.widget.ButtonBar#<init>(String,Sge)	sge.visui.widget.ButtonBar#<init>(String,Sge)	Renamed	-	com/kotcrab/vis/ui/widget/ButtonBar.java	51	a15bca20378b9fea	

@@ -209,6 +209,40 @@ object VisUiPolicy:
         balticporter.transform.MemberRenameTransform(Map(
           "com.kotcrab.vis.ui.widget.VisWindow#close" -> "closeWindow",
         )),
+        // THE CONTEXT SEAM'S EXIT, AND IT IS AN EXTENSION OF THE BASE'S HOLDER — never a second
+        // holder (`PROGRESS.md` §10.9.7 family 1, §10.9.10; `ENGINE-LIMITS.md` CT8).
+        //
+        // libGDX core declares `com.badlogic.gdx.Gdx`; this module inherits that one instance and
+        // adds the PER-DECLARATION half for its OWN types, which is the only manifest such a key
+        // can be written in. Every key below names a `com.kotcrab.vis.ui` type, so the `governs`
+        // screen passes and nothing here re-shapes what the base emits.
+        //
+        // ==`cache` on `VisUI`, because that is where this library's lifecycle is==
+        // `VisUI` is an all-`static` holder: `load(…)` reads `Gdx.files` and `checkBeforeLoad()`
+        // reads `Gdx.app`, so the threading puts the clause on its METHODS and nothing constructs
+        // it — it is in no `threadedClasses` and `retain` would emit nothing. `sgeInstance` is the
+        // REFERENCE HAND PORT'S OWN NAME for this member (`../sge/sge-extension/visui`'s
+        // `VisUI.sgeInstance`, over a `_sgeInstance` it assigns inside each `load`), which is what
+        // makes it this library's convention rather than the engine's invention.
+        //
+        // ==`selfSupplied` on the three enums the threading reached and could not sign==
+        // An emitted `enum`'s primary IS its java constructor and every case reaches it with its
+        // own argument list, so a clause there is a `lost-clause` refusal. These three take the
+        // context WITHOUT taking a parameter, from the accessor above — which is the hand port's
+        // own second member, read as an expression. The value is captured by whichever `load` the
+        // consumer calls, and a class-level `given` is initialised lazily (measured, §10.8.11), so
+        // an enum constant built at module initialisation does not read it.
+        balticporter.transform.GlobalsToImplicitsTransform(Nil, List(
+          balticporter.transform.ContextHolderExtension(
+            holder = "com.badlogic.gdx.Gdx",
+            cache  = Map("com.kotcrab.vis.ui.VisUI" -> "sgeInstance"),
+            selfSupplied = Map(
+              "com.kotcrab.vis.ui.VisUI$SkinScale"                          -> "sge.visui.VisUI.sgeInstance",
+              "com.kotcrab.vis.ui.widget.ButtonBar$ButtonType"              -> "sge.visui.VisUI.sgeInstance",
+              "com.kotcrab.vis.ui.building.utilities.layouts.TableLayout"   -> "sge.visui.VisUI.sgeInstance",
+            ),
+          ),
+        )),
         // LAST, deliberately, for the reason `AshleyPolicy`, `GdxAiPolicy` and `TextraTypistPolicy`
         // state: this reads what the BASE actually emitted and reports a reference the base does
         // not ship, so it must run after any seam that re-points such a reference, or it reports
