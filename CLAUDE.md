@@ -1766,6 +1766,26 @@ port it was aimed at, because "is this type nameable" is TWO questions — a wil
 INSIDE an argument (`Class[?]`) and is not writable ON ITS OWN as a cast target (`asInstanceOf[?]` is
 a syntax error). A dead arm is evidence the distinction was never made, not just that the order slipped.
 
+**…and the SECOND way a guard is dead is that its CONFIRMING ARTIFACT is simply absent — so state
+the REFUTATION instead.** The arm above is unreachable because a sibling claims it; this one is
+reachable, runs, and answers `false` every time, which is strictly harder to see: there is no
+ordering to inspect and the code reads as a careful positive test. A coercion keyed on *the callee's
+DECLARED result is not `java.lang.Object`* is the worked example — true of the construct, and
+`java.util.Iterator#next()` interns with **no signature at all** in this corpus, so the `exists(…)`
+never had anything to look at. Its predecessor failed the same way for the opposite reason: keyed on
+*the RESULT IS the capture*, it asked about a node the frontend fills in with JAVA's own answer, so
+both sides of the seam read `Object` and the test was false everywhere. Two guards, zero sites, and
+a port that still did not compile.
+
+Ask, of every conjunct: **what does this guard read, and can that thing be MISSING?** Where it can,
+the artifact is a REFUTER and not the evidence — `!x.exists(isObject)` rather than
+`x.exists(!isObject)` — and the positive evidence has to be something the phase itself established
+(here: the receiver is one of my own targets and its sole argument is a wildcard, over a shim family
+whose 76 members declare no bare `Object` between them). Note this inverts the polarity its own
+neighbour needs, three lines away in the same file, where an unreadable class file must answer
+`false` because there the signature IS the evidence — so a polarity copied from the function above is
+the shape to distrust, and both deserve the sentence saying which they are (`ENGINE-LIMITS.md` G33).
+
 **And the repair is ONE DERIVATION with the answers moved OUT to the callers — never the reorder.**
 Reordering thirteen arms changes thirteen ANSWERS at once, on behalf of thirteen callers none of
 which was asked, which is why it prices at 5 → 8 and why it reads as unarguably safe before it is
