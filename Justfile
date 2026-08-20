@@ -3296,25 +3296,48 @@ visui-measure:
     done
 
     echo
-    echo "-- the resource residue: what the emitted code NAMES and what this run SHIPS --"
-    # A STATED RESIDUE, RE-DERIVED. VisUI loads its skin, its i18n bundles and the colour picker's
-    # shaders through HARDCODED CLASSPATH STRINGS (`Gdx.files.classpath("com/kotcrab/vis/ui/…")`).
-    # A rename moves SYMBOLS and must not touch a string literal (§4.56), so those paths stay
-    # UPSTREAM whatever this port's types are called — which is exactly what the reference hand port
-    # does. This engine has no general verbatim resource-copy mechanism (`serviceProviders` copies
-    # ONE well-known family and REWRITES both namespaces, which is the wrong act here), so the port
-    # emits code naming resources the run does not ship. The gap is (b) — a mechanism the engine
-    # does not have yet, with the file list belonging to the port — and it is printed rather than
-    # asserted because a residue nobody re-derives is a residue that silently changes size.
+    echo "-- the resources this port SHIPS: byte-for-byte against upstream --"
+    # WAS a printed residue — "24 upstream, 9 paths named in emitted Scala, 0 shipped" — and is a
+    # GATE now that the mechanism exists (`DESIGN.md` §8.22): `PortManifest.resources` declares the
+    # files and the run copies them into `src_managed/main/resources`, unrenamed, because a classpath
+    # lookup is a STRING LITERAL no rename may move (§4.56).
+    #
+    # The engine's own `resources` lane is in the check report above, one row per file, diffed
+    # against the baseline. What THIS stage adds is the one question no check inside the run can
+    # answer: are the SHIPPED BYTES upstream's? That is §4.58's text-to-text rule read at a resource —
+    # a copy that re-encoded a `.png`, normalised a `.properties` or rewrote a path inside a skin
+    # would produce the same count, the same emitted Scala and the same member digests.
     UP_RES=$(find {{visui_src}}/ui/src/main/resources -type f | wc -l | tr -d ' ')
-    NAMED=$(grep -rhoE '"com/kotcrab/vis/[^"]*"' {{visui_module}}/src_managed/main/scala | sort -u | wc -l | tr -d ' ')
-    SHIPPED=$(find {{visui_module}}/src_managed -path '*resources*' -type f 2>/dev/null | wc -l | tr -d ' ')
-    echo "upstream resources: $UP_RES   distinct upstream classpath paths NAMED in emitted Scala: $NAMED   shipped by this run: $SHIPPED"
-    if [ "$NAMED" != "0" ] && [ "$SHIPPED" = "0" ]; then
-      echo "   RESIDUE (b): the emitted code names $NAMED classpath resource path(s) this run does not"
-      echo "   ship. Not a drop — the paths are correct and must stay UNRENAMED; what is missing is a"
-      echo "   verbatim resource-copy mechanism. PROGRESS.md §10.9 holds it."
+    RES_DIR="{{visui_module}}/src_managed/main/resources"
+    SHIPPED=$(find "$RES_DIR" -type f 2>/dev/null | wc -l | tr -d ' ')
+    echo "upstream resources: $UP_RES   shipped by this run: $SHIPPED"
+    if [ "$SHIPPED" != "22" ]; then
+      echo "!! THIS PORT SHIPS $SHIPPED RESOURCES, NOT 22 — the emitted code names paths a consumer's"
+      echo "   build has to supply, and a missing one fails at first use with no compile error, no"
+      echo "   check count and no member digest. Re-read \`resources\` in VisUiMigrate.scala."
+      exit 1
     fi
+    DIFFER=0
+    for f in $(find "$RES_DIR" -type f | sort); do
+      REL="${f#$RES_DIR/}"
+      if ! cmp -s "$f" "{{visui_src}}/ui/src/main/resources/$REL"; then
+        echo "!! NOT VERBATIM: $REL differs from the upstream file it was copied from"
+        DIFFER=$((DIFFER + 1))
+      fi
+    done
+    echo "byte-identical to upstream: $((SHIPPED - DIFFER)) of $SHIPPED"
+    [ "$DIFFER" != "0" ] && exit 1
+    # …and the TWO the port deliberately does not ship, asserted so the decision cannot rot into an
+    # oversight. Both belong to the UPSTREAM BUILD rather than to the library, and the GWT module is
+    # FQNs and java paths — the REWRITE shape, naming a namespace this port renames.
+    for b in "com/kotcrab/vis/vis-ui.gwt.xml" "META-INF/robovm/ios/robovm.xml"; do
+      if [ -f "$RES_DIR/$b" ]; then
+        echo "!! $b IS SHIPPED, and it is the upstream BUILD's file rather than this library's."
+        echo "   PROGRESS.md §10.9.3 and DESIGN.md §8.22 say why a DECLARATION and not a scan."
+        exit 1
+      fi
+    done
+    echo "the 2 upstream-build files under that root are correctly NOT shipped (24 - 22)"
 
     echo
     echo "-- test discovery --"

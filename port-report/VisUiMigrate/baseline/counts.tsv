@@ -34,6 +34,7 @@ portability(emitted)	47
 portability(injected)	0
 porter-notes	0
 remediation	13
+resources	22
 rewrite-callsites	2
 signature	0
 substitution(dangling)	0

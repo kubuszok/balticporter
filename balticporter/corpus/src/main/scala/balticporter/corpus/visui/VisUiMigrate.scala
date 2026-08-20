@@ -162,14 +162,78 @@ object VisUiPolicy:
       // it does not and must not touch a string literal (§4.56). So the 22 resources that back
       // those strings belong at their UPSTREAM classpath path whatever this port's types are
       // called — which is verified to be exactly what the reference hand port does, byte-for-byte
-      // the same relative layout under its own `src/main/resources`. This engine has no general
-      // resource-copy mechanism (`PortManifest.serviceProviders` copies ONE well-known family and
-      // rewrites both namespaces through the rename, which is the wrong act here — these paths must
-      // NOT be rewritten), so the port emits code naming a classpath resource the run does not
-      // ship. That is a stated residue and the §1 classification is (b): the mechanism is
-      // `serviceProviders`' generalised to a declared, VERBATIM tree, and the file list is the
-      // port's. `PROGRESS.md` §10.9 holds it with the numbers; it is emphatically not a drop.
+      // the same relative layout under its own `src/main/resources`. The `resources` key below is
+      // what SHIPS them (`DESIGN.md` §8.22), and it is a copy and not a rewrite for exactly the
+      // reason stated here.
       packageRenames = Map("com.kotcrab.vis.ui" -> "sge.visui"),
+      // THE 22 RESOURCES THE EMITTED CODE ASKS FOR, COPIED VERBATIM (`DESIGN.md` §8.22).
+      //
+      // ==22 of the 24 files under that root, and the 2 are a DECISION rather than an oversight==
+      // `META-INF/robovm/ios/robovm.xml` and `com/kotcrab/vis/vis-ui.gwt.xml` belong to the UPSTREAM
+      // BUILD and not to this library. The second one is the worked example §8.22's rejected-scan
+      // argument wants: it is FQNs and JAVA PATHS, which is the REWRITE shape and not the copy
+      // shape — `<source path='ui'>` with twelve `<exclude name="widget/file/FileChooser.java"/>`
+      // entries, and eleven `gdx.reflect.include` values naming `com.kotcrab.vis.ui.*` types this
+      // port renames to `sge.visui.*`. Copied verbatim it would advertise sources and reflection
+      // roots that do not exist in this port; rewritten it would need a cross-compiler-module
+      // rewriter nobody has written. Declining it is the honest act, and the control is the
+      // reference hand port, whose `src/main/resources` holds exactly these 22 and neither of them.
+      //
+      // ==And the list is CONFIRMED by upstream's own enumeration, not just by that control==
+      // That same GWT module lists the classpath resources this library needs at run time —
+      // `extend-configuration-property name="gdx.files.classpath"` — and its 22 values are exactly
+      // the 22 below, family for family (5 skin files × 2 scales, 6 shaders, 6 bundles). So this
+      // list is upstream's own answer to the question, read out of a file the port does not ship.
+      //
+      // ==MEASURED: 2 of the 22 are named by a literal, and the other 20 are the point==
+      // The lane compares this list against the string literals in the emitted Scala, and the split
+      // is `shipped 2 / unnamed 20`. Only the two `uiskin.json` are named OUTRIGHT — every other
+      // file is reached by one of three indirections none of which any phase can walk:
+      //
+      //   * through ANOTHER RESOURCE's content — the skin json names its `.atlas` and both `.fnt`,
+      //     and the atlas names its `.png` page. Nothing in this engine reads a skin;
+      //   * through a name the LIBRARY completes — the six bundles are named `…/i18n/ButtonBar`,
+      //     without the extension, because libGDX's `I18NBundle` appends `.properties` (and a
+      //     locale) itself;
+      //   * through a DIRECTORY literal plus a file name — the six colour-picker shaders.
+      //
+      // So an `unnamed` row means *no literal EQUALS this path*, never *nothing references it*, and
+      // the check deliberately stops there: inferring that `…/ButtonBar` plus a suffix is a
+      // reference to `…/ButtonBar.properties` would be §4.6's fabricated fact, and it would report
+      // a hit for a port where that guess is wrong. The 20 are exactly the population a DECLARATION
+      // exists to carry, and they are why a check over emitted literals could never have replaced
+      // this list.
+      resources = List(balticporter.core.ResourceTree(
+        repoRoot.resolve("../sge/original-src/vis-ui/ui/src/main/resources").normalize,
+        List(
+          // the i18n bundles — `Locales` names each of these base names and libGDX's `I18NBundle`
+          // appends the `.properties`.
+          "com/kotcrab/vis/ui/i18n/ButtonBar.properties",
+          "com/kotcrab/vis/ui/i18n/ColorPicker.properties",
+          "com/kotcrab/vis/ui/i18n/Common.properties",
+          "com/kotcrab/vis/ui/i18n/Dialogs.properties",
+          "com/kotcrab/vis/ui/i18n/FileChooser.properties",
+          "com/kotcrab/vis/ui/i18n/TabbedPane.properties",
+          // the two SKINS. `VisUI.SkinScale` names the `.json` of each; the `.json` names the
+          // `.atlas` and the two `.fnt`, and the `.atlas` names the `.png`.
+          "com/kotcrab/vis/ui/skin/x1/default.fnt",
+          "com/kotcrab/vis/ui/skin/x1/font-small.fnt",
+          "com/kotcrab/vis/ui/skin/x1/uiskin.atlas",
+          "com/kotcrab/vis/ui/skin/x1/uiskin.json",
+          "com/kotcrab/vis/ui/skin/x1/uiskin.png",
+          "com/kotcrab/vis/ui/skin/x2/default.fnt",
+          "com/kotcrab/vis/ui/skin/x2/font-small.fnt",
+          "com/kotcrab/vis/ui/skin/x2/uiskin.atlas",
+          "com/kotcrab/vis/ui/skin/x2/uiskin.json",
+          "com/kotcrab/vis/ui/skin/x2/uiskin.png",
+          // the colour picker's shaders, whose paths the widget builds from a directory literal.
+          "com/kotcrab/vis/ui/widget/color/internal/checkerboard.frag",
+          "com/kotcrab/vis/ui/widget/color/internal/default.vert",
+          "com/kotcrab/vis/ui/widget/color/internal/hsv.frag",
+          "com/kotcrab/vis/ui/widget/color/internal/palette.frag",
+          "com/kotcrab/vis/ui/widget/color/internal/rgb.frag",
+          "com/kotcrab/vis/ui/widget/color/internal/verticalBar.frag",
+        ))),
       // NOTHING IS WRITTEN HERE FOR `AsyncTask`, AND THAT IS A DECISION RATHER THAN AN OMISSION.
       // Upstream has `com.kotcrab.vis.ui.util.async.AsyncTask`, a STATEFUL abstract class with a
       // `Status` enum, a `CountDownLatch` and a listener list across four files; libGDX core has

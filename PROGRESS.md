@@ -6126,11 +6126,42 @@ hand port does: its `src/main/resources/com/kotcrab/vis/ui/…` tree is byte-for
 layout as upstream's, 22 files — 6 `.properties` bundles, 4 `.fnt`, the x1/x2 `.atlas`/`.png`/`.json`
 skin triples and 6 shaders.
 
-The engine has no mechanism for that. `PortManifest.serviceProviders` copies ONE well-known family
-and **rewrites both namespaces through the port's own rename rules**, which is precisely the wrong
-act here — these paths must NOT be rewritten. So the port emits code naming resources the run does
-not ship, and the lane re-derives the gap on every run rather than leaving it in prose: **24
-upstream resources, 9 distinct upstream classpath paths NAMED in the emitted Scala, 0 shipped.**
+**CLOSED IN WAVE 7 — 22 SHIPPED, VERBATIM, AT 0 MOVED ANYTHING ELSE.** `PortManifest.resources` is
+the mechanism (`DESIGN.md` §8.22), the file list is this port's, and the lane's printed residue is
+now a GATE: `resources 0 -> 22`, `errors 8 = 8`, **0 member digests**, every other count at its
+baseline. The stage that used to print the gap now compares the SHIPPED BYTES against upstream's
+file by file — the one question no check inside the run can ask, since a copy that re-encoded a
+`.png` or normalised a `.properties` would move no count — and asserts that the two upstream-BUILD
+files are still not shipped.
+
+The state it replaced, kept because the argument for the mechanism rests on it: **24 upstream
+resources, 9 distinct upstream classpath paths NAMED in the emitted Scala, 0 shipped.**
+`serviceProviders` could not do it — it copies ONE well-known family and **rewrites both namespaces
+through the port's own rename rules**, which is precisely the wrong act here.
+
+**THE 2 THIS PORT DOES NOT SHIP ARE THE ARGUMENT FOR A DECLARATION OVER A SCAN, and they were worth
+opening.** `META-INF/robovm/ios/robovm.xml` and `com/kotcrab/vis/vis-ui.gwt.xml` belong to the
+upstream BUILD. The second is the worked example: it is FQNs and JAVA PATHS — `<source path='ui'>`
+with twelve `<exclude name="widget/file/FileChooser.java"/>` entries and eleven
+`gdx.reflect.include` values naming `com.kotcrab.vis.ui.*` types this port renames to `sge.visui.*`.
+That is the REWRITE shape, in a format nothing here rewrites, so copying it verbatim would advertise
+sources and reflection roots that do not exist in the port. A scan ships it; a declaration does not.
+The reference hand port ships exactly the same 22 and neither of those two, which is the control —
+**and upstream's own GWT module independently enumerates the runtime classpath resources this
+library needs (`extend-configuration-property name="gdx.files.classpath"`), and its 22 values are
+exactly the 22 declared here**, family for family. The list is upstream's own answer, read out of a
+file the port declines to ship.
+
+**AND THE `named` SPLIT IS 2 / 20, WHICH IS THE NUMBER THAT JUSTIFIES THE KEY.** The lane compares
+each declared path against the string literals in the emitted Scala: only the two `uiskin.json` are
+named OUTRIGHT, and the other 20 are reached by an indirection no phase can walk — through another
+RESOURCE's content (the skin json names its `.atlas` and both `.fnt`; the atlas names its `.png`),
+through a name the LIBRARY completes (the six bundles are named `…/i18n/ButtonBar`, with libGDX's
+`I18NBundle` appending `.properties` and a locale), or through a DIRECTORY literal plus a file name
+(the six shaders). So an `unnamed` row means *no literal EQUALS this path* and never *nothing
+references it*, and the check stops there deliberately: inferring the suffix would be §4.6's
+fabricated fact. Had the engine tried to DERIVE the list from emitted literals it would have shipped
+2 of 22 and reported success.
 
 **§1 classification: (b), and this is the SECOND occurrence of an item §11's own audit already
 carries** (§6.1 item 7, raised on flexmark's one `entities.properties`). Two libraries in two
@@ -6618,8 +6649,6 @@ in one direction is wrong in the other.
 
 ### 10.9.8 Residues, named and classified
 
-- **the resource copy** — §10.9.3, §1(b), 9 named paths against 0 shipped. The largest one, and the
-  only one that makes the emitted port incomplete rather than merely unfinished;
 - **`portability(emitted)` 47 against 37 rules**, dominated by `java.lang.Thread` (9),
   `java.util.concurrent.Executors` (5), `java.lang.Class#getMethod` (5) and the
   `ExecutorService`/`Atomic*` family. The file chooser's directory scanning and VisUI's own
@@ -7036,9 +7065,7 @@ oracle's 3,654 identical lines are the behavioural half of the same answer.
    step-9 SEQUENCE — a static field's initialiser and the `static { }` block beside it — because
    deferring only the field relocates the `E172` to the block. It is 1 of the 8, and with `DragPane`
    it gates 3 differential tests.
-3. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
-   error count reads. It is now also a MEASURED test blocker rather than only a completeness gap.
-4. **The two upstream `@Test`** (§10.9.1) — a test source set this port does not have yet. **Wave 5
+3. **The two upstream `@Test`** (§10.9.1) — a test source set this port does not have yet. **Wave 5
    scoped it and deliberately did not take it, and the reason is a measurement rather than a
    budget.** Both are `GreaterThanValidatorTest` and `LesserThanValidatorTest`, pure JUnit 4 unit
    tests over `Validators` with no libGDX and no scene2d — and §10.9.12's `ValidatorsSuite` now
@@ -7048,7 +7075,7 @@ oracle's 3,654 identical lines are the behavioural half of the same answer.
    path — `TestFrameworkTransform`, `java_test_count`, `test_discovery_guard`, `expected-lost` —
    which no differential lane can, since a hand-written suite is never converted. Price it as that,
    not as coverage.
-5. **The DOUBLE ASCRIPTION G33 leaves** — one site in the corpus, cosmetic, and its fix is in
+4. **The DOUBLE ASCRIPTION G33 leaves** — one site in the corpus, cosmetic, and its fix is in
    `TirEmitter`'s general `Tree.Typed` arm rather than in the phase that caused it: collapse a
    `Typed` whose operand is a `Typed` to the same target. It is a §3 *new arm inherits the node's
    obligations* job (`JS-G34`, `JS-E06`) and a §5 widening, so it wants its own commit and its own
