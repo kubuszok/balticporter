@@ -1,0 +1,25 @@
+# balticporter port map	schema=3	module=sge-visui-usl-test	engine=balticporter/0.1.0-SNAPSHOT	sources=1aae8bd77c0fb096	files=2	policy=a9366a29e9f1e4ab
+#kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
+type	com.kotcrab.vis.usl.test.RemoteTest	sge.visui.usl.test.RemoteTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.test.TemplateBasedParserTest	sge.visui.usl.test.TemplateBasedParserTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type		balticporter.runtime.JavaCollection	Added	-		0		
+type		balticporter.runtime.JavaCollections	Added	-		0		
+type		balticporter.runtime.JavaEnumMap	Added	-		0		
+type		balticporter.runtime.JavaEnumSet	Added	-		0		
+type		balticporter.runtime.JavaIterable	Added	-		0		
+type		balticporter.runtime.JavaIterator	Added	-		0		
+type		balticporter.runtime.JavaListIterator	Added	-		0		
+type		balticporter.runtime.JavaOptionalDouble	Added	-		0		
+type		balticporter.runtime.JavaOptionalInt	Added	-		0		
+type		balticporter.runtime.JavaOptionalLong	Added	-		0		
+type		balticporter.runtime.JavaStack	Added	-		0		
+member	com.kotcrab.vis.usl.test.RemoteTest#<stmt1>	sge.visui.usl.test.RemoteTest#<stmt1>	Renamed	-	com/kotcrab/vis/usl/test/RemoteTest.java	26	d75490b44d04aef5	
+member	com.kotcrab.vis.usl.test.TemplateBasedParserTest#<stmt1>	sge.visui.usl.test.TemplateBasedParserTest#<stmt1>	Renamed	-	com/kotcrab/vis/usl/test/TemplateBasedParserTest.java	28	b5bd3fc2b0b87b8b	
+member	com.kotcrab.vis.usl.test.TemplateBasedParserTest#<stmt2>	sge.visui.usl.test.TemplateBasedParserTest#<stmt2>	Renamed	-	com/kotcrab/vis/usl/test/TemplateBasedParserTest.java	33	eb58e8f93dc71bf9	
+member	com.kotcrab.vis.usl.test.TemplateBasedParserTest#<stmt3>	sge.visui.usl.test.TemplateBasedParserTest#<stmt3>	Renamed	-	com/kotcrab/vis/usl/test/TemplateBasedParserTest.java	38	1c344a2e6a2ed65a	
+member	com.kotcrab.vis.usl.test.TemplateBasedParserTest#<stmt4>	sge.visui.usl.test.TemplateBasedParserTest#<stmt4>	Renamed	-	com/kotcrab/vis/usl/test/TemplateBasedParserTest.java	43	aa06a7e291ac424f	
+member	com.kotcrab.vis.usl.test.TemplateBasedParserTest#<stmt5>	sge.visui.usl.test.TemplateBasedParserTest#<stmt5>	Renamed	-	com/kotcrab/vis/usl/test/TemplateBasedParserTest.java	48	76326ba57d1e0d19	
+member	com.kotcrab.vis.usl.test.TemplateBasedParserTest#<stmt6>	sge.visui.usl.test.TemplateBasedParserTest#<stmt6>	Renamed	-	com/kotcrab/vis/usl/test/TemplateBasedParserTest.java	53	9be24f424578c571	
+member	com.kotcrab.vis.usl.test.TemplateBasedParserTest#compareResult(String,String)	sge.visui.usl.test.TemplateBasedParserTest#compareResult(String,String)	Renamed	-	com/kotcrab/vis/usl/test/TemplateBasedParserTest.java	63	c2f7a19662a78568	vis=private
+member	com.kotcrab.vis.usl.test.TemplateBasedParserTest#readFile(String)	sge.visui.usl.test.TemplateBasedParserTest#readFile(String)	Renamed	-	com/kotcrab/vis/usl/test/TemplateBasedParserTest.java	76	358b121873041031	vis=private
+member	com.kotcrab.vis.usl.test.TemplateBasedParserTest#testUsingTemplate(String,String)	sge.visui.usl.test.TemplateBasedParserTest#testUsingTemplate(String,String)	Renamed	-	com/kotcrab/vis/usl/test/TemplateBasedParserTest.java	57	d468e6a303a84230	vis=private

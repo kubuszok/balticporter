@@ -6958,6 +6958,37 @@ seven fixtures; the differential tier covers all nineteen, including twelve olde
 reporting only the first would call twelve fixtures "not applicable" when they are in fact the widest
 input this port has.
 
+#### 10.9.13.3 The 7 upstream `@Test` — **7 emitted of 7, 6 passing, 0 failing, 1 ignored**
+
+`just usl-test-measure`, report identity `port-report/UslTestMigrate`. The first census and the
+first run, and both are clean:
+
+| | |
+|---|---|
+| `@Test` in `usl/src/test` | **7** (`java_test_count`; a filename census says 2) |
+| discoverable in emitted Scala | **7** — munit 7, junit residue 0 |
+| tests lost | **0** |
+| compile errors | **0** (both source sets, `--test`) |
+| outcomes | **6 passing, 0 failing, 1 ignored** — 7 of 7 emitted |
+| `test-framework(refused)` | **0** |
+
+**Seven of VisUI's nine live here**, so the module the sibling deferred holds three quarters of the
+library's own behavioural evidence, and this is the first time any of it has run.
+
+**The 1 not-run is java's own decision reproduced, not a loss.** `RemoteTest.testRemote` is
+`@Ignore`d upstream because it downloads three templates over HTTP; the port emits MUnit's ignored
+test and the runner reports `==> i … ignored`. §5.1 keeps `ignored` apart from `skipped` for exactly
+this reason — the first is a DECISION and the second is PREVENTION — and dropping the file would
+have turned a recorded decision into a silent absence.
+
+**And the suite's inputs are RESOURCES, which is the smallest instance of a standing gap.** Every
+test resolves `/test-visui.usl` through `getResourceAsStream`, a STRING LITERAL no rename may touch
+(§4.56), so the emitted Scala names upstream paths and the LANE supplies that tree
+(`--resource-dir`). That is §11 item 7's obligation — *the port's own classpath resources are not
+part of its output, and nothing says so* — met by hand, at 12 files, where §10.9.3's version of the
+same gap is 22 files the sibling port still does not ship. Absent, all six fail on a null stream,
+which reads exactly like a conversion defect.
+
 **WHAT THE ORACLE IS *NOT* EVIDENCE FOR, and this is the correction that matters most.** Both the
 conf and §10.9.1 justify this port partly on **28 post-increment sites** in the lexer and parser —
 §4.4's row, "in the one kind of code where reading the value before or after the update decides every

@@ -1,0 +1,8 @@
+#suite	test	status
+sge.visui.usl.test.RemoteTest	testRemote ignored	ignored
+sge.visui.usl.test.TemplateBasedParserTest	testMinus	pass
+sge.visui.usl.test.TemplateBasedParserTest	testParserAlias	pass
+sge.visui.usl.test.TemplateBasedParserTest	testParserComments	pass
+sge.visui.usl.test.TemplateBasedParserTest	testParserUsingGdxTemplate	pass
+sge.visui.usl.test.TemplateBasedParserTest	testParserUsingTintedTemplate	pass
+sge.visui.usl.test.TemplateBasedParserTest	testParserUsingVisUITemplate	pass
