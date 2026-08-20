@@ -7137,17 +7137,27 @@ with each item's state re-verified against the working tree.
    the upstream resource tree, unchanged, at the upstream paths, beside the renamed Scala. Absent,
    the failure is a static-initialiser exception at first use — no compile error, no check count, no
    member digest, and on the first port to reach one it took out three of four conformance suites
-   (`§10.6.7`). What is owed is at minimum a REPORT — the resource lookups an emitted port makes,
-   with the paths a build has to supply — and arguably an `SbtGen` `unmanagedResourceDirectories`
-   line derived from the port's own upstream roots.
-   **SECOND OCCURRENCE, and it is worse than the first: `sge-visui` (§10.9.3).** flexmark reads ONE
-   properties file; VisUI reads its whole SKIN — 24 resources, 9 distinct classpath paths named in
-   the emitted Scala, and the library refuses to start without them (`VisUI.load()` is the first
-   call every consumer makes). `visui-measure` derives the REPORT this item asks for as a lane stage
-   (named against shipped), which is a stopgap and not the mechanism: the mechanism is
-   `serviceProviders`' generalised to a DECLARED verbatim tree with NO rewrite, copied into
-   `SbtGen.managedResources`. Two libraries in two different families is what makes it §1(b) policy
-   rather than a per-port workaround.
+   (`§10.6.7`). The SECOND occurrence is what promoted it from a per-port workaround to policy:
+   `sge-visui` (§10.9.3) reads its whole SKIN — 24 resources under its root, 9 distinct classpath
+   paths named in the emitted Scala — and the library refuses to start without them.
+   **CLOSED, wave 7 — `PortManifest.resources` and `DESIGN.md` §8.22, on BOTH occurrences.** More
+   than the report this item asked for: the port SHIPS the files, verbatim, at the upstream paths,
+   into `SbtGen.managedResources` — the descriptor mechanism's complement, a COPY where
+   `serviceProviders` is a REWRITE, because a `META-INF/services` file is FQNs and a resource is
+   bytes the program merely locates. The `resources` lane carries one row per file with two residues
+   (`named-unshipped`, which is the report this item wanted, and `unnamed`), and `SbtGen` already
+   wrote the `unmanagedResourceDirectories` lines this item guessed at.
+   - **`sge-visui`**: `resources 0 -> 22`, errors 8 = 8, 0 member digests, 22 of 22 byte-identical to
+     upstream, and the 2 upstream-BUILD files under that root correctly not shipped;
+   - **`ssg-md`**: `resources 0 -> 1`, errors 0 = 0, 0 member digests — and the proof is the SUITE.
+     `md_lib_res` used to point `--resource-dir` at the upstream tree, which made the tests pass
+     while the port shipped nothing; it points at `ported/ssg-md/src_managed/main/resources` now, and
+     the lane reads **725 passing / 2 failing (both expected)**, unchanged. The static initialiser
+     that took out three of four conformance suites is fed by the port's own deliverable.
+
+   What is still open is one step out and is not this item: nothing checks that a CONSUMER's build
+   puts that directory on its classpath. The generated `build.sbt` does; a hand-written build that
+   ignores `src_managed/<config>/resources` gets the same silence as before.
 
 ### 6.2 What the audit found SOUND — clean verdicts, not courtesy
 

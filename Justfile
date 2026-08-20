@@ -426,17 +426,26 @@ md_test_src   := "../ssg/original-src/flexmark-java/flexmark-util/src/test ../ss
 #      what three of the four conformance suites did on their first run. Nothing before this wave
 #      could see it — the unit suite never unescapes an entity — and no compile, no check and no
 #      count moves when it is missing.
+#      **IT IS NOW THE PORT'S OWN OUTPUT** — `md_lib_res` points at what the run WRITES, not at
+#      upstream. `main.conf`'s `resources` key declares the file and the run copies it verbatim into
+#      `src_managed/main/resources` (`DESIGN.md` §8.22). Pointed at upstream, this flag made the
+#      SUITE pass while the PORT shipped nothing, which is exactly the consumer obligation
+#      `PROGRESS.md` §11 item 7 raised; pointed here, the lane measures the deliverable.
 #   3. `flexmark-test-util` — one `com.vladsch.flexmark.test.util.txt` marker the module-root
 #      helpers locate a source tree by.
+#
+# ==1 AND 3 STAY UPSTREAM, AND THAT IS THE LINE== A port ships what its own emitted code reads. The
+# spec files and the marker are the HARNESS's input, in modules this port does not convert, so they
+# are flags on a test lane and not `resources` entries — a port that shipped its test fixtures would
+# be putting somebody else's data in the deliverable.
 #
 # ==THE PATHS ARE THE UPSTREAM ONES, AND THAT IS NOT AN OVERSIGHT== The lookup is a STRING LITERAL
 # (`"/com/vladsch/flexmark/util/sequence/entities.properties"`), and a rename decides ownership
 # structurally and never from a string (`CLAUDE.md` §4.56) — so `packageRenames` does not touch it
 # and must not. The emitted `ssg.md.util.sequence.Html5Entities` therefore asks for the upstream
-# path, and a consumer of this port has to ship the upstream resource tree unchanged. Stated here
-# because it is the first thing in the corpus that makes it visible (`PROGRESS.md` §10.6.7).
+# path, which is why the file the run ships sits at that path inside the port's own resource tree.
 md_spec_res   := "../ssg/original-src/flexmark-java/flexmark-test-specs/src/main/resources"
-md_lib_res    := "../ssg/original-src/flexmark-java/flexmark-util-sequence/src/main/resources"
+md_lib_res    := "ported/ssg-md/src_managed/main/resources"
 md_tutil_res  := "../ssg/original-src/flexmark-java/flexmark-test-util/src/main/resources"
 
 # junit is a RUN dependency and not only a frontend one: six files declare
@@ -2663,8 +2672,9 @@ md-test-measure:
       echo
       echo "-- run --"
       # `--resource-dir` is what puts the spec files, the library's OWN `entities.properties` and the
-      # harness marker on the test JVM's classpath; see `md_spec_res` for all three and for why they
-      # are the upstream's own bytes at the upstream's own paths.
+      # harness marker on the test JVM's classpath; see `md_spec_res` for all three, for why the
+      # harness's two are the upstream's own bytes at the upstream's own paths, and for why the
+      # library's own is now the PORT's output instead (`DESIGN.md` §8.22).
       scala-cli test --scala {{scala_version}} --server=false $DEPS \
         --resource-dir "$ROOT/{{md_spec_res}}" \
         --resource-dir "$ROOT/{{md_lib_res}}" \
@@ -2908,10 +2918,12 @@ md-ext-measure:
       echo
       echo "-- run --"
       # `--resource-dir` puts the LIBRARY'S OWN `entities.properties` on the test JVM's classpath —
-      # `md_lib_res`, not the harness's: `Html5Entities` reads it in a static initialiser to build the
-      # HTML5 entity table, so every `&nbsp;` in every document needs it and its absence is an
-      # `ExceptionInInitializerError` that no compile, check or count can see. The spec files and the
-      # harness marker are `md-test-measure`'s and are not on this lane's path.
+      # `md_lib_res`, which is the BASE PORT'S OWN OUTPUT and no longer the upstream tree
+      # (`DESIGN.md` §8.22): `Html5Entities` reads it in a static initialiser to build the HTML5
+      # entity table, so every `&nbsp;` in every document needs it and its absence is an
+      # `ExceptionInInitializerError` that no compile, check or count can see. Pointed at upstream
+      # this flag made the suite pass while the port shipped nothing. The spec files and the harness
+      # marker are `md-test-measure`'s and are not on this lane's path.
       scala-cli test --scala {{scala_version}} --server=false $DEPS \
         --resource-dir "$ROOT/{{md_lib_res}}" \
         {{md_module}}/src_managed/main/scala \
