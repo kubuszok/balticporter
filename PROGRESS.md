@@ -6981,6 +6981,14 @@ test and the runner reports `==> i … ignored`. §5.1 keeps `ignored` apart fro
 this reason — the first is a DECISION and the second is PREVENTION — and dropping the file would
 have turned a recorded decision into a silent absence.
 
+**A LIVE CONFIRMATION OF §4.56's COUNTER RULE, on data it was not tuned against.** The `@Ignore`d
+test emits as `test(munit.TestOptions("testRemote").ignore)({…})` — a `TestOptions` registration,
+which is precisely one of the naming shapes §4.56 names when it says an anchor on `test("` enumerates
+the ACCEPTED spellings and silently subtracts every new one. `munit_emitted` reads the CURRIED
+APPLICATION and counted it, so `7 = 7` and `tests lost 0`. Under the old anchor this suite would have
+reported 6 emitted against 7 java `@Test` and the lane would have opened with a declared loss that
+was not a loss at all.
+
 **And the suite's inputs are RESOURCES, which is the smallest instance of a standing gap.** Every
 test resolves `/test-visui.usl` through `getResourceAsStream`, a STRING LITERAL no rename may touch
 (§4.56), so the emitted Scala names upstream paths and the LANE supplies that tree
