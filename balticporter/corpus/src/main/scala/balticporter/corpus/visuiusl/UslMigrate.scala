@@ -35,9 +35,13 @@ import java.nio.file.Path
   *
   * ==What it forces the engine to get right==
   *   1. **A hand-written CHARACTER SCANNER.** `Lexer` and `Parser` are ordinary imperative java
-  *      driven by a `char` index. **28 post-increment/decrement sites**, in the one kind of code
-  *      where CLAUDE.md §4.4's post-increment row decides every token boundary — and none of it
-  *      moves a compile-error count.
+  *      driven by a `char` index, whose whole behaviour is invisible to a compile. The obvious
+  *      thing to fear is CLAUDE.md §4.4's post-increment row — **28 post-increment/decrement
+  *      sites** — and it was MEASURED rather than assumed: all 28 are in STATEMENT position and no
+  *      increment here is read as a VALUE, so that row is not reachable in this library and this
+  *      port is evidence about it in neither direction (`PROGRESS.md` §10.9.13.2). What the oracle
+  *      does reach is the rest of the scanner: the jump lowering, the reference `==` on enum
+  *      tokens, and the retyped collections' iteration ORDER.
   *   2. **A ZERO-AUTHORING ORACLE.** Upstream ships both sides of the answer: 19 `.usl` fixtures
   *      under `usl/styles`, six `test-*.usl`/`test-*-expected.json` pairs under the test
   *      resources, and a `uiskin.json` checked into `ui/src/main/resources` that the root build

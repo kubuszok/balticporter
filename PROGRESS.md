@@ -6958,6 +6958,24 @@ seven fixtures; the differential tier covers all nineteen, including twelve olde
 reporting only the first would call twelve fixtures "not applicable" when they are in fact the widest
 input this port has.
 
+**WHAT THE ORACLE IS *NOT* EVIDENCE FOR, and this is the correction that matters most.** Both the
+conf and §10.9.1 justify this port partly on **28 post-increment sites** in the lexer and parser —
+§4.4's row, "in the one kind of code where reading the value before or after the update decides every
+token boundary". That is the right reason to LOOK and it is not a measurement, and measured it comes
+out the other way: **all 28 are in STATEMENT position** (`i++;`, `ctx.curliesLevel++;`) and not one
+increment in these 18 files is read as a value — grepped for the value-position forms (`= i++`,
+`(i++)`, `[i++]`, `return i++`, and the pre-increment spellings) over the whole tree, which reads 0.
+A statement-position `i++` translates to `i = i + 1` and has no before-or-after question in it.
+
+So the oracle passing is **not** evidence that this engine translates post-increment correctly; USL
+does not contain the shape that would test it. That is §3.5's *measure at the site, never read off
+the java* applied to this port's own justification, and it is the sort of claim that would otherwise
+have been quoted forward as a covered risk. What the 3,654 identical lines ARE evidence for is the
+rest of a hand-written character scanner: the `switch`-free control flow, the `break`/`continue`
+lowering (`break_residue` 0, and one `boundary.break` emitted in `IncludeLoader`), the reference
+`==` on enum tokens rendered `eq`, the retyped collections' iteration ORDER, and the whole
+lexer-parser-merger-writer pipeline agreeing with java over nineteen real inputs.
+
 **AND FIVE NON-LOCAL RETURNS, checked rather than assumed.** The port compiles with 5 deprecation
 warnings: `for (block <- target) { … return block }` over a retyped `ArrayBuffer` desugars to
 `foreach`, so java's ordinary return becomes scala's non-local one. That is §14's already-recorded
